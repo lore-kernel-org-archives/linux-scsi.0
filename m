@@ -1,45 +1,46 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [v6 PATCH 1/8] cxgb4/cxgb4vf: Chelsio FCoE offload driver
- submission (common header updates).
-Date: Tue, 13 Nov 2012 18:26:48 -0800
-Message-ID: <1352860008.28921.2.camel@dabdike>
-References: <1351158621-32222-1-git-send-email-naresh@chelsio.com>
-	 <1351158621-32222-2-git-send-email-naresh@chelsio.com>
+Subject: Re: scsi target, likely GPL violation
+Date: Tue, 13 Nov 2012 18:32:54 -0800
+Message-ID: <1352860374.28921.3.camel@dabdike>
+References: <509A915B.30105@redhat.com> <1352626456.6524.46.camel@dabdike>
+	 <20121111130553.GA30943@thunk.org> <87390gxjbd.fsf@ebb.org>
+	 <1352658157.6524.58.camel@dabdike>
+	 <20121111183243.62602d9b@pyramind.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1351158621-32222-2-git-send-email-naresh@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: linux-scsi@vger.kernel.org, dm@chelsio.com, leedom@chelsio.com, netdev@vger.kernel.org, chethan@chelsio.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20121111183243.62602d9b@pyramind.ukuu.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Bradley M. Kuhn" <bkuhn@sfconservancy.org>, Theodore Ts'o <tytso@mit.edu>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Marc Fleischmann <mwf@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-10-25 at 15:20 +0530, Naresh Kumar Inna wrote:
-> This patch contains updates to firmware/hardware header files shared
-> between csiostor and cxgb4/cxgb4vf, and the resulting changes to the
-> cxgb4/cxgb4vf source files.
->=20
-> Signed-off-by: Naresh Kumar Inna <naresh@chelsio.com>
-> ---
->  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |    8 ++--
->  drivers/net/ethernet/chelsio/cxgb4/sge.c        |    6 ++--
->  drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |   20 +++++-----
->  drivers/net/ethernet/chelsio/cxgb4/t4_msg.h     |    1 +
->  drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |   36 +++++++++++++=
-++++++-
->  drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   |   41 +++++++++++++=
-+++++++---
->  drivers/net/ethernet/chelsio/cxgb4vf/sge.c      |    8 ++--
->  7 files changed, 92 insertions(+), 28 deletions(-)
+On Sun, 2012-11-11 at 18:32 +0000, Alan Cox wrote:
+> > >      1. Yes, I've got first hand proof of a GPL violation (in which case
+> > >         we'll then move to seeing how we can remedy this) or
+> > >      2. A genuine public apology for the libel, which I'll do my best to
+> > >         prevail on RTS to accept.
+> > > 
+> > > Because any further discussion of unsubstantiated allegations of this
+> > > nature exposes us all to jeopardy of legal sanction.
+> > 
+> > That asks for moderation until we have a better investigation of the
+> > facts.  It definitely doesn't try to prejudge them or express preference
+> > for a specific outcome as your misquote makes out.
+> 
+> So how can you demand a public apology for libel or instant first hand
+> proof and now claim you just wanted moderation ? It's not hard to see why
+> your position was misinterpreted ?
 
-This still doesn't compile:
+So you want me to be less definite to avoid misinterpretation?
 
-drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c: In function =E2=80=98a=
-dap_init0=E2=80=99:
-drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c:3932:10: error: =E2=80=98=
-struct fw_caps_config_cmd=E2=80=99 has no member named =E2=80=98retval_=
-len16=E2=80=99
-make[5]: *** [drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.o] Error 1
+OK, here it is:  I'd really appreciate it if there was more rigour
+behind the initial investigation before going public with suspicions of
+GPL violation.  Based on what I read on the internet is a bit too low a
+bar for me, particularly when, I believe, Red Hat has the proprietary
+target OS and can check directly.
 
+We now have a whole runaway train of suspicion and lawyer involvement
+before anyone has actually confirmed there is a problem.
 James
