@@ -1,64 +1,64 @@
-From: "Mahesh Rajashekhara" <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [PATCH 1/1] aacraid: SCSI dma mapping failure case handling
-Date: Wed, 14 Nov 2012 01:58:33 -0800
-Message-ID: <340C71CD25A7EB49BFA81AE8C83926671A6D6AFA@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <1350421170-2436-1-git-send-email-Mahesh_Rajashekhara@pmc-sierra.com> <507DD2E1.4080301@redhat.com> <1352841833.8317.0.camel@dabdike>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:41239 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752187Ab2KNJ6i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Nov 2012 04:58:38 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1352841833.8317.0.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] Try #3: Use SCSI read/write(16) with > 32-bit LBA drives
+Date: Wed, 14 Nov 2012 10:39:36 -0500
+Message-ID: <1352907576-29285-1-git-send-email-hernejj@gmail.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, Elliott-VXdhtT5mjnY@public.gmane.org, "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi@vger.kernel.org, aacraid@pmc-sierra.com, Achim Leubner <Achim.Leubner@pmcs.com>, Tony Ruiz <Tony.Ruiz@pmcs.com>
 
-SGkgSmFtZXMsDQoNCldlIGhhdmUgdGFrZW4gY2FyZSB0aGUgcmV2aWV3IGNvbW1lbnRzIGFuZCBy
-ZS1zdWJtaXR0ZWQgdGhlIHBhdGNoIGEgd2hpbGUgYWdvLg0KaHR0cDovL21hcmMuaW5mby8/bD1s
-aW51eC1zY3NpJm09MTM1MDYzNDc4MjMyMzk2Jnc9Mg0KIA0KDQpUb21hcyBoYXMgcHJvdmlkZWQg
-QWNrZWQtYnkgdG8gdGhlIHBhdGNoLg0KaHR0cDovL21hcmMuaW5mby8/bD1saW51eC1zY3NpJm09
-MTM1MDY1NzA2MzA3OTc0Jnc9Mg0KDQogIA0KVGhhbmtzLA0KTWFoZXNoDQoNCg0KLS0tLS1Pcmln
-aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRvOmpib3R0b21s
-ZXlAcGFyYWxsZWxzLmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDE0LCAyMDEyIDEy
-OjMzIFBNDQpUbzogVG9tYXMgSGVuemwNCkNjOiBNYWhlc2ggUmFqYXNoZWtoYXJhOyBsaW51eC1z
-Y3NpQHZnZXIua2VybmVsLm9yZzsgYWFjcmFpZEBwbWMtc2llcnJhLmNvbTsgQWNoaW0gTGV1Ym5l
-cjsgVG9ueSBSdWl6DQpTdWJqZWN0OiBSZTogW1BBVENIIDEvMV0gYWFjcmFpZDogU0NTSSBkbWEg
-bWFwcGluZyBmYWlsdXJlIGNhc2UgaGFuZGxpbmcNCg0KT24gVHVlLCAyMDEyLTEwLTE2IGF0IDIz
-OjM0ICswMjAwLCBUb21hcyBIZW56bCB3cm90ZToNCj4gT24gMTAvMTYvMjAxMiAxMDo1OSBQTSwg
-TWFoZXNoIFJhamFzaGVraGFyYSB3cm90ZToNCj4gPiBUaGlzIHBhdGNoIGhhbmRsZXMgU0NTSSBk
-bWEgbWFwcGluZyBmYWlsdXJlIGNhc2UuIFJlcG9ydGluZyBlcnJvciBjb2RlIHRvIHRoZSB1cHBl
-ciBsYXllciBpbnN0ZWFkIG9mIEJVR19PTigpLg0KPiA+DQo+ID4gVGhpcyBwYXRjaCBpcyBjcmVh
-dGVkIGFnYWluc3QgY3VycmVudCB1cHN0cmVhbSBrZXJuZWwuDQo+ID4NCj4gPiBTaWduZWQtb2Zm
-LWJ5OiBNYWhlc2ggUmFqYXNoZWtoYXJhIA0KPiA+IDxNYWhlc2hfUmFqYXNoZWtoYXJhQHBtYy1z
-aWVycmEuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyAg
-fCAgIDYzICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0NCj4gPiAgZHJp
-dmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oIHwgICAgMiArLQ0KPiA+ICAyIGZpbGVzIGNoYW5n
-ZWQsIDUwIGluc2VydGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jIA0KPiA+IGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvYWFjaGJhLmMgaW5kZXggZDc5NDU3YS4uZWZhMjkwMCAxMDA2NDQNCj4gPiAtLS0gYS9k
-cml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL2FhY2hiYS5jDQo+ID4gQEAgLTk3MSw2ICs5NzEsNyBAQCBzdGF0aWMgaW50IGFhY19yZWFk
-X3Jhd19pbyhzdHJ1Y3QgZmliICogZmliLCANCj4gPiBzdHJ1Y3Qgc2NzaV9jbW5kICogY21kLCB1
-NjQgbGJhLCB1MyAgew0KPiA+ICAJc3RydWN0IGFhY19kZXYgKmRldiA9IGZpYi0+ZGV2Ow0KPiA+
-ICAJdTE2IGZpYnNpemUsIGNvbW1hbmQ7DQo+ID4gKwl1bnNpZ25lZCBsb25nIHJldDsNCj4gPiAg
-DQo+ID4gIAlhYWNfZmliX2luaXQoZmliKTsNCj4gPiAgCWlmIChkZXYtPmNvbW1faW50ZXJmYWNl
-ID09IEFBQ19DT01NX01FU1NBR0VfVFlQRTIgJiYgDQo+ID4gIWRldi0+c3luY19tb2RlKSB7IEBA
-IC05ODIsNyArOTgzLDEwIEBAIHN0YXRpYyBpbnQgYWFjX3JlYWRfcmF3X2lvKHN0cnVjdCBmaWIg
-KiBmaWIsIHN0cnVjdCBzY3NpX2NtbmQgKiBjbWQsIHU2NCBsYmEsIHUzDQo+ID4gIAkJcmVhZGNt
-ZDItPmJ5dGVDb3VudCA9IGNwdV90b19sZTMyKGNvdW50PDw5KTsNCj4gPiAgCQlyZWFkY21kMi0+
-Y2lkID0gY3B1X3RvX2xlMTYoc2NtZF9pZChjbWQpKTsNCj4gPiAgCQlyZWFkY21kMi0+ZmxhZ3Mg
-PSBjcHVfdG9fbGUxNihSSU8yX0lPX1RZUEVfUkVBRCk7DQo+ID4gLQkJYWFjX2J1aWxkX3NncmF3
-MihjbWQsIHJlYWRjbWQyLCBkZXYtPnNjc2lfaG9zdF9wdHItPnNnX3RhYmxlc2l6ZSk7DQo+ID4g
-KwkJcmV0ID0gYWFjX2J1aWxkX3NncmF3MihjbWQsIHJlYWRjbWQyLA0KPiA+ICsJCQkJZGV2LT5z
-Y3NpX2hvc3RfcHRyLT5zZ190YWJsZXNpemUpOw0KPiA+ICsJCWlmIChyZXQgPCAwKQ0KPiA+ICsJ
-CQlyZXR1cm4gcmV0Ow0KPiANCj4gSGkgTWFoZXNoLCAncmV0JyBpcyAndW5zaWduZWQnLCB0aGUg
-YWJvdmUgdGVzdCB3aWxsIG5vdCB3b3JrLg0KPiBUb21hcw0KDQpQaW5nIG9uIHRoaXMgcGxlYXNl
-IE1haGVzaD8gIFRoZSBjcml0aWNpc20gc2VlbXMgY29tcGxldGVseSB2YWxpZCB0byBtZS4NCg0K
-SmFtZXMNCg0K
+From: "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+Force large capacity (> 0xFFFFFFFF blocks) drives to use READ/WRITE(16) instead
+of READ/WRITE(10). Some(most/all?) USB enclosures do not like READ(10) commands
+when a large capacity drive is installed.
+
+Signed-off-by: Jason J. Herne <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ drivers/scsi/sd.c          |    5 ++++-
+ include/scsi/scsi_device.h |    1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 12f6fdf..f7913c0 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -887,7 +887,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
+ 		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
+ 		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
+-	} else if (block > 0xffffffff) {
++	} else if (sdp->use_16_for_rw) {
+ 		SCpnt->cmnd[0] += READ_16 - READ_6;
+ 		SCpnt->cmnd[1] = protect | ((rq->cmd_flags & REQ_FUA) ? 0x8 : 0);
+ 		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
+@@ -2054,6 +2054,9 @@ got_data:
+ 		}
+ 	}
+ 
++	/* Use read/write(16) for > 32-bit LBA disks */
++	sdp->use_16_for_rw = (sdkp->capacity > 0xffffffff);
++
+ 	/* Rescale capacity to 512-byte units */
+ 	if (sector_size == 4096)
+ 		sdkp->capacity <<= 3;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 88fae8d..19ab8f1 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -135,6 +135,7 @@ struct scsi_device {
+ 				     * because we did a bus reset. */
+ 	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+ 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
++	unsigned use_16_for_rw:1; /* Use read/write(16) over read/write(10) */
+ 	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08 */
+ 	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f */
+ 	unsigned skip_vpd_pages:1;	/* do not read VPD pages */
+-- 
+1.7.9.5
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
