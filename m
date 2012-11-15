@@ -1,77 +1,69 @@
-From: Sasha Levin <sasha.levin@oracle.com>
-Subject: [PATCH] scsi: prevent stack buffer overflow in host_reset
-Date: Thu, 15 Nov 2012 15:51:46 -0500
-Message-ID: <1353012706-28182-1-git-send-email-sasha.levin@oracle.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sasha Levin <sasha.levin@oracle.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target/iblock: Fix double iblock_complete_cmd callback
+ bug
+Date: Thu, 15 Nov 2012 14:36:30 -0800
+Message-ID: <1353018990.11597.35.camel@haakon2.linux-iscsi.org>
+References: <1352404739-22881-1-git-send-email-nab@linux-iscsi.org>
+	 <20121115104922.GA28956@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:39766 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712Ab2KOWgd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2012 17:36:33 -0500
+In-Reply-To: <20121115104922.GA28956@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 
-store_host_reset() has tried to re-invent the wheel to compare sysfs strings.
-Unfortunately it did so poorly and never bothered to check the input from
-userspace before overwriting stack with it, so something simple as:
+On Thu, 2012-11-15 at 05:49 -0500, Christoph Hellwig wrote:
+> On Thu, Nov 08, 2012 at 07:58:59PM +0000, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch fixes a double completion bug where ibr->pending = 2 usage
+> > plus the extra callback to iblock_complete_cmd() invoked after bio
+> > submission in iblock_execute_rw() can interfere with the normal
+> > bio->bi_done() -> iblock_bio_done() -> iblock_complete_cmd() completion
+> > path, causing a double target_complete_cmd() call to occur.
+> 
+> How so exactly?  Please provide an explanation, and preferably a test
+> case.
+> 
 
-echo "WoopsieWoopsie" >
-/sys/devices/pseudo_0/adapter0/host0/scsi_host/host0/host_reset
+So, I was getting a bit confused here while debugging Kelsey's issue
+with dispatched multiple bios throwing an with a virtio-blk backend.
 
-would result in:
+However, setting the default ibr->pending=2 value before dispatch, and
+making a extra iblock_complete_cmd() call from iblock_execute_rw(),
+while doing the normal iblock_complete_cmd() calls from
+iblock_bio_done() is AFAICT a pointless extra atomic_dec_and_test() call
+per I/O.
 
-[  316.310101] Kernel panic - not syncing: stack-protector: Kernel stack is corrupted in: ffffffff81f5bac7
-[  316.310101]
-[  316.320051] Pid: 6655, comm: sh Tainted: G        W    3.7.0-rc5-next-20121114-sasha-00016-g5c9d68d-dirty #129
-[  316.320051] Call Trace:
-[  316.340058] pps pps0: PPS event at 1352918752.620355751
-[  316.340062] pps pps0: capture assert seq #303
-[  316.320051]  [<ffffffff83b3856b>] panic+0xcd/0x1f4
-[  316.320051]  [<ffffffff81f5bac7>] ? store_host_reset+0xd7/0x100
-[  316.320051]  [<ffffffff8110b996>] __stack_chk_fail+0x16/0x20
-[  316.320051]  [<ffffffff81f5bac7>] store_host_reset+0xd7/0x100
-[  316.320051]  [<ffffffff81e55bb3>] dev_attr_store+0x13/0x30
-[  316.320051]  [<ffffffff812f7db1>] sysfs_write_file+0x101/0x170
-[  316.320051]  [<ffffffff8127acc8>] vfs_write+0xb8/0x180
-[  316.320051]  [<ffffffff8127ae80>] sys_write+0x50/0xa0
-[  316.320051]  [<ffffffff83c03418>] tracesys+0xe1/0xe6
+Was there a reason why you changed ->pending from 1 -> 2 during the
+se_task removal in commit 5787cacd0bd5ee01..?
 
-Fix this by uninventing whatever was going on there and just use sysfs_streq.
+> > Also drop the bio_cnt >= IBLOCK_MAX_BIO_PER_TASK rolling call to
+> > iblock_submit_bios() to avoid the exception case where outstanding
+> > bios completing via iblock_bio_done() are not accounted for when
+> > returning returning non zero from iblock_execute_rw().
+> 
+> This will cause deadlocks when we can't allocate enough bios for
+> a too large request.
+> 
 
-Bug introduced by 29443691 ("[SCSI] scsi: Added support for adapter and
-firmware reset").
+Mmmm..
 
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
----
- drivers/scsi/scsi_sysfs.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+So the case this patch tries to avoid is where iblock_submit_bio() is
+called multiple times before the final ibr->pending value is set, this
+could potentially cause bios completion calls to decrement the value +
+complete to core before iblock_execute_rw() is done incrementing
+ibr->pending.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index ce5224c..77ba946 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -249,9 +249,9 @@ static DEVICE_ATTR(active_mode, S_IRUGO | S_IWUSR, show_shost_active_mode, NULL)
- 
- static int check_reset_type(char *str)
- {
--	if (strncmp(str, "adapter", 10) == 0)
-+	if (sysfs_streq(str, "adapter"))
- 		return SCSI_ADAPTER_RESET;
--	else if (strncmp(str, "firmware", 10) == 0)
-+	else if (sysfs_streq(str, "firmware"))
- 		return SCSI_FIRMWARE_RESET;
- 	else
- 		return 0;
-@@ -264,12 +264,9 @@ store_host_reset(struct device *dev, struct device_attribute *attr,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct scsi_host_template *sht = shost->hostt;
- 	int ret = -EINVAL;
--	char str[10];
- 	int type;
- 
--	sscanf(buf, "%s", str);
--	type = check_reset_type(str);
--
-+	type = check_reset_type(buf);
- 	if (!type)
- 		goto exit_store_host_reset;
- 
--- 
-1.8.0
+How about returning an exception here instead when IBLOCK_MAX_BIOS in
+reached..?  Btw, where did the default of 32 for this come from..?
+
+--nab
+
