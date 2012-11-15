@@ -1,43 +1,86 @@
-From: "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Felipe Balbi <balbi@ti.com>
 Subject: Re: [PATCH] Try #3: Use SCSI read/write(16) with > 32-bit LBA drives
-Date: Wed, 14 Nov 2012 20:06:20 -0500
-Message-ID: <CAJiM5SacceJLCrUMAR2Yqw4P7qX_q-BSbzRqthrc84TpHbWhZw@mail.gmail.com>
+Date: Thu, 15 Nov 2012 07:50:05 +0200
+Message-ID: <20121115055005.GC3585@arwen.pp.htv.fi>
 References: <1352930602-3505-1-git-send-email-hernejj@gmail.com>
-	<50A419B6.4070605@mvista.com>
+ <50A419B6.4070605@mvista.com>
+ <CAJiM5SacceJLCrUMAR2Yqw4P7qX_q-BSbzRqthrc84TpHbWhZw@mail.gmail.com>
+Reply-To: <balbi@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <50A419B6.4070605-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sebastian Andrzej Siewior <sebastian-E0PNVn5OA6ohrxcnuTQ+TQ@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="i0/AhcQY5QxfSsSZ"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:52794 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751105Ab2KOF5e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Nov 2012 00:57:34 -0500
+Content-Disposition: inline
+In-Reply-To: <CAJiM5SacceJLCrUMAR2Yqw4P7qX_q-BSbzRqthrc84TpHbWhZw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Jason J. Herne" <hernejj@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, Sebastian Andrzej Siewior <sebastian@breakpoint.cc>, linux-usb@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, JBottomley@parallels.com, Alan Stern <stern@rowland.harvard.edu>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
 
-On Wed, Nov 14, 2012 at 5:22 PM, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org> wrote:
-> Hello.
->
->
-> On 15-11-2012 2:03, Jason J. Herne wrote:
->
->> From: "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->
->
->   You have already posted Try #3. And preferrably, information about patch
-> version should be included with [PATCH] prefix like this [PATCH v4].
->
->
+--i0/AhcQY5QxfSsSZ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Noted for future submissions.  Any idea how I get git send-email to
-generate the patch tag
-like that?
+Hi,
 
-Also, do I need to resubmit this patch because of this semi-faulty
-subject line? I would
-assume that to be unnecessary.
+On Wed, Nov 14, 2012 at 08:06:20PM -0500, Jason J. Herne wrote:
+> On Wed, Nov 14, 2012 at 5:22 PM, Sergei Shtylyov <sshtylyov@mvista.com> w=
+rote:
+> > Hello.
+> >
+> >
+> > On 15-11-2012 2:03, Jason J. Herne wrote:
+> >
+> >> From: "Jason J. Herne" <hernejj@gmail.com>
+> >
+> >
+> >   You have already posted Try #3. And preferrably, information about pa=
+tch
+> > version should be included with [PATCH] prefix like this [PATCH v4].
+> >
+> >
+>=20
+> Noted for future submissions.  Any idea how I get git send-email to
+> generate the patch tag
+> like that?
+>=20
+> Also, do I need to resubmit this patch because of this semi-faulty
+> subject line? I would
+> assume that to be unnecessary.
 
---
-- Jason J. Herne (hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org)
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+$ git send-email --subject-prefix=3D"PATCH v4" HEAD ^origin/master
+
+if you want to generate the patch file before sending, pass
+--subject-prefix to git format-patch instead.
+
+--=20
+balbi
+
+--i0/AhcQY5QxfSsSZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQpIKMAAoJEIaOsuA1yqREFPgP/1YQaPku1e4iFur5V+2nlvIP
+5B/A9r6zib5YZ+2EcNN6dkdZFcxBnC1mcG1l2Vw4ShGJhknhW4pf+Aa4LiTHSv2j
+noEyUWL2yNWLtGtKbSSEhGwTXQNjvFSA0jbhpG+7kRDcjn5RtV8W3UYXccU/Mahu
+UTfiPaeBUgajVcSXmdLO52GFFusr7KY4XR+A+d9Wt3mlOR4VXStOYcH8QZMcEIpR
+8x9k0HfNsplvv2gdaCwjnzYzaxA2sI3la30nnZ23Beqkj4tKuZuRmwlZ168g/gbk
+TY8zc2JgG+9Y6d8j/lkNsopHaa9G2FyDvcexsHIx/kMDdlxea8B7hkZc7hAnBAWT
+OVV8XiPx5d1foDJrmY6QYO6Vm4MyXucmQiyniSyTPR2w5jQN9wO0jikJlNb9aIy2
+lxIaKhTsViHdDDO3xkT7l+wU6o7xJBtwvqcoLH8vKzGaJxxvBQH7u0zWnUKHBvlN
+h2xtJRtaW+EtryaLFd22XSLD4ckupcm7lGCsu+fFx1J0HOARxGSMIgvgHqPgo8XX
+ecgFmLSlHEjd5q55Hf2mvaQ5Tlg2ULXuHgUl5s6QkaxP1cuKpeqwFA6LAGlHFSQw
+d0p0DCLCn6Rsp/5tRAljS+sWD7KLIRPhrdxydKLp/mILUWuZ1HQLxncGLrawYGzV
+VjnCRL/2K9yjQO9sqSdv
+=xduj
+-----END PGP SIGNATURE-----
+
+--i0/AhcQY5QxfSsSZ--
