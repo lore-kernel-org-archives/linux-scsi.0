@@ -1,44 +1,34 @@
-From: =?UTF-8?B?6YSt5a6I6KyZ?= <nick.cheng@areca.com.tw>
-Subject: Re: [PATCH 1/5] arcmsr: Re-name the HBA Type
-Date: Thu, 15 Nov 2012 23:07:52 +0800
-Message-ID: <CAGUPPa6eL-_vKVjCkrHihAhKkniS0E4buWyRPuR4b-qmoUBPwA@mail.gmail.com>
-References: <85E5FCE3D4AD4A2D9A3DE6E64060AF05@arecaaebe11fae>
-	<1352988719.2578.5.camel@dabdike>
-	<CAGUPPa5rmZoG0tf3o6GSqcjUwdnd5+CPfy1WkSoO0doFv6eh4Q@mail.gmail.com>
-	<1352991622.2578.9.camel@dabdike>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 3/3] target/iblock: Add WRITE_SAME w/ UNMAP=0 emulation support
+Date: Thu, 15 Nov 2012 10:25:32 -0500
+Message-ID: <yq1ehju28ib.fsf@sermon.lab.mkp.net>
+References: <1352405238-23267-1-git-send-email-nab@linux-iscsi.org>
+	<1352405238-23267-4-git-send-email-nab@linux-iscsi.org>
+	<20121115110432.GD28956@infradead.org> <50A5043E.1030301@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:58708 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1768218Ab2KOPHy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2012 10:07:54 -0500
-Received: by mail-la0-f46.google.com with SMTP id h6so1314617lag.19
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Nov 2012 07:07:52 -0800 (PST)
-In-Reply-To: <1352991622.2578.9.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <50A5043E.1030301@interlog.com> (Douglas Gilbert's message of
+	"Thu, 15 Nov 2012 10:03:26 -0500")
+Sender: linux-kernel-owner@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-OK. I will fix it.
-Thank you,
-2012/11/15 James Bottomley <James.Bottomley@hansenpartnership.com>:
-> On Thu, 2012-11-15 at 22:53 +0800, =E9=84=AD=E5=AE=88=E8=AC=99 wrote:
->> Hi James,
->> You got these errors/warnings before or after you apply these 5 patc=
-hes?
->
-> I got all of this lot from patch 1/5 only.  Please fix at least the
-> errors and the warnings that go to whitespace issues.  I don't really
-> care about printk(KERN_ERR vs pr_err( or lines over 80 characters.
->
-> James
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+
+Doug> On 12-11-15 06:04 AM, Christoph Hellwig wrote:
+>>> + /*
+>>> + * Enable WRITE_SAME emulation for IBLOCK, use scsi_debug.c default
+>>> + */
+>> 
+>> Why would we care what scsi_debug.c uses?
+
+Doug> Would you prefer no hint of where the magic number came from? At
+Doug> least somebody who cares when they see that comment might contact
+Doug> Martin Petersen and ask why he chose that value.
+
+And the answer is that WRITE SAME(10) takes a two-byte block count.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
