@@ -1,78 +1,77 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 2/3] target: Add/check max_write_same_len device
- attribute + update block limits VPD
-Date: Thu, 15 Nov 2012 12:38:06 -0800
-Message-ID: <1353011886.11597.4.camel@haakon2.linux-iscsi.org>
-References: <1353010439-4600-1-git-send-email-nab@linux-iscsi.org>
-	 <1353010439-4600-3-git-send-email-nab@linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Sasha Levin <sasha.levin@oracle.com>
+Subject: [PATCH] scsi: prevent stack buffer overflow in host_reset
+Date: Thu, 15 Nov 2012 15:51:46 -0500
+Message-ID: <1353012706-28182-1-git-send-email-sasha.levin@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1353010439-4600-3-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Elliot <Elliott@hp.com>
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sasha Levin <sasha.levin@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2012-11-15 at 20:13 +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch adds a new max_write_same_len device attribute for use with
-> WRITE_SAME w/ UNMAP=0 backend emulation.  This can be useful for
-> lowering the default backend value (IBLOCK uses 0xFFFF).
-> 
-> Also, update block limits VPD emulation code in spc_emulate_evpd_b0() to
-> report MAXIMUM WRITE SAME LENGTH, and enforce max_write_same_len during
-> sbc_parse() -> sbc_setup_write_same() CDB sanity checking for all emulated
-> WRITE_SAME w/ UNMAP=0 cases.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/target_core_configfs.c |    4 ++++
->  drivers/target/target_core_device.c   |   11 +++++++++++
->  drivers/target/target_core_internal.h |    1 +
->  drivers/target/target_core_sbc.c      |    8 ++++++++
->  drivers/target/target_core_spc.c      |    8 +++++++-
->  include/target/target_core_base.h     |    3 +++
->  6 files changed, 34 insertions(+), 1 deletions(-)
-> 
+store_host_reset() has tried to re-invent the wheel to compare sysfs strings.
+Unfortunately it did so poorly and never bothered to check the input from
+userspace before overwriting stack with it, so something simple as:
 
-<SNIP>
+echo "WoopsieWoopsie" >
+/sys/devices/pseudo_0/adapter0/host0/scsi_host/host0/host_reset
 
-> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> index a5a8f46..8dd8a802 100644
-> --- a/drivers/target/target_core_sbc.c
-> +++ b/drivers/target/target_core_sbc.c
-> @@ -238,6 +238,8 @@ static inline unsigned long long transport_lba_64_ext(unsigned char *cdb)
->  static sense_reason_t
->  sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *ops)
->  {
-> +	unsigned int sectors = spc_get_write_same_sectors(cmd);
-> +
->  	if ((flags[0] & 0x04) || (flags[0] & 0x02)) {
->  		pr_err("WRITE_SAME PBDATA and LBDATA"
->  			" bits not supported for Block Discard"
-> @@ -258,6 +260,12 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
->  	if (!ops->execute_write_same)
->  		return TCM_UNSUPPORTED_SCSI_OPCODE;
->  
-> +	if (sectors > cmd->se_dev->dev_attrib.max_write_same_len) {
-> +		pr_warn("WRITE_SAME sectors: %u exceeds max_write_same_len: %u\n",
-> +			sectors, cmd->se_dev->dev_attrib.max_write_same_len);
-> +		return TCM_INVALID_CDB_FIELD;
-> +	}
-> +
->  	cmd->execute_cmd = ops->execute_write_same;
->  	return 0;
->  }
+would result in:
 
-Now moving the max_write_same_len check above directly ahead of the
-UNMAP conditional branch, so that both WRITE_SAME w/ UNMAP=[1,0] are
-properly checked against this value as per hch's + Robert's input.
+[  316.310101] Kernel panic - not syncing: stack-protector: Kernel stack is corrupted in: ffffffff81f5bac7
+[  316.310101]
+[  316.320051] Pid: 6655, comm: sh Tainted: G        W    3.7.0-rc5-next-20121114-sasha-00016-g5c9d68d-dirty #129
+[  316.320051] Call Trace:
+[  316.340058] pps pps0: PPS event at 1352918752.620355751
+[  316.340062] pps pps0: capture assert seq #303
+[  316.320051]  [<ffffffff83b3856b>] panic+0xcd/0x1f4
+[  316.320051]  [<ffffffff81f5bac7>] ? store_host_reset+0xd7/0x100
+[  316.320051]  [<ffffffff8110b996>] __stack_chk_fail+0x16/0x20
+[  316.320051]  [<ffffffff81f5bac7>] store_host_reset+0xd7/0x100
+[  316.320051]  [<ffffffff81e55bb3>] dev_attr_store+0x13/0x30
+[  316.320051]  [<ffffffff812f7db1>] sysfs_write_file+0x101/0x170
+[  316.320051]  [<ffffffff8127acc8>] vfs_write+0xb8/0x180
+[  316.320051]  [<ffffffff8127ae80>] sys_write+0x50/0xa0
+[  316.320051]  [<ffffffff83c03418>] tracesys+0xe1/0xe6
 
-Thanks!
+Fix this by uninventing whatever was going on there and just use sysfs_streq.
 
---nab
+Bug introduced by 29443691 ("[SCSI] scsi: Added support for adapter and
+firmware reset").
+
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+---
+ drivers/scsi/scsi_sysfs.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ce5224c..77ba946 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -249,9 +249,9 @@ static DEVICE_ATTR(active_mode, S_IRUGO | S_IWUSR, show_shost_active_mode, NULL)
+ 
+ static int check_reset_type(char *str)
+ {
+-	if (strncmp(str, "adapter", 10) == 0)
++	if (sysfs_streq(str, "adapter"))
+ 		return SCSI_ADAPTER_RESET;
+-	else if (strncmp(str, "firmware", 10) == 0)
++	else if (sysfs_streq(str, "firmware"))
+ 		return SCSI_FIRMWARE_RESET;
+ 	else
+ 		return 0;
+@@ -264,12 +264,9 @@ store_host_reset(struct device *dev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct scsi_host_template *sht = shost->hostt;
+ 	int ret = -EINVAL;
+-	char str[10];
+ 	int type;
+ 
+-	sscanf(buf, "%s", str);
+-	type = check_reset_type(str);
+-
++	type = check_reset_type(buf);
+ 	if (!type)
+ 		goto exit_store_host_reset;
+ 
+-- 
+1.8.0
