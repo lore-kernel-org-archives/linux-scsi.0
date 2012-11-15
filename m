@@ -1,30 +1,35 @@
-From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH] Try #3: Use SCSI read/write(16) with > 32-bit LBA drives
-Date: Thu, 15 Nov 2012 04:20:51 -0500
-Message-ID: <20121115092051.GA16140@infradead.org>
-References: <1352930602-3505-1-git-send-email-hernejj@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] target/iblock: Fix double iblock_complete_cmd callback
+ bug
+Date: Thu, 15 Nov 2012 05:49:22 -0500
+Message-ID: <20121115104922.GA28956@infradead.org>
+References: <1352404739-22881-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1352930602-3505-1-git-send-email-hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sebastian-E0PNVn5OA6ohrxcnuTQ+TQ@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, Elliott-VXdhtT5mjnY@public.gmane.org
+In-Reply-To: <1352404739-22881-1-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 14, 2012 at 05:03:22PM -0500, Jason J. Herne wrote:
-> From: "Jason J. Herne" <hernejj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+On Thu, Nov 08, 2012 at 07:58:59PM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> Force large capacity (> 0xFFFFFFFF blocks) drives to use READ/WRITE(16) instead
-> of READ/WRITE(10). Some(most/all?) USB enclosures do not like READ(10) commands
-> when a large capacity drive is installed. This issue was reported and discussed
-> here: http://marc.info/?l=linux-usb&m=135247705222324&w=2
+> This patch fixes a double completion bug where ibr->pending = 2 usage
+> plus the extra callback to iblock_complete_cmd() invoked after bio
+> submission in iblock_execute_rw() can interfere with the normal
+> bio->bi_done() -> iblock_bio_done() -> iblock_complete_cmd() completion
+> path, causing a double target_complete_cmd() call to occur.
 
-Is there any reason not to simply use the 16 byte command
-unconditionally for large devices?
+How so exactly?  Please provide an explanation, and preferably a test
+case.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Also drop the bio_cnt >= IBLOCK_MAX_BIO_PER_TASK rolling call to
+> iblock_submit_bios() to avoid the exception case where outstanding
+> bios completing via iblock_bio_done() are not accounted for when
+> returning returning non zero from iblock_execute_rw().
+
+This will cause deadlocks when we can't allocate enough bios for
+a too large request.
