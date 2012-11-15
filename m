@@ -1,56 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] target/iblock: Add WRITE_SAME w/ UNMAP=0 emulation
- support
-Date: Thu, 15 Nov 2012 06:04:32 -0500
-Message-ID: <20121115110432.GD28956@infradead.org>
-References: <1352405238-23267-1-git-send-email-nab@linux-iscsi.org>
- <1352405238-23267-4-git-send-email-nab@linux-iscsi.org>
+From: Naresh Kumar Inna <naresh@chelsio.com>
+Subject: Re: [v6 PATCH 1/8] cxgb4/cxgb4vf: Chelsio FCoE offload driver submission
+ (common header updates).
+Date: Thu, 15 Nov 2012 17:02:11 +0530
+Message-ID: <50A4D2BB.90100@chelsio.com>
+References: <1351158621-32222-1-git-send-email-naresh@chelsio.com>  <1351158621-32222-2-git-send-email-naresh@chelsio.com> <1352860008.28921.2.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1352405238-23267-4-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([67.207.112.58]:8989 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993197Ab2KOLcS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2012 06:32:18 -0500
+In-Reply-To: <1352860008.28921.2.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 
-> +	/*
-> +	 * Enable WRITE_SAME emulation for IBLOCK, use scsi_debug.c default
-> +	 */
+On 11/14/2012 7:56 AM, James Bottomley wrote:
+> On Thu, 2012-10-25 at 15:20 +0530, Naresh Kumar Inna wrote:
+>> This patch contains updates to firmware/hardware header files shared
+>> between csiostor and cxgb4/cxgb4vf, and the resulting changes to the
+>> cxgb4/cxgb4vf source files.
+>>
+>> Signed-off-by: Naresh Kumar Inna <naresh@chelsio.com>
+>> ---
+>>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |    8 ++--
+>>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |    6 ++--
+>>  drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |   20 +++++-----
+>>  drivers/net/ethernet/chelsio/cxgb4/t4_msg.h     |    1 +
+>>  drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |   36 +++++++++++++++++++-
+>>  drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   |   41 ++++++++++++++++++++---
+>>  drivers/net/ethernet/chelsio/cxgb4vf/sge.c      |    8 ++--
+>>  7 files changed, 92 insertions(+), 28 deletions(-)
+> 
+> This still doesn't compile:
+> 
+> drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c: In function adap_init0:
+> drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c:3932:10: error: struct fw_caps_config_cmd has no member named retval_len16
+> make[5]: *** [drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.o] Error 1
+> 
+> James
+> 
+> 
+> 
 
-Why would we care what scsi_debug.c uses?
+This must have been caused by a recent pull - it used to build fine at
+the time I sent this patch set for review.
 
-> +	dev->dev_attrib.max_write_same_len = 0xFFFF;
->  
->  	if (blk_queue_nonrot(q))
->  		dev->dev_attrib.is_nonrot = 1;
-> @@ -375,22 +379,80 @@ err:
->  	return ret;
->  }
+I will send out another patch-set to address the build failure.
 
-> +static struct bio *iblock_get_bio(struct se_cmd *, sector_t, u32);
-> +static void iblock_submit_bios(struct bio_list *, int);
-> +static void iblock_complete_cmd(struct se_cmd *);
-
-I'd suggest moving the write_same callback below these to avoid
-forward declarations.
-
-> +	if (cmd->se_cmd_flags & SCF_WRITE_SAME_DISCARD) {
-
-I'd probably add separate write_same and write_same_unmap members to
-the sbc_ops structure.  That'll keep decoding which one is used in the
-SBC code, and it'll keep the implementations nicely separated.
-
-> +	if (sectors > cmd->se_dev->dev_attrib.max_write_same_len) {
-
-This sort of check should stay in the SBC code.
-
-> +	sg = &cmd->t_data_sg[0];
-
-Btw, it seems like we don't bother to ensure the S/G list length
-is just one sector for WRITE SAME with either the unmap bit set or not.
-
-Also please add testcases for WRITE SAME including corner cases like
-incorrect transfer length to the scsi testsuite to ensure this code
-has proper QA coverage.
+Thanks,
+Naresh.
