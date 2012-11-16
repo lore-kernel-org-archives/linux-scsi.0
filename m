@@ -1,60 +1,83 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] target/iblock: Fix double iblock_complete_cmd callback
- bug
-Date: Fri, 16 Nov 2012 14:25:41 -0500
-Message-ID: <20121116192541.GA25096@infradead.org>
-References: <1352404739-22881-1-git-send-email-nab@linux-iscsi.org>
- <20121115104922.GA28956@infradead.org>
- <1353018990.11597.35.camel@haakon2.linux-iscsi.org>
+From: Xi Wang <xi.wang@gmail.com>
+Subject: [PATCH v2] [SCSI] mvsas: fix undefined bit shift
+Date: Fri, 16 Nov 2012 14:40:03 -0500
+Message-ID: <50A69693.2050002@gmail.com>
+References: <1352145183-29355-1-git-send-email-xi.wang@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:35603
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752264Ab2KPTZo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Nov 2012 14:25:44 -0500
-Content-Disposition: inline
-In-Reply-To: <1353018990.11597.35.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1352145183-29355-1-git-send-email-xi.wang@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Xiangliang Yu <yuxiangl@marvell.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@infradead.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 
-On Thu, Nov 15, 2012 at 02:36:30PM -0800, Nicholas A. Bellinger wrote:
-> However, setting the default ibr->pending=2 value before dispatch, and
-> making a extra iblock_complete_cmd() call from iblock_execute_rw(),
-> while doing the normal iblock_complete_cmd() calls from
-> iblock_bio_done() is AFAICT a pointless extra atomic_dec_and_test() call
-> per I/O.
-> 
-> Was there a reason why you changed ->pending from 1 -> 2 during the
-> se_task removal in commit 5787cacd0bd5ee01..?
+The macro bit(n) is defined as ((u32)1 << n), and thus it doesn't work
+with n >= 32, such as in mvs_94xx_assign_reg_set():
 
-It is to avoid having the request completed before even submitting all
-bios.  As soon as one is submitted it could on a very fast device
-complete before we've incremented the count for the next bio.
+	if (i >= 32) {
+		mvi->sata_reg_set |= bit(i);
+		...
+	}
 
-It's a very common scheme used all over the kernel when submitting
-I/O in smaller subdivisions.
+The shift ((u32)1 << n) with n >= 32 also leads to undefined behavior.
+The result varies depending on the architecture.
 
-> So the case this patch tries to avoid is where iblock_submit_bio() is
-> called multiple times before the final ibr->pending value is set, this
-> could potentially cause bios completion calls to decrement the value +
-> complete to core before iblock_execute_rw() is done incrementing
-> ibr->pending.
+This patch changes bit(n) to do a 64-bit shift.  It also simplifies
+mv_ffc64() using __ffs64(), since invoking ffz() with ~0 is undefined.
 
-That's exacltly what we try to avoid here.
+Signed-off-by: Xi Wang <xi.wang@gmail.com>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>
+Cc: James Bottomley <JBottomley@Parallels.com>
+Cc: stable@vger.kernel.org
+---
+As suggested by James, v2 is a single patch with a stable tag.
+---
+ drivers/scsi/mvsas/mv_94xx.h |   14 ++------------
+ drivers/scsi/mvsas/mv_sas.h  |    2 +-
+ 2 files changed, 3 insertions(+), 13 deletions(-)
 
-> How about returning an exception here instead when IBLOCK_MAX_BIOS in
-> reached..?
-
-Why?  As soon as we kicked the first batch off we're guaranteed to make
-progress allocating more as sson as the first of the submitted ones
-completes.
-
-> Btw, where did the default of 32 for this come from..?
-
-It's a random number, with the important property that it's considerably
-smaller than IBLOCK_BIO_POOL_SIZE.
-
+diff --git a/drivers/scsi/mvsas/mv_94xx.h b/drivers/scsi/mvsas/mv_94xx.h
+index 8f7eb4f..487aa6f 100644
+--- a/drivers/scsi/mvsas/mv_94xx.h
++++ b/drivers/scsi/mvsas/mv_94xx.h
+@@ -258,21 +258,11 @@ enum sas_sata_phy_regs {
+ #define SPI_ADDR_VLD_94XX         	(1U << 1)
+ #define SPI_CTRL_SpiStart_94XX     	(1U << 0)
+ 
+-#define mv_ffc(x)   ffz(x)
+-
+ static inline int
+ mv_ffc64(u64 v)
+ {
+-	int i;
+-	i = mv_ffc((u32)v);
+-	if (i >= 0)
+-		return i;
+-	i = mv_ffc((u32)(v>>32));
+-
+-	if (i != 0)
+-		return 32 + i;
+-
+-	return -1;
++	u64 x = ~v;
++	return x ? __ffs64(x) : -1;
+ }
+ 
+ #define r_reg_set_enable(i) \
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index c04a4f5..da24955 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -69,7 +69,7 @@ extern struct kmem_cache *mvs_task_list_cache;
+ #define DEV_IS_EXPANDER(type)	\
+ 	((type == EDGE_DEV) || (type == FANOUT_DEV))
+ 
+-#define bit(n) ((u32)1 << n)
++#define bit(n) ((u64)1 << n)
+ 
+ #define for_each_phy(__lseq_mask, __mc, __lseq)			\
+ 	for ((__mc) = (__lseq_mask), (__lseq) = 0;		\
+-- 
+1.7.10.4
