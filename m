@@ -1,39 +1,36 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 2/3] target: Add max_write_same_len device attribute
-Date: Fri, 16 Nov 2012 14:05:05 +0100
-Message-ID: <50A63A01.3080404@redhat.com>
-References: <1352405238-23267-1-git-send-email-nab@linux-iscsi.org>  <1352405238-23267-3-git-send-email-nab@linux-iscsi.org>  <20121115105312.GC28956@infradead.org> <1353007392.4447.22.camel@haakon2.linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1353007392.4447.22.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@infradead.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: UAPI disintegration for SCSI, FCoE and RDMA
+Date: Fri, 16 Nov 2012 13:23:30 +0000
+Message-ID: <18968.1353072210@warthog.procyon.org.uk>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, dillowda-1Heg1YXhbW8@public.gmane.org
+Cc: dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Il 15/11/2012 20:23, Nicholas A. Bellinger ha scritto:
->>> > > 
->>> > > This patch adds a new max_write_same_len device attribute for use with
->>> > > WRITE_SAME w/ UNMAP=0 backend emulation.
->>> > > 
->>> > > Also, update block limits VPD emulation code in spc_emulate_evpd_b0() to
->>> > > set the default MAXIMUM WRITE SAME LENGTH value of zero.
->> > 
->> > why do we need an exposed attribute for this?
->> > 
-> This is useful for userspace to reduce the allowed maximum from the
-> default 0xFFFF set by IBLOCK.  Allowing huge WRITE_SAMEs can very much
-> effect performance (esp. with spinning media), so being able to reduce
-> the max we accept via a userspace tunable is helpful.
 
-Unfortunately this doesn't really help.  Linux will submit the smaller
-WRITE SAMEs in parallel, and this could easily bring the target to its
-knees.
+Hi James, Robert, David,
 
-(This was reported to me with a Linux virtual machine sending WRITE SAME
-commands to a Nexenta iSCSI target running OpenSolaris.  QEMU can be
-easily replaced with LIO, with the same effect).
+I have patches still outstanding for the UAPI header disintegration of
+linux/scsi/, linux/scsi/fs/ and linux/rdma.  I have updated them from the
+original pull requests and they can be found at tags:
 
-Paolo
+	disintegrate-scsi-20121116
+	disintegrate-fc-20121116
+	disintegrate-rdma-20121116
+
+in:
+
+	git://git.infradead.org/users/dhowells/linux-headers.git
+	http://git.infradead.org/users/dhowells/linux-headers.git
+
+Do you accept git pull requests or only patches through the mailing lists?
+Should all three go via the SCSI tree?  Note that the MAINTAINERS' record for
+RDMA points to a defunct git tree.
+
+Thanks,
+David
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
