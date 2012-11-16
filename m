@@ -1,61 +1,34 @@
-From: Lalit Chandivade <lalit.chandivade@qlogic.com>
-Subject: RE: [PATCH 0/7] qla4xxx: Updates for scsi "misc" branch
-Date: Fri, 16 Nov 2012 05:50:16 +0000
-Message-ID: <F60B9976955DCB4D8D754EFEBD98D2EC02ABC1@avmb2.qlogic.org>
-References: <1349868286-13650-1-git-send-email-vikas.chaudhary@qlogic.com>
-	 <2C4E81FE-8AE8-4E48-A87C-536A40E0CCBA@cs.wisc.edu>
- <1352813692.2505.9.camel@dabdike.sthat4.btopenzone.com>
+From: Xiangliang Yu <yuxiangl@marvell.com>
+Subject: RE: [PATCH 2/3] [SCSI] mvsas: fix shift in mvs_94xx_free_reg_set()
+Date: Thu, 15 Nov 2012 23:39:47 -0800
+Message-ID: <F766E4F80769BD478052FB6533FA745D25EA94A704@SC-VEXCH4.marvell.com>
+References: <1352145183-29355-1-git-send-email-xi.wang@gmail.com>
+  <1352145183-29355-3-git-send-email-xi.wang@gmail.com>
+ <1352203618.2529.22.camel@dabdike> <50997955.10000@gmail.com>
+ <F766E4F80769BD478052FB6533FA745D25EA5FB180@SC-VEXCH4.marvell.com>
+ <509D08B5.2080303@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:28435
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750767Ab2KPFuX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Nov 2012 00:50:23 -0500
-In-Reply-To: <1352813692.2505.9.camel@dabdike.sthat4.btopenzone.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <509D08B5.2080303@gmail.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Xi Wang <xi.wang@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Michael Christie <michaelc@cs.wisc.edu>
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>
 
-SGkgSmFtZXMsDQoNClNvbWUgb2YgdGhlIGludGVyZmFjZXMgbGlrZSBhYm91dCBmaXJtd2FyZSB3
-ZSBjYW4gbWFrZSBnZW5lcmljLg0KQW5kIHdlIGFyZSBzdGlsbCBkaXNjdXNzaW5nIGludGVybmFs
-bHksIGlmIHdlIGNhbiByZWFsbHkgbWFrZSB0aGUgQWRkcmVzcyBDb250cm9sIEJsb2NrIChBQ0Ip
-IGludGVyZmFjZSBnZW5lcmljIG9yIG5vdC4NCg0KTWF5IGJlIHdlIHdpbGwgcmUtc3VibWl0IHRo
-ZSBwYXRjaGVzIHdpdGhvdXQgdGhlIEFDQiAod2hpY2ggaXMgc3RpbGwgdW5kZXIgZGlzY3Vzc2lv
-bikgaW4gbmV4dCB3ZWVrLg0KDQpUaGFua3MsDQpMYWxpdC4NCg0KPiAtLS0tLU9yaWdpbmFsIE1l
-c3NhZ2UtLS0tLQ0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21haWx0bzpKYW1lcy5Cb3R0b21s
-ZXlASGFuc2VuUGFydG5lcnNoaXAuY29tXQ0KPiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAxMywg
-MjAxMiA3OjA1IFBNDQo+IFRvOiBNaWNoYWVsIENocmlzdGllDQo+IENjOiBWaWthcyBDaGF1ZGhh
-cnk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBMYWxpdCBDaGFuZGl2YWRlOyBSYXZpDQo+
-IEFuYW5kDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMC83XSBxbGE0eHh4OiBVcGRhdGVzIGZvciBz
-Y3NpICJtaXNjIiBicmFuY2gNCj4NCj4gT24gV2VkLCAyMDEyLTEwLTEwIGF0IDExOjA4IC0wNTAw
-LCBNaWNoYWVsIENocmlzdGllIHdyb3RlOg0KPiA+IE9uIE9jdCAxMCwgMjAxMiwgYXQgNjoyNCBB
-TSwgdmlrYXMuY2hhdWRoYXJ5QHFsb2dpYy5jb20gd3JvdGU6DQo+ID4NCj4gPiA+IEZyb206IFZp
-a2FzIENoYXVkaGFyeSA8dmlrYXMuY2hhdWRoYXJ5QHFsb2dpYy5jb20+DQo+ID4gPg0KPiA+ID4g
-SmFtZXMsDQo+ID4gPg0KPiA+ID4gUGxlYXNlIGFwcGx5IHRoZSBmb2xsb3dpbmcgcGF0Y2hlcyB0
-byB0aGUgc2NzaSB0cmVlIGF0IHlvdXIgZWFybGllc3QNCj4gPiA+IGNvbnZlbmllbmNlLg0KPiA+
-ID4NCj4gPiA+IFRoYW5rcywNCj4gPiA+IFZpa2FzLg0KPiA+ID4NCj4gPg0KPiA+IEkgdGhpbmsg
-c29tZSBvZiB0aGVzZSBzaG91bGQgYmUgY29tbW9uIG9wZXJhdGlvbnMgaW5zdGVhZCBvZiB2ZW5k
-b3INCj4gb25lcy4NCj4gPg0KPiA+DQo+ID4gPiBBZGhlZXIgQ2hhbmRyYXZhbnNoaSAoMSk6DQo+
-ID4gPiAgICAgIHFsYTR4eHg6IEFkZGVkIG5ldyBCU0cgY29tbWFuZCBRTElTQ1NJX1ZORF9BQk9V
-VF9GSVJNV0FSRQ0KPiA+ID4NCj4gPg0KPiA+IFdoYXQgaW5mbyBkb2VzIHRoaXMgcHJvdmlkZT8N
-Cj4gPg0KPiA+DQo+ID4gPiBIYXJpc2ggWnVuamFycmFvICgzKToNCj4gPiA+ICAgICAgcWxhNHh4
-eDogQWxsb3cgcmVzZXQgaW4gbGluayBkb3duIGNhc2UNCj4gPiA+ICAgICAgcWxhNHh4eDogSW52
-b2tlIFNldCBBZGRyZXNzIENvbnRyb2wgQmxvY2sgdXNpbmcgQlNHDQo+ID4NCj4gPiBEb2VzIHRo
-aXMgc2V0IHRoZSBuZXR3b3JraW5nIGluZm8/DQo+ID4NCj4gPg0KPiA+ID4gICAgICBxbGE0eHh4
-OiBJbnZva2UgRGlzYWJsZUFDQiB1c2luZyBCU0cNCj4gPg0KPiA+IFdoYXQgZG9lcyB0aGlzIGRv
-PyBEaXNhYmxlIHRoZSBuZXR3b3JraW5nPw0KPg0KPiBQaW5nIG9uIHRoaXMsIHBsZWFzZS4gICBN
-aWtlJ3MgcG9pbnRzIHNlZW0gZW1pbmVudGx5IHNlbnNpYmxlLCB3aGF0IGlzDQo+IHRoZSByZXNw
-b25zZT8NCj4NCj4gSmFtZXMNCj4NCj4NCg0KDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXw0KDQpUaGlzIG1lc3NhZ2UgYW5kIGFueSBhdHRhY2hlZCBkb2N1bWVudHMgY29udGFpbiBp
-bmZvcm1hdGlvbiBmcm9tIFFMb2dpYyBDb3Jwb3JhdGlvbiBvciBpdHMgd2hvbGx5LW93bmVkIHN1
-YnNpZGlhcmllcyB0aGF0IG1heSBiZSBjb25maWRlbnRpYWwuIElmIHlvdSBhcmUgbm90IHRoZSBp
-bnRlbmRlZCByZWNpcGllbnQsIHlvdSBtYXkgbm90IHJlYWQsIGNvcHksIGRpc3RyaWJ1dGUsIG9y
-IHVzZSB0aGlzIGluZm9ybWF0aW9uLiBJZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIHRyYW5zbWlz
-c2lvbiBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGltbWVkaWF0ZWx5IGJ5IHJl
-cGx5IGUtbWFpbCBhbmQgdGhlbiBkZWxldGUgdGhpcyBtZXNzYWdlLg0K
+Hi, Xi
 
+> > About patch 3, I check the ffz code and found it will check ~0 conditions.
+> 
+> Can you point me to the ~0 check in ffz code?  I also feel like using
+> __ffs64 makes the code simpler.
+Yes, it seem to be ok
+
+> 
+> Does patch 1 look good to you?  Thanks.
+> 
+Yes
+
+Thanks!
