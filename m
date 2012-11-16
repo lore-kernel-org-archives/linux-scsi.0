@@ -1,50 +1,55 @@
 From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH 0/4] Make aborts work on tcm_qla2xxx, other cleanups
-Date: Fri, 16 Nov 2012 08:06:15 -0800
-Message-ID: <1353081979-29474-1-git-send-email-roland@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog113.obsmtp.com ([74.125.245.94]:44952 "HELO
-	na3sys010aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751667Ab2KPQG0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Nov 2012 11:06:26 -0500
-Received: by mail-da0-f70.google.com with SMTP id i30so3104282dad.1
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Nov 2012 08:06:25 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 1/4] target: Fix handling of aborted commands
+Date: Fri, 16 Nov 2012 08:06:16 -0800
+Message-ID: <1353081979-29474-2-git-send-email-roland@kernel.org>
+References: <1353081979-29474-1-git-send-email-roland@kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1353081979-29474-1-git-send-email-roland@kernel.org>
+Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Roland Dreier <roland@purestorage.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Roland Dreier <roland@purestorage.com>
 
-Hi Nic,
+- If we stop processing an already-aborted command in
+  target_execute_cmd(), then we need to complete t_transport_stop_comp
+  to wake up the the TMR handling thread, or else it will end up
+  waiting forever.
 
-Here's a series that makes aborts actually work on qla2xxx.  Stopping
-and releasing commands is quite convoluted so I'm not sure the first
-patch is totally correct, but without it I can easily reproduce task
-hangs or list corruption by having an initiator flood a tcm_qla2xxx
-target with aborts.  With those fixes, Steve's patch is pretty
-straightforward.
+- If we've a already sent an "aborted" status for a command in
+  transport_check_aborted_status() then we should bail out of
+  transport_send_task_abort() to avoid freeing the command twice.
 
-The last two patches are just cleanups I noticed while debugging this.
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/target/target_core_transport.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Just to be clear: to the extent that this is copyrightable work, it is
-released exclusively under the GPL.  No permission is granted to
-redistribute this under any other terms.
-
- - R.
-
-Roland Dreier (3):
-  target: Fix handling of aborted commands
-  target: Clean up logic in transport_put_cmd()
-  target: Clean up flow in transport_check_aborted_status()
-
-Steve Hodgson (1):
-  qla2xxx: Look up LUN for abort requests
-
- drivers/scsi/qla2xxx/qla_target.c      |   19 ++++++++++++++-
- drivers/target/target_core_transport.c |   40 ++++++++++++++------------------
- 2 files changed, 36 insertions(+), 23 deletions(-)
-
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 9097155..dcecbfb 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1819,8 +1819,10 @@ void target_execute_cmd(struct se_cmd *cmd)
+ 	/*
+ 	 * If the received CDB has aleady been aborted stop processing it here.
+ 	 */
+-	if (transport_check_aborted_status(cmd, 1))
++	if (transport_check_aborted_status(cmd, 1)) {
++		complete(&cmd->t_transport_stop_comp);
+ 		return;
++	}
+ 
+ 	/*
+ 	 * Determine if IOCTL context caller in requesting the stopping of this
+@@ -3067,7 +3069,7 @@ void transport_send_task_abort(struct se_cmd *cmd)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&cmd->t_state_lock, flags);
+-	if (cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION) {
++	if (cmd->se_cmd_flags & (SCF_SENT_CHECK_CONDITION | SCF_SENT_DELAYED_TAS)) {
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 		return;
+ 	}
 -- 
 1.7.10.4
