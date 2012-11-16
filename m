@@ -1,66 +1,67 @@
 From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH 2/4] qla2xxx: Look up LUN for abort requests
-Date: Fri, 16 Nov 2012 08:06:17 -0800
-Message-ID: <1353081979-29474-3-git-send-email-roland@kernel.org>
+Subject: [PATCH 4/4] target: Clean up flow in transport_check_aborted_status()
+Date: Fri, 16 Nov 2012 08:06:19 -0800
+Message-ID: <1353081979-29474-5-git-send-email-roland@kernel.org>
 References: <1353081979-29474-1-git-send-email-roland@kernel.org>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys010aog106.obsmtp.com ([74.125.245.80]:38277 "HELO
+	na3sys010aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752255Ab2KPQGb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Nov 2012 11:06:31 -0500
+Received: by mail-pa0-f70.google.com with SMTP id fb10so5129259pad.1
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Nov 2012 08:06:30 -0800 (PST)
 In-Reply-To: <1353081979-29474-1-git-send-email-roland@kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Steve Hodgson <steve@purestorage.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Roland Dreier <roland@purestorage.com>
 
-From: Steve Hodgson <steve@purestorage.com>
+From: Roland Dreier <roland@purestorage.com>
 
-Search through the list of pending commands on the session list to find
-the command the initiator is actually aborting, so that we can pass the
-correct LUN to the core TMR handling code.
-
-Signed-off-by: Steve Hodgson <steve@purestorage.com>
 Signed-off-by: Roland Dreier <roland@purestorage.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c |   19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ drivers/target/target_core_transport.c |   24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 62aa558..79fbdd7 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1264,9 +1264,26 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
- 	struct abts_recv_from_24xx *abts, struct qla_tgt_sess *sess)
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 0f29d70..f225f90 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3042,23 +3042,19 @@ EXPORT_SYMBOL(transport_send_check_condition_and_sense);
+ 
+ int transport_check_aborted_status(struct se_cmd *cmd, int send_status)
  {
- 	struct qla_hw_data *ha = vha->hw;
-+	struct se_session *se_sess = sess->se_sess;
- 	struct qla_tgt_mgmt_cmd *mcmd;
-+	struct se_cmd *se_cmd;
-+	u32 lun = 0;
- 	int rc;
+-	int ret = 0;
++	if (!(cmd->transport_state & CMD_T_ABORTED))
++		return 0;
  
-+	spin_lock(&se_sess->sess_cmd_lock);
-+	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
-+		struct qla_tgt_cmd *cmd =
-+			container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
-+		if (cmd->tag == abts->exchange_addr_to_abort) {
-+			lun = cmd->unpacked_lun;
-+			break;
-+		}
-+	}
-+	spin_unlock(&se_sess->sess_cmd_lock);
-+
-+	if (!lun)
-+		return -ENOENT;
-+
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00f,
- 	    "qla_target(%d): task abort (tag=%d)\n",
- 	    vha->vp_idx, abts->exchange_addr_to_abort);
-@@ -1283,7 +1300,7 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
- 	mcmd->sess = sess;
- 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
+-	if (cmd->transport_state & CMD_T_ABORTED) {
+-		if (!send_status ||
+-		     (cmd->se_cmd_flags & SCF_SENT_DELAYED_TAS))
+-			return 1;
++	if (!send_status || (cmd->se_cmd_flags & SCF_SENT_DELAYED_TAS))
++		return 1;
  
--	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, 0, TMR_ABORT_TASK,
-+	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, TMR_ABORT_TASK,
- 	    abts->exchange_addr_to_abort);
- 	if (rc != 0) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf052,
+-		pr_debug("Sending delayed SAM_STAT_TASK_ABORTED"
+-			" status for CDB: 0x%02x ITT: 0x%08x\n",
+-			cmd->t_task_cdb[0],
+-			cmd->se_tfo->get_task_tag(cmd));
++	pr_debug("Sending delayed SAM_STAT_TASK_ABORTED status for CDB: 0x%02x ITT: 0x%08x\n",
++		 cmd->t_task_cdb[0], cmd->se_tfo->get_task_tag(cmd));
+ 
+-		cmd->se_cmd_flags |= SCF_SENT_DELAYED_TAS;
+-		cmd->se_tfo->queue_status(cmd);
+-		ret = 1;
+-	}
+-	return ret;
++	cmd->se_cmd_flags |= SCF_SENT_DELAYED_TAS;
++	cmd->se_tfo->queue_status(cmd);
++
++	return 1;
+ }
+ EXPORT_SYMBOL(transport_check_aborted_status);
+ 
 -- 
 1.7.10.4
+
