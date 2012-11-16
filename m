@@ -1,36 +1,52 @@
-From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: UAPI disintegration for SCSI, FCoE and RDMA
-Date: Fri, 16 Nov 2012 13:23:30 +0000
-Message-ID: <18968.1353072210@warthog.procyon.org.uk>
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, dillowda-1Heg1YXhbW8@public.gmane.org
-Cc: dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: [scsi:misc 36/36] drivers/scsi/csiostor/csio_attr.c:92:41:
+ sparse: incorrect type in assignment (different base types)
+Date: Fri, 16 Nov 2012 22:58:19 +0800
+Message-ID: <20121116145819.GC5726@localhost>
+References: <50a53498.V1y2+GrYc8qRSL1F%fengguang.wu@intel.com>
+ <50A61169.3010709@chelsio.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:21076 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752264Ab2KPO6c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Nov 2012 09:58:32 -0500
+Content-Disposition: inline
+In-Reply-To: <50A61169.3010709@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@Parallels.com>
 
+Hi Naresh,
 
-Hi James, Robert, David,
+On Fri, Nov 16, 2012 at 03:41:53PM +0530, Naresh Kumar Inna wrote:
+> On 11/15/2012 11:59 PM, kbuild test robot wrote:
+> > tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
+> > head:   0779fa137a73170b6c796fdb476f1455ba67b9aa
+> > commit: 0779fa137a73170b6c796fdb476f1455ba67b9aa [36/36] [SCSI] csiostor: Chelsio FCoE offload driver
+> > 
+> > 
+> > sparse warnings:
+> > 
+> 
+> Thanks for your report.
 
-I have patches still outstanding for the UAPI header disintegration of
-linux/scsi/, linux/scsi/fs/ and linux/rdma.  I have updated them from the
-original pull requests and they can be found at tags:
+My pleasure!
 
-	disintegrate-scsi-20121116
-	disintegrate-fc-20121116
-	disintegrate-rdma-20121116
+> My run of 'make C=2' to run sparse never reported these. Is there
+> someway I can run your tool locally so I can clean up my next set of
+> patches before sending them?
+ 
+This will enable more sparse type checks:
 
-in:
+make C=1 CF=-D__CHECK_ENDIAN__
 
-	git://git.infradead.org/users/dhowells/linux-headers.git
-	http://git.infradead.org/users/dhowells/linux-headers.git
+> With respect to the warnings, will correct type-casting help me get rid
+> of most of them?
 
-Do you accept git pull requests or only patches through the mailing lists?
-Should all three go via the SCSI tree?  Note that the MAINTAINERS' record for
-RDMA points to a defunct git tree.
+As long as the type-casting is *correct* ;-) 
 
 Thanks,
-David
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Fengguang
