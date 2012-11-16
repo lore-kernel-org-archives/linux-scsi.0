@@ -1,55 +1,66 @@
 From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH 1/4] target: Fix handling of aborted commands
-Date: Fri, 16 Nov 2012 08:06:16 -0800
-Message-ID: <1353081979-29474-2-git-send-email-roland@kernel.org>
+Subject: [PATCH 2/4] qla2xxx: Look up LUN for abort requests
+Date: Fri, 16 Nov 2012 08:06:17 -0800
+Message-ID: <1353081979-29474-3-git-send-email-roland@kernel.org>
 References: <1353081979-29474-1-git-send-email-roland@kernel.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1353081979-29474-1-git-send-email-roland@kernel.org>
 Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Roland Dreier <roland@purestorage.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Steve Hodgson <steve@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Roland Dreier <roland@purestorage.com>
+From: Steve Hodgson <steve@purestorage.com>
 
-- If we stop processing an already-aborted command in
-  target_execute_cmd(), then we need to complete t_transport_stop_comp
-  to wake up the the TMR handling thread, or else it will end up
-  waiting forever.
+Search through the list of pending commands on the session list to find
+the command the initiator is actually aborting, so that we can pass the
+correct LUN to the core TMR handling code.
 
-- If we've a already sent an "aborted" status for a command in
-  transport_check_aborted_status() then we should bail out of
-  transport_send_task_abort() to avoid freeing the command twice.
-
+Signed-off-by: Steve Hodgson <steve@purestorage.com>
 Signed-off-by: Roland Dreier <roland@purestorage.com>
 ---
- drivers/target/target_core_transport.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c |   19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 9097155..dcecbfb 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1819,8 +1819,10 @@ void target_execute_cmd(struct se_cmd *cmd)
- 	/*
- 	 * If the received CDB has aleady been aborted stop processing it here.
- 	 */
--	if (transport_check_aborted_status(cmd, 1))
-+	if (transport_check_aborted_status(cmd, 1)) {
-+		complete(&cmd->t_transport_stop_comp);
- 		return;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 62aa558..79fbdd7 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1264,9 +1264,26 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+ 	struct abts_recv_from_24xx *abts, struct qla_tgt_sess *sess)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
++	struct se_session *se_sess = sess->se_sess;
+ 	struct qla_tgt_mgmt_cmd *mcmd;
++	struct se_cmd *se_cmd;
++	u32 lun = 0;
+ 	int rc;
+ 
++	spin_lock(&se_sess->sess_cmd_lock);
++	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
++		struct qla_tgt_cmd *cmd =
++			container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
++		if (cmd->tag == abts->exchange_addr_to_abort) {
++			lun = cmd->unpacked_lun;
++			break;
++		}
 +	}
++	spin_unlock(&se_sess->sess_cmd_lock);
++
++	if (!lun)
++		return -ENOENT;
++
+ 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00f,
+ 	    "qla_target(%d): task abort (tag=%d)\n",
+ 	    vha->vp_idx, abts->exchange_addr_to_abort);
+@@ -1283,7 +1300,7 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+ 	mcmd->sess = sess;
+ 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
  
- 	/*
- 	 * Determine if IOCTL context caller in requesting the stopping of this
-@@ -3067,7 +3069,7 @@ void transport_send_task_abort(struct se_cmd *cmd)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&cmd->t_state_lock, flags);
--	if (cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION) {
-+	if (cmd->se_cmd_flags & (SCF_SENT_CHECK_CONDITION | SCF_SENT_DELAYED_TAS)) {
- 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 		return;
- 	}
+-	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, 0, TMR_ABORT_TASK,
++	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, TMR_ABORT_TASK,
+ 	    abts->exchange_addr_to_abort);
+ 	if (rc != 0) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf052,
 -- 
 1.7.10.4
