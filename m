@@ -1,52 +1,50 @@
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [scsi:misc 36/36] drivers/scsi/csiostor/csio_attr.c:92:41:
- sparse: incorrect type in assignment (different base types)
-Date: Fri, 16 Nov 2012 22:58:19 +0800
-Message-ID: <20121116145819.GC5726@localhost>
-References: <50a53498.V1y2+GrYc8qRSL1F%fengguang.wu@intel.com>
- <50A61169.3010709@chelsio.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH 0/4] Make aborts work on tcm_qla2xxx, other cleanups
+Date: Fri, 16 Nov 2012 08:06:15 -0800
+Message-ID: <1353081979-29474-1-git-send-email-roland@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21076 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752264Ab2KPO6c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Nov 2012 09:58:32 -0500
-Content-Disposition: inline
-In-Reply-To: <50A61169.3010709@chelsio.com>
+Received: from na3sys010aog113.obsmtp.com ([74.125.245.94]:44952 "HELO
+	na3sys010aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751667Ab2KPQG0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Nov 2012 11:06:26 -0500
+Received: by mail-da0-f70.google.com with SMTP id i30so3104282dad.1
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Nov 2012 08:06:25 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@Parallels.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Roland Dreier <roland@purestorage.com>
 
-Hi Naresh,
+From: Roland Dreier <roland@purestorage.com>
 
-On Fri, Nov 16, 2012 at 03:41:53PM +0530, Naresh Kumar Inna wrote:
-> On 11/15/2012 11:59 PM, kbuild test robot wrote:
-> > tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
-> > head:   0779fa137a73170b6c796fdb476f1455ba67b9aa
-> > commit: 0779fa137a73170b6c796fdb476f1455ba67b9aa [36/36] [SCSI] csiostor: Chelsio FCoE offload driver
-> > 
-> > 
-> > sparse warnings:
-> > 
-> 
-> Thanks for your report.
+Hi Nic,
 
-My pleasure!
+Here's a series that makes aborts actually work on qla2xxx.  Stopping
+and releasing commands is quite convoluted so I'm not sure the first
+patch is totally correct, but without it I can easily reproduce task
+hangs or list corruption by having an initiator flood a tcm_qla2xxx
+target with aborts.  With those fixes, Steve's patch is pretty
+straightforward.
 
-> My run of 'make C=2' to run sparse never reported these. Is there
-> someway I can run your tool locally so I can clean up my next set of
-> patches before sending them?
- 
-This will enable more sparse type checks:
+The last two patches are just cleanups I noticed while debugging this.
 
-make C=1 CF=-D__CHECK_ENDIAN__
+Just to be clear: to the extent that this is copyrightable work, it is
+released exclusively under the GPL.  No permission is granted to
+redistribute this under any other terms.
 
-> With respect to the warnings, will correct type-casting help me get rid
-> of most of them?
+ - R.
 
-As long as the type-casting is *correct* ;-) 
+Roland Dreier (3):
+  target: Fix handling of aborted commands
+  target: Clean up logic in transport_put_cmd()
+  target: Clean up flow in transport_check_aborted_status()
 
-Thanks,
-Fengguang
+Steve Hodgson (1):
+  qla2xxx: Look up LUN for abort requests
+
+ drivers/scsi/qla2xxx/qla_target.c      |   19 ++++++++++++++-
+ drivers/target/target_core_transport.c |   40 ++++++++++++++------------------
+ 2 files changed, 36 insertions(+), 23 deletions(-)
+
+-- 
+1.7.10.4
