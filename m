@@ -1,104 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@risingtidesystems.com>
-Subject: Re: [PATCH 2/4] qla2xxx: Look up LUN for abort requests
-Date: Sat, 17 Nov 2012 13:52:24 -0800
-Message-ID: <1353189144.21033.89.camel@haakon2.linux-iscsi.org>
-References: <1353081979-29474-1-git-send-email-roland@kernel.org>
-	 <1353081979-29474-3-git-send-email-roland@kernel.org>
-Reply-To: nab@risingtidesystems.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v9 03/10] ata: zpodd: identify and init ZPODD devices
+Date: Sun, 18 Nov 2012 06:38:00 -0800
+Message-ID: <20121118143800.GI7306@mtj.dyndns.org>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+ <1352443922-13734-4-git-send-email-aaron.lu@intel.com>
+ <20121112185301.GB5560@mtj.dyndns.org>
+ <50A2F4AB.6060903@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:38297 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752201Ab2KQVw3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Nov 2012 16:52:29 -0500
-In-Reply-To: <1353081979-29474-3-git-send-email-roland@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <50A2F4AB.6060903@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Steve Hodgson <steve@purestorage.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-On Fri, 2012-11-16 at 08:06 -0800, Roland Dreier wrote:
-> From: Steve Hodgson <steve@purestorage.com>
+Hello, Aaron.
+
+On Wed, Nov 14, 2012 at 09:32:27AM +0800, Aaron Lu wrote:
+> > I don't think you're supposed to use dev->private_data from libata
+> > core layer.  Just add a new field.  Nobody cares about adding 8 more
+> > bytes to struct ata_device and spending 8 more bytes is way better
+> > than muddying the ownership of ->private_data.
 > 
-> Search through the list of pending commands on the session list to find
-> the command the initiator is actually aborting, so that we can pass the
-> correct LUN to the core TMR handling code.
+> OK.
+> And just out of curiosity, who's supposed to use device's private_data?
+> I didn't find any user for ata_device's private_data in libata.
+
+All the ->private_data fields are to be used by low level drivers
+(ahci, ata_piix, pata_via...).  Given the twisted nature of ATA
+devices, it's a bit surprising that no driver yet found a need for
+ata_dev->private_data.  For most SATA controllers, port to device is
+one to one so maybe ap->private_data is enough.
+
+> > And this gets completely wrong.  What if the device supports DA and
+> > low level driver makes use of ->private_data?
 > 
-> Signed-off-by: Steve Hodgson <steve@purestorage.com>
-> Signed-off-by: Roland Dreier <roland@purestorage.com>
-> ---
->  drivers/scsi/qla2xxx/qla_target.c |   19 ++++++++++++++++++-
->  1 file changed, 18 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-> index 62aa558..79fbdd7 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -1264,9 +1264,26 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
->  	struct abts_recv_from_24xx *abts, struct qla_tgt_sess *sess)
->  {
->  	struct qla_hw_data *ha = vha->hw;
-> +	struct se_session *se_sess = sess->se_sess;
->  	struct qla_tgt_mgmt_cmd *mcmd;
-> +	struct se_cmd *se_cmd;
-> +	u32 lun = 0;
->  	int rc;
->  
-> +	spin_lock(&se_sess->sess_cmd_lock);
-> +	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
-> +		struct qla_tgt_cmd *cmd =
-> +			container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
-> +		if (cmd->tag == abts->exchange_addr_to_abort) {
-> +			lun = cmd->unpacked_lun;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&se_sess->sess_cmd_lock);
-> +
-> +	if (!lun)
-> +		return -ENOENT;
-> +
+> I didn't find any user of ata_device's private_data, so I used it for
+> ZPODD. But if this is dangerous, I'll use a new field.
 
-So I'm sure this patch works fine against a private target tree that
-uses a hack to always use virtual LUN=0 for management purposes, but
-that's not what mainline target does now, does it..?
+As there currently is no other user, it won't break anything but yeah
+please add a properly typed and named field.
 
-Fixing this up now with the following patch + squashing into the
-original.  Also, please CC' the Qlogic folks in the future for these
-types of patches.
+Thanks.
 
-Thanks,
-
---nab
-
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 79fbdd7..661d33e 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1269,6 +1269,7 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
-        struct se_cmd *se_cmd;
-        u32 lun = 0;
-        int rc;
-+       bool found_lun = false;
- 
-        spin_lock(&se_sess->sess_cmd_lock);
-        list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
-@@ -1276,12 +1277,13 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
-                        container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
-                if (cmd->tag == abts->exchange_addr_to_abort) {
-                        lun = cmd->unpacked_lun;
-+                       found_lun = true;
-                        break;
-                }
-        }
-        spin_unlock(&se_sess->sess_cmd_lock);
- 
--       if (!lun)
-+       if (!found_lun)
-                return -ENOENT;
- 
-        ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00f,
-
-
+-- 
+tejun
