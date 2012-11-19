@@ -1,68 +1,47 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Error handling on FC devices
-Date: Mon, 19 Nov 2012 13:41:51 +0100
-Message-ID: <50AA290F.8000105@suse.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v9 07/10] block: add a new interface to block events
+Date: Mon, 19 Nov 2012 06:50:09 -0800
+Message-ID: <20121119145009.GA15971@htj.dyndns.org>
+References: <20121118233531.GC25790@mtj.dyndns.org>
+ <Pine.LNX.4.44L0.1211182058450.10879-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45641 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751698Ab2KSMl4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Nov 2012 07:41:56 -0500
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:58319 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994Ab2KSOuO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2012 09:50:14 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1211182058450.10879-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Smart <james.smart@emulex.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
-Hi all,
+On Sun, Nov 18, 2012 at 09:07:22PM -0500, Alan Stern wrote:
+> Hey...
 
-just when we thought we'd finally nailed the error handling on FC ...
-A customer of ours recently hit this really nasty issue:
-He had a 'drain' on the SAN, in the sense that the link was still=20
-intact, but no commands were coming back from the link.
+Hey, again. :P
 
-This caused the FC HBA / driver to not detect a link down, and so=20
-the failing command was pushed onto the error handler.
-Which of course resorted back to HBA reset, but by that time the=20
-cluster already had kicked out the machine.
-And as all machines in the cluster were connected to the same switch=20
-this happened to all machines, resulting on a nice cluster shutdown.=20
-And a really unhappy customer.
+> > So, at least for SATA, I think what autopm can do is...
+> > 
+> > * Trigger zpodd if possible.
+> > 
+> > * Trigger suspend iff polling isn't happening on the device.
+> 
+> That sums it up nicely.  Of course, the PM core is unaware of details
+> such as media polling.  What we can do is have the SATA runtime-idle
+> method return -EBUSY if the device isn't a ZPODD and if polling is
+> enabled.  Unfortunately I don't think there's any way currently to
+> trigger autopm when the user turns off polling.  Maybe something could
+> be added to the appropriate sysfs handler.
 
-Looking closer multipathing actually managed to detect and switch=20
-paths as desired, but as the initial failing command was pushed onto=20
-the error handler all applications had to wait for this command to=20
-finish before proceeding.
-
-So the following questions:
-- Why did the FC HBA not detect a 'link-down' scenario?
-   (Incidentally, this happens with QLogic _and_ Emulex :-)
-   I know this is not a typical link-down, but from my naive
-   assumption the HBA should detect that commands are not
-   making progress, and at least after RA TOV was expired
-   it should try to reset the link.
-- Can we speed up error handling for these cases?
-   Currently we're waiting for eh to complete before returning
-   the affected commands with a final state.
-   However, after we've done a LUN reset there shouldn't be
-   any command state left and we should be able to terminate
-   outstanding commands directly, without having to wait for
-   eh to finally complete. James?
+Given that genhd event polling and PM are likely to interact with each
+other, I think it would be a good idea to implement a proper way for
+the two to communicate.  Dunno what it should be tho.  The tricky part
+would be mapping the block device to the underlying hardware one.
 
 Thanks.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
