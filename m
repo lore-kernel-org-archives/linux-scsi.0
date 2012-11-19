@@ -1,130 +1,72 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Mon, 19 Nov 2012 11:09:40 +0800
-Message-ID: <50A9A2F4.3020006@intel.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com> <1352443922-13734-7-git-send-email-aaron.lu@intel.com> <20121112191303.GE5560@mtj.dyndns.org> <50A2FF6F.3080603@intel.com> <20121118150004.GJ7306@mtj.dyndns.org>
+Subject: Re: [PATCH v9 07/10] block: add a new interface to block events
+Date: Mon, 19 Nov 2012 11:21:53 +0800
+Message-ID: <50A9A5D1.5060900@intel.com>
+References: <Pine.LNX.4.44L0.1211182058450.10879-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121118150004.GJ7306@mtj.dyndns.org>
+In-Reply-To: <Pine.LNX.4.44L0.1211182058450.10879-100000@netrider.rowland.org>
 Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/18/2012 11:00 PM, Tejun Heo wrote:
-> Hello, Aaron.
-Hi,
-
+On 11/19/2012 10:07 AM, Alan Stern wrote:
+> On Sun, 18 Nov 2012, Tejun Heo wrote:
 > 
-> On Wed, Nov 14, 2012 at 10:18:23AM +0800, Aaron Lu wrote:
->> On 11/13/2012 03:13 AM, Tejun Heo wrote:
->>> Hello,
->>>
->>> On Fri, Nov 09, 2012 at 02:51:58PM +0800, Aaron Lu wrote:
->>>> +#define POWEROFF_DELAY  (30 * 1000)     /* 30 seconds for power off delay */
->>>> +
->>>>  struct zpodd {
->>>>  	bool slot:1;
->>>>  	bool drawer:1;
->>>>  	bool from_notify:1;	/* resumed as a result of acpi notification */
->>>> +	bool status_ready:1;	/* ready status derived from media event poll,
->>>> +				   it is not accurate, but serves as a hint */
->>>> +	bool zp_ready:1;	/* zero power ready state */
->>>> +
->>>> +	unsigned long last_ready; /* last zero power ready timestamp */
->>>>  
->>>>  	struct ata_device *dev;
->>>>  };
->>>
->>> How are accesses to the bit fields synchronized?
+>> Hey, Alan.
+> 
+> Hey...
+> 
+>> It's controlled by /sys/class/scsi_host/hostX/link_power_management.
+>> Once enabled, the power saving is completedly handled by hardware.  If
+>> link stays idle longer than certain duration, the hardware initiates
+>> low power state and leaves it when something needs to happen.
 >>
->> They are synchronized by PM core.
->> PM core ensures that no two suspend or resume callback run concurrently.
->> And when ODD is executing a command, it is in active state, no PM
->> callback will run.
-> 
-> Care to add short comment for that?  Flag and bitfield updates aren't
-> atomic to each other, so I find it usually helpful to clearly state
-> the synchronization rules for them.  More so if locking is inherited
-> from upprer layer and not immediately obvious.
-
-OK.
-
-> 
->>> Hmmm... so, the "full" check only happens when autopm kicks in, right?
->>> Is it really worth avoiding an extra TUR on autopm events?  That's not
->>> really a hot path.  It seems a bit over-engineered to me.
+>>>> So, this whole autopm thing doesn't sound like a good idea to me.
+>>>
+>>> No doubt it's better suited to some devices than to others.
 >>
->> A little more information about this:
->> When there is disc inside and no program mounted the drive, the ODD will
->> be runtime suspended/resumed every 2 seconds along with the event poll.
+>> Yeah, SATA seems to need a different approach than USB.
 > 
-> Is that a desirable behavior?  I haven't been following autopm and am
-> a bit fuzzy about how autopm works and what it does.
+> Based on your description, I agree.
 > 
-> If there isn't any user of the device autopm kicks in.  If zpodd is
-> enabled and there's no media, the device goes off power.  If the user
-> initiates an event which may change media status, the driver is
-> notified via acpi and autopm backs out restoring power to the device.
-> Am I understanding it correctly?
-
-Yes.
-
+>>> That may be true for SATA.  For USB optical drives, it does make sense
+>>> to power-down the host controller when the drive isn't in use.  USB
+>>> suspend/resume takes on the order of 50-100 ms or so.
+>>
+>> I see.  For SATA too, the controller / link bring up doesn't take too
+>> long.  The crappy part is what the attached, especially ATAPI, devices
+>> would do after such events as those events will be visible to them
+>> basically as random link resets.
+>>
+>> So, at least for SATA, I think what autopm can do is...
+>>
+>> * Trigger zpodd if possible.
+>>
+>> * Trigger suspend iff polling isn't happening on the device.
 > 
-> What I'm confused about is what autopm does for devices w/o zpodd.
-> What happens then?  Is it gonna leave power on for the device and,
-> say, go on to suspend the controller?  But, how would that work for,
-> say, future devices with async notification for media events?
+> That sums it up nicely.  Of course, the PM core is unaware of details
+> such as media polling.  What we can do is have the SATA runtime-idle
+> method return -EBUSY if the device isn't a ZPODD and if polling is
+> enabled.  Unfortunately I don't think there's any way currently to
+> trigger autopm when the user turns off polling.  Maybe something could
+> be added to the appropriate sysfs handler.
 
-Maybe we shouldn't allow autopm for such devices?
+OK, thanks for your(both of you) suggestions.
 
-> 
-> Also, if autopm is enabled, an optical device would go in and out of
-> suspend every two seconds?
-> 
->> I'm not sure if the above situation can happen often. Normal desktop
->> environment should automatically mount the ODD once they got uevent, and
->> for console users, they will probably manually mount the drive after
->> they have inserted a disc. The way I did it this way is to deal with the
->> worst possible case. But if this is deemed as not necessary, I think I
->> can remove the snoop hint thing and use TUR directly.
-> 
-> The problem with issuing TUR regularly is that some ODDs lock up after
-> getting hit by frequent TURs.  That's the reason why sr event check
-> routine is being careful with TUR and only issue
-> GET_EVENT_STATUS_NOTIFICATION.  Windows does about the same thing and
-> some vendors somehow screwed up TUR.
-> 
-> That said, I can't say the snooping is pretty.  It's a rather nasty
-> thing to do.  So, libata now wants information from the event polling
-> in block layer, but reaching for block_device from ata_devices is
-> nasty too.  Hmmm... but aren't you already doing that to block polling
-> on a powered down device?
+But probably for ZPODD devices first, as it has a clear use case and
+should already have productions. For async notification capable ODDs,
+I'll leave it for someone else or maybe at a later time if I can get
+such a device to test on.
 
-I was feeling brain damaged by this for some time :-)
-
-Basically, only ATA layer is aware of the power off thing, and sr knows
-nothing about this(or it is not supposed to know this, at least, this is
-what SCSI people think) and once powered off, I do not want the poll to
-disturb the device, so I need to block the poll. I can't come up with
-another way to achieve this except this nasty way.
-
-James suggests me to keep the poll, but emulate the command. The problem
-with this is, the autopm for resume will kick in on each poll, so I'll
-need to decide if power up the ODD for this time's resume is needed in
-port's runtime resume callback. This made things complex and it also put
-too much logic in the resume callback, which is not desired. And even if
-I keep the ODD in powered off state by emulating this poll command, its
-ancestor devices will still be resumed, and I may need to do some trick
-in their resume callback to avoid needless power/state transitions. This
-doesn't feel like an elegant way to solve this either.
-
-So yes, I'm still using this _nasty_ way to make the ODD stay in powered
-off state as long as possible. But if there is other elegant ways to
-solve this, I would appreciate it and happily using it. Personally, I
-hope we can make sr aware of ZPODD, that would make the pain gone.
+To conclude, the ata port's runtime idle callback will return 0 when:
+1 It attached a ZPODD capable ODD;
+2 Or it attached a hard disk.
+For all other cases, it will return -EBUSY.
+Does this look correct?
 
 Thanks,
 Aaron
