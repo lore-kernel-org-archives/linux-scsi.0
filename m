@@ -1,43 +1,139 @@
-From: "sales@batteryebuy.com" <sales@batteryebuy.com>
-Subject: RE
-Date: Mon, 19 Nov 2012 11:34:25 +0800
-Message-ID: <201211191134253122579@batteryebuy.com>
-Reply-To: sales@batteryebuy.com
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx100.chinaemail.cn ([74.86.103.194]:45136 "EHLO
-	mx100.chinaemail.cn" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752191Ab2KSDs5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Nov 2012 22:48:57 -0500
-Received: from mx136v.chinaemail.cn (unknown [121.14.57.134])
-	by mx100.chinaemail.cn (Postfix) with ESMTP id 404DD683347
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Nov 2012 11:34:45 +0800 (CST)
-Received: from YM- (unknown [113.89.210.78])
-	(Authenticated sender: sales@batteryebuy.com)
-	by mx136v.chinaemail.cn (Bossmail) with ESMTP id 4E6EC34B0B4
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Nov 2012 11:34:35 +0800 (CST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Subject: [PATCH 2/2] [SCSI] libiscsi: replace kfifo_init with kfifo_alloc
+Date: Mon, 19 Nov 2012 16:58:59 +0800
+Message-ID: <1353315539-10424-2-git-send-email-yuanhan.liu@linux.intel.com>
+References: <1353315539-10424-1-git-send-email-yuanhan.liu@linux.intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1353315539-10424-1-git-send-email-yuanhan.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Yuanhan Liu <yuanhan.liu@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, "James E.J. Bottomley" <JBottomley@parallels.com>, iscsi list <open-iscsi@googlegroups.com>, Stefani Seibold <stefani@seibold.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-SXRlbTogZW5lbDE0IGVuZWwxNSBiYXR0ZXJ5IGZ1bGx5IGRlY29kZWQgICAgICAgDQoNCkRlc2Ny
-aXB0aW9uOg0KZW5lbDE0IDcuNFYgMTIwME1BSA0KZW5lbDE1IDcuNFYgMTgwME1BSA0KUGFja2Fn
-ZTogY29sb3IgYm94DQpNT1E6IDEsMDBwY3MNCkxvYWRpbmcgcG9ydDogQ2hpbmEgU2hlbnpoZW4N
-ClBheW1lbnQgdGVybXM6IFQvVCwgTC9DLCBEL1AsIGV0Yy4NCldhcnJhbnRseSB0aW1lOiAzNjAg
-ZGF5cw0KRk9CIFNoZW56aGVuOiANCmVuZWwxNCBVU0QgMTAvcGMNCmVuZWwxNSBVU0QgMTEvcGMN
-Cg0Kb3RoZXJzOg0KDQpOUC1GOTYwL05QLUY5NzAJNjAwMG1BaAkxMS45dXNkIA0KTlAtRlc1MAk5
-MDBtQWgJNC40dXNkIA0KTlAtRlYxMDAJMjQwMG1BaAk3LjF1c2QgDQpOUC1CRzEvTlAtRkcxICAg
-ICAgCTk2MG1BaAkyLjV1c2QgDQpOUC1CTjEJNjAwbUFoCTIuNXVzZCANCk5CLTEwTAk5MjBtQWgJ
-My4ydXNkIA0KTFAtRTYJMTYwMG1BaAk2LjJ1c2QgDQpMUC1FOAkxMTAwbUFoCTIuOXVzZCANCkxQ
-LUUxMAk5MDBtQWgJMy4wdXNkIA0KQlAtOTcwRwk3MjAwbUFoCTEyLjR1c2QgDQpOUC1XMTI2CTEx
-MDBtQWgJMy4zdXNkIA0KRU4tRUwxOQk3MDBtQWgJMS42dXNkIA0KRU4tRUwyMAkxMDIwbUFoCTMu
-N3VzZCANCkJOLVZGODIzCTIxMDBtQWgJOS41dXNkIA0KVlctVkJTMjBFCTQyMDBtQWgJOC43dXNk
-IA0KRE1XLUJDRjEwZQk5MDBtQWgJNi4wdXNkIA0KRE1XLUJDRzEwZQk4NTBtQWgJNi4wdXNkIA0K
-RE1XLUJDSzcJMTIwME1BSAkxLjl1c2QgDQpETVctQkxFOQkxNDAwbWFoCTMuN3VzZCANClZXLVZC
-TjEzMAkxMjUwbWFoCTguM3VzZCANClZXLVZCTjI2MAkyODAwbWFoCTkuOHVzZCANCkJQLTcwQQk3
-NTBtQWgJMS42dXNkIA0KTGktODBCCTc1MG1BaAkxLjZ1c2QgDQpCTE4tMQkxMjIwbWFoCTMuNXVz
-ZCANClBTLUJMTTUJMTYwMG1BaAk0LjF1c2QgDQpQUy1CTFM1CTEwNTBtQWgJMy43dXNkIA0KDQpt
-c246d3VqaWU2ODEzMDBAaG90bWFpbC5jb20NCnNreXBlOnd1amllNjgxMzAw
+kfifo_init will use a pre-allocated buffer as fifo buffer; the buffer
+size is determinted at caller side. While, kfifo will maintain a real
+kfifo buffer size(power of 2 aligned). So, the two size may not be
+equal.
+
+So, to be safe. We should use kfifo_alloc instead. git grep 'kfifo_init\>'
+shows that this is one user of kfifo_init(2 in total).
+
+Replace it with kfifo_alloc, as I propose to remove kfifo_init API
+later.
+
+Besides that, I refactored the code a bit with the style used in
+libsrp.c: allocated items once by kcalloc.
+
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James E.J. Bottomley <JBottomley@parallels.com>
+Cc: iscsi list <open-iscsi@googlegroups.com>
+Cc: Stefani Seibold <stefani@seibold.net>
+Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+---
+ drivers/scsi/libiscsi.c |   59 ++++++++++++++++++++++++-----------------------
+ include/scsi/libiscsi.h |    4 +-
+ 2 files changed, 32 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 82c3fd4..8e60f1f 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2485,51 +2485,52 @@ EXPORT_SYMBOL_GPL(iscsi_eh_recover_target);
+ int
+ iscsi_pool_init(struct iscsi_pool *q, int max, void ***items, int item_size)
+ {
+-	int i, num_arrays = 1;
+-
+-	memset(q, 0, sizeof(*q));
++	int i;
++	int ret;
++	void *item;
+ 
+-	q->max = max;
++	ret = -ENOMEM;
++	q->pool = kcalloc(max, item_size, GFP_KERNEL);
++	if (!q->pool)
++		goto err_out;
+ 
+-	/* If the user passed an items pointer, he wants a copy of
+-	 * the array. */
+-	if (items)
+-		num_arrays++;
+-	q->pool = kzalloc(num_arrays * max * sizeof(void*), GFP_KERNEL);
+-	if (q->pool == NULL)
+-		return -ENOMEM;
++	ret = kfifo_alloc(&q->queue, max * sizeof(void *), GFP_KERNEL);
++	if (ret < 0)
++		goto free_pool;
+ 
+-	kfifo_init(&q->queue, (void*)q->pool, max * sizeof(void*));
+-
+-	for (i = 0; i < max; i++) {
+-		q->pool[i] = kzalloc(item_size, GFP_KERNEL);
+-		if (q->pool[i] == NULL) {
+-			q->max = i;
+-			goto enomem;
++	q->items_ptr = NULL;
++	/* If the user passed an items pointer, he wants a copy of the array */
++	if (items) {
++		q->items_ptr = kcalloc(max, sizeof(void *), GFP_KERNEL);
++		if (!q->items_ptr) {
++			ret = -ENOMEM;
++			goto free_fifo;
+ 		}
+-		kfifo_in(&q->queue, (void*)&q->pool[i], sizeof(void*));
++		*items = q->items_ptr;
+ 	}
+ 
+-	if (items) {
+-		*items = q->pool + max;
+-		memcpy(*items, q->pool, max * sizeof(void *));
++	for (i = 0, item = q->pool; i < max; i++, item += item_size) {
++		kfifo_in(&q->queue, &item, sizeof(void *));
++		if (q->items_ptr)
++			q->items_ptr[i] = item;
+ 	}
+ 
+ 	return 0;
+ 
+-enomem:
+-	iscsi_pool_free(q);
+-	return -ENOMEM;
++free_fifo:
++	kfifo_free(&q->queue);
++free_pool:
++	kfree(q->pool);
++err_out:
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_pool_init);
+ 
+ void iscsi_pool_free(struct iscsi_pool *q)
+ {
+-	int i;
+-
+-	for (i = 0; i < q->max; i++)
+-		kfree(q->pool[i]);
+ 	kfree(q->pool);
++	kfree(q->items_ptr);
++	kfifo_free(&q->queue);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_pool_free);
+ 
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 6e33386..c4262c6 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -231,8 +231,8 @@ struct iscsi_conn {
+ 
+ struct iscsi_pool {
+ 	struct kfifo		queue;		/* FIFO Queue */
+-	void			**pool;		/* Pool of elements */
+-	int			max;		/* Max number of elements */
++	void			*pool;		/* Pool of elements */
++	void			**items_ptr;	/* element pointers */
+ };
+ 
+ /* Session's states */
+-- 
+1.7.7.6
