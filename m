@@ -1,60 +1,41 @@
-From: Help Desk <info@helpdesk.org>
-Subject: Scheduled Maintenance & Upgrade
-Date: Tue, 20 Nov 2012 12:47:20 -0600
-Message-ID: <20121120124720.76517hss92ohy24o__11388.2489422851$1353421959$gmane$org@mail.supernet.ao>
-Reply-To: tech.team@tech-center.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15171] smartd crashing recent 2.6.32 kernel
+Date: Tue, 20 Nov 2012 16:45:43 +0000 (UTC)
+Message-ID: <20121120164543.BD05511FB83@bugzilla.kernel.org>
+References: <bug-15171-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.supernet.ao ([66.110.113.4]:34199 "EHLO mail.supernet.ao"
+Received: from mail.kernel.org ([198.145.19.201]:59147 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752769Ab2KTOcP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2012 09:32:15 -0500
-Content-Disposition: inline
+	id S1751789Ab2KTQpq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Nov 2012 11:45:46 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 41E3B204D8
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Nov 2012 16:45:45 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 53595204CC
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Nov 2012 16:45:44 +0000 (UTC)
+In-Reply-To: <bug-15171-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=15171
 
 
-Help Desk
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-Attention Account User,
-
-Scheduled Maintenance & Upgrade
-
-Your account is in the process of being upgraded to a newest  
-Windows-based servers and an enhanced online email interface inline  
-with internet infrastructure Maintenance. The new servers will provide  
-better anti-spam and anti-virus functions, along with IMAP Support for  
-mobile devices to enhance your usage.
-
-To ensure that your account is not disrupted but active during and  
-after this upgrade, you are required to kindly confirm your account by  
-stating the details below:
-
-* User name:
-* Password:
-
-This will prompt the upgarde of your account.
-
-Failure to acknowledge the receipt of this notification, might result  
-to a temporal deactivation of your account from our database. Your  
-account shall remain active upon your confirmation of your login  
-details.
-
-We do apologize for any inconvenience caused.
-
-Help Desk Team.
-
-(c) Copyright 2012, All Rights Reserved.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|REOPENED                    |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |OBSOLETE
 
 
 
 
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
