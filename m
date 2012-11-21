@@ -1,61 +1,66 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH V4 1/4] [SCSI] drivers/scsi/ufs: Seggregate PCI Specific
- Code
-Date: Wed, 21 Nov 2012 10:56:26 +0000
-Message-ID: <1353495386.2432.13.camel@dabdike.int.hansenpartnership.com>
-References: <1350474822-7315-1-git-send-email-vinholikatti@gmail.com>
-	 <1350474822-7315-2-git-send-email-vinholikatti@gmail.com>
-	 <507FA52E.9050400@ti.com>
-	 <CAKVbJB_FpmbtcLr5G5sSphNOPnodZUd0sN8ha0C_RtCDtWUG=Q@mail.gmail.com>
-	 <1352841998.8317.1.camel@dabdike>
-	 <CAKVbJB8sZ4Y5QfF63wh19N61+0honqoXawnkPGY6qUkt2MCrsw@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 6/7] Fix race between starved list processing and device
+ removal
+Date: Wed, 21 Nov 2012 12:06:35 +0100
+Message-ID: <50ACB5BB.6060409@acm.org>
+References: <508A7B63.60608@acm.org> <508A7C6D.8070002@acm.org> <267107B7B5D6404FB174AB273F79D8BD1A4C39@SHSMSX101.ccr.corp.intel.com> <508E936F.7050004@acm.org> <267107B7B5D6404FB174AB273F79D8BD1A5BC4@SHSMSX101.ccr.corp.intel.com> <5093A4E5.20207@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKVbJB8sZ4Y5QfF63wh19N61+0honqoXawnkPGY6qUkt2MCrsw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vinayak holikatti <vinholikatti@gmail.com>
-Cc: Venkatraman S <svenkatr@ti.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com, Santosh Yaraganavi <santoshsy@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:32914 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754067Ab2KULGj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Nov 2012 06:06:39 -0500
+In-Reply-To: <5093A4E5.20207@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Zhuang, Jin Can" <jin.can.zhuang@intel.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-On Wed, 2012-11-21 at 16:02 +0530, vinayak holikatti wrote:
-> On Wed, Nov 14, 2012 at 2:56 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > On Thu, 2012-10-18 at 17:37 +0530, vinayak holikatti wrote:
-> >> I am Vacation will look into it when i am back to work.
-> >> > This doesn't apply on 3.7-rc1. Am I missing any patches in between ?
-> >
-> > OK, so it doesn't apply for me either:
-> >
-> > patching file drivers/scsi/ufs/ufshcd.c
-> > Hunk #11 FAILED at 902.
-> > Hunk #15 succeeded at 1157 with fuzz 1 (offset 2 lines).
-> > Hunk #16 succeeded at 1271 (offset 2 lines).
-> > Hunk #17 succeeded at 1300 (offset 2 lines).
-> > Hunk #18 succeeded at 1364 (offset 2 lines).
-> > Hunk #19 succeeded at 1499 (offset 2 lines).
-> > Hunk #20 succeeded at 1542 (offset 2 lines).
-> > Hunk #21 succeeded at 1678 (offset 2 lines).
-> > Hunk #22 succeeded at 1706 (offset 2 lines).
-> > Hunk #23 succeeded at 1727 (offset 2 lines).
-> > Hunk #24 succeeded at 1775 (offset 2 lines).
-> > Hunk #25 succeeded at 1819 (offset 2 lines).
-> > Hunk #26 succeeded at 1872 (offset 2 lines).
-> > Hunk #27 succeeded at 1898 (offset 2 lines).
-> > Hunk #28 FAILED at 2011.
-> > 2 out of 28 hunks FAILED -- saving rejects to file
-> > drivers/scsi/ufs/ufshcd.c.rej
-> >
-> I have generated patches based on linux/kernel/git/jejb/scsi.git this
-> tree, Also i have
-> confirmed that patches get applied successfully on this git tree.
-> 
-> James,
-> Which tree are you refering to. Let me know, which tree i should use to
-> generate the patches.
+On 11/02/12 11:48, Bart Van Assche wrote:
+> [PATCH] Fix race between starved list processing and device removal
+> [ ... ]
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index ce5224c..2f0f31e 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -348,7 +348,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>   	starget->reap_ref++;
+>   	list_del(&sdev->siblings);
+>   	list_del(&sdev->same_target_siblings);
+> -	list_del(&sdev->starved_entry);
+>   	spin_unlock_irqrestore(sdev->host->host_lock, flags);
+>
+>   	cancel_work_sync(&sdev->event_work);
+> @@ -956,6 +955,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+>   void __scsi_remove_device(struct scsi_device *sdev)
+>   {
+>   	struct device *dev = &sdev->sdev_gendev;
+> +	struct Scsi_Host *shost = sdev->host;
+> +	unsigned long flags;
+>
+>   	if (sdev->is_visible) {
+>   		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+> @@ -973,7 +974,13 @@ void __scsi_remove_device(struct scsi_device *sdev)
+>   	 * scsi_run_queue() invocations have finished before tearing down the
+>   	 * device.
+>   	 */
+> +
+>   	scsi_device_set_state(sdev, SDEV_DEL);
+> +
+> +	spin_lock_irqsave(shost->host_lock, flags);
+> +	list_del(&sdev->starved_entry);
+> +	spin_unlock_irqrestore(shost->host_lock, flags);
+> +
+>   	blk_cleanup_queue(sdev->request_queue);
+>   	cancel_work_sync(&sdev->requeue_work);
+>
 
-All patches for the merge window should be against the misc branch of
-the scsi.git tree.
+Please ignore this patch. Even with this patch applied there is still a 
+race condition present, namely that the __blk_run_queue() call in 
+scsi_run_queue() can get invoked after __scsi_remove_device() invoked 
+put_device().
 
-James
+Bart.
+
