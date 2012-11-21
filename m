@@ -1,66 +1,74 @@
-From: vinayak holikatti <vinholikatti@gmail.com>
-Subject: Re: [PATCH V4 1/4] [SCSI] drivers/scsi/ufs: Seggregate PCI Specific Code
-Date: Wed, 21 Nov 2012 17:34:28 +0530
-Message-ID: <CAKVbJB9i-PuEDdBr0=tcRQBP3VrB_nNh_POBb6p_aNQCVrjk5A@mail.gmail.com>
-References: <1350474822-7315-1-git-send-email-vinholikatti@gmail.com>
-	<1350474822-7315-2-git-send-email-vinholikatti@gmail.com>
-	<507FA52E.9050400@ti.com>
-	<CAKVbJB_FpmbtcLr5G5sSphNOPnodZUd0sN8ha0C_RtCDtWUG=Q@mail.gmail.com>
-	<1352841998.8317.1.camel@dabdike>
-	<CAKVbJB8sZ4Y5QfF63wh19N61+0honqoXawnkPGY6qUkt2MCrsw@mail.gmail.com>
-	<1353495386.2432.13.camel@dabdike.int.hansenpartnership.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 6/7] Fix race between starved list processing and device
+ removal
+Date: Wed, 21 Nov 2012 13:10:36 +0100
+Message-ID: <50ACC4BC.2050406@acm.org>
+References: <508A7B63.60608@acm.org> <508A7C6D.8070002@acm.org> <267107B7B5D6404FB174AB273F79D8BD1A4C39@SHSMSX101.ccr.corp.intel.com> <508E936F.7050004@acm.org> <267107B7B5D6404FB174AB273F79D8BD1A5BC4@SHSMSX101.ccr.corp.intel.com> <026701cdb8c3$d2e3cb50$78ab61f0$@min@lge.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-Reply-To: <1353495386.2432.13.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-samsung-soc-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Venkatraman S <svenkatr@ti.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, girish.shivananjappa@linaro.org, saugata.das@linaro.org, vishak.g@samsung.com, venkat@linaro.org, k.rajesh@samsung.com, dsaxena@linaro.org, ilho215.lee@samsung.com, nala.la@samsung.com, sreekumar.c@samsung.com, Santosh Yaraganavi <santoshsy@gmail.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:35885 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754688Ab2KUMKm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Nov 2012 07:10:42 -0500
+In-Reply-To: <026701cdb8c3$d2e3cb50$78ab61f0$@min@lge.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chanho Min <chanho.min@lge.com>
+Cc: "'Zhuang, Jin Can'" <jin.can.zhuang@intel.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'James Bottomley' <jbottomley@parallels.com>, 'Mike Christie' <michaelc@cs.wisc.edu>, 'Jens Axboe' <axboe@kernel.dk>, 'Tejun Heo' <tj@kernel.org>
 
-On Wed, Nov 21, 2012 at 4:26 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Wed, 2012-11-21 at 16:02 +0530, vinayak holikatti wrote:
->> On Wed, Nov 14, 2012 at 2:56 AM, James Bottomley
->> <James.Bottomley@hansenpartnership.com> wrote:
->> > On Thu, 2012-10-18 at 17:37 +0530, vinayak holikatti wrote:
->> >> I am Vacation will look into it when i am back to work.
->> >> > This doesn't apply on 3.7-rc1. Am I missing any patches in between ?
->> >
->> > OK, so it doesn't apply for me either:
->> >
->> > patching file drivers/scsi/ufs/ufshcd.c
->> > Hunk #11 FAILED at 902.
->> > Hunk #15 succeeded at 1157 with fuzz 1 (offset 2 lines).
->> > Hunk #16 succeeded at 1271 (offset 2 lines).
->> > Hunk #17 succeeded at 1300 (offset 2 lines).
->> > Hunk #18 succeeded at 1364 (offset 2 lines).
->> > Hunk #19 succeeded at 1499 (offset 2 lines).
->> > Hunk #20 succeeded at 1542 (offset 2 lines).
->> > Hunk #21 succeeded at 1678 (offset 2 lines).
->> > Hunk #22 succeeded at 1706 (offset 2 lines).
->> > Hunk #23 succeeded at 1727 (offset 2 lines).
->> > Hunk #24 succeeded at 1775 (offset 2 lines).
->> > Hunk #25 succeeded at 1819 (offset 2 lines).
->> > Hunk #26 succeeded at 1872 (offset 2 lines).
->> > Hunk #27 succeeded at 1898 (offset 2 lines).
->> > Hunk #28 FAILED at 2011.
->> > 2 out of 28 hunks FAILED -- saving rejects to file
->> > drivers/scsi/ufs/ufshcd.c.rej
->> >
->> I have generated patches based on linux/kernel/git/jejb/scsi.git this
->> tree, Also i have
->> confirmed that patches get applied successfully on this git tree.
->>
->> James,
->> Which tree are you refering to. Let me know, which tree i should use to
->> generate the patches.
->
-> All patches for the merge window should be against the misc branch of
-> the scsi.git tree.
->
-> James
->
-Ok, I will create the patches against misc branch and resend these patches.
-Thanks
-Vinayak Holikatti
+On 11/02/12 07:32, Chanho Min wrote:
+>> Yes. Here's the warning.
+>> For the trace below, I used scsi_device_get/scsi_device_put() in scsi_run_queue(). (A little different
+>>from your patch). But I think it's the same.
+> 
+> I think it's correct. cancel_work_sync can sleep. It is caught under CONFIG_DEBUG_ATOMIC_SLEEP.
+> What if we only enable irq at cancel_work_sync as the patch bellows?
+> 
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index bb7c482..6e17db9 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -350,7 +350,9 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>          list_del(&sdev->starved_entry);
+>          spin_unlock_irqrestore(sdev->host->host_lock, flags);
+>   
+> +       local_irq_enable();
+>          cancel_work_sync(&sdev->event_work);
+> +       local_irq_restore(flags);
+>   
+>          list_for_each_safe(this, tmp, &sdev->event_list) {
+>                  struct scsi_event *evt;
+> 
+
+As far as I can see this should work but unfortunately this change
+creates a nontrivial dependency between scsi_run_queue() and
+scsi_device_dev_release_usercontext(). Personally I would prefer
+something like this follow-up patch:
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 71bddec..20ea2e9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -453,15 +453,12 @@ static void scsi_run_queue(struct request_queue *q)
+                }
+ 
+                get_device(&sdev->sdev_gendev);
+-               spin_unlock(shost->host_lock);
+-
+-               spin_lock(sdev->request_queue->queue_lock);
+-               __blk_run_queue(sdev->request_queue);
+-               spin_unlock(sdev->request_queue->queue_lock);
++               spin_unlock_irqrestore(shost->host_lock, flags);
+ 
++               blk_run_queue(sdev->request_queue);
+                put_device(&sdev->sdev_gendev);
+ 
+-               spin_lock(shost->host_lock);
++               spin_lock_irqsave(shost->host_lock, flags);
+        }
+        /* put any unprocessed entries back */
+        list_splice(&starved_list, &shost->starved_list);
+
+Bart.
