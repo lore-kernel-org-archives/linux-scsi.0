@@ -1,31 +1,55 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: =?UTF-8?q?=5BPATCH=20192/493=5D=20scsi=3A=20remove=20use=20of=20=5F=5Fdevinit?=
-Date: Wed, 21 Nov 2012 13:13:50 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.1211211311530.842@axis700.grange>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
- <1353349642-3677-192-git-send-email-wfp5p@virginia.edu>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: SCSI LLDs, the SCSI error handler and host resource lifetime
+Date: Wed, 21 Nov 2012 13:26:35 +0100
+Message-ID: <50ACC87B.5010401@acm.org>
+References: <50AB9286.8040403@acm.org> <50AC808D.1060700@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:58481 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272Ab2KUMOI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Nov 2012 07:14:08 -0500
-In-Reply-To: <1353349642-3677-192-git-send-email-wfp5p@virginia.edu>
+Received: from georges.telenet-ops.be ([195.130.137.68]:43232 "EHLO
+	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892Ab2KUM0i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Nov 2012 07:26:38 -0500
+In-Reply-To: <50AC808D.1060700@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bill Pemberton <wfp5p@virginia.edu>
-Cc: gregkh@linuxfoundation.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Wilcox <matthew@wil.cx>, Russell King <linux@arm.linux.org.uk>, Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, Neela Syam Kolli <megaraidlinux@lsi.com>, GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, Geoff Levand <geoff@infradead.org>, Michael Reed <mdr@sgi.com>, Willem Riede <osst@riede.org>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, Kurt Garloff <garloff@suse.de>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dc395x@twibble.org, iss_storagedev@hp.com, linuxppc-dev@lists.ozlabs.org, cbe-oss-dev@lists.ozlabs.org, osst-users@lists.sourceforge.net
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 19 Nov 2012, Bill Pemberton wrote:
+On 11/21/12 08:19, Hannes Reinecke wrote:
+> On 11/20/2012 03:24 PM, Bart Van Assche wrote:
+>> If I interpret the SCSI error handler source code correctly then
+>> scsi_unjam_host() may proceed concurrently with scsi_remove_host().
+>> This means that the LLD eh_abort_handler callback may get invoked after
+>> scsi_remove_host() finished. At least the SRP initiator (ib_srp) cleans
+>> up resources necessary for aborting commands as soon as
+>> scsi_remove_host() returns. That looks like a race condition to me. As
+>> far as I can see it is only safe to clean up such resources after the
+>> EH thread has been stopped. Any opinions about adding an additional
+>> callback for this purpose in struct scsi_host_template ?
+>>
+>> Note: it doesn't look like a good idea to me to let scsi_remove_host()
+>> wait until error recovery has finished since scsi_remove_host() may get
+>> invoked from the context of a workqueue. If any work gets queued on the
+>> same workqueue related to SCSI error handling letting scsi_remove_host()
+>> wait for the error handler to finish might result in a deadlock.
+>>
+>> The patch below is a request for comments patch that does not only add a
+>> callback to struct scsi_host_template but also fixes a (hard to trigger)
+>> race condition in ib_srp: avoid that ib_destroy_cm_id() frees the IB RC
+>> connection while srp_send_tsk_mgmt() is using it.
+>>
+> Hmm.
+> This would still mean that the eh thread will run until finished.
+> Which can take _A LOT_ of time (we're speaking hours here).
+> I would rather have an additional return code in the various
+> scsi_try_XXX functions to terminate the loop quickly.
 
->  drivers/scsi/tmscsim.c                    | 16 +++---
+How about combining both approaches ? I think the additional callback is 
+needed anyway to prevent the race condition explained above. Making the 
+SCSI EH stop quicker after scsi_remove_host() has been invoked looks 
+like a good idea to me but I'm not sure that change alone is sufficient.
 
-Acked-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Bart.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
