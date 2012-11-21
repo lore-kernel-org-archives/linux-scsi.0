@@ -1,66 +1,31 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 6/7] Fix race between starved list processing and device
- removal
-Date: Wed, 21 Nov 2012 12:06:35 +0100
-Message-ID: <50ACB5BB.6060409@acm.org>
-References: <508A7B63.60608@acm.org> <508A7C6D.8070002@acm.org> <267107B7B5D6404FB174AB273F79D8BD1A4C39@SHSMSX101.ccr.corp.intel.com> <508E936F.7050004@acm.org> <267107B7B5D6404FB174AB273F79D8BD1A5BC4@SHSMSX101.ccr.corp.intel.com> <5093A4E5.20207@acm.org>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH 097/493] scsi: remove use of __devexit_p
+Date: Wed, 21 Nov 2012 11:45:21 +0000
+Message-ID: <20121121114521.GC3290@n2100.arm.linux.org.uk>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu> <1353349642-3677-97-git-send-email-wfp5p@virginia.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:32914 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754067Ab2KULGj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Nov 2012 06:06:39 -0500
-In-Reply-To: <5093A4E5.20207@acm.org>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:47706 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892Ab2KULuS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Nov 2012 06:50:18 -0500
+Content-Disposition: inline
+In-Reply-To: <1353349642-3677-97-git-send-email-wfp5p@virginia.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Zhuang, Jin Can" <jin.can.zhuang@intel.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
+To: Bill Pemberton <wfp5p@virginia.edu>
+Cc: gregkh@linuxfoundation.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, Neela Syam Kolli <megaraidlinux@lsi.com>, GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, Michael Reed <mdr@sgi.com>, Willem Riede <osst@riede.org>, Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>, Kurt Garloff <garloff@suse.de>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dc395x@twibble.org, iss_storagedev@hp.com, osst-users@lists.sourceforge.net
 
-On 11/02/12 11:48, Bart Van Assche wrote:
-> [PATCH] Fix race between starved list processing and device removal
-> [ ... ]
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index ce5224c..2f0f31e 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -348,7 +348,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
->   	starget->reap_ref++;
->   	list_del(&sdev->siblings);
->   	list_del(&sdev->same_target_siblings);
-> -	list_del(&sdev->starved_entry);
->   	spin_unlock_irqrestore(sdev->host->host_lock, flags);
->
->   	cancel_work_sync(&sdev->event_work);
-> @@ -956,6 +955,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
->   void __scsi_remove_device(struct scsi_device *sdev)
->   {
->   	struct device *dev = &sdev->sdev_gendev;
-> +	struct Scsi_Host *shost = sdev->host;
-> +	unsigned long flags;
->
->   	if (sdev->is_visible) {
->   		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
-> @@ -973,7 +974,13 @@ void __scsi_remove_device(struct scsi_device *sdev)
->   	 * scsi_run_queue() invocations have finished before tearing down the
->   	 * device.
->   	 */
-> +
->   	scsi_device_set_state(sdev, SDEV_DEL);
-> +
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	list_del(&sdev->starved_entry);
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
-> +
->   	blk_cleanup_queue(sdev->request_queue);
->   	cancel_work_sync(&sdev->requeue_work);
->
+On Mon, Nov 19, 2012 at 01:20:46PM -0500, Bill Pemberton wrote:
+>  drivers/scsi/arm/acornscsi.c              | 2 +-
+>  drivers/scsi/arm/arxescsi.c               | 2 +-
+>  drivers/scsi/arm/cumana_1.c               | 2 +-
+>  drivers/scsi/arm/cumana_2.c               | 2 +-
+>  drivers/scsi/arm/eesox.c                  | 2 +-
+>  drivers/scsi/arm/oak.c                    | 2 +-
+>  drivers/scsi/arm/powertec.c               | 2 +-
 
-Please ignore this patch. Even with this patch applied there is still a 
-race condition present, namely that the __blk_run_queue() call in 
-scsi_run_queue() can get invoked after __scsi_remove_device() invoked 
-put_device().
+For these drivers,
 
-Bart.
-
+Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
