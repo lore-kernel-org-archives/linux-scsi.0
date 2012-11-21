@@ -1,69 +1,73 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH RESEND v4 0/5] Migrate SCSI drivers to use dev_pm_ops
-Date: Wed, 21 Nov 2012 01:53:06 +0100
-Message-ID: <3643841.7EMCNpFCqq@vostro.rjw.lan>
-References: <1352446075-1814-1-git-send-email-aaron.lu@intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: SCSI LLDs, the SCSI error handler and host resource lifetime
+Date: Wed, 21 Nov 2012 08:19:41 +0100
+Message-ID: <50AC808D.1060700@suse.de>
+References: <50AB9286.8040403@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1352446075-1814-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Alan Stern <stern@rowland.harvard.edu>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:35426 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752125Ab2KUHTm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Nov 2012 02:19:42 -0500
+In-Reply-To: <50AB9286.8040403@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi James,
+On 11/20/2012 03:24 PM, Bart Van Assche wrote:
+> Hello,
+>
+> If I interpret the SCSI error handler source code correctly then
+> scsi_unjam_host() may proceed concurrently with scsi_remove_host().
+> This means that the LLD eh_abort_handler callback may get invoked aft=
+er
+> scsi_remove_host() finished. At least the SRP initiator (ib_srp) clea=
+ns
+> up resources necessary for aborting commands as soon as
+> scsi_remove_host() returns. That looks like a race condition to me. A=
+s
+> far as I can see it is only safe to clean up such resources after the
+> EH thread has been stopped. Any opinions about adding an additional
+> callback for this purpose in struct scsi_host_template ?
+>
+> Note: it doesn't look like a good idea to me to let scsi_remove_host(=
+)
+> wait until error recovery has finished since scsi_remove_host() may g=
+et
+> invoked from the context of a workqueue. If any work gets queued on t=
+he
+> same workqueue related to SCSI error handling letting scsi_remove_hos=
+t()
+> wait for the error handler to finish might result in a deadlock.
+>
+> The patch below is a request for comments patch that does not only ad=
+d a
+> callback to struct scsi_host_template but also fixes a (hard to trigg=
+er)
+> race condition in ib_srp: avoid that ib_destroy_cm_id() frees the IB =
+RC
+> connection while srp_send_tsk_mgmt() is using it.
+>
+Hmm.
+This would still mean that the eh thread will run until finished.
+Which can take _A LOT_ of time (we're speaking hours here).
+I would rather have an additional return code in the various=20
+scsi_try_XXX functions to terminate the loop quickly.
 
-On Friday, November 09, 2012 03:27:50 PM Aaron Lu wrote:
-> This patchset has been quiet for a while, so resend them.
-> 
-> v4:
-> Only Patch 4 is modified:
-> Fixed a line over 80 characters warning by checkpatch.pl;
-> Update the changelog so that it is no more a try :-)
-> 
-> v3:
-> Only patch 4 is modified:
-> Remove the special case for system freeze in scsi_bus_suspend_common
-> as pointed out by Alan Stern;
-> Updated some comments;
-> Removed the use of typedef (*pm_callback_t)(struct device *).
-> 
-> v2:
-> Change the runtime suspend behaviour of sd driver by putting the device
-> into stopped power state.
-> Revert 2 patches which are no longer needed as pointed out by Alan Stern.
-> Find out device callbacks in bus callbacks as suggested by Alan Stern.
-> 
-> Due to these changes, patch number grows from 2 -> 5.
-> 
-> v1:
-> The 2 patches will migrate SCSI drivers to use the pm callbacks defined
-> in dev_pm_ops as pm_message is deprecated and should not be used by driver.
-> Bus level callback is changed to use callbacks defined in dev_pm_ops when
-> needed and sd's pm callback is updated to use what are defined in dev_pm_ops.
-> 
-> 
-> Aaron Lu (5):
->   sd: put to stopped power state when runtime suspend
->   Revert "[SCSI] scsi_pm: set device runtime state before parent
->     suspended"
->   Revert "[SCSI] runtime resume parent for child's system-resume"
->   pm: use callbacks from dev_pm_ops for scsi devices
->   sd: update sd to use the new pm callbacks
-> 
->  drivers/scsi/scsi_pm.c | 98 +++++++++++++++++++++++++++-----------------------
->  drivers/scsi/sd.c      | 18 +++++++---
->  2 files changed, 67 insertions(+), 49 deletions(-)
+Cheers,
 
-Do you have any plans with respect to this patchset?
-
-It has been acked by Alan and me, do you have any objections against it?
-
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
