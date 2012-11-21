@@ -1,73 +1,63 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: SCSI LLDs, the SCSI error handler and host resource lifetime
-Date: Wed, 21 Nov 2012 08:19:41 +0100
-Message-ID: <50AC808D.1060700@suse.de>
-References: <50AB9286.8040403@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH 3/5] qla2xxx: Change in setting UNLOADING flag and FC vports logout sequence while unloading qla2xxx driver.
+Date: Wed, 21 Nov 2012 02:39:55 -0500
+Message-ID: <1353483597-17206-4-git-send-email-saurav.kashyap@qlogic.com>
+References: <1353483597-17206-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35426 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752125Ab2KUHTm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Nov 2012 02:19:42 -0500
-In-Reply-To: <50AB9286.8040403@acm.org>
+Received: from mvnat01.qlogic.com ([198.186.3.73]:46175 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753316Ab2KUH6H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Nov 2012 02:58:07 -0500
+In-Reply-To: <1353483597-17206-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On 11/20/2012 03:24 PM, Bart Van Assche wrote:
-> Hello,
->
-> If I interpret the SCSI error handler source code correctly then
-> scsi_unjam_host() may proceed concurrently with scsi_remove_host().
-> This means that the LLD eh_abort_handler callback may get invoked aft=
-er
-> scsi_remove_host() finished. At least the SRP initiator (ib_srp) clea=
-ns
-> up resources necessary for aborting commands as soon as
-> scsi_remove_host() returns. That looks like a race condition to me. A=
-s
-> far as I can see it is only safe to clean up such resources after the
-> EH thread has been stopped. Any opinions about adding an additional
-> callback for this purpose in struct scsi_host_template ?
->
-> Note: it doesn't look like a good idea to me to let scsi_remove_host(=
-)
-> wait until error recovery has finished since scsi_remove_host() may g=
-et
-> invoked from the context of a workqueue. If any work gets queued on t=
-he
-> same workqueue related to SCSI error handling letting scsi_remove_hos=
-t()
-> wait for the error handler to finish might result in a deadlock.
->
-> The patch below is a request for comments patch that does not only ad=
-d a
-> callback to struct scsi_host_template but also fixes a (hard to trigg=
-er)
-> race condition in ib_srp: avoid that ib_destroy_cm_id() frees the IB =
-RC
-> connection while srp_send_tsk_mgmt() is using it.
->
-Hmm.
-This would still mean that the eh thread will run until finished.
-Which can take _A LOT_ of time (we're speaking hours here).
-I would rather have an additional return code in the various=20
-scsi_try_XXX functions to terminate the loop quickly.
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Cheers,
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c |    3 +--
+ drivers/scsi/qla2xxx/qla_os.c   |    3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 1c28215..83d7984 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1615,8 +1615,7 @@ qla2x00_terminate_rport_io(struct fc_rport *rport)
+ 	 * At this point all fcport's software-states are cleared.  Perform any
+ 	 * final cleanup of firmware resources (PCBs and XCBs).
+ 	 */
+-	if (fcport->loop_id != FC_NO_LOOP_ID &&
+-	    !test_bit(UNLOADING, &fcport->vha->dpc_flags)) {
++	if (fcport->loop_id != FC_NO_LOOP_ID) {
+ 		if (IS_FWI2_CAPABLE(fcport->vha->hw))
+ 			fcport->vha->hw->isp_ops->fabric_logout(fcport->vha,
+ 			    fcport->loop_id, fcport->d_id.b.domain,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index a603967..f4b1fc8 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2755,6 +2755,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 
+ 	ha->flags.host_shutting_down = 1;
+ 
++	set_bit(UNLOADING, &base_vha->dpc_flags);
+ 	mutex_lock(&ha->vport_lock);
+ 	while (ha->cur_vport_count) {
+ 		struct Scsi_Host *scsi_host;
+@@ -2784,8 +2785,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 			    "Error while clearing DRV-Presence.\n");
+ 	}
+ 
+-	set_bit(UNLOADING, &base_vha->dpc_flags);
+-
+ 	qla2x00_abort_all_cmds(base_vha, DID_NO_CONNECT << 16);
+ 
+ 	qla2x00_dfs_remove(base_vha);
+-- 
+1.7.7
+
