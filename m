@@ -1,105 +1,41 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 0/7 v5] More device removal fixes
-Date: Fri, 23 Nov 2012 11:37:58 +0100
-Message-ID: <50AF5206.9060608@acm.org>
-References: <508A7B63.60608@acm.org>
+From: Masanori Goto <gotom@sanori.org>
+Subject: Re: [PATCH 319/493] scsi: remove use of __devinitdata
+Date: Fri, 23 Nov 2012 20:26:47 +0900
+Message-ID: <CALZLnaEE--zjbajKiWXFjVw5GxZRU_i-e8P4sXh-CYAM-AKeaA@mail.gmail.com>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+ <1353349642-3677-319-git-send-email-wfp5p@virginia.edu> <Pine.LNX.4.64.1211222357141.11581@axis700.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gerard.telenet-ops.be ([195.130.132.48]:55266 "EHLO
-	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413Ab2KWKiC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Nov 2012 05:38:02 -0500
-In-Reply-To: <508A7B63.60608@acm.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:48682 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706Ab2KWL1K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Nov 2012 06:27:10 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so4134027lbb.19
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Nov 2012 03:27:08 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.64.1211222357141.11581@axis700.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Bill Pemberton <wfp5p@virginia.edu>, gregkh@linuxfoundation.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Wilcox <matthew@wil.cx>, "Juergen E. Fischer" <fischer@norbit.de>, Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, Kurt Garloff <garloff@suse.de>, linux-scsi@vger.kernel.org, dc395x@twibble.org
 
-On 10/26/12 14:00, Bart Van Assche wrote:
-> Fix a few race conditions that can be triggered by removing a device:
-> [ ... ]
+2012/11/23 Guennadi Liakhovetski <g.liakhovetski@gmx.de>:
+> On Mon, 19 Nov 2012, Bill Pemberton wrote:
+>
+>>  drivers/scsi/tmscsim.c              |  2 +-
+>
+> Acked-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 
-Hello,
+Acked-by: GOTO Masanori <gotom@debian.or.jp>
 
-I'd like to add the patch below to this series. This is something I came
-up with after analyzing why a crash was triggered during an SRP failover
-test. One of the functions in the crash call stack was blk_delay_work().
+Regards,
+-- gotom
 
-Bart.
-
-
-[PATCH] block: Avoid scheduling delayed work on a dead queue
-
-Running a queue must continue after it has been marked dying until
-it has been marked dead. So the function blk_run_queue_async() must
-not schedule delayed work after blk_cleanup_queue() has marked a queue
-dead. Hence add a test for that queue state in blk_run_queue_async()
-and make sure that queue_unplugged() invokes that function with the
-queue lock held. This avoids that the queue state can change after
-it has been tested and before mod_delayed_work() is invoked. Drop
-the queue dying test in queue_unplugged() since it is now
-superfluous: __blk_run_queue() already tests whether or not the
-queue is dead.
-
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jens Axboe <axboe@kernel.dk>
----
- block/blk-core.c |   26 +++++---------------------
- 1 file changed, 5 insertions(+), 21 deletions(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index e4f4e06..212c878 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -343,11 +343,11 @@ EXPORT_SYMBOL(__blk_run_queue);
-  *
-  * Description:
-  *    Tells kblockd to perform the equivalent of @blk_run_queue on behalf
-- *    of us.
-+ *    of us. The caller must hold the queue lock.
-  */
- void blk_run_queue_async(struct request_queue *q)
- {
--	if (likely(!blk_queue_stopped(q)))
-+	if (likely(!blk_queue_stopped(q) && !blk_queue_dead(q)))
- 		mod_delayed_work(kblockd_workqueue, &q->delay_work, 0);
- }
- EXPORT_SYMBOL(blk_run_queue_async);
-@@ -2923,27 +2923,11 @@ static void queue_unplugged(struct request_queue *q, unsigned int depth,
- {
- 	trace_block_unplug(q, depth, !from_schedule);
- 
--	/*
--	 * Don't mess with a dying queue.
--	 */
--	if (unlikely(blk_queue_dying(q))) {
--		spin_unlock(q->queue_lock);
--		return;
--	}
--
--	/*
--	 * If we are punting this to kblockd, then we can safely drop
--	 * the queue_lock before waking kblockd (which needs to take
--	 * this lock).
--	 */
--	if (from_schedule) {
--		spin_unlock(q->queue_lock);
-+	if (from_schedule)
- 		blk_run_queue_async(q);
--	} else {
-+	else
- 		__blk_run_queue(q);
--		spin_unlock(q->queue_lock);
--	}
--
-+	spin_unlock(q->queue_lock);
- }
- 
- static void flush_plug_callbacks(struct blk_plug *plug, bool from_schedule)
--- 
-1.7.10.4
-
-
+>
+> Thanks
+> Guennadi
+> ---
+> Guennadi Liakhovetski, Ph.D.
+> Freelance Open-Source Software Developer
+> http://www.open-technology.de/
+>
