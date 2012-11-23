@@ -1,45 +1,56 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH 00/20, v4] Make ib_srp better suited for H.A. purposes
-Date: Fri, 23 Nov 2012 16:07:50 +0100
-Message-ID: <50AF9146.5000405@acm.org>
-References: <5023DA39.7020000@acm.org> <5061C841.8070307@acm.org> <1348705896.26028.3.camel@obelisk.thedillows.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RESEND][PATCH 11/20][SCSI] mpt3sas: Ioctl Support for MPT
+ based controller
+Date: Fri, 23 Nov 2012 17:05:22 +0400
+Message-ID: <1353675922.2381.1.camel@dabdike.int.hansenpartnership.com>
+References: <20121008005821.GA2868@dhcp-135-24-192-117.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1348705896.26028.3.camel-1q1vX8mYZiGLUyTwlgNVppKKF0rrzTr+@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43501 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755804Ab2KWQrT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Nov 2012 11:47:19 -0500
+In-Reply-To: <20121008005821.GA2868@dhcp-135-24-192-117.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: sreekanth.reddy@lsi.com
+Cc: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com
 
-On 09/27/12 02:31, David Dillow wrote:
-> On Tue, 2012-09-25 at 17:05 +0200, Bart Van Assche wrote:
->> On 08/09/12 17:41, Bart Van Assche wrote:
->>> [ ... ]
->>
->> Hello Dave,
->>
->> More than six weeks have elapsed since I posted version four of this
->> patch series. It would be appreciated if you could tell me when review
->> comments for this patch series will be posted. I'd also like to remind
->> you that some time ago you asked other people to wait with posting more
->> ib_srp patches until this patch series is upstream [1, 2].
->
-> Yes, it has taken me far more time than I expected to get to these. I am
-> in the middle of fiscal-year-end thrash, and will attend to the SRP
-> backlog next week.
+On Mon, 2012-10-08 at 06:28 +0530, sreekanth.reddy@lsi.com wrote:
+> At the line number 475 of mpt3sas.ctl file(i.e at line number 488 in =
+patch file)
+> and in the function "mpt3sas_ctl_reset_handler" there was type mistak=
+e.
+> i.e instead of MPT3SAS_FMT it is typed as MPT3SAS_FMT9/13/2012.
+> So because of this type mistake there was a compilation error.
+>=20
+> This patch provide ioctl Support for MPT (Message Passing Technology)
+> based controller
 
-(replying to an e-mail of one month ago)
+This still doesn't seem to fix the compile failure:
 
-Hello Dave,
+drivers/scsi/mpt3sas/mpt3sas_scsih.c: In function
+=E2=80=98_scsih_sas_broadcast_primitive_event=E2=80=99:
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: error: =E2=80=98event_data=
+=E2=80=99
+undeclared (first use in this function)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: note: each undeclared
+identifier is reported only once for each function it appears in
+make[3]: *** [drivers/scsi/mpt3sas/mpt3sas_scsih.o] Error 1
 
-Will you have time next week to review the srp-ha patch series ?
+Could you please build against scsi.git scsi-misc and see if you can
+find the actual problem.
 
 Thanks,
 
-Bart.
+James
+
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
