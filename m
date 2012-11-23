@@ -1,44 +1,35 @@
-From: Masanori Goto <gotom@sanori.org>
-Subject: Re: [PATCH 425/493] scsi: remove use of __devexit
-Date: Fri, 23 Nov 2012 20:27:42 +0900
-Message-ID: <CALZLnaFcLwhNnvr5Hpia7tJkyJYmH-aj5GfHJxF8OS=uDkxoFQ@mail.gmail.com>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
- <1353349642-3677-425-git-send-email-wfp5p@virginia.edu> <Pine.LNX.4.64.1211230845540.14984@axis700.grange>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 0/5] qla4xxx: Updates for scsi "misc" branch
+Date: Fri, 23 Nov 2012 06:58:37 -0500
+Message-ID: <1353671922-19090-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:59625 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134Ab2KWL2D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Nov 2012 06:28:03 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so4134581lbb.19
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Nov 2012 03:28:02 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.64.1211230845540.14984@axis700.grange>
+Received: from mvnat01.qlogic.com ([198.186.3.73]:7839 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753452Ab2KWMRM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Nov 2012 07:17:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Bill Pemberton <wfp5p@virginia.edu>, gregkh@linuxfoundation.org, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Matthew Wilcox <matthew@wil.cx>, Russell King <linux@arm.linux.org.uk>, Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, Neela Syam Kolli <megaraidlinux@lsi.com>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, Michael Reed <mdr@sgi.com>, Kurt Garloff <garloff@suse.de>, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dc395x@twibble.org, iss_storagedev@hp.com
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-2012/11/23 Guennadi Liakhovetski <g.liakhovetski@gmx.de>:
-> On Mon, 19 Nov 2012, Bill Pemberton wrote:
->
->> CONFIG_HOTPLUG is going away as an option so __devexit is no
->> longer needed.
->
->>  drivers/scsi/tmscsim.c                    | 2 +-
->
-> Acked-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Acked-by: GOTO Masanori <gotom@debian.or.jp>
+James,
 
-Regards,
--- gotom
+Please apply the following patches to the scsi tree at your earliest
+convenience.
 
->
-> Thanks
-> Guennadi
-> ---
-> Guennadi Liakhovetski, Ph.D.
-> Freelance Open-Source Software Developer
-> http://www.open-technology.de/
->
+Thanks,
+Vikas.
+
+Harish Zunjarrao (1):
+      qla4xxx: Allow reset in link down case
+
+Manish Rangankar (2):
+      qla4xxx: Fix memory corruption issue in qla4xxx_get_ep_fwdb.
+      scsi_transport_iscsi: export iscsi class session's target_id in sysfs.
+
+Vikas Chaudhary (2):
+      qla4xxx: Fix MBOX intr switching from polling to intr mode for ISP83XX
+      qla4xxx: Update driver version to 5.03.00-k2
+
