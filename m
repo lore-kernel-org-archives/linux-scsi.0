@@ -1,56 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RESEND][PATCH 11/20][SCSI] mpt3sas: Ioctl Support for MPT
- based controller
-Date: Fri, 23 Nov 2012 17:05:22 +0400
-Message-ID: <1353675922.2381.1.camel@dabdike.int.hansenpartnership.com>
-References: <20121008005821.GA2868@dhcp-135-24-192-117.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43501 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755804Ab2KWQrT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Nov 2012 11:47:19 -0500
-In-Reply-To: <20121008005821.GA2868@dhcp-135-24-192-117.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Cesar Eduardo Barros <cesarb@cesarb.net>
+Subject: [PATCH 15/24] MAINTAINERS: remove firmware/isci/
+Date: Fri, 23 Nov 2012 22:26:39 -0200
+Message-ID: <1353716808-16375-16-git-send-email-cesarb@cesarb.net>
+References: <1353716808-16375-1-git-send-email-cesarb@cesarb.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1353716808-16375-1-git-send-email-cesarb@cesarb.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Cesar Eduardo Barros <cesarb@cesarb.net>, Ben Hutchings <ben@decadent.org.uk>, Dan Williams <dan.j.williams@intel.com>, James Bottomley <JBottomley@Parallels.com>, Intel SCU Linux support <intel-linux-scu@intel.com>, Lukasz Dorau <lukasz.dorau@intel.com>, Maciej Patelczyk <maciej.patelczyk@intel.com>, Dave Jiang <dave.jiang@intel.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sreekanth.reddy@lsi.com
-Cc: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com
 
-On Mon, 2012-10-08 at 06:28 +0530, sreekanth.reddy@lsi.com wrote:
-> At the line number 475 of mpt3sas.ctl file(i.e at line number 488 in =
-patch file)
-> and in the function "mpt3sas_ctl_reset_handler" there was type mistak=
-e.
-> i.e instead of MPT3SAS_FMT it is typed as MPT3SAS_FMT9/13/2012.
-> So because of this type mistake there was a compilation error.
->=20
-> This patch provide ioctl Support for MPT (Message Passing Technology)
-> based controller
+This directory was removed by commit 7d99b3a (isci, firmware: Remove
+isci fallback parameter blob and generator).
 
-This still doesn't seem to fix the compile failure:
+Cc: Ben Hutchings <ben@decadent.org.uk>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: James Bottomley <JBottomley@Parallels.com>
+Cc: Intel SCU Linux support <intel-linux-scu@intel.com>
+Cc: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Cesar Eduardo Barros <cesarb@cesarb.net>
+---
+ MAINTAINERS | 1 -
+ 1 file changed, 1 deletion(-)
 
-drivers/scsi/mpt3sas/mpt3sas_scsih.c: In function
-=E2=80=98_scsih_sas_broadcast_primitive_event=E2=80=99:
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: error: =E2=80=98event_data=
-=E2=80=99
-undeclared (first use in this function)
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: note: each undeclared
-identifier is reported only once for each function it appears in
-make[3]: *** [drivers/scsi/mpt3sas/mpt3sas_scsih.o] Error 1
-
-Could you please build against scsi.git scsi-misc and see if you can
-find the actual problem.
-
-Thanks,
-
-James
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/MAINTAINERS b/MAINTAINERS
+index bd3049f..3a09993 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3876,7 +3876,6 @@ L:	linux-scsi@vger.kernel.org
+ T:	git git://git.code.sf.net/p/intel-sas/isci
+ S:	Supported
+ F:	drivers/scsi/isci/
+-F:	firmware/isci/
+ 
+ INTEL IDLE DRIVER
+ M:	Len Brown <lenb@kernel.org>
+-- 
+1.7.11.7
