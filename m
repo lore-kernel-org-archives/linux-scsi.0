@@ -1,47 +1,74 @@
-From: Masatake YAMATO <yamato@redhat.com>
-Subject: [RESEND PATCH] libiscsi: avoid unnecessary multiple NULL assignments
-Date: Thu, 22 Nov 2012 19:41:50 +0900
-Message-ID: <1353580910-23358-1-git-send-email-yamato@redhat.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH] firewire: sbp2: allow WRITE SAME and REPORT SUPPORTED
+ OPERATION CODES
+Date: Sun, 25 Nov 2012 18:45:25 +0100
+Message-ID: <20121125184525.0b7967c4@stein>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from h219-110-092-224.catv01.itscom.jp ([219.110.92.224]:38031 "EHLO
-	localhost.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752690Ab2KYMss (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Nov 2012 07:48:48 -0500
+Received: from einhorn.in-berlin.de ([192.109.42.8]:42847 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753235Ab2KYRpk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Nov 2012 12:45:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Masatake YAMATO <yamato@redhat.com>
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-In iscsi_free_task, NULL is assigned to task->sc twice: before and
-after kfifo_in invocatoin. Allocating and freeing iscsi_task are guarded
-with session->lock, so multiple NULL assignments cause no trouble. But
-people reading the source code may be confused.
+The commits
+    3c6bdaeab4fd "[SCSI] Add a report opcode helper"
+    5db44863b6eb "[SCSI] sd: Implement support for WRITE SAME"
+introduced in-kernel uses of the mentioned commands but cautiously
+blacklisted for any IEEE 1394 (SBP-2/3) targets and some other
+transports.
 
-The second NULL assignment comes from commit:
+I looked through a range of SBP devices and found that the blacklist
+flags can be removed:
 
-    3e5c28ad0391389959ccae81c938c7533efb3490
+The kernel never attempts these commands if the device's INQUIRY
+data claim a SCSI revision of less than 0x05.  This is the case with
+all SBP devices that I checked, except for two devices (both based on
+the OXUF936QSE chip but having different firmwares) which claimed
+a revision of 0x05 i.e. conformance with SPC-3.
 
-It seems that the line after kfifo_in invocation was introduced
-accidentally.
+I tried "sg_opcodes" from sg3_utils on these two devices and several
+of the other ones and did not encounter any apparent firmware bug
+with it.  (All of them returned Illegal Request/ Invalid command
+operation code and carried on.)
 
-Signed-off-by: Masatake YAMATO <yamato@redhat.com>
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+I did not try "sg_write_same" on any of the devices; but since the
+two SPC-3 devices are correctly identified as "fully provisioned",
+won't issue WRITE SAME to them either.
+
+Hence let's remove the no_report_opcodes and no_write_same blacklist
+flags so that these commands can be used on respectively capable
+targets.  I guess the Linux sbp-target could be such a target.
+
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 ---
- drivers/scsi/libiscsi.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/firewire/sbp2.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 82c3fd4..7aacf3a 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -507,7 +507,6 @@ static void iscsi_free_task(struct iscsi_task *task)
- 	kfifo_in(&session->cmdpool.queue, (void*)&task, sizeof(void*));
+diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
+index bb1b392..1162d6b 100644
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -1546,8 +1546,6 @@ static int sbp2_scsi_slave_configure(struct scsi_device *sdev)
+ 	struct sbp2_logical_unit *lu = sdev->hostdata;
  
- 	if (sc) {
--		task->sc = NULL;
- 		/* SCSI eh reuses commands to verify us */
- 		sc->SCp.ptr = NULL;
- 		/*
+ 	sdev->use_10_for_rw = 1;
+-	sdev->no_report_opcodes = 1;
+-	sdev->no_write_same = 1;
+ 
+ 	if (sbp2_param_exclusive_login)
+ 		sdev->manage_start_stop = 1;
 -- 
-1.7.11.7
+1.7.12
 
+
+
+-- 
+Stefan Richter
+-=====-===-- =-== ==--=
+http://arcgraph.de/sr/
