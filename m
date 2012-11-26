@@ -1,41 +1,25 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH 7/7] ipr: Driver version 2.6.0
-Date: Mon, 26 Nov 2012 09:55:41 -0600
-Message-ID: <20121126155632.587004078@linux.vnet.ibm.com>
-References: <20121126155534.352187900@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.65] ([32.97.110.65]:44381 "HELO
-	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1754511Ab2KZQLs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Nov 2012 11:11:48 -0500
-Content-Disposition: inline; filename=version_bump
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Mon, 26 Nov 2012 11:21:37 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1211261120190.2168-100000@iolanthe.rowland.org>
+References: <1353935850.2523.52.camel@dabdike>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1353935850.2523.52.camel@dabdike>
+Sender: linux-pm-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-Bump driver version.
+On Mon, 26 Nov 2012, James Bottomley wrote:
 
-Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> I'm also curious about driving sleep from autopm, since mode page timers
+> don't control the sleep transition.
 
-Index: b/drivers/scsi/ipr.h
-===================================================================
---- a/drivers/scsi/ipr.h	2012-11-19 12:18:58.263935158 -0600
-+++ b/drivers/scsi/ipr.h	2012-11-19 12:35:31.355166443 -0600
-@@ -39,8 +39,8 @@
- /*
-  * Literals
-  */
--#define IPR_DRIVER_VERSION "2.5.4"
--#define IPR_DRIVER_DATE "(July 11, 2012)"
-+#define IPR_DRIVER_VERSION "2.6.0"
-+#define IPR_DRIVER_DATE "(November 16, 2012)"
- 
- /*
-  * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
+Is it feasible to do this the other way around?  That is, to drive 
+runtime suspend by noticing when the device decides to put itself into 
+a low-power state?
 
--- 
+Alan Stern
+
