@@ -1,51 +1,56 @@
 From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: Re: [PATCH 00/20, v4] Make ib_srp better suited for H.A. purposes
-Date: Sun, 25 Nov 2012 23:47:41 -0500
-Message-ID: <1353905261.23660.5.camel@obelisk.thedillows.org>
-References: <5023DA39.7020000@acm.org> <5061C841.8070307@acm.org>
-	 <1348705896.26028.3.camel@obelisk.thedillows.org>
-	 <50AF9146.5000405@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 04/11] IB/srp: keep processing commands during host removal
+Date: Sun, 25 Nov 2012 23:44:09 -0500
+Message-ID: <8715294a23dded5879b3a327c470d9b6a39ddbc4.1353903448.git.dillowda@ornl.gov>
+References: <cover.1353903448.git.dillowda@ornl.gov>
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <50AF9146.5000405-HInyCGIudOg@public.gmane.org>
+In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
+In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
+References: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2012-11-23 at 16:07 +0100, Bart Van Assche wrote:
-> On 09/27/12 02:31, David Dillow wrote:
-> > On Tue, 2012-09-25 at 17:05 +0200, Bart Van Assche wrote:
-> >> On 08/09/12 17:41, Bart Van Assche wrote:
-> >>> [ ... ]
-> >>
-> >> Hello Dave,
-> >>
-> >> More than six weeks have elapsed since I posted version four of this
-> >> patch series. It would be appreciated if you could tell me when review
-> >> comments for this patch series will be posted. I'd also like to remind
-> >> you that some time ago you asked other people to wait with posting more
-> >> ib_srp patches until this patch series is upstream [1, 2].
-> >
-> > Yes, it has taken me far more time than I expected to get to these. I am
-> > in the middle of fiscal-year-end thrash, and will attend to the SRP
-> > backlog next week.
-> 
-> (replying to an e-mail of one month ago)
-> 
-> Hello Dave,
-> 
-> Will you have time next week to review the srp-ha patch series ?
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 
-I just pushed my first patch for your review; fingers crossed to build
-some momentum.
+Some SCSI upper layer drivers, e.g. sd, issue SCSI commands from
+inside scsi_remove_host() (see also the sd_shutdown() call in
+sd_remove()). Make sure that these commands have a chance to reach
+the SCSI device.
+
+Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+[ adapted to new state tracking ]
+Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+---
+ drivers/infiniband/ulp/srp/ib_srp.c |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index 2951e1c..f7d7e6a 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -1328,12 +1328,13 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
+ 	int len;
+ 
+ 	if (unlikely(target->state)) {
+-		if (!srp_is_removed(target))
++		/*
++		 * Only requeue commands if we cannot send them to the target.
++		 * We'll let commands through during shutdown so that caches
++		 * get flushed, etc.
++		 */
++		if (srp_is_disconnected(target) || srp_in_error(target))
+ 			goto err;
+-
+-		scmnd->result = DID_BAD_TARGET << 16;
+-		scmnd->scsi_done(scmnd);
+-		return 0;
+ 	}
+ 
+ 	spin_lock_irqsave(&target->lock, flags);
 -- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
+1.7.7.6
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
