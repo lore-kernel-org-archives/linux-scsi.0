@@ -1,71 +1,85 @@
 From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: [PATCH 00/11] First pass at merging Bart's HA work
-Date: Sun, 25 Nov 2012 23:44:05 -0500
-Message-ID: <cover.1353903448.git.dillowda@ornl.gov>
+Subject: [PATCH 03/11] IB/srp: don't send anything on a bad QP
+Date: Sun, 25 Nov 2012 23:44:08 -0500
+Message-ID: <90b21916a384281682d520302b594834e010671b.1353903448.git.dillowda@ornl.gov>
+References: <cover.1353903448.git.dillowda@ornl.gov>
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
+In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
+References: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Here is a first, UNTESTED, pass at preparing a merge of Bart's SRP HA
-work to upstream. It is not complete, as I have not yet added the
-transport layer error handling and related patches. It is also currently
-missing the patch to maintain a single connection for an I_T nexus.
+Once we know we have an issue with the QP, there is no point trying to
+send anything else down the pipe. This also allows us to consolidate
+code in the SCSI EH path.
 
-I swapped Ishai's code to recreate QP/CQs for each connection, as that
-adds recovery from fatal hardware errors, and reduces the code needed to
-avoid stale completions. Similarly, Vu's patch slightly reduces reconnect
-times.
+Needs-to-be-signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+[ adapted to new state tracking code ]
+Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+---
+ drivers/infiniband/ulp/srp/ib_srp.c |   21 ++++++++-------------
+ 1 files changed, 8 insertions(+), 13 deletions(-)
 
-Target blocking/unblocking hasn't been added from Bart's patch that
-removes the SRP_TARGET_CONNECTING state; I think it is probably the right
-thing to do, but want to think it over a bit more.
-
-Similarly, I'm looking for a clean way to start the reconnection effort
-as soon as we get an error through the CQ -- we know that any pending
-commands are lost to us at that point, so we should be able to kick them
-back upstream quickly. This should allow multipath to reissue them on one
-of the remaining good paths.
-
-This series compiles, but is otherwise UNTESTED. I'll be working on that
-over the next few days, with an eye on getting as much of Bart's work
-into 3.8 as possible.
-
-One may also pull this series from github:
-
-	git pull git://github.com/dillow/srp-initiator.git ha-merge-v1
-
-
-Bart Van Assche (7):
-  IB/srp: enlarge block layer timeout
-  IB/srp: keep processing commands during host removal
-  IB/srp: Document sysfs attributes
-  srp_transport: Fix attribute registration
-  srp_transport: Simplify attribute initialization code
-  srp_transport: Document sysfs attributes
-  IB/srp: Allow SRP disconnect through sysfs
-
-David Dillow (2):
-  IB/srp: simplify state tracking
-  IB/srp: don't send anything on a bad QP
-
-Ishai Rabinovitz (1):
-  IB/srp: destroy and recreate QP and CQs on each connection
-
-Vu Pham (1):
-  IB/srp: send disconnect request without waiting for CM timewait exit
-
- Documentation/ABI/stable/sysfs-driver-ib_srp |  156 +++++++++++++++
- Documentation/ABI/stable/sysfs-transport-srp |   19 ++
- drivers/infiniband/ulp/srp/ib_srp.c          |  274 +++++++++++++++-----------
- drivers/infiniband/ulp/srp/ib_srp.h          |   13 +-
- drivers/scsi/scsi_transport_srp.c            |   51 +++---
- include/scsi/scsi_transport_srp.h            |    8 +
- 6 files changed, 378 insertions(+), 143 deletions(-)
- create mode 100644 Documentation/ABI/stable/sysfs-driver-ib_srp
- create mode 100644 Documentation/ABI/stable/sysfs-transport-srp
-
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index 1e8ce81..2951e1c 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -1328,14 +1328,12 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
+ 	int len;
+ 
+ 	if (unlikely(target->state)) {
+-		if (srp_is_disconnected(target))
++		if (!srp_is_removed(target))
+ 			goto err;
+ 
+-		if (srp_is_removed(target)) {
+-			scmnd->result = DID_BAD_TARGET << 16;
+-			scmnd->scsi_done(scmnd);
+-			return 0;
+-		}
++		scmnd->result = DID_BAD_TARGET << 16;
++		scmnd->scsi_done(scmnd);
++		return 0;
+ 	}
+ 
+ 	spin_lock_irqsave(&target->lock, flags);
+@@ -1683,7 +1681,7 @@ static int srp_send_tsk_mgmt(struct srp_target_port *target,
+ 	struct srp_iu *iu;
+ 	struct srp_tsk_mgmt *tsk_mgmt;
+ 
+-	if (srp_is_removed(target))
++	if (target->state)
+ 		return -1;
+ 
+ 	init_completion(&target->tsk_mgmt_done);
+@@ -1727,12 +1725,11 @@ static int srp_abort(struct scsi_cmnd *scmnd)
+ 
+ 	shost_printk(KERN_ERR, target->scsi_host, "SRP abort called\n");
+ 
+-	if (srp_in_error(target))
+-		return FAILED;
+ 	if (!req || !srp_claim_req(target, req, scmnd))
+ 		return FAILED;
+-	srp_send_tsk_mgmt(target, req->index, scmnd->device->lun,
+-			  SRP_TSK_ABORT_TASK);
++	if (srp_send_tsk_mgmt(target, req->index, scmnd->device->lun,
++			  SRP_TSK_ABORT_TASK))
++		return FAILED;
+ 	srp_free_req(target, req, scmnd, 0);
+ 	scmnd->result = DID_ABORT << 16;
+ 	scmnd->scsi_done(scmnd);
+@@ -1747,8 +1744,6 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
+ 
+ 	shost_printk(KERN_ERR, target->scsi_host, "SRP reset_device called\n");
+ 
+-	if (srp_in_error(target))
+-		return FAILED;
+ 	if (srp_send_tsk_mgmt(target, SRP_TAG_NO_REQ, scmnd->device->lun,
+ 			      SRP_TSK_LUN_RESET))
+ 		return FAILED;
 -- 
 1.7.7.6
 
