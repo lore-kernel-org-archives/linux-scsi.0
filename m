@@ -1,38 +1,39 @@
-From: Dmitry Torokhov <dtor@vmware.com>
-Subject: Re: [Pv-drivers] [PATCH 192/493] scsi: remove use of __devinit
-Date: Mon, 26 Nov 2012 09:37:35 -0800
-Message-ID: <20121126173735.GC11127@dtor-ws.eng.vmware.com>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
- <1353349642-3677-192-git-send-email-wfp5p@virginia.edu>
+From: Roland Dreier <roland@purestorage.com>
+Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
+Date: Mon, 26 Nov 2012 10:50:56 -0800
+Message-ID: <CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com>
+References: <cover.1353903448.git.dillowda@ornl.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-1.vmware.com ([208.91.2.12]:46941 "EHLO
-	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755146Ab2KZRhf (ORCPT
+Received: from na3sys010aog104.obsmtp.com ([74.125.245.76]:38876 "HELO
+	na3sys010aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753942Ab2KZSvT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Nov 2012 12:37:35 -0500
-Content-Disposition: inline
-In-Reply-To: <1353349642-3677-192-git-send-email-wfp5p@virginia.edu>
+	Mon, 26 Nov 2012 13:51:19 -0500
+Received: by mail-gg0-f198.google.com with SMTP id f4so5646443ggn.1
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Nov 2012 10:51:18 -0800 (PST)
+In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bill Pemberton <wfp5p@virginia.edu>
-Cc: gregkh@linuxfoundation.org, Oliver Neukum <oliver@neukum.org>, VMware PV-Drivers <pv-drivers@vmware.com>, Kurt Garloff <garloff@suse.de>, Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>, GOTO Masanori <gotom@debian.or.jp>, Russell King <linux@arm.linux.org.uk>, linux-scsi@vger.kernel.org, Jamie Lenehan <lenehan@twibble.org>, osst-users@lists.sourceforge.net, Michael Reed <mdr@sgi.com>, cbe-oss-dev@lists.ozlabs.org, iss_storagedev@hp.com, Matthew Wilcox <matthew@wil.cx>, Ali Akcaagac <aliakc@web.de>, dc395x@twibble.org, linux-arm-kernel@lists.infradead.org, Neela Syam Kolli <megaraidlinux@lsi.com>, Geoff Levand <geoff@infradead.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Willem Riede <osst@riede.org>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linuxppc-dev@lists.ozlabs.org, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: David Dillow <dillowda@ornl.gov>
+Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>
 
-On Mon, Nov 19, 2012 at 01:22:21PM -0500, Bill Pemberton wrote:
-> CONFIG_HOTPLUG is going away as an option so __devinit is no longer
-> needed.
-> 
+ > This series compiles, but is otherwise UNTESTED. I'll be working on that
+ > over the next few days, with an eye on getting as much of Bart's work
+ > into 3.8 as possible.
 
-...
+Hi Dave,
 
->  drivers/scsi/vmw_pvscsi.c                 |  6 +-
+Great to have you back.  Certainly I'd like to get this stuff into 3.8 too.
 
-For vmw_pvscsi:
+A couple of comments:
+ - I think the srp_transport stuff should go through linux-scsi / James B.
+   instead of my tree, esp. since it's shared with the IBM vscsi stuff (I think)
+ - I see Bart had a few comments about a few of your patches, I'll wait
+   for you guys to hash that out.
 
-Acked-by: Dmitry Torokhov <dtor@vmware.com>
+Otherwise definitely happy to merge this for 3.8!
 
 Thanks,
-Dmitry
-
-
+  Roland
