@@ -1,89 +1,171 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: [PATCH 03/11] IB/srp: don't send anything on a bad QP
-Date: Sun, 25 Nov 2012 23:44:08 -0500
-Message-ID: <90b21916a384281682d520302b594834e010671b.1353903448.git.dillowda@ornl.gov>
+From: David Dillow <dillowda@ornl.gov>
+Subject: [PATCH 05/11] IB/srp: destroy and recreate QP and CQs on each connection
+Date: Sun, 25 Nov 2012 23:44:10 -0500
+Message-ID: <8fa9a268ec4dc587970161efe94968f3263aad3b.1353903448.git.dillowda@ornl.gov>
 References: <cover.1353903448.git.dillowda@ornl.gov>
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
-In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
-References: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from matrix.voodoobox.net ([75.127.97.206]:38059 "EHLO
+	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754142Ab2KZEzO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Nov 2012 23:55:14 -0500
+In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
+In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
+References: <cover.1353903448.git.dillowda@ornl.gov>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-rdma@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org, roland@purestorage.com, Ishai Rabinovitz <ishai@mellanox.co.il>, "Michael S. Tsirkin" <mst@mellanox.co.il>
 
-Once we know we have an issue with the QP, there is no point trying to
-send anything else down the pipe. This also allows us to consolidate
-code in the SCSI EH path.
+From: Ishai Rabinovitz <ishai@mellanox.co.il>
 
-Needs-to-be-signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-[ adapted to new state tracking code ]
-Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+HW QP FATAL errors persist over a reset operation, but we can recover
+from that by recreating the QP and associated CQs for each connection.
+Creating a new QP/CQ also completely forecloses any possibility of
+getting stale completions or packets on the new connection.
+
+Signed-off-by: Ishai Rabinovitz <ishai@mellanox.co.il>
+Signed-off-by: Michael S. Tsirkin <mst@mellanox.co.il>
+[ updated to current code from OFED, cleaned up commit message ]
+Signed-off-by: David Dillow <dillowda@ornl.gov>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |   21 ++++++++-------------
- 1 files changed, 8 insertions(+), 13 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c |   66 ++++++++++++++++++----------------
+ 1 files changed, 35 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 1e8ce81..2951e1c 100644
+index f7d7e6a..a481727 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -1328,14 +1328,12 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 	int len;
+@@ -250,27 +250,29 @@ static int srp_new_cm_id(struct srp_target_port *target)
+ static int srp_create_target_ib(struct srp_target_port *target)
+ {
+ 	struct ib_qp_init_attr *init_attr;
++	struct ib_cq *recv_cq, *send_cq;
++	struct ib_qp *qp;
+ 	int ret;
  
- 	if (unlikely(target->state)) {
--		if (srp_is_disconnected(target))
-+		if (!srp_is_removed(target))
- 			goto err;
+ 	init_attr = kzalloc(sizeof *init_attr, GFP_KERNEL);
+ 	if (!init_attr)
+ 		return -ENOMEM;
  
--		if (srp_is_removed(target)) {
--			scmnd->result = DID_BAD_TARGET << 16;
--			scmnd->scsi_done(scmnd);
--			return 0;
--		}
-+		scmnd->result = DID_BAD_TARGET << 16;
-+		scmnd->scsi_done(scmnd);
-+		return 0;
+-	target->recv_cq = ib_create_cq(target->srp_host->srp_dev->dev,
+-				       srp_recv_completion, NULL, target, SRP_RQ_SIZE, 0);
+-	if (IS_ERR(target->recv_cq)) {
+-		ret = PTR_ERR(target->recv_cq);
++	recv_cq = ib_create_cq(target->srp_host->srp_dev->dev,
++			       srp_recv_completion, NULL, target, SRP_RQ_SIZE, 0);
++	if (IS_ERR(recv_cq)) {
++		ret = PTR_ERR(recv_cq);
+ 		goto err;
  	}
  
- 	spin_lock_irqsave(&target->lock, flags);
-@@ -1683,7 +1681,7 @@ static int srp_send_tsk_mgmt(struct srp_target_port *target,
- 	struct srp_iu *iu;
- 	struct srp_tsk_mgmt *tsk_mgmt;
+-	target->send_cq = ib_create_cq(target->srp_host->srp_dev->dev,
+-				       srp_send_completion, NULL, target, SRP_SQ_SIZE, 0);
+-	if (IS_ERR(target->send_cq)) {
+-		ret = PTR_ERR(target->send_cq);
++	send_cq = ib_create_cq(target->srp_host->srp_dev->dev,
++			       srp_send_completion, NULL, target, SRP_SQ_SIZE, 0);
++	if (IS_ERR(send_cq)) {
++		ret = PTR_ERR(send_cq);
+ 		goto err_recv_cq;
+ 	}
  
--	if (srp_is_removed(target))
-+	if (target->state)
- 		return -1;
+-	ib_req_notify_cq(target->recv_cq, IB_CQ_NEXT_COMP);
++	ib_req_notify_cq(recv_cq, IB_CQ_NEXT_COMP);
  
- 	init_completion(&target->tsk_mgmt_done);
-@@ -1727,12 +1725,11 @@ static int srp_abort(struct scsi_cmnd *scmnd)
+ 	init_attr->event_handler       = srp_qp_event;
+ 	init_attr->cap.max_send_wr     = SRP_SQ_SIZE;
+@@ -279,30 +281,41 @@ static int srp_create_target_ib(struct srp_target_port *target)
+ 	init_attr->cap.max_send_sge    = 1;
+ 	init_attr->sq_sig_type         = IB_SIGNAL_ALL_WR;
+ 	init_attr->qp_type             = IB_QPT_RC;
+-	init_attr->send_cq             = target->send_cq;
+-	init_attr->recv_cq             = target->recv_cq;
++	init_attr->send_cq             = send_cq;
++	init_attr->recv_cq             = recv_cq;
  
- 	shost_printk(KERN_ERR, target->scsi_host, "SRP abort called\n");
+-	target->qp = ib_create_qp(target->srp_host->srp_dev->pd, init_attr);
+-	if (IS_ERR(target->qp)) {
+-		ret = PTR_ERR(target->qp);
++	qp = ib_create_qp(target->srp_host->srp_dev->pd, init_attr);
++	if (IS_ERR(qp)) {
++		ret = PTR_ERR(qp);
+ 		goto err_send_cq;
+ 	}
  
--	if (srp_in_error(target))
--		return FAILED;
- 	if (!req || !srp_claim_req(target, req, scmnd))
- 		return FAILED;
--	srp_send_tsk_mgmt(target, req->index, scmnd->device->lun,
--			  SRP_TSK_ABORT_TASK);
-+	if (srp_send_tsk_mgmt(target, req->index, scmnd->device->lun,
-+			  SRP_TSK_ABORT_TASK))
-+		return FAILED;
- 	srp_free_req(target, req, scmnd, 0);
- 	scmnd->result = DID_ABORT << 16;
- 	scmnd->scsi_done(scmnd);
-@@ -1747,8 +1744,6 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
+-	ret = srp_init_qp(target, target->qp);
++	ret = srp_init_qp(target, qp);
+ 	if (ret)
+ 		goto err_qp;
  
- 	shost_printk(KERN_ERR, target->scsi_host, "SRP reset_device called\n");
++	if (target->qp)
++		ib_destroy_qp(target->qp);
++	if (target->recv_cq)
++		ib_destroy_cq(target->recv_cq);
++	if (target->send_cq)
++		ib_destroy_cq(target->send_cq);
++
++	target->qp = qp;
++	target->recv_cq = recv_cq;
++	target->send_cq = send_cq;
++
+ 	kfree(init_attr);
+ 	return 0;
  
--	if (srp_in_error(target))
--		return FAILED;
- 	if (srp_send_tsk_mgmt(target, SRP_TAG_NO_REQ, scmnd->device->lun,
- 			      SRP_TSK_LUN_RESET))
- 		return FAILED;
+ err_qp:
+-	ib_destroy_qp(target->qp);
++	ib_destroy_qp(qp);
+ 
+ err_send_cq:
+-	ib_destroy_cq(target->send_cq);
++	ib_destroy_cq(send_cq);
+ 
+ err_recv_cq:
+-	ib_destroy_cq(target->recv_cq);
++	ib_destroy_cq(recv_cq);
+ 
+ err:
+ 	kfree(init_attr);
+@@ -317,6 +330,9 @@ static void srp_free_target_ib(struct srp_target_port *target)
+ 	ib_destroy_cq(target->send_cq);
+ 	ib_destroy_cq(target->recv_cq);
+ 
++	target->qp = NULL;
++	target->send_cq = target->recv_cq = NULL;
++
+ 	for (i = 0; i < SRP_RQ_SIZE; ++i)
+ 		srp_free_iu(target->srp_host, target->rx_ring[i]);
+ 	for (i = 0; i < SRP_SQ_SIZE; ++i)
+@@ -673,8 +689,6 @@ static void srp_reset_req(struct srp_target_port *target, struct srp_request *re
+ 
+ static int srp_reconnect_target(struct srp_target_port *target)
+ {
+-	struct ib_qp_attr qp_attr;
+-	struct ib_wc wc;
+ 	int i, ret;
+ 
+ 	if (srp_is_removed(target))
+@@ -689,20 +703,10 @@ static int srp_reconnect_target(struct srp_target_port *target)
+ 	if (ret)
+ 		goto err;
+ 
+-	qp_attr.qp_state = IB_QPS_RESET;
+-	ret = ib_modify_qp(target->qp, &qp_attr, IB_QP_STATE);
+-	if (ret)
+-		goto err;
+-
+-	ret = srp_init_qp(target, target->qp);
++	ret = srp_create_target_ib(target);
+ 	if (ret)
+ 		goto err;
+ 
+-	while (ib_poll_cq(target->recv_cq, 1, &wc) > 0)
+-		; /* nothing */
+-	while (ib_poll_cq(target->send_cq, 1, &wc) > 0)
+-		; /* nothing */
+-
+ 	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
+ 		struct srp_request *req = &target->req_ring[i];
+ 		if (req->scmnd)
 -- 
 1.7.7.6
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
