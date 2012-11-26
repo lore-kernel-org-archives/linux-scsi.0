@@ -1,105 +1,39 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH 04/11] IB/srp: keep processing commands during host removal
-Date: Mon, 26 Nov 2012 10:43:36 +0100
-Message-ID: <50B339C8.2000104@acm.org>
-References: <cover.1353903448.git.dillowda@ornl.gov> <8715294a23dded5879b3a327c470d9b6a39ddbc4.1353903448.git.dillowda@ornl.gov>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 02/11] IB/srp: simplify state tracking
+Date: Mon, 26 Nov 2012 10:46:57 +0100
+Message-ID: <50B33A91.3060103@acm.org>
+References: <cover.1353903448.git.dillowda@ornl.gov> <6f9ad200f981a2fe49319e7437c842f03063a4f1.1353903448.git.dillowda@ornl.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <8715294a23dded5879b3a327c470d9b6a39ddbc4.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from georges.telenet-ops.be ([195.130.137.68]:49270 "EHLO
+	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754104Ab2KZJrA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Nov 2012 04:47:00 -0500
+In-Reply-To: <6f9ad200f981a2fe49319e7437c842f03063a4f1.1353903448.git.dillowda@ornl.gov>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Dillow <dillowda@ornl.gov>
+Cc: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, roland@purestorage.com
 
 On 11/26/12 05:44, David Dillow wrote:
-> From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-> 
-> Some SCSI upper layer drivers, e.g. sd, issue SCSI commands from
-> inside scsi_remove_host() (see also the sd_shutdown() call in
-> sd_remove()). Make sure that these commands have a chance to reach
-> the SCSI device.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-> [ adapted to new state tracking ]
-> Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-> ---
->   drivers/infiniband/ulp/srp/ib_srp.c |   11 ++++++-----
->   1 files changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-> index 2951e1c..f7d7e6a 100644
-> --- a/drivers/infiniband/ulp/srp/ib_srp.c
-> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-> @@ -1328,12 +1328,13 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
->   	int len;
->   
->   	if (unlikely(target->state)) {
-> -		if (!srp_is_removed(target))
-> +		/*
-> +		 * Only requeue commands if we cannot send them to the target.
-> +		 * We'll let commands through during shutdown so that caches
-> +		 * get flushed, etc.
-> +		 */
-> +		if (srp_is_disconnected(target) || srp_in_error(target))
->   			goto err;
-> -
-> -		scmnd->result = DID_BAD_TARGET << 16;
-> -		scmnd->scsi_done(scmnd);
-> -		return 0;
->   	}
->   
->   	spin_lock_irqsave(&target->lock, flags);
+> The state of the target has several conditions that overlap, making it
+> easier to model as a bit-field of exceptional conditions rather than an
+> enum of all possible states.
+>
+> Bart Van Assche did the hard work of identifying the states that can be
+> removed, and did a first patch that consolidated the state space.
+[ ... ]
 
 Hi Dave,
 
-After I posted the patch on which the above patch has been based I
-realized that it can be simplified. Since the patch called "Eliminate
-state SRP_TARGET_CONNECTING" blocks the SCSI host as long as the RDMA
-RC connection is being reconnected srp_queuecommand() won't be invoked
-during the "disconnected" or "error" state. How about adding the patch
-below just after the patch that eliminates the state
-SRP_TARGET_CONNECTING ?
+Could you please explain why you would prefer to use test_bit () / 
+test_and_set_bit() and clear_bit() for managing the SRP target state ? 
+As far as I can see the target state is not changed in any code path 
+where it matters how fast the state is changed. Maybe I'm missing 
+something ?
+
+Thanks,
 
 Bart.
-
- 
-[PATCH] ib_srp: Keep processing commands during host removal
-
-Some SCSI upper layer drivers, e.g. sd, issue SCSI commands from
-inside scsi_remove_host(). See also the sd_shutdown() call in
-sd_remove(). Make sure that these commands have a chance to reach
-the SCSI device.
-
-Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
----
- drivers/infiniband/ulp/srp/ib_srp.c |    7 -------
- 1 file changed, 7 deletions(-)
-
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 39723e7..03b9fa0 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -1324,13 +1324,6 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 	unsigned long flags;
- 	int len;
- 
--	if (target->state == SRP_TARGET_DEAD ||
--	    target->state == SRP_TARGET_REMOVED) {
--		scmnd->result = DID_BAD_TARGET << 16;
--		scmnd->scsi_done(scmnd);
--		return 0;
--	}
--
- 	spin_lock_irqsave(&target->lock, flags);
- 	iu = __srp_get_tx_iu(target, SRP_IU_CMD);
- 	if (!iu)
--- 
-1.7.10.4
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
