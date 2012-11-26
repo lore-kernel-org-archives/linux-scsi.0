@@ -1,36 +1,36 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
-Date: Mon, 26 Nov 2012 23:15:08 +0400
-Message-ID: <1353957308.2681.5.camel@dabdike>
-References: <cover.1353903448.git.dillowda@ornl.gov>
-	 <CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Mon, 26 Nov 2012 23:15:54 +0400
+Message-ID: <1353957354.2681.6.camel@dabdike>
+References: <Pine.LNX.4.44L0.1211261120190.2168-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52341 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754150Ab2KZTP1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Nov 2012 14:15:27 -0500
-In-Reply-To: <CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1211261120190.2168-100000@iolanthe.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@purestorage.com>
-Cc: David Dillow <dillowda@ornl.gov>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>
 
-On Mon, 2012-11-26 at 10:50 -0800, Roland Dreier wrote:
->  - I think the srp_transport stuff should go through linux-scsi /
-> James B.
->    instead of my tree, esp. since it's shared with the IBM vscsi stuff
-> (I think)
->  - I see Bart had a few comments about a few of your patches, I'll
-> wait
->    for you guys to hash that out.
+On Mon, 2012-11-26 at 11:21 -0500, Alan Stern wrote:
+> On Mon, 26 Nov 2012, James Bottomley wrote:
+> 
+> > I'm also curious about driving sleep from autopm, since mode page timers
+> > don't control the sleep transition.
+> 
+> Is it feasible to do this the other way around?  That is, to drive 
+> runtime suspend by noticing when the device decides to put itself into 
+> a low-power state?
 
-I'm amenable to that, but we do need an agreed patch set, as Roland
-says.  I also hate to apply the pressure, but I suspect -rc7 was the
-last -rc, so I'm expecting the merge window to open on 2/12.
+Well, yes and no.  The spec is annoyingly (and deliberately) vague about
+what the states actually mean.  The two states that the devices go into
+because of timers is idle and standby.  The supposedly deeper low power
+state of sleep can only be reached by sending a command to the device.
+The design is that software (or HBA drivers) don't really need to notice
+idle and standby; the device automatically manages transitions between
+them depending on command activity.  For sleep, we do have to care (if
+it actually makes some meaningful difference).
 
 James
 
