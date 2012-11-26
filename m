@@ -1,14 +1,14 @@
 From: Aaron Lu <aaron.lu@intel.com>
 Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Mon, 26 Nov 2012 09:09:36 +0800
-Message-ID: <50B2C150.9070809@intel.com>
+Date: Mon, 26 Nov 2012 09:17:56 +0800
+Message-ID: <50B2C344.9060403@intel.com>
 References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com> <3650037.tRRn9I6XAb@vostro.rjw.lan> <50B2C076.3070201@intel.com> <1543239.67ZUIKlEE3@vostro.rjw.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1543239.67ZUIKlEE3@vostro.rjw.lan>
-Sender: linux-pm-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: "Rafael J. Wysocki" <rjw@sisk.pl>
 Cc: Tejun Heo <tj@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -84,8 +84,9 @@ On 11/26/2012 09:11 AM, Rafael J. Wysocki wrote:
 > But the media change event should change the status from suspended to active,
 > shouldn't it?
 
-The media change event is derived from the poll, if we stop the poll, how
-can we know the event in the first place?
+We need a way PM code can tell block layer that it is not necessary to
+poll the device now, and runtime suspended is not enough, so we need
+another way.
 
 Thanks,
 Aaron
