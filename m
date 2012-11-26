@@ -1,171 +1,90 @@
-From: David Dillow <dillowda@ornl.gov>
-Subject: [PATCH 05/11] IB/srp: destroy and recreate QP and CQs on each connection
-Date: Sun, 25 Nov 2012 23:44:10 -0500
-Message-ID: <8fa9a268ec4dc587970161efe94968f3263aad3b.1353903448.git.dillowda@ornl.gov>
+From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Subject: [PATCH 09/11] srp_transport: Simplify attribute initialization code
+Date: Sun, 25 Nov 2012 23:44:14 -0500
+Message-ID: <a55a3dbccc3742a817aa0b52e4e1333b7949af01.1353903448.git.dillowda@ornl.gov>
 References: <cover.1353903448.git.dillowda@ornl.gov>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from matrix.voodoobox.net ([75.127.97.206]:38059 "EHLO
-	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754142Ab2KZEzO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Nov 2012 23:55:14 -0500
-In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
-In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
-References: <cover.1353903448.git.dillowda@ornl.gov>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
+In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
+References: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, bvanassche-HInyCGIudOg@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Robert Jennings <rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-rdma@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org, roland@purestorage.com, Ishai Rabinovitz <ishai@mellanox.co.il>, "Michael S. Tsirkin" <mst@mellanox.co.il>
 
-From: Ishai Rabinovitz <ishai@mellanox.co.il>
+From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org
 
-HW QP FATAL errors persist over a reset operation, but we can recover
-from that by recreating the QP and associated CQs for each connection.
-Creating a new QP/CQ also completely forecloses any possibility of
-getting stale completions or packets on the new connection.
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 
-Signed-off-by: Ishai Rabinovitz <ishai@mellanox.co.il>
-Signed-off-by: Michael S. Tsirkin <mst@mellanox.co.il>
-[ updated to current code from OFED, cleaned up commit message ]
-Signed-off-by: David Dillow <dillowda@ornl.gov>
+Eliminate the private_rport_attrs[] array and the SETUP_*() macros
+used to set up that array since the information in that array
+duplicates the information in the static device attributes. Also,
+verify whether SRP_RPORT_ATTRS is large enough since it is easy
+to forget to update that macro when adding new attributes.
+
+Cc: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+Cc: Robert Jennings <rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |   66 ++++++++++++++++++----------------
- 1 files changed, 35 insertions(+), 31 deletions(-)
+ drivers/scsi/scsi_transport_srp.c |   26 ++++----------------------
+ 1 files changed, 4 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index f7d7e6a..a481727 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -250,27 +250,29 @@ static int srp_new_cm_id(struct srp_target_port *target)
- static int srp_create_target_ib(struct srp_target_port *target)
- {
- 	struct ib_qp_init_attr *init_attr;
-+	struct ib_cq *recv_cq, *send_cq;
-+	struct ib_qp *qp;
- 	int ret;
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index 07c4394..0d85f79 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -47,7 +47,6 @@ struct srp_internal {
+ 	struct device_attribute *host_attrs[SRP_HOST_ATTRS + 1];
  
- 	init_attr = kzalloc(sizeof *init_attr, GFP_KERNEL);
- 	if (!init_attr)
- 		return -ENOMEM;
+ 	struct device_attribute *rport_attrs[SRP_RPORT_ATTRS + 1];
+-	struct device_attribute private_rport_attrs[SRP_RPORT_ATTRS];
+ 	struct transport_container rport_attr_cont;
+ };
  
--	target->recv_cq = ib_create_cq(target->srp_host->srp_dev->dev,
--				       srp_recv_completion, NULL, target, SRP_RQ_SIZE, 0);
--	if (IS_ERR(target->recv_cq)) {
--		ret = PTR_ERR(target->recv_cq);
-+	recv_cq = ib_create_cq(target->srp_host->srp_dev->dev,
-+			       srp_recv_completion, NULL, target, SRP_RQ_SIZE, 0);
-+	if (IS_ERR(recv_cq)) {
-+		ret = PTR_ERR(recv_cq);
- 		goto err;
- 	}
+@@ -72,24 +71,6 @@ static DECLARE_TRANSPORT_CLASS(srp_host_class, "srp_host", srp_host_setup,
+ static DECLARE_TRANSPORT_CLASS(srp_rport_class, "srp_remote_ports",
+ 			       NULL, NULL, NULL);
  
--	target->send_cq = ib_create_cq(target->srp_host->srp_dev->dev,
--				       srp_send_completion, NULL, target, SRP_SQ_SIZE, 0);
--	if (IS_ERR(target->send_cq)) {
--		ret = PTR_ERR(target->send_cq);
-+	send_cq = ib_create_cq(target->srp_host->srp_dev->dev,
-+			       srp_send_completion, NULL, target, SRP_SQ_SIZE, 0);
-+	if (IS_ERR(send_cq)) {
-+		ret = PTR_ERR(send_cq);
- 		goto err_recv_cq;
- 	}
- 
--	ib_req_notify_cq(target->recv_cq, IB_CQ_NEXT_COMP);
-+	ib_req_notify_cq(recv_cq, IB_CQ_NEXT_COMP);
- 
- 	init_attr->event_handler       = srp_qp_event;
- 	init_attr->cap.max_send_wr     = SRP_SQ_SIZE;
-@@ -279,30 +281,41 @@ static int srp_create_target_ib(struct srp_target_port *target)
- 	init_attr->cap.max_send_sge    = 1;
- 	init_attr->sq_sig_type         = IB_SIGNAL_ALL_WR;
- 	init_attr->qp_type             = IB_QPT_RC;
--	init_attr->send_cq             = target->send_cq;
--	init_attr->recv_cq             = target->recv_cq;
-+	init_attr->send_cq             = send_cq;
-+	init_attr->recv_cq             = recv_cq;
- 
--	target->qp = ib_create_qp(target->srp_host->srp_dev->pd, init_attr);
--	if (IS_ERR(target->qp)) {
--		ret = PTR_ERR(target->qp);
-+	qp = ib_create_qp(target->srp_host->srp_dev->pd, init_attr);
-+	if (IS_ERR(qp)) {
-+		ret = PTR_ERR(qp);
- 		goto err_send_cq;
- 	}
- 
--	ret = srp_init_qp(target, target->qp);
-+	ret = srp_init_qp(target, qp);
- 	if (ret)
- 		goto err_qp;
- 
-+	if (target->qp)
-+		ib_destroy_qp(target->qp);
-+	if (target->recv_cq)
-+		ib_destroy_cq(target->recv_cq);
-+	if (target->send_cq)
-+		ib_destroy_cq(target->send_cq);
-+
-+	target->qp = qp;
-+	target->recv_cq = recv_cq;
-+	target->send_cq = send_cq;
-+
- 	kfree(init_attr);
- 	return 0;
- 
- err_qp:
--	ib_destroy_qp(target->qp);
-+	ib_destroy_qp(qp);
- 
- err_send_cq:
--	ib_destroy_cq(target->send_cq);
-+	ib_destroy_cq(send_cq);
- 
- err_recv_cq:
--	ib_destroy_cq(target->recv_cq);
-+	ib_destroy_cq(recv_cq);
- 
- err:
- 	kfree(init_attr);
-@@ -317,6 +330,9 @@ static void srp_free_target_ib(struct srp_target_port *target)
- 	ib_destroy_cq(target->send_cq);
- 	ib_destroy_cq(target->recv_cq);
- 
-+	target->qp = NULL;
-+	target->send_cq = target->recv_cq = NULL;
-+
- 	for (i = 0; i < SRP_RQ_SIZE; ++i)
- 		srp_free_iu(target->srp_host, target->rx_ring[i]);
- 	for (i = 0; i < SRP_SQ_SIZE; ++i)
-@@ -673,8 +689,6 @@ static void srp_reset_req(struct srp_target_port *target, struct srp_request *re
- 
- static int srp_reconnect_target(struct srp_target_port *target)
- {
--	struct ib_qp_attr qp_attr;
--	struct ib_wc wc;
- 	int i, ret;
- 
- 	if (srp_is_removed(target))
-@@ -689,20 +703,10 @@ static int srp_reconnect_target(struct srp_target_port *target)
- 	if (ret)
- 		goto err;
- 
--	qp_attr.qp_state = IB_QPS_RESET;
--	ret = ib_modify_qp(target->qp, &qp_attr, IB_QP_STATE);
--	if (ret)
--		goto err;
+-#define SETUP_TEMPLATE(attrb, field, perm, test, ro_test, ro_perm)	\
+-	i->private_##attrb[count] = dev_attr_##field;		\
+-	i->private_##attrb[count].attr.mode = perm;			\
+-	if (ro_test) {							\
+-		i->private_##attrb[count].attr.mode = ro_perm;		\
+-		i->private_##attrb[count].store = NULL;			\
+-	}								\
+-	i->attrb[count] = &i->private_##attrb[count];			\
+-	if (test)							\
+-		count++
 -
--	ret = srp_init_qp(target, target->qp);
-+	ret = srp_create_target_ib(target);
- 	if (ret)
- 		goto err;
- 
--	while (ib_poll_cq(target->recv_cq, 1, &wc) > 0)
--		; /* nothing */
--	while (ib_poll_cq(target->send_cq, 1, &wc) > 0)
--		; /* nothing */
+-#define SETUP_RPORT_ATTRIBUTE_RD(field)					\
+-	SETUP_TEMPLATE(rport_attrs, field, S_IRUGO, 1, 0, 0)
 -
- 	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
- 		struct srp_request *req = &target->req_ring[i];
- 		if (req->scmnd)
+-#define SETUP_RPORT_ATTRIBUTE_RW(field)					\
+-	SETUP_TEMPLATE(rport_attrs, field, S_IRUGO | S_IWUSR,		\
+-		       1, 1, S_IRUGO)
+-
+ #define SRP_PID(p) \
+ 	(p)->port_id[0], (p)->port_id[1], (p)->port_id[2], (p)->port_id[3], \
+ 	(p)->port_id[4], (p)->port_id[5], (p)->port_id[6], (p)->port_id[7], \
+@@ -326,9 +307,10 @@ srp_attach_transport(struct srp_function_template *ft)
+ 	i->rport_attr_cont.ac.match = srp_rport_match;
+ 
+ 	count = 0;
+-	SETUP_RPORT_ATTRIBUTE_RD(port_id);
+-	SETUP_RPORT_ATTRIBUTE_RD(roles);
+-	i->rport_attrs[count] = NULL;
++	i->rport_attrs[count++] = &dev_attr_port_id;
++	i->rport_attrs[count++] = &dev_attr_roles;
++	i->rport_attrs[count++] = NULL;
++	BUG_ON(count > ARRAY_SIZE(i->rport_attrs));
+ 
+ 	transport_container_register(&i->rport_attr_cont);
+ 
 -- 
 1.7.7.6
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
