@@ -1,58 +1,50 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: [PATCH 08/11] srp_transport: Fix attribute registration
-Date: Sun, 25 Nov 2012 23:44:13 -0500
-Message-ID: <dbcc2ab781fc513e8a880d028053020665765fd3.1353903448.git.dillowda@ornl.gov>
+From: David Dillow <dillowda@ornl.gov>
+Subject: [PATCH 10/11] srp_transport: Document sysfs attributes
+Date: Sun, 25 Nov 2012 23:44:15 -0500
+Message-ID: <a529b3922e12a1f880ddf4c79336f24361142c02.1353903448.git.dillowda@ornl.gov>
 References: <cover.1353903448.git.dillowda@ornl.gov>
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
-In-Reply-To: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
-References: <cover.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Robert Jennings <rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from matrix.voodoobox.net ([75.127.97.206]:38059 "EHLO
+	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754210Ab2KZEzK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Nov 2012 23:55:10 -0500
+In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
+In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
+References: <cover.1353903448.git.dillowda@ornl.gov>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-rdma@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org, roland@purestorage.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Robert Jennings <rcj@linux.vnet.ibm.com>
 
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+From: Bart Van Assche <bvanassche@acm.org>
 
-Register transport attributes after the attribute array has been
-set up instead of before. The current code can trigger a race
-condition because the code reading the attribute array can run
-on another thread than the code that initialized that array.
-Make sure that any code reading the attribute array will see all
-values written into that array.
-
-Cc: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-Cc: Robert Jennings <rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Robert Jennings <rcj@linux.vnet.ibm.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: David Dillow <dillowda@ornl.gov>
 ---
- drivers/scsi/scsi_transport_srp.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ Documentation/ABI/stable/sysfs-transport-srp |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/ABI/stable/sysfs-transport-srp
 
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index 21a045e..07c4394 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -324,13 +324,14 @@ srp_attach_transport(struct srp_function_template *ft)
- 	i->rport_attr_cont.ac.attrs = &i->rport_attrs[0];
- 	i->rport_attr_cont.ac.class = &srp_rport_class.class;
- 	i->rport_attr_cont.ac.match = srp_rport_match;
--	transport_container_register(&i->rport_attr_cont);
- 
- 	count = 0;
- 	SETUP_RPORT_ATTRIBUTE_RD(port_id);
- 	SETUP_RPORT_ATTRIBUTE_RD(roles);
- 	i->rport_attrs[count] = NULL;
- 
-+	transport_container_register(&i->rport_attr_cont);
+diff --git a/Documentation/ABI/stable/sysfs-transport-srp b/Documentation/ABI/stable/sysfs-transport-srp
+new file mode 100644
+index 0000000..7b0d4a5
+--- /dev/null
++++ b/Documentation/ABI/stable/sysfs-transport-srp
+@@ -0,0 +1,12 @@
++What:		/sys/class/srp_remote_ports/port-<h>:<n>/port_id
++Date:		June 27, 2007
++KernelVersion:	2.6.24
++Contact:	linux-scsi@vger.kernel.org
++Description:	16-byte local SRP port identifier in hexadecimal format. An
++		example: 4c:49:4e:55:58:20:56:49:4f:00:00:00:00:00:00:00.
 +
- 	i->f = ft;
- 
- 	return &i->t;
++What:		/sys/class/srp_remote_ports/port-<h>:<n>/roles
++Date:		June 27, 2007
++KernelVersion:	2.6.24
++Contact:	linux-scsi@vger.kernel.org
++Description:	Role of the remote port. Either "SRP Initiator" or "SRP Target".
 -- 
 1.7.7.6
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
