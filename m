@@ -1,12 +1,12 @@
 From: David Dillow <dillowda@ornl.gov>
-Subject: [PATCH 01/11] IB/srp: enlarge block layer timeout
-Date: Sun, 25 Nov 2012 23:44:06 -0500
-Message-ID: <47dc2dd2b59cf5d4e5124d0ad8a5f988b2f1a87e.1353903448.git.dillowda@ornl.gov>
+Subject: [PATCH 07/11] IB/srp: Document sysfs attributes
+Date: Sun, 25 Nov 2012 23:44:12 -0500
+Message-ID: <78288efeff82cae6001a5689a1f34707fdad6b6b.1353903448.git.dillowda@ornl.gov>
 References: <cover.1353903448.git.dillowda@ornl.gov>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from matrix.voodoobox.net ([75.127.97.206]:38059 "EHLO
 	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754205Ab2KZEzI (ORCPT
+	with ESMTP id S1754142Ab2KZEzI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Nov 2012 23:55:08 -0500
 In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
 In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
@@ -18,106 +18,178 @@ Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org, roland@purestorage.com
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-Enlarge the block layer timeout for disks such that it is above
-the InfiniBand transport layer timeout.
+Document the sysfs attributes of the SRP initiator according
+to the rules specified in Documentation/ABI/README.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: David Dillow <dillowda@ornl.gov>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |   45 +++++++++++++++++++++++++++++++++++
- drivers/infiniband/ulp/srp/ib_srp.h |    2 +
- 2 files changed, 47 insertions(+), 0 deletions(-)
+ Documentation/ABI/stable/sysfs-driver-ib_srp |  156 ++++++++++++++++++++++++++
+ 1 files changed, 156 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/ABI/stable/sysfs-driver-ib_srp
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 922d845..6c0cd66 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -1419,6 +1419,33 @@ err:
- 	return -ENOMEM;
- }
- 
-+static uint32_t srp_compute_rq_tmo(struct ib_qp_attr *qp_attr, int attr_mask)
-+{
-+	uint64_t T_tr_ns, max_compl_time_ms;
-+	uint32_t rq_tmo_jiffies;
+diff --git a/Documentation/ABI/stable/sysfs-driver-ib_srp b/Documentation/ABI/stable/sysfs-driver-ib_srp
+new file mode 100644
+index 0000000..481aae9
+--- /dev/null
++++ b/Documentation/ABI/stable/sysfs-driver-ib_srp
+@@ -0,0 +1,156 @@
++What:		/sys/class/infiniband_srp/srp-<hca>-<port_number>/add_target
++Date:		January 2, 2006
++KernelVersion:	2.6.15
++Contact:	linux-rdma@vger.kernel.org
++Description:	Interface for making ib_srp connect to a new target.
++		One can request ib_srp to connect to a new target by writing
++		a comma-separated list of login parameters to this sysfs
++		attribute. The supported parameters are:
++		* id_ext, a 16-digit hexadecimal number specifying the eight
++		  byte identifier extension in the 16-byte SRP target port
++		  identifier. The target port identifier is sent by ib_srp
++		  to the target in the SRP_LOGIN_REQ request.
++		* ioc_guid, a 16-digit hexadecimal number specifying the eight
++		  byte I/O controller GUID portion of the 16-byte target port
++		  identifier.
++		* dgid, a 32-digit hexadecimal number specifying the
++		  destination GID.
++		* pkey, a four-digit hexadecimal number specifying the
++		  InfiniBand partition key.
++		* service_id, a 16-digit hexadecimal number specifying the
++		  InfiniBand service ID used to establish communication with
++		  the SRP target. How to find out the value of the service ID
++		  is specified in the documentation of the SRP target.
++		* max_sect, a decimal number specifying the maximum number of
++		  512-byte sectors to be transferred via a single SCSI command.
++		* max_cmd_per_lun, a decimal number specifying the maximum
++		  number of outstanding commands for a single LUN.
++		* io_class, a hexadecimal number specifying the SRP I/O class.
++		  Must be either 0xff00 (rev 10) or 0x0100 (rev 16a). The I/O
++		  class defines the format of the SRP initiator and target
++		  port identifiers.
++		* initiator_ext, a 16-digit hexadecimal number specifying the
++		  identifier extension portion of the SRP initiator port
++		  identifier. This data is sent by the initiator to the target
++		  in the SRP_LOGIN_REQ request.
++		* cmd_sg_entries, a number in the range 1..255 that specifies
++		  the maximum number of data buffer descriptors stored in the
++		  SRP_CMD information unit itself. With allow_ext_sg=0 the
++		  parameter cmd_sg_entries defines the maximum S/G list length
++		  for a single SRP_CMD, and commands whose S/G list length
++		  exceeds this limit after S/G list collapsing will fail.
++		* allow_ext_sg, whether ib_srp is allowed to include a partial
++		  memory descriptor list in an SRP_CMD instead of the entire
++		  list. If a partial memory descriptor list has been included
++		  in an SRP_CMD the remaining memory descriptors are
++		  communicated from initiator to target via an additional RDMA
++		  transfer. Setting allow_ext_sg to 1 increases the maximum
++		  amount of data that can be transferred between initiator and
++		  target via a single SCSI command. Since not all SRP target
++		  implementations support partial memory descriptor lists the
++		  default value for this option is 0.
++		* sg_tablesize, a number in the range 1..2048 specifying the
++		  maximum S/G list length the SCSI layer is allowed to pass to
++		  ib_srp. Specifying a value that exceeds cmd_sg_entries is
++		  only safe with partial memory descriptor list support enabled
++		  (allow_ext_sg=1).
 +
-+	/*
-+	 * According to section 11.2.4.2 in the IBTA spec (Modify Queue Pair,
-+	 * table 91), both the QP timeout and the retry count have to be set
-+	 * for RC QP's during the RTR to RTS transition.
-+	 */
-+	WARN_ON((attr_mask & (IB_QP_TIMEOUT | IB_QP_RETRY_CNT)) !=
-+		(IB_QP_TIMEOUT | IB_QP_RETRY_CNT));
++What:		/sys/class/infiniband_srp/srp-<hca>-<port_number>/ibdev
++Date:		January 2, 2006
++KernelVersion:	2.6.15
++Contact:	linux-rdma@vger.kernel.org
++Description:	HCA name (<hca>).
 +
-+	/*
-+	 * Set target->rq_tmo_jiffies to one second more than the largest time
-+	 * it can take before an error completion is generated. See also
-+	 * C9-140..142 in the IBTA spec for more information about how to
-+	 * convert the QP Local ACK Timeout value to nanoseconds.
-+	 */
-+	T_tr_ns = 4096 * (1ULL << qp_attr->timeout);
-+	max_compl_time_ms = qp_attr->retry_cnt * 4 * T_tr_ns;
-+	do_div(max_compl_time_ms, NSEC_PER_MSEC);
-+	rq_tmo_jiffies = msecs_to_jiffies(max_compl_time_ms + 1000);
++What:		/sys/class/infiniband_srp/srp-<hca>-<port_number>/port
++Date:		January 2, 2006
++KernelVersion:	2.6.15
++Contact:	linux-rdma@vger.kernel.org
++Description:	HCA port number (<port_number>).
 +
-+	return rq_tmo_jiffies;
-+}
++What:		/sys/class/scsi_host/host<n>/allow_ext_sg
++Date:		May 19, 2011
++KernelVersion:	2.6.39
++Contact:	linux-rdma@vger.kernel.org
++Description:	Whether ib_srp is allowed to include a partial memory
++		descriptor list in an SRP_CMD when communicating with an SRP
++		target.
 +
- static void srp_cm_rep_handler(struct ib_cm_id *cm_id,
- 			       struct srp_login_rsp *lrsp,
- 			       struct srp_target_port *target)
-@@ -1478,6 +1505,8 @@ static void srp_cm_rep_handler(struct ib_cm_id *cm_id,
- 	if (ret)
- 		goto error_free;
- 
-+	target->rq_tmo_jiffies = srp_compute_rq_tmo(qp_attr, attr_mask);
++What:		/sys/class/scsi_host/host<n>/cmd_sg_entries
++Date:		May 19, 2011
++KernelVersion:	2.6.39
++Contact:	linux-rdma@vger.kernel.org
++Description:	Maximum number of data buffer descriptors that may be sent to
++		the target in a single SRP_CMD request.
 +
- 	ret = ib_modify_qp(target->qp, qp_attr, attr_mask);
- 	if (ret)
- 		goto error_free;
-@@ -1729,6 +1758,21 @@ static int srp_reset_host(struct scsi_cmnd *scmnd)
- 	return ret;
- }
- 
-+static int srp_slave_configure(struct scsi_device *sdev)
-+{
-+	struct Scsi_Host *shost = sdev->host;
-+	struct srp_target_port *target = host_to_target(shost);
-+	struct request_queue *q = sdev->request_queue;
-+	unsigned long timeout;
++What:		/sys/class/scsi_host/host<n>/dgid
++Date:		June 17, 2006
++KernelVersion:	2.6.17
++Contact:	linux-rdma@vger.kernel.org
++Description:	InfiniBand destination GID used for communication with the SRP
++		target. Differs from orig_dgid if port redirection has happened.
 +
-+	if (sdev->type == TYPE_DISK) {
-+		timeout = max_t(unsigned, 30 * HZ, target->rq_tmo_jiffies);
-+		blk_queue_rq_timeout(q, timeout);
-+	}
++What:		/sys/class/scsi_host/host<n>/id_ext
++Date:		June 17, 2006
++KernelVersion:	2.6.17
++Contact:	linux-rdma@vger.kernel.org
++Description:	Eight-byte identifier extension portion of the 16-byte target
++		port identifier.
 +
-+	return 0;
-+}
++What:		/sys/class/scsi_host/host<n>/ioc_guid
++Date:		June 17, 2006
++KernelVersion:	2.6.17
++Contact:	linux-rdma@vger.kernel.org
++Description:	Eight-byte I/O controller GUID portion of the 16-byte target
++		port identifier.
 +
- static ssize_t show_id_ext(struct device *dev, struct device_attribute *attr,
- 			   char *buf)
- {
-@@ -1861,6 +1905,7 @@ static struct scsi_host_template srp_template = {
- 	.module				= THIS_MODULE,
- 	.name				= "InfiniBand SRP initiator",
- 	.proc_name			= DRV_NAME,
-+	.slave_configure		= srp_slave_configure,
- 	.info				= srp_target_info,
- 	.queuecommand			= srp_queuecommand,
- 	.eh_abort_handler		= srp_abort,
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
-index 020caf0..e3a6304 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.h
-+++ b/drivers/infiniband/ulp/srp/ib_srp.h
-@@ -163,6 +163,8 @@ struct srp_target_port {
- 	struct ib_sa_query     *path_query;
- 	int			path_query_id;
- 
-+	u32			rq_tmo_jiffies;
++What:		/sys/class/scsi_host/host<n>/local_ib_device
++Date:		November 29, 2006
++KernelVersion:	2.6.19
++Contact:	linux-rdma@vger.kernel.org
++Description:	Name of the InfiniBand HCA used for communicating with the
++		SRP target.
 +
- 	struct ib_cm_id	       *cm_id;
- 
- 	int			max_ti_iu_len;
++What:		/sys/class/scsi_host/host<n>/local_ib_port
++Date:		November 29, 2006
++KernelVersion:	2.6.19
++Contact:	linux-rdma@vger.kernel.org
++Description:	Number of the HCA port used for communicating with the
++		SRP target.
++
++What:		/sys/class/scsi_host/host<n>/orig_dgid
++Date:		June 17, 2006
++KernelVersion:	2.6.17
++Contact:	linux-rdma@vger.kernel.org
++Description:	InfiniBand destination GID specified in the parameters
++		written to the add_target sysfs attribute.
++
++What:		/sys/class/scsi_host/host<n>/pkey
++Date:		June 17, 2006
++KernelVersion:	2.6.17
++Contact:	linux-rdma@vger.kernel.org
++Description:	A 16-bit number representing the InfiniBand partition key used
++		for communication with the SRP target.
++
++What:		/sys/class/scsi_host/host<n>/req_lim
++Date:		October 20, 2010
++KernelVersion:	2.6.36
++Contact:	linux-rdma@vger.kernel.org
++Description:	Number of requests ib_srp can send to the target before it has
++		to wait for more credits. For more information see also the
++		SRP credit algorithm in the SRP specification.
++
++What:		/sys/class/scsi_host/host<n>/service_id
++Date:		June 17, 2006
++KernelVersion:	2.6.17
++Contact:	linux-rdma@vger.kernel.org
++Description:	InfiniBand service ID used for establishing communication with
++		the SRP	target.
++
++What:		/sys/class/scsi_host/host<n>/zero_req_lim
++Date:		September 20, 2006
++KernelVersion:	2.6.18
++Contact:	linux-rdma@vger.kernel.org
++Description:	Number of times the initiator had to wait before sending a
++		request to the target because it ran out of credits. For more
++		information see also the SRP credit algorithm in the SRP
++		specification.
 -- 
 1.7.7.6
 
