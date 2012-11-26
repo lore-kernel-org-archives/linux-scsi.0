@@ -1,50 +1,40 @@
 From: David Dillow <dillowda@ornl.gov>
-Subject: [PATCH 10/11] srp_transport: Document sysfs attributes
-Date: Sun, 25 Nov 2012 23:44:15 -0500
-Message-ID: <a529b3922e12a1f880ddf4c79336f24361142c02.1353903448.git.dillowda@ornl.gov>
+Subject: Re: [PATCH 09/11] srp_transport: Simplify attribute initialization
+ code
+Date: Mon, 26 Nov 2012 00:02:22 -0500
+Message-ID: <1353906142.23660.13.camel@obelisk.thedillows.org>
 References: <cover.1353903448.git.dillowda@ornl.gov>
+	 <a55a3dbccc3742a817aa0b52e4e1333b7949af01.1353903448.git.dillowda@ornl.gov>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from matrix.voodoobox.net ([75.127.97.206]:38059 "EHLO
+Received: from matrix.voodoobox.net ([75.127.97.206]:35460 "EHLO
 	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754210Ab2KZEzK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Nov 2012 23:55:10 -0500
-In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
-In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
-References: <cover.1353903448.git.dillowda@ornl.gov>
+	with ESMTP id S1750756Ab2KZFC2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Nov 2012 00:02:28 -0500
+In-Reply-To: <a55a3dbccc3742a817aa0b52e4e1333b7949af01.1353903448.git.dillowda@ornl.gov>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-rdma@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org, roland@purestorage.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Robert Jennings <rcj@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+On Sun, 2012-11-25 at 23:44 -0500, David Dillow wrote:
+> From: David Dillow <dillowda@ornl.gov
+> 
+> From: Bart Van Assche <bvanassche@acm.org>
+> 
+> Eliminate the private_rport_attrs[] array and the SETUP_*() macros
+> used to set up that array since the information in that array
+> duplicates the information in the static device attributes. Also,
+> verify whether SRP_RPORT_ATTRS is large enough since it is easy
+> to forget to update that macro when adding new attributes.
 
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Robert Jennings <rcj@linux.vnet.ibm.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: David Dillow <dillowda@ornl.gov>
----
- Documentation/ABI/stable/sysfs-transport-srp |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/ABI/stable/sysfs-transport-srp
-
-diff --git a/Documentation/ABI/stable/sysfs-transport-srp b/Documentation/ABI/stable/sysfs-transport-srp
-new file mode 100644
-index 0000000..7b0d4a5
---- /dev/null
-+++ b/Documentation/ABI/stable/sysfs-transport-srp
-@@ -0,0 +1,12 @@
-+What:		/sys/class/srp_remote_ports/port-<h>:<n>/port_id
-+Date:		June 27, 2007
-+KernelVersion:	2.6.24
-+Contact:	linux-scsi@vger.kernel.org
-+Description:	16-byte local SRP port identifier in hexadecimal format. An
-+		example: 4c:49:4e:55:58:20:56:49:4f:00:00:00:00:00:00:00.
-+
-+What:		/sys/class/srp_remote_ports/port-<h>:<n>/roles
-+Date:		June 27, 2007
-+KernelVersion:	2.6.24
-+Contact:	linux-scsi@vger.kernel.org
-+Description:	Role of the remote port. Either "SRP Initiator" or "SRP Target".
+Bah, screwed up some edits for the batch email. This one (and Vu's) is
+properly attributed in the repository.
 -- 
-1.7.7.6
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
 
