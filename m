@@ -1,36 +1,37 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH 05/11] IB/srp: destroy and recreate QP and CQs on each
- connection
-Date: Mon, 26 Nov 2012 19:57:36 +0100
-Message-ID: <50B3BBA0.1050302@acm.org>
-References: <cover.1353903448.git.dillowda@ornl.gov> <8fa9a268ec4dc587970161efe94968f3263aad3b.1353903448.git.dillowda@ornl.gov>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
+Date: Mon, 26 Nov 2012 23:15:08 +0400
+Message-ID: <1353957308.2681.5.camel@dabdike>
+References: <cover.1353903448.git.dillowda@ornl.gov>
+	 <CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <8fa9a268ec4dc587970161efe94968f3263aad3b.1353903448.git.dillowda-1Heg1YXhbW8@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, Ishai Rabinovitz <ishai-VPRAkNaXOzVS1MOuV/RT9w@public.gmane.org>, "Michael S. Tsirkin" <mst-VPRAkNaXOzVS1MOuV/RT9w@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52341 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754150Ab2KZTP1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Nov 2012 14:15:27 -0500
+In-Reply-To: <CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@purestorage.com>
+Cc: David Dillow <dillowda@ornl.gov>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>
 
-On 11/26/12 05:44, David Dillow wrote:
-> From: Ishai Rabinovitz <ishai-VPRAkNaXOzVS1MOuV/RT9w@public.gmane.org>
->
-> HW QP FATAL errors persist over a reset operation, but we can recover
-> from that by recreating the QP and associated CQs for each connection.
-> Creating a new QP/CQ also completely forecloses any possibility of
-> getting stale completions or packets on the new connection.
+On Mon, 2012-11-26 at 10:50 -0800, Roland Dreier wrote:
+>  - I think the srp_transport stuff should go through linux-scsi /
+> James B.
+>    instead of my tree, esp. since it's shared with the IBM vscsi stuff
+> (I think)
+>  - I see Bart had a few comments about a few of your patches, I'll
+> wait
+>    for you guys to hash that out.
 
-[ ... ]
+I'm amenable to that, but we do need an agreed patch set, as Roland
+says.  I also hate to apply the pressure, but I suspect -rc7 was the
+last -rc, so I'm expecting the merge window to open on 2/12.
 
-This looks like a more elegant way than what I had came up with ("Make 
-srp_disconnect_target() wait for IB completions") so I'm fine with this 
-patch, and with the next one too.
+James
 
-Bart.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
