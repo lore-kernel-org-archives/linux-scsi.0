@@ -1,83 +1,52 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Tue, 27 Nov 2012 09:41:40 +0800
-Message-ID: <50B41A54.8020905@intel.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>    <20121119145605.GC15971@htj.dyndns.org>    <1353337611.2444.32.camel@dabdike.int.hansenpartnership.com>    <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike>   <50B2F96D.9080405@intel.com> <1353915142.2523.36.camel@dabdike>  <50B327FB.3020701@intel.com> <1353935850.2523.52.camel@dabdike>
+From: David Dillow <dillowda@ornl.gov>
+Subject: Re: [PATCH 04/11] IB/srp: keep processing commands during host
+ removal
+Date: Mon, 26 Nov 2012 22:16:16 -0500
+Message-ID: <1353986176.28917.3.camel@obelisk.thedillows.org>
+References: <cover.1353903448.git.dillowda@ornl.gov>
+	 <8715294a23dded5879b3a327c470d9b6a39ddbc4.1353903448.git.dillowda@ornl.gov>
+	 <50B339C8.2000104@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53493 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755614Ab2K0Blb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Nov 2012 20:41:31 -0500
-In-Reply-To: <1353935850.2523.52.camel@dabdike>
+Received: from matrix.voodoobox.net ([75.127.97.206]:52219 "EHLO
+	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757937Ab2K0DQY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Nov 2012 22:16:24 -0500
+In-Reply-To: <50B339C8.2000104@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, roland@purestorage.com
 
-On 11/26/2012 09:17 PM, James Bottomley wrote:
-> On Mon, 2012-11-26 at 16:27 +0800, Aaron Lu wrote:
->> Well, ZPREADY is not a power state that we can program the ODD to
->> enter(figure 234 and table 323 of the SPEC), it servers more like an
->> information provided by ODD to host so that host does not need to do TUR
->> and then examine the sense code to decide if zero power ready status is
->> satisfied but simply query ODD if its current power state is ZPREADY.
->> So it's not that we program the device to go into ZPREADY power state
->> and the ODD's power will be omitted.
->>
->> The benefit of a ZPREADY capable ODD is that, when we need to decide if
->> the ODD is in a zero power ready status, we can simply query the ODD by
->> issuing a GET_EVENT_STATUS_NOTIFICATION and check the returned power
->> class events, if it is in ZPREADY power state, then we can omit the
->> power. To support ZPREADY, we just need some change to the zpready
->> funtion, which currently uses sense code to check ZP ready status.
->>
->> So this is my understanding of ZPREADY, and I don't see it as a total
->> different thing with ZPODD, it just changes the way how host senses the
->> zero power ready status. But if I was wrong, please kindly let me know,
->> thanks.
+On Mon, 2012-11-26 at 10:43 +0100, Bart Van Assche wrote:
+> On 11/26/12 05:44, David Dillow wrote:
+> > From: Bart Van Assche <bvanassche@acm.org>
+> > 
+> > Some SCSI upper layer drivers, e.g. sd, issue SCSI commands from
+> > inside scsi_remove_host() (see also the sd_shutdown() call in
+> > sd_remove()). Make sure that these commands have a chance to reach
+> > the SCSI device.
+
+> Hi Dave,
 > 
-> My understanding is that a ZPREADY device may be capable of internal
-> power down, meaning it doesn't necessarily need the host to omit the
-> power.  It depends what the difference is between Sleep and Off is
-> (they're deliberately left as implementation defined in the standard, Ch
-> 16, but the conditions of sleep are pretty onerous, so it sounds like
-> most of the mechanics are powered down).
+> After I posted the patch on which the above patch has been based I
+> realized that it can be simplified. Since the patch called "Eliminate
+> state SRP_TARGET_CONNECTING" blocks the SCSI host as long as the RDMA
+> RC connection is being reconnected srp_queuecommand() won't be invoked
+> during the "disconnected" or "error" state. How about adding the patch
+> below just after the patch that eliminates the state
+> SRP_TARGET_CONNECTING ?
 
-I Agree that when the ODD is put to Sleep state, it may power down most
-of the mechanics, good for power saving. The problem is, we have the 2
-seconds poll, and since Sleep state can not process any command, we will
-need to bring the ODD out of Sleep state every 2 seconds, is this
-feasible? Please note that leaving Sleep state needs full initialization
-of the ODD.
+Right, I left off out the part of that patch that blocks the target as I
+wanted to think about its implications a bit more. I think it is
+probably the right thing to do, and will likely add that functionality
+back.
 
-ZPODD system(ODD+platform) solves this problem with ACPI, when the ODD
-is powered off and any event that may induce a media change event will
-generate an ACPI interrupt, so we can stop the poll(though in whatever
-way is still in discussion).
-
-So I suppose we need to find a proper way to implement Sleep.
-
-> 
-> However, if you want to work it similarly to ZPODD, then the timeouts
-> automatically transitions to ZPREADY, the device issues an event, we
-> trap the event at the low level and omit power.
-
-Yeah, I can do this. Except that I don't quite understand how the device
-issues the event to host, by interrupt? My understanding is that, it
-will issue this event to itself...and host still needs to use command
-GET_EVENT_STATUS_NOTIFICATION to fetch the event, much the same way like
-the media related events it emits.
-
-> 
-> I'm also curious about driving sleep from autopm, since mode page timers
-> don't control the sleep transition.
-
-I see. But we will need to work out a sensible way to put the ODD into
-that power state, if at all possible.
-
-Thanks,
-Aaron
+-- 
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
 
