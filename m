@@ -1,48 +1,51 @@
-From: David Dillow <dillowda@ornl.gov>
-Subject: Re: [PATCH 04/11] IB/srp: keep processing commands during host
- removal
-Date: Mon, 26 Nov 2012 22:16:16 -0500
-Message-ID: <1353986176.28917.3.camel@obelisk.thedillows.org>
+From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Subject: Re: [PATCH 03/11] IB/srp: don't send anything on a bad QP
+Date: Mon, 26 Nov 2012 22:31:24 -0500
+Message-ID: <1353987084.28917.10.camel@obelisk.thedillows.org>
 References: <cover.1353903448.git.dillowda@ornl.gov>
-	 <8715294a23dded5879b3a327c470d9b6a39ddbc4.1353903448.git.dillowda@ornl.gov>
-	 <50B339C8.2000104@acm.org>
+	 <90b21916a384281682d520302b594834e010671b.1353903448.git.dillowda@ornl.gov>
+	 <50B333AF.6040509@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from matrix.voodoobox.net ([75.127.97.206]:52219 "EHLO
-	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757937Ab2K0DQY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Nov 2012 22:16:24 -0500
-In-Reply-To: <50B339C8.2000104@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <50B333AF.6040509-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, roland@purestorage.com
 
-On Mon, 2012-11-26 at 10:43 +0100, Bart Van Assche wrote:
+On Mon, 2012-11-26 at 10:17 +0100, Bart Van Assche wrote:
 > On 11/26/12 05:44, David Dillow wrote:
-> > From: Bart Van Assche <bvanassche@acm.org>
-> > 
-> > Some SCSI upper layer drivers, e.g. sd, issue SCSI commands from
-> > inside scsi_remove_host() (see also the sd_shutdown() call in
-> > sd_remove()). Make sure that these commands have a chance to reach
-> > the SCSI device.
+> > Once we know we have an issue with the QP, there is no point trying to
+> > send anything else down the pipe. This also allows us to consolidate
+> > code in the SCSI EH path.
 
-> Hi Dave,
-> 
-> After I posted the patch on which the above patch has been based I
-> realized that it can be simplified. Since the patch called "Eliminate
-> state SRP_TARGET_CONNECTING" blocks the SCSI host as long as the RDMA
-> RC connection is being reconnected srp_queuecommand() won't be invoked
-> during the "disconnected" or "error" state. How about adding the patch
-> below just after the patch that eliminates the state
-> SRP_TARGET_CONNECTING ?
+> After I posted the patch on which the above patch has been based I 
+> realized that testing the connection state at the start of 
+> srp_send_tsk_mgmt() is not sufficient to avoid QPN use-after-free. If a 
+> DREQ is received by the initiator after the above test has been 
+> performed and before the task management function has been sent it is 
+> still possible to send a task management function over a closed QP.
 
-Right, I left off out the part of that patch that blocks the target as I
-wanted to think about its implications a bit more. I think it is
-probably the right thing to do, and will likely add that functionality
-back.
+AFIACT, DREQ does not actually close the QP -- it only tells us that the
+other side would like to. We don't actually close the connection until
+we try to send on it again, I think -- not sure if we see recv failures
+for the queued work items.
+
+Regardless, the issue of resource lifetime is an issue that needs
+solving.
+
+>  I'd like to address this in a different way - see also the thread called 
+> "SCSI LLDs, the SCSI error handler and host resource lifetime" on the 
+> linux-scsi mailing list (November 20, 
+> http://marc.info/?t=135342155500003&r=1).
+
+I like the direction you propose there. It seems that scsi_remove_host()
+at one point waited for the EH thread to exit -- or perhaps it was part
+of scsi_host_put() chain -- as there's the longstanding deferral to the
+work queue for the SRP target removal. Of course, that's been there for
+~5 years now, and things have changed in the SCSI stack.
 
 -- 
 Dave Dillow
@@ -50,3 +53,7 @@ National Center for Computational Science
 Oak Ridge National Laboratory
 (865) 241-6602 office
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
