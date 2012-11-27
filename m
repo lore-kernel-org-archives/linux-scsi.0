@@ -1,61 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RESEND][PATCH 15/20][SCSI] mpt3sas: This patch is part 2 of
- mpt3sas_scsih.c
-Date: Tue, 27 Nov 2012 13:41:43 +0400
-Message-ID: <1354009303.2276.10.camel@dabdike>
-References: <20121126211612.GA10454@localhost.localdomain>
+From: vinayak holikatti <vinholikatti@gmail.com>
+Subject: Re: [PATCH 192/493] scsi: remove use of __devinit
+Date: Tue, 27 Nov 2012 17:02:51 +0530
+Message-ID: <CAKVbJB9wTj9HtXYTW0Le+oHsdMACkuBnf2jSXu-pAx+gPKoBYA@mail.gmail.com>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+	<1353349642-3677-192-git-send-email-wfp5p@virginia.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54190 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758342Ab2K0Jlu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Nov 2012 04:41:50 -0500
-In-Reply-To: <20121126211612.GA10454@localhost.localdomain>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:48056 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754829Ab2K0Lcy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2012 06:32:54 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so12306150oag.19
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Nov 2012 03:32:52 -0800 (PST)
+In-Reply-To: <1353349642-3677-192-git-send-email-wfp5p@virginia.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sreekanth.reddy@lsi.com
-Cc: linux-scsi@vger.kernel.org, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com
+To: Bill Pemberton <wfp5p@virginia.edu>
+Cc: gregkh@linuxfoundation.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Wilcox <matthew@wil.cx>, Russell King <linux@arm.linux.org.uk>, Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, Neela Syam Kolli <megaraidlinux@lsi.com>, GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, Geoff Levand <geoff@infradead.org>, Michael Reed <mdr@sgi.com>, Willem Riede <osst@riede.org>, =?ISO-8859-1?Q?Kai_M=E4kisara?= <Kai.Makisara@kolumbus.fi>, Kurt Garloff <garloff@suse.de>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dc395x@twibble.org, iss_storagedev@hp.com, linuxppc-dev@lists.ozlabs.org, cbe-oss-dev@lists.ozlabs.org, osst-users
 
-On Tue, 2012-11-27 at 02:46 +0530, sreekanth.reddy@lsi.com wrote:
-> This patch contains code related to Scsi Host Layer for
-> MPT (Message Passing Technology) based controllers
-> This patch is part 2 of mpt3sas_scsih.c
->=20
-> This patch also Fixes the error:
->=20
-> drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: error: =E2=80=98event_da=
-ta=E2=80=99
-> undeclared (first use in this function)
-> drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: note: each undeclared
-> identifier is reported only once for each function it appears in
+>  drivers/scsi/ufs/ufshcd.c                 |  2 +-
 
-And now we get this:
+Acked-by: Vinayak Holikatti <vinholikatti@gmail.com>
 
-drivers/scsi/mpt3sas/mpt3sas_scsih.c: In function =E2=80=98_scsih_sas_b=
-roadcast_primitive_event=E2=80=99:
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: warning: dereferencing =E2=
-=80=98void *=E2=80=99 pointer [enabled by default]
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: error: request for member =
-=E2=80=98PhyNum=E2=80=99 in something not a structure or union
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: warning: dereferencing =E2=
-=80=98void *=E2=80=99 pointer [enabled by default]
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:5368:2: error: request for member =
-=E2=80=98PortWidth=E2=80=99 in something not a structure or union
-make[3]: *** [drivers/scsi/mpt3sas/mpt3sas_scsih.o] Error 1
+only for drivers/scsi/ufs/ufshcd.c
 
-I'm not your compile service.  prepare the whole series against
-scsi-misc, please, *compile* and test it and then resubmit.
-
-Thanks,
-
-James
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 4a370f8..a79ff87 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1811,7 +1811,7 @@ static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+>   *
+>   * Returns 0 on success, non-zero value on failure
+>   */
+> -static int __devinit
+> +static int
+>  ufshcd_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  {
+>         struct Scsi_Host *host;
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Regards,
+Vinayak Holikatti
