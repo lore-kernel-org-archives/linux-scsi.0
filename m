@@ -1,7 +1,7 @@
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch,v3,repost 02/10] scsi: make __scsi_alloc_queue numa-aware
-Date: Tue, 27 Nov 2012 11:46:30 -0500
-Message-ID: <1354034799-8460-3-git-send-email-jmoyer@redhat.com>
+Subject: [patch,v3,repost 04/10] scsi: allocate scsi_cmnd-s from the device's local numa node
+Date: Tue, 27 Nov 2012 11:46:32 -0500
+Message-ID: <1354034799-8460-5-git-send-email-jmoyer@redhat.com>
 References: <1354034799-8460-1-git-send-email-jmoyer@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1354034799-8460-1-git-send-email-jmoyer@redhat.com>
@@ -10,29 +10,58 @@ To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@paralle
 Cc: Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Pass the numa node id set in the Scsi_Host on to blk_init_queue_node
-in order to keep all allocations local to the numa node the device is
-closest to.
-
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 ---
- drivers/scsi/scsi_lib.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/scsi.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index da36a3a..ebad5e8 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1664,7 +1664,8 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
- 	struct request_queue *q;
- 	struct device *dev = shost->dma_dev;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2936b44..1750702 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -173,16 +173,19 @@ static DEFINE_MUTEX(host_cmd_pool_mutex);
+  * NULL on failure
+  */
+ static struct scsi_cmnd *
+-scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask)
++scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask,
++			int node)
+ {
+ 	struct scsi_cmnd *cmd;
  
--	q = blk_init_queue(request_fn, NULL);
-+	q = blk_init_queue_node(request_fn, NULL,
-+				scsi_host_get_numa_node(shost));
- 	if (!q)
+-	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
++	cmd = kmem_cache_alloc_node(pool->cmd_slab,
++				    gfp_mask | pool->gfp_mask | __GFP_ZERO,
++				    node);
+ 	if (!cmd)
  		return NULL;
+ 
+-	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
+-					     gfp_mask | pool->gfp_mask);
++	cmd->sense_buffer = kmem_cache_alloc_node(pool->sense_slab,
++					gfp_mask | pool->gfp_mask, node);
+ 	if (!cmd->sense_buffer) {
+ 		kmem_cache_free(pool->cmd_slab, cmd);
+ 		return NULL;
+@@ -223,7 +226,8 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
+ {
+ 	struct scsi_cmnd *cmd;
+ 
+-	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask);
++	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask,
++				      scsi_host_get_numa_node(shost));
+ 	if (!cmd)
+ 		return NULL;
+ 
+@@ -435,7 +439,7 @@ struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask)
+ 	if (!pool)
+ 		return NULL;
+ 
+-	return scsi_pool_alloc_command(pool, gfp_mask);
++	return scsi_pool_alloc_command(pool, gfp_mask, NUMA_NO_NODE);
+ }
+ EXPORT_SYMBOL(scsi_allocate_command);
  
 -- 
 1.7.1
