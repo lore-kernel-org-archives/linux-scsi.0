@@ -1,33 +1,74 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] csiostor: remove unneeded memset()
-Date: Tue, 27 Nov 2012 20:33:30 +0300
-Message-ID: <20121127173330.GD1059@elgon.mountain>
+From: Joseph Glanville <joseph.glanville-2MxvZkOi9dvvnOemgxGiVw@public.gmane.org>
+Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
+Date: Wed, 28 Nov 2012 05:10:32 +1100
+Message-ID: <CAOzFzEg7ytycGcLqN4rOyLBUMC_spw+qaHxfHRzNCn4eOH8cUA@mail.gmail.com>
+References: <cover.1353903448.git.dillowda@ornl.gov>
+	<50B4EBA3.7070400@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45984 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932237Ab2K0Rdl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2012 12:33:41 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <50B4EBA3.7070400-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-No need to memset() this when we just copy over it on the next line.
+On 28 November 2012 03:34, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
+> On 11/26/12 05:44, David Dillow wrote:
+>>
+>> Here is a first, UNTESTED, pass at preparing a merge of Bart's SRP HA
+>> work to upstream. It is not complete, as I have not yet added the
+>> transport layer error handling and related patches. It is also currently
+>> missing the patch to maintain a single connection for an I_T nexus.
+>>
+>> I swapped Ishai's code to recreate QP/CQs for each connection, as that
+>> adds recovery from fatal hardware errors, and reduces the code needed to
+>> avoid stale completions. Similarly, Vu's patch slightly reduces reconnect
+>> times.
+>>
+>> Target blocking/unblocking hasn't been added from Bart's patch that
+>> removes the SRP_TARGET_CONNECTING state; I think it is probably the right
+>> thing to do, but want to think it over a bit more.
+>>
+>> Similarly, I'm looking for a clean way to start the reconnection effort
+>> as soon as we get an error through the CQ -- we know that any pending
+>> commands are lost to us at that point, so we should be able to kick them
+>> back upstream quickly. This should allow multipath to reissue them on one
+>> of the remaining good paths.
+>>
+>> This series compiles, but is otherwise UNTESTED. I'll be working on that
+>> over the next few days, with an eye on getting as much of Bart's work
+>> into 3.8 as possible.
+>
+>
+> Thanks Dave for doing all this work. A reworked and retested patch series
+> that should address all comments that have been posted so far can be found
+> here: http://github.com/bvanassche/linux/srp-ha. I can repost the entire
+> patch series if you want. The changes compared to the previous time this
+> patch series was posted are:
+> * Integrated Ishai's and Vu's patches for recreating the QP and the CQs.
+> * Took advantage of SCSI core changes that make scsi_remove_host() wait
+>   until device removal and error handling finished (will post these
+>   shortly).
+>
+> Bart.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+This is grreat news, would be really good to see this merged for 3.8
 
-diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
-index 551959e..8b54976 100644
---- a/drivers/scsi/csiostor/csio_lnode.c
-+++ b/drivers/scsi/csiostor/csio_lnode.c
-@@ -245,7 +245,6 @@ csio_append_attrib(uint8_t **ptr, uint16_t type, uint8_t *val, uint16_t len)
- 	len += 4;		/* includes attribute type and length */
- 	len = (len + 3) & ~3;	/* should be multiple of 4 bytes */
- 	ae->len = htons(len);
--	memset(ae->value, 0, len - 4);
- 	memcpy(ae->value, val, len);
- 	*ptr += len;
- }
+Bart - I will test the new srp-ha branch in our environment.
+
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Joseph.
+
+-- 
+CTO | Orion Virtualisation Solutions | www.orionvm.com.au
+Phone: 1300 56 99 52 | Mobile: 0428 754 846
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
