@@ -1,49 +1,53 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] target: update error handling for sbc_setup_write_same()
-Date: Tue, 27 Nov 2012 17:27:01 +0300
-Message-ID: <20121127142701.GA1059@elgon.mountain>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: SCSI LLDs, the SCSI error handler and host resource lifetime
+Date: Tue, 27 Nov 2012 16:37:09 +0100
+Message-ID: <50B4DE25.30206@suse.de>
+References: <50AB9286.8040403@acm.org> <50AC808D.1060700@suse.de> <50B3A59F.3050506@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:53841 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754981Ab2K0PhL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Nov 2012 10:37:11 -0500
+In-Reply-To: <50B3A59F.3050506@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-We recently changed this to return positive subsystem error codes so the
-error handling needs to be updated.
+On 11/26/2012 06:23 PM, Bart Van Assche wrote:
+> On 11/21/12 08:19, Hannes Reinecke wrote:
+>> Hmm.
+>> This would still mean that the eh thread will run until finished.
+>> Which can take _A LOT_ of time (we're speaking hours here).
+>> I would rather have an additional return code in the various
+>> scsi_try_XXX functions to terminate the loop quickly.
+>
+> Hello Hannes,
+>
+> Since I'm not sure that I understood you properly: is something like
+> the patch below what you had in mind ?
+>
+Yeah, something like this.
+Although the usage of 'scsi_host_scan_allowed()' is
+non-obvious; after all, we're not _scanning_ this host,
+we're just checking if it's working normally.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+But thanks for doing this.
+Cheers,
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 943c689..4fd22cd 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -439,7 +439,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 			cmd->t_task_lba = get_unaligned_be64(&cdb[12]);
- 
- 			ret = sbc_setup_write_same(cmd, &cdb[10], ops);
--			if (ret < 0)
-+			if (ret)
- 				return ret;
- 			break;
- 		default:
-@@ -512,7 +512,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		cmd->t_task_lba = get_unaligned_be64(&cdb[2]);
- 
- 		ret = sbc_setup_write_same(cmd, &cdb[1], ops);
--		if (ret < 0)
-+		if (ret)
- 			return ret;
- 		break;
- 	case WRITE_SAME:
-@@ -530,7 +530,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		 * of byte 1 bit 3 UNMAP instead of original reserved field
- 		 */
- 		ret = sbc_setup_write_same(cmd, &cdb[1], ops);
--		if (ret < 0)
-+		if (ret)
- 			return ret;
- 		break;
- 	case VERIFY:
+Hannes
+
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
