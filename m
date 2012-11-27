@@ -1,67 +1,33 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch,v3,repost 04/10] scsi: allocate scsi_cmnd-s from the device's local numa node
-Date: Tue, 27 Nov 2012 11:46:32 -0500
-Message-ID: <1354034799-8460-5-git-send-email-jmoyer@redhat.com>
-References: <1354034799-8460-1-git-send-email-jmoyer@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1354034799-8460-1-git-send-email-jmoyer@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com
-Cc: Bart Van Assche <bvanassche@acm.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] csiostor: remove unneeded memset()
+Date: Tue, 27 Nov 2012 20:33:30 +0300
+Message-ID: <20121127173330.GD1059@elgon.mountain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45984 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932237Ab2K0Rdl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2012 12:33:41 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
----
- drivers/scsi/scsi.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+No need to memset() this when we just copy over it on the next line.
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 2936b44..1750702 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -173,16 +173,19 @@ static DEFINE_MUTEX(host_cmd_pool_mutex);
-  * NULL on failure
-  */
- static struct scsi_cmnd *
--scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask)
-+scsi_pool_alloc_command(struct scsi_host_cmd_pool *pool, gfp_t gfp_mask,
-+			int node)
- {
- 	struct scsi_cmnd *cmd;
- 
--	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
-+	cmd = kmem_cache_alloc_node(pool->cmd_slab,
-+				    gfp_mask | pool->gfp_mask | __GFP_ZERO,
-+				    node);
- 	if (!cmd)
- 		return NULL;
- 
--	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
--					     gfp_mask | pool->gfp_mask);
-+	cmd->sense_buffer = kmem_cache_alloc_node(pool->sense_slab,
-+					gfp_mask | pool->gfp_mask, node);
- 	if (!cmd->sense_buffer) {
- 		kmem_cache_free(pool->cmd_slab, cmd);
- 		return NULL;
-@@ -223,7 +226,8 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
- {
- 	struct scsi_cmnd *cmd;
- 
--	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask);
-+	cmd = scsi_pool_alloc_command(shost->cmd_pool, gfp_mask,
-+				      scsi_host_get_numa_node(shost));
- 	if (!cmd)
- 		return NULL;
- 
-@@ -435,7 +439,7 @@ struct scsi_cmnd *scsi_allocate_command(gfp_t gfp_mask)
- 	if (!pool)
- 		return NULL;
- 
--	return scsi_pool_alloc_command(pool, gfp_mask);
-+	return scsi_pool_alloc_command(pool, gfp_mask, NUMA_NO_NODE);
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
+index 551959e..8b54976 100644
+--- a/drivers/scsi/csiostor/csio_lnode.c
++++ b/drivers/scsi/csiostor/csio_lnode.c
+@@ -245,7 +245,6 @@ csio_append_attrib(uint8_t **ptr, uint16_t type, uint8_t *val, uint16_t len)
+ 	len += 4;		/* includes attribute type and length */
+ 	len = (len + 3) & ~3;	/* should be multiple of 4 bytes */
+ 	ae->len = htons(len);
+-	memset(ae->value, 0, len - 4);
+ 	memcpy(ae->value, val, len);
+ 	*ptr += len;
  }
- EXPORT_SYMBOL(scsi_allocate_command);
- 
--- 
-1.7.1
