@@ -1,32 +1,43 @@
-From: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
-Date: Tue, 27 Nov 2012 08:42:10 +0200
-Message-ID: <50B460C2.9020000@mellanox.com>
-References: <cover.1353903448.git.dillowda@ornl.gov>  <CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com>  <1353957308.2681.5.camel@dabdike> <1353989041.28917.24.camel@obelisk.thedillows.org>
+From: vinayak holikatti <vinholikatti@gmail.com>
+Subject: Re: [PATCH 097/493] scsi: remove use of __devexit_p
+Date: Tue, 27 Nov 2012 12:43:19 +0530
+Message-ID: <CAKVbJB9MNYU+Q0kkmLnORQyb6=Ua6JesWqaA+pMm98kE2RXswA@mail.gmail.com>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+	<1353349642-3677-97-git-send-email-wfp5p@virginia.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1353989041.28917.24.camel-1q1vX8mYZiGLUyTwlgNVppKKF0rrzTr+@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:34313 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758065Ab2K0HNU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2012 02:13:20 -0500
+Received: by mail-ob0-f174.google.com with SMTP id wc20so10668339obb.19
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Nov 2012 23:13:20 -0800 (PST)
+In-Reply-To: <1353349642-3677-97-git-send-email-wfp5p@virginia.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bill Pemberton <wfp5p@virginia.edu>
+Cc: gregkh@linuxfoundation.org, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Matthew Wilcox <matthew@wil.cx>, Russell King <linux@arm.linux.org.uk>, Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, Neela Syam Kolli <megaraidlinux@lsi.com>, GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, Michael Reed <mdr@sgi.com>, Willem Riede <osst@riede.org>, =?ISO-8859-1?Q?Kai_M=E4kisara?= <Kai.Makisara@kolumbus.fi>, Kurt Garloff <garloff@suse.de>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dc395x@twibble.org, iss_storagedev@hp.com, osst-users@lists.sourceforge.net
 
-On 27/11/2012 06:04, David Dillow wrote:
-> We can push it through James's tree if need be, but Bart's code is 
-> pretty self-contained, and going through the SCSI tree will introduce 
-> merge dependencies. It'd be much easier to push it all through the 
-> RDMA tree
+>  drivers/scsi/ufs/ufshcd.c                 | 2 +-
 
-Yep, this makes sense to me even without taking into account the time 
-left for the merge window to open,
-the patches have been around for long time and relate directly to the 
-SRP code in the IB subsystem, there's no point in introducing merge 
-dependencies where it can be avoided.
+Acked-by: Vinayak Holikatti <vinholikatti@gmail.com>
 
-Or.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+only for drivers/scsi/ufs/ufshcd.c
+
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 58f4ba6..4a370f8 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1947,7 +1947,7 @@ static struct pci_driver ufshcd_pci_driver = {
+>         .name = UFSHCD,
+>         .id_table = ufshcd_pci_tbl,
+>         .probe = ufshcd_probe,
+> -       .remove = __devexit_p(ufshcd_remove),
+> +       .remove = ufshcd_remove,
+>         .shutdown = ufshcd_shutdown,
+>  #ifdef CONFIG_PM
+>         .suspend = ufshcd_suspend,
+
+Thanks,
+Vinayak Holikatti
