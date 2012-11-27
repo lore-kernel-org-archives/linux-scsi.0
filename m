@@ -1,50 +1,55 @@
-From: Rob Evers <revers@redhat.com>
-Subject: Re: [PATCH 0/2] Change type-2 dif to use rq embedded 32 byte cdb
-Date: Tue, 27 Nov 2012 11:12:17 -0500
-Message-ID: <50B4E661.6020002@redhat.com>
-References: <1353528468-5664-1-git-send-email-revers@redhat.com> <yq14nkbsyr8.fsf@sermon.lab.mkp.net>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
+Date: Tue, 27 Nov 2012 17:34:43 +0100
+Message-ID: <50B4EBA3.7070400@acm.org>
+References: <cover.1353903448.git.dillowda@ornl.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61322 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755399Ab2K0QMz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Nov 2012 11:12:55 -0500
-In-Reply-To: <yq14nkbsyr8.fsf@sermon.lab.mkp.net>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:43071 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755861Ab2K0Qeq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2012 11:34:46 -0500
+In-Reply-To: <cover.1353903448.git.dillowda@ornl.gov>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, chad.dupuis@qlogic.com, giridhar.malavali@qlogic.com, scameron@beardog.cce.hp.com, mike.miller@hp.com, fushun@marvell.com
+To: David Dillow <dillowda@ornl.gov>
+Cc: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, roland@purestorage.com
 
-On 11/26/2012 06:58 PM, Martin K. Petersen wrote:
->>>>>> "Rob" == Rob Evers<revers@redhat.com>  writes:
-> Rob>  These patches replace the original t10 type 2 dif mempool
-> Rob>  implementation by increasing the block and scsi cdb maximum sizes
-> Rob>  from 16 to 32 bytes.  The cdb embedded in the request structure can
-> Rob>  then be used for type 2 dif commands, or other 32 byte cdbs as
-> Rob>  required.
+On 11/26/12 05:44, David Dillow wrote:
+> Here is a first, UNTESTED, pass at preparing a merge of Bart's SRP HA
+> work to upstream. It is not complete, as I have not yet added the
+> transport layer error handling and related patches. It is also currently
+> missing the patch to maintain a single connection for an I_T nexus.
 >
-> Rob>  Motivation for this is that type-2 dif commands should be treated
-> Rob>  as any other read/writes generally, without any performance
-> Rob>  penalty.
+> I swapped Ishai's code to recreate QP/CQs for each connection, as that
+> adds recovery from fatal hardware errors, and reduces the code needed to
+> avoid stale completions. Similarly, Vu's patch slightly reduces reconnect
+> times.
 >
-> We did the mempool because we did not want to penalize everybody else by
-> always allocating 32-byte CDBs. Type 2 is a really rare corner case.
-
-I didn't see a penalty in the non dif case, in the sanity checking I did.
-If someone has results that indicate otherwise, please indicate.
-
-> So while I agree we should handle the UA scenario correctly, I'm not
-> sure I agree with the fix. Why are you messing with Type 2 devices in
-> the first place? These should really only be used inside disk arrays.
+> Target blocking/unblocking hasn't been added from Bart's patch that
+> removes the SRP_TARGET_CONNECTING state; I think it is probably the right
+> thing to do, but want to think it over a bit more.
 >
+> Similarly, I'm looking for a clean way to start the reconnection effort
+> as soon as we get an error through the CQ -- we know that any pending
+> commands are lost to us at that point, so we should be able to kick them
+> back upstream quickly. This should allow multipath to reissue them on one
+> of the remaining good paths.
+>
+> This series compiles, but is otherwise UNTESTED. I'll be working on that
+> over the next few days, with an eye on getting as much of Bart's work
+> into 3.8 as possible.
 
-The previous fix for the mempool race condition was found when
-one of our partners reported a problem in a system that had
-type 2 dif storage attached to the host.
+Thanks Dave for doing all this work. A reworked and retested patch 
+series that should address all comments that have been posted so far can 
+be found here: http://github.com/bvanassche/linux/srp-ha. I can repost 
+the entire patch series if you want. The changes compared to the 
+previous time this patch series was posted are:
+* Integrated Ishai's and Vu's patches for recreating the QP and the CQs.
+* Took advantage of SCSI core changes that make scsi_remove_host() wait
+   until device removal and error handling finished (will post these
+   shortly).
 
-Use of BLK_MAX_CDB and MAX_COMMAND_SIZE could
-use some feedback.
-
-
+Bart.
