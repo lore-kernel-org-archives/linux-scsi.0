@@ -1,32 +1,54 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: Error handling on FC devices
-Date: Tue, 27 Nov 2012 15:03:21 -0500
-Message-ID: <1354046601.4420.14.camel@localhost.localdomain>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: Error handling on FC devices
+Date: Tue, 27 Nov 2012 20:29:07 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net>
 References: <50AA290F.8000105@suse.de>  <50B3EDEA.40008@emulex.com>
-Reply-To: emilne@redhat.com
+ <1354046601.4420.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9288 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754601Ab2K0UEI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Nov 2012 15:04:08 -0500
-In-Reply-To: <50B3EDEA.40008@emulex.com>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:28600 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755381Ab2K0UaP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2012 15:30:15 -0500
+In-Reply-To: <1354046601.4420.14.camel@localhost.localdomain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@emulex.com
+To: "emilne@redhat.com" <emilne@redhat.com>, "James.Smart@emulex.com" <James.Smart@emulex.com>
 Cc: Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Mon, 2012-11-26 at 17:32 -0500, James Smart wrote:
-> Given path switching is somewhat separate from the i/o, would it better 
-> to send a notification of a path-fail condition as part of the eh, 
-> rather than hinging it on the individual i/o.  Yes, the i/o is still in 
-> limbo and can't be switched to the new path, but other i/o could without 
-> incurring the delay.
-
-Is there a potential issue with a write that is taking a long time on
-one path, which could cause path switching for subsequent writes to
-another path, before the disposition of the first write is known?
-
-
+VGhlcmUgaXMgYSBuZXcgY29tbWFuZCBpbiBTUEMtNCBjYWxsZWQgUkVNT1ZFIElfVCBORVhVUyB0
+aGF0IGlzIGludGVuZGVkIHRvIGhlbHAgdGhhdCBzaXR1YXRpb24uICBSRU1PVkUgSV9UIE5FWFVT
+IGxldHMgdGhlIGFwcGxpY2F0aW9uIGNsaWVudCB1c2UgYSBnb29kIElfVCBuZXh1cyB0byBhYm9y
+dCBjb21tYW5kcyB0aGF0IHdlcmUgYmVpbmcgcHJvY2Vzc2VkIG9uIGEgYmFkIElfVCBuZXh1cywg
+c28gaXQgY2FuIHNhZmVseSByZS1pc3N1ZSB0aG9zZSBjb21tYW5kcyBvbiB0aGUgZ29vZCBJX1Qg
+bmV4dXMgd2l0aG91dCB3b3JyeWluZyB0aGF0IHRoZSBvcmlnaW5hbCBjb21tYW5kcyBtaWdodCBy
+ZXN1bWUuDQoNCkluIGNvbnRyYXN0Og0KLSB0aGUgQUJPUlQgVEFTSywgQUJPUlQgVEFTSyBTRVQs
+IGFuZCBDTEVBUiBUQVNLIFNFVCBtdXN0IHVzZSB0aGUgc2FtZSBJX1QgbmV4dXMgYXMgdGhlIGNv
+bW1hbmRzIGJlaW5nIGFib3J0ZWQsIHNvIGFyZSBub3QgdmlhYmxlIGlmIHRoYXQgSV9UIG5leHVz
+IGlzIGJhZA0KLSBMT0dJQ0FMIFVOSVQgUkVTRVQgYWJvcnRzIGNvbW1hbmRzIGZyb20gZXZlcnkg
+SV9UIG5leHVzLCBzbyBpbiBhZGRpdGlvbiB0byBhYm9ydGluZyBjb21tYW5kcyBmcm9tIHRoZSBi
+YWQgSV9UIG5leHVzIGl0IGFsc28gYWZmZWN0cyBjb21tYW5kcyBvbiB0aGUgZ29vZCBJX1QgbmV4
+dXMNCg0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2Nz
+aS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2Vy
+Lmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBFd2FuIE1pbG5lDQo+IFNlbnQ6IFR1ZXNkYXksIDI3
+IE5vdmVtYmVyLCAyMDEyIDI6MDMgUE0NCj4gVG86IEphbWVzLlNtYXJ0QGVtdWxleC5jb20NCj4g
+Q2M6IEhhbm5lcyBSZWluZWNrZTsgU0NTSSBNYWlsaW5nIExpc3Q7IEFuZHJldyBWYXNxdWV6OyBD
+aGFkIER1cHVpczsNCj4gSmFtZXMgQm90dG9tbGV5DQo+IFN1YmplY3Q6IFJlOiBFcnJvciBoYW5k
+bGluZyBvbiBGQyBkZXZpY2VzDQo+IA0KPiBPbiBNb24sIDIwMTItMTEtMjYgYXQgMTc6MzIgLTA1
+MDAsIEphbWVzIFNtYXJ0IHdyb3RlOg0KPiA+IEdpdmVuIHBhdGggc3dpdGNoaW5nIGlzIHNvbWV3
+aGF0IHNlcGFyYXRlIGZyb20gdGhlIGkvbywgd291bGQgaXQgYmV0dGVyDQo+ID4gdG8gc2VuZCBh
+IG5vdGlmaWNhdGlvbiBvZiBhIHBhdGgtZmFpbCBjb25kaXRpb24gYXMgcGFydCBvZiB0aGUgZWgs
+DQo+ID4gcmF0aGVyIHRoYW4gaGluZ2luZyBpdCBvbiB0aGUgaW5kaXZpZHVhbCBpL28uICBZZXMs
+IHRoZSBpL28gaXMgc3RpbGwgaW4NCj4gPiBsaW1ibyBhbmQgY2FuJ3QgYmUgc3dpdGNoZWQgdG8g
+dGhlIG5ldyBwYXRoLCBidXQgb3RoZXIgaS9vIGNvdWxkIHdpdGhvdXQNCj4gPiBpbmN1cnJpbmcg
+dGhlIGRlbGF5Lg0KPiANCj4gSXMgdGhlcmUgYSBwb3RlbnRpYWwgaXNzdWUgd2l0aCBhIHdyaXRl
+IHRoYXQgaXMgdGFraW5nIGEgbG9uZyB0aW1lIG9uDQo+IG9uZSBwYXRoLCB3aGljaCBjb3VsZCBj
+YXVzZSBwYXRoIHN3aXRjaGluZyBmb3Igc3Vic2VxdWVudCB3cml0ZXMgdG8NCj4gYW5vdGhlciBw
+YXRoLCBiZWZvcmUgdGhlIGRpc3Bvc2l0aW9uIG9mIHRoZSBmaXJzdCB3cml0ZSBpcyBrbm93bj8N
+Cj4gDQo+IA0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUg
+bGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdl
+IHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAg
+aHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
