@@ -1,72 +1,63 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] sd: Don't incorrectly "promote" DIF type0 into DIF type1
- disks.
-Date: Tue, 27 Nov 2012 16:17:29 -0800
-Message-ID: <20121128001729.GB4321@blackbox.djwong.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Wed, 28 Nov 2012 01:51 +0100
+Message-ID: <21511277.LLinyDpbAK@vostro.rjw.lan>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com> <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1353906191.2523.25.camel@dabdike>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-pm@vger.kernel.org, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If I run the following command:
-# modprobe scsi_debug dev_size_mb=64 ato=1 dix=1 dif=0
+On Monday, November 26, 2012 09:03:11 AM James Bottomley wrote:
+> On Mon, 2012-11-26 at 01:33 +0100, Rafael J. Wysocki wrote:
+> > On Monday, November 19, 2012 03:06:51 PM James Bottomley wrote:
+> > > > I really think we need a way for (auto)pm and event polling to talk to
+> > > > each other so that autopm can tell event poll to sod off while pm is
+> > > > in effect.  Trying to solve this from inside libata doesn't seem
+> > > > right.  The problem, again, seems to be figuring out which hardware
+> > > > device maps to which block device.  Hmmm... Any good ideas?
+> > > 
+> > > I've asked the PM people several times about this, because it's a real
+> > > problem for almost everything:  PM needs some type of top to bottom
+> > > stack view, which the layering isolation we have within storage really
+> > > doesn't cope with well.  No real suggestion has been forthcoming.
+> > 
+> > Actually, I think that the particular case in question is really special
+> > and the fact that there's the pollig loop that user space is involved in
+> > doesn't make things more stratightforward.
+> > 
+> > And PM really doesn't need to see things top to bottom, but the polling
+> > needs to know what happens in the PM land.  We need to be able to tell it
+> > "from now on tell user space that there are no events here".  The question
+> > is where to put that information so that it's accessible to all parts of the
+> > stack involved.
+> 
+> Right, open to suggestions ...
 
-then I see the following in the dmesg log:
+Having considered that a bit more I'm now thinking that in fact the power state
+the device is in at the moment doesn't really matter, so the polling code need
+not really know what PM is doing.  What it needs to know is that the device
+will generate a hardware event when something interesting happens, so it is not
+necessary to poll it.
 
-[   25.859145] scsi_debug: host protection DIX0
+In this particular case it is related to power management (apparently, hardware
+events will only be generated after the device has been put into ACPI D3cold,
+or so Aaron seems to be claiming), but it need not be in general, at least in
+principle.
 
-Ok, DIX0, which means "no integrity extensions at all", and no DIF support at all.
-I'm not sure why you'd advertise DIX0 at all, but so far so good.
+It looks like we need an "event driven" flag that the can be set in the lower
+layers and read by the upper layers.  I suppose this means it would need to be
+in struct device, but not necessarily in the PM-specific part of it.
 
-(DIX is the mechanism by which the OS sends integrity data to the disk in
-whatever format DIF specifies.  You need DIF for DIX to do anything.)
+Thanks,
+Rafael
 
-[   25.860214] scsi0 : scsi_debug, version 1.82 [20100324], dev_size_mb=64, opts=0x0
-[   25.863418] scsi 0:0:0:0: Direct-Access     Linux    scsi_debug       0004 PQ: 0 ANSI: 5
-[   25.880079] sd 0:0:0:0: [sda] 131072 512-byte logical blocks: (67.1 MB/64.0 MiB)
-[   25.884133] sd 0:0:0:0: [sda] Write Protect is off
-[   25.892205] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
-[   25.920344]  sda: unknown partition table
-[   25.926704] sd_dif_config_host: type=0 dif=0 dix=8
-[   25.931651] sd 0:0:0:0: [sda] Enabling DIX T10-DIF-TYPE1-CRC protection
 
-Huh??  Here we are turning on DIX support as if the disk supports DIF type1.
-This seems strange to me because we didn't advertise any DIF support at all.
-
-[   25.952208] sd 0:0:0:0: [sda] Attached SCSI disk
-[   25.977977] BUG: unable to handle kernel paging request at 00000000000ffc02
-[   25.980262] IP: [<ffffffffa01ebaa5>] resp_read.part.38+0x145/0x420 [scsi_debug]
-
-Uhoh, that shouldn't happen.  The SCSI layer sent along what looks like a type1
-read request even though the disk wasn't really prepared to handle it, and
-kaboom.  I don't think this particular combination is terribly common, but we
-could at least not misprogram the disk when we see it.
-
-If the disk advertises DIF type 0, we can skip the rest of the DIF setup.
-Right now, the SCSI layer "promotes" a DIF type 0 disk into a DIF type 1 disk,
-which seems incorrect.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- drivers/scsi/sd_dif.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 04998f3..ede5b7b 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -313,6 +313,10 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
- 	u8 type = sdkp->protection_type;
- 	int dif, dix;
- 
-+	/* Don't promote DIF type0 into type1 support. */
-+	if (type == SD_DIF_TYPE0_PROTECTION)
-+		return;
-+
- 	dif = scsi_host_dif_capable(sdp->host, type);
- 	dix = scsi_host_dix_capable(sdp->host, type);
- 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
