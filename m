@@ -1,67 +1,66 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Error handling on FC devices
-Date: Wed, 28 Nov 2012 08:09:56 +0100
-Message-ID: <50B5B8C4.1040503@suse.de>
-References: <50AA290F.8000105@suse.de>  <50B3EDEA.40008@emulex.com> <1354046601.4420.14.camel@localhost.localdomain> <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Wed, 28 Nov 2012 08:56:09 +0000
+Message-ID: <1354092969.2276.49.camel@dabdike>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+	 <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike>
+	 <21511277.LLinyDpbAK@vostro.rjw.lan>
+	 <20121128013928.GB15971@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55826 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751126Ab2K1HKC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Nov 2012 02:10:02 -0500
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20121128013928.GB15971@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: "emilne@redhat.com" <emilne@redhat.com>, "James.Smart@emulex.com" <James.Smart@emulex.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On 11/27/2012 09:29 PM, Elliott, Robert (Server Storage) wrote:
-> There is a new command in SPC-4 called REMOVE I_T NEXUS that is inten=
-ded to help
- > that situation.  REMOVE I_T NEXUS lets the application client use=20
-a good I_T nexus
- > to abort commands that were being processed on a bad I_T nexus,=20
-so it can safely
- > re-issue those commands on the good I_T nexus without worrying=20
-that the original
- > commands might resume.
->
-> In contrast:
-> - the ABORT TASK, ABORT TASK SET, and CLEAR TASK SET must use the sam=
-e I_T nexus
- >   as the commands being aborted, so are not viable if that I_T=20
-nexus is bad
-> - LOGICAL UNIT RESET aborts commands from every I_T nexus, so in addi=
-tion to
- >   aborting commands from the bad I_T nexus it also affects=20
-commands on the
- >   good I_T nexus
->
-Hmm. Nice in principle, but the problem here is that we cannot=20
-guarantee the nexus is still intact.
-So one would need to implement this in the HBA firmware; the=20
-firmware would need to be able to process the TMF, and do the=20
-appropriate things for the FC stack like dropping the rport etc.
+On Tue, 2012-11-27 at 17:39 -0800, Tejun Heo wrote:
+> Hey, Rafael.
+> 
+> On Wed, Nov 28, 2012 at 01:51:00AM +0100, Rafael J. Wysocki wrote:
+> > Having considered that a bit more I'm now thinking that in fact the power state
+> > the device is in at the moment doesn't really matter, so the polling code need
+> > not really know what PM is doing.  What it needs to know is that the device
+> > will generate a hardware event when something interesting happens, so it is not
+> > necessary to poll it.
+> > 
+> > In this particular case it is related to power management (apparently, hardware
+> > events will only be generated after the device has been put into ACPI D3cold,
+> > or so Aaron seems to be claiming), but it need not be in general, at least in
+> > principle.
+> > 
+> > It looks like we need an "event driven" flag that the can be set in the lower
+> > layers and read by the upper layers.  I suppose this means it would need to be
+> > in struct device, but not necessarily in the PM-specific part of it.
+> 
+> We already have that.  That's what gendisk->async_events is for (as
+> opposed to gendisk->events).  If all events are async_events, block
+> won't poll for events, but I'm not sure that's the golden bullet.
+> 
+> * None implements async_events yet and an API is missing -
+>   disk_check_events() - which is trivial to add, but it's the same
+>   story.  We'll need a mechanism to shoot up notification from libata
+>   to block layer.  It's admittedly easier to justify routing through
+>   SCSI tho.  So, we're mostly shifting the problem.  Given that async
+>   events is nice to have, so it isn't a bad idea.
 
-Good idea, though.
+Could we drive it in the polling code?  As in, if we set a flag to say
+we're event driven and please don't bother us, we could just respond to
+the poll with the last known state (this would probably have to be in
+SCSI somewhere since most polls are Test Unit Readys).  That way ZPODD
+sets this flag when the device powers down and unsets it when it powers
+up.
 
-James, Andrew, Chad?
-Any chance of having a firmware supporting REMOVE IT-NEXUS ?
+James
 
-Cheers,
+> * Still dunno much about zpodd but IIUC the notification from
+>   zero-power is via ACPI.  To advertise that the device doesn't need
+>   polling, it should also be able to do async notification while
+>   powered up, which isn't covered by zpodd but ATA async notification.
+>   So, ummm... that's another obstacle.  If zpodd requires the device
+>   to support ATA async notification, it might not be too bad tho.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
