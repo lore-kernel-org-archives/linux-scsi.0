@@ -1,75 +1,68 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch] target: update error handling for
- sbc_setup_write_same()
-Date: Tue, 27 Nov 2012 19:03:19 -0800
-Message-ID: <1354071799.18736.110.camel@haakon2.linux-iscsi.org>
-References: <20121127142701.GA1059@elgon.mountain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:40811 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645Ab2K1DDV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2012 22:03:21 -0500
-In-Reply-To: <20121127142701.GA1059@elgon.mountain>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH] target: Make spc_get_write_same_sectors return sector_t
+Date: Wed, 28 Nov 2012 03:55:25 +0000
+Message-ID: <1354074925-12647-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Hi Dan,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Tue, 2012-11-27 at 17:27 +0300, Dan Carpenter wrote:
-> We recently changed this to return positive subsystem error codes so the
-> error handling needs to be updated.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
+We already expect TFO->get_blocks() to return sector_t for zero value case
+when doing WRITE_SAME to the end of the backend device, so go ahead and return
+sector_t from spc_get_write_same_sectors() to handle this case properly.
 
-A nice catch on this sense_reason_t return breakage that I managed to
-introduce within for-3.8 code.
+Also, update the single iblock_execute_write_same() caller of this code.
 
-Applied to for-next.
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_iblock.c  |    2 +-
+ drivers/target/target_core_sbc.c     |    2 +-
+ include/target/target_core_backend.h |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Thank you!
-
---nab
-
-> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> index 943c689..4fd22cd 100644
-> --- a/drivers/target/target_core_sbc.c
-> +++ b/drivers/target/target_core_sbc.c
-> @@ -439,7 +439,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
->  			cmd->t_task_lba = get_unaligned_be64(&cdb[12]);
->  
->  			ret = sbc_setup_write_same(cmd, &cdb[10], ops);
-> -			if (ret < 0)
-> +			if (ret)
->  				return ret;
->  			break;
->  		default:
-> @@ -512,7 +512,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
->  		cmd->t_task_lba = get_unaligned_be64(&cdb[2]);
->  
->  		ret = sbc_setup_write_same(cmd, &cdb[1], ops);
-> -		if (ret < 0)
-> +		if (ret)
->  			return ret;
->  		break;
->  	case WRITE_SAME:
-> @@ -530,7 +530,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
->  		 * of byte 1 bit 3 UNMAP instead of original reserved field
->  		 */
->  		ret = sbc_setup_write_same(cmd, &cdb[1], ops);
-> -		if (ret < 0)
-> +		if (ret)
->  			return ret;
->  		break;
->  	case VERIFY:
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 42cc3fb..cfdb949 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -483,7 +483,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 	struct bio *bio;
+ 	struct bio_list list;
+ 	sector_t block_lba = cmd->t_task_lba;
+-	unsigned int sectors = spc_get_write_same_sectors(cmd);
++	sector_t sectors = spc_get_write_same_sectors(cmd);
+ 
+ 	sg = &cmd->t_data_sg[0];
+ 
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 4fd22cd..8be5bd7 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -109,7 +109,7 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ 	return 0;
+ }
+ 
+-int spc_get_write_same_sectors(struct se_cmd *cmd)
++sector_t spc_get_write_same_sectors(struct se_cmd *cmd)
+ {
+ 	u32 num_blocks;
+ 
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index 3393ab1..5079109 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -52,7 +52,7 @@ void	target_complete_cmd(struct se_cmd *, u8);
+ 
+ sense_reason_t	spc_parse_cdb(struct se_cmd *cmd, unsigned int *size);
+ sense_reason_t	spc_emulate_report_luns(struct se_cmd *cmd);
+-int	spc_get_write_same_sectors(struct se_cmd *cmd);
++sector_t	spc_get_write_same_sectors(struct se_cmd *cmd);
+ 
+ sense_reason_t	sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops);
+ u32	sbc_get_device_rev(struct se_device *dev);
+-- 
+1.7.2.5
