@@ -1,72 +1,71 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v6 08/13] Remove get_device() / put_device() pair from scsi_request_fn()
-Date: Wed, 28 Nov 2012 13:48:59 +0100
-Message-ID: <50B6083B.2000209@acm.org>
+Subject: [PATCH v6 09/13] Avoid saving/restoring interrupt state inside scsi_remove_host()
+Date: Wed, 28 Nov 2012 13:50:08 +0100
+Message-ID: <50B60880.3050602@acm.org>
 References: <50B60619.4080406@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:46499 "EHLO
+Received: from jacques.telenet-ops.be ([195.130.132.50]:55753 "EHLO
 	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754811Ab2K1MtA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2012 07:49:00 -0500
+	with ESMTP id S1754731Ab2K1MuK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2012 07:50:10 -0500
 In-Reply-To: <50B60619.4080406@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
-Now that all scsi_request_fn() callers hold a reference on the
-SCSI device that function is invoked on and since
-blk_cleanup_queue() waits until scsi_request_fn() has finished
-it is safe to remove the get_device() / put_device() pair from
-scsi_request_fn().
+Since it is not allowed to invoke scsi_remove_host() with interrupts
+disabled, avoid saving and restoring the interrupt state inside
+scsi_remove_host().
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Acked-by: Tejun Heo <tj@kernel.org>
 Cc: James Bottomley <JBottomley@Parallels.com>
+Cc: Tejun Heo <tj@kernel.org>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_lib.c |   12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/scsi/hosts.c |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8d772df..cfc420b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1525,16 +1525,14 @@ static void scsi_softirq_done(struct request *rq)
-  * Lock status: IO request lock assumed to be held when called.
-  */
- static void scsi_request_fn(struct request_queue *q)
-+	__releases(q->queue_lock)
-+	__acquires(q->queue_lock)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 593085a..6ae16cd 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -156,27 +156,25 @@ EXPORT_SYMBOL(scsi_host_set_state);
+  **/
+ void scsi_remove_host(struct Scsi_Host *shost)
  {
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost;
- 	struct scsi_cmnd *cmd;
- 	struct request *req;
- 
--	if(!get_device(&sdev->sdev_gendev))
--		/* We must be tearing the block queue down already */
--		return;
+-	unsigned long flags;
 -
- 	/*
- 	 * To start with, we keep looping until the queue is empty, or until
- 	 * the host is no longer able to accept any more requests.
-@@ -1643,11 +1641,7 @@ out_delay:
- 	if (sdev->device_busy == 0)
- 		blk_delay_queue(q, SCSI_QUEUE_DELAY);
- out:
--	/* must be careful here...if we trigger the ->remove() function
--	 * we cannot be holding the q lock */
--	spin_unlock_irq(q->queue_lock);
--	put_device(&sdev->sdev_gendev);
--	spin_lock_irq(q->queue_lock);
-+	;
- }
+ 	mutex_lock(&shost->scan_mutex);
+-	spin_lock_irqsave(shost->host_lock, flags);
++	spin_lock_irq(shost->host_lock);
+ 	if (scsi_host_set_state(shost, SHOST_CANCEL))
+ 		if (scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY)) {
+-			spin_unlock_irqrestore(shost->host_lock, flags);
++			spin_unlock_irq(shost->host_lock);
+ 			mutex_unlock(&shost->scan_mutex);
+ 			return;
+ 		}
+-	spin_unlock_irqrestore(shost->host_lock, flags);
++	spin_unlock_irq(shost->host_lock);
  
- u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
+ 	scsi_autopm_get_host(shost);
+ 	scsi_forget_host(shost);
+ 	mutex_unlock(&shost->scan_mutex);
+ 	scsi_proc_host_rm(shost);
+ 
+-	spin_lock_irqsave(shost->host_lock, flags);
++	spin_lock_irq(shost->host_lock);
+ 	if (scsi_host_set_state(shost, SHOST_DEL))
+ 		BUG_ON(scsi_host_set_state(shost, SHOST_DEL_RECOVERY));
+-	spin_unlock_irqrestore(shost->host_lock, flags);
++	spin_unlock_irq(shost->host_lock);
+ 
+ 	transport_unregister_device(&shost->shost_gendev);
+ 	device_unregister(&shost->shost_dev);
 -- 
 1.7.10.4
 
