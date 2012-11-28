@@ -1,56 +1,75 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] iscsit: use GFP_ATOMIC under spin lock
-Date: Tue, 27 Nov 2012 18:53:51 -0800
-Message-ID: <1354071231.18736.100.camel@haakon2.linux-iscsi.org>
-References: <CAPgLHd9ZPyLugr5mS0NHpm8kiv6a6e9maTY4cuVbO=+CtCf1NQ@mail.gmail.com>
+Subject: Re: [patch] target: update error handling for
+ sbc_setup_write_same()
+Date: Tue, 27 Nov 2012 19:03:19 -0800
+Message-ID: <1354071799.18736.110.camel@haakon2.linux-iscsi.org>
+References: <20121127142701.GA1059@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAPgLHd9ZPyLugr5mS0NHpm8kiv6a6e9maTY4cuVbO=+CtCf1NQ@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:40811 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751645Ab2K1DDV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2012 22:03:21 -0500
+In-Reply-To: <20121127142701.GA1059@elgon.mountain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Hi Wei,
+Hi Dan,
 
-On Fri, 2012-11-23 at 12:07 +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Tue, 2012-11-27 at 17:27 +0300, Dan Carpenter wrote:
+> We recently changed this to return positive subsystem error codes so the
+> error handling needs to be updated.
 > 
-> The function iscsit_build_conn_drop_async_message() is called
-> from iscsit_close_connection() with spin lock 'sess->conn_lock'
-> held, so we should use GFP_ATOMIC instead of GFP_KERNEL.
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
 
-Nice catch here.  Applied to target-pending/for-next, and including a CC
-to stable.
+A nice catch on this sense_reason_t return breakage that I managed to
+introduce within for-3.8 code.
+
+Applied to for-next.
 
 Thank you!
 
 --nab
 
->  drivers/target/iscsi/iscsi_target.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> index 035c2c7..3983ad3 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -2360,7 +2360,7 @@ static void iscsit_build_conn_drop_async_message(struct iscsi_conn *conn)
->  	if (!conn_p)
->  		return;
+> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> index 943c689..4fd22cd 100644
+> --- a/drivers/target/target_core_sbc.c
+> +++ b/drivers/target/target_core_sbc.c
+> @@ -439,7 +439,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>  			cmd->t_task_lba = get_unaligned_be64(&cdb[12]);
 >  
-> -	cmd = iscsit_allocate_cmd(conn_p, GFP_KERNEL);
-> +	cmd = iscsit_allocate_cmd(conn_p, GFP_ATOMIC);
->  	if (!cmd) {
->  		iscsit_dec_conn_usage_count(conn_p);
->  		return;
-> 
-> 
+>  			ret = sbc_setup_write_same(cmd, &cdb[10], ops);
+> -			if (ret < 0)
+> +			if (ret)
+>  				return ret;
+>  			break;
+>  		default:
+> @@ -512,7 +512,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>  		cmd->t_task_lba = get_unaligned_be64(&cdb[2]);
+>  
+>  		ret = sbc_setup_write_same(cmd, &cdb[1], ops);
+> -		if (ret < 0)
+> +		if (ret)
+>  			return ret;
+>  		break;
+>  	case WRITE_SAME:
+> @@ -530,7 +530,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>  		 * of byte 1 bit 3 UNMAP instead of original reserved field
+>  		 */
+>  		ret = sbc_setup_write_same(cmd, &cdb[1], ops);
+> -		if (ret < 0)
+> +		if (ret)
+>  			return ret;
+>  		break;
+>  	case VERIFY:
 > --
 > To unsubscribe from this list: send the line "unsubscribe target-devel" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
