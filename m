@@ -1,54 +1,72 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: Error handling on FC devices
-Date: Tue, 27 Nov 2012 20:29:07 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net>
-References: <50AA290F.8000105@suse.de>  <50B3EDEA.40008@emulex.com>
- <1354046601.4420.14.camel@localhost.localdomain>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] sd: Don't incorrectly "promote" DIF type0 into DIF type1
+ disks.
+Date: Tue, 27 Nov 2012 16:17:29 -0800
+Message-ID: <20121128001729.GB4321@blackbox.djwong.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:28600 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755381Ab2K0UaP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2012 15:30:15 -0500
-In-Reply-To: <1354046601.4420.14.camel@localhost.localdomain>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "emilne@redhat.com" <emilne@redhat.com>, "James.Smart@emulex.com" <James.Smart@emulex.com>
-Cc: Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-VGhlcmUgaXMgYSBuZXcgY29tbWFuZCBpbiBTUEMtNCBjYWxsZWQgUkVNT1ZFIElfVCBORVhVUyB0
-aGF0IGlzIGludGVuZGVkIHRvIGhlbHAgdGhhdCBzaXR1YXRpb24uICBSRU1PVkUgSV9UIE5FWFVT
-IGxldHMgdGhlIGFwcGxpY2F0aW9uIGNsaWVudCB1c2UgYSBnb29kIElfVCBuZXh1cyB0byBhYm9y
-dCBjb21tYW5kcyB0aGF0IHdlcmUgYmVpbmcgcHJvY2Vzc2VkIG9uIGEgYmFkIElfVCBuZXh1cywg
-c28gaXQgY2FuIHNhZmVseSByZS1pc3N1ZSB0aG9zZSBjb21tYW5kcyBvbiB0aGUgZ29vZCBJX1Qg
-bmV4dXMgd2l0aG91dCB3b3JyeWluZyB0aGF0IHRoZSBvcmlnaW5hbCBjb21tYW5kcyBtaWdodCBy
-ZXN1bWUuDQoNCkluIGNvbnRyYXN0Og0KLSB0aGUgQUJPUlQgVEFTSywgQUJPUlQgVEFTSyBTRVQs
-IGFuZCBDTEVBUiBUQVNLIFNFVCBtdXN0IHVzZSB0aGUgc2FtZSBJX1QgbmV4dXMgYXMgdGhlIGNv
-bW1hbmRzIGJlaW5nIGFib3J0ZWQsIHNvIGFyZSBub3QgdmlhYmxlIGlmIHRoYXQgSV9UIG5leHVz
-IGlzIGJhZA0KLSBMT0dJQ0FMIFVOSVQgUkVTRVQgYWJvcnRzIGNvbW1hbmRzIGZyb20gZXZlcnkg
-SV9UIG5leHVzLCBzbyBpbiBhZGRpdGlvbiB0byBhYm9ydGluZyBjb21tYW5kcyBmcm9tIHRoZSBi
-YWQgSV9UIG5leHVzIGl0IGFsc28gYWZmZWN0cyBjb21tYW5kcyBvbiB0aGUgZ29vZCBJX1QgbmV4
-dXMNCg0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2Nz
-aS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2Vy
-Lmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBFd2FuIE1pbG5lDQo+IFNlbnQ6IFR1ZXNkYXksIDI3
-IE5vdmVtYmVyLCAyMDEyIDI6MDMgUE0NCj4gVG86IEphbWVzLlNtYXJ0QGVtdWxleC5jb20NCj4g
-Q2M6IEhhbm5lcyBSZWluZWNrZTsgU0NTSSBNYWlsaW5nIExpc3Q7IEFuZHJldyBWYXNxdWV6OyBD
-aGFkIER1cHVpczsNCj4gSmFtZXMgQm90dG9tbGV5DQo+IFN1YmplY3Q6IFJlOiBFcnJvciBoYW5k
-bGluZyBvbiBGQyBkZXZpY2VzDQo+IA0KPiBPbiBNb24sIDIwMTItMTEtMjYgYXQgMTc6MzIgLTA1
-MDAsIEphbWVzIFNtYXJ0IHdyb3RlOg0KPiA+IEdpdmVuIHBhdGggc3dpdGNoaW5nIGlzIHNvbWV3
-aGF0IHNlcGFyYXRlIGZyb20gdGhlIGkvbywgd291bGQgaXQgYmV0dGVyDQo+ID4gdG8gc2VuZCBh
-IG5vdGlmaWNhdGlvbiBvZiBhIHBhdGgtZmFpbCBjb25kaXRpb24gYXMgcGFydCBvZiB0aGUgZWgs
-DQo+ID4gcmF0aGVyIHRoYW4gaGluZ2luZyBpdCBvbiB0aGUgaW5kaXZpZHVhbCBpL28uICBZZXMs
-IHRoZSBpL28gaXMgc3RpbGwgaW4NCj4gPiBsaW1ibyBhbmQgY2FuJ3QgYmUgc3dpdGNoZWQgdG8g
-dGhlIG5ldyBwYXRoLCBidXQgb3RoZXIgaS9vIGNvdWxkIHdpdGhvdXQNCj4gPiBpbmN1cnJpbmcg
-dGhlIGRlbGF5Lg0KPiANCj4gSXMgdGhlcmUgYSBwb3RlbnRpYWwgaXNzdWUgd2l0aCBhIHdyaXRl
-IHRoYXQgaXMgdGFraW5nIGEgbG9uZyB0aW1lIG9uDQo+IG9uZSBwYXRoLCB3aGljaCBjb3VsZCBj
-YXVzZSBwYXRoIHN3aXRjaGluZyBmb3Igc3Vic2VxdWVudCB3cml0ZXMgdG8NCj4gYW5vdGhlciBw
-YXRoLCBiZWZvcmUgdGhlIGRpc3Bvc2l0aW9uIG9mIHRoZSBmaXJzdCB3cml0ZSBpcyBrbm93bj8N
-Cj4gDQo+IA0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUg
-bGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdl
-IHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAg
-aHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
+If I run the following command:
+# modprobe scsi_debug dev_size_mb=64 ato=1 dix=1 dif=0
+
+then I see the following in the dmesg log:
+
+[   25.859145] scsi_debug: host protection DIX0
+
+Ok, DIX0, which means "no integrity extensions at all", and no DIF support at all.
+I'm not sure why you'd advertise DIX0 at all, but so far so good.
+
+(DIX is the mechanism by which the OS sends integrity data to the disk in
+whatever format DIF specifies.  You need DIF for DIX to do anything.)
+
+[   25.860214] scsi0 : scsi_debug, version 1.82 [20100324], dev_size_mb=64, opts=0x0
+[   25.863418] scsi 0:0:0:0: Direct-Access     Linux    scsi_debug       0004 PQ: 0 ANSI: 5
+[   25.880079] sd 0:0:0:0: [sda] 131072 512-byte logical blocks: (67.1 MB/64.0 MiB)
+[   25.884133] sd 0:0:0:0: [sda] Write Protect is off
+[   25.892205] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
+[   25.920344]  sda: unknown partition table
+[   25.926704] sd_dif_config_host: type=0 dif=0 dix=8
+[   25.931651] sd 0:0:0:0: [sda] Enabling DIX T10-DIF-TYPE1-CRC protection
+
+Huh??  Here we are turning on DIX support as if the disk supports DIF type1.
+This seems strange to me because we didn't advertise any DIF support at all.
+
+[   25.952208] sd 0:0:0:0: [sda] Attached SCSI disk
+[   25.977977] BUG: unable to handle kernel paging request at 00000000000ffc02
+[   25.980262] IP: [<ffffffffa01ebaa5>] resp_read.part.38+0x145/0x420 [scsi_debug]
+
+Uhoh, that shouldn't happen.  The SCSI layer sent along what looks like a type1
+read request even though the disk wasn't really prepared to handle it, and
+kaboom.  I don't think this particular combination is terribly common, but we
+could at least not misprogram the disk when we see it.
+
+If the disk advertises DIF type 0, we can skip the rest of the DIF setup.
+Right now, the SCSI layer "promotes" a DIF type 0 disk into a DIF type 1 disk,
+which seems incorrect.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ drivers/scsi/sd_dif.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index 04998f3..ede5b7b 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -313,6 +313,10 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
+ 	u8 type = sdkp->protection_type;
+ 	int dif, dix;
+ 
++	/* Don't promote DIF type0 into type1 support. */
++	if (type == SD_DIF_TYPE0_PROTECTION)
++		return;
++
+ 	dif = scsi_host_dif_capable(sdp->host, type);
+ 	dix = scsi_host_dix_capable(sdp->host, type);
+ 
