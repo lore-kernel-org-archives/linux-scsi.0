@@ -1,68 +1,67 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Make spc_get_write_same_sectors return sector_t
-Date: Wed, 28 Nov 2012 03:55:25 +0000
-Message-ID: <1354074925-12647-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Error handling on FC devices
+Date: Wed, 28 Nov 2012 08:09:56 +0100
+Message-ID: <50B5B8C4.1040503@suse.de>
+References: <50AA290F.8000105@suse.de>  <50B3EDEA.40008@emulex.com> <1354046601.4420.14.camel@localhost.localdomain> <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:55826 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751126Ab2K1HKC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Nov 2012 02:10:02 -0500
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: "emilne@redhat.com" <emilne@redhat.com>, "James.Smart@emulex.com" <James.Smart@emulex.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 11/27/2012 09:29 PM, Elliott, Robert (Server Storage) wrote:
+> There is a new command in SPC-4 called REMOVE I_T NEXUS that is inten=
+ded to help
+ > that situation.  REMOVE I_T NEXUS lets the application client use=20
+a good I_T nexus
+ > to abort commands that were being processed on a bad I_T nexus,=20
+so it can safely
+ > re-issue those commands on the good I_T nexus without worrying=20
+that the original
+ > commands might resume.
+>
+> In contrast:
+> - the ABORT TASK, ABORT TASK SET, and CLEAR TASK SET must use the sam=
+e I_T nexus
+ >   as the commands being aborted, so are not viable if that I_T=20
+nexus is bad
+> - LOGICAL UNIT RESET aborts commands from every I_T nexus, so in addi=
+tion to
+ >   aborting commands from the bad I_T nexus it also affects=20
+commands on the
+ >   good I_T nexus
+>
+Hmm. Nice in principle, but the problem here is that we cannot=20
+guarantee the nexus is still intact.
+So one would need to implement this in the HBA firmware; the=20
+firmware would need to be able to process the TMF, and do the=20
+appropriate things for the FC stack like dropping the rport etc.
 
-We already expect TFO->get_blocks() to return sector_t for zero value case
-when doing WRITE_SAME to the end of the backend device, so go ahead and return
-sector_t from spc_get_write_same_sectors() to handle this case properly.
+Good idea, though.
 
-Also, update the single iblock_execute_write_same() caller of this code.
+James, Andrew, Chad?
+Any chance of having a firmware supporting REMOVE IT-NEXUS ?
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_iblock.c  |    2 +-
- drivers/target/target_core_sbc.c     |    2 +-
- include/target/target_core_backend.h |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+Cheers,
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 42cc3fb..cfdb949 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -483,7 +483,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 	struct bio *bio;
- 	struct bio_list list;
- 	sector_t block_lba = cmd->t_task_lba;
--	unsigned int sectors = spc_get_write_same_sectors(cmd);
-+	sector_t sectors = spc_get_write_same_sectors(cmd);
- 
- 	sg = &cmd->t_data_sg[0];
- 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 4fd22cd..8be5bd7 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -109,7 +109,7 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
- 	return 0;
- }
- 
--int spc_get_write_same_sectors(struct se_cmd *cmd)
-+sector_t spc_get_write_same_sectors(struct se_cmd *cmd)
- {
- 	u32 num_blocks;
- 
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 3393ab1..5079109 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -52,7 +52,7 @@ void	target_complete_cmd(struct se_cmd *, u8);
- 
- sense_reason_t	spc_parse_cdb(struct se_cmd *cmd, unsigned int *size);
- sense_reason_t	spc_emulate_report_luns(struct se_cmd *cmd);
--int	spc_get_write_same_sectors(struct se_cmd *cmd);
-+sector_t	spc_get_write_same_sectors(struct se_cmd *cmd);
- 
- sense_reason_t	sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops);
- u32	sbc_get_device_rev(struct se_device *dev);
--- 
-1.7.2.5
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
