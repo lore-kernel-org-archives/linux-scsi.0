@@ -1,8 +1,7 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v6 11/13] Make scsi_remove_host() wait until error handling
- finished
-Date: Wed, 28 Nov 2012 13:52:51 +0100
-Message-ID: <50B60923.3080207@acm.org>
+Subject: [PATCH v6 12/13] Avoid that scsi_device_set_state() triggers a race
+Date: Wed, 28 Nov 2012 13:53:24 +0100
+Message-ID: <50B60944.2080605@acm.org>
 References: <50B60619.4080406@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -10,214 +9,101 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from georges.telenet-ops.be ([195.130.137.68]:57141 "EHLO
 	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754232Ab2K1Mwx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2012 07:52:53 -0500
+	with ESMTP id S1754475Ab2K1MxZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2012 07:53:25 -0500
 In-Reply-To: <50B60619.4080406@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
-A SCSI LLD may start cleaning up host resources as soon as
-scsi_remove_host() returns. These host resources may be needed by
-the LLD in an implementation of one of the eh_* functions. So if
-one of the eh_* functions is in progress when scsi_remove_host()
-is invoked, wait until the eh_* function has finished. Also, do
-not invoke any of the eh_* functions after scsi_remove_host() has
-started.
+Make concurrent invocations of scsi_device_set_state() safe.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: James Bottomley <JBottomley@Parallels.com>
+Cc: Tejun Heo <tj@kernel.org>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Tejun Heo <tj@kernel.org>
 ---
- drivers/scsi/hosts.c      |    2 +-
- drivers/scsi/scsi_error.c |  114 ++++++++++++++++++++++++++++++++++-----------
- include/scsi/scsi_host.h  |    1 +
- 3 files changed, 89 insertions(+), 28 deletions(-)
+ drivers/scsi/scsi_lib.c   |   24 ++++++++++++------------
+ drivers/scsi/scsi_sysfs.c |    9 ++++++++-
+ 2 files changed, 20 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 7bd944e..477b8d6 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -155,7 +155,7 @@ static bool __scsi_remove_host_done(struct Scsi_Host *shost)
- {
- 	lockdep_assert_held(shost->host_lock);
- 
--	return list_empty(&shost->__devices);
-+	return list_empty(&shost->__devices) && !shost->eh_active;
- }
- 
- /* Test whether scsi_remove_host() may finish, and if so, wake it up. */
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index c1b05a8..cab2ac3 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -536,8 +536,52 @@ static void scsi_eh_done(struct scsi_cmnd *scmd)
- }
- 
- /**
-+ * scsi_begin_eh - start host-related error handling
-+ *
-+ * Must be called before invoking any of the scsi_host_template.eh_* functions
-+ * to avoid that scsi_remove_host() returns while one of these callback
-+ * functions is in progress.
-+ *
-+ * Returns true if invoking the eh_* function is allowed and false if not.
-+ * If this function returns true then scsi_end_eh() must be called eventually.
-+ *
-+ * Note: scsi_send_eh_cmnd() calls do not have to be protected by a
-+ * scsi_begin_eh() / scsi_end_eh() pair since these operate on an unfinished
-+ * block layer request. Since scsi_remove_host() waits until all SCSI devices
-+ * have been removed and since blk_cleanup_queue() is invoked during SCSI
-+ * device removal scsi_remove_host() won't finish while a scsi_send_eh_cmnd()
-+ * call is in progress.
-+ */
-+static bool scsi_begin_eh(struct Scsi_Host *host)
-+{
-+	bool res;
-+
-+	spin_lock_irq(host->host_lock);
-+	res = scsi_host_scan_allowed(host);
-+	if (res) {
-+		WARN_ON_ONCE(host->eh_active < 0 || host->eh_active > 1);
-+		host->eh_active++;
-+	}
-+	spin_unlock_irq(host->host_lock);
-+
-+	return res;
-+}
-+
-+/**
-+ * scsi_end_eh - finish host-related error handling
-+ */
-+static void scsi_end_eh(struct Scsi_Host *host)
-+{
-+	spin_lock_irq(host->host_lock);
-+	host->eh_active--;
-+	WARN_ON_ONCE(host->eh_active < 0 || host->eh_active > 1);
-+	__scsi_check_remove_host_done(host);
-+	spin_unlock_irq(host->host_lock);
-+}
-+
-+/**
-  * scsi_try_host_reset - ask host adapter to reset itself
-- * @scmd:	SCSI cmd to send hsot reset.
-+ * @scmd:	SCSI cmd to send host reset.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index cfc420b..f3d6e0d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2072,7 +2072,9 @@ EXPORT_SYMBOL(scsi_test_unit_ready);
+  *	@state:	state to change to.
+  *
+  *	Returns zero if unsuccessful or an error if the requested 
+- *	transition is illegal.
++ *	transition is illegal. It is the responsibility of the caller to make
++ *      sure that a call of this function does not race with other code that
++ *      accesses the device state, e.g. by holding the host lock.
   */
- static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- {
-@@ -552,14 +596,17 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- 	if (!hostt->eh_host_reset_handler)
- 		return FAILED;
+ int
+ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+@@ -2433,21 +2435,19 @@ scsi_internal_device_block(struct scsi_device *sdev)
+ 	unsigned long flags;
+ 	int err = 0;
  
--	rtn = hostt->eh_host_reset_handler(scmd);
++	spin_lock_irqsave(q->queue_lock, flags);
+ 	err = scsi_device_set_state(sdev, SDEV_BLOCK);
+-	if (err) {
++	if (err)
+ 		err = scsi_device_set_state(sdev, SDEV_CREATED_BLOCK);
+ 
+-		if (err)
+-			return err;
++	if (err == 0) {
++		/*
++		 * The device has transitioned to SDEV_BLOCK.  Stop the
++		 * block layer from calling the midlayer with this device's
++		 * request queue.
++		 */
++		blk_stop_queue(q);
+ 	}
 -
--	if (rtn == SUCCESS) {
--		if (!hostt->skip_settle_delay)
--			ssleep(HOST_RESET_SETTLE_TIME);
--		spin_lock_irqsave(host->host_lock, flags);
--		scsi_report_bus_reset(host, scmd_channel(scmd));
--		spin_unlock_irqrestore(host->host_lock, flags);
-+	rtn = FAST_IO_FAIL;
-+	if (scsi_begin_eh(host)) {
-+		rtn = hostt->eh_host_reset_handler(scmd);
-+		if (rtn == SUCCESS) {
-+			if (!hostt->skip_settle_delay)
-+				ssleep(HOST_RESET_SETTLE_TIME);
-+			spin_lock_irqsave(host->host_lock, flags);
-+			scsi_report_bus_reset(host, scmd_channel(scmd));
-+			spin_unlock_irqrestore(host->host_lock, flags);
+-	/* 
+-	 * The device has transitioned to SDEV_BLOCK.  Stop the
+-	 * block layer from calling the midlayer with this device's
+-	 * request queue. 
+-	 */
+-	spin_lock_irqsave(q->queue_lock, flags);
+-	blk_stop_queue(q);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
+ 	return 0;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 89195e2..3f5197e 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -960,8 +960,12 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	unsigned long flags;
+ 
+ 	if (sdev->is_visible) {
+-		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
++		spin_lock_irqsave(shost->host_lock, flags);
++		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0) {
++			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			return;
 +		}
-+		scsi_end_eh(host);
- 	}
++		spin_unlock_irqrestore(shost->host_lock, flags);
  
- 	return rtn;
-@@ -582,14 +629,17 @@ static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
- 	if (!hostt->eh_bus_reset_handler)
- 		return FAILED;
+ 		bsg_unregister_queue(sdev->request_queue);
+ 		device_unregister(&sdev->sdev_dev);
+@@ -975,7 +979,10 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	 * scsi_run_queue() invocations have finished before tearing down the
+ 	 * device.
+ 	 */
++	spin_lock_irqsave(shost->host_lock, flags);
+ 	scsi_device_set_state(sdev, SDEV_DEL);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++
+ 	blk_cleanup_queue(sdev->request_queue);
+ 	cancel_work_sync(&sdev->requeue_work);
  
--	rtn = hostt->eh_bus_reset_handler(scmd);
--
--	if (rtn == SUCCESS) {
--		if (!hostt->skip_settle_delay)
--			ssleep(BUS_RESET_SETTLE_TIME);
--		spin_lock_irqsave(host->host_lock, flags);
--		scsi_report_bus_reset(host, scmd_channel(scmd));
--		spin_unlock_irqrestore(host->host_lock, flags);
-+	rtn = FAST_IO_FAIL;
-+	if (scsi_begin_eh(host)) {
-+		rtn = hostt->eh_bus_reset_handler(scmd);
-+		if (rtn == SUCCESS) {
-+			if (!hostt->skip_settle_delay)
-+				ssleep(BUS_RESET_SETTLE_TIME);
-+			spin_lock_irqsave(host->host_lock, flags);
-+			scsi_report_bus_reset(host, scmd_channel(scmd));
-+			spin_unlock_irqrestore(host->host_lock, flags);
-+		}
-+		scsi_end_eh(host);
- 	}
- 
- 	return rtn;
-@@ -621,12 +671,17 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- 	if (!hostt->eh_target_reset_handler)
- 		return FAILED;
- 
--	rtn = hostt->eh_target_reset_handler(scmd);
--	if (rtn == SUCCESS) {
--		spin_lock_irqsave(host->host_lock, flags);
--		__starget_for_each_device(scsi_target(scmd->device), NULL,
--					  __scsi_report_device_reset);
--		spin_unlock_irqrestore(host->host_lock, flags);
-+	rtn = FAST_IO_FAIL;
-+	if (scsi_begin_eh(host)) {
-+		rtn = hostt->eh_target_reset_handler(scmd);
-+		if (rtn == SUCCESS) {
-+			spin_lock_irqsave(host->host_lock, flags);
-+			__starget_for_each_device(scsi_target(scmd->device),
-+						  NULL,
-+						  __scsi_report_device_reset);
-+			spin_unlock_irqrestore(host->host_lock, flags);
-+		}
-+		scsi_end_eh(host);
- 	}
- 
- 	return rtn;
-@@ -645,14 +700,19 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- {
- 	int rtn;
--	struct scsi_host_template *hostt = scmd->device->host->hostt;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
- 	if (!hostt->eh_device_reset_handler)
- 		return FAILED;
- 
--	rtn = hostt->eh_device_reset_handler(scmd);
--	if (rtn == SUCCESS)
--		__scsi_report_device_reset(scmd->device, NULL);
-+	rtn = FAST_IO_FAIL;
-+	if (scsi_begin_eh(host)) {
-+		rtn = hostt->eh_device_reset_handler(scmd);
-+		if (rtn == SUCCESS)
-+			__scsi_report_device_reset(scmd->device, NULL);
-+		scsi_end_eh(host);
-+	}
- 	return rtn;
- }
- 
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 1b7fd89..5e2fcd2 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -576,6 +576,7 @@ struct Scsi_Host {
- 	struct task_struct    * ehandler;  /* Error recovery thread. */
- 	struct completion     * eh_action; /* Wait for specific actions on the
- 					      host. */
-+	int			eh_active;
- 	wait_queue_head_t       host_wait;
- 	wait_queue_head_t	remove_host;
- 	struct scsi_host_template *hostt;
 -- 
 1.7.10.4
 
