@@ -1,39 +1,38 @@
-From: Norman Diamond <n0diamond@yahoo.co.jp>
-Subject: mv_chips.h
-Date: Thu, 29 Nov 2012 13:48:10 +0900 (JST)
-Message-ID: <688785.56474.qm@web100004.mail.kks.yahoo.co.jp>
-Reply-To: n0diamond@yahoo.co.jp
+From: Naresh Kumar Inna <naresh@chelsio.com>
+Subject: Re: [patch] [SCSI] csiostor: remove unneeded memset()
+Date: Thu, 29 Nov 2012 11:45:00 +0530
+Message-ID: <50B6FD64.2080504@chelsio.com>
+References: <20121127173330.GD1059@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web100004.mail.kks.yahoo.co.jp ([114.111.98.178]:23858 "HELO
-	web100004.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751406Ab2K2Eyy convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Nov 2012 23:54:54 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20121127173330.GD1059@elgon.mountain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-mv_chips.h
+On 11/27/2012 11:03 PM, Dan Carpenter wrote:
+> No need to memset() this when we just copy over it on the next line.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
+> index 551959e..8b54976 100644
+> --- a/drivers/scsi/csiostor/csio_lnode.c
+> +++ b/drivers/scsi/csiostor/csio_lnode.c
+> @@ -245,7 +245,6 @@ csio_append_attrib(uint8_t **ptr, uint16_t type, uint8_t *val, uint16_t len)
+>  	len += 4;		/* includes attribute type and length */
+>  	len = (len + 3) & ~3;	/* should be multiple of 4 bytes */
+>  	ae->len = htons(len);
+> -	memset(ae->value, 0, len - 4);
+>  	memcpy(ae->value, val, len);
+>  	*ptr += len;
+>  }
+> 
 
- * Copyright 2007 Red Hat, Inc.
- * Copyright 2008 Marvell. <kewei@marvell.com>
- * This file is licensed under GPLv2.
+Acked-by: Naresh Kumar Inna <naresh@chelsio.com>
 
-OK, but someone didn't copy right.
-
-#define mw32(reg, val)	writel((val), regs + reg)
-
-No "caller" will ever pass a WTF expression in reg, only in val.  Ever.
-
-#define iow32(reg, val) 	outl(val, (unsigned long)(regs + reg))
-
-Obviously someone "calls" that macro.  (Without a WTF reg of course.)
-
-#define iow16(reg, val) 	outw((unsigned long)(val, regs + reg))
-#define iow8(reg, val) 		outb((unsigned long)(val, regs + reg))
-
-Luckily no one "calls" those macros.
-And no one heard my WTF expression when I read them.
+Thanks,
+Naresh.
