@@ -1,57 +1,40 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 5/5]  arcmsr: Modify ARC-1214 IO Behavior
-Date: Fri, 30 Nov 2012 09:18:21 +0000
-Message-ID: <1354267101.2259.11.camel@dabdike.int.hansenpartnership.com>
-References: <BFB9B1E1DD3748D895CE90958A9D95CA@arecaaebe11fae>
+Subject: Re: [PATCH 2/7] ipr: Handler ID memory allocation failure
+Date: Fri, 30 Nov 2012 15:30:35 +0000
+Message-ID: <1354289435.2259.18.camel@dabdike.int.hansenpartnership.com>
+References: <20121126155534.352187900@linux.vnet.ibm.com>
+	 <20121126155632.125112047@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41256 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42443 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932206Ab2K3JSZ (ORCPT
+	by vger.kernel.org with ESMTP id S1030646Ab2K3Paj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Nov 2012 04:18:25 -0500
-In-Reply-To: <BFB9B1E1DD3748D895CE90958A9D95CA@arecaaebe11fae>
+	Fri, 30 Nov 2012 10:30:39 -0500
+In-Reply-To: <20121126155632.125112047@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: NickCheng <nick.cheng@areca.com.tw>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@kernel.org
+To: wenxiong@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-On Fri, 2012-11-16 at 19:56 +0800, NickCheng wrote:
-> From: Nick Cheng <nick.cheng@areca.com.tw>
+On Mon, 2012-11-26 at 09:55 -0600, wenxiong@linux.vnet.ibm.com wrote:
+> plain text document attachment (fix_mem_alloc_fail)
+> Add code to handle memory allocation failures at module load time.
 > 
-> Modify ARC-1214 IO behavior to make up for HW seldom malfunction.
-> Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
+> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+> 
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 
-This still isn't right.  I said you could ignore most of the warnings
-(like lines over 80 characters), but you have a lot of this:
+The signoff chain on a lot of these patches is incorrect.
 
+This patch only has Brian's signoff and it needs yours because you sent
+it to me.  If it is really Brian's patch, it needs a 
 
-> -			printk(KERN_NOTICE "arcmsr%d: memory mapping region fail \n", =
-> acb->host->host_no);
-> +			pr_notice("arcmsr%d: memory mapping"
-> +				"region fail\n", acb->host->host_no);
+From: Brian King <brking@linux.vnet.ibm.com>
 
-I'm agnostic on whether you split a print, in spite of the warning but I
-do tend to prefer longer lines, since they avoid the mistake you made
-quite a few times, which is not leaving a space between the separate
-words in the split string.  This will produce a message like
-
-arcmsr1: memory mappingregion fail
-
-Plus this indentation
-
-
-> -		if (readl(&acb->pmuC->outbound_doorbell) & ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE) {
-> -			writel(ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE_DOORBELL_CLEAR, &acb->pmuC->outbound_doorbell_clear);/*clear interrupt*/=0A=
-> +		if (readl(&acb->pmuC->outbound_doorbell) &
-> +			ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE) {
->    +		writel(ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE_DOORBELL_CLEAR,
-> +				&acb->pmuC->outbound_doorbell_clear);
-
-Is being changed from correctly indented to incorrectly indented (writel
-needs another tab).
+To get the authorship right.
 
 James
 
