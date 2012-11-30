@@ -1,64 +1,58 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: prevent stack buffer overflow in host_reset
-Date: Fri, 30 Nov 2012 09:07:57 +0000
-Message-ID: <1354266477.2259.5.camel@dabdike.int.hansenpartnership.com>
-References: <1353012706-28182-1-git-send-email-sasha.levin@oracle.com>
+Subject: Re: [PATCH 5/5]  arcmsr: Modify ARC-1214 IO Behavior
+Date: Fri, 30 Nov 2012 09:18:21 +0000
+Message-ID: <1354267101.2259.11.camel@dabdike.int.hansenpartnership.com>
+References: <BFB9B1E1DD3748D895CE90958A9D95CA@arecaaebe11fae>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1353012706-28182-1-git-send-email-sasha.levin@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sasha Levin <sasha.levin@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41256 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932206Ab2K3JSZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Nov 2012 04:18:25 -0500
+In-Reply-To: <BFB9B1E1DD3748D895CE90958A9D95CA@arecaaebe11fae>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: NickCheng <nick.cheng@areca.com.tw>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@kernel.org
 
-On Thu, 2012-11-15 at 15:51 -0500, Sasha Levin wrote:
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index ce5224c..77ba946 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -249,9 +249,9 @@ static DEVICE_ATTR(active_mode, S_IRUGO | S_IWUSR=
-, show_shost_active_mode, NULL)
-> =20
->  static int check_reset_type(char *str)
->  {
-> -	if (strncmp(str, "adapter", 10) =3D=3D 0)
-> +	if (sysfs_streq(str, "adapter"))
->  		return SCSI_ADAPTER_RESET;
-> -	else if (strncmp(str, "firmware", 10) =3D=3D 0)
-> +	else if (sysfs_streq(str, "firmware"))
->  		return SCSI_FIRMWARE_RESET;
->  	else
->  		return 0;
-> @@ -264,12 +264,9 @@ store_host_reset(struct device *dev, struct devi=
-ce_attribute *attr,
->  	struct Scsi_Host *shost =3D class_to_shost(dev);
->  	struct scsi_host_template *sht =3D shost->hostt;
->  	int ret =3D -EINVAL;
-> -	char str[10];
->  	int type;
-> =20
-> -	sscanf(buf, "%s", str);
-> -	type =3D check_reset_type(str);
-> -
-> +	type =3D check_reset_type(buf);
->  	if (!type)
->  		goto exit_store_host_reset;
+On Fri, 2012-11-16 at 19:56 +0800, NickCheng wrote:
+> From: Nick Cheng <nick.cheng@areca.com.tw>
+> 
+> Modify ARC-1214 IO behavior to make up for HW seldom malfunction.
+> Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
 
-You didn't compile test this:
+This still isn't right.  I said you could ignore most of the warnings
+(like lines over 80 characters), but you have a lot of this:
 
-  CC [M]  drivers/scsi/scsi_sysfs.o
-drivers/scsi/scsi_sysfs.c: In function =E2=80=98store_host_reset=E2=80=99=
-:
-drivers/scsi/scsi_sysfs.c:269:2: warning: passing argument 1 of =E2=80=98=
-check_reset_type=E2=80=99 discards =E2=80=98const=E2=80=99 qualifier fr=
-om pointer target type [enabled by default]
-drivers/scsi/scsi_sysfs.c:250:12: note: expected =E2=80=98char *=E2=80=99=
- but argument is of type =E2=80=98const char *=E2=80=99
 
-It needs a const in check_reset_type().
+> -			printk(KERN_NOTICE "arcmsr%d: memory mapping region fail \n", =
+> acb->host->host_no);
+> +			pr_notice("arcmsr%d: memory mapping"
+> +				"region fail\n", acb->host->host_no);
 
-I've added it.
+I'm agnostic on whether you split a print, in spite of the warning but I
+do tend to prefer longer lines, since they avoid the mistake you made
+quite a few times, which is not leaving a space between the separate
+words in the split string.  This will produce a message like
+
+arcmsr1: memory mappingregion fail
+
+Plus this indentation
+
+
+> -		if (readl(&acb->pmuC->outbound_doorbell) & ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE) {
+> -			writel(ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE_DOORBELL_CLEAR, &acb->pmuC->outbound_doorbell_clear);/*clear interrupt*/=0A=
+> +		if (readl(&acb->pmuC->outbound_doorbell) &
+> +			ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE) {
+>    +		writel(ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE_DOORBELL_CLEAR,
+> +				&acb->pmuC->outbound_doorbell_clear);
+
+Is being changed from correctly indented to incorrectly indented (writel
+needs another tab).
 
 James
+
+
