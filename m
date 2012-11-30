@@ -1,1183 +1,1171 @@
 From: <sreekanth.reddy@lsi.com>
-Subject: [v2 PATCH 6/20][SCSI] mpt3sas: Part 5 of MPI API headers
-Date: Fri, 30 Nov 2012 07:48:18 +0530
-Message-ID: <20121130021818.GA10209@localhost.localdomain>
+Subject: [v2 PATCH 9/20][SCSI] mpt3sas: Common API layer interface headers
+ for access to MPT firmware.
+Date: Fri, 30 Nov 2012 07:50:40 +0530
+Message-ID: <20121130022040.GA10239@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:38845 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751034Ab2K2PVO (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:51765 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751034Ab2K2PWf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Nov 2012 10:21:14 -0500
+	Thu, 29 Nov 2012 10:22:35 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
 Cc: Sathya.Prakash@lsi.com
 
-This patch contains MPI API headers
-This patch is part 5 of MPI API headers.
+This patch contains the Fusion MPT base driver providing common API layer interface
+headers for access to MPT (Message Passing Technology) firmware.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 Reviewed-by: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_raid.h b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
 new file mode 100644
-index 0000000..d1d9866
+index 0000000..994656c
 --- /dev/null
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
-@@ -0,0 +1,346 @@
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -0,0 +1,1139 @@
 +/*
-+ * Copyright (c) 2000-2012 LSI Corporation.
++ * This is the Fusion MPT base driver providing common API layer interface
++ * for access to MPT (Message Passing Technology) firmware.
 + *
++ * This code is based on drivers/scsi/mpt3sas/mpt3sas_base.h
++ * Copyright (C) 2012  LSI Corporation
++ *  (mailto:DL-MPTFusionLinux@lsi.com)
 + *
-+ *          Name:  mpi2_raid.h
-+ *         Title:  MPI Integrated RAID messages and structures
-+ * Creation Date:  April 26, 2007
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
 + *
-+ *   mpi2_raid.h Version:  02.00.08
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
 + *
-+ * Version History
-+ * ---------------
-+ *
-+ * Date      Version   Description
-+ * --------  --------  ------------------------------------------------------
-+ * 04-30-07  02.00.00  Corresponds to Fusion-MPT MPI Specification Rev A.
-+ * 08-31-07  02.00.01  Modifications to RAID Action request and reply,
-+ *                     including the Actions and ActionData.
-+ * 02-29-08  02.00.02  Added MPI2_RAID_ACTION_ADATA_DISABL_FULL_REBUILD.
-+ * 05-21-08  02.00.03  Added MPI2_RAID_VOL_CREATION_NUM_PHYSDISKS so that
-+ *                     the PhysDisk array in MPI2_RAID_VOLUME_CREATION_STRUCT
-+ *                     can be sized by the build environment.
-+ * 07-30-09  02.00.04  Added proper define for the Use Default Settings bit of
-+ *                     VolumeCreationFlags and marked the old one as obsolete.
-+ * 05-12-10  02.00.05  Added MPI2_RAID_VOL_FLAGS_OP_MDC define.
-+ * 08-24-10  02.00.06  Added MPI2_RAID_ACTION_COMPATIBILITY_CHECK along with
-+ *                     related structures and defines.
-+ *                     Added product-specific range to RAID Action values.
-+ * 11-18-11  02.00.07  Incorporating additions for MPI v2.5.
-+ * 02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
-+ * --------------------------------------------------------------------------
++ * NO WARRANTY
++ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
++ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
++ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
++ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
++ * solely responsible for determining the appropriateness of using and
++ * distributing the Program and assumes all risks associated with its
++ * exercise of rights under this Agreement, including but not limited to
++ * the risks and costs of program errors, damage to or loss of data,
++ * programs or equipment, and unavailability or interruption of operations.
++
++ * DISCLAIMER OF LIABILITY
++ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
++ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
++ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
++ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
++ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
++ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
++
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
++ * USA.
 + */
 +
-+#ifndef MPI2_RAID_H
-+#define MPI2_RAID_H
++#ifndef MPT3SAS_BASE_H_INCLUDED
++#define MPT3SAS_BASE_H_INCLUDED
 +
-+/*****************************************************************************
-+*
-+*              Integrated RAID Messages
-+*
-+*****************************************************************************/
++#include "mpi/mpi2_type.h"
++#include "mpi/mpi2.h"
++#include "mpi/mpi2_ioc.h"
++#include "mpi/mpi2_cnfg.h"
++#include "mpi/mpi2_init.h"
++#include "mpi/mpi2_raid.h"
++#include "mpi/mpi2_tool.h"
++#include "mpi/mpi2_sas.h"
 +
-+/****************************************************************************
-+* RAID Action messages
-+****************************************************************************/
++#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_tcq.h>
++#include <scsi/scsi_transport_sas.h>
++#include <scsi/scsi_dbg.h>
++#include <scsi/scsi_eh.h>
 +
-+/*ActionDataWord defines for use with MPI2_RAID_ACTION_DELETE_VOLUME action */
-+#define MPI2_RAID_ACTION_ADATA_KEEP_LBA0            (0x00000000)
-+#define MPI2_RAID_ACTION_ADATA_ZERO_LBA0            (0x00000001)
++#include "mpt3sas_debug.h"
++#include "mpt3sas_trigger_diag.h"
 +
-+/*use MPI2_RAIDVOL0_SETTING_ defines from mpi2_cnfg.h for
-+ *MPI2_RAID_ACTION_CHANGE_VOL_WRITE_CACHE action */
-+
-+/*ActionDataWord defines for use with
-+ *MPI2_RAID_ACTION_DISABLE_ALL_VOLUMES action */
-+#define MPI2_RAID_ACTION_ADATA_DISABL_FULL_REBUILD  (0x00000001)
-+
-+/*ActionDataWord for MPI2_RAID_ACTION_SET_RAID_FUNCTION_RATE Action */
-+typedef struct _MPI2_RAID_ACTION_RATE_DATA {
-+	U8 RateToChange;	/*0x00 */
-+	U8 RateOrMode;		/*0x01 */
-+	U16 DataScrubDuration;	/*0x02 */
-+} MPI2_RAID_ACTION_RATE_DATA, *PTR_MPI2_RAID_ACTION_RATE_DATA,
-+	Mpi2RaidActionRateData_t, *pMpi2RaidActionRateData_t;
-+
-+#define MPI2_RAID_ACTION_SET_RATE_RESYNC            (0x00)
-+#define MPI2_RAID_ACTION_SET_RATE_DATA_SCRUB        (0x01)
-+#define MPI2_RAID_ACTION_SET_RATE_POWERSAVE_MODE    (0x02)
-+
-+/*ActionDataWord for MPI2_RAID_ACTION_START_RAID_FUNCTION Action */
-+typedef struct _MPI2_RAID_ACTION_START_RAID_FUNCTION {
-+	U8 RAIDFunction;	/*0x00 */
-+	U8 Flags;		/*0x01 */
-+	U16 Reserved1;		/*0x02 */
-+} MPI2_RAID_ACTION_START_RAID_FUNCTION,
-+	*PTR_MPI2_RAID_ACTION_START_RAID_FUNCTION,
-+	Mpi2RaidActionStartRaidFunction_t,
-+	*pMpi2RaidActionStartRaidFunction_t;
-+
-+/*defines for the RAIDFunction field */
-+#define MPI2_RAID_ACTION_START_BACKGROUND_INIT      (0x00)
-+#define MPI2_RAID_ACTION_START_ONLINE_CAP_EXPANSION (0x01)
-+#define MPI2_RAID_ACTION_START_CONSISTENCY_CHECK    (0x02)
-+
-+/*defines for the Flags field */
-+#define MPI2_RAID_ACTION_START_NEW                  (0x00)
-+#define MPI2_RAID_ACTION_START_RESUME               (0x01)
-+
-+/*ActionDataWord for MPI2_RAID_ACTION_STOP_RAID_FUNCTION Action */
-+typedef struct _MPI2_RAID_ACTION_STOP_RAID_FUNCTION {
-+	U8 RAIDFunction;	/*0x00 */
-+	U8 Flags;		/*0x01 */
-+	U16 Reserved1;		/*0x02 */
-+} MPI2_RAID_ACTION_STOP_RAID_FUNCTION,
-+	*PTR_MPI2_RAID_ACTION_STOP_RAID_FUNCTION,
-+	Mpi2RaidActionStopRaidFunction_t,
-+	*pMpi2RaidActionStopRaidFunction_t;
-+
-+/*defines for the RAIDFunction field */
-+#define MPI2_RAID_ACTION_STOP_BACKGROUND_INIT       (0x00)
-+#define MPI2_RAID_ACTION_STOP_ONLINE_CAP_EXPANSION  (0x01)
-+#define MPI2_RAID_ACTION_STOP_CONSISTENCY_CHECK     (0x02)
-+
-+/*defines for the Flags field */
-+#define MPI2_RAID_ACTION_STOP_ABORT                 (0x00)
-+#define MPI2_RAID_ACTION_STOP_PAUSE                 (0x01)
-+
-+/*ActionDataWord for MPI2_RAID_ACTION_CREATE_HOT_SPARE Action */
-+typedef struct _MPI2_RAID_ACTION_HOT_SPARE {
-+	U8 HotSparePool;	/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U16 DevHandle;		/*0x02 */
-+} MPI2_RAID_ACTION_HOT_SPARE, *PTR_MPI2_RAID_ACTION_HOT_SPARE,
-+	Mpi2RaidActionHotSpare_t, *pMpi2RaidActionHotSpare_t;
-+
-+/*ActionDataWord for MPI2_RAID_ACTION_DEVICE_FW_UPDATE_MODE Action */
-+typedef struct _MPI2_RAID_ACTION_FW_UPDATE_MODE {
-+	U8 Flags;		/*0x00 */
-+	U8 DeviceFirmwareUpdateModeTimeout;	/*0x01 */
-+	U16 Reserved1;		/*0x02 */
-+} MPI2_RAID_ACTION_FW_UPDATE_MODE,
-+	*PTR_MPI2_RAID_ACTION_FW_UPDATE_MODE,
-+	Mpi2RaidActionFwUpdateMode_t,
-+	*pMpi2RaidActionFwUpdateMode_t;
-+
-+/*ActionDataWord defines for use with
-+ *MPI2_RAID_ACTION_DEVICE_FW_UPDATE_MODE action */
-+#define MPI2_RAID_ACTION_ADATA_DISABLE_FW_UPDATE        (0x00)
-+#define MPI2_RAID_ACTION_ADATA_ENABLE_FW_UPDATE         (0x01)
-+
-+typedef union _MPI2_RAID_ACTION_DATA {
-+	U32 Word;
-+	MPI2_RAID_ACTION_RATE_DATA Rates;
-+	MPI2_RAID_ACTION_START_RAID_FUNCTION StartRaidFunction;
-+	MPI2_RAID_ACTION_STOP_RAID_FUNCTION StopRaidFunction;
-+	MPI2_RAID_ACTION_HOT_SPARE HotSpare;
-+	MPI2_RAID_ACTION_FW_UPDATE_MODE FwUpdateMode;
-+} MPI2_RAID_ACTION_DATA, *PTR_MPI2_RAID_ACTION_DATA,
-+	Mpi2RaidActionData_t, *pMpi2RaidActionData_t;
-+
-+/*RAID Action Request Message */
-+typedef struct _MPI2_RAID_ACTION_REQUEST {
-+	U8 Action;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 VolDevHandle;	/*0x04 */
-+	U8 PhysDiskNum;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved2;		/*0x0A */
-+	U32 Reserved3;		/*0x0C */
-+	MPI2_RAID_ACTION_DATA ActionDataWord;	/*0x10 */
-+	MPI2_SGE_SIMPLE_UNION ActionDataSGE;	/*0x14 */
-+} MPI2_RAID_ACTION_REQUEST, *PTR_MPI2_RAID_ACTION_REQUEST,
-+	Mpi2RaidActionRequest_t, *pMpi2RaidActionRequest_t;
-+
-+/*RAID Action request Action values */
-+
-+#define MPI2_RAID_ACTION_INDICATOR_STRUCT           (0x01)
-+#define MPI2_RAID_ACTION_CREATE_VOLUME              (0x02)
-+#define MPI2_RAID_ACTION_DELETE_VOLUME              (0x03)
-+#define MPI2_RAID_ACTION_DISABLE_ALL_VOLUMES        (0x04)
-+#define MPI2_RAID_ACTION_ENABLE_ALL_VOLUMES         (0x05)
-+#define MPI2_RAID_ACTION_PHYSDISK_OFFLINE           (0x0A)
-+#define MPI2_RAID_ACTION_PHYSDISK_ONLINE            (0x0B)
-+#define MPI2_RAID_ACTION_FAIL_PHYSDISK              (0x0F)
-+#define MPI2_RAID_ACTION_ACTIVATE_VOLUME            (0x11)
-+#define MPI2_RAID_ACTION_DEVICE_FW_UPDATE_MODE      (0x15)
-+#define MPI2_RAID_ACTION_CHANGE_VOL_WRITE_CACHE     (0x17)
-+#define MPI2_RAID_ACTION_SET_VOLUME_NAME            (0x18)
-+#define MPI2_RAID_ACTION_SET_RAID_FUNCTION_RATE     (0x19)
-+#define MPI2_RAID_ACTION_ENABLE_FAILED_VOLUME       (0x1C)
-+#define MPI2_RAID_ACTION_CREATE_HOT_SPARE           (0x1D)
-+#define MPI2_RAID_ACTION_DELETE_HOT_SPARE           (0x1E)
-+#define MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED  (0x20)
-+#define MPI2_RAID_ACTION_START_RAID_FUNCTION        (0x21)
-+#define MPI2_RAID_ACTION_STOP_RAID_FUNCTION         (0x22)
-+#define MPI2_RAID_ACTION_COMPATIBILITY_CHECK        (0x23)
-+#define MPI2_RAID_ACTION_PHYSDISK_HIDDEN            (0x24)
-+#define MPI2_RAID_ACTION_MIN_PRODUCT_SPECIFIC       (0x80)
-+#define MPI2_RAID_ACTION_MAX_PRODUCT_SPECIFIC       (0xFF)
-+
-+/*RAID Volume Creation Structure */
++/* driver versioning info */
++#define MPT3SAS_DRIVER_NAME		"mpt3sas"
++#define MPT3SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
++#define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
++#define MPT3SAS_DRIVER_VERSION		"01.100.01.00"
++#define MPT3SAS_MAJOR_VERSION		1
++#define MPT3SAS_MINOR_VERSION		100
++#define MPT3SAS_BUILD_VERSION		1
++#define MPT3SAS_RELEASE_VERSION	00
 +
 +/*
-+ *The following define can be customized for the targeted product.
++ * Set MPT3SAS_SG_DEPTH value based on user input.
 + */
-+#ifndef MPI2_RAID_VOL_CREATION_NUM_PHYSDISKS
-+#define MPI2_RAID_VOL_CREATION_NUM_PHYSDISKS        (1)
++#define MPT3SAS_MAX_PHYS_SEGMENTS	SCSI_MAX_SG_SEGMENTS
++#define MPT3SAS_MIN_PHYS_SEGMENTS	16
++#ifdef CONFIG_SCSI_MPT3SAS_MAX_SGE
++#define MPT3SAS_SG_DEPTH		CONFIG_SCSI_MPT3SAS_MAX_SGE
++#else
++#define MPT3SAS_SG_DEPTH		MPT3SAS_MAX_PHYS_SEGMENTS
 +#endif
 +
-+typedef struct _MPI2_RAID_VOLUME_PHYSDISK {
-+	U8 RAIDSetNum;		/*0x00 */
-+	U8 PhysDiskMap;		/*0x01 */
-+	U16 PhysDiskDevHandle;	/*0x02 */
-+} MPI2_RAID_VOLUME_PHYSDISK, *PTR_MPI2_RAID_VOLUME_PHYSDISK,
-+	Mpi2RaidVolumePhysDisk_t, *pMpi2RaidVolumePhysDisk_t;
-+
-+/*defines for the PhysDiskMap field */
-+#define MPI2_RAIDACTION_PHYSDISK_PRIMARY            (0x01)
-+#define MPI2_RAIDACTION_PHYSDISK_SECONDARY          (0x02)
-+
-+typedef struct _MPI2_RAID_VOLUME_CREATION_STRUCT {
-+	U8 NumPhysDisks;	/*0x00 */
-+	U8 VolumeType;		/*0x01 */
-+	U16 Reserved1;		/*0x02 */
-+	U32 VolumeCreationFlags;	/*0x04 */
-+	U32 VolumeSettings;	/*0x08 */
-+	U8 Reserved2;		/*0x0C */
-+	U8 ResyncRate;		/*0x0D */
-+	U16 DataScrubDuration;	/*0x0E */
-+	U64 VolumeMaxLBA;	/*0x10 */
-+	U32 StripeSize;		/*0x18 */
-+	U8 Name[16];		/*0x1C */
-+	MPI2_RAID_VOLUME_PHYSDISK
-+		PhysDisk[MPI2_RAID_VOL_CREATION_NUM_PHYSDISKS];	/*0x2C */
-+} MPI2_RAID_VOLUME_CREATION_STRUCT,
-+	*PTR_MPI2_RAID_VOLUME_CREATION_STRUCT,
-+	Mpi2RaidVolumeCreationStruct_t,
-+	*pMpi2RaidVolumeCreationStruct_t;
-+
-+/*use MPI2_RAID_VOL_TYPE_ defines from mpi2_cnfg.h for VolumeType */
-+
-+/*defines for the VolumeCreationFlags field */
-+#define MPI2_RAID_VOL_CREATION_DEFAULT_SETTINGS     (0x80000000)
-+#define MPI2_RAID_VOL_CREATION_BACKGROUND_INIT      (0x00000004)
-+#define MPI2_RAID_VOL_CREATION_LOW_LEVEL_INIT       (0x00000002)
-+#define MPI2_RAID_VOL_CREATION_MIGRATE_DATA         (0x00000001)
-+/*The following is an obsolete define.
-+ *It must be shifted left 24 bits in order to set the proper bit.
-+ */
-+#define MPI2_RAID_VOL_CREATION_USE_DEFAULT_SETTINGS (0x80)
-+
-+/*RAID Online Capacity Expansion Structure */
-+
-+typedef struct _MPI2_RAID_ONLINE_CAPACITY_EXPANSION {
-+	U32 Flags;		/*0x00 */
-+	U16 DevHandle0;		/*0x04 */
-+	U16 Reserved1;		/*0x06 */
-+	U16 DevHandle1;		/*0x08 */
-+	U16 Reserved2;		/*0x0A */
-+} MPI2_RAID_ONLINE_CAPACITY_EXPANSION,
-+	*PTR_MPI2_RAID_ONLINE_CAPACITY_EXPANSION,
-+	Mpi2RaidOnlineCapacityExpansion_t,
-+	*pMpi2RaidOnlineCapacityExpansion_t;
-+
-+/*RAID Compatibility Input Structure */
-+
-+typedef struct _MPI2_RAID_COMPATIBILITY_INPUT_STRUCT {
-+	U16 SourceDevHandle;	/*0x00 */
-+	U16 CandidateDevHandle;	/*0x02 */
-+	U32 Flags;		/*0x04 */
-+	U32 Reserved1;		/*0x08 */
-+	U32 Reserved2;		/*0x0C */
-+} MPI2_RAID_COMPATIBILITY_INPUT_STRUCT,
-+	*PTR_MPI2_RAID_COMPATIBILITY_INPUT_STRUCT,
-+	Mpi2RaidCompatibilityInputStruct_t,
-+	*pMpi2RaidCompatibilityInputStruct_t;
-+
-+/*defines for RAID Compatibility Structure Flags field */
-+#define MPI2_RAID_COMPAT_SOURCE_IS_VOLUME_FLAG      (0x00000002)
-+#define MPI2_RAID_COMPAT_REPORT_SOURCE_INFO_FLAG    (0x00000001)
-+
-+/*RAID Volume Indicator Structure */
-+
-+typedef struct _MPI2_RAID_VOL_INDICATOR {
-+	U64 TotalBlocks;	/*0x00 */
-+	U64 BlocksRemaining;	/*0x08 */
-+	U32 Flags;		/*0x10 */
-+} MPI2_RAID_VOL_INDICATOR, *PTR_MPI2_RAID_VOL_INDICATOR,
-+	Mpi2RaidVolIndicator_t, *pMpi2RaidVolIndicator_t;
-+
-+/*defines for RAID Volume Indicator Flags field */
-+#define MPI2_RAID_VOL_FLAGS_OP_MASK                 (0x0000000F)
-+#define MPI2_RAID_VOL_FLAGS_OP_BACKGROUND_INIT      (0x00000000)
-+#define MPI2_RAID_VOL_FLAGS_OP_ONLINE_CAP_EXPANSION (0x00000001)
-+#define MPI2_RAID_VOL_FLAGS_OP_CONSISTENCY_CHECK    (0x00000002)
-+#define MPI2_RAID_VOL_FLAGS_OP_RESYNC               (0x00000003)
-+#define MPI2_RAID_VOL_FLAGS_OP_MDC                  (0x00000004)
-+
-+/*RAID Compatibility Result Structure */
-+
-+typedef struct _MPI2_RAID_COMPATIBILITY_RESULT_STRUCT {
-+	U8 State;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U16 Reserved2;		/*0x02 */
-+	U32 GenericAttributes;	/*0x04 */
-+	U32 OEMSpecificAttributes;	/*0x08 */
-+	U32 Reserved3;		/*0x0C */
-+	U32 Reserved4;		/*0x10 */
-+} MPI2_RAID_COMPATIBILITY_RESULT_STRUCT,
-+	*PTR_MPI2_RAID_COMPATIBILITY_RESULT_STRUCT,
-+	Mpi2RaidCompatibilityResultStruct_t,
-+	*pMpi2RaidCompatibilityResultStruct_t;
-+
-+/*defines for RAID Compatibility Result Structure State field */
-+#define MPI2_RAID_COMPAT_STATE_COMPATIBLE           (0x00)
-+#define MPI2_RAID_COMPAT_STATE_NOT_COMPATIBLE       (0x01)
-+
-+/*defines for RAID Compatibility Result Structure GenericAttributes field */
-+#define MPI2_RAID_COMPAT_GENATTRIB_4K_SECTOR            (0x00000010)
-+
-+#define MPI2_RAID_COMPAT_GENATTRIB_MEDIA_MASK           (0x0000000C)
-+#define MPI2_RAID_COMPAT_GENATTRIB_SOLID_STATE_DRIVE    (0x00000008)
-+#define MPI2_RAID_COMPAT_GENATTRIB_HARD_DISK_DRIVE      (0x00000004)
-+
-+#define MPI2_RAID_COMPAT_GENATTRIB_PROTOCOL_MASK        (0x00000003)
-+#define MPI2_RAID_COMPAT_GENATTRIB_SAS_PROTOCOL         (0x00000002)
-+#define MPI2_RAID_COMPAT_GENATTRIB_SATA_PROTOCOL        (0x00000001)
-+
-+/*RAID Action Reply ActionData union */
-+typedef union _MPI2_RAID_ACTION_REPLY_DATA {
-+	U32 Word[5];
-+	MPI2_RAID_VOL_INDICATOR RaidVolumeIndicator;
-+	U16 VolDevHandle;
-+	U8 VolumeState;
-+	U8 PhysDiskNum;
-+	MPI2_RAID_COMPATIBILITY_RESULT_STRUCT RaidCompatibilityResult;
-+} MPI2_RAID_ACTION_REPLY_DATA, *PTR_MPI2_RAID_ACTION_REPLY_DATA,
-+	Mpi2RaidActionReplyData_t, *pMpi2RaidActionReplyData_t;
-+
-+/*use MPI2_RAIDVOL0_SETTING_ defines from mpi2_cnfg.h for
-+ *MPI2_RAID_ACTION_CHANGE_VOL_WRITE_CACHE action */
-+
-+/*RAID Action Reply Message */
-+typedef struct _MPI2_RAID_ACTION_REPLY {
-+	U8 Action;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 VolDevHandle;	/*0x04 */
-+	U8 PhysDiskNum;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved2;		/*0x0A */
-+	U16 Reserved3;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	MPI2_RAID_ACTION_REPLY_DATA ActionData;	/*0x14 */
-+} MPI2_RAID_ACTION_REPLY, *PTR_MPI2_RAID_ACTION_REPLY,
-+	Mpi2RaidActionReply_t, *pMpi2RaidActionReply_t;
-+
-+#endif
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_sas.h b/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
-new file mode 100644
-index 0000000..b4e7084
---- /dev/null
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
-@@ -0,0 +1,295 @@
-+/*
-+ * Copyright (c) 2000-2012 LSI Corporation.
-+ *
-+ *
-+ *          Name:  mpi2_sas.h
-+ *         Title:  MPI Serial Attached SCSI structures and definitions
-+ * Creation Date:  February 9, 2007
-+ *
-+ * mpi2_sas.h Version:  02.00.07
-+ *
-+ * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-+ *       prefix are for use only on MPI v2.5 products, and must not be used
-+ *       with MPI v2.0 products. Unless otherwise noted, names beginning with
-+ *       MPI2 or Mpi2 are for use with both MPI v2.0 and MPI v2.5 products.
-+ *
-+ * Version History
-+ * ---------------
-+ *
-+ * Date      Version   Description
-+ * --------  --------  ------------------------------------------------------
-+ * 04-30-07  02.00.00  Corresponds to Fusion-MPT MPI Specification Rev A.
-+ * 06-26-07  02.00.01  Added Clear All Persistent Operation to SAS IO Unit
-+ *                     Control Request.
-+ * 10-02-08  02.00.02  Added Set IOC Parameter Operation to SAS IO Unit Control
-+ *                     Request.
-+ * 10-28-09  02.00.03  Changed the type of SGL in MPI2_SATA_PASSTHROUGH_REQUEST
-+ *                     to MPI2_SGE_IO_UNION since it supports chained SGLs.
-+ * 05-12-10  02.00.04  Modified some comments.
-+ * 08-11-10  02.00.05  Added NCQ operations to SAS IO Unit Control.
-+ * 11-18-11  02.00.06  Incorporating additions for MPI v2.5.
-+ * 07-10-12  02.00.07  Added MPI2_SATA_PT_SGE_UNION for use in the SATA
-+ *                     Passthrough Request message.
-+ * --------------------------------------------------------------------------
-+ */
-+
-+#ifndef MPI2_SAS_H
-+#define MPI2_SAS_H
 +
 +/*
-+ *Values for SASStatus.
++ * Generic Defines
 + */
-+#define MPI2_SASSTATUS_SUCCESS                          (0x00)
-+#define MPI2_SASSTATUS_UNKNOWN_ERROR                    (0x01)
-+#define MPI2_SASSTATUS_INVALID_FRAME                    (0x02)
-+#define MPI2_SASSTATUS_UTC_BAD_DEST                     (0x03)
-+#define MPI2_SASSTATUS_UTC_BREAK_RECEIVED               (0x04)
-+#define MPI2_SASSTATUS_UTC_CONNECT_RATE_NOT_SUPPORTED   (0x05)
-+#define MPI2_SASSTATUS_UTC_PORT_LAYER_REQUEST           (0x06)
-+#define MPI2_SASSTATUS_UTC_PROTOCOL_NOT_SUPPORTED       (0x07)
-+#define MPI2_SASSTATUS_UTC_STP_RESOURCES_BUSY           (0x08)
-+#define MPI2_SASSTATUS_UTC_WRONG_DESTINATION            (0x09)
-+#define MPI2_SASSTATUS_SHORT_INFORMATION_UNIT           (0x0A)
-+#define MPI2_SASSTATUS_LONG_INFORMATION_UNIT            (0x0B)
-+#define MPI2_SASSTATUS_XFER_RDY_INCORRECT_WRITE_DATA    (0x0C)
-+#define MPI2_SASSTATUS_XFER_RDY_REQUEST_OFFSET_ERROR    (0x0D)
-+#define MPI2_SASSTATUS_XFER_RDY_NOT_EXPECTED            (0x0E)
-+#define MPI2_SASSTATUS_DATA_INCORRECT_DATA_LENGTH       (0x0F)
-+#define MPI2_SASSTATUS_DATA_TOO_MUCH_READ_DATA          (0x10)
-+#define MPI2_SASSTATUS_DATA_OFFSET_ERROR                (0x11)
-+#define MPI2_SASSTATUS_SDSF_NAK_RECEIVED                (0x12)
-+#define MPI2_SASSTATUS_SDSF_CONNECTION_FAILED           (0x13)
-+#define MPI2_SASSTATUS_INITIATOR_RESPONSE_TIMEOUT       (0x14)
++#define MPT3SAS_SATA_QUEUE_DEPTH	32
++#define MPT3SAS_SAS_QUEUE_DEPTH		254
++#define MPT3SAS_RAID_QUEUE_DEPTH	128
++
++#define MPT_NAME_LENGTH			32	/* generic length of strings */
++#define MPT_STRING_LENGTH		64
++
++#define MPT_MAX_CALLBACKS		32
++
++
++#define	 CAN_SLEEP			1
++#define  NO_SLEEP			0
++
++#define INTERNAL_CMDS_COUNT		10	/* reserved cmds */
++
++#define MPI3_HIM_MASK			0xFFFFFFFF /* mask every bit*/
++
++#define MPT3SAS_INVALID_DEVICE_HANDLE	0xFFFF
 +
 +/*
-+ *Values for the SAS DeviceInfo field used in SAS Device Status Change Event
-+ *data and SAS Configuration pages.
++ * reset phases
 + */
-+#define MPI2_SAS_DEVICE_INFO_SEP                (0x00004000)
-+#define MPI2_SAS_DEVICE_INFO_ATAPI_DEVICE       (0x00002000)
-+#define MPI2_SAS_DEVICE_INFO_LSI_DEVICE         (0x00001000)
-+#define MPI2_SAS_DEVICE_INFO_DIRECT_ATTACH      (0x00000800)
-+#define MPI2_SAS_DEVICE_INFO_SSP_TARGET         (0x00000400)
-+#define MPI2_SAS_DEVICE_INFO_STP_TARGET         (0x00000200)
-+#define MPI2_SAS_DEVICE_INFO_SMP_TARGET         (0x00000100)
-+#define MPI2_SAS_DEVICE_INFO_SATA_DEVICE        (0x00000080)
-+#define MPI2_SAS_DEVICE_INFO_SSP_INITIATOR      (0x00000040)
-+#define MPI2_SAS_DEVICE_INFO_STP_INITIATOR      (0x00000020)
-+#define MPI2_SAS_DEVICE_INFO_SMP_INITIATOR      (0x00000010)
-+#define MPI2_SAS_DEVICE_INFO_SATA_HOST          (0x00000008)
++#define MPT3_IOC_PRE_RESET		1 /* prior to host reset */
++#define MPT3_IOC_AFTER_RESET		2 /* just after host reset */
++#define MPT3_IOC_DONE_RESET		3 /* links re-initialized */
 +
-+#define MPI2_SAS_DEVICE_INFO_MASK_DEVICE_TYPE   (0x00000007)
-+#define MPI2_SAS_DEVICE_INFO_NO_DEVICE          (0x00000000)
-+#define MPI2_SAS_DEVICE_INFO_END_DEVICE         (0x00000001)
-+#define MPI2_SAS_DEVICE_INFO_EDGE_EXPANDER      (0x00000002)
-+#define MPI2_SAS_DEVICE_INFO_FANOUT_EXPANDER    (0x00000003)
-+
-+/*****************************************************************************
-+*
-+*       SAS Messages
-+*
-+*****************************************************************************/
-+
-+/****************************************************************************
-+* SMP Passthrough messages
-+****************************************************************************/
-+
-+/*SMP Passthrough Request Message */
-+typedef struct _MPI2_SMP_PASSTHROUGH_REQUEST {
-+	U8 PassthroughFlags;	/*0x00 */
-+	U8 PhysicalPort;	/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 RequestDataLength;	/*0x04 */
-+	U8 SGLFlags;		/*0x06*//*MPI v2.0 only. Reserved on MPI v2.5*/
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved1;		/*0x0A */
-+	U32 Reserved2;		/*0x0C */
-+	U64 SASAddress;		/*0x10 */
-+	U32 Reserved3;		/*0x18 */
-+	U32 Reserved4;		/*0x1C */
-+	MPI2_SIMPLE_SGE_UNION SGL;/*0x20 */
-+} MPI2_SMP_PASSTHROUGH_REQUEST, *PTR_MPI2_SMP_PASSTHROUGH_REQUEST,
-+	Mpi2SmpPassthroughRequest_t, *pMpi2SmpPassthroughRequest_t;
-+
-+/*values for PassthroughFlags field */
-+#define MPI2_SMP_PT_REQ_PT_FLAGS_IMMEDIATE      (0x80)
-+
-+/*MPI v2.0: use MPI2_SGLFLAGS_ defines from mpi2.h for the SGLFlags field */
-+
-+/*SMP Passthrough Reply Message */
-+typedef struct _MPI2_SMP_PASSTHROUGH_REPLY {
-+	U8 PassthroughFlags;	/*0x00 */
-+	U8 PhysicalPort;	/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 ResponseDataLength;	/*0x04 */
-+	U8 SGLFlags;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved1;		/*0x0A */
-+	U8 Reserved2;		/*0x0C */
-+	U8 SASStatus;		/*0x0D */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U32 Reserved3;		/*0x14 */
-+	U8 ResponseData[4];	/*0x18 */
-+} MPI2_SMP_PASSTHROUGH_REPLY, *PTR_MPI2_SMP_PASSTHROUGH_REPLY,
-+	Mpi2SmpPassthroughReply_t, *pMpi2SmpPassthroughReply_t;
-+
-+/*values for PassthroughFlags field */
-+#define MPI2_SMP_PT_REPLY_PT_FLAGS_IMMEDIATE    (0x80)
-+
-+/*values for SASStatus field are at the top of this file */
-+
-+/****************************************************************************
-+* SATA Passthrough messages
-+****************************************************************************/
-+
-+typedef union _MPI2_SATA_PT_SGE_UNION {
-+	MPI2_SGE_SIMPLE_UNION MpiSimple;	/*MPI v2.0 only */
-+	MPI2_SGE_CHAIN_UNION MpiChain;	/*MPI v2.0 only */
-+	MPI2_IEEE_SGE_SIMPLE_UNION IeeeSimple;
-+	MPI2_IEEE_SGE_CHAIN_UNION IeeeChain;	/*MPI v2.0 only */
-+	MPI25_IEEE_SGE_CHAIN64 IeeeChain64;	/*MPI v2.5 only */
-+} MPI2_SATA_PT_SGE_UNION, *PTR_MPI2_SATA_PT_SGE_UNION,
-+	Mpi2SataPTSGEUnion_t, *pMpi2SataPTSGEUnion_t;
-+
-+/*SATA Passthrough Request Message */
-+typedef struct _MPI2_SATA_PASSTHROUGH_REQUEST {
-+	U16 DevHandle;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 PassthroughFlags;	/*0x04 */
-+	U8 SGLFlags;		/*0x06*//*MPI v2.0 only. Reserved on MPI v2.5*/
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved1;		/*0x0A */
-+	U32 Reserved2;		/*0x0C */
-+	U32 Reserved3;		/*0x10 */
-+	U32 Reserved4;		/*0x14 */
-+	U32 DataLength;		/*0x18 */
-+	U8 CommandFIS[20];	/*0x1C */
-+	MPI2_SATA_PT_SGE_UNION SGL;/*0x30*//*MPI v2.5: IEEE 64 elements only*/
-+} MPI2_SATA_PASSTHROUGH_REQUEST, *PTR_MPI2_SATA_PASSTHROUGH_REQUEST,
-+	Mpi2SataPassthroughRequest_t,
-+	*pMpi2SataPassthroughRequest_t;
-+
-+/*values for PassthroughFlags field */
-+#define MPI2_SATA_PT_REQ_PT_FLAGS_EXECUTE_DIAG      (0x0100)
-+#define MPI2_SATA_PT_REQ_PT_FLAGS_DMA               (0x0020)
-+#define MPI2_SATA_PT_REQ_PT_FLAGS_PIO               (0x0010)
-+#define MPI2_SATA_PT_REQ_PT_FLAGS_UNSPECIFIED_VU    (0x0004)
-+#define MPI2_SATA_PT_REQ_PT_FLAGS_WRITE             (0x0002)
-+#define MPI2_SATA_PT_REQ_PT_FLAGS_READ              (0x0001)
-+
-+/*MPI v2.0: use MPI2_SGLFLAGS_ defines from mpi2.h for the SGLFlags field */
-+
-+/*SATA Passthrough Reply Message */
-+typedef struct _MPI2_SATA_PASSTHROUGH_REPLY {
-+	U16 DevHandle;		/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 PassthroughFlags;	/*0x04 */
-+	U8 SGLFlags;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved1;		/*0x0A */
-+	U8 Reserved2;		/*0x0C */
-+	U8 SASStatus;		/*0x0D */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U8 StatusFIS[20];	/*0x14 */
-+	U32 StatusControlRegisters;	/*0x28 */
-+	U32 TransferCount;	/*0x2C */
-+} MPI2_SATA_PASSTHROUGH_REPLY, *PTR_MPI2_SATA_PASSTHROUGH_REPLY,
-+	Mpi2SataPassthroughReply_t, *pMpi2SataPassthroughReply_t;
-+
-+/*values for SASStatus field are at the top of this file */
-+
-+/****************************************************************************
-+* SAS IO Unit Control messages
-+****************************************************************************/
-+
-+/*SAS IO Unit Control Request Message */
-+typedef struct _MPI2_SAS_IOUNIT_CONTROL_REQUEST {
-+	U8 Operation;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 DevHandle;		/*0x04 */
-+	U8 IOCParameter;	/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+	U16 Reserved4;		/*0x0C */
-+	U8 PhyNum;		/*0x0E */
-+	U8 PrimFlags;		/*0x0F */
-+	U32 Primitive;		/*0x10 */
-+	U8 LookupMethod;	/*0x14 */
-+	U8 Reserved5;		/*0x15 */
-+	U16 SlotNumber;		/*0x16 */
-+	U64 LookupAddress;	/*0x18 */
-+	U32 IOCParameterValue;	/*0x20 */
-+	U32 Reserved7;		/*0x24 */
-+	U32 Reserved8;		/*0x28 */
-+} MPI2_SAS_IOUNIT_CONTROL_REQUEST,
-+	*PTR_MPI2_SAS_IOUNIT_CONTROL_REQUEST,
-+	Mpi2SasIoUnitControlRequest_t,
-+	*pMpi2SasIoUnitControlRequest_t;
-+
-+/*values for the Operation field */
-+#define MPI2_SAS_OP_CLEAR_ALL_PERSISTENT        (0x02)
-+#define MPI2_SAS_OP_PHY_LINK_RESET              (0x06)
-+#define MPI2_SAS_OP_PHY_HARD_RESET              (0x07)
-+#define MPI2_SAS_OP_PHY_CLEAR_ERROR_LOG         (0x08)
-+#define MPI2_SAS_OP_SEND_PRIMITIVE              (0x0A)
-+#define MPI2_SAS_OP_FORCE_FULL_DISCOVERY        (0x0B)
-+#define MPI2_SAS_OP_TRANSMIT_PORT_SELECT_SIGNAL (0x0C)
-+#define MPI2_SAS_OP_REMOVE_DEVICE               (0x0D)
-+#define MPI2_SAS_OP_LOOKUP_MAPPING              (0x0E)
-+#define MPI2_SAS_OP_SET_IOC_PARAMETER           (0x0F)
-+#define MPI25_SAS_OP_ENABLE_FP_DEVICE           (0x10)
-+#define MPI25_SAS_OP_DISABLE_FP_DEVICE          (0x11)
-+#define MPI25_SAS_OP_ENABLE_FP_ALL              (0x12)
-+#define MPI25_SAS_OP_DISABLE_FP_ALL             (0x13)
-+#define MPI2_SAS_OP_DEV_ENABLE_NCQ              (0x14)
-+#define MPI2_SAS_OP_DEV_DISABLE_NCQ             (0x15)
-+#define MPI2_SAS_OP_PRODUCT_SPECIFIC_MIN        (0x80)
-+
-+/*values for the PrimFlags field */
-+#define MPI2_SAS_PRIMFLAGS_SINGLE               (0x08)
-+#define MPI2_SAS_PRIMFLAGS_TRIPLE               (0x02)
-+#define MPI2_SAS_PRIMFLAGS_REDUNDANT            (0x01)
-+
-+/*values for the LookupMethod field */
-+#define MPI2_SAS_LOOKUP_METHOD_SAS_ADDRESS          (0x01)
-+#define MPI2_SAS_LOOKUP_METHOD_SAS_ENCLOSURE_SLOT   (0x02)
-+#define MPI2_SAS_LOOKUP_METHOD_SAS_DEVICE_NAME      (0x03)
-+
-+/*SAS IO Unit Control Reply Message */
-+typedef struct _MPI2_SAS_IOUNIT_CONTROL_REPLY {
-+	U8 Operation;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 DevHandle;		/*0x04 */
-+	U8 IOCParameter;	/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+	U16 Reserved4;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+} MPI2_SAS_IOUNIT_CONTROL_REPLY,
-+	*PTR_MPI2_SAS_IOUNIT_CONTROL_REPLY,
-+	Mpi2SasIoUnitControlReply_t, *pMpi2SasIoUnitControlReply_t;
-+
-+#endif
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
-new file mode 100644
-index 0000000..71453d1
---- /dev/null
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
-@@ -0,0 +1,437 @@
 +/*
-+ * Copyright (c) 2000-2012 LSI Corporation.
-+ *
-+ *
-+ *          Name:  mpi2_tool.h
-+ *         Title:  MPI diagnostic tool structures and definitions
-+ * Creation Date:  March 26, 2007
-+ *
-+ *   mpi2_tool.h Version:  02.00.09
-+ *
-+ * Version History
-+ * ---------------
-+ *
-+ * Date      Version   Description
-+ * --------  --------  ------------------------------------------------------
-+ * 04-30-07  02.00.00  Corresponds to Fusion-MPT MPI Specification Rev A.
-+ * 12-18-07  02.00.01  Added Diagnostic Buffer Post and Diagnostic Release
-+ *                     structures and defines.
-+ * 02-29-08  02.00.02  Modified various names to make them 32-character unique.
-+ * 05-06-09  02.00.03  Added ISTWI Read Write Tool and Diagnostic CLI Tool.
-+ * 07-30-09  02.00.04  Added ExtendedType field to DiagnosticBufferPost request
-+ *                     and reply messages.
-+ *                     Added MPI2_DIAG_BUF_TYPE_EXTENDED.
-+ *                     Incremented MPI2_DIAG_BUF_TYPE_COUNT.
-+ * 05-12-10  02.00.05  Added Diagnostic Data Upload tool.
-+ * 08-11-10  02.00.06  Added defines that were missing for Diagnostic Buffer
-+ *                     Post Request.
-+ * 05-25-11  02.00.07  Added Flags field and related defines to
-+ *                     MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST.
-+ * 11-18-11  02.00.08  Incorporating additions for MPI v2.5.
-+ * 07-10-12  02.00.09  Add MPI v2.5 Toolbox Diagnostic CLI Tool Request
-+ *                     message.
-+ * --------------------------------------------------------------------------
++ * logging format
 + */
++#define MPT3SAS_FMT			"%s: "
 +
-+#ifndef MPI2_TOOL_H
-+#define MPI2_TOOL_H
-+
-+/*****************************************************************************
-+*
-+*              Toolbox Messages
-+*
-+*****************************************************************************/
-+
-+/*defines for the Tools */
-+#define MPI2_TOOLBOX_CLEAN_TOOL                     (0x00)
-+#define MPI2_TOOLBOX_MEMORY_MOVE_TOOL               (0x01)
-+#define MPI2_TOOLBOX_DIAG_DATA_UPLOAD_TOOL          (0x02)
-+#define MPI2_TOOLBOX_ISTWI_READ_WRITE_TOOL          (0x03)
-+#define MPI2_TOOLBOX_BEACON_TOOL                    (0x05)
-+#define MPI2_TOOLBOX_DIAGNOSTIC_CLI_TOOL            (0x06)
-+
-+/****************************************************************************
-+* Toolbox reply
-+****************************************************************************/
-+
-+typedef struct _MPI2_TOOLBOX_REPLY {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+} MPI2_TOOLBOX_REPLY, *PTR_MPI2_TOOLBOX_REPLY,
-+	Mpi2ToolboxReply_t, *pMpi2ToolboxReply_t;
-+
-+/****************************************************************************
-+* Toolbox Clean Tool request
-+****************************************************************************/
-+
-+typedef struct _MPI2_TOOLBOX_CLEAN_REQUEST {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U32 Flags;		/*0x0C */
-+} MPI2_TOOLBOX_CLEAN_REQUEST, *PTR_MPI2_TOOLBOX_CLEAN_REQUEST,
-+	Mpi2ToolboxCleanRequest_t, *pMpi2ToolboxCleanRequest_t;
-+
-+/*values for the Flags field */
-+#define MPI2_TOOLBOX_CLEAN_BOOT_SERVICES            (0x80000000)
-+#define MPI2_TOOLBOX_CLEAN_PERSIST_MANUFACT_PAGES   (0x40000000)
-+#define MPI2_TOOLBOX_CLEAN_OTHER_PERSIST_PAGES      (0x20000000)
-+#define MPI2_TOOLBOX_CLEAN_FW_CURRENT               (0x10000000)
-+#define MPI2_TOOLBOX_CLEAN_FW_BACKUP                (0x08000000)
-+#define MPI2_TOOLBOX_CLEAN_MEGARAID                 (0x02000000)
-+#define MPI2_TOOLBOX_CLEAN_INITIALIZATION           (0x01000000)
-+#define MPI2_TOOLBOX_CLEAN_FLASH                    (0x00000004)
-+#define MPI2_TOOLBOX_CLEAN_SEEPROM                  (0x00000002)
-+#define MPI2_TOOLBOX_CLEAN_NVSRAM                   (0x00000001)
-+
-+/****************************************************************************
-+* Toolbox Memory Move request
-+****************************************************************************/
-+
-+typedef struct _MPI2_TOOLBOX_MEM_MOVE_REQUEST {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	MPI2_SGE_SIMPLE_UNION SGL;	/*0x0C */
-+} MPI2_TOOLBOX_MEM_MOVE_REQUEST, *PTR_MPI2_TOOLBOX_MEM_MOVE_REQUEST,
-+	Mpi2ToolboxMemMoveRequest_t, *pMpi2ToolboxMemMoveRequest_t;
-+
-+/****************************************************************************
-+* Toolbox Diagnostic Data Upload request
-+****************************************************************************/
-+
-+typedef struct _MPI2_TOOLBOX_DIAG_DATA_UPLOAD_REQUEST {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U8 SGLFlags;		/*0x0C */
-+	U8 Reserved5;		/*0x0D */
-+	U16 Reserved6;		/*0x0E */
-+	U32 Flags;		/*0x10 */
-+	U32 DataLength;		/*0x14 */
-+	MPI2_SGE_SIMPLE_UNION SGL;	/*0x18 */
-+} MPI2_TOOLBOX_DIAG_DATA_UPLOAD_REQUEST,
-+	*PTR_MPI2_TOOLBOX_DIAG_DATA_UPLOAD_REQUEST,
-+	Mpi2ToolboxDiagDataUploadRequest_t,
-+	*pMpi2ToolboxDiagDataUploadRequest_t;
-+
-+/*use MPI2_SGLFLAGS_ defines from mpi2.h for the SGLFlags field */
-+
-+typedef struct _MPI2_DIAG_DATA_UPLOAD_HEADER {
-+	U32 DiagDataLength;	/*00h */
-+	U8 FormatCode;		/*04h */
-+	U8 Reserved1;		/*05h */
-+	U16 Reserved2;		/*06h */
-+} MPI2_DIAG_DATA_UPLOAD_HEADER, *PTR_MPI2_DIAG_DATA_UPLOAD_HEADER,
-+	Mpi2DiagDataUploadHeader_t, *pMpi2DiagDataUploadHeader_t;
-+
-+/****************************************************************************
-+* Toolbox ISTWI Read Write Tool
-+****************************************************************************/
-+
-+/*Toolbox ISTWI Read Write Tool request message */
-+typedef struct _MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U32 Reserved5;		/*0x0C */
-+	U32 Reserved6;		/*0x10 */
-+	U8 DevIndex;		/*0x14 */
-+	U8 Action;		/*0x15 */
-+	U8 SGLFlags;		/*0x16 */
-+	U8 Flags;		/*0x17 */
-+	U16 TxDataLength;	/*0x18 */
-+	U16 RxDataLength;	/*0x1A */
-+	U32 Reserved8;		/*0x1C */
-+	U32 Reserved9;		/*0x20 */
-+	U32 Reserved10;		/*0x24 */
-+	U32 Reserved11;		/*0x28 */
-+	U32 Reserved12;		/*0x2C */
-+	MPI2_SGE_SIMPLE_UNION SGL;	/*0x30 */
-+} MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST,
-+	*PTR_MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST,
-+	Mpi2ToolboxIstwiReadWriteRequest_t,
-+	*pMpi2ToolboxIstwiReadWriteRequest_t;
-+
-+/*values for the Action field */
-+#define MPI2_TOOL_ISTWI_ACTION_READ_DATA            (0x01)
-+#define MPI2_TOOL_ISTWI_ACTION_WRITE_DATA           (0x02)
-+#define MPI2_TOOL_ISTWI_ACTION_SEQUENCE             (0x03)
-+#define MPI2_TOOL_ISTWI_ACTION_RESERVE_BUS          (0x10)
-+#define MPI2_TOOL_ISTWI_ACTION_RELEASE_BUS          (0x11)
-+#define MPI2_TOOL_ISTWI_ACTION_RESET                (0x12)
-+
-+/*use MPI2_SGLFLAGS_ defines from mpi2.h for the SGLFlags field */
-+
-+/*values for the Flags field */
-+#define MPI2_TOOL_ISTWI_FLAG_AUTO_RESERVE_RELEASE   (0x80)
-+#define MPI2_TOOL_ISTWI_FLAG_PAGE_ADDR_MASK         (0x07)
-+
-+/*Toolbox ISTWI Read Write Tool reply message */
-+typedef struct _MPI2_TOOLBOX_ISTWI_REPLY {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U8 DevIndex;		/*0x14 */
-+	U8 Action;		/*0x15 */
-+	U8 IstwiStatus;		/*0x16 */
-+	U8 Reserved6;		/*0x17 */
-+	U16 TxDataCount;	/*0x18 */
-+	U16 RxDataCount;	/*0x1A */
-+} MPI2_TOOLBOX_ISTWI_REPLY, *PTR_MPI2_TOOLBOX_ISTWI_REPLY,
-+	Mpi2ToolboxIstwiReply_t, *pMpi2ToolboxIstwiReply_t;
-+
-+/****************************************************************************
-+* Toolbox Beacon Tool request
-+****************************************************************************/
-+
-+typedef struct _MPI2_TOOLBOX_BEACON_REQUEST {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U8 Reserved5;		/*0x0C */
-+	U8 PhysicalPort;	/*0x0D */
-+	U8 Reserved6;		/*0x0E */
-+	U8 Flags;		/*0x0F */
-+} MPI2_TOOLBOX_BEACON_REQUEST, *PTR_MPI2_TOOLBOX_BEACON_REQUEST,
-+	Mpi2ToolboxBeaconRequest_t, *pMpi2ToolboxBeaconRequest_t;
-+
-+/*values for the Flags field */
-+#define MPI2_TOOLBOX_FLAGS_BEACONMODE_OFF       (0x00)
-+#define MPI2_TOOLBOX_FLAGS_BEACONMODE_ON        (0x01)
-+
-+/****************************************************************************
-+* Toolbox Diagnostic CLI Tool
-+****************************************************************************/
-+
-+#define MPI2_TOOLBOX_DIAG_CLI_CMD_LENGTH    (0x5C)
-+
-+/*MPI v2.0 Toolbox Diagnostic CLI Tool request message */
-+typedef struct _MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U8 SGLFlags;		/*0x0C */
-+	U8 Reserved5;		/*0x0D */
-+	U16 Reserved6;		/*0x0E */
-+	U32 DataLength;		/*0x10 */
-+	U8 DiagnosticCliCommand[MPI2_TOOLBOX_DIAG_CLI_CMD_LENGTH];/*0x14 */
-+	MPI2_SGE_SIMPLE_UNION SGL;	/*0x70 */
-+} MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
-+	*PTR_MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
-+	Mpi2ToolboxDiagnosticCliRequest_t,
-+	*pMpi2ToolboxDiagnosticCliRequest_t;
-+
-+/*use MPI2_SGLFLAGS_ defines from mpi2.h for the SGLFlags field */
-+
-+/*MPI v2.5 Toolbox Diagnostic CLI Tool request message */
-+typedef struct _MPI25_TOOLBOX_DIAGNOSTIC_CLI_REQUEST {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U32 Reserved5;		/*0x0C */
-+	U32 DataLength;		/*0x10 */
-+	U8 DiagnosticCliCommand[MPI2_TOOLBOX_DIAG_CLI_CMD_LENGTH];/*0x14 */
-+	MPI25_SGE_IO_UNION SGL;	/*0x70 */
-+} MPI25_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
-+	*PTR_MPI25_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
-+	Mpi25ToolboxDiagnosticCliRequest_t,
-+	*pMpi25ToolboxDiagnosticCliRequest_t;
-+
-+/*Toolbox Diagnostic CLI Tool reply message */
-+typedef struct _MPI2_TOOLBOX_DIAGNOSTIC_CLI_REPLY {
-+	U8 Tool;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U32 ReturnedDataLength;	/*0x14 */
-+} MPI2_TOOLBOX_DIAGNOSTIC_CLI_REPLY,
-+	*PTR_MPI2_TOOLBOX_DIAG_CLI_REPLY,
-+	Mpi2ToolboxDiagnosticCliReply_t,
-+	*pMpi2ToolboxDiagnosticCliReply_t;
-+
-+/*****************************************************************************
-+*
-+*      Diagnostic Buffer Messages
-+*
-+*****************************************************************************/
-+
-+/****************************************************************************
-+* Diagnostic Buffer Post request
-+****************************************************************************/
-+
-+typedef struct _MPI2_DIAG_BUFFER_POST_REQUEST {
-+	U8 ExtendedType;	/*0x00 */
-+	U8 BufferType;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U64 BufferAddress;	/*0x0C */
-+	U32 BufferLength;	/*0x14 */
-+	U32 Reserved5;		/*0x18 */
-+	U32 Reserved6;		/*0x1C */
-+	U32 Flags;		/*0x20 */
-+	U32 ProductSpecific[23];	/*0x24 */
-+} MPI2_DIAG_BUFFER_POST_REQUEST, *PTR_MPI2_DIAG_BUFFER_POST_REQUEST,
-+	Mpi2DiagBufferPostRequest_t, *pMpi2DiagBufferPostRequest_t;
-+
-+/*values for the ExtendedType field */
-+#define MPI2_DIAG_EXTENDED_TYPE_UTILIZATION         (0x02)
-+
-+/*values for the BufferType field */
-+#define MPI2_DIAG_BUF_TYPE_TRACE                    (0x00)
-+#define MPI2_DIAG_BUF_TYPE_SNAPSHOT                 (0x01)
-+#define MPI2_DIAG_BUF_TYPE_EXTENDED                 (0x02)
-+/*count of the number of buffer types */
-+#define MPI2_DIAG_BUF_TYPE_COUNT                    (0x03)
-+
-+/*values for the Flags field */
-+#define MPI2_DIAG_BUF_FLAG_RELEASE_ON_FULL          (0x00000002)
-+#define MPI2_DIAG_BUF_FLAG_IMMEDIATE_RELEASE        (0x00000001)
-+
-+/****************************************************************************
-+* Diagnostic Buffer Post reply
-+****************************************************************************/
-+
-+typedef struct _MPI2_DIAG_BUFFER_POST_REPLY {
-+	U8 ExtendedType;	/*0x00 */
-+	U8 BufferType;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U32 TransferLength;	/*0x14 */
-+} MPI2_DIAG_BUFFER_POST_REPLY, *PTR_MPI2_DIAG_BUFFER_POST_REPLY,
-+	Mpi2DiagBufferPostReply_t, *pMpi2DiagBufferPostReply_t;
-+
-+/****************************************************************************
-+* Diagnostic Release request
-+****************************************************************************/
-+
-+typedef struct _MPI2_DIAG_RELEASE_REQUEST {
-+	U8 Reserved1;		/*0x00 */
-+	U8 BufferType;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+} MPI2_DIAG_RELEASE_REQUEST, *PTR_MPI2_DIAG_RELEASE_REQUEST,
-+	Mpi2DiagReleaseRequest_t, *pMpi2DiagReleaseRequest_t;
-+
-+/****************************************************************************
-+* Diagnostic Buffer Post reply
-+****************************************************************************/
-+
-+typedef struct _MPI2_DIAG_RELEASE_REPLY {
-+	U8 Reserved1;		/*0x00 */
-+	U8 BufferType;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+} MPI2_DIAG_RELEASE_REPLY, *PTR_MPI2_DIAG_RELEASE_REPLY,
-+	Mpi2DiagReleaseReply_t, *pMpi2DiagReleaseReply_t;
-+
-+#endif
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_type.h b/drivers/scsi/mpt3sas/mpi/mpi2_type.h
-new file mode 100644
-index 0000000..516f959
---- /dev/null
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_type.h
-@@ -0,0 +1,56 @@
 +/*
-+ *  Copyright (c) 2000-2007 LSI Corporation.
-+ *
-+ *
-+ *           Name:  mpi2_type.h
-+ *          Title:  MPI basic type definitions
-+ *  Creation Date:  August 16, 2006
-+ *
-+ *    mpi2_type.h Version:  02.00.00
-+ *
-+ *  Version History
-+ *  ---------------
-+ *
-+ *  Date      Version   Description
-+ *  --------  --------  ------------------------------------------------------
-+ *  04-30-07  02.00.00  Corresponds to Fusion-MPT MPI Specification Rev A.
-+ *  --------------------------------------------------------------------------
++ * per target private data
 + */
++#define MPT_TARGET_FLAGS_RAID_COMPONENT	0x01
++#define MPT_TARGET_FLAGS_VOLUME		0x02
++#define MPT_TARGET_FLAGS_DELETED	0x04
++#define MPT_TARGET_FASTPATH_IO		0x08
 +
-+#ifndef MPI2_TYPE_H
-+#define MPI2_TYPE_H
 +
-+/*******************************************************************************
-+ * Define * if it hasn't already been defined. By default
-+ * * is defined to be a near pointer. MPI2_POINTER can be defined as
-+ * a far pointer by defining * as "far *" before this header file is
-+ * included.
++
++/*
++ * status bits for ioc->diag_buffer_status
 + */
++#define MPT3_DIAG_BUFFER_IS_REGISTERED	(0x01)
++#define MPT3_DIAG_BUFFER_IS_RELEASED	(0x02)
++#define MPT3_DIAG_BUFFER_IS_DIAG_RESET	(0x04)
 +
-+/* the basic types may have already been included by mpi_type.h */
-+#ifndef MPI_TYPE_H
-+/*****************************************************************************
-+*
-+*               Basic Types
-+*
-+*****************************************************************************/
 +
-+typedef u8 U8;
-+typedef __le16 U16;
-+typedef __le32 U32;
-+typedef __le64 U64 __attribute__ ((aligned(4)));
++/* OEM Identifiers */
++#define MFG10_OEM_ID_INVALID                   (0x00000000)
++#define MFG10_OEM_ID_DELL                      (0x00000001)
++#define MFG10_OEM_ID_FSC                       (0x00000002)
++#define MFG10_OEM_ID_SUN                       (0x00000003)
++#define MFG10_OEM_ID_IBM                       (0x00000004)
 +
-+/*****************************************************************************
-+*
-+*               Pointer Types
-+*
-+*****************************************************************************/
++/* GENERIC Flags 0*/
++#define MFG10_GF0_OCE_DISABLED                 (0x00000001)
++#define MFG10_GF0_R1E_DRIVE_COUNT              (0x00000002)
++#define MFG10_GF0_R10_DISPLAY                  (0x00000004)
++#define MFG10_GF0_SSD_DATA_SCRUB_DISABLE       (0x00000008)
++#define MFG10_GF0_SINGLE_DRIVE_R0              (0x00000010)
 +
-+typedef U8 *PU8;
-+typedef U16 *PU16;
-+typedef U32 *PU32;
-+typedef U64 *PU64;
++/* OEM Specific Flags will come from OEM specific header files */
++struct Mpi2ManufacturingPage10_t {
++	MPI2_CONFIG_PAGE_HEADER	Header;		/* 00h */
++	U8	OEMIdentifier;			/* 04h */
++	U8	Reserved1;			/* 05h */
++	U16	Reserved2;			/* 08h */
++	U32	Reserved3;			/* 0Ch */
++	U32	GenericFlags0;			/* 10h */
++	U32	GenericFlags1;			/* 14h */
++	U32	Reserved4;			/* 18h */
++	U32	OEMSpecificFlags0;		/* 1Ch */
++	U32	OEMSpecificFlags1;		/* 20h */
++	U32	Reserved5[18];			/* 24h - 60h*/
++};
 +
-+#endif
 +
-+#endif
++/* Miscellaneous options */
++struct Mpi2ManufacturingPage11_t {
++	MPI2_CONFIG_PAGE_HEADER Header;		/* 00h */
++	__le32	Reserved1;			/* 04h */
++	u8	Reserved2;			/* 08h */
++	u8	EEDPTagMode;			/* 09h */
++	u8	Reserved3;			/* 0Ah */
++	u8	Reserved4;			/* 0Bh */
++	__le32	Reserved5[23];			/* 0Ch-60h*/
++};
++
++/**
++ * struct MPT3SAS_TARGET - starget private hostdata
++ * @starget: starget object
++ * @sas_address: target sas address
++ * @handle: device handle
++ * @num_luns: number luns
++ * @flags: MPT_TARGET_FLAGS_XXX flags
++ * @deleted: target flaged for deletion
++ * @tm_busy: target is busy with TM request.
++ */
++struct MPT3SAS_TARGET {
++	struct scsi_target *starget;
++	u64	sas_address;
++	u16	handle;
++	int	num_luns;
++	u32	flags;
++	u8	deleted;
++	u8	tm_busy;
++};
++
++
++/*
++ * per device private data
++ */
++#define MPT_DEVICE_FLAGS_INIT		0x01
++#define MPT_DEVICE_TLR_ON		0x02
++
++/**
++ * struct MPT3SAS_DEVICE - sdev private hostdata
++ * @sas_target: starget private hostdata
++ * @lun: lun number
++ * @flags: MPT_DEVICE_XXX flags
++ * @configured_lun: lun is configured
++ * @block: device is in SDEV_BLOCK state
++ * @tlr_snoop_check: flag used in determining whether to disable TLR
++ * @eedp_enable: eedp support enable bit
++ * @eedp_type: 0(type_1), 1(type_2), 2(type_3)
++ * @eedp_block_length: block size
++ */
++struct MPT3SAS_DEVICE {
++	struct MPT3SAS_TARGET *sas_target;
++	unsigned int	lun;
++	u32	flags;
++	u8	configured_lun;
++	u8	block;
++	u8	tlr_snoop_check;
++};
++
++#define MPT3_CMD_NOT_USED	0x8000	/* free */
++#define MPT3_CMD_COMPLETE	0x0001	/* completed */
++#define MPT3_CMD_PENDING	0x0002	/* pending */
++#define MPT3_CMD_REPLY_VALID	0x0004	/* reply is valid */
++#define MPT3_CMD_RESET		0x0008	/* host reset dropped the command */
++
++/**
++ * struct _internal_cmd - internal commands struct
++ * @mutex: mutex
++ * @done: completion
++ * @reply: reply message pointer
++ * @sense: sense data
++ * @status: MPT3_CMD_XXX status
++ * @smid: system message id
++ */
++struct _internal_cmd {
++	struct mutex mutex;
++	struct completion done;
++	void	*reply;
++	void	*sense;
++	u16	status;
++	u16	smid;
++};
++
++
++
++/**
++ * struct _sas_device - attached device information
++ * @list: sas device list
++ * @starget: starget object
++ * @sas_address: device sas address
++ * @device_name: retrieved from the SAS IDENTIFY frame.
++ * @handle: device handle
++ * @sas_address_parent: sas address of parent expander or sas host
++ * @enclosure_handle: enclosure handle
++ * @enclosure_logical_id: enclosure logical identifier
++ * @volume_handle: volume handle (valid when hidden raid member)
++ * @volume_wwid: volume unique identifier
++ * @device_info: bitfield provides detailed info about the device
++ * @id: target id
++ * @channel: target channel
++ * @slot: number number
++ * @phy: phy identifier provided in sas device page 0
++ * @fast_path: fast path feature enable bit
++ * @responding: used in _scsih_sas_device_mark_responding
++ */
++struct _sas_device {
++	struct list_head list;
++	struct scsi_target *starget;
++	u64	sas_address;
++	u64	device_name;
++	u16	handle;
++	u64	sas_address_parent;
++	u16	enclosure_handle;
++	u64	enclosure_logical_id;
++	u16	volume_handle;
++	u64	volume_wwid;
++	u32	device_info;
++	int	id;
++	int	channel;
++	u16	slot;
++	u8	phy;
++	u8	responding;
++	u8	fast_path;
++};
++
++/**
++ * struct _raid_device - raid volume link list
++ * @list: sas device list
++ * @starget: starget object
++ * @sdev: scsi device struct (volumes are single lun)
++ * @wwid: unique identifier for the volume
++ * @handle: device handle
++ * @id: target id
++ * @channel: target channel
++ * @volume_type: the raid level
++ * @device_info: bitfield provides detailed info about the hidden components
++ * @num_pds: number of hidden raid components
++ * @responding: used in _scsih_raid_device_mark_responding
++ * @percent_complete: resync percent complete
++ */
++#define MPT_MAX_WARPDRIVE_PDS		8
++struct _raid_device {
++	struct list_head list;
++	struct scsi_target *starget;
++	struct scsi_device *sdev;
++	u64	wwid;
++	u16	handle;
++	int	id;
++	int	channel;
++	u8	volume_type;
++	u8	num_pds;
++	u8	responding;
++	u8	percent_complete;
++	u32	device_info;
++};
++
++/**
++ * struct _boot_device - boot device info
++ * @is_raid: flag to indicate whether this is volume
++ * @device: holds pointer for either struct _sas_device or
++ *     struct _raid_device
++ */
++struct _boot_device {
++	u8 is_raid;
++	void *device;
++};
++
++/**
++ * struct _sas_port - wide/narrow sas port information
++ * @port_list: list of ports belonging to expander
++ * @num_phys: number of phys belonging to this port
++ * @remote_identify: attached device identification
++ * @rphy: sas transport rphy object
++ * @port: sas transport wide/narrow port object
++ * @phy_list: _sas_phy list objects belonging to this port
++ */
++struct _sas_port {
++	struct list_head port_list;
++	u8	num_phys;
++	struct sas_identify remote_identify;
++	struct sas_rphy *rphy;
++	struct sas_port *port;
++	struct list_head phy_list;
++};
++
++/**
++ * struct _sas_phy - phy information
++ * @port_siblings: list of phys belonging to a port
++ * @identify: phy identification
++ * @remote_identify: attached device identification
++ * @phy: sas transport phy object
++ * @phy_id: unique phy id
++ * @handle: device handle for this phy
++ * @attached_handle: device handle for attached device
++ * @phy_belongs_to_port: port has been created for this phy
++ */
++struct _sas_phy {
++	struct list_head port_siblings;
++	struct sas_identify identify;
++	struct sas_identify remote_identify;
++	struct sas_phy *phy;
++	u8	phy_id;
++	u16	handle;
++	u16	attached_handle;
++	u8	phy_belongs_to_port;
++};
++
++/**
++ * struct _sas_node - sas_host/expander information
++ * @list: list of expanders
++ * @parent_dev: parent device class
++ * @num_phys: number phys belonging to this sas_host/expander
++ * @sas_address: sas address of this sas_host/expander
++ * @handle: handle for this sas_host/expander
++ * @sas_address_parent: sas address of parent expander or sas host
++ * @enclosure_handle: handle for this a member of an enclosure
++ * @device_info: bitwise defining capabilities of this sas_host/expander
++ * @responding: used in _scsih_expander_device_mark_responding
++ * @phy: a list of phys that make up this sas_host/expander
++ * @sas_port_list: list of ports attached to this sas_host/expander
++ */
++struct _sas_node {
++	struct list_head list;
++	struct device *parent_dev;
++	u8	num_phys;
++	u64	sas_address;
++	u16	handle;
++	u64	sas_address_parent;
++	u16	enclosure_handle;
++	u64	enclosure_logical_id;
++	u8	responding;
++	struct	_sas_phy *phy;
++	struct list_head sas_port_list;
++};
++
++/**
++ * enum reset_type - reset state
++ * @FORCE_BIG_HAMMER: issue diagnostic reset
++ * @SOFT_RESET: issue message_unit_reset, if fails to to big hammer
++ */
++enum reset_type {
++	FORCE_BIG_HAMMER,
++	SOFT_RESET,
++};
++
++/**
++ * struct chain_tracker - firmware chain tracker
++ * @chain_buffer: chain buffer
++ * @chain_buffer_dma: physical address
++ * @tracker_list: list of free request (ioc->free_chain_list)
++ */
++struct chain_tracker {
++	void *chain_buffer;
++	dma_addr_t chain_buffer_dma;
++	struct list_head tracker_list;
++};
++
++/**
++ * struct scsiio_tracker - scsi mf request tracker
++ * @smid: system message id
++ * @scmd: scsi request pointer
++ * @cb_idx: callback index
++ * @tracker_list: list of free request (ioc->free_list)
++ */
++struct scsiio_tracker {
++	u16	smid;
++	struct scsi_cmnd *scmd;
++	u8	cb_idx;
++	struct list_head chain_list;
++	struct list_head tracker_list;
++};
++
++/**
++ * struct request_tracker - firmware request tracker
++ * @smid: system message id
++ * @cb_idx: callback index
++ * @tracker_list: list of free request (ioc->free_list)
++ */
++struct request_tracker {
++	u16	smid;
++	u8	cb_idx;
++	struct list_head tracker_list;
++};
++
++/**
++ * struct _tr_list - target reset list
++ * @handle: device handle
++ * @state: state machine
++ */
++struct _tr_list {
++	struct list_head list;
++	u16	handle;
++	u16	state;
++};
++
++
++/**
++ * struct adapter_reply_queue - the reply queue struct
++ * @ioc: per adapter object
++ * @msix_index: msix index into vector table
++ * @vector: irq vector
++ * @reply_post_host_index: head index in the pool where FW completes IO
++ * @reply_post_free: reply post base virt address
++ * @name: the name registered to request_irq()
++ * @busy: isr is actively processing replies on another cpu
++ * @list: this list
++*/
++struct adapter_reply_queue {
++	struct MPT3SAS_ADAPTER	*ioc;
++	u8			msix_index;
++	unsigned int		vector;
++	u32			reply_post_host_index;
++	Mpi2ReplyDescriptorsUnion_t *reply_post_free;
++	char			name[MPT_NAME_LENGTH];
++	atomic_t		busy;
++	struct list_head	list;
++};
++
++typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
++
++/* SAS3.0 support */
++typedef int (*MPT_BUILD_SG_SCMD)(struct MPT3SAS_ADAPTER *ioc,
++		struct scsi_cmnd *scmd, u16 smid);
++typedef void (*MPT_BUILD_SG)(struct MPT3SAS_ADAPTER *ioc, void *psge,
++		dma_addr_t data_out_dma, size_t data_out_sz,
++		dma_addr_t data_in_dma, size_t data_in_sz);
++typedef void (*MPT_BUILD_ZERO_LEN_SGE)(struct MPT3SAS_ADAPTER *ioc,
++		void *paddr);
++
++
++
++/* IOC Facts and Port Facts converted from little endian to cpu */
++union mpi3_version_union {
++	MPI2_VERSION_STRUCT		Struct;
++	u32				Word;
++};
++
++struct mpt3sas_facts {
++	u16			MsgVersion;
++	u16			HeaderVersion;
++	u8			IOCNumber;
++	u8			VP_ID;
++	u8			VF_ID;
++	u16			IOCExceptions;
++	u16			IOCStatus;
++	u32			IOCLogInfo;
++	u8			MaxChainDepth;
++	u8			WhoInit;
++	u8			NumberOfPorts;
++	u8			MaxMSIxVectors;
++	u16			RequestCredit;
++	u16			ProductID;
++	u32			IOCCapabilities;
++	union mpi3_version_union	FWVersion;
++	u16			IOCRequestFrameSize;
++	u16			Reserved3;
++	u16			MaxInitiators;
++	u16			MaxTargets;
++	u16			MaxSasExpanders;
++	u16			MaxEnclosures;
++	u16			ProtocolFlags;
++	u16			HighPriorityCredit;
++	u16			MaxReplyDescriptorPostQueueDepth;
++	u8			ReplyFrameSize;
++	u8			MaxVolumes;
++	u16			MaxDevHandle;
++	u16			MaxPersistentEntries;
++	u16			MinDevHandle;
++};
++
++struct mpt3sas_port_facts {
++	u8			PortNumber;
++	u8			VP_ID;
++	u8			VF_ID;
++	u8			PortType;
++	u16			MaxPostedCmdBuffers;
++};
++
++/**
++ * enum mutex_type - task management mutex type
++ * @TM_MUTEX_OFF: mutex is not required becuase calling function is acquiring it
++ * @TM_MUTEX_ON: mutex is required
++ */
++enum mutex_type {
++	TM_MUTEX_OFF = 0,
++	TM_MUTEX_ON = 1,
++};
++
++typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
++/**
++ * struct MPT3SAS_ADAPTER - per adapter struct
++ * @list: ioc_list
++ * @shost: shost object
++ * @id: unique adapter id
++ * @cpu_count: number online cpus
++ * @name: generic ioc string
++ * @tmp_string: tmp string used for logging
++ * @pdev: pci pdev object
++ * @pio_chip: physical io register space
++ * @chip: memory mapped register space
++ * @chip_phys: physical addrss prior to mapping
++ * @logging_level: see mpt3sas_debug.h
++ * @fwfault_debug: debuging FW timeouts
++ * @ir_firmware: IR firmware present
++ * @bars: bitmask of BAR's that must be configured
++ * @mask_interrupts: ignore interrupt
++ * @fault_reset_work_q_name: fw fault work queue
++ * @fault_reset_work_q: ""
++ * @fault_reset_work: ""
++ * @firmware_event_name: fw event work queue
++ * @firmware_event_thread: ""
++ * @fw_event_lock:
++ * @fw_event_list: list of fw events
++ * @aen_event_read_flag: event log was read
++ * @broadcast_aen_busy: broadcast aen waiting to be serviced
++ * @shost_recovery: host reset in progress
++ * @ioc_reset_in_progress_lock:
++ * @ioc_link_reset_in_progress: phy/hard reset in progress
++ * @ignore_loginfos: ignore loginfos during task management
++ * @remove_host: flag for when driver unloads, to avoid sending dev resets
++ * @pci_error_recovery: flag to prevent ioc access until slot reset completes
++ * @wait_for_discovery_to_complete: flag set at driver load time when
++ *                                               waiting on reporting devices
++ * @is_driver_loading: flag set at driver load time
++ * @port_enable_failed: flag set when port enable has failed
++ * @start_scan: flag set from scan_start callback, cleared from _mpt3sas_fw_work
++ * @start_scan_failed: means port enable failed, return's the ioc_status
++ * @msix_enable: flag indicating msix is enabled
++ * @msix_vector_count: number msix vectors
++ * @cpu_msix_table: table for mapping cpus to msix index
++ * @cpu_msix_table_sz: table size
++ * @schedule_dead_ioc_flush_running_cmds: callback to flush pending commands
++ * @scsi_io_cb_idx: shost generated commands
++ * @tm_cb_idx: task management commands
++ * @scsih_cb_idx: scsih internal commands
++ * @transport_cb_idx: transport internal commands
++ * @ctl_cb_idx: clt internal commands
++ * @base_cb_idx: base internal commands
++ * @config_cb_idx: base internal commands
++ * @tm_tr_cb_idx : device removal target reset handshake
++ * @tm_tr_volume_cb_idx : volume removal target reset
++ * @base_cmds:
++ * @transport_cmds:
++ * @scsih_cmds:
++ * @tm_cmds:
++ * @ctl_cmds:
++ * @config_cmds:
++ * @base_add_sg_single: handler for either 32/64 bit sgl's
++ * @event_type: bits indicating which events to log
++ * @event_context: unique id for each logged event
++ * @event_log: event log pointer
++ * @event_masks: events that are masked
++ * @facts: static facts data
++ * @pfacts: static port facts data
++ * @manu_pg0: static manufacturing page 0
++ * @manu_pg10: static manufacturing page 10
++ * @manu_pg11: static manufacturing page 11
++ * @bios_pg2: static bios page 2
++ * @bios_pg3: static bios page 3
++ * @ioc_pg8: static ioc page 8
++ * @iounit_pg0: static iounit page 0
++ * @iounit_pg1: static iounit page 1
++ * @sas_hba: sas host object
++ * @sas_expander_list: expander object list
++ * @sas_node_lock:
++ * @sas_device_list: sas device object list
++ * @sas_device_init_list: sas device object list (used only at init time)
++ * @sas_device_lock:
++ * @io_missing_delay: time for IO completed by fw when PDR enabled
++ * @device_missing_delay: time for device missing by fw when PDR enabled
++ * @sas_id : used for setting volume target IDs
++ * @blocking_handles: bitmask used to identify which devices need blocking
++ * @pd_handles : bitmask for PD handles
++ * @pd_handles_sz : size of pd_handle bitmask
++ * @config_page_sz: config page size
++ * @config_page: reserve memory for config page payload
++ * @config_page_dma:
++ * @hba_queue_depth: hba request queue depth
++ * @sge_size: sg element size for either 32/64 bit
++ * @scsiio_depth: SCSI_IO queue depth
++ * @request_sz: per request frame size
++ * @request: pool of request frames
++ * @request_dma:
++ * @request_dma_sz:
++ * @scsi_lookup: firmware request tracker list
++ * @scsi_lookup_lock:
++ * @free_list: free list of request
++ * @pending_io_count:
++ * @reset_wq:
++ * @chain: pool of chains
++ * @chain_dma:
++ * @max_sges_in_main_message: number sg elements in main message
++ * @max_sges_in_chain_message: number sg elements per chain
++ * @chains_needed_per_io: max chains per io
++ * @chain_depth: total chains allocated
++ * @hi_priority_smid:
++ * @hi_priority:
++ * @hi_priority_dma:
++ * @hi_priority_depth:
++ * @hpr_lookup:
++ * @hpr_free_list:
++ * @internal_smid:
++ * @internal:
++ * @internal_dma:
++ * @internal_depth:
++ * @internal_lookup:
++ * @internal_free_list:
++ * @sense: pool of sense
++ * @sense_dma:
++ * @sense_dma_pool:
++ * @reply_depth: hba reply queue depth:
++ * @reply_sz: per reply frame size:
++ * @reply: pool of replys:
++ * @reply_dma:
++ * @reply_dma_pool:
++ * @reply_free_queue_depth: reply free depth
++ * @reply_free: pool for reply free queue (32 bit addr)
++ * @reply_free_dma:
++ * @reply_free_dma_pool:
++ * @reply_free_host_index: tail index in pool to insert free replys
++ * @reply_post_queue_depth: reply post queue depth
++ * @reply_post_free: pool for reply post (64bit descriptor)
++ * @reply_post_free_dma:
++ * @reply_queue_count: number of reply queue's
++ * @reply_queue_list: link list contaning the reply queue info
++ * @reply_post_host_index: head index in the pool where FW completes IO
++ * @delayed_tr_list: target reset link list
++ * @delayed_tr_volume_list: volume target reset link list
++ */
++struct MPT3SAS_ADAPTER {
++	struct list_head list;
++	struct Scsi_Host *shost;
++	u8		id;
++	int		cpu_count;
++	char		name[MPT_NAME_LENGTH];
++	char		tmp_string[MPT_STRING_LENGTH];
++	struct pci_dev	*pdev;
++	Mpi2SystemInterfaceRegs_t __iomem *chip;
++	resource_size_t	chip_phys;
++	int		logging_level;
++	int		fwfault_debug;
++	u8		ir_firmware;
++	int		bars;
++	u8		mask_interrupts;
++
++	/* fw fault handler */
++	char		fault_reset_work_q_name[20];
++	struct workqueue_struct *fault_reset_work_q;
++	struct delayed_work fault_reset_work;
++
++	/* fw event handler */
++	char		firmware_event_name[20];
++	struct workqueue_struct	*firmware_event_thread;
++	spinlock_t	fw_event_lock;
++	struct list_head fw_event_list;
++
++	 /* misc flags */
++	int		aen_event_read_flag;
++	u8		broadcast_aen_busy;
++	u16		broadcast_aen_pending;
++	u8		shost_recovery;
++
++	struct mutex	reset_in_progress_mutex;
++	spinlock_t	ioc_reset_in_progress_lock;
++	u8		ioc_link_reset_in_progress;
++	u8		ioc_reset_in_progress_status;
++
++	u8		ignore_loginfos;
++	u8		remove_host;
++	u8		pci_error_recovery;
++	u8		wait_for_discovery_to_complete;
++	u8		is_driver_loading;
++	u8		port_enable_failed;
++	u8		start_scan;
++	u16		start_scan_failed;
++
++	u8		msix_enable;
++	u16		msix_vector_count;
++	u8		*cpu_msix_table;
++	u16		cpu_msix_table_sz;
++	u32		ioc_reset_count;
++	MPT3SAS_FLUSH_RUNNING_CMDS schedule_dead_ioc_flush_running_cmds;
++
++	/* internal commands, callback index */
++	u8		scsi_io_cb_idx;
++	u8		tm_cb_idx;
++	u8		transport_cb_idx;
++	u8		scsih_cb_idx;
++	u8		ctl_cb_idx;
++	u8		base_cb_idx;
++	u8		port_enable_cb_idx;
++	u8		config_cb_idx;
++	u8		tm_tr_cb_idx;
++	u8		tm_tr_volume_cb_idx;
++	u8		tm_sas_control_cb_idx;
++	struct _internal_cmd base_cmds;
++	struct _internal_cmd port_enable_cmds;
++	struct _internal_cmd transport_cmds;
++	struct _internal_cmd scsih_cmds;
++	struct _internal_cmd tm_cmds;
++	struct _internal_cmd ctl_cmds;
++	struct _internal_cmd config_cmds;
++
++	MPT_ADD_SGE	base_add_sg_single;
++
++	/* function ptr for either IEEE or MPI sg elements */
++	MPT_BUILD_SG_SCMD build_sg_scmd;
++	MPT_BUILD_SG    build_sg;
++	MPT_BUILD_ZERO_LEN_SGE build_zero_len_sge;
++	u8              mpi25;
++	u16             sge_size_ieee;
++
++	/* function ptr for MPI sg elements only */
++	MPT_BUILD_SG    build_sg_mpi;
++	MPT_BUILD_ZERO_LEN_SGE build_zero_len_sge_mpi;
++
++	/* event log */
++	u32		event_type[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];
++	u32		event_context;
++	void		*event_log;
++	u32		event_masks[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];
++
++	/* static config pages */
++	struct mpt3sas_facts facts;
++	struct mpt3sas_port_facts *pfacts;
++	Mpi2ManufacturingPage0_t manu_pg0;
++	struct Mpi2ManufacturingPage10_t manu_pg10;
++	struct Mpi2ManufacturingPage11_t manu_pg11;
++	Mpi2BiosPage2_t	bios_pg2;
++	Mpi2BiosPage3_t	bios_pg3;
++	Mpi2IOCPage8_t ioc_pg8;
++	Mpi2IOUnitPage0_t iounit_pg0;
++	Mpi2IOUnitPage1_t iounit_pg1;
++
++	struct _boot_device req_boot_device;
++	struct _boot_device req_alt_boot_device;
++	struct _boot_device current_boot_device;
++
++	/* sas hba, expander, and device list */
++	struct _sas_node sas_hba;
++	struct list_head sas_expander_list;
++	spinlock_t	sas_node_lock;
++	struct list_head sas_device_list;
++	struct list_head sas_device_init_list;
++	spinlock_t	sas_device_lock;
++	struct list_head raid_device_list;
++	spinlock_t	raid_device_lock;
++	u8		io_missing_delay;
++	u16		device_missing_delay;
++	int		sas_id;
++
++	void		*blocking_handles;
++	void		*pd_handles;
++	u16		pd_handles_sz;
++
++	/* config page */
++	u16		config_page_sz;
++	void		*config_page;
++	dma_addr_t	config_page_dma;
++
++	/* scsiio request */
++	u16		hba_queue_depth;
++	u16		sge_size;
++	u16		scsiio_depth;
++	u16		request_sz;
++	u8		*request;
++	dma_addr_t	request_dma;
++	u32		request_dma_sz;
++	struct scsiio_tracker *scsi_lookup;
++	ulong		scsi_lookup_pages;
++	spinlock_t	scsi_lookup_lock;
++	struct list_head free_list;
++	int		pending_io_count;
++	wait_queue_head_t reset_wq;
++
++	/* chain */
++	struct chain_tracker *chain_lookup;
++	struct list_head free_chain_list;
++	struct dma_pool *chain_dma_pool;
++	ulong		chain_pages;
++	u16		max_sges_in_main_message;
++	u16		max_sges_in_chain_message;
++	u16		chains_needed_per_io;
++	u32		chain_depth;
++
++	/* hi-priority queue */
++	u16		hi_priority_smid;
++	u8		*hi_priority;
++	dma_addr_t	hi_priority_dma;
++	u16		hi_priority_depth;
++	struct request_tracker *hpr_lookup;
++	struct list_head hpr_free_list;
++
++	/* internal queue */
++	u16		internal_smid;
++	u8		*internal;
++	dma_addr_t	internal_dma;
++	u16		internal_depth;
++	struct request_tracker *internal_lookup;
++	struct list_head internal_free_list;
++
++	/* sense */
++	u8		*sense;
++	dma_addr_t	sense_dma;
++	struct dma_pool *sense_dma_pool;
++
++	/* reply */
++	u16		reply_sz;
++	u8		*reply;
++	dma_addr_t	reply_dma;
++	u32		reply_dma_max_address;
++	u32		reply_dma_min_address;
++	struct dma_pool *reply_dma_pool;
++
++	/* reply free queue */
++	u16		reply_free_queue_depth;
++	__le32		*reply_free;
++	dma_addr_t	reply_free_dma;
++	struct dma_pool *reply_free_dma_pool;
++	u32		reply_free_host_index;
++
++	/* reply post queue */
++	u16		reply_post_queue_depth;
++	Mpi2ReplyDescriptorsUnion_t *reply_post_free;
++	dma_addr_t	reply_post_free_dma;
++	struct dma_pool *reply_post_free_dma_pool;
++	u8		reply_queue_count;
++	struct list_head reply_queue_list;
++
++	struct list_head delayed_tr_list;
++	struct list_head delayed_tr_volume_list;
++
++	/* diag buffer support */
++	u8		*diag_buffer[MPI2_DIAG_BUF_TYPE_COUNT];
++	u32		diag_buffer_sz[MPI2_DIAG_BUF_TYPE_COUNT];
++	dma_addr_t	diag_buffer_dma[MPI2_DIAG_BUF_TYPE_COUNT];
++	u8		diag_buffer_status[MPI2_DIAG_BUF_TYPE_COUNT];
++	u32		unique_id[MPI2_DIAG_BUF_TYPE_COUNT];
++	u32		product_specific[MPI2_DIAG_BUF_TYPE_COUNT][23];
++	u32		diagnostic_flags[MPI2_DIAG_BUF_TYPE_COUNT];
++	u32		ring_buffer_offset;
++	u32		ring_buffer_sz;
++	spinlock_t	diag_trigger_lock;
++	u8		diag_trigger_active;
++	struct SL_WH_MASTER_TRIGGER_T diag_trigger_master;
++	struct SL_WH_EVENT_TRIGGERS_T diag_trigger_event;
++	struct SL_WH_SCSI_TRIGGERS_T diag_trigger_scsi;
++	struct SL_WH_MPI_TRIGGERS_T diag_trigger_mpi;
++};
++
++typedef u8 (*MPT_CALLBACK)(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
++	u32 reply);
++
++
++/* base shared API */
++extern struct list_head mpt3sas_ioc_list;
++void mpt3sas_base_start_watchdog(struct MPT3SAS_ADAPTER *ioc);
++void mpt3sas_base_stop_watchdog(struct MPT3SAS_ADAPTER *ioc);
++
++int mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc);
++void mpt3sas_base_detach(struct MPT3SAS_ADAPTER *ioc);
++int mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc);
++void mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc);
++int mpt3sas_base_hard_reset_handler(struct MPT3SAS_ADAPTER *ioc, int sleep_flag,
++	enum reset_type type);
++
++void *mpt3sas_base_get_msg_frame(struct MPT3SAS_ADAPTER *ioc, u16 smid);
++void *mpt3sas_base_get_sense_buffer(struct MPT3SAS_ADAPTER *ioc, u16 smid);
++__le32 mpt3sas_base_get_sense_buffer_dma(struct MPT3SAS_ADAPTER *ioc,
++	u16 smid);
++void mpt3sas_base_flush_reply_queues(struct MPT3SAS_ADAPTER *ioc);
++
++/* hi-priority queue */
++u16 mpt3sas_base_get_smid_hpr(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
++u16 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
++	struct scsi_cmnd *scmd);
++
++u16 mpt3sas_base_get_smid(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
++void mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid);
++void mpt3sas_base_put_smid_scsi_io(struct MPT3SAS_ADAPTER *ioc, u16 smid,
++	u16 handle);
++void mpt3sas_base_put_smid_fast_path(struct MPT3SAS_ADAPTER *ioc, u16 smid,
++	u16 handle);
++void mpt3sas_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid);
++void mpt3sas_base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid);
++void mpt3sas_base_initialize_callback_handler(void);
++u8 mpt3sas_base_register_callback_handler(MPT_CALLBACK cb_func);
++void mpt3sas_base_release_callback_handler(u8 cb_idx);
++
++u8 mpt3sas_base_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
++	u32 reply);
++u8 mpt3sas_port_enable_done(struct MPT3SAS_ADAPTER *ioc, u16 smid,
++	u8 msix_index, u32 reply);
++void *mpt3sas_base_get_reply_virt_addr(struct MPT3SAS_ADAPTER *ioc,
++	u32 phys_addr);
++
++u32 mpt3sas_base_get_iocstate(struct MPT3SAS_ADAPTER *ioc, int cooked);
++
++void mpt3sas_base_fault_info(struct MPT3SAS_ADAPTER *ioc , u16 fault_code);
++int mpt3sas_base_sas_iounit_control(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2SasIoUnitControlReply_t *mpi_reply,
++	Mpi2SasIoUnitControlRequest_t *mpi_request);
++int mpt3sas_base_scsi_enclosure_processor(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2SepReply_t *mpi_reply, Mpi2SepRequest_t *mpi_request);
++
++void mpt3sas_base_validate_event_type(struct MPT3SAS_ADAPTER *ioc,
++	u32 *event_type);
++
++void mpt3sas_halt_firmware(struct MPT3SAS_ADAPTER *ioc);
++
++void mpt3sas_base_update_missing_delay(struct MPT3SAS_ADAPTER *ioc,
++	u16 device_missing_delay, u8 io_missing_delay);
++
++int mpt3sas_port_enable(struct MPT3SAS_ADAPTER *ioc);
++
++
++/* scsih shared API */
++u8 mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
++	u32 reply);
++void mpt3sas_scsih_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase);
++
++int mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
++	uint channel, uint id, uint lun, u8 type, u16 smid_task,
++	ulong timeout, unsigned long serial_number,  enum mutex_type m_type);
++void mpt3sas_scsih_set_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle);
++void mpt3sas_scsih_clear_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle);
++void mpt3sas_expander_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address);
++void mpt3sas_device_remove_by_sas_address(struct MPT3SAS_ADAPTER *ioc,
++	u64 sas_address);
++
++struct _sas_node *mpt3sas_scsih_expander_find_by_handle(
++	struct MPT3SAS_ADAPTER *ioc, u16 handle);
++struct _sas_node *mpt3sas_scsih_expander_find_by_sas_address(
++	struct MPT3SAS_ADAPTER *ioc, u64 sas_address);
++struct _sas_device *mpt3sas_scsih_sas_device_find_by_sas_address(
++	struct MPT3SAS_ADAPTER *ioc, u64 sas_address);
++
++void mpt3sas_port_enable_complete(struct MPT3SAS_ADAPTER *ioc);
++
++/* config shared API */
++u8 mpt3sas_config_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
++	u32 reply);
++int mpt3sas_config_get_number_hba_phys(struct MPT3SAS_ADAPTER *ioc,
++	u8 *num_phys);
++int mpt3sas_config_get_manufacturing_pg0(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage0_t *config_page);
++int mpt3sas_config_get_manufacturing_pg7(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage7_t *config_page,
++	u16 sz);
++int mpt3sas_config_get_manufacturing_pg10(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply,
++	struct Mpi2ManufacturingPage10_t *config_page);
++
++int mpt3sas_config_get_manufacturing_pg11(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply,
++	struct Mpi2ManufacturingPage11_t  *config_page);
++int mpt3sas_config_set_manufacturing_pg11(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply,
++	struct Mpi2ManufacturingPage11_t *config_page);
++
++int mpt3sas_config_get_bios_pg2(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
++	*mpi_reply, Mpi2BiosPage2_t *config_page);
++int mpt3sas_config_get_bios_pg3(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
++	*mpi_reply, Mpi2BiosPage3_t *config_page);
++int mpt3sas_config_get_iounit_pg0(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
++	*mpi_reply, Mpi2IOUnitPage0_t *config_page);
++int mpt3sas_config_get_sas_device_pg0(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2SasDevicePage0_t *config_page,
++	u32 form, u32 handle);
++int mpt3sas_config_get_sas_device_pg1(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2SasDevicePage1_t *config_page,
++	u32 form, u32 handle);
++int mpt3sas_config_get_sas_iounit_pg0(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2SasIOUnitPage0_t *config_page,
++	u16 sz);
++int mpt3sas_config_get_iounit_pg1(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
++	*mpi_reply, Mpi2IOUnitPage1_t *config_page);
++int mpt3sas_config_set_iounit_pg1(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
++	*mpi_reply, Mpi2IOUnitPage1_t *config_page);
++int mpt3sas_config_get_sas_iounit_pg1(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2SasIOUnitPage1_t *config_page,
++	u16 sz);
++int mpt3sas_config_set_sas_iounit_pg1(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2SasIOUnitPage1_t *config_page,
++	u16 sz);
++int mpt3sas_config_get_ioc_pg8(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
++	*mpi_reply, Mpi2IOCPage8_t *config_page);
++int mpt3sas_config_get_expander_pg0(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2ExpanderPage0_t *config_page,
++	u32 form, u32 handle);
++int mpt3sas_config_get_expander_pg1(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2ExpanderPage1_t *config_page,
++	u32 phy_number, u16 handle);
++int mpt3sas_config_get_enclosure_pg0(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2SasEnclosurePage0_t *config_page,
++	u32 form, u32 handle);
++int mpt3sas_config_get_phy_pg0(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
++	*mpi_reply, Mpi2SasPhyPage0_t *config_page, u32 phy_number);
++int mpt3sas_config_get_phy_pg1(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
++	*mpi_reply, Mpi2SasPhyPage1_t *config_page, u32 phy_number);
++int mpt3sas_config_get_raid_volume_pg1(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2RaidVolPage1_t *config_page, u32 form,
++	u32 handle);
++int mpt3sas_config_get_number_pds(struct MPT3SAS_ADAPTER *ioc, u16 handle,
++	u8 *num_pds);
++int mpt3sas_config_get_raid_volume_pg0(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2RaidVolPage0_t *config_page, u32 form,
++	u32 handle, u16 sz);
++int mpt3sas_config_get_phys_disk_pg0(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2RaidPhysDiskPage0_t *config_page,
++	u32 form, u32 form_specific);
++int mpt3sas_config_get_volume_handle(struct MPT3SAS_ADAPTER *ioc, u16 pd_handle,
++	u16 *volume_handle);
++int mpt3sas_config_get_volume_wwid(struct MPT3SAS_ADAPTER *ioc,
++	u16 volume_handle, u64 *wwid);
++
++/* ctl shared API */
++extern struct device_attribute *mpt3sas_host_attrs[];
++extern struct device_attribute *mpt3sas_dev_attrs[];
++void mpt3sas_ctl_init(void);
++void mpt3sas_ctl_exit(void);
++u8 mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
++	u32 reply);
++void mpt3sas_ctl_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase);
++u8 mpt3sas_ctl_event_callback(struct MPT3SAS_ADAPTER *ioc,
++	u8 msix_index, u32 reply);
++void mpt3sas_ctl_add_to_event_log(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2EventNotificationReply_t *mpi_reply);
++
++void mpt3sas_enable_diag_buffer(struct MPT3SAS_ADAPTER *ioc,
++	u8 bits_to_regsiter);
++int mpt3sas_send_diag_release(struct MPT3SAS_ADAPTER *ioc, u8 buffer_type,
++	u8 *issue_reset);
++
++/* transport shared API */
++u8 mpt3sas_transport_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
++	u32 reply);
++struct _sas_port *mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc,
++	u16 handle, u64 sas_address);
++void mpt3sas_transport_port_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
++	u64 sas_address_parent);
++int mpt3sas_transport_add_host_phy(struct MPT3SAS_ADAPTER *ioc, struct _sas_phy
++	*mpt3sas_phy, Mpi2SasPhyPage0_t phy_pg0, struct device *parent_dev);
++int mpt3sas_transport_add_expander_phy(struct MPT3SAS_ADAPTER *ioc,
++	struct _sas_phy *mpt3sas_phy, Mpi2ExpanderPage1_t expander_pg1,
++	struct device *parent_dev);
++void mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
++	u64 sas_address, u16 handle, u8 phy_number, u8 link_rate);
++extern struct sas_function_template mpt3sas_transport_functions;
++extern struct scsi_transport_template *mpt3sas_transport_template;
++extern int scsi_internal_device_block(struct scsi_device *sdev);
++extern int scsi_internal_device_unblock(struct scsi_device *sdev,
++				enum scsi_device_state new_state);
++/* trigger data externs */
++void mpt3sas_send_trigger_data_event(struct MPT3SAS_ADAPTER *ioc,
++	struct SL_WH_TRIGGERS_EVENT_DATA_T *event_data);
++void mpt3sas_process_trigger_data(struct MPT3SAS_ADAPTER *ioc,
++	struct SL_WH_TRIGGERS_EVENT_DATA_T *event_data);
++void mpt3sas_trigger_master(struct MPT3SAS_ADAPTER *ioc,
++	u32 tigger_bitmask);
++void mpt3sas_trigger_event(struct MPT3SAS_ADAPTER *ioc, u16 event,
++	u16 log_entry_qualifier);
++void mpt3sas_trigger_scsi(struct MPT3SAS_ADAPTER *ioc, u8 sense_key,
++	u8 asc, u8 ascq);
++void mpt3sas_trigger_mpi(struct MPT3SAS_ADAPTER *ioc, u16 ioc_status,
++	u32 loginfo);
++#endif /* MPT3SAS_BASE_H_INCLUDED */
