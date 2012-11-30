@@ -1,2262 +1,2437 @@
 From: <sreekanth.reddy@lsi.com>
-Subject: [v2 PATCH 5/20][SCSI] mpt3sas: Part 4 of MPI API headers
-Date: Fri, 30 Nov 2012 07:47:37 +0530
-Message-ID: <20121130021737.GA10200@localhost.localdomain>
+Subject: [v2 PATCH 7/20][SCSI] mpt3sas: Common API layer interface for access
+ to MPT firmware.This patch is part 1 of mpt3sas_base.c
+Date: Fri, 30 Nov 2012 07:49:13 +0530
+Message-ID: <20121130021913.GA10221@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:58153 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751034Ab2K2PUe (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:33816 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751034Ab2K2PVH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Nov 2012 10:20:34 -0500
+	Thu, 29 Nov 2012 10:21:07 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, sreekanth.reddy@lsi.com
 Cc: Sathya.Prakash@lsi.com
 
-This patch contains MPI API headers
-This patch is part 4 of MPI API headers.
+This Patch contains the Fusion MPT base driver providing common API layer interface
+for access to MPT (Message Passing Technology) firmware.
+This patch is part 1 of mpt3sas_base.c
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 Reviewed-by: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
 new file mode 100644
-index 0000000..a079e52
+index 0000000..1164d38
 --- /dev/null
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
-@@ -0,0 +1,560 @@
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -0,0 +1,2404 @@
 +/*
-+ * Copyright (c) 2000-2012 LSI Corporation.
++ * This is the Fusion MPT base driver providing common API layer interface
++ * for access to MPT (Message Passing Technology) firmware.
 + *
++ * This code is based on drivers/scsi/mpt3sas/mpt3sas_base.c
++ * Copyright (C) 2012  LSI Corporation
++ *  (mailto:DL-MPTFusionLinux@lsi.com)
 + *
-+ *          Name:  mpi2_init.h
-+ *         Title:  MPI SCSI initiator mode messages and structures
-+ * Creation Date:  June 23, 2006
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
 + *
-+ * mpi2_init.h Version:  02.00.14
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
 + *
-+ * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-+ *       prefix are for use only on MPI v2.5 products, and must not be used
-+ *       with MPI v2.0 products. Unless otherwise noted, names beginning with
-+ *       MPI2 or Mpi2 are for use with both MPI v2.0 and MPI v2.5 products.
-+ *
-+ * Version History
-+ * ---------------
-+ *
-+ * Date      Version   Description
-+ * --------  --------  ------------------------------------------------------
-+ * 04-30-07  02.00.00  Corresponds to Fusion-MPT MPI Specification Rev A.
-+ * 10-31-07  02.00.01  Fixed name for pMpi2SCSITaskManagementRequest_t.
-+ * 12-18-07  02.00.02  Modified Task Management Target Reset Method defines.
-+ * 02-29-08  02.00.03  Added Query Task Set and Query Unit Attention.
-+ * 03-03-08  02.00.04  Fixed name of struct _MPI2_SCSI_TASK_MANAGE_REPLY.
-+ * 05-21-08  02.00.05  Fixed typo in name of Mpi2SepRequest_t.
-+ * 10-02-08  02.00.06  Removed Untagged and No Disconnect values from SCSI IO
-+ *                     Control field Task Attribute flags.
-+ *                     Moved LUN field defines to mpi2.h becasue they are
-+ *                     common to many structures.
-+ * 05-06-09  02.00.07  Changed task management type of Query Unit Attention to
-+ *                     Query Asynchronous Event.
-+ *                     Defined two new bits in the SlotStatus field of the SCSI
-+ *                     Enclosure Processor Request and Reply.
-+ * 10-28-09  02.00.08  Added defines for decoding the ResponseInfo bytes for
-+ *                     both SCSI IO Error Reply and SCSI Task Management Reply.
-+ *                     Added ResponseInfo field to MPI2_SCSI_TASK_MANAGE_REPLY.
-+ *                     Added MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG define.
-+ * 02-10-10  02.00.09  Removed unused structure that had "#if 0" around it.
-+ * 05-12-10  02.00.10  Added optional vendor-unique region to SCSI IO Request.
-+ * 11-10-10  02.00.11  Added MPI2_SCSIIO_NUM_SGLOFFSETS define.
-+ * 11-18-11  02.00.12  Incorporating additions for MPI v2.5.
-+ * 02-06-12  02.00.13  Added alternate defines for Task Priority / Command
-+ *                     Priority to match SAM-4.
-+ *                     Added EEDPErrorOffset to MPI2_SCSI_IO_REPLY.
-+ * 07-10-12  02.00.14  Added MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION.
-+ * --------------------------------------------------------------------------
++ * NO WARRANTY
++ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
++ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
++ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
++ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
++ * solely responsible for determining the appropriateness of using and
++ * distributing the Program and assumes all risks associated with its
++ * exercise of rights under this Agreement, including but not limited to
++ * the risks and costs of program errors, damage to or loss of data,
++ * programs or equipment, and unavailability or interruption of operations.
++
++ * DISCLAIMER OF LIABILITY
++ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
++ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
++ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
++ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
++ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
++ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
++
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
++ * USA.
 + */
 +
-+#ifndef MPI2_INIT_H
-+#define MPI2_INIT_H
-+
-+/*****************************************************************************
-+*
-+*              SCSI Initiator Messages
-+*
-+*****************************************************************************/
-+
-+/****************************************************************************
-+* SCSI IO messages and associated structures
-+****************************************************************************/
-+
-+typedef struct _MPI2_SCSI_IO_CDB_EEDP32 {
-+	U8 CDB[20];		/*0x00 */
-+	U32 PrimaryReferenceTag;	/*0x14 */
-+	U16 PrimaryApplicationTag;	/*0x18 */
-+	U16 PrimaryApplicationTagMask;	/*0x1A */
-+	U32 TransferLength;	/*0x1C */
-+} MPI2_SCSI_IO_CDB_EEDP32, *PTR_MPI2_SCSI_IO_CDB_EEDP32,
-+	Mpi2ScsiIoCdbEedp32_t, *pMpi2ScsiIoCdbEedp32_t;
-+
-+/*MPI v2.0 CDB field */
-+typedef union _MPI2_SCSI_IO_CDB_UNION {
-+	U8 CDB32[32];
-+	MPI2_SCSI_IO_CDB_EEDP32 EEDP32;
-+	MPI2_SGE_SIMPLE_UNION SGE;
-+} MPI2_SCSI_IO_CDB_UNION, *PTR_MPI2_SCSI_IO_CDB_UNION,
-+	Mpi2ScsiIoCdb_t, *pMpi2ScsiIoCdb_t;
-+
-+/*MPI v2.0 SCSI IO Request Message */
-+typedef struct _MPI2_SCSI_IO_REQUEST {
-+	U16 DevHandle;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved1;		/*0x04 */
-+	U8 Reserved2;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+	U32 SenseBufferLowAddress;	/*0x0C */
-+	U16 SGLFlags;		/*0x10 */
-+	U8 SenseBufferLength;	/*0x12 */
-+	U8 Reserved4;		/*0x13 */
-+	U8 SGLOffset0;		/*0x14 */
-+	U8 SGLOffset1;		/*0x15 */
-+	U8 SGLOffset2;		/*0x16 */
-+	U8 SGLOffset3;		/*0x17 */
-+	U32 SkipCount;		/*0x18 */
-+	U32 DataLength;		/*0x1C */
-+	U32 BidirectionalDataLength;	/*0x20 */
-+	U16 IoFlags;		/*0x24 */
-+	U16 EEDPFlags;		/*0x26 */
-+	U32 EEDPBlockSize;	/*0x28 */
-+	U32 SecondaryReferenceTag;	/*0x2C */
-+	U16 SecondaryApplicationTag;	/*0x30 */
-+	U16 ApplicationTagTranslationMask;	/*0x32 */
-+	U8 LUN[8];		/*0x34 */
-+	U32 Control;		/*0x3C */
-+	MPI2_SCSI_IO_CDB_UNION CDB;	/*0x40 */
-+
-+#ifdef MPI2_SCSI_IO_VENDOR_UNIQUE_REGION /*typically this is left undefined */
-+	MPI2_SCSI_IO_VENDOR_UNIQUE VendorRegion;
-+#endif
-+
-+	MPI2_SGE_IO_UNION SGL;	/*0x60 */
-+
-+} MPI2_SCSI_IO_REQUEST, *PTR_MPI2_SCSI_IO_REQUEST,
-+	Mpi2SCSIIORequest_t, *pMpi2SCSIIORequest_t;
-+
-+/*SCSI IO MsgFlags bits */
-+
-+/*MsgFlags for SenseBufferAddressSpace */
-+#define MPI2_SCSIIO_MSGFLAGS_MASK_SENSE_ADDR        (0x0C)
-+#define MPI2_SCSIIO_MSGFLAGS_SYSTEM_SENSE_ADDR      (0x00)
-+#define MPI2_SCSIIO_MSGFLAGS_IOCDDR_SENSE_ADDR      (0x04)
-+#define MPI2_SCSIIO_MSGFLAGS_IOCPLB_SENSE_ADDR      (0x08)
-+#define MPI2_SCSIIO_MSGFLAGS_IOCPLBNTA_SENSE_ADDR   (0x0C)
-+
-+/*SCSI IO SGLFlags bits */
-+
-+/*base values for Data Location Address Space */
-+#define MPI2_SCSIIO_SGLFLAGS_ADDR_MASK              (0x0C)
-+#define MPI2_SCSIIO_SGLFLAGS_SYSTEM_ADDR            (0x00)
-+#define MPI2_SCSIIO_SGLFLAGS_IOCDDR_ADDR            (0x04)
-+#define MPI2_SCSIIO_SGLFLAGS_IOCPLB_ADDR            (0x08)
-+#define MPI2_SCSIIO_SGLFLAGS_IOCPLBNTA_ADDR         (0x0C)
-+
-+/*base values for Type */
-+#define MPI2_SCSIIO_SGLFLAGS_TYPE_MASK              (0x03)
-+#define MPI2_SCSIIO_SGLFLAGS_TYPE_MPI               (0x00)
-+#define MPI2_SCSIIO_SGLFLAGS_TYPE_IEEE32            (0x01)
-+#define MPI2_SCSIIO_SGLFLAGS_TYPE_IEEE64            (0x02)
-+
-+/*shift values for each sub-field */
-+#define MPI2_SCSIIO_SGLFLAGS_SGL3_SHIFT             (12)
-+#define MPI2_SCSIIO_SGLFLAGS_SGL2_SHIFT             (8)
-+#define MPI2_SCSIIO_SGLFLAGS_SGL1_SHIFT             (4)
-+#define MPI2_SCSIIO_SGLFLAGS_SGL0_SHIFT             (0)
-+
-+/*number of SGLOffset fields */
-+#define MPI2_SCSIIO_NUM_SGLOFFSETS                  (4)
-+
-+/*SCSI IO IoFlags bits */
-+
-+/*Large CDB Address Space */
-+#define MPI2_SCSIIO_CDB_ADDR_MASK                   (0x6000)
-+#define MPI2_SCSIIO_CDB_ADDR_SYSTEM                 (0x0000)
-+#define MPI2_SCSIIO_CDB_ADDR_IOCDDR                 (0x2000)
-+#define MPI2_SCSIIO_CDB_ADDR_IOCPLB                 (0x4000)
-+#define MPI2_SCSIIO_CDB_ADDR_IOCPLBNTA              (0x6000)
-+
-+#define MPI2_SCSIIO_IOFLAGS_LARGE_CDB               (0x1000)
-+#define MPI2_SCSIIO_IOFLAGS_BIDIRECTIONAL           (0x0800)
-+#define MPI2_SCSIIO_IOFLAGS_MULTICAST               (0x0400)
-+#define MPI2_SCSIIO_IOFLAGS_CMD_DETERMINES_DATA_DIR (0x0200)
-+#define MPI2_SCSIIO_IOFLAGS_CDBLENGTH_MASK          (0x01FF)
-+
-+/*SCSI IO EEDPFlags bits */
-+
-+#define MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG        (0x8000)
-+#define MPI2_SCSIIO_EEDPFLAGS_INC_SEC_REFTAG        (0x4000)
-+#define MPI2_SCSIIO_EEDPFLAGS_INC_PRI_APPTAG        (0x2000)
-+#define MPI2_SCSIIO_EEDPFLAGS_INC_SEC_APPTAG        (0x1000)
-+
-+#define MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG          (0x0400)
-+#define MPI2_SCSIIO_EEDPFLAGS_CHECK_APPTAG          (0x0200)
-+#define MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD           (0x0100)
-+
-+#define MPI2_SCSIIO_EEDPFLAGS_PASSTHRU_REFTAG       (0x0008)
-+
-+#define MPI2_SCSIIO_EEDPFLAGS_MASK_OP               (0x0007)
-+#define MPI2_SCSIIO_EEDPFLAGS_NOOP_OP               (0x0000)
-+#define MPI2_SCSIIO_EEDPFLAGS_CHECK_OP              (0x0001)
-+#define MPI2_SCSIIO_EEDPFLAGS_STRIP_OP              (0x0002)
-+#define MPI2_SCSIIO_EEDPFLAGS_CHECK_REMOVE_OP       (0x0003)
-+#define MPI2_SCSIIO_EEDPFLAGS_INSERT_OP             (0x0004)
-+#define MPI2_SCSIIO_EEDPFLAGS_REPLACE_OP            (0x0006)
-+#define MPI2_SCSIIO_EEDPFLAGS_CHECK_REGEN_OP        (0x0007)
-+
-+/*SCSI IO LUN fields: use MPI2_LUN_ from mpi2.h */
-+
-+/*SCSI IO Control bits */
-+#define MPI2_SCSIIO_CONTROL_ADDCDBLEN_MASK      (0xFC000000)
-+#define MPI2_SCSIIO_CONTROL_ADDCDBLEN_SHIFT     (26)
-+
-+#define MPI2_SCSIIO_CONTROL_DATADIRECTION_MASK  (0x03000000)
-+#define MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION (24)
-+#define MPI2_SCSIIO_CONTROL_NODATATRANSFER      (0x00000000)
-+#define MPI2_SCSIIO_CONTROL_WRITE               (0x01000000)
-+#define MPI2_SCSIIO_CONTROL_READ                (0x02000000)
-+#define MPI2_SCSIIO_CONTROL_BIDIRECTIONAL       (0x03000000)
-+
-+#define MPI2_SCSIIO_CONTROL_TASKPRI_MASK        (0x00007800)
-+#define MPI2_SCSIIO_CONTROL_TASKPRI_SHIFT       (11)
-+/*alternate name for the previous field; called Command Priority in SAM-4 */
-+#define MPI2_SCSIIO_CONTROL_CMDPRI_MASK         (0x00007800)
-+#define MPI2_SCSIIO_CONTROL_CMDPRI_SHIFT        (11)
-+
-+#define MPI2_SCSIIO_CONTROL_TASKATTRIBUTE_MASK  (0x00000700)
-+#define MPI2_SCSIIO_CONTROL_SIMPLEQ             (0x00000000)
-+#define MPI2_SCSIIO_CONTROL_HEADOFQ             (0x00000100)
-+#define MPI2_SCSIIO_CONTROL_ORDEREDQ            (0x00000200)
-+#define MPI2_SCSIIO_CONTROL_ACAQ                (0x00000400)
-+
-+#define MPI2_SCSIIO_CONTROL_TLR_MASK            (0x000000C0)
-+#define MPI2_SCSIIO_CONTROL_NO_TLR              (0x00000000)
-+#define MPI2_SCSIIO_CONTROL_TLR_ON              (0x00000040)
-+#define MPI2_SCSIIO_CONTROL_TLR_OFF             (0x00000080)
-+
-+/*MPI v2.5 CDB field */
-+typedef union _MPI25_SCSI_IO_CDB_UNION {
-+	U8 CDB32[32];
-+	MPI2_SCSI_IO_CDB_EEDP32 EEDP32;
-+	MPI2_IEEE_SGE_SIMPLE64 SGE;
-+} MPI25_SCSI_IO_CDB_UNION, *PTR_MPI25_SCSI_IO_CDB_UNION,
-+	Mpi25ScsiIoCdb_t, *pMpi25ScsiIoCdb_t;
-+
-+/*MPI v2.5 SCSI IO Request Message */
-+typedef struct _MPI25_SCSI_IO_REQUEST {
-+	U16 DevHandle;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved1;		/*0x04 */
-+	U8 Reserved2;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+	U32 SenseBufferLowAddress;	/*0x0C */
-+	U8 DMAFlags;		/*0x10 */
-+	U8 Reserved5;		/*0x11 */
-+	U8 SenseBufferLength;	/*0x12 */
-+	U8 Reserved4;		/*0x13 */
-+	U8 SGLOffset0;		/*0x14 */
-+	U8 SGLOffset1;		/*0x15 */
-+	U8 SGLOffset2;		/*0x16 */
-+	U8 SGLOffset3;		/*0x17 */
-+	U32 SkipCount;		/*0x18 */
-+	U32 DataLength;		/*0x1C */
-+	U32 BidirectionalDataLength;	/*0x20 */
-+	U16 IoFlags;		/*0x24 */
-+	U16 EEDPFlags;		/*0x26 */
-+	U16 EEDPBlockSize;	/*0x28 */
-+	U16 Reserved6;		/*0x2A */
-+	U32 SecondaryReferenceTag;	/*0x2C */
-+	U16 SecondaryApplicationTag;	/*0x30 */
-+	U16 ApplicationTagTranslationMask;	/*0x32 */
-+	U8 LUN[8];		/*0x34 */
-+	U32 Control;		/*0x3C */
-+	MPI25_SCSI_IO_CDB_UNION CDB;	/*0x40 */
-+
-+#ifdef MPI25_SCSI_IO_VENDOR_UNIQUE_REGION /*typically this is left undefined */
-+	MPI25_SCSI_IO_VENDOR_UNIQUE VendorRegion;
-+#endif
-+
-+	MPI25_SGE_IO_UNION SGL;	/*0x60 */
-+
-+} MPI25_SCSI_IO_REQUEST, *PTR_MPI25_SCSI_IO_REQUEST,
-+	Mpi25SCSIIORequest_t, *pMpi25SCSIIORequest_t;
-+
-+/*use MPI2_SCSIIO_MSGFLAGS_ defines for the MsgFlags field */
-+
-+/*Defines for the DMAFlags field
-+ * Each setting affects 4 SGLS, from SGL0 to SGL3.
-+ *     D = Data
-+ *     C = Cache DIF
-+ *     I = Interleaved
-+ *     H = Host DIF
-+ */
-+#define MPI25_SCSIIO_DMAFLAGS_OP_MASK               (0x0F)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_D_D            (0x00)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_D_C            (0x01)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_D_I            (0x02)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_C_C            (0x03)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_C_I            (0x04)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_I_I            (0x05)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_C_C_C            (0x06)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_C_C_I            (0x07)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_C_I_I            (0x08)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_I_I_I            (0x09)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_D_D            (0x0A)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_D_C            (0x0B)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_D_I            (0x0C)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_C_C            (0x0D)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_C_I            (0x0E)
-+#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_I_I            (0x0F)
-+
-+/*number of SGLOffset fields */
-+#define MPI25_SCSIIO_NUM_SGLOFFSETS                 (4)
-+
-+/*defines for the IoFlags field */
-+#define MPI25_SCSIIO_IOFLAGS_IO_PATH_MASK           (0xC000)
-+#define MPI25_SCSIIO_IOFLAGS_NORMAL_PATH            (0x0000)
-+#define MPI25_SCSIIO_IOFLAGS_FAST_PATH              (0x4000)
-+
-+#define MPI25_SCSIIO_IOFLAGS_LARGE_CDB                  (0x1000)
-+#define MPI25_SCSIIO_IOFLAGS_BIDIRECTIONAL              (0x0800)
-+#define MPI25_SCSIIO_IOFLAGS_CDBLENGTH_MASK             (0x01FF)
-+
-+/*MPI v2.5 defines for the EEDPFlags bits */
-+/*use MPI2_SCSIIO_EEDPFLAGS_ defines for the other EEDPFlags bits */
-+#define MPI25_SCSIIO_EEDPFLAGS_ESCAPE_MODE_MASK             (0x00C0)
-+#define MPI25_SCSIIO_EEDPFLAGS_COMPATIBLE_MODE              (0x0000)
-+#define MPI25_SCSIIO_EEDPFLAGS_DO_NOT_DISABLE_MODE          (0x0040)
-+#define MPI25_SCSIIO_EEDPFLAGS_APPTAG_DISABLE_MODE          (0x0080)
-+#define MPI25_SCSIIO_EEDPFLAGS_APPTAG_REFTAG_DISABLE_MODE   (0x00C0)
-+
-+#define MPI25_SCSIIO_EEDPFLAGS_HOST_GUARD_METHOD_MASK       (0x0030)
-+#define MPI25_SCSIIO_EEDPFLAGS_T10_CRC_HOST_GUARD           (0x0000)
-+#define MPI25_SCSIIO_EEDPFLAGS_IP_CHKSUM_HOST_GUARD         (0x0010)
-+
-+/*use MPI2_LUN_ defines from mpi2.h for the LUN field */
-+
-+/*use MPI2_SCSIIO_CONTROL_ defines for the Control field */
-+
-+/*NOTE: The SCSI IO Reply is nearly the same for MPI 2.0 and MPI 2.5, so
-+ *      MPI2_SCSI_IO_REPLY is used for both.
-+ */
-+
-+/*SCSI IO Error Reply Message */
-+typedef struct _MPI2_SCSI_IO_REPLY {
-+	U16 DevHandle;		/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved1;		/*0x04 */
-+	U8 Reserved2;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+	U8 SCSIStatus;		/*0x0C */
-+	U8 SCSIState;		/*0x0D */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U32 TransferCount;	/*0x14 */
-+	U32 SenseCount;		/*0x18 */
-+	U32 ResponseInfo;	/*0x1C */
-+	U16 TaskTag;		/*0x20 */
-+	U16 Reserved4;		/*0x22 */
-+	U32 BidirectionalTransferCount;	/*0x24 */
-+	U32 EEDPErrorOffset;	/*0x28 *//*MPI 2.5 only; Reserved in MPI 2.0*/
-+	U32 Reserved6;		/*0x2C */
-+} MPI2_SCSI_IO_REPLY, *PTR_MPI2_SCSI_IO_REPLY,
-+	Mpi2SCSIIOReply_t, *pMpi2SCSIIOReply_t;
-+
-+/*SCSI IO Reply SCSIStatus values (SAM-4 status codes) */
-+
-+#define MPI2_SCSI_STATUS_GOOD                   (0x00)
-+#define MPI2_SCSI_STATUS_CHECK_CONDITION        (0x02)
-+#define MPI2_SCSI_STATUS_CONDITION_MET          (0x04)
-+#define MPI2_SCSI_STATUS_BUSY                   (0x08)
-+#define MPI2_SCSI_STATUS_INTERMEDIATE           (0x10)
-+#define MPI2_SCSI_STATUS_INTERMEDIATE_CONDMET   (0x14)
-+#define MPI2_SCSI_STATUS_RESERVATION_CONFLICT   (0x18)
-+#define MPI2_SCSI_STATUS_COMMAND_TERMINATED     (0x22)	/*obsolete */
-+#define MPI2_SCSI_STATUS_TASK_SET_FULL          (0x28)
-+#define MPI2_SCSI_STATUS_ACA_ACTIVE             (0x30)
-+#define MPI2_SCSI_STATUS_TASK_ABORTED           (0x40)
-+
-+/*SCSI IO Reply SCSIState flags */
-+
-+#define MPI2_SCSI_STATE_RESPONSE_INFO_VALID     (0x10)
-+#define MPI2_SCSI_STATE_TERMINATED              (0x08)
-+#define MPI2_SCSI_STATE_NO_SCSI_STATUS          (0x04)
-+#define MPI2_SCSI_STATE_AUTOSENSE_FAILED        (0x02)
-+#define MPI2_SCSI_STATE_AUTOSENSE_VALID         (0x01)
-+
-+/*masks and shifts for the ResponseInfo field */
-+
-+#define MPI2_SCSI_RI_MASK_REASONCODE            (0x000000FF)
-+#define MPI2_SCSI_RI_SHIFT_REASONCODE           (0)
-+
-+#define MPI2_SCSI_TASKTAG_UNKNOWN               (0xFFFF)
-+
-+/****************************************************************************
-+* SCSI Task Management messages
-+****************************************************************************/
-+
-+/*SCSI Task Management Request Message */
-+typedef struct _MPI2_SCSI_TASK_MANAGE_REQUEST {
-+	U16 DevHandle;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U8 Reserved1;		/*0x04 */
-+	U8 TaskType;		/*0x05 */
-+	U8 Reserved2;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+	U8 LUN[8];		/*0x0C */
-+	U32 Reserved4[7];	/*0x14 */
-+	U16 TaskMID;		/*0x30 */
-+	U16 Reserved5;		/*0x32 */
-+} MPI2_SCSI_TASK_MANAGE_REQUEST,
-+	*PTR_MPI2_SCSI_TASK_MANAGE_REQUEST,
-+	Mpi2SCSITaskManagementRequest_t,
-+	*pMpi2SCSITaskManagementRequest_t;
-+
-+/*TaskType values */
-+
-+#define MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK           (0x01)
-+#define MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET        (0x02)
-+#define MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET         (0x03)
-+#define MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET   (0x05)
-+#define MPI2_SCSITASKMGMT_TASKTYPE_CLEAR_TASK_SET       (0x06)
-+#define MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK           (0x07)
-+#define MPI2_SCSITASKMGMT_TASKTYPE_CLR_ACA              (0x08)
-+#define MPI2_SCSITASKMGMT_TASKTYPE_QRY_TASK_SET         (0x09)
-+#define MPI2_SCSITASKMGMT_TASKTYPE_QRY_ASYNC_EVENT      (0x0A)
-+
-+/*obsolete TaskType name */
-+#define MPI2_SCSITASKMGMT_TASKTYPE_QRY_UNIT_ATTENTION \
-+		(MPI2_SCSITASKMGMT_TASKTYPE_QRY_ASYNC_EVENT)
-+
-+/*MsgFlags bits */
-+
-+#define MPI2_SCSITASKMGMT_MSGFLAGS_MASK_TARGET_RESET    (0x18)
-+#define MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET           (0x00)
-+#define MPI2_SCSITASKMGMT_MSGFLAGS_NEXUS_RESET_SRST     (0x08)
-+#define MPI2_SCSITASKMGMT_MSGFLAGS_SAS_HARD_LINK_RESET  (0x10)
-+
-+#define MPI2_SCSITASKMGMT_MSGFLAGS_DO_NOT_SEND_TASK_IU  (0x01)
-+
-+/*SCSI Task Management Reply Message */
-+typedef struct _MPI2_SCSI_TASK_MANAGE_REPLY {
-+	U16 DevHandle;		/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U8 ResponseCode;	/*0x04 */
-+	U8 TaskType;		/*0x05 */
-+	U8 Reserved1;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved2;		/*0x0A */
-+	U16 Reserved3;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U32 TerminationCount;	/*0x14 */
-+	U32 ResponseInfo;	/*0x18 */
-+} MPI2_SCSI_TASK_MANAGE_REPLY,
-+	*PTR_MPI2_SCSI_TASK_MANAGE_REPLY,
-+	Mpi2SCSITaskManagementReply_t, *pMpi2SCSIManagementReply_t;
-+
-+/*ResponseCode values */
-+
-+#define MPI2_SCSITASKMGMT_RSP_TM_COMPLETE               (0x00)
-+#define MPI2_SCSITASKMGMT_RSP_INVALID_FRAME             (0x02)
-+#define MPI2_SCSITASKMGMT_RSP_TM_NOT_SUPPORTED          (0x04)
-+#define MPI2_SCSITASKMGMT_RSP_TM_FAILED                 (0x05)
-+#define MPI2_SCSITASKMGMT_RSP_TM_SUCCEEDED              (0x08)
-+#define MPI2_SCSITASKMGMT_RSP_TM_INVALID_LUN            (0x09)
-+#define MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG         (0x0A)
-+#define MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC          (0x80)
-+
-+/*masks and shifts for the ResponseInfo field */
-+
-+#define MPI2_SCSITASKMGMT_RI_MASK_REASONCODE            (0x000000FF)
-+#define MPI2_SCSITASKMGMT_RI_SHIFT_REASONCODE           (0)
-+#define MPI2_SCSITASKMGMT_RI_MASK_ARI2                  (0x0000FF00)
-+#define MPI2_SCSITASKMGMT_RI_SHIFT_ARI2                 (8)
-+#define MPI2_SCSITASKMGMT_RI_MASK_ARI1                  (0x00FF0000)
-+#define MPI2_SCSITASKMGMT_RI_SHIFT_ARI1                 (16)
-+#define MPI2_SCSITASKMGMT_RI_MASK_ARI0                  (0xFF000000)
-+#define MPI2_SCSITASKMGMT_RI_SHIFT_ARI0                 (24)
-+
-+/****************************************************************************
-+* SCSI Enclosure Processor messages
-+****************************************************************************/
-+
-+/*SCSI Enclosure Processor Request Message */
-+typedef struct _MPI2_SEP_REQUEST {
-+	U16 DevHandle;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U8 Action;		/*0x04 */
-+	U8 Flags;		/*0x05 */
-+	U8 Reserved1;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved2;		/*0x0A */
-+	U32 SlotStatus;		/*0x0C */
-+	U32 Reserved3;		/*0x10 */
-+	U32 Reserved4;		/*0x14 */
-+	U32 Reserved5;		/*0x18 */
-+	U16 Slot;		/*0x1C */
-+	U16 EnclosureHandle;	/*0x1E */
-+} MPI2_SEP_REQUEST, *PTR_MPI2_SEP_REQUEST,
-+	Mpi2SepRequest_t, *pMpi2SepRequest_t;
-+
-+/*Action defines */
-+#define MPI2_SEP_REQ_ACTION_WRITE_STATUS                (0x00)
-+#define MPI2_SEP_REQ_ACTION_READ_STATUS                 (0x01)
-+
-+/*Flags defines */
-+#define MPI2_SEP_REQ_FLAGS_DEVHANDLE_ADDRESS            (0x00)
-+#define MPI2_SEP_REQ_FLAGS_ENCLOSURE_SLOT_ADDRESS       (0x01)
-+
-+/*SlotStatus defines */
-+#define MPI2_SEP_REQ_SLOTSTATUS_REQUEST_REMOVE          (0x00040000)
-+#define MPI2_SEP_REQ_SLOTSTATUS_IDENTIFY_REQUEST        (0x00020000)
-+#define MPI2_SEP_REQ_SLOTSTATUS_REBUILD_STOPPED         (0x00000200)
-+#define MPI2_SEP_REQ_SLOTSTATUS_HOT_SPARE               (0x00000100)
-+#define MPI2_SEP_REQ_SLOTSTATUS_UNCONFIGURED            (0x00000080)
-+#define MPI2_SEP_REQ_SLOTSTATUS_PREDICTED_FAULT         (0x00000040)
-+#define MPI2_SEP_REQ_SLOTSTATUS_IN_CRITICAL_ARRAY       (0x00000010)
-+#define MPI2_SEP_REQ_SLOTSTATUS_IN_FAILED_ARRAY         (0x00000008)
-+#define MPI2_SEP_REQ_SLOTSTATUS_DEV_REBUILDING          (0x00000004)
-+#define MPI2_SEP_REQ_SLOTSTATUS_DEV_FAULTY              (0x00000002)
-+#define MPI2_SEP_REQ_SLOTSTATUS_NO_ERROR                (0x00000001)
-+
-+/*SCSI Enclosure Processor Reply Message */
-+typedef struct _MPI2_SEP_REPLY {
-+	U16 DevHandle;		/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U8 Action;		/*0x04 */
-+	U8 Flags;		/*0x05 */
-+	U8 Reserved1;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved2;		/*0x0A */
-+	U16 Reserved3;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U32 SlotStatus;		/*0x14 */
-+	U32 Reserved4;		/*0x18 */
-+	U16 Slot;		/*0x1C */
-+	U16 EnclosureHandle;	/*0x1E */
-+} MPI2_SEP_REPLY, *PTR_MPI2_SEP_REPLY,
-+	Mpi2SepReply_t, *pMpi2SepReply_t;
-+
-+/*SlotStatus defines */
-+#define MPI2_SEP_REPLY_SLOTSTATUS_REMOVE_READY          (0x00040000)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_IDENTIFY_REQUEST      (0x00020000)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_REBUILD_STOPPED       (0x00000200)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_HOT_SPARE             (0x00000100)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_UNCONFIGURED          (0x00000080)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_PREDICTED_FAULT       (0x00000040)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_IN_CRITICAL_ARRAY     (0x00000010)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_IN_FAILED_ARRAY       (0x00000008)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_DEV_REBUILDING        (0x00000004)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_DEV_FAULTY            (0x00000002)
-+#define MPI2_SEP_REPLY_SLOTSTATUS_NO_ERROR              (0x00000001)
-+
-+#endif
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-new file mode 100644
-index 0000000..0de425d
---- /dev/null
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-@@ -0,0 +1,1665 @@
-+/*
-+ * Copyright (c) 2000-2012 LSI Corporation.
++#include <linux/version.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/errno.h>
++#include <linux/init.h>
++#include <linux/slab.h>
++#include <linux/types.h>
++#include <linux/pci.h>
++#include <linux/kdev_t.h>
++#include <linux/blkdev.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/dma-mapping.h>
++#include <linux/io.h>
++#include <linux/time.h>
++#include <linux/kthread.h>
++#include <linux/aer.h>
++
++
++#include "mpt3sas_base.h"
++
++static MPT_CALLBACK	mpt_callbacks[MPT_MAX_CALLBACKS];
++
++
++#define FAULT_POLLING_INTERVAL 1000 /* in milliseconds */
++
++ /* maximum controller queue depth */
++#define MAX_HBA_QUEUE_DEPTH	30000
++#define MAX_CHAIN_DEPTH		100000
++static int max_queue_depth = -1;
++module_param(max_queue_depth, int, 0);
++MODULE_PARM_DESC(max_queue_depth, " max controller queue depth ");
++
++static int max_sgl_entries = -1;
++module_param(max_sgl_entries, int, 0);
++MODULE_PARM_DESC(max_sgl_entries, " max sg entries ");
++
++static int msix_disable = -1;
++module_param(msix_disable, int, 0);
++MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
++
++
++static int mpt3sas_fwfault_debug;
++MODULE_PARM_DESC(mpt3sas_fwfault_debug,
++	" enable detection of firmware fault and halt firmware - (default=0)");
++
++
++/**
++ * _scsih_set_fwfault_debug - global setting of ioc->fwfault_debug.
 + *
++ */
++static int
++_scsih_set_fwfault_debug(const char *val, struct kernel_param *kp)
++{
++	int ret = param_set_int(val, kp);
++	struct MPT3SAS_ADAPTER *ioc;
++
++	if (ret)
++		return ret;
++
++	pr_info("setting fwfault_debug(%d)\n", mpt3sas_fwfault_debug);
++	list_for_each_entry(ioc, &mpt3sas_ioc_list, list)
++		ioc->fwfault_debug = mpt3sas_fwfault_debug;
++	return 0;
++}
++module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
++	param_get_int, &mpt3sas_fwfault_debug, 0644);
++
++/**
++ *  mpt3sas_remove_dead_ioc_func - kthread context to remove dead ioc
++ * @arg: input argument, used to derive ioc
 + *
-+ *          Name:  mpi2_ioc.h
-+ *         Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
-+ * Creation Date:  October 11, 2006
++ * Return 0 if controller is removed from pci subsystem.
++ * Return -1 for other case.
++ */
++static int mpt3sas_remove_dead_ioc_func(void *arg)
++{
++	struct MPT3SAS_ADAPTER *ioc = (struct MPT3SAS_ADAPTER *)arg;
++	struct pci_dev *pdev;
++
++	if ((ioc == NULL))
++		return -1;
++
++	pdev = ioc->pdev;
++	if ((pdev == NULL))
++		return -1;
++	pci_stop_and_remove_bus_device(pdev);
++	return 0;
++}
++
++/**
++ * _base_fault_reset_work - workq handling ioc fault conditions
++ * @work: input argument, used to derive ioc
++ * Context: sleep.
 + *
-+ * mpi2_ioc.h Version:  02.00.21
++ * Return nothing.
++ */
++static void
++_base_fault_reset_work(struct work_struct *work)
++{
++	struct MPT3SAS_ADAPTER *ioc =
++	    container_of(work, struct MPT3SAS_ADAPTER, fault_reset_work.work);
++	unsigned long	 flags;
++	u32 doorbell;
++	int rc;
++	struct task_struct *p;
++
++
++	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
++	if (ioc->shost_recovery)
++		goto rearm_timer;
++	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++
++	doorbell = mpt3sas_base_get_iocstate(ioc, 0);
++	if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_MASK) {
++		pr_err(MPT3SAS_FMT "SAS host is non-operational !!!!\n",
++		    ioc->name);
++
++		/*
++		 * Call _scsih_flush_pending_cmds callback so that we flush all
++		 * pending commands back to OS. This call is required to aovid
++		 * deadlock at block layer. Dead IOC will fail to do diag reset,
++		 * and this call is safe since dead ioc will never return any
++		 * command back from HW.
++		 */
++		ioc->schedule_dead_ioc_flush_running_cmds(ioc);
++		/*
++		 * Set remove_host flag early since kernel thread will
++		 * take some time to execute.
++		 */
++		ioc->remove_host = 1;
++		/*Remove the Dead Host */
++		p = kthread_run(mpt3sas_remove_dead_ioc_func, ioc,
++		    "mpt3sas_dead_ioc_%d", ioc->id);
++		if (IS_ERR(p))
++			pr_err(MPT3SAS_FMT
++			"%s: Running mpt3sas_dead_ioc thread failed !!!!\n",
++			ioc->name, __func__);
++		else
++			pr_err(MPT3SAS_FMT
++			"%s: Running mpt3sas_dead_ioc thread success !!!!\n",
++			ioc->name, __func__);
++		return; /* don't rearm timer */
++	}
++
++	if ((doorbell & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL) {
++		rc = mpt3sas_base_hard_reset_handler(ioc, CAN_SLEEP,
++		    FORCE_BIG_HAMMER);
++		pr_warn(MPT3SAS_FMT "%s: hard reset: %s\n", ioc->name,
++		    __func__, (rc == 0) ? "success" : "failed");
++		doorbell = mpt3sas_base_get_iocstate(ioc, 0);
++		if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT)
++			mpt3sas_base_fault_info(ioc, doorbell &
++			    MPI2_DOORBELL_DATA_MASK);
++		if (rc && (doorbell & MPI2_IOC_STATE_MASK) !=
++		    MPI2_IOC_STATE_OPERATIONAL)
++			return; /* don't rearm timer */
++	}
++
++	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
++ rearm_timer:
++	if (ioc->fault_reset_work_q)
++		queue_delayed_work(ioc->fault_reset_work_q,
++		    &ioc->fault_reset_work,
++		    msecs_to_jiffies(FAULT_POLLING_INTERVAL));
++	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++}
++
++/**
++ * mpt3sas_base_start_watchdog - start the fault_reset_work_q
++ * @ioc: per adapter object
++ * Context: sleep.
 + *
-+ * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-+ *       prefix are for use only on MPI v2.5 products, and must not be used
-+ *       with MPI v2.0 products. Unless otherwise noted, names beginning with
-+ *       MPI2 or Mpi2 are for use with both MPI v2.0 and MPI v2.5 products.
++ * Return nothing.
++ */
++void
++mpt3sas_base_start_watchdog(struct MPT3SAS_ADAPTER *ioc)
++{
++	unsigned long	 flags;
++
++	if (ioc->fault_reset_work_q)
++		return;
++
++	/* initialize fault polling */
++
++	INIT_DELAYED_WORK(&ioc->fault_reset_work, _base_fault_reset_work);
++	snprintf(ioc->fault_reset_work_q_name,
++	    sizeof(ioc->fault_reset_work_q_name), "poll_%d_status", ioc->id);
++	ioc->fault_reset_work_q =
++		create_singlethread_workqueue(ioc->fault_reset_work_q_name);
++	if (!ioc->fault_reset_work_q) {
++		pr_err(MPT3SAS_FMT "%s: failed (line=%d)\n",
++		    ioc->name, __func__, __LINE__);
++			return;
++	}
++	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
++	if (ioc->fault_reset_work_q)
++		queue_delayed_work(ioc->fault_reset_work_q,
++		    &ioc->fault_reset_work,
++		    msecs_to_jiffies(FAULT_POLLING_INTERVAL));
++	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++}
++
++/**
++ * mpt3sas_base_stop_watchdog - stop the fault_reset_work_q
++ * @ioc: per adapter object
++ * Context: sleep.
 + *
-+ * Version History
-+ * ---------------
++ * Return nothing.
++ */
++void
++mpt3sas_base_stop_watchdog(struct MPT3SAS_ADAPTER *ioc)
++{
++	unsigned long flags;
++	struct workqueue_struct *wq;
++
++	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
++	wq = ioc->fault_reset_work_q;
++	ioc->fault_reset_work_q = NULL;
++	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
++	if (wq) {
++		if (!cancel_delayed_work(&ioc->fault_reset_work))
++			flush_workqueue(wq);
++		destroy_workqueue(wq);
++	}
++}
++
++/**
++ * mpt3sas_base_fault_info - verbose translation of firmware FAULT code
++ * @ioc: per adapter object
++ * @fault_code: fault code
 + *
-+ * Date      Version   Description
-+ * --------  --------  ------------------------------------------------------
-+ * 04-30-07  02.00.00  Corresponds to Fusion-MPT MPI Specification Rev A.
-+ * 06-04-07  02.00.01  In IOCFacts Reply structure, renamed MaxDevices to
-+ *                     MaxTargets.
-+ *                     Added TotalImageSize field to FWDownload Request.
-+ *                     Added reserved words to FWUpload Request.
-+ * 06-26-07  02.00.02  Added IR Configuration Change List Event.
-+ * 08-31-07  02.00.03  Removed SystemReplyQueueDepth field from the IOCInit
-+ *                     request and replaced it with
-+ *                     ReplyDescriptorPostQueueDepth and ReplyFreeQueueDepth.
-+ *                     Replaced the MinReplyQueueDepth field of the IOCFacts
-+ *                     reply with MaxReplyDescriptorPostQueueDepth.
-+ *                     Added MPI2_RDPQ_DEPTH_MIN define to specify the minimum
-+ *                     depth for the Reply Descriptor Post Queue.
-+ *                     Added SASAddress field to Initiator Device Table
-+ *                     Overflow Event data.
-+ * 10-31-07  02.00.04  Added ReasonCode MPI2_EVENT_SAS_INIT_RC_NOT_RESPONDING
-+ *                     for SAS Initiator Device Status Change Event data.
-+ *                     Modified Reason Code defines for SAS Topology Change
-+ *                     List Event data, including adding a bit for PHY Vacant
-+ *                     status, and adding a mask for the Reason Code.
-+ *                     Added define for
-+ *                     MPI2_EVENT_SAS_TOPO_ES_DELAY_NOT_RESPONDING.
-+ *                     Added define for MPI2_EXT_IMAGE_TYPE_MEGARAID.
-+ * 12-18-07  02.00.05  Added Boot Status defines for the IOCExceptions field of
-+ *                     the IOCFacts Reply.
-+ *                     Removed MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER define.
-+ *                     Moved MPI2_VERSION_UNION to mpi2.h.
-+ *                     Changed MPI2_EVENT_NOTIFICATION_REQUEST to use masks
-+ *                     instead of enables, and added SASBroadcastPrimitiveMasks
-+ *                     field.
-+ *                     Added Log Entry Added Event and related structure.
-+ * 02-29-08  02.00.06  Added define MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID.
-+ *                     Removed define MPI2_IOCFACTS_PROTOCOL_SMP_TARGET.
-+ *                     Added MaxVolumes and MaxPersistentEntries fields to
-+ *                     IOCFacts reply.
-+ *                     Added ProtocalFlags and IOCCapabilities fields to
-+ *                     MPI2_FW_IMAGE_HEADER.
-+ *                     Removed MPI2_PORTENABLE_FLAGS_ENABLE_SINGLE_PORT.
-+ * 03-03-08  02.00.07  Fixed MPI2_FW_IMAGE_HEADER by changing Reserved26 to
-+ *                     a U16 (from a U32).
-+ *                     Removed extra 's' from EventMasks name.
-+ * 06-27-08  02.00.08  Fixed an offset in a comment.
-+ * 10-02-08  02.00.09  Removed SystemReplyFrameSize from MPI2_IOC_INIT_REQUEST.
-+ *                     Removed CurReplyFrameSize from MPI2_IOC_FACTS_REPLY and
-+ *                     renamed MinReplyFrameSize to ReplyFrameSize.
-+ *                     Added MPI2_IOCFACTS_EXCEPT_IR_FOREIGN_CONFIG_MAX.
-+ *                     Added two new RAIDOperation values for Integrated RAID
-+ *                     Operations Status Event data.
-+ *                     Added four new IR Configuration Change List Event data
-+ *                     ReasonCode values.
-+ *                     Added two new ReasonCode defines for SAS Device Status
-+ *                     Change Event data.
-+ *                     Added three new DiscoveryStatus bits for the SAS
-+ *                     Discovery event data.
-+ *                     Added Multiplexing Status Change bit to the PhyStatus
-+ *                     field of the SAS Topology Change List event data.
-+ *                     Removed define for MPI2_INIT_IMAGE_BOOTFLAGS_XMEMCOPY.
-+ *                     BootFlags are now product-specific.
-+ *                     Added defines for the indivdual signature bytes
-+ *                     for MPI2_INIT_IMAGE_FOOTER.
-+ * 01-19-09  02.00.10  Added MPI2_IOCFACTS_CAPABILITY_EVENT_REPLAY define.
-+ *                     Added MPI2_EVENT_SAS_DISC_DS_DOWNSTREAM_INITIATOR
-+ *                     define.
-+ *                     Added MPI2_EVENT_SAS_DEV_STAT_RC_SATA_INIT_FAILURE
-+ *                     define.
-+ *                     Removed MPI2_EVENT_SAS_DISC_DS_SATA_INIT_FAILURE define.
-+ * 05-06-09  02.00.11  Added MPI2_IOCFACTS_CAPABILITY_RAID_ACCELERATOR define.
-+ *                     Added MPI2_IOCFACTS_CAPABILITY_MSI_X_INDEX define.
-+ *                     Added two new reason codes for SAS Device Status Change
-+ *                     Event.
-+ *                     Added new event: SAS PHY Counter.
-+ * 07-30-09  02.00.12  Added GPIO Interrupt event define and structure.
-+ *                     Added MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER define.
-+ *                     Added new product id family for 2208.
-+ * 10-28-09  02.00.13  Added HostMSIxVectors field to MPI2_IOC_INIT_REQUEST.
-+ *                     Added MaxMSIxVectors field to MPI2_IOC_FACTS_REPLY.
-+ *                     Added MinDevHandle field to MPI2_IOC_FACTS_REPLY.
-+ *                     Added MPI2_IOCFACTS_CAPABILITY_HOST_BASED_DISCOVERY.
-+ *                     Added MPI2_EVENT_HOST_BASED_DISCOVERY_PHY define.
-+ *                     Added MPI2_EVENT_SAS_TOPO_ES_NO_EXPANDER define.
-+ *                     Added Host Based Discovery Phy Event data.
-+ *                     Added defines for ProductID Product field
-+ *                     (MPI2_FW_HEADER_PID_).
-+ *                     Modified values for SAS ProductID Family
-+ *                     (MPI2_FW_HEADER_PID_FAMILY_).
-+ * 02-10-10  02.00.14  Added SAS Quiesce Event structure and defines.
-+ *                     Added PowerManagementControl Request structures and
-+ *                     defines.
-+ * 05-12-10  02.00.15  Marked Task Set Full Event as obsolete.
-+ *                     Added MPI2_EVENT_SAS_TOPO_LR_UNSUPPORTED_PHY define.
-+ * 11-10-10  02.00.16  Added MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC.
-+ * 02-23-11  02.00.17  Added SAS NOTIFY Primitive event, and added
-+ *                     SASNotifyPrimitiveMasks field to
-+ *                     MPI2_EVENT_NOTIFICATION_REQUEST.
-+ *                     Added Temperature Threshold Event.
-+ *                     Added Host Message Event.
-+ *                     Added Send Host Message request and reply.
-+ * 05-25-11  02.00.18  For Extended Image Header, added
-+ *                     MPI2_EXT_IMAGE_TYPE_MIN_PRODUCT_SPECIFIC and
-+ *                     MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC defines.
-+ *                     Deprecated MPI2_EXT_IMAGE_TYPE_MAX define.
-+ * 08-24-11  02.00.19  Added PhysicalPort field to
-+ *                     MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE structure.
-+ *                     Marked MPI2_PM_CONTROL_FEATURE_PCIE_LINK as obsolete.
-+ * 11-18-11  02.00.20  Incorporating additions for MPI v2.5.
-+ * 03-29-12  02.00.21  Added a product specific range to event values.
-+ * --------------------------------------------------------------------------
++ * Return nothing.
 + */
-+
-+#ifndef MPI2_IOC_H
-+#define MPI2_IOC_H
-+
-+/*****************************************************************************
-+*
-+*              IOC Messages
-+*
-+*****************************************************************************/
-+
-+/****************************************************************************
-+* IOCInit message
-+****************************************************************************/
-+
-+/*IOCInit Request message */
-+typedef struct _MPI2_IOC_INIT_REQUEST {
-+	U8 WhoInit;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 MsgVersion;		/*0x0C */
-+	U16 HeaderVersion;	/*0x0E */
-+	U32 Reserved5;		/*0x10 */
-+	U16 Reserved6;		/*0x14 */
-+	U8 Reserved7;		/*0x16 */
-+	U8 HostMSIxVectors;	/*0x17 */
-+	U16 Reserved8;		/*0x18 */
-+	U16 SystemRequestFrameSize;	/*0x1A */
-+	U16 ReplyDescriptorPostQueueDepth;	/*0x1C */
-+	U16 ReplyFreeQueueDepth;	/*0x1E */
-+	U32 SenseBufferAddressHigh;	/*0x20 */
-+	U32 SystemReplyAddressHigh;	/*0x24 */
-+	U64 SystemRequestFrameBaseAddress;	/*0x28 */
-+	U64 ReplyDescriptorPostQueueAddress;	/*0x30 */
-+	U64 ReplyFreeQueueAddress;	/*0x38 */
-+	U64 TimeStamp;		/*0x40 */
-+} MPI2_IOC_INIT_REQUEST, *PTR_MPI2_IOC_INIT_REQUEST,
-+	Mpi2IOCInitRequest_t, *pMpi2IOCInitRequest_t;
-+
-+/*WhoInit values */
-+#define MPI2_WHOINIT_NOT_INITIALIZED            (0x00)
-+#define MPI2_WHOINIT_SYSTEM_BIOS                (0x01)
-+#define MPI2_WHOINIT_ROM_BIOS                   (0x02)
-+#define MPI2_WHOINIT_PCI_PEER                   (0x03)
-+#define MPI2_WHOINIT_HOST_DRIVER                (0x04)
-+#define MPI2_WHOINIT_MANUFACTURER               (0x05)
-+
-+/*MsgVersion */
-+#define MPI2_IOCINIT_MSGVERSION_MAJOR_MASK      (0xFF00)
-+#define MPI2_IOCINIT_MSGVERSION_MAJOR_SHIFT     (8)
-+#define MPI2_IOCINIT_MSGVERSION_MINOR_MASK      (0x00FF)
-+#define MPI2_IOCINIT_MSGVERSION_MINOR_SHIFT     (0)
-+
-+/*HeaderVersion */
-+#define MPI2_IOCINIT_HDRVERSION_UNIT_MASK       (0xFF00)
-+#define MPI2_IOCINIT_HDRVERSION_UNIT_SHIFT      (8)
-+#define MPI2_IOCINIT_HDRVERSION_DEV_MASK        (0x00FF)
-+#define MPI2_IOCINIT_HDRVERSION_DEV_SHIFT       (0)
-+
-+/*minimum depth for the Reply Descriptor Post Queue */
-+#define MPI2_RDPQ_DEPTH_MIN                     (16)
-+
-+/*IOCInit Reply message */
-+typedef struct _MPI2_IOC_INIT_REPLY {
-+	U8 WhoInit;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+} MPI2_IOC_INIT_REPLY, *PTR_MPI2_IOC_INIT_REPLY,
-+	Mpi2IOCInitReply_t, *pMpi2IOCInitReply_t;
-+
-+/****************************************************************************
-+* IOCFacts message
-+****************************************************************************/
-+
-+/*IOCFacts Request message */
-+typedef struct _MPI2_IOC_FACTS_REQUEST {
-+	U16 Reserved1;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+} MPI2_IOC_FACTS_REQUEST, *PTR_MPI2_IOC_FACTS_REQUEST,
-+	Mpi2IOCFactsRequest_t, *pMpi2IOCFactsRequest_t;
-+
-+/*IOCFacts Reply message */
-+typedef struct _MPI2_IOC_FACTS_REPLY {
-+	U16 MsgVersion;		/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 HeaderVersion;	/*0x04 */
-+	U8 IOCNumber;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved1;		/*0x0A */
-+	U16 IOCExceptions;	/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U8 MaxChainDepth;	/*0x14 */
-+	U8 WhoInit;		/*0x15 */
-+	U8 NumberOfPorts;	/*0x16 */
-+	U8 MaxMSIxVectors;	/*0x17 */
-+	U16 RequestCredit;	/*0x18 */
-+	U16 ProductID;		/*0x1A */
-+	U32 IOCCapabilities;	/*0x1C */
-+	MPI2_VERSION_UNION FWVersion;	/*0x20 */
-+	U16 IOCRequestFrameSize;	/*0x24 */
-+	U16 IOCMaxChainSegmentSize;	/*0x26 */
-+	U16 MaxInitiators;	/*0x28 */
-+	U16 MaxTargets;		/*0x2A */
-+	U16 MaxSasExpanders;	/*0x2C */
-+	U16 MaxEnclosures;	/*0x2E */
-+	U16 ProtocolFlags;	/*0x30 */
-+	U16 HighPriorityCredit;	/*0x32 */
-+	U16 MaxReplyDescriptorPostQueueDepth;	/*0x34 */
-+	U8 ReplyFrameSize;	/*0x36 */
-+	U8 MaxVolumes;		/*0x37 */
-+	U16 MaxDevHandle;	/*0x38 */
-+	U16 MaxPersistentEntries;	/*0x3A */
-+	U16 MinDevHandle;	/*0x3C */
-+	U16 Reserved4;		/*0x3E */
-+} MPI2_IOC_FACTS_REPLY, *PTR_MPI2_IOC_FACTS_REPLY,
-+	Mpi2IOCFactsReply_t, *pMpi2IOCFactsReply_t;
-+
-+/*MsgVersion */
-+#define MPI2_IOCFACTS_MSGVERSION_MAJOR_MASK             (0xFF00)
-+#define MPI2_IOCFACTS_MSGVERSION_MAJOR_SHIFT            (8)
-+#define MPI2_IOCFACTS_MSGVERSION_MINOR_MASK             (0x00FF)
-+#define MPI2_IOCFACTS_MSGVERSION_MINOR_SHIFT            (0)
-+
-+/*HeaderVersion */
-+#define MPI2_IOCFACTS_HDRVERSION_UNIT_MASK              (0xFF00)
-+#define MPI2_IOCFACTS_HDRVERSION_UNIT_SHIFT             (8)
-+#define MPI2_IOCFACTS_HDRVERSION_DEV_MASK               (0x00FF)
-+#define MPI2_IOCFACTS_HDRVERSION_DEV_SHIFT              (0)
-+
-+/*IOCExceptions */
-+#define MPI2_IOCFACTS_EXCEPT_IR_FOREIGN_CONFIG_MAX      (0x0100)
-+
-+#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_MASK              (0x00E0)
-+#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_GOOD              (0x0000)
-+#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_BACKUP            (0x0020)
-+#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_RESTORED          (0x0040)
-+#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_CORRUPT_BACKUP    (0x0060)
-+
-+#define MPI2_IOCFACTS_EXCEPT_METADATA_UNSUPPORTED       (0x0010)
-+#define MPI2_IOCFACTS_EXCEPT_MANUFACT_CHECKSUM_FAIL     (0x0008)
-+#define MPI2_IOCFACTS_EXCEPT_FW_CHECKSUM_FAIL           (0x0004)
-+#define MPI2_IOCFACTS_EXCEPT_RAID_CONFIG_INVALID        (0x0002)
-+#define MPI2_IOCFACTS_EXCEPT_CONFIG_CHECKSUM_FAIL       (0x0001)
-+
-+/*defines for WhoInit field are after the IOCInit Request */
-+
-+/*ProductID field uses MPI2_FW_HEADER_PID_ */
-+
-+/*IOCCapabilities */
-+#define MPI25_IOCFACTS_CAPABILITY_FAST_PATH_CAPABLE     (0x00020000)
-+#define MPI2_IOCFACTS_CAPABILITY_HOST_BASED_DISCOVERY   (0x00010000)
-+#define MPI2_IOCFACTS_CAPABILITY_MSI_X_INDEX            (0x00008000)
-+#define MPI2_IOCFACTS_CAPABILITY_RAID_ACCELERATOR       (0x00004000)
-+#define MPI2_IOCFACTS_CAPABILITY_EVENT_REPLAY           (0x00002000)
-+#define MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID        (0x00001000)
-+#define MPI2_IOCFACTS_CAPABILITY_TLR                    (0x00000800)
-+#define MPI2_IOCFACTS_CAPABILITY_MULTICAST              (0x00000100)
-+#define MPI2_IOCFACTS_CAPABILITY_BIDIRECTIONAL_TARGET   (0x00000080)
-+#define MPI2_IOCFACTS_CAPABILITY_EEDP                   (0x00000040)
-+#define MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER        (0x00000020)
-+#define MPI2_IOCFACTS_CAPABILITY_SNAPSHOT_BUFFER        (0x00000010)
-+#define MPI2_IOCFACTS_CAPABILITY_DIAG_TRACE_BUFFER      (0x00000008)
-+#define MPI2_IOCFACTS_CAPABILITY_TASK_SET_FULL_HANDLING (0x00000004)
-+
-+/*ProtocolFlags */
-+#define MPI2_IOCFACTS_PROTOCOL_SCSI_TARGET              (0x0001)
-+#define MPI2_IOCFACTS_PROTOCOL_SCSI_INITIATOR           (0x0002)
-+
-+/****************************************************************************
-+* PortFacts message
-+****************************************************************************/
-+
-+/*PortFacts Request message */
-+typedef struct _MPI2_PORT_FACTS_REQUEST {
-+	U16 Reserved1;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 PortNumber;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+} MPI2_PORT_FACTS_REQUEST, *PTR_MPI2_PORT_FACTS_REQUEST,
-+	Mpi2PortFactsRequest_t, *pMpi2PortFactsRequest_t;
-+
-+/*PortFacts Reply message */
-+typedef struct _MPI2_PORT_FACTS_REPLY {
-+	U16 Reserved1;		/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 PortNumber;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+	U16 Reserved4;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U8 Reserved5;		/*0x14 */
-+	U8 PortType;		/*0x15 */
-+	U16 Reserved6;		/*0x16 */
-+	U16 MaxPostedCmdBuffers;	/*0x18 */
-+	U16 Reserved7;		/*0x1A */
-+} MPI2_PORT_FACTS_REPLY, *PTR_MPI2_PORT_FACTS_REPLY,
-+	Mpi2PortFactsReply_t, *pMpi2PortFactsReply_t;
-+
-+/*PortType values */
-+#define MPI2_PORTFACTS_PORTTYPE_INACTIVE            (0x00)
-+#define MPI2_PORTFACTS_PORTTYPE_FC                  (0x10)
-+#define MPI2_PORTFACTS_PORTTYPE_ISCSI               (0x20)
-+#define MPI2_PORTFACTS_PORTTYPE_SAS_PHYSICAL        (0x30)
-+#define MPI2_PORTFACTS_PORTTYPE_SAS_VIRTUAL         (0x31)
-+
-+/****************************************************************************
-+* PortEnable message
-+****************************************************************************/
-+
-+/*PortEnable Request message */
-+typedef struct _MPI2_PORT_ENABLE_REQUEST {
-+	U16 Reserved1;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U8 Reserved2;		/*0x04 */
-+	U8 PortFlags;		/*0x05 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+} MPI2_PORT_ENABLE_REQUEST, *PTR_MPI2_PORT_ENABLE_REQUEST,
-+	Mpi2PortEnableRequest_t, *pMpi2PortEnableRequest_t;
-+
-+/*PortEnable Reply message */
-+typedef struct _MPI2_PORT_ENABLE_REPLY {
-+	U16 Reserved1;		/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U8 Reserved2;		/*0x04 */
-+	U8 PortFlags;		/*0x05 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+} MPI2_PORT_ENABLE_REPLY, *PTR_MPI2_PORT_ENABLE_REPLY,
-+	Mpi2PortEnableReply_t, *pMpi2PortEnableReply_t;
-+
-+/****************************************************************************
-+* EventNotification message
-+****************************************************************************/
-+
-+/*EventNotification Request message */
-+#define MPI2_EVENT_NOTIFY_EVENTMASK_WORDS           (4)
-+
-+typedef struct _MPI2_EVENT_NOTIFICATION_REQUEST {
-+	U16 Reserved1;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U32 Reserved5;		/*0x0C */
-+	U32 Reserved6;		/*0x10 */
-+	U32 EventMasks[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];	/*0x14 */
-+	U16 SASBroadcastPrimitiveMasks;	/*0x24 */
-+	U16 SASNotifyPrimitiveMasks;	/*0x26 */
-+	U32 Reserved8;		/*0x28 */
-+} MPI2_EVENT_NOTIFICATION_REQUEST,
-+	*PTR_MPI2_EVENT_NOTIFICATION_REQUEST,
-+	Mpi2EventNotificationRequest_t,
-+	*pMpi2EventNotificationRequest_t;
-+
-+/*EventNotification Reply message */
-+typedef struct _MPI2_EVENT_NOTIFICATION_REPLY {
-+	U16 EventDataLength;	/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved1;		/*0x04 */
-+	U8 AckRequired;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved2;		/*0x0A */
-+	U16 Reserved3;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U16 Event;		/*0x14 */
-+	U16 Reserved4;		/*0x16 */
-+	U32 EventContext;	/*0x18 */
-+	U32 EventData[1];	/*0x1C */
-+} MPI2_EVENT_NOTIFICATION_REPLY, *PTR_MPI2_EVENT_NOTIFICATION_REPLY,
-+	Mpi2EventNotificationReply_t,
-+	*pMpi2EventNotificationReply_t;
-+
-+/*AckRequired */
-+#define MPI2_EVENT_NOTIFICATION_ACK_NOT_REQUIRED    (0x00)
-+#define MPI2_EVENT_NOTIFICATION_ACK_REQUIRED        (0x01)
-+
-+/*Event */
-+#define MPI2_EVENT_LOG_DATA                         (0x0001)
-+#define MPI2_EVENT_STATE_CHANGE                     (0x0002)
-+#define MPI2_EVENT_HARD_RESET_RECEIVED              (0x0005)
-+#define MPI2_EVENT_EVENT_CHANGE                     (0x000A)
-+#define MPI2_EVENT_TASK_SET_FULL                    (0x000E)	/*obsolete */
-+#define MPI2_EVENT_SAS_DEVICE_STATUS_CHANGE         (0x000F)
-+#define MPI2_EVENT_IR_OPERATION_STATUS              (0x0014)
-+#define MPI2_EVENT_SAS_DISCOVERY                    (0x0016)
-+#define MPI2_EVENT_SAS_BROADCAST_PRIMITIVE          (0x0017)
-+#define MPI2_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE    (0x0018)
-+#define MPI2_EVENT_SAS_INIT_TABLE_OVERFLOW          (0x0019)
-+#define MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST         (0x001C)
-+#define MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE    (0x001D)
-+#define MPI2_EVENT_IR_VOLUME                        (0x001E)
-+#define MPI2_EVENT_IR_PHYSICAL_DISK                 (0x001F)
-+#define MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST     (0x0020)
-+#define MPI2_EVENT_LOG_ENTRY_ADDED                  (0x0021)
-+#define MPI2_EVENT_SAS_PHY_COUNTER                  (0x0022)
-+#define MPI2_EVENT_GPIO_INTERRUPT                   (0x0023)
-+#define MPI2_EVENT_HOST_BASED_DISCOVERY_PHY         (0x0024)
-+#define MPI2_EVENT_SAS_QUIESCE                      (0x0025)
-+#define MPI2_EVENT_SAS_NOTIFY_PRIMITIVE             (0x0026)
-+#define MPI2_EVENT_TEMP_THRESHOLD                   (0x0027)
-+#define MPI2_EVENT_HOST_MESSAGE                     (0x0028)
-+#define MPI2_EVENT_POWER_PERFORMANCE_CHANGE         (0x0029)
-+#define MPI2_EVENT_MIN_PRODUCT_SPECIFIC             (0x006E)
-+#define MPI2_EVENT_MAX_PRODUCT_SPECIFIC             (0x007F)
-+
-+/*Log Entry Added Event data */
-+
-+/*the following structure matches MPI2_LOG_0_ENTRY in mpi2_cnfg.h */
-+#define MPI2_EVENT_DATA_LOG_DATA_LENGTH             (0x1C)
-+
-+typedef struct _MPI2_EVENT_DATA_LOG_ENTRY_ADDED {
-+	U64 TimeStamp;		/*0x00 */
-+	U32 Reserved1;		/*0x08 */
-+	U16 LogSequence;	/*0x0C */
-+	U16 LogEntryQualifier;	/*0x0E */
-+	U8 VP_ID;		/*0x10 */
-+	U8 VF_ID;		/*0x11 */
-+	U16 Reserved2;		/*0x12 */
-+	U8 LogData[MPI2_EVENT_DATA_LOG_DATA_LENGTH];	/*0x14 */
-+} MPI2_EVENT_DATA_LOG_ENTRY_ADDED,
-+	*PTR_MPI2_EVENT_DATA_LOG_ENTRY_ADDED,
-+	Mpi2EventDataLogEntryAdded_t,
-+	*pMpi2EventDataLogEntryAdded_t;
-+
-+/*GPIO Interrupt Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_GPIO_INTERRUPT {
-+	U8 GPIONum;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U16 Reserved2;		/*0x02 */
-+} MPI2_EVENT_DATA_GPIO_INTERRUPT,
-+	*PTR_MPI2_EVENT_DATA_GPIO_INTERRUPT,
-+	Mpi2EventDataGpioInterrupt_t,
-+	*pMpi2EventDataGpioInterrupt_t;
-+
-+/*Temperature Threshold Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_TEMPERATURE {
-+	U16 Status;		/*0x00 */
-+	U8 SensorNum;		/*0x02 */
-+	U8 Reserved1;		/*0x03 */
-+	U16 CurrentTemperature;	/*0x04 */
-+	U16 Reserved2;		/*0x06 */
-+	U32 Reserved3;		/*0x08 */
-+	U32 Reserved4;		/*0x0C */
-+} MPI2_EVENT_DATA_TEMPERATURE,
-+	*PTR_MPI2_EVENT_DATA_TEMPERATURE,
-+	Mpi2EventDataTemperature_t, *pMpi2EventDataTemperature_t;
-+
-+/*Temperature Threshold Event data Status bits */
-+#define MPI2_EVENT_TEMPERATURE3_EXCEEDED            (0x0008)
-+#define MPI2_EVENT_TEMPERATURE2_EXCEEDED            (0x0004)
-+#define MPI2_EVENT_TEMPERATURE1_EXCEEDED            (0x0002)
-+#define MPI2_EVENT_TEMPERATURE0_EXCEEDED            (0x0001)
-+
-+/*Host Message Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_HOST_MESSAGE {
-+	U8 SourceVF_ID;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U16 Reserved2;		/*0x02 */
-+	U32 Reserved3;		/*0x04 */
-+	U32 HostData[1];	/*0x08 */
-+} MPI2_EVENT_DATA_HOST_MESSAGE, *PTR_MPI2_EVENT_DATA_HOST_MESSAGE,
-+	Mpi2EventDataHostMessage_t, *pMpi2EventDataHostMessage_t;
-+
-+/*Power Performance Change Event */
-+
-+typedef struct _MPI2_EVENT_DATA_POWER_PERF_CHANGE {
-+	U8 CurrentPowerMode;	/*0x00 */
-+	U8 PreviousPowerMode;	/*0x01 */
-+	U16 Reserved1;		/*0x02 */
-+} MPI2_EVENT_DATA_POWER_PERF_CHANGE,
-+	*PTR_MPI2_EVENT_DATA_POWER_PERF_CHANGE,
-+	Mpi2EventDataPowerPerfChange_t,
-+	*pMpi2EventDataPowerPerfChange_t;
-+
-+/*defines for CurrentPowerMode and PreviousPowerMode fields */
-+#define MPI2_EVENT_PM_INIT_MASK              (0xC0)
-+#define MPI2_EVENT_PM_INIT_UNAVAILABLE       (0x00)
-+#define MPI2_EVENT_PM_INIT_HOST              (0x40)
-+#define MPI2_EVENT_PM_INIT_IO_UNIT           (0x80)
-+#define MPI2_EVENT_PM_INIT_PCIE_DPA          (0xC0)
-+
-+#define MPI2_EVENT_PM_MODE_MASK              (0x07)
-+#define MPI2_EVENT_PM_MODE_UNAVAILABLE       (0x00)
-+#define MPI2_EVENT_PM_MODE_UNKNOWN           (0x01)
-+#define MPI2_EVENT_PM_MODE_FULL_POWER        (0x04)
-+#define MPI2_EVENT_PM_MODE_REDUCED_POWER     (0x05)
-+#define MPI2_EVENT_PM_MODE_STANDBY           (0x06)
-+
-+/*Hard Reset Received Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_HARD_RESET_RECEIVED {
-+	U8 Reserved1;		/*0x00 */
-+	U8 Port;		/*0x01 */
-+	U16 Reserved2;		/*0x02 */
-+} MPI2_EVENT_DATA_HARD_RESET_RECEIVED,
-+	*PTR_MPI2_EVENT_DATA_HARD_RESET_RECEIVED,
-+	Mpi2EventDataHardResetReceived_t,
-+	*pMpi2EventDataHardResetReceived_t;
-+
-+/*Task Set Full Event data */
-+/*  this event is obsolete */
-+
-+typedef struct _MPI2_EVENT_DATA_TASK_SET_FULL {
-+	U16 DevHandle;		/*0x00 */
-+	U16 CurrentDepth;	/*0x02 */
-+} MPI2_EVENT_DATA_TASK_SET_FULL, *PTR_MPI2_EVENT_DATA_TASK_SET_FULL,
-+	Mpi2EventDataTaskSetFull_t, *pMpi2EventDataTaskSetFull_t;
-+
-+/*SAS Device Status Change Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE {
-+	U16 TaskTag;		/*0x00 */
-+	U8 ReasonCode;		/*0x02 */
-+	U8 PhysicalPort;	/*0x03 */
-+	U8 ASC;			/*0x04 */
-+	U8 ASCQ;		/*0x05 */
-+	U16 DevHandle;		/*0x06 */
-+	U32 Reserved2;		/*0x08 */
-+	U64 SASAddress;		/*0x0C */
-+	U8 LUN[8];		/*0x14 */
-+} MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE,
-+	*PTR_MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE,
-+	Mpi2EventDataSasDeviceStatusChange_t,
-+	*pMpi2EventDataSasDeviceStatusChange_t;
-+
-+/*SAS Device Status Change Event data ReasonCode values */
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_SMART_DATA                           (0x05)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_UNSUPPORTED                          (0x07)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET                (0x08)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_TASK_ABORT_INTERNAL                  (0x09)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_ABORT_TASK_SET_INTERNAL              (0x0A)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_CLEAR_TASK_SET_INTERNAL              (0x0B)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_QUERY_TASK_INTERNAL                  (0x0C)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_ASYNC_NOTIFICATION                   (0x0D)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET               (0x0E)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_CMP_TASK_ABORT_INTERNAL              (0x0F)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_SATA_INIT_FAILURE                    (0x10)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_EXPANDER_REDUCED_FUNCTIONALITY       (0x11)
-+#define MPI2_EVENT_SAS_DEV_STAT_RC_CMP_EXPANDER_REDUCED_FUNCTIONALITY   (0x12)
-+
-+/*Integrated RAID Operation Status Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_IR_OPERATION_STATUS {
-+	U16 VolDevHandle;	/*0x00 */
-+	U16 Reserved1;		/*0x02 */
-+	U8 RAIDOperation;	/*0x04 */
-+	U8 PercentComplete;	/*0x05 */
-+	U16 Reserved2;		/*0x06 */
-+	U32 Resereved3;		/*0x08 */
-+} MPI2_EVENT_DATA_IR_OPERATION_STATUS,
-+	*PTR_MPI2_EVENT_DATA_IR_OPERATION_STATUS,
-+	Mpi2EventDataIrOperationStatus_t,
-+	*pMpi2EventDataIrOperationStatus_t;
-+
-+/*Integrated RAID Operation Status Event data RAIDOperation values */
-+#define MPI2_EVENT_IR_RAIDOP_RESYNC                     (0x00)
-+#define MPI2_EVENT_IR_RAIDOP_ONLINE_CAP_EXPANSION       (0x01)
-+#define MPI2_EVENT_IR_RAIDOP_CONSISTENCY_CHECK          (0x02)
-+#define MPI2_EVENT_IR_RAIDOP_BACKGROUND_INIT            (0x03)
-+#define MPI2_EVENT_IR_RAIDOP_MAKE_DATA_CONSISTENT       (0x04)
-+
-+/*Integrated RAID Volume Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_IR_VOLUME {
-+	U16 VolDevHandle;	/*0x00 */
-+	U8 ReasonCode;		/*0x02 */
-+	U8 Reserved1;		/*0x03 */
-+	U32 NewValue;		/*0x04 */
-+	U32 PreviousValue;	/*0x08 */
-+} MPI2_EVENT_DATA_IR_VOLUME, *PTR_MPI2_EVENT_DATA_IR_VOLUME,
-+	Mpi2EventDataIrVolume_t, *pMpi2EventDataIrVolume_t;
-+
-+/*Integrated RAID Volume Event data ReasonCode values */
-+#define MPI2_EVENT_IR_VOLUME_RC_SETTINGS_CHANGED        (0x01)
-+#define MPI2_EVENT_IR_VOLUME_RC_STATUS_FLAGS_CHANGED    (0x02)
-+#define MPI2_EVENT_IR_VOLUME_RC_STATE_CHANGED           (0x03)
-+
-+/*Integrated RAID Physical Disk Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_IR_PHYSICAL_DISK {
-+	U16 Reserved1;		/*0x00 */
-+	U8 ReasonCode;		/*0x02 */
-+	U8 PhysDiskNum;		/*0x03 */
-+	U16 PhysDiskDevHandle;	/*0x04 */
-+	U16 Reserved2;		/*0x06 */
-+	U16 Slot;		/*0x08 */
-+	U16 EnclosureHandle;	/*0x0A */
-+	U32 NewValue;		/*0x0C */
-+	U32 PreviousValue;	/*0x10 */
-+} MPI2_EVENT_DATA_IR_PHYSICAL_DISK,
-+	*PTR_MPI2_EVENT_DATA_IR_PHYSICAL_DISK,
-+	Mpi2EventDataIrPhysicalDisk_t,
-+	*pMpi2EventDataIrPhysicalDisk_t;
-+
-+/*Integrated RAID Physical Disk Event data ReasonCode values */
-+#define MPI2_EVENT_IR_PHYSDISK_RC_SETTINGS_CHANGED      (0x01)
-+#define MPI2_EVENT_IR_PHYSDISK_RC_STATUS_FLAGS_CHANGED  (0x02)
-+#define MPI2_EVENT_IR_PHYSDISK_RC_STATE_CHANGED         (0x03)
-+
-+/*Integrated RAID Configuration Change List Event data */
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check NumElements at runtime.
++void
++mpt3sas_base_fault_info(struct MPT3SAS_ADAPTER *ioc , u16 fault_code)
++{
++	pr_err(MPT3SAS_FMT "fault_state(0x%04x)!\n",
++	    ioc->name, fault_code);
++}
++
++/**
++ * mpt3sas_halt_firmware - halt's mpt controller firmware
++ * @ioc: per adapter object
++ *
++ * For debugging timeout related issues.  Writing 0xCOFFEE00
++ * to the doorbell register will halt controller firmware. With
++ * the purpose to stop both driver and firmware, the enduser can
++ * obtain a ring buffer from controller UART.
 + */
-+#ifndef MPI2_EVENT_IR_CONFIG_ELEMENT_COUNT
-+#define MPI2_EVENT_IR_CONFIG_ELEMENT_COUNT          (1)
++void
++mpt3sas_halt_firmware(struct MPT3SAS_ADAPTER *ioc)
++{
++	u32 doorbell;
++
++	if (!ioc->fwfault_debug)
++		return;
++
++	dump_stack();
++
++	doorbell = readl(&ioc->chip->Doorbell);
++	if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT)
++		mpt3sas_base_fault_info(ioc , doorbell);
++	else {
++		writel(0xC0FFEE00, &ioc->chip->Doorbell);
++		pr_err(MPT3SAS_FMT "Firmware is halted due to command timeout\n",
++			ioc->name);
++	}
++
++	if (ioc->fwfault_debug == 2)
++		for (;;)
++			;
++	else
++		panic("panic in %s\n", __func__);
++}
++
++#ifdef CONFIG_SCSI_MPT3SAS_LOGGING
++/**
++ * _base_sas_ioc_info - verbose translation of the ioc status
++ * @ioc: per adapter object
++ * @mpi_reply: reply mf payload returned from firmware
++ * @request_hdr: request mf
++ *
++ * Return nothing.
++ */
++static void
++_base_sas_ioc_info(struct MPT3SAS_ADAPTER *ioc, MPI2DefaultReply_t *mpi_reply,
++	MPI2RequestHeader_t *request_hdr)
++{
++	u16 ioc_status = le16_to_cpu(mpi_reply->IOCStatus) &
++	    MPI2_IOCSTATUS_MASK;
++	char *desc = NULL;
++	u16 frame_sz;
++	char *func_str = NULL;
++
++	/* SCSI_IO, RAID_PASS are handled from _scsih_scsi_ioc_info */
++	if (request_hdr->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
++	    request_hdr->Function == MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH ||
++	    request_hdr->Function == MPI2_FUNCTION_EVENT_NOTIFICATION)
++		return;
++
++	if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
++		return;
++
++	switch (ioc_status) {
++
++/****************************************************************************
++*  Common IOCStatus values for all replies
++****************************************************************************/
++
++	case MPI2_IOCSTATUS_INVALID_FUNCTION:
++		desc = "invalid function";
++		break;
++	case MPI2_IOCSTATUS_BUSY:
++		desc = "busy";
++		break;
++	case MPI2_IOCSTATUS_INVALID_SGL:
++		desc = "invalid sgl";
++		break;
++	case MPI2_IOCSTATUS_INTERNAL_ERROR:
++		desc = "internal error";
++		break;
++	case MPI2_IOCSTATUS_INVALID_VPID:
++		desc = "invalid vpid";
++		break;
++	case MPI2_IOCSTATUS_INSUFFICIENT_RESOURCES:
++		desc = "insufficient resources";
++		break;
++	case MPI2_IOCSTATUS_INVALID_FIELD:
++		desc = "invalid field";
++		break;
++	case MPI2_IOCSTATUS_INVALID_STATE:
++		desc = "invalid state";
++		break;
++	case MPI2_IOCSTATUS_OP_STATE_NOT_SUPPORTED:
++		desc = "op state not supported";
++		break;
++
++/****************************************************************************
++*  Config IOCStatus values
++****************************************************************************/
++
++	case MPI2_IOCSTATUS_CONFIG_INVALID_ACTION:
++		desc = "config invalid action";
++		break;
++	case MPI2_IOCSTATUS_CONFIG_INVALID_TYPE:
++		desc = "config invalid type";
++		break;
++	case MPI2_IOCSTATUS_CONFIG_INVALID_PAGE:
++		desc = "config invalid page";
++		break;
++	case MPI2_IOCSTATUS_CONFIG_INVALID_DATA:
++		desc = "config invalid data";
++		break;
++	case MPI2_IOCSTATUS_CONFIG_NO_DEFAULTS:
++		desc = "config no defaults";
++		break;
++	case MPI2_IOCSTATUS_CONFIG_CANT_COMMIT:
++		desc = "config cant commit";
++		break;
++
++/****************************************************************************
++*  SCSI IO Reply
++****************************************************************************/
++
++	case MPI2_IOCSTATUS_SCSI_RECOVERED_ERROR:
++	case MPI2_IOCSTATUS_SCSI_INVALID_DEVHANDLE:
++	case MPI2_IOCSTATUS_SCSI_DEVICE_NOT_THERE:
++	case MPI2_IOCSTATUS_SCSI_DATA_OVERRUN:
++	case MPI2_IOCSTATUS_SCSI_DATA_UNDERRUN:
++	case MPI2_IOCSTATUS_SCSI_IO_DATA_ERROR:
++	case MPI2_IOCSTATUS_SCSI_PROTOCOL_ERROR:
++	case MPI2_IOCSTATUS_SCSI_TASK_TERMINATED:
++	case MPI2_IOCSTATUS_SCSI_RESIDUAL_MISMATCH:
++	case MPI2_IOCSTATUS_SCSI_TASK_MGMT_FAILED:
++	case MPI2_IOCSTATUS_SCSI_IOC_TERMINATED:
++	case MPI2_IOCSTATUS_SCSI_EXT_TERMINATED:
++		break;
++
++/****************************************************************************
++*  For use by SCSI Initiator and SCSI Target end-to-end data protection
++****************************************************************************/
++
++	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
++		desc = "eedp guard error";
++		break;
++	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
++		desc = "eedp ref tag error";
++		break;
++	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
++		desc = "eedp app tag error";
++		break;
++
++/****************************************************************************
++*  SCSI Target values
++****************************************************************************/
++
++	case MPI2_IOCSTATUS_TARGET_INVALID_IO_INDEX:
++		desc = "target invalid io index";
++		break;
++	case MPI2_IOCSTATUS_TARGET_ABORTED:
++		desc = "target aborted";
++		break;
++	case MPI2_IOCSTATUS_TARGET_NO_CONN_RETRYABLE:
++		desc = "target no conn retryable";
++		break;
++	case MPI2_IOCSTATUS_TARGET_NO_CONNECTION:
++		desc = "target no connection";
++		break;
++	case MPI2_IOCSTATUS_TARGET_XFER_COUNT_MISMATCH:
++		desc = "target xfer count mismatch";
++		break;
++	case MPI2_IOCSTATUS_TARGET_DATA_OFFSET_ERROR:
++		desc = "target data offset error";
++		break;
++	case MPI2_IOCSTATUS_TARGET_TOO_MUCH_WRITE_DATA:
++		desc = "target too much write data";
++		break;
++	case MPI2_IOCSTATUS_TARGET_IU_TOO_SHORT:
++		desc = "target iu too short";
++		break;
++	case MPI2_IOCSTATUS_TARGET_ACK_NAK_TIMEOUT:
++		desc = "target ack nak timeout";
++		break;
++	case MPI2_IOCSTATUS_TARGET_NAK_RECEIVED:
++		desc = "target nak received";
++		break;
++
++/****************************************************************************
++*  Serial Attached SCSI values
++****************************************************************************/
++
++	case MPI2_IOCSTATUS_SAS_SMP_REQUEST_FAILED:
++		desc = "smp request failed";
++		break;
++	case MPI2_IOCSTATUS_SAS_SMP_DATA_OVERRUN:
++		desc = "smp data overrun";
++		break;
++
++/****************************************************************************
++*  Diagnostic Buffer Post / Diagnostic Release values
++****************************************************************************/
++
++	case MPI2_IOCSTATUS_DIAGNOSTIC_RELEASED:
++		desc = "diagnostic released";
++		break;
++	default:
++		break;
++	}
++
++	if (!desc)
++		return;
++
++	switch (request_hdr->Function) {
++	case MPI2_FUNCTION_CONFIG:
++		frame_sz = sizeof(Mpi2ConfigRequest_t) + ioc->sge_size;
++		func_str = "config_page";
++		break;
++	case MPI2_FUNCTION_SCSI_TASK_MGMT:
++		frame_sz = sizeof(Mpi2SCSITaskManagementRequest_t);
++		func_str = "task_mgmt";
++		break;
++	case MPI2_FUNCTION_SAS_IO_UNIT_CONTROL:
++		frame_sz = sizeof(Mpi2SasIoUnitControlRequest_t);
++		func_str = "sas_iounit_ctl";
++		break;
++	case MPI2_FUNCTION_SCSI_ENCLOSURE_PROCESSOR:
++		frame_sz = sizeof(Mpi2SepRequest_t);
++		func_str = "enclosure";
++		break;
++	case MPI2_FUNCTION_IOC_INIT:
++		frame_sz = sizeof(Mpi2IOCInitRequest_t);
++		func_str = "ioc_init";
++		break;
++	case MPI2_FUNCTION_PORT_ENABLE:
++		frame_sz = sizeof(Mpi2PortEnableRequest_t);
++		func_str = "port_enable";
++		break;
++	case MPI2_FUNCTION_SMP_PASSTHROUGH:
++		frame_sz = sizeof(Mpi2SmpPassthroughRequest_t) + ioc->sge_size;
++		func_str = "smp_passthru";
++		break;
++	default:
++		frame_sz = 32;
++		func_str = "unknown";
++		break;
++	}
++
++	pr_warn(MPT3SAS_FMT "ioc_status: %s(0x%04x), request(0x%p),(%s)\n",
++		ioc->name, desc, ioc_status, request_hdr, func_str);
++
++	_debug_dump_mf(request_hdr, frame_sz/4);
++}
++
++/**
++ * _base_display_event_data - verbose translation of firmware asyn events
++ * @ioc: per adapter object
++ * @mpi_reply: reply mf payload returned from firmware
++ *
++ * Return nothing.
++ */
++static void
++_base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2EventNotificationReply_t *mpi_reply)
++{
++	char *desc = NULL;
++	u16 event;
++
++	if (!(ioc->logging_level & MPT_DEBUG_EVENTS))
++		return;
++
++	event = le16_to_cpu(mpi_reply->Event);
++
++	switch (event) {
++	case MPI2_EVENT_LOG_DATA:
++		desc = "Log Data";
++		break;
++	case MPI2_EVENT_STATE_CHANGE:
++		desc = "Status Change";
++		break;
++	case MPI2_EVENT_HARD_RESET_RECEIVED:
++		desc = "Hard Reset Received";
++		break;
++	case MPI2_EVENT_EVENT_CHANGE:
++		desc = "Event Change";
++		break;
++	case MPI2_EVENT_SAS_DEVICE_STATUS_CHANGE:
++		desc = "Device Status Change";
++		break;
++	case MPI2_EVENT_IR_OPERATION_STATUS:
++		desc = "IR Operation Status";
++		break;
++	case MPI2_EVENT_SAS_DISCOVERY:
++	{
++		Mpi2EventDataSasDiscovery_t *event_data =
++		    (Mpi2EventDataSasDiscovery_t *)mpi_reply->EventData;
++		pr_info(MPT3SAS_FMT "Discovery: (%s)", ioc->name,
++		    (event_data->ReasonCode == MPI2_EVENT_SAS_DISC_RC_STARTED) ?
++		    "start" : "stop");
++		if (event_data->DiscoveryStatus)
++			pr_info("discovery_status(0x%08x)",
++			    le32_to_cpu(event_data->DiscoveryStatus));
++			pr_info("\n");
++		return;
++	}
++	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
++		desc = "SAS Broadcast Primitive";
++		break;
++	case MPI2_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE:
++		desc = "SAS Init Device Status Change";
++		break;
++	case MPI2_EVENT_SAS_INIT_TABLE_OVERFLOW:
++		desc = "SAS Init Table Overflow";
++		break;
++	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
++		desc = "SAS Topology Change List";
++		break;
++	case MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE:
++		desc = "SAS Enclosure Device Status Change";
++		break;
++	case MPI2_EVENT_IR_VOLUME:
++		desc = "IR Volume";
++		break;
++	case MPI2_EVENT_IR_PHYSICAL_DISK:
++		desc = "IR Physical Disk";
++		break;
++	case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST:
++		desc = "IR Configuration Change List";
++		break;
++	case MPI2_EVENT_LOG_ENTRY_ADDED:
++		desc = "Log Entry Added";
++		break;
++	}
++
++	if (!desc)
++		return;
++
++	pr_info(MPT3SAS_FMT "%s\n", ioc->name, desc);
++}
 +#endif
 +
-+typedef struct _MPI2_EVENT_IR_CONFIG_ELEMENT {
-+	U16 ElementFlags;	/*0x00 */
-+	U16 VolDevHandle;	/*0x02 */
-+	U8 ReasonCode;		/*0x04 */
-+	U8 PhysDiskNum;		/*0x05 */
-+	U16 PhysDiskDevHandle;	/*0x06 */
-+} MPI2_EVENT_IR_CONFIG_ELEMENT, *PTR_MPI2_EVENT_IR_CONFIG_ELEMENT,
-+	Mpi2EventIrConfigElement_t, *pMpi2EventIrConfigElement_t;
-+
-+/*IR Configuration Change List Event data ElementFlags values */
-+#define MPI2_EVENT_IR_CHANGE_EFLAGS_ELEMENT_TYPE_MASK   (0x000F)
-+#define MPI2_EVENT_IR_CHANGE_EFLAGS_VOLUME_ELEMENT      (0x0000)
-+#define MPI2_EVENT_IR_CHANGE_EFLAGS_VOLPHYSDISK_ELEMENT (0x0001)
-+#define MPI2_EVENT_IR_CHANGE_EFLAGS_HOTSPARE_ELEMENT    (0x0002)
-+
-+/*IR Configuration Change List Event data ReasonCode values */
-+#define MPI2_EVENT_IR_CHANGE_RC_ADDED                   (0x01)
-+#define MPI2_EVENT_IR_CHANGE_RC_REMOVED                 (0x02)
-+#define MPI2_EVENT_IR_CHANGE_RC_NO_CHANGE               (0x03)
-+#define MPI2_EVENT_IR_CHANGE_RC_HIDE                    (0x04)
-+#define MPI2_EVENT_IR_CHANGE_RC_UNHIDE                  (0x05)
-+#define MPI2_EVENT_IR_CHANGE_RC_VOLUME_CREATED          (0x06)
-+#define MPI2_EVENT_IR_CHANGE_RC_VOLUME_DELETED          (0x07)
-+#define MPI2_EVENT_IR_CHANGE_RC_PD_CREATED              (0x08)
-+#define MPI2_EVENT_IR_CHANGE_RC_PD_DELETED              (0x09)
-+
-+typedef struct _MPI2_EVENT_DATA_IR_CONFIG_CHANGE_LIST {
-+	U8 NumElements;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 Reserved2;		/*0x02 */
-+	U8 ConfigNum;		/*0x03 */
-+	U32 Flags;		/*0x04 */
-+	MPI2_EVENT_IR_CONFIG_ELEMENT
-+		ConfigElement[MPI2_EVENT_IR_CONFIG_ELEMENT_COUNT];/*0x08 */
-+} MPI2_EVENT_DATA_IR_CONFIG_CHANGE_LIST,
-+	*PTR_MPI2_EVENT_DATA_IR_CONFIG_CHANGE_LIST,
-+	Mpi2EventDataIrConfigChangeList_t,
-+	*pMpi2EventDataIrConfigChangeList_t;
-+
-+/*IR Configuration Change List Event data Flags values */
-+#define MPI2_EVENT_IR_CHANGE_FLAGS_FOREIGN_CONFIG   (0x00000001)
-+
-+/*SAS Discovery Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_DISCOVERY {
-+	U8 Flags;		/*0x00 */
-+	U8 ReasonCode;		/*0x01 */
-+	U8 PhysicalPort;	/*0x02 */
-+	U8 Reserved1;		/*0x03 */
-+	U32 DiscoveryStatus;	/*0x04 */
-+} MPI2_EVENT_DATA_SAS_DISCOVERY,
-+	*PTR_MPI2_EVENT_DATA_SAS_DISCOVERY,
-+	Mpi2EventDataSasDiscovery_t, *pMpi2EventDataSasDiscovery_t;
-+
-+/*SAS Discovery Event data Flags values */
-+#define MPI2_EVENT_SAS_DISC_DEVICE_CHANGE                   (0x02)
-+#define MPI2_EVENT_SAS_DISC_IN_PROGRESS                     (0x01)
-+
-+/*SAS Discovery Event data ReasonCode values */
-+#define MPI2_EVENT_SAS_DISC_RC_STARTED                      (0x01)
-+#define MPI2_EVENT_SAS_DISC_RC_COMPLETED                    (0x02)
-+
-+/*SAS Discovery Event data DiscoveryStatus values */
-+#define MPI2_EVENT_SAS_DISC_DS_MAX_ENCLOSURES_EXCEED            (0x80000000)
-+#define MPI2_EVENT_SAS_DISC_DS_MAX_EXPANDERS_EXCEED             (0x40000000)
-+#define MPI2_EVENT_SAS_DISC_DS_MAX_DEVICES_EXCEED               (0x20000000)
-+#define MPI2_EVENT_SAS_DISC_DS_MAX_TOPO_PHYS_EXCEED             (0x10000000)
-+#define MPI2_EVENT_SAS_DISC_DS_DOWNSTREAM_INITIATOR             (0x08000000)
-+#define MPI2_EVENT_SAS_DISC_DS_MULTI_SUBTRACTIVE_SUBTRACTIVE    (0x00008000)
-+#define MPI2_EVENT_SAS_DISC_DS_EXP_MULTI_SUBTRACTIVE            (0x00004000)
-+#define MPI2_EVENT_SAS_DISC_DS_MULTI_PORT_DOMAIN                (0x00002000)
-+#define MPI2_EVENT_SAS_DISC_DS_TABLE_TO_SUBTRACTIVE_LINK        (0x00001000)
-+#define MPI2_EVENT_SAS_DISC_DS_UNSUPPORTED_DEVICE               (0x00000800)
-+#define MPI2_EVENT_SAS_DISC_DS_TABLE_LINK                       (0x00000400)
-+#define MPI2_EVENT_SAS_DISC_DS_SUBTRACTIVE_LINK                 (0x00000200)
-+#define MPI2_EVENT_SAS_DISC_DS_SMP_CRC_ERROR                    (0x00000100)
-+#define MPI2_EVENT_SAS_DISC_DS_SMP_FUNCTION_FAILED              (0x00000080)
-+#define MPI2_EVENT_SAS_DISC_DS_INDEX_NOT_EXIST                  (0x00000040)
-+#define MPI2_EVENT_SAS_DISC_DS_OUT_ROUTE_ENTRIES                (0x00000020)
-+#define MPI2_EVENT_SAS_DISC_DS_SMP_TIMEOUT                      (0x00000010)
-+#define MPI2_EVENT_SAS_DISC_DS_MULTIPLE_PORTS                   (0x00000004)
-+#define MPI2_EVENT_SAS_DISC_DS_UNADDRESSABLE_DEVICE             (0x00000002)
-+#define MPI2_EVENT_SAS_DISC_DS_LOOP_DETECTED                    (0x00000001)
-+
-+/*SAS Broadcast Primitive Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_BROADCAST_PRIMITIVE {
-+	U8 PhyNum;		/*0x00 */
-+	U8 Port;		/*0x01 */
-+	U8 PortWidth;		/*0x02 */
-+	U8 Primitive;		/*0x03 */
-+} MPI2_EVENT_DATA_SAS_BROADCAST_PRIMITIVE,
-+	*PTR_MPI2_EVENT_DATA_SAS_BROADCAST_PRIMITIVE,
-+	Mpi2EventDataSasBroadcastPrimitive_t,
-+	*pMpi2EventDataSasBroadcastPrimitive_t;
-+
-+/*defines for the Primitive field */
-+#define MPI2_EVENT_PRIMITIVE_CHANGE                         (0x01)
-+#define MPI2_EVENT_PRIMITIVE_SES                            (0x02)
-+#define MPI2_EVENT_PRIMITIVE_EXPANDER                       (0x03)
-+#define MPI2_EVENT_PRIMITIVE_ASYNCHRONOUS_EVENT             (0x04)
-+#define MPI2_EVENT_PRIMITIVE_RESERVED3                      (0x05)
-+#define MPI2_EVENT_PRIMITIVE_RESERVED4                      (0x06)
-+#define MPI2_EVENT_PRIMITIVE_CHANGE0_RESERVED               (0x07)
-+#define MPI2_EVENT_PRIMITIVE_CHANGE1_RESERVED               (0x08)
-+
-+/*SAS Notify Primitive Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_NOTIFY_PRIMITIVE {
-+	U8 PhyNum;		/*0x00 */
-+	U8 Port;		/*0x01 */
-+	U8 Reserved1;		/*0x02 */
-+	U8 Primitive;		/*0x03 */
-+} MPI2_EVENT_DATA_SAS_NOTIFY_PRIMITIVE,
-+	*PTR_MPI2_EVENT_DATA_SAS_NOTIFY_PRIMITIVE,
-+	Mpi2EventDataSasNotifyPrimitive_t,
-+	*pMpi2EventDataSasNotifyPrimitive_t;
-+
-+/*defines for the Primitive field */
-+#define MPI2_EVENT_NOTIFY_ENABLE_SPINUP                     (0x01)
-+#define MPI2_EVENT_NOTIFY_POWER_LOSS_EXPECTED               (0x02)
-+#define MPI2_EVENT_NOTIFY_RESERVED1                         (0x03)
-+#define MPI2_EVENT_NOTIFY_RESERVED2                         (0x04)
-+
-+/*SAS Initiator Device Status Change Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_INIT_DEV_STATUS_CHANGE {
-+	U8 ReasonCode;		/*0x00 */
-+	U8 PhysicalPort;	/*0x01 */
-+	U16 DevHandle;		/*0x02 */
-+	U64 SASAddress;		/*0x04 */
-+} MPI2_EVENT_DATA_SAS_INIT_DEV_STATUS_CHANGE,
-+	*PTR_MPI2_EVENT_DATA_SAS_INIT_DEV_STATUS_CHANGE,
-+	Mpi2EventDataSasInitDevStatusChange_t,
-+	*pMpi2EventDataSasInitDevStatusChange_t;
-+
-+/*SAS Initiator Device Status Change event ReasonCode values */
-+#define MPI2_EVENT_SAS_INIT_RC_ADDED                (0x01)
-+#define MPI2_EVENT_SAS_INIT_RC_NOT_RESPONDING       (0x02)
-+
-+/*SAS Initiator Device Table Overflow Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_INIT_TABLE_OVERFLOW {
-+	U16 MaxInit;		/*0x00 */
-+	U16 CurrentInit;	/*0x02 */
-+	U64 SASAddress;		/*0x04 */
-+} MPI2_EVENT_DATA_SAS_INIT_TABLE_OVERFLOW,
-+	*PTR_MPI2_EVENT_DATA_SAS_INIT_TABLE_OVERFLOW,
-+	Mpi2EventDataSasInitTableOverflow_t,
-+	*pMpi2EventDataSasInitTableOverflow_t;
-+
-+/*SAS Topology Change List Event data */
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check NumEntries at runtime.
++/**
++ * _base_sas_log_info - verbose translation of firmware log info
++ * @ioc: per adapter object
++ * @log_info: log info
++ *
++ * Return nothing.
 + */
-+#ifndef MPI2_EVENT_SAS_TOPO_PHY_COUNT
-+#define MPI2_EVENT_SAS_TOPO_PHY_COUNT           (1)
-+#endif
-+
-+typedef struct _MPI2_EVENT_SAS_TOPO_PHY_ENTRY {
-+	U16 AttachedDevHandle;	/*0x00 */
-+	U8 LinkRate;		/*0x02 */
-+	U8 PhyStatus;		/*0x03 */
-+} MPI2_EVENT_SAS_TOPO_PHY_ENTRY, *PTR_MPI2_EVENT_SAS_TOPO_PHY_ENTRY,
-+	Mpi2EventSasTopoPhyEntry_t, *pMpi2EventSasTopoPhyEntry_t;
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_TOPOLOGY_CHANGE_LIST {
-+	U16 EnclosureHandle;	/*0x00 */
-+	U16 ExpanderDevHandle;	/*0x02 */
-+	U8 NumPhys;		/*0x04 */
-+	U8 Reserved1;		/*0x05 */
-+	U16 Reserved2;		/*0x06 */
-+	U8 NumEntries;		/*0x08 */
-+	U8 StartPhyNum;		/*0x09 */
-+	U8 ExpStatus;		/*0x0A */
-+	U8 PhysicalPort;	/*0x0B */
-+	MPI2_EVENT_SAS_TOPO_PHY_ENTRY
-+	PHY[MPI2_EVENT_SAS_TOPO_PHY_COUNT];	/*0x0C */
-+} MPI2_EVENT_DATA_SAS_TOPOLOGY_CHANGE_LIST,
-+	*PTR_MPI2_EVENT_DATA_SAS_TOPOLOGY_CHANGE_LIST,
-+	Mpi2EventDataSasTopologyChangeList_t,
-+	*pMpi2EventDataSasTopologyChangeList_t;
-+
-+/*values for the ExpStatus field */
-+#define MPI2_EVENT_SAS_TOPO_ES_NO_EXPANDER                  (0x00)
-+#define MPI2_EVENT_SAS_TOPO_ES_ADDED                        (0x01)
-+#define MPI2_EVENT_SAS_TOPO_ES_NOT_RESPONDING               (0x02)
-+#define MPI2_EVENT_SAS_TOPO_ES_RESPONDING                   (0x03)
-+#define MPI2_EVENT_SAS_TOPO_ES_DELAY_NOT_RESPONDING         (0x04)
-+
-+/*defines for the LinkRate field */
-+#define MPI2_EVENT_SAS_TOPO_LR_CURRENT_MASK                 (0xF0)
-+#define MPI2_EVENT_SAS_TOPO_LR_CURRENT_SHIFT                (4)
-+#define MPI2_EVENT_SAS_TOPO_LR_PREV_MASK                    (0x0F)
-+#define MPI2_EVENT_SAS_TOPO_LR_PREV_SHIFT                   (0)
-+
-+#define MPI2_EVENT_SAS_TOPO_LR_UNKNOWN_LINK_RATE            (0x00)
-+#define MPI2_EVENT_SAS_TOPO_LR_PHY_DISABLED                 (0x01)
-+#define MPI2_EVENT_SAS_TOPO_LR_NEGOTIATION_FAILED           (0x02)
-+#define MPI2_EVENT_SAS_TOPO_LR_SATA_OOB_COMPLETE            (0x03)
-+#define MPI2_EVENT_SAS_TOPO_LR_PORT_SELECTOR                (0x04)
-+#define MPI2_EVENT_SAS_TOPO_LR_SMP_RESET_IN_PROGRESS        (0x05)
-+#define MPI2_EVENT_SAS_TOPO_LR_UNSUPPORTED_PHY              (0x06)
-+#define MPI2_EVENT_SAS_TOPO_LR_RATE_1_5                     (0x08)
-+#define MPI2_EVENT_SAS_TOPO_LR_RATE_3_0                     (0x09)
-+#define MPI2_EVENT_SAS_TOPO_LR_RATE_6_0                     (0x0A)
-+#define MPI25_EVENT_SAS_TOPO_LR_RATE_12_0                   (0x0B)
-+
-+/*values for the PhyStatus field */
-+#define MPI2_EVENT_SAS_TOPO_PHYSTATUS_VACANT                (0x80)
-+#define MPI2_EVENT_SAS_TOPO_PS_MULTIPLEX_CHANGE             (0x10)
-+/*values for the PhyStatus ReasonCode sub-field */
-+#define MPI2_EVENT_SAS_TOPO_RC_MASK                         (0x0F)
-+#define MPI2_EVENT_SAS_TOPO_RC_TARG_ADDED                   (0x01)
-+#define MPI2_EVENT_SAS_TOPO_RC_TARG_NOT_RESPONDING          (0x02)
-+#define MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED                  (0x03)
-+#define MPI2_EVENT_SAS_TOPO_RC_NO_CHANGE                    (0x04)
-+#define MPI2_EVENT_SAS_TOPO_RC_DELAY_NOT_RESPONDING         (0x05)
-+
-+/*SAS Enclosure Device Status Change Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_ENCL_DEV_STATUS_CHANGE {
-+	U16 EnclosureHandle;	/*0x00 */
-+	U8 ReasonCode;		/*0x02 */
-+	U8 PhysicalPort;	/*0x03 */
-+	U64 EnclosureLogicalID;	/*0x04 */
-+	U16 NumSlots;		/*0x0C */
-+	U16 StartSlot;		/*0x0E */
-+	U32 PhyBits;		/*0x10 */
-+} MPI2_EVENT_DATA_SAS_ENCL_DEV_STATUS_CHANGE,
-+	*PTR_MPI2_EVENT_DATA_SAS_ENCL_DEV_STATUS_CHANGE,
-+	Mpi2EventDataSasEnclDevStatusChange_t,
-+	*pMpi2EventDataSasEnclDevStatusChange_t;
-+
-+/*SAS Enclosure Device Status Change event ReasonCode values */
-+#define MPI2_EVENT_SAS_ENCL_RC_ADDED                (0x01)
-+#define MPI2_EVENT_SAS_ENCL_RC_NOT_RESPONDING       (0x02)
-+
-+/*SAS PHY Counter Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_PHY_COUNTER {
-+	U64 TimeStamp;		/*0x00 */
-+	U32 Reserved1;		/*0x08 */
-+	U8 PhyEventCode;	/*0x0C */
-+	U8 PhyNum;		/*0x0D */
-+	U16 Reserved2;		/*0x0E */
-+	U32 PhyEventInfo;	/*0x10 */
-+	U8 CounterType;		/*0x14 */
-+	U8 ThresholdWindow;	/*0x15 */
-+	U8 TimeUnits;		/*0x16 */
-+	U8 Reserved3;		/*0x17 */
-+	U32 EventThreshold;	/*0x18 */
-+	U16 ThresholdFlags;	/*0x1C */
-+	U16 Reserved4;		/*0x1E */
-+} MPI2_EVENT_DATA_SAS_PHY_COUNTER,
-+	*PTR_MPI2_EVENT_DATA_SAS_PHY_COUNTER,
-+	Mpi2EventDataSasPhyCounter_t,
-+	*pMpi2EventDataSasPhyCounter_t;
-+
-+/*use MPI2_SASPHY3_EVENT_CODE_ values from mpi2_cnfg.h
-+ *for the PhyEventCode field */
-+
-+/*use MPI2_SASPHY3_COUNTER_TYPE_ values from mpi2_cnfg.h
-+ *for the CounterType field */
-+
-+/*use MPI2_SASPHY3_TIME_UNITS_ values from mpi2_cnfg.h
-+ *for the TimeUnits field */
-+
-+/*use MPI2_SASPHY3_TFLAGS_ values from mpi2_cnfg.h
-+ *for the ThresholdFlags field */
-+
-+/*SAS Quiesce Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_QUIESCE {
-+	U8 ReasonCode;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U16 Reserved2;		/*0x02 */
-+	U32 Reserved3;		/*0x04 */
-+} MPI2_EVENT_DATA_SAS_QUIESCE,
-+	*PTR_MPI2_EVENT_DATA_SAS_QUIESCE,
-+	Mpi2EventDataSasQuiesce_t, *pMpi2EventDataSasQuiesce_t;
-+
-+/*SAS Quiesce Event data ReasonCode values */
-+#define MPI2_EVENT_SAS_QUIESCE_RC_STARTED                   (0x01)
-+#define MPI2_EVENT_SAS_QUIESCE_RC_COMPLETED                 (0x02)
-+
-+/*Host Based Discovery Phy Event data */
-+
-+typedef struct _MPI2_EVENT_HBD_PHY_SAS {
-+	U8 Flags;		/*0x00 */
-+	U8 NegotiatedLinkRate;	/*0x01 */
-+	U8 PhyNum;		/*0x02 */
-+	U8 PhysicalPort;	/*0x03 */
-+	U32 Reserved1;		/*0x04 */
-+	U8 InitialFrame[28];	/*0x08 */
-+} MPI2_EVENT_HBD_PHY_SAS, *PTR_MPI2_EVENT_HBD_PHY_SAS,
-+	Mpi2EventHbdPhySas_t, *pMpi2EventHbdPhySas_t;
-+
-+/*values for the Flags field */
-+#define MPI2_EVENT_HBD_SAS_FLAGS_FRAME_VALID        (0x02)
-+#define MPI2_EVENT_HBD_SAS_FLAGS_SATA_FRAME         (0x01)
-+
-+/*use MPI2_SAS_NEG_LINK_RATE_ defines from mpi2_cnfg.h
-+ *for the NegotiatedLinkRate field */
-+
-+typedef union _MPI2_EVENT_HBD_DESCRIPTOR {
-+	MPI2_EVENT_HBD_PHY_SAS Sas;
-+} MPI2_EVENT_HBD_DESCRIPTOR, *PTR_MPI2_EVENT_HBD_DESCRIPTOR,
-+	Mpi2EventHbdDescriptor_t, *pMpi2EventHbdDescriptor_t;
-+
-+typedef struct _MPI2_EVENT_DATA_HBD_PHY {
-+	U8 DescriptorType;	/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U16 Reserved2;		/*0x02 */
-+	U32 Reserved3;		/*0x04 */
-+	MPI2_EVENT_HBD_DESCRIPTOR Descriptor;	/*0x08 */
-+} MPI2_EVENT_DATA_HBD_PHY, *PTR_MPI2_EVENT_DATA_HBD_PHY,
-+	Mpi2EventDataHbdPhy_t,
-+	*pMpi2EventDataMpi2EventDataHbdPhy_t;
-+
-+/*values for the DescriptorType field */
-+#define MPI2_EVENT_HBD_DT_SAS               (0x01)
-+
-+/****************************************************************************
-+* EventAck message
-+****************************************************************************/
-+
-+/*EventAck Request message */
-+typedef struct _MPI2_EVENT_ACK_REQUEST {
-+	U16 Reserved1;		/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Event;		/*0x0C */
-+	U16 Reserved5;		/*0x0E */
-+	U32 EventContext;	/*0x10 */
-+} MPI2_EVENT_ACK_REQUEST, *PTR_MPI2_EVENT_ACK_REQUEST,
-+	Mpi2EventAckRequest_t, *pMpi2EventAckRequest_t;
-+
-+/*EventAck Reply message */
-+typedef struct _MPI2_EVENT_ACK_REPLY {
-+	U16 Reserved1;		/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+} MPI2_EVENT_ACK_REPLY, *PTR_MPI2_EVENT_ACK_REPLY,
-+	Mpi2EventAckReply_t, *pMpi2EventAckReply_t;
-+
-+/****************************************************************************
-+* SendHostMessage message
-+****************************************************************************/
-+
-+/*SendHostMessage Request message */
-+typedef struct _MPI2_SEND_HOST_MESSAGE_REQUEST {
-+	U16 HostDataLength;	/*0x00 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved1;		/*0x04 */
-+	U8 Reserved2;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+	U8 Reserved4;		/*0x0C */
-+	U8 DestVF_ID;		/*0x0D */
-+	U16 Reserved5;		/*0x0E */
-+	U32 Reserved6;		/*0x10 */
-+	U32 Reserved7;		/*0x14 */
-+	U32 Reserved8;		/*0x18 */
-+	U32 Reserved9;		/*0x1C */
-+	U32 Reserved10;		/*0x20 */
-+	U32 HostData[1];	/*0x24 */
-+} MPI2_SEND_HOST_MESSAGE_REQUEST,
-+	*PTR_MPI2_SEND_HOST_MESSAGE_REQUEST,
-+	Mpi2SendHostMessageRequest_t,
-+	*pMpi2SendHostMessageRequest_t;
-+
-+/*SendHostMessage Reply message */
-+typedef struct _MPI2_SEND_HOST_MESSAGE_REPLY {
-+	U16 HostDataLength;	/*0x00 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved1;		/*0x04 */
-+	U8 Reserved2;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved3;		/*0x0A */
-+	U16 Reserved4;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+} MPI2_SEND_HOST_MESSAGE_REPLY, *PTR_MPI2_SEND_HOST_MESSAGE_REPLY,
-+	Mpi2SendHostMessageReply_t, *pMpi2SendHostMessageReply_t;
-+
-+/****************************************************************************
-+* FWDownload message
-+****************************************************************************/
-+
-+/*MPI v2.0 FWDownload Request message */
-+typedef struct _MPI2_FW_DOWNLOAD_REQUEST {
-+	U8 ImageType;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U32 TotalImageSize;	/*0x0C */
-+	U32 Reserved5;		/*0x10 */
-+	MPI2_MPI_SGE_UNION SGL;	/*0x14 */
-+} MPI2_FW_DOWNLOAD_REQUEST, *PTR_MPI2_FW_DOWNLOAD_REQUEST,
-+	Mpi2FWDownloadRequest, *pMpi2FWDownloadRequest;
-+
-+#define MPI2_FW_DOWNLOAD_MSGFLGS_LAST_SEGMENT   (0x01)
-+
-+#define MPI2_FW_DOWNLOAD_ITYPE_FW                   (0x01)
-+#define MPI2_FW_DOWNLOAD_ITYPE_BIOS                 (0x02)
-+#define MPI2_FW_DOWNLOAD_ITYPE_MANUFACTURING        (0x06)
-+#define MPI2_FW_DOWNLOAD_ITYPE_CONFIG_1             (0x07)
-+#define MPI2_FW_DOWNLOAD_ITYPE_CONFIG_2             (0x08)
-+#define MPI2_FW_DOWNLOAD_ITYPE_MEGARAID             (0x09)
-+#define MPI2_FW_DOWNLOAD_ITYPE_COMPLETE             (0x0A)
-+#define MPI2_FW_DOWNLOAD_ITYPE_COMMON_BOOT_BLOCK    (0x0B)
-+#define MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC (0xF0)
-+
-+/*MPI v2.0 FWDownload TransactionContext Element */
-+typedef struct _MPI2_FW_DOWNLOAD_TCSGE {
-+	U8 Reserved1;		/*0x00 */
-+	U8 ContextSize;		/*0x01 */
-+	U8 DetailsLength;	/*0x02 */
-+	U8 Flags;		/*0x03 */
-+	U32 Reserved2;		/*0x04 */
-+	U32 ImageOffset;	/*0x08 */
-+	U32 ImageSize;		/*0x0C */
-+} MPI2_FW_DOWNLOAD_TCSGE, *PTR_MPI2_FW_DOWNLOAD_TCSGE,
-+	Mpi2FWDownloadTCSGE_t, *pMpi2FWDownloadTCSGE_t;
-+
-+/*MPI v2.5 FWDownload Request message */
-+typedef struct _MPI25_FW_DOWNLOAD_REQUEST {
-+	U8 ImageType;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U32 TotalImageSize;	/*0x0C */
-+	U32 Reserved5;		/*0x10 */
-+	U32 Reserved6;		/*0x14 */
-+	U32 ImageOffset;	/*0x18 */
-+	U32 ImageSize;		/*0x1C */
-+	MPI25_SGE_IO_UNION SGL;	/*0x20 */
-+} MPI25_FW_DOWNLOAD_REQUEST, *PTR_MPI25_FW_DOWNLOAD_REQUEST,
-+	Mpi25FWDownloadRequest, *pMpi25FWDownloadRequest;
-+
-+/*FWDownload Reply message */
-+typedef struct _MPI2_FW_DOWNLOAD_REPLY {
-+	U8 ImageType;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+} MPI2_FW_DOWNLOAD_REPLY, *PTR_MPI2_FW_DOWNLOAD_REPLY,
-+	Mpi2FWDownloadReply_t, *pMpi2FWDownloadReply_t;
-+
-+/****************************************************************************
-+* FWUpload message
-+****************************************************************************/
-+
-+/*MPI v2.0 FWUpload Request message */
-+typedef struct _MPI2_FW_UPLOAD_REQUEST {
-+	U8 ImageType;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U32 Reserved5;		/*0x0C */
-+	U32 Reserved6;		/*0x10 */
-+	MPI2_MPI_SGE_UNION SGL;	/*0x14 */
-+} MPI2_FW_UPLOAD_REQUEST, *PTR_MPI2_FW_UPLOAD_REQUEST,
-+	Mpi2FWUploadRequest_t, *pMpi2FWUploadRequest_t;
-+
-+#define MPI2_FW_UPLOAD_ITYPE_FW_CURRENT         (0x00)
-+#define MPI2_FW_UPLOAD_ITYPE_FW_FLASH           (0x01)
-+#define MPI2_FW_UPLOAD_ITYPE_BIOS_FLASH         (0x02)
-+#define MPI2_FW_UPLOAD_ITYPE_FW_BACKUP          (0x05)
-+#define MPI2_FW_UPLOAD_ITYPE_MANUFACTURING      (0x06)
-+#define MPI2_FW_UPLOAD_ITYPE_CONFIG_1           (0x07)
-+#define MPI2_FW_UPLOAD_ITYPE_CONFIG_2           (0x08)
-+#define MPI2_FW_UPLOAD_ITYPE_MEGARAID           (0x09)
-+#define MPI2_FW_UPLOAD_ITYPE_COMPLETE           (0x0A)
-+#define MPI2_FW_UPLOAD_ITYPE_COMMON_BOOT_BLOCK  (0x0B)
-+
-+/*MPI v2.0 FWUpload TransactionContext Element */
-+typedef struct _MPI2_FW_UPLOAD_TCSGE {
-+	U8 Reserved1;		/*0x00 */
-+	U8 ContextSize;		/*0x01 */
-+	U8 DetailsLength;	/*0x02 */
-+	U8 Flags;		/*0x03 */
-+	U32 Reserved2;		/*0x04 */
-+	U32 ImageOffset;	/*0x08 */
-+	U32 ImageSize;		/*0x0C */
-+} MPI2_FW_UPLOAD_TCSGE, *PTR_MPI2_FW_UPLOAD_TCSGE,
-+	Mpi2FWUploadTCSGE_t, *pMpi2FWUploadTCSGE_t;
-+
-+/*MPI v2.5 FWUpload Request message */
-+typedef struct _MPI25_FW_UPLOAD_REQUEST {
-+	U8 ImageType;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U32 Reserved5;		/*0x0C */
-+	U32 Reserved6;		/*0x10 */
-+	U32 Reserved7;		/*0x14 */
-+	U32 ImageOffset;	/*0x18 */
-+	U32 ImageSize;		/*0x1C */
-+	MPI25_SGE_IO_UNION SGL;	/*0x20 */
-+} MPI25_FW_UPLOAD_REQUEST, *PTR_MPI25_FW_UPLOAD_REQUEST,
-+	Mpi25FWUploadRequest_t, *pMpi25FWUploadRequest_t;
-+
-+/*FWUpload Reply message */
-+typedef struct _MPI2_FW_UPLOAD_REPLY {
-+	U8 ImageType;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+	U32 ActualImageSize;	/*0x14 */
-+} MPI2_FW_UPLOAD_REPLY, *PTR_MPI2_FW_UPLOAD_REPLY,
-+	Mpi2FWUploadReply_t, *pMPi2FWUploadReply_t;
-+
-+/*FW Image Header */
-+typedef struct _MPI2_FW_IMAGE_HEADER {
-+	U32 Signature;		/*0x00 */
-+	U32 Signature0;		/*0x04 */
-+	U32 Signature1;		/*0x08 */
-+	U32 Signature2;		/*0x0C */
-+	MPI2_VERSION_UNION MPIVersion;	/*0x10 */
-+	MPI2_VERSION_UNION FWVersion;	/*0x14 */
-+	MPI2_VERSION_UNION NVDATAVersion;	/*0x18 */
-+	MPI2_VERSION_UNION PackageVersion;	/*0x1C */
-+	U16 VendorID;		/*0x20 */
-+	U16 ProductID;		/*0x22 */
-+	U16 ProtocolFlags;	/*0x24 */
-+	U16 Reserved26;		/*0x26 */
-+	U32 IOCCapabilities;	/*0x28 */
-+	U32 ImageSize;		/*0x2C */
-+	U32 NextImageHeaderOffset;	/*0x30 */
-+	U32 Checksum;		/*0x34 */
-+	U32 Reserved38;		/*0x38 */
-+	U32 Reserved3C;		/*0x3C */
-+	U32 Reserved40;		/*0x40 */
-+	U32 Reserved44;		/*0x44 */
-+	U32 Reserved48;		/*0x48 */
-+	U32 Reserved4C;		/*0x4C */
-+	U32 Reserved50;		/*0x50 */
-+	U32 Reserved54;		/*0x54 */
-+	U32 Reserved58;		/*0x58 */
-+	U32 Reserved5C;		/*0x5C */
-+	U32 Reserved60;		/*0x60 */
-+	U32 FirmwareVersionNameWhat;	/*0x64 */
-+	U8 FirmwareVersionName[32];	/*0x68 */
-+	U32 VendorNameWhat;	/*0x88 */
-+	U8 VendorName[32];	/*0x8C */
-+	U32 PackageNameWhat;	/*0x88 */
-+	U8 PackageName[32];	/*0x8C */
-+	U32 ReservedD0;		/*0xD0 */
-+	U32 ReservedD4;		/*0xD4 */
-+	U32 ReservedD8;		/*0xD8 */
-+	U32 ReservedDC;		/*0xDC */
-+	U32 ReservedE0;		/*0xE0 */
-+	U32 ReservedE4;		/*0xE4 */
-+	U32 ReservedE8;		/*0xE8 */
-+	U32 ReservedEC;		/*0xEC */
-+	U32 ReservedF0;		/*0xF0 */
-+	U32 ReservedF4;		/*0xF4 */
-+	U32 ReservedF8;		/*0xF8 */
-+	U32 ReservedFC;		/*0xFC */
-+} MPI2_FW_IMAGE_HEADER, *PTR_MPI2_FW_IMAGE_HEADER,
-+	Mpi2FWImageHeader_t, *pMpi2FWImageHeader_t;
-+
-+/*Signature field */
-+#define MPI2_FW_HEADER_SIGNATURE_OFFSET         (0x00)
-+#define MPI2_FW_HEADER_SIGNATURE_MASK           (0xFF000000)
-+#define MPI2_FW_HEADER_SIGNATURE                (0xEA000000)
-+
-+/*Signature0 field */
-+#define MPI2_FW_HEADER_SIGNATURE0_OFFSET        (0x04)
-+#define MPI2_FW_HEADER_SIGNATURE0               (0x5AFAA55A)
-+
-+/*Signature1 field */
-+#define MPI2_FW_HEADER_SIGNATURE1_OFFSET        (0x08)
-+#define MPI2_FW_HEADER_SIGNATURE1               (0xA55AFAA5)
-+
-+/*Signature2 field */
-+#define MPI2_FW_HEADER_SIGNATURE2_OFFSET        (0x0C)
-+#define MPI2_FW_HEADER_SIGNATURE2               (0x5AA55AFA)
-+
-+/*defines for using the ProductID field */
-+#define MPI2_FW_HEADER_PID_TYPE_MASK            (0xF000)
-+#define MPI2_FW_HEADER_PID_TYPE_SAS             (0x2000)
-+
-+#define MPI2_FW_HEADER_PID_PROD_MASK                    (0x0F00)
-+#define MPI2_FW_HEADER_PID_PROD_A                       (0x0000)
-+#define MPI2_FW_HEADER_PID_PROD_TARGET_INITIATOR_SCSI   (0x0200)
-+#define MPI2_FW_HEADER_PID_PROD_IR_SCSI                 (0x0700)
-+
-+#define MPI2_FW_HEADER_PID_FAMILY_MASK          (0x00FF)
-+/*SAS ProductID Family bits */
-+#define MPI2_FW_HEADER_PID_FAMILY_2108_SAS      (0x0013)
-+#define MPI2_FW_HEADER_PID_FAMILY_2208_SAS      (0x0014)
-+#define MPI25_FW_HEADER_PID_FAMILY_3108_SAS     (0x0021)
-+
-+/*use MPI2_IOCFACTS_PROTOCOL_ defines for ProtocolFlags field */
-+
-+/*use MPI2_IOCFACTS_CAPABILITY_ defines for IOCCapabilities field */
-+
-+#define MPI2_FW_HEADER_IMAGESIZE_OFFSET         (0x2C)
-+#define MPI2_FW_HEADER_NEXTIMAGE_OFFSET         (0x30)
-+#define MPI2_FW_HEADER_VERNMHWAT_OFFSET         (0x64)
-+
-+#define MPI2_FW_HEADER_WHAT_SIGNATURE           (0x29232840)
-+
-+#define MPI2_FW_HEADER_SIZE                     (0x100)
-+
-+/*Extended Image Header */
-+typedef struct _MPI2_EXT_IMAGE_HEADER {
-+	U8 ImageType;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U16 Reserved2;		/*0x02 */
-+	U32 Checksum;		/*0x04 */
-+	U32 ImageSize;		/*0x08 */
-+	U32 NextImageHeaderOffset;	/*0x0C */
-+	U32 PackageVersion;	/*0x10 */
-+	U32 Reserved3;		/*0x14 */
-+	U32 Reserved4;		/*0x18 */
-+	U32 Reserved5;		/*0x1C */
-+	U8 IdentifyString[32];	/*0x20 */
-+} MPI2_EXT_IMAGE_HEADER, *PTR_MPI2_EXT_IMAGE_HEADER,
-+	Mpi2ExtImageHeader_t, *pMpi2ExtImageHeader_t;
-+
-+/*useful offsets */
-+#define MPI2_EXT_IMAGE_IMAGETYPE_OFFSET         (0x00)
-+#define MPI2_EXT_IMAGE_IMAGESIZE_OFFSET         (0x08)
-+#define MPI2_EXT_IMAGE_NEXTIMAGE_OFFSET         (0x0C)
-+
-+#define MPI2_EXT_IMAGE_HEADER_SIZE              (0x40)
-+
-+/*defines for the ImageType field */
-+#define MPI2_EXT_IMAGE_TYPE_UNSPECIFIED             (0x00)
-+#define MPI2_EXT_IMAGE_TYPE_FW                      (0x01)
-+#define MPI2_EXT_IMAGE_TYPE_NVDATA                  (0x03)
-+#define MPI2_EXT_IMAGE_TYPE_BOOTLOADER              (0x04)
-+#define MPI2_EXT_IMAGE_TYPE_INITIALIZATION          (0x05)
-+#define MPI2_EXT_IMAGE_TYPE_FLASH_LAYOUT            (0x06)
-+#define MPI2_EXT_IMAGE_TYPE_SUPPORTED_DEVICES       (0x07)
-+#define MPI2_EXT_IMAGE_TYPE_MEGARAID                (0x08)
-+#define MPI2_EXT_IMAGE_TYPE_MIN_PRODUCT_SPECIFIC    (0x80)
-+#define MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC    (0xFF)
-+
-+#define MPI2_EXT_IMAGE_TYPE_MAX (MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC)
-+
-+/*FLASH Layout Extended Image Data */
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check RegionsPerLayout at runtime.
++static void
++_base_sas_log_info(struct MPT3SAS_ADAPTER *ioc , u32 log_info)
++{
++	union loginfo_type {
++		u32	loginfo;
++		struct {
++			u32	subcode:16;
++			u32	code:8;
++			u32	originator:4;
++			u32	bus_type:4;
++		} dw;
++	};
++	union loginfo_type sas_loginfo;
++	char *originator_str = NULL;
++
++	sas_loginfo.loginfo = log_info;
++	if (sas_loginfo.dw.bus_type != 3 /*SAS*/)
++		return;
++
++	/* each nexus loss loginfo */
++	if (log_info == 0x31170000)
++		return;
++
++	/* eat the loginfos associated with task aborts */
++	if (ioc->ignore_loginfos && (log_info == 0x30050000 || log_info ==
++	    0x31140000 || log_info == 0x31130000))
++		return;
++
++	switch (sas_loginfo.dw.originator) {
++	case 0:
++		originator_str = "IOP";
++		break;
++	case 1:
++		originator_str = "PL";
++		break;
++	case 2:
++		originator_str = "IR";
++		break;
++	}
++
++	pr_warn(MPT3SAS_FMT
++		"log_info(0x%08x): originator(%s), code(0x%02x), sub_code(0x%04x)\n",
++		ioc->name, log_info,
++	     originator_str, sas_loginfo.dw.code,
++	     sas_loginfo.dw.subcode);
++}
++
++/**
++ * _base_display_reply_info -
++ * @ioc: per adapter object
++ * @smid: system request message index
++ * @msix_index: MSIX table index supplied by the OS
++ * @reply: reply message frame(lower 32bit addr)
++ *
++ * Return nothing.
 + */
-+#ifndef MPI2_FLASH_NUMBER_OF_REGIONS
-+#define MPI2_FLASH_NUMBER_OF_REGIONS        (1)
-+#endif
++static void
++_base_display_reply_info(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
++	u32 reply)
++{
++	MPI2DefaultReply_t *mpi_reply;
++	u16 ioc_status;
++	u32 loginfo = 0;
 +
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check NumberOfLayouts at runtime.
++	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
++	if (unlikely(!mpi_reply)) {
++		pr_err(MPT3SAS_FMT "mpi_reply not valid at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		return;
++	}
++	ioc_status = le16_to_cpu(mpi_reply->IOCStatus);
++#ifdef CONFIG_SCSI_MPT3SAS_LOGGING
++	if ((ioc_status & MPI2_IOCSTATUS_MASK) &&
++	    (ioc->logging_level & MPT_DEBUG_REPLY)) {
++		_base_sas_ioc_info(ioc , mpi_reply,
++		   mpt3sas_base_get_msg_frame(ioc, smid));
++	}
++#endif
++	if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE) {
++		loginfo = le32_to_cpu(mpi_reply->IOCLogInfo);
++		_base_sas_log_info(ioc, loginfo);
++	}
++
++	if (ioc_status || loginfo) {
++		ioc_status &= MPI2_IOCSTATUS_MASK;
++		mpt3sas_trigger_mpi(ioc, ioc_status, loginfo);
++	}
++}
++
++/**
++ * mpt3sas_base_done - base internal command completion routine
++ * @ioc: per adapter object
++ * @smid: system request message index
++ * @msix_index: MSIX table index supplied by the OS
++ * @reply: reply message frame(lower 32bit addr)
++ *
++ * Return 1 meaning mf should be freed from _base_interrupt
++ *        0 means the mf is freed from this function.
 + */
-+#ifndef MPI2_FLASH_NUMBER_OF_LAYOUTS
-+#define MPI2_FLASH_NUMBER_OF_LAYOUTS        (1)
-+#endif
++u8
++mpt3sas_base_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
++	u32 reply)
++{
++	MPI2DefaultReply_t *mpi_reply;
 +
-+typedef struct _MPI2_FLASH_REGION {
-+	U8 RegionType;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U16 Reserved2;		/*0x02 */
-+	U32 RegionOffset;	/*0x04 */
-+	U32 RegionSize;		/*0x08 */
-+	U32 Reserved3;		/*0x0C */
-+} MPI2_FLASH_REGION, *PTR_MPI2_FLASH_REGION,
-+	Mpi2FlashRegion_t, *pMpi2FlashRegion_t;
++	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
++	if (mpi_reply && mpi_reply->Function == MPI2_FUNCTION_EVENT_ACK)
++		return 1;
 +
-+typedef struct _MPI2_FLASH_LAYOUT {
-+	U32 FlashSize;		/*0x00 */
-+	U32 Reserved1;		/*0x04 */
-+	U32 Reserved2;		/*0x08 */
-+	U32 Reserved3;		/*0x0C */
-+	MPI2_FLASH_REGION Region[MPI2_FLASH_NUMBER_OF_REGIONS];	/*0x10 */
-+} MPI2_FLASH_LAYOUT, *PTR_MPI2_FLASH_LAYOUT,
-+	Mpi2FlashLayout_t, *pMpi2FlashLayout_t;
++	if (ioc->base_cmds.status == MPT3_CMD_NOT_USED)
++		return 1;
 +
-+typedef struct _MPI2_FLASH_LAYOUT_DATA {
-+	U8 ImageRevision;	/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 SizeOfRegion;	/*0x02 */
-+	U8 Reserved2;		/*0x03 */
-+	U16 NumberOfLayouts;	/*0x04 */
-+	U16 RegionsPerLayout;	/*0x06 */
-+	U16 MinimumSectorAlignment;	/*0x08 */
-+	U16 Reserved3;		/*0x0A */
-+	U32 Reserved4;		/*0x0C */
-+	MPI2_FLASH_LAYOUT Layout[MPI2_FLASH_NUMBER_OF_LAYOUTS];	/*0x10 */
-+} MPI2_FLASH_LAYOUT_DATA, *PTR_MPI2_FLASH_LAYOUT_DATA,
-+	Mpi2FlashLayoutData_t, *pMpi2FlashLayoutData_t;
++	ioc->base_cmds.status |= MPT3_CMD_COMPLETE;
++	if (mpi_reply) {
++		ioc->base_cmds.status |= MPT3_CMD_REPLY_VALID;
++		memcpy(ioc->base_cmds.reply, mpi_reply, mpi_reply->MsgLength*4);
++	}
++	ioc->base_cmds.status &= ~MPT3_CMD_PENDING;
 +
-+/*defines for the RegionType field */
-+#define MPI2_FLASH_REGION_UNUSED                (0x00)
-+#define MPI2_FLASH_REGION_FIRMWARE              (0x01)
-+#define MPI2_FLASH_REGION_BIOS                  (0x02)
-+#define MPI2_FLASH_REGION_NVDATA                (0x03)
-+#define MPI2_FLASH_REGION_FIRMWARE_BACKUP       (0x05)
-+#define MPI2_FLASH_REGION_MFG_INFORMATION       (0x06)
-+#define MPI2_FLASH_REGION_CONFIG_1              (0x07)
-+#define MPI2_FLASH_REGION_CONFIG_2              (0x08)
-+#define MPI2_FLASH_REGION_MEGARAID              (0x09)
-+#define MPI2_FLASH_REGION_INIT                  (0x0A)
++	complete(&ioc->base_cmds.done);
++	return 1;
++}
 +
-+/*ImageRevision */
-+#define MPI2_FLASH_LAYOUT_IMAGE_REVISION        (0x00)
-+
-+/*Supported Devices Extended Image Data */
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check NumberOfDevices at runtime.
++/**
++ * _base_async_event - main callback handler for firmware asyn events
++ * @ioc: per adapter object
++ * @msix_index: MSIX table index supplied by the OS
++ * @reply: reply message frame(lower 32bit addr)
++ *
++ * Return 1 meaning mf should be freed from _base_interrupt
++ *        0 means the mf is freed from this function.
 + */
-+#ifndef MPI2_SUPPORTED_DEVICES_IMAGE_NUM_DEVICES
-+#define MPI2_SUPPORTED_DEVICES_IMAGE_NUM_DEVICES    (1)
++static u8
++_base_async_event(struct MPT3SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
++{
++	Mpi2EventNotificationReply_t *mpi_reply;
++	Mpi2EventAckRequest_t *ack_request;
++	u16 smid;
++
++	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
++	if (!mpi_reply)
++		return 1;
++	if (mpi_reply->Function != MPI2_FUNCTION_EVENT_NOTIFICATION)
++		return 1;
++#ifdef CONFIG_SCSI_MPT3SAS_LOGGING
++	_base_display_event_data(ioc, mpi_reply);
++#endif
++	if (!(mpi_reply->AckRequired & MPI2_EVENT_NOTIFICATION_ACK_REQUIRED))
++		goto out;
++	smid = mpt3sas_base_get_smid(ioc, ioc->base_cb_idx);
++	if (!smid) {
++		pr_err(MPT3SAS_FMT "%s: failed obtaining a smid\n",
++		    ioc->name, __func__);
++		goto out;
++	}
++
++	ack_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	memset(ack_request, 0, sizeof(Mpi2EventAckRequest_t));
++	ack_request->Function = MPI2_FUNCTION_EVENT_ACK;
++	ack_request->Event = mpi_reply->Event;
++	ack_request->EventContext = mpi_reply->EventContext;
++	ack_request->VF_ID = 0;  /* TODO */
++	ack_request->VP_ID = 0;
++	mpt3sas_base_put_smid_default(ioc, smid);
++
++ out:
++
++	/* scsih callback handler */
++	mpt3sas_scsih_event_callback(ioc, msix_index, reply);
++
++	/* ctl callback handler */
++	mpt3sas_ctl_event_callback(ioc, msix_index, reply);
++
++	return 1;
++}
++
++/**
++ * _base_get_cb_idx - obtain the callback index
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Return callback index.
++ */
++static u8
++_base_get_cb_idx(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	int i;
++	u8 cb_idx;
++
++	if (smid < ioc->hi_priority_smid) {
++		i = smid - 1;
++		cb_idx = ioc->scsi_lookup[i].cb_idx;
++	} else if (smid < ioc->internal_smid) {
++		i = smid - ioc->hi_priority_smid;
++		cb_idx = ioc->hpr_lookup[i].cb_idx;
++	} else if (smid <= ioc->hba_queue_depth) {
++		i = smid - ioc->internal_smid;
++		cb_idx = ioc->internal_lookup[i].cb_idx;
++	} else
++		cb_idx = 0xFF;
++	return cb_idx;
++}
++
++/**
++ * _base_mask_interrupts - disable interrupts
++ * @ioc: per adapter object
++ *
++ * Disabling ResetIRQ, Reply and Doorbell Interrupts
++ *
++ * Return nothing.
++ */
++static void
++_base_mask_interrupts(struct MPT3SAS_ADAPTER *ioc)
++{
++	u32 him_register;
++
++	ioc->mask_interrupts = 1;
++	him_register = readl(&ioc->chip->HostInterruptMask);
++	him_register |= MPI2_HIM_DIM + MPI2_HIM_RIM + MPI2_HIM_RESET_IRQ_MASK;
++	writel(him_register, &ioc->chip->HostInterruptMask);
++	readl(&ioc->chip->HostInterruptMask);
++}
++
++/**
++ * _base_unmask_interrupts - enable interrupts
++ * @ioc: per adapter object
++ *
++ * Enabling only Reply Interrupts
++ *
++ * Return nothing.
++ */
++static void
++_base_unmask_interrupts(struct MPT3SAS_ADAPTER *ioc)
++{
++	u32 him_register;
++
++	him_register = readl(&ioc->chip->HostInterruptMask);
++	him_register &= ~MPI2_HIM_RIM;
++	writel(him_register, &ioc->chip->HostInterruptMask);
++	ioc->mask_interrupts = 0;
++}
++
++union reply_descriptor {
++	u64 word;
++	struct {
++		u32 low;
++		u32 high;
++	} u;
++};
++
++/**
++ * _base_interrupt - MPT adapter (IOC) specific interrupt handler.
++ * @irq: irq number (not used)
++ * @bus_id: bus identifier cookie == pointer to MPT_ADAPTER structure
++ * @r: pt_regs pointer (not used)
++ *
++ * Return IRQ_HANDLE if processed, else IRQ_NONE.
++ */
++static irqreturn_t
++_base_interrupt(int irq, void *bus_id)
++{
++	struct adapter_reply_queue *reply_q = bus_id;
++	union reply_descriptor rd;
++	u32 completed_cmds;
++	u8 request_desript_type;
++	u16 smid;
++	u8 cb_idx;
++	u32 reply;
++	u8 msix_index = reply_q->msix_index;
++	struct MPT3SAS_ADAPTER *ioc = reply_q->ioc;
++	Mpi2ReplyDescriptorsUnion_t *rpf;
++	u8 rc;
++
++	if (ioc->mask_interrupts)
++		return IRQ_NONE;
++
++	if (!atomic_add_unless(&reply_q->busy, 1, 1))
++		return IRQ_NONE;
++
++	rpf = &reply_q->reply_post_free[reply_q->reply_post_host_index];
++	request_desript_type = rpf->Default.ReplyFlags
++	     & MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
++	if (request_desript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED) {
++		atomic_dec(&reply_q->busy);
++		return IRQ_NONE;
++	}
++
++	completed_cmds = 0;
++	cb_idx = 0xFF;
++	do {
++		rd.word = le64_to_cpu(rpf->Words);
++		if (rd.u.low == UINT_MAX || rd.u.high == UINT_MAX)
++			goto out;
++		reply = 0;
++		smid = le16_to_cpu(rpf->Default.DescriptorTypeDependent1);
++		if (request_desript_type ==
++		    MPI25_RPY_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO_SUCCESS ||
++		    request_desript_type ==
++		    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS) {
++			cb_idx = _base_get_cb_idx(ioc, smid);
++			if ((likely(cb_idx < MPT_MAX_CALLBACKS)) &&
++			    (likely(mpt_callbacks[cb_idx] != NULL))) {
++				rc = mpt_callbacks[cb_idx](ioc, smid,
++				    msix_index, 0);
++				if (rc)
++					mpt3sas_base_free_smid(ioc, smid);
++			}
++		} else if (request_desript_type ==
++		    MPI2_RPY_DESCRIPT_FLAGS_ADDRESS_REPLY) {
++			reply = le32_to_cpu(
++			    rpf->AddressReply.ReplyFrameAddress);
++			if (reply > ioc->reply_dma_max_address ||
++			    reply < ioc->reply_dma_min_address)
++				reply = 0;
++			if (smid) {
++				cb_idx = _base_get_cb_idx(ioc, smid);
++				if ((likely(cb_idx < MPT_MAX_CALLBACKS)) &&
++				    (likely(mpt_callbacks[cb_idx] != NULL))) {
++					rc = mpt_callbacks[cb_idx](ioc, smid,
++					    msix_index, reply);
++					if (reply)
++						_base_display_reply_info(ioc,
++						    smid, msix_index, reply);
++					if (rc)
++						mpt3sas_base_free_smid(ioc,
++						    smid);
++				}
++			} else {
++				_base_async_event(ioc, msix_index, reply);
++			}
++
++			/* reply free queue handling */
++			if (reply) {
++				ioc->reply_free_host_index =
++				    (ioc->reply_free_host_index ==
++				    (ioc->reply_free_queue_depth - 1)) ?
++				    0 : ioc->reply_free_host_index + 1;
++				ioc->reply_free[ioc->reply_free_host_index] =
++				    cpu_to_le32(reply);
++				wmb();
++				writel(ioc->reply_free_host_index,
++				    &ioc->chip->ReplyFreeHostIndex);
++			}
++		}
++
++		rpf->Words = cpu_to_le64(ULLONG_MAX);
++		reply_q->reply_post_host_index =
++		    (reply_q->reply_post_host_index ==
++		    (ioc->reply_post_queue_depth - 1)) ? 0 :
++		    reply_q->reply_post_host_index + 1;
++		request_desript_type =
++		    reply_q->reply_post_free[reply_q->reply_post_host_index].
++		    Default.ReplyFlags & MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
++		completed_cmds++;
++		if (request_desript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
++			goto out;
++		if (!reply_q->reply_post_host_index)
++			rpf = reply_q->reply_post_free;
++		else
++			rpf++;
++	} while (1);
++
++ out:
++
++	if (!completed_cmds) {
++		atomic_dec(&reply_q->busy);
++		return IRQ_NONE;
++	}
++
++	wmb();
++	writel(reply_q->reply_post_host_index | (msix_index <<
++	    MPI2_RPHI_MSIX_INDEX_SHIFT), &ioc->chip->ReplyPostHostIndex);
++	atomic_dec(&reply_q->busy);
++	return IRQ_HANDLED;
++}
++
++/**
++ * _base_is_controller_msix_enabled - is controller support muli-reply queues
++ * @ioc: per adapter object
++ *
++ */
++static inline int
++_base_is_controller_msix_enabled(struct MPT3SAS_ADAPTER *ioc)
++{
++	return (ioc->facts.IOCCapabilities &
++	    MPI2_IOCFACTS_CAPABILITY_MSI_X_INDEX) && ioc->msix_enable;
++}
++
++/**
++ * mpt3sas_base_flush_reply_queues - flushing the MSIX reply queues
++ * @ioc: per adapter object
++ * Context: ISR conext
++ *
++ * Called when a Task Management request has completed. We want
++ * to flush the other reply queues so all the outstanding IO has been
++ * completed back to OS before we process the TM completetion.
++ *
++ * Return nothing.
++ */
++void
++mpt3sas_base_flush_reply_queues(struct MPT3SAS_ADAPTER *ioc)
++{
++	struct adapter_reply_queue *reply_q;
++
++	/* If MSIX capability is turned off
++	 * then multi-queues are not enabled
++	 */
++	if (!_base_is_controller_msix_enabled(ioc))
++		return;
++
++	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
++		if (ioc->shost_recovery)
++			return;
++		/* TMs are on msix_index == 0 */
++		if (reply_q->msix_index == 0)
++			continue;
++		_base_interrupt(reply_q->vector, (void *)reply_q);
++	}
++}
++
++/**
++ * mpt3sas_base_release_callback_handler - clear interrupt callback handler
++ * @cb_idx: callback index
++ *
++ * Return nothing.
++ */
++void
++mpt3sas_base_release_callback_handler(u8 cb_idx)
++{
++	mpt_callbacks[cb_idx] = NULL;
++}
++
++/**
++ * mpt3sas_base_register_callback_handler - obtain index for the interrupt callback handler
++ * @cb_func: callback function
++ *
++ * Returns cb_func.
++ */
++u8
++mpt3sas_base_register_callback_handler(MPT_CALLBACK cb_func)
++{
++	u8 cb_idx;
++
++	for (cb_idx = MPT_MAX_CALLBACKS-1; cb_idx; cb_idx--)
++		if (mpt_callbacks[cb_idx] == NULL)
++			break;
++
++	mpt_callbacks[cb_idx] = cb_func;
++	return cb_idx;
++}
++
++/**
++ * mpt3sas_base_initialize_callback_handler - initialize the interrupt callback handler
++ *
++ * Return nothing.
++ */
++void
++mpt3sas_base_initialize_callback_handler(void)
++{
++	u8 cb_idx;
++
++	for (cb_idx = 0; cb_idx < MPT_MAX_CALLBACKS; cb_idx++)
++		mpt3sas_base_release_callback_handler(cb_idx);
++}
++
++
++/**
++ * _base_build_zero_len_sge - build zero length sg entry
++ * @ioc: per adapter object
++ * @paddr: virtual address for SGE
++ *
++ * Create a zero length scatter gather entry to insure the IOCs hardware has
++ * something to use if the target device goes brain dead and tries
++ * to send data even when none is asked for.
++ *
++ * Return nothing.
++ */
++static void
++_base_build_zero_len_sge(struct MPT3SAS_ADAPTER *ioc, void *paddr)
++{
++	u32 flags_length = (u32)((MPI2_SGE_FLAGS_LAST_ELEMENT |
++	    MPI2_SGE_FLAGS_END_OF_BUFFER | MPI2_SGE_FLAGS_END_OF_LIST |
++	    MPI2_SGE_FLAGS_SIMPLE_ELEMENT) <<
++	    MPI2_SGE_FLAGS_SHIFT);
++	ioc->base_add_sg_single(paddr, flags_length, -1);
++}
++
++/**
++ * _base_add_sg_single_32 - Place a simple 32 bit SGE at address pAddr.
++ * @paddr: virtual address for SGE
++ * @flags_length: SGE flags and data transfer length
++ * @dma_addr: Physical address
++ *
++ * Return nothing.
++ */
++static void
++_base_add_sg_single_32(void *paddr, u32 flags_length, dma_addr_t dma_addr)
++{
++	Mpi2SGESimple32_t *sgel = paddr;
++
++	flags_length |= (MPI2_SGE_FLAGS_32_BIT_ADDRESSING |
++	    MPI2_SGE_FLAGS_SYSTEM_ADDRESS) << MPI2_SGE_FLAGS_SHIFT;
++	sgel->FlagsLength = cpu_to_le32(flags_length);
++	sgel->Address = cpu_to_le32(dma_addr);
++}
++
++
++/**
++ * _base_add_sg_single_64 - Place a simple 64 bit SGE at address pAddr.
++ * @paddr: virtual address for SGE
++ * @flags_length: SGE flags and data transfer length
++ * @dma_addr: Physical address
++ *
++ * Return nothing.
++ */
++static void
++_base_add_sg_single_64(void *paddr, u32 flags_length, dma_addr_t dma_addr)
++{
++	Mpi2SGESimple64_t *sgel = paddr;
++
++	flags_length |= (MPI2_SGE_FLAGS_64_BIT_ADDRESSING |
++	    MPI2_SGE_FLAGS_SYSTEM_ADDRESS) << MPI2_SGE_FLAGS_SHIFT;
++	sgel->FlagsLength = cpu_to_le32(flags_length);
++	sgel->Address = cpu_to_le64(dma_addr);
++}
++
++/**
++ * _base_get_chain_buffer_tracker - obtain chain tracker
++ * @ioc: per adapter object
++ * @smid: smid associated to an IO request
++ *
++ * Returns chain tracker(from ioc->free_chain_list)
++ */
++static struct chain_tracker *
++_base_get_chain_buffer_tracker(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	struct chain_tracker *chain_req;
++	unsigned long flags;
++
++	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
++	if (list_empty(&ioc->free_chain_list)) {
++		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++		dfailprintk(ioc, pr_warn(MPT3SAS_FMT
++			"chain buffers not available\n", ioc->name));
++		return NULL;
++	}
++	chain_req = list_entry(ioc->free_chain_list.next,
++	    struct chain_tracker, tracker_list);
++	list_del_init(&chain_req->tracker_list);
++	list_add_tail(&chain_req->tracker_list,
++	    &ioc->scsi_lookup[smid - 1].chain_list);
++	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++	return chain_req;
++}
++
++
++/**
++ * _base_build_sg - build generic sg
++ * @ioc: per adapter object
++ * @psge: virtual address for SGE
++ * @data_out_dma: physical address for WRITES
++ * @data_out_sz: data xfer size for WRITES
++ * @data_in_dma: physical address for READS
++ * @data_in_sz: data xfer size for READS
++ *
++ * Return nothing.
++ */
++static void
++_base_build_sg(struct MPT3SAS_ADAPTER *ioc, void *psge,
++	dma_addr_t data_out_dma, size_t data_out_sz, dma_addr_t data_in_dma,
++	size_t data_in_sz)
++{
++	u32 sgl_flags;
++
++	if (!data_out_sz && !data_in_sz) {
++		_base_build_zero_len_sge(ioc, psge);
++		return;
++	}
++
++	if (data_out_sz && data_in_sz) {
++		/* WRITE sgel first */
++		sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI2_SGE_FLAGS_END_OF_BUFFER | MPI2_SGE_FLAGS_HOST_TO_IOC);
++		sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
++		ioc->base_add_sg_single(psge, sgl_flags |
++		    data_out_sz, data_out_dma);
++
++		/* incr sgel */
++		psge += ioc->sge_size;
++
++		/* READ sgel last */
++		sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI2_SGE_FLAGS_LAST_ELEMENT | MPI2_SGE_FLAGS_END_OF_BUFFER |
++		    MPI2_SGE_FLAGS_END_OF_LIST);
++		sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
++		ioc->base_add_sg_single(psge, sgl_flags |
++		    data_in_sz, data_in_dma);
++	} else if (data_out_sz) /* WRITE */ {
++		sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI2_SGE_FLAGS_LAST_ELEMENT | MPI2_SGE_FLAGS_END_OF_BUFFER |
++		    MPI2_SGE_FLAGS_END_OF_LIST | MPI2_SGE_FLAGS_HOST_TO_IOC);
++		sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
++		ioc->base_add_sg_single(psge, sgl_flags |
++		    data_out_sz, data_out_dma);
++	} else if (data_in_sz) /* READ */ {
++		sgl_flags = (MPI2_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI2_SGE_FLAGS_LAST_ELEMENT | MPI2_SGE_FLAGS_END_OF_BUFFER |
++		    MPI2_SGE_FLAGS_END_OF_LIST);
++		sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
++		ioc->base_add_sg_single(psge, sgl_flags |
++		    data_in_sz, data_in_dma);
++	}
++}
++
++/* IEEE format sgls */
++
++/**
++ * _base_add_sg_single_ieee - add sg element for IEEE format
++ * @paddr: virtual address for SGE
++ * @flags: SGE flags
++ * @chain_offset: number of 128 byte elements from start of segment
++ * @length: data transfer length
++ * @dma_addr: Physical address
++ *
++ * Return nothing.
++ */
++static void
++_base_add_sg_single_ieee(void *paddr, u8 flags, u8 chain_offset, u32 length,
++	dma_addr_t dma_addr)
++{
++	Mpi25IeeeSgeChain64_t *sgel = paddr;
++
++	sgel->Flags = flags;
++	sgel->NextChainOffset = chain_offset;
++	sgel->Length = cpu_to_le32(length);
++	sgel->Address = cpu_to_le64(dma_addr);
++}
++
++/**
++ * _base_build_zero_len_sge_ieee - build zero length sg entry for IEEE format
++ * @ioc: per adapter object
++ * @paddr: virtual address for SGE
++ *
++ * Create a zero length scatter gather entry to insure the IOCs hardware has
++ * something to use if the target device goes brain dead and tries
++ * to send data even when none is asked for.
++ *
++ * Return nothing.
++ */
++static void
++_base_build_zero_len_sge_ieee(struct MPT3SAS_ADAPTER *ioc, void *paddr)
++{
++	u8 sgl_flags = (MPI2_IEEE_SGE_FLAGS_SIMPLE_ELEMENT |
++		MPI2_IEEE_SGE_FLAGS_SYSTEM_ADDR |
++		MPI25_IEEE_SGE_FLAGS_END_OF_LIST);
++	_base_add_sg_single_ieee(paddr, sgl_flags, 0, 0, -1);
++}
++
++/**
++ * _base_build_sg_scmd_ieee - main sg creation routine for IEEE format
++ * @ioc: per adapter object
++ * @scmd: scsi command
++ * @smid: system request message index
++ * Context: none.
++ *
++ * The main routine that builds scatter gather table from a given
++ * scsi request sent via the .queuecommand main handler.
++ *
++ * Returns 0 success, anything else error
++ */
++static int
++_base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
++	struct scsi_cmnd *scmd, u16 smid)
++{
++	Mpi2SCSIIORequest_t *mpi_request;
++	dma_addr_t chain_dma;
++	struct scatterlist *sg_scmd;
++	void *sg_local, *chain;
++	u32 chain_offset;
++	u32 chain_length;
++	u32 chain_flags;
++	int sges_left;
++	u32 sges_in_segment;
++	u8 simple_sgl_flags;
++	u8 simple_sgl_flags_last;
++	u8 chain_sgl_flags;
++	struct chain_tracker *chain_req;
++
++	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++
++	/* init scatter gather flags */
++	simple_sgl_flags = MPI2_IEEE_SGE_FLAGS_SIMPLE_ELEMENT |
++	    MPI2_IEEE_SGE_FLAGS_SYSTEM_ADDR;
++	simple_sgl_flags_last = simple_sgl_flags |
++	    MPI25_IEEE_SGE_FLAGS_END_OF_LIST;
++	chain_sgl_flags = MPI2_IEEE_SGE_FLAGS_CHAIN_ELEMENT |
++	    MPI2_IEEE_SGE_FLAGS_SYSTEM_ADDR;
++
++	sg_scmd = scsi_sglist(scmd);
++	sges_left = scsi_dma_map(scmd);
++	if (!sges_left) {
++		sdev_printk(KERN_ERR, scmd->device,
++			"pci_map_sg failed: request for %d bytes!\n",
++			scsi_bufflen(scmd));
++		return -ENOMEM;
++	}
++
++	sg_local = &mpi_request->SGL;
++	sges_in_segment = (ioc->request_sz -
++	    offsetof(Mpi2SCSIIORequest_t, SGL))/ioc->sge_size_ieee;
++	if (sges_left <= sges_in_segment)
++		goto fill_in_last_segment;
++
++	mpi_request->ChainOffset = (sges_in_segment - 1 /* chain element */) +
++	    (offsetof(Mpi2SCSIIORequest_t, SGL)/ioc->sge_size_ieee);
++
++	/* fill in main message segment when there is a chain following */
++	while (sges_in_segment > 1) {
++		_base_add_sg_single_ieee(sg_local, simple_sgl_flags, 0,
++		    sg_dma_len(sg_scmd), sg_dma_address(sg_scmd));
++		sg_scmd = sg_next(sg_scmd);
++		sg_local += ioc->sge_size_ieee;
++		sges_left--;
++		sges_in_segment--;
++	}
++
++	/* initializing the chain flags and pointers */
++	chain_flags = MPI2_SGE_FLAGS_CHAIN_ELEMENT << MPI2_SGE_FLAGS_SHIFT;
++	chain_req = _base_get_chain_buffer_tracker(ioc, smid);
++	if (!chain_req)
++		return -1;
++	chain = chain_req->chain_buffer;
++	chain_dma = chain_req->chain_buffer_dma;
++	do {
++		sges_in_segment = (sges_left <=
++		    ioc->max_sges_in_chain_message) ? sges_left :
++		    ioc->max_sges_in_chain_message;
++		chain_offset = (sges_left == sges_in_segment) ?
++		    0 : sges_in_segment;
++		chain_length = sges_in_segment * ioc->sge_size_ieee;
++		if (chain_offset)
++			chain_length += ioc->sge_size_ieee;
++		_base_add_sg_single_ieee(sg_local, chain_sgl_flags,
++		    chain_offset, chain_length, chain_dma);
++
++		sg_local = chain;
++		if (!chain_offset)
++			goto fill_in_last_segment;
++
++		/* fill in chain segments */
++		while (sges_in_segment) {
++			_base_add_sg_single_ieee(sg_local, simple_sgl_flags, 0,
++			    sg_dma_len(sg_scmd), sg_dma_address(sg_scmd));
++			sg_scmd = sg_next(sg_scmd);
++			sg_local += ioc->sge_size_ieee;
++			sges_left--;
++			sges_in_segment--;
++		}
++
++		chain_req = _base_get_chain_buffer_tracker(ioc, smid);
++		if (!chain_req)
++			return -1;
++		chain = chain_req->chain_buffer;
++		chain_dma = chain_req->chain_buffer_dma;
++	} while (1);
++
++
++ fill_in_last_segment:
++
++	/* fill the last segment */
++	while (sges_left) {
++		if (sges_left == 1)
++			_base_add_sg_single_ieee(sg_local,
++			    simple_sgl_flags_last, 0, sg_dma_len(sg_scmd),
++			    sg_dma_address(sg_scmd));
++		else
++			_base_add_sg_single_ieee(sg_local, simple_sgl_flags, 0,
++			    sg_dma_len(sg_scmd), sg_dma_address(sg_scmd));
++		sg_scmd = sg_next(sg_scmd);
++		sg_local += ioc->sge_size_ieee;
++		sges_left--;
++	}
++
++	return 0;
++}
++
++/**
++ * _base_build_sg_ieee - build generic sg for IEEE format
++ * @ioc: per adapter object
++ * @psge: virtual address for SGE
++ * @data_out_dma: physical address for WRITES
++ * @data_out_sz: data xfer size for WRITES
++ * @data_in_dma: physical address for READS
++ * @data_in_sz: data xfer size for READS
++ *
++ * Return nothing.
++ */
++static void
++_base_build_sg_ieee(struct MPT3SAS_ADAPTER *ioc, void *psge,
++	dma_addr_t data_out_dma, size_t data_out_sz, dma_addr_t data_in_dma,
++	size_t data_in_sz)
++{
++	u8 sgl_flags;
++
++	if (!data_out_sz && !data_in_sz) {
++		_base_build_zero_len_sge_ieee(ioc, psge);
++		return;
++	}
++
++	if (data_out_sz && data_in_sz) {
++		/* WRITE sgel first */
++		sgl_flags = MPI2_IEEE_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI2_IEEE_SGE_FLAGS_SYSTEM_ADDR;
++		_base_add_sg_single_ieee(psge, sgl_flags, 0, data_out_sz,
++		    data_out_dma);
++
++		/* incr sgel */
++		psge += ioc->sge_size_ieee;
++
++		/* READ sgel last */
++		sgl_flags |= MPI25_IEEE_SGE_FLAGS_END_OF_LIST;
++		_base_add_sg_single_ieee(psge, sgl_flags, 0, data_in_sz,
++		    data_in_dma);
++	} else if (data_out_sz) /* WRITE */ {
++		sgl_flags = MPI2_IEEE_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI25_IEEE_SGE_FLAGS_END_OF_LIST |
++		    MPI2_IEEE_SGE_FLAGS_SYSTEM_ADDR;
++		_base_add_sg_single_ieee(psge, sgl_flags, 0, data_out_sz,
++		    data_out_dma);
++	} else if (data_in_sz) /* READ */ {
++		sgl_flags = MPI2_IEEE_SGE_FLAGS_SIMPLE_ELEMENT |
++		    MPI25_IEEE_SGE_FLAGS_END_OF_LIST |
++		    MPI2_IEEE_SGE_FLAGS_SYSTEM_ADDR;
++		_base_add_sg_single_ieee(psge, sgl_flags, 0, data_in_sz,
++		    data_in_dma);
++	}
++}
++
++#define convert_to_kb(x) ((x) << (PAGE_SHIFT - 10))
++
++/**
++ * _base_config_dma_addressing - set dma addressing
++ * @ioc: per adapter object
++ * @pdev: PCI device struct
++ *
++ * Returns 0 for success, non-zero for failure.
++ */
++static int
++_base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
++{
++	struct sysinfo s;
++	char *desc = NULL;
++
++	if (sizeof(dma_addr_t) > 4) {
++		const uint64_t required_mask =
++		    dma_get_required_mask(&pdev->dev);
++		if ((required_mask > DMA_BIT_MASK(32)) &&
++		    !pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) &&
++		    !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64))) {
++			ioc->base_add_sg_single = &_base_add_sg_single_64;
++			ioc->sge_size = sizeof(Mpi2SGESimple64_t);
++			desc = "64";
++			goto out;
++		}
++	}
++
++	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))
++	    && !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
++		ioc->base_add_sg_single = &_base_add_sg_single_32;
++		ioc->sge_size = sizeof(Mpi2SGESimple32_t);
++		desc = "32";
++	} else
++		return -ENODEV;
++
++ out:
++	si_meminfo(&s);
++	pr_info(MPT3SAS_FMT
++		"%s BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
++		ioc->name, desc, convert_to_kb(s.totalram));
++
++	return 0;
++}
++
++/**
++ * _base_check_enable_msix - checks MSIX capabable.
++ * @ioc: per adapter object
++ *
++ * Check to see if card is capable of MSIX, and set number
++ * of available msix vectors
++ */
++static int
++_base_check_enable_msix(struct MPT3SAS_ADAPTER *ioc)
++{
++	int base;
++	u16 message_control;
++
++	base = pci_find_capability(ioc->pdev, PCI_CAP_ID_MSIX);
++	if (!base) {
++		dfailprintk(ioc, pr_info(MPT3SAS_FMT "msix not supported\n",
++			ioc->name));
++		return -EINVAL;
++	}
++
++	/* get msix vector count */
++
++	pci_read_config_word(ioc->pdev, base + 2, &message_control);
++	ioc->msix_vector_count = (message_control & 0x3FF) + 1;
++	if (ioc->msix_vector_count > 8)
++		ioc->msix_vector_count = 8;
++	dinitprintk(ioc, pr_info(MPT3SAS_FMT
++		"msix is supported, vector_count(%d)\n",
++		ioc->name, ioc->msix_vector_count));
++	return 0;
++}
++
++/**
++ * _base_free_irq - free irq
++ * @ioc: per adapter object
++ *
++ * Freeing respective reply_queue from the list.
++ */
++static void
++_base_free_irq(struct MPT3SAS_ADAPTER *ioc)
++{
++	struct adapter_reply_queue *reply_q, *next;
++
++	if (list_empty(&ioc->reply_queue_list))
++		return;
++
++	list_for_each_entry_safe(reply_q, next, &ioc->reply_queue_list, list) {
++		list_del(&reply_q->list);
++		synchronize_irq(reply_q->vector);
++		free_irq(reply_q->vector, reply_q);
++		kfree(reply_q);
++	}
++}
++
++/**
++ * _base_request_irq - request irq
++ * @ioc: per adapter object
++ * @index: msix index into vector table
++ * @vector: irq vector
++ *
++ * Inserting respective reply_queue into the list.
++ */
++static int
++_base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index, u32 vector)
++{
++	struct adapter_reply_queue *reply_q;
++	int r;
++
++	reply_q =  kzalloc(sizeof(struct adapter_reply_queue), GFP_KERNEL);
++	if (!reply_q) {
++		pr_err(MPT3SAS_FMT "unable to allocate memory %d!\n",
++		    ioc->name, (int)sizeof(struct adapter_reply_queue));
++		return -ENOMEM;
++	}
++	reply_q->ioc = ioc;
++	reply_q->msix_index = index;
++	reply_q->vector = vector;
++	atomic_set(&reply_q->busy, 0);
++	if (ioc->msix_enable)
++		snprintf(reply_q->name, MPT_NAME_LENGTH, "%s%d-msix%d",
++		    MPT3SAS_DRIVER_NAME, ioc->id, index);
++	else
++		snprintf(reply_q->name, MPT_NAME_LENGTH, "%s%d",
++		    MPT3SAS_DRIVER_NAME, ioc->id);
++	r = request_irq(vector, _base_interrupt, IRQF_SHARED, reply_q->name,
++	    reply_q);
++	if (r) {
++		pr_err(MPT3SAS_FMT "unable to allocate interrupt %d!\n",
++		    reply_q->name, vector);
++		kfree(reply_q);
++		return -EBUSY;
++	}
++
++	INIT_LIST_HEAD(&reply_q->list);
++	list_add_tail(&reply_q->list, &ioc->reply_queue_list);
++	return 0;
++}
++
++/**
++ * _base_assign_reply_queues - assigning msix index for each cpu
++ * @ioc: per adapter object
++ *
++ * The enduser would need to set the affinity via /proc/irq/#/smp_affinity
++ *
++ * It would nice if we could call irq_set_affinity, however it is not
++ * an exported symbol
++ */
++static void
++_base_assign_reply_queues(struct MPT3SAS_ADAPTER *ioc)
++{
++	struct adapter_reply_queue *reply_q;
++	int cpu_id;
++	int cpu_grouping, loop, grouping, grouping_mod;
++	int reply_queue;
++
++	if (!_base_is_controller_msix_enabled(ioc))
++		return;
++
++	memset(ioc->cpu_msix_table, 0, ioc->cpu_msix_table_sz);
++
++	/* NUMA Hardware bug workaround - drop to less reply queues */
++	if (ioc->reply_queue_count > ioc->facts.MaxMSIxVectors) {
++		ioc->reply_queue_count = ioc->facts.MaxMSIxVectors;
++		reply_queue = 0;
++		list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
++			reply_q->msix_index = reply_queue;
++			if (++reply_queue == ioc->reply_queue_count)
++				reply_queue = 0;
++		}
++	}
++
++	/* when there are more cpus than available msix vectors,
++	 * then group cpus togeather on same irq
++	 */
++	if (ioc->cpu_count > ioc->msix_vector_count) {
++		grouping = ioc->cpu_count / ioc->msix_vector_count;
++		grouping_mod = ioc->cpu_count % ioc->msix_vector_count;
++		if (grouping < 2 || (grouping == 2 && !grouping_mod))
++			cpu_grouping = 2;
++		else if (grouping < 4 || (grouping == 4 && !grouping_mod))
++			cpu_grouping = 4;
++		else if (grouping < 8 || (grouping == 8 && !grouping_mod))
++			cpu_grouping = 8;
++		else
++			cpu_grouping = 16;
++	} else
++		cpu_grouping = 0;
++
++	loop = 0;
++	reply_q = list_entry(ioc->reply_queue_list.next,
++	     struct adapter_reply_queue, list);
++	for_each_online_cpu(cpu_id) {
++		if (!cpu_grouping) {
++			ioc->cpu_msix_table[cpu_id] = reply_q->msix_index;
++			reply_q = list_entry(reply_q->list.next,
++			    struct adapter_reply_queue, list);
++		} else {
++			if (loop < cpu_grouping) {
++				ioc->cpu_msix_table[cpu_id] =
++				    reply_q->msix_index;
++				loop++;
++			} else {
++				reply_q = list_entry(reply_q->list.next,
++				    struct adapter_reply_queue, list);
++				ioc->cpu_msix_table[cpu_id] =
++				    reply_q->msix_index;
++				loop = 1;
++			}
++		}
++	}
++}
++
++/**
++ * _base_disable_msix - disables msix
++ * @ioc: per adapter object
++ *
++ */
++static void
++_base_disable_msix(struct MPT3SAS_ADAPTER *ioc)
++{
++	if (!ioc->msix_enable)
++		return;
++	pci_disable_msix(ioc->pdev);
++	ioc->msix_enable = 0;
++}
++
++/**
++ * _base_enable_msix - enables msix, failback to io_apic
++ * @ioc: per adapter object
++ *
++ */
++static int
++_base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
++{
++	struct msix_entry *entries, *a;
++	int r;
++	int i;
++	u8 try_msix = 0;
++
++	INIT_LIST_HEAD(&ioc->reply_queue_list);
++
++	if (msix_disable == -1 || msix_disable == 0)
++		try_msix = 1;
++
++	if (!try_msix)
++		goto try_ioapic;
++
++	if (_base_check_enable_msix(ioc) != 0)
++		goto try_ioapic;
++
++	ioc->reply_queue_count = min_t(int, ioc->cpu_count,
++	    ioc->msix_vector_count);
++
++	entries = kcalloc(ioc->reply_queue_count, sizeof(struct msix_entry),
++	    GFP_KERNEL);
++	if (!entries) {
++		dfailprintk(ioc, pr_info(MPT3SAS_FMT
++			"kcalloc failed @ at %s:%d/%s() !!!\n",
++			ioc->name, __FILE__, __LINE__, __func__));
++		goto try_ioapic;
++	}
++
++	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
++		a->entry = i;
++
++	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
++	if (r) {
++		dfailprintk(ioc, pr_info(MPT3SAS_FMT
++			"pci_enable_msix failed (r=%d) !!!\n",
++			ioc->name, r));
++		kfree(entries);
++		goto try_ioapic;
++	}
++
++	ioc->msix_enable = 1;
++	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++) {
++		r = _base_request_irq(ioc, i, a->vector);
++		if (r) {
++			_base_free_irq(ioc);
++			_base_disable_msix(ioc);
++			kfree(entries);
++			goto try_ioapic;
++		}
++	}
++
++	kfree(entries);
++	return 0;
++
++/* failback to io_apic interrupt routing */
++ try_ioapic:
++
++	r = _base_request_irq(ioc, 0, ioc->pdev->irq);
++
++	return r;
++}
++
++/**
++ * mpt3sas_base_map_resources - map in controller resources (io/irq/memap)
++ * @ioc: per adapter object
++ *
++ * Returns 0 for success, non-zero for failure.
++ */
++int
++mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
++{
++	struct pci_dev *pdev = ioc->pdev;
++	u32 memap_sz;
++	u32 pio_sz;
++	int i, r = 0;
++	u64 pio_chip = 0;
++	u64 chip_phys = 0;
++	struct adapter_reply_queue *reply_q;
++
++	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n",
++	    ioc->name, __func__));
++
++	ioc->bars = pci_select_bars(pdev, IORESOURCE_MEM);
++	if (pci_enable_device_mem(pdev)) {
++		pr_warn(MPT3SAS_FMT "pci_enable_device_mem: failed\n",
++			ioc->name);
++		return -ENODEV;
++	}
++
++
++	if (pci_request_selected_regions(pdev, ioc->bars,
++	    MPT3SAS_DRIVER_NAME)) {
++		pr_warn(MPT3SAS_FMT "pci_request_selected_regions: failed\n",
++			ioc->name);
++		r = -ENODEV;
++		goto out_fail;
++	}
++
++/* AER (Advanced Error Reporting) hooks */
++	pci_enable_pcie_error_reporting(pdev);
++
++	pci_set_master(pdev);
++
++
++	if (_base_config_dma_addressing(ioc, pdev) != 0) {
++		pr_warn(MPT3SAS_FMT "no suitable DMA mask for %s\n",
++		    ioc->name, pci_name(pdev));
++		r = -ENODEV;
++		goto out_fail;
++	}
++
++	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE; i++) {
++		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
++			if (pio_sz)
++				continue;
++			pio_chip = (u64)pci_resource_start(pdev, i);
++			pio_sz = pci_resource_len(pdev, i);
++		} else if (pci_resource_flags(pdev, i) & IORESOURCE_MEM) {
++			if (memap_sz)
++				continue;
++			ioc->chip_phys = pci_resource_start(pdev, i);
++			chip_phys = (u64)ioc->chip_phys;
++			memap_sz = pci_resource_len(pdev, i);
++			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
++			if (ioc->chip == NULL) {
++				pr_err(MPT3SAS_FMT "unable to map adapter memory!\n",
++					ioc->name);
++				r = -EINVAL;
++				goto out_fail;
++			}
++		}
++	}
++
++	_base_mask_interrupts(ioc);
++	r = _base_enable_msix(ioc);
++	if (r)
++		goto out_fail;
++
++	list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
++		pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
++		    reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
++		    "IO-APIC enabled"), reply_q->vector);
++
++	pr_info(MPT3SAS_FMT "iomem(0x%016llx), mapped(0x%p), size(%d)\n",
++	    ioc->name, (unsigned long long)chip_phys, ioc->chip, memap_sz);
++	pr_info(MPT3SAS_FMT "ioport(0x%016llx), size(%d)\n",
++	    ioc->name, (unsigned long long)pio_chip, pio_sz);
++
++	/* Save PCI configuration state for recovery from PCI AER/EEH errors */
++	pci_save_state(pdev);
++	return 0;
++
++ out_fail:
++	if (ioc->chip_phys)
++		iounmap(ioc->chip);
++	ioc->chip_phys = 0;
++	pci_release_selected_regions(ioc->pdev, ioc->bars);
++	pci_disable_pcie_error_reporting(pdev);
++	pci_disable_device(pdev);
++	return r;
++}
++
++/**
++ * mpt3sas_base_get_msg_frame - obtain request mf pointer
++ * @ioc: per adapter object
++ * @smid: system request message index(smid zero is invalid)
++ *
++ * Returns virt pointer to message frame.
++ */
++void *
++mpt3sas_base_get_msg_frame(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	return (void *)(ioc->request + (smid * ioc->request_sz));
++}
++
++/**
++ * mpt3sas_base_get_sense_buffer - obtain a sense buffer virt addr
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Returns virt pointer to sense buffer.
++ */
++void *
++mpt3sas_base_get_sense_buffer(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	return (void *)(ioc->sense + ((smid - 1) * SCSI_SENSE_BUFFERSIZE));
++}
++
++/**
++ * mpt3sas_base_get_sense_buffer_dma - obtain a sense buffer dma addr
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Returns phys pointer to the low 32bit address of the sense buffer.
++ */
++__le32
++mpt3sas_base_get_sense_buffer_dma(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	return cpu_to_le32(ioc->sense_dma + ((smid - 1) *
++	    SCSI_SENSE_BUFFERSIZE));
++}
++
++/**
++ * mpt3sas_base_get_reply_virt_addr - obtain reply frames virt address
++ * @ioc: per adapter object
++ * @phys_addr: lower 32 physical addr of the reply
++ *
++ * Converts 32bit lower physical addr into a virt address.
++ */
++void *
++mpt3sas_base_get_reply_virt_addr(struct MPT3SAS_ADAPTER *ioc, u32 phys_addr)
++{
++	if (!phys_addr)
++		return NULL;
++	return ioc->reply + (phys_addr - (u32)ioc->reply_dma);
++}
++
++/**
++ * mpt3sas_base_get_smid - obtain a free smid from internal queue
++ * @ioc: per adapter object
++ * @cb_idx: callback index
++ *
++ * Returns smid (zero is invalid)
++ */
++u16
++mpt3sas_base_get_smid(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx)
++{
++	unsigned long flags;
++	struct request_tracker *request;
++	u16 smid;
++
++	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
++	if (list_empty(&ioc->internal_free_list)) {
++		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++		pr_err(MPT3SAS_FMT "%s: smid not available\n",
++		    ioc->name, __func__);
++		return 0;
++	}
++
++	request = list_entry(ioc->internal_free_list.next,
++	    struct request_tracker, tracker_list);
++	request->cb_idx = cb_idx;
++	smid = request->smid;
++	list_del(&request->tracker_list);
++	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++	return smid;
++}
++
++/**
++ * mpt3sas_base_get_smid_scsiio - obtain a free smid from scsiio queue
++ * @ioc: per adapter object
++ * @cb_idx: callback index
++ * @scmd: pointer to scsi command object
++ *
++ * Returns smid (zero is invalid)
++ */
++u16
++mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
++	struct scsi_cmnd *scmd)
++{
++	unsigned long flags;
++	struct scsiio_tracker *request;
++	u16 smid;
++
++	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
++	if (list_empty(&ioc->free_list)) {
++		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++		pr_err(MPT3SAS_FMT "%s: smid not available\n",
++		    ioc->name, __func__);
++		return 0;
++	}
++
++	request = list_entry(ioc->free_list.next,
++	    struct scsiio_tracker, tracker_list);
++	request->scmd = scmd;
++	request->cb_idx = cb_idx;
++	smid = request->smid;
++	list_del(&request->tracker_list);
++	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++	return smid;
++}
++
++/**
++ * mpt3sas_base_get_smid_hpr - obtain a free smid from hi-priority queue
++ * @ioc: per adapter object
++ * @cb_idx: callback index
++ *
++ * Returns smid (zero is invalid)
++ */
++u16
++mpt3sas_base_get_smid_hpr(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx)
++{
++	unsigned long flags;
++	struct request_tracker *request;
++	u16 smid;
++
++	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
++	if (list_empty(&ioc->hpr_free_list)) {
++		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++		return 0;
++	}
++
++	request = list_entry(ioc->hpr_free_list.next,
++	    struct request_tracker, tracker_list);
++	request->cb_idx = cb_idx;
++	smid = request->smid;
++	list_del(&request->tracker_list);
++	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++	return smid;
++}
++
++/**
++ * mpt3sas_base_free_smid - put smid back on free_list
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Return nothing.
++ */
++void
++mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	unsigned long flags;
++	int i;
++	struct chain_tracker *chain_req, *next;
++
++	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
++	if (smid < ioc->hi_priority_smid) {
++		/* scsiio queue */
++		i = smid - 1;
++		if (!list_empty(&ioc->scsi_lookup[i].chain_list)) {
++			list_for_each_entry_safe(chain_req, next,
++			    &ioc->scsi_lookup[i].chain_list, tracker_list) {
++				list_del_init(&chain_req->tracker_list);
++				list_add(&chain_req->tracker_list,
++				    &ioc->free_chain_list);
++			}
++		}
++		ioc->scsi_lookup[i].cb_idx = 0xFF;
++		ioc->scsi_lookup[i].scmd = NULL;
++		list_add(&ioc->scsi_lookup[i].tracker_list, &ioc->free_list);
++		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++
++		/*
++		 * See _wait_for_commands_to_complete() call with regards
++		 * to this code.
++		 */
++		if (ioc->shost_recovery && ioc->pending_io_count) {
++			if (ioc->pending_io_count == 1)
++				wake_up(&ioc->reset_wq);
++			ioc->pending_io_count--;
++		}
++		return;
++	} else if (smid < ioc->internal_smid) {
++		/* hi-priority */
++		i = smid - ioc->hi_priority_smid;
++		ioc->hpr_lookup[i].cb_idx = 0xFF;
++		list_add(&ioc->hpr_lookup[i].tracker_list, &ioc->hpr_free_list);
++	} else if (smid <= ioc->hba_queue_depth) {
++		/* internal queue */
++		i = smid - ioc->internal_smid;
++		ioc->internal_lookup[i].cb_idx = 0xFF;
++		list_add(&ioc->internal_lookup[i].tracker_list,
++		    &ioc->internal_free_list);
++	}
++	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
++}
++
++/**
++ * _base_writeq - 64 bit write to MMIO
++ * @ioc: per adapter object
++ * @b: data payload
++ * @addr: address in MMIO space
++ * @writeq_lock: spin lock
++ *
++ * Glue for handling an atomic 64 bit word to MMIO. This special handling takes
++ * care of 32 bit environment where its not quarenteed to send the entire word
++ * in one transfer.
++ */
++#if defined(writeq) && defined(CONFIG_64BIT)
++static inline void
++_base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
++{
++	writeq(cpu_to_le64(b), addr);
++}
++#else
++static inline void
++_base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
++{
++	unsigned long flags;
++	__u64 data_out = cpu_to_le64(b);
++
++	spin_lock_irqsave(writeq_lock, flags);
++	writel((u32)(data_out), addr);
++	writel((u32)(data_out >> 32), (addr + 4));
++	spin_unlock_irqrestore(writeq_lock, flags);
++}
 +#endif
 +
-+typedef struct _MPI2_SUPPORTED_DEVICE {
-+	U16 DeviceID;		/*0x00 */
-+	U16 VendorID;		/*0x02 */
-+	U16 DeviceIDMask;	/*0x04 */
-+	U16 Reserved1;		/*0x06 */
-+	U8 LowPCIRev;		/*0x08 */
-+	U8 HighPCIRev;		/*0x09 */
-+	U16 Reserved2;		/*0x0A */
-+	U32 Reserved3;		/*0x0C */
-+} MPI2_SUPPORTED_DEVICE, *PTR_MPI2_SUPPORTED_DEVICE,
-+	Mpi2SupportedDevice_t, *pMpi2SupportedDevice_t;
++static inline u8
++_base_get_msix_index(struct MPT3SAS_ADAPTER *ioc)
++{
++	return ioc->cpu_msix_table[raw_smp_processor_id()];
++}
 +
-+typedef struct _MPI2_SUPPORTED_DEVICES_DATA {
-+	U8 ImageRevision;	/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 NumberOfDevices;	/*0x02 */
-+	U8 Reserved2;		/*0x03 */
-+	U32 Reserved3;		/*0x04 */
-+	MPI2_SUPPORTED_DEVICE
-+	SupportedDevice[MPI2_SUPPORTED_DEVICES_IMAGE_NUM_DEVICES];/*0x08 */
-+} MPI2_SUPPORTED_DEVICES_DATA, *PTR_MPI2_SUPPORTED_DEVICES_DATA,
-+	Mpi2SupportedDevicesData_t, *pMpi2SupportedDevicesData_t;
++/**
++ * mpt3sas_base_put_smid_scsi_io - send SCSI_IO request to firmware
++ * @ioc: per adapter object
++ * @smid: system request message index
++ * @handle: device handle
++ *
++ * Return nothing.
++ */
++void
++mpt3sas_base_put_smid_scsi_io(struct MPT3SAS_ADAPTER *ioc, u16 smid, u16 handle)
++{
++	Mpi2RequestDescriptorUnion_t descriptor;
++	u64 *request = (u64 *)&descriptor;
 +
-+/*ImageRevision */
-+#define MPI2_SUPPORTED_DEVICES_IMAGE_REVISION   (0x00)
 +
-+/*Init Extended Image Data */
++	descriptor.SCSIIO.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO;
++	descriptor.SCSIIO.MSIxIndex =  _base_get_msix_index(ioc);
++	descriptor.SCSIIO.SMID = cpu_to_le16(smid);
++	descriptor.SCSIIO.DevHandle = cpu_to_le16(handle);
++	descriptor.SCSIIO.LMID = 0;
++	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++	    &ioc->scsi_lookup_lock);
++}
 +
-+typedef struct _MPI2_INIT_IMAGE_FOOTER {
-+	U32 BootFlags;		/*0x00 */
-+	U32 ImageSize;		/*0x04 */
-+	U32 Signature0;		/*0x08 */
-+	U32 Signature1;		/*0x0C */
-+	U32 Signature2;		/*0x10 */
-+	U32 ResetVector;	/*0x14 */
-+} MPI2_INIT_IMAGE_FOOTER, *PTR_MPI2_INIT_IMAGE_FOOTER,
-+	Mpi2InitImageFooter_t, *pMpi2InitImageFooter_t;
++/**
++ * mpt3sas_base_put_smid_fast_path - send fast path request to firmware
++ * @ioc: per adapter object
++ * @smid: system request message index
++ * @handle: device handle
++ *
++ * Return nothing.
++ */
++void
++mpt3sas_base_put_smid_fast_path(struct MPT3SAS_ADAPTER *ioc, u16 smid,
++	u16 handle)
++{
++	Mpi2RequestDescriptorUnion_t descriptor;
++	u64 *request = (u64 *)&descriptor;
 +
-+/*defines for the BootFlags field */
-+#define MPI2_INIT_IMAGE_BOOTFLAGS_OFFSET        (0x00)
++	descriptor.SCSIIO.RequestFlags =
++	    MPI25_REQ_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO;
++	descriptor.SCSIIO.MSIxIndex = _base_get_msix_index(ioc);
++	descriptor.SCSIIO.SMID = cpu_to_le16(smid);
++	descriptor.SCSIIO.DevHandle = cpu_to_le16(handle);
++	descriptor.SCSIIO.LMID = 0;
++	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++	    &ioc->scsi_lookup_lock);
++}
 +
-+/*defines for the ImageSize field */
-+#define MPI2_INIT_IMAGE_IMAGESIZE_OFFSET        (0x04)
++/**
++ * mpt3sas_base_put_smid_hi_priority - send Task Managment request to firmware
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Return nothing.
++ */
++void
++mpt3sas_base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	Mpi2RequestDescriptorUnion_t descriptor;
++	u64 *request = (u64 *)&descriptor;
 +
-+/*defines for the Signature0 field */
-+#define MPI2_INIT_IMAGE_SIGNATURE0_OFFSET       (0x08)
-+#define MPI2_INIT_IMAGE_SIGNATURE0              (0x5AA55AEA)
++	descriptor.HighPriority.RequestFlags =
++	    MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY;
++	descriptor.HighPriority.MSIxIndex =  0;
++	descriptor.HighPriority.SMID = cpu_to_le16(smid);
++	descriptor.HighPriority.LMID = 0;
++	descriptor.HighPriority.Reserved1 = 0;
++	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++	    &ioc->scsi_lookup_lock);
++}
 +
-+/*defines for the Signature1 field */
-+#define MPI2_INIT_IMAGE_SIGNATURE1_OFFSET       (0x0C)
-+#define MPI2_INIT_IMAGE_SIGNATURE1              (0xA55AEAA5)
++/**
++ * mpt3sas_base_put_smid_default - Default, primarily used for config pages
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Return nothing.
++ */
++void
++mpt3sas_base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	Mpi2RequestDescriptorUnion_t descriptor;
++	u64 *request = (u64 *)&descriptor;
 +
-+/*defines for the Signature2 field */
-+#define MPI2_INIT_IMAGE_SIGNATURE2_OFFSET       (0x10)
-+#define MPI2_INIT_IMAGE_SIGNATURE2              (0x5AEAA55A)
++	descriptor.Default.RequestFlags = MPI2_REQ_DESCRIPT_FLAGS_DEFAULT_TYPE;
++	descriptor.Default.MSIxIndex =  _base_get_msix_index(ioc);
++	descriptor.Default.SMID = cpu_to_le16(smid);
++	descriptor.Default.LMID = 0;
++	descriptor.Default.DescriptorTypeDependent = 0;
++	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++	    &ioc->scsi_lookup_lock);
++}
 +
-+/*Signature fields as individual bytes */
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_0        (0xEA)
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_1        (0x5A)
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_2        (0xA5)
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_3        (0x5A)
 +
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_4        (0xA5)
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_5        (0xEA)
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_6        (0x5A)
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_7        (0xA5)
 +
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_8        (0x5A)
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_9        (0xA5)
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_A        (0xEA)
-+#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_B        (0x5A)
++/**
++ * _base_display_ioc_capabilities - Disply IOC's capabilities.
++ * @ioc: per adapter object
++ *
++ * Return nothing.
++ */
++static void
++_base_display_ioc_capabilities(struct MPT3SAS_ADAPTER *ioc)
++{
++	int i = 0;
++	char desc[16];
++	u32 iounit_pg1_flags;
++	u32 bios_version;
 +
-+/*defines for the ResetVector field */
-+#define MPI2_INIT_IMAGE_RESETVECTOR_OFFSET      (0x14)
++	bios_version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
++	strncpy(desc, ioc->manu_pg0.ChipName, 16);
++	pr_info(MPT3SAS_FMT "%s: FWVersion(%02d.%02d.%02d.%02d), "\
++	   "ChipRevision(0x%02x), BiosVersion(%02d.%02d.%02d.%02d)\n",
++	    ioc->name, desc,
++	   (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
++	   (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
++	   (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
++	   ioc->facts.FWVersion.Word & 0x000000FF,
++	   ioc->pdev->revision,
++	   (bios_version & 0xFF000000) >> 24,
++	   (bios_version & 0x00FF0000) >> 16,
++	   (bios_version & 0x0000FF00) >> 8,
++	    bios_version & 0x000000FF);
 +
-+/****************************************************************************
-+* PowerManagementControl message
-+****************************************************************************/
++	pr_info(MPT3SAS_FMT "Protocol=(", ioc->name);
 +
-+/*PowerManagementControl Request message */
-+typedef struct _MPI2_PWR_MGMT_CONTROL_REQUEST {
-+	U8 Feature;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 ChainOffset;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U8 Parameter1;		/*0x0C */
-+	U8 Parameter2;		/*0x0D */
-+	U8 Parameter3;		/*0x0E */
-+	U8 Parameter4;		/*0x0F */
-+	U32 Reserved5;		/*0x10 */
-+	U32 Reserved6;		/*0x14 */
-+} MPI2_PWR_MGMT_CONTROL_REQUEST, *PTR_MPI2_PWR_MGMT_CONTROL_REQUEST,
-+	Mpi2PwrMgmtControlRequest_t, *pMpi2PwrMgmtControlRequest_t;
++	if (ioc->facts.ProtocolFlags & MPI2_IOCFACTS_PROTOCOL_SCSI_INITIATOR) {
++		pr_info("Initiator");
++		i++;
++	}
 +
-+/*defines for the Feature field */
-+#define MPI2_PM_CONTROL_FEATURE_DA_PHY_POWER_COND       (0x01)
-+#define MPI2_PM_CONTROL_FEATURE_PORT_WIDTH_MODULATION   (0x02)
-+#define MPI2_PM_CONTROL_FEATURE_PCIE_LINK               (0x03)	/*obsolete */
-+#define MPI2_PM_CONTROL_FEATURE_IOC_SPEED               (0x04)
-+#define MPI2_PM_CONTROL_FEATURE_GLOBAL_PWR_MGMT_MODE    (0x05)
-+#define MPI2_PM_CONTROL_FEATURE_MIN_PRODUCT_SPECIFIC    (0x80)
-+#define MPI2_PM_CONTROL_FEATURE_MAX_PRODUCT_SPECIFIC    (0xFF)
++	if (ioc->facts.ProtocolFlags & MPI2_IOCFACTS_PROTOCOL_SCSI_TARGET) {
++		pr_info("%sTarget", i ? "," : "");
++		i++;
++	}
 +
-+/*parameter usage for the MPI2_PM_CONTROL_FEATURE_DA_PHY_POWER_COND Feature */
-+/*Parameter1 contains a PHY number */
-+/*Parameter2 indicates power condition action using these defines */
-+#define MPI2_PM_CONTROL_PARAM2_PARTIAL                  (0x01)
-+#define MPI2_PM_CONTROL_PARAM2_SLUMBER                  (0x02)
-+#define MPI2_PM_CONTROL_PARAM2_EXIT_PWR_MGMT            (0x03)
-+/*Parameter3 and Parameter4 are reserved */
++	i = 0;
++	pr_info("), ");
++	pr_info("Capabilities=(");
 +
-+/*parameter usage for the MPI2_PM_CONTROL_FEATURE_PORT_WIDTH_MODULATION
-+ * Feature */
-+/*Parameter1 contains SAS port width modulation group number */
-+/*Parameter2 indicates IOC action using these defines */
-+#define MPI2_PM_CONTROL_PARAM2_REQUEST_OWNERSHIP        (0x01)
-+#define MPI2_PM_CONTROL_PARAM2_CHANGE_MODULATION        (0x02)
-+#define MPI2_PM_CONTROL_PARAM2_RELINQUISH_OWNERSHIP     (0x03)
-+/*Parameter3 indicates desired modulation level using these defines */
-+#define MPI2_PM_CONTROL_PARAM3_25_PERCENT               (0x00)
-+#define MPI2_PM_CONTROL_PARAM3_50_PERCENT               (0x01)
-+#define MPI2_PM_CONTROL_PARAM3_75_PERCENT               (0x02)
-+#define MPI2_PM_CONTROL_PARAM3_100_PERCENT              (0x03)
-+/*Parameter4 is reserved */
++	if (ioc->facts.IOCCapabilities &
++		    MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID) {
++			pr_info("Raid");
++			i++;
++	}
 +
-+/*this next set (_PCIE_LINK) is obsolete */
-+/*parameter usage for the MPI2_PM_CONTROL_FEATURE_PCIE_LINK Feature */
-+/*Parameter1 indicates desired PCIe link speed using these defines */
-+#define MPI2_PM_CONTROL_PARAM1_PCIE_2_5_GBPS            (0x00)	/*obsolete */
-+#define MPI2_PM_CONTROL_PARAM1_PCIE_5_0_GBPS            (0x01)	/*obsolete */
-+#define MPI2_PM_CONTROL_PARAM1_PCIE_8_0_GBPS            (0x02)	/*obsolete */
-+/*Parameter2 indicates desired PCIe link width using these defines */
-+#define MPI2_PM_CONTROL_PARAM2_WIDTH_X1                 (0x01)	/*obsolete */
-+#define MPI2_PM_CONTROL_PARAM2_WIDTH_X2                 (0x02)	/*obsolete */
-+#define MPI2_PM_CONTROL_PARAM2_WIDTH_X4                 (0x04)	/*obsolete */
-+#define MPI2_PM_CONTROL_PARAM2_WIDTH_X8                 (0x08)	/*obsolete */
-+/*Parameter3 and Parameter4 are reserved */
++	if (ioc->facts.IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_TLR) {
++		pr_info("%sTLR", i ? "," : "");
++		i++;
++	}
 +
-+/*parameter usage for the MPI2_PM_CONTROL_FEATURE_IOC_SPEED Feature */
-+/*Parameter1 indicates desired IOC hardware clock speed using these defines */
-+#define MPI2_PM_CONTROL_PARAM1_FULL_IOC_SPEED           (0x01)
-+#define MPI2_PM_CONTROL_PARAM1_HALF_IOC_SPEED           (0x02)
-+#define MPI2_PM_CONTROL_PARAM1_QUARTER_IOC_SPEED        (0x04)
-+#define MPI2_PM_CONTROL_PARAM1_EIGHTH_IOC_SPEED         (0x08)
-+/*Parameter2, Parameter3, and Parameter4 are reserved */
++	if (ioc->facts.IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_MULTICAST) {
++		pr_info("%sMulticast", i ? "," : "");
++		i++;
++	}
 +
-+/*parameter usage for the MPI2_PM_CONTROL_FEATURE_GLOBAL_PWR_MGMT_MODE Feature*/
-+/*Parameter1 indicates host action regarding global power management mode */
-+#define MPI2_PM_CONTROL_PARAM1_TAKE_CONTROL             (0x01)
-+#define MPI2_PM_CONTROL_PARAM1_CHANGE_GLOBAL_MODE       (0x02)
-+#define MPI2_PM_CONTROL_PARAM1_RELEASE_CONTROL          (0x03)
-+/*Parameter2 indicates the requested global power management mode */
-+#define MPI2_PM_CONTROL_PARAM2_FULL_PWR_PERF            (0x01)
-+#define MPI2_PM_CONTROL_PARAM2_REDUCED_PWR_PERF         (0x08)
-+#define MPI2_PM_CONTROL_PARAM2_STANDBY                  (0x40)
-+/*Parameter3 and Parameter4 are reserved */
++	if (ioc->facts.IOCCapabilities &
++	    MPI2_IOCFACTS_CAPABILITY_BIDIRECTIONAL_TARGET) {
++		pr_info("%sBIDI Target", i ? "," : "");
++		i++;
++	}
 +
-+/*PowerManagementControl Reply message */
-+typedef struct _MPI2_PWR_MGMT_CONTROL_REPLY {
-+	U8 Feature;		/*0x00 */
-+	U8 Reserved1;		/*0x01 */
-+	U8 MsgLength;		/*0x02 */
-+	U8 Function;		/*0x03 */
-+	U16 Reserved2;		/*0x04 */
-+	U8 Reserved3;		/*0x06 */
-+	U8 MsgFlags;		/*0x07 */
-+	U8 VP_ID;		/*0x08 */
-+	U8 VF_ID;		/*0x09 */
-+	U16 Reserved4;		/*0x0A */
-+	U16 Reserved5;		/*0x0C */
-+	U16 IOCStatus;		/*0x0E */
-+	U32 IOCLogInfo;		/*0x10 */
-+} MPI2_PWR_MGMT_CONTROL_REPLY, *PTR_MPI2_PWR_MGMT_CONTROL_REPLY,
-+	Mpi2PwrMgmtControlReply_t, *pMpi2PwrMgmtControlReply_t;
++	if (ioc->facts.IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_EEDP) {
++		pr_info("%sEEDP", i ? "," : "");
++		i++;
++	}
 +
-+#endif
++	if (ioc->facts.IOCCapabilities &
++	    MPI2_IOCFACTS_CAPABILITY_SNAPSHOT_BUFFER) {
++		pr_info("%sSnapshot Buffer", i ? "," : "");
++		i++;
++	}
++
++	if (ioc->facts.IOCCapabilities &
++	    MPI2_IOCFACTS_CAPABILITY_DIAG_TRACE_BUFFER) {
++		pr_info("%sDiag Trace Buffer", i ? "," : "");
++		i++;
++	}
++
++	if (ioc->facts.IOCCapabilities &
++	    MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER) {
++		pr_info("%sDiag Extended Buffer", i ? "," : "");
++		i++;
++	}
++
++	if (ioc->facts.IOCCapabilities &
++	    MPI2_IOCFACTS_CAPABILITY_TASK_SET_FULL_HANDLING) {
++		pr_info("%sTask Set Full", i ? "," : "");
++		i++;
++	}
++
++	iounit_pg1_flags = le32_to_cpu(ioc->iounit_pg1.Flags);
++	if (!(iounit_pg1_flags & MPI2_IOUNITPAGE1_NATIVE_COMMAND_Q_DISABLE)) {
++		pr_info("%sNCQ", i ? "," : "");
++		i++;
++	}
++
++	pr_info(")\n");
++}
++
++/**
++ * mpt3sas_base_update_missing_delay - change the missing delay timers
++ * @ioc: per adapter object
++ * @device_missing_delay: amount of time till device is reported missing
++ * @io_missing_delay: interval IO is returned when there is a missing device
++ *
++ * Return nothing.
++ *
++ * Passed on the command line, this function will modify the device missing
++ * delay, as well as the io missing delay. This should be called at driver
++ * load time.
++ */
++void
++mpt3sas_base_update_missing_delay(struct MPT3SAS_ADAPTER *ioc,
++	u16 device_missing_delay, u8 io_missing_delay)
++{
++	u16 dmd, dmd_new, dmd_orignal;
++	u8 io_missing_delay_original;
++	u16 sz;
++	Mpi2SasIOUnitPage1_t *sas_iounit_pg1 = NULL;
++	Mpi2ConfigReply_t mpi_reply;
++	u8 num_phys = 0;
++	u16 ioc_status;
++
++	mpt3sas_config_get_number_hba_phys(ioc, &num_phys);
++	if (!num_phys)
++		return;
++
++	sz = offsetof(Mpi2SasIOUnitPage1_t, PhyData) + (num_phys *
++	    sizeof(Mpi2SasIOUnit1PhyData_t));
++	sas_iounit_pg1 = kzalloc(sz, GFP_KERNEL);
++	if (!sas_iounit_pg1) {
++		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		goto out;
++	}
++	if ((mpt3sas_config_get_sas_iounit_pg1(ioc, &mpi_reply,
++	    sas_iounit_pg1, sz))) {
++		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		goto out;
++	}
++	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++	    MPI2_IOCSTATUS_MASK;
++	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		goto out;
++	}
++
++	/* device missing delay */
++	dmd = sas_iounit_pg1->ReportDeviceMissingDelay;
++	if (dmd & MPI2_SASIOUNIT1_REPORT_MISSING_UNIT_16)
++		dmd = (dmd & MPI2_SASIOUNIT1_REPORT_MISSING_TIMEOUT_MASK) * 16;
++	else
++		dmd = dmd & MPI2_SASIOUNIT1_REPORT_MISSING_TIMEOUT_MASK;
++	dmd_orignal = dmd;
++	if (device_missing_delay > 0x7F) {
++		dmd = (device_missing_delay > 0x7F0) ? 0x7F0 :
++		    device_missing_delay;
++		dmd = dmd / 16;
++		dmd |= MPI2_SASIOUNIT1_REPORT_MISSING_UNIT_16;
++	} else
++		dmd = device_missing_delay;
++	sas_iounit_pg1->ReportDeviceMissingDelay = dmd;
++
++	/* io missing delay */
++	io_missing_delay_original = sas_iounit_pg1->IODeviceMissingDelay;
++	sas_iounit_pg1->IODeviceMissingDelay = io_missing_delay;
++
++	if (!mpt3sas_config_set_sas_iounit_pg1(ioc, &mpi_reply, sas_iounit_pg1,
++	    sz)) {
++		if (dmd & MPI2_SASIOUNIT1_REPORT_MISSING_UNIT_16)
++			dmd_new = (dmd &
++			    MPI2_SASIOUNIT1_REPORT_MISSING_TIMEOUT_MASK) * 16;
++		else
++			dmd_new =
++		    dmd & MPI2_SASIOUNIT1_REPORT_MISSING_TIMEOUT_MASK;
++		pr_info(MPT3SAS_FMT "device_missing_delay: old(%d), new(%d)\n",
++			ioc->name, dmd_orignal, dmd_new);
++		pr_info(MPT3SAS_FMT "ioc_missing_delay: old(%d), new(%d)\n",
++			ioc->name, io_missing_delay_original,
++		    io_missing_delay);
++		ioc->device_missing_delay = dmd_new;
++		ioc->io_missing_delay = io_missing_delay;
++	}
++
++out:
++	kfree(sas_iounit_pg1);
++}
