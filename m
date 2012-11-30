@@ -1,51 +1,55 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
-Date: Thu, 29 Nov 2012 21:21:38 -0500
-Message-ID: <1354242098.3670.3.camel@obelisk.thedillows.org>
-References: <cover.1353903448.git.dillowda@ornl.gov>
-	 <CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com>
-	 <1353957308.2681.5.camel@dabdike>
-	 <1353989041.28917.24.camel@obelisk.thedillows.org>
-	 <CAL1RGDXpdWL_r7sWp=vvvXH4jxFgjDL+XcEGgKo-44=wrOBmtA@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Error handling on FC devices
+Date: Fri, 30 Nov 2012 12:44:45 +0100
+Message-ID: <50B89C2D.8030108@suse.de>
+References: <50AA290F.8000105@suse.de>  <50B3EDEA.40008@emulex.com> <1354046601.4420.14.camel@localhost.localdomain> <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net> <50B5B8C4.1040503@suse.de> <50B78715.2060109@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAL1RGDXpdWL_r7sWp=vvvXH4jxFgjDL+XcEGgKo-44=wrOBmtA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:36778 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758013Ab2K3Los (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Nov 2012 06:44:48 -0500
+In-Reply-To: <50B78715.2060109@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Smart@emulex.com
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "emilne@redhat.com" <emilne@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Thu, 2012-11-29 at 12:21 -0800, Roland Dreier wrote:
-> On Mon, Nov 26, 2012 at 8:04 PM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
-> > We can push it through James's tree if need be, but Bart's code is
-> > pretty self-contained, and going through the SCSI tree will introduce
-> > merge dependencies. It'd be much easier to push it all through the RDMA
-> > tree, especially if we want to get this landed for 3.8.
-> 
-> OK, I guess all the srp_transport stuff looks quite simple and good to
-> me, so I'm OK merging it.
-> 
-> Is there some subset of patches that you and Bart agree are good,
-> which I can pick up now?  I'd love to get at least some of the SRP
-> stuff into 3.8, and that window is opening pretty soon.
+On 11/29/2012 05:02 PM, James Smart wrote:
+> Always possible - but....   Our f/w works at the FCP level and
+> below, which means it doesn't know/do SCSI commands - e.g what the
+> cdb within the FCP CMD frame is; know anything about SCSI device
+> classes and state; etc. And it shouldn't be required to do so.
+> Anytime this has been there in the past, it's been problematic.
+>
+> if we want to do this - we should add it to the midlayer/transport.
+>
+D'accord. Transport layer looks like a good fit.
 
-Modulo a few style issues (braces around one line if branches, etc.) and
-having three state variables vs one, I can live with everything up to
-aabfa852acd27962 at git://github.com/bvanassche/linux.git#srp-ha. Those
-two are small things that can be fixed later and are not worth holding
-things up any further.
+What we should be doing is hooking up 'bus_reset' to be equivalent=20
+to REMOVE I_T NEXUS (SAS is already doing this).
 
-I'll try to spend some time on the final four patches tomorrow
-afternoon.
--- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
+In our case a REMOVE I_T NEXUS would be roughly equivalent to
+scsi_remote_port_delete(); only we should be starting aborting
+outstanding I/O directly and not waiting for fast_fail_tmo
+to kick in.
 
+I'll be posting a patch.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
