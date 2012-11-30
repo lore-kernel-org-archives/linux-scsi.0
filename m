@@ -1,64 +1,64 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Fri, 30 Nov 2012 12:15:20 +0100
-Message-ID: <2098128.OOSiMIlA4d@vostro.rjw.lan>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com> <20121128013928.GB15971@htj.dyndns.org> <50B8749C.3050105@intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: prevent stack buffer overflow in host_reset
+Date: Fri, 30 Nov 2012 09:07:57 +0000
+Message-ID: <1354266477.2259.5.camel@dabdike.int.hansenpartnership.com>
+References: <1353012706-28182-1-git-send-email-sasha.levin@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <50B8749C.3050105@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-acpi@vger.kernel.org
-Cc: Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1353012706-28182-1-git-send-email-sasha.levin@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sasha Levin <sasha.levin@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday, November 30, 2012 04:55:56 PM Aaron Lu wrote:
-> On 11/28/2012 09:39 AM, Tejun Heo wrote:
-> > Hey, Rafael.
-> > 
-> > On Wed, Nov 28, 2012 at 01:51:00AM +0100, Rafael J. Wysocki wrote:
-> >> Having considered that a bit more I'm now thinking that in fact the power state
-> >> the device is in at the moment doesn't really matter, so the polling code need
-> >> not really know what PM is doing.  What it needs to know is that the device
-> >> will generate a hardware event when something interesting happens, so it is not
-> >> necessary to poll it.
-> >>
-> >> In this particular case it is related to power management (apparently, hardware
-> >> events will only be generated after the device has been put into ACPI D3cold,
-> >> or so Aaron seems to be claiming), but it need not be in general, at least in
-> >> principle.
-> >>
-> >> It looks like we need an "event driven" flag that the can be set in the lower
-> >> layers and read by the upper layers.  I suppose this means it would need to be
-> >> in struct device, but not necessarily in the PM-specific part of it.
-> > 
-> > We already have that.  That's what gendisk->async_events is for (as
-> > opposed to gendisk->events).  If all events are async_events, block
-> > won't poll for events, but I'm not sure that's the golden bullet.
-> > 
-> > * None implements async_events yet and an API is missing -
-> >   disk_check_events() - which is trivial to add, but it's the same
-> >   story.  We'll need a mechanism to shoot up notification from libata
-> >   to block layer.  It's admittedly easier to justify routing through
-> 
-> I don't see a way to do this, since libata has no chance of accessing
-> the gendisk pointer. Or we can add a new field to struct device,
-> something like no_poll, but I don't think it is the right thing to do,
-> as not all devices are block ones.
-> 
-> Any other suggestions/ideas please?
+On Thu, 2012-11-15 at 15:51 -0500, Sasha Levin wrote:
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index ce5224c..77ba946 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -249,9 +249,9 @@ static DEVICE_ATTR(active_mode, S_IRUGO | S_IWUSR=
+, show_shost_active_mode, NULL)
+> =20
+>  static int check_reset_type(char *str)
+>  {
+> -	if (strncmp(str, "adapter", 10) =3D=3D 0)
+> +	if (sysfs_streq(str, "adapter"))
+>  		return SCSI_ADAPTER_RESET;
+> -	else if (strncmp(str, "firmware", 10) =3D=3D 0)
+> +	else if (sysfs_streq(str, "firmware"))
+>  		return SCSI_FIRMWARE_RESET;
+>  	else
+>  		return 0;
+> @@ -264,12 +264,9 @@ store_host_reset(struct device *dev, struct devi=
+ce_attribute *attr,
+>  	struct Scsi_Host *shost =3D class_to_shost(dev);
+>  	struct scsi_host_template *sht =3D shost->hostt;
+>  	int ret =3D -EINVAL;
+> -	char str[10];
+>  	int type;
+> =20
+> -	sscanf(buf, "%s", str);
+> -	type =3D check_reset_type(str);
+> -
+> +	type =3D check_reset_type(buf);
+>  	if (!type)
+>  		goto exit_store_host_reset;
 
-I think you can follow the James' suggestion:
+You didn't compile test this:
 
-http://www.spinics.net/lists/linux-acpi/msg40257.html
+  CC [M]  drivers/scsi/scsi_sysfs.o
+drivers/scsi/scsi_sysfs.c: In function =E2=80=98store_host_reset=E2=80=99=
+:
+drivers/scsi/scsi_sysfs.c:269:2: warning: passing argument 1 of =E2=80=98=
+check_reset_type=E2=80=99 discards =E2=80=98const=E2=80=99 qualifier fr=
+om pointer target type [enabled by default]
+drivers/scsi/scsi_sysfs.c:250:12: note: expected =E2=80=98char *=E2=80=99=
+ but argument is of type =E2=80=98const char *=E2=80=99
 
-and see how that goes.
+It needs a const in check_reset_type().
 
-Thanks,
-Rafael
+I've added it.
 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+James
