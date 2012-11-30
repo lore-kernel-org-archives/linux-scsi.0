@@ -1,15 +1,15 @@
 From: <sreekanth.reddy@lsi.com>
-Subject: [v2 PATCH 3/20][SCSI] mpt3sas: Part 2 of MPI API headers
-Date: Fri, 30 Nov 2012 07:46:07 +0530
-Message-ID: <20121130021607.GA10178@localhost.localdomain>
+Subject: [v2 PATCH 5/20][SCSI] mpt3sas: Part 4 of MPI API headers
+Date: Fri, 30 Nov 2012 07:47:37 +0530
+Message-ID: <20121130021737.GA10200@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:33269 "EHLO
-	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754614Ab2K2PTE (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:58153 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751034Ab2K2PUe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Nov 2012 10:19:04 -0500
+	Thu, 29 Nov 2012 10:20:34 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,27 +17,27 @@ To: linux-scsi@vger.kernel.org, jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com, 
 Cc: Sathya.Prakash@lsi.com
 
 This patch contains MPI API headers
-This patch is part 2 of MPI API headers.
+This patch is part 4 of MPI API headers.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 Reviewed-by: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
 new file mode 100644
-index 0000000..7e24c55
+index 0000000..a079e52
 --- /dev/null
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-@@ -0,0 +1,1707 @@
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+@@ -0,0 +1,560 @@
 +/*
-+ * Copyright (c) 2000-2011 LSI Corporation.
++ * Copyright (c) 2000-2012 LSI Corporation.
 + *
 + *
-+ *          Name:  mpi2_cnfg.h
-+ *         Title:  MPI Configuration messages and pages
-+ * Creation Date:  November 10, 2006
++ *          Name:  mpi2_init.h
++ *         Title:  MPI SCSI initiator mode messages and structures
++ * Creation Date:  June 23, 2006
 + *
-+ *   mpi2_cnfg.h Version:  02.00.22
++ * mpi2_init.h Version:  02.00.14
 + *
 + * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
 + *       prefix are for use only on MPI v2.5 products, and must not be used
@@ -50,1689 +50,2213 @@ index 0000000..7e24c55
 + * Date      Version   Description
 + * --------  --------  ------------------------------------------------------
 + * 04-30-07  02.00.00  Corresponds to Fusion-MPT MPI Specification Rev A.
-+ * 06-04-07  02.00.01  Added defines for SAS IO Unit Page 2 PhyFlags.
-+ *                     Added Manufacturing Page 11.
-+ *                     Added MPI2_SAS_EXPANDER0_FLAGS_CONNECTOR_END_DEVICE
-+ *                     define.
-+ * 06-26-07  02.00.02  Adding generic structure for product-specific
-+ *                     Manufacturing pages: MPI2_CONFIG_PAGE_MANUFACTURING_PS.
-+ *                     Rework of BIOS Page 2 configuration page.
-+ *                     Fixed MPI2_BIOSPAGE2_BOOT_DEVICE to be a union of the
-+ *                     forms.
-+ *                     Added configuration pages IOC Page 8 and Driver
-+ *                     Persistent Mapping Page 0.
-+ * 08-31-07  02.00.03  Modified configuration pages dealing with Integrated
-+ *                     RAID (Manufacturing Page 4, RAID Volume Pages 0 and 1,
-+ *                     RAID Physical Disk Pages 0 and 1, RAID Configuration
-+ *                     Page 0).
-+ *                     Added new value for AccessStatus field of SAS Device
-+ *                     Page 0 (_SATA_NEEDS_INITIALIZATION).
-+ * 10-31-07  02.00.04  Added missing SEPDevHandle field to
-+ *                     MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-+ * 12-18-07  02.00.05  Modified IO Unit Page 0 to use 32-bit version fields for
-+ *                     NVDATA.
-+ *                     Modified IOC Page 7 to use masks and added field for
-+ *                     SASBroadcastPrimitiveMasks.
-+ *                     Added MPI2_CONFIG_PAGE_BIOS_4.
-+ *                     Added MPI2_CONFIG_PAGE_LOG_0.
-+ * 02-29-08  02.00.06  Modified various names to make them 32-character unique.
-+ *                     Added SAS Device IDs.
-+ *                     Updated Integrated RAID configuration pages including
-+ *                     Manufacturing Page 4, IOC Page 6, and RAID Configuration
-+ *                     Page 0.
-+ * 05-21-08  02.00.07  Added define MPI2_MANPAGE4_MIX_SSD_SAS_SATA.
-+ *                     Added define MPI2_MANPAGE4_PHYSDISK_128MB_COERCION.
-+ *                     Fixed define MPI2_IOCPAGE8_FLAGS_ENCLOSURE_SLOT_MAPPING.
-+ *                     Added missing MaxNumRoutedSasAddresses field to
-+ *                     MPI2_CONFIG_PAGE_EXPANDER_0.
-+ *                     Added SAS Port Page 0.
-+ *                     Modified structure layout for
-+ *                     MPI2_CONFIG_PAGE_DRIVER_MAPPING_0.
-+ * 06-27-08  02.00.08  Changed MPI2_CONFIG_PAGE_RD_PDISK_1 to use
-+ *                     MPI2_RAID_PHYS_DISK1_PATH_MAX to size the array.
-+ * 10-02-08  02.00.09  Changed MPI2_RAID_PGAD_CONFIGNUM_MASK from 0x0000FFFF
-+ *                     to 0x000000FF.
-+ *                     Added two new values for the Physical Disk Coercion Size
-+ *                     bits in the Flags field of Manufacturing Page 4.
-+ *                     Added product-specific Manufacturing pages 16 to 31.
-+ *                     Modified Flags bits for controlling write cache on SATA
-+ *                     drives in IO Unit Page 1.
-+ *                     Added new bit to AdditionalControlFlags of SAS IO Unit
-+ *                     Page 1 to control Invalid Topology Correction.
-+ *                     Added additional defines for RAID Volume Page 0
-+ *                     VolumeStatusFlags field.
-+ *                     Modified meaning of RAID Volume Page 0 VolumeSettings
-+ *                     define for auto-configure of hot-swap drives.
-+ *                     Added SupportedPhysDisks field to RAID Volume Page 1 and
-+ *                     added related defines.
-+ *                     Added PhysDiskAttributes field (and related defines) to
-+ *                     RAID Physical Disk Page 0.
-+ *                     Added MPI2_SAS_PHYINFO_PHY_VACANT define.
-+ *                     Added three new DiscoveryStatus bits for SAS IO Unit
-+ *                     Page 0 and SAS Expander Page 0.
-+ *                     Removed multiplexing information from SAS IO Unit pages.
-+ *                     Added BootDeviceWaitTime field to SAS IO Unit Page 4.
-+ *                     Removed Zone Address Resolved bit from PhyInfo and from
-+ *                     Expander Page 0 Flags field.
-+ *                     Added two new AccessStatus values to SAS Device Page 0
-+ *                     for indicating routing problems. Added 3 reserved words
-+ *                     to this page.
-+ * 01-19-09  02.00.10  Fixed defines for GPIOVal field of IO Unit Page 3.
-+ *                     Inserted missing reserved field into structure for IOC
-+ *                     Page 6.
-+ *                     Added more pending task bits to RAID Volume Page 0
-+ *                     VolumeStatusFlags defines.
-+ *                     Added MPI2_PHYSDISK0_STATUS_FLAG_NOT_CERTIFIED define.
-+ *                     Added a new DiscoveryStatus bit for SAS IO Unit Page 0
-+ *                     and SAS Expander Page 0 to flag a downstream initiator
-+ *                     when in simplified routing mode.
-+ *                     Removed SATA Init Failure defines for DiscoveryStatus
-+ *                     fields of SAS IO Unit Page 0 and SAS Expander Page 0.
-+ *                     Added MPI2_SAS_DEVICE0_ASTATUS_DEVICE_BLOCKED define.
-+ *                     Added PortGroups, DmaGroup, and ControlGroup fields to
-+ *                     SAS Device Page 0.
-+ * 05-06-09  02.00.11  Added structures and defines for IO Unit Page 5 and IO
-+ *                     Unit Page 6.
-+ *                     Added expander reduced functionality data to SAS
-+ *                     Expander Page 0.
-+ *                     Added SAS PHY Page 2 and SAS PHY Page 3.
-+ * 07-30-09  02.00.12  Added IO Unit Page 7.
-+ *                     Added new device ids.
-+ *                     Added SAS IO Unit Page 5.
-+ *                     Added partial and slumber power management capable flags
-+ *                     to SAS Device Page 0 Flags field.
-+ *                     Added PhyInfo defines for power condition.
-+ *                     Added Ethernet configuration pages.
-+ * 10-28-09  02.00.13  Added MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY.
-+ *                     Added SAS PHY Page 4 structure and defines.
-+ * 02-10-10  02.00.14  Modified the comments for the configuration page
-+ *                     structures that contain an array of data. The host
-+ *                     should use the "count" field in the page data (e.g. the
-+ *                     NumPhys field) to determine the number of valid elements
-+ *                     in the array.
-+ *                     Added/modified some MPI2_MFGPAGE_DEVID_SAS defines.
-+ *                     Added PowerManagementCapabilities to IO Unit Page 7.
-+ *                     Added PortWidthModGroup field to
-+ *                     MPI2_SAS_IO_UNIT5_PHY_PM_SETTINGS.
-+ *                     Added MPI2_CONFIG_PAGE_SASIOUNIT_6 and related defines.
-+ *                     Added MPI2_CONFIG_PAGE_SASIOUNIT_7 and related defines.
-+ *                     Added MPI2_CONFIG_PAGE_SASIOUNIT_8 and related defines.
-+ * 05-12-10  02.00.15  Added MPI2_RAIDVOL0_STATUS_FLAG_VOL_NOT_CONSISTENT
-+ *                     define.
-+ *                     Added MPI2_PHYSDISK0_INCOMPATIBLE_MEDIA_TYPE define.
-+ *                     Added MPI2_SAS_NEG_LINK_RATE_UNSUPPORTED_PHY define.
-+ * 08-11-10  02.00.16  Removed IO Unit Page 1 device path (multi-pathing)
-+ *                     defines.
-+ * 11-10-10  02.00.17  Added ReceptacleID field (replacing Reserved1) to
-+ *                     MPI2_MANPAGE7_CONNECTOR_INFO and reworked defines for
-+ *                     the Pinout field.
-+ *                     Added BoardTemperature and BoardTemperatureUnits fields
-+ *                     to MPI2_CONFIG_PAGE_IO_UNIT_7.
-+ *                     Added MPI2_CONFIG_EXTPAGETYPE_EXT_MANUFACTURING define
-+ *                     and MPI2_CONFIG_PAGE_EXT_MAN_PS structure.
-+ * 02-23-11  02.00.18  Added ProxyVF_ID field to MPI2_CONFIG_REQUEST.
-+ *                     Added IO Unit Page 8, IO Unit Page 9,
-+ *                     and IO Unit Page 10.
-+ *                     Added SASNotifyPrimitiveMasks field to
-+ *                     MPI2_CONFIG_PAGE_IOC_7.
-+ * 03-09-11  02.00.19  Fixed IO Unit Page 10 (to match the spec).
-+ * 05-25-11  02.00.20  Cleaned up a few comments.
-+ * 08-24-11  02.00.21  Marked the IO Unit Page 7 PowerManagementCapabilities
-+ *                     for PCIe link as obsolete.
-+ *                     Added SpinupFlags field containing a Disable Spin-up bit
-+ *                     to the MPI2_SAS_IOUNIT4_SPINUP_GROUP fields of SAS IO
-+ *                     Unit Page 4.
-+ * 11-18-11  02.00.22  Added define MPI2_IOCPAGE6_CAP_FLAGS_4K_SECTORS_SUPPORT.
-+ *                     Added UEFIVersion field to BIOS Page 1 and defined new
-+ *                     BiosOptions bits.
-+ *                     Incorporating additions for MPI v2.5.
++ * 10-31-07  02.00.01  Fixed name for pMpi2SCSITaskManagementRequest_t.
++ * 12-18-07  02.00.02  Modified Task Management Target Reset Method defines.
++ * 02-29-08  02.00.03  Added Query Task Set and Query Unit Attention.
++ * 03-03-08  02.00.04  Fixed name of struct _MPI2_SCSI_TASK_MANAGE_REPLY.
++ * 05-21-08  02.00.05  Fixed typo in name of Mpi2SepRequest_t.
++ * 10-02-08  02.00.06  Removed Untagged and No Disconnect values from SCSI IO
++ *                     Control field Task Attribute flags.
++ *                     Moved LUN field defines to mpi2.h becasue they are
++ *                     common to many structures.
++ * 05-06-09  02.00.07  Changed task management type of Query Unit Attention to
++ *                     Query Asynchronous Event.
++ *                     Defined two new bits in the SlotStatus field of the SCSI
++ *                     Enclosure Processor Request and Reply.
++ * 10-28-09  02.00.08  Added defines for decoding the ResponseInfo bytes for
++ *                     both SCSI IO Error Reply and SCSI Task Management Reply.
++ *                     Added ResponseInfo field to MPI2_SCSI_TASK_MANAGE_REPLY.
++ *                     Added MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG define.
++ * 02-10-10  02.00.09  Removed unused structure that had "#if 0" around it.
++ * 05-12-10  02.00.10  Added optional vendor-unique region to SCSI IO Request.
++ * 11-10-10  02.00.11  Added MPI2_SCSIIO_NUM_SGLOFFSETS define.
++ * 11-18-11  02.00.12  Incorporating additions for MPI v2.5.
++ * 02-06-12  02.00.13  Added alternate defines for Task Priority / Command
++ *                     Priority to match SAM-4.
++ *                     Added EEDPErrorOffset to MPI2_SCSI_IO_REPLY.
++ * 07-10-12  02.00.14  Added MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION.
 + * --------------------------------------------------------------------------
 + */
 +
-+#ifndef MPI2_CNFG_H
-+#define MPI2_CNFG_H
-+
-+/*****************************************************************************
-+*  Configuration Page Header and defines
-+*****************************************************************************/
-+
-+/*Config Page Header */
-+typedef struct _MPI2_CONFIG_PAGE_HEADER {
-+	U8                 PageVersion;                /*0x00 */
-+	U8                 PageLength;                 /*0x01 */
-+	U8                 PageNumber;                 /*0x02 */
-+	U8                 PageType;                   /*0x03 */
-+} MPI2_CONFIG_PAGE_HEADER, *PTR_MPI2_CONFIG_PAGE_HEADER,
-+	Mpi2ConfigPageHeader_t, *pMpi2ConfigPageHeader_t;
-+
-+typedef union _MPI2_CONFIG_PAGE_HEADER_UNION {
-+	MPI2_CONFIG_PAGE_HEADER  Struct;
-+	U8                       Bytes[4];
-+	U16                      Word16[2];
-+	U32                      Word32;
-+} MPI2_CONFIG_PAGE_HEADER_UNION, *PTR_MPI2_CONFIG_PAGE_HEADER_UNION,
-+	Mpi2ConfigPageHeaderUnion, *pMpi2ConfigPageHeaderUnion;
-+
-+/*Extended Config Page Header */
-+typedef struct _MPI2_CONFIG_EXTENDED_PAGE_HEADER {
-+	U8                  PageVersion;                /*0x00 */
-+	U8                  Reserved1;                  /*0x01 */
-+	U8                  PageNumber;                 /*0x02 */
-+	U8                  PageType;                   /*0x03 */
-+	U16                 ExtPageLength;              /*0x04 */
-+	U8                  ExtPageType;                /*0x06 */
-+	U8                  Reserved2;                  /*0x07 */
-+} MPI2_CONFIG_EXTENDED_PAGE_HEADER,
-+	*PTR_MPI2_CONFIG_EXTENDED_PAGE_HEADER,
-+	Mpi2ConfigExtendedPageHeader_t,
-+	*pMpi2ConfigExtendedPageHeader_t;
-+
-+typedef union _MPI2_CONFIG_EXT_PAGE_HEADER_UNION {
-+	MPI2_CONFIG_PAGE_HEADER          Struct;
-+	MPI2_CONFIG_EXTENDED_PAGE_HEADER Ext;
-+	U8                               Bytes[8];
-+	U16                              Word16[4];
-+	U32                              Word32[2];
-+} MPI2_CONFIG_EXT_PAGE_HEADER_UNION,
-+	*PTR_MPI2_CONFIG_EXT_PAGE_HEADER_UNION,
-+	Mpi2ConfigPageExtendedHeaderUnion,
-+	*pMpi2ConfigPageExtendedHeaderUnion;
-+
-+
-+/*PageType field values */
-+#define MPI2_CONFIG_PAGEATTR_READ_ONLY              (0x00)
-+#define MPI2_CONFIG_PAGEATTR_CHANGEABLE             (0x10)
-+#define MPI2_CONFIG_PAGEATTR_PERSISTENT             (0x20)
-+#define MPI2_CONFIG_PAGEATTR_MASK                   (0xF0)
-+
-+#define MPI2_CONFIG_PAGETYPE_IO_UNIT                (0x00)
-+#define MPI2_CONFIG_PAGETYPE_IOC                    (0x01)
-+#define MPI2_CONFIG_PAGETYPE_BIOS                   (0x02)
-+#define MPI2_CONFIG_PAGETYPE_RAID_VOLUME            (0x08)
-+#define MPI2_CONFIG_PAGETYPE_MANUFACTURING          (0x09)
-+#define MPI2_CONFIG_PAGETYPE_RAID_PHYSDISK          (0x0A)
-+#define MPI2_CONFIG_PAGETYPE_EXTENDED               (0x0F)
-+#define MPI2_CONFIG_PAGETYPE_MASK                   (0x0F)
-+
-+#define MPI2_CONFIG_TYPENUM_MASK                    (0x0FFF)
-+
-+
-+/*ExtPageType field values */
-+#define MPI2_CONFIG_EXTPAGETYPE_SAS_IO_UNIT         (0x10)
-+#define MPI2_CONFIG_EXTPAGETYPE_SAS_EXPANDER        (0x11)
-+#define MPI2_CONFIG_EXTPAGETYPE_SAS_DEVICE          (0x12)
-+#define MPI2_CONFIG_EXTPAGETYPE_SAS_PHY             (0x13)
-+#define MPI2_CONFIG_EXTPAGETYPE_LOG                 (0x14)
-+#define MPI2_CONFIG_EXTPAGETYPE_ENCLOSURE           (0x15)
-+#define MPI2_CONFIG_EXTPAGETYPE_RAID_CONFIG         (0x16)
-+#define MPI2_CONFIG_EXTPAGETYPE_DRIVER_MAPPING      (0x17)
-+#define MPI2_CONFIG_EXTPAGETYPE_SAS_PORT            (0x18)
-+#define MPI2_CONFIG_EXTPAGETYPE_ETHERNET            (0x19)
-+#define MPI2_CONFIG_EXTPAGETYPE_EXT_MANUFACTURING   (0x1A)
-+
-+
-+/*****************************************************************************
-+*  PageAddress defines
-+*****************************************************************************/
-+
-+/*RAID Volume PageAddress format */
-+#define MPI2_RAID_VOLUME_PGAD_FORM_MASK             (0xF0000000)
-+#define MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE  (0x00000000)
-+#define MPI2_RAID_VOLUME_PGAD_FORM_HANDLE           (0x10000000)
-+
-+#define MPI2_RAID_VOLUME_PGAD_HANDLE_MASK           (0x0000FFFF)
-+
-+
-+/*RAID Physical Disk PageAddress format */
-+#define MPI2_PHYSDISK_PGAD_FORM_MASK                    (0xF0000000)
-+#define MPI2_PHYSDISK_PGAD_FORM_GET_NEXT_PHYSDISKNUM    (0x00000000)
-+#define MPI2_PHYSDISK_PGAD_FORM_PHYSDISKNUM             (0x10000000)
-+#define MPI2_PHYSDISK_PGAD_FORM_DEVHANDLE               (0x20000000)
-+
-+#define MPI2_PHYSDISK_PGAD_PHYSDISKNUM_MASK             (0x000000FF)
-+#define MPI2_PHYSDISK_PGAD_DEVHANDLE_MASK               (0x0000FFFF)
-+
-+
-+/*SAS Expander PageAddress format */
-+#define MPI2_SAS_EXPAND_PGAD_FORM_MASK              (0xF0000000)
-+#define MPI2_SAS_EXPAND_PGAD_FORM_GET_NEXT_HNDL     (0x00000000)
-+#define MPI2_SAS_EXPAND_PGAD_FORM_HNDL_PHY_NUM      (0x10000000)
-+#define MPI2_SAS_EXPAND_PGAD_FORM_HNDL              (0x20000000)
-+
-+#define MPI2_SAS_EXPAND_PGAD_HANDLE_MASK            (0x0000FFFF)
-+#define MPI2_SAS_EXPAND_PGAD_PHYNUM_MASK            (0x00FF0000)
-+#define MPI2_SAS_EXPAND_PGAD_PHYNUM_SHIFT           (16)
-+
-+
-+/*SAS Device PageAddress format */
-+#define MPI2_SAS_DEVICE_PGAD_FORM_MASK              (0xF0000000)
-+#define MPI2_SAS_DEVICE_PGAD_FORM_GET_NEXT_HANDLE   (0x00000000)
-+#define MPI2_SAS_DEVICE_PGAD_FORM_HANDLE            (0x20000000)
-+
-+#define MPI2_SAS_DEVICE_PGAD_HANDLE_MASK            (0x0000FFFF)
-+
-+
-+/*SAS PHY PageAddress format */
-+#define MPI2_SAS_PHY_PGAD_FORM_MASK                 (0xF0000000)
-+#define MPI2_SAS_PHY_PGAD_FORM_PHY_NUMBER           (0x00000000)
-+#define MPI2_SAS_PHY_PGAD_FORM_PHY_TBL_INDEX        (0x10000000)
-+
-+#define MPI2_SAS_PHY_PGAD_PHY_NUMBER_MASK           (0x000000FF)
-+#define MPI2_SAS_PHY_PGAD_PHY_TBL_INDEX_MASK        (0x0000FFFF)
-+
-+
-+/*SAS Port PageAddress format */
-+#define MPI2_SASPORT_PGAD_FORM_MASK                 (0xF0000000)
-+#define MPI2_SASPORT_PGAD_FORM_GET_NEXT_PORT        (0x00000000)
-+#define MPI2_SASPORT_PGAD_FORM_PORT_NUM             (0x10000000)
-+
-+#define MPI2_SASPORT_PGAD_PORTNUMBER_MASK           (0x00000FFF)
-+
-+
-+/*SAS Enclosure PageAddress format */
-+#define MPI2_SAS_ENCLOS_PGAD_FORM_MASK              (0xF0000000)
-+#define MPI2_SAS_ENCLOS_PGAD_FORM_GET_NEXT_HANDLE   (0x00000000)
-+#define MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE            (0x10000000)
-+
-+#define MPI2_SAS_ENCLOS_PGAD_HANDLE_MASK            (0x0000FFFF)
-+
-+
-+/*RAID Configuration PageAddress format */
-+#define MPI2_RAID_PGAD_FORM_MASK                    (0xF0000000)
-+#define MPI2_RAID_PGAD_FORM_GET_NEXT_CONFIGNUM      (0x00000000)
-+#define MPI2_RAID_PGAD_FORM_CONFIGNUM               (0x10000000)
-+#define MPI2_RAID_PGAD_FORM_ACTIVE_CONFIG           (0x20000000)
-+
-+#define MPI2_RAID_PGAD_CONFIGNUM_MASK               (0x000000FF)
-+
-+
-+/*Driver Persistent Mapping PageAddress format */
-+#define MPI2_DPM_PGAD_FORM_MASK                     (0xF0000000)
-+#define MPI2_DPM_PGAD_FORM_ENTRY_RANGE              (0x00000000)
-+
-+#define MPI2_DPM_PGAD_ENTRY_COUNT_MASK              (0x0FFF0000)
-+#define MPI2_DPM_PGAD_ENTRY_COUNT_SHIFT             (16)
-+#define MPI2_DPM_PGAD_START_ENTRY_MASK              (0x0000FFFF)
-+
-+
-+/*Ethernet PageAddress format */
-+#define MPI2_ETHERNET_PGAD_FORM_MASK                (0xF0000000)
-+#define MPI2_ETHERNET_PGAD_FORM_IF_NUM              (0x00000000)
-+
-+#define MPI2_ETHERNET_PGAD_IF_NUMBER_MASK           (0x000000FF)
-+
-+
-+
-+/****************************************************************************
-+*  Configuration messages
-+****************************************************************************/
-+
-+/*Configuration Request Message */
-+typedef struct _MPI2_CONFIG_REQUEST {
-+	U8                      Action;                     /*0x00 */
-+	U8                      SGLFlags;                   /*0x01 */
-+	U8                      ChainOffset;                /*0x02 */
-+	U8                      Function;                   /*0x03 */
-+	U16                     ExtPageLength;              /*0x04 */
-+	U8                      ExtPageType;                /*0x06 */
-+	U8                      MsgFlags;                   /*0x07 */
-+	U8                      VP_ID;                      /*0x08 */
-+	U8                      VF_ID;                      /*0x09 */
-+	U16                     Reserved1;                  /*0x0A */
-+	U8                      Reserved2;                  /*0x0C */
-+	U8                      ProxyVF_ID;                 /*0x0D */
-+	U16                     Reserved4;                  /*0x0E */
-+	U32                     Reserved3;                  /*0x10 */
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x14 */
-+	U32                     PageAddress;                /*0x18 */
-+	MPI2_SGE_IO_UNION       PageBufferSGE;              /*0x1C */
-+} MPI2_CONFIG_REQUEST, *PTR_MPI2_CONFIG_REQUEST,
-+	Mpi2ConfigRequest_t, *pMpi2ConfigRequest_t;
-+
-+/*values for the Action field */
-+#define MPI2_CONFIG_ACTION_PAGE_HEADER              (0x00)
-+#define MPI2_CONFIG_ACTION_PAGE_READ_CURRENT        (0x01)
-+#define MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT       (0x02)
-+#define MPI2_CONFIG_ACTION_PAGE_DEFAULT             (0x03)
-+#define MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM         (0x04)
-+#define MPI2_CONFIG_ACTION_PAGE_READ_DEFAULT        (0x05)
-+#define MPI2_CONFIG_ACTION_PAGE_READ_NVRAM          (0x06)
-+#define MPI2_CONFIG_ACTION_PAGE_GET_CHANGEABLE      (0x07)
-+
-+/*use MPI2_SGLFLAGS_ defines from mpi2.h for the SGLFlags field */
-+
-+
-+/*Config Reply Message */
-+typedef struct _MPI2_CONFIG_REPLY {
-+	U8                      Action;                     /*0x00 */
-+	U8                      SGLFlags;                   /*0x01 */
-+	U8                      MsgLength;                  /*0x02 */
-+	U8                      Function;                   /*0x03 */
-+	U16                     ExtPageLength;              /*0x04 */
-+	U8                      ExtPageType;                /*0x06 */
-+	U8                      MsgFlags;                   /*0x07 */
-+	U8                      VP_ID;                      /*0x08 */
-+	U8                      VF_ID;                      /*0x09 */
-+	U16                     Reserved1;                  /*0x0A */
-+	U16                     Reserved2;                  /*0x0C */
-+	U16                     IOCStatus;                  /*0x0E */
-+	U32                     IOCLogInfo;                 /*0x10 */
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x14 */
-+} MPI2_CONFIG_REPLY, *PTR_MPI2_CONFIG_REPLY,
-+	Mpi2ConfigReply_t, *pMpi2ConfigReply_t;
-+
-+
++#ifndef MPI2_INIT_H
++#define MPI2_INIT_H
 +
 +/*****************************************************************************
 +*
-+*              C o n f i g u r a t i o n    P a g e s
++*              SCSI Initiator Messages
 +*
 +*****************************************************************************/
 +
 +/****************************************************************************
-+*  Manufacturing Config pages
++* SCSI IO messages and associated structures
 +****************************************************************************/
 +
-+#define MPI2_MFGPAGE_VENDORID_LSI                   (0x1000)
++typedef struct _MPI2_SCSI_IO_CDB_EEDP32 {
++	U8 CDB[20];		/*0x00 */
++	U32 PrimaryReferenceTag;	/*0x14 */
++	U16 PrimaryApplicationTag;	/*0x18 */
++	U16 PrimaryApplicationTagMask;	/*0x1A */
++	U32 TransferLength;	/*0x1C */
++} MPI2_SCSI_IO_CDB_EEDP32, *PTR_MPI2_SCSI_IO_CDB_EEDP32,
++	Mpi2ScsiIoCdbEedp32_t, *pMpi2ScsiIoCdbEedp32_t;
 +
-+/*MPI v2.0 SAS products */
-+#define MPI2_MFGPAGE_DEVID_SAS2004                  (0x0070)
-+#define MPI2_MFGPAGE_DEVID_SAS2008                  (0x0072)
-+#define MPI2_MFGPAGE_DEVID_SAS2108_1                (0x0074)
-+#define MPI2_MFGPAGE_DEVID_SAS2108_2                (0x0076)
-+#define MPI2_MFGPAGE_DEVID_SAS2108_3                (0x0077)
-+#define MPI2_MFGPAGE_DEVID_SAS2116_1                (0x0064)
-+#define MPI2_MFGPAGE_DEVID_SAS2116_2                (0x0065)
++/*MPI v2.0 CDB field */
++typedef union _MPI2_SCSI_IO_CDB_UNION {
++	U8 CDB32[32];
++	MPI2_SCSI_IO_CDB_EEDP32 EEDP32;
++	MPI2_SGE_SIMPLE_UNION SGE;
++} MPI2_SCSI_IO_CDB_UNION, *PTR_MPI2_SCSI_IO_CDB_UNION,
++	Mpi2ScsiIoCdb_t, *pMpi2ScsiIoCdb_t;
 +
-+#define MPI2_MFGPAGE_DEVID_SSS6200                  (0x007E)
++/*MPI v2.0 SCSI IO Request Message */
++typedef struct _MPI2_SCSI_IO_REQUEST {
++	U16 DevHandle;		/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved1;		/*0x04 */
++	U8 Reserved2;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved3;		/*0x0A */
++	U32 SenseBufferLowAddress;	/*0x0C */
++	U16 SGLFlags;		/*0x10 */
++	U8 SenseBufferLength;	/*0x12 */
++	U8 Reserved4;		/*0x13 */
++	U8 SGLOffset0;		/*0x14 */
++	U8 SGLOffset1;		/*0x15 */
++	U8 SGLOffset2;		/*0x16 */
++	U8 SGLOffset3;		/*0x17 */
++	U32 SkipCount;		/*0x18 */
++	U32 DataLength;		/*0x1C */
++	U32 BidirectionalDataLength;	/*0x20 */
++	U16 IoFlags;		/*0x24 */
++	U16 EEDPFlags;		/*0x26 */
++	U32 EEDPBlockSize;	/*0x28 */
++	U32 SecondaryReferenceTag;	/*0x2C */
++	U16 SecondaryApplicationTag;	/*0x30 */
++	U16 ApplicationTagTranslationMask;	/*0x32 */
++	U8 LUN[8];		/*0x34 */
++	U32 Control;		/*0x3C */
++	MPI2_SCSI_IO_CDB_UNION CDB;	/*0x40 */
 +
-+#define MPI2_MFGPAGE_DEVID_SAS2208_1                (0x0080)
-+#define MPI2_MFGPAGE_DEVID_SAS2208_2                (0x0081)
-+#define MPI2_MFGPAGE_DEVID_SAS2208_3                (0x0082)
-+#define MPI2_MFGPAGE_DEVID_SAS2208_4                (0x0083)
-+#define MPI2_MFGPAGE_DEVID_SAS2208_5                (0x0084)
-+#define MPI2_MFGPAGE_DEVID_SAS2208_6                (0x0085)
-+#define MPI2_MFGPAGE_DEVID_SAS2308_1                (0x0086)
-+#define MPI2_MFGPAGE_DEVID_SAS2308_2                (0x0087)
-+#define MPI2_MFGPAGE_DEVID_SAS2308_3                (0x006E)
-+
-+/*MPI v2.5 SAS products */
-+#define MPI25_MFGPAGE_DEVID_SAS3004                 (0x0096)
-+#define MPI25_MFGPAGE_DEVID_SAS3008                 (0x0097)
-+#define MPI25_MFGPAGE_DEVID_SAS3108_1               (0x0090)
-+#define MPI25_MFGPAGE_DEVID_SAS3108_2               (0x0091)
-+#define MPI25_MFGPAGE_DEVID_SAS3108_5               (0x0094)
-+#define MPI25_MFGPAGE_DEVID_SAS3108_6               (0x0095)
-+
-+
-+
-+
-+/*Manufacturing Page 0 */
-+
-+typedef struct _MPI2_CONFIG_PAGE_MAN_0 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U8                      ChipName[16];               /*0x04 */
-+	U8                      ChipRevision[8];            /*0x14 */
-+	U8                      BoardName[16];              /*0x1C */
-+	U8                      BoardAssembly[16];          /*0x2C */
-+	U8                      BoardTracerNumber[16];      /*0x3C */
-+} MPI2_CONFIG_PAGE_MAN_0,
-+	*PTR_MPI2_CONFIG_PAGE_MAN_0,
-+	Mpi2ManufacturingPage0_t,
-+	*pMpi2ManufacturingPage0_t;
-+
-+#define MPI2_MANUFACTURING0_PAGEVERSION                (0x00)
-+
-+
-+/*Manufacturing Page 1 */
-+
-+typedef struct _MPI2_CONFIG_PAGE_MAN_1 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U8                      VPD[256];                   /*0x04 */
-+} MPI2_CONFIG_PAGE_MAN_1,
-+	*PTR_MPI2_CONFIG_PAGE_MAN_1,
-+	Mpi2ManufacturingPage1_t,
-+	*pMpi2ManufacturingPage1_t;
-+
-+#define MPI2_MANUFACTURING1_PAGEVERSION                (0x00)
-+
-+
-+typedef struct _MPI2_CHIP_REVISION_ID {
-+	U16 DeviceID;                                       /*0x00 */
-+	U8  PCIRevisionID;                                  /*0x02 */
-+	U8  Reserved;                                       /*0x03 */
-+} MPI2_CHIP_REVISION_ID, *PTR_MPI2_CHIP_REVISION_ID,
-+	Mpi2ChipRevisionId_t, *pMpi2ChipRevisionId_t;
-+
-+
-+/*Manufacturing Page 2 */
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check Header.PageLength at runtime.
-+ */
-+#ifndef MPI2_MAN_PAGE_2_HW_SETTINGS_WORDS
-+#define MPI2_MAN_PAGE_2_HW_SETTINGS_WORDS   (1)
++#ifdef MPI2_SCSI_IO_VENDOR_UNIQUE_REGION /*typically this is left undefined */
++	MPI2_SCSI_IO_VENDOR_UNIQUE VendorRegion;
 +#endif
 +
-+typedef struct _MPI2_CONFIG_PAGE_MAN_2 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	MPI2_CHIP_REVISION_ID   ChipId;                     /*0x04 */
-+	U32
-+		HwSettings[MPI2_MAN_PAGE_2_HW_SETTINGS_WORDS];/*0x08 */
-+} MPI2_CONFIG_PAGE_MAN_2,
-+	*PTR_MPI2_CONFIG_PAGE_MAN_2,
-+	Mpi2ManufacturingPage2_t,
-+	*pMpi2ManufacturingPage2_t;
++	MPI2_SGE_IO_UNION SGL;	/*0x60 */
 +
-+#define MPI2_MANUFACTURING2_PAGEVERSION                 (0x00)
++} MPI2_SCSI_IO_REQUEST, *PTR_MPI2_SCSI_IO_REQUEST,
++	Mpi2SCSIIORequest_t, *pMpi2SCSIIORequest_t;
 +
++/*SCSI IO MsgFlags bits */
 +
-+/*Manufacturing Page 3 */
++/*MsgFlags for SenseBufferAddressSpace */
++#define MPI2_SCSIIO_MSGFLAGS_MASK_SENSE_ADDR        (0x0C)
++#define MPI2_SCSIIO_MSGFLAGS_SYSTEM_SENSE_ADDR      (0x00)
++#define MPI2_SCSIIO_MSGFLAGS_IOCDDR_SENSE_ADDR      (0x04)
++#define MPI2_SCSIIO_MSGFLAGS_IOCPLB_SENSE_ADDR      (0x08)
++#define MPI2_SCSIIO_MSGFLAGS_IOCPLBNTA_SENSE_ADDR   (0x0C)
 +
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check Header.PageLength at runtime.
-+ */
-+#ifndef MPI2_MAN_PAGE_3_INFO_WORDS
-+#define MPI2_MAN_PAGE_3_INFO_WORDS          (1)
++/*SCSI IO SGLFlags bits */
++
++/*base values for Data Location Address Space */
++#define MPI2_SCSIIO_SGLFLAGS_ADDR_MASK              (0x0C)
++#define MPI2_SCSIIO_SGLFLAGS_SYSTEM_ADDR            (0x00)
++#define MPI2_SCSIIO_SGLFLAGS_IOCDDR_ADDR            (0x04)
++#define MPI2_SCSIIO_SGLFLAGS_IOCPLB_ADDR            (0x08)
++#define MPI2_SCSIIO_SGLFLAGS_IOCPLBNTA_ADDR         (0x0C)
++
++/*base values for Type */
++#define MPI2_SCSIIO_SGLFLAGS_TYPE_MASK              (0x03)
++#define MPI2_SCSIIO_SGLFLAGS_TYPE_MPI               (0x00)
++#define MPI2_SCSIIO_SGLFLAGS_TYPE_IEEE32            (0x01)
++#define MPI2_SCSIIO_SGLFLAGS_TYPE_IEEE64            (0x02)
++
++/*shift values for each sub-field */
++#define MPI2_SCSIIO_SGLFLAGS_SGL3_SHIFT             (12)
++#define MPI2_SCSIIO_SGLFLAGS_SGL2_SHIFT             (8)
++#define MPI2_SCSIIO_SGLFLAGS_SGL1_SHIFT             (4)
++#define MPI2_SCSIIO_SGLFLAGS_SGL0_SHIFT             (0)
++
++/*number of SGLOffset fields */
++#define MPI2_SCSIIO_NUM_SGLOFFSETS                  (4)
++
++/*SCSI IO IoFlags bits */
++
++/*Large CDB Address Space */
++#define MPI2_SCSIIO_CDB_ADDR_MASK                   (0x6000)
++#define MPI2_SCSIIO_CDB_ADDR_SYSTEM                 (0x0000)
++#define MPI2_SCSIIO_CDB_ADDR_IOCDDR                 (0x2000)
++#define MPI2_SCSIIO_CDB_ADDR_IOCPLB                 (0x4000)
++#define MPI2_SCSIIO_CDB_ADDR_IOCPLBNTA              (0x6000)
++
++#define MPI2_SCSIIO_IOFLAGS_LARGE_CDB               (0x1000)
++#define MPI2_SCSIIO_IOFLAGS_BIDIRECTIONAL           (0x0800)
++#define MPI2_SCSIIO_IOFLAGS_MULTICAST               (0x0400)
++#define MPI2_SCSIIO_IOFLAGS_CMD_DETERMINES_DATA_DIR (0x0200)
++#define MPI2_SCSIIO_IOFLAGS_CDBLENGTH_MASK          (0x01FF)
++
++/*SCSI IO EEDPFlags bits */
++
++#define MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG        (0x8000)
++#define MPI2_SCSIIO_EEDPFLAGS_INC_SEC_REFTAG        (0x4000)
++#define MPI2_SCSIIO_EEDPFLAGS_INC_PRI_APPTAG        (0x2000)
++#define MPI2_SCSIIO_EEDPFLAGS_INC_SEC_APPTAG        (0x1000)
++
++#define MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG          (0x0400)
++#define MPI2_SCSIIO_EEDPFLAGS_CHECK_APPTAG          (0x0200)
++#define MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD           (0x0100)
++
++#define MPI2_SCSIIO_EEDPFLAGS_PASSTHRU_REFTAG       (0x0008)
++
++#define MPI2_SCSIIO_EEDPFLAGS_MASK_OP               (0x0007)
++#define MPI2_SCSIIO_EEDPFLAGS_NOOP_OP               (0x0000)
++#define MPI2_SCSIIO_EEDPFLAGS_CHECK_OP              (0x0001)
++#define MPI2_SCSIIO_EEDPFLAGS_STRIP_OP              (0x0002)
++#define MPI2_SCSIIO_EEDPFLAGS_CHECK_REMOVE_OP       (0x0003)
++#define MPI2_SCSIIO_EEDPFLAGS_INSERT_OP             (0x0004)
++#define MPI2_SCSIIO_EEDPFLAGS_REPLACE_OP            (0x0006)
++#define MPI2_SCSIIO_EEDPFLAGS_CHECK_REGEN_OP        (0x0007)
++
++/*SCSI IO LUN fields: use MPI2_LUN_ from mpi2.h */
++
++/*SCSI IO Control bits */
++#define MPI2_SCSIIO_CONTROL_ADDCDBLEN_MASK      (0xFC000000)
++#define MPI2_SCSIIO_CONTROL_ADDCDBLEN_SHIFT     (26)
++
++#define MPI2_SCSIIO_CONTROL_DATADIRECTION_MASK  (0x03000000)
++#define MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION (24)
++#define MPI2_SCSIIO_CONTROL_NODATATRANSFER      (0x00000000)
++#define MPI2_SCSIIO_CONTROL_WRITE               (0x01000000)
++#define MPI2_SCSIIO_CONTROL_READ                (0x02000000)
++#define MPI2_SCSIIO_CONTROL_BIDIRECTIONAL       (0x03000000)
++
++#define MPI2_SCSIIO_CONTROL_TASKPRI_MASK        (0x00007800)
++#define MPI2_SCSIIO_CONTROL_TASKPRI_SHIFT       (11)
++/*alternate name for the previous field; called Command Priority in SAM-4 */
++#define MPI2_SCSIIO_CONTROL_CMDPRI_MASK         (0x00007800)
++#define MPI2_SCSIIO_CONTROL_CMDPRI_SHIFT        (11)
++
++#define MPI2_SCSIIO_CONTROL_TASKATTRIBUTE_MASK  (0x00000700)
++#define MPI2_SCSIIO_CONTROL_SIMPLEQ             (0x00000000)
++#define MPI2_SCSIIO_CONTROL_HEADOFQ             (0x00000100)
++#define MPI2_SCSIIO_CONTROL_ORDEREDQ            (0x00000200)
++#define MPI2_SCSIIO_CONTROL_ACAQ                (0x00000400)
++
++#define MPI2_SCSIIO_CONTROL_TLR_MASK            (0x000000C0)
++#define MPI2_SCSIIO_CONTROL_NO_TLR              (0x00000000)
++#define MPI2_SCSIIO_CONTROL_TLR_ON              (0x00000040)
++#define MPI2_SCSIIO_CONTROL_TLR_OFF             (0x00000080)
++
++/*MPI v2.5 CDB field */
++typedef union _MPI25_SCSI_IO_CDB_UNION {
++	U8 CDB32[32];
++	MPI2_SCSI_IO_CDB_EEDP32 EEDP32;
++	MPI2_IEEE_SGE_SIMPLE64 SGE;
++} MPI25_SCSI_IO_CDB_UNION, *PTR_MPI25_SCSI_IO_CDB_UNION,
++	Mpi25ScsiIoCdb_t, *pMpi25ScsiIoCdb_t;
++
++/*MPI v2.5 SCSI IO Request Message */
++typedef struct _MPI25_SCSI_IO_REQUEST {
++	U16 DevHandle;		/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved1;		/*0x04 */
++	U8 Reserved2;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved3;		/*0x0A */
++	U32 SenseBufferLowAddress;	/*0x0C */
++	U8 DMAFlags;		/*0x10 */
++	U8 Reserved5;		/*0x11 */
++	U8 SenseBufferLength;	/*0x12 */
++	U8 Reserved4;		/*0x13 */
++	U8 SGLOffset0;		/*0x14 */
++	U8 SGLOffset1;		/*0x15 */
++	U8 SGLOffset2;		/*0x16 */
++	U8 SGLOffset3;		/*0x17 */
++	U32 SkipCount;		/*0x18 */
++	U32 DataLength;		/*0x1C */
++	U32 BidirectionalDataLength;	/*0x20 */
++	U16 IoFlags;		/*0x24 */
++	U16 EEDPFlags;		/*0x26 */
++	U16 EEDPBlockSize;	/*0x28 */
++	U16 Reserved6;		/*0x2A */
++	U32 SecondaryReferenceTag;	/*0x2C */
++	U16 SecondaryApplicationTag;	/*0x30 */
++	U16 ApplicationTagTranslationMask;	/*0x32 */
++	U8 LUN[8];		/*0x34 */
++	U32 Control;		/*0x3C */
++	MPI25_SCSI_IO_CDB_UNION CDB;	/*0x40 */
++
++#ifdef MPI25_SCSI_IO_VENDOR_UNIQUE_REGION /*typically this is left undefined */
++	MPI25_SCSI_IO_VENDOR_UNIQUE VendorRegion;
 +#endif
 +
-+typedef struct _MPI2_CONFIG_PAGE_MAN_3 {
-+	MPI2_CONFIG_PAGE_HEADER             Header;         /*0x00 */
-+	MPI2_CHIP_REVISION_ID               ChipId;         /*0x04 */
-+	U32
-+		Info[MPI2_MAN_PAGE_3_INFO_WORDS];/*0x08 */
-+} MPI2_CONFIG_PAGE_MAN_3,
-+	*PTR_MPI2_CONFIG_PAGE_MAN_3,
-+	Mpi2ManufacturingPage3_t,
-+	*pMpi2ManufacturingPage3_t;
++	MPI25_SGE_IO_UNION SGL;	/*0x60 */
 +
-+#define MPI2_MANUFACTURING3_PAGEVERSION                 (0x00)
++} MPI25_SCSI_IO_REQUEST, *PTR_MPI25_SCSI_IO_REQUEST,
++	Mpi25SCSIIORequest_t, *pMpi25SCSIIORequest_t;
 +
++/*use MPI2_SCSIIO_MSGFLAGS_ defines for the MsgFlags field */
 +
-+/*Manufacturing Page 4 */
-+
-+typedef struct _MPI2_MANPAGE4_PWR_SAVE_SETTINGS {
-+	U8                          PowerSaveFlags;                 /*0x00 */
-+	U8                          InternalOperationsSleepTime;    /*0x01 */
-+	U8                          InternalOperationsRunTime;      /*0x02 */
-+	U8                          HostIdleTime;                   /*0x03 */
-+} MPI2_MANPAGE4_PWR_SAVE_SETTINGS,
-+	*PTR_MPI2_MANPAGE4_PWR_SAVE_SETTINGS,
-+	Mpi2ManPage4PwrSaveSettings_t,
-+	*pMpi2ManPage4PwrSaveSettings_t;
-+
-+/*defines for the PowerSaveFlags field */
-+#define MPI2_MANPAGE4_MASK_POWERSAVE_MODE               (0x03)
-+#define MPI2_MANPAGE4_POWERSAVE_MODE_DISABLED           (0x00)
-+#define MPI2_MANPAGE4_CUSTOM_POWERSAVE_MODE             (0x01)
-+#define MPI2_MANPAGE4_FULL_POWERSAVE_MODE               (0x02)
-+
-+typedef struct _MPI2_CONFIG_PAGE_MAN_4 {
-+	MPI2_CONFIG_PAGE_HEADER             Header;                 /*0x00 */
-+	U32                                 Reserved1;              /*0x04 */
-+	U32                                 Flags;                  /*0x08 */
-+	U8                                  InquirySize;            /*0x0C */
-+	U8                                  Reserved2;              /*0x0D */
-+	U16                                 Reserved3;              /*0x0E */
-+	U8                                  InquiryData[56];        /*0x10 */
-+	U32                                 RAID0VolumeSettings;    /*0x48 */
-+	U32                                 RAID1EVolumeSettings;   /*0x4C */
-+	U32                                 RAID1VolumeSettings;    /*0x50 */
-+	U32                                 RAID10VolumeSettings;   /*0x54 */
-+	U32                                 Reserved4;              /*0x58 */
-+	U32                                 Reserved5;              /*0x5C */
-+	MPI2_MANPAGE4_PWR_SAVE_SETTINGS     PowerSaveSettings;      /*0x60 */
-+	U8                                  MaxOCEDisks;            /*0x64 */
-+	U8                                  ResyncRate;             /*0x65 */
-+	U16                                 DataScrubDuration;      /*0x66 */
-+	U8                                  MaxHotSpares;           /*0x68 */
-+	U8                                  MaxPhysDisksPerVol;     /*0x69 */
-+	U8                                  MaxPhysDisks;           /*0x6A */
-+	U8                                  MaxVolumes;             /*0x6B */
-+} MPI2_CONFIG_PAGE_MAN_4,
-+	*PTR_MPI2_CONFIG_PAGE_MAN_4,
-+	Mpi2ManufacturingPage4_t,
-+	*pMpi2ManufacturingPage4_t;
-+
-+#define MPI2_MANUFACTURING4_PAGEVERSION                 (0x0A)
-+
-+/*Manufacturing Page 4 Flags field */
-+#define MPI2_MANPAGE4_METADATA_SIZE_MASK                (0x00030000)
-+#define MPI2_MANPAGE4_METADATA_512MB                    (0x00000000)
-+
-+#define MPI2_MANPAGE4_MIX_SSD_SAS_SATA                  (0x00008000)
-+#define MPI2_MANPAGE4_MIX_SSD_AND_NON_SSD               (0x00004000)
-+#define MPI2_MANPAGE4_HIDE_PHYSDISK_NON_IR              (0x00002000)
-+
-+#define MPI2_MANPAGE4_MASK_PHYSDISK_COERCION            (0x00001C00)
-+#define MPI2_MANPAGE4_PHYSDISK_COERCION_1GB             (0x00000000)
-+#define MPI2_MANPAGE4_PHYSDISK_128MB_COERCION           (0x00000400)
-+#define MPI2_MANPAGE4_PHYSDISK_ADAPTIVE_COERCION        (0x00000800)
-+#define MPI2_MANPAGE4_PHYSDISK_ZERO_COERCION            (0x00000C00)
-+
-+#define MPI2_MANPAGE4_MASK_BAD_BLOCK_MARKING            (0x00000300)
-+#define MPI2_MANPAGE4_DEFAULT_BAD_BLOCK_MARKING         (0x00000000)
-+#define MPI2_MANPAGE4_TABLE_BAD_BLOCK_MARKING           (0x00000100)
-+#define MPI2_MANPAGE4_WRITE_LONG_BAD_BLOCK_MARKING      (0x00000200)
-+
-+#define MPI2_MANPAGE4_FORCE_OFFLINE_FAILOVER            (0x00000080)
-+#define MPI2_MANPAGE4_RAID10_DISABLE                    (0x00000040)
-+#define MPI2_MANPAGE4_RAID1E_DISABLE                    (0x00000020)
-+#define MPI2_MANPAGE4_RAID1_DISABLE                     (0x00000010)
-+#define MPI2_MANPAGE4_RAID0_DISABLE                     (0x00000008)
-+#define MPI2_MANPAGE4_IR_MODEPAGE8_DISABLE              (0x00000004)
-+#define MPI2_MANPAGE4_IM_RESYNC_CACHE_ENABLE            (0x00000002)
-+#define MPI2_MANPAGE4_IR_NO_MIX_SAS_SATA                (0x00000001)
-+
-+
-+/*Manufacturing Page 5 */
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check the value returned for NumPhys at runtime.
++/*Defines for the DMAFlags field
++ * Each setting affects 4 SGLS, from SGL0 to SGL3.
++ *     D = Data
++ *     C = Cache DIF
++ *     I = Interleaved
++ *     H = Host DIF
 + */
-+#ifndef MPI2_MAN_PAGE_5_PHY_ENTRIES
-+#define MPI2_MAN_PAGE_5_PHY_ENTRIES         (1)
-+#endif
++#define MPI25_SCSIIO_DMAFLAGS_OP_MASK               (0x0F)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_D_D            (0x00)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_D_C            (0x01)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_D_I            (0x02)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_C_C            (0x03)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_C_I            (0x04)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_D_I_I            (0x05)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_C_C_C            (0x06)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_C_C_I            (0x07)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_C_I_I            (0x08)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_I_I_I            (0x09)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_D_D            (0x0A)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_D_C            (0x0B)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_D_I            (0x0C)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_C_C            (0x0D)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_C_I            (0x0E)
++#define MPI25_SCSIIO_DMAFLAGS_OP_D_H_I_I            (0x0F)
 +
-+typedef struct _MPI2_MANUFACTURING5_ENTRY {
-+	U64                                 WWID;           /*0x00 */
-+	U64                                 DeviceName;     /*0x08 */
-+} MPI2_MANUFACTURING5_ENTRY,
-+	*PTR_MPI2_MANUFACTURING5_ENTRY,
-+	Mpi2Manufacturing5Entry_t,
-+	*pMpi2Manufacturing5Entry_t;
++/*number of SGLOffset fields */
++#define MPI25_SCSIIO_NUM_SGLOFFSETS                 (4)
 +
-+typedef struct _MPI2_CONFIG_PAGE_MAN_5 {
-+	MPI2_CONFIG_PAGE_HEADER             Header;         /*0x00 */
-+	U8                                  NumPhys;        /*0x04 */
-+	U8                                  Reserved1;      /*0x05 */
-+	U16                                 Reserved2;      /*0x06 */
-+	U32                                 Reserved3;      /*0x08 */
-+	U32                                 Reserved4;      /*0x0C */
-+	MPI2_MANUFACTURING5_ENTRY
-+		Phy[MPI2_MAN_PAGE_5_PHY_ENTRIES];/*0x08 */
-+} MPI2_CONFIG_PAGE_MAN_5,
-+	*PTR_MPI2_CONFIG_PAGE_MAN_5,
-+	Mpi2ManufacturingPage5_t,
-+	*pMpi2ManufacturingPage5_t;
++/*defines for the IoFlags field */
++#define MPI25_SCSIIO_IOFLAGS_IO_PATH_MASK           (0xC000)
++#define MPI25_SCSIIO_IOFLAGS_NORMAL_PATH            (0x0000)
++#define MPI25_SCSIIO_IOFLAGS_FAST_PATH              (0x4000)
 +
-+#define MPI2_MANUFACTURING5_PAGEVERSION                 (0x03)
++#define MPI25_SCSIIO_IOFLAGS_LARGE_CDB                  (0x1000)
++#define MPI25_SCSIIO_IOFLAGS_BIDIRECTIONAL              (0x0800)
++#define MPI25_SCSIIO_IOFLAGS_CDBLENGTH_MASK             (0x01FF)
 +
++/*MPI v2.5 defines for the EEDPFlags bits */
++/*use MPI2_SCSIIO_EEDPFLAGS_ defines for the other EEDPFlags bits */
++#define MPI25_SCSIIO_EEDPFLAGS_ESCAPE_MODE_MASK             (0x00C0)
++#define MPI25_SCSIIO_EEDPFLAGS_COMPATIBLE_MODE              (0x0000)
++#define MPI25_SCSIIO_EEDPFLAGS_DO_NOT_DISABLE_MODE          (0x0040)
++#define MPI25_SCSIIO_EEDPFLAGS_APPTAG_DISABLE_MODE          (0x0080)
++#define MPI25_SCSIIO_EEDPFLAGS_APPTAG_REFTAG_DISABLE_MODE   (0x00C0)
 +
-+/*Manufacturing Page 6 */
++#define MPI25_SCSIIO_EEDPFLAGS_HOST_GUARD_METHOD_MASK       (0x0030)
++#define MPI25_SCSIIO_EEDPFLAGS_T10_CRC_HOST_GUARD           (0x0000)
++#define MPI25_SCSIIO_EEDPFLAGS_IP_CHKSUM_HOST_GUARD         (0x0010)
 +
-+typedef struct _MPI2_CONFIG_PAGE_MAN_6 {
-+	MPI2_CONFIG_PAGE_HEADER         Header;             /*0x00 */
-+	U32                             ProductSpecificInfo;/*0x04 */
-+} MPI2_CONFIG_PAGE_MAN_6,
-+	*PTR_MPI2_CONFIG_PAGE_MAN_6,
-+	Mpi2ManufacturingPage6_t,
-+	*pMpi2ManufacturingPage6_t;
++/*use MPI2_LUN_ defines from mpi2.h for the LUN field */
 +
-+#define MPI2_MANUFACTURING6_PAGEVERSION                 (0x00)
++/*use MPI2_SCSIIO_CONTROL_ defines for the Control field */
 +
-+
-+/*Manufacturing Page 7 */
-+
-+typedef struct _MPI2_MANPAGE7_CONNECTOR_INFO {
-+	U32                         Pinout;                 /*0x00 */
-+	U8                          Connector[16];          /*0x04 */
-+	U8                          Location;               /*0x14 */
-+	U8                          ReceptacleID;           /*0x15 */
-+	U16                         Slot;                   /*0x16 */
-+	U32                         Reserved2;              /*0x18 */
-+} MPI2_MANPAGE7_CONNECTOR_INFO,
-+	*PTR_MPI2_MANPAGE7_CONNECTOR_INFO,
-+	Mpi2ManPage7ConnectorInfo_t,
-+	*pMpi2ManPage7ConnectorInfo_t;
-+
-+/*defines for the Pinout field */
-+#define MPI2_MANPAGE7_PINOUT_LANE_MASK                  (0x0000FF00)
-+#define MPI2_MANPAGE7_PINOUT_LANE_SHIFT                 (8)
-+
-+#define MPI2_MANPAGE7_PINOUT_TYPE_MASK                  (0x000000FF)
-+#define MPI2_MANPAGE7_PINOUT_TYPE_UNKNOWN               (0x00)
-+#define MPI2_MANPAGE7_PINOUT_SATA_SINGLE                (0x01)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8482                   (0x02)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8486                   (0x03)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8484                   (0x04)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8087                   (0x05)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8643_4I                (0x06)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8643_8I                (0x07)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8470                   (0x08)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8088                   (0x09)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8644_4X                (0x0A)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8644_8X                (0x0B)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8644_16X               (0x0C)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8436                   (0x0D)
-+
-+/*defines for the Location field */
-+#define MPI2_MANPAGE7_LOCATION_UNKNOWN                  (0x01)
-+#define MPI2_MANPAGE7_LOCATION_INTERNAL                 (0x02)
-+#define MPI2_MANPAGE7_LOCATION_EXTERNAL                 (0x04)
-+#define MPI2_MANPAGE7_LOCATION_SWITCHABLE               (0x08)
-+#define MPI2_MANPAGE7_LOCATION_AUTO                     (0x10)
-+#define MPI2_MANPAGE7_LOCATION_NOT_PRESENT              (0x20)
-+#define MPI2_MANPAGE7_LOCATION_NOT_CONNECTED            (0x80)
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check the value returned for NumPhys at runtime.
-+ */
-+#ifndef MPI2_MANPAGE7_CONNECTOR_INFO_MAX
-+#define MPI2_MANPAGE7_CONNECTOR_INFO_MAX  (1)
-+#endif
-+
-+typedef struct _MPI2_CONFIG_PAGE_MAN_7 {
-+	MPI2_CONFIG_PAGE_HEADER         Header;             /*0x00 */
-+	U32                             Reserved1;          /*0x04 */
-+	U32                             Reserved2;          /*0x08 */
-+	U32                             Flags;              /*0x0C */
-+	U8                              EnclosureName[16];  /*0x10 */
-+	U8                              NumPhys;            /*0x20 */
-+	U8                              Reserved3;          /*0x21 */
-+	U16                             Reserved4;          /*0x22 */
-+	MPI2_MANPAGE7_CONNECTOR_INFO
-+	ConnectorInfo[MPI2_MANPAGE7_CONNECTOR_INFO_MAX]; /*0x24 */
-+} MPI2_CONFIG_PAGE_MAN_7,
-+	*PTR_MPI2_CONFIG_PAGE_MAN_7,
-+	Mpi2ManufacturingPage7_t,
-+	*pMpi2ManufacturingPage7_t;
-+
-+#define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
-+
-+/*defines for the Flags field */
-+#define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
-+
-+
-+/*
-+ *Generic structure to use for product-specific manufacturing pages
-+ *(currently Manufacturing Page 8 through Manufacturing Page 31).
++/*NOTE: The SCSI IO Reply is nearly the same for MPI 2.0 and MPI 2.5, so
++ *      MPI2_SCSI_IO_REPLY is used for both.
 + */
 +
-+typedef struct _MPI2_CONFIG_PAGE_MAN_PS {
-+	MPI2_CONFIG_PAGE_HEADER         Header;             /*0x00 */
-+	U32                             ProductSpecificInfo;/*0x04 */
-+} MPI2_CONFIG_PAGE_MAN_PS,
-+	*PTR_MPI2_CONFIG_PAGE_MAN_PS,
-+	Mpi2ManufacturingPagePS_t,
-+	*pMpi2ManufacturingPagePS_t;
++/*SCSI IO Error Reply Message */
++typedef struct _MPI2_SCSI_IO_REPLY {
++	U16 DevHandle;		/*0x00 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved1;		/*0x04 */
++	U8 Reserved2;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved3;		/*0x0A */
++	U8 SCSIStatus;		/*0x0C */
++	U8 SCSIState;		/*0x0D */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++	U32 TransferCount;	/*0x14 */
++	U32 SenseCount;		/*0x18 */
++	U32 ResponseInfo;	/*0x1C */
++	U16 TaskTag;		/*0x20 */
++	U16 Reserved4;		/*0x22 */
++	U32 BidirectionalTransferCount;	/*0x24 */
++	U32 EEDPErrorOffset;	/*0x28 *//*MPI 2.5 only; Reserved in MPI 2.0*/
++	U32 Reserved6;		/*0x2C */
++} MPI2_SCSI_IO_REPLY, *PTR_MPI2_SCSI_IO_REPLY,
++	Mpi2SCSIIOReply_t, *pMpi2SCSIIOReply_t;
 +
-+#define MPI2_MANUFACTURING8_PAGEVERSION                 (0x00)
-+#define MPI2_MANUFACTURING9_PAGEVERSION                 (0x00)
-+#define MPI2_MANUFACTURING10_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING11_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING12_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING13_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING14_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING15_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING16_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING17_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING18_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING19_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING20_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING21_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING22_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING23_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING24_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING25_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING26_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING27_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING28_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING29_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING30_PAGEVERSION                (0x00)
-+#define MPI2_MANUFACTURING31_PAGEVERSION                (0x00)
++/*SCSI IO Reply SCSIStatus values (SAM-4 status codes) */
 +
++#define MPI2_SCSI_STATUS_GOOD                   (0x00)
++#define MPI2_SCSI_STATUS_CHECK_CONDITION        (0x02)
++#define MPI2_SCSI_STATUS_CONDITION_MET          (0x04)
++#define MPI2_SCSI_STATUS_BUSY                   (0x08)
++#define MPI2_SCSI_STATUS_INTERMEDIATE           (0x10)
++#define MPI2_SCSI_STATUS_INTERMEDIATE_CONDMET   (0x14)
++#define MPI2_SCSI_STATUS_RESERVATION_CONFLICT   (0x18)
++#define MPI2_SCSI_STATUS_COMMAND_TERMINATED     (0x22)	/*obsolete */
++#define MPI2_SCSI_STATUS_TASK_SET_FULL          (0x28)
++#define MPI2_SCSI_STATUS_ACA_ACTIVE             (0x30)
++#define MPI2_SCSI_STATUS_TASK_ABORTED           (0x40)
++
++/*SCSI IO Reply SCSIState flags */
++
++#define MPI2_SCSI_STATE_RESPONSE_INFO_VALID     (0x10)
++#define MPI2_SCSI_STATE_TERMINATED              (0x08)
++#define MPI2_SCSI_STATE_NO_SCSI_STATUS          (0x04)
++#define MPI2_SCSI_STATE_AUTOSENSE_FAILED        (0x02)
++#define MPI2_SCSI_STATE_AUTOSENSE_VALID         (0x01)
++
++/*masks and shifts for the ResponseInfo field */
++
++#define MPI2_SCSI_RI_MASK_REASONCODE            (0x000000FF)
++#define MPI2_SCSI_RI_SHIFT_REASONCODE           (0)
++
++#define MPI2_SCSI_TASKTAG_UNKNOWN               (0xFFFF)
 +
 +/****************************************************************************
-+*  IO Unit Config Pages
++* SCSI Task Management messages
 +****************************************************************************/
 +
-+/*IO Unit Page 0 */
-+
-+typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_0 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U64                     UniqueValue;                /*0x04 */
-+	MPI2_VERSION_UNION      NvdataVersionDefault;       /*0x08 */
-+	MPI2_VERSION_UNION      NvdataVersionPersistent;    /*0x0A */
-+} MPI2_CONFIG_PAGE_IO_UNIT_0,
-+	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_0,
-+	Mpi2IOUnitPage0_t, *pMpi2IOUnitPage0_t;
-+
-+#define MPI2_IOUNITPAGE0_PAGEVERSION                    (0x02)
-+
-+
-+/*IO Unit Page 1 */
-+
-+typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U32                     Flags;                      /*0x04 */
-+} MPI2_CONFIG_PAGE_IO_UNIT_1,
-+	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_1,
-+	Mpi2IOUnitPage1_t, *pMpi2IOUnitPage1_t;
-+
-+#define MPI2_IOUNITPAGE1_PAGEVERSION                    (0x04)
-+
-+/*IO Unit Page 1 Flags defines */
-+#define MPI25_IOUNITPAGE1_NEW_DEVICE_FAST_PATH_DISABLE  (0x00002000)
-+#define MPI25_IOUNITPAGE1_DISABLE_FAST_PATH             (0x00001000)
-+#define MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY    (0x00000800)
-+#define MPI2_IOUNITPAGE1_MASK_SATA_WRITE_CACHE          (0x00000600)
-+#define MPI2_IOUNITPAGE1_SATA_WRITE_CACHE_SHIFT         (9)
-+#define MPI2_IOUNITPAGE1_ENABLE_SATA_WRITE_CACHE        (0x00000000)
-+#define MPI2_IOUNITPAGE1_DISABLE_SATA_WRITE_CACHE       (0x00000200)
-+#define MPI2_IOUNITPAGE1_UNCHANGED_SATA_WRITE_CACHE     (0x00000400)
-+#define MPI2_IOUNITPAGE1_NATIVE_COMMAND_Q_DISABLE       (0x00000100)
-+#define MPI2_IOUNITPAGE1_DISABLE_IR                     (0x00000040)
-+#define MPI2_IOUNITPAGE1_DISABLE_TASK_SET_FULL_HANDLING (0x00000020)
-+#define MPI2_IOUNITPAGE1_IR_USE_STATIC_VOLUME_ID        (0x00000004)
-+
-+
-+/*IO Unit Page 3 */
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check the value returned for GPIOCount at runtime.
-+ */
-+#ifndef MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX
-+#define MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX    (1)
-+#endif
-+
-+typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_3 {
-+	MPI2_CONFIG_PAGE_HEADER Header;			 /*0x00 */
-+	U8                      GPIOCount;		 /*0x04 */
-+	U8                      Reserved1;		 /*0x05 */
-+	U16                     Reserved2;		 /*0x06 */
-+	U16
-+		GPIOVal[MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX];/*0x08 */
-+} MPI2_CONFIG_PAGE_IO_UNIT_3,
-+	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_3,
-+	Mpi2IOUnitPage3_t, *pMpi2IOUnitPage3_t;
-+
-+#define MPI2_IOUNITPAGE3_PAGEVERSION                    (0x01)
-+
-+/*defines for IO Unit Page 3 GPIOVal field */
-+#define MPI2_IOUNITPAGE3_GPIO_FUNCTION_MASK             (0xFFFC)
-+#define MPI2_IOUNITPAGE3_GPIO_FUNCTION_SHIFT            (2)
-+#define MPI2_IOUNITPAGE3_GPIO_SETTING_OFF               (0x0000)
-+#define MPI2_IOUNITPAGE3_GPIO_SETTING_ON                (0x0001)
-+
-+
-+/*IO Unit Page 5 */
-+
-+/*
-+ *Upper layer code (drivers, utilities, etc.) should leave this define set to
-+ *one and check the value returned for NumDmaEngines at runtime.
-+ */
-+#ifndef MPI2_IOUNITPAGE5_DMAENGINE_ENTRIES
-+#define MPI2_IOUNITPAGE5_DMAENGINE_ENTRIES      (1)
-+#endif
-+
-+typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_5 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U64
-+		RaidAcceleratorBufferBaseAddress;           /*0x04 */
-+	U64
-+		RaidAcceleratorBufferSize;                  /*0x0C */
-+	U64
-+		RaidAcceleratorControlBaseAddress;          /*0x14 */
-+	U8                      RAControlSize;              /*0x1C */
-+	U8                      NumDmaEngines;              /*0x1D */
-+	U8                      RAMinControlSize;           /*0x1E */
-+	U8                      RAMaxControlSize;           /*0x1F */
-+	U32                     Reserved1;                  /*0x20 */
-+	U32                     Reserved2;                  /*0x24 */
-+	U32                     Reserved3;                  /*0x28 */
-+	U32
-+	DmaEngineCapabilities[MPI2_IOUNITPAGE5_DMAENGINE_ENTRIES]; /*0x2C */
-+} MPI2_CONFIG_PAGE_IO_UNIT_5,
-+	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_5,
-+	Mpi2IOUnitPage5_t, *pMpi2IOUnitPage5_t;
-+
-+#define MPI2_IOUNITPAGE5_PAGEVERSION                    (0x00)
-+
-+/*defines for IO Unit Page 5 DmaEngineCapabilities field */
-+#define MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS      (0xFF00)
-+#define MPI2_IOUNITPAGE5_DMA_CAP_SHIFT_MAX_REQUESTS     (16)
-+
-+#define MPI2_IOUNITPAGE5_DMA_CAP_EEDP                   (0x0008)
-+#define MPI2_IOUNITPAGE5_DMA_CAP_PARITY_GENERATION      (0x0004)
-+#define MPI2_IOUNITPAGE5_DMA_CAP_HASHING                (0x0002)
-+#define MPI2_IOUNITPAGE5_DMA_CAP_ENCRYPTION             (0x0001)
-+
-+
-+/*IO Unit Page 6 */
-+
-+typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_6 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                 /*0x00 */
-+	U16                     Flags;                  /*0x04 */
-+	U8                      RAHostControlSize;      /*0x06 */
-+	U8                      Reserved0;              /*0x07 */
-+	U64
-+		RaidAcceleratorHostControlBaseAddress;  /*0x08 */
-+	U32                     Reserved1;              /*0x10 */
-+	U32                     Reserved2;              /*0x14 */
-+	U32                     Reserved3;              /*0x18 */
-+} MPI2_CONFIG_PAGE_IO_UNIT_6,
-+	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_6,
-+	Mpi2IOUnitPage6_t, *pMpi2IOUnitPage6_t;
-+
-+#define MPI2_IOUNITPAGE6_PAGEVERSION                    (0x00)
-+
-+/*defines for IO Unit Page 6 Flags field */
-+#define MPI2_IOUNITPAGE6_FLAGS_ENABLE_RAID_ACCELERATOR  (0x0001)
-+
-+
-+/*IO Unit Page 7 */
-+
-+typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                 /*0x00 */
-+	U8                      CurrentPowerMode;       /*0x04 */
-+	U8                      PreviousPowerMode;      /*0x05 */
-+	U8                      PCIeWidth;              /*0x06 */
-+	U8                      PCIeSpeed;              /*0x07 */
-+	U32                     ProcessorState;         /*0x08 */
-+	U32
-+		PowerManagementCapabilities;            /*0x0C */
-+	U16                     IOCTemperature;         /*0x10 */
-+	U8
-+		IOCTemperatureUnits;                    /*0x12 */
-+	U8                      IOCSpeed;               /*0x13 */
-+	U16                     BoardTemperature;       /*0x14 */
-+	U8
-+		BoardTemperatureUnits;                  /*0x16 */
-+	U8                      Reserved3;              /*0x17 */
-+} MPI2_CONFIG_PAGE_IO_UNIT_7,
-+	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_7,
-+	Mpi2IOUnitPage7_t, *pMpi2IOUnitPage7_t;
-+
-+#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x02)
-+
-+/*defines for IO Unit Page 7 CurrentPowerMode and PreviousPowerMode fields */
-+#define MPI25_IOUNITPAGE7_PM_INIT_MASK              (0xC0)
-+#define MPI25_IOUNITPAGE7_PM_INIT_UNAVAILABLE       (0x00)
-+#define MPI25_IOUNITPAGE7_PM_INIT_HOST              (0x40)
-+#define MPI25_IOUNITPAGE7_PM_INIT_IO_UNIT           (0x80)
-+#define MPI25_IOUNITPAGE7_PM_INIT_PCIE_DPA          (0xC0)
-+
-+#define MPI25_IOUNITPAGE7_PM_MODE_MASK              (0x07)
-+#define MPI25_IOUNITPAGE7_PM_MODE_UNAVAILABLE       (0x00)
-+#define MPI25_IOUNITPAGE7_PM_MODE_UNKNOWN           (0x01)
-+#define MPI25_IOUNITPAGE7_PM_MODE_FULL_POWER        (0x04)
-+#define MPI25_IOUNITPAGE7_PM_MODE_REDUCED_POWER     (0x05)
-+#define MPI25_IOUNITPAGE7_PM_MODE_STANDBY           (0x06)
-+
-+
-+/*defines for IO Unit Page 7 PCIeWidth field */
-+#define MPI2_IOUNITPAGE7_PCIE_WIDTH_X1              (0x01)
-+#define MPI2_IOUNITPAGE7_PCIE_WIDTH_X2              (0x02)
-+#define MPI2_IOUNITPAGE7_PCIE_WIDTH_X4              (0x04)
-+#define MPI2_IOUNITPAGE7_PCIE_WIDTH_X8              (0x08)
-+
-+/*defines for IO Unit Page 7 PCIeSpeed field */
-+#define MPI2_IOUNITPAGE7_PCIE_SPEED_2_5_GBPS        (0x00)
-+#define MPI2_IOUNITPAGE7_PCIE_SPEED_5_0_GBPS        (0x01)
-+#define MPI2_IOUNITPAGE7_PCIE_SPEED_8_0_GBPS        (0x02)
-+
-+/*defines for IO Unit Page 7 ProcessorState field */
-+#define MPI2_IOUNITPAGE7_PSTATE_MASK_SECOND         (0x0000000F)
-+#define MPI2_IOUNITPAGE7_PSTATE_SHIFT_SECOND        (0)
-+
-+#define MPI2_IOUNITPAGE7_PSTATE_NOT_PRESENT         (0x00)
-+#define MPI2_IOUNITPAGE7_PSTATE_DISABLED            (0x01)
-+#define MPI2_IOUNITPAGE7_PSTATE_ENABLED             (0x02)
-+
-+/*defines for IO Unit Page 7 PowerManagementCapabilities field */
-+#define MPI25_IOUNITPAGE7_PMCAP_DPA_FULL_PWR_MODE       (0x00400000)
-+#define MPI25_IOUNITPAGE7_PMCAP_DPA_REDUCED_PWR_MODE    (0x00200000)
-+#define MPI25_IOUNITPAGE7_PMCAP_DPA_STANDBY_MODE        (0x00100000)
-+#define MPI25_IOUNITPAGE7_PMCAP_HOST_FULL_PWR_MODE      (0x00040000)
-+#define MPI25_IOUNITPAGE7_PMCAP_HOST_REDUCED_PWR_MODE   (0x00020000)
-+#define MPI25_IOUNITPAGE7_PMCAP_HOST_STANDBY_MODE       (0x00010000)
-+#define MPI25_IOUNITPAGE7_PMCAP_IO_FULL_PWR_MODE        (0x00004000)
-+#define MPI25_IOUNITPAGE7_PMCAP_IO_REDUCED_PWR_MODE     (0x00002000)
-+#define MPI25_IOUNITPAGE7_PMCAP_IO_STANDBY_MODE         (0x00001000)
-+#define MPI2_IOUNITPAGE7_PMCAP_HOST_12_5_PCT_IOCSPEED   (0x00000400)
-+#define MPI2_IOUNITPAGE7_PMCAP_HOST_25_0_PCT_IOCSPEED   (0x00000200)
-+#define MPI2_IOUNITPAGE7_PMCAP_HOST_50_0_PCT_IOCSPEED   (0x00000100)
-+#define MPI25_IOUNITPAGE7_PMCAP_IO_12_5_PCT_IOCSPEED    (0x00000040)
-+#define MPI25_IOUNITPAGE7_PMCAP_IO_25_0_PCT_IOCSPEED    (0x00000020)
-+#define MPI25_IOUNITPAGE7_PMCAP_IO_50_0_PCT_IOCSPEED    (0x00000010)
-+#define MPI2_IOUNITPAGE7_PMCAP_HOST_WIDTH_CHANGE_PCIE   (0x00000008)
-+#define MPI2_IOUNITPAGE7_PMCAP_HOST_SPEED_CHANGE_PCIE   (0x00000004)
-+#define MPI25_IOUNITPAGE7_PMCAP_IO_WIDTH_CHANGE_PCIE    (0x00000002)
-+#define MPI25_IOUNITPAGE7_PMCAP_IO_SPEED_CHANGE_PCIE    (0x00000001)
-+
-+/*obsolete names for the PowerManagementCapabilities bits (above) */
-+#define MPI2_IOUNITPAGE7_PMCAP_12_5_PCT_IOCSPEED    (0x00000400)
-+#define MPI2_IOUNITPAGE7_PMCAP_25_0_PCT_IOCSPEED    (0x00000200)
-+#define MPI2_IOUNITPAGE7_PMCAP_50_0_PCT_IOCSPEED    (0x00000100)
-+#define MPI2_IOUNITPAGE7_PMCAP_PCIE_WIDTH_CHANGE    (0x00000008) /*obsolete */
-+#define MPI2_IOUNITPAGE7_PMCAP_PCIE_SPEED_CHANGE    (0x00000004) /*obsolete */
-+
-+
-+/*defines for IO Unit Page 7 IOCTemperatureUnits field */
-+#define MPI2_IOUNITPAGE7_IOC_TEMP_NOT_PRESENT       (0x00)
-+#define MPI2_IOUNITPAGE7_IOC_TEMP_FAHRENHEIT        (0x01)
-+#define MPI2_IOUNITPAGE7_IOC_TEMP_CELSIUS           (0x02)
-+
-+/*defines for IO Unit Page 7 IOCSpeed field */
-+#define MPI2_IOUNITPAGE7_IOC_SPEED_FULL             (0x01)
-+#define MPI2_IOUNITPAGE7_IOC_SPEED_HALF             (0x02)
-+#define MPI2_IOUNITPAGE7_IOC_SPEED_QUARTER          (0x04)
-+#define MPI2_IOUNITPAGE7_IOC_SPEED_EIGHTH           (0x08)
-+
-+/*defines for IO Unit Page 7 BoardTemperatureUnits field */
-+#define MPI2_IOUNITPAGE7_BOARD_TEMP_NOT_PRESENT     (0x00)
-+#define MPI2_IOUNITPAGE7_BOARD_TEMP_FAHRENHEIT      (0x01)
-+#define MPI2_IOUNITPAGE7_BOARD_TEMP_CELSIUS         (0x02)
-+
-+
-+/*IO Unit Page 8 */
-+
-+#define MPI2_IOUNIT8_NUM_THRESHOLDS     (4)
-+
-+typedef struct _MPI2_IOUNIT8_SENSOR {
-+	U16                     Flags;                  /*0x00 */
-+	U16                     Reserved1;              /*0x02 */
-+	U16
-+		Threshold[MPI2_IOUNIT8_NUM_THRESHOLDS]; /*0x04 */
-+	U32                     Reserved2;              /*0x0C */
-+	U32                     Reserved3;              /*0x10 */
-+	U32                     Reserved4;              /*0x14 */
-+} MPI2_IOUNIT8_SENSOR, *PTR_MPI2_IOUNIT8_SENSOR,
-+	Mpi2IOUnit8Sensor_t, *pMpi2IOUnit8Sensor_t;
-+
-+/*defines for IO Unit Page 8 Sensor Flags field */
-+#define MPI2_IOUNIT8_SENSOR_FLAGS_T3_ENABLE         (0x0008)
-+#define MPI2_IOUNIT8_SENSOR_FLAGS_T2_ENABLE         (0x0004)
-+#define MPI2_IOUNIT8_SENSOR_FLAGS_T1_ENABLE         (0x0002)
-+#define MPI2_IOUNIT8_SENSOR_FLAGS_T0_ENABLE         (0x0001)
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check the value returned for NumSensors at runtime.
-+ */
-+#ifndef MPI2_IOUNITPAGE8_SENSOR_ENTRIES
-+#define MPI2_IOUNITPAGE8_SENSOR_ENTRIES     (1)
-+#endif
-+
-+typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_8 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                 /*0x00 */
-+	U32                     Reserved1;              /*0x04 */
-+	U32                     Reserved2;              /*0x08 */
-+	U8                      NumSensors;             /*0x0C */
-+	U8                      PollingInterval;        /*0x0D */
-+	U16                     Reserved3;              /*0x0E */
-+	MPI2_IOUNIT8_SENSOR
-+		Sensor[MPI2_IOUNITPAGE8_SENSOR_ENTRIES];/*0x10 */
-+} MPI2_CONFIG_PAGE_IO_UNIT_8,
-+	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_8,
-+	Mpi2IOUnitPage8_t, *pMpi2IOUnitPage8_t;
-+
-+#define MPI2_IOUNITPAGE8_PAGEVERSION                    (0x00)
-+
-+
-+/*IO Unit Page 9 */
-+
-+typedef struct _MPI2_IOUNIT9_SENSOR {
-+	U16                     CurrentTemperature;     /*0x00 */
-+	U16                     Reserved1;              /*0x02 */
-+	U8                      Flags;                  /*0x04 */
-+	U8                      Reserved2;              /*0x05 */
-+	U16                     Reserved3;              /*0x06 */
-+	U32                     Reserved4;              /*0x08 */
-+	U32                     Reserved5;              /*0x0C */
-+} MPI2_IOUNIT9_SENSOR, *PTR_MPI2_IOUNIT9_SENSOR,
-+	Mpi2IOUnit9Sensor_t, *pMpi2IOUnit9Sensor_t;
-+
-+/*defines for IO Unit Page 9 Sensor Flags field */
-+#define MPI2_IOUNIT9_SENSOR_FLAGS_TEMP_VALID        (0x01)
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check the value returned for NumSensors at runtime.
-+ */
-+#ifndef MPI2_IOUNITPAGE9_SENSOR_ENTRIES
-+#define MPI2_IOUNITPAGE9_SENSOR_ENTRIES     (1)
-+#endif
-+
-+typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_9 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                 /*0x00 */
-+	U32                     Reserved1;              /*0x04 */
-+	U32                     Reserved2;              /*0x08 */
-+	U8                      NumSensors;             /*0x0C */
-+	U8                      Reserved4;              /*0x0D */
-+	U16                     Reserved3;              /*0x0E */
-+	MPI2_IOUNIT9_SENSOR
-+		Sensor[MPI2_IOUNITPAGE9_SENSOR_ENTRIES];/*0x10 */
-+} MPI2_CONFIG_PAGE_IO_UNIT_9,
-+	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_9,
-+	Mpi2IOUnitPage9_t, *pMpi2IOUnitPage9_t;
-+
-+#define MPI2_IOUNITPAGE9_PAGEVERSION                    (0x00)
-+
-+
-+/*IO Unit Page 10 */
-+
-+typedef struct _MPI2_IOUNIT10_FUNCTION {
-+	U8                      CreditPercent;      /*0x00 */
-+	U8                      Reserved1;          /*0x01 */
-+	U16                     Reserved2;          /*0x02 */
-+} MPI2_IOUNIT10_FUNCTION,
-+	*PTR_MPI2_IOUNIT10_FUNCTION,
-+	Mpi2IOUnit10Function_t,
-+	*pMpi2IOUnit10Function_t;
-+
-+/*
-+ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check the value returned for NumFunctions at runtime.
-+ */
-+#ifndef MPI2_IOUNITPAGE10_FUNCTION_ENTRIES
-+#define MPI2_IOUNITPAGE10_FUNCTION_ENTRIES      (1)
-+#endif
-+
-+typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_10 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                      /*0x00 */
-+	U8                      NumFunctions;                /*0x04 */
-+	U8                      Reserved1;                   /*0x05 */
-+	U16                     Reserved2;                   /*0x06 */
-+	U32                     Reserved3;                   /*0x08 */
-+	U32                     Reserved4;                   /*0x0C */
-+	MPI2_IOUNIT10_FUNCTION
-+		Function[MPI2_IOUNITPAGE10_FUNCTION_ENTRIES];/*0x10 */
-+} MPI2_CONFIG_PAGE_IO_UNIT_10,
-+	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_10,
-+	Mpi2IOUnitPage10_t, *pMpi2IOUnitPage10_t;
-+
-+#define MPI2_IOUNITPAGE10_PAGEVERSION                   (0x01)
-+
-+
++/*SCSI Task Management Request Message */
++typedef struct _MPI2_SCSI_TASK_MANAGE_REQUEST {
++	U16 DevHandle;		/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U8 Reserved1;		/*0x04 */
++	U8 TaskType;		/*0x05 */
++	U8 Reserved2;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved3;		/*0x0A */
++	U8 LUN[8];		/*0x0C */
++	U32 Reserved4[7];	/*0x14 */
++	U16 TaskMID;		/*0x30 */
++	U16 Reserved5;		/*0x32 */
++} MPI2_SCSI_TASK_MANAGE_REQUEST,
++	*PTR_MPI2_SCSI_TASK_MANAGE_REQUEST,
++	Mpi2SCSITaskManagementRequest_t,
++	*pMpi2SCSITaskManagementRequest_t;
++
++/*TaskType values */
++
++#define MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK           (0x01)
++#define MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET        (0x02)
++#define MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET         (0x03)
++#define MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET   (0x05)
++#define MPI2_SCSITASKMGMT_TASKTYPE_CLEAR_TASK_SET       (0x06)
++#define MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK           (0x07)
++#define MPI2_SCSITASKMGMT_TASKTYPE_CLR_ACA              (0x08)
++#define MPI2_SCSITASKMGMT_TASKTYPE_QRY_TASK_SET         (0x09)
++#define MPI2_SCSITASKMGMT_TASKTYPE_QRY_ASYNC_EVENT      (0x0A)
++
++/*obsolete TaskType name */
++#define MPI2_SCSITASKMGMT_TASKTYPE_QRY_UNIT_ATTENTION \
++		(MPI2_SCSITASKMGMT_TASKTYPE_QRY_ASYNC_EVENT)
++
++/*MsgFlags bits */
++
++#define MPI2_SCSITASKMGMT_MSGFLAGS_MASK_TARGET_RESET    (0x18)
++#define MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET           (0x00)
++#define MPI2_SCSITASKMGMT_MSGFLAGS_NEXUS_RESET_SRST     (0x08)
++#define MPI2_SCSITASKMGMT_MSGFLAGS_SAS_HARD_LINK_RESET  (0x10)
++
++#define MPI2_SCSITASKMGMT_MSGFLAGS_DO_NOT_SEND_TASK_IU  (0x01)
++
++/*SCSI Task Management Reply Message */
++typedef struct _MPI2_SCSI_TASK_MANAGE_REPLY {
++	U16 DevHandle;		/*0x00 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U8 ResponseCode;	/*0x04 */
++	U8 TaskType;		/*0x05 */
++	U8 Reserved1;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved2;		/*0x0A */
++	U16 Reserved3;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++	U32 TerminationCount;	/*0x14 */
++	U32 ResponseInfo;	/*0x18 */
++} MPI2_SCSI_TASK_MANAGE_REPLY,
++	*PTR_MPI2_SCSI_TASK_MANAGE_REPLY,
++	Mpi2SCSITaskManagementReply_t, *pMpi2SCSIManagementReply_t;
++
++/*ResponseCode values */
++
++#define MPI2_SCSITASKMGMT_RSP_TM_COMPLETE               (0x00)
++#define MPI2_SCSITASKMGMT_RSP_INVALID_FRAME             (0x02)
++#define MPI2_SCSITASKMGMT_RSP_TM_NOT_SUPPORTED          (0x04)
++#define MPI2_SCSITASKMGMT_RSP_TM_FAILED                 (0x05)
++#define MPI2_SCSITASKMGMT_RSP_TM_SUCCEEDED              (0x08)
++#define MPI2_SCSITASKMGMT_RSP_TM_INVALID_LUN            (0x09)
++#define MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG         (0x0A)
++#define MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC          (0x80)
++
++/*masks and shifts for the ResponseInfo field */
++
++#define MPI2_SCSITASKMGMT_RI_MASK_REASONCODE            (0x000000FF)
++#define MPI2_SCSITASKMGMT_RI_SHIFT_REASONCODE           (0)
++#define MPI2_SCSITASKMGMT_RI_MASK_ARI2                  (0x0000FF00)
++#define MPI2_SCSITASKMGMT_RI_SHIFT_ARI2                 (8)
++#define MPI2_SCSITASKMGMT_RI_MASK_ARI1                  (0x00FF0000)
++#define MPI2_SCSITASKMGMT_RI_SHIFT_ARI1                 (16)
++#define MPI2_SCSITASKMGMT_RI_MASK_ARI0                  (0xFF000000)
++#define MPI2_SCSITASKMGMT_RI_SHIFT_ARI0                 (24)
 +
 +/****************************************************************************
-+*  IOC Config Pages
++* SCSI Enclosure Processor messages
 +****************************************************************************/
 +
-+/*IOC Page 0 */
++/*SCSI Enclosure Processor Request Message */
++typedef struct _MPI2_SEP_REQUEST {
++	U16 DevHandle;		/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U8 Action;		/*0x04 */
++	U8 Flags;		/*0x05 */
++	U8 Reserved1;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved2;		/*0x0A */
++	U32 SlotStatus;		/*0x0C */
++	U32 Reserved3;		/*0x10 */
++	U32 Reserved4;		/*0x14 */
++	U32 Reserved5;		/*0x18 */
++	U16 Slot;		/*0x1C */
++	U16 EnclosureHandle;	/*0x1E */
++} MPI2_SEP_REQUEST, *PTR_MPI2_SEP_REQUEST,
++	Mpi2SepRequest_t, *pMpi2SepRequest_t;
 +
-+typedef struct _MPI2_CONFIG_PAGE_IOC_0 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U32                     Reserved1;                  /*0x04 */
-+	U32                     Reserved2;                  /*0x08 */
-+	U16                     VendorID;                   /*0x0C */
-+	U16                     DeviceID;                   /*0x0E */
-+	U8                      RevisionID;                 /*0x10 */
-+	U8                      Reserved3;                  /*0x11 */
-+	U16                     Reserved4;                  /*0x12 */
-+	U32                     ClassCode;                  /*0x14 */
-+	U16                     SubsystemVendorID;          /*0x18 */
-+	U16                     SubsystemID;                /*0x1A */
-+} MPI2_CONFIG_PAGE_IOC_0,
-+	*PTR_MPI2_CONFIG_PAGE_IOC_0,
-+	Mpi2IOCPage0_t, *pMpi2IOCPage0_t;
++/*Action defines */
++#define MPI2_SEP_REQ_ACTION_WRITE_STATUS                (0x00)
++#define MPI2_SEP_REQ_ACTION_READ_STATUS                 (0x01)
 +
-+#define MPI2_IOCPAGE0_PAGEVERSION                       (0x02)
++/*Flags defines */
++#define MPI2_SEP_REQ_FLAGS_DEVHANDLE_ADDRESS            (0x00)
++#define MPI2_SEP_REQ_FLAGS_ENCLOSURE_SLOT_ADDRESS       (0x01)
 +
++/*SlotStatus defines */
++#define MPI2_SEP_REQ_SLOTSTATUS_REQUEST_REMOVE          (0x00040000)
++#define MPI2_SEP_REQ_SLOTSTATUS_IDENTIFY_REQUEST        (0x00020000)
++#define MPI2_SEP_REQ_SLOTSTATUS_REBUILD_STOPPED         (0x00000200)
++#define MPI2_SEP_REQ_SLOTSTATUS_HOT_SPARE               (0x00000100)
++#define MPI2_SEP_REQ_SLOTSTATUS_UNCONFIGURED            (0x00000080)
++#define MPI2_SEP_REQ_SLOTSTATUS_PREDICTED_FAULT         (0x00000040)
++#define MPI2_SEP_REQ_SLOTSTATUS_IN_CRITICAL_ARRAY       (0x00000010)
++#define MPI2_SEP_REQ_SLOTSTATUS_IN_FAILED_ARRAY         (0x00000008)
++#define MPI2_SEP_REQ_SLOTSTATUS_DEV_REBUILDING          (0x00000004)
++#define MPI2_SEP_REQ_SLOTSTATUS_DEV_FAULTY              (0x00000002)
++#define MPI2_SEP_REQ_SLOTSTATUS_NO_ERROR                (0x00000001)
 +
-+/*IOC Page 1 */
++/*SCSI Enclosure Processor Reply Message */
++typedef struct _MPI2_SEP_REPLY {
++	U16 DevHandle;		/*0x00 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U8 Action;		/*0x04 */
++	U8 Flags;		/*0x05 */
++	U8 Reserved1;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved2;		/*0x0A */
++	U16 Reserved3;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++	U32 SlotStatus;		/*0x14 */
++	U32 Reserved4;		/*0x18 */
++	U16 Slot;		/*0x1C */
++	U16 EnclosureHandle;	/*0x1E */
++} MPI2_SEP_REPLY, *PTR_MPI2_SEP_REPLY,
++	Mpi2SepReply_t, *pMpi2SepReply_t;
 +
-+typedef struct _MPI2_CONFIG_PAGE_IOC_1 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U32                     Flags;                      /*0x04 */
-+	U32                     CoalescingTimeout;          /*0x08 */
-+	U8                      CoalescingDepth;            /*0x0C */
-+	U8                      PCISlotNum;                 /*0x0D */
-+	U8                      PCIBusNum;                  /*0x0E */
-+	U8                      PCIDomainSegment;           /*0x0F */
-+	U32                     Reserved1;                  /*0x10 */
-+	U32                     Reserved2;                  /*0x14 */
-+} MPI2_CONFIG_PAGE_IOC_1,
-+	*PTR_MPI2_CONFIG_PAGE_IOC_1,
-+	Mpi2IOCPage1_t, *pMpi2IOCPage1_t;
++/*SlotStatus defines */
++#define MPI2_SEP_REPLY_SLOTSTATUS_REMOVE_READY          (0x00040000)
++#define MPI2_SEP_REPLY_SLOTSTATUS_IDENTIFY_REQUEST      (0x00020000)
++#define MPI2_SEP_REPLY_SLOTSTATUS_REBUILD_STOPPED       (0x00000200)
++#define MPI2_SEP_REPLY_SLOTSTATUS_HOT_SPARE             (0x00000100)
++#define MPI2_SEP_REPLY_SLOTSTATUS_UNCONFIGURED          (0x00000080)
++#define MPI2_SEP_REPLY_SLOTSTATUS_PREDICTED_FAULT       (0x00000040)
++#define MPI2_SEP_REPLY_SLOTSTATUS_IN_CRITICAL_ARRAY     (0x00000010)
++#define MPI2_SEP_REPLY_SLOTSTATUS_IN_FAILED_ARRAY       (0x00000008)
++#define MPI2_SEP_REPLY_SLOTSTATUS_DEV_REBUILDING        (0x00000004)
++#define MPI2_SEP_REPLY_SLOTSTATUS_DEV_FAULTY            (0x00000002)
++#define MPI2_SEP_REPLY_SLOTSTATUS_NO_ERROR              (0x00000001)
 +
-+#define MPI2_IOCPAGE1_PAGEVERSION                       (0x05)
++#endif
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+new file mode 100644
+index 0000000..0de425d
+--- /dev/null
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+@@ -0,0 +1,1665 @@
++/*
++ * Copyright (c) 2000-2012 LSI Corporation.
++ *
++ *
++ *          Name:  mpi2_ioc.h
++ *         Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
++ * Creation Date:  October 11, 2006
++ *
++ * mpi2_ioc.h Version:  02.00.21
++ *
++ * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
++ *       prefix are for use only on MPI v2.5 products, and must not be used
++ *       with MPI v2.0 products. Unless otherwise noted, names beginning with
++ *       MPI2 or Mpi2 are for use with both MPI v2.0 and MPI v2.5 products.
++ *
++ * Version History
++ * ---------------
++ *
++ * Date      Version   Description
++ * --------  --------  ------------------------------------------------------
++ * 04-30-07  02.00.00  Corresponds to Fusion-MPT MPI Specification Rev A.
++ * 06-04-07  02.00.01  In IOCFacts Reply structure, renamed MaxDevices to
++ *                     MaxTargets.
++ *                     Added TotalImageSize field to FWDownload Request.
++ *                     Added reserved words to FWUpload Request.
++ * 06-26-07  02.00.02  Added IR Configuration Change List Event.
++ * 08-31-07  02.00.03  Removed SystemReplyQueueDepth field from the IOCInit
++ *                     request and replaced it with
++ *                     ReplyDescriptorPostQueueDepth and ReplyFreeQueueDepth.
++ *                     Replaced the MinReplyQueueDepth field of the IOCFacts
++ *                     reply with MaxReplyDescriptorPostQueueDepth.
++ *                     Added MPI2_RDPQ_DEPTH_MIN define to specify the minimum
++ *                     depth for the Reply Descriptor Post Queue.
++ *                     Added SASAddress field to Initiator Device Table
++ *                     Overflow Event data.
++ * 10-31-07  02.00.04  Added ReasonCode MPI2_EVENT_SAS_INIT_RC_NOT_RESPONDING
++ *                     for SAS Initiator Device Status Change Event data.
++ *                     Modified Reason Code defines for SAS Topology Change
++ *                     List Event data, including adding a bit for PHY Vacant
++ *                     status, and adding a mask for the Reason Code.
++ *                     Added define for
++ *                     MPI2_EVENT_SAS_TOPO_ES_DELAY_NOT_RESPONDING.
++ *                     Added define for MPI2_EXT_IMAGE_TYPE_MEGARAID.
++ * 12-18-07  02.00.05  Added Boot Status defines for the IOCExceptions field of
++ *                     the IOCFacts Reply.
++ *                     Removed MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER define.
++ *                     Moved MPI2_VERSION_UNION to mpi2.h.
++ *                     Changed MPI2_EVENT_NOTIFICATION_REQUEST to use masks
++ *                     instead of enables, and added SASBroadcastPrimitiveMasks
++ *                     field.
++ *                     Added Log Entry Added Event and related structure.
++ * 02-29-08  02.00.06  Added define MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID.
++ *                     Removed define MPI2_IOCFACTS_PROTOCOL_SMP_TARGET.
++ *                     Added MaxVolumes and MaxPersistentEntries fields to
++ *                     IOCFacts reply.
++ *                     Added ProtocalFlags and IOCCapabilities fields to
++ *                     MPI2_FW_IMAGE_HEADER.
++ *                     Removed MPI2_PORTENABLE_FLAGS_ENABLE_SINGLE_PORT.
++ * 03-03-08  02.00.07  Fixed MPI2_FW_IMAGE_HEADER by changing Reserved26 to
++ *                     a U16 (from a U32).
++ *                     Removed extra 's' from EventMasks name.
++ * 06-27-08  02.00.08  Fixed an offset in a comment.
++ * 10-02-08  02.00.09  Removed SystemReplyFrameSize from MPI2_IOC_INIT_REQUEST.
++ *                     Removed CurReplyFrameSize from MPI2_IOC_FACTS_REPLY and
++ *                     renamed MinReplyFrameSize to ReplyFrameSize.
++ *                     Added MPI2_IOCFACTS_EXCEPT_IR_FOREIGN_CONFIG_MAX.
++ *                     Added two new RAIDOperation values for Integrated RAID
++ *                     Operations Status Event data.
++ *                     Added four new IR Configuration Change List Event data
++ *                     ReasonCode values.
++ *                     Added two new ReasonCode defines for SAS Device Status
++ *                     Change Event data.
++ *                     Added three new DiscoveryStatus bits for the SAS
++ *                     Discovery event data.
++ *                     Added Multiplexing Status Change bit to the PhyStatus
++ *                     field of the SAS Topology Change List event data.
++ *                     Removed define for MPI2_INIT_IMAGE_BOOTFLAGS_XMEMCOPY.
++ *                     BootFlags are now product-specific.
++ *                     Added defines for the indivdual signature bytes
++ *                     for MPI2_INIT_IMAGE_FOOTER.
++ * 01-19-09  02.00.10  Added MPI2_IOCFACTS_CAPABILITY_EVENT_REPLAY define.
++ *                     Added MPI2_EVENT_SAS_DISC_DS_DOWNSTREAM_INITIATOR
++ *                     define.
++ *                     Added MPI2_EVENT_SAS_DEV_STAT_RC_SATA_INIT_FAILURE
++ *                     define.
++ *                     Removed MPI2_EVENT_SAS_DISC_DS_SATA_INIT_FAILURE define.
++ * 05-06-09  02.00.11  Added MPI2_IOCFACTS_CAPABILITY_RAID_ACCELERATOR define.
++ *                     Added MPI2_IOCFACTS_CAPABILITY_MSI_X_INDEX define.
++ *                     Added two new reason codes for SAS Device Status Change
++ *                     Event.
++ *                     Added new event: SAS PHY Counter.
++ * 07-30-09  02.00.12  Added GPIO Interrupt event define and structure.
++ *                     Added MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER define.
++ *                     Added new product id family for 2208.
++ * 10-28-09  02.00.13  Added HostMSIxVectors field to MPI2_IOC_INIT_REQUEST.
++ *                     Added MaxMSIxVectors field to MPI2_IOC_FACTS_REPLY.
++ *                     Added MinDevHandle field to MPI2_IOC_FACTS_REPLY.
++ *                     Added MPI2_IOCFACTS_CAPABILITY_HOST_BASED_DISCOVERY.
++ *                     Added MPI2_EVENT_HOST_BASED_DISCOVERY_PHY define.
++ *                     Added MPI2_EVENT_SAS_TOPO_ES_NO_EXPANDER define.
++ *                     Added Host Based Discovery Phy Event data.
++ *                     Added defines for ProductID Product field
++ *                     (MPI2_FW_HEADER_PID_).
++ *                     Modified values for SAS ProductID Family
++ *                     (MPI2_FW_HEADER_PID_FAMILY_).
++ * 02-10-10  02.00.14  Added SAS Quiesce Event structure and defines.
++ *                     Added PowerManagementControl Request structures and
++ *                     defines.
++ * 05-12-10  02.00.15  Marked Task Set Full Event as obsolete.
++ *                     Added MPI2_EVENT_SAS_TOPO_LR_UNSUPPORTED_PHY define.
++ * 11-10-10  02.00.16  Added MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC.
++ * 02-23-11  02.00.17  Added SAS NOTIFY Primitive event, and added
++ *                     SASNotifyPrimitiveMasks field to
++ *                     MPI2_EVENT_NOTIFICATION_REQUEST.
++ *                     Added Temperature Threshold Event.
++ *                     Added Host Message Event.
++ *                     Added Send Host Message request and reply.
++ * 05-25-11  02.00.18  For Extended Image Header, added
++ *                     MPI2_EXT_IMAGE_TYPE_MIN_PRODUCT_SPECIFIC and
++ *                     MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC defines.
++ *                     Deprecated MPI2_EXT_IMAGE_TYPE_MAX define.
++ * 08-24-11  02.00.19  Added PhysicalPort field to
++ *                     MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE structure.
++ *                     Marked MPI2_PM_CONTROL_FEATURE_PCIE_LINK as obsolete.
++ * 11-18-11  02.00.20  Incorporating additions for MPI v2.5.
++ * 03-29-12  02.00.21  Added a product specific range to event values.
++ * --------------------------------------------------------------------------
++ */
 +
-+/*defines for IOC Page 1 Flags field */
-+#define MPI2_IOCPAGE1_REPLY_COALESCING                  (0x00000001)
++#ifndef MPI2_IOC_H
++#define MPI2_IOC_H
 +
-+#define MPI2_IOCPAGE1_PCISLOTNUM_UNKNOWN                (0xFF)
-+#define MPI2_IOCPAGE1_PCIBUSNUM_UNKNOWN                 (0xFF)
-+#define MPI2_IOCPAGE1_PCIDOMAIN_UNKNOWN                 (0xFF)
-+
-+/*IOC Page 6 */
-+
-+typedef struct _MPI2_CONFIG_PAGE_IOC_6 {
-+	MPI2_CONFIG_PAGE_HEADER Header;         /*0x00 */
-+	U32
-+		CapabilitiesFlags;              /*0x04 */
-+	U8                      MaxDrivesRAID0; /*0x08 */
-+	U8                      MaxDrivesRAID1; /*0x09 */
-+	U8
-+		 MaxDrivesRAID1E;                /*0x0A */
-+	U8
-+		 MaxDrivesRAID10;		/*0x0B */
-+	U8                      MinDrivesRAID0; /*0x0C */
-+	U8                      MinDrivesRAID1; /*0x0D */
-+	U8
-+		 MinDrivesRAID1E;                /*0x0E */
-+	U8
-+		 MinDrivesRAID10;                /*0x0F */
-+	U32                     Reserved1;      /*0x10 */
-+	U8
-+		 MaxGlobalHotSpares;             /*0x14 */
-+	U8                      MaxPhysDisks;   /*0x15 */
-+	U8                      MaxVolumes;     /*0x16 */
-+	U8                      MaxConfigs;     /*0x17 */
-+	U8                      MaxOCEDisks;    /*0x18 */
-+	U8                      Reserved2;      /*0x19 */
-+	U16                     Reserved3;      /*0x1A */
-+	U32
-+		SupportedStripeSizeMapRAID0;    /*0x1C */
-+	U32
-+		SupportedStripeSizeMapRAID1E;   /*0x20 */
-+	U32
-+		SupportedStripeSizeMapRAID10;   /*0x24 */
-+	U32                     Reserved4;      /*0x28 */
-+	U32                     Reserved5;      /*0x2C */
-+	U16
-+		DefaultMetadataSize;            /*0x30 */
-+	U16                     Reserved6;      /*0x32 */
-+	U16
-+		MaxBadBlockTableEntries;        /*0x34 */
-+	U16                     Reserved7;      /*0x36 */
-+	U32
-+		IRNvsramVersion;                /*0x38 */
-+} MPI2_CONFIG_PAGE_IOC_6,
-+	*PTR_MPI2_CONFIG_PAGE_IOC_6,
-+	Mpi2IOCPage6_t, *pMpi2IOCPage6_t;
-+
-+#define MPI2_IOCPAGE6_PAGEVERSION                       (0x05)
-+
-+/*defines for IOC Page 6 CapabilitiesFlags */
-+#define MPI2_IOCPAGE6_CAP_FLAGS_4K_SECTORS_SUPPORT      (0x00000020)
-+#define MPI2_IOCPAGE6_CAP_FLAGS_RAID10_SUPPORT          (0x00000010)
-+#define MPI2_IOCPAGE6_CAP_FLAGS_RAID1_SUPPORT           (0x00000008)
-+#define MPI2_IOCPAGE6_CAP_FLAGS_RAID1E_SUPPORT          (0x00000004)
-+#define MPI2_IOCPAGE6_CAP_FLAGS_RAID0_SUPPORT           (0x00000002)
-+#define MPI2_IOCPAGE6_CAP_FLAGS_GLOBAL_HOT_SPARE        (0x00000001)
-+
-+
-+/*IOC Page 7 */
-+
-+#define MPI2_IOCPAGE7_EVENTMASK_WORDS       (4)
-+
-+typedef struct _MPI2_CONFIG_PAGE_IOC_7 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U32                     Reserved1;                  /*0x04 */
-+	U32
-+		EventMasks[MPI2_IOCPAGE7_EVENTMASK_WORDS];/*0x08 */
-+	U16                     SASBroadcastPrimitiveMasks; /*0x18 */
-+	U16                     SASNotifyPrimitiveMasks;    /*0x1A */
-+	U32                     Reserved3;                  /*0x1C */
-+} MPI2_CONFIG_PAGE_IOC_7,
-+	*PTR_MPI2_CONFIG_PAGE_IOC_7,
-+	Mpi2IOCPage7_t, *pMpi2IOCPage7_t;
-+
-+#define MPI2_IOCPAGE7_PAGEVERSION                       (0x02)
-+
-+
-+/*IOC Page 8 */
-+
-+typedef struct _MPI2_CONFIG_PAGE_IOC_8 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U8                      NumDevsPerEnclosure;        /*0x04 */
-+	U8                      Reserved1;                  /*0x05 */
-+	U16                     Reserved2;                  /*0x06 */
-+	U16                     MaxPersistentEntries;       /*0x08 */
-+	U16                     MaxNumPhysicalMappedIDs;    /*0x0A */
-+	U16                     Flags;                      /*0x0C */
-+	U16                     Reserved3;                  /*0x0E */
-+	U16                     IRVolumeMappingFlags;       /*0x10 */
-+	U16                     Reserved4;                  /*0x12 */
-+	U32                     Reserved5;                  /*0x14 */
-+} MPI2_CONFIG_PAGE_IOC_8,
-+	*PTR_MPI2_CONFIG_PAGE_IOC_8,
-+	Mpi2IOCPage8_t, *pMpi2IOCPage8_t;
-+
-+#define MPI2_IOCPAGE8_PAGEVERSION                       (0x00)
-+
-+/*defines for IOC Page 8 Flags field */
-+#define MPI2_IOCPAGE8_FLAGS_DA_START_SLOT_1             (0x00000020)
-+#define MPI2_IOCPAGE8_FLAGS_RESERVED_TARGETID_0         (0x00000010)
-+
-+#define MPI2_IOCPAGE8_FLAGS_MASK_MAPPING_MODE           (0x0000000E)
-+#define MPI2_IOCPAGE8_FLAGS_DEVICE_PERSISTENCE_MAPPING  (0x00000000)
-+#define MPI2_IOCPAGE8_FLAGS_ENCLOSURE_SLOT_MAPPING      (0x00000002)
-+
-+#define MPI2_IOCPAGE8_FLAGS_DISABLE_PERSISTENT_MAPPING  (0x00000001)
-+#define MPI2_IOCPAGE8_FLAGS_ENABLE_PERSISTENT_MAPPING   (0x00000000)
-+
-+/*defines for IOC Page 8 IRVolumeMappingFlags */
-+#define MPI2_IOCPAGE8_IRFLAGS_MASK_VOLUME_MAPPING_MODE  (0x00000003)
-+#define MPI2_IOCPAGE8_IRFLAGS_LOW_VOLUME_MAPPING        (0x00000000)
-+#define MPI2_IOCPAGE8_IRFLAGS_HIGH_VOLUME_MAPPING       (0x00000001)
-+
++/*****************************************************************************
++*
++*              IOC Messages
++*
++*****************************************************************************/
 +
 +/****************************************************************************
-+*  BIOS Config Pages
++* IOCInit message
 +****************************************************************************/
 +
-+/*BIOS Page 1 */
++/*IOCInit Request message */
++typedef struct _MPI2_IOC_INIT_REQUEST {
++	U8 WhoInit;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U16 MsgVersion;		/*0x0C */
++	U16 HeaderVersion;	/*0x0E */
++	U32 Reserved5;		/*0x10 */
++	U16 Reserved6;		/*0x14 */
++	U8 Reserved7;		/*0x16 */
++	U8 HostMSIxVectors;	/*0x17 */
++	U16 Reserved8;		/*0x18 */
++	U16 SystemRequestFrameSize;	/*0x1A */
++	U16 ReplyDescriptorPostQueueDepth;	/*0x1C */
++	U16 ReplyFreeQueueDepth;	/*0x1E */
++	U32 SenseBufferAddressHigh;	/*0x20 */
++	U32 SystemReplyAddressHigh;	/*0x24 */
++	U64 SystemRequestFrameBaseAddress;	/*0x28 */
++	U64 ReplyDescriptorPostQueueAddress;	/*0x30 */
++	U64 ReplyFreeQueueAddress;	/*0x38 */
++	U64 TimeStamp;		/*0x40 */
++} MPI2_IOC_INIT_REQUEST, *PTR_MPI2_IOC_INIT_REQUEST,
++	Mpi2IOCInitRequest_t, *pMpi2IOCInitRequest_t;
 +
-+typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U32                     BiosOptions;                /*0x04 */
-+	U32                     IOCSettings;                /*0x08 */
-+	U32                     Reserved1;                  /*0x0C */
-+	U32                     DeviceSettings;             /*0x10 */
-+	U16                     NumberOfDevices;            /*0x14 */
-+	U16                     UEFIVersion;                /*0x16 */
-+	U16                     IOTimeoutBlockDevicesNonRM; /*0x18 */
-+	U16                     IOTimeoutSequential;        /*0x1A */
-+	U16                     IOTimeoutOther;             /*0x1C */
-+	U16                     IOTimeoutBlockDevicesRM;    /*0x1E */
-+} MPI2_CONFIG_PAGE_BIOS_1,
-+	*PTR_MPI2_CONFIG_PAGE_BIOS_1,
-+	Mpi2BiosPage1_t, *pMpi2BiosPage1_t;
++/*WhoInit values */
++#define MPI2_WHOINIT_NOT_INITIALIZED            (0x00)
++#define MPI2_WHOINIT_SYSTEM_BIOS                (0x01)
++#define MPI2_WHOINIT_ROM_BIOS                   (0x02)
++#define MPI2_WHOINIT_PCI_PEER                   (0x03)
++#define MPI2_WHOINIT_HOST_DRIVER                (0x04)
++#define MPI2_WHOINIT_MANUFACTURER               (0x05)
 +
-+#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x05)
++/*MsgVersion */
++#define MPI2_IOCINIT_MSGVERSION_MAJOR_MASK      (0xFF00)
++#define MPI2_IOCINIT_MSGVERSION_MAJOR_SHIFT     (8)
++#define MPI2_IOCINIT_MSGVERSION_MINOR_MASK      (0x00FF)
++#define MPI2_IOCINIT_MSGVERSION_MINOR_SHIFT     (0)
 +
-+/*values for BIOS Page 1 BiosOptions field */
-+#define MPI2_BIOSPAGE1_OPTIONS_MASK_UEFI_HII_REGISTRATION   (0x00000006)
-+#define MPI2_BIOSPAGE1_OPTIONS_ENABLE_UEFI_HII              (0x00000000)
-+#define MPI2_BIOSPAGE1_OPTIONS_DISABLE_UEFI_HII             (0x00000002)
-+#define MPI2_BIOSPAGE1_OPTIONS_VERSION_CHECK_UEFI_HII       (0x00000004)
++/*HeaderVersion */
++#define MPI2_IOCINIT_HDRVERSION_UNIT_MASK       (0xFF00)
++#define MPI2_IOCINIT_HDRVERSION_UNIT_SHIFT      (8)
++#define MPI2_IOCINIT_HDRVERSION_DEV_MASK        (0x00FF)
++#define MPI2_IOCINIT_HDRVERSION_DEV_SHIFT       (0)
 +
-+#define MPI2_BIOSPAGE1_OPTIONS_DISABLE_BIOS                 (0x00000001)
++/*minimum depth for the Reply Descriptor Post Queue */
++#define MPI2_RDPQ_DEPTH_MIN                     (16)
 +
-+/*values for BIOS Page 1 IOCSettings field */
-+#define MPI2_BIOSPAGE1_IOCSET_MASK_BOOT_PREFERENCE      (0x00030000)
-+#define MPI2_BIOSPAGE1_IOCSET_ENCLOSURE_SLOT_BOOT       (0x00000000)
-+#define MPI2_BIOSPAGE1_IOCSET_SAS_ADDRESS_BOOT          (0x00010000)
++/*IOCInit Reply message */
++typedef struct _MPI2_IOC_INIT_REPLY {
++	U8 WhoInit;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U16 Reserved5;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++} MPI2_IOC_INIT_REPLY, *PTR_MPI2_IOC_INIT_REPLY,
++	Mpi2IOCInitReply_t, *pMpi2IOCInitReply_t;
 +
-+#define MPI2_BIOSPAGE1_IOCSET_MASK_RM_SETTING           (0x000000C0)
-+#define MPI2_BIOSPAGE1_IOCSET_NONE_RM_SETTING           (0x00000000)
-+#define MPI2_BIOSPAGE1_IOCSET_BOOT_RM_SETTING           (0x00000040)
-+#define MPI2_BIOSPAGE1_IOCSET_MEDIA_RM_SETTING          (0x00000080)
++/****************************************************************************
++* IOCFacts message
++****************************************************************************/
 +
-+#define MPI2_BIOSPAGE1_IOCSET_MASK_ADAPTER_SUPPORT      (0x00000030)
-+#define MPI2_BIOSPAGE1_IOCSET_NO_SUPPORT                (0x00000000)
-+#define MPI2_BIOSPAGE1_IOCSET_BIOS_SUPPORT              (0x00000010)
-+#define MPI2_BIOSPAGE1_IOCSET_OS_SUPPORT                (0x00000020)
-+#define MPI2_BIOSPAGE1_IOCSET_ALL_SUPPORT               (0x00000030)
++/*IOCFacts Request message */
++typedef struct _MPI2_IOC_FACTS_REQUEST {
++	U16 Reserved1;		/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++} MPI2_IOC_FACTS_REQUEST, *PTR_MPI2_IOC_FACTS_REQUEST,
++	Mpi2IOCFactsRequest_t, *pMpi2IOCFactsRequest_t;
 +
-+#define MPI2_BIOSPAGE1_IOCSET_ALTERNATE_CHS             (0x00000008)
++/*IOCFacts Reply message */
++typedef struct _MPI2_IOC_FACTS_REPLY {
++	U16 MsgVersion;		/*0x00 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 HeaderVersion;	/*0x04 */
++	U8 IOCNumber;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved1;		/*0x0A */
++	U16 IOCExceptions;	/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++	U8 MaxChainDepth;	/*0x14 */
++	U8 WhoInit;		/*0x15 */
++	U8 NumberOfPorts;	/*0x16 */
++	U8 MaxMSIxVectors;	/*0x17 */
++	U16 RequestCredit;	/*0x18 */
++	U16 ProductID;		/*0x1A */
++	U32 IOCCapabilities;	/*0x1C */
++	MPI2_VERSION_UNION FWVersion;	/*0x20 */
++	U16 IOCRequestFrameSize;	/*0x24 */
++	U16 IOCMaxChainSegmentSize;	/*0x26 */
++	U16 MaxInitiators;	/*0x28 */
++	U16 MaxTargets;		/*0x2A */
++	U16 MaxSasExpanders;	/*0x2C */
++	U16 MaxEnclosures;	/*0x2E */
++	U16 ProtocolFlags;	/*0x30 */
++	U16 HighPriorityCredit;	/*0x32 */
++	U16 MaxReplyDescriptorPostQueueDepth;	/*0x34 */
++	U8 ReplyFrameSize;	/*0x36 */
++	U8 MaxVolumes;		/*0x37 */
++	U16 MaxDevHandle;	/*0x38 */
++	U16 MaxPersistentEntries;	/*0x3A */
++	U16 MinDevHandle;	/*0x3C */
++	U16 Reserved4;		/*0x3E */
++} MPI2_IOC_FACTS_REPLY, *PTR_MPI2_IOC_FACTS_REPLY,
++	Mpi2IOCFactsReply_t, *pMpi2IOCFactsReply_t;
 +
-+/*values for BIOS Page 1 DeviceSettings field */
-+#define MPI2_BIOSPAGE1_DEVSET_DISABLE_SMART_POLLING     (0x00000010)
-+#define MPI2_BIOSPAGE1_DEVSET_DISABLE_SEQ_LUN           (0x00000008)
-+#define MPI2_BIOSPAGE1_DEVSET_DISABLE_RM_LUN            (0x00000004)
-+#define MPI2_BIOSPAGE1_DEVSET_DISABLE_NON_RM_LUN        (0x00000002)
-+#define MPI2_BIOSPAGE1_DEVSET_DISABLE_OTHER_LUN         (0x00000001)
++/*MsgVersion */
++#define MPI2_IOCFACTS_MSGVERSION_MAJOR_MASK             (0xFF00)
++#define MPI2_IOCFACTS_MSGVERSION_MAJOR_SHIFT            (8)
++#define MPI2_IOCFACTS_MSGVERSION_MINOR_MASK             (0x00FF)
++#define MPI2_IOCFACTS_MSGVERSION_MINOR_SHIFT            (0)
 +
-+/*defines for BIOS Page 1 UEFIVersion field */
-+#define MPI2_BIOSPAGE1_UEFI_VER_MAJOR_MASK              (0xFF00)
-+#define MPI2_BIOSPAGE1_UEFI_VER_MAJOR_SHIFT             (8)
-+#define MPI2_BIOSPAGE1_UEFI_VER_MINOR_MASK              (0x00FF)
-+#define MPI2_BIOSPAGE1_UEFI_VER_MINOR_SHIFT             (0)
++/*HeaderVersion */
++#define MPI2_IOCFACTS_HDRVERSION_UNIT_MASK              (0xFF00)
++#define MPI2_IOCFACTS_HDRVERSION_UNIT_SHIFT             (8)
++#define MPI2_IOCFACTS_HDRVERSION_DEV_MASK               (0x00FF)
++#define MPI2_IOCFACTS_HDRVERSION_DEV_SHIFT              (0)
 +
++/*IOCExceptions */
++#define MPI2_IOCFACTS_EXCEPT_IR_FOREIGN_CONFIG_MAX      (0x0100)
 +
++#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_MASK              (0x00E0)
++#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_GOOD              (0x0000)
++#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_BACKUP            (0x0020)
++#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_RESTORED          (0x0040)
++#define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_CORRUPT_BACKUP    (0x0060)
 +
-+/*BIOS Page 2 */
++#define MPI2_IOCFACTS_EXCEPT_METADATA_UNSUPPORTED       (0x0010)
++#define MPI2_IOCFACTS_EXCEPT_MANUFACT_CHECKSUM_FAIL     (0x0008)
++#define MPI2_IOCFACTS_EXCEPT_FW_CHECKSUM_FAIL           (0x0004)
++#define MPI2_IOCFACTS_EXCEPT_RAID_CONFIG_INVALID        (0x0002)
++#define MPI2_IOCFACTS_EXCEPT_CONFIG_CHECKSUM_FAIL       (0x0001)
 +
-+typedef struct _MPI2_BOOT_DEVICE_ADAPTER_ORDER {
-+	U32         Reserved1;                              /*0x00 */
-+	U32         Reserved2;                              /*0x04 */
-+	U32         Reserved3;                              /*0x08 */
-+	U32         Reserved4;                              /*0x0C */
-+	U32         Reserved5;                              /*0x10 */
-+	U32         Reserved6;                              /*0x14 */
-+} MPI2_BOOT_DEVICE_ADAPTER_ORDER,
-+	*PTR_MPI2_BOOT_DEVICE_ADAPTER_ORDER,
-+	Mpi2BootDeviceAdapterOrder_t,
-+	*pMpi2BootDeviceAdapterOrder_t;
++/*defines for WhoInit field are after the IOCInit Request */
 +
-+typedef struct _MPI2_BOOT_DEVICE_SAS_WWID {
-+	U64         SASAddress;                             /*0x00 */
-+	U8          LUN[8];                                 /*0x08 */
-+	U32         Reserved1;                              /*0x10 */
-+	U32         Reserved2;                              /*0x14 */
-+} MPI2_BOOT_DEVICE_SAS_WWID,
-+	*PTR_MPI2_BOOT_DEVICE_SAS_WWID,
-+	Mpi2BootDeviceSasWwid_t,
-+	*pMpi2BootDeviceSasWwid_t;
++/*ProductID field uses MPI2_FW_HEADER_PID_ */
 +
-+typedef struct _MPI2_BOOT_DEVICE_ENCLOSURE_SLOT {
-+	U64         EnclosureLogicalID;                     /*0x00 */
-+	U32         Reserved1;                              /*0x08 */
-+	U32         Reserved2;                              /*0x0C */
-+	U16         SlotNumber;                             /*0x10 */
-+	U16         Reserved3;                              /*0x12 */
-+	U32         Reserved4;                              /*0x14 */
-+} MPI2_BOOT_DEVICE_ENCLOSURE_SLOT,
-+	*PTR_MPI2_BOOT_DEVICE_ENCLOSURE_SLOT,
-+	Mpi2BootDeviceEnclosureSlot_t,
-+	*pMpi2BootDeviceEnclosureSlot_t;
++/*IOCCapabilities */
++#define MPI25_IOCFACTS_CAPABILITY_FAST_PATH_CAPABLE     (0x00020000)
++#define MPI2_IOCFACTS_CAPABILITY_HOST_BASED_DISCOVERY   (0x00010000)
++#define MPI2_IOCFACTS_CAPABILITY_MSI_X_INDEX            (0x00008000)
++#define MPI2_IOCFACTS_CAPABILITY_RAID_ACCELERATOR       (0x00004000)
++#define MPI2_IOCFACTS_CAPABILITY_EVENT_REPLAY           (0x00002000)
++#define MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID        (0x00001000)
++#define MPI2_IOCFACTS_CAPABILITY_TLR                    (0x00000800)
++#define MPI2_IOCFACTS_CAPABILITY_MULTICAST              (0x00000100)
++#define MPI2_IOCFACTS_CAPABILITY_BIDIRECTIONAL_TARGET   (0x00000080)
++#define MPI2_IOCFACTS_CAPABILITY_EEDP                   (0x00000040)
++#define MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER        (0x00000020)
++#define MPI2_IOCFACTS_CAPABILITY_SNAPSHOT_BUFFER        (0x00000010)
++#define MPI2_IOCFACTS_CAPABILITY_DIAG_TRACE_BUFFER      (0x00000008)
++#define MPI2_IOCFACTS_CAPABILITY_TASK_SET_FULL_HANDLING (0x00000004)
 +
-+typedef struct _MPI2_BOOT_DEVICE_DEVICE_NAME {
-+	U64         DeviceName;                             /*0x00 */
-+	U8          LUN[8];                                 /*0x08 */
-+	U32         Reserved1;                              /*0x10 */
-+	U32         Reserved2;                              /*0x14 */
-+} MPI2_BOOT_DEVICE_DEVICE_NAME,
-+	*PTR_MPI2_BOOT_DEVICE_DEVICE_NAME,
-+	Mpi2BootDeviceDeviceName_t,
-+	*pMpi2BootDeviceDeviceName_t;
++/*ProtocolFlags */
++#define MPI2_IOCFACTS_PROTOCOL_SCSI_TARGET              (0x0001)
++#define MPI2_IOCFACTS_PROTOCOL_SCSI_INITIATOR           (0x0002)
 +
-+typedef union _MPI2_MPI2_BIOSPAGE2_BOOT_DEVICE {
-+	MPI2_BOOT_DEVICE_ADAPTER_ORDER  AdapterOrder;
-+	MPI2_BOOT_DEVICE_SAS_WWID       SasWwid;
-+	MPI2_BOOT_DEVICE_ENCLOSURE_SLOT EnclosureSlot;
-+	MPI2_BOOT_DEVICE_DEVICE_NAME    DeviceName;
-+} MPI2_BIOSPAGE2_BOOT_DEVICE,
-+	*PTR_MPI2_BIOSPAGE2_BOOT_DEVICE,
-+	Mpi2BiosPage2BootDevice_t,
-+	*pMpi2BiosPage2BootDevice_t;
++/****************************************************************************
++* PortFacts message
++****************************************************************************/
 +
-+typedef struct _MPI2_CONFIG_PAGE_BIOS_2 {
-+	MPI2_CONFIG_PAGE_HEADER     Header;                 /*0x00 */
-+	U32                         Reserved1;              /*0x04 */
-+	U32                         Reserved2;              /*0x08 */
-+	U32                         Reserved3;              /*0x0C */
-+	U32                         Reserved4;              /*0x10 */
-+	U32                         Reserved5;              /*0x14 */
-+	U32                         Reserved6;              /*0x18 */
-+	U8                          ReqBootDeviceForm;      /*0x1C */
-+	U8                          Reserved7;              /*0x1D */
-+	U16                         Reserved8;              /*0x1E */
-+	MPI2_BIOSPAGE2_BOOT_DEVICE  RequestedBootDevice;    /*0x20 */
-+	U8                          ReqAltBootDeviceForm;   /*0x38 */
-+	U8                          Reserved9;              /*0x39 */
-+	U16                         Reserved10;             /*0x3A */
-+	MPI2_BIOSPAGE2_BOOT_DEVICE  RequestedAltBootDevice; /*0x3C */
-+	U8                          CurrentBootDeviceForm;  /*0x58 */
-+	U8                          Reserved11;             /*0x59 */
-+	U16                         Reserved12;             /*0x5A */
-+	MPI2_BIOSPAGE2_BOOT_DEVICE  CurrentBootDevice;      /*0x58 */
-+} MPI2_CONFIG_PAGE_BIOS_2, *PTR_MPI2_CONFIG_PAGE_BIOS_2,
-+	Mpi2BiosPage2_t, *pMpi2BiosPage2_t;
++/*PortFacts Request message */
++typedef struct _MPI2_PORT_FACTS_REQUEST {
++	U16 Reserved1;		/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 PortNumber;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved3;		/*0x0A */
++} MPI2_PORT_FACTS_REQUEST, *PTR_MPI2_PORT_FACTS_REQUEST,
++	Mpi2PortFactsRequest_t, *pMpi2PortFactsRequest_t;
 +
-+#define MPI2_BIOSPAGE2_PAGEVERSION                      (0x04)
++/*PortFacts Reply message */
++typedef struct _MPI2_PORT_FACTS_REPLY {
++	U16 Reserved1;		/*0x00 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 PortNumber;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved3;		/*0x0A */
++	U16 Reserved4;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++	U8 Reserved5;		/*0x14 */
++	U8 PortType;		/*0x15 */
++	U16 Reserved6;		/*0x16 */
++	U16 MaxPostedCmdBuffers;	/*0x18 */
++	U16 Reserved7;		/*0x1A */
++} MPI2_PORT_FACTS_REPLY, *PTR_MPI2_PORT_FACTS_REPLY,
++	Mpi2PortFactsReply_t, *pMpi2PortFactsReply_t;
 +
-+/*values for BIOS Page 2 BootDeviceForm fields */
-+#define MPI2_BIOSPAGE2_FORM_MASK                        (0x0F)
-+#define MPI2_BIOSPAGE2_FORM_NO_DEVICE_SPECIFIED         (0x00)
-+#define MPI2_BIOSPAGE2_FORM_SAS_WWID                    (0x05)
-+#define MPI2_BIOSPAGE2_FORM_ENCLOSURE_SLOT              (0x06)
-+#define MPI2_BIOSPAGE2_FORM_DEVICE_NAME                 (0x07)
++/*PortType values */
++#define MPI2_PORTFACTS_PORTTYPE_INACTIVE            (0x00)
++#define MPI2_PORTFACTS_PORTTYPE_FC                  (0x10)
++#define MPI2_PORTFACTS_PORTTYPE_ISCSI               (0x20)
++#define MPI2_PORTFACTS_PORTTYPE_SAS_PHYSICAL        (0x30)
++#define MPI2_PORTFACTS_PORTTYPE_SAS_VIRTUAL         (0x31)
 +
++/****************************************************************************
++* PortEnable message
++****************************************************************************/
 +
-+/*BIOS Page 3 */
++/*PortEnable Request message */
++typedef struct _MPI2_PORT_ENABLE_REQUEST {
++	U16 Reserved1;		/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U8 Reserved2;		/*0x04 */
++	U8 PortFlags;		/*0x05 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++} MPI2_PORT_ENABLE_REQUEST, *PTR_MPI2_PORT_ENABLE_REQUEST,
++	Mpi2PortEnableRequest_t, *pMpi2PortEnableRequest_t;
 +
-+typedef struct _MPI2_ADAPTER_INFO {
-+	U8      PciBusNumber;                        /*0x00 */
-+	U8      PciDeviceAndFunctionNumber;          /*0x01 */
-+	U16     AdapterFlags;                        /*0x02 */
-+} MPI2_ADAPTER_INFO, *PTR_MPI2_ADAPTER_INFO,
-+	Mpi2AdapterInfo_t, *pMpi2AdapterInfo_t;
++/*PortEnable Reply message */
++typedef struct _MPI2_PORT_ENABLE_REPLY {
++	U16 Reserved1;		/*0x00 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U8 Reserved2;		/*0x04 */
++	U8 PortFlags;		/*0x05 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U16 Reserved5;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++} MPI2_PORT_ENABLE_REPLY, *PTR_MPI2_PORT_ENABLE_REPLY,
++	Mpi2PortEnableReply_t, *pMpi2PortEnableReply_t;
 +
-+#define MPI2_ADAPTER_INFO_FLAGS_EMBEDDED                (0x0001)
-+#define MPI2_ADAPTER_INFO_FLAGS_INIT_STATUS             (0x0002)
++/****************************************************************************
++* EventNotification message
++****************************************************************************/
 +
-+typedef struct _MPI2_CONFIG_PAGE_BIOS_3 {
-+	MPI2_CONFIG_PAGE_HEADER Header;              /*0x00 */
-+	U32                     GlobalFlags;         /*0x04 */
-+	U32                     BiosVersion;         /*0x08 */
-+	MPI2_ADAPTER_INFO       AdapterOrder[4];     /*0x0C */
-+	U32                     Reserved1;           /*0x1C */
-+} MPI2_CONFIG_PAGE_BIOS_3,
-+	*PTR_MPI2_CONFIG_PAGE_BIOS_3,
-+	Mpi2BiosPage3_t, *pMpi2BiosPage3_t;
++/*EventNotification Request message */
++#define MPI2_EVENT_NOTIFY_EVENTMASK_WORDS           (4)
 +
-+#define MPI2_BIOSPAGE3_PAGEVERSION                      (0x00)
++typedef struct _MPI2_EVENT_NOTIFICATION_REQUEST {
++	U16 Reserved1;		/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U32 Reserved5;		/*0x0C */
++	U32 Reserved6;		/*0x10 */
++	U32 EventMasks[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];	/*0x14 */
++	U16 SASBroadcastPrimitiveMasks;	/*0x24 */
++	U16 SASNotifyPrimitiveMasks;	/*0x26 */
++	U32 Reserved8;		/*0x28 */
++} MPI2_EVENT_NOTIFICATION_REQUEST,
++	*PTR_MPI2_EVENT_NOTIFICATION_REQUEST,
++	Mpi2EventNotificationRequest_t,
++	*pMpi2EventNotificationRequest_t;
 +
-+/*values for BIOS Page 3 GlobalFlags */
-+#define MPI2_BIOSPAGE3_FLAGS_PAUSE_ON_ERROR             (0x00000002)
-+#define MPI2_BIOSPAGE3_FLAGS_VERBOSE_ENABLE             (0x00000004)
-+#define MPI2_BIOSPAGE3_FLAGS_HOOK_INT_40_DISABLE        (0x00000010)
++/*EventNotification Reply message */
++typedef struct _MPI2_EVENT_NOTIFICATION_REPLY {
++	U16 EventDataLength;	/*0x00 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved1;		/*0x04 */
++	U8 AckRequired;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved2;		/*0x0A */
++	U16 Reserved3;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++	U16 Event;		/*0x14 */
++	U16 Reserved4;		/*0x16 */
++	U32 EventContext;	/*0x18 */
++	U32 EventData[1];	/*0x1C */
++} MPI2_EVENT_NOTIFICATION_REPLY, *PTR_MPI2_EVENT_NOTIFICATION_REPLY,
++	Mpi2EventNotificationReply_t,
++	*pMpi2EventNotificationReply_t;
 +
-+#define MPI2_BIOSPAGE3_FLAGS_DEV_LIST_DISPLAY_MASK      (0x000000E0)
-+#define MPI2_BIOSPAGE3_FLAGS_INSTALLED_DEV_DISPLAY      (0x00000000)
-+#define MPI2_BIOSPAGE3_FLAGS_ADAPTER_DISPLAY            (0x00000020)
-+#define MPI2_BIOSPAGE3_FLAGS_ADAPTER_DEV_DISPLAY        (0x00000040)
++/*AckRequired */
++#define MPI2_EVENT_NOTIFICATION_ACK_NOT_REQUIRED    (0x00)
++#define MPI2_EVENT_NOTIFICATION_ACK_REQUIRED        (0x01)
 +
++/*Event */
++#define MPI2_EVENT_LOG_DATA                         (0x0001)
++#define MPI2_EVENT_STATE_CHANGE                     (0x0002)
++#define MPI2_EVENT_HARD_RESET_RECEIVED              (0x0005)
++#define MPI2_EVENT_EVENT_CHANGE                     (0x000A)
++#define MPI2_EVENT_TASK_SET_FULL                    (0x000E)	/*obsolete */
++#define MPI2_EVENT_SAS_DEVICE_STATUS_CHANGE         (0x000F)
++#define MPI2_EVENT_IR_OPERATION_STATUS              (0x0014)
++#define MPI2_EVENT_SAS_DISCOVERY                    (0x0016)
++#define MPI2_EVENT_SAS_BROADCAST_PRIMITIVE          (0x0017)
++#define MPI2_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE    (0x0018)
++#define MPI2_EVENT_SAS_INIT_TABLE_OVERFLOW          (0x0019)
++#define MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST         (0x001C)
++#define MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE    (0x001D)
++#define MPI2_EVENT_IR_VOLUME                        (0x001E)
++#define MPI2_EVENT_IR_PHYSICAL_DISK                 (0x001F)
++#define MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST     (0x0020)
++#define MPI2_EVENT_LOG_ENTRY_ADDED                  (0x0021)
++#define MPI2_EVENT_SAS_PHY_COUNTER                  (0x0022)
++#define MPI2_EVENT_GPIO_INTERRUPT                   (0x0023)
++#define MPI2_EVENT_HOST_BASED_DISCOVERY_PHY         (0x0024)
++#define MPI2_EVENT_SAS_QUIESCE                      (0x0025)
++#define MPI2_EVENT_SAS_NOTIFY_PRIMITIVE             (0x0026)
++#define MPI2_EVENT_TEMP_THRESHOLD                   (0x0027)
++#define MPI2_EVENT_HOST_MESSAGE                     (0x0028)
++#define MPI2_EVENT_POWER_PERFORMANCE_CHANGE         (0x0029)
++#define MPI2_EVENT_MIN_PRODUCT_SPECIFIC             (0x006E)
++#define MPI2_EVENT_MAX_PRODUCT_SPECIFIC             (0x007F)
 +
-+/*BIOS Page 4 */
++/*Log Entry Added Event data */
++
++/*the following structure matches MPI2_LOG_0_ENTRY in mpi2_cnfg.h */
++#define MPI2_EVENT_DATA_LOG_DATA_LENGTH             (0x1C)
++
++typedef struct _MPI2_EVENT_DATA_LOG_ENTRY_ADDED {
++	U64 TimeStamp;		/*0x00 */
++	U32 Reserved1;		/*0x08 */
++	U16 LogSequence;	/*0x0C */
++	U16 LogEntryQualifier;	/*0x0E */
++	U8 VP_ID;		/*0x10 */
++	U8 VF_ID;		/*0x11 */
++	U16 Reserved2;		/*0x12 */
++	U8 LogData[MPI2_EVENT_DATA_LOG_DATA_LENGTH];	/*0x14 */
++} MPI2_EVENT_DATA_LOG_ENTRY_ADDED,
++	*PTR_MPI2_EVENT_DATA_LOG_ENTRY_ADDED,
++	Mpi2EventDataLogEntryAdded_t,
++	*pMpi2EventDataLogEntryAdded_t;
++
++/*GPIO Interrupt Event data */
++
++typedef struct _MPI2_EVENT_DATA_GPIO_INTERRUPT {
++	U8 GPIONum;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U16 Reserved2;		/*0x02 */
++} MPI2_EVENT_DATA_GPIO_INTERRUPT,
++	*PTR_MPI2_EVENT_DATA_GPIO_INTERRUPT,
++	Mpi2EventDataGpioInterrupt_t,
++	*pMpi2EventDataGpioInterrupt_t;
++
++/*Temperature Threshold Event data */
++
++typedef struct _MPI2_EVENT_DATA_TEMPERATURE {
++	U16 Status;		/*0x00 */
++	U8 SensorNum;		/*0x02 */
++	U8 Reserved1;		/*0x03 */
++	U16 CurrentTemperature;	/*0x04 */
++	U16 Reserved2;		/*0x06 */
++	U32 Reserved3;		/*0x08 */
++	U32 Reserved4;		/*0x0C */
++} MPI2_EVENT_DATA_TEMPERATURE,
++	*PTR_MPI2_EVENT_DATA_TEMPERATURE,
++	Mpi2EventDataTemperature_t, *pMpi2EventDataTemperature_t;
++
++/*Temperature Threshold Event data Status bits */
++#define MPI2_EVENT_TEMPERATURE3_EXCEEDED            (0x0008)
++#define MPI2_EVENT_TEMPERATURE2_EXCEEDED            (0x0004)
++#define MPI2_EVENT_TEMPERATURE1_EXCEEDED            (0x0002)
++#define MPI2_EVENT_TEMPERATURE0_EXCEEDED            (0x0001)
++
++/*Host Message Event data */
++
++typedef struct _MPI2_EVENT_DATA_HOST_MESSAGE {
++	U8 SourceVF_ID;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U16 Reserved2;		/*0x02 */
++	U32 Reserved3;		/*0x04 */
++	U32 HostData[1];	/*0x08 */
++} MPI2_EVENT_DATA_HOST_MESSAGE, *PTR_MPI2_EVENT_DATA_HOST_MESSAGE,
++	Mpi2EventDataHostMessage_t, *pMpi2EventDataHostMessage_t;
++
++/*Power Performance Change Event */
++
++typedef struct _MPI2_EVENT_DATA_POWER_PERF_CHANGE {
++	U8 CurrentPowerMode;	/*0x00 */
++	U8 PreviousPowerMode;	/*0x01 */
++	U16 Reserved1;		/*0x02 */
++} MPI2_EVENT_DATA_POWER_PERF_CHANGE,
++	*PTR_MPI2_EVENT_DATA_POWER_PERF_CHANGE,
++	Mpi2EventDataPowerPerfChange_t,
++	*pMpi2EventDataPowerPerfChange_t;
++
++/*defines for CurrentPowerMode and PreviousPowerMode fields */
++#define MPI2_EVENT_PM_INIT_MASK              (0xC0)
++#define MPI2_EVENT_PM_INIT_UNAVAILABLE       (0x00)
++#define MPI2_EVENT_PM_INIT_HOST              (0x40)
++#define MPI2_EVENT_PM_INIT_IO_UNIT           (0x80)
++#define MPI2_EVENT_PM_INIT_PCIE_DPA          (0xC0)
++
++#define MPI2_EVENT_PM_MODE_MASK              (0x07)
++#define MPI2_EVENT_PM_MODE_UNAVAILABLE       (0x00)
++#define MPI2_EVENT_PM_MODE_UNKNOWN           (0x01)
++#define MPI2_EVENT_PM_MODE_FULL_POWER        (0x04)
++#define MPI2_EVENT_PM_MODE_REDUCED_POWER     (0x05)
++#define MPI2_EVENT_PM_MODE_STANDBY           (0x06)
++
++/*Hard Reset Received Event data */
++
++typedef struct _MPI2_EVENT_DATA_HARD_RESET_RECEIVED {
++	U8 Reserved1;		/*0x00 */
++	U8 Port;		/*0x01 */
++	U16 Reserved2;		/*0x02 */
++} MPI2_EVENT_DATA_HARD_RESET_RECEIVED,
++	*PTR_MPI2_EVENT_DATA_HARD_RESET_RECEIVED,
++	Mpi2EventDataHardResetReceived_t,
++	*pMpi2EventDataHardResetReceived_t;
++
++/*Task Set Full Event data */
++/*  this event is obsolete */
++
++typedef struct _MPI2_EVENT_DATA_TASK_SET_FULL {
++	U16 DevHandle;		/*0x00 */
++	U16 CurrentDepth;	/*0x02 */
++} MPI2_EVENT_DATA_TASK_SET_FULL, *PTR_MPI2_EVENT_DATA_TASK_SET_FULL,
++	Mpi2EventDataTaskSetFull_t, *pMpi2EventDataTaskSetFull_t;
++
++/*SAS Device Status Change Event data */
++
++typedef struct _MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE {
++	U16 TaskTag;		/*0x00 */
++	U8 ReasonCode;		/*0x02 */
++	U8 PhysicalPort;	/*0x03 */
++	U8 ASC;			/*0x04 */
++	U8 ASCQ;		/*0x05 */
++	U16 DevHandle;		/*0x06 */
++	U32 Reserved2;		/*0x08 */
++	U64 SASAddress;		/*0x0C */
++	U8 LUN[8];		/*0x14 */
++} MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE,
++	*PTR_MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE,
++	Mpi2EventDataSasDeviceStatusChange_t,
++	*pMpi2EventDataSasDeviceStatusChange_t;
++
++/*SAS Device Status Change Event data ReasonCode values */
++#define MPI2_EVENT_SAS_DEV_STAT_RC_SMART_DATA                           (0x05)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_UNSUPPORTED                          (0x07)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET                (0x08)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_TASK_ABORT_INTERNAL                  (0x09)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_ABORT_TASK_SET_INTERNAL              (0x0A)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_CLEAR_TASK_SET_INTERNAL              (0x0B)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_QUERY_TASK_INTERNAL                  (0x0C)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_ASYNC_NOTIFICATION                   (0x0D)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET               (0x0E)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_CMP_TASK_ABORT_INTERNAL              (0x0F)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_SATA_INIT_FAILURE                    (0x10)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_EXPANDER_REDUCED_FUNCTIONALITY       (0x11)
++#define MPI2_EVENT_SAS_DEV_STAT_RC_CMP_EXPANDER_REDUCED_FUNCTIONALITY   (0x12)
++
++/*Integrated RAID Operation Status Event data */
++
++typedef struct _MPI2_EVENT_DATA_IR_OPERATION_STATUS {
++	U16 VolDevHandle;	/*0x00 */
++	U16 Reserved1;		/*0x02 */
++	U8 RAIDOperation;	/*0x04 */
++	U8 PercentComplete;	/*0x05 */
++	U16 Reserved2;		/*0x06 */
++	U32 Resereved3;		/*0x08 */
++} MPI2_EVENT_DATA_IR_OPERATION_STATUS,
++	*PTR_MPI2_EVENT_DATA_IR_OPERATION_STATUS,
++	Mpi2EventDataIrOperationStatus_t,
++	*pMpi2EventDataIrOperationStatus_t;
++
++/*Integrated RAID Operation Status Event data RAIDOperation values */
++#define MPI2_EVENT_IR_RAIDOP_RESYNC                     (0x00)
++#define MPI2_EVENT_IR_RAIDOP_ONLINE_CAP_EXPANSION       (0x01)
++#define MPI2_EVENT_IR_RAIDOP_CONSISTENCY_CHECK          (0x02)
++#define MPI2_EVENT_IR_RAIDOP_BACKGROUND_INIT            (0x03)
++#define MPI2_EVENT_IR_RAIDOP_MAKE_DATA_CONSISTENT       (0x04)
++
++/*Integrated RAID Volume Event data */
++
++typedef struct _MPI2_EVENT_DATA_IR_VOLUME {
++	U16 VolDevHandle;	/*0x00 */
++	U8 ReasonCode;		/*0x02 */
++	U8 Reserved1;		/*0x03 */
++	U32 NewValue;		/*0x04 */
++	U32 PreviousValue;	/*0x08 */
++} MPI2_EVENT_DATA_IR_VOLUME, *PTR_MPI2_EVENT_DATA_IR_VOLUME,
++	Mpi2EventDataIrVolume_t, *pMpi2EventDataIrVolume_t;
++
++/*Integrated RAID Volume Event data ReasonCode values */
++#define MPI2_EVENT_IR_VOLUME_RC_SETTINGS_CHANGED        (0x01)
++#define MPI2_EVENT_IR_VOLUME_RC_STATUS_FLAGS_CHANGED    (0x02)
++#define MPI2_EVENT_IR_VOLUME_RC_STATE_CHANGED           (0x03)
++
++/*Integrated RAID Physical Disk Event data */
++
++typedef struct _MPI2_EVENT_DATA_IR_PHYSICAL_DISK {
++	U16 Reserved1;		/*0x00 */
++	U8 ReasonCode;		/*0x02 */
++	U8 PhysDiskNum;		/*0x03 */
++	U16 PhysDiskDevHandle;	/*0x04 */
++	U16 Reserved2;		/*0x06 */
++	U16 Slot;		/*0x08 */
++	U16 EnclosureHandle;	/*0x0A */
++	U32 NewValue;		/*0x0C */
++	U32 PreviousValue;	/*0x10 */
++} MPI2_EVENT_DATA_IR_PHYSICAL_DISK,
++	*PTR_MPI2_EVENT_DATA_IR_PHYSICAL_DISK,
++	Mpi2EventDataIrPhysicalDisk_t,
++	*pMpi2EventDataIrPhysicalDisk_t;
++
++/*Integrated RAID Physical Disk Event data ReasonCode values */
++#define MPI2_EVENT_IR_PHYSDISK_RC_SETTINGS_CHANGED      (0x01)
++#define MPI2_EVENT_IR_PHYSDISK_RC_STATUS_FLAGS_CHANGED  (0x02)
++#define MPI2_EVENT_IR_PHYSDISK_RC_STATE_CHANGED         (0x03)
++
++/*Integrated RAID Configuration Change List Event data */
 +
 +/*
 + *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check the value returned for NumPhys at runtime.
++ *one and check NumElements at runtime.
 + */
-+#ifndef MPI2_BIOS_PAGE_4_PHY_ENTRIES
-+#define MPI2_BIOS_PAGE_4_PHY_ENTRIES        (1)
++#ifndef MPI2_EVENT_IR_CONFIG_ELEMENT_COUNT
++#define MPI2_EVENT_IR_CONFIG_ELEMENT_COUNT          (1)
 +#endif
 +
-+typedef struct _MPI2_BIOS4_ENTRY {
-+	U64                     ReassignmentWWID;       /*0x00 */
-+	U64                     ReassignmentDeviceName; /*0x08 */
-+} MPI2_BIOS4_ENTRY, *PTR_MPI2_BIOS4_ENTRY,
-+	Mpi2MBios4Entry_t, *pMpi2Bios4Entry_t;
++typedef struct _MPI2_EVENT_IR_CONFIG_ELEMENT {
++	U16 ElementFlags;	/*0x00 */
++	U16 VolDevHandle;	/*0x02 */
++	U8 ReasonCode;		/*0x04 */
++	U8 PhysDiskNum;		/*0x05 */
++	U16 PhysDiskDevHandle;	/*0x06 */
++} MPI2_EVENT_IR_CONFIG_ELEMENT, *PTR_MPI2_EVENT_IR_CONFIG_ELEMENT,
++	Mpi2EventIrConfigElement_t, *pMpi2EventIrConfigElement_t;
 +
-+typedef struct _MPI2_CONFIG_PAGE_BIOS_4 {
-+	MPI2_CONFIG_PAGE_HEADER Header;             /*0x00 */
-+	U8                      NumPhys;            /*0x04 */
-+	U8                      Reserved1;          /*0x05 */
-+	U16                     Reserved2;          /*0x06 */
-+	MPI2_BIOS4_ENTRY
-+		Phy[MPI2_BIOS_PAGE_4_PHY_ENTRIES];  /*0x08 */
-+} MPI2_CONFIG_PAGE_BIOS_4, *PTR_MPI2_CONFIG_PAGE_BIOS_4,
-+	Mpi2BiosPage4_t, *pMpi2BiosPage4_t;
++/*IR Configuration Change List Event data ElementFlags values */
++#define MPI2_EVENT_IR_CHANGE_EFLAGS_ELEMENT_TYPE_MASK   (0x000F)
++#define MPI2_EVENT_IR_CHANGE_EFLAGS_VOLUME_ELEMENT      (0x0000)
++#define MPI2_EVENT_IR_CHANGE_EFLAGS_VOLPHYSDISK_ELEMENT (0x0001)
++#define MPI2_EVENT_IR_CHANGE_EFLAGS_HOTSPARE_ELEMENT    (0x0002)
 +
-+#define MPI2_BIOSPAGE4_PAGEVERSION                      (0x01)
++/*IR Configuration Change List Event data ReasonCode values */
++#define MPI2_EVENT_IR_CHANGE_RC_ADDED                   (0x01)
++#define MPI2_EVENT_IR_CHANGE_RC_REMOVED                 (0x02)
++#define MPI2_EVENT_IR_CHANGE_RC_NO_CHANGE               (0x03)
++#define MPI2_EVENT_IR_CHANGE_RC_HIDE                    (0x04)
++#define MPI2_EVENT_IR_CHANGE_RC_UNHIDE                  (0x05)
++#define MPI2_EVENT_IR_CHANGE_RC_VOLUME_CREATED          (0x06)
++#define MPI2_EVENT_IR_CHANGE_RC_VOLUME_DELETED          (0x07)
++#define MPI2_EVENT_IR_CHANGE_RC_PD_CREATED              (0x08)
++#define MPI2_EVENT_IR_CHANGE_RC_PD_DELETED              (0x09)
 +
++typedef struct _MPI2_EVENT_DATA_IR_CONFIG_CHANGE_LIST {
++	U8 NumElements;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 Reserved2;		/*0x02 */
++	U8 ConfigNum;		/*0x03 */
++	U32 Flags;		/*0x04 */
++	MPI2_EVENT_IR_CONFIG_ELEMENT
++		ConfigElement[MPI2_EVENT_IR_CONFIG_ELEMENT_COUNT];/*0x08 */
++} MPI2_EVENT_DATA_IR_CONFIG_CHANGE_LIST,
++	*PTR_MPI2_EVENT_DATA_IR_CONFIG_CHANGE_LIST,
++	Mpi2EventDataIrConfigChangeList_t,
++	*pMpi2EventDataIrConfigChangeList_t;
 +
-+/****************************************************************************
-+*  RAID Volume Config Pages
-+****************************************************************************/
++/*IR Configuration Change List Event data Flags values */
++#define MPI2_EVENT_IR_CHANGE_FLAGS_FOREIGN_CONFIG   (0x00000001)
 +
-+/*RAID Volume Page 0 */
++/*SAS Discovery Event data */
 +
-+typedef struct _MPI2_RAIDVOL0_PHYS_DISK {
-+	U8                      RAIDSetNum;        /*0x00 */
-+	U8                      PhysDiskMap;       /*0x01 */
-+	U8                      PhysDiskNum;       /*0x02 */
-+	U8                      Reserved;          /*0x03 */
-+} MPI2_RAIDVOL0_PHYS_DISK, *PTR_MPI2_RAIDVOL0_PHYS_DISK,
-+	Mpi2RaidVol0PhysDisk_t, *pMpi2RaidVol0PhysDisk_t;
++typedef struct _MPI2_EVENT_DATA_SAS_DISCOVERY {
++	U8 Flags;		/*0x00 */
++	U8 ReasonCode;		/*0x01 */
++	U8 PhysicalPort;	/*0x02 */
++	U8 Reserved1;		/*0x03 */
++	U32 DiscoveryStatus;	/*0x04 */
++} MPI2_EVENT_DATA_SAS_DISCOVERY,
++	*PTR_MPI2_EVENT_DATA_SAS_DISCOVERY,
++	Mpi2EventDataSasDiscovery_t, *pMpi2EventDataSasDiscovery_t;
 +
-+/*defines for the PhysDiskMap field */
-+#define MPI2_RAIDVOL0_PHYSDISK_PRIMARY                  (0x01)
-+#define MPI2_RAIDVOL0_PHYSDISK_SECONDARY                (0x02)
++/*SAS Discovery Event data Flags values */
++#define MPI2_EVENT_SAS_DISC_DEVICE_CHANGE                   (0x02)
++#define MPI2_EVENT_SAS_DISC_IN_PROGRESS                     (0x01)
 +
-+typedef struct _MPI2_RAIDVOL0_SETTINGS {
-+	U16                     Settings;          /*0x00 */
-+	U8                      HotSparePool;      /*0x01 */
-+	U8                      Reserved;          /*0x02 */
-+} MPI2_RAIDVOL0_SETTINGS, *PTR_MPI2_RAIDVOL0_SETTINGS,
-+	Mpi2RaidVol0Settings_t,
-+	*pMpi2RaidVol0Settings_t;
++/*SAS Discovery Event data ReasonCode values */
++#define MPI2_EVENT_SAS_DISC_RC_STARTED                      (0x01)
++#define MPI2_EVENT_SAS_DISC_RC_COMPLETED                    (0x02)
 +
-+/*RAID Volume Page 0 HotSparePool defines, also used in RAID Physical Disk */
-+#define MPI2_RAID_HOT_SPARE_POOL_0                      (0x01)
-+#define MPI2_RAID_HOT_SPARE_POOL_1                      (0x02)
-+#define MPI2_RAID_HOT_SPARE_POOL_2                      (0x04)
-+#define MPI2_RAID_HOT_SPARE_POOL_3                      (0x08)
-+#define MPI2_RAID_HOT_SPARE_POOL_4                      (0x10)
-+#define MPI2_RAID_HOT_SPARE_POOL_5                      (0x20)
-+#define MPI2_RAID_HOT_SPARE_POOL_6                      (0x40)
-+#define MPI2_RAID_HOT_SPARE_POOL_7                      (0x80)
++/*SAS Discovery Event data DiscoveryStatus values */
++#define MPI2_EVENT_SAS_DISC_DS_MAX_ENCLOSURES_EXCEED            (0x80000000)
++#define MPI2_EVENT_SAS_DISC_DS_MAX_EXPANDERS_EXCEED             (0x40000000)
++#define MPI2_EVENT_SAS_DISC_DS_MAX_DEVICES_EXCEED               (0x20000000)
++#define MPI2_EVENT_SAS_DISC_DS_MAX_TOPO_PHYS_EXCEED             (0x10000000)
++#define MPI2_EVENT_SAS_DISC_DS_DOWNSTREAM_INITIATOR             (0x08000000)
++#define MPI2_EVENT_SAS_DISC_DS_MULTI_SUBTRACTIVE_SUBTRACTIVE    (0x00008000)
++#define MPI2_EVENT_SAS_DISC_DS_EXP_MULTI_SUBTRACTIVE            (0x00004000)
++#define MPI2_EVENT_SAS_DISC_DS_MULTI_PORT_DOMAIN                (0x00002000)
++#define MPI2_EVENT_SAS_DISC_DS_TABLE_TO_SUBTRACTIVE_LINK        (0x00001000)
++#define MPI2_EVENT_SAS_DISC_DS_UNSUPPORTED_DEVICE               (0x00000800)
++#define MPI2_EVENT_SAS_DISC_DS_TABLE_LINK                       (0x00000400)
++#define MPI2_EVENT_SAS_DISC_DS_SUBTRACTIVE_LINK                 (0x00000200)
++#define MPI2_EVENT_SAS_DISC_DS_SMP_CRC_ERROR                    (0x00000100)
++#define MPI2_EVENT_SAS_DISC_DS_SMP_FUNCTION_FAILED              (0x00000080)
++#define MPI2_EVENT_SAS_DISC_DS_INDEX_NOT_EXIST                  (0x00000040)
++#define MPI2_EVENT_SAS_DISC_DS_OUT_ROUTE_ENTRIES                (0x00000020)
++#define MPI2_EVENT_SAS_DISC_DS_SMP_TIMEOUT                      (0x00000010)
++#define MPI2_EVENT_SAS_DISC_DS_MULTIPLE_PORTS                   (0x00000004)
++#define MPI2_EVENT_SAS_DISC_DS_UNADDRESSABLE_DEVICE             (0x00000002)
++#define MPI2_EVENT_SAS_DISC_DS_LOOP_DETECTED                    (0x00000001)
 +
-+/*RAID Volume Page 0 VolumeSettings defines */
-+#define MPI2_RAIDVOL0_SETTING_USE_PRODUCT_ID_SUFFIX     (0x0008)
-+#define MPI2_RAIDVOL0_SETTING_AUTO_CONFIG_HSWAP_DISABLE (0x0004)
++/*SAS Broadcast Primitive Event data */
 +
-+#define MPI2_RAIDVOL0_SETTING_MASK_WRITE_CACHING        (0x0003)
-+#define MPI2_RAIDVOL0_SETTING_UNCHANGED                 (0x0000)
-+#define MPI2_RAIDVOL0_SETTING_DISABLE_WRITE_CACHING     (0x0001)
-+#define MPI2_RAIDVOL0_SETTING_ENABLE_WRITE_CACHING      (0x0002)
++typedef struct _MPI2_EVENT_DATA_SAS_BROADCAST_PRIMITIVE {
++	U8 PhyNum;		/*0x00 */
++	U8 Port;		/*0x01 */
++	U8 PortWidth;		/*0x02 */
++	U8 Primitive;		/*0x03 */
++} MPI2_EVENT_DATA_SAS_BROADCAST_PRIMITIVE,
++	*PTR_MPI2_EVENT_DATA_SAS_BROADCAST_PRIMITIVE,
++	Mpi2EventDataSasBroadcastPrimitive_t,
++	*pMpi2EventDataSasBroadcastPrimitive_t;
++
++/*defines for the Primitive field */
++#define MPI2_EVENT_PRIMITIVE_CHANGE                         (0x01)
++#define MPI2_EVENT_PRIMITIVE_SES                            (0x02)
++#define MPI2_EVENT_PRIMITIVE_EXPANDER                       (0x03)
++#define MPI2_EVENT_PRIMITIVE_ASYNCHRONOUS_EVENT             (0x04)
++#define MPI2_EVENT_PRIMITIVE_RESERVED3                      (0x05)
++#define MPI2_EVENT_PRIMITIVE_RESERVED4                      (0x06)
++#define MPI2_EVENT_PRIMITIVE_CHANGE0_RESERVED               (0x07)
++#define MPI2_EVENT_PRIMITIVE_CHANGE1_RESERVED               (0x08)
++
++/*SAS Notify Primitive Event data */
++
++typedef struct _MPI2_EVENT_DATA_SAS_NOTIFY_PRIMITIVE {
++	U8 PhyNum;		/*0x00 */
++	U8 Port;		/*0x01 */
++	U8 Reserved1;		/*0x02 */
++	U8 Primitive;		/*0x03 */
++} MPI2_EVENT_DATA_SAS_NOTIFY_PRIMITIVE,
++	*PTR_MPI2_EVENT_DATA_SAS_NOTIFY_PRIMITIVE,
++	Mpi2EventDataSasNotifyPrimitive_t,
++	*pMpi2EventDataSasNotifyPrimitive_t;
++
++/*defines for the Primitive field */
++#define MPI2_EVENT_NOTIFY_ENABLE_SPINUP                     (0x01)
++#define MPI2_EVENT_NOTIFY_POWER_LOSS_EXPECTED               (0x02)
++#define MPI2_EVENT_NOTIFY_RESERVED1                         (0x03)
++#define MPI2_EVENT_NOTIFY_RESERVED2                         (0x04)
++
++/*SAS Initiator Device Status Change Event data */
++
++typedef struct _MPI2_EVENT_DATA_SAS_INIT_DEV_STATUS_CHANGE {
++	U8 ReasonCode;		/*0x00 */
++	U8 PhysicalPort;	/*0x01 */
++	U16 DevHandle;		/*0x02 */
++	U64 SASAddress;		/*0x04 */
++} MPI2_EVENT_DATA_SAS_INIT_DEV_STATUS_CHANGE,
++	*PTR_MPI2_EVENT_DATA_SAS_INIT_DEV_STATUS_CHANGE,
++	Mpi2EventDataSasInitDevStatusChange_t,
++	*pMpi2EventDataSasInitDevStatusChange_t;
++
++/*SAS Initiator Device Status Change event ReasonCode values */
++#define MPI2_EVENT_SAS_INIT_RC_ADDED                (0x01)
++#define MPI2_EVENT_SAS_INIT_RC_NOT_RESPONDING       (0x02)
++
++/*SAS Initiator Device Table Overflow Event data */
++
++typedef struct _MPI2_EVENT_DATA_SAS_INIT_TABLE_OVERFLOW {
++	U16 MaxInit;		/*0x00 */
++	U16 CurrentInit;	/*0x02 */
++	U64 SASAddress;		/*0x04 */
++} MPI2_EVENT_DATA_SAS_INIT_TABLE_OVERFLOW,
++	*PTR_MPI2_EVENT_DATA_SAS_INIT_TABLE_OVERFLOW,
++	Mpi2EventDataSasInitTableOverflow_t,
++	*pMpi2EventDataSasInitTableOverflow_t;
++
++/*SAS Topology Change List Event data */
 +
 +/*
 + *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ *one and check the value returned for NumPhysDisks at runtime.
++ *one and check NumEntries at runtime.
 + */
-+#ifndef MPI2_RAID_VOL_PAGE_0_PHYSDISK_MAX
-+#define MPI2_RAID_VOL_PAGE_0_PHYSDISK_MAX       (1)
++#ifndef MPI2_EVENT_SAS_TOPO_PHY_COUNT
++#define MPI2_EVENT_SAS_TOPO_PHY_COUNT           (1)
 +#endif
 +
-+typedef struct _MPI2_CONFIG_PAGE_RAID_VOL_0 {
-+	MPI2_CONFIG_PAGE_HEADER Header;            /*0x00 */
-+	U16                     DevHandle;         /*0x04 */
-+	U8                      VolumeState;       /*0x06 */
-+	U8                      VolumeType;        /*0x07 */
-+	U32                     VolumeStatusFlags; /*0x08 */
-+	MPI2_RAIDVOL0_SETTINGS  VolumeSettings;    /*0x0C */
-+	U64                     MaxLBA;            /*0x10 */
-+	U32                     StripeSize;        /*0x18 */
-+	U16                     BlockSize;         /*0x1C */
-+	U16                     Reserved1;         /*0x1E */
-+	U8                      SupportedPhysDisks;/*0x20 */
-+	U8                      ResyncRate;        /*0x21 */
-+	U16                     DataScrubDuration; /*0x22 */
-+	U8                      NumPhysDisks;      /*0x24 */
-+	U8                      Reserved2;         /*0x25 */
-+	U8                      Reserved3;         /*0x26 */
-+	U8                      InactiveStatus;    /*0x27 */
-+	MPI2_RAIDVOL0_PHYS_DISK
-+	PhysDisk[MPI2_RAID_VOL_PAGE_0_PHYSDISK_MAX]; /*0x28 */
-+} MPI2_CONFIG_PAGE_RAID_VOL_0,
-+	*PTR_MPI2_CONFIG_PAGE_RAID_VOL_0,
-+	Mpi2RaidVolPage0_t, *pMpi2RaidVolPage0_t;
++typedef struct _MPI2_EVENT_SAS_TOPO_PHY_ENTRY {
++	U16 AttachedDevHandle;	/*0x00 */
++	U8 LinkRate;		/*0x02 */
++	U8 PhyStatus;		/*0x03 */
++} MPI2_EVENT_SAS_TOPO_PHY_ENTRY, *PTR_MPI2_EVENT_SAS_TOPO_PHY_ENTRY,
++	Mpi2EventSasTopoPhyEntry_t, *pMpi2EventSasTopoPhyEntry_t;
 +
-+#define MPI2_RAIDVOLPAGE0_PAGEVERSION           (0x0A)
++typedef struct _MPI2_EVENT_DATA_SAS_TOPOLOGY_CHANGE_LIST {
++	U16 EnclosureHandle;	/*0x00 */
++	U16 ExpanderDevHandle;	/*0x02 */
++	U8 NumPhys;		/*0x04 */
++	U8 Reserved1;		/*0x05 */
++	U16 Reserved2;		/*0x06 */
++	U8 NumEntries;		/*0x08 */
++	U8 StartPhyNum;		/*0x09 */
++	U8 ExpStatus;		/*0x0A */
++	U8 PhysicalPort;	/*0x0B */
++	MPI2_EVENT_SAS_TOPO_PHY_ENTRY
++	PHY[MPI2_EVENT_SAS_TOPO_PHY_COUNT];	/*0x0C */
++} MPI2_EVENT_DATA_SAS_TOPOLOGY_CHANGE_LIST,
++	*PTR_MPI2_EVENT_DATA_SAS_TOPOLOGY_CHANGE_LIST,
++	Mpi2EventDataSasTopologyChangeList_t,
++	*pMpi2EventDataSasTopologyChangeList_t;
 +
-+/*values for RAID VolumeState */
-+#define MPI2_RAID_VOL_STATE_MISSING                         (0x00)
-+#define MPI2_RAID_VOL_STATE_FAILED                          (0x01)
-+#define MPI2_RAID_VOL_STATE_INITIALIZING                    (0x02)
-+#define MPI2_RAID_VOL_STATE_ONLINE                          (0x03)
-+#define MPI2_RAID_VOL_STATE_DEGRADED                        (0x04)
-+#define MPI2_RAID_VOL_STATE_OPTIMAL                         (0x05)
++/*values for the ExpStatus field */
++#define MPI2_EVENT_SAS_TOPO_ES_NO_EXPANDER                  (0x00)
++#define MPI2_EVENT_SAS_TOPO_ES_ADDED                        (0x01)
++#define MPI2_EVENT_SAS_TOPO_ES_NOT_RESPONDING               (0x02)
++#define MPI2_EVENT_SAS_TOPO_ES_RESPONDING                   (0x03)
++#define MPI2_EVENT_SAS_TOPO_ES_DELAY_NOT_RESPONDING         (0x04)
 +
-+/*values for RAID VolumeType */
-+#define MPI2_RAID_VOL_TYPE_RAID0                            (0x00)
-+#define MPI2_RAID_VOL_TYPE_RAID1E                           (0x01)
-+#define MPI2_RAID_VOL_TYPE_RAID1                            (0x02)
-+#define MPI2_RAID_VOL_TYPE_RAID10                           (0x05)
-+#define MPI2_RAID_VOL_TYPE_UNKNOWN                          (0xFF)
++/*defines for the LinkRate field */
++#define MPI2_EVENT_SAS_TOPO_LR_CURRENT_MASK                 (0xF0)
++#define MPI2_EVENT_SAS_TOPO_LR_CURRENT_SHIFT                (4)
++#define MPI2_EVENT_SAS_TOPO_LR_PREV_MASK                    (0x0F)
++#define MPI2_EVENT_SAS_TOPO_LR_PREV_SHIFT                   (0)
 +
-+/*values for RAID Volume Page 0 VolumeStatusFlags field */
-+#define MPI2_RAIDVOL0_STATUS_FLAG_PENDING_RESYNC            (0x02000000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_BACKG_INIT_PENDING        (0x01000000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_MDC_PENDING               (0x00800000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_USER_CONSIST_PENDING      (0x00400000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_MAKE_DATA_CONSISTENT      (0x00200000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_DATA_SCRUB                (0x00100000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_CONSISTENCY_CHECK         (0x00080000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_CAPACITY_EXPANSION        (0x00040000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_BACKGROUND_INIT           (0x00020000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_RESYNC_IN_PROGRESS        (0x00010000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_VOL_NOT_CONSISTENT        (0x00000080)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_OCE_ALLOWED               (0x00000040)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_BGI_COMPLETE              (0x00000020)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_1E_OFFSET_MIRROR          (0x00000000)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_1E_ADJACENT_MIRROR        (0x00000010)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_BAD_BLOCK_TABLE_FULL      (0x00000008)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_VOLUME_INACTIVE           (0x00000004)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_QUIESCED                  (0x00000002)
-+#define MPI2_RAIDVOL0_STATUS_FLAG_ENABLED                   (0x00000001)
++#define MPI2_EVENT_SAS_TOPO_LR_UNKNOWN_LINK_RATE            (0x00)
++#define MPI2_EVENT_SAS_TOPO_LR_PHY_DISABLED                 (0x01)
++#define MPI2_EVENT_SAS_TOPO_LR_NEGOTIATION_FAILED           (0x02)
++#define MPI2_EVENT_SAS_TOPO_LR_SATA_OOB_COMPLETE            (0x03)
++#define MPI2_EVENT_SAS_TOPO_LR_PORT_SELECTOR                (0x04)
++#define MPI2_EVENT_SAS_TOPO_LR_SMP_RESET_IN_PROGRESS        (0x05)
++#define MPI2_EVENT_SAS_TOPO_LR_UNSUPPORTED_PHY              (0x06)
++#define MPI2_EVENT_SAS_TOPO_LR_RATE_1_5                     (0x08)
++#define MPI2_EVENT_SAS_TOPO_LR_RATE_3_0                     (0x09)
++#define MPI2_EVENT_SAS_TOPO_LR_RATE_6_0                     (0x0A)
++#define MPI25_EVENT_SAS_TOPO_LR_RATE_12_0                   (0x0B)
 +
-+/*values for RAID Volume Page 0 SupportedPhysDisks field */
-+#define MPI2_RAIDVOL0_SUPPORT_SOLID_STATE_DISKS             (0x08)
-+#define MPI2_RAIDVOL0_SUPPORT_HARD_DISKS                    (0x04)
-+#define MPI2_RAIDVOL0_SUPPORT_SAS_PROTOCOL                  (0x02)
-+#define MPI2_RAIDVOL0_SUPPORT_SATA_PROTOCOL                 (0x01)
++/*values for the PhyStatus field */
++#define MPI2_EVENT_SAS_TOPO_PHYSTATUS_VACANT                (0x80)
++#define MPI2_EVENT_SAS_TOPO_PS_MULTIPLEX_CHANGE             (0x10)
++/*values for the PhyStatus ReasonCode sub-field */
++#define MPI2_EVENT_SAS_TOPO_RC_MASK                         (0x0F)
++#define MPI2_EVENT_SAS_TOPO_RC_TARG_ADDED                   (0x01)
++#define MPI2_EVENT_SAS_TOPO_RC_TARG_NOT_RESPONDING          (0x02)
++#define MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED                  (0x03)
++#define MPI2_EVENT_SAS_TOPO_RC_NO_CHANGE                    (0x04)
++#define MPI2_EVENT_SAS_TOPO_RC_DELAY_NOT_RESPONDING         (0x05)
 +
-+/*values for RAID Volume Page 0 InactiveStatus field */
-+#define MPI2_RAIDVOLPAGE0_UNKNOWN_INACTIVE                  (0x00)
-+#define MPI2_RAIDVOLPAGE0_STALE_METADATA_INACTIVE           (0x01)
-+#define MPI2_RAIDVOLPAGE0_FOREIGN_VOLUME_INACTIVE           (0x02)
-+#define MPI2_RAIDVOLPAGE0_INSUFFICIENT_RESOURCE_INACTIVE    (0x03)
-+#define MPI2_RAIDVOLPAGE0_CLONE_VOLUME_INACTIVE             (0x04)
-+#define MPI2_RAIDVOLPAGE0_INSUFFICIENT_METADATA_INACTIVE    (0x05)
-+#define MPI2_RAIDVOLPAGE0_PREVIOUSLY_DELETED                (0x06)
++/*SAS Enclosure Device Status Change Event data */
 +
++typedef struct _MPI2_EVENT_DATA_SAS_ENCL_DEV_STATUS_CHANGE {
++	U16 EnclosureHandle;	/*0x00 */
++	U8 ReasonCode;		/*0x02 */
++	U8 PhysicalPort;	/*0x03 */
++	U64 EnclosureLogicalID;	/*0x04 */
++	U16 NumSlots;		/*0x0C */
++	U16 StartSlot;		/*0x0E */
++	U32 PhyBits;		/*0x10 */
++} MPI2_EVENT_DATA_SAS_ENCL_DEV_STATUS_CHANGE,
++	*PTR_MPI2_EVENT_DATA_SAS_ENCL_DEV_STATUS_CHANGE,
++	Mpi2EventDataSasEnclDevStatusChange_t,
++	*pMpi2EventDataSasEnclDevStatusChange_t;
 +
-+/*RAID Volume Page 1 */
++/*SAS Enclosure Device Status Change event ReasonCode values */
++#define MPI2_EVENT_SAS_ENCL_RC_ADDED                (0x01)
++#define MPI2_EVENT_SAS_ENCL_RC_NOT_RESPONDING       (0x02)
 +
-+typedef struct _MPI2_CONFIG_PAGE_RAID_VOL_1 {
-+	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
-+	U16                     DevHandle;                  /*0x04 */
-+	U16                     Reserved0;                  /*0x06 */
-+	U8                      GUID[24];                   /*0x08 */
-+	U8                      Name[16];                   /*0x20 */
-+	U64                     WWID;                       /*0x30 */
-+	U32                     Reserved1;                  /*0x38 */
-+	U32                     Reserved2;                  /*0x3C */
-+} MPI2_CONFIG_PAGE_RAID_VOL_1,
-+	*PTR_MPI2_CONFIG_PAGE_RAID_VOL_1,
-+	Mpi2RaidVolPage1_t, *pMpi2RaidVolPage1_t;
++/*SAS PHY Counter Event data */
 +
-+#define MPI2_RAIDVOLPAGE1_PAGEVERSION           (0x03)
++typedef struct _MPI2_EVENT_DATA_SAS_PHY_COUNTER {
++	U64 TimeStamp;		/*0x00 */
++	U32 Reserved1;		/*0x08 */
++	U8 PhyEventCode;	/*0x0C */
++	U8 PhyNum;		/*0x0D */
++	U16 Reserved2;		/*0x0E */
++	U32 PhyEventInfo;	/*0x10 */
++	U8 CounterType;		/*0x14 */
++	U8 ThresholdWindow;	/*0x15 */
++	U8 TimeUnits;		/*0x16 */
++	U8 Reserved3;		/*0x17 */
++	U32 EventThreshold;	/*0x18 */
++	U16 ThresholdFlags;	/*0x1C */
++	U16 Reserved4;		/*0x1E */
++} MPI2_EVENT_DATA_SAS_PHY_COUNTER,
++	*PTR_MPI2_EVENT_DATA_SAS_PHY_COUNTER,
++	Mpi2EventDataSasPhyCounter_t,
++	*pMpi2EventDataSasPhyCounter_t;
 +
++/*use MPI2_SASPHY3_EVENT_CODE_ values from mpi2_cnfg.h
++ *for the PhyEventCode field */
++
++/*use MPI2_SASPHY3_COUNTER_TYPE_ values from mpi2_cnfg.h
++ *for the CounterType field */
++
++/*use MPI2_SASPHY3_TIME_UNITS_ values from mpi2_cnfg.h
++ *for the TimeUnits field */
++
++/*use MPI2_SASPHY3_TFLAGS_ values from mpi2_cnfg.h
++ *for the ThresholdFlags field */
++
++/*SAS Quiesce Event data */
++
++typedef struct _MPI2_EVENT_DATA_SAS_QUIESCE {
++	U8 ReasonCode;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U16 Reserved2;		/*0x02 */
++	U32 Reserved3;		/*0x04 */
++} MPI2_EVENT_DATA_SAS_QUIESCE,
++	*PTR_MPI2_EVENT_DATA_SAS_QUIESCE,
++	Mpi2EventDataSasQuiesce_t, *pMpi2EventDataSasQuiesce_t;
++
++/*SAS Quiesce Event data ReasonCode values */
++#define MPI2_EVENT_SAS_QUIESCE_RC_STARTED                   (0x01)
++#define MPI2_EVENT_SAS_QUIESCE_RC_COMPLETED                 (0x02)
++
++/*Host Based Discovery Phy Event data */
++
++typedef struct _MPI2_EVENT_HBD_PHY_SAS {
++	U8 Flags;		/*0x00 */
++	U8 NegotiatedLinkRate;	/*0x01 */
++	U8 PhyNum;		/*0x02 */
++	U8 PhysicalPort;	/*0x03 */
++	U32 Reserved1;		/*0x04 */
++	U8 InitialFrame[28];	/*0x08 */
++} MPI2_EVENT_HBD_PHY_SAS, *PTR_MPI2_EVENT_HBD_PHY_SAS,
++	Mpi2EventHbdPhySas_t, *pMpi2EventHbdPhySas_t;
++
++/*values for the Flags field */
++#define MPI2_EVENT_HBD_SAS_FLAGS_FRAME_VALID        (0x02)
++#define MPI2_EVENT_HBD_SAS_FLAGS_SATA_FRAME         (0x01)
++
++/*use MPI2_SAS_NEG_LINK_RATE_ defines from mpi2_cnfg.h
++ *for the NegotiatedLinkRate field */
++
++typedef union _MPI2_EVENT_HBD_DESCRIPTOR {
++	MPI2_EVENT_HBD_PHY_SAS Sas;
++} MPI2_EVENT_HBD_DESCRIPTOR, *PTR_MPI2_EVENT_HBD_DESCRIPTOR,
++	Mpi2EventHbdDescriptor_t, *pMpi2EventHbdDescriptor_t;
++
++typedef struct _MPI2_EVENT_DATA_HBD_PHY {
++	U8 DescriptorType;	/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U16 Reserved2;		/*0x02 */
++	U32 Reserved3;		/*0x04 */
++	MPI2_EVENT_HBD_DESCRIPTOR Descriptor;	/*0x08 */
++} MPI2_EVENT_DATA_HBD_PHY, *PTR_MPI2_EVENT_DATA_HBD_PHY,
++	Mpi2EventDataHbdPhy_t,
++	*pMpi2EventDataMpi2EventDataHbdPhy_t;
++
++/*values for the DescriptorType field */
++#define MPI2_EVENT_HBD_DT_SAS               (0x01)
 +
 +/****************************************************************************
-+*  RAID Physical Disk Config Pages
++* EventAck message
 +****************************************************************************/
 +
-+/*RAID Physical Disk Page 0 */
++/*EventAck Request message */
++typedef struct _MPI2_EVENT_ACK_REQUEST {
++	U16 Reserved1;		/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U16 Event;		/*0x0C */
++	U16 Reserved5;		/*0x0E */
++	U32 EventContext;	/*0x10 */
++} MPI2_EVENT_ACK_REQUEST, *PTR_MPI2_EVENT_ACK_REQUEST,
++	Mpi2EventAckRequest_t, *pMpi2EventAckRequest_t;
 +
-+typedef struct _MPI2_RAIDPHYSDISK0_SETTINGS {
-+	U16                     Reserved1;                  /*0x00 */
-+	U8                      HotSparePool;               /*0x02 */
-+	U8                      Reserved2;                  /*0x03 */
-+} MPI2_RAIDPHYSDISK0_SETTINGS,
-+	*PTR_MPI2_RAIDPHYSDISK0_SETTINGS,
-+	Mpi2RaidPhysDisk0Settings_t,
-+	*pMpi2RaidPhysDisk0Settings_t;
++/*EventAck Reply message */
++typedef struct _MPI2_EVENT_ACK_REPLY {
++	U16 Reserved1;		/*0x00 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U16 Reserved5;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++} MPI2_EVENT_ACK_REPLY, *PTR_MPI2_EVENT_ACK_REPLY,
++	Mpi2EventAckReply_t, *pMpi2EventAckReply_t;
 +
-+/*use MPI2_RAID_HOT_SPARE_POOL_ defines for the HotSparePool field */
++/****************************************************************************
++* SendHostMessage message
++****************************************************************************/
 +
-+typedef struct _MPI2_RAIDPHYSDISK0_INQUIRY_DATA {
-+	U8                      VendorID[8];                /*0x00 */
-+	U8                      ProductID[16];              /*0x08 */
-+	U8                      ProductRevLevel[4];         /*0x18 */
-+	U8                      SerialNum[32];              /*0x1C */
-+} MPI2_RAIDPHYSDISK0_INQUIRY_DATA,
-+	*PTR_MPI2_RAIDPHYSDISK0_INQUIRY_DATA,
-+	Mpi2RaidPhysDisk0InquiryData_t,
-+	*pMpi2RaidPhysDisk0InquiryData_t;
++/*SendHostMessage Request message */
++typedef struct _MPI2_SEND_HOST_MESSAGE_REQUEST {
++	U16 HostDataLength;	/*0x00 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved1;		/*0x04 */
++	U8 Reserved2;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved3;		/*0x0A */
++	U8 Reserved4;		/*0x0C */
++	U8 DestVF_ID;		/*0x0D */
++	U16 Reserved5;		/*0x0E */
++	U32 Reserved6;		/*0x10 */
++	U32 Reserved7;		/*0x14 */
++	U32 Reserved8;		/*0x18 */
++	U32 Reserved9;		/*0x1C */
++	U32 Reserved10;		/*0x20 */
++	U32 HostData[1];	/*0x24 */
++} MPI2_SEND_HOST_MESSAGE_REQUEST,
++	*PTR_MPI2_SEND_HOST_MESSAGE_REQUEST,
++	Mpi2SendHostMessageRequest_t,
++	*pMpi2SendHostMessageRequest_t;
 +
-+typedef struct _MPI2_CONFIG_PAGE_RD_PDISK_0 {
-+	MPI2_CONFIG_PAGE_HEADER         Header;             /*0x00 */
-+	U16                             DevHandle;          /*0x04 */
-+	U8                              Reserved1;          /*0x06 */
-+	U8                              PhysDiskNum;        /*0x07 */
-+	MPI2_RAIDPHYSDISK0_SETTINGS     PhysDiskSettings;   /*0x08 */
-+	U32                             Reserved2;          /*0x0C */
-+	MPI2_RAIDPHYSDISK0_INQUIRY_DATA InquiryData;        /*0x10 */
-+	U32                             Reserved3;          /*0x4C */
-+	U8                              PhysDiskState;      /*0x50 */
-+	U8                              OfflineReason;      /*0x51 */
-+	U8                              IncompatibleReason; /*0x52 */
-+	U8                              PhysDiskAttributes; /*0x53 */
-+	U32                             PhysDiskStatusFlags;/*0x54 */
-+	U64                             DeviceMaxLBA;       /*0x58 */
-+	U64                             HostMaxLBA;         /*0x60 */
-+	U64                             CoercedMaxLBA;      /*0x68 */
-+	U16                             BlockSize;          /*0x70 */
-+	U16                             Reserved5;          /*0x72 */
-+	U32                             Reserved6;          /*0x74 */
-+} MPI2_CONFIG_PAGE_RD_PDISK_0,
-+	*PTR_MPI2_CONFIG_PAGE_RD_PDISK_0,
-+	Mpi2RaidPhysDiskPage0_t,
-+	*pMpi2RaidPhysDiskPage0_t;
++/*SendHostMessage Reply message */
++typedef struct _MPI2_SEND_HOST_MESSAGE_REPLY {
++	U16 HostDataLength;	/*0x00 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved1;		/*0x04 */
++	U8 Reserved2;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved3;		/*0x0A */
++	U16 Reserved4;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++} MPI2_SEND_HOST_MESSAGE_REPLY, *PTR_MPI2_SEND_HOST_MESSAGE_REPLY,
++	Mpi2SendHostMessageReply_t, *pMpi2SendHostMessageReply_t;
 +
-+#define MPI2_RAIDPHYSDISKPAGE0_PAGEVERSION          (0x05)
++/****************************************************************************
++* FWDownload message
++****************************************************************************/
++
++/*MPI v2.0 FWDownload Request message */
++typedef struct _MPI2_FW_DOWNLOAD_REQUEST {
++	U8 ImageType;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U32 TotalImageSize;	/*0x0C */
++	U32 Reserved5;		/*0x10 */
++	MPI2_MPI_SGE_UNION SGL;	/*0x14 */
++} MPI2_FW_DOWNLOAD_REQUEST, *PTR_MPI2_FW_DOWNLOAD_REQUEST,
++	Mpi2FWDownloadRequest, *pMpi2FWDownloadRequest;
++
++#define MPI2_FW_DOWNLOAD_MSGFLGS_LAST_SEGMENT   (0x01)
++
++#define MPI2_FW_DOWNLOAD_ITYPE_FW                   (0x01)
++#define MPI2_FW_DOWNLOAD_ITYPE_BIOS                 (0x02)
++#define MPI2_FW_DOWNLOAD_ITYPE_MANUFACTURING        (0x06)
++#define MPI2_FW_DOWNLOAD_ITYPE_CONFIG_1             (0x07)
++#define MPI2_FW_DOWNLOAD_ITYPE_CONFIG_2             (0x08)
++#define MPI2_FW_DOWNLOAD_ITYPE_MEGARAID             (0x09)
++#define MPI2_FW_DOWNLOAD_ITYPE_COMPLETE             (0x0A)
++#define MPI2_FW_DOWNLOAD_ITYPE_COMMON_BOOT_BLOCK    (0x0B)
++#define MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC (0xF0)
++
++/*MPI v2.0 FWDownload TransactionContext Element */
++typedef struct _MPI2_FW_DOWNLOAD_TCSGE {
++	U8 Reserved1;		/*0x00 */
++	U8 ContextSize;		/*0x01 */
++	U8 DetailsLength;	/*0x02 */
++	U8 Flags;		/*0x03 */
++	U32 Reserved2;		/*0x04 */
++	U32 ImageOffset;	/*0x08 */
++	U32 ImageSize;		/*0x0C */
++} MPI2_FW_DOWNLOAD_TCSGE, *PTR_MPI2_FW_DOWNLOAD_TCSGE,
++	Mpi2FWDownloadTCSGE_t, *pMpi2FWDownloadTCSGE_t;
++
++/*MPI v2.5 FWDownload Request message */
++typedef struct _MPI25_FW_DOWNLOAD_REQUEST {
++	U8 ImageType;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U32 TotalImageSize;	/*0x0C */
++	U32 Reserved5;		/*0x10 */
++	U32 Reserved6;		/*0x14 */
++	U32 ImageOffset;	/*0x18 */
++	U32 ImageSize;		/*0x1C */
++	MPI25_SGE_IO_UNION SGL;	/*0x20 */
++} MPI25_FW_DOWNLOAD_REQUEST, *PTR_MPI25_FW_DOWNLOAD_REQUEST,
++	Mpi25FWDownloadRequest, *pMpi25FWDownloadRequest;
++
++/*FWDownload Reply message */
++typedef struct _MPI2_FW_DOWNLOAD_REPLY {
++	U8 ImageType;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U16 Reserved5;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++} MPI2_FW_DOWNLOAD_REPLY, *PTR_MPI2_FW_DOWNLOAD_REPLY,
++	Mpi2FWDownloadReply_t, *pMpi2FWDownloadReply_t;
++
++/****************************************************************************
++* FWUpload message
++****************************************************************************/
++
++/*MPI v2.0 FWUpload Request message */
++typedef struct _MPI2_FW_UPLOAD_REQUEST {
++	U8 ImageType;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U32 Reserved5;		/*0x0C */
++	U32 Reserved6;		/*0x10 */
++	MPI2_MPI_SGE_UNION SGL;	/*0x14 */
++} MPI2_FW_UPLOAD_REQUEST, *PTR_MPI2_FW_UPLOAD_REQUEST,
++	Mpi2FWUploadRequest_t, *pMpi2FWUploadRequest_t;
++
++#define MPI2_FW_UPLOAD_ITYPE_FW_CURRENT         (0x00)
++#define MPI2_FW_UPLOAD_ITYPE_FW_FLASH           (0x01)
++#define MPI2_FW_UPLOAD_ITYPE_BIOS_FLASH         (0x02)
++#define MPI2_FW_UPLOAD_ITYPE_FW_BACKUP          (0x05)
++#define MPI2_FW_UPLOAD_ITYPE_MANUFACTURING      (0x06)
++#define MPI2_FW_UPLOAD_ITYPE_CONFIG_1           (0x07)
++#define MPI2_FW_UPLOAD_ITYPE_CONFIG_2           (0x08)
++#define MPI2_FW_UPLOAD_ITYPE_MEGARAID           (0x09)
++#define MPI2_FW_UPLOAD_ITYPE_COMPLETE           (0x0A)
++#define MPI2_FW_UPLOAD_ITYPE_COMMON_BOOT_BLOCK  (0x0B)
++
++/*MPI v2.0 FWUpload TransactionContext Element */
++typedef struct _MPI2_FW_UPLOAD_TCSGE {
++	U8 Reserved1;		/*0x00 */
++	U8 ContextSize;		/*0x01 */
++	U8 DetailsLength;	/*0x02 */
++	U8 Flags;		/*0x03 */
++	U32 Reserved2;		/*0x04 */
++	U32 ImageOffset;	/*0x08 */
++	U32 ImageSize;		/*0x0C */
++} MPI2_FW_UPLOAD_TCSGE, *PTR_MPI2_FW_UPLOAD_TCSGE,
++	Mpi2FWUploadTCSGE_t, *pMpi2FWUploadTCSGE_t;
++
++/*MPI v2.5 FWUpload Request message */
++typedef struct _MPI25_FW_UPLOAD_REQUEST {
++	U8 ImageType;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U32 Reserved5;		/*0x0C */
++	U32 Reserved6;		/*0x10 */
++	U32 Reserved7;		/*0x14 */
++	U32 ImageOffset;	/*0x18 */
++	U32 ImageSize;		/*0x1C */
++	MPI25_SGE_IO_UNION SGL;	/*0x20 */
++} MPI25_FW_UPLOAD_REQUEST, *PTR_MPI25_FW_UPLOAD_REQUEST,
++	Mpi25FWUploadRequest_t, *pMpi25FWUploadRequest_t;
++
++/*FWUpload Reply message */
++typedef struct _MPI2_FW_UPLOAD_REPLY {
++	U8 ImageType;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U16 Reserved5;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++	U32 ActualImageSize;	/*0x14 */
++} MPI2_FW_UPLOAD_REPLY, *PTR_MPI2_FW_UPLOAD_REPLY,
++	Mpi2FWUploadReply_t, *pMPi2FWUploadReply_t;
++
++/*FW Image Header */
++typedef struct _MPI2_FW_IMAGE_HEADER {
++	U32 Signature;		/*0x00 */
++	U32 Signature0;		/*0x04 */
++	U32 Signature1;		/*0x08 */
++	U32 Signature2;		/*0x0C */
++	MPI2_VERSION_UNION MPIVersion;	/*0x10 */
++	MPI2_VERSION_UNION FWVersion;	/*0x14 */
++	MPI2_VERSION_UNION NVDATAVersion;	/*0x18 */
++	MPI2_VERSION_UNION PackageVersion;	/*0x1C */
++	U16 VendorID;		/*0x20 */
++	U16 ProductID;		/*0x22 */
++	U16 ProtocolFlags;	/*0x24 */
++	U16 Reserved26;		/*0x26 */
++	U32 IOCCapabilities;	/*0x28 */
++	U32 ImageSize;		/*0x2C */
++	U32 NextImageHeaderOffset;	/*0x30 */
++	U32 Checksum;		/*0x34 */
++	U32 Reserved38;		/*0x38 */
++	U32 Reserved3C;		/*0x3C */
++	U32 Reserved40;		/*0x40 */
++	U32 Reserved44;		/*0x44 */
++	U32 Reserved48;		/*0x48 */
++	U32 Reserved4C;		/*0x4C */
++	U32 Reserved50;		/*0x50 */
++	U32 Reserved54;		/*0x54 */
++	U32 Reserved58;		/*0x58 */
++	U32 Reserved5C;		/*0x5C */
++	U32 Reserved60;		/*0x60 */
++	U32 FirmwareVersionNameWhat;	/*0x64 */
++	U8 FirmwareVersionName[32];	/*0x68 */
++	U32 VendorNameWhat;	/*0x88 */
++	U8 VendorName[32];	/*0x8C */
++	U32 PackageNameWhat;	/*0x88 */
++	U8 PackageName[32];	/*0x8C */
++	U32 ReservedD0;		/*0xD0 */
++	U32 ReservedD4;		/*0xD4 */
++	U32 ReservedD8;		/*0xD8 */
++	U32 ReservedDC;		/*0xDC */
++	U32 ReservedE0;		/*0xE0 */
++	U32 ReservedE4;		/*0xE4 */
++	U32 ReservedE8;		/*0xE8 */
++	U32 ReservedEC;		/*0xEC */
++	U32 ReservedF0;		/*0xF0 */
++	U32 ReservedF4;		/*0xF4 */
++	U32 ReservedF8;		/*0xF8 */
++	U32 ReservedFC;		/*0xFC */
++} MPI2_FW_IMAGE_HEADER, *PTR_MPI2_FW_IMAGE_HEADER,
++	Mpi2FWImageHeader_t, *pMpi2FWImageHeader_t;
++
++/*Signature field */
++#define MPI2_FW_HEADER_SIGNATURE_OFFSET         (0x00)
++#define MPI2_FW_HEADER_SIGNATURE_MASK           (0xFF000000)
++#define MPI2_FW_HEADER_SIGNATURE                (0xEA000000)
++
++/*Signature0 field */
++#define MPI2_FW_HEADER_SIGNATURE0_OFFSET        (0x04)
++#define MPI2_FW_HEADER_SIGNATURE0               (0x5AFAA55A)
++
++/*Signature1 field */
++#define MPI2_FW_HEADER_SIGNATURE1_OFFSET        (0x08)
++#define MPI2_FW_HEADER_SIGNATURE1               (0xA55AFAA5)
++
++/*Signature2 field */
++#define MPI2_FW_HEADER_SIGNATURE2_OFFSET        (0x0C)
++#define MPI2_FW_HEADER_SIGNATURE2               (0x5AA55AFA)
++
++/*defines for using the ProductID field */
++#define MPI2_FW_HEADER_PID_TYPE_MASK            (0xF000)
++#define MPI2_FW_HEADER_PID_TYPE_SAS             (0x2000)
++
++#define MPI2_FW_HEADER_PID_PROD_MASK                    (0x0F00)
++#define MPI2_FW_HEADER_PID_PROD_A                       (0x0000)
++#define MPI2_FW_HEADER_PID_PROD_TARGET_INITIATOR_SCSI   (0x0200)
++#define MPI2_FW_HEADER_PID_PROD_IR_SCSI                 (0x0700)
++
++#define MPI2_FW_HEADER_PID_FAMILY_MASK          (0x00FF)
++/*SAS ProductID Family bits */
++#define MPI2_FW_HEADER_PID_FAMILY_2108_SAS      (0x0013)
++#define MPI2_FW_HEADER_PID_FAMILY_2208_SAS      (0x0014)
++#define MPI25_FW_HEADER_PID_FAMILY_3108_SAS     (0x0021)
++
++/*use MPI2_IOCFACTS_PROTOCOL_ defines for ProtocolFlags field */
++
++/*use MPI2_IOCFACTS_CAPABILITY_ defines for IOCCapabilities field */
++
++#define MPI2_FW_HEADER_IMAGESIZE_OFFSET         (0x2C)
++#define MPI2_FW_HEADER_NEXTIMAGE_OFFSET         (0x30)
++#define MPI2_FW_HEADER_VERNMHWAT_OFFSET         (0x64)
++
++#define MPI2_FW_HEADER_WHAT_SIGNATURE           (0x29232840)
++
++#define MPI2_FW_HEADER_SIZE                     (0x100)
++
++/*Extended Image Header */
++typedef struct _MPI2_EXT_IMAGE_HEADER {
++	U8 ImageType;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U16 Reserved2;		/*0x02 */
++	U32 Checksum;		/*0x04 */
++	U32 ImageSize;		/*0x08 */
++	U32 NextImageHeaderOffset;	/*0x0C */
++	U32 PackageVersion;	/*0x10 */
++	U32 Reserved3;		/*0x14 */
++	U32 Reserved4;		/*0x18 */
++	U32 Reserved5;		/*0x1C */
++	U8 IdentifyString[32];	/*0x20 */
++} MPI2_EXT_IMAGE_HEADER, *PTR_MPI2_EXT_IMAGE_HEADER,
++	Mpi2ExtImageHeader_t, *pMpi2ExtImageHeader_t;
++
++/*useful offsets */
++#define MPI2_EXT_IMAGE_IMAGETYPE_OFFSET         (0x00)
++#define MPI2_EXT_IMAGE_IMAGESIZE_OFFSET         (0x08)
++#define MPI2_EXT_IMAGE_NEXTIMAGE_OFFSET         (0x0C)
++
++#define MPI2_EXT_IMAGE_HEADER_SIZE              (0x40)
++
++/*defines for the ImageType field */
++#define MPI2_EXT_IMAGE_TYPE_UNSPECIFIED             (0x00)
++#define MPI2_EXT_IMAGE_TYPE_FW                      (0x01)
++#define MPI2_EXT_IMAGE_TYPE_NVDATA                  (0x03)
++#define MPI2_EXT_IMAGE_TYPE_BOOTLOADER              (0x04)
++#define MPI2_EXT_IMAGE_TYPE_INITIALIZATION          (0x05)
++#define MPI2_EXT_IMAGE_TYPE_FLASH_LAYOUT            (0x06)
++#define MPI2_EXT_IMAGE_TYPE_SUPPORTED_DEVICES       (0x07)
++#define MPI2_EXT_IMAGE_TYPE_MEGARAID                (0x08)
++#define MPI2_EXT_IMAGE_TYPE_MIN_PRODUCT_SPECIFIC    (0x80)
++#define MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC    (0xFF)
++
++#define MPI2_EXT_IMAGE_TYPE_MAX (MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC)
++
++/*FLASH Layout Extended Image Data */
++
++/*
++ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ *one and check RegionsPerLayout at runtime.
++ */
++#ifndef MPI2_FLASH_NUMBER_OF_REGIONS
++#define MPI2_FLASH_NUMBER_OF_REGIONS        (1)
++#endif
++
++/*
++ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ *one and check NumberOfLayouts at runtime.
++ */
++#ifndef MPI2_FLASH_NUMBER_OF_LAYOUTS
++#define MPI2_FLASH_NUMBER_OF_LAYOUTS        (1)
++#endif
++
++typedef struct _MPI2_FLASH_REGION {
++	U8 RegionType;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U16 Reserved2;		/*0x02 */
++	U32 RegionOffset;	/*0x04 */
++	U32 RegionSize;		/*0x08 */
++	U32 Reserved3;		/*0x0C */
++} MPI2_FLASH_REGION, *PTR_MPI2_FLASH_REGION,
++	Mpi2FlashRegion_t, *pMpi2FlashRegion_t;
++
++typedef struct _MPI2_FLASH_LAYOUT {
++	U32 FlashSize;		/*0x00 */
++	U32 Reserved1;		/*0x04 */
++	U32 Reserved2;		/*0x08 */
++	U32 Reserved3;		/*0x0C */
++	MPI2_FLASH_REGION Region[MPI2_FLASH_NUMBER_OF_REGIONS];	/*0x10 */
++} MPI2_FLASH_LAYOUT, *PTR_MPI2_FLASH_LAYOUT,
++	Mpi2FlashLayout_t, *pMpi2FlashLayout_t;
++
++typedef struct _MPI2_FLASH_LAYOUT_DATA {
++	U8 ImageRevision;	/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 SizeOfRegion;	/*0x02 */
++	U8 Reserved2;		/*0x03 */
++	U16 NumberOfLayouts;	/*0x04 */
++	U16 RegionsPerLayout;	/*0x06 */
++	U16 MinimumSectorAlignment;	/*0x08 */
++	U16 Reserved3;		/*0x0A */
++	U32 Reserved4;		/*0x0C */
++	MPI2_FLASH_LAYOUT Layout[MPI2_FLASH_NUMBER_OF_LAYOUTS];	/*0x10 */
++} MPI2_FLASH_LAYOUT_DATA, *PTR_MPI2_FLASH_LAYOUT_DATA,
++	Mpi2FlashLayoutData_t, *pMpi2FlashLayoutData_t;
++
++/*defines for the RegionType field */
++#define MPI2_FLASH_REGION_UNUSED                (0x00)
++#define MPI2_FLASH_REGION_FIRMWARE              (0x01)
++#define MPI2_FLASH_REGION_BIOS                  (0x02)
++#define MPI2_FLASH_REGION_NVDATA                (0x03)
++#define MPI2_FLASH_REGION_FIRMWARE_BACKUP       (0x05)
++#define MPI2_FLASH_REGION_MFG_INFORMATION       (0x06)
++#define MPI2_FLASH_REGION_CONFIG_1              (0x07)
++#define MPI2_FLASH_REGION_CONFIG_2              (0x08)
++#define MPI2_FLASH_REGION_MEGARAID              (0x09)
++#define MPI2_FLASH_REGION_INIT                  (0x0A)
++
++/*ImageRevision */
++#define MPI2_FLASH_LAYOUT_IMAGE_REVISION        (0x00)
++
++/*Supported Devices Extended Image Data */
++
++/*
++ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ *one and check NumberOfDevices at runtime.
++ */
++#ifndef MPI2_SUPPORTED_DEVICES_IMAGE_NUM_DEVICES
++#define MPI2_SUPPORTED_DEVICES_IMAGE_NUM_DEVICES    (1)
++#endif
++
++typedef struct _MPI2_SUPPORTED_DEVICE {
++	U16 DeviceID;		/*0x00 */
++	U16 VendorID;		/*0x02 */
++	U16 DeviceIDMask;	/*0x04 */
++	U16 Reserved1;		/*0x06 */
++	U8 LowPCIRev;		/*0x08 */
++	U8 HighPCIRev;		/*0x09 */
++	U16 Reserved2;		/*0x0A */
++	U32 Reserved3;		/*0x0C */
++} MPI2_SUPPORTED_DEVICE, *PTR_MPI2_SUPPORTED_DEVICE,
++	Mpi2SupportedDevice_t, *pMpi2SupportedDevice_t;
++
++typedef struct _MPI2_SUPPORTED_DEVICES_DATA {
++	U8 ImageRevision;	/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 NumberOfDevices;	/*0x02 */
++	U8 Reserved2;		/*0x03 */
++	U32 Reserved3;		/*0x04 */
++	MPI2_SUPPORTED_DEVICE
++	SupportedDevice[MPI2_SUPPORTED_DEVICES_IMAGE_NUM_DEVICES];/*0x08 */
++} MPI2_SUPPORTED_DEVICES_DATA, *PTR_MPI2_SUPPORTED_DEVICES_DATA,
++	Mpi2SupportedDevicesData_t, *pMpi2SupportedDevicesData_t;
++
++/*ImageRevision */
++#define MPI2_SUPPORTED_DEVICES_IMAGE_REVISION   (0x00)
++
++/*Init Extended Image Data */
++
++typedef struct _MPI2_INIT_IMAGE_FOOTER {
++	U32 BootFlags;		/*0x00 */
++	U32 ImageSize;		/*0x04 */
++	U32 Signature0;		/*0x08 */
++	U32 Signature1;		/*0x0C */
++	U32 Signature2;		/*0x10 */
++	U32 ResetVector;	/*0x14 */
++} MPI2_INIT_IMAGE_FOOTER, *PTR_MPI2_INIT_IMAGE_FOOTER,
++	Mpi2InitImageFooter_t, *pMpi2InitImageFooter_t;
++
++/*defines for the BootFlags field */
++#define MPI2_INIT_IMAGE_BOOTFLAGS_OFFSET        (0x00)
++
++/*defines for the ImageSize field */
++#define MPI2_INIT_IMAGE_IMAGESIZE_OFFSET        (0x04)
++
++/*defines for the Signature0 field */
++#define MPI2_INIT_IMAGE_SIGNATURE0_OFFSET       (0x08)
++#define MPI2_INIT_IMAGE_SIGNATURE0              (0x5AA55AEA)
++
++/*defines for the Signature1 field */
++#define MPI2_INIT_IMAGE_SIGNATURE1_OFFSET       (0x0C)
++#define MPI2_INIT_IMAGE_SIGNATURE1              (0xA55AEAA5)
++
++/*defines for the Signature2 field */
++#define MPI2_INIT_IMAGE_SIGNATURE2_OFFSET       (0x10)
++#define MPI2_INIT_IMAGE_SIGNATURE2              (0x5AEAA55A)
++
++/*Signature fields as individual bytes */
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_0        (0xEA)
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_1        (0x5A)
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_2        (0xA5)
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_3        (0x5A)
++
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_4        (0xA5)
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_5        (0xEA)
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_6        (0x5A)
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_7        (0xA5)
++
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_8        (0x5A)
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_9        (0xA5)
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_A        (0xEA)
++#define MPI2_INIT_IMAGE_SIGNATURE_BYTE_B        (0x5A)
++
++/*defines for the ResetVector field */
++#define MPI2_INIT_IMAGE_RESETVECTOR_OFFSET      (0x14)
++
++/****************************************************************************
++* PowerManagementControl message
++****************************************************************************/
++
++/*PowerManagementControl Request message */
++typedef struct _MPI2_PWR_MGMT_CONTROL_REQUEST {
++	U8 Feature;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 ChainOffset;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U8 Parameter1;		/*0x0C */
++	U8 Parameter2;		/*0x0D */
++	U8 Parameter3;		/*0x0E */
++	U8 Parameter4;		/*0x0F */
++	U32 Reserved5;		/*0x10 */
++	U32 Reserved6;		/*0x14 */
++} MPI2_PWR_MGMT_CONTROL_REQUEST, *PTR_MPI2_PWR_MGMT_CONTROL_REQUEST,
++	Mpi2PwrMgmtControlRequest_t, *pMpi2PwrMgmtControlRequest_t;
++
++/*defines for the Feature field */
++#define MPI2_PM_CONTROL_FEATURE_DA_PHY_POWER_COND       (0x01)
++#define MPI2_PM_CONTROL_FEATURE_PORT_WIDTH_MODULATION   (0x02)
++#define MPI2_PM_CONTROL_FEATURE_PCIE_LINK               (0x03)	/*obsolete */
++#define MPI2_PM_CONTROL_FEATURE_IOC_SPEED               (0x04)
++#define MPI2_PM_CONTROL_FEATURE_GLOBAL_PWR_MGMT_MODE    (0x05)
++#define MPI2_PM_CONTROL_FEATURE_MIN_PRODUCT_SPECIFIC    (0x80)
++#define MPI2_PM_CONTROL_FEATURE_MAX_PRODUCT_SPECIFIC    (0xFF)
++
++/*parameter usage for the MPI2_PM_CONTROL_FEATURE_DA_PHY_POWER_COND Feature */
++/*Parameter1 contains a PHY number */
++/*Parameter2 indicates power condition action using these defines */
++#define MPI2_PM_CONTROL_PARAM2_PARTIAL                  (0x01)
++#define MPI2_PM_CONTROL_PARAM2_SLUMBER                  (0x02)
++#define MPI2_PM_CONTROL_PARAM2_EXIT_PWR_MGMT            (0x03)
++/*Parameter3 and Parameter4 are reserved */
++
++/*parameter usage for the MPI2_PM_CONTROL_FEATURE_PORT_WIDTH_MODULATION
++ * Feature */
++/*Parameter1 contains SAS port width modulation group number */
++/*Parameter2 indicates IOC action using these defines */
++#define MPI2_PM_CONTROL_PARAM2_REQUEST_OWNERSHIP        (0x01)
++#define MPI2_PM_CONTROL_PARAM2_CHANGE_MODULATION        (0x02)
++#define MPI2_PM_CONTROL_PARAM2_RELINQUISH_OWNERSHIP     (0x03)
++/*Parameter3 indicates desired modulation level using these defines */
++#define MPI2_PM_CONTROL_PARAM3_25_PERCENT               (0x00)
++#define MPI2_PM_CONTROL_PARAM3_50_PERCENT               (0x01)
++#define MPI2_PM_CONTROL_PARAM3_75_PERCENT               (0x02)
++#define MPI2_PM_CONTROL_PARAM3_100_PERCENT              (0x03)
++/*Parameter4 is reserved */
++
++/*this next set (_PCIE_LINK) is obsolete */
++/*parameter usage for the MPI2_PM_CONTROL_FEATURE_PCIE_LINK Feature */
++/*Parameter1 indicates desired PCIe link speed using these defines */
++#define MPI2_PM_CONTROL_PARAM1_PCIE_2_5_GBPS            (0x00)	/*obsolete */
++#define MPI2_PM_CONTROL_PARAM1_PCIE_5_0_GBPS            (0x01)	/*obsolete */
++#define MPI2_PM_CONTROL_PARAM1_PCIE_8_0_GBPS            (0x02)	/*obsolete */
++/*Parameter2 indicates desired PCIe link width using these defines */
++#define MPI2_PM_CONTROL_PARAM2_WIDTH_X1                 (0x01)	/*obsolete */
++#define MPI2_PM_CONTROL_PARAM2_WIDTH_X2                 (0x02)	/*obsolete */
++#define MPI2_PM_CONTROL_PARAM2_WIDTH_X4                 (0x04)	/*obsolete */
++#define MPI2_PM_CONTROL_PARAM2_WIDTH_X8                 (0x08)	/*obsolete */
++/*Parameter3 and Parameter4 are reserved */
++
++/*parameter usage for the MPI2_PM_CONTROL_FEATURE_IOC_SPEED Feature */
++/*Parameter1 indicates desired IOC hardware clock speed using these defines */
++#define MPI2_PM_CONTROL_PARAM1_FULL_IOC_SPEED           (0x01)
++#define MPI2_PM_CONTROL_PARAM1_HALF_IOC_SPEED           (0x02)
++#define MPI2_PM_CONTROL_PARAM1_QUARTER_IOC_SPEED        (0x04)
++#define MPI2_PM_CONTROL_PARAM1_EIGHTH_IOC_SPEED         (0x08)
++/*Parameter2, Parameter3, and Parameter4 are reserved */
++
++/*parameter usage for the MPI2_PM_CONTROL_FEATURE_GLOBAL_PWR_MGMT_MODE Feature*/
++/*Parameter1 indicates host action regarding global power management mode */
++#define MPI2_PM_CONTROL_PARAM1_TAKE_CONTROL             (0x01)
++#define MPI2_PM_CONTROL_PARAM1_CHANGE_GLOBAL_MODE       (0x02)
++#define MPI2_PM_CONTROL_PARAM1_RELEASE_CONTROL          (0x03)
++/*Parameter2 indicates the requested global power management mode */
++#define MPI2_PM_CONTROL_PARAM2_FULL_PWR_PERF            (0x01)
++#define MPI2_PM_CONTROL_PARAM2_REDUCED_PWR_PERF         (0x08)
++#define MPI2_PM_CONTROL_PARAM2_STANDBY                  (0x40)
++/*Parameter3 and Parameter4 are reserved */
++
++/*PowerManagementControl Reply message */
++typedef struct _MPI2_PWR_MGMT_CONTROL_REPLY {
++	U8 Feature;		/*0x00 */
++	U8 Reserved1;		/*0x01 */
++	U8 MsgLength;		/*0x02 */
++	U8 Function;		/*0x03 */
++	U16 Reserved2;		/*0x04 */
++	U8 Reserved3;		/*0x06 */
++	U8 MsgFlags;		/*0x07 */
++	U8 VP_ID;		/*0x08 */
++	U8 VF_ID;		/*0x09 */
++	U16 Reserved4;		/*0x0A */
++	U16 Reserved5;		/*0x0C */
++	U16 IOCStatus;		/*0x0E */
++	U32 IOCLogInfo;		/*0x10 */
++} MPI2_PWR_MGMT_CONTROL_REPLY, *PTR_MPI2_PWR_MGMT_CONTROL_REPLY,
++	Mpi2PwrMgmtControlReply_t, *pMpi2PwrMgmtControlReply_t;
++
++#endif
