@@ -1,54 +1,63 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Error handling on FC devices
-Date: Fri, 30 Nov 2012 10:54:04 -0600
-Message-ID: <50B8E4AC.8@cs.wisc.edu>
-References: <50AA290F.8000105@suse.de>  <50B3EDEA.40008@emulex.com> <1354046601.4420.14.camel@localhost.localdomain> <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net> <50B5B8C4.1040503@suse.de> <50B78715.2060109@emulex.com> <50B89C2D.8030108@suse.de>
+From: Hiroyuki Yamada <mogwaing@gmail.com>
+Subject: one 16K random read I/O issues 2 scsi I/O (16K and 4K) requests
+Date: Sat, 1 Dec 2012 18:44:42 +0900
+Message-ID: <CAPDOW76Mp8FKDv3oEo=rKZpXf2+uwG0kB5ejCusnrkY4Euq_NQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35260 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031156Ab2K3RCG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Nov 2012 12:02:06 -0500
-In-Reply-To: <50B89C2D.8030108@suse.de>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:56850 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602Ab2LAJom (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Dec 2012 04:44:42 -0500
+Received: by mail-vc0-f174.google.com with SMTP id d16so441089vcd.19
+        for <linux-scsi@vger.kernel.org>; Sat, 01 Dec 2012 01:44:42 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James.Smart@emulex.com, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "emilne@redhat.com" <emilne@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: linux-scsi@vger.kernel.org
 
-On 11/30/2012 05:44 AM, Hannes Reinecke wrote:
-> On 11/29/2012 05:02 PM, James Smart wrote:
->> Always possible - but....   Our f/w works at the FCP level and
->> below, which means it doesn't know/do SCSI commands - e.g what the
->> cdb within the FCP CMD frame is; know anything about SCSI device
->> classes and state; etc. And it shouldn't be required to do so.
->> Anytime this has been there in the past, it's been problematic.
->>
->> if we want to do this - we should add it to the midlayer/transport.
->>
-> D'accord. Transport layer looks like a good fit.
-> 
-> What we should be doing is hooking up 'bus_reset' to be equivalent to
-> REMOVE I_T NEXUS (SAS is already doing this).
+I noticed weird issue when benchmarking random read I/O for files in
+linux (2.6.18-274).
+The Benchmarking program is my own program and it simply keeps reading
+16KB of a file from a random offset.
 
-Do you mean the scsi eh bus reset callout and if so does that work on
-multiple targets but REMOVE I_T NEXUS only will operate on one at a
-time? I think it would be cleaner to add a new callout that works like
-the target reset one where the scsi-ml loops over the targets for the
-drivers.
+I traced I/O behavior at system call level and scsi level with systemtap and
+I noticed that one 16KB pread issues 2 scsi I/Os as following.
 
-> 
-> In our case a REMOVE I_T NEXUS would be roughly equivalent to
-> scsi_remote_port_delete(); only we should be starting aborting
-> outstanding I/O directly and not waiting for fast_fail_tmo
-> to kick in.
-> 
+=============================================
+SYSPREAD random(8472) 3, 0x16fc5200, 16384, 128137183232
+SCSI random(8472) 0 1 0 0 start-sector: 226321183 size: 4096 bufflen
+4096 FROM_DEVICE 1354354008068009
+SCSI random(8472) 0 1 0 0 start-sector: 226323431 size: 16384 bufflen
+16384 FROM_DEVICE 1354354008075927
+SYSPREAD random(8472) 3, 0x16fc5200, 16384, 21807710208
+SCSI random(8472) 0 1 0 0 start-sector: 1889888935 size: 4096 bufflen
+4096 FROM_DEVICE 1354354008085128
+SCSI random(8472) 0 1 0 0 start-sector: 1889891823 size: 16384 bufflen
+16384 FROM_DEVICE 1354354008097161
+SYSPREAD random(8472) 3, 0x16fc5200, 16384, 139365318656
+SCSI random(8472) 0 1 0 0 start-sector: 254092663 size: 4096 bufflen
+4096 FROM_DEVICE 1354354008100633
+SCSI random(8472) 0 1 0 0 start-sector: 254094879 size: 16384 bufflen
+16384 FROM_DEVICE 1354354008111723
+SYSPREAD random(8472) 3, 0x16fc5200, 16384, 60304424960
+SCSI random(8472) 0 1 0 0 start-sector: 58119807 size: 4096 bufflen
+4096 FROM_DEVICE 1354354008120469
+SCSI random(8472) 0 1 0 0 start-sector: 58125415 size: 16384 bufflen
+16384 FROM_DEVICE 1354354008126343
+=============================================
 
-To abort IO, will you be calling the drivers terminate_rport_io or
-dev_loss_tmo_callbk? If so I just wanted to warn you that I noticed that
-some drivers will only initiate the aborting/cleanup of IO in there. So
-if you call those callouts and expect that when finished scsi-ml can
-free the scsi command and pass the request back up, I think we could hit
-some races with memory issues.
 
+As shown above, one 16KB pread issues 2 scsi I/Os. (I traced scsi io
+dispatching with probe scsi.iodispatching)
+
+One scsi I/O is 16KB I/O as requested from the application and it's OK.
+The thing is the other 4KB I/O which I don't know why linux issues that I/O.
+
+Of course, I/O performance is degraded by the weired 4KB I/O and I am
+having trouble.
+I also use fio (famous I/O benchmark tool) and noticed the same issue,
+so it's not from the application.
+Does anybody know what is going on ?
+Any comments or advices are appreciated.
+
+Thanks
