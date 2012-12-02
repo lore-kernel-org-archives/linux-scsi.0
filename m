@@ -1,48 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/13 v6] More device removal fixes
-Date: Sun, 2 Dec 2012 06:02:13 -0800
-Message-ID: <20121202140213.GP15930@mtj.dyndns.org>
-References: <50B60619.4080406@acm.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] firewire: sbp2: allow WRITE SAME and REPORT SUPPORTED
+ OPERATION CODES
+Date: Sun, 2 Dec 2012 19:16:54 +0100
+Message-ID: <20121202191654.59117ac2@stein>
+References: <20121125184525.0b7967c4@stein>
+	<yq18v9nsz3q.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45250 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690Ab2LBOCS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 09:02:18 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1429665pbc.19
-        for <linux-scsi@vger.kernel.org>; Sun, 02 Dec 2012 06:02:18 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <50B60619.4080406@acm.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:50062 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814Ab2LBSRK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 13:17:10 -0500
+In-Reply-To: <yq18v9nsz3q.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Hello, Bart.
-
-On Wed, Nov 28, 2012 at 01:39:53PM +0100, Bart Van Assche wrote:
-> Fix a few race conditions that can be triggered by removing a device:
-> - Avoid that request_fn() can be invoked on a dead queue.
-> - Avoid that blk_cleanup_queue() can finish while request_fn is still
->   running.
-> - Fix a race between starved list processing and device removal.
-> - Avoid that a SCSI LLD callback can be invoked after scsi_remove_host()
->   finished.
-> - Speed up device removal by stopping error handling as soon as
->   scsi_remove_host() started.
+On Nov 26 Martin K. Petersen wrote:
+> >>>>> "Stefan" == Stefan Richter <stefanr@s5r6.in-berlin.de> writes:
+> Stefan> I did not try "sg_write_same" on any of the devices; but since
+> Stefan> the two SPC-3 devices are correctly identified as "fully
+> Stefan> provisioned", won't issue WRITE SAME to them either.
+                       ^[the kernel]
 > 
-> These patches have been tested on top of kernel v3.7-rc7.
+> What if you have an SSD behind one of them?
 
-Awesome work.  I had some nits but would be happy if the whole
-patchset gets merged right now.  It's embarrassing that we are *still*
-this broken and, nits aside, all the patches seem correct and to the
-point.
+At the moment I only have a single old SSD available which does not
+implement ATA TRIM as far as I recall.
 
-Jens, James?  Except for the last few SCSI patches, this patchset has
-now been around for quite a while.  Any chance to fast-track these?
+And the two mentioned OXUF936QSE based SPC-3 devices are four-bay SATA disk
+enclosures whose firmwares only support various RAID modes and require at
+least two bays to be populated.  I.e. I can't test them with the SSD for
+now.  But I suspect that they don't implement thin provisioning anyway,
+particularly translation of WRITE SAME with UNMAP to ATA TRIM.
 
-Thanks.
+But now I found another SPC-3 compliant device in my stash; a dual SATA
+bridge based on OXUF934DSB which supports JBOD with 1...2 disks
+alternatively to striping/ spanning/ mirroring over 2 disks.  I attached
+the old SSD to it, and its thin_provisioning sysfs attribute was shown as
+0 as well.  "sg_write_same -U ..." on this device in the 10 and 16 byte
+variants ended with Illegal Request/ Invalid command operation code, but
+otherwise without discernible malfunction.
 
+> Stefan> Hence let's remove the no_report_opcodes and no_write_same
+> Stefan> blacklist flags so that these commands can be used on
+> Stefan> respectively capable targets.  
+> 
+> I just erred on the side of caution. If you are happy without belt and
+> suspenders that's perfectly ok with me :)
+
+Blacklisting at first was definitely the right approach.  But now that I
+looked at a variety of older and newer devices, I am confident that the
+general Inquiry_Data.Version >= SPC-3 test keeps the wackier among the
+SBP-2 devices safe enough.
+
+Of course it remains to be seen what happens with ATA TRIM enabled SSDs
+behind the newer SPC-3 compliant bridges, but at this time the risk with
+those seems low.
 -- 
-tejun
+Stefan Richter
+-=====-===-- =-== ==-==
+http://arcgraph.de/sr/
