@@ -1,43 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v6 09/13] Avoid saving/restoring interrupt state inside
- scsi_remove_host()
-Date: Sun, 2 Dec 2012 05:35:30 -0800
-Message-ID: <20121202133530.GI15930@mtj.dyndns.org>
-References: <50B60619.4080406@acm.org>
- <50B60880.3050602@acm.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v6 03/13] block: Avoid that request_fn is invoked on a
+ dead queue
+Date: Sun, 02 Dec 2012 14:35:52 +0100
+Message-ID: <50BB5938.9040207@acm.org>
+References: <50B60619.4080406@acm.org> <50B60745.8060806@acm.org> <20121202132320.GC15930@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:34910 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579Ab2LBNff (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 08:35:35 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1423025pbc.19
-        for <linux-scsi@vger.kernel.org>; Sun, 02 Dec 2012 05:35:35 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <50B60880.3050602@acm.org>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:55165 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770Ab2LBNf4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 08:35:56 -0500
+In-Reply-To: <20121202132320.GC15930@mtj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
-On Wed, Nov 28, 2012 at 01:50:08PM +0100, Bart Van Assche wrote:
-> Since it is not allowed to invoke scsi_remove_host() with interrupts
-> disabled, avoid saving and restoring the interrupt state inside
-> scsi_remove_host().
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Cc: James Bottomley <JBottomley@Parallels.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Mike Christie <michaelc@cs.wisc.edu>
-> Cc: Hannes Reinecke <hare@suse.de>
+On 12/02/12 14:23, Tejun Heo wrote:
+> On Wed, Nov 28, 2012 at 01:44:53PM +0100, Bart Van Assche wrote:
+>> A block driver may start cleaning up resources needed by its
+>> request_fn as soon as blk_cleanup_queue() finished, so request_fn
+>> must not be invoked after draining finished. This is important
+>> when blk_run_queue() is invoked without any requests in progress.
+>> As an example, if blk_drain_queue() and scsi_run_queue() run in
+>> parallel, blk_drain_queue() may have finished all requests after
+>> scsi_run_queue() has taken a SCSI device off the starved list but
+>> before that last function has had a chance to run the queue.
+>>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> Cc: James Bottomley <JBottomley@Parallels.com>
+>> Cc: Mike Christie <michaelc@cs.wisc.edu>
+>> Cc: Jens Axboe <axboe@kernel.dk>
+>> Cc: Tejun Heo <tj@kernel.org>
+>> Cc: Chanho Min <chanho.min@lge.com>
+>
+> Acked-by: Tejun Heo <tj@kernel.org>
+>
+>> +inline void __blk_run_queue_uncond(struct request_queue *q)
+>
+> Does this inline actually make a difference in the generated code?
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Yes. Without that "inline" keyword that function is not inlined in 
+__blk_run_queue() but with that "inline" keyword it is inlined. At least 
+with gcc 4.7.1 - I have not checked any other gcc versions.
 
-It would be nice to note that this doesn't make any functional
-difference in the commit message.
+Bart.
 
-Thanks.
-
--- 
-tejun
