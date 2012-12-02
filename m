@@ -1,61 +1,50 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] [SCSI] csiostor: convert to use simple_open()
-Date: Sun, 2 Dec 2012 06:51:34 -0500
-Message-ID: <CAPgLHd93AaLhAxVktx3-PQ8VojVN5AnGfZHFic-hp5O4ceBrxQ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v6 03/13] block: Avoid that request_fn is invoked on a
+ dead queue
+Date: Sun, 2 Dec 2012 05:23:20 -0800
+Message-ID: <20121202132320.GC15930@mtj.dyndns.org>
+References: <50B60619.4080406@acm.org>
+ <50B60745.8060806@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:55571 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355Ab2LBLvf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 06:51:35 -0500
-Received: by mail-qc0-f174.google.com with SMTP id o22so1035853qcr.19
-        for <linux-scsi@vger.kernel.org>; Sun, 02 Dec 2012 03:51:34 -0800 (PST)
+Received: from mail-da0-f46.google.com ([209.85.210.46]:52274 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176Ab2LBNX1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 08:23:27 -0500
+Received: by mail-da0-f46.google.com with SMTP id p5so918398dak.19
+        for <linux-scsi@vger.kernel.org>; Sun, 02 Dec 2012 05:23:27 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <50B60745.8060806@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, naresh@chelsio.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Wed, Nov 28, 2012 at 01:44:53PM +0100, Bart Van Assche wrote:
+> A block driver may start cleaning up resources needed by its
+> request_fn as soon as blk_cleanup_queue() finished, so request_fn
+> must not be invoked after draining finished. This is important
+> when blk_run_queue() is invoked without any requests in progress.
+> As an example, if blk_drain_queue() and scsi_run_queue() run in
+> parallel, blk_drain_queue() may have finished all requests after
+> scsi_run_queue() has taken a SCSI device off the starved list but
+> before that last function has had a chance to run the queue.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Cc: James Bottomley <JBottomley@Parallels.com>
+> Cc: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Chanho Min <chanho.min@lge.com>
 
-This removes an open coded simple_open() function and
-replaces file operations references to the function
-with simple_open() instead.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/scsi/csiostor/csio_init.c | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+> +inline void __blk_run_queue_uncond(struct request_queue *q)
 
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index fdd408f..17cf5e1 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -57,16 +57,6 @@ static struct dentry *csio_debugfs_root;
- static struct scsi_transport_template *csio_fcoe_transport;
- static struct scsi_transport_template *csio_fcoe_transport_vport;
- 
--/*
-- * debugfs support
-- */
--static int
--csio_mem_open(struct inode *inode, struct file *file)
--{
--	file->private_data = inode->i_private;
--	return 0;
--}
--
- static ssize_t
- csio_mem_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
- {
-@@ -110,7 +100,7 @@ csio_mem_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
- 
- static const struct file_operations csio_mem_debugfs_fops = {
- 	.owner   = THIS_MODULE,
--	.open    = csio_mem_open,
-+	.open = simple_open,
- 	.read    = csio_mem_read,
- 	.llseek  = default_llseek,
- };
+Does this inline actually make a difference in the generated code?
 
+Thanks.
 
+-- 
+tejun
