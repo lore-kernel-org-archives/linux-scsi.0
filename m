@@ -1,48 +1,60 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] [SCSI] lpfc 8.3.36: fix potential NULL pointer
- dereference in lpfc_sli4_rq_put()
-Date: Sun, 2 Dec 2012 08:33:24 -0500
-Message-ID: <CAPgLHd8VqtYG2cS3627WtxizaNugb9x=85+cZiQEgQc3Fp_kjw@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v6 08/13] Remove get_device() / put_device() pair from
+ scsi_request_fn()
+Date: Sun, 2 Dec 2012 05:34:37 -0800
+Message-ID: <20121202133437.GH15930@mtj.dyndns.org>
+References: <50B60619.4080406@acm.org>
+ <50B6083B.2000209@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:43682 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511Ab2LBNdY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 08:33:24 -0500
-Received: by mail-qc0-f174.google.com with SMTP id o22so1057316qcr.19
-        for <linux-scsi@vger.kernel.org>; Sun, 02 Dec 2012 05:33:24 -0800 (PST)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:53206 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752064Ab2LBNem (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 08:34:42 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so1422820pbc.19
+        for <linux-scsi@vger.kernel.org>; Sun, 02 Dec 2012 05:34:42 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <50B6083B.2000209@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com, JBottomley@parallels.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Hello,
 
-The dereference to 'put_index' should be moved below the NULL test.
+On Wed, Nov 28, 2012 at 01:48:59PM +0100, Bart Van Assche wrote:
+> Now that all scsi_request_fn() callers hold a reference on the
+> SCSI device that function is invoked on and since
+> blk_cleanup_queue() waits until scsi_request_fn() has finished
+> it is safe to remove the get_device() / put_device() pair from
+> scsi_request_fn().
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Acked-by: Tejun Heo <tj@kernel.org>
+> Cc: James Bottomley <JBottomley@Parallels.com>
+> Cc: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: Jens Axboe <axboe@kernel.dk>
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/scsi/lpfc/lpfc_sli.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Acked-by: Tejun Heo <tj@kernel.org>
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 624eab3..a9a7fd7 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -431,11 +431,12 @@ lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
- 	struct lpfc_rqe *temp_hrqe;
- 	struct lpfc_rqe *temp_drqe;
- 	struct lpfc_register doorbell;
--	int put_index = hq->host_index;
-+	int put_index;
- 
- 	/* sanity check on queue memory */
- 	if (unlikely(!hq) || unlikely(!dq))
- 		return -ENOMEM;
-+	put_index = hq->host_index;
- 	temp_hrqe = hq->qe[hq->host_index].rqe;
- 	temp_drqe = dq->qe[dq->host_index].rqe;
- 
+with one nit.
 
+> @@ -1643,11 +1641,7 @@ out_delay:
+>  	if (sdev->device_busy == 0)
+>  		blk_delay_queue(q, SCSI_QUEUE_DELAY);
+>  out:
+> -	/* must be careful here...if we trigger the ->remove() function
+> -	 * we cannot be holding the q lock */
+> -	spin_unlock_irq(q->queue_lock);
+> -	put_device(&sdev->sdev_gendev);
+> -	spin_lock_irq(q->queue_lock);
+> +	;
 
+There's one "goto out" at the end of the usual control flow.  Please
+just return from there.
+
+Thanks.
+
+-- 
+tejun
