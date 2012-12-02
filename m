@@ -1,78 +1,61 @@
-From: Hiroyuki Yamada <mogwaing@gmail.com>
-Subject: Re: one 16K random read I/O issues 2 scsi I/O (16K and 4K) requests
-Date: Sun, 2 Dec 2012 19:56:59 +0900
-Message-ID: <CAPDOW76F_78CWNwgV4zOM=-Kq9Bdo-UwQgBxjZnsapvRf+kM-Q@mail.gmail.com>
-References: <CAPDOW76Mp8FKDv3oEo=rKZpXf2+uwG0kB5ejCusnrkY4Euq_NQ@mail.gmail.com>
-	<94D0CD8314A33A4D9D801C0FE68B40294CD01BD9@G9W0745.americas.hpqcorp.net>
-	<CAPDOW76rRJML+0NsSjFyTjBnN9Un1f7e=6sAtrF71zR3eDXO6Q@mail.gmail.com>
-	<CAPDOW75pHJ7mN1+EywLtkhOSdGX9Hvt9_T9LH5JzY3V2_LA_XA@mail.gmail.com>
-	<50BB2CCD.6070501@acm.org>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH -next] [SCSI] csiostor: convert to use simple_open()
+Date: Sun, 2 Dec 2012 06:51:34 -0500
+Message-ID: <CAPgLHd93AaLhAxVktx3-PQ8VojVN5AnGfZHFic-hp5O4ceBrxQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:61175 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751647Ab2LBK5A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 05:57:00 -0500
-Received: by mail-vc0-f174.google.com with SMTP id d16so967835vcd.19
-        for <linux-scsi@vger.kernel.org>; Sun, 02 Dec 2012 02:57:00 -0800 (PST)
-In-Reply-To: <50BB2CCD.6070501@acm.org>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:55571 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355Ab2LBLvf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 06:51:35 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so1035853qcr.19
+        for <linux-scsi@vger.kernel.org>; Sun, 02 Dec 2012 03:51:34 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, naresh@chelsio.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org
 
-Thank you for the comment.
-I just figured it out and was checking ext4.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-This problem never happens with ext4 !!!
-It's from ext3 indirect block addressing.
+This removes an open coded simple_open() function and
+replaces file operations references to the function
+with simple_open() instead.
 
-Thank you Bart.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/scsi/csiostor/csio_init.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
+index fdd408f..17cf5e1 100644
+--- a/drivers/scsi/csiostor/csio_init.c
++++ b/drivers/scsi/csiostor/csio_init.c
+@@ -57,16 +57,6 @@ static struct dentry *csio_debugfs_root;
+ static struct scsi_transport_template *csio_fcoe_transport;
+ static struct scsi_transport_template *csio_fcoe_transport_vport;
+ 
+-/*
+- * debugfs support
+- */
+-static int
+-csio_mem_open(struct inode *inode, struct file *file)
+-{
+-	file->private_data = inode->i_private;
+-	return 0;
+-}
+-
+ static ssize_t
+ csio_mem_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+ {
+@@ -110,7 +100,7 @@ csio_mem_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+ 
+ static const struct file_operations csio_mem_debugfs_fops = {
+ 	.owner   = THIS_MODULE,
+-	.open    = csio_mem_open,
++	.open = simple_open,
+ 	.read    = csio_mem_read,
+ 	.llseek  = default_llseek,
+ };
 
 
-On Sun, Dec 2, 2012 at 7:26 PM, Bart Van Assche <bvanassche@acm.org> wrote:
-> On 12/02/12 10:23, Hiroyuki Yamada wrote:
->>
->> I figured out what is going on, but I don't know what it is for.
->>
->> Ext3 filesystem has some 4KB data in each 4096KB(8192 sectors) data.
->> Visually, data is aligned like the following.
->>
->> |4KB|4096KB|4KB|4096KB|4KB|4096KB| ...
->>
->> And 4096KB area in only accessible by application programs.
->> When accessing the first 4096KB area for the first time,
->> then OS reads the 4KB just before the 4096KB area first
->> and then read the requested data in the 4096KB area.
->>
->> When accessing a large file (compared to the DRAM size) randomly,
->> every I/O has rare chance of hitting page cahce,
->> so every I/O request comes together with 4KB I/O.
->>
->> The thing is what the 4KB data is for ?
->> Is this location metadata for filesystem ?
->> Is there any way I can remove this ?
->> Or Is there any way I can clear the 4096KB area only ?
->
->
-> Does this behavior also occur with ext4 ? From the ext4 wiki
-> (http://ext4.wiki.kernel.org/index.php/Ext4_Howto#Extents):
->
->  Extents
->
-> Traditional, Unix-derived, file systems, like Ext3, use a indirect block
-> mapping scheme to keep track of each block used for the blocks corresponding
-> to the data of a file. This is inefficient for large files, especially
-> during large file delete and truncate operations, because the mapping keeps
-> an entry for every single block, and big files have many blocks -> huge
-> mappings, slow to handle. Modern file systems use a different approach
-> called "extents". An extent is basically a bunch of contiguous physical
-> blocks. It basically says "The data is in the next n blocks". For example, a
-> 100 MiB file can be allocated into a single extent of that size, instead of
-> needing to create the indirect mapping for 25600 blocks (4 KiB per block).
-> Huge files are split in several extents. Extents improve the performance and
-> also help to reduce the fragmentation, since an extent encourages continuous
-> layouts on the disk.
->
-> Bart.
