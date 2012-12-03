@@ -1,54 +1,52 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Mon, 03 Dec 2012 13:56:56 -0500
-Message-ID: <50BCF5F8.2030802@pobox.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com> <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike> <21511277.LLinyDpbAK@vostro.rjw.lan> <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike> <20121203081321.GA9990@mint-spring.sh.intel.com> <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com> <20121203162323.GB19802@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121203162323.GB19802@htj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: Gregory Haskins <gregory.haskins@gmail.com>
+Subject: Slow writes to SAS drives on LSI mpt2sas HBA
+Date: Mon, 3 Dec 2012 14:48:07 -0500
+Message-ID: <536E46D8-A041-4860-A922-21305CAF5321@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:62628 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554Ab2LCUKQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2012 15:10:16 -0500
+Received: by mail-ie0-f179.google.com with SMTP id k14so4752943iea.24
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Dec 2012 12:10:15 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 12/03/2012 11:23 AM, Tejun Heo wrote:
-> Hello, James.
->
-> On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
->>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
->>> index e65c62e..1756151 100644
->>> --- a/include/scsi/scsi_device.h
->>> +++ b/include/scsi/scsi_device.h
->>> @@ -160,6 +160,7 @@ struct scsi_device {
->>>   	unsigned can_power_off:1; /* Device supports runtime power off */
->>>   	unsigned wce_default_on:1;	/* Cache is ON by default */
->>>   	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
->>> +	unsigned event_driven:1; /* No need to poll the device */
->>>
->>>   	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
->>>   	struct list_head event_list;	/* asserted events */
->>
->> Yes, but if we can get away with doing that, it should be in genhd
->> because it's completely generic.
->>
->> I was imagining we'd have to fake the reply to the test unit ready or
->> some other commands, which is why it would need to be in sr.c
->>
->> The check events code is Tejun's baby, if he's OK with it then just do
->> it in genhd.c
->
-> The problem here is there's no easy to reach genhd from libata (or the
-> other way around) without going through sr.  I think we're gonna have
-> to have something in sr one way or the other.
+Hello, 
 
-  ...which is precisely as I said when v1 of this ZPODD patchset appeared.
+I am experiencing a significant performance issue in write thoughput with SAS devices connected via an LSI 9207-8e (LSISAS2308 based) HBA.  SATA devices plugged into the same rig appear to be ok.  I first noticed this in kernel v3.0.13, but I confirmed the problem exists even in 3.7.0-rc7. 
 
-sr modifications cannot be avoided.
+I have gathered numerous tables of data and graphs, but have boiled the problem down such that it can be easily reproduced with dd. 
 
-	Jeff
+In this example: The "SATA" drive is a 3Gbps 7200rpm 640GB WD model WD6400AAKS-4, mounted to /mnt/sata.  The "SAS" is a 6Gbps 7200rpm 3TB WD model WD3001FYYG-01SL3, mounted to /mnt/sas. 
 
+Under normal operation, the SATA drive is capable of about 5MB/s - 115MB/s, and the SAS drive is about 5MB/s - 165MB/s.  However, what I am seeing is that small block sizes are about 122KB/s, and it peaks out at about 70MB/s.  For example: 
 
+lse2:/home/ghaskins # uname -a 
+Linux lse2 3.7.0-rc7-0.27-default+ #1 SMP Mon Dec 3 08:47:39 EST 2012 x86_64 x86_64 x86_64 GNU/Linux 
+lse2:/home/ghaskins # dd oflag=direct if=/dev/zero of=/mnt/sas/test.dat bs=1k count=1M 
+^C7566+0 records in 
+7566+0 records out 
+7747584 bytes (7.7 MB) copied, 63.5934 s, 122 kB/s 
 
+lse2:/home/ghaskins # dd oflag=direct if=/dev/zero of=/mnt/sata/test.dat bs=1k count=1M 
+^C109381+0 records in 
+109381+0 records out 
+112006144 bytes (112 MB) copied, 21.7539 s, 5.1 MB/s 
 
+lse2:/home/ghaskins # dd oflag=direct if=/dev/zero of=/mnt/sata/test.dat bs=1M count=1k 
+1024+0 records in 
+1024+0 records out 
+1073741824 bytes (1.1 GB) copied, 9.31733 s, 115 MB/s 
+lse2:/home/ghaskins # dd oflag=direct if=/dev/zero of=/mnt/sas/test.dat bs=1M count=1k 
+1024+0 records in 
+1024+0 records out 
+1073741824 bytes (1.1 GB) copied, 14.6696 s, 73.2 MB/s 
+
+Note that this setup has been tested under the LSI driver on Windows7 to rule out any issues with the hardware, and both SATA and SAS drives appear to operate normally.  My current guess is that the linux driver is not queuing commands properly, but this is not confirmed.  Has anyone else seen this? 
+
+-Greg 
