@@ -1,66 +1,68 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] firewire: sbp2: allow WRITE SAME and REPORT SUPPORTED
- OPERATION CODES
-Date: Sun, 2 Dec 2012 19:16:54 +0100
-Message-ID: <20121202191654.59117ac2@stein>
-References: <20121125184525.0b7967c4@stein>
-	<yq18v9nsz3q.fsf@sermon.lab.mkp.net>
+From: Naresh Kumar Inna <naresh@chelsio.com>
+Subject: Re: [PATCH -next] [SCSI] csiostor: convert to use simple_open()
+Date: Mon, 3 Dec 2012 11:44:12 +0530
+Message-ID: <50BC4334.5040706@chelsio.com>
+References: <CAPgLHd93AaLhAxVktx3-PQ8VojVN5AnGfZHFic-hp5O4ceBrxQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:50062 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752814Ab2LBSRK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Dec 2012 13:17:10 -0500
-In-Reply-To: <yq18v9nsz3q.fsf@sermon.lab.mkp.net>
+Received: from stargate.chelsio.com ([67.207.112.58]:23116 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750906Ab2LCGOf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2012 01:14:35 -0500
+In-Reply-To: <CAPgLHd93AaLhAxVktx3-PQ8VojVN5AnGfZHFic-hp5O4ceBrxQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Nov 26 Martin K. Petersen wrote:
-> >>>>> "Stefan" == Stefan Richter <stefanr@s5r6.in-berlin.de> writes:
-> Stefan> I did not try "sg_write_same" on any of the devices; but since
-> Stefan> the two SPC-3 devices are correctly identified as "fully
-> Stefan> provisioned", won't issue WRITE SAME to them either.
-                       ^[the kernel]
+On 12/2/2012 5:21 PM, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > 
-> What if you have an SSD behind one of them?
-
-At the moment I only have a single old SSD available which does not
-implement ATA TRIM as far as I recall.
-
-And the two mentioned OXUF936QSE based SPC-3 devices are four-bay SATA disk
-enclosures whose firmwares only support various RAID modes and require at
-least two bays to be populated.  I.e. I can't test them with the SSD for
-now.  But I suspect that they don't implement thin provisioning anyway,
-particularly translation of WRITE SAME with UNMAP to ATA TRIM.
-
-But now I found another SPC-3 compliant device in my stash; a dual SATA
-bridge based on OXUF934DSB which supports JBOD with 1...2 disks
-alternatively to striping/ spanning/ mirroring over 2 disks.  I attached
-the old SSD to it, and its thin_provisioning sysfs attribute was shown as
-0 as well.  "sg_write_same -U ..." on this device in the 10 and 16 byte
-variants ended with Illegal Request/ Invalid command operation code, but
-otherwise without discernible malfunction.
-
-> Stefan> Hence let's remove the no_report_opcodes and no_write_same
-> Stefan> blacklist flags so that these commands can be used on
-> Stefan> respectively capable targets.  
+> This removes an open coded simple_open() function and
+> replaces file operations references to the function
+> with simple_open() instead.
 > 
-> I just erred on the side of caution. If you are happy without belt and
-> suspenders that's perfectly ok with me :)
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>  drivers/scsi/csiostor/csio_init.c | 12 +-----------
+>  1 file changed, 1 insertion(+), 11 deletions(-)
+> 
+> diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
+> index fdd408f..17cf5e1 100644
+> --- a/drivers/scsi/csiostor/csio_init.c
+> +++ b/drivers/scsi/csiostor/csio_init.c
+> @@ -57,16 +57,6 @@ static struct dentry *csio_debugfs_root;
+>  static struct scsi_transport_template *csio_fcoe_transport;
+>  static struct scsi_transport_template *csio_fcoe_transport_vport;
+>  
+> -/*
+> - * debugfs support
+> - */
 
-Blacklisting at first was definitely the right approach.  But now that I
-looked at a variety of older and newer devices, I am confident that the
-general Inquiry_Data.Version >= SPC-3 test keeps the wackier among the
-SBP-2 devices safe enough.
+Please retain this comment - it is needed for the rest of the debugfs code.
 
-Of course it remains to be seen what happens with ATA TRIM enabled SSDs
-behind the newer SPC-3 compliant bridges, but at this time the risk with
-those seems low.
--- 
-Stefan Richter
--=====-===-- =-== ==-==
-http://arcgraph.de/sr/
+> -static int
+> -csio_mem_open(struct inode *inode, struct file *file)
+> -{
+> -	file->private_data = inode->i_private;
+> -	return 0;
+> -}
+> -
+>  static ssize_t
+>  csio_mem_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+>  {
+> @@ -110,7 +100,7 @@ csio_mem_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+>  
+>  static const struct file_operations csio_mem_debugfs_fops = {
+>  	.owner   = THIS_MODULE,
+> -	.open    = csio_mem_open,
+> +	.open = simple_open,
+
+It would be nice if you could indent this per the rest of the structure
+members. The patch looks good otherwise.
+
+Thanks!
+Naresh.
+
