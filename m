@@ -1,82 +1,66 @@
-From: Dave Jiang <dave.jiang@intel.com>
-Subject: Re: getting I/O errors in super_written()...any ideas what would
- cause this?
-Date: Mon, 03 Dec 2012 14:59:49 -0700
-Message-ID: <50BD20D5.40606@intel.com>
-References: <8134827.27.1354128708501.JavaMail.root@zimbra> <50B67230.4080602@genband.com> <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com> <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com> <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com> <50BD14B1.7000203@genband.com> <50BD17CD.8080206@intel.com> <50BD1B67.7090606@genband.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: Slow writes to SAS drives on LSI mpt2sas HBA
+Date: Mon, 03 Dec 2012 17:06:40 -0500
+Message-ID: <1354572400.4420.66.camel@localhost.localdomain>
+References: <536E46D8-A041-4860-A922-21305CAF5321@gmail.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50BD1B67.7090606@genband.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Chris Friesen <chris.friesen@genband.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:25820 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751085Ab2LCWGm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Dec 2012 17:06:42 -0500
+In-Reply-To: <536E46D8-A041-4860-A922-21305CAF5321@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Gregory Haskins <gregory.haskins@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 12/03/2012 02:36 PM, Chris Friesen wrote:
-> On 12/03/2012 03:21 PM, Dave Jiang wrote:
->> On 12/03/2012 02:08 PM, Chris Friesen wrote:
->>> On 12/03/2012 02:52 PM, Ric Wheeler wrote:
->>>
->>>> I jumped into this thread late - can you repost detail on the specific
->>>> drive and HBA used here? In any case, it sounds like this is a better
->>>> topic for the linux-scsi or linux-ide list where most of the low level
->>>> storage people lurk :)
->>> Okay, expanding the receiver list. :)
->>>
->>> To recap:
->>>
->>> I'm running 2.6.27 with LVM over software RAID 1 over a pair of SAS disks.
->>> Disks are WD9001BKHG, controller is Intel C600.
->> Just curious what driver are you using with the C600. The upstream
->> driver for C600 didn't get accepted until 3.0-rc6 and all of the
->> outstanding patches weren't accepted until 3.7-rc. So I'd say 3.6 would
->> be your best bet until 3.7 is released. Did you attempt a backport of
->> the isci driver or using something like an LSI port on 2.6.27? Have you
->> verified the issue on a more recent kernel?
-> We're using a driver provided by the hardware vendor.  It appears to be 
-> a backport of version 1.0.1 of the isci driver.  We've been using it 
-> since mid-March or so.
+On Mon, 2012-12-03 at 14:48 -0500, Gregory Haskins wrote:
+> Hello, 
+> 
+> I am experiencing a significant performance issue in write thoughput with SAS devices connected via an LSI 9207-8e (LSISAS2308 based) HBA.  SATA devices plugged into the same rig appear to be ok.  I first noticed this in kernel v3.0.13, but I confirmed the problem exists even in 3.7.0-rc7. 
+> 
+> I have gathered numerous tables of data and graphs, but have boiled the problem down such that it can be easily reproduced with dd. 
+> 
+> In this example: The "SATA" drive is a 3Gbps 7200rpm 640GB WD model WD6400AAKS-4, mounted to /mnt/sata.  The "SAS" is a 6Gbps 7200rpm 3TB WD model WD3001FYYG-01SL3, mounted to /mnt/sas. 
+> 
+> Under normal operation, the SATA drive is capable of about 5MB/s - 115MB/s, and the SAS drive is about 5MB/s - 165MB/s.  However, what I am seeing is that small block sizes are about 122KB/s, and it peaks out at about 70MB/s.  For example: 
+> 
+> lse2:/home/ghaskins # uname -a 
+> Linux lse2 3.7.0-rc7-0.27-default+ #1 SMP Mon Dec 3 08:47:39 EST 2012 x86_64 x86_64 x86_64 GNU/Linux 
+> lse2:/home/ghaskins # dd oflag=direct if=/dev/zero of=/mnt/sas/test.dat bs=1k count=1M 
+> ^C7566+0 records in 
+> 7566+0 records out 
+> 7747584 bytes (7.7 MB) copied, 63.5934 s, 122 kB/s
 
-Yikes. There has been significant updates to libsas, libata, and isci
-driver since March. Looks like you are barely limping along. I would
-imagine the error handling and the hotplug would be a giant mess to say
-the least.
+It sounds like your drive write cache is disabled, 7200RPM is 120
+revolutions/sec, and you are getting 7747584 / 1024 / 63.59 = ~119 IO/s
+I believe the write cache is enabled by default on SATA drives, which
+would explain the difference.
 
-> This is an embedded system, so as is all too common in that environment 
-> upgrading the whole kernel isn't an option since it requires support 
-> from multiple hardware/software vendors.
->
-> Upgrading just the driver might be possible--do you think it's likely as 
-> a cause for these errors?  The current driver has a binary firmware file 
-> that it uses--would we keep that with the new driver?
-You can certainly try but it needs the libsas, libata, and some block
-fixes to function in a stable fashion. Given that it was a backport by a
-vendor, one would wonder how much of libsas they actually backported.
-It's really difficult to say where the error is coming from without
-being able to verify on a later kernel. Is there any other I/O
-controller you can use to test this? I'm guessing the answer is no since
-it's embedded board. You are using a very old driver that is backported
-to a very old kernel that requires significant subsystem backporting as
-well. You may need to go poke your OS vendor and have them support the
-issue?
-
-The binary firmware file is really there in case you are not able to
-load your OEM parameter properly from the platform. It's there to allow
-you to limp if that is the case and by no means should be used for
-standard operation. You are suppose to get the appropriate values for
-your specific platform using a tool called phytune (which you should've
-gotten from your Intel field rep). You need to program those values and
-others into the OEM parameter block in the SPI flash of your platform.
-In your BIOS you need to have either the OROM or the EFI driver loaded
-during boot. The OROM or EFI driver then copies the values out of SPI
-flash at boot and provides it to the driver. Those parameters provide
-important timing values and others. If you are loading the wrong values
-against your platform, it is very possible that you could see I/O errors.
-
-
-
-> Chris
+> 
+> lse2:/home/ghaskins # dd oflag=direct if=/dev/zero of=/mnt/sata/test.dat bs=1k count=1M 
+> ^C109381+0 records in 
+> 109381+0 records out 
+> 112006144 bytes (112 MB) copied, 21.7539 s, 5.1 MB/s 
+> 
+> lse2:/home/ghaskins # dd oflag=direct if=/dev/zero of=/mnt/sata/test.dat bs=1M count=1k 
+> 1024+0 records in 
+> 1024+0 records out 
+> 1073741824 bytes (1.1 GB) copied, 9.31733 s, 115 MB/s 
+> lse2:/home/ghaskins # dd oflag=direct if=/dev/zero of=/mnt/sas/test.dat bs=1M count=1k 
+> 1024+0 records in 
+> 1024+0 records out 
+> 1073741824 bytes (1.1 GB) copied, 14.6696 s, 73.2 MB/s 
+> 
+> Note that this setup has been tested under the LSI driver on Windows7 to rule out any issues with the hardware, and both SATA and SAS drives appear to operate normally.  My current guess is that the linux driver is not queuing commands properly, but this is not confirmed.  Has anyone else seen this? 
+> 
+> -Greg --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
