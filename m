@@ -1,55 +1,53 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v6 10/13] Make scsi_remove_host() wait for device removal
-Date: Mon, 3 Dec 2012 08:15:10 -0800
-Message-ID: <20121203161510.GA19802@htj.dyndns.org>
-References: <50B60619.4080406@acm.org>
- <50B608C1.6080803@acm.org>
- <20121202134515.GJ15930@mtj.dyndns.org>
- <50BC619F.7060707@acm.org>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Mon, 3 Dec 2012 08:23:23 -0800
+Message-ID: <20121203162323.GB19802@htj.dyndns.org>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+ <35648985.61QNrr0Knq@vostro.rjw.lan>
+ <1353906191.2523.25.camel@dabdike>
+ <21511277.LLinyDpbAK@vostro.rjw.lan>
+ <20121128013928.GB15971@htj.dyndns.org>
+ <1354092969.2276.49.camel@dabdike>
+ <20121203081321.GA9990@mint-spring.sh.intel.com>
+ <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:44977 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752651Ab2LCQPR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2012 11:15:17 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so2100916pbc.19
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Dec 2012 08:15:17 -0800 (PST)
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <50BC619F.7060707@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
-Hello, Bart.
+Hello, James.
 
-On Mon, Dec 03, 2012 at 09:23:59AM +0100, Bart Van Assche wrote:
-> On 12/02/12 14:45, Tejun Heo wrote:
-> >On Wed, Nov 28, 2012 at 01:51:13PM +0100, Bart Van Assche wrote:
-> >>+/* Test whether scsi_remove_host() may finish, and if so, wake it up. */
-> >>+void __scsi_check_remove_host_done(struct Scsi_Host *shost)
-> >>+{
-> >>+	lockdep_assert_held(shost->host_lock);
-> >>+
-> >>+	if (__scsi_remove_host_done(shost))
-> >>+		wake_up(&shost->remove_host);
-> >>+}
-> >
-> >This being an one-time thing.  Using completion could be simpler.  e.g.
+On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
+> > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> > index e65c62e..1756151 100644
+> > --- a/include/scsi/scsi_device.h
+> > +++ b/include/scsi/scsi_device.h
+> > @@ -160,6 +160,7 @@ struct scsi_device {
+> >  	unsigned can_power_off:1; /* Device supports runtime power off */
+> >  	unsigned wce_default_on:1;	/* Cache is ON by default */
+> >  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+> > +	unsigned event_driven:1; /* No need to poll the device */
+> >  
+> >  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+> >  	struct list_head event_list;	/* asserted events */
 > 
-> Sorry but I'm not sure that would work here. A user can e.g. delete
-> all SCSI devices associated with a SCSI host (echo 1
-> >/sys/class/scsi_host/host<n>/device/target<m>/<lun>/delete) and
-> then issue a rescan to re-add LUNs. When using a completion the
-> completion would be set as soon as the last SCSI device has been
-> deleted instead of only after scsi_remove_host() finished removing
-> the re-added SCSI devices.
+> Yes, but if we can get away with doing that, it should be in genhd
+> because it's completely generic.
+> 
+> I was imagining we'd have to fake the reply to the test unit ready or
+> some other commands, which is why it would need to be in sr.c
+> 
+> The check events code is Tejun's baby, if he's OK with it then just do
+> it in genhd.c
 
-You can gate the whole thing with test on whether the host is being
-removed.  Once removal begins, no device should be allowed to be added
-and the completion triggers iff host removal is in progress.  That
-should work, right?
+The problem here is there's no easy to reach genhd from libata (or the
+other way around) without going through sr.  I think we're gonna have
+to have something in sr one way or the other.
 
 Thanks.
 
