@@ -1,96 +1,112 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Error handling on FC devices
-Date: Mon, 03 Dec 2012 08:15:10 +0100
-Message-ID: <50BC517E.4090208@suse.de>
-References: <50AA290F.8000105@suse.de>  <50B3EDEA.40008@emulex.com> <1354046601.4420.14.camel@localhost.localdomain> <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net> <50B5B8C4.1040503@suse.de> <50B78715.2060109@emulex.com> <50B89C2D.8030108@suse.de> <50B8E4AC.8@cs.wisc.edu>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Mon, 3 Dec 2012 16:13:21 +0800
+Message-ID: <20121203081321.GA9990@mint-spring.sh.intel.com>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+ <35648985.61QNrr0Knq@vostro.rjw.lan>
+ <1353906191.2523.25.camel@dabdike>
+ <21511277.LLinyDpbAK@vostro.rjw.lan>
+ <20121128013928.GB15971@htj.dyndns.org>
+ <1354092969.2276.49.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43848 "EHLO mx2.suse.de"
+Received: from mga02.intel.com ([134.134.136.20]:55262 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750921Ab2LCHPS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Dec 2012 02:15:18 -0500
-In-Reply-To: <50B8E4AC.8@cs.wisc.edu>
+	id S1751130Ab2LCINZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Dec 2012 03:13:25 -0500
+Content-Disposition: inline
+In-Reply-To: <1354092969.2276.49.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James.Smart@emulex.com, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "emilne@redhat.com" <emilne@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
-On 11/30/2012 05:54 PM, Mike Christie wrote:
-> On 11/30/2012 05:44 AM, Hannes Reinecke wrote:
->> On 11/29/2012 05:02 PM, James Smart wrote:
->>> Always possible - but....   Our f/w works at the FCP level and
->>> below, which means it doesn't know/do SCSI commands - e.g what the
->>> cdb within the FCP CMD frame is; know anything about SCSI device
->>> classes and state; etc. And it shouldn't be required to do so.
->>> Anytime this has been there in the past, it's been problematic.
->>>
->>> if we want to do this - we should add it to the midlayer/transport.
->>>
->> D'accord. Transport layer looks like a good fit.
->>
->> What we should be doing is hooking up 'bus_reset' to be equivalent t=
-o
->> REMOVE I_T NEXUS (SAS is already doing this).
->
-> Do you mean the scsi eh bus reset callout and if so does that work on
-> multiple targets but REMOVE I_T NEXUS only will operate on one at a
-> time? I think it would be cleaner to add a new callout that works lik=
-e
-> the target reset one where the scsi-ml loops over the targets for the
-> drivers.
->
-Well, looking at QLogic and Emulex both emulate a bus reset with a=20
-loop over each target and invoke a target reset there.
-I somewhat fail to see the rationale behind it, other than emulating=20
-the bus reset behaviour on SPI.
-Given that the original target reset already failed (otherwise we=20
-wouldn't be doing a bus reset), I doubt a _second_ target reset
-will lead to a different result.
+On Wed, Nov 28, 2012 at 08:56:09AM +0000, James Bottomley wrote:
+> On Tue, 2012-11-27 at 17:39 -0800, Tejun Heo wrote:
+> > Hey, Rafael.
+> > 
+> > On Wed, Nov 28, 2012 at 01:51:00AM +0100, Rafael J. Wysocki wrote:
+> > > Having considered that a bit more I'm now thinking that in fact the power state
+> > > the device is in at the moment doesn't really matter, so the polling code need
+> > > not really know what PM is doing.  What it needs to know is that the device
+> > > will generate a hardware event when something interesting happens, so it is not
+> > > necessary to poll it.
+> > > 
+> > > In this particular case it is related to power management (apparently, hardware
+> > > events will only be generated after the device has been put into ACPI D3cold,
+> > > or so Aaron seems to be claiming), but it need not be in general, at least in
+> > > principle.
+> > > 
+> > > It looks like we need an "event driven" flag that the can be set in the lower
+> > > layers and read by the upper layers.  I suppose this means it would need to be
+> > > in struct device, but not necessarily in the PM-specific part of it.
+> > 
+> > We already have that.  That's what gendisk->async_events is for (as
+> > opposed to gendisk->events).  If all events are async_events, block
+> > won't poll for events, but I'm not sure that's the golden bullet.
+> > 
+> > * None implements async_events yet and an API is missing -
+> >   disk_check_events() - which is trivial to add, but it's the same
+> >   story.  We'll need a mechanism to shoot up notification from libata
+> >   to block layer.  It's admittedly easier to justify routing through
+> >   SCSI tho.  So, we're mostly shifting the problem.  Given that async
+> >   events is nice to have, so it isn't a bad idea.
+> 
+> Could we drive it in the polling code?  As in, if we set a flag to say
+> we're event driven and please don't bother us, we could just respond to
+> the poll with the last known state (this would probably have to be in
+> SCSI somewhere since most polls are Test Unit Readys).  That way ZPODD
+> sets this flag when the device powers down and unsets it when it powers
+> up.
 
-So invoking REMOVE I_T NEXUS here can only improve matters :-)
+Does it mean I can do something like this:
 
-I'm all for renaming bus_reset, though :-)
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 5fc97d2..219820c 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -578,7 +578,10 @@ static unsigned int sr_block_check_events(struct gendisk *disk,
+ 					  unsigned int clearing)
+ {
+ 	struct scsi_cd *cd = scsi_cd(disk);
+-	return cdrom_check_events(&cd->cdi, clearing);
++	if (!cd->device->event_driven)
++		return cdrom_check_events(&cd->cdi, clearing);
++	else
++		return 0;
+ }
+ 
+ static int sr_block_revalidate_disk(struct gendisk *disk)
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index e65c62e..1756151 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -160,6 +160,7 @@ struct scsi_device {
+ 	unsigned can_power_off:1; /* Device supports runtime power off */
+ 	unsigned wce_default_on:1;	/* Cache is ON by default */
+ 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
++	unsigned event_driven:1; /* No need to poll the device */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
 
->>
->> In our case a REMOVE I_T NEXUS would be roughly equivalent to
->> scsi_remote_port_delete(); only we should be starting aborting
->> outstanding I/O directly and not waiting for fast_fail_tmo
->> to kick in.
->>
->
-> To abort IO, will you be calling the drivers terminate_rport_io or
-> dev_loss_tmo_callbk? If so I just wanted to warn you that I noticed t=
-hat
-> some drivers will only initiate the aborting/cleanup of IO in there. =
-So
-> if you call those callouts and expect that when finished scsi-ml can
-> free the scsi command and pass the request back up, I think we could =
-hit
-> some races with memory issues.
->
-Yeah, I know.
-What I had in mind was to invoke terminate_rport_io() and then wait=20
-for a certain time until either all outstanding commands have been
-processes (ie starget->busy drops to zero) or the port state changed.
-I'm not quite sure as for how long I should be waiting, but=20
-dev_loss_tmo will be a good upper limit here.
 
-As said, I'll be posting a patch.
+Then when ZPODD is powered off, it will set this flag; and unset it when
+it is powered up.
 
-Cheers,
+Thanks,
+Aaron
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> James
+> 
+> > * Still dunno much about zpodd but IIUC the notification from
+> >   zero-power is via ACPI.  To advertise that the device doesn't need
+> >   polling, it should also be able to do async notification while
+> >   powered up, which isn't covered by zpodd but ATA async notification.
+> >   So, ummm... that's another obstacle.  If zpodd requires the device
+> >   to support ATA async notification, it might not be too bad tho.
+> 
+> 
+> 
