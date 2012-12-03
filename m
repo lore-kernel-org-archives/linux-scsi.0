@@ -1,33 +1,41 @@
-From: Cong Ding <dinggnu@gmail.com>
-Subject: [PATCH] scsi:gdth.c: fix compilation warning
-Date: Mon,  3 Dec 2012 10:19:09 +0000
-Message-ID: <1354529949-8483-1-git-send-email-dinggnu@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com, Achim Leubner <achim_leubner@adaptec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Cong Ding <dinggnu@gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] hpsa: fix potential resource leak
+Date: Mon, 03 Dec 2012 13:13:49 +0100
+Message-ID: <50BC977D.4060007@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53359 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754215Ab2LCMOV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Dec 2012 07:14:21 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
 
-We do not allow old-style function definition.  Always spell foo(void) if
-a function does not take any parameters.
+I think we should free also the cfgtable allocated a few lines
+above this point.
 
-Signed-off-by: Cong Ding <dinggnu@gmail.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/gdth.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 5d72274..950c095 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -204,7 +204,7 @@ static char strbuf[MAX_SERBUF+1];
- #else
- #define COM_BASE 0x3f8
- #endif
--static void ser_init()
-+static void ser_init(void)
- {
-     unsigned port=COM_BASE;
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 796482b..3cc18aa 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3858,7 +3858,7 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	}
+ 	rc = write_driver_ver_to_cfgtable(cfgtable);
+ 	if (rc)
+-		goto unmap_vaddr;
++		goto unmap_cfgtable;
  
+ 	/* If reset via doorbell register is supported, use that.
+ 	 * There are two such methods.  Favor the newest method.
 -- 
-1.7.4.5
+1.7.11.7
+
