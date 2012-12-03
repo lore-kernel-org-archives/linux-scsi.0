@@ -1,90 +1,33 @@
-From: Sachin Kamat <sachin.kamat@linaro.org>
-Subject: [PATCH 1/1] [SCSI] mpt3sas: Remove unneeded version.h header inclusion
-Date: Mon,  3 Dec 2012 15:30:17 +0530
-Message-ID: <1354528817-28894-1-git-send-email-sachin.kamat@linaro.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33911 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101Ab2LCKHC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2012 05:07:02 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so1803607pad.19
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Dec 2012 02:07:02 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Cong Ding <dinggnu@gmail.com>
+Subject: [PATCH] scsi:gdth.c: fix compilation warning
+Date: Mon,  3 Dec 2012 10:19:09 +0000
+Message-ID: <1354529949-8483-1-git-send-email-dinggnu@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com, Achim Leubner <achim_leubner@adaptec.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Cong Ding <dinggnu@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: DL-MPTFusionLinux@lsi.com, JBottomley@parallels.com, support@lsi.com, Sreekanth.Reddy@lsi.com, Nagalakshmi.Nandigama@lsi.com, sachin.kamat@linaro.org, patches@linaro.org
 
-linux/version.h is not necessary as detected by checkversion.pl script.
+We do not allow old-style function definition.  Always spell foo(void) if
+a function does not take any parameters.
 
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Signed-off-by: Cong Ding <dinggnu@gmail.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c         |    1 -
- drivers/scsi/mpt3sas/mpt3sas_config.c       |    1 -
- drivers/scsi/mpt3sas/mpt3sas_ctl.c          |    1 -
- drivers/scsi/mpt3sas/mpt3sas_scsih.c        |    1 -
- drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c |    1 -
- 5 files changed, 0 insertions(+), 5 deletions(-)
+ drivers/scsi/gdth.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 04f8010..d5e8463 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -42,7 +42,6 @@
-  * USA.
-  */
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 5d72274..950c095 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -204,7 +204,7 @@ static char strbuf[MAX_SERBUF+1];
+ #else
+ #define COM_BASE 0x3f8
+ #endif
+-static void ser_init()
++static void ser_init(void)
+ {
+     unsigned port=COM_BASE;
  
--#include <linux/version.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/errno.h>
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index ce7e59b..1df9ed4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -41,7 +41,6 @@
-  * USA.
-  */
- 
--#include <linux/version.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 8af944d..5b0d4f8 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -42,7 +42,6 @@
-  * USA.
-  */
- 
--#include <linux/version.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/errno.h>
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 05f8045..ac9dbc2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -41,7 +41,6 @@
-  * USA.
-  */
- 
--#include <linux/version.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
-index da6c5f2..6f8d621 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
-@@ -42,7 +42,6 @@
-  * USA.
-  */
- 
--#include <linux/version.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/errno.h>
 -- 
-1.7.4.1
-
+1.7.4.5
