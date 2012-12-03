@@ -1,48 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v6 10/13] Make scsi_remove_host() wait for device removal
-Date: Mon, 3 Dec 2012 08:42:57 -0800
-Message-ID: <20121203164257.GE19802@htj.dyndns.org>
-References: <50B60619.4080406@acm.org>
- <50B608C1.6080803@acm.org>
- <20121202134515.GJ15930@mtj.dyndns.org>
- <50BC619F.7060707@acm.org>
- <20121203161510.GA19802@htj.dyndns.org>
- <50BCD59C.2020909@acm.org>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: Error handling on FC devices
+Date: Mon, 3 Dec 2012 11:19:54 -0600
+Message-ID: <50BCDF3A.6040608@tributary.com>
+References: <50AA290F.8000105@suse.de>  <50B3EDEA.40008@emulex.com> <1354046601.4420.14.camel@localhost.localdomain> <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net> <50B5B8C4.1040503@suse.de> <50B78715.2060109@emulex.com> <50B89C2D.8030108@suse.de> <50B8E4AC.8@cs.wisc.edu> <50BC517E.4090208@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:43761 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753169Ab2LCQnC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2012 11:43:02 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so2031694pad.19
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Dec 2012 08:43:02 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <50BCD59C.2020909@acm.org>
+Received: from relay.ihostexchange.net ([66.46.182.52]:3774 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755277Ab2LCRZI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2012 12:25:08 -0500
+In-Reply-To: <50BC517E.4090208@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@kernel.dk>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
+To: Hannes Reinecke <hare@suse.de>, Linux Scsi <linux-scsi@vger.kernel.org>
 
-Hello, Bart.
+On 12/3/2012 1:15 AM, Hannes Reinecke wrote:
+> Well, looking at QLogic and Emulex both emulate a bus reset with a loop
+> over each target and invoke a target reset there. I somewhat fail to see
+> the rationale behind it, other than emulating the bus reset behaviour on
+> SPI.
 
-On Mon, Dec 03, 2012 at 05:38:52PM +0100, Bart Van Assche wrote:
-> It is indeed possible to invoke complete() only if the device list
-> became empty with the host state equal to SHOST_CANCEL,
-> SHOST_CANCEL_RECOVERY, SHOST_DEL or SHOST_DEL_RECOVERY and in
+	It is actually a _VERY_ bad idea in multiple initiator tape environments with
+switched fibre where the resets can affect devices that are visible but not
+owned/controlled by the machine broadcasting resets. Many tape environments
+operate this way as the physical drives are assigned dynamically to initiators
+as necessary. In some cases (ACSLS) the machine/OS/backup applications aren't
+even homogenous.
 
-We can test this with !scsi_host_scan_allowed(), right?
+	The rewind and loss of PR/etc, which if not handled properly by all the other
+machines on the SAN can be quite disastrous.
 
-> scsi_remove_host() to wait for that completion only if the device
-> list was not empty before the host state was changed into one of the
-> four mentioned states. Do you really prefer this approach over the
-> approach in the patch at the start of this thread ?
+	Its also somewhat problematic even in single initiator environments as the
+reset can affect devices not having problems, and the 6/2900's can get eaten
+by the logic attempting the reset, which leaves the user of a functional
+device in the dark that it was reset/rewound.
 
-Maybe I'm missing something but if possible completion tends to be
-much simpler than using waitqueue directly.  I *think* that's the case
-here.  Am I missing something?
+	I was told last time I brought this up, that it was impossible for a single
+device's failure to result in that bus reset path being called. Which was
+patently false as the problem was only tracked down because of a repeatable
+case of a single device failing in a manner which triggered progressively more
+aggressive recovery culminating in the bus-reset being called.
 
-Thanks.
+	The result was a single device cascading a failure to a bunch of functional
+devices and interrupting their operation.
 
--- 
-tejun
+
+
+
+
+
