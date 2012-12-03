@@ -1,77 +1,225 @@
 From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH 1/7] RESEND ipr: Add sereral new CCIN definitions for new adapters support
-Date: Mon, 03 Dec 2012 12:31:13 -0600
-Message-ID: <20121203183211.818537028@linux.vnet.ibm.com>
+Subject: [PATCH 3/7] RESEND ipr: Resource path error logging cleanup
+Date: Mon, 03 Dec 2012 12:31:15 -0600
+Message-ID: <20121203183212.007735972@linux.vnet.ibm.com>
 References: <20121203183112.822371464@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.65] ([32.97.110.65]:19072 "HELO
+Received: from [32.97.110.65] ([32.97.110.65]:22390 "HELO
 	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1751376Ab2LCSe1 (ORCPT
+	by vger.kernel.org with SMTP id S1751435Ab2LCSe1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2012 13:34:27 -0500
-Content-Disposition: inline; filename=new_pciid
+Content-Disposition: inline; filename=resource_path_error_clean
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-Add the appropriate definitions and table entries for new adapter support.
+From: Brian King <brking@linux.vnet.ibm.com>
 
+The resource path as displayed by the ipr driver is the
+location string identifying a location on the SAS fabric.
+This patch adds the SCSI host number such that error logs
+can be more easily correlated in multiple adapter configurations.
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 ---
- drivers/scsi/ipr.c |   10 ++++++++++
- drivers/scsi/ipr.h |    5 +++++
- 2 files changed, 15 insertions(+)
 
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2012-11-14 20:15:46.666405044 -0600
-+++ b/drivers/scsi/ipr.c	2012-11-14 20:23:26.295466065 -0600
-@@ -9279,6 +9279,8 @@ static struct pci_device_id ipr_pci_tabl
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B2, 0, 0, 0 },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C0, 0, 0, 0 },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C3, 0, 0, 0 },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C4, 0, 0, 0 },
-@@ -9292,6 +9294,14 @@ static struct pci_device_id ipr_pci_tabl
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C8, 0, 0, 0 },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57CE, 0, 0, 0 },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57D5, 0, 0, 0 },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57D6, 0, 0, 0 },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57D7, 0, 0, 0 },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57D8, 0, 0, 0 },
- 	{ }
- };
- MODULE_DEVICE_TABLE(pci, ipr_pci_table);
+ drivers/scsi/ipr.c |   78 ++++++++++++++++++++++++++++++++++++-----------------
+ drivers/scsi/ipr.h |    5 ++-
+ 2 files changed, 56 insertions(+), 27 deletions(-)
+
 Index: b/drivers/scsi/ipr.h
 ===================================================================
---- a/drivers/scsi/ipr.h	2012-11-14 20:15:46.666405044 -0600
-+++ b/drivers/scsi/ipr.h	2012-11-14 20:23:23.404216172 -0600
-@@ -82,6 +82,7 @@
+--- a/drivers/scsi/ipr.h	2012-11-14 23:07:25.986404583 -0600
++++ b/drivers/scsi/ipr.h	2012-11-14 23:11:26.756404525 -0600
+@@ -409,7 +409,7 @@ struct ipr_config_table_entry64 {
+ 	__be64 dev_id;
+ 	__be64 lun;
+ 	__be64 lun_wwn[2];
+-#define IPR_MAX_RES_PATH_LENGTH		24
++#define IPR_MAX_RES_PATH_LENGTH		48
+ 	__be64 res_path;
+ 	struct ipr_std_inq_data std_inq_data;
+ 	u8 reserved2[4];
+@@ -1722,7 +1722,8 @@ struct ipr_ucode_image_header {
+ 	if (ipr_is_device(hostrcb)) {					\
+ 		if ((hostrcb)->ioa_cfg->sis64) {			\
+ 			printk(KERN_ERR IPR_NAME ": %s: " fmt, 		\
+-				ipr_format_res_path(hostrcb->hcam.u.error64.fd_res_path, \
++				ipr_format_res_path(hostrcb->ioa_cfg,	\
++					hostrcb->hcam.u.error64.fd_res_path, \
+ 					hostrcb->rp_buffer,		\
+ 					sizeof(hostrcb->rp_buffer)),	\
+ 				__VA_ARGS__);				\
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2012-11-14 23:09:49.484214019 -0600
++++ b/drivers/scsi/ipr.c	2012-11-14 23:28:24.724214331 -0600
+@@ -1166,14 +1166,15 @@ static int ipr_is_same_device(struct ipr
+ }
  
- #define IPR_SUBS_DEV_ID_57B4    0x033B
- #define IPR_SUBS_DEV_ID_57B2    0x035F
-+#define IPR_SUBS_DEV_ID_57C0    0x0352
- #define IPR_SUBS_DEV_ID_57C3    0x0353
- #define IPR_SUBS_DEV_ID_57C4    0x0354
- #define IPR_SUBS_DEV_ID_57C6    0x0357
-@@ -94,6 +95,10 @@
- #define IPR_SUBS_DEV_ID_574D    0x0356
- #define IPR_SUBS_DEV_ID_57C8    0x035D
+ /**
+- * ipr_format_res_path - Format the resource path for printing.
++ * __ipr_format_res_path - Format the resource path for printing.
+  * @res_path:	resource path
+  * @buf:	buffer
++ * @len:	length of buffer provided
+  *
+  * Return value:
+  * 	pointer to buffer
+  **/
+-static char *ipr_format_res_path(u8 *res_path, char *buffer, int len)
++static char *__ipr_format_res_path(u8 *res_path, char *buffer, int len)
+ {
+ 	int i;
+ 	char *p = buffer;
+@@ -1187,6 +1188,27 @@ static char *ipr_format_res_path(u8 *res
+ }
  
-+#define IPR_SUBS_DEV_ID_57D5    0x03FB
-+#define IPR_SUBS_DEV_ID_57D6    0x03FC
-+#define IPR_SUBS_DEV_ID_57D7    0x03FF
-+#define IPR_SUBS_DEV_ID_57D8    0x03FE
- #define IPR_NAME				"ipr"
+ /**
++ * ipr_format_res_path - Format the resource path for printing.
++ * @ioa_cfg:	ioa config struct
++ * @res_path:	resource path
++ * @buf:	buffer
++ * @len:	length of buffer provided
++ *
++ * Return value:
++ *	pointer to buffer
++ **/
++static char *ipr_format_res_path(struct ipr_ioa_cfg *ioa_cfg,
++				 u8 *res_path, char *buffer, int len)
++{
++	char *p = buffer;
++
++	*p = '\0';
++	p += snprintf(p, buffer + len - p, "%d/", ioa_cfg->host->host_no);
++	__ipr_format_res_path(res_path, p, len - (buffer - p));
++	return buffer;
++}
++
++/**
+  * ipr_update_res_entry - Update the resource entry.
+  * @res:	resource entry struct
+  * @cfgtew:	config table entry wrapper struct
+@@ -1226,8 +1248,8 @@ static void ipr_update_res_entry(struct 
  
- /*
+ 		if (res->sdev && new_path)
+ 			sdev_printk(KERN_INFO, res->sdev, "Resource path: %s\n",
+-				    ipr_format_res_path(res->res_path, buffer,
+-							sizeof(buffer)));
++				    ipr_format_res_path(res->ioa_cfg,
++					res->res_path, buffer, sizeof(buffer)));
+ 	} else {
+ 		res->flags = cfgtew->u.cfgte->flags;
+ 		if (res->flags & IPR_IS_IOA_RESOURCE)
+@@ -1613,8 +1635,8 @@ static void ipr_log_sis64_config_error(s
+ 		ipr_err_separator;
+ 
+ 		ipr_err("Device %d : %s", i + 1,
+-			 ipr_format_res_path(dev_entry->res_path, buffer,
+-					     sizeof(buffer)));
++			__ipr_format_res_path(dev_entry->res_path,
++					      buffer, sizeof(buffer)));
+ 		ipr_log_ext_vpd(&dev_entry->vpd);
+ 
+ 		ipr_err("-----New Device Information-----\n");
+@@ -1960,14 +1982,16 @@ static void ipr_log64_fabric_path(struct
+ 
+ 			ipr_hcam_err(hostrcb, "%s %s: Resource Path=%s\n",
+ 				     path_active_desc[i].desc, path_state_desc[j].desc,
+-				     ipr_format_res_path(fabric->res_path, buffer,
+-							 sizeof(buffer)));
++				     ipr_format_res_path(hostrcb->ioa_cfg,
++						fabric->res_path,
++						buffer, sizeof(buffer)));
+ 			return;
+ 		}
+ 	}
+ 
+ 	ipr_err("Path state=%02X Resource Path=%s\n", path_state,
+-		ipr_format_res_path(fabric->res_path, buffer, sizeof(buffer)));
++		ipr_format_res_path(hostrcb->ioa_cfg, fabric->res_path,
++				    buffer, sizeof(buffer)));
+ }
+ 
+ static const struct {
+@@ -2108,18 +2132,20 @@ static void ipr_log64_path_elem(struct i
+ 
+ 			ipr_hcam_err(hostrcb, "%s %s: Resource Path=%s, Link rate=%s, WWN=%08X%08X\n",
+ 				     path_status_desc[j].desc, path_type_desc[i].desc,
+-				     ipr_format_res_path(cfg->res_path, buffer,
+-							 sizeof(buffer)),
+-				     link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
+-				     be32_to_cpu(cfg->wwid[0]), be32_to_cpu(cfg->wwid[1]));
++				     ipr_format_res_path(hostrcb->ioa_cfg,
++					cfg->res_path, buffer, sizeof(buffer)),
++					link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
++					be32_to_cpu(cfg->wwid[0]),
++					be32_to_cpu(cfg->wwid[1]));
+ 			return;
+ 		}
+ 	}
+ 	ipr_hcam_err(hostrcb, "Path element=%02X: Resource Path=%s, Link rate=%s "
+ 		     "WWN=%08X%08X\n", cfg->type_status,
+-		     ipr_format_res_path(cfg->res_path, buffer, sizeof(buffer)),
+-		     link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
+-		     be32_to_cpu(cfg->wwid[0]), be32_to_cpu(cfg->wwid[1]));
++		     ipr_format_res_path(hostrcb->ioa_cfg,
++			cfg->res_path, buffer, sizeof(buffer)),
++			link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
++			be32_to_cpu(cfg->wwid[0]), be32_to_cpu(cfg->wwid[1]));
+ }
+ 
+ /**
+@@ -2182,7 +2208,8 @@ static void ipr_log_sis64_array_error(st
+ 
+ 	ipr_err("RAID %s Array Configuration: %s\n",
+ 		error->protection_level,
+-		ipr_format_res_path(error->last_res_path, buffer, sizeof(buffer)));
++		ipr_format_res_path(ioa_cfg, error->last_res_path,
++			buffer, sizeof(buffer)));
+ 
+ 	ipr_err_separator;
+ 
+@@ -2203,11 +2230,12 @@ static void ipr_log_sis64_array_error(st
+ 		ipr_err("Array Member %d:\n", i);
+ 		ipr_log_ext_vpd(&array_entry->vpd);
+ 		ipr_err("Current Location: %s\n",
+-			 ipr_format_res_path(array_entry->res_path, buffer,
+-					     sizeof(buffer)));
++			 ipr_format_res_path(ioa_cfg, array_entry->res_path,
++				buffer, sizeof(buffer)));
+ 		ipr_err("Expected Location: %s\n",
+-			 ipr_format_res_path(array_entry->expected_res_path,
+-					     buffer, sizeof(buffer)));
++			 ipr_format_res_path(ioa_cfg,
++				array_entry->expected_res_path,
++				buffer, sizeof(buffer)));
+ 
+ 		ipr_err_separator;
+ 	}
+@@ -4227,8 +4255,8 @@ static ssize_t ipr_show_resource_path(st
+ 	res = (struct ipr_resource_entry *)sdev->hostdata;
+ 	if (res && ioa_cfg->sis64)
+ 		len = snprintf(buf, PAGE_SIZE, "%s\n",
+-			       ipr_format_res_path(res->res_path, buffer,
+-						   sizeof(buffer)));
++			       __ipr_format_res_path(res->res_path, buffer,
++						     sizeof(buffer)));
+ 	else if (res)
+ 		len = snprintf(buf, PAGE_SIZE, "%d:%d:%d:%d\n", ioa_cfg->host->host_no,
+ 			       res->bus, res->target, res->lun);
+@@ -4556,8 +4584,8 @@ static int ipr_slave_configure(struct sc
+ 			scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
+ 		if (ioa_cfg->sis64)
+ 			sdev_printk(KERN_INFO, sdev, "Resource path: %s\n",
+-				    ipr_format_res_path(res->res_path, buffer,
+-							sizeof(buffer)));
++				    ipr_format_res_path(ioa_cfg,
++				res->res_path, buffer, sizeof(buffer)));
+ 		return 0;
+ 	}
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
 
 -- 
