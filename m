@@ -1,53 +1,77 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: Error handling on FC devices
-Date: Mon, 3 Dec 2012 11:19:54 -0600
-Message-ID: <50BCDF3A.6040608@tributary.com>
-References: <50AA290F.8000105@suse.de>  <50B3EDEA.40008@emulex.com> <1354046601.4420.14.camel@localhost.localdomain> <94D0CD8314A33A4D9D801C0FE68B40294CCFD463@G9W0745.americas.hpqcorp.net> <50B5B8C4.1040503@suse.de> <50B78715.2060109@emulex.com> <50B89C2D.8030108@suse.de> <50B8E4AC.8@cs.wisc.edu> <50BC517E.4090208@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: wenxiong@linux.vnet.ibm.com
+Subject: [PATCH 1/7] RESEND ipr: Add sereral new CCIN definitions for new adapters support
+Date: Mon, 03 Dec 2012 12:31:13 -0600
+Message-ID: <20121203183211.818537028@linux.vnet.ibm.com>
+References: <20121203183112.822371464@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.52]:3774 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755277Ab2LCRZI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2012 12:25:08 -0500
-In-Reply-To: <50BC517E.4090208@suse.de>
+Received: from [32.97.110.65] ([32.97.110.65]:19072 "HELO
+	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1751376Ab2LCSe1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2012 13:34:27 -0500
+Content-Disposition: inline; filename=new_pciid
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Linux Scsi <linux-scsi@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-On 12/3/2012 1:15 AM, Hannes Reinecke wrote:
-> Well, looking at QLogic and Emulex both emulate a bus reset with a loop
-> over each target and invoke a target reset there. I somewhat fail to see
-> the rationale behind it, other than emulating the bus reset behaviour on
-> SPI.
+Add the appropriate definitions and table entries for new adapter support.
 
-	It is actually a _VERY_ bad idea in multiple initiator tape environments with
-switched fibre where the resets can affect devices that are visible but not
-owned/controlled by the machine broadcasting resets. Many tape environments
-operate this way as the physical drives are assigned dynamically to initiators
-as necessary. In some cases (ACSLS) the machine/OS/backup applications aren't
-even homogenous.
+Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+---
+ drivers/scsi/ipr.c |   10 ++++++++++
+ drivers/scsi/ipr.h |    5 +++++
+ 2 files changed, 15 insertions(+)
 
-	The rewind and loss of PR/etc, which if not handled properly by all the other
-machines on the SAN can be quite disastrous.
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2012-11-14 20:15:46.666405044 -0600
++++ b/drivers/scsi/ipr.c	2012-11-14 20:23:26.295466065 -0600
+@@ -9279,6 +9279,8 @@ static struct pci_device_id ipr_pci_tabl
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B2, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C0, 0, 0, 0 },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C3, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C4, 0, 0, 0 },
+@@ -9292,6 +9294,14 @@ static struct pci_device_id ipr_pci_tabl
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C8, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57CE, 0, 0, 0 },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57D5, 0, 0, 0 },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57D6, 0, 0, 0 },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57D7, 0, 0, 0 },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57D8, 0, 0, 0 },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, ipr_pci_table);
+Index: b/drivers/scsi/ipr.h
+===================================================================
+--- a/drivers/scsi/ipr.h	2012-11-14 20:15:46.666405044 -0600
++++ b/drivers/scsi/ipr.h	2012-11-14 20:23:23.404216172 -0600
+@@ -82,6 +82,7 @@
+ 
+ #define IPR_SUBS_DEV_ID_57B4    0x033B
+ #define IPR_SUBS_DEV_ID_57B2    0x035F
++#define IPR_SUBS_DEV_ID_57C0    0x0352
+ #define IPR_SUBS_DEV_ID_57C3    0x0353
+ #define IPR_SUBS_DEV_ID_57C4    0x0354
+ #define IPR_SUBS_DEV_ID_57C6    0x0357
+@@ -94,6 +95,10 @@
+ #define IPR_SUBS_DEV_ID_574D    0x0356
+ #define IPR_SUBS_DEV_ID_57C8    0x035D
+ 
++#define IPR_SUBS_DEV_ID_57D5    0x03FB
++#define IPR_SUBS_DEV_ID_57D6    0x03FC
++#define IPR_SUBS_DEV_ID_57D7    0x03FF
++#define IPR_SUBS_DEV_ID_57D8    0x03FE
+ #define IPR_NAME				"ipr"
+ 
+ /*
 
-	Its also somewhat problematic even in single initiator environments as the
-reset can affect devices not having problems, and the 6/2900's can get eaten
-by the logic attempting the reset, which leaves the user of a functional
-device in the dark that it was reset/rewound.
-
-	I was told last time I brought this up, that it was impossible for a single
-device's failure to result in that bus reset path being called. Which was
-patently false as the problem was only tracked down because of a repeatable
-case of a single device failing in a manner which triggered progressively more
-aggressive recovery culminating in the bus-reset being called.
-
-	The result was a single device cascading a failure to a bunch of functional
-devices and interrupting their operation.
-
-
-
-
-
-
+-- 
