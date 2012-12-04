@@ -1,64 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Tue, 04 Dec 2012 12:11:40 +0000
-Message-ID: <1354623100.3206.34.camel@dabdike.int.hansenpartnership.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
-	 <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike>
-	 <21511277.LLinyDpbAK@vostro.rjw.lan>
-	 <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike>
-	 <20121203081321.GA9990@mint-spring.sh.intel.com>
-	 <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
-	 <20121203162323.GB19802@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] megaraid: fix use of delayed work
+Date: Tue, 4 Dec 2012 07:39:39 -0800
+Message-ID: <20121204153939.GD3885@mtj.dyndns.org>
+References: <1354620834-2953-1-git-send-email-xtfeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20121203162323.GB19802@htj.dyndns.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1354620834-2953-1-git-send-email-xtfeng@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Xiaotian Feng <xtfeng@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Xiaotian Feng <dannyfeng@tencent.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2012-12-03 at 08:23 -0800, Tejun Heo wrote:
-> Hello, James.
+On Tue, Dec 04, 2012 at 07:33:54PM +0800, Xiaotian Feng wrote:
+> megaraid use INIT_WORK to declare a hotplug_work, but cast the hotplug_work
+> from work_struct to delayed_work and schedule_delayed_work on it. This is
+> very dangerous, as other part of delayed_work might be kernel memories allocated
+> by others.
 > 
-> On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
-> > > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> > > index e65c62e..1756151 100644
-> > > --- a/include/scsi/scsi_device.h
-> > > +++ b/include/scsi/scsi_device.h
-> > > @@ -160,6 +160,7 @@ struct scsi_device {
-> > >  	unsigned can_power_off:1; /* Device supports runtime power off */
-> > >  	unsigned wce_default_on:1;	/* Cache is ON by default */
-> > >  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
-> > > +	unsigned event_driven:1; /* No need to poll the device */
-> > >  
-> > >  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
-> > >  	struct list_head event_list;	/* asserted events */
-> > 
-> > Yes, but if we can get away with doing that, it should be in genhd
-> > because it's completely generic.
-> > 
-> > I was imagining we'd have to fake the reply to the test unit ready or
-> > some other commands, which is why it would need to be in sr.c
-> > 
-> > The check events code is Tejun's baby, if he's OK with it then just do
-> > it in genhd.c
+> With commit 8852aac, schedule_delayed_work() will check dwork->timer before
+> queue_work, this will cause megaraid code to hit the BUG_ON in workqueue code.
+> Change megaraid code to use delayed work.
 > 
-> The problem here is there's no easy to reach genhd from libata (or the
-> other way around) without going through sr.  I think we're gonna have
-> to have something in sr one way or the other.
+> Signed-off-by: Xiaotian Feng <dannyfeng@tencent.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
 
-Can't we do that via an event? It's a bit clunky because we need the
-callback in the layer that sees the sdev, which is libata-scsi, we just
-need an analogue of ata_scsi_media_change_notify, but ignoring and
-allowing polling is essentially event driven as well, so it should all
-work.  We'll need a listener in genhd, which might be trickier.
+Urgh... what the....  Didn't see that one coming.  I'm gonna push this
+to Linus through the workqueue tree.
 
-This may also work as the more generic route for stuff where we can't
-connect the bottom to the top of the stack (which looks like a problem
-we'll begin wrestling with a lot now).
+Thanks for the fix.
 
-James
-
-
+-- 
+tejun
