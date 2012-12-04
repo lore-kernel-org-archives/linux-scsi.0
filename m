@@ -1,52 +1,90 @@
-From: Jonathan Nieder <jrnieder@gmail.com>
-Subject: Re: megaraid_sas: which patches are needed for 2.6.32.y?
-Date: Mon, 3 Dec 2012 22:27:08 -0800
-Message-ID: <20121204062708.GA7633@elie.Belkin>
-References: <CAD2iGhWrruwSWtNo9pVH1Aufimq1W2G3VQKEHaWnmoXjnNk4cQ@mail.gmail.com>
- <20121203144310.GA1357@elie.Belkin>
- <CAD2iGhWegHsB+1P9unXn6sfveSQGFyahH9qKh4oHtXpxDSz1EA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:44740 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826Ab2LDG1S convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2012 01:27:18 -0500
-Received: by mail-da0-f46.google.com with SMTP id p5so1659301dak.19
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Dec 2012 22:27:18 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <CAD2iGhWegHsB+1P9unXn6sfveSQGFyahH9qKh4oHtXpxDSz1EA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Xiaotian Feng <xtfeng@gmail.com>
+Subject: [PATCH] megaraid: fix use of delayed work
+Date: Tue,  4 Dec 2012 19:33:54 +0800
+Message-ID: <1354620834-2953-1-git-send-email-xtfeng@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, tj@kernel.org
+Cc: Xiaotian Feng <xtfeng@gmail.com>, Xiaotian Feng <dannyfeng@tencent.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?B?VG9yYmrDuHJu?= Thorsen <torbjorn@trollweb.no>
-Cc: 666108@bugs.debian.org, Neela Syam Kolli <megaraidlinux@lsi.com>, adam radford <aradford@gmail.com>, linux-scsi@vger.kernel.org
 
-tags 666108 - moreinfo
-quit
+megaraid use INIT_WORK to declare a hotplug_work, but cast the hotplug_work
+from work_struct to delayed_work and schedule_delayed_work on it. This is
+very dangerous, as other part of delayed_work might be kernel memories allocated
+by others.
 
-Torbj=C3=B8rn Thorsen wrote:
+With commit 8852aac, schedule_delayed_work() will check dwork->timer before
+queue_work, this will cause megaraid code to hit the BUG_ON in workqueue code.
+Change megaraid code to use delayed work.
 
-> The kernel boots with no problems, the storage controller seems to be
-> working nicely.
->
-> root@xen14:~# dmesg | grep -i mega
-> [    3.340638] megasas: 00.00.05.38-rc1 Wed. May. 11 17:00:00 PDT 201=
-1
-> [    3.340742] megasas: 0x1000:0x005b:0x1028:0x1f38: bus 3:slot 0:fun=
-c 0
+Signed-off-by: Xiaotian Feng <dannyfeng@tencent.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/megaraid/megaraid_sas.h      |    2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c |   14 ++++++--------
+ 2 files changed, 7 insertions(+), 9 deletions(-)
 
-Yay, thanks much for checking.
-
-Ben and Dann, what do you think?  Should we apply these patches[1]?
-
-Regards,
-Jonathan
-
-[1] http://alioth.debian.org/~jrnieder-guest/temp/driver-test/megaraid-=
-driver-backport.mbox
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 16b7a72..3b2365c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1276,7 +1276,7 @@ struct megasas_evt_detail {
+ } __attribute__ ((packed));
+ 
+ struct megasas_aen_event {
+-	struct work_struct hotplug_work;
++	struct delayed_work hotplug_work;
+ 	struct megasas_instance *instance;
+ };
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index d2c5366..e4f2baa 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -2060,9 +2060,9 @@ megasas_service_aen(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ 		} else {
+ 			ev->instance = instance;
+ 			instance->ev = ev;
+-			INIT_WORK(&ev->hotplug_work, megasas_aen_polling);
+-			schedule_delayed_work(
+-				(struct delayed_work *)&ev->hotplug_work, 0);
++			INIT_DELAYED_WORK(&ev->hotplug_work,
++					  megasas_aen_polling);
++			schedule_delayed_work(&ev->hotplug_work, 0);
+ 		}
+ 	}
+ }
+@@ -4352,8 +4352,7 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	/* cancel the delayed work if this work still in queue */
+ 	if (instance->ev != NULL) {
+ 		struct megasas_aen_event *ev = instance->ev;
+-		cancel_delayed_work_sync(
+-			(struct delayed_work *)&ev->hotplug_work);
++		cancel_delayed_work_sync(&ev->hotplug_work);
+ 		instance->ev = NULL;
+ 	}
+ 
+@@ -4545,8 +4544,7 @@ static void __devexit megasas_detach_one(struct pci_dev *pdev)
+ 	/* cancel the delayed work if this work still in queue*/
+ 	if (instance->ev != NULL) {
+ 		struct megasas_aen_event *ev = instance->ev;
+-		cancel_delayed_work_sync(
+-			(struct delayed_work *)&ev->hotplug_work);
++		cancel_delayed_work_sync(&ev->hotplug_work);
+ 		instance->ev = NULL;
+ 	}
+ 
+@@ -5190,7 +5188,7 @@ static void
+ megasas_aen_polling(struct work_struct *work)
+ {
+ 	struct megasas_aen_event *ev =
+-		container_of(work, struct megasas_aen_event, hotplug_work);
++		container_of(work, struct megasas_aen_event, hotplug_work.work);
+ 	struct megasas_instance *instance = ev->instance;
+ 	union megasas_evt_class_locale class_locale;
+ 	struct  Scsi_Host *host;
+-- 
+1.7.9.6 (Apple Git-31.1)
