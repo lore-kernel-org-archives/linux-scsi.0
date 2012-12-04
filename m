@@ -1,40 +1,54 @@
 From: adam radford <aradford@gmail.com>
-Subject: Re: [patch,v3,repost 07/10] megaraid_sas: use scsi_host_alloc_node
-Date: Mon, 3 Dec 2012 17:41:30 -0800
-Message-ID: <CAHtARFEQvSgivGiyYizr80BCRWCkq7+zci8Hkmx822neKKWH3Q@mail.gmail.com>
-References: <1354034799-8460-1-git-send-email-jmoyer@redhat.com>
-	<1354034799-8460-8-git-send-email-jmoyer@redhat.com>
+Subject: Re: [PATCH] megaraid_sas: fix memory leak if SGL has zero length entries
+Date: Mon, 3 Dec 2012 17:49:23 -0800
+Message-ID: <CAHtARFF0jGrd-7a5Jh16GK60SYBCP7f5Fg2=c8bb7K13aMneRQ@mail.gmail.com>
+References: <1353488088-10684-1-git-send-email-bjorn@mork.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1354034799-8460-8-git-send-email-jmoyer@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, Bart Van Assche <bvanassche@acm.org>, Neela Syam Kolli <megaraidlinux@lsi.com>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1353488088-10684-1-git-send-email-bjorn@mork.no>
+Sender: stable-owner@vger.kernel.org
+To: =?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Nov 27, 2012 at 8:46 AM, Jeff Moyer <jmoyer@redhat.com> wrote:
+On Wed, Nov 21, 2012 at 12:54 AM, Bj=F8rn Mork <bjorn@mork.no> wrote:
+> commit 98cb7e44 ([SCSI] megaraid_sas: Sanity check user
+> supplied length before passing it to dma_alloc_coherent())
+> introduced a memory leak.  Memory allocated for entries
+> following zero length SGL entries will not be freed.
 >
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+> Reference: http://bugs.debian.org/688198
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Bj=F8rn Mork <bjorn@mork.no>
 > ---
->  drivers/scsi/megaraid/megaraid_sas_base.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
+>  drivers/scsi/megaraid/megaraid_sas_base.c |   10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
 >
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index d2c5366..707a6cd 100644
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi=
+/megaraid/megaraid_sas_base.c
+> index d2c5366..12b6be4 100644
 > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4020,8 +4020,9 @@ megasas_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
->         if (megasas_set_dma_mask(pdev))
->                 goto fail_set_dma_mask;
+> @@ -4854,10 +4854,12 @@ megasas_mgmt_fw_ioctl(struct megasas_instance=
+ *instance,
+>                                     sense, sense_handle);
+>         }
 >
-> -       host = scsi_host_alloc(&megasas_template,
-> -                              sizeof(struct megasas_instance));
-> +       host = scsi_host_alloc_node(&megasas_template,
-> +                                   sizeof(struct megasas_instance),
-> +                                   dev_to_node(&pdev->dev));
+> -       for (i =3D 0; i < ioc->sge_count && kbuff_arr[i]; i++) {
+> -               dma_free_coherent(&instance->pdev->dev,
+> -                                   kern_sge32[i].length,
+> -                                   kbuff_arr[i], kern_sge32[i].phys_=
+addr);
+> +       for (i =3D 0; i < ioc->sge_count; i++) {
+> +               if (kbuff_arr[i])
+> +                       dma_free_coherent(&instance->pdev->dev,
+> +                                         kern_sge32[i].length,
+> +                                         kbuff_arr[i],
+> +                                         kern_sge32[i].phys_addr);
+>         }
 >
->         if (!host) {
->                 printk(KERN_DEBUG "megasas: scsi_host_alloc failed\n");
+>         megasas_return_cmd(instance, cmd);
 
 Acked-by: Adam Radford <aradford@gmail.com>
