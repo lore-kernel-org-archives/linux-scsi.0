@@ -1,54 +1,64 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH] megaraid_sas: fix memory leak if SGL has zero length entries
-Date: Mon, 3 Dec 2012 17:49:23 -0800
-Message-ID: <CAHtARFF0jGrd-7a5Jh16GK60SYBCP7f5Fg2=c8bb7K13aMneRQ@mail.gmail.com>
-References: <1353488088-10684-1-git-send-email-bjorn@mork.no>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Tue, 04 Dec 2012 13:04:42 +0800
+Message-ID: <50BD846A.6050601@intel.com>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com> <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike> <21511277.LLinyDpbAK@vostro.rjw.lan> <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike> <20121203081321.GA9990@mint-spring.sh.intel.com> <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com> <20121203162323.GB19802@htj.dyndns.org> <50BCF5F8.2030802@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1353488088-10684-1-git-send-email-bjorn@mork.no>
-Sender: stable-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <50BCF5F8.2030802@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 21, 2012 at 12:54 AM, Bj=F8rn Mork <bjorn@mork.no> wrote:
-> commit 98cb7e44 ([SCSI] megaraid_sas: Sanity check user
-> supplied length before passing it to dma_alloc_coherent())
-> introduced a memory leak.  Memory allocated for entries
-> following zero length SGL entries will not be freed.
->
-> Reference: http://bugs.debian.org/688198
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Bj=F8rn Mork <bjorn@mork.no>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c |   10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi=
-/megaraid/megaraid_sas_base.c
-> index d2c5366..12b6be4 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4854,10 +4854,12 @@ megasas_mgmt_fw_ioctl(struct megasas_instance=
- *instance,
->                                     sense, sense_handle);
->         }
->
-> -       for (i =3D 0; i < ioc->sge_count && kbuff_arr[i]; i++) {
-> -               dma_free_coherent(&instance->pdev->dev,
-> -                                   kern_sge32[i].length,
-> -                                   kbuff_arr[i], kern_sge32[i].phys_=
-addr);
-> +       for (i =3D 0; i < ioc->sge_count; i++) {
-> +               if (kbuff_arr[i])
-> +                       dma_free_coherent(&instance->pdev->dev,
-> +                                         kern_sge32[i].length,
-> +                                         kbuff_arr[i],
-> +                                         kern_sge32[i].phys_addr);
->         }
->
->         megasas_return_cmd(instance, cmd);
+On 12/04/2012 02:56 AM, Jeff Garzik wrote:
+> On 12/03/2012 11:23 AM, Tejun Heo wrote:
+>> Hello, James.
+>>
+>> On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
+>>>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>>>> index e65c62e..1756151 100644
+>>>> --- a/include/scsi/scsi_device.h
+>>>> +++ b/include/scsi/scsi_device.h
+>>>> @@ -160,6 +160,7 @@ struct scsi_device {
+>>>>   	unsigned can_power_off:1; /* Device supports runtime power off */
+>>>>   	unsigned wce_default_on:1;	/* Cache is ON by default */
+>>>>   	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+>>>> +	unsigned event_driven:1; /* No need to poll the device */
+>>>>
+>>>>   	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+>>>>   	struct list_head event_list;	/* asserted events */
+>>>
+>>> Yes, but if we can get away with doing that, it should be in genhd
+>>> because it's completely generic.
+>>>
+>>> I was imagining we'd have to fake the reply to the test unit ready or
+>>> some other commands, which is why it would need to be in sr.c
+>>>
+>>> The check events code is Tejun's baby, if he's OK with it then just do
+>>> it in genhd.c
+>>
+>> The problem here is there's no easy to reach genhd from libata (or the
+>> other way around) without going through sr.  I think we're gonna have
+>> to have something in sr one way or the other.
+> 
+>   ...which is precisely as I said when v1 of this ZPODD patchset appeared.
+> 
+> sr modifications cannot be avoided.
 
-Acked-by: Adam Radford <aradford@gmail.com>
+So I'm gonna use the above code to silence the poll when ODD is powered
+off. I suppose everybody is OK with this, right? James, please let me
+know if you disagree.
+
+Thanks,
+Aaron
+
+> 
+> 	Jeff
+> 
+> 
+> 
+> 
+
