@@ -1,72 +1,49 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v7 3/9] Introduce scsi_device_being_removed()
-Date: Thu, 06 Dec 2012 16:55:01 +0100
-Message-ID: <50C0BFD5.9030604@acm.org>
-References: <50C0BEEE.4040907@acm.org>
+From: Alex Turin <alextu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
+Date: Thu, 6 Dec 2012 17:55:12 +0200
+Message-ID: <50C0BFE0.909@mellanox.com>
+References: <cover.1353903448.git.dillowda@ornl.gov> <CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com> <1353957308.2681.5.camel@dabdike> <1353989041.28917.24.camel@obelisk.thedillows.org> <CAL1RGDXpdWL_r7sWp=vvvXH4jxFgjDL+XcEGgKo-44=wrOBmtA@mail.gmail.com> <1354242098.3670.3.camel@obelisk.thedillows.org> <CAJZOPZJBTRXftrW5NWEEHnf2QWsni0HMTAV_PKSgDtA7GO=wRw@mail.gmail.com> <50BF9760.2080801@acm.org> <CAJZOPZKPs5Vx5nB3610V+byv9p1KvL7+sRU6G4uMTRQu=4=STw@mail.gmail.com> <50C0A76C.20500@acm.org> <50C0AB42.8040402@mellanox.com> <50C0B407.4010706@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gerard.telenet-ops.be ([195.130.132.48]:50984 "EHLO
-	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424105Ab2LFPzG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2012 10:55:06 -0500
-In-Reply-To: <50C0BEEE.4040907@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <50C0B407.4010706-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Tejun Heo <tj@kernel.org>
----
- drivers/scsi/device_handler/scsi_dh.c |    7 ++-----
- include/scsi/scsi_device.h            |    5 +++++
- 2 files changed, 7 insertions(+), 5 deletions(-)
+On 12/6/2012 5:04 PM, Bart Van Assche wrote:
+> On 12/06/12 15:27, Or Gerlitz wrote:
+>> The core problem here seems to be that scsi_remove_host simply never 
+>> ends.
+>
+> Hello Or,
+>
+> The later patches in the srp-ha patch series avoided such behavior by 
+> checking whether the connection between SRP initiator and target is 
+> unique, and by removing duplicate SCSI hosts for which the transport 
+> layer failed.  Unfortunately these patches are still under review. 
+> Unless someone can come up with a better solution I will post a patch 
+> one of the next days that makes ib_srp again fail all commands after 
+> host removal started. That will avoid spending a long time doing error 
+> recovery.
+>
+> Also, you might have noticed that Hannes Reinecke reported a few days 
+> ago that the SCSI error handler may need a lot of time for other 
+> transport types - this behavior is not SRP specific.
+>
+> Bart.
+>
+Hello Bart,
 
-diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-index 33e422e..78b3ddb 100644
---- a/drivers/scsi/device_handler/scsi_dh.c
-+++ b/drivers/scsi/device_handler/scsi_dh.c
-@@ -156,8 +156,7 @@ store_dh_state(struct device *dev, struct device_attribute *attr,
- 	struct scsi_device_handler *scsi_dh;
- 	int err = -EINVAL;
- 
--	if (sdev->sdev_state == SDEV_CANCEL ||
--	    sdev->sdev_state == SDEV_DEL)
-+	if (scsi_device_being_removed(sdev))
- 		return -ENODEV;
- 
- 	if (!sdev->scsi_dh_data) {
-@@ -400,9 +399,7 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
- 	if (sdev->scsi_dh_data)
- 		scsi_dh = sdev->scsi_dh_data->scsi_dh;
- 	dev = get_device(&sdev->sdev_gendev);
--	if (!scsi_dh || !dev ||
--	    sdev->sdev_state == SDEV_CANCEL ||
--	    sdev->sdev_state == SDEV_DEL)
-+	if (!scsi_dh || !dev || scsi_device_being_removed(sdev))
- 		err = SCSI_DH_NOSYS;
- 	if (sdev->sdev_state == SDEV_OFFLINE)
- 		err = SCSI_DH_DEV_OFFLINED;
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 55367b0..767dd16 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -442,6 +442,11 @@ static inline int scsi_device_created(struct scsi_device *sdev)
- 	return sdev->sdev_state == SDEV_CREATED ||
- 		sdev->sdev_state == SDEV_CREATED_BLOCK;
- }
-+static inline int scsi_device_being_removed(struct scsi_device *sdev)
-+{
-+	return sdev->sdev_state == SDEV_CANCEL ||
-+		sdev->sdev_state == SDEV_DEL;
-+}
- 
- /* accessor functions for the SCSI parameters */
- static inline int scsi_device_sync(struct scsi_device *sdev)
--- 
-1.7.10.4
+In our case we don't have duplicate hosts or targets. We are working 
+with a single SCSI disk.
+To make scsi_remove_host hang we simply disabling a IB port and run "dd 
+if=/dev/sdb of=/dev/null count=1".
 
+Alex
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
