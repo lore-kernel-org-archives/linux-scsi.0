@@ -1,36 +1,43 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0/13 v6] More device removal fixes
-Date: Thu, 06 Dec 2012 14:33:57 +0100
-Message-ID: <50C09EC5.7010105@kernel.dk>
-References: <50B60619.4080406@acm.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
+Date: Thu, 06 Dec 2012 15:10:52 +0100
+Message-ID: <50C0A76C.20500@acm.org>
+References: <cover.1353903448.git.dillowda@ornl.gov> <CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com> <1353957308.2681.5.camel@dabdike> <1353989041.28917.24.camel@obelisk.thedillows.org> <CAL1RGDXpdWL_r7sWp=vvvXH4jxFgjDL+XcEGgKo-44=wrOBmtA@mail.gmail.com> <1354242098.3670.3.camel@obelisk.thedillows.org> <CAJZOPZJBTRXftrW5NWEEHnf2QWsni0HMTAV_PKSgDtA7GO=wRw@mail.gmail.com> <50BF9760.2080801@acm.org> <CAJZOPZKPs5Vx5nB3610V+byv9p1KvL7+sRU6G4uMTRQu=4=STw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:36391 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755022Ab2LFNeX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2012 08:34:23 -0500
-In-Reply-To: <50B60619.4080406@acm.org>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:57496 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932088Ab2LFOLN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2012 09:11:13 -0500
+In-Reply-To: <CAJZOPZKPs5Vx5nB3610V+byv9p1KvL7+sRU6G4uMTRQu=4=STw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
+To: Or Gerlitz <or.gerlitz@gmail.com>
+Cc: David Dillow <dillowda@ornl.gov>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, fujita.tomonori@lab.ntt.co.jp, rcj@linux.vnet.ibm.com, Alex Turin <alextu@mellanox.com>
 
-On 2012-11-28 13:39, Bart Van Assche wrote:
-> Fix a few race conditions that can be triggered by removing a device:
-> - Avoid that request_fn() can be invoked on a dead queue.
-> - Avoid that blk_cleanup_queue() can finish while request_fn is still
->   running.
-> - Fix a race between starved list processing and device removal.
-> - Avoid that a SCSI LLD callback can be invoked after scsi_remove_host()
->   finished.
-> - Speed up device removal by stopping error handling as soon as
->   scsi_remove_host() started.
+On 12/05/12 22:32, Or Gerlitz wrote:
+> On Wed, Dec 5, 2012 at 8:50 PM, Bart Van Assche <bvanassche@acm.org> wrote:
+> [...]
+>> The only way to make I/O work reliably if a failure can occur at the
+>> transport layer is to use multipathd on top of ib_srp. If a connection fails
+>> for some reason, then the SRP SCSI host will be removed after the SCSI error
+>> handler has finished with its error recovery strategy. And once the
+>> transport layer is operational again and srp_daemon detects that the
+>> initiator is no longer logged in srp_daemon will make ib_srp log in again.
+>> multipathd will then cause I/O to continue over the new path.
+>
+> Claim basically understood and agreed however, does this also hold
+> when the link is back again, that is can't SRP login via this single
+> path also when there's no multipath on top?
 
-Bart, I've applied 1-6 to the block 3.8 tree. I still am not super happy
-with 5/6, but I don't have any better ideas at the moment.
+As far as I can remember the behavior of ib_srp has always been to try 
+to reconnect once to the SRP target after the SCSI error handler kicked 
+in. Other SCSI LLDs, e.g. the iSCSI initiator, can be configured to keep 
+trying to reconnect after a transport layer failure. That has the 
+advantage that the SCSI host number remains the same after reconnecting 
+succeeded as before reconnecting started.
 
--- 
-Jens Axboe
+Bart.
 
