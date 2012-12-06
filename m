@@ -1,40 +1,107 @@
-From: Or Gerlitz <or.gerlitz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
-Date: Wed, 5 Dec 2012 23:32:19 +0200
-Message-ID: <CAJZOPZKPs5Vx5nB3610V+byv9p1KvL7+sRU6G4uMTRQu=4=STw@mail.gmail.com>
-References: <cover.1353903448.git.dillowda@ornl.gov>
-	<CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com>
-	<1353957308.2681.5.camel@dabdike>
-	<1353989041.28917.24.camel@obelisk.thedillows.org>
-	<CAL1RGDXpdWL_r7sWp=vvvXH4jxFgjDL+XcEGgKo-44=wrOBmtA@mail.gmail.com>
-	<1354242098.3670.3.camel@obelisk.thedillows.org>
-	<CAJZOPZJBTRXftrW5NWEEHnf2QWsni0HMTAV_PKSgDtA7GO=wRw@mail.gmail.com>
-	<50BF9760.2080801@acm.org>
+From: Chen Gang <gang.chen@asianux.com>
+Subject: [Suggestion] drivers/target/sbp/ : set tport->tpg to NULL when clean
+ up for failure.
+Date: Thu, 06 Dec 2012 12:24:54 +0800
+Message-ID: <50C01E16.5080303@asianux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <50BF9760.2080801-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, Alex Turin <alextu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from intranet.asianux.com ([58.214.24.6]:36656 "EHLO
+	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753318Ab2LFEYF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2012 23:24:05 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bootc@bootc.net, nab@linux-iscsi.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 
-On Wed, Dec 5, 2012 at 8:50 PM, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
-[...]
-> The only way to make I/O work reliably if a failure can occur at the
-> transport layer is to use multipathd on top of ib_srp. If a connection fails
-> for some reason, then the SRP SCSI host will be removed after the SCSI error
-> handler has finished with its error recovery strategy. And once the
-> transport layer is operational again and srp_daemon detects that the
-> initiator is no longer logged in srp_daemon will make ib_srp log in again.
-> multipathd will then cause I/O to continue over the new path.
+Hello Maintainers: 
 
-Claim basically understood and agreed however, does this also hold
-when the link is back again, that is can't SRP login via this single
-path also when there's no multipath on top?
+in drivers/target/sbp/sbp_target.c:
 
-Or.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   tport->tpg must be NULL before process it in function sbp_make_tpg. (line 2185..2188)
+   tport->tpg assigned a ptr (line 2198)
+   if processing failed, not set tport->tpg = NULL (line 2208..2212, 2217..2221)
+
+   we have done: when free tport->tpg, set it to NULL (line 2233..2234)
+
+   is it valuable to let tport->tpg = NULL, when clean up for failure ?
+
+
+  Regards
+
+gchen.
+
+
+2168 static struct se_portal_group *sbp_make_tpg(
+2169                 struct se_wwn *wwn,
+2170                 struct config_group *group,
+2171                 const char *name)
+2172 {
+2173         struct sbp_tport *tport =
+2174                 container_of(wwn, struct sbp_tport, tport_wwn);
+2175 
+2176         struct sbp_tpg *tpg;
+2177         unsigned long tpgt;
+2178         int ret;
+2179 
+2180         if (strstr(name, "tpgt_") != name)
+2181                 return ERR_PTR(-EINVAL);
+2182         if (kstrtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
+2183                 return ERR_PTR(-EINVAL);
+2184 
+2185         if (tport->tpg) {
+2186                 pr_err("Only one TPG per Unit is possible.\n");
+2187                 return ERR_PTR(-EBUSY);
+2188         }
+2189 
+2190         tpg = kzalloc(sizeof(*tpg), GFP_KERNEL);
+2191         if (!tpg) {
+2192                 pr_err("Unable to allocate struct sbp_tpg\n");
+2193                 return ERR_PTR(-ENOMEM);
+2194         }
+2195 
+2196         tpg->tport = tport;
+2197         tpg->tport_tpgt = tpgt;
+2198         tport->tpg = tpg;
+2199 
+2200         /* default attribute values */
+2201         tport->enable = 0;
+2202         tport->directory_id = -1;
+2203         tport->mgt_orb_timeout = 15;
+2204         tport->max_reconnect_timeout = 5;
+2205         tport->max_logins_per_lun = 1;
+2206 
+2207         tport->mgt_agt = sbp_management_agent_register(tport);
+2208         if (IS_ERR(tport->mgt_agt)) {
+2209                 ret = PTR_ERR(tport->mgt_agt);
+2210                 kfree(tpg);
+2211                 return ERR_PTR(ret);
+2212         }
+2213 
+2214         ret = core_tpg_register(&sbp_fabric_configfs->tf_ops, wwn,
+2215                         &tpg->se_tpg, (void *)tpg,
+2216                         TRANSPORT_TPG_TYPE_NORMAL);
+2217         if (ret < 0) {
+2218                 sbp_management_agent_unregister(tport->mgt_agt);
+2219                 kfree(tpg);
+2220                 return ERR_PTR(ret);
+2221         }
+2222 
+2223         return &tpg->se_tpg;
+2224 }
+2225 
+2226 static void sbp_drop_tpg(struct se_portal_group *se_tpg)
+2227 {
+2228         struct sbp_tpg *tpg = container_of(se_tpg, struct sbp_tpg, se_tpg);
+2229         struct sbp_tport *tport = tpg->tport;
+2230 
+2231         core_tpg_deregister(se_tpg);
+2232         sbp_management_agent_unregister(tport->mgt_agt);
+2233         tport->tpg = NULL;
+2234         kfree(tpg);
+2235 }
+2236 
+
+
