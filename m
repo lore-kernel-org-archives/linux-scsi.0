@@ -1,81 +1,72 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v7 2/9] Remove get_device() / put_device() pair from scsi_request_fn()
-Date: Thu, 06 Dec 2012 16:53:51 +0100
-Message-ID: <50C0BF8F.3060401@acm.org>
+Subject: [PATCH v7 3/9] Introduce scsi_device_being_removed()
+Date: Thu, 06 Dec 2012 16:55:01 +0100
+Message-ID: <50C0BFD5.9030604@acm.org>
 References: <50C0BEEE.4040907@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from georges.telenet-ops.be ([195.130.137.68]:48650 "EHLO
-	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424105Ab2LFPxx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2012 10:53:53 -0500
+Received: from gerard.telenet-ops.be ([195.130.132.48]:50984 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424105Ab2LFPzG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2012 10:55:06 -0500
 In-Reply-To: <50C0BEEE.4040907@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Jens Axboe <axboe@kernel.dk>
-
-Now that all scsi_request_fn() callers hold a reference on the
-SCSI device that function is invoked for and since
-blk_cleanup_queue() waits until scsi_request_fn() has finished
-it is safe to remove the get_device() / put_device() pair from
-scsi_request_fn().
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Acked-by: Tejun Heo <tj@kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>
 Cc: James Bottomley <JBottomley@Parallels.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>
 ---
- drivers/scsi/scsi_lib.c |   14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+ drivers/scsi/device_handler/scsi_dh.c |    7 ++-----
+ include/scsi/scsi_device.h            |    5 +++++
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5c67339..db4836bc 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1529,16 +1529,14 @@ static void scsi_softirq_done(struct request *rq)
-  * Lock status: IO request lock assumed to be held when called.
-  */
- static void scsi_request_fn(struct request_queue *q)
-+	__releases(q->queue_lock)
-+	__acquires(q->queue_lock)
- {
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost;
- 	struct scsi_cmnd *cmd;
- 	struct request *req;
+diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
+index 33e422e..78b3ddb 100644
+--- a/drivers/scsi/device_handler/scsi_dh.c
++++ b/drivers/scsi/device_handler/scsi_dh.c
+@@ -156,8 +156,7 @@ store_dh_state(struct device *dev, struct device_attribute *attr,
+ 	struct scsi_device_handler *scsi_dh;
+ 	int err = -EINVAL;
  
--	if(!get_device(&sdev->sdev_gendev))
--		/* We must be tearing the block queue down already */
--		return;
--
- 	/*
- 	 * To start with, we keep looping until the queue is empty, or until
- 	 * the host is no longer able to accept any more requests.
-@@ -1627,7 +1625,7 @@ static void scsi_request_fn(struct request_queue *q)
- 			goto out_delay;
- 	}
+-	if (sdev->sdev_state == SDEV_CANCEL ||
+-	    sdev->sdev_state == SDEV_DEL)
++	if (scsi_device_being_removed(sdev))
+ 		return -ENODEV;
  
--	goto out;
-+	return;
- 
-  not_ready:
- 	spin_unlock_irq(shost->host_lock);
-@@ -1646,12 +1644,6 @@ static void scsi_request_fn(struct request_queue *q)
- out_delay:
- 	if (sdev->device_busy == 0)
- 		blk_delay_queue(q, SCSI_QUEUE_DELAY);
--out:
--	/* must be careful here...if we trigger the ->remove() function
--	 * we cannot be holding the q lock */
--	spin_unlock_irq(q->queue_lock);
--	put_device(&sdev->sdev_gendev);
--	spin_lock_irq(q->queue_lock);
+ 	if (!sdev->scsi_dh_data) {
+@@ -400,9 +399,7 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
+ 	if (sdev->scsi_dh_data)
+ 		scsi_dh = sdev->scsi_dh_data->scsi_dh;
+ 	dev = get_device(&sdev->sdev_gendev);
+-	if (!scsi_dh || !dev ||
+-	    sdev->sdev_state == SDEV_CANCEL ||
+-	    sdev->sdev_state == SDEV_DEL)
++	if (!scsi_dh || !dev || scsi_device_being_removed(sdev))
+ 		err = SCSI_DH_NOSYS;
+ 	if (sdev->sdev_state == SDEV_OFFLINE)
+ 		err = SCSI_DH_DEV_OFFLINED;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 55367b0..767dd16 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -442,6 +442,11 @@ static inline int scsi_device_created(struct scsi_device *sdev)
+ 	return sdev->sdev_state == SDEV_CREATED ||
+ 		sdev->sdev_state == SDEV_CREATED_BLOCK;
  }
++static inline int scsi_device_being_removed(struct scsi_device *sdev)
++{
++	return sdev->sdev_state == SDEV_CANCEL ||
++		sdev->sdev_state == SDEV_DEL;
++}
  
- u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
+ /* accessor functions for the SCSI parameters */
+ static inline int scsi_device_sync(struct scsi_device *sdev)
 -- 
 1.7.10.4
 
