@@ -1,51 +1,49 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [patch] [SCSI] mpt3sas: cut and paste bug storing trigger mpi
-Date: Fri, 07 Dec 2012 09:41:56 +0100
-Message-ID: <953b00ff89996c4a3681b3c8f425462b@sf-mail.de>
-References: <20121207062801.GD18220@elgon.mountain>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v7 3/9] Introduce scsi_device_being_removed()
+Date: Fri, 07 Dec 2012 10:11:55 +0100
+Message-ID: <50C1B2DB.9070001@acm.org>
+References: <50C0BEEE.4040907@acm.org> <50C0BFD5.9030604@acm.org> <e6b81317b8ba62b6493cf67645cb1501@sf-mail.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121207062801.GD18220@elgon.mountain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from georges.telenet-ops.be ([195.130.137.68]:44994 "EHLO
+	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752131Ab2LGJL6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Dec 2012 04:11:58 -0500
+In-Reply-To: <e6b81317b8ba62b6493cf67645cb1501@sf-mail.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
-> ioc->diag_trigger_mpi is an SL_WH_MPI_TRIGGERS_T struct.
+On 12/07/12 09:40, Rolf Eike Beer wrote:
+>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>> index 55367b0..767dd16 100644
+>> --- a/include/scsi/scsi_device.h
+>> +++ b/include/scsi/scsi_device.h
+>> @@ -442,6 +442,11 @@ static inline int scsi_device_created(struct
+>> scsi_device *sdev)
+>>      return sdev->sdev_state == SDEV_CREATED ||
+>>          sdev->sdev_state == SDEV_CREATED_BLOCK;
+>>  }
+>> +static inline int scsi_device_being_removed(struct scsi_device *sdev)
+>> +{
+>> +    return sdev->sdev_state == SDEV_CANCEL ||
+>> +        sdev->sdev_state == SDEV_DEL;
+>> +}
+>>
+>>  /* accessor functions for the SCSI parameters */
+>>  static inline int scsi_device_sync(struct scsi_device *sdev)
 >
-> There is a cut and paste error here and SL_WH_EVENT_TRIGGERS_T is 
-> used
-> instead of SL_WH_MPI_TRIGGERS_T.  Since the SL_WH_EVENT_TRIGGERS_T is
-> smaller than SL_WH_MPI_TRIGGERS_T, it means we only clear part of the
-> buffer.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> Only needed in linux-next.
->
-> This is a static analysis patch.  Even though I'm pretty sure it's
-> correct, I'm not able to test it.
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> index 8af944d..3e35e64 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> @@ -3136,7 +3136,7 @@ _ctl_diag_trigger_mpi_store(struct device 
-> *cdev,
->  	spin_lock_irqsave(&ioc->diag_trigger_lock, flags);
->  	sz = min(sizeof(struct SL_WH_MPI_TRIGGERS_T), count);
->  	memset(&ioc->diag_trigger_mpi, 0,
-> -	    sizeof(struct SL_WH_EVENT_TRIGGERS_T));
-> +	    sizeof(struct SL_WH_MPI_TRIGGERS_T));
->  	memcpy(&ioc->diag_trigger_mpi, buf, sz);
->  	if (ioc->diag_trigger_mpi.ValidEntries > NUM_VALID_ENTRIES)
->  		ioc->diag_trigger_mpi.ValidEntries = NUM_VALID_ENTRIES;
+> Newline missing before the new function.
 
-Then just use sizeof(ioc->diag_trigger_mpi), then it's irrelevant how 
-that type is ever called.
+Hello Rolf,
 
-Eike
+Well spotted. Did you realize I had left out the newline on purpose, to 
+preserve consistency with the rest of the header file ?
+
+Thanks,
+
+Bart.
+
