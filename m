@@ -1,133 +1,77 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v7 5/9] Disallow changing the device state via sysfs into
- "deleted"
-Date: Fri, 07 Dec 2012 14:36:24 +0100
-Message-ID: <50C1F0D8.1020201@suse.de>
-References: <50C0BEEE.4040907@acm.org> <50C0C046.2060903@acm.org> <50C192CE.3000208@suse.de> <50C1E529.3090107@acm.org> <50C1F047.3020705@acm.org>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH v7 3/9] Introduce =?UTF-8?Q?scsi=5Fdevice=5Fbeing=5Fre?=
+ =?UTF-8?Q?moved=28=29?=
+Date: Fri, 07 Dec 2012 14:41:43 +0100
+Message-ID: <5aa7fb2f543e27a913760b5d953ea4c4@sf-mail.de>
+References: <50C0BEEE.4040907@acm.org> <50C0BFD5.9030604@acm.org>
+ <e6b81317b8ba62b6493cf67645cb1501@sf-mail.de> <50C1B2DB.9070001@acm.org>
+ <35b212f7c176c6782f048f01fe7e75dd@sf-mail.de> <50C1E46C.1020208@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53630 "EHLO mx2.suse.de"
+Received: from mail.sf-mail.de ([62.27.20.61]:56400 "EHLO mail.sf-mail.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030286Ab2LGNg1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Dec 2012 08:36:27 -0500
-In-Reply-To: <50C1F047.3020705@acm.org>
+	id S1030424Ab2LGNlo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Dec 2012 08:41:44 -0500
+In-Reply-To: <50C1E46C.1020208@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
 
-On 12/07/2012 02:33 PM, Bart Van Assche wrote:
-> On 12/07/12 13:46, Bart Van Assche wrote:
->> On 12/07/12 07:55, Hannes Reinecke wrote:
->>> On 12/06/2012 04:56 PM, Bart Van Assche wrote:
->>>> Changing the state of a SCSI device via sysfs into "cancel" or
->>>> "deleted" prevents scsi_remove_host() to remove these devices.
->>>> Hence do not allow this.
+Am , schrieb Bart Van Assche:
+> On 12/07/12 11:02, Rolf Eike Beer wrote:
+>> Am , schrieb Bart Van Assche:
+>>> On 12/07/12 09:40, Rolf Eike Beer wrote:
+>>>>> diff --git a/include/scsi/scsi_device.h 
+>>>>> b/include/scsi/scsi_device.h
+>>>>> index 55367b0..767dd16 100644
+>>>>> --- a/include/scsi/scsi_device.h
+>>>>> +++ b/include/scsi/scsi_device.h
+>>>>> @@ -442,6 +442,11 @@ static inline int scsi_device_created(struct
+>>>>> scsi_device *sdev)
+>>>>>      return sdev->sdev_state == SDEV_CREATED ||
+>>>>>          sdev->sdev_state == SDEV_CREATED_BLOCK;
+>>>>>  }
+>>>>> +static inline int scsi_device_being_removed(struct scsi_device 
+>>>>> *sdev)
+>>>>> +{
+>>>>> +    return sdev->sdev_state == SDEV_CANCEL ||
+>>>>> +        sdev->sdev_state == SDEV_DEL;
+>>>>> +}
+>>>>>
+>>>>>  /* accessor functions for the SCSI parameters */
+>>>>>  static inline int scsi_device_sync(struct scsi_device *sdev)
 >>>>
->>>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->>>> Cc: Tejun Heo <tj@kernel.org>
->>>> Cc: James Bottomley <JBottomley@Parallels.com>
->>>> Cc: Mike Christie <michaelc@cs.wisc.edu>
->>>> Cc: Hannes Reinecke <hare@suse.de>
->>>> ---
->>>>    drivers/scsi/scsi_sysfs.c |    7 +++++--
->>>>    1 file changed, 5 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->>>> index 4348f12..b319c20 100644
->>>> --- a/drivers/scsi/scsi_sysfs.c
->>>> +++ b/drivers/scsi/scsi_sysfs.c
->>>> @@ -591,13 +591,15 @@ sdev_store_delete(struct device *dev, struct
->>>> device_attribute *attr,
->>>>    };
->>>>    static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
->>>>
->>>> +#define INVALID_SDEV_STATE 0
->>>> +
->>> Shouldn't this become part of the enum?
->>> Defining it outside only confuses the compiler.
->>> And the unsuspecting user.
+>>>> Newline missing before the new function.
+>>>
+>>> Hello Rolf,
+>>>
+>>> Well spotted. Did you realize I had left out the newline on 
+>>> purpose,
+>>> to preserve consistency with the rest of the header file ?
 >>
->> I can do that, but that will require changes in every switch stateme=
-nt
->> on enum scsi_device_state because the kernel code is compiled with
->> -Wswitch. From the gcc manual: <quote>-Wswitch: Warn whenever a swit=
-ch
->> statement has an index of enumerated type and lacks a case for one o=
-r
->> more of the named codes of that enumeration. (The presence of a defa=
-ult
->> label prevents this warning.)</quote>
+>> Well, there is already a newline between scsi_device_created() and
+>> scsi_device_sync() where you insert your stuff so this sort of
+>> consistency is hard to spot.
 >
-> (replying to my own e-mail)
+> Hello Eike,
 >
-> Apparently there is only one such switch statement that has to be
-> updated. The add-on patch below realizes the above proposal:
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index d80714f..253fc30 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2158,6 +2158,8 @@ scsi_device_set_state(struct scsi_device *sdev,=
- enum scsi_device_state state)
->   		}
->   		break;
->
-> +	case INVALID_SDEV_STATE:
-> +		goto illegal;
->   	}
->   	sdev->sdev_state =3D state;
->   	return 0;
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 3293ba7..81d9d55 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -592,8 +592,6 @@ sdev_store_delete(struct device *dev, struct devi=
-ce_attribute *attr,
->   };
->   static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
->
-> -#define INVALID_SDEV_STATE 0
-> -
->   static ssize_t
->   store_state_field(struct device *dev, struct device_attribute *attr=
-,
->   		  const char *buf, size_t count)
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 83a6532..4281ff4 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -29,7 +29,11 @@ struct scsi_mode_data {
->    * scsi_lib:scsi_device_set_state().
->    */
->   enum scsi_device_state {
-> -	SDEV_CREATED =3D 1,	/* device created but not added to sysfs
-> +	INVALID_SDEV_STATE,	/* Not a valid SCSI device state but a
-> +				 * symbolic name that can be used wherever
-> +				 * a value is needed that is different of
-> +				 * any valid SCSI device state. */
-> +	SDEV_CREATED,		/* device created but not added to sysfs
->   				 * Only internal commands allowed (for inq) */
->   	SDEV_RUNNING,		/* device properly configured
->   				 * All commands allowed */
->
+> So you really care about these blank lines ? How about the patch 
+> below ?
 
-Much better.
-enum checking was the main intention for this, after all :-)
+Well, that was not the intent of the message. I just saw that you 
+introduced something that looked like an error. You explained why you 
+did it, I explained why I did not notice that before.
 
-Cheers,
+> It is identical to the patch at the start of this thread except that 
+> it
+> adds a blank line between each pair of functions in 
+> <scsi/scsi_device.h>
+> where there was not yet a blank line.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Since you already did the patch I think we should take this one ;)
+
+Eike
