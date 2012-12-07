@@ -1,77 +1,113 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH v7 3/9] Introduce =?UTF-8?Q?scsi=5Fdevice=5Fbeing=5Fre?=
- =?UTF-8?Q?moved=28=29?=
-Date: Fri, 07 Dec 2012 14:41:43 +0100
-Message-ID: <5aa7fb2f543e27a913760b5d953ea4c4@sf-mail.de>
-References: <50C0BEEE.4040907@acm.org> <50C0BFD5.9030604@acm.org>
- <e6b81317b8ba62b6493cf67645cb1501@sf-mail.de> <50C1B2DB.9070001@acm.org>
- <35b212f7c176c6782f048f01fe7e75dd@sf-mail.de> <50C1E46C.1020208@acm.org>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: Odd behavior of a "SAS-2" backplane with SGPIO commands
+Date: Fri, 7 Dec 2012 15:46:43 +0200
+Message-ID: <20121207134643.GA8912@reaktio.net>
+References: <5030E0F8.5@gmail.com>
+ <20120819131309.GQ19851@reaktio.net>
+ <CAOeNLupdpdDqQUhabgQhZjF0rP+XcTV6jF-XhYW3=KUfmW=R4Q@mail.gmail.com>
+ <20120910134711.GJ8912@reaktio.net>
+ <20120910180142.6adfd3f3@harpe.intellique.com>
+ <20120910160407.GK8912@reaktio.net>
+ <CAOeNLupUgCbNCfs8mOWgu4Xfv2S=Lrjt0Hdi42ijwsS1bSJi4w@mail.gmail.com>
+ <20120910161315.GL8912@reaktio.net>
+ <20121021124649.GS8912@reaktio.net>
+ <CAOeNLurHZPpo8mV3u5cTQ_mZL1buL4LUv1udyhn7fNZYFmOHQg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:56400 "EHLO mail.sf-mail.de"
+Received: from smtp.tele.fi ([192.89.123.25]:58459 "EHLO smtp.tele.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030424Ab2LGNlo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Dec 2012 08:41:44 -0500
-In-Reply-To: <50C1E46C.1020208@acm.org>
+	id S1030393Ab2LGNqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Dec 2012 08:46:47 -0500
+Content-Disposition: inline
+In-Reply-To: <CAOeNLurHZPpo8mV3u5cTQ_mZL1buL4LUv1udyhn7fNZYFmOHQg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
+To: Rich <rercola@pha.jhu.edu>
+Cc: Emmanuel Florac <eflorac@intellique.com>, Harri Olin <harri.olin@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Am , schrieb Bart Van Assche:
-> On 12/07/12 11:02, Rolf Eike Beer wrote:
->> Am , schrieb Bart Van Assche:
->>> On 12/07/12 09:40, Rolf Eike Beer wrote:
->>>>> diff --git a/include/scsi/scsi_device.h 
->>>>> b/include/scsi/scsi_device.h
->>>>> index 55367b0..767dd16 100644
->>>>> --- a/include/scsi/scsi_device.h
->>>>> +++ b/include/scsi/scsi_device.h
->>>>> @@ -442,6 +442,11 @@ static inline int scsi_device_created(struct
->>>>> scsi_device *sdev)
->>>>>      return sdev->sdev_state == SDEV_CREATED ||
->>>>>          sdev->sdev_state == SDEV_CREATED_BLOCK;
->>>>>  }
->>>>> +static inline int scsi_device_being_removed(struct scsi_device 
->>>>> *sdev)
->>>>> +{
->>>>> +    return sdev->sdev_state == SDEV_CANCEL ||
->>>>> +        sdev->sdev_state == SDEV_DEL;
->>>>> +}
->>>>>
->>>>>  /* accessor functions for the SCSI parameters */
->>>>>  static inline int scsi_device_sync(struct scsi_device *sdev)
->>>>
->>>> Newline missing before the new function.
->>>
->>> Hello Rolf,
->>>
->>> Well spotted. Did you realize I had left out the newline on 
->>> purpose,
->>> to preserve consistency with the rest of the header file ?
->>
->> Well, there is already a newline between scsi_device_created() and
->> scsi_device_sync() where you insert your stuff so this sort of
->> consistency is hard to spot.
->
-> Hello Eike,
->
-> So you really care about these blank lines ? How about the patch 
-> below ?
+On Thu, Nov 01, 2012 at 11:55:25AM -0400, Rich wrote:
+> On Sun, Oct 21, 2012 at 8:46 AM, Pasi K=E4rkk=E4inen <pasik@iki.fi> w=
+rote:
+> > On Mon, Sep 10, 2012 at 07:13:15PM +0300, Pasi K=E4rkk=E4inen wrote=
+:
+> >> On Mon, Sep 10, 2012 at 12:07:45PM -0400, Rich wrote:
+> >> > On Mon, Sep 10, 2012 at 12:04 PM, Pasi K=E4rkk=E4inen <pasik@iki=
+=2Efi> wrote:
+> >> > > On Mon, Sep 10, 2012 at 06:01:42PM +0200, Emmanuel Florac wrot=
+e:
+> >> > >> Le Mon, 10 Sep 2012 16:47:11 +0300
+> >> > >> Pasi K=E4rkk=E4inen <pasik@iki.fi> =E9crivait:
+> >> > >>
+> >> > >> > Any replies from Supermicro/LSI ?
+> >> > >> >
+> >> > >>
+> >> > >> Only loosely related, but Supermicro replaced recently my 846=
+E26 (dual
+> >> > >> expander backplane) with 846E16 (single expander). Apparently=
+ they
+> >> > >> gave up getting the E26 to work properly or something: LSI ex=
+pander
+> >> > >> firmware problem.
+> >> > >>
+> >> > >> In another (very large scale, high end) setup, many different=
+ 60 slots
+> >> > >> 5 LSI expanders chassis had a general failure of the 5th draw=
+er.
+> >> > >> Another LSI SAS-2 expander firmware problem.
+> >> > >>
+> >> > >> I could start a rant about the evil of proprietary firmware, =
+etc. You
+> >> > >> get my meaning :)
+> >> > >>
+> >> > >
+> >> > > Yeah, this is a good example why we're trying to get the LEDs =
+working with
+> >> > > direct attach (non-expander) backplanes :)
+> >> > >
+> >> > > -- Pasi
+> >> > >
+> >> >
+> >> > I don't have anything useful for people, other than that they ha=
+ve
+> >> > shown me an HBA firmware that fixes the LED problem but has othe=
+r
+> >> > problems they're still debugging.
+> >> >
+> >> > So there does exist code for this firmware which will fix this p=
+roblem.
+> >> >
+> >>
+> >> That's good to know! Let's hope the fix ends up in an official
+> >> LSI HBA firmware update in not-so-distant future.
+> >>
+> >
+> > Btw what was the version number of the LED-fixed LSI firmware?
+> > I'm just wondering in which firmware series the fix might end up be=
+ing included..
+> >
+> > Also: Any updates on this?
+> >
+> > Thanks,
+> >
+> > -- Pasi
+> >
+>=20
+> The fixed FW I had demonstrated for me was still 14.0.0.0 - I've been
+> told it'll be rolled into the FW release currently on the site and
+> posted at some point, but that they have no ETA for that.
+>=20
 
-Well, that was not the intent of the message. I just saw that you 
-introduced something that looked like an error. You explained why you 
-did it, I explained why I did not notice that before.
+I can now see P15 firmware available on LSI's website for 9211-8i (SAS2=
+008 based HBA).
+Sadly it's missing the releasenotes/changelogs for both the LSI bios an=
+d firmware..
 
-> It is identical to the patch at the start of this thread except that 
-> it
-> adds a blank line between each pair of functions in 
-> <scsi/scsi_device.h>
-> where there was not yet a blank line.
+-- Pasi
 
-Since you already did the patch I think we should take this one ;)
-
-Eike
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
