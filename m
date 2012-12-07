@@ -1,12 +1,12 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 2/6] qla2xxx: Ramp down queue depth for attached SCSI devices when driver resources are low.
-Date: Fri,  7 Dec 2012 02:30:50 -0500
-Message-ID: <1354865454-29964-3-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 3/6] qla2xxx: Enable target mode support for ISP83xx.
+Date: Fri,  7 Dec 2012 02:30:51 -0500
+Message-ID: <1354865454-29964-4-git-send-email-saurav.kashyap@qlogic.com>
 References: <1354865454-29964-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:41731 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:2348 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752672Ab2LGHtk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754536Ab2LGHtk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 7 Dec 2012 02:49:40 -0500
 In-Reply-To: <1354865454-29964-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,299 +14,455 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+From: Arun Easi <arun.easi@qlogic.com>
 
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Arun Easi <arun.easi@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
  drivers/scsi/qla2xxx/qla_dbg.c    |    2 +-
- drivers/scsi/qla2xxx/qla_def.h    |    9 +++
- drivers/scsi/qla2xxx/qla_gbl.h    |    1 +
- drivers/scsi/qla2xxx/qla_inline.h |   19 +++++++
- drivers/scsi/qla2xxx/qla_isr.c    |    4 ++
- drivers/scsi/qla2xxx/qla_os.c     |  107 ++++++++++++++++++++++++++++++++++--
- 6 files changed, 135 insertions(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |    8 ++
+ drivers/scsi/qla2xxx/qla_fw.h     |    3 +-
+ drivers/scsi/qla2xxx/qla_init.c   |    6 +-
+ drivers/scsi/qla2xxx/qla_isr.c    |   16 +++-
+ drivers/scsi/qla2xxx/qla_os.c     |    4 +
+ drivers/scsi/qla2xxx/qla_target.c |  159 +++++++++++++++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_target.h |   14 +++-
+ 8 files changed, 187 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 2f3e765..f7cdd25 100644
+index f7cdd25..e690d05 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -17,7 +17,7 @@
-  * |                              |                    | 0x113a         |
-  * | Device Discovery             |       0x2087       | 0x2020-0x2022, |
-  * |                              |                    | 0x2016         |
-- * | Queue Command and IO tracing |       0x3030       | 0x3006-0x300b  |
-+ * | Queue Command and IO tracing |       0x3031       | 0x3006-0x300b  |
-  * |                              |                    | 0x3027-0x3028  |
-  * |                              |                    | 0x302d-0x302e  |
-  * | DPC Thread                   |       0x401d       | 0x4002,0x4013  |
+@@ -39,7 +39,7 @@
+  * | MultiQ                       |       0xc00c       |		|
+  * | Misc                         |       0xd010       |		|
+  * | Target Mode		  |	  0xe06f       |		|
+- * | Target Mode Management	  |	  0xf071       |		|
++ * | Target Mode Management	  |	  0xf072       |		|
+  * | Target Mode Task Management  |	  0x1000b      |		|
+  * ----------------------------------------------------------------------
+  */
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index a84bb8d..06c6271 100644
+index 06c6271..b5fc478 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2536,6 +2536,7 @@ struct req_que {
- 	srb_t **outstanding_cmds;
- 	uint32_t current_outstanding_cmd;
- 	uint16_t num_outstanding_cmds;
-+#define	MAX_Q_DEPTH		32
- 	int max_q_depth;
+@@ -537,6 +537,8 @@ struct device_reg_25xxmq {
+ 	uint32_t req_q_out;
+ 	uint32_t rsp_q_in;
+ 	uint32_t rsp_q_out;
++	uint32_t atio_q_in;
++	uint32_t atio_q_out;
  };
  
-@@ -3058,6 +3059,12 @@ struct qla_hw_data {
- 	struct work_struct idc_state_handler;
- 	struct work_struct nic_core_unrecoverable;
+ typedef union {
+@@ -563,6 +565,9 @@ typedef union {
+ 	 &(reg)->u.isp2100.mailbox5 : \
+ 	 &(reg)->u.isp2300.rsp_q_out)
  
-+#define HOST_QUEUE_RAMPDOWN_INTERVAL           (60 * HZ)
-+#define HOST_QUEUE_RAMPUP_INTERVAL             (30 * HZ)
-+	unsigned long   host_last_rampdown_time;
-+	unsigned long   host_last_rampup_time;
-+	int             cfg_lun_q_depth;
++#define ISP_ATIO_Q_IN(vha) (vha->hw->tgt.atio_q_in)
++#define ISP_ATIO_Q_OUT(vha) (vha->hw->tgt.atio_q_out)
 +
- 	struct qlt_hw_data tgt;
- };
+ #define MAILBOX_REG(ha, reg, num) \
+ 	(IS_QLA2100(ha) || IS_QLA2200(ha) ? \
+ 	 (num < 8 ? \
+@@ -2559,6 +2564,8 @@ struct qlt_hw_data {
+ 	struct atio *atio_ring_ptr;	/* Current address. */
+ 	uint16_t atio_ring_index; /* Current index. */
+ 	uint16_t atio_q_length;
++	uint32_t __iomem *atio_q_in;
++	uint32_t __iomem *atio_q_out;
  
-@@ -3117,6 +3124,8 @@ typedef struct scsi_qla_host {
- #define MPI_RESET_NEEDED	19	/* Initiate MPI FW reset */
- #define ISP_QUIESCE_NEEDED	20	/* Driver need some quiescence */
- #define SCR_PENDING		21	/* SCR in target mode */
-+#define HOST_RAMP_DOWN_QUEUE_DEPTH     22
-+#define HOST_RAMP_UP_QUEUE_DEPTH       23
+ 	void *target_lport_ptr;
+ 	struct qla_tgt_func_tmpl *tgt_ops;
+@@ -2790,6 +2797,7 @@ struct qla_hw_data {
+ #define IS_PI_SPLIT_DET_CAPABLE_HBA(ha)	(IS_QLA83XX(ha))
+ #define IS_PI_SPLIT_DET_CAPABLE(ha)	(IS_PI_SPLIT_DET_CAPABLE_HBA(ha) && \
+     (((ha)->fw_attributes_h << 16 | (ha)->fw_attributes) & BIT_22))
++#define IS_ATIO_MSIX_CAPABLE(ha) (IS_QLA83XX(ha))
  
- 	uint32_t	device_flags;
- #define SWITCH_FOUND		BIT_0
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index fba0651..1732713 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -97,6 +97,7 @@ extern int qlport_down_retry;
- extern int ql2xplogiabsentdevice;
- extern int ql2xloginretrycount;
- extern int ql2xfdmienable;
-+extern int ql2xmaxqdepth;
- extern int ql2xallocfwdump;
- extern int ql2xextended_error_logging;
- extern int ql2xiidmaenable;
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index c0462c0..deb8618 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -213,3 +213,22 @@ qla2x00_gid_list_size(struct qla_hw_data *ha)
- {
- 	return sizeof(struct gid_list_info) * ha->max_fibre_devices;
- }
+ 	/* HBA serial number */
+ 	uint8_t		serial0;
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index be6d61a..7105d5e 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -300,7 +300,8 @@ struct init_cb_24xx {
+ 	uint32_t prio_request_q_address[2];
+ 
+ 	uint16_t msix;
+-	uint8_t reserved_2[6];
++	uint16_t msix_atio;
++	uint8_t reserved_2[4];
+ 
+ 	uint16_t atio_q_inpointer;
+ 	uint16_t atio_q_length;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 81e8cca..a581c85 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1964,7 +1964,7 @@ qla24xx_config_rings(struct scsi_qla_host *vha)
+ 		WRT_REG_DWORD(&reg->isp24.rsp_q_in, 0);
+ 		WRT_REG_DWORD(&reg->isp24.rsp_q_out, 0);
+ 	}
+-	qlt_24xx_config_rings(vha, reg);
++	qlt_24xx_config_rings(vha);
+ 
+ 	/* PCI posting */
+ 	RD_REG_DWORD(&ioreg->hccr);
+@@ -5579,6 +5579,8 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 	if (IS_T10_PI_CAPABLE(ha))
+ 		nv->frame_payload_size &= ~7;
+ 
++	qlt_81xx_config_nvram_stage1(vha, nv);
 +
-+static inline void
-+qla2x00_do_host_ramp_up(scsi_qla_host_t *vha)
-+{
-+	if (vha->hw->cfg_lun_q_depth >= ql2xmaxqdepth)
-+		return;
+ 	/* Reset Initialization control block */
+ 	memset(icb, 0, ha->init_cb_size);
+ 
+@@ -5619,6 +5621,8 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 	qla2x00_set_model_info(vha, nv->model_name, sizeof(nv->model_name),
+ 	    "QLE8XXX");
+ 
++	qlt_81xx_config_nvram_stage2(vha, icb);
 +
-+	/* Wait at least HOST_QUEUE_RAMPDOWN_INTERVAL before ramping up */
-+	if (time_before(jiffies, (vha->hw->host_last_rampdown_time +
-+	    HOST_QUEUE_RAMPDOWN_INTERVAL)))
-+		return;
-+
-+	/* Wait at least HOST_QUEUE_RAMPUP_INTERVAL between each ramp up */
-+	if (time_before(jiffies, (vha->hw->host_last_rampup_time +
-+	    HOST_QUEUE_RAMPUP_INTERVAL)))
-+		return;
-+
-+	set_bit(HOST_RAMP_UP_QUEUE_DEPTH, &vha->dpc_flags);
-+}
+ 	/* Use alternate WWN? */
+ 	if (nv->host_p & __constant_cpu_to_le32(BIT_15)) {
+ 		memcpy(icb->node_name, nv->alternate_node_name, WWN_SIZE);
 diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 4513073..1b192c8 100644
+index 1b192c8..26a3086 100644
 --- a/drivers/scsi/qla2xxx/qla_isr.c
 +++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1934,6 +1934,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+@@ -13,6 +13,8 @@
+ #include <scsi/scsi_bsg_fc.h>
+ #include <scsi/scsi_eh.h>
  
- 	/* Fast path completion. */
- 	if (comp_status == CS_COMPLETE && scsi_status == 0) {
-+		qla2x00_do_host_ramp_up(vha);
- 		qla2x00_process_completed_request(vha, req, handle);
- 
- 		return;
-@@ -2193,6 +2194,9 @@ out:
- 		    cp->cmnd[8], cp->cmnd[9], scsi_bufflen(cp), rsp_info_len,
- 		    resid_len, fw_resid_len);
- 
-+	if (!res)
-+		qla2x00_do_host_ramp_up(vha);
++#include "qla_target.h"
 +
- 	if (rsp->status_srb == NULL)
- 		sp->done(ha, sp, res);
- }
+ static void qla2x00_mbx_completion(scsi_qla_host_t *, uint16_t);
+ static void qla2x00_process_completed_request(struct scsi_qla_host *,
+ 	struct req_que *, uint32_t);
+@@ -2751,6 +2753,12 @@ static struct qla_init_msix_entry qla82xx_msix_entries[2] = {
+ 	{ "qla2xxx (rsp_q)", qla82xx_msix_rsp_q },
+ };
+ 
++static struct qla_init_msix_entry qla83xx_msix_entries[3] = {
++	{ "qla2xxx (default)", qla24xx_msix_default },
++	{ "qla2xxx (rsp_q)", qla24xx_msix_rsp_q },
++	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
++};
++
+ static void
+ qla24xx_disable_msix(struct qla_hw_data *ha)
+ {
+@@ -2831,9 +2839,13 @@ msix_failed:
+ 	}
+ 
+ 	/* Enable MSI-X vectors for the base queue */
+-	for (i = 0; i < 2; i++) {
++	for (i = 0; i < ha->msix_count; i++) {
+ 		qentry = &ha->msix_entries[i];
+-		if (IS_QLA82XX(ha)) {
++		if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
++			ret = request_irq(qentry->vector,
++				qla83xx_msix_entries[i].handler,
++				0, qla83xx_msix_entries[i].name, rsp);
++		} else if (IS_QLA82XX(ha)) {
+ 			ret = request_irq(qentry->vector,
+ 				qla82xx_msix_entries[i].handler,
+ 				0, qla82xx_msix_entries[i].name, rsp);
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 15b4037..9a826aa0 100644
+index 9a826aa0..519e7b8 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -111,8 +111,7 @@ MODULE_PARM_DESC(ql2xfdmienable,
- 		"Enables FDMI registrations. "
- 		"0 - no FDMI. Default is 1 - perform FDMI.");
+@@ -1812,6 +1812,9 @@ qla83xx_iospace_config(struct qla_hw_data *ha)
  
--#define MAX_Q_DEPTH    32
--static int ql2xmaxqdepth = MAX_Q_DEPTH;
-+int ql2xmaxqdepth = MAX_Q_DEPTH;
- module_param(ql2xmaxqdepth, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(ql2xmaxqdepth,
- 		"Maximum queue depth to set for each LUN. "
-@@ -720,8 +719,10 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ mqiobase_exit:
+ 	ha->msix_count = ha->max_rsp_queues + 1;
++
++	qlt_83xx_iospace_config(ha);
++
+ 	ql_dbg_pci(ql_dbg_init, ha->pdev, 0x011f,
+ 	    "MSIX Count:%d.\n", ha->msix_count);
+ 	return 0;
+@@ -2390,6 +2393,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
+ 		req_length = REQUEST_ENTRY_CNT_24XX;
+ 		rsp_length = RESPONSE_ENTRY_CNT_2300;
++		ha->tgt.atio_q_length = ATIO_ENTRY_CNT_24XX;
+ 		ha->max_loop_id = SNS_LAST_LOOP_ID_2300;
+ 		ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
+ 		ha->gid_list_info_size = 8;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index b57ef31..41c3a40 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -52,7 +52,7 @@ MODULE_PARM_DESC(qlini_mode,
+ 	"\"disabled\" - initiator mode will never be enabled; "
+ 	"\"enabled\" (default) - initiator mode will always stay enabled.");
+ 
+-static int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
++int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
+ 
+ /*
+  * From scsi/fc/fc_fcp.h
+@@ -1119,6 +1119,7 @@ static void qlt_send_notify_ack(struct scsi_qla_host *vha,
+ 	nack->u.isp24.srr_rx_id = ntfy->u.isp24.srr_rx_id;
+ 	nack->u.isp24.status = ntfy->u.isp24.status;
+ 	nack->u.isp24.status_subcode = ntfy->u.isp24.status_subcode;
++	nack->u.isp24.fw_handle = ntfy->u.isp24.fw_handle;
+ 	nack->u.isp24.exchange_address = ntfy->u.isp24.exchange_address;
+ 	nack->u.isp24.srr_rel_offs = ntfy->u.isp24.srr_rel_offs;
+ 	nack->u.isp24.srr_ui = ntfy->u.isp24.srr_ui;
+@@ -4647,7 +4648,6 @@ void
+ qlt_24xx_process_atio_queue(struct scsi_qla_host *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+ 	struct atio_from_isp *pkt;
+ 	int cnt, i;
+ 
+@@ -4675,26 +4675,28 @@ qlt_24xx_process_atio_queue(struct scsi_qla_host *vha)
  	}
  
- 	sp = qla2x00_get_sp(base_vha, fcport, GFP_ATOMIC);
--	if (!sp)
-+	if (!sp) {
-+		set_bit(HOST_RAMP_DOWN_QUEUE_DEPTH, &vha->dpc_flags);
- 		goto qc24_host_busy;
-+	}
- 
- 	sp->u.scmd.cmd = cmd;
- 	sp->type = SRB_SCSI_CMD;
-@@ -734,6 +735,7 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	if (rval != QLA_SUCCESS) {
- 		ql_dbg(ql_dbg_io + ql_dbg_verbose, vha, 0x3013,
- 		    "Start scsi failed rval=%d for cmd=%p.\n", rval, cmd);
-+		set_bit(HOST_RAMP_DOWN_QUEUE_DEPTH, &vha->dpc_flags);
- 		goto qc24_host_busy_free_sp;
- 	}
- 
-@@ -1458,6 +1460,81 @@ qla2x00_change_queue_type(struct scsi_device *sdev, int tag_type)
- 	return tag_type;
+ 	/* Adjust ring index */
+-	WRT_REG_DWORD(&reg->atio_q_out, ha->tgt.atio_ring_index);
++	WRT_REG_DWORD(ISP_ATIO_Q_OUT(vha), ha->tgt.atio_ring_index);
  }
  
-+static void
-+qla2x00_host_ramp_down_queuedepth(scsi_qla_host_t *vha)
+ void
+-qlt_24xx_config_rings(struct scsi_qla_host *vha, device_reg_t __iomem *reg)
++qlt_24xx_config_rings(struct scsi_qla_host *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
++	if (!QLA_TGT_MODE_ENABLED())
++		return;
+ 
+-/* FIXME: atio_q in/out for ha->mqenable=1..? */
+-	if (ha->mqenable) {
+-#if 0
+-		WRT_REG_DWORD(&reg->isp25mq.atio_q_in, 0);
+-		WRT_REG_DWORD(&reg->isp25mq.atio_q_out, 0);
+-		RD_REG_DWORD(&reg->isp25mq.atio_q_out);
+-#endif
+-	} else {
+-		/* Setup APTIO registers for target mode */
+-		WRT_REG_DWORD(&reg->isp24.atio_q_in, 0);
+-		WRT_REG_DWORD(&reg->isp24.atio_q_out, 0);
+-		RD_REG_DWORD(&reg->isp24.atio_q_out);
++	WRT_REG_DWORD(ISP_ATIO_Q_IN(vha), 0);
++	WRT_REG_DWORD(ISP_ATIO_Q_OUT(vha), 0);
++	RD_REG_DWORD(ISP_ATIO_Q_OUT(vha));
++
++	if (IS_ATIO_MSIX_CAPABLE(ha)) {
++		struct qla_msix_entry *msix = &ha->msix_entries[2];
++		struct init_cb_24xx *icb = (struct init_cb_24xx *)ha->init_cb;
++
++		icb->msix_atio = cpu_to_le16(msix->entry);
++		ql_dbg(ql_dbg_init, vha, 0xf072,
++		    "Registering ICB vector 0x%x for atio que.\n",
++		    msix->entry);
+ 	}
+ }
+ 
+@@ -4777,6 +4779,101 @@ qlt_24xx_config_nvram_stage2(struct scsi_qla_host *vha,
+ 	}
+ }
+ 
++void
++qlt_81xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_81xx *nv)
 +{
-+	scsi_qla_host_t *vp;
-+	struct Scsi_Host *shost;
-+	struct scsi_device *sdev;
 +	struct qla_hw_data *ha = vha->hw;
-+	unsigned long flags;
 +
-+	ha->host_last_rampdown_time = jiffies;
-+
-+	if (ha->cfg_lun_q_depth <= vha->host->cmd_per_lun)
++	if (!QLA_TGT_MODE_ENABLED())
 +		return;
 +
-+	if ((ha->cfg_lun_q_depth / 2) < vha->host->cmd_per_lun)
-+		ha->cfg_lun_q_depth = vha->host->cmd_per_lun;
-+	else
-+		ha->cfg_lun_q_depth = ha->cfg_lun_q_depth / 2;
-+
-+	/*
-+	 * Geometrically ramp down the queue depth for all devices on this
-+	 * adapter
-+	 */
-+	spin_lock_irqsave(&ha->vport_slock, flags);
-+	list_for_each_entry(vp, &ha->vp_list, list) {
-+		shost = vp->host;
-+		shost_for_each_device(sdev, shost) {
-+			if (sdev->queue_depth > shost->cmd_per_lun) {
-+				if (sdev->queue_depth < ha->cfg_lun_q_depth)
-+					continue;
-+				ql_log(ql_log_warn, vp, 0x3031,
-+				    "%ld:%d:%d: Ramping down queue depth to %d",
-+				    vp->host_no, sdev->id, sdev->lun,
-+				    ha->cfg_lun_q_depth);
-+				qla2x00_change_queue_depth(sdev,
-+				    ha->cfg_lun_q_depth, SCSI_QDEPTH_DEFAULT);
-+			}
++	if (qla_tgt_mode_enabled(vha)) {
++		if (!ha->tgt.saved_set) {
++			/* We save only once */
++			ha->tgt.saved_exchange_count = nv->exchange_count;
++			ha->tgt.saved_firmware_options_1 =
++			    nv->firmware_options_1;
++			ha->tgt.saved_firmware_options_2 =
++			    nv->firmware_options_2;
++			ha->tgt.saved_firmware_options_3 =
++			    nv->firmware_options_3;
++			ha->tgt.saved_set = 1;
 +		}
-+	}
-+	spin_unlock_irqrestore(&ha->vport_slock, flags);
 +
-+	return;
++		nv->exchange_count = __constant_cpu_to_le16(0xFFFF);
++
++		/* Enable target mode */
++		nv->firmware_options_1 |= __constant_cpu_to_le32(BIT_4);
++
++		/* Disable ini mode, if requested */
++		if (!qla_ini_mode_enabled(vha))
++			nv->firmware_options_1 |=
++			    __constant_cpu_to_le32(BIT_5);
++
++		/* Disable Full Login after LIP */
++		nv->firmware_options_1 &= __constant_cpu_to_le32(~BIT_13);
++		/* Enable initial LIP */
++		nv->firmware_options_1 &= __constant_cpu_to_le32(~BIT_9);
++		/* Enable FC tapes support */
++		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_12);
++		/* Disable Full Login after LIP */
++		nv->host_p &= __constant_cpu_to_le32(~BIT_10);
++		/* Enable target PRLI control */
++		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_14);
++	} else {
++		if (ha->tgt.saved_set) {
++			nv->exchange_count = ha->tgt.saved_exchange_count;
++			nv->firmware_options_1 =
++			    ha->tgt.saved_firmware_options_1;
++			nv->firmware_options_2 =
++			    ha->tgt.saved_firmware_options_2;
++			nv->firmware_options_3 =
++			    ha->tgt.saved_firmware_options_3;
++		}
++		return;
++	}
++
++	/* out-of-order frames reassembly */
++	nv->firmware_options_3 |= BIT_6|BIT_9;
++
++	if (ha->tgt.enable_class_2) {
++		if (vha->flags.init_done)
++			fc_host_supported_classes(vha->host) =
++				FC_COS_CLASS2 | FC_COS_CLASS3;
++
++		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_8);
++	} else {
++		if (vha->flags.init_done)
++			fc_host_supported_classes(vha->host) = FC_COS_CLASS3;
++
++		nv->firmware_options_2 &= ~__constant_cpu_to_le32(BIT_8);
++	}
 +}
 +
-+static void
-+qla2x00_host_ramp_up_queuedepth(scsi_qla_host_t *vha)
++void
++qlt_81xx_config_nvram_stage2(struct scsi_qla_host *vha,
++	struct init_cb_81xx *icb)
 +{
-+	scsi_qla_host_t *vp;
-+	struct Scsi_Host *shost;
-+	struct scsi_device *sdev;
 +	struct qla_hw_data *ha = vha->hw;
++
++	if (!QLA_TGT_MODE_ENABLED())
++		return;
++
++	if (ha->tgt.node_name_set) {
++		memcpy(icb->node_name, ha->tgt.tgt_node_name, WWN_SIZE);
++		icb->firmware_options_1 |= __constant_cpu_to_le32(BIT_14);
++	}
++}
++
++void
++qlt_83xx_iospace_config(struct qla_hw_data *ha)
++{
++	if (!QLA_TGT_MODE_ENABLED())
++		return;
++
++	ha->msix_count += 1; /* For ATIO Q */
++}
++
+ int
+ qlt_24xx_process_response_error(struct scsi_qla_host *vha,
+ 	struct sts_entry_24xx *pkt)
+@@ -4809,11 +4906,41 @@ qlt_probe_one_stage1(struct scsi_qla_host *base_vha, struct qla_hw_data *ha)
+ 	if (!QLA_TGT_MODE_ENABLED())
+ 		return;
+ 
++	if  (ha->mqenable || IS_QLA83XX(ha)) {
++		ISP_ATIO_Q_IN(base_vha) = &ha->mqiobase->isp25mq.atio_q_in;
++		ISP_ATIO_Q_OUT(base_vha) = &ha->mqiobase->isp25mq.atio_q_out;
++	} else {
++		ISP_ATIO_Q_IN(base_vha) = &ha->iobase->isp24.atio_q_in;
++		ISP_ATIO_Q_OUT(base_vha) = &ha->iobase->isp24.atio_q_out;
++	}
++
+ 	mutex_init(&ha->tgt.tgt_mutex);
+ 	mutex_init(&ha->tgt.tgt_host_action_mutex);
+ 	qlt_clear_mode(base_vha);
+ }
+ 
++irqreturn_t
++qla83xx_msix_atio_q(int irq, void *dev_id)
++{
++	struct rsp_que *rsp;
++	scsi_qla_host_t	*vha;
++	struct qla_hw_data *ha;
 +	unsigned long flags;
 +
-+	ha->host_last_rampup_time = jiffies;
-+	ha->cfg_lun_q_depth++;
++	rsp = (struct rsp_que *) dev_id;
++	ha = rsp->hw;
++	vha = pci_get_drvdata(ha->pdev);
 +
-+	/*
-+	 * Linearly ramp up the queue depth for all devices on this
-+	 * adapter
-+	 */
-+	spin_lock_irqsave(&ha->vport_slock, flags);
-+	list_for_each_entry(vp, &ha->vp_list, list) {
-+		shost = vp->host;
-+		shost_for_each_device(sdev, shost) {
-+			if (sdev->queue_depth > ha->cfg_lun_q_depth)
-+				continue;
-+			qla2x00_change_queue_depth(sdev, ha->cfg_lun_q_depth,
-+			    SCSI_QDEPTH_RAMP_UP);
-+		}
-+	}
-+	spin_unlock_irqrestore(&ha->vport_slock, flags);
++	spin_lock_irqsave(&ha->hardware_lock, flags);
 +
-+	return;
++	qlt_24xx_process_atio_queue(vha);
++	qla24xx_process_response_queue(vha, rsp);
++
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++	return IRQ_HANDLED;
 +}
 +
- /**
-  * qla2x00_config_dma_addressing() - Configure OS DMA addressing method.
-  * @ha: HA context
-@@ -2235,6 +2312,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	ha->init_cb_size = sizeof(init_cb_t);
- 	ha->link_data_rate = PORT_SPEED_UNKNOWN;
- 	ha->optrom_size = OPTROM_SIZE_2300;
-+	ha->cfg_lun_q_depth = ql2xmaxqdepth;
+ int
+ qlt_mem_alloc(struct qla_hw_data *ha)
+ {
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index fc61d6a..ff9ccb9 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -162,7 +162,7 @@ struct imm_ntfy_from_isp {
+ 			uint16_t srr_rx_id;
+ 			uint16_t status;
+ 			uint8_t  status_subcode;
+-			uint8_t  reserved_3;
++			uint8_t  fw_handle;
+ 			uint32_t exchange_address;
+ 			uint32_t srr_rel_offs;
+ 			uint16_t srr_ui;
+@@ -218,7 +218,7 @@ struct nack_to_isp {
+ 			uint16_t srr_rx_id;
+ 			uint16_t status;
+ 			uint8_t  status_subcode;
+-			uint8_t  reserved_3;
++			uint8_t  fw_handle;
+ 			uint32_t exchange_address;
+ 			uint32_t srr_rel_offs;
+ 			uint16_t srr_ui;
+@@ -949,6 +949,7 @@ extern void qlt_update_vp_map(struct scsi_qla_host *, int);
+  * is not set. Right now, ha value is ignored.
+  */
+ #define QLA_TGT_MODE_ENABLED() (ql2x_ini_mode != QLA2XXX_INI_MODE_ENABLED)
++extern int ql2x_ini_mode;
  
- 	/* Assign ISP specific operations. */
- 	if (IS_QLA2100(ha)) {
-@@ -4610,6 +4688,18 @@ qla2x00_do_dpc(void *data)
- 			qla2xxx_flash_npiv_conf(base_vha);
- 		}
+ static inline bool qla_tgt_mode_enabled(struct scsi_qla_host *ha)
+ {
+@@ -986,12 +987,15 @@ extern void qlt_vport_create(struct scsi_qla_host *, struct qla_hw_data *);
+ extern void qlt_rff_id(struct scsi_qla_host *, struct ct_sns_req *);
+ extern void qlt_init_atio_q_entries(struct scsi_qla_host *);
+ extern void qlt_24xx_process_atio_queue(struct scsi_qla_host *);
+-extern void qlt_24xx_config_rings(struct scsi_qla_host *,
+-	device_reg_t __iomem *);
++extern void qlt_24xx_config_rings(struct scsi_qla_host *);
+ extern void qlt_24xx_config_nvram_stage1(struct scsi_qla_host *,
+ 	struct nvram_24xx *);
+ extern void qlt_24xx_config_nvram_stage2(struct scsi_qla_host *,
+ 	struct init_cb_24xx *);
++extern void qlt_81xx_config_nvram_stage2(struct scsi_qla_host *,
++	struct init_cb_81xx *);
++extern void qlt_81xx_config_nvram_stage1(struct scsi_qla_host *,
++	struct nvram_81xx *);
+ extern int qlt_24xx_process_response_error(struct scsi_qla_host *,
+ 	struct sts_entry_24xx *);
+ extern void qlt_modify_vp_config(struct scsi_qla_host *,
+@@ -1001,5 +1005,7 @@ extern int qlt_mem_alloc(struct qla_hw_data *);
+ extern void qlt_mem_free(struct qla_hw_data *);
+ extern void qlt_stop_phase1(struct qla_tgt *);
+ extern void qlt_stop_phase2(struct qla_tgt *);
++extern irqreturn_t qla83xx_msix_atio_q(int, void *);
++extern void qlt_83xx_iospace_config(struct qla_hw_data *);
  
-+		if (test_and_clear_bit(HOST_RAMP_DOWN_QUEUE_DEPTH,
-+		    &base_vha->dpc_flags)) {
-+			/* Prevents simultaneous ramp up and down */
-+			clear_bit(HOST_RAMP_UP_QUEUE_DEPTH,
-+			    &base_vha->dpc_flags);
-+			qla2x00_host_ramp_down_queuedepth(base_vha);
-+		}
-+
-+		if (test_and_clear_bit(HOST_RAMP_UP_QUEUE_DEPTH,
-+		    &base_vha->dpc_flags))
-+			qla2x00_host_ramp_up_queuedepth(base_vha);
-+
- 		if (!ha->interrupts_on)
- 			ha->isp_ops->enable_intrs(ha);
- 
-@@ -4807,7 +4897,9 @@ qla2x00_timer(scsi_qla_host_t *vha)
- 	    test_bit(ISP_UNRECOVERABLE, &vha->dpc_flags) ||
- 	    test_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags) ||
- 	    test_bit(VP_DPC_NEEDED, &vha->dpc_flags) ||
--	    test_bit(RELOGIN_NEEDED, &vha->dpc_flags))) {
-+	    test_bit(RELOGIN_NEEDED, &vha->dpc_flags) ||
-+	    test_bit(HOST_RAMP_DOWN_QUEUE_DEPTH, &vha->dpc_flags) ||
-+	    test_bit(HOST_RAMP_UP_QUEUE_DEPTH, &vha->dpc_flags))) {
- 		ql_dbg(ql_dbg_timer, vha, 0x600b,
- 		    "isp_abort_needed=%d loop_resync_needed=%d "
- 		    "fcport_update_needed=%d start_dpc=%d "
-@@ -4820,12 +4912,15 @@ qla2x00_timer(scsi_qla_host_t *vha)
- 		ql_dbg(ql_dbg_timer, vha, 0x600c,
- 		    "beacon_blink_needed=%d isp_unrecoverable=%d "
- 		    "fcoe_ctx_reset_needed=%d vp_dpc_needed=%d "
--		    "relogin_needed=%d.\n",
-+		    "relogin_needed=%d, host_ramp_down_needed=%d "
-+		    "host_ramp_up_needed=%d.\n",
- 		    test_bit(BEACON_BLINK_NEEDED, &vha->dpc_flags),
- 		    test_bit(ISP_UNRECOVERABLE, &vha->dpc_flags),
- 		    test_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags),
- 		    test_bit(VP_DPC_NEEDED, &vha->dpc_flags),
--		    test_bit(RELOGIN_NEEDED, &vha->dpc_flags));
-+		    test_bit(RELOGIN_NEEDED, &vha->dpc_flags),
-+		    test_bit(HOST_RAMP_UP_QUEUE_DEPTH, &vha->dpc_flags),
-+		    test_bit(HOST_RAMP_DOWN_QUEUE_DEPTH, &vha->dpc_flags));
- 		qla2xxx_wake_dpc(vha);
- 	}
- 
+ #endif /* __QLA_TARGET_H */
 -- 
 1.7.7
 
