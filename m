@@ -1,144 +1,167 @@
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [PATCH] scsi_ram: a RAM-based SCSI driver
-Date: Fri, 7 Dec 2012 13:20:14 +0200
-Message-ID: <20121207112014.GA4466@otc-wbsnb-06>
-References: <1354725918-14713-1-git-send-email-kirill.shutemov@linux.intel.com>
- <50C06EC3.20002@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v7 3/9] Introduce scsi_device_being_removed()
+Date: Fri, 07 Dec 2012 13:43:24 +0100
+Message-ID: <50C1E46C.1020208@acm.org>
+References: <50C0BEEE.4040907@acm.org> <50C0BFD5.9030604@acm.org> <e6b81317b8ba62b6493cf67645cb1501@sf-mail.de> <50C1B2DB.9070001@acm.org> <35b212f7c176c6782f048f01fe7e75dd@sf-mail.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="pf9I7BMVVzbSWLtt"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <50C06EC3.20002@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, Stephen Cameron <stephenmcameron@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Wilcox <willy@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:53363 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964900Ab2LGMn2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Dec 2012 07:43:28 -0500
+In-Reply-To: <35b212f7c176c6782f048f01fe7e75dd@sf-mail.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, Hannes Reinecke <hare@suse.de>
+
+On 12/07/12 11:02, Rolf Eike Beer wrote:
+> Am , schrieb Bart Van Assche:
+>> On 12/07/12 09:40, Rolf Eike Beer wrote:
+>>>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>>>> index 55367b0..767dd16 100644
+>>>> --- a/include/scsi/scsi_device.h
+>>>> +++ b/include/scsi/scsi_device.h
+>>>> @@ -442,6 +442,11 @@ static inline int scsi_device_created(struct
+>>>> scsi_device *sdev)
+>>>>      return sdev->sdev_state == SDEV_CREATED ||
+>>>>          sdev->sdev_state == SDEV_CREATED_BLOCK;
+>>>>  }
+>>>> +static inline int scsi_device_being_removed(struct scsi_device *sdev)
+>>>> +{
+>>>> +    return sdev->sdev_state == SDEV_CANCEL ||
+>>>> +        sdev->sdev_state == SDEV_DEL;
+>>>> +}
+>>>>
+>>>>  /* accessor functions for the SCSI parameters */
+>>>>  static inline int scsi_device_sync(struct scsi_device *sdev)
+>>>
+>>> Newline missing before the new function.
+>>
+>> Hello Rolf,
+>>
+>> Well spotted. Did you realize I had left out the newline on purpose,
+>> to preserve consistency with the rest of the header file ?
+> 
+> Well, there is already a newline between scsi_device_created() and 
+> scsi_device_sync() where you insert your stuff so this sort of 
+> consistency is hard to spot.
+
+Hello Eike,
+
+So you really care about these blank lines ? How about the patch below ?
+It is identical to the patch at the start of this thread except that it
+adds a blank line between each pair of functions in <scsi/scsi_device.h>
+where there was not yet a blank line.
+
+---
+ drivers/scsi/device_handler/scsi_dh.c |    7 ++-----
+ include/scsi/scsi_device.h            |   15 +++++++++++++++
+ 2 files changed, 17 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
+index 33e422e..78b3ddb 100644
+--- a/drivers/scsi/device_handler/scsi_dh.c
++++ b/drivers/scsi/device_handler/scsi_dh.c
+@@ -156,8 +156,7 @@ store_dh_state(struct device *dev, struct device_attribute *attr,
+ 	struct scsi_device_handler *scsi_dh;
+ 	int err = -EINVAL;
+ 
+-	if (sdev->sdev_state == SDEV_CANCEL ||
+-	    sdev->sdev_state == SDEV_DEL)
++	if (scsi_device_being_removed(sdev))
+ 		return -ENODEV;
+ 
+ 	if (!sdev->scsi_dh_data) {
+@@ -400,9 +399,7 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
+ 	if (sdev->scsi_dh_data)
+ 		scsi_dh = sdev->scsi_dh_data->scsi_dh;
+ 	dev = get_device(&sdev->sdev_gendev);
+-	if (!scsi_dh || !dev ||
+-	    sdev->sdev_state == SDEV_CANCEL ||
+-	    sdev->sdev_state == SDEV_DEL)
++	if (!scsi_dh || !dev || scsi_device_being_removed(sdev))
+ 		err = SCSI_DH_NOSYS;
+ 	if (sdev->sdev_state == SDEV_OFFLINE)
+ 		err = SCSI_DH_DEV_OFFLINED;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 55367b0..b9b19ca 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -426,54 +426,69 @@ static inline unsigned int sdev_id(struct scsi_device *sdev)
+ /*
+  * checks for positions of the SCSI state machine
+  */
++
+ static inline int scsi_device_online(struct scsi_device *sdev)
+ {
+ 	return (sdev->sdev_state != SDEV_OFFLINE &&
+ 		sdev->sdev_state != SDEV_TRANSPORT_OFFLINE &&
+ 		sdev->sdev_state != SDEV_DEL);
+ }
++
+ static inline int scsi_device_blocked(struct scsi_device *sdev)
+ {
+ 	return sdev->sdev_state == SDEV_BLOCK ||
+ 		sdev->sdev_state == SDEV_CREATED_BLOCK;
+ }
++
+ static inline int scsi_device_created(struct scsi_device *sdev)
+ {
+ 	return sdev->sdev_state == SDEV_CREATED ||
+ 		sdev->sdev_state == SDEV_CREATED_BLOCK;
+ }
+ 
++static inline int scsi_device_being_removed(struct scsi_device *sdev)
++{
++	return sdev->sdev_state == SDEV_CANCEL ||
++		sdev->sdev_state == SDEV_DEL;
++}
++
+ /* accessor functions for the SCSI parameters */
+ static inline int scsi_device_sync(struct scsi_device *sdev)
+ {
+ 	return sdev->sdtr;
+ }
++
+ static inline int scsi_device_wide(struct scsi_device *sdev)
+ {
+ 	return sdev->wdtr;
+ }
++
+ static inline int scsi_device_dt(struct scsi_device *sdev)
+ {
+ 	return sdev->ppr;
+ }
++
+ static inline int scsi_device_dt_only(struct scsi_device *sdev)
+ {
+ 	if (sdev->inquiry_len < 57)
+ 		return 0;
+ 	return (sdev->inquiry[56] & 0x0c) == 0x04;
+ }
++
+ static inline int scsi_device_ius(struct scsi_device *sdev)
+ {
+ 	if (sdev->inquiry_len < 57)
+ 		return 0;
+ 	return sdev->inquiry[56] & 0x01;
+ }
++
+ static inline int scsi_device_qas(struct scsi_device *sdev)
+ {
+ 	if (sdev->inquiry_len < 57)
+ 		return 0;
+ 	return sdev->inquiry[56] & 0x02;
+ }
++
+ static inline int scsi_device_enclosure(struct scsi_device *sdev)
+ {
+ 	return sdev->inquiry ? (sdev->inquiry[6] & (1<<6)) : 1;
+-- 
+1.7.10.4
 
 
---pf9I7BMVVzbSWLtt
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Dec 06, 2012 at 11:09:07AM +0100, Paolo Bonzini wrote:
-> Il 05/12/2012 17:45, Kirill A. Shutemov ha scritto:
-> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> >=20
-> > This driver is intended to run as fast as possible, hence the options to
-> > discard writes and reads. It's designed to let us find latency issues
-> > elsewhere in the storage stack (eg filesystem, block layer, scsi layer).
-> >=20
-> > There are a few different options, controlled through module parameters.
-> > The sector size and disc capacity are load-time parameters, but the
-> > parameters affecting performance are tweakable at runtime.
-> >=20
-> > By default, it'll allocate half a gigabyte of RAM to use as a ramdisc;
-> > you can change this with the `capacity' module parameter.
->=20
-> Is this that much faster than scsi-debug?  The discarding options surely
-> can be added there.
-
-scsi_ram is about 9% faster (without fake_rw/throw_away_*) on my machine:
-
-fio job file (slightly modified ssd-test):
-
-[global]
-bs=3D4k
-ioengine=3Dlibaio
-iodepth=3D4
-size=3D10g
-direct=3D1
-runtime=3D60
-filename=3D/dev/sdb
-
-[seq-read]
-rw=3Dread
-stonewall
-
-[rand-read]
-rw=3Drandread
-stonewall
-
-[seq-write]
-rw=3Dwrite
-stonewall
-
-[rand-write]
-rw=3Drandwrite
-stonewall
-
-----------------------
-
-scsi_ram capacity=3D41943040:
-
-Run status group 0 (all jobs):
-   READ: io=3D6975.2MB, aggrb=3D119040KB/s, minb=3D119040KB/s, maxb=3D11904=
-0KB/s, mint=3D60001msec, maxt=3D60001msec
-
-Run status group 1 (all jobs):
-   READ: io=3D7006.8MB, aggrb=3D119579KB/s, minb=3D119579KB/s, maxb=3D11957=
-9KB/s, mint=3D60001msec, maxt=3D60001msec
-
-Run status group 2 (all jobs):
-  WRITE: io=3D7009.9MB, aggrb=3D119632KB/s, minb=3D119632KB/s, maxb=3D11963=
-2KB/s, mint=3D60001msec, maxt=3D60001msec
-
-Run status group 3 (all jobs):
-  WRITE: io=3D6919.8MB, aggrb=3D118094KB/s, minb=3D118094KB/s, maxb=3D11809=
-4KB/s, mint=3D60001msec, maxt=3D60001msec
-
-Disk stats (read/write):
-  sdb: ios=3D3579612/3559798, merge=3D0/0, ticks=3D128180/125565, in_queue=
-=3D240098, util=3D77.79%
-
-----------------------
-
-scsi_debug dev_size_mb=3D10240 delay=3D0:
-
-Run status group 0 (all jobs):
-   READ: io=3D6393.2MB, aggrb=3D109110KB/s, minb=3D109110KB/s, maxb=3D10911=
-0KB/s, mint=3D60000msec, maxt=3D60000msec
-
-Run status group 1 (all jobs):
-   READ: io=3D6327.6MB, aggrb=3D107988KB/s, minb=3D107988KB/s, maxb=3D10798=
-8KB/s, mint=3D60001msec, maxt=3D60001msec
-
-Run status group 2 (all jobs):
-  WRITE: io=3D6473.3MB, aggrb=3D110474KB/s, minb=3D110474KB/s, maxb=3D11047=
-4KB/s, mint=3D60001msec, maxt=3D60001msec
-
-Run status group 3 (all jobs):
-  WRITE: io=3D6330.5MB, aggrb=3D108037KB/s, minb=3D108037KB/s, maxb=3D10803=
-7KB/s, mint=3D60001msec, maxt=3D60001msec
-
-Disk stats (read/write):
-  sdb: ios=3D3256653/3272376, merge=3D0/0, ticks=3D54502/54150, in_queue=3D=
-101165, util=3D42.09%
-
---=20
- Kirill A. Shutemov
-
---pf9I7BMVVzbSWLtt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQwdDuAAoJEAd+omnVudOMmsUP/0QkaIWSavjw48K6qyvmcXsa
-tzzI1sz4iqesYFwfemE49CcEQOYPU7RZJj+Vt4MMEbe5YPY5CUYnxb1JFtDUL0Qm
-hO+5EVcuMvM96ljXkIw1Zt0tk2M9IDi81OQweByP5R8YFeubgZP3tNWPr8dCtC4B
-GMiQJD7WTSwoc4Gj6DnMX84sbjWChnrJJliqjH/YM6be97T34rwEFY44AzVYCF64
-4r4tU1oHeUV290R1D3MLONiPHvQQa+4DHZfcJQsK7PXhFuEEBktXbHWj34lJrjo8
-Y2N/unV+ZiiFsAB76JKxvpnOR2QGD8JEl37fg5fPxha96uSv9DlUBaF4oDQVgqCQ
-CefJJI4yjG236UsbEOdlAl/oyeNe5hvHJCbpvn6cKtz0EQnSD5ZqrRunSAtT1DhT
-DPWmuKIKuVA/XigdkbijICWsBAsKQbnTWQ1/il+EuVfwtilOTXsS+dQYKzGM7fVh
-EqvoY1iOL3qq0dRPRaF05kiEYnd32e8D5tiRBc1C2YN2kx5hie0hd7OZWw6Lgb2M
-qO20lntKXICQuHEGjdNoL6c4lIbHWNxnWLL44VBD+iMzU64UI6sEGFBQRrGQd9Gs
-QDZ2UazZeAvnqUh58myrQxwZ3I42o61oQYx6YJx2wi2pajTT/3ftj1PL3s1GOMp6
-yzpPoB3SDk/raXZFY3yM
-=RR8t
------END PGP SIGNATURE-----
-
---pf9I7BMVVzbSWLtt--
