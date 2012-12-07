@@ -1,37 +1,32 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v7 8/9] Make scsi_remove_host() wait until error handling
- finished
-Date: Fri, 07 Dec 2012 07:58:02 +0100
-Message-ID: <50C1937A.6090803@suse.de>
-References: <50C0BEEE.4040907@acm.org> <50C0C0FC.7030701@acm.org>
+Subject: Re: [PATCH v7 9/9] Avoid that scsi_device_set_state() triggers a
+ race
+Date: Fri, 07 Dec 2012 07:59:19 +0100
+Message-ID: <50C193C7.80007@suse.de>
+References: <50C0BEEE.4040907@acm.org> <50C0C13A.9060009@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34180 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:34209 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755215Ab2LGG6D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Dec 2012 01:58:03 -0500
-In-Reply-To: <50C0C0FC.7030701@acm.org>
+	id S1751209Ab2LGG7V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Dec 2012 01:59:21 -0500
+In-Reply-To: <50C0C13A.9060009@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-On 12/06/2012 04:59 PM, Bart Van Assche wrote:
-> A SCSI LLD may start cleaning up host resources as soon as
-> scsi_remove_host() returns. These host resources may be needed by
-> the LLD in an implementation of one of the eh_* functions. So if
-> one of the eh_* functions is in progress when scsi_remove_host()
-> is invoked, wait until the eh_* function has finished. Also, do
-> not invoke any of the eh_* functions after scsi_remove_host() has
-> started.
+On 12/06/2012 05:00 PM, Bart Van Assche wrote:
+> Make concurrent invocations of scsi_device_set_state() safe.
 >
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Cc: James Bottomley <JBottomley@Parallels.com>
+> Cc: Tejun Heo <tj@kernel.org>
 > Cc: Hannes Reinecke <hare@suse.de>
 > Cc: Mike Christie <michaelc@cs.wisc.edu>
-> Cc: Tejun Heo <tj@kernel.org>
 Acked-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
