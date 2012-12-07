@@ -1,78 +1,38 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
- register field names
-Date: Fri, 7 Dec 2012 08:17:38 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org>
-References: <20121205205740.13851.43284.stgit@bhelgaas.mtv.corp.google.com>
+From: Or Gerlitz <or.gerlitz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 00/11] First pass at merging Bart's HA work
+Date: Fri, 7 Dec 2012 10:19:15 +0200
+Message-ID: <CAJZOPZK58eDMLjsO2VU0kOLCfmRqsM2g3_GcR+VNQUeBHYrJuA@mail.gmail.com>
+References: <cover.1353903448.git.dillowda@ornl.gov>
+	<CAL1RGDU+b4GxEoY0TOvkyJjr0yx=5tFNmAVZ27hVjOOx=n=yJg@mail.gmail.com>
+	<1353957308.2681.5.camel@dabdike>
+	<1353989041.28917.24.camel@obelisk.thedillows.org>
+	<CAL1RGDXpdWL_r7sWp=vvvXH4jxFgjDL+XcEGgKo-44=wrOBmtA@mail.gmail.com>
+	<1354242098.3670.3.camel@obelisk.thedillows.org>
+	<CAJZOPZJBTRXftrW5NWEEHnf2QWsni0HMTAV_PKSgDtA7GO=wRw@mail.gmail.com>
+	<50BF9760.2080801@acm.org>
+	<CAJZOPZKPs5Vx5nB3610V+byv9p1KvL7+sRU6G4uMTRQu=4=STw@mail.gmail.com>
+	<50C0A76C.20500@acm.org>
+	<50C0AB42.8040402@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <20121205205740.13851.43284.stgit@bhelgaas.mtv.corp.google.com>
-Content-Language: en-US
-Content-ID: <A9C6DC7206F14342B94ED3BD995B329A@qlogic.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <50C0AB42.8040402-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Cc: Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, rcj-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, Alex Turin <alextu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+On Thu, Dec 6, 2012 at 4:27 PM, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+[...]
+> looking on the current locks in the system, we see that this kworker task
+> holds four locks, but none of them seems  to be mutually held by another task,
 
-Thanks,
-~Saurav
-
-
-
->Use the standard #defines for PCIe Link Capability register fields
->rather than bare numbers.  This also uses the new PCI Express Capability
->accessor rather than reading the capability directly.
->
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
->CC: linux-driver@qlogic.com
->CC: "James E.J. Bottomley" <JBottomley@parallels.com>
->CC: linux-scsi@vger.kernel.org
->---
-> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
-> 1 files changed, 5 insertions(+), 9 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
->index d501bf5..b5d070f 100644
->--- a/drivers/scsi/qla2xxx/qla_os.c
->+++ b/drivers/scsi/qla2xxx/qla_os.c
->@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
->char *str)
->       static char *pci_bus_modes[] = { "33", "66", "100", "133", };
->       struct qla_hw_data *ha = vha->hw;
->       uint32_t pci_bus;
->-      int pcie_reg;
->
->-      pcie_reg = pci_pcie_cap(ha->pdev);
->-      if (pcie_reg) {
->+      if (pci_is_pcie(ha->pdev)) {
->               char lwstr[6];
->-              uint16_t pcie_lstat, lspeed, lwidth;
->+              uint32_t lstat, lspeed, lwidth;
->
->-              pcie_reg += PCI_EXP_LNKCAP;
->-              pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
->-              lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
->-              lwidth = (pcie_lstat &
->-                  (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
->+              pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
->+              lspeed = lstat & PCI_EXP_LNKCAP_SLS;
->+              lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
->
->               strcpy(str, "PCIe (");
->               if (lspeed == 1)
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+That was ofcourse a wrong assertion, as a lock can't be mutually held
+by two tasks...
+I wanted to say that from the general view of which locks are being
+held there's no obvious deadlock here, since none of the other locks
+holders relates to the block/scsi layers...
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
