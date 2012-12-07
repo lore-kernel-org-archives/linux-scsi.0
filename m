@@ -1,468 +1,535 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 3/6] qla2xxx: Enable target mode support for ISP83xx.
-Date: Fri,  7 Dec 2012 02:30:51 -0500
-Message-ID: <1354865454-29964-4-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 1/6] qla2xxx: Determine the number of outstanding commands based on available resources.
+Date: Fri,  7 Dec 2012 02:30:49 -0500
+Message-ID: <1354865454-29964-2-git-send-email-saurav.kashyap@qlogic.com>
 References: <1354865454-29964-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:2348 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:48029 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754536Ab2LGHtk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Dec 2012 02:49:40 -0500
+	id S1752940Ab2LGIQJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Dec 2012 03:16:09 -0500
 In-Reply-To: <1354865454-29964-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Arun Easi <arun.easi@qlogic.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-Signed-off-by: Arun Easi <arun.easi@qlogic.com>
+Base the number of outstanding requests the driver will keep track of on the
+available resources instead of being hard-coded.
+
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
+ drivers/scsi/qla2xxx/qla_bsg.c    |    2 +-
  drivers/scsi/qla2xxx/qla_dbg.c    |    2 +-
- drivers/scsi/qla2xxx/qla_def.h    |    8 ++
- drivers/scsi/qla2xxx/qla_fw.h     |    3 +-
- drivers/scsi/qla2xxx/qla_init.c   |    6 +-
- drivers/scsi/qla2xxx/qla_isr.c    |   16 +++-
- drivers/scsi/qla2xxx/qla_os.c     |    4 +
- drivers/scsi/qla2xxx/qla_target.c |  159 +++++++++++++++++++++++++++++++++----
- drivers/scsi/qla2xxx/qla_target.h |   14 +++-
- 8 files changed, 187 insertions(+), 25 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |   12 ++++----
+ drivers/scsi/qla2xxx/qla_gbl.h    |    3 ++
+ drivers/scsi/qla2xxx/qla_init.c   |   54 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_iocb.c   |   37 ++++++++++++-------------
+ drivers/scsi/qla2xxx/qla_isr.c    |   10 +++---
+ drivers/scsi/qla2xxx/qla_mbx.c    |    8 +++---
+ drivers/scsi/qla2xxx/qla_mid.c    |    7 ++++-
+ drivers/scsi/qla2xxx/qla_nx.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c     |   11 +++++--
+ drivers/scsi/qla2xxx/qla_target.c |    4 +-
+ drivers/scsi/qla2xxx/qla_target.h |    5 ++-
+ 13 files changed, 110 insertions(+), 47 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 9f34ded..f7cb6a3 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1950,7 +1950,7 @@ qla24xx_bsg_timeout(struct fc_bsg_job *bsg_job)
+ 		if (!req)
+ 			continue;
+ 
+-		for (cnt = 1; cnt < MAX_OUTSTANDING_COMMANDS; cnt++) {
++		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
+ 			sp = req->outstanding_cmds[cnt];
+ 			if (sp) {
+ 				if (((sp->type == SRB_CT_CMD) ||
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index f7cdd25..e690d05 100644
+index 53f9e49..2f3e765 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -39,7 +39,7 @@
-  * | MultiQ                       |       0xc00c       |		|
-  * | Misc                         |       0xd010       |		|
-  * | Target Mode		  |	  0xe06f       |		|
-- * | Target Mode Management	  |	  0xf071       |		|
-+ * | Target Mode Management	  |	  0xf072       |		|
-  * | Target Mode Task Management  |	  0x1000b      |		|
+@@ -11,7 +11,7 @@
   * ----------------------------------------------------------------------
-  */
+  * |             Level            |   Last Value Used  |     Holes	|
+  * ----------------------------------------------------------------------
+- * | Module Init and Probe        |       0x0125       | 0x4b,0xba,0xfa |
++ * | Module Init and Probe        |       0x0126       | 0x4b,0xba,0xfa |
+  * | Mailbox commands             |       0x114f       | 0x111a-0x111b  |
+  * |                              |                    | 0x112c-0x112e  |
+  * |                              |                    | 0x113a         |
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 06c6271..b5fc478 100644
+index 6e7727f..a84bb8d 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -537,6 +537,8 @@ struct device_reg_25xxmq {
- 	uint32_t req_q_out;
- 	uint32_t rsp_q_in;
- 	uint32_t rsp_q_out;
-+	uint32_t atio_q_in;
-+	uint32_t atio_q_out;
+@@ -253,8 +253,8 @@
+ #define LOOP_DOWN_TIME			255	/* 240 */
+ #define	LOOP_DOWN_RESET			(LOOP_DOWN_TIME - 30)
+ 
+-/* Maximum outstanding commands in ISP queues (1-65535) */
+-#define MAX_OUTSTANDING_COMMANDS	1024
++#define DEFAULT_OUTSTANDING_COMMANDS	1024
++#define MIN_OUTSTANDING_COMMANDS	128
+ 
+ /* ISP request and response entry counts (37-65535) */
+ #define REQUEST_ENTRY_CNT_2100		128	/* Number of request entries. */
+@@ -2533,8 +2533,9 @@ struct req_que {
+ 	uint16_t  qos;
+ 	uint16_t  vp_idx;
+ 	struct rsp_que *rsp;
+-	srb_t *outstanding_cmds[MAX_OUTSTANDING_COMMANDS];
++	srb_t **outstanding_cmds;
+ 	uint32_t current_outstanding_cmd;
++	uint16_t num_outstanding_cmds;
+ 	int max_q_depth;
  };
  
- typedef union {
-@@ -563,6 +565,9 @@ typedef union {
- 	 &(reg)->u.isp2100.mailbox5 : \
- 	 &(reg)->u.isp2300.rsp_q_out)
- 
-+#define ISP_ATIO_Q_IN(vha) (vha->hw->tgt.atio_q_in)
-+#define ISP_ATIO_Q_OUT(vha) (vha->hw->tgt.atio_q_out)
-+
- #define MAILBOX_REG(ha, reg, num) \
- 	(IS_QLA2100(ha) || IS_QLA2200(ha) ? \
- 	 (num < 8 ? \
-@@ -2559,6 +2564,8 @@ struct qlt_hw_data {
- 	struct atio *atio_ring_ptr;	/* Current address. */
- 	uint16_t atio_ring_index; /* Current index. */
- 	uint16_t atio_q_length;
-+	uint32_t __iomem *atio_q_in;
-+	uint32_t __iomem *atio_q_out;
- 
+@@ -2561,7 +2562,7 @@ struct qlt_hw_data {
  	void *target_lport_ptr;
  	struct qla_tgt_func_tmpl *tgt_ops;
-@@ -2790,6 +2797,7 @@ struct qla_hw_data {
- #define IS_PI_SPLIT_DET_CAPABLE_HBA(ha)	(IS_QLA83XX(ha))
- #define IS_PI_SPLIT_DET_CAPABLE(ha)	(IS_PI_SPLIT_DET_CAPABLE_HBA(ha) && \
-     (((ha)->fw_attributes_h << 16 | (ha)->fw_attributes) & BIT_22))
-+#define IS_ATIO_MSIX_CAPABLE(ha) (IS_QLA83XX(ha))
+ 	struct qla_tgt *qla_tgt;
+-	struct qla_tgt_cmd *cmds[MAX_OUTSTANDING_COMMANDS];
++	struct qla_tgt_cmd *cmds[DEFAULT_OUTSTANDING_COMMANDS];
+ 	uint16_t current_handle;
  
- 	/* HBA serial number */
- 	uint8_t		serial0;
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index be6d61a..7105d5e 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -300,7 +300,8 @@ struct init_cb_24xx {
- 	uint32_t prio_request_q_address[2];
+ 	struct qla_tgt_vp_map *tgt_vp_map;
+@@ -2887,6 +2888,7 @@ struct qla_hw_data {
+ #define RISC_START_ADDRESS_2300 0x800
+ #define RISC_START_ADDRESS_2400 0x100000
+ 	uint16_t	fw_xcb_count;
++	uint16_t	fw_iocb_count;
  
- 	uint16_t msix;
--	uint8_t reserved_2[6];
-+	uint16_t msix_atio;
-+	uint8_t reserved_2[4];
+ 	uint16_t	fw_options[16];         /* slots: 1,2,3,10,11 */
+ 	uint8_t		fw_seriallink_options[4];
+@@ -3248,8 +3250,6 @@ struct qla_tgt_vp_map {
  
- 	uint16_t atio_q_inpointer;
- 	uint16_t atio_q_length;
+ #define NVRAM_DELAY()		udelay(10)
+ 
+-#define INVALID_HANDLE	(MAX_OUTSTANDING_COMMANDS+1)
+-
+ /*
+  * Flash support definitions
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 2411d1a..fba0651 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -84,6 +84,9 @@ extern int qla83xx_nic_core_reset(scsi_qla_host_t *);
+ extern void qla83xx_reset_ownership(scsi_qla_host_t *);
+ extern int qla2xxx_mctp_dump(scsi_qla_host_t *);
+ 
++extern int
++qla2x00_alloc_outstanding_cmds(struct qla_hw_data *, struct req_que *);
++
+ /*
+  * Global Data in qla_os.c source file.
+  */
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 81e8cca..a581c85 100644
+index 563eee3..81e8cca 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1964,7 +1964,7 @@ qla24xx_config_rings(struct scsi_qla_host *vha)
- 		WRT_REG_DWORD(&reg->isp24.rsp_q_in, 0);
- 		WRT_REG_DWORD(&reg->isp24.rsp_q_out, 0);
+@@ -1559,6 +1559,47 @@ done:
+ 	return rval;
+ }
+ 
++int
++qla2x00_alloc_outstanding_cmds(struct qla_hw_data *ha, struct req_que *req)
++{
++	/* Don't try to reallocate the array */
++	if (req->outstanding_cmds)
++		return QLA_SUCCESS;
++
++	if (!IS_FWI2_CAPABLE(ha) || (ha->mqiobase &&
++	    (ql2xmultique_tag || ql2xmaxqueues > 1)))
++		req->num_outstanding_cmds = DEFAULT_OUTSTANDING_COMMANDS;
++	else {
++		if (ha->fw_xcb_count <= ha->fw_iocb_count)
++			req->num_outstanding_cmds = ha->fw_xcb_count;
++		else
++			req->num_outstanding_cmds = ha->fw_iocb_count;
++	}
++
++	req->outstanding_cmds = kzalloc(sizeof(srb_t *) *
++	    req->num_outstanding_cmds, GFP_KERNEL);
++
++	if (!req->outstanding_cmds) {
++		/*
++		 * Try to allocate a minimal size just so we can get through
++		 * initialization.
++		 */
++		req->num_outstanding_cmds = MIN_OUTSTANDING_COMMANDS;
++		req->outstanding_cmds = kzalloc(sizeof(srb_t *) *
++		    req->num_outstanding_cmds, GFP_KERNEL);
++
++		if (!req->outstanding_cmds) {
++			ql_log(ql_log_fatal, NULL, 0x0126,
++			    "Failed to allocate memory for "
++			    "outstanding_cmds for req_que %p.\n", req);
++			req->num_outstanding_cmds = 0;
++			return QLA_FUNCTION_FAILED;
++		}
++	}
++
++	return QLA_SUCCESS;
++}
++
+ /**
+  * qla2x00_setup_chip() - Load and start RISC firmware.
+  * @ha: HA context
+@@ -1628,9 +1669,18 @@ enable_82xx_npiv:
+ 						    MIN_MULTI_ID_FABRIC - 1;
+ 				}
+ 				qla2x00_get_resource_cnts(vha, NULL,
+-				    &ha->fw_xcb_count, NULL, NULL,
++				    &ha->fw_xcb_count, NULL, &ha->fw_iocb_count,
+ 				    &ha->max_npiv_vports, NULL);
+ 
++				/*
++				 * Allocate the array of outstanding commands
++				 * now that we know the firmware resources.
++				 */
++				rval = qla2x00_alloc_outstanding_cmds(ha,
++				    vha->req);
++				if (rval != QLA_SUCCESS)
++					goto failed;
++
+ 				if (!fw_major_version && ql2xallocfwdump
+ 				    && !IS_QLA82XX(ha))
+ 					qla2x00_alloc_fw_dump(vha);
+@@ -1948,7 +1998,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 		req = ha->req_q_map[que];
+ 		if (!req)
+ 			continue;
+-		for (cnt = 1; cnt < MAX_OUTSTANDING_COMMANDS; cnt++)
++		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++)
+ 			req->outstanding_cmds[cnt] = NULL;
+ 
+ 		req->current_outstanding_cmd = 1;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index a481684..6055d96 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -349,14 +349,14 @@ qla2x00_start_scsi(srb_t *sp)
+ 
+ 	/* Check for room in outstanding command list. */
+ 	handle = req->current_outstanding_cmd;
+-	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
++	for (index = 1; index < req->num_outstanding_cmds; index++) {
+ 		handle++;
+-		if (handle == MAX_OUTSTANDING_COMMANDS)
++		if (handle == req->num_outstanding_cmds)
+ 			handle = 1;
+ 		if (!req->outstanding_cmds[handle])
+ 			break;
  	}
--	qlt_24xx_config_rings(vha, reg);
-+	qlt_24xx_config_rings(vha);
+-	if (index == MAX_OUTSTANDING_COMMANDS)
++	if (index == req->num_outstanding_cmds)
+ 		goto queuing_error;
  
- 	/* PCI posting */
- 	RD_REG_DWORD(&ioreg->hccr);
-@@ -5579,6 +5579,8 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
- 	if (IS_T10_PI_CAPABLE(ha))
- 		nv->frame_payload_size &= ~7;
+ 	/* Map the sg table so we have an accurate count of sg entries needed */
+@@ -1467,16 +1467,15 @@ qla24xx_start_scsi(srb_t *sp)
  
-+	qlt_81xx_config_nvram_stage1(vha, nv);
-+
- 	/* Reset Initialization control block */
- 	memset(icb, 0, ha->init_cb_size);
+ 	/* Check for room in outstanding command list. */
+ 	handle = req->current_outstanding_cmd;
+-	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
++	for (index = 1; index < req->num_outstanding_cmds; index++) {
+ 		handle++;
+-		if (handle == MAX_OUTSTANDING_COMMANDS)
++		if (handle == req->num_outstanding_cmds)
+ 			handle = 1;
+ 		if (!req->outstanding_cmds[handle])
+ 			break;
+ 	}
+-	if (index == MAX_OUTSTANDING_COMMANDS) {
++	if (index == req->num_outstanding_cmds)
+ 		goto queuing_error;
+-	}
  
-@@ -5619,6 +5621,8 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
- 	qla2x00_set_model_info(vha, nv->model_name, sizeof(nv->model_name),
- 	    "QLE8XXX");
+ 	/* Map the sg table so we have an accurate count of sg entries needed */
+ 	if (scsi_sg_count(cmd)) {
+@@ -1641,15 +1640,15 @@ qla24xx_dif_start_scsi(srb_t *sp)
  
-+	qlt_81xx_config_nvram_stage2(vha, icb);
-+
- 	/* Use alternate WWN? */
- 	if (nv->host_p & __constant_cpu_to_le32(BIT_15)) {
- 		memcpy(icb->node_name, nv->alternate_node_name, WWN_SIZE);
+ 	/* Check for room in outstanding command list. */
+ 	handle = req->current_outstanding_cmd;
+-	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
++	for (index = 1; index < req->num_outstanding_cmds; index++) {
+ 		handle++;
+-		if (handle == MAX_OUTSTANDING_COMMANDS)
++		if (handle == req->num_outstanding_cmds)
+ 			handle = 1;
+ 		if (!req->outstanding_cmds[handle])
+ 			break;
+ 	}
+ 
+-	if (index == MAX_OUTSTANDING_COMMANDS)
++	if (index == req->num_outstanding_cmds)
+ 		goto queuing_error;
+ 
+ 	/* Compute number of required data segments */
+@@ -1822,14 +1821,14 @@ qla2x00_alloc_iocbs(scsi_qla_host_t *vha, srb_t *sp)
+ 
+ 	/* Check for room in outstanding command list. */
+ 	handle = req->current_outstanding_cmd;
+-	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
++	for (index = 1; req->num_outstanding_cmds; index++) {
+ 		handle++;
+-		if (handle == MAX_OUTSTANDING_COMMANDS)
++		if (handle == req->num_outstanding_cmds)
+ 			handle = 1;
+ 		if (!req->outstanding_cmds[handle])
+ 			break;
+ 	}
+-	if (index == MAX_OUTSTANDING_COMMANDS) {
++	if (index == req->num_outstanding_cmds) {
+ 		ql_log(ql_log_warn, vha, 0x700b,
+ 		    "No room on outstanding cmd array.\n");
+ 		goto queuing_error;
+@@ -2263,14 +2262,14 @@ qla82xx_start_scsi(srb_t *sp)
+ 
+ 	/* Check for room in outstanding command list. */
+ 	handle = req->current_outstanding_cmd;
+-	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
++	for (index = 1; index < req->num_outstanding_cmds; index++) {
+ 		handle++;
+-		if (handle == MAX_OUTSTANDING_COMMANDS)
++		if (handle == req->num_outstanding_cmds)
+ 			handle = 1;
+ 		if (!req->outstanding_cmds[handle])
+ 			break;
+ 	}
+-	if (index == MAX_OUTSTANDING_COMMANDS)
++	if (index == req->num_outstanding_cmds)
+ 		goto queuing_error;
+ 
+ 	/* Map the sg table so we have an accurate count of sg entries needed */
+@@ -2767,15 +2766,15 @@ qla2x00_start_bidir(srb_t *sp, struct scsi_qla_host *vha, uint32_t tot_dsds)
+ 
+ 	/* Check for room in outstanding command list. */
+ 	handle = req->current_outstanding_cmd;
+-	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
++	for (index = 1; index < req->num_outstanding_cmds; index++) {
+ 		handle++;
+-	if (handle == MAX_OUTSTANDING_COMMANDS)
++	if (handle == req->num_outstanding_cmds)
+ 		handle = 1;
+ 	if (!req->outstanding_cmds[handle])
+ 		break;
+ 	}
+ 
+-	if (index == MAX_OUTSTANDING_COMMANDS) {
++	if (index == req->num_outstanding_cmds) {
+ 		rval = EXT_STATUS_BUSY;
+ 		goto queuing_error;
+ 	}
 diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 1b192c8..26a3086 100644
+index 873c820..4513073 100644
 --- a/drivers/scsi/qla2xxx/qla_isr.c
 +++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -13,6 +13,8 @@
- #include <scsi/scsi_bsg_fc.h>
- #include <scsi/scsi_eh.h>
+@@ -1029,7 +1029,7 @@ qla2x00_process_completed_request(struct scsi_qla_host *vha,
+ 	struct qla_hw_data *ha = vha->hw;
  
-+#include "qla_target.h"
-+
- static void qla2x00_mbx_completion(scsi_qla_host_t *, uint16_t);
- static void qla2x00_process_completed_request(struct scsi_qla_host *,
- 	struct req_que *, uint32_t);
-@@ -2751,6 +2753,12 @@ static struct qla_init_msix_entry qla82xx_msix_entries[2] = {
- 	{ "qla2xxx (rsp_q)", qla82xx_msix_rsp_q },
- };
+ 	/* Validate handle. */
+-	if (index >= MAX_OUTSTANDING_COMMANDS) {
++	if (index >= req->num_outstanding_cmds) {
+ 		ql_log(ql_log_warn, vha, 0x3014,
+ 		    "Invalid SCSI command index (%x).\n", index);
  
-+static struct qla_init_msix_entry qla83xx_msix_entries[3] = {
-+	{ "qla2xxx (default)", qla24xx_msix_default },
-+	{ "qla2xxx (rsp_q)", qla24xx_msix_rsp_q },
-+	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
-+};
-+
- static void
- qla24xx_disable_msix(struct qla_hw_data *ha)
- {
-@@ -2831,9 +2839,13 @@ msix_failed:
+@@ -1067,7 +1067,7 @@ qla2x00_get_sp_from_handle(scsi_qla_host_t *vha, const char *func,
+ 	uint16_t index;
+ 
+ 	index = LSW(pkt->handle);
+-	if (index >= MAX_OUTSTANDING_COMMANDS) {
++	if (index >= req->num_outstanding_cmds) {
+ 		ql_log(ql_log_warn, vha, 0x5031,
+ 		    "Invalid command index (%x).\n", index);
+ 		if (IS_QLA82XX(ha))
+@@ -1740,7 +1740,7 @@ qla25xx_process_bidir_status_iocb(scsi_qla_host_t *vha, void *pkt,
+ 	sts24 = (struct sts_entry_24xx *) pkt;
+ 
+ 	/* Validate handle. */
+-	if (index >= MAX_OUTSTANDING_COMMANDS) {
++	if (index >= req->num_outstanding_cmds) {
+ 		ql_log(ql_log_warn, vha, 0x70af,
+ 		    "Invalid SCSI completion handle 0x%x.\n", index);
+ 		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+@@ -1910,9 +1910,9 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 	req = ha->req_q_map[que];
+ 
+ 	/* Validate handle. */
+-	if (handle < MAX_OUTSTANDING_COMMANDS) {
++	if (handle < req->num_outstanding_cmds)
+ 		sp = req->outstanding_cmds[handle];
+-	} else
++	else
+ 		sp = NULL;
+ 
+ 	if (sp == NULL) {
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 68c55ea..319b0f2 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -900,13 +900,13 @@ qla2x00_abort_command(srb_t *sp)
+ 	    "Entered %s.\n", __func__);
+ 
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+-	for (handle = 1; handle < MAX_OUTSTANDING_COMMANDS; handle++) {
++	for (handle = 1; handle < req->num_outstanding_cmds; handle++) {
+ 		if (req->outstanding_cmds[handle] == sp)
+ 			break;
+ 	}
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+-	if (handle == MAX_OUTSTANDING_COMMANDS) {
++	if (handle == req->num_outstanding_cmds) {
+ 		/* command not found */
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+@@ -2535,12 +2535,12 @@ qla24xx_abort_command(srb_t *sp)
+ 	    "Entered %s.\n", __func__);
+ 
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+-	for (handle = 1; handle < MAX_OUTSTANDING_COMMANDS; handle++) {
++	for (handle = 1; handle < req->num_outstanding_cmds; handle++) {
+ 		if (req->outstanding_cmds[handle] == sp)
+ 			break;
+ 	}
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-	if (handle == MAX_OUTSTANDING_COMMANDS) {
++	if (handle == req->num_outstanding_cmds) {
+ 		/* Command not found. */
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 20fd974..95cb6e78 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -523,6 +523,7 @@ qla25xx_free_req_que(struct scsi_qla_host *vha, struct req_que *req)
+ 		clear_bit(que_id, ha->req_qid_map);
+ 		mutex_unlock(&ha->vport_lock);
+ 	}
++	kfree(req->outstanding_cmds);
+ 	kfree(req);
+ 	req = NULL;
+ }
+@@ -649,6 +650,10 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
+ 		goto que_failed;
  	}
  
- 	/* Enable MSI-X vectors for the base queue */
--	for (i = 0; i < 2; i++) {
-+	for (i = 0; i < ha->msix_count; i++) {
- 		qentry = &ha->msix_entries[i];
--		if (IS_QLA82XX(ha)) {
-+		if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
-+			ret = request_irq(qentry->vector,
-+				qla83xx_msix_entries[i].handler,
-+				0, qla83xx_msix_entries[i].name, rsp);
-+		} else if (IS_QLA82XX(ha)) {
- 			ret = request_irq(qentry->vector,
- 				qla82xx_msix_entries[i].handler,
- 				0, qla82xx_msix_entries[i].name, rsp);
++	ret = qla2x00_alloc_outstanding_cmds(ha, req);
++	if (ret != QLA_SUCCESS)
++		goto que_failed;
++
+ 	mutex_lock(&ha->vport_lock);
+ 	que_id = find_first_zero_bit(ha->req_qid_map, ha->max_req_queues);
+ 	if (que_id >= ha->max_req_queues) {
+@@ -685,7 +690,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
+ 	    "options=0x%x.\n", req->options);
+ 	ql_dbg(ql_dbg_init, base_vha, 0x00dd,
+ 	    "options=0x%x.\n", req->options);
+-	for (cnt = 1; cnt < MAX_OUTSTANDING_COMMANDS; cnt++)
++	for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++)
+ 		req->outstanding_cmds[cnt] = NULL;
+ 	req->current_outstanding_cmd = 1;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 3e3f593..042368b 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -3629,7 +3629,7 @@ qla82xx_chip_reset_cleanup(scsi_qla_host_t *vha)
+ 			req = ha->req_q_map[que];
+ 			if (!req)
+ 				continue;
+-			for (cnt = 1; cnt < MAX_OUTSTANDING_COMMANDS; cnt++) {
++			for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
+ 				sp = req->outstanding_cmds[cnt];
+ 				if (sp) {
+ 					if (!sp->u.scmd.ctx ||
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 9a826aa0..519e7b8 100644
+index 3a1661c..15b4037 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1812,6 +1812,9 @@ qla83xx_iospace_config(struct qla_hw_data *ha)
+@@ -360,6 +360,9 @@ static void qla2x00_free_req_que(struct qla_hw_data *ha, struct req_que *req)
+ 		(req->length + 1) * sizeof(request_t),
+ 		req->ring, req->dma);
  
- mqiobase_exit:
- 	ha->msix_count = ha->max_rsp_queues + 1;
++	if (req && req->outstanding_cmds)
++		kfree(req->outstanding_cmds);
 +
-+	qlt_83xx_iospace_config(ha);
-+
- 	ql_dbg_pci(ql_dbg_init, ha->pdev, 0x011f,
- 	    "MSIX Count:%d.\n", ha->msix_count);
- 	return 0;
-@@ -2390,6 +2393,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
- 		req_length = REQUEST_ENTRY_CNT_24XX;
- 		rsp_length = RESPONSE_ENTRY_CNT_2300;
-+		ha->tgt.atio_q_length = ATIO_ENTRY_CNT_24XX;
- 		ha->max_loop_id = SNS_LAST_LOOP_ID_2300;
- 		ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
- 		ha->gid_list_info_size = 8;
+ 	kfree(req);
+ 	req = NULL;
+ }
+@@ -1010,7 +1013,7 @@ qla2x00_eh_wait_for_pending_commands(scsi_qla_host_t *vha, unsigned int t,
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	req = vha->req;
+ 	for (cnt = 1; status == QLA_SUCCESS &&
+-		cnt < MAX_OUTSTANDING_COMMANDS; cnt++) {
++		cnt < req->num_outstanding_cmds; cnt++) {
+ 		sp = req->outstanding_cmds[cnt];
+ 		if (!sp)
+ 			continue;
+@@ -1337,7 +1340,9 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
+ 		req = ha->req_q_map[que];
+ 		if (!req)
+ 			continue;
+-		for (cnt = 1; cnt < MAX_OUTSTANDING_COMMANDS; cnt++) {
++		if (!req->outstanding_cmds)
++			continue;
++		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
+ 			sp = req->outstanding_cmds[cnt];
+ 			if (sp) {
+ 				req->outstanding_cmds[cnt] = NULL;
+@@ -4733,7 +4738,7 @@ qla2x00_timer(scsi_qla_host_t *vha)
+ 				    cpu_flags);
+ 				req = ha->req_q_map[0];
+ 				for (index = 1;
+-				    index < MAX_OUTSTANDING_COMMANDS;
++				    index < req->num_outstanding_cmds;
+ 				    index++) {
+ 					fc_port_t *sfcp;
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b57ef31..41c3a40 100644
+index dc98ec9..b57ef31 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -52,7 +52,7 @@ MODULE_PARM_DESC(qlini_mode,
- 	"\"disabled\" - initiator mode will never be enabled; "
- 	"\"enabled\" (default) - initiator mode will always stay enabled.");
- 
--static int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
-+int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
- 
- /*
-  * From scsi/fc/fc_fcp.h
-@@ -1119,6 +1119,7 @@ static void qlt_send_notify_ack(struct scsi_qla_host *vha,
- 	nack->u.isp24.srr_rx_id = ntfy->u.isp24.srr_rx_id;
- 	nack->u.isp24.status = ntfy->u.isp24.status;
- 	nack->u.isp24.status_subcode = ntfy->u.isp24.status_subcode;
-+	nack->u.isp24.fw_handle = ntfy->u.isp24.fw_handle;
- 	nack->u.isp24.exchange_address = ntfy->u.isp24.exchange_address;
- 	nack->u.isp24.srr_rel_offs = ntfy->u.isp24.srr_rel_offs;
- 	nack->u.isp24.srr_ui = ntfy->u.isp24.srr_ui;
-@@ -4647,7 +4648,6 @@ void
- qlt_24xx_process_atio_queue(struct scsi_qla_host *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
--	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
- 	struct atio_from_isp *pkt;
- 	int cnt, i;
- 
-@@ -4675,26 +4675,28 @@ qlt_24xx_process_atio_queue(struct scsi_qla_host *vha)
- 	}
- 
- 	/* Adjust ring index */
--	WRT_REG_DWORD(&reg->atio_q_out, ha->tgt.atio_ring_index);
-+	WRT_REG_DWORD(ISP_ATIO_Q_OUT(vha), ha->tgt.atio_ring_index);
- }
- 
- void
--qlt_24xx_config_rings(struct scsi_qla_host *vha, device_reg_t __iomem *reg)
-+qlt_24xx_config_rings(struct scsi_qla_host *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
-+	if (!QLA_TGT_MODE_ENABLED())
-+		return;
- 
--/* FIXME: atio_q in/out for ha->mqenable=1..? */
--	if (ha->mqenable) {
--#if 0
--		WRT_REG_DWORD(&reg->isp25mq.atio_q_in, 0);
--		WRT_REG_DWORD(&reg->isp25mq.atio_q_out, 0);
--		RD_REG_DWORD(&reg->isp25mq.atio_q_out);
--#endif
--	} else {
--		/* Setup APTIO registers for target mode */
--		WRT_REG_DWORD(&reg->isp24.atio_q_in, 0);
--		WRT_REG_DWORD(&reg->isp24.atio_q_out, 0);
--		RD_REG_DWORD(&reg->isp24.atio_q_out);
-+	WRT_REG_DWORD(ISP_ATIO_Q_IN(vha), 0);
-+	WRT_REG_DWORD(ISP_ATIO_Q_OUT(vha), 0);
-+	RD_REG_DWORD(ISP_ATIO_Q_OUT(vha));
-+
-+	if (IS_ATIO_MSIX_CAPABLE(ha)) {
-+		struct qla_msix_entry *msix = &ha->msix_entries[2];
-+		struct init_cb_24xx *icb = (struct init_cb_24xx *)ha->init_cb;
-+
-+		icb->msix_atio = cpu_to_le16(msix->entry);
-+		ql_dbg(ql_dbg_init, vha, 0xf072,
-+		    "Registering ICB vector 0x%x for atio que.\n",
-+		    msix->entry);
- 	}
- }
- 
-@@ -4777,6 +4779,101 @@ qlt_24xx_config_nvram_stage2(struct scsi_qla_host *vha,
- 	}
- }
- 
-+void
-+qlt_81xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_81xx *nv)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if (!QLA_TGT_MODE_ENABLED())
-+		return;
-+
-+	if (qla_tgt_mode_enabled(vha)) {
-+		if (!ha->tgt.saved_set) {
-+			/* We save only once */
-+			ha->tgt.saved_exchange_count = nv->exchange_count;
-+			ha->tgt.saved_firmware_options_1 =
-+			    nv->firmware_options_1;
-+			ha->tgt.saved_firmware_options_2 =
-+			    nv->firmware_options_2;
-+			ha->tgt.saved_firmware_options_3 =
-+			    nv->firmware_options_3;
-+			ha->tgt.saved_set = 1;
-+		}
-+
-+		nv->exchange_count = __constant_cpu_to_le16(0xFFFF);
-+
-+		/* Enable target mode */
-+		nv->firmware_options_1 |= __constant_cpu_to_le32(BIT_4);
-+
-+		/* Disable ini mode, if requested */
-+		if (!qla_ini_mode_enabled(vha))
-+			nv->firmware_options_1 |=
-+			    __constant_cpu_to_le32(BIT_5);
-+
-+		/* Disable Full Login after LIP */
-+		nv->firmware_options_1 &= __constant_cpu_to_le32(~BIT_13);
-+		/* Enable initial LIP */
-+		nv->firmware_options_1 &= __constant_cpu_to_le32(~BIT_9);
-+		/* Enable FC tapes support */
-+		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_12);
-+		/* Disable Full Login after LIP */
-+		nv->host_p &= __constant_cpu_to_le32(~BIT_10);
-+		/* Enable target PRLI control */
-+		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_14);
-+	} else {
-+		if (ha->tgt.saved_set) {
-+			nv->exchange_count = ha->tgt.saved_exchange_count;
-+			nv->firmware_options_1 =
-+			    ha->tgt.saved_firmware_options_1;
-+			nv->firmware_options_2 =
-+			    ha->tgt.saved_firmware_options_2;
-+			nv->firmware_options_3 =
-+			    ha->tgt.saved_firmware_options_3;
-+		}
-+		return;
-+	}
-+
-+	/* out-of-order frames reassembly */
-+	nv->firmware_options_3 |= BIT_6|BIT_9;
-+
-+	if (ha->tgt.enable_class_2) {
-+		if (vha->flags.init_done)
-+			fc_host_supported_classes(vha->host) =
-+				FC_COS_CLASS2 | FC_COS_CLASS3;
-+
-+		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_8);
-+	} else {
-+		if (vha->flags.init_done)
-+			fc_host_supported_classes(vha->host) = FC_COS_CLASS3;
-+
-+		nv->firmware_options_2 &= ~__constant_cpu_to_le32(BIT_8);
-+	}
-+}
-+
-+void
-+qlt_81xx_config_nvram_stage2(struct scsi_qla_host *vha,
-+	struct init_cb_81xx *icb)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if (!QLA_TGT_MODE_ENABLED())
-+		return;
-+
-+	if (ha->tgt.node_name_set) {
-+		memcpy(icb->node_name, ha->tgt.tgt_node_name, WWN_SIZE);
-+		icb->firmware_options_1 |= __constant_cpu_to_le32(BIT_14);
-+	}
-+}
-+
-+void
-+qlt_83xx_iospace_config(struct qla_hw_data *ha)
-+{
-+	if (!QLA_TGT_MODE_ENABLED())
-+		return;
-+
-+	ha->msix_count += 1; /* For ATIO Q */
-+}
-+
- int
- qlt_24xx_process_response_error(struct scsi_qla_host *vha,
- 	struct sts_entry_24xx *pkt)
-@@ -4809,11 +4906,41 @@ qlt_probe_one_stage1(struct scsi_qla_host *base_vha, struct qla_hw_data *ha)
- 	if (!QLA_TGT_MODE_ENABLED())
- 		return;
- 
-+	if  (ha->mqenable || IS_QLA83XX(ha)) {
-+		ISP_ATIO_Q_IN(base_vha) = &ha->mqiobase->isp25mq.atio_q_in;
-+		ISP_ATIO_Q_OUT(base_vha) = &ha->mqiobase->isp25mq.atio_q_out;
-+	} else {
-+		ISP_ATIO_Q_IN(base_vha) = &ha->iobase->isp24.atio_q_in;
-+		ISP_ATIO_Q_OUT(base_vha) = &ha->iobase->isp24.atio_q_out;
-+	}
-+
- 	mutex_init(&ha->tgt.tgt_mutex);
- 	mutex_init(&ha->tgt.tgt_host_action_mutex);
- 	qlt_clear_mode(base_vha);
- }
- 
-+irqreturn_t
-+qla83xx_msix_atio_q(int irq, void *dev_id)
-+{
-+	struct rsp_que *rsp;
-+	scsi_qla_host_t	*vha;
-+	struct qla_hw_data *ha;
-+	unsigned long flags;
-+
-+	rsp = (struct rsp_que *) dev_id;
-+	ha = rsp->hw;
-+	vha = pci_get_drvdata(ha->pdev);
-+
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+
-+	qlt_24xx_process_atio_queue(vha);
-+	qla24xx_process_response_queue(vha, rsp);
-+
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return IRQ_HANDLED;
-+}
-+
- int
- qlt_mem_alloc(struct qla_hw_data *ha)
- {
+@@ -1551,7 +1551,7 @@ static inline uint32_t qlt_make_handle(struct scsi_qla_host *vha)
+ 	/* always increment cmd handle */
+ 	do {
+ 		++h;
+-		if (h > MAX_OUTSTANDING_COMMANDS)
++		if (h > DEFAULT_OUTSTANDING_COMMANDS)
+ 			h = 1; /* 0 is QLA_TGT_NULL_HANDLE */
+ 		if (h == ha->tgt.current_handle) {
+ 			ql_dbg(ql_dbg_tgt, vha, 0xe04e,
+@@ -2422,7 +2422,7 @@ static struct qla_tgt_cmd *qlt_ctio_to_cmd(struct scsi_qla_host *vha,
+ 			return NULL;
+ 		}
+ 		/* handle-1 is actually used */
+-		if (unlikely(handle > MAX_OUTSTANDING_COMMANDS)) {
++		if (unlikely(handle > DEFAULT_OUTSTANDING_COMMANDS)) {
+ 			ql_dbg(ql_dbg_tgt, vha, 0xe052,
+ 			    "qla_target(%d): Wrong handle %x received\n",
+ 			    vha->vp_idx, handle);
 diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index fc61d6a..ff9ccb9 100644
+index bad7495..fc61d6a 100644
 --- a/drivers/scsi/qla2xxx/qla_target.h
 +++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -162,7 +162,7 @@ struct imm_ntfy_from_isp {
- 			uint16_t srr_rx_id;
- 			uint16_t status;
- 			uint8_t  status_subcode;
--			uint8_t  reserved_3;
-+			uint8_t  fw_handle;
- 			uint32_t exchange_address;
- 			uint32_t srr_rel_offs;
- 			uint16_t srr_ui;
-@@ -218,7 +218,7 @@ struct nack_to_isp {
- 			uint16_t srr_rx_id;
- 			uint16_t status;
- 			uint8_t  status_subcode;
--			uint8_t  reserved_3;
-+			uint8_t  fw_handle;
- 			uint32_t exchange_address;
- 			uint32_t srr_rel_offs;
- 			uint16_t srr_ui;
-@@ -949,6 +949,7 @@ extern void qlt_update_vp_map(struct scsi_qla_host *, int);
-  * is not set. Right now, ha value is ignored.
+@@ -60,8 +60,9 @@
+  * multi-complete should come to the tgt driver or be handled there by qla2xxx
   */
- #define QLA_TGT_MODE_ENABLED() (ql2x_ini_mode != QLA2XXX_INI_MODE_ENABLED)
-+extern int ql2x_ini_mode;
+ #define CTIO_COMPLETION_HANDLE_MARK	BIT_29
+-#if (CTIO_COMPLETION_HANDLE_MARK <= MAX_OUTSTANDING_COMMANDS)
+-#error "CTIO_COMPLETION_HANDLE_MARK not larger than MAX_OUTSTANDING_COMMANDS"
++#if (CTIO_COMPLETION_HANDLE_MARK <= DEFAULT_OUTSTANDING_COMMANDS)
++#error "CTIO_COMPLETION_HANDLE_MARK not larger than "
++	"DEFAULT_OUTSTANDING_COMMANDS"
+ #endif
+ #define HANDLE_IS_CTIO_COMP(h) (h & CTIO_COMPLETION_HANDLE_MARK)
  
- static inline bool qla_tgt_mode_enabled(struct scsi_qla_host *ha)
- {
-@@ -986,12 +987,15 @@ extern void qlt_vport_create(struct scsi_qla_host *, struct qla_hw_data *);
- extern void qlt_rff_id(struct scsi_qla_host *, struct ct_sns_req *);
- extern void qlt_init_atio_q_entries(struct scsi_qla_host *);
- extern void qlt_24xx_process_atio_queue(struct scsi_qla_host *);
--extern void qlt_24xx_config_rings(struct scsi_qla_host *,
--	device_reg_t __iomem *);
-+extern void qlt_24xx_config_rings(struct scsi_qla_host *);
- extern void qlt_24xx_config_nvram_stage1(struct scsi_qla_host *,
- 	struct nvram_24xx *);
- extern void qlt_24xx_config_nvram_stage2(struct scsi_qla_host *,
- 	struct init_cb_24xx *);
-+extern void qlt_81xx_config_nvram_stage2(struct scsi_qla_host *,
-+	struct init_cb_81xx *);
-+extern void qlt_81xx_config_nvram_stage1(struct scsi_qla_host *,
-+	struct nvram_81xx *);
- extern int qlt_24xx_process_response_error(struct scsi_qla_host *,
- 	struct sts_entry_24xx *);
- extern void qlt_modify_vp_config(struct scsi_qla_host *,
-@@ -1001,5 +1005,7 @@ extern int qlt_mem_alloc(struct qla_hw_data *);
- extern void qlt_mem_free(struct qla_hw_data *);
- extern void qlt_stop_phase1(struct qla_tgt *);
- extern void qlt_stop_phase2(struct qla_tgt *);
-+extern irqreturn_t qla83xx_msix_atio_q(int, void *);
-+extern void qlt_83xx_iospace_config(struct qla_hw_data *);
- 
- #endif /* __QLA_TARGET_H */
 -- 
 1.7.7
 
