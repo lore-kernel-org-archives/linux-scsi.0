@@ -1,40 +1,41 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] mpt3sas: cut and paste bug storing trigger mpi
-Date: Fri, 7 Dec 2012 09:28:01 +0300
-Message-ID: <20121207062801.GD18220@elgon.mountain>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v7 3/9] Introduce scsi_device_being_removed()
+Date: Fri, 07 Dec 2012 07:48:56 +0100
+Message-ID: <50C19158.4080405@suse.de>
+References: <50C0BEEE.4040907@acm.org> <50C0BFD5.9030604@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:33961 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755188Ab2LGGtA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Dec 2012 01:49:00 -0500
+In-Reply-To: <50C0BFD5.9030604@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>
 
-ioc->diag_trigger_mpi is an SL_WH_MPI_TRIGGERS_T struct.
+On 12/06/2012 04:55 PM, Bart Van Assche wrote:
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: James Bottomley <JBottomley@Parallels.com>
+> Cc: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: Tejun Heo <tj@kernel.org>
+Acked-by: Hannes Reinecke <hare@suse.de>
 
-There is a cut and paste error here and SL_WH_EVENT_TRIGGERS_T is used
-instead of SL_WH_MPI_TRIGGERS_T.  Since the SL_WH_EVENT_TRIGGERS_T is
-smaller than SL_WH_MPI_TRIGGERS_T, it means we only clear part of the
-buffer.
+Cheers,
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Only needed in linux-next.
-
-This is a static analysis patch.  Even though I'm pretty sure it's
-correct, I'm not able to test it.
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 8af944d..3e35e64 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -3136,7 +3136,7 @@ _ctl_diag_trigger_mpi_store(struct device *cdev,
- 	spin_lock_irqsave(&ioc->diag_trigger_lock, flags);
- 	sz = min(sizeof(struct SL_WH_MPI_TRIGGERS_T), count);
- 	memset(&ioc->diag_trigger_mpi, 0,
--	    sizeof(struct SL_WH_EVENT_TRIGGERS_T));
-+	    sizeof(struct SL_WH_MPI_TRIGGERS_T));
- 	memcpy(&ioc->diag_trigger_mpi, buf, sz);
- 	if (ioc->diag_trigger_mpi.ValidEntries > NUM_VALID_ENTRIES)
- 		ioc->diag_trigger_mpi.ValidEntries = NUM_VALID_ENTRIES;
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
