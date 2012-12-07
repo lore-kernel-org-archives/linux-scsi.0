@@ -1,69 +1,38 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [ 11/11] scsi: Silence unnecessary warnings about ioctl to partition
-Date: Thu,  6 Dec 2012 16:57:07 -0800
-Message-ID: <20121207005616.809919764@linuxfoundation.org>
-References: <20121207005613.189054768@linuxfoundation.org>
+From: Gregory Haskins <gregory.haskins@gmail.com>
+Subject: Re: Slow writes to SAS drives on LSI mpt2sas HBA
+Date: Thu, 6 Dec 2012 20:43:38 -0500
+Message-ID: <450090F8-2B0F-4B38-AB7C-2154C75043F9@gmail.com>
+References: <536E46D8-A041-4860-A922-21305CAF5321@gmail.com> <1354572400.4420.66.camel@localhost.localdomain>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61767 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423263Ab2LGA5v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2012 19:57:51 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so4882375pbc.19
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Dec 2012 16:57:51 -0800 (PST)
-In-Reply-To: <20121207005613.189054768@linuxfoundation.org>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:62093 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754401Ab2LGBnD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2012 20:43:03 -0500
+Received: by mail-qa0-f53.google.com with SMTP id a19so91142qad.19
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Dec 2012 17:43:02 -0800 (PST)
+In-Reply-To: <1354572400.4420.66.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, alan@lxorguk.ukuu.org.uk, Paolo Bonzini <pbonzini@redhat.com>, James Bottomley <JBottomley@parallels.com>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Satoru Takeuchi <satoru.takeuchi@gmail.com>, linux-scsi@vger.kernel.org
+To: emilne@redhat.com
+Cc: linux-scsi@vger.kernel.org
 
-3.0-stable review patch.  If anyone has any objections, please let me know.
+Hello Ewan
 
-------------------
+On Dec 3, 2012, at 5:06 PM, Ewan Milne <emilne@redhat.com> wrote:
 
-From: Jan Kara <jack@suse.cz>
+>> 
+> 
+> It sounds like your drive write cache is disabled, 7200RPM is 120
+> revolutions/sec, and you are getting 7747584 / 1024 / 63.59 = ~119 IO/s
+> I believe the write cache is enabled by default on SATA drives, which
+> would explain the difference.
 
-commit 6d9359280753d2955f86d6411047516a9431eb51 upstream.
+You were exactly right.  Thank you!
 
-Sometimes, warnings about ioctls to partition happen often enough that they
-form majority of the warnings in the kernel log and users complain. In some
-cases warnings are about ioctls such as SG_IO so it's not good to get rid of
-the warnings completely as they can ease debugging of userspace problems
-when ioctl is refused.
+A quick "sdparm -S -set=WCE <dev>" and I was back to where I expected.
 
-Since I have seen warnings from lots of commands, including some proprietary
-userspace applications, I don't think disallowing the ioctls for processes
-with CAP_SYS_RAWIO will happen in the near future if ever. So lets just
-stop warning for processes with CAP_SYS_RAWIO for which ioctl is allowed.
-
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
-CC: James Bottomley <JBottomley@parallels.com>
-CC: linux-scsi@vger.kernel.org
-Signed-off-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Cc: Satoru Takeuchi <satoru.takeuchi@gmail.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- block/scsi_ioctl.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -722,11 +722,14 @@ int scsi_verify_blk_ioctl(struct block_d
- 		break;
- 	}
- 
-+	if (capable(CAP_SYS_RAWIO))
-+		return 0;
-+
- 	/* In particular, rule out all resets and host-specific ioctls.  */
- 	printk_ratelimited(KERN_WARNING
- 			   "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
- 
--	return capable(CAP_SYS_RAWIO) ? 0 : -ENOTTY;
-+	return -ENOTTY;
- }
- EXPORT_SYMBOL(scsi_verify_blk_ioctl);
- 
-
-
+Thanks again,
+-Greg
