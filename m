@@ -1,19 +1,19 @@
-From: SEC Capitals Loan <dcssrh@ufcg.edu.br>
-Subject: loan offer
-Date: Fri, 7 Dec 2012 22:36:06 -0300 (BRT)
-Message-ID: <420191693.40931.1354930566788.JavaMail.root__37156.3811706894$1354931236$gmane$org@ufcg.edu.br>
-Reply-To: SEC Capitals Loan <secapitaloans@kimo.com>
+From: songlile@yahoo.com.hk
+Subject: Contact Me Asap
+Date: Sat, 08 Dec 2012 03:06:04 +0100
+Message-ID: <20121208020737.394A2D46565E__42127.0384955735$1354941520$gmane$org@mail.factum.hk>
+Reply-To: songlileprivatee12@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta1.ufcg.edu.br ([150.165.111.244]:48110 "EHLO
-	mta1.ufcg.edu.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757647Ab2LHBqv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Dec 2012 20:46:51 -0500
+Received: from 061093167034.ctinets.com ([61.93.167.34]:49604 "EHLO
+	mail.factum.hk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932999Ab2LHEiD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Dec 2012 23:38:03 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <songlile@yahoo.com.hk>
 
-
-
-Loan Offer at 3%, Feel Free to REPLY back to us for more info
+ May I ask if you would be eligible to pursue a Business Proposal of $19.5m?
