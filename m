@@ -1,63 +1,37 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [Bug] Remove and add a mounted device gets a new dev path
-Date: Mon, 10 Dec 2012 18:51:48 +1100
-Message-ID: <50C59494.5020103@interlog.com>
-References: <50C223B4.8050301@oracle.com> <50C55E67.1000507@oracle.com>
-Reply-To: dgilbert@interlog.com
+From: Chris Boot <bootc@bootc.net>
+Subject: Re: [Suggestion] drivers/target/sbp/ : set tport->tpg to NULL when
+ clean up for failure.
+Date: Mon, 10 Dec 2012 08:02:12 +0000
+Message-ID: <50C59704.60303@bootc.net>
+References: <50C01E16.5080303@asianux.com> <50C058A4.7030403@bootc.net> <50C05A02.6080401@asianux.com> <50C54B49.6020000@asianux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=GB2312
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:34149 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752176Ab2LJHv5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Dec 2012 02:51:57 -0500
-In-Reply-To: <50C55E67.1000507@oracle.com>
+Received: from kamaji.grokhost.net ([87.117.218.43]:45289 "EHLO
+	kamaji.grokhost.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751910Ab2LJICQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Dec 2012 03:02:16 -0500
+In-Reply-To: <50C54B49.6020000@asianux.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anand Jain <anand.jain@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: Chen Gang <gang.chen@asianux.com>
+Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 
-On 12-12-10 03:00 PM, Anand Jain wrote:
+On 10/12/12 02:39, Chen Gang wrote:
+> Hello Chris Boot:
 >
->
-> # mount /dev/sdb /btrfs
->
-> # echo "scsi remove-single-device 1 0 0 0" > /proc/scsi/scsi
->
-> # lsscsi
->   [0:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sda
->   [2:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sdc
->
-> # btrfs su create /btrfs/sv1
-> Create subvolume '/btrfs/sv1'
-> ERROR: cannot create subvolume - Input/output error
->
-> # echo "scsi add-single-device 1 0 0 0" > /proc/scsi/scsi
->
-> # lsscsi
-> [0:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sda
-> [1:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sdd <---
-> [2:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sdc
->
-> The same disk comes back as /dev/sdd
->
-> (the issue is same if disk is mounted as an ext4 fs)
+>   need I send the relative patch ?
 
-That has been called a feature for several years now.
-You (and any program that tries to track such things)
-should be using the Device Identification VPD page
-(e.g. see 'sg_vpd -i <device>').
+Hi Chen,
 
-And if the "VBOX HARDDISK" doesn't have that page
-containing a unique identifier then you need to speak
-to Oracle.
+Sorry, life got in the way this weekend. I'll try to get the patch sent
+out today.
 
-Linux could be more helpful and make those identifiers
-available in sysfs; then lsscsi might display those
-identifiers. The udev infrastructure tracks down some
-of those identifiers, see the /dev/disk folder.
+Cheers,
+Chris
 
-Doug Gilbert
-
+-- 
+Chris Boot
+bootc@bootc.net
 
