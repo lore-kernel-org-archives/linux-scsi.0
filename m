@@ -1,48 +1,38 @@
-From: "Hiral Patel (hiralpat)" <hiralpat@cisco.com>
-Subject: Re: [PATCH 9/9] fnic: FIP configuration mismatch between switch and
- adapter crashes driver
-Date: Mon, 10 Dec 2012 09:45:24 +0000
-Message-ID: <DF334AB4E0858445841A5B5201E1C1B1288D0AF7@xmb-rcd-x08.cisco.com>
-References: <1355132307.2464.14.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-3.cisco.com ([173.37.86.74]:61562 "EHLO
-	rcdn-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249Ab2LJJ5v convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Dec 2012 04:57:51 -0500
-In-Reply-To: <1355132307.2464.14.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
-Content-ID: <93A2F50F518B99459CBDC3F883D7B295@cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Petr Uzel <petr.uzel@suse.cz>
+Subject: [PATCH] [SCSI] Remove reference to dropped scsi_wait_scan module
+Date: Mon, 10 Dec 2012 14:26:47 +0100
+Message-ID: <1355146007-20138-1-git-send-email-petr.uzel@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Sorry This one is just same as [9/10], only difference is subject. By
-mistake I emailed it with others.
+scsi_wait_scan module has been dropped by commit 6072609d9bb91ff54aee.
+Don't reference it in Kconfig.
 
-Ignore this patch from the set.
+Signed-off-by: Petr Uzel <petr.uzel@suse.cz>
+---
+ drivers/scsi/Kconfig |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-Thanks,
-Hiral
-
-On 12/10/12 1:38 AM, "James Bottomley"
-<James.Bottomley@HansenPartnership.com> wrote:
-
->On Mon, 2012-12-10 at 01:21 -0800, Hiral Patel wrote:
->> If switch configured in FIP and kirkwood lake configured in non-fip
->>mode,
->> panics while queueing FIP frame in non-existing fip_frame_queue. Added
->>config
->> check before queueing FIP frame in misconfiguration case to avoid
->>kernel panic.
->
->Where exactly does this go?  You've already got a 9/10 patch which is
->different.
->
->James
->
->
-
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 74bf1aa..a392ca4 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -255,10 +255,9 @@ config SCSI_SCAN_ASYNC
+ 
+ 	  If you have built SCSI as modules, enabling this option can
+ 	  be a problem as the devices may not have been found by the
+-	  time your system expects them to have been.  You can load the
+-	  scsi_wait_scan module to ensure that all scans have completed.
+-	  If you build your SCSI drivers into the kernel, then everything
+-	  will work fine if you say Y here.
++	  time your system expects them to have been.  If you build your 
++	  SCSI drivers into the kernel, then everything will work fine 
++	  if you say Y here.
+ 
+ 	  You can override this choice by specifying "scsi_mod.scan=sync"
+ 	  or async on the kernel's command line.
+-- 
+1.7.7
