@@ -1,68 +1,95 @@
-From: Chen Gang <gang.chen@asianux.com>
-Subject: Re: [Suggestion] drivers/target/sbp/ : set tport->tpg to NULL when
- clean up for failure.
-Date: Mon, 10 Dec 2012 10:39:05 +0800
-Message-ID: <50C54B49.6020000@asianux.com>
-References: <50C01E16.5080303@asianux.com> <50C058A4.7030403@bootc.net> <50C05A02.6080401@asianux.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Mon, 10 Dec 2012 11:26:07 +0800
+Message-ID: <50C5564F.8030000@intel.com>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>  <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike>  <21511277.LLinyDpbAK@vostro.rjw.lan>  <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike>  <20121203081321.GA9990@mint-spring.sh.intel.com>  <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>  <20121203162323.GB19802@htj.dyndns.org> <1354623100.3206.34.camel@dabdike.int.hansenpartnership.com> <50C1891A.7040900@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <50C05A02.6080401@asianux.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Chris Boot <bootc@bootc.net>
-Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <50C1891A.7040900@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Chris Boot:
-
-  need I send the relative patch ?
-
-  Regards
-
-gchen.
-
-
-=D3=DA 2012=C4=EA12=D4=C206=C8=D5 16:40, Chen Gang =D0=B4=B5=C0:
-> =D3=DA 2012=C4=EA12=D4=C206=C8=D5 16:34, Chris Boot =D0=B4=B5=C0:
->> On 06/12/12 04:24, Chen Gang wrote:
->>> Hello Maintainers:=20
+On 12/07/2012 02:13 PM, Aaron Lu wrote:
+> On 12/04/2012 08:11 PM, James Bottomley wrote:
+>> On Mon, 2012-12-03 at 08:23 -0800, Tejun Heo wrote:
+>>> Hello, James.
 >>>
->>> in drivers/target/sbp/sbp_target.c:
+>>> On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
+>>>>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>>>>> index e65c62e..1756151 100644
+>>>>> --- a/include/scsi/scsi_device.h
+>>>>> +++ b/include/scsi/scsi_device.h
+>>>>> @@ -160,6 +160,7 @@ struct scsi_device {
+>>>>>  	unsigned can_power_off:1; /* Device supports runtime power off */
+>>>>>  	unsigned wce_default_on:1;	/* Cache is ON by default */
+>>>>>  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+>>>>> +	unsigned event_driven:1; /* No need to poll the device */
+>>>>>  
+>>>>>  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+>>>>>  	struct list_head event_list;	/* asserted events */
+>>>>
+>>>> Yes, but if we can get away with doing that, it should be in genhd
+>>>> because it's completely generic.
+>>>>
+>>>> I was imagining we'd have to fake the reply to the test unit ready or
+>>>> some other commands, which is why it would need to be in sr.c
+>>>>
+>>>> The check events code is Tejun's baby, if he's OK with it then just do
+>>>> it in genhd.c
 >>>
->>>    tport->tpg must be NULL before process it in function sbp_make_t=
-pg. (line 2185..2188)
->>>    tport->tpg assigned a ptr (line 2198)
->>>    if processing failed, not set tport->tpg =3D NULL (line 2208..22=
-12, 2217..2221)
->>>
->>>    we have done: when free tport->tpg, set it to NULL (line 2233..2=
-234)
->>>
->>>    is it valuable to let tport->tpg =3D NULL, when clean up for fai=
-lure ?
->>>
->> <snip>
+>>> The problem here is there's no easy to reach genhd from libata (or the
+>>> other way around) without going through sr.  I think we're gonna have
+>>> to have something in sr one way or the other.
 >>
->> Yes, that's a good catch. The way it is now, if we fail to set up th=
-e
->> TPG, the port will be left in an inconsistent state. I'll prepare a
->> patch ASAP unless you'd rather do it yourself.
+>> Can't we do that via an event? It's a bit clunky because we need the
+>> callback in the layer that sees the sdev, which is libata-scsi, we just
+>> need an analogue of ata_scsi_media_change_notify, but ignoring and
+>> allowing polling is essentially event driven as well, so it should all
+>> work.  We'll need a listener in genhd, which might be trickier.
+> 
+> Hi Tejun,
+> 
+> Do you have any comments on James' suggestion? I want to know your
+> opinion, thanks.
+
+Hi Tejun,
+
+A colleague of mine reminded me that it's impolite to write something
+like this, and here is my apology. I didn't mean to be rude, I'm sorry
+for this if it made you feel uncomfortable.
+
+If possible, can you please shed some light on this problem and James'
+suggestion? I need your opinions to make progress, thanks.
+
+-Aaron
+
+> 
+> Hi James,
+> 
+> Do you mean we start a thread in genhd that listen to events, so that
+> some driver can send an event to genhd about if the device should be
+> polled? I'm thinking where to store such information. If store it in
+> struct disk_events, then we will need to know which gendisk is for
+> the device, but how? Maybe by loop scan all gendisk's driverfs_dev?
+> If store it in struct device, then we do not need to send the event but
+> just set a flag in sturct device in libata, and let genhd check this
+> flag when poll. So I don't quite understand this, can you please
+> elaborate? Thanks.
+> 
+> Thanks,
+> Aaron
+> 
 >>
->> Thanks,
->> Chris
+>> This may also work as the more generic route for stuff where we can't
+>> connect the bottom to the top of the stack (which looks like a problem
+>> we'll begin wrestling with a lot now).
 >>
->=20
->   please help do it (better to mark me as Reported-by in your patch).
->=20
->   thanks.
->=20
->   :-)
->=20
->=20
+>> James
+>>
+>>
+> 
 
-
---=20
-Chen Gang
-
-Asianux Corporation
