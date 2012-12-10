@@ -1,38 +1,37 @@
-From: Petr Uzel <petr.uzel@suse.cz>
-Subject: [PATCH] [SCSI] Remove reference to dropped scsi_wait_scan module
-Date: Mon, 10 Dec 2012 14:26:47 +0100
-Message-ID: <1355146007-20138-1-git-send-email-petr.uzel@suse.cz>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [patch,v3,repost 00/10] make I/O path allocations more numa-friendly
+Date: Mon, 10 Dec 2012 12:59:30 -0500
+Message-ID: <x49zk1l6b5p.fsf@segfault.boston.devel.redhat.com>
+References: <1354034799-8460-1-git-send-email-jmoyer@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1354034799-8460-1-git-send-email-jmoyer@redhat.com> (Jeff
+	Moyer's message of "Tue, 27 Nov 2012 11:46:28 -0500")
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-scsi_wait_scan module has been dropped by commit 6072609d9bb91ff54aee.
-Don't reference it in Kconfig.
+Jeff Moyer <jmoyer@redhat.com> writes:
 
-Signed-off-by: Petr Uzel <petr.uzel@suse.cz>
----
- drivers/scsi/Kconfig |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+> Hi,
+>
+> This patch set makes memory allocations for data structures used in
+> the I/O path more numa friendly by allocating them from the same numa
+> node as the storage device.  I've only converted a handful of drivers
+> at this point.  My testing is limited by the hardware I have on hand.
+> Using these patches, I was able to max out the bandwidth of the storage
+> controller when issuing I/O from any node on my 4 node system.  Without
+> the patch, I/O from nodes remote to the storage device would suffer a
+> penalty ranging from 6-12%.  Given my relatively low-end setup[1], I
+> wouldn't be surprised if others could show a more significant performance
+> advantage.
+>
+> This is a repost of the last posting.  The only changes are additional
+> reviewed-by/acked-by tags.  I think this version is ready for inclusion.
+> James, would you mind taking a look?
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 74bf1aa..a392ca4 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -255,10 +255,9 @@ config SCSI_SCAN_ASYNC
- 
- 	  If you have built SCSI as modules, enabling this option can
- 	  be a problem as the devices may not have been found by the
--	  time your system expects them to have been.  You can load the
--	  scsi_wait_scan module to ensure that all scans have completed.
--	  If you build your SCSI drivers into the kernel, then everything
--	  will work fine if you say Y here.
-+	  time your system expects them to have been.  If you build your 
-+	  SCSI drivers into the kernel, then everything will work fine 
-+	  if you say Y here.
- 
- 	  You can override this choice by specifying "scsi_mod.scan=sync"
- 	  or async on the kernel's command line.
--- 
-1.7.7
+James?  Do you have any objections to including this for 3.8?
+
+-Jeff
