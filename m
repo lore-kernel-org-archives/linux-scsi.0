@@ -1,95 +1,103 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Mon, 10 Dec 2012 11:26:07 +0800
-Message-ID: <50C5564F.8030000@intel.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>  <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike>  <21511277.LLinyDpbAK@vostro.rjw.lan>  <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike>  <20121203081321.GA9990@mint-spring.sh.intel.com>  <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>  <20121203162323.GB19802@htj.dyndns.org> <1354623100.3206.34.camel@dabdike.int.hansenpartnership.com> <50C1891A.7040900@intel.com>
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Subject: Re: [PATCH 1/1] [SCSI] mpt3sas: Remove unneeded version.h header inclusion
+Date: Mon, 10 Dec 2012 09:07:02 +0530
+Message-ID: <CAK9yfHzjOCTtRgPaePzDenasjOsfTJMvPekV4+re_+gUzB2dzA@mail.gmail.com>
+References: <1354528817-28894-1-git-send-email-sachin.kamat@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <50C1891A.7040900@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:35011 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906Ab2LJDhD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Dec 2012 22:37:03 -0500
+Received: by mail-vb0-f46.google.com with SMTP id b13so2050553vby.19
+        for <linux-scsi@vger.kernel.org>; Sun, 09 Dec 2012 19:37:02 -0800 (PST)
+In-Reply-To: <1354528817-28894-1-git-send-email-sachin.kamat@linaro.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: DL-MPTFusionLinux@lsi.com, support@lsi.com, Sreekanth.Reddy@lsi.com, Nagalakshmi.Nandigama@lsi.com, sachin.kamat@linaro.org
 
-On 12/07/2012 02:13 PM, Aaron Lu wrote:
-> On 12/04/2012 08:11 PM, James Bottomley wrote:
->> On Mon, 2012-12-03 at 08:23 -0800, Tejun Heo wrote:
->>> Hello, James.
->>>
->>> On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
->>>>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
->>>>> index e65c62e..1756151 100644
->>>>> --- a/include/scsi/scsi_device.h
->>>>> +++ b/include/scsi/scsi_device.h
->>>>> @@ -160,6 +160,7 @@ struct scsi_device {
->>>>>  	unsigned can_power_off:1; /* Device supports runtime power off */
->>>>>  	unsigned wce_default_on:1;	/* Cache is ON by default */
->>>>>  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
->>>>> +	unsigned event_driven:1; /* No need to poll the device */
->>>>>  
->>>>>  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
->>>>>  	struct list_head event_list;	/* asserted events */
->>>>
->>>> Yes, but if we can get away with doing that, it should be in genhd
->>>> because it's completely generic.
->>>>
->>>> I was imagining we'd have to fake the reply to the test unit ready or
->>>> some other commands, which is why it would need to be in sr.c
->>>>
->>>> The check events code is Tejun's baby, if he's OK with it then just do
->>>> it in genhd.c
->>>
->>> The problem here is there's no easy to reach genhd from libata (or the
->>> other way around) without going through sr.  I think we're gonna have
->>> to have something in sr one way or the other.
->>
->> Can't we do that via an event? It's a bit clunky because we need the
->> callback in the layer that sees the sdev, which is libata-scsi, we just
->> need an analogue of ata_scsi_media_change_notify, but ignoring and
->> allowing polling is essentially event driven as well, so it should all
->> work.  We'll need a listener in genhd, which might be trickier.
-> 
-> Hi Tejun,
-> 
-> Do you have any comments on James' suggestion? I want to know your
-> opinion, thanks.
+ping..
 
-Hi Tejun,
+On 3 December 2012 15:30, Sachin Kamat <sachin.kamat@linaro.org> wrote:
+> linux/version.h is not necessary as detected by checkversion.pl script.
+>
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.c         |    1 -
+>  drivers/scsi/mpt3sas/mpt3sas_config.c       |    1 -
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c          |    1 -
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c        |    1 -
+>  drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c |    1 -
+>  5 files changed, 0 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 04f8010..d5e8463 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -42,7 +42,6 @@
+>   * USA.
+>   */
+>
+> -#include <linux/version.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/errno.h>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+> index ce7e59b..1df9ed4 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_config.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+> @@ -41,7 +41,6 @@
+>   * USA.
+>   */
+>
+> -#include <linux/version.h>
+>  #include <linux/module.h>
+>  #include <linux/kernel.h>
+>  #include <linux/init.h>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> index 8af944d..5b0d4f8 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> @@ -42,7 +42,6 @@
+>   * USA.
+>   */
+>
+> -#include <linux/version.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/errno.h>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 05f8045..ac9dbc2 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -41,7 +41,6 @@
+>   * USA.
+>   */
+>
+> -#include <linux/version.h>
+>  #include <linux/module.h>
+>  #include <linux/kernel.h>
+>  #include <linux/init.h>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+> index da6c5f2..6f8d621 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+> @@ -42,7 +42,6 @@
+>   * USA.
+>   */
+>
+> -#include <linux/version.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/errno.h>
+> --
+> 1.7.4.1
+>
 
-A colleague of mine reminded me that it's impolite to write something
-like this, and here is my apology. I didn't mean to be rude, I'm sorry
-for this if it made you feel uncomfortable.
 
-If possible, can you please shed some light on this problem and James'
-suggestion? I need your opinions to make progress, thanks.
 
--Aaron
-
-> 
-> Hi James,
-> 
-> Do you mean we start a thread in genhd that listen to events, so that
-> some driver can send an event to genhd about if the device should be
-> polled? I'm thinking where to store such information. If store it in
-> struct disk_events, then we will need to know which gendisk is for
-> the device, but how? Maybe by loop scan all gendisk's driverfs_dev?
-> If store it in struct device, then we do not need to send the event but
-> just set a flag in sturct device in libata, and let genhd check this
-> flag when poll. So I don't quite understand this, can you please
-> elaborate? Thanks.
-> 
-> Thanks,
-> Aaron
-> 
->>
->> This may also work as the more generic route for stuff where we can't
->> connect the bottom to the top of the stack (which looks like a problem
->> we'll begin wrestling with a lot now).
->>
->> James
->>
->>
-> 
-
+-- 
+With warm regards,
+Sachin
