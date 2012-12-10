@@ -1,103 +1,55 @@
-From: Sachin Kamat <sachin.kamat@linaro.org>
-Subject: Re: [PATCH 1/1] [SCSI] mpt3sas: Remove unneeded version.h header inclusion
-Date: Mon, 10 Dec 2012 09:07:02 +0530
-Message-ID: <CAK9yfHzjOCTtRgPaePzDenasjOsfTJMvPekV4+re_+gUzB2dzA@mail.gmail.com>
-References: <1354528817-28894-1-git-send-email-sachin.kamat@linaro.org>
+From: Anand Jain <anand.jain@oracle.com>
+Subject: [Bug] Remove and add a mounted device gets a new dev path
+Date: Mon, 10 Dec 2012 12:00:39 +0800
+Message-ID: <50C55E67.1000507@oracle.com>
+References: <50C223B4.8050301@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:35011 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751906Ab2LJDhD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Dec 2012 22:37:03 -0500
-Received: by mail-vb0-f46.google.com with SMTP id b13so2050553vby.19
-        for <linux-scsi@vger.kernel.org>; Sun, 09 Dec 2012 19:37:02 -0800 (PST)
-In-Reply-To: <1354528817-28894-1-git-send-email-sachin.kamat@linaro.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:30216 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849Ab2LJEAn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Dec 2012 23:00:43 -0500
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by userp1040.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with ESMTP id qBA40gPY005203
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Dec 2012 04:00:42 GMT
+Received: from acsmt357.oracle.com (acsmt357.oracle.com [141.146.40.157])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id qBA40fSm017292
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Dec 2012 04:00:41 GMT
+Received: from abhmt116.oracle.com (abhmt116.oracle.com [141.146.116.68])
+	by acsmt357.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id qBA40fnc018444
+	for <linux-scsi@vger.kernel.org>; Sun, 9 Dec 2012 22:00:41 -0600
+In-Reply-To: <50C223B4.8050301@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: DL-MPTFusionLinux@lsi.com, support@lsi.com, Sreekanth.Reddy@lsi.com, Nagalakshmi.Nandigama@lsi.com, sachin.kamat@linaro.org
-
-ping..
-
-On 3 December 2012 15:30, Sachin Kamat <sachin.kamat@linaro.org> wrote:
-> linux/version.h is not necessary as detected by checkversion.pl script.
->
-> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c         |    1 -
->  drivers/scsi/mpt3sas/mpt3sas_config.c       |    1 -
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c          |    1 -
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c        |    1 -
->  drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c |    1 -
->  5 files changed, 0 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 04f8010..d5e8463 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -42,7 +42,6 @@
->   * USA.
->   */
->
-> -#include <linux/version.h>
->  #include <linux/kernel.h>
->  #include <linux/module.h>
->  #include <linux/errno.h>
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-> index ce7e59b..1df9ed4 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-> @@ -41,7 +41,6 @@
->   * USA.
->   */
->
-> -#include <linux/version.h>
->  #include <linux/module.h>
->  #include <linux/kernel.h>
->  #include <linux/init.h>
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> index 8af944d..5b0d4f8 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> @@ -42,7 +42,6 @@
->   * USA.
->   */
->
-> -#include <linux/version.h>
->  #include <linux/kernel.h>
->  #include <linux/module.h>
->  #include <linux/errno.h>
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 05f8045..ac9dbc2 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -41,7 +41,6 @@
->   * USA.
->   */
->
-> -#include <linux/version.h>
->  #include <linux/module.h>
->  #include <linux/kernel.h>
->  #include <linux/init.h>
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
-> index da6c5f2..6f8d621 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
-> @@ -42,7 +42,6 @@
->   * USA.
->   */
->
-> -#include <linux/version.h>
->  #include <linux/kernel.h>
->  #include <linux/module.h>
->  #include <linux/errno.h>
-> --
-> 1.7.4.1
->
 
 
 
--- 
-With warm regards,
-Sachin
+# mount /dev/sdb /btrfs
+
+# echo "scsi remove-single-device 1 0 0 0" > /proc/scsi/scsi
+
+# lsscsi
+  [0:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sda
+  [2:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sdc
+
+# btrfs su create /btrfs/sv1
+Create subvolume '/btrfs/sv1'
+ERROR: cannot create subvolume - Input/output error
+
+# echo "scsi add-single-device 1 0 0 0" > /proc/scsi/scsi
+
+# lsscsi
+[0:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sda
+[1:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sdd <---
+[2:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sdc
+
+The same disk comes back as /dev/sdd
+
+(the issue is same if disk is mounted as an ext4 fs)
+
+Thanks
