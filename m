@@ -1,41 +1,48 @@
-From: <vmohan@brocade.com>
-Subject: [PATCH] bfa: Update MAINTAINERS list for BFA driver
-Date: Mon, 10 Dec 2012 01:20:03 -0800
-Message-ID: <1355131203-14805-1-git-send-email-vmohan@brocade.com>
+From: "Hiral Patel (hiralpat)" <hiralpat@cisco.com>
+Subject: Re: [PATCH 9/9] fnic: FIP configuration mismatch between switch and
+ adapter crashes driver
+Date: Mon, 10 Dec 2012 09:45:24 +0000
+Message-ID: <DF334AB4E0858445841A5B5201E1C1B1288D0AF7@xmb-rcd-x08.cisco.com>
+References: <1355132307.2464.14.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:40451 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753903Ab2LJJpM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Dec 2012 04:45:12 -0500
+Received: from rcdn-iport-3.cisco.com ([173.37.86.74]:61562 "EHLO
+	rcdn-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751249Ab2LJJ5v convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Dec 2012 04:57:51 -0500
+In-Reply-To: <1355132307.2464.14.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
+Content-ID: <93A2F50F518B99459CBDC3F883D7B295@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: adapter_linux_open_src_team@brocade.com, agurumur@brocade.com, Vijaya Mohan Guvva <vmohan@brocade.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Vijaya Mohan Guvva <vmohan@brocade.com>
+Sorry This one is just same as [9/10], only difference is subject. By
+mistake I emailed it with others.
 
-Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
----
- MAINTAINERS | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Ignore this patch from the set.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9386a63..e337857 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1697,7 +1697,8 @@ F:	drivers/bcma/
- F:	include/linux/bcma/
- 
- BROCADE BFA FC SCSI DRIVER
--M:	Krishna C Gudipati <kgudipat@brocade.com>
-+M:	Anil Gurumurthy <agurumur@brocade.com>
-+M:	Vijaya Mohan Guvva <vmohan@brocade.com>
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/bfa/
--- 
-1.7.12
+Thanks,
+Hiral
+
+On 12/10/12 1:38 AM, "James Bottomley"
+<James.Bottomley@HansenPartnership.com> wrote:
+
+>On Mon, 2012-12-10 at 01:21 -0800, Hiral Patel wrote:
+>> If switch configured in FIP and kirkwood lake configured in non-fip
+>>mode,
+>> panics while queueing FIP frame in non-existing fip_frame_queue. Added
+>>config
+>> check before queueing FIP frame in misconfiguration case to avoid
+>>kernel panic.
+>
+>Where exactly does this go?  You've already got a 9/10 patch which is
+>different.
+>
+>James
+>
+>
 
