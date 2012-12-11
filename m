@@ -1,12 +1,14 @@
-From: Ren Mingxin <renmx@cn.fujitsu.com>
+From: renmx@cn.fujitsu.com
 Subject: [PATCH] lpfc: init: fix misspelling word in mailbox command waiting comments
-Date: Tue, 11 Dec 2012 11:50:59 +0800
-Message-ID: <1355197859-17055-1-git-send-email-renmx__7278.48504107005$1355197734$gmane$org@cn.fujitsu.com>
+Date: Tue, 11 Dec 2012 11:53:38 +0800
+Message-ID: <1355198018-17112-1-git-send-email-renmx@cn.fujitsu.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: renmx@cn.fujitsu.com, james.smart@emulex.com
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Dayu <pandy.fnst@cn.fujitsu.com>
+To: chenhanxiao@cn.fujitsu.com, james.smart@emulex.com
+Cc: renmx@cn.fujitsu.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Dayu <pandy.fnst@cn.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
+
+From: Ren Mingxin <renmx@cn.fujitsu.com>
 
 Correct misspelling of "outstanding" in mailbox command waiting comments.
 
