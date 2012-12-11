@@ -1,53 +1,27 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: Re: [PATCH] bnx2i: fix the bit manipulation when setting the
- error mask
-Date: Mon, 10 Dec 2012 19:09:47 -0800
-Message-ID: <1355195388.31189.976.camel@dhcp-10-12-137-160.irv.broadcom.com>
-References: <4FF2A889.30102@redhat.com>
+From: intercomloanfirmservice <intercomloanfirmservice@gmail.com>
+Subject: Hello Do you need a loan?
+Date: Mon, 10 Dec 2012 19:25:08 -0800
+Message-ID: <CABPv3bOe-2H0XbvGGqFRkCBnUw55JkyZtMvH=ajSKF+6rNPBVg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4593 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751867Ab2LKDJ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Dec 2012 22:09:56 -0500
-In-Reply-To: <4FF2A889.30102@redhat.com>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:33711 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173Ab2LKDZI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Dec 2012 22:25:08 -0500
+Received: by mail-gh0-f174.google.com with SMTP id g15so653422ghb.19
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Dec 2012 19:25:08 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, mchan@broadcom.com
 
-Hello James,
-
-I'm re-sending this patch fix by Tomas as it hasn't made it upstream yet
-in any of the trees.
-
-Thanks,
-Eddie
-
-On Tue, 2012-07-03 at 10:08 +0200, Tomas Henzl wrote:
-> The intention in bnx2i_send_fw_iscsi_init_msg was to zero out
-> only the lower 32bits, but instead the whole mask64 is zeroed.
-> This patch fixes it.
-> 
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
-> diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-> index ece47e5..1cbf402 100644
-> --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-> +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-> @@ -1314,7 +1314,7 @@ int bnx2i_send_fw_iscsi_init_msg(struct bnx2i_hba *hba)
->  		(1ULL << ISCSI_KCQE_COMPLETION_STATUS_PROTOCOL_ERR_LUN));
->  	if (error_mask1) {
->  		iscsi_init2.error_bit_map[0] = error_mask1;
-> -		mask64 &= (u32)(~mask64);
-> +		mask64 ^= (u32)(mask64);
->  		mask64 |= error_mask1;
->  	} else
->  		iscsi_init2.error_bit_map[0] = (u32) mask64;
-> 
-> 
-> 
-
-
+Hello
+Do you need a loan?
+If yes, then you have no problem because all we are doing is
+give credit to the pepole 3% rates with us, you are sure of your sum
+credit.
+We are making history, and many others.
+as we are the best online lenders have loans internet.We different
+customers in Singapore, United States of America and its
+surroundings.
+You can contact us by.
+mail: starbicloanagency@gmail.com
