@@ -1,12 +1,16 @@
 From: renmx@cn.fujitsu.com
 Subject: [PATCH] lpfc: init: fix misspelling word in mailbox command waiting comments
 Date: Tue, 11 Dec 2012 11:53:38 +0800
-Message-ID: <1355198018-17112-1-git-send-email-renmx@cn.fujitsu.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1355198018-17112-1-git-send-email-renmx__43690.6699128032$1355197886$gmane$org@cn.fujitsu.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:37724 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751867Ab2LKDuy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Dec 2012 22:50:54 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: chenhanxiao@cn.fujitsu.com, james.smart@emulex.com
 Cc: renmx@cn.fujitsu.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Dayu <pandy.fnst@cn.fujitsu.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Ren Mingxin <renmx@cn.fujitsu.com>
 
@@ -33,3 +37,4 @@ index 7dc4218..8533160 100644
  		msleep(2);
 -- 
 1.7.1
+
