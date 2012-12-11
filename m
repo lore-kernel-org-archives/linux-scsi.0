@@ -1,53 +1,65 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: RE: [patch] [SCSI] mpt3sas: cut and paste bug storing trigger mpi
-Date: Tue, 11 Dec 2012 14:32:32 +0530
-Message-ID: <DCD177647606E9419ED923E0C8C4AA7223E75BB255@inbmail02.lsi.com>
-References: <20121207062801.GD18220@elgon.mountain>
+From: <sreekanth.reddy@lsi.com>
+Subject: [PATCH -next] [SCSI] mpt3sas: remove unused variables
+Date: Wed, 12 Dec 2012 02:26:51 +0530
+Message-ID: <20121211205651.GA5312@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121207062801.GD18220@elgon.mountain>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: Support <support@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:54549 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751821Ab2LKJ6f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Dec 2012 04:58:35 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, jejb@kernel.org, yongjun_wei@trendmicro.com.cn, sreekanth.reddy@lsi.com, weiyj.lk@gmail.com
+Cc: Nagalakshmi.Nandigama@lsi.com
 
-James,
+The variable 'chain_flags' and 'phy_number' are initialized but never used otherwise,
+So remove those unused variables.
 
-This patch seem to be fine. Please consider this patch as Acked-by: "Sreekanth Reddy" <Sreekanth.reddy@lsi.com>
-
-Regards,
-Sreekanth.
-
------Original Message-----
-From: Dan Carpenter [mailto:dan.carpenter@oracle.com] 
-Sent: Friday, December 07, 2012 11:58 AM
-To: Nandigama, Nagalakshmi
-Cc: Reddy, Sreekanth; Support; James E.J. Bottomley; DL-MPT Fusion Linux; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; kernel-janitors@vger.kernel.org
-Subject: [patch] [SCSI] mpt3sas: cut and paste bug storing trigger mpi
-
-ioc->diag_trigger_mpi is an SL_WH_MPI_TRIGGERS_T struct.
-
-There is a cut and paste error here and SL_WH_EVENT_TRIGGERS_T is used instead of SL_WH_MPI_TRIGGERS_T.  Since the SL_WH_EVENT_TRIGGERS_T is smaller than SL_WH_MPI_TRIGGERS_T, it means we only clear part of the buffer.
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Acked-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 ---
-Only needed in linux-next.
 
-This is a static analysis patch.  Even though I'm pretty sure it's correct, I'm not able to test it.
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 8af944d..3e35e64 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -3136,7 +3136,7 @@ _ctl_diag_trigger_mpi_store(struct device *cdev,
- 	spin_lock_irqsave(&ioc->diag_trigger_lock, flags);
- 	sz = min(sizeof(struct SL_WH_MPI_TRIGGERS_T), count);
- 	memset(&ioc->diag_trigger_mpi, 0,
--	    sizeof(struct SL_WH_EVENT_TRIGGERS_T));
-+	    sizeof(struct SL_WH_MPI_TRIGGERS_T));
- 	memcpy(&ioc->diag_trigger_mpi, buf, sz);
- 	if (ioc->diag_trigger_mpi.ValidEntries > NUM_VALID_ENTRIES)
- 		ioc->diag_trigger_mpi.ValidEntries = NUM_VALID_ENTRIES;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 764f3fe..157746d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1309,7 +1309,6 @@ _base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
+ 	void *sg_local, *chain;
+ 	u32 chain_offset;
+ 	u32 chain_length;
+-	u32 chain_flags;
+ 	int sges_left;
+ 	u32 sges_in_segment;
+ 	u8 simple_sgl_flags;
+@@ -1355,8 +1354,7 @@ _base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
+ 		sges_in_segment--;
+ 	}
+ 
+-	/* initializing the chain flags and pointers */
+-	chain_flags = MPI2_SGE_FLAGS_CHAIN_ELEMENT << MPI2_SGE_FLAGS_SHIFT;
++	/* initializing the pointers */
+ 	chain_req = _base_get_chain_buffer_tracker(ioc, smid);
+ 	if (!chain_req)
+ 		return -1;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index ac9dbc2..61a1a45 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2754,13 +2754,11 @@ _scsih_block_io_to_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
+ 	int i;
+ 	u16 handle;
+ 	u16 reason_code;
+-	u8 phy_number;
+ 
+ 	for (i = 0; i < event_data->NumEntries; i++) {
+ 		handle = le16_to_cpu(event_data->PHY[i].AttachedDevHandle);
+ 		if (!handle)
+ 			continue;
+-		phy_number = event_data->StartPhyNum + i;
+ 		reason_code = event_data->PHY[i].PhyStatus &
+ 		    MPI2_EVENT_SAS_TOPO_RC_MASK;
+ 		if (reason_code == MPI2_EVENT_SAS_TOPO_RC_DELAY_NOT_RESPONDING)
