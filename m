@@ -1,40 +1,22 @@
-From: renmx@cn.fujitsu.com
-Subject: [PATCH] lpfc: init: fix misspelling word in mailbox command waiting comments
-Date: Tue, 11 Dec 2012 11:53:38 +0800
-Message-ID: <1355198018-17112-1-git-send-email-renmx__43690.6699128032$1355197886$gmane$org@cn.fujitsu.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:37724 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751867Ab2LKDuy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Dec 2012 22:50:54 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: chenhanxiao@cn.fujitsu.com, james.smart@emulex.com
-Cc: renmx@cn.fujitsu.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Dayu <pandy.fnst@cn.fujitsu.com>
-
 From: Ren Mingxin <renmx@cn.fujitsu.com>
+Subject: Re: [PATCH] lpfc: init: fix misspelling word in mailbox command waiting
+ comments
+Date: Tue, 11 Dec 2012 11:57:40 +0800
+Message-ID: <50C6AF34.2010509@cn.fujitsu.com>
+References: <1355198018-17112-1-git-send-email-renmx@cn.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1355198018-17112-1-git-send-email-renmx@cn.fujitsu.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: james.smart@emulex.com
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Correct misspelling of "outstanding" in mailbox command waiting comments.
+On 12/11/2012 11:53 AM, renmx@cn.fujitsu.com wrote:
+> From: Ren Mingxin<renmx@cn.fujitsu.com>
 
-Signed-off-by: Ren Mingxin <renmx@cn.fujitsu.com>
-Signed-off-by: Pan Dayu <pandy.fnst@cn.fujitsu.com>
----
- drivers/scsi/lpfc/lpfc_init.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Superfluous, sorry for disturbing everyone :-(
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 7dc4218..8533160 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -2566,7 +2566,7 @@ lpfc_block_mgmt_io(struct lpfc_hba *phba, int mbx_action)
- 	}
- 	spin_unlock_irqrestore(&phba->hbalock, iflag);
- 
--	/* Wait for the outstnading mailbox command to complete */
-+	/* Wait for the outstanding mailbox command to complete */
- 	while (phba->sli.mbox_active) {
- 		/* Check active mailbox complete status every 2ms */
- 		msleep(2);
--- 
-1.7.1
-
+Ren
