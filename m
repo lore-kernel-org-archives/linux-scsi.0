@@ -1,158 +1,296 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 08/16] libfc, libfcoe,
- fcoe: Convert debug_logging macros to pr_info
-Date: Wed, 12 Dec 2012 15:22:46 -0800
-Message-ID: <20121212232246.13084.93455.stgit@fritz>
+Subject: [PATCH 07/16] bnx2fc: Use the fcoe_sysfs control interface
+Date: Wed, 12 Dec 2012 15:22:41 -0800
+Message-ID: <20121212232241.13084.58939.stgit@fritz>
 References: <20121212232203.13084.3630.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:33939 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:61794 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754462Ab2LLXWr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Dec 2012 18:22:47 -0500
+	id S1752903Ab2LLXWn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Dec 2012 18:22:43 -0500
 In-Reply-To: <20121212232203.13084.3630.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Marcus Dennis <marcusx.e.dennis@intel.com>
+Cc: Neil Horman <nhorman@tuxdriver.com>
 
-Convert libfc, libfcoe and fcoe's debug_logging macros
-to use pr_info() instead of printk(KERN_INFO, ...). checkpatch.pl
-now complains about this, so convert libfcoe to preferred
-method.
+This patch adds support for the new fcoe_sysfs
+control interface to bnx2fc.ko. It keeps the deprecated
+interface in tact and therefore either the legacy
+or the new control interfaces can be used. A mixed mode
+is not supported. A user must either use the new
+interfaces or the old ones, but not both.
+
+The fcoe_ctlr's link state is now driven by both the
+netdev link state as well as the fcoe_ctlr_device's
+enabled attribute. The link must be up and the
+fcoe_ctlr_device must be enabled before the FCoE
+Controller starts discovery or login.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
-Tested-by: Marcus Dennis <marcusx.e.dennis@intel.com>
+Acked-by: Neil Horman <nhorman@tuxdriver.com>
 ---
- drivers/scsi/fcoe/fcoe.h      |    6 +++---
- drivers/scsi/fcoe/libfcoe.h   |    9 ++++-----
- drivers/scsi/libfc/fc_libfc.h |   38 +++++++++++++++++++-------------------
- 3 files changed, 26 insertions(+), 27 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  168 +++++++++++++++++++++++++++++++------
+ 1 file changed, 139 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
-index b42dc32..2b53672 100644
---- a/drivers/scsi/fcoe/fcoe.h
-+++ b/drivers/scsi/fcoe/fcoe.h
-@@ -55,12 +55,12 @@ do {                                                            	\
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 9b38794..8d975ef 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -62,6 +62,10 @@ static int bnx2fc_destroy(struct net_device *net_device);
+ static int bnx2fc_enable(struct net_device *netdev);
+ static int bnx2fc_disable(struct net_device *netdev);
  
- #define FCOE_DBG(fmt, args...)						\
- 	FCOE_CHECK_LOGGING(FCOE_LOGGING,				\
--			   printk(KERN_INFO "fcoe: " fmt, ##args);)
-+			   pr_info("fcoe: " fmt, ##args);)
++/* fcoe_syfs control interface handlers */
++static int bnx2fc_ctlr_alloc(struct net_device *netdev);
++static int bnx2fc_ctlr_enabled(struct fcoe_ctlr_device *cdev);
++
+ static void bnx2fc_recv_frame(struct sk_buff *skb);
  
- #define FCOE_NETDEV_DBG(netdev, fmt, args...)			\
- 	FCOE_CHECK_LOGGING(FCOE_NETDEV_LOGGING,			\
--			   printk(KERN_INFO "fcoe: %s: " fmt,	\
--				  netdev->name, ##args);)
-+			   pr_info("fcoe: %s: " fmt,		\
-+				   netdev->name, ##args);)
+ static void bnx2fc_start_disc(struct bnx2fc_interface *interface);
+@@ -864,6 +868,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 				     u16 vlan_id)
+ {
+ 	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)context;
++	struct fcoe_ctlr_device *cdev;
+ 	struct fc_lport *lport;
+ 	struct fc_lport *vport;
+ 	struct bnx2fc_interface *interface, *tmp;
+@@ -925,28 +930,45 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 
+ 		bnx2fc_link_speed_update(lport);
+ 
++		cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
++
+ 		if (link_possible && !bnx2fc_link_ok(lport)) {
+-			/* Reset max recv frame size to default */
+-			fc_set_mfs(lport, BNX2FC_MFS);
+-			/*
+-			 * ctlr link up will only be handled during
+-			 * enable to avoid sending discovery solicitation
+-			 * on a stale vlan
+-			 */
+-			if (interface->enabled)
+-				fcoe_ctlr_link_up(ctlr);
++			switch (cdev->enabled) {
++			case FCOE_CTLR_DISABLED:
++				pr_info("Link up while interface is disabled.\n");
++				break;
++			case FCOE_CTLR_ENABLED:
++			case FCOE_CTLR_UNUSED:
++				/* Reset max recv frame size to default */
++				fc_set_mfs(lport, BNX2FC_MFS);
++				/*
++				 * ctlr link up will only be handled during
++				 * enable to avoid sending discovery
++				 * solicitation on a stale vlan
++				 */
++				if (interface->enabled)
++					fcoe_ctlr_link_up(ctlr);
++			};
+ 		} else if (fcoe_ctlr_link_down(ctlr)) {
+-			mutex_lock(&lport->lp_mutex);
+-			list_for_each_entry(vport, &lport->vports, list)
+-				fc_host_port_type(vport->host) =
+-							FC_PORTTYPE_UNKNOWN;
+-			mutex_unlock(&lport->lp_mutex);
+-			fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
+-			per_cpu_ptr(lport->stats,
+-				    get_cpu())->LinkFailureCount++;
+-			put_cpu();
+-			fcoe_clean_pending_queue(lport);
+-			wait_for_upload = 1;
++			switch (cdev->enabled) {
++			case FCOE_CTLR_DISABLED:
++				pr_info("Link down while interface is disabled.\n");
++				break;
++			case FCOE_CTLR_ENABLED:
++			case FCOE_CTLR_UNUSED:
++				mutex_lock(&lport->lp_mutex);
++				list_for_each_entry(vport, &lport->vports, list)
++					fc_host_port_type(vport->host) =
++					FC_PORTTYPE_UNKNOWN;
++				mutex_unlock(&lport->lp_mutex);
++				fc_host_port_type(lport->host) =
++					FC_PORTTYPE_UNKNOWN;
++				per_cpu_ptr(lport->stats,
++					    get_cpu())->LinkFailureCount++;
++				put_cpu();
++				fcoe_clean_pending_queue(lport);
++				wait_for_upload = 1;
++			};
+ 		}
+ 	}
+ 	mutex_unlock(&bnx2fc_dev_lock);
+@@ -1996,7 +2018,9 @@ static void bnx2fc_ulp_init(struct cnic_dev *dev)
+ 		set_bit(BNX2FC_CNIC_REGISTERED, &hba->reg_with_cnic);
+ }
+ 
+-
++/**
++ * Deperecated: Use bnx2fc_enabled()
++ */
+ static int bnx2fc_disable(struct net_device *netdev)
+ {
+ 	struct bnx2fc_interface *interface;
+@@ -2022,7 +2046,9 @@ static int bnx2fc_disable(struct net_device *netdev)
+ 	return rc;
+ }
+ 
+-
++/**
++ * Deprecated: Use bnx2fc_enabled()
++ */
+ static int bnx2fc_enable(struct net_device *netdev)
+ {
+ 	struct bnx2fc_interface *interface;
+@@ -2048,17 +2074,57 @@ static int bnx2fc_enable(struct net_device *netdev)
+ }
  
  /**
-  * struct fcoe_interface - A FCoE interface
-diff --git a/drivers/scsi/fcoe/libfcoe.h b/drivers/scsi/fcoe/libfcoe.h
-index 63d8fae..d3bb16d 100644
---- a/drivers/scsi/fcoe/libfcoe.h
-+++ b/drivers/scsi/fcoe/libfcoe.h
-@@ -17,17 +17,16 @@ do {							\
+- * bnx2fc_create - Create bnx2fc FCoE interface
++ * bnx2fc_ctlr_enabled() - Enable or disable an FCoE Controller
++ * @cdev: The FCoE Controller that is being enabled or disabled
+  *
+- * @buffer: The name of Ethernet interface to create on
+- * @kp:     The associated kernel param
++ * fcoe_sysfs will ensure that the state of 'enabled' has
++ * changed, so no checking is necessary here. This routine simply
++ * calls fcoe_enable or fcoe_disable, both of which are deprecated.
++ * When those routines are removed the functionality can be merged
++ * here.
++ */
++static int bnx2fc_ctlr_enabled(struct fcoe_ctlr_device *cdev)
++{
++	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(cdev);
++	struct fc_lport *lport = ctlr->lp;
++	struct net_device *netdev = bnx2fc_netdev(lport);
++
++	switch (cdev->enabled) {
++	case FCOE_CTLR_ENABLED:
++		return bnx2fc_enable(netdev);
++	case FCOE_CTLR_DISABLED:
++		return bnx2fc_disable(netdev);
++	case FCOE_CTLR_UNUSED:
++	default:
++		return -ENOTSUPP;
++	};
++}
++
++enum bnx2fc_create_link_state {
++	BNX2FC_CREATE_LINK_DOWN,
++	BNX2FC_CREATE_LINK_UP,
++};
++
++/**
++ * _bnx2fc_create() - Create bnx2fc FCoE interface
++ * @netdev  :   The net_device object the Ethernet interface to create on
++ * @fip_mode:   The FIP mode for this creation
++ * @link_state: The ctlr link state on creation
+  *
+- * Called from sysfs.
++ * Called from either the libfcoe 'create' module parameter
++ * via fcoe_create or from fcoe_syfs's ctlr_create file.
++ *
++ * libfcoe's 'create' module parameter is deprecated so some
++ * consolidation of code can be done when that interface is
++ * removed.
+  *
+  * Returns: 0 for success
+  */
+-static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
++static int _bnx2fc_create(struct net_device *netdev,
++			  enum fip_state fip_mode,
++			  enum bnx2fc_create_link_state link_state)
+ {
++	struct fcoe_ctlr_device *cdev;
+ 	struct fcoe_ctlr *ctlr;
+ 	struct bnx2fc_interface *interface;
+ 	struct bnx2fc_hba *hba;
+@@ -2153,7 +2219,15 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
+ 	/* Make this master N_port */
+ 	ctlr->lp = lport;
  
- #define LIBFCOE_DBG(fmt, args...)					\
- 	LIBFCOE_CHECK_LOGGING(LIBFCOE_LOGGING,				\
--			      printk(KERN_INFO "libfcoe: " fmt, ##args);)
-+			      pr_info("libfcoe: " fmt, ##args);)
+-	if (!bnx2fc_link_ok(lport)) {
++	cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
++
++	if (link_state == BNX2FC_CREATE_LINK_UP)
++		cdev->enabled = FCOE_CTLR_ENABLED;
++	else
++		cdev->enabled = FCOE_CTLR_DISABLED;
++
++	if (link_state == BNX2FC_CREATE_LINK_UP &&
++	    !bnx2fc_link_ok(lport)) {
+ 		fcoe_ctlr_link_up(ctlr);
+ 		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
+ 		set_bit(ADAPTER_STATE_READY, &interface->hba->adapter_state);
+@@ -2161,7 +2235,10 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
  
- #define LIBFCOE_FIP_DBG(fip, fmt, args...)				\
- 	LIBFCOE_CHECK_LOGGING(LIBFCOE_FIP_LOGGING,			\
--			      printk(KERN_INFO "host%d: fip: " fmt,	\
--				     (fip)->lp->host->host_no, ##args);)
-+			      pr_info("host%d: fip: " fmt,		\
-+				      (fip)->lp->host->host_no, ##args);)
+ 	BNX2FC_HBA_DBG(lport, "create: START DISC\n");
+ 	bnx2fc_start_disc(interface);
+-	interface->enabled = true;
++
++	if (link_state == BNX2FC_CREATE_LINK_UP)
++		interface->enabled = true;
++
+ 	/*
+ 	 * Release from kref_init in bnx2fc_interface_setup, on success
+ 	 * lport should be holding a reference taken in bnx2fc_if_create
+@@ -2187,6 +2264,37 @@ mod_err:
+ }
  
- #define LIBFCOE_TRANSPORT_DBG(fmt, args...)				\
- 	LIBFCOE_CHECK_LOGGING(LIBFCOE_TRANSPORT_LOGGING,		\
--			      printk(KERN_INFO "%s: " fmt,		\
--				     __func__, ##args);)
-+			      pr_info("%s: " fmt, __func__, ##args);)
+ /**
++ * bnx2fc_create() - Create a bnx2fc interface
++ * @netdev  : The net_device object the Ethernet interface to create on
++ * @fip_mode: The FIP mode for this creation
++ *
++ * Called from fcoe transport
++ *
++ * Returns: 0 for success
++ */
++static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
++{
++	return _bnx2fc_create(netdev, fip_mode, BNX2FC_CREATE_LINK_UP);
++}
++
++/**
++ * bnx2fc_ctlr_alloc() - Allocate a bnx2fc interface from fcoe_sysfs
++ * @netdev: The net_device to be used by the allocated FCoE Controller
++ *
++ * This routine is called from fcoe_sysfs. It will start the fcoe_ctlr
++ * in a link_down state. The allows the user an opportunity to configure
++ * the FCoE Controller from sysfs before enabling the FCoE Controller.
++ *
++ * Creating in with this routine starts the FCoE Controller in Fabric
++ * mode. The user can change to VN2VN or another mode before enabling.
++ */
++static int bnx2fc_ctlr_alloc(struct net_device *netdev)
++{
++	return _bnx2fc_create(netdev, FIP_MODE_FABRIC,
++			      BNX2FC_CREATE_LINK_DOWN);
++}
++
++/**
+  * bnx2fc_find_hba_for_cnic - maps cnic instance to bnx2fc hba instance
+  *
+  * @cnic:	Pointer to cnic device instance
+@@ -2311,6 +2419,7 @@ static struct fcoe_transport bnx2fc_transport = {
+ 	.name = {"bnx2fc"},
+ 	.attached = false,
+ 	.list = LIST_HEAD_INIT(bnx2fc_transport.list),
++	.alloc = bnx2fc_ctlr_alloc,
+ 	.match = bnx2fc_match,
+ 	.create = bnx2fc_create,
+ 	.destroy = bnx2fc_destroy,
+@@ -2555,6 +2664,7 @@ module_init(bnx2fc_mod_init);
+ module_exit(bnx2fc_mod_exit);
  
- #define LIBFCOE_SYSFS_DBG(cdev, fmt, args...)				\
- 	LIBFCOE_CHECK_LOGGING(LIBFCOE_SYSFS_LOGGING,			\
-diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
-index c2830cc..b74189d 100644
---- a/drivers/scsi/libfc/fc_libfc.h
-+++ b/drivers/scsi/libfc/fc_libfc.h
-@@ -41,25 +41,25 @@ extern unsigned int fc_debug_logging;
- 
- #define FC_LIBFC_DBG(fmt, args...)					\
- 	FC_CHECK_LOGGING(FC_LIBFC_LOGGING,				\
--			 printk(KERN_INFO "libfc: " fmt, ##args))
-+			 pr_info("libfc: " fmt, ##args))
- 
- #define FC_LPORT_DBG(lport, fmt, args...)				\
- 	FC_CHECK_LOGGING(FC_LPORT_LOGGING,				\
--			 printk(KERN_INFO "host%u: lport %6.6x: " fmt,	\
--				(lport)->host->host_no,			\
--				(lport)->port_id, ##args))
-+			 pr_info("host%u: lport %6.6x: " fmt,		\
-+				 (lport)->host->host_no,		\
-+				 (lport)->port_id, ##args))
- 
--#define FC_DISC_DBG(disc, fmt, args...)				\
--	FC_CHECK_LOGGING(FC_DISC_LOGGING,			\
--			 printk(KERN_INFO "host%u: disc: " fmt,	\
--				fc_disc_lport(disc)->host->host_no,	\
--				##args))
-+#define FC_DISC_DBG(disc, fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_DISC_LOGGING,				\
-+			 pr_info("host%u: disc: " fmt,			\
-+				 fc_disc_lport(disc)->host->host_no,	\
-+				 ##args))
- 
- #define FC_RPORT_ID_DBG(lport, port_id, fmt, args...)			\
- 	FC_CHECK_LOGGING(FC_RPORT_LOGGING,				\
--			 printk(KERN_INFO "host%u: rport %6.6x: " fmt,	\
--				(lport)->host->host_no,			\
--				(port_id), ##args))
-+			 pr_info("host%u: rport %6.6x: " fmt,		\
-+				 (lport)->host->host_no,		\
-+				 (port_id), ##args))
- 
- #define FC_RPORT_DBG(rdata, fmt, args...)				\
- 	FC_RPORT_ID_DBG((rdata)->local_port, (rdata)->ids.port_id, fmt, ##args)
-@@ -70,13 +70,13 @@ extern unsigned int fc_debug_logging;
- 		if ((pkt)->seq_ptr) {					\
- 			struct fc_exch *_ep = NULL;			\
- 			_ep = fc_seq_exch((pkt)->seq_ptr);		\
--			printk(KERN_INFO "host%u: fcp: %6.6x: "		\
-+			pr_info("host%u: fcp: %6.6x: "			\
- 				"xid %04x-%04x: " fmt,			\
- 				(pkt)->lp->host->host_no,		\
- 				(pkt)->rport->port_id,			\
- 				(_ep)->oxid, (_ep)->rxid, ##args);	\
- 		} else {						\
--			printk(KERN_INFO "host%u: fcp: %6.6x: " fmt,	\
-+			pr_info("host%u: fcp: %6.6x: " fmt,		\
- 				(pkt)->lp->host->host_no,		\
- 				(pkt)->rport->port_id, ##args);		\
- 		}							\
-@@ -84,14 +84,14 @@ extern unsigned int fc_debug_logging;
- 
- #define FC_EXCH_DBG(exch, fmt, args...)					\
- 	FC_CHECK_LOGGING(FC_EXCH_LOGGING,				\
--			 printk(KERN_INFO "host%u: xid %4x: " fmt,	\
--				(exch)->lp->host->host_no,		\
--				exch->xid, ##args))
-+			 pr_info("host%u: xid %4x: " fmt,		\
-+				 (exch)->lp->host->host_no,		\
-+				 exch->xid, ##args))
- 
- #define FC_SCSI_DBG(lport, fmt, args...)				\
- 	FC_CHECK_LOGGING(FC_SCSI_LOGGING,				\
--			 printk(KERN_INFO "host%u: scsi: " fmt,		\
--				(lport)->host->host_no,	##args))
-+			 pr_info("host%u: scsi: " fmt,			\
-+				 (lport)->host->host_no, ##args))
- 
- /*
-  * FC-4 Providers.
+ static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ = {
++	.set_fcoe_ctlr_enabled = bnx2fc_ctlr_enabled,
+ 	.get_fcoe_ctlr_link_fail = bnx2fc_ctlr_get_lesb,
+ 	.get_fcoe_ctlr_vlink_fail = bnx2fc_ctlr_get_lesb,
+ 	.get_fcoe_ctlr_miss_fka = bnx2fc_ctlr_get_lesb,
 
