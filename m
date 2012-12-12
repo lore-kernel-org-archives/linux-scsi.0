@@ -1,7 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 02/16] Documentation: Add missing devices/ to devices path
-Date: Wed, 12 Dec 2012 15:22:14 -0800
-Message-ID: <20121212232214.13084.22497.stgit@fritz>
+Subject: [PATCH 03/16] libfcoe: Save some memory and optimize name lookups
+Date: Wed, 12 Dec 2012 15:22:19 -0800
+Message-ID: <20121212232219.13084.99143.stgit@fritz>
 References: <20121212232203.13084.3630.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,40 +9,96 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga11.intel.com ([192.55.52.93]:49889 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754515Ab2LLXWS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Dec 2012 18:22:18 -0500
+	id S1754515Ab2LLXWU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Dec 2012 18:22:20 -0500
 In-Reply-To: <20121212232203.13084.3630.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>
+Cc: Neil Horman <nhorman@tuxdriver.com>
 
-Add missing 'devices/ subdirectory to /sys/bus/fcoe/devices/ctlr_X
-and /sys/bus/fcoe/devices/fcf_X references.
+Instead of creating a structure with an enum and a pointer
+to a string, simply allocate an array of strings and use
+the enum values for the indicies.
+
+This means that we do not need to iterate through the list
+of entries when looking up a string name by its enum key.
+
+This will also help with a latter patch that will add
+more fcoe_sysfs attributes that will also use the
+fcoe_enum_name_search macro. One attribute will also do
+a reverse lookup which requires less code when the
+enum-to-string mappings are organized as this patch makes
+them to be.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
+Acked-by: Neil Horman <nhorman@tuxdriver.com>
 ---
- Documentation/ABI/testing/sysfs-bus-fcoe |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe_sysfs.c |   44 +++++++++++++++-------------------------
+ 1 file changed, 16 insertions(+), 28 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-fcoe b/Documentation/ABI/testing/sysfs-bus-fcoe
-index 50e2a80..971dc22 100644
---- a/Documentation/ABI/testing/sysfs-bus-fcoe
-+++ b/Documentation/ABI/testing/sysfs-bus-fcoe
-@@ -1,4 +1,4 @@
--What:		/sys/bus/fcoe/ctlr_X
-+What:		/sys/bus/fcoe/devices/ctlr_X
- Date:		March 2012
- KernelVersion:	TBD
- Contact:	Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org
-@@ -26,7 +26,7 @@ Attributes:
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index 5e75168..5a74a47 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -210,25 +210,23 @@ static ssize_t show_fcoe_fcf_device_##field(struct device *dev,	\
+ #define fcoe_enum_name_search(title, table_type, table)			\
+ static const char *get_fcoe_##title##_name(enum table_type table_key)	\
+ {									\
+-	int i;								\
+-	char *name = NULL;						\
+-									\
+-	for (i = 0; i < ARRAY_SIZE(table); i++) {			\
+-		if (table[i].value == table_key) {			\
+-			name = table[i].name;				\
+-			break;						\
+-		}							\
+-	}								\
+-	return name;							\
++	if (table_key >= ARRAY_SIZE(table))				\
++		return NULL;						\
++	return table[table_key];					\
+ }
  
- Notes: ctlr_X (global increment starting at 0)
+-static struct {
+-	enum fcf_state value;
+-	char           *name;
+-} fcf_state_names[] = {
+-	{ FCOE_FCF_STATE_UNKNOWN,      "Unknown" },
+-	{ FCOE_FCF_STATE_DISCONNECTED, "Disconnected" },
+-	{ FCOE_FCF_STATE_CONNECTED,    "Connected" },
++static char *fip_conn_type_names[] = {
++	[ FIP_CONN_TYPE_UNKNOWN ] = "Unknown",
++        [ FIP_CONN_TYPE_FABRIC ]  = "Fabric",
++	[ FIP_CONN_TYPE_VN2VN ]   = "VN2VN",
++};
++fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
++#define FCOE_CTLR_MODE_MAX_NAMELEN 50
++
++static char *fcf_state_names[] = {
++	[ FCOE_FCF_STATE_UNKNOWN ]      = "Unknown",
++	[ FCOE_FCF_STATE_DISCONNECTED ] = "Disconnected",
++	[ FCOE_FCF_STATE_CONNECTED ]    = "Connected",
+ };
+ fcoe_enum_name_search(fcf_state, fcf_state, fcf_state_names)
+ #define FCOE_FCF_STATE_MAX_NAMELEN 50
+@@ -246,17 +244,7 @@ static ssize_t show_fcf_state(struct device *dev,
+ }
+ static FCOE_DEVICE_ATTR(fcf, state, S_IRUGO, show_fcf_state, NULL);
  
--What:		/sys/bus/fcoe/fcf_X
-+What:		/sys/bus/fcoe/devices/fcf_X
- Date:		March 2012
- KernelVersion:	TBD
- Contact:	Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org
+-static struct {
+-	enum fip_conn_type value;
+-	char               *name;
+-} fip_conn_type_names[] = {
+-	{ FIP_CONN_TYPE_UNKNOWN, "Unknown" },
+-	{ FIP_CONN_TYPE_FABRIC, "Fabric" },
+-	{ FIP_CONN_TYPE_VN2VN, "VN2VN" },
+-};
+-fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
+-#define FCOE_CTLR_MODE_MAX_NAMELEN 50
+-
++#define FCOE_MAX_MODENAME_LEN 20
+ static ssize_t show_ctlr_mode(struct device *dev,
+ 			      struct device_attribute *attr,
+ 			      char *buf)
 
