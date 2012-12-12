@@ -1,296 +1,68 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 07/16] bnx2fc: Use the fcoe_sysfs control interface
-Date: Wed, 12 Dec 2012 15:22:41 -0800
-Message-ID: <20121212232241.13084.58939.stgit@fritz>
+Subject: [PATCH 10/16] fcoe: add support to the get_netdev() for fcoe_interface
+Date: Wed, 12 Dec 2012 15:22:57 -0800
+Message-ID: <20121212232257.13084.25770.stgit@fritz>
 References: <20121212232203.13084.3630.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61794 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:24718 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752903Ab2LLXWn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Dec 2012 18:22:43 -0500
+	id S1754349Ab2LLXW5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Dec 2012 18:22:57 -0500
 In-Reply-To: <20121212232203.13084.3630.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>
+Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>, Marcus Dennis <marcusx.e.dennis@intel.com>, Yi Zou <yi.zou@intel.com>
 
-This patch adds support for the new fcoe_sysfs
-control interface to bnx2fc.ko. It keeps the deprecated
-interface in tact and therefore either the legacy
-or the new control interfaces can be used. A mixed mode
-is not supported. A user must either use the new
-interfaces or the old ones, but not both.
+From: Yi Zou <yi.zou@intel.com>
 
-The fcoe_ctlr's link state is now driven by both the
-netdev link state as well as the fcoe_ctlr_device's
-enabled attribute. The link must be up and the
-fcoe_ctlr_device must be enabled before the FCoE
-Controller starts discovery or login.
+Adds support to fcoe_port's newly added get_netdev fucntion pointer.
 
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Tested-by: Marcus Dennis <marcusx.e.dennis@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  168 +++++++++++++++++++++++++++++++------
- 1 file changed, 139 insertions(+), 29 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |    1 +
+ include/scsi/libfcoe.h   |   12 ++++++++++++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 9b38794..8d975ef 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -62,6 +62,10 @@ static int bnx2fc_destroy(struct net_device *net_device);
- static int bnx2fc_enable(struct net_device *netdev);
- static int bnx2fc_disable(struct net_device *netdev);
- 
-+/* fcoe_syfs control interface handlers */
-+static int bnx2fc_ctlr_alloc(struct net_device *netdev);
-+static int bnx2fc_ctlr_enabled(struct fcoe_ctlr_device *cdev);
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 21927f7..4cec9dd 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1118,6 +1118,7 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 	port = lport_priv(lport);
+ 	port->lport = lport;
+ 	port->priv = fcoe;
++	port->get_netdev = fcoe_netdev;
+ 	port->max_queue_depth = FCOE_MAX_QUEUE_DEPTH;
+ 	port->min_queue_depth = FCOE_MIN_QUEUE_DEPTH;
+ 	INIT_WORK(&port->destroy_work, fcoe_destroy_work);
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index 52bba71..746bc58 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -353,6 +353,18 @@ struct fcoe_port {
+ 	u8		      data_src_addr[ETH_ALEN];
+ 	struct net_device * (*get_netdev)(const struct fc_lport *lport);
+ };
 +
- static void bnx2fc_recv_frame(struct sk_buff *skb);
- 
- static void bnx2fc_start_disc(struct bnx2fc_interface *interface);
-@@ -864,6 +868,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 				     u16 vlan_id)
- {
- 	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)context;
-+	struct fcoe_ctlr_device *cdev;
- 	struct fc_lport *lport;
- 	struct fc_lport *vport;
- 	struct bnx2fc_interface *interface, *tmp;
-@@ -925,28 +930,45 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 
- 		bnx2fc_link_speed_update(lport);
- 
-+		cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
-+
- 		if (link_possible && !bnx2fc_link_ok(lport)) {
--			/* Reset max recv frame size to default */
--			fc_set_mfs(lport, BNX2FC_MFS);
--			/*
--			 * ctlr link up will only be handled during
--			 * enable to avoid sending discovery solicitation
--			 * on a stale vlan
--			 */
--			if (interface->enabled)
--				fcoe_ctlr_link_up(ctlr);
-+			switch (cdev->enabled) {
-+			case FCOE_CTLR_DISABLED:
-+				pr_info("Link up while interface is disabled.\n");
-+				break;
-+			case FCOE_CTLR_ENABLED:
-+			case FCOE_CTLR_UNUSED:
-+				/* Reset max recv frame size to default */
-+				fc_set_mfs(lport, BNX2FC_MFS);
-+				/*
-+				 * ctlr link up will only be handled during
-+				 * enable to avoid sending discovery
-+				 * solicitation on a stale vlan
-+				 */
-+				if (interface->enabled)
-+					fcoe_ctlr_link_up(ctlr);
-+			};
- 		} else if (fcoe_ctlr_link_down(ctlr)) {
--			mutex_lock(&lport->lp_mutex);
--			list_for_each_entry(vport, &lport->vports, list)
--				fc_host_port_type(vport->host) =
--							FC_PORTTYPE_UNKNOWN;
--			mutex_unlock(&lport->lp_mutex);
--			fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
--			per_cpu_ptr(lport->stats,
--				    get_cpu())->LinkFailureCount++;
--			put_cpu();
--			fcoe_clean_pending_queue(lport);
--			wait_for_upload = 1;
-+			switch (cdev->enabled) {
-+			case FCOE_CTLR_DISABLED:
-+				pr_info("Link down while interface is disabled.\n");
-+				break;
-+			case FCOE_CTLR_ENABLED:
-+			case FCOE_CTLR_UNUSED:
-+				mutex_lock(&lport->lp_mutex);
-+				list_for_each_entry(vport, &lport->vports, list)
-+					fc_host_port_type(vport->host) =
-+					FC_PORTTYPE_UNKNOWN;
-+				mutex_unlock(&lport->lp_mutex);
-+				fc_host_port_type(lport->host) =
-+					FC_PORTTYPE_UNKNOWN;
-+				per_cpu_ptr(lport->stats,
-+					    get_cpu())->LinkFailureCount++;
-+				put_cpu();
-+				fcoe_clean_pending_queue(lport);
-+				wait_for_upload = 1;
-+			};
- 		}
- 	}
- 	mutex_unlock(&bnx2fc_dev_lock);
-@@ -1996,7 +2018,9 @@ static void bnx2fc_ulp_init(struct cnic_dev *dev)
- 		set_bit(BNX2FC_CNIC_REGISTERED, &hba->reg_with_cnic);
- }
- 
--
 +/**
-+ * Deperecated: Use bnx2fc_enabled()
++ * fcoe_get_netdev() - Return the net device associated with a local port
++ * @lport: The local port to get the net device from
 + */
- static int bnx2fc_disable(struct net_device *netdev)
- {
- 	struct bnx2fc_interface *interface;
-@@ -2022,7 +2046,9 @@ static int bnx2fc_disable(struct net_device *netdev)
- 	return rc;
- }
- 
--
-+/**
-+ * Deprecated: Use bnx2fc_enabled()
-+ */
- static int bnx2fc_enable(struct net_device *netdev)
- {
- 	struct bnx2fc_interface *interface;
-@@ -2048,17 +2074,57 @@ static int bnx2fc_enable(struct net_device *netdev)
- }
- 
- /**
-- * bnx2fc_create - Create bnx2fc FCoE interface
-+ * bnx2fc_ctlr_enabled() - Enable or disable an FCoE Controller
-+ * @cdev: The FCoE Controller that is being enabled or disabled
-  *
-- * @buffer: The name of Ethernet interface to create on
-- * @kp:     The associated kernel param
-+ * fcoe_sysfs will ensure that the state of 'enabled' has
-+ * changed, so no checking is necessary here. This routine simply
-+ * calls fcoe_enable or fcoe_disable, both of which are deprecated.
-+ * When those routines are removed the functionality can be merged
-+ * here.
-+ */
-+static int bnx2fc_ctlr_enabled(struct fcoe_ctlr_device *cdev)
++static inline struct net_device *fcoe_get_netdev(const struct fc_lport *lport)
 +{
-+	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(cdev);
-+	struct fc_lport *lport = ctlr->lp;
-+	struct net_device *netdev = bnx2fc_netdev(lport);
++	struct fcoe_port *port = ((struct fcoe_port *)lport_priv(lport));
 +
-+	switch (cdev->enabled) {
-+	case FCOE_CTLR_ENABLED:
-+		return bnx2fc_enable(netdev);
-+	case FCOE_CTLR_DISABLED:
-+		return bnx2fc_disable(netdev);
-+	case FCOE_CTLR_UNUSED:
-+	default:
-+		return -ENOTSUPP;
-+	};
++	return (port->get_netdev) ? port->get_netdev(lport) : NULL;
 +}
 +
-+enum bnx2fc_create_link_state {
-+	BNX2FC_CREATE_LINK_DOWN,
-+	BNX2FC_CREATE_LINK_UP,
-+};
-+
-+/**
-+ * _bnx2fc_create() - Create bnx2fc FCoE interface
-+ * @netdev  :   The net_device object the Ethernet interface to create on
-+ * @fip_mode:   The FIP mode for this creation
-+ * @link_state: The ctlr link state on creation
-  *
-- * Called from sysfs.
-+ * Called from either the libfcoe 'create' module parameter
-+ * via fcoe_create or from fcoe_syfs's ctlr_create file.
-+ *
-+ * libfcoe's 'create' module parameter is deprecated so some
-+ * consolidation of code can be done when that interface is
-+ * removed.
-  *
-  * Returns: 0 for success
-  */
--static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
-+static int _bnx2fc_create(struct net_device *netdev,
-+			  enum fip_state fip_mode,
-+			  enum bnx2fc_create_link_state link_state)
- {
-+	struct fcoe_ctlr_device *cdev;
- 	struct fcoe_ctlr *ctlr;
- 	struct bnx2fc_interface *interface;
- 	struct bnx2fc_hba *hba;
-@@ -2153,7 +2219,15 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
- 	/* Make this master N_port */
- 	ctlr->lp = lport;
- 
--	if (!bnx2fc_link_ok(lport)) {
-+	cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
-+
-+	if (link_state == BNX2FC_CREATE_LINK_UP)
-+		cdev->enabled = FCOE_CTLR_ENABLED;
-+	else
-+		cdev->enabled = FCOE_CTLR_DISABLED;
-+
-+	if (link_state == BNX2FC_CREATE_LINK_UP &&
-+	    !bnx2fc_link_ok(lport)) {
- 		fcoe_ctlr_link_up(ctlr);
- 		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
- 		set_bit(ADAPTER_STATE_READY, &interface->hba->adapter_state);
-@@ -2161,7 +2235,10 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
- 
- 	BNX2FC_HBA_DBG(lport, "create: START DISC\n");
- 	bnx2fc_start_disc(interface);
--	interface->enabled = true;
-+
-+	if (link_state == BNX2FC_CREATE_LINK_UP)
-+		interface->enabled = true;
-+
- 	/*
- 	 * Release from kref_init in bnx2fc_interface_setup, on success
- 	 * lport should be holding a reference taken in bnx2fc_if_create
-@@ -2187,6 +2264,37 @@ mod_err:
- }
- 
- /**
-+ * bnx2fc_create() - Create a bnx2fc interface
-+ * @netdev  : The net_device object the Ethernet interface to create on
-+ * @fip_mode: The FIP mode for this creation
-+ *
-+ * Called from fcoe transport
-+ *
-+ * Returns: 0 for success
-+ */
-+static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
-+{
-+	return _bnx2fc_create(netdev, fip_mode, BNX2FC_CREATE_LINK_UP);
-+}
-+
-+/**
-+ * bnx2fc_ctlr_alloc() - Allocate a bnx2fc interface from fcoe_sysfs
-+ * @netdev: The net_device to be used by the allocated FCoE Controller
-+ *
-+ * This routine is called from fcoe_sysfs. It will start the fcoe_ctlr
-+ * in a link_down state. The allows the user an opportunity to configure
-+ * the FCoE Controller from sysfs before enabling the FCoE Controller.
-+ *
-+ * Creating in with this routine starts the FCoE Controller in Fabric
-+ * mode. The user can change to VN2VN or another mode before enabling.
-+ */
-+static int bnx2fc_ctlr_alloc(struct net_device *netdev)
-+{
-+	return _bnx2fc_create(netdev, FIP_MODE_FABRIC,
-+			      BNX2FC_CREATE_LINK_DOWN);
-+}
-+
-+/**
-  * bnx2fc_find_hba_for_cnic - maps cnic instance to bnx2fc hba instance
-  *
-  * @cnic:	Pointer to cnic device instance
-@@ -2311,6 +2419,7 @@ static struct fcoe_transport bnx2fc_transport = {
- 	.name = {"bnx2fc"},
- 	.attached = false,
- 	.list = LIST_HEAD_INIT(bnx2fc_transport.list),
-+	.alloc = bnx2fc_ctlr_alloc,
- 	.match = bnx2fc_match,
- 	.create = bnx2fc_create,
- 	.destroy = bnx2fc_destroy,
-@@ -2555,6 +2664,7 @@ module_init(bnx2fc_mod_init);
- module_exit(bnx2fc_mod_exit);
- 
- static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ = {
-+	.set_fcoe_ctlr_enabled = bnx2fc_ctlr_enabled,
- 	.get_fcoe_ctlr_link_fail = bnx2fc_ctlr_get_lesb,
- 	.get_fcoe_ctlr_vlink_fail = bnx2fc_ctlr_get_lesb,
- 	.get_fcoe_ctlr_miss_fka = bnx2fc_ctlr_get_lesb,
+ void fcoe_clean_pending_queue(struct fc_lport *);
+ void fcoe_check_wait_queue(struct fc_lport *lport, struct sk_buff *skb);
+ void fcoe_queue_timer(ulong lport);
 
