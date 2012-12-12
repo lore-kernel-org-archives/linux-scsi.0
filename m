@@ -1,104 +1,74 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 03/16] libfcoe: Save some memory and optimize name lookups
-Date: Wed, 12 Dec 2012 15:22:19 -0800
-Message-ID: <20121212232219.13084.99143.stgit@fritz>
+Subject: [PATCH 04/16] libfcoe: Add fcoe_sysfs debug logging level
+Date: Wed, 12 Dec 2012 15:22:24 -0800
+Message-ID: <20121212232224.13084.13254.stgit@fritz>
 References: <20121212232203.13084.3630.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:49889 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:1330 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754515Ab2LLXWU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Dec 2012 18:22:20 -0500
+	id S1754515Ab2LLXW0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Dec 2012 18:22:26 -0500
 In-Reply-To: <20121212232203.13084.3630.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Neil Horman <nhorman@tuxdriver.com>
 
-Instead of creating a structure with an enum and a pointer
-to a string, simply allocate an array of strings and use
-the enum values for the indicies.
-
-This means that we do not need to iterate through the list
-of entries when looking up a string name by its enum key.
-
-This will also help with a latter patch that will add
-more fcoe_sysfs attributes that will also use the
-fcoe_enum_name_search macro. One attribute will also do
-a reverse lookup which requires less code when the
-enum-to-string mappings are organized as this patch makes
-them to be.
+Add a macro to print fcoe_sysfs debug statements.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 Acked-by: Neil Horman <nhorman@tuxdriver.com>
 ---
- drivers/scsi/fcoe/fcoe_sysfs.c |   44 +++++++++++++++-------------------------
- 1 file changed, 16 insertions(+), 28 deletions(-)
+ drivers/scsi/fcoe/fcoe_sysfs.c |    7 +++++++
+ drivers/scsi/fcoe/libfcoe.h    |   11 ++++++++---
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index 5e75168..5a74a47 100644
+index 5a74a47..638e8a2 100644
 --- a/drivers/scsi/fcoe/fcoe_sysfs.c
 +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -210,25 +210,23 @@ static ssize_t show_fcoe_fcf_device_##field(struct device *dev,	\
- #define fcoe_enum_name_search(title, table_type, table)			\
- static const char *get_fcoe_##title##_name(enum table_type table_key)	\
- {									\
--	int i;								\
--	char *name = NULL;						\
--									\
--	for (i = 0; i < ARRAY_SIZE(table); i++) {			\
--		if (table[i].value == table_key) {			\
--			name = table[i].name;				\
--			break;						\
--		}							\
--	}								\
--	return name;							\
-+	if (table_key >= ARRAY_SIZE(table))				\
-+		return NULL;						\
-+	return table[table_key];					\
- }
+@@ -24,6 +24,13 @@
  
--static struct {
--	enum fcf_state value;
--	char           *name;
--} fcf_state_names[] = {
--	{ FCOE_FCF_STATE_UNKNOWN,      "Unknown" },
--	{ FCOE_FCF_STATE_DISCONNECTED, "Disconnected" },
--	{ FCOE_FCF_STATE_CONNECTED,    "Connected" },
-+static char *fip_conn_type_names[] = {
-+	[ FIP_CONN_TYPE_UNKNOWN ] = "Unknown",
-+        [ FIP_CONN_TYPE_FABRIC ]  = "Fabric",
-+	[ FIP_CONN_TYPE_VN2VN ]   = "VN2VN",
-+};
-+fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
-+#define FCOE_CTLR_MODE_MAX_NAMELEN 50
+ #include <scsi/fcoe_sysfs.h>
+ 
++/*
++ * OK to include local libfcoe.h for debug_logging, but cannot include
++ * <scsi/libfcoe.h> otherwise non-netdev based fcoe solutions would have
++ * have to include more than fcoe_sysfs.h.
++ */
++#include "libfcoe.h"
 +
-+static char *fcf_state_names[] = {
-+	[ FCOE_FCF_STATE_UNKNOWN ]      = "Unknown",
-+	[ FCOE_FCF_STATE_DISCONNECTED ] = "Disconnected",
-+	[ FCOE_FCF_STATE_CONNECTED ]    = "Connected",
- };
- fcoe_enum_name_search(fcf_state, fcf_state, fcf_state_names)
- #define FCOE_FCF_STATE_MAX_NAMELEN 50
-@@ -246,17 +244,7 @@ static ssize_t show_fcf_state(struct device *dev,
- }
- static FCOE_DEVICE_ATTR(fcf, state, S_IRUGO, show_fcf_state, NULL);
+ static atomic_t ctlr_num;
+ static atomic_t fcf_num;
  
--static struct {
--	enum fip_conn_type value;
--	char               *name;
--} fip_conn_type_names[] = {
--	{ FIP_CONN_TYPE_UNKNOWN, "Unknown" },
--	{ FIP_CONN_TYPE_FABRIC, "Fabric" },
--	{ FIP_CONN_TYPE_VN2VN, "VN2VN" },
--};
--fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
--#define FCOE_CTLR_MODE_MAX_NAMELEN 50
--
-+#define FCOE_MAX_MODENAME_LEN 20
- static ssize_t show_ctlr_mode(struct device *dev,
- 			      struct device_attribute *attr,
- 			      char *buf)
+diff --git a/drivers/scsi/fcoe/libfcoe.h b/drivers/scsi/fcoe/libfcoe.h
+index 6af5fc3..63d8fae 100644
+--- a/drivers/scsi/fcoe/libfcoe.h
++++ b/drivers/scsi/fcoe/libfcoe.h
+@@ -2,9 +2,10 @@
+ #define _FCOE_LIBFCOE_H_
+ 
+ extern unsigned int libfcoe_debug_logging;
+-#define LIBFCOE_LOGGING	    0x01 /* General logging, not categorized */
+-#define LIBFCOE_FIP_LOGGING 0x02 /* FIP logging */
+-#define LIBFCOE_TRANSPORT_LOGGING	0x04 /* FCoE transport logging */
++#define LIBFCOE_LOGGING	          0x01 /* General logging, not categorized */
++#define LIBFCOE_FIP_LOGGING       0x02 /* FIP logging */
++#define LIBFCOE_TRANSPORT_LOGGING 0x04 /* FCoE transport logging */
++#define LIBFCOE_SYSFS_LOGGING     0x08 /* fcoe_sysfs logging */
+ 
+ #define LIBFCOE_CHECK_LOGGING(LEVEL, CMD)		\
+ do {							\
+@@ -28,4 +29,8 @@ do {							\
+ 			      printk(KERN_INFO "%s: " fmt,		\
+ 				     __func__, ##args);)
+ 
++#define LIBFCOE_SYSFS_DBG(cdev, fmt, args...)				\
++	LIBFCOE_CHECK_LOGGING(LIBFCOE_SYSFS_LOGGING,			\
++			      pr_info("ctlr_%d: " fmt, cdev->id, ##args);)
++
+ #endif /* _FCOE_LIBFCOE_H_ */
 
