@@ -1,118 +1,66 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 15/16] bnx2fc: use fcoe_get_lesb/fcoe_ctlr_get_lesb() directly
- from libfcoe
-Date: Wed, 12 Dec 2012 15:23:24 -0800
-Message-ID: <20121212232324.13084.65058.stgit@fritz>
-References: <20121212232203.13084.3630.stgit@fritz>
+Subject: FCoE Updates for 3.8
+Date: Wed, 12 Dec 2012 16:45:50 -0800
+Message-ID: <20121213004550.GA19743@fritz.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:44563 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:6606 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754276Ab2LLXXZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Dec 2012 18:23:25 -0500
-In-Reply-To: <20121212232203.13084.3630.stgit@fritz>
+	id S1754860Ab2LMApx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Dec 2012 19:45:53 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>, Marcus Dennis <marcusx.e.dennis@intel.com>, Yi Zou <yi.zou@intel.com>
 
-From: Yi Zou <yi.zou@intel.com>
+The following changes since commit b69f0859dc8e633c5d8c06845811588fe17e68b3:
 
-Drop the bnx2fc_xxx versions as they are basically the same.
+  Linux 3.7-rc8 (2012-12-03 11:22:37 -0800)
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
-Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Tested-by: Marcus Dennis <marcusx.e.dennis@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   53 +++++--------------------------------
- 1 file changed, 7 insertions(+), 46 deletions(-)
+are available in the git repository at:
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index a1c687c..4d5c721 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -93,7 +93,6 @@ static void bnx2fc_port_shutdown(struct fc_lport *lport);
- static void bnx2fc_stop(struct bnx2fc_interface *interface);
- static int __init bnx2fc_mod_init(void);
- static void __exit bnx2fc_mod_exit(void);
--static void bnx2fc_ctlr_get_lesb(struct fcoe_ctlr_device *ctlr_dev);
- 
- unsigned int bnx2fc_debug_level;
- module_param_named(debug_logging, bnx2fc_debug_level, int, S_IRUGO|S_IWUSR);
-@@ -111,44 +110,6 @@ static inline struct net_device *bnx2fc_netdev(const struct fc_lport *lport)
- 		((struct fcoe_port *)lport_priv(lport))->priv)->netdev;
- }
- 
--/**
-- * bnx2fc_get_lesb() - Fill the FCoE Link Error Status Block
-- * @lport: the local port
-- * @fc_lesb: the link error status block
-- */
--static void bnx2fc_get_lesb(struct fc_lport *lport,
--			    struct fc_els_lesb *fc_lesb)
--{
--	struct net_device *netdev = fcoe_get_netdev(lport);
--
--	__fcoe_get_lesb(lport, fc_lesb, netdev);
--}
--
--static void bnx2fc_ctlr_get_lesb(struct fcoe_ctlr_device *ctlr_dev)
--{
--	struct fcoe_ctlr *fip = fcoe_ctlr_device_priv(ctlr_dev);
--	struct net_device *netdev = fcoe_get_netdev(fip->lp);
--	struct fcoe_fc_els_lesb *fcoe_lesb;
--	struct fc_els_lesb fc_lesb;
--
--	__fcoe_get_lesb(fip->lp, &fc_lesb, netdev);
--	fcoe_lesb = (struct fcoe_fc_els_lesb *)(&fc_lesb);
--
--	ctlr_dev->lesb.lesb_link_fail =
--		ntohl(fcoe_lesb->lesb_link_fail);
--	ctlr_dev->lesb.lesb_vlink_fail =
--		ntohl(fcoe_lesb->lesb_vlink_fail);
--	ctlr_dev->lesb.lesb_miss_fka =
--		ntohl(fcoe_lesb->lesb_miss_fka);
--	ctlr_dev->lesb.lesb_symb_err =
--		ntohl(fcoe_lesb->lesb_symb_err);
--	ctlr_dev->lesb.lesb_err_block =
--		ntohl(fcoe_lesb->lesb_err_block);
--	ctlr_dev->lesb.lesb_fcs_error =
--		ntohl(fcoe_lesb->lesb_fcs_error);
--}
--EXPORT_SYMBOL(bnx2fc_ctlr_get_lesb);
--
- static void bnx2fc_fcf_get_vlan_id(struct fcoe_fcf_device *fcf_dev)
- {
- 	struct fcoe_ctlr_device *ctlr_dev =
-@@ -2637,12 +2598,12 @@ module_exit(bnx2fc_mod_exit);
- 
- static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ = {
- 	.set_fcoe_ctlr_enabled = bnx2fc_ctlr_enabled,
--	.get_fcoe_ctlr_link_fail = bnx2fc_ctlr_get_lesb,
--	.get_fcoe_ctlr_vlink_fail = bnx2fc_ctlr_get_lesb,
--	.get_fcoe_ctlr_miss_fka = bnx2fc_ctlr_get_lesb,
--	.get_fcoe_ctlr_symb_err = bnx2fc_ctlr_get_lesb,
--	.get_fcoe_ctlr_err_block = bnx2fc_ctlr_get_lesb,
--	.get_fcoe_ctlr_fcs_error = bnx2fc_ctlr_get_lesb,
-+	.get_fcoe_ctlr_link_fail = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_vlink_fail = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_miss_fka = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_symb_err = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_err_block = fcoe_ctlr_get_lesb,
-+	.get_fcoe_ctlr_fcs_error = fcoe_ctlr_get_lesb,
- 
- 	.get_fcoe_fcf_selected = fcoe_fcf_get_selected,
- 	.get_fcoe_fcf_vlan_id = bnx2fc_fcf_get_vlan_id,
-@@ -2749,7 +2710,7 @@ static struct libfc_function_template bnx2fc_libfc_fcn_templ = {
- 	.elsct_send		= bnx2fc_elsct_send,
- 	.fcp_abort_io		= bnx2fc_abort_io,
- 	.fcp_cleanup		= bnx2fc_cleanup,
--	.get_lesb		= bnx2fc_get_lesb,
-+	.get_lesb		= fcoe_get_lesb,
- 	.rport_event_callback	= bnx2fc_rport_event_handler,
- };
- 
+  git://git.kernel.org/pub/scm/linux/kernel/git/rwlove/fcoe.git for-next-12-12-12
 
+for you to fetch changes up to 04f0ac991b5dd2a32c3fa3dcb2cf34830949afa5:
+
+  debris left by "[SCSI] libfcoe: Remove mutex_trylock/restart_syscall checks" (2012-12-11 10:22:36 -0800)
+
+----------------------------------------------------------------
+Al Viro (1):
+      debris left by "[SCSI] libfcoe: Remove mutex_trylock/restart_syscall checks"
+
+Robert Love (7):
+      Documentation: Add missing devices/ to devices path
+      libfcoe: Save some memory and optimize name lookups
+      libfcoe: Add fcoe_sysfs debug logging level
+      libfcoe, fcoe, bnx2fc: Add new fcoe control interface
+      fcoe: Use the fcoe_sysfs control interface
+      bnx2fc: Use the fcoe_sysfs control interface
+      libfc, libfcoe, fcoe: Convert debug_logging macros to pr_info
+
+Vasu Dev (1):
+      libfc: fix REC handling
+
+Yi Zou (7):
+      fcoe: prep work to start consolidate the usage of fcoe_netdev
+      fcoe: add support to the get_netdev() for fcoe_interface
+      libfcoe, fcoe: move fcoe_link_speed_update() to libfcoe and export it
+      libfcoe, fcoe: consolidate the fcoe_ctlr_get_lesb/fcoe_get_lesb
+      bnx2fc: add support to get_netdev for bnx2f_interface
+      bnx2fc: use fcoe_link_speed_update() from the exported symbol in libfcoe
+      bnx2fc: use fcoe_get_lesb/fcoe_ctlr_get_lesb() directly from libfcoe
+
+ Documentation/ABI/testing/sysfs-bus-fcoe |   45 +++++-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |  256 +++++++++++++++++-------------
+ drivers/scsi/fcoe/fcoe.c                 |  212 +++++++++++++++----------
+ drivers/scsi/fcoe/fcoe.h                 |    6 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c            |   17 +-
+ drivers/scsi/fcoe/fcoe_sysfs.c           |  186 ++++++++++++++++++----
+ drivers/scsi/fcoe/fcoe_transport.c       |  199 ++++++++++++++++++++++-
+ drivers/scsi/fcoe/libfcoe.h              |   20 ++-
+ drivers/scsi/libfc/fc_fcp.c              |    6 +-
+ drivers/scsi/libfc/fc_libfc.h            |   38 ++---
+ include/scsi/fcoe_sysfs.h                |   11 +-
+ include/scsi/libfcoe.h                   |   32 +++-
+ 12 files changed, 749 insertions(+), 279 deletions(-)
