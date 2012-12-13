@@ -1,41 +1,38 @@
 From: Bart Van Assche <bvanassche@acm.org>
 Subject: Re: SCSI mid layer and high IOPS capable devices
-Date: Thu, 13 Dec 2012 12:40:27 +0100
-Message-ID: <50C9BEAB.6010702@acm.org>
-References: <20121211000013.GI23107@beardog.cce.hp.com> <50C6ED1A.7040404@acm.org> <20121211224626.GB20898@beardog.cce.hp.com>
+Date: Thu, 13 Dec 2012 16:22:33 +0100
+Message-ID: <50C9F2B9.4050500@acm.org>
+References: <20121211000013.GI23107@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gerard.telenet-ops.be ([195.130.132.48]:60266 "EHLO
-	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860Ab2LMLka (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Dec 2012 06:40:30 -0500
-In-Reply-To: <20121211224626.GB20898@beardog.cce.hp.com>
+Received: from juliette.telenet-ops.be ([195.130.137.74]:47703 "EHLO
+	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756084Ab2LMPWi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Dec 2012 10:22:38 -0500
+In-Reply-To: <20121211000013.GI23107@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scameron@beardog.cce.hp.com
 Cc: linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, dab@hp.com
 
-On 12/11/12 23:46, scameron@beardog.cce.hp.com wrote:
-> I would be curious to see what kind of results you would get with scsi_debug
-> with fake_rw=1.  I am sort of suspecting that trying to put an "upper limit"
-> on scsi LLD IOPS performance by seeing what scsi_debug will do with fake_rw=1
-> is not really valid (or, maybe I'm doing it wrong) as I know of one case in
-> which a real HW scsi driver beats scsi_debug fake_rw=1 at IOPS on the very
-> same system, which seems like it shouldn't be possible.  Kind of mysterious.
+On 12/11/12 01:00, scameron@beardog.cce.hp.com wrote:
+> The driver, like nvme, has a submit and reply queue per cpu.
 
-The test
+This is interesting. If my interpretation of the POSIX spec is correct 
+then aio_write() allows to queue overlapping writes and all writes 
+submitted by the same thread have to be performed in the order they were 
+submitted by that thread. What if a thread submits a first write via 
+aio_write(), gets rescheduled on another CPU and submits a second 
+overlapping write also via aio_write() ? If a block driver uses one 
+queue per CPU, does that mean that such writes that were issued in order 
+can be executed in a different order by the driver and/or hardware than 
+the order in which the writes were submitted ?
 
-# disable-frequency-scaling
-# modprobe scsi_debug delay=0 fake_rw=1
-# echo 2 > /sys/block/sdc/queue/rq_affinity
-# echo noop > /sys/block/sdc/queue/scheduler
-# echo 0 > /sys/block/sdc/queue/add_random
-
-results in about 800K IOPS for random reads on the same setup (with a 
-request size of 4 KB; CPU: quad core i5-2400).
-
-Repeating the same test with fake_rw=0 results in about 651K IOPS.
+See also the aio_write() man page, The Open Group Base Specifications 
+Issue 7, IEEE Std 1003.1-2008 
+(http://pubs.opengroup.org/onlinepubs/9699919799/functions/aio_write.html).
 
 Bart.
+
