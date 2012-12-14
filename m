@@ -1,69 +1,71 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: FCoE Updates for 3.8 (v2)
-Date: Fri, 14 Dec 2012 14:33:55 -0800
-Message-ID: <20121214223355.GA10546@fritz.jf.intel.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: FCoE Updates for 3.8
+Date: Fri, 14 Dec 2012 22:33:19 +0000
+Message-ID: <50CBA92E.6090607@intel.com>
+References: <20121213004550.GA19743@fritz.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6199 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:38945 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932401Ab2LNWdz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Dec 2012 17:33:55 -0500
-Content-Disposition: inline
+	id S932156Ab2LNWda (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Dec 2012 17:33:30 -0500
+In-Reply-To: <20121213004550.GA19743@fritz.jf.intel.com>
+Content-Language: en-US
+Content-ID: <27A82C9EBD24674A9085261D14425C0E@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The following changes since commit b69f0859dc8e633c5d8c06845811588fe17e68b3:
-
-  Linux 3.7-rc8 (2012-12-03 11:22:37 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/rwlove/fcoe.git tags/for-next-12-14-12
-
-for you to fetch changes up to 4f670ff8eb4cb3e9e6ae0c0c6976faa0a4503751:
-
-  debris left by "[SCSI] libfcoe: Remove mutex_trylock/restart_syscall checks" (2012-12-14 10:38:56 -0800)
-
-----------------------------------------------------------------
-FCoE Updates for 3.8 (v2)
-
-----------------------------------------------------------------
-Al Viro (1):
-      debris left by "[SCSI] libfcoe: Remove mutex_trylock/restart_syscall checks"
-
-Robert Love (7):
-      Documentation: Add missing devices/ to devices path
-      libfcoe: Save some memory and optimize name lookups
-      libfcoe: Add fcoe_sysfs debug logging level
-      libfcoe, fcoe, bnx2fc: Add new fcoe control interface
-      fcoe: Use the fcoe_sysfs control interface
-      bnx2fc: Use the fcoe_sysfs control interface
-      libfc, libfcoe, fcoe: Convert debug_logging macros to pr_info
-
-Vasu Dev (1):
-      libfc: fix REC handling
-
-Yi Zou (7):
-      fcoe: prep work to start consolidate the usage of fcoe_netdev
-      fcoe: add support to the get_netdev() for fcoe_interface
-      libfcoe, fcoe: move fcoe_link_speed_update() to libfcoe and export it
-      libfcoe, fcoe: consolidate the fcoe_ctlr_get_lesb/fcoe_get_lesb
-      bnx2fc: add support to get_netdev for bnx2f_interface
-      bnx2fc: use fcoe_link_speed_update() from the exported symbol in libfcoe
-      bnx2fc: use fcoe_get_lesb/fcoe_ctlr_get_lesb() directly from libfcoe
-
- Documentation/ABI/testing/sysfs-bus-fcoe |   45 +++++-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |  256 +++++++++++++++++-------------
- drivers/scsi/fcoe/fcoe.c                 |  212 +++++++++++++++----------
- drivers/scsi/fcoe/fcoe.h                 |    6 +-
- drivers/scsi/fcoe/fcoe_ctlr.c            |   17 +-
- drivers/scsi/fcoe/fcoe_sysfs.c           |  186 ++++++++++++++++++----
- drivers/scsi/fcoe/fcoe_transport.c       |  199 ++++++++++++++++++++++-
- drivers/scsi/fcoe/libfcoe.h              |   20 ++-
- drivers/scsi/libfc/fc_fcp.c              |    6 +-
- drivers/scsi/libfc/fc_libfc.h            |   38 ++---
- include/scsi/fcoe_sysfs.h                |   11 +-
- include/scsi/libfcoe.h                   |   32 +++-
- 12 files changed, 749 insertions(+), 279 deletions(-)
+T24gV2VkIDEyIERlYyAyMDEyIDA0OjQ1OjUwIFBNIFBTVCwgUm9iZXJ0IExvdmUgd3JvdGU6DQo+
+IFRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQgYjY5ZjA4NTlkYzhlNjMzYzVkOGMw
+Njg0NTgxMTU4OGZlMTdlNjhiMzoNCj4NCj4gICAgTGludXggMy43LXJjOCAoMjAxMi0xMi0wMyAx
+MToyMjozNyAtMDgwMCkNCj4NCj4gYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkg
+YXQ6DQo+DQo+ICAgIGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dp
+dC9yd2xvdmUvZmNvZS5naXQgZm9yLW5leHQtMTItMTItMTINCj4NCj4gZm9yIHlvdSB0byBmZXRj
+aCBjaGFuZ2VzIHVwIHRvIDA0ZjBhYzk5MWI1ZGQyYTMyYzNmYTNkY2IyY2YzNDgzMDk0OWFmYTU6
+DQo+DQo+ICAgIGRlYnJpcyBsZWZ0IGJ5ICJbU0NTSV0gbGliZmNvZTogUmVtb3ZlIG11dGV4X3Ry
+eWxvY2svcmVzdGFydF9zeXNjYWxsIGNoZWNrcyIgKDIwMTItMTItMTEgMTA6MjI6MzYgLTA4MDAp
+DQo+DQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0NCj4gQWwgVmlybyAoMSk6DQo+ICAgICAgICBkZWJyaXMgbGVmdCBieSAi
+W1NDU0ldIGxpYmZjb2U6IFJlbW92ZSBtdXRleF90cnlsb2NrL3Jlc3RhcnRfc3lzY2FsbCBjaGVj
+a3MiDQo+DQo+IFJvYmVydCBMb3ZlICg3KToNCj4gICAgICAgIERvY3VtZW50YXRpb246IEFkZCBt
+aXNzaW5nIGRldmljZXMvIHRvIGRldmljZXMgcGF0aA0KPiAgICAgICAgbGliZmNvZTogU2F2ZSBz
+b21lIG1lbW9yeSBhbmQgb3B0aW1pemUgbmFtZSBsb29rdXBzDQo+ICAgICAgICBsaWJmY29lOiBB
+ZGQgZmNvZV9zeXNmcyBkZWJ1ZyBsb2dnaW5nIGxldmVsDQo+ICAgICAgICBsaWJmY29lLCBmY29l
+LCBibngyZmM6IEFkZCBuZXcgZmNvZSBjb250cm9sIGludGVyZmFjZQ0KPiAgICAgICAgZmNvZTog
+VXNlIHRoZSBmY29lX3N5c2ZzIGNvbnRyb2wgaW50ZXJmYWNlDQo+ICAgICAgICBibngyZmM6IFVz
+ZSB0aGUgZmNvZV9zeXNmcyBjb250cm9sIGludGVyZmFjZQ0KPiAgICAgICAgbGliZmMsIGxpYmZj
+b2UsIGZjb2U6IENvbnZlcnQgZGVidWdfbG9nZ2luZyBtYWNyb3MgdG8gcHJfaW5mbw0KPg0KPiBW
+YXN1IERldiAoMSk6DQo+ICAgICAgICBsaWJmYzogZml4IFJFQyBoYW5kbGluZw0KPg0KPiBZaSBa
+b3UgKDcpOg0KPiAgICAgICAgZmNvZTogcHJlcCB3b3JrIHRvIHN0YXJ0IGNvbnNvbGlkYXRlIHRo
+ZSB1c2FnZSBvZiBmY29lX25ldGRldg0KPiAgICAgICAgZmNvZTogYWRkIHN1cHBvcnQgdG8gdGhl
+IGdldF9uZXRkZXYoKSBmb3IgZmNvZV9pbnRlcmZhY2UNCj4gICAgICAgIGxpYmZjb2UsIGZjb2U6
+IG1vdmUgZmNvZV9saW5rX3NwZWVkX3VwZGF0ZSgpIHRvIGxpYmZjb2UgYW5kIGV4cG9ydCBpdA0K
+PiAgICAgICAgbGliZmNvZSwgZmNvZTogY29uc29saWRhdGUgdGhlIGZjb2VfY3Rscl9nZXRfbGVz
+Yi9mY29lX2dldF9sZXNiDQo+ICAgICAgICBibngyZmM6IGFkZCBzdXBwb3J0IHRvIGdldF9uZXRk
+ZXYgZm9yIGJueDJmX2ludGVyZmFjZQ0KPiAgICAgICAgYm54MmZjOiB1c2UgZmNvZV9saW5rX3Nw
+ZWVkX3VwZGF0ZSgpIGZyb20gdGhlIGV4cG9ydGVkIHN5bWJvbCBpbiBsaWJmY29lDQo+ICAgICAg
+ICBibngyZmM6IHVzZSBmY29lX2dldF9sZXNiL2Zjb2VfY3Rscl9nZXRfbGVzYigpIGRpcmVjdGx5
+IGZyb20gbGliZmNvZQ0KPg0KPiAgIERvY3VtZW50YXRpb24vQUJJL3Rlc3Rpbmcvc3lzZnMtYnVz
+LWZjb2UgfCAgIDQ1ICsrKysrLQ0KPiAgIGRyaXZlcnMvc2NzaS9ibngyZmMvYm54MmZjX2Zjb2Uu
+YyAgICAgICAgfCAgMjU2ICsrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLQ0KPiAgIGRyaXZl
+cnMvc2NzaS9mY29lL2Zjb2UuYyAgICAgICAgICAgICAgICAgfCAgMjEyICsrKysrKysrKysrKysr
+Ky0tLS0tLS0tLS0NCj4gICBkcml2ZXJzL3Njc2kvZmNvZS9mY29lLmggICAgICAgICAgICAgICAg
+IHwgICAgNiArLQ0KPiAgIGRyaXZlcnMvc2NzaS9mY29lL2Zjb2VfY3Rsci5jICAgICAgICAgICAg
+fCAgIDE3ICstDQo+ICAgZHJpdmVycy9zY3NpL2Zjb2UvZmNvZV9zeXNmcy5jICAgICAgICAgICB8
+ICAxODYgKysrKysrKysrKysrKysrKysrLS0tLQ0KPiAgIGRyaXZlcnMvc2NzaS9mY29lL2Zjb2Vf
+dHJhbnNwb3J0LmMgICAgICAgfCAgMTk5ICsrKysrKysrKysrKysrKysrKysrKystDQo+ICAgZHJp
+dmVycy9zY3NpL2Zjb2UvbGliZmNvZS5oICAgICAgICAgICAgICB8ICAgMjAgKystDQo+ICAgZHJp
+dmVycy9zY3NpL2xpYmZjL2ZjX2ZjcC5jICAgICAgICAgICAgICB8ICAgIDYgKy0NCj4gICBkcml2
+ZXJzL3Njc2kvbGliZmMvZmNfbGliZmMuaCAgICAgICAgICAgIHwgICAzOCArKy0tLQ0KPiAgIGlu
+Y2x1ZGUvc2NzaS9mY29lX3N5c2ZzLmggICAgICAgICAgICAgICAgfCAgIDExICstDQo+ICAgaW5j
+bHVkZS9zY3NpL2xpYmZjb2UuaCAgICAgICAgICAgICAgICAgICB8ICAgMzIgKysrLQ0KPiAgIDEy
+IGZpbGVzIGNoYW5nZWQsIDc0OSBpbnNlcnRpb25zKCspLCAyNzkgZGVsZXRpb25zKC0pDQo+IC0t
+DQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNj
+cmliZSBsaW51eC1zY3NpIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21v
+QHZnZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5r
+ZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg0KUGxlYXNlIGlnbm9yZSB0aGlzIHJlcXVl
+c3QuIEEgbmV3ICh2MikgcHVsbCByZXF1ZXN0IGlzIGNvbWluZyB0aGF0IA0KYWRkcmVzc2VzIEJh
+cnQncyBmZWVkYmFjayBvbiBvbmUgcGF0Y2guDQoNClRoYW5rcywgLy9Sb2INCg0K
