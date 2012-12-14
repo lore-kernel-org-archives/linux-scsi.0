@@ -1,60 +1,58 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: SCSI mid layer and high IOPS capable devices
-Date: Fri, 14 Dec 2012 10:44:21 -0600
-Message-ID: <20121214164421.GQ20898@beardog.cce.hp.com>
-References: <20121211000013.GI23107@beardog.cce.hp.com> <50C9F2B9.4050500@acm.org> <20121213172513.GH20898@beardog.cce.hp.com> <50CA0692.2010903@acm.org> <20121213164912.GA28496@infradead.org> <50CAF502.3070300@acm.org>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [patch,v3,repost 00/10] make I/O path allocations more numa-friendly
+Date: Fri, 14 Dec 2012 11:05:04 -0500
+Message-ID: <x49pq2czkjz.fsf@segfault.boston.devel.redhat.com>
+References: <1354034799-8460-1-git-send-email-jmoyer@redhat.com>
+	<x49zk1l6b5p.fsf@segfault.boston.devel.redhat.com>
+	<1355220811.2400.5.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:5469 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756493Ab2LNPoY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Dec 2012 10:44:24 -0500
-Content-Disposition: inline
-In-Reply-To: <50CAF502.3070300@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1355220811.2400.5.camel@dabdike.int.hansenpartnership.com>
+	(James Bottomley's message of "Tue, 11 Dec 2012 10:13:31 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, dab@hp.com, scameron@beardog.cce.hp.com
 
-On Fri, Dec 14, 2012 at 10:44:34AM +0100, Bart Van Assche wrote:
-> On 12/13/12 17:49, Christoph Hellwig wrote:
-> >On Thu, Dec 13, 2012 at 05:47:14PM +0100, Bart Van Assche wrote:
-> >> From my experience with block and SCSI drivers option (1) doesn't
-> >>look attractive from a performance point of view. From what I have
-> >>seen performance with QD=1 is several times lower than performance
-> >>with QD > 1. But maybe I overlooked something ?
-> >
-> >What you might be missing is that at least on Linux no one who cares
-> >about performance uses the Posix AIO inferface anyway, as the
-> >implementation in glibc always has been horrible.  The Linux-native
-> >aio interface or the various thread pool implementations don't imply
-> >useless ordering and thus can be used to fill up large queues.
-> 
-> Some applications need write ordering without having a need for 
-> enforcing durability as fsync() does [1]. What I'm wondering about is 
-> whether an operating system kernel like the Linux kernel should penalize 
-> application performance when using block drivers and storage hardware 
-> that preserve the order of write requests because there exist other 
-> drivers and storage devices that do not preserve the order of write 
-> requests ?
+James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-Which devices don't re-order requests?  So far as I know every single
-disk drive ever made that is capable of handling multiple requests will
-also re-order requests as it sees fit.
+> On Mon, 2012-12-10 at 12:59 -0500, Jeff Moyer wrote:
+>> Jeff Moyer <jmoyer@redhat.com> writes:
+>> 
+>> > Hi,
+>> >
+>> > This patch set makes memory allocations for data structures used in
+>> > the I/O path more numa friendly by allocating them from the same numa
+>> > node as the storage device.  I've only converted a handful of drivers
+>> > at this point.  My testing is limited by the hardware I have on hand.
+>> > Using these patches, I was able to max out the bandwidth of the storage
+>> > controller when issuing I/O from any node on my 4 node system.  Without
+>> > the patch, I/O from nodes remote to the storage device would suffer a
+>> > penalty ranging from 6-12%.  Given my relatively low-end setup[1], I
+>> > wouldn't be surprised if others could show a more significant performance
+>> > advantage.
+>> >
+>> > This is a repost of the last posting.  The only changes are additional
+>> > reviewed-by/acked-by tags.  I think this version is ready for inclusion.
+>> > James, would you mind taking a look?
+>> 
+>> James?  Do you have any objections to including this for 3.8?
+>
+> Probably for 3.9 since the 3.8 merge window is upon us.
 
-I expect the flash devices re-order requests as well, simply because
-to feed requests to the things at a sufficient rate, you have to pump
-requests into them concurrently on multiple hardware queues -- a single
-cpu jamming requests into them as fast as it can is still not fast enough
-to keep them busy.  Consequently, they *can't* care about ordering, as the
-relative order requests on different hardware queues are submitted into them
-is not even really controlled, so the OS *can't* count on concurrent requests
-not to be essentially "re-ordered", just because of the nature of the way
-requests get into the device.
+OK.
 
-So I think the property that devices and drivers are free to reorder
-concurrent requests is not going away.
+> Do we actually have any performance numbers from the big system people?
+> That's really a must for this type of work.
 
--- steve
+I'm working on getting some numbers.
 
+> It's missing acks from the affected drivers; that's not a show stopper
+> but it would be better to have them.
+
+Well, we could trim the driver list to those that have ACKs, but the
+driver changes are trivial.
+
+Thanks,
+Jeff
