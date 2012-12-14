@@ -1,85 +1,53 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: qla2xxx firmware
-Date: Fri, 14 Dec 2012 13:06:16 -0500
-Message-ID: <alpine.WNT.2.00.1212141303260.7460@N5102REMCQXM4BS.qlogic.org>
-References: <50C23DF2.4030901@gmail.com> <50CB5993.4050803@gmail.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Re: [PATCH 03/16] libfcoe: Save some memory and optimize name
+ lookups
+Date: Fri, 14 Dec 2012 18:36:42 +0000
+Message-ID: <50CB71B3.4040307@intel.com>
+References: <20121212232203.13084.3630.stgit@fritz>
+ <20121212232219.13084.99143.stgit@fritz> <50C989A2.2070400@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:37853 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756545Ab2LNSGm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Dec 2012 13:06:42 -0500
-In-Reply-To: <50CB5993.4050803@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:46129 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756626Ab2LNShV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Dec 2012 13:37:21 -0500
+In-Reply-To: <50C989A2.2070400@acm.org>
+Content-Language: en-US
+Content-ID: <7D6AE2AD0E9C2B4292E43ABFA333B5DF@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Neil Horman <nhorman@tuxdriver.com>
 
-
-
-On Fri, 14 Dec 2012, Xose Vazquez Perez wrote:
-
-> On 12/07/2012 08:05 PM, Xose Vazquez Perez wrote:
->
->> please qlogic guys, send latest fw to upstream linux-firmware.git
->>
->>
->> linux-firmware brings old releases:
->> File: ql2400_fw.bin
->> Version: 5.06.05 MID
->> File: ql2500_fw.bin
->> Version: 5.06.05 MIDQ
->>
->> qlogic-ftp releases:
->> ql2400_fw.bin -- 5.08.00 MID
->> ql2500_fw.bin -- 5.08.00 MIDQ
->
-> btw,
-> these URIs should be fixed:
-> qla2xxx/Kconfig:                ftp://ftp.qlogic.com/outgoing/linux/firmware/
-> qla2xxx/qla_init.c:#define QLA_FW_URL "ftp://ftp.qlogic.com/outgoing/linux/firmware/"
->
-> because ftp.qlogic.com is going to disappear, as stated in:
-> ftp://ftp.qlogic.com/IMPORTANT.THIS.FTP.SITE.TO.BE.SHUTDOWN
->
-> ---cut---
-> QLogic Corporation FTP service - Access is monitored
-> =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
->                - IMPORTANT NOTICE -
-> QLogic Corporation will be shutting down this public ftp site by end
-> of calendar year 2012.
->
-> All users must transition to our replacement service as follows:
->
-> QLogic Customers:  Driver downloads are available at
-> http://driverdownloads.qlogic.com
->
-> QLogic Business Partners: Please contact your QLogic counterpart for
-> assistance.
->
-> QLogic Employees: Please use the new Secure File Transfer service as
-> described in the following link.
-> http://helpdesk.qlogic.com/AddSolution.do?solID=19288
->
-> Please Contact ftp.help@qlogic.com for further assistance
-> =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-> ---end---
->
->
-
-Hi Xose,
-
-Thanks for the heads up.  We have a patch pending (but no submitted yet)
-that will fix the FTP URIs.  We will also be send a pull request to
-update the firmware soon.
-
-Thanks,
-Chad
-
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-
+T24gV2VkIDEyIERlYyAyMDEyIDExOjU0OjEwIFBNIFBTVCwgQmFydCBWYW4gQXNzY2hlIHdyb3Rl
+Og0KPiBPbiAxMi8xMy8xMiAwMDoyMiwgUm9iZXJ0IExvdmUgd3JvdGU6DQo+PiBAQCAtMjEwLDI1
+ICsyMTAsMjMgQEAgc3RhdGljIHNzaXplX3QNCj4+IHNob3dfZmNvZV9mY2ZfZGV2aWNlXyMjZmll
+bGQoc3RydWN0IGRldmljZSAqZGV2LCAgICBcDQo+PiAgICNkZWZpbmUgZmNvZV9lbnVtX25hbWVf
+c2VhcmNoKHRpdGxlLCB0YWJsZV90eXBlLCB0YWJsZSkgICAgICAgICAgICBcDQo+PiAgIHN0YXRp
+YyBjb25zdCBjaGFyICpnZXRfZmNvZV8jI3RpdGxlIyNfbmFtZShlbnVtIHRhYmxlX3R5cGUNCj4+
+IHRhYmxlX2tleSkgICAgXA0KPj4gICB7ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgXA0KPj4gLSAgICBpbnQgaTsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwNCj4+
+IC0gICAgY2hhciAqbmFtZSA9IE5VTEw7ICAgICAgICAgICAgICAgICAgICAgICAgXA0KPj4gLSAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwNCj4+IC0gICAgZm9yIChpID0gMDsg
+aSA8IEFSUkFZX1NJWkUodGFibGUpOyBpKyspIHsgICAgICAgICAgICBcDQo+PiAtICAgICAgICBp
+ZiAodGFibGVbaV0udmFsdWUgPT0gdGFibGVfa2V5KSB7ICAgICAgICAgICAgXA0KPj4gLSAgICAg
+ICAgICAgIG5hbWUgPSB0YWJsZVtpXS5uYW1lOyAgICAgICAgICAgICAgICBcDQo+PiAtICAgICAg
+ICAgICAgYnJlYWs7ICAgICAgICAgICAgICAgICAgICAgICAgXA0KPj4gLSAgICAgICAgfSAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICBcDQo+PiAtICAgIH0gICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIFwNCj4+IC0gICAgcmV0dXJuIG5hbWU7ICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIFwNCj4+ICsgICAgaWYgKHRhYmxlX2tleSA+PSBBUlJBWV9TSVpFKHRhYmxlKSkgICAgICAg
+ICAgICAgICAgXA0KPj4gKyAgICAgICAgcmV0dXJuIE5VTEw7ICAgICAgICAgICAgICAgICAgICAg
+ICAgXA0KPj4gKyAgICByZXR1cm4gdGFibGVbdGFibGVfa2V5XTsgICAgICAgICAgICAgICAgICAg
+IFwNCj4+ICAgfQ0KPg0KPiBUaGUgb2xkIGNvZGUgd2FzIHNhZmUgaWYgdGFibGVfa2V5IDwgMCBi
+dXQgdGhlIG5ldyBjb2RlIG5vdC4gQ2FuDQo+IHRhYmxlX2tleSBiZSBuZWdhdGl2ZSA/DQo+DQo+
+PiArc3RhdGljIGNoYXIgKmZpcF9jb25uX3R5cGVfbmFtZXNbXSA9IHsNCj4+ICsgICAgWyBGSVBf
+Q09OTl9UWVBFX1VOS05PV04gXSA9ICJVbmtub3duIiwNCj4+ICsgICAgICAgIFsgRklQX0NPTk5f
+VFlQRV9GQUJSSUMgXSAgPSAiRmFicmljIiwNCj4+ICsgICAgWyBGSVBfQ09OTl9UWVBFX1ZOMlZO
+IF0gICA9ICJWTjJWTiIsDQo+PiArfTsNCj4NCj4gQSBtaW5vciBuaXQ6IGluZGVudGF0aW9uIHN0
+eWxlIGlzIGluY29uc2lzdGVudCBoZXJlLiBUd28gZWxlbWVudHMgYXJlDQo+IGluZGVudGVkIHdp
+dGggYSB0YWIgYW5kIGFub3RoZXIgd2l0aCBlaWdodCBzcGFjZXMuDQo+DQo+IEJhcnQuDQoNClRo
+YW5rcyBmb3IgdGhlIHJldmlldyBhbmQgY29tbWVudHMsIEJhcnQuIEkgYWdyZWUgd2l0aCBib3Ro
+IG9mIHlvdXIgDQpwb2ludHMuICBJJ2xsIHNlbmQgYW4gdXBkYXRlZCBwYXRjaCBzaG9ydGx5LiAv
+L1JvYg==
