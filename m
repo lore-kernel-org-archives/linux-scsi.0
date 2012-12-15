@@ -1,45 +1,39 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: SCSI mid layer and high IOPS capable devices
-Date: Sat, 15 Dec 2012 10:40:24 +0100
-Message-ID: <50CC4588.1010608@acm.org>
-References: <20121211000013.GI23107@beardog.cce.hp.com> <50C9F2B9.4050500@acm.org> <20121213172513.GH20898@beardog.cce.hp.com> <50CA0692.2010903@acm.org> <20121213164912.GA28496@infradead.org> <50CAF502.3070300@acm.org> <20121214164421.GQ20898@beardog.cce.hp.com> <50CB50A9.1050202@acm.org> <20121214195533.GS20898@beardog.cce.hp.com> <50CB7DF8.5020002@acm.org> <20121214210645.GV20898@beardog.cce.hp.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] target updates for v3.8-rc1
+Date: Sat, 15 Dec 2012 14:28:59 -0800
+Message-ID: <CA+55aFzHGQX1KWPcRwiFqK3EifodAfN=NQ=OMQKww2qM57gYsA@mail.gmail.com>
+References: <1355529222.31680.143.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from juliette.telenet-ops.be ([195.130.137.74]:48005 "EHLO
-	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037Ab2LOJk3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Dec 2012 04:40:29 -0500
-In-Reply-To: <20121214210645.GV20898@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1355529222.31680.143.camel@haakon2.linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, stephenmcameron@gmail.com, dab@hp.com
 
-On 12/14/12 22:06, scameron@beardog.cce.hp.com wrote:
-> [ ... ] how to get the scsi mid layer to provide a wide enough
-> highway for requests destined for very low latency devices.
+On Fri, Dec 14, 2012 at 3:53 PM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+>
+> Here are the target updates for v3.8-rc1 merge window code.  Please go
+> ahead and pull from:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
+>
+> Just a heads up that there is a minor merge conflict that you'll
+> encounter in target_handle_task_attr() code, that sfr has been carrying
+> a fix for recently within -next.  After dropping the HEAD section, the
+> resolution should look like:
 
-While the SCSI mid-layer is processing an I/O request not only the queue 
-lock has to be locked and unlocked several times but also the SCSI host 
-lock. The reason that it's unavoidable to lock and unlock the host lock 
-is because the SCSI core has been designed for SCSI equipment that has a 
-queue depth limit per host (shost->can_queue). For single LUN devices 
-that model could be changed in a queue depth limit per LUN. Also, it's 
-probably not that hard to modify software SCSI target implementations 
-such that these have a queue depth limit per LUN instead of per host. It 
-might be interesting to verify whether the following approach helps to 
-improve performance of the SCSI mid-layer:
-* Make it possible for SCSI LLDs to tell the SCSI core whether there is
-   a queue depth limit per host or per LUN.
-* Do not update shost->host_busy and shost->target_busy when using the
-   QD limit per LUN mode. This change will allow to avoid spin_lock()
-   and spin_unlock() calls inside scsi_request_fn(). It will also allow
-   to avoid having to take the host lock inside scsi_device_unbusy().
-* In queue-depth-limit-per-LUN mode, neither add a SCSI device to the
-   starved list if it's busy nor examine the starved list in
-   scsi_run_queue().
+Hmm. This is *not* how I resolved that conflict - that seems to drop the new
 
-Bart.
+     complete(&cmd->t_transport_stop_comp);
 
+added by Roland in commit 3ea160b3e8f0 ("target: Fix handling of
+aborted commands").
+
+So my conflict resolution looks different.
+
+Which may be a bug, of course. Nicholas, Roland, please check my end result,
+
+                  Linus
