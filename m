@@ -1,42 +1,24 @@
-From: Chen Gang <gang.chen@asianux.com>
-Subject: Re: [Suggestion] drivers/target/sbp/ : set tport->tpg to NULL when
- clean up for failure.
-Date: Sat, 15 Dec 2012 14:26:52 +0800
-Message-ID: <50CC182C.8000104@asianux.com>
-References: <50C01E16.5080303@asianux.com> <50C058A4.7030403@bootc.net>  <50C05A02.6080401@asianux.com> <50C54B49.6020000@asianux.com>  <50C59704.60303@bootc.net> <50CA962E.9070501@asianux.com>  <20121214075728.43b6fb41@stein>  <50CAD3A7.8060308@asianux.com> <1355531606.5909.1.camel@haakon2.linux-iscsi.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: Deadlock observed in SCSI device removal
+Date: Sat, 15 Dec 2012 10:04:23 +0100
+Message-ID: <50CC3D17.10902@acm.org>
+References: <CADDb1s0wdZfHTZ8jyKdT4zpsYg4+hYXCSBN5=bY3Q=03wBJT4Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1355531606.5909.1.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Chris Boot <bootc@bootc.net>, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CADDb1s0wdZfHTZ8jyKdT4zpsYg4+hYXCSBN5=bY3Q=03wBJT4Q@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-=E4=BA=8E 2012=E5=B9=B412=E6=9C=8815=E6=97=A5 08:33, Nicholas A. Bellin=
-ger =E5=86=99=E9=81=93:
->=20
-> FYI folks, this fix from Chris was included in the [GIT PULL] request
-> for v3.8-rc1 sent out today.
->=20
+On 12/15/12 05:22, Amit Sahrawat wrote:
+> We are using kernel version 3.0.33, and the patch which is mentioned for
+> the above problem - is already applied in the kernel.
 
-  thanks
+If the kernel reports that io_schedule() hangs that usually means that 
+an I/O request was not finished properly. It would help if you could 
+verify whether or not you can reproduce this issue with kernel 3.6.10.
 
-  and now I am in target-devel@vger.kernel.org, too.
-
-  :-)
-
-
-> Thanks!
->=20
-> --nab
->=20
->=20
->=20
-
-
---=20
-Chen Gang
-
-Asianux Corporation
+Bart.
