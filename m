@@ -1,57 +1,96 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target updates for v3.8-rc1
-Date: Sat, 15 Dec 2012 17:25:18 -0800
-Message-ID: <1355621118.7425.10.camel@haakon2.linux-iscsi.org>
-References: <1355529222.31680.143.camel@haakon2.linux-iscsi.org>
-	 <CA+55aFzHGQX1KWPcRwiFqK3EifodAfN=NQ=OMQKww2qM57gYsA@mail.gmail.com>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH 05/16] libfcoe, fcoe, bnx2fc: Add new fcoe control
+ interface
+Date: Sun, 16 Dec 2012 11:50:28 -0800
+Message-ID: <50CE2604.4050106@broadcom.com>
+References: <20121212232203.13084.3630.stgit@fritz>
+ <20121212232230.13084.56240.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:36464 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123Ab2LPBZ1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Dec 2012 20:25:27 -0500
-In-Reply-To: <CA+55aFzHGQX1KWPcRwiFqK3EifodAfN=NQ=OMQKww2qM57gYsA@mail.gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3335 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751397Ab2LPTxH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 Dec 2012 14:53:07 -0500
+In-Reply-To: <20121212232230.13084.56240.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Robert Love <robert.w.love@intel.com>
+Cc: linux-scsi@vger.kernel.org, Neil Horman <nhorman@tuxdriver.com>
 
-On Sat, 2012-12-15 at 14:28 -0800, Linus Torvalds wrote:
-> On Fri, Dec 14, 2012 at 3:53 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> >
-> > Here are the target updates for v3.8-rc1 merge window code.  Please go
-> > ahead and pull from:
-> >
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
-> >
-> > Just a heads up that there is a minor merge conflict that you'll
-> > encounter in target_handle_task_attr() code, that sfr has been carrying
-> > a fix for recently within -next.  After dropping the HEAD section, the
-> > resolution should look like:
-> 
-> Hmm. This is *not* how I resolved that conflict - that seems to drop the new
-> 
->      complete(&cmd->t_transport_stop_comp);
-> 
-> added by Roland in commit 3ea160b3e8f0 ("target: Fix handling of
-> aborted commands").
+On 12/12/2012 03:22 PM, Robert Love wrote:
+> +ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
+> +			       const char *buf, size_t count)
+> +{
+> +	struct net_device *netdev = NULL;
+> +	struct fcoe_transport *ft = NULL;
+> +	struct fcoe_ctlr_device *ctlr_dev = NULL;
+> +	int rc = 0;
+> +	int err;
+> +
+> +	mutex_lock(&ft_mutex);
+> +
+> +	netdev = fcoe_if_to_netdev(buf);
+> +	if (!netdev) {
+> +		LIBFCOE_TRANSPORT_DBG("Invalid device %s.\n", buf);
+> +		rc = -ENODEV;
+> +		goto out_nodev;
+> +	}
+> +
+> +	ft = fcoe_netdev_map_lookup(netdev);
+> +	if (ft) {
+> +		LIBFCOE_TRANSPORT_DBG("transport %s already has existing "
+> +				      "FCoE instance on %s.\n",
+> +				      ft->name, netdev->name);
+> +		rc = -EEXIST;
+> +		goto out_putdev;
+> +	}
+> +
+> +	ft = fcoe_transport_lookup(netdev);
+> +	if (!ft) {
+> +		LIBFCOE_TRANSPORT_DBG("no FCoE transport found for %s.\n",
+> +				      netdev->name);
+> +		rc = -ENODEV;
+> +		goto out_putdev;
+> +	}
+> +
+> +	/* pass to transport create */
+> +	err = ft->alloc ? ft->alloc(netdev) : -ENODEV;
+> +	if (err) {
+> +		fcoe_del_netdev_mapping(netdev);
+> +		rc = -ENOMEM;
+> +		goto out_putdev;
+> +	}
+> +
+> +	err = fcoe_add_netdev_mapping(netdev, ft);
+> +	if (err) {
+> +		LIBFCOE_TRANSPORT_DBG("failed to add new netdev mapping "
+> +				      "for FCoE transport %s for %s.\n",
+> +				      ft->name, netdev->name);
+> +		rc = -ENODEV;
+> +		goto out_putdev;
+> +	}
+> +
+> +	LIBFCOE_TRANSPORT_DBG("transport %s %s to create fcoe on %s.\n",
+> +			      ft->name, (ctlr_dev) ? "succeeded" : "failed",
+> +			      netdev->name);
 
-You are most certainly correct.
+ctlr_dev is initialized to NULL and not updated anywhere in this 
+function, and hence the above debug statement will always say that 
+'create' failed.
 
-> 
-> So my conflict resolution looks different.
-> 
-> Which may be a bug, of course. Nicholas, Roland, please check my end result,
-> 
+> +
+> +out_putdev:
+> +	dev_put(netdev);
+> +out_nodev:
+> +	mutex_unlock(&ft_mutex);
+> +	if (rc)
+> +		return rc;
+> +	return count;
+> +}
+>
 
-Including the complete() from commit 3ea160b3e8f0 in the exception path
-for transport_check_aborted_status() within target_execute_cmd() code
-was/is the proper merge resolution.
-
-Thank you for taking care of this.
-
---nab
 
