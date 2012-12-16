@@ -1,76 +1,85 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [PATCH 00/16] libfc, libfcoe and fcoe updates for 3.8
-Date: Sun, 16 Dec 2012 11:56:55 -0800
-Message-ID: <50CE2787.6020505@broadcom.com>
-References: <20121212232203.13084.3630.stgit@fritz>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: Bug#666108: megaraid_sas: which patches are needed for 2.6.32.y?
+Date: Sun, 16 Dec 2012 23:24:50 +0000
+Message-ID: <1355700290.18807.176.camel@deadeye.wl.decadent.org.uk>
+References: <CAD2iGhWrruwSWtNo9pVH1Aufimq1W2G3VQKEHaWnmoXjnNk4cQ@mail.gmail.com>
+	 <20121203144310.GA1357@elie.Belkin>
+	 <CAD2iGhWegHsB+1P9unXn6sfveSQGFyahH9qKh4oHtXpxDSz1EA@mail.gmail.com>
+	 <20121204062708.GA7633@elie.Belkin>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-2Lf8MnK23N4vp2pOSQYU"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1274 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751682Ab2LPT7c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Dec 2012 14:59:32 -0500
-In-Reply-To: <20121212232203.13084.3630.stgit@fritz>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:58170 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752453Ab2LPXZM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 Dec 2012 18:25:12 -0500
+In-Reply-To: <20121204062708.GA7633@elie.Belkin>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: linux-scsi@vger.kernel.org
-
-On 12/12/2012 03:22 PM, Robert Love wrote:
-> There are two primary changes within this update. Additionally there are two or three fix/cleanup patches.
->
-> The first change is the addition of the fcoe_sysfs "control" interfaces. These patches were well vetted on the scsi mailing list and have only seen validation and a minor fix or two, as the result testing, since the last RFC posting.
->
-> The second change is a cleanup/consolidation series from Yi that touches libfcoe.ko, fcoe.ko and bnx2fc.ko. These patches were well vetted on the fcoe mailing list and should be good to go as well. They make no functional change.
->
-> I will compose a pull-request and send it soon, but I wanted to make sure the most recent versions of these patches were posted to linux-scsi first.
->
-> ---
->
-> Al Viro (1):
->        debris left by "[SCSI] libfcoe: Remove mutex_trylock/restart_syscall checks"
->
-> Robert Love (7):
->        Documentation: Add missing devices/ to devices path
->        libfcoe: Save some memory and optimize name lookups
->        libfcoe: Add fcoe_sysfs debug logging level
->        libfcoe, fcoe, bnx2fc: Add new fcoe control interface
->        fcoe: Use the fcoe_sysfs control interface
->        bnx2fc: Use the fcoe_sysfs control interface
->        libfc, libfcoe, fcoe: Convert debug_logging macros to pr_info
->
-> Vasu Dev (1):
->        libfc: fix REC handling
->
-> Yi Zou (7):
->        fcoe: prep work to start consolidate the usage of fcoe_netdev
->        fcoe: add support to the get_netdev() for fcoe_interface
->        libfcoe, fcoe: move fcoe_link_speed_update() to libfcoe and export it
->        libfcoe, fcoe: consolidate the fcoe_ctlr_get_lesb/fcoe_get_lesb
->        bnx2fc: add support to get_netdev for bnx2f_interface
->        bnx2fc: use fcoe_link_speed_update() from the exported symbol in libfcoe
->        bnx2fc: use fcoe_get_lesb/fcoe_ctlr_get_lesb() directly from libfcoe
->
->
->   Documentation/ABI/testing/sysfs-bus-fcoe |   45 +++++
->   drivers/scsi/bnx2fc/bnx2fc_fcoe.c        |  256 +++++++++++++++++-------------
->   drivers/scsi/fcoe/fcoe.c                 |  212 +++++++++++++++----------
->   drivers/scsi/fcoe/fcoe.h                 |    6 -
->   drivers/scsi/fcoe/fcoe_ctlr.c            |   17 +-
->   drivers/scsi/fcoe/fcoe_sysfs.c           |  186 ++++++++++++++++++----
->   drivers/scsi/fcoe/fcoe_transport.c       |  199 +++++++++++++++++++++++
->   drivers/scsi/fcoe/libfcoe.h              |   20 +-
->   drivers/scsi/libfc/fc_fcp.c              |    6 -
->   drivers/scsi/libfc/fc_libfc.h            |   38 ++--
->   include/scsi/fcoe_sysfs.h                |   11 +
->   include/scsi/libfcoe.h                   |   32 ++++
->   12 files changed, 749 insertions(+), 279 deletions(-)
->
-Changes look good to me, except for the minor comment in patch 5.
-
-Reviewed-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+To: Jonathan Nieder <jrnieder@gmail.com>, 666108@bugs.debian.org
+Cc: =?ISO-8859-1?Q?Torbj=F8rn?= Thorsen <torbjorn@trollweb.no>, Neela Syam Kolli <megaraidlinux@lsi.com>, adam radford <aradford@gmail.com>, linux-scsi@vger.kernel.org
 
 
+--=-2Lf8MnK23N4vp2pOSQYU
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2012-12-03 at 22:27 -0800, Jonathan Nieder wrote:
+> tags 666108 - moreinfo
+> quit
+>=20
+> Torbj=C3=B8rn Thorsen wrote:
+>=20
+> > The kernel boots with no problems, the storage controller seems to be
+> > working nicely.
+> >
+> > root@xen14:~# dmesg | grep -i mega
+> > [    3.340638] megasas: 00.00.05.38-rc1 Wed. May. 11 17:00:00 PDT 2011
+> > [    3.340742] megasas: 0x1000:0x005b:0x1028:0x1f38: bus 3:slot 0:func =
+0
+>=20
+> Yay, thanks much for checking.
+>=20
+> Ben and Dann, what do you think?  Should we apply these patches[1]?
+>=20
+> Regards,
+> Jonathan
+>=20
+> [1] http://alioth.debian.org/~jrnieder-guest/temp/driver-test/megaraid-dr=
+iver-backport.mbox
+
+I've committed these, but we should really get some more users of both
+old and new hardware to test the result.
+
+Ben.
+
+--=20
+Ben Hutchings
+Always try to do things in chronological order;
+it's less confusing that way.
+
+--=-2Lf8MnK23N4vp2pOSQYU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAUM5YQue/yOyVhhEJAQr/Ww//ZcR7GRYLFnMetRaGPp5sRa74Z7mFgfLT
+F9ookPawUDNFX65bwGN7sLkzRFeC4bMv15CWrX5b253Vnl1AiRuvE3NHliAIOYDA
+0OS5RVwN63EL+UaDADDoJyYH1kzHVGm4ATR1hz+wGjoblyv4YdC47fGaV+/NwFb/
+FOPjEtAZtxcS8a6/fHhLQEfdxDpS6lUxl2mUMtuScqh/mp0pSsN4hUuOgnUn/7qx
+Ux6Mm6IAKYAdUQJgYpQg0U4p/57rsCaJ4fttWSc3OC0Yuz70E6XUzLt1SkenyWaO
+emY95ym5s1w9fd1rs1GD3l8WN5EdyTOZU1ePtQZrWXSjGEakzTzfSK4JcXE5fYAm
+tzn3GF8iG+7EdsdmhjIzfvvpOT0UQ60J4a69RQVGL/LeX3JeJp/TBjUxu4hfkiGJ
+kLeHEfCL7u9nrJ81VsArGGfaQTZfCljWYMalOzu22bQBvyntS/uJe2VmZyPY+bYL
+roPmEpi34xYCr2QlwA/i1D8GhToEJuCREkpbGLGrQmxV/rKVmSS2DIZGOJtmFPYE
++HcWRXPFi0fb/cNTXxJm6sDZ4ww87JZzNjxfPrnXLRH/huO0G6LcXz5ZknI4EoPT
+2v2uAyNeJNfSvqd9jCXkYrLmROYjeTl1gSkVF629nC9b2Rgto5XHO4kiA0aMq9x+
+59G+xr3FHLA=
+=A4mF
+-----END PGP SIGNATURE-----
+
+--=-2Lf8MnK23N4vp2pOSQYU--
