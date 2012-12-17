@@ -1,52 +1,51 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v3 0/2] add per-device sysfs knob to enable unrestricted,
- unprivileged SG_IO
-Date: Mon, 17 Dec 2012 15:27:49 +0100
-Message-ID: <50CF2BE5.8070804@redhat.com>
-References: <1352827513-29890-1-git-send-email-pbonzini@redhat.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [GIT PULL] exofs: 3 changes to exofs & osd
+Date: Mon, 17 Dec 2012 18:53:21 +0200
+Message-ID: <50CF4E01.5030004@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1352827513-29890-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from natasha.panasas.com ([67.152.220.90]:35798 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753149Ab2LQQxm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2012 11:53:42 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, open-osd <osd-dev@open-osd.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Il 13/11/2012 18:25, Paolo Bonzini ha scritto:
-> Privilege restrictions for SG_IO right now apply without distinction to
-> all devices, based on the single capability CAP_SYS_RAWIO.  This is a very
-> broad capability, and makes it difficult to give SG_IO access to trusted
-> clients that need access to persistent reservations, trim/discard, or
-> vendor-specific commands.  One problem here is that CAP_SYS_RAWIO allows
-> to escape a partition and issue commands that affect the full disk,
-> thus making DAC almost useless.
-> 
-> For simplicity, this series attempts to solve one case only: you want
-> to pass through almost everything, but still run as confined as possible.
-> This is for example the case for virtualization, where more complex
-> filtering can be done just as easily in userspace, in the virtual
-> machine monitor.  (This does mean the filter can be subverted if the
-> guest can escape the QEMU jail, but a more generic approach involving
-> a bitmap was NACKed).
-> 
-> Ok for 3.8?
+Hi Linus.
 
-Ping... Jens, I haven't seen any pull request for 3.8 from you.  Are
-these patches on your radar?  Tejun acked both of them.
+Please pull the following changes since commit [ddffeb8c] Linux 3.7-rc1
+They are available in the git repository at:
 
-Paolo
+  git://git.open-osd.org/linux-open-osd.git for-linus
 
-> v2->v3: change bitmap filter to boolean
-> 
-> Paolo Bonzini (2):
->   sg_io: pass request_queue to blk_verify_command
->   sg_io: introduce unpriv_sgio queue flag
-> 
->  block/blk-sysfs.c      |   32 ++++++++++++++++++++++++++++++++
->  block/bsg.c            |    2 +-
->  block/scsi_ioctl.c     |    9 +++++----
->  drivers/scsi/sg.c      |    3 ++-
->  include/linux/blkdev.h |    6 +++++-
->  5 files changed, 45 insertions(+), 7 deletions(-)
-> 
+for you to fetch changes up to
+	[861d6660] exofs: don't leak io_state and pages on read error (2012-12-14 12:17:32 +0200)
+
+These are just 3 patches, the last two are bug fixes on the error paths
+in exofs.
+
+The important patch is the one to osd_uld which adds sysfs info to osd
+devices for use by user-mode clustering discovery software. I'm already
+sitting on this patch since before February this year, It is important for
+some of the big installation cluster systems, who's been compiling their
+own kernel just for that patch.
+
+Thanks in advance
+Boaz
+
+----------------------------------------------------------------
+Boaz Harrosh (1):
+      exofs: don't leak io_state and pages on read error
+
+Idan Kedar (1):
+      exofs: clean up the correct page collection on write error
+
+Sachin Bhamare (1):
+      osduld: Add osdname & systemid sysfs at scsi_osd class
+
+ drivers/scsi/osd/osd_uld.c | 28 ++++++++++++++++++++++++++++
+ fs/exofs/inode.c           | 16 +++++++++-------
+ 2 files changed, 37 insertions(+), 7 deletions(-)
