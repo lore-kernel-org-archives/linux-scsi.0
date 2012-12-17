@@ -1,84 +1,116 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
- register field names
-Date: Mon, 17 Dec 2012 12:21:49 -0700
-Message-ID: <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
-References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org> <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org>
-Sender: linux-pci-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH] scsi: remove device when state is changed to deleted thru sysfs
+Date: Mon, 17 Dec 2012 17:26:52 -0600
+Message-ID: <1355786812-17908-1-git-send-email-dmilburn@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:17238 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752416Ab2LQXUp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Dec 2012 18:20:45 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com
 
-Ping.  I didn't push this through my tree because I didn't want to
-create conflicts with other changes to this file.  But I think this
-can be merged any time.
+Changing device state to "deleted" through /sys doesn't really delete 
+the device, and rescan of the bus can fail. This linux-3.7 patch would insure
+sdev_store_delete_callback would remove the device similiar to the path 
+taken when "echo 1 > /sys/block/sdd/device/delete" is used, this would
+allow subsequent rescan to successfully add the device back.
 
-On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
-<giridhar.malavali@qlogic.com> wrote:
-> Acked-by: Giridhar Malavali
->
-> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
->
->>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
->>
->>Thanks,
->>~Saurav
->>
->>
->>
->>>Use the standard #defines for PCIe Link Capability register fields
->>>rather than bare numbers.  This also uses the new PCI Express Capability
->>>accessor rather than reading the capability directly.
->>>
->>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
->>>CC: linux-driver@qlogic.com
->>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
->>>CC: linux-scsi@vger.kernel.org
->>>---
->>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
->>> 1 files changed, 5 insertions(+), 9 deletions(-)
->>>
->>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
->>>b/drivers/scsi/qla2xxx/qla_os.c
->>>index d501bf5..b5d070f 100644
->>>--- a/drivers/scsi/qla2xxx/qla_os.c
->>>+++ b/drivers/scsi/qla2xxx/qla_os.c
->>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
->>>char *str)
->>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
->>>      struct qla_hw_data *ha = vha->hw;
->>>      uint32_t pci_bus;
->>>-     int pcie_reg;
->>>
->>>-     pcie_reg = pci_pcie_cap(ha->pdev);
->>>-     if (pcie_reg) {
->>>+     if (pci_is_pcie(ha->pdev)) {
->>>              char lwstr[6];
->>>-             uint16_t pcie_lstat, lspeed, lwidth;
->>>+             uint32_t lstat, lspeed, lwidth;
->>>
->>>-             pcie_reg += PCI_EXP_LNKCAP;
->>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
->>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
->>>-             lwidth = (pcie_lstat &
->>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
->>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
->>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
->>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
->>>
->>>              strcpy(str, "PCIe (");
->>>              if (lspeed == 1)
->>>
->>>--
->>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>>the body of a message to majordomo@vger.kernel.org
->>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->
->
+# modprobe scsi_debug
+# echo "deleted" > /sys/block/sdd/device/state
+# echo "- - -" > /sys/class/scsi_host/host10/scan
+
+scsi 10:0:0:0: Direct-Access     Linux    scsi_debug       0004 PQ: 0 ANSI: 5
+------------[ cut here ]------------
+WARNING: at fs/sysfs/dir.c:536 sysfs_add_one+0xbb/0xe0()
+Hardware name: 2012 Client Platform
+sysfs: cannot create duplicate filename '/devices/pseudo_0/adapter0/host10/target10:0:0/10:0:0:0'
+------------[ cut here ]------------
+Call Trace:
+ [<ffffffff8105557f>] warn_slowpath_common+0x7f/0xc0
+ [<ffffffff81055676>] warn_slowpath_fmt+0x46/0x50
+ [<ffffffff81269fe9>] ? strlcat+0x69/0x80
+ [<ffffffff811eea4b>] sysfs_add_one+0xbb/0xe0
+ [<ffffffff811eebd2>] create_dir+0x82/0xe0
+ [<ffffffff811eecba>] sysfs_create_dir+0x8a/0xf0
+ [<ffffffff8126423f>] kobject_add_internal+0x9f/0x260
+ [<ffffffff812645b8>] kobject_add_varg+0x38/0x60
+ [<ffffffff81264694>] kobject_add+0x44/0x70
+ [<ffffffff8135e584>] device_add+0xd4/0x560
+ [<ffffffff8136d39c>] ? __pm_runtime_resume+0x6c/0x90
+ [<ffffffff8138dd13>] scsi_sysfs_add_sdev+0xb3/0x340
+ [<ffffffff8138aa98>] scsi_add_lun+0x418/0x520
+ [<ffffffff8138b09d>] scsi_probe_and_add_lun+0x20d/0x500
+ [<ffffffff8138befe>] __scsi_scan_target+0xde/0x210
+ [<ffffffff8138c0b7>] scsi_scan_channel+0x87/0xb0
+ [<ffffffff8138c1c9>] scsi_scan_host_selected+0xe9/0x1a0
+ [<ffffffff8138d161>] scsi_scan+0xf1/0x100
+ [<ffffffff81164613>] ? alloc_pages_current+0xe3/0x1c0
+ [<ffffffff8138d190>] store_scan+0x20/0x30
+ [<ffffffff8135c240>] dev_attr_store+0x20/0x30
+ [<ffffffff811ecdff>] sysfs_write_file+0xef/0x170
+ [<ffffffff8117a9d8>] vfs_write+0xc8/0x190
+ [<ffffffff8117b20f>] sys_write+0x5f/0xa0
+ [<ffffffff81546119>] system_call_fastpath+0x16/0x1b
+---[ end trace d8c5fd627d86780b ]---
+------------[ cut here ]------------
+WARNING: at lib/kobject.c:196 kobject_add_internal+0x204/0x260()
+------------[ cut here ]------------
+Call Trace:
+ [<ffffffff8105557f>] warn_slowpath_common+0x7f/0xc0
+ [<ffffffff81055676>] warn_slowpath_fmt+0x46/0x50
+ [<ffffffff812643a4>] kobject_add_internal+0x204/0x260
+ [<ffffffff812645b8>] kobject_add_varg+0x38/0x60
+ [<ffffffff81264694>] kobject_add+0x44/0x70
+ [<ffffffff8135e584>] device_add+0xd4/0x560
+ [<ffffffff8136d39c>] ? __pm_runtime_resume+0x6c/0x90
+ [<ffffffff8138dd13>] scsi_sysfs_add_sdev+0xb3/0x340
+ [<ffffffff8138aa98>] scsi_add_lun+0x418/0x520
+ [<ffffffff8138b09d>] scsi_probe_and_add_lun+0x20d/0x500
+ [<ffffffff8138befe>] __scsi_scan_target+0xde/0x210
+ [<ffffffff8138c0b7>] scsi_scan_channel+0x87/0xb0
+ [<ffffffff8138c1c9>] scsi_scan_host_selected+0xe9/0x1a0
+ [<ffffffff8138d161>] scsi_scan+0xf1/0x100
+ [<ffffffff81164613>] ? alloc_pages_current+0xe3/0x1c0
+ [<ffffffff8138d190>] store_scan+0x20/0x30
+ [<ffffffff8135c240>] dev_attr_store+0x20/0x30
+ [<ffffffff811ecdff>] sysfs_write_file+0xef/0x170
+ [<ffffffff8117a9d8>] vfs_write+0xc8/0x190
+ [<ffffffff8117b20f>] sys_write+0x5f/0xa0
+ [<ffffffff81546119>] system_call_fastpath+0x16/0x1b
+---[ end trace d8c5fd627d86780c ]---
+scsi 10:0:0:0: failed to add device: -17
+
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+---
+ drivers/scsi/scsi_sysfs.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ce5224c..6d72abb 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -596,7 +596,7 @@ static ssize_t
+ store_state_field(struct device *dev, struct device_attribute *attr,
+ 		  const char *buf, size_t count)
+ {
+-	int i;
++	int i, rc;
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 	enum scsi_device_state state = 0;
+ 
+@@ -611,7 +611,11 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+ 	if (!state)
+ 		return -EINVAL;
+ 
+-	if (scsi_device_set_state(sdev, state))
++	if (state == SDEV_DEL) {
++		rc = device_schedule_callback(dev, sdev_store_delete_callback);
++		if (rc)
++			count = rc;
++	} else if (scsi_device_set_state(sdev, state))
+ 		return -EINVAL;
+ 	return count;
+ }
