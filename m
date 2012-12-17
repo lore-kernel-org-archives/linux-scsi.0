@@ -1,109 +1,52 @@
-From: Neil Horman <nhorman@tuxdriver.com>
-Subject: Re: [PATCH v2] libfcoe: Save some memory and optimize name lookups
-Date: Mon, 17 Dec 2012 09:26:28 -0500
-Message-ID: <20121217142628.GC25322@hmsreliant.think-freely.org>
-References: <20121212232219.13084.99143.stgit@fritz>
- <20121214220218.9650.18664.stgit@fritz>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH v3 0/2] add per-device sysfs knob to enable unrestricted,
+ unprivileged SG_IO
+Date: Mon, 17 Dec 2012 15:27:49 +0100
+Message-ID: <50CF2BE5.8070804@redhat.com>
+References: <1352827513-29890-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36509 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752179Ab2LQO0k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2012 09:26:40 -0500
-Content-Disposition: inline
-In-Reply-To: <20121214220218.9650.18664.stgit@fritz>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1352827513-29890-1-git-send-email-pbonzini@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: bvanassche@acm.org, linux-scsi@vger.kernel.org
 
-On Fri, Dec 14, 2012 at 02:02:18PM -0800, Robert Love wrote:
-> Instead of creating a structure with an enum and a pointer
-> to a string, simply allocate an array of strings and use
-> the enum values for the indicies.
+Il 13/11/2012 18:25, Paolo Bonzini ha scritto:
+> Privilege restrictions for SG_IO right now apply without distinction to
+> all devices, based on the single capability CAP_SYS_RAWIO.  This is a very
+> broad capability, and makes it difficult to give SG_IO access to trusted
+> clients that need access to persistent reservations, trim/discard, or
+> vendor-specific commands.  One problem here is that CAP_SYS_RAWIO allows
+> to escape a partition and issue commands that affect the full disk,
+> thus making DAC almost useless.
 > 
-> This means that we do not need to iterate through the list
-> of entries when looking up a string name by its enum key.
+> For simplicity, this series attempts to solve one case only: you want
+> to pass through almost everything, but still run as confined as possible.
+> This is for example the case for virtualization, where more complex
+> filtering can be done just as easily in userspace, in the virtual
+> machine monitor.  (This does mean the filter can be subverted if the
+> guest can escape the QEMU jail, but a more generic approach involving
+> a bitmap was NACKed).
 > 
-> This will also help with a latter patch that will add
-> more fcoe_sysfs attributes that will also use the
-> fcoe_enum_name_search macro. One attribute will also do
-> a reverse lookup which requires less code when the
-> enum-to-string mappings are organized as this patch makes
-> them to be.
-> 
-> Signed-off-by: Robert Love <robert.w.love@intel.com>
-> Acked-by: Neil Horman <nhorman@tuxdriver.com>
-> ---
->  drivers/scsi/fcoe/fcoe_sysfs.c |   44 +++++++++++++++-------------------------
->  1 file changed, 16 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-> index 5e75168..e6fce28 100644
-> --- a/drivers/scsi/fcoe/fcoe_sysfs.c
-> +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-> @@ -210,25 +210,23 @@ static ssize_t show_fcoe_fcf_device_##field(struct device *dev,	\
->  #define fcoe_enum_name_search(title, table_type, table)			\
->  static const char *get_fcoe_##title##_name(enum table_type table_key)	\
->  {									\
-> -	int i;								\
-> -	char *name = NULL;						\
-> -									\
-> -	for (i = 0; i < ARRAY_SIZE(table); i++) {			\
-> -		if (table[i].value == table_key) {			\
-> -			name = table[i].name;				\
-> -			break;						\
-> -		}							\
-> -	}								\
-> -	return name;							\
-> +	if (table_key < 0 || table_key >= ARRAY_SIZE(table))		\
-> +		return NULL;						\
-> +	return table[table_key];					\
->  }
->  
-> -static struct {
-> -	enum fcf_state value;
-> -	char           *name;
-> -} fcf_state_names[] = {
-> -	{ FCOE_FCF_STATE_UNKNOWN,      "Unknown" },
-> -	{ FCOE_FCF_STATE_DISCONNECTED, "Disconnected" },
-> -	{ FCOE_FCF_STATE_CONNECTED,    "Connected" },
-> +static char *fip_conn_type_names[] = {
-> +	[ FIP_CONN_TYPE_UNKNOWN ] = "Unknown",
-> +	[ FIP_CONN_TYPE_FABRIC ]  = "Fabric",
-> +	[ FIP_CONN_TYPE_VN2VN ]   = "VN2VN",
-> +};
-> +fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
-> +#define FCOE_CTLR_MODE_MAX_NAMELEN 50
-> +
-> +static char *fcf_state_names[] = {
-> +	[ FCOE_FCF_STATE_UNKNOWN ]      = "Unknown",
-> +	[ FCOE_FCF_STATE_DISCONNECTED ] = "Disconnected",
-> +	[ FCOE_FCF_STATE_CONNECTED ]    = "Connected",
->  };
->  fcoe_enum_name_search(fcf_state, fcf_state, fcf_state_names)
->  #define FCOE_FCF_STATE_MAX_NAMELEN 50
-> @@ -246,17 +244,7 @@ static ssize_t show_fcf_state(struct device *dev,
->  }
->  static FCOE_DEVICE_ATTR(fcf, state, S_IRUGO, show_fcf_state, NULL);
->  
-> -static struct {
-> -	enum fip_conn_type value;
-> -	char               *name;
-> -} fip_conn_type_names[] = {
-> -	{ FIP_CONN_TYPE_UNKNOWN, "Unknown" },
-> -	{ FIP_CONN_TYPE_FABRIC, "Fabric" },
-> -	{ FIP_CONN_TYPE_VN2VN, "VN2VN" },
-> -};
-> -fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
-> -#define FCOE_CTLR_MODE_MAX_NAMELEN 50
-> -
-> +#define FCOE_MAX_MODENAME_LEN 20
->  static ssize_t show_ctlr_mode(struct device *dev,
->  			      struct device_attribute *attr,
->  			      char *buf)
-> 
-> 
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
+> Ok for 3.8?
 
+Ping... Jens, I haven't seen any pull request for 3.8 from you.  Are
+these patches on your radar?  Tejun acked both of them.
+
+Paolo
+
+> v2->v3: change bitmap filter to boolean
+> 
+> Paolo Bonzini (2):
+>   sg_io: pass request_queue to blk_verify_command
+>   sg_io: introduce unpriv_sgio queue flag
+> 
+>  block/blk-sysfs.c      |   32 ++++++++++++++++++++++++++++++++
+>  block/bsg.c            |    2 +-
+>  block/scsi_ioctl.c     |    9 +++++----
+>  drivers/scsi/sg.c      |    3 ++-
+>  include/linux/blkdev.h |    6 +++++-
+>  5 files changed, 45 insertions(+), 7 deletions(-)
+> 
