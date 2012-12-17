@@ -1,522 +1,1058 @@
 From: Hiral Patel <hiralpat@cisco.com>
-Subject: [PATCH 06/10] fnic: New debug flags and debug log messages
-Date: Mon, 17 Dec 2012 15:29:20 -0800
-Message-ID: <1355786960-5235-1-git-send-email-hiralpat@cisco.com>
+Subject: [PATCH 07/10] fnic: Fnic Trace Utility
+Date: Mon, 17 Dec 2012 15:29:39 -0800
+Message-ID: <1355786979-5271-1-git-send-email-hiralpat@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtv-iport-1.cisco.com ([173.36.130.12]:51160 "EHLO
-	mtv-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253Ab2LQXeL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2012 18:34:11 -0500
+Received: from mtv-iport-2.cisco.com ([173.36.130.13]:57835 "EHLO
+	mtv-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752276Ab2LQXed (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2012 18:34:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Hiral Patel <hiralpat@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
+Cc: linux-scsi@vger.kernel.org, Hiral Patel <hiralpat@cisco.com>
 
-Added new fnic debug flags for identifying IO state at every stage of IO while debugging
-and also added more log messages for better debugging capability.
+Fnic Trace utility is a tracing functionality built directly into fnic driver
+to trace events. The benefit that trace buffer brings to fnic driver is the
+ability to see what it happening inside the fnic driver. It also provides the
+capability to trace every IO event inside fnic driver to debug panics, hangs
+and potentially IO corruption issues. This feature makes it easy to find
+problems in fnic driver and it also helps in tracking down strange bugs in a
+more manageable way. Trace buffer is shared across all fnic instances for
+this implementation.
 
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 Signed-off-by: Hiral Patel <hiralpat@cisco.com>
 ---
- drivers/scsi/fnic/fnic.h      |   32 ++++++++---
- drivers/scsi/fnic/fnic_io.h   |    4 +-
- drivers/scsi/fnic/fnic_scsi.c |  121 +++++++++++++++++++++++++++++++++++++----
- 3 files changed, 136 insertions(+), 21 deletions(-)
+ drivers/scsi/fnic/Makefile       |    2 +
+ drivers/scsi/fnic/fnic.h         |    1 +
+ drivers/scsi/fnic/fnic_debugfs.c |  312 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/fnic/fnic_main.c    |   14 ++
+ drivers/scsi/fnic/fnic_scsi.c    |  120 +++++++++++++--
+ drivers/scsi/fnic/fnic_trace.c   |  260 +++++++++++++++++++++++++++++++
+ drivers/scsi/fnic/fnic_trace.h   |   80 ++++++++++
+ 7 files changed, 778 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/scsi/fnic/fnic_debugfs.c
+ create mode 100644 drivers/scsi/fnic/fnic_trace.c
+ create mode 100644 drivers/scsi/fnic/fnic_trace.h
 
+diff --git a/drivers/scsi/fnic/Makefile b/drivers/scsi/fnic/Makefile
+index 37c3440..383598f 100644
+--- a/drivers/scsi/fnic/Makefile
++++ b/drivers/scsi/fnic/Makefile
+@@ -7,6 +7,8 @@ fnic-y	:= \
+ 	fnic_res.o \
+ 	fnic_fcs.o \
+ 	fnic_scsi.o \
++	fnic_trace.o \
++	fnic_debugfs.o \
+ 	vnic_cq.o \
+ 	vnic_dev.o \
+ 	vnic_intr.o \
 diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 9b62fc3..cba8c0e 100644
+index cba8c0e..e03a3c6 100644
 --- a/drivers/scsi/fnic/fnic.h
 +++ b/drivers/scsi/fnic/fnic.h
-@@ -50,6 +50,7 @@
- /*
-  * Tag bits used for special requests.
-  */
-+#define BIT(nr)			(1UL << (nr))
- #define FNIC_TAG_ABORT		BIT(30)		/* tag bit indicating abort */
- #define FNIC_TAG_DEV_RST	BIT(29)		/* indicates device reset */
- #define FNIC_TAG_MASK		(BIT(24) - 1)	/* mask for lookup */
-@@ -59,14 +60,29 @@
-  * Command flags to identify the type of command and for other future
-  * use.
-  */
--#define FNIC_NO_FLAGS			0
--#define FNIC_CDB_REQ			BIT(1)	/* All IOs with a valid CDB */
--#define FNIC_BLOCKING_REQ		BIT(2)	/* All blocking Requests */
--#define FNIC_DEVICE_RESET		BIT(3)	/* Device reset request */
--#define FNIC_DEV_RST_PENDING		BIT(4)	/* Device reset pending */
--#define FNIC_DEV_RST_TIMED_OUT		BIT(5)	/* Device reset timed out */
--#define FNIC_DEV_RST_TERM_ISSUED	BIT(6)	/* Device reset terminate */
--#define FNIC_DEV_RST_DONE		BIT(7)	/* Device reset done */
-+#define FNIC_NO_FLAGS                   0
-+#define FNIC_IO_INITIALIZED             BIT(0)
-+#define FNIC_IO_ISSUED                  BIT(1)
-+#define FNIC_IO_DONE                    BIT(2)
-+#define FNIC_IO_REQ_NULL                BIT(3)
-+#define FNIC_IO_ABTS_PENDING            BIT(4)
-+#define FNIC_IO_ABORTED                 BIT(5)
-+#define FNIC_IO_ABTS_ISSUED             BIT(6)
-+#define FNIC_IO_TERM_ISSUED             BIT(7)
-+#define FNIC_IO_INTERNAL_TERM_ISSUED    BIT(8)
-+#define FNIC_IO_ABT_TERM_DONE           BIT(9)
-+#define FNIC_IO_ABT_TERM_REQ_NULL       BIT(10)
-+#define FNIC_IO_ABT_TERM_TIMED_OUT      BIT(11)
-+#define FNIC_DEVICE_RESET               BIT(12)  /* Device reset request */
-+#define FNIC_DEV_RST_ISSUED             BIT(13)
-+#define FNIC_DEV_RST_TIMED_OUT          BIT(14)
-+#define FNIC_DEV_RST_ABTS_ISSUED        BIT(15)
-+#define FNIC_DEV_RST_TERM_ISSUED        BIT(16)
-+#define FNIC_DEV_RST_DONE               BIT(17)
-+#define FNIC_DEV_RST_REQ_NULL           BIT(18)
-+#define FNIC_DEV_RST_ABTS_DONE          BIT(19)
-+#define FNIC_DEV_RST_TERM_DONE          BIT(20)
-+#define FNIC_DEV_RST_ABTS_PENDING       BIT(21)
+@@ -26,6 +26,7 @@
+ #include <scsi/libfcoe.h>
+ #include "fnic_io.h"
+ #include "fnic_res.h"
++#include "fnic_trace.h"
+ #include "vnic_dev.h"
+ #include "vnic_wq.h"
+ #include "vnic_rq.h"
+diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
+new file mode 100644
+index 0000000..d89fc04
+--- /dev/null
++++ b/drivers/scsi/fnic/fnic_debugfs.c
+@@ -0,0 +1,312 @@
++/*
++ * Copyright 2012 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#include <linux/module.h>
++#include <linux/errno.h>
++#include <linux/debugfs.h>
++#include "fnic.h"
++
++static struct dentry *fnic_trace_debugfs_root;
++static struct dentry *fnic_trace_debugfs_file;
++static struct dentry *fnic_trace_enable;
++
++/*
++ * fnic_trace_ctrl_open - Open the trace_enable file
++ * @inode: The inode pointer.
++ * @file: The file pointer to attach the trace enable/disable flag.
++ *
++ * Description:
++ * This routine opens a debugsfs file trace_enable.
++ *
++ * Returns:
++ * This function returns zero if successful.
++ */
++int fnic_trace_ctrl_open(struct inode *inode, struct file *filp)
++{
++	filp->private_data = inode->i_private;
++	return 0;
++}
++
++/*
++ * fnic_trace_ctrl_read - Read a trace_enable debugfs file
++ * @filp: The file pointer to read from.
++ * @ubuf: The buffer to copy the data to.
++ * @cnt: The number of bytes to read.
++ * @ppos: The position in the file to start reading from.
++ *
++ * Description:
++ * This routine reads value of variable fnic_tracing_enabled
++ * and stores into local @buf. It will start reading file at @ppos and
++ * copy up to @cnt of data to @ubuf from @buf.
++ *
++ * Returns:
++ * This function returns the amount of data that was read.
++ */
++static ssize_t fnic_trace_ctrl_read(struct file *filp,
++				  char __user *ubuf,
++				  size_t cnt, loff_t *ppos)
++{
++	char buf[64];
++	int len;
++	len = sprintf(buf, "%u\n", fnic_tracing_enabled);
++
++	return simple_read_from_buffer(ubuf, cnt, ppos, buf, len);
++}
++
++/*
++ * fnic_trace_ctrl_write - Write to trace_enable debugfs file
++ * @filp: The file pointer to write from.
++ * @ubuf: The buffer to copy the data from.
++ * @cnt: The number of bytes to write.
++ * @ppos: The position in the file to start writing to.
++ *
++ * Description:
++ * This routine writes data from user buffer @ubuf to buffer @buf and
++ * sets fnic_tracing_enabled value as per user input.
++ *
++ * Returns:
++ * This function returns the amount of data that was written.
++ */
++static ssize_t fnic_trace_ctrl_write(struct file *filp,
++				  const char __user *ubuf,
++				  size_t cnt, loff_t *ppos)
++{
++	char buf[64];
++	unsigned long val;
++	int ret;
++
++	if (cnt >= sizeof(buf))
++		return -EINVAL;
++
++	if (copy_from_user(&buf, ubuf, cnt))
++		return -EFAULT;
++
++	buf[cnt] = 0;
++
++	ret = kstrtoul(buf, 10, &val);
++	if (ret < 0)
++		return ret;
++
++	fnic_tracing_enabled = val;
++	(*ppos)++;
++
++	return cnt;
++}
++
++/*
++ * fnic_trace_debugfs_open - Open the fnic trace log
++ * @inode: The inode pointer
++ * @file: The file pointer to attach the log output
++ *
++ * Description:
++ * This routine is the entry point for the debugfs open file operation.
++ * It allocates the necessary buffer for the log, fills the buffer from
++ * the in-memory log and then returns a pointer to that log in
++ * the private_data field in @file.
++ *
++ * Returns:
++ * This function returns zero if successful. On error it will return
++ * a negative error value.
++ */
++static int fnic_trace_debugfs_open(struct inode *inode,
++				  struct file *file)
++{
++	fnic_dbgfs_t *fnic_dbg_prt;
++	fnic_dbg_prt = kzalloc(sizeof(fnic_dbgfs_t), GFP_KERNEL);
++	if (!fnic_dbg_prt)
++		return -ENOMEM;
++
++	fnic_dbg_prt->buffer = vmalloc((3*(trace_max_pages * PAGE_SIZE)));
++	if (!fnic_dbg_prt->buffer)
++		return -ENOMEM;
++	memset((void *)fnic_dbg_prt->buffer, 0,
++			  (3*(trace_max_pages * PAGE_SIZE)));
++	fnic_dbg_prt->buffer_len = fnic_get_trace_data(fnic_dbg_prt);
++	file->private_data = fnic_dbg_prt;
++	return 0;
++}
++
++/*
++ * fnic_trace_debugfs_lseek - Seek through a debugfs file
++ * @file: The file pointer to seek through.
++ * @offset: The offset to seek to or the amount to seek by.
++ * @howto: Indicates how to seek.
++ *
++ * Description:
++ * This routine is the entry point for the debugfs lseek file operation.
++ * The @howto parameter indicates whether @offset is the offset to directly
++ * seek to, or if it is a value to seek forward or reverse by. This function
++ * figures out what the new offset of the debugfs file will be and assigns
++ * that value to the f_pos field of @file.
++ *
++ * Returns:
++ * This function returns the new offset if successful and returns a negative
++ * error if unable to process the seek.
++ */
++static loff_t fnic_trace_debugfs_lseek(struct file *file,
++					loff_t offset,
++					int howto)
++{
++	fnic_dbgfs_t *fnic_dbg_prt = file->private_data;
++	loff_t pos = -1;
++
++	switch (howto) {
++	case 0:
++		pos = offset;
++		break;
++	case 1:
++		pos = file->f_pos + offset;
++		break;
++	case 2:
++		pos = fnic_dbg_prt->buffer_len - offset;
++	}
++	return (pos < 0 || pos > fnic_dbg_prt->buffer_len) ?
++			  -EINVAL : (file->f_pos = pos);
++}
++
++/*
++ * fnic_trace_debugfs_read - Read a debugfs file
++ * @file: The file pointer to read from.
++ * @ubuf: The buffer to copy the data to.
++ * @nbytes: The number of bytes to read.
++ * @pos: The position in the file to start reading from.
++ *
++ * Description:
++ * This routine reads data from the buffer indicated in the private_data
++ * field of @file. It will start reading at @pos and copy up to @nbytes of
++ * data to @ubuf.
++ *
++ * Returns:
++ * This function returns the amount of data that was read (this could be
++ * less than @nbytes if the end of the file was reached).
++ */
++static ssize_t fnic_trace_debugfs_read(struct file *file,
++					char __user *ubuf,
++					size_t nbytes,
++					loff_t *pos)
++{
++	fnic_dbgfs_t *fnic_dbg_prt = file->private_data;
++	int rc = 0;
++	rc = simple_read_from_buffer(ubuf, nbytes, pos,
++				  fnic_dbg_prt->buffer,
++				  fnic_dbg_prt->buffer_len);
++	return rc;
++}
++
++/*
++ * fnic_trace_debugfs_release - Release the buffer used to store
++ * debugfs file data
++ * @inode: The inode pointer
++ * @file: The file pointer that contains the buffer to release
++ *
++ * Description:
++ * This routine frees the buffer that was allocated when the debugfs
++ * file was opened.
++ *
++ * Returns:
++ * This function returns zero.
++ */
++static int fnic_trace_debugfs_release(struct inode *inode,
++					  struct file *file)
++{
++	fnic_dbgfs_t *fnic_dbg_prt = file->private_data;
++
++	vfree(fnic_dbg_prt->buffer);
++	kfree(fnic_dbg_prt);
++	return 0;
++}
++
++static const struct file_operations fnic_trace_ctrl_fops = {
++	.owner = THIS_MODULE,
++	.open = fnic_trace_ctrl_open,
++	.read = fnic_trace_ctrl_read,
++	.write = fnic_trace_ctrl_write,
++};
++
++static const struct file_operations fnic_trace_debugfs_fops = {
++	.owner = THIS_MODULE,
++	.open = fnic_trace_debugfs_open,
++	.llseek = fnic_trace_debugfs_lseek,
++	.read = fnic_trace_debugfs_read,
++	.release = fnic_trace_debugfs_release,
++};
++
++/*
++ * fnic_trace_debugfs_init - Initialize debugfs for fnic trace logging
++ *
++ * Description:
++ * When Debugfs is configured this routine sets up the fnic debugfs
++ * file system. If not already created, this routine will create the
++ * fnic directory. It will create file trace to log fnic trace buffer
++ * output into debugfs and it will also create file trace_enable to
++ * control enable/disable of trace logging into trace buffer.
++ */
++int fnic_trace_debugfs_init()
++{
++	int rc = -1;
++	fnic_trace_debugfs_root = debugfs_create_dir("fnic", NULL);
++	if (!fnic_trace_debugfs_root) {
++		printk(KERN_DEBUG "Cannot create debugfs root\n");
++		return rc;
++	}
++	fnic_trace_enable = debugfs_create_file("tracing_enable",
++					  S_IFREG|S_IRUGO|S_IWUSR,
++					  fnic_trace_debugfs_root,
++					  NULL, &fnic_trace_ctrl_fops);
++
++	if (!fnic_trace_enable) {
++		printk(KERN_DEBUG "Cannot create trace_enable file"
++				  " under debugfs");
++		return rc;
++	}
++
++	fnic_trace_debugfs_file = debugfs_create_file("trace",
++						  S_IFREG|S_IRUGO|S_IWUSR,
++						  fnic_trace_debugfs_root,
++						  NULL,
++						  &fnic_trace_debugfs_fops);
++
++	if (!fnic_trace_debugfs_file) {
++		printk(KERN_DEBUG "Cannot create trace file under debugfs");
++		return rc;
++	}
++	rc = 0;
++	return rc;
++}
++
++/*
++ * fnic_trace_debugfs_terminate - Tear down debugfs infrastructure
++ *
++ * Description:
++ * When Debugfs is configured this routine removes debugfs file system
++ * elements that are specific to fnic trace logging.
++ */
++void fnic_trace_debugfs_terminate()
++{
++	if (fnic_trace_debugfs_file) {
++		debugfs_remove(fnic_trace_debugfs_file);
++		fnic_trace_debugfs_file = NULL;
++	}
++	if (fnic_trace_enable) {
++		debugfs_remove(fnic_trace_enable);
++		fnic_trace_enable = NULL;
++	}
++	if (fnic_trace_debugfs_root) {
++		debugfs_remove(fnic_trace_debugfs_root);
++		fnic_trace_debugfs_root = NULL;
++	}
++}
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index f377f9f..f724025 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -68,6 +68,10 @@ unsigned int fnic_log_level;
+ module_param(fnic_log_level, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(fnic_log_level, "bit mask of fnic logging levels");
  
- /*
-  * Usage of the scsi_cmnd scratchpad.
-diff --git a/drivers/scsi/fnic/fnic_io.h b/drivers/scsi/fnic/fnic_io.h
-index 3455c34..c35b8f1 100644
---- a/drivers/scsi/fnic/fnic_io.h
-+++ b/drivers/scsi/fnic/fnic_io.h
-@@ -45,7 +45,8 @@ enum fnic_sgl_list_type {
- };
++unsigned int fnic_trace_max_pages = 16;
++module_param(fnic_trace_max_pages, uint, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(fnic_trace_max_pages, "Total allocated memory pages "
++					"for fnic trace buffer");
  
- enum fnic_ioreq_state {
--	FNIC_IOREQ_CMD_PENDING = 0,
-+	FNIC_IOREQ_NOT_INITED = 0,
-+	FNIC_IOREQ_CMD_PENDING,
- 	FNIC_IOREQ_ABTS_PENDING,
- 	FNIC_IOREQ_ABTS_COMPLETE,
- 	FNIC_IOREQ_CMD_COMPLETE,
-@@ -60,6 +61,7 @@ struct fnic_io_req {
- 	u8 sgl_type; /* device DMA descriptor list type */
- 	u8 io_completed:1; /* set to 1 when fw completes IO */
- 	u32 port_id; /* remote port DID */
-+	unsigned long start_time; /* in jiffies */
- 	struct completion *abts_done; /* completion for abts */
- 	struct completion *dr_done; /* completion for device reset */
- };
+ static struct libfc_function_template fnic_transport_template = {
+ 	.frame_send = fnic_send,
+@@ -862,6 +866,14 @@ static int __init fnic_init_module(void)
+ 
+ 	printk(KERN_INFO PFX "%s, ver %s\n", DRV_DESCRIPTION, DRV_VERSION);
+ 
++	/* Allocate memory for trace buffer */
++	err = fnic_trace_buf_init();
++	if (err < 0) {
++		printk(KERN_ERR PFX "Trace buffer initialization Failed "
++				  "Fnic Tracing utility is disabled\n");
++		fnic_trace_free();
++	}
++
+ 	/* Create a cache for allocation of default size sgls */
+ 	len = sizeof(struct fnic_dflt_sgl_list);
+ 	fnic_sgl_cache[FNIC_SGL_CACHE_DFLT] = kmem_cache_create
+@@ -932,6 +944,7 @@ err_create_fnic_ioreq_slab:
+ err_create_fnic_sgl_slab_max:
+ 	kmem_cache_destroy(fnic_sgl_cache[FNIC_SGL_CACHE_DFLT]);
+ err_create_fnic_sgl_slab_dflt:
++	fnic_trace_free();
+ 	return err;
+ }
+ 
+@@ -943,6 +956,7 @@ static void __exit fnic_cleanup_module(void)
+ 	kmem_cache_destroy(fnic_sgl_cache[FNIC_SGL_CACHE_DFLT]);
+ 	kmem_cache_destroy(fnic_io_req_cache);
+ 	fc_release_transport(fnic_fc_transport);
++	fnic_trace_free();
+ }
+ 
+ module_init(fnic_init_module);
 diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index a9f436c..e1e817f 100644
+index e1e817f..38d42cf 100644
 --- a/drivers/scsi/fnic/fnic_scsi.c
 +++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -47,6 +47,7 @@ const char *fnic_state_str[] = {
- };
+@@ -392,11 +392,12 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ {
+ 	struct fc_lport *lp = shost_priv(sc->device->host);
+ 	struct fc_rport *rport;
+-	struct fnic_io_req *io_req;
++	struct fnic_io_req *io_req = NULL;
+ 	struct fnic *fnic = lport_priv(lp);
+ 	struct vnic_wq_copy *wq;
+ 	int ret;
+-	int sg_count;
++	u64 cmd_trace;
++	int sg_count = 0;
+ 	unsigned long flags;
+ 	unsigned long ptr;
  
- static const char *fnic_ioreq_state_str[] = {
-+	[FNIC_IOREQ_NOT_INITED] = "FNIC_IOREQ_NOT_INITED",
- 	[FNIC_IOREQ_CMD_PENDING] = "FNIC_IOREQ_CMD_PENDING",
- 	[FNIC_IOREQ_ABTS_PENDING] = "FNIC_IOREQ_ABTS_PENDING",
- 	[FNIC_IOREQ_ABTS_COMPLETE] = "FNIC_IOREQ_ABTS_COMPLETE",
-@@ -348,6 +349,8 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
- 
- 	if (unlikely(!vnic_wq_copy_desc_avail(wq))) {
- 		spin_unlock_irqrestore(&fnic->wq_copy_lock[0], intr_flags);
-+		FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
-+			  "fnic_queue_wq_copy_desc failure - no descriptors\n");
- 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -436,6 +437,9 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 	/* Map the data buffer */
+ 	sg_count = scsi_dma_map(sc);
+ 	if (sg_count < 0) {
++		FNIC_TRACE((u64)fnic_queuecommand, sc->device->host->host_no,
++			  sc->request->tag, (u64)sc, 0, sc->cmnd[0],
++			  sg_count, CMD_STATE(sc));
+ 		mempool_free(io_req, fnic->io_req_pool);
+ 		goto out;
  	}
- 
-@@ -419,7 +422,8 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 	 * caller disabling them.
- 	 */
- 	spin_unlock(lp->host->host_lock);
--	CMD_FLAGS(sc) = FNIC_CDB_REQ;
-+	CMD_STATE(sc) = FNIC_IOREQ_NOT_INITED;
-+	CMD_FLAGS(sc) = FNIC_NO_FLAGS;
- 
- 	/* Get a new io_req for this SCSI IO */
- 	io_req = mempool_alloc(fnic->io_req_pool, GFP_ATOMIC);
-@@ -466,8 +470,10 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 
- 	/* initialize rest of io_req */
- 	io_req->port_id = rport->port_id;
-+	io_req->start_time = jiffies;
- 	CMD_STATE(sc) = FNIC_IOREQ_CMD_PENDING;
- 	CMD_SP(sc) = (char *)io_req;
-+	CMD_FLAGS(sc) |= FNIC_IO_INITIALIZED;
- 	sc->scsi_done = done;
- 
- 	/* create copy wq desc and enqueue it */
-@@ -489,6 +495,9 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 			fnic_release_ioreq_buf(fnic, io_req, sc);
- 			mempool_free(io_req, fnic->io_req_pool);
- 		}
-+	} else {
-+		/* REVISIT: Use per IO lock in the final code */
-+		CMD_FLAGS(sc) |= FNIC_IO_ISSUED;
+@@ -485,7 +489,9 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 		 * refetch the pointer under the lock.
+ 		 */
+ 		spinlock_t *io_lock = fnic_io_lock_hash(fnic, sc);
+-
++		FNIC_TRACE((u64)fnic_queuecommand, sc->device->host->host_no,
++			  sc->request->tag, (u64)sc, 0, 0, 0,
++			  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
+ 		spin_lock_irqsave(io_lock, flags);
+ 		io_req = (struct fnic_io_req *)CMD_SP(sc);
+ 		CMD_SP(sc) = NULL;
+@@ -500,6 +506,15 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 		CMD_FLAGS(sc) |= FNIC_IO_ISSUED;
  	}
  out:
++	cmd_trace = ((u64)sc->cmnd[0] << 56 | (u64)sc->cmnd[7] << 40 |
++			(u64)sc->cmnd[8] << 32 | (u64)sc->cmnd[2] << 24 |
++			(u64)sc->cmnd[3] << 16 | (u64)sc->cmnd[4] << 8 |
++			sc->cmnd[5]);
++
++	FNIC_TRACE((u64)fnic_queuecommand, sc->device->host->host_no,
++		  sc->request->tag, (u64)sc, (u64)io_req,
++		  sg_count, cmd_trace,
++		  (((u64)CMD_FLAGS(sc) >> 32) | CMD_STATE(sc)));
  	atomic_dec(&fnic->in_flight);
-@@ -693,10 +702,12 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 	/* acquire host lock before returning to SCSI */
+ 	spin_lock(lp->host->host_lock);
+@@ -673,6 +688,7 @@ static inline void fnic_fcpio_ack_handler(struct fnic *fnic,
+ 	struct vnic_wq_copy *wq;
+ 	u16 request_out = desc->u.ack.request_out;
+ 	unsigned long flags;
++	u64 *ox_id_tag = (u64 *)(void *)desc;
+ 
+ 	/* mark the ack state */
+ 	wq = &fnic->wq_copy[cq_index - fnic->raw_wq_count - fnic->rq_count];
+@@ -683,6 +699,9 @@ static inline void fnic_fcpio_ack_handler(struct fnic *fnic,
+ 		fnic->fw_ack_recd[0] = 1;
+ 	}
+ 	spin_unlock_irqrestore(&fnic->wq_copy_lock[0], flags);
++	FNIC_TRACE((u64)fnic_fcpio_ack_handler,
++		  fnic->lport->host->host_no, 0, 0, ox_id_tag[2], ox_id_tag[3],
++		  ox_id_tag[4], ox_id_tag[5]);
+ }
+ 
+ /*
+@@ -702,6 +721,7 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
  	struct scsi_cmnd *sc;
  	unsigned long flags;
  	spinlock_t *io_lock;
-+	unsigned long start_time;
++	u64 cmd_trace;
+ 	unsigned long start_time;
  
  	/* Decode the cmpl description to get the io_req id */
- 	fcpio_header_dec(&desc->hdr, &type, &hdr_status, &tag);
- 	fcpio_tag_id_dec(&tag, &id);
-+	icmnd_cmpl = &desc->u.icmnd_cmpl;
- 
- 	if (id >= FNIC_MAX_IO_REQ) {
- 		shost_printk(KERN_ERR, fnic->lport->host,
-@@ -707,17 +718,28 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 
- 	sc = scsi_host_find_tag(fnic->lport->host, id);
- 	WARN_ON_ONCE(!sc);
--	if (!sc)
-+	if (!sc) {
-+		shost_printk(KERN_ERR, fnic->lport->host,
-+			  "icmnd_cmpl sc is null - "
-+			  "hdr status = %s tag = 0x%x desc = 0x%p\n",
-+			  fnic_fcpio_status_to_str(hdr_status), id, desc);
- 		return;
-+	}
- 
- 	io_lock = fnic_io_lock_hash(fnic, sc);
- 	spin_lock_irqsave(io_lock, flags);
- 	io_req = (struct fnic_io_req *)CMD_SP(sc);
- 	WARN_ON_ONCE(!io_req);
- 	if (!io_req) {
-+		CMD_FLAGS(sc) |= FNIC_IO_REQ_NULL;
- 		spin_unlock_irqrestore(io_lock, flags);
-+		shost_printk(KERN_ERR, fnic->lport->host,
-+			  "icmnd_cmpl io_req is null - "
-+			  "hdr status = %s tag = 0x%x sc 0x%p\n",
-+			  fnic_fcpio_status_to_str(hdr_status), id, sc);
- 		return;
- 	}
-+	start_time = io_req->start_time;
- 
- 	/* firmware completed the io */
- 	io_req->io_completed = 1;
-@@ -728,6 +750,31 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 	 */
- 	if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING) {
- 		spin_unlock_irqrestore(io_lock, flags);
-+		CMD_FLAGS(sc) |= FNIC_IO_ABTS_PENDING;
-+		switch (hdr_status) {
-+		case FCPIO_SUCCESS:
-+			CMD_FLAGS(sc) |= FNIC_IO_DONE;
-+			FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
-+				  "icmnd_cmpl ABTS pending hdr status = %s "
-+				  "sc  0x%p scsi_status %x  residual %d\n",
-+				  fnic_fcpio_status_to_str(hdr_status), sc,
-+				  icmnd_cmpl->scsi_status,
-+				  icmnd_cmpl->residual);
-+			break;
-+		case FCPIO_ABORTED:
-+			CMD_FLAGS(sc) |= FNIC_IO_ABORTED;
-+			break;
-+		default:
-+			if (hdr_status != FCPIO_SUCCESS ||
-+				  hdr_status != FCPIO_ABORTED) {
-+				FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
-+					  "icmnd_cmpl abts pending "
-+					  "hdr status = %s tag = 0x%x sc = 0x%p\n",
-+					  fnic_fcpio_status_to_str(hdr_status),
-+					  id, sc);
-+			}
-+			break;
-+		}
+@@ -723,6 +743,14 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 			  "icmnd_cmpl sc is null - "
+ 			  "hdr status = %s tag = 0x%x desc = 0x%p\n",
+ 			  fnic_fcpio_status_to_str(hdr_status), id, desc);
++		FNIC_TRACE((u64)fnic_fcpio_icmnd_cmpl_handler,
++			  fnic->lport->host->host_no, id,
++			  ((u64)icmnd_cmpl->_resvd0[1] << 16 |
++			  (u64)icmnd_cmpl->_resvd0[0]),
++			  ((u64)hdr_status << 16 |
++			  (u64)icmnd_cmpl->scsi_status << 8 |
++			  (u64)icmnd_cmpl->flags), (u64)desc,
++			  (u64)icmnd_cmpl->residual, 0);
  		return;
  	}
  
-@@ -811,6 +858,7 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+@@ -866,6 +894,20 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
  
- 	/* Break link with the SCSI command */
- 	CMD_SP(sc) = NULL;
-+	CMD_FLAGS(sc) |= FNIC_IO_DONE;
+ 	mempool_free(io_req, fnic->io_req_pool);
  
- 	spin_unlock_irqrestore(io_lock, flags);
- 
-@@ -847,6 +895,7 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 	struct fnic_io_req *io_req;
- 	unsigned long flags;
- 	spinlock_t *io_lock;
-+	unsigned long start_time;
- 
- 	fcpio_header_dec(&desc->hdr, &type, &hdr_status, &tag);
- 	fcpio_tag_id_dec(&tag, &id);
-@@ -860,17 +909,26 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 
- 	sc = scsi_host_find_tag(fnic->lport->host, id & FNIC_TAG_MASK);
- 	WARN_ON_ONCE(!sc);
--	if (!sc)
-+	if (!sc) {
-+		shost_printk(KERN_ERR, fnic->lport->host,
-+			  "itmf_cmpl sc is null - hdr status = %s tag = 0x%x\n",
-+			  fnic_fcpio_status_to_str(hdr_status), id);
- 		return;
++	cmd_trace = ((u64)hdr_status << 56) |
++		  (u64)icmnd_cmpl->scsi_status << 48 |
++		  (u64)icmnd_cmpl->flags << 40 | (u64)sc->cmnd[0] << 32 |
++		  (u64)sc->cmnd[2] << 24 | (u64)sc->cmnd[3] << 16 |
++		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5];
++
++	FNIC_TRACE((u64)fnic_fcpio_icmnd_cmpl_handler,
++		  sc->device->host->host_no, id, (u64)sc,
++		  ((u64)icmnd_cmpl->_resvd0[1] << 56 |
++		  (u64)icmnd_cmpl->_resvd0[0] << 48 |
++		  jiffies_to_msecs(jiffies - start_time)),
++		  (u64)desc, cmd_trace,
++		  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
++
+ 	if (sc->sc_data_direction == DMA_FROM_DEVICE) {
+ 		fnic->lport->host_stats.fcp_input_requests++;
+ 		fnic->fcp_input_bytes += xfer_len;
+@@ -878,7 +920,6 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 	/* Call SCSI completion function to complete the IO */
+ 	if (sc->scsi_done)
+ 		sc->scsi_done(sc);
 -
-+	}
- 	io_lock = fnic_io_lock_hash(fnic, sc);
- 	spin_lock_irqsave(io_lock, flags);
- 	io_req = (struct fnic_io_req *)CMD_SP(sc);
- 	WARN_ON_ONCE(!io_req);
- 	if (!io_req) {
- 		spin_unlock_irqrestore(io_lock, flags);
-+		CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_REQ_NULL;
-+		shost_printk(KERN_ERR, fnic->lport->host,
-+			  "itmf_cmpl io_req is null - "
-+			  "hdr status = %s tag = 0x%x sc 0x%p\n",
-+			  fnic_fcpio_status_to_str(hdr_status), id, sc);
- 		return;
- 	}
-+	start_time = io_req->start_time;
+ }
  
- 	if ((id & FNIC_TAG_ABORT) && (id & FNIC_TAG_DEV_RST)) {
- 		/* Abort and terminate completion of device reset req */
-@@ -894,6 +952,7 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 		CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
- 		CMD_ABTS_STATUS(sc) = hdr_status;
+ /* fnic_fcpio_itmf_cmpl_handler
+@@ -976,8 +1017,21 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
  
-+		CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_DONE;
- 		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 			      "abts cmpl recd. id %d status %s\n",
- 			      (int)(id & FNIC_TAG_MASK),
-@@ -926,6 +985,7 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 		CMD_LR_STATUS(sc) = hdr_status;
+ 			fnic_release_ioreq_buf(fnic, io_req, sc);
+ 			mempool_free(io_req, fnic->io_req_pool);
+-			if (sc->scsi_done)
++			if (sc->scsi_done) {
++				FNIC_TRACE((u64)fnic_fcpio_itmf_cmpl_handler,
++					sc->device->host->host_no, id,
++					(u64)sc,
++					jiffies_to_msecs(jiffies - start_time),
++					(u64)desc,
++					(((u64)hdr_status << 40) |
++					(u64)sc->cmnd[0] << 32 |
++					(u64)sc->cmnd[2] << 24 |
++					(u64)sc->cmnd[3] << 16 |
++					(u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
++					(((u64)CMD_FLAGS(sc) << 32) |
++					CMD_STATE(sc)));
+ 				sc->scsi_done(sc);
++			}
+ 		}
+ 
+ 	} else if (id & FNIC_TAG_DEV_RST) {
+@@ -986,6 +1040,11 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
  		if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING) {
  			spin_unlock_irqrestore(io_lock, flags);
-+			CMD_FLAGS(sc) |= FNIC_DEV_RST_ABTS_PENDING;
+ 			CMD_FLAGS(sc) |= FNIC_DEV_RST_ABTS_PENDING;
++			FNIC_TRACE((u64)fnic_fcpio_itmf_cmpl_handler,
++				  sc->device->host->host_no, id, (u64)sc,
++				  jiffies_to_msecs(jiffies - start_time),
++				  (u64)desc, 0,
++				  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
  			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
  				"Terminate pending "
  				"dev reset cmpl recd. id %d status %s\n",
-@@ -1031,6 +1091,7 @@ static void fnic_cleanup_io(struct fnic *fnic, int exclude_id)
- 	unsigned long flags = 0;
- 	struct scsi_cmnd *sc;
- 	spinlock_t *io_lock;
-+	unsigned long start_time = 0;
- 
- 	for (i = 0; i < FNIC_MAX_IO_REQ; i++) {
- 		if (i == exclude_id)
-@@ -1073,6 +1134,7 @@ static void fnic_cleanup_io(struct fnic *fnic, int exclude_id)
- 		 * If there is a scsi_cmnd associated with this io_req, then
- 		 * free the corresponding state
- 		 */
-+		start_time = io_req->start_time;
- 		fnic_release_ioreq_buf(fnic, io_req, sc);
- 		mempool_free(io_req, fnic->io_req_pool);
- 
-@@ -1096,6 +1158,7 @@ void fnic_wq_copy_cleanup_handler(struct vnic_wq_copy *wq,
- 	struct scsi_cmnd *sc;
- 	unsigned long flags;
- 	spinlock_t *io_lock;
-+	unsigned long start_time = 0;
- 
- 	/* get the tag reference */
- 	fcpio_tag_id_dec(&desc->hdr.tag, &id);
-@@ -1125,6 +1188,7 @@ void fnic_wq_copy_cleanup_handler(struct vnic_wq_copy *wq,
- 
- 	spin_unlock_irqrestore(io_lock, flags);
- 
-+	start_time = io_req->start_time;
- 	fnic_release_ioreq_buf(fnic, io_req, sc);
- 	mempool_free(io_req, fnic->io_req_pool);
- 
-@@ -1162,7 +1226,7 @@ static inline int fnic_queue_abort_io_req(struct fnic *fnic, int tag,
- 	if (!vnic_wq_copy_desc_avail(wq)) {
- 		spin_unlock_irqrestore(&fnic->wq_copy_lock[0], flags);
- 		atomic_dec(&fnic->in_flight);
--		shost_printk(KERN_DEBUG, fnic->lport->host,
-+		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 			"fnic_queue_abort_io_req: failure: no descriptors\n");
- 		return 1;
- 	}
-@@ -1212,7 +1276,7 @@ void fnic_rport_exch_reset(struct fnic *fnic, u32 port_id)
- 		}
- 
- 		if ((CMD_FLAGS(sc) & FNIC_DEVICE_RESET) &&
--			(!(CMD_FLAGS(sc) & FNIC_DEV_RST_PENDING))) {
-+			(!(CMD_FLAGS(sc) & FNIC_DEV_RST_ISSUED))) {
- 			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 			"fnic_rport_exch_reset dev rst not pending sc 0x%p\n",
- 			sc);
-@@ -1239,6 +1303,13 @@ void fnic_rport_exch_reset(struct fnic *fnic, u32 port_id)
- 			"fnic_rport_exch_reset: sc->device is null state is "
- 			"%s\n", fnic_ioreq_state_to_str(CMD_STATE(sc)));
- 
-+		if (!(CMD_FLAGS(sc) & FNIC_IO_ISSUED)) {
-+			shost_printk(KERN_ERR, fnic->lport->host,
-+				  "rport_exch_reset "
-+				  "IO not yet issued %p tag 0x%x flags "
-+				  "%x state %d\n",
-+				  sc, tag, CMD_FLAGS(sc), CMD_STATE(sc));
-+		}
- 		old_ioreq_state = CMD_STATE(sc);
- 		CMD_STATE(sc) = FNIC_IOREQ_ABTS_PENDING;
- 		CMD_ABTS_STATUS(sc) = FCPIO_INVALID_CODE;
-@@ -1276,6 +1347,8 @@ void fnic_rport_exch_reset(struct fnic *fnic, u32 port_id)
- 			spin_lock_irqsave(io_lock, flags);
- 			if (CMD_FLAGS(sc) & FNIC_DEVICE_RESET)
- 				CMD_FLAGS(sc) |= FNIC_DEV_RST_TERM_ISSUED;
-+			else
-+				CMD_FLAGS(sc) |= FNIC_IO_INTERNAL_TERM_ISSUED;
+@@ -996,6 +1055,11 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+ 		if (CMD_FLAGS(sc) & FNIC_DEV_RST_TIMED_OUT) {
+ 			/* Need to wait for terminate completion */
  			spin_unlock_irqrestore(io_lock, flags);
- 		}
- 	}
-@@ -1338,7 +1411,7 @@ void fnic_terminate_rport_io(struct fc_rport *rport)
- 		}
- 
- 		if ((CMD_FLAGS(sc) & FNIC_DEVICE_RESET) &&
--			(!(CMD_FLAGS(sc) & FNIC_DEV_RST_PENDING))) {
-+			(!(CMD_FLAGS(sc) & FNIC_DEV_RST_ISSUED))) {
++			FNIC_TRACE((u64)fnic_fcpio_itmf_cmpl_handler,
++				  sc->device->host->host_no, id, (u64)sc,
++				  jiffies_to_msecs(jiffies - start_time),
++				  (u64)desc, 0,
++				  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
  			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 			"fnic_terminate_rport_io dev rst not pending sc 0x%p\n",
- 			sc);
-@@ -1359,6 +1432,13 @@ void fnic_terminate_rport_io(struct fc_rport *rport)
- 			"state is %s\n",
- 			fnic_ioreq_state_to_str(CMD_STATE(sc)));
- 		}
-+		if (!(CMD_FLAGS(sc) & FNIC_IO_ISSUED)) {
-+			FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
-+				  "fnic_terminate_rport_io "
-+				  "IO not yet issued %p tag 0x%x flags "
-+				  "%x state %d\n",
-+				  sc, tag, CMD_FLAGS(sc), CMD_STATE(sc));
+ 				"dev reset cmpl recd after time out. "
+ 				"id %d status %s\n",
+@@ -1144,8 +1208,18 @@ cleanup_scsi_cmd:
+ 			      " DID_TRANSPORT_DISRUPTED\n");
+ 
+ 		/* Complete the command to SCSI */
+-		if (sc->scsi_done)
++		if (sc->scsi_done) {
++			FNIC_TRACE((u64)fnic_cleanup_io,
++				  sc->device->host->host_no, i, (u64)sc,
++				  jiffies_to_msecs(jiffies - start_time),
++				  0, ((u64)sc->cmnd[0] << 32 |
++				  (u64)sc->cmnd[2] << 24 |
++				  (u64)sc->cmnd[3] << 16 |
++				  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
++				  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
++
+ 			sc->scsi_done(sc);
 +		}
- 		old_ioreq_state = CMD_STATE(sc);
- 		CMD_STATE(sc) = FNIC_IOREQ_ABTS_PENDING;
- 		CMD_ABTS_STATUS(sc) = FCPIO_INVALID_CODE;
-@@ -1396,6 +1476,8 @@ void fnic_terminate_rport_io(struct fc_rport *rport)
- 			spin_lock_irqsave(io_lock, flags);
- 			if (CMD_FLAGS(sc) & FNIC_DEVICE_RESET)
- 				CMD_FLAGS(sc) |= FNIC_DEV_RST_TERM_ISSUED;
-+			else
-+				CMD_FLAGS(sc) |= FNIC_IO_INTERNAL_TERM_ISSUED;
- 			spin_unlock_irqrestore(io_lock, flags);
- 		}
  	}
-@@ -1415,8 +1497,9 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ }
+ 
+@@ -1197,8 +1271,17 @@ wq_copy_cleanup_scsi_cmd:
+ 	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host, "wq_copy_cleanup_handler:"
+ 		      " DID_NO_CONNECT\n");
+ 
+-	if (sc->scsi_done)
++	if (sc->scsi_done) {
++		FNIC_TRACE((u64)fnic_wq_copy_cleanup_handler,
++			  sc->device->host->host_no, id, (u64)sc,
++			  jiffies_to_msecs(jiffies - start_time),
++			  0, ((u64)sc->cmnd[0] << 32 |
++			  (u64)sc->cmnd[2] << 24 | (u64)sc->cmnd[3] << 16 |
++			  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
++			  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
++
+ 		sc->scsi_done(sc);
++	}
+ }
+ 
+ static inline int fnic_queue_abort_io_req(struct fnic *fnic, int tag,
+@@ -1493,7 +1576,7 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ {
+ 	struct fc_lport *lp;
+ 	struct fnic *fnic;
+-	struct fnic_io_req *io_req;
++	struct fnic_io_req *io_req = NULL;
  	struct fc_rport *rport;
  	spinlock_t *io_lock;
  	unsigned long flags;
-+	unsigned long start_time = 0;
- 	int ret = SUCCESS;
--	u32 task_req;
-+	u32 task_req = 0;
- 	struct scsi_lun fc_lun;
- 	int tag;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
-@@ -1503,6 +1586,10 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+@@ -1520,7 +1603,6 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ 
+ 	CMD_FLAGS(sc) = FNIC_NO_FLAGS;
+ 
+-
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up)) {
  		ret = FAILED;
  		goto fnic_abort_cmd_end;
- 	}
-+	if (task_req == FCPIO_ITMF_ABT_TASK)
-+		CMD_FLAGS(sc) |= FNIC_IO_ABTS_ISSUED;
-+	else
-+		CMD_FLAGS(sc) |= FNIC_IO_TERM_ISSUED;
- 
- 	/*
- 	 * We queued an abort IO, wait for its completion.
-@@ -1521,6 +1608,7 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	io_req = (struct fnic_io_req *)CMD_SP(sc);
- 	if (!io_req) {
- 		spin_unlock_irqrestore(io_lock, flags);
-+		CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_REQ_NULL;
- 		ret = FAILED;
- 		goto fnic_abort_cmd_end;
- 	}
-@@ -1529,6 +1617,7 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	/* fw did not complete abort, timed out */
- 	if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING) {
- 		spin_unlock_irqrestore(io_lock, flags);
-+		CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_TIMED_OUT;
- 		ret = FAILED;
- 		goto fnic_abort_cmd_end;
- 	}
-@@ -1544,12 +1633,13 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 
- 	spin_unlock_irqrestore(io_lock, flags);
- 
-+	start_time = io_req->start_time;
- 	fnic_release_ioreq_buf(fnic, io_req, sc);
+@@ -1638,6 +1720,14 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
  	mempool_free(io_req, fnic->io_req_pool);
  
  fnic_abort_cmd_end:
++	FNIC_TRACE((u64)fnic_abort_cmd, sc->device->host->host_no,
++		  sc->request->tag, (u64)sc,
++		  jiffies_to_msecs(jiffies - start_time),
++		  0, ((u64)sc->cmnd[0] << 32 |
++		  (u64)sc->cmnd[2] << 24 | (u64)sc->cmnd[3] << 16 |
++		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
++		  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
++
  	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
--		      "Returning from abort cmd %s\n",
-+		      "Returning from abort cmd type %x %s\n", task_req,
+ 		      "Returning from abort cmd type %x %s\n", task_req,
  		      (ret == SUCCESS) ?
- 		      "SUCCESS" : "FAILED");
- 	return ret;
-@@ -1580,6 +1670,8 @@ static inline int fnic_queue_dr_io_req(struct fnic *fnic,
- 		free_wq_copy_descs(fnic, wq);
- 
- 	if (!vnic_wq_copy_desc_avail(wq)) {
-+		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+			  "queue_dr_io_req failure - no descriptors\n");
- 		ret = -EAGAIN;
- 		goto lr_io_req_end;
- 	}
-@@ -1651,7 +1743,7 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 			continue;
- 		}
- 		if ((CMD_FLAGS(sc) & FNIC_DEVICE_RESET) &&
--			(!(CMD_FLAGS(sc) & FNIC_DEV_RST_PENDING))) {
-+			(!(CMD_FLAGS(sc) & FNIC_DEV_RST_ISSUED))) {
- 			FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
- 				"%s dev rst not pending sc 0x%p\n", __func__,
- 				sc);
-@@ -1707,6 +1799,7 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 				CMD_FLAGS(sc) |= FNIC_DEV_RST_TERM_ISSUED;
- 			spin_unlock_irqrestore(io_lock, flags);
- 		}
-+		CMD_FLAGS(sc) |= FNIC_IO_INTERNAL_TERM_ISSUED;
- 
- 		wait_for_completion_timeout(&tm_done,
- 					    msecs_to_jiffies
-@@ -1717,6 +1810,7 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 		io_req = (struct fnic_io_req *)CMD_SP(sc);
- 		if (!io_req) {
- 			spin_unlock_irqrestore(io_lock, flags);
-+			CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_REQ_NULL;
- 			continue;
- 		}
- 
-@@ -1725,6 +1819,7 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 		/* if abort is still pending with fw, fail */
- 		if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING) {
- 			spin_unlock_irqrestore(io_lock, flags);
-+			CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_DONE;
- 			ret = 1;
- 			goto clean_pending_aborts_end;
- 		}
-@@ -1819,6 +1914,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+@@ -1908,7 +1998,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+ {
+ 	struct fc_lport *lp;
+ 	struct fnic *fnic;
+-	struct fnic_io_req *io_req;
++	struct fnic_io_req *io_req = NULL;
+ 	struct fc_rport *rport;
+ 	int status;
  	int ret = FAILED;
- 	spinlock_t *io_lock;
+@@ -1916,7 +2006,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
  	unsigned long flags;
-+	unsigned long start_time = 0;
+ 	unsigned long start_time = 0;
  	struct scsi_lun fc_lun;
- 	int tag;
+-	int tag;
++	int tag = 0;
  	DECLARE_COMPLETION_ONSTACK(tm_done);
-@@ -1844,7 +1940,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 	if (fc_remote_port_chkready(rport))
- 		goto fnic_device_reset_end;
+ 	int tag_gen_flag = 0;   /*to track tags allocated by fnic driver*/
  
--	CMD_FLAGS(sc) = (FNIC_DEVICE_RESET | FNIC_BLOCKING_REQ);
-+	CMD_FLAGS(sc) = FNIC_DEVICE_RESET;
- 	/* Allocate tag if not present */
- 
- 	tag = sc->request->tag;
-@@ -1891,7 +1987,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 		goto fnic_device_reset_clean;
+@@ -2111,6 +2201,14 @@ fnic_device_reset_clean:
  	}
- 	spin_lock_irqsave(io_lock, flags);
--	CMD_FLAGS(sc) |= FNIC_DEV_RST_PENDING;
-+	CMD_FLAGS(sc) |= FNIC_DEV_RST_ISSUED;
- 	spin_unlock_irqrestore(io_lock, flags);
  
- 	/*
-@@ -2009,6 +2105,7 @@ fnic_device_reset_clean:
- 	spin_unlock_irqrestore(io_lock, flags);
- 
- 	if (io_req) {
-+		start_time = io_req->start_time;
- 		fnic_release_ioreq_buf(fnic, io_req, sc);
- 		mempool_free(io_req, fnic->io_req_pool);
- 	}
+ fnic_device_reset_end:
++	FNIC_TRACE((u64)fnic_device_reset, sc->device->host->host_no,
++		  sc->request->tag, (u64)sc,
++		  jiffies_to_msecs(jiffies - start_time),
++		  0, ((u64)sc->cmnd[0] << 32 |
++		  (u64)sc->cmnd[2] << 24 | (u64)sc->cmnd[3] << 16 |
++		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
++		  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
++
+ 	/* free tag if it is allocated */
+ 	if (unlikely(tag_gen_flag))
+ 		fnic_scsi_host_end_tag(fnic, sc);
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+new file mode 100644
+index 0000000..2daca6d
+--- /dev/null
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -0,0 +1,260 @@
++/*
++ * Copyright 2012 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#include <linux/module.h>
++#include <linux/mempool.h>
++#include <linux/errno.h>
++#include <linux/spinlock.h>
++#include <linux/version.h>
++#include <linux/kallsyms.h>
++#include "fnic_io.h"
++#include "fnic.h"
++
++unsigned int trace_max_pages;
++int fnic_max_trace_entries;
++
++static u64 fnic_trace_buf_p;
++DEFINE_SPINLOCK(fnic_trace_lock);
++
++static fnic_trace_dbg_t fnic_trace_entries;
++int fnic_tracing_enabled = 1;
++
++/*
++ * fnic_trace_get_buf - Give buffer pointer to user to fill up trace information
++ *
++ * Description:
++ * This routine gets next available trace buffer entry location @wr_idx
++ * from allocated trace buffer pages and give that memory location
++ * to user to store the trace information.
++ *
++ * Return Value:
++ * This routine returns pointer to next available trace entry
++ * @fnic_buf_head for user to fill trace information.
++ */
++fnic_trace_data_t *fnic_trace_get_buf()
++{
++	u64 fnic_buf_head;
++	unsigned long flags;
++
++	spin_lock_irqsave(&fnic_trace_lock, flags);
++
++	/*
++	 * Get next available memory location for writing trace information
++	 * at @wr_idx and increment @wr_idx
++	 */
++	fnic_buf_head =
++		fnic_trace_entries.page_offset[fnic_trace_entries.wr_idx];
++	fnic_trace_entries.wr_idx++;
++
++	/*
++	 * Verify if trace buffer is full then change wd_idx to
++	 * start from zero
++	 */
++	if (fnic_trace_entries.wr_idx >= fnic_max_trace_entries)
++		fnic_trace_entries.wr_idx = 0;
++
++	/*
++	 * Verify if write index @wr_idx and read index @rd_idx are same then
++	 * increment @rd_idx to move to next entry in trace buffer
++	 */
++	if (fnic_trace_entries.wr_idx == fnic_trace_entries.rd_idx) {
++		fnic_trace_entries.rd_idx++;
++		if (fnic_trace_entries.rd_idx >= fnic_max_trace_entries)
++			fnic_trace_entries.rd_idx = 0;
++	}
++	spin_unlock_irqrestore(&fnic_trace_lock, flags);
++	return (fnic_trace_data_t *)fnic_buf_head;
++}
++
++/*
++ * fnic_get_trace_data - Copy trace buffer to a memory file
++ * @fnic_dbgfs_t: pointer to debugfs trace buffer
++ *
++ * Description:
++ * This routine gathers the fnic trace debugfs data from the fnic_trace_data_t
++ * buffer and dumps it to fnic_dbgfs_t. It will start at the rd_idx entry in
++ * the log and process the log until the end of the buffer. Then it will gather
++ * from the beginning of the log and process until the current entry @wr_idx.
++ *
++ * Return Value:
++ * This routine returns the amount of bytes that were dumped into fnic_dbgfs_t
++ */
++int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
++{
++	int rd_idx;
++	int wr_idx;
++	int len = 0;
++	unsigned long flags;
++	char str[KSYM_SYMBOL_LEN];
++	struct timespec val;
++	fnic_trace_data_t *tbp;
++
++	spin_lock_irqsave(&fnic_trace_lock, flags);
++	rd_idx = fnic_trace_entries.rd_idx;
++	wr_idx = fnic_trace_entries.wr_idx;
++	if (wr_idx < rd_idx) {
++		while (1) {
++			/* Start from read index @rd_idx */
++			tbp = (fnic_trace_data_t *)
++				  fnic_trace_entries.page_offset[rd_idx];
++			if (!tbp)
++				return 0;
++			/* Convert function pointer to function name */
++			sprint_symbol(str, tbp->fnaddr);
++			jiffies_to_timespec(tbp->timestamp, &val);
++			/*
++			 * Dump trace buffer entry to memory file
++			 * and increment read index @rd_idx
++			 */
++			len += snprintf(fnic_dbgfs_prt->buffer + len,
++				  (trace_max_pages * PAGE_SIZE * 3) - len,
++				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
++				  "%16llx %16llx %16llx\n", val.tv_sec,
++				  val.tv_nsec, str, tbp->host_no, tbp->tag,
++				  tbp->data[0], tbp->data[1], tbp->data[2],
++				  tbp->data[3], tbp->data[4]);
++			rd_idx++;
++			/*
++			 * If rd_idx is reached to maximum trace entries
++			 * then move rd_idx to zero
++			 */
++			if (rd_idx > (fnic_max_trace_entries-1))
++				rd_idx = 0;
++			/*
++			 * Continure dumpping trace buffer entries into
++			 * memory file till rd_idx reaches write index
++			 */
++			if (rd_idx == wr_idx)
++				break;
++		}
++	} else if (wr_idx > rd_idx) {
++		while (1) {
++			/* Start from read index @rd_idx */
++			tbp = (fnic_trace_data_t *)
++				  fnic_trace_entries.page_offset[rd_idx];
++			if (!tbp)
++				return 0;
++			jiffies_to_timespec(tbp->timestamp, &val);
++			/* Convert function pointer to function name */
++			sprint_symbol(str, tbp->fnaddr);
++			/*
++			 * Dump trace buffer entry to memory file
++			 * and increment read index @rd_idx
++			 */
++			len += snprintf(fnic_dbgfs_prt->buffer + len,
++				  (trace_max_pages * PAGE_SIZE * 3) - len,
++				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
++				  "%16llx %16llx %16llx\n", val.tv_sec,
++				  val.tv_nsec, str, tbp->host_no, tbp->tag,
++				  tbp->data[0], tbp->data[1], tbp->data[2],
++				  tbp->data[3], tbp->data[4]);
++			rd_idx++;
++			/*
++			 * Continue dumpping trace buffer entries into
++			 * memory file till rd_idx reaches write index
++			 */
++			if (rd_idx == wr_idx)
++				break;
++		}
++	}
++	spin_unlock_irqrestore(&fnic_trace_lock, flags);
++	return len;
++}
++
++/*
++ * fnic_trace_buf_init - Initialize fnic trace buffer logging facility
++ *
++ * Description:
++ * Initialize trace buffer data structure by allocating required memory and
++ * setting page_offset information for every trace entry by adding trace entry
++ * length to previous page_offset value.
++ */
++int fnic_trace_buf_init()
++{
++	u64 fnic_buf_head;
++	int i;
++	int err = 0;
++
++	trace_max_pages = fnic_trace_max_pages;
++	fnic_max_trace_entries = (trace_max_pages * PAGE_SIZE)/
++					  FNIC_ENTRY_SIZE_BYTES;
++
++	fnic_trace_buf_p = (u64)vmalloc((trace_max_pages * PAGE_SIZE));
++	if (!fnic_trace_buf_p) {
++		printk(KERN_ERR PFX "Failed to allocate memory "
++				  "for fnic_trace_buf_p\n");
++		err = -ENOMEM;
++		goto err_fnic_trace_buf_init;
++	}
++	memset((void *)fnic_trace_buf_p, 0, (trace_max_pages * PAGE_SIZE));
++
++	fnic_trace_entries.page_offset = (u64 *)vmalloc(fnic_max_trace_entries *
++						  sizeof(unsigned long long));
++	if (!fnic_trace_entries.page_offset) {
++		printk(KERN_ERR PFX "Failed to allocate memory for"
++				  " page_offset\n");
++		if (fnic_trace_buf_p) {
++			vfree((void *)fnic_trace_buf_p);
++			fnic_trace_buf_p = 0;
++		}
++		err = -ENOMEM;
++		goto err_fnic_trace_buf_init;
++	}
++	memset((void *)fnic_trace_entries.page_offset, 0,
++		  (fnic_max_trace_entries * sizeof(unsigned long long)));
++	fnic_trace_entries.wr_idx = fnic_trace_entries.rd_idx = 0;
++	fnic_buf_head = fnic_trace_buf_p;
++
++	/*
++	 * Set page_offset field of fnic_trace_entries struct by
++	 * calculating memory location for every trace entry using
++	 * length of each trace entry
++	 */
++	for (i = 0; i < fnic_max_trace_entries; i++) {
++		fnic_trace_entries.page_offset[i] = fnic_buf_head;
++		fnic_buf_head += FNIC_ENTRY_SIZE_BYTES;
++	}
++	err = fnic_trace_debugfs_init();
++	if (err < 0) {
++		printk(KERN_ERR PFX "Failed to initialize debugfs for tracing\n");
++		goto err_fnic_trace_debugfs_init;
++	}
++	printk(KERN_INFO PFX "Successfully Initialized Trace Buffer\n");
++	return err;
++err_fnic_trace_debugfs_init:
++	fnic_trace_free();
++err_fnic_trace_buf_init:
++	return err;
++}
++
++/*
++ * fnic_trace_free - Free memory of fnic trace data structures.
++ */
++void fnic_trace_free()
++{
++	fnic_tracing_enabled = 0;
++	fnic_trace_debugfs_terminate();
++	if (fnic_trace_entries.page_offset) {
++		vfree((void *)fnic_trace_entries.page_offset);
++		fnic_trace_entries.page_offset = 0;
++	}
++	if (fnic_trace_buf_p) {
++		vfree((void *)fnic_trace_buf_p);
++		fnic_trace_buf_p = 0;
++	}
++	printk(KERN_INFO PFX "Successfully Freed Trace Buffer\n");
++}
+diff --git a/drivers/scsi/fnic/fnic_trace.h b/drivers/scsi/fnic/fnic_trace.h
+new file mode 100644
+index 0000000..c12caed
+--- /dev/null
++++ b/drivers/scsi/fnic/fnic_trace.h
+@@ -0,0 +1,80 @@
++/*
++ * Copyright 2012 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef __FNIC_TRACE_H__
++#define __FNIC_TRACE_H__
++
++#define FNIC_ENTRY_SIZE_BYTES 64
++
++extern ssize_t simple_read_from_buffer(void __user *to,
++					  size_t count,
++					  loff_t *ppos,
++					  const void *from,
++					  size_t available);
++
++extern unsigned int fnic_trace_max_pages;
++extern int fnic_tracing_enabled;
++extern unsigned int trace_max_pages;
++
++typedef struct fnic_trace_dbg {
++	int wr_idx;
++	int rd_idx;
++	unsigned long long *page_offset;
++} fnic_trace_dbg_t;
++
++typedef struct fnic_dbgfs {
++	int buffer_len;
++	char *buffer;
++} fnic_dbgfs_t;
++
++struct fnic_trace_data {
++	u64 timestamp;
++	u64 fnaddr;
++	u32 host_no;
++	u32 tag;
++	u64 data[5];
++} __attribute__((__packed__));
++
++typedef struct fnic_trace_data fnic_trace_data_t;
++
++#define FNIC_TRACE_ENTRY_SIZE \
++		  (FNIC_ENTRY_SIZE_BYTES - sizeof(fnic_trace_data_t))
++
++#define FNIC_TRACE(_fn, _hn, _t, _a, _b, _c, _d, _e)           \
++	if (unlikely(fnic_tracing_enabled)) {                   \
++		fnic_trace_data_t *trace_buf = fnic_trace_get_buf(); \
++		if (trace_buf) { \
++			trace_buf->timestamp = jiffies; \
++			trace_buf->fnaddr = _fn; \
++			trace_buf->host_no = _hn; \
++			trace_buf->tag = _t; \
++			trace_buf->data[0] = _a; \
++			trace_buf->data[1] = _b; \
++			trace_buf->data[2] = _c; \
++			trace_buf->data[3] = _d; \
++			trace_buf->data[4] = _e; \
++		} \
++	}
++
++fnic_trace_data_t *fnic_trace_get_buf(void);
++int fnic_get_trace_data(fnic_dbgfs_t *);
++int fnic_trace_buf_init(void);
++void fnic_trace_free(void);
++int fnic_trace_debugfs_init(void);
++void fnic_trace_debugfs_terminate(void);
++
++#endif
 -- 
 1.7.9.5
 
