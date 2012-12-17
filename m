@@ -1,63 +1,109 @@
-From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [scsi:for-next 23/27] drivers/scsi/fnic/fnic_scsi.c:183:35:
- sparse: invalid assignment: &=
-Date: Mon, 17 Dec 2012 21:50:59 +0800
-Message-ID: <50cf2343.OFwbZqu4+cv8MZmU%fengguang.wu@intel.com>
+From: Neil Horman <nhorman@tuxdriver.com>
+Subject: Re: [PATCH v2] libfcoe: Save some memory and optimize name lookups
+Date: Mon, 17 Dec 2012 09:26:28 -0500
+Message-ID: <20121217142628.GC25322@hmsreliant.think-freely.org>
+References: <20121212232219.13084.99143.stgit@fritz>
+ <20121214220218.9650.18664.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:61775 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753051Ab2LQNvy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Dec 2012 08:51:54 -0500
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36509 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752179Ab2LQO0k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2012 09:26:40 -0500
+Content-Disposition: inline
+In-Reply-To: <20121214220218.9650.18664.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hiral Patel <hiralpat@cisco.com>
-Cc: linux-scsi@vger.kernel.org, Narsimhulu Musini <nmusini@cisco.com>, James Bottomley <JBottomley@Parallels.com>
+To: Robert Love <robert.w.love@intel.com>
+Cc: bvanassche@acm.org, linux-scsi@vger.kernel.org
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-head:   e3ff197a750d2912d0bb2a0161c23c18bad250ad
-commit: 188061001ac78b40780af042dd2156e2213e29ed [23/27] [SCSI] fnic:fixing issues in device and firmware reset code
+On Fri, Dec 14, 2012 at 02:02:18PM -0800, Robert Love wrote:
+> Instead of creating a structure with an enum and a pointer
+> to a string, simply allocate an array of strings and use
+> the enum values for the indicies.
+> 
+> This means that we do not need to iterate through the list
+> of entries when looking up a string name by its enum key.
+> 
+> This will also help with a latter patch that will add
+> more fcoe_sysfs attributes that will also use the
+> fcoe_enum_name_search macro. One attribute will also do
+> a reverse lookup which requires less code when the
+> enum-to-string mappings are organized as this patch makes
+> them to be.
+> 
+> Signed-off-by: Robert Love <robert.w.love@intel.com>
+> Acked-by: Neil Horman <nhorman@tuxdriver.com>
+> ---
+>  drivers/scsi/fcoe/fcoe_sysfs.c |   44 +++++++++++++++-------------------------
+>  1 file changed, 16 insertions(+), 28 deletions(-)
+> 
+> diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+> index 5e75168..e6fce28 100644
+> --- a/drivers/scsi/fcoe/fcoe_sysfs.c
+> +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+> @@ -210,25 +210,23 @@ static ssize_t show_fcoe_fcf_device_##field(struct device *dev,	\
+>  #define fcoe_enum_name_search(title, table_type, table)			\
+>  static const char *get_fcoe_##title##_name(enum table_type table_key)	\
+>  {									\
+> -	int i;								\
+> -	char *name = NULL;						\
+> -									\
+> -	for (i = 0; i < ARRAY_SIZE(table); i++) {			\
+> -		if (table[i].value == table_key) {			\
+> -			name = table[i].name;				\
+> -			break;						\
+> -		}							\
+> -	}								\
+> -	return name;							\
+> +	if (table_key < 0 || table_key >= ARRAY_SIZE(table))		\
+> +		return NULL;						\
+> +	return table[table_key];					\
+>  }
+>  
+> -static struct {
+> -	enum fcf_state value;
+> -	char           *name;
+> -} fcf_state_names[] = {
+> -	{ FCOE_FCF_STATE_UNKNOWN,      "Unknown" },
+> -	{ FCOE_FCF_STATE_DISCONNECTED, "Disconnected" },
+> -	{ FCOE_FCF_STATE_CONNECTED,    "Connected" },
+> +static char *fip_conn_type_names[] = {
+> +	[ FIP_CONN_TYPE_UNKNOWN ] = "Unknown",
+> +	[ FIP_CONN_TYPE_FABRIC ]  = "Fabric",
+> +	[ FIP_CONN_TYPE_VN2VN ]   = "VN2VN",
+> +};
+> +fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
+> +#define FCOE_CTLR_MODE_MAX_NAMELEN 50
+> +
+> +static char *fcf_state_names[] = {
+> +	[ FCOE_FCF_STATE_UNKNOWN ]      = "Unknown",
+> +	[ FCOE_FCF_STATE_DISCONNECTED ] = "Disconnected",
+> +	[ FCOE_FCF_STATE_CONNECTED ]    = "Connected",
+>  };
+>  fcoe_enum_name_search(fcf_state, fcf_state, fcf_state_names)
+>  #define FCOE_FCF_STATE_MAX_NAMELEN 50
+> @@ -246,17 +244,7 @@ static ssize_t show_fcf_state(struct device *dev,
+>  }
+>  static FCOE_DEVICE_ATTR(fcf, state, S_IRUGO, show_fcf_state, NULL);
+>  
+> -static struct {
+> -	enum fip_conn_type value;
+> -	char               *name;
+> -} fip_conn_type_names[] = {
+> -	{ FIP_CONN_TYPE_UNKNOWN, "Unknown" },
+> -	{ FIP_CONN_TYPE_FABRIC, "Fabric" },
+> -	{ FIP_CONN_TYPE_VN2VN, "VN2VN" },
+> -};
+> -fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
+> -#define FCOE_CTLR_MODE_MAX_NAMELEN 50
+> -
+> +#define FCOE_MAX_MODENAME_LEN 20
+>  static ssize_t show_ctlr_mode(struct device *dev,
+>  			      struct device_attribute *attr,
+>  			      char *buf)
+> 
+> 
+Acked-by: Neil Horman <nhorman@tuxdriver.com>
 
-
-sparse warnings:
-
-+ drivers/scsi/fnic/fnic_scsi.c:183:35: sparse: invalid assignment: &=
-drivers/scsi/fnic/fnic_scsi.c:183:35:    left side has type restricted unsigned long long
-drivers/scsi/fnic/fnic_scsi.c:183:35:    right side has type unsigned long long
-drivers/scsi/fnic/fnic_scsi.c:185:35: sparse: invalid assignment: |=
-drivers/scsi/fnic/fnic_scsi.c:185:35:    left side has type restricted unsigned long long
-drivers/scsi/fnic/fnic_scsi.c:185:35:    right side has type unsigned long long
-
-vim +183 drivers/scsi/fnic/fnic_scsi.c
-
-5df6d737 Abhijeet Joglekar 2009-04-17  167  
-18806100 Hiral Patel       2012-12-10  168  /**
-18806100 Hiral Patel       2012-12-10  169   * __fnic_set_state_flags
-18806100 Hiral Patel       2012-12-10  170   * Sets/Clears bits in fnic's state_flags
-18806100 Hiral Patel       2012-12-10  171   **/
-18806100 Hiral Patel       2012-12-10  172  void
-18806100 Hiral Patel       2012-12-10  173  __fnic_set_state_flags(struct fnic *fnic, u64 st_flags, u64 clearbits)
-18806100 Hiral Patel       2012-12-10  174  {
-18806100 Hiral Patel       2012-12-10  175  	struct Scsi_Host *host = fnic->lport->host;
-18806100 Hiral Patel       2012-12-10  176  	int sh_locked = spin_is_locked(host->host_lock);
-18806100 Hiral Patel       2012-12-10  177  	unsigned long flags = 0;
-18806100 Hiral Patel       2012-12-10  178  
-18806100 Hiral Patel       2012-12-10  179  	if (!sh_locked)
-18806100 Hiral Patel       2012-12-10  180  		spin_lock_irqsave(host->host_lock, flags);
-18806100 Hiral Patel       2012-12-10  181  
-18806100 Hiral Patel       2012-12-10  182  	if (clearbits)
-18806100 Hiral Patel       2012-12-10 @183  		fnic->state_flags &= ~st_flags;
-18806100 Hiral Patel       2012-12-10  184  	else
-18806100 Hiral Patel       2012-12-10  185  		fnic->state_flags |= st_flags;
-18806100 Hiral Patel       2012-12-10  186  
-18806100 Hiral Patel       2012-12-10  187  	if (!sh_locked)
-18806100 Hiral Patel       2012-12-10  188  		spin_unlock_irqrestore(host->host_lock, flags);
-18806100 Hiral Patel       2012-12-10  189  
-18806100 Hiral Patel       2012-12-10  190  	return;
-18806100 Hiral Patel       2012-12-10  191  }
-
----
-0-DAY kernel build testing backend         Open Source Technology Center
-Fengguang Wu, Yuanhan Liu                              Intel Corporation
