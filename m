@@ -1,73 +1,749 @@
 From: Hiral Patel <hiralpat@cisco.com>
-Subject: [PATCH 07/10] fnic: Fnic Trace Utility
-Date: Mon, 17 Dec 2012 15:29:39 -0800
-Message-ID: <1355786979-5271-1-git-send-email-hiralpat@cisco.com>
+Subject: [PATCH 08/10] fnic: FIP VLAN Discovery Feature Support
+Date: Mon, 17 Dec 2012 15:29:58 -0800
+Message-ID: <1355786998-5307-1-git-send-email-hiralpat@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtv-iport-2.cisco.com ([173.36.130.13]:57835 "EHLO
-	mtv-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752276Ab2LQXed (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2012 18:34:33 -0500
+Received: from mtv-iport-3.cisco.com ([173.36.130.14]:55369 "EHLO
+	mtv-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752276Ab2LQXes (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2012 18:34:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Hiral Patel <hiralpat@cisco.com>
+Cc: linux-scsi@vger.kernel.org, Hiral Patel <hiralpat@cisco.com>, Anantha Prakash T <atungara@cisco.com>
 
-Fnic Trace utility is a tracing functionality built directly into fnic driver
-to trace events. The benefit that trace buffer brings to fnic driver is the
-ability to see what it happening inside the fnic driver. It also provides the
-capability to trace every IO event inside fnic driver to debug panics, hangs
-and potentially IO corruption issues. This feature makes it easy to find
-problems in fnic driver and it also helps in tracking down strange bugs in a
-more manageable way. Trace buffer is shared across all fnic instances for
-this implementation.
+FIP VLAN discovery discovers the FCoE VLAN that will be used by all other FIP protocols
+as well as by the FCoE encapsulation for Fibre Channel payloads on the established
+virtual link. One of the goals of FC-BB-5 was to be as nonintrusive as possible on
+initiators and targets, and therefore FIP VLAN discovery occurs in the native VLAN
+used by the initiator or target to exchange Ethernet traffic. The FIP VLAN discovery
+protocol is the only FIP protocol running on the native VLAN; all other FIP protocols
+run on the discovered FCoE VLANs.
 
+If an administrator has manually configured FCoE VLANs on ENodes and FCFs, there is no need
+to use this protocol. FIP and FCoE will run over the configured VLANs.
+
+An ENode without FCoE VLANs configuration would use this automated discovery protocol to
+discover over which VLANs FCoE is running.
+
+The ENode sends a FIP VLAN discovery request to a multicast MAC address called All-FCF-MACs,
+which is a multicast MAC address to which all FCFs listen.
+
+All FCFs that can be reached in the native VLAN of the ENode are expected to respond on the
+same VLAN with a response that lists one or more FCoE VLANs that are available for the ENode's
+VN_Port login. This protocol has the sole purpose of allowing the ENode to discover all the
+available FCoE VLANs.
+
+Now the ENode may enable a subset of these VLANs for FCoE Running the FIP protocol in these
+VLANs on a per VLAN basis. And FCoE data transactions also would occur on this VLAN. Hence,
+Except for FIP VLAN discovery, all other FIP and FCoE traffic runs on the selected FCoE VLAN.
+Its only the FIP VLAN Discovery protocol that is permitted to run on the Default native VLAN
+of the system.
+
+[**** NOTE ****]
+We are working on moving this feature definitions and functionality to libfcoe module. We need
+this patch to be approved, as Suse is looking forward to merge this feature in SLES 11 SP3 release.
+Once this patch is approved, we will submit patch which should move vlan discovery feature to libfoce.
+
+Signed-off-by: Anantha Prakash T <atungara@cisco.com>
 Signed-off-by: Hiral Patel <hiralpat@cisco.com>
 ---
- drivers/scsi/fnic/Makefile       |    2 +
- drivers/scsi/fnic/fnic.h         |    1 +
- drivers/scsi/fnic/fnic_debugfs.c |  312 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/fnic/fnic_main.c    |   14 ++
- drivers/scsi/fnic/fnic_scsi.c    |  120 +++++++++++++--
- drivers/scsi/fnic/fnic_trace.c   |  260 +++++++++++++++++++++++++++++++
- drivers/scsi/fnic/fnic_trace.h   |   80 ++++++++++
- 7 files changed, 778 insertions(+), 11 deletions(-)
- create mode 100644 drivers/scsi/fnic/fnic_debugfs.c
- create mode 100644 drivers/scsi/fnic/fnic_trace.c
- create mode 100644 drivers/scsi/fnic/fnic_trace.h
+ drivers/scsi/fnic/fnic.h        |   32 +++
+ drivers/scsi/fnic/fnic_fcs.c    |  557 ++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/fnic/fnic_fip.h    |   68 +++++
+ drivers/scsi/fnic/fnic_main.c   |   51 +++-
+ drivers/scsi/fnic/vnic_dev.c    |   10 +
+ drivers/scsi/fnic/vnic_dev.h    |    2 +
+ drivers/scsi/fnic/vnic_devcmd.h |   67 +++++
+ 7 files changed, 783 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/scsi/fnic/fnic_fip.h
 
-diff --git a/drivers/scsi/fnic/Makefile b/drivers/scsi/fnic/Makefile
-index 37c3440..383598f 100644
---- a/drivers/scsi/fnic/Makefile
-+++ b/drivers/scsi/fnic/Makefile
-@@ -7,6 +7,8 @@ fnic-y	:= \
- 	fnic_res.o \
- 	fnic_fcs.o \
- 	fnic_scsi.o \
-+	fnic_trace.o \
-+	fnic_debugfs.o \
- 	vnic_cq.o \
- 	vnic_dev.o \
- 	vnic_intr.o \
 diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index cba8c0e..e03a3c6 100644
+index e03a3c6..2adbda4 100644
 --- a/drivers/scsi/fnic/fnic.h
 +++ b/drivers/scsi/fnic/fnic.h
-@@ -26,6 +26,7 @@
- #include <scsi/libfcoe.h>
+@@ -193,6 +193,18 @@ enum fnic_state {
+ 
+ struct mempool;
+ 
++enum fnic_evt {
++	FNIC_EVT_START_VLAN_DISC = 1,
++	FNIC_EVT_START_FCF_DISC = 2,
++	FNIC_EVT_MAX,
++};
++
++struct fnic_event {
++	struct list_head list;
++	struct fnic *fnic;
++	enum fnic_evt event;
++};
++
+ /* Per-instance private data structure */
+ struct fnic {
+ 	struct fc_lport *lport;
+@@ -255,6 +267,18 @@ struct fnic {
+ 	struct sk_buff_head frame_queue;
+ 	struct sk_buff_head tx_queue;
+ 
++	/*** FIP related data members  -- start ***/
++	void (*set_vlan)(struct fnic *, u16 vlan);
++	struct work_struct      fip_frame_work;
++	struct sk_buff_head     fip_frame_queue;
++	struct timer_list       fip_timer;
++	struct list_head        vlans;
++	spinlock_t              vlans_lock;
++
++	struct work_struct      event_work;
++	struct list_head        evlist;
++	/*** FIP related data members  -- end ***/
++
+ 	/* copy work queue cache line section */
+ 	____cacheline_aligned struct vnic_wq_copy wq_copy[FNIC_WQ_COPY_MAX];
+ 	/* completion queue cache line section */
+@@ -279,6 +303,7 @@ static inline struct fnic *fnic_from_ctlr(struct fcoe_ctlr *fip)
+ }
+ 
+ extern struct workqueue_struct *fnic_event_queue;
++extern struct workqueue_struct *fnic_fip_queue;
+ extern struct device_attribute *fnic_attrs[];
+ 
+ void fnic_clear_intr_mode(struct fnic *fnic);
+@@ -290,6 +315,7 @@ int fnic_send(struct fc_lport *, struct fc_frame *);
+ void fnic_free_wq_buf(struct vnic_wq *wq, struct vnic_wq_buf *buf);
+ void fnic_handle_frame(struct work_struct *work);
+ void fnic_handle_link(struct work_struct *work);
++void fnic_handle_event(struct work_struct *work);
+ int fnic_rq_cmpl_handler(struct fnic *fnic, int);
+ int fnic_alloc_rq_frame(struct vnic_rq *rq);
+ void fnic_free_rq_buf(struct vnic_rq *rq, struct vnic_rq_buf *buf);
+@@ -322,6 +348,12 @@ void fnic_handle_link_event(struct fnic *fnic);
+ 
+ int fnic_is_abts_pending(struct fnic *, struct scsi_cmnd *);
+ 
++void fnic_handle_fip_frame(struct work_struct *work);
++void fnic_handle_fip_event(struct fnic *fnic);
++void fnic_fcoe_reset_vlans(struct fnic *fnic);
++void fnic_fcoe_evlist_free(struct fnic *fnic);
++extern void fnic_handle_fip_timer(struct fnic *fnic);
++
+ static inline int
+ fnic_chk_state_flags_locked(struct fnic *fnic, u64 __bitwise__ st_flags)
+ {
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 483eb9d..3810c0b 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -31,12 +31,20 @@
+ #include <scsi/libfc.h>
  #include "fnic_io.h"
- #include "fnic_res.h"
-+#include "fnic_trace.h"
- #include "vnic_dev.h"
- #include "vnic_wq.h"
- #include "vnic_rq.h"
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
+ #include "fnic.h"
++#include "fnic_fip.h"
+ #include "cq_enet_desc.h"
+ #include "cq_exch_desc.h"
+ 
++static u8 fcoe_all_fcfs[ETH_ALEN] = FIP_ALL_FCF_MACS;
++struct workqueue_struct *fnic_fip_queue;
+ struct workqueue_struct *fnic_event_queue;
+ 
+ static void fnic_set_eth_mode(struct fnic *);
++static void fnic_fcoe_send_vlan_req(struct fnic *fnic);
++static void fnic_fcoe_start_fcf_disc(struct fnic *fnic);
++static void fnic_fcoe_process_vlan_resp(struct fnic *fnic, struct sk_buff *);
++static int fnic_fcoe_vlan_check(struct fnic *fnic, u16 flag);
++static int fnic_fcoe_handle_fip_frame(struct fnic *fnic, struct sk_buff *skb);
+ 
+ void fnic_handle_link(struct work_struct *work)
+ {
+@@ -69,6 +77,11 @@ void fnic_handle_link(struct work_struct *work)
+ 				FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
+ 					     "link down\n");
+ 				fcoe_ctlr_link_down(&fnic->ctlr);
++				if (fnic->config.flags & VFCF_FIP_CAPABLE) {
++					/* start FCoE VLAN discovery */
++					fnic_fcoe_send_vlan_req(fnic);
++					return;
++				}
+ 				FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
+ 					     "link up\n");
+ 				fcoe_ctlr_link_up(&fnic->ctlr);
+@@ -79,6 +92,11 @@ void fnic_handle_link(struct work_struct *work)
+ 	} else if (fnic->link_status) {
+ 		/* DOWN -> UP */
+ 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		if (fnic->config.flags & VFCF_FIP_CAPABLE) {
++			/* start FCoE VLAN discovery */
++			fnic_fcoe_send_vlan_req(fnic);
++			return;
++		}
+ 		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, "link up\n");
+ 		fcoe_ctlr_link_up(&fnic->ctlr);
+ 	} else {
+@@ -128,6 +146,440 @@ void fnic_handle_frame(struct work_struct *work)
+ 	}
+ }
+ 
++void fnic_fcoe_evlist_free(struct fnic *fnic)
++{
++	struct fnic_event *fevt = NULL;
++	struct fnic_event *next = NULL;
++	unsigned long flags;
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	if (list_empty(&fnic->evlist)) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++
++	list_for_each_entry_safe(fevt, next, &fnic->evlist, list) {
++		list_del(&fevt->list);
++		kfree(fevt);
++	}
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++}
++
++void fnic_handle_event(struct work_struct *work)
++{
++	struct fnic *fnic = container_of(work, struct fnic, event_work);
++	struct fnic_event *fevt = NULL;
++	struct fnic_event *next = NULL;
++	unsigned long flags;
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	if (list_empty(&fnic->evlist)) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++
++	list_for_each_entry_safe(fevt, next, &fnic->evlist, list) {
++		if (fnic->stop_rx_link_events) {
++			list_del(&fevt->list);
++			kfree(fevt);
++			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++			return;
++		}
++		/*
++		 * If we're in a transitional state, just re-queue and return.
++		 * The queue will be serviced when we get to a stable state.
++		 */
++		if (fnic->state != FNIC_IN_FC_MODE &&
++		    fnic->state != FNIC_IN_ETH_MODE) {
++			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++			return;
++		}
++
++		list_del(&fevt->list);
++		switch (fevt->event) {
++		case FNIC_EVT_START_VLAN_DISC:
++			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++			fnic_fcoe_send_vlan_req(fnic);
++			spin_lock_irqsave(&fnic->fnic_lock, flags);
++			break;
++		case FNIC_EVT_START_FCF_DISC:
++			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
++				  "Start FCF Discovery\n");
++			fnic_fcoe_start_fcf_disc(fnic);
++			break;
++		default:
++			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
++				  "Unknown event 0x%x\n", fevt->event);
++			break;
++		}
++		kfree(fevt);
++	}
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++}
++
++/**
++ * Check if the Received FIP FLOGI frame is rejected
++ * @fip: The FCoE controller that received the frame
++ * @skb: The received FIP frame
++ *
++ * Returns non-zero if the frame is rejected with unsupported cmd with
++ * insufficient resource els explanation.
++ */
++static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
++					 struct sk_buff *skb)
++{
++	struct fc_lport *lport = fip->lp;
++	struct fip_header *fiph;
++	struct fc_frame_header *fh = NULL;
++	struct fip_desc *desc;
++	struct fip_encaps *els;
++	enum fip_desc_type els_dtype = 0;
++	u16 op;
++	u8 els_op;
++	u8 sub;
++
++	size_t els_len = 0;
++	size_t rlen;
++	size_t dlen = 0;
++
++	if (skb_linearize(skb))
++		return 0;
++
++	if (skb->len < sizeof(*fiph))
++		return 0;
++
++	fiph = (struct fip_header *)skb->data;
++	op = ntohs(fiph->fip_op);
++	sub = fiph->fip_subcode;
++
++	if (op != FIP_OP_LS)
++		return 0;
++
++	if (sub != FIP_SC_REP)
++		return 0;
++
++	rlen = ntohs(fiph->fip_dl_len) * 4;
++	if (rlen + sizeof(*fiph) > skb->len)
++		return 0;
++
++	desc = (struct fip_desc *)(fiph + 1);
++	dlen = desc->fip_dlen * FIP_BPW;
++
++	if (desc->fip_dtype == FIP_DT_FLOGI) {
++
++		shost_printk(KERN_DEBUG, lport->host,
++			  " FIP TYPE FLOGI: fab name:%llx "
++			  "vfid:%d map:%x\n",
++			  fip->sel_fcf->fabric_name, fip->sel_fcf->vfid,
++			  fip->sel_fcf->fc_map);
++		if (dlen < sizeof(*els) + sizeof(*fh) + 1)
++			return 0;
++
++		els_len = dlen - sizeof(*els);
++		els = (struct fip_encaps *)desc;
++		fh = (struct fc_frame_header *)(els + 1);
++		els_dtype = desc->fip_dtype;
++
++		if (!fh)
++			return 0;
++
++		/*
++		 * ELS command code, reason and explanation should be = Reject,
++		 * unsupported command and insufficient resource
++		 */
++		els_op = *(u8 *)(fh + 1);
++		if (els_op == ELS_LS_RJT) {
++			shost_printk(KERN_INFO, lport->host,
++				  "Flogi Request Rejected by Switch\n");
++			return 1;
++		}
++		shost_printk(KERN_INFO, lport->host,
++				"Flogi Request Accepted by Switch\n");
++	}
++	return 0;
++}
++
++static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
++{
++	struct fcoe_ctlr *fip = &fnic->ctlr;
++	struct sk_buff *skb;
++	char *eth_fr;
++	int fr_len;
++	struct fip_vlan *vlan;
++	u64 vlan_tov;
++
++	fnic_fcoe_reset_vlans(fnic);
++	fnic->set_vlan(fnic, 0);
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
++		  "Sending VLAN request...\n");
++	skb = dev_alloc_skb(sizeof(struct fip_vlan));
++	if (!skb)
++		return;
++
++	fr_len = sizeof(*vlan);
++	eth_fr = (char *)skb->data;
++	vlan = (struct fip_vlan *)eth_fr;
++
++	memset(vlan, 0, sizeof(*vlan));
++	memcpy(vlan->eth.h_source, fip->ctl_src_addr, ETH_ALEN);
++	memcpy(vlan->eth.h_dest, fcoe_all_fcfs, ETH_ALEN);
++	vlan->eth.h_proto = htons(ETH_P_FIP);
++
++	vlan->fip.fip_ver = FIP_VER_ENCAPS(FIP_VER);
++	vlan->fip.fip_op = htons(FIP_OP_VLAN);
++	vlan->fip.fip_subcode = FIP_SC_VL_REQ;
++	vlan->fip.fip_dl_len = htons(sizeof(vlan->desc) / FIP_BPW);
++
++	vlan->desc.mac.fd_desc.fip_dtype = FIP_DT_MAC;
++	vlan->desc.mac.fd_desc.fip_dlen = sizeof(vlan->desc.mac) / FIP_BPW;
++	memcpy(&vlan->desc.mac.fd_mac, fip->ctl_src_addr, ETH_ALEN);
++
++	vlan->desc.wwnn.fd_desc.fip_dtype = FIP_DT_NAME;
++	vlan->desc.wwnn.fd_desc.fip_dlen = sizeof(vlan->desc.wwnn) / FIP_BPW;
++	put_unaligned_be64(fip->lp->wwnn, &vlan->desc.wwnn.fd_wwn);
++
++	skb_put(skb, sizeof(*vlan));
++	skb->protocol = htons(ETH_P_FIP);
++	skb_reset_mac_header(skb);
++	skb_reset_network_header(skb);
++	fip->send(fip, skb);
++
++	/* set a timer so that we can retry if there no response */
++	vlan_tov = jiffies + msecs_to_jiffies(FCOE_CTLR_FIPVLAN_TOV);
++	mod_timer(&fnic->fip_timer, round_jiffies(vlan_tov));
++}
++
++static void fnic_fcoe_process_vlan_resp(struct fnic *fnic, struct sk_buff *skb)
++{
++	struct fcoe_ctlr *fip = &fnic->ctlr;
++	struct fip_header *fiph;
++	struct fip_desc *desc;
++	u16 vid;
++	size_t rlen;
++	size_t dlen;
++	struct fcoe_vlan *vlan;
++	u64 sol_time;
++	unsigned long flags;
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
++		  "Received VLAN response...\n");
++
++	fiph = (struct fip_header *) skb->data;
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
++		  "Received VLAN response... OP 0x%x SUB_OP 0x%x\n",
++		  ntohs(fiph->fip_op), fiph->fip_subcode);
++
++	rlen = ntohs(fiph->fip_dl_len) * 4;
++	fnic_fcoe_reset_vlans(fnic);
++	spin_lock_irqsave(&fnic->vlans_lock, flags);
++	desc = (struct fip_desc *)(fiph + 1);
++	while (rlen > 0) {
++		dlen = desc->fip_dlen * FIP_BPW;
++		switch (desc->fip_dtype) {
++		case FIP_DT_VLAN:
++			vid = ntohs(((struct fip_vlan_desc *)desc)->fd_vlan);
++			shost_printk(KERN_INFO, fnic->lport->host,
++				  "process_vlan_resp: FIP VLAN %d\n", vid);
++			vlan = (struct fcoe_vlan *) kmalloc(sizeof(*vlan),
++							GFP_ATOMIC);
++			if (!vlan) {
++				/* retry from timer */
++				spin_unlock_irqrestore(&fnic->vlans_lock,
++							flags);
++				goto out;
++			}
++			memset(vlan, 0, sizeof(struct fcoe_vlan));
++			vlan->vid = vid & 0x0fff;
++			vlan->state = FIP_VLAN_AVAIL;
++			list_add_tail(&vlan->list, &fnic->vlans);
++			break;
++		}
++		desc = (struct fip_desc *)((char *)desc + dlen);
++		rlen -= dlen;
++	}
++
++	/* any VLAN descriptors present ? */
++	if (list_empty(&fnic->vlans)) {
++		/* retry from timer */
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
++			  "No VLAN descriptors in FIP VLAN response\n");
++		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		goto out;
++	}
++
++	vlan = list_first_entry(&fnic->vlans, struct fcoe_vlan, list);
++	fnic->set_vlan(fnic, vlan->vid);
++	vlan->state = FIP_VLAN_SENT; /* sent now */
++	vlan->sol_count++;
++	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++
++	/* start the solicitation */
++	fcoe_ctlr_link_up(fip);
++
++	sol_time = jiffies + msecs_to_jiffies(FCOE_CTLR_START_DELAY);
++	mod_timer(&fnic->fip_timer, round_jiffies(sol_time));
++out:
++	return;
++}
++
++static void fnic_fcoe_start_fcf_disc(struct fnic *fnic)
++{
++	unsigned long flags;
++	struct fcoe_vlan *vlan;
++	u64 sol_time;
++
++	spin_lock_irqsave(&fnic->vlans_lock, flags);
++	vlan = list_first_entry(&fnic->vlans, struct fcoe_vlan, list);
++	fnic->set_vlan(fnic, vlan->vid);
++	vlan->state = FIP_VLAN_SENT; /* sent now */
++	vlan->sol_count = 1;
++	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++
++	/* start the solicitation */
++	fcoe_ctlr_link_up(&fnic->ctlr);
++
++	sol_time = jiffies + msecs_to_jiffies(FCOE_CTLR_START_DELAY);
++	mod_timer(&fnic->fip_timer, round_jiffies(sol_time));
++}
++
++static int fnic_fcoe_vlan_check(struct fnic *fnic, u16 flag)
++{
++	unsigned long flags;
++	struct fcoe_vlan *fvlan;
++
++	spin_lock_irqsave(&fnic->vlans_lock, flags);
++	if (list_empty(&fnic->vlans)) {
++		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		return -EINVAL;
++	}
++
++	fvlan = list_first_entry(&fnic->vlans, struct fcoe_vlan, list);
++	if (fvlan->state == FIP_VLAN_USED) {
++		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		return 0;
++	}
++
++	if (fvlan->state == FIP_VLAN_SENT) {
++		fvlan->state = FIP_VLAN_USED;
++		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		return 0;
++	}
++	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++	return -EINVAL;
++}
++
++void fnic_event_enq(struct fnic *fnic, enum fnic_evt ev)
++{
++	struct fnic_event *fevt;
++	unsigned long flags;
++
++	fevt = (struct fnic_event *) kmalloc(sizeof(*fevt), GFP_ATOMIC);
++	if (!fevt)
++		return;
++
++	fevt->fnic = fnic;
++	fevt->event = ev;
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	list_add_tail(&fevt->list, &fnic->evlist);
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++
++	schedule_work(&fnic->event_work);
++}
++
++int fnic_fcoe_handle_fip_frame(struct fnic *fnic, struct sk_buff *skb)
++{
++	struct fip_header *fiph;
++	int ret = 1;
++	u16 op;
++	u8 sub;
++
++	if (!skb || !(skb->data))
++		return -1;
++
++	if (skb_linearize(skb))
++		goto drop;
++
++	fiph = (struct fip_header *)skb->data;
++	op = ntohs(fiph->fip_op);
++	sub = fiph->fip_subcode;
++
++	if (FIP_VER_DECAPS(fiph->fip_ver) != FIP_VER)
++		goto drop;
++
++	if (ntohs(fiph->fip_dl_len) * FIP_BPW + sizeof(*fiph) > skb->len)
++		goto drop;
++
++	if (op == FIP_OP_DISC && sub == FIP_SC_ADV) {
++		if (fnic_fcoe_vlan_check(fnic, ntohs(fiph->fip_flags)))
++			goto drop;
++		/* pass it on to fcoe */
++		ret = 1;
++	} else if (op == FIP_OP_VLAN && sub == FIP_SC_VL_REP) {
++		/* set the vlan as used */
++		fnic_fcoe_process_vlan_resp(fnic, skb);
++		ret = 0;
++	} else if (op == FIP_OP_CTRL && sub == FIP_SC_CLR_VLINK) {
++		/* received CVL request, restart vlan disc */
++		fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
++		/* pass it on to fcoe */
++		ret = 1;
++	}
++	return ret;
++drop:
++	dev_kfree_skb_irq(skb);
++	return -1;
++}
++
++void fnic_handle_fip_frame(struct work_struct *work)
++{
++	struct fnic *fnic = container_of(work, struct fnic, fip_frame_work);
++	unsigned long flags;
++	struct sk_buff *skb;
++	struct ethhdr *eh;
++
++	while ((skb = skb_dequeue(&fnic->fip_frame_queue))) {
++		spin_lock_irqsave(&fnic->fnic_lock, flags);
++		if (fnic->stop_rx_link_events) {
++			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++			dev_kfree_skb(skb);
++			return;
++		}
++		/*
++		 * If we're in a transitional state, just re-queue and return.
++		 * The queue will be serviced when we get to a stable state.
++		 */
++		if (fnic->state != FNIC_IN_FC_MODE &&
++		    fnic->state != FNIC_IN_ETH_MODE) {
++			skb_queue_head(&fnic->fip_frame_queue, skb);
++			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++			return;
++		}
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		eh = (struct ethhdr *)skb->data;
++		if (eh->h_proto == htons(ETH_P_FIP)) {
++			skb_pull(skb, sizeof(*eh));
++			if (fnic_fcoe_handle_fip_frame(fnic, skb) <= 0)
++				continue;
++			/*
++			 * If there's FLOGI rejects - clear all
++			 * fcf's & restart from scratch
++			 */
++			if (is_fnic_fip_flogi_reject(&fnic->ctlr, skb)) {
++				shost_printk(KERN_INFO, fnic->lport->host,
++					  "Trigger a Link down - VLAN Disc\n");
++				fcoe_ctlr_link_down(&fnic->ctlr);
++				/* start FCoE VLAN discovery */
++				fnic_fcoe_send_vlan_req(fnic);
++				continue;
++			}
++			fcoe_ctlr_recv(&fnic->ctlr, skb);
++			continue;
++		}
++	}
++}
++
+ /**
+  * fnic_import_rq_eth_pkt() - handle received FCoE or FIP frame.
+  * @fnic:	fnic instance.
+@@ -150,8 +602,8 @@ static inline int fnic_import_rq_eth_pkt(struct fnic *fnic, struct sk_buff *skb)
+ 		skb_reset_mac_header(skb);
+ 	}
+ 	if (eh->h_proto == htons(ETH_P_FIP)) {
+-		skb_pull(skb, sizeof(*eh));
+-		fcoe_ctlr_recv(&fnic->ctlr, skb);
++		skb_queue_tail(&fnic->fip_frame_queue, skb);
++		queue_work(fnic_fip_queue, &fnic->fip_frame_work);
+ 		return 1;		/* let caller know packet was used */
+ 	}
+ 	if (eh->h_proto != htons(ETH_P_FCOE))
+@@ -720,3 +1172,104 @@ void fnic_free_wq_buf(struct vnic_wq *wq, struct vnic_wq_buf *buf)
+ 	dev_kfree_skb(fp_skb(fp));
+ 	buf->os_buf = NULL;
+ }
++
++void fnic_fcoe_reset_vlans(struct fnic *fnic)
++{
++	unsigned long flags;
++	struct fcoe_vlan *vlan;
++	struct fcoe_vlan *next;
++
++	/*
++	 * indicate a link down to fcoe so that all fcf's are free'd
++	 * might not be required since we did this before sending vlan
++	 * discovery request
++	 */
++	spin_lock_irqsave(&fnic->vlans_lock, flags);
++	if (!list_empty(&fnic->vlans)) {
++		list_for_each_entry_safe(vlan, next, &fnic->vlans, list) {
++			list_del(&vlan->list);
++			kfree(vlan);
++		}
++	}
++	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++}
++
++void fnic_handle_fip_timer(struct fnic *fnic)
++{
++	unsigned long flags;
++	struct fcoe_vlan *vlan;
++	u64 sol_time;
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	if (fnic->stop_rx_link_events) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++
++	if (fnic->ctlr.mode == FIP_ST_NON_FIP)
++		return;
++
++	spin_lock_irqsave(&fnic->vlans_lock, flags);
++	if (list_empty(&fnic->vlans)) {
++		/* no vlans available, try again */
++		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
++			  "Start VLAN Discovery\n");
++		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
++		return;
++	}
++
++	vlan = list_first_entry(&fnic->vlans, struct fcoe_vlan, list);
++	shost_printk(KERN_DEBUG, fnic->lport->host,
++		  "fip_timer: vlan %d state %d sol_count %d\n",
++		  vlan->vid, vlan->state, vlan->sol_count);
++	switch (vlan->state) {
++	case FIP_VLAN_USED:
++		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
++			  "FIP VLAN is selected for FC transaction\n");
++		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		break;
++	case FIP_VLAN_FAILED:
++		/* if all vlans are in failed state, restart vlan disc */
++		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
++			  "Start VLAN Discovery\n");
++		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
++		break;
++	case FIP_VLAN_SENT:
++		if (vlan->sol_count >= FCOE_CTLR_MAX_SOL) {
++			/*
++			 * no response on this vlan, remove  from the list.
++			 * Try the next vlan
++			 */
++			shost_printk(KERN_INFO, fnic->lport->host,
++				  "Dequeue this VLAN ID %d from list\n",
++				  vlan->vid);
++			list_del(&vlan->list);
++			kfree(vlan);
++			vlan = NULL;
++			if (list_empty(&fnic->vlans)) {
++				/* we exhausted all vlans, restart vlan disc */
++				spin_unlock_irqrestore(&fnic->vlans_lock,
++							flags);
++				shost_printk(KERN_INFO, fnic->lport->host,
++					  "fip_timer: vlan list empty, "
++					  "trigger vlan disc\n");
++				fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
++				return;
++			}
++			/* check the next vlan */
++			vlan = list_first_entry(&fnic->vlans, struct fcoe_vlan,
++							list);
++			fnic->set_vlan(fnic, vlan->vid);
++			vlan->state = FIP_VLAN_SENT; /* sent now */
++		}
++		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		vlan->sol_count++;
++		sol_time = jiffies + msecs_to_jiffies
++					(FCOE_CTLR_START_DELAY);
++		mod_timer(&fnic->fip_timer, round_jiffies(sol_time));
++		break;
++	}
++}
+diff --git a/drivers/scsi/fnic/fnic_fip.h b/drivers/scsi/fnic/fnic_fip.h
 new file mode 100644
-index 0000000..d89fc04
+index 0000000..e70b6a3
 --- /dev/null
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -0,0 +1,312 @@
++++ b/drivers/scsi/fnic/fnic_fip.h
+@@ -0,0 +1,68 @@
 +/*
-+ * Copyright 2012 Cisco Systems, Inc.  All rights reserved.
++ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
++ * Copyright 2007 Nuova Systems, Inc.  All rights reserved.
 + *
 + * This program is free software; you may redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -83,976 +759,273 @@ index 0000000..d89fc04
 + * SOFTWARE.
 + */
 +
-+#include <linux/module.h>
-+#include <linux/errno.h>
-+#include <linux/debugfs.h>
-+#include "fnic.h"
++#ifndef _FNIC_FIP_H_
++#define _FNIC_FIP_H_
 +
-+static struct dentry *fnic_trace_debugfs_root;
-+static struct dentry *fnic_trace_debugfs_file;
-+static struct dentry *fnic_trace_enable;
 +
-+/*
-+ * fnic_trace_ctrl_open - Open the trace_enable file
-+ * @inode: The inode pointer.
-+ * @file: The file pointer to attach the trace enable/disable flag.
-+ *
-+ * Description:
-+ * This routine opens a debugsfs file trace_enable.
-+ *
-+ * Returns:
-+ * This function returns zero if successful.
-+ */
-+int fnic_trace_ctrl_open(struct inode *inode, struct file *filp)
-+{
-+	filp->private_data = inode->i_private;
-+	return 0;
-+}
++#define FCOE_CTLR_START_DELAY    2000    /* ms after first adv. to choose FCF */
++#define FCOE_CTLR_FIPVLAN_TOV    2000    /* ms after FIP VLAN disc */
++#define FCOE_CTLR_MAX_SOL        8
++
++#define FINC_MAX_FLOGI_REJECTS   8
 +
 +/*
-+ * fnic_trace_ctrl_read - Read a trace_enable debugfs file
-+ * @filp: The file pointer to read from.
-+ * @ubuf: The buffer to copy the data to.
-+ * @cnt: The number of bytes to read.
-+ * @ppos: The position in the file to start reading from.
-+ *
-+ * Description:
-+ * This routine reads value of variable fnic_tracing_enabled
-+ * and stores into local @buf. It will start reading file at @ppos and
-+ * copy up to @cnt of data to @ubuf from @buf.
-+ *
-+ * Returns:
-+ * This function returns the amount of data that was read.
++ * FIP_DT_VLAN descriptor.
 + */
-+static ssize_t fnic_trace_ctrl_read(struct file *filp,
-+				  char __user *ubuf,
-+				  size_t cnt, loff_t *ppos)
-+{
-+	char buf[64];
-+	int len;
-+	len = sprintf(buf, "%u\n", fnic_tracing_enabled);
++struct fip_vlan_desc {
++	struct fip_desc fd_desc;
++	u16 fd_vlan;
++} __attribute__((packed));
 +
-+	return simple_read_from_buffer(ubuf, cnt, ppos, buf, len);
-+}
-+
-+/*
-+ * fnic_trace_ctrl_write - Write to trace_enable debugfs file
-+ * @filp: The file pointer to write from.
-+ * @ubuf: The buffer to copy the data from.
-+ * @cnt: The number of bytes to write.
-+ * @ppos: The position in the file to start writing to.
-+ *
-+ * Description:
-+ * This routine writes data from user buffer @ubuf to buffer @buf and
-+ * sets fnic_tracing_enabled value as per user input.
-+ *
-+ * Returns:
-+ * This function returns the amount of data that was written.
-+ */
-+static ssize_t fnic_trace_ctrl_write(struct file *filp,
-+				  const char __user *ubuf,
-+				  size_t cnt, loff_t *ppos)
-+{
-+	char buf[64];
-+	unsigned long val;
-+	int ret;
-+
-+	if (cnt >= sizeof(buf))
-+		return -EINVAL;
-+
-+	if (copy_from_user(&buf, ubuf, cnt))
-+		return -EFAULT;
-+
-+	buf[cnt] = 0;
-+
-+	ret = kstrtoul(buf, 10, &val);
-+	if (ret < 0)
-+		return ret;
-+
-+	fnic_tracing_enabled = val;
-+	(*ppos)++;
-+
-+	return cnt;
-+}
-+
-+/*
-+ * fnic_trace_debugfs_open - Open the fnic trace log
-+ * @inode: The inode pointer
-+ * @file: The file pointer to attach the log output
-+ *
-+ * Description:
-+ * This routine is the entry point for the debugfs open file operation.
-+ * It allocates the necessary buffer for the log, fills the buffer from
-+ * the in-memory log and then returns a pointer to that log in
-+ * the private_data field in @file.
-+ *
-+ * Returns:
-+ * This function returns zero if successful. On error it will return
-+ * a negative error value.
-+ */
-+static int fnic_trace_debugfs_open(struct inode *inode,
-+				  struct file *file)
-+{
-+	fnic_dbgfs_t *fnic_dbg_prt;
-+	fnic_dbg_prt = kzalloc(sizeof(fnic_dbgfs_t), GFP_KERNEL);
-+	if (!fnic_dbg_prt)
-+		return -ENOMEM;
-+
-+	fnic_dbg_prt->buffer = vmalloc((3*(trace_max_pages * PAGE_SIZE)));
-+	if (!fnic_dbg_prt->buffer)
-+		return -ENOMEM;
-+	memset((void *)fnic_dbg_prt->buffer, 0,
-+			  (3*(trace_max_pages * PAGE_SIZE)));
-+	fnic_dbg_prt->buffer_len = fnic_get_trace_data(fnic_dbg_prt);
-+	file->private_data = fnic_dbg_prt;
-+	return 0;
-+}
-+
-+/*
-+ * fnic_trace_debugfs_lseek - Seek through a debugfs file
-+ * @file: The file pointer to seek through.
-+ * @offset: The offset to seek to or the amount to seek by.
-+ * @howto: Indicates how to seek.
-+ *
-+ * Description:
-+ * This routine is the entry point for the debugfs lseek file operation.
-+ * The @howto parameter indicates whether @offset is the offset to directly
-+ * seek to, or if it is a value to seek forward or reverse by. This function
-+ * figures out what the new offset of the debugfs file will be and assigns
-+ * that value to the f_pos field of @file.
-+ *
-+ * Returns:
-+ * This function returns the new offset if successful and returns a negative
-+ * error if unable to process the seek.
-+ */
-+static loff_t fnic_trace_debugfs_lseek(struct file *file,
-+					loff_t offset,
-+					int howto)
-+{
-+	fnic_dbgfs_t *fnic_dbg_prt = file->private_data;
-+	loff_t pos = -1;
-+
-+	switch (howto) {
-+	case 0:
-+		pos = offset;
-+		break;
-+	case 1:
-+		pos = file->f_pos + offset;
-+		break;
-+	case 2:
-+		pos = fnic_dbg_prt->buffer_len - offset;
-+	}
-+	return (pos < 0 || pos > fnic_dbg_prt->buffer_len) ?
-+			  -EINVAL : (file->f_pos = pos);
-+}
-+
-+/*
-+ * fnic_trace_debugfs_read - Read a debugfs file
-+ * @file: The file pointer to read from.
-+ * @ubuf: The buffer to copy the data to.
-+ * @nbytes: The number of bytes to read.
-+ * @pos: The position in the file to start reading from.
-+ *
-+ * Description:
-+ * This routine reads data from the buffer indicated in the private_data
-+ * field of @file. It will start reading at @pos and copy up to @nbytes of
-+ * data to @ubuf.
-+ *
-+ * Returns:
-+ * This function returns the amount of data that was read (this could be
-+ * less than @nbytes if the end of the file was reached).
-+ */
-+static ssize_t fnic_trace_debugfs_read(struct file *file,
-+					char __user *ubuf,
-+					size_t nbytes,
-+					loff_t *pos)
-+{
-+	fnic_dbgfs_t *fnic_dbg_prt = file->private_data;
-+	int rc = 0;
-+	rc = simple_read_from_buffer(ubuf, nbytes, pos,
-+				  fnic_dbg_prt->buffer,
-+				  fnic_dbg_prt->buffer_len);
-+	return rc;
-+}
-+
-+/*
-+ * fnic_trace_debugfs_release - Release the buffer used to store
-+ * debugfs file data
-+ * @inode: The inode pointer
-+ * @file: The file pointer that contains the buffer to release
-+ *
-+ * Description:
-+ * This routine frees the buffer that was allocated when the debugfs
-+ * file was opened.
-+ *
-+ * Returns:
-+ * This function returns zero.
-+ */
-+static int fnic_trace_debugfs_release(struct inode *inode,
-+					  struct file *file)
-+{
-+	fnic_dbgfs_t *fnic_dbg_prt = file->private_data;
-+
-+	vfree(fnic_dbg_prt->buffer);
-+	kfree(fnic_dbg_prt);
-+	return 0;
-+}
-+
-+static const struct file_operations fnic_trace_ctrl_fops = {
-+	.owner = THIS_MODULE,
-+	.open = fnic_trace_ctrl_open,
-+	.read = fnic_trace_ctrl_read,
-+	.write = fnic_trace_ctrl_write,
-+};
-+
-+static const struct file_operations fnic_trace_debugfs_fops = {
-+	.owner = THIS_MODULE,
-+	.open = fnic_trace_debugfs_open,
-+	.llseek = fnic_trace_debugfs_lseek,
-+	.read = fnic_trace_debugfs_read,
-+	.release = fnic_trace_debugfs_release,
++struct vlan {
++	__be16 vid;
++	__be16 type;
 +};
 +
 +/*
-+ * fnic_trace_debugfs_init - Initialize debugfs for fnic trace logging
-+ *
-+ * Description:
-+ * When Debugfs is configured this routine sets up the fnic debugfs
-+ * file system. If not already created, this routine will create the
-+ * fnic directory. It will create file trace to log fnic trace buffer
-+ * output into debugfs and it will also create file trace_enable to
-+ * control enable/disable of trace logging into trace buffer.
++ * VLAN entry.
 + */
-+int fnic_trace_debugfs_init()
-+{
-+	int rc = -1;
-+	fnic_trace_debugfs_root = debugfs_create_dir("fnic", NULL);
-+	if (!fnic_trace_debugfs_root) {
-+		printk(KERN_DEBUG "Cannot create debugfs root\n");
-+		return rc;
-+	}
-+	fnic_trace_enable = debugfs_create_file("tracing_enable",
-+					  S_IFREG|S_IRUGO|S_IWUSR,
-+					  fnic_trace_debugfs_root,
-+					  NULL, &fnic_trace_ctrl_fops);
++struct fcoe_vlan {
++	struct list_head list;
++	u16 vid;		/* vlan ID */
++	u16 sol_count;		/* no. of sols sent */
++	u16 state;		/* state */
++};
 +
-+	if (!fnic_trace_enable) {
-+		printk(KERN_DEBUG "Cannot create trace_enable file"
-+				  " under debugfs");
-+		return rc;
-+	}
++enum fip_vlan_state {
++	FIP_VLAN_AVAIL  = 0,	/* don't do anything */
++	FIP_VLAN_SENT   = 1,	/* sent */
++	FIP_VLAN_USED   = 2,	/* succeed */
++	FIP_VLAN_FAILED = 3,	/* failed to response */
++};
 +
-+	fnic_trace_debugfs_file = debugfs_create_file("trace",
-+						  S_IFREG|S_IRUGO|S_IWUSR,
-+						  fnic_trace_debugfs_root,
-+						  NULL,
-+						  &fnic_trace_debugfs_fops);
++struct fip_vlan {
++	struct ethhdr eth;
++	struct fip_header fip;
++	struct {
++		struct fip_mac_desc mac;
++		struct fip_wwn_desc wwnn;
++	} desc;
++};
 +
-+	if (!fnic_trace_debugfs_file) {
-+		printk(KERN_DEBUG "Cannot create trace file under debugfs");
-+		return rc;
-+	}
-+	rc = 0;
-+	return rc;
-+}
-+
-+/*
-+ * fnic_trace_debugfs_terminate - Tear down debugfs infrastructure
-+ *
-+ * Description:
-+ * When Debugfs is configured this routine removes debugfs file system
-+ * elements that are specific to fnic trace logging.
-+ */
-+void fnic_trace_debugfs_terminate()
-+{
-+	if (fnic_trace_debugfs_file) {
-+		debugfs_remove(fnic_trace_debugfs_file);
-+		fnic_trace_debugfs_file = NULL;
-+	}
-+	if (fnic_trace_enable) {
-+		debugfs_remove(fnic_trace_enable);
-+		fnic_trace_enable = NULL;
-+	}
-+	if (fnic_trace_debugfs_root) {
-+		debugfs_remove(fnic_trace_debugfs_root);
-+		fnic_trace_debugfs_root = NULL;
-+	}
-+}
++#endif  /* __FINC_FIP_H_ */
 diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index f377f9f..f724025 100644
+index f724025..93d969a 100644
 --- a/drivers/scsi/fnic/fnic_main.c
 +++ b/drivers/scsi/fnic/fnic_main.c
-@@ -68,6 +68,10 @@ unsigned int fnic_log_level;
- module_param(fnic_log_level, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(fnic_log_level, "bit mask of fnic logging levels");
+@@ -39,6 +39,7 @@
+ #include "vnic_intr.h"
+ #include "vnic_stats.h"
+ #include "fnic_io.h"
++#include "fnic_fip.h"
+ #include "fnic.h"
  
-+unsigned int fnic_trace_max_pages = 16;
-+module_param(fnic_trace_max_pages, uint, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(fnic_trace_max_pages, "Total allocated memory pages "
-+					"for fnic trace buffer");
- 
- static struct libfc_function_template fnic_transport_template = {
- 	.frame_send = fnic_send,
-@@ -862,6 +866,14 @@ static int __init fnic_init_module(void)
- 
- 	printk(KERN_INFO PFX "%s, ver %s\n", DRV_DESCRIPTION, DRV_VERSION);
- 
-+	/* Allocate memory for trace buffer */
-+	err = fnic_trace_buf_init();
-+	if (err < 0) {
-+		printk(KERN_ERR PFX "Trace buffer initialization Failed "
-+				  "Fnic Tracing utility is disabled\n");
-+		fnic_trace_free();
-+	}
-+
- 	/* Create a cache for allocation of default size sgls */
- 	len = sizeof(struct fnic_dflt_sgl_list);
- 	fnic_sgl_cache[FNIC_SGL_CACHE_DFLT] = kmem_cache_create
-@@ -932,6 +944,7 @@ err_create_fnic_ioreq_slab:
- err_create_fnic_sgl_slab_max:
- 	kmem_cache_destroy(fnic_sgl_cache[FNIC_SGL_CACHE_DFLT]);
- err_create_fnic_sgl_slab_dflt:
-+	fnic_trace_free();
- 	return err;
+ #define PCI_DEVICE_ID_CISCO_FNIC	0x0045
+@@ -292,6 +293,13 @@ static void fnic_notify_timer(unsigned long data)
+ 		  round_jiffies(jiffies + FNIC_NOTIFY_TIMER_PERIOD));
  }
  
-@@ -943,6 +956,7 @@ static void __exit fnic_cleanup_module(void)
++static void fnic_fip_notify_timer(unsigned long data)
++{
++	struct fnic *fnic = (struct fnic *)data;
++
++	fnic_handle_fip_timer(fnic);
++}
++
+ static void fnic_notify_timer_start(struct fnic *fnic)
+ {
+ 	switch (vnic_dev_get_intr_mode(fnic->vdev)) {
+@@ -403,6 +411,12 @@ static u8 *fnic_get_mac(struct fc_lport *lport)
+ 	return fnic->data_src_addr;
+ }
+ 
++void fnic_set_vlan(struct fnic *fnic, u16 vlan_id)
++{
++	u16 old_vlan;
++	old_vlan = vnic_dev_set_default_vlan(fnic->vdev, vlan_id);
++}
++
+ static int __devinit fnic_probe(struct pci_dev *pdev,
+ 				const struct pci_device_id *ent)
+ {
+@@ -621,7 +635,29 @@ static int __devinit fnic_probe(struct pci_dev *pdev,
+ 		vnic_dev_packet_filter(fnic->vdev, 1, 1, 0, 0, 0);
+ 		vnic_dev_add_addr(fnic->vdev, FIP_ALL_ENODE_MACS);
+ 		vnic_dev_add_addr(fnic->vdev, fnic->ctlr.ctl_src_addr);
++		fnic->set_vlan = fnic_set_vlan;
+ 		fcoe_ctlr_init(&fnic->ctlr, FIP_MODE_AUTO);
++		setup_timer(&fnic->fip_timer, fnic_fip_notify_timer,
++							(unsigned long)fnic);
++		spin_lock_init(&fnic->vlans_lock);
++		INIT_WORK(&fnic->fip_frame_work, fnic_handle_fip_frame);
++		INIT_WORK(&fnic->event_work, fnic_handle_event);
++		skb_queue_head_init(&fnic->fip_frame_queue);
++		spin_lock_irqsave(&fnic_list_lock, flags);
++		if (!fnic_fip_queue) {
++			fnic_fip_queue =
++				create_singlethread_workqueue("fnic_fip_q");
++			if (!fnic_fip_queue) {
++				spin_unlock_irqrestore(&fnic_list_lock, flags);
++				printk(KERN_ERR PFX "fnic FIP work queue "
++						 "create failed\n");
++				err = -ENOMEM;
++				goto err_out_free_max_pool;
++			}
++		}
++		spin_unlock_irqrestore(&fnic_list_lock, flags);
++		INIT_LIST_HEAD(&fnic->evlist);
++		INIT_LIST_HEAD(&fnic->vlans);
+ 	} else {
+ 		shost_printk(KERN_INFO, fnic->lport->host,
+ 			     "firmware uses non-FIP mode\n");
+@@ -808,6 +844,13 @@ static void __devexit fnic_remove(struct pci_dev *pdev)
+ 	skb_queue_purge(&fnic->frame_queue);
+ 	skb_queue_purge(&fnic->tx_queue);
+ 
++	if (fnic->config.flags & VFCF_FIP_CAPABLE) {
++		del_timer_sync(&fnic->fip_timer);
++		skb_queue_purge(&fnic->fip_frame_queue);
++		fnic_fcoe_reset_vlans(fnic);
++		fnic_fcoe_evlist_free(fnic);
++	}
++
+ 	/*
+ 	 * Log off the fabric. This stops all remote ports, dns port,
+ 	 * logs off the fabric. This flushes all rport, disc, lport work
+@@ -890,8 +933,8 @@ static int __init fnic_init_module(void)
+ 	len = sizeof(struct fnic_sgl_list);
+ 	fnic_sgl_cache[FNIC_SGL_CACHE_MAX] = kmem_cache_create
+ 		("fnic_sgl_max", len + FNIC_SG_DESC_ALIGN, FNIC_SG_DESC_ALIGN,
+-		 SLAB_HWCACHE_ALIGN,
+-		 NULL);
++		  SLAB_HWCACHE_ALIGN,
++		  NULL);
+ 	if (!fnic_sgl_cache[FNIC_SGL_CACHE_MAX]) {
+ 		printk(KERN_ERR PFX "failed to create fnic max sgl slab\n");
+ 		err = -ENOMEM;
+@@ -952,6 +995,10 @@ static void __exit fnic_cleanup_module(void)
+ {
+ 	pci_unregister_driver(&fnic_driver);
+ 	destroy_workqueue(fnic_event_queue);
++	if (fnic_fip_queue) {
++		flush_workqueue(fnic_fip_queue);
++		destroy_workqueue(fnic_fip_queue);
++	}
+ 	kmem_cache_destroy(fnic_sgl_cache[FNIC_SGL_CACHE_MAX]);
  	kmem_cache_destroy(fnic_sgl_cache[FNIC_SGL_CACHE_DFLT]);
  	kmem_cache_destroy(fnic_io_req_cache);
- 	fc_release_transport(fnic_fc_transport);
-+	fnic_trace_free();
+diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
+index b576be7..9795d6f 100644
+--- a/drivers/scsi/fnic/vnic_dev.c
++++ b/drivers/scsi/fnic/vnic_dev.c
+@@ -584,6 +584,16 @@ int vnic_dev_init(struct vnic_dev *vdev, int arg)
+ 	return vnic_dev_cmd(vdev, CMD_INIT, &a0, &a1, wait);
  }
  
- module_init(fnic_init_module);
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index e1e817f..38d42cf 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -392,11 +392,12 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
++u16 vnic_dev_set_default_vlan(struct vnic_dev *vdev, u16 new_default_vlan)
++{
++	u64 a0 = new_default_vlan, a1 = 0;
++	int wait = 1000;
++	int old_vlan = 0;
++
++	old_vlan = vnic_dev_cmd(vdev, CMD_SET_DEFAULT_VLAN, &a0, &a1, wait);
++	return (u16)old_vlan;
++}
++
+ int vnic_dev_link_status(struct vnic_dev *vdev)
  {
- 	struct fc_lport *lp = shost_priv(sc->device->host);
- 	struct fc_rport *rport;
--	struct fnic_io_req *io_req;
-+	struct fnic_io_req *io_req = NULL;
- 	struct fnic *fnic = lport_priv(lp);
- 	struct vnic_wq_copy *wq;
- 	int ret;
--	int sg_count;
-+	u64 cmd_trace;
-+	int sg_count = 0;
- 	unsigned long flags;
- 	unsigned long ptr;
+ 	if (vdev->linkstatus)
+diff --git a/drivers/scsi/fnic/vnic_dev.h b/drivers/scsi/fnic/vnic_dev.h
+index f9935a8..40d4195 100644
+--- a/drivers/scsi/fnic/vnic_dev.h
++++ b/drivers/scsi/fnic/vnic_dev.h
+@@ -148,6 +148,8 @@ int vnic_dev_disable(struct vnic_dev *vdev);
+ int vnic_dev_open(struct vnic_dev *vdev, int arg);
+ int vnic_dev_open_done(struct vnic_dev *vdev, int *done);
+ int vnic_dev_init(struct vnic_dev *vdev, int arg);
++u16 vnic_dev_set_default_vlan(struct vnic_dev *vdev,
++				u16 new_default_vlan);
+ int vnic_dev_soft_reset(struct vnic_dev *vdev, int arg);
+ int vnic_dev_soft_reset_done(struct vnic_dev *vdev, int *done);
+ void vnic_dev_set_intr_mode(struct vnic_dev *vdev,
+diff --git a/drivers/scsi/fnic/vnic_devcmd.h b/drivers/scsi/fnic/vnic_devcmd.h
+index 7c9ccbd..3e2fcbd 100644
+--- a/drivers/scsi/fnic/vnic_devcmd.h
++++ b/drivers/scsi/fnic/vnic_devcmd.h
+@@ -196,6 +196,73 @@ enum vnic_devcmd_cmd {
  
-@@ -436,6 +437,9 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 	/* Map the data buffer */
- 	sg_count = scsi_dma_map(sc);
- 	if (sg_count < 0) {
-+		FNIC_TRACE((u64)fnic_queuecommand, sc->device->host->host_no,
-+			  sc->request->tag, (u64)sc, 0, sc->cmnd[0],
-+			  sg_count, CMD_STATE(sc));
- 		mempool_free(io_req, fnic->io_req_pool);
- 		goto out;
- 	}
-@@ -485,7 +489,9 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 		 * refetch the pointer under the lock.
- 		 */
- 		spinlock_t *io_lock = fnic_io_lock_hash(fnic, sc);
--
-+		FNIC_TRACE((u64)fnic_queuecommand, sc->device->host->host_no,
-+			  sc->request->tag, (u64)sc, 0, 0, 0,
-+			  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
- 		spin_lock_irqsave(io_lock, flags);
- 		io_req = (struct fnic_io_req *)CMD_SP(sc);
- 		CMD_SP(sc) = NULL;
-@@ -500,6 +506,15 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 		CMD_FLAGS(sc) |= FNIC_IO_ISSUED;
- 	}
- out:
-+	cmd_trace = ((u64)sc->cmnd[0] << 56 | (u64)sc->cmnd[7] << 40 |
-+			(u64)sc->cmnd[8] << 32 | (u64)sc->cmnd[2] << 24 |
-+			(u64)sc->cmnd[3] << 16 | (u64)sc->cmnd[4] << 8 |
-+			sc->cmnd[5]);
+ 	/* undo initialize of virtual link */
+ 	CMD_DEINIT		= _CMDCNW(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 34),
 +
-+	FNIC_TRACE((u64)fnic_queuecommand, sc->device->host->host_no,
-+		  sc->request->tag, (u64)sc, (u64)io_req,
-+		  sg_count, cmd_trace,
-+		  (((u64)CMD_FLAGS(sc) >> 32) | CMD_STATE(sc)));
- 	atomic_dec(&fnic->in_flight);
- 	/* acquire host lock before returning to SCSI */
- 	spin_lock(lp->host->host_lock);
-@@ -673,6 +688,7 @@ static inline void fnic_fcpio_ack_handler(struct fnic *fnic,
- 	struct vnic_wq_copy *wq;
- 	u16 request_out = desc->u.ack.request_out;
- 	unsigned long flags;
-+	u64 *ox_id_tag = (u64 *)(void *)desc;
- 
- 	/* mark the ack state */
- 	wq = &fnic->wq_copy[cq_index - fnic->raw_wq_count - fnic->rq_count];
-@@ -683,6 +699,9 @@ static inline void fnic_fcpio_ack_handler(struct fnic *fnic,
- 		fnic->fw_ack_recd[0] = 1;
- 	}
- 	spin_unlock_irqrestore(&fnic->wq_copy_lock[0], flags);
-+	FNIC_TRACE((u64)fnic_fcpio_ack_handler,
-+		  fnic->lport->host->host_no, 0, 0, ox_id_tag[2], ox_id_tag[3],
-+		  ox_id_tag[4], ox_id_tag[5]);
- }
- 
- /*
-@@ -702,6 +721,7 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 	struct scsi_cmnd *sc;
- 	unsigned long flags;
- 	spinlock_t *io_lock;
-+	u64 cmd_trace;
- 	unsigned long start_time;
- 
- 	/* Decode the cmpl description to get the io_req id */
-@@ -723,6 +743,14 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 			  "icmnd_cmpl sc is null - "
- 			  "hdr status = %s tag = 0x%x desc = 0x%p\n",
- 			  fnic_fcpio_status_to_str(hdr_status), id, desc);
-+		FNIC_TRACE((u64)fnic_fcpio_icmnd_cmpl_handler,
-+			  fnic->lport->host->host_no, id,
-+			  ((u64)icmnd_cmpl->_resvd0[1] << 16 |
-+			  (u64)icmnd_cmpl->_resvd0[0]),
-+			  ((u64)hdr_status << 16 |
-+			  (u64)icmnd_cmpl->scsi_status << 8 |
-+			  (u64)icmnd_cmpl->flags), (u64)desc,
-+			  (u64)icmnd_cmpl->residual, 0);
- 		return;
- 	}
- 
-@@ -866,6 +894,20 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 
- 	mempool_free(io_req, fnic->io_req_pool);
- 
-+	cmd_trace = ((u64)hdr_status << 56) |
-+		  (u64)icmnd_cmpl->scsi_status << 48 |
-+		  (u64)icmnd_cmpl->flags << 40 | (u64)sc->cmnd[0] << 32 |
-+		  (u64)sc->cmnd[2] << 24 | (u64)sc->cmnd[3] << 16 |
-+		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5];
++	/* check fw capability of a cmd:
++	 * in:  (u32)a0=cmd
++	 * out: (u32)a0=errno, 0:valid cmd, a1=supported VNIC_STF_* bits */
++	CMD_CAPABILITY      = _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 36),
 +
-+	FNIC_TRACE((u64)fnic_fcpio_icmnd_cmpl_handler,
-+		  sc->device->host->host_no, id, (u64)sc,
-+		  ((u64)icmnd_cmpl->_resvd0[1] << 56 |
-+		  (u64)icmnd_cmpl->_resvd0[0] << 48 |
-+		  jiffies_to_msecs(jiffies - start_time)),
-+		  (u64)desc, cmd_trace,
-+		  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
++	/* persistent binding info
++	 * in:  (u64)a0=paddr of arg
++	 *      (u32)a1=CMD_PERBI_XXX */
++	CMD_PERBI       = _CMDC(_CMD_DIR_RW, _CMD_VTYPE_FC, 37),
 +
- 	if (sc->sc_data_direction == DMA_FROM_DEVICE) {
- 		fnic->lport->host_stats.fcp_input_requests++;
- 		fnic->fcp_input_bytes += xfer_len;
-@@ -878,7 +920,6 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 	/* Call SCSI completion function to complete the IO */
- 	if (sc->scsi_done)
- 		sc->scsi_done(sc);
--
- }
- 
- /* fnic_fcpio_itmf_cmpl_handler
-@@ -976,8 +1017,21 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 
- 			fnic_release_ioreq_buf(fnic, io_req, sc);
- 			mempool_free(io_req, fnic->io_req_pool);
--			if (sc->scsi_done)
-+			if (sc->scsi_done) {
-+				FNIC_TRACE((u64)fnic_fcpio_itmf_cmpl_handler,
-+					sc->device->host->host_no, id,
-+					(u64)sc,
-+					jiffies_to_msecs(jiffies - start_time),
-+					(u64)desc,
-+					(((u64)hdr_status << 40) |
-+					(u64)sc->cmnd[0] << 32 |
-+					(u64)sc->cmnd[2] << 24 |
-+					(u64)sc->cmnd[3] << 16 |
-+					(u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
-+					(((u64)CMD_FLAGS(sc) << 32) |
-+					CMD_STATE(sc)));
- 				sc->scsi_done(sc);
-+			}
- 		}
- 
- 	} else if (id & FNIC_TAG_DEV_RST) {
-@@ -986,6 +1040,11 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 		if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING) {
- 			spin_unlock_irqrestore(io_lock, flags);
- 			CMD_FLAGS(sc) |= FNIC_DEV_RST_ABTS_PENDING;
-+			FNIC_TRACE((u64)fnic_fcpio_itmf_cmpl_handler,
-+				  sc->device->host->host_no, id, (u64)sc,
-+				  jiffies_to_msecs(jiffies - start_time),
-+				  (u64)desc, 0,
-+				  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
- 			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 				"Terminate pending "
- 				"dev reset cmpl recd. id %d status %s\n",
-@@ -996,6 +1055,11 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 		if (CMD_FLAGS(sc) & FNIC_DEV_RST_TIMED_OUT) {
- 			/* Need to wait for terminate completion */
- 			spin_unlock_irqrestore(io_lock, flags);
-+			FNIC_TRACE((u64)fnic_fcpio_itmf_cmpl_handler,
-+				  sc->device->host->host_no, id, (u64)sc,
-+				  jiffies_to_msecs(jiffies - start_time),
-+				  (u64)desc, 0,
-+				  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
- 			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 				"dev reset cmpl recd after time out. "
- 				"id %d status %s\n",
-@@ -1144,8 +1208,18 @@ cleanup_scsi_cmd:
- 			      " DID_TRANSPORT_DISRUPTED\n");
- 
- 		/* Complete the command to SCSI */
--		if (sc->scsi_done)
-+		if (sc->scsi_done) {
-+			FNIC_TRACE((u64)fnic_cleanup_io,
-+				  sc->device->host->host_no, i, (u64)sc,
-+				  jiffies_to_msecs(jiffies - start_time),
-+				  0, ((u64)sc->cmnd[0] << 32 |
-+				  (u64)sc->cmnd[2] << 24 |
-+				  (u64)sc->cmnd[3] << 16 |
-+				  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
-+				  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
++	/* Interrupt Assert Register functionality
++	 * in: (u16)a0=interrupt number to assert
++	 */
++	CMD_IAR         = _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 38),
 +
- 			sc->scsi_done(sc);
-+		}
- 	}
- }
- 
-@@ -1197,8 +1271,17 @@ wq_copy_cleanup_scsi_cmd:
- 	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host, "wq_copy_cleanup_handler:"
- 		      " DID_NO_CONNECT\n");
- 
--	if (sc->scsi_done)
-+	if (sc->scsi_done) {
-+		FNIC_TRACE((u64)fnic_wq_copy_cleanup_handler,
-+			  sc->device->host->host_no, id, (u64)sc,
-+			  jiffies_to_msecs(jiffies - start_time),
-+			  0, ((u64)sc->cmnd[0] << 32 |
-+			  (u64)sc->cmnd[2] << 24 | (u64)sc->cmnd[3] << 16 |
-+			  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
-+			  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
++	/* initiate hangreset, like softreset after hang detected */
++	CMD_HANG_RESET      = _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 39),
 +
- 		sc->scsi_done(sc);
-+	}
- }
- 
- static inline int fnic_queue_abort_io_req(struct fnic *fnic, int tag,
-@@ -1493,7 +1576,7 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- {
- 	struct fc_lport *lp;
- 	struct fnic *fnic;
--	struct fnic_io_req *io_req;
-+	struct fnic_io_req *io_req = NULL;
- 	struct fc_rport *rport;
- 	spinlock_t *io_lock;
- 	unsigned long flags;
-@@ -1520,7 +1603,6 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 
- 	CMD_FLAGS(sc) = FNIC_NO_FLAGS;
- 
--
- 	if (lp->state != LPORT_ST_READY || !(lp->link_up)) {
- 		ret = FAILED;
- 		goto fnic_abort_cmd_end;
-@@ -1638,6 +1720,14 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	mempool_free(io_req, fnic->io_req_pool);
- 
- fnic_abort_cmd_end:
-+	FNIC_TRACE((u64)fnic_abort_cmd, sc->device->host->host_no,
-+		  sc->request->tag, (u64)sc,
-+		  jiffies_to_msecs(jiffies - start_time),
-+		  0, ((u64)sc->cmnd[0] << 32 |
-+		  (u64)sc->cmnd[2] << 24 | (u64)sc->cmnd[3] << 16 |
-+		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
-+		  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
-+
- 	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 		      "Returning from abort cmd type %x %s\n", task_req,
- 		      (ret == SUCCESS) ?
-@@ -1908,7 +1998,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- {
- 	struct fc_lport *lp;
- 	struct fnic *fnic;
--	struct fnic_io_req *io_req;
-+	struct fnic_io_req *io_req = NULL;
- 	struct fc_rport *rport;
- 	int status;
- 	int ret = FAILED;
-@@ -1916,7 +2006,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 	unsigned long flags;
- 	unsigned long start_time = 0;
- 	struct scsi_lun fc_lun;
--	int tag;
-+	int tag = 0;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
- 	int tag_gen_flag = 0;   /*to track tags allocated by fnic driver*/
- 
-@@ -2111,6 +2201,14 @@ fnic_device_reset_clean:
- 	}
- 
- fnic_device_reset_end:
-+	FNIC_TRACE((u64)fnic_device_reset, sc->device->host->host_no,
-+		  sc->request->tag, (u64)sc,
-+		  jiffies_to_msecs(jiffies - start_time),
-+		  0, ((u64)sc->cmnd[0] << 32 |
-+		  (u64)sc->cmnd[2] << 24 | (u64)sc->cmnd[3] << 16 |
-+		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
-+		  (((u64)CMD_FLAGS(sc) << 32) | CMD_STATE(sc)));
-+
- 	/* free tag if it is allocated */
- 	if (unlikely(tag_gen_flag))
- 		fnic_scsi_host_end_tag(fnic, sc);
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-new file mode 100644
-index 0000000..2daca6d
---- /dev/null
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -0,0 +1,260 @@
-+/*
-+ * Copyright 2012 Cisco Systems, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you may redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; version 2 of the License.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/mempool.h>
-+#include <linux/errno.h>
-+#include <linux/spinlock.h>
-+#include <linux/version.h>
-+#include <linux/kallsyms.h>
-+#include "fnic_io.h"
-+#include "fnic.h"
-+
-+unsigned int trace_max_pages;
-+int fnic_max_trace_entries;
-+
-+static u64 fnic_trace_buf_p;
-+DEFINE_SPINLOCK(fnic_trace_lock);
-+
-+static fnic_trace_dbg_t fnic_trace_entries;
-+int fnic_tracing_enabled = 1;
-+
-+/*
-+ * fnic_trace_get_buf - Give buffer pointer to user to fill up trace information
-+ *
-+ * Description:
-+ * This routine gets next available trace buffer entry location @wr_idx
-+ * from allocated trace buffer pages and give that memory location
-+ * to user to store the trace information.
-+ *
-+ * Return Value:
-+ * This routine returns pointer to next available trace entry
-+ * @fnic_buf_head for user to fill trace information.
-+ */
-+fnic_trace_data_t *fnic_trace_get_buf()
-+{
-+	u64 fnic_buf_head;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&fnic_trace_lock, flags);
++	/* hangreset status:
++	 *    out: a0=0 reset complete, a0=1 reset in progress */
++	CMD_HANG_RESET_STATUS   = _CMDC(_CMD_DIR_READ, _CMD_VTYPE_ALL, 40),
 +
 +	/*
-+	 * Get next available memory location for writing trace information
-+	 * at @wr_idx and increment @wr_idx
-+	 */
-+	fnic_buf_head =
-+		fnic_trace_entries.page_offset[fnic_trace_entries.wr_idx];
-+	fnic_trace_entries.wr_idx++;
++	 * Set hw ingress packet vlan rewrite mode:
++	 * in:  (u32)a0=new vlan rewrite mode
++	 * out: (u32)a0=old vlan rewrite mode */
++	CMD_IG_VLAN_REWRITE_MODE = _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ENET, 41),
 +
 +	/*
-+	 * Verify if trace buffer is full then change wd_idx to
-+	 * start from zero
-+	 */
-+	if (fnic_trace_entries.wr_idx >= fnic_max_trace_entries)
-+		fnic_trace_entries.wr_idx = 0;
++	 * in:  (u16)a0=bdf of target vnic
++	 *      (u32)a1=cmd to proxy
++	 *      a2-a15=args to cmd in a1
++	 * out: (u32)a0=status of proxied cmd
++	 *      a1-a15=out args of proxied cmd */
++	CMD_PROXY_BY_BDF =  _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 42),
 +
 +	/*
-+	 * Verify if write index @wr_idx and read index @rd_idx are same then
-+	 * increment @rd_idx to move to next entry in trace buffer
++	 * As for BY_BDF except a0 is index of hvnlink subordinate vnic
++	 * or SR-IOV virtual vnic
 +	 */
-+	if (fnic_trace_entries.wr_idx == fnic_trace_entries.rd_idx) {
-+		fnic_trace_entries.rd_idx++;
-+		if (fnic_trace_entries.rd_idx >= fnic_max_trace_entries)
-+			fnic_trace_entries.rd_idx = 0;
-+	}
-+	spin_unlock_irqrestore(&fnic_trace_lock, flags);
-+	return (fnic_trace_data_t *)fnic_buf_head;
-+}
-+
-+/*
-+ * fnic_get_trace_data - Copy trace buffer to a memory file
-+ * @fnic_dbgfs_t: pointer to debugfs trace buffer
-+ *
-+ * Description:
-+ * This routine gathers the fnic trace debugfs data from the fnic_trace_data_t
-+ * buffer and dumps it to fnic_dbgfs_t. It will start at the rd_idx entry in
-+ * the log and process the log until the end of the buffer. Then it will gather
-+ * from the beginning of the log and process until the current entry @wr_idx.
-+ *
-+ * Return Value:
-+ * This routine returns the amount of bytes that were dumped into fnic_dbgfs_t
-+ */
-+int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
-+{
-+	int rd_idx;
-+	int wr_idx;
-+	int len = 0;
-+	unsigned long flags;
-+	char str[KSYM_SYMBOL_LEN];
-+	struct timespec val;
-+	fnic_trace_data_t *tbp;
-+
-+	spin_lock_irqsave(&fnic_trace_lock, flags);
-+	rd_idx = fnic_trace_entries.rd_idx;
-+	wr_idx = fnic_trace_entries.wr_idx;
-+	if (wr_idx < rd_idx) {
-+		while (1) {
-+			/* Start from read index @rd_idx */
-+			tbp = (fnic_trace_data_t *)
-+				  fnic_trace_entries.page_offset[rd_idx];
-+			if (!tbp)
-+				return 0;
-+			/* Convert function pointer to function name */
-+			sprint_symbol(str, tbp->fnaddr);
-+			jiffies_to_timespec(tbp->timestamp, &val);
-+			/*
-+			 * Dump trace buffer entry to memory file
-+			 * and increment read index @rd_idx
-+			 */
-+			len += snprintf(fnic_dbgfs_prt->buffer + len,
-+				  (trace_max_pages * PAGE_SIZE * 3) - len,
-+				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
-+				  "%16llx %16llx %16llx\n", val.tv_sec,
-+				  val.tv_nsec, str, tbp->host_no, tbp->tag,
-+				  tbp->data[0], tbp->data[1], tbp->data[2],
-+				  tbp->data[3], tbp->data[4]);
-+			rd_idx++;
-+			/*
-+			 * If rd_idx is reached to maximum trace entries
-+			 * then move rd_idx to zero
-+			 */
-+			if (rd_idx > (fnic_max_trace_entries-1))
-+				rd_idx = 0;
-+			/*
-+			 * Continure dumpping trace buffer entries into
-+			 * memory file till rd_idx reaches write index
-+			 */
-+			if (rd_idx == wr_idx)
-+				break;
-+		}
-+	} else if (wr_idx > rd_idx) {
-+		while (1) {
-+			/* Start from read index @rd_idx */
-+			tbp = (fnic_trace_data_t *)
-+				  fnic_trace_entries.page_offset[rd_idx];
-+			if (!tbp)
-+				return 0;
-+			jiffies_to_timespec(tbp->timestamp, &val);
-+			/* Convert function pointer to function name */
-+			sprint_symbol(str, tbp->fnaddr);
-+			/*
-+			 * Dump trace buffer entry to memory file
-+			 * and increment read index @rd_idx
-+			 */
-+			len += snprintf(fnic_dbgfs_prt->buffer + len,
-+				  (trace_max_pages * PAGE_SIZE * 3) - len,
-+				  "%16lu.%16lu %-50s %8x %8x %16llx %16llx "
-+				  "%16llx %16llx %16llx\n", val.tv_sec,
-+				  val.tv_nsec, str, tbp->host_no, tbp->tag,
-+				  tbp->data[0], tbp->data[1], tbp->data[2],
-+				  tbp->data[3], tbp->data[4]);
-+			rd_idx++;
-+			/*
-+			 * Continue dumpping trace buffer entries into
-+			 * memory file till rd_idx reaches write index
-+			 */
-+			if (rd_idx == wr_idx)
-+				break;
-+		}
-+	}
-+	spin_unlock_irqrestore(&fnic_trace_lock, flags);
-+	return len;
-+}
-+
-+/*
-+ * fnic_trace_buf_init - Initialize fnic trace buffer logging facility
-+ *
-+ * Description:
-+ * Initialize trace buffer data structure by allocating required memory and
-+ * setting page_offset information for every trace entry by adding trace entry
-+ * length to previous page_offset value.
-+ */
-+int fnic_trace_buf_init()
-+{
-+	u64 fnic_buf_head;
-+	int i;
-+	int err = 0;
-+
-+	trace_max_pages = fnic_trace_max_pages;
-+	fnic_max_trace_entries = (trace_max_pages * PAGE_SIZE)/
-+					  FNIC_ENTRY_SIZE_BYTES;
-+
-+	fnic_trace_buf_p = (u64)vmalloc((trace_max_pages * PAGE_SIZE));
-+	if (!fnic_trace_buf_p) {
-+		printk(KERN_ERR PFX "Failed to allocate memory "
-+				  "for fnic_trace_buf_p\n");
-+		err = -ENOMEM;
-+		goto err_fnic_trace_buf_init;
-+	}
-+	memset((void *)fnic_trace_buf_p, 0, (trace_max_pages * PAGE_SIZE));
-+
-+	fnic_trace_entries.page_offset = (u64 *)vmalloc(fnic_max_trace_entries *
-+						  sizeof(unsigned long long));
-+	if (!fnic_trace_entries.page_offset) {
-+		printk(KERN_ERR PFX "Failed to allocate memory for"
-+				  " page_offset\n");
-+		if (fnic_trace_buf_p) {
-+			vfree((void *)fnic_trace_buf_p);
-+			fnic_trace_buf_p = 0;
-+		}
-+		err = -ENOMEM;
-+		goto err_fnic_trace_buf_init;
-+	}
-+	memset((void *)fnic_trace_entries.page_offset, 0,
-+		  (fnic_max_trace_entries * sizeof(unsigned long long)));
-+	fnic_trace_entries.wr_idx = fnic_trace_entries.rd_idx = 0;
-+	fnic_buf_head = fnic_trace_buf_p;
++	CMD_PROXY_BY_INDEX =    _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 43),
 +
 +	/*
-+	 * Set page_offset field of fnic_trace_entries struct by
-+	 * calculating memory location for every trace entry using
-+	 * length of each trace entry
++	 * For HPP toggle:
++	 * adapter-info-get
++	 * in:  (u64)a0=phsical address of buffer passed in from caller.
++	 *      (u16)a1=size of buffer specified in a0.
++	 * out: (u64)a0=phsical address of buffer passed in from caller.
++	 *      (u16)a1=actual bytes from VIF-CONFIG-INFO TLV, or
++	 *              0 if no VIF-CONFIG-INFO TLV was ever received. */
++	CMD_CONFIG_INFO_GET = _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 44),
++
++	/*
++	 * INT13 API: (u64)a0=paddr to vnic_int13_params struct
++	 *            (u32)a1=INT13_CMD_xxx
 +	 */
-+	for (i = 0; i < fnic_max_trace_entries; i++) {
-+		fnic_trace_entries.page_offset[i] = fnic_buf_head;
-+		fnic_buf_head += FNIC_ENTRY_SIZE_BYTES;
-+	}
-+	err = fnic_trace_debugfs_init();
-+	if (err < 0) {
-+		printk(KERN_ERR PFX "Failed to initialize debugfs for tracing\n");
-+		goto err_fnic_trace_debugfs_init;
-+	}
-+	printk(KERN_INFO PFX "Successfully Initialized Trace Buffer\n");
-+	return err;
-+err_fnic_trace_debugfs_init:
-+	fnic_trace_free();
-+err_fnic_trace_buf_init:
-+	return err;
-+}
++	CMD_INT13_ALL = _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 45),
 +
-+/*
-+ * fnic_trace_free - Free memory of fnic trace data structures.
-+ */
-+void fnic_trace_free()
-+{
-+	fnic_tracing_enabled = 0;
-+	fnic_trace_debugfs_terminate();
-+	if (fnic_trace_entries.page_offset) {
-+		vfree((void *)fnic_trace_entries.page_offset);
-+		fnic_trace_entries.page_offset = 0;
-+	}
-+	if (fnic_trace_buf_p) {
-+		vfree((void *)fnic_trace_buf_p);
-+		fnic_trace_buf_p = 0;
-+	}
-+	printk(KERN_INFO PFX "Successfully Freed Trace Buffer\n");
-+}
-diff --git a/drivers/scsi/fnic/fnic_trace.h b/drivers/scsi/fnic/fnic_trace.h
-new file mode 100644
-index 0000000..c12caed
---- /dev/null
-+++ b/drivers/scsi/fnic/fnic_trace.h
-@@ -0,0 +1,80 @@
-+/*
-+ * Copyright 2012 Cisco Systems, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you may redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; version 2 of the License.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
-+
-+#ifndef __FNIC_TRACE_H__
-+#define __FNIC_TRACE_H__
-+
-+#define FNIC_ENTRY_SIZE_BYTES 64
-+
-+extern ssize_t simple_read_from_buffer(void __user *to,
-+					  size_t count,
-+					  loff_t *ppos,
-+					  const void *from,
-+					  size_t available);
-+
-+extern unsigned int fnic_trace_max_pages;
-+extern int fnic_tracing_enabled;
-+extern unsigned int trace_max_pages;
-+
-+typedef struct fnic_trace_dbg {
-+	int wr_idx;
-+	int rd_idx;
-+	unsigned long long *page_offset;
-+} fnic_trace_dbg_t;
-+
-+typedef struct fnic_dbgfs {
-+	int buffer_len;
-+	char *buffer;
-+} fnic_dbgfs_t;
-+
-+struct fnic_trace_data {
-+	u64 timestamp;
-+	u64 fnaddr;
-+	u32 host_no;
-+	u32 tag;
-+	u64 data[5];
-+} __attribute__((__packed__));
-+
-+typedef struct fnic_trace_data fnic_trace_data_t;
-+
-+#define FNIC_TRACE_ENTRY_SIZE \
-+		  (FNIC_ENTRY_SIZE_BYTES - sizeof(fnic_trace_data_t))
-+
-+#define FNIC_TRACE(_fn, _hn, _t, _a, _b, _c, _d, _e)           \
-+	if (unlikely(fnic_tracing_enabled)) {                   \
-+		fnic_trace_data_t *trace_buf = fnic_trace_get_buf(); \
-+		if (trace_buf) { \
-+			trace_buf->timestamp = jiffies; \
-+			trace_buf->fnaddr = _fn; \
-+			trace_buf->host_no = _hn; \
-+			trace_buf->tag = _t; \
-+			trace_buf->data[0] = _a; \
-+			trace_buf->data[1] = _b; \
-+			trace_buf->data[2] = _c; \
-+			trace_buf->data[3] = _d; \
-+			trace_buf->data[4] = _e; \
-+		} \
-+	}
-+
-+fnic_trace_data_t *fnic_trace_get_buf(void);
-+int fnic_get_trace_data(fnic_dbgfs_t *);
-+int fnic_trace_buf_init(void);
-+void fnic_trace_free(void);
-+int fnic_trace_debugfs_init(void);
-+void fnic_trace_debugfs_terminate(void);
-+
-+#endif
++	/*
++	 * Set default vlan:
++	 * in: (u16)a0=new default vlan
++	 *     (u16)a1=zero for overriding vlan with param a0,
++	 *             non-zero for resetting vlan to the default
++	 * out: (u16)a0=old default vlan
++	 */
++	CMD_SET_DEFAULT_VLAN = _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 46)
+ };
+ 
+ /* flags for CMD_OPEN */
 -- 
 1.7.9.5
 
