@@ -1,51 +1,84 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [GIT PULL] exofs: 3 changes to exofs & osd
-Date: Mon, 17 Dec 2012 18:53:21 +0200
-Message-ID: <50CF4E01.5030004@panasas.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
+ register field names
+Date: Mon, 17 Dec 2012 12:21:49 -0700
+Message-ID: <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
+References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org> <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from natasha.panasas.com ([67.152.220.90]:35798 "EHLO
-	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753149Ab2LQQxm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2012 11:53:42 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, open-osd <osd-dev@open-osd.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Linus.
+Ping.  I didn't push this through my tree because I didn't want to
+create conflicts with other changes to this file.  But I think this
+can be merged any time.
 
-Please pull the following changes since commit [ddffeb8c] Linux 3.7-rc1
-They are available in the git repository at:
-
-  git://git.open-osd.org/linux-open-osd.git for-linus
-
-for you to fetch changes up to
-	[861d6660] exofs: don't leak io_state and pages on read error (2012-12-14 12:17:32 +0200)
-
-These are just 3 patches, the last two are bug fixes on the error paths
-in exofs.
-
-The important patch is the one to osd_uld which adds sysfs info to osd
-devices for use by user-mode clustering discovery software. I'm already
-sitting on this patch since before February this year, It is important for
-some of the big installation cluster systems, who's been compiling their
-own kernel just for that patch.
-
-Thanks in advance
-Boaz
-
-----------------------------------------------------------------
-Boaz Harrosh (1):
-      exofs: don't leak io_state and pages on read error
-
-Idan Kedar (1):
-      exofs: clean up the correct page collection on write error
-
-Sachin Bhamare (1):
-      osduld: Add osdname & systemid sysfs at scsi_osd class
-
- drivers/scsi/osd/osd_uld.c | 28 ++++++++++++++++++++++++++++
- fs/exofs/inode.c           | 16 +++++++++-------
- 2 files changed, 37 insertions(+), 7 deletions(-)
+On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
+<giridhar.malavali@qlogic.com> wrote:
+> Acked-by: Giridhar Malavali
+>
+> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
+>
+>>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>>
+>>Thanks,
+>>~Saurav
+>>
+>>
+>>
+>>>Use the standard #defines for PCIe Link Capability register fields
+>>>rather than bare numbers.  This also uses the new PCI Express Capability
+>>>accessor rather than reading the capability directly.
+>>>
+>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
+>>>CC: linux-driver@qlogic.com
+>>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+>>>CC: linux-scsi@vger.kernel.org
+>>>---
+>>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
+>>> 1 files changed, 5 insertions(+), 9 deletions(-)
+>>>
+>>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
+>>>b/drivers/scsi/qla2xxx/qla_os.c
+>>>index d501bf5..b5d070f 100644
+>>>--- a/drivers/scsi/qla2xxx/qla_os.c
+>>>+++ b/drivers/scsi/qla2xxx/qla_os.c
+>>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
+>>>char *str)
+>>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
+>>>      struct qla_hw_data *ha = vha->hw;
+>>>      uint32_t pci_bus;
+>>>-     int pcie_reg;
+>>>
+>>>-     pcie_reg = pci_pcie_cap(ha->pdev);
+>>>-     if (pcie_reg) {
+>>>+     if (pci_is_pcie(ha->pdev)) {
+>>>              char lwstr[6];
+>>>-             uint16_t pcie_lstat, lspeed, lwidth;
+>>>+             uint32_t lstat, lspeed, lwidth;
+>>>
+>>>-             pcie_reg += PCI_EXP_LNKCAP;
+>>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
+>>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
+>>>-             lwidth = (pcie_lstat &
+>>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
+>>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
+>>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
+>>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
+>>>
+>>>              strcpy(str, "PCIe (");
+>>>              if (lspeed == 1)
+>>>
+>>>--
+>>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>the body of a message to majordomo@vger.kernel.org
+>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>
+>
