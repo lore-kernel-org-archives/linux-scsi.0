@@ -1,46 +1,53 @@
-From: Masatake YAMATO <yamato@redhat.com>
-Subject: [RESEND2 PATCH] libiscsi: avoid unnecessary multiple NULL
- assignments
-Date: Mon, 17 Dec 2012 17:08:54 +0900 (JST)
-Message-ID: <20121217.170854.1401098659349665391.yamato@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 6/7] ipr: Implement block iopoll
+Date: Mon, 17 Dec 2012 10:16:12 +0000
+Message-ID: <1355739372.2352.5.camel@dabdike.int.hansenpartnership.com>
+References: <20121126155534.352187900@linux.vnet.ibm.com>
+	 <20121126155632.494625736@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51206 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751397Ab2LQKQP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Dec 2012 05:16:15 -0500
+In-Reply-To: <20121126155632.494625736@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: wenxiong@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-In iscsi_free_task, NULL is assigned to task->sc twice: before and
-after kfifo_in invocatoin. Allocating and freeing iscsi_task are guarded
-with session->lock, so multiple NULL assignments cause no trouble. But
-people reading the source code may be confused.
+On Mon, 2012-11-26 at 09:55 -0600, wenxiong@linux.vnet.ibm.com wrote:
+> +static ssize_t ipr_store_iopoll_weight(struct device *dev,
+> +                                       struct device_attribute *attr,
+> +                                       const char *buf, size_t count)
+> +{
+> +       struct Scsi_Host *shost = class_to_shost(dev);
+> +       struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg
+> *)shost->hostdata;
+> +       u32 user_iopoll_weight;
+> +       unsigned long lock_flags = 0;
+> +       int i;
+> +
+> +       if (!ioa_cfg->sis64) {
+> +               dev_info(&ioa_cfg->pdev->dev, "blk-iopoll not
+> supported on this adapter\n");
+> +               return -EINVAL;
+> +       }
+> +       user_iopoll_weight = simple_strtoul(buf, NULL, 10);
 
-The second NULL assignment comes from commit:
+Checkpatch should have told you not to do this:
 
-    3e5c28ad0391389959ccae81c938c7533efb3490
+WARNING: simple_strtoul is obsolete, use kstrtoul instead
+#89: FILE: drivers/scsi/ipr.c:3612:
++       user_iopoll_weight = simple_strtoul(buf, NULL, 10);
 
-It seems that the line after kfifo_in invocation was introduced
-accidentally.
+Could you please resend with the corrected primitive.
 
-Signed-off-by: Masatake YAMATO <yamato@redhat.com>
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/libiscsi.c | 1 -
- 1 file changed, 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 82c3fd4..7aacf3a 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -507,7 +507,6 @@ static void iscsi_free_task(struct iscsi_task *task)
- 	kfifo_in(&session->cmdpool.queue, (void*)&task, sizeof(void*));
- 
- 	if (sc) {
--		task->sc = NULL;
- 		/* SCSI eh reuses commands to verify us */
- 		sc->SCp.ptr = NULL;
- 		/*
--- 
-1.7.11.7
+James
+
+
