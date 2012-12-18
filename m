@@ -1,15 +1,16 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH v2 0/5] Multiqueue virtio-scsi, and API for piecewise
-	buffer submission
-Date: Tue, 18 Dec 2012 15:42:31 +0200
-Message-ID: <20121218134230.GE26110@redhat.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH v2 1/5] virtio: add functions for piecewise addition of
+	buffers
+Date: Tue, 18 Dec 2012 14:43:51 +0100
+Message-ID: <50D07317.8050902@redhat.com>
 References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
+	<1355833972-20319-2-git-send-email-pbonzini@redhat.com>
+	<20121218133606.GC26110@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
+In-Reply-To: <20121218133606.GC26110@redhat.com>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -19,89 +20,81 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Paolo Bonzini <pbonzini@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
 Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 18, 2012 at 01:32:47PM +0100, Paolo Bonzini wrote:
-> Hi all,
+Il 18/12/2012 14:36, Michael S. Tsirkin ha scritto:
+> Some comments without arguing about whether the performance
+> benefit is worth it.
 > 
-> this series adds multiqueue support to the virtio-scsi driver, based
-> on Jason Wang's work on virtio-net.  It uses a simple queue steering
-> algorithm that expects one queue per CPU.  LUNs in the same target always
-> use the same queue (so that commands are not reordered); queue switching
-> occurs when the request being queued is the only one for the target.
-> Also based on Jason's patches, the virtqueue affinity is set so that
-> each CPU is associated to one virtqueue.
+> On Tue, Dec 18, 2012 at 01:32:48PM +0100, Paolo Bonzini wrote:
+>> diff --git a/include/linux/virtio.h b/include/linux/virtio.h
+>> index cf8adb1..39d56c4 100644
+>> --- a/include/linux/virtio.h
+>> +++ b/include/linux/virtio.h
+>> @@ -7,6 +7,7 @@
+>>  #include <linux/spinlock.h>
+>>  #include <linux/device.h>
+>>  #include <linux/mod_devicetable.h>
+>> +#include <linux/dma-direction.h>
+>>  #include <linux/gfp.h>
+>>  
+>>  /**
+>> @@ -40,6 +41,26 @@ int virtqueue_add_buf(struct virtqueue *vq,
+>>  		      void *data,
+>>  		      gfp_t gfp);
+>>  
+>> +struct virtqueue_buf {
+>> +	struct virtqueue *vq;
+>> +	struct vring_desc *indirect, *tail;
 > 
-> I tested the patches with fio, using up to 32 virtio-scsi disks backed
-> by tmpfs on the host.  These numbers are with 1 LUN per target.
+> This is wrong: virtio.h does not include virito_ring.h,
+> and it shouldn't by design depend on it.
 > 
-> FIO configuration
-> -----------------
-> [global]
-> rw=read
-> bsrange=4k-64k
-> ioengine=libaio
-> direct=1
-> iodepth=4
-> loops=20
+>> +	int head;
+>> +};
+>> +
 > 
-> overall bandwidth (MB/s)
-> ------------------------
-> 
-> # of targets    single-queue    multi-queue, 4 VCPUs    multi-queue, 8 VCPUs
-> 1                  540               626                     599
-> 2                  795               965                     925
-> 4                  997              1376                    1500
-> 8                 1136              2130                    2060
-> 16                1440              2269                    2474
-> 24                1408              2179                    2436
-> 32                1515              1978                    2319
-> 
-> (These numbers for single-queue are with 4 VCPUs, but the impact of adding
-> more VCPUs is very limited).
-> 
-> avg bandwidth per LUN (MB/s)
-> ----------------------------
-> 
-> # of targets    single-queue    multi-queue, 4 VCPUs    multi-queue, 8 VCPUs
-> 1                  540               626                     599
-> 2                  397               482                     462
-> 4                  249               344                     375
-> 8                  142               266                     257
-> 16                  90               141                     154
-> 24                  58                90                     101
-> 32                  47                61                      72
+> Can't we track state internally to the virtqueue?
+> Exposing it seems to buy us nothing since you can't
+> call add_buf between start and end anyway.
 
+I wanted to keep the state for these functions separate from the rest.
+I don't think it makes much sense to move it to struct virtqueue unless
+virtqueue_add_buf is converted to use the new API (doesn't make much
+sense, could even be a tad slower).
 
-Could you please try and measure host CPU utilization?
-Without this data it is possible that your host
-is undersubscribed and you are drinking up more host CPU.
+On the other hand moving it there would eliminate the dependency on
+virtio_ring.h.  Rusty, what do you think?
 
-Another thing to note is that ATM you might need to
-test with idle=poll on host otherwise we have strange interaction
-with power management where reducing the overhead
-switches to lower power so gives you a worse IOPS.
+>> +int virtqueue_start_buf(struct virtqueue *_vq,
+>> +			struct virtqueue_buf *buf,
+>> +			void *data,
+>> +			unsigned int count,
+>> +			unsigned int count_sg,
+>> +			gfp_t gfp);
+>> +
+>> +void virtqueue_add_sg(struct virtqueue_buf *buf,
+>> +		      struct scatterlist sgl[],
+>> +		      unsigned int count,
+>> +		      enum dma_data_direction dir);
+>> +
+> 
+> And idea: in practice virtio scsi seems to always call sg_init_one, no?
+> So how about we pass in void* or something and avoid using sg and count?
+> This would make it useful for -net BTW.
 
+It also passes the scatterlist from the LLD.  It calls sg_init_one for
+the request/response headers.
 
-> Patch 1 adds a new API to add functions for piecewise addition for buffers,
-> which enables various simplifications in virtio-scsi (patches 2-3) and a
-> small performance improvement of 2-6%.  Patches 4 and 5 add multiqueuing.
-> 
-> I'm mostly looking for comments on the new API of patch 1 for inclusion
-> into the 3.9 kernel.
-> 
-> Thanks to Wao Ganlong for help rebasing and benchmarking these patches.
-> 
-> Paolo Bonzini (5):
->   virtio: add functions for piecewise addition of buffers
->   virtio-scsi: use functions for piecewise composition of buffers
->   virtio-scsi: redo allocation of target data
->   virtio-scsi: pass struct virtio_scsi to virtqueue completion function
->   virtio-scsi: introduce multiqueue support
-> 
->  drivers/scsi/virtio_scsi.c   |  374 +++++++++++++++++++++++++++++-------------
->  drivers/virtio/virtio_ring.c |  205 ++++++++++++++++++++++++
->  include/linux/virtio.h       |   21 +++
->  3 files changed, 485 insertions(+), 115 deletions(-)
+Paolo
+
+>> +void virtqueue_end_buf(struct virtqueue_buf *buf);
+>> +
+>>  void virtqueue_kick(struct virtqueue *vq);
+>>  
+>>  bool virtqueue_kick_prepare(struct virtqueue *vq);
+>> -- 
+>> 1.7.1
+>>
