@@ -1,125 +1,54 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: RE: [PATCH] [SCSI] mpt2sas: fix for driver fails EEH recovery from
- injected pci bus error
-Date: Tue, 18 Dec 2012 10:37:23 +0530
-Message-ID: <DCD177647606E9419ED923E0C8C4AA7223E761D1C8@inbmail02.lsi.com>
-References: <20121217215818.GA12490@lsi.com> <50CF1A55.9030304@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] scsi: remove device when state is changed to deleted
+ thru sysfs
+Date: Tue, 18 Dec 2012 08:51:49 +0100
+Message-ID: <50D02095.2080505@acm.org>
+References: <1355786812-17908-1-git-send-email-dmilburn@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:53644 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750806Ab2LRFHc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Dec 2012 00:07:32 -0500
-In-Reply-To: <50CF1A55.9030304@redhat.com>
-Content-Language: en-US
+Received: from georges.telenet-ops.be ([195.130.137.68]:46641 "EHLO
+	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753863Ab2LRHvy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Dec 2012 02:51:54 -0500
+In-Reply-To: <1355786812-17908-1-git-send-email-dmilburn@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: David Milburn <dmilburn@redhat.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com
 
-Yes Thomas, we need to reset the non_operational_loop to zero after the transient event.
-
-Thanks,
-Sreekanth.
-
------Original Message-----
-From: Tomas Henzl [mailto:thenzl@redhat.com] 
-Sent: Monday, December 17, 2012 6:43 PM
-To: Reddy, Sreekanth
-Cc: jejb@kernel.org; Nandigama, Nagalakshmi; JBottomley@Parallels.com; linux-scsi@vger.kernel.org; Prakash, Sathya
-Subject: Re: [PATCH] [SCSI] mpt2sas: fix for driver fails EEH recovery from injected pci bus error
-
-On 12/17/2012 10:58 PM, Sreekanth Reddy wrote:
-> This patch stops the driver to invoke kthread (which remove the dead 
-> ioc) for some time while EEH recovery has started.
-
-Thank you for posting this, the issue we have seen is resolved now.
-Shouldn't be an additional initialization added?
-So after a transient event the non_operational_loop is reset again?
-
-Tomas
- 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index fd3b3d7..480111c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -208,6 +208,8 @@ _base_fault_reset_work(struct work_struct *work)
- 		return; /* don't rearm timer */
- 	}
- 
-+	ioc->non_operational_loop = 0;
-+
- 	if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
- 		rc = mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
- 		    FORCE_BIG_HAMMER);
-
-
-
+On 12/18/12 00:26, David Milburn wrote:
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index ce5224c..6d72abb 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -596,7 +596,7 @@ static ssize_t
+>   store_state_field(struct device *dev, struct device_attribute *attr,
+>   		  const char *buf, size_t count)
+>   {
+> -	int i;
+> +	int i, rc;
+>   	struct scsi_device *sdev = to_scsi_device(dev);
+>   	enum scsi_device_state state = 0;
 >
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> ---
+> @@ -611,7 +611,11 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+>   	if (!state)
+>   		return -EINVAL;
 >
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c 
-> b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index ffd85c5..2349531 100755
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -155,7 +155,7 @@ _base_fault_reset_work(struct work_struct *work)
->  	struct task_struct *p;
->  
->  	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
-> -	if (ioc->shost_recovery)
-> +	if (ioc->shost_recovery || ioc->pci_error_recovery)
->  		goto rearm_timer;
->  	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
->  
-> @@ -164,6 +164,20 @@ _base_fault_reset_work(struct work_struct *work)
->  		printk(MPT2SAS_INFO_FMT "%s : SAS host is non-operational !!!!\n",
->  			ioc->name, __func__);
->  
-> +		/* It may be possible that EEH recovery can resolve some of
-> +		 * pci bus failure issues rather removing the dead ioc function
-> +		 * by considering controller is in a non-operational state. So
-> +		 * here priority is given to the EEH recovery. If it doesn't
-> +		 * not resolve this issue, mpt2sas driver will consider this
-> +		 * controller to non-operational state and remove the dead ioc
-> +		 * function.
-> +		 */
-> +		if (ioc->non_operational_loop++ < 5) {
-> +			spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock,
-> +							 flags);
-> +			goto rearm_timer;
-> +		}
-> +
->  		/*
->  		 * Call _scsih_flush_pending_cmds callback so that we flush all
->  		 * pending commands back to OS. This call is required to aovid @@ 
-> -4386,6 +4400,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
->  	if (missing_delay[0] != -1 && missing_delay[1] != -1)
->  		_base_update_missing_delay(ioc, missing_delay[0],
->  		    missing_delay[1]);
-> +	ioc->non_operational_loop = 0;
->  
->  	return 0;
->  
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h 
-> b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> index 543d8d6..c6ee7aa 100755
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> @@ -835,6 +835,7 @@ struct MPT2SAS_ADAPTER {
->  	u16		cpu_msix_table_sz;
->  	u32		ioc_reset_count;
->  	MPT2SAS_FLUSH_RUNNING_CMDS schedule_dead_ioc_flush_running_cmds;
-> +	u32             non_operational_loop;
->  
->  	/* internal commands, callback index */
->  	u8		scsi_io_cb_idx;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
-> in the body of a message to majordomo@vger.kernel.org More majordomo 
-> info at  http://vger.kernel.org/majordomo-info.html
+> -	if (scsi_device_set_state(sdev, state))
+> +	if (state == SDEV_DEL) {
+> +		rc = device_schedule_callback(dev, sdev_store_delete_callback);
+> +		if (rc)
+> +			count = rc;
+> +	} else if (scsi_device_set_state(sdev, state))
+>   		return -EINVAL;
+>   	return count;
+>   }
 
+Hello David,
+
+And what about the "cancel" state ? I guess this means that you have 
+missed patch http://marc.info/?l=linux-scsi&m=135480941801843 ?
+
+Bart.
