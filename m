@@ -1,211 +1,129 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v2 2/5] virtio-scsi: use functions for piecewise
-	composition of buffers
-Date: Tue, 18 Dec 2012 14:35:42 +0100
-Message-ID: <50D0712E.4080207@redhat.com>
-References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
-	<1355833972-20319-3-git-send-email-pbonzini@redhat.com>
-	<20121218133719.GD26110@redhat.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] [SCSI] mpt2sas: fix for driver fails EEH recovery from
+ injected pci bus error
+Date: Tue, 18 Dec 2012 14:36:47 +0100
+Message-ID: <50D0716F.3030300@redhat.com>
+References: <20121217215818.GA12490@lsi.com> <50CF1A55.9030304@redhat.com> <DCD177647606E9419ED923E0C8C4AA7223E761D1C8@inbmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20121218133719.GD26110@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42952 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754716Ab2LRNhC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Dec 2012 08:37:02 -0500
+In-Reply-To: <DCD177647606E9419ED923E0C8C4AA7223E761D1C8@inbmail02.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
+Cc: "jejb@kernel.org" <jejb@kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-Il 18/12/2012 14:37, Michael S. Tsirkin ha scritto:
-> On Tue, Dec 18, 2012 at 01:32:49PM +0100, Paolo Bonzini wrote:
->> Using the new virtio_scsi_add_sg function lets us simplify the queueing
->> path.  In particular, all data protected by the tgt_lock is just gone
->> (multiqueue will find a new use for the lock).
-> 
-> vq access still needs some protection: virtio is not reentrant
-> by itself. with tgt_lock gone what protects vq against
-> concurrent add_buf calls?
+On 12/18/2012 06:07 AM, Reddy, Sreekanth wrote:
+> Yes Thomas, we need to reset the non_operational_loop to zero after the transient event.
 
-vq_lock.
+OK, so let me repost a V2 of the whole patch. 
 
-Paolo
-
->> The speedup is relatively small (2-4%) but it is worthwhile because of
->> the code simplification---both in this patches and in the next ones.
->>
->> Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
->> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+>
+> Thanks,
+> Sreekanth.
+>
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com] 
+> Sent: Monday, December 17, 2012 6:43 PM
+> To: Reddy, Sreekanth
+> Cc: jejb@kernel.org; Nandigama, Nagalakshmi; JBottomley@Parallels.com; linux-scsi@vger.kernel.org; Prakash, Sathya
+> Subject: Re: [PATCH] [SCSI] mpt2sas: fix for driver fails EEH recovery from injected pci bus error
+>
+> On 12/17/2012 10:58 PM, Sreekanth Reddy wrote:
+>> This patch stops the driver to invoke kthread (which remove the dead 
+>> ioc) for some time while EEH recovery has started.
+> Thank you for posting this, the issue we have seen is resolved now.
+> Shouldn't be an additional initialization added?
+> So after a transient event the non_operational_loop is reset again?
+>
+> Tomas
+>  
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> index fd3b3d7..480111c 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -208,6 +208,8 @@ _base_fault_reset_work(struct work_struct *work)
+>  		return; /* don't rearm timer */
+>  	}
+>  
+> +	ioc->non_operational_loop = 0;
+> +
+>  	if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
+>  		rc = mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
+>  		    FORCE_BIG_HAMMER);
+>
+>
+>
+>> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 >> ---
->> 	v1->v2: new
 >>
->>  drivers/scsi/virtio_scsi.c |   94 +++++++++++++++++++------------------------
->>  1 files changed, 42 insertions(+), 52 deletions(-)
->>
->> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
->> index 74ab67a..2b93b6e 100644
->> --- a/drivers/scsi/virtio_scsi.c
->> +++ b/drivers/scsi/virtio_scsi.c
->> @@ -59,11 +59,8 @@ struct virtio_scsi_vq {
+>> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c 
+>> b/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> index ffd85c5..2349531 100755
+>> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> @@ -155,7 +155,7 @@ _base_fault_reset_work(struct work_struct *work)
+>>  	struct task_struct *p;
 >>  
->>  /* Per-target queue state */
->>  struct virtio_scsi_target_state {
->> -	/* Protects sg.  Lock hierarchy is tgt_lock -> vq_lock.  */
->> +	/* Never held at the same time as vq_lock.  */
->>  	spinlock_t tgt_lock;
->> -
->> -	/* For sglist construction when adding commands to the virtqueue.  */
->> -	struct scatterlist sg[];
->>  };
+>>  	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+>> -	if (ioc->shost_recovery)
+>> +	if (ioc->shost_recovery || ioc->pci_error_recovery)
+>>  		goto rearm_timer;
+>>  	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
 >>  
->>  /* Driver instance state */
->> @@ -351,57 +348,58 @@ static void virtscsi_event_done(struct virtqueue *vq)
->>  	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
->>  };
+>> @@ -164,6 +164,20 @@ _base_fault_reset_work(struct work_struct *work)
+>>  		printk(MPT2SAS_INFO_FMT "%s : SAS host is non-operational !!!!\n",
+>>  			ioc->name, __func__);
 >>  
->> -static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
->> -			     struct scsi_data_buffer *sdb)
->> -{
->> -	struct sg_table *table = &sdb->table;
->> -	struct scatterlist *sg_elem;
->> -	unsigned int idx = *p_idx;
->> -	int i;
->> -
->> -	for_each_sg(table->sgl, sg_elem, table->nents, i)
->> -		sg[idx++] = *sg_elem;
->> -
->> -	*p_idx = idx;
->> -}
->> -
->>  /**
->> - * virtscsi_map_cmd - map a scsi_cmd to a virtqueue scatterlist
->> + * virtscsi_add_cmd - add a virtio_scsi_cmd to a virtqueue
->>   * @vscsi	: virtio_scsi state
->>   * @cmd		: command structure
->> - * @out_num	: number of read-only elements
->> - * @in_num	: number of write-only elements
->>   * @req_size	: size of the request buffer
->>   * @resp_size	: size of the response buffer
->> - *
->> - * Called with tgt_lock held.
->> + * @gfp	: flags to use for memory allocations
->>   */
->> -static void virtscsi_map_cmd(struct virtio_scsi_target_state *tgt,
->> -			     struct virtio_scsi_cmd *cmd,
->> -			     unsigned *out_num, unsigned *in_num,
->> -			     size_t req_size, size_t resp_size)
->> +static int virtscsi_add_cmd(struct virtqueue *vq,
->> +			    struct virtio_scsi_cmd *cmd,
->> +			    size_t req_size, size_t resp_size, gfp_t gfp)
->>  {
->>  	struct scsi_cmnd *sc = cmd->sc;
->> -	struct scatterlist *sg = tgt->sg;
->> -	unsigned int idx = 0;
->> +	struct scatterlist sg;
->> +	unsigned int count, count_sg;
->> +	struct sg_table *out, *in;
->> +	struct virtqueue_buf buf;
->> +	int ret;
+>> +		/* It may be possible that EEH recovery can resolve some of
+>> +		 * pci bus failure issues rather removing the dead ioc function
+>> +		 * by considering controller is in a non-operational state. So
+>> +		 * here priority is given to the EEH recovery. If it doesn't
+>> +		 * not resolve this issue, mpt2sas driver will consider this
+>> +		 * controller to non-operational state and remove the dead ioc
+>> +		 * function.
+>> +		 */
+>> +		if (ioc->non_operational_loop++ < 5) {
+>> +			spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock,
+>> +							 flags);
+>> +			goto rearm_timer;
+>> +		}
 >> +
->> +	out = in = NULL;
->> +
->> +	if (sc && sc->sc_data_direction != DMA_NONE) {
->> +		if (sc->sc_data_direction != DMA_FROM_DEVICE)
->> +			out = &scsi_out(sc)->table;
->> +		if (sc->sc_data_direction != DMA_TO_DEVICE)
->> +			in = &scsi_in(sc)->table;
->> +	}
->> +
->> +	count_sg = 2 + (out ? 1 : 0)          + (in ? 1 : 0);
->> +	count    = 2 + (out ? out->nents : 0) + (in ? in->nents : 0);
->> +	ret = virtqueue_start_buf(vq, &buf, cmd, count, count_sg, gfp);
->> +	if (ret < 0)
->> +		return ret;
+>>  		/*
+>>  		 * Call _scsih_flush_pending_cmds callback so that we flush all
+>>  		 * pending commands back to OS. This call is required to aovid @@ 
+>> -4386,6 +4400,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+>>  	if (missing_delay[0] != -1 && missing_delay[1] != -1)
+>>  		_base_update_missing_delay(ioc, missing_delay[0],
+>>  		    missing_delay[1]);
+>> +	ioc->non_operational_loop = 0;
 >>  
->>  	/* Request header.  */
->> -	sg_set_buf(&sg[idx++], &cmd->req, req_size);
->> +	sg_init_one(&sg, &cmd->req, req_size);
->> +	virtqueue_add_sg(&buf, &sg, 1, DMA_TO_DEVICE);
+>>  	return 0;
 >>  
->>  	/* Data-out buffer.  */
->> -	if (sc && sc->sc_data_direction != DMA_FROM_DEVICE)
->> -		virtscsi_map_sgl(sg, &idx, scsi_out(sc));
->> -
->> -	*out_num = idx;
->> +	if (out)
->> +		virtqueue_add_sg(&buf, out->sgl, out->nents, DMA_TO_DEVICE);
+>> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h 
+>> b/drivers/scsi/mpt2sas/mpt2sas_base.h
+>> index 543d8d6..c6ee7aa 100755
+>> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
+>> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+>> @@ -835,6 +835,7 @@ struct MPT2SAS_ADAPTER {
+>>  	u16		cpu_msix_table_sz;
+>>  	u32		ioc_reset_count;
+>>  	MPT2SAS_FLUSH_RUNNING_CMDS schedule_dead_ioc_flush_running_cmds;
+>> +	u32             non_operational_loop;
 >>  
->>  	/* Response header.  */
->> -	sg_set_buf(&sg[idx++], &cmd->resp, resp_size);
->> +	sg_init_one(&sg, &cmd->resp, resp_size);
->> +	virtqueue_add_sg(&buf, &sg, 1, DMA_FROM_DEVICE);
->>  
->>  	/* Data-in buffer */
->> -	if (sc && sc->sc_data_direction != DMA_TO_DEVICE)
->> -		virtscsi_map_sgl(sg, &idx, scsi_in(sc));
->> +	if (in)
->> +		virtqueue_add_sg(&buf, in->sgl, in->nents, DMA_FROM_DEVICE);
->>  
->> -	*in_num = idx - *out_num;
->> +	virtqueue_end_buf(&buf);
->> +	return 0;
->>  }
->>  
->>  static int virtscsi_kick_cmd(struct virtio_scsi_target_state *tgt,
->> @@ -409,25 +407,20 @@ static int virtscsi_kick_cmd(struct virtio_scsi_target_state *tgt,
->>  			     struct virtio_scsi_cmd *cmd,
->>  			     size_t req_size, size_t resp_size, gfp_t gfp)
->>  {
->> -	unsigned int out_num, in_num;
->>  	unsigned long flags;
->> -	int err;
->> +	int ret;
->>  	bool needs_kick = false;
->>  
->> -	spin_lock_irqsave(&tgt->tgt_lock, flags);
->> -	virtscsi_map_cmd(tgt, cmd, &out_num, &in_num, req_size, resp_size);
->> -
->> -	spin_lock(&vq->vq_lock);
->> -	err = virtqueue_add_buf(vq->vq, tgt->sg, out_num, in_num, cmd, gfp);
->> -	spin_unlock(&tgt->tgt_lock);
->> -	if (!err)
->> +	spin_lock_irqsave(&vq->vq_lock, flags);
->> +	ret = virtscsi_add_cmd(vq->vq, cmd, req_size, resp_size, gfp);
->> +	if (!ret)
->>  		needs_kick = virtqueue_kick_prepare(vq->vq);
->>  
->>  	spin_unlock_irqrestore(&vq->vq_lock, flags);
->>  
->>  	if (needs_kick)
->>  		virtqueue_notify(vq->vq);
->> -	return err;
->> +	return ret;
->>  }
->>  
->>  static int virtscsi_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
->> @@ -592,14 +585,11 @@ static struct virtio_scsi_target_state *virtscsi_alloc_tgt(
->>  	gfp_t gfp_mask = GFP_KERNEL;
->>  
->>  	/* We need extra sg elements at head and tail.  */
->> -	tgt = kmalloc(sizeof(*tgt) + sizeof(tgt->sg[0]) * (sg_elems + 2),
->> -		      gfp_mask);
->> -
->> +	tgt = kmalloc(sizeof(*tgt), gfp_mask);
->>  	if (!tgt)
->>  		return NULL;
->>  
->>  	spin_lock_init(&tgt->tgt_lock);
->> -	sg_init_table(tgt->sg, sg_elems + 2);
->>  	return tgt;
->>  }
->>  
->> -- 
->> 1.7.1
->>
+>>  	/* internal commands, callback index */
+>>  	u8		scsi_io_cb_idx;
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
+>> in the body of a message to majordomo@vger.kernel.org More majordomo 
+>> info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
