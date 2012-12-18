@@ -1,8 +1,7 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 2/5] virtio-scsi: use functions for piecewise composition
-	of buffers
-Date: Tue, 18 Dec 2012 13:32:49 +0100
-Message-ID: <1355833972-20319-3-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v2 3/5] virtio-scsi: redo allocation of target data
+Date: Tue, 18 Dec 2012 13:32:50 +0100
+Message-ID: <1355833972-20319-4-git-send-email-pbonzini@redhat.com>
 References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,177 +21,124 @@ To: linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, hutao@cn.fujitsu.com, virtualization@lists.linux-foundation.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Using the new virtio_scsi_add_sg function lets us simplify the queueing
-path.  In particular, all data protected by the tgt_lock is just gone
-(multiqueue will find a new use for the lock).
+virtio_scsi_target_state is now empty, but we will find new uses
+for it in the next few patches.  However, dropping the sglist lets
+us turn the array-of-pointers into a simple array, which simplifies
+the allocation.
 
-The speedup is relatively small (2-4%) but it is worthwhile because of
-the code simplification---both in this patches and in the next ones.
+However, we do not leave the virtio_scsi_target_state structs in the
+flexible array member at the end of struct virtio_scsi, because
+we will place the virtqueues there in the next patches.
 
-Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
 	v1->v2: new
 
- drivers/scsi/virtio_scsi.c |   94 +++++++++++++++++++------------------------
- 1 files changed, 42 insertions(+), 52 deletions(-)
+ drivers/scsi/virtio_scsi.c |   43 ++++++++++++++-----------------------------
+ 1 files changed, 14 insertions(+), 29 deletions(-)
 
 diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 74ab67a..2b93b6e 100644
+index 2b93b6e..4a3abaf 100644
 --- a/drivers/scsi/virtio_scsi.c
 +++ b/drivers/scsi/virtio_scsi.c
-@@ -59,11 +59,8 @@ struct virtio_scsi_vq {
+@@ -74,7 +74,7 @@ struct virtio_scsi {
+ 	/* Get some buffers ready for event vq */
+ 	struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
  
- /* Per-target queue state */
- struct virtio_scsi_target_state {
--	/* Protects sg.  Lock hierarchy is tgt_lock -> vq_lock.  */
-+	/* Never held at the same time as vq_lock.  */
- 	spinlock_t tgt_lock;
--
--	/* For sglist construction when adding commands to the virtqueue.  */
--	struct scatterlist sg[];
+-	struct virtio_scsi_target_state *tgt[];
++	struct virtio_scsi_target_state *tgt;
  };
  
- /* Driver instance state */
-@@ -351,57 +348,58 @@ static void virtscsi_event_done(struct virtqueue *vq)
- 	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
- };
- 
--static void virtscsi_map_sgl(struct scatterlist *sg, unsigned int *p_idx,
--			     struct scsi_data_buffer *sdb)
--{
--	struct sg_table *table = &sdb->table;
--	struct scatterlist *sg_elem;
--	unsigned int idx = *p_idx;
--	int i;
--
--	for_each_sg(table->sgl, sg_elem, table->nents, i)
--		sg[idx++] = *sg_elem;
--
--	*p_idx = idx;
--}
--
- /**
-- * virtscsi_map_cmd - map a scsi_cmd to a virtqueue scatterlist
-+ * virtscsi_add_cmd - add a virtio_scsi_cmd to a virtqueue
-  * @vscsi	: virtio_scsi state
-  * @cmd		: command structure
-- * @out_num	: number of read-only elements
-- * @in_num	: number of write-only elements
-  * @req_size	: size of the request buffer
-  * @resp_size	: size of the response buffer
-- *
-- * Called with tgt_lock held.
-+ * @gfp	: flags to use for memory allocations
-  */
--static void virtscsi_map_cmd(struct virtio_scsi_target_state *tgt,
--			     struct virtio_scsi_cmd *cmd,
--			     unsigned *out_num, unsigned *in_num,
--			     size_t req_size, size_t resp_size)
-+static int virtscsi_add_cmd(struct virtqueue *vq,
-+			    struct virtio_scsi_cmd *cmd,
-+			    size_t req_size, size_t resp_size, gfp_t gfp)
- {
- 	struct scsi_cmnd *sc = cmd->sc;
--	struct scatterlist *sg = tgt->sg;
--	unsigned int idx = 0;
-+	struct scatterlist sg;
-+	unsigned int count, count_sg;
-+	struct sg_table *out, *in;
-+	struct virtqueue_buf buf;
-+	int ret;
-+
-+	out = in = NULL;
-+
-+	if (sc && sc->sc_data_direction != DMA_NONE) {
-+		if (sc->sc_data_direction != DMA_FROM_DEVICE)
-+			out = &scsi_out(sc)->table;
-+		if (sc->sc_data_direction != DMA_TO_DEVICE)
-+			in = &scsi_in(sc)->table;
-+	}
-+
-+	count_sg = 2 + (out ? 1 : 0)          + (in ? 1 : 0);
-+	count    = 2 + (out ? out->nents : 0) + (in ? in->nents : 0);
-+	ret = virtqueue_start_buf(vq, &buf, cmd, count, count_sg, gfp);
-+	if (ret < 0)
-+		return ret;
- 
- 	/* Request header.  */
--	sg_set_buf(&sg[idx++], &cmd->req, req_size);
-+	sg_init_one(&sg, &cmd->req, req_size);
-+	virtqueue_add_sg(&buf, &sg, 1, DMA_TO_DEVICE);
- 
- 	/* Data-out buffer.  */
--	if (sc && sc->sc_data_direction != DMA_FROM_DEVICE)
--		virtscsi_map_sgl(sg, &idx, scsi_out(sc));
--
--	*out_num = idx;
-+	if (out)
-+		virtqueue_add_sg(&buf, out->sgl, out->nents, DMA_TO_DEVICE);
- 
- 	/* Response header.  */
--	sg_set_buf(&sg[idx++], &cmd->resp, resp_size);
-+	sg_init_one(&sg, &cmd->resp, resp_size);
-+	virtqueue_add_sg(&buf, &sg, 1, DMA_FROM_DEVICE);
- 
- 	/* Data-in buffer */
--	if (sc && sc->sc_data_direction != DMA_TO_DEVICE)
--		virtscsi_map_sgl(sg, &idx, scsi_in(sc));
-+	if (in)
-+		virtqueue_add_sg(&buf, in->sgl, in->nents, DMA_FROM_DEVICE);
- 
--	*in_num = idx - *out_num;
-+	virtqueue_end_buf(&buf);
-+	return 0;
- }
- 
- static int virtscsi_kick_cmd(struct virtio_scsi_target_state *tgt,
-@@ -409,25 +407,20 @@ static int virtscsi_kick_cmd(struct virtio_scsi_target_state *tgt,
- 			     struct virtio_scsi_cmd *cmd,
- 			     size_t req_size, size_t resp_size, gfp_t gfp)
- {
--	unsigned int out_num, in_num;
- 	unsigned long flags;
--	int err;
-+	int ret;
- 	bool needs_kick = false;
- 
--	spin_lock_irqsave(&tgt->tgt_lock, flags);
--	virtscsi_map_cmd(tgt, cmd, &out_num, &in_num, req_size, resp_size);
--
--	spin_lock(&vq->vq_lock);
--	err = virtqueue_add_buf(vq->vq, tgt->sg, out_num, in_num, cmd, gfp);
--	spin_unlock(&tgt->tgt_lock);
--	if (!err)
-+	spin_lock_irqsave(&vq->vq_lock, flags);
-+	ret = virtscsi_add_cmd(vq->vq, cmd, req_size, resp_size, gfp);
-+	if (!ret)
- 		needs_kick = virtqueue_kick_prepare(vq->vq);
- 
- 	spin_unlock_irqrestore(&vq->vq_lock, flags);
- 
- 	if (needs_kick)
- 		virtqueue_notify(vq->vq);
--	return err;
-+	return ret;
- }
- 
+ static struct kmem_cache *virtscsi_cmd_cache;
+@@ -426,7 +426,7 @@ static int virtscsi_kick_cmd(struct virtio_scsi_target_state *tgt,
  static int virtscsi_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
-@@ -592,14 +585,11 @@ static struct virtio_scsi_target_state *virtscsi_alloc_tgt(
- 	gfp_t gfp_mask = GFP_KERNEL;
+ {
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+-	struct virtio_scsi_target_state *tgt = vscsi->tgt[sc->device->id];
++	struct virtio_scsi_target_state *tgt = &vscsi->tgt[sc->device->id];
+ 	struct virtio_scsi_cmd *cmd;
+ 	int ret;
  
- 	/* We need extra sg elements at head and tail.  */
--	tgt = kmalloc(sizeof(*tgt) + sizeof(tgt->sg[0]) * (sg_elems + 2),
--		      gfp_mask);
--
-+	tgt = kmalloc(sizeof(*tgt), gfp_mask);
- 	if (!tgt)
- 		return NULL;
+@@ -474,7 +474,7 @@ out:
+ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+ {
+ 	DECLARE_COMPLETION_ONSTACK(comp);
+-	struct virtio_scsi_target_state *tgt = vscsi->tgt[cmd->sc->device->id];
++	struct virtio_scsi_target_state *tgt = &vscsi->tgt[cmd->sc->device->id];
+ 	int ret = FAILED;
  
- 	spin_lock_init(&tgt->tgt_lock);
--	sg_init_table(tgt->sg, sg_elems + 2);
- 	return tgt;
+ 	cmd->comp = &comp;
+@@ -578,19 +578,9 @@ static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
+ 	virtscsi_vq->vq = vq;
  }
  
+-static struct virtio_scsi_target_state *virtscsi_alloc_tgt(
+-	struct virtio_device *vdev, int sg_elems)
++static void virtscsi_init_tgt(struct virtio_scsi_target_state *tgt)
+ {
+-	struct virtio_scsi_target_state *tgt;
+-	gfp_t gfp_mask = GFP_KERNEL;
+-
+-	/* We need extra sg elements at head and tail.  */
+-	tgt = kmalloc(sizeof(*tgt), gfp_mask);
+-	if (!tgt)
+-		return NULL;
+-
+ 	spin_lock_init(&tgt->tgt_lock);
+-	return tgt;
+ }
+ 
+ static void virtscsi_scan(struct virtio_device *vdev)
+@@ -604,16 +594,12 @@ static void virtscsi_remove_vqs(struct virtio_device *vdev)
+ {
+ 	struct Scsi_Host *sh = virtio_scsi_host(vdev);
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+-	u32 i, num_targets;
+ 
+ 	/* Stop all the virtqueues. */
+ 	vdev->config->reset(vdev);
+ 
+-	num_targets = sh->max_id;
+-	for (i = 0; i < num_targets; i++) {
+-		kfree(vscsi->tgt[i]);
+-		vscsi->tgt[i] = NULL;
+-	}
++	kfree(vscsi->tgt);
++	vscsi->tgt = NULL;
+ 
+ 	vdev->config->del_vqs(vdev);
+ }
+@@ -654,13 +640,14 @@ static int virtscsi_init(struct virtio_device *vdev,
+ 	/* We need to know how many segments before we allocate.  */
+ 	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
+ 
+-	for (i = 0; i < num_targets; i++) {
+-		vscsi->tgt[i] = virtscsi_alloc_tgt(vdev, sg_elems);
+-		if (!vscsi->tgt[i]) {
+-			err = -ENOMEM;
+-			goto out;
+-		}
++	vscsi->tgt = kmalloc(num_targets * sizeof(vscsi->tgt[0]), GFP_KERNEL);
++	if (!vscsi->tgt) {
++		err = -ENOMEM;
++		goto out;
+ 	}
++	for (i = 0; i < num_targets; i++)
++		virtscsi_init_tgt(&vscsi->tgt[i]);
++
+ 	err = 0;
+ 
+ out:
+@@ -679,9 +666,7 @@ static int __devinit virtscsi_probe(struct virtio_device *vdev)
+ 
+ 	/* Allocate memory and link the structs together.  */
+ 	num_targets = virtscsi_config_get(vdev, max_target) + 1;
+-	shost = scsi_host_alloc(&virtscsi_host_template,
+-		sizeof(*vscsi)
+-		+ num_targets * sizeof(struct virtio_scsi_target_state));
++	shost = scsi_host_alloc(&virtscsi_host_template, sizeof(*vscsi));
+ 
+ 	if (!shost)
+ 		return -ENOMEM;
 -- 
 1.7.1
