@@ -1,129 +1,107 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] [SCSI] mpt2sas: fix for driver fails EEH recovery from
- injected pci bus error
-Date: Tue, 18 Dec 2012 14:36:47 +0100
-Message-ID: <50D0716F.3030300@redhat.com>
-References: <20121217215818.GA12490@lsi.com> <50CF1A55.9030304@redhat.com> <DCD177647606E9419ED923E0C8C4AA7223E761D1C8@inbmail02.lsi.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH v2 0/5] Multiqueue virtio-scsi, and API for piecewise
+	buffer submission
+Date: Tue, 18 Dec 2012 15:42:31 +0200
+Message-ID: <20121218134230.GE26110@redhat.com>
+References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42952 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754716Ab2LRNhC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Dec 2012 08:37:02 -0500
-In-Reply-To: <DCD177647606E9419ED923E0C8C4AA7223E761D1C8@inbmail02.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-On 12/18/2012 06:07 AM, Reddy, Sreekanth wrote:
-> Yes Thomas, we need to reset the non_operational_loop to zero after the transient event.
+On Tue, Dec 18, 2012 at 01:32:47PM +0100, Paolo Bonzini wrote:
+> Hi all,
+> 
+> this series adds multiqueue support to the virtio-scsi driver, based
+> on Jason Wang's work on virtio-net.  It uses a simple queue steering
+> algorithm that expects one queue per CPU.  LUNs in the same target always
+> use the same queue (so that commands are not reordered); queue switching
+> occurs when the request being queued is the only one for the target.
+> Also based on Jason's patches, the virtqueue affinity is set so that
+> each CPU is associated to one virtqueue.
+> 
+> I tested the patches with fio, using up to 32 virtio-scsi disks backed
+> by tmpfs on the host.  These numbers are with 1 LUN per target.
+> 
+> FIO configuration
+> -----------------
+> [global]
+> rw=read
+> bsrange=4k-64k
+> ioengine=libaio
+> direct=1
+> iodepth=4
+> loops=20
+> 
+> overall bandwidth (MB/s)
+> ------------------------
+> 
+> # of targets    single-queue    multi-queue, 4 VCPUs    multi-queue, 8 VCPUs
+> 1                  540               626                     599
+> 2                  795               965                     925
+> 4                  997              1376                    1500
+> 8                 1136              2130                    2060
+> 16                1440              2269                    2474
+> 24                1408              2179                    2436
+> 32                1515              1978                    2319
+> 
+> (These numbers for single-queue are with 4 VCPUs, but the impact of adding
+> more VCPUs is very limited).
+> 
+> avg bandwidth per LUN (MB/s)
+> ----------------------------
+> 
+> # of targets    single-queue    multi-queue, 4 VCPUs    multi-queue, 8 VCPUs
+> 1                  540               626                     599
+> 2                  397               482                     462
+> 4                  249               344                     375
+> 8                  142               266                     257
+> 16                  90               141                     154
+> 24                  58                90                     101
+> 32                  47                61                      72
 
-OK, so let me repost a V2 of the whole patch. 
 
->
-> Thanks,
-> Sreekanth.
->
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com] 
-> Sent: Monday, December 17, 2012 6:43 PM
-> To: Reddy, Sreekanth
-> Cc: jejb@kernel.org; Nandigama, Nagalakshmi; JBottomley@Parallels.com; linux-scsi@vger.kernel.org; Prakash, Sathya
-> Subject: Re: [PATCH] [SCSI] mpt2sas: fix for driver fails EEH recovery from injected pci bus error
->
-> On 12/17/2012 10:58 PM, Sreekanth Reddy wrote:
->> This patch stops the driver to invoke kthread (which remove the dead 
->> ioc) for some time while EEH recovery has started.
-> Thank you for posting this, the issue we have seen is resolved now.
-> Shouldn't be an additional initialization added?
-> So after a transient event the non_operational_loop is reset again?
->
-> Tomas
->  
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index fd3b3d7..480111c 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -208,6 +208,8 @@ _base_fault_reset_work(struct work_struct *work)
->  		return; /* don't rearm timer */
->  	}
->  
-> +	ioc->non_operational_loop = 0;
-> +
->  	if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
->  		rc = mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
->  		    FORCE_BIG_HAMMER);
->
->
->
->> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
->> ---
->>
->> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c 
->> b/drivers/scsi/mpt2sas/mpt2sas_base.c
->> index ffd85c5..2349531 100755
->> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
->> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
->> @@ -155,7 +155,7 @@ _base_fault_reset_work(struct work_struct *work)
->>  	struct task_struct *p;
->>  
->>  	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
->> -	if (ioc->shost_recovery)
->> +	if (ioc->shost_recovery || ioc->pci_error_recovery)
->>  		goto rearm_timer;
->>  	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
->>  
->> @@ -164,6 +164,20 @@ _base_fault_reset_work(struct work_struct *work)
->>  		printk(MPT2SAS_INFO_FMT "%s : SAS host is non-operational !!!!\n",
->>  			ioc->name, __func__);
->>  
->> +		/* It may be possible that EEH recovery can resolve some of
->> +		 * pci bus failure issues rather removing the dead ioc function
->> +		 * by considering controller is in a non-operational state. So
->> +		 * here priority is given to the EEH recovery. If it doesn't
->> +		 * not resolve this issue, mpt2sas driver will consider this
->> +		 * controller to non-operational state and remove the dead ioc
->> +		 * function.
->> +		 */
->> +		if (ioc->non_operational_loop++ < 5) {
->> +			spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock,
->> +							 flags);
->> +			goto rearm_timer;
->> +		}
->> +
->>  		/*
->>  		 * Call _scsih_flush_pending_cmds callback so that we flush all
->>  		 * pending commands back to OS. This call is required to aovid @@ 
->> -4386,6 +4400,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
->>  	if (missing_delay[0] != -1 && missing_delay[1] != -1)
->>  		_base_update_missing_delay(ioc, missing_delay[0],
->>  		    missing_delay[1]);
->> +	ioc->non_operational_loop = 0;
->>  
->>  	return 0;
->>  
->> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h 
->> b/drivers/scsi/mpt2sas/mpt2sas_base.h
->> index 543d8d6..c6ee7aa 100755
->> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
->> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
->> @@ -835,6 +835,7 @@ struct MPT2SAS_ADAPTER {
->>  	u16		cpu_msix_table_sz;
->>  	u32		ioc_reset_count;
->>  	MPT2SAS_FLUSH_RUNNING_CMDS schedule_dead_ioc_flush_running_cmds;
->> +	u32             non_operational_loop;
->>  
->>  	/* internal commands, callback index */
->>  	u8		scsi_io_cb_idx;
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
->> in the body of a message to majordomo@vger.kernel.org More majordomo 
->> info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Could you please try and measure host CPU utilization?
+Without this data it is possible that your host
+is undersubscribed and you are drinking up more host CPU.
 
+Another thing to note is that ATM you might need to
+test with idle=poll on host otherwise we have strange interaction
+with power management where reducing the overhead
+switches to lower power so gives you a worse IOPS.
+
+
+> Patch 1 adds a new API to add functions for piecewise addition for buffers,
+> which enables various simplifications in virtio-scsi (patches 2-3) and a
+> small performance improvement of 2-6%.  Patches 4 and 5 add multiqueuing.
+> 
+> I'm mostly looking for comments on the new API of patch 1 for inclusion
+> into the 3.9 kernel.
+> 
+> Thanks to Wao Ganlong for help rebasing and benchmarking these patches.
+> 
+> Paolo Bonzini (5):
+>   virtio: add functions for piecewise addition of buffers
+>   virtio-scsi: use functions for piecewise composition of buffers
+>   virtio-scsi: redo allocation of target data
+>   virtio-scsi: pass struct virtio_scsi to virtqueue completion function
+>   virtio-scsi: introduce multiqueue support
+> 
+>  drivers/scsi/virtio_scsi.c   |  374 +++++++++++++++++++++++++++++-------------
+>  drivers/virtio/virtio_ring.c |  205 ++++++++++++++++++++++++
+>  include/linux/virtio.h       |   21 +++
+>  3 files changed, 485 insertions(+), 115 deletions(-)
