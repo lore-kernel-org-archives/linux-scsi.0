@@ -1,47 +1,49 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: Re: megaraid_sas: problem with specific hardware only with kernel
- 3.2.5 and above
-Date: Wed, 19 Dec 2012 11:17:52 +0100
-Message-ID: <50D19450.4010402@matthiasprager.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Scott Guthridge <guthridg@us.ibm.com>
+Subject: Re: [PATCH 0/2] Change type-2 dif to use rq embedded 32 byte cdb
+Date: Wed, 19 Dec 2012 05:34:03 -0500
+Message-ID: <201212191034.qBJAY3gk007148@d01av04.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dd15408.kasserver.com ([85.13.136.168]:55107 "EHLO
-	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750966Ab2LSKXi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Dec 2012 05:23:38 -0500
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:57396 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751049Ab2LSKe5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Dec 2012 05:34:57 -0500
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <guthridg@us.ibm.com>;
+	Wed, 19 Dec 2012 05:34:57 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 6DC27C9001C
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Dec 2012 05:34:54 -0500 (EST)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id qBJAYs7g348328
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Dec 2012 05:34:54 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id qBJAYsKt010046
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Dec 2012 05:34:54 -0500
+Received: from 9.80.5.232 ([9.80.5.232])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with SMTP id qBJAY3gk007148
+	for linux-scsi@vger.kernel.org; Wed, 19 Dec 2012 05:34:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michal.miszewski@gemius.com
-Cc: linux-scsi@vger.kernel.org, Matthias Prager <linux@matthiasprager.de>
+To: linux-scsi@vger.kernel.org
 
-Hello everyone, hello Michal,
+The patch we suggested where we simply changed BLK_MAX_CDB and MAX_COMMAND_SIZE from 16 to 32 was meant to be a "stick in the sand".  It's the simplest description of the functionality we're looking for.  Other approaches that accomplish the same thing would be fine.
 
-I can confirm and reproduce this issue on a different set of hardware:
+I don't know if the reason that "sd" went with the mempool for 32-byte commands was binary compatibility with modules, concerns about memory usage on small/embedded systems, or both.  But given that "sd" uses the mempool, it's reasonable to assume that greater than 16 byte pass-through requests might also take this approach.  A potential advantage of using a mempool or other dynamic allocation for the pass-through CDB is that it could be implemented to allow arbitrary CDB sizes, which would be more general than just increasing the fixed limit from 16 to 32.
 
-Intel S1200BTLR Mainboard
-LSI MegaRAID 9266-4i Raid-Controller
+>> We did the mempool because we did not want to penalize everybody else by
+>> always allocating 32-byte CDBs. Type 2 is a really rare corner case.
 
-I haven't tried using a kernel older than 3.2.5 so far, but with kernels
-3.2.24 and 3.5.0 I get the following dmesg output:
+All of the SCSI drives we're seeing now come from the vendor formatted with PI type 2.  Linux automatically detects the format and uses PI, so it's no longer a corner case -- it's now the normal case.
 
-[    2.621164] megasas: 00.00.06.15-rc1 Mon. Mar. 19 17:00:00 PDT 2012
-[    2.621179] megasas: 0x1000:0x005b:0x1000:0x9269: bus 1:slot 0:func 0
-[    2.621599] megasas: Waiting for FW to come to ready state
-[    2.621601] megasas: FW in FAULT state!!
+If you accept that dynamically allocated CDB's have become the rule rather than the exception, then it makes sense that the fixed size __cmd buffer in struct request should eventually be phased out.
 
-As a result I can't access any drives connected to the controller.
+Two places in the kernel accept SG_IO (pass-through) requests.  One is the "sg" driver; the other (and the one we actually care about more) is scsi_cmd_ioctl in block/scsi_ioctl.c, which handles pass-through requests sent directly to an "sd" device.
 
-Tested Controller firmwares: 23.7.0-0031, 23.7.0-0035 and 23.9.0-0015
-Tested Mainboard BIOSes: R0037 (BMC 1.14, FRUSDR 1.14)
+What we are looking for is simply to be able to send 32-byte pass-through commands.  These commands do not have the  prot_op and prot_type fields of struct scsi_cmnd set, so from the perspective of the Linux SCSI subsystem and the adapter firmware, they are -not- PI I/O's.  But if a pass-through command sent to the device happened to be a 32-byte read with RDPROTECT=3, for example, then the drive will return the PI interleaved with the data -- it's this raw pass-through functionality that we need.  Conveniently, increasing the CDB size doesn't break binary compatibility with the existing sg_io_hdr_t.
 
-I contacted Intel and LSI support a while ago. Intel shot me down by
-telling me this wasn't their problem. LSI at least tried to resolve the
-issue but thus far failed to do so.
+One could develop a more general pass-through command that gave the user access to the prot_op and prot_type fields and that provided a DIX style side-buffer to hold de-interleaved PI data.  That would be a nice extension, but it's not something we currently need.
 
-Unfortunately I don't have access to the system on a day-to-day basis,
-but I will test eventual fixes as soon as I get the chance.
+Scott Guthridge
+IBM Almaden Research Center
 
----
-Matthias Prager
