@@ -1,68 +1,66 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH v2 1/5] virtio: add functions for piecewise addition of
-	buffers
-Date: Wed, 19 Dec 2012 18:52:51 +0200
-Message-ID: <20121219165251.GA13705@redhat.com>
-References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
-	<1355833972-20319-2-git-send-email-pbonzini@redhat.com>
-	<20121219104722.GA5832@stefanha-thinkpad.redhat.com>
-	<50D1AD38.7070606@redhat.com> <20121219165130.GA13684@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/2] Change type-2 dif to use rq embedded 32 byte cdb
+Date: Wed, 19 Dec 2012 11:55:30 -0500
+Message-ID: <yq1fw327zi5.fsf@sermon.lab.mkp.net>
+References: <201212191034.qBJAY3gk007148@d01av04.pok.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <20121219165130.GA13684@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, Stefan Hajnoczi <stefanha@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31798 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755645Ab2LSQ5X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Dec 2012 11:57:23 -0500
+In-Reply-To: <201212191034.qBJAY3gk007148@d01av04.pok.ibm.com> (Scott
+	Guthridge's message of "Wed, 19 Dec 2012 05:34:03 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Scott Guthridge <guthridg@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Dec 19, 2012 at 06:51:30PM +0200, Michael S. Tsirkin wrote:
-> On Wed, Dec 19, 2012 at 01:04:08PM +0100, Paolo Bonzini wrote:
-> > Il 19/12/2012 11:47, Stefan Hajnoczi ha scritto:
-> > > On Tue, Dec 18, 2012 at 01:32:48PM +0100, Paolo Bonzini wrote:
-> > >> +/**
-> > >> + * virtqueue_start_buf - start building buffer for the other end
-> > >> + * @vq: the struct virtqueue we're talking about.
-> > >> + * @buf: a struct keeping the state of the buffer
-> > >> + * @data: the token identifying the buffer.
-> > >> + * @count: the number of buffers that will be added
-> > > 
-> > > Perhaps count should be named count_bufs or num_bufs.
-> > 
-> > Ok.
-> > 
-> > >> + * @count_sg: the number of sg lists that will be added
-> > > 
-> > > What is the purpose of count_sg?
-> > 
-> > It is needed to decide whether to use an indirect or a direct buffer.
-> > The idea is to avoid a memory allocation if the driver is providing us
-> > with separate sg elements (under the assumption that they will be few).
-> > 
-> > Originally I wanted to use a mix of direct and indirect buffer (direct
-> > if add_buf received a one-element scatterlist, otherwise indirect).  It
-> > would have had the same effect, without having to specify count_sg in
-> > advance.  The spec is not clear if that is allowed or not, but in the
-> > end they do not work with either QEMU or vhost, so I chose this
-> > alternative instead.
-> > 
-> > Paolo
-> 
-> Hmm it should work with vhost.
+>>>>> "Scott" == Scott Guthridge <guthridg@us.ibm.com> writes:
 
-BTW passing in num_in + num_out would be nicer than explicit direction:
-closer to the current add_buf.
+Scott,
 
-> > 
-> > > Stefan
-> > > 
+Scott> I don't know if the reason that "sd" went with the mempool for
+Scott> 32-byte commands was binary compatibility with modules, concerns
+Scott> about memory usage on small/embedded systems, or both.  
+
+The latter. Type 2 is an edge case and we didn't want to penalize
+everybody on the planet by doubling the default command size.
+
+
+Scott> All of the SCSI drives we're seeing now come from the vendor
+Scott> formatted with PI type 2.  Linux automatically detects the format
+Scott> and uses PI, so it's no longer a corner case -- it's now the
+Scott> normal case.
+
+Drives don't come as Type 2 by default. You have to ask for them to be
+formatted that way. All the drives we ship at Oracle are Type 1.
+
+The main reason I'm objecting to the use of Type 2 is that the
+protection scheme offered is a poor match for a general purpose OS. If
+you look closely at how we treat Type 2 device you'll see that in
+reality we drive them as if they were Type 1. I.e. the expected initial
+reference tag is set to the LBA. This renders the additional
+functionality offered by Type 2 useless and so effectively you get a
+Type 1 drive with the cost of a bigger CDB. Plus there are several HBAs
+out there that do not even support 32-byte CDBs.
+
+
+Scott> What we are looking for is simply to be able to send 32-byte
+Scott> pass-through commands.
+
+That works today, though. If you send a passthrough command that's
+bigger than BLK_MAX_CDB we'll allocate a separate cmd buffer and pin it
+to the request. Much like sd does.
+
+
+Scott> But if a pass-through command sent to the device happened to be a
+Scott> 32-byte read with RDPROTECT=3, for example, then the drive will
+Scott> return the PI interleaved with the data -- it's this raw
+Scott> pass-through functionality that we need.
+
+Also shouldn't be a problem.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
