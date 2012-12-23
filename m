@@ -1,46 +1,39 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] target: initialize sense_reason_t ret in core_scsi3_emulate_pro_register()
-Date: Sat, 22 Dec 2012 22:15:57 +0100
-Message-ID: <1356210957-30089-1-git-send-email-geert@linux-m68k.org>
-References: <y>
+From: Xi Wang <xi.wang@gmail.com>
+Subject: Re: mvsas regression since 3.5
+Date: Sun, 23 Dec 2012 02:17:06 -0500
+Message-ID: <50D6AFF2.1010708@gmail.com>
+References: <CAJiejCRCXgCw957to0fWhQPS69doacY9DOaQMpfyxM4bm3igQw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <y>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vc0-f171.google.com ([209.85.220.171]:56271 "EHLO
+	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082Ab2LWHWR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Dec 2012 02:22:17 -0500
+In-Reply-To: <CAJiejCRCXgCw957to0fWhQPS69doacY9DOaQMpfyxM4bm3igQw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Drunkard Zhang <gongfan193@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Dan Williams <dan.j.williams@intel.com>, Jack Wang <jack_wang@usish.com>, Xiangliang Yu <yuxiangl@marvell.com>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-drivers/target/target_core_pr.c: In function =E2=80=98core_scsi3_emulat=
-e_pro_register=E2=80=99:
-drivers/target/target_core_pr.c:2056: warning: =E2=80=98ret=E2=80=99 ma=
-y be used uninitialized in this function
+On 12/22/12 10:33 AM, Drunkard Zhang wrote:
+> I'm using Asus PIKE 6480 SAS card, whose chipset is "RAID bus
+> controller: Marvell Technology Group Ltd. MV64460/64461/64462 System
+> Controller, Revision B", with latest stable branch 3.7.1 only 1 of 8
+> ports works, to get others works I got to pull & plug back. While with
+> 3.5.7 it's all good, so it must be a regression.
 
-If !spec_i_pt, the "goto out_put_pr_reg" on line 2141 seems to be a rea=
-l
-case where ret is not initialized.
+Can you try to revert commit beecadea1b8d67f591b13f7099559f32f3fd601d?
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/target/target_core_pr.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Particularly, can you first change
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_co=
-re_pr.c
-index e35dbf8..c2e8026 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -2053,7 +2053,7 @@ core_scsi3_emulate_pro_register(struct se_cmd *cm=
-d, u64 res_key, u64 sa_res_key,
- 	/* Used for APTPL metadata w/ UNREGISTER */
- 	unsigned char *pr_aptpl_buf =3D NULL;
- 	unsigned char isid_buf[PR_REG_ISID_LEN], *isid_ptr =3D NULL;
--	sense_reason_t ret;
-+	sense_reason_t ret =3D 0;
- 	int pr_holder =3D 0, type;
-=20
- 	if (!se_sess || !se_lun) {
---=20
-1.7.0.4
+  #define bit(n) ((u64)1 << n)
+
+in drivers/scsi/mvsas/mv_sas.h back to
+
+  #define bit(n) ((u32)1 << n)
+
+and see if it works for you?  Thanks.
+
+- xi
