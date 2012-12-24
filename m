@@ -1,24 +1,33 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [Bug 51881] New: HighPoint RocketRAID 2720 fail to detect some SATA hdd
-Date: Mon, 24 Dec 2012 12:53:44 +0800
-Message-ID: <00da01cde192$ae704300$0b50c900$@com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 51881] HighPoint RocketRAID 2720 fail to detect some SATA hdd
+Date: Mon, 24 Dec 2012 04:53:42 +0000 (UTC)
+Message-ID: <20121224045342.DED1F11FF02@bugzilla.kernel.org>
 References: <bug-51881-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:52367 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289Ab2LXExm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Dec 2012 23:53:42 -0500
+Received: from mail.kernel.org ([198.145.19.201]:57213 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752289Ab2LXExv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Dec 2012 23:53:51 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id B949820151
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Dec 2012 04:53:45 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id A730920147
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Dec 2012 04:53:44 +0000 (UTC)
 In-Reply-To: <bug-51881-11613@https.bugzilla.kernel.org/>
-Content-Language: zh-cn
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
-Cc: 'Shane Huang' <shane.huang@amd.com>, 'Aaron Lu' <aaron.lwe@gmail.com>, 'Jeff Garzik' <jgarzik@redhat.com>
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=51881
+
+
+
+
+
+--- Comment #3 from jack_wang@usish.com  2012-12-24 04:53:42 ---
 Cc the author of the bad commit.
 
 Jack
@@ -45,11 +54,13 @@ https://bugzilla.kernel.org/show_bug.cgi?id=51881
         Regression: Yes
 
 
-After upgrading from 3.6.9 to 3.7, HighPoint RocketRAID 2720 (mvsas)  failed to detect some hdd.
+After upgrading from 3.6.9 to 3.7, HighPoint RocketRAID 2720 (mvsas)  failed to
+detect some hdd.
 7 SATA hdds are connected, but only 2 or 3 hdds are detected.
 I bisected and found bad commit:
 
-65fe1f0f66a57380229a4ced844188103135f37b is the first bad commit commit 65fe1f0f66a57380229a4ced844188103135f37b
+65fe1f0f66a57380229a4ced844188103135f37b is the first bad commit commit
+65fe1f0f66a57380229a4ced844188103135f37b
 Author: Shane Huang <shane.huang@amd.com>
 Date:   Fri Sep 7 22:40:01 2012 +0800
 
@@ -85,7 +96,14 @@ Revert 65fe1f0f66a from 3.7.1, all hdds are detected.
 
 --
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: ------- You are the assignee for the bug.
+------- You are receiving this mail because: ------- You are the assignee for
+the bug.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
+body of a message to majordomo@vger.kernel.org More majordomo info at 
+http://vger.kernel.org/majordomo-info.html
 
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
