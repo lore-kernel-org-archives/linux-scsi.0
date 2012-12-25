@@ -1,73 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Tue, 25 Dec 2012 12:17:23 -0500
-Message-ID: <20121225171723.GI10220@mtj.dyndns.org>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
- <35648985.61QNrr0Knq@vostro.rjw.lan>
- <1353906191.2523.25.camel@dabdike>
- <21511277.LLinyDpbAK@vostro.rjw.lan>
- <20121128013928.GB15971@htj.dyndns.org>
- <1354092969.2276.49.camel@dabdike>
- <20121203081321.GA9990@mint-spring.sh.intel.com>
- <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
- <20121203162323.GB19802@htj.dyndns.org>
- <50D2AB1D.9050602@intel.com>
+From: Andreas Bombe <aeb@debian.org>
+Subject: [RFC PATCH] [SCSI] sd: When no media present ignore WCE in
+ suspend/shutdown
+Date: Wed, 26 Dec 2012 00:24:01 +0100
+Message-ID: <20121225232401.GA19299@amos.fritz.box>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from infernal.debian.net ([176.28.9.132]:50499 "EHLO
+	infernal.debian.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752549Ab2LYXsS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Dec 2012 18:48:18 -0500
 Content-Disposition: inline
-In-Reply-To: <50D2AB1D.9050602@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Aaron.
+When the WCE flag is set for a drive, sd_shutdown() and sd_suspend() try
+to send a SYNCHRONIZE_CACHE command to that drive. This is not
+meaningful when no media are present and causes errors with devices
+where the media are the actual command processing devices, such as SATA
+attached RDX docks where the removable cartridges contain hard disks.
 
-On Thu, Dec 20, 2012 at 02:07:25PM +0800, Aaron Lu wrote:
-> +static int is_gendisk_part0(struct device *dev, void *data)
-> +{
-> +	struct device **child = data;
-> +
-> +	if (dev->class == &block_class && dev->type == &disk_type) {
-> +		*child = dev;
-> +		return 1;
-> +	} else
-> +		return 0;
-> +}
-> +
-> +/**
-> + * disk_from_device - Get the gendisk pointer for this device.
-> + * @dev: the device this gendisk is created for, i.e. gendisk->driverfs_dev
-> + *
-> + * LLD sometimes need to play with the gendisk without HLD's aware,
-> + * this routine gives LLD the required access to gendisk.
-> + *
-> + * CONTEXT:
-> + * Don't care.
-> + */
-> +struct gendisk *disk_from_device(struct device *dev)
-> +{
-> +	struct device *child;
-> +
-> +	if (device_for_each_child(dev, &child, is_gendisk_part0))
-> +		return dev_to_disk(child);
-> +	else
-> +		return NULL;
-> +}
-> +EXPORT_SYMBOL(disk_from_device);
+In the RDX case, the WCE bit is set when a cartridge is inserted and not
+reset when it is removed. Suspending the computer afterwards will not be
+possible unless a cartridge is inserted since otherwise the
+SYNCHRONIZE_CACHE command will fail causing sd_suspend() to return an
+error.
 
-This is really a round-about way to find out the matching device and
-it wouldn't work if the disk device nests deeper.  Doesn't really look
-like a good idea to me.
+Signed-off-by: Andreas Bombe <aeb@debian.org>
+---
 
-> Then together with disk_try_block_events and disk_unblock_events, we can
-> avoid touching SCSI layer to let ODD stay in zero power state.
+Ok, this patch makes the problem go away, but I'm not sure whether this
+is right solution. I also don't know whether SATA RDX docks are sort of
+a special case in this regard.
 
-Also, I'd much prefer something along the line of
-block_events_nowait() instead of try_block.
+I can think of two other solutions:
+1. Also skip the sd_start_stop_device() call. The device for the RDX
+   dock isn't managed so I can't test.
+2. Clear the WCE flag when media are removed and leave sd_shutdown() /
+   sd_suspend() alone.
 
-Thanks.
+The final patch would then also be Cc: stable, I don't know how far back
+this goes but at least 3.7 is affected.
 
+
+ drivers/scsi/sd.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7992635..723512e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3048,7 +3048,7 @@ static void sd_shutdown(struct device *dev)
+ 	if (pm_runtime_suspended(dev))
+ 		goto exit;
+ 
+-	if (sdkp->WCE) {
++	if (sdkp->WCE && sdkp->media_present) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		sd_sync_cache(sdkp);
+ 	}
+@@ -3070,7 +3070,7 @@ static int sd_suspend(struct device *dev)
+ 	if (!sdkp)
+ 		return 0;	/* this can happen */
+ 
+-	if (sdkp->WCE) {
++	if (sdkp->WCE && sdkp->media_present) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		ret = sd_sync_cache(sdkp);
+ 		if (ret)
 -- 
-tejun
+1.7.10.4
