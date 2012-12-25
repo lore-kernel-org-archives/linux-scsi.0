@@ -1,37 +1,73 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 51881] HighPoint RocketRAID 2720 fail to detect some SATA hdd
-Date: Tue, 25 Dec 2012 12:50:54 +0000 (UTC)
-Message-ID: <20121225125054.1782411FF01@bugzilla.kernel.org>
-References: <bug-51881-11613@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Tue, 25 Dec 2012 12:17:23 -0500
+Message-ID: <20121225171723.GI10220@mtj.dyndns.org>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+ <35648985.61QNrr0Knq@vostro.rjw.lan>
+ <1353906191.2523.25.camel@dabdike>
+ <21511277.LLinyDpbAK@vostro.rjw.lan>
+ <20121128013928.GB15971@htj.dyndns.org>
+ <1354092969.2276.49.camel@dabdike>
+ <20121203081321.GA9990@mint-spring.sh.intel.com>
+ <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
+ <20121203162323.GB19802@htj.dyndns.org>
+ <50D2AB1D.9050602@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:51657 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753691Ab2LYMu7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Dec 2012 07:50:59 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 323CC201A5
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Dec 2012 12:50:58 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 1DA472019D
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Dec 2012 12:50:56 +0000 (UTC)
-In-Reply-To: <bug-51881-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <50D2AB1D.9050602@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=51881
+Hello, Aaron.
 
+On Thu, Dec 20, 2012 at 02:07:25PM +0800, Aaron Lu wrote:
+> +static int is_gendisk_part0(struct device *dev, void *data)
+> +{
+> +	struct device **child = data;
+> +
+> +	if (dev->class == &block_class && dev->type == &disk_type) {
+> +		*child = dev;
+> +		return 1;
+> +	} else
+> +		return 0;
+> +}
+> +
+> +/**
+> + * disk_from_device - Get the gendisk pointer for this device.
+> + * @dev: the device this gendisk is created for, i.e. gendisk->driverfs_dev
+> + *
+> + * LLD sometimes need to play with the gendisk without HLD's aware,
+> + * this routine gives LLD the required access to gendisk.
+> + *
+> + * CONTEXT:
+> + * Don't care.
+> + */
+> +struct gendisk *disk_from_device(struct device *dev)
+> +{
+> +	struct device *child;
+> +
+> +	if (device_for_each_child(dev, &child, is_gendisk_part0))
+> +		return dev_to_disk(child);
+> +	else
+> +		return NULL;
+> +}
+> +EXPORT_SYMBOL(disk_from_device);
 
+This is really a round-about way to find out the matching device and
+it wouldn't work if the disk device nests deeper.  Doesn't really look
+like a good idea to me.
 
+> Then together with disk_try_block_events and disk_unblock_events, we can
+> avoid touching SCSI layer to let ODD stay in zero power state.
 
+Also, I'd much prefer something along the line of
+block_events_nowait() instead of try_block.
 
---- Comment #6 from Kouichi ONO <kou1.ono@gmail.com>  2012-12-25 12:50:53 ---
-3.7.1 with attached patch works fine, all hdds found.
-Thanks!
+Thanks.
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+tejun
