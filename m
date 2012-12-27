@@ -1,46 +1,48 @@
-From: Servicio Webmail <david.antia2@mail.dcu.ie>
-Subject: =?ISO-8859-1?Q?E=2Dmail_de_atualiza=E7=E3o_de_verifica=E7=E3o_de_conta?=
-Date: Thu, 27 Dec 2012 14:32:36 +0100
-Message-ID: <CAP6Rbx_Dfjtz_-2eLDXtcFjwCAMUQitHGfV6YX_HwF659aFiwA__18865.3569472537$1356615180$gmane$org@mail.gmail.com>
-Reply-To: re.activate.account@hotmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Asim Kadav <kadav@cs.wisc.edu>
+Subject: Re: [PATCH] a100u2w: Added sanitization for pointer dereference using a value from hardware. Detected using Carburizer  (http://lwn.net/Articles/479653/)
+Date: Thu, 27 Dec 2012 08:12:01 -0600
+Message-ID: <E83641E5-24F4-493A-8D0C-347D8611FC75@cs.wisc.edu>
+References: <159925B4-EEAA-441E-8A8E-666DCA702D5B@cs.wisc.edu> <1356607503.2306.20.camel@dabdike>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:42982 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752293Ab2L0Nch convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Dec 2012 08:32:37 -0500
-Received: by mail-ie0-f171.google.com with SMTP id 17so11550064iea.16
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Dec 2012 05:32:36 -0800 (PST)
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:56249 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752446Ab2L0OML (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Dec 2012 09:12:11 -0500
+In-Reply-To: <1356607503.2306.20.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-Caro Usb.org.br Usu=E1rio E-mail
 
-Usb.org.br Computador Pol=EDtica de Seguran=E7a exige que usu=E1rio e s=
-enha
-s=E3o verificados em uma base regular. Para o usu=E1rio final de servi=E7=
-os,
-incluindo p=E1ginas Usb.org.br de e-mail de Internet, STV Cluster &
-Staff e servi=E7os Unix, como S=F3crates e Plat=E3o, este nome de usu=E1=
-rio e
-senha deve ser verificada aqui no nosso banco de dados.
+> If your theory is that the hardware just returned a bogus value, this
+> isn't the right way to sanitise it because the chances are you'll
+> complete the wrong command and cause corruption: you'd have to halt the
+> entire system at that point.  Also, I don't understand why you think the
+> value should only be 0-31?  The size of variable allocated there is for
+> SCBs up to 243, no idea why, since some of the allocation routines will
+> search up to 256.  However, safety from overrun should be guaranteed at
+> least at the system level by the can_queue value.
 
-Se o seu nome de usu=E1rio e senha n=E3o foi verificada nos sete dias
-seguintes, ele ser=E1 automaticamente reiniciar e ser desativado do
-nosso banco de dados. fornecer os seguintes dados
+I agree. If the hardware returns a bogus value, it immediately would crash.
+Would a more appropriate patch be checking within the ORC_MAXQUEUE 
+range and flagging an error?
 
-Nome de Usu=E1rio:   (               )
-Senha:    (                  )
+> 
+> Double checking hardware values isn't something we habitually do unless
+> there's a known reason for it (like the state machine does throw bogus
+> values with a defined recovery procedure).  We definitely don't run in
+> the mode where you can't trust your hardware.
+> 
 
-Nota: Voc=EA est=E1 para voltar o mais r=E1pido poss=EDvel.
+Hardware can fail for multiple reasons. Furthermore, such bugs are security
+vulnerabilities too in the case of virtual hardware or USB drivers where
+such values can be faked. The article in my patch gives more details.
+http://lwn.net/Articles/479653/
 
-Ajuda Desk.Important:
-Usb.org.br Equipa de Verifica=E7=E3o Conta
-E-mail de atualiza=E7=E3o de verifica=E7=E3o de conta! !
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Asim
+
