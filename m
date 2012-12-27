@@ -1,62 +1,306 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] a100u2w: Added sanitization for pointer dereference
- using a value from hardware. Detected using Carburizer
- (http://lwn.net/Articles/479653/)
-Date: Thu, 27 Dec 2012 14:53:34 +0000
-Message-ID: <1356620014.2306.23.camel@dabdike>
-References: <159925B4-EEAA-441E-8A8E-666DCA702D5B@cs.wisc.edu>
-	 <1356607503.2306.20.camel@dabdike>
-	 <E83641E5-24F4-493A-8D0C-347D8611FC75@cs.wisc.edu>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH V5 3/4] [SCSI] ufs: Add Platform glue driver for ufshcd
+Date: Thu, 27 Dec 2012 20:28:44 +0530
+Message-ID: <50DC6224.7050109@codeaurora.org>
+References: <1356552955-18027-1-git-send-email-y> <50db5b12.644e420a.0ead.ffffbbac@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46375 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752593Ab2L0Oxk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Dec 2012 09:53:40 -0500
-In-Reply-To: <E83641E5-24F4-493A-8D0C-347D8611FC75@cs.wisc.edu>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31683 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785Ab2L0O6s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Dec 2012 09:58:48 -0500
+In-Reply-To: <50db5b12.644e420a.0ead.ffffbbac@mx.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Asim Kadav <kadav@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: vinholikatti@gmail.com
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, santoshsy@gmail.com
 
-On Thu, 2012-12-27 at 08:12 -0600, Asim Kadav wrote:
-> > If your theory is that the hardware just returned a bogus value, this
-> > isn't the right way to sanitise it because the chances are you'll
-> > complete the wrong command and cause corruption: you'd have to halt the
-> > entire system at that point.  Also, I don't understand why you think the
-> > value should only be 0-31?  The size of variable allocated there is for
-> > SCBs up to 243, no idea why, since some of the allocation routines will
-> > search up to 256.  However, safety from overrun should be guaranteed at
-> > least at the system level by the can_queue value.
-> 
-> I agree. If the hardware returns a bogus value, it immediately would crash.
-> Would a more appropriate patch be checking within the ORC_MAXQUEUE 
-> range and flagging an error?
+On 12/27/2012 1:45 AM, vinholikatti@gmail.com wrote:
+> From: Vinayak Holikatti <vinholikatti@gmail.com>
+>
+> This patch adds Platform glue driver for ufshcd.
+>
+> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+> Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
+> Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
+> Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
+> ---
+>   drivers/scsi/ufs/Kconfig         |   11 ++
+>   drivers/scsi/ufs/Makefile        |    1 +
+>   drivers/scsi/ufs/ufshcd-pltfrm.c |  205 ++++++++++++++++++++++++++++++++++++++
+>   3 files changed, 217 insertions(+), 0 deletions(-)
+>   create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.c
+>
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index d77ae97..96e1721 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -57,3 +57,14 @@ config SCSI_UFSHCD_PCI
+>   	  If you have a controller with this interface, say Y or M here.
+>   
+>   	  If unsure, say N.
+> +
+> +config SCSI_UFSHCD_PLATFORM
+> +	tristate "Platform based UFS Controller support"
+This may sound more explicit: s/"Platform based"/"Platform bus based"
+> +	depends on SCSI_UFSHCD
+> +	---help---
+> +	This selects the UFS host controller support. If you have a
+> +	   platform with UFS controller, say Y or M here.
+s/"If you have a platform with UFS controller,"/"If you have UFS 
+controller on platform bus,"
+> +
+> +	   If you have a controller with this interface, say Y or M here.
+Why do we need this line? we already one comment above.
+> +
+> +	  If unsure, say N.
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index 9eda0df..1e5bd48 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -1,3 +1,4 @@
+>   # UFSHCD makefile
+>   obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
+>   obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+> +obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> new file mode 100644
+> index 0000000..94acfdc
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -0,0 +1,205 @@
+> +/*
+> + * Universal Flash Storage Host controller driver
+Please add some comment to indicate that this is platform bus UFS host 
+controller driver.
+> + *
+> + * This code is based on drivers/scsi/ufs/ufshcd-pltfrm.c
+> + * Copyright (C) 2011-2012 Samsung India Software Operations
+> + *
+> + * Authors:
+> + *	Santosh Yaraganavi <santosh.sy@samsung.com>
+> + *	Vinayak Holikatti <h.vinayak@samsung.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + * See the COPYING file in the top-level directory or visit
+> + * <http://www.gnu.org/licenses/gpl-2.0.html>
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * This program is provided "AS IS" and "WITH ALL FAULTS" and
+> + * without warranty of any kind. You are solely responsible for
+> + * determining the appropriateness of using and distributing
+> + * the program and assume all risks associated with your exercise
+> + * of rights with respect to the program, including but not limited
+> + * to infringement of third party rights, the risks and costs of
+> + * program errors, damage to or loss of data, programs or equipment,
+> + * and unavailability or interruption of operations. Under no
+> + * circumstances will the contributor of this Program be liable for
+> + * any damages of any kind arising from your use or distribution of
+> + * this program.
+> + */
+> +
+> +#include "ufshcd.h"
+> +#include <linux/platform_device.h>
+> +
+> +#ifdef CONFIG_PM
+> +/**
+> + * ufshcd_pltfrm_suspend - suspend power management function
+> + * @pdev: pointer to Platform device handle
+> + * @mesg: power state
+> + *
+> + * Returns -ENOSYS
+> + */
+> +static int ufshcd_pltfrm_suspend(struct platform_device *pdev,
+> +				 pm_message_t mesg)
+> +{
+> +	/*
+> +	 * TODO:
+> +	 * 1. Call ufshcd_suspend
+> +	 * 2. Do bus specific power management
+> +	 */
+> +
+> +	return -ENOSYS;
+> +}
+> +
+> +/**
+> + * ufshcd_pltfrm_resume - resume power management function
+> + * @pdev: pointer to Platform device handle
+> + *
+> + * Returns -ENOSYS
+> + */
+> +static int ufshcd_pltfrm_resume(struct platform_device *pdev)
+> +{
+> +	/*
+> +	 * TODO:
+> +	 * 1. Call ufshcd_resume.
+> +	 * 2. Do bus specific wake up
+> +	 */
+> +
+> +	return -ENOSYS;
+> +}
+> +#endif
+> +
+> +/**
+> + * ufshcd_pltfrm_probe - probe routine of the driver
+> + * @pdev: pointer to Platform device handle
+> + *
+> + * Returns 0 on success, non-zero value on failure
+> + */
+> +static int __devinit
+> +ufshcd_pltfrm_probe(struct platform_device *pdev)
+> +{
+> +	struct ufs_hba *hba;
+> +	void __iomem *mmio_base;
+> +	struct resource *mem_res;
+> +	struct resource *irq_res;
+> +	resource_size_t mem_size;
+> +	int err;
+> +	struct device *dev = &pdev->dev;
+> +
+> +	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	if (!mem_res) {
+> +		dev_err(&pdev->dev,
+> +			"%s: Memory resource not available\n", __FILE__);
+Why would we print the file name? Won't the device name prefix enough in 
+debug message?
+> +		err = -ENODEV;
+> +		goto out_error;
+> +	}
+> +
+> +	mem_size = resource_size(mem_res);
+> +	if (!request_mem_region(mem_res->start, mem_size, "ufshcd")) {
+you may want to use the UFSHCD macro:   s/"ufshcd"/UFSHCD
 
-It's probably really not worth it.  The u100w2 is a pretty old SCSI
-driver.  I can't imagine there's more than a handful of them left.  As I
-said, there's no evidence of a problem.
+> +		dev_err(&pdev->dev,
+> +			"ufshcd: Cannot reserve the memory resource\n");
 
-> > Double checking hardware values isn't something we habitually do unless
-> > there's a known reason for it (like the state machine does throw bogus
-> > values with a defined recovery procedure).  We definitely don't run in
-> > the mode where you can't trust your hardware.
-> > 
-> 
-> Hardware can fail for multiple reasons. Furthermore, such bugs are security
-> vulnerabilities too in the case of virtual hardware or USB drivers where
-> such values can be faked. The article in my patch gives more details.
-> http://lwn.net/Articles/479653/
+"ufshcd:" prefix may not be required here as the device name prefix 
+should be enough to know the context of the error.
+> +		err = -EBUSY;
+> +		goto out_error;
+> +	}
+> +
+> +	mmio_base = ioremap_nocache(mem_res->start, mem_size);
+> +	if (!mmio_base) {
+> +		dev_err(&pdev->dev, "memory map failed\n");
+> +		err = -ENOMEM;
+> +		goto out_release_regions;
+> +	}
+> +
+> +	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+> +	if (!irq_res) {
+> +		dev_err(&pdev->dev, "ufshcd: IRQ resource not available\n");
 
-USB possibly, but this isn't a USB driver.  Virtual hardware is a bit
-unlikely, since it's created by the host for the guest.  I don't believe
-there's any hypervisor system that can survive attempted subversion by
-the *host* (host protecting against guest, yes, but guest trying to
-protect against host is a very different ball game).
+Same as above. "ufshcd:" prefix may not be required here as the device 
+name prefix should be enough to know the context of the error.
 
-James
+> +		err = -ENODEV;
+> +		goto out_iounmap;
+> +	}
+> +
+> +	err = dma_set_coherent_mask(dev, dev->coherent_dma_mask);
+> +	if (err) {
+> +		dev_err(&pdev->dev, "set dma mask failed\n");
+> +		goto out_iounmap;
+> +	}
+> +
+> +	err = ufshcd_init(&pdev->dev, &hba, mmio_base, irq_res->start);
+> +	if (err) {
+> +		dev_err(&pdev->dev, "%s: Intialization failed\n",
+> +			__FILE__);
 
+Again, not sure why we would need to prefix the file name here.
+
+> +		goto out_iounmap;
+> +	}
+> +
+> +	platform_set_drvdata(pdev, hba);
+> +
+> +	return 0;
+> +
+> +out_iounmap:
+> +	iounmap(mmio_base);
+> +out_release_regions:
+> +	release_mem_region(mem_res->start, mem_size);
+> +out_error:
+> +	return err;
+> +}
+> +
+> +/**
+> + * ufshcd_pltfrm_remove - remove platform driver routine
+> + * @pdev: pointer to platform device handle
+> + *
+> + * Returns 0 on success, non-zero value on failure
+> + */
+> +static int __devexit ufshcd_pltfrm_remove(struct platform_device *pdev)
+> +{
+> +	struct resource *mem_res;
+> +	struct resource *irq_res;
+> +	resource_size_t mem_size;
+> +	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+> +
+> +	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+It would be better to save the irq number under "struct ufs_hba" during 
+probe. So here during remove you just need simply need to call the 
+"free_irq(irq_res->start, hba)"
+> +
+> +	if (!irq_res)
+> +		dev_err(&pdev->dev, "ufshcd: IRQ resource not available\n");
+> +	else
+> +		free_irq(irq_res->start, hba);
+> +
+> +	ufshcd_remove(hba);
+Remove should be exactly opposite of probe(). So shouldn't you call the 
+ufshcd_remove() first and then free_irq() after that.
+> +	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+You might want to save the pointer to mem_res in "struct ufs_hba" during 
+probe and may use the same here.
+> +	if (!mem_res)
+> +		dev_err(&pdev->dev, "ufshcd: Memory resource not available\n");
+> +	else {
+> +		mem_size = resource_size(mem_res);
+> +		release_mem_region(mem_res->start, mem_size);
+> +	}
+> +	platform_set_drvdata(pdev, NULL);
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id ufs_of_match[] = {
+> +	{ .compatible = "jedec,ufs-1.1"},
+> +};
+> +
+> +static struct platform_driver ufshcd_pltfrm_driver = {
+> +	.probe	= ufshcd_pltfrm_probe,
+> +	.remove	= __devexit_p(ufshcd_pltfrm_remove),
+> +#ifdef CONFIG_PM
+> +	.suspend = ufshcd_pltfrm_suspend,
+> +	.resume = ufshcd_pltfrm_resume,
+> +#endif
+> +	.driver	= {
+> +		.name	= "ufshcd",
+> +		.owner	= THIS_MODULE,
+> +		.of_match_table = ufs_of_match,
+> +	},
+> +};
+> +
+> +module_platform_driver(ufshcd_pltfrm_driver);
+> +
+> +MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
+> +MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
+> +MODULE_DESCRIPTION("Platform based UFS host controller driver");
+
+s/"Platform based"/"Platform Bus based"
+
+> +MODULE_LICENSE("GPL");
+> +MODULE_VERSION(UFSHCD_DRIVER_VERSION);
+You want to keep the same driver version as the UFS core driver?
 
