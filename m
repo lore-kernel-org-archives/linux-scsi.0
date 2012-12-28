@@ -1,79 +1,48 @@
-From: "John L. Males" <jlmales@gmail.com>
-Subject: Request for Information Required for Linux Kernel Hard Lockup with
- PCMCIA SYM53C895a Card
-Date: Fri, 28 Dec 2012 10:38:24 -0500
-Message-ID: <20121228103824.e87b8aa4.jlmales@gmail.com>
-Reply-To: jlmales@gmail.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Fri, 28 Dec 2012 16:16:35 -0500
+Message-ID: <20121228211635.GB3062@mtj.dyndns.org>
+References: <1353906191.2523.25.camel@dabdike>
+ <21511277.LLinyDpbAK@vostro.rjw.lan>
+ <20121128013928.GB15971@htj.dyndns.org>
+ <1354092969.2276.49.camel@dabdike>
+ <20121203081321.GA9990@mint-spring.sh.intel.com>
+ <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
+ <20121203162323.GB19802@htj.dyndns.org>
+ <50D2AB1D.9050602@intel.com>
+ <20121225171723.GI10220@mtj.dyndns.org>
+ <50DA55F6.8080706@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:45698 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753678Ab2L1Pir (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Dec 2012 10:38:47 -0500
-Received: by mail-ie0-f174.google.com with SMTP id c11so12955961ieb.33
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Dec 2012 07:38:47 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <50DA55F6.8080706@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hello,
 
-Mathew,
+On Wed, Dec 26, 2012 at 09:42:14AM +0800, Aaron Lu wrote:
+> > This is really a round-about way to find out the matching device and
+> > it wouldn't work if the disk device nests deeper.  Doesn't really look
+> > like a good idea to me.
+> 
+> I don't quite understand the 'disk device nests deeper' case, can you
+> please elaborate? My understanding is, as long as the disk's part0
+> device has a parent, this function should work. For LLDs want to take
 
-I have a PCMCIA SYM53C895a based card that has been no end of
-challenges for a few years.  It worked with one Debian kernel a
-couple years ago, but only one and for the life of me I cannot
-find the notes for what version.  I can advise you I did try to
-find the Debian source code for that kernel version and it was
-nowhere to be found as is sadly the case with Debian.  I even
-tried going back one point release of that Debian version with
-no success in finding a kernel that would work with the PCMCIA
-SYM53C895a based card.  The general area that it was last known
-that the PCMCIA SYM53C895a card worked was a network install
-between 5.0.2 to 5.0.3 or 5.0.3 to 5.0.4 as best my memory can
-recall.
+Hmmm, maybe I misread but it looked like it wouldn't work if there are
+intermediate nodes between the parent device and part0.  It might not
+happen for sata but I don't think it's a good idea to assume that the
+part0 and hardware device are connected directly.
 
-What I like to know is is there any other information that will
-be required besides the standing information in the kernel
-source tarball on what information is required to submit a
-Linux Kernel bug?
+In general, it's a quite roundabout way to do it.  Let's just push it
+through SCSI.  That's how everything else is routed after all.  It's
+confusing to do this one differently.
 
-As an FYI I am currently running 3.4.24 which is the last
-kernel version I used to see if the PCMCIA SYM53C895a bug was
-resolved.
+Thanks.
 
-
-Regards,
-
-John L. Males
-Toronto, Ontario
-Canada
-28 December 2012 10:38
-
-
-==============================================================
-2012-12-28 10:24:49.735853695-0500-EST
-
-28 Dec 10:24:49 ntpdate[4757]: ntpdate 4.2.6p2@1.2194-o Sun Oct
-17 13:35:14 UTC 2010 (1)
-
-28 Dec 10:25:09 ntpdate[4762]: step time server 199.102.46.72
-offset 0.154124 sec
-
-Linux 3.4.24-kernel.org-jlm-010-amd64 #1 SMP PREEMPT Sun Dec 23
-10:06:41 EST 2012
-
-Modified Debian GNU/Linux 6.0.3 (squeeze)
-(Evaluating alternatives to Debian)
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlDdvPAACgkQ+V/XUtB6aBBkxwCg3rJJQ9b5PKTzcIzv0ApVLokS
-lx8AoM5CAND9pcXes20oJIYnG5oeUJPW
-=liOe
------END PGP SIGNATURE-----
+-- 
+tejun
