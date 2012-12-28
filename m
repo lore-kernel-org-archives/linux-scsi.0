@@ -1,48 +1,30 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Fri, 28 Dec 2012 16:16:35 -0500
-Message-ID: <20121228211635.GB3062@mtj.dyndns.org>
-References: <1353906191.2523.25.camel@dabdike>
- <21511277.LLinyDpbAK@vostro.rjw.lan>
- <20121128013928.GB15971@htj.dyndns.org>
- <1354092969.2276.49.camel@dabdike>
- <20121203081321.GA9990@mint-spring.sh.intel.com>
- <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
- <20121203162323.GB19802@htj.dyndns.org>
- <50D2AB1D.9050602@intel.com>
- <20121225171723.GI10220@mtj.dyndns.org>
- <50DA55F6.8080706@intel.com>
-Mime-Version: 1.0
+From: Asim Kadav <kadav@cs.wisc.edu>
+Subject: Re: [PATCH] a100u2w: Added sanitization for pointer dereference using a value from hardware. Detected using Carburizer  (http://lwn.net/Articles/479653/)
+Date: Fri, 28 Dec 2012 17:03:33 -0600
+Message-ID: <898F3002-7027-4FE7-B34B-45943748EBB1@cs.wisc.edu>
+References: <159925B4-EEAA-441E-8A8E-666DCA702D5B@cs.wisc.edu> <1356607503.2306.20.camel@dabdike> <E83641E5-24F4-493A-8D0C-347D8611FC75@cs.wisc.edu> <1356620014.2306.23.camel@dabdike>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <50DA55F6.8080706@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:58522 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754115Ab2L1XDg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Dec 2012 18:03:36 -0500
+In-Reply-To: <1356620014.2306.23.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
 
-On Wed, Dec 26, 2012 at 09:42:14AM +0800, Aaron Lu wrote:
-> > This is really a round-about way to find out the matching device and
-> > it wouldn't work if the disk device nests deeper.  Doesn't really look
-> > like a good idea to me.
-> 
-> I don't quite understand the 'disk device nests deeper' case, can you
-> please elaborate? My understanding is, as long as the disk's part0
-> device has a parent, this function should work. For LLDs want to take
+> It's probably really not worth it.  The u100w2 is a pretty old SCSI
+> driver.  I can't imagine there's more than a handful of them left.  As I
+> said, there's no evidence of a problem.
 
-Hmmm, maybe I misread but it looked like it wouldn't work if there are
-intermediate nodes between the parent device and part0.  It might not
-happen for sata but I don't think it's a good idea to assume that the
-part0 and hardware device are connected directly.
+I would argue that having hardened code is always better if you plan to
+support this code at all. And these bugs manifest  more frequently as hardware 
+gets older. Sanitizing inputs from hardware is a good idea and this one is 
+particularly insidious since it uses it uses hardware values in pointer operations.
 
-In general, it's a quite roundabout way to do it.  Let's just push it
-through SCSI.  That's how everything else is routed after all.  It's
-confusing to do this one differently.
-
-Thanks.
-
--- 
-tejun
+-Asim
