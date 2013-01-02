@@ -1,40 +1,19 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 48891] scsi/lpfc/lpfc_ct.c:637: possible finger trouble ?
-Date: Wed,  2 Jan 2013 17:01:07 +0000 (UTC)
-Message-ID: <20130102170107.442CB11FEB6@bugzilla.kernel.org>
-References: <bug-48891-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: wenxiong@linux.vnet.ibm.com
+Subject: [PATCH 0/2] RESEND Add support for new IBM SAS controllers
+Date: Wed, 02 Jan 2013 12:23:12 -0600
+Message-ID: <20130102182312.041361425@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:38799 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752591Ab3ABRBR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Jan 2013 12:01:17 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A483120308
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Jan 2013 17:01:16 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 4619C2030C
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Jan 2013 17:01:07 +0000 (UTC)
-In-Reply-To: <bug-48891-11613@https.bugzilla.kernel.org/>
+Received: from [32.97.110.65] ([32.97.110.65]:35694 "HELO
+	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1752760Ab3ABS00 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jan 2013 13:26:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=48891
+I am re-sending "blk iopoll support" and "bump version" patches in previous series.
 
-
-Alan <alan@lxorguk.ukuu.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |CODE_FIX
-
-
-
-
+Thanks for your help!
+Wendy
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
