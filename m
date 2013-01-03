@@ -1,84 +1,149 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/11] lpfc 8.3.37: Provide support for change_queue_type
-Date: Thu, 3 Jan 2013 15:43:03 -0500
-Message-ID: <1357245783.2628.15.camel@myfc17>
+Subject: [PATCH 2/11] lpfc 8.3.37: Fixed ELS_REC received on the unsolicited
+ receive queue
+Date: Thu, 3 Jan 2013 15:43:11 -0500
+Message-ID: <1357245791.2628.16.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:27018 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753710Ab3ACUss (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2013 15:48:48 -0500
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:50071 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753710Ab3ACUs5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2013 15:48:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Provide support for change_queue_type method in scsi_host_template
+Fixed not properly handle ELS_REC received on the unsolicited receive queue
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_scsi.c |   24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
+ lpfc_els.c |   18 ++++++++++++++++--
+ lpfc_hw.h  |    2 ++
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2012-12-12 13:32:10.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2013-01-02 16:26:35.665352067 -0500
-@@ -288,6 +288,26 @@ lpfc_change_queue_depth(struct scsi_devi
- }
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2012-12-12 13:32:10.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_els.c	2013-01-02 13:13:02.680087643 -0500
+@@ -6517,7 +6517,8 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 	struct lpfc_nodelist *ndlp;
+ 	struct ls_rjt stat;
+ 	uint32_t *payload;
+-	uint32_t cmd, did, newnode, rjt_err = 0;
++	uint32_t cmd, did, newnode;
++	uint8_t rjt_exp, rjt_err = 0;
+ 	IOCB_t *icmd = &elsiocb->iocb;
  
- /**
-+ * lpfc_change_queue_type() - Change a device's scsi tag queuing type
-+ * @sdev: Pointer the scsi device whose queue depth is to change
-+ * @tag_type: Identifier for queue tag type
-+ */
-+static int
-+lpfc_change_queue_type(struct scsi_device *sdev, int tag_type)
-+{
-+	if (sdev->tagged_supported) {
-+		scsi_set_tag_type(sdev, tag_type);
-+		if (tag_type)
-+			scsi_activate_tcq(sdev, sdev->queue_depth);
-+		else
-+			scsi_deactivate_tcq(sdev, sdev->queue_depth);
-+	} else
-+		tag_type = 0;
-+
-+	return tag_type;
-+}
-+
-+/**
-  * lpfc_rampdown_queue_depth - Post RAMP_DOWN_QUEUE event to worker thread
-  * @phba: The Hba for which this call is being executed.
-  *
-@@ -3972,7 +3992,7 @@ lpfc_scsi_prep_cmnd(struct lpfc_vport *v
+ 	if (!vport || !(elsiocb->context2))
+@@ -6606,12 +6607,14 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 		/* If Nport discovery is delayed, reject PLOGIs */
+ 		if (vport->fc_flag & FC_DISC_DELAYED) {
+ 			rjt_err = LSRJT_UNABLE_TPC;
++			rjt_exp = LSEXP_NOTHING_MORE;
  			break;
  		}
- 	} else
--		fcp_cmnd->fcpCntl1 = 0;
-+		fcp_cmnd->fcpCntl1 = SIMPLE_Q;
+ 		if (vport->port_state < LPFC_DISC_AUTH) {
+ 			if (!(phba->pport->fc_flag & FC_PT2PT) ||
+ 				(phba->pport->fc_flag & FC_PT2PT_PLOGI)) {
+ 				rjt_err = LSRJT_UNABLE_TPC;
++				rjt_exp = LSEXP_NOTHING_MORE;
+ 				break;
+ 			}
+ 			/* We get here, and drop thru, if we are PT2PT with
+@@ -6648,6 +6651,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 		lpfc_send_els_event(vport, ndlp, payload);
+ 		if (vport->port_state < LPFC_DISC_AUTH) {
+ 			rjt_err = LSRJT_UNABLE_TPC;
++			rjt_exp = LSEXP_NOTHING_MORE;
+ 			break;
+ 		}
+ 		lpfc_disc_state_machine(vport, ndlp, elsiocb, NLP_EVT_RCV_LOGO);
+@@ -6661,6 +6665,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 		lpfc_send_els_event(vport, ndlp, payload);
+ 		if (vport->port_state < LPFC_DISC_AUTH) {
+ 			rjt_err = LSRJT_UNABLE_TPC;
++			rjt_exp = LSEXP_NOTHING_MORE;
+ 			break;
+ 		}
+ 		lpfc_disc_state_machine(vport, ndlp, elsiocb, NLP_EVT_RCV_PRLO);
+@@ -6680,6 +6685,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 		phba->fc_stat.elsRcvADISC++;
+ 		if (vport->port_state < LPFC_DISC_AUTH) {
+ 			rjt_err = LSRJT_UNABLE_TPC;
++			rjt_exp = LSEXP_NOTHING_MORE;
+ 			break;
+ 		}
+ 		lpfc_disc_state_machine(vport, ndlp, elsiocb,
+@@ -6693,6 +6699,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 		phba->fc_stat.elsRcvPDISC++;
+ 		if (vport->port_state < LPFC_DISC_AUTH) {
+ 			rjt_err = LSRJT_UNABLE_TPC;
++			rjt_exp = LSEXP_NOTHING_MORE;
+ 			break;
+ 		}
+ 		lpfc_disc_state_machine(vport, ndlp, elsiocb,
+@@ -6730,6 +6737,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 		phba->fc_stat.elsRcvPRLI++;
+ 		if (vport->port_state < LPFC_DISC_AUTH) {
+ 			rjt_err = LSRJT_UNABLE_TPC;
++			rjt_exp = LSEXP_NOTHING_MORE;
+ 			break;
+ 		}
+ 		lpfc_disc_state_machine(vport, ndlp, elsiocb, NLP_EVT_RCV_PRLI);
+@@ -6813,6 +6821,11 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 		if (newnode)
+ 			lpfc_nlp_put(ndlp);
+ 		break;
++	case ELS_CMD_REC:
++			/* receive this due to exchange closed */
++			rjt_err = LSRJT_UNABLE_TPC;
++			rjt_exp = LSEXP_INVALID_OX_RX;
++		break;
+ 	default:
+ 		lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_UNSOL,
+ 			"RCV ELS cmd:     cmd:x%x did:x%x/ste:x%x",
+@@ -6820,6 +6833,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
  
- 	sli4 = (phba->sli_rev == LPFC_SLI_REV4);
+ 		/* Unsupported ELS command, reject */
+ 		rjt_err = LSRJT_CMD_UNSUPPORTED;
++		rjt_exp = LSEXP_NOTHING_MORE;
  
-@@ -5150,6 +5170,7 @@ struct scsi_host_template lpfc_template
- 	.max_sectors		= 0xFFFF,
- 	.vendor_id		= LPFC_NL_VENDOR_ID,
- 	.change_queue_depth	= lpfc_change_queue_depth,
-+	.change_queue_type	= lpfc_change_queue_type,
- };
- 
- struct scsi_host_template lpfc_vport_template = {
-@@ -5172,4 +5193,5 @@ struct scsi_host_template lpfc_vport_tem
- 	.shost_attrs		= lpfc_vport_attrs,
- 	.max_sectors		= 0xFFFF,
- 	.change_queue_depth	= lpfc_change_queue_depth,
-+	.change_queue_type	= lpfc_change_queue_type,
- };
+ 		/* Unknown ELS command <elsCmd> received from NPORT <did> */
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
+@@ -6834,7 +6848,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 	if (rjt_err) {
+ 		memset(&stat, 0, sizeof(stat));
+ 		stat.un.b.lsRjtRsnCode = rjt_err;
+-		stat.un.b.lsRjtRsnCodeExp = LSEXP_NOTHING_MORE;
++		stat.un.b.lsRjtRsnCodeExp = rjt_exp;
+ 		lpfc_els_rsp_reject(vport, stat.un.lsRjtError, elsiocb, ndlp,
+ 			NULL);
+ 	}
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2012-09-26 20:19:47.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2013-01-02 13:13:02.688087642 -0500
+@@ -538,6 +538,7 @@ struct fc_vft_header {
+ #define ELS_CMD_ECHO      0x10000000
+ #define ELS_CMD_TEST      0x11000000
+ #define ELS_CMD_RRQ       0x12000000
++#define ELS_CMD_REC       0x13000000
+ #define ELS_CMD_PRLI      0x20100014
+ #define ELS_CMD_PRLO      0x21100014
+ #define ELS_CMD_PRLO_ACC  0x02100014
+@@ -574,6 +575,7 @@ struct fc_vft_header {
+ #define ELS_CMD_ECHO      0x10
+ #define ELS_CMD_TEST      0x11
+ #define ELS_CMD_RRQ       0x12
++#define ELS_CMD_REC       0x13
+ #define ELS_CMD_PRLI      0x14001020
+ #define ELS_CMD_PRLO      0x14001021
+ #define ELS_CMD_PRLO_ACC  0x14001002
 
 
 
