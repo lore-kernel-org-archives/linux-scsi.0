@@ -1,110 +1,105 @@
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [scsi:for-next 11/19] drivers/scsi/ipr.c:8700:16: warning: array
- subscript is above array bounds
-Date: Thu, 3 Jan 2013 18:16:36 +0800
-Message-ID: <20130103101636.GA13994@localhost>
-References: <50cf0007.C4w69iMWfvH9T/3N%fengguang.wu@intel.com>
- <20130102190547.Horde.PyZzqJir309Q5Mtbh-Z1Y7A@imap.linux.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4295 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753073Ab3ACKQu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jan 2013 05:16:50 -0500
-Content-Disposition: inline
-In-Reply-To: <20130102190547.Horde.PyZzqJir309Q5Mtbh-Z1Y7A@imap.linux.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH -v2 16/26] scsi: rename random32() to prandom_u32()
+Date: Thu,  3 Jan 2013 21:19:12 +0900
+Message-ID: <1357215562-6288-17-git-send-email-akinobu.mita@gmail.com>
+References: <1357215562-6288-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1357215562-6288-1-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: wenxiong@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>
 
-Hi Wendy,
+Use more preferable function name which implies using a pseudo-random
+number generator.
 
-On Wed, Jan 02, 2013 at 07:05:47PM -0500, wenxiong@linux.vnet.ibm.com wrote:
-> Hi Fengguang,
-> 
-> We built 32bit kernel for "current jejb for-next tree" on x86
-> platform by using your config file. Seems We couldn't reproduce the
-> error in our environment. What options you use to make 32bit kernel?
-> We used:
-> 
-> make ARCH=i386 V=1 -Wall.
-> 
-> Also can you reproduce this with current jejb for-next tree in your
-> environment?
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Robert Love <robert.w.love@intel.com>
+Cc: devel@open-fcoe.org
+Cc: James Smart <james.smart@emulex.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-driver@qlogic.com
+Cc: linux-scsi@vger.kernel.org
+---
 
-Yes I can reproduce the warning at commit
-7af0de314b738e26bf4d49a6f30d00ce56343107 as well as
-7ff768a5feade4fa51f038d97b7eb9f72152b7c1.
+No change from v1
 
-I'm running gcc 4.6.3 and 4.7.2, the reproduce command line is:
+ drivers/scsi/fcoe/fcoe_ctlr.c    | 4 ++--
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 6 +++---
+ drivers/scsi/qla2xxx/qla_attr.c  | 7 +++++--
+ 3 files changed, 10 insertions(+), 7 deletions(-)
 
-        make ARCH=i386 drivers/scsi/ipr.o
-
-Thanks,
-Fengguang
-
-> Quoting kbuild test robot <fengguang.wu@intel.com>:
-> 
-> >tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-> >head:   7ff768a5feade4fa51f038d97b7eb9f72152b7c1
-> >commit: 7af0de314b738e26bf4d49a6f30d00ce56343107 [11/19] [SCSI]
-> >ipr: Add support for MSI-X and distributed completion
-> >config: i386-randconfig-x243 (attached as .config)
-> >
-> >All warnings:
-> >
-> >drivers/scsi/ipr.c: In function 'ipr_probe':
-> >drivers/scsi/ipr.c:8700:16: warning: array subscript is above
-> >array bounds [-Warray-bounds]
-> >
-> >vim +8700 drivers/scsi/ipr.c
-> >
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8684
-> >				ioa_cfg->hrrq[i].min_cmd_id =
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8685
-> >					IPR_NUM_INTERNAL_CMD_BLKS +
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8686  					(i -
-> >1) * entries_each_hrrq;
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8687
-> >				ioa_cfg->hrrq[i].max_cmd_id =
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8688
-> >					(IPR_NUM_INTERNAL_CMD_BLKS +
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8689  					i *
-> >entries_each_hrrq - 1);
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8690  			}
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8691  		} else {
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8692
-> >			entries_each_hrrq = IPR_NUM_CMD_BLKS;
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8693
-> >			ioa_cfg->hrrq[i].min_cmd_id = 0;
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8694
-> >			ioa_cfg->hrrq[i].max_cmd_id = (entries_each_hrrq - 1);
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8695  		}
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8696
-> >		ioa_cfg->hrrq[i].size = entries_each_hrrq;
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8697  	}
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8698
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8699  	i =
-> >IPR_NUM_CMD_BLKS -
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03 @8700
-> >		ioa_cfg->hrrq[ioa_cfg->hrrq_num - 1].max_cmd_id - 1;
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8701  	if (i > 0) {
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8702
-> >		ioa_cfg->hrrq[ioa_cfg->hrrq_num - 1].size += i;
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8703
-> >		ioa_cfg->hrrq[ioa_cfg->hrrq_num - 1].max_cmd_id += i;
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8704  	}
-> >7af0de31 wenxiong@linux.vnet.ibm.com 2012-12-03  8705
-> >^1da177e Linus Torvalds              2005-04-16  8706  	for (i =
-> >0; i < IPR_NUM_CMD_BLKS; i++) {
-> >203fa3fe Kleber Sacilotto de Souza   2012-08-22  8707  		ipr_cmd =
-> >pci_pool_alloc(ioa_cfg->ipr_cmd_pool, GFP_KERNEL, &dma_addr);
-> >^1da177e Linus Torvalds              2005-04-16  8708
-> >
-> >---
-> >0-DAY kernel build testing backend         Open Source Technology Center
-> >Fengguang Wu, Yuanhan Liu                              Intel Corporation
-> 
-> 
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 4a909d7..d870ccc 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2153,7 +2153,7 @@ static void fcoe_ctlr_vn_restart(struct fcoe_ctlr *fip)
+ 
+ 	if (fip->probe_tries < FIP_VN_RLIM_COUNT) {
+ 		fip->probe_tries++;
+-		wait = random32() % FIP_VN_PROBE_WAIT;
++		wait = prandom_u32() % FIP_VN_PROBE_WAIT;
+ 	} else
+ 		wait = FIP_VN_RLIM_INT;
+ 	mod_timer(&fip->timer, jiffies + msecs_to_jiffies(wait));
+@@ -2786,7 +2786,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 					  fcoe_all_vn2vn, 0);
+ 			fip->port_ka_time = jiffies +
+ 				 msecs_to_jiffies(FIP_VN_BEACON_INT +
+-					(random32() % FIP_VN_BEACON_FUZZ));
++					(prandom_u32() % FIP_VN_BEACON_FUZZ));
+ 		}
+ 		if (time_before(fip->port_ka_time, next_time))
+ 			next_time = fip->port_ka_time;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index d7096ad..bfda184 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -1732,7 +1732,7 @@ lpfc_check_pending_fcoe_event(struct lpfc_hba *phba, uint8_t unreg_fcf)
+  * use through a sequence of @fcf_cnt eligible FCF records with equal
+  * probability. To perform integer manunipulation of random numbers with
+  * size unit32_t, the lower 16 bits of the 32-bit random number returned
+- * from random32() are taken as the random random number generated.
++ * from prandom_u32() are taken as the random random number generated.
+  *
+  * Returns true when outcome is for the newly read FCF record should be
+  * chosen; otherwise, return false when outcome is for keeping the previously
+@@ -1744,7 +1744,7 @@ lpfc_sli4_new_fcf_random_select(struct lpfc_hba *phba, uint32_t fcf_cnt)
+ 	uint32_t rand_num;
+ 
+ 	/* Get 16-bit uniform random number */
+-	rand_num = (0xFFFF & random32());
++	rand_num = 0xFFFF & prandom_u32();
+ 
+ 	/* Decision with probability 1/fcf_cnt */
+ 	if ((fcf_cnt * rand_num) < 0xFFFF)
+@@ -2380,7 +2380,7 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 		phba->fcf.eligible_fcf_cnt = 1;
+ 		/* Seeding the random number generator for random selection */
+ 		seed = (uint32_t)(0xFFFFFFFF & jiffies);
+-		srandom32(seed);
++		prandom_seed(seed);
+ 	}
+ 	spin_unlock_irq(&phba->hbalock);
+ 	goto read_next_fcf;
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 83d7984..3658e9f 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1933,8 +1933,11 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ 
+ 	/* No pending activities shall be there on the vha now */
+ 	if (ql2xextended_error_logging & ql_dbg_user)
+-		msleep(random32()%10);  /* Just to see if something falls on
+-					* the net we have placed below */
++		msleep(prandom_u32() % 10);
++		/*
++		 * Just to see if something falls on the net we have placed
++		 * below
++		 */
+ 
+ 	BUG_ON(atomic_read(&vha->vref_count));
+ 
+-- 
+1.7.11.7
