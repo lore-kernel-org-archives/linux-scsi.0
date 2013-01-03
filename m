@@ -1,49 +1,245 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 3/11] lpfc 8.3.37: Fixed exhausted retry for plogi to
- nameserver.
-Date: Thu, 3 Jan 2013 15:43:19 -0500
-Message-ID: <1357245799.2628.17.camel@myfc17>
+Subject: [PATCH 4/11] lpfc 8.3.37: Removed use of NOP mailboxes for
+ interrupt verification
+Date: Thu, 3 Jan 2013 15:43:29 -0500
+Message-ID: <1357245809.2628.18.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:50073 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753811Ab3ACUtG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2013 15:49:06 -0500
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:27028 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753938Ab3ACUtO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2013 15:49:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed exhausted retry for plogi to nameserver.
+Removed use of NOP mailboxes for interrupt verification in pci_probe_one_s4
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_els.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ lpfc_init.c |  179 ++++++++----------------------------------------------------
+ 1 file changed, 26 insertions(+), 153 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2013-01-02 13:13:02.680087643 -0500
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2013-01-02 13:13:03.820087669 -0500
-@@ -3122,6 +3122,13 @@ lpfc_els_retry(struct lpfc_hba *phba, st
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2013-01-02 13:12:56.517087503 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2013-01-02 13:13:04.818087691 -0500
+@@ -7664,78 +7664,6 @@ out:
+ }
  
- 		case IOERR_SEQUENCE_TIMEOUT:
- 		case IOERR_INVALID_RPI:
-+			if (cmd == ELS_CMD_PLOGI &&
-+			    did == NameServer_DID) {
-+				/* Continue forever if plogi to */
-+				/* the nameserver fails */
-+				maxretry = 0;
-+				delay = 100;
-+			}
- 			retry = 1;
- 			break;
- 		}
+ /**
+- * lpfc_sli4_send_nop_mbox_cmds - Send sli-4 nop mailbox commands
+- * @phba: pointer to lpfc hba data structure.
+- * @cnt: number of nop mailbox commands to send.
+- *
+- * This routine is invoked to send a number @cnt of NOP mailbox command and
+- * wait for each command to complete.
+- *
+- * Return: the number of NOP mailbox command completed.
+- **/
+-static int
+-lpfc_sli4_send_nop_mbox_cmds(struct lpfc_hba *phba, uint32_t cnt)
+-{
+-	LPFC_MBOXQ_t *mboxq;
+-	int length, cmdsent;
+-	uint32_t mbox_tmo;
+-	uint32_t rc = 0;
+-	uint32_t shdr_status, shdr_add_status;
+-	union lpfc_sli4_cfg_shdr *shdr;
+-
+-	if (cnt == 0) {
+-		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+-				"2518 Requested to send 0 NOP mailbox cmd\n");
+-		return cnt;
+-	}
+-
+-	mboxq = (LPFC_MBOXQ_t *)mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+-	if (!mboxq) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"2519 Unable to allocate memory for issuing "
+-				"NOP mailbox command\n");
+-		return 0;
+-	}
+-
+-	/* Set up NOP SLI4_CONFIG mailbox-ioctl command */
+-	length = (sizeof(struct lpfc_mbx_nop) -
+-		  sizeof(struct lpfc_sli4_cfg_mhdr));
+-
+-	for (cmdsent = 0; cmdsent < cnt; cmdsent++) {
+-		lpfc_sli4_config(phba, mboxq, LPFC_MBOX_SUBSYSTEM_COMMON,
+-				 LPFC_MBOX_OPCODE_NOP, length,
+-				 LPFC_SLI4_MBX_EMBED);
+-		if (!phba->sli4_hba.intr_enable)
+-			rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
+-		else {
+-			mbox_tmo = lpfc_mbox_tmo_val(phba, mboxq);
+-			rc = lpfc_sli_issue_mbox_wait(phba, mboxq, mbox_tmo);
+-		}
+-		if (rc == MBX_TIMEOUT)
+-			break;
+-		/* Check return status */
+-		shdr = (union lpfc_sli4_cfg_shdr *)
+-			&mboxq->u.mqe.un.sli4_config.header.cfg_shdr;
+-		shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
+-		shdr_add_status = bf_get(lpfc_mbox_hdr_add_status,
+-					 &shdr->response);
+-		if (shdr_status || shdr_add_status || rc) {
+-			lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+-					"2520 NOP mailbox command failed "
+-					"status x%x add_status x%x mbx "
+-					"status x%x\n", shdr_status,
+-					shdr_add_status, rc);
+-			break;
+-		}
+-	}
+-
+-	if (rc != MBX_TIMEOUT)
+-		mempool_free(mboxq, phba->mbox_mem_pool);
+-
+-	return cmdsent;
+-}
+-
+-/**
+  * lpfc_sli4_pci_mem_setup - Setup SLI4 HBA PCI memory space.
+  * @phba: pointer to lpfc hba data structure.
+  *
+@@ -8503,37 +8431,6 @@ lpfc_unset_hba(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_sli4_unset_hba - Unset SLI4 hba device initialization.
+- * @phba: pointer to lpfc hba data structure.
+- *
+- * This routine is invoked to unset the HBA device initialization steps to
+- * a device with SLI-4 interface spec.
+- **/
+-static void
+-lpfc_sli4_unset_hba(struct lpfc_hba *phba)
+-{
+-	struct lpfc_vport *vport = phba->pport;
+-	struct Scsi_Host  *shost = lpfc_shost_from_vport(vport);
+-
+-	spin_lock_irq(shost->host_lock);
+-	vport->load_flag |= FC_UNLOADING;
+-	spin_unlock_irq(shost->host_lock);
+-
+-	phba->pport->work_port_events = 0;
+-
+-	/* Stop the SLI4 device port */
+-	lpfc_stop_port(phba);
+-
+-	lpfc_sli4_disable_intr(phba);
+-
+-	/* Reset SLI4 HBA FCoE function */
+-	lpfc_pci_function_reset(phba);
+-	lpfc_sli4_queue_destroy(phba);
+-
+-	return;
+-}
+-
+-/**
+  * lpfc_sli4_xri_exchange_busy_wait - Wait for device XRI exchange busy
+  * @phba: Pointer to HBA context object.
+  *
+@@ -9595,7 +9492,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
+ 	struct Scsi_Host  *shost = NULL;
+ 	int error, ret;
+ 	uint32_t cfg_mode, intr_mode;
+-	int mcnt;
+ 	int adjusted_fcp_io_channel;
+ 
+ 	/* Allocate memory for HBA structure */
+@@ -9684,58 +9580,35 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
+ 	shost = lpfc_shost_from_vport(vport); /* save shost for error cleanup */
+ 	/* Now, trying to enable interrupt and bring up the device */
+ 	cfg_mode = phba->cfg_use_msi;
+-	while (true) {
+-		/* Put device to a known state before enabling interrupt */
+-		lpfc_stop_port(phba);
+-		/* Configure and enable interrupt */
+-		intr_mode = lpfc_sli4_enable_intr(phba, cfg_mode);
+-		if (intr_mode == LPFC_INTR_ERROR) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"0426 Failed to enable interrupt.\n");
+-			error = -ENODEV;
+-			goto out_free_sysfs_attr;
+-		}
+-		/* Default to single EQ for non-MSI-X */
+-		if (phba->intr_type != MSIX)
+-			adjusted_fcp_io_channel = 1;
+-		else
+-			adjusted_fcp_io_channel = phba->cfg_fcp_io_channel;
+-		phba->cfg_fcp_io_channel = adjusted_fcp_io_channel;
+-		/* Set up SLI-4 HBA */
+-		if (lpfc_sli4_hba_setup(phba)) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"1421 Failed to set up hba\n");
+-			error = -ENODEV;
+-			goto out_disable_intr;
+-		}
+-
+-		/* Send NOP mbx cmds for non-INTx mode active interrupt test */
+-		if (intr_mode != 0)
+-			mcnt = lpfc_sli4_send_nop_mbox_cmds(phba,
+-							    LPFC_ACT_INTR_CNT);
+ 
+-		/* Check active interrupts received only for MSI/MSI-X */
+-		if (intr_mode == 0 ||
+-		    phba->sli.slistat.sli_intr >= LPFC_ACT_INTR_CNT) {
+-			/* Log the current active interrupt mode */
+-			phba->intr_mode = intr_mode;
+-			lpfc_log_intr_mode(phba, intr_mode);
+-			break;
+-		}
+-		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-				"0451 Configure interrupt mode (%d) "
+-				"failed active interrupt test.\n",
+-				intr_mode);
+-		/* Unset the previous SLI-4 HBA setup. */
+-		/*
+-		 * TODO:  Is this operation compatible with IF TYPE 2
+-		 * devices?  All port state is deleted and cleared.
+-		 */
+-		lpfc_sli4_unset_hba(phba);
+-		/* Try next level of interrupt mode */
+-		cfg_mode = --intr_mode;
++	/* Put device to a known state before enabling interrupt */
++	lpfc_stop_port(phba);
++	/* Configure and enable interrupt */
++	intr_mode = lpfc_sli4_enable_intr(phba, cfg_mode);
++	if (intr_mode == LPFC_INTR_ERROR) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"0426 Failed to enable interrupt.\n");
++		error = -ENODEV;
++		goto out_free_sysfs_attr;
++	}
++	/* Default to single EQ for non-MSI-X */
++	if (phba->intr_type != MSIX)
++		adjusted_fcp_io_channel = 1;
++	else
++		adjusted_fcp_io_channel = phba->cfg_fcp_io_channel;
++	phba->cfg_fcp_io_channel = adjusted_fcp_io_channel;
++	/* Set up SLI-4 HBA */
++	if (lpfc_sli4_hba_setup(phba)) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"1421 Failed to set up hba\n");
++		error = -ENODEV;
++		goto out_disable_intr;
+ 	}
+ 
++	/* Log the current active interrupt mode */
++	phba->intr_mode = intr_mode;
++	lpfc_log_intr_mode(phba, intr_mode);
++
+ 	/* Perform post initialization setup */
+ 	lpfc_post_init_setup(phba);
+ 
 
 
 
