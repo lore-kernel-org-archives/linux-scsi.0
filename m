@@ -1,90 +1,66 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
- register field names
-Date: Fri, 4 Jan 2013 12:31:11 -0700
-Message-ID: <CAErSpo6-BFtr=HH_5zLUrVK6goiVsNTq5pwmn+_wj4_z9kY-3A@mail.gmail.com>
-References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org>
- <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org> <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] [SCSI] sr: Fix multi-drive performance by using
+ per-device mutexes
+Date: Fri, 4 Jan 2013 20:50:27 +0100
+Message-ID: <20130104205027.062c808a@stein>
+References: <50E2F09A.6030606@sister-shadow.de>
+	<50E61021.20709@sister-shadow.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:51152 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754655Ab3ADTvH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jan 2013 14:51:07 -0500
+In-Reply-To: <50E61021.20709@sister-shadow.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Otto Meta <otto.kernel.02e4af24@sister-shadow.de>
+Cc: linux-scsi@vger.kernel.org, Wakko Warner <wakko@animx.eu.org>
 
-I haven't heard anything, so I'm going to push this through the PCI
-tree.  Let me know if anybody objects or would like to handle it
-differently.
+On Jan 04 Otto Meta wrote:
+> Otto Meta wrote:
+> > The single mutex for the sr module, introduced as a BKL replacement,
+> > globally serialises all sr ioctls, which hurts multi-drive performance.
+> > 
+> > This patch replaces sr_mutex with per-device mutexes in struct scsi_cd,
+> > allowing concurrent ioctls on different sr devices.
+> 
+> Unfortunately it wasn't as easy as that. The patch seems to introduce
+> a race condition that corrupts a drive's state under certain circumstances.
+> 
+> When two drives (e.g. sr0 and sr1) are attached to the same IDE cable, one
+> drive has its door locked, which will usually be the case after any operation
+> on the drive with inserted media (and whenever it feels like it, even with
+> dev.cdrom.lock=0), and the other drive is unlocked, then executing
+> 
+>   $ eject sr0 & eject sr1
+> 
+> will eject the unlocked drive and the locked drive will return
+> 
+>   eject: unable to eject, last error: Inappropriate ioctl for device
+> 
+> 
+> Other drivers down the road probably don't expect concurrent ioctls, so this
+> patch cannot be applied safely at this time. Sorry about the noise.
+> 
+> For the record: Tested with kernels 3.2.35 and 3.8.0-rc1, using IDE CD/DVD
+> drives connected via the drivers ata_piix and pata_pdc202xx_old.
 
-On Mon, Dec 17, 2012 at 12:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Ping.  I didn't push this through my tree because I didn't want to
-> create conflicts with other changes to this file.  But I think this
-> can be merged any time.
->
-> On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
-> <giridhar.malavali@qlogic.com> wrote:
->> Acked-by: Giridhar Malavali
->>
->> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
->>
->>>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
->>>
->>>Thanks,
->>>~Saurav
->>>
->>>
->>>
->>>>Use the standard #defines for PCIe Link Capability register fields
->>>>rather than bare numbers.  This also uses the new PCI Express Capability
->>>>accessor rather than reading the capability directly.
->>>>
->>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
->>>>CC: linux-driver@qlogic.com
->>>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
->>>>CC: linux-scsi@vger.kernel.org
->>>>---
->>>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
->>>> 1 files changed, 5 insertions(+), 9 deletions(-)
->>>>
->>>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
->>>>b/drivers/scsi/qla2xxx/qla_os.c
->>>>index d501bf5..b5d070f 100644
->>>>--- a/drivers/scsi/qla2xxx/qla_os.c
->>>>+++ b/drivers/scsi/qla2xxx/qla_os.c
->>>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
->>>>char *str)
->>>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
->>>>      struct qla_hw_data *ha = vha->hw;
->>>>      uint32_t pci_bus;
->>>>-     int pcie_reg;
->>>>
->>>>-     pcie_reg = pci_pcie_cap(ha->pdev);
->>>>-     if (pcie_reg) {
->>>>+     if (pci_is_pcie(ha->pdev)) {
->>>>              char lwstr[6];
->>>>-             uint16_t pcie_lstat, lspeed, lwidth;
->>>>+             uint32_t lstat, lspeed, lwidth;
->>>>
->>>>-             pcie_reg += PCI_EXP_LNKCAP;
->>>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
->>>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
->>>>-             lwidth = (pcie_lstat &
->>>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
->>>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
->>>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
->>>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
->>>>
->>>>              strcpy(str, "PCIe (");
->>>>              if (lspeed == 1)
->>>>
->>>>--
->>>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>>>the body of a message to majordomo@vger.kernel.org
->>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>
->>
+As yo may have seen in the mailinglist archive, when Wakko and I tested
+with sr_mutex removed without any replacement, we were not able to trigger
+any race condition.  However, we certainly did not attempt this very
+particular test (two drives on the same PATA cable, one locked and one
+unlocked, and "eject" called on both of them at the same time).  I wonder
+if this is a PATA idiosyncrasy.
+
+I will see whether I can do some tests tomorrow.  I can easily test master
+and slave PATA drives on a single cable behind a PATA-to-1394 bridge; but
+testing two drives on a single cable behind a PATA-to-PCI controller would
+be a bit more involved because the case of my PATA-equipped Linux PC is
+rather cramped.
+-- 
+Stefan Richter
+-=====-===-= ---= --=--
+http://arcgraph.de/sr/
