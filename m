@@ -1,41 +1,90 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Ping^2 Re: [PATCH v3 0/2] add per-device sysfs knob to enable unrestricted,
- unprivileged SG_IO
-Date: Fri, 04 Jan 2013 19:48:14 +0100
-Message-ID: <50E723EE.6070304@redhat.com>
-References: <1352827513-29890-1-git-send-email-pbonzini@redhat.com> <50CF2BE5.8070804@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
+ register field names
+Date: Fri, 4 Jan 2013 12:31:11 -0700
+Message-ID: <CAErSpo6-BFtr=HH_5zLUrVK6goiVsNTq5pwmn+_wj4_z9kY-3A@mail.gmail.com>
+References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org>
+ <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org> <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50CF2BE5.8070804@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Il 17/12/2012 15:27, Paolo Bonzini ha scritto:
-> Il 13/11/2012 18:25, Paolo Bonzini ha scritto:
->> > Privilege restrictions for SG_IO right now apply without distinction to
->> > all devices, based on the single capability CAP_SYS_RAWIO.  This is a very
->> > broad capability, and makes it difficult to give SG_IO access to trusted
->> > clients that need access to persistent reservations, trim/discard, or
->> > vendor-specific commands.  One problem here is that CAP_SYS_RAWIO allows
->> > to escape a partition and issue commands that affect the full disk,
->> > thus making DAC almost useless.
->> > 
->> > For simplicity, this series attempts to solve one case only: you want
->> > to pass through almost everything, but still run as confined as possible.
->> > This is for example the case for virtualization, where more complex
->> > filtering can be done just as easily in userspace, in the virtual
->> > machine monitor.  (This does mean the filter can be subverted if the
->> > guest can escape the QEMU jail, but a more generic approach involving
->> > a bitmap was NACKed).
->> > 
->> > Ok for 3.8?
-> Ping... Jens, I haven't seen any pull request for 3.8 from you.  Are
-> these patches on your radar?  Tejun acked both of them.
+I haven't heard anything, so I'm going to push this through the PCI
+tree.  Let me know if anybody objects or would like to handle it
+differently.
 
-Ping^2.
-
-Paolo
+On Mon, Dec 17, 2012 at 12:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Ping.  I didn't push this through my tree because I didn't want to
+> create conflicts with other changes to this file.  But I think this
+> can be merged any time.
+>
+> On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
+> <giridhar.malavali@qlogic.com> wrote:
+>> Acked-by: Giridhar Malavali
+>>
+>> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
+>>
+>>>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>>>
+>>>Thanks,
+>>>~Saurav
+>>>
+>>>
+>>>
+>>>>Use the standard #defines for PCIe Link Capability register fields
+>>>>rather than bare numbers.  This also uses the new PCI Express Capability
+>>>>accessor rather than reading the capability directly.
+>>>>
+>>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
+>>>>CC: linux-driver@qlogic.com
+>>>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+>>>>CC: linux-scsi@vger.kernel.org
+>>>>---
+>>>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
+>>>> 1 files changed, 5 insertions(+), 9 deletions(-)
+>>>>
+>>>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
+>>>>b/drivers/scsi/qla2xxx/qla_os.c
+>>>>index d501bf5..b5d070f 100644
+>>>>--- a/drivers/scsi/qla2xxx/qla_os.c
+>>>>+++ b/drivers/scsi/qla2xxx/qla_os.c
+>>>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
+>>>>char *str)
+>>>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
+>>>>      struct qla_hw_data *ha = vha->hw;
+>>>>      uint32_t pci_bus;
+>>>>-     int pcie_reg;
+>>>>
+>>>>-     pcie_reg = pci_pcie_cap(ha->pdev);
+>>>>-     if (pcie_reg) {
+>>>>+     if (pci_is_pcie(ha->pdev)) {
+>>>>              char lwstr[6];
+>>>>-             uint16_t pcie_lstat, lspeed, lwidth;
+>>>>+             uint32_t lstat, lspeed, lwidth;
+>>>>
+>>>>-             pcie_reg += PCI_EXP_LNKCAP;
+>>>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
+>>>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
+>>>>-             lwidth = (pcie_lstat &
+>>>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
+>>>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
+>>>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
+>>>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
+>>>>
+>>>>              strcpy(str, "PCIe (");
+>>>>              if (lspeed == 1)
+>>>>
+>>>>--
+>>>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>>the body of a message to majordomo@vger.kernel.org
+>>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>
+>>
+>>
