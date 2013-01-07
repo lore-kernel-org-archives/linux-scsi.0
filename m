@@ -1,53 +1,54 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v11 5/9] libata: check zero power ready status for ZPODD
-Date: Mon, 7 Jan 2013 10:36:10 -0800
-Message-ID: <20130107183610.GR3926@htj.dyndns.org>
+Subject: Re: [PATCH v11 7/9] libata: expose pm qos flags for ata device
+Date: Mon, 7 Jan 2013 10:43:58 -0800
+Message-ID: <20130107184358.GT3926@htj.dyndns.org>
 References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com>
- <1357440509-28108-6-git-send-email-aaron.lu@intel.com>
+ <1357440509-28108-8-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-pm-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1357440509-28108-6-git-send-email-aaron.lu@intel.com>
+In-Reply-To: <1357440509-28108-8-git-send-email-aaron.lu@intel.com>
 Sender: linux-pm-owner@vger.kernel.org
 To: Aaron Lu <aaron.lu@intel.com>
 Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello, Aaron.
+On Sun, Jan 06, 2013 at 10:48:27AM +0800, Aaron Lu wrote:
+> Expose pm qos flags to user space so that user has a chance to disable
+> pm features like power off, if he/she has a broken platform or devices
+> or simply does not like this pm feature.
+> 
+> This flag is exposed to user space only for ata device or atapi device
+> that is zero power capable. For normal atapi device, it will never be
+> powered off.
+> 
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  drivers/ata/libata-acpi.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index e832bf6..5b67be3 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -17,6 +17,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/slab.h>
+>  #include <linux/pm_runtime.h>
+> +#include <linux/pm_qos.h>
+>  #include <scsi/scsi_device.h>
+>  #include "libata.h"
+>  
+> @@ -1022,6 +1023,8 @@ static void ata_acpi_unregister_power_resource(struct ata_device *dev)
+>  void ata_acpi_bind(struct ata_device *dev)
+>  {
+>  	ata_acpi_register_power_resource(dev);
+> +	if (dev->class == ATA_DEV_ATA || zpodd_dev_enabled(dev))
+> +		dev_pm_qos_expose_flags(&dev->sdev->sdev_gendev, 0);
+>  }
 
-On Sun, Jan 06, 2013 at 10:48:25AM +0800, Aaron Lu wrote:
-> +/* Check zero power ready status */
-> +void zpodd_on_suspend(struct ata_device *dev)
-> +{
-> +	struct zpodd *zpodd = dev->zpodd;
-> +	unsigned long expires;
-> +
-> +	if (!zpready(dev)) {
-> +		zpodd->zp_ready = false;
-> +		zpodd->last_ready = 0;
-> +		return;
-> +	}
-> +
-> +	if (!zpodd->last_ready) {
-> +		zpodd->last_ready = jiffies;
-> +		return;
-> +	}
-> +
-> +	expires = zpodd->last_ready +
-> +		  msecs_to_jiffies(zpodd_poweroff_delay * 1000);
-> +	if (time_before(jiffies, expires))
-> +		return;
-> +
-> +	zpodd->zp_ready = true;
-> +}
-
-Using 0 jiffies as special value is generally considered a bad form.
-It should be mostly ok here but it's not like avoiding that is
-difficult, so let's please not use 0 jiffies as special value.  If you
-have to, add another variable zp_sample_cnt or whatever.
-
-Thanks.
+Why from ata_acpi_bind()?
 
 -- 
 tejun
