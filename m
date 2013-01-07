@@ -1,65 +1,68 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v11 9/9] libata: do not suspend port if normal ODD is
- attached
-Date: Mon, 07 Jan 2013 09:09:41 +0800
-Message-ID: <50EA2055.1030600@intel.com>
-References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com> <1357440509-28108-10-git-send-email-aaron.lu@intel.com> <50E98B7C.7030908@mvista.com>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v2 1/5] virtio: add functions for piecewise addition of
+	buffers
+Date: Mon, 07 Jan 2013 10:32:19 +1030
+Message-ID: <87pq1h508k.fsf@rustcorp.com.au>
+References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
+	<1355833972-20319-2-git-send-email-pbonzini@redhat.com>
+	<87r4m45g88.fsf@rustcorp.com.au> <50E54DC0.4040609@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <50E98B7C.7030908@mvista.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <50E54DC0.4040609@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Sergei,
+Paolo Bonzini <pbonzini@redhat.com> writes:
+> Il 02/01/2013 06:03, Rusty Russell ha scritto:
+>> Paolo Bonzini <pbonzini@redhat.com> writes:
+>>> The virtqueue_add_buf function has two limitations:
+>>>
+>>> 1) it requires the caller to provide all the buffers in a single call;
+>>>
+>>> 2) it does not support chained scatterlists: the buffers must be
+>>> provided as an array of struct scatterlist;
+>> 
+>> Chained scatterlists are a horrible interface, but that doesn't mean we
+>> shouldn't support them if there's a need.
+>> 
+>> I think I once even had a patch which passed two chained sgs, rather
+>> than a combo sg and two length numbers.  It's very old, but I've pasted
+>> it below.
+>> 
+>> Duplicating the implementation by having another interface is pretty
+>> nasty; I think I'd prefer the chained scatterlists, if that's optimal
+>> for you.
+>
+> Unfortunately, that cannot work because not all architectures support
+> chained scatterlists.
 
-Thanks for reviewing, will update in next revision.
+WHAT?  I can't figure out what an arch needs to do to support this?  Why
+is it an option for archs?  Why is sg_chain() even defined for
+non-ARCH_HAS_SG_CHAIN?
 
--Aaron
+Jens, help!!
 
-On 01/06/2013 10:34 PM, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 06-01-2013 6:48, Aaron Lu wrote:
-> 
->> For ODDs, the upper layer will poll for media change every a few
->> seconds, which will make it enter and leave suspend state very
->> oftern. And as each suspend will also cause a hard/soft reset,
-> 
->     s/oftern/often/
-> 
->> the gain of runtime suspend is very little while the ODD may
->> mis-function after constantly being reset. So the idle callback
->> here will not proceed to suspend if a non-ZPODD capable ODD is
->> attached to the port.
-> 
->> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
->> ---
->>   drivers/ata/libata-core.c | 19 +++++++++++++++++++
->>   1 file changed, 19 insertions(+)
-> 
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 65a362e..f664a90 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -5408,8 +5408,27 @@ static int ata_port_resume(struct device *dev)
->>   	return rc;
->>   }
->>
->> +/*
->> + * For ODDs, the upper layer will poll for media change every a few seconds,
->> + * which will make it enter and leave suspend state every a few seconds. And
-> 
->     Article is not needed before "few". (Same comment to the changelog.)
-> 
->> + * as each suspend will cause a hard/soft reset, the gain of runtime suspend
->> + * is very little and the ODD may mis-function after constantly being reset.
-> 
->     s/mis-function/malfunction/ perhaps? (Same in the changelog.)
-> 
-> MBR, Sergei
-> 
+All archs we care about support them, though, so I think we can ignore
+this issue for now.
 
+> (Also, as you mention chained scatterlists are horrible.  They'd happen
+> to work for virtio-scsi, but not for virtio-blk where the response
+> status is part of the footer, not the header).
+
+We lost that debate 5 years ago, so we hack around it as needed.  We can
+add helpers to append if we need.
+
+Thanks,
+Rusty.
