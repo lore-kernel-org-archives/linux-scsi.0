@@ -1,71 +1,41 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH v2 1/5] virtio: add functions for piecewise addition of
-	buffers
-Date: Tue, 08 Jan 2013 10:42:13 +1030
-Message-ID: <87wqvo3542.fsf@rustcorp.com.au>
-References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
-	<1355833972-20319-2-git-send-email-pbonzini@redhat.com>
-	<87r4m45g88.fsf@rustcorp.com.au> <50E54DC0.4040609@redhat.com>
-	<87pq1h508k.fsf@rustcorp.com.au> <50EADB62.1010704@redhat.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/3] qla4xxx: Updates for scsi "misc" branch
+Date: Tue, 08 Jan 2013 00:12:04 -0600
+Message-ID: <50EBB8B4.70700@cs.wisc.edu>
+References: <1356765894-14001-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <50EADB62.1010704@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39845 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750794Ab3AHGMX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Jan 2013 01:12:23 -0500
+In-Reply-To: <1356765894-14001-1-git-send-email-vikas.chaudhary@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-Paolo Bonzini <pbonzini@redhat.com> writes:
-> Il 07/01/2013 01:02, Rusty Russell ha scritto:
->> Paolo Bonzini <pbonzini@redhat.com> writes:
->>> Il 02/01/2013 06:03, Rusty Russell ha scritto:
->>>> Paolo Bonzini <pbonzini@redhat.com> writes:
->>>>> The virtqueue_add_buf function has two limitations:
->>>>>
->>>>> 1) it requires the caller to provide all the buffers in a single call;
->>>>>
->>>>> 2) it does not support chained scatterlists: the buffers must be
->>>>> provided as an array of struct scatterlist;
->>>>
->>>> Chained scatterlists are a horrible interface, but that doesn't mean we
->>>> shouldn't support them if there's a need.
->>>>
->>>> I think I once even had a patch which passed two chained sgs, rather
->>>> than a combo sg and two length numbers.  It's very old, but I've pasted
->>>> it below.
->>>>
->>>> Duplicating the implementation by having another interface is pretty
->>>> nasty; I think I'd prefer the chained scatterlists, if that's optimal
->>>> for you.
->>>
->>> Unfortunately, that cannot work because not all architectures support
->>> chained scatterlists.
->> 
->> WHAT?  I can't figure out what an arch needs to do to support this?
->
-> It needs to use the iterator functions in its DMA driver.
+On 12/29/2012 01:24 AM, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> 
+> James,
+> 
+> Please apply the following patches to the scsi tree at your earliest
+> convenience.
+> 
+> Thanks,
+> Vikas.
+> 
+> Nilesh Javali (1):
+>       qla4xxx: Correct the validation to check in get_sys_info mailbox
+> 
+> Vikas Chaudhary (2):
+>       qla4xxx: Pass correct function param to qla4_8xxx_rd_direct
+>       qla4xxx: Update driver version to 5.03.00-k3
+> 
 
-But we don't care for virtio.
+Look ok to me.
 
->> All archs we care about support them, though, so I think we can ignore
->> this issue for now.
->
-> Kind of... In principle all QEMU-supported arches can use virtio, and
-> the speedup can be quite useful.  And there is no Kconfig symbol for SG
-> chains that I can use to disable virtio-scsi on unsupported arches. :/
-
-Well, we #error if it's not supported.  Then the lazy architectures can
-fix it.
-
-Cheers,
-Rusty.
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
