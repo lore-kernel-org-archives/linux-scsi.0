@@ -1,73 +1,86 @@
-From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Subject: Re: [PATCH 5/5] kfifo: log based kfifo API
-Date: Wed, 9 Jan 2013 10:42:26 +0800
-Message-ID: <20130109024226.GD304@yliu-dev.sh.intel.com>
-References: <1357657073-27352-1-git-send-email-yuanhan.liu@linux.intel.com>
- <1357657073-27352-6-git-send-email-yuanhan.liu@linux.intel.com>
- <20130108181645.GA7972@core.coreip.homeip.net>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v11 3/9] libata: identify and init ZPODD devices
+Date: Wed, 09 Jan 2013 11:20:37 +0800
+Message-ID: <50ECE205.3000005@intel.com>
+References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com> <1357440509-28108-4-git-send-email-aaron.lu@intel.com> <20130107182052.GP3926@htj.dyndns.org> <50EBE1E2.5080406@intel.com> <20130108175202.GZ3926@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130108181645.GA7972@core.coreip.homeip.net>
-Sender: owner-linux-mm@kvack.org
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Stefani Seibold <stefani@seibold.net>, Andrew Morton <akpm@linux-foundation.org>, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, platform-driver-x86@vger.kernel.org, linux-input@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org, libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-pci@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-serial@vger.kernel.org, linux-usb@vger.kernel.org, linux-mm@kvack.org, dccp@vger.kernel.org, linux-sctp@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <20130108175202.GZ3926@htj.dyndns.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 08, 2013 at 10:16:46AM -0800, Dmitry Torokhov wrote:
-> Hi Yuanhan,
+Hi Tejun,
+
+On 01/09/2013 01:52 AM, Tejun Heo wrote:
+> Hello, Aaron.
 > 
-> On Tue, Jan 08, 2013 at 10:57:53PM +0800, Yuanhan Liu wrote:
-> > The current kfifo API take the kfifo size as input, while it rounds
-> >  _down_ the size to power of 2 at __kfifo_alloc. This may introduce
-> > potential issue.
-> > 
-> > Take the code at drivers/hid/hid-logitech-dj.c as example:
-> > 
-> > 	if (kfifo_alloc(&djrcv_dev->notif_fifo,
-> >                        DJ_MAX_NUMBER_NOTIFICATIONS * sizeof(struct dj_report),
-> >                        GFP_KERNEL)) {
-> > 
-> > Where, DJ_MAX_NUMBER_NOTIFICATIONS is 8, and sizeo of(struct dj_report)
-> > is 15.
-> > 
-> > Which means it wants to allocate a kfifo buffer which can store 8
-> > dj_report entries at once. The expected kfifo buffer size would be
-> > 8 * 15 = 120 then. While, in the end, __kfifo_alloc will turn the
-> > size to rounddown_power_of_2(120) =  64, and then allocate a buf
-> > with 64 bytes, which I don't think this is the original author want.
-> > 
-> > With the new log API, we can do like following:
-> > 
-> > 	int kfifo_size_order = order_base_2(DJ_MAX_NUMBER_NOTIFICATIONS *
-> > 					    sizeof(struct dj_report));
-> > 
-> > 	if (kfifo_alloc(&djrcv_dev->notif_fifo, kfifo_size_order, GFP_KERNEL)) {
-> > 
-> > This make sure we will allocate enough kfifo buffer for holding
-> > DJ_MAX_NUMBER_NOTIFICATIONS dj_report entries.
+> On Tue, Jan 08, 2013 at 05:07:46PM +0800, Aaron Lu wrote:
+>>>> +struct zpodd {
+>>>> +	bool slot:1;
+>>>> +	bool drawer:1;
+>>>> +
+>>>> +	struct ata_device *dev;
+>>>> +};
+>>>
+>>> Field names are usually indented.  It would be nice to have a comment
+>>
+>> checkscript.sh doesn't seem like this if I put a tab around the ':'
+>>
+>> ERROR: spaces prohibited around that ':' (ctx:VxW)
+>> #222: FILE: include/uapi/linux/cdrom.h:915:
+>> +	__u8 reserved1:		2;
+>>  	              ^
+>>
+>> Which style should I follow?
 > 
-> Why don't you simply change __kfifo_alloc to round the allocation up
-> instead of down?
+> struct zpodd {
+> 	bool			slot:1;
+> 	bool			drawer:1;
+> 
+> 	struct ata_device	*dev;
+> };
 
-Hi Dmitry,
+Oh, got it :-)
 
-Yes, it would be neat and that was my first reaction as well. I then
-sent out a patch, but it was NACKed by Stefani(the original kfifo
-author). Here is the link:
+> 
+>>> explaining synchronization.  Bitfields w/ their implicit RMW ops tend
+>>> to make people wonder about what the access rules are.
+>>
+>> The slot and drawer bit field is assigned only once during ata probe
+>> time in EH context, and accessed later in PM's callback context.
+>> Not sure what access rule should I describe...
+> 
+> /* init during probe, RO afterwards */ should do but I'd prefer if you
+> stay away from bitfields altogether.  There are cases where bitfields
+> are okay but when you're working across multiple locking domains, it
+> usually is a bad idea because the code which accesses those fields
+> look completely independent while still being able to interact with
+> each other.  They look properly synchronized until you realized they
+> live on the same machine word.
 
-    https://lkml.org/lkml/2012/10/26/144
+Then I will not use bitfields, I was just thinking to save some space
+and didn't realize it would bring such nasty problems...
 
-Then Stefani proposed to change the API to take log of size as input to
-root fix this kind of issues. And here it is.
+> 
+>>>> +/*
+>>>> + * Per the spec, only slot type and drawer type ODD can be supported
+>>>> + *
+>>>> + * Return 0 for slot type, 1 for drawer, -ENODEV for other types or on error.
+>>>> + */
+>>>
+>>> Maybe bool odd_has_drawer() is better?
+>>
+>> There are other types of ODD other than slot and drawer, and both slot
+>> and drawer type ODDs can be supported for ZPODD. So a bool can't convey
+>> such information :-)
+> 
+> Then please make it a proper ATA enum and use it in struct zpodd too.
 
-Thanks.
+Sure, and thanks for all the suggestions!
 
-	--yliu
+-Aaron
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
