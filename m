@@ -1,45 +1,57 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH] mvsas: use correct sas_device_type.
-Date: Wed, 9 Jan 2013 09:27:30 +0800
-Message-ID: <201301090927193684361@gmail.com>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: initialize sense_reason_t ret in
+ core_scsi3_emulate_pro_register()
+Date: Tue, 08 Jan 2013 17:51:26 -0800
+Message-ID: <1357696286.5660.36.camel@haakon2.linux-iscsi.org>
+References: <y>  <1356210957-30089-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-da0-f50.google.com ([209.85.210.50]:51358 "EHLO
-	mail-da0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756044Ab3AIB1k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2013 20:27:40 -0500
-Received: by mail-da0-f50.google.com with SMTP id h15so466616dan.37
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Jan 2013 17:27:40 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1356210957-30089-1-git-send-email-geert@linux-m68k.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley <JBottomley@parallels.com>
-Cc: =?gb2312?B?09rP8sHB?= <yuxiangl@marvell.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-V2hlbiBidWlsZGVkIG12c2FzLCBpdCB3aWxsIHByaW50IHRob3NlIG1lc3NhZ2VzOg0KDQpkcml2
-ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmM6IEluIGZ1bmN0aW9uICdtdnNfdXBkYXRlX3BoeWluZm8n
-Og0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jOjExNTY6MzQ6IHdhcm5pbmc6IGNvbXBhcmlz
-b24gYmV0d2VlbiAnZW51bQ0Kc2FzX2RldmljZV90eXBlJyBhbmQgJ2VudW0gc2FzX2Rldl90eXBl
-JyBbLVdlbnVtLWNvbXBhcmVdDQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmM6MTE1OTozOTog
-d2FybmluZzogY29tcGFyaXNvbiBiZXR3ZWVuICdlbnVtDQpzYXNfZGV2aWNlX3R5cGUnYW5kICdl
-bnVtIHNhc19kZXZfdHlwZScgWy1XZW51bS1jb21wYXJlXQ0KDQpTaWduZWQtb2ZmLWJ5OiBKaWFu
-cGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL3Njc2kvbXZzYXMv
-bXZfc2FzLmMgfCAgICA0ICsrLS0NCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAy
-IGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5j
-IGIvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jDQppbmRleCAwNzhjNjM5Li45MGYzYTc3IDEw
-MDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jDQorKysgYi9kcml2ZXJzL3Nj
-c2kvbXZzYXMvbXZfc2FzLmMNCkBAIC0xMTUzLDEwICsxMTUzLDEwIEBAIHZvaWQgbXZzX3VwZGF0
-ZV9waHlpbmZvKHN0cnVjdCBtdnNfaW5mbyAqbXZpLCBpbnQgaSwgaW50IGdldF9zdCkNCiAJCQlw
-aHktPmlkZW50aWZ5LmRldmljZV90eXBlID0NCiAJCQkJcGh5LT5hdHRfZGV2X2luZm8gJiBQT1JU
-X0RFVl9UWVBFX01BU0s7DQogDQotCQkJaWYgKHBoeS0+aWRlbnRpZnkuZGV2aWNlX3R5cGUgPT0g
-U0FTX0VORF9ERVYpDQorCQkJaWYgKHBoeS0+aWRlbnRpZnkuZGV2aWNlX3R5cGUgPT0gU0FTX0VO
-RF9ERVZJQ0UpDQogCQkJCXBoeS0+aWRlbnRpZnkudGFyZ2V0X3BvcnRfcHJvdG9jb2xzID0NCiAJ
-CQkJCQkJU0FTX1BST1RPQ09MX1NTUDsNCi0JCQllbHNlIGlmIChwaHktPmlkZW50aWZ5LmRldmlj
-ZV90eXBlICE9IE5PX0RFVklDRSkNCisJCQllbHNlIGlmIChwaHktPmlkZW50aWZ5LmRldmljZV90
-eXBlICE9IFNBU19QSFlfVU5VU0VEKQ0KIAkJCQlwaHktPmlkZW50aWZ5LnRhcmdldF9wb3J0X3By
-b3RvY29scyA9DQogCQkJCQkJCVNBU19QUk9UT0NPTF9TTVA7DQogCQkJaWYgKG9vYl9kb25lKQ0K
-LS0gDQoxLjcuOS41DQo=
+Hi Geert,
 
+Apologies for the delay on this one.  Still catching up on some older
+holiday items..
+
+On Sat, 2012-12-22 at 22:15 +0100, Geert Uytterhoeven wrote:
+> drivers/target/target_core_pr.c: In function =E2=80=98core_scsi3_emul=
+ate_pro_register=E2=80=99:
+> drivers/target/target_core_pr.c:2056: warning: =E2=80=98ret=E2=80=99 =
+may be used uninitialized in this function
+>=20
+> If !spec_i_pt, the "goto out_put_pr_reg" on line 2141 seems to be a r=
+eal
+> case where ret is not initialized.
+>=20
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> ---
+>  drivers/target/target_core_pr.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_=
+core_pr.c
+> index e35dbf8..c2e8026 100644
+> --- a/drivers/target/target_core_pr.c
+> +++ b/drivers/target/target_core_pr.c
+> @@ -2053,7 +2053,7 @@ core_scsi3_emulate_pro_register(struct se_cmd *=
+cmd, u64 res_key, u64 sa_res_key,
+>  	/* Used for APTPL metadata w/ UNREGISTER */
+>  	unsigned char *pr_aptpl_buf =3D NULL;
+>  	unsigned char isid_buf[PR_REG_ISID_LEN], *isid_ptr =3D NULL;
+> -	sense_reason_t ret;
+> +	sense_reason_t ret =3D 0;
+>  	int pr_holder =3D 0, type;
+> =20
+>  	if (!se_sess || !se_lun) {
+
+Looks fine, applied to target-pending/master.
+
+Thank you,
+
+--nab
