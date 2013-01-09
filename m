@@ -1,64 +1,168 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [PATCH -next] [SCSI] mpt3sas: remove unused variables
-Date: Wed, 9 Jan 2013 11:51:22 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A60A54E6986A@inbmail02.lsi.com>
-References: <20121211205651.GA5312@localhost.localdomain>
- <87k3sgn73t.fsf@nemi.mork.no>
+From: "Wu, Jeff" <Jeff.Wu@amd.com>
+Subject: RE: [PATCH v11 0/9] ZPODD Patches
+Date: Wed, 9 Jan 2013 07:55:43 +0000
+Message-ID: <5180B254989D2842B6BD8114CBC703AC0AEA7F@SCYBEXDAG03.amd.com>
+References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:53328 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757219Ab3AIGVa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2013 01:21:30 -0500
-In-Reply-To: <87k3sgn73t.fsf@nemi.mork.no>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1357440509-28108-1-git-send-email-aaron.lu@intel.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?B?QmrDuHJuIE1vcms=?= <bjorn@mork.no>, "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@kernel.org" <jejb@kernel.org>, "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>, "weiyj.lk@gmail.com" <weiyj.lk@gmail.com>
 
-Qmpvcm4sDQoNCldlIHdpbGwgZml4IHRoaXMgYnVnIGluIGJvdGggbXB0MnNhcyBhbmQgbXB0M3Nh
-cy4NClBsZWFzZSBub3RlIHRoYXQgd2UgY3VycmVudGx5IHBlcmlvZGljYWxseSByZWxlYXNlIG5l
-dyBmZWF0dXJlcyBhbmQgZGVmZWN0IGZpeGVzIGZvciBib3RoIG1wdDJzYXMgYW5kIG1wdDNzYXMu
-IE1vc3Qgb2YgdGhlc2UgYXJlIHRoZW4gcG9zdGVkIHRvIHVwc3RyZWFtLiBXZSBoYXZlIGEgdmVy
-eSB3ZWxsIGRlZmluZWQgTFNJIGludGVybmFsIHByb2Nlc3MgZm9yIHN5bmNocm9uaXppbmcgdGhl
-IGRlZmVjdCBmaXhlcyBhY3Jvc3MgdGhlIDIgZHJpdmVycy4gDQpBIGRlbGliZXJhdGUgY2hvaWNl
-IHdhcyBtYWRlIHRvIGtlZXAgdGhlIG1wdDNzYXMgc2VwYXJhdGUgZnJvbSBtcHQyc2FzIGR1ZSB0
-byBvdXIgNiBHSUcgcHJvZHVjdCBiZWluZyB0cnVseSBtYXR1cmUgd2l0aCBhIG5vdGljZWFibGUg
-cmFtcGluZyBkb3duIG9mIGVuaGFuY2VtZW50cy9yZWxlYXNlcy4gICANCg0KbXB0M3NhcyBpcyBh
-dCBpdCdzIGluaXRpYWwgYmFzZWxpbmUgd2l0aCBhIGhlYWx0aHkgcm9hZG1hcCBhaGVhZC4gIEFy
-Y2hpdGVjdHVyYWxseSB0aGVyZSB3aWxsIGJlIGNoYW5nZXMgdG8gdGhlIGhlYWRlcnMgdGhhdCB3
-aWxsIGJlIG9ubHkgbXB0M3NhcyBzcGVjaWZpYy4gDQoNCkZyb20gYSBtYWludGVuYW5jZSBhbmQg
-dGVzdCBwZXJzcGVjdGl2ZSBoYXZpbmcgdGhlIHNvdXJjZSBiYXNlIHNlcGFyYXRlIGFjdHVhbGx5
-IHJlZHVjZXMgdGhlIHNvIGNhbGxlZCBtYWludGVuYW5jZSAiaGVsbCIuDQoNClRoaXMgaXMgbm90
-IGEg4oCcbWVzc+KAnSAuICBMU0kgaXMgZnVsbHkgY2FwYWJsZSBvZiBtYW5hZ2luZyB0aGlzIHNv
-ZnR3YXJlLg0KDQpSZWdhcmRzLA0KTmFnYWxha3NobWkNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KRnJvbTogQmrDuHJuIE1vcmsgW21haWx0bzpiam9ybkBtb3JrLm5vXSANClNlbnQ6
-IE1vbmRheSwgRGVjZW1iZXIgMTcsIDIwMTIgNjo1NSBQTQ0KVG86IFJlZGR5LCBTcmVla2FudGgN
-CkNjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgamVqYkBrZXJuZWwub3JnOyB5b25nanVu
-X3dlaUB0cmVuZG1pY3JvLmNvbS5jbjsgd2VpeWoubGtAZ21haWwuY29tOyBOYW5kaWdhbWEsIE5h
-Z2FsYWtzaG1pDQpTdWJqZWN0OiBSZTogW1BBVENIIC1uZXh0XSBbU0NTSV0gbXB0M3NhczogcmVt
-b3ZlIHVudXNlZCB2YXJpYWJsZXMNCg0KPHNyZWVrYW50aC5yZWRkeUBsc2kuY29tPiB3cml0ZXM6
-DQoNCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYyAN
-Cj4gYi9kcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2loLmMNCj4gaW5kZXggYWM5ZGJj
-Mi4uNjFhMWE0NSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19z
-Y3NpaC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYw0KPiBA
-QCAtMjc1NCwxMyArMjc1NCwxMSBAQCBfc2NzaWhfYmxvY2tfaW9fdG9fY2hpbGRyZW5fYXR0YWNo
-ZWRfZGlyZWN0bHkoc3RydWN0IE1QVDNTQVNfQURBUFRFUiAqaW9jLA0KPiAgCWludCBpOw0KPiAg
-CXUxNiBoYW5kbGU7DQo+ICAJdTE2IHJlYXNvbl9jb2RlOw0KPiAtCXU4IHBoeV9udW1iZXI7DQo+
-ICANCj4gIAlmb3IgKGkgPSAwOyBpIDwgZXZlbnRfZGF0YS0+TnVtRW50cmllczsgaSsrKSB7DQo+
-ICAJCWhhbmRsZSA9IGxlMTZfdG9fY3B1KGV2ZW50X2RhdGEtPlBIWVtpXS5BdHRhY2hlZERldkhh
-bmRsZSk7DQo+ICAJCWlmICghaGFuZGxlKQ0KPiAgCQkJY29udGludWU7DQo+IC0JCXBoeV9udW1i
-ZXIgPSBldmVudF9kYXRhLT5TdGFydFBoeU51bSArIGk7DQo+ICAJCXJlYXNvbl9jb2RlID0gZXZl
-bnRfZGF0YS0+UEhZW2ldLlBoeVN0YXR1cyAmDQo+ICAJCSAgICBNUEkyX0VWRU5UX1NBU19UT1BP
-X1JDX01BU0s7DQo+ICAJCWlmIChyZWFzb25fY29kZSA9PSBNUEkyX0VWRU5UX1NBU19UT1BPX1JD
-X0RFTEFZX05PVF9SRVNQT05ESU5HKQ0KDQpUaGVyZSBpcyBhbiBpZGVudGljYWwgY29weSBvZiB0
-aGlzIGNvZGUsIGluY2x1ZGluZyB0aGF0IGJ1ZywgaW4gZHJpdmVycy9zY3NpL21wdDJzYXMvbXB0
-MnNhc19zY3NpaC5jLg0KDQpJZiB5b3UgaW5zaXN0IG9uIHRoZSBzdHVwaWQgY29kZSBkdXBsaWNh
-dGlvbiwgdGhlbiBwbGVhc2UgdHJ5IHRvIGtlZXAgeW91ciBidWdzIHN5bmNyb25pemVkISAgSWYg
-eW91IGFyZSBnb2luZyB0byBmaXggdGhpcyBidWcgZm9yIHRoZSBtcHQzc2FzIGRyaXZlciwgdGhl
-biB5b3UgKmhhdmUqIHRvIGZpeCBpdCBmb3IgbXB0MnNhcyBhcyB3ZWxsLg0KDQpZZXMsIEkgYmVs
-aWV2ZSB0aGlzIGlzIGEgbWVzcyBhbmQgeW91IGhhdmUgYWxyZWFkeSBkZW1vbnN0cmF0ZWQgdGhh
-dCB5b3UgYXJlIGluY2FwYWJsZSBvZiBtYW5hZ2luZyBpdC4NCg0KDQpCasO4cm4NCg==
+
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Aaron Lu
+> Sent: Sunday, January 06, 2013 10:48 AM
+> To: Jeff Garzik; James Bottomley; Rafael J. Wysocki; Alan Stern; Tejun Heo
+> Cc: Aaron Lu; Wu, Jeff; linux-ide@vger.kernel.org; linux-pm@vger.kernel.org;
+> linux-scsi@vger.kernel.org; linux-acpi@vger.kernel.org; Aaron Lu
+> Subject: [PATCH v11 0/9] ZPODD Patches
+> 
+> v11:
+> Introduce event_driven flag in scsi_device to silence the media event poll
+> after ODD is powered off; Removed ata layer PM QOS control, instead,
+> simply limit ACPI state to D3_HOT when choosing state; Make the power off
+> delay a module param named zpodd_poweroff_delay, defaults to 30
+> seconds.
+> 
+
+1. Tray type ZPODD , test pass;
+2. Slot type ZPODD , test pass;
+
+Tested-by: Jeff Wu  <jeff.wu@amd.com>
+
+
+> v10:
+> Introduce PM_QOS_NO_POLL flag to skip calling disk's events_check callback;
+> Do not use zero power ready hint information from event poll; Check
+> attached device in port's runtime idle callback to decide if suspend is desired;
+> Address various comments from Tejun Heo.
+> 
+> v9:
+> Build ZPODD as part of libata instead of another standalone module as it is
+> tightly related to other libata files.
+> Identify and init ZPODD during probe time instead of after SCSI device is
+> created as suggested by Tejun Heo.
+> Make use of pm qos flag to give ACPI hint when choosing ACPI state.
+> Expose qos flag to give user control of whether power off is allowed.
+> 
+> This patchset used Rafael's pm-qos work:
+> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm-qos
+> 
+> v8:
+> This version is a redesign, it doesn't have much to do with previous versions.
+> The ZPODD implementation is done almost entirely in ATA layer now, except
+> 2 helper functions from SCSI sr driver to block disk events.
+> 
+> The basic idea is that, when ata port is runtime suspended, it will check if the
+> ODD is ready to be powered off. And if yes, events is blocked and power
+> omitted; if not, ODD's power supply remains unchanged by keeping ACPI
+> state at D0.
+> 
+> Some background knowledge about ZPODD is added below v1 history log.
+> 
+> v7:
+> Re work of runtime pm of sr driver, based on ideas of Alan Stern and Oliver
+> Neukum.
+> 
+> Jeff, due to the ready_to_power_off flag added, there is a small change in
+> [PATCH v7 6/6] libata: acpi: respect may_power_off flag, please check if I can
+> still get your ack, thanks.
+> 
+> v6:
+> When user changes may_power_off flag through sysfs entry and if device is
+> already runtime suspended, resume resume it so that it can respect this flag
+> next time it is runtime suspended as suggested by Alan Stern.
+> Call scsi_autopm_get/put_device once in sr_check_events as suggested by
+> Alan Stern.
+> 
+> v5:
+> Add may_power_off flag to scsi device.
+> Alan Stern suggested that I should not mess runtime suspend with runtime
+> power off, but the current zpodd implementation made it not easy to
+> seperate. So I re-wrote the zpodd implementation, the end result is, normal
+> ODD can also enter runtime suspended state, but their power won't be
+> removed.
+> 
+> v4:
+> Rebase on top of Linus' tree, due to this, the problem of a missing flag in v3 is
+> gone; Add a new function scsi_autopm_put_device_autosuspend to first
+> mark last busy for the device and then put autosuspend it as suggested by
+> Oliver Neukum.
+> Typo fix as pointed by Sergei Shtylyov.
+> Check can_power_off flag before any runtime pm operations in sr.
+> 
+> v3:
+> Rebase on top of scsi-misc tree;
+> Add the sr related patches previously in Jeff's libata tree; Re-organize the sr
+> patches.
+> A problem for now: for patch
+> scsi: sr: support zero power ODD(ZPODD)
+> I can't set a flag in libata-acpi.c since a related function is missing in scsi-misc
+> tree. Will fix this when 3.6-rc1 released.
+> 
+> v2:
+> Bug fix for v1;
+> Use scsi_autopm_* in sr driver instead of pm_runtime_*;
+> 
+> v1:
+> Here are some patches to make ZPODD easier to use for end users and a fix
+> for using ZPODD with system suspend.
+> 
+> Some background knowledge about ZPODD:
+> ODD means Optical Disc Drive.
+> ZPODD means Zero Power ODD, it is a mechanism to place the ODD into zero
+> power state when the system is running at S0 system state without user's
+> awareness.
+> It achieved this by ACPI and SATA device attention pin. For power off, normal
+> ACPI control method is used to place the device into D3 cold ACPI device
+> state, aka. device power supply omitted. For power on, when user press the
+> eject button of a drawer type ODD or when user inserts an ODD into a slot
+> type ODD, the device attention pin will trigger. In the current x86
+> implementation, this pin will connect to a GPE, and the GPE will trigger an
+> ACPI interrupt. With our pre-registered ACPI notification code, the device
+> can be runtime resumed, and we place the device back to full power state by
+> setting its ACPI state to D0. The whole process is transparent to the end user.
+> 
+> Aaron Lu (9):
+>   scsi: sr: support runtime pm
+>   libata: Add CONFIG_SATA_ZPODD
+>   libata: identify and init ZPODD devices
+>   libata: move acpi notification code to zpodd
+>   libata: check zero power ready status for ZPODD
+>   libata: handle power transition of ODD
+>   libata: expose pm qos flags for ata device
+>   libata: no poll when ODD is powered off
+>   libata: do not suspend port if normal ODD is attached
+> 
+>  drivers/ata/Kconfig        |  13 +++
+>  drivers/ata/Makefile       |   1 +
+>  drivers/ata/libata-acpi.c  | 111 +++++-------------  drivers/ata/libata-core.c  |
+> 23 +++-
+>  drivers/ata/libata-eh.c    |  12 +-
+>  drivers/ata/libata-zpodd.c | 281
+> +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/ata/libata.h       |  27 +++++
+>  drivers/scsi/sr.c          |  36 +++++-
+>  include/linux/libata.h     |   3 +
+>  include/scsi/scsi_device.h |   1 +
+>  include/uapi/linux/cdrom.h |  34 ++++++
+>  11 files changed, 452 insertions(+), 90 deletions(-)  create mode 100644
+> drivers/ata/libata-zpodd.c
+> 
+> --
+> 1.7.11.7
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+
+
