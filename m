@@ -1,81 +1,45 @@
-From: Andy Walls <awalls@md.metrocast.net>
-Subject: Re: [PATCH 5/5] kfifo: log based kfifo API
-Date: Tue, 08 Jan 2013 16:10:07 -0500
-Message-ID: <f1be90be-ad99-4dff-8332-804383adc5c8@email.android.com>
-References: <1357657073-27352-1-git-send-email-yuanhan.liu@linux.intel.com> <1357657073-27352-6-git-send-email-yuanhan.liu@linux.intel.com> <20130108181645.GA7972@core.coreip.homeip.net>
+From: majianpeng <majianpeng@gmail.com>
+Subject: [PATCH] mvsas: use correct sas_device_type.
+Date: Wed, 9 Jan 2013 09:27:30 +0800
+Message-ID: <201301090927193684361@gmail.com>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130108181645.GA7972@core.coreip.homeip.net>
-Sender: owner-linux-mm@kvack.org
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>, Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Stefani Seibold <stefani@seibold.net>, Andrew Morton <akpm@linux-foundation.org>, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, platform-driver-x86@vger.kernel.org, linux-input@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org, libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-pci@vger.kernel.org, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-serial@vger.kernel.org, linux-usb@vger.kernel.org, linux-mm@kvack.org, dccp@vger.kernel.org, linux-sctp@vger.kernel.org
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-da0-f50.google.com ([209.85.210.50]:51358 "EHLO
+	mail-da0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756044Ab3AIB1k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2013 20:27:40 -0500
+Received: by mail-da0-f50.google.com with SMTP id h15so466616dan.37
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Jan 2013 17:27:40 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley <JBottomley@parallels.com>
+Cc: =?gb2312?B?09rP8sHB?= <yuxiangl@marvell.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
+V2hlbiBidWlsZGVkIG12c2FzLCBpdCB3aWxsIHByaW50IHRob3NlIG1lc3NhZ2VzOg0KDQpkcml2
+ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmM6IEluIGZ1bmN0aW9uICdtdnNfdXBkYXRlX3BoeWluZm8n
+Og0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jOjExNTY6MzQ6IHdhcm5pbmc6IGNvbXBhcmlz
+b24gYmV0d2VlbiAnZW51bQ0Kc2FzX2RldmljZV90eXBlJyBhbmQgJ2VudW0gc2FzX2Rldl90eXBl
+JyBbLVdlbnVtLWNvbXBhcmVdDQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmM6MTE1OTozOTog
+d2FybmluZzogY29tcGFyaXNvbiBiZXR3ZWVuICdlbnVtDQpzYXNfZGV2aWNlX3R5cGUnYW5kICdl
+bnVtIHNhc19kZXZfdHlwZScgWy1XZW51bS1jb21wYXJlXQ0KDQpTaWduZWQtb2ZmLWJ5OiBKaWFu
+cGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL3Njc2kvbXZzYXMv
+bXZfc2FzLmMgfCAgICA0ICsrLS0NCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAy
+IGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5j
+IGIvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jDQppbmRleCAwNzhjNjM5Li45MGYzYTc3IDEw
+MDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jDQorKysgYi9kcml2ZXJzL3Nj
+c2kvbXZzYXMvbXZfc2FzLmMNCkBAIC0xMTUzLDEwICsxMTUzLDEwIEBAIHZvaWQgbXZzX3VwZGF0
+ZV9waHlpbmZvKHN0cnVjdCBtdnNfaW5mbyAqbXZpLCBpbnQgaSwgaW50IGdldF9zdCkNCiAJCQlw
+aHktPmlkZW50aWZ5LmRldmljZV90eXBlID0NCiAJCQkJcGh5LT5hdHRfZGV2X2luZm8gJiBQT1JU
+X0RFVl9UWVBFX01BU0s7DQogDQotCQkJaWYgKHBoeS0+aWRlbnRpZnkuZGV2aWNlX3R5cGUgPT0g
+U0FTX0VORF9ERVYpDQorCQkJaWYgKHBoeS0+aWRlbnRpZnkuZGV2aWNlX3R5cGUgPT0gU0FTX0VO
+RF9ERVZJQ0UpDQogCQkJCXBoeS0+aWRlbnRpZnkudGFyZ2V0X3BvcnRfcHJvdG9jb2xzID0NCiAJ
+CQkJCQkJU0FTX1BST1RPQ09MX1NTUDsNCi0JCQllbHNlIGlmIChwaHktPmlkZW50aWZ5LmRldmlj
+ZV90eXBlICE9IE5PX0RFVklDRSkNCisJCQllbHNlIGlmIChwaHktPmlkZW50aWZ5LmRldmljZV90
+eXBlICE9IFNBU19QSFlfVU5VU0VEKQ0KIAkJCQlwaHktPmlkZW50aWZ5LnRhcmdldF9wb3J0X3By
+b3RvY29scyA9DQogCQkJCQkJCVNBU19QUk9UT0NPTF9TTVA7DQogCQkJaWYgKG9vYl9kb25lKQ0K
+LS0gDQoxLjcuOS41DQo=
 
->Hi Yuanhan,
->
->On Tue, Jan 08, 2013 at 10:57:53PM +0800, Yuanhan Liu wrote:
->> The current kfifo API take the kfifo size as input, while it rounds
->>  _down_ the size to power of 2 at __kfifo_alloc. This may introduce
->> potential issue.
->>=20
->> Take the code at drivers/hid/hid-logitech-dj.c as example:
->>=20
->> 	if (kfifo_alloc(&djrcv_dev->notif_fifo,
->>                        DJ_MAX_NUMBER_NOTIFICATIONS * sizeof(struct
->dj_report),
->>                        GFP_KERNEL)) {
->>=20
->> Where, DJ_MAX_NUMBER_NOTIFICATIONS is 8, and sizeo of(struct
->dj_report)
->> is 15.
->>=20
->> Which means it wants to allocate a kfifo buffer which can store 8
->> dj_report entries at once. The expected kfifo buffer size would be
->> 8 * 15 =3D 120 then. While, in the end, __kfifo_alloc will turn the
->> size to rounddown_power_of_2(120) =3D  64, and then allocate a buf
->> with 64 bytes, which I don't think this is the original author want.
->>=20
->> With the new log API, we can do like following:
->>=20
->> 	int kfifo_size_order =3D order_base_2(DJ_MAX_NUMBER_NOTIFICATIONS *
->> 					    sizeof(struct dj_report));
->>=20
->> 	if (kfifo_alloc(&djrcv_dev->notif_fifo, kfifo_size_order,
->GFP_KERNEL)) {
->>=20
->> This make sure we will allocate enough kfifo buffer for holding
->> DJ_MAX_NUMBER_NOTIFICATIONS dj_report entries.
->
->Why don't you simply change __kfifo_alloc to round the allocation up
->instead of down?
->
->Thanks.
->
->--=20
->Dmitry
->--
->To unsubscribe from this list: send the line "unsubscribe linux-media"
->in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Hi Dmitry,
-
-I agree.   I don't see the benefit in pushing up the change to a kfifo in=
-ternal decision/problem to many different places in the kernel.
-
-Regards,
-Andy
-
-=20
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
