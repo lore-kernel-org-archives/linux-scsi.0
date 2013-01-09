@@ -1,59 +1,64 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v11 7/9] libata: expose pm qos flags for ata device
-Date: Wed, 09 Jan 2013 13:11:39 +0800
-Message-ID: <50ECFC0B.5070008@intel.com>
-References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com> <1357440509-28108-8-git-send-email-aaron.lu@intel.com> <20130107184358.GT3926@htj.dyndns.org>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH -next] [SCSI] mpt3sas: remove unused variables
+Date: Wed, 9 Jan 2013 11:51:22 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A60A54E6986A@inbmail02.lsi.com>
+References: <20121211205651.GA5312@localhost.localdomain>
+ <87k3sgn73t.fsf@nemi.mork.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20130107184358.GT3926@htj.dyndns.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:53328 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757219Ab3AIGVa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2013 01:21:30 -0500
+In-Reply-To: <87k3sgn73t.fsf@nemi.mork.no>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?utf-8?B?QmrDuHJuIE1vcms=?= <bjorn@mork.no>, "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@kernel.org" <jejb@kernel.org>, "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>, "weiyj.lk@gmail.com" <weiyj.lk@gmail.com>
 
-On 01/08/2013 02:43 AM, Tejun Heo wrote:
-> On Sun, Jan 06, 2013 at 10:48:27AM +0800, Aaron Lu wrote:
->> Expose pm qos flags to user space so that user has a chance to disable
->> pm features like power off, if he/she has a broken platform or devices
->> or simply does not like this pm feature.
->>
->> This flag is exposed to user space only for ata device or atapi device
->> that is zero power capable. For normal atapi device, it will never be
->> powered off.
->>
->> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
->> ---
->>  drivers/ata/libata-acpi.c | 3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
->> index e832bf6..5b67be3 100644
->> --- a/drivers/ata/libata-acpi.c
->> +++ b/drivers/ata/libata-acpi.c
->> @@ -17,6 +17,7 @@
->>  #include <linux/pci.h>
->>  #include <linux/slab.h>
->>  #include <linux/pm_runtime.h>
->> +#include <linux/pm_qos.h>
->>  #include <scsi/scsi_device.h>
->>  #include "libata.h"
->>  
->> @@ -1022,6 +1023,8 @@ static void ata_acpi_unregister_power_resource(struct ata_device *dev)
->>  void ata_acpi_bind(struct ata_device *dev)
->>  {
->>  	ata_acpi_register_power_resource(dev);
->> +	if (dev->class == ATA_DEV_ATA || zpodd_dev_enabled(dev))
->> +		dev_pm_qos_expose_flags(&dev->sdev->sdev_gendev, 0);
->>  }
-> 
-> Why from ata_acpi_bind()?
-
-I think I should add a check to see if platform can power off the device
-before export this qos flag. The check is done by ACPI, and the qos flag
-is for the scsi device. So looks like this is the proper place?
-
-Thanks,
-Aaron
-
+Qmpvcm4sDQoNCldlIHdpbGwgZml4IHRoaXMgYnVnIGluIGJvdGggbXB0MnNhcyBhbmQgbXB0M3Nh
+cy4NClBsZWFzZSBub3RlIHRoYXQgd2UgY3VycmVudGx5IHBlcmlvZGljYWxseSByZWxlYXNlIG5l
+dyBmZWF0dXJlcyBhbmQgZGVmZWN0IGZpeGVzIGZvciBib3RoIG1wdDJzYXMgYW5kIG1wdDNzYXMu
+IE1vc3Qgb2YgdGhlc2UgYXJlIHRoZW4gcG9zdGVkIHRvIHVwc3RyZWFtLiBXZSBoYXZlIGEgdmVy
+eSB3ZWxsIGRlZmluZWQgTFNJIGludGVybmFsIHByb2Nlc3MgZm9yIHN5bmNocm9uaXppbmcgdGhl
+IGRlZmVjdCBmaXhlcyBhY3Jvc3MgdGhlIDIgZHJpdmVycy4gDQpBIGRlbGliZXJhdGUgY2hvaWNl
+IHdhcyBtYWRlIHRvIGtlZXAgdGhlIG1wdDNzYXMgc2VwYXJhdGUgZnJvbSBtcHQyc2FzIGR1ZSB0
+byBvdXIgNiBHSUcgcHJvZHVjdCBiZWluZyB0cnVseSBtYXR1cmUgd2l0aCBhIG5vdGljZWFibGUg
+cmFtcGluZyBkb3duIG9mIGVuaGFuY2VtZW50cy9yZWxlYXNlcy4gICANCg0KbXB0M3NhcyBpcyBh
+dCBpdCdzIGluaXRpYWwgYmFzZWxpbmUgd2l0aCBhIGhlYWx0aHkgcm9hZG1hcCBhaGVhZC4gIEFy
+Y2hpdGVjdHVyYWxseSB0aGVyZSB3aWxsIGJlIGNoYW5nZXMgdG8gdGhlIGhlYWRlcnMgdGhhdCB3
+aWxsIGJlIG9ubHkgbXB0M3NhcyBzcGVjaWZpYy4gDQoNCkZyb20gYSBtYWludGVuYW5jZSBhbmQg
+dGVzdCBwZXJzcGVjdGl2ZSBoYXZpbmcgdGhlIHNvdXJjZSBiYXNlIHNlcGFyYXRlIGFjdHVhbGx5
+IHJlZHVjZXMgdGhlIHNvIGNhbGxlZCBtYWludGVuYW5jZSAiaGVsbCIuDQoNClRoaXMgaXMgbm90
+IGEg4oCcbWVzc+KAnSAuICBMU0kgaXMgZnVsbHkgY2FwYWJsZSBvZiBtYW5hZ2luZyB0aGlzIHNv
+ZnR3YXJlLg0KDQpSZWdhcmRzLA0KTmFnYWxha3NobWkNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
+Z2UtLS0tLQ0KRnJvbTogQmrDuHJuIE1vcmsgW21haWx0bzpiam9ybkBtb3JrLm5vXSANClNlbnQ6
+IE1vbmRheSwgRGVjZW1iZXIgMTcsIDIwMTIgNjo1NSBQTQ0KVG86IFJlZGR5LCBTcmVla2FudGgN
+CkNjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgamVqYkBrZXJuZWwub3JnOyB5b25nanVu
+X3dlaUB0cmVuZG1pY3JvLmNvbS5jbjsgd2VpeWoubGtAZ21haWwuY29tOyBOYW5kaWdhbWEsIE5h
+Z2FsYWtzaG1pDQpTdWJqZWN0OiBSZTogW1BBVENIIC1uZXh0XSBbU0NTSV0gbXB0M3NhczogcmVt
+b3ZlIHVudXNlZCB2YXJpYWJsZXMNCg0KPHNyZWVrYW50aC5yZWRkeUBsc2kuY29tPiB3cml0ZXM6
+DQoNCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYyAN
+Cj4gYi9kcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2loLmMNCj4gaW5kZXggYWM5ZGJj
+Mi4uNjFhMWE0NSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19z
+Y3NpaC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYw0KPiBA
+QCAtMjc1NCwxMyArMjc1NCwxMSBAQCBfc2NzaWhfYmxvY2tfaW9fdG9fY2hpbGRyZW5fYXR0YWNo
+ZWRfZGlyZWN0bHkoc3RydWN0IE1QVDNTQVNfQURBUFRFUiAqaW9jLA0KPiAgCWludCBpOw0KPiAg
+CXUxNiBoYW5kbGU7DQo+ICAJdTE2IHJlYXNvbl9jb2RlOw0KPiAtCXU4IHBoeV9udW1iZXI7DQo+
+ICANCj4gIAlmb3IgKGkgPSAwOyBpIDwgZXZlbnRfZGF0YS0+TnVtRW50cmllczsgaSsrKSB7DQo+
+ICAJCWhhbmRsZSA9IGxlMTZfdG9fY3B1KGV2ZW50X2RhdGEtPlBIWVtpXS5BdHRhY2hlZERldkhh
+bmRsZSk7DQo+ICAJCWlmICghaGFuZGxlKQ0KPiAgCQkJY29udGludWU7DQo+IC0JCXBoeV9udW1i
+ZXIgPSBldmVudF9kYXRhLT5TdGFydFBoeU51bSArIGk7DQo+ICAJCXJlYXNvbl9jb2RlID0gZXZl
+bnRfZGF0YS0+UEhZW2ldLlBoeVN0YXR1cyAmDQo+ICAJCSAgICBNUEkyX0VWRU5UX1NBU19UT1BP
+X1JDX01BU0s7DQo+ICAJCWlmIChyZWFzb25fY29kZSA9PSBNUEkyX0VWRU5UX1NBU19UT1BPX1JD
+X0RFTEFZX05PVF9SRVNQT05ESU5HKQ0KDQpUaGVyZSBpcyBhbiBpZGVudGljYWwgY29weSBvZiB0
+aGlzIGNvZGUsIGluY2x1ZGluZyB0aGF0IGJ1ZywgaW4gZHJpdmVycy9zY3NpL21wdDJzYXMvbXB0
+MnNhc19zY3NpaC5jLg0KDQpJZiB5b3UgaW5zaXN0IG9uIHRoZSBzdHVwaWQgY29kZSBkdXBsaWNh
+dGlvbiwgdGhlbiBwbGVhc2UgdHJ5IHRvIGtlZXAgeW91ciBidWdzIHN5bmNyb25pemVkISAgSWYg
+eW91IGFyZSBnb2luZyB0byBmaXggdGhpcyBidWcgZm9yIHRoZSBtcHQzc2FzIGRyaXZlciwgdGhl
+biB5b3UgKmhhdmUqIHRvIGZpeCBpdCBmb3IgbXB0MnNhcyBhcyB3ZWxsLg0KDQpZZXMsIEkgYmVs
+aWV2ZSB0aGlzIGlzIGEgbWVzcyBhbmQgeW91IGhhdmUgYWxyZWFkeSBkZW1vbnN0cmF0ZWQgdGhh
+dCB5b3UgYXJlIGluY2FwYWJsZSBvZiBtYW5hZ2luZyBpdC4NCg0KDQpCasO4cm4NCg==
