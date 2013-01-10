@@ -1,194 +1,57 @@
-From: vinayak holikatti <vinholikatti@gmail.com>
-Subject: Re: [PATCH V5 3/4] [SCSI] ufs: Add Platform glue driver for ufshcd
-Date: Wed, 9 Jan 2013 17:41:32 +0530
-Message-ID: <CAKVbJB_wckWaS5Y0gjhFdxW-SvS3OwZqhyPhEfhwWuuZDzd_EQ@mail.gmail.com>
-References: <50db5b12.644e420a.0ead.ffffbbac@mx.google.com>
-	<50DC6224.7050109@codeaurora.org>
-	<CAKVbJB-rT3qE41AO_vbG-YyKv+F9_FxO6njsVfe+bJkBpw0FoQ@mail.gmail.com>
-	<50E9B638.8010602@codeaurora.org>
-	<50EA7C36.8080807@codeaurora.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH v2 1/5] virtio: add functions for piecewise addition of
+	buffers
+Date: Thu, 10 Jan 2013 09:44:56 +0100
+Message-ID: <50EE7F88.1010100@redhat.com>
+References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
+	<1355833972-20319-2-git-send-email-pbonzini@redhat.com>
+	<87r4m45g88.fsf@rustcorp.com.au> <50E54DC0.4040609@redhat.com>
+	<87pq1h508k.fsf@rustcorp.com.au> <50EADB62.1010704@redhat.com>
+	<87wqvo3542.fsf@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:40021 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757532Ab3AIMLc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2013 07:11:32 -0500
-Received: by mail-oa0-f43.google.com with SMTP id k1so890590oag.16
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Jan 2013 04:11:32 -0800 (PST)
-In-Reply-To: <50EA7C36.8080807@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <87wqvo3542.fsf@rustcorp.com.au>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Jens Axboe <axboe@kernel.dk>, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, santoshsy@gmail.com
 
-On Mon, Jan 7, 2013 at 1:11 PM, Sujit Reddy Thumma
-<sthumma@codeaurora.org> wrote:
-> Hi Vinayak,
->
-> I have few comments below:
->
->
->>>>> +#ifdef CONFIG_PM
->>>>> +/**
->>>>> + * ufshcd_pltfrm_suspend - suspend power management function
->>>>> + * @pdev: pointer to Platform device handle
->>>>> + * @mesg: power state
->>>>> + *
->>>>> + * Returns -ENOSYS
->
-> What breaks if you return 0 instead of return -ENOSYS? Returning error seems
-> to break platform suspend/resume until all the TODO's are addressed. If the
-> current s/w cannot make h/w suspend, it should be okay to let the rest of
-> the system be suspended.
->
+Il 08/01/2013 01:12, Rusty Russell ha scritto:
+>>>> >>> Unfortunately, that cannot work because not all architectures support
+>>>> >>> chained scatterlists.
+>>> >> 
+>>> >> WHAT?  I can't figure out what an arch needs to do to support this?
+>> >
+>> > It needs to use the iterator functions in its DMA driver.
+> But we don't care for virtio.
 
-In that case how will the controller be in a working state once it resumes.
-It does not make sense to return zero and to notify the OS that
-everything is fine.
+True.
 
->>>>> + */
->>>>> +static int ufshcd_pltfrm_suspend(struct platform_device *pdev,
->>>>> +                                pm_message_t mesg)
->>>>> +{
->>>>> +       /*
->>>>> +        * TODO:
->>>>> +        * 1. Call ufshcd_suspend
->>>>> +        * 2. Do bus specific power management
->>>>> +        */
->>>>> +
->>>>> +       return -ENOSYS;
->
-> Returning error doesn't allow entire system to be suspended. Perhaps, you
-> can do disable_irq() and return 0?
->
->>>>> +}
->>>>> +
->>>>> +/**
->>>>> + * ufshcd_pltfrm_resume - resume power management function
->>>>> + * @pdev: pointer to Platform device handle
->>>>> + *
->>>>> + * Returns -ENOSYS
->>>>> + */
->>>>> +static int ufshcd_pltfrm_resume(struct platform_device *pdev)
->>>>> +{
->>>>> +       /*
->>>>> +        * TODO:
->>>>> +        * 1. Call ufshcd_resume.
->>>>> +        * 2. Do bus specific wake up
->>>>> +        */
->>>>> +
->>>>> +       return -ENOSYS;
->
-> enable_irq() and return 0?
->
->>>>> +}
->>>>> +#endif
->>>>> +
->
->>>>> +static int __devexit ufshcd_pltfrm_remove(struct platform_device
->>>>> *pdev)
->>>>> +{
->>>>> +       struct resource *mem_res;
->>>>> +       struct resource *irq_res;
->>>>> +       resource_size_t mem_size;
->>>>> +       struct ufs_hba *hba =  platform_get_drvdata(pdev);
->>>>> +
->>>>> +       irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
->>>>
->>>> It would be better to save the irq number under "struct ufs_hba" during
->>>> probe. So here during remove you just need simply need to call the
->>>> "free_irq(irq_res->start, hba)"
->>>
->>> Will modify the code accordingly in the next patchset.
->>>>>
->>>>> +
->>>>> +       if (!irq_res)
->>>>> +               dev_err(&pdev->dev, "ufshcd: IRQ resource not
->>>>> available\n");
->>>>> +       else
->>>>> +               free_irq(irq_res->start, hba);
->
->
-> The documentation of free_irq says:
-> "... On a shared IRQ the caller must ensure the interrupt is disabled on the
-> card it drives before calling this function. .." I don't see disable_irq()
-> getting called either here or ufshcd_remove().
+>>> >> All archs we care about support them, though, so I think we can ignore
+>>> >> this issue for now.
+>> >
+>> > Kind of... In principle all QEMU-supported arches can use virtio, and
+>> > the speedup can be quite useful.  And there is no Kconfig symbol for SG
+>> > chains that I can use to disable virtio-scsi on unsupported arches. :/
+> Well, we #error if it's not supported.  Then the lazy architectures can
+> fix it.
 
-Why would you want to disable the entire IRQ line when it is shared?
-Logical thing is to disable the interrupt on the controller.
+Yeah, that would be one approach.
 
->
->
->>>>> +
->>>>> +       ufshcd_remove(hba);
->>>>
->>>> Remove should be exactly opposite of probe(). So shouldn't you call the
->>>> ufshcd_remove() first and then free_irq() after that.
->>>
->>> Some bugging controllers might raise the interrupt after resources are
->>> removed.
->>> this sequence will prevent it.
->>
->>
->> Could you please add the same as comment in above code sequence?
->>
->>>>> +       mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->>>>
->>>> You might want to save the pointer to mem_res in "struct ufs_hba" during
->>>> probe and may use the same here.
->>>>>
->>>>> +       if (!mem_res)
->>>>> +               dev_err(&pdev->dev, "ufshcd: Memory resource not
->>>>> available\n");
->>>>> +       else {
->>>>> +               mem_size = resource_size(mem_res);
->>>>> +               release_mem_region(mem_res->start, mem_size);
->>>>> +       }
->>>>> +       platform_set_drvdata(pdev, NULL);
->>>>> +       return 0;
->>>>> +}
->>>>> +
->>>>> +static const struct of_device_id ufs_of_match[] = {
->>>>> +       { .compatible = "jedec,ufs-1.1"},
->>>>> +};
->>>>> +
->>>>> +static struct platform_driver ufshcd_pltfrm_driver = {
->>>>> +       .probe  = ufshcd_pltfrm_probe,
->>>>> +       .remove = __devexit_p(ufshcd_pltfrm_remove),
->>>>> +#ifdef CONFIG_PM
->
->
-> CONFIG_PM_SLEEP would be better?
+But frankly, your patch is really disgusting. :)  Not your fault, of
+course, but I still prefer a limited amount of duplication.
 
-the current implementation looks fine.
+Perhaps we can get the best of both worlds, I'll take a look when I have
+some time.
 
->Also, can you move legacy suspend/resume
-
-Ok,
-
-> callbacks below to dev_pm_ops?
->
->>>>> +       .suspend = ufshcd_pltfrm_suspend,
->>>>> +       .resume = ufshcd_pltfrm_resume,
->>>>> +#endif
->>>>> +       .driver = {
->>>>> +               .name   = "ufshcd",
->>>>> +               .owner  = THIS_MODULE,
->>>>> +               .of_match_table = ufs_of_match,
->>>>> +       },
->>>>> +};
->
->
-> --
-> Regards,
-> Sujit Reddy Thumma
->
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-> of Code Aurora Forum, hosted by The Linux Foundation.
-
-
-
--- 
-Regards,
-Vinayak Holikatti
+Paolo
