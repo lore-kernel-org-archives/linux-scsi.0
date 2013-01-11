@@ -1,70 +1,79 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v12 7/9] libata: scsi: no poll when ODD is powered off
-Date: Fri, 11 Jan 2013 11:16:26 +0800
-Message-ID: <20130111031626.GA26613@aaronlu.sh.intel.com>
-References: <1357809870-18816-1-git-send-email-aaron.lu@intel.com>
- <1357809870-18816-8-git-send-email-aaron.lu@intel.com>
- <20130110195610.GL20454@htj.dyndns.org>
- <20130111021110.GB26270@aaronlu.sh.intel.com>
- <20130111021701.GA2513@mtj.dyndns.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/5] target: Don't let abort handling free pending
+ write commands too soon
+Date: Thu, 10 Jan 2013 20:21:56 -0800
+Message-ID: <1357878116.20882.7.camel@haakon2.linux-iscsi.org>
+References: <1357159681-24477-1-git-send-email-roland@kernel.org>
+	 <1357159681-24477-2-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130111021701.GA2513@mtj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:36613 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753422Ab3AKEWB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2013 23:22:01 -0500
+In-Reply-To: <1357159681-24477-2-git-send-email-roland@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
 
-Hi Tejun,
-
-On Thu, Jan 10, 2013 at 06:17:01PM -0800, Tejun Heo wrote:
-> Hello, Aaron.
+On Wed, 2013-01-02 at 12:47 -0800, Roland Dreier wrote:
+> From: Roland Dreier <roland@purestorage.com>
 > 
-> On Fri, Jan 11, 2013 at 10:11:10AM +0800, Aaron Lu wrote:
-> > > What's the synchronization rule for this field?
-> > 
-> > I documented the rule in include/scsi/scsi_device.h.
-> > 
-> > This field is modified in the ata port's runtime suspend and resume
-> > callback, and is read accessed in the check_events callback of the sr
-> > block driver. The runtime PM callback is synchronized by PM core, in
-> > that the two callbacks will never run concurrently. So I guess saying
-> > synchronized by PM core is enough for this field?
-> > 
-> > This is what I've added in v12 for scsi_device structure:
-> > 
-> > +	bool disable_disk_events; /* disable poll for disk events, used in
-> > +				   * ATA layer, sychronized by PM core */
-> > +
-> > 
-> > Or do you mean I should add a comment explaining the sync rule when it
-> > is modifed, like in the above code?
+> The following sequence happens for write commands (or any other
+> commands with a data out phase):
 > 
-> The thing is that disabling disk events doesn't necessarily have
-> anything to do with PM, so tying synchronization to PM subsystem is a
-> bit unexpected.  How about making it an atomic_t?  That way, disabling
-> can stack and synchronization dependency to PM is removed.
+>  - The transport calls target_submit_cmd(), which sets CMD_T_ACTIVE in
+>    cmd->transport_state and sets cmd->t_state to TRANSPORT_NEW_CMD.
+>  - Things go on transport_generic_new_cmd(), which notices that the
+>    command needs to transfer data, so it sets cmd->t_state to
+>    TRANSPORT_WRITE_PENDING and calls transport_cmd_check_stop().
+>  - transport_cmd_check_stop() clears CMD_T_ACTIVE in cmd->transport_state
+>    and returns in the normal case.
+>  - Then we continue on to call ->se_tfo->write_pending().
+>  - The data comes back from the initiator, and the transport calls
+>    target_execute_cmd(), which sets cmd->t_state to TRANSPORT_PROCESSING
+>    and calls into the backend to actually write the data.
+> 
+> At this point, the backend might take a long time to complete the
+> command, since it has to do real IO.  If an abort request comes in for
+> this command at this point, it will not wait for the command to finish
+> since CMD_T_ACTIVE is not set.  Then when the command does finally
+> finish, we blow up with use-after-free.
+> 
+> Avoid this by setting CMD_T_ACTIVE in target_execute_cmd() so that
+> transport_wait_for_tasks() waits for the command to finish executing.
+> This matches the behavior from before commit 1389533ef944 ("target:
+> remove transport_generic_handle_data"), when data was signaled via
+> transport_generic_handle_data(), which set CMD_T_ACTIVE because it
+> called transport_add_cmd_to_queue().
+> 
+> Signed-off-by: Roland Dreier <roland@purestorage.com>
+> ---
 
-OK, will make it atomic in next version, thanks for the advice.
+Applied a CC' to stable with a extra comment wrt to the commit that
+introduced this regression.
 
-Perhaps I can add two scsi helper functions in scsi_lib.c like:
+Thanks again Roland!
 
-void sdev_disable_disk_events(struct scsi_device *sdev)
-{
-	atomic_inc(&sdev->disk_events_disable_depth);
-}
+--nab
 
-void sdev_enable_disk_events(struct scsi_device *sdev)
-{
-	if (WARN_ON_ONCE(atomic_read(&sdev->disk_events_disable_depth) <= 0))
-		return;
-	atomic_dec(&sdev->disk_events_disable_depth);
-}
+>  drivers/target/target_core_transport.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index c23c76c..1dd9d66 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -1688,6 +1688,7 @@ void target_execute_cmd(struct se_cmd *cmd)
+>  	}
+>  
+>  	cmd->t_state = TRANSPORT_PROCESSING;
+> +	cmd->transport_state |= CMD_T_ACTIVE;
+>  	spin_unlock_irq(&cmd->t_state_lock);
+>  
+>  	if (!target_handle_task_attr(cmd))
 
-And call them in ATA layer. Do you like this?
-
-Thanks,
-Aaron
 
