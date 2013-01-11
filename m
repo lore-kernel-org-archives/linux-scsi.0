@@ -1,49 +1,57 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 3/5] target: Release se_cmd when LUN lookup fails for
- TMR
-Date: Thu, 10 Jan 2013 20:39:45 -0800
-Message-ID: <1357879185.20882.15.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 4/5] target: Remove useless if statement
+Date: Thu, 10 Jan 2013 20:41:44 -0800
+Message-ID: <1357879304.20882.16.camel@haakon2.linux-iscsi.org>
 References: <1357159681-24477-1-git-send-email-roland@kernel.org>
-	 <1357159681-24477-4-git-send-email-roland@kernel.org>
+	 <1357159681-24477-5-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1357159681-24477-4-git-send-email-roland@kernel.org>
+In-Reply-To: <1357159681-24477-5-git-send-email-roland@kernel.org>
 Sender: target-devel-owner@vger.kernel.org
 To: Roland Dreier <roland@kernel.org>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2013-01-02 at 12:47 -0800, Roland Dreier wrote:
+On Wed, 2013-01-02 at 12:48 -0800, Roland Dreier wrote:
 > From: Roland Dreier <roland@purestorage.com>
 > 
-> When transport_lookup_tmr_lun() fails and we return a task management
-> response from target_complete_tmr_failure(), we need to call
-> transport_cmd_check_stop_to_fabric() to release the last ref to the
-> cmd after calling se_tfo->queue_tm_rsp(), or else we will never remove
-> the failed TMR from the session command list (and we'll end up waiting
-> forever when trying to tear down the session).
+> We do the same thing no matter which way the test goes, so just remove
+> the test and do what we're going to do.
+> 
+> The debug messages printed the wrong value of CMD_T_ACTIVE and don't
+> seem particularly useful, remove them too.
 > 
 > Signed-off-by: Roland Dreier <roland@purestorage.com>
 > ---
->  drivers/target/target_core_transport.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/target/target_core_tmr.c | 12 ------------
+>  1 file changed, 12 deletions(-)
 > 
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 49390d8..fe6208f 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -1393,6 +1393,8 @@ static void target_complete_tmr_failure(struct work_struct *work)
+> diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+> index c6e0293..d0b4dd9 100644
+> --- a/drivers/target/target_core_tmr.c
+> +++ b/drivers/target/target_core_tmr.c
+> @@ -331,18 +331,6 @@ static void core_tmr_drain_state_list(
 >  
->  	se_cmd->se_tmr_req->response = TMR_LUN_DOES_NOT_EXIST;
->  	se_cmd->se_tfo->queue_tm_rsp(se_cmd);
-> +
-> +	transport_cmd_check_stop_to_fabric(cmd);
->  }
+>  		fe_count = atomic_read(&cmd->t_fe_count);
 >  
->  /**
+> -		if (!(cmd->transport_state & CMD_T_ACTIVE)) {
+> -			pr_debug("LUN_RESET: got CMD_T_ACTIVE for"
+> -				" cdb: %p, t_fe_count: %d dev: %p\n", cmd,
+> -				fe_count, dev);
+> -			cmd->transport_state |= CMD_T_ABORTED;
+> -			spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+> -
+> -			core_tmr_handle_tas_abort(tmr_nacl, cmd, tas, fe_count);
+> -			continue;
+> -		}
+> -		pr_debug("LUN_RESET: Got !CMD_T_ACTIVE for cdb: %p,"
+> -			" t_fe_count: %d dev: %p\n", cmd, fe_count, dev);
+>  		cmd->transport_state |= CMD_T_ABORTED;
+>  		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+>  
 
-Looks good.  CC'ing to stable as well.
+Looks OK to drop.  Applying to for-next.
 
 --nab
