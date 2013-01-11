@@ -1,38 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: linux-next: build failure after merge of the scsi tree
-Date: Fri, 11 Jan 2013 07:34:16 +0000
-Message-ID: <1357889656.3065.2.camel@dabdike.int.hansenpartnership.com>
-References: <20130111120323.cdc06081d0fb1c498c9f1779@canb.auug.org.au>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: [v2 PATCH 3/8] bnx2fc: support software fcoe target
+Date: Thu, 10 Jan 2013 23:59:38 -0800
+Message-ID: <1357891178-22811-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130111120323.cdc06081d0fb1c498c9f1779@canb.auug.org.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:1785 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752133Ab3AKH7p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jan 2013 02:59:45 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-On Fri, 2013-01-11 at 12:03 +1100, Stephen Rothwell wrote:
-> Hi James,
-> 
-> After merging the scsi tree, today's linux-next build (powerpc
-> ppc64_defconfig) failed like this:
-> 
-> drivers/scsi/ipr.c:9138:22: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'ipr_enable_msix'
-> drivers/scsi/ipr.c:9165:22: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'ipr_enable_msi'
-> drivers/scsi/ipr.c:9188:23: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'name_msi_vectors'
-> drivers/scsi/ipr.c:9200:22: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'ipr_request_other_msi_irqs'
-> drivers/scsi/ipr.c: In function 'ipr_probe_ioa':
-> drivers/scsi/ipr.c:9422:4: error: implicit declaration of function 'ipr_enable_msix' [-Werror=implicit-function-declaration]
-> drivers/scsi/ipr.c:9425:4: error: implicit declaration of function 'ipr_enable_msi' [-Werror=implicit-function-declaration]
-> drivers/scsi/ipr.c:9517:3: error: implicit declaration of function 'name_msi_vectors' [-Werror=implicit-function-declaration]
-> drivers/scsi/ipr.c:9523:4: error: implicit declaration of function 'ipr_request_other_msi_irqs' [-Werror=implicit-function-declaration]
+James, Please pick up v2 version of patch 3 in the patch series.
+If you have already picked up the patches, please let me know so
+that I can create a new patch.
 
-OK, fine, I'll drop all the ipr patches.  I've been waiting for a month
-for them to fix the smatch and sparse warnings.  Please resend the
-series with all the fixes.
+Thanks.
 
-Thanks,
+V2: incorrectly used bitwise 'or' instead of bitwise 'and' operation. Fixed it
+in this V2 patch.
 
-James
+Software FCoE target always advertises RETRY bit even when there are no
+tape LUNs behind the target. This causes the driver to enable FW support
+for sequence level error recovery and perform REC/SRR. This patch
+arrests the behavior by not enabling SLER feature for this target.
+
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+index b9d0d9c..eba2328 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+@@ -381,7 +381,9 @@ static int bnx2fc_init_tgt(struct bnx2fc_rport *tgt,
+ 	tgt->rq_cons_idx = 0;
+ 	atomic_set(&tgt->num_active_ios, 0);
+ 
+-	if (rdata->flags & FC_RP_FLAGS_RETRY) {
++	if (rdata->flags & FC_RP_FLAGS_RETRY &&
++	    rdata->ids.roles & FC_RPORT_ROLE_FCP_TARGET &&
++	    !(rdata->ids.roles & FC_RPORT_ROLE_FCP_INITIATOR)) {
+ 		tgt->dev_type = TYPE_TAPE;
+ 		tgt->io_timeout = 0; /* use default ULP timeout */
+ 	} else {
+-- 
+1.7.0.6
+
+
