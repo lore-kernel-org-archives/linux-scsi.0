@@ -1,55 +1,50 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [v2 PATCH 3/8] bnx2fc: support software fcoe target
-Date: Thu, 10 Jan 2013 23:59:38 -0800
-Message-ID: <1357891178-22811-1-git-send-email-bprakash@broadcom.com>
+From: Anil Gurumurthy <agurumur@Brocade.com>
+Subject: RE: [patch] [SCSI] bfa: fix strncpy() limiter in bfad_start_ops()
+Date: Fri, 11 Jan 2013 01:33:39 -0700
+Message-ID: <4D34E914CE7A004D8570F4381FDE55490B6D93F914@BRM-EXCH-3.corp.brocade.com>
+References: <20130110090620.GE23063@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1785 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752133Ab3AKH7p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jan 2013 02:59:45 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130110090620.GE23063@elgon.mountain>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Vijay Mohan Guvva <vmohan@Brocade.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-James, Please pick up v2 version of patch 3 in the patch series.
-If you have already picked up the patches, please let me know so
-that I can create a new patch.
 
-Thanks.
 
-V2: incorrectly used bitwise 'or' instead of bitwise 'and' operation. Fixed it
-in this V2 patch.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dan Carpenter
+Sent: Thursday, January 10, 2013 2:36 PM
+To: Anil Gurumurthy
+Cc: Vijay Mohan Guvva; James E.J. Bottomley; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; kernel-janitors@vger.kernel.org
+Subject: [patch] [SCSI] bfa: fix strncpy() limiter in bfad_start_ops()
 
-Software FCoE target always advertises RETRY bit even when there are no
-tape LUNs behind the target. This causes the driver to enable FW support
-for sequence level error recovery and perform REC/SRR. This patch
-arrests the behavior by not enabling SLER feature for this target.
+The closing parenthesis is in the wrong place so it takes the sizeof a pointer instead of the sizeof the buffer minus one.
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc_tgt.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-index b9d0d9c..eba2328 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-@@ -381,7 +381,9 @@ static int bnx2fc_init_tgt(struct bnx2fc_rport *tgt,
- 	tgt->rq_cons_idx = 0;
- 	atomic_set(&tgt->num_active_ios, 0);
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index e6bf126..a5f7690 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1034,7 +1034,7 @@ bfad_start_ops(struct bfad_s *bfad) {
+ 			sizeof(driver_info.host_os_patch) - 1);
  
--	if (rdata->flags & FC_RP_FLAGS_RETRY) {
-+	if (rdata->flags & FC_RP_FLAGS_RETRY &&
-+	    rdata->ids.roles & FC_RPORT_ROLE_FCP_TARGET &&
-+	    !(rdata->ids.roles & FC_RPORT_ROLE_FCP_INITIATOR)) {
- 		tgt->dev_type = TYPE_TAPE;
- 		tgt->io_timeout = 0; /* use default ULP timeout */
- 	} else {
--- 
-1.7.0.6
+ 	strncpy(driver_info.os_device_name, bfad->pci_name,
+-		sizeof(driver_info.os_device_name - 1));
++		sizeof(driver_info.os_device_name) - 1);
+ 
+ 	/* FCS driver info init */
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+--
 
 
+Looks good. Thanks for the patch, Dan.
+
+Acked-by: Anil Gurumurthy<agurumur@brocade.com>
+
+
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
