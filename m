@@ -1,47 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v12 7/9] libata: scsi: no poll when ODD is powered off
-Date: Fri, 11 Jan 2013 10:44:57 -0800
-Message-ID: <20130111184457.GQ20454@htj.dyndns.org>
-References: <1357809870-18816-1-git-send-email-aaron.lu@intel.com>
- <1357809870-18816-8-git-send-email-aaron.lu@intel.com>
- <20130110195610.GL20454@htj.dyndns.org>
- <20130111021110.GB26270@aaronlu.sh.intel.com>
- <20130111021701.GA2513@mtj.dyndns.org>
- <20130111031626.GA26613@aaronlu.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130111031626.GA26613@aaronlu.sh.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Subject: [PATCH] cxgb4i: Remove the scsi host device when removing device
+Date: Fri, 11 Jan 2013 17:12:09 -0200
+Message-ID: <1357931529-10248-1-git-send-email-cascardo@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, JBottomley@parallels.com, linux-kernel@vger.kernel.org, kxie@chelsio.com, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, Divy La Rey <divy@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+When doing a hotplug remove of a cxgb4 device, there are still dandling
+symlinks at /sys/class/scsi_host/hostX to the removed PCI device. The
+upper layer device may also try to send data, which may crash the
+system.
 
-On Fri, Jan 11, 2013 at 11:16:26AM +0800, Aaron Lu wrote:
-> OK, will make it atomic in next version, thanks for the advice.
-> 
-> Perhaps I can add two scsi helper functions in scsi_lib.c like:
-> 
-> void sdev_disable_disk_events(struct scsi_device *sdev)
-> {
-> 	atomic_inc(&sdev->disk_events_disable_depth);
-> }
-> 
-> void sdev_enable_disk_events(struct scsi_device *sdev)
-> {
-> 	if (WARN_ON_ONCE(atomic_read(&sdev->disk_events_disable_depth) <= 0))
-> 		return;
-> 	atomic_dec(&sdev->disk_events_disable_depth);
-> }
-> 
-> And call them in ATA layer. Do you like this?
+The DETACH message from the lower level driver is sent to the ULD when
+the device is removed, when the scsi host should be removed from the
+system, avoiding any problems.
 
-Sounds good to me.  James, how does the series look to you?
+After this patch, there are no more dangling symlinks and many attempts
+to crash the system while there is SCSI activity and removing the device
+have failed. Adding the device back again works as expected, with the
+scsi hosts showing up again.
 
-Thanks!
+Based on a patch by Karen Xie.
 
+Cc: Karen Xie <kxie@chelsio.com>
+Cc: Divy La Rey <divy@chelsio.com>
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index f924b3c..3fecf35 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -1564,6 +1564,7 @@ static int t4_uld_state_change(void *handle, enum cxgb4_state state)
+ 		break;
+ 	case CXGB4_STATE_DETACH:
+ 		pr_info("cdev 0x%p, DETACH.\n", cdev);
++		cxgbi_device_unregister(cdev);
+ 		break;
+ 	default:
+ 		pr_info("cdev 0x%p, unknown state %d.\n", cdev, state);
 -- 
-tejun
+1.7.1
