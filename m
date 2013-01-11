@@ -1,68 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: linux-next: build failure after merge of the scsi tree
-Date: Fri, 11 Jan 2013 18:04:40 +0000
-Message-ID: <1357927480.11965.6.camel@dabdike.int.hansenpartnership.com>
-References: <20130111120323.cdc06081d0fb1c498c9f1779@canb.auug.org.au>
-	 <1357889656.3065.2.camel@dabdike.int.hansenpartnership.com>
-	 <50F02F4E.4070804@linux.vnet.ibm.com>
-	 <1357918637.3065.22.camel@dabdike.int.hansenpartnership.com>
-	 <20130111160514.GA10823@kroah.com> <50F04D63.9080703@linux.vnet.ibm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v12 7/9] libata: scsi: no poll when ODD is powered off
+Date: Fri, 11 Jan 2013 10:44:57 -0800
+Message-ID: <20130111184457.GQ20454@htj.dyndns.org>
+References: <1357809870-18816-1-git-send-email-aaron.lu@intel.com>
+ <1357809870-18816-8-git-send-email-aaron.lu@intel.com>
+ <20130110195610.GL20454@htj.dyndns.org>
+ <20130111021110.GB26270@aaronlu.sh.intel.com>
+ <20130111021701.GA2513@mtj.dyndns.org>
+ <20130111031626.GA26613@aaronlu.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <50F04D63.9080703@linux.vnet.ibm.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Greg KH <greg@kroah.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Wen Xiong <wenxiong@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130111031626.GA26613@aaronlu.sh.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2013-01-11 at 11:35 -0600, Brian King wrote:
-> On 01/11/2013 10:05 AM, Greg KH wrote:
-> > On Fri, Jan 11, 2013 at 03:37:17PM +0000, James Bottomley wrote:
-> >> On Fri, 2013-01-11 at 09:27 -0600, Brian King wrote:
-> >>> It looks like this was a due to the fact that the new patches
-> >>> added __devinit tags in the same merge window the __devinit tag
-> >>> itself was getting removed.
-> >>
-> >> Not exactly.  The patch which makes them nops went into 3.8.  Now
-> >> there's a patch queued in, Gregs tree I presume, to remove them all and
-> >> the #defines which causes the compile failure.
-> >>
-> >>> As to the sparse warnings, this patch fixed the ones that
-> >>> were actual bugs in the new code, although we could have
-> >>> made that more clear in the patch description.
-> >>>
-> >>> http://marc.info/?l=linux-scsi&m=135716576204083&w=2
-> >>
-> >> Ah, thanks ... I've been on holiday for a while, so I did miss that.
-> >>
-> >>> There is one outstanding issue I am aware of which was an
-> >>> array bounds compiler warning which looks to be a misdetection
-> >>> by the compiler. Wendy and I discussed adding a BUG_ON
-> >>> to stop the compiler from complaining.
-> >>>
-> >>> Wendy - lets queue these two changes up ASAP. They should both
-> >>> be very simple changes.
-> >>
-> >> If it's a simple gcc bug, just ignore it.
-> >>
-> >> I do need you to redo the patches to remove the __dev annotations,
-> >> though.  We can't risk introducing a bisect killing compile breakage if
-> >> Greg's tree merges before mine in the next merge window.
-> > 
-> > This change should be pushed to Linus in time for 3.8-final, so there
-> > should not be any bisect issues.
+Hello,
+
+On Fri, Jan 11, 2013 at 11:16:26AM +0800, Aaron Lu wrote:
+> OK, will make it atomic in next version, thanks for the advice.
 > 
-> We can do this either way.
+> Perhaps I can add two scsi helper functions in scsi_lib.c like:
 > 
-> James - what is your preference? Drop everything and do a resend of the
-> entire series or delta patches on top of what is currently in your tree?
+> void sdev_disable_disk_events(struct scsi_device *sdev)
+> {
+> 	atomic_inc(&sdev->disk_events_disable_depth);
+> }
+> 
+> void sdev_enable_disk_events(struct scsi_device *sdev)
+> {
+> 	if (WARN_ON_ONCE(atomic_read(&sdev->disk_events_disable_depth) <= 0))
+> 		return;
+> 	atomic_dec(&sdev->disk_events_disable_depth);
+> }
+> 
+> And call them in ATA layer. Do you like this?
 
-Drop everything and resend still, I think.  There's still a rebase
-problem, because the merge failure will happen if I rebase the misc tree
-to beyond Greg's merge point and I'd rather not have to worry about it.
+Sounds good to me.  James, how does the series look to you?
 
-Thanks,
+Thanks!
 
-James
+-- 
+tejun
