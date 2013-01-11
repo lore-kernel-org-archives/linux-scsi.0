@@ -1,53 +1,38 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] iscsi-target: Fix CmdSN comparison (use cmd->cmd_sn
- instead of cmd->stat_sn)
-Date: Thu, 10 Jan 2013 20:47:06 -0800
-Message-ID: <1357879626.20882.18.camel@haakon2.linux-iscsi.org>
-References: <1357587916-4870-1-git-send-email-roland@kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: linux-next: build failure after merge of the scsi tree
+Date: Fri, 11 Jan 2013 07:34:16 +0000
+Message-ID: <1357889656.3065.2.camel@dabdike.int.hansenpartnership.com>
+References: <20130111120323.cdc06081d0fb1c498c9f1779@canb.auug.org.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:52475 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753733Ab3AKErI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2013 23:47:08 -0500
-In-Reply-To: <1357587916-4870-1-git-send-email-roland@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130111120323.cdc06081d0fb1c498c9f1779@canb.auug.org.au>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>, Ben Hutchings <ben@decadent.org.uk>
 
-On Mon, 2013-01-07 at 11:45 -0800, Roland Dreier wrote:
-> From: Roland Dreier <roland@purestorage.com>
+On Fri, 2013-01-11 at 12:03 +1100, Stephen Rothwell wrote:
+> Hi James,
 > 
-> Commit 64c13330a389 ("iscsi-target: Fix bug in handling of ExpStatSN
-> ACK during u32 wrap-around") introduced a bug where we compare the
-> wrong SN against our ExpCmdSN.
+> After merging the scsi tree, today's linux-next build (powerpc
+> ppc64_defconfig) failed like this:
 > 
-> Reported-by: Ben Hutchings <ben@decadent.org.uk>
-> Signed-off-by: Roland Dreier <roland@purestorage.com>
-> ---
->  drivers/target/iscsi/iscsi_target_erl2.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target_erl2.c b/drivers/target/iscsi/iscsi_target_erl2.c
-> index 9ac4c151..ba6091b 100644
-> --- a/drivers/target/iscsi/iscsi_target_erl2.c
-> +++ b/drivers/target/iscsi/iscsi_target_erl2.c
-> @@ -372,7 +372,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
->  		 * made generic here.
->  		 */
->  		if (!(cmd->cmd_flags & ICF_OOO_CMDSN) && !cmd->immediate_cmd &&
-> -		     iscsi_sna_gte(cmd->stat_sn, conn->sess->exp_cmd_sn)) {
-> +		     iscsi_sna_gte(cmd->cmd_sn, conn->sess->exp_cmd_sn)) {
->  			list_del(&cmd->i_conn_node);
->  			spin_unlock_bh(&conn->cmd_lock);
->  			iscsit_free_cmd(cmd);
+> drivers/scsi/ipr.c:9138:22: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'ipr_enable_msix'
+> drivers/scsi/ipr.c:9165:22: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'ipr_enable_msi'
+> drivers/scsi/ipr.c:9188:23: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'name_msi_vectors'
+> drivers/scsi/ipr.c:9200:22: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'ipr_request_other_msi_irqs'
+> drivers/scsi/ipr.c: In function 'ipr_probe_ioa':
+> drivers/scsi/ipr.c:9422:4: error: implicit declaration of function 'ipr_enable_msix' [-Werror=implicit-function-declaration]
+> drivers/scsi/ipr.c:9425:4: error: implicit declaration of function 'ipr_enable_msi' [-Werror=implicit-function-declaration]
+> drivers/scsi/ipr.c:9517:3: error: implicit declaration of function 'name_msi_vectors' [-Werror=implicit-function-declaration]
+> drivers/scsi/ipr.c:9523:4: error: implicit declaration of function 'ipr_request_other_msi_irqs' [-Werror=implicit-function-declaration]
 
-Thanks for fixing this up.  Applied with another 'CC to stable for Ben &
-Co. to pick this up..
+OK, fine, I'll drop all the ipr patches.  I've been waiting for a month
+for them to fix the smatch and sparse warnings.  Please resend the
+series with all the fixes.
 
---nab
+Thanks,
 
-
+James
