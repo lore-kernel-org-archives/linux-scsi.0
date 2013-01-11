@@ -1,42 +1,53 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 5/5] target: Remove never-used TMR_FABRIC_TMR enum value
-Date: Thu, 10 Jan 2013 20:42:27 -0800
-Message-ID: <1357879347.20882.17.camel@haakon2.linux-iscsi.org>
-References: <1357159681-24477-1-git-send-email-roland@kernel.org>
-	 <1357159681-24477-6-git-send-email-roland@kernel.org>
+Subject: Re: [PATCH] iscsi-target: Fix CmdSN comparison (use cmd->cmd_sn
+ instead of cmd->stat_sn)
+Date: Thu, 10 Jan 2013 20:47:06 -0800
+Message-ID: <1357879626.20882.18.camel@haakon2.linux-iscsi.org>
+References: <1357587916-4870-1-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1357159681-24477-6-git-send-email-roland@kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:52475 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733Ab3AKErI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2013 23:47:08 -0500
+In-Reply-To: <1357587916-4870-1-git-send-email-roland@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>, Ben Hutchings <ben@decadent.org.uk>
 
-On Wed, 2013-01-02 at 12:48 -0800, Roland Dreier wrote:
+On Mon, 2013-01-07 at 11:45 -0800, Roland Dreier wrote:
 > From: Roland Dreier <roland@purestorage.com>
 > 
+> Commit 64c13330a389 ("iscsi-target: Fix bug in handling of ExpStatSN
+> ACK during u32 wrap-around") introduced a bug where we compare the
+> wrong SN against our ExpCmdSN.
+> 
+> Reported-by: Ben Hutchings <ben@decadent.org.uk>
 > Signed-off-by: Roland Dreier <roland@purestorage.com>
 > ---
->  include/target/target_core_base.h | 1 -
->  1 file changed, 1 deletion(-)
+>  drivers/target/iscsi/iscsi_target_erl2.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-> index 7cae236..02ed017 100644
-> --- a/include/target/target_core_base.h
-> +++ b/include/target/target_core_base.h
-> @@ -210,7 +210,6 @@ enum tcm_tmreq_table {
->  	TMR_LUN_RESET		= 5,
->  	TMR_TARGET_WARM_RESET	= 6,
->  	TMR_TARGET_COLD_RESET	= 7,
-> -	TMR_FABRIC_TMR		= 255,
->  };
->  
->  /* fabric independent task management response values */
+> diff --git a/drivers/target/iscsi/iscsi_target_erl2.c b/drivers/target/iscsi/iscsi_target_erl2.c
+> index 9ac4c151..ba6091b 100644
+> --- a/drivers/target/iscsi/iscsi_target_erl2.c
+> +++ b/drivers/target/iscsi/iscsi_target_erl2.c
+> @@ -372,7 +372,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
+>  		 * made generic here.
+>  		 */
+>  		if (!(cmd->cmd_flags & ICF_OOO_CMDSN) && !cmd->immediate_cmd &&
+> -		     iscsi_sna_gte(cmd->stat_sn, conn->sess->exp_cmd_sn)) {
+> +		     iscsi_sna_gte(cmd->cmd_sn, conn->sess->exp_cmd_sn)) {
+>  			list_del(&cmd->i_conn_node);
+>  			spin_unlock_bh(&conn->cmd_lock);
+>  			iscsit_free_cmd(cmd);
 
-Applied to for-next.
-
-Thanks again Roland!
+Thanks for fixing this up.  Applied with another 'CC to stable for Ben &
+Co. to pick this up..
 
 --nab
+
+
