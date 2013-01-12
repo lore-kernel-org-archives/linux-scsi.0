@@ -1,433 +1,75 @@
-From: Asias He <asias.hejun@gmail.com>
-Subject: Re: [PATCH 6/8] V2 ipr: Implement block iopoll
-Date: Sat, 12 Jan 2013 08:35:07 +0800
-Message-ID: <CAFO3S42PYyObt0BpgoJG2WdKNgC_4=7QOik0RF-fCHdakcj0vA@mail.gmail.com>
-References: <20130111234346.012076652@linux.vnet.ibm.com> <20130111234530.436351746@linux.vnet.ibm.com>
+From: wenxiong@linux.vnet.ibm.com
+Subject: Re: linux-next: build failure after merge of the scsi tree
+Date: Fri, 11 Jan 2013 21:23:08 -0500
+Message-ID: <20130111212308.Horde.EQ70Mpir309Q8MkMJXuEiEA@imap.linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:49186 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755262Ab3ALAft (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2013 19:35:49 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so1715150lbb.33
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2013 16:35:47 -0800 (PST)
-In-Reply-To: <20130111234530.436351746@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, Greg KH <greg@kroah.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: wenxiong@linux.vnet.ibm.com
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, klebers@linux.vnet.ibm.com
-
-Hello Wen Xiong,
-
-On Sat, Jan 12, 2013 at 7:43 AM,  <wenxiong@linux.vnet.ibm.com> wrote:
-> This patch implements blk iopoll in ipr driver for performance improvement.
-
-Can you provide the performance numbers with/without the io polling?
-It would be interesting to know.
-
-> Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/ipr.c |  221 +++++++++++++++++++++++++++++++++++++++++------------
->  drivers/scsi/ipr.h |    6 +
->  2 files changed, 178 insertions(+), 49 deletions(-)
->
-> Index: b/drivers/scsi/ipr.c
-> ===================================================================
-> --- a/drivers/scsi/ipr.c        2013-01-11 16:11:20.062476228 -0600
-> +++ b/drivers/scsi/ipr.c        2013-01-11 16:11:50.275910225 -0600
-> @@ -108,6 +108,7 @@ static const struct ipr_chip_cfg_t ipr_c
->                 .max_cmds = 100,
->                 .cache_line_size = 0x20,
->                 .clear_isr = 1,
-> +               .iopoll_weight = 0,
->                 {
->                         .set_interrupt_mask_reg = 0x0022C,
->                         .clr_interrupt_mask_reg = 0x00230,
-> @@ -132,6 +133,7 @@ static const struct ipr_chip_cfg_t ipr_c
->                 .max_cmds = 100,
->                 .cache_line_size = 0x20,
->                 .clear_isr = 1,
-> +               .iopoll_weight = 0,
->                 {
->                         .set_interrupt_mask_reg = 0x00288,
->                         .clr_interrupt_mask_reg = 0x0028C,
-> @@ -156,6 +158,7 @@ static const struct ipr_chip_cfg_t ipr_c
->                 .max_cmds = 1000,
->                 .cache_line_size = 0x20,
->                 .clear_isr = 0,
-> +               .iopoll_weight = 64,
->                 {
->                         .set_interrupt_mask_reg = 0x00010,
->                         .clr_interrupt_mask_reg = 0x00018,
-> @@ -3560,6 +3563,95 @@ static struct device_attribute ipr_ioa_r
->         .store = ipr_store_reset_adapter
->  };
->
-> +static int ipr_iopoll(struct blk_iopoll *iop, int budget);
-> + /**
-> + * ipr_show_iopoll_weight - Show ipr polling mode
-> + * @dev:       class device struct
-> + * @buf:       buffer
-> + *
-> + * Return value:
-> + *     number of bytes printed to buffer
-> + **/
-> +static ssize_t ipr_show_iopoll_weight(struct device *dev,
-> +                                  struct device_attribute *attr, char *buf)
-> +{
-> +       struct Scsi_Host *shost = class_to_shost(dev);
-> +       struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
-> +       unsigned long lock_flags = 0;
-> +       int len;
-> +
-> +       spin_lock_irqsave(shost->host_lock, lock_flags);
-> +       len = snprintf(buf, PAGE_SIZE, "%d\n", ioa_cfg->iopoll_weight);
-> +       spin_unlock_irqrestore(shost->host_lock, lock_flags);
-> +
-> +       return len;
-> +}
-> +
-> +/**
-> + * ipr_store_iopoll_weight - Change the adapter's polling mode
-> + * @dev:       class device struct
-> + * @buf:       buffer
-> + *
-> + * Return value:
-> + *     number of bytes printed to buffer
-> + **/
-> +static ssize_t ipr_store_iopoll_weight(struct device *dev,
-> +                                       struct device_attribute *attr,
-> +                                       const char *buf, size_t count)
-> +{
-> +       struct Scsi_Host *shost = class_to_shost(dev);
-> +       struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
-> +       unsigned long user_iopoll_weight;
-> +       unsigned long lock_flags = 0;
-> +       int i;
-> +
-> +       if (!ioa_cfg->sis64) {
-> +               dev_info(&ioa_cfg->pdev->dev, "blk-iopoll not supported on this adapter\n");
-> +               return -EINVAL;
-> +       }
-> +       if (kstrtoul(buf, 10, &user_iopoll_weight))
-> +               return -EINVAL;
-> +
-> +       if (user_iopoll_weight > 256) {
-> +               dev_info(&ioa_cfg->pdev->dev, "Invalid blk-iopoll weight. It must be less than 256\n");
-> +               return -EINVAL;
-> +       }
-> +
-> +       if (user_iopoll_weight == ioa_cfg->iopoll_weight) {
-> +               dev_info(&ioa_cfg->pdev->dev, "Current blk-iopoll weight has the same weight\n");
-> +               return strlen(buf);
-> +       }
-> +
-> +       if (blk_iopoll_enabled && ioa_cfg->iopoll_weight &&
-> +                       ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
-> +               for (i = 1; i < ioa_cfg->hrrq_num; i++)
-> +                       blk_iopoll_disable(&ioa_cfg->hrrq[i].iopoll);
-> +       }
-> +
-> +       spin_lock_irqsave(shost->host_lock, lock_flags);
-> +       ioa_cfg->iopoll_weight = user_iopoll_weight;
-> +       if (blk_iopoll_enabled && ioa_cfg->iopoll_weight &&
-> +                       ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
-> +               for (i = 1; i < ioa_cfg->hrrq_num; i++) {
-> +                       blk_iopoll_init(&ioa_cfg->hrrq[i].iopoll,
-> +                                       ioa_cfg->iopoll_weight, ipr_iopoll);
-> +                       blk_iopoll_enable(&ioa_cfg->hrrq[i].iopoll);
-> +               }
-> +       }
-> +       spin_unlock_irqrestore(shost->host_lock, lock_flags);
-> +
-> +       return strlen(buf);
-> +}
-> +
-> +static struct device_attribute ipr_iopoll_weight_attr = {
-> +       .attr = {
-> +               .name =         "iopoll_weight",
-> +               .mode =         S_IRUGO | S_IWUSR,
-> +       },
-> +       .show = ipr_show_iopoll_weight,
-> +       .store = ipr_store_iopoll_weight
-> +};
-> +
->  /**
->   * ipr_alloc_ucode_buffer - Allocates a microcode download buffer
->   * @buf_len:           buffer length
-> @@ -3928,6 +4020,7 @@ static struct device_attribute *ipr_ioa_
->         &ipr_ioa_reset_attr,
->         &ipr_update_fw_attr,
->         &ipr_ioa_fw_type_attr,
-> +       &ipr_iopoll_weight_attr,
->         NULL,
->  };
->
-> @@ -5218,7 +5311,7 @@ static void ipr_isr_eh(struct ipr_ioa_cf
->         ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
->  }
->
-> -static int __ipr_process_hrrq(struct ipr_hrr_queue *hrr_queue,
-> +static int ipr_process_hrrq(struct ipr_hrr_queue *hrr_queue, int budget,
->                                                 struct list_head *doneq)
->  {
->         u32 ioasc;
-> @@ -5260,9 +5353,41 @@ static int __ipr_process_hrrq(struct ipr
->                         hrr_queue->toggle_bit ^= 1u;
->                 }
->                 num_hrrq++;
-> +               if (budget > 0 && num_hrrq >= budget)
-> +                       break;
->         }
-> +
->         return num_hrrq;
->  }
-> +
-> +static int ipr_iopoll(struct blk_iopoll *iop, int budget)
-> +{
-> +       struct ipr_ioa_cfg *ioa_cfg;
-> +       struct ipr_hrr_queue *hrrq;
-> +       struct ipr_cmnd *ipr_cmd, *temp;
-> +       unsigned long hrrq_flags;
-> +       int completed_ops;
-> +       LIST_HEAD(doneq);
-> +
-> +       hrrq = container_of(iop, struct ipr_hrr_queue, iopoll);
-> +       ioa_cfg = hrrq->ioa_cfg;
-> +
-> +       spin_lock_irqsave(hrrq->lock, hrrq_flags);
-> +       completed_ops = ipr_process_hrrq(hrrq, budget, &doneq);
-> +
-> +       if (completed_ops < budget)
-> +               blk_iopoll_complete(iop);
-> +       spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
-> +
-> +       list_for_each_entry_safe(ipr_cmd, temp, &doneq, queue) {
-> +               list_del(&ipr_cmd->queue);
-> +               del_timer(&ipr_cmd->timer);
-> +               ipr_cmd->fast_done(ipr_cmd);
-> +       }
-> +
-> +       return completed_ops;
-> +}
-> +
->  /**
->   * ipr_isr - Interrupt service routine
->   * @irq:       irq number
-> @@ -5277,8 +5402,6 @@ static irqreturn_t ipr_isr(int irq, void
->         struct ipr_ioa_cfg *ioa_cfg = hrrq->ioa_cfg;
->         unsigned long hrrq_flags = 0;
->         u32 int_reg = 0;
-> -       u32 ioasc;
-> -       u16 cmd_index;
->         int num_hrrq = 0;
->         int irq_none = 0;
->         struct ipr_cmnd *ipr_cmd, *temp;
-> @@ -5293,60 +5416,30 @@ static irqreturn_t ipr_isr(int irq, void
->         }
->
->         while (1) {
-> -               ipr_cmd = NULL;
-> -
-> -               while ((be32_to_cpu(*hrrq->hrrq_curr) & IPR_HRRQ_TOGGLE_BIT) ==
-> -                      hrrq->toggle_bit) {
-> -
-> -                       cmd_index = (be32_to_cpu(*hrrq->hrrq_curr) &
-> -                                    IPR_HRRQ_REQ_RESP_HANDLE_MASK) >> IPR_HRRQ_REQ_RESP_HANDLE_SHIFT;
-> -
-> -                       if (unlikely(cmd_index > hrrq->max_cmd_id ||
-> -                                    cmd_index < hrrq->min_cmd_id)) {
-> -                               ipr_isr_eh(ioa_cfg,
-> -                                       "Invalid response handle from IOA: ",
-> -                                       cmd_index);
-> -                               rc = IRQ_HANDLED;
-> -                               goto unlock_out;
-> -                       }
-> -
-> -                       ipr_cmd = ioa_cfg->ipr_cmnd_list[cmd_index];
-> -                       ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
-> -
-> -                       ipr_trc_hook(ipr_cmd, IPR_TRACE_FINISH, ioasc);
-> -
-> -                       list_move_tail(&ipr_cmd->queue, &doneq);
-> -
-> -                       rc = IRQ_HANDLED;
-> -
-> -                       if (hrrq->hrrq_curr < hrrq->hrrq_end) {
-> -                               hrrq->hrrq_curr++;
-> -                       } else {
-> -                               hrrq->hrrq_curr = hrrq->hrrq_start;
-> -                               hrrq->toggle_bit ^= 1u;
-> -                       }
-> -               }
-> +               if (ipr_process_hrrq(hrrq, -1, &doneq)) {
-> +                       rc =  IRQ_HANDLED;
->
-> -               if (ipr_cmd && !ioa_cfg->clear_isr)
-> -                       break;
-> +                       if (!ioa_cfg->clear_isr)
-> +                               break;
->
-> -               if (ipr_cmd != NULL) {
->                         /* Clear the PCI interrupt */
->                         num_hrrq = 0;
->                         do {
-> -                               writel(IPR_PCII_HRRQ_UPDATED, ioa_cfg->regs.clr_interrupt_reg32);
-> +                               writel(IPR_PCII_HRRQ_UPDATED,
-> +                                    ioa_cfg->regs.clr_interrupt_reg32);
->                                 int_reg = readl(ioa_cfg->regs.sense_interrupt_reg32);
->                         } while (int_reg & IPR_PCII_HRRQ_UPDATED &&
-> -                                       num_hrrq++ < IPR_MAX_HRRQ_RETRIES);
-> +                               num_hrrq++ < IPR_MAX_HRRQ_RETRIES);
->
->                 } else if (rc == IRQ_NONE && irq_none == 0) {
->                         int_reg = readl(ioa_cfg->regs.sense_interrupt_reg32);
->                         irq_none++;
->                 } else if (num_hrrq == IPR_MAX_HRRQ_RETRIES &&
->                            int_reg & IPR_PCII_HRRQ_UPDATED) {
-> -                       ipr_isr_eh(ioa_cfg, "Error clearing HRRQ: ", num_hrrq);
-> +                       ipr_isr_eh(ioa_cfg,
-> +                               "Error clearing HRRQ: ", num_hrrq);
->                         rc = IRQ_HANDLED;
-> -                       goto unlock_out;
-> +                       break;
->                 } else
->                         break;
->         }
-> @@ -5354,7 +5447,6 @@ static irqreturn_t ipr_isr(int irq, void
->         if (unlikely(rc == IRQ_NONE))
->                 rc = ipr_handle_other_interrupt(ioa_cfg, int_reg);
->
-> -unlock_out:
->         spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
->         list_for_each_entry_safe(ipr_cmd, temp, &doneq, queue) {
->                 list_del(&ipr_cmd->queue);
-> @@ -5375,6 +5467,7 @@ unlock_out:
->  static irqreturn_t ipr_isr_mhrrq(int irq, void *devp)
->  {
->         struct ipr_hrr_queue *hrrq = (struct ipr_hrr_queue *)devp;
-> +       struct ipr_ioa_cfg *ioa_cfg = hrrq->ioa_cfg;
->         unsigned long hrrq_flags = 0;
->         struct ipr_cmnd *ipr_cmd, *temp;
->         irqreturn_t rc = IRQ_NONE;
-> @@ -5388,11 +5481,22 @@ static irqreturn_t ipr_isr_mhrrq(int irq
->                 return IRQ_NONE;
->         }
->
-> -       if ((be32_to_cpu(*hrrq->hrrq_curr) & IPR_HRRQ_TOGGLE_BIT) ==
-> -            hrrq->toggle_bit)
-> +       if (blk_iopoll_enabled && ioa_cfg->iopoll_weight &&
-> +                       ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
-> +               if ((be32_to_cpu(*hrrq->hrrq_curr) & IPR_HRRQ_TOGGLE_BIT) ==
-> +                      hrrq->toggle_bit) {
-> +                       if (!blk_iopoll_sched_prep(&hrrq->iopoll))
-> +                               blk_iopoll_sched(&hrrq->iopoll);
-> +                       spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
-> +                       return IRQ_HANDLED;
-> +               }
-> +       } else {
-> +               if ((be32_to_cpu(*hrrq->hrrq_curr) & IPR_HRRQ_TOGGLE_BIT) ==
-> +                       hrrq->toggle_bit)
->
-> -               if (__ipr_process_hrrq(hrrq, &doneq))
-> -                       rc =  IRQ_HANDLED;
-> +                       if (ipr_process_hrrq(hrrq, -1, &doneq))
-> +                               rc =  IRQ_HANDLED;
-> +       }
->
->         spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
->
-> @@ -9690,7 +9794,7 @@ static void ipr_remove(struct pci_dev *p
->  static int ipr_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
->  {
->         struct ipr_ioa_cfg *ioa_cfg;
-> -       int rc;
-> +       int rc, i;
->
->         rc = ipr_probe_ioa(pdev, dev_id);
->
-> @@ -9737,6 +9841,17 @@ static int ipr_probe(struct pci_dev *pde
->         scsi_add_device(ioa_cfg->host, IPR_IOA_BUS, IPR_IOA_TARGET, IPR_IOA_LUN);
->         ioa_cfg->allow_ml_add_del = 1;
->         ioa_cfg->host->max_channel = IPR_VSET_BUS;
-> +       ioa_cfg->iopoll_weight = ioa_cfg->chip_cfg->iopoll_weight;
-> +
-> +       if (blk_iopoll_enabled && ioa_cfg->iopoll_weight &&
-> +                       ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
-> +               for (i = 1; i < ioa_cfg->hrrq_num; i++) {
-> +                       blk_iopoll_init(&ioa_cfg->hrrq[i].iopoll,
-> +                                       ioa_cfg->iopoll_weight, ipr_iopoll);
-> +                       blk_iopoll_enable(&ioa_cfg->hrrq[i].iopoll);
-> +               }
-> +       }
-> +
->         schedule_work(&ioa_cfg->work_q);
->         return 0;
->  }
-> @@ -9755,8 +9870,16 @@ static void ipr_shutdown(struct pci_dev
->  {
->         struct ipr_ioa_cfg *ioa_cfg = pci_get_drvdata(pdev);
->         unsigned long lock_flags = 0;
-> +       int i;
->
->         spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-> +       if (blk_iopoll_enabled && ioa_cfg->iopoll_weight &&
-> +                       ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
-> +               ioa_cfg->iopoll_weight = 0;
-> +               for (i = 1; i < ioa_cfg->hrrq_num; i++)
-> +                       blk_iopoll_disable(&ioa_cfg->hrrq[i].iopoll);
-> +       }
-> +
->         while (ioa_cfg->in_reset_reload) {
->                 spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
->                 wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
-> Index: b/drivers/scsi/ipr.h
-> ===================================================================
-> --- a/drivers/scsi/ipr.h        2013-01-11 16:10:56.114660090 -0600
-> +++ b/drivers/scsi/ipr.h        2013-01-11 16:11:50.275910225 -0600
-> @@ -32,6 +32,7 @@
->  #include <linux/libata.h>
->  #include <linux/list.h>
->  #include <linux/kref.h>
-> +#include <linux/blk-iopoll.h>
->  #include <scsi/scsi.h>
->  #include <scsi/scsi_cmnd.h>
->
-> @@ -492,6 +493,8 @@ struct ipr_hrr_queue {
->         u8 allow_interrupts:1;
->         u8 ioa_is_dead:1;
->         u8 allow_cmds:1;
-> +
-> +       struct blk_iopoll iopoll;
->  };
->
->  /* Command packet structure */
-> @@ -1348,6 +1351,7 @@ struct ipr_chip_cfg_t {
->         u16 max_cmds;
->         u8 cache_line_size;
->         u8 clear_isr;
-> +       u32 iopoll_weight;
->         struct ipr_interrupt_offsets regs;
->  };
->
-> @@ -1534,6 +1538,8 @@ struct ipr_ioa_cfg {
->                 char desc[22];
->         } vectors_info[IPR_MAX_MSIX_VECTORS];
->
-> +       u32 iopoll_weight;
-> +
->  }; /* struct ipr_ioa_cfg */
->
->  struct ipr_cmnd {
->
-> --
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+Quoting James Bottomley <James.Bottomley@hansenpartnership.com>:
 
--- 
-Asias
+> On Fri, 2013-01-11 at 11:35 -0600, Brian King wrote:
+>> On 01/11/2013 10:05 AM, Greg KH wrote:
+>> > On Fri, Jan 11, 2013 at 03:37:17PM +0000, James Bottomley wrote:
+>> >> On Fri, 2013-01-11 at 09:27 -0600, Brian King wrote:
+>> >>> It looks like this was a due to the fact that the new patches
+>> >>> added __devinit tags in the same merge window the __devinit tag
+>> >>> itself was getting removed.
+>> >>
+>> >> Not exactly.  The patch which makes them nops went into 3.8.  Now
+>> >> there's a patch queued in, Gregs tree I presume, to remove them all and
+>> >> the #defines which causes the compile failure.
+>> >>
+>> >>> As to the sparse warnings, this patch fixed the ones that
+>> >>> were actual bugs in the new code, although we could have
+>> >>> made that more clear in the patch description.
+>> >>>
+>> >>> http://marc.info/?l=linux-scsi&m=135716576204083&w=2
+>> >>
+>> >> Ah, thanks ... I've been on holiday for a while, so I did miss that.
+>> >>
+>> >>> There is one outstanding issue I am aware of which was an
+>> >>> array bounds compiler warning which looks to be a misdetection
+>> >>> by the compiler. Wendy and I discussed adding a BUG_ON
+>> >>> to stop the compiler from complaining.
+>> >>>
+>> >>> Wendy - lets queue these two changes up ASAP. They should both
+>> >>> be very simple changes.
+>> >>
+>> >> If it's a simple gcc bug, just ignore it.
+>> >>
+>> >> I do need you to redo the patches to remove the __dev annotations,
+>> >> though.  We can't risk introducing a bisect killing compile breakage if
+>> >> Greg's tree merges before mine in the next merge window.
+>> >
+>> > This change should be pushed to Linus in time for 3.8-final, so there
+>> > should not be any bisect issues.
+>>
+>> We can do this either way.
+>>
+>> James - what is your preference? Drop everything and do a resend of the
+>> entire series or delta patches on top of what is currently in your tree?
+>
+> Drop everything and resend still, I think.  There's still a rebase
+> problem, because the merge failure will happen if I rebase the misc tree
+> to beyond Greg's merge point and I'd rather not have to worry about it.
+>
+> Thanks,
+>
+> James
+
+Hi James, I just re-sent all patches which are against
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git.
+This kernel already have Greg's "Drivers: scsi: remove _dev*  
+attributes" patch.
+
+Let me know if you have any questions for these patches.
+
+Thanks for for your help!
+Wendy
