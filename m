@@ -1,114 +1,55 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v5 3/4] block: implement runtime pm strategy
-Date: Mon, 14 Jan 2013 15:18:24 +0800
-Message-ID: <50F3B140.2030003@intel.com>
-References: <1341547472-6863-1-git-send-email-ming.m.lin@intel.com>  <1341547472-6863-4-git-send-email-ming.m.lin@intel.com>  <1341550812.3023.3.camel@dabdike.hilton.com>  <1341554872.3628.30.camel@minggr> <1341561953.3023.31.camel@dabdike.hilton.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: [PATCH] Fix libata-eh don't retry command after reset succeeded.
+Date: Mon, 14 Jan 2013 09:01:12 -0500
+Message-ID: <50F40FA8.4070101@teksavvy.com>
+References: <201301141820562689358@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1341561953.3023.31.camel@dabdike.hilton.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ironport2-out.teksavvy.com ([206.248.154.182]:37696 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756175Ab3ANOBO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jan 2013 09:01:14 -0500
+In-Reply-To: <201301141820562689358@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Removed LinMing@intel
-
-Hi James,
-
-Sorry for the late reply, as I'm just picking up this work and thought
-this may still need some discussion/clarification. Please see below.
-
-On 07/06/2012 04:05 PM, James Bottomley wrote:
-> On Fri, 2012-07-06 at 14:07 +0800, Lin Ming wrote:
->> On Fri, 2012-07-06 at 09:00 +0400, James Bottomley wrote:
->>> On Fri, 2012-07-06 at 12:04 +0800, Lin Ming wrote:
->>>> When a request is added:
->>>>     If device is suspended or is suspending and the request is not a
->>>>     PM request, resume the device.
->>>>
->>>> When a request finishes:
->>>>     Call pm_runtime_mark_last_busy().
->>>>
->>>> When pick a request:
->>>>     If device is resuming/suspending, then only PM request is allowed to go.
->>>>     Return NULL for other cases.
->>>
->>> This is a complete reinvention of the quiesce state, just with new names
->>> and moved up to block in part ... why do we have to have two separate
->>> systems for stopping a device and sending special commands when the
->>> device is suspended, why not just one?
->>
->> Yes, there are some duplicates with scsi layer quiesce state.
->> I'd like to do the cleanup.
-> 
-> The mechanism is pretty much identical:  For quiesce you set the sdev
-> state to SDEV_QUIESCE and then send in special requests with REQ_PREEMPT
-> to bypass the suspend.  In your additional scheme you set a queue flag
-> RPM_SUSPENDED by a pm specific set of callbacks and you only then accept
-> requests with REQ_PM.  I don't see any difference in actual effect
-> (well, except that quiesce can be done on a non-empty queue, but that's
-> a simple flag difference).
-
-My understanding of quiesce state is that, it is used by scsi driver to
-say: hold on for a moment, no more FS requests, I need to do some
-housekeeping work for the device and when I'm done, I'll put it back to
-normal state.
-
-The housekeeping work will generally involve executing some commands for
-the device using scsi_execute, as all requests originated from
-scsi_execute are of type REQ_PREEMPT. But it is not for suspending the
-device.
-
-While for runtime suspended state, we can't say: everybody quiet, I'm
-gonna sleep, so I'll ignore all of your requests. Instead, we keep track
-of the device's activity, and once we have learned that it is not being
-used by anyone, we put it into a low power state. And if there is any
-requests arrived for it due to whatever user, we will need to resume it
-to process the request.
-
-So I think they are different, serves for different purposes.
+To: jgarzik <jgarzik@redhat.com>
+Cc: ycbzzjlby <ycbzzjlby@gmail.com>, mlord <mlord@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
 > 
-> What I don't want to see is duplicated mechanisms.  If you want to make
-> a general quiesce mechanism in block instead of SCSI, I'm fine with
-> that, but I want to see our current quiesce mechanism moved to it first
-> since that demonstrates you got it right.  If you don't want to do that,
-> then just use the existing mechanism in SCSI.
-> 
-> Now that I look at it, your q->nr_pending is an inexact duplicate of
-> sdev->device_busy as well.  Again, no objection to moving this to block,
-> but if you then make SCSI use it for sdev->device_busy, you'll get a
-> very fast indication of whether you got this right or not, which is an
-> excellent reason for unifying.
+> From 9cc9a85f17a8525e53caf430611d762c105d324c Mon Sep 17 00:00:00 2001
+> From: Bian Yu <ycbzzjlby@gmail.com>
+> Date: Tue, 18 Dec 2012 05:58:34 -0500
+> Subject: [PATCH] Fix libata-eh don't retry command after reset succeeded.
+>  It's introduced by commit 8d899e70c1b3afff, When disk has a UNC error,
+>  qc->err_mask will set AC_ERR_MEDIA flag.
+>  Signed-off-by: Bian Yu <ycbzzjlby@gmail.com>
+>  
+> ---
+>  drivers/ata/libata-eh.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>  
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index bf039b0..bcf4437 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -2094,7 +2094,7 @@ static unsigned int ata_eh_speed_down(struct ata_device *dev,
+>   */
+>  static inline int ata_eh_worth_retry(struct ata_queued_cmd *qc)
+>  {
+> -       if (qc->flags & AC_ERR_MEDIA)
+> +       if (qc->err_mask & AC_ERR_MEDIA)
+>                 return 0;       /* don't retry media errors */
+>         if (qc->flags & ATA_QCFLAG_IO)
+>                 return 1;       /* otherwise retry anything from fs stack */
+> -- 
+> 1.7.1
 
-The nr_pending is the counter of how many requests are in the device's
-request queue, while the device_busy is how many commands are being
-processed by the device, and they can be different as Alan Stern has put
-it here:
-http://www.spinics.net/lists/linux-scsi/msg60497.html
+Yup, good catch.  The original patch to fix retries (from me) had it that way,
+but somewhere among the enforced revisions this error crept in unnoticed.
 
-And I think we still need device_busy in scsi layer, for the case when
-the scsi prepare phase decides to defer the request(due to no memory or
-whatever), we will have 1 request in the queue while no commands are
-being processed by the device. And we need to keep track of such
-information in order to decide if we need restart the queue when we
-return BLKPREP_DEFER in function scsi_prep_return:
+Jeff -- wanna pick this one up?
+Could be useful for -stable, too.
 
-        case BLKPREP_DEFER:
-                /*
-                 * If we defer, the blk_peek_request() returns NULL, but the
-                 * queue must be restarted, so we schedule a callback to happen
-                 * shortly.
-                 */
-                if (sdev->device_busy == 0)
-                        blk_delay_queue(q, SCSI_QUEUE_DELAY);
-                break;
-
-So I think we still need device_busy.
-
-OK, this is my understanding, they may be wrong, so please let me know
-what do you think, thanks.
-
--Aaron
