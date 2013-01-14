@@ -1,92 +1,107 @@
-From: Chen Gang <gang.chen@asianux.com>
-Subject: [PATCH] drivers/scsi/cxgbi: correcting the include path, so can pass
- compiling.
-Date: Sat, 12 Jan 2013 20:42:29 +0800
-Message-ID: <50F15A35.4000400@asianux.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v6 3/4] block: implement runtime pm strategy
+Date: Mon, 14 Jan 2013 11:03:02 +0800
+Message-ID: <20130114030302.GA15280@aaronlu.sh.intel.com>
+References: <50EBCC93.5000203@intel.com>
+ <Pine.LNX.4.44L0.1301081016310.1535-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from intranet.asianux.com ([58.214.24.6]:23884 "EHLO
-	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751285Ab3ALMlk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Jan 2013 07:41:40 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1301081016310.1535-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: David Miller <davem@davemloft.net>, kxie@chelsio.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
+On Tue, Jan 08, 2013 at 10:22:45AM -0500, Alan Stern wrote:
+> Just as importantly, all of the public routines added in patch 2/4 to
+> blk-core.c should have kerneldoc explaining how and where to use them.  
+> In particular, the kerneldoc for blk_pm_runtime_init() has to mention
+> that the block runtime PM implementation works only for drivers that
+> use request structures for their I/O; it doesn't work for drivers that
+> use bio's directly.
 
-  correct the include path,
-  or the compiler will report can not find "common.h"...
+How about the following description for them?
 
-  both cxgb3/ and cxgb4/ sub directly have l2t.h (they are different).
-  so it is not suitable to '-I' sub-directy, directly.
+/**
+ * blk_pm_runtime_init - Block layer runtime PM initialization routine
+ * @q: the queue of the device
+ * @dev: the device the queue belongs to
+ *
+ * Description:
+ *    Initialize runtime PM related fields for @q and start auto suspend
+ *    for @dev. Drivers that want to take advantage of request based runtime
+ *    PM should call this function after @dev has been initialized, and its
+ *    request queue @q has been allocated, and runtime PM for it is not
+ *    ready yet(either disabled/forbidden or its usage count >= 0).
+ *
+ *    The block layer runtime PM is request based, so only works for drivers
+ *    that use request as their IO unit instead of those directly use bio's.
+ */
 
+/**
+ * blk_pre_runtime_suspend - Pre runtime suspend check
+ * @q: the queue of the device
+ *
+ * Description:
+ *    This function will check if runtime suspend is allowed for the device
+ *    by examining if there are any requests pending in the queue. If there
+ *    are requests pending, the device can not be runtime suspended; otherwise,
+ *    the queue's status will be updated to SUSPENDING and the driver can
+ *    proceed to suspend the device.
+ *
+ *    For the not allowed case, we mark last busy for the device so that
+ *    runtime PM core will try to autosuspend it some time later.
+ *
+ *    This function should be called in the device's runtime suspend callback,
+ *    before its runtime suspend function is called.
+ *
+ * Return:
+ *    0		- OK to runtime suspend the device
+ *    -EBUSY	- Device should not be runtime suspended
+ */
 
-Signed-off-by: Chen Gang <gang.chen@asianux.com>
----
- drivers/scsi/cxgbi/Makefile        |    4 ++++
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c |   14 +++++++-------
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   10 +++++-----
- 3 files changed, 16 insertions(+), 12 deletions(-)
+/**
+ * blk_post_runtime_suspend - Post runtime suspend processing
+ * @q: the queue of the device
+ * @err: return value of the device's runtime suspend function
+ *
+ * Description:
+ *    Update the queue's runtime status according to the return value of the
+ *    device's runtime suspend function.
+ *
+ *    This function should be called in the device's runtime suspend callback,
+ *    after its runtime suspend function is called.
+ */
 
-diff --git a/drivers/scsi/cxgbi/Makefile b/drivers/scsi/cxgbi/Makefile
-index 86007e3..aff2998 100644
---- a/drivers/scsi/cxgbi/Makefile
-+++ b/drivers/scsi/cxgbi/Makefile
-@@ -1,2 +1,6 @@
-+
-+ccflags-y			:= -Idrivers/net/ethernet/chelsio
-+subdir-ccflags-y		:= -Idrivers/net/ethernet/chelsio
-+
- obj-$(CONFIG_SCSI_CXGB3_ISCSI)	+= libcxgbi.o cxgb3i/
- obj-$(CONFIG_SCSI_CXGB4_ISCSI)	+= libcxgbi.o cxgb4i/
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index 49692a1..ca92e72 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -18,13 +18,13 @@
- #include <linux/moduleparam.h>
- #include <scsi/scsi_host.h>
- 
--#include "common.h"
--#include "t3_cpl.h"
--#include "t3cdev.h"
--#include "cxgb3_defs.h"
--#include "cxgb3_ctl_defs.h"
--#include "cxgb3_offload.h"
--#include "firmware_exports.h"
-+#include "cxgb3/common.h"
-+#include "cxgb3/t3_cpl.h"
-+#include "cxgb3/t3cdev.h"
-+#include "cxgb3/cxgb3_defs.h"
-+#include "cxgb3/cxgb3_ctl_defs.h"
-+#include "cxgb3/cxgb3_offload.h"
-+#include "cxgb3/firmware_exports.h"
- #include "cxgb3i.h"
- 
- static unsigned int dbg_level;
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index f924b3c..a5795d5 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -20,11 +20,11 @@
- #include <net/dst.h>
- #include <linux/netdevice.h>
- 
--#include "t4_msg.h"
--#include "cxgb4.h"
--#include "cxgb4_uld.h"
--#include "t4fw_api.h"
--#include "l2t.h"
-+#include "cxgb4/t4_msg.h"
-+#include "cxgb4/cxgb4.h"
-+#include "cxgb4/cxgb4_uld.h"
-+#include "cxgb4/t4fw_api.h"
-+#include "cxgb4/l2t.h"
- #include "cxgb4i.h"
- 
- static unsigned int dbg_level;
--- 
-1.7.10.4
+/**
+ * blk_pre_runtime_resume - Pre runtime resume processing
+ * @q: the queue of the device
+ *
+ * Description:
+ *    Update the queue's runtime status to RESUMING in preparation for the
+ *    runtime resume of the device.
+ *
+ *    This function should be called in the device's runtime resume callback,
+ *    before its runtime resume function is called.
+ */
+
+/**
+ * blk_post_runtime_resume - Post runtime resume processing
+ * @q: the queue of the device
+ * @err: return value of the device's runtime resume function
+ *
+ * Description:
+ *    Update the queue's runtime status according to the return value of the
+ *    device's runtime resume function. If it is successfully resumed, process
+ *    the requests that are queued into the device's queue when it is resuming
+ *    and then mark last busy and initiate autosuspend for it.
+ *
+ *    This function should be called in the device's runtime resume callback,
+ *    after its runtime resume function is called.
+ */
+
+Please feel free to suggest, thanks.
+
+-Aaron
