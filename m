@@ -1,122 +1,89 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v6 3/4] block: implement runtime pm strategy
-Date: Mon, 14 Jan 2013 13:13:32 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1301141306560.1782-100000@iolanthe.rowland.org>
-References: <20130114030302.GA15280@aaronlu.sh.intel.com>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: xhci problem
+Date: Mon, 14 Jan 2013 13:37:26 -0800
+Message-ID: <20130114213726.GA7735@xanatos>
+References: <1354670910.2610.7.camel@66-152-109-61.tvc-ip.com>
+ <20121205172451.GA5324@xanatos>
+ <1358087698.27952.7.camel@66-152-109-61.tvc-ip.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130114030302.GA15280@aaronlu.sh.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:54656 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756688Ab3ANVh0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jan 2013 16:37:26 -0500
+Content-Disposition: inline
+In-Reply-To: <1358087698.27952.7.camel@66-152-109-61.tvc-ip.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Allan Dennis <aldennis@rogers.com>
+Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-On Mon, 14 Jan 2013, Aaron Lu wrote:
+On Sun, Jan 13, 2013 at 09:34:58AM -0500, Allan Dennis wrote:
+> I left this problem for awhile, then finally got back to it. I upgraded
+> the gentoo kernel to 3.6.11 and was partially successful: the 3TB drive
+> mounted ok, but then had some serious trouble transferring files and I
+> believe that linux force-unmounted it as a result.
+> Then upgrading to 3.7.1 fixed the problem completely. Here is the dmesg
+> output now:
 
-> On Tue, Jan 08, 2013 at 10:22:45AM -0500, Alan Stern wrote:
-> > Just as importantly, all of the public routines added in patch 2/4 to
-> > blk-core.c should have kerneldoc explaining how and where to use them.  
-> > In particular, the kerneldoc for blk_pm_runtime_init() has to mention
-> > that the block runtime PM implementation works only for drivers that
-> > use request structures for their I/O; it doesn't work for drivers that
-> > use bio's directly.
+Good to hear that upgrading helped.
+
+It would be nice to know which commit fixed your issue, so that we can
+make sure any Linux distributions include it in their stable releases.
+Do you have time to git bisect the changes between 3.6 and 3.7?
+
+Sarah Sharp
+
+> [    4.787051] scsi 7:0:0:0: Direct-Access     ST330006 51AS
+> CC45 PQ: 0 ANSI: 0
+> [    4.787176] sd 7:0:0:0: Attached scsi generic sg2 type 0
+> [    4.787416] sd 7:0:0:0: [sdc] Very big device. Trying to use READ
+> CAPACITY(16).
+> [    4.787998] sd 7:0:0:0: [sdc] 5860533168 512-byte logical blocks:
+> (3.00 TB/2.72 TiB)
+> [    4.788405] sd 7:0:0:0: [sdc] Write Protect is off
+> [    4.788408] sd 7:0:0:0: [sdc] Mode Sense: 03 00 00 00
+> [    4.788886] sd 7:0:0:0: [sdc] No Caching mode page present
+> [    4.788888] sd 7:0:0:0: [sdc] Assuming drive cache: write through
+> [    4.789246] sd 7:0:0:0: [sdc] Very big device. Trying to use READ
+> CAPACITY(16).
+> [    4.790420] sd 7:0:0:0: [sdc] No Caching mode page present
+> [    4.790424] sd 7:0:0:0: [sdc] Assuming drive cache: write through
+> [    4.841399]  sdc: sdc1
+> [    4.841883] sd 7:0:0:0: [sdc] Very big device. Trying to use READ
+> CAPACITY(16).
+> [    4.843331] sd 7:0:0:0: [sdc] No Caching mode page present
+> [    4.843334] sd 7:0:0:0: [sdc] Assuming drive cache: write through
+> [    4.843336] sd 7:0:0:0: [sdc] Attached SCSI disk
 > 
-> How about the following description for them?
-
-Overall this is very good.
-
-> /**
->  * blk_pm_runtime_init - Block layer runtime PM initialization routine
->  * @q: the queue of the device
->  * @dev: the device the queue belongs to
->  *
->  * Description:
->  *    Initialize runtime PM related fields for @q and start auto suspend
->  *    for @dev. Drivers that want to take advantage of request based runtime
->  *    PM should call this function after @dev has been initialized, and its
->  *    request queue @q has been allocated, and runtime PM for it is not
->  *    ready yet(either disabled/forbidden or its usage count >= 0).
->  *
->  *    The block layer runtime PM is request based, so only works for drivers
->  *    that use request as their IO unit instead of those directly use bio's.
->  */
+> Thanks for your help!
 > 
-> /**
->  * blk_pre_runtime_suspend - Pre runtime suspend check
->  * @q: the queue of the device
->  *
->  * Description:
->  *    This function will check if runtime suspend is allowed for the device
->  *    by examining if there are any requests pending in the queue. If there
->  *    are requests pending, the device can not be runtime suspended; otherwise,
->  *    the queue's status will be updated to SUSPENDING and the driver can
->  *    proceed to suspend the device.
->  *
->  *    For the not allowed case, we mark last busy for the device so that
->  *    runtime PM core will try to autosuspend it some time later.
->  *
->  *    This function should be called in the device's runtime suspend callback,
->  *    before its runtime suspend function is called.
-
-This doesn't quite make sense, because the runtime_suspend callback 
-_is_ the runtime-suspend function.  How about "... should be called 
-near the start of the device's runtime_suspend callback."?
-
-A similar comment applies to the other functions.
-
->  *
->  * Return:
->  *    0		- OK to runtime suspend the device
->  *    -EBUSY	- Device should not be runtime suspended
->  */
+> On Wed, 2012-12-05 at 09:24 -0800, Sarah Sharp wrote:
+> > On Tue, Dec 04, 2012 at 08:28:30PM -0500, Allan Dennis wrote:
+> > > I hope you won't be annoyed by my question... here goes:
+> > 
+> > It's my job to answer questions, so fire away. :)
+> > 
+> > > I have 2TB and 3TB SATA drives, both connected to my Intense PC (Ivy
+> > > Bridge tiny PC) on separate external drive enclosures on USB 3 cables. I
+> > > have gentoo linux, and was running kernel 3.4.9 where both drives
+> > > weren't recognized properly. Now I updated to 3.5.7 and the 2TB is good
+> > > to go (yay!) but the 3TB guy is still giving me problems. Here is the
+> > > dmesg output as I plugged in the 3TB (sdc) after the 2TB (sdb) was
+> > > successful, with debug enabled in the kernel config. Is this a known
+> > > issue? Can I help you figure out what's going wrong here by providing
+> > > logs or whatnot?
+> > 
+> > I can't see anything wrong on the xHCI side, so I suspect the problem
+> > might be that the SCSI layer doesn't like some response the hard drive is
+> > sending.  I would suggest you take a usbmon trace, following the
+> > directions here:
+> > 
+> > http://lxr.linux.no/#linux/Documentation/usb/usbmon.txt
+> > 
+> > Please hit 'reply-all' when you send the trace, since I've Cced the
+> > linux-usb and usb-storage mailing lists.
+> > 
+> > Sarah Sharp
 > 
-> /**
->  * blk_post_runtime_suspend - Post runtime suspend processing
->  * @q: the queue of the device
->  * @err: return value of the device's runtime suspend function
->  *
->  * Description:
->  *    Update the queue's runtime status according to the return value of the
->  *    device's runtime suspend function.
->  *
->  *    This function should be called in the device's runtime suspend callback,
->  *    after its runtime suspend function is called.
->  */
-> 
-> /**
->  * blk_pre_runtime_resume - Pre runtime resume processing
->  * @q: the queue of the device
->  *
->  * Description:
->  *    Update the queue's runtime status to RESUMING in preparation for the
->  *    runtime resume of the device.
->  *
->  *    This function should be called in the device's runtime resume callback,
->  *    before its runtime resume function is called.
->  */
-> 
-> /**
->  * blk_post_runtime_resume - Post runtime resume processing
->  * @q: the queue of the device
->  * @err: return value of the device's runtime resume function
->  *
->  * Description:
->  *    Update the queue's runtime status according to the return value of the
->  *    device's runtime resume function. If it is successfully resumed, process
->  *    the requests that are queued into the device's queue when it is resuming
->  *    and then mark last busy and initiate autosuspend for it.
->  *
->  *    This function should be called in the device's runtime resume callback,
->  *    after its runtime resume function is called.
->  */
-> 
-> Please feel free to suggest, thanks.
-
-I would hypenate some of these words, such as "runtime-PM-related
-fields" or "request-based runtime PM".  Also, "runtime_suspend" and 
-"runtime_resume" generally should have either a '_' or a '-'.
-
-But that's a very minor point; your descriptions are quite good.
-
-Alan Stern
