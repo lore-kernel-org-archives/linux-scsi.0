@@ -1,133 +1,231 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v13 7/9] libata: scsi: no poll when ODD is powered off
-Date: Tue, 15 Jan 2013 17:21:03 +0800
-Message-ID: <1358241665-2156-8-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v13 4/9] libata: check zero power ready status for ZPODD
+Date: Tue, 15 Jan 2013 17:21:00 +0800
+Message-ID: <1358241665-2156-5-git-send-email-aaron.lu@intel.com>
 References: <1358241665-2156-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:9325 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756676Ab3AOJUf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jan 2013 04:20:35 -0500
+Return-path: <linux-acpi-owner@vger.kernel.org>
 In-Reply-To: <1358241665-2156-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
 Cc: Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-When the ODD is powered off, any action the user did to the ODD that
-would generate a media event will trigger an ACPI interrupt, so the
-poll for media event is no longer necessary. And the poll will also
-cause a runtime status change, which will stop the ODD from staying in
-powered off state, so the poll should better be stopped.
+Per the Mount Fuji spec, the ODD is considered zero power ready when:
+  - For slot type ODD, no media inside;
+  - For tray type ODD, no media inside and tray closed.
 
-But since we don't have access to the gendisk structure in LLDs, here
-comes the disk_events_disable_depth for scsi device. This field is a
-hint set by LLDs to convey information to upper layer drivers. A value
-of 0 means media poll is necessary for the device, while values above 0
-means media poll is not needed and should better be skipped. So we can
-increase its value when we are to power off the ODD in ATA layer and
-decrease its value when the ODD is powered on, effectively silence the
-media events poll.
+The information can be retrieved by either the returned information of
+command GET_EVENT_STATUS_NOTIFICATION(the command is used to poll for
+media event) or sense code.
+
+The information provided by the media status byte is not accurate, it
+is possible that after a new disc is just inserted, the status byte
+still returns media not present. So this information can not be used as
+the deciding factor, we use sense code to decide if zpready status is
+true.
+
+When we first sensed the ODD in the zero power ready state, the
+zp_sampled will be set and timestamp will be recoreded. And after ODD
+stayed in this state for some pre-defined period, the ODD is considered
+as power off ready and the zp_ready flag will be set. The zp_ready flag
+serves as the deciding factor other code will use to see if power off is
+OK for the ODD.
+
+The Mount Fuji spec suggests a delay should be used here, to avoid the
+case user ejects the ODD and then instantly inserts a new one again, so
+that we can avoid a power transition. And some ODDs may be slow to place
+its head to the home position after disc is ejected, so a delay here is
+generally a good idea. And the delay time can be changed via the module
+param zpodd_poweroff_delay.
+
+The zero power ready status check is performed in the ata port's runtime
+suspend code path, when port is not frozen yet, as we need to issue some
+IOs to the ODD.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- drivers/ata/libata-zpodd.c |  7 +++++++
- drivers/scsi/scsi_lib.c    | 14 ++++++++++++++
- drivers/scsi/sr.c          |  6 +++++-
- include/scsi/scsi_device.h |  4 ++++
- 4 files changed, 30 insertions(+), 1 deletion(-)
+ drivers/ata/libata-eh.c    | 14 +++++++--
+ drivers/ata/libata-zpodd.c | 75 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata.h       |  5 ++++
+ 3 files changed, 92 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index bcf4437..a0dddc3 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1591,7 +1591,7 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
+  *	RETURNS:
+  *	0 on success, AC_ERR_* mask on failure.
+  */
+-static unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
++unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
+ {
+ 	u8 cdb[ATAPI_CDB_LEN] = { TEST_UNIT_READY, 0, 0, 0, 0, 0 };
+ 	struct ata_taskfile tf;
+@@ -1624,7 +1624,7 @@ static unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
+  *	RETURNS:
+  *	0 on success, AC_ERR_* mask on failure
+  */
+-static unsigned int atapi_eh_request_sense(struct ata_device *dev,
++unsigned int atapi_eh_request_sense(struct ata_device *dev,
+ 					   u8 *sense_buf, u8 dfl_sense_key)
+ {
+ 	u8 cdb[ATAPI_CDB_LEN] =
+@@ -4022,6 +4022,7 @@ static void ata_eh_handle_port_suspend(struct ata_port *ap)
+ {
+ 	unsigned long flags;
+ 	int rc = 0;
++	struct ata_device *dev;
+ 
+ 	/* are we suspending? */
+ 	spin_lock_irqsave(ap->lock, flags);
+@@ -4034,6 +4035,15 @@ static void ata_eh_handle_port_suspend(struct ata_port *ap)
+ 
+ 	WARN_ON(ap->pflags & ATA_PFLAG_SUSPENDED);
+ 
++	/*
++	 * If we have a ZPODD attached, check its zero
++	 * power ready status before the port is frozen.
++	 */
++	ata_for_each_dev(dev, &ap->link, ENABLED) {
++		if (zpodd_dev_enabled(dev))
++			zpodd_on_suspend(dev);
++	}
++
+ 	/* tell ACPI we're suspending */
+ 	rc = ata_acpi_on_suspend(ap);
+ 	if (rc)
 diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index 540b0b7..a7df603 100644
+index 9a0d90d..71dd48c 100644
 --- a/drivers/ata/libata-zpodd.c
 +++ b/drivers/ata/libata-zpodd.c
-@@ -178,11 +178,16 @@ bool zpodd_zpready(struct ata_device *dev)
-  * Enable runtime wake capability through ACPI and set the powered_off flag,
-  * this flag will be used during resume to decide what operations are needed
-  * to take.
-+ *
-+ * Also, media poll needs to be silenced, so that it doesn't bring the ODD
-+ * back to full power state every few seconds.
-  */
- void zpodd_enable_run_wake(struct ata_device *dev)
- {
- 	struct zpodd *zpodd = dev->zpodd;
+@@ -1,10 +1,15 @@
+ #include <linux/libata.h>
+ #include <linux/cdrom.h>
+ #include <linux/pm_runtime.h>
++#include <linux/module.h>
+ #include <scsi/scsi_device.h>
  
-+	sdev_disable_disk_events(dev->sdev);
-+
- 	zpodd->powered_off = true;
- 	device_set_run_wake(&dev->sdev->sdev_gendev, true);
- 	acpi_pm_device_run_wake(&dev->sdev->sdev_gendev, true);
-@@ -231,6 +236,8 @@ void zpodd_post_poweron(struct ata_device *dev)
+ #include "libata.h"
  
- 	zpodd->zp_sampled = false;
- 	zpodd->zp_ready = false;
++static int zpodd_poweroff_delay = 30; /* 30 seconds for power off delay */
++module_param(zpodd_poweroff_delay, int, 0644);
++MODULE_PARM_DESC(zpodd_poweroff_delay, "Poweroff delay for ZPODD in seconds");
 +
-+	sdev_enable_disk_events(dev->sdev);
+ enum odd_mech_type {
+ 	ODD_MECH_TYPE_SLOT,
+ 	ODD_MECH_TYPE_DRAWER,
+@@ -18,6 +23,9 @@ struct zpodd {
+ 	/* The following fields are synchronized by PM core. */
+ 	bool			from_notify; /* resumed as a result of
+ 					      * acpi wake notification */
++	bool			zp_ready; /* ZP ready state */
++	unsigned long		last_ready; /* last ZP ready timestamp */
++	bool			zp_sampled; /* ZP ready state sampled */
+ };
+ 
+ /* Per the spec, only slot type and drawer type ODD can be supported */
+@@ -74,6 +82,73 @@ static bool odd_can_poweroff(struct ata_device *ata_dev)
+ 	return acpi_device_can_poweroff(acpi_dev);
  }
  
- static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f1bf5af..765398c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2617,3 +2617,17 @@ void scsi_kunmap_atomic_sg(void *virt)
- 	kunmap_atomic(virt);
- }
- EXPORT_SYMBOL(scsi_kunmap_atomic_sg);
-+
-+void sdev_disable_disk_events(struct scsi_device *sdev)
++/* Test if ODD is zero power ready by sense code */
++static bool zpready(struct ata_device *dev)
 +{
-+	atomic_inc(&sdev->disk_events_disable_depth);
-+}
-+EXPORT_SYMBOL(sdev_disable_disk_events);
++	u8 sense_key, *sense_buf;
++	unsigned int ret, asc, ascq, add_len;
++	struct zpodd *zpodd = dev->zpodd;
 +
-+void sdev_enable_disk_events(struct scsi_device *sdev)
-+{
-+	if (WARN_ON_ONCE(atomic_read(&sdev->disk_events_disable_depth) <= 0))
-+		return;
-+	atomic_dec(&sdev->disk_events_disable_depth);
-+}
-+EXPORT_SYMBOL(sdev_enable_disk_events);
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 4d1a610..c99ecd4 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -594,7 +594,11 @@ static unsigned int sr_block_check_events(struct gendisk *disk,
- 					  unsigned int clearing)
- {
- 	struct scsi_cd *cd = scsi_cd(disk);
--	return cdrom_check_events(&cd->cdi, clearing);
++	ret = atapi_eh_tur(dev, &sense_key);
 +
-+	if (atomic_read(&cd->device->disk_events_disable_depth) == 0)
-+		return cdrom_check_events(&cd->cdi, clearing);
++	if (!ret || sense_key != NOT_READY)
++		return false;
++
++	sense_buf = dev->link->ap->sector_buf;
++	ret = atapi_eh_request_sense(dev, sense_buf, sense_key);
++	if (ret)
++		return false;
++
++	/* sense valid */
++	if ((sense_buf[0] & 0x7f) != 0x70)
++		return false;
++
++	add_len = sense_buf[7];
++	/* has asc and ascq */
++	if (add_len < 6)
++		return false;
++
++	asc = sense_buf[12];
++	ascq = sense_buf[13];
++
++	if (zpodd->mech_type == ODD_MECH_TYPE_SLOT)
++		/* no media inside */
++		return asc == 0x3a;
 +	else
-+		return 0;
- }
- 
- static int sr_block_revalidate_disk(struct gendisk *disk)
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index e65c62e..bb1371b 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -161,6 +161,8 @@ struct scsi_device {
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
- 
-+	atomic_t disk_events_disable_depth; /* disable depth for disk events */
++		/* no media inside and door closed */
++		return asc == 0x3a && ascq == 0x01;
++}
 +
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
- 	struct work_struct event_work;
-@@ -397,6 +399,8 @@ extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
- 			    int data_direction, void *buffer, unsigned bufflen,
- 			    struct scsi_sense_hdr *, int timeout, int retries,
- 			    int *resid);
-+extern void sdev_disable_disk_events(struct scsi_device *sdev);
-+extern void sdev_enable_disk_events(struct scsi_device *sdev);
++/*
++ * Update the zpodd->zp_ready field. This field will only be set
++ * if the ODD has stayed in ZP ready state for zpodd_poweroff_delay
++ * time, and will be used to decide if power off is allowed. If it
++ * is set, it will be cleared during resume from powered off state.
++ */
++void zpodd_on_suspend(struct ata_device *dev)
++{
++	struct zpodd *zpodd = dev->zpodd;
++	unsigned long expires;
++
++	if (!zpready(dev)) {
++		zpodd->zp_sampled = false;
++		return;
++	}
++
++	if (!zpodd->zp_sampled) {
++		zpodd->zp_sampled = true;
++		zpodd->last_ready = jiffies;
++		return;
++	}
++
++	expires = zpodd->last_ready +
++		  msecs_to_jiffies(zpodd_poweroff_delay * 1000);
++	if (time_before(jiffies, expires))
++		return;
++
++	zpodd->zp_ready = true;
++}
++
+ static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
+ {
+ 	struct ata_device *ata_dev = context;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index a21740b..b9b2bb1 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -182,6 +182,9 @@ extern void ata_eh_finish(struct ata_port *ap);
+ extern int ata_ering_map(struct ata_ering *ering,
+ 			 int (*map_fn)(struct ata_ering_entry *, void *),
+ 		  	 void *arg);
++extern unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key);
++extern unsigned int atapi_eh_request_sense(struct ata_device *dev,
++					   u8 *sense_buf, u8 dfl_sense_key);
  
- #ifdef CONFIG_PM_RUNTIME
- extern int scsi_autopm_get_device(struct scsi_device *);
+ /* libata-pmp.c */
+ #ifdef CONFIG_SATA_PMP
+@@ -238,10 +241,12 @@ static inline bool zpodd_dev_enabled(struct ata_device *dev)
+ {
+ 	return dev->zpodd != NULL;
+ }
++void zpodd_on_suspend(struct ata_device *dev);
+ #else /* CONFIG_SATA_ZPODD */
+ static inline void zpodd_init(struct ata_device *dev) {}
+ static inline void zpodd_exit(struct ata_device *dev) {}
+ static inline bool zpodd_dev_enabled(struct ata_device *dev) { return false; }
++static inline void zpodd_on_suspend(struct ata_device *dev) {}
+ #endif /* CONFIG_SATA_ZPODD */
+ 
+ #endif /* __LIBATA_H__ */
 -- 
 1.7.11.7
 
