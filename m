@@ -1,14 +1,16 @@
 From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: [PATCH 1/2] virtio-scsi: split out request queue set affinity function
-Date: Tue, 15 Jan 2013 17:48:19 +0800
-Message-ID: <50F525E3.1000100@cn.fujitsu.com>
+Subject: [PATCH 2/2] virtio-scsi: reset virtqueue affinity when doing cpu
+	hotplug
+Date: Tue, 15 Jan 2013 17:50:47 +0800
+Message-ID: <50F52677.80100@cn.fujitsu.com>
 References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
+	<50F525E3.1000100@cn.fujitsu.com>
 Reply-To: gaowanlong@cn.fujitsu.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
+In-Reply-To: <50F525E3.1000100@cn.fujitsu.com>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -18,109 +20,87 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com
+To: virtualization@lists.linux-foundation.org
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, stefanha@redhat.com, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-These two patches are based on the multi-queue virtio-scsi patch set.
 
-We set cpu affinity when the num_queues equals to the number
-of VCPUs. Split out the set affinity function, this also
-fix the bug when CPU IDs are not consecutive.
+Add hot cpu notifier to reset the request virtqueue affinity
+when doing cpu hotplug.
 
 Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
 ---
- drivers/scsi/virtio_scsi.c | 50 ++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 44 insertions(+), 6 deletions(-)
+ drivers/scsi/virtio_scsi.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
 diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 3641d5f..16b0ef2 100644
+index 16b0ef2..a3b5f12 100644
 --- a/drivers/scsi/virtio_scsi.c
 +++ b/drivers/scsi/virtio_scsi.c
-@@ -106,6 +106,9 @@ struct virtio_scsi {
+@@ -20,6 +20,7 @@
+ #include <linux/virtio_ids.h>
+ #include <linux/virtio_config.h>
+ #include <linux/virtio_scsi.h>
++#include <linux/cpu.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -109,6 +110,9 @@ struct virtio_scsi {
+ 	/* Does the affinity hint is set for virtqueues? */
+ 	bool affinity_hint_set;
  
- 	u32 num_queues;
- 
-+	/* Does the affinity hint is set for virtqueues? */
-+	bool affinity_hint_set;
++	/* CPU hotplug notifier */
++	struct notifier_block nb;
 +
  	struct virtio_scsi_vq ctrl_vq;
  	struct virtio_scsi_vq event_vq;
  	struct virtio_scsi_vq req_vqs[];
-@@ -701,14 +704,45 @@ static struct scsi_host_template virtscsi_host_template_multi = {
- 				  &__val, sizeof(__val)); \
- 	})
- 
-+static void virtscsi_set_affinity(struct virtio_scsi *vscsi, bool affinity)
-+{
-+	int i;
-+	int cpu;
-+
-+	/* In multiqueue mode, when the number of cpu is equal
-+	 * to the number of request queues, we let the qeueues
-+	 * to be private to one cpu by setting the affinity hint
-+	 * to eliminate the contention.
-+	 */
-+	if ((vscsi->num_queues == 1 ||
-+	     vscsi->num_queues != num_online_cpus()) && affinity) {
-+		if (vscsi->affinity_hint_set)
-+			affinity = false;
-+		else
-+			return;
-+	}
-+
-+	if (affinity) {
-+		i = 0;
-+		for_each_online_cpu(cpu) {
-+			virtqueue_set_affinity(vscsi->req_vqs[i].vq, cpu);
-+			i++;
-+		}
-+
-+		vscsi->affinity_hint_set = true;
-+	} else {
-+		for (i = 0; i < vscsi->num_queues - VIRTIO_SCSI_VQ_BASE; i++)
-+			virtqueue_set_affinity(vscsi->req_vqs[i].vq, -1);
-+
-+		vscsi->affinity_hint_set = false;
-+	}
-+}
- 
- static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
--			     struct virtqueue *vq, bool affinity)
-+			     struct virtqueue *vq)
- {
- 	spin_lock_init(&virtscsi_vq->vq_lock);
- 	virtscsi_vq->vq = vq;
--	if (affinity)
--		virtqueue_set_affinity(vq, vq->index - VIRTIO_SCSI_VQ_BASE);
+@@ -738,6 +742,23 @@ static void virtscsi_set_affinity(struct virtio_scsi *vscsi, bool affinity)
+ 	}
  }
  
- static void virtscsi_init_tgt(struct virtio_scsi *vscsi, int i)
-@@ -736,6 +770,8 @@ static void virtscsi_remove_vqs(struct virtio_device *vdev)
- 	struct Scsi_Host *sh = virtio_scsi_host(vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
- 
-+	virtscsi_set_affinity(vscsi, false);
++static int virtscsi_cpu_callback(struct notifier_block *nfb,
++				 unsigned long action, void *hcpu)
++{
++	struct virtio_scsi *vscsi = container_of(nfb, struct virtio_scsi, nb);
++	switch(action) {
++	case CPU_ONLINE:
++	case CPU_ONLINE_FROZEN:
++	case CPU_DEAD:
++	case CPU_DEAD_FROZEN:
++		virtscsi_set_affinity(vscsi, true);
++		break;
++	default:
++		break;
++	}
++	return NOTIFY_OK;
++}
 +
- 	/* Stop all the virtqueues. */
- 	vdev->config->reset(vdev);
- 
-@@ -779,11 +815,13 @@ static int virtscsi_init(struct virtio_device *vdev,
+ static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
+ 			     struct virtqueue *vq)
+ {
+@@ -888,6 +909,13 @@ static int __devinit virtscsi_probe(struct virtio_device *vdev)
  	if (err)
- 		return err;
+ 		goto virtscsi_init_failed;
  
--	virtscsi_init_vq(&vscsi->ctrl_vq, vqs[0], false);
--	virtscsi_init_vq(&vscsi->event_vq, vqs[1], false);
-+	virtscsi_init_vq(&vscsi->ctrl_vq, vqs[0]);
-+	virtscsi_init_vq(&vscsi->event_vq, vqs[1]);
- 	for (i = VIRTIO_SCSI_VQ_BASE; i < num_vqs; i++)
- 		virtscsi_init_vq(&vscsi->req_vqs[i - VIRTIO_SCSI_VQ_BASE],
--				 vqs[i], vscsi->num_queues > 1);
-+				 vqs[i]);
++	vscsi->nb.notifier_call = &virtscsi_cpu_callback;
++	err = register_hotcpu_notifier(&vscsi->nb);
++	if (err) {
++		pr_err("virtio_scsi: registering cpu notifier failed\n");
++		goto scsi_add_host_failed;
++	}
 +
-+	virtscsi_set_affinity(vscsi, true);
+ 	cmd_per_lun = virtscsi_config_get(vdev, cmd_per_lun) ?: 1;
+ 	shost->cmd_per_lun = min_t(u32, cmd_per_lun, shost->can_queue);
+ 	shost->max_sectors = virtscsi_config_get(vdev, max_sectors) ?: 0xFFFF;
+@@ -925,6 +953,8 @@ static void __devexit virtscsi_remove(struct virtio_device *vdev)
  
- 	virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
- 	virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
+ 	scsi_remove_host(shost);
+ 
++	unregister_hotcpu_notifier(&vscsi->nb);
++
+ 	virtscsi_remove_vqs(vdev);
+ 	scsi_host_put(shost);
+ }
 -- 
 1.8.1
