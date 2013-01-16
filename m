@@ -1,243 +1,126 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v7 2/4] block: add runtime pm helpers
-Date: Wed, 16 Jan 2013 17:02:19 +0800
-Message-ID: <1358326941-3725-3-git-send-email-aaron.lu@intel.com>
-References: <1358326941-3725-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1358326941-3725-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>, Shane Huang <shane.huang@amd.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 1/1] block: blk-merge: don't merge the pages with
+ non-contiguous descriptors
+Date: Wed, 16 Jan 2013 09:25:34 +0000
+Message-ID: <1358328334.2384.3.camel@dabdike.int.hansenpartnership.com>
+References: <1358265681-25671-1-git-send-email-subhashj@codeaurora.org>
+	 <1358266794.10591.8.camel@dabdike.int.hansenpartnership.com>
+	 <50F64AC1.3040304@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <50F64AC1.3040304@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org, linux-arm-msm@vger.kernel.org, martin.petersen@oracle.com, asias@redhat.com, tj@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Lin Ming <ming.m.lin@intel.com>
+On Wed, 2013-01-16 at 12:07 +0530, Subhash Jadavani wrote:
+> On 1/15/2013 9:49 PM, James Bottomley wrote:
+> > On Tue, 2013-01-15 at 21:31 +0530, Subhash Jadavani wrote:
+> >> blk_rq_map_sg() function merges the physically contiguous pages to use same
+> >> scatter-gather node without checking if their page descriptors are
+> >> contiguous or not.
+> >>
+> >> Now when dma_map_sg() is called on the scatter gather list, it would
+> >> take the base page pointer from each node (one by one) and iterates
+> >> through all of the pages in same sg node by keep incrementing the base
+> >> page pointer with the assumption that physically contiguous pages will
+> >> have their page descriptor address contiguous which may not be true
+> >> if SPARSEMEM config is enabled. So here we may end referring to invalid
+> >> page descriptor.
+> >>
+> >> Following table shows the example of physically contiguous pages but
+> >> their page descriptor addresses non-contiguous.
+> >> -------------------------------------------
+> >> | Page Descriptor    |   Physical Address |
+> >> ------------------------------------------
+> >> | 0xc1e43fdc         |   0xdffff000       |
+> >> | 0xc2052000         |   0xe0000000       |
+> >> -------------------------------------------
+> >>
+> >> With this patch, relevant blk-merge functions will also check if the
+> >> physically contiguous pages are having page descriptors address contiguous
+> >> or not? If not then, these pages are separated to be in different
+> >> scatter-gather nodes.
+> > How does this manifest as a bug?
+> >
+> > The discontinuity is in struct page arrays, which hardware doesn't care
+> > about.  All we need is to get from struct page to the physical address
+> > for programming the hardware, for which we use the sg_phys() inline
+> > function.
+> >
+> > Even given we have a two page physical contiguity at 0xdffff000 in your
+> > example, the sg list entry contains a length of 8192 and a page_link of
+> > 0xc1e43fdc, which we transform to the correct physical address and
+> > length.
+> Thanks James for looking at this patch.
+> 
+> Let's assume this scenario.
+> PAGE_SIZE = 4096 (4K),
+> 2 page descriptors (as mentioned commit text) whose own addresses are 
+> discontingous but they point to physically contiguous memory space, 
+> sizeof(struct page) is 36 bytes.
+> Only one SG node created in Scatter Gather list (by blk_rq_map_sg) with 
+> this node's page_link=0xc1e43fdc, length=8192, offset=0
+> 
+> Now consider this call stack from MMC block driver (this is on the ARmv7 
+> based board):
+>      [   98.918174] [<c001b50c>] (v7_dma_inv_range+0x30/0x48) from 
+> [<c0017b8c>] (dma_cache_maint_page+0x1c4/0x24c)
+>      [   98.927819] [<c0017b8c>] (dma_cache_maint_page+0x1c4/0x24c) from 
+> [<c0017c28>] (___dma_page_cpu_to_dev+0x14/0x1c)
+>      [   98.937982] [<c0017c28>] (___dma_page_cpu_to_dev+0x14/0x1c) from 
+> [<c0017ff8>] (dma_map_sg+0x3c/0x114)
+>      [   98.947169] [<c0017ff8>] (dma_map_sg+0x3c/0x114) from 
+> [<c0532c40>] (msmsdcc_prep_xfer+0x50/0x10c)
+>      [   98.956020] [<c0532c40>] (msmsdcc_prep_xfer+0x50/0x10c) from 
+> [<c0539664>] (msmsdcc_pre_req+0x78/0x98)
+>      [   98.965237] [<c0539664>] (msmsdcc_pre_req+0x78/0x98) from 
+> [<c0521d98>] (mmc_start_req+0x4c/0x1c4)
+>      [   98.974088] [<c0521d98>] (mmc_start_req+0x4c/0x1c4) from 
+> [<c052faa0>] (mmc_blk_issue_rw_rq+0x3a0/0x84c)
+>      [   98.983457] [<c052faa0>] (mmc_blk_issue_rw_rq+0x3a0/0x84c) from 
+> [<c05304b4>] (mmc_blk_issue_rq+0x568/0x5c4)
+>      [   98.993193] [<c05304b4>] (mmc_blk_issue_rq+0x568/0x5c4) from 
+> [<c0530718>] (mmc_queue_thread+0xb4/0x120)
+>      [   99.002563] [<c0530718>] (mmc_queue_thread+0xb4/0x120) from 
+> [<c0096400>] (kthread+0x80/0x8c)
+>      [   99.010987] [<c0096400>] (kthread+0x80/0x8c) from [<c000f028>] 
+> (kernel_thread_exit+0x0/0x8)
+> 
+> dma_cache_maint_page() function iterates through each page in single sg 
+> node, maps it to virtual space and then call the cache maintainance 
+> operation on that page.
+> 
+> With above scenario, first page descriptor would be 0xc1e43fdc, which 
+> would be mapped virtual address by either kmap() (if it's higmem page) 
+> or by page_address() (if it's low mem page).
+> 
+> Now as the size of the sg node is 8192 bytes, dma_cache_maint_page() 
+> function increments the page pointer (pointed by page_link of sg node) 
+> to get to the next descriptor. page++ would yield page descriptor 
+> address = 0xc1e44000 (0xc1e43fdc + sizeof (struct page)). 0xc1e44000 is 
+> not pointing any real page descriptor so when calls 
+> page_address(0xc1e44000) to get virtual address of the page, it returns 
+> invalid virtual address. Now when we try to dereference that invalid 
+> virtual address in cache maintainance functions, it would result into 
+> "Unable to handle kernel paging request at virtual address xxxxxxxx" 
+> error and kernel crashes.
 
-Add runtime pm helper functions:
+Well, that means the fault is in the iterator, doesn't it?  It's
+assuming two pages which are physically contiguous have adjacent entries
+in the page arrays.  If you want to fix that fault, fix it in the
+iterators ... probably they should use the correct page to pfn
+transforms which will move across the discontiguous arrays.
 
-void blk_pm_runtime_init(struct request_queue *q, struct device *dev)
-  - Initialization function for drivers to call.
+More simply, though, if the MMC drivers want to iterate through all the
+pages in the array, then surely you don't want any physical merging
+anyway, so your quick fix is to turn off clustering:
 
-int blk_pre_runtime_suspend(struct request_queue *q)
-  - If any requests are in the queue, mark last busy and return -EBUSY.
-    Otherwise set q->rpm_status to RPM_SUSPENDING and return 0.
+		q->limits.cluster = 0;
 
-void blk_post_runtime_suspend(struct request_queue *q, int err)
-  - If the suspend succeeded then set q->rpm_status to RPM_SUSPENDED.
-    Otherwise set it to RPM_ACTIVE.
+in the mmc layer?
 
-void blk_pre_runtime_resume(struct request_queue *q)
-  - Set q->rpm_status to RPM_RESUMING.
-
-void blk_post_runtime_resume(struct request_queue *q, int err)
-  - If the resume succeeded then set q->rpm_status to RPM_ACTIVE
-    and call __blk_run_queue, then mark last busy and autosuspend.
-    Otherwise set q->rpm_status to RPM_SUSPENDED.
-
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- block/blk-core.c       | 136 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |  27 ++++++++++
- 2 files changed, 163 insertions(+)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 66d3168..e441daf 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -30,6 +30,7 @@
- #include <linux/list_sort.h>
- #include <linux/delay.h>
- #include <linux/ratelimit.h>
-+#include <linux/pm_runtime.h>
- 
- #define CREATE_TRACE_POINTS
- #include <trace/events/block.h>
-@@ -3043,6 +3044,141 @@ void blk_finish_plug(struct blk_plug *plug)
- }
- EXPORT_SYMBOL(blk_finish_plug);
- 
-+#ifdef CONFIG_PM_RUNTIME
-+/**
-+ * blk_pm_runtime_init - Block layer runtime PM initialization routine
-+ * @q: the queue of the device
-+ * @dev: the device the queue belongs to
-+ *
-+ * Description:
-+ *    Initialize runtime-PM-related fields for @q and start auto suspend for
-+ *    @dev. Drivers that want to take advantage of request-based runtime PM
-+ *    should call this function after @dev has been initialized, and its
-+ *    request queue @q has been allocated, and runtime PM for it can not happen
-+ *    yet(either due to disabled/forbidden or its usage_count > 0).
-+ *
-+ *    The block layer runtime PM is request based, so only works for drivers
-+ *    that use request as their IO unit instead of those directly use bio's.
-+ */
-+void blk_pm_runtime_init(struct request_queue *q, struct device *dev)
-+{
-+	q->dev = dev;
-+	q->rpm_status = RPM_ACTIVE;
-+	pm_runtime_use_autosuspend(q->dev);
-+	pm_runtime_mark_last_busy(q->dev);
-+	pm_runtime_autosuspend(q->dev);
-+}
-+EXPORT_SYMBOL(blk_pm_runtime_init);
-+
-+/**
-+ * blk_pre_runtime_suspend - Pre runtime suspend check
-+ * @q: the queue of the device
-+ *
-+ * Description:
-+ *    This function will check if runtime suspend is allowed for the device
-+ *    by examining if there are any requests pending in the queue. If there
-+ *    are requests pending, the device can not be runtime suspended; otherwise,
-+ *    the queue's status will be updated to SUSPENDING and the driver can
-+ *    proceed to suspend the device.
-+ *
-+ *    For the not allowed case, we mark last busy for the device so that
-+ *    runtime PM core will try to autosuspend it some time later.
-+ *
-+ *    This function should be called near the start of the device's
-+ *    runtime_suspend callback.
-+ *
-+ * Return:
-+ *    0		- OK to runtime suspend the device
-+ *    -EBUSY	- Device should not be runtime suspended
-+ */
-+int blk_pre_runtime_suspend(struct request_queue *q)
-+{
-+	int ret = 0;
-+
-+	spin_lock_irq(q->queue_lock);
-+	if (q->nr_pending) {
-+		ret = -EBUSY;
-+		pm_runtime_mark_last_busy(q->dev);
-+	} else {
-+		q->rpm_status = RPM_SUSPENDING;
-+	}
-+	spin_unlock_irq(q->queue_lock);
-+	return ret;
-+}
-+EXPORT_SYMBOL(blk_pre_runtime_suspend);
-+
-+/**
-+ * blk_post_runtime_suspend - Post runtime suspend processing
-+ * @q: the queue of the device
-+ * @err: return value of the device's runtime_suspend function
-+ *
-+ * Description:
-+ *    Update the queue's runtime status according to the return value of the
-+ *    device's runtime suspend function.
-+ *
-+ *    This function should be called near the end of the device's
-+ *    runtime_suspend callback.
-+ */
-+void blk_post_runtime_suspend(struct request_queue *q, int err)
-+{
-+	spin_lock_irq(q->queue_lock);
-+	if (!err)
-+		q->rpm_status = RPM_SUSPENDED;
-+	else
-+		q->rpm_status = RPM_ACTIVE;
-+	spin_unlock_irq(q->queue_lock);
-+}
-+EXPORT_SYMBOL(blk_post_runtime_suspend);
-+
-+/**
-+ * blk_pre_runtime_resume - Pre runtime resume processing
-+ * @q: the queue of the device
-+ *
-+ * Description:
-+ *    Update the queue's runtime status to RESUMING in preparation for the
-+ *    runtime resume of the device.
-+ *
-+ *    This function should be called near the start of the device's
-+ *    runtime_resume callback.
-+ */
-+void blk_pre_runtime_resume(struct request_queue *q)
-+{
-+	spin_lock_irq(q->queue_lock);
-+	q->rpm_status = RPM_RESUMING;
-+	spin_unlock_irq(q->queue_lock);
-+}
-+EXPORT_SYMBOL(blk_pre_runtime_resume);
-+
-+/**
-+ * blk_post_runtime_resume - Post runtime resume processing
-+ * @q: the queue of the device
-+ * @err: return value of the device's runtime_resume function
-+ *
-+ * Description:
-+ *    Update the queue's runtime status according to the return value of the
-+ *    device's runtime_resume function. If it is successfully resumed, process
-+ *    the requests that are queued into the device's queue when it is resuming
-+ *    and then mark last busy and initiate autosuspend for it.
-+ *
-+ *    This function should be called near the end of the device's
-+ *    runtime_resume callback.
-+ */
-+void blk_post_runtime_resume(struct request_queue *q, int err)
-+{
-+	spin_lock_irq(q->queue_lock);
-+	if (!err) {
-+		q->rpm_status = RPM_ACTIVE;
-+		__blk_run_queue(q);
-+		pm_runtime_mark_last_busy(q->dev);
-+		pm_runtime_autosuspend(q->dev);
-+	} else {
-+		q->rpm_status = RPM_SUSPENDED;
-+	}
-+	spin_unlock_irq(q->queue_lock);
-+}
-+EXPORT_SYMBOL(blk_post_runtime_resume);
-+#endif
-+
- int __init blk_dev_init(void)
- {
- 	BUILD_BUG_ON(__REQ_NR_BITS > 8 *
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 78feda9..89d89c7 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -361,6 +361,12 @@ struct request_queue {
- 	 */
- 	struct kobject kobj;
- 
-+#ifdef CONFIG_PM_RUNTIME
-+	struct device		*dev;
-+	int			rpm_status;
-+	unsigned int		nr_pending;
-+#endif
-+
- 	/*
- 	 * queue settings
- 	 */
-@@ -961,6 +967,27 @@ struct request_queue *blk_alloc_queue_node(gfp_t, int);
- extern void blk_put_queue(struct request_queue *);
- 
- /*
-+ * block layer runtime pm functions
-+ */
-+#ifdef CONFIG_PM_RUNTIME
-+extern void blk_pm_runtime_init(struct request_queue *q, struct device *dev);
-+extern int blk_pre_runtime_suspend(struct request_queue *q);
-+extern void blk_post_runtime_suspend(struct request_queue *q, int err);
-+extern void blk_pre_runtime_resume(struct request_queue *q);
-+extern void blk_post_runtime_resume(struct request_queue *q, int err);
-+#else
-+static inline void blk_pm_runtime_init(struct request_queue *q,
-+	struct device *dev) {}
-+static inline int blk_pre_runtime_suspend(struct request_queue *q)
-+{
-+	return -ENOSYS;
-+}
-+static inline void blk_post_runtime_suspend(struct request_queue *q, int err) {}
-+static inline void blk_pre_runtime_resume(struct request_queue *q) {}
-+static inline void blk_post_runtime_resume(struct request_queue *q, int err) {}
-+#endif
-+
-+/*
-  * blk_plug permits building a queue of related requests by holding the I/O
-  * fragments for a short period. This allows merging of sequential requests
-  * into single larger request. As the requests are moved from a per-task list to
--- 
-1.8.0.2
+James
