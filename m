@@ -1,57 +1,89 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.8-rc4
-Date: Tue, 15 Jan 2013 13:17:48 -0800
-Message-ID: <1358284668.25196.47.camel@haakon2.linux-iscsi.org>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 2/2] virtio-scsi: reset virtqueue affinity when doing cpu
+	hotplug
+Date: Wed, 16 Jan 2013 14:01:49 +1030
+Message-ID: <871udlztui.fsf@rustcorp.com.au>
+References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
+	<50F525E3.1000100@cn.fujitsu.com> <50F52677.80100@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, "Rustad, Mark D" <mark.d.rustad@intel.com>, Roland Dreier <roland@kernel.org>
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <50F52677.80100@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Wanlong Gao <gaowanlong@cn.fujitsu.com>, virtualization@lists.linux-foundation.org
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, stefanha@redhat.com, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+Wanlong Gao <gaowanlong@cn.fujitsu.com> writes:
+> Add hot cpu notifier to reset the request virtqueue affinity
+> when doing cpu hotplug.
 
-The following are the target pending fixes headed into v3.8-rc4.  Please
-go ahead and pull from:
+You need to be careful to get_online_cpus() and put_online_cpus() here,
+so CPUs can't go up and down in the middle of operations.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+In particular, get_online_cpus()/put_online_cpus() around calls to
+virtscsi_set_affinity() (except within notifiers).
 
-This includes an important >= v3.6 regression bugfix for active I/O
-shutdown (Roland), some TMR related failure / corner cases fixes for
-long outstanding I/O (Roland), two FCoE target mode fabric fabric role
-fixes (MDR), a fix for an incorrect sense code during LUN communication
-failure (Dr. Hannes), plus a handful of other minor fixes.
+> +static int virtscsi_cpu_callback(struct notifier_block *nfb,
+> +				 unsigned long action, void *hcpu)
+> +{
+> +	struct virtio_scsi *vscsi = container_of(nfb, struct virtio_scsi, nb);
+> +	switch(action) {
+> +	case CPU_ONLINE:
+> +	case CPU_ONLINE_FROZEN:
+> +	case CPU_DEAD:
+> +	case CPU_DEAD_FROZEN:
+> +		virtscsi_set_affinity(vscsi, true);
+> +		break;
+> +	default:
+> +		break;
+> +	}
+> +	return NOTIFY_OK;
+> +}
 
-There are still some outstanding zero-length control CDB regression
-fixes that need to be addressed for v3.8, that will be coming in a
-follow-up PULL request.
+You probably want to remove affinities *before* the CPU goes down, and
+restore it after the CPU comes up.
 
-Thank you,
+So, how about:
 
---nab
+        switch (action & ~CPU_TASKS_FROZEN) {
+        case CPU_ONLINE:
+        case CPU_DOWN_FAILED:
+                virtscsi_set_affinity(vscsi, true, -1);
+                break;
+        case CPU_DOWN_PREPARE:
+                virtscsi_set_affinity(vscsi, true, (unsigned long)hcpu);
+                break;
+        }
 
-Hannes Reinecke (3):
-  target: use correct sense code for LUN communication failure
-  target: Introduce TCM_NO_SENSE
-  target: Use TCM_NO_SENSE for initialisation
+The extra argument to virtscsi_set_affinity() is to tell it to ignore a
+cpu which seems online (because it's going down).
 
-Mark Rustad (2):
-  tcm_fc: Do not indicate retry capability to initiators
-  tcm_fc: Do not report target role when target is not defined
+>  static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
+>  			     struct virtqueue *vq)
+>  {
+> @@ -888,6 +909,13 @@ static int __devinit virtscsi_probe(struct virtio_device *vdev)
+>  	if (err)
+>  		goto virtscsi_init_failed;
+>  
+> +	vscsi->nb.notifier_call = &virtscsi_cpu_callback;
+> +	err = register_hotcpu_notifier(&vscsi->nb);
+> +	if (err) {
+> +		pr_err("virtio_scsi: registering cpu notifier failed\n");
+> +		goto scsi_add_host_failed;
+> +	}
+> +
 
-Roland Dreier (4):
-  target: Fix missing CMD_T_ACTIVE bit regression for pending WRITEs
-  target: Fix use-after-free in LUN RESET handling
-  target: Release se_cmd when LUN lookup fails for TMR
-  iscsi-target: Fix CmdSN comparison (use cmd->cmd_sn instead of
-    cmd->stat_sn)
+You have to clean this up if scsi_add_host() fails, I think.
 
- drivers/target/iscsi/iscsi_target_erl2.c |    2 +-
- drivers/target/target_core_alua.c        |    2 +-
- drivers/target/target_core_pr.c          |    2 +-
- drivers/target/target_core_transport.c   |   20 ++++++++++++++++----
- drivers/target/tcm_fc/tfc_sess.c         |   12 +++++++++---
- include/target/target_core_base.h        |    1 +
- 6 files changed, 29 insertions(+), 10 deletions(-)
+Cheers,
+Rusty.
