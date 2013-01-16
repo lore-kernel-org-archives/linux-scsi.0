@@ -1,41 +1,63 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
-Date: Wed, 16 Jan 2013 11:31:31 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1301161127540.1704-100000@iolanthe.rowland.org>
-References: <1358351148.2384.34.camel@dabdike.int.hansenpartnership.com>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 1/1] block: blk-merge: don't merge the pages with
+	non-contiguous descriptors
+Date: Wed, 16 Jan 2013 23:14:01 +0000
+Message-ID: <20130116231401.GV23505@n2100.arm.linux.org.uk>
+References: <1358265681-25671-1-git-send-email-subhashj@codeaurora.org> <1358266794.10591.8.camel@dabdike.int.hansenpartnership.com> <50F64AC1.3040304@codeaurora.org> <1358332355.2384.11.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1358351148.2384.34.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mmc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1358332355.2384.11.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-mmc-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Cc: Subhash Jadavani <subhashj@codeaurora.org>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, asias@redhat.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 16 Jan 2013, James Bottomley wrote:
-
-> On Tue, 2013-01-15 at 17:20 +0800, Aaron Lu wrote:
-> > This patch adds runtime pm support for sr.
-> > 
-> > It did this by increasing the runtime usage_count of the device when:
-> > - its block device is opened;
-> > - the events checking is to run.
-> > 
-> > And decreasing the runtime usage_count of the device when:
-> > - its block device is closed;
-> > - After the events checking is done.
-> > 
-> > The idea is discussed in this mail thread:
-> > http://thread.gmane.org/gmane.linux.acpi.devel/55243/focus=52703
-> > 
-> > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+On Wed, Jan 16, 2013 at 10:32:35AM +0000, James Bottomley wrote:
+> On Wed, 2013-01-16 at 12:07 +0530, Subhash Jadavani wrote:
 > 
-> I'd like an ack from Alan Stern as well, please, but with that, you can
-> add my acked-by.
+> > Now consider this call stack from MMC block driver (this is on the ARmv7 
+> > based board):
+> >      [   98.918174] [<c001b50c>] (v7_dma_inv_range+0x30/0x48) from 
+> > [<c0017b8c>] (dma_cache_maint_page+0x1c4/0x24c)
+> >      [   98.927819] [<c0017b8c>] (dma_cache_maint_page+0x1c4/0x24c) from 
+> > [<c0017c28>] (___dma_page_cpu_to_dev+0x14/0x1c)
+> >      [   98.937982] [<c0017c28>] (___dma_page_cpu_to_dev+0x14/0x1c) from 
+> > [<c0017ff8>] (dma_map_sg+0x3c/0x114)
+> 
+> OK, so this is showing that ARM itself is making the assumption that the
+> pages are contiguous in the page offset map.
+> 
+> Fix this by doing the increment via the pfn, which will do the right
+> thing whatever the memory model.
+> 
+> Signed-off-by: James Bottomley <JBottomley@Parallels.com>
 
-Aaron, have you checked whether this patch works okay when you play a
-track on an audio-only CD on the computer?  The block interface looks 
-okay but I'm not sure about the cdrom_device interface.
+Ok.  What would you like the patch summary line for this to be -
+the existing one seems to be a little wrong given the content of
+this patch...
 
-Alan Stern
-
+> 
+> ---
+> 
+> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+> index 6b2fb87..ab88c5b 100644
+> --- a/arch/arm/mm/dma-mapping.c
+> +++ b/arch/arm/mm/dma-mapping.c
+> @@ -809,7 +809,7 @@ static void dma_cache_maint_page(struct page *page, unsigned long offset,
+>  			op(vaddr, len, dir);
+>  		}
+>  		offset = 0;
+> -		page++;
+> +		page = pfn_to_page(page_to_pfn(page) + 1);
+>  		left -= len;
+>  	} while (left);
+>  }
+> 
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
