@@ -1,36 +1,41 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 51881] HighPoint RocketRAID 2720 fail to detect some SATA hdd
-Date: Thu, 17 Jan 2013 09:36:23 +0000 (UTC)
-Message-ID: <20130117093623.74C5E11FE9A@bugzilla.kernel.org>
-References: <bug-51881-11613@https.bugzilla.kernel.org/>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 1/1] block: blk-merge: don't merge the pages with
+	non-contiguous descriptors
+Date: Thu, 17 Jan 2013 10:37:42 +0000
+Message-ID: <20130117103742.GX23505@n2100.arm.linux.org.uk>
+References: <1358265681-25671-1-git-send-email-subhashj@codeaurora.org> <1358266794.10591.8.camel@dabdike.int.hansenpartnership.com> <50F64AC1.3040304@codeaurora.org> <1358332355.2384.11.camel@dabdike.int.hansenpartnership.com> <20130116231857.GU2668@htj.dyndns.org> <1358413880.2394.7.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:51159 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759393Ab3AQJg0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jan 2013 04:36:26 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 70B0920279
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Jan 2013 09:36:25 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id B75B720271
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Jan 2013 09:36:23 +0000 (UTC)
-In-Reply-To: <bug-51881-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1358413880.2394.7.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, Subhash Jadavani <subhashj@codeaurora.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org, linux-arm-msm@vger.kernel.org, martin.petersen@oracle.com, asias@redhat.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=51881
+On Thu, Jan 17, 2013 at 09:11:20AM +0000, James Bottomley wrote:
+> On Wed, 2013-01-16 at 15:18 -0800, Tejun Heo wrote:
+> > On Wed, Jan 16, 2013 at 10:32:35AM +0000, James Bottomley wrote:
+> > > diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+> > > index 6b2fb87..ab88c5b 100644
+> > > --- a/arch/arm/mm/dma-mapping.c
+> > > +++ b/arch/arm/mm/dma-mapping.c
+> > > @@ -809,7 +809,7 @@ static void dma_cache_maint_page(struct page *page, unsigned long offset,
+> > >  			op(vaddr, len, dir);
+> > >  		}
+> > >  		offset = 0;
+> > > -		page++;
+> > > +		page = pfn_to_page(page_to_pfn(page) + 1);
+> > 
+> > Probably page = nth_page(page, 1) is the better form.
+> 
+> It's the same thing.
+> 
+> I'd actually prefer page = pfn_to_page(page_to_pfn(page) + 1); because
+> it makes the code look like the hack it is.  The preferred form for all
+> iterators like this should be to iterate over the pfn instead of a
+> pointer into the page arrays, because that will always work correctly no
+> matter how many weird and wonderful memory schemes we come up with.
 
-
-
-
-
---- Comment #9 from Shane Huang <shane.huang@amd.com>  2013-01-17 09:36:23 ---
-The patch in comment #4 was accepted by Jeff in his repository. Thanks.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+So, why don't we update the code to do that then?
