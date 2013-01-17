@@ -1,98 +1,61 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v2 1/1] block: blk-merge: don't merge the pages with non-contiguous
- descriptors
-Date: Thu, 17 Jan 2013 20:28:41 +0530
-Message-ID: <50F811A1.5050707@codeaurora.org>
-References: <1358265681-25671-1-git-send-email-subhashj@codeaurora.org> <1358266794.10591.8.camel@dabdike.int.hansenpartnership.com> <50F64AC1.3040304@codeaurora.org> <1358332355.2384.11.camel@dabdike.int.hansenpartnership.com> <20130116231857.GU2668@htj.dyndns.org> <1358413880.2394.7.camel@dabdike.int.hansenpartnership.com> <20130117103742.GX23505@n2100.arm.linux.org.uk> <20130117104741.GY23505@n2100.arm.linux.org.uk>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v7 3/4] block: implement runtime pm strategy
+Date: Thu, 17 Jan 2013 10:11:31 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1301171005560.1339-100000@iolanthe.rowland.org>
+References: <20130117051325.GA31469@aaronlu.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <20130117104741.GY23505@n2100.arm.linux.org.uk>
-Sender: linux-mmc-owner@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, asias@redhat.com, linux-arm-kernel@lists.infradead.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130117051325.GA31469@aaronlu.sh.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/17/2013 4:17 PM, Russell King - ARM Linux wrote:
-> On Thu, Jan 17, 2013 at 10:37:42AM +0000, Russell King - ARM Linux wrote:
->> On Thu, Jan 17, 2013 at 09:11:20AM +0000, James Bottomley wrote:
->>> I'd actually prefer page = pfn_to_page(page_to_pfn(page) + 1); because
->>> it makes the code look like the hack it is.  The preferred form for all
->>> iterators like this should be to iterate over the pfn instead of a
->>> pointer into the page arrays, because that will always work correctly no
->>> matter how many weird and wonderful memory schemes we come up with.
->> So, why don't we update the code to do that then?
-> Also, couldn't the addition of the scatterlist offset to the page also
-> be buggy too?
->
-> So, what about this patch which addresses both additions by keeping our
-> iterator as a pfn as you suggest.  It also simplifies some of the code
-> in the loop too.
->
-> Can the original folk with the problem test this patch?
+On Thu, 17 Jan 2013, Aaron Lu wrote:
 
-Yes, this patch also fixes the issue.  You may add: Tested-by: Subhash 
-Jadavani <subhashj@codeaurora.org> .
+> > > @@ -515,6 +516,27 @@ void elv_bio_merged(struct request_queue *q, struct request *rq,
+> > >  		e->type->ops.elevator_bio_merged_fn(q, rq, bio);
+> > >  }
+> > >  
+> > > +#ifdef CONFIG_PM_RUNTIME
+> > > +static void blk_pm_requeue_request(struct request *rq)
+> > > +{
+> > > +	if (!(rq->cmd_flags & REQ_PM))
+> > > +		rq->q->nr_pending--;
+> > > +}
+> > 
+> > You don't check q->dev here.  That's okay, but it means that
+> > q->nr_pending will be meaningless or wrong if any I/O takes place
+> > before blk_pm_runtime_init is called.
+> 
+> Right, so I had better check q->dev here too.
+> 
+> > 
+> > Therefore the kerneldoc for blk_pm_runtime_init should mention that it
+> > must not be called after any requests have been submitted.  Also
+> 
+> So with the q->dev check added above, I believe this is not needed.
 
-Regards,
-Subhash
+No, it is still needed.  With the q->dev check added, q->nr_pending 
+will always be 0 before blk_pm_runtime_init is called.  But if I/O is 
+taking place then the number of pending requests really isn't 0.
 
->
->   arch/arm/mm/dma-mapping.c |   18 ++++++++++--------
->   1 files changed, 10 insertions(+), 8 deletions(-)
->
-> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-> index 6b2fb87..076c26d 100644
-> --- a/arch/arm/mm/dma-mapping.c
-> +++ b/arch/arm/mm/dma-mapping.c
-> @@ -774,25 +774,27 @@ static void dma_cache_maint_page(struct page *page, unsigned long offset,
->   	size_t size, enum dma_data_direction dir,
->   	void (*op)(const void *, size_t, int))
->   {
-> +	unsigned long pfn;
-> +	size_t left = size;
-> +
-> +	pfn = page_to_pfn(page) + offset / PAGE_SIZE;
-> +	offset %= PAGE_SIZE;
-> +
->   	/*
->   	 * A single sg entry may refer to multiple physically contiguous
->   	 * pages.  But we still need to process highmem pages individually.
->   	 * If highmem is not configured then the bulk of this loop gets
->   	 * optimized out.
->   	 */
-> -	size_t left = size;
->   	do {
->   		size_t len = left;
->   		void *vaddr;
->   
-> +		page = pfn_to_page(pfn);
-> +
->   		if (PageHighMem(page)) {
-> -			if (len + offset > PAGE_SIZE) {
-> -				if (offset >= PAGE_SIZE) {
-> -					page += offset / PAGE_SIZE;
-> -					offset %= PAGE_SIZE;
-> -				}
-> +			if (len + offset > PAGE_SIZE)
->   				len = PAGE_SIZE - offset;
-> -			}
->   			vaddr = kmap_high_get(page);
->   			if (vaddr) {
->   				vaddr += offset;
-> @@ -809,7 +811,7 @@ static void dma_cache_maint_page(struct page *page, unsigned long offset,
->   			op(vaddr, len, dir);
->   		}
->   		offset = 0;
-> -		page++;
-> +		pfn++;
->   		left -= len;
->   	} while (left);
->   }
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Either you have to make sure the q->nr_pending is always correct, even 
+when runtime PM isn't being used, or else the caller has to make sure 
+that no I/O takes place before blk_pm_runtime_init is called.
 
+> ------------
+> > mention that blk_pm_runtime_init enables runtime PM for q->dev, so the
+> > caller shouldn't do it.
+> 
+> I may misunderstandd this in last email.
+> 
+> We didn't enable runtime PM for the device in blk_pm_runtime_init, just
+> some auto suspend related settings.
+
+Sorry, yes, you are right.  In fact, the caller has to make sure that 
+runtime PM is enabled before calling blk_pm_runtime_init; otherwise the 
+autosuspend timer might not work right.
+
+Alan Stern
