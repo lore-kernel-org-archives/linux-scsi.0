@@ -1,61 +1,107 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] cxgb4i: Remove the scsi host device when removing device
-Date: Wed, 16 Jan 2013 23:17:01 -0600
-Message-ID: <50F7894D.3070901@cs.wisc.edu>
-References: <1357931529-10248-1-git-send-email-cascardo@linux.vnet.ibm.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 3/4] block: implement runtime pm strategy
+Date: Thu, 17 Jan 2013 14:31:47 +0800
+Message-ID: <20130117063147.GA25352@aaronlu.sh.intel.com>
+References: <1358326941-3725-4-git-send-email-aaron.lu@intel.com>
+ <Pine.LNX.4.44L0.1301161020190.1704-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:54520 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758341Ab3AQFRR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jan 2013 00:17:17 -0500
-In-Reply-To: <1357931529-10248-1-git-send-email-cascardo@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1301161020190.1704-100000@iolanthe.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-kernel@vger.kernel.org, kxie@chelsio.com, Divy La Rey <divy@chelsio.com>
 
-On 01/11/2013 01:12 PM, Thadeu Lima de Souza Cascardo wrote:
-> When doing a hotplug remove of a cxgb4 device, there are still dandling
-> symlinks at /sys/class/scsi_host/hostX to the removed PCI device. The
-> upper layer device may also try to send data, which may crash the
-> system.
+On Wed, Jan 16, 2013 at 10:30:45AM -0500, Alan Stern wrote:
+> On Wed, 16 Jan 2013, Aaron Lu wrote:
 > 
-> The DETACH message from the lower level driver is sent to the ULD when
-> the device is removed, when the scsi host should be removed from the
-> system, avoiding any problems.
+> > From: Lin Ming <ming.m.lin@intel.com>
+> > 
+> > When a request is added:
+> >     If device is suspended or is suspending and the request is not a
+> >     PM request, resume the device.
+> > 
+> > When the last request finishes:
+> >     Call pm_runtime_mark_last_busy().
+> > 
+> > When pick a request:
+> >     If device is resuming/suspending, then only PM request is allowed
+> >     to go.
+> > 
+> > Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 > 
-> After this patch, there are no more dangling symlinks and many attempts
-> to crash the system while there is SCSI activity and removing the device
-> have failed. Adding the device back again works as expected, with the
-> scsi hosts showing up again.
+> Just a couple of minor problems remaining...
 > 
-> Based on a patch by Karen Xie.
+> > --- a/block/blk-core.c
+> > +++ b/block/blk-core.c
 > 
-> Cc: Karen Xie <kxie@chelsio.com>
-> Cc: Divy La Rey <divy@chelsio.com>
-> Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
+> > @@ -2051,6 +2063,28 @@ static void blk_account_io_done(struct request *req)
+> >  	}
+> >  }
+> >  
+> > +#ifdef CONFIG_PM_RUNTIME
+> > +/*
+> > + * Don't process normal requests when queue is suspended
+> > + * or in the process of suspending/resuming
+> > + */
+> > +static struct request *blk_pm_peek_request(struct request_queue *q,
+> > +					   struct request *rq)
+> > +{
+> > +	if (q->rpm_status == RPM_SUSPENDED ||
+> > +	    (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM)))
+> > +		return NULL;
+> > +	else
+> > +		return rq;
+> > +}
 > 
-> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> index f924b3c..3fecf35 100644
-> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> @@ -1564,6 +1564,7 @@ static int t4_uld_state_change(void *handle, enum cxgb4_state state)
->  		break;
->  	case CXGB4_STATE_DETACH:
->  		pr_info("cdev 0x%p, DETACH.\n", cdev);
-> +		cxgbi_device_unregister(cdev);
->  		break;
->  	default:
->  		pr_info("cdev 0x%p, unknown state %d.\n", cdev, state);
+> You don't check q->dev here, so the result is indefinite for devices
+> that don't use runtime PM.  (Actually it will work out because
+> RPM_ACTIVE is defined as 0, but that's a pretty fragile approach.)
 > 
+> Either do check q->dev here, or else explicitly initialize
+> q->rpm_status when the queue is created.
+> 
+> 
+> > --- a/block/elevator.c
+> > +++ b/block/elevator.c
+> > @@ -34,6 +34,7 @@
+> >  #include <linux/blktrace_api.h>
+> >  #include <linux/hash.h>
+> >  #include <linux/uaccess.h>
+> > +#include <linux/pm_runtime.h>
+> >  
+> >  #include <trace/events/block.h>
+> >  
+> > @@ -515,6 +516,27 @@ void elv_bio_merged(struct request_queue *q, struct request *rq,
+> >  		e->type->ops.elevator_bio_merged_fn(q, rq, bio);
+> >  }
+> >  
+> > +#ifdef CONFIG_PM_RUNTIME
+> > +static void blk_pm_requeue_request(struct request *rq)
+> > +{
+> > +	if (!(rq->cmd_flags & REQ_PM))
+> > +		rq->q->nr_pending--;
+> > +}
+> 
+> You don't check q->dev here.  That's okay, but it means that
+> q->nr_pending will be meaningless or wrong if any I/O takes place
+> before blk_pm_runtime_init is called.
+> 
+> Therefore the kerneldoc for blk_pm_runtime_init should mention that it
+> must not be called after any requests have been submitted.  Also
 
-Patch looks ok to me.
+------------
+> mention that blk_pm_runtime_init enables runtime PM for q->dev, so the 
+> caller shouldn't do it.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+I may misunderstandd this in last email.
+
+We didn't enable runtime PM for the device in blk_pm_runtime_init, just
+some auto suspend related settings.
+
+Thanks,
+Aaron
 
