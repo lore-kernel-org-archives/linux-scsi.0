@@ -1,226 +1,131 @@
 From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH V2 3/8] ipr: Resource path error logging cleanup
-Date: Thu, 17 Jan 2013 12:44:43 -0600
-Message-ID: <20130117184644.385146463@linux.vnet.ibm.com>
+Subject: [PATCH V2 8/8] ipr: Fix sparse error in ipr driver
+Date: Thu, 17 Jan 2013 12:44:48 -0600
+Message-ID: <20130117184644.867333028@linux.vnet.ibm.com>
 References: <20130117184440.249625379@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.65] ([32.97.110.65]:30331 "HELO
+Received: from [32.97.110.65] ([32.97.110.65]:21910 "HELO
 	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1754140Ab3AQStF (ORCPT
+	by vger.kernel.org with SMTP id S1754986Ab3AQStH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jan 2013 13:49:05 -0500
-Content-Disposition: inline; filename=resource_path_error_clean
+	Thu, 17 Jan 2013 13:49:07 -0500
+Content-Disposition: inline; filename=sparse_error
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, klebers@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-From: Brian King <brking@linux.vnet.ibm.com>
+This patch fixes the following sparse error:
 
-The resource path as displayed by the ipr driver is the
-location string identifying a location on the SAS fabric.
-This patch adds the SCSI host number such that error logs
-can be more easily correlated in multiple adapter configurations.
+ CHECK   drivers/scsi/ipr.c
+spinlock.h:147:9: warning: context imbalance in 'ipr_reset_reload' - unexpected unlock
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 ---
+ drivers/scsi/ipr.c |   69 +++++++++++++----------------------------------------
+ 1 file changed, 17 insertions(+), 52 deletions(-)
 
- drivers/scsi/ipr.c |   78 ++++++++++++++++++++++++++++++++++++-----------------
- drivers/scsi/ipr.h |    5 ++-
- 2 files changed, 56 insertions(+), 27 deletions(-)
-
-Index: b/drivers/scsi/ipr.h
-===================================================================
---- a/drivers/scsi/ipr.h	2013-01-11 13:30:56.053727535 -0600
-+++ b/drivers/scsi/ipr.h	2013-01-11 13:31:35.095911184 -0600
-@@ -409,7 +409,7 @@ struct ipr_config_table_entry64 {
- 	__be64 dev_id;
- 	__be64 lun;
- 	__be64 lun_wwn[2];
--#define IPR_MAX_RES_PATH_LENGTH		24
-+#define IPR_MAX_RES_PATH_LENGTH		48
- 	__be64 res_path;
- 	struct ipr_std_inq_data std_inq_data;
- 	u8 reserved2[4];
-@@ -1722,7 +1722,8 @@ struct ipr_ucode_image_header {
- 	if (ipr_is_device(hostrcb)) {					\
- 		if ((hostrcb)->ioa_cfg->sis64) {			\
- 			printk(KERN_ERR IPR_NAME ": %s: " fmt, 		\
--				ipr_format_res_path(hostrcb->hcam.u.error64.fd_res_path, \
-+				ipr_format_res_path(hostrcb->ioa_cfg,	\
-+					hostrcb->hcam.u.error64.fd_res_path, \
- 					hostrcb->rp_buffer,		\
- 					sizeof(hostrcb->rp_buffer)),	\
- 				__VA_ARGS__);				\
 Index: b/drivers/scsi/ipr.c
 ===================================================================
---- a/drivers/scsi/ipr.c	2013-01-11 13:31:21.703731278 -0600
-+++ b/drivers/scsi/ipr.c	2013-01-11 13:31:35.105915246 -0600
-@@ -1166,14 +1166,15 @@ static int ipr_is_same_device(struct ipr
+--- a/drivers/scsi/ipr.c	2013-01-11 16:13:50.803418076 -0600
++++ b/drivers/scsi/ipr.c	2013-01-11 16:14:53.092477895 -0600
+@@ -2553,36 +2553,6 @@ static void ipr_oper_timeout(struct ipr_
  }
  
  /**
-- * ipr_format_res_path - Format the resource path for printing.
-+ * __ipr_format_res_path - Format the resource path for printing.
-  * @res_path:	resource path
-  * @buf:	buffer
-+ * @len:	length of buffer provided
+- * ipr_reset_reload - Reset/Reload the IOA
+- * @ioa_cfg:		ioa config struct
+- * @shutdown_type:	shutdown type
+- *
+- * This function resets the adapter and re-initializes it.
+- * This function assumes that all new host commands have been stopped.
+- * Return value:
+- * 	SUCCESS / FAILED
+- **/
+-static int ipr_reset_reload(struct ipr_ioa_cfg *ioa_cfg,
+-			    enum ipr_shutdown_type shutdown_type)
+-{
+-	if (!ioa_cfg->in_reset_reload)
+-		ipr_initiate_ioa_reset(ioa_cfg, shutdown_type);
+-
+-	spin_unlock_irq(ioa_cfg->host->host_lock);
+-	wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
+-	spin_lock_irq(ioa_cfg->host->host_lock);
+-
+-	/* If we got hit with a host reset while we were already resetting
+-	 the adapter for some reason, and the reset failed. */
+-	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead) {
+-		ipr_trace;
+-		return FAILED;
+-	}
+-
+-	return SUCCESS;
+-}
+-
+-/**
+  * ipr_find_ses_entry - Find matching SES in SES table
+  * @res:	resource entry struct of SES
   *
-  * Return value:
-  * 	pointer to buffer
-  **/
--static char *ipr_format_res_path(u8 *res_path, char *buffer, int len)
-+static char *__ipr_format_res_path(u8 *res_path, char *buffer, int len)
+@@ -4797,22 +4767,18 @@ static int ipr_slave_alloc(struct scsi_d
+ 	return rc;
+ }
+ 
+-/**
+- * ipr_eh_host_reset - Reset the host adapter
+- * @scsi_cmd:	scsi command struct
+- *
+- * Return value:
+- * 	SUCCESS / FAILED
+- **/
+-static int __ipr_eh_host_reset(struct scsi_cmnd *scsi_cmd)
++static int ipr_eh_host_reset(struct scsi_cmnd *cmd)
  {
- 	int i;
- 	char *p = buffer;
-@@ -1187,6 +1188,27 @@ static char *ipr_format_res_path(u8 *res
+ 	struct ipr_ioa_cfg *ioa_cfg;
+-	int rc;
++	unsigned long lock_flags = 0;
++	int rc = SUCCESS;
+ 
+ 	ENTER;
+-	ioa_cfg = (struct ipr_ioa_cfg *) scsi_cmd->device->host->hostdata;
++	ioa_cfg = (struct ipr_ioa_cfg *) cmd->device->host->hostdata;
++	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+ 
+ 	if (!ioa_cfg->in_reset_reload) {
++		ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_ABBREV);
+ 		dev_err(&ioa_cfg->pdev->dev,
+ 			"Adapter being reset as a result of error recovery.\n");
+ 
+@@ -4820,20 +4786,19 @@ static int __ipr_eh_host_reset(struct sc
+ 			ioa_cfg->sdt_state = GET_DUMP;
+ 	}
+ 
+-	rc = ipr_reset_reload(ioa_cfg, IPR_SHUTDOWN_ABBREV);
+-
+-	LEAVE;
+-	return rc;
+-}
+-
+-static int ipr_eh_host_reset(struct scsi_cmnd *cmd)
+-{
+-	int rc;
++	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++	wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
++	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+ 
+-	spin_lock_irq(cmd->device->host->host_lock);
+-	rc = __ipr_eh_host_reset(cmd);
+-	spin_unlock_irq(cmd->device->host->host_lock);
++	/* If we got hit with a host reset while we were already resetting
++	 the adapter for some reason, and the reset failed. */
++	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead) {
++		ipr_trace;
++		rc = FAILED;
++	}
+ 
++	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++	LEAVE;
+ 	return rc;
  }
  
- /**
-+ * ipr_format_res_path - Format the resource path for printing.
-+ * @ioa_cfg:	ioa config struct
-+ * @res_path:	resource path
-+ * @buf:	buffer
-+ * @len:	length of buffer provided
-+ *
-+ * Return value:
-+ *	pointer to buffer
-+ **/
-+static char *ipr_format_res_path(struct ipr_ioa_cfg *ioa_cfg,
-+				 u8 *res_path, char *buffer, int len)
-+{
-+	char *p = buffer;
-+
-+	*p = '\0';
-+	p += snprintf(p, buffer + len - p, "%d/", ioa_cfg->host->host_no);
-+	__ipr_format_res_path(res_path, p, len - (buffer - p));
-+	return buffer;
-+}
-+
-+/**
-  * ipr_update_res_entry - Update the resource entry.
-  * @res:	resource entry struct
-  * @cfgtew:	config table entry wrapper struct
-@@ -1226,8 +1248,8 @@ static void ipr_update_res_entry(struct 
- 
- 		if (res->sdev && new_path)
- 			sdev_printk(KERN_INFO, res->sdev, "Resource path: %s\n",
--				    ipr_format_res_path(res->res_path, buffer,
--							sizeof(buffer)));
-+				    ipr_format_res_path(res->ioa_cfg,
-+					res->res_path, buffer, sizeof(buffer)));
- 	} else {
- 		res->flags = cfgtew->u.cfgte->flags;
- 		if (res->flags & IPR_IS_IOA_RESOURCE)
-@@ -1613,8 +1635,8 @@ static void ipr_log_sis64_config_error(s
- 		ipr_err_separator;
- 
- 		ipr_err("Device %d : %s", i + 1,
--			 ipr_format_res_path(dev_entry->res_path, buffer,
--					     sizeof(buffer)));
-+			__ipr_format_res_path(dev_entry->res_path,
-+					      buffer, sizeof(buffer)));
- 		ipr_log_ext_vpd(&dev_entry->vpd);
- 
- 		ipr_err("-----New Device Information-----\n");
-@@ -1960,14 +1982,16 @@ static void ipr_log64_fabric_path(struct
- 
- 			ipr_hcam_err(hostrcb, "%s %s: Resource Path=%s\n",
- 				     path_active_desc[i].desc, path_state_desc[j].desc,
--				     ipr_format_res_path(fabric->res_path, buffer,
--							 sizeof(buffer)));
-+				     ipr_format_res_path(hostrcb->ioa_cfg,
-+						fabric->res_path,
-+						buffer, sizeof(buffer)));
- 			return;
- 		}
- 	}
- 
- 	ipr_err("Path state=%02X Resource Path=%s\n", path_state,
--		ipr_format_res_path(fabric->res_path, buffer, sizeof(buffer)));
-+		ipr_format_res_path(hostrcb->ioa_cfg, fabric->res_path,
-+				    buffer, sizeof(buffer)));
- }
- 
- static const struct {
-@@ -2108,18 +2132,20 @@ static void ipr_log64_path_elem(struct i
- 
- 			ipr_hcam_err(hostrcb, "%s %s: Resource Path=%s, Link rate=%s, WWN=%08X%08X\n",
- 				     path_status_desc[j].desc, path_type_desc[i].desc,
--				     ipr_format_res_path(cfg->res_path, buffer,
--							 sizeof(buffer)),
--				     link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
--				     be32_to_cpu(cfg->wwid[0]), be32_to_cpu(cfg->wwid[1]));
-+				     ipr_format_res_path(hostrcb->ioa_cfg,
-+					cfg->res_path, buffer, sizeof(buffer)),
-+					link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
-+					be32_to_cpu(cfg->wwid[0]),
-+					be32_to_cpu(cfg->wwid[1]));
- 			return;
- 		}
- 	}
- 	ipr_hcam_err(hostrcb, "Path element=%02X: Resource Path=%s, Link rate=%s "
- 		     "WWN=%08X%08X\n", cfg->type_status,
--		     ipr_format_res_path(cfg->res_path, buffer, sizeof(buffer)),
--		     link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
--		     be32_to_cpu(cfg->wwid[0]), be32_to_cpu(cfg->wwid[1]));
-+		     ipr_format_res_path(hostrcb->ioa_cfg,
-+			cfg->res_path, buffer, sizeof(buffer)),
-+			link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
-+			be32_to_cpu(cfg->wwid[0]), be32_to_cpu(cfg->wwid[1]));
- }
- 
- /**
-@@ -2182,7 +2208,8 @@ static void ipr_log_sis64_array_error(st
- 
- 	ipr_err("RAID %s Array Configuration: %s\n",
- 		error->protection_level,
--		ipr_format_res_path(error->last_res_path, buffer, sizeof(buffer)));
-+		ipr_format_res_path(ioa_cfg, error->last_res_path,
-+			buffer, sizeof(buffer)));
- 
- 	ipr_err_separator;
- 
-@@ -2203,11 +2230,12 @@ static void ipr_log_sis64_array_error(st
- 		ipr_err("Array Member %d:\n", i);
- 		ipr_log_ext_vpd(&array_entry->vpd);
- 		ipr_err("Current Location: %s\n",
--			 ipr_format_res_path(array_entry->res_path, buffer,
--					     sizeof(buffer)));
-+			 ipr_format_res_path(ioa_cfg, array_entry->res_path,
-+				buffer, sizeof(buffer)));
- 		ipr_err("Expected Location: %s\n",
--			 ipr_format_res_path(array_entry->expected_res_path,
--					     buffer, sizeof(buffer)));
-+			 ipr_format_res_path(ioa_cfg,
-+				array_entry->expected_res_path,
-+				buffer, sizeof(buffer)));
- 
- 		ipr_err_separator;
- 	}
-@@ -4227,8 +4255,8 @@ static ssize_t ipr_show_resource_path(st
- 	res = (struct ipr_resource_entry *)sdev->hostdata;
- 	if (res && ioa_cfg->sis64)
- 		len = snprintf(buf, PAGE_SIZE, "%s\n",
--			       ipr_format_res_path(res->res_path, buffer,
--						   sizeof(buffer)));
-+			       __ipr_format_res_path(res->res_path, buffer,
-+						     sizeof(buffer)));
- 	else if (res)
- 		len = snprintf(buf, PAGE_SIZE, "%d:%d:%d:%d\n", ioa_cfg->host->host_no,
- 			       res->bus, res->target, res->lun);
-@@ -4556,8 +4584,8 @@ static int ipr_slave_configure(struct sc
- 			scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
- 		if (ioa_cfg->sis64)
- 			sdev_printk(KERN_INFO, sdev, "Resource path: %s\n",
--				    ipr_format_res_path(res->res_path, buffer,
--							sizeof(buffer)));
-+				    ipr_format_res_path(ioa_cfg,
-+				res->res_path, buffer, sizeof(buffer)));
- 		return 0;
- 	}
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
 
 -- 
