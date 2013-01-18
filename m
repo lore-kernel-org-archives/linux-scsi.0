@@ -1,215 +1,81 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH RFC 8/9] [SCSI] Add sense and Unit Attention generation to scsi_debug
-Date: Fri, 18 Jan 2013 11:27:13 -0500
-Message-ID: <1358526434-1173-9-git-send-email-emilne@redhat.com>
-References: <1358526434-1173-1-git-send-email-emilne@redhat.com>
+Subject: [PATCH RFC 0/9] [SCSI] Enhanced sense and Unit Attention handling
+Date: Fri, 18 Jan 2013 11:27:05 -0500
+Message-ID: <1358526434-1173-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52680 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:61875 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754374Ab3ARQ1T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jan 2013 11:27:19 -0500
+	id S1751881Ab3ARQ1Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jan 2013 11:27:16 -0500
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r0IGRJXI017113
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r0IGRFAq012948
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2013 11:27:19 -0500
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2013 11:27:16 -0500
 Received: from emilne.csb (dhcp-186-175.bos.redhat.com [10.16.186.175])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r0IGRFnL026564
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2013 11:27:19 -0500
-In-Reply-To: <1358526434-1173-1-git-send-email-emilne@redhat.com>
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r0IGRFnD026564
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2013 11:27:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-Added capability to scsi_debug to generate sense and Unit Attention
-conditions to exercise the enhanced sense and Unit Attention handling.
+This patch set adds changes to the SCSI mid-layer, sysfs and scsi_debug
+to provide enhanced support for Unit Attention conditions, as well as
+detection of reported sense data overflow conditions and some changes
+to sense data processing.  It also adds a uevent when the reported
+capacity changes on an sd device.
 
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/scsi_debug.c | 133 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 133 insertions(+)
+There was some discussion about this a couple of years ago on the linux-scsi
+mailing list:  http://marc.info/?l=linux-scsi&m=129702506514742&w=2
+Although one approach is to send all SCSI sense data to a userspace daemon
+for processing, this patch set does not take that approach due to the
+difficulty in reliably delivering all of the data.  An interesting UA
+condition might not be delivered due to a flood of media errors, for example.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 88f6d16..8fe9bcd 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3051,10 +3051,27 @@ static ssize_t sdebug_max_luns_store(struct device_driver * ddp,
- 				     const char * buf, size_t count)
- {
-         int n;
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+#endif
- 
- 	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
- 		scsi_debug_max_luns = n;
- 		sdebug_max_tgts_luns();
-+
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				mk_sense_buffer(devip, UNIT_ATTENTION,
-+						0x3f, 0x0e);
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+#endif
- 		return count;
- 	}
- 	return -EINVAL;
-@@ -3101,12 +3118,28 @@ static ssize_t sdebug_virtual_gb_store(struct device_driver * ddp,
- 				       const char * buf, size_t count)
- {
-         int n;
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+#endif
- 
- 	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
- 		scsi_debug_virtual_gb = n;
- 
- 		sdebug_capacity = get_sdebug_capacity();
- 
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				mk_sense_buffer(devip, UNIT_ATTENTION,
-+						0x2a, 0x09);
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+#endif
- 		return count;
- 	}
- 	return -EINVAL;
-@@ -3233,6 +3266,90 @@ static ssize_t sdebug_sense_overflow_store(struct device_driver *ddp,
- }
- DRIVER_ATTR(sense_overflow, S_IWUSR, NULL, sdebug_sense_overflow_store);
- 
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+static ssize_t sdebug_ua_overflow_store(struct device_driver *ddp,
-+					const char *buf, size_t count)
-+{
-+	int n;
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				if (scsi_debug_dsense) {
-+					mk_sense_buffer(devip, UNIT_ATTENTION,
-+							0, 0);
-+					devip->sense_buff[7] = 8;
-+					devip->sense_buff[8] = 0x02;
-+					devip->sense_buff[9] = 0x06;
-+					devip->sense_buff[12] = 0x01;
-+				}
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+DRIVER_ATTR(ua_overflow, S_IWUSR, NULL, sdebug_ua_overflow_store);
-+
-+static ssize_t sdebug_soft_threshold_reached_store(struct device_driver *ddp,
-+						   const char *buf,
-+						   size_t count)
-+{
-+	int n;
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				mk_sense_buffer(devip, UNIT_ATTENTION,
-+						0x38, 0x07);
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+DRIVER_ATTR(soft_threshold_reached, S_IWUSR, NULL,
-+	    sdebug_soft_threshold_reached_store);
-+
-+static ssize_t sdebug_mode_parameters_changed_store(struct device_driver *ddp,
-+						    const char *buf,
-+						    size_t count)
-+{
-+	int n;
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				mk_sense_buffer(devip, UNIT_ATTENTION,
-+						0x2a, 0x01);
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+DRIVER_ATTR(mode_parameters_changed, S_IWUSR, NULL,
-+	    sdebug_mode_parameters_changed_store);
-+#endif
-+
- /* Note: The following function creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-    files (over those found in the /sys/module/scsi_debug/parameters
-@@ -3268,11 +3385,27 @@ static int do_create_driverfs_files(void)
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_map);
- 	ret |= driver_create_file(&sdebug_driverfs_driver,
- 				  &driver_attr_sense_overflow);
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	ret |= driver_create_file(&sdebug_driverfs_driver,
-+				  &driver_attr_ua_overflow);
-+	ret |= driver_create_file(&sdebug_driverfs_driver,
-+				  &driver_attr_soft_threshold_reached);
-+	ret |= driver_create_file(&sdebug_driverfs_driver,
-+				  &driver_attr_mode_parameters_changed);
-+#endif
- 	return ret;
- }
- 
- static void do_remove_driverfs_files(void)
- {
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	driver_remove_file(&sdebug_driverfs_driver,
-+			   &driver_attr_mode_parameters_changed);
-+	driver_remove_file(&sdebug_driverfs_driver,
-+			   &driver_attr_soft_threshold_reached);
-+	driver_remove_file(&sdebug_driverfs_driver,
-+			   &driver_attr_ua_overflow);
-+#endif
- 	driver_remove_file(&sdebug_driverfs_driver,
- 			   &driver_attr_sense_overflow);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_map);
+The mechanism used is to flag when certain UA ASC/ASCQ codes are received
+that report asynchronous changes to the storage device configuration.
+An appropriate uevent is then generated for the scsi_device or scsi_target
+object.  An aggregation mechanism is used to avoid generating uevents at
+too high a rate, and to coalesce multiple UAs reported by LUNs on the
+same target for a REPORTED LUNS DATA HAS CHANGED sense code.
+
+The changes are (mostly) enabled by a new kernel config option
+CONFIG_SCSI_ENHANCED_UA.  If this config option is not used, no new
+uevents are generated.  There are some changes to kernel logging messages
+if CONFIG_SCSI_ENHANCED_UA is enabled, because the existing messages
+explicitly stated that the kernel did not do anything with the information.
+
+Note that checkpatch is reporting errors on patch 7/9 relating to macros
+in scsi_sysfs.c -- I believe these errors are incorrect and have sent a
+message to the checkpatch maintainer.  The macros were derived from
+existing ones already in the file.
+
+Ewan D. Milne (9):
+  [SCSI] Detect overflow of sense data buffer
+  [SCSI] Generate uevent on sd capacity change
+  [SCSI] Add a kernel config option for enhanced Unit Attention support
+  [SCSI] Rename scsi_evt_xxx to sdev_evt_xxx and scsi_event to
+    sdev_event
+  [SCSI] Add support for scsi_target events
+  [SCSI] Generate uevents for certain Unit Attention codes
+  [SCSI] Add sysfs support for enhanced Unit Attention handling
+  [SCSI] Add sense and Unit Attention generation to scsi_debug
+  [SCSI] Streamline detection of FM/EOM/ILI status
+
+ drivers/scsi/Kconfig       |  12 +++
+ drivers/scsi/scsi_debug.c  | 168 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_error.c  | 198 ++++++++++++++++++++++++++++++++++++++++-----
+ drivers/scsi/scsi_lib.c    | 178 +++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/scsi_priv.h   |  10 ++-
+ drivers/scsi/scsi_scan.c   |  54 ++++++-------
+ drivers/scsi/scsi_sysfs.c  | 148 ++++++++++++++++++++++++++++++---
+ drivers/scsi/sd.c          |   9 +++
+ include/scsi/scsi_cmnd.h   |   4 +
+ include/scsi/scsi_device.h |  64 ++++++++++++++-
+ include/scsi/scsi_eh.h     |   7 ++
+ 11 files changed, 773 insertions(+), 79 deletions(-)
+
 -- 
 1.7.11.7
 
