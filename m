@@ -1,56 +1,55 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] sg3_utils-1.35 available
-Date: Fri, 18 Jan 2013 00:25:21 -0500
-Message-ID: <50F8DCC1.8030602@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
+Date: Fri, 18 Jan 2013 15:42:40 +0800
+Message-ID: <20130118074240.GA6861@aaronlu.sh.intel.com>
+References: <1358351148.2384.34.camel@dabdike.int.hansenpartnership.com>
+ <Pine.LNX.4.44L0.1301161127540.1704-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, "shahar.salzman@kaminario.com" <shahar.salzman@kaminario.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1301161127540.1704-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-sg3_utils is a package of command line utilities for sending
-SCSI and some ATA commands to devices. This package targets
-the linux kernel (lk) 3, 2.6 and lk 2.4 series. It also has
-ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
+On Wed, Jan 16, 2013 at 11:31:31AM -0500, Alan Stern wrote:
+> On Wed, 16 Jan 2013, James Bottomley wrote:
+> 
+> > On Tue, 2013-01-15 at 17:20 +0800, Aaron Lu wrote:
+> > > This patch adds runtime pm support for sr.
+> > > 
+> > > It did this by increasing the runtime usage_count of the device when:
+> > > - its block device is opened;
+> > > - the events checking is to run.
+> > > 
+> > > And decreasing the runtime usage_count of the device when:
+> > > - its block device is closed;
+> > > - After the events checking is done.
+> > > 
+> > > The idea is discussed in this mail thread:
+> > > http://thread.gmane.org/gmane.linux.acpi.devel/55243/focus=52703
+> > > 
+> > > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> > 
+> > I'd like an ack from Alan Stern as well, please, but with that, you can
+> > add my acked-by.
+> 
+> Aaron, have you checked whether this patch works okay when you play a
+> track on an audio-only CD on the computer?  The block interface looks 
+> okay but I'm not sure about the cdrom_device interface.
 
-This version adds sg_compare_and_write (contributed by
-Shahar Salzman). Also Hannes Reinecke has done more work on
-'sg_inq --export' to support udev. This version tracks various
-changes made by www.t10.org since October 2012.
+Just verified it works OK with the whole patchset applied using 2 audio
+CDs.
 
-For an overview of sg3_utils and downloads see this page:
-     http://sg.danny.cz/sg/sg3_utils.html
-The sg_ses utility (for enclosure devices) is discussed at:
-     http://sg.danny.cz/sg/sg_ses.html
-The SG_IO ioctl is discussed at:
-     http://sg.danny.cz/sg/sg_io.html
-A full changelog can be found at:
-     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
+After the ODD has been put into zero power state, insert an audio cd.
+ODD will be resumed, gvfs will automatically mount the disc, and a
+dialog titled "Audio Disc" asks me what to do. Press OK, the rhythmbox
+application will get started. Press the Play button of rhythmbox, songs
+will start to play, and runtime_usage is 2. Eject the disc, the ODD will
+be put to zero power state some time later.
 
-A release announcement will be sent to freecode.com .
+Thanks,
+Aaron
 
-Changelog for sg3_utils-1.35 [20130117] [svn: r476]
-   - sg_compare_and_write: new utility
-   - sg_inq+sg_vpd: block device characteristics VPD page:
-     add product_type, WABEREQ, WACEREQ and VBULS fields
-   - sg_inq: more --export option changes for udev
-   - sg_vpd: add more rdac vendor specific vpd pages
-   - sg_verify: add --ebytchk option for sbc3r34 changes
-   - sg_stpg: --offline option: fix 'Invalid state 0xe'
-   - sg_ses: Door Lock element changed to Door element and
-     abbreviation changed from 'dl' to 'do' (ses3r05)
-   - archive/rescan-scsi-bus.sh: upgrade to version 1.53hr
-     - move rescan-scsi-bus.sh to scripts directory
-   - sync to sbc3r34
-   - sg_lib: sg_ll_verify10+16 expand BYTCHK to 2 bit field
-   - sg_pt_win32, sg_scan(win32): changes for cygwin 1.7.17
-   - clean up man page summary lines
-
-Changelog for sg3_utils-1.34 [20121013] [svn: r461]
-...
-
-Doug Gilbert
