@@ -1,54 +1,38 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v7 4/4] sd: change to auto suspend mode
-Date: Fri, 18 Jan 2013 16:25:10 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1301181613060.1190-100000@iolanthe.rowland.org>
-References: <1358326941-3725-5-git-send-email-aaron.lu@intel.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [patch] target: change sprintf to snprintf
+Date: Sat, 19 Jan 2013 00:35:14 +0300
+Message-ID: <20130118213514.GO16282@mwanda>
+References: <20130118130512.GA1634@elgon.mountain>
+ <1358537812.18551.446.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1358326941-3725-5-git-send-email-aaron.lu@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1358537812.18551.446.camel@haakon2.linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 16 Jan 2013, Aaron Lu wrote:
-
-> From: Lin Ming <ming.m.lin@intel.com>
+On Fri, Jan 18, 2013 at 11:36:52AM -0800, Nicholas A. Bellinger wrote:
+> On Fri, 2013-01-18 at 16:05 +0300, Dan Carpenter wrote:
+> > "buf" is 128 characters and "vpd->device_identifier" is 256.  It makes
+> > the static checkers complain.
+> > 
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > ---
 > 
-> Uses block layer runtime pm helper functions in
-> scsi_runtime_suspend/resume.
-> Remove scsi_autopm_* from sd open/release path and check_events path.
-> And remove the quiesce call in runtime suspend path, as we know there is
-> no request to quiesce for the device.
+> Applied to target-pending/for-next.
 > 
-> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> > Probably we should just raise VPD_TMP_BUF_SIZE to 300.
+> 
+> Also bumping up VPD_TMP_BUF_SIZE to 254 to match the usage with
+> INQUIRY_VPD_DEVICE_IDENTIFIER_LEN sized vpd->device_identifier[] below.
+> 
 
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -893,6 +893,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
->  	 */
->  	scsi_autopm_get_device(sdev);
->  
-> +	blk_pm_runtime_init(rq, &sdev->sdev_gendev);
-> +
->  	error = device_add(&sdev->sdev_gendev);
->  	if (error) {
->  		sdev_printk(KERN_INFO, sdev,
+It could still go over 254 because it's "T10 VPD Binary Device
+Identifier: " plus INQUIRY_VPD_DEVICE_IDENTIFIER_LEN.  But I agree
+that probably 254 is enough space.
 
-Someone just asked about the default autosuspend delay, and I realized
-your patch series doesn't set one.  Since we don't know the properties
-of the disk drive at this point (or even whether the device is a disk
-drive), the only safe course is to call
-
-	pm_runtime_set_autosuspend_delay(&sdev->sdev_gendev, -1);
-
-before calling blk_pm_runtime_init().  Then autosuspends will be 
-prevented until userspace writes a non-negative value into the device's 
-control/autosuspend_delay_ms file.
-
-The kerneldoc for blk_pm_runtime_init() should mention that the caller 
-needs to set the autosuspend delay beforehand.
-
-Alan Stern
+regards,
+dan carpenter
