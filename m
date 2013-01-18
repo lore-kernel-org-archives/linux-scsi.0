@@ -1,113 +1,56 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: LSF/MM Summit CFP
-Date: Thu, 17 Jan 2013 21:19:10 -0500
-Message-ID: <yq1mww7i675.fsf@sermon.lab.mkp.net>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.35 available
+Date: Fri, 18 Jan 2013 00:25:21 -0500
+Message-ID: <50F8DCC1.8030602@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23374 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752808Ab3ARCTF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jan 2013 21:19:05 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, "shahar.salzman@kaminario.com" <shahar.salzman@kaminario.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
+sg3_utils is a package of command line utilities for sending
+SCSI and some ATA commands to devices. This package targets
+the linux kernel (lk) 3, 2.6 and lk 2.4 series. It also has
+ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
 
-The annual Linux Storage, Filesystem and Memory Management Summit for
-2013 will be held on April 18th and 19th following the Linux Foundation
-Collaboration Summit at Parc 55 Hotel in San Francisco, CA:
+This version adds sg_compare_and_write (contributed by
+Shahar Salzman). Also Hannes Reinecke has done more work on
+'sg_inq --export' to support udev. This version tracks various
+changes made by www.t10.org since October 2012.
 
-	https://events.linuxfoundation.org/events/collaboration-summit
-	https://events.linuxfoundation.org/events/lsfmm-summit
+For an overview of sg3_utils and downloads see this page:
+     http://sg.danny.cz/sg/sg3_utils.html
+The sg_ses utility (for enclosure devices) is discussed at:
+     http://sg.danny.cz/sg/sg_ses.html
+The SG_IO ioctl is discussed at:
+     http://sg.danny.cz/sg/sg_io.html
+A full changelog can be found at:
+     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
 
-We'd therefore like to issue a call for agenda proposals that are
-suitable for cross-track discussion as well as more technical subjects
-for discussion in the breakout sessions.
+A release announcement will be sent to freecode.com .
 
-1) Suggestions for agenda topics should be sent before February 8th
-2013 to:
+Changelog for sg3_utils-1.35 [20130117] [svn: r476]
+   - sg_compare_and_write: new utility
+   - sg_inq+sg_vpd: block device characteristics VPD page:
+     add product_type, WABEREQ, WACEREQ and VBULS fields
+   - sg_inq: more --export option changes for udev
+   - sg_vpd: add more rdac vendor specific vpd pages
+   - sg_verify: add --ebytchk option for sbc3r34 changes
+   - sg_stpg: --offline option: fix 'Invalid state 0xe'
+   - sg_ses: Door Lock element changed to Door element and
+     abbreviation changed from 'dl' to 'do' (ses3r05)
+   - archive/rescan-scsi-bus.sh: upgrade to version 1.53hr
+     - move rescan-scsi-bus.sh to scripts directory
+   - sync to sbc3r34
+   - sg_lib: sg_ll_verify10+16 expand BYTCHK to 2 bit field
+   - sg_pt_win32, sg_scan(win32): changes for cygwin 1.7.17
+   - clean up man page summary lines
 
-	lsf-pc@lists.linux-foundation.org
+Changelog for sg3_utils-1.34 [20121013] [svn: r461]
+...
 
-and optionally cc the Linux list which would be most interested in it:
-
-	ATA: linux-ide@vger.kernel.org
-	SCSI: linux-scsi@vger.kernel.org
-	FS: linux-fsdevel@vger.kernel.org
-	MM: linux-mm@kvack.org
-
-Please remember to tag your subject with [LSF/MM TOPIC] to make it
-easier to track. Agenda topics and attendees will be selected by the
-program committee, but the final agenda will be formed by consensus of
-the attendees on the day.
-
-We'll try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes at
-the venue.
-
-2) Requests to attend the summit should be sent to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Please summarize what expertise you will bring to the meeting, and what
-you'd like to discuss.  please also tag your email with [ATTEND] so
-there's less chance of it getting lost in the large mail pile.
-
-Presentations are allowed to guide discussion, but are strongly
-discouraged. There will be no recording or audio bridge. However,
-written minutes will be published as in previous years:
-
-2012:
-	http://lwn.net/Articles/490114/
-	http://lwn.net/Articles/490501/
-
-2011:
-	http://lwn.net/Articles/436871/
-	http://lwn.net/Articles/437066/
-
-2010:
-	http://lwn.net/Articles/399148/
-	http://lwn.net/Articles/399313/
-	http://lwn.net/Articles/400589/
-
-2009:
-	http://lwn.net/Articles/327601/
-	http://lwn.net/Articles/327740/
-	http://lwn.net/Articles/328347/
-
-Prior years:
-	http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
-	http://www.usenix.org/publications/login/2007-06/openpdfs...
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-Storage:
-	Martin K. Petersen
-	Jens Axboe
-	James Bottomley
-
-Filesystems:
-	Ric Wheeler
-	Christoph Hellwig
-	Jaegeuk Kim
-	Jeffrey Layton
-	Tao Ma
-	Chris Mason
-	Trond Myklebust
-	Eric Sandeen
-	Theodore Ts'o
-	Sage Weil
-
-MM:
-	Rik van Riel
-	Mel Gorman
-	Ying Han
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Doug Gilbert
