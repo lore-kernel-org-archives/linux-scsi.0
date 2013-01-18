@@ -1,50 +1,43 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] target: change sprintf to snprintf
-Date: Fri, 18 Jan 2013 16:05:12 +0300
-Message-ID: <20130118130512.GA1634@elgon.mountain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
+Date: Fri, 18 Jan 2013 10:24:28 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1301181017070.1988-100000@iolanthe.rowland.org>
+References: <20130118074240.GA6861@aaronlu.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25579 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751146Ab3ARNF1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jan 2013 08:05:27 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <20130118074240.GA6861@aaronlu.sh.intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-"buf" is 128 characters and "vpd->device_identifier" is 256.  It makes
-the static checkers complain.
+On Fri, 18 Jan 2013, Aaron Lu wrote:
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Probably we should just raise VPD_TMP_BUF_SIZE to 300.
+> > Aaron, have you checked whether this patch works okay when you play a
+> > track on an audio-only CD on the computer?  The block interface looks 
+> > okay but I'm not sure about the cdrom_device interface.
+> 
+> Just verified it works OK with the whole patchset applied using 2 audio
+> CDs.
+> 
+> After the ODD has been put into zero power state, insert an audio cd.
+> ODD will be resumed, gvfs will automatically mount the disc, and a
+> dialog titled "Audio Disc" asks me what to do. Press OK, the rhythmbox
+> application will get started. Press the Play button of rhythmbox, songs
+> will start to play, and runtime_usage is 2. Eject the disc, the ODD will
+> be put to zero power state some time later.
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index bd587b7..96b64d5 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -907,15 +907,18 @@ int transport_dump_vpd_ident(
- 
- 	switch (vpd->device_identifier_code_set) {
- 	case 0x01: /* Binary */
--		sprintf(buf, "T10 VPD Binary Device Identifier: %s\n",
-+		snprintf(buf, sizeof(buf),
-+			"T10 VPD Binary Device Identifier: %s\n",
- 			&vpd->device_identifier[0]);
- 		break;
- 	case 0x02: /* ASCII */
--		sprintf(buf, "T10 VPD ASCII Device Identifier: %s\n",
-+		snprintf(buf, sizeof(buf),
-+			"T10 VPD ASCII Device Identifier: %s\n",
- 			&vpd->device_identifier[0]);
- 		break;
- 	case 0x03: /* UTF-8 */
--		sprintf(buf, "T10 VPD UTF-8 Device Identifier: %s\n",
-+		snprintf(buf, sizeof(buf),
-+			"T10 VPD UTF-8 Device Identifier: %s\n",
- 			&vpd->device_identifier[0]);
- 		break;
- 	default:
+What happens if you use a non-ZP drive?
+
+What happens if you're not running a desktop graphical environment, so
+gvfs doesn't mount the disc?  Basically, I'm worried that the drive may
+remain suspended after sr_open() returns.
+
+What happens if you use a program other than rhythmbox?  There are (or
+used to be) programs which would issue the PLAY AUDIO command and then
+exit.  The drive would continue playing even while the device file was
+closed.  Do we want to drop support for that kind of behavior?
+
+Alan Stern
+
