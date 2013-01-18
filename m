@@ -1,979 +1,113 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH V2 5/8] ipr: Reduce lock contention
-Date: Thu, 17 Jan 2013 12:44:45 -0600
-Message-ID: <20130117184644.584942186@linux.vnet.ibm.com>
-References: <20130117184440.249625379@linux.vnet.ibm.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: LSF/MM Summit CFP
+Date: Thu, 17 Jan 2013 21:19:10 -0500
+Message-ID: <yq1mww7i675.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.65] ([32.97.110.65]:22332 "HELO
-	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1754885Ab3AQStG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jan 2013 13:49:06 -0500
-Content-Disposition: inline; filename=hrrq_lock
+Received: from aserp1040.oracle.com ([141.146.126.69]:23374 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752808Ab3ARCTF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jan 2013 21:19:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, klebers@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-This patch reduces lock contention while implementing distributed 
-completion processing. 
 
-Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |  323 +++++++++++++++++++++++++++++++++++++----------------
- drivers/scsi/ipr.h |   21 +--
- 2 files changed, 240 insertions(+), 104 deletions(-)
+The annual Linux Storage, Filesystem and Memory Management Summit for
+2013 will be held on April 18th and 19th following the Linux Foundation
+Collaboration Summit at Parc 55 Hotel in San Francisco, CA:
 
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2013-01-11 13:40:15.992165067 -0600
-+++ b/drivers/scsi/ipr.c	2013-01-11 16:11:20.062476228 -0600
-@@ -552,7 +552,8 @@ static void ipr_trc_hook(struct ipr_cmnd
- 	struct ipr_trace_entry *trace_entry;
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 
--	trace_entry = &ioa_cfg->trace[ioa_cfg->trace_index++];
-+	trace_entry = &ioa_cfg->trace[atomic_add_return
-+			(1, &ioa_cfg->trace_index)%IPR_NUM_TRACE_ENTRIES];
- 	trace_entry->time = jiffies;
- 	trace_entry->op_code = ipr_cmd->ioarcb.cmd_pkt.cdb[0];
- 	trace_entry->type = type;
-@@ -563,6 +564,7 @@ static void ipr_trc_hook(struct ipr_cmnd
- 	trace_entry->cmd_index = ipr_cmd->cmd_index & 0xff;
- 	trace_entry->res_handle = ipr_cmd->ioarcb.res_handle;
- 	trace_entry->u.add_data = add_data;
-+	wmb();
- }
- #else
- #define ipr_trc_hook(ipr_cmd, type, add_data) do { } while (0)
-@@ -697,9 +699,15 @@ static void ipr_mask_and_clear_interrupt
- 					  u32 clr_ints)
- {
- 	volatile u32 int_reg;
-+	int i;
- 
- 	/* Stop new interrupts */
--	ioa_cfg->allow_interrupts = 0;
-+	for (i = 0; i < ioa_cfg->hrrq_num; i++) {
-+		spin_lock(&ioa_cfg->hrrq[i]._lock);
-+		ioa_cfg->hrrq[i].allow_interrupts = 0;
-+		spin_unlock(&ioa_cfg->hrrq[i]._lock);
-+	}
-+	wmb();
- 
- 	/* Set interrupt mask to stop all new interrupts */
- 	if (ioa_cfg->sis64)
-@@ -818,6 +826,7 @@ static void ipr_fail_all_ops(struct ipr_
- 
- 	ENTER;
- 	for_each_hrrq(hrrq, ioa_cfg) {
-+		spin_lock(&hrrq->_lock);
- 		list_for_each_entry_safe(ipr_cmd,
- 					temp, &hrrq->hrrq_pending_q, queue) {
- 			list_del(&ipr_cmd->queue);
-@@ -837,6 +846,7 @@ static void ipr_fail_all_ops(struct ipr_
- 			del_timer(&ipr_cmd->timer);
- 			ipr_cmd->done(ipr_cmd);
- 		}
-+		spin_unlock(&hrrq->_lock);
- 	}
- 	LEAVE;
- }
-@@ -991,12 +1001,9 @@ static void ipr_send_blocking_cmd(struct
- static int ipr_get_hrrq_index(struct ipr_ioa_cfg *ioa_cfg)
- {
- 	if (ioa_cfg->hrrq_num == 1)
--		ioa_cfg->hrrq_index = 0;
--	else {
--		if (++ioa_cfg->hrrq_index >= ioa_cfg->hrrq_num)
--			ioa_cfg->hrrq_index = 1;
--	}
--	return ioa_cfg->hrrq_index;
-+		return 0;
-+	else
-+		return (atomic_add_return(1, &ioa_cfg->hrrq_index) % (ioa_cfg->hrrq_num - 1)) + 1;
- }
- 
- /**
-@@ -1018,7 +1025,7 @@ static void ipr_send_hcam(struct ipr_ioa
- 	struct ipr_cmnd *ipr_cmd;
- 	struct ipr_ioarcb *ioarcb;
- 
--	if (ioa_cfg->allow_cmds) {
-+	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].allow_cmds) {
- 		ipr_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
- 		list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
- 		list_add_tail(&hostrcb->queue, &ioa_cfg->hostrcb_pending_q);
-@@ -2564,7 +2571,7 @@ static int ipr_reset_reload(struct ipr_i
- 
- 	/* If we got hit with a host reset while we were already resetting
- 	 the adapter for some reason, and the reset failed. */
--	if (ioa_cfg->ioa_is_dead) {
-+	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead) {
- 		ipr_trace;
- 		return FAILED;
- 	}
-@@ -3205,7 +3212,8 @@ static void ipr_worker_thread(struct wor
- restart:
- 	do {
- 		did_work = 0;
--		if (!ioa_cfg->allow_cmds || !ioa_cfg->allow_ml_add_del) {
-+		if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].allow_cmds ||
-+		    !ioa_cfg->allow_ml_add_del) {
- 			spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 			return;
- 		}
-@@ -3453,7 +3461,7 @@ static ssize_t ipr_show_adapter_state(st
- 	int len;
- 
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
--	if (ioa_cfg->ioa_is_dead)
-+	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead)
- 		len = snprintf(buf, PAGE_SIZE, "offline\n");
- 	else
- 		len = snprintf(buf, PAGE_SIZE, "online\n");
-@@ -3479,14 +3487,20 @@ static ssize_t ipr_store_adapter_state(s
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
- 	unsigned long lock_flags;
--	int result = count;
-+	int result = count, i;
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
--	if (ioa_cfg->ioa_is_dead && !strncmp(buf, "online", 6)) {
--		ioa_cfg->ioa_is_dead = 0;
-+	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead &&
-+	    !strncmp(buf, "online", 6)) {
-+		for (i = 0; i < ioa_cfg->hrrq_num; i++) {
-+			spin_lock(&ioa_cfg->hrrq[i]._lock);
-+			ioa_cfg->hrrq[i].ioa_is_dead = 0;
-+			spin_unlock(&ioa_cfg->hrrq[i]._lock);
-+		}
-+		wmb();
- 		ioa_cfg->reset_retries = 0;
- 		ioa_cfg->in_ioa_bringdown = 0;
- 		ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
-@@ -4066,7 +4080,7 @@ static int ipr_alloc_dump(struct ipr_ioa
- 
- 	ioa_cfg->dump = dump;
- 	ioa_cfg->sdt_state = WAIT_FOR_DUMP;
--	if (ioa_cfg->ioa_is_dead && !ioa_cfg->dump_taken) {
-+	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead && !ioa_cfg->dump_taken) {
- 		ioa_cfg->dump_taken = 1;
- 		schedule_work(&ioa_cfg->work_q);
- 	}
-@@ -4861,10 +4875,11 @@ static int __ipr_eh_dev_reset(struct scs
- 	 */
- 	if (ioa_cfg->in_reset_reload)
- 		return FAILED;
--	if (ioa_cfg->ioa_is_dead)
-+	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead)
- 		return FAILED;
- 
- 	for_each_hrrq(hrrq, ioa_cfg) {
-+		spin_lock(&hrrq->_lock);
- 		list_for_each_entry(ipr_cmd, &hrrq->hrrq_pending_q, queue) {
- 			if (ipr_cmd->ioarcb.res_handle == res->res_handle) {
- 				if (ipr_cmd->scsi_cmd)
-@@ -4878,6 +4893,7 @@ static int __ipr_eh_dev_reset(struct scs
- 				}
- 			}
- 		}
-+		spin_unlock(&hrrq->_lock);
- 	}
- 	res->resetting_device = 1;
- 	scmd_printk(KERN_ERR, scsi_cmd, "Resetting device\n");
-@@ -4889,6 +4905,7 @@ static int __ipr_eh_dev_reset(struct scs
- 		spin_lock_irq(scsi_cmd->device->host->host_lock);
- 
- 		for_each_hrrq(hrrq, ioa_cfg) {
-+			spin_lock(&hrrq->_lock);
- 			list_for_each_entry(ipr_cmd,
- 					    &hrrq->hrrq_pending_q, queue) {
- 				if (ipr_cmd->ioarcb.res_handle ==
-@@ -4897,6 +4914,7 @@ static int __ipr_eh_dev_reset(struct scs
- 					break;
- 				}
- 			}
-+			spin_unlock(&hrrq->_lock);
- 		}
- 	} else
- 		rc = ipr_device_reset(ioa_cfg, res);
-@@ -5020,7 +5038,8 @@ static int ipr_cancel_op(struct scsi_cmn
- 	 * This will force the mid-layer to call ipr_eh_host_reset,
- 	 * which will then go to sleep and wait for the reset to complete
- 	 */
--	if (ioa_cfg->in_reset_reload || ioa_cfg->ioa_is_dead)
-+	if (ioa_cfg->in_reset_reload ||
-+	    ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead)
- 		return FAILED;
- 	if (!res)
- 		return FAILED;
-@@ -5036,6 +5055,7 @@ static int ipr_cancel_op(struct scsi_cmn
- 		return FAILED;
- 
- 	for_each_hrrq(hrrq, ioa_cfg) {
-+		spin_lock(&hrrq->_lock);
- 		list_for_each_entry(ipr_cmd, &hrrq->hrrq_pending_q, queue) {
- 			if (ipr_cmd->scsi_cmd == scsi_cmd) {
- 				ipr_cmd->done = ipr_scsi_eh_done;
-@@ -5043,6 +5063,7 @@ static int ipr_cancel_op(struct scsi_cmn
- 				break;
- 			}
- 		}
-+		spin_unlock(&hrrq->_lock);
- 	}
- 
- 	if (!op_found)
-@@ -5112,6 +5133,7 @@ static irqreturn_t ipr_handle_other_inte
- {
- 	irqreturn_t rc = IRQ_HANDLED;
- 	u32 int_mask_reg;
-+
- 	int_mask_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg32);
- 	int_reg &= ~int_mask_reg;
- 
-@@ -5173,6 +5195,7 @@ static irqreturn_t ipr_handle_other_inte
- 		ipr_mask_and_clear_interrupts(ioa_cfg, ~0);
- 		ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
- 	}
-+
- 	return rc;
- }
- 
-@@ -5205,7 +5228,7 @@ static int __ipr_process_hrrq(struct ipr
- 	int num_hrrq = 0;
- 
- 	/* If interrupts are disabled, ignore the interrupt */
--	if (!ioa_cfg->allow_interrupts)
-+	if (!hrr_queue->allow_interrupts)
- 		return 0;
- 
- 	while ((be32_to_cpu(*hrr_queue->hrrq_curr) & IPR_HRRQ_TOGGLE_BIT) ==
-@@ -5252,7 +5275,7 @@ static irqreturn_t ipr_isr(int irq, void
- {
- 	struct ipr_hrr_queue *hrrq = (struct ipr_hrr_queue *)devp;
- 	struct ipr_ioa_cfg *ioa_cfg = hrrq->ioa_cfg;
--	unsigned long lock_flags = 0;
-+	unsigned long hrrq_flags = 0;
- 	u32 int_reg = 0;
- 	u32 ioasc;
- 	u16 cmd_index;
-@@ -5262,10 +5285,10 @@ static irqreturn_t ipr_isr(int irq, void
- 	irqreturn_t rc = IRQ_NONE;
- 	LIST_HEAD(doneq);
- 
--	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-+	spin_lock_irqsave(hrrq->lock, hrrq_flags);
- 	/* If interrupts are disabled, ignore the interrupt */
--	if (!ioa_cfg->allow_interrupts) {
--		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+	if (!hrrq->allow_interrupts) {
-+		spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 		return IRQ_NONE;
- 	}
- 
-@@ -5332,7 +5355,7 @@ static irqreturn_t ipr_isr(int irq, void
- 		rc = ipr_handle_other_interrupt(ioa_cfg, int_reg);
- 
- unlock_out:
--	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+	spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 	list_for_each_entry_safe(ipr_cmd, temp, &doneq, queue) {
- 		list_del(&ipr_cmd->queue);
- 		del_timer(&ipr_cmd->timer);
-@@ -5352,17 +5375,16 @@ unlock_out:
- static irqreturn_t ipr_isr_mhrrq(int irq, void *devp)
- {
- 	struct ipr_hrr_queue *hrrq = (struct ipr_hrr_queue *)devp;
--	struct ipr_ioa_cfg *ioa_cfg = hrrq->ioa_cfg;
--	unsigned long lock_flags = 0;
-+	unsigned long hrrq_flags = 0;
- 	struct ipr_cmnd *ipr_cmd, *temp;
- 	irqreturn_t rc = IRQ_NONE;
- 	LIST_HEAD(doneq);
- 
--	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-+	spin_lock_irqsave(hrrq->lock, hrrq_flags);
- 
- 	/* If interrupts are disabled, ignore the interrupt */
--	if (!ioa_cfg->allow_interrupts) {
--		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+	if (!hrrq->allow_interrupts) {
-+		spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 		return IRQ_NONE;
- 	}
- 
-@@ -5372,7 +5394,7 @@ static irqreturn_t ipr_isr_mhrrq(int irq
- 		if (__ipr_process_hrrq(hrrq, &doneq))
- 			rc =  IRQ_HANDLED;
- 
--	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+	spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 
- 	list_for_each_entry_safe(ipr_cmd, temp, &doneq, queue) {
- 		list_del(&ipr_cmd->queue);
-@@ -5965,14 +5987,14 @@ static void ipr_scsi_done(struct ipr_cmn
- 	if (likely(IPR_IOASC_SENSE_KEY(ioasc) == 0)) {
- 		scsi_dma_unmap(scsi_cmd);
- 
--		spin_lock_irqsave(ioa_cfg->host->host_lock, hrrq_flags);
-+		spin_lock_irqsave(ipr_cmd->hrrq->lock, hrrq_flags);
- 		list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
- 		scsi_cmd->scsi_done(scsi_cmd);
--		spin_unlock_irqrestore(ioa_cfg->host->host_lock, hrrq_flags);
-+		spin_unlock_irqrestore(ipr_cmd->hrrq->lock, hrrq_flags);
- 	} else {
--		spin_lock_irqsave(ioa_cfg->host->host_lock, hrrq_flags);
-+		spin_lock_irqsave(ipr_cmd->hrrq->lock, hrrq_flags);
- 		ipr_erp_start(ioa_cfg, ipr_cmd);
--		spin_unlock_irqrestore(ioa_cfg->host->host_lock, hrrq_flags);
-+		spin_unlock_irqrestore(ipr_cmd->hrrq->lock, hrrq_flags);
- 	}
- }
- 
-@@ -5995,26 +6017,34 @@ static int ipr_queuecommand(struct Scsi_
- 	struct ipr_resource_entry *res;
- 	struct ipr_ioarcb *ioarcb;
- 	struct ipr_cmnd *ipr_cmd;
--	unsigned long lock_flags;
-+	unsigned long hrrq_flags, lock_flags;
- 	int rc;
- 	struct ipr_hrr_queue *hrrq;
- 	int hrrq_id;
- 
- 	ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
- 
--	spin_lock_irqsave(shost->host_lock, lock_flags);
- 	scsi_cmd->result = (DID_OK << 16);
- 	res = scsi_cmd->device->hostdata;
-+
-+	if (ipr_is_gata(res) && res->sata_port) {
-+		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-+		rc = ata_sas_queuecmd(scsi_cmd, res->sata_port->ap);
-+		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+		return rc;
-+	}
-+
- 	hrrq_id = ipr_get_hrrq_index(ioa_cfg);
- 	hrrq = &ioa_cfg->hrrq[hrrq_id];
- 
-+	spin_lock_irqsave(hrrq->lock, hrrq_flags);
- 	/*
- 	 * We are currently blocking all devices due to a host reset
- 	 * We have told the host to stop giving us new requests, but
- 	 * ERP ops don't count. FIXME
- 	 */
--	if (unlikely(!ioa_cfg->allow_cmds && !ioa_cfg->ioa_is_dead)) {
--		spin_unlock_irqrestore(shost->host_lock, lock_flags);
-+	if (unlikely(!hrrq->allow_cmds && !hrrq->ioa_is_dead)) {
-+		spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
- 
-@@ -6022,23 +6052,17 @@ static int ipr_queuecommand(struct Scsi_
- 	 * FIXME - Create scsi_set_host_offline interface
- 	 *  and the ioa_is_dead check can be removed
- 	 */
--	if (unlikely(ioa_cfg->ioa_is_dead || !res)) {
--		spin_unlock_irqrestore(shost->host_lock, lock_flags);
-+	if (unlikely(hrrq->ioa_is_dead || !res)) {
-+		spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 		goto err_nodev;
- 	}
- 
--	if (ipr_is_gata(res) && res->sata_port) {
--		rc = ata_sas_queuecmd(scsi_cmd, res->sata_port->ap);
--		spin_unlock_irqrestore(shost->host_lock, lock_flags);
--		return rc;
--	}
--
- 	ipr_cmd = __ipr_get_free_ipr_cmnd(hrrq);
- 	if (ipr_cmd == NULL) {
--		spin_unlock_irqrestore(shost->host_lock, lock_flags);
-+		spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
--	spin_unlock_irqrestore(shost->host_lock, lock_flags);
-+	spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 
- 	ipr_init_ipr_cmnd(ipr_cmd, ipr_scsi_done);
- 	ioarcb = &ipr_cmd->ioarcb;
-@@ -6068,18 +6092,18 @@ static int ipr_queuecommand(struct Scsi_
- 	else
- 		rc = ipr_build_ioadl(ioa_cfg, ipr_cmd);
- 
--	spin_lock_irqsave(shost->host_lock, lock_flags);
--	if (unlikely(rc || (!ioa_cfg->allow_cmds && !ioa_cfg->ioa_is_dead))) {
-+	spin_lock_irqsave(hrrq->lock, hrrq_flags);
-+	if (unlikely(rc || (!hrrq->allow_cmds && !hrrq->ioa_is_dead))) {
- 		list_add_tail(&ipr_cmd->queue, &hrrq->hrrq_free_q);
--		spin_unlock_irqrestore(shost->host_lock, lock_flags);
-+		spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 		if (!rc)
- 			scsi_dma_unmap(scsi_cmd);
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
- 
--	if (unlikely(ioa_cfg->ioa_is_dead)) {
-+	if (unlikely(hrrq->ioa_is_dead)) {
- 		list_add_tail(&ipr_cmd->queue, &hrrq->hrrq_free_q);
--		spin_unlock_irqrestore(shost->host_lock, lock_flags);
-+		spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 		scsi_dma_unmap(scsi_cmd);
- 		goto err_nodev;
- 	}
-@@ -6092,15 +6116,15 @@ static int ipr_queuecommand(struct Scsi_
- 	list_add_tail(&ipr_cmd->queue, &hrrq->hrrq_pending_q);
- 	ipr_trc_hook(ipr_cmd, IPR_TRACE_START, IPR_GET_RES_PHYS_LOC(res));
- 	ipr_send_command(ipr_cmd);
--	spin_unlock_irqrestore(shost->host_lock, lock_flags);
-+	spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 	return 0;
- 
- err_nodev:
--	spin_lock_irqsave(shost->host_lock, lock_flags);
-+	spin_lock_irqsave(hrrq->lock, hrrq_flags);
- 	memset(scsi_cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
- 	scsi_cmd->result = (DID_NO_CONNECT << 16);
- 	scsi_cmd->scsi_done(scsi_cmd);
--	spin_unlock_irqrestore(shost->host_lock, lock_flags);
-+	spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
- 	return 0;
- }
- 
-@@ -6198,7 +6222,7 @@ static void ipr_ata_phy_reset(struct ata
- 		spin_lock_irqsave(ioa_cfg->host->host_lock, flags);
- 	}
- 
--	if (!ioa_cfg->allow_cmds)
-+	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].allow_cmds)
- 		goto out_unlock;
- 
- 	rc = ipr_device_reset(ioa_cfg, res);
-@@ -6240,12 +6264,14 @@ static void ipr_ata_post_internal(struct
- 	}
- 
- 	for_each_hrrq(hrrq, ioa_cfg) {
-+		spin_lock(&hrrq->_lock);
- 		list_for_each_entry(ipr_cmd, &hrrq->hrrq_pending_q, queue) {
- 			if (ipr_cmd->qc == qc) {
- 				ipr_device_reset(ioa_cfg, sata_port->res);
- 				break;
- 			}
- 		}
-+		spin_unlock(&hrrq->_lock);
- 	}
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
- }
-@@ -6294,6 +6320,7 @@ static void ipr_sata_done(struct ipr_cmn
- 	struct ipr_resource_entry *res = sata_port->res;
- 	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
- 
-+	spin_lock(&ipr_cmd->hrrq->_lock);
- 	if (ipr_cmd->ioa_cfg->sis64)
- 		memcpy(&sata_port->ioasa, &ipr_cmd->s.ioasa64.u.gata,
- 		       sizeof(struct ipr_ioasa_gata));
-@@ -6310,6 +6337,7 @@ static void ipr_sata_done(struct ipr_cmn
- 	else
- 		qc->err_mask |= ac_err_mask(sata_port->ioasa.status);
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
-+	spin_unlock(&ipr_cmd->hrrq->_lock);
- 	ata_qc_complete(qc);
- }
- 
-@@ -6405,6 +6433,48 @@ static void ipr_build_ata_ioadl(struct i
- }
- 
- /**
-+ * ipr_qc_defer - Get a free ipr_cmd
-+ * @qc:	queued command
-+ *
-+ * Return value:
-+ *	0 if success
-+ **/
-+static int ipr_qc_defer(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct ipr_sata_port *sata_port = ap->private_data;
-+	struct ipr_ioa_cfg *ioa_cfg = sata_port->ioa_cfg;
-+	struct ipr_cmnd *ipr_cmd;
-+	struct ipr_hrr_queue *hrrq;
-+	int hrrq_id;
-+
-+	hrrq_id = ipr_get_hrrq_index(ioa_cfg);
-+	hrrq = &ioa_cfg->hrrq[hrrq_id];
-+
-+	qc->lldd_task = NULL;
-+	spin_lock(&hrrq->_lock);
-+	if (unlikely(hrrq->ioa_is_dead)) {
-+		spin_unlock(&hrrq->_lock);
-+		return 0;
-+	}
-+
-+	if (unlikely(!hrrq->allow_cmds)) {
-+		spin_unlock(&hrrq->_lock);
-+		return ATA_DEFER_LINK;
-+	}
-+
-+	ipr_cmd = __ipr_get_free_ipr_cmnd(hrrq);
-+	if (ipr_cmd == NULL) {
-+		spin_unlock(&hrrq->_lock);
-+		return ATA_DEFER_LINK;
-+	}
-+
-+	qc->lldd_task = ipr_cmd;
-+	spin_unlock(&hrrq->_lock);
-+	return 0;
-+}
-+
-+/**
-  * ipr_qc_issue - Issue a SATA qc to a device
-  * @qc:	queued command
-  *
-@@ -6420,15 +6490,23 @@ static unsigned int ipr_qc_issue(struct 
- 	struct ipr_cmnd *ipr_cmd;
- 	struct ipr_ioarcb *ioarcb;
- 	struct ipr_ioarcb_ata_regs *regs;
--	struct ipr_hrr_queue *hrrq;
--	int hrrq_id;
- 
--	if (unlikely(!ioa_cfg->allow_cmds || ioa_cfg->ioa_is_dead))
-+	if (qc->lldd_task == NULL)
-+		ipr_qc_defer(qc);
-+
-+	ipr_cmd = qc->lldd_task;
-+	if (ipr_cmd == NULL)
- 		return AC_ERR_SYSTEM;
- 
--	hrrq_id = ipr_get_hrrq_index(ioa_cfg);
--	hrrq = &ioa_cfg->hrrq[hrrq_id];
--	ipr_cmd = __ipr_get_free_ipr_cmnd(hrrq);
-+	qc->lldd_task = NULL;
-+	spin_lock(&ipr_cmd->hrrq->_lock);
-+	if (unlikely(!ipr_cmd->hrrq->allow_cmds ||
-+			ipr_cmd->hrrq->ioa_is_dead)) {
-+		list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
-+		spin_unlock(&ipr_cmd->hrrq->_lock);
-+		return AC_ERR_SYSTEM;
-+	}
-+
- 	ipr_init_ipr_cmnd(ipr_cmd, ipr_lock_and_done);
- 	ioarcb = &ipr_cmd->ioarcb;
- 
-@@ -6441,7 +6519,7 @@ static unsigned int ipr_qc_issue(struct 
- 	memset(regs, 0, sizeof(*regs));
- 	ioarcb->add_cmd_parms_len = cpu_to_be16(sizeof(*regs));
- 
--	list_add_tail(&ipr_cmd->queue, &hrrq->hrrq_pending_q);
-+	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
- 	ipr_cmd->qc = qc;
- 	ipr_cmd->done = ipr_sata_done;
- 	ipr_cmd->ioarcb.res_handle = res->res_handle;
-@@ -6481,10 +6559,12 @@ static unsigned int ipr_qc_issue(struct 
- 
- 	default:
- 		WARN_ON(1);
-+		spin_unlock(&ipr_cmd->hrrq->_lock);
- 		return AC_ERR_INVALID;
- 	}
- 
- 	ipr_send_command(ipr_cmd);
-+	spin_unlock(&ipr_cmd->hrrq->_lock);
- 
- 	return 0;
- }
-@@ -6523,6 +6603,7 @@ static struct ata_port_operations ipr_sa
- 	.hardreset = ipr_sata_reset,
- 	.post_internal_cmd = ipr_ata_post_internal,
- 	.qc_prep = ata_noop_qc_prep,
-+	.qc_defer = ipr_qc_defer,
- 	.qc_issue = ipr_qc_issue,
- 	.qc_fill_rtf = ipr_qc_fill_rtf,
- 	.port_start = ata_sas_port_start,
-@@ -6620,11 +6701,16 @@ static int ipr_ioa_reset_done(struct ipr
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	struct ipr_resource_entry *res;
- 	struct ipr_hostrcb *hostrcb, *temp;
--	int i = 0;
-+	int i = 0, j;
- 
- 	ENTER;
- 	ioa_cfg->in_reset_reload = 0;
--	ioa_cfg->allow_cmds = 1;
-+	for (j = 0; j < ioa_cfg->hrrq_num; j++) {
-+		spin_lock(&ioa_cfg->hrrq[j]._lock);
-+		ioa_cfg->hrrq[j].allow_cmds = 1;
-+		spin_unlock(&ioa_cfg->hrrq[j]._lock);
-+	}
-+	wmb();
- 	ioa_cfg->reset_cmd = NULL;
- 	ioa_cfg->doorbell |= IPR_RUNTIME_RESET;
- 
-@@ -6655,7 +6741,7 @@ static int ipr_ioa_reset_done(struct ipr
- 	scsi_unblock_requests(ioa_cfg->host);
- 	spin_lock(ioa_cfg->host->host_lock);
- 
--	if (!ioa_cfg->allow_cmds)
-+	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].allow_cmds)
- 		scsi_block_requests(ioa_cfg->host);
- 
- 	LEAVE;
-@@ -7452,8 +7538,8 @@ static int ipr_ioafp_identify_hrrq(struc
- 	ipr_cmd->job_step = ipr_ioafp_std_inquiry;
- 	dev_info(&ioa_cfg->pdev->dev, "Starting IOA initialization sequence.\n");
- 
--	if (ioa_cfg->hrrq_index < ioa_cfg->hrrq_num) {
--		hrrq = &ioa_cfg->hrrq[ioa_cfg->hrrq_index];
-+	if (ioa_cfg->identify_hrrq_index < ioa_cfg->hrrq_num) {
-+		hrrq = &ioa_cfg->hrrq[ioa_cfg->identify_hrrq_index];
- 
- 		ioarcb->cmd_pkt.cdb[0] = IPR_ID_HOST_RR_Q;
- 		ioarcb->res_handle = cpu_to_be32(IPR_IOA_RES_HANDLE);
-@@ -7481,7 +7567,8 @@ static int ipr_ioafp_identify_hrrq(struc
- 			(sizeof(u32) * hrrq->size) & 0xff;
- 
- 		if (ioarcb->cmd_pkt.cdb[1] & IPR_ID_HRRQ_SELE_ENABLE)
--			ioarcb->cmd_pkt.cdb[9] = ioa_cfg->hrrq_index;
-+			ioarcb->cmd_pkt.cdb[9] =
-+					ioa_cfg->identify_hrrq_index;
- 
- 		if (ioa_cfg->sis64) {
- 			ioarcb->cmd_pkt.cdb[10] =
-@@ -7495,24 +7582,19 @@ static int ipr_ioafp_identify_hrrq(struc
- 		}
- 
- 		if (ioarcb->cmd_pkt.cdb[1] & IPR_ID_HRRQ_SELE_ENABLE)
--			ioarcb->cmd_pkt.cdb[14] = ioa_cfg->hrrq_index;
-+			ioarcb->cmd_pkt.cdb[14] =
-+					ioa_cfg->identify_hrrq_index;
- 
- 		ipr_do_req(ipr_cmd, ipr_reset_ioa_job, ipr_timeout,
- 			   IPR_INTERNAL_TIMEOUT);
- 
--		if (++ioa_cfg->hrrq_index < ioa_cfg->hrrq_num)
--				ipr_cmd->job_step = ipr_ioafp_identify_hrrq;
-+		if (++ioa_cfg->identify_hrrq_index < ioa_cfg->hrrq_num)
-+			ipr_cmd->job_step = ipr_ioafp_identify_hrrq;
- 
- 		LEAVE;
- 		return IPR_RC_JOB_RETURN;
--
- 	}
- 
--	if (ioa_cfg->hrrq_num == 1)
--		ioa_cfg->hrrq_index = 0;
--	else
--		ioa_cfg->hrrq_index = 1;
--
- 	LEAVE;
- 	return IPR_RC_JOB_CONTINUE;
- }
-@@ -7571,7 +7653,6 @@ static void ipr_reset_start_timer(struct
- 	ipr_cmd->timer.expires = jiffies + timeout;
- 	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_reset_timer_done;
- 	add_timer(&ipr_cmd->timer);
--	LEAVE;
- }
- 
- /**
-@@ -7586,6 +7667,7 @@ static void ipr_init_ioa_mem(struct ipr_
- 	struct ipr_hrr_queue *hrrq;
- 
- 	for_each_hrrq(hrrq, ioa_cfg) {
-+		spin_lock(&hrrq->_lock);
- 		memset(hrrq->host_rrq, 0, sizeof(u32) * hrrq->size);
- 
- 		/* Initialize Host RRQ pointers */
-@@ -7593,9 +7675,15 @@ static void ipr_init_ioa_mem(struct ipr_
- 		hrrq->hrrq_end = &hrrq->host_rrq[hrrq->size - 1];
- 		hrrq->hrrq_curr = hrrq->hrrq_start;
- 		hrrq->toggle_bit = 1;
-+		spin_unlock(&hrrq->_lock);
- 	}
-+	wmb();
- 
--	ioa_cfg->hrrq_index = 0;
-+	ioa_cfg->identify_hrrq_index = 0;
-+	if (ioa_cfg->hrrq_num == 1)
-+		atomic_set(&ioa_cfg->hrrq_index, 0);
-+	else
-+		atomic_set(&ioa_cfg->hrrq_index, 1);
- 
- 	/* Zero out config table */
- 	memset(ioa_cfg->u.cfg_table, 0, ioa_cfg->cfg_table_size);
-@@ -7673,12 +7761,18 @@ static int ipr_reset_enable_ioa(struct i
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	volatile u32 int_reg;
- 	volatile u64 maskval;
-+	int i;
- 
- 	ENTER;
- 	ipr_cmd->job_step = ipr_ioafp_identify_hrrq;
- 	ipr_init_ioa_mem(ioa_cfg);
- 
--	ioa_cfg->allow_interrupts = 1;
-+	for (i = 0; i < ioa_cfg->hrrq_num; i++) {
-+		spin_lock(&ioa_cfg->hrrq[i]._lock);
-+		ioa_cfg->hrrq[i].allow_interrupts = 1;
-+		spin_unlock(&ioa_cfg->hrrq[i]._lock);
-+	}
-+	wmb();
- 	if (ioa_cfg->sis64) {
- 		/* Set the adapter to the correct endian mode. */
- 		writel(IPR_ENDIAN_SWAP_KEY, ioa_cfg->regs.endian_swap_reg);
-@@ -8237,7 +8331,8 @@ static int ipr_reset_shutdown_ioa(struct
- 	int rc = IPR_RC_JOB_CONTINUE;
- 
- 	ENTER;
--	if (shutdown_type != IPR_SHUTDOWN_NONE && !ioa_cfg->ioa_is_dead) {
-+	if (shutdown_type != IPR_SHUTDOWN_NONE &&
-+			!ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead) {
- 		ipr_cmd->ioarcb.res_handle = cpu_to_be32(IPR_IOA_RES_HANDLE);
- 		ipr_cmd->ioarcb.cmd_pkt.request_type = IPR_RQTYPE_IOACMD;
- 		ipr_cmd->ioarcb.cmd_pkt.cdb[0] = IPR_IOA_SHUTDOWN;
-@@ -8321,9 +8416,15 @@ static void _ipr_initiate_ioa_reset(stru
- 				    enum ipr_shutdown_type shutdown_type)
- {
- 	struct ipr_cmnd *ipr_cmd;
-+	int i;
- 
- 	ioa_cfg->in_reset_reload = 1;
--	ioa_cfg->allow_cmds = 0;
-+	for (i = 0; i < ioa_cfg->hrrq_num; i++) {
-+		spin_lock(&ioa_cfg->hrrq[i]._lock);
-+		ioa_cfg->hrrq[i].allow_cmds = 0;
-+		spin_unlock(&ioa_cfg->hrrq[i]._lock);
-+	}
-+	wmb();
- 	scsi_block_requests(ioa_cfg->host);
- 
- 	ipr_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
-@@ -8349,7 +8450,9 @@ static void _ipr_initiate_ioa_reset(stru
- static void ipr_initiate_ioa_reset(struct ipr_ioa_cfg *ioa_cfg,
- 				   enum ipr_shutdown_type shutdown_type)
- {
--	if (ioa_cfg->ioa_is_dead)
-+	int i;
-+
-+	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead)
- 		return;
- 
- 	if (ioa_cfg->in_reset_reload) {
-@@ -8364,7 +8467,12 @@ static void ipr_initiate_ioa_reset(struc
- 			"IOA taken offline - error recovery failed\n");
- 
- 		ioa_cfg->reset_retries = 0;
--		ioa_cfg->ioa_is_dead = 1;
-+		for (i = 0; i < ioa_cfg->hrrq_num; i++) {
-+			spin_lock(&ioa_cfg->hrrq[i]._lock);
-+			ioa_cfg->hrrq[i].ioa_is_dead = 1;
-+			spin_unlock(&ioa_cfg->hrrq[i]._lock);
-+		}
-+		wmb();
- 
- 		if (ioa_cfg->in_ioa_bringdown) {
- 			ioa_cfg->reset_cmd = NULL;
-@@ -8396,8 +8504,16 @@ static void ipr_initiate_ioa_reset(struc
-  */
- static int ipr_reset_freeze(struct ipr_cmnd *ipr_cmd)
- {
-+	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
-+	int i;
-+
- 	/* Disallow new interrupts, avoid loop */
--	ipr_cmd->ioa_cfg->allow_interrupts = 0;
-+	for (i = 0; i < ioa_cfg->hrrq_num; i++) {
-+		spin_lock(&ioa_cfg->hrrq[i]._lock);
-+		ioa_cfg->hrrq[i].allow_interrupts = 0;
-+		spin_unlock(&ioa_cfg->hrrq[i]._lock);
-+	}
-+	wmb();
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_pending_q);
- 	ipr_cmd->done = ipr_reset_ioa_job;
- 	return IPR_RC_JOB_RETURN;
-@@ -8455,13 +8571,19 @@ static void ipr_pci_perm_failure(struct 
- {
- 	unsigned long flags = 0;
- 	struct ipr_ioa_cfg *ioa_cfg = pci_get_drvdata(pdev);
-+	int i;
- 
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, flags);
- 	if (ioa_cfg->sdt_state == WAIT_FOR_DUMP)
- 		ioa_cfg->sdt_state = ABORT_DUMP;
- 	ioa_cfg->reset_retries = IPR_NUM_RESET_RELOAD_RETRIES;
- 	ioa_cfg->in_ioa_bringdown = 1;
--	ioa_cfg->allow_cmds = 0;
-+	for (i = 0; i < ioa_cfg->hrrq_num; i++) {
-+		spin_lock(&ioa_cfg->hrrq[i]._lock);
-+		ioa_cfg->hrrq[i].allow_cmds = 0;
-+		spin_unlock(&ioa_cfg->hrrq[i]._lock);
-+	}
-+	wmb();
- 	ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
- }
-@@ -8522,7 +8644,7 @@ static int ipr_probe_ioa_part2(struct ip
- 	wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, host_lock_flags);
- 
--	if (ioa_cfg->ioa_is_dead) {
-+	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead) {
- 		rc = -EIO;
- 	} else if (ipr_invalid_adapter(ioa_cfg)) {
- 		if (!ipr_testmode)
-@@ -8629,10 +8751,13 @@ static void ipr_free_all_resources(struc
- 	} else
- 		free_irq(pdev->irq, &ioa_cfg->hrrq[0]);
- 
--	if (ioa_cfg->intr_flag == IPR_USE_MSI)
-+	if (ioa_cfg->intr_flag == IPR_USE_MSI) {
- 		pci_disable_msi(pdev);
--	else if (ioa_cfg->intr_flag == IPR_USE_MSIX)
-+		ioa_cfg->intr_flag &= ~IPR_USE_MSI;
-+	} else if (ioa_cfg->intr_flag == IPR_USE_MSIX) {
- 		pci_disable_msix(pdev);
-+		ioa_cfg->intr_flag &= ~IPR_USE_MSIX;
-+	}
- 
- 	iounmap(ioa_cfg->hdw_dma_regs);
- 	pci_release_regions(pdev);
-@@ -8800,6 +8925,11 @@ static int ipr_alloc_mem(struct ipr_ioa_
- 	for (i = 0; i < ioa_cfg->hrrq_num; i++) {
- 		INIT_LIST_HEAD(&ioa_cfg->hrrq[i].hrrq_free_q);
- 		INIT_LIST_HEAD(&ioa_cfg->hrrq[i].hrrq_pending_q);
-+		spin_lock_init(&ioa_cfg->hrrq[i]._lock);
-+		if (i == 0)
-+			ioa_cfg->hrrq[i].lock = ioa_cfg->host->host_lock;
-+		else
-+			ioa_cfg->hrrq[i].lock = &ioa_cfg->hrrq[i]._lock;
- 	}
- 
- 	if (ipr_alloc_cmd_blks(ioa_cfg))
-@@ -9154,9 +9284,9 @@ static int ipr_test_msi(struct ipr_ioa_c
- 	writel(IPR_PCII_IO_DEBUG_ACKNOWLEDGE, ioa_cfg->regs.sense_interrupt_reg32);
- 	int_reg = readl(ioa_cfg->regs.sense_interrupt_reg);
- 	wait_event_timeout(ioa_cfg->msi_wait_q, ioa_cfg->msi_received, HZ);
-+	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
- 
--	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 	if (!ioa_cfg->msi_received) {
- 		/* MSI test failed */
- 		dev_info(&pdev->dev, "MSI test failed.  Falling back to LSI.\n");
-@@ -9189,6 +9319,7 @@ static int ipr_probe_ioa(struct pci_dev 
- 	void __iomem *ipr_regs;
- 	int rc = PCIBIOS_SUCCESSFUL;
- 	volatile u32 mask, uproc, interrupts;
-+	unsigned long lock_flags;
- 
- 	ENTER;
- 
-@@ -9291,10 +9422,10 @@ static int ipr_probe_ioa(struct pci_dev 
- 	}
- 
- 	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
--		ipr_enable_msix(ioa_cfg) == 0)
-+			ipr_enable_msix(ioa_cfg) == 0)
- 		ioa_cfg->intr_flag = IPR_USE_MSIX;
- 	else if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
--		ipr_enable_msi(ioa_cfg) == 0)
-+			ipr_enable_msi(ioa_cfg) == 0)
- 		ioa_cfg->intr_flag = IPR_USE_MSI;
- 	else {
- 		ioa_cfg->intr_flag = IPR_USE_LSI;
-@@ -9380,7 +9511,9 @@ static int ipr_probe_ioa(struct pci_dev 
- 	if (interrupts & IPR_PCII_IOA_UNIT_CHECKED)
- 		ioa_cfg->ioa_unit_checked = 1;
- 
-+	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
-+	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 
- 	if (ioa_cfg->intr_flag == IPR_USE_MSI
- 			|| ioa_cfg->intr_flag == IPR_USE_MSIX) {
-@@ -9767,7 +9900,7 @@ static int ipr_halt(struct notifier_bloc
- 
- 	list_for_each_entry(ioa_cfg, &ipr_ioa_head, queue) {
- 		spin_lock_irqsave(ioa_cfg->host->host_lock, flags);
--		if (!ioa_cfg->allow_cmds) {
-+		if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].allow_cmds) {
- 			spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
- 			continue;
- 		}
-Index: b/drivers/scsi/ipr.h
-===================================================================
---- a/drivers/scsi/ipr.h	2013-01-11 13:38:09.752168134 -0600
-+++ b/drivers/scsi/ipr.h	2013-01-11 16:10:56.114660090 -0600
-@@ -482,17 +482,18 @@ struct ipr_hrr_queue {
- 
- 	struct list_head hrrq_free_q;
- 	struct list_head hrrq_pending_q;
-+	spinlock_t _lock;
-+	spinlock_t *lock;
- 
- 	volatile u32 toggle_bit;
- 	u32 size;
- 	u32 min_cmd_id;
- 	u32 max_cmd_id;
-+	u8 allow_interrupts:1;
-+	u8 ioa_is_dead:1;
-+	u8 allow_cmds:1;
- };
- 
--#define for_each_hrrq(hrrq, ioa_cfg) \
--		for (hrrq = (ioa_cfg)->hrrq; \
--			hrrq < ((ioa_cfg)->hrrq + (ioa_cfg)->hrrq_num); hrrq++)
--
- /* Command packet structure */
- struct ipr_cmd_pkt {
- 	u8 reserved;		/* Reserved by IOA */
-@@ -1057,6 +1058,10 @@ struct ipr_hostrcb64_fabric_desc {
- 	struct ipr_hostrcb64_config_element elem[1];
- }__attribute__((packed, aligned (8)));
- 
-+#define for_each_hrrq(hrrq, ioa_cfg) \
-+		for (hrrq = (ioa_cfg)->hrrq; \
-+			hrrq < ((ioa_cfg)->hrrq + (ioa_cfg)->hrrq_num); hrrq++)
-+
- #define for_each_fabric_cfg(fabric, cfg) \
- 		for (cfg = (fabric)->elem; \
- 			cfg < ((fabric)->elem + be16_to_cpu((fabric)->num_entries)); \
-@@ -1411,13 +1416,10 @@ struct ipr_ioa_cfg {
- 
- 	struct list_head queue;
- 
--	u8 allow_interrupts:1;
- 	u8 in_reset_reload:1;
- 	u8 in_ioa_bringdown:1;
- 	u8 ioa_unit_checked:1;
--	u8 ioa_is_dead:1;
- 	u8 dump_taken:1;
--	u8 allow_cmds:1;
- 	u8 allow_ml_add_del:1;
- 	u8 needs_hard_reset:1;
- 	u8 dual_raid:1;
-@@ -1449,7 +1451,7 @@ struct ipr_ioa_cfg {
- 	char trace_start[8];
- #define IPR_TRACE_START_LABEL			"trace"
- 	struct ipr_trace_entry *trace;
--	u32 trace_index:IPR_NUM_TRACE_INDEX_BITS;
-+	atomic_t trace_index;
- 
- 	char cfg_table_start[8];
- #define IPR_CFG_TBL_START		"cfg"
-@@ -1476,7 +1478,8 @@ struct ipr_ioa_cfg {
- 
- 	struct ipr_hrr_queue hrrq[IPR_MAX_HRRQ_NUM];
- 	u32 hrrq_num;
--	u32 hrrq_index;
-+	atomic_t  hrrq_index;
-+	u16 identify_hrrq_index;
- 
- 	struct ipr_bus_attributes bus_attr[IPR_MAX_NUM_BUSES];
- 
+	https://events.linuxfoundation.org/events/collaboration-summit
+	https://events.linuxfoundation.org/events/lsfmm-summit
+
+We'd therefore like to issue a call for agenda proposals that are
+suitable for cross-track discussion as well as more technical subjects
+for discussion in the breakout sessions.
+
+1) Suggestions for agenda topics should be sent before February 8th
+2013 to:
+
+	lsf-pc@lists.linux-foundation.org
+
+and optionally cc the Linux list which would be most interested in it:
+
+	ATA: linux-ide@vger.kernel.org
+	SCSI: linux-scsi@vger.kernel.org
+	FS: linux-fsdevel@vger.kernel.org
+	MM: linux-mm@kvack.org
+
+Please remember to tag your subject with [LSF/MM TOPIC] to make it
+easier to track. Agenda topics and attendees will be selected by the
+program committee, but the final agenda will be formed by consensus of
+the attendees on the day.
+
+We'll try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
+
+2) Requests to attend the summit should be sent to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Please summarize what expertise you will bring to the meeting, and what
+you'd like to discuss.  please also tag your email with [ATTEND] so
+there's less chance of it getting lost in the large mail pile.
+
+Presentations are allowed to guide discussion, but are strongly
+discouraged. There will be no recording or audio bridge. However,
+written minutes will be published as in previous years:
+
+2012:
+	http://lwn.net/Articles/490114/
+	http://lwn.net/Articles/490501/
+
+2011:
+	http://lwn.net/Articles/436871/
+	http://lwn.net/Articles/437066/
+
+2010:
+	http://lwn.net/Articles/399148/
+	http://lwn.net/Articles/399313/
+	http://lwn.net/Articles/400589/
+
+2009:
+	http://lwn.net/Articles/327601/
+	http://lwn.net/Articles/327740/
+	http://lwn.net/Articles/328347/
+
+Prior years:
+	http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
+	http://www.usenix.org/publications/login/2007-06/openpdfs...
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+Storage:
+	Martin K. Petersen
+	Jens Axboe
+	James Bottomley
+
+Filesystems:
+	Ric Wheeler
+	Christoph Hellwig
+	Jaegeuk Kim
+	Jeffrey Layton
+	Tao Ma
+	Chris Mason
+	Trond Myklebust
+	Eric Sandeen
+	Theodore Ts'o
+	Sage Weil
+
+MM:
+	Rik van Riel
+	Mel Gorman
+	Ying Han
 
 -- 
+Martin K. Petersen	Oracle Linux Engineering
