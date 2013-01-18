@@ -1,20 +1,20 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH RFC 4/9] [SCSI] Rename scsi_evt_xxx to sdev_evt_xxx and scsi_event to sdev_event
-Date: Fri, 18 Jan 2013 11:27:09 -0500
-Message-ID: <1358526434-1173-5-git-send-email-emilne@redhat.com>
+Subject: [PATCH RFC 6/9] [SCSI] Generate uevents for certain Unit Attention codes
+Date: Fri, 18 Jan 2013 11:27:11 -0500
+Message-ID: <1358526434-1173-7-git-send-email-emilne@redhat.com>
 References: <1358526434-1173-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37611 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58132 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753957Ab3ARQ1R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jan 2013 11:27:17 -0500
+	id S1754140Ab3ARQ1S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jan 2013 11:27:18 -0500
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r0IGRHfp017100
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r0IGRIjj008156
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2013 11:27:17 -0500
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2013 11:27:18 -0500
 Received: from emilne.csb (dhcp-186-175.bos.redhat.com [10.16.186.175])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r0IGRFnH026564
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2013 11:27:17 -0500
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r0IGRFnJ026564
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2013 11:27:18 -0500
 In-Reply-To: <1358526434-1173-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,174 +22,440 @@ To: linux-scsi@vger.kernel.org
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-The names of the struct and some of the functions for scsi_device
-events are too generic and do not match the comments in the source.
-Changed all of the names to begin with sdev_ in order to avoid
-naming issues and confusion with scsi_target events to be added.
+Generate a uevent on the scsi_target object when the following
+Unit Attention ASC/ASCQ code is received:
+
+    3F/0E  REPORTED LUNS DATA HAS CHANGED
+
+Generate a uevent on the scsi_device object when the following
+Unit Attention ASC/ASCQ codes are received:
+
+    2A/01  MODE PARAMETERS CHANGED
+    2A/09  CAPACITY DATA HAS CHANGED
+    38/07  THIN PROVISIONING SOFT THRESHOLD REACHED
+
+All uevent generation is aggregated and rate-limited so that any
+individual event is delivered no more than once every 2 seconds.
+
+Log kernel messages when the following Unit Attention ASC/ASCQ
+codes are received:
+
+    2A/xx  PARAMETERS CHANGED
+    3F/03  INQUIRY DATA HAS CHANGED
+    3F/xx  TARGET OPERATING CONDITIONS HAVE CHANGED
+
+Also changed the kernel log messages on existing Unit Attention
+codes, to remove text that indicates that the conditions were not
+handled in any way (since they are now handled in some way) and
+reflect the wording used in SPC-4.
+
+Also log a kernel message when the a scsi device reports a Unit
+Attention queue overflow, indicating that status has been lost.
+
+These changes are only enabled when the kernel config option
+CONFIG_SCSI_ENHANCED_UA is set.  Otherwise, the behavior is the
+same as before, including the existing kernel log messages.
+However, the detection of these conditions was moved to be earlier
+in scsi_check_sense(), because the code was not always reached.
 
 Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/scsi_lib.c    | 22 +++++++++++-----------
- drivers/scsi/scsi_priv.h   |  1 +
- drivers/scsi/scsi_scan.c   |  3 +--
- drivers/scsi/scsi_sysfs.c  |  4 ++--
- include/scsi/scsi_device.h |  6 +++---
- 5 files changed, 18 insertions(+), 18 deletions(-)
+ drivers/scsi/scsi_error.c  | 176 +++++++++++++++++++++++++++++++++++++++------
+ drivers/scsi/scsi_lib.c    |  16 +++++
+ drivers/scsi/scsi_priv.h   |   2 +
+ drivers/scsi/scsi_scan.c   |   5 ++
+ drivers/scsi/scsi_sysfs.c  |   3 +
+ include/scsi/scsi_cmnd.h   |   4 ++
+ include/scsi/scsi_device.h |  21 ++++++
+ include/scsi/scsi_eh.h     |   3 +
+ 8 files changed, 209 insertions(+), 21 deletions(-)
 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 20669836..3aa8706 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -244,6 +244,77 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 	if (sshdr.overflow)
+ 		scmd_printk(KERN_WARNING, scmd, "Sense data overflow");
+ 
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	if (sshdr.ua_queue_overflow)
++		scmd_printk(KERN_WARNING, scmd,
++			    "Unit Attention queue overflow");
++#endif
++
++	if (sshdr.sense_key == UNIT_ATTENTION) {
++		if (sshdr.asc == 0x3f && sshdr.ascq == 0x03)
++			scmd_printk(KERN_WARNING, scmd,
++				    "Inquiry data has changed");
++		else if (sshdr.asc == 0x3f && sshdr.ascq == 0x0e) {
++#ifdef CONFIG_SCSI_ENHANCED_UA
++			struct scsi_target *starget = scsi_target(sdev);
++			if (atomic_xchg(&starget->lun_change_reported, 1) == 0)
++				schedule_delayed_work(&starget->ua_dwork, 2*HZ);
++			scmd_printk(KERN_WARNING, scmd,
++				    "Reported LUNs data has changed");
++#else
++			scmd_printk(KERN_WARNING, scmd,
++				    "Warning! Received an indication that the "
++				    "LUN assignments on this target have "
++				    "changed. The Linux SCSI layer does not "
++				    "automatically remap LUN assignments.\n");
++#endif
++		} else if (sshdr.asc == 0x3f)
++#ifdef CONFIG_SCSI_ENHANCED_UA
++			scmd_printk(KERN_WARNING, scmd,
++				    "Target operating conditions have changed");
++#else
++			scmd_printk(KERN_WARNING, scmd,
++				    "Warning! Received an indication that the "
++				    "operating parameters on this target have "
++				    "changed. The Linux SCSI layer does not "
++				    "automatically adjust these parameters.\n");
++#endif
++
++		if (sshdr.asc == 0x38 && sshdr.ascq == 0x07) {
++#ifdef CONFIG_SCSI_ENHANCED_UA
++			if (atomic_xchg(&sdev->soft_threshold_reached, 1) == 0)
++				schedule_delayed_work(&sdev->ua_dwork, 2 * HZ);
++			scmd_printk(KERN_WARNING, scmd,
++				    "Thin provisioning soft threshold reached");
++#else
++			scmd_printk(KERN_WARNING, scmd,
++				    "Warning! Received an indication that the "
++				    "LUN reached a thin provisioning soft "
++				    "threshold.\n");
++#endif
++		}
++
++		if (sshdr.asc == 0x2a && sshdr.ascq == 0x01) {
++#ifdef CONFIG_SCSI_ENHANCED_UA
++			if (atomic_xchg(&sdev->mode_parameter_change_reported,
++					1) == 0)
++				schedule_delayed_work(&sdev->ua_dwork, 2 * HZ);
++#endif
++			scmd_printk(KERN_WARNING, scmd,
++				    "Mode parameters changed");
++		} else if (sshdr.asc == 0x2a && sshdr.ascq == 0x09) {
++#ifdef CONFIG_SCSI_ENHANCED_UA
++			if (atomic_xchg(&sdev->capacity_change_reported,
++					1) == 0)
++				schedule_delayed_work(&sdev->ua_dwork, 2 * HZ);
++#endif
++			scmd_printk(KERN_WARNING, scmd,
++				    "Capacity data has changed");
++		} else if (sshdr.asc == 0x2a)
++			scmd_printk(KERN_WARNING, scmd,
++				    "Parameters changed");
++	}
++
+ 	if (scsi_sense_is_deferred(&sshdr))
+ 		return NEEDS_RETRY;
+ 
+@@ -321,26 +392,6 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 		if (scmd->device->allow_restart &&
+ 		    (sshdr.asc == 0x04) && (sshdr.ascq == 0x02))
+ 			return FAILED;
+-
+-		if (sshdr.asc == 0x3f && sshdr.ascq == 0x0e)
+-			scmd_printk(KERN_WARNING, scmd,
+-				    "Warning! Received an indication that the "
+-				    "LUN assignments on this target have "
+-				    "changed. The Linux SCSI layer does not "
+-				    "automatically remap LUN assignments.\n");
+-		else if (sshdr.asc == 0x3f)
+-			scmd_printk(KERN_WARNING, scmd,
+-				    "Warning! Received an indication that the "
+-				    "operating parameters on this target have "
+-				    "changed. The Linux SCSI layer does not "
+-				    "automatically adjust these parameters.\n");
+-
+-		if (sshdr.asc == 0x38 && sshdr.ascq == 0x07)
+-			scmd_printk(KERN_WARNING, scmd,
+-				    "Warning! Received an indication that the "
+-				    "LUN reached a thin provisioning soft "
+-				    "threshold.\n");
+-
+ 		/*
+ 		 * Pass the UA upwards for a determination in the completion
+ 		 * functions.
+@@ -383,6 +434,52 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 	}
+ }
+ 
++#ifdef CONFIG_SCSI_ENHANCED_UA
++/**
++ *	sdev_ua_events - send a uevent for received unit attention events
++ *	@work: work struct for scsi_device
++ *
++ *	Dispatch aggregated events to their associated scsi_device kobjects
++ *	as uevents.
++ */
++void sdev_ua_events(struct work_struct *work)
++{
++	struct scsi_device *sdev;
++
++	sdev = container_of(work, struct scsi_device, ua_dwork.work);
++
++	if (atomic_xchg(&sdev->capacity_change_reported, 0) != 0)
++		sdev_evt_send_simple(sdev, SDEV_EVT_CAPACITY_CHANGE_REPORTED,
++				     GFP_KERNEL);
++	if (atomic_xchg(&sdev->soft_threshold_reached, 0) != 0)
++		sdev_evt_send_simple(sdev, SDEV_EVT_SOFT_THRESHOLD_REACHED,
++				     GFP_KERNEL);
++	if (atomic_xchg(&sdev->mode_parameter_change_reported, 0) != 0)
++		sdev_evt_send_simple(sdev,
++				     SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED,
++				     GFP_KERNEL);
++}
++
++/**
++ *	starget_ua_events - send a uevent for received unit attention events
++ *	@work: work struct for scsi_target
++ *
++ *	Dispatch aggregated events to their associated scsi_target kobjects
++ *	as uevents.
++ */
++void starget_ua_events(struct work_struct *work)
++{
++	struct scsi_target *starget;
++
++	starget = container_of(work, struct scsi_target, ua_dwork.work);
++
++	if (atomic_xchg(&starget->lun_change_reported, 0) != 0)
++		starget_evt_send_simple(starget,
++					STARGET_EVT_LUN_CHANGE_REPORTED,
++					GFP_KERNEL);
++}
++#endif
++
+ static void scsi_handle_queue_ramp_up(struct scsi_device *sdev)
+ {
+ 	struct scsi_host_template *sht = sdev->host->hostt;
+@@ -2042,6 +2139,10 @@ EXPORT_SYMBOL(scsi_reset_provider);
+ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+                          struct scsi_sense_hdr *sshdr)
+ {
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	int desc_pos, desc_len, desc_type, addl_len;
++#endif
++
+ 	if (!sense_buffer || !sb_len)
+ 		return 0;
+ 
+@@ -2064,8 +2165,41 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+ 			sshdr->ascq = sense_buffer[3];
+ 		if (sb_len > 4)
+ 			sshdr->overflow = ((sense_buffer[4] & 0x80) != 0);
+-		if (sb_len > 7)
++		if (sb_len > 7) {
+ 			sshdr->additional_length = sense_buffer[7];
++
++#ifdef CONFIG_SCSI_ENHANCED_UA
++			desc_pos = 8;
++			desc_len = sshdr->additional_length;
++
++			if (desc_len > (sb_len - 8))
++				desc_len = sb_len - 8;
++/*
++ * desc_len should be either 0 or >= 2 here but it might not be, in which case
++ * we can't continue because we can't extract addl_len (and there is no data)
++ */
++			while (desc_len >= 2) {
++				desc_type = sense_buffer[desc_pos];
++				addl_len = sense_buffer[desc_pos + 1];
++
++				if ((sshdr->sense_key == UNIT_ATTENTION) &&
++				    (desc_type == 0x02) && (desc_len >= 5) &&
++				    (addl_len >= 3) &&
++/*
++ * addl_len is supposed to be 0x6 per the spec but we don't actually need that
++ * here, we just need it to be long enough so we can examine [desc_pos + 4]
++ */
++				    ((sense_buffer[desc_pos + 4] & 0x01) != 0))
++					sshdr->ua_queue_overflow = 1;
++
++				if (addl_len > (desc_len - 2))
++					addl_len = desc_len - 2;
++
++				desc_pos += (2 + addl_len);
++				desc_len -= (2 + addl_len);
++			}
++#endif
++		}
+ 	} else {
+ 		/*
+ 		 * fixed format
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index eba68de..9de1186 100644
+index 056030a..22f9acc 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -2175,9 +2175,9 @@ EXPORT_SYMBOL(scsi_device_set_state);
-  *	@sdev: associated SCSI device
-  *	@evt: event to emit
-  *
-- *	Send a single uevent (scsi_event) to the associated scsi_device.
-+ *	Send a single uevent (sdev_event) to the associated scsi_device.
-  */
--static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
-+static void sdev_evt_emit(struct scsi_device *sdev, struct sdev_event *evt)
- {
- 	int idx = 0;
- 	char *envp[3];
-@@ -2206,7 +2206,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
-  *	Dispatch queued events to their associated scsi_device kobjects
-  *	as uevents.
-  */
--void scsi_evt_thread(struct work_struct *work)
-+void sdev_evt_thread(struct work_struct *work)
- {
- 	struct scsi_device *sdev;
- 	LIST_HEAD(event_list);
-@@ -2214,7 +2214,7 @@ void scsi_evt_thread(struct work_struct *work)
- 	sdev = container_of(work, struct scsi_device, event_work);
- 
- 	while (1) {
--		struct scsi_event *evt;
-+		struct sdev_event *evt;
- 		struct list_head *this, *tmp;
- 		unsigned long flags;
- 
-@@ -2226,9 +2226,9 @@ void scsi_evt_thread(struct work_struct *work)
- 			break;
- 
- 		list_for_each_safe(this, tmp, &event_list) {
--			evt = list_entry(this, struct scsi_event, node);
-+			evt = list_entry(this, struct sdev_event, node);
- 			list_del(&evt->node);
--			scsi_evt_emit(sdev, evt);
-+			sdev_evt_emit(sdev, evt);
- 			kfree(evt);
- 		}
- 	}
-@@ -2241,7 +2241,7 @@ void scsi_evt_thread(struct work_struct *work)
-  *
-  *	Assert scsi device event asynchronously.
-  */
--void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt)
-+void sdev_evt_send(struct scsi_device *sdev, struct sdev_event *evt)
- {
- 	unsigned long flags;
- 
-@@ -2267,12 +2267,12 @@ EXPORT_SYMBOL_GPL(sdev_evt_send);
-  *	@evt_type: type of event to allocate
-  *	@gfpflags: GFP flags for allocation
-  *
-- *	Allocates and returns a new scsi_event.
-+ *	Allocates and returns a new sdev_event.
-  */
--struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-+struct sdev_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- 				  gfp_t gfpflags)
- {
--	struct scsi_event *evt = kzalloc(sizeof(struct scsi_event), gfpflags);
-+	struct sdev_event *evt = kzalloc(sizeof(struct sdev_event), gfpflags);
- 	if (!evt)
- 		return NULL;
- 
-@@ -2303,7 +2303,7 @@ EXPORT_SYMBOL_GPL(sdev_evt_alloc);
- void sdev_evt_send_simple(struct scsi_device *sdev,
- 			  enum scsi_device_event evt_type, gfp_t gfpflags)
- {
--	struct scsi_event *evt = sdev_evt_alloc(evt_type, gfpflags);
-+	struct sdev_event *evt = sdev_evt_alloc(evt_type, gfpflags);
- 	if (!evt) {
- 		sdev_printk(KERN_ERR, sdev, "event %d eaten due to OOM\n",
- 			    evt_type);
+@@ -2189,6 +2189,17 @@ static void sdev_evt_emit(struct scsi_device *sdev, struct sdev_event *evt)
+ 	case SDEV_EVT_CAPACITY_CHANGE:
+ 		envp[idx++] = "SDEV_CAPACITY_CHANGE=1";
+ 		break;
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
++		envp[idx++] = "SDEV_CAPACITY_CHANGE_REPORTED=1";
++		break;
++	case SDEV_EVT_SOFT_THRESHOLD_REACHED:
++		envp[idx++] = "SDEV_SOFT_THRESHOLD_REACHED=1";
++		break;
++	case SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED:
++		envp[idx++] = "SDEV_MODE_PARAMETER_CHANGE_REPORTED=1";
++		break;
++#endif
+ 	default:
+ 		/* do nothing */
+ 		break;
+@@ -2283,6 +2294,11 @@ struct sdev_event *sdev_evt_alloc(enum scsi_device_event evt_type,
+ 	switch (evt_type) {
+ 	case SDEV_EVT_MEDIA_CHANGE:
+ 	case SDEV_EVT_CAPACITY_CHANGE:
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
++	case SDEV_EVT_SOFT_THRESHOLD_REACHED:
++	case SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED:
++#endif
+ 	default:
+ 		/* do nothing */
+ 		break;
 diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 07ce3f5..658a51a 100644
+index e271792..ddd2d31 100644
 --- a/drivers/scsi/scsi_priv.h
 +++ b/drivers/scsi/scsi_priv.h
-@@ -90,6 +90,7 @@ extern void scsi_exit_queue(void);
- struct request_queue;
- struct request;
+@@ -92,7 +92,9 @@ struct request;
  extern struct kmem_cache *scsi_sdb_cache;
-+extern void sdev_evt_thread(struct work_struct *work);
+ extern void sdev_evt_thread(struct work_struct *work);
+ #ifdef CONFIG_SCSI_ENHANCED_UA
++extern void sdev_ua_events(struct work_struct *work);
+ extern void starget_evt_thread(struct work_struct *work);
++extern void starget_ua_events(struct work_struct *work);
+ #endif
  
  /* scsi_proc.c */
- #ifdef CONFIG_SCSI_PROC_FS
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 2e5fe58..8f444aa 100644
+index 3b0e5b5..f252c14 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -244,7 +244,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	struct scsi_device *sdev;
- 	int display_failure_msg = 1, ret;
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
--	extern void scsi_evt_thread(struct work_struct *work);
- 	extern void scsi_requeue_run_queue(struct work_struct *work);
- 
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
-@@ -267,7 +266,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	INIT_LIST_HEAD(&sdev->starved_entry);
- 	INIT_LIST_HEAD(&sdev->event_list);
+@@ -268,6 +268,9 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
  	spin_lock_init(&sdev->list_lock);
--	INIT_WORK(&sdev->event_work, scsi_evt_thread);
-+	INIT_WORK(&sdev->event_work, sdev_evt_thread);
+ 	INIT_WORK(&sdev->event_work, sdev_evt_thread);
  	INIT_WORK(&sdev->requeue_work, scsi_requeue_run_queue);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	INIT_DELAYED_WORK(&sdev->ua_dwork, sdev_ua_events);
++#endif
  
  	sdev->sdev_gendev.parent = get_device(&starget->dev);
+ 	sdev->sdev_target = starget;
+@@ -429,6 +432,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	INIT_LIST_HEAD(&starget->event_list);
+ 	spin_lock_init(&starget->list_lock);
+ 	INIT_WORK(&starget->event_work, starget_evt_thread);
++	INIT_DELAYED_WORK(&starget->ua_dwork, starget_ua_events);
+ #endif
+ 	starget->state = STARGET_CREATED;
+ 	starget->scsi_level = SCSI_2;
+@@ -481,6 +485,7 @@ static void scsi_target_reap_usercontext(struct work_struct *work)
+ 	struct list_head *this, *tmp;
+ 
+ 	cancel_work_sync(&starget->event_work);
++	cancel_delayed_work_sync(&starget->ua_dwork);
+ 
+ 	list_for_each_safe(this, tmp, &starget->event_list) {
+ 		struct starget_event *evt;
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index ba7da3b..b22210d 100644
+index b22210d..aff1e29 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
-@@ -353,9 +353,9 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+@@ -351,6 +351,9 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
+ 
  	cancel_work_sync(&sdev->event_work);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	cancel_delayed_work_sync(&sdev->ua_dwork);
++#endif
  
  	list_for_each_safe(this, tmp, &sdev->event_list) {
--		struct scsi_event *evt;
-+		struct sdev_event *evt;
+ 		struct sdev_event *evt;
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 1e11985..4cb7a5e 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -103,7 +103,11 @@ struct scsi_cmnd {
+ 	struct request *request;	/* The command we are
+ 				   	   working on */
  
--		evt = list_entry(this, struct scsi_event, node);
-+		evt = list_entry(this, struct sdev_event, node);
- 		list_del(&evt->node);
- 		kfree(evt);
- 	}
++#ifdef CONFIG_SCSI_ENHANCED_UA
++#define SCSI_SENSE_BUFFERSIZE	252
++#else
+ #define SCSI_SENSE_BUFFERSIZE 	96
++#endif
+ 	unsigned char *sense_buffer;
+ 				/* obtained by REQUEST SENSE when
+ 				 * CHECK CONDITION is received on original
 diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index e4c964e..dad0a37 100644
+index 240aa6d..2935e61 100644
 --- a/include/scsi/scsi_device.h
 +++ b/include/scsi/scsi_device.h
-@@ -57,7 +57,7 @@ enum scsi_device_event {
+@@ -52,8 +52,15 @@ enum scsi_device_state {
+ enum scsi_device_event {
+ 	SDEV_EVT_MEDIA_CHANGE	= 1,	/* media has changed */
+ 	SDEV_EVT_CAPACITY_CHANGE	= 2,	/* capacity has changed */
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	SDEV_EVT_CAPACITY_CHANGE_REPORTED	= 3,	/* UA reported */
++	SDEV_EVT_SOFT_THRESHOLD_REACHED	= 4,	/* UA soft threshold reached */
++	SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED	= 5,	/* UA reported */
+ 
++	SDEV_EVT_LAST		= SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED,
++#else
+ 	SDEV_EVT_LAST		= SDEV_EVT_CAPACITY_CHANGE,
++#endif
  	SDEV_EVT_MAXBITS	= SDEV_EVT_LAST + 1
  };
  
--struct scsi_event {
-+struct sdev_event {
- 	enum scsi_device_event	evt_type;
- 	struct list_head	node;
+@@ -153,6 +160,16 @@ struct scsi_device {
+ 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
+ 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	atomic_t capacity_change_reported;	/* Device has reported that
++						   capacity has changed */
++	atomic_t soft_threshold_reached;	/* Device has reported that
++						   the thin provisioning soft
++						   threshold has been reached */
++	atomic_t mode_parameter_change_reported;/* Device has reported that
++						   mode parameter has changed */
++	struct delayed_work ua_dwork;
++#endif
  
-@@ -360,9 +360,9 @@ extern int scsi_get_vpd_page(struct scsi_device *, u8 page, unsigned char *buf,
- 			     int buf_len);
- extern int scsi_device_set_state(struct scsi_device *sdev,
- 				 enum scsi_device_state state);
--extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-+extern struct sdev_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- 					  gfp_t gfpflags);
--extern void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt);
-+extern void sdev_evt_send(struct scsi_device *sdev, struct sdev_event *evt);
- extern void sdev_evt_send_simple(struct scsi_device *sdev,
- 			  enum scsi_device_event evt_type, gfp_t gfpflags);
- extern int scsi_device_quiesce(struct scsi_device *sdev);
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
+@@ -271,6 +288,10 @@ struct scsi_target {
+ 	unsigned int		no_report_luns:1;	/* Don't use
+ 						 * REPORT LUNS for scanning. */
+ #ifdef CONFIG_SCSI_ENHANCED_UA
++	atomic_t	lun_change_reported;	/* Target has reported that
++						   LUNs have changed */
++	struct delayed_work ua_dwork;
++
+ 	DECLARE_BITMAP(supported_events, STARGET_EVT_MAXBITS);
+ 	struct list_head	event_list;	/* asserted events */
+ 	struct work_struct	event_work;
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index ddf58cf..dc6dcfe 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -26,6 +26,9 @@ struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
+ 	u8 byte6;
+ 	u8 additional_length;	/* always 0 for fixed sense format */
+ 	unsigned int overflow:1;	/* sense data overflow */
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	unsigned int ua_queue_overflow:1;	/* UA info lost by device */
++#endif
+ };
+ 
+ static inline int scsi_sense_valid(struct scsi_sense_hdr *sshdr)
 -- 
 1.7.11.7
 
