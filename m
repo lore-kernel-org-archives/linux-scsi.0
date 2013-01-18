@@ -1,43 +1,30 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
-Date: Fri, 18 Jan 2013 10:24:28 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1301181017070.1988-100000@iolanthe.rowland.org>
-References: <20130118074240.GA6861@aaronlu.sh.intel.com>
+Subject: Re: [PATCH v7 3/4] block: implement runtime pm strategy
+Date: Fri, 18 Jan 2013 10:26:38 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1301181024340.1988-100000@iolanthe.rowland.org>
+References: <20130118082720.GA12599@aaronlu.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20130118074240.GA6861@aaronlu.sh.intel.com>
+In-Reply-To: <20130118082720.GA12599@aaronlu.sh.intel.com>
 Sender: linux-pm-owner@vger.kernel.org
 To: Aaron Lu <aaron.lu@intel.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On Fri, 18 Jan 2013, Aaron Lu wrote:
 
-> > Aaron, have you checked whether this patch works okay when you play a
-> > track on an audio-only CD on the computer?  The block interface looks 
-> > okay but I'm not sure about the cdrom_device interface.
+> > Either you have to make sure the q->nr_pending is always correct, even 
+> > when runtime PM isn't being used, or else the caller has to make sure 
+> > that no I/O takes place before blk_pm_runtime_init is called.
 > 
-> Just verified it works OK with the whole patchset applied using 2 audio
-> CDs.
-> 
-> After the ODD has been put into zero power state, insert an audio cd.
-> ODD will be resumed, gvfs will automatically mount the disc, and a
-> dialog titled "Audio Disc" asks me what to do. Press OK, the rhythmbox
-> application will get started. Press the Play button of rhythmbox, songs
-> will start to play, and runtime_usage is 2. Eject the disc, the ODD will
-> be put to zero power state some time later.
+> I think we can say:
+> blk_pm_runtime_init can't be called after any requests have been
+> submitted but not finished.
+> Sounds more accurate?
 
-What happens if you use a non-ZP drive?
-
-What happens if you're not running a desktop graphical environment, so
-gvfs doesn't mount the disc?  Basically, I'm worried that the drive may
-remain suspended after sr_open() returns.
-
-What happens if you use a program other than rhythmbox?  There are (or
-used to be) programs which would issue the PLAY AUDIO command and then
-exit.  The drive would continue playing even while the device file was
-closed.  Do we want to drop support for that kind of behavior?
+Okay.  I think you can add (in parentheses) that in most cases drivers
+should call the routine before any I/O has taken place.
 
 Alan Stern
 
