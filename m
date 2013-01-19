@@ -1,38 +1,42 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] target: change sprintf to snprintf
-Date: Sat, 19 Jan 2013 00:35:14 +0300
-Message-ID: <20130118213514.GO16282@mwanda>
-References: <20130118130512.GA1634@elgon.mountain>
- <1358537812.18551.446.camel@haakon2.linux-iscsi.org>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 3/4] block: implement runtime pm strategy
+Date: Sat, 19 Jan 2013 14:24:56 +0800
+Message-ID: <50FA3C38.5030308@intel.com>
+References: <Pine.LNX.4.44L0.1301181024340.1988-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1358537812.18551.446.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1301181024340.1988-100000@iolanthe.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jan 18, 2013 at 11:36:52AM -0800, Nicholas A. Bellinger wrote:
-> On Fri, 2013-01-18 at 16:05 +0300, Dan Carpenter wrote:
-> > "buf" is 128 characters and "vpd->device_identifier" is 256.  It makes
-> > the static checkers complain.
-> > 
-> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > ---
-> 
-> Applied to target-pending/for-next.
-> 
-> > Probably we should just raise VPD_TMP_BUF_SIZE to 300.
-> 
-> Also bumping up VPD_TMP_BUF_SIZE to 254 to match the usage with
-> INQUIRY_VPD_DEVICE_IDENTIFIER_LEN sized vpd->device_identifier[] below.
-> 
+On 01/18/2013 11:26 PM, Alan Stern wrote:
+> On Fri, 18 Jan 2013, Aaron Lu wrote:
+>
+>>> Either you have to make sure the q->nr_pending is always correct, even
+>>> when runtime PM isn't being used, or else the caller has to make sure
+>>> that no I/O takes place before blk_pm_runtime_init is called.
+>>
+>> I think we can say:
+>> blk_pm_runtime_init can't be called after any requests have been
+>> submitted but not finished.
+>> Sounds more accurate?
+>
+> Okay.  I think you can add (in parentheses) that in most cases drivers
+> should call the routine before any I/O has taken place.
 
-It could still go over 254 because it's "T10 VPD Binary Device
-Identifier: " plus INQUIRY_VPD_DEVICE_IDENTIFIER_LEN.  But I agree
-that probably 254 is enough space.
+The reason I put it that way is, in patch 4, the blk_pm_runtime_init is
+called after a request is executed(scsi_probe_lun). I do not want people
+get confused by the comments for blk_pm_runtime_init and the example
+code in patch 4 where we didn't follow it :-)
 
-regards,
-dan carpenter
+Considering ODD's use case, I was thinking of moving the
+blk_pm_runtime_init call to sd.c, as sr will not use request based auto
+suspend. Probably right before we decrease usage count for the device in
+sd_probe_async. What do you think?
+
+Thanks,
+Aaron
