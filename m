@@ -1,88 +1,154 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 07/10] qla4xxx: Added support for force firmware dump
-Date: Sun, 20 Jan 2013 23:51:02 -0500
-Message-ID: <1358743865-435-8-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 03/10] qla4xxx: Quiesce driver activities while loopback
+Date: Sun, 20 Jan 2013 23:50:58 -0500
+Message-ID: <1358743865-435-4-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1358743865-435-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:34123 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:57850 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1750915Ab3AUFLk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jan 2013 00:11:40 -0500
+	id S1750848Ab3AUFLj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jan 2013 00:11:39 -0500
 In-Reply-To: <1358743865-435-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Nilesh Javali <nilesh.javali@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Nilesh Javali <nilesh.javali@qlogic.com>
 
-This patch force driver to collect firmware dump using following command:-
-"echo 2 > /sys/class/scsi_host/hostX/device/fw_dump"
+Quiesce all different activities performed by driver upon the link events
+while loopback diagnostics is in progress.
 
+Signed-off-by: Nilesh Javali <nilesh.javali@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_83xx.c |    2 +-
- drivers/scsi/qla4xxx/ql4_attr.c |   16 +++++++++++-----
- drivers/scsi/qla4xxx/ql4_glbl.h |    1 +
- 3 files changed, 13 insertions(+), 6 deletions(-)
+ drivers/scsi/qla4xxx/ql4_def.h |    4 +++-
+ drivers/scsi/qla4xxx/ql4_fw.h  |    4 ++++
+ drivers/scsi/qla4xxx/ql4_isr.c |   36 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla4xxx/ql4_os.c  |    4 +++-
+ 4 files changed, 45 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
-index 4177383..5d8fe4f 100644
---- a/drivers/scsi/qla4xxx/ql4_83xx.c
-+++ b/drivers/scsi/qla4xxx/ql4_83xx.c
-@@ -538,7 +538,7 @@ struct device_info {
- 	int port_num;
- };
- 
--static int qla4_83xx_can_perform_reset(struct scsi_qla_host *ha)
-+int qla4_83xx_can_perform_reset(struct scsi_qla_host *ha)
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index c71a371..8f41937 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -501,6 +501,7 @@ struct scsi_qla_host {
+ #define AF_INTERRUPTS_ON		6 /* 0x00000040 */
+ #define AF_GET_CRASH_RECORD		7 /* 0x00000080 */
+ #define AF_LINK_UP			8 /* 0x00000100 */
++#define AF_LOOPBACK			9 /* 0x00000200 */
+ #define AF_IRQ_ATTACHED			10 /* 0x00000400 */
+ #define AF_DISABLE_ACB_COMPLETE		11 /* 0x00000800 */
+ #define AF_HA_REMOVAL			12 /* 0x00001000 */
+@@ -840,7 +841,8 @@ static inline int is_aer_supported(struct scsi_qla_host *ha)
+ static inline int adapter_up(struct scsi_qla_host *ha)
  {
- 	uint32_t drv_active;
- 	uint32_t dev_part, dev_part1, dev_part2;
-diff --git a/drivers/scsi/qla4xxx/ql4_attr.c b/drivers/scsi/qla4xxx/ql4_attr.c
-index 76819b7..19ee55a 100644
---- a/drivers/scsi/qla4xxx/ql4_attr.c
-+++ b/drivers/scsi/qla4xxx/ql4_attr.c
-@@ -74,16 +74,22 @@ qla4_8xxx_sysfs_write_fw_dump(struct file *filep, struct kobject *kobj,
- 		}
- 		break;
- 	case 2:
--		/* Reset HBA */
-+		/* Reset HBA and collect FW dump */
- 		ha->isp_ops->idc_lock(ha);
- 		dev_state = qla4_8xxx_rd_direct(ha, QLA8XXX_CRB_DEV_STATE);
- 		if (dev_state == QLA8XXX_DEV_READY) {
--			ql4_printk(KERN_INFO, ha,
--				   "%s: Setting Need reset, reset_owner is 0x%x.\n",
--				   __func__, ha->func_num);
-+			ql4_printk(KERN_INFO, ha, "%s: Setting Need reset\n",
-+				   __func__);
- 			qla4_8xxx_wr_direct(ha, QLA8XXX_CRB_DEV_STATE,
- 					    QLA8XXX_DEV_NEED_RESET);
--			set_bit(AF_8XXX_RST_OWNER, &ha->flags);
-+			if (is_qla8022(ha) ||
-+			    (is_qla8032(ha) &&
-+			     qla4_83xx_can_perform_reset(ha))) {
-+				set_bit(AF_8XXX_RST_OWNER, &ha->flags);
-+				set_bit(AF_FW_RECOVERY, &ha->flags);
-+				ql4_printk(KERN_INFO, ha, "%s: Reset owner is 0x%x\n",
-+					   __func__, ha->func_num);
-+			}
- 		} else
- 			ql4_printk(KERN_INFO, ha,
- 				   "%s: Reset not performed as device state is 0x%x\n",
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index 7a2a35a..982293e 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -260,6 +260,7 @@ int qla4_8xxx_update_idc_reg(struct scsi_qla_host *ha);
- int qla4_83xx_post_idc_ack(struct scsi_qla_host *ha);
- void qla4_83xx_disable_pause(struct scsi_qla_host *ha);
- void qla4_83xx_enable_mbox_intrs(struct scsi_qla_host *ha);
-+int qla4_83xx_can_perform_reset(struct scsi_qla_host *ha);
+ 	return (test_bit(AF_ONLINE, &ha->flags) != 0) &&
+-		(test_bit(AF_LINK_UP, &ha->flags) != 0);
++	       (test_bit(AF_LINK_UP, &ha->flags) != 0) &&
++	       (!test_bit(AF_LOOPBACK, &ha->flags));
+ }
  
- extern int ql4xextended_error_logging;
- extern int ql4xdontresethba;
+ static inline struct scsi_qla_host* to_qla_host(struct Scsi_Host *shost)
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index 6ee18a9..ad9d2e2 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -522,6 +522,10 @@ struct qla_flt_region {
+ #define FLASH_OPT_COMMIT	2
+ #define FLASH_OPT_RMW_COMMIT	3
+ 
++/* Loopback type */
++#define ENABLE_INTERNAL_LOOPBACK	0x04
++#define ENABLE_EXTERNAL_LOOPBACK	0x08
++
+ /*************************************************************************/
+ 
+ /* Host Adapter Initialization Control Block (from host) */
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index 81909d9..1b83dc2 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -582,6 +582,33 @@ exit_prq_error:
+ }
+ 
+ /**
++ * qla4_83xx_loopback_in_progress: Is loopback in progress?
++ * @ha: Pointer to host adapter structure.
++ * @ret: 1 = loopback in progress, 0 = loopback not in progress
++ **/
++static int qla4_83xx_loopback_in_progress(struct scsi_qla_host *ha)
++{
++	int rval = 1;
++
++	if (is_qla8032(ha)) {
++		if ((ha->idc_info.info2 & ENABLE_INTERNAL_LOOPBACK) ||
++		    (ha->idc_info.info2 & ENABLE_EXTERNAL_LOOPBACK)) {
++			DEBUG2(ql4_printk(KERN_INFO, ha,
++					  "%s: Loopback diagnostics in progress\n",
++					  __func__));
++			rval = 1;
++		} else {
++			DEBUG2(ql4_printk(KERN_INFO, ha,
++					  "%s: Loopback diagnostics not in progress\n",
++					  __func__));
++			rval = 0;
++		}
++	}
++
++	return rval;
++}
++
++/**
+  * qla4xxx_isr_decode_mailbox - decodes mailbox status
+  * @ha: Pointer to host adapter structure.
+  * @mailbox_status: Mailbox status.
+@@ -676,8 +703,10 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
+ 
+ 		case MBOX_ASTS_LINK_DOWN:
+ 			clear_bit(AF_LINK_UP, &ha->flags);
+-			if (test_bit(AF_INIT_DONE, &ha->flags))
++			if (test_bit(AF_INIT_DONE, &ha->flags)) {
+ 				set_bit(DPC_LINK_CHANGED, &ha->dpc_flags);
++				qla4xxx_wake_dpc(ha);
++			}
+ 
+ 			ql4_printk(KERN_INFO, ha, "%s: LINK DOWN\n", __func__);
+ 			qla4xxx_post_aen_work(ha, ISCSI_EVENT_LINKDOWN,
+@@ -840,6 +869,11 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
+ 				DEBUG2(ql4_printk(KERN_INFO, ha,
+ 						  "scsi:%ld: AEN %04x IDC Complete notification\n",
+ 						  ha->host_no, mbox_sts[0]));
++
++				if (qla4_83xx_loopback_in_progress(ha))
++					set_bit(AF_LOOPBACK, &ha->flags);
++				else
++					clear_bit(AF_LOOPBACK, &ha->flags);
+ 			}
+ 			break;
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 60526bb..1df1387 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -2242,6 +2242,7 @@ static int qla4xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	    test_bit(DPC_HA_NEED_QUIESCENT, &ha->dpc_flags) ||
+ 	    !test_bit(AF_ONLINE, &ha->flags) ||
+ 	    !test_bit(AF_LINK_UP, &ha->flags) ||
++	    test_bit(AF_LOOPBACK, &ha->flags) ||
+ 	    test_bit(DPC_RESET_HA_FW_CONTEXT, &ha->dpc_flags))
+ 		goto qc_host_busy;
+ 
+@@ -3480,7 +3481,8 @@ dpc_post_reset_ha:
+ 	}
+ 
+ 	/* ---- link change? --- */
+-	if (test_and_clear_bit(DPC_LINK_CHANGED, &ha->dpc_flags)) {
++	if (!test_bit(AF_LOOPBACK, &ha->flags) &&
++	    test_and_clear_bit(DPC_LINK_CHANGED, &ha->dpc_flags)) {
+ 		if (!test_bit(AF_LINK_UP, &ha->flags)) {
+ 			/* ---- link down? --- */
+ 			qla4xxx_mark_all_devices_missing(ha);
 -- 
 1.7.8.GIT
 
