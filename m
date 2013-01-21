@@ -1,67 +1,38 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [PATCH 5/15] drivers/scsi/bnx2fc/bnx2fc_io.c: adjust
- duplicate test
-Date: Mon, 21 Jan 2013 15:05:26 -0800
-Message-ID: <50FDC9B6.3040908@broadcom.com>
-References: <1358773378-4700-1-git-send-email-Julia.Lawall@lip6.fr>
- <1358773378-4700-6-git-send-email-Julia.Lawall@lip6.fr>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 52911] 3w-9xxx BUG on insmod with 9650-4LPML and Quanta S45 MB
+Date: Mon, 21 Jan 2013 23:14:52 +0000 (UTC)
+Message-ID: <20130121231452.8101F11FE8D@bugzilla.kernel.org>
+References: <bug-52911-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1358773378-4700-6-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:42802 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751620Ab3AUXO4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jan 2013 18:14:56 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9A32C20318
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jan 2013 23:14:54 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id B87C9202F7
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jan 2013 23:14:53 +0000 (UTC)
+In-Reply-To: <bug-52911-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 01/21/2013 05:02 AM, Julia Lawall wrote:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> Delete successive tests to the same location.  The code tested the result
-> of a previous allocation, that itself was already tested.  It is changed to
-> test the result of the most recent allocation.
->
-> A simplified version of the semantic match that finds this problem is as
-> follows: (http://coccinelle.lip6.fr/)
->
-> // <smpl>
-> @s exists@
-> local idexpression y;
-> expression x,e;
-> @@
->
-> *if ( \(x == NULL\|IS_ERR(x)\|y != 0\) )
->   { ... when forall
->     return ...; }
-> ... when != \(y = e\|y += e\|y -= e\|y |= e\|y &= e\|y++\|y--\|&y\)
->      when != \(XT_GETPAGE(...,y)\|WMI_CMD_BUF(...)\)
-> *if ( \(x == NULL\|IS_ERR(x)\|y != 0\) )
->   { ... when forall
->     return ...; }
-> // </smpl>
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> ---
->   drivers/scsi/bnx2fc/bnx2fc_io.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> index 8d4626c..8bea53d 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> @@ -654,7 +654,7 @@ int bnx2fc_init_mp_req(struct bnx2fc_cmd *io_req)
->   	mp_req->mp_resp_bd = dma_alloc_coherent(&hba->pcidev->dev, sz,
->   						 &mp_req->mp_resp_bd_dma,
->   						 GFP_ATOMIC);
-> -	if (!mp_req->mp_req_bd) {
-> +	if (!mp_req->mp_resp_bd) {
->   		printk(KERN_ERR PFX "unable to alloc MP resp bd\n");
->   		bnx2fc_free_mp_resc(io_req);
->   		return FAILED;
->
->
-Acked-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=52911
+
+
+
+
+
+--- Comment #1 from james@warp2biz.com  2013-01-21 23:14:52 ---
+Created an attachment (id=91621)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=91621)
+More readable Kernel BUG output
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
