@@ -1,86 +1,89 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RFC 1/9] [SCSI] Detect overflow of sense data buffer
-Date: Mon, 21 Jan 2013 08:58:40 +0000
-Message-ID: <1358758720.3975.4.camel@dabdike.int.hansenpartnership.com>
-References: <1358526434-1173-1-git-send-email-emilne@redhat.com>
-	  <1358526434-1173-2-git-send-email-emilne@redhat.com>
-	 <1358527592.2345.35.camel@dabdike.int.hansenpartnership.com>
-	 <50FCEDB4.8080801@suse.de>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
+Date: Mon, 21 Jan 2013 17:11:04 +0800
+Message-ID: <20130121091104.GA11010@aaronlu.sh.intel.com>
+References: <50FA5F67.4080102@intel.com>
+ <Pine.LNX.4.44L0.1301191312050.13032-100000@netrider.rowland.org>
+ <CAGRGNgXMthaFSvj4aJ8KCZb2R70rvohh_kHPu2JY1tV_9veriQ@mail.gmail.com>
+ <20130121081417.GB6904@aaronlu.sh.intel.com>
+ <CAGRGNgWc2QTnY==NdMeZpw-7L3WwQfBFOwm=UZZ3Jcz+dp=h3g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47802 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752408Ab3AUI6n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jan 2013 03:58:43 -0500
-In-Reply-To: <50FCEDB4.8080801@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGRGNgWc2QTnY==NdMeZpw-7L3WwQfBFOwm=UZZ3Jcz+dp=h3g@mail.gmail.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-On Mon, 2013-01-21 at 08:26 +0100, Hannes Reinecke wrote:
-> On 01/18/2013 05:46 PM, James Bottomley wrote:
-> > On Fri, 2013-01-18 at 11:27 -0500, Ewan D. Milne wrote:
-> >> --- a/drivers/scsi/scsi_error.c
-> >> +++ b/drivers/scsi/scsi_error.c
-> >> @@ -241,6 +241,9 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
-> >>   	if (! scsi_command_normalize_sense(scmd, &sshdr))
-> >>   		return FAILED;	/* no valid sense data */
+Hi Julian,
+
+On Mon, Jan 21, 2013 at 07:55:20PM +1100, Julian Calaby wrote:
+> Hi Aaron,
+> 
+> On Mon, Jan 21, 2013 at 7:14 PM, Aaron Lu <aaron.lu@intel.com> wrote:
+> > On Mon, Jan 21, 2013 at 02:31:50PM +1100, Julian Calaby wrote:
+> >> Hi Alan,
 > >>
-> >> +	if (sshdr.overflow)
-> >> +		scmd_printk(KERN_WARNING, scmd, "Sense data overflow");
-> >> +
-> >>   	if (scsi_sense_is_deferred(&sshdr))
-> >>   		return NEEDS_RETRY;
+> >> On Sun, Jan 20, 2013 at 5:46 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> >> > On Sat, 19 Jan 2013, Aaron Lu wrote:
+> >> >> > closed.  Do we want to drop support for that kind of behavior?
+> >> >>
+> >> >> I don't think we should drop such support.
+> >> >> And the safest way to avoid such break is we refine the suspend
+> >> >> condition for ODD, and using what ZPODD defined condition isn't that
+> >> >> bad to me:
+> >> >> - for tray type, no media inside and tray close;
+> >> >> - for slot type, no media inside.
+> >> >> While whether tray is closed or not may not be that important, but at
+> >> >> least we should make sure there is no media inside.
+> >> >>
+> >> >> Thoughts?
+> >> >
+> >> > That sounds reasonable to me, at least as a first step.  If people want
+> >> > their CD drive to suspend, they can eject the disc.
 > >>
-> >> @@ -2059,14 +2062,18 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
-> >>   			sshdr->asc = sense_buffer[2];
-> >>   		if (sb_len > 3)
-> >>   			sshdr->ascq = sense_buffer[3];
-> >> +		if (sb_len > 4)
-> >> +			sshdr->overflow = ((sense_buffer[4] & 0x80) != 0);
-> >>   		if (sb_len > 7)
-> >>   			sshdr->additional_length = sense_buffer[7];
-> >>   	} else {
-> >>   		/*
-> >>   		 * fixed format
-> >>   		 */
-> >> -		if (sb_len > 2)
-> >> +		if (sb_len > 2) {
-> >> +			sshdr->overflow = ((sense_buffer[2] & 0x10) != 0);
-> >>   			sshdr->sense_key = (sense_buffer[2] & 0xf);
-> >> +		}
-> >>   		if (sb_len > 7) {
-> >>   			sb_len = (sb_len < (sense_buffer[7] + 8)) ?
-> >>   					 sb_len : (sense_buffer[7] + 8);
+> >> Stupid question: does the kernel know if a CD has audio tracks?
 > >
-> > This isn't the right way to do it:  The overflow bit is a recent
-> > introduction in SPC-4.  The correct way to tell if we have an overflow
-> > or not is to look at the additional sense length and compare it to the
-> > allocation length; this will work for everything.
+> > Yes, cdrom module knows that, but the block driver(e.g. sr) doesn't.
+> > See cdrom_count_tracks in cdrom.c.
 > >
-> > I'm not even convinced that overflow is important: for a lot of the
-> > sense probes, we deliberately induce overflows by giving the request
-> > sense command a short buffer.  Printing a warning in scsi_check_sense
-> > will get very noisy very fast.
-> >
-> And indeed I would rather prefer to have it the other way round;
-> we're using a fixed sense_buffer within the SCSI stack, which might
-> not be large enough to hold all sense data.
-> So I would prefer to have an indicator on whether _the internal_ 
-> sense buffer overflowed; this would even give us some valid use-case 
-> now.
-> Plus we can add the sense buffer overflow bit to that if required.
+> > May I know if you have an use case that you want to runtime suspend the
+> > cd drive with a disc inside? That would help us to refine the runtime
+> > suspend condition.
+> 
+> The discussion seemed to be restricting when the drive would be
+> suspended to only occasions where the drive is empty and, where
+> applicable, closed. I'll admit that I hadn't followed the discussion
+> enough to know what the restrictions were before that, but this seemed
+> to be a further restriction, therefore I assumed that you were
+> originally planning to be able to suspend the drive with a disk
+> inside.
 
-Probably the most useful field to add would be total_length.  That tells
-you immediately (since you know the size of the buffer you sent in)
-whether there's an overflow and whether you care.  Just knowing there's
-an overflow isn't much help because you still don't know whether it was
-significant or not.
+Right, that was the original implementation to allow the cd drive to be
+runtime suspended even with a disc inside.
 
-James
+> 
+> I asked my question in the hope of someone setting up the compromise:
+> "we could suspend the drive only if the drive is empty and closed, or
+> a data disc is inside and nobody's using it."
+> 
+> Personally, providing nobody's using it, and relevant state is stored,
+> I can't see any reason why you can't suspend a drive with a disc in
+> it.
 
+It is not easy for the OS to tell if the drive is being used or not
+sometimes :-)
+
+Alan has reminded me it is possible for an app to open the block device
+file(/dev/sr0), issue a command(play audio), then close the device file.
+>From the OS' point of view, we think nobody is using it. But actually,
+the drive is playing cd for the user, so we can't suspend the device.
+
+I think we can always refine the condition check, but as a first step, I
+want to be safe and avoid breaking existing functionalities.
+
+Thanks,
+Aaron
 
