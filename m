@@ -1,46 +1,34 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v13 8/9] libata: do not suspend port if normal ODD is
- attached
-Date: Tue, 22 Jan 2013 19:27:46 +0800
-Message-ID: <20130122112746.GA26380@aaronlu.sh.intel.com>
-References: <1358241665-2156-1-git-send-email-aaron.lu@intel.com>
- <1358241665-2156-9-git-send-email-aaron.lu@intel.com>
- <50FDA84F.8030204@pobox.com>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: Re: Fwd: 2TB USB hard drive for backing up
+Date: Tue, 22 Jan 2013 12:49:52 +0100
+Message-ID: <2472909.UxI1EnLDV4@linux-5eaq.site>
+References: <jmunm9$90r$2@speranza.aioe.org> <CAGZeNoeEoecpjvuP9uwphostOcrrAJNerxYGUtjyaMEBn04jxQ@mail.gmail.com> <1358852735.2387.34.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <50FDA84F.8030204@pobox.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:45317 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753331Ab3AVLtx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jan 2013 06:49:53 -0500
+In-Reply-To: <1358852735.2387.34.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Ellwood Blues <elwood.blue@gmail.com>, linux-efi@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@lists.one-eyed-alien.net>
 
-On Mon, Jan 21, 2013 at 03:42:55PM -0500, Jeff Garzik wrote:
-> On 01/15/2013 04:21 AM, Aaron Lu wrote:
-> >For ODDs, the upper layer will poll for media change every few
-> >seconds, which will make it enter and leave suspend state very
-> >often. And as each suspend will also cause a hard/soft reset,
-> >the gain of runtime suspend is very little while the ODD may
-> >malfunction after constantly being reset. So the idle callback
-> >here will not proceed to suspend if a non-ZPODD capable ODD is
-> >attached to the port.
-> >
-> >Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-> >Acked-by: Tejun Heo <tj@kernel.org>
-> >---
-> >  drivers/ata/libata-core.c | 19 +++++++++++++++++++
-> >  1 file changed, 19 insertions(+)
+On Tuesday 22 January 2013 11:05:35 James Bottomley wrote:
+> > May  3 18:19:06 relampago3 kernel: [ 3948.472796] sd 7:0:0:0: [sdf]
+> > 1565565872 512-byte logical blocks: (801 GB/746 GiB)
 > 
-> applied patches #2-6 and #8
+> This looks like a wrap around of your actual size.  This appears to
+> indicate the device isn't replying correctly to READ CAPACITY.  The
+> conventional return from READ CAPACITY should be -1 which would trigger
+> us to retry with READ CAPACITY(16).
 
-Thanks!
+What can we do? The answer the device is giving is quite ordinary.
+Do we need another quirk and an associated flag?
 
-Now that patch 1 has ack from Alan Stern(and thus James), and consider
-the smatch warning of patch #3, I can either send out the remaining 3
-patches(#1, #7 and #9) together with a small fix patch for the smatch
-warning or I can re-send the whole patchset. Just let me know which way
-you prefer, thanks.
-
--Aaron
+	Regards
+		Oliver
 
