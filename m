@@ -1,133 +1,239 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH RFC 1/9] [SCSI] Detect overflow of sense data buffer
-Date: Wed, 23 Jan 2013 16:21:07 -0500
-Message-ID: <1358976067.4420.381.camel@localhost.localdomain>
-References: <1358526434-1173-1-git-send-email-emilne@redhat.com>
-	 <1358526434-1173-2-git-send-email-emilne@redhat.com>
-	 <1358527592.2345.35.camel@dabdike.int.hansenpartnership.com>
-	 <1358867323.4420.315.camel@localhost.localdomain>
-	 <1358946385.2584.56.camel@dabdike.int.hansenpartnership.com>
-Reply-To: emilne@redhat.com
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: [PATCH] mpt2sas: prevent double free on error path
+Date: Wed, 23 Jan 2013 16:20:33 -0500
+Message-ID: <20130123212033.GA15800@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62305 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899Ab3AWVVR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Jan 2013 16:21:17 -0500
-In-Reply-To: <1358946385.2584.56.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2013-01-23 at 13:06 +0000, James Bottomley wrote:
-> On Tue, 2013-01-22 at 10:08 -0500, Ewan Milne wrote:
-> > On Fri, 2013-01-18 at 16:46 +0000, James Bottomley wrote:
-> > > On Fri, 2013-01-18 at 11:27 -0500, Ewan D. Milne wrote:
-> > > > --- a/drivers/scsi/scsi_error.c
-> > > > +++ b/drivers/scsi/scsi_error.c
-> > > > @@ -241,6 +241,9 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
-> > > >  	if (! scsi_command_normalize_sense(scmd, &sshdr))
-> > > >  		return FAILED;	/* no valid sense data */
-> > > >  
-> > > > +	if (sshdr.overflow)
-> > > > +		scmd_printk(KERN_WARNING, scmd, "Sense data overflow");
-> > > > +
-> > > >  	if (scsi_sense_is_deferred(&sshdr))
-> > > >  		return NEEDS_RETRY;
-> > > >  
-> > > > @@ -2059,14 +2062,18 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
-> > > >  			sshdr->asc = sense_buffer[2];
-> > > >  		if (sb_len > 3)
-> > > >  			sshdr->ascq = sense_buffer[3];
-> > > > +		if (sb_len > 4)
-> > > > +			sshdr->overflow = ((sense_buffer[4] & 0x80) != 0);
-> > > >  		if (sb_len > 7)
-> > > >  			sshdr->additional_length = sense_buffer[7];
-> > > >  	} else {
-> > > >  		/*
-> > > >  		 * fixed format
-> > > >  		 */
-> > > > -		if (sb_len > 2)
-> > > > +		if (sb_len > 2) {
-> > > > +			sshdr->overflow = ((sense_buffer[2] & 0x10) != 0);
-> > > >  			sshdr->sense_key = (sense_buffer[2] & 0xf);
-> > > > +		}
-> > > >  		if (sb_len > 7) {
-> > > >  			sb_len = (sb_len < (sense_buffer[7] + 8)) ?
-> > > >  					 sb_len : (sense_buffer[7] + 8);
-> > > 
-> > > This isn't the right way to do it:  The overflow bit is a recent
-> > > introduction in SPC-4.  The correct way to tell if we have an overflow
-> > > or not is to look at the additional sense length and compare it to the
-> > > allocation length; this will work for everything.
-> > 
-> > Unfortunately, I am not sure that the allocation length that was sent
-> > to the device is always available.
-> 
-> Well, yes it is, we just don't store it.  scsi_normalize_sense() takes
-> as input the length of the sense buffer we gave it.  If we want an
-> overflow indication, we can certainly compare that against the
-> additional length (assuming we have enough bytes to get the additional
-> length).
-> 
-> >   I will look into this more closely
-> > but it appeared to me that e.g. FC drivers like qla2xxx get the sense
-> > data automatically from the HBA firmware.  In the case of that driver
-> > the host sense buffer size looks like it is hard-coded to 32 bytes,
-> > for all I know the firmware might only asking for 18 bytes.
-> 
-> You mean for their ACA emulation in the transport?  They have to be
-> picking up at least the standard minimum in order not to be in
-> violation, surely?
+I noticed this one when list_del was called with poisoned list
+pointers, but the real problem is a double-free (and a use-after-free
+just before that).
 
-I'm sure that's the case, I just don't know if the minimum is big
-enough.  See below.
+Both _scsih_probe_boot_devices() and _scsih_sas_device_add() put the
+sas_device onto a list, thereby giving up control.  Next they call
+mpt2sas_transport_port_add() and will list_del and free the object on
+errors.  If some other function already did the list_del and free, it
+will happen again.
 
-> 
-> > Of course, for a normal REQUEST SENSE command where the allocation
-> > length is in the CDB, it would indeed be easy to add a check against
-> > the additional sense length.
-> > 
-> > > 
-> > > I'm not even convinced that overflow is important: for a lot of the
-> > > sense probes, we deliberately induce overflows by giving the request
-> > > sense command a short buffer.  Printing a warning in scsi_check_sense
-> > > will get very noisy very fast.
-> > 
-> > That would indeed be a problem.  I didn't see this behavior when testing
-> > the changes but I'll need to investigate this further.
-> > 
-> > The purpose of detecting the sense data overflow was to provide some
-> > visibility that a device is returning a large amount of sense data that
-> > is currently being silently ignored.  In the case of descriptor format
-> > sense data, it is possible that a descriptor we want to examine is
-> > located after one or more other descriptors, and we might not get it
-> > at all if the buffer isn't large enough.
-> 
-> But why should we care?  A lot of the time it will be spewing
-> descriptors with irrelevant FRU information.  I really think printing
-> there's been an overflow isn't a good idea.  I'm not sure there's much
-> use in the sshdr indicating there's been one.  It *may* be useful to
-> indicate how big the allocation length should have been, but I'm not
-> even convinced of that, since the data is now lost.
+This patch adds reference counting to prevent the double free.  One
+reference count goes to the caller of mpt2sas_transport_port_add(), the
+second to the list.  Whoever removes the object from the list gets to
+drop one reference count.  _scsih_probe_boot_devices() and
+_scsih_sas_device_add() get a second reference count to ensure the
+object is not freed while they are still accessing it.
 
-My thinking was that it was important to log the fact that the device
-had reported a Unit Attention queue overflow, which is reported in a
-sense key specific descriptor, so I was concerned that if the sense
-buffer wasn't big enough, the host would never see that there had
-been a UA queue overflow.  That was why I had added the logging of
-a sense buffer overflow.  I wasn't so much interested in reporting
-sense buffer overflow for its own sake.
+To prevent the double list_del(), I changed the code to list_del_init()
+and added a list_empty() check before that.  Since the
+list_empty/list_del_init is always called under a lock, this should be
+safe.
 
-So, as it stands right now, I think I'll remove the 1/9 component
-of the patch set, unless there is consensus that it is really needed.
+I hate the complexity this patch adds, but see no alternative to it.
 
-> 
-> James
-> 
-> 
+mpt2sas0: failure at drivers/scsi/mpt2sas/mpt2sas_transport.c:708/mpt2sas_transport_port_add()!
+general protection fault: 0000 [#1] SMP
+CPU 9
+Pid: 3097, comm: kworker/u:11 Tainted: G        W  O 3.6.10+ #31392.trunk    /0JP31P
+RIP: 0010:[<ffffffffa0309744>]  [<ffffffffa0309744>] _scsih_sas_device_remove+0x54/0x90 [mpt2sas]
+RSP: 0018:ffff881fed4d7ab0  EFLAGS: 00010046
+RAX: dead000000200200 RBX: ffff881ff6a5cd88 RCX: 00000000000010e8
+RDX: ffff881ff7dab800 RSI: ffff881ff7daba00 RDI: dead000000100100
+RBP: ffff881fed4d7ad0 R08: dead000000200200 R09: ffff880fff802200
+R10: ffffffffa0317980 R11: 0000000000000000 R12: ffff881ff7daba00
+R13: 0000000000000286 R14: 500605ba006c9d09 R15: ffff881ff7daba00
+FS:  0000000000000000(0000) GS:ffff88203fc80000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 00007f8ac89ec458 CR3: 0000001ff4c5c000 CR4: 00000000000407e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process kworker/u:11 (pid: 3097, threadinfo ffff881fed4d6000, task ffff881402f3d9c0)
+Stack:
+ 0000000000000401 ffff881ff6a5c6b0 0000000000000401 0000000000000016
+ ffff881fed4d7bb0 ffffffffa030f93e 0000000000000000 ffff881ff6a5cd88
+ 0012000e0f000008 006c9d090002000b 00180009500605ba 0000040100000016
+Call Trace:
+ [<ffffffffa030f93e>] _scsih_add_device.clone.32+0x2fe/0x420 [mpt2sas]
+ [<ffffffffa03126e5>] _scsih_sas_topology_change_event.clone.38+0x285/0x620 [mpt2sas]
+ [<ffffffff81078c90>] ? load_balance+0x100/0x7a0
+ [<ffffffffa0312a80>] ? _scsih_sas_topology_change_event.clone.38+0x620/0x620 [mpt2sas]
+ [<ffffffffa0312d8a>] _firmware_event_work+0x30a/0xfc0 [mpt2sas]
+ [<ffffffff810015cc>] ? __switch_to+0x14c/0x410
+ [<ffffffff8106dfdb>] ? finish_task_switch+0x4b/0xf0
+ [<ffffffffa0312a80>] ? _scsih_sas_topology_change_event.clone.38+0x620/0x620 [mpt2sas]
+ [<ffffffff8105bf40>] process_one_work+0x140/0x500
+ [<ffffffff8105d354>] worker_thread+0x194/0x510
+ [<ffffffff8106dfdb>] ? finish_task_switch+0x4b/0xf0
+ [<ffffffff8105d1c0>] ? manage_workers+0x320/0x320
+ [<ffffffff8106282e>] kthread+0x9e/0xb0
+ [<ffffffff815bef44>] kernel_thread_helper+0x4/0x10
+ [<ffffffff815b5e5d>] ? retint_restore_args+0x13/0x13
+ [<ffffffff81062790>] ? kthread_freezable_should_stop+0x70/0x70
+ [<ffffffff815bef40>] ? gs_change+0x13/0x13
 
+Signed-off-by: Joern Engel <joern@logfs.org>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.h  |    1 +
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |   55 ++++++++++++++++++++++++++++------
+ 2 files changed, 47 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 543d8d6..ceb7d41 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -367,6 +367,7 @@ struct _sas_device {
+ 	u16	slot;
+ 	u8	phy;
+ 	u8	responding;
++	struct kref kref;
+ };
+ 
+ /**
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index c6bdc92..43b3a98 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -570,6 +570,18 @@ _scsih_sas_device_find_by_handle(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	return NULL;
+ }
+ 
++static void free_sas_device(struct kref *kref)
++{
++	struct _sas_device *sas_device = container_of(kref, struct _sas_device,
++			kref);
++	kfree(sas_device);
++}
++
++static void put_sas_device(struct _sas_device *sas_device)
++{
++	kref_put(&sas_device->kref, free_sas_device);
++}
++
+ /**
+  * _scsih_sas_device_remove - remove sas_device from list.
+  * @ioc: per adapter object
+@@ -583,14 +595,19 @@ _scsih_sas_device_remove(struct MPT2SAS_ADAPTER *ioc,
+     struct _sas_device *sas_device)
+ {
+ 	unsigned long flags;
++	int was_on_list = 0;
+ 
+ 	if (!sas_device)
+ 		return;
+ 
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+-	list_del(&sas_device->list);
+-	kfree(sas_device);
++	if (!list_empty(&sas_device->list)) {
++		list_del_init(&sas_device->list);
++		was_on_list = 1;
++	}
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
++	if (was_on_list)
++		put_sas_device(sas_device);
+ }
+ 
+ 
+@@ -613,6 +630,8 @@ _scsih_sas_device_add(struct MPT2SAS_ADAPTER *ioc,
+ 	    sas_device->handle, (unsigned long long)sas_device->sas_address));
+ 
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
++	/* Get an extra refcount... */
++	kref_get(&sas_device->kref);
+ 	list_add_tail(&sas_device->list, &ioc->sas_device_list);
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+ 
+@@ -630,6 +649,12 @@ _scsih_sas_device_add(struct MPT2SAS_ADAPTER *ioc,
+ 			sas_device->sas_address_parent);
+ 		_scsih_sas_device_remove(ioc, sas_device);
+ 	}
++	/*
++	 * ...and drop it again.  If an error already happend, this is the
++	 * final put and we free the object now.  Otherwise whoever removes
++	 * the object from the list will do the final put and free.
++	 */
++	put_sas_device(sas_device);
+ }
+ 
+ /**
+@@ -5270,6 +5295,7 @@ _scsih_add_device(struct MPT2SAS_ADAPTER *ioc, u16 handle, u8 phy_num, u8 is_pd)
+ 		return -1;
+ 	}
+ 
++	kref_init(&sas_device->kref);
+ 	sas_device->handle = handle;
+ 	if (_scsih_get_sas_address(ioc, le16_to_cpu
+ 		(sas_device_pg0.ParentDevHandle),
+@@ -5341,7 +5367,7 @@ _scsih_remove_device(struct MPT2SAS_ADAPTER *ioc,
+ 	    "handle(0x%04x), sas_addr(0x%016llx)\n", ioc->name, __func__,
+ 	    sas_device->handle, (unsigned long long)
+ 	    sas_device->sas_address));
+-	kfree(sas_device);
++	put_sas_device(sas_device);
+ }
+ /**
+  * _scsih_device_remove_by_handle - removing device object by handle
+@@ -5355,16 +5381,21 @@ _scsih_device_remove_by_handle(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ {
+ 	struct _sas_device *sas_device;
+ 	unsigned long flags;
++	int was_on_list = 0;
+ 
+ 	if (ioc->shost_recovery)
+ 		return;
+ 
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+-	if (sas_device)
+-		list_del(&sas_device->list);
++	if (sas_device) {
++		if (!list_empty(&sas_device->list)) {
++			list_del_init(&sas_device->list);
++			was_on_list = 1;
++		}
++	}
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+-	if (sas_device)
++	if (was_on_list)
+ 		_scsih_remove_device(ioc, sas_device);
+ }
+ 
+@@ -5381,6 +5412,7 @@ mpt2sas_device_remove_by_sas_address(struct MPT2SAS_ADAPTER *ioc,
+ {
+ 	struct _sas_device *sas_device;
+ 	unsigned long flags;
++	int was_on_list = 0;
+ 
+ 	if (ioc->shost_recovery)
+ 		return;
+@@ -5388,10 +5420,14 @@ mpt2sas_device_remove_by_sas_address(struct MPT2SAS_ADAPTER *ioc,
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 	sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
+ 	    sas_address);
+-	if (sas_device)
+-		list_del(&sas_device->list);
++	if (sas_device) {
++		if (!list_empty(&sas_device->list)) {
++			list_del_init(&sas_device->list);
++			was_on_list = 1;
++		}
++	}
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+-	if (sas_device)
++	if (was_on_list)
+ 		_scsih_remove_device(ioc, sas_device);
+ }
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+@@ -7805,6 +7841,7 @@ _scsih_probe_boot_devices(struct MPT2SAS_ADAPTER *ioc)
+ 		handle = sas_device->handle;
+ 		sas_address_parent = sas_device->sas_address_parent;
+ 		sas_address = sas_device->sas_address;
++		kref_get(&sas_device->kref);
+ 		list_move_tail(&sas_device->list, &ioc->sas_device_list);
+ 		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+ 
+-- 
+1.7.10.4
