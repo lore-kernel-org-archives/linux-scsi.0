@@ -1,58 +1,70 @@
-From: "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [usb-storage] Re: Fwd: 2TB USB hard drive for backing up
-Date: Tue, 22 Jan 2013 13:17:20 -0600
-Message-ID: <2d90dddf-1bdc-4f43-bdf3-9ec09e38bb8b@email.android.com>
-References: <Pine.LNX.4.44L0.1301221039350.1510-100000@iolanthe.rowland.org> <50FEC6D6.3030708@zytor.com> <1358874830.2387.46.camel@dabdike.int.hansenpartnership.com>
+From: Naresh Kumar Inna <naresh@chelsio.com>
+Subject: Re: [PATCH 10/15] drivers/scsi/csiostor/csio_lnode.c: adjust duplicate
+ test
+Date: Wed, 23 Jan 2013 09:29:44 +0530
+Message-ID: <50FF6030.5040306@chelsio.com>
+References: <1358773378-4700-1-git-send-email-Julia.Lawall@lip6.fr> <1358773378-4700-11-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-efi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1358874830.2387.46.camel-sFMDBYUN5F8GjUHQrlYNx2Wm91YjaHnnhRte9Li2A+AAvxtiuMwx3w@public.gmane.org>
-Sender: linux-efi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>, Ellwood Blues <elwood.blue-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-efi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1358773378-4700-11-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Don't worry... I have lived in that world for decades... it's a lot like BIOS.
+On 1/21/2013 6:32 PM, Julia Lawall wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
+> 
+> Delete successive tests to the same location.  The current value of ln has
+> been tested already, and is clearly not NULL, given the enclosing if
+> condition.  Furthermore, the result of csio_lnode_alloc is currently
+> ignored.
+> 
+> A simplified version of the semantic match that finds this problem is as
+> follows: (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @s exists@
+> local idexpression y;
+> expression x,e;
+> @@
+> 
+> *if ( \(x == NULL\|IS_ERR(x)\|y != 0\) )
+>  { ... when forall
+>    return ...; }
+> ... when != \(y = e\|y += e\|y -= e\|y |= e\|y &= e\|y++\|y--\|&y\)
+>     when != \(XT_GETPAGE(...,y)\|WMI_CMD_BUF(...)\)
+> *if ( \(x == NULL\|IS_ERR(x)\|y != 0\) )
+>  { ... when forall
+>    return ...; }
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> 
+> ---
+> Not tested.  I don't know if this is the right fix.
+> 
+>  drivers/scsi/csiostor/csio_lnode.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
+> index ffe9be0..d956f97 100644
+> --- a/drivers/scsi/csiostor/csio_lnode.c
+> +++ b/drivers/scsi/csiostor/csio_lnode.c
+> @@ -873,7 +873,7 @@ csio_handle_link_up(struct csio_hw *hw, uint8_t portid, uint32_t fcfi,
+>  		if (ln->vnp_flowid != CSIO_INVALID_IDX) {
+>  			/* New VN-Port */
+>  			spin_unlock_irq(&hw->lock);
+> -			csio_lnode_alloc(hw);
+> +			ln = csio_lnode_alloc(hw);
+>  			spin_lock_irq(&hw->lock);
+>  			if (!ln) {
+>  				csio_err(hw,
+> --
 
-James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
+Acked-by: Naresh Kumar Inna <naresh@chelsio.com>
 
->On Tue, 2013-01-22 at 11:05 -0600, H. Peter Anvin wrote:
->> On 01/22/2013 09:43 AM, Alan Stern wrote:
->> > On Tue, 22 Jan 2013, Oliver Neukum wrote:
->> > 
->> >> On Tuesday 22 January 2013 11:05:35 James Bottomley wrote:
->> >>>> May  3 18:19:06 relampago3 kernel: [ 3948.472796] sd 7:0:0:0:
->[sdf]
->> >>>> 1565565872 512-byte logical blocks: (801 GB/746 GiB)
->> >>>
->> >>> This looks like a wrap around of your actual size.  This appears
->to
->> >>> indicate the device isn't replying correctly to READ CAPACITY. 
->The
->> >>> conventional return from READ CAPACITY should be -1 which would
->trigger
->> >>> us to retry with READ CAPACITY(16).
->> >>
->> >> What can we do? The answer the device is giving is quite ordinary.
->> >> Do we need another quirk and an associated flag?
->> > 
->> > The JMicron bridges are well known to be fairly buggy.  Another
->quirk 
->> > may indeed be the only solution.  Oliver, would you like to write a
->
->> > patch for it?
->> > 
->> 
->> Would it make more sense to try READ CAPACITY(16) first?  Or does
->that
->> have other bad effects?
->
->That has other effect: Many USB devices crash the firmware on 16 byte
->commands (sigh, welcome to our world ...)
->
->James
-
--- 
-Sent from my mobile phone. Please excuse brevity and lack of formatting.
+Thanks,
+Naresh.
