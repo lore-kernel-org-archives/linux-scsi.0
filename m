@@ -1,73 +1,107 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RFC 0/9] [SCSI] Enhanced sense and Unit Attention handling
-Date: Thu, 24 Jan 2013 15:51:39 +0100
-Message-ID: <51014A7B.2060806@suse.de>
-References: <1358526434-1173-1-git-send-email-emilne@redhat.com> <CAO+b5-oKyPoSdKJPcyaf4FkDUNH25Cwwz=_C4WiwvpfauNqStQ@mail.gmail.com> <51011D2E.305@suse.de> <CAO+b5-ptjPEbCrKEpdCEZBCh5Xs7ycXQA5V+iohAL4TSfbUzFg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45045 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753937Ab3AXOvk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Jan 2013 09:51:40 -0500
-In-Reply-To: <CAO+b5-ptjPEbCrKEpdCEZBCh5Xs7ycXQA5V+iohAL4TSfbUzFg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH 01/13] sg_io: pass request_queue to blk_verify_command
+Date: Thu, 24 Jan 2013 16:00:37 +0100
+Message-ID: <1359039649-17734-2-git-send-email-pbonzini@redhat.com>
+References: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: tj@kernel.org, pmatouse@redhat.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@kernel.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-On 01/24/2013 03:38 PM, Bart Van Assche wrote:
-> On Thu, Jan 24, 2013 at 4:38 AM, Hannes Reinecke <hare@suse.de> wrote=
-:
->> As for AEN, does iSCSI _do_ AEN? I thought it got removed ...
->>
->> If it does, though, it should schedule an event on its own whenever =
-an AER
->> is received. The same goes for LLDDs with vendor-specific AENs; thin=
-king of
->> megaraid_sas here ...
->
-> Let me ask this another way. SAN users expect that the LUN list at th=
-e
-> initiator side gets updated automatically after a SAN configuration
-> change. How should a SAN system communicate to a SCSI initiator that
-> the LUN list has been changed ? Some FC SAN systems send a LIP after =
-a
-> configuration change to force the initiator to rescan LUNs.
+Adjust the blk_verify_command function to let it look at per-queue
+data.  This will be done in the next patch.
 
-And thereby disrupting traffic on _ALL_ LUNs on the loop.
-Really cool idea.
-I know; the one vendor which does _not_ talk to us.
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Doug Gilbert <dgilbert@interlog.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+ block/bsg.c            |    2 +-
+ block/scsi_ioctl.c     |    7 ++++---
+ drivers/scsi/sg.c      |    3 ++-
+ include/linux/blkdev.h |    3 ++-
+ 4 files changed, 9 insertions(+), 6 deletions(-)
 
-> But how to inform the initiator about a LUN change for other SCSI pro=
-tocols ?
- > I'm not sure that it is even possible to report such a change via=20
-sense
-> data in case a SAN user first removes all LUNs and after that change
-> adds one or more LUNs.
->
-The official way is indeed via UAs; most storage arrays (Hello,=20
-NetApp!) provide a default LUN0 which is always visible.
-Up to the point that some even refuse to add 'normal' disk LUNs to=20
-LUN0. Or have the ominous 'Well-known Address' LUN to handle these=20
-kind of issues.
-
-Obviously, one needs to send commands to it to even _get_ an UA back.
-
-But yeah, normally it's possible.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/block/bsg.c b/block/bsg.c
+index ff64ae3..eb5ad59 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -187,7 +187,7 @@ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
+ 		return -EFAULT;
+ 
+ 	if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
+-		if (blk_verify_command(rq->cmd, has_write_perm))
++		if (blk_verify_command(q, rq->cmd, has_write_perm))
+ 			return -EPERM;
+ 	} else if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 9a87daa..a737562 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -196,7 +196,8 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	__set_bit(GPCMD_SET_READ_AHEAD, filter->write_ok);
+ }
+ 
+-int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm)
++int blk_verify_command(struct request_queue *q,
++		       unsigned char *cmd, fmode_t has_write_perm)
+ {
+ 	struct blk_cmd_filter *filter = &blk_default_cmd_filter;
+ 
+@@ -225,7 +226,7 @@ static int blk_fill_sghdr_rq(struct request_queue *q, struct request *rq,
+ {
+ 	if (copy_from_user(rq->cmd, hdr->cmdp, hdr->cmd_len))
+ 		return -EFAULT;
+-	if (blk_verify_command(rq->cmd, mode & FMODE_WRITE))
++	if (blk_verify_command(q, rq->cmd, mode & FMODE_WRITE))
+ 		return -EPERM;
+ 
+ 	/*
+@@ -472,7 +473,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 	if (in_len && copy_from_user(buffer, sic->data + cmdlen, in_len))
+ 		goto error;
+ 
+-	err = blk_verify_command(rq->cmd, mode & FMODE_WRITE);
++	err = blk_verify_command(q, rq->cmd, mode & FMODE_WRITE);
+ 	if (err)
+ 		goto error;
+ 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index be2c9a6..cab816f 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -217,11 +217,12 @@ static void sg_put_dev(Sg_device *sdp);
+ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+ {
+ 	struct sg_fd *sfp = filp->private_data;
++	struct request_queue *q = sfp->parentdp->device->request_queue;
+ 
+ 	if (sfp->parentdp->device->type == TYPE_SCANNER)
+ 		return 0;
+ 
+-	return blk_verify_command(cmd, filp->f_mode & FMODE_WRITE);
++	return blk_verify_command(q, cmd, filp->f_mode & FMODE_WRITE);
+ }
+ 
+ static int get_exclude(Sg_device *sdp)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index f94bc83..0782336 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1061,7 +1061,8 @@ static inline int sb_issue_zeroout(struct super_block *sb, sector_t block,
+ 				    gfp_mask);
+ }
+ 
+-extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
++extern int blk_verify_command(struct request_queue *q,
++			      unsigned char *cmd, fmode_t has_write_perm);
+ 
+ enum blk_default_limits {
+ 	BLK_MAX_SEGMENTS	= 128,
+-- 
+1.7.1
