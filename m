@@ -1,64 +1,123 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 00/13] Corrections and customization of the SG_IO command whitelist (CVE-2012-4542)
-Date: Thu, 24 Jan 2013 16:00:36 +0100
-Message-ID: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH 03/13] sg_io: use different default filters for each device class
+Date: Thu, 24 Jan 2013 16:00:39 +0100
+Message-ID: <1359039649-17734-4-git-send-email-pbonzini@redhat.com>
+References: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: tj@kernel.org, pmatouse@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi@kernel.org
+Cc: tj@kernel.org, pmatouse@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@kernel.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
 
-This series regards the whitelist that is used for the SG_IO ioctl.  This
-whitelist has three problems:
+Store the filters in a 256-entry array, and pick an appropriate filter
+for SCSI devices.  Apart from SCSI disks, SG_IO is supported for CCISS,
+ide-floppy and virtio-blk devices; TYPE_DISK (which is zero, i.e. the
+default) is more appropriate for these devices than TYPE_ROM.
 
-* the bitmap of allowed commands is designed for MMC devices (roughly,
-  "play/burn CDs without requiring root") but some opcodes overlap across SCSI
-  device classes and have different meanings for different classes.
+This patch already introduces some semantic change, albeit very limited;
+in addition to the above change for CCISS/ide-floppy/virtio-blk, a few
+commands are now forbidden for devices of type other than TYPE_ROM,
+where they are reserved or vendor-specific.
 
-* also because the bitmap of allowed commands is designed for MMC devices
-  only, some commands are missing even though they are generally useful and
-  not insecure.  At least not more insecure than anything else you can
-  do if you have access to /dev/sdX or /dev/stX nodes.
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+ block/scsi_ioctl.c       |   14 +++++---------
+ drivers/scsi/scsi_scan.c |    2 ++
+ include/linux/blkdev.h   |    2 +-
+ include/scsi/scsi.h      |    1 +
+ 4 files changed, 9 insertions(+), 10 deletions(-)
 
-* the whitelist can be disabled per-process but not per-disk.  In addition,
-  the required capability (CAP_SYS_RAWIO) gives access to a range of other 
-  resources, enough to make it insecure.
-
-The series corrects these problems.  Patches 1-4 solve the first problem,
-which also has an assigned CVE, by using different bitmaps for the various
-device classes.  Patches 5-11 solve the second by adding more commands
-to the bitmaps.  Patches 12 and 13 solve the third, and were already
-posted but ignored by the maintainers despite multiple pings.
-
-Note: checkpatch hates the formatting of the command table.  I know about this,
-and ensured that there are no errors in the rest of the code.
-
-Ok for the next merge window?
-
-Paolo Bonzini (13):
-  sg_io: pass request_queue to blk_verify_command
-  sg_io: reorganize list of allowed commands
-  sg_io: use different default filters for each device class
-  sg_io: resolve conflicts between commands assigned to multiple
-    classes (CVE-2012-4542)
-  sg_io: whitelist a few more commands for rare & obsolete device types
-  sg_io: whitelist a few more commands for multimedia devices
-  sg_io: whitelist a few more commands for media changers
-  sg_io: whitelist a few more commands for tapes
-  sg_io: whitelist a few more commands for disks
-  sg_io: whitelist a few obsolete commands
-  sg_io: add list of commands that were in the consulted list but are
-    disabled
-  sg_io: remove remnants of sysfs SG_IO filters
-  sg_io: introduce unpriv_sgio queue flag
-
- Documentation/block/queue-sysfs.txt |    8 +
- block/blk-sysfs.c                   |   33 +++
- block/bsg.c                         |    2 +-
- block/scsi_ioctl.c                  |  440 ++++++++++++++++++++++++++++-------
- drivers/scsi/scsi_scan.c            |    2 +
- drivers/scsi/sg.c                   |    3 +-
- include/linux/blkdev.h              |    8 +-
- include/linux/genhd.h               |    9 -
- include/scsi/scsi.h                 |    1 +
- 9 files changed, 403 insertions(+), 103 deletions(-)
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 75533bd..e68add2 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -34,8 +34,8 @@
+ #include <scsi/scsi_cmnd.h>
+ 
+ struct blk_cmd_filter {
+-	unsigned long read_ok[BLK_SCSI_CMD_PER_LONG];
+-	unsigned long write_ok[BLK_SCSI_CMD_PER_LONG];
++	u32 read_ok[BLK_SCSI_MAX_CMDS];
++	u32 write_ok[BLK_SCSI_MAX_CMDS];
+ };
+ 
+ static struct blk_cmd_filter blk_default_cmd_filter;
+@@ -116,7 +116,7 @@ static int sg_emulated_host(struct request_queue *q, int __user *p)
+ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ {
+ #define sgio_bitmap_set(cmd, mask, rw) \
+-	if ((mask) != 0) __set_bit((cmd), filter->rw##_ok)
++	filter->rw##_ok[(cmd)] |= (mask);
+ 
+ #define D (1u << TYPE_DISK)           /* Direct Access Block Device (SBC-3) */
+ #define T (1u << TYPE_TAPE)           /* Sequential Access Device (SSC-3) */
+@@ -256,16 +256,12 @@ int blk_verify_command(struct request_queue *q,
+ 	if (capable(CAP_SYS_RAWIO))
+ 		return 0;
+ 
+-	/* if there's no filter set, assume we're filtering everything out */
+-	if (!filter)
+-		return -EPERM;
+-
+ 	/* Anybody who can open the device can do a read-safe command */
+-	if (test_bit(cmd[0], filter->read_ok))
++	if (filter->read_ok[cmd[0]] & (1 << q->sgio_type))
+ 		return 0;
+ 
+ 	/* Write-safe commands require a writable open */
+-	if (test_bit(cmd[0], filter->write_ok) && has_write_perm)
++	if (has_write_perm && filter->write_ok[cmd[0]] & (1 << q->sgio_type))
+ 		return 0;
+ 
+ 	return -EPERM;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 3e58b22..86940f3 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -782,6 +782,8 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 		sdev->removable = (inq_result[1] & 0x80) >> 7;
+ 	}
+ 
++	sdev->request_queue->sgio_type = sdev->type;
++
+ 	switch (sdev->type) {
+ 	case TYPE_RBC:
+ 	case TYPE_TAPE:
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 0782336..b376d37 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -256,7 +256,6 @@ struct blk_queue_tag {
+ };
+ 
+ #define BLK_SCSI_MAX_CMDS	(256)
+-#define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
+ 
+ struct queue_limits {
+ 	unsigned long		bounce_pfn;
+@@ -403,6 +402,7 @@ struct request_queue {
+ 	 */
+ 	unsigned int		sg_timeout;
+ 	unsigned int		sg_reserved_size;
++	unsigned char		sgio_type;
+ 	int			node;
+ #ifdef CONFIG_BLK_DEV_IO_TRACE
+ 	struct blk_trace	*blk_trace;
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 66216c1..1a26291 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -325,6 +325,7 @@ static inline int scsi_status_is_good(int status)
+ #define TYPE_ENCLOSURE      0x0d    /* Enclosure Services Device */
+ #define TYPE_RBC	    0x0e
+ #define TYPE_OSD            0x11
++#define TYPE_MAX            0x1f
+ #define TYPE_NO_LUN         0x7f
+ 
+ /* SCSI protocols; these are taken from SPC-3 section 7.5 */
+-- 
+1.7.1
