@@ -1,107 +1,64 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 01/13] sg_io: pass request_queue to blk_verify_command
-Date: Thu, 24 Jan 2013 16:00:37 +0100
-Message-ID: <1359039649-17734-2-git-send-email-pbonzini@redhat.com>
-References: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH 00/13] Corrections and customization of the SG_IO command whitelist (CVE-2012-4542)
+Date: Thu, 24 Jan 2013 16:00:36 +0100
+Message-ID: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: tj@kernel.org, pmatouse@redhat.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc: tj@kernel.org, pmatouse@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Adjust the blk_verify_command function to let it look at per-queue
-data.  This will be done in the next patch.
+This series regards the whitelist that is used for the SG_IO ioctl.  This
+whitelist has three problems:
 
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Doug Gilbert <dgilbert@interlog.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- block/bsg.c            |    2 +-
- block/scsi_ioctl.c     |    7 ++++---
- drivers/scsi/sg.c      |    3 ++-
- include/linux/blkdev.h |    3 ++-
- 4 files changed, 9 insertions(+), 6 deletions(-)
+* the bitmap of allowed commands is designed for MMC devices (roughly,
+  "play/burn CDs without requiring root") but some opcodes overlap across SCSI
+  device classes and have different meanings for different classes.
 
-diff --git a/block/bsg.c b/block/bsg.c
-index ff64ae3..eb5ad59 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -187,7 +187,7 @@ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
- 		return -EFAULT;
- 
- 	if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
--		if (blk_verify_command(rq->cmd, has_write_perm))
-+		if (blk_verify_command(q, rq->cmd, has_write_perm))
- 			return -EPERM;
- 	} else if (!capable(CAP_SYS_RAWIO))
- 		return -EPERM;
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 9a87daa..a737562 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -196,7 +196,8 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
- 	__set_bit(GPCMD_SET_READ_AHEAD, filter->write_ok);
- }
- 
--int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm)
-+int blk_verify_command(struct request_queue *q,
-+		       unsigned char *cmd, fmode_t has_write_perm)
- {
- 	struct blk_cmd_filter *filter = &blk_default_cmd_filter;
- 
-@@ -225,7 +226,7 @@ static int blk_fill_sghdr_rq(struct request_queue *q, struct request *rq,
- {
- 	if (copy_from_user(rq->cmd, hdr->cmdp, hdr->cmd_len))
- 		return -EFAULT;
--	if (blk_verify_command(rq->cmd, mode & FMODE_WRITE))
-+	if (blk_verify_command(q, rq->cmd, mode & FMODE_WRITE))
- 		return -EPERM;
- 
- 	/*
-@@ -472,7 +473,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
- 	if (in_len && copy_from_user(buffer, sic->data + cmdlen, in_len))
- 		goto error;
- 
--	err = blk_verify_command(rq->cmd, mode & FMODE_WRITE);
-+	err = blk_verify_command(q, rq->cmd, mode & FMODE_WRITE);
- 	if (err)
- 		goto error;
- 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index be2c9a6..cab816f 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -217,11 +217,12 @@ static void sg_put_dev(Sg_device *sdp);
- static int sg_allow_access(struct file *filp, unsigned char *cmd)
- {
- 	struct sg_fd *sfp = filp->private_data;
-+	struct request_queue *q = sfp->parentdp->device->request_queue;
- 
- 	if (sfp->parentdp->device->type == TYPE_SCANNER)
- 		return 0;
- 
--	return blk_verify_command(cmd, filp->f_mode & FMODE_WRITE);
-+	return blk_verify_command(q, cmd, filp->f_mode & FMODE_WRITE);
- }
- 
- static int get_exclude(Sg_device *sdp)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f94bc83..0782336 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1061,7 +1061,8 @@ static inline int sb_issue_zeroout(struct super_block *sb, sector_t block,
- 				    gfp_mask);
- }
- 
--extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
-+extern int blk_verify_command(struct request_queue *q,
-+			      unsigned char *cmd, fmode_t has_write_perm);
- 
- enum blk_default_limits {
- 	BLK_MAX_SEGMENTS	= 128,
--- 
-1.7.1
+* also because the bitmap of allowed commands is designed for MMC devices
+  only, some commands are missing even though they are generally useful and
+  not insecure.  At least not more insecure than anything else you can
+  do if you have access to /dev/sdX or /dev/stX nodes.
+
+* the whitelist can be disabled per-process but not per-disk.  In addition,
+  the required capability (CAP_SYS_RAWIO) gives access to a range of other 
+  resources, enough to make it insecure.
+
+The series corrects these problems.  Patches 1-4 solve the first problem,
+which also has an assigned CVE, by using different bitmaps for the various
+device classes.  Patches 5-11 solve the second by adding more commands
+to the bitmaps.  Patches 12 and 13 solve the third, and were already
+posted but ignored by the maintainers despite multiple pings.
+
+Note: checkpatch hates the formatting of the command table.  I know about this,
+and ensured that there are no errors in the rest of the code.
+
+Ok for the next merge window?
+
+Paolo Bonzini (13):
+  sg_io: pass request_queue to blk_verify_command
+  sg_io: reorganize list of allowed commands
+  sg_io: use different default filters for each device class
+  sg_io: resolve conflicts between commands assigned to multiple
+    classes (CVE-2012-4542)
+  sg_io: whitelist a few more commands for rare & obsolete device types
+  sg_io: whitelist a few more commands for multimedia devices
+  sg_io: whitelist a few more commands for media changers
+  sg_io: whitelist a few more commands for tapes
+  sg_io: whitelist a few more commands for disks
+  sg_io: whitelist a few obsolete commands
+  sg_io: add list of commands that were in the consulted list but are
+    disabled
+  sg_io: remove remnants of sysfs SG_IO filters
+  sg_io: introduce unpriv_sgio queue flag
+
+ Documentation/block/queue-sysfs.txt |    8 +
+ block/blk-sysfs.c                   |   33 +++
+ block/bsg.c                         |    2 +-
+ block/scsi_ioctl.c                  |  440 ++++++++++++++++++++++++++++-------
+ drivers/scsi/scsi_scan.c            |    2 +
+ drivers/scsi/sg.c                   |    3 +-
+ include/linux/blkdev.h              |    8 +-
+ include/linux/genhd.h               |    9 -
+ include/scsi/scsi.h                 |    1 +
+ 9 files changed, 403 insertions(+), 103 deletions(-)
