@@ -1,45 +1,63 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 12/13] sg_io: remove remnants of sysfs SG_IO filters
-Date: Thu, 24 Jan 2013 16:00:48 +0100
-Message-ID: <1359039649-17734-13-git-send-email-pbonzini@redhat.com>
-References: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: tj@kernel.org, pmatouse@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@kernel.org, Jens Axboe <axboe@kernel.dk>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH RFC 0/9] [SCSI] Enhanced sense and Unit Attention handling
+Date: Thu, 24 Jan 2013 08:00:20 -0700
+Message-ID: <51014C84.4000906@cs.wisc.edu>
+References: <1358526434-1173-1-git-send-email-emilne@redhat.com> <CAO+b5-oKyPoSdKJPcyaf4FkDUNH25Cwwz=_C4WiwvpfauNqStQ@mail.gmail.com> <51011D2E.305@suse.de> <CAO+b5-ptjPEbCrKEpdCEZBCh5Xs7ycXQA5V+iohAL4TSfbUzFg@mail.gmail.com> <51014A7B.2060806@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:35313 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754549Ab3AXPBW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Jan 2013 10:01:22 -0500
+In-Reply-To: <51014A7B.2060806@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-Some defines and structs remained when support was removed for SG_IO
-filters in sysfs.  Remove them.
+On 01/24/2013 07:51 AM, Hannes Reinecke wrote:
+> On 01/24/2013 03:38 PM, Bart Van Assche wrote:
+>> On Thu, Jan 24, 2013 at 4:38 AM, Hannes Reinecke <hare@suse.de> wrote:
+>>> As for AEN, does iSCSI _do_ AEN? I thought it got removed ...
+>>>
+>>> If it does, though, it should schedule an event on its own whenever
+>>> an AER
+>>> is received. The same goes for LLDDs with vendor-specific AENs;
+>>> thinking of
+>>> megaraid_sas here ...
+>>
+>> Let me ask this another way. SAN users expect that the LUN list at the
+>> initiator side gets updated automatically after a SAN configuration
+>> change. How should a SAN system communicate to a SCSI initiator that
+>> the LUN list has been changed ? Some FC SAN systems send a LIP after a
+>> configuration change to force the initiator to rescan LUNs.
+> 
+> And thereby disrupting traffic on _ALL_ LUNs on the loop.
+> Really cool idea.
+> I know; the one vendor which does _not_ talk to us.
+> 
+>> But how to inform the initiator about a LUN change for other SCSI
+>> protocols ?
+>> I'm not sure that it is even possible to report such a change via sense
+>> data in case a SAN user first removes all LUNs and after that change
+>> adds one or more LUNs.
+>>
+> The official way is indeed via UAs; most storage arrays (Hello, NetApp!)
+> provide a default LUN0 which is always visible.
+> Up to the point that some even refuse to add 'normal' disk LUNs to LUN0.
+> Or have the ominous 'Well-known Address' LUN to handle these kind of
+> issues.
+> 
+> Obviously, one needs to send commands to it to even _get_ an UA back.
+> 
 
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- include/linux/genhd.h |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+In SAM5 there is that QUERY ASYNCHRONOUS EVENT TMF. Could we send that
+periodically to lun0/well-knwon-lun if the transport supports it (iscsi
+will in
+http://tools.ietf.org/html/draft-ietf-storm-iscsi-sam-06#section-6).
+Whatever daemon in userspace handles these other events, could send it
+(we just need to add a interface) or we could add kernel code.
 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 79b8bba..d3bc249 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -144,15 +144,6 @@ enum {
- 	DISK_EVENT_EJECT_REQUEST		= 1 << 1, /* eject requested */
- };
- 
--#define BLK_SCSI_MAX_CMDS	(256)
--#define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
--
--struct blk_scsi_cmd_filter {
--	unsigned long read_ok[BLK_SCSI_CMD_PER_LONG];
--	unsigned long write_ok[BLK_SCSI_CMD_PER_LONG];
--	struct kobject kobj;
--};
--
- struct disk_part_tbl {
- 	struct rcu_head rcu_head;
- 	int len;
--- 
-1.7.1
+This should not hold up Ewan's patches though.
