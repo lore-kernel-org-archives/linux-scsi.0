@@ -1,7 +1,7 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 10/13] sg_io: whitelist a few obsolete commands
-Date: Thu, 24 Jan 2013 16:00:46 +0100
-Message-ID: <1359039649-17734-11-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH 07/13] sg_io: whitelist a few more commands for media changers
+Date: Thu, 24 Jan 2013 16:00:43 +0100
+Message-ID: <1359039649-17734-8-git-send-email-pbonzini@redhat.com>
 References: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1359039649-17734-1-git-send-email-pbonzini@redhat.com>
@@ -10,56 +10,78 @@ To: linux-kernel@vger.kernel.org
 Cc: tj@kernel.org, pmatouse@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@kernel.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
 
-These are added to their own section of the table, together with SEEK(10)
-which has always been permitted.
+Besides CD-ROMs, three more device types are interesting for SG_IO:
+media changers, tapes and of course disks.
+
+Starting with this patch, we will whitelist a few more commands for
+these devices.  For media changers, enable "INITIALIZE ELEMENT STATUS"
+and "REQUEST VOLUME ELEMENT ADDRESS".  A few changer-specific commands
+were already enabled by chance because they overlapped commands that
+are valid for other classes: "EXCHANGE MEDIUM" and "SEND VOLUME TAG",
+"INITIALIZE ELEMENT STATUS WITH RANGE".
 
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@kernel.org
 Cc: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- block/scsi_ioctl.c |   22 +++++++++++++++++++++-
- 1 files changed, 21 insertions(+), 1 deletions(-)
+ block/scsi_ioctl.c |   21 ++++++++++++++++-----
+ 1 files changed, 16 insertions(+), 5 deletions(-)
 
 diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 74f3678..fea0c5d 100644
+index ec930f0..6af330a 100644
 --- a/block/scsi_ioctl.c
 +++ b/block/scsi_ioctl.c
-@@ -143,7 +143,6 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+@@ -141,9 +141,9 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	sgio_bitmap_set(0x03, -1                             , read);  // REQUEST SENSE
+ 	sgio_bitmap_set(0x12, -1                             , read);  // INQUIRY
  	sgio_bitmap_set(0x1A, -1                             , read);  // MODE SENSE(6)
- 	sgio_bitmap_set(0x1B, D|      W|R|O|  A|  B|K|  F    , read);  // START STOP UNIT
+-	sgio_bitmap_set(0x1B, D|T|    W|R|O|M|A|  B|K|V|F    , read);  // START STOP UNIT
++	sgio_bitmap_set(0x1B, D|T|    W|R|O|  A|  B|K|V|F    , read);  // START STOP UNIT
  	sgio_bitmap_set(0x1C,                    ~B          , read);  // RECEIVE DIAGNOSTIC RESULTS
--	sgio_bitmap_set(0x2B, D|      W|R|O|        K        , read);  // SEEK(10)
+-	sgio_bitmap_set(0x2B, D|T|    W|R|O|M|      K        , read);  // SEEK(10)
++	sgio_bitmap_set(0x2B, D|T|    W|R|O|        K        , read);  // SEEK(10)
  	sgio_bitmap_set(0x3C,                    ~B          , read);  // READ BUFFER
  	sgio_bitmap_set(0x4D, -1                             , read);  // LOG SENSE
  	sgio_bitmap_set(0x5A, -1                             , read);  // MODE SENSE(10)
-@@ -298,6 +297,27 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
- 	sgio_bitmap_set(0x91,   T                            , write); // SPACE(16)
- 	sgio_bitmap_set(0x93,   T                            , write); // ERASE(16)
+@@ -167,7 +167,7 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	sgio_bitmap_set(0x25, D|      W|R|O|      B|K        , read);  // READ CAPACITY(10)
+ 	sgio_bitmap_set(0x28, D|      W|R|O|      B|K        , read);  // READ(10)
+ 	sgio_bitmap_set(0x2F, D|      W|R|O                  , read);  // VERIFY(10)
+-	sgio_bitmap_set(0x37, D|          O|M                , read);  // READ DEFECT DATA(10)
++	sgio_bitmap_set(0x37, D|          O                  , read);  // READ DEFECT DATA(10)
+ 	sgio_bitmap_set(0x3E, D|      W|  O                  , read);  // READ LONG(10)
+ 	sgio_bitmap_set(0x88, D|T|    W|  O|      B          , read);  // READ(16)
+ 	sgio_bitmap_set(0x8F, D|T|    W|  O|      B          , read);  // VERIFY(16)
+@@ -203,6 +203,17 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	sgio_bitmap_set(0x10,     L                          , write); // SYNCHRONIZE BUFFER
+ 	sgio_bitmap_set(0x1B,     L                          , write); // STOP PRINT
  
-+	/* various obsolete */
++	/* media changer */
 +
-+	sgio_bitmap_set(0x0B, D|      W|R|O                  , read);  // SEEK(6)
-+	sgio_bitmap_set(0x2B, D|      W|R|O|        K        , read);  // SEEK(10)
-+	sgio_bitmap_set(0x30, D|      W|R|O                  , read);  // SEARCH DATA HIGH(10)
-+	sgio_bitmap_set(0x31, D|      W|R|O                  , read);  // SEARCH DATA EQUAL(10)
-+	sgio_bitmap_set(0x32, D|      W|R|O                  , read);  // SEARCH DATA LOW(10)
-+	sgio_bitmap_set(0x39, D|T|L|P|W|R|O|        K        , read);  // COMPARE
-+	sgio_bitmap_set(0x52, D                              , read);  // XDREAD(10)
-+	sgio_bitmap_set(0xB0,         W|R|O                  , read);  // SEARCH DATA HIGH(12)
-+	sgio_bitmap_set(0xB1,         W|R|O                  , read);  // SEARCH DATA EQUAL(12)
-+	sgio_bitmap_set(0xB2,         W|R|O                  , read);  // SEARCH DATA LOW(12)
-+	sgio_bitmap_set(0xB4, D|T|    W|R|O                  , read);  // READ ELEMENT STATUS ATTACHED
-+	sgio_bitmap_set(0xB8,   T|    W|R|O|M                , read);  // READ ELEMENT STATUS
++	sgio_bitmap_set(0x07,               M                , read);  // INITIALIZE ELEMENT STATUS
++	sgio_bitmap_set(0x1B,               M                , read);  // OPEN/CLOSE IMPORT/EXPORT ELEMENT
++	sgio_bitmap_set(0x2B,               M                , read);  // POSITION TO ELEMENT
++	sgio_bitmap_set(0x37,               M                , read);  // INITIALIZE ELEMENT STATUS WITH RANGE
++	sgio_bitmap_set(0xB5,               M                , read);  // REQUEST VOLUME ELEMENT ADDRESS
 +
-+	sgio_bitmap_set(0x01, D|      W|R|O|M                , write); // REZERO UNIT
-+	sgio_bitmap_set(0x18, D|T|L|P|W|R|O|        K        , write); // COPY
-+	sgio_bitmap_set(0x3A, D|T|L|P|W|R|O|        K        , write); // COPY AND VERIFY
-+	sgio_bitmap_set(0x50, D                              , write); // XDWRITE(10)
-+	sgio_bitmap_set(0x80, D                              , write); // XDWRITE EXTENDED(16)
++	sgio_bitmap_set(0xA6,               M                , write); // EXCHANGE MEDIUM
++	sgio_bitmap_set(0xB6,               M                , write); // SEND VOLUME TAG
 +
- 	/* communication devices (obsolete) */
+ 	/* (mostly) MMC */
  
- 	sgio_bitmap_set(0x08,                             C  , write); // GET MESSAGE(6)
+ 	sgio_bitmap_set(0x23,           R                    , read);  // READ FORMAT CAPACITIES
+@@ -238,9 +249,9 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	sgio_bitmap_set(0xA1, D|        R|        B          , write); // BLANK / ATA PASS-THROUGH(12)
+ 	sgio_bitmap_set(0xA2,           R                    , write); // SEND EVENT
+ 	sgio_bitmap_set(0xA3,           R                    , write); // SEND KEY
+-	sgio_bitmap_set(0xA6,           R|  M                , write); // LOAD/UNLOAD C/DVD
++	sgio_bitmap_set(0xA6,           R                    , write); // LOAD/UNLOAD C/DVD
+ 	sgio_bitmap_set(0xA7,           R                    , write); // SET READ AHEAD
+-	sgio_bitmap_set(0xB6,           R|  M                , write); // SET STREAMING
++	sgio_bitmap_set(0xB6,           R                    , write); // SET STREAMING
+ 	sgio_bitmap_set(0xBB,           R                    , write); // SET CD SPEED
+ 	sgio_bitmap_set(0xBF,           R                    , write); // SEND DVD STRUCTURE
+ 
 -- 
 1.7.1
