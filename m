@@ -1,46 +1,33 @@
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Initialize the sglist
-Date: Fri, 25 Jan 2013 14:29:34 +0800
-Message-ID: <5102264E.9020604@cn.fujitsu.com>
-References: <1359075861-1014-1-git-send-email-kys@microsoft.com>
-Reply-To: gaowanlong@cn.fujitsu.com
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 06/13] sg_io: whitelist a few more commands for multimedia
+ devices
+Date: Fri, 25 Jan 2013 10:26:09 +0100
+Message-ID: <51024FB1.3000206@redhat.com>
+References: <1359039649-17734-1-git-send-email-pbonzini@redhat.com> <1359039649-17734-7-git-send-email-pbonzini@redhat.com> <20130124225555.GC2373@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:28834 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017Ab3AYG3q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jan 2013 01:29:46 -0500
-In-Reply-To: <1359075861-1014-1-git-send-email-kys@microsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130124225555.GC2373@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, pmatouse@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@kernel.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, jasowang@redhat.com, linux-scsi@vger.kernel.org, Stable <stable@vger.kernel.org>, Wanlong Gao <gaowanlong@cn.fujitsu.com>
 
-On 01/25/2013 09:04 AM, K. Y. Srinivasan wrote:
-> Properly initialize scatterlist before using it.
+Il 24/01/2013 23:55, Tejun Heo ha scritto:
+> On Thu, Jan 24, 2013 at 04:00:42PM +0100, Paolo Bonzini wrote:
+>> Strangely, a couple of MMC commands were never included.  Add them too.
 > 
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> Cc: Stable <stable@vger.kernel.org>
+> What are the justifications for adding these commands to the filter?
+> Are there users requesting these?
 
-Reviewed-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+I think it's the other way round.  What's the justification for leaving
+them out, if they are in the standard?  Since we're touching the
+commands for other standards, it's better to be complete for MMC as well.
 
-> ---
->  drivers/scsi/storvsc_drv.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 270b3cf..5ada1d0 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -467,6 +467,7 @@ static struct scatterlist *create_bounce_buffer(struct scatterlist *sgl,
->  	if (!bounce_sgl)
->  		return NULL;
->  
-> +	sg_init_table(bounce_sgl, num_pages);
->  	for (i = 0; i < num_pages; i++) {
->  		page_buf = alloc_page(GFP_ATOMIC);
->  		if (!page_buf)
-> 
+At least one of them (MECHANISM STATUS) is implemented in both QEMU and
+Bochs, so someone is using it.  If that someone were run virtualized,
+with the host /dev/sr0 passed directly to the guest rather than
+emulated, it would break.
 
+Paolo
