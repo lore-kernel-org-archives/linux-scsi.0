@@ -1,51 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 06/13] sg_io: whitelist a few more commands for
- multimedia devices
-Date: Fri, 25 Jan 2013 15:47:14 -0800
-Message-ID: <20130125234714.GR3081@htj.dyndns.org>
-References: <20130125170434.GC3081@htj.dyndns.org>
- <5102BDD4.2020501@redhat.com>
- <20130125172805.GG3081@htj.dyndns.org>
- <5102C780.3090402@redhat.com>
- <20130125181326.GK3081@htj.dyndns.org>
- <5102D353.8010305@redhat.com>
- <20130125190154.GM3081@htj.dyndns.org>
- <5103080A.4090803@redhat.com>
- <20130125224159.GQ3081@htj.dyndns.org>
- <51031614.8000609@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <51031614.8000609@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, pmatouse@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@kernel.org, Jens Axboe <axboe@kernel.dk>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] Drivers: hv: balloon: Make adjustments to the pressure report
+Date: Fri, 25 Jan 2013 16:18:47 -0800
+Message-ID: <1359159527-8148-1-git-send-email-kys@microsoft.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:42722
+	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753641Ab3AYXvz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jan 2013 18:51:55 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, jasowang@redhat.com, linux-scsi@vger.kernel.org
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 
-Hello, Paolo.
+The host expects that the pressure report includes the pressure due to the
+pages that have been ballooned. Make necessary adjustments to reflect that.
+Also, include the free memory information in the pressure report.
 
-On Sat, Jan 26, 2013 at 12:32:36AM +0100, Paolo Bonzini wrote:
-> If I make a whitelist with all the commands that Linux sends, I'll have
-> many new commands in the whitelist and no old commands.  The new
-> commands didn't exist when old drives were sold, so they are "dangerous"
-> in your opinion.  At that point I might as well keep the whitelist
-> empty, no?
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/hv/hv_balloon.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
-Let's not go to extremes.  It's not about theoretic correctness.  It's
-about how to appraoch a possibly messy practical problem.  To me, it
-seems natural to be conservative on this and add what's being acitvely
-used, which as a bonus will also give us at least some chance of
-evaluating what we have and why later on if it ever needs to be
-changed.
-
-I'm just not comfortable with adding a bunch of commands by simply
-scanning the specs.  Let's at least have some backing data and
-justification for exposing new ones.  I really don't think that's too
-much to ask.  Start with minimal set.  Grow it as needed.  We can
-always grow but the other direction is much harder.
-
-Thanks.
-
+diff --git a/drivers/hv/hv_balloon.c b/drivers/hv/hv_balloon.c
+index ce6f984..32a96f1 100644
+--- a/drivers/hv/hv_balloon.c
++++ b/drivers/hv/hv_balloon.c
+@@ -529,15 +529,21 @@ static void process_info(struct hv_dynmem_device *dm, struct dm_info_msg *msg)
+ static void post_status(struct hv_dynmem_device *dm)
+ {
+ 	struct dm_status status;
++	struct sysinfo val;
+ 
+-
++	si_meminfo(&val);
+ 	memset(&status, 0, sizeof(struct dm_status));
+ 	status.hdr.type = DM_STATUS_REPORT;
+ 	status.hdr.size = sizeof(struct dm_status);
+ 	status.hdr.trans_id = atomic_inc_return(&trans_id);
+ 
+-
+-	status.num_committed = vm_memory_committed();
++	/*
++	 * The host expects the guest to report free memory.
++	 * Further, the host expects the pressure information to
++	 * include the ballooned out pages.
++	 */
++	status.num_avail = val.freeram;
++	status.num_committed = vm_memory_committed() + dm->num_pages_ballooned;
+ 
+ 	vmbus_sendpacket(dm->dev->channel, &status,
+ 				sizeof(struct dm_status),
 -- 
-tejun
+1.7.4.1
+
