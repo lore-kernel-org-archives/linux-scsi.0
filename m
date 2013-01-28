@@ -1,148 +1,53 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 3/4] block: implement runtime pm strategy
-Date: Mon, 28 Jan 2013 17:21:21 +0800
-Message-ID: <20130128092121.GB2568@aaronlu.sh.intel.com>
-References: <50FA3C38.5030308@intel.com>
- <Pine.LNX.4.44L0.1301191259040.13032-100000@netrider.rowland.org>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH RFC 0/9] [SCSI] Enhanced sense and Unit Attention handling
+Date: Mon, 28 Jan 2013 09:05:02 -0600
+Message-ID: <5106939E.1010301@tributary.com>
+References: <1358526434-1173-1-git-send-email-emilne@redhat.com> <CAO+b5-oKyPoSdKJPcyaf4FkDUNH25Cwwz=_C4WiwvpfauNqStQ@mail.gmail.com> <51011D2E.305@suse.de> <CAO+b5-ptjPEbCrKEpdCEZBCh5Xs7ycXQA5V+iohAL4TSfbUzFg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1301191259040.13032-100000@netrider.rowland.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay.ihostexchange.net ([66.46.182.58]:47392 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750742Ab3A1PKV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jan 2013 10:10:21 -0500
+In-Reply-To: <CAO+b5-ptjPEbCrKEpdCEZBCh5Xs7ycXQA5V+iohAL4TSfbUzFg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Hannes Reinecke <hare@suse.de>, "Ewan D. Milne" <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sat, Jan 19, 2013 at 01:11:45PM -0500, Alan Stern wrote:
-> On Sat, 19 Jan 2013, Aaron Lu wrote:
-> > Considering ODD's use case, I was thinking of moving the
-> > blk_pm_runtime_init call to sd.c, as sr will not use request based auto
-> > suspend. Probably right before we decrease usage count for the device in
-> > sd_probe_async. What do you think?
-> 
-> That makes sense.  But then you should review the changes in scsi_pm.c 
-> to make sure they will work okay for devices that aren't using 
-> block-layer runtime PM.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Now that we have two different runtime PM schemes for scsi device, and
-I think there are two ways to make them work:
+On 1/24/2013 8:38 AM, Bart Van Assche wrote:
 
-1 Do it all in scsi_pm.c. In bus' runtime PM callback, check if this
-  device is using block layer runtime PM API, and act accordingly;
-2 Do it in indivisual drivers' runtime PM callback. Bus' runtime PM
-  callbacks just call pm_generic_runtime_xxx, and each driver's runtime
-  PM callback will need to do what is appropriate for them.
+> Let me ask this another way. SAN users expect that the LUN list at the 
+> initiator side gets updated automatically after a SAN configuration change.
+> How should a SAN system communicate to a SCSI initiator that the LUN list
+> has been changed ? Some FC SAN systems send a LIP after a configuration
+> change to force the initiator to rescan LUNs. But how to
 
-Personally I want to go with option 1, but I would like to hear your
-opinion :-)
+	What I think your looking for is RSCN (Registered State Change notification)
+. Hook that, and then check the name server. This will tell you when ports get
+added/removed. You can then report luns against lun 0 of all the known target
+ports. This allows you to transparently detect changes.
 
-And for option 1, the code would be like this:
+	Otherwise, you run the risk of trapping UA's in the lower level portions of
+the stack that _REALLY_ need to be propagated to the controlling driver or
+application.
 
-static int scsi_blk_runtime_suspend(struct device *dev)
-{
-	struct scsi_device *sdev = to_scsi_device(dev);
-	int err;
 
-	err = blk_pre_runtime_suspend(sdev->request_queue);
-	if (err)
-		return err;
-	err = pm_generic_runtime_suspend(dev);
-	blk_post_runtime_suspend(sdev->request_queue, err);
 
-	return err;
-}
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-static int scsi_dev_runtime_suspend(struct device *dev)
-{
-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-	int err;
-
-	err = scsi_dev_type_suspend(dev, pm ? pm->runtime_suspend : NULL);
-	if (err == -EAGAIN)
-		pm_schedule_suspend(dev, jiffies_to_msecs(
-					round_jiffies_up_relative(HZ/10)));
-
-	return err;
-}
-
-static int scsi_runtime_suspend(struct device *dev)
-{
-	int err = 0;
-
-	dev_dbg(dev, "scsi_runtime_suspend\n");
-	if (scsi_is_sdev_device(dev)) {
-		struct scsi_device *sdev = to_scsi_device(dev);
-		if (sdev->request_queue->dev)
-			err = scsi_blk_runtime_suspend(dev);
-		else
-			err = scsi_dev_runtime_suspend(dev);
-	}
-
-	/* Insert hooks here for targets, hosts, and transport classes */
-
-	return err;
-}
-
-static int scsi_blk_runtime_resume(struct device *dev)
-{
-	struct scsi_device *sdev = to_scsi_device(dev);
-	int err;
-
-	blk_pre_runtime_resume(sdev->request_queue);
-	err = pm_generic_runtime_resume(dev);
-	blk_post_runtime_resume(sdev->request_queue, err);
-
-	return err;
-}
-
-static int scsi_dev_runtime_resume(struct device *dev)
-{
-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-	return scsi_dev_type_resume(dev, pm ? pm->runtime_resume : NULL);
-}
-
-static int scsi_runtime_resume(struct device *dev)
-{
-	int err = 0;
-
-	dev_dbg(dev, "scsi_runtime_resume\n");
-	if (scsi_is_sdev_device(dev)) {
-		struct scsi_device *sdev = to_scsi_device(dev);
-		if (sdev->request_queue->dev)
-			err = scsi_blk_runtime_resume(dev);
-		else
-			err = scsi_dev_runtime_resume(dev);
-	}
-
-	/* Insert hooks here for targets, hosts, and transport classes */
-
-	return err;
-}
-
-static int scsi_runtime_idle(struct device *dev)
-{
-	int err;
-
-	dev_dbg(dev, "scsi_runtime_idle\n");
-
-	/* Insert hooks here for targets, hosts, and transport classes */
-
-	if (scsi_is_sdev_device(dev)) {
-		struct scsi_device *sdev = to_scsi_device(dev);
-		if (sdev->request_queue->dev) {
-			pm_runtime_mark_last_busy(dev);
-			err = pm_runtime_autosuspend(dev);
-		} else {
-			err = pm_schedule_suspend(dev, 100);
-		}
-	} else {
-		err = pm_runtime_suspend(dev);
-	}
-	return err;
-}
-
-Please feel free to suggest, thanks.
-
--Aaron
-
+iQEcBAEBAgAGBQJRBpOeAAoJEL5i86xrzcy765gH/AnG1TPJ5Y3RGx00TiLP5shb
++yS384FoIis4XuWijUdofsAcnZzUFaMgH7lPBr5TkT1yYDgyXtzvpjV/2rvWlvzA
+PfHPU4vPFmpF1XO7IX2PJCpHAYheHXhucnMkXVLI9GA5nR9+BPQjjvav24ixGKPc
+b2889zju7Z7KUb0R4SXWtSCbRZZtYuBj0Rckh8a/ra9wJXHuMpsg7+7OzrLqbSqH
+OcAmcb5Q8T/5D6Rj4rJVF3d1Fzr5+P2qrMhS+eb98I6phZ5UvHs66nY/pHjCGpbA
+SShQlGOg7+nIjxsf9jjl2/sgx0jJH40koyW8Xv9WERE75eQ9bVBpBX3BeosvlJs=
+=isBF
+-----END PGP SIGNATURE-----
