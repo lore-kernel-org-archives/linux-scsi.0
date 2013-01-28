@@ -1,123 +1,61 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RFC 0/9] [SCSI] Enhanced sense and Unit Attention handling
-Date: Mon, 28 Jan 2013 07:56:22 +0100
-Message-ID: <51062116.2060709@suse.de>
-References: <1358526434-1173-1-git-send-email-emilne@redhat.com> <CAO+b5-oKyPoSdKJPcyaf4FkDUNH25Cwwz=_C4WiwvpfauNqStQ@mail.gmail.com> <51011D2E.305@suse.de> <CAO+b5-ptjPEbCrKEpdCEZBCh5Xs7ycXQA5V+iohAL4TSfbUzFg@mail.gmail.com> <51014A7B.2060806@suse.de> <51014C84.4000906@cs.wisc.edu> <51015016.5050309@suse.de> <51041E57.3080104@cs.wisc.edu>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 4/4] sd: change to auto suspend mode
+Date: Mon, 28 Jan 2013 16:56:51 +0800
+Message-ID: <20130128085651.GA2568@aaronlu.sh.intel.com>
+References: <1358326941-3725-5-git-send-email-aaron.lu@intel.com>
+ <Pine.LNX.4.44L0.1301181613060.1190-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43766 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752571Ab3A1G4Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jan 2013 01:56:24 -0500
-In-Reply-To: <51041E57.3080104@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1301181613060.1190-100000@iolanthe.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-On 01/26/2013 07:20 PM, Mike Christie wrote:
-> On 01/24/2013 09:15 AM, Hannes Reinecke wrote:
->> On 01/24/2013 04:00 PM, Mike Christie wrote:
->>> On 01/24/2013 07:51 AM, Hannes Reinecke wrote:
->>>> On 01/24/2013 03:38 PM, Bart Van Assche wrote:
->>>>> On Thu, Jan 24, 2013 at 4:38 AM, Hannes Reinecke <hare@suse.de> w=
-rote:
->>>>>> As for AEN, does iSCSI _do_ AEN? I thought it got removed ...
->>>>>>
->>>>>> If it does, though, it should schedule an event on its own whene=
-ver
->>>>>> an AER
->>>>>> is received. The same goes for LLDDs with vendor-specific AENs;
->>>>>> thinking of
->>>>>> megaraid_sas here ...
->>>>>
->>>>> Let me ask this another way. SAN users expect that the LUN list a=
-t the
->>>>> initiator side gets updated automatically after a SAN configurati=
-on
->>>>> change. How should a SAN system communicate to a SCSI initiator t=
-hat
->>>>> the LUN list has been changed ? Some FC SAN systems send a LIP af=
-ter a
->>>>> configuration change to force the initiator to rescan LUNs.
->>>>
->>>> And thereby disrupting traffic on _ALL_ LUNs on the loop.
->>>> Really cool idea.
->>>> I know; the one vendor which does _not_ talk to us.
->>>>
->>>>> But how to inform the initiator about a LUN change for other SCSI
->>>>> protocols ?
->>>>> I'm not sure that it is even possible to report such a change via=
- sense
->>>>> data in case a SAN user first removes all LUNs and after that cha=
-nge
->>>>> adds one or more LUNs.
->>>>>
->>>> The official way is indeed via UAs; most storage arrays (Hello, Ne=
-tApp!)
->>>> provide a default LUN0 which is always visible.
->>>> Up to the point that some even refuse to add 'normal' disk LUNs to=
- LUN0.
->>>> Or have the ominous 'Well-known Address' LUN to handle these kind =
-of
->>>> issues.
->>>>
->>>> Obviously, one needs to send commands to it to even _get_ an UA ba=
-ck.
->>>>
->>>
->>> In SAM5 there is that QUERY ASYNCHRONOUS EVENT TMF. Could we send t=
-hat
->>> periodically to lun0/well-knwon-lun if the transport supports it (i=
-scsi
->>> will in
->>> http://tools.ietf.org/html/draft-ietf-storm-iscsi-sam-06#section-6)=
-=2E
->>> Whatever daemon in userspace handles these other events, could send=
- it
->>> (we just need to add a interface) or we could add kernel code.
->>>
->> Oh, cool.
->> Polling a device to figure out if we should poll it :-)
->>
->> We'd be better off sending TEST UNIT READY to it; then we should
->> be getting UAs regardless on the SAM version in use on the target.
->>
->
-> To handle the case where all devices are removed then new ones are
-> added, we will not have kernel structs or /dev/sdXs to send TURs to t=
-o
-> find new ones. Are you thinking we would do something like have the
-> kernel create temp structs to send TURs to LUN0/well-known-lun? Or, d=
-o
-> you think we would have something doing scsi scans (call
-> scsi_scan_target or scsi_scan_host) every once in a while?
->
-Well, not as such.
+On Fri, Jan 18, 2013 at 04:25:10PM -0500, Alan Stern wrote:
+> On Wed, 16 Jan 2013, Aaron Lu wrote:
+> 
+> > From: Lin Ming <ming.m.lin@intel.com>
+> > 
+> > Uses block layer runtime pm helper functions in
+> > scsi_runtime_suspend/resume.
+> > Remove scsi_autopm_* from sd open/release path and check_events path.
+> > And remove the quiesce call in runtime suspend path, as we know there is
+> > no request to quiesce for the device.
+> > 
+> > Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> 
+> > --- a/drivers/scsi/scsi_sysfs.c
+> > +++ b/drivers/scsi/scsi_sysfs.c
+> > @@ -893,6 +893,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+> >  	 */
+> >  	scsi_autopm_get_device(sdev);
+> >  
+> > +	blk_pm_runtime_init(rq, &sdev->sdev_gendev);
+> > +
+> >  	error = device_add(&sdev->sdev_gendev);
+> >  	if (error) {
+> >  		sdev_printk(KERN_INFO, sdev,
+> 
+> Someone just asked about the default autosuspend delay, and I realized
+> your patch series doesn't set one.  Since we don't know the properties
+> of the disk drive at this point (or even whether the device is a disk
+> drive), the only safe course is to call
+> 
+> 	pm_runtime_set_autosuspend_delay(&sdev->sdev_gendev, -1);
+> 
+> before calling blk_pm_runtime_init().  Then autosuspends will be 
+> prevented until userspace writes a non-negative value into the device's 
+> control/autosuspend_delay_ms file.
 
-Most arrays (eg RDAC, EVA, or EMC) will present you with a separate=20
-device (like the infamous 'Universal Xport' :-) which will be=20
-present always, so it can be used for polling in case no targets are=20
-present.
-NetApp and the like are more tricky as they do _not_ present any=20
-targets per default. So we'd need something here to talk to.
-Some kind of 'virtual' LUN0 or somesuch.
+Shall we do it inside blk_pm_runtime_init? This way, we do not need to
+do it for every driver. And for drivers that do know a proper value for
+autosuspend delay, they can call pm_runtime_set_autosuspend_delay
+somewhere after blk_pm_runtime_init.
 
-Wouldn't this be a grand topic for LSF?
+Thanks,
+Aaron
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
