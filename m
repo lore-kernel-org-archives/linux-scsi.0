@@ -1,53 +1,44 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH RFC 0/9] [SCSI] Enhanced sense and Unit Attention handling
-Date: Mon, 28 Jan 2013 09:05:02 -0600
-Message-ID: <5106939E.1010301@tributary.com>
-References: <1358526434-1173-1-git-send-email-emilne@redhat.com> <CAO+b5-oKyPoSdKJPcyaf4FkDUNH25Cwwz=_C4WiwvpfauNqStQ@mail.gmail.com> <51011D2E.305@suse.de> <CAO+b5-ptjPEbCrKEpdCEZBCh5Xs7ycXQA5V+iohAL4TSfbUzFg@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v7 3/4] block: implement runtime pm strategy
+Date: Mon, 28 Jan 2013 10:11:53 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1301281010160.1997-100000@iolanthe.rowland.org>
+References: <20130128092121.GB2568@aaronlu.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.58]:47392 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750742Ab3A1PKV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jan 2013 10:10:21 -0500
-In-Reply-To: <CAO+b5-ptjPEbCrKEpdCEZBCh5Xs7ycXQA5V+iohAL4TSfbUzFg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <20130128092121.GB2568@aaronlu.sh.intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Hannes Reinecke <hare@suse.de>, "Ewan D. Milne" <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Mon, 28 Jan 2013, Aaron Lu wrote:
 
-On 1/24/2013 8:38 AM, Bart Van Assche wrote:
+> On Sat, Jan 19, 2013 at 01:11:45PM -0500, Alan Stern wrote:
+> > On Sat, 19 Jan 2013, Aaron Lu wrote:
+> > > Considering ODD's use case, I was thinking of moving the
+> > > blk_pm_runtime_init call to sd.c, as sr will not use request based auto
+> > > suspend. Probably right before we decrease usage count for the device in
+> > > sd_probe_async. What do you think?
+> > 
+> > That makes sense.  But then you should review the changes in scsi_pm.c 
+> > to make sure they will work okay for devices that aren't using 
+> > block-layer runtime PM.
+> 
+> Now that we have two different runtime PM schemes for scsi device, and
+> I think there are two ways to make them work:
+> 
+> 1 Do it all in scsi_pm.c. In bus' runtime PM callback, check if this
+>   device is using block layer runtime PM API, and act accordingly;
+> 2 Do it in indivisual drivers' runtime PM callback. Bus' runtime PM
+>   callbacks just call pm_generic_runtime_xxx, and each driver's runtime
+>   PM callback will need to do what is appropriate for them.
+> 
+> Personally I want to go with option 1, but I would like to hear your
+> opinion :-)
 
-> Let me ask this another way. SAN users expect that the LUN list at the 
-> initiator side gets updated automatically after a SAN configuration change.
-> How should a SAN system communicate to a SCSI initiator that the LUN list
-> has been changed ? Some FC SAN systems send a LIP after a configuration
-> change to force the initiator to rescan LUNs. But how to
+I don't think it matters very much.  Option 1 is okay with me.  James 
+might have a stronger feeling one way or the other.
 
-	What I think your looking for is RSCN (Registered State Change notification)
-. Hook that, and then check the name server. This will tell you when ports get
-added/removed. You can then report luns against lun 0 of all the known target
-ports. This allows you to transparently detect changes.
+Alan Stern
 
-	Otherwise, you run the risk of trapping UA's in the lower level portions of
-the stack that _REALLY_ need to be propagated to the controlling driver or
-application.
-
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJRBpOeAAoJEL5i86xrzcy765gH/AnG1TPJ5Y3RGx00TiLP5shb
-+yS384FoIis4XuWijUdofsAcnZzUFaMgH7lPBr5TkT1yYDgyXtzvpjV/2rvWlvzA
-PfHPU4vPFmpF1XO7IX2PJCpHAYheHXhucnMkXVLI9GA5nR9+BPQjjvav24ixGKPc
-b2889zju7Z7KUb0R4SXWtSCbRZZtYuBj0Rckh8a/ra9wJXHuMpsg7+7OzrLqbSqH
-OcAmcb5Q8T/5D6Rj4rJVF3d1Fzr5+P2qrMhS+eb98I6phZ5UvHs66nY/pHjCGpbA
-SShQlGOg7+nIjxsf9jjl2/sgx0jJH40koyW8Xv9WERE75eQ9bVBpBX3BeosvlJs=
-=isBF
------END PGP SIGNATURE-----
