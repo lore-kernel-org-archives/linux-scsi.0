@@ -1,67 +1,171 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RFC 0/9] [SCSI] Enhanced sense and Unit Attention
- handling
-Date: Tue, 29 Jan 2013 07:26:46 +1100
-Message-ID: <1359404806.2408.2.camel@dabdike>
-References: <1358526434-1173-1-git-send-email-emilne@redhat.com>
-	 <CAO+b5-oKyPoSdKJPcyaf4FkDUNH25Cwwz=_C4WiwvpfauNqStQ@mail.gmail.com>
-	 <51011D2E.305@suse.de>
-	 <CAO+b5-ptjPEbCrKEpdCEZBCh5Xs7ycXQA5V+iohAL4TSfbUzFg@mail.gmail.com>
-	 <5106939E.1010301@tributary.com> <51069CC8.3000103@acm.org>
-	 <51069DE0.4010006@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+From: Rob Evers <revers@redhat.com>
+Subject: [PATCH 1/2] Encapsulate scsi_do_report_luns
+Date: Mon, 28 Jan 2013 15:27:53 -0500
+Message-ID: <1359404874-30871-2-git-send-email-revers@redhat.com>
+References: <1359404874-30871-1-git-send-email-revers@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41135 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752124Ab3A1U0x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jan 2013 15:26:53 -0500
-In-Reply-To: <51069DE0.4010006@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:28638 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753721Ab3A1U14 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jan 2013 15:27:56 -0500
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r0SKRtO3006626
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Jan 2013 15:27:56 -0500
+Received: from localhost (dhcp-185-85.bos.redhat.com [10.16.185.85])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r0SKRtU2017935
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Jan 2013 15:27:55 -0500
+In-Reply-To: <1359404874-30871-1-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Assche <bvanassche@acm.org>, Jeremy Linton <jlinton@tributary.com>, "Ewan D. Milne" <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2013-01-28 at 16:48 +0100, Hannes Reinecke wrote:
-> On 01/28/2013 04:44 PM, Bart Van Assche wrote:
-> > On 01/28/13 16:05, Jeremy Linton wrote:
-> >> What I think your looking for is RSCN (Registered State Change
-> >> notification).
-> >> Hook that, and then check the name server. This will tell you when
-> >> ports get
-> >> added/removed. You can then report luns against lun 0 of all the
-> >> known target
-> >> ports. This allows you to transparently detect changes.
-> >>
-> >> Otherwise, you run the risk of trapping UA's in the lower level
-> >> portions of
-> >> the stack that _REALLY_ need to be propagated to the controlling
-> >> driver or
-> >> application.
-> >
-> > Thanks for the feedback. Unfortunately sending an RSCN is only
-> > possible when using Fibre Channel as transport layer. I'm looking
-> > for a solution that also works with other SCSI transports, e.g.
-> > iSCSI and SRP.
-> >
-> And we're already doing that. Rather, the FC HBAs do exactly this.
-> 
-> So the proposal would be to export a 'virtual' LUN0 if none is 
-> present, so that we always have a device to talk to, right?
-> 
-> Shouldn't be too hard; we already create a 'virtual' LUN0 during 
-> scanning, only we delete it if no LUNs are found.
-> So we're already doing this, only we don't tell :-)
 
-I'm not sure I'd like to leave virtual LUN-0 around if we find nothing
-because it's going to cause confusion and be nasty in cases where a
-physical lun 0 is created later.  However, don't the standards define
-this ignored lun: W-LUN that's supposed to be created precisely for this
-purpose?  I wouldn't object to creating and exporting one of those if we
-have to and the array doesn't supply it.
+Signed-off-by: Rob Evers <revers@redhat.com>
+---
+ drivers/scsi/scsi_scan.c | 109 +++++++++++++++++++++++++----------------------
+ 1 file changed, 59 insertions(+), 50 deletions(-)
 
-James
-
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 3e58b22..b2abf22 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1282,6 +1282,64 @@ void int_to_scsilun(unsigned int lun, struct scsi_lun *scsilun)
+ }
+ EXPORT_SYMBOL(int_to_scsilun);
+ 
++int scsi_do_report_luns(struct scsi_device *sdev, int length,
++			struct scsi_lun *lun_data, char *devname)
++{
++	unsigned int retries;
++	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
++	struct scsi_sense_hdr sshdr;
++	int result;
++
++	scsi_cmd[0] = REPORT_LUNS;
++
++	/*
++	 * bytes 1 - 5: reserved, set to zero.
++	 */
++	memset(&scsi_cmd[1], 0, 5);
++
++	/*
++	 * bytes 6 - 9: length of the command.
++	 */
++	scsi_cmd[6] = (unsigned char) (length >> 24) & 0xff;
++	scsi_cmd[7] = (unsigned char) (length >> 16) & 0xff;
++	scsi_cmd[8] = (unsigned char) (length >> 8) & 0xff;
++	scsi_cmd[9] = (unsigned char) length & 0xff;
++
++	scsi_cmd[10] = 0;	/* reserved */
++	scsi_cmd[11] = 0;	/* control */
++
++	/*
++	 * We can get a UNIT ATTENTION, for example a power on/reset, so
++	 * retry a few times (like sd.c does for TEST UNIT READY).
++	 * Experience shows some combinations of adapter/devices get at
++	 * least two power on/resets.
++	 *
++	 * Illegal requests (for devices that do not support REPORT LUNS)
++	 * should come through as a check condition, and will not generate
++	 * a retry.
++	 */
++	for (retries = 0; retries < 3; retries++) {
++		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: Sending"
++				  " REPORT LUNS to %s (try %d)\n", devname,
++				  retries));
++		result = scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
++					  lun_data, length, &sshdr,
++					  SCSI_TIMEOUT + 4 * HZ, 3, NULL);
++
++		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: REPORT LUNS"
++				  " %s (try %d) result 0x%x\n", result
++				  ?  "failed" : "successful", retries, result));
++		if (result == 0)
++			break;
++		else if (scsi_sense_valid(&sshdr)) {
++			if (sshdr.sense_key != UNIT_ATTENTION)
++				break;
++		}
++	}
++
++	return result;
++}
++
+ /**
+  * scsi_report_lun_scan - Scan using SCSI REPORT LUN results
+  * @starget: which target
+@@ -1306,15 +1364,12 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 				int rescan)
+ {
+ 	char devname[64];
+-	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	unsigned int length;
+ 	unsigned int lun;
+ 	unsigned int num_luns;
+-	unsigned int retries;
+ 	int result;
+ 	struct scsi_lun *lunp, *lun_data;
+ 	u8 *data;
+-	struct scsi_sense_hdr sshdr;
+ 	struct scsi_device *sdev;
+ 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
+ 	int ret = 0;
+@@ -1369,53 +1424,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 		goto out;
+ 	}
+ 
+-	scsi_cmd[0] = REPORT_LUNS;
+-
+-	/*
+-	 * bytes 1 - 5: reserved, set to zero.
+-	 */
+-	memset(&scsi_cmd[1], 0, 5);
+-
+-	/*
+-	 * bytes 6 - 9: length of the command.
+-	 */
+-	scsi_cmd[6] = (unsigned char) (length >> 24) & 0xff;
+-	scsi_cmd[7] = (unsigned char) (length >> 16) & 0xff;
+-	scsi_cmd[8] = (unsigned char) (length >> 8) & 0xff;
+-	scsi_cmd[9] = (unsigned char) length & 0xff;
+-
+-	scsi_cmd[10] = 0;	/* reserved */
+-	scsi_cmd[11] = 0;	/* control */
+-
+-	/*
+-	 * We can get a UNIT ATTENTION, for example a power on/reset, so
+-	 * retry a few times (like sd.c does for TEST UNIT READY).
+-	 * Experience shows some combinations of adapter/devices get at
+-	 * least two power on/resets.
+-	 *
+-	 * Illegal requests (for devices that do not support REPORT LUNS)
+-	 * should come through as a check condition, and will not generate
+-	 * a retry.
+-	 */
+-	for (retries = 0; retries < 3; retries++) {
+-		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: Sending"
+-				" REPORT LUNS to %s (try %d)\n", devname,
+-				retries));
+-
+-		result = scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
+-					  lun_data, length, &sshdr,
+-					  SCSI_TIMEOUT + 4 * HZ, 3, NULL);
+-
+-		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: REPORT LUNS"
+-				" %s (try %d) result 0x%x\n", result
+-				?  "failed" : "successful", retries, result));
+-		if (result == 0)
+-			break;
+-		else if (scsi_sense_valid(&sshdr)) {
+-			if (sshdr.sense_key != UNIT_ATTENTION)
+-				break;
+-		}
+-	}
++	result = scsi_do_report_luns(sdev, length, lun_data, devname);
+ 
+ 	if (result) {
+ 		/*
+-- 
+1.7.11.7
 
