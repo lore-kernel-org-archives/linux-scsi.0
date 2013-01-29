@@ -1,27 +1,72 @@
-From: "Mrs. Pualine" <mrspau0@rambler.ru>
-Subject: business
-Date: Wed, 30 Jan 2013 01:30:35 +0600 (BDT)
-Message-ID: <49541.210.186.98.137.1359487835.squirrel@202.51.184.171>
-Reply-To: mrspau01@rambler.ru
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: storvsc loops with No Sense messages
+Date: Tue, 29 Jan 2013 19:44:42 +0000
+Message-ID: <05a4f02fe12545f489dd053175990b8d@SN2PR03MB061.namprd03.prod.outlook.com>
+References: <20130129152801.GA671@aepfle.de>
+ <a120050e059c40c2a1d1be4eadc42dfd@SN2PR03MB061.namprd03.prod.outlook.com>
+ <20130129185600.GA31738@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ASSIGNED-FOR-CLIENT.adnsl.com ([202.51.184.171]:47712 "EHLO
-	mail.amanknittings.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753132Ab3A2TpG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 14:45:06 -0500
+Received: from na01-by2-obe.ptr.protection.outlook.com ([207.46.100.24]:54642
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751380Ab3A2Twq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2013 14:52:46 -0500
+Received: from mail193-ch1 (localhost [127.0.0.1])	by
+ mail193-ch1-R.bigfish.com (Postfix) with ESMTP id 79ED0401DD	for
+ <linux-scsi@vger.kernel.org.FOPE.CONNECTOR.OVERRIDE>; Tue, 29 Jan 2013
+ 19:44:48 +0000 (UTC)
+In-Reply-To: <20130129185600.GA31738@aepfle.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Olaf Hering <olaf@aepfle.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-
-
-This is a business offer notification. I write to know if this is your
-valid email.please contact me via mrspau01@rambler.ru
-
--- 
-This message has been scanned for viruses and
-dangerous content by AccessTEL MailScanner, and is
-believed to be clean.
+V2FzIHRoZSBpbnN0YWxsYXRpb24gZG9uZSBvbiBhIHZoZCBvciBWSERYLiBJIGNoZWNrZWQgd2l0
+aCBIeXBlci1WIGd1eXMgYW5kIHRoZXkgc2F5IHRoZXkgbmV2ZXIgc3VwcG9ydGVkIFdSSVRFX1NB
+TUUuIEkgYW0gd29uZGVyaW5nIGhvdyBpdCB3b3JrZWQgb24gd3MyMDA4Lg0KDQpLLiBZDQoNCj4g
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogT2xhZiBIZXJpbmcgW21haWx0bzpv
+bGFmQGFlcGZsZS5kZV0NCj4gU2VudDogVHVlc2RheSwgSmFudWFyeSAyOSwgMjAxMyAxOjU2IFBN
+DQo+IFRvOiBLWSBTcmluaXZhc2FuDQo+IENjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0K
+PiBTdWJqZWN0OiBSZTogc3RvcnZzYyBsb29wcyB3aXRoIE5vIFNlbnNlIG1lc3NhZ2VzDQo+IA0K
+PiBPbiBUdWUsIEphbiAyOSwgS1kgU3Jpbml2YXNhbiB3cm90ZToNCj4gDQo+ID4gSSBoYXZlIG5v
+dCBzZWVuIHRoaXMuIFRoZSBTUkIgc3RhdHVzIGluZGljYXRlcyBpdCBpcyBhbiBpbGxlZ2FsIHJl
+cXVlc3Q7IHRoZQ0KPiBjb21tYW5kIGlzIFdSSVRFX1NBTUUuIEkgd2lsbCB0YWtlIGEgbG9vay4N
+Cj4gDQo+IEkgY2FuIGlnbm9yZSBpdCBsaWtlIFNFVF9XSU5ET1csIGFuZCB0aGUgaW5zdGFsbGF0
+aW9uIHByb2NlZWRzLg0KPiBKdXN0IGEgZmV3IG1lc3NhZ2VzIGluIGRtZXNnOg0KPiANCj4gLi4u
+DQo+IFsgIDEwNy40NDgyODFdIEVYVDQtZnMgKHNkYTIpOiBtb3VudGVkIGZpbGVzeXN0ZW0gd2l0
+aCBvcmRlcmVkIGRhdGEgbW9kZS4gT3B0czoNCj4gYWNsLHVzZXJfeGF0dHINCj4gWyAgMTExLjAy
+MDM4M10gc2QgMjowOjA6MDogW3NkYV0gVW5oYW5kbGVkIGVycm9yIGNvZGUNCj4gWyAgMTExLjAy
+MDkxM10gc2QgMjowOjA6MDogW3NkYV0NCj4gWyAgMTExLjAyMTI2NF0gUmVzdWx0OiBob3N0Ynl0
+ZT1ESURfQUJPUlQgZHJpdmVyYnl0ZT1EUklWRVJfT0sNCj4gWyAgMTExLjAyMTc5MV0gc2QgMjow
+OjA6MDogW3NkYV0gQ0RCOg0KPiBbICAxMTEuMDIyMTg2XSBXcml0ZSBTYW1lKDEwKTogNDEgMDAg
+MDAgMTYgZTMgYTggMDAgMGYgZDggMDANCj4gWyAgMTExLjAyNDQwMF0gZW5kX3JlcXVlc3Q6IEkv
+TyBlcnJvciwgZGV2IHNkYSwgc2VjdG9yIDE1MDAwNzINCj4gWyAgMTExLjAyNTc5MF0gc2RhMjog
+V1JJVEUgU0FNRSBmYWlsZWQuIE1hbnVhbGx5IHplcm9pbmcuDQo+IFsgIDExMi45MzYzNDJdIHNk
+IDI6MDowOjA6IFtzZGFdIFVuaGFuZGxlZCBlcnJvciBjb2RlDQo+IFsgIDExMi45Mzc1ODhdIHNk
+IDI6MDowOjA6IFtzZGFdDQo+IFsgIDExMi45Mzg0MjldIFJlc3VsdDogaG9zdGJ5dGU9RElEX0FC
+T1JUIGRyaXZlcmJ5dGU9RFJJVkVSX09LDQo+IFsgIDExMi45Mzk2NDJdIHNkIDI6MDowOjA6IFtz
+ZGFdIENEQjoNCj4gWyAgMTEyLjk0MDU1MF0gV3JpdGUgU2FtZSgxMCk6IDQxIDAwIDAwIDE2IGYz
+IDgwIDAwIDBmIGUwIDAwDQo+IFsgIDExMi45NDUwODFdIGVuZF9yZXF1ZXN0OiBJL08gZXJyb3Is
+IGRldiBzZGEsIHNlY3RvciAxNTA0MTI4DQo+IFsgIDExMi45NDY2MjddIHNkYTI6IFdSSVRFIFNB
+TUUgZmFpbGVkLiBNYW51YWxseSB6ZXJvaW5nLg0KPiBbICAxMTMuNDk1ODgwXSBJU08gOTY2MCBF
+eHRlbnNpb25zOiBNaWNyb3NvZnQgSm9saWV0IExldmVsIDMNCj4gWyAgMTEzLjQ5ODk1OV0gSVNP
+IDk2NjAgRXh0ZW5zaW9uczogUlJJUF8xOTkxQQ0KPiBbICAxMTQuNzI4Mjc0XSBzZCAyOjA6MDow
+OiBbc2RhXSBVbmhhbmRsZWQgZXJyb3IgY29kZQ0KPiBbICAxMTQuNzI5NTQwXSBzZCAyOjA6MDow
+OiBbc2RhXQ0KPiBbICAxMTQuNzMwNDE5XSBSZXN1bHQ6IGhvc3RieXRlPURJRF9BQk9SVCBkcml2
+ZXJieXRlPURSSVZFUl9PSw0KPiBbICAxMTQuNzMxNjcwXSBzZCAyOjA6MDowOiBbc2RhXSBDREI6
+DQo+IFsgIDExNC43MzI2NDRdIFdyaXRlIFNhbWUoMTApOiA0MSAwMCAwMCAxNyAwMyA2MCAwMCAw
+ZiBlMCAwMA0KPiBbICAxMTQuNzM3MjE5XSBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgc2Rh
+LCBzZWN0b3IgMTUwODE5Mg0KPiBbICAxMTQuNzM5MDI3XSBzZGEyOiBXUklURSBTQU1FIGZhaWxl
+ZC4gTWFudWFsbHkgemVyb2luZy4NCj4gWyAgMTE2LjUxMjIxN10gc2QgMjowOjA6MDogW3NkYV0g
+VW5oYW5kbGVkIGVycm9yIGNvZGUNCj4gWyAgMTE2LjUxMzIwNl0gc2QgMjowOjA6MDogW3NkYV0N
+Cj4gWyAgMTE2LjUxMzk0N10gUmVzdWx0OiBob3N0Ynl0ZT1ESURfQUJPUlQgZHJpdmVyYnl0ZT1E
+UklWRVJfT0sNCj4gWyAgMTE2LjUxNTE4N10gc2QgMjowOjA6MDogW3NkYV0gQ0RCOg0KPiBbICAx
+MTYuNTE1OTgzXSBXcml0ZSBTYW1lKDEwKTogNDEgMDAgMDAgMTcgMTMgNDAgMDAgMGYgZTAgMDAN
+Cj4gWyAgMTE2LjUxOTU0N10gZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkYSwgc2VjdG9y
+IDE1MTIyNTYNCj4gWyAgMTE2LjUyMTAxMV0gc2RhMjogV1JJVEUgU0FNRSBmYWlsZWQuIE1hbnVh
+bGx5IHplcm9pbmcuDQo+IC4uLg0KPiANCj4gT2xhZg0KPiANCg0K
 
