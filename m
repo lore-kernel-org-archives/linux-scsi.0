@@ -1,95 +1,62 @@
-From: yxlraid@gmail.com
-Subject: [PATCH] mvsas: fixed timeout issue when removing module
-Date: Wed, 30 Jan 2013 00:25:53 +0800
-Message-ID: <1359476753-19361-1-git-send-email-yxlraid@gmail.com>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: storvsc loops with No Sense messages
+Date: Tue, 29 Jan 2013 19:56:00 +0100
+Message-ID: <20130129185600.GA31738@aepfle.de>
+References: <20130129152801.GA671@aepfle.de>
+ <a120050e059c40c2a1d1be4eadc42dfd@SN2PR03MB061.namprd03.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:43943 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754060Ab3A2Q0T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 11:26:19 -0500
-Received: by mail-pa0-f46.google.com with SMTP id kp14so486109pab.33
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jan 2013 08:26:18 -0800 (PST)
+Received: from mo-p00-ob.rzone.de ([81.169.146.161]:42425 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753029Ab3A2S4J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 13:56:09 -0500
+Content-Disposition: inline
+In-Reply-To: <a120050e059c40c2a1d1be4eadc42dfd@SN2PR03MB061.namprd03.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Xiangliang Yu <yuxiangl@marvell.com>
+On Tue, Jan 29, KY Srinivasan wrote:
 
-- Root cause is libsas will clear asd_sas_port
-  phy_mask value in sas_port_deform after triggering
-  destruct workqueue, but the workqueue will send
-  sync cmd and still need phy_mask value.
-  Now, mvsas using asd_sas_phy setting instead of
-  asd_sas_port setting.
----
- drivers/scsi/mvsas/mv_sas.c |   10 ++++++++--
- drivers/scsi/mvsas/mv_sas.h |    1 +
- 2 files changed, 9 insertions(+), 2 deletions(-)
+> I have not seen this. The SRB status indicates it is an illegal request; the command is WRITE_SAME. I will take a look.
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 078c639..532110f 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -316,10 +316,13 @@ static int mvs_task_prep_smp(struct mvs_info *mvi,
- 			     struct mvs_task_exec_info *tei)
- {
- 	int elem, rc, i;
-+	struct sas_ha_struct *sha = mvi->sas;
- 	struct sas_task *task = tei->task;
- 	struct mvs_cmd_hdr *hdr = tei->hdr;
- 	struct domain_device *dev = task->dev;
- 	struct asd_sas_port *sas_port = dev->port;
-+	struct sas_phy *sphy = dev->phy;
-+	struct asd_sas_phy *sas_phy = sha->sas_phy[sphy->number];
- 	struct scatterlist *sg_req, *sg_resp;
- 	u32 req_len, resp_len, tag = tei->tag;
- 	void *buf_tmp;
-@@ -392,7 +395,7 @@ static int mvs_task_prep_smp(struct mvs_info *mvi,
- 	slot->tx = mvi->tx_prod;
- 	mvi->tx[mvi->tx_prod] = cpu_to_le32((TXQ_CMD_SMP << TXQ_CMD_SHIFT) |
- 					TXQ_MODE_I | tag |
--					(sas_port->phy_mask << TXQ_PHY_SHIFT));
-+					(MVS_PHY_ID << TXQ_PHY_SHIFT));
- 
- 	hdr->flags |= flags;
- 	hdr->lens = cpu_to_le32(((resp_len / 4) << 16) | ((req_len - 4) / 4));
-@@ -438,11 +441,14 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
- static int mvs_task_prep_ata(struct mvs_info *mvi,
- 			     struct mvs_task_exec_info *tei)
- {
-+	struct sas_ha_struct *sha = mvi->sas;
- 	struct sas_task *task = tei->task;
- 	struct domain_device *dev = task->dev;
- 	struct mvs_device *mvi_dev = dev->lldd_dev;
- 	struct mvs_cmd_hdr *hdr = tei->hdr;
- 	struct asd_sas_port *sas_port = dev->port;
-+	struct sas_phy *sphy = dev->phy;
-+	struct asd_sas_phy *sas_phy = sha->sas_phy[sphy->number];
- 	struct mvs_slot_info *slot;
- 	void *buf_prd;
- 	u32 tag = tei->tag, hdr_tag;
-@@ -462,7 +468,7 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
- 	slot->tx = mvi->tx_prod;
- 	del_q = TXQ_MODE_I | tag |
- 		(TXQ_CMD_STP << TXQ_CMD_SHIFT) |
--		(sas_port->phy_mask << TXQ_PHY_SHIFT) |
-+		(MVS_PHY_ID << TXQ_PHY_SHIFT) |
- 		(mvi_dev->taskfileset << TXQ_SRS_SHIFT);
- 	mvi->tx[mvi->tx_prod] = cpu_to_le32(del_q);
- 
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 2ae77a0..9f3cc13 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -76,6 +76,7 @@ extern struct kmem_cache *mvs_task_list_cache;
- 					(__mc) != 0 ;		\
- 					(++__lseq), (__mc) >>= 1)
- 
-+#define MVS_PHY_ID (1U << sas_phy->id)
- #define MV_INIT_DELAYED_WORK(w, f, d)	INIT_DELAYED_WORK(w, f)
- #define UNASSOC_D2H_FIS(id)		\
- 	((void *) mvi->rx_fis + 0x100 * id)
--- 
-1.7.5.4
+I can ignore it like SET_WINDOW, and the installation proceeds.
+Just a few messages in dmesg:
 
+...
+[  107.448281] EXT4-fs (sda2): mounted filesystem with ordered data mode. Opts: acl,user_xattr
+[  111.020383] sd 2:0:0:0: [sda] Unhandled error code
+[  111.020913] sd 2:0:0:0: [sda]
+[  111.021264] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+[  111.021791] sd 2:0:0:0: [sda] CDB:
+[  111.022186] Write Same(10): 41 00 00 16 e3 a8 00 0f d8 00
+[  111.024400] end_request: I/O error, dev sda, sector 1500072
+[  111.025790] sda2: WRITE SAME failed. Manually zeroing.
+[  112.936342] sd 2:0:0:0: [sda] Unhandled error code
+[  112.937588] sd 2:0:0:0: [sda]
+[  112.938429] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+[  112.939642] sd 2:0:0:0: [sda] CDB:
+[  112.940550] Write Same(10): 41 00 00 16 f3 80 00 0f e0 00
+[  112.945081] end_request: I/O error, dev sda, sector 1504128
+[  112.946627] sda2: WRITE SAME failed. Manually zeroing.
+[  113.495880] ISO 9660 Extensions: Microsoft Joliet Level 3
+[  113.498959] ISO 9660 Extensions: RRIP_1991A
+[  114.728274] sd 2:0:0:0: [sda] Unhandled error code
+[  114.729540] sd 2:0:0:0: [sda]
+[  114.730419] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+[  114.731670] sd 2:0:0:0: [sda] CDB:
+[  114.732644] Write Same(10): 41 00 00 17 03 60 00 0f e0 00
+[  114.737219] end_request: I/O error, dev sda, sector 1508192
+[  114.739027] sda2: WRITE SAME failed. Manually zeroing.
+[  116.512217] sd 2:0:0:0: [sda] Unhandled error code
+[  116.513206] sd 2:0:0:0: [sda]
+[  116.513947] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+[  116.515187] sd 2:0:0:0: [sda] CDB:
+[  116.515983] Write Same(10): 41 00 00 17 13 40 00 0f e0 00
+[  116.519547] end_request: I/O error, dev sda, sector 1512256
+[  116.521011] sda2: WRITE SAME failed. Manually zeroing.
+...
+
+Olaf
