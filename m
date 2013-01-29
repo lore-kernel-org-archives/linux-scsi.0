@@ -1,41 +1,50 @@
 From: Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [PATCH] aic7xxx_old: silence GCC warnings
-Date: Tue, 29 Jan 2013 11:05:28 +0100
-Message-ID: <1359453928.1345.35.camel@x61.thuisdomein>
-References: <1348219723.1581.5.camel@x61.thuisdomein>
-	 <1351506978.1339.8.camel@x61.thuisdomein>
-	 <1351513026.2480.4.camel@dabdike.sthat4.btopenzone.com>
-	 <1351514716.1339.15.camel@x61.thuisdomein>
+Subject: Re: [PATCH] [SCSI] advansys: change buildtime warning into runtime
+ error
+Date: Tue, 29 Jan 2013 11:20:42 +0100
+Message-ID: <1359454842.1345.40.camel@x61.thuisdomein>
+References: <1352113082.1434.31.camel@x61.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1351514716.1339.15.camel@x61.thuisdomein>
+In-Reply-To: <1352113082.1434.31.camel@x61.thuisdomein>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2012-10-29 at 13:45 +0100, Paul Bolle wrote:
-> On Mon, 2012-10-29 at 12:17 +0000, James Bottomley wrote:
-> > mvsas has a maintainer: poke them harder
->=20
-> According to MAINTAINERS that's you. Is Xiangliang Yu perhaps the act=
-ual
-> maintainer?
+On Mon, 2012-11-05 at 11:58 +0100, Paul Bolle wrote:
+> Building advansys.o triggers this warning:
+>     drivers/scsi/advansys.c:71:2: warning: #warning this driver is still not properly converted to the DMA API [-Wcpp]
+> 
+> This warning can be traced back to a patch called "advansys: add warning
+> and convert #includes" which was included in v2.6.10. That patch also
+> marked the driver as BROKEN.
+> 
+> Commit 4661e3eace2c7b8433476b5bf0ee437ab3c7dfd4 ("[SCSI] advansys
+> driver: limp along on x86") enabled this driver for x86-32. And commit
+> 9d511a4b29de6764931343d03e493f2e04df0271 ("[SCSI] advansys: Changes to
+> work on parisc") enabled this driver for all architectures. But the
+> commit explanation stated:
+>     I haven't removed the #warning yet because virt_to_bus/bus_to_virt are
+>     only eliminated for narrow boards.  Wide boards need more work.
+> 
+> Five years have passed and, apparently, those wide boards still need
+> more work. So let's change the buildtime warning into a runtime error,
+> only printed for those wide boards. Perhaps that might push the people
+> using those wide boards to convert this driver. And for all others
+> there's now one less buildtime warning to ignore.
+> 
+> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> ---
+> Compile tested only. I don't have any AdvanSys SCSI boards (neither
+> narrow nor wide).
 
-Building the mvsas driver triggers identical warnings in v3.8-rc5:
-    drivers/scsi/mvsas/mv_sas.c: In function =E2=80=98mvs_update_phyinf=
-o=E2=80=99:
-    drivers/scsi/mvsas/mv_sas.c:1156:34: warning: comparison between =E2=
-=80=98enum sas_device_type=E2=80=99 and =E2=80=98enum sas_dev_type=E2=80=
-=99 [-Wenum-compare]
-    drivers/scsi/mvsas/mv_sas.c:1159:39: warning: comparison between =E2=
-=80=98enum sas_device_type=E2=80=99 and =E2=80=98enum sas_dev_type=E2=80=
-=99 [-Wenum-compare]
-
-And according to MAINTAINERS you're still the maintainer. So I'd guess
-I'm poking the maintainer now.
+The date of this message suggests I submitted this patch for a warning
+seen while building v3.7-rc4. An identical warning can be seen while
+building v3.8-rc5. What's the status of my patch? Did anyone find some
+time to have a look at it?
 
 
 Paul Bolle
