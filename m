@@ -1,36 +1,65 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: storvsc loops with No Sense messages
-Date: Tue, 29 Jan 2013 22:27:43 +0100
-Message-ID: <20130129212743.GA8052@aepfle.de>
-References: <20130129152801.GA671@aepfle.de>
- <a120050e059c40c2a1d1be4eadc42dfd@SN2PR03MB061.namprd03.prod.outlook.com>
- <20130129185600.GA31738@aepfle.de>
- <05a4f02fe12545f489dd053175990b8d@SN2PR03MB061.namprd03.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.161]:55854 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750949Ab3A2V1x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 16:27:53 -0500
-Content-Disposition: inline
-In-Reply-To: <05a4f02fe12545f489dd053175990b8d@SN2PR03MB061.namprd03.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 1/3] target: Fix zero-length INQUIRY additional sense code regression
+Date: Tue, 29 Jan 2013 22:26:13 +0000
+Message-ID: <1359498375-8040-2-git-send-email-nab@linux-iscsi.org>
+References: <1359498375-8040-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1359498375-8040-1-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, Roland Dreier <roland@purestorage.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 29, KY Srinivasan wrote:
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-> Was the installation done on a vhd or VHDX. I checked with Hyper-V
-> guys and they say they never supported WRITE_SAME. I am wondering how
-> it worked on ws2008.
+This patch fixes a minor regression introduced in v3.8-rc1 code
+where a zero-length INQUIRY was no longer returning the correct
+INVALID FIELD IN CDB additional sense code.
 
-Its a vhdx image, both fixed and dynamically size have the same issue.
-I will see what happens with ws2008, at least the install proceeds
-without issues. 
+This regression was introduced with the following commit:
 
+  commit de103c93aff0bed0ae984274e5dc8b95899badab
+  Author: Christoph Hellwig <hch@lst.de>
+  Date:   Tue Nov 6 12:24:09 2012 -0800
 
-Also the unpatched kernel works fine in the installed system.
+      target: pass sense_reason as a return value
 
-Olaf
+and this patch has been tested with the following zero-length CDB:
+
+  sg_raw /dev/sdd 12 00 83 00 00 00
+  SCSI Status: Check Condition
+
+  Sense Information:
+   Fixed format, current;  Sense key: Illegal Request
+   Additional sense: Invalid field in cdb
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_spc.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 84f9e96..f8857d4 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -641,11 +641,10 @@ spc_emulate_inquiry(struct se_cmd *cmd)
+ 
+ out:
+ 	rbuf = transport_kmap_data_sg(cmd);
+-	if (!rbuf)
+-		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+-
+-	memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
+-	transport_kunmap_data_sg(cmd);
++	if (rbuf) {
++		memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
++		transport_kunmap_data_sg(cmd);
++	}
+ 
+ 	if (!ret)
+ 		target_complete_cmd(cmd, GOOD);
+-- 
+1.7.2.5
