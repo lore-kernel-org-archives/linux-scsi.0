@@ -1,94 +1,95 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: storvsc loops with No Sense messages
-Date: Tue, 29 Jan 2013 15:51:16 +0000
-Message-ID: <a120050e059c40c2a1d1be4eadc42dfd@SN2PR03MB061.namprd03.prod.outlook.com>
-References: <20130129152801.GA671@aepfle.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: yxlraid@gmail.com
+Subject: [PATCH] mvsas: fixed timeout issue when removing module
+Date: Wed, 30 Jan 2013 00:25:53 +0800
+Message-ID: <1359476753-19361-1-git-send-email-yxlraid@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na01-bl2-obe.ptr.protection.outlook.com ([65.55.169.26]:41175
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751576Ab3A2P64 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jan 2013 10:58:56 -0500
-Received: from mail61-ch1 (localhost [127.0.0.1])	by mail61-ch1-R.bigfish.com
- (Postfix) with ESMTP id 680B72001AF	for
- <linux-scsi@vger.kernel.org.FOPE.CONNECTOR.OVERRIDE>; Tue, 29 Jan 2013
- 15:51:36 +0000 (UTC)
-In-Reply-To: <20130129152801.GA671@aepfle.de>
-Content-Language: en-US
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:43943 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060Ab3A2Q0T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 11:26:19 -0500
+Received: by mail-pa0-f46.google.com with SMTP id kp14so486109pab.33
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Jan 2013 08:26:18 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogT2xhZiBIZXJpbmcgW21h
-aWx0bzpvbGFmQGFlcGZsZS5kZV0NCj4gU2VudDogVHVlc2RheSwgSmFudWFyeSAyOSwgMjAxMyAx
-MDoyOCBBTQ0KPiBUbzogS1kgU3Jpbml2YXNhbg0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5l
-bC5vcmcNCj4gU3ViamVjdDogc3RvcnZzYyBsb29wcyB3aXRoIE5vIFNlbnNlIG1lc3NhZ2VzDQo+
-IA0KPiANCj4gS1ksDQo+IA0KPiB3aGlsZSBhdHRlbXB0aW5nIHRvIGluc3RhbGwgdGhlIHVwY29t
-aW5nIG9wZW5TdVNFIDEyLjMgaW4gYSBoeXBlci12DQo+IGd1ZXN0ICgxIHZjcHUsIDUxMk1CKSBo
-b3N0ZWQgb24gV2luZG93cyBTZXJ2ZXIgMjAxMiBJIHNlZSBhIGhhbmdpbmcNCj4gZ3Vlc3QgYWZ0
-ZXIgZm9ybWF0aW5nIHRoZSByb290IHBhcnRpdGlvbiwgd2hlbiB0aGUgaW5zdGFsbGVyIHN0YXJ0
-cyB0bw0KPiB3cml0ZSBmaWxlcyB0byBpdC4gIEFmdGVyIGJvb3RpbmcgdGhlIGluc3RhbGwga2Vy
-bmVsIHdpdGgNCj4gJ2lnbm9yZV9sb2dsZXZlbCcgSSBzZWUgYSBmbG9vZCBvZiB0aGUgIk5vIFNl
-bnNlIiBtZXNzYWdlcyBzaG93biBiZWxvdy4NCj4gSSBjYW4gcmVwcm9kdWNlIGl0IGV2ZXJ5IHRp
-bWUgd2l0aCAxMi4zLg0KPiANCj4gVGhlIHNnbGlzdCBpbml0IHBhdGNoIGRvZXMgbm90IGZpeCBp
-dCBmb3IgbWUuDQo+IA0KPiBIYW5uZXMgZGlkIG1hbnkgc3RvcmFnZSByZWxhdGVkIGJhY2twb3J0
-cyBmb3IgU0xFUzExIFNQMywgYW5kIHNvbWV0aW1lcw0KPiB0aGUgaW5zdGFsbGVyIGhhbmdzIGF0
-IHNpbWlsYXIgcG9pbnRzIGR1cmluZyBhIGZyZXNoIFNQMyBpbnN0YWxsLg0KPiANCj4gVGhlIHNh
-bWUgcHJvY2VkdXJlIHdvcmtzIGZpbmUgb24gV2luZG93cyBTZXJ2ZXIgMjAwOC4NCj4gDQo+IEFu
-eSBpZGVhcyB3aGF0IDIwMTIgZG9lcyBkaWZmZXJlbnRseT8gSXQgaGFwcGVucyB3aXRoIGEgcGxh
-aW4gMy43Lm4NCj4ga2VybmVsLiBJIHdpbGwgdHJ5IDMuOC1yYyBub3csIGFuZCBzZWUgaWYgaXQg
-aGFwcGVucyBhcyB3ZWxsLg0KPiANCj4gT2xhZg0KPiANCj4gLi4uDQo+IFsgICAgMC4wMDAwMDBd
-IExpbnV4IHZlcnNpb24gMy43LjUtNS5ob21lX29saF8xMl8zLXZhbmlsbGEgKGdlZWtvQGJ1aWxk
-aG9zdCkNCj4gKGdjYyB2ZXJzaW9uIDQuNy4yIDIwMTMwMTA4IFtnY2MtNF83LWJyYW5jaCByZXZp
-c2lvbiAxOTUwMTJdIChTVVNFIExpbnV4KSApICMxDQo+IFNNUCBNb24gSmFuIDI4IDEyOjM5OjQ2
-IFVUQyAyMDEzIChkOWE5ZTZkKQ0KPiBbICAgIDAuMDAwMDAwXSBDb21tYW5kIGxpbmU6IHF1aWV0
-IHBhbmljPTkgc3lzcnE9eWVzIHN0YXJ0X3NoZWxsIHNwbGFzaD1zaWxlbnQNCj4gdmdhPTB4MzE3
-IHZpZGVvPTEwMjR4NzY4IGNvbnNvbGU9dHR5UzAsMTE1MjAwIGNvbnNvbGU9dHR5MSBpZ25vcmVf
-bG9nbGV2ZWwNCj4gaW5pdHJkPXNsLzEyLjMvaW5pdHJkLXg4Nl82NCBCT09UX0lNQUdFPXNsLzEy
-LjMvbGludXgteDg2XzY0DQo+IC4uLg0KPiBbICAgIDcuOTM4ODA2XSBzY3NpMiA6IHN0b3J2c2Nf
-aG9zdF90DQo+IFsgICAgNy45NDA3MDldIHNjc2kgMjowOjA6MDogRGlyZWN0LUFjY2VzcyAgICAg
-TXNmdCAgICAgVmlydHVhbCBEaXNrICAgICAxLjAgIFBROiAwIEFOU0k6IDQNCj4gWyAgICA3Ljk0
-Mzk1Ml0gc2QgMjowOjA6MDogQXR0YWNoZWQgc2NzaSBnZW5lcmljIHNnMSB0eXBlIDANCj4gDQo+
-IFsgICAgNy45NDY0NDBdIHNkIDI6MDowOjA6IFtzZGFdIDIwOTcxNTIwIDUxMi1ieXRlIGxvZ2lj
-YWwgYmxvY2tzOiAoMTAuNyBHQi8xMC4wIEdpQikNCj4gWyAgICA3Ljk0OTQ4NV0gc2QgMjowOjA6
-MDogW3NkYV0gV3JpdGUgUHJvdGVjdCBpcyBvZmYNCj4gWyAgICA3Ljk1MTIzMV0gc2QgMjowOjA6
-MDogW3NkYV0gTW9kZSBTZW5zZTogMGYgMDAgMDAgMDANCj4gWyAgICA3Ljk1MzEwNV0gc2QgMjow
-OjA6MDogW3NkYV0gV3JpdGUgY2FjaGU6IGVuYWJsZWQsIHJlYWQgY2FjaGU6IGVuYWJsZWQsIGRv
-ZXNuJ3QNCj4gc3VwcG9ydCBEUE8gb3IgRlVBDQo+IFsgICAgNy45NTUyNjldIHNjc2kzIDogc3Rv
-cnZzY19ob3N0X3QNCj4gWyAgICA3Ljk1NzAyN10gc2NzaSBzY2FuOiBJTlFVSVJZIHJlc3VsdCB0
-b28gc2hvcnQgKDUpLCB1c2luZyAzNg0KPiBbICAgIDcuOTU4Nzg2XSBzY3NpIHNjYW46IElOUVVJ
-UlkgcmVzdWx0IHRvbyBzaG9ydCAoNSksIHVzaW5nIDM2DQo+IFsgICAgNy45NjEyOTJdIGlucHV0
-OiBNaWNyb3NvZnQgVm1idXMgSElELWNvbXBsaWFudCBNb3VzZSBhcw0KPiAvZGV2aWNlcy92aXJ0
-dWFsL2lucHV0L2lucHV0Mw0KPiBbICAgIDcuOTY1NDAwXSBoaWQtZ2VuZXJpYyAwMDA2OjA0NUU6
-MDYyMS4wMDAxOiBpbnB1dDogPFVOS05PV04+IEhJRCB2MC4wMQ0KPiBNb3VzZSBbTWljcm9zb2Z0
-IFZtYnVzIEhJRC1jb21wbGlhbnQgTW91c2VdIG9uDQo+IFsgICAgNy45NzE4NzJdIGh2X25ldHZz
-YzogaHZfbmV0dnNjIGNoYW5uZWwgb3BlbmVkIHN1Y2Nlc3NmdWxseQ0KPiBbICAgIDcuOTc0NTc0
-XSBodl9uZXR2c2Mgdm1idXNfMF8xMTogRGV2aWNlIE1BQyAwMDoxNTo1ZDowMjo1MTowMiBsaW5r
-IHN0YXRlIHVwDQo+IFsgICAgNy45ODUwODZdICBzZGE6IHNkYTEgc2RhMg0KPiBbICAgIDcuOTg2
-NzI1XSBzZCAyOjA6MDowOiBbc2RhXSBBdHRhY2hlZCBTQ1NJIGRpc2sNCj4gLi4uDQo+IFsgIDE1
-Ni4yMDUxODVdIEFkZGluZyA3NDY0OTJrIHN3YXAgb24gL2Rldi9zZGExLiAgUHJpb3JpdHk6LTEg
-ZXh0ZW50czoxDQo+IGFjcm9zczo3NDY0OTJrDQo+IC4uLg0KPiBbICAxNTYuNDc4MTg2XSBFWFQ0
-LWZzIChzZGEyKTogbW91bnRlZCBmaWxlc3lzdGVtIHdpdGggb3JkZXJlZCBkYXRhIG1vZGUuIE9w
-dHM6DQo+IGFjbCx1c2VyX3hhdHRyDQo+IFsgIDE2MS40NTk1MjNdIGh2X3N0b3J2c2Mgdm1idXNf
-MF8xOiBjbWQgMHg0MSBzY3NpIHN0YXR1cyAweDIgc3JiIHN0YXR1cyAweDYNCj4gWyAgMTYxLjQ2
-MjE1N10gc2QgMjowOjA6MDogW3NkYV0NCj4gWyAgMTYxLjQ2MzEzNV0gU2Vuc2UgS2V5IDogTm8g
-U2Vuc2UgW2N1cnJlbnRdDQo+IFsgIDE2MS40NjQ5ODNdIHNkIDI6MDowOjA6IFtzZGFdDQo+IFsg
-IDE2MS40NjU4OTldIEFkZC4gU2Vuc2U6IE5vIGFkZGl0aW9uYWwgc2Vuc2UgaW5mb3JtYXRpb24N
-Cj4gWyAgMTYxLjQ2ODIxMV0gaHZfc3RvcnZzYyB2bWJ1c18wXzE6IGNtZCAweDQxIHNjc2kgc3Rh
-dHVzIDB4MiBzcmIgc3RhdHVzIDB4Ng0KPiBbICAxNjEuNDc1NzY2XSBzZCAyOjA6MDowOiBbc2Rh
-XQ0KPiBbICAxNjEuNDc2NzI4XSBTZW5zZSBLZXkgOiBObyBTZW5zZSBbY3VycmVudF0NCj4gWyAg
-MTYxLjQ3ODI4NF0gc2QgMjowOjA6MDogW3NkYV0NCj4gWyAgMTYxLjQ3OTQ0MV0gQWRkLiBTZW5z
-ZTogTm8gYWRkaXRpb25hbCBzZW5zZSBpbmZvcm1hdGlvbg0KPiBbICAxNjEuNDgxMzExXSBodl9z
-dG9ydnNjIHZtYnVzXzBfMTogY21kIDB4NDEgc2NzaSBzdGF0dXMgMHgyIHNyYiBzdGF0dXMgMHg2
-DQo+IFsgIDE2MS40ODQ0NzddIHNkIDI6MDowOjA6IFtzZGFdDQo+IFsgIDE2MS40ODU0MjJdIFNl
-bnNlIEtleSA6IE5vIFNlbnNlIFtjdXJyZW50XQ0KPiBbICAxNjEuNDg2OTc3XSBzZCAyOjA6MDow
-OiBbc2RhXQ0KPiBbICAxNjEuNDg3OTIwXSBBZGQuIFNlbnNlOiBObyBhZGRpdGlvbmFsIHNlbnNl
-IGluZm9ybWF0aW9uDQo+IA0KPiAuLi4gYW5kIHNvIGl0IGdvZXMgb24gdW50aWwgdGhlIFZNIGlz
-IHBvd2VyZWQgb2ZmLg0KDQpPbGFmLA0KDQpJIGhhdmUgbm90IHNlZW4gdGhpcy4gVGhlIFNSQiBz
-dGF0dXMgaW5kaWNhdGVzIGl0IGlzIGFuIGlsbGVnYWwgcmVxdWVzdDsgdGhlIGNvbW1hbmQgaXMg
-V1JJVEVfU0FNRS4gSSB3aWxsIHRha2UgYSBsb29rLg0KDQpLLiBZDQo+IA0KPiANCg0K
+From: Xiangliang Yu <yuxiangl@marvell.com>
+
+- Root cause is libsas will clear asd_sas_port
+  phy_mask value in sas_port_deform after triggering
+  destruct workqueue, but the workqueue will send
+  sync cmd and still need phy_mask value.
+  Now, mvsas using asd_sas_phy setting instead of
+  asd_sas_port setting.
+---
+ drivers/scsi/mvsas/mv_sas.c |   10 ++++++++--
+ drivers/scsi/mvsas/mv_sas.h |    1 +
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 078c639..532110f 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -316,10 +316,13 @@ static int mvs_task_prep_smp(struct mvs_info *mvi,
+ 			     struct mvs_task_exec_info *tei)
+ {
+ 	int elem, rc, i;
++	struct sas_ha_struct *sha = mvi->sas;
+ 	struct sas_task *task = tei->task;
+ 	struct mvs_cmd_hdr *hdr = tei->hdr;
+ 	struct domain_device *dev = task->dev;
+ 	struct asd_sas_port *sas_port = dev->port;
++	struct sas_phy *sphy = dev->phy;
++	struct asd_sas_phy *sas_phy = sha->sas_phy[sphy->number];
+ 	struct scatterlist *sg_req, *sg_resp;
+ 	u32 req_len, resp_len, tag = tei->tag;
+ 	void *buf_tmp;
+@@ -392,7 +395,7 @@ static int mvs_task_prep_smp(struct mvs_info *mvi,
+ 	slot->tx = mvi->tx_prod;
+ 	mvi->tx[mvi->tx_prod] = cpu_to_le32((TXQ_CMD_SMP << TXQ_CMD_SHIFT) |
+ 					TXQ_MODE_I | tag |
+-					(sas_port->phy_mask << TXQ_PHY_SHIFT));
++					(MVS_PHY_ID << TXQ_PHY_SHIFT));
+ 
+ 	hdr->flags |= flags;
+ 	hdr->lens = cpu_to_le32(((resp_len / 4) << 16) | ((req_len - 4) / 4));
+@@ -438,11 +441,14 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
+ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 			     struct mvs_task_exec_info *tei)
+ {
++	struct sas_ha_struct *sha = mvi->sas;
+ 	struct sas_task *task = tei->task;
+ 	struct domain_device *dev = task->dev;
+ 	struct mvs_device *mvi_dev = dev->lldd_dev;
+ 	struct mvs_cmd_hdr *hdr = tei->hdr;
+ 	struct asd_sas_port *sas_port = dev->port;
++	struct sas_phy *sphy = dev->phy;
++	struct asd_sas_phy *sas_phy = sha->sas_phy[sphy->number];
+ 	struct mvs_slot_info *slot;
+ 	void *buf_prd;
+ 	u32 tag = tei->tag, hdr_tag;
+@@ -462,7 +468,7 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 	slot->tx = mvi->tx_prod;
+ 	del_q = TXQ_MODE_I | tag |
+ 		(TXQ_CMD_STP << TXQ_CMD_SHIFT) |
+-		(sas_port->phy_mask << TXQ_PHY_SHIFT) |
++		(MVS_PHY_ID << TXQ_PHY_SHIFT) |
+ 		(mvi_dev->taskfileset << TXQ_SRS_SHIFT);
+ 	mvi->tx[mvi->tx_prod] = cpu_to_le32(del_q);
+ 
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index 2ae77a0..9f3cc13 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -76,6 +76,7 @@ extern struct kmem_cache *mvs_task_list_cache;
+ 					(__mc) != 0 ;		\
+ 					(++__lseq), (__mc) >>= 1)
+ 
++#define MVS_PHY_ID (1U << sas_phy->id)
+ #define MV_INIT_DELAYED_WORK(w, f, d)	INIT_DELAYED_WORK(w, f)
+ #define UNASSOC_D2H_FIS(id)		\
+ 	((void *) mvi->rx_fis + 0x100 * id)
+-- 
+1.7.5.4
 
