@@ -1,82 +1,94 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: storvsc loops with No Sense messages
-Date: Tue, 29 Jan 2013 16:28:01 +0100
-Message-ID: <20130129152801.GA671@aepfle.de>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: storvsc loops with No Sense messages
+Date: Tue, 29 Jan 2013 15:51:16 +0000
+Message-ID: <a120050e059c40c2a1d1be4eadc42dfd@SN2PR03MB061.namprd03.prod.outlook.com>
+References: <20130129152801.GA671@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.160]:48378 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756634Ab3A2P2L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 10:28:11 -0500
-Content-Disposition: inline
+Received: from na01-bl2-obe.ptr.protection.outlook.com ([65.55.169.26]:41175
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751576Ab3A2P64 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2013 10:58:56 -0500
+Received: from mail61-ch1 (localhost [127.0.0.1])	by mail61-ch1-R.bigfish.com
+ (Postfix) with ESMTP id 680B72001AF	for
+ <linux-scsi@vger.kernel.org.FOPE.CONNECTOR.OVERRIDE>; Tue, 29 Jan 2013
+ 15:51:36 +0000 (UTC)
+In-Reply-To: <20130129152801.GA671@aepfle.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: linux-scsi@vger.kernel.org
+To: Olaf Hering <olaf@aepfle.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-KY,
-
-while attempting to install the upcoming openSuSE 12.3 in a hyper-v
-guest (1 vcpu, 512MB) hosted on Windows Server 2012 I see a hanging
-guest after formating the root partition, when the installer starts to
-write files to it.  After booting the install kernel with
-'ignore_loglevel' I see a flood of the "No Sense" messages shown below.
-I can reproduce it every time with 12.3.
-
-The sglist init patch does not fix it for me.
-
-Hannes did many storage related backports for SLES11 SP3, and sometimes
-the installer hangs at similar points during a fresh SP3 install.
-
-The same procedure works fine on Windows Server 2008.
-
-Any ideas what 2012 does differently? It happens with a plain 3.7.n
-kernel. I will try 3.8-rc now, and see if it happens as well.
-
-Olaf
-
-...
-[    0.000000] Linux version 3.7.5-5.home_olh_12_3-vanilla (geeko@buildhost) (gcc version 4.7.2 20130108 [gcc-4_7-branch revision 195012] (SUSE Linux) ) #1 SMP Mon Jan 28 12:39:46 UTC 2013 (d9a9e6d)
-[    0.000000] Command line: quiet panic=9 sysrq=yes start_shell splash=silent vga=0x317 video=1024x768 console=ttyS0,115200 console=tty1 ignore_loglevel initrd=sl/12.3/initrd-x86_64 BOOT_IMAGE=sl/12.3/linux-x86_64
-...
-[    7.938806] scsi2 : storvsc_host_t
-[    7.940709] scsi 2:0:0:0: Direct-Access     Msft     Virtual Disk     1.0  PQ: 0 ANSI: 4
-[    7.943952] sd 2:0:0:0: Attached scsi generic sg1 type 0
-
-[    7.946440] sd 2:0:0:0: [sda] 20971520 512-byte logical blocks: (10.7 GB/10.0 GiB)
-[    7.949485] sd 2:0:0:0: [sda] Write Protect is off
-[    7.951231] sd 2:0:0:0: [sda] Mode Sense: 0f 00 00 00
-[    7.953105] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[    7.955269] scsi3 : storvsc_host_t
-[    7.957027] scsi scan: INQUIRY result too short (5), using 36
-[    7.958786] scsi scan: INQUIRY result too short (5), using 36
-[    7.961292] input: Microsoft Vmbus HID-compliant Mouse as /devices/virtual/input/input3
-[    7.965400] hid-generic 0006:045E:0621.0001: input: <UNKNOWN> HID v0.01 Mouse [Microsoft Vmbus HID-compliant Mouse] on
-[    7.971872] hv_netvsc: hv_netvsc channel opened successfully
-[    7.974574] hv_netvsc vmbus_0_11: Device MAC 00:15:5d:02:51:02 link state up
-[    7.985086]  sda: sda1 sda2
-[    7.986725] sd 2:0:0:0: [sda] Attached SCSI disk
-...
-[  156.205185] Adding 746492k swap on /dev/sda1.  Priority:-1 extents:1 across:746492k
-...
-[  156.478186] EXT4-fs (sda2): mounted filesystem with ordered data mode. Opts: acl,user_xattr
-[  161.459523] hv_storvsc vmbus_0_1: cmd 0x41 scsi status 0x2 srb status 0x6
-[  161.462157] sd 2:0:0:0: [sda]
-[  161.463135] Sense Key : No Sense [current]
-[  161.464983] sd 2:0:0:0: [sda]
-[  161.465899] Add. Sense: No additional sense information
-[  161.468211] hv_storvsc vmbus_0_1: cmd 0x41 scsi status 0x2 srb status 0x6
-[  161.475766] sd 2:0:0:0: [sda]
-[  161.476728] Sense Key : No Sense [current]
-[  161.478284] sd 2:0:0:0: [sda]
-[  161.479441] Add. Sense: No additional sense information
-[  161.481311] hv_storvsc vmbus_0_1: cmd 0x41 scsi status 0x2 srb status 0x6
-[  161.484477] sd 2:0:0:0: [sda]
-[  161.485422] Sense Key : No Sense [current]
-[  161.486977] sd 2:0:0:0: [sda]
-[  161.487920] Add. Sense: No additional sense information
-
-... and so it goes on until the VM is powered off.
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogT2xhZiBIZXJpbmcgW21h
+aWx0bzpvbGFmQGFlcGZsZS5kZV0NCj4gU2VudDogVHVlc2RheSwgSmFudWFyeSAyOSwgMjAxMyAx
+MDoyOCBBTQ0KPiBUbzogS1kgU3Jpbml2YXNhbg0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5l
+bC5vcmcNCj4gU3ViamVjdDogc3RvcnZzYyBsb29wcyB3aXRoIE5vIFNlbnNlIG1lc3NhZ2VzDQo+
+IA0KPiANCj4gS1ksDQo+IA0KPiB3aGlsZSBhdHRlbXB0aW5nIHRvIGluc3RhbGwgdGhlIHVwY29t
+aW5nIG9wZW5TdVNFIDEyLjMgaW4gYSBoeXBlci12DQo+IGd1ZXN0ICgxIHZjcHUsIDUxMk1CKSBo
+b3N0ZWQgb24gV2luZG93cyBTZXJ2ZXIgMjAxMiBJIHNlZSBhIGhhbmdpbmcNCj4gZ3Vlc3QgYWZ0
+ZXIgZm9ybWF0aW5nIHRoZSByb290IHBhcnRpdGlvbiwgd2hlbiB0aGUgaW5zdGFsbGVyIHN0YXJ0
+cyB0bw0KPiB3cml0ZSBmaWxlcyB0byBpdC4gIEFmdGVyIGJvb3RpbmcgdGhlIGluc3RhbGwga2Vy
+bmVsIHdpdGgNCj4gJ2lnbm9yZV9sb2dsZXZlbCcgSSBzZWUgYSBmbG9vZCBvZiB0aGUgIk5vIFNl
+bnNlIiBtZXNzYWdlcyBzaG93biBiZWxvdy4NCj4gSSBjYW4gcmVwcm9kdWNlIGl0IGV2ZXJ5IHRp
+bWUgd2l0aCAxMi4zLg0KPiANCj4gVGhlIHNnbGlzdCBpbml0IHBhdGNoIGRvZXMgbm90IGZpeCBp
+dCBmb3IgbWUuDQo+IA0KPiBIYW5uZXMgZGlkIG1hbnkgc3RvcmFnZSByZWxhdGVkIGJhY2twb3J0
+cyBmb3IgU0xFUzExIFNQMywgYW5kIHNvbWV0aW1lcw0KPiB0aGUgaW5zdGFsbGVyIGhhbmdzIGF0
+IHNpbWlsYXIgcG9pbnRzIGR1cmluZyBhIGZyZXNoIFNQMyBpbnN0YWxsLg0KPiANCj4gVGhlIHNh
+bWUgcHJvY2VkdXJlIHdvcmtzIGZpbmUgb24gV2luZG93cyBTZXJ2ZXIgMjAwOC4NCj4gDQo+IEFu
+eSBpZGVhcyB3aGF0IDIwMTIgZG9lcyBkaWZmZXJlbnRseT8gSXQgaGFwcGVucyB3aXRoIGEgcGxh
+aW4gMy43Lm4NCj4ga2VybmVsLiBJIHdpbGwgdHJ5IDMuOC1yYyBub3csIGFuZCBzZWUgaWYgaXQg
+aGFwcGVucyBhcyB3ZWxsLg0KPiANCj4gT2xhZg0KPiANCj4gLi4uDQo+IFsgICAgMC4wMDAwMDBd
+IExpbnV4IHZlcnNpb24gMy43LjUtNS5ob21lX29saF8xMl8zLXZhbmlsbGEgKGdlZWtvQGJ1aWxk
+aG9zdCkNCj4gKGdjYyB2ZXJzaW9uIDQuNy4yIDIwMTMwMTA4IFtnY2MtNF83LWJyYW5jaCByZXZp
+c2lvbiAxOTUwMTJdIChTVVNFIExpbnV4KSApICMxDQo+IFNNUCBNb24gSmFuIDI4IDEyOjM5OjQ2
+IFVUQyAyMDEzIChkOWE5ZTZkKQ0KPiBbICAgIDAuMDAwMDAwXSBDb21tYW5kIGxpbmU6IHF1aWV0
+IHBhbmljPTkgc3lzcnE9eWVzIHN0YXJ0X3NoZWxsIHNwbGFzaD1zaWxlbnQNCj4gdmdhPTB4MzE3
+IHZpZGVvPTEwMjR4NzY4IGNvbnNvbGU9dHR5UzAsMTE1MjAwIGNvbnNvbGU9dHR5MSBpZ25vcmVf
+bG9nbGV2ZWwNCj4gaW5pdHJkPXNsLzEyLjMvaW5pdHJkLXg4Nl82NCBCT09UX0lNQUdFPXNsLzEy
+LjMvbGludXgteDg2XzY0DQo+IC4uLg0KPiBbICAgIDcuOTM4ODA2XSBzY3NpMiA6IHN0b3J2c2Nf
+aG9zdF90DQo+IFsgICAgNy45NDA3MDldIHNjc2kgMjowOjA6MDogRGlyZWN0LUFjY2VzcyAgICAg
+TXNmdCAgICAgVmlydHVhbCBEaXNrICAgICAxLjAgIFBROiAwIEFOU0k6IDQNCj4gWyAgICA3Ljk0
+Mzk1Ml0gc2QgMjowOjA6MDogQXR0YWNoZWQgc2NzaSBnZW5lcmljIHNnMSB0eXBlIDANCj4gDQo+
+IFsgICAgNy45NDY0NDBdIHNkIDI6MDowOjA6IFtzZGFdIDIwOTcxNTIwIDUxMi1ieXRlIGxvZ2lj
+YWwgYmxvY2tzOiAoMTAuNyBHQi8xMC4wIEdpQikNCj4gWyAgICA3Ljk0OTQ4NV0gc2QgMjowOjA6
+MDogW3NkYV0gV3JpdGUgUHJvdGVjdCBpcyBvZmYNCj4gWyAgICA3Ljk1MTIzMV0gc2QgMjowOjA6
+MDogW3NkYV0gTW9kZSBTZW5zZTogMGYgMDAgMDAgMDANCj4gWyAgICA3Ljk1MzEwNV0gc2QgMjow
+OjA6MDogW3NkYV0gV3JpdGUgY2FjaGU6IGVuYWJsZWQsIHJlYWQgY2FjaGU6IGVuYWJsZWQsIGRv
+ZXNuJ3QNCj4gc3VwcG9ydCBEUE8gb3IgRlVBDQo+IFsgICAgNy45NTUyNjldIHNjc2kzIDogc3Rv
+cnZzY19ob3N0X3QNCj4gWyAgICA3Ljk1NzAyN10gc2NzaSBzY2FuOiBJTlFVSVJZIHJlc3VsdCB0
+b28gc2hvcnQgKDUpLCB1c2luZyAzNg0KPiBbICAgIDcuOTU4Nzg2XSBzY3NpIHNjYW46IElOUVVJ
+UlkgcmVzdWx0IHRvbyBzaG9ydCAoNSksIHVzaW5nIDM2DQo+IFsgICAgNy45NjEyOTJdIGlucHV0
+OiBNaWNyb3NvZnQgVm1idXMgSElELWNvbXBsaWFudCBNb3VzZSBhcw0KPiAvZGV2aWNlcy92aXJ0
+dWFsL2lucHV0L2lucHV0Mw0KPiBbICAgIDcuOTY1NDAwXSBoaWQtZ2VuZXJpYyAwMDA2OjA0NUU6
+MDYyMS4wMDAxOiBpbnB1dDogPFVOS05PV04+IEhJRCB2MC4wMQ0KPiBNb3VzZSBbTWljcm9zb2Z0
+IFZtYnVzIEhJRC1jb21wbGlhbnQgTW91c2VdIG9uDQo+IFsgICAgNy45NzE4NzJdIGh2X25ldHZz
+YzogaHZfbmV0dnNjIGNoYW5uZWwgb3BlbmVkIHN1Y2Nlc3NmdWxseQ0KPiBbICAgIDcuOTc0NTc0
+XSBodl9uZXR2c2Mgdm1idXNfMF8xMTogRGV2aWNlIE1BQyAwMDoxNTo1ZDowMjo1MTowMiBsaW5r
+IHN0YXRlIHVwDQo+IFsgICAgNy45ODUwODZdICBzZGE6IHNkYTEgc2RhMg0KPiBbICAgIDcuOTg2
+NzI1XSBzZCAyOjA6MDowOiBbc2RhXSBBdHRhY2hlZCBTQ1NJIGRpc2sNCj4gLi4uDQo+IFsgIDE1
+Ni4yMDUxODVdIEFkZGluZyA3NDY0OTJrIHN3YXAgb24gL2Rldi9zZGExLiAgUHJpb3JpdHk6LTEg
+ZXh0ZW50czoxDQo+IGFjcm9zczo3NDY0OTJrDQo+IC4uLg0KPiBbICAxNTYuNDc4MTg2XSBFWFQ0
+LWZzIChzZGEyKTogbW91bnRlZCBmaWxlc3lzdGVtIHdpdGggb3JkZXJlZCBkYXRhIG1vZGUuIE9w
+dHM6DQo+IGFjbCx1c2VyX3hhdHRyDQo+IFsgIDE2MS40NTk1MjNdIGh2X3N0b3J2c2Mgdm1idXNf
+MF8xOiBjbWQgMHg0MSBzY3NpIHN0YXR1cyAweDIgc3JiIHN0YXR1cyAweDYNCj4gWyAgMTYxLjQ2
+MjE1N10gc2QgMjowOjA6MDogW3NkYV0NCj4gWyAgMTYxLjQ2MzEzNV0gU2Vuc2UgS2V5IDogTm8g
+U2Vuc2UgW2N1cnJlbnRdDQo+IFsgIDE2MS40NjQ5ODNdIHNkIDI6MDowOjA6IFtzZGFdDQo+IFsg
+IDE2MS40NjU4OTldIEFkZC4gU2Vuc2U6IE5vIGFkZGl0aW9uYWwgc2Vuc2UgaW5mb3JtYXRpb24N
+Cj4gWyAgMTYxLjQ2ODIxMV0gaHZfc3RvcnZzYyB2bWJ1c18wXzE6IGNtZCAweDQxIHNjc2kgc3Rh
+dHVzIDB4MiBzcmIgc3RhdHVzIDB4Ng0KPiBbICAxNjEuNDc1NzY2XSBzZCAyOjA6MDowOiBbc2Rh
+XQ0KPiBbICAxNjEuNDc2NzI4XSBTZW5zZSBLZXkgOiBObyBTZW5zZSBbY3VycmVudF0NCj4gWyAg
+MTYxLjQ3ODI4NF0gc2QgMjowOjA6MDogW3NkYV0NCj4gWyAgMTYxLjQ3OTQ0MV0gQWRkLiBTZW5z
+ZTogTm8gYWRkaXRpb25hbCBzZW5zZSBpbmZvcm1hdGlvbg0KPiBbICAxNjEuNDgxMzExXSBodl9z
+dG9ydnNjIHZtYnVzXzBfMTogY21kIDB4NDEgc2NzaSBzdGF0dXMgMHgyIHNyYiBzdGF0dXMgMHg2
+DQo+IFsgIDE2MS40ODQ0NzddIHNkIDI6MDowOjA6IFtzZGFdDQo+IFsgIDE2MS40ODU0MjJdIFNl
+bnNlIEtleSA6IE5vIFNlbnNlIFtjdXJyZW50XQ0KPiBbICAxNjEuNDg2OTc3XSBzZCAyOjA6MDow
+OiBbc2RhXQ0KPiBbICAxNjEuNDg3OTIwXSBBZGQuIFNlbnNlOiBObyBhZGRpdGlvbmFsIHNlbnNl
+IGluZm9ybWF0aW9uDQo+IA0KPiAuLi4gYW5kIHNvIGl0IGdvZXMgb24gdW50aWwgdGhlIFZNIGlz
+IHBvd2VyZWQgb2ZmLg0KDQpPbGFmLA0KDQpJIGhhdmUgbm90IHNlZW4gdGhpcy4gVGhlIFNSQiBz
+dGF0dXMgaW5kaWNhdGVzIGl0IGlzIGFuIGlsbGVnYWwgcmVxdWVzdDsgdGhlIGNvbW1hbmQgaXMg
+V1JJVEVfU0FNRS4gSSB3aWxsIHRha2UgYSBsb29rLg0KDQpLLiBZDQo+IA0KPiANCg0K
 
