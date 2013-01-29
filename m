@@ -1,141 +1,48 @@
-From: Chen Gang <gang.chen@asianux.com>
-Subject: Re: [PATCH] drivers/scsi/cxgbi: correcting the include path, so can
- pass compiling.
-Date: Tue, 29 Jan 2013 15:35:15 +0800
-Message-ID: <51077BB3.2010809@asianux.com>
-References: <50F15A35.4000400@asianux.com> <50FB9A33.2090204@asianux.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [LSF/MM TOPIC] Thin provisioning SOFT_THRESHOLD error handling
+Date: Tue, 29 Jan 2013 09:14:22 +0100
+Message-ID: <510784DE.3000509@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from intranet.asianux.com ([58.214.24.6]:49058 "EHLO
-	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717Ab3A2HfV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 02:35:21 -0500
-In-Reply-To: <50FB9A33.2090204@asianux.com>
+Received: from cantor2.suse.de ([195.135.220.15]:42415 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753190Ab3A2IOY (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2013 03:14:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: David Miller <davem@davemloft.net>, kxie@chelsio.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: Linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Hello JBottomley@parallels.com
+Hi all,
 
-  have you already fixed it by another patches ?
+Thin-provisioned devices have the ability to set a 'soft threshold',=20
+which is triggered if the real free space for this device is beyond=20
+this mark.
 
-  if so:
-    better to let me know about it, so I should not bother you, again.
-  else
-    please give a glance to this patch, when you have time
-     (since compiling errors are always belong to critical errors)
+The intention behind this is to allow the system to induce some=20
+garbage collection with possibly freeing up unused space.
 
-  thanks.
+Initially it would be possible to execute garbage collection on=20
+filesystems (eg for btrfs).
 
+However, as this concept applies to other areas within the kernel
+(like dm-thinp or even btrfs itself) it might be an idea to have
+a general mechanism / error handling etc in place.
 
-by the way:
-   I get the sending mail address from ./script/get_maintainer.pl.
-   if I sent to an incorrect member, please tell me.
+I would like to discuss at LSF the possible implementations
+and handling mechanism for this kind of failure scenarios.
 
-  thanks.
+Cheers,
 
-gchen.
-
-
-=D3=DA 2013=C4=EA01=D4=C220=C8=D5 15:18, Chen Gang =D0=B4=B5=C0:
-> Hello JBottomley@parallels.com
->=20
->   when you have free time, could you give a glance for this patch ?
->=20
->   thanks.
->=20
-> gchen.
->=20
->=20
-> =D3=DA 2013=C4=EA01=D4=C212=C8=D5 20:42, Chen Gang =D0=B4=B5=C0:
->>
->>   correct the include path,
->>   or the compiler will report can not find "common.h"...
->>
->>   both cxgb3/ and cxgb4/ sub directly have l2t.h (they are different=
-).
->>   so it is not suitable to '-I' sub-directy, directly.
->>
->>
->> Signed-off-by: Chen Gang <gang.chen@asianux.com>
->> ---
->>  drivers/scsi/cxgbi/Makefile        |    4 ++++
->>  drivers/scsi/cxgbi/cxgb3i/cxgb3i.c |   14 +++++++-------
->>  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   10 +++++-----
->>  3 files changed, 16 insertions(+), 12 deletions(-)
->>
->> diff --git a/drivers/scsi/cxgbi/Makefile b/drivers/scsi/cxgbi/Makefi=
-le
->> index 86007e3..aff2998 100644
->> --- a/drivers/scsi/cxgbi/Makefile
->> +++ b/drivers/scsi/cxgbi/Makefile
->> @@ -1,2 +1,6 @@
->> +
->> +ccflags-y			:=3D -Idrivers/net/ethernet/chelsio
->> +subdir-ccflags-y		:=3D -Idrivers/net/ethernet/chelsio
->> +
->>  obj-$(CONFIG_SCSI_CXGB3_ISCSI)	+=3D libcxgbi.o cxgb3i/
->>  obj-$(CONFIG_SCSI_CXGB4_ISCSI)	+=3D libcxgbi.o cxgb4i/
->> diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi=
-/cxgb3i/cxgb3i.c
->> index 49692a1..ca92e72 100644
->> --- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
->> +++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
->> @@ -18,13 +18,13 @@
->>  #include <linux/moduleparam.h>
->>  #include <scsi/scsi_host.h>
->> =20
->> -#include "common.h"
->> -#include "t3_cpl.h"
->> -#include "t3cdev.h"
->> -#include "cxgb3_defs.h"
->> -#include "cxgb3_ctl_defs.h"
->> -#include "cxgb3_offload.h"
->> -#include "firmware_exports.h"
->> +#include "cxgb3/common.h"
->> +#include "cxgb3/t3_cpl.h"
->> +#include "cxgb3/t3cdev.h"
->> +#include "cxgb3/cxgb3_defs.h"
->> +#include "cxgb3/cxgb3_ctl_defs.h"
->> +#include "cxgb3/cxgb3_offload.h"
->> +#include "cxgb3/firmware_exports.h"
->>  #include "cxgb3i.h"
->> =20
->>  static unsigned int dbg_level;
->> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi=
-/cxgb4i/cxgb4i.c
->> index f924b3c..a5795d5 100644
->> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
->> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
->> @@ -20,11 +20,11 @@
->>  #include <net/dst.h>
->>  #include <linux/netdevice.h>
->> =20
->> -#include "t4_msg.h"
->> -#include "cxgb4.h"
->> -#include "cxgb4_uld.h"
->> -#include "t4fw_api.h"
->> -#include "l2t.h"
->> +#include "cxgb4/t4_msg.h"
->> +#include "cxgb4/cxgb4.h"
->> +#include "cxgb4/cxgb4_uld.h"
->> +#include "cxgb4/t4fw_api.h"
->> +#include "cxgb4/l2t.h"
->>  #include "cxgb4i.h"
->> =20
->>  static unsigned int dbg_level;
->>
->=20
->=20
-
-
+Hannes
 --=20
-Chen Gang
-
-Asianux Corporation
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
