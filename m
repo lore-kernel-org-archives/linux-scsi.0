@@ -1,60 +1,39 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: For iblock at default writecache enable.
-Date: Tue, 29 Jan 2013 11:03:18 -0800
-Message-ID: <1359486198.23290.1409.camel@haakon2.linux-iscsi.org>
-References: <201301250958101278740@gmail.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: [LSF/MM TOPIC] Making sure soft SCSI Targets are Valid
+Date: Tue, 29 Jan 2013 11:13:44 -0800
+Message-ID: <51081F68.1030808@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:40347 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753724Ab3A2TDU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 14:03:20 -0500
-In-Reply-To: <201301250958101278740@gmail.com>
+Received: from smtp.nue.novell.com ([195.135.221.5]:47706 "EHLO
+	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753832Ab3A2TNx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 14:13:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, ronnie sahlberg <ronniesahlberg@gmail.com>
 
-Hi majianpeng,
+Hi:
 
-On Fri, 2013-01-25 at 09:58 +0800, majianpeng wrote:
-> Like the harddisk, at default write cache is enable.
-> 
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/target/target_core_iblock.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-> index b526d23..69c2f2d 100644
-> --- a/drivers/target/target_core_iblock.c
-> +++ b/drivers/target/target_core_iblock.c
-> @@ -125,6 +125,9 @@ static int iblock_configure_device(struct se_device *dev)
->  	dev->dev_attrib.hw_max_sectors = UINT_MAX;
->  	dev->dev_attrib.hw_queue_depth = q->nr_requests;
->  
-> +	/*Default enable write cache*/
-> +	dev->dev_attrib.emulate_write_cache = 1;
-> +
+I'm not sure if there is much interest in this, but I've recently
+realized that there is no good free software to validate iSCSI targets,
+not to mention FCOE targets, IB soft targets, etc. There's just no way
+to know if any change you make is "legal" short of learning to speak
+SCSI geek spec (or waiting to see what fails when you make a subtle change).
 
-So enabling emulate_write_cache=1 in the case when the underlying device
-has not enabled it is incorrect.
+So I have been working with the (user-space) libiscsi creator and
+maintainer, Ronnie Sahlberg, to enhance his test suite. But this only
+addresses iSCSI targets. Some of his tests have already shown problems
+like kernel panics when an incorrect bit is injected, showing the need
+for such testing.
 
-I'd like to enable this bit when we know the underlying device has WCE=1
-set, but currently there is not a way to determine this (generically)
-from struct block_device.
-
-So NACK for applying this until there is a method to determine what the
-hardware below is doing.
-
---nab
-
->  	/*
->  	 * Check if the underlying struct block_device request_queue supports
->  	 * the QUEUE_FLAG_DISCARD bit for UNMAP/WRITE_SAME in SCSI + TRIM
-> -- 
-> 1.7.9.5
-
-
+It occurs to me it would be most valuable if we had more generic SCSI
+tests, not even limited to soft targets, available to developers and
+manufacturers. How best to support such tests with our SCSI layer, and
+what tests are needed now and in the future may be a good topic for
+discussion.
+-- 
+Lee Duncan
+SUSE Labs
