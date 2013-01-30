@@ -1,46 +1,23 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+From: Paul Bolle <pebolle@tiscali.nl>
 Subject: Re: [PATCH v3] qla2xxx: silence two GCC warnings
-Date: Wed, 30 Jan 2013 08:07:31 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D045B19@AVMB1.qlogic.org>
-References: <1359453426.1345.30.camel@x61.thuisdomein>
+Date: Wed, 30 Jan 2013 09:14:48 +0100
+Message-ID: <1359533688.1345.61.camel@x61.thuisdomein>
+References: <F5D084D6342F9B479C34599BB0A03E4D045B19@AVMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1359453426.1345.30.camel@x61.thuisdomein>
-Content-Language: en-US
-Content-ID: <DE77B86CCA952B4BB91BC1FA4B5D4C5D@qlogic.com>
+In-Reply-To: <F5D084D6342F9B479C34599BB0A03E4D045B19@AVMB1.qlogic.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
+To: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, Rolf Eike Beer <eike-kernel@sf-tec.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj5PbiBNb24sIDIwMTItMTAtMDggYXQgMTE6MTUgLTA1MDAsIFNhdXJhdiBLYXNoeWFwIHdy
-b3RlOg0KPj4gQWNrZWQtYnk6IFNhdXJhdiBLYXNoeWFwIDxzYXVyYXYua2FzaHlhcEBxbG9naWMu
-Y29tPg0KPj4NCj4+IFRoYW5rcywNCj4+IH5TYXVyYXYNCj4+DQo+PiA+Q29tcGlsaW5nIHFsYV9n
-cy5vIChwYXJ0IG9mIHRoZSBxbGEyeHh4IG1vZHVsZSkgdHJpZ2dlcnMgdHdvIEdDQw0KPj4gPndh
-cm5pbmdzOg0KPj4gPiAgICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZ3MuYzogSW4gZnVuY3Rp
-b24gxZJxbGEyeDAwX2ZkbWlfcmhiYcK5Og0KPj4gPiAgICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9x
-bGFfZ3MuYzoxMzM5Ojc6IHdhcm5pbmc6IGFycmF5IHN1YnNjcmlwdCBpcw0KPj4gPmFib3ZlIGFy
-cmF5IGJvdW5kcyBbLVdhcnJheS1ib3VuZHNdDQo+PiA+ICAgIGRyaXZlcnMvc2NzaS9xbGEyeHh4
-L3FsYV9ncy5jOiBJbiBmdW5jdGlvbiDFknFsYTJ4MDBfZmRtaV9yZWdpc3RlcsK5Og0KPj4gPiAg
-ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZ3MuYzoxNjYzOjE1OiB3YXJuaW5nOiBhcnJheSBz
-dWJzY3JpcHQgaXMNCj4+ID5hYm92ZSBhcnJheSBib3VuZHMgWy1XYXJyYXktYm91bmRzXQ0KPg0K
-PlRoaXMgcGF0Y2ggd2FzIG9yaWdpbmFsbHkgcG9zdGVkIHRvIHNpbGVuY2UgdHdvIEdDQyB3YXJu
-aW5ncyB3aGlsZQ0KPmJ1aWxkaW5nIHYzLjYtcmM3LiBCYXNpY2FsbHkgaWRlbnRpY2FsIHdhcm5p
-bmdzIGNhbiBzdGlsbCBiZSBzZWVuIHdoaWxlDQo+YnVpbGRpbmcgdjMuOC1yYzUuIFdoYXQncyB0
-aGUgc3RhdHVzIG9mIHRoaXMgcGF0Y2g/DQoNCkhpIFBhdWwsDQpJIGFtIHN1Ym1pdHRpbmcgc29t
-ZSBjb3JyZWN0aW9uIHBhdGNoZXMgdG9kYXkgYW5kIHRoaXMgcGF0Y2ggd2lsbCBiZSBwYXJ0DQpv
-ZiB0aGUgc2NzaS1taXNjIHN1Ym1pc3Npb24gYWZ0ZXIgdGhhdCBzZXQuDQoNClRoYW5rcywNCn5T
-YXVyYXYNCj4NCj4NCj5QYXVsIEJvbGxlDQo+DQo+LS0NCj5UbyB1bnN1YnNjcmliZSBmcm9tIHRo
-aXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSIgaW4NCj50aGUg
-Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPk1vcmUgbWFq
-b3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRt
-bA0KPg0KDQoNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQoNClRoaXMgbWVzc2Fn
-ZSBhbmQgYW55IGF0dGFjaGVkIGRvY3VtZW50cyBjb250YWluIGluZm9ybWF0aW9uIGZyb20gUUxv
-Z2ljIENvcnBvcmF0aW9uIG9yIGl0cyB3aG9sbHktb3duZWQgc3Vic2lkaWFyaWVzIHRoYXQgbWF5
-IGJlIGNvbmZpZGVudGlhbC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVudCwg
-eW91IG1heSBub3QgcmVhZCwgY29weSwgZGlzdHJpYnV0ZSwgb3IgdXNlIHRoaXMgaW5mb3JtYXRp
-b24uIElmIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgdHJhbnNtaXNzaW9uIGluIGVycm9yLCBwbGVh
-c2Ugbm90aWZ5IHRoZSBzZW5kZXIgaW1tZWRpYXRlbHkgYnkgcmVwbHkgZS1tYWlsIGFuZCB0aGVu
-IGRlbGV0ZSB0aGlzIG1lc3NhZ2UuDQo=
+On Wed, 2013-01-30 at 08:07 +0000, Saurav Kashyap wrote:
+> I am submitting some correction patches today and this patch will be part
+> of the scsi-misc submission after that set.
+
+Thanks.
+
+
+Paul Bolle
