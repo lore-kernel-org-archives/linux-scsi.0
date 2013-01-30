@@ -1,68 +1,221 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [scsi:for-next 14/27] drivers/scsi/qla2xxx/qla_os.c:364
- qla2x00_free_req_que() info: redundant null check on req->outstanding_cmds
- calling kfree()
-Date: Wed, 30 Jan 2013 05:25:24 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D04596A@AVMB1.qlogic.org>
-References: <1359428377.2408.20.camel@dabdike>
+From: kbuild test robot <fengguang.wu@intel.com>
+Subject: [scsi:misc 61/65] drivers/scsi/fnic/fnic_scsi.c:441:3: warning:
+ cast from pointer to integer of different size
+Date: Wed, 30 Jan 2013 14:26:34 +0800
+Message-ID: <5108bd1a.8xz9RnqCpU8wRGNk%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from db3ehsobe006.messaging.microsoft.com ([213.199.154.144]:45399
-	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750732Ab3A3F0E convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jan 2013 00:26:04 -0500
-In-Reply-To: <1359428377.2408.20.camel@dabdike>
-Content-Language: en-US
-Content-ID: <BBA96FC07B10FC45ADAB67D9F88AD689@qlogic.com>
+Received: from mga01.intel.com ([192.55.52.88]:23666 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752953Ab3A3G2J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jan 2013 01:28:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, kbuild test robot <fengguang.wu@intel.com>
-Cc: Chad Dupuis <chad.dupuis@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hiral Patel <hiralpat@cisco.com>
+Cc: linux-scsi@vger.kernel.org, Narsimhulu Musini <nmusini@cisco.com>, James Bottomley <JBottomley@Parallels.com>
 
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
+head:   52cb5cbe9b8ed89db0f8c9eeec8410fcfb0887fd
+commit: 6f3b5679f2af1ef3becbf7832d2bce977907c08a [61/65] [SCSI] fnic: fixing issues in device and firmware reset code
+config: make ARCH=i386 allmodconfig
 
+All warnings:
 
->On Mon, 2012-12-17 at 20:45 +0800, kbuild test robot wrote:
->> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
->>for-next
->> head:   e3ff197a750d2912d0bb2a0161c23c18bad250ad
->> commit: 99cc149bbdd78a3f18c6b366e1c239f62d59d096 [14/27] [SCSI]
->>qla2xxx: Determine the number of outstanding commands based on available
->>resources.
->>
->>
->> smatch warnings:
->>
->> + drivers/scsi/qla2xxx/qla_os.c:364 qla2x00_free_req_que() info:
->>redundant null check on req->outstanding_cmds calling kfree()
->>   drivers/scsi/qla2xxx/qla_os.c:686 qla2xxx_queuecommand() error:
->>potential NULL dereference 'rport'.
->
->I flushed all the outstanding qla2xxx patches from the SCSI tree.
->Please fix these issues and resubmit.
+   drivers/scsi/fnic/fnic_scsi.c:190:39: sparse: context imbalance in '__fnic_set_state_flags' - unexpected unlock
+   drivers/scsi/fnic/fnic_scsi.c:419:19: sparse: context imbalance in 'fnic_queuecommand_lck' - unexpected unlock
+   drivers/scsi/fnic/fnic_scsi.c:2411:49: sparse: context imbalance in 'fnic_is_abts_pending' - different lock contexts for basic block
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_queuecommand_lck':
+>> drivers/scsi/fnic/fnic_scsi.c:441:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:441:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:493:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:493:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:515:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:515:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:515:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_fcpio_ack_handler':
+>> drivers/scsi/fnic/fnic_scsi.c:703:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_fcpio_icmnd_cmpl_handler':
+>> drivers/scsi/fnic/fnic_scsi.c:747:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:747:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:904:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:904:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:904:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_fcpio_itmf_cmpl_handler':
+>> drivers/scsi/fnic/fnic_scsi.c:1022:5: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:1022:5: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:1022:5: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:1044:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:1044:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:1044:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_scsi.c:1059:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+--
+   drivers/scsi/fnic/fnic_trace.c: In function 'fnic_trace_get_buf':
+>> drivers/scsi/fnic/fnic_trace.c:80:9: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+   drivers/scsi/fnic/fnic_trace.c: In function 'fnic_get_trace_data':
+>> drivers/scsi/fnic/fnic_trace.c:112:10: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+>> drivers/scsi/fnic/fnic_trace.c:149:10: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+   drivers/scsi/fnic/fnic_trace.c: In function 'fnic_trace_buf_init':
+>> drivers/scsi/fnic/fnic_trace.c:200:21: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+>> drivers/scsi/fnic/fnic_trace.c:207:2: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+>> drivers/scsi/fnic/fnic_trace.c:215:10: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+   drivers/scsi/fnic/fnic_trace.c: In function 'fnic_trace_free':
+>> drivers/scsi/fnic/fnic_trace.c:260:9: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
 
-Hi James,
+sparse warnings: (new ones prefixed by >>)
 
-We will be re-submitting the patches soon.
+>> drivers/scsi/fnic/fnic_scsi.c:190:39: sparse: context imbalance in '__fnic_set_state_flags' - unexpected unlock
+   drivers/scsi/fnic/fnic_scsi.c:419:19: sparse: context imbalance in 'fnic_queuecommand_lck' - unexpected unlock
+>> drivers/scsi/fnic/fnic_scsi.c:2411:49: sparse: context imbalance in 'fnic_is_abts_pending' - different lock contexts for basic block
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_queuecommand_lck':
+   drivers/scsi/fnic/fnic_scsi.c:441:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:441:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:493:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:493:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:515:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:515:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:515:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_fcpio_ack_handler':
+   drivers/scsi/fnic/fnic_scsi.c:703:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_fcpio_icmnd_cmpl_handler':
+   drivers/scsi/fnic/fnic_scsi.c:747:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:747:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:904:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:904:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:904:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_fcpio_itmf_cmpl_handler':
+   drivers/scsi/fnic/fnic_scsi.c:1022:5: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1022:5: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1022:5: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1044:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1044:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1044:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1059:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1059:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1059:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_cleanup_io':
+   drivers/scsi/fnic/fnic_scsi.c:1213:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1213:4: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_wq_copy_cleanup_handler':
+   drivers/scsi/fnic/fnic_scsi.c:1276:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1276:3: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_abort_cmd':
+   drivers/scsi/fnic/fnic_scsi.c:1709:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:1709:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_device_reset':
+   drivers/scsi/fnic/fnic_scsi.c:2190:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   drivers/scsi/fnic/fnic_scsi.c:2190:2: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
 
-Thanks,
-~Saurav
->
->Thanks,
->
->James
->
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+vim +441 drivers/scsi/fnic/fnic_scsi.c
 
+   413			return SCSI_MLQUEUE_HOST_BUSY;
+   414	
+   415		atomic_inc(&fnic->in_flight);
+   416	
+   417		/*
+   418		 * Release host lock, use driver resource specific locks from here.
+   419		 * Don't re-enable interrupts in case they were disabled prior to the
+   420		 * caller disabling them.
+   421		 */
+   422		spin_unlock(lp->host->host_lock);
+   423		CMD_FLAGS(sc) = FNIC_CDB_REQ;
+   424	
+   425		/* Get a new io_req for this SCSI IO */
+   426		io_req = mempool_alloc(fnic->io_req_pool, GFP_ATOMIC);
+   427		if (!io_req) {
+   428			ret = SCSI_MLQUEUE_HOST_BUSY;
+   429			goto out;
+   430		}
+   431		memset(io_req, 0, sizeof(*io_req));
+   432	
+   433		/* Map the data buffer */
+   434		sg_count = scsi_dma_map(sc);
+   435		if (sg_count < 0) {
+   436			mempool_free(io_req, fnic->io_req_pool);
+   437			goto out;
+   438		}
+   439	
+   440		/* Determine the type of scatter/gather list we need */
+ > 441		io_req->sgl_cnt = sg_count;
+   442		io_req->sgl_type = FNIC_SGL_CACHE_DFLT;
+   443		if (sg_count > FNIC_DFLT_SG_DESC_CNT)
+   444			io_req->sgl_type = FNIC_SGL_CACHE_MAX;
+   445	
+   446		if (sg_count) {
+   447			io_req->sgl_list =
+   448				mempool_alloc(fnic->io_sgl_pool[io_req->sgl_type],
+   449					      GFP_ATOMIC);
+   450			if (!io_req->sgl_list) {
+   451				ret = SCSI_MLQUEUE_HOST_BUSY;
+   452				scsi_dma_unmap(sc);
+   453				mempool_free(io_req, fnic->io_req_pool);
+   454				goto out;
+   455			}
+   456	
+   457			/* Cache sgl list allocated address before alignment */
+   458			io_req->sgl_list_alloc = io_req->sgl_list;
+   459			ptr = (unsigned long) io_req->sgl_list;
+   460			if (ptr % FNIC_SG_DESC_ALIGN) {
+   461				io_req->sgl_list = (struct host_sg_desc *)
+   462					(((unsigned long) ptr
+   463					  + FNIC_SG_DESC_ALIGN - 1)
+   464					 & ~(FNIC_SG_DESC_ALIGN - 1));
+   465			}
+   466		}
+   467	
+   468		/* initialize rest of io_req */
+   469		io_req->port_id = rport->port_id;
+   470		CMD_STATE(sc) = FNIC_IOREQ_CMD_PENDING;
+   471		CMD_SP(sc) = (char *)io_req;
+   472		sc->scsi_done = done;
+   473	
+   474		/* create copy wq desc and enqueue it */
+   475		wq = &fnic->wq_copy[0];
+   476		ret = fnic_queue_wq_copy_desc(fnic, wq, io_req, sc, sg_count);
+   477		if (ret) {
+   478			/*
+   479			 * In case another thread cancelled the request,
+   480			 * refetch the pointer under the lock.
+   481			 */
+   482			spinlock_t *io_lock = fnic_io_lock_hash(fnic, sc);
+   483	
+   484			spin_lock_irqsave(io_lock, flags);
+   485			io_req = (struct fnic_io_req *)CMD_SP(sc);
+   486			CMD_SP(sc) = NULL;
+   487			CMD_STATE(sc) = FNIC_IOREQ_CMD_COMPLETE;
+   488			spin_unlock_irqrestore(io_lock, flags);
+   489			if (io_req) {
+   490				fnic_release_ioreq_buf(fnic, io_req, sc);
+   491				mempool_free(io_req, fnic->io_req_pool);
+   492			}
+   493		}
+   494	out:
+   495		atomic_dec(&fnic->in_flight);
+   496		/* acquire host lock before returning to SCSI */
+   497		spin_lock(lp->host->host_lock);
+   498		return ret;
+   499	}
+   500	
+   501	DEF_SCSI_QCMD(fnic_queuecommand)
+   502	
+   503	/*
+   504	 * fnic_fcpio_fw_reset_cmpl_handler
+   505	 * Routine to handle fw reset completion
+   506	 */
+   507	static int fnic_fcpio_fw_reset_cmpl_handler(struct fnic *fnic,
+   508						    struct fcpio_fw_req *desc)
+   509	{
+   510		u8 type;
+   511		u8 hdr_status;
+   512		struct fcpio_tag tag;
+   513		int ret = 0;
+   514		unsigned long flags;
+   515	
+   516		fcpio_header_dec(&desc->hdr, &type, &hdr_status, &tag);
+   517	
+   518		/* Clean up all outstanding io requests */
 
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-
+---
+0-DAY kernel build testing backend              Open Source Technology Center
+http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
