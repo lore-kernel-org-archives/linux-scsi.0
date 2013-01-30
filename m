@@ -1,39 +1,56 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 4/6] qla2xxx: Allow ISP81xx to create ATIO queues.
-Date: Wed, 30 Jan 2013 03:34:40 -0500
-Message-ID: <1359534882-17069-5-git-send-email-saurav.kashyap@qlogic.com>
-References: <1359534882-17069-1-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 0/6] qla2xxx: Patches for scsi "misc" branch.
+Date: Wed, 30 Jan 2013 03:34:36 -0500
+Message-ID: <1359534882-17069-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:12574 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:37481 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752017Ab3A3Iz1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753382Ab3A3Iz1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 30 Jan 2013 03:55:27 -0500
-In-Reply-To: <1359534882-17069-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Arun Easi <arun.easi@qlogic.com>
+Hi James,
 
-Signed-off-by: Arun Easi <arun.easi@qlogic.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_os.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Please apply the following patches to the scsi tree at your earliest
+convenience for inclusion in the next mainline merge window.
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index e93408f..2d2afdb 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2425,6 +2425,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
- 		req_length = REQUEST_ENTRY_CNT_24XX;
- 		rsp_length = RESPONSE_ENTRY_CNT_2300;
-+		ha->tgt.atio_q_length = ATIO_ENTRY_CNT_24XX;
- 		ha->max_loop_id = SNS_LAST_LOOP_ID_2300;
- 		ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
- 		ha->gid_list_info_size = 8;
+Thanks,
+~Saurav
+
+Arun Easi (3):
+  qla2xxx: Enable target mode support for ISP83xx.
+  qla2xxx: Allow ISP81xx to create ATIO queues.
+  qla2xxx: Prevent enabling target mode for unsupported HBAs.
+
+Chad Dupuis (2):
+  qla2xxx: Determine the number of outstanding commands based on
+    available resources.
+  qla2xxx: Ramp down queue depth for attached SCSI devices when driver
+    resources are low.
+
+Saurav Kashyap (1):
+  qla2xxx: Correction to the message ids.
+
+ drivers/scsi/qla2xxx/qla_bsg.c    |    2 +-
+ drivers/scsi/qla2xxx/qla_dbg.c    |    9 +-
+ drivers/scsi/qla2xxx/qla_def.h    |   30 +++++--
+ drivers/scsi/qla2xxx/qla_fw.h     |    3 +-
+ drivers/scsi/qla2xxx/qla_gbl.h    |    4 +
+ drivers/scsi/qla2xxx/qla_init.c   |   60 +++++++++++++-
+ drivers/scsi/qla2xxx/qla_inline.h |   19 ++++
+ drivers/scsi/qla2xxx/qla_iocb.c   |   37 ++++----
+ drivers/scsi/qla2xxx/qla_isr.c    |   30 +++++--
+ drivers/scsi/qla2xxx/qla_mbx.c    |    8 +-
+ drivers/scsi/qla2xxx/qla_mid.c    |    7 ++-
+ drivers/scsi/qla2xxx/qla_nx.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c     |  123 +++++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_target.c |  169 +++++++++++++++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_target.h |   19 +++--
+ 15 files changed, 442 insertions(+), 80 deletions(-)
+
 -- 
 1.7.7
 
