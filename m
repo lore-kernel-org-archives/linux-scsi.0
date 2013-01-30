@@ -1,221 +1,65 @@
-From: "Hiral Patel (hiralpat)" <hiralpat@cisco.com>
-Subject: Re: [scsi:for-next 23/27] drivers/scsi/fnic/fnic_scsi.c:1260
- fnic_rport_exch_reset() error: we previously assumed 'sc->device' could be
- null (see line 1237)
-Date: Wed, 30 Jan 2013 00:12:55 +0000
-Message-ID: <DF334AB4E0858445841A5B5201E1C1B128919436@xmb-rcd-x08.cisco.com>
-References: <20121217134920.GP5083@mwanda>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH] target: For iblock at default writecache enable.
+Date: Wed, 30 Jan 2013 09:19:16 +0800
+Message-ID: <201301300919014311109@gmail.com>
+References: <201301250958101278740@gmail.com> <1359486198.23290.1409.camel@haakon2.linux-iscsi.org> <5108558D.6000408@redhat.com>,
+	<1359501265.23290.1720.camel@haakon2.linux-iscsi.org>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-8.cisco.com ([173.37.86.79]:4122 "EHLO
-	rcdn-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364Ab3A3AWm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 19:22:42 -0500
-In-Reply-To: <20121217134920.GP5083@mwanda>
-Content-Language: en-US
-Content-ID: <F518075452D5D14E9C0131B7E79583E8@cisco.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:37038 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751586Ab3A3BTf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 20:19:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: James Bottomley <JBottomley@Parallels.com>, "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kbuild@01.org" <kbuild@01.org>
+To: nab <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 
-Hi Dan,
-
-I have fixed the new smatch warnings which was introduced by fnic update
-patches and resubmitted new patches.
-
-Thanks,
-Hiral
-
-On 12/17/12 5:49 AM, "Dan Carpenter" <dan.carpenter@oracle.com> wrote:
-
->[ It doesn't make sense to check for NULL, print an error and then
->  dereference the pointer.  The normal Oops message is easy to debug
->  without the extra code added here.  Or maybe it is possible for
->  the pointer to be NULL in that case we should handle it
->  correctly. ]
->
->Hi Hiral,
->
->FYI, there are new smatch warnings show up in
->
->tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
->for-next
->head:   e3ff197a750d2912d0bb2a0161c23c18bad250ad
->commit: 188061001ac78b40780af042dd2156e2213e29ed [23/27] [SCSI]
->fnic:fixing issues in device and firmware reset code
->
->  drivers/scsi/fnic/fnic_scsi.c:404 fnic_queuecommand_lck() error:
->potential NULL dereference 'rport'.
->  drivers/scsi/fnic/fnic_scsi.c:303 fnic_queue_wq_copy_desc() error:
->potential NULL dereference 'rport'.
->+ drivers/scsi/fnic/fnic_scsi.c:1260 fnic_rport_exch_reset() error: we
->previously assumed 'sc->device' could be null (see line 1237)
->+ drivers/scsi/fnic/fnic_scsi.c:1325 fnic_terminate_rport_io() error: we
->previously assumed 'sc->device' could be null (see line 1314)
->  drivers/scsi/fnic/fnic_scsi.c:1431 fnic_abort_cmd() error: potential
->NULL dereference 'rport'.
->  drivers/scsi/fnic/fnic_scsi.c:1787 fnic_device_reset() error: potential
->NULL dereference 'rport'.
->
->git remote add scsi
->git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
->git remote update scsi
->git checkout 188061001ac78b40780af042dd2156e2213e29ed
->vim +1260 drivers/scsi/fnic/fnic_scsi.c
->
->18806100 Hiral Patel       2012-12-10  1231  		if (io_req->abts_done) {
->18806100 Hiral Patel       2012-12-10  1232  			shost_printk(KERN_ERR,
->fnic->lport->host,
->18806100 Hiral Patel       2012-12-10  1233  			"fnic_rport_exch_reset:
->io_req->abts_done is set "
->18806100 Hiral Patel       2012-12-10  1234  			"state is %s\n",
->18806100 Hiral Patel       2012-12-10  1235
->			fnic_ioreq_state_to_str(CMD_STATE(sc)));
->18806100 Hiral Patel       2012-12-10  1236  		}
->18806100 Hiral Patel       2012-12-10 @1237  		if (sc->device == NULL)
->18806100 Hiral Patel       2012-12-10  1238  			shost_printk(KERN_ERR,
->fnic->lport->host,
->18806100 Hiral Patel       2012-12-10  1239  			"fnic_rport_exch_reset:
->sc->device is null state is "
->18806100 Hiral Patel       2012-12-10  1240  			"%s\n",
->fnic_ioreq_state_to_str(CMD_STATE(sc)));
->18806100 Hiral Patel       2012-12-10  1241
->5df6d737 Abhijeet Joglekar 2009-04-17  1242  		old_ioreq_state =
->CMD_STATE(sc);
->5df6d737 Abhijeet Joglekar 2009-04-17  1243  		CMD_STATE(sc) =
->FNIC_IOREQ_ABTS_PENDING;
->5df6d737 Abhijeet Joglekar 2009-04-17  1244  		CMD_ABTS_STATUS(sc) =
->FCPIO_INVALID_CODE;
->18806100 Hiral Patel       2012-12-10  1245  		if (CMD_FLAGS(sc) &
->FNIC_DEVICE_RESET) {
->18806100 Hiral Patel       2012-12-10  1246  			abt_tag = (tag |
->FNIC_TAG_DEV_RST);
->18806100 Hiral Patel       2012-12-10  1247  			FNIC_SCSI_DBG(KERN_DEBUG,
->fnic->lport->host,
->18806100 Hiral Patel       2012-12-10  1248  			"fnic_rport_exch_reset
->dev rst sc 0x%p\n",
->18806100 Hiral Patel       2012-12-10  1249  			sc);
->18806100 Hiral Patel       2012-12-10  1250  		}
->5df6d737 Abhijeet Joglekar 2009-04-17  1251
->5df6d737 Abhijeet Joglekar 2009-04-17  1252  		BUG_ON(io_req->abts_done);
->5df6d737 Abhijeet Joglekar 2009-04-17  1253
->5df6d737 Abhijeet Joglekar 2009-04-17  1254  		FNIC_SCSI_DBG(KERN_DEBUG,
->fnic->lport->host,
->5df6d737 Abhijeet Joglekar 2009-04-17  1255  			
->"fnic_rport_reset_exch: Issuing abts\n");
->5df6d737 Abhijeet Joglekar 2009-04-17  1256
->5df6d737 Abhijeet Joglekar 2009-04-17  1257
->		spin_unlock_irqrestore(io_lock, flags);
->5df6d737 Abhijeet Joglekar 2009-04-17  1258
->5df6d737 Abhijeet Joglekar 2009-04-17  1259  		/* Now queue the abort
->command to firmware */
->5df6d737 Abhijeet Joglekar 2009-04-17 @1260
->		int_to_scsilun(sc->device->lun, &fc_lun);
->5df6d737 Abhijeet Joglekar 2009-04-17  1261
->18806100 Hiral Patel       2012-12-10  1262  		if
->(fnic_queue_abort_io_req(fnic, abt_tag,
->5df6d737 Abhijeet Joglekar 2009-04-17  1263  					
->FCPIO_ITMF_ABT_TASK_TERM,
->5df6d737 Abhijeet Joglekar 2009-04-17  1264  					    fc_lun.scsi_lun,
->io_req)) {
->5df6d737 Abhijeet Joglekar 2009-04-17  1265  			/*
->5df6d737 Abhijeet Joglekar 2009-04-17  1266  			 * Revert the cmd state
->back to old state, if
->25985edc Lucas De Marchi   2011-03-30  1267  			 * it hasn't changed in
->between. This cmd will get
->5df6d737 Abhijeet Joglekar 2009-04-17  1268  			 * aborted later by
->scsi_eh, or cleaned up during
->5df6d737 Abhijeet Joglekar 2009-04-17  1269  			 * lun reset
->5df6d737 Abhijeet Joglekar 2009-04-17  1270  			 */
->5df6d737 Abhijeet Joglekar 2009-04-17  1271
->			spin_lock_irqsave(io_lock, flags);
->5df6d737 Abhijeet Joglekar 2009-04-17  1272  			if (CMD_STATE(sc) ==
->FNIC_IOREQ_ABTS_PENDING)
->5df6d737 Abhijeet Joglekar 2009-04-17  1273  				CMD_STATE(sc) =
->old_ioreq_state;
->5df6d737 Abhijeet Joglekar 2009-04-17  1274
->			spin_unlock_irqrestore(io_lock, flags);
->18806100 Hiral Patel       2012-12-10  1275  		} else {
->18806100 Hiral Patel       2012-12-10  1276
->			spin_lock_irqsave(io_lock, flags);
->18806100 Hiral Patel       2012-12-10  1277  			CMD_FLAGS(sc) |=
->FNIC_DEV_RST_TERM_ISSUED;
->18806100 Hiral Patel       2012-12-10  1278
->			spin_unlock_irqrestore(io_lock, flags);
->5df6d737 Abhijeet Joglekar 2009-04-17  1279  		}
->5df6d737 Abhijeet Joglekar 2009-04-17  1280  	}
->5df6d737 Abhijeet Joglekar 2009-04-17  1281
->5df6d737 Abhijeet Joglekar 2009-04-17  1282  }
->5df6d737 Abhijeet Joglekar 2009-04-17  1283
->5df6d737 Abhijeet Joglekar 2009-04-17  1284  void
->fnic_terminate_rport_io(struct fc_rport *rport)
->5df6d737 Abhijeet Joglekar 2009-04-17  1285  {
->5df6d737 Abhijeet Joglekar 2009-04-17  1286  	int tag;
->18806100 Hiral Patel       2012-12-10  1287  	int abt_tag;
->5df6d737 Abhijeet Joglekar 2009-04-17  1288  	struct fnic_io_req *io_req;
->5df6d737 Abhijeet Joglekar 2009-04-17  1289  	spinlock_t *io_lock;
->5df6d737 Abhijeet Joglekar 2009-04-17  1290  	unsigned long flags;
->5df6d737 Abhijeet Joglekar 2009-04-17  1291  	struct scsi_cmnd *sc;
->5df6d737 Abhijeet Joglekar 2009-04-17  1292  	struct scsi_lun fc_lun;
->5df6d737 Abhijeet Joglekar 2009-04-17  1293  	struct fc_rport_libfc_priv
->*rdata = rport->dd_data;
->5df6d737 Abhijeet Joglekar 2009-04-17  1294  	struct fc_lport *lport =
->rdata->local_port;
->5df6d737 Abhijeet Joglekar 2009-04-17  1295  	struct fnic *fnic =
->lport_priv(lport);
->5df6d737 Abhijeet Joglekar 2009-04-17  1296  	struct fc_rport *cmd_rport;
->5df6d737 Abhijeet Joglekar 2009-04-17  1297  	enum fnic_ioreq_state
->old_ioreq_state;
->5df6d737 Abhijeet Joglekar 2009-04-17  1298
->5df6d737 Abhijeet Joglekar 2009-04-17  1299  	FNIC_SCSI_DBG(KERN_DEBUG,
->5df6d737 Abhijeet Joglekar 2009-04-17  1300  		      fnic->lport->host,
->"fnic_terminate_rport_io called"
->18806100 Hiral Patel       2012-12-10  1301  		      " wwpn 0x%llx,
->wwnn0x%llx, rport 0x%p, portid 0x%06x\n",
->18806100 Hiral Patel       2012-12-10  1302  		      rport->port_name,
->rport->node_name, rport,
->5df6d737 Abhijeet Joglekar 2009-04-17  1303  		      rport->port_id);
->5df6d737 Abhijeet Joglekar 2009-04-17  1304
->5df6d737 Abhijeet Joglekar 2009-04-17  1305  	if (fnic->in_remove)
->5df6d737 Abhijeet Joglekar 2009-04-17  1306  		return;
->5df6d737 Abhijeet Joglekar 2009-04-17  1307
->5df6d737 Abhijeet Joglekar 2009-04-17  1308  	for (tag = 0; tag <
->FNIC_MAX_IO_REQ; tag++) {
->18806100 Hiral Patel       2012-12-10  1309  		abt_tag = tag;
->5df6d737 Abhijeet Joglekar 2009-04-17  1310  		sc =
->scsi_host_find_tag(fnic->lport->host, tag);
->5df6d737 Abhijeet Joglekar 2009-04-17  1311  		if (!sc)
->5df6d737 Abhijeet Joglekar 2009-04-17  1312  			continue;
->5df6d737 Abhijeet Joglekar 2009-04-17  1313
->18806100 Hiral Patel       2012-12-10 @1314  		if (sc->device == NULL)
->18806100 Hiral Patel       2012-12-10  1315  			shost_printk(KERN_ERR,
->fnic->lport->host,
->18806100 Hiral Patel       2012-12-10  1316  			"fnic_terminate_rport_io:
->sc->device is null "
->18806100 Hiral Patel       2012-12-10  1317  			"state is %s tag is %d\n",
->18806100 Hiral Patel       2012-12-10  1318
->			fnic_ioreq_state_to_str(CMD_STATE(sc)), tag);
->18806100 Hiral Patel       2012-12-10  1319  		else if
->(sc->device->sdev_gendev.parent == NULL)
->18806100 Hiral Patel       2012-12-10  1320  			shost_printk(KERN_ERR,
->fnic->lport->host,
->18806100 Hiral Patel       2012-12-10  1321  			"fnic_terminate_rport_io:
->parent is null "
->18806100 Hiral Patel       2012-12-10  1322  			"state is %s  tag is
->%d\n",
->18806100 Hiral Patel       2012-12-10  1323
->			fnic_ioreq_state_to_str(CMD_STATE(sc)), tag);
->18806100 Hiral Patel       2012-12-10  1324
->5df6d737 Abhijeet Joglekar 2009-04-17 @1325  		cmd_rport =
->starget_to_rport(scsi_target(sc->device));
->5df6d737 Abhijeet Joglekar 2009-04-17  1326  		if (rport != cmd_rport)
->5df6d737 Abhijeet Joglekar 2009-04-17  1327  			continue;
->5df6d737 Abhijeet Joglekar 2009-04-17  1328
->
->---
->0-DAY kernel build testing backend         Open Source Technology Center
->Fengguang Wu, Yuanhan Liu                              Intel Corporation
+Pk9uIFR1ZSwgMjAxMy0wMS0yOSBhdCAxNTowNCAtMDgwMCwgQW5keSBHcm92ZXIgd3JvdGU6DQo+
+PiBPbiAwMS8yOS8yMDEzIDExOjAzIEFNLCBOaWNob2xhcyBBLiBCZWxsaW5nZXIgd3JvdGU6DQo+
+PiANCj4+ID4gU28gZW5hYmxpbmcgZW11bGF0ZV93cml0ZV9jYWNoZT0xIGluIHRoZSBjYXNlIHdo
+ZW4gdGhlIHVuZGVybHlpbmcgZGV2aWNlDQo+PiA+IGhhcyBub3QgZW5hYmxlZCBpdCBpcyBpbmNv
+cnJlY3QuDQo+PiA+IA0KPj4gPiBJJ2QgbGlrZSB0byBlbmFibGUgdGhpcyBiaXQgd2hlbiB3ZSBr
+bm93IHRoZSB1bmRlcmx5aW5nIGRldmljZSBoYXMgV0NFPTENCj4+ID4gc2V0LCBidXQgY3VycmVu
+dGx5IHRoZXJlIGlzIG5vdCBhIHdheSB0byBkZXRlcm1pbmUgdGhpcyAoZ2VuZXJpY2FsbHkpDQo+
+PiA+IGZyb20gc3RydWN0IGJsb2NrX2RldmljZS4NCj4+ID4gDQo+PiA+IFNvIE5BQ0sgZm9yIGFw
+cGx5aW5nIHRoaXMgdW50aWwgdGhlcmUgaXMgYSBtZXRob2QgdG8gZGV0ZXJtaW5lIHdoYXQgdGhl
+DQo+PiA+IGhhcmR3YXJlIGJlbG93IGlzIGRvaW5nLg0KPj4gDQo+PiBUaGlzIHNob3VsZCBiZSBw
+b3NzaWJsZSBmcm9tIHVzZXJzcGFjZSB0aG91Z2guIEknbSBwbGFubmluZyBvbiBsb29raW5nDQo+
+PiB1cCB1bmRlcmx5aW5nIHNjc2kgZGV2aWNlKHM/KSB1c2luZyBsaWJibGtpZCwgYW5kIHRoZW4g
+cXVlcnkgdGhlIHNlbnNlDQo+PiBkYXRhIHVzaW5nIGxpYnNndXRpbHMgd2hlbiBhZGRpbmcgYSBi
+bG9jayBiYWNrc3RvcmUgaW4gdGFyZ2V0Y2xpLg0KPj4gDQo+DQo+UXVlcnlpbmcgdGhlIG1vZGUg
+cGFnZXMgZnJvbSB1c2Vyc3BhY2Ugd291bGQgd29yayBmb3IgdGhlIFNDU0kgYmFja3N0b3JlDQo+
+Y2FzZSwgYnV0IGNlcnRhaW5seSBub3QgZm9yIHJhdyBibG9jayBkZXZpY2VzLg0KPg0KPkknZCBz
+dGlsbCBsaWtlIHRvIHNlZSB0aGlzIGV4cG9zZWQgdG8gdGhlIGJsb2NrIGxheWVyIHNvbWVob3cs
+IHNvIHRoYXQNCj50aGUgc2V0dGluZyBjYW4gYmUgYXV0b21hdGljYWxseSBkZXRlcm1pbmVkIGJ5
+IFRDTSBvbmNlIGl0J3Mga25vd24gaWYNCj50aGUgdW5kZXJseWluZyBIVyBoYXMgZW5hYmxlZCB3
+cml0ZSBjYWNoaW5nLg0KPg0KPj4gSXQncyBraW5kIG9mIGEgaGFzc2xlLCBidXQgaXNuJ3QgaXQg
+YSBodWdlIHBlcmZvcm1hbmNlIHdpbiBpZiB3ZSBjYW4NCj4+IGVuYWJsZSB0aGlzPw0KPj4gDQo+
+DQo+TW9zdCBjZXJ0YWlubHksIGJ1dCB0aGUgZGFuZ2VyIGlzIHJlcG9ydGluZyBXQ0U9MSAoYnkg
+ZGVmYXVsdCBpbiBhbGwNCj5jYXNlcykgZnJvbSBUQ00gdG8gdGhlIGluaXRpYXRvciB3aGVuIHRo
+ZSB1bmRlcmx5aW5nIGRyaXZlcyBkbyBub3QgaGF2ZQ0KPmNhY2hpbmcgZW5hYmxlZC4gIE5vdGUg
+dGhhdCBldmVyeSBzcGlubmluZyBtZWRpYSBkZXZpY2UgdGhhdCBJJ3ZlIGV2ZXINCj5zZWVuIGRp
+c2FibGVzIFdDRSBieSBkZWZhdWx0IGZyb20gdGhlIGZhY3RvcnkuDQpTb3JyeSwgd2hhdCdzIHRo
+ZSBkYW5nZXI/Q2FuIHlvdSBleHBsYWluIHRoZSBkZXRhaWxzPw0KQW5kIGZvciBtb3N0IHNhdGEg
+aGRkIHRoZSBXQ0UgIGlzIGVuYWJsZSBieSBkZWZhdWx0Lg0KSU1ITywgZm9yIGhhcmQtcmFpZCB0
+aGUgV0NFIHdpbGwgYmUgZGlzYWJsZSwgaXQgdXNlZCB0aGUgY2FjaGUgb2YgaGFyZHJhaWQtY2Fy
+ZC4NCg0KSW4gZnVuYyBzZF9yZXZhbGlkYXRlX2Rpc2s6DQo+CS8qDQo+CSAqIFdlIG5vdyBoYXZl
+IGFsbCBjYWNoZSByZWxhdGVkIGluZm8sIGRldGVybWluZSBob3cgd2UgZGVhbA0KPgkgKiB3aXRo
+IGZsdXNoIHJlcXVlc3RzLg0KPgkgKi8NCj4JaWYgKHNka3AtPldDRSkgew0KPgkJZmx1c2ggfD0g
+UkVRX0ZMVVNIOw0KPgkJaWYgKHNka3AtPkRQT0ZVQSkNCj4JCQlmbHVzaCB8PSBSRVFfRlVBOw0K
+Pgl9DQoNCj4JYmxrX3F1ZXVlX2ZsdXNoKHNka3AtPmRpc2stPnF1ZXVlLCBmbHVzaCk7DQpXZSBj
+YW4gdXNlIHF1ZXVlLT5mbHVzaF9mbGFncy4NCkJ1dCBpbiBmdW5jIGdlbmVyaWNfbWFrZV9yZXF1
+ZXN0X2NoZWNrczoNCj4vKg0KPgkgKiBGaWx0ZXIgZmx1c2ggYmlvJ3MgZWFybHkgc28gdGhhdCBt
+YWtlX3JlcXVlc3QgYmFzZWQNCj4JICogZHJpdmVycyB3aXRob3V0IGZsdXNoIHN1cHBvcnQgZG9u
+J3QgaGF2ZSB0byB3b3JyeQ0KPgkgKiBhYm91dCB0aGVtLg0KPgkgKi8NCj4JaWYgKChiaW8tPmJp
+X3J3ICYgKFJFUV9GTFVTSCB8IFJFUV9GVUEpKSAmJiAhcS0+Zmx1c2hfZmxhZ3MpIHsNCj4JCWJp
+by0+YmlfcncgJj0gfihSRVFfRkxVU0ggfCBSRVFfRlVBKTsNClNvIGlmIHVkZXJseWluZyBkZXZp
+Y2UgZG9uJ3Qgc3VwcG9ydCBXQ0UsIGl0IGNhbiByZW1vdmUgUkVRX0ZVQXxSRVFfRkxVU0guDQpJ
+IHRoaW5rIGVuYWJsZSB3cml0ZWNhY2hlIGJ5IGRlZmF1bHQgaXMgb2suDQoNCkppYW5wZW5nDQpU
+aGFua3Mh
 
