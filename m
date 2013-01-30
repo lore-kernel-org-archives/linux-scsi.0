@@ -1,105 +1,66 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [patch] [SCSI] libosd: check for kzalloc() failure
-Date: Wed, 30 Jan 2013 14:00:01 +0100
-Message-ID: <51091951.5090709@bfs.de>
-References: <20130130070602.GB12396@elgon.mountain> <5108D6AF.5040205@bfs.de> <20130130082741.GT16282@mwanda> <5108E08E.70302@bfs.de> <CAEMWVhuS5Dg8XAQjxrb_VO-T0S7jS5knOmEWvvJ18xY8hp08hg@mail.gmail.com>
-Reply-To: wharms@bfs.de
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: storvsc loops with No Sense messages
+Date: Wed, 30 Jan 2013 14:35:11 +0100
+Message-ID: <20130130133511.GA6290@aepfle.de>
+References: <20130129152801.GA671@aepfle.de>
+ <a120050e059c40c2a1d1be4eadc42dfd@SN2PR03MB061.namprd03.prod.outlook.com>
+ <20130129185600.GA31738@aepfle.de>
+ <05a4f02fe12545f489dd053175990b8d@SN2PR03MB061.namprd03.prod.outlook.com>
+ <20130129212743.GA8052@aepfle.de>
+ <20130130095947.GA6626@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx01.sz.bfs.de ([194.94.69.103]:61261 "EHLO mx01.sz.bfs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753325Ab3A3NAE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jan 2013 08:00:04 -0500
-In-Reply-To: <CAEMWVhuS5Dg8XAQjxrb_VO-T0S7jS5knOmEWvvJ18xY8hp08hg@mail.gmail.com>
+Received: from mo-p00-ob.rzone.de ([81.169.146.162]:55553 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754513Ab3A3NfV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jan 2013 08:35:21 -0500
+Content-Disposition: inline
+In-Reply-To: <20130130095947.GA6626@aepfle.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benny Halevy <bhalevy@tonian.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Wed, Jan 30, Olaf Hering wrote:
 
+> Is there a way to not use WRITE_SAME at all? While browsing the code its
+> not clear if there is a conditional for this command.
 
-Am 30.01.2013 10:51, schrieb Benny Halevy:
-> On Wed, Jan 30, 2013 at 10:57 AM, walter harms <wharms@bfs.de> wrote:
->>
->>
->> Am 30.01.2013 09:27, schrieb Dan Carpenter:
->>> On Wed, Jan 30, 2013 at 09:15:43AM +0100, walter harms wrote:
->>>>
->>>>
->>>> Am 30.01.2013 08:06, schrieb Dan Carpenter:
->>>>> There wasn't any error handling for this kzalloc().
->>>>>
->>>>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->>>>>
->>>>> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
->>>>> index c06b8e5..d8293f2 100644
->>>>> --- a/drivers/scsi/osd/osd_initiator.c
->>>>> +++ b/drivers/scsi/osd/osd_initiator.c
->>>>> @@ -144,6 +144,10 @@ static int _osd_get_print_system_info(struct osd_dev *od,
->>>>>     odi->osdname_len = get_attrs[a].len;
->>>>>     /* Avoid NULL for memcmp optimization 0-length is good enough */
->>>>>     odi->osdname = kzalloc(odi->osdname_len + 1, GFP_KERNEL);
->>>>> +   if (!odi->osdname) {
->>>>> +           ret = -ENOMEM;
->>>>> +           goto out;
->>>>> +   }
->>>>>     if (odi->osdname_len)
->>>>>             memcpy(odi->osdname, get_attrs[a].val_ptr, odi->osdname_len);
->>>>>     OSD_INFO("OSD_NAME               [%s]\n", odi->osdname);
->>>>> --
->>>>
->>>> this looks like strdup() ?
->>>>
->>>
->>> Maybe?  It's a funny thing going on with the NUL terminator and I
->>> don't understand what the comment is about.
->>>
->>> It appears that normally "get_attrs[a].val_ptr" is a NUL terminated
->>> string but "get_attrs[a].len" does not count the terminator.
->>>
->>> Odd.
->>>
->> i have no clue what the programmer was thinking. if i read this correct
->> osdname is u8 *osdname; so a simple strdup() or strndup() would be ok
->> the comment seems to indicate that get_attrs[a].val_ptr could be NULL
->> but where is the check ?
->> Perhaps they are not using ascii here ? then a memdup(get_attrs[a].len)
->> would be better.
-> 
-> There are subtle differences between kstrdup or kmemdup and this implementation.
-> 
-> kmemdup is problematic as get_attrs[a].val_ptr does not contain the
-> NUL terminator
+It seems scsi_device->no_write_same may avoid this command, I will
+test this patch:
 
-ok, i understand - but can we assume that we are talking ascii here ?
+# Subject: [PATCH] scsi: storvsc: avoid usage of WRITE_SAME
 
-> In the following case:
-> if get_attrs[a].len == 0
-> then get_attrs[a].val_ptr == NULL
-> 
-> The end result should be
-> odi->osdname_len = 0
-> odi->osdname = kzalloc(1, GFP_KERNEL);
-> 
-> while with kstrdup, odi->osdname will end up being NULL
-> as it's input arg "s" is NULL.
-> 
+Set scsi_device->no_write_same because the host does not support it.
+Also blacklist WRITE_SAME to avoid (and log) accident usage.
 
-and you want the argument to be "" ?
-May i ask why ? kfree() can handle NULL and kprintf() (-family) also.
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
+---
+ drivers/scsi/storvsc_drv.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-re,
- wh
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 0144078..21f788a 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1155,6 +1155,8 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ 
+ 	blk_queue_bounce_limit(sdevice->request_queue, BLK_BOUNCE_ANY);
+ 
++	sdevice->no_write_same = 1;
++
+ 	return 0;
+ }
+ 
+@@ -1241,6 +1243,7 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
+ 	 * smartd sends this command and the host does not handle
+ 	 * this. So, don't send it.
+ 	 */
++	case WRITE_SAME:
+ 	case SET_WINDOW:
+ 		scmnd->result = ILLEGAL_REQUEST << 16;
+ 		allowed = false;
+-- 
+1.8.1.1
 
-
-> Benny
-> 
->>
->> re,
->>  wh
->>
->>
-> 
-> 
