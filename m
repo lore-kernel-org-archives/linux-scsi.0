@@ -1,163 +1,91 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v8 3/4] block: implement runtime pm strategy
-Date: Wed, 30 Jan 2013 17:34:53 +0800
-Message-ID: <1359538494-2936-4-git-send-email-aaron.lu@intel.com>
-References: <1359538494-2936-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1359538494-2936-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>, Shane Huang <shane.huang@amd.com>
+From: Benny Halevy <bhalevy@tonian.com>
+Subject: Re: [patch] [SCSI] libosd: check for kzalloc() failure
+Date: Wed, 30 Jan 2013 11:51:32 +0200
+Message-ID: <CAEMWVhuS5Dg8XAQjxrb_VO-T0S7jS5knOmEWvvJ18xY8hp08hg@mail.gmail.com>
+References: <20130130070602.GB12396@elgon.mountain> <5108D6AF.5040205@bfs.de>
+ <20130130082741.GT16282@mwanda> <5108E08E.70302@bfs.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:52308 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754184Ab3A3Jvx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jan 2013 04:51:53 -0500
+Received: by mail-ob0-f173.google.com with SMTP id dn14so1388658obc.4
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Jan 2013 01:51:52 -0800 (PST)
+In-Reply-To: <5108E08E.70302@bfs.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: wharms@bfs.de
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-From: Lin Ming <ming.m.lin@intel.com>
+On Wed, Jan 30, 2013 at 10:57 AM, walter harms <wharms@bfs.de> wrote:
+>
+>
+> Am 30.01.2013 09:27, schrieb Dan Carpenter:
+>> On Wed, Jan 30, 2013 at 09:15:43AM +0100, walter harms wrote:
+>>>
+>>>
+>>> Am 30.01.2013 08:06, schrieb Dan Carpenter:
+>>>> There wasn't any error handling for this kzalloc().
+>>>>
+>>>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>>>>
+>>>> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+>>>> index c06b8e5..d8293f2 100644
+>>>> --- a/drivers/scsi/osd/osd_initiator.c
+>>>> +++ b/drivers/scsi/osd/osd_initiator.c
+>>>> @@ -144,6 +144,10 @@ static int _osd_get_print_system_info(struct osd_dev *od,
+>>>>     odi->osdname_len = get_attrs[a].len;
+>>>>     /* Avoid NULL for memcmp optimization 0-length is good enough */
+>>>>     odi->osdname = kzalloc(odi->osdname_len + 1, GFP_KERNEL);
+>>>> +   if (!odi->osdname) {
+>>>> +           ret = -ENOMEM;
+>>>> +           goto out;
+>>>> +   }
+>>>>     if (odi->osdname_len)
+>>>>             memcpy(odi->osdname, get_attrs[a].val_ptr, odi->osdname_len);
+>>>>     OSD_INFO("OSD_NAME               [%s]\n", odi->osdname);
+>>>> --
+>>>
+>>> this looks like strdup() ?
+>>>
+>>
+>> Maybe?  It's a funny thing going on with the NUL terminator and I
+>> don't understand what the comment is about.
+>>
+>> It appears that normally "get_attrs[a].val_ptr" is a NUL terminated
+>> string but "get_attrs[a].len" does not count the terminator.
+>>
+>> Odd.
+>>
+> i have no clue what the programmer was thinking. if i read this correct
+> osdname is u8 *osdname; so a simple strdup() or strndup() would be ok
+> the comment seems to indicate that get_attrs[a].val_ptr could be NULL
+> but where is the check ?
+> Perhaps they are not using ascii here ? then a memdup(get_attrs[a].len)
+> would be better.
 
-When a request is added:
-    If device is suspended or is suspending and the request is not a
-    PM request, resume the device.
+There are subtle differences between kstrdup or kmemdup and this implementation.
 
-When the last request finishes:
-    Call pm_runtime_mark_last_busy().
+kmemdup is problematic as get_attrs[a].val_ptr does not contain the
+NUL terminator
 
-When pick a request:
-    If device is resuming/suspending, then only PM request is allowed
-    to go.
+In the following case:
+if get_attrs[a].len == 0
+then get_attrs[a].val_ptr == NULL
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- block/blk-core.c | 39 +++++++++++++++++++++++++++++++++++++++
- block/elevator.c | 26 ++++++++++++++++++++++++++
- 2 files changed, 65 insertions(+)
+The end result should be
+odi->osdname_len = 0
+odi->osdname = kzalloc(1, GFP_KERNEL);
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 1ec09f6..82cf678 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1264,6 +1264,16 @@ void part_round_stats(int cpu, struct hd_struct *part)
- }
- EXPORT_SYMBOL_GPL(part_round_stats);
- 
-+#ifdef CONFIG_PM_RUNTIME
-+static void blk_pm_put_request(struct request *rq)
-+{
-+	if (rq->q->dev && !(rq->cmd_flags & REQ_PM) && !--rq->q->nr_pending)
-+		pm_runtime_mark_last_busy(rq->q->dev);
-+}
-+#else
-+static inline void blk_pm_put_request(struct request *rq) {}
-+#endif
-+
- /*
-  * queue lock must be held
-  */
-@@ -1274,6 +1284,8 @@ void __blk_put_request(struct request_queue *q, struct request *req)
- 	if (unlikely(--req->ref_count))
- 		return;
- 
-+	blk_pm_put_request(req);
-+
- 	elv_completed_request(q, req);
- 
- 	/* this is a bio leak */
-@@ -2051,6 +2063,28 @@ static void blk_account_io_done(struct request *req)
- 	}
- }
- 
-+#ifdef CONFIG_PM_RUNTIME
-+/*
-+ * Don't process normal requests when queue is suspended
-+ * or in the process of suspending/resuming
-+ */
-+static struct request *blk_pm_peek_request(struct request_queue *q,
-+					   struct request *rq)
-+{
-+	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
-+	    (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM))))
-+		return NULL;
-+	else
-+		return rq;
-+}
-+#else
-+static inline struct request *blk_pm_peek_request(struct request_queue *q,
-+						  struct request *rq)
-+{
-+	return rq;
-+}
-+#endif
-+
- /**
-  * blk_peek_request - peek at the top of a request queue
-  * @q: request queue to peek at
-@@ -2073,6 +2107,11 @@ struct request *blk_peek_request(struct request_queue *q)
- 	int ret;
- 
- 	while ((rq = __elv_next_request(q)) != NULL) {
-+
-+		rq = blk_pm_peek_request(q, rq);
-+		if (!rq)
-+			break;
-+
- 		if (!(rq->cmd_flags & REQ_STARTED)) {
- 			/*
- 			 * This is the first time the device driver
-diff --git a/block/elevator.c b/block/elevator.c
-index 11683bb..29c5c7e 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -34,6 +34,7 @@
- #include <linux/blktrace_api.h>
- #include <linux/hash.h>
- #include <linux/uaccess.h>
-+#include <linux/pm_runtime.h>
- 
- #include <trace/events/block.h>
- 
-@@ -515,6 +516,27 @@ void elv_bio_merged(struct request_queue *q, struct request *rq,
- 		e->type->ops.elevator_bio_merged_fn(q, rq, bio);
- }
- 
-+#ifdef CONFIG_PM_RUNTIME
-+static void blk_pm_requeue_request(struct request *rq)
-+{
-+	if (rq->q->dev && !(rq->cmd_flags & REQ_PM))
-+		rq->q->nr_pending--;
-+}
-+
-+static void blk_pm_add_request(struct request_queue *q, struct request *rq)
-+{
-+	if (q->dev && !(rq->cmd_flags & REQ_PM) && q->nr_pending++ == 0 &&
-+	    (q->rpm_status == RPM_SUSPENDED || q->rpm_status == RPM_SUSPENDING))
-+		pm_request_resume(q->dev);
-+}
-+#else
-+static inline void blk_pm_requeue_request(struct request *rq) {}
-+static inline void blk_pm_add_request(struct request_queue *q,
-+				      struct request *rq)
-+{
-+}
-+#endif
-+
- void elv_requeue_request(struct request_queue *q, struct request *rq)
- {
- 	/*
-@@ -529,6 +551,8 @@ void elv_requeue_request(struct request_queue *q, struct request *rq)
- 
- 	rq->cmd_flags &= ~REQ_STARTED;
- 
-+	blk_pm_requeue_request(rq);
-+
- 	__elv_add_request(q, rq, ELEVATOR_INSERT_REQUEUE);
- }
- 
-@@ -551,6 +575,8 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
- {
- 	trace_block_rq_insert(q, rq);
- 
-+	blk_pm_add_request(q, rq);
-+
- 	rq->q = q;
- 
- 	if (rq->cmd_flags & REQ_SOFTBARRIER) {
--- 
-1.8.1
+while with kstrdup, odi->osdname will end up being NULL
+as it's input arg "s" is NULL.
+
+Benny
+
+>
+> re,
+>  wh
+>
+>
