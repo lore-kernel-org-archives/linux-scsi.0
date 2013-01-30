@@ -1,143 +1,204 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v8 1/4] block: add a flag to identify PM request
-Date: Wed, 30 Jan 2013 17:34:51 +0800
-Message-ID: <1359538494-2936-2-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v8 4/4] sd: change to auto suspend mode
+Date: Wed, 30 Jan 2013 17:34:54 +0800
+Message-ID: <1359538494-2936-5-git-send-email-aaron.lu@intel.com>
 References: <1359538494-2936-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:33289 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754282Ab3A3JeM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jan 2013 04:34:12 -0500
 In-Reply-To: <1359538494-2936-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>
 Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>, Shane Huang <shane.huang@amd.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Lin Ming <ming.m.lin@intel.com>
 
-Add a flag REQ_PM to identify the request is PM related, such requests
-will not change the device request queue's runtime status. It is
-intended to be used in driver's runtime PM callback, so that driver can
-perform some IO to the device there with the queue's runtime status
-unaffected. e.g. in SCSI disk's runtime suspend callback, the disk will
-be put into stopped power state, and this require sending a command to
-the device. Such command processing should not change the disk's runtime
-status.
+Uses block layer runtime pm helper functions in
+scsi_runtime_suspend/resume for devices that take advantage of it.
 
-As an example, modify scsi code to use this flag.
+Remove scsi_autopm_* from sd open/release path and check_events path.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- drivers/scsi/scsi_lib.c    |  9 ++++-----
- drivers/scsi/sd.c          |  8 ++++----
- include/linux/blk_types.h  |  2 ++
- include/scsi/scsi_device.h | 16 ++++++++++++----
- 4 files changed, 22 insertions(+), 13 deletions(-)
+ drivers/scsi/scsi_pm.c | 79 ++++++++++++++++++++++++++++++++++++++++++--------
+ drivers/scsi/sd.c      | 13 +--------
+ 2 files changed, 68 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 765398c..23f795f 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -271,11 +271,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- }
- EXPORT_SYMBOL(scsi_execute);
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 8f6b12c..6ce00c5 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -144,18 +144,44 @@ static int scsi_bus_restore(struct device *dev)
  
--
--int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
-+int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned char *cmd,
- 		     int data_direction, void *buffer, unsigned bufflen,
- 		     struct scsi_sense_hdr *sshdr, int timeout, int retries,
--		     int *resid)
-+		     int *resid, int flags)
+ #ifdef CONFIG_PM_RUNTIME
+ 
++static int scsi_blk_runtime_suspend(struct device *dev)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	int err;
++
++	err = blk_pre_runtime_suspend(sdev->request_queue);
++	if (err)
++		return err;
++	err = pm_generic_runtime_suspend(dev);
++	blk_post_runtime_suspend(sdev->request_queue, err);
++
++	return err;
++}
++
++static int scsi_dev_runtime_suspend(struct device *dev)
++{
++	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
++	int err;
++
++	err = scsi_dev_type_suspend(dev, pm ? pm->runtime_suspend : NULL);
++	if (err == -EAGAIN)
++		pm_schedule_suspend(dev, jiffies_to_msecs(
++					round_jiffies_up_relative(HZ/10)));
++
++	return err;
++}
++
+ static int scsi_runtime_suspend(struct device *dev)
  {
- 	char *sense = NULL;
- 	int result;
-@@ -286,14 +285,14 @@ int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
- 			return DRIVER_ERROR << 24;
+ 	int err = 0;
+-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 
+ 	dev_dbg(dev, "scsi_runtime_suspend\n");
+ 	if (scsi_is_sdev_device(dev)) {
+-		err = scsi_dev_type_suspend(dev,
+-				pm ? pm->runtime_suspend : NULL);
+-		if (err == -EAGAIN)
+-			pm_schedule_suspend(dev, jiffies_to_msecs(
+-				round_jiffies_up_relative(HZ/10)));
++		struct scsi_device *sdev = to_scsi_device(dev);
++		if (sdev->request_queue->dev)
++			err = scsi_blk_runtime_suspend(dev);
++		else
++			err = scsi_dev_runtime_suspend(dev);
  	}
- 	result = scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
--			      sense, timeout, retries, 0, resid);
-+			      sense, timeout, retries, flags, resid);
- 	if (sshdr)
- 		scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, sshdr);
  
- 	kfree(sense);
- 	return result;
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+@@ -163,14 +189,36 @@ static int scsi_runtime_suspend(struct device *dev)
+ 	return err;
  }
--EXPORT_SYMBOL(scsi_execute_req);
-+EXPORT_SYMBOL(scsi_execute_req_flags);
  
- /*
-  * Function:    scsi_init_cmd_errh()
++static int scsi_blk_runtime_resume(struct device *dev)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	int err;
++
++	blk_pre_runtime_resume(sdev->request_queue);
++	err = pm_generic_runtime_resume(dev);
++	blk_post_runtime_resume(sdev->request_queue, err);
++
++	return err;
++}
++
++static int scsi_dev_runtime_resume(struct device *dev)
++{
++	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
++	return scsi_dev_type_resume(dev, pm ? pm->runtime_resume : NULL);
++}
++
+ static int scsi_runtime_resume(struct device *dev)
+ {
+ 	int err = 0;
+-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 
+ 	dev_dbg(dev, "scsi_runtime_resume\n");
+-	if (scsi_is_sdev_device(dev))
+-		err = scsi_dev_type_resume(dev, pm ? pm->runtime_resume : NULL);
++	if (scsi_is_sdev_device(dev)) {
++		struct scsi_device *sdev = to_scsi_device(dev);
++		if (sdev->request_queue->dev)
++			err = scsi_blk_runtime_resume(dev);
++		else
++			err = scsi_dev_runtime_resume(dev);
++	}
+ 
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+ 
+@@ -185,10 +233,17 @@ static int scsi_runtime_idle(struct device *dev)
+ 
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+ 
+-	if (scsi_is_sdev_device(dev))
+-		err = pm_schedule_suspend(dev, 100);
+-	else
++	if (scsi_is_sdev_device(dev)) {
++		struct scsi_device *sdev = to_scsi_device(dev);
++		if (sdev->request_queue->dev) {
++			pm_runtime_mark_last_busy(dev);
++			err = pm_runtime_autosuspend(dev);
++		} else {
++			err = pm_schedule_suspend(dev, 100);
++		}
++	} else {
+ 		err = pm_runtime_suspend(dev);
++	}
+ 	return err;
+ }
+ 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 7992635..698923f 100644
+index 698923f..bf04dbf 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1424,8 +1424,8 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 		 * Leave the rest of the command zero to indicate
- 		 * flush everything.
- 		 */
--		res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
--				       SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL);
-+		res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+				SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
- 		if (res == 0)
- 			break;
+@@ -1121,10 +1121,6 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+ 
+ 	sdev = sdkp->device;
+ 
+-	retval = scsi_autopm_get_device(sdev);
+-	if (retval)
+-		goto error_autopm;
+-
+ 	/*
+ 	 * If the device is in error recovery, wait until it is done.
+ 	 * If the device is offline, then disallow any access to it.
+@@ -1169,8 +1165,6 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+ 	return 0;
+ 
+ error_out:
+-	scsi_autopm_put_device(sdev);
+-error_autopm:
+ 	scsi_disk_put(sdkp);
+ 	return retval;	
+ }
+@@ -1205,7 +1199,6 @@ static int sd_release(struct gendisk *disk, fmode_t mode)
+ 	 * XXX is followed by a "rmmod sd_mod"?
+ 	 */
+ 
+-	scsi_autopm_put_device(sdev);
+ 	scsi_disk_put(sdkp);
+ 	return 0;
+ }
+@@ -1367,14 +1360,9 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+ 	retval = -ENODEV;
+ 
+ 	if (scsi_block_when_processing_errors(sdp)) {
+-		retval = scsi_autopm_get_device(sdp);
+-		if (retval)
+-			goto out;
+-
+ 		sshdr  = kzalloc(sizeof(*sshdr), GFP_KERNEL);
+ 		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES,
+ 					      sshdr);
+-		scsi_autopm_put_device(sdp);
  	}
-@@ -3021,8 +3021,8 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 	if (!scsi_device_online(sdp))
- 		return -ENODEV;
  
--	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
--			       SD_TIMEOUT, SD_MAX_RETRIES, NULL);
-+	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
- 	if (res) {
- 		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
- 		sd_print_result(sdkp, res);
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index cdf1119..fcc1ce2 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -175,6 +175,7 @@ enum rq_flag_bits {
- 	__REQ_IO_STAT,		/* account I/O stat */
- 	__REQ_MIXED_MERGE,	/* merge of different types, fail separately */
- 	__REQ_KERNEL, 		/* direct IO to kernel pages */
-+	__REQ_PM,		/* runtime pm request */
- 	__REQ_NR_BITS,		/* stops here */
- };
+ 	/* failed to execute TUR, assume media not present */
+@@ -2838,6 +2826,7 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
  
-@@ -223,5 +224,6 @@ enum rq_flag_bits {
- #define REQ_MIXED_MERGE		(1 << __REQ_MIXED_MERGE)
- #define REQ_SECURE		(1 << __REQ_SECURE)
- #define REQ_KERNEL		(1 << __REQ_KERNEL)
-+#define REQ_PM			(1 << __REQ_PM)
- 
- #endif /* __LINUX_BLK_TYPES_H */
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index a7f9cba..cc64587 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -394,10 +394,18 @@ extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 			int data_direction, void *buffer, unsigned bufflen,
- 			unsigned char *sense, int timeout, int retries,
- 			int flag, int *resid);
--extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
--			    int data_direction, void *buffer, unsigned bufflen,
--			    struct scsi_sense_hdr *, int timeout, int retries,
--			    int *resid);
-+extern int scsi_execute_req_flags(struct scsi_device *sdev,
-+	const unsigned char *cmd, int data_direction, void *buffer,
-+	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
-+	int retries, int *resid, int flags);
-+static inline int scsi_execute_req(struct scsi_device *sdev,
-+	const unsigned char *cmd, int data_direction, void *buffer,
-+	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
-+	int retries, int *resid)
-+{
-+	return scsi_execute_req_flags(sdev, cmd, data_direction, buffer,
-+		bufflen, sshdr, timeout, retries, resid, 0);
-+}
- extern void sdev_disable_disk_events(struct scsi_device *sdev);
- extern void sdev_enable_disk_events(struct scsi_device *sdev);
- 
+ 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+ 		  sdp->removable ? "removable " : "");
++	blk_pm_runtime_init(sdp->request_queue, dev);
+ 	scsi_autopm_put_device(sdp);
+ 	put_device(&sdkp->dev);
+ }
 -- 
 1.8.1
+
