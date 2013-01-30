@@ -1,68 +1,105 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [patch] [SCSI] qla4xxx: don't free NULL dma pool
-Date: Wed, 30 Jan 2013 12:41:06 +0000
-Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD03422B@avmb3.qlogic.org>
-References: <20130130070731.GC12396@elgon.mountain>
+From: walter harms <wharms@bfs.de>
+Subject: Re: [patch] [SCSI] libosd: check for kzalloc() failure
+Date: Wed, 30 Jan 2013 14:00:01 +0100
+Message-ID: <51091951.5090709@bfs.de>
+References: <20130130070602.GB12396@elgon.mountain> <5108D6AF.5040205@bfs.de> <20130130082741.GT16282@mwanda> <5108E08E.70302@bfs.de> <CAEMWVhuS5Dg8XAQjxrb_VO-T0S7jS5knOmEWvvJ18xY8hp08hg@mail.gmail.com>
+Reply-To: wharms@bfs.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:39588
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751851Ab3A3MlZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jan 2013 07:41:25 -0500
-In-Reply-To: <20130130070731.GC12396@elgon.mountain>
-Content-Language: en-US
-Content-ID: <F8876F43FB811C47A1E01DFB8077E809@qlogic.com>
+Received: from mx01.sz.bfs.de ([194.94.69.103]:61261 "EHLO mx01.sz.bfs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753325Ab3A3NAE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jan 2013 08:00:04 -0500
+In-Reply-To: <CAEMWVhuS5Dg8XAQjxrb_VO-T0S7jS5knOmEWvvJ18xY8hp08hg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Ravi Anand <ravi.anand@qlogic.com>
-Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+To: Benny Halevy <bhalevy@tonian.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 
------Original Message-----
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Date: Wednesday 30 January 2013 12:37 PM
-To: Ravi Anand <ravi.anand@qlogic.com>
-Cc: Vikas <vikas.chaudhary@qlogic.com>, Dept-Eng iSCSI Driver
-<Dept-iSCSIDriver@qlogic.com>, "James E.J. Bottomley"
-<JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>,
-"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: [patch] [SCSI] qla4xxx: don't free NULL dma pool
 
->The error path calls dma_pool_free() on this path but "chap_table" is
->NULL and "chap_dma" is uninitialized.  It's cleaner to just return
->directly.
->
->Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
->diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c
->b/drivers/scsi/qla4xxx/ql4_mbx.c
->index 1c57c22..887e409 100644
->--- a/drivers/scsi/qla4xxx/ql4_mbx.c
->+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
->@@ -1404,10 +1404,8 @@ int qla4xxx_get_chap(struct scsi_qla_host *ha,
->char *username, char *password,
->       dma_addr_t chap_dma;
->
->       chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
->-      if (chap_table == NULL) {
->-              ret = -ENOMEM;
->-              goto exit_get_chap;
->-      }
->+      if (chap_table == NULL)
->+              return -ENOMEM;
->
->       chap_size = sizeof(struct ql4_chap_table);
->       memset(chap_table, 0, chap_size);
+Am 30.01.2013 10:51, schrieb Benny Halevy:
+> On Wed, Jan 30, 2013 at 10:57 AM, walter harms <wharms@bfs.de> wrote:
+>>
+>>
+>> Am 30.01.2013 09:27, schrieb Dan Carpenter:
+>>> On Wed, Jan 30, 2013 at 09:15:43AM +0100, walter harms wrote:
+>>>>
+>>>>
+>>>> Am 30.01.2013 08:06, schrieb Dan Carpenter:
+>>>>> There wasn't any error handling for this kzalloc().
+>>>>>
+>>>>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>>>>>
+>>>>> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+>>>>> index c06b8e5..d8293f2 100644
+>>>>> --- a/drivers/scsi/osd/osd_initiator.c
+>>>>> +++ b/drivers/scsi/osd/osd_initiator.c
+>>>>> @@ -144,6 +144,10 @@ static int _osd_get_print_system_info(struct osd_dev *od,
+>>>>>     odi->osdname_len = get_attrs[a].len;
+>>>>>     /* Avoid NULL for memcmp optimization 0-length is good enough */
+>>>>>     odi->osdname = kzalloc(odi->osdname_len + 1, GFP_KERNEL);
+>>>>> +   if (!odi->osdname) {
+>>>>> +           ret = -ENOMEM;
+>>>>> +           goto out;
+>>>>> +   }
+>>>>>     if (odi->osdname_len)
+>>>>>             memcpy(odi->osdname, get_attrs[a].val_ptr, odi->osdname_len);
+>>>>>     OSD_INFO("OSD_NAME               [%s]\n", odi->osdname);
+>>>>> --
+>>>>
+>>>> this looks like strdup() ?
+>>>>
+>>>
+>>> Maybe?  It's a funny thing going on with the NUL terminator and I
+>>> don't understand what the comment is about.
+>>>
+>>> It appears that normally "get_attrs[a].val_ptr" is a NUL terminated
+>>> string but "get_attrs[a].len" does not count the terminator.
+>>>
+>>> Odd.
+>>>
+>> i have no clue what the programmer was thinking. if i read this correct
+>> osdname is u8 *osdname; so a simple strdup() or strndup() would be ok
+>> the comment seems to indicate that get_attrs[a].val_ptr could be NULL
+>> but where is the check ?
+>> Perhaps they are not using ascii here ? then a memdup(get_attrs[a].len)
+>> would be better.
+> 
+> There are subtle differences between kstrdup or kmemdup and this implementation.
+> 
+> kmemdup is problematic as get_attrs[a].val_ptr does not contain the
+> NUL terminator
 
-Thanks for a fix.
+ok, i understand - but can we assume that we are talking ascii here ?
 
-Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> In the following case:
+> if get_attrs[a].len == 0
+> then get_attrs[a].val_ptr == NULL
+> 
+> The end result should be
+> odi->osdname_len = 0
+> odi->osdname = kzalloc(1, GFP_KERNEL);
+> 
+> while with kstrdup, odi->osdname will end up being NULL
+> as it's input arg "s" is NULL.
+> 
+
+and you want the argument to be "" ?
+May i ask why ? kfree() can handle NULL and kprintf() (-family) also.
+
+re,
+ wh
 
 
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-
+> Benny
+> 
+>>
+>> re,
+>>  wh
+>>
+>>
+> 
+> 
