@@ -1,65 +1,78 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH] target: For iblock at default writecache enable.
-Date: Wed, 30 Jan 2013 09:19:16 +0800
-Message-ID: <201301300919014311109@gmail.com>
-References: <201301250958101278740@gmail.com> <1359486198.23290.1409.camel@haakon2.linux-iscsi.org> <5108558D.6000408@redhat.com>,
-	<1359501265.23290.1720.camel@haakon2.linux-iscsi.org>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 08/10] fnic: FIP VLAN Discovery Feature Support
+Date: Wed, 30 Jan 2013 14:36:59 +1100
+Message-ID: <1359517019.2373.28.camel@dabdike>
+References: <1359504323-14453-1-git-send-email-hiralpat@cisco.com>
+	 <1359504323-14453-6-git-send-email-hiralpat@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:37038 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586Ab3A3BTf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2013 20:19:35 -0500
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45209 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752434Ab3A3DhQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2013 22:37:16 -0500
+In-Reply-To: <1359504323-14453-6-git-send-email-hiralpat@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+To: Hiral Patel <hiralpat@cisco.com>
+Cc: linux-scsi@vger.kernel.org, Anantha Prakash T <atungara@cisco.com>
 
-Pk9uIFR1ZSwgMjAxMy0wMS0yOSBhdCAxNTowNCAtMDgwMCwgQW5keSBHcm92ZXIgd3JvdGU6DQo+
-PiBPbiAwMS8yOS8yMDEzIDExOjAzIEFNLCBOaWNob2xhcyBBLiBCZWxsaW5nZXIgd3JvdGU6DQo+
-PiANCj4+ID4gU28gZW5hYmxpbmcgZW11bGF0ZV93cml0ZV9jYWNoZT0xIGluIHRoZSBjYXNlIHdo
-ZW4gdGhlIHVuZGVybHlpbmcgZGV2aWNlDQo+PiA+IGhhcyBub3QgZW5hYmxlZCBpdCBpcyBpbmNv
-cnJlY3QuDQo+PiA+IA0KPj4gPiBJJ2QgbGlrZSB0byBlbmFibGUgdGhpcyBiaXQgd2hlbiB3ZSBr
-bm93IHRoZSB1bmRlcmx5aW5nIGRldmljZSBoYXMgV0NFPTENCj4+ID4gc2V0LCBidXQgY3VycmVu
-dGx5IHRoZXJlIGlzIG5vdCBhIHdheSB0byBkZXRlcm1pbmUgdGhpcyAoZ2VuZXJpY2FsbHkpDQo+
-PiA+IGZyb20gc3RydWN0IGJsb2NrX2RldmljZS4NCj4+ID4gDQo+PiA+IFNvIE5BQ0sgZm9yIGFw
-cGx5aW5nIHRoaXMgdW50aWwgdGhlcmUgaXMgYSBtZXRob2QgdG8gZGV0ZXJtaW5lIHdoYXQgdGhl
-DQo+PiA+IGhhcmR3YXJlIGJlbG93IGlzIGRvaW5nLg0KPj4gDQo+PiBUaGlzIHNob3VsZCBiZSBw
-b3NzaWJsZSBmcm9tIHVzZXJzcGFjZSB0aG91Z2guIEknbSBwbGFubmluZyBvbiBsb29raW5nDQo+
-PiB1cCB1bmRlcmx5aW5nIHNjc2kgZGV2aWNlKHM/KSB1c2luZyBsaWJibGtpZCwgYW5kIHRoZW4g
-cXVlcnkgdGhlIHNlbnNlDQo+PiBkYXRhIHVzaW5nIGxpYnNndXRpbHMgd2hlbiBhZGRpbmcgYSBi
-bG9jayBiYWNrc3RvcmUgaW4gdGFyZ2V0Y2xpLg0KPj4gDQo+DQo+UXVlcnlpbmcgdGhlIG1vZGUg
-cGFnZXMgZnJvbSB1c2Vyc3BhY2Ugd291bGQgd29yayBmb3IgdGhlIFNDU0kgYmFja3N0b3JlDQo+
-Y2FzZSwgYnV0IGNlcnRhaW5seSBub3QgZm9yIHJhdyBibG9jayBkZXZpY2VzLg0KPg0KPkknZCBz
-dGlsbCBsaWtlIHRvIHNlZSB0aGlzIGV4cG9zZWQgdG8gdGhlIGJsb2NrIGxheWVyIHNvbWVob3cs
-IHNvIHRoYXQNCj50aGUgc2V0dGluZyBjYW4gYmUgYXV0b21hdGljYWxseSBkZXRlcm1pbmVkIGJ5
-IFRDTSBvbmNlIGl0J3Mga25vd24gaWYNCj50aGUgdW5kZXJseWluZyBIVyBoYXMgZW5hYmxlZCB3
-cml0ZSBjYWNoaW5nLg0KPg0KPj4gSXQncyBraW5kIG9mIGEgaGFzc2xlLCBidXQgaXNuJ3QgaXQg
-YSBodWdlIHBlcmZvcm1hbmNlIHdpbiBpZiB3ZSBjYW4NCj4+IGVuYWJsZSB0aGlzPw0KPj4gDQo+
-DQo+TW9zdCBjZXJ0YWlubHksIGJ1dCB0aGUgZGFuZ2VyIGlzIHJlcG9ydGluZyBXQ0U9MSAoYnkg
-ZGVmYXVsdCBpbiBhbGwNCj5jYXNlcykgZnJvbSBUQ00gdG8gdGhlIGluaXRpYXRvciB3aGVuIHRo
-ZSB1bmRlcmx5aW5nIGRyaXZlcyBkbyBub3QgaGF2ZQ0KPmNhY2hpbmcgZW5hYmxlZC4gIE5vdGUg
-dGhhdCBldmVyeSBzcGlubmluZyBtZWRpYSBkZXZpY2UgdGhhdCBJJ3ZlIGV2ZXINCj5zZWVuIGRp
-c2FibGVzIFdDRSBieSBkZWZhdWx0IGZyb20gdGhlIGZhY3RvcnkuDQpTb3JyeSwgd2hhdCdzIHRo
-ZSBkYW5nZXI/Q2FuIHlvdSBleHBsYWluIHRoZSBkZXRhaWxzPw0KQW5kIGZvciBtb3N0IHNhdGEg
-aGRkIHRoZSBXQ0UgIGlzIGVuYWJsZSBieSBkZWZhdWx0Lg0KSU1ITywgZm9yIGhhcmQtcmFpZCB0
-aGUgV0NFIHdpbGwgYmUgZGlzYWJsZSwgaXQgdXNlZCB0aGUgY2FjaGUgb2YgaGFyZHJhaWQtY2Fy
-ZC4NCg0KSW4gZnVuYyBzZF9yZXZhbGlkYXRlX2Rpc2s6DQo+CS8qDQo+CSAqIFdlIG5vdyBoYXZl
-IGFsbCBjYWNoZSByZWxhdGVkIGluZm8sIGRldGVybWluZSBob3cgd2UgZGVhbA0KPgkgKiB3aXRo
-IGZsdXNoIHJlcXVlc3RzLg0KPgkgKi8NCj4JaWYgKHNka3AtPldDRSkgew0KPgkJZmx1c2ggfD0g
-UkVRX0ZMVVNIOw0KPgkJaWYgKHNka3AtPkRQT0ZVQSkNCj4JCQlmbHVzaCB8PSBSRVFfRlVBOw0K
-Pgl9DQoNCj4JYmxrX3F1ZXVlX2ZsdXNoKHNka3AtPmRpc2stPnF1ZXVlLCBmbHVzaCk7DQpXZSBj
-YW4gdXNlIHF1ZXVlLT5mbHVzaF9mbGFncy4NCkJ1dCBpbiBmdW5jIGdlbmVyaWNfbWFrZV9yZXF1
-ZXN0X2NoZWNrczoNCj4vKg0KPgkgKiBGaWx0ZXIgZmx1c2ggYmlvJ3MgZWFybHkgc28gdGhhdCBt
-YWtlX3JlcXVlc3QgYmFzZWQNCj4JICogZHJpdmVycyB3aXRob3V0IGZsdXNoIHN1cHBvcnQgZG9u
-J3QgaGF2ZSB0byB3b3JyeQ0KPgkgKiBhYm91dCB0aGVtLg0KPgkgKi8NCj4JaWYgKChiaW8tPmJp
-X3J3ICYgKFJFUV9GTFVTSCB8IFJFUV9GVUEpKSAmJiAhcS0+Zmx1c2hfZmxhZ3MpIHsNCj4JCWJp
-by0+YmlfcncgJj0gfihSRVFfRkxVU0ggfCBSRVFfRlVBKTsNClNvIGlmIHVkZXJseWluZyBkZXZp
-Y2UgZG9uJ3Qgc3VwcG9ydCBXQ0UsIGl0IGNhbiByZW1vdmUgUkVRX0ZVQXxSRVFfRkxVU0guDQpJ
-IHRoaW5rIGVuYWJsZSB3cml0ZWNhY2hlIGJ5IGRlZmF1bHQgaXMgb2suDQoNCkppYW5wZW5nDQpU
-aGFua3Mh
+On Tue, 2013-01-29 at 16:05 -0800, Hiral Patel wrote:
+> FIP VLAN discovery discovers the FCoE VLAN that will be used by all other FIP protocols
+> as well as by the FCoE encapsulation for Fibre Channel payloads on the established
+> virtual link. One of the goals of FC-BB-5 was to be as nonintrusive as possible on
+> initiators and targets, and therefore FIP VLAN discovery occurs in the native VLAN
+> used by the initiator or target to exchange Ethernet traffic. The FIP VLAN discovery
+> protocol is the only FIP protocol running on the native VLAN; all other FIP protocols
+> run on the discovered FCoE VLANs.
+> 
+> If an administrator has manually configured FCoE VLANs on ENodes and FCFs, there is no need
+> to use this protocol. FIP and FCoE will run over the configured VLANs.
+> 
+> An ENode without FCoE VLANs configuration would use this automated discovery protocol to
+> discover over which VLANs FCoE is running.
+> 
+> The ENode sends a FIP VLAN discovery request to a multicast MAC address called All-FCF-MACs,
+> which is a multicast MAC address to which all FCFs listen.
+> 
+> All FCFs that can be reached in the native VLAN of the ENode are expected to respond on the
+> same VLAN with a response that lists one or more FCoE VLANs that are available for the ENode's
+> VN_Port login. This protocol has the sole purpose of allowing the ENode to discover all the
+> available FCoE VLANs.
+> 
+> Now the ENode may enable a subset of these VLANs for FCoE Running the FIP protocol in these
+> VLANs on a per VLAN basis. And FCoE data transactions also would occur on this VLAN. Hence,
+> Except for FIP VLAN discovery, all other FIP and FCoE traffic runs on the selected FCoE VLAN.
+> Its only the FIP VLAN Discovery protocol that is permitted to run on the Default native VLAN
+> of the system.
+> 
+> [**** NOTE ****]
+> We are working on moving this feature definitions and functionality to libfcoe module. We need
+> this patch to be approved, as Suse is looking forward to merge this feature in SLES 11 SP3 release.
+> Once this patch is approved, we will submit patch which should move vlan discovery feature to libfoce.
+> 
+> Signed-off-by: Anantha Prakash T <atungara@cisco.com>
+> Signed-off-by: Hiral Patel <hiralpat@cisco.com>
+
+This one isn't applying for me at the top of the scsi-misc tree:
+
+jejb@dabdike> patch -p1 < .git/rebase-apply/patch 
+patching file drivers/scsi/fnic/fnic.h
+patching file drivers/scsi/fnic/fnic_fcs.c
+patching file drivers/scsi/fnic/fnic_fip.h
+patching file drivers/scsi/fnic/fnic_main.c
+Hunk #3 FAILED at 411.
+Hunk #4 succeeded at 628 (offset -1 lines).
+Hunk #5 succeeded at 837 (offset -1 lines).
+Hunk #6 succeeded at 926 (offset -1 lines).
+Hunk #7 succeeded at 988 (offset -1 lines).
+1 out of 7 hunks FAILED -- saving rejects to file drivers/scsi/fnic/fnic_main.c.rej
+patching file drivers/scsi/fnic/vnic_dev.c
+patching file drivers/scsi/fnic/vnic_dev.h
+patching file drivers/scsi/fnic/vnic_devcmd.h
+
+James
+
 
