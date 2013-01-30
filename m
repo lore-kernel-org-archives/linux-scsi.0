@@ -1,67 +1,164 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: [PATCH] scsi: storvsc: avoid usage of WRITE_SAME
-Date: Wed, 30 Jan 2013 15:44:54 +0100
-Message-ID: <1359557094-13625-1-git-send-email-olaf@aepfle.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.160]:49846 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478Ab3A3OpU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jan 2013 09:45:20 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v8 4/4] sd: change to auto suspend mode
+Date: Wed, 30 Jan 2013 10:38:26 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1301301032460.1709-100000@iolanthe.rowland.org>
+References: <1359538494-2936-5-git-send-email-aaron.lu@intel.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1359538494-2936-5-git-send-email-aaron.lu@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Olaf Hering <olaf@aepfle.de>, KY Srinivasan <kys@microsoft.com>
 
-Set scsi_device->no_write_same because the host does not support it.
-Also blacklist WRITE_SAME to avoid (and log) accident usage.
+On Wed, 30 Jan 2013, Aaron Lu wrote:
 
-If the guest uses the ext4 filesystem, storvsc hangs while it prints
-these messages in an endless loop:
-...
-[  161.459523] hv_storvsc vmbus_0_1: cmd 0x41 scsi status 0x2 srb status 0x6
-[  161.462157] sd 2:0:0:0: [sda]
-[  161.463135] Sense Key : No Sense [current]
-[  161.464983] sd 2:0:0:0: [sda]
-[  161.465899] Add. Sense: No additional sense information
-[  161.468211] hv_storvsc vmbus_0_1: cmd 0x41 scsi status 0x2 srb status 0x6
-[  161.475766] sd 2:0:0:0: [sda]
-[  161.476728] Sense Key : No Sense [current]
-[  161.478284] sd 2:0:0:0: [sda]
-[  161.479441] Add. Sense: No additional sense information
-...
+> From: Lin Ming <ming.m.lin@intel.com>
+> 
+> Uses block layer runtime pm helper functions in
+> scsi_runtime_suspend/resume for devices that take advantage of it.
+> 
+> Remove scsi_autopm_* from sd open/release path and check_events path.
+> 
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 
-This happens with a guest running on Windows Server 2012, but happens to
-work while running on Windows Server 2008. WRITE_SAME isnt really
-supported by both versions, so disable the command usage globally.
+A couple of very minor suggestions...
 
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
-Cc: KY Srinivasan <kys@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 0144078..314586c 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1155,6 +1155,8 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
- 
- 	blk_queue_bounce_limit(sdevice->request_queue, BLK_BOUNCE_ANY);
- 
-+	sdevice->no_write_same = 1;
-+
- 	return 0;
- }
- 
-@@ -1237,6 +1239,8 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
- 	u8 scsi_op = scmnd->cmnd[0];
- 
- 	switch (scsi_op) {
-+	/* the host does not handle WRITE_SAME, log accident usage */
-+	case WRITE_SAME:
- 	/*
- 	 * smartd sends this command and the host does not handle
- 	 * this. So, don't send it.
--- 
-1.8.1.1
+> @@ -144,18 +144,44 @@ static int scsi_bus_restore(struct device *dev)
+>  
+>  #ifdef CONFIG_PM_RUNTIME
+>  
+> +static int scsi_blk_runtime_suspend(struct device *dev)
+> +{
+> +	struct scsi_device *sdev = to_scsi_device(dev);
+
+For this routine and the other new ones, it may be slightly more
+efficient to pass both dev and sdev as arguments (this depends on how
+smart the compiler's optimizer is).  The caller already knows both of
+them, after all.
+
+> +	int err;
+> +
+> +	err = blk_pre_runtime_suspend(sdev->request_queue);
+> +	if (err)
+> +		return err;
+> +	err = pm_generic_runtime_suspend(dev);
+> +	blk_post_runtime_suspend(sdev->request_queue, err);
+> +
+> +	return err;
+> +}
+> +
+> +static int scsi_dev_runtime_suspend(struct device *dev)
+> +{
+> +	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+> +	int err;
+> +
+> +	err = scsi_dev_type_suspend(dev, pm ? pm->runtime_suspend : NULL);
+> +	if (err == -EAGAIN)
+> +		pm_schedule_suspend(dev, jiffies_to_msecs(
+> +					round_jiffies_up_relative(HZ/10)));
+> +
+> +	return err;
+> +}
+> +
+>  static int scsi_runtime_suspend(struct device *dev)
+>  {
+>  	int err = 0;
+> -	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+>  
+>  	dev_dbg(dev, "scsi_runtime_suspend\n");
+>  	if (scsi_is_sdev_device(dev)) {
+> -		err = scsi_dev_type_suspend(dev,
+> -				pm ? pm->runtime_suspend : NULL);
+> -		if (err == -EAGAIN)
+> -			pm_schedule_suspend(dev, jiffies_to_msecs(
+> -				round_jiffies_up_relative(HZ/10)));
+> +		struct scsi_device *sdev = to_scsi_device(dev);
+
+There should be a blank line between the declaration and the
+executable code.
+
+> +		if (sdev->request_queue->dev)
+> +			err = scsi_blk_runtime_suspend(dev);
+> +		else
+> +			err = scsi_dev_runtime_suspend(dev);
+>  	}
+>  
+>  	/* Insert hooks here for targets, hosts, and transport classes */
+> @@ -163,14 +189,36 @@ static int scsi_runtime_suspend(struct device *dev)
+>  	return err;
+>  }
+>  
+> +static int scsi_blk_runtime_resume(struct device *dev)
+> +{
+> +	struct scsi_device *sdev = to_scsi_device(dev);
+> +	int err;
+> +
+> +	blk_pre_runtime_resume(sdev->request_queue);
+> +	err = pm_generic_runtime_resume(dev);
+> +	blk_post_runtime_resume(sdev->request_queue, err);
+> +
+> +	return err;
+> +}
+> +
+> +static int scsi_dev_runtime_resume(struct device *dev)
+> +{
+> +	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+
+Blank line.
+
+> +	return scsi_dev_type_resume(dev, pm ? pm->runtime_resume : NULL);
+> +}
+> +
+>  static int scsi_runtime_resume(struct device *dev)
+>  {
+>  	int err = 0;
+> -	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+>  
+>  	dev_dbg(dev, "scsi_runtime_resume\n");
+> -	if (scsi_is_sdev_device(dev))
+> -		err = scsi_dev_type_resume(dev, pm ? pm->runtime_resume : NULL);
+> +	if (scsi_is_sdev_device(dev)) {
+> +		struct scsi_device *sdev = to_scsi_device(dev);
+
+Blank line.
+
+> +		if (sdev->request_queue->dev)
+> +			err = scsi_blk_runtime_resume(dev);
+> +		else
+> +			err = scsi_dev_runtime_resume(dev);
+> +	}
+>  
+>  	/* Insert hooks here for targets, hosts, and transport classes */
+>  
+> @@ -185,10 +233,17 @@ static int scsi_runtime_idle(struct device *dev)
+>  
+>  	/* Insert hooks here for targets, hosts, and transport classes */
+>  
+> -	if (scsi_is_sdev_device(dev))
+> -		err = pm_schedule_suspend(dev, 100);
+> -	else
+> +	if (scsi_is_sdev_device(dev)) {
+> +		struct scsi_device *sdev = to_scsi_device(dev);
+
+Blank line.
+
+> +		if (sdev->request_queue->dev) {
+> +			pm_runtime_mark_last_busy(dev);
+> +			err = pm_runtime_autosuspend(dev);
+> +		} else {
+> +			err = pm_schedule_suspend(dev, 100);
+> +		}
+> +	} else {
+>  		err = pm_runtime_suspend(dev);
+> +	}
+>  	return err;
+>  }
+
+Alan Stern
 
