@@ -1,60 +1,49 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v8 2/4] block: add runtime pm helpers
-Date: Wed, 30 Jan 2013 10:54:53 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1301301053210.1709-100000@iolanthe.rowland.org>
-References: <1359538494-2936-3-git-send-email-aaron.lu@intel.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [patch] [SCSI] libosd: check for kzalloc() failure
+Date: Wed, 30 Jan 2013 17:56:13 +0200
+Message-ID: <5109429D.1080802@panasas.com>
+References: <20130130070602.GB12396@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:48258 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753733Ab3A3Pyy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jan 2013 10:54:54 -0500
-In-Reply-To: <1359538494-2936-3-git-send-email-aaron.lu@intel.com>
+Received: from natasha.panasas.com ([67.152.220.90]:44801 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753995Ab3A3P42 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jan 2013 10:56:28 -0500
+In-Reply-To: <20130130070602.GB12396@elgon.mountain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Benny Halevy <bhalevy@tonian.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Wed, 30 Jan 2013, Aaron Lu wrote:
+On 01/30/2013 09:06 AM, Dan Carpenter wrote:
+> There wasn't any error handling for this kzalloc().
+> 
 
-> From: Lin Ming <ming.m.lin@intel.com>
-> 
-> Add runtime pm helper functions:
-> 
-> void blk_pm_runtime_init(struct request_queue *q, struct device *dev)
->   - Initialization function for drivers to call.
-> 
-> int blk_pre_runtime_suspend(struct request_queue *q)
->   - If any requests are in the queue, mark last busy and return -EBUSY.
->     Otherwise set q->rpm_status to RPM_SUSPENDING and return 0.
-> 
-> void blk_post_runtime_suspend(struct request_queue *q, int err)
->   - If the suspend succeeded then set q->rpm_status to RPM_SUSPENDED.
->     Otherwise set it to RPM_ACTIVE.
-> 
-> void blk_pre_runtime_resume(struct request_queue *q)
->   - Set q->rpm_status to RPM_RESUMING.
-> 
-> void blk_post_runtime_resume(struct request_queue *q, int err)
->   - If the resume succeeded then set q->rpm_status to RPM_ACTIVE
->     and call __blk_run_queue, then mark last busy and autosuspend.
->     Otherwise set q->rpm_status to RPM_SUSPENDED.
-> 
-> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+ACK-by: Boaz Harrosh <bharrosh@panasas.com>
 
-> +void blk_pm_runtime_init(struct request_queue *q, struct device *dev)
-> +{
-> +	q->dev = dev;
-> +	q->rpm_status = RPM_ACTIVE;
-> +	pm_runtime_set_autosuspend_delay(q->dev, -1);
-> +	pm_runtime_use_autosuspend(q->dev);
-> +	pm_runtime_mark_last_busy(q->dev);
-> +	pm_runtime_autosuspend(q->dev);
+James please queue for inclusion
 
-This last line is no longer needed.  It can't do anything useful, since 
-autosuspends are disabled (the delay is -1).
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Alan Stern
+Thanks Dan
+
+> 
+> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+> index c06b8e5..d8293f2 100644
+> --- a/drivers/scsi/osd/osd_initiator.c
+> +++ b/drivers/scsi/osd/osd_initiator.c
+> @@ -144,6 +144,10 @@ static int _osd_get_print_system_info(struct osd_dev *od,
+>  	odi->osdname_len = get_attrs[a].len;
+>  	/* Avoid NULL for memcmp optimization 0-length is good enough */
+>  	odi->osdname = kzalloc(odi->osdname_len + 1, GFP_KERNEL);
+> +	if (!odi->osdname) {
+> +		ret = -ENOMEM;
+> +		goto out;
+> +	}
+>  	if (odi->osdname_len)
+>  		memcpy(odi->osdname, get_attrs[a].val_ptr, odi->osdname_len);
+>  	OSD_INFO("OSD_NAME               [%s]\n", odi->osdname);
+> 
 
