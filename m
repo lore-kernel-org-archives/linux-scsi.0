@@ -1,204 +1,251 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v8 4/4] sd: change to auto suspend mode
-Date: Wed, 30 Jan 2013 17:34:54 +0800
-Message-ID: <1359538494-2936-5-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v8 2/4] block: add runtime pm helpers
+Date: Wed, 30 Jan 2013 17:34:52 +0800
+Message-ID: <1359538494-2936-3-git-send-email-aaron.lu@intel.com>
 References: <1359538494-2936-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:33289 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754282Ab3A3JeM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jan 2013 04:34:12 -0500
+Return-path: <linux-pm-owner@vger.kernel.org>
 In-Reply-To: <1359538494-2936-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-pm-owner@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>
 Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>, Shane Huang <shane.huang@amd.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Lin Ming <ming.m.lin@intel.com>
 
-Uses block layer runtime pm helper functions in
-scsi_runtime_suspend/resume for devices that take advantage of it.
+Add runtime pm helper functions:
 
-Remove scsi_autopm_* from sd open/release path and check_events path.
+void blk_pm_runtime_init(struct request_queue *q, struct device *dev)
+  - Initialization function for drivers to call.
+
+int blk_pre_runtime_suspend(struct request_queue *q)
+  - If any requests are in the queue, mark last busy and return -EBUSY.
+    Otherwise set q->rpm_status to RPM_SUSPENDING and return 0.
+
+void blk_post_runtime_suspend(struct request_queue *q, int err)
+  - If the suspend succeeded then set q->rpm_status to RPM_SUSPENDED.
+    Otherwise set it to RPM_ACTIVE.
+
+void blk_pre_runtime_resume(struct request_queue *q)
+  - Set q->rpm_status to RPM_RESUMING.
+
+void blk_post_runtime_resume(struct request_queue *q, int err)
+  - If the resume succeeded then set q->rpm_status to RPM_ACTIVE
+    and call __blk_run_queue, then mark last busy and autosuspend.
+    Otherwise set q->rpm_status to RPM_SUSPENDED.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- drivers/scsi/scsi_pm.c | 79 ++++++++++++++++++++++++++++++++++++++++++--------
- drivers/scsi/sd.c      | 13 +--------
- 2 files changed, 68 insertions(+), 24 deletions(-)
+ block/blk-core.c       | 143 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h |  27 ++++++++++
+ 2 files changed, 170 insertions(+)
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 8f6b12c..6ce00c5 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -144,18 +144,44 @@ static int scsi_bus_restore(struct device *dev)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 66d3168..1ec09f6 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -30,6 +30,7 @@
+ #include <linux/list_sort.h>
+ #include <linux/delay.h>
+ #include <linux/ratelimit.h>
++#include <linux/pm_runtime.h>
  
- #ifdef CONFIG_PM_RUNTIME
- 
-+static int scsi_blk_runtime_suspend(struct device *dev)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	int err;
-+
-+	err = blk_pre_runtime_suspend(sdev->request_queue);
-+	if (err)
-+		return err;
-+	err = pm_generic_runtime_suspend(dev);
-+	blk_post_runtime_suspend(sdev->request_queue, err);
-+
-+	return err;
-+}
-+
-+static int scsi_dev_runtime_suspend(struct device *dev)
-+{
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	int err;
-+
-+	err = scsi_dev_type_suspend(dev, pm ? pm->runtime_suspend : NULL);
-+	if (err == -EAGAIN)
-+		pm_schedule_suspend(dev, jiffies_to_msecs(
-+					round_jiffies_up_relative(HZ/10)));
-+
-+	return err;
-+}
-+
- static int scsi_runtime_suspend(struct device *dev)
- {
- 	int err = 0;
--	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
- 	dev_dbg(dev, "scsi_runtime_suspend\n");
- 	if (scsi_is_sdev_device(dev)) {
--		err = scsi_dev_type_suspend(dev,
--				pm ? pm->runtime_suspend : NULL);
--		if (err == -EAGAIN)
--			pm_schedule_suspend(dev, jiffies_to_msecs(
--				round_jiffies_up_relative(HZ/10)));
-+		struct scsi_device *sdev = to_scsi_device(dev);
-+		if (sdev->request_queue->dev)
-+			err = scsi_blk_runtime_suspend(dev);
-+		else
-+			err = scsi_dev_runtime_suspend(dev);
- 	}
- 
- 	/* Insert hooks here for targets, hosts, and transport classes */
-@@ -163,14 +189,36 @@ static int scsi_runtime_suspend(struct device *dev)
- 	return err;
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/block.h>
+@@ -3043,6 +3044,148 @@ void blk_finish_plug(struct blk_plug *plug)
  }
+ EXPORT_SYMBOL(blk_finish_plug);
  
-+static int scsi_blk_runtime_resume(struct device *dev)
++#ifdef CONFIG_PM_RUNTIME
++/**
++ * blk_pm_runtime_init - Block layer runtime PM initialization routine
++ * @q: the queue of the device
++ * @dev: the device the queue belongs to
++ *
++ * Description:
++ *    Initialize runtime-PM-related fields for @q and start auto suspend for
++ *    @dev. Drivers that want to take advantage of request-based runtime PM
++ *    should call this function after @dev has been initialized, and its
++ *    request queue @q has been allocated, and runtime PM for it can not happen
++ *    yet(either due to disabled/forbidden or its usage_count > 0). In most
++ *    cases, driver should call this function before any I/O has taken place.
++ *
++ *    This function takes care of setting up using auto suspend for the device,
++ *    the autosuspend delay is set to -1 to make runtime suspend impossible
++ *    until an updated value is either set by user or by driver. Drivers do
++ *    not need to touch other autosuspend settings.
++ *
++ *    The block layer runtime PM is request based, so only works for drivers
++ *    that use request as their IO unit instead of those directly use bio's.
++ */
++void blk_pm_runtime_init(struct request_queue *q, struct device *dev)
 +{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	int err;
-+
-+	blk_pre_runtime_resume(sdev->request_queue);
-+	err = pm_generic_runtime_resume(dev);
-+	blk_post_runtime_resume(sdev->request_queue, err);
-+
-+	return err;
++	q->dev = dev;
++	q->rpm_status = RPM_ACTIVE;
++	pm_runtime_set_autosuspend_delay(q->dev, -1);
++	pm_runtime_use_autosuspend(q->dev);
++	pm_runtime_mark_last_busy(q->dev);
++	pm_runtime_autosuspend(q->dev);
 +}
++EXPORT_SYMBOL(blk_pm_runtime_init);
 +
-+static int scsi_dev_runtime_resume(struct device *dev)
++/**
++ * blk_pre_runtime_suspend - Pre runtime suspend check
++ * @q: the queue of the device
++ *
++ * Description:
++ *    This function will check if runtime suspend is allowed for the device
++ *    by examining if there are any requests pending in the queue. If there
++ *    are requests pending, the device can not be runtime suspended; otherwise,
++ *    the queue's status will be updated to SUSPENDING and the driver can
++ *    proceed to suspend the device.
++ *
++ *    For the not allowed case, we mark last busy for the device so that
++ *    runtime PM core will try to autosuspend it some time later.
++ *
++ *    This function should be called near the start of the device's
++ *    runtime_suspend callback.
++ *
++ * Return:
++ *    0		- OK to runtime suspend the device
++ *    -EBUSY	- Device should not be runtime suspended
++ */
++int blk_pre_runtime_suspend(struct request_queue *q)
 +{
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	return scsi_dev_type_resume(dev, pm ? pm->runtime_resume : NULL);
-+}
++	int ret = 0;
 +
- static int scsi_runtime_resume(struct device *dev)
- {
- 	int err = 0;
--	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
- 	dev_dbg(dev, "scsi_runtime_resume\n");
--	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev, pm ? pm->runtime_resume : NULL);
-+	if (scsi_is_sdev_device(dev)) {
-+		struct scsi_device *sdev = to_scsi_device(dev);
-+		if (sdev->request_queue->dev)
-+			err = scsi_blk_runtime_resume(dev);
-+		else
-+			err = scsi_dev_runtime_resume(dev);
-+	}
- 
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
-@@ -185,10 +233,17 @@ static int scsi_runtime_idle(struct device *dev)
- 
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
--	if (scsi_is_sdev_device(dev))
--		err = pm_schedule_suspend(dev, 100);
--	else
-+	if (scsi_is_sdev_device(dev)) {
-+		struct scsi_device *sdev = to_scsi_device(dev);
-+		if (sdev->request_queue->dev) {
-+			pm_runtime_mark_last_busy(dev);
-+			err = pm_runtime_autosuspend(dev);
-+		} else {
-+			err = pm_schedule_suspend(dev, 100);
-+		}
++	spin_lock_irq(q->queue_lock);
++	if (q->nr_pending) {
++		ret = -EBUSY;
++		pm_runtime_mark_last_busy(q->dev);
 +	} else {
- 		err = pm_runtime_suspend(dev);
++		q->rpm_status = RPM_SUSPENDING;
 +	}
- 	return err;
- }
- 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 698923f..bf04dbf 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1121,10 +1121,6 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
- 
- 	sdev = sdkp->device;
- 
--	retval = scsi_autopm_get_device(sdev);
--	if (retval)
--		goto error_autopm;
--
- 	/*
- 	 * If the device is in error recovery, wait until it is done.
- 	 * If the device is offline, then disallow any access to it.
-@@ -1169,8 +1165,6 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
- 	return 0;
- 
- error_out:
--	scsi_autopm_put_device(sdev);
--error_autopm:
- 	scsi_disk_put(sdkp);
- 	return retval;	
- }
-@@ -1205,7 +1199,6 @@ static int sd_release(struct gendisk *disk, fmode_t mode)
- 	 * XXX is followed by a "rmmod sd_mod"?
++	spin_unlock_irq(q->queue_lock);
++	return ret;
++}
++EXPORT_SYMBOL(blk_pre_runtime_suspend);
++
++/**
++ * blk_post_runtime_suspend - Post runtime suspend processing
++ * @q: the queue of the device
++ * @err: return value of the device's runtime_suspend function
++ *
++ * Description:
++ *    Update the queue's runtime status according to the return value of the
++ *    device's runtime suspend function.
++ *
++ *    This function should be called near the end of the device's
++ *    runtime_suspend callback.
++ */
++void blk_post_runtime_suspend(struct request_queue *q, int err)
++{
++	spin_lock_irq(q->queue_lock);
++	if (!err)
++		q->rpm_status = RPM_SUSPENDED;
++	else
++		q->rpm_status = RPM_ACTIVE;
++	spin_unlock_irq(q->queue_lock);
++}
++EXPORT_SYMBOL(blk_post_runtime_suspend);
++
++/**
++ * blk_pre_runtime_resume - Pre runtime resume processing
++ * @q: the queue of the device
++ *
++ * Description:
++ *    Update the queue's runtime status to RESUMING in preparation for the
++ *    runtime resume of the device.
++ *
++ *    This function should be called near the start of the device's
++ *    runtime_resume callback.
++ */
++void blk_pre_runtime_resume(struct request_queue *q)
++{
++	spin_lock_irq(q->queue_lock);
++	q->rpm_status = RPM_RESUMING;
++	spin_unlock_irq(q->queue_lock);
++}
++EXPORT_SYMBOL(blk_pre_runtime_resume);
++
++/**
++ * blk_post_runtime_resume - Post runtime resume processing
++ * @q: the queue of the device
++ * @err: return value of the device's runtime_resume function
++ *
++ * Description:
++ *    Update the queue's runtime status according to the return value of the
++ *    device's runtime_resume function. If it is successfully resumed, process
++ *    the requests that are queued into the device's queue when it is resuming
++ *    and then mark last busy and initiate autosuspend for it.
++ *
++ *    This function should be called near the end of the device's
++ *    runtime_resume callback.
++ */
++void blk_post_runtime_resume(struct request_queue *q, int err)
++{
++	spin_lock_irq(q->queue_lock);
++	if (!err) {
++		q->rpm_status = RPM_ACTIVE;
++		__blk_run_queue(q);
++		pm_runtime_mark_last_busy(q->dev);
++		pm_runtime_autosuspend(q->dev);
++	} else {
++		q->rpm_status = RPM_SUSPENDED;
++	}
++	spin_unlock_irq(q->queue_lock);
++}
++EXPORT_SYMBOL(blk_post_runtime_resume);
++#endif
++
+ int __init blk_dev_init(void)
+ {
+ 	BUILD_BUG_ON(__REQ_NR_BITS > 8 *
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 78feda9..89d89c7 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -361,6 +361,12 @@ struct request_queue {
  	 */
+ 	struct kobject kobj;
  
--	scsi_autopm_put_device(sdev);
- 	scsi_disk_put(sdkp);
- 	return 0;
- }
-@@ -1367,14 +1360,9 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
- 	retval = -ENODEV;
++#ifdef CONFIG_PM_RUNTIME
++	struct device		*dev;
++	int			rpm_status;
++	unsigned int		nr_pending;
++#endif
++
+ 	/*
+ 	 * queue settings
+ 	 */
+@@ -961,6 +967,27 @@ struct request_queue *blk_alloc_queue_node(gfp_t, int);
+ extern void blk_put_queue(struct request_queue *);
  
- 	if (scsi_block_when_processing_errors(sdp)) {
--		retval = scsi_autopm_get_device(sdp);
--		if (retval)
--			goto out;
--
- 		sshdr  = kzalloc(sizeof(*sshdr), GFP_KERNEL);
- 		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES,
- 					      sshdr);
--		scsi_autopm_put_device(sdp);
- 	}
- 
- 	/* failed to execute TUR, assume media not present */
-@@ -2838,6 +2826,7 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
- 		  sdp->removable ? "removable " : "");
-+	blk_pm_runtime_init(sdp->request_queue, dev);
- 	scsi_autopm_put_device(sdp);
- 	put_device(&sdkp->dev);
- }
+ /*
++ * block layer runtime pm functions
++ */
++#ifdef CONFIG_PM_RUNTIME
++extern void blk_pm_runtime_init(struct request_queue *q, struct device *dev);
++extern int blk_pre_runtime_suspend(struct request_queue *q);
++extern void blk_post_runtime_suspend(struct request_queue *q, int err);
++extern void blk_pre_runtime_resume(struct request_queue *q);
++extern void blk_post_runtime_resume(struct request_queue *q, int err);
++#else
++static inline void blk_pm_runtime_init(struct request_queue *q,
++	struct device *dev) {}
++static inline int blk_pre_runtime_suspend(struct request_queue *q)
++{
++	return -ENOSYS;
++}
++static inline void blk_post_runtime_suspend(struct request_queue *q, int err) {}
++static inline void blk_pre_runtime_resume(struct request_queue *q) {}
++static inline void blk_post_runtime_resume(struct request_queue *q, int err) {}
++#endif
++
++/*
+  * blk_plug permits building a queue of related requests by holding the I/O
+  * fragments for a short period. This allows merging of sequential requests
+  * into single larger request. As the requests are moved from a per-task list to
 -- 
 1.8.1
 
