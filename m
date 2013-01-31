@@ -1,56 +1,61 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] be2iscsi: WRB Initialization and Failure code path change
-Date: Thu, 31 Jan 2013 22:56:06 +0300
-Message-ID: <20130131195606.GA4063@elgon.mountain>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [patch 1/2] target: don't always say "ipv6" as address type
+Date: Thu, 31 Jan 2013 12:31:10 -0800
+Message-ID: <1359664270.6300.29.camel@haakon2.linux-iscsi.org>
+References: <20130131081754.GB14812@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22112 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752937Ab3AaT4O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2013 14:56:14 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20130131081754.GB14812@elgon.mountain>
+Sender: target-devel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jayamohan.kallickal@emulex.com
-Cc: linux-scsi@vger.kernel.org
 
-Hello Jayamohan,
+On Thu, 2013-01-31 at 11:17 +0300, Dan Carpenter wrote:
+> "lstat->last_intr_fail_ip_addr" is an array inside the "lstat" struct.
+> It's never NULL so we always print "ipv6\n" here.  The test should be
+> "if (lstat->last_intr_fail_ip_family == AF_INET6)".
+> 
+> We don't need the temporary buffer either.  We could print directly into
+> "page".
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
 
-I had a question about 3ec7827134a9: "[SCSI] be2iscsi: WRB
-Initialization and Failure code path change" from Apr 3, 2012.
+Applied to for-next.  Thanks Dan!
 
-drivers/scsi/be2iscsi/be_main.c
-  2683          for (index = 0; index < phba->params.cxns_per_ctrl * 2; index += 2) {
-                                                                        ^^^^^^^^^^
-We are allocating every other element in the array.  Why?
+--nab
 
-  2684                  pwrb_context = &phwi_ctrlr->wrb_context[index];
-  2685                  pwrb_context->pwrb_handle_base =
-  2686                                  kzalloc(sizeof(struct wrb_handle *) *
-  2687                                          phba->params.wrbs_per_cxn, GFP_KERNEL);
-  2688                  if (!pwrb_context->pwrb_handle_base) {
-  2689                          beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-  2690                                      "BM_%d : Mem Alloc Failed. Failing to load\n");
-  2691                          goto init_wrb_hndl_failed;
-  2692                  }
-
-[snip]
-
-  2746  init_wrb_hndl_failed:
-  2747          for (j = index; j > 0; j--) {
-                     ^^^^^^^^^^^^^^^^^^^^^
-Here we are freeing every element in the array except ->wrb_context[0].
-Some of the elements were not allocated, and doesn't skipping zero lead
-to a memory leak?
-
-  2748                  pwrb_context = &phwi_ctrlr->wrb_context[j];
-  2749                  kfree(pwrb_context->pwrb_handle_base);
-  2750                  kfree(pwrb_context->pwrb_handle_basestd);
-  2751          }
-  2752          return -ENOMEM;
-  2753  }
-
-regards,
-dan carpenter
-
+> Compile tested only.
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target_stat.c b/drivers/target/iscsi/iscsi_target_stat.c
+> index 421d694..54a6f38 100644
+> --- a/drivers/target/iscsi/iscsi_target_stat.c
+> +++ b/drivers/target/iscsi/iscsi_target_stat.c
+> @@ -410,14 +410,16 @@ static ssize_t iscsi_stat_tgt_attr_show_attr_fail_intr_addr_type(
+>  	struct iscsi_tiqn *tiqn = container_of(igrps,
+>  			struct iscsi_tiqn, tiqn_stat_grps);
+>  	struct iscsi_login_stats *lstat = &tiqn->login_stats;
+> -	unsigned char buf[8];
+> +	int ret;
+>  
+>  	spin_lock(&lstat->lock);
+> -	snprintf(buf, 8, "%s", (lstat->last_intr_fail_ip_addr != NULL) ?
+> -				"ipv6" : "ipv4");
+> +	if (lstat->last_intr_fail_ip_family == AF_INET6)
+> +		ret = snprintf(page, PAGE_SIZE, "ipv6\n");
+> +	else
+> +		ret = snprintf(page, PAGE_SIZE, "ipv4\n");
+>  	spin_unlock(&lstat->lock);
+>  
+> -	return snprintf(page, PAGE_SIZE, "%s\n", buf);
+> +	return ret;
+>  }
+>  ISCSI_STAT_TGT_ATTR_RO(fail_intr_addr_type);
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
