@@ -1,63 +1,46 @@
-From: "dbasehore ." <dbasehore@chromium.org>
-Subject: Re: [PATCH 1/2] don't wait on disk to start on resume
-Date: Thu, 31 Jan 2013 14:32:10 -0800
-Message-ID: <CAGAzgspDkPUAHHES434t-nVnd_2WC5udV8=J=T4wbU3cwH-Gow@mail.gmail.com>
-References: <1356064540-17414-1-git-send-email-dbasehore@chromium.org>
-	<50D5C473.2030902@mvista.com>
-	<CAGAzgso4cJHM+CNV0nCu6zUmq=xUstbsguynUp+hyx581LcHJg@mail.gmail.com>
-	<1359671257.7527.4.camel@dabdike>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1359671257.7527.4.camel@dabdike>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/2] target: Fix bugs when dealing with unconfigured devices
+Date: Thu, 31 Jan 2013 23:19:13 +0000
+Message-ID: <1359674355-8590-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:36636 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751523Ab3AaX2a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2013 18:28:30 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-That was a response to Sergei's message (which is properly tracked on
-the lists).
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Thu, Jan 31, 2013 at 2:27 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Thu, 2013-01-31 at 14:00 -0800, dbasehore . wrote:
->> (Resending as plain text so the message is tracked on vger)
->>
->> Hi, thanks for reading through my patch.
->>
->> With regards to SCSI_SENSE_BUFFERSIZE, I'm following the precedent of
->> scsi_execute_req found in drivers/scsi/scsi_lib.c
->
-> I have no context for this: I don't recall making any comment on sense
-> buffers; what are you replying to?
->
-> James
->
->> It seems that it is used by the scsi_normalize_sense function which I
->> call in sd_resume_async. I just input SCSI_SENSE_BUFFERSIZE directly
->> there though. I didn't know if anything would change its behavior on a
->> lower level if I made sense_len = SCSI_SENSE_BUFFERSIZE, so I just
->> went with what was already done.
->>
->> I'll make sure the semantic fixes go into the final patch.
->>
->> Also, I forgot to mention one possible problem earlier. I understand
->> that some hard drives have a command buffer that can be executed by
->> the hard drive in an order it determines. Does anyone know of a
->> potential problem if the following happens?
->>
->> -resume finishes (hard drive not started yet)
->> -read/write sent to disk, inserted before start command
->>
->> Could this happen? If so, could it cause any problems?
->>
->> I've tested the possibility of a program trying to read/write from the
->> disk before it has started, and the read/write blocks until the disk
->> has actually been spun up. I don't know if there are specific hard
->> drives where this could be a problem though.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+Hi folks,
+
+These two patches address two bugs that I've ran across when dealing with
+backend devices that have failed to be successfully enabled, and remain
+in an unconfigured state.
+
+The first is a v3.8-rc1 specific regression due to fallout from the removal
+of struct se_subsystem_dev, and the second is to avoid a possible divide by
+zero when writing fabric_max_sectors when no block_size has been set by the
+device.
+
+The latter is being CC'ed to stable.
+
+Thanks,
+
+--nab
+
+Nicholas Bellinger (2):
+  target: Fix regression allowing unconfigured devices to fabric port
+    link
+  target: Fix divide by zero bug in fabric_max_sectors for unconfigured
+    devices
+
+ drivers/target/target_core_device.c          |    8 +++++++-
+ drivers/target/target_core_fabric_configfs.c |    5 +++++
+ 2 files changed, 12 insertions(+), 1 deletions(-)
+
+-- 
+1.7.2.5
+
