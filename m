@@ -1,38 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 53281] megaraid_mbox kernel panic during boot
-Date: Thu, 31 Jan 2013 13:28:16 +0000 (UTC)
-Message-ID: <20130131132816.5D96A11FF02@bugzilla.kernel.org>
-References: <bug-53281-11613@https.bugzilla.kernel.org/>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v8 2/4] block: add runtime pm helpers
+Date: Thu, 31 Jan 2013 10:09:59 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1301311004050.1876-100000@iolanthe.rowland.org>
+References: <20130131053535.GA14627@aaronlu.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:34361 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753884Ab3AaN2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2013 08:28:18 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id B58BA203D9
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2013 13:28:17 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id A95992038B
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2013 13:28:16 +0000 (UTC)
-In-Reply-To: <bug-53281-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <20130131053535.GA14627@aaronlu.sh.intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=53281
+On Thu, 31 Jan 2013, Aaron Lu wrote:
 
+> > > +void blk_pm_runtime_init(struct request_queue *q, struct device *dev)
+> > > +{
+> > > +	q->dev = dev;
+> > > +	q->rpm_status = RPM_ACTIVE;
+> > > +	pm_runtime_set_autosuspend_delay(q->dev, -1);
+> > > +	pm_runtime_use_autosuspend(q->dev);
+> > > +	pm_runtime_mark_last_busy(q->dev);
+> > > +	pm_runtime_autosuspend(q->dev);
+> > 
+> > This last line is no longer needed.  It can't do anything useful, since 
+> > autosuspends are disabled (the delay is -1).
+> 
+> Right, thanks.
+> And the mark_last_busy can probably be removed too, it didn't make much
+> sense here and we can add "driver should call pm_runtime_mark_last_busy
+> and pm_runtime_autosuspend in its runtime idle callback" to the kernel
+> doc. What do you think?
 
+Yes, okay.
 
+Alan Stern
 
-
---- Comment #9 from miguel <romomoruno@gmail.com>  2013-01-31 13:28:16 ---
-Download link of image (Kernel panic trace megaraid_mbox)
-
-http://imageshack.us/download/19/megaraidmboxpanic.jpg
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
