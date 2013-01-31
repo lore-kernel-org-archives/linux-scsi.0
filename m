@@ -1,46 +1,56 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH RFC 0/9] [SCSI] Enhanced sense and Unit Attention
- handling
-Date: Thu, 31 Jan 2013 11:27:56 -0500
-Message-ID: <1359649676.4420.476.camel@localhost.localdomain>
-References: <1358526434-1173-1-git-send-email-emilne@redhat.com>
-Reply-To: emilne@redhat.com
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] be2iscsi: WRB Initialization and Failure code path change
+Date: Thu, 31 Jan 2013 22:56:06 +0300
+Message-ID: <20130131195606.GA4063@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26137 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751690Ab3AaQ16 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2013 11:27:58 -0500
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r0VGRvTW006596
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2013 11:27:57 -0500
-Received: from [10.16.186.175] (dhcp-186-175.bos.redhat.com [10.16.186.175])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r0VGRv0p015935
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2013 11:27:57 -0500
-In-Reply-To: <1358526434-1173-1-git-send-email-emilne@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:22112 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937Ab3AaT4O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2013 14:56:14 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jayamohan.kallickal@emulex.com
+Cc: linux-scsi@vger.kernel.org
 
-Thanks to everyone for the comments on this patch series.
+Hello Jayamohan,
 
-Based upon the feedback, I'll be making the following changes
-to the patch series before submitting it:
+I had a question about 3ec7827134a9: "[SCSI] be2iscsi: WRB
+Initialization and Failure code path change" from Apr 3, 2012.
 
-   - Remove patch 1/9 "Detect overflow of sense data buffer"
-   - Change name of "sdev_evt_thread" to "sdev_evt_work"
-   - Change name of "starget_evt_thread" to "starget_evt_work"
-   - Pull code out of scsi_check_sense() that handles UAs into
-     an exported function so that drivers can report conditions
-     received asynchronously
+drivers/scsi/be2iscsi/be_main.c
+  2683          for (index = 0; index < phba->params.cxns_per_ctrl * 2; index += 2) {
+                                                                        ^^^^^^^^^^
+We are allocating every other element in the array.  Why?
 
-The discussions about further changes (e.g. AEN, W-LUN) to
-ensure conditions are reported to the host in the case of no
-active I/O in progress or no LUNs currently presented have been
-good.  I think this could be addressed with subsequent patches.
+  2684                  pwrb_context = &phwi_ctrlr->wrb_context[index];
+  2685                  pwrb_context->pwrb_handle_base =
+  2686                                  kzalloc(sizeof(struct wrb_handle *) *
+  2687                                          phba->params.wrbs_per_cxn, GFP_KERNEL);
+  2688                  if (!pwrb_context->pwrb_handle_base) {
+  2689                          beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+  2690                                      "BM_%d : Mem Alloc Failed. Failing to load\n");
+  2691                          goto init_wrb_hndl_failed;
+  2692                  }
 
--Ewan
+[snip]
+
+  2746  init_wrb_hndl_failed:
+  2747          for (j = index; j > 0; j--) {
+                     ^^^^^^^^^^^^^^^^^^^^^
+Here we are freeing every element in the array except ->wrb_context[0].
+Some of the elements were not allocated, and doesn't skipping zero lead
+to a memory leak?
+
+  2748                  pwrb_context = &phwi_ctrlr->wrb_context[j];
+  2749                  kfree(pwrb_context->pwrb_handle_base);
+  2750                  kfree(pwrb_context->pwrb_handle_basestd);
+  2751          }
+  2752          return -ENOMEM;
+  2753  }
+
+regards,
+dan carpenter
 
