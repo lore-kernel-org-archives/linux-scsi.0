@@ -1,71 +1,50 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch 2/2] target: don't truncate the fail intr address
-Date: Thu, 31 Jan 2013 12:31:40 -0800
-Message-ID: <1359664300.6300.30.camel@haakon2.linux-iscsi.org>
-References: <20130131081909.GC14812@elgon.mountain>
+From: "dbasehore ." <dbasehore@chromium.org>
+Subject: Re: [PATCH 1/2] don't wait on disk to start on resume
+Date: Thu, 31 Jan 2013 14:00:09 -0800
+Message-ID: <CAGAzgso4cJHM+CNV0nCu6zUmq=xUstbsguynUp+hyx581LcHJg@mail.gmail.com>
+References: <1356064540-17414-1-git-send-email-dbasehore@chromium.org>
+	<50D5C473.2030902@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:51667 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753067Ab3AaUbm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2013 15:31:42 -0500
-In-Reply-To: <20130131081909.GC14812@elgon.mountain>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:34874 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755349Ab3AaWAJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2013 17:00:09 -0500
+Received: by mail-oa0-f41.google.com with SMTP id i10so3605347oag.0
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2013 14:00:09 -0800 (PST)
+In-Reply-To: <50D5C473.2030902@mvista.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: JBottomley@parallels.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2013-01-31 at 11:19 +0300, Dan Carpenter wrote:
-> The temporary buffer was only 32 characters but ->last_intr_fail_ip_addr
-> is a 48 character buffer.  We don't need to use a temporary buffer at
-> all, we can just print directly to "page".
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
+(Resending as plain text so the message is tracked on vger)
 
-Also applied to for-next.
+Hi, thanks for reading through my patch.
 
-Thanks Dan!
+With regards to SCSI_SENSE_BUFFERSIZE, I'm following the precedent of
+scsi_execute_req found in drivers/scsi/scsi_lib.c
 
---nab
+It seems that it is used by the scsi_normalize_sense function which I
+call in sd_resume_async. I just input SCSI_SENSE_BUFFERSIZE directly
+there though. I didn't know if anything would change its behavior on a
+lower level if I made sense_len = SCSI_SENSE_BUFFERSIZE, so I just
+went with what was already done.
 
-> Compile tested only.
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target_stat.c b/drivers/target/iscsi/iscsi_target_stat.c
-> index 54a6f38..464b420 100644
-> --- a/drivers/target/iscsi/iscsi_target_stat.c
-> +++ b/drivers/target/iscsi/iscsi_target_stat.c
-> @@ -429,16 +429,19 @@ static ssize_t iscsi_stat_tgt_attr_show_attr_fail_intr_addr(
->  	struct iscsi_tiqn *tiqn = container_of(igrps,
->  			struct iscsi_tiqn, tiqn_stat_grps);
->  	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-> -	unsigned char buf[32];
-> +	int ret;
->  
->  	spin_lock(&lstat->lock);
-> -	if (lstat->last_intr_fail_ip_family == AF_INET6)
-> -		snprintf(buf, 32, "[%s]", lstat->last_intr_fail_ip_addr);
-> -	else
-> -		snprintf(buf, 32, "%s", lstat->last_intr_fail_ip_addr);
-> +	if (lstat->last_intr_fail_ip_family == AF_INET6) {
-> +		ret = snprintf(page, PAGE_SIZE, "[%s]\n",
-> +			       lstat->last_intr_fail_ip_addr);
-> +	} else {
-> +		ret = snprintf(page, PAGE_SIZE, "%s\n",
-> +			       lstat->last_intr_fail_ip_addr);
-> +	}
->  	spin_unlock(&lstat->lock);
->  
-> -	return snprintf(page, PAGE_SIZE, "%s\n", buf);
-> +	return ret;
->  }
->  ISCSI_STAT_TGT_ATTR_RO(fail_intr_addr);
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'll make sure the semantic fixes go into the final patch.
 
+Also, I forgot to mention one possible problem earlier. I understand
+that some hard drives have a command buffer that can be executed by
+the hard drive in an order it determines. Does anyone know of a
+potential problem if the following happens?
 
+-resume finishes (hard drive not started yet)
+-read/write sent to disk, inserted before start command
+
+Could this happen? If so, could it cause any problems?
+
+I've tested the possibility of a program trying to read/write from the
+disk before it has started, and the read/write blocks until the disk
+has actually been spun up. I don't know if there are specific hard
+drives where this could be a problem though.
