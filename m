@@ -1,19 +1,19 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH v2 7/8] [SCSI] Add sense and Unit Attention generation to scsi_debug
-Date: Fri,  1 Feb 2013 12:53:14 -0500
-Message-ID: <1359741195-2641-8-git-send-email-emilne@redhat.com>
+Subject: [PATCH v2 6/8] [SCSI] Add sysfs support for enhanced Unit Attention handling
+Date: Fri,  1 Feb 2013 12:53:13 -0500
+Message-ID: <1359741195-2641-7-git-send-email-emilne@redhat.com>
 References: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45723 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:26978 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757293Ab3BARxU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1757284Ab3BARxU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 1 Feb 2013 12:53:20 -0500
 Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrKL9000901
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrJng011730
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:20 -0500
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:19 -0500
 Received: from emilne.csb (dhcp-186-175.bos.redhat.com [10.16.186.175])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRk011917
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRj011917
 	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:19 -0500
 In-Reply-To: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -22,213 +22,289 @@ To: linux-scsi@vger.kernel.org
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-Added capability to scsi_debug to generate sense and Unit Attention
-conditions to exercise the enhanced sense and Unit Attention handling.
+Added support for additional scsi_device events in sysfs, as
+well as support for scsi_target events.  Also added "rescan"
+node in scsi_target sysfs to permit targets to be rescanned
+from udev rules in a more straightforward way.
 
 Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/scsi_debug.c | 138 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 138 insertions(+)
+ drivers/scsi/scsi_priv.h  |   4 +-
+ drivers/scsi/scsi_scan.c  |  29 +---------
+ drivers/scsi/scsi_sysfs.c | 141 ++++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 136 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 182d5a5..8a6bf31 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -230,6 +230,7 @@ struct sdebug_dev_info {
- 	char reset;
- 	char stopped;
- 	char used;
-+	char sense_pending;
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index b237c8e..fa3366a97 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -136,7 +136,9 @@ extern int scsi_sysfs_add_host(struct Scsi_Host *);
+ extern int scsi_sysfs_register(void);
+ extern void scsi_sysfs_unregister(void);
+ extern void scsi_sysfs_device_initialize(struct scsi_device *);
+-extern int scsi_sysfs_target_initialize(struct scsi_device *);
++extern void scsi_sysfs_target_initialize(struct scsi_target *,
++					 struct Scsi_Host *,
++					 struct device *parent);
+ extern struct scsi_transport_template blank_transport_template;
+ extern void __scsi_remove_device(struct scsi_device *);
+ 
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 1ad4287..1bbbc43 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -346,25 +346,6 @@ static void scsi_target_destroy(struct scsi_target *starget)
+ 	put_device(dev);
+ }
+ 
+-static void scsi_target_dev_release(struct device *dev)
+-{
+-	struct device *parent = dev->parent;
+-	struct scsi_target *starget = to_scsi_target(dev);
+-
+-	kfree(starget);
+-	put_device(parent);
+-}
+-
+-static struct device_type scsi_target_type = {
+-	.name =		"scsi_target",
+-	.release =	scsi_target_dev_release,
+-};
+-
+-int scsi_is_target_device(const struct device *dev)
+-{
+-	return dev->type == &scsi_target_type;
+-}
+-EXPORT_SYMBOL(scsi_is_target_device);
+ 
+ static struct scsi_target *__scsi_find_target(struct device *parent,
+ 					      int channel, uint id)
+@@ -416,15 +397,11 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 		printk(KERN_ERR "%s: allocation failure\n", __func__);
+ 		return NULL;
+ 	}
+-	dev = &starget->dev;
+-	device_initialize(dev);
+-	starget->reap_ref = 1;
+-	dev->parent = get_device(parent);
+-	dev_set_name(dev, "target%d:%d:%d", shost->host_no, channel, id);
+-	dev->bus = &scsi_bus_type;
+-	dev->type = &scsi_target_type;
+ 	starget->id = id;
+ 	starget->channel = channel;
++	scsi_sysfs_target_initialize(starget, shost, parent);
++	dev = &starget->dev;
++	starget->reap_ref = 1;
+ 	starget->can_queue = 0;
+ 	INIT_LIST_HEAD(&starget->siblings);
+ 	INIT_LIST_HEAD(&starget->devices);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index aff1e29..363e29f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -502,7 +502,7 @@ sdev_store_##field (struct device *dev, struct device_attribute *attr,	\
+ {									\
+ 	int ret;							\
+ 	struct scsi_device *sdev;					\
+-	ret = scsi_sdev_check_buf_bit(buf);				\
++	ret = scsi_sysfs_check_buf_bit(buf);				\
+ 	if (ret >= 0)	{						\
+ 		sdev = to_scsi_device(dev);				\
+ 		sdev->field = ret;					\
+@@ -513,10 +513,10 @@ sdev_store_##field (struct device *dev, struct device_attribute *attr,	\
+ static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field);
+ 
+ /*
+- * scsi_sdev_check_buf_bit: return 0 if buf is "0", return 1 if buf is "1",
++ * scsi_sysfs_check_buf_bit: return 0 if buf is "0", return 1 if buf is "1",
+  * else return -EINVAL.
+  */
+-static int scsi_sdev_check_buf_bit(const char *buf)
++static int scsi_sysfs_check_buf_bit(const char *buf)
+ {
+ 	if ((buf[1] == '\0') || ((buf[1] == '\n') && (buf[2] == '\0'))) {
+ 		if (buf[0] == '1')
+@@ -650,7 +650,8 @@ show_queue_type_field(struct device *dev, struct device_attribute *attr,
+ static DEVICE_ATTR(queue_type, S_IRUGO, show_queue_type_field, NULL);
+ 
+ static ssize_t
+-show_iostat_counterbits(struct device *dev, struct device_attribute *attr, 				char *buf)
++show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
++			char *buf)
+ {
+ 	return snprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
+ }
+@@ -681,7 +682,7 @@ sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
+ }
+ static DEVICE_ATTR(modalias, S_IRUGO, sdev_show_modalias, NULL);
+ 
+-#define DECLARE_EVT_SHOW(name, Cap_name)				\
++#define DECLARE_SDEV_EVT_SHOW(name, Cap_name)				\
+ static ssize_t								\
+ sdev_show_evt_##name(struct device *dev, struct device_attribute *attr,	\
+ 		     char *buf)						\
+@@ -691,7 +692,7 @@ sdev_show_evt_##name(struct device *dev, struct device_attribute *attr,	\
+ 	return snprintf(buf, 20, "%d\n", val);				\
+ }
+ 
+-#define DECLARE_EVT_STORE(name, Cap_name)				\
++#define DECLARE_SDEV_EVT_STORE(name, Cap_name)				\
+ static ssize_t								\
+ sdev_store_evt_##name(struct device *dev, struct device_attribute *attr,\
+ 		      const char *buf, size_t count)			\
+@@ -707,15 +708,20 @@ sdev_store_evt_##name(struct device *dev, struct device_attribute *attr,\
+ 	return count;							\
+ }
+ 
+-#define DECLARE_EVT(name, Cap_name)					\
+-	DECLARE_EVT_SHOW(name, Cap_name)				\
+-	DECLARE_EVT_STORE(name, Cap_name)				\
++#define DECLARE_SDEV_EVT(name, Cap_name)				\
++	DECLARE_SDEV_EVT_SHOW(name, Cap_name)				\
++	DECLARE_SDEV_EVT_STORE(name, Cap_name)				\
+ 	static DEVICE_ATTR(evt_##name, S_IRUGO, sdev_show_evt_##name,	\
+ 			   sdev_store_evt_##name);
+ #define REF_EVT(name) &dev_attr_evt_##name.attr
+ 
+-DECLARE_EVT(media_change, MEDIA_CHANGE)
+-DECLARE_EVT(capacity_change, CAPACITY_CHANGE)
++DECLARE_SDEV_EVT(media_change, MEDIA_CHANGE)
++DECLARE_SDEV_EVT(capacity_change, CAPACITY_CHANGE)
++#ifdef CONFIG_SCSI_ENHANCED_UA
++DECLARE_SDEV_EVT(capacity_change_reported, CAPACITY_CHANGE_REPORTED)
++DECLARE_SDEV_EVT(soft_threshold_reached, SOFT_THRESHOLD_REACHED)
++DECLARE_SDEV_EVT(mode_parameter_change_reported, MODE_PARAMETER_CHANGE_REPORTED)
++#endif
+ 
+ /* Default template for device attributes.  May NOT be modified */
+ static struct attribute *scsi_sdev_attrs[] = {
+@@ -736,6 +742,11 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_modalias.attr,
+ 	REF_EVT(media_change),
+ 	REF_EVT(capacity_change),
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	REF_EVT(capacity_change_reported),
++	REF_EVT(soft_threshold_reached),
++	REF_EVT(mode_parameter_change_reported),
++#endif
+ 	NULL
  };
  
- struct sdebug_host_info {
-@@ -3050,10 +3051,27 @@ static ssize_t sdebug_max_luns_store(struct device_driver * ddp,
- 				     const char * buf, size_t count)
- {
-         int n;
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+#endif
- 
- 	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
- 		scsi_debug_max_luns = n;
- 		sdebug_max_tgts_luns();
-+
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				mk_sense_buffer(devip, UNIT_ATTENTION,
-+						0x3f, 0x0e);
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+#endif
- 		return count;
- 	}
- 	return -EINVAL;
-@@ -3100,12 +3118,28 @@ static ssize_t sdebug_virtual_gb_store(struct device_driver * ddp,
- 				       const char * buf, size_t count)
- {
-         int n;
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+#endif
- 
- 	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
- 		scsi_debug_virtual_gb = n;
- 
- 		sdebug_capacity = get_sdebug_capacity();
- 
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				mk_sense_buffer(devip, UNIT_ATTENTION,
-+						0x2a, 0x09);
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+#endif
- 		return count;
- 	}
- 	return -EINVAL;
-@@ -3206,6 +3240,90 @@ static ssize_t sdebug_map_show(struct device_driver *ddp, char *buf)
- DRIVER_ATTR(map, S_IRUGO, sdebug_map_show, NULL);
- 
- 
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+static ssize_t sdebug_ua_overflow_store(struct device_driver *ddp,
-+					const char *buf, size_t count)
-+{
-+	int n;
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				if (scsi_debug_dsense) {
-+					mk_sense_buffer(devip, UNIT_ATTENTION,
-+							0, 0);
-+					devip->sense_buff[7] = 8;
-+					devip->sense_buff[8] = 0x02;
-+					devip->sense_buff[9] = 0x06;
-+					devip->sense_buff[12] = 0x01;
-+				}
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+DRIVER_ATTR(ua_overflow, S_IWUSR, NULL, sdebug_ua_overflow_store);
-+
-+static ssize_t sdebug_soft_threshold_reached_store(struct device_driver *ddp,
-+						   const char *buf,
-+						   size_t count)
-+{
-+	int n;
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				mk_sense_buffer(devip, UNIT_ATTENTION,
-+						0x38, 0x07);
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+DRIVER_ATTR(soft_threshold_reached, S_IWUSR, NULL,
-+	    sdebug_soft_threshold_reached_store);
-+
-+static ssize_t sdebug_mode_parameters_changed_store(struct device_driver *ddp,
-+						    const char *buf,
-+						    size_t count)
-+{
-+	int n;
-+	struct sdebug_host_info *sdbg_host;
-+	struct sdebug_dev_info *devip;
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-+		spin_lock(&sdebug_host_list_lock);
-+		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-+			list_for_each_entry(devip, &sdbg_host->dev_info_list,
-+					    dev_list) {
-+				mk_sense_buffer(devip, UNIT_ATTENTION,
-+						0x2a, 0x01);
-+				devip->sense_pending = 1;
-+			}
-+		}
-+		spin_unlock(&sdebug_host_list_lock);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+DRIVER_ATTR(mode_parameters_changed, S_IWUSR, NULL,
-+	    sdebug_mode_parameters_changed_store);
-+#endif
-+
- /* Note: The following function creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-    files (over those found in the /sys/module/scsi_debug/parameters
-@@ -3239,11 +3357,27 @@ static int do_create_driverfs_files(void)
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_guard);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_ato);
- 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_map);
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	ret |= driver_create_file(&sdebug_driverfs_driver,
-+				  &driver_attr_ua_overflow);
-+	ret |= driver_create_file(&sdebug_driverfs_driver,
-+				  &driver_attr_soft_threshold_reached);
-+	ret |= driver_create_file(&sdebug_driverfs_driver,
-+				  &driver_attr_mode_parameters_changed);
-+#endif
- 	return ret;
+@@ -1126,6 +1137,114 @@ int scsi_is_sdev_device(const struct device *dev)
  }
+ EXPORT_SYMBOL(scsi_is_sdev_device);
  
- static void do_remove_driverfs_files(void)
- {
++static ssize_t
++starget_store_rescan_field(struct device *dev, struct device_attribute *attr,
++			   const char *buf, size_t count)
++{
++	struct scsi_target *starget = to_scsi_target(dev);
++
++	scsi_scan_target(starget->dev.parent, starget->channel, starget->id,
++			 SCAN_WILD_CARD, 1);
++	return count;
++}
++/* DEVICE_ATTR(rescan) clashes with dev_attr_rescan for sdev */
++struct device_attribute dev_attr_trescan =
++	__ATTR(rescan, S_IWUSR, NULL, starget_store_rescan_field);
++
++#define DECLARE_STARGET_EVT_SHOW(name, Cap_name)			\
++static ssize_t								\
++starget_show_evt_##name(struct device *dev,				\
++			struct device_attribute *attr, char *buf)	\
++{									\
++	struct scsi_target *starget = to_scsi_target(dev);		\
++	int val = test_bit(STARGET_EVT_##Cap_name,			\
++			   starget->supported_events);			\
++	return snprintf(buf, 20, "%d\n", val);				\
++}
++
++#define DECLARE_STARGET_EVT_STORE(name, Cap_name)			\
++static ssize_t								\
++starget_store_evt_##name(struct device *dev,				\
++			 struct device_attribute *attr,			\
++			 const char *buf, size_t count)			\
++{									\
++	struct scsi_target *starget = to_scsi_target(dev);		\
++	unsigned int val;						\
++	int err = kstrtouint(buf, 10, &val);				\
++	if (err != 0)							\
++		return err;						\
++	if (val == 0)							\
++		clear_bit(STARGET_EVT_##Cap_name,			\
++			  starget->supported_events);			\
++	else if (val == 1)						\
++		set_bit(STARGET_EVT_##Cap_name,				\
++			starget->supported_events);			\
++	else								\
++		return -EINVAL;						\
++	return count;							\
++}
++
++#define DECLARE_STARGET_EVT(name, Cap_name)				\
++	DECLARE_STARGET_EVT_SHOW(name, Cap_name)			\
++	DECLARE_STARGET_EVT_STORE(name, Cap_name)			\
++	static DEVICE_ATTR(evt_##name, S_IRUGO,				\
++			   starget_show_evt_##name,			\
++			   starget_store_evt_##name);
++
 +#ifdef CONFIG_SCSI_ENHANCED_UA
-+	driver_remove_file(&sdebug_driverfs_driver,
-+			   &driver_attr_mode_parameters_changed);
-+	driver_remove_file(&sdebug_driverfs_driver,
-+			   &driver_attr_soft_threshold_reached);
-+	driver_remove_file(&sdebug_driverfs_driver,
-+			   &driver_attr_ua_overflow);
++DECLARE_STARGET_EVT(lun_change_reported, LUN_CHANGE_REPORTED)
 +#endif
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_map);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_ato);
- 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_guard);
-@@ -3926,6 +4060,10 @@ write:
- 		errsts = check_condition_result;
- 		break;
- 	}
-+	if (!errsts && devip->sense_pending) {
-+		devip->sense_pending = 0;
-+		errsts = check_condition_result;
-+	}
- 	return schedule_resp(SCpnt, devip, done, errsts,
- 			     (delay_override ? 0 : scsi_debug_delay));
- }
++
++static struct attribute *scsi_target_attrs[] = {
++	&dev_attr_trescan.attr,
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	REF_EVT(lun_change_reported),
++#endif
++	NULL
++};
++
++static struct attribute_group scsi_target_attr_group = {
++	.attrs =	scsi_target_attrs,
++};
++
++static const struct attribute_group *scsi_target_attr_groups[] = {
++	&scsi_target_attr_group,
++	NULL
++};
++
++static void scsi_target_dev_release(struct device *dev)
++{
++	struct device *parent = dev->parent;
++	struct scsi_target *starget = to_scsi_target(dev);
++
++	kfree(starget);
++	put_device(parent);
++}
++
++static struct device_type scsi_target_type = {
++	.name =		"scsi_target",
++	.release =	scsi_target_dev_release,
++	.groups =	scsi_target_attr_groups,
++};
++
++int scsi_is_target_device(const struct device *dev)
++{
++	return dev->type == &scsi_target_type;
++}
++EXPORT_SYMBOL(scsi_is_target_device);
++
++void scsi_sysfs_target_initialize(struct scsi_target *starget,
++				  struct Scsi_Host *shost,
++				  struct device *parent)
++{
++	device_initialize(&starget->dev);
++	starget->dev.parent = get_device(parent);
++	starget->dev.bus = &scsi_bus_type;
++	starget->dev.type = &scsi_target_type;
++	dev_set_name(&starget->dev, "target%d:%d:%d", shost->host_no,
++		     starget->channel, starget->id);
++}
++
+ /* A blank transport template that is used in drivers that don't
+  * yet implement Transport Attributes */
+ struct scsi_transport_template blank_transport_template = { { { {NULL, }, }, }, };
 -- 
 1.7.11.7
 
