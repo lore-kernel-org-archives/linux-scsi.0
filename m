@@ -1,64 +1,30 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v8 4/4] sd: change to auto suspend mode
-Date: Fri, 1 Feb 2013 11:19:44 +0800
-Message-ID: <20130201031944.GA6960@aaronlu.sh.intel.com>
-References: <20130131054324.GB14627@aaronlu.sh.intel.com>
- <Pine.LNX.4.44L0.1301311010200.1876-100000@iolanthe.rowland.org>
+From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Subject: [PATCH] [SCSI] mpt2sas: Description patch
+Date: Fri, 1 Feb 2013 21:46:41 +0530
+Message-ID: <20130201161641.GA21513@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:43674 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750918Ab3BAFWr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2013 00:22:47 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1301311010200.1876-100000@iolanthe.rowland.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@kernel.org, sreekanth.reddy@lsi.com, Nagalakshmi.Nandigama@lsi.com, JBottomley@Parallels.com
+Cc: linux-scsi@vger.kernel.org, sathya.prakash@lsi.com
 
-On Thu, Jan 31, 2013 at 10:13:05AM -0500, Alan Stern wrote:
-> On Thu, 31 Jan 2013, Aaron Lu wrote:
-> 
-> > > > +static int scsi_blk_runtime_suspend(struct device *dev)
-> > > > +{
-> > > > +	struct scsi_device *sdev = to_scsi_device(dev);
-> > > 
-> > > For this routine and the other new ones, it may be slightly more
-> > > efficient to pass both dev and sdev as arguments (this depends on how
-> > > smart the compiler's optimizer is).  The caller already knows both of
-> > > them, after all.
-> > 
-> > What about passing only scsi_device? When device is needed, I can use
-> > &sdev->sdev_gendev. Is this equally efficient?
-> 
-> I don't know...  The difference is very small in any case.  The 
-> routines will probably be inlined automatically.
+Please consider this patch set for next kernel release.
 
-Indeed, I just checked the .s output of the three cases, they are all
-the same. So we just need to care about readability and less of code,
-passing only scsi_device seems to be the simplest, are you OK with this?
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+---
 
-BTW, the compiler I used is gcc-4.7.2.
-
-> 
-> > > > +		if (sdev->request_queue->dev) {
-> > > > +			pm_runtime_mark_last_busy(dev);
-> > > > +			err = pm_runtime_autosuspend(dev);
-> > > > +		} else {
-> > > > +			err = pm_schedule_suspend(dev, 100);
-> > > > +		}
-> > > > +	} else {
-> > > >  		err = pm_runtime_suspend(dev);
-> > > > +	}
-> > > >  	return err;
-> > 
-> > Shall we ignore the return value for these pm_xxx_suspend functions?
-> > I mean we do not need to record the return value for them and return it,
-> > since pm core doesn't care the return value of idle callback.
-> 
-> Maybe it will care in a future kernel version.  You might as well store 
-> the return code and pass it back.
-
-OK.
-
-Thanks,
-Aaron
-
+[PATCH 1/8] [SCSI] mpt2sas : Add support for OEM specific controller.
+[PATCH 2/8] [SCSI] mpt2sas : Fix for issue Missing delay not getting set during system bootup.
+[PATCH 3/8] [SCSI] mpt2sas : MPI2 Rev W (2.00.15) specification.
+[PATCH 4/8] [SCSI] mpt2sas : Update the timing requirements for issuing a Hard Reset as per the MPI spec.
+[PATCH 5/8] [SCSI] mpt2sas : Fix for device scan following host reset could get stuck in a infinite loop.
+[PATCH 6/8] [SCSI] mpt2sas : When SCSI command is received with task atrribute not set, set it to SIMPLE.
+[PATCH 7/8] [SCSI] mpt2sas : Calulate the Reply post queue depth calculation as per the MPI spec.
+[PATCH 8/8] [SCSI] mpt2sas : Bump driver vesion to v15.100.00.00.
