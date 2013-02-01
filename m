@@ -1,19 +1,19 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH v2 3/8] [SCSI] Rename scsi_evt_xxx to sdev_evt_xxx and scsi_event to sdev_event
-Date: Fri,  1 Feb 2013 12:53:10 -0500
-Message-ID: <1359741195-2641-4-git-send-email-emilne@redhat.com>
+Subject: [PATCH v2 4/8] [SCSI] Add support for scsi_target events
+Date: Fri,  1 Feb 2013 12:53:11 -0500
+Message-ID: <1359741195-2641-5-git-send-email-emilne@redhat.com>
 References: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12429 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40361 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757143Ab3BARxS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Feb 2013 12:53:18 -0500
+	id S1757277Ab3BARxT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Feb 2013 12:53:19 -0500
 Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrIjC028018
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrIas028024
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:18 -0500
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:19 -0500
 Received: from emilne.csb (dhcp-186-175.bos.redhat.com [10.16.186.175])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRg011917
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRh011917
 	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:18 -0500
 In-Reply-To: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -22,182 +22,271 @@ To: linux-scsi@vger.kernel.org
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-The names of the struct and some of the functions for scsi_device
-events are too generic and do not match the comments in the source.
-Changed all of the names to begin with sdev_ in order to avoid
-naming issues and confusion with scsi_target events to be added.
-Also changed name of sdev_evt_thread() to sdev_evt_work().
+Added capability to generate uevents on scsi_target objects.
 
 Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/scsi_lib.c    | 24 ++++++++++++------------
- drivers/scsi/scsi_priv.h   |  1 +
- drivers/scsi/scsi_scan.c   |  3 +--
- drivers/scsi/scsi_sysfs.c  |  4 ++--
- include/scsi/scsi_device.h |  6 +++---
- 5 files changed, 19 insertions(+), 19 deletions(-)
+ drivers/scsi/scsi_lib.c    | 135 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_priv.h   |   3 +
+ drivers/scsi/scsi_scan.c   |  17 ++++++
+ include/scsi/scsi_device.h |  34 ++++++++++++
+ 4 files changed, 189 insertions(+)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index eba68de..75b7cad 100644
+index 75b7cad..b815666 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -2175,9 +2175,9 @@ EXPORT_SYMBOL(scsi_device_set_state);
-  *	@sdev: associated SCSI device
-  *	@evt: event to emit
-  *
-- *	Send a single uevent (scsi_event) to the associated scsi_device.
-+ *	Send a single uevent (sdev_event) to the associated scsi_device.
-  */
--static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
-+static void sdev_evt_emit(struct scsi_device *sdev, struct sdev_event *evt)
- {
- 	int idx = 0;
- 	char *envp[3];
-@@ -2200,13 +2200,13 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+@@ -2393,6 +2393,141 @@ scsi_target_resume(struct scsi_target *starget)
  }
+ EXPORT_SYMBOL(scsi_target_resume);
  
++#ifdef CONFIG_SCSI_ENHANCED_UA
++/**
++ *	starget_evt_emit - emit a single SCSI target uevent
++ *	@starget: associated SCSI target
++ *	@evt: event to emit
++ *
++ *	Send a single uevent (starget_event) to the associated scsi_target.
++ */
++static void starget_evt_emit(struct scsi_target *starget,
++			     struct starget_event *evt)
++{
++	int idx = 0;
++	char *envp[3];
++
++	switch (evt->evt_type) {
++	case STARGET_EVT_LUN_CHANGE_REPORTED:
++		envp[idx++] = "STARGET_LUN_CHANGE_REPORTED=1";
++		break;
++	default:
++		/* do nothing */
++		break;
++	}
++
++	envp[idx++] = NULL;
++
++	kobject_uevent_env(&starget->dev.kobj, KOBJ_CHANGE, envp);
++}
++
++/**
++ *	starget_evt_work - send a uevent for each scsi event
++ *	@work: work struct for scsi_target
++ *
++ *	Dispatch queued events to their associated scsi_target kobjects
++ *	as uevents.
++ */
++void starget_evt_work(struct work_struct *work)
++{
++	struct scsi_target *starget;
++	LIST_HEAD(event_list);
++
++	starget = container_of(work, struct scsi_target, event_work);
++
++	while (1) {
++		struct starget_event *evt;
++		struct list_head *this, *tmp;
++		unsigned long flags;
++
++		spin_lock_irqsave(&starget->list_lock, flags);
++		list_splice_init(&starget->event_list, &event_list);
++		spin_unlock_irqrestore(&starget->list_lock, flags);
++
++		if (list_empty(&event_list))
++			break;
++
++		list_for_each_safe(this, tmp, &event_list) {
++			evt = list_entry(this, struct starget_event, node);
++			list_del(&evt->node);
++			starget_evt_emit(starget, evt);
++			kfree(evt);
++		}
++	}
++}
++
++/**
++ *	starget_evt_send - send asserted event to uevent thread
++ *	@starget: scsi_target event occurred on
++ *	@evt: event to send
++ *
++ *	Assert scsi target event asynchronously.
++ */
++void starget_evt_send(struct scsi_target *starget, struct starget_event *evt)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&starget->list_lock, flags);
++	list_add_tail(&evt->node, &starget->event_list);
++	schedule_work(&starget->event_work);
++	spin_unlock_irqrestore(&starget->list_lock, flags);
++}
++EXPORT_SYMBOL_GPL(starget_evt_send);
++
++/**
++ *	starget_evt_alloc - allocate a new scsi_target event
++ *	@evt_type: type of event to allocate
++ *	@gfpflags: GFP flags for allocation
++ *
++ *	Allocates and returns a new starget_event.
++ */
++struct starget_event *starget_evt_alloc(enum scsi_target_event evt_type,
++					gfp_t gfpflags)
++{
++	struct starget_event *evt = kzalloc(sizeof(struct starget_event),
++					    gfpflags);
++	if (!evt)
++		return NULL;
++
++	evt->evt_type = evt_type;
++	INIT_LIST_HEAD(&evt->node);
++
++	/* evt_type-specific initialization, if any */
++	switch (evt_type) {
++	case STARGET_EVT_LUN_CHANGE_REPORTED:
++	default:
++		/* do nothing */
++		break;
++	}
++
++	return evt;
++}
++EXPORT_SYMBOL_GPL(starget_evt_alloc);
++
++/**
++ *	starget_evt_send_simple - send asserted event to uevent thread
++ *	@starget: scsi_target event occurred on
++ *	@evt_type: type of event to send
++ *	@gfpflags: GFP flags for allocation
++ *
++ *	Assert scsi target event asynchronously, given an event type.
++ */
++void starget_evt_send_simple(struct scsi_target *starget,
++			     enum scsi_target_event evt_type, gfp_t gfpflags)
++{
++	struct starget_event *evt = starget_evt_alloc(evt_type, gfpflags);
++	if (!evt) {
++		starget_printk(KERN_ERR, starget, "event %d eaten due to OOM\n",
++			       evt_type);
++		return;
++	}
++
++	starget_evt_send(starget, evt);
++}
++EXPORT_SYMBOL_GPL(starget_evt_send_simple);
++
++#endif
++
  /**
-- * 	sdev_evt_thread - send a uevent for each scsi event
-+ *	sdev_evt_work - send a uevent for each scsi event
-  *	@work: work struct for scsi_device
-  *
-  *	Dispatch queued events to their associated scsi_device kobjects
-  *	as uevents.
-  */
--void scsi_evt_thread(struct work_struct *work)
-+void sdev_evt_work(struct work_struct *work)
- {
- 	struct scsi_device *sdev;
- 	LIST_HEAD(event_list);
-@@ -2214,7 +2214,7 @@ void scsi_evt_thread(struct work_struct *work)
- 	sdev = container_of(work, struct scsi_device, event_work);
- 
- 	while (1) {
--		struct scsi_event *evt;
-+		struct sdev_event *evt;
- 		struct list_head *this, *tmp;
- 		unsigned long flags;
- 
-@@ -2226,9 +2226,9 @@ void scsi_evt_thread(struct work_struct *work)
- 			break;
- 
- 		list_for_each_safe(this, tmp, &event_list) {
--			evt = list_entry(this, struct scsi_event, node);
-+			evt = list_entry(this, struct sdev_event, node);
- 			list_del(&evt->node);
--			scsi_evt_emit(sdev, evt);
-+			sdev_evt_emit(sdev, evt);
- 			kfree(evt);
- 		}
- 	}
-@@ -2241,7 +2241,7 @@ void scsi_evt_thread(struct work_struct *work)
-  *
-  *	Assert scsi device event asynchronously.
-  */
--void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt)
-+void sdev_evt_send(struct scsi_device *sdev, struct sdev_event *evt)
- {
- 	unsigned long flags;
- 
-@@ -2267,12 +2267,12 @@ EXPORT_SYMBOL_GPL(sdev_evt_send);
-  *	@evt_type: type of event to allocate
-  *	@gfpflags: GFP flags for allocation
-  *
-- *	Allocates and returns a new scsi_event.
-+ *	Allocates and returns a new sdev_event.
-  */
--struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-+struct sdev_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- 				  gfp_t gfpflags)
- {
--	struct scsi_event *evt = kzalloc(sizeof(struct scsi_event), gfpflags);
-+	struct sdev_event *evt = kzalloc(sizeof(struct sdev_event), gfpflags);
- 	if (!evt)
- 		return NULL;
- 
-@@ -2303,7 +2303,7 @@ EXPORT_SYMBOL_GPL(sdev_evt_alloc);
- void sdev_evt_send_simple(struct scsi_device *sdev,
- 			  enum scsi_device_event evt_type, gfp_t gfpflags)
- {
--	struct scsi_event *evt = sdev_evt_alloc(evt_type, gfpflags);
-+	struct sdev_event *evt = sdev_evt_alloc(evt_type, gfpflags);
- 	if (!evt) {
- 		sdev_printk(KERN_ERR, sdev, "event %d eaten due to OOM\n",
- 			    evt_type);
+  * scsi_internal_device_block - internal function to put a device temporarily into the SDEV_BLOCK state
+  * @sdev:	device to block
 diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 07ce3f5..7f00813 100644
+index 7f00813..5da5466 100644
 --- a/drivers/scsi/scsi_priv.h
 +++ b/drivers/scsi/scsi_priv.h
-@@ -90,6 +90,7 @@ extern void scsi_exit_queue(void);
- struct request_queue;
+@@ -91,6 +91,9 @@ struct request_queue;
  struct request;
  extern struct kmem_cache *scsi_sdb_cache;
-+extern void sdev_evt_work(struct work_struct *work);
+ extern void sdev_evt_work(struct work_struct *work);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++extern void starget_evt_work(struct work_struct *work);
++#endif
  
  /* scsi_proc.c */
  #ifdef CONFIG_SCSI_PROC_FS
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 2e5fe58..47348ed 100644
+index 47348ed..2d21597 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -244,7 +244,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	struct scsi_device *sdev;
- 	int display_failure_msg = 1, ret;
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
--	extern void scsi_evt_thread(struct work_struct *work);
- 	extern void scsi_requeue_run_queue(struct work_struct *work);
+@@ -425,6 +425,11 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	starget->can_queue = 0;
+ 	INIT_LIST_HEAD(&starget->siblings);
+ 	INIT_LIST_HEAD(&starget->devices);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	INIT_LIST_HEAD(&starget->event_list);
++	spin_lock_init(&starget->list_lock);
++	INIT_WORK(&starget->event_work, starget_evt_work);
++#endif
+ 	starget->state = STARGET_CREATED;
+ 	starget->scsi_level = SCSI_2;
+ 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
+@@ -472,7 +477,19 @@ static void scsi_target_reap_usercontext(struct work_struct *work)
+ {
+ 	struct scsi_target *starget =
+ 		container_of(work, struct scsi_target, ew.work);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	struct list_head *this, *tmp;
++
++	cancel_work_sync(&starget->event_work);
++
++	list_for_each_safe(this, tmp, &starget->event_list) {
++		struct starget_event *evt;
  
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
-@@ -267,7 +266,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	INIT_LIST_HEAD(&sdev->starved_entry);
- 	INIT_LIST_HEAD(&sdev->event_list);
- 	spin_lock_init(&sdev->list_lock);
--	INIT_WORK(&sdev->event_work, scsi_evt_thread);
-+	INIT_WORK(&sdev->event_work, sdev_evt_work);
- 	INIT_WORK(&sdev->requeue_work, scsi_requeue_run_queue);
- 
- 	sdev->sdev_gendev.parent = get_device(&starget->dev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index ba7da3b..b22210d 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -353,9 +353,9 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	cancel_work_sync(&sdev->event_work);
- 
- 	list_for_each_safe(this, tmp, &sdev->event_list) {
--		struct scsi_event *evt;
-+		struct sdev_event *evt;
- 
--		evt = list_entry(this, struct scsi_event, node);
-+		evt = list_entry(this, struct sdev_event, node);
- 		list_del(&evt->node);
- 		kfree(evt);
- 	}
++		evt = list_entry(this, struct starget_event, node);
++		list_del(&evt->node);
++		kfree(evt);
++	}
++#endif
+ 	transport_remove_device(&starget->dev);
+ 	device_del(&starget->dev);
+ 	scsi_target_destroy(starget);
 diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index e4c964e..dad0a37 100644
+index dad0a37..240aa6d 100644
 --- a/include/scsi/scsi_device.h
 +++ b/include/scsi/scsi_device.h
-@@ -57,7 +57,7 @@ enum scsi_device_event {
- 	SDEV_EVT_MAXBITS	= SDEV_EVT_LAST + 1
+@@ -230,6 +230,24 @@ enum scsi_target_state {
+ 	STARGET_DEL,
  };
  
--struct scsi_event {
-+struct sdev_event {
- 	enum scsi_device_event	evt_type;
- 	struct list_head	node;
- 
-@@ -360,9 +360,9 @@ extern int scsi_get_vpd_page(struct scsi_device *, u8 page, unsigned char *buf,
- 			     int buf_len);
- extern int scsi_device_set_state(struct scsi_device *sdev,
- 				 enum scsi_device_state state);
--extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-+extern struct sdev_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- 					  gfp_t gfpflags);
--extern void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt);
-+extern void sdev_evt_send(struct scsi_device *sdev, struct sdev_event *evt);
- extern void sdev_evt_send_simple(struct scsi_device *sdev,
- 			  enum scsi_device_event evt_type, gfp_t gfpflags);
- extern int scsi_device_quiesce(struct scsi_device *sdev);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++enum scsi_target_event {
++	STARGET_EVT_LUN_CHANGE_REPORTED	= 1,	/* UA reported */
++
++	STARGET_EVT_LAST	= STARGET_EVT_LUN_CHANGE_REPORTED,
++	STARGET_EVT_MAXBITS	= STARGET_EVT_LAST + 1
++};
++
++struct starget_event {
++	enum scsi_target_event	evt_type;
++	struct list_head	node;
++
++	/* put union of data structures, for non-simple event types,
++	 * here
++	 */
++};
++#endif
++
+ /*
+  * scsi_target: representation of a scsi target, for now, this is only
+  * used for single_lun devices. If no one has active IO to the target,
+@@ -252,6 +270,13 @@ struct scsi_target {
+ 						 * means no lun present. */
+ 	unsigned int		no_report_luns:1;	/* Don't use
+ 						 * REPORT LUNS for scanning. */
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	DECLARE_BITMAP(supported_events, STARGET_EVT_MAXBITS);
++	struct list_head	event_list;	/* asserted events */
++	struct work_struct	event_work;
++	spinlock_t list_lock;
++#endif
++
+ 	/* commands actually active on LLD. protected by host lock. */
+ 	unsigned int		target_busy;
+ 	/*
+@@ -369,6 +394,15 @@ extern int scsi_device_quiesce(struct scsi_device *sdev);
+ extern void scsi_device_resume(struct scsi_device *sdev);
+ extern void scsi_target_quiesce(struct scsi_target *);
+ extern void scsi_target_resume(struct scsi_target *);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++extern struct starget_event *starget_evt_alloc(enum scsi_target_event evt_type,
++					       gfp_t gfpflags);
++extern void starget_evt_send(struct scsi_target *starget,
++			     struct starget_event *evt);
++extern void starget_evt_send_simple(struct scsi_target *starget,
++				    enum scsi_target_event evt_type,
++				    gfp_t gfpflags);
++#endif
+ extern void scsi_scan_target(struct device *parent, unsigned int channel,
+ 			     unsigned int id, unsigned int lun, int rescan);
+ extern void scsi_target_reap(struct scsi_target *);
 -- 
 1.7.11.7
 
