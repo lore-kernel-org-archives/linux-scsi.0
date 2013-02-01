@@ -1,219 +1,65 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 3/8] [SCSI] mpt2sas : MPI2 Rev W (2.00.15) specification
-Date: Fri, 1 Feb 2013 21:54:13 +0530
-Message-ID: <20130201162413.GA21602@lsi.com>
+Subject: [PATCH 4/8] [SCSI] mpt2sas : Update the timing requirements for
+ issuing a Hard Reset as per the MPI spec
+Date: Fri, 1 Feb 2013 21:55:43 +0530
+Message-ID: <20130201162543.GA21627@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:58594 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750770Ab3BAFaI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2013 00:30:08 -0500
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:33778 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751841Ab3BAFcn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2013 00:32:43 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, sreekanth.reddy@lsi.com, Nagalakshmi.Nandigama@lsi.com, JBottomley@Parallels.com
 Cc: linux-scsi@vger.kernel.org, sathya.prakash@lsi.com
 
-Change set in MPI 2.0 Rev W(2.00.15) specification and 2.00.27 header files
-
-1. Added a bit to the IOCExceptions field of the IOCFacts Reply to indicate that the IOC detected a partial memory failure. 
-2. Added ElapsedSeconds field to RAID Volume Indicator Structure. Added Elapsed Seconds Valid flag to Flags field of this structure. 
-3. Added ElapsedSeconds field to Integrated RAID Operations Status Event Data. 
-4. In the IOCSettings field of BIOS Page 1, modified the Adapter Support bits description to specify X86 BIOS. 
-5. Toolbox Diagnostic CLI Tool Request may now use chain elements in the SGL. 
+Updated the mpt2sas driver code that issues hard reset to comply with the timing requirements
+mentioned in MPI specifications rev V.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 ---
 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
-index e960f96..31b5b15 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                  scatter/gather formats.
-  *  Creation Date:  June 21, 2006
-  *
-- *  mpi2.h Version:  02.00.25
-+ *  mpi2.h Version:  02.00.27
-  *
-  *  Version History
-  *  ---------------
-@@ -75,6 +75,8 @@
-  *  02-06-12  02.00.24  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  03-29-12  02.00.25  Bumped MPI2_HEADER_VERSION_UNIT.
-  *                      Added Hard Reset delay timings.
-+ *  07-10-12  02.00.26  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  07-26-12  02.00.27  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  --------------------------------------------------------------------------
-  */
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index ce89b14..fc91a5a 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -3920,11 +3920,15 @@ _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	writel(host_diagnostic | MPI2_DIAG_RESET_ADAPTER,
+ 	     &ioc->chip->HostDiagnostic);
  
-@@ -100,7 +102,7 @@
- #define MPI2_VERSION_02_00                  (0x0200)
+-	/* don't access any registers for 50 milliseconds */
+-	msleep(50);
++	/* This delay allows the chip PCIe hardware time to finish reset tasks*/
++	if (sleep_flag == CAN_SLEEP)
++		msleep(MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC/1000);
++	else
++		mdelay(MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC/1000);
  
- /* versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x19)
-+#define MPI2_HEADER_VERSION_UNIT            (0x1B)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-index 38c5da3..963761f 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI SCSI initiator mode messages and structures
-  *  Creation Date:  June 23, 2006
-  *
-- *    mpi2_init.h Version:  02.00.13
-+ *    mpi2_init.h Version:  02.00.14
-  *
-  *  Version History
-  *  ---------------
-@@ -36,6 +36,7 @@
-  *  11-10-10  02.00.11  Added MPI2_SCSIIO_NUM_SGLOFFSETS define.
-  *  02-06-12  02.00.13  Added alternate defines for Task Priority / Command
-  *                      Priority to match SAM-4.
-+ *  07-10-12  02.00.14  Added MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION.
-  *  --------------------------------------------------------------------------
-  */
+-	/* 300 second max wait */
+-	for (count = 0; count < 3000000 ; count++) {
++	/* Approximately 300 second max wait */
++	for (count = 0; count < (300000000 /
++	    MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC); count++) {
  
-@@ -189,6 +190,7 @@ typedef struct _MPI2_SCSI_IO_REQUEST
- #define MPI2_SCSIIO_CONTROL_ADDCDBLEN_SHIFT     (26)
+ 		host_diagnostic = readl(&ioc->chip->HostDiagnostic);
  
- #define MPI2_SCSIIO_CONTROL_DATADIRECTION_MASK  (0x03000000)
-+#define MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION (24)
- #define MPI2_SCSIIO_CONTROL_NODATATRANSFER      (0x00000000)
- #define MPI2_SCSIIO_CONTROL_WRITE               (0x01000000)
- #define MPI2_SCSIIO_CONTROL_READ                (0x02000000)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-index b0d4760..bdd7b18 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
-  *  Creation Date:  October 11, 2006
-  *
-- *  mpi2_ioc.h Version:  02.00.21
-+ *  mpi2_ioc.h Version:  02.00.22
-  *
-  *  Version History
-  *  ---------------
-@@ -118,6 +118,9 @@
-  *                      MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE structure.
-  *                      Marked MPI2_PM_CONTROL_FEATURE_PCIE_LINK as obsolete.
-  *  03-29-12  02.00.21  Added a product specific range to event values.
-+ *  07-26-12  02.00.22  Added MPI2_IOCFACTS_EXCEPT_PARTIAL_MEMORY_FAILURE.
-+ *                      Added ElapsedSeconds field to
-+ *                      MPI2_EVENT_DATA_IR_OPERATION_STATUS.
-  *  --------------------------------------------------------------------------
-  */
+@@ -3933,11 +3937,13 @@ _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 		if (!(host_diagnostic & MPI2_DIAG_RESET_ADAPTER))
+ 			break;
  
-@@ -284,6 +287,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY
- #define MPI2_IOCFACTS_HDRVERSION_DEV_SHIFT              (0)
+-		/* wait 100 msec */
++		/* Wait to pass the second read delay window */
+ 		if (sleep_flag == CAN_SLEEP)
+-			msleep(1);
++			msleep(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC\
++				/1000);
+ 		else
+-			mdelay(1);
++			mdelay(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC\
++				/1000);
+ 	}
  
- /* IOCExceptions */
-+#define MPI2_IOCFACTS_EXCEPT_PARTIAL_MEMORY_FAILURE     (0x0200)
- #define MPI2_IOCFACTS_EXCEPT_IR_FOREIGN_CONFIG_MAX      (0x0100)
- 
- #define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_MASK              (0x00E0)
-@@ -624,7 +628,7 @@ typedef struct _MPI2_EVENT_DATA_IR_OPERATION_STATUS
-     U8                      RAIDOperation;              /* 0x04 */
-     U8                      PercentComplete;            /* 0x05 */
-     U16                     Reserved2;                  /* 0x06 */
--    U32                     Resereved3;                 /* 0x08 */
-+	U32                     ElapsedSeconds;             /* 0x08 */
- } MPI2_EVENT_DATA_IR_OPERATION_STATUS,
-   MPI2_POINTER PTR_MPI2_EVENT_DATA_IR_OPERATION_STATUS,
-   Mpi2EventDataIrOperationStatus_t,
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-index 2b38af2..3471c24 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI Integrated RAID messages and structures
-  *  Creation Date:  April 26, 2007
-  *
-- *    mpi2_raid.h Version:  02.00.08
-+ *    mpi2_raid.h Version:  02.00.09
-  *
-  *  Version History
-  *  ---------------
-@@ -27,6 +27,8 @@
-  *                      related structures and defines.
-  *                      Added product-specific range to RAID Action values.
-  *  02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
-+ *  07-26-12  02.00.09  Added ElapsedSeconds field to MPI2_RAID_VOL_INDICATOR.
-+ *                      Added MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID define.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -276,10 +278,13 @@ typedef struct _MPI2_RAID_VOL_INDICATOR
-     U64                     TotalBlocks;                    /* 0x00 */
-     U64                     BlocksRemaining;                /* 0x08 */
-     U32                     Flags;                          /* 0x10 */
-+	U32                     ElapsedSeconds;                 /* 0x14 */
- } MPI2_RAID_VOL_INDICATOR, MPI2_POINTER PTR_MPI2_RAID_VOL_INDICATOR,
-   Mpi2RaidVolIndicator_t, MPI2_POINTER pMpi2RaidVolIndicator_t;
- 
- /* defines for RAID Volume Indicator Flags field */
-+#define MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID   (0x80000000)
-+
- #define MPI2_RAID_VOL_FLAGS_OP_MASK                 (0x0000000F)
- #define MPI2_RAID_VOL_FLAGS_OP_BACKGROUND_INIT      (0x00000000)
- #define MPI2_RAID_VOL_FLAGS_OP_ONLINE_CAP_EXPANSION (0x00000001)
-@@ -320,7 +325,7 @@ MPI2_POINTER pMpi2RaidCompatibilityResultStruct_t;
- /* RAID Action Reply ActionData union */
- typedef union _MPI2_RAID_ACTION_REPLY_DATA
- {
--	U32                                     Word[5];
-+	U32                                     Word[6];
- 	MPI2_RAID_VOL_INDICATOR                 RaidVolumeIndicator;
- 	U16                                     VolDevHandle;
- 	U8                                      VolumeState;
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-index 3cbe677..616e380 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2010 LSI Corporation.
-+ *  Copyright (c) 2000-2012 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_tool.h
-  *          Title:  MPI diagnostic tool structures and definitions
-  *  Creation Date:  March 26, 2007
-  *
-- *    mpi2_tool.h Version:  02.00.07
-+ *    mpi2_tool.h Version:  02.00.10
-  *
-  *  Version History
-  *  ---------------
-@@ -27,6 +27,8 @@
-  *                      Post Request.
-  *  05-25-11  02.00.07  Added Flags field and related defines to
-  *                      MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST.
-+ *  07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
-+ *			it uses MPI Chain SGE as well as MPI Simple SGE.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -270,7 +272,7 @@ typedef struct _MPI2_TOOLBOX_BEACON_REQUEST
- 
- #define MPI2_TOOLBOX_DIAG_CLI_CMD_LENGTH    (0x5C)
- 
--/* Toolbox Diagnostic CLI Tool request message */
-+/* MPI v2.0 Toolbox Diagnostic CLI Tool request message */
- typedef struct _MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST {
-     U8                      Tool;                       /* 0x00 */
-     U8                      Reserved1;                  /* 0x01 */
-@@ -288,7 +290,7 @@ typedef struct _MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST {
-     U32                     DataLength;                 /* 0x10 */
-     U8                      DiagnosticCliCommand
- 		[MPI2_TOOLBOX_DIAG_CLI_CMD_LENGTH];     /* 0x14 */
--    MPI2_SGE_SIMPLE_UNION   SGL;                        /* 0x70 */
-+	MPI2_MPI_SGE_IO_UNION   SGL;                        /* 0x70 */
- } MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
-   MPI2_POINTER PTR_MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
-   Mpi2ToolboxDiagnosticCliRequest_t,
+ 	if (host_diagnostic & MPI2_DIAG_HCB_MODE) {
