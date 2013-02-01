@@ -1,491 +1,315 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH v2 5/8] [SCSI] Generate uevents for certain Unit Attention codes
-Date: Fri,  1 Feb 2013 12:53:12 -0500
-Message-ID: <1359741195-2641-6-git-send-email-emilne@redhat.com>
-References: <1359741195-2641-1-git-send-email-emilne@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42751 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757283Ab3BARxT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Feb 2013 12:53:19 -0500
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrJ22007440
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:19 -0500
-Received: from emilne.csb (dhcp-186-175.bos.redhat.com [10.16.186.175])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRi011917
-	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:19 -0500
-In-Reply-To: <1359741195-2641-1-git-send-email-emilne@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux-CoA6ZxLDdyEEUmgCuDUIdw@public.gmane.org>
+Subject: [PATCH] driver-core: constify data for class_find_device()
+Date: Fri,  1 Feb 2013 20:40:17 +0100 (CET)
+Message-ID: <4cba0646c55f8beb9e290492e499be209ca6f20d.1359746656.git.mirq-linux@rere.qmqm.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <spi-devel-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/spi-devel-general>,
+	<mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=spi-devel-general>
+List-Post: <mailto:spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/spi-devel-general>,
+	<mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+Errors-To: spi-devel-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-zigbee-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Benny Halevy <bhalevy-4/WYdZTkCtzQT0dZR+AlfA@public.gmane.org>, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, linux-nfc-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-pm-u79uwXL29TavoUN+ObpdWA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-From: "Ewan D. Milne" <emilne@redhat.com>
-
-Generate a uevent on the scsi_target object when the following
-Unit Attention ASC/ASCQ code is received:
-
-    3F/0E  REPORTED LUNS DATA HAS CHANGED
-
-Generate a uevent on the scsi_device object when the following
-Unit Attention ASC/ASCQ codes are received:
-
-    2A/01  MODE PARAMETERS CHANGED
-    2A/09  CAPACITY DATA HAS CHANGED
-    38/07  THIN PROVISIONING SOFT THRESHOLD REACHED
-
-All uevent generation is aggregated and rate-limited so that any
-individual event is delivered no more than once every 2 seconds.
-
-Log kernel messages when the following Unit Attention ASC/ASCQ
-codes are received:
-
-    2A/xx  PARAMETERS CHANGED
-    3F/03  INQUIRY DATA HAS CHANGED
-    3F/xx  TARGET OPERATING CONDITIONS HAVE CHANGED
-
-Also changed the kernel log messages on existing Unit Attention
-codes, to remove text that indicates that the conditions were not
-handled in any way (since they are now handled in some way) and
-reflect the wording used in SPC-4.
-
-Also log a kernel message when the a scsi device reports a Unit
-Attention queue overflow, indicating that status has been lost.
-
-These changes are only enabled when the kernel config option
-CONFIG_SCSI_ENHANCED_UA is set.  Otherwise, the behavior is the
-same as before, including the existing kernel log messages.
-However, the detection of these conditions was moved to be earlier
-in scsi_check_sense(), because the code was not always reached.
-
-Added a new exported function scsi_report_sense() to allow drivers
-to report sense data that is not associated with a SCSI command.
-
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/scsi_error.c  | 187 ++++++++++++++++++++++++++++++++++++++++-----
- drivers/scsi/scsi_lib.c    |  16 ++++
- drivers/scsi/scsi_priv.h   |   2 +
- drivers/scsi/scsi_scan.c   |   5 ++
- drivers/scsi/scsi_sysfs.c  |   3 +
- include/scsi/scsi_cmnd.h   |   4 +
- include/scsi/scsi_device.h |  21 +++++
- include/scsi/scsi_eh.h     |   5 ++
- 8 files changed, 222 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index d0f71e5..d0b5a26 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -223,6 +223,86 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
- #endif
- 
- /**
-+ * scsi_report_sense - Examine scsi sense information and log messages for
-+ *		       certain conditions, also issue uevents if so configured.
-+ * @sshdr:	sshdr to be examined
-+ */
-+void scsi_report_sense(struct scsi_device *sdev, struct scsi_sense_hdr *sshdr)
-+{
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	if (sshdr->ua_queue_overflow)
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "Unit Attention queue overflow");
-+#endif
-+
-+	if (sshdr->sense_key == UNIT_ATTENTION) {
-+		if (sshdr->asc == 0x3f && sshdr->ascq == 0x03)
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Inquiry data has changed");
-+		else if (sshdr->asc == 0x3f && sshdr->ascq == 0x0e) {
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+			struct scsi_target *starget = scsi_target(sdev);
-+			if (atomic_xchg(&starget->lun_change_reported, 1) == 0)
-+				schedule_delayed_work(&starget->ua_dwork, 2*HZ);
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Reported LUNs data has changed");
-+#else
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Warning! Received an indication that the "
-+				    "LUN assignments on this target have "
-+				    "changed. The Linux SCSI layer does not "
-+				    "automatically remap LUN assignments.\n");
-+#endif
-+		} else if (sshdr->asc == 0x3f)
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Target operating conditions have changed");
-+#else
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Warning! Received an indication that the "
-+				    "operating parameters on this target have "
-+				    "changed. The Linux SCSI layer does not "
-+				    "automatically adjust these parameters.\n");
-+#endif
-+
-+		if (sshdr->asc == 0x38 && sshdr->ascq == 0x07) {
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+			if (atomic_xchg(&sdev->soft_threshold_reached, 1) == 0)
-+				schedule_delayed_work(&sdev->ua_dwork, 2 * HZ);
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Thin provisioning soft threshold reached");
-+#else
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Warning! Received an indication that the "
-+				    "LUN reached a thin provisioning soft "
-+				    "threshold.\n");
-+#endif
-+		}
-+
-+		if (sshdr->asc == 0x2a && sshdr->ascq == 0x01) {
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+			if (atomic_xchg(&sdev->mode_parameter_change_reported,
-+					1) == 0)
-+				schedule_delayed_work(&sdev->ua_dwork, 2 * HZ);
-+#endif
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Mode parameters changed");
-+		} else if (sshdr->asc == 0x2a && sshdr->ascq == 0x09) {
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+			if (atomic_xchg(&sdev->capacity_change_reported,
-+					1) == 0)
-+				schedule_delayed_work(&sdev->ua_dwork, 2 * HZ);
-+#endif
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Capacity data has changed");
-+		} else if (sshdr->asc == 0x2a)
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Parameters changed");
-+	}
-+}
-+EXPORT_SYMBOL(scsi_report_sense);
-+
-+/**
-  * scsi_check_sense - Examine scsi cmd sense
-  * @scmd:	Cmd to have sense checked.
-  *
-@@ -241,6 +321,8 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 	if (! scsi_command_normalize_sense(scmd, &sshdr))
- 		return FAILED;	/* no valid sense data */
- 
-+	scsi_report_sense(sdev, &sshdr);
-+
- 	if (scsi_sense_is_deferred(&sshdr))
- 		return NEEDS_RETRY;
- 
-@@ -318,26 +400,6 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 		if (scmd->device->allow_restart &&
- 		    (sshdr.asc == 0x04) && (sshdr.ascq == 0x02))
- 			return FAILED;
--
--		if (sshdr.asc == 0x3f && sshdr.ascq == 0x0e)
--			scmd_printk(KERN_WARNING, scmd,
--				    "Warning! Received an indication that the "
--				    "LUN assignments on this target have "
--				    "changed. The Linux SCSI layer does not "
--				    "automatically remap LUN assignments.\n");
--		else if (sshdr.asc == 0x3f)
--			scmd_printk(KERN_WARNING, scmd,
--				    "Warning! Received an indication that the "
--				    "operating parameters on this target have "
--				    "changed. The Linux SCSI layer does not "
--				    "automatically adjust these parameters.\n");
--
--		if (sshdr.asc == 0x38 && sshdr.ascq == 0x07)
--			scmd_printk(KERN_WARNING, scmd,
--				    "Warning! Received an indication that the "
--				    "LUN reached a thin provisioning soft "
--				    "threshold.\n");
--
- 		/*
- 		 * Pass the UA upwards for a determination in the completion
- 		 * functions.
-@@ -380,6 +442,52 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 	}
- }
- 
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+/**
-+ *	sdev_ua_events - send a uevent for received unit attention events
-+ *	@work: work struct for scsi_device
-+ *
-+ *	Dispatch aggregated events to their associated scsi_device kobjects
-+ *	as uevents.
-+ */
-+void sdev_ua_events(struct work_struct *work)
-+{
-+	struct scsi_device *sdev;
-+
-+	sdev = container_of(work, struct scsi_device, ua_dwork.work);
-+
-+	if (atomic_xchg(&sdev->capacity_change_reported, 0) != 0)
-+		sdev_evt_send_simple(sdev, SDEV_EVT_CAPACITY_CHANGE_REPORTED,
-+				     GFP_KERNEL);
-+	if (atomic_xchg(&sdev->soft_threshold_reached, 0) != 0)
-+		sdev_evt_send_simple(sdev, SDEV_EVT_SOFT_THRESHOLD_REACHED,
-+				     GFP_KERNEL);
-+	if (atomic_xchg(&sdev->mode_parameter_change_reported, 0) != 0)
-+		sdev_evt_send_simple(sdev,
-+				     SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED,
-+				     GFP_KERNEL);
-+}
-+
-+/**
-+ *	starget_ua_events - send a uevent for received unit attention events
-+ *	@work: work struct for scsi_target
-+ *
-+ *	Dispatch aggregated events to their associated scsi_target kobjects
-+ *	as uevents.
-+ */
-+void starget_ua_events(struct work_struct *work)
-+{
-+	struct scsi_target *starget;
-+
-+	starget = container_of(work, struct scsi_target, ua_dwork.work);
-+
-+	if (atomic_xchg(&starget->lun_change_reported, 0) != 0)
-+		starget_evt_send_simple(starget,
-+					STARGET_EVT_LUN_CHANGE_REPORTED,
-+					GFP_KERNEL);
-+}
-+#endif
-+
- static void scsi_handle_queue_ramp_up(struct scsi_device *sdev)
- {
- 	struct scsi_host_template *sht = sdev->host->hostt;
-@@ -2039,6 +2147,10 @@ EXPORT_SYMBOL(scsi_reset_provider);
- int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
-                          struct scsi_sense_hdr *sshdr)
- {
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	int desc_pos, desc_len, desc_type, addl_len;
-+#endif
-+
- 	if (!sense_buffer || !sb_len)
- 		return 0;
- 
-@@ -2059,8 +2171,41 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 			sshdr->asc = sense_buffer[2];
- 		if (sb_len > 3)
- 			sshdr->ascq = sense_buffer[3];
--		if (sb_len > 7)
-+		if (sb_len > 7) {
- 			sshdr->additional_length = sense_buffer[7];
-+
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+			desc_pos = 8;
-+			desc_len = sshdr->additional_length;
-+
-+			if (desc_len > (sb_len - 8))
-+				desc_len = sb_len - 8;
-+/*
-+ * desc_len should be either 0 or >= 2 here but it might not be, in which case
-+ * we can't continue because we can't extract addl_len (and there is no data)
-+ */
-+			while (desc_len >= 2) {
-+				desc_type = sense_buffer[desc_pos];
-+				addl_len = sense_buffer[desc_pos + 1];
-+
-+				if ((sshdr->sense_key == UNIT_ATTENTION) &&
-+				    (desc_type == 0x02) && (desc_len >= 5) &&
-+				    (addl_len >= 3) &&
-+/*
-+ * addl_len is supposed to be 0x6 per the spec but we don't actually need that
-+ * here, we just need it to be long enough so we can examine [desc_pos + 4]
-+ */
-+				    ((sense_buffer[desc_pos + 4] & 0x01) != 0))
-+					sshdr->ua_queue_overflow = 1;
-+
-+				if (addl_len > (desc_len - 2))
-+					addl_len = desc_len - 2;
-+
-+				desc_pos += (2 + addl_len);
-+				desc_len -= (2 + addl_len);
-+			}
-+#endif
-+		}
- 	} else {
- 		/*
- 		 * fixed format
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b815666..f5a669c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2189,6 +2189,17 @@ static void sdev_evt_emit(struct scsi_device *sdev, struct sdev_event *evt)
- 	case SDEV_EVT_CAPACITY_CHANGE:
- 		envp[idx++] = "SDEV_CAPACITY_CHANGE=1";
- 		break;
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
-+		envp[idx++] = "SDEV_CAPACITY_CHANGE_REPORTED=1";
-+		break;
-+	case SDEV_EVT_SOFT_THRESHOLD_REACHED:
-+		envp[idx++] = "SDEV_SOFT_THRESHOLD_REACHED=1";
-+		break;
-+	case SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED:
-+		envp[idx++] = "SDEV_MODE_PARAMETER_CHANGE_REPORTED=1";
-+		break;
-+#endif
- 	default:
- 		/* do nothing */
- 		break;
-@@ -2283,6 +2294,11 @@ struct sdev_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- 	switch (evt_type) {
- 	case SDEV_EVT_MEDIA_CHANGE:
- 	case SDEV_EVT_CAPACITY_CHANGE:
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
-+	case SDEV_EVT_SOFT_THRESHOLD_REACHED:
-+	case SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED:
-+#endif
- 	default:
- 		/* do nothing */
- 		break;
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 5da5466..b237c8e 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -92,7 +92,9 @@ struct request;
- extern struct kmem_cache *scsi_sdb_cache;
- extern void sdev_evt_work(struct work_struct *work);
- #ifdef CONFIG_SCSI_ENHANCED_UA
-+extern void sdev_ua_events(struct work_struct *work);
- extern void starget_evt_work(struct work_struct *work);
-+extern void starget_ua_events(struct work_struct *work);
- #endif
- 
- /* scsi_proc.c */
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 2d21597..1ad4287 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -268,6 +268,9 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	spin_lock_init(&sdev->list_lock);
- 	INIT_WORK(&sdev->event_work, sdev_evt_work);
- 	INIT_WORK(&sdev->requeue_work, scsi_requeue_run_queue);
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	INIT_DELAYED_WORK(&sdev->ua_dwork, sdev_ua_events);
-+#endif
- 
- 	sdev->sdev_gendev.parent = get_device(&starget->dev);
- 	sdev->sdev_target = starget;
-@@ -429,6 +432,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	INIT_LIST_HEAD(&starget->event_list);
- 	spin_lock_init(&starget->list_lock);
- 	INIT_WORK(&starget->event_work, starget_evt_work);
-+	INIT_DELAYED_WORK(&starget->ua_dwork, starget_ua_events);
- #endif
- 	starget->state = STARGET_CREATED;
- 	starget->scsi_level = SCSI_2;
-@@ -481,6 +485,7 @@ static void scsi_target_reap_usercontext(struct work_struct *work)
- 	struct list_head *this, *tmp;
- 
- 	cancel_work_sync(&starget->event_work);
-+	cancel_delayed_work_sync(&starget->ua_dwork);
- 
- 	list_for_each_safe(this, tmp, &starget->event_list) {
- 		struct starget_event *evt;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index b22210d..aff1e29 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -351,6 +351,9 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 
- 	cancel_work_sync(&sdev->event_work);
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	cancel_delayed_work_sync(&sdev->ua_dwork);
-+#endif
- 
- 	list_for_each_safe(this, tmp, &sdev->event_list) {
- 		struct sdev_event *evt;
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 1e11985..4cb7a5e 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -103,7 +103,11 @@ struct scsi_cmnd {
- 	struct request *request;	/* The command we are
- 				   	   working on */
- 
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+#define SCSI_SENSE_BUFFERSIZE	252
-+#else
- #define SCSI_SENSE_BUFFERSIZE 	96
-+#endif
- 	unsigned char *sense_buffer;
- 				/* obtained by REQUEST SENSE when
- 				 * CHECK CONDITION is received on original
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 240aa6d..2935e61 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -52,8 +52,15 @@ enum scsi_device_state {
- enum scsi_device_event {
- 	SDEV_EVT_MEDIA_CHANGE	= 1,	/* media has changed */
- 	SDEV_EVT_CAPACITY_CHANGE	= 2,	/* capacity has changed */
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	SDEV_EVT_CAPACITY_CHANGE_REPORTED	= 3,	/* UA reported */
-+	SDEV_EVT_SOFT_THRESHOLD_REACHED	= 4,	/* UA soft threshold reached */
-+	SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED	= 5,	/* UA reported */
- 
-+	SDEV_EVT_LAST		= SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED,
-+#else
- 	SDEV_EVT_LAST		= SDEV_EVT_CAPACITY_CHANGE,
-+#endif
- 	SDEV_EVT_MAXBITS	= SDEV_EVT_LAST + 1
- };
- 
-@@ -153,6 +160,16 @@ struct scsi_device {
- 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
- 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	atomic_t capacity_change_reported;	/* Device has reported that
-+						   capacity has changed */
-+	atomic_t soft_threshold_reached;	/* Device has reported that
-+						   the thin provisioning soft
-+						   threshold has been reached */
-+	atomic_t mode_parameter_change_reported;/* Device has reported that
-+						   mode parameter has changed */
-+	struct delayed_work ua_dwork;
-+#endif
- 
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
-@@ -271,6 +288,10 @@ struct scsi_target {
- 	unsigned int		no_report_luns:1;	/* Don't use
- 						 * REPORT LUNS for scanning. */
- #ifdef CONFIG_SCSI_ENHANCED_UA
-+	atomic_t	lun_change_reported;	/* Target has reported that
-+						   LUNs have changed */
-+	struct delayed_work ua_dwork;
-+
- 	DECLARE_BITMAP(supported_events, STARGET_EVT_MAXBITS);
- 	struct list_head	event_list;	/* asserted events */
- 	struct work_struct	event_work;
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 06a8790..b6c4d3d 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -25,6 +25,9 @@ struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
- 	u8 byte5;
- 	u8 byte6;
- 	u8 additional_length;	/* always 0 for fixed sense format */
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	unsigned int ua_queue_overflow:1;	/* UA info lost by device */
-+#endif
- };
- 
- static inline int scsi_sense_valid(struct scsi_sense_hdr *sshdr)
-@@ -42,6 +45,8 @@ extern void scsi_eh_flush_done_q(struct list_head *done_q);
- extern void scsi_report_bus_reset(struct Scsi_Host *, int);
- extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
- extern int scsi_block_when_processing_errors(struct scsi_device *);
-+extern void scsi_report_sense(struct scsi_device *sdev,
-+			      struct scsi_sense_hdr *sshdr);
- extern int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 		struct scsi_sense_hdr *sshdr);
- extern int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
--- 
-1.7.11.7
-
+QWxsIGluLWtlcm5lbCB1c2VycyBvZiBjbGFzc19maW5kX2RldmljZSgpIGRvbid0IHJlYWxseSBu
+ZWVkIG11dGFibGUKZGF0YSBmb3IgbWF0Y2ggY2FsbGJhY2suCgpJbiB0d28gcGxhY2VzIChrZXJu
+ZWwvcG93ZXIvc3VzcGVuZF90ZXN0LmMsIGRyaXZlcnMvc2NzaS9vc2Qvb3NkX3VsZC5jKQp0aGlz
+IHBhdGNoIGNoYW5nZXMgbWF0Y2ggY2FsbGJhY2tzIHRvIHVzZSBjb25zdCBzZWFyY2ggZGF0YS4K
+ClRoZSBjb25zdCBpcyBwcm9wYWdhdGVkIHRvIHJ0Y19jbGFzc19vcGVuKCkgYW5kIHBvd2VyX3N1
+cHBseV9nZXRfYnlfbmFtZSgpCnBhcmFtZXRlcnMuCgpOb3RlIHRoYXQgdGhlcmUncyBhIGRldiBy
+ZWZlcmVuY2UgbGVhayBpbiBzdXNwZW5kX3Rlc3QuYyB0aGF0J3Mgbm90CnRvdWNoZWQgaW4gdGhp
+cyBwYXRjaC4KClNpZ25lZC1vZmYtYnk6IE1pY2hhxYIgTWlyb3PFgmF3IDxtaXJxLWxpbnV4QHJl
+cmUucW1xbS5wbD4KLS0tCgpwYXRjaCBhZ2FpbnN0IGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxk
+cy9saW51eC5naXQgbWFzdGVyCgogZHJpdmVycy9iYXNlL2NsYXNzLmMgICAgICAgICAgICAgICAg
+fCAgICA0ICsrLS0KIGRyaXZlcnMvYmFzZS9jb3JlLmMgICAgICAgICAgICAgICAgIHwgICAgNCAr
+Ky0tCiBkcml2ZXJzL2dwaW8vZ3Bpb2xpYi5jICAgICAgICAgICAgICB8ICAgIDIgKy0KIGRyaXZl
+cnMvaXNkbi9tSVNETi9jb3JlLmMgICAgICAgICAgIHwgICAgNCArKy0tCiBkcml2ZXJzL25ldC9w
+aHkvbWRpb19idXMuYyAgICAgICAgICB8ICAgIDIgKy0KIGRyaXZlcnMvcG93ZXIvcG93ZXJfc3Vw
+cGx5X2NvcmUuYyAgIHwgICAgNCArKy0tCiBkcml2ZXJzL3J0Yy9pbnRlcmZhY2UuYyAgICAgICAg
+ICAgICB8ICAgIDYgKysrLS0tCiBkcml2ZXJzL3Njc2kvaG9zdHMuYyAgICAgICAgICAgICAgICB8
+ICAgIDQgKystLQogZHJpdmVycy9zY3NpL29zZC9vc2RfdWxkLmMgICAgICAgICAgfCAgIDI2ICsr
+KysrKysrKy0tLS0tLS0tLS0tLS0tLS0tCiBkcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfaXNj
+c2kuYyB8ICAgIDQgKystLQogZHJpdmVycy9zcGkvc3BpLmMgICAgICAgICAgICAgICAgICAgfCAg
+ICA0ICsrLS0KIGRyaXZlcnMvdXdiL2xjLXJjLmMgICAgICAgICAgICAgICAgIHwgICAyMSArKysr
+KysrKysrLS0tLS0tLS0tLS0KIGluY2x1ZGUvbGludXgvZGV2aWNlLmggICAgICAgICAgICAgIHwg
+ICAgNCArKy0tCiBpbmNsdWRlL2xpbnV4L3Bvd2VyX3N1cHBseS5oICAgICAgICB8ICAgIDIgKy0K
+IGluY2x1ZGUvbGludXgvcnRjLmggICAgICAgICAgICAgICAgIHwgICAgMiArLQogaW5pdC9kb19t
+b3VudHMuYyAgICAgICAgICAgICAgICAgICAgfCAgICA0ICsrLS0KIGtlcm5lbC9wb3dlci9zdXNw
+ZW5kX3Rlc3QuYyAgICAgICAgIHwgICAxMSArKysrKy0tLS0tLQogbmV0L2llZWU4MDIxNTQvd3Bh
+bi1jbGFzcy5jICAgICAgICAgfCAgICA1ICsrLS0tCiBuZXQvbmZjL2NvcmUuYyAgICAgICAgICAg
+ICAgICAgICAgICB8ICAgIDQgKystLQogMTkgZmlsZXMgY2hhbmdlZCwgNTMgaW5zZXJ0aW9ucygr
+KSwgNjQgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9iYXNlL2NsYXNzLmMgYi9k
+cml2ZXJzL2Jhc2UvY2xhc3MuYwppbmRleCAwMzI0M2Q0Li4zY2U4NDU0IDEwMDY0NAotLS0gYS9k
+cml2ZXJzL2Jhc2UvY2xhc3MuYworKysgYi9kcml2ZXJzL2Jhc2UvY2xhc3MuYwpAQCAtNDIwLDgg
+KzQyMCw4IEBAIEVYUE9SVF9TWU1CT0xfR1BMKGNsYXNzX2Zvcl9lYWNoX2RldmljZSk7CiAgKiBj
+b2RlLiAgVGhlcmUncyBubyBsb2NraW5nIHJlc3RyaWN0aW9uLgogICovCiBzdHJ1Y3QgZGV2aWNl
+ICpjbGFzc19maW5kX2RldmljZShzdHJ1Y3QgY2xhc3MgKmNsYXNzLCBzdHJ1Y3QgZGV2aWNlICpz
+dGFydCwKLQkJCQkgdm9pZCAqZGF0YSwKLQkJCQkgaW50ICgqbWF0Y2gpKHN0cnVjdCBkZXZpY2Ug
+Kiwgdm9pZCAqKSkKKwkJCQkgY29uc3Qgdm9pZCAqZGF0YSwKKwkJCQkgaW50ICgqbWF0Y2gpKHN0
+cnVjdCBkZXZpY2UgKiwgY29uc3Qgdm9pZCAqKSkKIHsKIAlzdHJ1Y3QgY2xhc3NfZGV2X2l0ZXIg
+aXRlcjsKIAlzdHJ1Y3QgZGV2aWNlICpkZXY7CmRpZmYgLS1naXQgYS9kcml2ZXJzL2Jhc2UvY29y
+ZS5jIGIvZHJpdmVycy9iYXNlL2NvcmUuYwppbmRleCBhMjM1MDg1Li5kZGEwYzdmIDEwMDY0NAot
+LS0gYS9kcml2ZXJzL2Jhc2UvY29yZS5jCisrKyBiL2RyaXZlcnMvYmFzZS9jb3JlLmMKQEAgLTE2
+MTcsOSArMTYxNyw5IEBAIHN0cnVjdCBkZXZpY2UgKmRldmljZV9jcmVhdGUoc3RydWN0IGNsYXNz
+ICpjbGFzcywgc3RydWN0IGRldmljZSAqcGFyZW50LAogfQogRVhQT1JUX1NZTUJPTF9HUEwoZGV2
+aWNlX2NyZWF0ZSk7CiAKLXN0YXRpYyBpbnQgX19tYXRjaF9kZXZ0KHN0cnVjdCBkZXZpY2UgKmRl
+diwgdm9pZCAqZGF0YSkKK3N0YXRpYyBpbnQgX19tYXRjaF9kZXZ0KHN0cnVjdCBkZXZpY2UgKmRl
+diwgY29uc3Qgdm9pZCAqZGF0YSkKIHsKLQlkZXZfdCAqZGV2dCA9IGRhdGE7CisJY29uc3QgZGV2
+X3QgKmRldnQgPSBkYXRhOwogCiAJcmV0dXJuIGRldi0+ZGV2dCA9PSAqZGV2dDsKIH0KZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvZ3Bpby9ncGlvbGliLmMgYi9kcml2ZXJzL2dwaW8vZ3Bpb2xpYi5jCmlu
+ZGV4IDE5OWZjYTEuLjUzNTljYTcgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvZ3Bpby9ncGlvbGliLmMK
+KysrIGIvZHJpdmVycy9ncGlvL2dwaW9saWIuYwpAQCAtODA2LDcgKzgwNiw3IEBAIGZhaWxfdW5s
+b2NrOgogfQogRVhQT1JUX1NZTUJPTF9HUEwoZ3Bpb19leHBvcnQpOwogCi1zdGF0aWMgaW50IG1h
+dGNoX2V4cG9ydChzdHJ1Y3QgZGV2aWNlICpkZXYsIHZvaWQgKmRhdGEpCitzdGF0aWMgaW50IG1h
+dGNoX2V4cG9ydChzdHJ1Y3QgZGV2aWNlICpkZXYsIGNvbnN0IHZvaWQgKmRhdGEpCiB7CiAJcmV0
+dXJuIGRldl9nZXRfZHJ2ZGF0YShkZXYpID09IGRhdGE7CiB9CmRpZmYgLS1naXQgYS9kcml2ZXJz
+L2lzZG4vbUlTRE4vY29yZS5jIGIvZHJpdmVycy9pc2RuL21JU0ROL2NvcmUuYwppbmRleCAzZTI0
+NTcxLi5kYTMwYzVjIDEwMDY0NAotLS0gYS9kcml2ZXJzL2lzZG4vbUlTRE4vY29yZS5jCisrKyBi
+L2RyaXZlcnMvaXNkbi9tSVNETi9jb3JlLmMKQEAgLTE2OCwxMyArMTY4LDEzIEBAIHN0YXRpYyBz
+dHJ1Y3QgY2xhc3MgbUlTRE5fY2xhc3MgPSB7CiB9OwogCiBzdGF0aWMgaW50Ci1fZ2V0X21kZXZp
+Y2Uoc3RydWN0IGRldmljZSAqZGV2LCB2b2lkICppZCkKK19nZXRfbWRldmljZShzdHJ1Y3QgZGV2
+aWNlICpkZXYsIGNvbnN0IHZvaWQgKmlkKQogewogCXN0cnVjdCBtSVNETmRldmljZSAqbWRldiA9
+IGRldl90b19tSVNETihkZXYpOwogCiAJaWYgKCFtZGV2KQogCQlyZXR1cm4gMDsKLQlpZiAobWRl
+di0+aWQgIT0gKih1X2ludCAqKWlkKQorCWlmIChtZGV2LT5pZCAhPSAqKGNvbnN0IHVfaW50ICop
+aWQpCiAJCXJldHVybiAwOwogCXJldHVybiAxOwogfQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
+cGh5L21kaW9fYnVzLmMgYi9kcml2ZXJzL25ldC9waHkvbWRpb19idXMuYwppbmRleCAwNDRiNTMy
+Li5kYzkyMDk3IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC9waHkvbWRpb19idXMuYworKysgYi9k
+cml2ZXJzL25ldC9waHkvbWRpb19idXMuYwpAQCAtOTUsNyArOTUsNyBAQCBzdGF0aWMgc3RydWN0
+IGNsYXNzIG1kaW9fYnVzX2NsYXNzID0gewogCiAjaWYgSVNfRU5BQkxFRChDT05GSUdfT0ZfTURJ
+TykKIC8qIEhlbHBlciBmdW5jdGlvbiBmb3Igb2ZfbWRpb19maW5kX2J1cyAqLwotc3RhdGljIGlu
+dCBvZl9tZGlvX2J1c19tYXRjaChzdHJ1Y3QgZGV2aWNlICpkZXYsIHZvaWQgKm1kaW9fYnVzX25w
+KQorc3RhdGljIGludCBvZl9tZGlvX2J1c19tYXRjaChzdHJ1Y3QgZGV2aWNlICpkZXYsIGNvbnN0
+IHZvaWQgKm1kaW9fYnVzX25wKQogewogCXJldHVybiBkZXYtPm9mX25vZGUgPT0gbWRpb19idXNf
+bnA7CiB9CmRpZmYgLS1naXQgYS9kcml2ZXJzL3Bvd2VyL3Bvd2VyX3N1cHBseV9jb3JlLmMgYi9k
+cml2ZXJzL3Bvd2VyL3Bvd2VyX3N1cHBseV9jb3JlLmMKaW5kZXggOGE3Y2ZiMy4uNWRlYWM0MyAx
+MDA2NDQKLS0tIGEvZHJpdmVycy9wb3dlci9wb3dlcl9zdXBwbHlfY29yZS5jCisrKyBiL2RyaXZl
+cnMvcG93ZXIvcG93ZXJfc3VwcGx5X2NvcmUuYwpAQCAtMTQxLDcgKzE0MSw3IEBAIGludCBwb3dl
+cl9zdXBwbHlfc2V0X2JhdHRlcnlfY2hhcmdlZChzdHJ1Y3QgcG93ZXJfc3VwcGx5ICpwc3kpCiB9
+CiBFWFBPUlRfU1lNQk9MX0dQTChwb3dlcl9zdXBwbHlfc2V0X2JhdHRlcnlfY2hhcmdlZCk7CiAK
+LXN0YXRpYyBpbnQgcG93ZXJfc3VwcGx5X21hdGNoX2RldmljZV9ieV9uYW1lKHN0cnVjdCBkZXZp
+Y2UgKmRldiwgdm9pZCAqZGF0YSkKK3N0YXRpYyBpbnQgcG93ZXJfc3VwcGx5X21hdGNoX2Rldmlj
+ZV9ieV9uYW1lKHN0cnVjdCBkZXZpY2UgKmRldiwgY29uc3Qgdm9pZCAqZGF0YSkKIHsKIAljb25z
+dCBjaGFyICpuYW1lID0gZGF0YTsKIAlzdHJ1Y3QgcG93ZXJfc3VwcGx5ICpwc3kgPSBkZXZfZ2V0
+X2RydmRhdGEoZGV2KTsKQEAgLTE0OSw3ICsxNDksNyBAQCBzdGF0aWMgaW50IHBvd2VyX3N1cHBs
+eV9tYXRjaF9kZXZpY2VfYnlfbmFtZShzdHJ1Y3QgZGV2aWNlICpkZXYsIHZvaWQgKmRhdGEpCiAJ
+cmV0dXJuIHN0cmNtcChwc3ktPm5hbWUsIG5hbWUpID09IDA7CiB9CiAKLXN0cnVjdCBwb3dlcl9z
+dXBwbHkgKnBvd2VyX3N1cHBseV9nZXRfYnlfbmFtZShjaGFyICpuYW1lKQorc3RydWN0IHBvd2Vy
+X3N1cHBseSAqcG93ZXJfc3VwcGx5X2dldF9ieV9uYW1lKGNvbnN0IGNoYXIgKm5hbWUpCiB7CiAJ
+c3RydWN0IGRldmljZSAqZGV2ID0gY2xhc3NfZmluZF9kZXZpY2UocG93ZXJfc3VwcGx5X2NsYXNz
+LCBOVUxMLCBuYW1lLAogCQkJCQlwb3dlcl9zdXBwbHlfbWF0Y2hfZGV2aWNlX2J5X25hbWUpOwpk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9ydGMvaW50ZXJmYWNlLmMgYi9kcml2ZXJzL3J0Yy9pbnRlcmZh
+Y2UuYwppbmRleCA5NTkyYjkzLi40MmJkNTdkIDEwMDY0NAotLS0gYS9kcml2ZXJzL3J0Yy9pbnRl
+cmZhY2UuYworKysgYi9kcml2ZXJzL3J0Yy9pbnRlcmZhY2UuYwpAQCAtNTg3LDE2ICs1ODcsMTYg
+QEAgdm9pZCBydGNfdXBkYXRlX2lycShzdHJ1Y3QgcnRjX2RldmljZSAqcnRjLAogfQogRVhQT1JU
+X1NZTUJPTF9HUEwocnRjX3VwZGF0ZV9pcnEpOwogCi1zdGF0aWMgaW50IF9fcnRjX21hdGNoKHN0
+cnVjdCBkZXZpY2UgKmRldiwgdm9pZCAqZGF0YSkKK3N0YXRpYyBpbnQgX19ydGNfbWF0Y2goc3Ry
+dWN0IGRldmljZSAqZGV2LCBjb25zdCB2b2lkICpkYXRhKQogewotCWNoYXIgKm5hbWUgPSAoY2hh
+ciAqKWRhdGE7CisJY29uc3QgY2hhciAqbmFtZSA9IGRhdGE7CiAKIAlpZiAoc3RyY21wKGRldl9u
+YW1lKGRldiksIG5hbWUpID09IDApCiAJCXJldHVybiAxOwogCXJldHVybiAwOwogfQogCi1zdHJ1
+Y3QgcnRjX2RldmljZSAqcnRjX2NsYXNzX29wZW4oY2hhciAqbmFtZSkKK3N0cnVjdCBydGNfZGV2
+aWNlICpydGNfY2xhc3Nfb3Blbihjb25zdCBjaGFyICpuYW1lKQogewogCXN0cnVjdCBkZXZpY2Ug
+KmRldjsKIAlzdHJ1Y3QgcnRjX2RldmljZSAqcnRjID0gTlVMTDsKZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvc2NzaS9ob3N0cy5jIGIvZHJpdmVycy9zY3NpL2hvc3RzLmMKaW5kZXggNTkzMDg1YS4uZGYw
+YzNjNyAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL2hvc3RzLmMKKysrIGIvZHJpdmVycy9zY3Np
+L2hvc3RzLmMKQEAgLTQ2OCwxMCArNDY4LDEwIEBAIHZvaWQgc2NzaV91bnJlZ2lzdGVyKHN0cnVj
+dCBTY3NpX0hvc3QgKnNob3N0KQogfQogRVhQT1JUX1NZTUJPTChzY3NpX3VucmVnaXN0ZXIpOwog
+Ci1zdGF0aWMgaW50IF9fc2NzaV9ob3N0X21hdGNoKHN0cnVjdCBkZXZpY2UgKmRldiwgdm9pZCAq
+ZGF0YSkKK3N0YXRpYyBpbnQgX19zY3NpX2hvc3RfbWF0Y2goc3RydWN0IGRldmljZSAqZGV2LCBj
+b25zdCB2b2lkICpkYXRhKQogewogCXN0cnVjdCBTY3NpX0hvc3QgKnA7Ci0JdW5zaWduZWQgc2hv
+cnQgKmhvc3RudW0gPSAodW5zaWduZWQgc2hvcnQgKilkYXRhOworCWNvbnN0IHVuc2lnbmVkIHNo
+b3J0ICpob3N0bnVtID0gZGF0YTsKIAogCXAgPSBjbGFzc190b19zaG9zdChkZXYpOwogCXJldHVy
+biBwLT5ob3N0X25vID09ICpob3N0bnVtOwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL29zZC9v
+c2RfdWxkLmMgYi9kcml2ZXJzL3Njc2kvb3NkL29zZF91bGQuYwppbmRleCA0Mzc1NDE3Li4wZmFi
+NmI1IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvb3NkL29zZF91bGQuYworKysgYi9kcml2ZXJz
+L3Njc2kvb3NkL29zZF91bGQuYwpAQCAtMjY4LDE4ICsyNjgsMTEgQEAgc3RhdGljIGlubGluZSBi
+b29sIF90aGVfc2FtZV9vcl9udWxsKGNvbnN0IHU4ICphMSwgdW5zaWduZWQgYTFfbGVuLAogCXJl
+dHVybiAwID09IG1lbWNtcChhMSwgYTIsIGExX2xlbik7CiB9CiAKLXN0cnVjdCBmaW5kX291ZF90
+IHsKLQljb25zdCBzdHJ1Y3Qgb3NkX2Rldl9pbmZvICpvZGk7Ci0Jc3RydWN0IGRldmljZSAqZGV2
+OwotCXN0cnVjdCBvc2RfdWxkX2RldmljZSAqb3VkOwotfSA7Ci0KLWludCBfbWFjaF9vZGkoc3Ry
+dWN0IGRldmljZSAqZGV2LCB2b2lkICpmaW5kX2RhdGEpCitzdGF0aWMgaW50IF9tYXRjaF9vZGko
+c3RydWN0IGRldmljZSAqZGV2LCBjb25zdCB2b2lkICpmaW5kX2RhdGEpCiB7CiAJc3RydWN0IG9z
+ZF91bGRfZGV2aWNlICpvdWQgPSBjb250YWluZXJfb2YoZGV2LCBzdHJ1Y3Qgb3NkX3VsZF9kZXZp
+Y2UsCiAJCQkJCQkgIGNsYXNzX2Rldik7Ci0Jc3RydWN0IGZpbmRfb3VkX3QgKmZvdCA9IGZpbmRf
+ZGF0YTsKLQljb25zdCBzdHJ1Y3Qgb3NkX2Rldl9pbmZvICpvZGkgPSBmb3QtPm9kaTsKKwljb25z
+dCBzdHJ1Y3Qgb3NkX2Rldl9pbmZvICpvZGkgPSBmaW5kX2RhdGE7CiAKIAlpZiAoX3RoZV9zYW1l
+X29yX251bGwob3VkLT5vZGkuc3lzdGVtaWQsIG91ZC0+b2RpLnN5c3RlbWlkX2xlbiwKIAkJCSAg
+ICAgIG9kaS0+c3lzdGVtaWQsIG9kaS0+c3lzdGVtaWRfbGVuKSAmJgpAQCAtMjg3LDcgKzI4MCw2
+IEBAIGludCBfbWFjaF9vZGkoc3RydWN0IGRldmljZSAqZGV2LCB2b2lkICpmaW5kX2RhdGEpCiAJ
+CQkgICAgICBvZGktPm9zZG5hbWUsIG9kaS0+b3NkbmFtZV9sZW4pKSB7CiAJCU9TRF9ERUJVRygi
+Zm91bmQgZGV2aWNlIHN5c2lkX2xlbj0lZCBvc2RuYW1lPSVkXG4iLAogCQkJICBvZGktPnN5c3Rl
+bWlkX2xlbiwgb2RpLT5vc2RuYW1lX2xlbik7Ci0JCWZvdC0+b3VkID0gb3VkOwogCQlyZXR1cm4g
+MTsKIAl9IGVsc2UgewogCQlyZXR1cm4gMDsKQEAgLTMwMSwxOSArMjkzLDE5IEBAIGludCBfbWFj
+aF9vZGkoc3RydWN0IGRldmljZSAqZGV2LCB2b2lkICpmaW5kX2RhdGEpCiAgKi8KIHN0cnVjdCBv
+c2RfZGV2ICpvc2R1bGRfaW5mb19sb29rdXAoY29uc3Qgc3RydWN0IG9zZF9kZXZfaW5mbyAqb2Rp
+KQogewotCXN0cnVjdCBmaW5kX291ZF90IGZpbmQgPSB7Lm9kaSA9IG9kaX07Ci0KLQlmaW5kLmRl
+diA9IGNsYXNzX2ZpbmRfZGV2aWNlKCZvc2RfdWxkX2NsYXNzLCBOVUxMLCAmZmluZCwgX21hY2hf
+b2RpKTsKLQlpZiAobGlrZWx5KGZpbmQuZGV2KSkgeworCXN0cnVjdCBkZXZpY2UgKmRldiA9IGNs
+YXNzX2ZpbmRfZGV2aWNlKCZvc2RfdWxkX2NsYXNzLCBOVUxMLCBvZGksIF9tYXRjaF9vZGkpOwor
+CWlmIChsaWtlbHkoZGV2KSkgewogCQlzdHJ1Y3Qgb3NkX2Rldl9oYW5kbGUgKm9kaCA9IGt6YWxs
+b2Moc2l6ZW9mKCpvZGgpLCBHRlBfS0VSTkVMKTsKKwkJc3RydWN0IG9zZF91bGRfZGV2aWNlICpv
+dWQgPSBjb250YWluZXJfb2YoZGV2LAorCQkJc3RydWN0IG9zZF91bGRfZGV2aWNlLCBjbGFzc19k
+ZXYpOwogCiAJCWlmICh1bmxpa2VseSghb2RoKSkgewotCQkJcHV0X2RldmljZShmaW5kLmRldik7
+CisJCQlwdXRfZGV2aWNlKGRldik7CiAJCQlyZXR1cm4gRVJSX1BUUigtRU5PTUVNKTsKIAkJfQog
+Ci0JCW9kaC0+b2QgPSBmaW5kLm91ZC0+b2Q7Ci0JCW9kaC0+b3VkID0gZmluZC5vdWQ7CisJCW9k
+aC0+b2QgPSBvdWQtPm9kOworCQlvZGgtPm91ZCA9IG91ZDsKIAogCQlyZXR1cm4gJm9kaC0+b2Q7
+CiAJfQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X2lzY3NpLmMgYi9k
+cml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfaXNjc2kuYwppbmRleCAzMTk2OWYyLi41OWQ0Mjdi
+IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfaXNjc2kuYworKysgYi9k
+cml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfaXNjc2kuYwpAQCAtMTgzLDEwICsxODMsMTAgQEAg
+c3RhdGljIHN0cnVjdCBhdHRyaWJ1dGVfZ3JvdXAgaXNjc2lfZW5kcG9pbnRfZ3JvdXAgPSB7CiAK
+ICNkZWZpbmUgSVNDU0lfTUFYX0VQSUQgLTEKIAotc3RhdGljIGludCBpc2NzaV9tYXRjaF9lcGlk
+KHN0cnVjdCBkZXZpY2UgKmRldiwgdm9pZCAqZGF0YSkKK3N0YXRpYyBpbnQgaXNjc2lfbWF0Y2hf
+ZXBpZChzdHJ1Y3QgZGV2aWNlICpkZXYsIGNvbnN0IHZvaWQgKmRhdGEpCiB7CiAJc3RydWN0IGlz
+Y3NpX2VuZHBvaW50ICplcCA9IGlzY3NpX2Rldl90b19lbmRwb2ludChkZXYpOwotCXVpbnQ2NF90
+ICplcGlkID0gKHVpbnQ2NF90ICopIGRhdGE7CisJY29uc3QgdWludDY0X3QgKmVwaWQgPSBkYXRh
+OwogCiAJcmV0dXJuICplcGlkID09IGVwLT5pZDsKIH0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc3Bp
+L3NwaS5jIGIvZHJpdmVycy9zcGkvc3BpLmMKaW5kZXggMTllZTkwMS4uNDkzY2U0YSAxMDA2NDQK
+LS0tIGEvZHJpdmVycy9zcGkvc3BpLmMKKysrIGIvZHJpdmVycy9zcGkvc3BpLmMKQEAgLTEyNDgs
+MTAgKzEyNDgsMTAgQEAgaW50IHNwaV9tYXN0ZXJfcmVzdW1lKHN0cnVjdCBzcGlfbWFzdGVyICpt
+YXN0ZXIpCiB9CiBFWFBPUlRfU1lNQk9MX0dQTChzcGlfbWFzdGVyX3Jlc3VtZSk7CiAKLXN0YXRp
+YyBpbnQgX19zcGlfbWFzdGVyX21hdGNoKHN0cnVjdCBkZXZpY2UgKmRldiwgdm9pZCAqZGF0YSkK
+K3N0YXRpYyBpbnQgX19zcGlfbWFzdGVyX21hdGNoKHN0cnVjdCBkZXZpY2UgKmRldiwgY29uc3Qg
+dm9pZCAqZGF0YSkKIHsKIAlzdHJ1Y3Qgc3BpX21hc3RlciAqbTsKLQl1MTYgKmJ1c19udW0gPSBk
+YXRhOworCWNvbnN0IHUxNiAqYnVzX251bSA9IGRhdGE7CiAKIAltID0gY29udGFpbmVyX29mKGRl
+diwgc3RydWN0IHNwaV9tYXN0ZXIsIGRldik7CiAJcmV0dXJuIG0tPmJ1c19udW0gPT0gKmJ1c19u
+dW07CmRpZmYgLS1naXQgYS9kcml2ZXJzL3V3Yi9sYy1yYy5jIGIvZHJpdmVycy91d2IvbGMtcmMu
+YwppbmRleCA0ZDY4OGM3Li4zZWNhNmNlIDEwMDY0NAotLS0gYS9kcml2ZXJzL3V3Yi9sYy1yYy5j
+CisrKyBiL2RyaXZlcnMvdXdiL2xjLXJjLmMKQEAgLTQwLDkgKzQwLDkgQEAKIAogI2luY2x1ZGUg
+InV3Yi1pbnRlcm5hbC5oIgogCi1zdGF0aWMgaW50IHV3Yl9yY19pbmRleF9tYXRjaChzdHJ1Y3Qg
+ZGV2aWNlICpkZXYsIHZvaWQgKmRhdGEpCitzdGF0aWMgaW50IHV3Yl9yY19pbmRleF9tYXRjaChz
+dHJ1Y3QgZGV2aWNlICpkZXYsIGNvbnN0IHZvaWQgKmRhdGEpCiB7Ci0JaW50ICppbmRleCA9IGRh
+dGE7CisJY29uc3QgaW50ICppbmRleCA9IGRhdGE7CiAJc3RydWN0IHV3Yl9yYyAqcmMgPSBkZXZf
+Z2V0X2RydmRhdGEoZGV2KTsKIAogCWlmIChyYy0+aW5kZXggPT0gKmluZGV4KQpAQCAtMzM0LDkg
+KzMzNCw5IEBAIHZvaWQgdXdiX3JjX3JtKHN0cnVjdCB1d2JfcmMgKnJjKQogfQogRVhQT1JUX1NZ
+TUJPTF9HUEwodXdiX3JjX3JtKTsKIAotc3RhdGljIGludCBmaW5kX3JjX3RyeV9nZXQoc3RydWN0
+IGRldmljZSAqZGV2LCB2b2lkICpkYXRhKQorc3RhdGljIGludCBmaW5kX3JjX3RyeV9nZXQoc3Ry
+dWN0IGRldmljZSAqZGV2LCBjb25zdCB2b2lkICpkYXRhKQogewotCXN0cnVjdCB1d2JfcmMgKnRh
+cmdldF9yYyA9IGRhdGE7CisJY29uc3Qgc3RydWN0IHV3Yl9yYyAqdGFyZ2V0X3JjID0gZGF0YTsK
+IAlzdHJ1Y3QgdXdiX3JjICpyYyA9IGRldl9nZXRfZHJ2ZGF0YShkZXYpOwogCiAJaWYgKHJjID09
+IE5VTEwpIHsKQEAgLTM4Niw5ICszODYsOSBAQCBzdGF0aWMgaW5saW5lIHN0cnVjdCB1d2JfcmMg
+KnV3Yl9yY19nZXQoc3RydWN0IHV3Yl9yYyAqcmMpCiAJcmV0dXJuIHJjOwogfQogCi1zdGF0aWMg
+aW50IGZpbmRfcmNfZ3JhbmRwYShzdHJ1Y3QgZGV2aWNlICpkZXYsIHZvaWQgKmRhdGEpCitzdGF0
+aWMgaW50IGZpbmRfcmNfZ3JhbmRwYShzdHJ1Y3QgZGV2aWNlICpkZXYsIGNvbnN0IHZvaWQgKmRh
+dGEpCiB7Ci0Jc3RydWN0IGRldmljZSAqZ3JhbmRwYV9kZXYgPSBkYXRhOworCWNvbnN0IHN0cnVj
+dCBkZXZpY2UgKmdyYW5kcGFfZGV2ID0gZGF0YTsKIAlzdHJ1Y3QgdXdiX3JjICpyYyA9IGRldl9n
+ZXRfZHJ2ZGF0YShkZXYpOwogCiAJaWYgKHJjLT51d2JfZGV2LmRldi5wYXJlbnQtPnBhcmVudCA9
+PSBncmFuZHBhX2RldikgewpAQCAtNDE5LDcgKzQxOSw3IEBAIHN0cnVjdCB1d2JfcmMgKnV3Yl9y
+Y19nZXRfYnlfZ3JhbmRwYShjb25zdCBzdHJ1Y3QgZGV2aWNlICpncmFuZHBhX2RldikKIAlzdHJ1
+Y3QgZGV2aWNlICpkZXY7CiAJc3RydWN0IHV3Yl9yYyAqcmMgPSBOVUxMOwogCi0JZGV2ID0gY2xh
+c3NfZmluZF9kZXZpY2UoJnV3Yl9yY19jbGFzcywgTlVMTCwgKHZvaWQgKilncmFuZHBhX2RldiwK
+KwlkZXYgPSBjbGFzc19maW5kX2RldmljZSgmdXdiX3JjX2NsYXNzLCBOVUxMLCBncmFuZHBhX2Rl
+diwKIAkJCQlmaW5kX3JjX2dyYW5kcGEpOwogCWlmIChkZXYpCiAJCXJjID0gZGV2X2dldF9kcnZk
+YXRhKGRldik7CkBAIC00MzIsOSArNDMyLDkgQEAgRVhQT1JUX1NZTUJPTF9HUEwodXdiX3JjX2dl
+dF9ieV9ncmFuZHBhKTsKICAqCiAgKiBAcmV0dXJucyB0aGUgcG9pbnRlciB0byB0aGUgcmFkaW8g
+Y29udHJvbGxlciwgcHJvcGVybHkgcmVmZXJlbmNlZAogICovCi1zdGF0aWMgaW50IGZpbmRfcmNf
+ZGV2KHN0cnVjdCBkZXZpY2UgKmRldiwgdm9pZCAqZGF0YSkKK3N0YXRpYyBpbnQgZmluZF9yY19k
+ZXYoc3RydWN0IGRldmljZSAqZGV2LCBjb25zdCB2b2lkICpkYXRhKQogewotCXN0cnVjdCB1d2Jf
+ZGV2X2FkZHIgKmFkZHIgPSBkYXRhOworCWNvbnN0IHN0cnVjdCB1d2JfZGV2X2FkZHIgKmFkZHIg
+PSBkYXRhOwogCXN0cnVjdCB1d2JfcmMgKnJjID0gZGV2X2dldF9kcnZkYXRhKGRldik7CiAKIAlp
+ZiAocmMgPT0gTlVMTCkgewpAQCAtNDUzLDggKzQ1Myw3IEBAIHN0cnVjdCB1d2JfcmMgKnV3Yl9y
+Y19nZXRfYnlfZGV2KGNvbnN0IHN0cnVjdCB1d2JfZGV2X2FkZHIgKmFkZHIpCiAJc3RydWN0IGRl
+dmljZSAqZGV2OwogCXN0cnVjdCB1d2JfcmMgKnJjID0gTlVMTDsKIAotCWRldiA9IGNsYXNzX2Zp
+bmRfZGV2aWNlKCZ1d2JfcmNfY2xhc3MsIE5VTEwsICh2b2lkICopYWRkciwKLQkJCQlmaW5kX3Jj
+X2Rldik7CisJZGV2ID0gY2xhc3NfZmluZF9kZXZpY2UoJnV3Yl9yY19jbGFzcywgTlVMTCwgYWRk
+ciwgZmluZF9yY19kZXYpOwogCWlmIChkZXYpCiAJCXJjID0gZGV2X2dldF9kcnZkYXRhKGRldik7
+CiAKZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvZGV2aWNlLmggYi9pbmNsdWRlL2xpbnV4L2Rl
+dmljZS5oCmluZGV4IDQzZGNkYTkuLjEzZGU1ZWUgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgv
+ZGV2aWNlLmgKKysrIGIvaW5jbHVkZS9saW51eC9kZXZpY2UuaApAQCAtMzk1LDggKzM5NSw4IEBA
+IGV4dGVybiBpbnQgY2xhc3NfZm9yX2VhY2hfZGV2aWNlKHN0cnVjdCBjbGFzcyAqY2xhc3MsIHN0
+cnVjdCBkZXZpY2UgKnN0YXJ0LAogCQkJCSB2b2lkICpkYXRhLAogCQkJCSBpbnQgKCpmbikoc3Ry
+dWN0IGRldmljZSAqZGV2LCB2b2lkICpkYXRhKSk7CiBleHRlcm4gc3RydWN0IGRldmljZSAqY2xh
+c3NfZmluZF9kZXZpY2Uoc3RydWN0IGNsYXNzICpjbGFzcywKLQkJCQkJc3RydWN0IGRldmljZSAq
+c3RhcnQsIHZvaWQgKmRhdGEsCi0JCQkJCWludCAoKm1hdGNoKShzdHJ1Y3QgZGV2aWNlICosIHZv
+aWQgKikpOworCQkJCQlzdHJ1Y3QgZGV2aWNlICpzdGFydCwgY29uc3Qgdm9pZCAqZGF0YSwKKwkJ
+CQkJaW50ICgqbWF0Y2gpKHN0cnVjdCBkZXZpY2UgKiwgY29uc3Qgdm9pZCAqKSk7CiAKIHN0cnVj
+dCBjbGFzc19hdHRyaWJ1dGUgewogCXN0cnVjdCBhdHRyaWJ1dGUgYXR0cjsKZGlmZiAtLWdpdCBh
+L2luY2x1ZGUvbGludXgvcG93ZXJfc3VwcGx5LmggYi9pbmNsdWRlL2xpbnV4L3Bvd2VyX3N1cHBs
+eS5oCmluZGV4IDFmMGFiOTAuLjg2ZWNhYTYgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvcG93
+ZXJfc3VwcGx5LmgKKysrIGIvaW5jbHVkZS9saW51eC9wb3dlcl9zdXBwbHkuaApAQCAtMjI0LDcg
+KzIyNCw3IEBAIHN0cnVjdCBwb3dlcl9zdXBwbHlfaW5mbyB7CiAJaW50IHVzZV9mb3JfYXBtOwog
+fTsKIAotZXh0ZXJuIHN0cnVjdCBwb3dlcl9zdXBwbHkgKnBvd2VyX3N1cHBseV9nZXRfYnlfbmFt
+ZShjaGFyICpuYW1lKTsKK2V4dGVybiBzdHJ1Y3QgcG93ZXJfc3VwcGx5ICpwb3dlcl9zdXBwbHlf
+Z2V0X2J5X25hbWUoY29uc3QgY2hhciAqbmFtZSk7CiBleHRlcm4gdm9pZCBwb3dlcl9zdXBwbHlf
+Y2hhbmdlZChzdHJ1Y3QgcG93ZXJfc3VwcGx5ICpwc3kpOwogZXh0ZXJuIGludCBwb3dlcl9zdXBw
+bHlfYW1faV9zdXBwbGllZChzdHJ1Y3QgcG93ZXJfc3VwcGx5ICpwc3kpOwogZXh0ZXJuIGludCBw
+b3dlcl9zdXBwbHlfc2V0X2JhdHRlcnlfY2hhcmdlZChzdHJ1Y3QgcG93ZXJfc3VwcGx5ICpwc3kp
+OwpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9ydGMuaCBiL2luY2x1ZGUvbGludXgvcnRjLmgK
+aW5kZXggOTUzMTg0NS4uNDQ1ZmU2ZSAxMDA2NDQKLS0tIGEvaW5jbHVkZS9saW51eC9ydGMuaAor
+KysgYi9pbmNsdWRlL2xpbnV4L3J0Yy5oCkBAIC0xNDgsNyArMTQ4LDcgQEAgZXh0ZXJuIGludCBy
+dGNfaW5pdGlhbGl6ZV9hbGFybShzdHJ1Y3QgcnRjX2RldmljZSAqcnRjLAogZXh0ZXJuIHZvaWQg
+cnRjX3VwZGF0ZV9pcnEoc3RydWN0IHJ0Y19kZXZpY2UgKnJ0YywKIAkJCXVuc2lnbmVkIGxvbmcg
+bnVtLCB1bnNpZ25lZCBsb25nIGV2ZW50cyk7CiAKLWV4dGVybiBzdHJ1Y3QgcnRjX2RldmljZSAq
+cnRjX2NsYXNzX29wZW4oY2hhciAqbmFtZSk7CitleHRlcm4gc3RydWN0IHJ0Y19kZXZpY2UgKnJ0
+Y19jbGFzc19vcGVuKGNvbnN0IGNoYXIgKm5hbWUpOwogZXh0ZXJuIHZvaWQgcnRjX2NsYXNzX2Ns
+b3NlKHN0cnVjdCBydGNfZGV2aWNlICpydGMpOwogCiBleHRlcm4gaW50IHJ0Y19pcnFfcmVnaXN0
+ZXIoc3RydWN0IHJ0Y19kZXZpY2UgKnJ0YywKZGlmZiAtLWdpdCBhL2luaXQvZG9fbW91bnRzLmMg
+Yi9pbml0L2RvX21vdW50cy5jCmluZGV4IDFkMWI2MzQuLmEyYjQ5ZjIgMTAwNjQ0Ci0tLSBhL2lu
+aXQvZG9fbW91bnRzLmMKKysrIGIvaW5pdC9kb19tb3VudHMuYwpAQCAtODEsOSArODEsOSBAQCBz
+dHJ1Y3QgdXVpZGNtcCB7CiAgKgogICogUmV0dXJucyAxIGlmIHRoZSBkZXZpY2UgbWF0Y2hlcywg
+YW5kIDAgb3RoZXJ3aXNlLgogICovCi1zdGF0aWMgaW50IG1hdGNoX2Rldl9ieV91dWlkKHN0cnVj
+dCBkZXZpY2UgKmRldiwgdm9pZCAqZGF0YSkKK3N0YXRpYyBpbnQgbWF0Y2hfZGV2X2J5X3V1aWQo
+c3RydWN0IGRldmljZSAqZGV2LCBjb25zdCB2b2lkICpkYXRhKQogewotCXN0cnVjdCB1dWlkY21w
+ICpjbXAgPSBkYXRhOworCWNvbnN0IHN0cnVjdCB1dWlkY21wICpjbXAgPSBkYXRhOwogCXN0cnVj
+dCBoZF9zdHJ1Y3QgKnBhcnQgPSBkZXZfdG9fcGFydChkZXYpOwogCiAJaWYgKCFwYXJ0LT5pbmZv
+KQpkaWZmIC0tZ2l0IGEva2VybmVsL3Bvd2VyL3N1c3BlbmRfdGVzdC5jIGIva2VybmVsL3Bvd2Vy
+L3N1c3BlbmRfdGVzdC5jCmluZGV4IDI1NTk2ZTQuLjliMmExZDUgMTAwNjQ0Ci0tLSBhL2tlcm5l
+bC9wb3dlci9zdXNwZW5kX3Rlc3QuYworKysgYi9rZXJuZWwvcG93ZXIvc3VzcGVuZF90ZXN0LmMK
+QEAgLTExMiw3ICsxMTIsNyBAQCBzdGF0aWMgdm9pZCBfX2luaXQgdGVzdF93YWtlYWxhcm0oc3Ry
+dWN0IHJ0Y19kZXZpY2UgKnJ0Yywgc3VzcGVuZF9zdGF0ZV90IHN0YXRlKQogCXJ0Y19zZXRfYWxh
+cm0ocnRjLCAmYWxtKTsKIH0KIAotc3RhdGljIGludCBfX2luaXQgaGFzX3dha2VhbGFybShzdHJ1
+Y3QgZGV2aWNlICpkZXYsIHZvaWQgKm5hbWVfcHRyKQorc3RhdGljIGludCBfX2luaXQgaGFzX3dh
+a2VhbGFybShzdHJ1Y3QgZGV2aWNlICpkZXYsIGNvbnN0IHZvaWQgKmRhdGEpCiB7CiAJc3RydWN0
+IHJ0Y19kZXZpY2UgKmNhbmRpZGF0ZSA9IHRvX3J0Y19kZXZpY2UoZGV2KTsKIApAQCAtMTIxLDcg
+KzEyMSw2IEBAIHN0YXRpYyBpbnQgX19pbml0IGhhc193YWtlYWxhcm0oc3RydWN0IGRldmljZSAq
+ZGV2LCB2b2lkICpuYW1lX3B0cikKIAlpZiAoIWRldmljZV9tYXlfd2FrZXVwKGNhbmRpZGF0ZS0+
+ZGV2LnBhcmVudCkpCiAJCXJldHVybiAwOwogCi0JKihjb25zdCBjaGFyICoqKW5hbWVfcHRyID0g
+ZGV2X25hbWUoZGV2KTsKIAlyZXR1cm4gMTsKIH0KIApAQCAtMTU5LDggKzE1OCw4IEBAIHN0YXRp
+YyBpbnQgX19pbml0IHRlc3Rfc3VzcGVuZCh2b2lkKQogCXN0YXRpYyBjaGFyCQl3YXJuX25vX3J0
+Y1tdIF9faW5pdGRhdGEgPQogCQlLRVJOX1dBUk5JTkcgIlBNOiBubyB3YWtlYWxhcm0tY2FwYWJs
+ZSBSVEMgZHJpdmVyIGlzIHJlYWR5XG4iOwogCi0JY2hhcgkJCSpwb255ID0gTlVMTDsKIAlzdHJ1
+Y3QgcnRjX2RldmljZQkqcnRjID0gTlVMTDsKKwlzdHJ1Y3QgZGV2aWNlCQkqZGV2OwogCiAJLyog
+UE0gaXMgaW5pdGlhbGl6ZWQgYnkgbm93OyBpcyB0aGF0IHN0YXRlIHRlc3RhYmxlPyAqLwogCWlm
+ICh0ZXN0X3N0YXRlID09IFBNX1NVU1BFTkRfT04pCkBAIC0xNzEsOSArMTcwLDkgQEAgc3RhdGlj
+IGludCBfX2luaXQgdGVzdF9zdXNwZW5kKHZvaWQpCiAJfQogCiAJLyogUlRDcyBoYXZlIGluaXRp
+YWxpemVkIGJ5IG5vdyB0b28gLi4uIGNhbiB3ZSB1c2Ugb25lPyAqLwotCWNsYXNzX2ZpbmRfZGV2
+aWNlKHJ0Y19jbGFzcywgTlVMTCwgJnBvbnksIGhhc193YWtlYWxhcm0pOwotCWlmIChwb255KQot
+CQlydGMgPSBydGNfY2xhc3Nfb3Blbihwb255KTsKKwlkZXYgPSBjbGFzc19maW5kX2RldmljZShy
+dGNfY2xhc3MsIE5VTEwsIE5VTEwsIGhhc193YWtlYWxhcm0pOworCWlmIChkZXYpCisJCXJ0YyA9
+IHJ0Y19jbGFzc19vcGVuKGRldl9uYW1lKGRldikpOwogCWlmICghcnRjKSB7CiAJCXByaW50ayh3
+YXJuX25vX3J0Yyk7CiAJCWdvdG8gZG9uZTsKZGlmZiAtLWdpdCBhL25ldC9pZWVlODAyMTU0L3dw
+YW4tY2xhc3MuYyBiL25ldC9pZWVlODAyMTU0L3dwYW4tY2xhc3MuYwppbmRleCAxNjI3ZWYyLi4x
+MzU3MWVhIDEwMDY0NAotLS0gYS9uZXQvaWVlZTgwMjE1NC93cGFuLWNsYXNzLmMKKysrIGIvbmV0
+L2llZWU4MDIxNTQvd3Bhbi1jbGFzcy5jCkBAIC05MSw3ICs5MSw3IEBAIHN0YXRpYyBzdHJ1Y3Qg
+Y2xhc3Mgd3Bhbl9waHlfY2xhc3MgPSB7CiBzdGF0aWMgREVGSU5FX01VVEVYKHdwYW5fcGh5X211
+dGV4KTsKIHN0YXRpYyBpbnQgd3Bhbl9waHlfaWR4OwogCi1zdGF0aWMgaW50IHdwYW5fcGh5X21h
+dGNoKHN0cnVjdCBkZXZpY2UgKmRldiwgdm9pZCAqZGF0YSkKK3N0YXRpYyBpbnQgd3Bhbl9waHlf
+bWF0Y2goc3RydWN0IGRldmljZSAqZGV2LCBjb25zdCB2b2lkICpkYXRhKQogewogCXJldHVybiAh
+c3RyY21wKGRldl9uYW1lKGRldiksIChjb25zdCBjaGFyICopZGF0YSk7CiB9CkBAIC0xMDMsOCAr
+MTAzLDcgQEAgc3RydWN0IHdwYW5fcGh5ICp3cGFuX3BoeV9maW5kKGNvbnN0IGNoYXIgKnN0cikK
+IAlpZiAoV0FSTl9PTighc3RyKSkKIAkJcmV0dXJuIE5VTEw7CiAKLQlkZXYgPSBjbGFzc19maW5k
+X2RldmljZSgmd3Bhbl9waHlfY2xhc3MsIE5VTEwsCi0JCQkodm9pZCAqKXN0ciwgd3Bhbl9waHlf
+bWF0Y2gpOworCWRldiA9IGNsYXNzX2ZpbmRfZGV2aWNlKCZ3cGFuX3BoeV9jbGFzcywgTlVMTCwg
+c3RyLCB3cGFuX3BoeV9tYXRjaCk7CiAJaWYgKCFkZXYpCiAJCXJldHVybiBOVUxMOwogCmRpZmYg
+LS1naXQgYS9uZXQvbmZjL2NvcmUuYyBiL25ldC9uZmMvY29yZS5jCmluZGV4IGFhNjRlYTQuLjBm
+NGE2ZGUgMTAwNjQ0Ci0tLSBhL25ldC9uZmMvY29yZS5jCisrKyBiL25ldC9uZmMvY29yZS5jCkBA
+IC03MzQsMTAgKzczNCwxMCBAQCBzdHJ1Y3QgY2xhc3MgbmZjX2NsYXNzID0gewogfTsKIEVYUE9S
+VF9TWU1CT0wobmZjX2NsYXNzKTsKIAotc3RhdGljIGludCBtYXRjaF9pZHgoc3RydWN0IGRldmlj
+ZSAqZCwgdm9pZCAqZGF0YSkKK3N0YXRpYyBpbnQgbWF0Y2hfaWR4KHN0cnVjdCBkZXZpY2UgKmQs
+IGNvbnN0IHZvaWQgKmRhdGEpCiB7CiAJc3RydWN0IG5mY19kZXYgKmRldiA9IHRvX25mY19kZXYo
+ZCk7Ci0JdW5zaWduZWQgaW50ICppZHggPSBkYXRhOworCWNvbnN0IHVuc2lnbmVkIGludCAqaWR4
+ID0gZGF0YTsKIAogCXJldHVybiBkZXYtPmlkeCA9PSAqaWR4OwogfQotLSAKMS43LjEwLjQKCgot
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0KRXZlcnlvbmUgaGF0ZXMgc2xvdyB3ZWJzaXRlcy4gU28gZG8g
+d2UuCk1ha2UgeW91ciB3ZWIgYXBwcyBmYXN0ZXIgd2l0aCBBcHBEeW5hbWljcwpEb3dubG9hZCBB
+cHBEeW5hbWljcyBMaXRlIGZvciBmcmVlIHRvZGF5OgpodHRwOi8vcC5zZi5uZXQvc2Z1L2FwcGR5
+bl9kMmRfamFuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CnNwaS1kZXZlbC1nZW5lcmFsIG1haWxpbmcgbGlzdApzcGktZGV2ZWwtZ2VuZXJhbEBsaXN0cy5z
+b3VyY2Vmb3JnZS5uZXQKaHR0cHM6Ly9saXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlzdHMvbGlzdGlu
+Zm8vc3BpLWRldmVsLWdlbmVyYWwK
