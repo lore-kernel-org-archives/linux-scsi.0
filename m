@@ -1,20 +1,20 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH v2 8/8] [SCSI] Streamline detection of FM/EOM/ILI status
-Date: Fri,  1 Feb 2013 12:53:15 -0500
-Message-ID: <1359741195-2641-9-git-send-email-emilne@redhat.com>
+Subject: [PATCH v2 7/8] [SCSI] Add sense and Unit Attention generation to scsi_debug
+Date: Fri,  1 Feb 2013 12:53:14 -0500
+Message-ID: <1359741195-2641-8-git-send-email-emilne@redhat.com>
 References: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7461 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45723 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757278Ab3BARxU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1757293Ab3BARxU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 1 Feb 2013 12:53:20 -0500
 Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrKPD000905
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrKL9000901
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:20 -0500
 Received: from emilne.csb (dhcp-186-175.bos.redhat.com [10.16.186.175])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRl011917
-	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:20 -0500
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRk011917
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:19 -0500
 In-Reply-To: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,80 +22,213 @@ To: linux-scsi@vger.kernel.org
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-Avoid duplicate tests when examining sense data for FM/EOM/ILI
-bits.  Moved extraction of status to scsi_normalize_sense() if
-the config option CONFIG_SCSI_ENHANCED_UA is used, because
-descriptor format sense data is already being parsed there.
+Added capability to scsi_debug to generate sense and Unit Attention
+conditions to exercise the enhanced sense and Unit Attention handling.
 
 Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/scsi_error.c | 16 +++++++++++++++-
- include/scsi/scsi_eh.h    |  3 +++
- 2 files changed, 18 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_debug.c | 138 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 138 insertions(+)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index d0b5a26..3ad001e 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -340,6 +340,10 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 	 * Previous logic looked for FILEMARK, EOM or ILI which are
- 	 * mainly associated with tapes and returned SUCCESS.
- 	 */
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+	if (sshdr.fm_eom_ili)
-+		return SUCCESS;
-+#else
- 	if (sshdr.response_code == 0x70) {
- 		/* fixed format */
- 		if (scmd->sense_buffer[2] & 0xe0)
-@@ -355,6 +359,7 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 		    (scmd->sense_buffer[11] & 0xe0))
- 			return SUCCESS;
- 	}
-+#endif
- 
- 	switch (sshdr.sense_key) {
- 	case NO_SENSE:
-@@ -2198,6 +2203,11 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 				    ((sense_buffer[desc_pos + 4] & 0x01) != 0))
- 					sshdr->ua_queue_overflow = 1;
- 
-+				if ((desc_type == 0x04) && (desc_len >= 4) &&
-+				    (addl_len >= 2) &&
-+				    ((sense_buffer[desc_pos + 3] & 0xe0) != 0))
-+					sshdr->fm_eom_ili = 1;
-+
- 				if (addl_len > (desc_len - 2))
- 					addl_len = desc_len - 2;
- 
-@@ -2210,8 +2220,12 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 		/*
- 		 * fixed format
- 		 */
--		if (sb_len > 2)
-+		if (sb_len > 2) {
-+#ifdef CONFIG_SCSI_ENHANCED_UA
-+			sshdr->fm_eom_ili = ((sense_buffer[2] & 0xe0) != 0);
-+#endif
- 			sshdr->sense_key = (sense_buffer[2] & 0xf);
-+		}
- 		if (sb_len > 7) {
- 			sb_len = (sb_len < (sense_buffer[7] + 8)) ?
- 					 sb_len : (sense_buffer[7] + 8);
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index b6c4d3d..d53a1d2 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -27,6 +27,9 @@ struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
- 	u8 additional_length;	/* always 0 for fixed sense format */
- #ifdef CONFIG_SCSI_ENHANCED_UA
- 	unsigned int ua_queue_overflow:1;	/* UA info lost by device */
-+
-+	unsigned int fm_eom_ili:1;	/* filemark, end of medium, or
-+					   incorrect length indicator set */
- #endif
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 182d5a5..8a6bf31 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -230,6 +230,7 @@ struct sdebug_dev_info {
+ 	char reset;
+ 	char stopped;
+ 	char used;
++	char sense_pending;
  };
  
+ struct sdebug_host_info {
+@@ -3050,10 +3051,27 @@ static ssize_t sdebug_max_luns_store(struct device_driver * ddp,
+ 				     const char * buf, size_t count)
+ {
+         int n;
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++#endif
+ 
+ 	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
+ 		scsi_debug_max_luns = n;
+ 		sdebug_max_tgts_luns();
++
++#ifdef CONFIG_SCSI_ENHANCED_UA
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				mk_sense_buffer(devip, UNIT_ATTENTION,
++						0x3f, 0x0e);
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++#endif
+ 		return count;
+ 	}
+ 	return -EINVAL;
+@@ -3100,12 +3118,28 @@ static ssize_t sdebug_virtual_gb_store(struct device_driver * ddp,
+ 				       const char * buf, size_t count)
+ {
+         int n;
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++#endif
+ 
+ 	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
+ 		scsi_debug_virtual_gb = n;
+ 
+ 		sdebug_capacity = get_sdebug_capacity();
+ 
++#ifdef CONFIG_SCSI_ENHANCED_UA
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				mk_sense_buffer(devip, UNIT_ATTENTION,
++						0x2a, 0x09);
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++#endif
+ 		return count;
+ 	}
+ 	return -EINVAL;
+@@ -3206,6 +3240,90 @@ static ssize_t sdebug_map_show(struct device_driver *ddp, char *buf)
+ DRIVER_ATTR(map, S_IRUGO, sdebug_map_show, NULL);
+ 
+ 
++#ifdef CONFIG_SCSI_ENHANCED_UA
++static ssize_t sdebug_ua_overflow_store(struct device_driver *ddp,
++					const char *buf, size_t count)
++{
++	int n;
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++
++	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				if (scsi_debug_dsense) {
++					mk_sense_buffer(devip, UNIT_ATTENTION,
++							0, 0);
++					devip->sense_buff[7] = 8;
++					devip->sense_buff[8] = 0x02;
++					devip->sense_buff[9] = 0x06;
++					devip->sense_buff[12] = 0x01;
++				}
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++		return count;
++	}
++	return -EINVAL;
++}
++DRIVER_ATTR(ua_overflow, S_IWUSR, NULL, sdebug_ua_overflow_store);
++
++static ssize_t sdebug_soft_threshold_reached_store(struct device_driver *ddp,
++						   const char *buf,
++						   size_t count)
++{
++	int n;
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++
++	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				mk_sense_buffer(devip, UNIT_ATTENTION,
++						0x38, 0x07);
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++		return count;
++	}
++	return -EINVAL;
++}
++DRIVER_ATTR(soft_threshold_reached, S_IWUSR, NULL,
++	    sdebug_soft_threshold_reached_store);
++
++static ssize_t sdebug_mode_parameters_changed_store(struct device_driver *ddp,
++						    const char *buf,
++						    size_t count)
++{
++	int n;
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++
++	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				mk_sense_buffer(devip, UNIT_ATTENTION,
++						0x2a, 0x01);
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++		return count;
++	}
++	return -EINVAL;
++}
++DRIVER_ATTR(mode_parameters_changed, S_IWUSR, NULL,
++	    sdebug_mode_parameters_changed_store);
++#endif
++
+ /* Note: The following function creates attribute files in the
+    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
+    files (over those found in the /sys/module/scsi_debug/parameters
+@@ -3239,11 +3357,27 @@ static int do_create_driverfs_files(void)
+ 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_guard);
+ 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_ato);
+ 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_map);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	ret |= driver_create_file(&sdebug_driverfs_driver,
++				  &driver_attr_ua_overflow);
++	ret |= driver_create_file(&sdebug_driverfs_driver,
++				  &driver_attr_soft_threshold_reached);
++	ret |= driver_create_file(&sdebug_driverfs_driver,
++				  &driver_attr_mode_parameters_changed);
++#endif
+ 	return ret;
+ }
+ 
+ static void do_remove_driverfs_files(void)
+ {
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	driver_remove_file(&sdebug_driverfs_driver,
++			   &driver_attr_mode_parameters_changed);
++	driver_remove_file(&sdebug_driverfs_driver,
++			   &driver_attr_soft_threshold_reached);
++	driver_remove_file(&sdebug_driverfs_driver,
++			   &driver_attr_ua_overflow);
++#endif
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_map);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_ato);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_guard);
+@@ -3926,6 +4060,10 @@ write:
+ 		errsts = check_condition_result;
+ 		break;
+ 	}
++	if (!errsts && devip->sense_pending) {
++		devip->sense_pending = 0;
++		errsts = check_condition_result;
++	}
+ 	return schedule_resp(SCpnt, devip, done, errsts,
+ 			     (delay_override ? 0 : scsi_debug_delay));
+ }
 -- 
 1.7.11.7
 
