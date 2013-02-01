@@ -1,39 +1,41 @@
-From: "Bryn M. Reeves" <bmr@redhat.com>
-Subject: Re: How to online remove an error scsi disk from the system?
-Date: Fri, 01 Feb 2013 11:20:05 +0000
-Message-ID: <510BA4E5.3030605@redhat.com>
-References: <510B5CFC.2040801@tao.ma> <510B749E.8020501@acm.org> <510B904B.4050508@redhat.com> <510B9213.1040508@tao.ma> <510B93EE.8000304@redhat.com> <510BA370.1040309@tao.ma>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [LSF/MM TOPIC] Reducing the SRP initiator failover time
+Date: Fri, 01 Feb 2013 14:43:38 +0100
+Message-ID: <510BC68A.90708@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20142 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753471Ab3BAMIT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Feb 2013 07:08:19 -0500
-In-Reply-To: <510BA370.1040309@tao.ma>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:44228 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755099Ab3BANnm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2013 08:43:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tao Ma <tm@tao.ma>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: lsf-pc@lists.linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, David Dillow <dillowda@ornl.gov>
 
-On 02/01/2013 11:13 AM, Tao Ma wrote:
->> You don't mention the versions of the kernel and driver you're using -
->> if the system is in production I would suggest contacting who ever
->> normally provides support for the kernel and distribution that you are
->> running.
-> We use CentOS6.2 and the kernel version is 2.6.32-220.23.1.
+It is known that it takes about two to three minutes before the upstream 
+SRP initiator fails over from a failed path to a working path. This is 
+not only considered longer than acceptable but is also longer than other 
+Linux SCSI initiators (e.g. iSCSI and FC). Progress so far with 
+improving the fail-over SRP initiator has been slow. This is because the 
+discussion about candidate patches occurred at two different levels: not 
+only the patches itself were discussed but also the approach that should 
+be followed. That last aspect is easier to discuss in a meeting than 
+over a mailing list. Hence the proposal to discuss SRP initiator 
+failover behavior during the LSF/MM summit. The topics that need further 
+discussion are:
+* If a path fails, remove the entire SCSI host or preserve the SCSI
+   host and only remove the SCSI devices associated with that host ?
+* Which software component should test the state of a path and should
+   reconnect to an SRP target if a path is restored ? Should that be
+   done by the user space process srp_daemon or by the SRP initiator
+   kernel module ?
+* How should the SRP initiator behave after a path failure has been
+   detected ? Should the behavior be similar to the FC initiator with
+   its fast_io_fail_tmo and dev_loss_tmo parameters ?
 
-This is ancient, even by CentOS or RHEL standards. There are thousands 
-of patches in more recent kernels (either at kernel.org or in the 
-updates in CentOS repositories).
+Dave, if this topic gets accepted, I really hope you will be able to 
+attend the LSF/MM summit.
 
-Nobody on linux-kernel or the other lists you copied is going to want to 
-investigate problems on such an old kernel - you'll need to either 
-reproduce with something current or seek assistance from the CentOS 
-community (who will probably tell you to update your kernel first anyway).
-
-Regards,
-Bryn.
-
-
+Bart.
