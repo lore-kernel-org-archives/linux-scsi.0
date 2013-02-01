@@ -1,46 +1,94 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v8 4/4] sd: change to auto suspend mode
-Date: Fri, 1 Feb 2013 10:11:43 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1302011011090.1752-100000@iolanthe.rowland.org>
-References: <20130201031944.GA6960@aaronlu.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH v2 0/8] [SCSI] Enhanced sense and Unit Attention handling
+Date: Fri,  1 Feb 2013 12:53:07 -0500
+Message-ID: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:35220 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754723Ab3BAPLo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2013 10:11:44 -0500
-In-Reply-To: <20130201031944.GA6960@aaronlu.sh.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34690 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757081Ab3BARxR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Feb 2013 12:53:17 -0500
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrHx6014058
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:17 -0500
+Received: from emilne.csb (dhcp-186-175.bos.redhat.com [10.16.186.175])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRd011917
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:17 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 1 Feb 2013, Aaron Lu wrote:
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-> On Thu, Jan 31, 2013 at 10:13:05AM -0500, Alan Stern wrote:
-> > On Thu, 31 Jan 2013, Aaron Lu wrote:
-> > 
-> > > > > +static int scsi_blk_runtime_suspend(struct device *dev)
-> > > > > +{
-> > > > > +	struct scsi_device *sdev = to_scsi_device(dev);
-> > > > 
-> > > > For this routine and the other new ones, it may be slightly more
-> > > > efficient to pass both dev and sdev as arguments (this depends on how
-> > > > smart the compiler's optimizer is).  The caller already knows both of
-> > > > them, after all.
-> > > 
-> > > What about passing only scsi_device? When device is needed, I can use
-> > > &sdev->sdev_gendev. Is this equally efficient?
-> > 
-> > I don't know...  The difference is very small in any case.  The 
-> > routines will probably be inlined automatically.
-> 
-> Indeed, I just checked the .s output of the three cases, they are all
-> the same. So we just need to care about readability and less of code,
-> passing only scsi_device seems to be the simplest, are you OK with this?
+This patch set adds changes to the SCSI mid-layer, sysfs and scsi_debug
+to provide enhanced support for Unit Attention conditions, as well as
+detection of reported sense data overflow conditions and some changes
+to sense data processing.  It also adds a uevent when the reported
+capacity changes on an sd device.
 
-Yes, that's fine.  Thanks for checking it out.
+There was some discussion about this a couple of years ago on the linux-scsi
+mailing list:  http://marc.info/?l=linux-scsi&m=129702506514742&w=2
+Although one approach is to send all SCSI sense data to a userspace daemon
+for processing, this patch set does not take that approach due to the
+difficulty in reliably delivering all of the data.  An interesting UA
+condition might not be delivered due to a flood of media errors, for example.
 
-Alan Stern
+The mechanism used is to flag when certain UA ASC/ASCQ codes are received
+that report asynchronous changes to the storage device configuration.
+An appropriate uevent is then generated for the scsi_device or scsi_target
+object.  An aggregation mechanism is used to avoid generating uevents at
+too high a rate, and to coalesce multiple UAs reported by LUNs on the
+same target for a REPORTED LUNS DATA HAS CHANGED sense code.
+
+The changes are (mostly) enabled by a new kernel config option
+CONFIG_SCSI_ENHANCED_UA.  If this config option is not used, no new
+uevents are generated.  There are some changes to kernel logging messages
+if CONFIG_SCSI_ENHANCED_UA is enabled, because the existing messages
+explicitly stated that the kernel did not do anything with the information.
+
+Note that checkpatch is reporting errors on patch 6/8 relating to macros
+in scsi_sysfs.c -- I believe these errors are incorrect and have sent a
+message to the checkpatch maintainer.  The macros were derived from
+existing ones already in the file.
+
+Some changes have been made to this patch set since an earlier version
+was sent out with RFC:
+
+   - Remove patch 1/9 "Detect overflow of sense data buffer"
+     Some scsi_debug changes in this patch were moved to patch 7/8
+   - Corrected Kconfig help text
+   - Change name of "sdev_evt_thread" to "sdev_evt_work"
+   - Change name of "starget_evt_thread" to "starget_evt_work"
+   - Pull code out of scsi_check_sense() that handles UAs into
+     an exported function so that drivers can report conditions
+     received asynchronously
+
+Thanks to everyone for the comments on this patch series.
+
+Ewan D. Milne (8):
+  [SCSI] Generate uevent on sd capacity change
+  [SCSI] Add a kernel config option for enhanced Unit Attention support
+  [SCSI] Rename scsi_evt_xxx to sdev_evt_xxx and scsi_event to
+    sdev_event
+  [SCSI] Add support for scsi_target events
+  [SCSI] Generate uevents for certain Unit Attention codes
+  [SCSI] Add sysfs support for enhanced Unit Attention handling
+  [SCSI] Add sense and Unit Attention generation to scsi_debug
+  [SCSI] Streamline detection of FM/EOM/ILI status
+
+ drivers/scsi/Kconfig       |  12 +++
+ drivers/scsi/scsi_debug.c  | 138 ++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_error.c  | 203 ++++++++++++++++++++++++++++++++++++++++-----
+ drivers/scsi/scsi_lib.c    | 180 +++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/scsi_priv.h   |  10 ++-
+ drivers/scsi/scsi_scan.c   |  54 ++++++------
+ drivers/scsi/scsi_sysfs.c  | 148 ++++++++++++++++++++++++++++++---
+ drivers/scsi/sd.c          |   9 ++
+ include/scsi/scsi_cmnd.h   |   4 +
+ include/scsi/scsi_device.h |  64 +++++++++++++-
+ include/scsi/scsi_eh.h     |   8 ++
+ 11 files changed, 750 insertions(+), 80 deletions(-)
+
+-- 
+1.7.11.7
 
