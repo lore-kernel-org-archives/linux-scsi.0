@@ -1,42 +1,46 @@
-From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [RESEND][PATCH 6/8][SCSI] mpt2sas : When SCSI command is received
- with task atrribute not set, set it to SIMPLE
-Date: Sat, 2 Feb 2013 00:58:20 +0530
-Message-ID: <20130201192820.GA24033@lsi.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: How to online remove an error scsi disk from the system?
+Date: Fri, 1 Feb 2013 16:50:19 +0800
+Message-ID: <008101ce0059$2a4976b0$7edc6410$@com>
+References: <510B5CFC.2040801@tao.ma>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:59523 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754598Ab3BAIeP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2013 03:34:15 -0500
-Content-Disposition: inline
+Received: from sr-smtp.usish.com ([210.5.144.203]:60746 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752905Ab3BAJBr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2013 04:01:47 -0500
+In-Reply-To: <510B5CFC.2040801@tao.ma>
+Content-Language: zh-cn
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@kernel.org, sreekanth.reddy@lsi.com, Nagalakshmi.Nandigama@lsi.com, JBottomley@Parallels.com
-Cc: linux-scsi@vger.kernel.org, sathya.prakash@lsi.com, stable@vger.kernel.org
+To: 'Tao Ma' <tm@tao.ma>, linux-scsi@vger.kernel.org, 'LKML' <linux-kernel@vger.kernel.org>
 
-When SCSI command is received with task attribute not set, set it to SIMPLE.
-Previously it is set to untagged. This causes the firmware to fail the commands.
+Hi All,
+	In our product system, we have several sata disks attached to one
+machine. So when one of the disk fails, the jbd2(yes, we use ext4) will hang
+forever and we will get something in /var/log/messages like below.
+It seems to me that the io sent to the scsi layer is never returned back
+with -EIO which is a little bit surprised for me(It should be a timeout
+somewhere, right?). We have tried echo "offline" >
+/sys/block/sdl/device/state, but it doesn't work. So is there any way for us
+to let the scsi device returns all the io requests back with EIO so that all
+the end_io can be called accordingly? Am I missing something here?
 
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: stable@vger.kernel.org
----
+Thanks,
+Tao
+[Jack Wang] 
+Hi Tao,
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 014caef..3b150b8 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -3998,11 +3998,7 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 			else
- 				mpi_control |= MPI2_SCSIIO_CONTROL_SIMPLEQ;
- 		} else
--/* MPI Revision I (UNIT = 0xA) - removed MPI2_SCSIIO_CONTROL_UNTAGGED */
--/*			mpi_control |= MPI2_SCSIIO_CONTROL_UNTAGGED;
-- */
--			mpi_control |= (0x500);
--
-+			mpi_control |= MPI2_SCSIIO_CONTROL_SIMPLEQ;
- 	} else
- 		mpi_control |= MPI2_SCSIIO_CONTROL_SIMPLEQ;
- 	/* Make sure Device is not raid volume.
+Have you tried:
+ echo 1 > /sys/block/sdv/device/delete
+ echo "- - -" > /sys/class/scsi_host/host
+
+another way is :
+find out which phy the disk attached to and:
+echo 1 > /sys/class/sas_phy/phy-x:x:x/link_reset
+
+Jack
+
