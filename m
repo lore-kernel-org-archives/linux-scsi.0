@@ -1,112 +1,245 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [RESEND][PATCH 2/8][SCSI] mpt2sas : Fix for issue Missing delay not
- getting set during system bootup
-Date: Sat, 2 Feb 2013 00:54:48 +0530
-Message-ID: <20130201192448.GA23994@lsi.com>
+Subject: [RESEND][PATCH 5/8][SCSI] mpt2sas : Fix for device scan following
+ host reset could get stuck in a infinite loop
+Date: Sat, 2 Feb 2013 00:56:18 +0530
+Message-ID: <20130201192618.GA24008@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:40731 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751601Ab3BAIaq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2013 03:30:46 -0500
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: jejb@kernel.org, sreekanth.reddy@lsi.com, Nagalakshmi.Nandigama@lsi.com, JBottomley@Parallels.com
 Cc: linux-scsi@vger.kernel.org, sathya.prakash@lsi.com, stable@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Missing delay is not getting set properly. The reason is it is not defined in the same file from where it is being invoked.
-
-The fix is to move the missing delay module parameter from mpt2sas_base.c to mpt2sas_scsh.c.
+Modified device scan routine so each configuration page read breaks from the while loop
+when the ioc_status is not equal to MPI2_IOCSTATUS_SUCCESS.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 Cc: stable@vger.kernel.org
----  
+---
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 0bb2b30..ce89b14 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -80,10 +80,6 @@ static int msix_disable = -1;
- module_param(msix_disable, int, 0);
- MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
- 
--static int missing_delay[2] = {-1, -1};
--module_param_array(missing_delay, int, NULL, 0);
--MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
--
- static int mpt2sas_fwfault_debug;
- MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
- 	"and halt firmware - (default=0)");
-@@ -2183,7 +2179,7 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
- }
- 
- /**
-- * _base_update_missing_delay - change the missing delay timers
-+ * mpt2sas_base_update_missing_delay - change the missing delay timers
-  * @ioc: per adapter object
-  * @device_missing_delay: amount of time till device is reported missing
-  * @io_missing_delay: interval IO is returned when there is a missing device
-@@ -2194,8 +2190,8 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
-  * delay, as well as the io missing delay. This should be called at driver
-  * load time.
-  */
--static void
--_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
-+void
-+mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
- 	u16 device_missing_delay, u8 io_missing_delay)
- {
- 	u16 dmd, dmd_new, dmd_orignal;
-@@ -4391,10 +4387,6 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 	if (r)
- 		goto out_free_resources;
- 
--	if (missing_delay[0] != -1 && missing_delay[1] != -1)
--		_base_update_missing_delay(ioc, missing_delay[0],
--		    missing_delay[1]);
--
- 	return 0;
- 
-  out_free_resources:
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index b46024c..ee7a030 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -1054,6 +1054,9 @@ void mpt2sas_base_validate_event_type(struct MPT2SAS_ADAPTER *ioc, u32 *event_ty
- 
- void mpt2sas_halt_firmware(struct MPT2SAS_ADAPTER *ioc);
- 
-+void mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
-+	u16 device_missing_delay, u8 io_missing_delay);
-+
- int mpt2sas_port_enable(struct MPT2SAS_ADAPTER *ioc);
- 
- /* scsih shared API */
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index af4e6c4..ab89b2d 100644
+index 5073586..014caef 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -101,6 +101,10 @@ static ushort max_sectors = 0xFFFF;
- module_param(max_sectors, ushort, 0);
- MODULE_PARM_DESC(max_sectors, "max sectors, range 64 to 32767  default=32767");
+@@ -7097,12 +7097,15 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
+ 	struct _sas_device *sas_device;
+ 	struct _sas_node *expander_device;
+ 	static struct _raid_device *raid_device;
++	u8 retry_count;
+ 	unsigned long flags;
  
-+static int missing_delay[2] = {-1, -1};
-+module_param_array(missing_delay, int, NULL, 0);
-+MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
+ 	printk(MPT2SAS_INFO_FMT "scan devices: start\n", ioc->name);
+ 
+ 	_scsih_sas_host_refresh(ioc);
+ 
++	printk(MPT2SAS_INFO_FMT "\tscan devices: expanders start\n",
++		ioc->name);
+ 	/* expanders */
+ 	handle = 0xFFFF;
+ 	while (!(mpt2sas_config_get_expander_pg0(ioc, &mpi_reply, &expander_pg0,
+@@ -7111,6 +7114,13 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
+ 		    MPI2_IOCSTATUS_MASK;
+ 		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+ 			break;
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++			printk(MPT2SAS_INFO_FMT "\tbreak from expander scan: " \
++				"ioc_status(0x%04x), loginfo(0x%08x)\n",
++				ioc->name, ioc_status,
++				le32_to_cpu(mpi_reply.IOCLogInfo));
++			break;
++		}
+ 		handle = le16_to_cpu(expander_pg0.DevHandle);
+ 		spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 		expander_device = mpt2sas_scsih_expander_find_by_sas_address(
+@@ -7119,13 +7129,26 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
+ 		if (expander_device)
+ 			_scsih_refresh_expander_links(ioc, expander_device,
+ 			    handle);
+-		else
++		else {
++			printk(MPT2SAS_INFO_FMT "\tBEFORE adding expander: " \
++				"handle (0x%04x), sas_addr(0x%016llx)\n",
++				ioc->name, handle, (unsigned long long)
++				le64_to_cpu(expander_pg0.SASAddress));
+ 			_scsih_expander_add(ioc, handle);
++			printk(MPT2SAS_INFO_FMT "\tAFTER adding expander: " \
++				"handle (0x%04x), sas_addr(0x%016llx)\n",
++				ioc->name, handle, (unsigned long long)
++				le64_to_cpu(expander_pg0.SASAddress));
++		}
+ 	}
+ 
++	printk(MPT2SAS_INFO_FMT "\tscan devices: expanders complete\n",
++		ioc->name);
 +
- /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
- #define MPT2SAS_MAX_LUN (16895)
- static int max_lun = MPT2SAS_MAX_LUN;
-@@ -7303,7 +7307,9 @@ _firmware_event_work(struct work_struct *work)
- 	case MPT2SAS_PORT_ENABLE_COMPLETE:
- 		ioc->start_scan = 0;
+ 	if (!ioc->ir_firmware)
+ 		goto skip_to_sas;
  
--
-+		if (missing_delay[0] != -1 && missing_delay[1] != -1)
-+			mpt2sas_base_update_missing_delay(ioc, missing_delay[0],
-+				missing_delay[1]);
++	printk(MPT2SAS_INFO_FMT "\tscan devices phys disk start\n", ioc->name);
+ 	/* phys disk */
+ 	phys_disk_num = 0xFF;
+ 	while (!(mpt2sas_config_get_phys_disk_pg0(ioc, &mpi_reply,
+@@ -7135,6 +7158,13 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
+ 		    MPI2_IOCSTATUS_MASK;
+ 		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+ 			break;
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++			printk(MPT2SAS_INFO_FMT "\tbreak from phys disk scan:" \
++				"ioc_status(0x%04x), loginfo(0x%08x)\n",
++				ioc->name, ioc_status,
++				le32_to_cpu(mpi_reply.IOCLogInfo));
++			break;
++		}
+ 		phys_disk_num = pd_pg0.PhysDiskNum;
+ 		handle = le16_to_cpu(pd_pg0.DevHandle);
+ 		spin_lock_irqsave(&ioc->sas_device_lock, flags);
+@@ -7146,17 +7176,46 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
+ 		    &sas_device_pg0, MPI2_SAS_DEVICE_PGAD_FORM_HANDLE,
+ 		    handle) != 0)
+ 			continue;
++		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++			MPI2_IOCSTATUS_MASK;
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++			printk(MPT2SAS_INFO_FMT "\tbreak from phys disk scan " \
++				"ioc_status(0x%04x), loginfo(0x%08x)\n",
++				ioc->name, ioc_status,
++				le32_to_cpu(mpi_reply.IOCLogInfo));
++			break;
++		}
+ 		parent_handle = le16_to_cpu(sas_device_pg0.ParentDevHandle);
+ 		if (!_scsih_get_sas_address(ioc, parent_handle,
+ 		    &sas_address)) {
++			printk(MPT2SAS_INFO_FMT "\tBEFORE adding phys disk: " \
++				" handle (0x%04x), sas_addr(0x%016llx)\n",
++				ioc->name, handle, (unsigned long long)
++				le64_to_cpu(sas_device_pg0.SASAddress));
+ 			mpt2sas_transport_update_links(ioc, sas_address,
+ 			    handle, sas_device_pg0.PhyNum,
+ 			    MPI2_SAS_NEG_LINK_RATE_1_5);
+ 			set_bit(handle, ioc->pd_handles);
+-			_scsih_add_device(ioc, handle, 0, 1);
++			retry_count = 0;
++			/* This will retry adding the end device.
++			* _scsih_add_device() will decide on retries and
++			* return "1" when it should be retried
++			*/
++			while (_scsih_add_device(ioc, handle, retry_count++,
++				1)) {
++					ssleep(1);
++			}
++			printk(MPT2SAS_INFO_FMT "\tAFTER adding phys disk: " \
++				" handle (0x%04x), sas_addr(0x%016llx)\n",
++				ioc->name, handle, (unsigned long long)
++				le64_to_cpu(sas_device_pg0.SASAddress));
+ 		}
+ 	}
  
- 		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "port enable: complete "
- 		    "from worker thread\n", ioc->name));
++	printk(MPT2SAS_INFO_FMT "\tscan devices: phys disk complete\n",
++		ioc->name);
++
++	printk(MPT2SAS_INFO_FMT "\tscan devices: volumes start\n", ioc->name);
+ 	/* volumes */
+ 	handle = 0xFFFF;
+ 	while (!(mpt2sas_config_get_raid_volume_pg1(ioc, &mpi_reply,
+@@ -7165,6 +7225,13 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
+ 		    MPI2_IOCSTATUS_MASK;
+ 		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+ 			break;
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++			printk(MPT2SAS_INFO_FMT "\tbreak from volume scan: " \
++				"ioc_status(0x%04x), loginfo(0x%08x)\n",
++				ioc->name, ioc_status,
++				le32_to_cpu(mpi_reply.IOCLogInfo));
++			break;
++		}
+ 		handle = le16_to_cpu(volume_pg1.DevHandle);
+ 		spin_lock_irqsave(&ioc->raid_device_lock, flags);
+ 		raid_device = _scsih_raid_device_find_by_wwid(ioc,
+@@ -7176,18 +7243,38 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
+ 		    &volume_pg0, MPI2_RAID_VOLUME_PGAD_FORM_HANDLE, handle,
+ 		     sizeof(Mpi2RaidVolPage0_t)))
+ 			continue;
++		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++			MPI2_IOCSTATUS_MASK;
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++			printk(MPT2SAS_INFO_FMT "\tbreak from volume scan: " \
++				"ioc_status(0x%04x), loginfo(0x%08x)\n",
++				ioc->name, ioc_status,
++				le32_to_cpu(mpi_reply.IOCLogInfo));
++			break;
++		}
+ 		if (volume_pg0.VolumeState == MPI2_RAID_VOL_STATE_OPTIMAL ||
+ 		    volume_pg0.VolumeState == MPI2_RAID_VOL_STATE_ONLINE ||
+ 		    volume_pg0.VolumeState == MPI2_RAID_VOL_STATE_DEGRADED) {
+ 			memset(&element, 0, sizeof(Mpi2EventIrConfigElement_t));
+ 			element.ReasonCode = MPI2_EVENT_IR_CHANGE_RC_ADDED;
+ 			element.VolDevHandle = volume_pg1.DevHandle;
++			printk(MPT2SAS_INFO_FMT "\tBEFORE adding volume: " \
++				" handle (0x%04x)\n", ioc->name,
++				volume_pg1.DevHandle);
+ 			_scsih_sas_volume_add(ioc, &element);
++			printk(MPT2SAS_INFO_FMT "\tAFTER adding volume: " \
++				" handle (0x%04x)\n", ioc->name,
++				volume_pg1.DevHandle);
+ 		}
+ 	}
+ 
++	printk(MPT2SAS_INFO_FMT "\tscan devices: volumes complete\n",
++		ioc->name);
++
+  skip_to_sas:
+ 
++	printk(MPT2SAS_INFO_FMT "\tscan devices: end devices start\n",
++		ioc->name);
+ 	/* sas devices */
+ 	handle = 0xFFFF;
+ 	while (!(mpt2sas_config_get_sas_device_pg0(ioc, &mpi_reply,
+@@ -7197,6 +7285,13 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
+ 		    MPI2_IOCSTATUS_MASK;
+ 		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+ 			break;
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++			printk(MPT2SAS_INFO_FMT "\tbreak from end device scan:"\
++				" ioc_status(0x%04x), loginfo(0x%08x)\n",
++				ioc->name, ioc_status,
++				le32_to_cpu(mpi_reply.IOCLogInfo));
++				break;
++		}
+ 		handle = le16_to_cpu(sas_device_pg0.DevHandle);
+ 		if (!(_scsih_is_end_device(
+ 		    le32_to_cpu(sas_device_pg0.DeviceInfo))))
+@@ -7209,12 +7304,31 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
+ 			continue;
+ 		parent_handle = le16_to_cpu(sas_device_pg0.ParentDevHandle);
+ 		if (!_scsih_get_sas_address(ioc, parent_handle, &sas_address)) {
++			printk(MPT2SAS_INFO_FMT "\tBEFORE adding end device: " \
++				"handle (0x%04x), sas_addr(0x%016llx)\n",
++				ioc->name, handle, (unsigned long long)
++				le64_to_cpu(sas_device_pg0.SASAddress));
+ 			mpt2sas_transport_update_links(ioc, sas_address, handle,
+ 			    sas_device_pg0.PhyNum, MPI2_SAS_NEG_LINK_RATE_1_5);
+-			_scsih_add_device(ioc, handle, 0, 0);
++			retry_count = 0;
++			/* This will retry adding the end device.
++			 * _scsih_add_device() will decide on retries and
++			 * return "1" when it should be retried
++			 */
++			while (_scsih_add_device(ioc, handle, retry_count++,
++				0)) {
++					ssleep(1);
++			}
++			printk(MPT2SAS_INFO_FMT "\tAFTER adding end device: " \
++				"handle (0x%04x), sas_addr(0x%016llx)\n",
++				ioc->name, handle, (unsigned long long)
++				le64_to_cpu(sas_device_pg0.SASAddress));
+ 		}
+ 	}
+ 
++	printk(MPT2SAS_INFO_FMT "\tscan devices: end devices complete\n",
++		ioc->name);
++
+ 	printk(MPT2SAS_INFO_FMT "scan devices: complete\n", ioc->name);
+ }
+ 
