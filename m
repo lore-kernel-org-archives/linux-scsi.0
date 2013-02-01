@@ -1,107 +1,219 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 2/8] [SCSI] mpt2sas : Fix for issue Missing delay not getting
- set during system bootup
-Date: Fri, 1 Feb 2013 21:52:40 +0530
-Message-ID: <20130201162240.GA21588@lsi.com>
+Subject: [PATCH 3/8] [SCSI] mpt2sas : MPI2 Rev W (2.00.15) specification
+Date: Fri, 1 Feb 2013 21:54:13 +0530
+Message-ID: <20130201162413.GA21602@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:58594 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750770Ab3BAFaI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2013 00:30:08 -0500
 Content-Disposition: inline
-Sender: stable-owner@vger.kernel.org
-To: jejb@kernel.org, sreekanth.reddy@lsi.com, Nagalakshmi.Nandigama@lsi.com, JBottomley@Parallels.com
-Cc: linux-scsi@vger.kernel.org, sathya.prakash@lsi.com, stable@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@kernel.org, sreekanth.reddy@lsi.com, Nagalakshmi.Nandigama@lsi.com, JBottomley@Parallels.com
+Cc: linux-scsi@vger.kernel.org, sathya.prakash@lsi.com
 
-Missing delay is not getting set properly. The reason is it is not defined in the same file from where it is being invoked.
+Change set in MPI 2.0 Rev W(2.00.15) specification and 2.00.27 header files
 
-The fix is to move the missing delay module parameter from mpt2sas_base.c to mpt2sas_scsh.c.
+1. Added a bit to the IOCExceptions field of the IOCFacts Reply to indicate that the IOC detected a partial memory failure. 
+2. Added ElapsedSeconds field to RAID Volume Indicator Structure. Added Elapsed Seconds Valid flag to Flags field of this structure. 
+3. Added ElapsedSeconds field to Integrated RAID Operations Status Event Data. 
+4. In the IOCSettings field of BIOS Page 1, modified the Adapter Support bits description to specify X86 BIOS. 
+5. Toolbox Diagnostic CLI Tool Request may now use chain elements in the SGL. 
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
----  
+---
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 0bb2b30..ce89b14 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -80,10 +80,6 @@ static int msix_disable = -1;
- module_param(msix_disable, int, 0);
- MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
- 
--static int missing_delay[2] = {-1, -1};
--module_param_array(missing_delay, int, NULL, 0);
--MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
--
- static int mpt2sas_fwfault_debug;
- MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
- 	"and halt firmware - (default=0)");
-@@ -2183,7 +2179,7 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
- }
- 
- /**
-- * _base_update_missing_delay - change the missing delay timers
-+ * mpt2sas_base_update_missing_delay - change the missing delay timers
-  * @ioc: per adapter object
-  * @device_missing_delay: amount of time till device is reported missing
-  * @io_missing_delay: interval IO is returned when there is a missing device
-@@ -2194,8 +2190,8 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
-  * delay, as well as the io missing delay. This should be called at driver
-  * load time.
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
+index e960f96..31b5b15 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                  scatter/gather formats.
+  *  Creation Date:  June 21, 2006
+  *
+- *  mpi2.h Version:  02.00.25
++ *  mpi2.h Version:  02.00.27
+  *
+  *  Version History
+  *  ---------------
+@@ -75,6 +75,8 @@
+  *  02-06-12  02.00.24  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  03-29-12  02.00.25  Bumped MPI2_HEADER_VERSION_UNIT.
+  *                      Added Hard Reset delay timings.
++ *  07-10-12  02.00.26  Bumped MPI2_HEADER_VERSION_UNIT.
++ *  07-26-12  02.00.27  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  --------------------------------------------------------------------------
   */
--static void
--_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
-+void
-+mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
- 	u16 device_missing_delay, u8 io_missing_delay)
+ 
+@@ -100,7 +102,7 @@
+ #define MPI2_VERSION_02_00                  (0x0200)
+ 
+ /* versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x19)
++#define MPI2_HEADER_VERSION_UNIT            (0x1B)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
+index 38c5da3..963761f 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI SCSI initiator mode messages and structures
+  *  Creation Date:  June 23, 2006
+  *
+- *    mpi2_init.h Version:  02.00.13
++ *    mpi2_init.h Version:  02.00.14
+  *
+  *  Version History
+  *  ---------------
+@@ -36,6 +36,7 @@
+  *  11-10-10  02.00.11  Added MPI2_SCSIIO_NUM_SGLOFFSETS define.
+  *  02-06-12  02.00.13  Added alternate defines for Task Priority / Command
+  *                      Priority to match SAM-4.
++ *  07-10-12  02.00.14  Added MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -189,6 +190,7 @@ typedef struct _MPI2_SCSI_IO_REQUEST
+ #define MPI2_SCSIIO_CONTROL_ADDCDBLEN_SHIFT     (26)
+ 
+ #define MPI2_SCSIIO_CONTROL_DATADIRECTION_MASK  (0x03000000)
++#define MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION (24)
+ #define MPI2_SCSIIO_CONTROL_NODATATRANSFER      (0x00000000)
+ #define MPI2_SCSIIO_CONTROL_WRITE               (0x01000000)
+ #define MPI2_SCSIIO_CONTROL_READ                (0x02000000)
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+index b0d4760..bdd7b18 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  *  Creation Date:  October 11, 2006
+  *
+- *  mpi2_ioc.h Version:  02.00.21
++ *  mpi2_ioc.h Version:  02.00.22
+  *
+  *  Version History
+  *  ---------------
+@@ -118,6 +118,9 @@
+  *                      MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE structure.
+  *                      Marked MPI2_PM_CONTROL_FEATURE_PCIE_LINK as obsolete.
+  *  03-29-12  02.00.21  Added a product specific range to event values.
++ *  07-26-12  02.00.22  Added MPI2_IOCFACTS_EXCEPT_PARTIAL_MEMORY_FAILURE.
++ *                      Added ElapsedSeconds field to
++ *                      MPI2_EVENT_DATA_IR_OPERATION_STATUS.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -284,6 +287,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY
+ #define MPI2_IOCFACTS_HDRVERSION_DEV_SHIFT              (0)
+ 
+ /* IOCExceptions */
++#define MPI2_IOCFACTS_EXCEPT_PARTIAL_MEMORY_FAILURE     (0x0200)
+ #define MPI2_IOCFACTS_EXCEPT_IR_FOREIGN_CONFIG_MAX      (0x0100)
+ 
+ #define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_MASK              (0x00E0)
+@@ -624,7 +628,7 @@ typedef struct _MPI2_EVENT_DATA_IR_OPERATION_STATUS
+     U8                      RAIDOperation;              /* 0x04 */
+     U8                      PercentComplete;            /* 0x05 */
+     U16                     Reserved2;                  /* 0x06 */
+-    U32                     Resereved3;                 /* 0x08 */
++	U32                     ElapsedSeconds;             /* 0x08 */
+ } MPI2_EVENT_DATA_IR_OPERATION_STATUS,
+   MPI2_POINTER PTR_MPI2_EVENT_DATA_IR_OPERATION_STATUS,
+   Mpi2EventDataIrOperationStatus_t,
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
+index 2b38af2..3471c24 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Integrated RAID messages and structures
+  *  Creation Date:  April 26, 2007
+  *
+- *    mpi2_raid.h Version:  02.00.08
++ *    mpi2_raid.h Version:  02.00.09
+  *
+  *  Version History
+  *  ---------------
+@@ -27,6 +27,8 @@
+  *                      related structures and defines.
+  *                      Added product-specific range to RAID Action values.
+  *  02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
++ *  07-26-12  02.00.09  Added ElapsedSeconds field to MPI2_RAID_VOL_INDICATOR.
++ *                      Added MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID define.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -276,10 +278,13 @@ typedef struct _MPI2_RAID_VOL_INDICATOR
+     U64                     TotalBlocks;                    /* 0x00 */
+     U64                     BlocksRemaining;                /* 0x08 */
+     U32                     Flags;                          /* 0x10 */
++	U32                     ElapsedSeconds;                 /* 0x14 */
+ } MPI2_RAID_VOL_INDICATOR, MPI2_POINTER PTR_MPI2_RAID_VOL_INDICATOR,
+   Mpi2RaidVolIndicator_t, MPI2_POINTER pMpi2RaidVolIndicator_t;
+ 
+ /* defines for RAID Volume Indicator Flags field */
++#define MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID   (0x80000000)
++
+ #define MPI2_RAID_VOL_FLAGS_OP_MASK                 (0x0000000F)
+ #define MPI2_RAID_VOL_FLAGS_OP_BACKGROUND_INIT      (0x00000000)
+ #define MPI2_RAID_VOL_FLAGS_OP_ONLINE_CAP_EXPANSION (0x00000001)
+@@ -320,7 +325,7 @@ MPI2_POINTER pMpi2RaidCompatibilityResultStruct_t;
+ /* RAID Action Reply ActionData union */
+ typedef union _MPI2_RAID_ACTION_REPLY_DATA
  {
- 	u16 dmd, dmd_new, dmd_orignal;
-@@ -4391,10 +4387,6 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 	if (r)
- 		goto out_free_resources;
+-	U32                                     Word[5];
++	U32                                     Word[6];
+ 	MPI2_RAID_VOL_INDICATOR                 RaidVolumeIndicator;
+ 	U16                                     VolDevHandle;
+ 	U8                                      VolumeState;
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
+index 3cbe677..616e380 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
+@@ -1,12 +1,12 @@
+ /*
+- *  Copyright (c) 2000-2010 LSI Corporation.
++ *  Copyright (c) 2000-2012 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_tool.h
+  *          Title:  MPI diagnostic tool structures and definitions
+  *  Creation Date:  March 26, 2007
+  *
+- *    mpi2_tool.h Version:  02.00.07
++ *    mpi2_tool.h Version:  02.00.10
+  *
+  *  Version History
+  *  ---------------
+@@ -27,6 +27,8 @@
+  *                      Post Request.
+  *  05-25-11  02.00.07  Added Flags field and related defines to
+  *                      MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST.
++ *  07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
++ *			it uses MPI Chain SGE as well as MPI Simple SGE.
+  *  --------------------------------------------------------------------------
+  */
  
--	if (missing_delay[0] != -1 && missing_delay[1] != -1)
--		_base_update_missing_delay(ioc, missing_delay[0],
--		    missing_delay[1]);
--
- 	return 0;
+@@ -270,7 +272,7 @@ typedef struct _MPI2_TOOLBOX_BEACON_REQUEST
  
-  out_free_resources:
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index b46024c..ee7a030 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -1054,6 +1054,9 @@ void mpt2sas_base_validate_event_type(struct MPT2SAS_ADAPTER *ioc, u32 *event_ty
+ #define MPI2_TOOLBOX_DIAG_CLI_CMD_LENGTH    (0x5C)
  
- void mpt2sas_halt_firmware(struct MPT2SAS_ADAPTER *ioc);
- 
-+void mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
-+	u16 device_missing_delay, u8 io_missing_delay);
-+
- int mpt2sas_port_enable(struct MPT2SAS_ADAPTER *ioc);
- 
- /* scsih shared API */
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index af4e6c4..ab89b2d 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -101,6 +101,10 @@ static ushort max_sectors = 0xFFFF;
- module_param(max_sectors, ushort, 0);
- MODULE_PARM_DESC(max_sectors, "max sectors, range 64 to 32767  default=32767");
- 
-+static int missing_delay[2] = {-1, -1};
-+module_param_array(missing_delay, int, NULL, 0);
-+MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
-+
- /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
- #define MPT2SAS_MAX_LUN (16895)
- static int max_lun = MPT2SAS_MAX_LUN;
-@@ -7303,7 +7307,9 @@ _firmware_event_work(struct work_struct *work)
- 	case MPT2SAS_PORT_ENABLE_COMPLETE:
- 		ioc->start_scan = 0;
- 
--
-+		if (missing_delay[0] != -1 && missing_delay[1] != -1)
-+			mpt2sas_base_update_missing_delay(ioc, missing_delay[0],
-+				missing_delay[1]);
- 
- 		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "port enable: complete "
- 		    "from worker thread\n", ioc->name));
+-/* Toolbox Diagnostic CLI Tool request message */
++/* MPI v2.0 Toolbox Diagnostic CLI Tool request message */
+ typedef struct _MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST {
+     U8                      Tool;                       /* 0x00 */
+     U8                      Reserved1;                  /* 0x01 */
+@@ -288,7 +290,7 @@ typedef struct _MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST {
+     U32                     DataLength;                 /* 0x10 */
+     U8                      DiagnosticCliCommand
+ 		[MPI2_TOOLBOX_DIAG_CLI_CMD_LENGTH];     /* 0x14 */
+-    MPI2_SGE_SIMPLE_UNION   SGL;                        /* 0x70 */
++	MPI2_MPI_SGE_IO_UNION   SGL;                        /* 0x70 */
+ } MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
+   MPI2_POINTER PTR_MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
+   Mpi2ToolboxDiagnosticCliRequest_t,
