@@ -1,94 +1,116 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH v2 0/8] [SCSI] Enhanced sense and Unit Attention handling
-Date: Fri,  1 Feb 2013 12:53:07 -0500
-Message-ID: <1359741195-2641-1-git-send-email-emilne@redhat.com>
+Subject: [PATCH v2 1/8] [SCSI] Generate uevent on sd capacity change
+Date: Fri,  1 Feb 2013 12:53:08 -0500
+Message-ID: <1359741195-2641-2-git-send-email-emilne@redhat.com>
+References: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34690 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40600 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757081Ab3BARxR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Feb 2013 12:53:17 -0500
+	id S1757239Ab3BARxS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Feb 2013 12:53:18 -0500
 Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrHx6014058
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r11HrHod000885
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:17 -0500
 Received: from emilne.csb (dhcp-186-175.bos.redhat.com [10.16.186.175])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRd011917
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r11HrGRe011917
 	for <linux-scsi@vger.kernel.org>; Fri, 1 Feb 2013 12:53:17 -0500
+In-Reply-To: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-This patch set adds changes to the SCSI mid-layer, sysfs and scsi_debug
-to provide enhanced support for Unit Attention conditions, as well as
-detection of reported sense data overflow conditions and some changes
-to sense data processing.  It also adds a uevent when the reported
-capacity changes on an sd device.
+In sd_read_capacity(), detect if the capacity is different from the
+previously read value, and generate a uevent if this is the case.
 
-There was some discussion about this a couple of years ago on the linux-scsi
-mailing list:  http://marc.info/?l=linux-scsi&m=129702506514742&w=2
-Although one approach is to send all SCSI sense data to a userspace daemon
-for processing, this patch set does not take that approach due to the
-difficulty in reliably delivering all of the data.  An interesting UA
-condition might not be delivered due to a flood of media errors, for example.
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/scsi_lib.c    | 5 ++++-
+ drivers/scsi/scsi_sysfs.c  | 2 ++
+ drivers/scsi/sd.c          | 9 +++++++++
+ include/scsi/scsi_device.h | 3 ++-
+ 4 files changed, 17 insertions(+), 2 deletions(-)
 
-The mechanism used is to flag when certain UA ASC/ASCQ codes are received
-that report asynchronous changes to the storage device configuration.
-An appropriate uevent is then generated for the scsi_device or scsi_target
-object.  An aggregation mechanism is used to avoid generating uevents at
-too high a rate, and to coalesce multiple UAs reported by LUNs on the
-same target for a REPORTED LUNS DATA HAS CHANGED sense code.
-
-The changes are (mostly) enabled by a new kernel config option
-CONFIG_SCSI_ENHANCED_UA.  If this config option is not used, no new
-uevents are generated.  There are some changes to kernel logging messages
-if CONFIG_SCSI_ENHANCED_UA is enabled, because the existing messages
-explicitly stated that the kernel did not do anything with the information.
-
-Note that checkpatch is reporting errors on patch 6/8 relating to macros
-in scsi_sysfs.c -- I believe these errors are incorrect and have sent a
-message to the checkpatch maintainer.  The macros were derived from
-existing ones already in the file.
-
-Some changes have been made to this patch set since an earlier version
-was sent out with RFC:
-
-   - Remove patch 1/9 "Detect overflow of sense data buffer"
-     Some scsi_debug changes in this patch were moved to patch 7/8
-   - Corrected Kconfig help text
-   - Change name of "sdev_evt_thread" to "sdev_evt_work"
-   - Change name of "starget_evt_thread" to "starget_evt_work"
-   - Pull code out of scsi_check_sense() that handles UAs into
-     an exported function so that drivers can report conditions
-     received asynchronously
-
-Thanks to everyone for the comments on this patch series.
-
-Ewan D. Milne (8):
-  [SCSI] Generate uevent on sd capacity change
-  [SCSI] Add a kernel config option for enhanced Unit Attention support
-  [SCSI] Rename scsi_evt_xxx to sdev_evt_xxx and scsi_event to
-    sdev_event
-  [SCSI] Add support for scsi_target events
-  [SCSI] Generate uevents for certain Unit Attention codes
-  [SCSI] Add sysfs support for enhanced Unit Attention handling
-  [SCSI] Add sense and Unit Attention generation to scsi_debug
-  [SCSI] Streamline detection of FM/EOM/ILI status
-
- drivers/scsi/Kconfig       |  12 +++
- drivers/scsi/scsi_debug.c  | 138 ++++++++++++++++++++++++++++++
- drivers/scsi/scsi_error.c  | 203 ++++++++++++++++++++++++++++++++++++++++-----
- drivers/scsi/scsi_lib.c    | 180 +++++++++++++++++++++++++++++++++++++---
- drivers/scsi/scsi_priv.h   |  10 ++-
- drivers/scsi/scsi_scan.c   |  54 ++++++------
- drivers/scsi/scsi_sysfs.c  | 148 ++++++++++++++++++++++++++++++---
- drivers/scsi/sd.c          |   9 ++
- include/scsi/scsi_cmnd.h   |   4 +
- include/scsi/scsi_device.h |  64 +++++++++++++-
- include/scsi/scsi_eh.h     |   8 ++
- 11 files changed, 750 insertions(+), 80 deletions(-)
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 6dfb978..eba68de 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2186,7 +2186,9 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+ 	case SDEV_EVT_MEDIA_CHANGE:
+ 		envp[idx++] = "SDEV_MEDIA_CHANGE=1";
+ 		break;
+-
++	case SDEV_EVT_CAPACITY_CHANGE:
++		envp[idx++] = "SDEV_CAPACITY_CHANGE=1";
++		break;
+ 	default:
+ 		/* do nothing */
+ 		break;
+@@ -2280,6 +2282,7 @@ struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
+ 	/* evt_type-specific initialization, if any */
+ 	switch (evt_type) {
+ 	case SDEV_EVT_MEDIA_CHANGE:
++	case SDEV_EVT_CAPACITY_CHANGE:
+ 	default:
+ 		/* do nothing */
+ 		break;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 04c2a27..ba7da3b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -712,6 +712,7 @@ sdev_store_evt_##name(struct device *dev, struct device_attribute *attr,\
+ #define REF_EVT(name) &dev_attr_evt_##name.attr
+ 
+ DECLARE_EVT(media_change, MEDIA_CHANGE)
++DECLARE_EVT(capacity_change, CAPACITY_CHANGE)
+ 
+ /* Default template for device attributes.  May NOT be modified */
+ static struct attribute *scsi_sdev_attrs[] = {
+@@ -731,6 +732,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_ioerr_cnt.attr,
+ 	&dev_attr_modalias.attr,
+ 	REF_EVT(media_change),
++	REF_EVT(capacity_change),
+ 	NULL
+ };
+ 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 6f0a4c6..9f2d00a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2017,6 +2017,15 @@ got_data:
+ 					  "%u-byte physical blocks\n",
+ 					  sdkp->physical_block_size);
+ 		}
++
++		/*
++		 * Don't report a capacity change event unless we have a
++		 * valid "old" value.
++		 */
++		if (!sdkp->first_scan && (old_capacity != 0) &&
++		    (old_capacity != sdkp->capacity))
++			sdev_evt_send_simple(sdp, SDEV_EVT_CAPACITY_CHANGE,
++					     GFP_KERNEL);
+ 	}
+ 
+ 	/* Rescale capacity to 512-byte units */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 6efb2e1..e4c964e 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -51,8 +51,9 @@ enum scsi_device_state {
+ 
+ enum scsi_device_event {
+ 	SDEV_EVT_MEDIA_CHANGE	= 1,	/* media has changed */
++	SDEV_EVT_CAPACITY_CHANGE	= 2,	/* capacity has changed */
+ 
+-	SDEV_EVT_LAST		= SDEV_EVT_MEDIA_CHANGE,
++	SDEV_EVT_LAST		= SDEV_EVT_CAPACITY_CHANGE,
+ 	SDEV_EVT_MAXBITS	= SDEV_EVT_LAST + 1
+ };
+ 
 -- 
 1.7.11.7
 
