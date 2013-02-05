@@ -1,70 +1,68 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v8 10/10] Save and restore host_scribble during error handling
-Date: Tue, 05 Feb 2013 13:51:55 +0100
-Message-ID: <5111006B.6030708@acm.org>
-References: <5110FE98.8030209@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gerard.telenet-ops.be ([195.130.132.48]:41694 "EHLO
-	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754249Ab3BEMv4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2013 07:51:56 -0500
-In-Reply-To: <5110FE98.8030209@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Grant Likely <grant.likely-s3s/WqlpOiPyB63q8FvJNQ@public.gmane.org>
+Subject: Re: [PATCH] driver-core: constify data for class_find_device()
+Date: Tue, 05 Feb 2013 13:36:38 +0000
+Message-ID: <20130205133638.9ED2F3E0E27@localhost>
+References: <4cba0646c55f8beb9e290492e499be209ca6f20d.1359746656.git.mirq-linux@rere.qmqm.pl>
+Content-Type: multipart/mixed; boundary="===============3106524905348920757=="
+Return-path: <spi-devel-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+In-Reply-To: <4cba0646c55f8beb9e290492e499be209ca6f20d.1359746656.git.mirq-linux-CoA6ZxLDdyEEUmgCuDUIdw@public.gmane.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/spi-devel-general>,
+	<mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=spi-devel-general>
+List-Post: <mailto:spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/spi-devel-general>,
+	<mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+Errors-To: spi-devel-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-zigbee-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Benny Halevy <bhalevy-4/WYdZTkCtzQT0dZR+AlfA@public.gmane.org>, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, linux-nfc-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-pm-u79uwXL29TavoUN+ObpdWA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>
 
-A SCSI LLD may overwrite host_scribble in its queuecommand()
-implementation. Several drivers need that field to process
-requests and aborts correctly. Hence this field must be saved
-by scsi_eh_prep_cmnd() and must be restored by
-scsi_eh_restore_cmnd().
+--===============3106524905348920757==
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>
----
- drivers/scsi/scsi_error.c |    2 ++
- include/scsi/scsi_eh.h    |    1 +
- 2 files changed, 3 insertions(+)
+On Fri,  1 Feb 2013 20:40:17 +0100 (CET), Michał Mirosław <mirq-linux-CoA6ZxLDdyEEUmgCuDUIdw@public.gmane.org> wrote:
+> All in-kernel users of class_find_device() don't really need mutable
+> data for match callback.
+> 
+> In two places (kernel/power/suspend_test.c, drivers/scsi/osd/osd_uld.c)
+> this patch changes match callbacks to use const search data.
+> 
+> The const is propagated to rtc_class_open() and power_supply_get_by_name()
+> parameters.
+> 
+> Note that there's a dev reference leak in suspend_test.c that's not
+> touched in this patch.
+> 
+> Signed-off-by: Michał Mirosław <mirq-linux-CoA6ZxLDdyEEUmgCuDUIdw@public.gmane.org>
+> ---
+> 
+> patch against https://github.com/torvalds/linux.git master
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index d50af13..a4a9ec9 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -769,6 +769,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 	ses->result = scmd->result;
- 	ses->underflow = scmd->underflow;
- 	ses->prot_op = scmd->prot_op;
-+	ses->host_scribble = scmd->host_scribble;
- 
- 	scmd->prot_op = SCSI_PROT_NORMAL;
- 	scmd->cmnd = ses->eh_cmnd;
-@@ -830,6 +831,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
- 	scmd->result = ses->result;
- 	scmd->underflow = ses->underflow;
- 	scmd->prot_op = ses->prot_op;
-+	scmd->host_scribble = ses->host_scribble;
- }
- EXPORT_SYMBOL(scsi_eh_restore_cmnd);
- 
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 06a8790..7bdb02f 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -83,6 +83,7 @@ struct scsi_eh_save {
- 	/* new command support */
- 	unsigned char eh_cmnd[BLK_MAX_CDB];
- 	struct scatterlist sense_sgl;
-+	unsigned char *host_scribble;
- };
- 
- extern void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd,
--- 
-1.7.10.4
+Acked-by: Grant Likely <grant.likely-s3s/WqlpOiPyB63q8FvJNQ@public.gmane.org> for the GPIO and SPI
+bits.
 
+
+
+--===============3106524905348920757==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+------------------------------------------------------------------------------
+Free Next-Gen Firewall Hardware Offer
+Buy your Sophos next-gen firewall before the end March 2013 
+and get the hardware for free! Learn more.
+http://p.sf.net/sfu/sophos-d2d-feb
+--===============3106524905348920757==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+spi-devel-general mailing list
+spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+https://lists.sourceforge.net/lists/listinfo/spi-devel-general
+
+--===============3106524905348920757==--
