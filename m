@@ -1,65 +1,77 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] lpfc 8.3.37: Provide support for FCoE protocol dual-chute
- (ULP) operation
-Date: Tue, 5 Feb 2013 12:04:26 +0300
-Message-ID: <20130205090425.GA5941@elgon.mountain>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v8 0/10] More device removal fixes
+Date: Tue, 05 Feb 2013 13:44:08 +0100
+Message-ID: <5110FE98.8030209@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25364 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842Ab3BEJHJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2013 04:07:09 -0500
-Content-Disposition: inline
+Received: from gerard.telenet-ops.be ([195.130.132.48]:41521 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751629Ab3BEMoM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Feb 2013 07:44:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>
 
-Hello James Smart,
+Fix a few race conditions that can be triggered by removing a device:
+- Fix a race between starved list processing and device removal.
+- Avoid that a SCSI LLD callback can get invoked after
+   scsi_remove_host() finished.
+- Speed up device removal by stopping error handling as soon as
+   the SHOST_DEL or SHOST_DEL_RECOVERY state has been reached.
+- Save and restore the host_scribble field during error handling
 
-The patch 962bc51b04b2: "[SCSI] lpfc 8.3.37: Provide support for FCoE
-protocol dual-chute (ULP) operation" from Jan 3, 2013, leads to the
-following warning:
-"drivers/scsi/lpfc/lpfc_sli.c:12818 lpfc_wq_create()
-	 warn: 0x800 is larger than 8 bits"
+These patches have been tested on top of kernel v3.8-rc6 and are also 
+available here: 
+http://github.com/bvanassche/linux/tree/device-removal-fixes.
 
-[ This is from a not ready for release Smatch check. ]
+Sorry for the delay between v7 and v8 - the past few weeks were really 
+hectic.
 
-drivers/scsi/lpfc/lpfc_sli.c
- 12818          if (phba->sli4_hba.fw_func_mode & LPFC_DUA_MODE)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-fw_func_mode is unsigned char.
-LPFC_DUA_MODE is 0x800.
-This condition is always false because 0xff & 0x800 is zero.
+Changes compared to v7:
+- Addressed the review comments posted by Hannes Reinecke and Rolf Eike
+   Beer.
+- Modified patch "Make scsi_remove_host() wait until error handling
+   finished" such that it is also safe for SCSI timeout values below
+   the maximum LLD response time by modifying scsi_send_eh_cmnd() such
+   that it does not invoke any LLD code after scsi_remove_host() started.
+- Added a patch to save and restore the host_scribble field.
+- Refined / clarified several patch descriptions.
+- Rebased and retested on top of kernel v3.8-rc6.
 
- 12819                  bf_set(lpfc_mbx_wq_create_dua, &wq_create->u.request, 1);
- 12820  
- 12821          rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
- 12822          /* The IOCTL status is embedded in the mailbox subheader. */
- 12823          shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
- 12824          shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
- 12825          if (shdr_status || shdr_add_status || rc) {
- 12826                  lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 12827                                  "2503 WQ_CREATE mailbox failed with "
- 12828                                  "status x%x add_status x%x, mbx status x%x\n",
- 12829                                  shdr_status, shdr_add_status, rc);
- 12830                  status = -ENXIO;
- 12831                  goto out;
- 12832          }
- 12833          wq->queue_id = bf_get(lpfc_mbx_wq_create_q_id, &wq_create->u.response);
- 12834          if (wq->queue_id == 0xFFFF) {
- 12835                  status = -ENXIO;
- 12836                  goto out;
- 12837          }
- 12838          if (phba->sli4_hba.fw_func_mode & LPFC_DUA_MODE) {
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Same.
+Changes compared to v6:
+- Dropped the first six patches since Jens queued these for 3.8.
+- Added patch to avoid that __scsi_remove_device() is invoked twice.
+- Restore error recovery in the SHOST_CANCEL state.
 
- 12839                  wq->db_format = bf_get(lpfc_mbx_wq_create_db_format,
- 12840                                         &wq_create->u.response);
- 12841                  if ((wq->db_format != LPFC_DB_LIST_FORMAT) &&
+Changes compared to v5:
+- Avoid that block layer work can be scheduled on a dead queue.
+- Do not invoke any SCSI LLD callback after scsi_remove_host() finished.
+- Stop error handling as soon as scsi_remove_host() started.
+- Remove the unused function bsg_goose_queue().
+- Avoid that scsi_device_set_state() triggers a race condition.
 
-regards,
-dan carpenter
+Changes compared to v4:
+- Moved queue_flag_set(QUEUE_FLAG_DEAD, q) from blk_drain_queue() into
+   blk_cleanup_queue().
+- Declared the new __blk_run_queue_uncond() function inline. Checked in
+   the generated assembler code that this function is really inlined in
+   __blk_run_queue().
+- Elaborated several patch descriptions.
+- Added sparse annotations to scsi_request_fn().
+- Split several patches.
 
+Changes compared to v3:
+- Fixed a race condition by setting QUEUE_FLAG_DEAD earlier.
+- Added a patch for fixing a race between starved list processing
+   and device removal to this series.
+
+Changes compared to v2:
+- Split second patch into two patches.
+- Refined patch descriptions.
+
+Changes compared to v1:
+- Included a patch to rename QUEUE_FLAG_DEAD.
+- Refined the descriptions of the __blk_run_queue_uncond() and
+   blk_cleanup_queue() functions.
