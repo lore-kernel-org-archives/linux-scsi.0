@@ -1,44 +1,80 @@
-From: vinholikatti@gmail.com
-Subject: [PATCH V6 4/4] [SCSI] ufs: Correct the expected data transfersize
-Date: Tue,  5 Feb 2013 22:17:37 +0530
-Message-ID: <511137e6.0657420a.5b57.ffffa80b@mx.google.com>
-References: <1360082857-3317-1-git-send-email-y>
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-Reply-To: <1360082857-3317-1-git-send-email-y>
-Sender: linux-samsung-soc-owner@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, santoshsy@gmail.com, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, saugata.das@linaro.org, venkat@linaro.org, subhashj@codeaurora.org, sthumma@codeaurora.org, vinholikatti@gmail.com
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v9 4/4] sd: change to auto suspend mode
+Date: Tue, 5 Feb 2013 11:51:45 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1302051147370.2245-100000@iolanthe.rowland.org>
+References: <1360051396-3080-5-git-send-email-aaron.lu@intel.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1360051396-3080-5-git-send-email-aaron.lu@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Vinayak Holikatti <vinholikatti@gmail.com>
+On Tue, 5 Feb 2013, Aaron Lu wrote:
 
-This patch corrects the expected data transfer size of the
-command UPIU. The current implementation of cmd->transfersize
-is wrong as it probably equal to sector size. With this
-implementation the transfer size is updated correctly
+> From: Lin Ming <ming.m.lin@intel.com>
+> 
+> Uses block layer runtime pm helper functions in
+> scsi_runtime_suspend/resume for devices that take advantage of it.
+> 
+> Remove scsi_autopm_* from sd open/release path and check_events path.
 
-Reported-by: KOBAYASHI Yoshitake <yoshitake.kobayashi@toshiba.co.jp>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
-Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
-Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
----
- drivers/scsi/ufs/ufshcd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+One thing is a little odd here...
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 60fd40c..c32a478 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -478,7 +478,7 @@ static void ufshcd_compose_upiu(struct ufshcd_lrb *lrbp)
- 		ucd_cmd_ptr->header.dword_2 = 0;
- 
- 		ucd_cmd_ptr->exp_data_transfer_len =
--			cpu_to_be32(lrbp->cmd->transfersize);
-+			cpu_to_be32(lrbp->cmd->sdb.length);
- 
- 		memcpy(ucd_cmd_ptr->cdb,
- 		       lrbp->cmd->cmnd,
--- 
-1.7.5.4
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -144,33 +144,78 @@ static int scsi_bus_restore(struct device *dev)
+>  
+>  #ifdef CONFIG_PM_RUNTIME
+>  
+> +static int sdev_blk_runtime_suspend(struct scsi_device *sdev,
+> +					int (*cb)(struct device *))
+> +{
+> +	int err;
+> +
+> +	err = blk_pre_runtime_suspend(sdev->request_queue);
+> +	if (err)
+> +		return err;
+> +	if (cb)
+> +		err = cb(&sdev->sdev_gendev);
+> +	blk_post_runtime_suspend(sdev->request_queue, err);
+> +
+> +	return err;
+> +}
+> +
+> +static int sdev_runtime_suspend(struct device *dev)
+> +{
+> +	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+> +	int (*cb)(struct device *) = pm ? pm->runtime_suspend : NULL;
+> +	struct scsi_device *sdev = to_scsi_device(dev);
+> +
+> +	if (sdev->request_queue->dev)
+> +		return sdev_blk_runtime_suspend(sdev, cb);
+> +	else
+> +		return scsi_dev_type_suspend(dev, cb);
+> +}
+> +
+>  static int scsi_runtime_suspend(struct device *dev)
+>  {
+>  	int err = 0;
+> -	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+>  
+>  	dev_dbg(dev, "scsi_runtime_suspend\n");
+> -	if (scsi_is_sdev_device(dev)) {
+> -		err = scsi_dev_type_suspend(dev,
+> -				pm ? pm->runtime_suspend : NULL);
+> -		if (err == -EAGAIN)
+> -			pm_schedule_suspend(dev, jiffies_to_msecs(
+> -				round_jiffies_up_relative(HZ/10)));
+> -	}
+> +	if (scsi_is_sdev_device(dev))
+> +		err = sdev_runtime_suspend(dev);
+
+The "if (err == -EAGAIN)" test and the call to pm_schedule_suspend seem
+to have been dropped since v8 of this series.  It looks like they ought
+to be moved into sdev_runtime_suspend.
+
+Alan Stern
+
