@@ -1,87 +1,29 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] SG_SCSI_RESET ioctl should only perform requested operation
-Date: Mon, 04 Feb 2013 17:28:48 -0500
-Message-ID: <51103620.1050204@interlog.com>
-References: <5110174A.4080808@tributary.com>
-Reply-To: dgilbert@interlog.com
+From: Roland Dreier <roland@purestorage.com>
+Subject: Re: [LSF/MM TOPIC] Thin provisioning SOFT_THRESHOLD error handling
+Date: Mon, 4 Feb 2013 16:06:32 -0800
+Message-ID: <CAL1RGDUyv++VcY7UqBfYkfTc02voC0FbsxH50WF-n-qhkb6dLg@mail.gmail.com>
+References: <510784DE.3000509@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:54144 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755141Ab3BDW2x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Feb 2013 17:28:53 -0500
-In-Reply-To: <5110174A.4080808@tributary.com>
+Received: from na3sys010aog113.obsmtp.com ([74.125.245.94]:51451 "HELO
+	na3sys010aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754649Ab3BEAGy (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Mon, 4 Feb 2013 19:06:54 -0500
+Received: by mail-wg0-f69.google.com with SMTP id fn15so7576964wgb.4
+        for <Linux-scsi@vger.kernel.org>; Mon, 04 Feb 2013 16:06:53 -0800 (PST)
+In-Reply-To: <510784DE.3000509@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jlinton@tributary.com>
-Cc: Linux Scsi <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: lsf-pc@lists.linux-foundation.org, linux-scsi <Linux-scsi@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-On 13-02-04 03:17 PM, Jeremy Linton wrote:
->>From all the documentation I've found, it is not clear that users of the
-> SG_SCSI_RESET ioctl may have their requests progress up the hierarchy of reset
-> operations.
->
-> Basically, requests for a SCSI_TRY_RESET_DEVICE may eventually result in a
-> TARGET, BUS, or HOST reset. The sg_reset utility hints at the error handling,
-> but actually leads the user to believe that they should reissue the sg_reset
-> command themselves to enact more aggressive reset functions. It also says:
-> "Note that a host reset and a bus reset may cause collateral damage."
->
-> In the interest of error isolation, I have attached a patch which changes the
-> behavior. The existing behavior is obviously intentional, but I don't believe
-> its the best choice.
->
-> There are other alternatives to this patch. For one, to avoid the possibility of
-> breaking an existing application, maybe SG_SCSI_RESET needs some new values like
-> "SG_SCSI_RESET_DEVICE_ONLY". While leaving the existing operations alone.
->
->
->
-> Just in case...
-> Signed-off-by: Jeremy Linton <jlinton@tributary.com>
-> ---
-> 	
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index c1b05a8..6f05bc2 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -1999,19 +1999,13 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
->          switch (flag) {
->          case SCSI_TRY_RESET_DEVICE:
->                  rtn = scsi_try_bus_device_reset(scmd);
-> -               if (rtn == SUCCESS)
-> -                       break;
-> -               /* FALLTHROUGH */
-> +               break;
->          case SCSI_TRY_RESET_TARGET:
->                  rtn = scsi_try_target_reset(scmd);
-> -               if (rtn == SUCCESS)
-> -                       break;
-> -               /* FALLTHROUGH */
-> +               break;
->          case SCSI_TRY_RESET_BUS:
->                  rtn = scsi_try_bus_reset(scmd);
-> -               if (rtn == SUCCESS)
-> -                       break;
-> -               /* FALLTHROUGH */
-> +               break;
->          case SCSI_TRY_RESET_HOST:
->                  rtn = scsi_try_host_reset(scmd);
->                  break;
-> --
+On Tue, Jan 29, 2013 at 12:14 AM, Hannes Reinecke <hare@suse.de> wrote:
+> I would like to discuss at LSF the possible implementations
+> and handling mechanism for this kind of failure scenarios.
 
-Jeremy,
-That is way too sensible to be approved as it will most likely
-break existing code that assumes the escalation property.
+I'd be interested in that discussion.  With my Pure hat on, our array
+can generate these thin provisioning threshold unit attentions, and it
+would be nice if Linux did something intelligent with them.
 
-Perhaps some new constants could be introduced (e.g.
-SCSI_TRY_RESET_TARGET_ONLY) that could be passed to
-the SG_SCSI_RESET ioctl. And perhaps that new set of
-constants could more accurately reflect how such things
-are done in modern SCSI.
-
-Doug Gilbert
-
-
+ - R.
