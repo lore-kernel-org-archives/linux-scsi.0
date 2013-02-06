@@ -1,1462 +1,311 @@
-From: "NickCheng" <nick.cheng@areca.com.tw>
-Subject: [PATCH 5/5]  arcmsr: Modify ARC-1214 Inband Messages Behavior
-Date: Wed, 6 Feb 2013 16:38:12 +0800
-Message-ID: <44D762422A6E4E8FAF3AB1AC57751182@arecaaebe11fae>
+From: "Mrs. Mary  Kamal" <maryakramkamal@hotmail.com>
+Subject: Please Refer to Attach Letter and Reply Urgently
+Date: Wed, 6 Feb 2013 03:15:29 -0800 (PST)
+Message-ID: <1360149329.40249.YahooMailClassic__16312.9246597693$1360149361$gmane$org@web5715.biz.mail.ne1.yahoo.com>
+Reply-To: maryakramkamal@gmail.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_000C_01CE0488.600903F0"
+Content-Type: multipart/mixed; boundary="1178294230-2037137443-1360149329=:40249"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:62696 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757198Ab3BFIix (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2013 03:38:53 -0500
-Received: by mail-ie0-f180.google.com with SMTP id bn7so1521839ieb.39
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Feb 2013 00:38:52 -0800 (PST)
+Received: from nm30-vm1.access.bullet.mail.mud.yahoo.com ([66.94.237.87]:37664
+	"EHLO nm30-vm1.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755038Ab3BFLPd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2013 06:15:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, jejb@kernel.org, =?big5?B?tsCyTbap?= <ching2048@areca.com.tw>
 
-This is a multi-part message in MIME format.
-
-------=_NextPart_000_000C_01CE0488.600903F0
-Content-Type: text/plain;
-	charset="big5"
-Content-Transfer-Encoding: 7bit
-
-From: Nick Cheng <nick.cheng@areca.com.tw>
-
-Modify ARC-1214 inband messages behavior to make up for HW seldom malfunction.
-Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
----
-
-------=_NextPart_000_000C_01CE0488.600903F0
-Content-Type: application/octet-stream;
-	name="patch5"
+--1178294230-2037137443-1360149329=:40249
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="patch5"
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_attr.c =
-b/drivers/scsi/arcmsr/arcmsr_attr.c=0A=
---- a/drivers/scsi/arcmsr/arcmsr_attr.c	2013-02-06 16:29:11.434076347 =
-+0800=0A=
-+++ b/drivers/scsi/arcmsr/arcmsr_attr.c	2013-02-06 16:29:25.566410389 =
-+0800=0A=
-@@ -72,40 +72,82 @@ arcmsr_sysfs_iop_message_read(struct fil=0A=
- 		(struct AdapterControlBlock *)host->hostdata;=0A=
- 	uint8_t *pQbuffer,*ptmpQbuffer;=0A=
- 	int32_t allxfer_len =3D 0;=0A=
-+	unsigned long flags;=0A=
- =0A=
- 	if (!capable(CAP_SYS_ADMIN))=0A=
- 		return -EACCES;=0A=
- =0A=
- 	/* do message unit read. */=0A=
- 	ptmpQbuffer =3D (uint8_t *)buf;=0A=
--	while ((acb->rqbuf_firstindex !=3D acb->rqbuf_lastindex)=0A=
--		&& (allxfer_len < 1031)) {=0A=
-+	spin_lock_irqsave(&acb->rqbuffer_lock, flags);=0A=
-+	if (acb->rqbuf_firstindex !=3D acb->rqbuf_lastindex) {=0A=
- 		pQbuffer =3D &acb->rqbuffer[acb->rqbuf_firstindex];=0A=
--		memcpy(ptmpQbuffer, pQbuffer, 1);=0A=
--		acb->rqbuf_firstindex++;=0A=
--		acb->rqbuf_firstindex %=3D ARCMSR_MAX_QBUFFER;=0A=
--		ptmpQbuffer++;=0A=
--		allxfer_len++;=0A=
-+		if (acb->rqbuf_firstindex > acb->rqbuf_lastindex) {=0A=
-+			if ((ARCMSR_MAX_QBUFFER - acb->rqbuf_firstindex) >=3D 1032) {=0A=
-+				memcpy(ptmpQbuffer, pQbuffer, 1032);=0A=
-+				acb->rqbuf_firstindex +=3D 1032;=0A=
-+				allxfer_len =3D 1032;=0A=
-+			} else {=0A=
-+				if (((ARCMSR_MAX_QBUFFER - acb->rqbuf_firstindex) + =
-acb->rqbuf_lastindex) > 1032) {=0A=
-+					memcpy(ptmpQbuffer, pQbuffer, ARCMSR_MAX_QBUFFER - =
-acb->rqbuf_firstindex);=0A=
-+					ptmpQbuffer +=3D ARCMSR_MAX_QBUFFER - acb->rqbuf_firstindex;=0A=
-+					memcpy(ptmpQbuffer, acb->rqbuffer, 1032 - (ARCMSR_MAX_QBUFFER - =
-acb->rqbuf_firstindex));=0A=
-+					acb->rqbuf_firstindex =3D 1032 - (ARCMSR_MAX_QBUFFER - =
-acb->rqbuf_firstindex);=0A=
-+					allxfer_len =3D 1032;=0A=
-+				} else {=0A=
-+					memcpy(ptmpQbuffer, pQbuffer, ARCMSR_MAX_QBUFFER - =
-acb->rqbuf_firstindex);=0A=
-+					ptmpQbuffer +=3D ARCMSR_MAX_QBUFFER - acb->rqbuf_firstindex;=0A=
-+					memcpy(ptmpQbuffer, acb->rqbuffer, acb->rqbuf_lastindex);=0A=
-+					allxfer_len =3D ARCMSR_MAX_QBUFFER - acb->rqbuf_firstindex + =
-acb->rqbuf_lastindex;=0A=
-+					acb->rqbuf_firstindex =3D acb->rqbuf_lastindex;=0A=
-+				}=0A=
-+			}=0A=
-+		} else {=0A=
-+			if ((acb->rqbuf_lastindex - acb->rqbuf_firstindex) > 1032) {=0A=
-+				memcpy(ptmpQbuffer, pQbuffer, 1032);=0A=
-+				acb->rqbuf_firstindex +=3D 1032;=0A=
-+				allxfer_len =3D 1032;=0A=
-+			} else {=0A=
-+				memcpy(ptmpQbuffer, pQbuffer, acb->rqbuf_lastindex - =
-acb->rqbuf_firstindex);=0A=
-+				allxfer_len =3D acb->rqbuf_lastindex - acb->rqbuf_firstindex;=0A=
-+				acb->rqbuf_firstindex =3D acb->rqbuf_lastindex;=0A=
-+			}=0A=
-+		}=0A=
- 	}=0A=
- 	if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {=0A=
- 		struct QBUFFER __iomem *prbuffer;=0A=
--		uint8_t __iomem *iop_data;=0A=
--		int32_t iop_len;=0A=
--=0A=
--		acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
-+		uint8_t __iomem *iop_data, *vaddr, *temp;=0A=
-+			int32_t data_len_residual, data_len, rqbuf_lastindex;=0A=
-+			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
-+		rqbuf_lastindex =3D acb->rqbuf_lastindex;=0A=
- 		prbuffer =3D arcmsr_get_iop_rqbuffer(acb);=0A=
--		iop_data =3D prbuffer->data;=0A=
--		iop_len =3D readl(&prbuffer->data_len);=0A=
--		while (iop_len > 0) {=0A=
--			acb->rqbuffer[acb->rqbuf_lastindex] =3D=0A=
--				readb(iop_data);=0A=
--			acb->rqbuf_lastindex++;=0A=
--			acb->rqbuf_lastindex %=3D ARCMSR_MAX_QBUFFER;=0A=
--			iop_data++;=0A=
--			iop_len--;=0A=
-+		iop_data =3D (uint8_t __iomem *)prbuffer->data;=0A=
-+		data_len_residual =3D data_len =3D readl(&prbuffer->data_len);=0A=
-+		if (data_len > 0) {=0A=
-+			temp =3D vaddr =3D kmalloc(data_len, GFP_ATOMIC);=0A=
-+			do {=0A=
-+				memcpy(temp, iop_data, 4);=0A=
-+				temp +=3D 4;=0A=
-+				iop_data +=3D 4;=0A=
-+				data_len_residual -=3D 4;=0A=
-+			} while (data_len_residual > 0);=0A=
-+			pQbuffer =3D &acb->rqbuffer[acb->rqbuf_lastindex];=0A=
-+			temp =3D vaddr;=0A=
-+			if ((rqbuf_lastindex + data_len) > ARCMSR_MAX_QBUFFER) {=0A=
-+				memcpy(pQbuffer, temp, ARCMSR_MAX_QBUFFER - rqbuf_lastindex);=0A=
-+				temp +=3D (ARCMSR_MAX_QBUFFER - rqbuf_lastindex);=0A=
-+				rqbuf_lastindex =3D (rqbuf_lastindex + data_len) % =
-ARCMSR_MAX_QBUFFER;=0A=
-+				memcpy(&acb->rqbuffer[0], temp, rqbuf_lastindex);=0A=
-+			} else {=0A=
-+				memcpy(pQbuffer, temp, data_len);=0A=
-+				rqbuf_lastindex =3D (rqbuf_lastindex + data_len) % =
-ARCMSR_MAX_QBUFFER;=0A=
-+			}=0A=
-+			kfree(vaddr);=0A=
- 		}=0A=
-+		acb->rqbuf_lastindex =3D rqbuf_lastindex;=0A=
- 		arcmsr_iop_message_read(acb);=0A=
- 	}=0A=
-+	spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);=0A=
- 	return (allxfer_len);=0A=
- }=0A=
- =0A=
-@@ -122,6 +164,7 @@ arcmsr_sysfs_iop_message_write(struct fi=0A=
- 		(struct AdapterControlBlock *)host->hostdata;=0A=
- 	int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;=0A=
- 	uint8_t *pQbuffer, *ptmpuserbuffer;=0A=
-+	unsigned long flags;=0A=
- =0A=
- 	if (!capable(CAP_SYS_ADMIN))=0A=
- 		return -EACCES;=0A=
-@@ -130,10 +173,12 @@ arcmsr_sysfs_iop_message_write(struct fi=0A=
- 	/* do message unit write. */=0A=
- 	ptmpuserbuffer =3D (uint8_t *)buf;=0A=
- 	user_len =3D (int32_t)count;=0A=
-+	spin_lock_irqsave(&acb->wqbuffer_lock, flags);=0A=
- 	wqbuf_lastindex =3D acb->wqbuf_lastindex;=0A=
- 	wqbuf_firstindex =3D acb->wqbuf_firstindex;=0A=
- 	if (wqbuf_lastindex !=3D wqbuf_firstindex) {=0A=
- 		arcmsr_post_ioctldata2iop(acb);=0A=
-+		spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);=0A=
- 		return 0;	/*need retry*/=0A=
- 	} else {=0A=
- 		my_empty_len =3D (wqbuf_firstindex-wqbuf_lastindex - 1)=0A=
-@@ -155,8 +200,10 @@ arcmsr_sysfs_iop_message_write(struct fi=0A=
- 					~ACB_F_MESSAGE_WQBUFFER_CLEARED;=0A=
- 				arcmsr_post_ioctldata2iop(acb);=0A=
- 			}=0A=
-+			spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);=0A=
- 			return count;=0A=
- 		} else {=0A=
-+			spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);=0A=
- 			return 0;	/*need retry*/=0A=
- 		}=0A=
- 	}=0A=
-@@ -174,6 +221,7 @@ arcmsr_sysfs_iop_message_clear(struct fi=0A=
- 	struct AdapterControlBlock *acb =3D=0A=
- 		(struct AdapterControlBlock *)host->hostdata;=0A=
- 	uint8_t *pQbuffer;=0A=
-+	unsigned long flags;=0A=
- =0A=
- 	if (!capable(CAP_SYS_ADMIN))=0A=
- 		return -EACCES;=0A=
-@@ -186,10 +234,14 @@ arcmsr_sysfs_iop_message_clear(struct fi=0A=
- 		(ACB_F_MESSAGE_WQBUFFER_CLEARED=0A=
- 		| ACB_F_MESSAGE_RQBUFFER_CLEARED=0A=
- 		| ACB_F_MESSAGE_WQBUFFER_READED);=0A=
-+	spin_lock_irqsave(&acb->rqbuffer_lock, flags);=0A=
- 	acb->rqbuf_firstindex =3D 0;=0A=
- 	acb->rqbuf_lastindex =3D 0;=0A=
-+	spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);=0A=
-+	spin_lock_irqsave(&acb->wqbuffer_lock, flags);=0A=
- 	acb->wqbuf_firstindex =3D 0;=0A=
- 	acb->wqbuf_lastindex =3D 0;=0A=
-+	spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);=0A=
- 	pQbuffer =3D acb->rqbuffer;=0A=
- 	memset(pQbuffer, 0, sizeof (struct QBUFFER));=0A=
- 	pQbuffer =3D acb->wqbuffer;=0A=
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h=0A=
---- a/drivers/scsi/arcmsr/arcmsr.h	2013-02-06 16:29:12.026093684 +0800=0A=
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2013-02-06 16:29:25.869417446 +0800=0A=
-@@ -63,6 +63,7 @@ struct device_attribute;=0A=
- #define ARCMSR_DEFAULT_SG_ENTRIES		38=0A=
- #define ARCMSR_MAX_HBB_POSTQUEUE		264=0A=
- #define ARCMSR_MAX_ARC1214_POSTQUEUE		256=0A=
-+#define ARCMSR_MAX_ARC1214_DONEQUEUE		257=0A=
- #define ARCMSR_MAX_XFER_LEN			0x26000=0A=
- #define ARCMSR_CDB_SG_PAGE_LENGTH		256=0A=
- #define ARCMST_NUM_MSIX_VECTORS		4=0A=
-@@ -564,7 +565,7 @@ struct OutBound_SRB {=0A=
- =0A=
- struct MessageUnit_D {=0A=
- 	struct InBound_SRB post_qbuffer[ARCMSR_MAX_ARC1214_POSTQUEUE];=0A=
--	struct OutBound_SRB done_qbuffer[ARCMSR_MAX_ARC1214_POSTQUEUE];=0A=
-+	struct OutBound_SRB done_qbuffer[ARCMSR_MAX_ARC1214_DONEQUEUE];=0A=
- 	u16 postq_index;=0A=
- 	u16 doneq_index;=0A=
- 	u32 __iomem *chip_id;			/*0x00004*/=0A=
-@@ -617,6 +618,7 @@ struct AdapterControlBlock=0A=
- 	spinlock_t eh_lock;=0A=
- 	spinlock_t ccblist_lock;=0A=
- 	spinlock_t postq_lock;=0A=
-+	spinlock_t doneq_lock;=0A=
- 	spinlock_t rqbuffer_lock;=0A=
- 	spinlock_t wqbuffer_lock;=0A=
- 	union {=0A=
-@@ -670,15 +672,15 @@ struct AdapterControlBlock=0A=
- 	unsigned int uncache_size;=0A=
- 	uint8_t rqbuffer[ARCMSR_MAX_QBUFFER];=0A=
- 	/* data collection buffer for read from 80331 */=0A=
--	int32_t rqbuf_firstindex;=0A=
-+	uint32_t rqbuf_firstindex;=0A=
- 	/* first of read buffer  */=0A=
--	int32_t rqbuf_lastindex;=0A=
-+	uint32_t rqbuf_lastindex;=0A=
- 	/* last of read buffer   */=0A=
- 	uint8_t wqbuffer[ARCMSR_MAX_QBUFFER];=0A=
- 	/* data collection buffer for write to 80331  */=0A=
--	int32_t wqbuf_firstindex;=0A=
-+	uint32_t wqbuf_firstindex;=0A=
- 	/* first of write buffer */=0A=
--	int32_t wqbuf_lastindex;=0A=
-+	uint32_t wqbuf_lastindex;=0A=
- 	/* last of write buffer  */=0A=
- 	uint8_t devstate[ARCMSR_MAX_TARGETID][ARCMSR_MAX_TARGETLUN];=0A=
- 	/* id0 ..... id15, lun0...lun7 */=0A=
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c =
-b/drivers/scsi/arcmsr/arcmsr_hba.c=0A=
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2013-02-06 16:29:12.453104788 =
-+0800=0A=
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2013-02-06 16:29:26.195427363 =
-+0800=0A=
-@@ -768,18 +768,18 @@ arcmsr_message_isr_bh_fn(struct work_str=0A=
- 						(diff & 0x01) =3D=3D 1) {=0A=
- 							scsi_add_device(acb->host,=0A=
- 							0, target, lun);=0A=
--					} else if ((temp & 0x01) =3D=3D 0=0A=
--					&& (diff & 0x01) =3D=3D 1) {=0A=
--						psdev =3D=0A=
--						scsi_device_lookup(acb->host,=0A=
--						0, target, lun);=0A=
--						if (psdev !=3D NULL) {=0A=
--							scsi_remove_device(psdev);=0A=
--							scsi_device_put(psdev);=0A=
-+						} else if ((temp & 0x01) =3D=3D 0=0A=
-+						&& (diff & 0x01) =3D=3D 1) {=0A=
-+							psdev =3D=0A=
-+							scsi_device_lookup(acb->host,=0A=
-+							0, target, lun);=0A=
-+							if (psdev !=3D NULL) {=0A=
-+								scsi_remove_device(psdev);=0A=
-+								scsi_device_put(psdev);=0A=
-+							}=0A=
- 						}=0A=
--					}=0A=
--					temp >>=3D 1;=0A=
--					diff >>=3D 1;=0A=
-+						temp >>=3D 1;=0A=
-+						diff >>=3D 1;=0A=
- 					}=0A=
- 				}=0A=
- 				devicemap++;=0A=
-@@ -813,20 +813,20 @@ arcmsr_message_isr_bh_fn(struct work_str=0A=
- 					lun < ARCMSR_MAX_TARGETLUN;=0A=
- 					lun++) {=0A=
- 						if ((temp & 0x01) =3D=3D 1 &&=0A=
--							(diff & 0x01) =3D=3D 1) {=0A=
-+						(diff & 0x01) =3D=3D 1) {=0A=
- 							scsi_add_device(acb->host,=0A=
- 							0, target, lun);=0A=
- 						} else if ((temp & 0x01) =3D=3D 0=0A=
--							&& (diff & 0x01) =3D=3D 1) {=0A=
-+						&& (diff & 0x01) =3D=3D 1) {=0A=
- 							psdev =3D scsi_device_lookup(acb->host,=0A=
- 							0, target, lun);=0A=
- 							if (psdev !=3D NULL) {=0A=
- 								scsi_remove_device(psdev);=0A=
- 								scsi_device_put(psdev);=0A=
- 							}=0A=
--					}=0A=
--					temp >>=3D 1;=0A=
--					diff >>=3D 1;=0A=
-+						}=0A=
-+						temp >>=3D 1;=0A=
-+						diff >>=3D 1;=0A=
- 					}=0A=
- 				}=0A=
- 				devicemap++;=0A=
-@@ -869,10 +869,10 @@ arcmsr_message_isr_bh_fn(struct work_str=0A=
- 							if (psdev !=3D NULL) {=0A=
- 								scsi_remove_device(psdev);=0A=
- 								scsi_device_put(psdev);=0A=
-+							}=0A=
- 						}=0A=
--					}=0A=
--					temp >>=3D 1;=0A=
--					diff >>=3D 1;=0A=
-+						temp >>=3D 1;=0A=
-+						diff >>=3D 1;=0A=
- 					}=0A=
- 				}=0A=
- 				devicemap++;=0A=
-@@ -915,10 +915,10 @@ arcmsr_message_isr_bh_fn(struct work_str=0A=
- 							if (psdev !=3D NULL) {=0A=
- 								scsi_remove_device(psdev);=0A=
- 								scsi_device_put(psdev);=0A=
-+							}=0A=
- 						}=0A=
--					}=0A=
--					temp >>=3D 1;=0A=
--					diff >>=3D 1;=0A=
-+						temp >>=3D 1;=0A=
-+						diff >>=3D 1;=0A=
- 					}=0A=
- 				}=0A=
- 				devicemap++;=0A=
-@@ -981,8 +981,8 @@ arcmsr_resume(struct pci_dev *pdev)=0A=
- 		error =3D pci_set_dma_mask(pdev, DMA_BIT_MASK(32));=0A=
- 		if (error) {=0A=
- 				pr_warn("scsi%d: No suitable DMA mask available\n",=0A=
--				host->host_no);=0A=
--				goto controller_unregister;=0A=
-+			       host->host_no);=0A=
-+			goto controller_unregister;=0A=
- 		}=0A=
- 	}=0A=
- 	pci_set_master(pdev);=0A=
-@@ -1097,6 +1097,7 @@ static int arcmsr_probe(struct pci_dev *=0A=
- 	spin_lock_init(&acb->eh_lock);=0A=
- 	spin_lock_init(&acb->ccblist_lock);=0A=
- 	spin_lock_init(&acb->postq_lock);=0A=
-+	spin_lock_init(&acb->doneq_lock);=0A=
- 	spin_lock_init(&acb->rqbuffer_lock);=0A=
- 	spin_lock_init(&acb->wqbuffer_lock);=0A=
- 	acb->acb_flags |=3D (ACB_F_MESSAGE_WQBUFFER_CLEARED |=0A=
-@@ -1541,33 +1542,29 @@ arcmsr_done4abort_postqueue(struct Adapt=0A=
- 		uint32_t doneq_index, index_stripped, addressLow, residual;=0A=
- 		bool error;=0A=
- 		struct CommandControlBlock *pCCB;=0A=
--		outbound_write_pointer =3D=0A=
--			readl(pmu->outboundlist_copy_pointer);=0A=
-+		outbound_write_pointer =3D pmu->done_qbuffer[0].addressLow + 1;=0A=
- 		doneq_index =3D pmu->doneq_index;=0A=
- 		residual =3D atomic_read(&acb->ccboutstandingcount);=0A=
- 		for (i =3D 0; i < residual; i++) {=0A=
--			while ((doneq_index & 0xFF) !=3D=0A=
--				(outbound_write_pointer & 0xFF)) {=0A=
-+			while ((doneq_index & 0xFFF) !=3D (outbound_write_pointer & 0xFFF)) {=0A=
- 				if (doneq_index & 0x4000) {=0A=
--					index_stripped =3D doneq_index & 0xFF;=0A=
-+					index_stripped =3D doneq_index & 0xFFF;=0A=
- 					index_stripped +=3D 1;=0A=
- 					index_stripped %=3D=0A=
--					ARCMSR_MAX_ARC1214_POSTQUEUE;=0A=
-+					ARCMSR_MAX_ARC1214_DONEQUEUE;=0A=
- 					pmu->doneq_index =3D index_stripped ?=0A=
--					(index_stripped | 0x4000) :=0A=
--					index_stripped;=0A=
-+					(index_stripped | 0x4000) : (index_stripped + 1);=0A=
- 				} else {=0A=
- 					index_stripped =3D doneq_index;=0A=
- 					index_stripped +=3D 1;=0A=
- 					index_stripped %=3D=0A=
--					ARCMSR_MAX_ARC1214_POSTQUEUE;=0A=
-+					ARCMSR_MAX_ARC1214_DONEQUEUE;=0A=
- 					pmu->doneq_index =3D=0A=
--					index_stripped ? index_stripped :=0A=
--					(index_stripped | 0x4000);=0A=
-+					index_stripped ? index_stripped : ((index_stripped | 0x4000) + 1);=0A=
- 				}=0A=
- 				doneq_index =3D pmu->doneq_index;=0A=
- 				addressLow =3D=0A=
--				pmu->done_qbuffer[doneq_index & 0xFF].addressLow;=0A=
-+				pmu->done_qbuffer[doneq_index & 0xFFF].addressLow;=0A=
- 				ccb_cdb_phy =3D (addressLow & 0xFFFFFFF0);=0A=
- 				pARCMSR_CDB =3D (struct  ARCMSR_CDB *)=0A=
- 				(acb->vir2phy_offset + ccb_cdb_phy);=0A=
-@@ -1582,7 +1579,7 @@ arcmsr_done4abort_postqueue(struct Adapt=0A=
- 			}=0A=
- 			mdelay(10);=0A=
- 			outbound_write_pointer =3D=0A=
--				readl(pmu->outboundlist_copy_pointer);=0A=
-+				pmu->done_qbuffer[0].addressLow + 1;=0A=
- 			doneq_index =3D pmu->doneq_index;=0A=
- 		}=0A=
- 		pmu->postq_index =3D 0;=0A=
-@@ -2004,12 +2001,14 @@ arcmsr_iop_message_read(struct AdapterCo=0A=
- 	case ACB_ADAPTER_TYPE_C: {=0A=
- 		struct MessageUnit_C __iomem *reg =3D acb->pmuC;=0A=
- 		writel(ARCMSR_HBCMU_DRV2IOP_DATA_READ_OK, &reg->inbound_doorbell);=0A=
-+		/*readl(&reg->inbound_doorbell);*/=0A=
- 		}=0A=
- 		break;=0A=
- 	case ACB_ADAPTER_TYPE_D: {=0A=
- 		struct MessageUnit_D __iomem *reg =3D acb->pmuD;=0A=
- 		writel(ARCMSR_ARC1214_DRV2IOP_DATA_OUT_READ,=0A=
- 		reg->inbound_doorbell);=0A=
-+		/*readl(reg->inbound_doorbell);*/=0A=
- 		break;=0A=
- 	}=0A=
- 	}=0A=
-@@ -2127,36 +2126,61 @@ struct QBUFFER __iomem=0A=
- void=0A=
- arcmsr_iop2drv_data_wrote_handle(struct AdapterControlBlock *acb)=0A=
- {=0A=
--	uint8_t __iomem *iop_data;=0A=
--	struct QBUFFER __iomem *prbuffer;=0A=
--	struct QBUFFER *pQbuffer;=0A=
--	int32_t my_empty_len, iop_len, rqbuf_firstindex, rqbuf_lastindex;=0A=
-+	uint8_t __iomem *iop_data, *pQbuffer, *vaddr, *temp;=0A=
-+	int32_t buf_empty_len, data_len, data_len_residual;=0A=
-+	uint32_t rqbuf_firstindex, rqbuf_lastindex;=0A=
- 	unsigned long flags;=0A=
--=0A=
-+	struct QBUFFER __iomem  *prbuffer;=0A=
- 	spin_lock_irqsave(&acb->rqbuffer_lock, flags);=0A=
- 	rqbuf_lastindex =3D acb->rqbuf_lastindex;=0A=
- 	rqbuf_firstindex =3D acb->rqbuf_firstindex;=0A=
- 	prbuffer =3D arcmsr_get_iop_rqbuffer(acb);=0A=
- 	iop_data =3D (uint8_t __iomem *)prbuffer->data;=0A=
--	iop_len =3D prbuffer->data_len;=0A=
--	my_empty_len =3D (rqbuf_firstindex - rqbuf_lastindex - 1) &=0A=
--	(ARCMSR_MAX_QBUFFER - 1);=0A=
--=0A=
--	if (my_empty_len >=3D iop_len) {=0A=
--		while (iop_len > 0) {=0A=
--			pQbuffer =3D (struct QBUFFER *)=0A=
--			&acb->rqbuffer[rqbuf_lastindex];=0A=
--			memcpy(pQbuffer, iop_data, 1);=0A=
--			rqbuf_lastindex++;=0A=
--			rqbuf_lastindex %=3D ARCMSR_MAX_QBUFFER;=0A=
--			iop_data++;=0A=
--			iop_len--;=0A=
-+	data_len_residual =3D data_len =3D readl(&prbuffer->data_len);=0A=
-+	buf_empty_len =3D (rqbuf_firstindex - rqbuf_lastindex - 1) &=0A=
-+		(ARCMSR_MAX_QBUFFER - 1);=0A=
-+	if (buf_empty_len >=3D data_len) {=0A=
-+		if (data_len > 0) {=0A=
-+			temp =3D vaddr =3D kmalloc(data_len, GFP_ATOMIC);=0A=
-+			if (!vaddr) {=0A=
-+				goto leave;=0A=
-+			}=0A=
-+			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
-+			while (data_len_residual >=3D 4) {=0A=
-+				memcpy(temp, iop_data, 4);=0A=
-+				temp +=3D 4;=0A=
-+				iop_data +=3D 4;=0A=
-+				data_len_residual -=3D 4;=0A=
-+			}=0A=
-+			if ((data_len_residual > 0) &&=0A=
-+			(data_len_residual < 4)) {=0A=
-+				memcpy(temp, iop_data, data_len_residual);=0A=
-+			}=0A=
-+			pQbuffer =3D &acb->rqbuffer[rqbuf_lastindex];=0A=
-+			temp =3D vaddr;=0A=
-+			if ((rqbuf_lastindex + data_len) >=0A=
-+			ARCMSR_MAX_QBUFFER) {=0A=
-+				memcpy(pQbuffer, temp,=0A=
-+				ARCMSR_MAX_QBUFFER - rqbuf_lastindex);=0A=
-+				temp +=3D (ARCMSR_MAX_QBUFFER -=0A=
-+				rqbuf_lastindex);=0A=
-+				rqbuf_lastindex =3D (rqbuf_lastindex + data_len)=0A=
-+				% ARCMSR_MAX_QBUFFER;=0A=
-+				memcpy(&acb->rqbuffer[0], temp,=0A=
-+				rqbuf_lastindex);=0A=
-+			} else {=0A=
-+				memcpy(pQbuffer, temp, data_len);=0A=
-+				rqbuf_lastindex =3D (rqbuf_lastindex + data_len)=0A=
-+				% ARCMSR_MAX_QBUFFER;=0A=
-+			}=0A=
-+			kfree(vaddr);=0A=
-+			acb->rqbuf_lastindex =3D rqbuf_lastindex;=0A=
-+			arcmsr_iop_message_read(acb);=0A=
- 		}=0A=
--		acb->rqbuf_lastindex =3D rqbuf_lastindex;=0A=
--		arcmsr_iop_message_read(acb);=0A=
- 	} else {=0A=
- 		acb->acb_flags |=3D ACB_F_IOPDATA_OVERFLOW;=0A=
- 	}=0A=
-+	leave:=0A=
- 	spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);=0A=
- }=0A=
- =0A=
-@@ -2164,7 +2188,6 @@ void=0A=
- arcmsr_iop2drv_data_read_handle(struct AdapterControlBlock *acb)=0A=
- {=0A=
- 	unsigned long flags;=0A=
--=0A=
- 	spin_lock_irqsave(&acb->wqbuffer_lock, flags);=0A=
- 	acb->acb_flags |=3D ACB_F_MESSAGE_WQBUFFER_READED;=0A=
- 	if (acb->wqbuf_firstindex !=3D acb->wqbuf_lastindex) {=0A=
-@@ -2176,18 +2199,113 @@ arcmsr_iop2drv_data_read_handle(struct A=0A=
- 		acb->acb_flags &=3D (~ACB_F_MESSAGE_WQBUFFER_READED);=0A=
- 		pwbuffer =3D arcmsr_get_iop_wqbuffer(acb);=0A=
- 		iop_data =3D (uint8_t __iomem *)pwbuffer->data;=0A=
--=0A=
--		while ((acb->wqbuf_firstindex !=3D acb->wqbuf_lastindex) &&=0A=
--		(allxfer_len < 124)) {=0A=
--			pQbuffer =3D &acb->wqbuffer[acb->wqbuf_firstindex];=0A=
--			memcpy(iop_data, pQbuffer, 1);=0A=
--			acb->wqbuf_firstindex++;=0A=
--			acb->wqbuf_firstindex %=3D ARCMSR_MAX_QBUFFER;=0A=
--			iop_data++;=0A=
--			allxfer_len++;=0A=
-+		if (acb->wqbuf_firstindex > acb->wqbuf_lastindex) {=0A=
-+			if ((ARCMSR_MAX_QBUFFER - acb->wqbuf_firstindex) >=3D 4) {=0A=
-+				do {=0A=
-+					pQbuffer =3D=0A=
-+					&acb->wqbuffer[acb->wqbuf_firstindex];=0A=
-+					if (acb->wqbuf_firstindex + 4=0A=
-+					> ARCMSR_MAX_QBUFFER) {=0A=
-+						memcpy(iop_data, pQbuffer,=0A=
-+						ARCMSR_MAX_QBUFFER=0A=
-+						- acb->wqbuf_firstindex);=0A=
-+						iop_data +=3D ARCMSR_MAX_QBUFFER=0A=
-+						- acb->wqbuf_firstindex;=0A=
-+						acb->wqbuf_firstindex +=3D 4;=0A=
-+						acb->wqbuf_firstindex %=3D=0A=
-+						ARCMSR_MAX_QBUFFER;=0A=
-+						memcpy(iop_data,=0A=
-+						&acb->wqbuffer[0],=0A=
-+						acb->wqbuf_firstindex);=0A=
-+						iop_data +=3D=0A=
-+						acb->wqbuf_firstindex;=0A=
-+					} else {=0A=
-+						if ((acb->wqbuf_lastindex=0A=
-+						- acb->wqbuf_firstindex) > 4) {=0A=
-+							memcpy(iop_data,=0A=
-+							pQbuffer, 4);=0A=
-+							acb->wqbuf_firstindex=0A=
-+							+=3D 4;=0A=
-+							acb->wqbuf_firstindex=0A=
-+							%=3D ARCMSR_MAX_QBUFFER;=0A=
-+							iop_data +=3D 4;=0A=
-+						} else {=0A=
-+							memcpy(iop_data, pQbuffer,=0A=
-+							acb->wqbuf_lastindex=0A=
-+							- acb->wqbuf_firstindex);=0A=
-+							allxfer_len +=3D=0A=
-+							acb->wqbuf_lastindex -=0A=
-+							acb->wqbuf_firstindex;=0A=
-+							acb->wqbuf_firstindex =3D=0A=
-+							acb->wqbuf_lastindex;=0A=
-+							break;=0A=
-+						}=0A=
-+					}=0A=
-+					allxfer_len +=3D 4;=0A=
-+				} while ((acb->wqbuf_firstindex !=3D=0A=
-+				acb->wqbuf_lastindex) && (allxfer_len < 124));=0A=
-+			} else {=0A=
-+				pQbuffer =3D=0A=
-+				&acb->wqbuffer[acb->wqbuf_firstindex];=0A=
-+				memcpy(iop_data, pQbuffer, ARCMSR_MAX_QBUFFER=0A=
-+				- acb->wqbuf_firstindex);=0A=
-+				iop_data +=3D ARCMSR_MAX_QBUFFER=0A=
-+				- acb->wqbuf_firstindex;=0A=
-+				allxfer_len =3D ARCMSR_MAX_QBUFFER=0A=
-+				- acb->wqbuf_firstindex;=0A=
-+				acb->wqbuf_firstindex =3D 0;=0A=
-+				do {=0A=
-+					pQbuffer =3D=0A=
-+					&acb->wqbuffer[acb->wqbuf_firstindex];=0A=
-+					if ((acb->wqbuf_lastindex -=0A=
-+					acb->wqbuf_firstindex) > 4) {=0A=
-+						memcpy(iop_data, pQbuffer, 4);=0A=
-+						acb->wqbuf_firstindex +=3D 4;=0A=
-+						acb->wqbuf_firstindex %=3D=0A=
-+						ARCMSR_MAX_QBUFFER;=0A=
-+						iop_data +=3D 4;=0A=
-+					} else {=0A=
-+						memcpy(iop_data, pQbuffer,=0A=
-+						acb->wqbuf_lastindex -=0A=
-+						acb->wqbuf_firstindex);=0A=
-+						allxfer_len +=3D=0A=
-+						acb->wqbuf_lastindex=0A=
-+						- acb->wqbuf_firstindex;=0A=
-+						acb->wqbuf_firstindex =3D=0A=
-+						acb->wqbuf_lastindex;=0A=
-+						break;=0A=
-+					}=0A=
-+					allxfer_len +=3D 4;=0A=
-+				} while ((acb->wqbuf_firstindex !=3D=0A=
-+				acb->wqbuf_lastindex) && (allxfer_len < 124));=0A=
-+			}=0A=
-+		} else {=0A=
-+			do {=0A=
-+				pQbuffer =3D=0A=
-+				&acb->wqbuffer[acb->wqbuf_firstindex];=0A=
-+				if ((acb->wqbuf_lastindex -=0A=
-+				acb->wqbuf_firstindex) > 4) {=0A=
-+					memcpy(iop_data, pQbuffer, 4);=0A=
-+					acb->wqbuf_firstindex +=3D 4;=0A=
-+					acb->wqbuf_firstindex %=3D=0A=
-+					ARCMSR_MAX_QBUFFER;=0A=
-+					iop_data +=3D 4;=0A=
-+				} else {=0A=
-+					memcpy(iop_data, pQbuffer,=0A=
-+					acb->wqbuf_lastindex -=0A=
-+					acb->wqbuf_firstindex);=0A=
-+					allxfer_len +=3D acb->wqbuf_lastindex=0A=
-+					- acb->wqbuf_firstindex;=0A=
-+					acb->wqbuf_firstindex =3D=0A=
-+					acb->wqbuf_lastindex;=0A=
-+					break;=0A=
-+				}=0A=
-+				allxfer_len +=3D 4;=0A=
-+			} while ((acb->wqbuf_firstindex !=3D=0A=
-+			acb->wqbuf_lastindex) && (allxfer_len < 124));=0A=
- 		}=0A=
--		pwbuffer->data_len =3D allxfer_len;=0A=
--		arcmsr_iop_message_wrote(acb);=0A=
-+		writel(allxfer_len, &pwbuffer->data_len);=0A=
-+		arcmsr_iop_message_wrote(acb);/*notice IOP the message has been =
-written*/=0A=
- 	}=0A=
- 	if (acb->wqbuf_firstindex =3D=3D acb->wqbuf_lastindex) {=0A=
- 		acb->acb_flags |=3D ACB_F_MESSAGE_WQBUFFER_CLEARED;=0A=
-@@ -2200,7 +2318,6 @@ arcmsr_hbaA_doorbell_isr(struct AdapterC=0A=
- {=0A=
- 	uint32_t outbound_doorbell;=0A=
- 	struct MessageUnit_A __iomem *reg  =3D acb->pmuA;=0A=
--=0A=
- 	outbound_doorbell =3D readl(&reg->outbound_doorbell);=0A=
- 	do {=0A=
- 		writel(outbound_doorbell, &reg->outbound_doorbell);=0A=
-@@ -2223,7 +2340,6 @@ arcmsr_hbaC_doorbell_isr(struct AdapterC=0A=
- 	uint32_t outbound_doorbell;=0A=
- 	struct MessageUnit_C __iomem *reg =3D=0A=
- 		(struct MessageUnit_C *)pACB->pmuC;=0A=
--=0A=
- 	outbound_doorbell =3D readl(&reg->outbound_doorbell);=0A=
- 	do {=0A=
- 		if (outbound_doorbell &=0A=
-@@ -2255,10 +2371,6 @@ arcmsr_hbaD_doorbell_isr(struct AdapterC=0A=
- 		(struct MessageUnit_D *)pACB->pmuD;=0A=
- =0A=
- 	outbound_doorbell =3D readl(pmu->outbound_doorbell);=0A=
--	if (unlikely(!outbound_doorbell)) {=0A=
--		arcmsr_iop2drv_data_wrote_handle(pACB);=0A=
--		arcmsr_iop2drv_data_read_handle(pACB);=0A=
--	}=0A=
- 	do {=0A=
- 		writel(outbound_doorbell, pmu->outbound_doorbell);=0A=
- 		if (outbound_doorbell &=0A=
-@@ -2367,28 +2479,30 @@ arcmsr_hbaD_postqueue_isr(struct Adapter=0A=
- 	struct MessageUnit_D __iomem *pmu;=0A=
- 	struct ARCMSR_CDB *arcmsr_cdb;=0A=
- 	struct CommandControlBlock *ccb;=0A=
-+	unsigned long flags;=0A=
- =0A=
-+	spin_lock_irqsave(&acb->doneq_lock, flags);=0A=
- 	pmu =3D (struct MessageUnit_D *)acb->pmuD;=0A=
--	outbound_write_pointer =3D readl(pmu->outboundlist_copy_pointer);=0A=
-+	outbound_write_pointer =3D pmu->done_qbuffer[0].addressLow + 1;=0A=
- 	doneq_index =3D pmu->doneq_index;=0A=
--	if ((doneq_index & 0xFF) !=3D (outbound_write_pointer & 0xFF)) {=0A=
-+	if ((doneq_index & 0xFFF) !=3D (outbound_write_pointer & 0xFFF)) {=0A=
- 		do {=0A=
- 			if (doneq_index & 0x4000) {=0A=
--				index_stripped =3D doneq_index & 0xFF;=0A=
-+				index_stripped =3D doneq_index & 0xFFF;=0A=
- 				index_stripped +=3D 1;=0A=
--				index_stripped %=3D ARCMSR_MAX_ARC1214_POSTQUEUE;=0A=
-+				index_stripped %=3D ARCMSR_MAX_ARC1214_DONEQUEUE;=0A=
- 				pmu->doneq_index =3D index_stripped=0A=
--				? (index_stripped | 0x4000) : index_stripped;=0A=
-+				? (index_stripped | 0x4000) : (index_stripped + 1);=0A=
- 			} else {=0A=
- 				index_stripped =3D doneq_index;=0A=
- 				index_stripped +=3D 1;=0A=
--				index_stripped %=3D ARCMSR_MAX_ARC1214_POSTQUEUE;=0A=
-+				index_stripped %=3D ARCMSR_MAX_ARC1214_DONEQUEUE;=0A=
- 				pmu->doneq_index =3D index_stripped=0A=
--				? index_stripped : (index_stripped | 0x4000);=0A=
-+				? index_stripped : ((index_stripped | 0x4000) + 1);=0A=
- 			}=0A=
- 			doneq_index =3D pmu->doneq_index;=0A=
- 			addressLow =3D=0A=
--			pmu->done_qbuffer[doneq_index & 0xFF].addressLow;=0A=
-+			pmu->done_qbuffer[doneq_index & 0xFFF].addressLow;=0A=
- 			ccb_cdb_phy =3D (addressLow & 0xFFFFFFF0);=0A=
- 			arcmsr_cdb =3D (struct ARCMSR_CDB *)(acb->vir2phy_offset=0A=
- 				+ ccb_cdb_phy);=0A=
-@@ -2399,12 +2513,13 @@ arcmsr_hbaD_postqueue_isr(struct Adapter=0A=
- 			arcmsr_drain_donequeue(acb, ccb, error);=0A=
- 			writel(doneq_index,=0A=
- 				pmu->outboundlist_read_pointer);=0A=
--		} while ((doneq_index & 0xFF) !=3D=0A=
--		(outbound_write_pointer & 0xFF));=0A=
-+		} while ((doneq_index & 0xFFF) !=3D=0A=
-+		(outbound_write_pointer & 0xFFF));=0A=
- 	}=0A=
- 	writel(ARCMSR_ARC1214_OUTBOUND_LIST_INTERRUPT_CLEAR,=0A=
- 		pmu->outboundlist_interrupt_cause);=0A=
- 	readl(pmu->outboundlist_interrupt_cause);=0A=
-+	spin_unlock_irqrestore(&acb->doneq_lock, flags);=0A=
- }=0A=
- =0A=
- static void=0A=
-@@ -2457,7 +2572,6 @@ arcmsr_hbaA_handle_isr(struct AdapterCon=0A=
- 	}=0A=
- 	do {=0A=
- 		writel(outbound_intstatus, &reg->outbound_intstatus);=0A=
--		readl(&reg->outbound_intstatus);=0A=
- 		if (outbound_intstatus & ARCMSR_MU_OUTBOUND_DOORBELL_INT)=0A=
- 			arcmsr_hbaA_doorbell_isr(acb);=0A=
- 		if (outbound_intstatus & ARCMSR_MU_OUTBOUND_POSTQUEUE_INT)=0A=
-@@ -2597,29 +2711,131 @@ arcmsr_iop_parking(struct AdapterControl=0A=
- void=0A=
- arcmsr_post_ioctldata2iop(struct AdapterControlBlock *acb)=0A=
- {=0A=
--	uint8_t __iomem *iop_data;=0A=
--	uint8_t *pQbuffer;=0A=
--	int32_t wqbuf_firstindex, wqbuf_lastindex;=0A=
--	int32_t allxfer_len =3D 0;=0A=
--	struct QBUFFER __iomem *pwbuffer;=0A=
--	pwbuffer =3D arcmsr_get_iop_wqbuffer(acb);=0A=
--	iop_data =3D (uint8_t __iomem *)pwbuffer->data;=0A=
- 	if (acb->acb_flags & ACB_F_MESSAGE_WQBUFFER_READED) {=0A=
--		acb->acb_flags &=3D (~ACB_F_MESSAGE_WQBUFFER_READED);=0A=
--		wqbuf_firstindex =3D acb->wqbuf_firstindex;=0A=
--		wqbuf_lastindex =3D acb->wqbuf_lastindex;=0A=
--		while ((wqbuf_firstindex !=3D wqbuf_lastindex)=0A=
--			&& (allxfer_len < 124)) {=0A=
--			pQbuffer =3D &acb->wqbuffer[wqbuf_firstindex];=0A=
--			memcpy(iop_data, pQbuffer, 1);=0A=
--			wqbuf_firstindex++;=0A=
--			wqbuf_firstindex %=3D ARCMSR_MAX_QBUFFER;=0A=
--			iop_data++;=0A=
--			allxfer_len++;=0A=
--		}=0A=
--		acb->wqbuf_firstindex =3D wqbuf_firstindex;=0A=
--		pwbuffer->data_len =3D allxfer_len;=0A=
--		arcmsr_iop_message_wrote(acb);=0A=
-+		if (acb->wqbuf_firstindex !=3D acb->wqbuf_lastindex) {=0A=
-+			uint8_t *pQbuffer;=0A=
-+			uint8_t __iomem *iop_data;=0A=
-+			int32_t allxfer_len =3D 0;=0A=
-+			struct QBUFFER __iomem *pwbuffer;=0A=
-+			acb->acb_flags &=3D (~ACB_F_MESSAGE_WQBUFFER_READED);=0A=
-+			pwbuffer =3D arcmsr_get_iop_wqbuffer(acb);=0A=
-+			iop_data =3D (uint8_t __iomem *)pwbuffer->data;=0A=
-+			if (acb->wqbuf_firstindex > acb->wqbuf_lastindex) {=0A=
-+				if ((ARCMSR_MAX_QBUFFER -=0A=
-+					acb->wqbuf_firstindex) >=3D 4) {=0A=
-+					do {=0A=
-+						pQbuffer =3D=0A=
-+						&acb->wqbuffer[acb->wqbuf_firstindex];=0A=
-+						if (acb->wqbuf_firstindex + 4 >=0A=
-+						ARCMSR_MAX_QBUFFER) {=0A=
-+							memcpy(iop_data, pQbuffer,=0A=
-+							ARCMSR_MAX_QBUFFER - acb->wqbuf_firstindex);=0A=
-+							iop_data +=3D ARCMSR_MAX_QBUFFER=0A=
-+							- acb->wqbuf_firstindex;=0A=
-+							acb->wqbuf_firstindex +=3D 4;=0A=
-+							acb->wqbuf_firstindex %=3D=0A=
-+							ARCMSR_MAX_QBUFFER;=0A=
-+							memcpy(iop_data,=0A=
-+							&acb->wqbuffer[0],=0A=
-+							acb->wqbuf_firstindex);=0A=
-+							iop_data +=3D=0A=
-+							acb->wqbuf_firstindex;=0A=
-+						} else {=0A=
-+							if ((acb->wqbuf_lastindex -=0A=
-+							acb->wqbuf_firstindex) > 4) {=0A=
-+								memcpy(iop_data,=0A=
-+								pQbuffer, 4);=0A=
-+								acb->wqbuf_firstindex=0A=
-+								+=3D 4;=0A=
-+								acb->wqbuf_firstindex=0A=
-+								%=3D ARCMSR_MAX_QBUFFER;=0A=
-+								iop_data +=3D 4;=0A=
-+							} else {=0A=
-+								memcpy(iop_data,=0A=
-+								pQbuffer,=0A=
-+								acb->wqbuf_lastindex=0A=
-+								- acb->wqbuf_firstindex);=0A=
-+								allxfer_len +=3D=0A=
-+								acb->wqbuf_lastindex=0A=
-+								- acb->wqbuf_firstindex;=0A=
-+								acb->wqbuf_firstindex=0A=
-+								=3D acb->wqbuf_lastindex;=0A=
-+								break;=0A=
-+							}=0A=
-+						}=0A=
-+						allxfer_len +=3D 4;=0A=
-+					} while ((acb->wqbuf_firstindex !=3D=0A=
-+					acb->wqbuf_lastindex) &&=0A=
-+					(allxfer_len < 124));=0A=
-+				} else {=0A=
-+					pQbuffer =3D=0A=
-+					&acb->wqbuffer[acb->wqbuf_firstindex];=0A=
-+					memcpy(iop_data, pQbuffer,=0A=
-+					ARCMSR_MAX_QBUFFER -=0A=
-+					acb->wqbuf_firstindex);=0A=
-+					iop_data +=3D ARCMSR_MAX_QBUFFER=0A=
-+					- acb->wqbuf_firstindex;=0A=
-+					allxfer_len =3D ARCMSR_MAX_QBUFFER=0A=
-+					- acb->wqbuf_firstindex;=0A=
-+					acb->wqbuf_firstindex =3D 0;=0A=
-+					do {=0A=
-+						pQbuffer =3D=0A=
-+						&acb->wqbuffer[acb->wqbuf_firstindex];=0A=
-+						if ((acb->wqbuf_lastindex -=0A=
-+						acb->wqbuf_firstindex) > 4) {=0A=
-+							memcpy(iop_data,=0A=
-+							pQbuffer, 4);=0A=
-+							acb->wqbuf_firstindex=0A=
-+							+=3D 4;=0A=
-+							acb->wqbuf_firstindex=0A=
-+							%=3D ARCMSR_MAX_QBUFFER;=0A=
-+							iop_data +=3D 4;=0A=
-+						} else {=0A=
-+							memcpy(iop_data, pQbuffer,=0A=
-+							acb->wqbuf_lastindex=0A=
-+							- acb->wqbuf_firstindex);=0A=
-+							allxfer_len +=3D=0A=
-+							acb->wqbuf_lastindex=0A=
-+							- acb->wqbuf_firstindex;=0A=
-+							acb->wqbuf_firstindex =3D=0A=
-+							acb->wqbuf_lastindex;=0A=
-+							break;=0A=
-+						}=0A=
-+						allxfer_len +=3D 4;=0A=
-+					} while ((acb->wqbuf_firstindex=0A=
-+					!=3D acb->wqbuf_lastindex) &&=0A=
-+					(allxfer_len < 124));=0A=
-+				}=0A=
-+			} else {=0A=
-+				do {=0A=
-+					pQbuffer =3D=0A=
-+					&acb->wqbuffer[acb->wqbuf_firstindex];=0A=
-+					if ((acb->wqbuf_lastindex -=0A=
-+					acb->wqbuf_firstindex) > 4) {=0A=
-+						memcpy(iop_data,=0A=
-+						pQbuffer, 4);=0A=
-+						acb->wqbuf_firstindex=0A=
-+						+=3D 4;=0A=
-+						acb->wqbuf_firstindex=0A=
-+						%=3D ARCMSR_MAX_QBUFFER;=0A=
-+						iop_data +=3D 4;=0A=
-+					} else {=0A=
-+						memcpy(iop_data, pQbuffer,=0A=
-+						acb->wqbuf_lastindex -=0A=
-+						acb->wqbuf_firstindex);=0A=
-+						allxfer_len +=3D acb->wqbuf_lastindex=0A=
-+						- acb->wqbuf_firstindex;=0A=
-+						acb->wqbuf_firstindex =3D=0A=
-+						acb->wqbuf_lastindex;=0A=
-+						break;=0A=
-+					}=0A=
-+					allxfer_len +=3D 4;=0A=
-+				} while ((acb->wqbuf_firstindex !=3D=0A=
-+				acb->wqbuf_lastindex) && (allxfer_len < 124));=0A=
-+			}=0A=
-+			writel(allxfer_len, &pwbuffer->data_len);=0A=
-+			arcmsr_iop_message_wrote(acb);=0A=
-+		}=0A=
- 	}=0A=
- }=0A=
- =0A=
-@@ -2627,74 +2843,155 @@ static int=0A=
- arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,=0A=
- 					struct scsi_cmnd *cmd)=0A=
- {=0A=
--	struct CMD_MESSAGE_FIELD *pcmdmessagefld;=0A=
--	int retvalue =3D 0, transfer_len =3D 0;=0A=
- 	char *buffer;=0A=
-+	unsigned short use_sg;=0A=
-+	int retvalue =3D 0, transfer_len =3D 0;=0A=
-+	unsigned long flags;=0A=
-+	struct CMD_MESSAGE_FIELD *pcmdmessagefld;=0A=
-+	uint32_t	controlcode =3D (uint32_t)cmd->cmnd[5] << 24 |=0A=
-+		(uint32_t)cmd->cmnd[6] << 16 |=0A=
-+		(uint32_t)cmd->cmnd[7] << 8 |=0A=
-+		(uint32_t)cmd->cmnd[8];=0A=
- 	struct scatterlist *sg;=0A=
--	uint32_t controlcode =3D (uint32_t)cmd->cmnd[5] << 24=0A=
--	|(uint32_t)cmd->cmnd[6] << 16=0A=
--	|(uint32_t)cmd->cmnd[7] << 8=0A=
--	| (uint32_t)cmd->cmnd[8];=0A=
-+=0A=
-+	use_sg =3D scsi_sg_count(cmd);=0A=
- 	sg =3D scsi_sglist(cmd);=0A=
- 	buffer =3D kmap_atomic(sg_page(sg)) + sg->offset;=0A=
--	if (scsi_sg_count(cmd) > 1) {=0A=
-+	if (use_sg > 1) {=0A=
- 		retvalue =3D ARCMSR_MESSAGE_FAIL;=0A=
- 		goto message_out;=0A=
- 	}=0A=
- 	transfer_len +=3D sg->length;=0A=
--=0A=
- 	if (transfer_len > sizeof(struct CMD_MESSAGE_FIELD)) {=0A=
- 		retvalue =3D ARCMSR_MESSAGE_FAIL;=0A=
-+		printk("%s: ARCMSR_MESSAGE_FAIL!\n", __func__);=0A=
- 		goto message_out;=0A=
- 	}=0A=
- 	pcmdmessagefld =3D (struct CMD_MESSAGE_FIELD *)buffer;=0A=
- 	switch (controlcode) {=0A=
--=0A=
- 	case ARCMSR_MESSAGE_READ_RQBUFFER: {=0A=
- 		unsigned char *ver_addr;=0A=
- 		uint8_t *pQbuffer, *ptmpQbuffer;=0A=
--		int32_t allxfer_len =3D 0;=0A=
--		unsigned long flags;=0A=
--=0A=
-+		uint32_t allxfer_len =3D 0;=0A=
- 		ver_addr =3D kmalloc(1032, GFP_ATOMIC);=0A=
- 		if (!ver_addr) {=0A=
- 			retvalue =3D ARCMSR_MESSAGE_FAIL;=0A=
-+			printk("%s: memory not enough!\n", __func__);=0A=
- 			goto message_out;=0A=
- 		}=0A=
- 		ptmpQbuffer =3D ver_addr;=0A=
- 		spin_lock_irqsave(&acb->rqbuffer_lock, flags);=0A=
--		while ((acb->rqbuf_firstindex !=3D acb->rqbuf_lastindex)=0A=
--			&& (allxfer_len < 1031)) {=0A=
-+		if (acb->rqbuf_firstindex !=3D acb->rqbuf_lastindex) {=0A=
- 			pQbuffer =3D &acb->rqbuffer[acb->rqbuf_firstindex];=0A=
--			memcpy(ptmpQbuffer, pQbuffer, 1);=0A=
--			acb->rqbuf_firstindex++;=0A=
--			acb->rqbuf_firstindex %=3D ARCMSR_MAX_QBUFFER;=0A=
--			ptmpQbuffer++;=0A=
--			allxfer_len++;=0A=
-+			if (acb->rqbuf_firstindex > acb->rqbuf_lastindex) {=0A=
-+				if ((ARCMSR_MAX_QBUFFER -=0A=
-+					acb->rqbuf_firstindex) >=3D 1032) {=0A=
-+					memcpy(ptmpQbuffer, pQbuffer, 1032);=0A=
-+					acb->rqbuf_firstindex +=3D 1032;=0A=
-+					allxfer_len =3D 1032;=0A=
-+				} else {=0A=
-+					if (((ARCMSR_MAX_QBUFFER -=0A=
-+						acb->rqbuf_firstindex) +=0A=
-+						acb->rqbuf_lastindex) > 1032) {=0A=
-+						memcpy(ptmpQbuffer,=0A=
-+						pQbuffer, ARCMSR_MAX_QBUFFER=0A=
-+						- acb->rqbuf_firstindex);=0A=
-+						ptmpQbuffer +=3D=0A=
-+						ARCMSR_MAX_QBUFFER -=0A=
-+						acb->rqbuf_firstindex;=0A=
-+						memcpy(ptmpQbuffer,=0A=
-+						acb->rqbuffer, 1032 -=0A=
-+						(ARCMSR_MAX_QBUFFER=0A=
-+						- acb->rqbuf_firstindex));=0A=
-+						acb->rqbuf_firstindex =3D=0A=
-+						1032 - (ARCMSR_MAX_QBUFFER=0A=
-+						- acb->rqbuf_firstindex);=0A=
-+						allxfer_len =3D 1032;=0A=
-+					} else {=0A=
-+						memcpy(ptmpQbuffer,=0A=
-+						pQbuffer, ARCMSR_MAX_QBUFFER=0A=
-+						- acb->rqbuf_firstindex);=0A=
-+						ptmpQbuffer +=3D=0A=
-+						ARCMSR_MAX_QBUFFER -=0A=
-+						acb->rqbuf_firstindex;=0A=
-+						memcpy(ptmpQbuffer,=0A=
-+						acb->rqbuffer,=0A=
-+						acb->rqbuf_lastindex);=0A=
-+						allxfer_len =3D ARCMSR_MAX_QBUFFER=0A=
-+						- acb->rqbuf_firstindex +=0A=
-+						acb->rqbuf_lastindex;=0A=
-+						acb->rqbuf_firstindex =3D=0A=
-+						acb->rqbuf_lastindex;=0A=
-+					}=0A=
-+				}=0A=
-+			} else {=0A=
-+				if ((acb->rqbuf_lastindex -=0A=
-+				acb->rqbuf_firstindex) > 1032) {=0A=
-+					memcpy(ptmpQbuffer, pQbuffer, 1032);=0A=
-+					acb->rqbuf_firstindex +=3D 1032;=0A=
-+					allxfer_len =3D 1032;=0A=
-+				} else {=0A=
-+					memcpy(ptmpQbuffer, pQbuffer,=0A=
-+					acb->rqbuf_lastindex - acb->rqbuf_firstindex);=0A=
-+					allxfer_len =3D acb->rqbuf_lastindex=0A=
-+					- acb->rqbuf_firstindex;=0A=
-+					acb->rqbuf_firstindex =3D=0A=
-+					acb->rqbuf_lastindex;=0A=
-+				}=0A=
-+			}=0A=
- 		}=0A=
- 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {=0A=
--=0A=
- 			struct QBUFFER __iomem *prbuffer;=0A=
--			uint8_t __iomem *iop_data;=0A=
--			int32_t iop_len;=0A=
--=0A=
--			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
-+			uint8_t __iomem *iop_data, *vaddr, *temp;=0A=
-+			uint32_t data_len_residual, data_len, rqbuf_lastindex;=0A=
-+			rqbuf_lastindex =3D acb->rqbuf_lastindex;=0A=
- 			prbuffer =3D arcmsr_get_iop_rqbuffer(acb);=0A=
--			iop_data =3D prbuffer->data;=0A=
--			iop_len =3D readl(&prbuffer->data_len);=0A=
--			while (iop_len > 0) {=0A=
--				acb->rqbuffer[acb->rqbuf_lastindex] =3D=0A=
--				readb(iop_data);=0A=
--				acb->rqbuf_lastindex++;=0A=
--				acb->rqbuf_lastindex %=3D ARCMSR_MAX_QBUFFER;=0A=
--				iop_data++;=0A=
--				iop_len--;=0A=
-+			iop_data =3D (uint8_t __iomem *)prbuffer->data;=0A=
-+			data_len_residual =3D data_len =3D readl(&prbuffer->data_len);=0A=
-+			if (data_len > 0) {=0A=
-+				temp =3D vaddr =3D kmalloc(data_len, GFP_ATOMIC);=0A=
-+				if (!vaddr) {=0A=
-+					goto leave;=0A=
-+				}=0A=
-+				acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
-+				while (data_len_residual >=3D 4) {=0A=
-+					memcpy(temp, iop_data, 4);=0A=
-+					temp +=3D 4;=0A=
-+					iop_data +=3D 4;=0A=
-+					data_len_residual -=3D 4;=0A=
-+				}=0A=
-+				if ((data_len_residual > 0) &&=0A=
-+				(data_len_residual < 4)) {=0A=
-+					memcpy(temp, iop_data,=0A=
-+					data_len_residual);=0A=
-+				}=0A=
-+				pQbuffer =3D=0A=
-+				&acb->rqbuffer[acb->rqbuf_lastindex];=0A=
-+				temp =3D vaddr;=0A=
-+				if ((rqbuf_lastindex + data_len) >=0A=
-+				ARCMSR_MAX_QBUFFER) {=0A=
-+					memcpy(pQbuffer, temp,=0A=
-+					ARCMSR_MAX_QBUFFER - rqbuf_lastindex);=0A=
-+					temp +=3D (ARCMSR_MAX_QBUFFER -=0A=
-+					rqbuf_lastindex);=0A=
-+					rqbuf_lastindex =3D (rqbuf_lastindex +=0A=
-+					data_len) % ARCMSR_MAX_QBUFFER;=0A=
-+					memcpy(&acb->rqbuffer[0],=0A=
-+					temp, rqbuf_lastindex);=0A=
-+				} else {=0A=
-+					memcpy(pQbuffer, temp, data_len);=0A=
-+					rqbuf_lastindex =3D=0A=
-+					(rqbuf_lastindex + data_len) %=0A=
-+					ARCMSR_MAX_QBUFFER;=0A=
-+				}=0A=
-+				kfree(vaddr);=0A=
-+				acb->rqbuf_lastindex =3D rqbuf_lastindex;=0A=
-+				arcmsr_iop_message_read(acb);=0A=
- 			}=0A=
--			arcmsr_iop_message_read(acb);=0A=
- 		}=0A=
-+		leave:=0A=
- 		spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);=0A=
--		memcpy(pcmdmessagefld->messagedatabuffer,=0A=
--		ver_addr, allxfer_len);=0A=
-+		memcpy(pcmdmessagefld->messagedatabuffer, ver_addr, allxfer_len);=0A=
- 		pcmdmessagefld->cmdmessage.Length =3D allxfer_len;=0A=
- 		if (acb->fw_flag =3D=3D FW_DEADLOCK) {=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
-@@ -2704,26 +3001,23 @@ arcmsr_iop_message_xfer(struct AdapterCo=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
- 		}=0A=
- 		kfree(ver_addr);=0A=
--		}=0A=
- 		break;=0A=
--=0A=
-+	}=0A=
- 	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {=0A=
- 		unsigned char *ver_addr;=0A=
- 		int32_t my_empty_len, user_len, wqbuf_firstindex,=0A=
- 		wqbuf_lastindex;=0A=
- 		uint8_t *pQbuffer, *ptmpuserbuffer;=0A=
--		unsigned long flags;=0A=
--=0A=
- 		ver_addr =3D kmalloc(1032, GFP_ATOMIC);=0A=
- 		if (!ver_addr) {=0A=
- 			retvalue =3D ARCMSR_MESSAGE_FAIL;=0A=
- 			goto message_out;=0A=
- 		}=0A=
- 		if (acb->fw_flag =3D=3D FW_DEADLOCK) {=0A=
--			pcmdmessagefld->cmdmessage.ReturnCode =3D =0A=
-+			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
- 		} else {=0A=
--			pcmdmessagefld->cmdmessage.ReturnCode =3D =0A=
-+			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
- 		}=0A=
- 		ptmpuserbuffer =3D ver_addr;=0A=
-@@ -2735,28 +3029,39 @@ arcmsr_iop_message_xfer(struct AdapterCo=0A=
- 		wqbuf_firstindex =3D acb->wqbuf_firstindex;=0A=
- 		if (wqbuf_lastindex !=3D wqbuf_firstindex) {=0A=
- 			struct SENSE_DATA *sensebuffer =3D=0A=
--				(struct SENSE_DATA *)cmd->sense_buffer;=0A=
-+			(struct SENSE_DATA *)cmd->sense_buffer;=0A=
- 			arcmsr_post_ioctldata2iop(acb);=0A=
- 			/* has error report sensedata */=0A=
--			sensebuffer->ErrorCode =3D 0x70;=0A=
-+			sensebuffer->ErrorCode =3D SCSI_SENSE_CURRENT_ERRORS;=0A=
- 			sensebuffer->SenseKey =3D ILLEGAL_REQUEST;=0A=
- 			sensebuffer->AdditionalSenseLength =3D 0x0A;=0A=
- 			sensebuffer->AdditionalSenseCode =3D 0x20;=0A=
- 			sensebuffer->Valid =3D 1;=0A=
- 			retvalue =3D ARCMSR_MESSAGE_FAIL;=0A=
- 		} else {=0A=
--			my_empty_len =3D (wqbuf_firstindex-wqbuf_lastindex - 1)=0A=
--				&(ARCMSR_MAX_QBUFFER - 1);=0A=
-+			my_empty_len =3D (wqbuf_firstindex - wqbuf_lastindex - 1)=0A=
-+			& (ARCMSR_MAX_QBUFFER - 1);=0A=
- 			if (my_empty_len >=3D user_len) {=0A=
- 				while (user_len > 0) {=0A=
--					pQbuffer =3D=0A=
--					&acb->wqbuffer[acb->wqbuf_lastindex];=0A=
--					memcpy(pQbuffer, ptmpuserbuffer, 1);=0A=
--					acb->wqbuf_lastindex++;=0A=
--					acb->wqbuf_lastindex %=3D=0A=
--					ARCMSR_MAX_QBUFFER;=0A=
--					ptmpuserbuffer++;=0A=
--					user_len--;=0A=
-+					pQbuffer =3D &acb->wqbuffer[acb->wqbuf_lastindex];=0A=
-+					if ((acb->wqbuf_lastindex + user_len)=0A=
-+						> ARCMSR_MAX_QBUFFER) {=0A=
-+						memcpy(pQbuffer, ptmpuserbuffer,=0A=
-+						ARCMSR_MAX_QBUFFER -=0A=
-+						acb->wqbuf_lastindex);=0A=
-+						ptmpuserbuffer +=3D (ARCMSR_MAX_QBUFFER=0A=
-+						- acb->wqbuf_lastindex);=0A=
-+						user_len -=3D (ARCMSR_MAX_QBUFFER=0A=
-+						- acb->wqbuf_lastindex);=0A=
-+						acb->wqbuf_lastindex =3D 0;=0A=
-+					} else {=0A=
-+						memcpy(pQbuffer, ptmpuserbuffer,=0A=
-+						user_len);=0A=
-+						acb->wqbuf_lastindex +=3D user_len;=0A=
-+						acb->wqbuf_lastindex %=3D=0A=
-+						ARCMSR_MAX_QBUFFER;=0A=
-+						user_len =3D 0;=0A=
-+					}=0A=
- 				}=0A=
- 				if (acb->acb_flags &=0A=
- 				ACB_F_MESSAGE_WQBUFFER_CLEARED) {=0A=
-@@ -2765,24 +3070,26 @@ arcmsr_iop_message_xfer(struct AdapterCo=0A=
- 					arcmsr_post_ioctldata2iop(acb);=0A=
- 				}=0A=
- 			} else {=0A=
--				/* has error report sensedata */=0A=
- 				struct SENSE_DATA *sensebuffer =3D=0A=
--					(struct SENSE_DATA *)cmd->sense_buffer;=0A=
--				sensebuffer->ErrorCode =3D 0x70;=0A=
-+				(struct SENSE_DATA *)cmd->sense_buffer;=0A=
-+				/* has error report sensedata */=0A=
-+				sensebuffer->ErrorCode =3D=0A=
-+				SCSI_SENSE_CURRENT_ERRORS;=0A=
- 				sensebuffer->SenseKey =3D ILLEGAL_REQUEST;=0A=
- 				sensebuffer->AdditionalSenseLength =3D 0x0A;=0A=
- 				sensebuffer->AdditionalSenseCode =3D 0x20;=0A=
- 				sensebuffer->Valid =3D 1;=0A=
- 				retvalue =3D ARCMSR_MESSAGE_FAIL;=0A=
- 			}=0A=
--			}=0A=
--			spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);=0A=
--			kfree(ver_addr);=0A=
- 		}=0A=
-+		spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);=0A=
-+		kfree(ver_addr);=0A=
- 		break;=0A=
--=0A=
-+	}=0A=
- 	case ARCMSR_MESSAGE_CLEAR_RQBUFFER: {=0A=
- 		uint8_t *pQbuffer =3D acb->rqbuffer;=0A=
-+=0A=
-+		spin_lock_irqsave(&acb->rqbuffer_lock, flags);=0A=
- 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {=0A=
- 			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
- 			arcmsr_iop_message_read(acb);=0A=
-@@ -2791,6 +3098,7 @@ arcmsr_iop_message_xfer(struct AdapterCo=0A=
- 		acb->rqbuf_firstindex =3D 0;=0A=
- 		acb->rqbuf_lastindex =3D 0;=0A=
- 		memset(pQbuffer, 0, ARCMSR_MAX_QBUFFER);=0A=
-+		spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);=0A=
- 		if (acb->fw_flag =3D=3D FW_DEADLOCK) {=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
-@@ -2798,9 +3106,8 @@ arcmsr_iop_message_xfer(struct AdapterCo=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
- 		}=0A=
--		}=0A=
- 		break;=0A=
--=0A=
-+	}=0A=
- 	case ARCMSR_MESSAGE_CLEAR_WQBUFFER: {=0A=
- 		uint8_t *pQbuffer =3D acb->wqbuffer;=0A=
- 		if (acb->fw_flag =3D=3D FW_DEADLOCK) {=0A=
-@@ -2810,39 +3117,40 @@ arcmsr_iop_message_xfer(struct AdapterCo=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
- 		}=0A=
--=0A=
-+		spin_lock_irqsave(&acb->wqbuffer_lock, flags);=0A=
- 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {=0A=
- 			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
- 			arcmsr_iop_message_read(acb);=0A=
- 		}=0A=
--		acb->acb_flags |=3D=0A=
--			(ACB_F_MESSAGE_WQBUFFER_CLEARED |=0A=
--				ACB_F_MESSAGE_WQBUFFER_READED);=0A=
-+		acb->acb_flags |=3D (ACB_F_MESSAGE_WQBUFFER_CLEARED |=0A=
-+		ACB_F_MESSAGE_WQBUFFER_READED);=0A=
- 		acb->wqbuf_firstindex =3D 0;=0A=
- 		acb->wqbuf_lastindex =3D 0;=0A=
- 		memset(pQbuffer, 0, ARCMSR_MAX_QBUFFER);=0A=
--		}=0A=
-+		spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);=0A=
- 		break;=0A=
--=0A=
-+	}=0A=
- 	case ARCMSR_MESSAGE_CLEAR_ALLQBUFFER: {=0A=
- 		uint8_t *pQbuffer;=0A=
--=0A=
- 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {=0A=
- 			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
- 			arcmsr_iop_message_read(acb);=0A=
- 		}=0A=
--		acb->acb_flags |=3D=0A=
--			(ACB_F_MESSAGE_WQBUFFER_CLEARED=0A=
--			| ACB_F_MESSAGE_RQBUFFER_CLEARED=0A=
--			| ACB_F_MESSAGE_WQBUFFER_READED);=0A=
-+		spin_lock_irqsave(&acb->rqbuffer_lock, flags);=0A=
-+		acb->acb_flags |=3D ACB_F_MESSAGE_RQBUFFER_CLEARED;=0A=
- 		acb->rqbuf_firstindex =3D 0;=0A=
- 		acb->rqbuf_lastindex =3D 0;=0A=
--		acb->wqbuf_firstindex =3D 0;=0A=
--		acb->wqbuf_lastindex =3D 0;=0A=
- 		pQbuffer =3D acb->rqbuffer;=0A=
- 		memset(pQbuffer, 0, sizeof(struct QBUFFER));=0A=
-+		spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);=0A=
-+		spin_lock_irqsave(&acb->wqbuffer_lock, flags);=0A=
-+		acb->acb_flags |=3D (ACB_F_MESSAGE_WQBUFFER_CLEARED |=0A=
-+		ACB_F_MESSAGE_WQBUFFER_READED);=0A=
-+		acb->wqbuf_firstindex =3D 0;=0A=
-+		acb->wqbuf_lastindex =3D 0;=0A=
- 		pQbuffer =3D acb->wqbuffer;=0A=
- 		memset(pQbuffer, 0, sizeof(struct QBUFFER));=0A=
-+		spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);=0A=
- 		if (acb->fw_flag =3D=3D FW_DEADLOCK) {=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
-@@ -2850,9 +3158,8 @@ arcmsr_iop_message_xfer(struct AdapterCo=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
- 		}=0A=
--		}=0A=
- 		break;=0A=
--=0A=
-+	}=0A=
- 	case ARCMSR_MESSAGE_RETURN_CODE_3F: {=0A=
- 		if (acb->fw_flag =3D=3D FW_DEADLOCK) {=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
-@@ -2862,7 +3169,7 @@ arcmsr_iop_message_xfer(struct AdapterCo=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_3F;=0A=
- 		}=0A=
- 		break;=0A=
--		}=0A=
-+	}=0A=
- 	case ARCMSR_MESSAGE_SAY_HELLO: {=0A=
- 		int8_t *hello_string =3D "Hello! I am ARCMSR";=0A=
- 		if (acb->fw_flag =3D=3D FW_DEADLOCK) {=0A=
-@@ -2872,33 +3179,42 @@ arcmsr_iop_message_xfer(struct AdapterCo=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
- 		}=0A=
--		memcpy(pcmdmessagefld->messagedatabuffer, hello_string=0A=
--			, (int16_t)strlen(hello_string));=0A=
--		}=0A=
-+		memcpy(pcmdmessagefld->messagedatabuffer,=0A=
-+		hello_string, (int16_t)strlen(hello_string));=0A=
- 		break;=0A=
--=0A=
--	case ARCMSR_MESSAGE_SAY_GOODBYE:=0A=
-+	}=0A=
-+	case ARCMSR_MESSAGE_SAY_GOODBYE: {=0A=
- 		if (acb->fw_flag =3D=3D FW_DEADLOCK) {=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
-+		} else {=0A=
-+			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
-+			ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
- 		}=0A=
- 		arcmsr_iop_parking(acb);=0A=
- 		break;=0A=
--=0A=
--	case ARCMSR_MESSAGE_FLUSH_ADAPTER_CACHE:=0A=
-+	}=0A=
-+	case ARCMSR_MESSAGE_FLUSH_ADAPTER_CACHE: {=0A=
- 		if (acb->fw_flag =3D=3D FW_DEADLOCK) {=0A=
- 			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
-+		} else {=0A=
-+			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
-+			ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
- 		}=0A=
- 		arcmsr_flush_adapter_cache(acb);=0A=
- 		break;=0A=
--=0A=
-+	}=0A=
- 	default:=0A=
- 		retvalue =3D ARCMSR_MESSAGE_FAIL;=0A=
-+		printk("unknown controlcode(%d)\n", __LINE__);=0A=
- 	}=0A=
- 	message_out:=0A=
--	sg =3D scsi_sglist(cmd);=0A=
--	kunmap_atomic(buffer - sg->offset);=0A=
-+	if (use_sg) {=0A=
-+		struct scatterlist *sg;=0A=
-+		sg =3D scsi_sglist(cmd);=0A=
-+		kunmap_atomic(buffer - sg->offset);=0A=
-+	}=0A=
- 	return retvalue;=0A=
- }=0A=
- =0A=
-@@ -2930,7 +3246,6 @@ arcmsr_handle_virtual_command(struct Ada=0A=
- 		unsigned char inqdata[36];=0A=
- 		char *buffer;=0A=
- 		struct scatterlist *sg;=0A=
--=0A=
- 		if (cmd->device->lun) {=0A=
- 			cmd->result =3D (DID_TIME_OUT << 16);=0A=
- 			cmd->scsi_done(cmd);=0A=
-@@ -2949,14 +3264,11 @@ arcmsr_handle_virtual_command(struct Ada=0A=
- 		strncpy(&inqdata[16], "RAID controller ", 16);=0A=
- 		/* Product Identification */=0A=
- 		strncpy(&inqdata[32], "R001", 4); /* Product Revision */=0A=
--=0A=
- 		sg =3D scsi_sglist(cmd);=0A=
- 		buffer =3D kmap_atomic(sg_page(sg)) + sg->offset;=0A=
--=0A=
- 		memcpy(buffer, inqdata, sizeof(inqdata));=0A=
- 		sg =3D scsi_sglist(cmd);=0A=
- 		kunmap_atomic(buffer - sg->offset);=0A=
--=0A=
- 		cmd->scsi_done(cmd);=0A=
- 	}=0A=
- 	break;=0A=
-@@ -3611,19 +3923,21 @@ arcmsr_hbaD_polling_ccbdone(struct Adapt=0A=
- {=0A=
- 	bool error;=0A=
- 	uint32_t poll_ccb_done =3D 0, poll_count =3D 0, flag_ccb, ccb_cdb_phy;=0A=
--	int rtn, index, outbound_write_pointer;=0A=
-+	int rtn, doneq_index, index_stripped, outbound_write_pointer;=0A=
-+	unsigned long flags;=0A=
- 	struct ARCMSR_CDB *arcmsr_cdb;=0A=
- 	struct CommandControlBlock *pCCB;=0A=
--	struct MessageUnit_D __iomem *reg =3D=0A=
-+	struct MessageUnit_D __iomem *pmu =3D=0A=
- 		(struct MessageUnit_D *)acb->pmuD;=0A=
- =0A=
-+	spin_lock_irqsave(&acb->doneq_lock, flags);=0A=
- 	polling_hbaD_ccb_retry:=0A=
- 	poll_count++;=0A=
- 	while (1) {=0A=
- 		outbound_write_pointer =3D=0A=
--			readl(reg->outboundlist_copy_pointer);=0A=
--		index =3D reg->doneq_index;=0A=
--		if ((outbound_write_pointer & 0xFF) =3D=3D index) {=0A=
-+		pmu->done_qbuffer[0].addressLow + 1;=0A=
-+		doneq_index =3D pmu->doneq_index;=0A=
-+		if ((outbound_write_pointer & 0xFFF) =3D=3D (doneq_index & 0xFFF)) {=0A=
- 			if (poll_ccb_done) {=0A=
- 				rtn =3D SUCCESS;=0A=
- 				break;=0A=
-@@ -3636,17 +3950,27 @@ arcmsr_hbaD_polling_ccbdone(struct Adapt=0A=
- 				goto polling_hbaD_ccb_retry;=0A=
- 			}=0A=
- 		}=0A=
--		flag_ccb =3D reg->done_qbuffer[index].addressLow;=0A=
-+		if (doneq_index & 0x4000) {=0A=
-+			index_stripped =3D doneq_index & 0xFFF;=0A=
-+			index_stripped +=3D 1;=0A=
-+			index_stripped %=3D ARCMSR_MAX_ARC1214_DONEQUEUE;=0A=
-+			pmu->doneq_index =3D index_stripped ? (index_stripped | 0x4000)=0A=
-+				: (index_stripped + 1);=0A=
-+		} else {=0A=
-+			index_stripped =3D doneq_index;=0A=
-+			index_stripped +=3D 1;=0A=
-+			index_stripped %=3D ARCMSR_MAX_ARC1214_DONEQUEUE;=0A=
-+			pmu->doneq_index =3D index_stripped ? index_stripped :=0A=
-+				((index_stripped | 0x4000) + 1);=0A=
-+		}=0A=
-+		doneq_index =3D pmu->doneq_index;=0A=
-+		flag_ccb =3D pmu->done_qbuffer[doneq_index & 0xFFF].addressLow;=0A=
- 		ccb_cdb_phy =3D (flag_ccb & 0xFFFFFFF0);=0A=
- 		arcmsr_cdb =3D (struct ARCMSR_CDB *)(acb->vir2phy_offset +=0A=
- 			ccb_cdb_phy);=0A=
- 		pCCB =3D container_of(arcmsr_cdb,=0A=
- 			struct CommandControlBlock, arcmsr_cdb);=0A=
- 		poll_ccb_done =3D (pCCB =3D=3D poll_ccb) ? 1 : 0;=0A=
--		index++;=0A=
--		index %=3D ARCMSR_MAX_ARC1214_POSTQUEUE;=0A=
--		reg->doneq_index =3D index;=0A=
--		/* check if command done with no error*/=0A=
- 		if ((pCCB->acb !=3D acb) ||=0A=
- 		(pCCB->startdone !=3D ARCMSR_CCB_START)) {=0A=
- 			if (pCCB->startdone =3D=3D ARCMSR_CCB_ABORTED) {=0A=
-@@ -3673,6 +3997,7 @@ arcmsr_hbaD_polling_ccbdone(struct Adapt=0A=
- 		? true : false;=0A=
- 		arcmsr_report_ccb_state(acb, pCCB, error);=0A=
- 	}=0A=
-+	spin_unlock_irqrestore(&acb->doneq_lock, flags);=0A=
- 	return rtn;=0A=
- }=0A=
- =0A=
-@@ -3805,7 +4130,7 @@ arcmsr_iop_confirm(struct AdapterControl=0A=
- 		struct MessageUnit_D *reg =3D=0A=
- 			(struct MessageUnit_D *)acb->pmuD;=0A=
- 		reg->postq_index =3D 0;=0A=
--		reg->doneq_index =3D 0x40FF;=0A=
-+		reg->doneq_index =3D 0;=0A=
- 		rwbuffer =3D reg->msgcode_rwbuffer;=0A=
- 		writel(ARCMSR_SIGNATURE_SET_CONFIG, rwbuffer++);=0A=
- 		writel(cdb_phyaddr_hi32, rwbuffer++);=0A=
-@@ -3849,7 +4174,8 @@ arcmsr_wait_firmware_ready(struct Adapte=0A=
- 		}=0A=
- 		break;=0A=
- 	case ACB_ADAPTER_TYPE_C: {=0A=
--		struct MessageUnit_C *reg =3D (struct MessageUnit_C *)acb->pmuC;=0A=
-+		struct MessageUnit_C *reg =3D=0A=
-+			(struct MessageUnit_C *)acb->pmuC;=0A=
- 		do {=0A=
- 			firmware_state =3D readl(&reg->outbound_msgaddr1);=0A=
- 		} while ((firmware_state &=0A=
+=0A 
+--1178294230-2037137443-1360149329=:40249
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document; name="Mrs."
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="Mrs. Mary Kamal.docx"
 
-------=_NextPart_000_000C_01CE0488.600903F0--
+UEsDBBQABgAIAAAAIQDd/JU3ZgEAACAFAAATAAgCW0NvbnRlbnRfVHlwZXNd
+LnhtbCCiBAIooAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC0VMtuwjAQvFfqP0S+Vomh
+h6qqCBz6OLZIpR9g7A1Y9Uv28vr7bgJEVQtBKuUSKVnvzOzsxIPR2ppsCTFp
+70rWL3osAye90m5Wso/JS37PsoTCKWG8g5JtILHR8PpqMNkESBl1u1SyOWJ4
+4DzJOViRCh/AUaXy0Qqk1zjjQchPMQN+2+vdcekdgsMcaww2HDxBJRYGs+c1
+fd4qiWASyx63B2uukokQjJYCSSlfOvWDJd8xFNTZnElzHdINyWD8IENdOU6w
+63sja6JWkI1FxFdhSQZf+ai48nJhaYaiG+aATl9VWkLbX6OF6CWkRJ5bU7QV
+K7Tb6z+qI+HGQPp/FVvcLnrSOY4+JE57OZsf6s0rUDlZESCihnZ1x0cHRLLs
+EsPvkLvGb1KAlHfgzbN/tgcNzEnKin6JiZgaOJvvV/Ja6JMiVjB9v5j738C7
+hLT5kz7+wYz9dVF3H0gdb+634RcAAAD//wMAUEsDBBQABgAIAAAAIQAekRq3
+8wAAAE4CAAALAAgCX3JlbHMvLnJlbHMgogQCKKAAAgAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAjJLbSgNBDIbvBd9hyH032woi0tneSKF3IusDhJnsAXcOzKTavr2jILpQ
+217m9OfLT9abg5vUO6c8Bq9hWdWg2JtgR99reG23iwdQWchbmoJnDUfOsGlu
+b9YvPJGUoTyMMaui4rOGQSQ+ImYzsKNchci+VLqQHEkJU4+RzBv1jKu6vsf0
+VwOamabaWQ1pZ+9AtcdYNl/WDl03Gn4KZu/Yy4kVyAdhb9kuYipsScZyjWop
+9SwabDDPJZ2RYqwKNuBpotX1RP9fi46FLAmhCYnP83x1nANaXg902aJ5x687
+HyFZLBZ9e/tDg7MvaD4BAAD//wMAUEsDBBQABgAIAAAAIQBf1OCkUgEAADEF
+AAAcAAgBd29yZC9fcmVscy9kb2N1bWVudC54bWwucmVscyCiBAEooAABAAAA
+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
+AAALAAsAwQIAAPguAAAAAA==
 
+--1178294230-2037137443-1360149329=:40249--
