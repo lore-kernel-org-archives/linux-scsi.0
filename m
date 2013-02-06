@@ -1,13 +1,13 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 62/77] target/iscsi: convert to idr_alloc()
-Date: Wed,  6 Feb 2013 11:40:34 -0800
-Message-ID: <1360179649-22465-63-git-send-email-tj@kernel.org>
+Subject: [PATCH 61/77] scsi: convert to idr_alloc()
+Date: Wed,  6 Feb 2013 11:40:33 -0800
+Message-ID: <1360179649-22465-62-git-send-email-tj@kernel.org>
 References: <1360179649-22465-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1360179649-22465-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Convert to the much saner new idr interface.
@@ -15,79 +15,195 @@ Convert to the much saner new idr interface.
 Only compile tested.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org
-Cc: target-devel@vger.kernel.org
 ---
- drivers/target/iscsi/iscsi_target.c       | 15 ++++++++-------
- drivers/target/iscsi/iscsi_target_login.c | 15 ++++++---------
- 2 files changed, 14 insertions(+), 16 deletions(-)
+ drivers/scsi/ch.c | 21 +++++++++------------
+ drivers/scsi/sg.c | 43 +++++++++++++++++--------------------------
+ drivers/scsi/st.c | 27 ++++++++-------------------
+ 3 files changed, 34 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 339f97f..f1fdf4f 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -144,23 +144,24 @@ struct iscsi_tiqn *iscsit_add_tiqn(unsigned char *buf)
- 	spin_lock_init(&tiqn->login_stats.lock);
- 	spin_lock_init(&tiqn->logout_stats.lock);
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index a15474e..2a32374 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -895,7 +895,7 @@ static int ch_probe(struct device *dev)
+ {
+ 	struct scsi_device *sd = to_scsi_device(dev);
+ 	struct device *class_dev;
+-	int minor, ret = -ENOMEM;
++	int ret;
+ 	scsi_changer *ch;
  
--	if (!idr_pre_get(&tiqn_idr, GFP_KERNEL)) {
--		pr_err("idr_pre_get() for tiqn_idr failed\n");
--		kfree(tiqn);
--		return ERR_PTR(-ENOMEM);
--	}
- 	tiqn->tiqn_state = TIQN_STATE_ACTIVE;
+ 	if (sd->type != TYPE_MEDIUM_CHANGER)
+@@ -905,22 +905,19 @@ static int ch_probe(struct device *dev)
+ 	if (NULL == ch)
+ 		return -ENOMEM;
  
+-	if (!idr_pre_get(&ch_index_idr, GFP_KERNEL))
+-		goto free_ch;
+-
 +	idr_preload(GFP_KERNEL);
- 	spin_lock(&tiqn_lock);
--	ret = idr_get_new(&tiqn_idr, NULL, &tiqn->tiqn_index);
-+
-+	ret = idr_alloc(&tiqn_idr, NULL, 0, 0, GFP_NOWAIT);
- 	if (ret < 0) {
--		pr_err("idr_get_new() failed for tiqn->tiqn_index\n");
-+		pr_err("idr_alloc() failed for tiqn->tiqn_index\n");
- 		spin_unlock(&tiqn_lock);
-+		idr_preload_end();
- 		kfree(tiqn);
- 		return ERR_PTR(ret);
+ 	spin_lock(&ch_index_lock);
+-	ret = idr_get_new(&ch_index_idr, ch, &minor);
++	ret = idr_alloc(&ch_index_idr, ch, 0, CH_MAX_DEVS + 1, GFP_NOWAIT);
+ 	spin_unlock(&ch_index_lock);
++	idr_preload_end();
+ 
+-	if (ret)
++	if (ret < 0) {
++		if (ret == -ENOSPC)
++			ret = -ENODEV;
+ 		goto free_ch;
+-
+-	if (minor > CH_MAX_DEVS) {
+-		ret = -ENODEV;
+-		goto remove_idr;
  	}
-+	tiqn->tiqn_index = ret;
- 	list_add_tail(&tiqn->tiqn_list, &g_tiqn_list);
-+
- 	spin_unlock(&tiqn_lock);
-+	idr_preload_end();
  
- 	pr_debug("CORE[0] - Added iSCSI Target IQN: %s\n", tiqn->tiqn);
+-	ch->minor = minor;
++	ch->minor = ret;
+ 	sprintf(ch->name,"ch%d",ch->minor);
  
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index fdb632f..2535d4d 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -247,19 +247,16 @@ static int iscsi_login_zero_tsih_s1(
- 	spin_lock_init(&sess->session_usage_lock);
- 	spin_lock_init(&sess->ttt_lock);
+ 	class_dev = device_create(ch_sysfs_class, dev,
+@@ -944,7 +941,7 @@ static int ch_probe(struct device *dev)
  
--	if (!idr_pre_get(&sess_idr, GFP_KERNEL)) {
--		pr_err("idr_pre_get() for sess_idr failed\n");
--		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
--				ISCSI_LOGIN_STATUS_NO_RESOURCES);
--		kfree(sess);
--		return -ENOMEM;
+ 	return 0;
+ remove_idr:
+-	idr_remove(&ch_index_idr, minor);
++	idr_remove(&ch_index_idr, ch->minor);
+ free_ch:
+ 	kfree(ch);
+ 	return ret;
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index afa5bfc..df5e961 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1392,24 +1392,23 @@ static Sg_device *sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+-	if (!idr_pre_get(&sg_index_idr, GFP_KERNEL)) {
+-		printk(KERN_WARNING "idr expansion Sg_device failure\n");
+-		error = -ENOMEM;
+-		goto out;
 -	}
+-
 +	idr_preload(GFP_KERNEL);
- 	spin_lock_bh(&sess_idr_lock);
--	ret = idr_get_new(&sess_idr, NULL, &sess->session_index);
-+	ret = idr_alloc(&sess_idr, NULL, 0, 0, GFP_NOWAIT);
-+	if (ret >= 0)
-+		sess->session_index = ret;
- 	spin_unlock_bh(&sess_idr_lock);
+ 	write_lock_irqsave(&sg_index_lock, iflags);
+ 
+-	error = idr_get_new(&sg_index_idr, sdp, &k);
+-	if (error) {
+-		write_unlock_irqrestore(&sg_index_lock, iflags);
+-		printk(KERN_WARNING "idr allocation Sg_device failure: %d\n",
+-		       error);
+-		goto out;
++	error = idr_alloc(&sg_index_idr, sdp, 0, SG_MAX_DEVS, GFP_NOWAIT);
++	if (error < 0) {
++		if (error == -ENOSPC) {
++			sdev_printk(KERN_WARNING, scsidp,
++				    "Unable to attach sg device type=%d, minor number exceeds %d\n",
++				    scsidp->type, SG_MAX_DEVS - 1);
++			error = -ENODEV;
++		} else {
++			printk(KERN_WARNING
++			       "idr allocation Sg_device failure: %d\n", error);
++		}
++		goto out_unlock;
+ 	}
+-
+-	if (unlikely(k >= SG_MAX_DEVS))
+-		goto overflow;
++	k = error;
+ 
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_alloc: dev=%d \n", k));
+ 	sprintf(disk->disk_name, "sg%d", k);
+@@ -1421,25 +1420,17 @@ static Sg_device *sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
+ 	sdp->sg_tablesize = queue_max_segments(q);
+ 	sdp->index = k;
+ 	kref_init(&sdp->d_ref);
++	error = 0;
+ 
++out_unlock:
+ 	write_unlock_irqrestore(&sg_index_lock, iflags);
 +	idr_preload_end();
  
- 	if (ret < 0) {
--		pr_err("idr_get_new() for sess_idr failed\n");
-+		pr_err("idr_alloc() for sess_idr failed\n");
- 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
- 				ISCSI_LOGIN_STATUS_NO_RESOURCES);
- 		kfree(sess);
+-	error = 0;
+- out:
+ 	if (error) {
+ 		kfree(sdp);
+ 		return ERR_PTR(error);
+ 	}
+ 	return sdp;
+-
+- overflow:
+-	idr_remove(&sg_index_idr, k);
+-	write_unlock_irqrestore(&sg_index_lock, iflags);
+-	sdev_printk(KERN_WARNING, scsidp,
+-		    "Unable to attach sg device type=%d, minor "
+-		    "number exceeds %d\n", scsidp->type, SG_MAX_DEVS - 1);
+-	error = -ENODEV;
+-	goto out;
+ }
+ 
+ static int
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 98156a9..7c6edca 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4076,7 +4076,7 @@ static int st_probe(struct device *dev)
+ 	struct st_modedef *STm;
+ 	struct st_partstat *STps;
+ 	struct st_buffer *buffer;
+-	int i, dev_num, error;
++	int i, error;
+ 	char *stp;
+ 
+ 	if (SDp->type != TYPE_TAPE)
+@@ -4178,27 +4178,17 @@ static int st_probe(struct device *dev)
+ 	    tpnt->blksize_changed = 0;
+ 	mutex_init(&tpnt->lock);
+ 
+-	if (!idr_pre_get(&st_index_idr, GFP_KERNEL)) {
+-		pr_warn("st: idr expansion failed\n");
+-		error = -ENOMEM;
+-		goto out_put_disk;
+-	}
+-
++	idr_preload(GFP_KERNEL);
+ 	spin_lock(&st_index_lock);
+-	error = idr_get_new(&st_index_idr, tpnt, &dev_num);
++	error = idr_alloc(&st_index_idr, tpnt, 0, ST_MAX_TAPES + 1, GFP_NOWAIT);
+ 	spin_unlock(&st_index_lock);
+-	if (error) {
++	idr_preload_end();
++	if (error < 0) {
+ 		pr_warn("st: idr allocation failed: %d\n", error);
+ 		goto out_put_disk;
+ 	}
+-
+-	if (dev_num > ST_MAX_TAPES) {
+-		pr_err("st: Too many tape devices (max. %d).\n", ST_MAX_TAPES);
+-		goto out_put_index;
+-	}
+-
+-	tpnt->index = dev_num;
+-	sprintf(disk->disk_name, "st%d", dev_num);
++	tpnt->index = error;
++	sprintf(disk->disk_name, "st%d", tpnt->index);
+ 
+ 	dev_set_drvdata(dev, tpnt);
+ 
+@@ -4218,9 +4208,8 @@ static int st_probe(struct device *dev)
+ 
+ out_remove_devs:
+ 	remove_cdevs(tpnt);
+-out_put_index:
+ 	spin_lock(&st_index_lock);
+-	idr_remove(&st_index_idr, dev_num);
++	idr_remove(&st_index_idr, tpnt->index);
+ 	spin_unlock(&st_index_lock);
+ out_put_disk:
+ 	put_disk(disk);
 -- 
 1.8.1
