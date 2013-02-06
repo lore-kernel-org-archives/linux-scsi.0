@@ -1,54 +1,31 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 60/77] scsi/bfa: convert to idr_alloc()
-Date: Wed,  6 Feb 2013 11:40:32 -0800
-Message-ID: <1360179649-22465-61-git-send-email-tj@kernel.org>
-References: <1360179649-22465-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1360179649-22465-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Krishna C Gudipati <kgudipat@brocade.com>, linux-scsi@vger.kernel.org
+From: Ben Myers <bpm@sgi.com>
+Subject: [LSF/MM TOPIC][ATTEND] protection information and userspace
+Date: Wed, 6 Feb 2013 13:51:22 -0600
+Message-ID: <20130206195122.GA30652@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay1.sgi.com ([192.48.179.29]:50067 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758298Ab3BFTvY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Feb 2013 14:51:24 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 
-Convert to the much saner new idr interface.
+Hi,
 
-Only compile tested.
+I'm interested in discussing how to pass protection information to and from
+userspace.  Maybe Martin could be enlisted for the discussion.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Krishna C Gudipati <kgudipat@brocade.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/bfa/bfad_im.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+I read that some work has already been done in this area but have not been able
+to locate it.  It looks like the bio-integrity code already makes it possible
+to generate the t10-dif crc in the filesystem.  It would be good to be able to
+get the guard and application tags back out to backup applications such as
+xfsdump.  Enabling other applications to generate their own tags in userspace
+is also interesting.
 
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 8f92732..5864f98 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -523,20 +523,13 @@ bfad_im_scsi_host_alloc(struct bfad_s *bfad, struct bfad_im_port_s *im_port,
- 	int error = 1;
- 
- 	mutex_lock(&bfad_mutex);
--	if (!idr_pre_get(&bfad_im_port_index, GFP_KERNEL)) {
-+	error = idr_alloc(&bfad_im_port_index, im_port, 0, 0, GFP_KERNEL);
-+	if (error < 0) {
- 		mutex_unlock(&bfad_mutex);
--		printk(KERN_WARNING "idr_pre_get failure\n");
-+		printk(KERN_WARNING "idr_alloc failure\n");
- 		goto out;
- 	}
--
--	error = idr_get_new(&bfad_im_port_index, im_port,
--					 &im_port->idr_id);
--	if (error) {
--		mutex_unlock(&bfad_mutex);
--		printk(KERN_WARNING "idr_get_new failure\n");
--		goto out;
--	}
--
-+	im_port->idr_id = error;
- 	mutex_unlock(&bfad_mutex);
- 
- 	im_port->shost = bfad_scsi_host_alloc(im_port, bfad);
--- 
-1.8.1
+Regards,
+	Ben
