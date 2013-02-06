@@ -1,80 +1,71 @@
-From: Chuck Lever <chuck.lever@oracle.com>
-Subject: Re: [LSF/MM TOPIC][ATTEND] protection information and userspace
-Date: Wed, 6 Feb 2013 15:34:49 -0500
-Message-ID: <20DAFDEA-0C44-478E-B406-C5B08BC67FBC@oracle.com>
-References: <20130206195122.GA30652@sgi.com> <20130206202444.GA4771@blackbox.djwong.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Andy Grover <agrover@redhat.com>
+Subject: targetcli-fb and rtslib-fb update, Feb '13
+Date: Wed, 06 Feb 2013 12:58:53 -0800
+Message-ID: <5112C40D.7090401@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23648 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758141Ab3BFUe6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Feb 2013 15:34:58 -0500
-In-Reply-To: <20130206202444.GA4771@blackbox.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:16438 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758203Ab3BFU6y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Feb 2013 15:58:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ben Myers <bpm@sgi.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
+Hi all,
 
-On Feb 6, 2013, at 3:24 PM, "Darrick J. Wong" <darrick.wong@oracle.com> wrote:
+I don't know how many of you follow my work on github so I just wanted 
+to give an update on some stuff I've been working on, for my branches of 
+the kernel target user space configuration tools.
 
-> On Wed, Feb 06, 2013 at 01:51:22PM -0600, Ben Myers wrote:
->> Hi,
->> 
->> I'm interested in discussing how to pass protection information to and from
->> userspace.  Maybe Martin could be enlisted for the discussion.
->> 
->> I read that some work has already been done in this area but have not been able
->> to locate it.  It looks like the bio-integrity code already makes it possible
->> to generate the t10-dif crc in the filesystem.  It would be good to be able to
->> get the guard and application tags back out to backup applications such as
->> xfsdump.  Enabling other applications to generate their own tags in userspace
->> is also interesting.
-> 
-> This one's been on my list for a couple of years (and companies) too.  A few
-> years ago Joel Becker had support for it in his sys_dio proposal (that hasn't
-> gone anywhere), and more recently I've theorized that we could add a magic
-> fcntl/ioctl to make the kernel recognize, say, the first iovec of a O_DIRECT
-> *{read,write}v call as the PI buffer, which I think is similar to how DIX gets
-> PI data to a disk.  But it's not like I have any code to show for it.
-> 
-> I /think/ it's fairly straightforward to change the directio submit code to
-> find the userspace PI buffer and amend the block integrity code to attach our
-> own PI buffer.  You'd still have to let the block layer set the sector # field,
-> but afaik that won't affect the crc or the app tag.
-> 
-> I hear that the NFS guys want to propose some sort of protocol for transmitting
-> PI data (across NFS), but I haven't seen anything concrete yet.
+The biggest recent rtslib change is that we've gone back to using Python 
+classes to describe the differences between fabrics. See
+https://github.com/agrover/rtslib-fb/blob/master/rtslib/fabric.py
+for how things look now. This significantly simplifies the 
+implementation of FabricModule, and other classes that use it. Having to 
+write Python to add support for a new fabric seems like a very small 
+price to pay.
 
-I'm writing a requirements document for the NFS protocol which I can discuss at LSF.  The use cases for NFS for now would be virtual disk devices (hypervisors) or direct NFS access to storage from user space.
+The biggest recent targetcli change is a WWN-handling overhaul. All 
+fabric WWNs are prefixed by their type, either "iqn.", "eui." or "naa." 
+This lets us do a better job checking WWNs are valid, and we allow 
+fabrics that allow multiple WWN formats, like iSCSI, to use any of 
+these, but still check for correctness. But we aren't WWN format zealots 
+-- when possible we convert user input to the correct WWN format if 
+possible. This should make cut n paste of FCoE initiator WWNs much less 
+aggravating, for example.
 
-Like everyone else we are waiting for a magical VFS and user space API to appear that can pass PI to and from storage.
+Here are some highlights of other things we've added since my last 
+update to the list in Jan 2012:
 
-> Well, I hope I'll scrape together the time to hack together a PoC before LSF...
-> on the other hand, I ran the discussion about PI userland interfaces at LPC2011
-> and (shamefully) haven't done anything yet.
-> 
-> <end rambling>
-> 
-> --D
->> 
->> Regards,
->> 	Ben
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+targetcli:
+* Only show fabric modules that are present, or don't need HW WWNs
+* "targetcli <cmd>" executes the command and exits
+* restoreconfig now emits specific info on each recoverable error when 
+parsing the savefile
+* ipv6 and localhost addresses allowed for portals
+* Creating a NodeACL MappedLUN can take a storage object, and tpg lun 
+will be automatically created
+* sbp (1394) fabric support
+* More info in storageobject and target summaries
+* read-only parameter on block backstores
+* "sessions" command to list iscsi sessions
+* Added targetcli.8 man page
+* rd_mcp backstore shown as "ramdisk"
+* iblock backstore shown as "block"
+* Change summary formats to "<thing>s: <num>" from "<num> thing{s}"
 
--- 
-Chuck Lever
-chuck[dot]lever[at]oracle[dot]com
+rtslib:
+* Don't load fabric kernel modules until used
+* Remove class Backstore from API - now handled as StorageObject 
+implementation detail
+* Remove legacy code
+* Improve performance of listing 500 luns from 6 min to 3 sec
+* lines of code reduced 20% (not counting .spec removal)
+* Removed python-ipaddr, python-netifaces and python-configobj dependencies
+* Use python-kmod for module loading if present
 
-
-
-
+Regards -- Andy
