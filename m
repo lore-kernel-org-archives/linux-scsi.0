@@ -1,45 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v9 4/4] sd: change to auto suspend mode
-Date: Wed, 6 Feb 2013 10:51:19 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1302061048180.1893-100000@iolanthe.rowland.org>
-References: <5111BBA1.4010200@intel.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 2/2] virtio-scsi: reset virtqueue affinity when doing
+	cpu hotplug
+Date: Wed, 06 Feb 2013 18:27:30 +0100
+Message-ID: <51129282.7040100@redhat.com>
+References: <1355833972-20319-1-git-send-email-pbonzini@redhat.com>
+	<50F525E3.1000100@cn.fujitsu.com> <50F52677.80100@cn.fujitsu.com>
+	<871udlztui.fsf@rustcorp.com.au> <50F624BA.20208@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <5111BBA1.4010200@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <50F624BA.20208@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: gaowanlong@cn.fujitsu.com
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, hutao@cn.fujitsu.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 6 Feb 2013, Aaron Lu wrote:
-
-> > The "if (err == -EAGAIN)" test and the call to pm_schedule_suspend seem
-> > to have been dropped since v8 of this series.  It looks like they ought
-> > to be moved into sdev_runtime_suspend.
+Il 16/01/2013 04:55, Wanlong Gao ha scritto:
+>>> >> Add hot cpu notifier to reset the request virtqueue affinity
+>>> >> when doing cpu hotplug.
+>> > 
+>> > You need to be careful to get_online_cpus() and put_online_cpus() here,
+>> > so CPUs can't go up and down in the middle of operations.
+>> > 
+>> > In particular, get_online_cpus()/put_online_cpus() around calls to
+>> > virtscsi_set_affinity() (except within notifiers).
+> Yes, I'll take care of this, thank you.
 > 
-> I thought they were no longer needed...
 
-You did not mention this in the patch description.
+I squashed patch 1 (plus changes to get/put_online_cpus) in my
+multiqueue series, and applied this one as a separate patch.
 
-> For sd, we have request based rutime PM and the PM core will always try
-> to autosuspend the device with the timer; and for sr, the poll will
-> trigger suspend constantly.
-
-What if the poll has been disabled?
-
-> And for both, we don't return -EAGAIN anyway.
-> So I suppose that code is not necessary?
-
-You could replace it with WARN_ON(err == -EAGAIN).  That way if some 
-SCSI driver does return -EAGAIN in the future, people will know 
-something is wrong.
-
-> BTW, I'll be on vocation till 02/17, and I don't have access to the
-> internet in my hometown, but please feel free to drop any comments and
-> I'll check them when I get back.
-
-I'm going on vacation next week too.  Enjoy your trip.
-
-Alan Stern
-
+Paolo
