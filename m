@@ -1,31 +1,48 @@
-From: Ben Myers <bpm@sgi.com>
-Subject: [LSF/MM TOPIC][ATTEND] protection information and userspace
-Date: Wed, 6 Feb 2013 13:51:22 -0600
-Message-ID: <20130206195122.GA30652@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay1.sgi.com ([192.48.179.29]:50067 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758298Ab3BFTvY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Feb 2013 14:51:24 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 63/77] scsi/lpfc: convert to idr_alloc()
+Date: Wed,  6 Feb 2013 11:40:35 -0800
+Message-ID: <1360179649-22465-64-git-send-email-tj@kernel.org>
+References: <1360179649-22465-1-git-send-email-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1360179649-22465-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 
-Hi,
+Convert to the much saner new idr interface.
 
-I'm interested in discussing how to pass protection information to and from
-userspace.  Maybe Martin could be enlisted for the discussion.
+Only compile tested.
 
-I read that some work has already been done in this area but have not been able
-to locate it.  It looks like the bio-integrity code already makes it possible
-to generate the t10-dif crc in the filesystem.  It would be good to be able to
-get the guard and application tags back out to backup applications such as
-xfsdump.  Enabling other applications to generate their own tags in userspace
-is also interesting.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/lpfc/lpfc_init.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-Regards,
-	Ben
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 26ca2ef..314b4f6 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3165,14 +3165,10 @@ destroy_port(struct lpfc_vport *vport)
+ int
+ lpfc_get_instance(void)
+ {
+-	int instance = 0;
+-
+-	/* Assign an unused number */
+-	if (!idr_pre_get(&lpfc_hba_index, GFP_KERNEL))
+-		return -1;
+-	if (idr_get_new(&lpfc_hba_index, NULL, &instance))
+-		return -1;
+-	return instance;
++	int ret;
++
++	ret = idr_alloc(&lpfc_hba_index, NULL, 0, 0, GFP_KERNEL);
++	return ret < 0 ? -1 : ret;
+ }
+ 
+ /**
+-- 
+1.8.1
