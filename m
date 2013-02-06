@@ -1,13 +1,13 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 63/77] scsi/lpfc: convert to idr_alloc()
-Date: Wed,  6 Feb 2013 11:40:35 -0800
-Message-ID: <1360179649-22465-64-git-send-email-tj@kernel.org>
+Subject: [PATCH 62/77] target/iscsi: convert to idr_alloc()
+Date: Wed,  6 Feb 2013 11:40:34 -0800
+Message-ID: <1360179649-22465-63-git-send-email-tj@kernel.org>
 References: <1360179649-22465-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1360179649-22465-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Convert to the much saner new idr interface.
@@ -15,34 +15,79 @@ Convert to the much saner new idr interface.
 Only compile tested.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: James Smart <james.smart@emulex.com>
+Cc: Nicholas A. Bellinger <nab@linux-iscsi.org>
 Cc: linux-scsi@vger.kernel.org
+Cc: target-devel@vger.kernel.org
 ---
- drivers/scsi/lpfc/lpfc_init.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/target/iscsi/iscsi_target.c       | 15 ++++++++-------
+ drivers/target/iscsi/iscsi_target_login.c | 15 ++++++---------
+ 2 files changed, 14 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 26ca2ef..314b4f6 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3165,14 +3165,10 @@ destroy_port(struct lpfc_vport *vport)
- int
- lpfc_get_instance(void)
- {
--	int instance = 0;
--
--	/* Assign an unused number */
--	if (!idr_pre_get(&lpfc_hba_index, GFP_KERNEL))
--		return -1;
--	if (idr_get_new(&lpfc_hba_index, NULL, &instance))
--		return -1;
--	return instance;
-+	int ret;
-+
-+	ret = idr_alloc(&lpfc_hba_index, NULL, 0, 0, GFP_KERNEL);
-+	return ret < 0 ? -1 : ret;
- }
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 339f97f..f1fdf4f 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -144,23 +144,24 @@ struct iscsi_tiqn *iscsit_add_tiqn(unsigned char *buf)
+ 	spin_lock_init(&tiqn->login_stats.lock);
+ 	spin_lock_init(&tiqn->logout_stats.lock);
  
- /**
+-	if (!idr_pre_get(&tiqn_idr, GFP_KERNEL)) {
+-		pr_err("idr_pre_get() for tiqn_idr failed\n");
+-		kfree(tiqn);
+-		return ERR_PTR(-ENOMEM);
+-	}
+ 	tiqn->tiqn_state = TIQN_STATE_ACTIVE;
+ 
++	idr_preload(GFP_KERNEL);
+ 	spin_lock(&tiqn_lock);
+-	ret = idr_get_new(&tiqn_idr, NULL, &tiqn->tiqn_index);
++
++	ret = idr_alloc(&tiqn_idr, NULL, 0, 0, GFP_NOWAIT);
+ 	if (ret < 0) {
+-		pr_err("idr_get_new() failed for tiqn->tiqn_index\n");
++		pr_err("idr_alloc() failed for tiqn->tiqn_index\n");
+ 		spin_unlock(&tiqn_lock);
++		idr_preload_end();
+ 		kfree(tiqn);
+ 		return ERR_PTR(ret);
+ 	}
++	tiqn->tiqn_index = ret;
+ 	list_add_tail(&tiqn->tiqn_list, &g_tiqn_list);
++
+ 	spin_unlock(&tiqn_lock);
++	idr_preload_end();
+ 
+ 	pr_debug("CORE[0] - Added iSCSI Target IQN: %s\n", tiqn->tiqn);
+ 
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index fdb632f..2535d4d 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -247,19 +247,16 @@ static int iscsi_login_zero_tsih_s1(
+ 	spin_lock_init(&sess->session_usage_lock);
+ 	spin_lock_init(&sess->ttt_lock);
+ 
+-	if (!idr_pre_get(&sess_idr, GFP_KERNEL)) {
+-		pr_err("idr_pre_get() for sess_idr failed\n");
+-		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
+-				ISCSI_LOGIN_STATUS_NO_RESOURCES);
+-		kfree(sess);
+-		return -ENOMEM;
+-	}
++	idr_preload(GFP_KERNEL);
+ 	spin_lock_bh(&sess_idr_lock);
+-	ret = idr_get_new(&sess_idr, NULL, &sess->session_index);
++	ret = idr_alloc(&sess_idr, NULL, 0, 0, GFP_NOWAIT);
++	if (ret >= 0)
++		sess->session_index = ret;
+ 	spin_unlock_bh(&sess_idr_lock);
++	idr_preload_end();
+ 
+ 	if (ret < 0) {
+-		pr_err("idr_get_new() for sess_idr failed\n");
++		pr_err("idr_alloc() for sess_idr failed\n");
+ 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
+ 				ISCSI_LOGIN_STATUS_NO_RESOURCES);
+ 		kfree(sess);
 -- 
 1.8.1
