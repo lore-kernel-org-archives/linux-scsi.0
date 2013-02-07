@@ -1,40 +1,86 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [SCSI] sd: Ensure we correctly disable devices with unknown protection type
-Date: Thu, 07 Feb 2013 14:24:33 -0500
-Message-ID: <yq1bobwrkpa.fsf@sermon.lab.mkp.net>
-References: <20120926082648.GA6721@elgon.mountain>
-	<yq1txuk9ojz.fsf@sermon.lab.mkp.net> <20130206192903.GW4989@mwanda>
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [LSF/MM TOPIC][ATTEND] protection information and userspace
+Date: Thu, 7 Feb 2013 16:04:36 -0500
+Message-ID: <20130207210436.GC6398@fieldses.org>
+References: <20130206195122.GA30652@sgi.com>
+ <20130206202444.GA4771@blackbox.djwong.org>
+ <20DAFDEA-0C44-478E-B406-C5B08BC67FBC@oracle.com>
+ <20130207094012.GA28047@localhost>
+ <20130207100139.GB4773@blackbox.djwong.org>
+ <51138FA0.1080507@suse.de>
+ <51139940.3000902@panasas.com>
+ <x497gmkgkpc.fsf@segfault.boston.devel.redhat.com>
+ <20130207172735.GR14246@lenny.home.zabbo.net>
+ <20130207173639.GB29575@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48802 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161002Ab3BGTYX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2013 14:24:23 -0500
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with ESMTP id r17JOLmU032304
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2013 19:24:22 GMT
-Received: from acsmt356.oracle.com (acsmt356.oracle.com [141.146.40.156])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id r17JOLr3017162
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2013 19:24:21 GMT
-Received: from abhmt101.oracle.com (abhmt101.oracle.com [141.146.116.53])
-	by acsmt356.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id r17JOLPU002807
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Feb 2013 13:24:21 -0600
-In-Reply-To: <20130206192903.GW4989@mwanda> (Dan Carpenter's message of "Wed,
-	6 Feb 2013 22:29:03 +0300")
+Received: from fieldses.org ([174.143.236.118]:49773 "EHLO fieldses.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759449Ab3BGVEo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Feb 2013 16:04:44 -0500
+Content-Disposition: inline
+In-Reply-To: <20130207173639.GB29575@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Zach Brown <zab@redhat.com>, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, Hannes Reinecke <hare@suse.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Chuck Lever <chuck.lever@oracle.com>, Ben Myers <bpm@sgi.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
->>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
+On Thu, Feb 07, 2013 at 09:36:39AM -0800, Joel Becker wrote:
+> Dear LSF committee,
+> 	I'd like to explicitly request attendance for this discussion
+> :-)
 
-Dan> This patch wasn't applied.
+http://marc.info/?l=linux-fsdevel&m=135894412908342&w=2
 
-Nope, but it hasn't been forgotten. I have it in my resubmit queue with
-a couple of other stable fixes.
+	"Also, the way I compile the list of requests is from thread
+	heads ...  that means don't send your attendee request as a
+	reply to something else either otherwise it might get missed."
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+--b.
+
+> 
+> Joel
+> 
+> On Thu, Feb 07, 2013 at 09:27:35AM -0800, Zach Brown wrote:
+> > On Thu, Feb 07, 2013 at 11:19:59AM -0500, Jeff Moyer wrote:
+> > > Boaz Harrosh <bharrosh@panasas.com> writes:
+> > > >> 
+> > > >> For aio we just need to add additional fields to an existing structure.
+> > > >> 
+> > > >> So yeah, I'd be interested in that discussion as well.
+> > > 
+> > > Sure, it's easy to start there, but then you eventually end up having to
+> > > add a non-aio interface as well.  Let's not take the latter off the
+> > > table.
+> > 
+> > I agree that a sync variant should't be ignored, but needing a sync
+> > interface with PI arguments also shouldn't get in the way of adding
+> > support to the aio+dio path.  Simply because it's what people use :/.
+> > 
+> > > I'm not sure how that's directly related to aio, but ok.  If we're going
+> > > to rewrite the aio code, I think Zach's acall would be a good start, at
+> > > least on the API front:
+> > >   http://lwn.net/Articles/316806/
+> > 
+> > Yeah, I'm happy to chat about this stuff if people are interested.  I
+> > think I'd do things differently today than what was done in that aged
+> > acall prototype.
+> > 
+> > - z
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> 
+> "You can get more with a kind word and a gun than you can with
+>  a kind word alone."
+>          - Al Capone
+> 
+> 			http://www.jlbec.org/
+> 			jlbec@evilplan.org
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
