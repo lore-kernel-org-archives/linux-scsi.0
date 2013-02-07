@@ -1,42 +1,50 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [LSF/MM TOPIC][ATTEND] protection information and userspace
-Date: Thu, 07 Feb 2013 14:12:57 -0500
-Message-ID: <yq1k3qkrl8m.fsf@sermon.lab.mkp.net>
+Date: Thu, 07 Feb 2013 14:20:07 -0500
+Message-ID: <yq1fw18rkwo.fsf@sermon.lab.mkp.net>
 References: <20130206195122.GA30652@sgi.com>
-	<20130206202444.GA4771@blackbox.djwong.org>
-	<20DAFDEA-0C44-478E-B406-C5B08BC67FBC@oracle.com>
-	<20130207094012.GA28047@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20130207094012.GA28047@localhost> (Joel Becker's message of
-	"Thu, 7 Feb 2013 01:40:14 -0800")
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Chuck Lever <chuck.lever@oracle.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ben Myers <bpm@sgi.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22170 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758711Ab3BGTUA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Feb 2013 14:20:00 -0500
+In-Reply-To: <20130206195122.GA30652@sgi.com> (Ben Myers's message of "Wed, 6
+	Feb 2013 13:51:22 -0600")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ben Myers <bpm@sgi.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 
->>>>> "Joel" == Joel Becker <jlbec@evilplan.org> writes:
+>>>>> "Ben" == Ben Myers <bpm@sgi.com> writes:
 
-Joel> I'm happy to chat about it.  Unfortunately, like Darrick says,
-Joel> sys_dio() coding hasn't happened.  I do think we're better off
-Joel> with some kind of explicit API than some magic state on the file.
-Joel> I mean, even something like:
+Ben> I'm interested in discussing how to pass protection information to
+Ben> and from userspace.  Maybe Martin could be enlisted for the
+Ben> discussion.
 
-Joel> 	ssize_t write_with_pi(int fd, const void *buf, size_t count,
-Joel> 			      const void *pi, size_t pi_count);
+I'll be there, obviously.
 
-Joel> It's not as nice as a non-historical API (eg sys_dio), but it also
-Joel> probably plays nicer with buffered I/O.
 
-Pretty much everyone I have talked to that are interested in explicitly
-attaching PI (as opposed to relying on the kernel doing it) are using
-Linux aio.
+Ben> I read that some work has already been done in this area but have
+Ben> not been able to locate it.  It looks like the bio-integrity code
+Ben> already makes it possible to generate the t10-dif crc in the
+Ben> filesystem.  
 
-I am not opposed to having more read()/write() like interface as
-well. But I think it's important to cater to the I/O paradigm used by
-the applications interested in this. It's a lot easier to tweak a few
-IOCB fields than it is to rewrite how an application does I/O.
+Yep. Although the block layer will generate the PI when the filesystem
+submits the bio. So until we have a userland conduit there hasn't been
+much point in the filesystems mucking with the PI explicitly.
+
+
+Ben> It would be good to be able to get the guard and application tags
+Ben> back out to backup applications such as xfsdump.  Enabling other
+Ben> applications to generate their own tags in userspace is also
+Ben> interesting.
+
+However, the app tag is really only good for disk drives. Most array
+vendors use it internally. And going forward we're going to use it for
+access control instead of opaque storage. So exposing the application
+tag space to userland applications is of very limited use at this point.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
