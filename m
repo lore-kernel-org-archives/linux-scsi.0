@@ -1,59 +1,65 @@
-From: Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: Re: [LSF/MM TOPIC] Reducing the SRP initiator failover time
-Date: Thu, 7 Feb 2013 14:42:49 -0800
-Message-ID: <51142DE9.30900@mellanox.com>
-References: <510BC68A.90708@acm.org> <CAJZOPZJeCdkJ0xfK0kxic9jfz5A5ddw7TSWXe51yuO6bYTk4ag@mail.gmail.com> <BB97625FCF082447AC2B11418FF02044A6E9E9C5@MTLDAG01.mtl.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [LSF/MM TOPIC][ATTEND] protection information and userspace
+Date: Thu, 7 Feb 2013 15:45:32 -0800
+Message-ID: <20130207234532.GB4771@blackbox.djwong.org>
+References: <20130206195122.GA30652@sgi.com>
+ <20130206202444.GA4771@blackbox.djwong.org>
+ <yq1obfwrleq.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <BB97625FCF082447AC2B11418FF02044A6E9E9C5-fViJhHBwANKuSA5JZHE7gA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Oren Duer <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1obfwrleq.fsf@sermon.lab.mkp.net>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ben Myers <bpm@sgi.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, Feb 07, 2013 at 02:09:17PM -0500, Martin K. Petersen wrote:
+> >>>>> "Darrick" == Darrick J Wong <darrick.wong@oracle.com> writes:
+> 
+> Darrick> and more recently I've theorized that we could add a magic
+> Darrick> fcntl/ioctl to make the kernel recognize, say, the first iovec
+> Darrick> of a O_DIRECT *{read,write}v call as the PI buffer, which I
+> Darrick> think is similar to how DIX gets PI data to a disk.  But it's
+> Darrick> not like I have any code to show for it.
+> 
+> I don't particularly like the "stick it in the first iovec" magic. Also,
+> we need a bit more than this. A handful of knobs need to be present to
+> convey how the PI should be sliced and diced. So then we get into the
+> territory where the first iovec is a PI descriptor of some sort. And
+> then the second entry is the PI buffer.
 
->
->
-> It is known that it takes about two to three minutes before the 
-> upstream SRP initiator fails over from a failed path to a working 
-> path. This is not only considered longer than acceptable but is also 
-> longer than other Linux SCSI initiators (e.g. iSCSI and FC). Progress 
-> so far with improving the fail-over SRP initiator has been slow. This 
-> is because the discussion about candidate patches occurred at two 
-> different levels: not only the patches itself were discussed but also 
-> the approach that should be followed. That last aspect is easier to 
-> discuss in a meeting than over a mailing list. Hence the proposal to 
-> discuss SRP initiator failover behavior during the LSF/MM summit. The 
-> topics that need further discussion are:
-> * If a path fails, remove the entire SCSI host or preserve the SCSI
->   host and only remove the SCSI devices associated with that host ?
-> * Which software component should test the state of a path and should
->   reconnect to an SRP target if a path is restored ? Should that be
->   done by the user space process srp_daemon or by the SRP initiator
->   kernel module ?
-> * How should the SRP initiator behave after a path failure has been
->   detected ? Should the behavior be similar to the FC initiator with
->   its fast_io_fail_tmo and dev_loss_tmo parameters ?
->
-> Dave, if this topic gets accepted, I really hope you will be able to 
-> attend the LSF/MM summit.
->
-> Bart.
->
-Hello Bart,
+Hm, well if we're adding another IO_CMD_ anyway, it probably isn't that hard to
+find space to stuff in an extra pointer or two to a PI descriptor + buffer.
 
-Thank you for taking the initiative.
-Mellanox think that this should be discussed. We'd be happy to attend.
+(or a pointer to a descriptor that itself points to a buffer...)
 
-We also would like to discuss:
-* How and how fast does SRP detect a path failure besides RC error?
-* Role of srp_daemon, how often srp_daemon scan fabric for new/old 
-targets, how-to scale srp_daemon discovery, traps.
+> Darrick> I /think/ it's fairly straightforward to change the directio
+> Darrick> submit code to find the userspace PI buffer and amend the block
+> Darrick> integrity code to attach our own PI buffer.  
+> 
+> I recommend that you check out how I do this in oracleasm.
 
--vu
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Is there a newer one than this?
+https://oss.oracle.com/projects/oracleasm/files/sources/
+
+(Nov. 2008?)
+
+> 
+> Darrick> You'd still have to let the block layer set the sector # field,
+> Darrick> but afaik that won't affect the crc or the app tag.
+> 
+> Correct. But the right way would be to pass the ref tag seed in as part
+> of the IOCB and let sd or the HBA hardware do the remapping.
+
+<nod>
+
+--D
+> 
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
