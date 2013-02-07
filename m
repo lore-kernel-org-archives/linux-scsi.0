@@ -1,86 +1,59 @@
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [LSF/MM TOPIC][ATTEND] protection information and userspace
-Date: Thu, 7 Feb 2013 16:04:36 -0500
-Message-ID: <20130207210436.GC6398@fieldses.org>
-References: <20130206195122.GA30652@sgi.com>
- <20130206202444.GA4771@blackbox.djwong.org>
- <20DAFDEA-0C44-478E-B406-C5B08BC67FBC@oracle.com>
- <20130207094012.GA28047@localhost>
- <20130207100139.GB4773@blackbox.djwong.org>
- <51138FA0.1080507@suse.de>
- <51139940.3000902@panasas.com>
- <x497gmkgkpc.fsf@segfault.boston.devel.redhat.com>
- <20130207172735.GR14246@lenny.home.zabbo.net>
- <20130207173639.GB29575@localhost>
+From: Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: Re: [LSF/MM TOPIC] Reducing the SRP initiator failover time
+Date: Thu, 7 Feb 2013 14:42:49 -0800
+Message-ID: <51142DE9.30900@mellanox.com>
+References: <510BC68A.90708@acm.org> <CAJZOPZJeCdkJ0xfK0kxic9jfz5A5ddw7TSWXe51yuO6bYTk4ag@mail.gmail.com> <BB97625FCF082447AC2B11418FF02044A6E9E9C5@MTLDAG01.mtl.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fieldses.org ([174.143.236.118]:49773 "EHLO fieldses.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759449Ab3BGVEo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Feb 2013 16:04:44 -0500
-Content-Disposition: inline
-In-Reply-To: <20130207173639.GB29575@localhost>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <BB97625FCF082447AC2B11418FF02044A6E9E9C5-fViJhHBwANKuSA5JZHE7gA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Oren Duer <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Zach Brown <zab@redhat.com>, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, Hannes Reinecke <hare@suse.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Chuck Lever <chuck.lever@oracle.com>, Ben Myers <bpm@sgi.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Thu, Feb 07, 2013 at 09:36:39AM -0800, Joel Becker wrote:
-> Dear LSF committee,
-> 	I'd like to explicitly request attendance for this discussion
-> :-)
 
-http://marc.info/?l=linux-fsdevel&m=135894412908342&w=2
+>
+>
+> It is known that it takes about two to three minutes before the 
+> upstream SRP initiator fails over from a failed path to a working 
+> path. This is not only considered longer than acceptable but is also 
+> longer than other Linux SCSI initiators (e.g. iSCSI and FC). Progress 
+> so far with improving the fail-over SRP initiator has been slow. This 
+> is because the discussion about candidate patches occurred at two 
+> different levels: not only the patches itself were discussed but also 
+> the approach that should be followed. That last aspect is easier to 
+> discuss in a meeting than over a mailing list. Hence the proposal to 
+> discuss SRP initiator failover behavior during the LSF/MM summit. The 
+> topics that need further discussion are:
+> * If a path fails, remove the entire SCSI host or preserve the SCSI
+>   host and only remove the SCSI devices associated with that host ?
+> * Which software component should test the state of a path and should
+>   reconnect to an SRP target if a path is restored ? Should that be
+>   done by the user space process srp_daemon or by the SRP initiator
+>   kernel module ?
+> * How should the SRP initiator behave after a path failure has been
+>   detected ? Should the behavior be similar to the FC initiator with
+>   its fast_io_fail_tmo and dev_loss_tmo parameters ?
+>
+> Dave, if this topic gets accepted, I really hope you will be able to 
+> attend the LSF/MM summit.
+>
+> Bart.
+>
+Hello Bart,
 
-	"Also, the way I compile the list of requests is from thread
-	heads ...  that means don't send your attendee request as a
-	reply to something else either otherwise it might get missed."
+Thank you for taking the initiative.
+Mellanox think that this should be discussed. We'd be happy to attend.
 
---b.
+We also would like to discuss:
+* How and how fast does SRP detect a path failure besides RC error?
+* Role of srp_daemon, how often srp_daemon scan fabric for new/old 
+targets, how-to scale srp_daemon discovery, traps.
 
-> 
-> Joel
-> 
-> On Thu, Feb 07, 2013 at 09:27:35AM -0800, Zach Brown wrote:
-> > On Thu, Feb 07, 2013 at 11:19:59AM -0500, Jeff Moyer wrote:
-> > > Boaz Harrosh <bharrosh@panasas.com> writes:
-> > > >> 
-> > > >> For aio we just need to add additional fields to an existing structure.
-> > > >> 
-> > > >> So yeah, I'd be interested in that discussion as well.
-> > > 
-> > > Sure, it's easy to start there, but then you eventually end up having to
-> > > add a non-aio interface as well.  Let's not take the latter off the
-> > > table.
-> > 
-> > I agree that a sync variant should't be ignored, but needing a sync
-> > interface with PI arguments also shouldn't get in the way of adding
-> > support to the aio+dio path.  Simply because it's what people use :/.
-> > 
-> > > I'm not sure how that's directly related to aio, but ok.  If we're going
-> > > to rewrite the aio code, I think Zach's acall would be a good start, at
-> > > least on the API front:
-> > >   http://lwn.net/Articles/316806/
-> > 
-> > Yeah, I'm happy to chat about this stuff if people are interested.  I
-> > think I'd do things differently today than what was done in that aged
-> > acall prototype.
-> > 
-> > - z
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -- 
-> 
-> "You can get more with a kind word and a gun than you can with
->  a kind word alone."
->          - Al Capone
-> 
-> 			http://www.jlbec.org/
-> 			jlbec@evilplan.org
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-vu
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
