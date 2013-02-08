@@ -1,12 +1,12 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 15/23] Revert "[SCSI] qla2xxx: Avoid losing any fc ports when loop id's are exhausted."
-Date: Fri,  8 Feb 2013 01:57:56 -0500
-Message-ID: <1360306684-8286-16-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 12/23] qla2xxx: Display the lock owner on lock acquire failure.
+Date: Fri,  8 Feb 2013 01:57:53 -0500
+Message-ID: <1360306684-8286-13-git-send-email-saurav.kashyap@qlogic.com>
 References: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:38904 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:36496 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1759996Ab3BHHTL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752684Ab3BHHTL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 8 Feb 2013 02:19:11 -0500
 In-Reply-To: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,151 +14,88 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
-
-This reverts commit 4dc77c36f86c2dc4e3f483146d33b64d12c0da3f.
-
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |   83 +++++++++++++++++++++++++++++---------
- 1 files changed, 63 insertions(+), 20 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
+ drivers/scsi/qla2xxx/qla_nx.c  |    9 ++++++++-
+ drivers/scsi/qla2xxx/qla_os.c  |    8 +++++++-
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 8888d9b..51f007f 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3159,7 +3159,7 @@ static int
- qla2x00_configure_fabric(scsi_qla_host_t *vha)
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 65e95bd..29101fe 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -36,7 +36,7 @@
+  * |                              |                    | 0x800b,0x8039  |
+  * | AER/EEH                      |       0x9011       |		|
+  * | Virtual Port                 |       0xa007       |		|
+- * | ISP82XX Specific             |       0xb084       | 0xb002,0xb024  |
++ * | ISP82XX Specific             |       0xb086       | 0xb002,0xb024  |
+  * | MultiQ                       |       0xc00c       |		|
+  * | Misc                         |       0xd010       |		|
+  * | Target Mode		  |	  0xe070       |		|
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 042368b..dc4be5b 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -847,14 +847,21 @@ static int
+ qla82xx_rom_lock(struct qla_hw_data *ha)
  {
- 	int	rval;
--	fc_port_t	*fcport;
-+	fc_port_t	*fcport, *fcptemp;
- 	uint16_t	next_loopid;
- 	uint16_t	mb[MAILBOX_REGISTER_COUNT];
- 	uint16_t	loop_id;
-@@ -3197,7 +3197,7 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 		    0xfc, mb, BIT_1|BIT_0);
- 		if (rval != QLA_SUCCESS) {
- 			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
--			break;
-+			return rval;
- 		}
- 		if (mb[0] != MBS_COMMAND_COMPLETE) {
- 			ql_dbg(ql_dbg_disc, vha, 0x2042,
-@@ -3233,12 +3233,10 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 		if (rval != QLA_SUCCESS)
+ 	int done = 0, timeout = 0;
++	uint32_t lock_owner = 0;
++	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+ 
+ 	while (!done) {
+ 		/* acquire semaphore2 from PCI HW block */
+ 		done = qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_LOCK));
+ 		if (done == 1)
  			break;
- 
--		/* Add new ports to existing port list */
--		list_splice_tail_init(&new_fcports, &vha->vp_fcports);
--
--		/* Starting free loop ID. */
--		next_loopid = ha->min_external_loopid;
--
-+		/*
-+		 * Logout all previous fabric devices marked lost, except
-+		 * FCP2 devices.
-+		 */
- 		list_for_each_entry(fcport, &vha->vp_fcports, list) {
- 			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
- 				break;
-@@ -3246,7 +3244,6 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0)
- 				continue;
- 
--			/* Logout lost/gone fabric devices (non-FCP2) */
- 			if (fcport->scan_state != QLA_FCPORT_SCAN_FOUND &&
- 			    atomic_read(&fcport->state) == FCS_ONLINE) {
- 				qla2x00_mark_device_lost(vha, fcport,
-@@ -3260,30 +3257,76 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 					    fcport->d_id.b.domain,
- 					    fcport->d_id.b.area,
- 					    fcport->d_id.b.al_pa);
-+					fcport->loop_id = FC_NO_LOOP_ID;
- 				}
- 				continue;
- 			}
- 			fcport->scan_state = QLA_FCPORT_SCAN_NONE;
+-		if (timeout >= qla82xx_rom_lock_timeout)
++		if (timeout >= qla82xx_rom_lock_timeout) {
++			lock_owner = qla82xx_rd_32(ha, QLA82XX_ROM_LOCK_ID);
++			ql_dbg(ql_dbg_p3p, vha, 0xb085,
++			    "Failed to acquire rom lock, acquired by %d.\n",
++			    lock_owner);
+ 			return -1;
 +		}
+ 		timeout++;
+ 	}
+ 	qla82xx_wr_32(ha, QLA82XX_ROM_LOCK_ID, ROM_LOCK_DRIVER);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 33fb217..a947f70 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4065,6 +4065,8 @@ qla83xx_force_lock_recovery(scsi_qla_host_t *base_vha)
+ 	uint32_t idc_lck_rcvry_stage_mask = 0x3;
+ 	uint32_t idc_lck_rcvry_owner_mask = 0x3c;
+ 	struct qla_hw_data *ha = base_vha->hw;
++	ql_dbg(ql_dbg_p3p, base_vha, 0xb086,
++	    "Trying force recovery of the IDC lock.\n");
  
--			/* Login fabric devices that need a login */
--			if ((fcport->flags & FCF_LOGIN_NEEDED) != 0 &&
--			    atomic_read(&vha->loop_down_timer) == 0) {
--				if (fcport->loop_id == FC_NO_LOOP_ID) {
--					fcport->loop_id = next_loopid;
--					rval = qla2x00_find_new_loop_id(
--					    base_vha, fcport);
--					if (rval != QLA_SUCCESS) {
--						/* Ran out of IDs to use */
--						continue;
--					}
-+		/* Starting free loop ID. */
-+		next_loopid = ha->min_external_loopid;
-+
-+		/*
-+		 * Scan through our port list and login entries that need to be
-+		 * logged in.
-+		 */
-+		list_for_each_entry(fcport, &vha->vp_fcports, list) {
-+			if (atomic_read(&vha->loop_down_timer) ||
-+			    test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
-+				break;
-+
-+			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0 ||
-+			    (fcport->flags & FCF_LOGIN_NEEDED) == 0)
-+				continue;
-+
-+			if (fcport->loop_id == FC_NO_LOOP_ID) {
-+				fcport->loop_id = next_loopid;
-+				rval = qla2x00_find_new_loop_id(
-+				    base_vha, fcport);
-+				if (rval != QLA_SUCCESS) {
-+					/* Ran out of IDs to use */
-+					break;
- 				}
- 			}
-+			/* Login and update database */
-+			qla2x00_fabric_dev_login(vha, fcport, &next_loopid);
-+		}
-+
-+		/* Exit if out of loop IDs. */
-+		if (rval != QLA_SUCCESS) {
-+			break;
-+		}
-+
-+		/*
-+		 * Login and add the new devices to our port list.
-+		 */
-+		list_for_each_entry_safe(fcport, fcptemp, &new_fcports, list) {
-+			if (atomic_read(&vha->loop_down_timer) ||
-+			    test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
-+				break;
-+
-+			/* Find a new loop ID to use. */
-+			fcport->loop_id = next_loopid;
-+			rval = qla2x00_find_new_loop_id(base_vha, fcport);
-+			if (rval != QLA_SUCCESS) {
-+				/* Ran out of IDs to use */
-+				break;
-+			}
+ 	rval = qla83xx_rd_reg(base_vha, QLA83XX_IDC_LOCK_RECOVERY, &data);
+ 	if (rval)
+@@ -4156,6 +4158,7 @@ qla83xx_idc_lock(scsi_qla_host_t *base_vha, uint16_t requester_id)
+ {
+ 	uint16_t options = (requester_id << 15) | BIT_6;
+ 	uint32_t data;
++	uint32_t lock_owner;
+ 	struct qla_hw_data *ha = base_vha->hw;
  
- 			/* Login and update database */
- 			qla2x00_fabric_dev_login(vha, fcport, &next_loopid);
-+
-+			list_move_tail(&fcport->list, &vha->vp_fcports);
- 		}
- 	} while (0);
+ 	/* IDC-lock implementation using driver-lock/lock-id remote registers */
+@@ -4167,8 +4170,11 @@ retry_lock:
+ 			qla83xx_wr_reg(base_vha, QLA83XX_DRIVER_LOCKID,
+ 			    ha->portnum);
+ 		} else {
++			qla83xx_rd_reg(base_vha, QLA83XX_DRIVER_LOCKID,
++			    &lock_owner);
+ 			ql_dbg(ql_dbg_p3p, base_vha, 0xb063,
+-			    "Failed to acquire IDC lock. retrying...\n");
++			    "Failed to acquire IDC lock, acquired by %d, "
++			    "retrying...\n", lock_owner);
  
-+	/* Free all new device structures not processed. */
-+	list_for_each_entry_safe(fcport, fcptemp, &new_fcports, list) {
-+		list_del(&fcport->list);
-+		kfree(fcport);
-+	}
-+
- 	if (rval) {
- 		ql_dbg(ql_dbg_disc, vha, 0x2068,
- 		    "Configure fabric error exit rval=%d.\n", rval);
+ 			/* Retry/Perform IDC-Lock recovery */
+ 			if (qla83xx_idc_lock_recovery(base_vha)
 -- 
 1.7.7
 
