@@ -1,47 +1,42 @@
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: Re: [LSF/MM TOPIC] Reducing the SRP initiator failover time
-Date: Fri, 08 Feb 2013 12:38:46 +0100
-Message-ID: <5114E3C6.9010900@profitbricks.com>
-References: <510BC68A.90708@acm.org> <CAJZOPZJeCdkJ0xfK0kxic9jfz5A5ddw7TSWXe51yuO6bYTk4ag@mail.gmail.com> <BB97625FCF082447AC2B11418FF02044A6E9E9C5@MTLDAG01.mtl.com> <51142DE9.30900@mellanox.com> <5114C453.7010904@mellanox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH 1/3] target: Fix sense data for out-of-bounds IO operations
+Date: Fri,  8 Feb 2013 15:18:38 -0800
+Message-ID: <1360365520-11972-1-git-send-email-roland@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:38127 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946284Ab3BHLit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2013 06:38:49 -0500
-Received: by mail-bk0-f49.google.com with SMTP id w11so1639271bku.36
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Feb 2013 03:38:47 -0800 (PST)
-In-Reply-To: <5114C453.7010904@mellanox.com>
+Received: from na3sys010aog109.obsmtp.com ([74.125.245.86]:52398 "HELO
+	na3sys010aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1760370Ab3BHXSr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2013 18:18:47 -0500
+Received: by mail-pa0-f70.google.com with SMTP id kp1so3353816pab.9
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Feb 2013 15:18:46 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Vu Pham <vu@mellanox.com>, lsf-pc@lists.linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, David Dillow <dillowda@ornl.gov>, Oren Duer <oren@mellanox.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
 
-On 08.02.2013 10:24, Sagi Grimberg wrote:
-> On 2/8/2013 12:42 AM, Vu Pham wrote:
->> Hello Bart,
->>
->> Thank you for taking the initiative.
->> Mellanox think that this should be discussed. We'd be happy to attend.
->>
->> We also would like to discuss:
->> * How and how fast does SRP detect a path failure besides RC error?
->> * Role of srp_daemon, how often srp_daemon scan fabric for new/old
->> targets, how-to scale srp_daemon discovery, traps.
->>
->> -vu
-> Hey Bart,
-> 
-> I agree with Vu that this issue should be discussed. We'd be happy to
-> attend.
-> 
-> -- 
-> Sagi
+From: Roland Dreier <roland@purestorage.com>
 
-Wow, also thanks to Mellanox for spending resources on SRP as well! Last
-year in June we came across a very different situation.
+We're supposed to return LOGICAL BLOCK ADDRESS OUT OF RANGE, not
+INVALID FIELD IN CDB.
 
-Cheers,
-Sebastian and the ProfitBricks storage team
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/target/target_core_sbc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index a664c66..170f1f7 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -486,7 +486,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		 */
+ 		if (cmd->t_task_lba || sectors) {
+ 			if (sbc_check_valid_sectors(cmd) < 0)
+-				return TCM_INVALID_CDB_FIELD;
++				return TCM_ADDRESS_OUT_OF_RANGE;
+ 		}
+ 		cmd->execute_cmd = ops->execute_sync_cache;
+ 		break;
+-- 
+1.8.1.2
+
