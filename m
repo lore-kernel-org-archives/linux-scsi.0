@@ -1,13 +1,13 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 09/23] qla2xxx: Unload hangs after issuing BSG commands to vport.
-Date: Fri,  8 Feb 2013 01:57:50 -0500
-Message-ID: <1360306684-8286-10-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 20/23] qla2xxx: Don't process RSCNs for a vport on the same physical adapter.
+Date: Fri,  8 Feb 2013 01:58:01 -0500
+Message-ID: <1360306684-8286-21-git-send-email-saurav.kashyap@qlogic.com>
 References: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:64739 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:46856 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1759973Ab3BHHTK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Feb 2013 02:19:10 -0500
+	id S1760004Ab3BHHTM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Feb 2013 02:19:12 -0500
 In-Reply-To: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,122 +16,123 @@ Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.
 
 From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-BSG code path increments ref count in the send path, but does not
-decrement in the return path leading to hang during unload of the
-driver.
+Currently,the driver is processes RSCNs for each new NPIV ports that is created.
+Processing the RSCN includes a name server query to see what has changed at the
+name server side.  The name server query is performed by the physical port and
+each virtual port on the physical adapter (since the RSCN is passed to each
+virtual port for processing).  As the number of virtual ports being created
+increases, this causes a lot of traffic and busies the firmware.
+
+Processing the RSCN for a virtual port we already have a priori knowledge of is
+not necessary so check the 24-bit fabric ID of the RSCN entry and skip
+processing it if the RSCN is for a virtual port we already know about.
 
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c    |   10 +++++-----
- drivers/scsi/qla2xxx/qla_init.c   |    4 +---
- drivers/scsi/qla2xxx/qla_inline.h |    7 +++++++
- drivers/scsi/qla2xxx/qla_os.c     |    4 ++--
- 4 files changed, 15 insertions(+), 10 deletions(-)
+ drivers/scsi/qla2xxx/qla_gbl.h  |    1 +
+ drivers/scsi/qla2xxx/qla_init.c |   21 +++------------------
+ drivers/scsi/qla2xxx/qla_isr.c  |   29 +++++++++++++++++++++++++++++
+ 3 files changed, 33 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 525c339..79babab 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -27,7 +27,7 @@ void
- qla2x00_bsg_sp_free(void *data, void *ptr)
- {
- 	srb_t *sp = (srb_t *)ptr;
--	struct scsi_qla_host *vha = (scsi_qla_host_t *)data;
-+	struct scsi_qla_host *vha = sp->fcport->vha;
- 	struct fc_bsg_job *bsg_job = sp->u.bsg_job;
- 	struct qla_hw_data *ha = vha->hw;
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 617771b..02f11de 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -446,6 +446,7 @@ extern uint8_t *qla25xx_read_nvram_data(scsi_qla_host_t *, uint8_t *, uint32_t,
+     uint32_t);
+ extern int qla25xx_write_nvram_data(scsi_qla_host_t *, uint8_t *, uint32_t,
+     uint32_t);
++extern int qla2x00_is_a_vp_did(scsi_qla_host_t *, uint32_t);
  
-@@ -40,7 +40,7 @@ qla2x00_bsg_sp_free(void *data, void *ptr)
- 	if (sp->type == SRB_CT_CMD ||
- 	    sp->type == SRB_ELS_CMD_HST)
- 		kfree(sp->fcport);
--	mempool_free(sp, vha->hw->srb_mempool);
-+	qla2x00_rel_sp(vha, sp);
- }
- 
- int
-@@ -368,7 +368,7 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
- 	if (rval != QLA_SUCCESS) {
- 		ql_log(ql_log_warn, vha, 0x700e,
- 		    "qla2x00_start_sp failed = %d\n", rval);
--		mempool_free(sp, ha->srb_mempool);
-+		qla2x00_rel_sp(vha, sp);
- 		rval = -EIO;
- 		goto done_unmap_sg;
- 	}
-@@ -515,7 +515,7 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
- 	if (rval != QLA_SUCCESS) {
- 		ql_log(ql_log_warn, vha, 0x7017,
- 		    "qla2x00_start_sp failed=%d.\n", rval);
--		mempool_free(sp, ha->srb_mempool);
-+		qla2x00_rel_sp(vha, sp);
- 		rval = -EIO;
- 		goto done_free_fcport;
- 	}
-@@ -1995,6 +1995,6 @@ done:
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	if (bsg_job->request->msgcode == FC_BSG_HST_CT)
- 		kfree(sp->fcport);
--	mempool_free(sp, ha->srb_mempool);
-+	qla2x00_rel_sp(vha, sp);
- 	return 0;
- }
+ extern int qla2x00_beacon_on(struct scsi_qla_host *);
+ extern int qla2x00_beacon_off(struct scsi_qla_host *);
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 97f2684..7568324 100644
+index 891b8f1..a1e5848 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -70,9 +70,7 @@ qla2x00_sp_free(void *data, void *ptr)
- 	struct scsi_qla_host *vha = (scsi_qla_host_t *)data;
+@@ -3368,8 +3368,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 	int		first_dev, last_dev;
+ 	port_id_t	wrap = {}, nxt_d_id;
+ 	struct qla_hw_data *ha = vha->hw;
+-	struct scsi_qla_host *vp, *base_vha = pci_get_drvdata(ha->pdev);
+-	struct scsi_qla_host *tvp;
++	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
  
- 	del_timer(&iocb->timer);
--	mempool_free(sp, vha->hw->srb_mempool);
+ 	rval = QLA_SUCCESS;
+ 
+@@ -3482,22 +3481,8 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 			continue;
+ 
+ 		/* Bypass virtual ports of the same host. */
+-		found = 0;
+-		if (ha->num_vhosts) {
+-			unsigned long flags;
 -
--	QLA_VHA_MARK_NOT_BUSY(vha);
-+	qla2x00_rel_sp(vha, sp);
+-			spin_lock_irqsave(&ha->vport_slock, flags);
+-			list_for_each_entry_safe(vp, tvp, &ha->vp_list, list) {
+-				if (new_fcport->d_id.b24 == vp->d_id.b24) {
+-					found = 1;
+-					break;
+-				}
+-			}
+-			spin_unlock_irqrestore(&ha->vport_slock, flags);
+-
+-			if (found)
+-				continue;
+-		}
++		if (qla2x00_is_a_vp_did(vha, new_fcport->d_id.b24))
++			continue;
+ 
+ 		/* Bypass if same domain and area of adapter. */
+ 		if (((new_fcport->d_id.b24 & 0xffff00) ==
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index fa738cd..d62fd1a 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -495,6 +495,31 @@ qla83xx_handle_8200_aen(scsi_qla_host_t *vha, uint16_t *mb)
+ 	}
  }
  
- /* Asynchronous Login/Logout Routines -------------------------------------- */
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index deb8618..130f6f3 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -198,6 +198,13 @@ done:
- }
- 
- static inline void
-+qla2x00_rel_sp(scsi_qla_host_t *vha, srb_t *sp)
++int
++qla2x00_is_a_vp_did(scsi_qla_host_t *vha, uint32_t rscn_entry)
 +{
-+	mempool_free(sp, vha->hw->srb_mempool);
-+	QLA_VHA_MARK_NOT_BUSY(vha);
++	struct qla_hw_data *ha = vha->hw;
++	scsi_qla_host_t *vp;
++	uint32_t vp_did;
++	unsigned long flags;
++	int ret = 0;
++
++	if (!ha->num_vhosts)
++		return ret;
++
++	spin_lock_irqsave(&ha->vport_slock, flags);
++	list_for_each_entry(vp, &ha->vp_list, list) {
++		vp_did = vp->d_id.b24;
++		if (vp_did == rscn_entry) {
++			ret = 1;
++			break;
++		}
++	}
++	spin_unlock_irqrestore(&ha->vport_slock, flags);
++
++	return ret;
 +}
 +
-+static inline void
- qla2x00_init_timer(srb_t *sp, unsigned long tmo)
- {
- 	init_timer(&sp->u.iocb_cmd.timer);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 9e3ae1d..33fb217 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -630,7 +630,7 @@ qla2x00_sp_free_dma(void *vha, void *ptr)
- 	}
+ /**
+  * qla2x00_async_event() - Process aynchronous events.
+  * @ha: SCSI driver HA context
+@@ -901,6 +926,10 @@ skip_rio:
+ 		/* Ignore reserved bits from RSCN-payload. */
+ 		rscn_entry = ((mb[1] & 0x3ff) << 16) | mb[2];
  
- 	CMD_SP(cmd) = NULL;
--	mempool_free(sp, ha->srb_mempool);
-+	qla2x00_rel_sp(sp->fcport->vha, sp);
- }
++		/* Skip RSCNs for virtual ports on the same physical port */
++		if (qla2x00_is_a_vp_did(vha, rscn_entry))
++			break;
++
+ 		atomic_set(&vha->loop_down_timer, 0);
+ 		vha->flags.management_server_logged_in = 0;
  
- static void
-@@ -718,7 +718,7 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		goto qc24_target_busy;
- 	}
- 
--	sp = qla2x00_get_sp(base_vha, fcport, GFP_ATOMIC);
-+	sp = qla2x00_get_sp(vha, fcport, GFP_ATOMIC);
- 	if (!sp) {
- 		set_bit(HOST_RAMP_DOWN_QUEUE_DEPTH, &vha->dpc_flags);
- 		goto qc24_host_busy;
 -- 
 1.7.7
 
