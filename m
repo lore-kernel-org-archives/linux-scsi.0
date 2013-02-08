@@ -1,12 +1,12 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 19/23] qla2xxx: Add setting of driver version string for vendor application.
-Date: Fri,  8 Feb 2013 01:58:00 -0500
-Message-ID: <1360306684-8286-20-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 22/23] qla2xxx: Integrate generic card temperature with mezz card temperature.
+Date: Fri,  8 Feb 2013 01:58:03 -0500
+Message-ID: <1360306684-8286-23-git-send-email-saurav.kashyap@qlogic.com>
 References: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:45285 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:30738 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1760005Ab3BHHTM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1760013Ab3BHHTM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 8 Feb 2013 02:19:12 -0500
 In-Reply-To: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,138 +16,248 @@ Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.
 
 From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
+Give priority to I2C thermal.
+
 Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
+ drivers/scsi/qla2xxx/qla_attr.c |   33 +++++++++------
  drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
- drivers/scsi/qla2xxx/qla_def.h  |    2 +
- drivers/scsi/qla2xxx/qla_gbl.h  |    3 ++
- drivers/scsi/qla2xxx/qla_init.c |    2 +
- drivers/scsi/qla2xxx/qla_mbx.c  |   58 +++++++++++++++++++++++++++++++++++++++
- 5 files changed, 66 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |    5 ++-
+ drivers/scsi/qla2xxx/qla_gbl.h  |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c |    2 +-
+ drivers/scsi/qla2xxx/qla_mbx.c  |   82 ++++++++++++++++++++++++++++-----------
+ 6 files changed, 86 insertions(+), 40 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 7256167..1d82eef 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1272,22 +1272,29 @@ qla2x00_thermal_temp_show(struct device *dev,
+ 	struct device_attribute *attr, char *buf)
+ {
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+-	int rval = QLA_FUNCTION_FAILED;
+-	uint16_t temp, frac;
++	uint16_t temp = 0;
+ 
+-	if (!vha->hw->flags.thermal_supported)
+-		return snprintf(buf, PAGE_SIZE, "\n");
++	if (!vha->hw->thermal_support) {
++		ql_log(ql_log_warn, vha, 0x70db,
++		    "Thermal not supported by this card.\n");
++		goto done;
++	}
+ 
+-	temp = frac = 0;
+-	if (qla2x00_reset_active(vha))
+-		ql_log(ql_log_warn, vha, 0x707b,
+-		    "ISP reset active.\n");
+-	else if (!vha->hw->flags.eeh_busy)
+-		rval = qla2x00_get_thermal_temp(vha, &temp, &frac);
+-	if (rval != QLA_SUCCESS)
+-		return snprintf(buf, PAGE_SIZE, "\n");
++	if (qla2x00_reset_active(vha)) {
++		ql_log(ql_log_warn, vha, 0x70dc, "ISP reset active.\n");
++		goto done;
++	}
++
++	if (vha->hw->flags.eeh_busy) {
++		ql_log(ql_log_warn, vha, 0x70dd, "PCI EEH busy.\n");
++		goto done;
++	}
++
++	if (qla2x00_get_thermal_temp(vha, &temp) == QLA_SUCCESS)
++		return snprintf(buf, PAGE_SIZE, "%d\n", temp);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", temp, frac);
++done:
++	return snprintf(buf, PAGE_SIZE, "\n");
+ }
+ 
+ static ssize_t
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 4e58001..69d7a85 100644
+index 69d7a85..1626de5 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
 @@ -12,7 +12,7 @@
   * |             Level            |   Last Value Used  |     Holes	|
   * ----------------------------------------------------------------------
   * | Module Init and Probe        |       0x0126       | 0x4b,0xba,0xfa |
-- * | Mailbox commands             |       0x1154       | 0x111a-0x111b  |
-+ * | Mailbox commands             |       0x1158       | 0x111a-0x111b  |
+- * | Mailbox commands             |       0x1158       | 0x111a-0x111b  |
++ * | Mailbox commands             |       0x115b       | 0x111a-0x111b  |
   * |                              |                    | 0x112c-0x112e  |
   * |                              |                    | 0x113a         |
   * | Device Discovery             |       0x2087       | 0x2020-0x2022, |
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 6550653..992e240 100644
+index 992e240..c081882 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -863,6 +863,8 @@ typedef struct {
- #define	MBX_1		BIT_1
+@@ -864,6 +864,7 @@ typedef struct {
  #define	MBX_0		BIT_0
  
-+#define RNID_TYPE_SET_VERSION	0x9
-+
+ #define RNID_TYPE_SET_VERSION	0x9
++#define RNID_TYPE_ASIC_TEMP	0xC
+ 
  /*
   * Firmware state codes from get firmware state mailbox command
-  */
+@@ -2628,7 +2629,6 @@ struct qla_hw_data {
+ 		uint32_t	nic_core_hung:1;
+ 
+ 		uint32_t	quiesce_owner:1;
+-		uint32_t	thermal_supported:1;
+ 		uint32_t	nic_core_reset_hdlr_active:1;
+ 		uint32_t	nic_core_reset_owner:1;
+ 		uint32_t	isp82xx_no_md_cap:1;
+@@ -3076,6 +3076,9 @@ struct qla_hw_data {
+ 	int             cfg_lun_q_depth;
+ 
+ 	struct qlt_hw_data tgt;
++	uint16_t	thermal_support;
++#define THERMAL_SUPPORT_I2C BIT_0
++#define THERMAL_SUPPORT_ISP BIT_1
+ };
+ 
+ /*
 diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index b67f74a..617771b 100644
+index 02f11de..eb3ca21 100644
 --- a/drivers/scsi/qla2xxx/qla_gbl.h
 +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -358,6 +358,9 @@ extern int
- qla2x00_disable_fce_trace(scsi_qla_host_t *, uint64_t *, uint64_t *);
+@@ -55,7 +55,7 @@ extern void qla2x00_update_fcport(scsi_qla_host_t *, fc_port_t *);
+ extern void qla2x00_alloc_fw_dump(scsi_qla_host_t *);
+ extern void qla2x00_try_to_stop_firmware(scsi_qla_host_t *);
  
- extern int
-+qla2x00_set_driver_version(scsi_qla_host_t *, char *);
-+
-+extern int
- qla2x00_read_sfp(scsi_qla_host_t *, dma_addr_t, uint8_t *,
- 	uint16_t, uint16_t, uint16_t, uint16_t);
+-extern int qla2x00_get_thermal_temp(scsi_qla_host_t *, uint16_t *, uint16_t *);
++extern int qla2x00_get_thermal_temp(scsi_qla_host_t *, uint16_t *);
+ 
+ extern void qla84xx_put_chip(struct scsi_qla_host *);
  
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index edb4f8e..891b8f1 100644
+index a1e5848..edf4d14 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -619,6 +619,8 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
- 	if (IS_QLA24XX_TYPE(ha) || IS_QLA25XX(ha))
- 		qla24xx_read_fcp_prio_cfg(vha);
- 
-+	qla2x00_set_driver_version(vha, QLA2XXX_VERSION);
-+
- 	return (rval);
- }
- 
+@@ -523,7 +523,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ 	vha->flags.reset_active = 0;
+ 	ha->flags.pci_channel_io_perm_failure = 0;
+ 	ha->flags.eeh_busy = 0;
+-	ha->flags.thermal_supported = 1;
++	ha->thermal_support = THERMAL_SUPPORT_I2C|THERMAL_SUPPORT_ISP;
+ 	atomic_set(&vha->loop_down_timer, LOOP_DOWN_TIME);
+ 	atomic_set(&vha->loop_state, LOOP_DOWN);
+ 	vha->device_flags = DFLG_NO_CABLE;
 diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index dc0fe52..281947e 100644
+index 281947e..186dd59 100644
 --- a/drivers/scsi/qla2xxx/qla_mbx.c
 +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3867,6 +3867,64 @@ qla81xx_restart_mpi_firmware(scsi_qla_host_t *vha)
+@@ -3924,6 +3924,39 @@ qla2x00_set_driver_version(scsi_qla_host_t *vha, char *version)
+ 	return rval;
  }
  
- int
-+qla2x00_set_driver_version(scsi_qla_host_t *vha, char *version)
++static int
++qla2x00_read_asic_temperature(scsi_qla_host_t *vha, uint16_t *temp)
 +{
 +	int rval;
 +	mbx_cmd_t mc;
 +	mbx_cmd_t *mcp = &mc;
-+	int len;
-+	uint16_t dwlen;
-+	uint8_t *str;
-+	dma_addr_t str_dma;
-+	struct qla_hw_data *ha = vha->hw;
 +
-+	if (!IS_FWI2_CAPABLE(ha) || IS_QLA82XX(ha))
++	if (!IS_FWI2_CAPABLE(vha->hw))
 +		return QLA_FUNCTION_FAILED;
 +
-+	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1155,
++	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1159,
 +	    "Entered %s.\n", __func__);
 +
-+	str = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &str_dma);
-+	if (!str) {
-+		ql_log(ql_log_warn, vha, 0x1156,
-+		    "Failed to allocate driver version param.\n");
-+		return QLA_MEMORY_ALLOC_FAILED;
-+	}
-+
-+	memcpy(str, "\x7\x3\x11\x0", 4);
-+	dwlen = str[0];
-+	len = dwlen * sizeof(uint32_t) - 4;
-+	memset(str + 4, 0, len);
-+	if (len > strlen(version))
-+		len = strlen(version);
-+	memcpy(str + 4, version, len);
-+
-+	mcp->mb[0] = MBC_SET_RNID_PARAMS;
-+	mcp->mb[1] = RNID_TYPE_SET_VERSION << 8 | dwlen;
-+	mcp->mb[2] = MSW(LSD(str_dma));
-+	mcp->mb[3] = LSW(LSD(str_dma));
-+	mcp->mb[6] = MSW(MSD(str_dma));
-+	mcp->mb[7] = LSW(MSD(str_dma));
-+	mcp->out_mb = MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
-+	mcp->in_mb = MBX_0;
++	mcp->mb[0] = MBC_GET_RNID_PARAMS;
++	mcp->mb[1] = RNID_TYPE_ASIC_TEMP << 8;
++	mcp->out_mb = MBX_1|MBX_0;
++	mcp->in_mb = MBX_1|MBX_0;
 +	mcp->tov = MBX_TOV_SECONDS;
 +	mcp->flags = 0;
 +	rval = qla2x00_mailbox_command(vha, mcp);
++	*temp = mcp->mb[1];
 +
 +	if (rval != QLA_SUCCESS) {
-+		ql_dbg(ql_dbg_mbx, vha, 0x1157,
-+		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
++		ql_dbg(ql_dbg_mbx, vha, 0x115a,
++		    "Failed=%x mb[0]=%x,%x.\n", rval, mcp->mb[0], mcp->mb[1]);
 +	} else {
-+		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1158,
++		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x115b,
 +		    "Done %s.\n", __func__);
 +	}
-+
-+	dma_pool_free(ha->s_dma_pool, str, str_dma);
 +
 +	return rval;
 +}
 +
-+int
+ int
  qla2x00_read_sfp(scsi_qla_host_t *vha, dma_addr_t sfp_dma, uint8_t *sfp,
  	uint16_t dev, uint16_t off, uint16_t len, uint16_t opt)
+@@ -4526,42 +4559,45 @@ qla24xx_set_fcp_prio(scsi_qla_host_t *vha, uint16_t loop_id, uint16_t priority,
+ }
+ 
+ int
+-qla2x00_get_thermal_temp(scsi_qla_host_t *vha, uint16_t *temp, uint16_t *frac)
++qla2x00_get_thermal_temp(scsi_qla_host_t *vha, uint16_t *temp)
  {
+-	int rval;
+-	uint8_t byte;
++	int rval = QLA_FUNCTION_FAILED;
+ 	struct qla_hw_data *ha = vha->hw;
++	uint8_t byte;
+ 
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10ca,
+ 	    "Entered %s.\n", __func__);
+ 
+-	/* Integer part */
+-	rval = qla2x00_read_sfp(vha, 0, &byte, 0x98, 0x01, 1,
+-		BIT_13|BIT_12|BIT_0);
+-	if (rval != QLA_SUCCESS) {
+-		ql_dbg(ql_dbg_mbx, vha, 0x10c9, "Failed=%x.\n", rval);
+-		ha->flags.thermal_supported = 0;
+-		goto fail;
++	if (ha->thermal_support & THERMAL_SUPPORT_I2C) {
++		rval = qla2x00_read_sfp(vha, 0, &byte,
++		    0x98, 0x1, 1, BIT_13|BIT_12|BIT_0);
++		*temp = byte;
++		if (rval == QLA_SUCCESS)
++			goto done;
++
++		ql_log(ql_log_warn, vha, 0x10c9,
++		    "Thermal not supported by I2C.\n");
++		ha->thermal_support &= ~THERMAL_SUPPORT_I2C;
+ 	}
+-	*temp = byte;
+ 
+-	/* Fraction part */
+-	rval = qla2x00_read_sfp(vha, 0, &byte, 0x98, 0x10, 1,
+-		BIT_13|BIT_12|BIT_0);
+-	if (rval != QLA_SUCCESS) {
+-		ql_dbg(ql_dbg_mbx, vha, 0x1019, "Failed=%x.\n", rval);
+-		ha->flags.thermal_supported = 0;
+-		goto fail;
++	if (ha->thermal_support & THERMAL_SUPPORT_ISP) {
++		rval = qla2x00_read_asic_temperature(vha, temp);
++		if (rval == QLA_SUCCESS)
++			goto done;
++
++		ql_log(ql_log_warn, vha, 0x1019,
++		    "Thermal not supported by ISP.\n");
++		ha->thermal_support &= ~THERMAL_SUPPORT_ISP;
+ 	}
+-	*frac = (byte >> 6) * 25;
+ 
+-	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1018,
+-	    "Done %s.\n", __func__);
+-	return rval;
+-fail:
+ 	ql_log(ql_log_warn, vha, 0x1150,
+ 	    "Thermal not supported by this card "
+ 	    "(ignoring further requests).\n");
++	return  rval;
++
++done:
++	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1018,
++	    "Done %s.\n", __func__);
+ 	return rval;
+ }
+ 
 -- 
 1.7.7
 
