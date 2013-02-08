@@ -1,247 +1,250 @@
 From: "NickCheng" <nick.cheng@areca.com.tw>
-Subject: [PATCH 4/5]  arcmsr: Support a New RAID Model, ARC-1214
-Date: Fri, 8 Feb 2013 14:02:58 +0800
-Message-ID: <21CB1F39001C437A9ED005546E7A603C@arecaaebe11fae>
+Subject: [PATCH 2/5]  arcmsr: Support Hibernation
+Date: Fri, 8 Feb 2013 14:03:56 +0800
+Message-ID: <7C296DBCC8724DFAA243BB0C4FB4F222@arecaaebe11fae>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0009_01CE0605.027D91F0"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	boundary="----=_NextPart_000_000F_01CE0605.24D67280"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ia0-f170.google.com ([209.85.210.170]:60720 "EHLO
+	mail-ia0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753182Ab3BHGEp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2013 01:04:45 -0500
+Received: by mail-ia0-f170.google.com with SMTP id k20so3867853iak.15
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Feb 2013 22:04:44 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, jejb@kernel.org, ??? <ching2048@areca.com.tw>
-List-Id: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0009_01CE0605.027D91F0
+------=_NextPart_000_000F_01CE0605.24D67280
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 
 From: Nick Cheng <nick.cheng@areca.com.tw>
 
-Add a New RAID Model, ARC-1214, which can support 8 SATA HDs at most, so far.
+Support hibernation for whole series of RAID controllers
 Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
 ---
 
-------=_NextPart_000_0009_01CE0605.027D91F0
+------=_NextPart_000_000F_01CE0605.24D67280
 Content-Type: application/octet-stream;
-	name="checkpatch4"
+	name="patch2"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: attachment;
-	filename="checkpatch4"
+	filename="patch2"
 
-WARNING: msleep < 20ms can sleep for up to 20ms; see =
-Documentation/timers/timers-howto.txt=0A=
-+		msleep(10);=0A=
-WARNING: line over 80 characters=0A=
-#428: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:496:=0A=
-+	int retry_count =3D 6;/* enlarge wait flush adapter cache time: 10 =
-minute */=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#458: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:531:=0A=
-+			pr_notice("arcmsr%d: wait 'flush adapter"=0A=
-+			"cache' timeout, retry count down =3D %d\n",=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#531: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:598:=0A=
-+			pr_notice("arcmsr%d: dma_alloc_coherent"=0A=
-+			"got error\n", acb->host->host_no);=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#621: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:671:=0A=
-+			pr_notice("arcmsr%d: dma_alloc_coherent"=0A=
-+			"got error\n", acb->host->host_no);=0A=
-=0A=
-WARNING: Too many leading tabs - consider code refactoring=0A=
-#707: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:776:=0A=
-+						if (psdev !=3D NULL) {=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#708: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:777:=0A=
-+							scsi_remove_device(psdev);=0A=
-=0A=
-WARNING: Too many leading tabs - consider code refactoring=0A=
-#810: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:907:=0A=
-+						if ((temp & 0x01) =3D=3D 1 &&=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#812: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:909:=0A=
-+							scsi_add_device(acb->host,=0A=
-=0A=
-WARNING: Too many leading tabs - consider code refactoring=0A=
-#814: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:911:=0A=
-+						} else if ((temp & 0x01) =3D=3D 0=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#816: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:913:=0A=
-+							psdev =3D scsi_device_lookup(acb->host,=0A=
-=0A=
-WARNING: Too many leading tabs - consider code refactoring=0A=
-#818: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:915:=0A=
+diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c =
+b/drivers/scsi/arcmsr/arcmsr_hba.c=0A=
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2013-02-08 13:55:04.814477574 =
++0800=0A=
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2013-02-08 13:55:18.557754617 =
++0800=0A=
+@@ -89,11 +89,18 @@ static int arcmsr_bios_param(struct scsi=0A=
+ static int arcmsr_queue_command(struct Scsi_Host *h, struct scsi_cmnd =
+*cmd);=0A=
+ static int arcmsr_probe(struct pci_dev *pdev,=0A=
+ 				const struct pci_device_id *id);=0A=
++#ifdef CONFIG_PM=0A=
++	static int arcmsr_suspend(struct pci_dev *pdev,=0A=
++	pm_message_t state);=0A=
++	static int arcmsr_resume(struct pci_dev *pdev);=0A=
++#endif=0A=
+ static void arcmsr_remove(struct pci_dev *pdev);=0A=
+ static void arcmsr_shutdown(struct pci_dev *pdev);=0A=
+ static void arcmsr_iop_init(struct AdapterControlBlock *acb);=0A=
+ static void arcmsr_free_ccb_pool(struct AdapterControlBlock *acb);=0A=
+ static u32 arcmsr_disable_outbound_ints(struct AdapterControlBlock =
+*acb);=0A=
++static void arcmsr_enable_outbound_ints(struct AdapterControlBlock *acb,=0A=
++	u32 orig_mask);=0A=
+ static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb);=0A=
+ static void arcmsr_hbaA_flush_cache(struct AdapterControlBlock *acb);=0A=
+ static void arcmsr_hbaB_flush_cache(struct AdapterControlBlock *acb);=0A=
+@@ -166,6 +173,10 @@ static struct pci_driver arcmsr_pci_driv=0A=
+ 	.id_table			=3D arcmsr_device_id_table,=0A=
+ 	.probe			=3D arcmsr_probe,=0A=
+ 	.remove			=3D arcmsr_remove,=0A=
++	#ifdef CONFIG_PM=0A=
++		.suspend		=3D arcmsr_suspend,=0A=
++		.resume		=3D arcmsr_resume,=0A=
++	#endif=0A=
+ 	.shutdown		=3D arcmsr_shutdown,=0A=
+ };=0A=
+ /*=0A=
+@@ -553,10 +564,10 @@ arcmsr_message_isr_bh_fn(struct work_str=0A=
+ 							psdev =3D=0A=
+ 							scsi_device_lookup(acb->host,=0A=
+ 							0, target, lun);=0A=
+-						if (psdev !=3D NULL) {=0A=
+-							scsi_remove_device(psdev);=0A=
+-							scsi_device_put(psdev);=0A=
+-						}=0A=
 +							if (psdev !=3D NULL) {=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#819: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:916:=0A=
 +								scsi_remove_device(psdev);=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#820: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:917:=0A=
 +								scsi_device_put(psdev);=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#978: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1008:=0A=
-+			pr_warn("arcmsr%d: MSI-X"=0A=
-+			"failed to enable\n", acb->host->host_no);=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#1102: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1213:=0A=
- 		pr_notice("arcmsr%d: wait 'abort all outstanding"=0A=
-+		"command' timeout\n"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#1111: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1229:=0A=
- 		pr_notice("arcmsr%d: wait 'abort all outstanding"=0A=
-+		"command' timeout\n"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#1120: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1243:=0A=
- 		pr_notice("arcmsr%d: wait 'abort all outstanding"=0A=
-+		"command' timeout\n"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#1133: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1256:=0A=
-+		pr_notice("arcmsr%d: wait 'abort all outstanding"=0A=
-+		"command' timeout\n"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#1178: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1424:=0A=
++							}=0A=
+ 						}=0A=
+ 						temp >>=3D 1;=0A=
+ 						diff >>=3D 1;=0A=
+@@ -663,6 +674,85 @@ arcmsr_message_isr_bh_fn(struct work_str=0A=
+ 	}=0A=
+ }=0A=
+ =0A=
++#ifdef CONFIG_PM=0A=
++	static int=0A=
++	arcmsr_suspend(struct pci_dev *pdev, pm_message_t state)=0A=
++	{=0A=
++		uint32_t intmask_org;=0A=
++		struct Scsi_Host *host =3D pci_get_drvdata(pdev);=0A=
++		struct AdapterControlBlock *acb =3D=0A=
++			(struct AdapterControlBlock *)host->hostdata;=0A=
++=0A=
++		intmask_org =3D arcmsr_disable_outbound_ints(acb);=0A=
++		free_irq(pdev->irq, acb);=0A=
++		del_timer_sync(&acb->eternal_timer);=0A=
++		flush_scheduled_work();=0A=
++		arcmsr_stop_adapter_bgrb(acb);=0A=
++		arcmsr_flush_adapter_cache(acb);=0A=
++		arcmsr_enable_outbound_ints(acb, intmask_org);=0A=
++		pci_set_drvdata(pdev, host);=0A=
++		pci_save_state(pdev);=0A=
++		pci_disable_device(pdev);=0A=
++		pci_set_power_state(pdev, pci_choose_state(pdev, state));=0A=
++		return 0;=0A=
++	}=0A=
++=0A=
++	static int=0A=
++	arcmsr_resume(struct pci_dev *pdev)=0A=
++	{=0A=
++		int error;=0A=
++		struct Scsi_Host *host =3D pci_get_drvdata(pdev);=0A=
++		struct AdapterControlBlock *acb =3D=0A=
++			(struct AdapterControlBlock *)host->hostdata;=0A=
++		pci_set_power_state(pdev, PCI_D0);=0A=
++		pci_enable_wake(pdev, PCI_D0, 0);=0A=
++		pci_restore_state(pdev);=0A=
++		if (pci_enable_device(pdev)) {=0A=
++			printk("%s: pci_enable_device error\n", __func__);=0A=
++			return -ENODEV;=0A=
++		}=0A=
++		error =3D pci_set_dma_mask(pdev, DMA_BIT_MASK(64));=0A=
++		if (error) {=0A=
++			error =3D pci_set_dma_mask(pdev, DMA_BIT_MASK(32));=0A=
++			if (error) {=0A=
++				pr_warn("scsi%d: No suitable DMA mask available\n",=0A=
++				       host->host_no);=0A=
++				goto controller_unregister;=0A=
++			}=0A=
++		}=0A=
++		pci_set_master(pdev);=0A=
++		arcmsr_iop_init(acb);=0A=
++		if (request_irq(pdev->irq, arcmsr_do_interrupt,=0A=
++			IRQF_SHARED, "arcmsr", acb)) {=0A=
++			goto controller_stop;=0A=
++		}=0A=
++		INIT_WORK(&acb->arcmsr_do_message_isr_bh,=0A=
++		arcmsr_message_isr_bh_fn);=0A=
++		atomic_set(&acb->rq_map_token, 16);=0A=
++		atomic_set(&acb->ante_token_value, 16);=0A=
++		acb->fw_flag =3D FW_NORMAL;=0A=
++		init_timer(&acb->eternal_timer);=0A=
++		acb->eternal_timer.expires =3D jiffies +=0A=
++			msecs_to_jiffies(6 * HZ);=0A=
++		acb->eternal_timer.data =3D (unsigned long) acb;=0A=
++		acb->eternal_timer.function =3D=0A=
++			&arcmsr_request_device_map;=0A=
++		add_timer(&acb->eternal_timer);=0A=
++		return 0;=0A=
++controller_stop:=0A=
++			arcmsr_stop_adapter_bgrb(acb);=0A=
++			arcmsr_flush_adapter_cache(acb);=0A=
++controller_unregister:=0A=
++			scsi_remove_host(host);=0A=
++			arcmsr_free_ccb_pool(acb);=0A=
++			arcmsr_unmap_pciregion(acb);=0A=
++			pci_release_regions(pdev);=0A=
++			scsi_host_put(host);=0A=
++			pci_disable_device(pdev);=0A=
++		return -ENODEV;=0A=
++	}=0A=
++#endif=0A=
++=0A=
+ static int arcmsr_probe(struct pci_dev *pdev, const struct =
+pci_device_id *id)=0A=
+ {=0A=
+ 	struct Scsi_Host *host;=0A=
+@@ -680,8 +770,7 @@ static int arcmsr_probe(struct pci_dev *=0A=
+ 	if (error) {=0A=
+ 		error =3D pci_set_dma_mask(pdev, DMA_BIT_MASK(32));=0A=
+ 		if (error) {=0A=
+-			printk(KERN_WARNING=0A=
+-			       "scsi%d: No suitable DMA mask available\n",=0A=
++			pr_warn("scsi%d: No suitable DMA mask available\n",=0A=
+ 			       host->host_no);=0A=
+ 			goto scsi_host_release;=0A=
+ 		}=0A=
+@@ -960,12 +1049,12 @@ arcmsr_report_ccb_state(struct AdapterCo=0A=
+ =0A=
+ 		default:=0A=
  			pr_notice("arcmsr%d: scsi id =3D %d lun =3D %d"=0A=
-+			"isr get command error done, but got unknown"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#1216: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1444:=0A=
-+		pr_notice("arcmsr%d: isr get an illegal ccb"=0A=
-+		"command done acb =3D 0x%p,"=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#1286: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1570:=0A=
-+				pmu->done_qbuffer[doneq_index & 0xFF].addressLow;=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#1460: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1865:=0A=
-+		pinbound_srb =3D (struct InBound_SRB *)&pmu->post_qbuffer[postq_index =
-& 0xFF];=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#1469: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1874:=0A=
-+			pmu->postq_index =3D index_stripped ? (index_stripped | 0x4000) : =
-index_stripped;=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#1474: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1879:=0A=
-+			pmu->postq_index =3D index_stripped ? index_stripped : =
-(index_stripped | 0x4000);=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#1492: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1894:=0A=
-+		pr_notice("arcmsr%d: wait 'stop adapter"=0A=
-+		"background rebulid' timeout\n"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#1510: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1908:=0A=
-+		pr_notice("arcmsr%d: wait 'stop adapter"=0A=
-+		"background rebulid' timeout\n"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#1526: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:1923:=0A=
-+		pr_notice("arcmsr%d: wait 'stop adapter"=0A=
-+		"background rebulid' timeout\n"=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#1606: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:2006:=0A=
-+		writel(ARCMSR_HBCMU_DRV2IOP_DATA_READ_OK, &reg->inbound_doorbell);=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2193: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:3039:=0A=
+-			"isr get command error done, but got unknown"=0A=
+-			"DeviceStatus =3D 0x%x\n"=0A=
+-			, acb->host->host_no=0A=
+-			, id=0A=
+-			, lun=0A=
+-			, ccb->arcmsr_cdb.DeviceStatus);=0A=
++				"isr get command error done, but got unknown"=0A=
++				"DeviceStatus =3D 0x%x\n"=0A=
++				, acb->host->host_no=0A=
++				, id=0A=
++				, lun=0A=
++				, ccb->arcmsr_cdb.DeviceStatus);=0A=
+ 			acb->devstate[id][lun] =3D ARECA_RAID_GONE;=0A=
+ 			ccb->pcmd->result =3D DID_NO_CONNECT << 16;=0A=
+ 			arcmsr_ccb_complete(ccb);=0A=
+@@ -996,7 +1085,7 @@ struct CommandControlBlock *pCCB, bool e=0A=
+ 		pr_notice("arcmsr%d: isr get an illegal ccb command"=0A=
+ 			"done acb =3D '0x%p'"=0A=
+ 			"ccb =3D '0x%p' ccbacb =3D '0x%p' startdone =3D 0x%x"=0A=
+-			" ccboutstandingcount =3D %d\n"=0A=
++			"ccboutstandingcount =3D %d\n"=0A=
+ 			, acb->host->host_no=0A=
+ 			, acb=0A=
+ 			, pCCB=0A=
+@@ -1023,6 +1112,7 @@ arcmsr_done4abort_postqueue(struct Adapt=0A=
+ 		uint32_t outbound_intstatus;=0A=
+ 		outbound_intstatus =3D readl(&reg->outbound_intstatus) &=0A=
+ 					acb->outbound_int_enable;=0A=
++		/*clear and abort all outbound posted Q*/=0A=
+ 		writel(outbound_intstatus, &reg->outbound_intstatus);=0A=
+ 		while (((flag_ccb =3D readl(&reg->outbound_queueport))=0A=
+ 			!=3D 0xFFFFFFFF)=0A=
+@@ -2262,8 +2352,8 @@ arcmsr_hbaA_get_config(struct AdapterCon=0A=
+ 		&reg->inbound_msgaddr0);=0A=
+ 	if (!arcmsr_hbaA_wait_msgint_ready(acb)) {=0A=
  		pr_notice("arcmsr%d: wait 'get adapter firmware"=0A=
-+		"miscellaneous data' timeout\n",=0A=
-=0A=
-WARNING: line over 80 characters=0A=
-#2221: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:3208:=0A=
-+			writel(ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE_DOORBELL_CLEAR,=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2229: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:3216:=0A=
-+		pr_notice("arcmsr%d: wait 'get adapter firmware"=0A=
-+		"miscellaneous data' timeout\n", pACB->host->host_no);=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2247: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:3234:=0A=
-+	pr_notice("Areca RAID Controller%d: F/W %s &"=0A=
-+	"Model %s\n",=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2364: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:3339:=0A=
-+		pr_notice("arcmsr%d: wait get adapter firmware"=0A=
-+		"miscellaneous data timeout\n", acb->host->host_no);=0A=
-=0A=
-WARNING: labels should not be indented=0A=
-#2463: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:3620:=0A=
-+	polling_hbaD_ccb_retry:=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2497: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:3654:=0A=
-+				pr_notice("arcmsr%d: scsi id =3D %d"=0A=
-+				"lun =3D %d ccb =3D '0x%p' poll command"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2508: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:3665:=0A=
-+			pr_notice("arcmsr%d: polling an illegal"=0A=
-+			"ccb command done ccb =3D '0x%p'"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2642: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:3821:=0A=
-+			pr_notice("arcmsr%d: 'set command Q"=0A=
-+			"window' timeout\n", acb->host->host_no);=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2744: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:4070:=0A=
-+		pr_notice("arcmsr%d: wait 'start adapter"=0A=
-+		"background rebulid' timeout\n", pACB->host->host_no);=0A=
-=0A=
-WARNING: labels should not be indented=0A=
-#2831: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:4447:=0A=
-+			nap:=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2835: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:4451:=0A=
-+				pr_err("arcmsr%d: waiting for"=0A=
-+				"hw bus reset return, retry=3D%d\n",=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2840: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:4456:=0A=
-+					pr_err("arcmsr%d:"=0A=
-+					"waiting for hw bus reset return,"=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2863: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:4479:=0A=
-+			pr_err("arcmsr: scsi bus reset"=0A=
-+			"eh returns with success\n");=0A=
-=0A=
-WARNING: quoted string split across lines=0A=
-#2883: FILE: drivers/scsi/arcmsr/arcmsr_hba.c:4512:=0A=
+-		"miscellaneous data' timeout\n",=0A=
+-		acb->host->host_no);=0A=
++			"miscellaneous data' timeout\n",=0A=
++			acb->host->host_no);=0A=
+ 		return false;=0A=
+ 	}=0A=
+ 	count =3D 8;=0A=
+@@ -3368,8 +3458,8 @@ arcmsr_abort(struct scsi_cmnd *cmd)=0A=
+ 	int rtn =3D FAILED;=0A=
  	pr_notice("arcmsr%d: abort device command of"=0A=
-+		"scsi id =3D %d lun =3D %d\n",=0A=
-=0A=
-ERROR: Missing Signed-off-by: line(s)=0A=
-=0A=
-total: 1 errors, 44 warnings, 2798 lines checked=0A=
-=0A=
-../patch4 has style problems, please review.=0A=
-=0A=
-If any of these errors are false positives, please report=0A=
-them to the maintainer, see CHECKPATCH in MAINTAINERS.=0A=
+ 	"scsi id =3D %d lun =3D %d\n",=0A=
+-	acb->host->host_no,=0A=
+-	cmd->device->id, cmd->device->lun);=0A=
++		acb->host->host_no,=0A=
++		cmd->device->id, cmd->device->lun);=0A=
+ 	acb->acb_flags |=3D ACB_F_ABORT;=0A=
+ 	acb->num_aborts++;=0A=
+ 	/*=0A=
 
-------=_NextPart_000_0009_01CE0605.027D91F0--
+------=_NextPart_000_000F_01CE0605.24D67280--
+
