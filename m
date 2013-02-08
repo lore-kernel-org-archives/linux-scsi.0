@@ -1,233 +1,153 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 10/23] qla2xxx: Extra loopback error handling for ISP83xx.
-Date: Fri,  8 Feb 2013 01:57:51 -0500
-Message-ID: <1360306684-8286-11-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 19/23] qla2xxx: Add setting of driver version string for vendor application.
+Date: Fri,  8 Feb 2013 01:58:00 -0500
+Message-ID: <1360306684-8286-20-git-send-email-saurav.kashyap@qlogic.com>
 References: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:34273 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:45285 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1759977Ab3BHHTK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Feb 2013 02:19:10 -0500
+	id S1760005Ab3BHHTM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Feb 2013 02:19:12 -0500
 In-Reply-To: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Add the following error handling for loopback diagnostic mode with ISP83xx:
-
-1. If we do not receive an MBA_DCBX_COMPLETE after our initial set port
-configuration command, try to reset the port back into normal operation.
-If that fails, take a FCoE dump and then reset the chip.
-2. After completing the loopback diagnostic operation, if the reset of the port
-back into normal operation fails then reset the port so we take a FCoE dump
-and then reset the chip.
-3. When we receive an IDC notification and the requested operation is loopback
-extend the loop down timer so the link does not appear to down for an
-extended period of time.
-
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c |  127 +++++++++++++++++++++++----------------
- drivers/scsi/qla2xxx/qla_isr.c |   16 ++++-
- 2 files changed, 87 insertions(+), 56 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
+ drivers/scsi/qla2xxx/qla_def.h  |    2 +
+ drivers/scsi/qla2xxx/qla_gbl.h  |    3 ++
+ drivers/scsi/qla2xxx/qla_init.c |    2 +
+ drivers/scsi/qla2xxx/qla_mbx.c  |   58 +++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 66 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 79babab..5478fff 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -531,6 +531,58 @@ done_unmap_sg:
- done:
- 	return rval;
- }
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 4e58001..69d7a85 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -12,7 +12,7 @@
+  * |             Level            |   Last Value Used  |     Holes	|
+  * ----------------------------------------------------------------------
+  * | Module Init and Probe        |       0x0126       | 0x4b,0xba,0xfa |
+- * | Mailbox commands             |       0x1154       | 0x111a-0x111b  |
++ * | Mailbox commands             |       0x1158       | 0x111a-0x111b  |
+  * |                              |                    | 0x112c-0x112e  |
+  * |                              |                    | 0x113a         |
+  * | Device Discovery             |       0x2087       | 0x2020-0x2022, |
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 6550653..992e240 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -863,6 +863,8 @@ typedef struct {
+ #define	MBX_1		BIT_1
+ #define	MBX_0		BIT_0
+ 
++#define RNID_TYPE_SET_VERSION	0x9
 +
-+/* Disable loopback mode */
-+static inline int
-+qla81xx_reset_loopback_mode(scsi_qla_host_t *vha, uint16_t *config,
-+    int wait)
+ /*
+  * Firmware state codes from get firmware state mailbox command
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index b67f74a..617771b 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -358,6 +358,9 @@ extern int
+ qla2x00_disable_fce_trace(scsi_qla_host_t *, uint64_t *, uint64_t *);
+ 
+ extern int
++qla2x00_set_driver_version(scsi_qla_host_t *, char *);
++
++extern int
+ qla2x00_read_sfp(scsi_qla_host_t *, dma_addr_t, uint8_t *,
+ 	uint16_t, uint16_t, uint16_t, uint16_t);
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index edb4f8e..891b8f1 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -619,6 +619,8 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ 	if (IS_QLA24XX_TYPE(ha) || IS_QLA25XX(ha))
+ 		qla24xx_read_fcp_prio_cfg(vha);
+ 
++	qla2x00_set_driver_version(vha, QLA2XXX_VERSION);
++
+ 	return (rval);
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index dc0fe52..281947e 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3867,6 +3867,64 @@ qla81xx_restart_mpi_firmware(scsi_qla_host_t *vha)
+ }
+ 
+ int
++qla2x00_set_driver_version(scsi_qla_host_t *vha, char *version)
 +{
-+	int ret = 0;
-+	int rval = 0;
-+	uint16_t new_config[4];
++	int rval;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++	int len;
++	uint16_t dwlen;
++	uint8_t *str;
++	dma_addr_t str_dma;
 +	struct qla_hw_data *ha = vha->hw;
 +
-+	if (!IS_QLA81XX(ha) && !IS_QLA8031(ha))
-+		goto done_reset_internal;
++	if (!IS_FWI2_CAPABLE(ha) || IS_QLA82XX(ha))
++		return QLA_FUNCTION_FAILED;
 +
-+	memset(new_config, 0 , sizeof(new_config));
-+	if ((config[0] & INTERNAL_LOOPBACK_MASK) >> 1 ==
-+	    ENABLE_INTERNAL_LOOPBACK ||
-+	    (config[0] & INTERNAL_LOOPBACK_MASK) >> 1 ==
-+	    ENABLE_EXTERNAL_LOOPBACK) {
-+		new_config[0] = config[0] & ~INTERNAL_LOOPBACK_MASK;
-+		ql_dbg(ql_dbg_user, vha, 0x70bf, "new_config[0]=%02x\n",
-+		    (new_config[0] & INTERNAL_LOOPBACK_MASK));
-+		memcpy(&new_config[1], &config[1], sizeof(uint16_t) * 3) ;
++	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1155,
++	    "Entered %s.\n", __func__);
 +
-+		ha->notify_dcbx_comp = wait;
-+		ret = qla81xx_set_port_config(vha, new_config);
-+		if (ret != QLA_SUCCESS) {
-+			ql_log(ql_log_warn, vha, 0x7025,
-+			    "Set port config failed.\n");
-+			ha->notify_dcbx_comp = 0;
-+			rval = -EINVAL;
-+			goto done_reset_internal;
-+		}
-+
-+		/* Wait for DCBX complete event */
-+		if (wait && !wait_for_completion_timeout(&ha->dcbx_comp,
-+			(20 * HZ))) {
-+			ql_dbg(ql_dbg_user, vha, 0x7026,
-+			    "State change notification not received.\n");
-+			ha->notify_dcbx_comp = 0;
-+			rval = -EINVAL;
-+			goto done_reset_internal;
-+		} else
-+			ql_dbg(ql_dbg_user, vha, 0x7027,
-+			    "State change received.\n");
-+
-+		ha->notify_dcbx_comp = 0;
++	str = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &str_dma);
++	if (!str) {
++		ql_log(ql_log_warn, vha, 0x1156,
++		    "Failed to allocate driver version param.\n");
++		return QLA_MEMORY_ALLOC_FAILED;
 +	}
-+done_reset_internal:
++
++	memcpy(str, "\x7\x3\x11\x0", 4);
++	dwlen = str[0];
++	len = dwlen * sizeof(uint32_t) - 4;
++	memset(str + 4, 0, len);
++	if (len > strlen(version))
++		len = strlen(version);
++	memcpy(str + 4, version, len);
++
++	mcp->mb[0] = MBC_SET_RNID_PARAMS;
++	mcp->mb[1] = RNID_TYPE_SET_VERSION << 8 | dwlen;
++	mcp->mb[2] = MSW(LSD(str_dma));
++	mcp->mb[3] = LSW(LSD(str_dma));
++	mcp->mb[6] = MSW(MSD(str_dma));
++	mcp->mb[7] = LSW(MSD(str_dma));
++	mcp->out_mb = MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
++	mcp->in_mb = MBX_0;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->flags = 0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++
++	if (rval != QLA_SUCCESS) {
++		ql_dbg(ql_dbg_mbx, vha, 0x1157,
++		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
++	} else {
++		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1158,
++		    "Done %s.\n", __func__);
++	}
++
++	dma_pool_free(ha->s_dma_pool, str, str_dma);
++
 +	return rval;
 +}
 +
- /*
-  * Set the port configuration to enable the internal or external loopback
-  * depending on the loopback mode.
-@@ -569,6 +621,15 @@ qla81xx_set_loopback_mode(scsi_qla_host_t *vha, uint16_t *config,
- 	if (!wait_for_completion_timeout(&ha->dcbx_comp, (20 * HZ))) {
- 		ql_dbg(ql_dbg_user, vha, 0x7022,
- 		    "State change notification not received.\n");
-+		ret = qla81xx_reset_loopback_mode(vha, new_config, 0);
-+		/*
-+		 * If the reset of the loopback mode doesn't work take a FCoE
-+		 * dump and reset the chip.
-+		 */
-+		if (ret) {
-+			ha->isp_ops->fw_dump(vha, 0);
-+			set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
-+		}
- 		rval = -EINVAL;
- 	} else {
- 		if (ha->flags.idc_compl_status) {
-@@ -587,57 +648,6 @@ done_set_internal:
- 	return rval;
- }
- 
--/* Disable loopback mode */
--static inline int
--qla81xx_reset_loopback_mode(scsi_qla_host_t *vha, uint16_t *config,
--    int wait)
--{
--	int ret = 0;
--	int rval = 0;
--	uint16_t new_config[4];
--	struct qla_hw_data *ha = vha->hw;
--
--	if (!IS_QLA81XX(ha) && !IS_QLA8031(ha))
--		goto done_reset_internal;
--
--	memset(new_config, 0 , sizeof(new_config));
--	if ((config[0] & INTERNAL_LOOPBACK_MASK) >> 1 ==
--	    ENABLE_INTERNAL_LOOPBACK ||
--	    (config[0] & INTERNAL_LOOPBACK_MASK) >> 1 ==
--	    ENABLE_EXTERNAL_LOOPBACK) {
--		new_config[0] = config[0] & ~INTERNAL_LOOPBACK_MASK;
--		ql_dbg(ql_dbg_user, vha, 0x70bf, "new_config[0]=%02x\n",
--		    (new_config[0] & INTERNAL_LOOPBACK_MASK));
--		memcpy(&new_config[1], &config[1], sizeof(uint16_t) * 3) ;
--
--		ha->notify_dcbx_comp = wait;
--		ret = qla81xx_set_port_config(vha, new_config);
--		if (ret != QLA_SUCCESS) {
--			ql_log(ql_log_warn, vha, 0x7025,
--			    "Set port config failed.\n");
--			ha->notify_dcbx_comp = 0;
--			rval = -EINVAL;
--			goto done_reset_internal;
--		}
--
--		/* Wait for DCBX complete event */
--		if (wait && !wait_for_completion_timeout(&ha->dcbx_comp,
--			(20 * HZ))) {
--			ql_dbg(ql_dbg_user, vha, 0x7026,
--			    "State change notification not received.\n");
--			ha->notify_dcbx_comp = 0;
--			rval = -EINVAL;
--			goto done_reset_internal;
--		} else
--			ql_dbg(ql_dbg_user, vha, 0x7027,
--			    "State change received.\n");
--
--		ha->notify_dcbx_comp = 0;
--	}
--done_reset_internal:
--	return rval;
--}
--
- static int
- qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
++int
+ qla2x00_read_sfp(scsi_qla_host_t *vha, dma_addr_t sfp_dma, uint8_t *sfp,
+ 	uint16_t dev, uint16_t off, uint16_t len, uint16_t opt)
  {
-@@ -781,11 +791,24 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 			rval = qla2x00_loopback_test(vha, &elreq, response);
- 
- 			if (new_config[0]) {
-+				int ret;
-+
- 				/* Revert back to original port config
- 				 * Also clear internal loopback
- 				 */
--				qla81xx_reset_loopback_mode(vha,
-+				ret = qla81xx_reset_loopback_mode(vha,
- 				    new_config, 0);
-+				if (ret) {
-+					/*
-+					 * If the reset of the loopback mode
-+					 * doesn't work take FCoE dump and then
-+					 * reset the chip.
-+					 */
-+					ha->isp_ops->fw_dump(vha, 0);
-+					set_bit(ISP_ABORT_NEEDED,
-+					    &vha->dpc_flags);
-+				}
-+
- 			}
- 
- 			if (response[0] == MBS_COMMAND_ERROR &&
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 26a3086..9380d96 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -985,13 +985,21 @@ skip_rio:
- 		    mb[1], mb[2], mb[3]);
- 		break;
- 	case MBA_IDC_NOTIFY:
--		/* See if we need to quiesce any I/O */
--		if (IS_QLA8031(vha->hw))
--			if ((mb[2] & 0x7fff) == MBC_PORT_RESET ||
--			    (mb[2] & 0x7fff) == MBC_SET_PORT_CONFIG) {
-+		if (IS_QLA8031(vha->hw)) {
-+			mb[4] = RD_REG_WORD(&reg24->mailbox4);
-+			if (((mb[2] & 0x7fff) == MBC_PORT_RESET ||
-+			    (mb[2] & 0x7fff) == MBC_SET_PORT_CONFIG) &&
-+			    (mb[4] & INTERNAL_LOOPBACK_MASK) != 0) {
- 				set_bit(ISP_QUIESCE_NEEDED, &vha->dpc_flags);
-+				/*
-+				 * Extend loop down timer since port is active.
-+				 */
-+				if (atomic_read(&vha->loop_state) == LOOP_DOWN)
-+					atomic_set(&vha->loop_down_timer,
-+					    LOOP_DOWN_TIME);
- 				qla2xxx_wake_dpc(vha);
- 			}
-+		}
- 	case MBA_IDC_COMPLETE:
- 	case MBA_IDC_TIME_EXT:
- 		if (IS_QLA81XX(vha->hw) || IS_QLA8031(vha->hw))
 -- 
 1.7.7
 
