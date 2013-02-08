@@ -1,99 +1,67 @@
-From: Naresh Kumar Inna <naresh@chelsio.com>
-Subject: Re: [SCSI] csiostor: Chelsio FCoE offload driver
-Date: Fri, 8 Feb 2013 13:04:29 +0530
-Message-ID: <5114AA85.8040005@chelsio.com>
-References: <20130206130943.GU4989@mwanda>
+From: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: Re: [LSF/MM TOPIC] Reducing the SRP initiator failover time
+Date: Fri, 8 Feb 2013 11:24:35 +0200
+Message-ID: <5114C453.7010904@mellanox.com>
+References: <510BC68A.90708@acm.org> <CAJZOPZJeCdkJ0xfK0kxic9jfz5A5ddw7TSWXe51yuO6bYTk4ag@mail.gmail.com> <BB97625FCF082447AC2B11418FF02044A6E9E9C5@MTLDAG01.mtl.com> <51142DE9.30900@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:21750 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317Ab3BHHef (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Feb 2013 02:34:35 -0500
-In-Reply-To: <20130206130943.GU4989@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51142DE9.30900-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Oren Duer <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kbuild@01.org" <kbuild@01.org>
 
-On 2/6/2013 6:39 PM, Dan Carpenter wrote:
-> Hopefully, you recieved an email about this last November, but this
-> is a follow up because the bug is still there.
-> 
+On 2/8/2013 12:42 AM, Vu Pham wrote:
+>
+>>
+>>
+>> It is known that it takes about two to three minutes before the 
+>> upstream SRP initiator fails over from a failed path to a working 
+>> path. This is not only considered longer than acceptable but is also 
+>> longer than other Linux SCSI initiators (e.g. iSCSI and FC). Progress 
+>> so far with improving the fail-over SRP initiator has been slow. This 
+>> is because the discussion about candidate patches occurred at two 
+>> different levels: not only the patches itself were discussed but also 
+>> the approach that should be followed. That last aspect is easier to 
+>> discuss in a meeting than over a mailing list. Hence the proposal to 
+>> discuss SRP initiator failover behavior during the LSF/MM summit. The 
+>> topics that need further discussion are:
+>> * If a path fails, remove the entire SCSI host or preserve the SCSI
+>>   host and only remove the SCSI devices associated with that host ?
+>> * Which software component should test the state of a path and should
+>>   reconnect to an SRP target if a path is restored ? Should that be
+>>   done by the user space process srp_daemon or by the SRP initiator
+>>   kernel module ?
+>> * How should the SRP initiator behave after a path failure has been
+>>   detected ? Should the behavior be similar to the FC initiator with
+>>   its fast_io_fail_tmo and dev_loss_tmo parameters ?
+>>
+>> Dave, if this topic gets accepted, I really hope you will be able to 
+>> attend the LSF/MM summit.
+>>
+>> Bart.
+>>
+> Hello Bart,
+>
+> Thank you for taking the initiative.
+> Mellanox think that this should be discussed. We'd be happy to attend.
+>
+> We also would like to discuss:
+> * How and how fast does SRP detect a path failure besides RC error?
+> * Role of srp_daemon, how often srp_daemon scan fabric for new/old 
+> targets, how-to scale srp_daemon discovery, traps.
+>
+> -vu
+Hey Bart,
 
-I don't recollect getting that email. Thanks for reporting nevertheless.
-There are some patches lined up for supporting new features and some bug
-fixes. I will ensure those patches address the issues you have reported.
+I agree with Vu that this issue should be discussed. We'd be happy to 
+attend.
 
-Thanks,
-Naresh.
-
-
-> Smatch complains about a buffer overflow in this:
-> 
-> drivers/scsi/csiostor/csio_rnode.c:872 csio_rnode_fwevt_handler()
-> 	error: buffer overflow '(rn)->stats.n_evt_fw' 22 <= 26
-> 
->    859  void
->    860  csio_rnode_fwevt_handler(struct csio_rnode *rn, uint8_t fwevt)
->    861  {
->    862          struct csio_lnode *ln = csio_rnode_to_lnode(rn);
->    863          enum csio_rn_ev evt;
->    864  
->    865          evt = CSIO_FWE_TO_RNFE(fwevt);
->    866          if (!evt) {
-> 
-> Events greater than PROTO_ERR_IMPL_LOGO are invalid.
-> 
->    867                  csio_ln_err(ln, "ssni:x%x Unhandled FW Rdev event: %d\n",
->    868                              csio_rn_flowid(rn), fwevt);
->    869                  CSIO_INC_STATS(rn, n_evt_unexp);
->    870                  return;
->    871          }
->    872          CSIO_INC_STATS(rn, n_evt_fw[fwevt]);
-> 
-> It looks like new events were added and the size of the n_evt_fw[]
-> array wasn't updated to hold them.  Everything after RSCN_DEV_LOST
-> causes memory corruption.
-> 
->    RSCN_DEV_LOST           = 0x16,
->    SCR_ACC_RCVD            = 0x17,
->    ADISC_RJT_RCVD          = 0x18,
->    LOGO_SNT                = 0x19,
->    PROTO_ERR_IMPL_LOGO     = 0x1a,
-> 
-> There is a related bug in the lnode version of this code which
-> Smatch does not catch.
-> 
-> drivers/scsi/csiostor/csio_lnode.c
->   1555                          /* save previous event for debugging */
->   1556                          ln->prev_evt = ln->cur_evt;
->   1557                          ln->cur_evt = rdev_wr->event_cause;
->   1558                          CSIO_INC_STATS(ln, n_evt_fw[rdev_wr->event_cause]);
->                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Memory corruption.
-> 
->   1559  
->   1560                          /* Translate all the fabric events to lnode SM events */
->   1561                          evt = CSIO_FWE_TO_LNE(rdev_wr->event_cause);
->   1562                          if (evt) {
-> 
-> Valid events handled here but we already corrupted memory three
-> lines earlier.
-> 
->   1563                                  csio_ln_dbg(ln,
->   1564                                          "Posting event to lnode event:%d "
->   1565                                          "cause:%d flowid:x%x\n", evt,
->   1566                                          rdev_wr->event_cause, rdev_flowid);
->   1567                                  csio_post_event(&ln->sm, evt);
->   1568                          }
->   1569  
-> 
-> I wasn't a part of the discussion in November, but the fix for this
-> seems trivial.  I'm probably missing something?
-> 
-> regards,
-> dan carpenter
-> 
-
+--
+Sagi
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
