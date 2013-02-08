@@ -1,189 +1,158 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 23/23] qla2xxx: Wait for IDC complete event to finish loopback operation.
-Date: Fri,  8 Feb 2013 01:58:04 -0500
-Message-ID: <1360306684-8286-24-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 07/23] qla2xxx: Do link initialization on get loop id failure.
+Date: Fri,  8 Feb 2013 01:57:48 -0500
+Message-ID: <1360306684-8286-8-git-send-email-saurav.kashyap@qlogic.com>
 References: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:64739 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:39132 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1759898Ab3BHHTN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Feb 2013 02:19:13 -0500
+	id S1759963Ab3BHHTK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Feb 2013 02:19:10 -0500
 In-Reply-To: <1360306684-8286-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Wait for the IDC complete AEN before returning the loopback operation back to
-the application to make sure the port is put back into normal operations.
+To avoid continually doing ISP resets when get loop id fails to
+obtain the adapter loop id, first try to do a link initialization.
 
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c |   39 +++++++++++++++++++++++++++++----------
- drivers/scsi/qla2xxx/qla_def.h |    6 ++++++
- drivers/scsi/qla2xxx/qla_isr.c |    3 +++
- drivers/scsi/qla2xxx/qla_os.c  |    1 +
- 4 files changed, 39 insertions(+), 10 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
+ drivers/scsi/qla2xxx/qla_def.h  |    1 +
+ drivers/scsi/qla2xxx/qla_gbl.h  |    3 ++
+ drivers/scsi/qla2xxx/qla_init.c |    8 ++++++
+ drivers/scsi/qla2xxx/qla_mbx.c  |   48 +++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 61 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 169dc85..5d4f5cb 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -535,7 +535,7 @@ done:
- /* Disable loopback mode */
- static inline int
- qla81xx_reset_loopback_mode(scsi_qla_host_t *vha, uint16_t *config,
--    int wait)
-+    int wait, int wait2)
- {
- 	int ret = 0;
- 	int rval = 0;
-@@ -556,28 +556,45 @@ qla81xx_reset_loopback_mode(scsi_qla_host_t *vha, uint16_t *config,
- 		memcpy(&new_config[1], &config[1], sizeof(uint16_t) * 3) ;
- 
- 		ha->notify_dcbx_comp = wait;
-+		ha->notify_lb_portup_comp = wait2;
-+
- 		ret = qla81xx_set_port_config(vha, new_config);
- 		if (ret != QLA_SUCCESS) {
- 			ql_log(ql_log_warn, vha, 0x7025,
- 			    "Set port config failed.\n");
- 			ha->notify_dcbx_comp = 0;
-+			ha->notify_lb_portup_comp = 0;
- 			rval = -EINVAL;
- 			goto done_reset_internal;
- 		}
- 
- 		/* Wait for DCBX complete event */
- 		if (wait && !wait_for_completion_timeout(&ha->dcbx_comp,
--			(20 * HZ))) {
-+			(DCBX_COMP_TIMEOUT * HZ))) {
- 			ql_dbg(ql_dbg_user, vha, 0x7026,
--			    "State change notification not received.\n");
-+			    "DCBX completion not received.\n");
- 			ha->notify_dcbx_comp = 0;
-+			ha->notify_lb_portup_comp = 0;
- 			rval = -EINVAL;
- 			goto done_reset_internal;
- 		} else
- 			ql_dbg(ql_dbg_user, vha, 0x7027,
--			    "State change received.\n");
-+			    "DCBX completion received.\n");
-+
-+		if (wait2 &&
-+		    !wait_for_completion_timeout(&ha->lb_portup_comp,
-+		    (LB_PORTUP_COMP_TIMEOUT * HZ))) {
-+			ql_dbg(ql_dbg_user, vha, 0x70c5,
-+			    "Port up completion not received.\n");
-+			ha->notify_lb_portup_comp = 0;
-+			rval = -EINVAL;
-+			goto done_reset_internal;
-+		} else
-+			ql_dbg(ql_dbg_user, vha, 0x70c6,
-+			    "Port up completion received.\n");
- 
- 		ha->notify_dcbx_comp = 0;
-+		ha->notify_lb_portup_comp = 0;
- 	}
- done_reset_internal:
- 	return rval;
-@@ -618,10 +635,11 @@ qla81xx_set_loopback_mode(scsi_qla_host_t *vha, uint16_t *config,
- 	}
- 
- 	/* Wait for DCBX complete event */
--	if (!wait_for_completion_timeout(&ha->dcbx_comp, (20 * HZ))) {
-+	if (!wait_for_completion_timeout(&ha->dcbx_comp,
-+	    (DCBX_COMP_TIMEOUT * HZ))) {
- 		ql_dbg(ql_dbg_user, vha, 0x7022,
--		    "State change notification not received.\n");
--		ret = qla81xx_reset_loopback_mode(vha, new_config, 0);
-+		    "DCBX completion not received.\n");
-+		ret = qla81xx_reset_loopback_mode(vha, new_config, 0, 0);
- 		/*
- 		 * If the reset of the loopback mode doesn't work take a FCoE
- 		 * dump and reset the chip.
-@@ -639,7 +657,7 @@ qla81xx_set_loopback_mode(scsi_qla_host_t *vha, uint16_t *config,
- 			ha->flags.idc_compl_status = 0;
- 		} else
- 			ql_dbg(ql_dbg_user, vha, 0x7023,
--			    "State change received.\n");
-+			    "DCBX completion received.\n");
- 	}
- 
- 	ha->notify_dcbx_comp = 0;
-@@ -749,6 +767,7 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 		if (IS_QLA81XX(ha) || IS_QLA8031(ha)) {
- 			memset(config, 0, sizeof(config));
- 			memset(new_config, 0, sizeof(new_config));
-+
- 			if (qla81xx_get_port_config(vha, config)) {
- 				ql_log(ql_log_warn, vha, 0x701f,
- 				    "Get port config failed.\n");
-@@ -773,7 +792,7 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 					    config, new_config, elreq.options);
- 				else
- 					rval = qla81xx_reset_loopback_mode(vha,
--					    config, 1);
-+					    config, 1, 0);
- 			else
- 				rval = qla81xx_set_loopback_mode(vha, config,
- 				    new_config, elreq.options);
-@@ -817,7 +836,7 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 				 * Also clear internal loopback
- 				 */
- 				ret = qla81xx_reset_loopback_mode(vha,
--				    new_config, 0);
-+				    new_config, 0, 1);
- 				if (ret) {
- 					/*
- 					 * If the reset of the loopback mode
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index c1d2310..65e95bd 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -12,7 +12,7 @@
+  * |             Level            |   Last Value Used  |     Holes	|
+  * ----------------------------------------------------------------------
+  * | Module Init and Probe        |       0x0126       | 0x4b,0xba,0xfa |
+- * | Mailbox commands             |       0x1150       | 0x111a-0x111b  |
++ * | Mailbox commands             |       0x1154       | 0x111a-0x111b  |
+  * |                              |                    | 0x112c-0x112e  |
+  * |                              |                    | 0x113a         |
+  * | Device Discovery             |       0x2087       | 0x2020-0x2022, |
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index c081882..c650991 100644
+index 5c42c91..e96abfc 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2882,7 +2882,13 @@ struct qla_hw_data {
- 	struct completion mbx_cmd_comp; /* Serialize mbx access */
- 	struct completion mbx_intr_comp;  /* Used for completion notification */
- 	struct completion dcbx_comp;	/* For set port config notification */
-+	struct completion lb_portup_comp; /* Used to wait for link up during
-+					   * loopback */
-+#define DCBX_COMP_TIMEOUT	20
-+#define LB_PORTUP_COMP_TIMEOUT	10
+@@ -814,6 +814,7 @@ typedef struct {
+ #define MBC_HOST_MEMORY_COPY		0x53	/* Host Memory Copy. */
+ #define MBC_SEND_RNFT_ELS		0x5e	/* Send RNFT ELS request */
+ #define MBC_GET_LINK_PRIV_STATS		0x6d	/* Get link & private data. */
++#define MBC_LINK_INITIALIZATION		0x72	/* Do link initialization. */
+ #define MBC_SET_VENDOR_ID		0x76	/* Set Vendor ID. */
+ #define MBC_PORT_RESET			0x120	/* Port Reset */
+ #define MBC_SET_PORT_CONFIG		0x122	/* Set port configuration */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 1732713..ee8ea95 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -282,6 +282,9 @@ extern int
+ qla2x00_get_port_name(scsi_qla_host_t *, uint16_t, uint8_t *, uint8_t);
+ 
+ extern int
++qla24xx_link_initialize(scsi_qla_host_t *);
 +
- 	int notify_dcbx_comp;
-+	int notify_lb_portup_comp;
- 	struct mutex selflogin_lock;
++extern int
+ qla2x00_lip_reset(scsi_qla_host_t *);
  
- 	/* Basic firmware related information. */
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index cbf6a43..e9dbd74 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1032,6 +1032,9 @@ skip_rio:
- 			}
+ extern int
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index bbf5688..97f2684 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2207,6 +2207,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ 	char		connect_type[22];
+ 	struct qla_hw_data *ha = vha->hw;
+ 	unsigned long flags;
++	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+ 
+ 	/* Get host addresses. */
+ 	rval = qla2x00_get_adapter_id(vha,
+@@ -2220,6 +2221,13 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ 		} else {
+ 			ql_log(ql_log_warn, vha, 0x2009,
+ 			    "Unable to get host loop ID.\n");
++			if (IS_FWI2_CAPABLE(ha) && (vha == base_vha) &&
++			    (rval == QLA_COMMAND_ERROR && loop_id == 0x1b)) {
++				ql_log(ql_log_warn, vha, 0x1151,
++				    "Doing link init.\n");
++				if (qla24xx_link_initialize(vha) == QLA_SUCCESS)
++					return rval;
++			}
+ 			set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
  		}
- 	case MBA_IDC_COMPLETE:
-+		if (ha->notify_lb_portup_comp)
-+			complete(&ha->lb_portup_comp);
-+		/* Fallthru */
- 	case MBA_IDC_TIME_EXT:
- 		if (IS_QLA81XX(vha->hw) || IS_QLA8031(vha->hw))
- 			qla81xx_idc_event(vha, mb[0], mb[1]);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index c484e21..2c6dd3d 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2465,6 +2465,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	complete(&ha->mbx_cmd_comp);
- 	init_completion(&ha->mbx_intr_comp);
- 	init_completion(&ha->dcbx_comp);
-+	init_completion(&ha->lb_portup_comp);
+ 		return (rval);
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 92d51fc..550f75a 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -1633,6 +1633,54 @@ qla2x00_get_port_name(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t *name,
+ }
  
- 	set_bit(0, (unsigned long *) ha->vp_idx_map);
- 
+ /*
++ * qla24xx_link_initialization
++ *	Issue link initialization mailbox command.
++ *
++ * Input:
++ *	ha = adapter block pointer.
++ *	TARGET_QUEUE_LOCK must be released.
++ *	ADAPTER_STATE_LOCK must be released.
++ *
++ * Returns:
++ *	qla2x00 local function return status code.
++ *
++ * Context:
++ *	Kernel context.
++ */
++int
++qla24xx_link_initialize(scsi_qla_host_t *vha)
++{
++	int rval;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++
++	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1152,
++	    "Entered %s.\n", __func__);
++
++	if (!IS_FWI2_CAPABLE(vha->hw) || IS_CNA_CAPABLE(vha->hw))
++		return QLA_FUNCTION_FAILED;
++
++	mcp->mb[0] = MBC_LINK_INITIALIZATION;
++	mcp->mb[1] = BIT_6|BIT_4;
++	mcp->mb[2] = 0;
++	mcp->mb[3] = 0;
++	mcp->out_mb = MBX_3|MBX_2|MBX_1|MBX_0;
++	mcp->in_mb = MBX_0;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->flags = 0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++
++	if (rval != QLA_SUCCESS) {
++		ql_dbg(ql_dbg_mbx, vha, 0x1153, "Failed=%x.\n", rval);
++	} else {
++		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1154,
++		    "Done %s.\n", __func__);
++	}
++
++	return rval;
++}
++
++/*
+  * qla2x00_lip_reset
+  *	Issue LIP reset mailbox command.
+  *
 -- 
 1.7.7
 
