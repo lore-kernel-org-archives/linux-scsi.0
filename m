@@ -1,46 +1,59 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: Re: [PATCH 2/3] target: Fix error checking for UNMAP commands
-Date: Sat, 9 Feb 2013 11:27:31 -0800
-Message-ID: <CAL1RGDXZL6cBh5Jc1aSkS-MqmA0pZ_HaKKm7HHQZ9RCay+CgQQ@mail.gmail.com>
-References: <1360365520-11972-1-git-send-email-roland@kernel.org>
- <1360365520-11972-2-git-send-email-roland@kernel.org> <51161593.9030007@bootc.net>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH] [SCSI] aacraid: silence two GCC warnings
+Date: Sat, 09 Feb 2013 21:09:21 +0100
+Message-ID: <1360440561.1350.27.camel@x61.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog113.obsmtp.com ([74.125.245.94]:54281 "HELO
-	na3sys010aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758494Ab3BIT1y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2013 14:27:54 -0500
-Received: by mail-ee0-f71.google.com with SMTP id t10so5478578eei.2
-        for <linux-scsi@vger.kernel.org>; Sat, 09 Feb 2013 11:27:52 -0800 (PST)
-In-Reply-To: <51161593.9030007@bootc.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Boot <bootc@bootc.net>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sat, Feb 9, 2013 at 1:23 AM, Chris Boot <bootc@bootc.net> wrote:
->> +       case TCM_PARAMETER_LIST_LENGTH_ERROR:
->> +               /* CURRENT ERROR */
->> +               buffer[0] = 0x70;
->> +               buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
->> +               /* ILLEGAL REQUEST */
->> +               buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
->> +               /* INVALID FIELD IN PARAMETER LIST */
->> +               buffer[SPC_ASC_KEY_OFFSET] = 0x1a;
->> +               break;
->>         case TCM_UNEXPECTED_UNSOLICITED_DATA:
->>                 /* CURRENT ERROR */
->>                 buffer[0] = 0x70;
->
->
-> Nitpick: I suspect a simple copy & paste error; "INVALID FIELD IN PARAMETER
-> LIST" in your comment should probably read "PARAMETER LIST LENGTH ERROR"
-> instead.
+Compiling src.o for a 32 bit system triggers two GCC warnings:
+    drivers/scsi/aacraid/src.c: In function =E2=80=98aac_src_deliver_me=
+ssage=E2=80=99:
+    drivers/scsi/aacraid/src.c:410:3: warning: right shift count >=3D w=
+idth of type [enabled by default]
+    drivers/scsi/aacraid/src.c:434:2: warning: right shift count >=3D w=
+idth of type [enabled by default]
 
-Yes, the comment is a copy and paste error.  The ASC of 1Ah is correct for
-PARAMETER LIST LENGTH ERROR.  Thanks & good catch.
+Silence these warnings by casting the 'address' variable (of type
+dma_addr_t) to u64 on those two lines.
 
-Nic, want me to resend?
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+0) Compile tested only.
 
- - R.
+1) Changing '0L' to 'OUL' might be a bit of cargo cult programming. I
+doubt it's necessary. Members of that cult might also change
+'0xffffffff' to '0xffffffffUL', but I didn't.
+
+ drivers/scsi/aacraid/src.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 3b021ec..dfa8a37 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -407,7 +407,7 @@ static int aac_src_deliver_message(struct fib *fib)
+ 		fib->hw_fib_va->header.StructType =3D FIB_MAGIC2;
+ 		fib->hw_fib_va->header.SenderFibAddress =3D (u32)address;
+ 		fib->hw_fib_va->header.u.TimeStamp =3D 0;
+-		BUG_ON((u32)(address >> 32) !=3D 0L);
++		BUG_ON(((u64)address >> 32) !=3D 0UL);
+ 		address |=3D fibsize;
+ 	} else {
+ 		/* Calculate the amount to the fibsize bits */
+@@ -431,7 +431,7 @@ static int aac_src_deliver_message(struct fib *fib)
+ 		address |=3D fibsize;
+ 	}
+=20
+-	src_writel(dev, MUnit.IQ_H, (address >> 32) & 0xffffffff);
++	src_writel(dev, MUnit.IQ_H, ((u64)address >> 32) & 0xffffffff);
+ 	src_writel(dev, MUnit.IQ_L, address & 0xffffffff);
+=20
+ 	return 0;
+--=20
+1.8.1.2
