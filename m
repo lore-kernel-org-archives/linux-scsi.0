@@ -1,47 +1,42 @@
-From: Chris Boot <bootc@bootc.net>
-Subject: Re: [PATCH 2/3] target: Fix error checking for UNMAP commands
-Date: Sat, 09 Feb 2013 09:23:31 +0000
-Message-ID: <51161593.9030007@bootc.net>
-References: <1360365520-11972-1-git-send-email-roland@kernel.org> <1360365520-11972-2-git-send-email-roland@kernel.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v8 0/10] More device removal fixes
+Date: Sat, 09 Feb 2013 10:28:09 +0100
+Message-ID: <511616A9.7040904@acm.org>
+References: <5110FE98.8030209@acm.org> <alpine.DEB.2.02.1302061727030.11804@jlaw-desktop.mno.stratus.com> <5113910D.2060100@acm.org> <alpine.DEB.2.02.1302081813170.13267@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1360365520-11972-2-git-send-email-roland@kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:54694 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751972Ab3BIJ2N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Feb 2013 04:28:13 -0500
+In-Reply-To: <alpine.DEB.2.02.1302081813170.13267@jlaw-desktop.mno.stratus.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Lawrence <Joe.Lawrence@stratus.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>
 
-On 08/02/2013 23:18, Roland Dreier wrote:
-> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-> index b526d23..b72ca5b 100644
-> --- a/drivers/target/target_core_iblock.c
-> +++ b/drivers/target/target_core_iblock.c
-> @@ -2674,6 +2675,15 @@ transport_send_check_condition_and_sense(struct se_cmd *cmd,
->   		/* INVALID FIELD IN PARAMETER LIST */
->   		buffer[SPC_ASC_KEY_OFFSET] = 0x26;
->   		break;
-> +	case TCM_PARAMETER_LIST_LENGTH_ERROR:
-> +		/* CURRENT ERROR */
-> +		buffer[0] = 0x70;
-> +		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
-> +		/* ILLEGAL REQUEST */
-> +		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
-> +		/* INVALID FIELD IN PARAMETER LIST */
-> +		buffer[SPC_ASC_KEY_OFFSET] = 0x1a;
-> +		break;
->   	case TCM_UNEXPECTED_UNSOLICITED_DATA:
->   		/* CURRENT ERROR */
->   		buffer[0] = 0x70;
+On 02/09/13 00:29, Joe Lawrence wrote:
+> I haven't had time to rerun the test without the two patches that wait in
+> scsi_remove_host(), however I did rerun the test and verify the same
+> behavior as in my earlier mail.  I didn't see any __scsi_remove_device()
+> instances running.
+>
+> Some more investigation revealed that MD RAID was holding a reference to
+> the removed device.  (In short, mdadm --remove had failed and left the
+> device as a faulty member of the array.)  When I did finally manage to
+> kick that disk from the MD device, scsi host/device removal continued to
+> completion as expected.
+>
+> There's a bit more context to the MD situation that I'll post to the raid
+> list once I get the details together for Neil.  I will CC you if you are
+> interested in following.
 
-Nitpick: I suspect a simple copy & paste error; "INVALID FIELD IN 
-PARAMETER LIST" in your comment should probably read "PARAMETER LIST 
-LENGTH ERROR" instead.
+The loop in scsi_remove_host() waits too long. It should stop waiting as 
+soon as the blk_cleanup_queue() calls for all sdev's have finished 
+instead of waiting until all sdev users have closed these sdev's. I will 
+repost patches 07/10 and 08/10.
 
-HTH,
-Chris
+Bart.
 
--- 
-Chris Boot
-bootc@bootc.net
