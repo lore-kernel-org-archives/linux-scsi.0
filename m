@@ -1,74 +1,47 @@
-From: Sagar Borikar <sagar.borikar@gmail.com>
-Subject: LSI controller resetting with fault_state 0x2622
-Date: Fri, 8 Feb 2013 23:30:19 -0800
-Message-ID: <CAFwMWxtk4Kmo5ztBdoLCOowsaPgzvO2JfU6jiADM4kBR8zRM5A@mail.gmail.com>
+From: Chris Boot <bootc@bootc.net>
+Subject: Re: [PATCH 2/3] target: Fix error checking for UNMAP commands
+Date: Sat, 09 Feb 2013 09:23:31 +0000
+Message-ID: <51161593.9030007@bootc.net>
+References: <1360365520-11972-1-git-send-email-roland@kernel.org> <1360365520-11972-2-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1360365520-11972-2-git-send-email-roland@kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+On 08/02/2013 23:18, Roland Dreier wrote:
+> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+> index b526d23..b72ca5b 100644
+> --- a/drivers/target/target_core_iblock.c
+> +++ b/drivers/target/target_core_iblock.c
+> @@ -2674,6 +2675,15 @@ transport_send_check_condition_and_sense(struct se_cmd *cmd,
+>   		/* INVALID FIELD IN PARAMETER LIST */
+>   		buffer[SPC_ASC_KEY_OFFSET] = 0x26;
+>   		break;
+> +	case TCM_PARAMETER_LIST_LENGTH_ERROR:
+> +		/* CURRENT ERROR */
+> +		buffer[0] = 0x70;
+> +		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+> +		/* ILLEGAL REQUEST */
+> +		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+> +		/* INVALID FIELD IN PARAMETER LIST */
+> +		buffer[SPC_ASC_KEY_OFFSET] = 0x1a;
+> +		break;
+>   	case TCM_UNEXPECTED_UNSOLICITED_DATA:
+>   		/* CURRENT ERROR */
+>   		buffer[0] = 0x70;
 
-I am using LSI 9207 controller on mips board and ported the standard
-driver came with the controller on linux-mips 2.6.23 kernel. I know
-its bit old but that's what I have available on the board that I am
-using.
+Nitpick: I suspect a simple copy & paste error; "INVALID FIELD IN 
+PARAMETER LIST" in your comment should probably read "PARAMETER LIST 
+LENGTH ERROR" instead.
 
-After loading the driver, I can see the end device properly.
+HTH,
+Chris
 
-
-# lsmod
-Module                  Size  Used by    Not tainted
-mpt2sas 246000 0 - Live 0xc01a9000
-# /config/lsscsi -t
-[0:0:0:0]    disk    sas:0x5000c5001db47d9d          /dev/sda
-
-But when I am creating the ext3 fs on the disk, It throws following error:
-8192 inodes per group
-Superblock backups stored on blocks:
-        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
-        4096000, 7962624, 11239424, 20480000, 23887872
-
-Allocating group tables: done
-Writing inode tables: [16844.399000] mpt2sas0: fault_state(0x2622)!
-[16844.400000] mpt2sas0: sending diag reset !!
-[16845.590000] mpt2sas0: diag reset: SUCCESS
-[16845.687000] mpt2sas0: LSISAS2308: FWVersion(13.00.57.00),
-ChipRevision(0x05), BiosVersion(07.25.00.00)
-[16845.688000] mpt2sas0: Protocol=(Initiator,Target),
-Capabilities=(TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set
-Full,NCQ)
-[16845.720000] mpt2sas0: sending port enable !!
-[16853.398000] mpt2sas0: port enable: SUCCESS
-
-While checking the meaning of fault_state 0x2622, I happen to find a
-link which states that there was an issue with the controller firmware
-as following:
-
-SCS Engineering Release Notice
-Phase14 Pre-Alpha Release Version 13.250.01.00 - SAS2FW_Phase14 (SCGCQ00276613)
-
-Total Defects Resolved (6)
-(SCGCQ00268527)
-HEADLINE:
-DESC OF CHANGE:
-TO REPRODUCE:
-ISSUE DESC:
-Defect 1/6
-Fault 0x2622 will occur if Request Equalization bit is set during PCIe Training
-Masked the unnecessary interrupts.
-Using a PCIe protocol exerciser, set the Request Equalization bit in
-the PCIe Training Sets. No known
-systems currently set this bit.
-Devices supporting Gen3 PCIe speeds can have interrupts occur when
-PCIe training sets the Request
-Equalization bit. The interrupt should be masked since firmware
-intervention is not required. Firmware
-faults on the unexpected interrupt with the belief that it is an error.
-
-Not sure whether the problem is as described above.
-
-Thanks
-Sagar
+-- 
+Chris Boot
+bootc@bootc.net
