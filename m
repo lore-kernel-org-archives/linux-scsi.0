@@ -1,65 +1,40 @@
-From: James Hogan <james.hogan@imgtec.com>
-Subject: Re: [RESEND PATCH] scsi: make struct scsi_varlen_cdb_hdr packed
-Date: Mon, 11 Feb 2013 12:55:23 +0000
-Message-ID: <5118EA3B.9010904@imgtec.com>
-References: <1349946933-30314-1-git-send-email-james.hogan@imgtec.com>  <1349951069.2425.44.camel@dabdike.int.hansenpartnership.com>  <5076AE3B.5040509@imgtec.com> <1349960296.2425.53.camel@dabdike.int.hansenpartnership.com> <5076D360.2010804@imgtec.com>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: [PATCH] scsi: storvsc: avoid usage of WRITE_SAME
+Date: Mon, 11 Feb 2013 17:06:38 +0100
+Message-ID: <20130211160638.GB15243@aepfle.de>
+References: <1359557094-13625-1-git-send-email-olaf@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5076D360.2010804@imgtec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo-p00-ob.rzone.de ([81.169.146.161]:14846 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757862Ab3BKQGm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Feb 2013 11:06:42 -0500
+Content-Disposition: inline
+In-Reply-To: <1359557094-13625-1-git-send-email-olaf@aepfle.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: KY Srinivasan <kys@microsoft.com>
 
-Hi James,
+James,
 
-On 11/10/12 15:10, James Hogan wrote:
-> On 11/10/12 13:58, James Bottomley wrote:
->> On Thu, 2012-10-11 at 12:32 +0100, James Hogan wrote:
->>> On 11/10/12 11:24, James Bottomley wrote:
->>>> On Thu, 2012-10-11 at 10:15 +0100, James Hogan wrote:
->>>>> The struct scsi_varlen_cdb_hdr is expected to be exactly 10 bytes when
->>>>> used in struct osd_cdb_head, but it isn't marked as packed. Some
->>>>> architectures will round the struct size up which triggers BUILD_BUG_ON
->>>>> compile errors in osd_initiator.c when the outer structs are unexpected
->>>>> sizes. This is fixed by marking struct scsi_varlen_cdb_hdr as __packed.
->>>>
->>>> What actual problem have you encountered? The structure is {u8[8], u16}
->>>> which is naturally packed on every architecture I know about.  I've even
->>>> built osd_initiator without problem on parisc, which has some of the
->>>> most rigid alignment rules I've seen.
->>>
->>> Hi James,
->>>
->>> The alignment is fine (the offset of the u16 is 8 bytes), but
->>> unfortunately with the metag port of gcc, sizeof(struct
->>> scsi_varlen_cdb_hdr) is rounded up to a 4 byte boundary (even though the
->>> largest data member alignment is only 2 bytes), which is 12 bytes
->>> instead of 10.
->>
->> That sounds to be a bug in your compiler ... it shouldn't be rounding up
->> structure sizes if the structure can fit in 10 bytes.  This isn't
->> happening in any other architecture that I know of (otherwise we'd have
->> had a reported build break).
+this patch fixes a regression in 3.8. Please try to include it in final 3.8.
+There is also another outstanding fix regarding sglist init from KY.
+
+Olaf
+
+On Wed, Jan 30, Olaf Hering wrote:
+
+> Set scsi_device->no_write_same because the host does not support it.
+> Also blacklist WRITE_SAME to avoid (and log) accident usage.
 > 
-> This was my initial thought, and I share your feeling that this isn't
-> ideal compiler behaviour, however it's pretty much set in stone as part
-> of our ABI now. Having talked to one of our compiler folk about it
-> here's what he had to say:
->> In GCC 4.2 the following backends have STRUCTURE_SIZE_BOUNDARY set to >=32 which will trigger this behaviour:
->>
->> Alpha+unicos
->> Arm prior to AAPCS
->> Mt
->>
->> This is within standards to my knowledge.
+> If the guest uses the ext4 filesystem, storvsc hangs while it prints
+> these messages in an endless loop:
 
-What are the chances of getting this patch accepted? I believe it is
-correct and the compiler behaviour is within standards, and hopefully
-arch/metag will be merged for v3.9 so without this patch the build of
-osd_initiator.c will be broken on an in-tree architecture.
 
-Thanks
-James
+>  drivers/scsi/storvsc_drv.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+
+> +	sdevice->no_write_same = 1;
+
