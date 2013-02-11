@@ -1,41 +1,52 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] dc395x: uninitialized variable in device_alloc()
-Date: Mon, 11 Feb 2013 22:03:18 +0300
-Message-ID: <20130211190317.GA19768@elgon.mountain>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v8 0/10] More device removal fixes
+Date: Mon, 11 Feb 2013 21:36:44 +0100
+Message-ID: <5119565C.1050701@acm.org>
+References: <5110FE98.8030209@acm.org> <alpine.DEB.2.02.1302061727030.11804@jlaw-desktop.mno.stratus.com> <5113910D.2060100@acm.org> <alpine.DEB.2.02.1302081813170.13267@jlaw-desktop.mno.stratus.com> <511616A9.7040904@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34474 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758298Ab3BKTDz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Feb 2013 14:03:55 -0500
-Content-Disposition: inline
+Received: from gerard.telenet-ops.be ([195.130.132.48]:51497 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759394Ab3BKUgs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Feb 2013 15:36:48 -0500
+In-Reply-To: <511616A9.7040904@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, dc395x@twibble.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Cc: Joe Lawrence <Joe.Lawrence@stratus.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>
 
-This bug was introduced back in bitkeeper days in 2003.  We use
-"dcb->dev_mode" before it has been initialized.
+On 02/09/13 10:28, Bart Van Assche wrote:
+> On 02/09/13 00:29, Joe Lawrence wrote:
+>> I haven't had time to rerun the test without the two patches that wait in
+>> scsi_remove_host(), however I did rerun the test and verify the same
+>> behavior as in my earlier mail.  I didn't see any __scsi_remove_device()
+>> instances running.
+>>
+>> Some more investigation revealed that MD RAID was holding a reference to
+>> the removed device.  (In short, mdadm --remove had failed and left the
+>> device as a faulty member of the array.)  When I did finally manage to
+>> kick that disk from the MD device, scsi host/device removal continued to
+>> completion as expected.
+>>
+>> There's a bit more context to the MD situation that I'll post to the raid
+>> list once I get the details together for Neil.  I will CC you if you are
+>> interested in following.
+>
+> The loop in scsi_remove_host() waits too long. It should stop waiting as
+> soon as the blk_cleanup_queue() calls for all sdev's have finished
+> instead of waiting until all sdev users have closed these sdev's. I will
+> repost patches 07/10 and 08/10.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+(replying to my own e-mail)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 865c64f..fed486bf 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -3747,13 +3747,13 @@ static struct DeviceCtlBlk *device_alloc(struct AdapterCtlBlk *acb,
- 	dcb->max_command = 1;
- 	dcb->target_id = target;
- 	dcb->target_lun = lun;
-+	dcb->dev_mode = eeprom->target[target].cfg0;
- #ifndef DC395x_NO_DISCONNECT
- 	dcb->identify_msg =
- 	    IDENTIFY(dcb->dev_mode & NTC_DO_DISCONNECT, lun);
- #else
- 	dcb->identify_msg = IDENTIFY(0, lun);
- #endif
--	dcb->dev_mode = eeprom->target[target].cfg0;
- 	dcb->inquiry7 = 0;
- 	dcb->sync_mode = 0;
- 	dcb->min_nego_period = clock_period[period_index];
+Hello Joe,
+
+It would be appreciated if you could repeat your test with this kernel 
+tree (tested with iSCSI and SRP): 
+http://github.com/bvanassche/linux/tree/device-removal-fixes. If that 
+test succeed I will repost the patches in that tree.
+
+Thanks,
+
+Bart.
