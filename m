@@ -1,52 +1,65 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH 06/23] qla2xxx: Update the FTP site references in the
- driver sources.
-Date: Mon, 11 Feb 2013 13:49:50 +0100
-Message-ID: <5118E8EE.7080807@gmail.com>
+From: James Hogan <james.hogan@imgtec.com>
+Subject: Re: [RESEND PATCH] scsi: make struct scsi_varlen_cdb_hdr packed
+Date: Mon, 11 Feb 2013 12:55:23 +0000
+Message-ID: <5118EA3B.9010904@imgtec.com>
+References: <1349946933-30314-1-git-send-email-james.hogan@imgtec.com>  <1349951069.2425.44.camel@dabdike.int.hansenpartnership.com>  <5076AE3B.5040509@imgtec.com> <1349960296.2425.53.camel@dabdike.int.hansenpartnership.com> <5076D360.2010804@imgtec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:43878 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757001Ab3BKMt4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Feb 2013 07:49:56 -0500
-Received: by mail-ee0-f42.google.com with SMTP id b47so3097163eek.15
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Feb 2013 04:49:55 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5076D360.2010804@imgtec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-Giridhar Malavali wrote:
+Hi James,
 
-> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+On 11/10/12 15:10, James Hogan wrote:
+> On 11/10/12 13:58, James Bottomley wrote:
+>> On Thu, 2012-10-11 at 12:32 +0100, James Hogan wrote:
+>>> On 11/10/12 11:24, James Bottomley wrote:
+>>>> On Thu, 2012-10-11 at 10:15 +0100, James Hogan wrote:
+>>>>> The struct scsi_varlen_cdb_hdr is expected to be exactly 10 bytes when
+>>>>> used in struct osd_cdb_head, but it isn't marked as packed. Some
+>>>>> architectures will round the struct size up which triggers BUILD_BUG_ON
+>>>>> compile errors in osd_initiator.c when the outer structs are unexpected
+>>>>> sizes. This is fixed by marking struct scsi_varlen_cdb_hdr as __packed.
+>>>>
+>>>> What actual problem have you encountered? The structure is {u8[8], u16}
+>>>> which is naturally packed on every architecture I know about.  I've even
+>>>> built osd_initiator without problem on parisc, which has some of the
+>>>> most rigid alignment rules I've seen.
+>>>
+>>> Hi James,
+>>>
+>>> The alignment is fine (the offset of the u16 is 8 bytes), but
+>>> unfortunately with the metag port of gcc, sizeof(struct
+>>> scsi_varlen_cdb_hdr) is rounded up to a 4 byte boundary (even though the
+>>> largest data member alignment is only 2 bytes), which is 12 bytes
+>>> instead of 10.
+>>
+>> That sounds to be a bug in your compiler ... it shouldn't be rounding up
+>> structure sizes if the structure can fit in 10 bytes.  This isn't
+>> happening in any other architecture that I know of (otherwise we'd have
+>> had a reported build break).
 > 
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-> ---
->  drivers/scsi/qla2xxx/qla_init.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index a581c85..bbf5688 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -5054,7 +5054,7 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
->  	return rval;
->  }
->  
-> -#define QLA_FW_URL "ftp://ftp.qlogic.com/outgoing/linux/firmware/"
-> +#define QLA_FW_URL "http://ldriver.qlogic.com/firmware/"
->  
->  int
->  qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
-> -- 
+> This was my initial thought, and I share your feeling that this isn't
+> ideal compiler behaviour, however it's pretty much set in stone as part
+> of our ABI now. Having talked to one of our compiler folk about it
+> here's what he had to say:
+>> In GCC 4.2 the following backends have STRUCTURE_SIZE_BOUNDARY set to >=32 which will trigger this behaviour:
+>>
+>> Alpha+unicos
+>> Arm prior to AAPCS
+>> Mt
+>>
+>> This is within standards to my knowledge.
 
-qla2xxx/Kconfig should also be changed:
+What are the chances of getting this patch accepted? I believe it is
+correct and the compiler behaviour is within standards, and hopefully
+arch/metag will be merged for v3.9 so without this patch the build of
+osd_initiator.c will be broken on an in-tree architecture.
 
-       Firmware images can be retrieved from:
-
-                ftp://ftp.qlogic.com/outgoing/linux/firmware/
-
-
-FYI, they are also included in linux-firmware.
+Thanks
+James
