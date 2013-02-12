@@ -1,99 +1,73 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v3 3/5] virtio-scsi: push vq lock/unlock into virtscsi_vq_done
-Date: Tue, 12 Feb 2013 14:06:29 +0100
-Message-ID: <1360674391-2661-4-git-send-email-pbonzini@redhat.com>
-References: <1360674391-2661-1-git-send-email-pbonzini@redhat.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH 06/23] qla2xxx: Update the FTP site references in the
+ driver sources.
+Date: Tue, 12 Feb 2013 08:00:50 -0500
+Message-ID: <alpine.WNT.2.00.1302120800050.7344@N5102REMCQXM4BS.qlogic.org>
+References: <5118E8EE.7080807@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1360674391-2661-1-git-send-email-pbonzini@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, JBottomley@parallels.com, virtualization@lists.linux-foundation.org
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from co9ehsobe001.messaging.microsoft.com ([207.46.163.24]:36244
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933048Ab3BLNN1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Feb 2013 08:13:27 -0500
+In-Reply-To: <5118E8EE.7080807@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Avoid duplicated code in all of the callers.
 
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- drivers/scsi/virtio_scsi.c |   22 +++++++++-------------
- 1 files changed, 9 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 3dd4ec5..3d77210 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -165,28 +165,30 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
- 	sc->scsi_done(sc);
- }
- 
--static void virtscsi_vq_done(struct virtio_scsi *vscsi, struct virtqueue *vq,
-+static void virtscsi_vq_done(struct virtio_scsi *vscsi,
-+			     struct virtio_scsi_vq *virtscsi_vq,
- 			     void (*fn)(struct virtio_scsi *vscsi, void *buf))
- {
- 	void *buf;
- 	unsigned int len;
-+	unsigned long flags;
-+	struct virtqueue *vq = virtscsi_vq->vq;
- 
-+	spin_lock_irqsave(&virtscsi_vq->vq_lock, flags);
- 	do {
- 		virtqueue_disable_cb(vq);
- 		while ((buf = virtqueue_get_buf(vq, &len)) != NULL)
- 			fn(vscsi, buf);
- 	} while (!virtqueue_enable_cb(vq));
-+	spin_unlock_irqrestore(&virtscsi_vq->vq_lock, flags);
- }
- 
- static void virtscsi_req_done(struct virtqueue *vq)
- {
- 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	unsigned long flags;
- 
--	spin_lock_irqsave(&vscsi->req_vq.vq_lock, flags);
--	virtscsi_vq_done(vscsi, vq, virtscsi_complete_cmd);
--	spin_unlock_irqrestore(&vscsi->req_vq.vq_lock, flags);
-+	virtscsi_vq_done(vscsi, &vscsi->req_vq, virtscsi_complete_cmd);
- };
- 
- static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
-@@ -203,11 +205,8 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
- {
- 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	unsigned long flags;
- 
--	spin_lock_irqsave(&vscsi->ctrl_vq.vq_lock, flags);
--	virtscsi_vq_done(vscsi, vq, virtscsi_complete_free);
--	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
-+	virtscsi_vq_done(vscsi, &vscsi->ctrl_vq, virtscsi_complete_free);
- };
- 
- static int virtscsi_kick_event(struct virtio_scsi *vscsi,
-@@ -342,11 +341,8 @@ static void virtscsi_event_done(struct virtqueue *vq)
- {
- 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	unsigned long flags;
- 
--	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
--	virtscsi_vq_done(vscsi, vq, virtscsi_complete_event);
--	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
-+	virtscsi_vq_done(vscsi, &vscsi->event_vq, virtscsi_complete_event);
- };
- 
- /**
--- 
-1.7.1
+On Mon, 11 Feb 2013, Xose Vazquez Perez wrote:
+
+> Giridhar Malavali wrote:
+>
+>> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+>>
+>> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+>> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>> ---
+>>  drivers/scsi/qla2xxx/qla_init.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+>> index a581c85..bbf5688 100644
+>> --- a/drivers/scsi/qla2xxx/qla_init.c
+>> +++ b/drivers/scsi/qla2xxx/qla_init.c
+>> @@ -5054,7 +5054,7 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+>>      return rval;
+>>  }
+>>
+>> -#define QLA_FW_URL "ftp://ftp.qlogic.com/outgoing/linux/firmware/"
+>> +#define QLA_FW_URL "http://ldriver.qlogic.com/firmware/"
+>>
+>>  int
+>>  qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+>> --
+>
+> qla2xxx/Kconfig should also be changed:
+>
+>       Firmware images can be retrieved from:
+>
+>                ftp://ftp.qlogic.com/outgoing/linux/firmware/
+>
+>
+> FYI, they are also included in linux-firmware.
+
+Thanks for pointing this out Xose.  We'll be posting a patch soon to fix
+the firmware link in the Kconfig files.
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+
+________________________________
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
