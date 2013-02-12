@@ -1,478 +1,57 @@
-From: Anand <anandkumar_santhanam@pmc-sierra.com>
-Subject: [PATCH 15/15] pm80xx: thermal, sas controller config and error handling
- update
-Date: Tue, 12 Feb 2013 04:44:42 -0800
-Message-ID: <511A393A.8070206@pmc-sierra.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH v3 0/5] virtio-scsi multiqueue
+Date: Tue, 12 Feb 2013 14:06:26 +0100
+Message-ID: <1360674391-2661-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:49568 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932927Ab3BLMoA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Feb 2013 07:44:00 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, JBottomley@parallels.com, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jack_wang@usish.com, Sangeetha.Gnanasekaran@pmcs.com, Vishwanath.Maram@pmcs.com, Harry.Yang@pmcs.com
 
->From 9c620d9273640b416054ba76cd267aebaf455ed2 Mon Sep 17 00:00:00 2001
-From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-Date: Wed, 6 Feb 2013 17:39:43 +0530
-Subject: [PATCH 15/15] pm80xx: thermal, sas controller config and error handling update
+This series implements virtio-scsi queue steering, which gives
+performance improvements of up to 50% (measured both with QEMU and
+tcm_vhost backends).  The patches build on top of the new virtio APIs
+at http://permalink.gmane.org/gmane.linux.kernel.virtualization/18431;
+the new API simplifies the locking of the virtio-scsi driver nicely,
+thus it makes sense to require them as a prerequisite.
 
-Modified thermal configuration to happen after interrupt registration
-Added SAS controller configuration during initialization
-Added error handling logic to handle I_T_Nexus errors and variants
+Changes from the previous post, which can be found at
+http://permalink.gmane.org/gmane.linux.kernel.virtualization/17869:
 
-Signed-off-by: Anand Kumar S <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c  |    2 +-
- drivers/scsi/pm8001/pm8001_init.c |    2 +
- drivers/scsi/pm8001/pm8001_sas.c  |   66 ++++++++++++++++
- drivers/scsi/pm8001/pm8001_sas.h  |    2 +
- drivers/scsi/pm8001/pm80xx_hwi.c  |  150 +++++++++++++++++++++++++++++++++----
- drivers/scsi/pm8001/pm80xx_hwi.h  |   44 +++++++++++-
- 6 files changed, 249 insertions(+), 17 deletions(-)
+- patches 1 and 2 ("virtio: add functions for piecewise addition of
+  buffers", "virtio-scsi: use functions for piecewise composition of
+  buffers") split into their own series
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index a90c002..d18f421 100755
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1670,7 +1670,7 @@ void pm8001_work_fn(struct work_struct *work)
- 	}	break;
- 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
- 		dev = pm8001_dev->sas_device;
--		pm8001_I_T_nexus_reset(dev);
-+		pm8001_I_T_nexus_event_handler(dev);
- 		break;
- 	case IO_OPEN_CNX_ERROR_STP_RESOURCES_BUSY:
- 		dev = pm8001_dev->sas_device;
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index b884a58..289c2a5 100755
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1795,6 +1795,8 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
- 	if (pm8001_ha->chip_id != chip_8001) {
- 		for (i = 1; i < pm8001_ha->number_of_intr; i++)
- 			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
-+		/* setup thermal configuration. */
-+		pm80xx_set_thermal_config(pm8001_ha);
- 	}
- 
- 	pm8001_init_sas_add(pm8001_ha);
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index c720917..9af9585 100755
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -1018,6 +1018,72 @@ int pm8001_I_T_nexus_reset(struct domain_device *dev)
- 	return rc;
- }
- 
-+/*
-+* This function handle the IT_NEXUS_XXX event or completion
-+* status code for SSP/SATA/SMP I/O request.
-+*/
-+int pm8001_I_T_nexus_event_handler(struct domain_device *dev)
-+{
-+	int rc = TMF_RESP_FUNC_FAILED;
-+	struct pm8001_device *pm8001_dev;
-+	struct pm8001_hba_info *pm8001_ha;
-+	struct sas_phy *phy;
-+	u32 device_id = 0;
-+
-+	if (!dev || !dev->lldd_dev)
-+		return -1;
-+
-+	pm8001_dev = dev->lldd_dev;
-+	device_id = pm8001_dev->device_id;
-+	pm8001_ha = pm8001_find_ha_by_dev(dev);
-+
-+	PM8001_EH_DBG(pm8001_ha,
-+			pm8001_printk("I_T_Nexus handler invoked !!"));
-+
-+	phy = sas_get_local_phy(dev);
-+
-+	if (dev_is_sata(dev)) {
-+		DECLARE_COMPLETION_ONSTACK(completion_setstate);
-+		if (scsi_is_sas_phy_local(phy)) {
-+			rc = 0;
-+			goto out;
-+		}
-+		/* send internal ssp/sata/smp abort command to FW */
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
-+							dev, 1, 0);
-+		msleep(100);
-+
-+		/* deregister the target device */
-+		pm8001_dev_gone_notify(dev);
-+		msleep(200);
-+
-+		/*send phy reset to hard reset target */
-+		rc = sas_phy_reset(phy, 1);
-+		msleep(2000);
-+		pm8001_dev->setds_completion = &completion_setstate;
-+
-+		wait_for_completion(&completion_setstate);
-+	} else {
-+		/* send internal ssp/sata/smp abort command to FW */
-+		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
-+							dev, 1, 0);
-+		msleep(100);
-+
-+		/* deregister the target device */
-+		pm8001_dev_gone_notify(dev);
-+		msleep(200);
-+
-+		/*send phy reset to hard reset target */
-+		rc = sas_phy_reset(phy, 1);
-+		msleep(2000);
-+	}
-+	PM8001_EH_DBG(pm8001_ha, pm8001_printk(" for device[%x]:rc=%d\n",
-+		pm8001_dev->device_id, rc));
-+out:
-+	sas_put_local_phy(phy);
-+
-+	return rc;
-+}
- /* mandatory SAM-3, the task reset the specified LUN*/
- int pm8001_lu_reset(struct domain_device *dev, u8 *lun)
- {
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index c1598dc..fbb65d5 100755
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -562,6 +562,7 @@ int pm8001_dev_found(struct domain_device *dev);
- void pm8001_dev_gone(struct domain_device *dev);
- int pm8001_lu_reset(struct domain_device *dev, u8 *lun);
- int pm8001_I_T_nexus_reset(struct domain_device *dev);
-+int pm8001_I_T_nexus_event_handler(struct domain_device *dev);
- int pm8001_query_task(struct sas_task *task);
- void pm8001_open_reject_retry(
- 	struct pm8001_hba_info *pm8001_ha,
-@@ -624,6 +625,7 @@ void pm8001_free_task(struct sas_task *task);
- void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag);
- struct pm8001_device *pm8001_find_dev(struct pm8001_hba_info *pm8001_ha,
- 					u32 device_id);
-+int pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha);
- 
- int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
- 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 3ac22e4..71954e8 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -613,7 +613,7 @@ static void init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
-  * pm80xx_set_thermal_config - support the thermal configuration
-  * @pm8001_ha: our hba card information.
-  */
--static int
-+int
- pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
- {
- 	struct set_ctrl_cfg_req payload;
-@@ -639,6 +639,86 @@ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
- }
- 
- /**
-+* pm80xx_set_sas_protocol_timer_config - support the SAS Protocol
-+* Timer configuration page
-+* @pm8001_ha: our hba card information.
-+*/
-+static int
-+pm80xx_set_sas_protocol_timer_config(struct pm8001_hba_info *pm8001_ha)
-+{
-+	struct set_ctrl_cfg_req payload;
-+	struct inbound_queue_table *circularQ;
-+	SASProtocolTimerConfig_t SASConfigPage;
-+	int rc;
-+	u32 tag;
-+	u32 opc = OPC_INB_SET_CONTROLLER_CONFIG;
-+
-+	memset(&payload, 0, sizeof(struct set_ctrl_cfg_req));
-+	memset(&SASConfigPage, 0, sizeof(SASProtocolTimerConfig_t));
-+
-+	rc = pm8001_tag_alloc(pm8001_ha, &tag);
-+
-+	if (rc)
-+		return -1;
-+
-+	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-+	payload.tag = cpu_to_le32(tag);
-+
-+	SASConfigPage.pageCode        =  SAS_PROTOCOL_TIMER_CONFIG_PAGE;
-+	SASConfigPage.MST_MSI         =  3 << 15;
-+	SASConfigPage.STP_SSP_MCT_TMO =  (STP_MCT_TMO << 16) | SSP_MCT_TMO;
-+	SASConfigPage.STP_FRM_TMO     = (SAS_MAX_OPEN_TIME << 24) |
-+				(SMP_MAX_CONN_TIMER << 16) | STP_FRM_TIMER;
-+	SASConfigPage.STP_IDLE_TMO    =  STP_IDLE_TIME;
-+
-+	if (SASConfigPage.STP_IDLE_TMO > 0x3FFFFFF)
-+		SASConfigPage.STP_IDLE_TMO = 0x3FFFFFF;
-+
-+
-+	SASConfigPage.OPNRJT_RTRY_INTVL =         (SAS_MFD << 16) |
-+						SAS_OPNRJT_RTRY_INTVL;
-+	SASConfigPage.Data_Cmd_OPNRJT_RTRY_TMO =  (SAS_DOPNRJT_RTRY_TMO << 16)
-+						| SAS_COPNRJT_RTRY_TMO;
-+	SASConfigPage.Data_Cmd_OPNRJT_RTRY_THR =  (SAS_DOPNRJT_RTRY_THR << 16)
-+						| SAS_COPNRJT_RTRY_THR;
-+	SASConfigPage.MAX_AIP =  SAS_MAX_AIP;
-+
-+	PM8001_INIT_DBG(pm8001_ha,
-+			pm8001_printk("SASConfigPage.pageCode "
-+			"0x%08x\n", SASConfigPage.pageCode));
-+	PM8001_INIT_DBG(pm8001_ha,
-+			pm8001_printk("SASConfigPage.MST_MSI "
-+			" 0x%08x\n", SASConfigPage.MST_MSI));
-+	PM8001_INIT_DBG(pm8001_ha,
-+			pm8001_printk("SASConfigPage.STP_SSP_MCT_TMO "
-+			" 0x%08x\n", SASConfigPage.STP_SSP_MCT_TMO));
-+	PM8001_INIT_DBG(pm8001_ha,
-+			pm8001_printk("SASConfigPage.STP_FRM_TMO "
-+			" 0x%08x\n", SASConfigPage.STP_FRM_TMO));
-+	PM8001_INIT_DBG(pm8001_ha,
-+			pm8001_printk("SASConfigPage.STP_IDLE_TMO "
-+			" 0x%08x\n", SASConfigPage.STP_IDLE_TMO));
-+	PM8001_INIT_DBG(pm8001_ha,
-+			pm8001_printk("SASConfigPage.OPNRJT_RTRY_INTVL "
-+			" 0x%08x\n", SASConfigPage.OPNRJT_RTRY_INTVL));
-+	PM8001_INIT_DBG(pm8001_ha,
-+			pm8001_printk("SASConfigPage.Data_Cmd_OPNRJT_RTRY_TMO "
-+			" 0x%08x\n", SASConfigPage.Data_Cmd_OPNRJT_RTRY_TMO));
-+	PM8001_INIT_DBG(pm8001_ha,
-+			pm8001_printk("SASConfigPage.Data_Cmd_OPNRJT_RTRY_THR "
-+			" 0x%08x\n", SASConfigPage.Data_Cmd_OPNRJT_RTRY_THR));
-+	PM8001_INIT_DBG(pm8001_ha, pm8001_printk("SASConfigPage.MAX_AIP "
-+			" 0x%08x\n", SASConfigPage.MAX_AIP));
-+
-+	memcpy(&payload.cfg_pg, &SASConfigPage,
-+			 sizeof(SASProtocolTimerConfig_t));
-+
-+	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-+
-+	return rc;
-+}
-+
-+/**
-  * pm80xx_get_encrypt_info - Check for encryption
-  * @pm8001_ha: our hba card information.
-  */
-@@ -800,11 +880,8 @@ static int pm80xx_chip_init(struct pm8001_hba_info *pm8001_ha)
- 	} else
- 		return -EBUSY;
- 
--	/* configure thermal */
--	pm80xx_set_thermal_config(pm8001_ha);
--
--	PM8001_INIT_DBG(pm8001_ha,
--		pm8001_printk("Thermal configuration successful!\n"));
-+	/* send SAS protocol timer configuration page to FW */
-+	ret = pm80xx_set_sas_protocol_timer_config(pm8001_ha);
- 
- 	/* Check for encryption */
- 	if (pm8001_ha->chip->encrypt) {
-@@ -1269,6 +1346,11 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
- 		ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
- 		break;
- 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
-+	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
-@@ -1472,6 +1554,11 @@ static void mpi_ssp_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
- 		ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
- 		break;
- 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
-+	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
-@@ -1557,6 +1644,13 @@ static void mpi_ssp_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
- 		ts->resp = SAS_TASK_COMPLETE;
- 		ts->stat = SAS_DATA_OVERRUN;
- 		break;
-+	case IO_XFER_ERROR_INTERNAL_CRC_ERROR:
-+		PM8001_IO_DBG(pm8001_ha,
-+			pm8001_printk("IO_XFR_ERROR_INTERNAL_CRC_ERROR\n"));
-+		/* TBC: used default set values */
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_DATA_OVERRUN;
-+		break;
- 	case IO_XFER_CMD_FRAME_ISSUED:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("IO_XFER_CMD_FRAME_ISSUED\n"));
-@@ -1761,6 +1855,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		ts->open_rej_reason = SAS_OREJ_RSVD_CONT0;
- 		break;
- 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
-+	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
-@@ -2051,7 +2150,12 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
- 		ts->open_rej_reason = SAS_OREJ_RSVD_CONT0;
- 		break;
- 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
--		PM8001_IO_DBG(pm8001_ha,
-+	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
-+		PM8001_FAIL_DBG(pm8001_ha,
- 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
- 		ts->resp = SAS_TASK_UNDELIVERED;
- 		ts->stat = SAS_DEV_NO_RESPONSE;
-@@ -2154,6 +2258,20 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
- 		ts->resp = SAS_TASK_COMPLETE;
- 		ts->stat = SAS_OPEN_TO;
- 		break;
-+	case IO_XFER_ERROR_INTERNAL_CRC_ERROR:
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("IO_XFR_ERROR_INTERNAL_CRC_ERROR\n"));
-+		/* TBC: used default set values */
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_OPEN_TO;
-+		break;
-+	case IO_XFER_DMA_ACTIVATE_TIMEOUT:
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("IO_XFR_DMA_ACTIVATE_TIMEOUT\n"));
-+		/* TBC: used default set values */
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_OPEN_TO;
-+		break;
- 	default:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("Unknown status 0x%x\n", event));
-@@ -2305,6 +2423,11 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		ts->open_rej_reason = SAS_OREJ_RSVD_CONT0;
- 		break;
- 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
-+	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
-+	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
-@@ -2862,6 +2985,9 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	case HW_EVENT_PORT_RECOVERY_TIMER_TMO:
- 		PM8001_MSG_DBG(pm8001_ha,
- 			pm8001_printk("HW_EVENT_PORT_RECOVERY_TIMER_TMO\n"));
-+		pm80xx_hw_event_ack_req(pm8001_ha, 0,
-+			HW_EVENT_PORT_RECOVERY_TIMER_TMO,
-+			port_id, phy_id, 0, 0);
- 		sas_phy_disconnected(sas_phy);
- 		phy->phy_attached = 0;
- 		sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_ERR);
-@@ -3499,10 +3625,7 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 	ssp_cmd.ssp_iu.efb_prio_attr |= (task->ssp_task.task_prio << 3);
- 	ssp_cmd.ssp_iu.efb_prio_attr |= (task->ssp_task.task_attr & 7);
- 	memcpy(ssp_cmd.ssp_iu.cdb, task->ssp_task.cdb, 16);
--	circularQ = &pm8001_ha->inbnd_q_tbl[inb++];
--
--	/* rotate the inb queue */
--	inb = inb%PM8001_MAX_SPCV_INB_NUM;
-+	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 
- 	/* Check if encryption is set */
- 	if (pm8001_ha->chip->encrypt &&
-@@ -3603,10 +3726,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	unsigned long flags;
- 	u32 opc = OPC_INB_SATA_HOST_OPSTART;
- 	memset(&sata_cmd, 0, sizeof(sata_cmd));
--	circularQ = &pm8001_ha->inbnd_q_tbl[inb++];
--
--	/* rotate the inb queue */
--	inb = inb%PM8001_MAX_SPCV_INB_NUM;
-+	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 
- 	if (task->data_dir == PCI_DMA_NONE) {
- 		ATAP = 0x04; /* no data*/
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index 0c15627..ea127b6 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -197,6 +197,30 @@
- #define CIPHER_MODE_XTS				0x00000002
- #define KEK_MGMT_SUBOP_KEYCARDUPDATE		0x4
- 
-+/* SAS protocol timer configuration page */
-+#define SAS_PROTOCOL_TIMER_CONFIG_PAGE  0x04
-+#define STP_MCT_TMO                     32
-+#define SSP_MCT_TMO                     32
-+#define SAS_MAX_OPEN_TIME				5
-+#define SMP_MAX_CONN_TIMER              0xFF
-+#define STP_FRM_TIMER                   0
-+#define STP_IDLE_TIME                   5 /* 5 us; controller default */
-+#define SAS_MFD                         0
-+#define SAS_OPNRJT_RTRY_INTVL           2
-+#define SAS_DOPNRJT_RTRY_TMO            128
-+#define SAS_COPNRJT_RTRY_TMO            128
-+
-+/*
-+  Making ORR bigger than IT NEXUS LOSS which is 2000000us = 2 second.
-+  Assuming a bigger value 3 second, 3000000/128 = 23437.5 where 128
-+  is DOPNRJT_RTRY_TMO
-+*/
-+#define SAS_DOPNRJT_RTRY_THR            23438
-+#define SAS_COPNRJT_RTRY_THR            23438
-+#define SAS_MAX_AIP                     0x200000
-+#define IT_NEXUS_TIMEOUT       0x7D0
-+#define PORT_RECOVERY_TIMEOUT  ((IT_NEXUS_TIMEOUT/100) + 30)
-+
- struct mpi_msg_hdr {
- 	__le32	header;	/* Bits [11:0] - Message operation code */
- 	/* Bits [15:12] - Message Category */
-@@ -996,6 +1020,23 @@ struct ssp_coalesced_comp_resp {
- 
- /* new outbound structure for spcv - ends */
- 
-+/* brief data structure for SAS protocol timer configuration page.
-+ *
-+ */
-+struct SASProtocolTimerConfig{
-+    __le32 pageCode;                        /* 0 */
-+    __le32 MST_MSI;                         /* 1 */
-+    __le32 STP_SSP_MCT_TMO;                 /* 2 */
-+    __le32 STP_FRM_TMO;                     /* 3 */
-+    __le32 STP_IDLE_TMO;                    /* 4 */
-+    __le32 OPNRJT_RTRY_INTVL;               /* 5 */
-+    __le32 Data_Cmd_OPNRJT_RTRY_TMO;        /* 6 */
-+    __le32 Data_Cmd_OPNRJT_RTRY_THR;        /* 7 */
-+    __le32 MAX_AIP;                         /* 8 */
-+} __attribute__((packed, aligned(4)));
-+
-+typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
-+
- #define NDS_BITS 0x0F
- #define PDS_BITS 0xF0
- 
-@@ -1122,7 +1163,8 @@ struct ssp_coalesced_comp_resp {
- #define IO_DS_INVALID					0x49
- /* WARNING: the value is not contiguous from here */
- #define IO_XFER_ERR_LAST_PIO_DATAIN_CRC_ERR	0x52
--#define IO_XFR_ERROR_INTERNAL_CRC_ERROR		0x54
-+#define IO_XFER_DMA_ACTIVATE_TIMEOUT		0x53
-+#define IO_XFER_ERROR_INTERNAL_CRC_ERROR	0x54
- #define MPI_IO_RQE_BUSY_FULL			0x55
- #define IO_XFER_ERR_EOB_DATA_OVERRUN		0x56
- #define IO_XFR_ERROR_INVALID_SSP_RSP_FRAME	0x57
--- 
-1.7.1
+- new cleanup patch "virtio-scsi: push vq lock/unlock into virtscsi_vq_done"
 
+- reorganized code to move ACCESS_ONCE in a clearer place
+
+- included Wanlong Gao's CPU hotplug patches
+
+Ok for 3.9?  It would probably be easier to get it in via Rusty's tree
+because of the prerequisites.  James, can I get your Acked-by?
+
+Paolo
+
+Paolo Bonzini (4):
+  virtio-scsi: redo allocation of target data
+  virtio-scsi: pass struct virtio_scsi to virtqueue completion function
+  virtio-scsi: push vq lock/unlock into virtscsi_vq_done
+  virtio-scsi: introduce multiqueue support
+
+Wanlong Gao (1):
+  virtio-scsi: reset virtqueue affinity when doing cpu hotplug
+
+ drivers/scsi/virtio_scsi.c |  360 +++++++++++++++++++++++++++++++++++---------
+ 1 files changed, 292 insertions(+), 68 deletions(-)
