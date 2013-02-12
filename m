@@ -1,16 +1,16 @@
 From: Anand <anandkumar_santhanam@pmc-sierra.com>
 Subject: [PATCH 07/15] pm80xx: MSI-X implementation for using 64 interrupts
-Date: Tue, 12 Feb 2013 04:33:26 -0800
-Message-ID: <511A3696.7020707@pmc-sierra.com>
+Date: Tue, 12 Feb 2013 04:35:13 -0800
+Message-ID: <511A3701.1060203@pmc-sierra.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51355 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51685 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932957Ab3BLMco (ORCPT
+	by vger.kernel.org with ESMTP id S1758515Ab3BLMeb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Feb 2013 07:32:44 -0500
+	Tue, 12 Feb 2013 07:34:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -27,19 +27,16 @@ upto 64 interrupt for the device.
 Signed-off-by: Sakthivel K <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
 Signed-off-by: Anand Kumar S <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 1233
-++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/pm8001/pm8001_init.c | 1233 ++++++++++++++++++++++++++++++++++++-
  1 files changed, 1203 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c
-b/drivers/scsi/pm8001/pm8001_init.c
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
 index e8a983f..f0c5075 100755
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -163,7 +163,13 @@ static void pm8001_free(struct pm8001_hba_info
-*pm8001_ha)
+@@ -163,7 +163,13 @@ static void pm8001_free(struct pm8001_hba_info *pm8001_ha)
  }
-
+ 
  #ifdef PM8001_USE_TASKLET
 -static void pm8001_tasklet(unsigned long opaque)
 +
@@ -561,17 +558,15 @@ index e8a983f..f0c5075 100755
 +	PM8001_CHIP_DISP->isr(pm8001_ha, 63);
 +}
  #endif
-
+ 
 +/**
-+ * pm8001_interrupt_handler_x -main interrupt handler invokde for all
-interrupt.
-+ * It obtains the vector number and calls the equivalent bottom half or
-services
++ * pm8001_interrupt_handler_x -main interrupt handler invokde for all interrupt.
++ * It obtains the vector number and calls the equivalent bottom half or services
 + * directly.
 + * @vec: vector number; will be 0 for none msi-x operation
 + * @opaque: the passed general host adapter struct
 + */
-
+ 
 - /**
 -  * pm8001_interrupt - when HBA originate a interrupt,we should invoke this
 -  * dispatcher to handle each case.
@@ -583,8 +578,7 @@ services
  {
  	struct pm8001_hba_info *pm8001_ha;
  	irqreturn_t ret = IRQ_HANDLED;
-@@ -191,13 +702,372 @@ static irqreturn_t pm8001_interrupt(int irq, void
-*opaque)
+@@ -191,13 +702,372 @@ static irqreturn_t pm8001_interrupt(int irq, void *opaque)
  	if (!PM8001_CHIP_DISP->is_our_interupt(pm8001_ha))
  		return IRQ_NONE;
  #ifdef PM8001_USE_TASKLET
@@ -595,7 +589,7 @@ services
  #endif
  	return ret;
  }
-
+ 
 +/* 64 interrupt handlers for 64 msi-x vectors */
 +static irqreturn_t pm8001_interrupt_handler0(int irq, void *dev_id)
 +{
@@ -958,10 +952,9 @@ services
  /**
   * pm8001_alloc - initiate our hba structure and 6 DMAs area.
   * @pm8001_ha:our hba structure.
-@@ -431,8 +1301,141 @@ static struct pm8001_hba_info
-*pm8001_pci_alloc(struct pci_dev *pdev,
+@@ -431,8 +1301,141 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
  		pm8001_ha->iomb_size = IOMB_SIZE_SPC;
-
+ 
  #ifdef PM8001_USE_TASKLET
 -	tasklet_init(&pm8001_ha->tasklet, pm8001_tasklet,
 -		(unsigned long)pm8001_ha);
@@ -1103,8 +1096,7 @@ services
  #endif
  	pm8001_ioremap(pm8001_ha);
  	if (!pm8001_alloc(pm8001_ha, ent))
-@@ -595,26 +1598,41 @@ static void pm8001_init_sas_add(struct
-pm8001_hba_info *pm8001_ha)
+@@ -595,26 +1598,41 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
   * @chip_info: our ha struct.
   * @irq_handler: irq_handler
   */
@@ -1151,16 +1143,15 @@ pm8001_hba_info *pm8001_ha)
  				SHOST_TO_SAS_HA(pm8001_ha->shost))) {
  				for (j = 0; j < i; j++)
  					free_irq(
-@@ -636,22 +1654,24 @@ static u32 pm8001_setup_msix(struct
-pm8001_hba_info *pm8001_ha,
+@@ -636,22 +1654,24 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha,
  static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
  {
  	struct pci_dev *pdev;
 -	irq_handler_t irq_handler = pm8001_interrupt;
  	int rc;
-
+ 
  	pdev = pm8001_ha->pdev;
-
+ 
  #ifdef PM8001_USE_MSIX
  	if (pci_find_capability(pdev, PCI_CAP_ID_MSIX))
 -		return pm8001_setup_msix(pm8001_ha, irq_handler);
@@ -1172,7 +1163,7 @@ pm8001_hba_info *pm8001_ha,
  		goto intx;
 +	}
  #endif
-
+ 
  intx:
  	/* initialize the INT-X interrupt */
 -	rc = request_irq(pdev->irq, irq_handler, IRQF_SHARED, DRV_NAME,
@@ -1181,7 +1172,7 @@ pm8001_hba_info *pm8001_ha,
 +		DRV_NAME, SHOST_TO_SAS_HA(pm8001_ha->shost));
  	return rc;
  }
-
+ 
 @@ -669,6 +1689,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
  {
  	unsigned int rc;
@@ -1192,7 +1183,7 @@ pm8001_hba_info *pm8001_ha,
  	const struct pm8001_chip_info *chip;
 @@ -733,6 +1754,11 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
  		goto err_out_shost;
-
+ 
  	PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, 0);
 +	if (pm8001_ha->chip_id != chip_8001) {
 +		for (i = 1; i < pm8001_ha->number_of_intr; i++)
@@ -1209,7 +1200,7 @@ pm8001_hba_info *pm8001_ha,
 -	PM8001_CHIP_DISP->interrupt_disable(pm8001_ha, 0);
 +	PM8001_CHIP_DISP->interrupt_disable(pm8001_ha, 0xFF);
  	PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha, 0x252acbcd);
-
+ 
  #ifdef PM8001_USE_MSIX
 @@ -781,7 +1807,11 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
  	free_irq(pm8001_ha->irq, sha);
@@ -1224,8 +1215,7 @@ pm8001_hba_info *pm8001_ha,
  #endif
  	pm8001_free(pm8001_ha);
  	kfree(sha->sas_phy);
-@@ -812,7 +1842,7 @@ static int pm8001_pci_suspend(struct pci_dev *pdev,
-pm_message_t state)
+@@ -812,7 +1842,7 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
  		printk(KERN_ERR " PCI PM not supported\n");
  		return -ENODEV;
  	}
@@ -1234,8 +1224,7 @@ pm_message_t state)
  	PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha, 0x252acbcd);
  #ifdef PM8001_USE_MSIX
  	for (i = 0; i < pm8001_ha->number_of_intr; i++)
-@@ -824,7 +1854,11 @@ static int pm8001_pci_suspend(struct pci_dev
-*pdev, pm_message_t state)
+@@ -824,7 +1854,11 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
  	free_irq(pm8001_ha->irq, sha);
  #endif
  #ifdef PM8001_USE_TASKLET
@@ -1414,7 +1403,7 @@ pm_message_t state)
 +	}
  	scsi_unblock_requests(pm8001_ha->shost);
  	return 0;
-
+ 
 -- 
 1.7.1
 
