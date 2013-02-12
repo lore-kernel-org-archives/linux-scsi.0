@@ -1,843 +1,478 @@
 From: Anand <anandkumar_santhanam@pmc-sierra.com>
-Subject: [PATCH 14/15] pm80xx: NCQ error handling changes
-Date: Tue, 12 Feb 2013 04:43:39 -0800
-Message-ID: <511A38FB.5080802@pmc-sierra.com>
+Subject: [PATCH 15/15] pm80xx: thermal, sas controller config and error handling
+ update
+Date: Tue, 12 Feb 2013 04:44:42 -0800
+Message-ID: <511A393A.8070206@pmc-sierra.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48670 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932927Ab3BLMm5 (ORCPT
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:49568 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932927Ab3BLMoA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Feb 2013 07:42:57 -0500
+	Tue, 12 Feb 2013 07:44:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: jack_wang@usish.com, Sangeetha.Gnanasekaran@pmcs.com, Vishwanath.Maram@pmcs.com, Harry.Yang@pmcs.com
 
->From 97d4edce607941e931b77d1fed12096294ff6c8e Mon Sep 17 00:00:00 2001
+>From 9c620d9273640b416054ba76cd267aebaf455ed2 Mon Sep 17 00:00:00 2001
 From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-Date: Wed, 6 Feb 2013 17:27:22 +0530
-Subject: [PATCH 14/15] pm80xx: NCQ error handling changes
+Date: Wed, 6 Feb 2013 17:39:43 +0530
+Subject: [PATCH 15/15] pm80xx: thermal, sas controller config and error handling update
 
-Handled NCQ errors in the low level driver as the FW
-is not providing the faulty tag for NCQ errors for libsas
-to recover.
+Modified thermal configuration to happen after interrupt registration
+Added SAS controller configuration during initialization
+Added error handling logic to handle I_T_Nexus errors and variants
 
 Signed-off-by: Anand Kumar S <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c |  270 ++++++++++++++++++++++++++++++++++++--
- drivers/scsi/pm8001/pm8001_sas.c |   22 +++-
- drivers/scsi/pm8001/pm8001_sas.h |   15 ++-
- drivers/scsi/pm8001/pm80xx_hwi.c |  262 +++++++++++++++++++++++++++++++++++--
- drivers/scsi/pm8001/pm80xx_hwi.h |    1 +
- 5 files changed, 543 insertions(+), 27 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c  |    2 +-
+ drivers/scsi/pm8001/pm8001_init.c |    2 +
+ drivers/scsi/pm8001/pm8001_sas.c  |   66 ++++++++++++++++
+ drivers/scsi/pm8001/pm8001_sas.h  |    2 +
+ drivers/scsi/pm8001/pm80xx_hwi.c  |  150 +++++++++++++++++++++++++++++++++----
+ drivers/scsi/pm8001/pm80xx_hwi.h  |   44 +++++++++++-
+ 6 files changed, 249 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 265dbf4..a90c002 100755
+index a90c002..d18f421 100755
 --- a/drivers/scsi/pm8001/pm8001_hwi.c
 +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1707,6 +1707,123 @@ int pm8001_handle_event(struct pm8001_hba_info *pm8001_ha, void *data,
- 	return ret;
- }
- 
-+static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
-+		struct pm8001_device *pm8001_ha_dev)
-+{
-+	int res;
-+	u32 ccb_tag;
-+	struct pm8001_ccb_info *ccb;
-+	struct sas_task *task = NULL;
-+	struct task_abort_req task_abort;
-+	struct inbound_queue_table *circularQ;
-+	u32 opc = OPC_INB_SATA_ABORT;
-+	int ret;
-+
-+	if (!pm8001_ha_dev) {
-+		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("dev is null \n"));
-+		return;
-+	}
-+
-+	task = sas_alloc_slow_task(GFP_ATOMIC);
-+
-+	if (!task) {
-+		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("cannot "
-+						"allocate task \n"));
-+		return;
-+	}
-+
-+	task->task_done = pm8001_task_done;
-+
-+	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
-+	if (res)
-+		return;
-+
-+	ccb = &pm8001_ha->ccb_info[ccb_tag];
-+	ccb->device = pm8001_ha_dev;
-+	ccb->ccb_tag = ccb_tag;
-+	ccb->task = task;
-+
-+	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-+
-+	memset(&task_abort, 0, sizeof(task_abort));
-+	task_abort.abort_all = cpu_to_le32(1);
-+	task_abort.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-+	task_abort.tag = cpu_to_le32(ccb_tag);
-+
-+	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &task_abort, 0);
-+
-+}
-+
-+static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
-+		struct pm8001_device *pm8001_ha_dev)
-+{
-+	struct sata_start_req sata_cmd;
-+	int res;
-+	u32 ccb_tag;
-+	struct pm8001_ccb_info *ccb;
-+	struct sas_task *task = NULL;
-+	struct host_to_dev_fis fis;
-+	struct domain_device *dev;
-+	struct inbound_queue_table *circularQ;
-+	u32 opc = OPC_INB_SATA_HOST_OPSTART;
-+
-+	task = sas_alloc_slow_task(GFP_ATOMIC);
-+
-+	if (!task) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("cannot allocate task !!!\n"));
-+		return;
-+	}
-+	task->task_done = pm8001_task_done;
-+
-+	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
-+	if (res) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("cannot allocate tag !!!\n"));
-+		return;
-+	}
-+
-+	/* allocate domain device by ourselves as libsas
-+	 * is not going to provide any
-+	*/
-+	dev = kzalloc(sizeof(struct domain_device), GFP_ATOMIC);
-+	if (!dev) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("Domain device cannot be allocated \n"));
-+		sas_free_task(task);
-+		return;
-+	} else {
-+		task->dev = dev;
-+		task->dev->lldd_dev = pm8001_ha_dev;
-+	}
-+
-+	ccb = &pm8001_ha->ccb_info[ccb_tag];
-+	ccb->device = pm8001_ha_dev;
-+	ccb->ccb_tag = ccb_tag;
-+	ccb->task = task;
-+	pm8001_ha_dev->id |= NCQ_READ_LOG_FLAG;
-+	pm8001_ha_dev->id |= NCQ_2ND_RLE_FLAG;
-+
-+	memset(&sata_cmd, 0, sizeof(sata_cmd));
-+	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-+
-+	/* construct read log FIS */
-+	memset(&fis, 0, sizeof(struct host_to_dev_fis));
-+	fis.fis_type = 0x27;
-+	fis.flags = 0x80;
-+	fis.command = ATA_CMD_READ_LOG_EXT;
-+	fis.lbal = 0x10;
-+	fis.sector_count = 0x1;
-+
-+	sata_cmd.tag = cpu_to_le32(ccb_tag);
-+	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-+	sata_cmd.ncqtag_atap_dir_m |= ((0x1 << 7) | (0x5 << 9));
-+	memcpy(&sata_cmd.sata_fis, &fis, sizeof(struct host_to_dev_fis));
-+
-+	res = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &sata_cmd, 0);
-+
-+}
-+
- /**
-  * mpi_ssp_completion- process the event that FW response to the SSP request.
-  * @pm8001_ha: our hba card information
-@@ -2170,16 +2287,44 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	status = le32_to_cpu(psataPayload->status);
- 	tag = le32_to_cpu(psataPayload->tag);
- 
-+	if (!tag) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("tag null \n"));
-+		return;
-+	}
- 	ccb = &pm8001_ha->ccb_info[tag];
- 	param = le32_to_cpu(psataPayload->param);
--	t = ccb->task;
-+	if (ccb) {
-+		t = ccb->task;
-+		pm8001_dev = ccb->device;
-+	} else {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("ccb null \n"));
-+		return;
-+	}
-+
-+	if (t) {
-+		if (t->dev && (t->dev->lldd_dev))
-+			pm8001_dev = t->dev->lldd_dev;
-+	} else {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("task null\n"));
-+		return;
-+	}
-+
-+	if ((pm8001_dev && !(pm8001_dev->id & NCQ_READ_LOG_FLAG))
-+		&& unlikely(!t || !t->lldd_task || !t->dev)) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("task or dev null\n"));
-+		return;
-+	}
-+
- 	ts = &t->task_status;
--	pm8001_dev = ccb->device;
--	if (status)
-+	if (!ts) {
- 		PM8001_FAIL_DBG(pm8001_ha,
--			pm8001_printk("sata IO status 0x%x\n", status));
--	if (unlikely(!t || !t->lldd_task || !t->dev))
-+			pm8001_printk("ts null \n"));
- 		return;
-+	}
- 
- 	switch (status) {
- 	case IO_SUCCESS:
-@@ -2187,6 +2332,19 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		if (param == 0) {
- 			ts->resp = SAS_TASK_COMPLETE;
- 			ts->stat = SAM_STAT_GOOD;
-+			/* check if response is for SEND READ LOG */
-+			if (pm8001_dev &&
-+				(pm8001_dev->id & NCQ_READ_LOG_FLAG)) {
-+				/* set new bit for abort_all */
-+				pm8001_dev->id |= NCQ_ABORT_ALL_FLAG;
-+				/* clear bit for read log */
-+				pm8001_dev->id = pm8001_dev->id & 0x7FFFFFFF;
-+				pm8001_send_abort_all(pm8001_ha, pm8001_dev);
-+				/* Free the tag */
-+				pm8001_tag_free(pm8001_ha, tag);
-+				sas_free_task(t);
-+				return;
-+			}
- 		} else {
- 			u8 len;
- 			ts->resp = SAS_TASK_COMPLETE;
-@@ -2498,6 +2656,29 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
- 	unsigned long flags;
- 
- 	ccb = &pm8001_ha->ccb_info[tag];
-+
-+	if (ccb) {
-+		t = ccb->task;
-+		pm8001_dev = ccb->device;
-+	} else {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("No CCB !!!. returning \n"));
-+	}
-+	if (event)
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("SATA EVENT 0x%x\n", event));
-+
-+	/* Check if this is NCQ error */
-+	if (event == IO_XFER_ERROR_ABORTED_NCQ_MODE) {
-+		/* find device using device id */
-+		pm8001_dev = pm8001_find_dev(pm8001_ha, dev_id);
-+		/* send read log extension */
-+		if (pm8001_dev)
-+			pm8001_send_read_log(pm8001_ha, pm8001_dev);
-+		return;
-+	}
-+
-+	ccb = &pm8001_ha->ccb_info[tag];
- 	t = ccb->task;
- 	pm8001_dev = ccb->device;
- 	if (event)
-@@ -3512,19 +3693,29 @@ int pm8001_mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	u32 status ;
- 	u32 tag, scp;
- 	struct task_status_struct *ts;
-+	struct pm8001_device *pm8001_dev;
- 
- 	struct task_abort_resp *pPayload =
- 		(struct task_abort_resp *)(piomb + 4);
- 
- 	status = le32_to_cpu(pPayload->status);
- 	tag = le32_to_cpu(pPayload->tag);
-+	if (!tag) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk(" TAG NULL. RETURNING !!!"));
-+		return -1;
-+	}
-+
- 	scp = le32_to_cpu(pPayload->scp);
- 	ccb = &pm8001_ha->ccb_info[tag];
- 	t = ccb->task;
--	PM8001_IO_DBG(pm8001_ha,
--		pm8001_printk(" status = 0x%x\n", status));
--	if (t == NULL)
-+	pm8001_dev = ccb->device; /* retrieve device */
-+
-+	if (!t)	{
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk(" TASK NULL. RETURNING !!!"));
- 		return -1;
-+	}
- 	ts = &t->task_status;
- 	if (status != 0)
- 		PM8001_FAIL_DBG(pm8001_ha,
-@@ -3548,7 +3739,15 @@ int pm8001_mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	spin_unlock_irqrestore(&t->task_state_lock, flags);
- 	pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
- 	mb();
--	t->task_done(t);
-+
-+	if ((pm8001_dev->id & NCQ_ABORT_ALL_FLAG) && t)	{
-+		pm8001_tag_free(pm8001_ha, tag);
-+		sas_free_task(t);
-+		/* clear the flag */
-+		pm8001_dev->id &= 0xBFFFFFFF;
-+	} else
-+		t->task_done(t);
-+
- 	return 0;
- }
- 
-@@ -4133,6 +4332,7 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	u32 ATAP = 0x0;
- 	u32 dir;
- 	struct inbound_queue_table *circularQ;
-+	unsigned long flags;
- 	u32  opc = OPC_INB_SATA_HOST_OPSTART;
- 	memset(&sata_cmd, 0, sizeof(sata_cmd));
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-@@ -4153,8 +4353,10 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			PM8001_IO_DBG(pm8001_ha, pm8001_printk("FPDMA\n"));
- 		}
+@@ -1670,7 +1670,7 @@ void pm8001_work_fn(struct work_struct *work)
+ 	}	break;
+ 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
+ 		dev = pm8001_dev->sas_device;
+-		pm8001_I_T_nexus_reset(dev);
++		pm8001_I_T_nexus_event_handler(dev);
+ 		break;
+ 	case IO_OPEN_CNX_ERROR_STP_RESOURCES_BUSY:
+ 		dev = pm8001_dev->sas_device;
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index b884a58..289c2a5 100755
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -1795,6 +1795,8 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+ 	if (pm8001_ha->chip_id != chip_8001) {
+ 		for (i = 1; i < pm8001_ha->number_of_intr; i++)
+ 			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
++		/* setup thermal configuration. */
++		pm80xx_set_thermal_config(pm8001_ha);
  	}
--	if (task->ata_task.use_ncq && pm8001_get_ncq_tag(task, &hdr_tag))
-+	if (task->ata_task.use_ncq && pm8001_get_ncq_tag(task, &hdr_tag)) {
-+		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
- 		ncg_tag = hdr_tag;
-+	}
- 	dir = data_dir_flags[task->data_dir] << 8;
- 	sata_cmd.tag = cpu_to_le32(tag);
- 	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-@@ -4185,6 +4387,54 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 		sata_cmd.len = cpu_to_le32(task->total_xfer_len);
- 		sata_cmd.esgl = 0;
- 	}
-+
-+	/* Check for read log for failed drive and return */
-+	if (sata_cmd.sata_fis.command == 0x2f) {
-+		if (pm8001_ha_dev && ((pm8001_ha_dev->id & NCQ_READ_LOG_FLAG) ||
-+			(pm8001_ha_dev->id & NCQ_ABORT_ALL_FLAG) ||
-+			(pm8001_ha_dev->id & NCQ_2ND_RLE_FLAG))) {
-+			struct task_status_struct *ts;
-+
-+			pm8001_ha_dev->id &= 0xDFFFFFFF;
-+			ts = &task->task_status;
-+
-+			spin_lock_irqsave(&task->task_state_lock, flags);
-+			ts->resp = SAS_TASK_COMPLETE;
-+			ts->stat = SAM_STAT_GOOD;
-+			task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-+			task->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
-+			task->task_state_flags |= SAS_TASK_STATE_DONE;
-+			if (unlikely((task->task_state_flags &
-+					SAS_TASK_STATE_ABORTED))) {
-+				spin_unlock_irqrestore(&task->task_state_lock,
-+							flags);
-+				PM8001_FAIL_DBG(pm8001_ha,
-+					pm8001_printk("task 0x%p resp 0x%x "
-+					" stat 0x%x but aborted by upper layer "
-+					"\n", task, ts->resp, ts->stat));
-+				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-+			} else if (task->uldd_task) {
-+				spin_unlock_irqrestore(&task->task_state_lock,
-+							flags);
-+				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-+				mb();/* ditto */
-+				spin_unlock_irq(&pm8001_ha->lock);
-+				task->task_done(task);
-+				spin_lock_irq(&pm8001_ha->lock);
-+				return 0;
-+			} else if (!task->uldd_task) {
-+				spin_unlock_irqrestore(&task->task_state_lock,
-+							flags);
-+				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-+				mb();/*ditto*/
-+				spin_unlock_irq(&pm8001_ha->lock);
-+				task->task_done(task);
-+				spin_lock_irq(&pm8001_ha->lock);
-+				return 0;
-+			}
-+		}
-+	}
-+
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &sata_cmd, 0);
- 	return ret;
- }
+ 
+ 	pm8001_init_sas_add(pm8001_ha);
 diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 6bba59c..c720917 100755
+index c720917..9af9585 100755
 --- a/drivers/scsi/pm8001/pm8001_sas.c
 +++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -68,7 +68,7 @@ static void pm8001_tag_clear(struct pm8001_hba_info *pm8001_ha, u32 tag)
- 	clear_bit(tag, bitmap);
+@@ -1018,6 +1018,72 @@ int pm8001_I_T_nexus_reset(struct domain_device *dev)
+ 	return rc;
  }
  
--static void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag)
-+void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag)
- {
- 	pm8001_tag_clear(pm8001_ha, tag);
- }
-@@ -565,6 +565,24 @@ struct pm8001_device *pm8001_alloc_dev(struct pm8001_hba_info *pm8001_ha)
- 	}
- 	return NULL;
- }
-+/**
-+  * pm8001_find_dev - find a matching pm8001_device
-+  * @pm8001_ha: our hba card information
-+  */
-+struct pm8001_device *pm8001_find_dev(struct pm8001_hba_info *pm8001_ha,
-+					u32 device_id)
++/*
++* This function handle the IT_NEXUS_XXX event or completion
++* status code for SSP/SATA/SMP I/O request.
++*/
++int pm8001_I_T_nexus_event_handler(struct domain_device *dev)
 +{
-+	u32 dev;
-+	for (dev = 0; dev < PM8001_MAX_DEVICES; dev++) {
-+		if (pm8001_ha->devices[dev].device_id == device_id)
-+			return &pm8001_ha->devices[dev];
++	int rc = TMF_RESP_FUNC_FAILED;
++	struct pm8001_device *pm8001_dev;
++	struct pm8001_hba_info *pm8001_ha;
++	struct sas_phy *phy;
++	u32 device_id = 0;
++
++	if (!dev || !dev->lldd_dev)
++		return -1;
++
++	pm8001_dev = dev->lldd_dev;
++	device_id = pm8001_dev->device_id;
++	pm8001_ha = pm8001_find_ha_by_dev(dev);
++
++	PM8001_EH_DBG(pm8001_ha,
++			pm8001_printk("I_T_Nexus handler invoked !!"));
++
++	phy = sas_get_local_phy(dev);
++
++	if (dev_is_sata(dev)) {
++		DECLARE_COMPLETION_ONSTACK(completion_setstate);
++		if (scsi_is_sas_phy_local(phy)) {
++			rc = 0;
++			goto out;
++		}
++		/* send internal ssp/sata/smp abort command to FW */
++		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
++							dev, 1, 0);
++		msleep(100);
++
++		/* deregister the target device */
++		pm8001_dev_gone_notify(dev);
++		msleep(200);
++
++		/*send phy reset to hard reset target */
++		rc = sas_phy_reset(phy, 1);
++		msleep(2000);
++		pm8001_dev->setds_completion = &completion_setstate;
++
++		wait_for_completion(&completion_setstate);
++	} else {
++		/* send internal ssp/sata/smp abort command to FW */
++		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
++							dev, 1, 0);
++		msleep(100);
++
++		/* deregister the target device */
++		pm8001_dev_gone_notify(dev);
++		msleep(200);
++
++		/*send phy reset to hard reset target */
++		rc = sas_phy_reset(phy, 1);
++		msleep(2000);
 +	}
-+	if (dev == PM8001_MAX_DEVICES) {
-+		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("NO MATCHING "
-+				"DEVICE FOUND !!!\n"));
-+	}
-+	return NULL;
++	PM8001_EH_DBG(pm8001_ha, pm8001_printk(" for device[%x]:rc=%d\n",
++		pm8001_dev->device_id, rc));
++out:
++	sas_put_local_phy(phy);
++
++	return rc;
 +}
- 
- static void pm8001_free_dev(struct pm8001_device *pm8001_dev)
+ /* mandatory SAM-3, the task reset the specified LUN*/
+ int pm8001_lu_reset(struct domain_device *dev, u8 *lun)
  {
-@@ -653,7 +671,7 @@ int pm8001_dev_found(struct domain_device *dev)
- 	return pm8001_dev_found_notify(dev);
- }
- 
--static void pm8001_task_done(struct sas_task *task)
-+void pm8001_task_done(struct sas_task *task)
- {
- 	if (!del_timer(&task->slow_task->timer))
- 		return;
 diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 53d7f3b..c1598dc 100755
+index c1598dc..fbb65d5 100755
 --- a/drivers/scsi/pm8001/pm8001_sas.h
 +++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -321,7 +321,9 @@ union main_cfg_table {
- 	u32			inbound_queue_offset;
- 	u32			outbound_queue_offset;
- 	u32			inbound_q_nppd_hppd;
--	u32			rsvd[10];
-+	u32			rsvd[8];
-+	u32			crc_core_dump;
-+	u32			rsvd1;
- 	u32			upper_event_log_addr;
- 	u32			lower_event_log_addr;
- 	u32			event_log_size;
-@@ -492,6 +494,9 @@ struct pm8001_fw_image_header {
- #define FLASH_UPDATE_DNLD_NOT_SUPPORTED		0x10
- #define FLASH_UPDATE_DISABLED			0x11
- 
-+#define	NCQ_READ_LOG_FLAG			0x80000000
-+#define	NCQ_ABORT_ALL_FLAG			0x40000000
-+#define	NCQ_2ND_RLE_FLAG			0x20000000
- /**
-  * brief param structure for firmware flash update.
-  */
-@@ -566,7 +571,6 @@ int pm8001_mem_alloc(struct pci_dev *pdev, void **virt_addr,
- 	dma_addr_t *pphys_addr, u32 *pphys_addr_hi, u32 *pphys_addr_lo,
- 	u32 mem_size, u32 align);
- 
--/********** functions common to spc & spcv - begins ************/
- void pm8001_chip_iounmap(struct pm8001_hba_info *pm8001_ha);
- int pm8001_mpi_build_cmd(struct pm8001_hba_info *pm8001_ha,
- 			struct inbound_queue_table *circularQ,
-@@ -614,7 +618,12 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha,
- 							void *piomb);
- int pm8001_mpi_general_event(struct pm8001_hba_info *pm8001_ha , void *piomb);
- int pm8001_mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha, void *piomb);
--/*********** functions common to spc & spcv - ends ************/
-+struct sas_task *pm8001_alloc_task(void);
-+void pm8001_task_done(struct sas_task *task);
-+void pm8001_free_task(struct sas_task *task);
-+void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag);
-+struct pm8001_device *pm8001_find_dev(struct pm8001_hba_info *pm8001_ha,
-+					u32 device_id);
+@@ -562,6 +562,7 @@ int pm8001_dev_found(struct domain_device *dev);
+ void pm8001_dev_gone(struct domain_device *dev);
+ int pm8001_lu_reset(struct domain_device *dev, u8 *lun);
+ int pm8001_I_T_nexus_reset(struct domain_device *dev);
++int pm8001_I_T_nexus_event_handler(struct domain_device *dev);
+ int pm8001_query_task(struct sas_task *task);
+ void pm8001_open_reject_retry(
+ 	struct pm8001_hba_info *pm8001_ha,
+@@ -624,6 +625,7 @@ void pm8001_free_task(struct sas_task *task);
+ void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag);
+ struct pm8001_device *pm8001_find_dev(struct pm8001_hba_info *pm8001_ha,
+ 					u32 device_id);
++int pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha);
  
  int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
  
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 6e1e664..3ac22e4 100644
+index 3ac22e4..71954e8 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -270,6 +270,9 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_severity	= 0x01;
- 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.fatal_err_interrupt		= 0x01;
- 
-+	/* Disable end to end CRC checking */
-+	pm8001_ha->main_cfg_tbl.pm80xx_tbl.crc_core_dump = (0x1 << 16);
-+
- 	for (i = 0; i < PM8001_MAX_SPCV_INB_NUM; i++) {
- 		pm8001_ha->inbnd_q_tbl[i].element_pri_size_cnt	=
- 			PM8001_MPI_QUEUE | (64 << 16) | (0x00<<30);
-@@ -353,6 +356,8 @@ static void update_main_config_table(struct pm8001_hba_info *pm8001_ha)
- 		pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_severity);
- 	pm8001_mw32(address, MAIN_FATAL_ERROR_INTERRUPT,
- 		pm8001_ha->main_cfg_tbl.pm80xx_tbl.fatal_err_interrupt);
-+	pm8001_mw32(address, MAIN_EVENT_CRC_CHECK,
-+		pm8001_ha->main_cfg_tbl.pm80xx_tbl.crc_core_dump);
- 
- 	/* SPCv specific */
- 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.gpio_led_mapping &= 0xCFFFFFFF;
-@@ -1026,6 +1031,123 @@ pm80xx_chip_interrupt_disable(struct pm8001_hba_info *pm8001_ha, u8 vec)
- 	pm80xx_chip_intx_interrupt_disable(pm8001_ha);
+@@ -613,7 +613,7 @@ static void init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
+  * pm80xx_set_thermal_config - support the thermal configuration
+  * @pm8001_ha: our hba card information.
+  */
+-static int
++int
+ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
+ {
+ 	struct set_ctrl_cfg_req payload;
+@@ -639,6 +639,86 @@ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
  }
  
-+static void pm80xx_send_abort_all(struct pm8001_hba_info *pm8001_ha,
-+		struct pm8001_device *pm8001_ha_dev)
-+{
-+	int res;
-+	u32 ccb_tag;
-+	struct pm8001_ccb_info *ccb;
-+	struct sas_task *task = NULL;
-+	struct task_abort_req task_abort;
-+	struct inbound_queue_table *circularQ;
-+	u32 opc = OPC_INB_SATA_ABORT;
-+	int ret;
-+
-+	if (!pm8001_ha_dev) {
-+		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("dev is null \n"));
-+		return;
-+	}
-+
-+	task = sas_alloc_slow_task(GFP_ATOMIC);
-+
-+	if (!task) {
-+		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("cannot "
-+						"allocate task \n"));
-+		return;
-+	}
-+
-+	task->task_done = pm8001_task_done;
-+
-+	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
-+	if (res)
-+		return;
-+
-+	ccb = &pm8001_ha->ccb_info[ccb_tag];
-+	ccb->device = pm8001_ha_dev;
-+	ccb->ccb_tag = ccb_tag;
-+	ccb->task = task;
-+
-+	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-+
-+	memset(&task_abort, 0, sizeof(task_abort));
-+	task_abort.abort_all = cpu_to_le32(1);
-+	task_abort.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-+	task_abort.tag = cpu_to_le32(ccb_tag);
-+
-+	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &task_abort, 0);
-+
-+}
-+
-+static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
-+		struct pm8001_device *pm8001_ha_dev)
-+{
-+	struct sata_start_req sata_cmd;
-+	int res;
-+	u32 ccb_tag;
-+	struct pm8001_ccb_info *ccb;
-+	struct sas_task *task = NULL;
-+	struct host_to_dev_fis fis;
-+	struct domain_device *dev;
-+	struct inbound_queue_table *circularQ;
-+	u32 opc = OPC_INB_SATA_HOST_OPSTART;
-+
-+	task = sas_alloc_slow_task(GFP_ATOMIC);
-+
-+	if (!task) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("cannot allocate task !!!\n"));
-+		return;
-+	}
-+	task->task_done = pm8001_task_done;
-+
-+	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
-+	if (res) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("cannot allocate tag !!!\n"));
-+		return;
-+	}
-+
-+	/* allocate domain device by ourselves as libsas
-+	 * is not going to provide any
-+	*/
-+	dev = kzalloc(sizeof(struct domain_device), GFP_ATOMIC);
-+	if (!dev) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("Domain device cannot be allocated \n"));
-+		sas_free_task(task);
-+		return;
-+	} else {
-+		task->dev = dev;
-+		task->dev->lldd_dev = pm8001_ha_dev;
-+	}
-+
-+	ccb = &pm8001_ha->ccb_info[ccb_tag];
-+	ccb->device = pm8001_ha_dev;
-+	ccb->ccb_tag = ccb_tag;
-+	ccb->task = task;
-+	pm8001_ha_dev->id |= NCQ_READ_LOG_FLAG;
-+	pm8001_ha_dev->id |= NCQ_2ND_RLE_FLAG;
-+
-+	memset(&sata_cmd, 0, sizeof(sata_cmd));
-+	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-+
-+	/* construct read log FIS */
-+	memset(&fis, 0, sizeof(struct host_to_dev_fis));
-+	fis.fis_type = 0x27;
-+	fis.flags = 0x80;
-+	fis.command = ATA_CMD_READ_LOG_EXT;
-+	fis.lbal = 0x10;
-+	fis.sector_count = 0x1;
-+
-+	sata_cmd.tag = cpu_to_le32(ccb_tag);
-+	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-+	sata_cmd.ncqtag_atap_dir_m_dad |= ((0x1 << 7) | (0x5 << 9));
-+	memcpy(&sata_cmd.sata_fis, &fis, sizeof(struct host_to_dev_fis));
-+
-+	res = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &sata_cmd, 0);
-+
-+}
-+
  /**
-  * mpi_ssp_completion- process the event that FW response to the SSP request.
-  * @pm8001_ha: our hba card information
-@@ -1480,22 +1602,50 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	struct ata_task_resp *resp ;
- 	u32 *sata_resp;
- 	struct pm8001_device *pm8001_dev;
--	unsigned long flags = 0;
-+	unsigned long flags;
++* pm80xx_set_sas_protocol_timer_config - support the SAS Protocol
++* Timer configuration page
++* @pm8001_ha: our hba card information.
++*/
++static int
++pm80xx_set_sas_protocol_timer_config(struct pm8001_hba_info *pm8001_ha)
++{
++	struct set_ctrl_cfg_req payload;
++	struct inbound_queue_table *circularQ;
++	SASProtocolTimerConfig_t SASConfigPage;
++	int rc;
++	u32 tag;
++	u32 opc = OPC_INB_SET_CONTROLLER_CONFIG;
++
++	memset(&payload, 0, sizeof(struct set_ctrl_cfg_req));
++	memset(&SASConfigPage, 0, sizeof(SASProtocolTimerConfig_t));
++
++	rc = pm8001_tag_alloc(pm8001_ha, &tag);
++
++	if (rc)
++		return -1;
++
++	circularQ = &pm8001_ha->inbnd_q_tbl[0];
++	payload.tag = cpu_to_le32(tag);
++
++	SASConfigPage.pageCode        =  SAS_PROTOCOL_TIMER_CONFIG_PAGE;
++	SASConfigPage.MST_MSI         =  3 << 15;
++	SASConfigPage.STP_SSP_MCT_TMO =  (STP_MCT_TMO << 16) | SSP_MCT_TMO;
++	SASConfigPage.STP_FRM_TMO     = (SAS_MAX_OPEN_TIME << 24) |
++				(SMP_MAX_CONN_TIMER << 16) | STP_FRM_TIMER;
++	SASConfigPage.STP_IDLE_TMO    =  STP_IDLE_TIME;
++
++	if (SASConfigPage.STP_IDLE_TMO > 0x3FFFFFF)
++		SASConfigPage.STP_IDLE_TMO = 0x3FFFFFF;
++
++
++	SASConfigPage.OPNRJT_RTRY_INTVL =         (SAS_MFD << 16) |
++						SAS_OPNRJT_RTRY_INTVL;
++	SASConfigPage.Data_Cmd_OPNRJT_RTRY_TMO =  (SAS_DOPNRJT_RTRY_TMO << 16)
++						| SAS_COPNRJT_RTRY_TMO;
++	SASConfigPage.Data_Cmd_OPNRJT_RTRY_THR =  (SAS_DOPNRJT_RTRY_THR << 16)
++						| SAS_COPNRJT_RTRY_THR;
++	SASConfigPage.MAX_AIP =  SAS_MAX_AIP;
++
++	PM8001_INIT_DBG(pm8001_ha,
++			pm8001_printk("SASConfigPage.pageCode "
++			"0x%08x\n", SASConfigPage.pageCode));
++	PM8001_INIT_DBG(pm8001_ha,
++			pm8001_printk("SASConfigPage.MST_MSI "
++			" 0x%08x\n", SASConfigPage.MST_MSI));
++	PM8001_INIT_DBG(pm8001_ha,
++			pm8001_printk("SASConfigPage.STP_SSP_MCT_TMO "
++			" 0x%08x\n", SASConfigPage.STP_SSP_MCT_TMO));
++	PM8001_INIT_DBG(pm8001_ha,
++			pm8001_printk("SASConfigPage.STP_FRM_TMO "
++			" 0x%08x\n", SASConfigPage.STP_FRM_TMO));
++	PM8001_INIT_DBG(pm8001_ha,
++			pm8001_printk("SASConfigPage.STP_IDLE_TMO "
++			" 0x%08x\n", SASConfigPage.STP_IDLE_TMO));
++	PM8001_INIT_DBG(pm8001_ha,
++			pm8001_printk("SASConfigPage.OPNRJT_RTRY_INTVL "
++			" 0x%08x\n", SASConfigPage.OPNRJT_RTRY_INTVL));
++	PM8001_INIT_DBG(pm8001_ha,
++			pm8001_printk("SASConfigPage.Data_Cmd_OPNRJT_RTRY_TMO "
++			" 0x%08x\n", SASConfigPage.Data_Cmd_OPNRJT_RTRY_TMO));
++	PM8001_INIT_DBG(pm8001_ha,
++			pm8001_printk("SASConfigPage.Data_Cmd_OPNRJT_RTRY_THR "
++			" 0x%08x\n", SASConfigPage.Data_Cmd_OPNRJT_RTRY_THR));
++	PM8001_INIT_DBG(pm8001_ha, pm8001_printk("SASConfigPage.MAX_AIP "
++			" 0x%08x\n", SASConfigPage.MAX_AIP));
++
++	memcpy(&payload.cfg_pg, &SASConfigPage,
++			 sizeof(SASProtocolTimerConfig_t));
++
++	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
++
++	return rc;
++}
++
++/**
+  * pm80xx_get_encrypt_info - Check for encryption
+  * @pm8001_ha: our hba card information.
+  */
+@@ -800,11 +880,8 @@ static int pm80xx_chip_init(struct pm8001_hba_info *pm8001_ha)
+ 	} else
+ 		return -EBUSY;
  
- 	psataPayload = (struct sata_completion_resp *)(piomb + 4);
- 	status = le32_to_cpu(psataPayload->status);
- 	tag = le32_to_cpu(psataPayload->tag);
+-	/* configure thermal */
+-	pm80xx_set_thermal_config(pm8001_ha);
+-
+-	PM8001_INIT_DBG(pm8001_ha,
+-		pm8001_printk("Thermal configuration successful!\n"));
++	/* send SAS protocol timer configuration page to FW */
++	ret = pm80xx_set_sas_protocol_timer_config(pm8001_ha);
  
-+	if (!tag) {
+ 	/* Check for encryption */
+ 	if (pm8001_ha->chip->encrypt) {
+@@ -1269,6 +1346,11 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
+ 		ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
+ 		break;
+ 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
++	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
+ 		PM8001_IO_DBG(pm8001_ha,
+ 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
+ 		ts->resp = SAS_TASK_COMPLETE;
+@@ -1472,6 +1554,11 @@ static void mpi_ssp_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
+ 		ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
+ 		break;
+ 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
++	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
+ 		PM8001_IO_DBG(pm8001_ha,
+ 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
+ 		ts->resp = SAS_TASK_COMPLETE;
+@@ -1557,6 +1644,13 @@ static void mpi_ssp_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
+ 		ts->resp = SAS_TASK_COMPLETE;
+ 		ts->stat = SAS_DATA_OVERRUN;
+ 		break;
++	case IO_XFER_ERROR_INTERNAL_CRC_ERROR:
++		PM8001_IO_DBG(pm8001_ha,
++			pm8001_printk("IO_XFR_ERROR_INTERNAL_CRC_ERROR\n"));
++		/* TBC: used default set values */
++		ts->resp = SAS_TASK_COMPLETE;
++		ts->stat = SAS_DATA_OVERRUN;
++		break;
+ 	case IO_XFER_CMD_FRAME_ISSUED:
+ 		PM8001_IO_DBG(pm8001_ha,
+ 			pm8001_printk("IO_XFER_CMD_FRAME_ISSUED\n"));
+@@ -1761,6 +1855,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		ts->open_rej_reason = SAS_OREJ_RSVD_CONT0;
+ 		break;
+ 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
++	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
+ 		PM8001_IO_DBG(pm8001_ha,
+ 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
+ 		ts->resp = SAS_TASK_COMPLETE;
+@@ -2051,7 +2150,12 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
+ 		ts->open_rej_reason = SAS_OREJ_RSVD_CONT0;
+ 		break;
+ 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
+-		PM8001_IO_DBG(pm8001_ha,
++	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
 +		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("tag null \n"));
-+		return;
-+	}
- 	ccb = &pm8001_ha->ccb_info[tag];
- 	param = le32_to_cpu(psataPayload->param);
--	t = ccb->task;
-+	if (ccb) {
-+		t = ccb->task;
-+		pm8001_dev = ccb->device;
-+	} else {
+ 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
+ 		ts->resp = SAS_TASK_UNDELIVERED;
+ 		ts->stat = SAS_DEV_NO_RESPONSE;
+@@ -2154,6 +2258,20 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
+ 		ts->resp = SAS_TASK_COMPLETE;
+ 		ts->stat = SAS_OPEN_TO;
+ 		break;
++	case IO_XFER_ERROR_INTERNAL_CRC_ERROR:
 +		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("ccb null \n"));
-+		return;
-+	}
-+
-+	if (t) {
-+		if (t->dev && (t->dev->lldd_dev))
-+			pm8001_dev = t->dev->lldd_dev;
-+	} else {
++			pm8001_printk("IO_XFR_ERROR_INTERNAL_CRC_ERROR\n"));
++		/* TBC: used default set values */
++		ts->resp = SAS_TASK_COMPLETE;
++		ts->stat = SAS_OPEN_TO;
++		break;
++	case IO_XFER_DMA_ACTIVATE_TIMEOUT:
 +		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("task null\n"));
-+		return;
-+	}
-+
-+	if ((pm8001_dev && !(pm8001_dev->id & NCQ_READ_LOG_FLAG))
-+		&& unlikely(!t || !t->lldd_task || !t->dev)) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("task or dev null\n"));
-+		return;
-+	}
-+
- 	ts = &t->task_status;
--	pm8001_dev = ccb->device;
--	if (status)
-+	if (!ts) {
- 		PM8001_FAIL_DBG(pm8001_ha,
--			pm8001_printk("sata IO status 0x%x\n", status));
--	if (unlikely(!t || !t->lldd_task || !t->dev))
-+			pm8001_printk("ts null \n"));
- 		return;
-+	}
++			pm8001_printk("IO_XFR_DMA_ACTIVATE_TIMEOUT\n"));
++		/* TBC: used default set values */
++		ts->resp = SAS_TASK_COMPLETE;
++		ts->stat = SAS_OPEN_TO;
++		break;
+ 	default:
+ 		PM8001_IO_DBG(pm8001_ha,
+ 			pm8001_printk("Unknown status 0x%x\n", event));
+@@ -2305,6 +2423,11 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		ts->open_rej_reason = SAS_OREJ_RSVD_CONT0;
+ 		break;
+ 	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
++	case IO_XFER_OPEN_RETRY_BACKOFF_THRESHOLD_REACHED:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_TMO:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_NO_DEST:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_OPEN_COLLIDE:
++	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS_PATHWAY_BLOCKED:
+ 		PM8001_IO_DBG(pm8001_ha,
+ 			pm8001_printk("IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS\n"));
+ 		ts->resp = SAS_TASK_COMPLETE;
+@@ -2862,6 +2985,9 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	case HW_EVENT_PORT_RECOVERY_TIMER_TMO:
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk("HW_EVENT_PORT_RECOVERY_TIMER_TMO\n"));
++		pm80xx_hw_event_ack_req(pm8001_ha, 0,
++			HW_EVENT_PORT_RECOVERY_TIMER_TMO,
++			port_id, phy_id, 0, 0);
+ 		sas_phy_disconnected(sas_phy);
+ 		phy->phy_attached = 0;
+ 		sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_ERR);
+@@ -3499,10 +3625,7 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
+ 	ssp_cmd.ssp_iu.efb_prio_attr |= (task->ssp_task.task_prio << 3);
+ 	ssp_cmd.ssp_iu.efb_prio_attr |= (task->ssp_task.task_attr & 7);
+ 	memcpy(ssp_cmd.ssp_iu.cdb, task->ssp_task.cdb, 16);
+-	circularQ = &pm8001_ha->inbnd_q_tbl[inb++];
+-
+-	/* rotate the inb queue */
+-	inb = inb%PM8001_MAX_SPCV_INB_NUM;
++	circularQ = &pm8001_ha->inbnd_q_tbl[0];
  
- 	switch (status) {
- 	case IO_SUCCESS:
-@@ -1503,6 +1653,19 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		if (param == 0) {
- 			ts->resp = SAS_TASK_COMPLETE;
- 			ts->stat = SAM_STAT_GOOD;
-+			/* check if response is for SEND READ LOG */
-+			if (pm8001_dev &&
-+				(pm8001_dev->id & NCQ_READ_LOG_FLAG)) {
-+				/* set new bit for abort_all */
-+				pm8001_dev->id |= NCQ_ABORT_ALL_FLAG;
-+				/* clear bit for read log */
-+				pm8001_dev->id = pm8001_dev->id & 0x7FFFFFFF;
-+				pm80xx_send_abort_all(pm8001_ha, pm8001_dev);
-+				/* Free the tag */
-+				pm8001_tag_free(pm8001_ha, tag);
-+				sas_free_task(t);
-+				return;
-+			}
- 		} else {
- 			u8 len;
- 			ts->resp = SAS_TASK_COMPLETE;
-@@ -1807,16 +1970,39 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void *piomb)
- 	u32 event = le32_to_cpu(psataPayload->event);
- 	u32 tag = le32_to_cpu(psataPayload->tag);
- 	u32 port_id = le32_to_cpu(psataPayload->port_id);
--	unsigned long flags = 0;
-+	u32 dev_id = le32_to_cpu(psataPayload->device_id);
-+	unsigned long flags;
- 
- 	ccb = &pm8001_ha->ccb_info[tag];
--	t = ccb->task;
--	pm8001_dev = ccb->device;
-+
-+	if (ccb) {
-+		t = ccb->task;
-+		pm8001_dev = ccb->device;
-+	} else {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("No CCB !!!. returning \n"));
-+		return;
-+	}
- 	if (event)
- 		PM8001_FAIL_DBG(pm8001_ha,
--			pm8001_printk("sata IO status 0x%x\n", event));
--	if (unlikely(!t || !t->lldd_task || !t->dev))
-+			pm8001_printk("SATA EVENT 0x%x\n", event));
-+
-+	/* Check if this is NCQ error */
-+	if (event == IO_XFER_ERROR_ABORTED_NCQ_MODE) {
-+		/* find device using device id */
-+		pm8001_dev = pm8001_find_dev(pm8001_ha, dev_id);
-+		/* send read log extension */
-+		if (pm8001_dev)
-+			pm80xx_send_read_log(pm8001_ha, pm8001_dev);
-+		return;
-+	}
-+
-+	if (unlikely(!t || !t->lldd_task || !t->dev)) {
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("task or dev null\n"));
- 		return;
-+	}
-+
- 	ts = &t->task_status;
- 	PM8001_IO_DBG(pm8001_ha,
- 		pm8001_printk("port_id:0x%x, tag:0x%x, event:0x%x\n",
-@@ -3414,6 +3600,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	u32 ATAP = 0x0;
- 	u32 dir;
- 	struct inbound_queue_table *circularQ;
-+	unsigned long flags;
+ 	/* Check if encryption is set */
+ 	if (pm8001_ha->chip->encrypt &&
+@@ -3603,10 +3726,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+ 	unsigned long flags;
  	u32 opc = OPC_INB_SATA_HOST_OPSTART;
  	memset(&sata_cmd, 0, sizeof(sata_cmd));
- 	circularQ = &pm8001_ha->inbnd_q_tbl[inb++];
-@@ -3438,8 +3625,10 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			PM8001_IO_DBG(pm8001_ha, pm8001_printk("FPDMA\n"));
- 		}
- 	}
--	if (task->ata_task.use_ncq && pm8001_get_ncq_tag(task, &hdr_tag))
-+	if (task->ata_task.use_ncq && pm8001_get_ncq_tag(task, &hdr_tag)) {
-+		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
- 		ncg_tag = hdr_tag;
-+	}
- 	dir = data_dir_flags[task->data_dir] << 8;
- 	sata_cmd.tag = cpu_to_le32(tag);
- 	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-@@ -3547,6 +3736,55 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 				(task->ata_task.atapi_packet[14] << 16) |
- 				(task->ata_task.atapi_packet[15] << 24)));
- 	}
-+
-+	/* Check for read log for failed drive and return */
-+	if (sata_cmd.sata_fis.command == 0x2f) {
-+		if (pm8001_ha_dev && ((pm8001_ha_dev->id & NCQ_READ_LOG_FLAG) ||
-+			(pm8001_ha_dev->id & NCQ_ABORT_ALL_FLAG) ||
-+			(pm8001_ha_dev->id & NCQ_2ND_RLE_FLAG))) {
-+			struct task_status_struct *ts;
-+
-+			pm8001_ha_dev->id &= 0xDFFFFFFF;
-+			ts = &task->task_status;
-+
-+			spin_lock_irqsave(&task->task_state_lock, flags);
-+			ts->resp = SAS_TASK_COMPLETE;
-+			ts->stat = SAM_STAT_GOOD;
-+			task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-+			task->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
-+			task->task_state_flags |= SAS_TASK_STATE_DONE;
-+			if (unlikely((task->task_state_flags &
-+					SAS_TASK_STATE_ABORTED))) {
-+				spin_unlock_irqrestore(&task->task_state_lock,
-+							flags);
-+				PM8001_FAIL_DBG(pm8001_ha,
-+					pm8001_printk("task 0x%p resp 0x%x "
-+					" stat 0x%x but aborted by upper layer "
-+					"\n", task, ts->resp, ts->stat));
-+				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-+				return 0;
-+			} else if (task->uldd_task) {
-+				spin_unlock_irqrestore(&task->task_state_lock,
-+							flags);
-+				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-+				mb();/* ditto */
-+				spin_unlock_irq(&pm8001_ha->lock);
-+				task->task_done(task);
-+				spin_lock_irq(&pm8001_ha->lock);
-+				return 0;
-+			} else if (!task->uldd_task) {
-+				spin_unlock_irqrestore(&task->task_state_lock,
-+							flags);
-+				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-+				mb();/*ditto*/
-+				spin_unlock_irq(&pm8001_ha->lock);
-+				task->task_done(task);
-+				spin_lock_irq(&pm8001_ha->lock);
-+				return 0;
-+			}
-+		}
-+	}
-+
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
- 						&sata_cmd, outb++);
+-	circularQ = &pm8001_ha->inbnd_q_tbl[inb++];
+-
+-	/* rotate the inb queue */
+-	inb = inb%PM8001_MAX_SPCV_INB_NUM;
++	circularQ = &pm8001_ha->inbnd_q_tbl[0];
  
+ 	if (task->data_dir == PCI_DMA_NONE) {
+ 		ATAP = 0x04; /* no data*/
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index cea0696..0c15627 100644
+index 0c15627..ea127b6 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.h
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -1278,6 +1278,7 @@ struct ssp_coalesced_comp_resp {
- #define MAIN_IQNPPD_HPPD_OFFSET		0x24 /* DWORD 0x09 */
+@@ -197,6 +197,30 @@
+ #define CIPHER_MODE_XTS				0x00000002
+ #define KEK_MGMT_SUBOP_KEYCARDUPDATE		0x4
  
- /* 0x28 - 0x4C - RSVD */
-+#define MAIN_EVENT_CRC_CHECK		0x48 /* DWORD 0x12 */
- #define MAIN_EVENT_LOG_ADDR_HI		0x50 /* DWORD 0x14 */
- #define MAIN_EVENT_LOG_ADDR_LO		0x54 /* DWORD 0x15 */
- #define MAIN_EVENT_LOG_BUFF_SIZE	0x58 /* DWORD 0x16 */
++/* SAS protocol timer configuration page */
++#define SAS_PROTOCOL_TIMER_CONFIG_PAGE  0x04
++#define STP_MCT_TMO                     32
++#define SSP_MCT_TMO                     32
++#define SAS_MAX_OPEN_TIME				5
++#define SMP_MAX_CONN_TIMER              0xFF
++#define STP_FRM_TIMER                   0
++#define STP_IDLE_TIME                   5 /* 5 us; controller default */
++#define SAS_MFD                         0
++#define SAS_OPNRJT_RTRY_INTVL           2
++#define SAS_DOPNRJT_RTRY_TMO            128
++#define SAS_COPNRJT_RTRY_TMO            128
++
++/*
++  Making ORR bigger than IT NEXUS LOSS which is 2000000us = 2 second.
++  Assuming a bigger value 3 second, 3000000/128 = 23437.5 where 128
++  is DOPNRJT_RTRY_TMO
++*/
++#define SAS_DOPNRJT_RTRY_THR            23438
++#define SAS_COPNRJT_RTRY_THR            23438
++#define SAS_MAX_AIP                     0x200000
++#define IT_NEXUS_TIMEOUT       0x7D0
++#define PORT_RECOVERY_TIMEOUT  ((IT_NEXUS_TIMEOUT/100) + 30)
++
+ struct mpi_msg_hdr {
+ 	__le32	header;	/* Bits [11:0] - Message operation code */
+ 	/* Bits [15:12] - Message Category */
+@@ -996,6 +1020,23 @@ struct ssp_coalesced_comp_resp {
+ 
+ /* new outbound structure for spcv - ends */
+ 
++/* brief data structure for SAS protocol timer configuration page.
++ *
++ */
++struct SASProtocolTimerConfig{
++    __le32 pageCode;                        /* 0 */
++    __le32 MST_MSI;                         /* 1 */
++    __le32 STP_SSP_MCT_TMO;                 /* 2 */
++    __le32 STP_FRM_TMO;                     /* 3 */
++    __le32 STP_IDLE_TMO;                    /* 4 */
++    __le32 OPNRJT_RTRY_INTVL;               /* 5 */
++    __le32 Data_Cmd_OPNRJT_RTRY_TMO;        /* 6 */
++    __le32 Data_Cmd_OPNRJT_RTRY_THR;        /* 7 */
++    __le32 MAX_AIP;                         /* 8 */
++} __attribute__((packed, aligned(4)));
++
++typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
++
+ #define NDS_BITS 0x0F
+ #define PDS_BITS 0xF0
+ 
+@@ -1122,7 +1163,8 @@ struct ssp_coalesced_comp_resp {
+ #define IO_DS_INVALID					0x49
+ /* WARNING: the value is not contiguous from here */
+ #define IO_XFER_ERR_LAST_PIO_DATAIN_CRC_ERR	0x52
+-#define IO_XFR_ERROR_INTERNAL_CRC_ERROR		0x54
++#define IO_XFER_DMA_ACTIVATE_TIMEOUT		0x53
++#define IO_XFER_ERROR_INTERNAL_CRC_ERROR	0x54
+ #define MPI_IO_RQE_BUSY_FULL			0x55
+ #define IO_XFER_ERR_EOB_DATA_OVERRUN		0x56
+ #define IO_XFR_ERROR_INVALID_SSP_RSP_FRAME	0x57
 -- 
 1.7.1
 
