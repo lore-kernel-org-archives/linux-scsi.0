@@ -1,73 +1,94 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 06/23] qla2xxx: Update the FTP site references in the
- driver sources.
-Date: Tue, 12 Feb 2013 08:00:50 -0500
-Message-ID: <alpine.WNT.2.00.1302120800050.7344@N5102REMCQXM4BS.qlogic.org>
-References: <5118E8EE.7080807@gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi_debug: Fix endianess in partition table
+Date: Tue, 12 Feb 2013 09:45:29 -0500
+Message-ID: <511A5589.1060709@interlog.com>
+References: <1360604094.24863.1.camel@br8ggx07.de.ibm.com> <1360659837.11990.9.camel@br8ggx07.de.ibm.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from co9ehsobe001.messaging.microsoft.com ([207.46.163.24]:36244
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933048Ab3BLNN1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Feb 2013 08:13:27 -0500
-In-Reply-To: <5118E8EE.7080807@gmail.com>
+Received: from smtp.infotech.no ([82.134.31.41]:34286 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759743Ab3BLOpu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Feb 2013 09:45:50 -0500
+In-Reply-To: <1360659837.11990.9.camel@br8ggx07.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-
-
-On Mon, 11 Feb 2013, Xose Vazquez Perez wrote:
-
-> Giridhar Malavali wrote:
+On 13-02-12 04:03 AM, Martin Peschke wrote:
+> On Mon, 2013-02-11 at 18:34 +0100, Martin Peschke wrote:
+>> Both start_sect and nr_sects in struct partition are __le32 and
+>> require cpu_to_le32() on assignment.
 >
->> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> Steffen Maier has pointed me at:
+>
+> block/partitions/msdos.c:	return
+> (sector_t)get_unaligned_le32(&p->start_sect);
+>
+> Unfortunately, both get_unaligned_le32() and le32_to_cpu() appear to be
+> in use for start_sect and nr_sects.
+>
+> Any one who would argue for changing my patch from cpu_to_le32 to
+> put_unaligned_le32()?
+
+No (because I don't know). However since SCSI is big
+endian and you are introducing some "le" code then a line
+or so of explanation (comments) in your revised patch might
+be helpful.
+
+
+BTW Finding a big endian architecture to test this patch on is
+not easy. The openwrt in my router is big endian (MIPS) but
+openwrt don't distribute the scsi_debug module :-(
+
+Doug Gilbert
+
+>> Without this fix tools like fdisk show an invalid partition table
+>> for SCSI devices emulated by scsi_debug on big-endian architectures,
+>> like s390x. Besides a kernel message like this was emitted:
 >>
->> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
->> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>> sda: p1 start 536870912 is beyond EOD, enabling native capacity
+>> sda: p1 start 536870912 is beyond EOD, truncated
+>>
+>> For verification 'xxd -l 512 /dev/sda' has been used to make sure
+>> that this fix makes scsi_debug generated partition tables on s390x
+>> look like the ones generated on my laptop.
+>>
+>> Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+>> Reviewed-by: Steffen Maier <maier@linux.vnet.ibm.com>
+>>
 >> ---
->>  drivers/scsi/qla2xxx/qla_init.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>   drivers/scsi/scsi_debug.c |    4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
 >>
->> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
->> index a581c85..bbf5688 100644
->> --- a/drivers/scsi/qla2xxx/qla_init.c
->> +++ b/drivers/scsi/qla2xxx/qla_init.c
->> @@ -5054,7 +5054,7 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
->>      return rval;
->>  }
+>> --- a/drivers/scsi/scsi_debug.c
+>> +++ b/drivers/scsi/scsi_debug.c
+>> @@ -2662,8 +2662,8 @@ static void __init sdebug_build_parts(un
+>>   			       / sdebug_sectors_per;
+>>   		pp->end_sector = (end_sec % sdebug_sectors_per) + 1;
 >>
->> -#define QLA_FW_URL "ftp://ftp.qlogic.com/outgoing/linux/firmware/"
->> +#define QLA_FW_URL "http://ldriver.qlogic.com/firmware/"
+>> -		pp->start_sect = start_sec;
+>> -		pp->nr_sects = end_sec - start_sec + 1;
+>> +		pp->start_sect = cpu_to_le32(start_sec);
+>> +		pp->nr_sects = cpu_to_le32(end_sec - start_sec + 1);
+>>   		pp->sys_ind = 0x83;	/* plain Linux partition */
+>>   	}
+>>   }
 >>
->>  int
->>  qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+>>
 >> --
->
-> qla2xxx/Kconfig should also be changed:
->
->       Firmware images can be retrieved from:
->
->                ftp://ftp.qlogic.com/outgoing/linux/firmware/
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 >
 >
-> FYI, they are also included in linux-firmware.
-
-Thanks for pointing this out Xose.  We'll be posting a patch soon to fix
-the firmware link in the Kconfig files.
-
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
->
-
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
