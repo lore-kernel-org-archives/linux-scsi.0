@@ -1,64 +1,55 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH] Use a more selective error recovery strategy based on
- device capabilities
-Date: Wed, 13 Feb 2013 09:46:13 -0600
-Message-ID: <511BB545.7060600@tributary.com>
-References: <511A87CA.5010901@tributary.com> <511B8FBF.9000705@suse.de>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH v2 00/14] Corrections and customization of the SG_IO command
+ whitelist (CVE-2012-4542)
+Date: Wed, 13 Feb 2013 16:48:58 +0100
+Message-ID: <511BB5EA.7020007@redhat.com>
+References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com> <511B4F95.1050404@redhat.com> <511BB2AD.4000605@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.58]:49828 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934166Ab3BMPqQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2013 10:46:16 -0500
-In-Reply-To: <511B8FBF.9000705@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <511BB2AD.4000605@interlog.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Linux Scsi <linux-scsi@vger.kernel.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Il 13/02/2013 16:35, Douglas Gilbert ha scritto:
+>>
+>> Ping? I'm not even sure what tree this should host these patches...
+> 
+> You are whitelisting SCSI commands so obviously the SCSI tree
+> and the patch spills over into the block tree.
 
-On 2/13/2013 7:06 AM, Hannes Reinecke wrote:
+Yeah, an Acked-by is in order but it's not clear from whom and for whom.
 
-> But unfortunately it failed the reality check; of my zoo of storage arrays
-> only NetApp OnTap 8.X and HP P2000 supports the REPORT SUPPORTED TASK
-> MANAGEMENT FUNCTIONS command. None of the others (HP EVA, NetApp E-Series,
-> EMC Clariion CX-3) do.
+> Can't see much point in ack-ing the sg changes since most
+> of the action is at higher levels.
+> 
+> The question I have is what existing code will this change
+> break (and will I being getting emails from peeved
+> developers)?
 
-	I'm not really surprised. I've had better luck with devices that report
-compliance with more recent versions of the specification. Of the those, I
-would guess slightly more than 50% support it. That includes tape drives,
-changer devices, and raid controllers. Of the ones I've tested that support
-it, they almost always report 0xDA for the first byte. Which correspond to
-abort task, abort task set, clear task set, lun reset and target reset.
+An unlikely situation is that a vendor-specific command in the "low"
+range (i.e. not 0xc0..0xff) conflicted with an MMC command, so it
+happened to be enabled.  That will now break, but only if executed
+without CAP_SYS_RAWIO.
 
-	The patch also includes some "reasonable" defaults based on SCSI version,
-which I think vastly improves the overall error handling situation. Querying
-the device is just the last little icing.
+Nothing will change for programs executed with CAP_SYS_RAWIO.
 
-	But its a chicken and egg thing, the command is optional, hardly anyone sends
-it, so few of the device manufactures have implemented it.
+I have not disabled any standards-defined command that used to be
+enabled, and on the contrary I enabled a few of them, so this could
+potentially lead to less emails from peeved developers, too.
 
+> Is 8 lines of documentation changes enough? My guess is
+> that SG_IO ioctl pass-through users will be tripped up
+> and it won't be obvious to them to look at
+>     Documentation/block/queue-sysfs.txt
+> for enlightenment; especially if they are using a char
+> device node from the bsg, sg or st drivers to issue SG_IO.
 
+The command whitelist was not documented before.  It's quite likely that
+any documentation except the code itself would not be updated the next
+time the whitelist is touched.
 
-
-
-
-
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJRG7VFAAoJEL5i86xrzcy7TjwH/R/V52LW66OPSwWVJHjVcbM/
-ZQ7ekWZ48oKy4zQrCjpyKMFXqsH5gsMinoruUhiu/Zt8kmef88jti+aMe1RDyCbp
-L2fFc5lUOIpHFkzWXCykq8f9ZDcxIi8cLcCR08S71gTZqo/E0gVqYKEzInXtATCQ
-HK9yjX7g3FkzYVl9ASiLeBPUT4/kk7IhN+iagc0S+VY8zBG/+jQC9RykenbnAUU1
-YLmWsWmzyWiTshk+vmBBpcikk+EEnB25NXZz6cqDSWGcm/wWq4Mcj9i6KvC9tKSr
-PzW+0/T2LtedGCTZKnFgNsn1jMJtjId+soAt5Ho4nZD+BHYcr2iSckzWxX3defs=
-=hDMi
------END PGP SIGNATURE-----
+Paolo
