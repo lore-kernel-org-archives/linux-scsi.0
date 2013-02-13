@@ -1,55 +1,79 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v2 00/14] Corrections and customization of the SG_IO command
- whitelist (CVE-2012-4542)
-Date: Wed, 13 Feb 2013 16:48:58 +0100
-Message-ID: <511BB5EA.7020007@redhat.com>
-References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com> <511B4F95.1050404@redhat.com> <511BB2AD.4000605@interlog.com>
+From: James Smart <James.Smart@emulex.com>
+Subject: Re: [SCSI] lpfc 8.3.37: Provide support for FCoE protocol dual-chute
+ (ULP) operation
+Date: Wed, 13 Feb 2013 12:07:32 -0500
+Message-ID: <511BC854.8050701@emulex.com>
+References: <20130205090425.GA5941@elgon.mountain>
+Reply-To: <James.Smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <511BB2AD.4000605@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:28204 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756481Ab3BMRHf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2013 12:07:35 -0500
+In-Reply-To: <20130205090425.GA5941@elgon.mountain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-Il 13/02/2013 16:35, Douglas Gilbert ha scritto:
->>
->> Ping? I'm not even sure what tree this should host these patches...
-> 
-> You are whitelisting SCSI commands so obviously the SCSI tree
-> and the patch spills over into the block tree.
+Dan,
 
-Yeah, an Acked-by is in order but it's not clear from whom and for whom.
+Thanks for pointing this out. I'm addressing it as the first patch in 
+8.3.38, which I'll be pushing shortly.
 
-> Can't see much point in ack-ing the sg changes since most
-> of the action is at higher levels.
-> 
-> The question I have is what existing code will this change
-> break (and will I being getting emails from peeved
-> developers)?
+-- james s
 
-An unlikely situation is that a vendor-specific command in the "low"
-range (i.e. not 0xc0..0xff) conflicted with an MMC command, so it
-happened to be enabled.  That will now break, but only if executed
-without CAP_SYS_RAWIO.
 
-Nothing will change for programs executed with CAP_SYS_RAWIO.
+On 2/5/2013 4:04 AM, Dan Carpenter wrote:
+> Hello James Smart,
+>
+> The patch 962bc51b04b2: "[SCSI] lpfc 8.3.37: Provide support for FCoE
+> protocol dual-chute (ULP) operation" from Jan 3, 2013, leads to the
+> following warning:
+> "drivers/scsi/lpfc/lpfc_sli.c:12818 lpfc_wq_create()
+> 	 warn: 0x800 is larger than 8 bits"
+>
+> [ This is from a not ready for release Smatch check. ]
+>
+> drivers/scsi/lpfc/lpfc_sli.c
+>   12818          if (phba->sli4_hba.fw_func_mode & LPFC_DUA_MODE)
+>                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> fw_func_mode is unsigned char.
+> LPFC_DUA_MODE is 0x800.
+> This condition is always false because 0xff & 0x800 is zero.
+>
+>   12819                  bf_set(lpfc_mbx_wq_create_dua, &wq_create->u.request, 1);
+>   12820
+>   12821          rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
+>   12822          /* The IOCTL status is embedded in the mailbox subheader. */
+>   12823          shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
+>   12824          shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
+>   12825          if (shdr_status || shdr_add_status || rc) {
+>   12826                  lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+>   12827                                  "2503 WQ_CREATE mailbox failed with "
+>   12828                                  "status x%x add_status x%x, mbx status x%x\n",
+>   12829                                  shdr_status, shdr_add_status, rc);
+>   12830                  status = -ENXIO;
+>   12831                  goto out;
+>   12832          }
+>   12833          wq->queue_id = bf_get(lpfc_mbx_wq_create_q_id, &wq_create->u.response);
+>   12834          if (wq->queue_id == 0xFFFF) {
+>   12835                  status = -ENXIO;
+>   12836                  goto out;
+>   12837          }
+>   12838          if (phba->sli4_hba.fw_func_mode & LPFC_DUA_MODE) {
+>                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> Same.
+>
+>   12839                  wq->db_format = bf_get(lpfc_mbx_wq_create_db_format,
+>   12840                                         &wq_create->u.response);
+>   12841                  if ((wq->db_format != LPFC_DB_LIST_FORMAT) &&
+>
+> regards,
+> dan carpenter
+>
+>
 
-I have not disabled any standards-defined command that used to be
-enabled, and on the contrary I enabled a few of them, so this could
-potentially lead to less emails from peeved developers, too.
-
-> Is 8 lines of documentation changes enough? My guess is
-> that SG_IO ioctl pass-through users will be tripped up
-> and it won't be obvious to them to look at
->     Documentation/block/queue-sysfs.txt
-> for enlightenment; especially if they are using a char
-> device node from the bsg, sg or st drivers to issue SG_IO.
-
-The command whitelist was not documented before.  It's quite likely that
-any documentation except the code itself would not be updated the next
-time the whitelist is touched.
-
-Paolo
