@@ -1,112 +1,84 @@
-From: Joe Lawrence <Joe.Lawrence@stratus.com>
-Subject: [PATCH] mpt2sas/mpt3sas: set async scan finished on adapter
- removal
-Date: Wed, 13 Feb 2013 16:52:58 -0500 (EST)
-Message-ID: <alpine.DEB.2.02.1302131634210.11804@jlaw-desktop.mno.stratus.com>
+From: Shuah Khan <shuah.khan@hp.com>
+Subject: [PATCH] scsi/hpsa: fix to check dma mapping error
+Date: Wed, 13 Feb 2013 15:55:55 -0700
+Message-ID: <1360796155.2735.16.camel@lorien2>
+Reply-To: shuah.khan@hp.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub4.stratus.com ([134.111.1.17]:59248 "EHLO
-	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760376Ab3BMV5f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2013 16:57:35 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: scameron@beardog.cce.hp.com, JBottomley@parallels.com
+Cc: iss_storagedev@hp.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-I stumbled across this while testing surprise device removal, particularly 
-during device initialization.
+Add missing dma mapping error check to fix the following warning from
+dma-debug.
 
-The test added an LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT 
-SAS-2 with a few disks attached.  During an async SCSI scan, the device is 
-removed via PCI hotplug.  Cleanup of the scsi host took a long time 
-(roughly five minutes) which I traced back to the timeout value in the 
-mpt2sas _scsih_scan_finished() function.
+[   16.614739] hpsa 0000:03:00.0: DMA-API: device driver failed to check map error[device address=0x00000000001c2ec0] [size=64 bytes] [mapped as single]
+[   16.614833] Modules linked in: pata_atiixp tg3(+) ptp pps_core hpsa(+)
+[   16.615381] Pid: 324, comm: modprobe Not tainted 3.8.0-rc7+ #6
+[   16.615466] Call Trace:
+[   16.615552]  [<ffffffff810581ef>] warn_slowpath_common+0x7f/0xc0
+[   16.615639]  [<ffffffff810582e6>] warn_slowpath_fmt+0x46/0x50
+[   16.615747]  [<ffffffff8134c129>] check_unmap+0x459/0x8a0
+[   16.615832]  [<ffffffff81698aad>] ? schedule_timeout+0x1ed/0x250
+[   16.615918]  [<ffffffff8134c70c>] debug_dma_unmap_page+0x5c/0x60
+[   16.616008]  [<ffffffffa0002776>] hpsa_pci_unmap+0x86/0xd0 [hpsa]
+[   16.616094]  [<ffffffffa00028c0>] hpsa_scsi_do_simple_cmd_with_retry+0x100/0x2a0 [hpsa]
+[   16.616195]  [<ffffffffa0004863>] hpsa_scsi_do_inquiry+0x83/0x100 [hpsa]
+[   16.616282]  [<ffffffffa0006ce9>] hpsa_init_one+0x1839/0x1ce0 [hpsa]
+[   16.616369]  [<ffffffff811fc2d8>] ? sysfs_new_dirent+0x58/0x140
+[   16.616456]  [<ffffffff8135db9b>] local_pci_probe+0x4b/0x80
+[   16.616542]  [<ffffffff8135f471>] pci_device_probe+0x101/0x120
+[   16.616629]  [<ffffffff814328db>] driver_probe_device+0x7b/0x240
+[   16.616715]  [<ffffffff81432b4b>] __driver_attach+0xab/0xb0
+[   16.616801]  [<ffffffff81432aa0>] ? driver_probe_device+0x240/0x240
+[   16.616888]  [<ffffffff81430cf6>] bus_for_each_dev+0x56/0x90
+[   16.617001]  [<ffffffff8143240e>] driver_attach+0x1e/0x20
+[   16.617087]  [<ffffffff81431f80>] bus_add_driver+0x190/0x290
+[   16.617173]  [<ffffffffa0011000>] ? 0xffffffffa0010fff
+[   16.617259]  [<ffffffff814330aa>] driver_register+0x7a/0x160
+[   16.617345]  [<ffffffffa0011000>] ? 0xffffffffa0010fff
+[   16.617431]  [<ffffffff8135e42c>] __pci_register_driver+0x4c/0x50
+[   16.617519]  [<ffffffffa001101e>] hpsa_init+0x1e/0x1000 [hpsa]
+[   16.617605]  [<ffffffff8100206f>] do_one_initcall+0x3f/0x170
+[   16.617692]  [<ffffffff810bef7e>] load_module+0x16ae/0x1c40
+[   16.617777]  [<ffffffff810bbb70>] ? show_initstate+0x50/0x50
+[   16.617863]  [<ffffffff8169f71e>] ? do_page_fault+0xe/0x10
+[   16.617949]  [<ffffffff810bf5de>] sys_init_module+0xce/0x100
+[   16.618035]  [<ffffffff816a3d99>] system_call_fastpath+0x16/0x1b
+[   16.618157] ---[ end trace 260311c4be71d0dc ]---
+[   16.618228] Mapped at:
+[   16.618311]  [<ffffffff8134b189>] debug_dma_map_page+0xb9/0x160
+[   16.618451]  [<ffffffffa0004132>] fill_cmd.isra.31+0x252/0x400 [hpsa]
+[   16.618613]  [<ffffffffa0004853>] hpsa_scsi_do_inquiry+0x73/0x100 [hpsa]
+[   16.618766]  [<ffffffffa0006ce9>] hpsa_init_one+0x1839/0x1ce0 [hpsa]
+[   16.618919]  [<ffffffff8135db9b>] local_pci_probe+0x4b/0x80
+[   16.619286] scsi3 : hpsa
 
-Since the driver has already set the adapter's "remove_host" value in its 
-.remove callback, it seems like the driver should use that information to 
-give up on the scan and cleanup a bit faster.
 
-I don't have mpt3sas HW, so that part of the patch is untested (though the 
-code looks 99% the same here.)
-
-Regards,
-
--- Joe
-
->From 9900a0a30464ef1fff67f28780ec036d3d7d0cbe Mon Sep 17 00:00:00 2001
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Date: Wed, 13 Feb 2013 16:30:31 -0500
-Subject: [PATCH] mpt2sas/mpt3sas: set async scan finished on adapter removal
-
-If a scsi host is removed during an asynchronous SCSI scan, the driver's
-.scan_finished callback function may take up to 5 minutes to timeout and
-notify the SCSI layer that the operation has failed.  Once the driver
-determines that an adapter is gone, stop waiting for the scan to complete.
-
-Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+CC: stable@vger.kernel.org
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 10 ++++++++--
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 +++++++++---
- 2 files changed, 17 insertions(+), 5 deletions(-)
+ drivers/scsi/hpsa.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index c6bdc92..d1e24e7 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -7951,14 +7951,20 @@ _scsih_scan_start(struct Scsi_Host *shost)
-  * @time: elapsed time of the scan in jiffies
-  *
-  * This function will be called periodically until it returns 1 with the
-- * scsi_host and the elapsed time of the scan in jiffies. In our implemention,
-- * we wait for firmware discovery to complete, then return 1.
-+ * scsi_host and the elapsed time of the scan in jiffies. In our
-+ * implementation, we wait for firmware discovery to complete, then return 1.
-  */
- static int
- _scsih_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
- 	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 4f33806..3b4d195 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -1405,6 +1405,11 @@ static void hpsa_map_one(struct pci_dev *pdev,
+ 	}
  
-+	if (ioc->remove_host) {
-+		printk(MPT2SAS_INFO_FMT "port enable: FAILED host removed\n",
-+		    ioc->name);
-+		return 1;
+ 	addr64 = (u64) pci_map_single(pdev, buf, buflen, data_direction);
++	if (dma_mapping_error(&pdev->dev, addr64)) {
++		cp->Header.SGList = 0;
++		cp->Header.SGTotal = 0;
++		return;
 +	}
-+
- 	if (disable_discovery > 0) {
- 		ioc->is_driver_loading = 0;
- 		ioc->wait_for_discovery_to_complete = 0;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 6421a06..170f485 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -7665,15 +7665,21 @@ _scsih_scan_start(struct Scsi_Host *shost)
-  * @shost: SCSI host pointer
-  * @time: elapsed time of the scan in jiffies
-  *
-- * This function will be called periodicallyn until it returns 1 with the
-- * scsi_host and the elapsed time of the scan in jiffies. In our implemention,
-- * we wait for firmware discovery to complete, then return 1.
-+ * This function will be called periodically until it returns 1 with the
-+ * scsi_host and the elapsed time of the scan in jiffies. In our
-+ * implementation, we wait for firmware discovery to complete, then return 1.
-  */
- static int
- _scsih_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
-+	if (ioc->remove_host) {
-+		pr_info(MPT3SAS_FMT "port enable: FAILED host removed\n",
-+			ioc->name);
-+		return 1;
-+	}
-+
- 	if (disable_discovery > 0) {
- 		ioc->is_driver_loading = 0;
- 		ioc->wait_for_discovery_to_complete = 0;
+ 	cp->SG[0].Addr.lower =
+ 	  (u32) (addr64 & (u64) 0x00000000FFFFFFFF);
+ 	cp->SG[0].Addr.upper =
 -- 
-1.8.1.2
-
+1.7.9.5
