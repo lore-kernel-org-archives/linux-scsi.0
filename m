@@ -1,39 +1,21 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH] Use a more selective error recovery strategy based on
- device capabilities
-Date: Tue, 12 Feb 2013 16:00:15 -0600
-Message-ID: <511ABB6F.1000700@tributary.com>
-References: <511A87CA.5010901@tributary.com> <94D0CD8314A33A4D9D801C0FE68B402950D4811C@G4W3304.americas.hpqcorp.net>
+From: "=?windows-1251?Q?=CA=E0=F2=E5=ED=FC=EA=E0_=D3=F5=F2=EE=EC=F1=EA=E0=FF?="
+	<ta2tc4@sina.com>
+Subject: =?windows-1251?Q?=CF=EE=F1=F2=E5=EB=FC=ED=FB=E5_=EF=F0=E8=ED=E0=E4=EB=E5=E6=ED=EE=F1=F2=E8_=E2_=ED=E0=EB=E8=F7=E8=E8=21?=
+Date: Wed, 13 Feb 2013 12:23:02 +0700
+Message-ID: <558844092.20130213122302@sina.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.58]:49414 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753073Ab3BLWAW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Feb 2013 17:00:22 -0500
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402950D4811C@G4W3304.americas.hpqcorp.net>
+Received: from mail3-167.sinamail.sina.com.cn ([202.108.3.167]:55045 "EHLO
+	smtp.sina.com.cn" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756438Ab3BMAgR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Feb 2013 19:36:17 -0500
+Received: from irxd5-183.sinamail.sina.com.cn (unknown [10.55.5.183])
+	by smtp.sina.com.cn (SINAMAIL) with ESMTP id 038D7ABC962
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2013 06:41:04 +0800 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 2/12/2013 2:57 PM, Elliott, Robert (Server Storage) wrote:
-> Ideally the device driver for the SCSI initiator port would report those
-> attributes, and higher level code would combine them with support
-> information from the device server (REPORT SUPPORTED TMF command, REPORT
-> SUPPORTED OPCODES command, etc.) to decide what is supported.
-
-
-Well, for the eh_xxx_handler functions, that is basically what happens now.
-
-The host driver can fail to set a callback for the eh_xxx_handlers if it
-doesn't support the operation. At that point, even if the target device
-supports a function (say target reset) if the host driver doesn't, then the
-target reset will be skipped.
-
-Of course, a number of the drivers define functions their underlying
-protocol's don't support. For example, bus reset on fibre channel. Which I
-personally believe is an error.
-
-
+http://trade-trt.com/images/u4.php
