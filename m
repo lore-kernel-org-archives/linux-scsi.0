@@ -1,79 +1,62 @@
-From: James Smart <James.Smart@emulex.com>
-Subject: Re: [SCSI] lpfc 8.3.37: Provide support for FCoE protocol dual-chute
- (ULP) operation
-Date: Wed, 13 Feb 2013 12:07:32 -0500
-Message-ID: <511BC854.8050701@emulex.com>
-References: <20130205090425.GA5941@elgon.mountain>
-Reply-To: <James.Smart@emulex.com>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH] scsi: Allow 64-bit LUNs during report lun scan
+Date: Wed, 13 Feb 2013 13:52:43 -0600
+Message-ID: <511BEF0B.4020302@tributary.com>
+References: <1360767971-947-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:28204 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756481Ab3BMRHf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2013 12:07:35 -0500
-In-Reply-To: <20130205090425.GA5941@elgon.mountain>
+Received: from relay.ihostexchange.net ([66.46.182.58]:14435 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759965Ab3BMTwv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2013 14:52:51 -0500
+In-Reply-To: <1360767971-947-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
 
-Dan,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Thanks for pointing this out. I'm addressing it as the first patch in 
-8.3.38, which I'll be pushing shortly.
+On 2/13/2013 9:06 AM, Hannes Reinecke wrote:
+> So add a new flag 'support_64bit_luns' to the scsi host and modify report
+> lun scan to not check for max_luns during scanning if that flag is set.
+> This will get rid of the
 
--- james s
+	Along these lines, I don't think the scsilun_to_int() and int_to_scsilun()
+routines are correct for > 2^14  luns. SAM  4.6 defines bits 6,7 of byte zero
+in the LU representation format as the address method. Which when set to 00b
+limits it to 256 luns but the overflow into the bus ID probably works for some
+devices.
+
+	Those routines should probably select/detect an alternative address method
+for luns > 256.
+
+	Or am I missing something?
 
 
-On 2/5/2013 4:04 AM, Dan Carpenter wrote:
-> Hello James Smart,
->
-> The patch 962bc51b04b2: "[SCSI] lpfc 8.3.37: Provide support for FCoE
-> protocol dual-chute (ULP) operation" from Jan 3, 2013, leads to the
-> following warning:
-> "drivers/scsi/lpfc/lpfc_sli.c:12818 lpfc_wq_create()
-> 	 warn: 0x800 is larger than 8 bits"
->
-> [ This is from a not ready for release Smatch check. ]
->
-> drivers/scsi/lpfc/lpfc_sli.c
->   12818          if (phba->sli4_hba.fw_func_mode & LPFC_DUA_MODE)
->                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> fw_func_mode is unsigned char.
-> LPFC_DUA_MODE is 0x800.
-> This condition is always false because 0xff & 0x800 is zero.
->
->   12819                  bf_set(lpfc_mbx_wq_create_dua, &wq_create->u.request, 1);
->   12820
->   12821          rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
->   12822          /* The IOCTL status is embedded in the mailbox subheader. */
->   12823          shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
->   12824          shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
->   12825          if (shdr_status || shdr_add_status || rc) {
->   12826                  lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
->   12827                                  "2503 WQ_CREATE mailbox failed with "
->   12828                                  "status x%x add_status x%x, mbx status x%x\n",
->   12829                                  shdr_status, shdr_add_status, rc);
->   12830                  status = -ENXIO;
->   12831                  goto out;
->   12832          }
->   12833          wq->queue_id = bf_get(lpfc_mbx_wq_create_q_id, &wq_create->u.response);
->   12834          if (wq->queue_id == 0xFFFF) {
->   12835                  status = -ENXIO;
->   12836                  goto out;
->   12837          }
->   12838          if (phba->sli4_hba.fw_func_mode & LPFC_DUA_MODE) {
->                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Same.
->
->   12839                  wq->db_format = bf_get(lpfc_mbx_wq_create_db_format,
->   12840                                         &wq_create->u.response);
->   12841                  if ((wq->db_format != LPFC_DB_LIST_FORMAT) &&
->
-> regards,
-> dan carpenter
->
->
 
+
+
+
+
+	
+
+
+
+
+	
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJRG+8LAAoJEL5i86xrzcy7SL4H/0vZvSuIVH+6yeN62XkKVzok
+HBP9Wg9spmOX8ANgJp3KZnOuHSLpVXZTvRRbWpI57sX3UJRZ55nOeA8g75s1hWSp
+yOrTQZZodD6/uA6QOdVQgqRCrpZ/jKuARHHlZzULnDRV4/eSrLCpU6CRHFviHxLE
+SkgAAJtQwXMRn3PM8QuzzdJ68tIvVZTW/8r795wV0NxI+AlCM51s/PoPWZxq5tNK
+tiYbTcRHdh14N4jC6or/hT1r8VdkWEKLhSMLRBVu1wmVIxrdFtoyOqR4CEGwq2vt
+HaL9L8Te4bmmxN20/Bu593KUymMMndvFDm9OGEuZzcjXdEJp3pauXO8fyhwJrFw=
+=E2w/
+-----END PGP SIGNATURE-----
