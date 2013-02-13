@@ -1,86 +1,107 @@
-From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi_debug: Fix endianess in partition table
-Date: Wed, 13 Feb 2013 16:16:31 +0100
-Message-ID: <1360768591.6893.17.camel@br8ggx07.de.ibm.com>
-References: <1360604094.24863.1.camel@br8ggx07.de.ibm.com>
-	 <1360659837.11990.9.camel@br8ggx07.de.ibm.com>
-	 <511A5589.1060709@interlog.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v2 00/14] Corrections and customization of the SG_IO command
+ whitelist (CVE-2012-4542)
+Date: Wed, 13 Feb 2013 10:35:09 -0500
+Message-ID: <511BB2AD.4000605@interlog.com>
+References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com> <511B4F95.1050404@redhat.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:54686 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759544Ab3BMPSE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2013 10:18:04 -0500
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mpeschke@linux.vnet.ibm.com>;
-	Wed, 13 Feb 2013 08:18:03 -0700
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 68DF1C901BA
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2013 10:17:07 -0500 (EST)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r1DFH71f28573822
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2013 10:17:07 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r1DFH6ir029772
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Feb 2013 10:17:06 -0500
-In-Reply-To: <511A5589.1060709@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <511B4F95.1050404@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2013-02-12 at 09:45 -0500, Douglas Gilbert wrote:
-> However since SCSI is big endian and you are introducing
-> some "le" code then a line or so of explanation (comments)
-> in your revised patch might be helpful.
+On 13-02-13 03:32 AM, Paolo Bonzini wrote:
+> Il 06/02/2013 16:15, Paolo Bonzini ha scritto:
+>> This series regards the whitelist that is used for the SG_IO ioctl.  This
+>> whitelist has three problems:
+>>
+>> * the bitmap of allowed commands is designed for MMC devices (roughly,
+>>    "play/burn CDs without requiring root") but some opcodes overlap across SCSI
+>>    device classes and have different meanings for different classes.
+>>
+>> * also because the bitmap of allowed commands is designed for MMC devices
+>>    only, some commands are missing even though they are generally useful and
+>>    not insecure.  At least not more insecure than anything else you can
+>>    do if you have access to /dev/sdX or /dev/stX nodes.
+>>
+>> * the whitelist can be disabled per-process but not per-disk.  In addition,
+>>    the required capability (CAP_SYS_RAWIO) gives access to a range of other
+>>    resources, enough to make it insecure.
+>>
+>> The series corrects these problems.  Patches 1-4 solve the first problem,
+>> which also has an assigned CVE, by using different bitmaps for the various
+>> device classes.  Patches 5-11 solve the second by adding more commands
+>> to the bitmaps.  Patches 12 and 13 solve the third, and were already
+>> posted but ignored by the maintainers despite multiple pings.
+>>
+>> Note: checkpatch hates the formatting of the command table.  I know about this,
+>> and ensured that there are no errors in the rest of the code.  The current
+>> formatting is IMHO quite handy, and roughly based on the files available
+>> from the SCSI standard body.
+>>
+>> Ok for the next merge window?
+>>
+>> Paolo
+>>
+>> v1->v2: remove 2 MMC commands and 6 SBC commands (see patches 6 and 9
+>>          for details).  Added patch 14 and added a few more scanner
+>>          commands based on SANE (scanners are not whitelisted by default,
+>>          also were not in v1, but this makes it possible to opt into the
+>>          whitelist out of paranoia).  Removed C++ comments.  Removed the
+>>          large #if 0'd list of commands that the kernel does not pass
+>>          though.  Marked blk_set_cmd_filter_defaults as __init.
+>>
+>>
+>> Paolo Bonzini (14):
+>>    sg_io: pass request_queue to blk_verify_command
+>>    sg_io: reorganize list of allowed commands
+>>    sg_io: use different default filters for each device class
+>>    sg_io: resolve conflicts between commands assigned to multiple
+>>      classes (CVE-2012-4542)
+>>    sg_io: whitelist a few more commands for rare & obsolete device types
+>>    sg_io: whitelist another command for multimedia devices
+>>    sg_io: whitelist a few more commands for media changers
+>>    sg_io: whitelist a few more commands for tapes
+>>    sg_io: whitelist a few more commands for disks
+>>    sg_io: whitelist a few obsolete commands
+>>    sg_io: mark blk_set_cmd_filter_defaults as __init
+>>    sg_io: remove remnants of sysfs SG_IO filters
+>>    sg_io: introduce unpriv_sgio queue flag
+>>    sg_io: use unpriv_sgio to disable whitelisting for scanners
+>>
+>>   Documentation/block/queue-sysfs.txt |    8 +
+>>   block/blk-sysfs.c                   |   33 +++
+>>   block/bsg.c                         |    2 +-
+>>   block/scsi_ioctl.c                  |  369 ++++++++++++++++++++++++++---------
+>>   drivers/scsi/scsi_scan.c            |   14 ++-
+>>   drivers/scsi/sg.c                   |    6 +-
+>>   include/linux/blkdev.h              |    8 +-
+>>   include/linux/genhd.h               |    9 -
+>>   include/scsi/scsi.h                 |    3 +
+>>   9 files changed, 344 insertions(+), 108 deletions(-)
+>>
+>
+> Ping? I'm not even sure what tree this should host these patches...
 
-I would argue that the definition of struct partition itself should be
-sufficient explanation. Only scsi_debug failed to assign values in a
-correct manner. 
+You are whitelisting SCSI commands so obviously the SCSI tree
+and the patch spills over into the block tree.
+Can't see much point in ack-ing the sg changes since most
+of the action is at higher levels.
 
-> BTW Finding a big endian architecture to test this patch on is
-> not easy.
+The question I have is what existing code will this change
+break (and will I being getting emails from peeved
+developers)?
 
-No big deal ;-) I can help out with test data from my System z (aka
-s390x).
+Is 8 lines of documentation changes enough? My guess is
+that SG_IO ioctl pass-through users will be tripped up
+and it won't be obvious to them to look at
+     Documentation/block/queue-sysfs.txt
+for enlightenment; especially if they are using a char
+device node from the bsg, sg or st drivers to issue SG_IO.
 
-
-Without fix:
-
-[root@zzzzzzzz ~]# xxd -l 512 /dev/sda
-<snip>
-00001b0: 0000 0000 0000 0000 0000 0000 0000 0001  ................
-00001c0: 0100 8307 203f 0000 0020 0000 3fe0 0000  .... ?... ..?...
-00001d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00001e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00001f0: 0000 0000 0000 0000 0000 0000 0000 55aa  ..............U.
-
-
-With fix:
-
-[root@zzzzzzzz ~]# xxd -l 512 /dev/sda
-<snip>
-00001b0: 0000 0000 0000 0000 0000 0000 0000 0001  ................
-00001c0: 0100 8307 203f 2000 0000 e03f 0000 0000  .... ? ....?....
-00001d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00001e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00001f0: 0000 0000 0000 0000 0000 0000 0000 55aa  ..............U.
-
-
-Which makes it exactly look like the table seen on my laptop:
-
-root@xxxxxxxx:~# xxd -l 512 /dev/sdb
-<snip>
-00001b0: 0000 0000 0000 0000 0000 0000 0000 0001  ................
-00001c0: 0100 8307 203f 2000 0000 e03f 0000 0000  .... ? ....?....
-00001d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00001e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00001f0: 0000 0000 0000 0000 0000 0000 0000 55aa  ..............U.
-
-
-Assuming:
-modprobe scsi_debug physblk_exp=3 lowest_aligned=7 num_parts=1
-
+Doug Gilbert
