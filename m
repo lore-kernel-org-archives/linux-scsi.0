@@ -1,42 +1,41 @@
-From: Michael Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] Use a more selective error recovery strategy based on device capabilities
-Date: Wed, 13 Feb 2013 20:43:03 -0600
-Message-ID: <12DB2383-B7CE-4DD4-BBAA-D6701271A6E6@cs.wisc.edu>
-References: <511A87CA.5010901@tributary.com> <511B8FBF.9000705@suse.de> <511BB545.7060600@tributary.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] scsi: Allow 64-bit LUNs during report lun scan
+Date: Thu, 14 Feb 2013 03:37:09 +0000
+Message-ID: <1360813027.2502.7.camel@dabdike>
+References: <1360767971-947-1-git-send-email-hare@suse.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:55259 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751805Ab3BNCn4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2013 21:43:56 -0500
-In-Reply-To: <511BB545.7060600@tributary.com>
+Received: from mx0.parallels.com ([199.115.104.20]:49067 "EHLO
+	mx0.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753055Ab3BNDtO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Feb 2013 22:49:14 -0500
+In-Reply-To: <1360767971-947-1-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <E336DA2C3908334CB7C5AAF7D7BCF9F8@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jlinton@tributary.com>
-Cc: Hannes Reinecke <hare@suse.de>, Linux Scsi <linux-scsi@vger.kernel.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Steffen Maier <maier@linux.vnet.ibm.com>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Krishna Gudipati <kgudipat@brocade.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Abhijeet Joglekar <abjoglek@cisco.com>
 
-
-On Feb 13, 2013, at 9:46 AM, Jeremy Linton <jlinton@tributary.com> wrote:
-
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Wed, 2013-02-13 at 16:06 +0100, Hannes Reinecke wrote:
+> shost->max_lun is only ever useful when doing a sequential
+> scan as we need to limit the number of devices to scan there.
+> For report lun scan we should allow _any_ reported LUN number
+> as long as the LLDD supports 64 bit LUNs.
 > 
-> On 2/13/2013 7:06 AM, Hannes Reinecke wrote:
-> 
->> But unfortunately it failed the reality check; of my zoo of storage arrays
->> only NetApp OnTap 8.X and HP P2000 supports the REPORT SUPPORTED TASK
->> MANAGEMENT FUNCTIONS command. None of the others (HP EVA, NetApp E-Series,
->> EMC Clariion CX-3) do.
-> 
-> 	I'm not really surprised. I've had better luck with devices that report
-> compliance with more recent versions of the specification. Of the those, I
-> would guess slightly more than 50% support it. That includes tape drives,
-> changer devices, and raid controllers. Of the ones I've tested that support
-> it, they almost always report 0xDA for the first byte. Which correspond to
-> abort task, abort task set, clear task set, lun reset and target reset.
-> 
+> So add a new flag 'support_64bit_luns' to the scsi host and
+> modify report lun scan to not check for max_luns during
+> scanning if that flag is set. This will get rid of the
+> annoying 'lunXXXX has a LUN larger than allowed ...'
+> message and allow scanning to continue.
 
+What advantage does this have over setting max_lun to ~0?
 
-For the case where report supported TMFs is not supported can we just have the LLD return some new return code from the eh callback when it gets FUNCTION_REJECTED. scsi-ml would then clear the eh_*_ok bit, so at least it would not be called again.
+Plus, if we're going to advertise 64 bit lun support I'd rather have us
+be actually capable of it ... luns are handled as 32 bit numbers in the
+mid layer currently.
+
+James
+
