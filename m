@@ -1,55 +1,69 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH] [SCSI] sd: Do not return success from init_sd if DIF mempool allocation fails
-Date: Thu, 14 Feb 2013 11:36:35 -0500
-Message-ID: <1360859795-30448-3-git-send-email-emilne@redhat.com>
-References: <1360859795-30448-1-git-send-email-emilne@redhat.com>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH] scsi: Allow 64-bit LUNs during report lun scan
+Date: Thu, 14 Feb 2013 12:02:28 -0600
+Message-ID: <511D26B4.6070302@tributary.com>
+References: <1360767971-947-1-git-send-email-hare@suse.de>  <511BEF0B.4020302@tributary.com> <1360813101.2502.8.camel@dabdike>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24476 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757950Ab3BNQgi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Feb 2013 11:36:38 -0500
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1EGacbg026651
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Feb 2013 11:36:38 -0500
-Received: from emilne.csb (dhcp-185-251.bos.redhat.com [10.16.185.251])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r1EGabxa000379
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Feb 2013 11:36:38 -0500
-In-Reply-To: <1360859795-30448-1-git-send-email-emilne@redhat.com>
+Received: from relay.ihostexchange.net ([66.46.182.58]:30166 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758313Ab3BNSCb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Feb 2013 13:02:31 -0500
+In-Reply-To: <1360813101.2502.8.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-init_sd() was returning 0 if sd_cdb_cache or sd_cdb_pool could
-not be allocated.  Return -ENOMEM instead, since the sd_disk_class
-and the blkdevs will be unregistered if this happens.
+On 2/13/2013 9:38 PM, James Bottomley wrote:
+> Yes.  The two functions are simple transforms ensuring that we can pack up
+> to two levels of luns into a u32 whatever address method is used.  At the
+> time it was done, no array or other extant system went beyond this.
+> 
+> At the end of the day, a LUN is just a handle, so even if we go to 64 bits
+> we're still going to be packing the address method into the logical unit
+> "number".
 
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/sd.c | 2 ++
- 1 file changed, 2 insertions(+)
+	Ok, I will buy that (probably violates SAM5, 4.7.1, but no big deal), two
+points.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8551f3e..4943a4f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2931,12 +2931,14 @@ static int __init init_sd(void)
- 					 0, 0, NULL);
- 	if (!sd_cdb_cache) {
- 		printk(KERN_ERR "sd: can't init extended cdb cache\n");
-+		err = -ENOMEM;
- 		goto err_out_class;
- 	}
- 
- 	sd_cdb_pool = mempool_create_slab_pool(SD_MEMPOOL_SIZE, sd_cdb_cache);
- 	if (!sd_cdb_pool) {
- 		printk(KERN_ERR "sd: can't init extended cdb pool\n");
-+		err = -ENOMEM;
- 		goto err_out_cache;
- 	}
- 
--- 
-1.7.11.7
+	First this requires basically every adapter capable of recieving address
+method!=0 LUNs to set the 64-bit capable flag that is included in this patch.
+Otherwise the "scsi: %s lun%d has a LUN larger than allowed by the host
+adapter\n" path fires even for a small number of luns because the address
+method bit creates a "lun" > max_luns in all cases.
 
+
+
+	Second, its possible with address method 11b, that none of the devices are
+actually visible even with this patch, as a device that chooses to use address
+method=11b and one of the >16 bit addressing methods gets its LSB truncated by
+the 32-bit return from scsilun_to_int(). Not that I have see one of those, no
+one needs that many LUNs <chuckle>. So, the flag in this patch is somewhat
+misnamed as it doesn't really support 64-bit luns. To stick to the existing
+method scsilun_to_int needs to be u64.
+
+
+	BTW: Tiny syntax cleanup, scsilun_to_int() should have a return type of
+unsigned.
+
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJRHSa0AAoJEL5i86xrzcy7K6oH/RBnWrpDJGt+mcvR8of6BM6y
+nwtokc/GCas/RFcn1rxvayicKcqAgYGeE7PRoECvIiDoSNFacNGCvf3XQye4tF2y
+IMfGZhKlndJWKUppv5ELgyzpEbh49U3XK/Vq7O2B6pB46O6Iiqz1PUWK+yZF757B
+O1Q+w49FUSbq3AsPxYh4CeHj7+L+6o6mAILzl8lTgGGRkhQFr15jR1K29AUhMyyM
+xCTeWw++N9Iu5ENjIdiBk0E5bQZujKBBrSpuqWnyqPzhGX74AYexkOkEiXGlEBO7
+Vr31C6TBVdpOvVdXlGoR/+ZcUxju1Q9ozmdW0QEzGMvNDbax3sS0/7wSZy9bKb4=
+=j5FP
+-----END PGP SIGNATURE-----
