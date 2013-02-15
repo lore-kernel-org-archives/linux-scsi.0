@@ -1,46 +1,74 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH] Use a more selective error recovery strategy based on
- device capabilities
-Date: Fri, 15 Feb 2013 09:17:20 -0600
-Message-ID: <511E5180.6000400@tributary.com>
-References: <511A87CA.5010901@tributary.com> <511B8FBF.9000705@suse.de> <511BB545.7060600@tributary.com> <12DB2383-B7CE-4DD4-BBAA-D6701271A6E6@cs.wisc.edu> <511D4FB5.708@tributary.com> <94D0CD8314A33A4D9D801C0FE68B402950D58F40@G9W0745.americas.hpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Ben Collins <bcollins@ubuntu.com>
+Subject: Re: [PATCH] [SCSI] aacraid: Fix invalid bit shifts of DMA address
+Date: Fri, 15 Feb 2013 11:19:27 -0500
+Message-ID: <EA999CA9-D99A-438A-9037-6F1887737F62@ubuntu.com>
+References: <1360939806.5374.375.camel@deadeye.wl.decadent.org.uk>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.58]:34508 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755948Ab3BOPR1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 10:17:27 -0500
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402950D58F40@G9W0745.americas.hpqcorp.net>
+Received: from mail-da0-f49.google.com ([209.85.210.49]:45405 "EHLO
+	mail-da0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935977Ab3BOQTb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 11:19:31 -0500
+Received: by mail-da0-f49.google.com with SMTP id t11so1523017daj.36
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Feb 2013 08:19:30 -0800 (PST)
+In-Reply-To: <1360939806.5374.375.camel@deadeye.wl.decadent.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Michael Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Linux Scsi <linux-scsi@vger.kernel.org>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Feb 15, 2013, at 9:50 AM, Ben Hutchings <ben@decadent.org.uk> wrote:
 
-On 2/14/2013 5:42 PM, Elliott, Robert (Server Storage) wrote:
-> Each logical unit is independent and is allowed to be different.
+> Commit b5f1758f221e ('[SCSI] aacraid: Fix endian issues in core and
+> SRC portions of driver') changed the type of the address variable in
+> aac_src_deliver_message() from u64 to dma_addr_t.  In configurations
+> with 32-bit dma_addr_t, this results in:
+> 
+> drivers/scsi/aacraid/src.c: In function 'aac_src_deliver_message':
+> drivers/scsi/aacraid/src.c:410:3: warning: right shift count >= width of type [enabled by default]
+> drivers/scsi/aacraid/src.c:434:2: warning: right shift count >= width of type [enabled by default]
+> 
+> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+> Cc: stable <stable@vger.kernel.org> # v3.6+
+> ---
+> This is compile-tested only.
 
-	I was actually just thinking about the target reset and IT reset flags. Two
-flags which affect the I_T not the I_T_L.
+Still works for me. It would be nice to alleviate the BUG_ON when sizeof(dma_addr_t) == 4. I'm wondering, since this driver sets DMA_BIT_MASK correctly, if this check is even needed.
 
-	For the target reset its probably a small proportion of devices anyway, The
-patch already disables target reset if the device is known to support lun reset.
+> Ben.
+> 
+> drivers/scsi/aacraid/src.c |    4 ++--
+> 1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+> index 3b021ec..129b984 100644
+> --- a/drivers/scsi/aacraid/src.c
+> +++ b/drivers/scsi/aacraid/src.c
+> @@ -407,7 +407,7 @@ static int aac_src_deliver_message(struct fib *fib)
+> 		fib->hw_fib_va->header.StructType = FIB_MAGIC2;
+> 		fib->hw_fib_va->header.SenderFibAddress = (u32)address;
+> 		fib->hw_fib_va->header.u.TimeStamp = 0;
+> -		BUG_ON((u32)(address >> 32) != 0L);
+> +		BUG_ON((u64)address >> 32);
+> 		address |= fibsize;
+> 	} else {
+> 		/* Calculate the amount to the fibsize bits */
+> @@ -431,7 +431,7 @@ static int aac_src_deliver_message(struct fib *fib)
+> 		address |= fibsize;
+> 	}
+> 
+> -	src_writel(dev, MUnit.IQ_H, (address >> 32) & 0xffffffff);
+> +	src_writel(dev, MUnit.IQ_H, (u64)address >> 32);
+> 	src_writel(dev, MUnit.IQ_L, address & 0xffffffff);
+> 
+> 	return 0;
+> 
 
+--
+Servergy  : http://www.servergy.com/
+SwissDisk : http://www.swissdisk.com/
+Ubuntu    : http://www.ubuntu.com/
+My Blog   : http://ben-collins.blogspot.com/
 
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJRHlGAAAoJEL5i86xrzcy7Yz8IAKn3w6DnUkPxmasQXi0WljNB
-eqBZHIZRx8gjpa6AOP0nBt+FDSmyrhE4vLOUFIiwpcql1jmJ6iwcT+Y4YHwi+GzC
-sE/ZtB5UDad4RleXcZIBHJwVVFtW0oCya2jYxr2GQFIEz3EefrfwwXEqdeI85uTv
-aLiKakEP6EDQur280T08R9UEpFHirUnhMKoCFsXjtB5T6u2XDRLLWXQ8hE5ILBnX
-Mf5HmCF8g1EjOnCJOzcUlhRlDuQe17FcDHyaxPkl2f34Qr+gdPo9WW5Cz38V0RLX
-UYqmZI/B1GX7rUaU+Xhc4aAkxq6547cWZUwRLdZ6M4osFZT6GBuw3iRBevzNXDs=
-=/1pc
------END PGP SIGNATURE-----
