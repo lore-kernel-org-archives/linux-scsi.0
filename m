@@ -1,34 +1,87 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi: Allow 64-bit LUNs during report lun scan
-Date: Fri, 15 Feb 2013 08:33:21 +0100
-Message-ID: <511DE4C1.5000000@acm.org>
-References: <1360767971-947-1-git-send-email-hare@suse.de>  <511BEF0B.4020302@tributary.com> <1360813101.2502.8.camel@dabdike> <511D26B4.6070302@tributary.com> <94D0CD8314A33A4D9D801C0FE68B402950D58E9A@G9W0745.americas.hpqcorp.net> <511D68CA.6050203@tributary.com>
+Subject: [PATCH v9 0/9] More device removal fixes
+Date: Fri, 15 Feb 2013 13:02:37 +0100
+Message-ID: <511E23DD.2030309@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from juliette.telenet-ops.be ([195.130.137.74]:39631 "EHLO
-	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935388Ab3BOHdZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 02:33:25 -0500
-In-Reply-To: <511D68CA.6050203@tributary.com>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:48396 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018Ab3BOMCm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 07:02:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jlinton@tributary.com>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>
 
-On 02/14/13 23:44, Jeremy Linton wrote:
-> On 2/14/2013 4:04 PM, Elliott, Robert (Server Storage) wrote:
->> Like James notes, LUNs should generally be treated as opaque values.
->
-> Maybe another issue to consider is how they are being displayed in userland.
-> A device with two luns using one of the alternative lun addressing methods is
-> going to get some pretty strange looking lun numbers showing up in userspace
-> if they aren't decoded properly.
+Fix a few issues that can be triggered by removing a device:
+- Fix a race between starved list processing and device removal.
+- Avoid that a SCSI LLD callback can get invoked after
+   scsi_remove_host() finished.
+- Speed up device removal by stopping error handling as soon as
+   the SHOST_DEL or SHOST_DEL_RECOVERY state has been reached.
+- Save and restore the host_scribble field during error handling.
 
-One example of this is the ibmvscsi protocol. Since the ibmvscsi target 
-driver uses the LUN addressing method its LUNs show up with LUN numbers 
-256  512  768 ... at a Linux SCSI initiator.
+These patches have been tested on top of kernel v3.8-rc7 and are also 
+available here: 
+http://github.com/bvanassche/linux/tree/device-removal-fixes.
 
-Bart.
+Changes compared to v8:
+- Addressed the feedback from Joe Lawrence - dropped the patch that
+   makes scsi_remove_host() wait until the last sdev user is gone.
+- Eliminated Scsi_Host.tmf_in_progress since it duplicates state
+   information available in Scsi_Host.eh_active.
+- Added a patch to avoid reenabling I/O after the transport layer
+   became offline.
+
+Changes compared to v7:
+- Addressed the review comments posted by Hannes Reinecke and Rolf Eike
+   Beer.
+- Modified patch "Make scsi_remove_host() wait until error handling
+   finished" such that it is also safe for SCSI timeout values below
+   the maximum LLD response time by modifying scsi_send_eh_cmnd() such
+   that it does not invoke any LLD code after scsi_remove_host() started.
+- Added a patch to save and restore the host_scribble field.
+- Refined / clarified several patch descriptions.
+- Rebased and retested on top of kernel v3.8-rc6.
+
+Changes compared to v6:
+- Dropped the first six patches since Jens queued these for 3.8.
+- Added patch to avoid that __scsi_remove_device() is invoked twice.
+- Restore error recovery in the SHOST_CANCEL state.
+
+Changes compared to v5:
+- Avoid that block layer work can be scheduled on a dead queue.
+- Do not invoke any SCSI LLD callback after scsi_remove_host() finished.
+- Stop error handling as soon as scsi_remove_host() started.
+- Remove the unused function bsg_goose_queue().
+- Avoid that scsi_device_set_state() triggers a race condition.
+
+Changes compared to v4:
+- Moved queue_flag_set(QUEUE_FLAG_DEAD, q) from blk_drain_queue() into
+   blk_cleanup_queue().
+- Declared the new __blk_run_queue_uncond() function inline. Checked in
+   the generated assembler code that this function is really inlined in
+   __blk_run_queue().
+- Elaborated several patch descriptions.
+- Added sparse annotations to scsi_request_fn().
+- Split several patches.
+
+Changes compared to v3:
+- Fixed a race condition by setting QUEUE_FLAG_DEAD earlier.
+- Added a patch for fixing a race between starved list processing
+   and device removal to this series.
+
+Changes compared to v2:
+- Split second patch into two patches.
+- Refined patch descriptions.
+
+Changes compared to v1:
+- Included a patch to rename QUEUE_FLAG_DEAD.
+- Refined the descriptions of the __blk_run_queue_uncond() and
+   blk_cleanup_queue() functions.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
