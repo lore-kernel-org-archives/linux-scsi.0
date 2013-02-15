@@ -1,87 +1,111 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v9 0/9] More device removal fixes
-Date: Fri, 15 Feb 2013 13:02:37 +0100
-Message-ID: <511E23DD.2030309@acm.org>
+Subject: [PATCH v9 1/9] Fix race between starved list processing and device
+ removal
+Date: Fri, 15 Feb 2013 13:04:23 +0100
+Message-ID: <511E2447.50000@acm.org>
+References: <511E23DD.2030309@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:48396 "EHLO
+Received: from jacques.telenet-ops.be ([195.130.132.50]:50752 "EHLO
 	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018Ab3BOMCm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 07:02:42 -0500
+	with ESMTP id S1750767Ab3BOMEY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 07:04:24 -0500
+In-Reply-To: <511E23DD.2030309@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>
 
-Fix a few issues that can be triggered by removing a device:
-- Fix a race between starved list processing and device removal.
-- Avoid that a SCSI LLD callback can get invoked after
-   scsi_remove_host() finished.
-- Speed up device removal by stopping error handling as soon as
-   the SHOST_DEL or SHOST_DEL_RECOVERY state has been reached.
-- Save and restore the host_scribble field during error handling.
+scsi_run_queue() examines all SCSI devices that are present on
+the starved list. Since scsi_run_queue() unlocks the SCSI host
+lock before running a queue a SCSI device can get removed after
+it has been removed from the starved list and before its queue
+is run. Protect against that race condition by increasing the
+sdev refcount before running the sdev queue. Also, remove a
+SCSI device from the starved list before __scsi_remove_device()
+decreases the sdev refcount such that the get_device() call
+added in scsi_run_queue() is guaranteed to succeed.
 
-These patches have been tested on top of kernel v3.8-rc7 and are also 
-available here: 
-http://github.com/bvanassche/linux/tree/device-removal-fixes.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Reported-and-tested-by: Chanho Min <chanho.min@lge.com>
+Reference: http://lkml.org/lkml/2012/8/2/96
+Acked-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/scsi_lib.c   |   16 +++++++++++-----
+ drivers/scsi/scsi_sysfs.c |   14 +++++++++++++-
+ 2 files changed, 24 insertions(+), 6 deletions(-)
 
-Changes compared to v8:
-- Addressed the feedback from Joe Lawrence - dropped the patch that
-   makes scsi_remove_host() wait until the last sdev user is gone.
-- Eliminated Scsi_Host.tmf_in_progress since it duplicates state
-   information available in Scsi_Host.eh_active.
-- Added a patch to avoid reenabling I/O after the transport layer
-   became offline.
-
-Changes compared to v7:
-- Addressed the review comments posted by Hannes Reinecke and Rolf Eike
-   Beer.
-- Modified patch "Make scsi_remove_host() wait until error handling
-   finished" such that it is also safe for SCSI timeout values below
-   the maximum LLD response time by modifying scsi_send_eh_cmnd() such
-   that it does not invoke any LLD code after scsi_remove_host() started.
-- Added a patch to save and restore the host_scribble field.
-- Refined / clarified several patch descriptions.
-- Rebased and retested on top of kernel v3.8-rc6.
-
-Changes compared to v6:
-- Dropped the first six patches since Jens queued these for 3.8.
-- Added patch to avoid that __scsi_remove_device() is invoked twice.
-- Restore error recovery in the SHOST_CANCEL state.
-
-Changes compared to v5:
-- Avoid that block layer work can be scheduled on a dead queue.
-- Do not invoke any SCSI LLD callback after scsi_remove_host() finished.
-- Stop error handling as soon as scsi_remove_host() started.
-- Remove the unused function bsg_goose_queue().
-- Avoid that scsi_device_set_state() triggers a race condition.
-
-Changes compared to v4:
-- Moved queue_flag_set(QUEUE_FLAG_DEAD, q) from blk_drain_queue() into
-   blk_cleanup_queue().
-- Declared the new __blk_run_queue_uncond() function inline. Checked in
-   the generated assembler code that this function is really inlined in
-   __blk_run_queue().
-- Elaborated several patch descriptions.
-- Added sparse annotations to scsi_request_fn().
-- Split several patches.
-
-Changes compared to v3:
-- Fixed a race condition by setting QUEUE_FLAG_DEAD earlier.
-- Added a patch for fixing a race between starved list processing
-   and device removal to this series.
-
-Changes compared to v2:
-- Split second patch into two patches.
-- Refined patch descriptions.
-
-Changes compared to v1:
-- Included a patch to rename QUEUE_FLAG_DEAD.
-- Refined the descriptions of the __blk_run_queue_uncond() and
-   blk_cleanup_queue() functions.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f1bf5af..5c67339 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -452,11 +452,17 @@ static void scsi_run_queue(struct request_queue *q)
+ 			continue;
+ 		}
+ 
+-		spin_unlock(shost->host_lock);
+-		spin_lock(sdev->request_queue->queue_lock);
+-		__blk_run_queue(sdev->request_queue);
+-		spin_unlock(sdev->request_queue->queue_lock);
+-		spin_lock(shost->host_lock);
++		/*
++		 * Obtain a reference before unlocking the host_lock such that
++		 * the sdev can't disappear before blk_run_queue() is invoked.
++		 */
++		get_device(&sdev->sdev_gendev);
++		spin_unlock_irqrestore(shost->host_lock, flags);
++
++		blk_run_queue(sdev->request_queue);
++		put_device(&sdev->sdev_gendev);
++
++		spin_lock_irqsave(shost->host_lock, flags);
+ 	}
+ 	/* put any unprocessed entries back */
+ 	list_splice(&starved_list, &shost->starved_list);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 931a7d9..34f1b39 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -345,7 +345,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	starget->reap_ref++;
+ 	list_del(&sdev->siblings);
+ 	list_del(&sdev->same_target_siblings);
+-	list_del(&sdev->starved_entry);
+ 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
+ 
+ 	cancel_work_sync(&sdev->event_work);
+@@ -953,6 +952,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ void __scsi_remove_device(struct scsi_device *sdev)
+ {
+ 	struct device *dev = &sdev->sdev_gendev;
++	struct Scsi_Host *shost = sdev->host;
++	unsigned long flags;
+ 
+ 	if (sdev->is_visible) {
+ 		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+@@ -974,6 +975,17 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	blk_cleanup_queue(sdev->request_queue);
+ 	cancel_work_sync(&sdev->requeue_work);
+ 
++	/*
++	 * Remove a SCSI device from the starved list after blk_cleanup_queue()
++	 * finished such that scsi_request_fn() can't add it back to that list.
++	 * Also remove an sdev from the starved list before invoking
++	 * put_device() such that get_device() is guaranteed to succeed for an
++	 * sdev present on the starved list.
++	 */
++	spin_lock_irqsave(shost->host_lock, flags);
++	list_del(&sdev->starved_entry);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++
+ 	if (sdev->host->hostt->slave_destroy)
+ 		sdev->host->hostt->slave_destroy(sdev);
+ 	transport_destroy_device(dev);
+-- 
+1.7.10.4
 
