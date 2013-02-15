@@ -1,74 +1,42 @@
-From: Ben Collins <bcollins@ubuntu.com>
-Subject: Re: [PATCH] [SCSI] aacraid: Fix invalid bit shifts of DMA address
-Date: Fri, 15 Feb 2013 11:19:27 -0500
-Message-ID: <EA999CA9-D99A-438A-9037-6F1887737F62@ubuntu.com>
-References: <1360939806.5374.375.camel@deadeye.wl.decadent.org.uk>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH] scsi: Allow 64-bit LUNs during report lun scan
+Date: Fri, 15 Feb 2013 10:25:18 -0600
+Message-ID: <511E616E.6040100@tributary.com>
+References: <1360767971-947-1-git-send-email-hare@suse.de> <1360813027.2502.7.camel@dabdike>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-da0-f49.google.com ([209.85.210.49]:45405 "EHLO
-	mail-da0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935977Ab3BOQTb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 11:19:31 -0500
-Received: by mail-da0-f49.google.com with SMTP id t11so1523017daj.36
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Feb 2013 08:19:30 -0800 (PST)
-In-Reply-To: <1360939806.5374.375.camel@deadeye.wl.decadent.org.uk>
+Received: from relay.ihostexchange.net ([66.46.182.58]:41018 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757126Ab3BOQZZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 11:25:25 -0500
+In-Reply-To: <1360813027.2502.7.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Feb 15, 2013, at 9:50 AM, Ben Hutchings <ben@decadent.org.uk> wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-> Commit b5f1758f221e ('[SCSI] aacraid: Fix endian issues in core and
-> SRC portions of driver') changed the type of the address variable in
-> aac_src_deliver_message() from u64 to dma_addr_t.  In configurations
-> with 32-bit dma_addr_t, this results in:
-> 
-> drivers/scsi/aacraid/src.c: In function 'aac_src_deliver_message':
-> drivers/scsi/aacraid/src.c:410:3: warning: right shift count >= width of type [enabled by default]
-> drivers/scsi/aacraid/src.c:434:2: warning: right shift count >= width of type [enabled by default]
-> 
-> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-> Cc: stable <stable@vger.kernel.org> # v3.6+
-> ---
-> This is compile-tested only.
+On 2/13/2013 9:37 PM, James Bottomley wrote:
 
-Still works for me. It would be nice to alleviate the BUG_ON when sizeof(dma_addr_t) == 4. I'm wondering, since this driver sets DMA_BIT_MASK correctly, if this check is even needed.
+> What advantage does this have over setting max_lun to ~0?
 
-> Ben.
-> 
-> drivers/scsi/aacraid/src.c |    4 ++--
-> 1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-> index 3b021ec..129b984 100644
-> --- a/drivers/scsi/aacraid/src.c
-> +++ b/drivers/scsi/aacraid/src.c
-> @@ -407,7 +407,7 @@ static int aac_src_deliver_message(struct fib *fib)
-> 		fib->hw_fib_va->header.StructType = FIB_MAGIC2;
-> 		fib->hw_fib_va->header.SenderFibAddress = (u32)address;
-> 		fib->hw_fib_va->header.u.TimeStamp = 0;
-> -		BUG_ON((u32)(address >> 32) != 0L);
-> +		BUG_ON((u64)address >> 32);
-> 		address |= fibsize;
-> 	} else {
-> 		/* Calculate the amount to the fibsize bits */
-> @@ -431,7 +431,7 @@ static int aac_src_deliver_message(struct fib *fib)
-> 		address |= fibsize;
-> 	}
-> 
-> -	src_writel(dev, MUnit.IQ_H, (address >> 32) & 0xffffffff);
-> +	src_writel(dev, MUnit.IQ_H, (u64)address >> 32);
-> 	src_writel(dev, MUnit.IQ_L, address & 0xffffffff);
-> 
-> 	return 0;
-> 
 
---
-Servergy  : http://www.servergy.com/
-SwissDisk : http://www.swissdisk.com/
-Ubuntu    : http://www.ubuntu.com/
-My Blog   : http://ben-collins.blogspot.com/
+	Actually, after having all those other discussions. I've come to see the
+elegance in this suggestion.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJRHmFuAAoJEL5i86xrzcy7RXkH+QHeQeWZE4Z5Qe2GcKj64SVV
+eqnQNiOoOR4sKmPM1J8AhBbOj/sl6upSSXrHgcK9EGKCA8R099wwdYjFhyLy+RQn
+HZURfpJbxEWItGJd9mouGqR6SeUiifs7If9VUp+/OJXiBtePD8Vu3GQB0p7v0DwI
+BlKkUTnMAQgYPYPc8iMJiGJYf38ZtMJFU0oHow5L0VZG6zTJhxcOmAxEuu1zqJWX
+5hvSw0jgXmAJ/p798LWKw4FjhdBFAyG1BcK8RmEsHqoW4XecSHU6qXvxokiVgIMt
+QKMuCHTRjxzVQCkpyUUc3hEH24kZFU8PqeMPw46dFYndZrM9Jg/3zq74k6aZlJo=
+=wwUR
+-----END PGP SIGNATURE-----
