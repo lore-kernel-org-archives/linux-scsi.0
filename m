@@ -1,36 +1,71 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v9 9/9] Avoid reenabling I/O after the transport became
- offline
-Date: Fri, 15 Feb 2013 15:56:54 -0600
-Message-ID: <511EAF26.9010804@cs.wisc.edu>
-References: <511E23DD.2030309@acm.org> <511E25B9.3080301@acm.org>
+From: merez@codeaurora.org
+Subject: Re: [PATCH V6 0/4] [SCSI] ufs: Adds glue drivers to ufshcd
+Date: Fri, 15 Feb 2013 14:30:03 -0800
+Message-ID: <340aa7e0584e68b3066f20ed54d64fda.squirrel@www.codeaurora.org>
+References: <511137ce.0657420a.5b57.ffffa7db@mx.google.com>
+    <CAKVbJB8=HU=Rc7u2siKSQmKQf461=dz0v-k2Ww6XMZdUBTQkcA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:60213 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750967Ab3BOWAv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Feb 2013 17:00:51 -0500
-In-Reply-To: <511E25B9.3080301@acm.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40109 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752150Ab3BOWaE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 17:30:04 -0500
+In-Reply-To: <CAKVbJB8=HU=Rc7u2siKSQmKQf461=dz0v-k2Ww6XMZdUBTQkcA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, santoshsy@gmail.com, patches@linaro.org, linux-samsung-soc@vger.kernel.org, arnd@linaro.org, venkat@linaro.org, subhashj@codeaurora.org, sthumma@codeaurora.org, vinholikatti@gmail.com
 
-On 02/15/2013 06:10 AM, Bart Van Assche wrote:
-> Disallow the SDEV_TRANSPORT_OFFLINE to SDEV_CANCEL transition such
-> that no I/O is sent to devices for which the transport is offline.
-> Notes:
-> - Functions like sd_shutdown() use scsi_execute_req() and hence
->   set the REQ_PREEMPT flag. Such requests are passed to the LLD
->   queuecommand callback in the SDEV_CANCEL state.
-> - This patch does not affect Fibre Channel LLD drivers since these
->   drivers invoke fc_remote_port_chkready() before submitting a SCSI
->   request to the HBA. That prevents a timeout to occur in state
->   SDEV_CANCEL if the transport is offline.
-> 
+Tested-by: Maya Erez <merez@codeaurora.org>
 
-Thanks for fixing this. Looks right to me.
+> Hi James,
+>
+> look like these patches are fine. Can you please integrate these
+> patches in your tree.
+>
+>
+> On Tue, Feb 5, 2013 at 10:17 PM,  <vinholikatti@gmail.com> wrote:
+>> From: Vinayak Holikatti <vinholikatti@gmail.com>
+>>
+>> This patch set adds following features
+>>  - Seggregate PCI specific code in ufshcd.c and corrected copyright
+>>  - Adds PCI glue driver ufshcd-pci.c and ufshcd.c become core module
+>>  - Adds Platform glue driver ufshcd-pltfrm.c
+>>  - Update correct transfer size in Command UPIU
+>>
+>> Vinayak Holikatti (4):
+>>   [SCSI] drivers/scsi/ufs: Seggregate PCI Specific Code
+>>   [SCSI] drivers/scsi/ufs: Separate PCI code into glue driver
+>>   [SCSI] ufs: Add Platform glue driver for ufshcd
+>>   [SCSI] ufs: Correct the expected data transfersize
+>>
+>>  drivers/scsi/ufs/Kconfig         |   87 +++++---
+>>  drivers/scsi/ufs/Makefile        |    2 +
+>>  drivers/scsi/ufs/ufs.h           |   44 ++---
+>>  drivers/scsi/ufs/ufshcd-pci.c    |  211 +++++++++++++++++++
+>>  drivers/scsi/ufs/ufshcd-pltfrm.c |  217 +++++++++++++++++++
+>>  drivers/scsi/ufs/ufshcd.c        |  426
+>> ++++++++------------------------------
+>>  drivers/scsi/ufs/ufshcd.h        |  202 ++++++++++++++++++
+>>  drivers/scsi/ufs/ufshci.h        |   44 ++---
+>>  8 files changed, 811 insertions(+), 422 deletions(-)
+>>  create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+>>  create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.c
+>>  create mode 100644 drivers/scsi/ufs/ufshcd.h
+>>
+>> --
+>> 1.7.5.4
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+
+-- 
+Maya Erez
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
+
