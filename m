@@ -1,42 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Use a more selective error recovery strategy based on
- device capabilities
-Date: Fri, 15 Feb 2013 08:17:36 +0100
-Message-ID: <511DE110.4040506@suse.de>
-References: <511A87CA.5010901@tributary.com> <511B8FBF.9000705@suse.de> <511BB545.7060600@tributary.com> <12DB2383-B7CE-4DD4-BBAA-D6701271A6E6@cs.wisc.edu> <511D4FB5.708@tributary.com>
+Subject: Re: [PATCH] scsi: Allow 64-bit LUNs during report lun scan
+Date: Fri, 15 Feb 2013 08:26:31 +0100
+Message-ID: <511DE327.4050008@suse.de>
+References: <1360767971-947-1-git-send-email-hare@suse.de>  <511BEF0B.4020302@tributary.com> <1360813101.2502.8.camel@dabdike> <511D26B4.6070302@tributary.com> <94D0CD8314A33A4D9D801C0FE68B402950D58E9A@G9W0745.americas.hpqcorp.net> <511D68CA.6050203@tributary.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42233 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42578 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935345Ab3BOHRi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Feb 2013 02:17:38 -0500
-In-Reply-To: <511D4FB5.708@tributary.com>
+	id S935388Ab3BOH0c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Feb 2013 02:26:32 -0500
+In-Reply-To: <511D68CA.6050203@tributary.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeremy Linton <jlinton@tributary.com>
-Cc: Michael Christie <michaelc@cs.wisc.edu>, Linux Scsi <linux-scsi@vger.kernel.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 02/14/2013 09:57 PM, Jeremy Linton wrote:
-> On 2/13/2013 8:43 PM, Michael Christie wrote:
->> For the case where report supported TMFs is not supported can we jus=
-t have the
- >> LLD return some new return code from the eh callback when it=20
-gets FUNCTION_REJECTED.
- >> scsi-ml would then clear the eh_*_ok bit, so at least it would=20
-not be called again..
+On 02/14/2013 11:44 PM, Jeremy Linton wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 >
+> On 2/14/2013 4:04 PM, Elliott, Robert (Server Storage) wrote:
+>> Like James notes, LUNs should generally be treated as opaque values.
 >
-> 	Hmm, that seems like a good idea. The question is, does propagating =
-the flag
-> change to all the devices on the I_T make sense?
+> 	Maybe another issue to consider is how they are being displayed in u=
+serland.
+> A device with two luns using one of the alternative lun addressing me=
+thods is
+> going to get some pretty strange looking lun numbers showing up in us=
+erspace
+> if they aren't decoded properly.
 >
-Hmm. Again, I've yet to find a storage array which actually _does_=20
-reject a TMF.
-None of mine do, not even the latest and greatest NetApp Ontap=20
-version ...
+No. LUNs with anything other than peripheral addressing do look=20
+weird even nowadays.
+Cf IBM DS8000 presents me with LUNs like:
+
+# lsscsi
+[0:0:0:49409]wlun    IBM      2107900          .107  -
+[0:0:0:1085358099]disk    IBM      2107900          .107  /dev/sda
+
+where the second maps to LUN 401340b100000000.
+
+Again, the initiator _must not_ attempt to decode the LUN.
+To stick with the above example, LUN 400040b100000000 and LUN
+40b1000000000000 do refer to the same LUN number, albeit on a=20
+different Level. And it's totally up to the target which physical=20
+LUN these numbers refer to. The initiator has to map these numbers=20
+to different devices; to figure out whether the devices are=20
+identical one would have to look at VPD page 0x83.
 
 Cheers,
 
