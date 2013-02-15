@@ -1,42 +1,49 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH] scsi: Allow 64-bit LUNs during report lun scan
-Date: Fri, 15 Feb 2013 10:25:18 -0600
-Message-ID: <511E616E.6040100@tributary.com>
-References: <1360767971-947-1-git-send-email-hare@suse.de> <1360813027.2502.7.camel@dabdike>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH v2] [SCSI] scsi_debug: Do not respond to certain commands with CHECK CONDITION when sense pending
+Date: Fri, 15 Feb 2013 12:52:31 -0500
+Message-ID: <1360950751-5136-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.58]:41018 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757126Ab3BOQZZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Feb 2013 11:25:25 -0500
-In-Reply-To: <1360813027.2502.7.camel@dabdike>
+Received: from mx1.redhat.com ([209.132.183.28]:9475 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753349Ab3BORwd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Feb 2013 12:52:33 -0500
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1FHqXhQ020586
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Feb 2013 12:52:33 -0500
+Received: from emilne.csb (dhcp-185-251.bos.redhat.com [10.16.185.251])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r1FHqWlQ025010
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Feb 2013 12:52:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-On 2/13/2013 9:37 PM, James Bottomley wrote:
+According to SPC, certain commands are not supposed to respond
+with a CHECK CONDITION due to a pending UNIT ATTENTION.  This
+was causing failures when re-scanning a scsi_debug target.  The
+commands in this category are INQUIRY and REPORT LUNS.
 
-> What advantage does this have over setting max_lun to ~0?
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/scsi_debug.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 8a6bf31..48fd5a7 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4060,7 +4060,8 @@ write:
+ 		errsts = check_condition_result;
+ 		break;
+ 	}
+-	if (!errsts && devip->sense_pending) {
++	if (!errsts && devip->sense_pending && (*cmd != INQUIRY) &&
++	    (*cmd != REPORT_LUNS)) {
+ 		devip->sense_pending = 0;
+ 		errsts = check_condition_result;
+ 	}
+-- 
+1.7.11.7
 
-	Actually, after having all those other discussions. I've come to see the
-elegance in this suggestion.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJRHmFuAAoJEL5i86xrzcy7RXkH+QHeQeWZE4Z5Qe2GcKj64SVV
-eqnQNiOoOR4sKmPM1J8AhBbOj/sl6upSSXrHgcK9EGKCA8R099wwdYjFhyLy+RQn
-HZURfpJbxEWItGJd9mouGqR6SeUiifs7If9VUp+/OJXiBtePD8Vu3GQB0p7v0DwI
-BlKkUTnMAQgYPYPc8iMJiGJYf38ZtMJFU0oHow5L0VZG6zTJhxcOmAxEuu1zqJWX
-5hvSw0jgXmAJ/p798LWKw4FjhdBFAyG1BcK8RmEsHqoW4XecSHU6qXvxokiVgIMt
-QKMuCHTRjxzVQCkpyUUc3hEH24kZFU8PqeMPw46dFYndZrM9Jg/3zq74k6aZlJo=
-=wwUR
------END PGP SIGNATURE-----
