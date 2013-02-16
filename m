@@ -1,64 +1,44 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 2/5] pmcraid: fix pmcraid_netlink_init() error path in module_init
-Date: Sat, 16 Feb 2013 23:27:56 +0900
-Message-ID: <1361024879-12934-2-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH 3/5] pmcraid: make pmcraid_minor static
+Date: Sat, 16 Feb 2013 23:27:57 +0900
+Message-ID: <1361024879-12934-3-git-send-email-akinobu.mita@gmail.com>
 References: <1361024879-12934-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:64796 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753236Ab3BPO22 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Feb 2013 09:28:28 -0500
-Received: by mail-pb0-f50.google.com with SMTP id up1so1000879pbc.23
-        for <linux-scsi@vger.kernel.org>; Sat, 16 Feb 2013 06:28:27 -0800 (PST)
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:55507 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236Ab3BPO2a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Feb 2013 09:28:30 -0500
+Received: by mail-pa0-f41.google.com with SMTP id fb11so2136325pad.14
+        for <linux-scsi@vger.kernel.org>; Sat, 16 Feb 2013 06:28:30 -0800 (PST)
 In-Reply-To: <1361024879-12934-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Akinobu Mita <akinobu.mita@gmail.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-pmcraid_netlink_init() error path in module_init doesn't destroy
-a struct class that was created just before.
+The bitmap pmcraid_minor is only used in this file.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/pmcraid.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/scsi/pmcraid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 073ff48..db77bf9 100644
+index db77bf9..583ec82 100644
 --- a/drivers/scsi/pmcraid.c
 +++ b/drivers/scsi/pmcraid.c
-@@ -6114,18 +6114,20 @@ static int __init pmcraid_init(void)
- 	error = pmcraid_netlink_init();
+@@ -76,7 +76,7 @@ static atomic_t pmcraid_adapter_count = ATOMIC_INIT(0);
+  */
+ static unsigned int pmcraid_major;
+ static struct class *pmcraid_class;
+-DECLARE_BITMAP(pmcraid_minor, PMCRAID_MAX_ADAPTERS);
++static DECLARE_BITMAP(pmcraid_minor, PMCRAID_MAX_ADAPTERS);
  
- 	if (error)
--		goto out_unreg_chrdev;
-+		goto out_class_destroy;
- 
- 	error = pci_register_driver(&pmcraid_driver);
- 
--	if (error == 0)
--		goto out_init;
-+	if (error)
-+		goto out_netlink_release;
- 
--	pmcraid_err("failed to register pmcraid driver, error = %x\n",
--		     error);
--	class_destroy(pmcraid_class);
--	pmcraid_netlink_release();
-+	return 0;
- 
-+out_netlink_release:
-+	pmcraid_err("failed to register pmcraid driver, error = %x\n", error);
-+	pmcraid_netlink_release();
-+out_class_destroy:
-+	class_destroy(pmcraid_class);
- out_unreg_chrdev:
- 	unregister_chrdev_region(MKDEV(pmcraid_major, 0), PMCRAID_MAX_ADAPTERS);
- 
+ /*
+  * Module parameters
 -- 
 1.8.1
 
