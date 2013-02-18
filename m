@@ -1,150 +1,176 @@
-From: Felipe Balbi <balbi@ti.com>
-Subject: Re: SYSFS "errors"
-Date: Mon, 18 Feb 2013 20:46:33 +0200
-Message-ID: <20130218184633.GC10755@arwen.pp.htv.fi>
-References: <20130218153316.GA2663@arwen.pp.htv.fi>
- <20130218155012.GA30974@kroah.com>
- <20130218155215.GB2663@arwen.pp.htv.fi>
- <20130218171334.GA31329@kroah.com>
- <20130218172700.GH2663@arwen.pp.htv.fi>
- <20130218174916.GA2070@kroah.com>
-Reply-To: <balbi@ti.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="0IvGJv3f9h+YhkrH"
+From: Rob Evers <revers@redhat.com>
+Subject: [PATCH v2 2/3] Configure reported luns
+Date: Mon, 18 Feb 2013 14:15:51 -0500
+Message-ID: <1361214952-28978-3-git-send-email-revers@redhat.com>
+References: <1361214952-28978-1-git-send-email-revers@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:35226 "EHLO arroyo.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:28549 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751580Ab3BRSrx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Feb 2013 13:47:53 -0500
-Content-Disposition: inline
-In-Reply-To: <20130218174916.GA2070@kroah.com>
+	id S1756350Ab3BRTPz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Feb 2013 14:15:55 -0500
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1IJFsMB031734
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Feb 2013 14:15:54 -0500
+Received: from localhost (dhcp-186-142.bos.redhat.com [10.16.186.142])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r1IJFsen028624
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Feb 2013 14:15:54 -0500
+In-Reply-To: <1361214952-28978-1-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Felipe Balbi <balbi@ti.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>, Ingo Molnar <mingo@redhat.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, davem@davemloft.net, netdev@vger.kernel.org, Doug Thompson <dougthompson@xmission.com>, linux-edac@vger.kernel.org, rjw@sisk.pl, linux-pm@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---0IvGJv3f9h+YhkrH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Change default value of max_report_luns to 16k-1.
 
-Hi, On Mon, Feb 18, 2013 at 09:49:16AM -0800, Greg KH wrote:
-> > Input/output error - /sys/devices/cpu/power/autosuspend_delay_ms
->=20
-> The issue with this file is, if the power.use_autosuspend flag is not
-> set for the device, then it can't be read or written to.  This flag
-> changes dynamically with the system state
-> (__pm_runtime_use_autosuspend() can change it), so we can't just not
-> show the file if the flag is not set properly, sorry.
->=20
-> So the "error" is correct here, as is the 0644 file value.
+Use data returned from max report luns command to configure the number
+of logical units present if previous default of 511 isn't enough.
 
-hmm... we could create the file at pm_runtime_enable() time and remove
-it on pm_runtime_disable() time, no ? Addin Rafael to Cc
+Signed-off-by: Rob Evers <revers@redhat.com>
+---
+ drivers/scsi/scsi_scan.c | 89 ++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 68 insertions(+), 21 deletions(-)
 
-> > No such device or address - /sys/devices/pci0000:00/0000:00:1d.7/usb2/2=
--5/2-5.1/2-5.1.1/2-5.1.1:1.0/host100/target100:0:0/100:0:0:0/block/sdc/trac=
-e/pid
-> > No such device or address - /sys/devices/pci0000:00/0000:00:1d.7/usb2/2=
--5/2-5.1/2-5.1.1/2-5.1.1:1.0/host100/target100:0:0/100:0:0:0/block/sdc/trac=
-e/end_lba
-> > No such device or address - /sys/devices/pci0000:00/0000:00:1d.7/usb2/2=
--5/2-5.1/2-5.1.1/2-5.1.1:1.0/host100/target100:0:0/100:0:0:0/block/sdc/trac=
-e/enable
-> > No such device or address - /sys/devices/pci0000:00/0000:00:1d.7/usb2/2=
--5/2-5.1/2-5.1.1/2-5.1.1:1.0/host100/target100:0:0/100:0:0:0/block/sdc/trac=
-e/act_mask
-> > No such device or address - /sys/devices/pci0000:00/0000:00:1d.7/usb2/2=
--5/2-5.1/2-5.1.1/2-5.1.1:1.0/host100/target100:0:0/100:0:0:0/block/sdc/trac=
-e/start_lba
-> > Invalid argument - /sys/devices/pci0000:00/0000:00:1f.2/ata2/host1/scsi=
-_host/host1/em_buffer
-> > Invalid argument - /sys/devices/pci0000:00/0000:00:1f.2/ata2/host1/targ=
-et1:0:0/1:0:0:0/sw_activity
-> > Operation not supported - /sys/devices/pci0000:00/0000:00:1f.2/ata2/hos=
-t1/target1:0:0/1:0:0:0/unload_heads
->=20
-> SCSI fun, go poke the SCSI developers about these files, I know nothing
-> about them, nor do I really want to :)
->=20
-> > No such device - /sys/devices/system/edac/mc/mc0/sdram_scrub_rate
->=20
-> Odd, go ask the edac developers
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index b2abf22..671ff58 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -109,12 +109,13 @@ MODULE_PARM_DESC(scan, "sync, async or none");
+  * in practice, the maximum number of LUNs suppored by any device
+  * is about 16k.
+  */
+-static unsigned int max_scsi_report_luns = 511;
++static unsigned int max_scsi_report_luns = 16383;
+ 
+ module_param_named(max_report_luns, max_scsi_report_luns, uint, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(max_report_luns,
+ 		 "REPORT LUNS maximum number of LUNS received (should be"
+-		 " between 1 and 16384)");
++		 " between 1 and 16383)");
++#define INITIAL_MAX_REPORT_LUNS 511
+ 
+ static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ + 18;
+ 
+@@ -1366,9 +1367,10 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 	char devname[64];
+ 	unsigned int length;
+ 	unsigned int lun;
+-	unsigned int num_luns;
++	unsigned int num_luns, num_luns_reported;
+ 	int result;
+ 	struct scsi_lun *lunp, *lun_data;
++	struct scsi_lun *first_lun_data, *second_lun_data;
+ 	u8 *data;
+ 	struct scsi_device *sdev;
+ 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
+@@ -1409,45 +1411,90 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 	/*
+ 	 * Allocate enough to hold the header (the same size as one scsi_lun)
+ 	 * plus the max number of luns we are requesting.
+-	 *
+-	 * Reallocating and trying again (with the exact amount we need)
+-	 * would be nice, but then we need to somehow limit the size
+-	 * allocated based on the available memory and the limits of
+-	 * kmalloc - we don't want a kmalloc() failure of a huge value to
+-	 * prevent us from finding any LUNs on this target.
+ 	 */
+-	length = (max_scsi_report_luns + 1) * sizeof(struct scsi_lun);
+-	lun_data = kmalloc(length, GFP_ATOMIC |
+-			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
+-	if (!lun_data) {
++	if (max_scsi_report_luns > INITIAL_MAX_REPORT_LUNS)
++		length = (INITIAL_MAX_REPORT_LUNS + 1) *
++			sizeof(struct scsi_lun);
++	else
++		length = (max_scsi_report_luns + 1) *
++			sizeof(struct scsi_lun);
++
++	first_lun_data = kmalloc(length, GFP_ATOMIC |
++				 (sdev->host->unchecked_isa_dma ?
++				 __GFP_DMA : 0));
++	if (!first_lun_data) {
+ 		printk(ALLOC_FAILURE_MSG, __func__);
+ 		goto out;
+ 	}
+ 
+-	result = scsi_do_report_luns(sdev, length, lun_data, devname);
++	result = scsi_do_report_luns(sdev, length, first_lun_data, devname);
+ 
+ 	if (result) {
+ 		/*
+ 		 * The device probably does not support a REPORT LUN command
+ 		 */
++		lun_data = first_lun_data;
+ 		ret = 1;
+ 		goto out_err;
+ 	}
+ 
+ 	/*
+-	 * Get the length from the first four bytes of lun_data.
++	 * Get the length from the first four bytes of first_lun_data.
+ 	 */
+-	data = (u8 *) lun_data->scsi_lun;
++	data = (u8 *) first_lun_data->scsi_lun;
+ 	length = ((data[0] << 24) | (data[1] << 16) |
+ 		  (data[2] << 8) | (data[3] << 0));
+ 
+-	num_luns = (length / sizeof(struct scsi_lun));
+-	if (num_luns > max_scsi_report_luns) {
++	num_luns_reported = (length / sizeof(struct scsi_lun));
++
++	if (num_luns_reported > max_scsi_report_luns) {
++		num_luns = max_scsi_report_luns;
++		length = num_luns * sizeof(struct scsi_lun);
+ 		printk(KERN_WARNING "scsi: On %s only %d (max_scsi_report_luns)"
+ 		       " of %d luns reported, try increasing"
+-		       " max_scsi_report_luns.\n", devname,
+-		       max_scsi_report_luns, num_luns);
+-		num_luns = max_scsi_report_luns;
++		       " max_report_luns parameter.\n", devname,
++		       max_scsi_report_luns, num_luns_reported);
++	} else {
++		num_luns = num_luns_reported;
++	}
++
++	if (num_luns > INITIAL_MAX_REPORT_LUNS) {
++		/*
++		 * add one for the header
++		 */
++		length = length + sizeof(struct scsi_lun);
++		second_lun_data = kmalloc(length, GFP_ATOMIC |
++					  (sdev->host->unchecked_isa_dma ?
++					  __GFP_DMA : 0));
++		if (!second_lun_data) {
++			num_luns = INITIAL_MAX_REPORT_LUNS;
++			lun_data = first_lun_data;
++			printk(ALLOC_FAILURE_MSG, __func__);
++			printk(KERN_WARNING "scsi: On %s %d of %d luns reported.\n",
++			       devname, num_luns,
++			       num_luns_reported);
++		} else {
++			kfree(first_lun_data);
++			lun_data = second_lun_data;
++			result = scsi_do_report_luns(sdev, length,
++						     lun_data, devname);
++			if (result) {
++				ret = 1;
++				goto out_err;
++			} else {
++				/*
++				 * Get the length from the first four bytes
++				 * of second_lun_data.
++				 */
++				data = (u8 *) lun_data->scsi_lun;
++				length = ((data[0] << 24) | (data[1] << 16) |
++				  (data[2] << 8) | (data[3] << 0));
++
++				num_luns = (length / sizeof(struct scsi_lun));
++			}
++		}
++	} else {
++		lun_data = first_lun_data;
+ 	}
+ 
+ 	SCSI_LOG_SCAN_BUS(3, sdev_printk (KERN_INFO, sdev,
+-- 
+1.7.11.7
 
-will do ;-)
-
-> > Input/output error - /sys/devices/system/memory/soft_offline_page
-> > Input/output error - /sys/devices/system/memory/hard_offline_page
->=20
-> These both should be mode 0400, not 0644, they have no 'show' attribute,
-> that's a bug, care to make up a patch that I can take?  Or I can, let me
-> know.
-
-sure, will send in a bit.
-
-> > Invalid argument - /sys/devices/virtual/net/lo/speed
-> > Invalid argument - /sys/devices/virtual/net/lo/duplex
->=20
-> Ask the network developers, odds are, the loopback device doesn't really
-> have a speed :)
-
-right ;-)
-
-> > No such device or address - /sys/devices/virtual/block/loop0/trace/pid
-> > No such device or address - /sys/devices/virtual/block/loop0/trace/end_=
-lba
-> > No such device or address - /sys/devices/virtual/block/loop0/trace/enab=
-le
-> > No such device or address - /sys/devices/virtual/block/loop0/trace/act_=
-mask
-> > No such device or address - /sys/devices/virtual/block/loop0/trace/star=
-t_lba
->=20
-> Hm, these show up for virtual block devices as well, maybe they aren't
-> scsi specific, but rather block specific, go poke the block developers
-> then.
-
-yeah, I was looking into these a while ago. They're created by
-blk_trace_init_sysfs() which is called by blk_register_queue() but I
-wonder if we couldn't defer the creation of those so that:
-
-sysfs_blk_trace_attr_show():
-
-1639         bdev =3D bdget(part_devt(p));
-1640         if (bdev =3D=3D NULL)
-1641                 goto out;
-1642=20
-1643         q =3D blk_trace_get_queue(bdev);
-1644         if (q =3D=3D NULL)
-1645                 goto out_bdput;
-
-never fail (meaning they could be removed), adding some block folks to
-the loop.
-
---=20
-balbi
-
---0IvGJv3f9h+YhkrH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRIncJAAoJEIaOsuA1yqREDr0P/jIuEk5NZM1ZXoLJ7VHyYa14
-ryQ6bQdJI8GJ0GgGTpy9VYHPmtKOpoidQ8xB8fMtuBdEvFYrwHu+5QmtNSSMAjbV
-lYs/J6q0jIlxvLQecDEER6xZFvm4YiNRiDgwgARB8xc74HukbtLbM5XSIiyOR5cc
-u7ue0ZACpDznT9j0/CvR6F/k1wSsCwsf6qJS1KH69ro7t/0XbpykbDVeBZAAczCk
-bnIoSP1b9auWOiFxObVBXNWie2Uf8NAE0Y9RaF91FpChgklsQc2kMXZCMTfPd2Lc
-Q4kSi1Hu+epdSzS3y20mAMOnH1EdWnAsCUikZYXfduQVXY60bdiwie4ejy5eNkTJ
-w5SLGuTc3Jd3sY65kxApOfCLi8396pEi6/Ru6gSr/3o77cgtQPkv6/SGiufzLjGh
-xlOau8TEbAEkA38vmyIZoTTTNVPeRo0q3jCXVmzD6Wn3p/iQLUAHx7FqQ7FLhd5a
-+ipFbKN5wvU0tEKxNrnm3QXEzVYEB0IQMMZsrXMykKdVDADccIDNtgZ9NAmAdUeV
-FdN6hjZMunh1akvKVnwcETy6aOQhWzFFKTL2oVgMrDvW52gjd6Hh1QS5bAs3RoWH
-0/57uC8buGLWCMVcNtJdbeshPbdMN8Po7QyOpQK32w7iXXuQFOE1ScbcFWSgdRYw
-hkNmCY0YtkQ5iHC+LVPP
-=Z36/
------END PGP SIGNATURE-----
-
---0IvGJv3f9h+YhkrH--
