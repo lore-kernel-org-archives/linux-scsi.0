@@ -1,77 +1,70 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v9 4/4] sd: change to auto suspend mode
-Date: Mon, 18 Feb 2013 11:20:39 +0800
-Message-ID: <20130218032039.GA25348@aaronlu.sh.intel.com>
-References: <5111BBA1.4010200@intel.com>
- <Pine.LNX.4.44L0.1302061048180.1893-100000@iolanthe.rowland.org>
+From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Subject: Re: [PATCH v3 0/5] virtio-scsi multiqueue
+Date: Mon, 18 Feb 2013 17:32:17 +0800
+Message-ID: <5121F521.6080300@cn.fujitsu.com>
+References: <1360674391-2661-1-git-send-email-pbonzini@redhat.com>
+Reply-To: gaowanlong@cn.fujitsu.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1302061048180.1893-100000@iolanthe.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1360674391-2661-1-git-send-email-pbonzini@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Feb 06, 2013 at 10:51:19AM -0500, Alan Stern wrote:
-> On Wed, 6 Feb 2013, Aaron Lu wrote:
+On 02/12/2013 09:06 PM, Paolo Bonzini wrote:
+> This series implements virtio-scsi queue steering, which gives
+> performance improvements of up to 50% (measured both with QEMU and
+> tcm_vhost backends).  The patches build on top of the new virtio APIs
+> at http://permalink.gmane.org/gmane.linux.kernel.virtualization/18431;
+> the new API simplifies the locking of the virtio-scsi driver nicely,
+> thus it makes sense to require them as a prerequisite.
 > 
-> > > The "if (err == -EAGAIN)" test and the call to pm_schedule_suspend seem
-> > > to have been dropped since v8 of this series.  It looks like they ought
-> > > to be moved into sdev_runtime_suspend.
-> > 
-> > I thought they were no longer needed...
+> Changes from the previous post, which can be found at
+> http://permalink.gmane.org/gmane.linux.kernel.virtualization/17869:
 > 
-> You did not mention this in the patch description.
-
-Sorry about that.
-
+> - patches 1 and 2 ("virtio: add functions for piecewise addition of
+>   buffers", "virtio-scsi: use functions for piecewise composition of
+>   buffers") split into their own series
 > 
-> > For sd, we have request based rutime PM and the PM core will always try
-> > to autosuspend the device with the timer; and for sr, the poll will
-> > trigger suspend constantly.
+> - new cleanup patch "virtio-scsi: push vq lock/unlock into virtscsi_vq_done"
 > 
-> What if the poll has been disabled?
+> - reorganized code to move ACCESS_ONCE in a clearer place
 > 
-> > And for both, we don't return -EAGAIN anyway.
-> > So I suppose that code is not necessary?
+> - included Wanlong Gao's CPU hotplug patches
 > 
-> You could replace it with WARN_ON(err == -EAGAIN).  That way if some 
-> SCSI driver does return -EAGAIN in the future, people will know 
-> something is wrong.
+> Ok for 3.9?  It would probably be easier to get it in via Rusty's tree
+> because of the prerequisites.  James, can I get your Acked-by?
 
-Placing a WARN_ON there seems to suggest drivers should not return
--EAGAIN, so I think I'll just add back those dropped code to
-sdev_runtime_suspend as you have suggested like this:
+I can't apply this series on top of Rusty's virtio-next, I missed something
+or needed rebase them ?
 
-static int sdev_runtime_suspend(struct device *dev)
-{
-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-	int (*cb)(struct device *) = pm ? pm->runtime_suspend : NULL;
-	struct scsi_device *sdev = to_scsi_device(dev);
-	int ret;
-
-	if (sdev->request_queue->dev)
-		return sdev_blk_runtime_suspend(sdev, cb);
-
-	ret = scsi_dev_type_suspend(dev, cb);
-	if (ret == -EAGAIN)
-		pm_schedule_suspend(dev, jiffies_to_msecs(
-					round_jiffies_up_relative(HZ/10)));
-	return ret;
-}
-
-Does this look OK?
+Thanks,
+Wanlong Gao
 
 > 
-> > BTW, I'll be on vocation till 02/17, and I don't have access to the
-> > internet in my hometown, but please feel free to drop any comments and
-> > I'll check them when I get back.
+> Paolo
 > 
-> I'm going on vacation next week too.  Enjoy your trip.
-
-Thanks, the trip was great.
-
--Aaron
-
+> Paolo Bonzini (4):
+>   virtio-scsi: redo allocation of target data
+>   virtio-scsi: pass struct virtio_scsi to virtqueue completion function
+>   virtio-scsi: push vq lock/unlock into virtscsi_vq_done
+>   virtio-scsi: introduce multiqueue support
+> 
+> Wanlong Gao (1):
+>   virtio-scsi: reset virtqueue affinity when doing cpu hotplug
+> 
+>  drivers/scsi/virtio_scsi.c |  360 +++++++++++++++++++++++++++++++++++---------
+>  1 files changed, 292 insertions(+), 68 deletions(-)
+> 
+> 
