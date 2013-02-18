@@ -1,14 +1,14 @@
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
 Subject: Re: [PATCH v3 0/5] virtio-scsi multiqueue
-Date: Mon, 18 Feb 2013 17:32:17 +0800
-Message-ID: <5121F521.6080300@cn.fujitsu.com>
+Date: Mon, 18 Feb 2013 11:05:13 +0100
+Message-ID: <5121FCD9.6010705@redhat.com>
 References: <1360674391-2661-1-git-send-email-pbonzini@redhat.com>
-Reply-To: gaowanlong@cn.fujitsu.com
+	<5121F521.6080300@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1360674391-2661-1-git-send-email-pbonzini@redhat.com>
+In-Reply-To: <5121F521.6080300@cn.fujitsu.com>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -18,53 +18,17 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Paolo Bonzini <pbonzini@redhat.com>
+To: gaowanlong@cn.fujitsu.com
 Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/12/2013 09:06 PM, Paolo Bonzini wrote:
-> This series implements virtio-scsi queue steering, which gives
-> performance improvements of up to 50% (measured both with QEMU and
-> tcm_vhost backends).  The patches build on top of the new virtio APIs
-> at http://permalink.gmane.org/gmane.linux.kernel.virtualization/18431;
-> the new API simplifies the locking of the virtio-scsi driver nicely,
-> thus it makes sense to require them as a prerequisite.
-> 
-> Changes from the previous post, which can be found at
-> http://permalink.gmane.org/gmane.linux.kernel.virtualization/17869:
-> 
-> - patches 1 and 2 ("virtio: add functions for piecewise addition of
->   buffers", "virtio-scsi: use functions for piecewise composition of
->   buffers") split into their own series
-> 
-> - new cleanup patch "virtio-scsi: push vq lock/unlock into virtscsi_vq_done"
-> 
-> - reorganized code to move ACCESS_ONCE in a clearer place
-> 
-> - included Wanlong Gao's CPU hotplug patches
-> 
-> Ok for 3.9?  It would probably be easier to get it in via Rusty's tree
-> because of the prerequisites.  James, can I get your Acked-by?
+Il 18/02/2013 10:32, Wanlong Gao ha scritto:
+>> > Ok for 3.9?  It would probably be easier to get it in via Rusty's tree
+>> > because of the prerequisites.  James, can I get your Acked-by?
+> I can't apply this series on top of Rusty's virtio-next, I missed something
+> or needed rebase them ?
 
-I can't apply this series on top of Rusty's virtio-next, I missed something
-or needed rebase them ?
+It's on top of the patches at
+http://permalink.gmane.org/gmane.linux.kernel.virtualization/18431.
 
-Thanks,
-Wanlong Gao
-
-> 
-> Paolo
-> 
-> Paolo Bonzini (4):
->   virtio-scsi: redo allocation of target data
->   virtio-scsi: pass struct virtio_scsi to virtqueue completion function
->   virtio-scsi: push vq lock/unlock into virtscsi_vq_done
->   virtio-scsi: introduce multiqueue support
-> 
-> Wanlong Gao (1):
->   virtio-scsi: reset virtqueue affinity when doing cpu hotplug
-> 
->  drivers/scsi/virtio_scsi.c |  360 +++++++++++++++++++++++++++++++++++---------
->  1 files changed, 292 insertions(+), 68 deletions(-)
-> 
-> 
+Paolo
