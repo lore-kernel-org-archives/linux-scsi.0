@@ -1,42 +1,43 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: SYSFS "errors"
-Date: Mon, 18 Feb 2013 13:54:34 -0800
-Message-ID: <20130218215434.GB16794@kroah.com>
-References: <20130218153316.GA2663@arwen.pp.htv.fi>
- <20130218155012.GA30974@kroah.com>
- <20130218155215.GB2663@arwen.pp.htv.fi>
- <20130218171334.GA31329@kroah.com>
- <20130218172700.GH2663@arwen.pp.htv.fi>
- <20130218174916.GA2070@kroah.com>
- <20130218184633.GC10755@arwen.pp.htv.fi>
- <20130218164638.7cb53baa@redhat.com>
- <20130218200542.GB20137@arwen.pp.htv.fi>
- <20130218184742.5a4c3c06@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v9 4/4] sd: change to auto suspend mode
+Date: Mon, 18 Feb 2013 16:55:35 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1302181655110.6790-100000@netrider.rowland.org>
+References: <20130218032039.GA25348@aaronlu.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130218184742.5a4c3c06@redhat.com>
+In-Reply-To: <20130218032039.GA25348@aaronlu.sh.intel.com>
 Sender: linux-pm-owner@vger.kernel.org
-To: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: balbi@ti.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>, Ingo Molnar <mingo@redhat.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, davem@davemloft.net, netdev@vger.kernel.org, Doug Thompson <dougthompson@xmission.com>, linux-edac@vger.kernel.org, rjw@sisk.pl, linux-pm@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 18, 2013 at 06:47:42PM -0300, Mauro Carvalho Chehab wrote:
-> In the past, the sysfs node creation was done using the raw sysfs support.
-> Doing dynamic creation with the old code were much more complex. I guess
-> that's the reason why the code was written this way. Now that the code 
-> uses struct device, it shouldn't be hard to change the code to only 
-> create this attribute if the device has support for scrub rate setting.
+On Mon, 18 Feb 2013, Aaron Lu wrote:
+
+> Placing a WARN_ON there seems to suggest drivers should not return
+> -EAGAIN, so I think I'll just add back those dropped code to
+> sdev_runtime_suspend as you have suggested like this:
 > 
-> Yet, that would change the userspace API. I'm not sure what
-> applications would rely on the current behavior. So, changing it
-> would require some investigation in order to avoid regressions.
+> static int sdev_runtime_suspend(struct device *dev)
+> {
+> 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+> 	int (*cb)(struct device *) = pm ? pm->runtime_suspend : NULL;
+> 	struct scsi_device *sdev = to_scsi_device(dev);
+> 	int ret;
+> 
+> 	if (sdev->request_queue->dev)
+> 		return sdev_blk_runtime_suspend(sdev, cb);
+> 
+> 	ret = scsi_dev_type_suspend(dev, cb);
+> 	if (ret == -EAGAIN)
+> 		pm_schedule_suspend(dev, jiffies_to_msecs(
+> 					round_jiffies_up_relative(HZ/10)));
+> 	return ret;
+> }
+> 
+> Does this look OK?
 
-Because sysfs is "one value per file" the lack of a file showing up
-shouldn't cause any userspace tools any problems, that is why we did
-things this way.
+Yes.
 
-But, of course, userspace programmers do know how to mess things up...
+Alan Stern
 
-greg k-h
