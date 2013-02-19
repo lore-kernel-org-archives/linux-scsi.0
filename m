@@ -1,58 +1,158 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 09/21] fcoe: prep work to start consolidate the usage of
- fcoe_netdev
-Date: Tue, 19 Feb 2013 11:31:20 -0800
-Message-ID: <20130219193120.10192.42030.stgit@fritz>
+Subject: [PATCH 08/21] libfc, libfcoe,
+ fcoe: Convert debug_logging macros to pr_info
+Date: Tue, 19 Feb 2013 11:31:15 -0800
+Message-ID: <20130219193115.10192.83811.stgit@fritz>
 References: <20130219193031.10192.33777.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:29277 "EHLO mga03.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:27119 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933343Ab3BSTbV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2013 14:31:21 -0500
+	id S933343Ab3BSTbQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2013 14:31:16 -0500
 In-Reply-To: <20130219193031.10192.33777.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>, Marcus Dennis <marcusx.e.dennis@intel.com>, Yi Zou <yi.zou@intel.com>
+Cc: Marcus Dennis <marcusx.e.dennis@intel.com>
 
-From: Yi Zou <yi.zou@intel.com>
+Convert libfc, libfcoe and fcoe's debug_logging macros
+to use pr_info() instead of printk(KERN_INFO, ...). checkpatch.pl
+now complains about this, so convert libfcoe to preferred
+method.
 
-Currently, in the default kernel fcoe driver, it is needed to get to the underlying
-private per fcoe transport's private structure, e.g., fcoe_interface in
-fcoe.ko, and returns the associated netdev. The similar logic exists in other
-fcoe drivers, e.g., bnx2fc, so we add a function pointer into the common
-fcoe_port struct to allow individual fcoe transport implementaion (fcoe
-and bnx2fc) to get the corresponding netdev associated with a give lport.
-
-Then a inline fcoe_get_netdev() is added as part of libfcoe for all underlying
-fcoe transport drivers to use regardless of its individual fcoe transport
-driver, and also allows move more common code such as fcoe_link_speed_update or
-fcoe_ctlr_get_lesb to be in libfcoe, rather than specific to fcoe.
-
-This patch is a prep work that adds aforementioned fucntion pointer, and
-followed by the actual code changes to make use of it.
-
-Signed-off-by: Yi Zou <yi.zou@intel.com>
-Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Tested-by: Marcus Dennis <marcusx.e.dennis@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
+Tested-by: Marcus Dennis <marcusx.e.dennis@intel.com>
 ---
- include/scsi/libfcoe.h |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/fcoe/fcoe.h      |    6 +++---
+ drivers/scsi/fcoe/libfcoe.h   |    9 ++++-----
+ drivers/scsi/libfc/fc_libfc.h |   38 +++++++++++++++++++-------------------
+ 3 files changed, 26 insertions(+), 27 deletions(-)
 
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 6add37a..52bba71 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -351,6 +351,7 @@ struct fcoe_port {
- 	struct timer_list     timer;
- 	struct work_struct    destroy_work;
- 	u8		      data_src_addr[ETH_ALEN];
-+	struct net_device * (*get_netdev)(const struct fc_lport *lport);
- };
- void fcoe_clean_pending_queue(struct fc_lport *);
- void fcoe_check_wait_queue(struct fc_lport *lport, struct sk_buff *skb);
+diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
+index b42dc32..2b53672 100644
+--- a/drivers/scsi/fcoe/fcoe.h
++++ b/drivers/scsi/fcoe/fcoe.h
+@@ -55,12 +55,12 @@ do {                                                            	\
+ 
+ #define FCOE_DBG(fmt, args...)						\
+ 	FCOE_CHECK_LOGGING(FCOE_LOGGING,				\
+-			   printk(KERN_INFO "fcoe: " fmt, ##args);)
++			   pr_info("fcoe: " fmt, ##args);)
+ 
+ #define FCOE_NETDEV_DBG(netdev, fmt, args...)			\
+ 	FCOE_CHECK_LOGGING(FCOE_NETDEV_LOGGING,			\
+-			   printk(KERN_INFO "fcoe: %s: " fmt,	\
+-				  netdev->name, ##args);)
++			   pr_info("fcoe: %s: " fmt,		\
++				   netdev->name, ##args);)
+ 
+ /**
+  * struct fcoe_interface - A FCoE interface
+diff --git a/drivers/scsi/fcoe/libfcoe.h b/drivers/scsi/fcoe/libfcoe.h
+index 63d8fae..d3bb16d 100644
+--- a/drivers/scsi/fcoe/libfcoe.h
++++ b/drivers/scsi/fcoe/libfcoe.h
+@@ -17,17 +17,16 @@ do {							\
+ 
+ #define LIBFCOE_DBG(fmt, args...)					\
+ 	LIBFCOE_CHECK_LOGGING(LIBFCOE_LOGGING,				\
+-			      printk(KERN_INFO "libfcoe: " fmt, ##args);)
++			      pr_info("libfcoe: " fmt, ##args);)
+ 
+ #define LIBFCOE_FIP_DBG(fip, fmt, args...)				\
+ 	LIBFCOE_CHECK_LOGGING(LIBFCOE_FIP_LOGGING,			\
+-			      printk(KERN_INFO "host%d: fip: " fmt,	\
+-				     (fip)->lp->host->host_no, ##args);)
++			      pr_info("host%d: fip: " fmt,		\
++				      (fip)->lp->host->host_no, ##args);)
+ 
+ #define LIBFCOE_TRANSPORT_DBG(fmt, args...)				\
+ 	LIBFCOE_CHECK_LOGGING(LIBFCOE_TRANSPORT_LOGGING,		\
+-			      printk(KERN_INFO "%s: " fmt,		\
+-				     __func__, ##args);)
++			      pr_info("%s: " fmt, __func__, ##args);)
+ 
+ #define LIBFCOE_SYSFS_DBG(cdev, fmt, args...)				\
+ 	LIBFCOE_CHECK_LOGGING(LIBFCOE_SYSFS_LOGGING,			\
+diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
+index c2830cc..b74189d 100644
+--- a/drivers/scsi/libfc/fc_libfc.h
++++ b/drivers/scsi/libfc/fc_libfc.h
+@@ -41,25 +41,25 @@ extern unsigned int fc_debug_logging;
+ 
+ #define FC_LIBFC_DBG(fmt, args...)					\
+ 	FC_CHECK_LOGGING(FC_LIBFC_LOGGING,				\
+-			 printk(KERN_INFO "libfc: " fmt, ##args))
++			 pr_info("libfc: " fmt, ##args))
+ 
+ #define FC_LPORT_DBG(lport, fmt, args...)				\
+ 	FC_CHECK_LOGGING(FC_LPORT_LOGGING,				\
+-			 printk(KERN_INFO "host%u: lport %6.6x: " fmt,	\
+-				(lport)->host->host_no,			\
+-				(lport)->port_id, ##args))
++			 pr_info("host%u: lport %6.6x: " fmt,		\
++				 (lport)->host->host_no,		\
++				 (lport)->port_id, ##args))
+ 
+-#define FC_DISC_DBG(disc, fmt, args...)				\
+-	FC_CHECK_LOGGING(FC_DISC_LOGGING,			\
+-			 printk(KERN_INFO "host%u: disc: " fmt,	\
+-				fc_disc_lport(disc)->host->host_no,	\
+-				##args))
++#define FC_DISC_DBG(disc, fmt, args...)					\
++	FC_CHECK_LOGGING(FC_DISC_LOGGING,				\
++			 pr_info("host%u: disc: " fmt,			\
++				 fc_disc_lport(disc)->host->host_no,	\
++				 ##args))
+ 
+ #define FC_RPORT_ID_DBG(lport, port_id, fmt, args...)			\
+ 	FC_CHECK_LOGGING(FC_RPORT_LOGGING,				\
+-			 printk(KERN_INFO "host%u: rport %6.6x: " fmt,	\
+-				(lport)->host->host_no,			\
+-				(port_id), ##args))
++			 pr_info("host%u: rport %6.6x: " fmt,		\
++				 (lport)->host->host_no,		\
++				 (port_id), ##args))
+ 
+ #define FC_RPORT_DBG(rdata, fmt, args...)				\
+ 	FC_RPORT_ID_DBG((rdata)->local_port, (rdata)->ids.port_id, fmt, ##args)
+@@ -70,13 +70,13 @@ extern unsigned int fc_debug_logging;
+ 		if ((pkt)->seq_ptr) {					\
+ 			struct fc_exch *_ep = NULL;			\
+ 			_ep = fc_seq_exch((pkt)->seq_ptr);		\
+-			printk(KERN_INFO "host%u: fcp: %6.6x: "		\
++			pr_info("host%u: fcp: %6.6x: "			\
+ 				"xid %04x-%04x: " fmt,			\
+ 				(pkt)->lp->host->host_no,		\
+ 				(pkt)->rport->port_id,			\
+ 				(_ep)->oxid, (_ep)->rxid, ##args);	\
+ 		} else {						\
+-			printk(KERN_INFO "host%u: fcp: %6.6x: " fmt,	\
++			pr_info("host%u: fcp: %6.6x: " fmt,		\
+ 				(pkt)->lp->host->host_no,		\
+ 				(pkt)->rport->port_id, ##args);		\
+ 		}							\
+@@ -84,14 +84,14 @@ extern unsigned int fc_debug_logging;
+ 
+ #define FC_EXCH_DBG(exch, fmt, args...)					\
+ 	FC_CHECK_LOGGING(FC_EXCH_LOGGING,				\
+-			 printk(KERN_INFO "host%u: xid %4x: " fmt,	\
+-				(exch)->lp->host->host_no,		\
+-				exch->xid, ##args))
++			 pr_info("host%u: xid %4x: " fmt,		\
++				 (exch)->lp->host->host_no,		\
++				 exch->xid, ##args))
+ 
+ #define FC_SCSI_DBG(lport, fmt, args...)				\
+ 	FC_CHECK_LOGGING(FC_SCSI_LOGGING,				\
+-			 printk(KERN_INFO "host%u: scsi: " fmt,		\
+-				(lport)->host->host_no,	##args))
++			 pr_info("host%u: scsi: " fmt,			\
++				 (lport)->host->host_no, ##args))
+ 
+ /*
+  * FC-4 Providers.
 
