@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/4] scsi_scan: Fixup scsilun_to_int()
-Date: Tue, 19 Feb 2013 09:18:00 +0100
-Message-ID: <1361261883-41467-2-git-send-email-hare@suse.de>
+Subject: [PATCH 4/4] scsi: Remove CONFIG_SCSI_MULTI_LUN
+Date: Tue, 19 Feb 2013 09:18:03 +0100
+Message-ID: <1361261883-41467-5-git-send-email-hare@suse.de>
 References: <1361261883-41467-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39601 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:39605 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932247Ab3BSISJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S932259Ab3BSISJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 19 Feb 2013 03:18:09 -0500
 In-Reply-To: <1361261883-41467-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,47 +14,106 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Bottomley <jbottomley@parallels.com>, Jeremy Linton <jlinton@tributary.com>, Robert Elliott <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.de>
 
-scsilun_to_int() has an error which prevents it from generating
-correct LUN numbers for 64bit values.
-Also we should remove the misleading comment about portions of
-the LUN being ignored; the initiator should treat the LUN as
-an opaque value.
+Obsolete now; either use 'max_lun' if the host supports only a
+limited number of LUNs or BLIST_NOLUN if the target has problems
+addressing more than one LUN.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_scan.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/scsi/Kconfig     |   14 --------------
+ drivers/scsi/dc395x.c    |    9 +--------
+ drivers/scsi/ncr53c8xx.h |    4 ----
+ drivers/scsi/scsi_scan.c |    4 ----
+ 4 files changed, 1 insertions(+), 30 deletions(-)
 
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 142f632..9f43fd4 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -197,20 +197,6 @@ config SCSI_ENCLOSURE
+ 	  it has an enclosure device.  Selecting this option will just allow
+ 	  certain enclosure conditions to be reported and is not required.
+ 
+-config SCSI_MULTI_LUN
+-	bool "Probe all LUNs on each SCSI device"
+-	depends on SCSI
+-	help
+-	  Some devices support more than one LUN (Logical Unit Number) in order
+-	  to allow access to several media, e.g. CD jukebox, USB card reader,
+-	  mobile phone in mass storage mode. This option forces the kernel to
+-	  probe for all LUNs by default. This setting can be overriden by
+-	  max_luns boot/module parameter. Note that this option does not affect
+-	  devices conforming to SCSI-3 or higher as they can explicitely report
+-	  their number of LUNs. It is safe to say Y here unless you have one of
+-	  those rare devices which reacts in an unexpected way when probed for
+-	  multiple LUNs.
+-
+ config SCSI_CONSTANTS
+ 	bool "Verbose SCSI error reporting (kernel size +=12K)"
+ 	depends on SCSI
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 9acdb9c..733f11f 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -517,9 +517,7 @@ static struct ParameterData cfg_data[] = {
+ 		CFG_PARAM_UNSET,
+ 		0,
+ 		0x2f,
+-#ifdef CONFIG_SCSI_MULTI_LUN
+-			NAC_SCANLUN |
+-#endif
++		NAC_SCANLUN |
+ 		NAC_GT2DRIVES | NAC_GREATER_1G | NAC_POWERON_SCSI_RESET
+ 			/*| NAC_ACTIVE_NEG*/,
+ 		NAC_GT2DRIVES | NAC_GREATER_1G | NAC_POWERON_SCSI_RESET | 0x08
+@@ -4432,15 +4430,10 @@ static void adapter_init_scsi_host(struct Scsi_Host *host)
+ 	if (host->max_id - 1 == eeprom->scsi_id)
+ 		host->max_id--;
+ 
+-#ifdef CONFIG_SCSI_MULTI_LUN
+ 	if (eeprom->channel_cfg & NAC_SCANLUN)
+ 		host->max_lun = 8;
+ 	else
+ 		host->max_lun = 1;
+-#else
+-	host->max_lun = 1;
+-#endif
+-
+ }
+ 
+ 
+diff --git a/drivers/scsi/ncr53c8xx.h b/drivers/scsi/ncr53c8xx.h
+index 0e008da..02901c5 100644
+--- a/drivers/scsi/ncr53c8xx.h
++++ b/drivers/scsi/ncr53c8xx.h
+@@ -264,11 +264,7 @@
+ #define SCSI_NCR_SG_TABLESIZE	(SCSI_NCR_MAX_SCATTER)
+ #define SCSI_NCR_TIMER_INTERVAL	(HZ)
+ 
+-#if 1 /* defined CONFIG_SCSI_MULTI_LUN */
+ #define SCSI_NCR_MAX_LUN	(16)
+-#else
+-#define SCSI_NCR_MAX_LUN	(1)
+-#endif
+ 
+ /*
+  *  IO functions definition for big/little endian CPU support.
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3e58b22..4f315f5 100644
+index dd25df7..53c8f79 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -1228,14 +1228,11 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
-  *     truncation before using this function.
-  *
-  * Notes:
-- *     The struct scsi_lun is assumed to be four levels, with each level
-- *     effectively containing a SCSI byte-ordered (big endian) short; the
-- *     addressing bits of each level are ignored (the highest two bits).
-  *     For a description of the LUN format, post SCSI-3 see the SCSI
-  *     Architecture Model, for SCSI-3 see the SCSI Controller Commands.
-  *
-- *     Given a struct scsi_lun of: 0a 04 0b 03 00 00 00 00, this function returns
-- *     the integer: 0x0b030a04
-+ *     Given a struct scsi_lun of: 0a 04 0b 03 00 00 00 00, this function
-+ *     returns the integer: 0x0b030a04
-  **/
- int scsilun_to_int(struct scsi_lun *scsilun)
- {
-@@ -1244,7 +1241,7 @@ int scsilun_to_int(struct scsi_lun *scsilun)
+@@ -81,11 +81,7 @@ static const char *scsi_null_device_strs = "nullnullnullnull";
  
- 	lun = 0;
- 	for (i = 0; i < sizeof(lun); i += 2)
--		lun = lun | (((scsilun->scsi_lun[i] << 8) |
-+		lun = lun | (((scsilun->scsi_lun[i] << ((i + 1) * 8)) |
- 			      scsilun->scsi_lun[i + 1]) << (i * 8));
- 	return lun;
- }
+ #define MAX_SCSI_LUNS	512
+ 
+-#ifdef CONFIG_SCSI_MULTI_LUN
+ static uint64_t max_scsi_luns = MAX_SCSI_LUNS;
+-#else
+-static uint64_t max_scsi_luns = 1;
+-#endif
+ 
+ module_param_named(max_luns, max_scsi_luns, ullong, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(max_luns,
 -- 
 1.7.4.2
 
