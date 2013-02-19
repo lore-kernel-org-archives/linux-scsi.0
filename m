@@ -1,65 +1,46 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 3/4] scsi: use 64-bit value for 'max_luns'
-Date: Tue, 19 Feb 2013 16:33:46 +0000
-Message-ID: <1361291625.2382.54.camel@dabdike.int.hansenpartnership.com>
-References: <1361261883-41467-1-git-send-email-hare@suse.de>
-	 <1361261883-41467-4-git-send-email-hare@suse.de>
-	 <26C9F254-62B6-460A-BEB3-BE41516B5186@cs.wisc.edu>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v9 3/4] block: implement runtime pm strategy
+Date: Tue, 19 Feb 2013 11:34:33 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1302191134050.2215-100000@iolanthe.rowland.org>
+References: <20130219022900.GA2285@aaronlu.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0.parallels.com ([199.115.104.20]:34595 "EHLO
-	mx0.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758355Ab3BSQee convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2013 11:34:34 -0500
-In-Reply-To: <26C9F254-62B6-460A-BEB3-BE41516B5186@cs.wisc.edu>
-Content-Language: en-US
-Content-ID: <10D4B6B0EBB76C428167637EF56E5371@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20130219022900.GA2285@aaronlu.sh.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Christie <michaelc@cs.wisc.edu>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jeremy Linton <jlinton@tributary.com>, Robert Elliott <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>
 
-On Tue, 2013-02-19 at 10:30 -0600, Michael Christie wrote:
-> On Feb 19, 2013, at 2:18 AM, Hannes Reinecke <hare@suse.de> wrote:
+On Tue, 19 Feb 2013, Aaron Lu wrote:
+
+> Hi Alan,
 > 
-> > diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-> > index b44c1cf..95105c0 100644
-> > --- a/drivers/scsi/cxgbi/libcxgbi.c
-> > +++ b/drivers/scsi/cxgbi/libcxgbi.c
-> > @@ -245,7 +245,7 @@ void cxgbi_hbas_remove(struct cxgbi_device *cdev)
-> > }
-> > EXPORT_SYMBOL_GPL(cxgbi_hbas_remove);
+> On Tue, Feb 05, 2013 at 04:03:15PM +0800, Aaron Lu wrote:
+> > From: Lin Ming <ming.m.lin@intel.com>
 > > 
-> > -int cxgbi_hbas_add(struct cxgbi_device *cdev, unsigned int max_lun,
-> > +int cxgbi_hbas_add(struct cxgbi_device *cdev, uint64_t max_lun,
-> > 		unsigned int max_id, struct scsi_host_template *sht,
-> > 		struct scsi_transport_template *stt)
-> > {
-> > diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-> > index 80fa99b..d3b27f8 100644
-> > --- a/drivers/scsi/cxgbi/libcxgbi.h
-> > +++ b/drivers/scsi/cxgbi/libcxgbi.h
-> > @@ -692,7 +692,7 @@ struct cxgbi_device *cxgbi_device_register(unsigned int, unsigned int);
-> > void cxgbi_device_unregister(struct cxgbi_device *);
-> > void cxgbi_device_unregister_all(unsigned int flag);
-> > struct cxgbi_device *cxgbi_device_find_by_lldev(void *);
-> > -int cxgbi_hbas_add(struct cxgbi_device *, unsigned int, unsigned int,
-> > +int cxgbi_hbas_add(struct cxgbi_device *, uint64_t, unsigned int,
-> > 			struct scsi_host_template *,
-> > 			struct scsi_transport_template *);
-> > void cxgbi_hbas_remove(struct cxgbi_device *);
-> > diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-> > index dfe90ce..9acdb9c 100644
+> > When a request is added:
+> >     If device is suspended or is suspending and the request is not a
+> >     PM request, resume the device.
+> > 
+> > When the last request finishes:
+> >     Call pm_runtime_mark_last_busy().
+> > 
+> > When pick a request:
+> >     If device is resuming/suspending, then only PM request is allowed
+> >     to go.
 > 
+> I think I should add the following words in patch 2 & 3's changelog:
 > 
-> Could it be possible to use u64, so it matches the rest of the driver
-> coding style? The rest of the driver uses the u* definitions instead f
-> the uint*_t ones.
+> The idea and API is designed by Alan Stern and described here:
+> http://marc.info/?l=linux-scsi&m=133727953625963&w=2
+> 
+> to reflect your credit if you don't object.
+> 
+> Please let me know what do you think, or if there is a better way to
+> reflect this, please feel free to let me know.
 
-In general we should use u64 for kernel internal stuff (which this is).
-uint64_t is supposed to be reserved for user interfaces.
+That's fine, go right ahead.
 
-James
+Alan Stern
 
