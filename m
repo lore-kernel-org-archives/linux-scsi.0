@@ -1,17 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 14/21] bnx2fc: use fcoe_link_speed_update() from the exported
- symbol in libfcoe
-Date: Tue, 19 Feb 2013 11:31:48 -0800
-Message-ID: <20130219193148.10192.99765.stgit@fritz>
+Subject: [PATCH 15/21] bnx2fc: use fcoe_get_lesb/fcoe_ctlr_get_lesb() directly
+ from libfcoe
+Date: Tue, 19 Feb 2013 11:31:54 -0800
+Message-ID: <20130219193154.10192.66220.stgit@fritz>
 References: <20130219193031.10192.33777.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:8111 "EHLO mga01.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:6111 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933416Ab3BSTbv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2013 14:31:51 -0500
+	id S933576Ab3BSTbz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2013 14:31:55 -0500
 In-Reply-To: <20130219193031.10192.33777.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,73 +20,99 @@ Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>, Marcus Dennis <marcusx.e.de
 
 From: Yi Zou <yi.zou@intel.com>
 
-We have fcoe_link_speed_update() in libfcoe ready for use now, take out the
-bnx2fc version which is almost the same.
+Drop the bnx2fc_xxx versions as they are basically the same.
 
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 Tested-by: Marcus Dennis <marcusx.e.dennis@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   33 ++-------------------------------
- 1 file changed, 2 insertions(+), 31 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   53 +++++--------------------------------
+ 1 file changed, 7 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 9b9ccc9..a1c687c 100644
+index a1c687c..4d5c721 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -738,35 +738,6 @@ static int bnx2fc_shost_config(struct fc_lport *lport, struct device *dev)
- 	return 0;
+@@ -93,7 +93,6 @@ static void bnx2fc_port_shutdown(struct fc_lport *lport);
+ static void bnx2fc_stop(struct bnx2fc_interface *interface);
+ static int __init bnx2fc_mod_init(void);
+ static void __exit bnx2fc_mod_exit(void);
+-static void bnx2fc_ctlr_get_lesb(struct fcoe_ctlr_device *ctlr_dev);
+ 
+ unsigned int bnx2fc_debug_level;
+ module_param_named(debug_logging, bnx2fc_debug_level, int, S_IRUGO|S_IWUSR);
+@@ -111,44 +110,6 @@ static inline struct net_device *bnx2fc_netdev(const struct fc_lport *lport)
+ 		((struct fcoe_port *)lport_priv(lport))->priv)->netdev;
  }
  
--static void bnx2fc_link_speed_update(struct fc_lport *lport)
+-/**
+- * bnx2fc_get_lesb() - Fill the FCoE Link Error Status Block
+- * @lport: the local port
+- * @fc_lesb: the link error status block
+- */
+-static void bnx2fc_get_lesb(struct fc_lport *lport,
+-			    struct fc_els_lesb *fc_lesb)
 -{
--	struct fcoe_port *port = lport_priv(lport);
--	struct bnx2fc_interface *interface = port->priv;
--	struct net_device *netdev = interface->netdev;
--	struct ethtool_cmd ecmd;
+-	struct net_device *netdev = fcoe_get_netdev(lport);
 -
--	if (!__ethtool_get_settings(netdev, &ecmd)) {
--		lport->link_supported_speeds &=
--			~(FC_PORTSPEED_1GBIT | FC_PORTSPEED_10GBIT);
--		if (ecmd.supported & (SUPPORTED_1000baseT_Half |
--				      SUPPORTED_1000baseT_Full))
--			lport->link_supported_speeds |= FC_PORTSPEED_1GBIT;
--		if (ecmd.supported & SUPPORTED_10000baseT_Full)
--			lport->link_supported_speeds |= FC_PORTSPEED_10GBIT;
--
--		switch (ethtool_cmd_speed(&ecmd)) {
--		case SPEED_1000:
--			lport->link_speed = FC_PORTSPEED_1GBIT;
--			break;
--		case SPEED_2500:
--			lport->link_speed = FC_PORTSPEED_2GBIT;
--			break;
--		case SPEED_10000:
--			lport->link_speed = FC_PORTSPEED_10GBIT;
--			break;
--		}
--	}
+-	__fcoe_get_lesb(lport, fc_lesb, netdev);
 -}
- static int bnx2fc_link_ok(struct fc_lport *lport)
+-
+-static void bnx2fc_ctlr_get_lesb(struct fcoe_ctlr_device *ctlr_dev)
+-{
+-	struct fcoe_ctlr *fip = fcoe_ctlr_device_priv(ctlr_dev);
+-	struct net_device *netdev = fcoe_get_netdev(fip->lp);
+-	struct fcoe_fc_els_lesb *fcoe_lesb;
+-	struct fc_els_lesb fc_lesb;
+-
+-	__fcoe_get_lesb(fip->lp, &fc_lesb, netdev);
+-	fcoe_lesb = (struct fcoe_fc_els_lesb *)(&fc_lesb);
+-
+-	ctlr_dev->lesb.lesb_link_fail =
+-		ntohl(fcoe_lesb->lesb_link_fail);
+-	ctlr_dev->lesb.lesb_vlink_fail =
+-		ntohl(fcoe_lesb->lesb_vlink_fail);
+-	ctlr_dev->lesb.lesb_miss_fka =
+-		ntohl(fcoe_lesb->lesb_miss_fka);
+-	ctlr_dev->lesb.lesb_symb_err =
+-		ntohl(fcoe_lesb->lesb_symb_err);
+-	ctlr_dev->lesb.lesb_err_block =
+-		ntohl(fcoe_lesb->lesb_err_block);
+-	ctlr_dev->lesb.lesb_fcs_error =
+-		ntohl(fcoe_lesb->lesb_fcs_error);
+-}
+-EXPORT_SYMBOL(bnx2fc_ctlr_get_lesb);
+-
+ static void bnx2fc_fcf_get_vlan_id(struct fcoe_fcf_device *fcf_dev)
  {
- 	struct fcoe_port *port = lport_priv(lport);
-@@ -824,7 +795,7 @@ static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
- 	port->fcoe_pending_queue_active = 0;
- 	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long) lport);
+ 	struct fcoe_ctlr_device *ctlr_dev =
+@@ -2637,12 +2598,12 @@ module_exit(bnx2fc_mod_exit);
  
--	bnx2fc_link_speed_update(lport);
-+	fcoe_link_speed_update(lport);
+ static struct fcoe_sysfs_function_template bnx2fc_fcoe_sysfs_templ = {
+ 	.set_fcoe_ctlr_enabled = bnx2fc_ctlr_enabled,
+-	.get_fcoe_ctlr_link_fail = bnx2fc_ctlr_get_lesb,
+-	.get_fcoe_ctlr_vlink_fail = bnx2fc_ctlr_get_lesb,
+-	.get_fcoe_ctlr_miss_fka = bnx2fc_ctlr_get_lesb,
+-	.get_fcoe_ctlr_symb_err = bnx2fc_ctlr_get_lesb,
+-	.get_fcoe_ctlr_err_block = bnx2fc_ctlr_get_lesb,
+-	.get_fcoe_ctlr_fcs_error = bnx2fc_ctlr_get_lesb,
++	.get_fcoe_ctlr_link_fail = fcoe_ctlr_get_lesb,
++	.get_fcoe_ctlr_vlink_fail = fcoe_ctlr_get_lesb,
++	.get_fcoe_ctlr_miss_fka = fcoe_ctlr_get_lesb,
++	.get_fcoe_ctlr_symb_err = fcoe_ctlr_get_lesb,
++	.get_fcoe_ctlr_err_block = fcoe_ctlr_get_lesb,
++	.get_fcoe_ctlr_fcs_error = fcoe_ctlr_get_lesb,
  
- 	if (!lport->vport) {
- 		if (fcoe_get_wwn(netdev, &wwnn, NETDEV_FCOE_WWNN))
-@@ -928,7 +899,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 		BNX2FC_HBA_DBG(lport, "netevent handler - event=%s %ld\n",
- 				interface->netdev->name, event);
- 
--		bnx2fc_link_speed_update(lport);
-+		fcoe_link_speed_update(lport);
- 
- 		cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
+ 	.get_fcoe_fcf_selected = fcoe_fcf_get_selected,
+ 	.get_fcoe_fcf_vlan_id = bnx2fc_fcf_get_vlan_id,
+@@ -2749,7 +2710,7 @@ static struct libfc_function_template bnx2fc_libfc_fcn_templ = {
+ 	.elsct_send		= bnx2fc_elsct_send,
+ 	.fcp_abort_io		= bnx2fc_abort_io,
+ 	.fcp_cleanup		= bnx2fc_cleanup,
+-	.get_lesb		= bnx2fc_get_lesb,
++	.get_lesb		= fcoe_get_lesb,
+ 	.rport_event_callback	= bnx2fc_rport_event_handler,
+ };
  
 
