@@ -1,128 +1,59 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 19/21] fcoe: Fix deadlock while deleting FCoE interface with
- NPIV ports
-Date: Tue, 19 Feb 2013 11:32:15 -0800
-Message-ID: <20130219193215.10192.57597.stgit@fritz>
+Subject: [PATCH 20/21] libfcoe: Handle CVL while waiting to select an FCF
+Date: Tue, 19 Feb 2013 11:32:21 -0800
+Message-ID: <20130219193221.10192.36778.stgit@fritz>
 References: <20130219193031.10192.33777.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51807 "EHLO mga14.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:5940 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933414Ab3BSTcW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2013 14:32:22 -0500
+	id S933341Ab3BSTcX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2013 14:32:23 -0500
 In-Reply-To: <20130219193031.10192.33777.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>, Marcus Dennis <marcusx.e.dennis@intel.com>, Neerav Parikh <Neerav.Parikh@intel.com>
+Cc: Yi Zou <yi.zou@intel.com>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-From: Neerav Parikh <Neerav.Parikh@intel.com>
+From: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-This patch fixes following deadlock caused by destroying of
-an FCoE interface with active NPIV ports on that interface.
+When a CVL is received while we wait to select best FCF, we drop it
+without handling it. This causes initiator and the switch to go
+out-of-sync. Initiator proceeds selecting one of the FCFs and tries to
+send FIP FLOGI. However the switch may reject the FLOGI, as it has
+cleared its internal state, and expects the initiator to start FIP
+discovery protocol. Fix this condition by resetting the fcoe
+controller.
 
-    Call Trace:
-    [<ffffffff814b7e88>] schedule+0x64/0x66
-    [<ffffffff814b6b4f>] schedule_timeout+0x36/0xe3
-    [<ffffffff81070c55>] ? update_curr+0xd6/0x110
-    [<ffffffff81071f6b>] ? hrtick_update+0x1b/0x4d
-    [<ffffffff81072405>] ? dequeue_task_fair+0x1ca/0x1d9
-    [<ffffffff8106a369>] ? need_resched+0x1e/0x28
-    [<ffffffff814b7d14>] wait_for_common+0x9b/0xf1
-    [<ffffffff8106e7be>] ? try_to_wake_up+0x1e0/0x1e0
-    [<ffffffff814b7e22>] wait_for_completion+0x1d/0x1f
-    [<ffffffff8105ae82>] flush_workqueue+0x116/0x2a1
-    [<ffffffff8105b357>] drain_workqueue+0x66/0x14c
-    [<ffffffff8105b8ef>] destroy_workqueue+0x1a/0xcf
-    [<ffffffffa009211e>] fc_remove_host+0x154/0x17f [scsi_transport_fc]
-    [<ffffffffa00edbb8>] fcoe_if_destroy+0x184/0x1c9 [fcoe]
-    [<ffffffffa00edc28>] fcoe_destroy_work+0x2b/0x44 [fcoe]
-    [<ffffffff8105a82a>] process_one_work+0x1a8/0x2a4
-    [<ffffffffa00edbfd>] ? fcoe_if_destroy+0x1c9/0x1c9 [fcoe]
-    [<ffffffff8105c396>] worker_thread+0x1db/0x268
-    [<ffffffff810604a3>] ? wake_up_bit+0x2a/0x2a
-    [<ffffffff8105c1bb>] ? manage_workers.clone.16+0x1f6/0x1f6
-    [<ffffffff8105ffd6>] kthread+0x6f/0x77
-    [<ffffffff814c0304>] kernel_thread_helper+0x4/0x10
-    [<ffffffff8105ff67>] ? kthread_freezable_should_stop+0x4b/0x4b
-
-    Call Trace:
-    [<ffffffff814b7e88>] schedule+0x64/0x66
-    [<ffffffff814b8041>] schedule_preempt_disabled+0xe/0x10
-    [<ffffffff814b70a1>] __mutex_lock_common.clone.5+0x117/0x17a
-    [<ffffffff814b7117>] __mutex_lock_slowpath+0x13/0x15
-    [<ffffffff814b6f76>] mutex_lock+0x23/0x37
-    [<ffffffff8125b890>] ? list_del+0x11/0x30
-    [<ffffffffa00edc84>] fcoe_vport_destroy+0x43/0x5f [fcoe]
-    [<ffffffffa009130a>] fc_vport_terminate+0x48/0x110 [scsi_transport_fc]
-    [<ffffffffa00913ef>] fc_vport_sched_delete+0x1d/0x79 [scsi_transport_fc]
-    [<ffffffff8105a82a>] process_one_work+0x1a8/0x2a4
-    [<ffffffffa00913d2>] ? fc_vport_terminate+0x110/0x110 [scsi_transport_fc]
-    [<ffffffff8105c396>] worker_thread+0x1db/0x268
-    [<ffffffff8105c1bb>] ? manage_workers.clone.16+0x1f6/0x1f6
-    [<ffffffff8105ffd6>] kthread+0x6f/0x77
-    [<ffffffff814c0304>] kernel_thread_helper+0x4/0x10
-    [<ffffffff8105ff67>] ? kthread_freezable_should_stop+0x4b/0x4b
-    [<ffffffff814c0300>] ? gs_change+0x13/0x13
-
-A prior attempt to fix this issue is posted here:
-http://lists.open-fcoe.org/pipermail/devel/2012-October/012318.html
-or
-http://article.gmane.org/gmane.linux.scsi.open-fcoe.devel/11924
-
-Based on feedback and discussion with Neil Horman it seems that the above patch
-may have a case where the fcoe_vport_destroy() and fcoe_destroy_work() can
-race; hence that patch has been withdrawn with this patch that is trying to
-solve the same problem in a different way.
-
-In the current approach instead of removing the fcoe_config_mutex from the
-vport_delete callback function; I've chosen to delete all the NPIV ports first
-on a given root lport before continuing with the removal of the root lport.
-
-Signed-off-by: Neerav Parikh <Neerav.Parikh@intel.com>
-Tested-by: Marcus Dennis <marcusx.e.dennis@intel.com>
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Reviewed-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ drivers/scsi/fcoe/fcoe_ctlr.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index d605700..b5d92fc 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2196,8 +2196,31 @@ static void fcoe_destroy_work(struct work_struct *work)
- {
- 	struct fcoe_port *port;
- 	struct fcoe_interface *fcoe;
-+	struct Scsi_Host *shost;
-+	struct fc_host_attrs *fc_host;
-+	unsigned long flags;
-+	struct fc_vport *vport;
-+	struct fc_vport *next_vport;
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 7583425..aff3c44 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -1291,8 +1291,16 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
  
- 	port = container_of(work, struct fcoe_port, destroy_work);
-+	shost = port->lport->host;
-+	fc_host = shost_to_fc_host(shost);
-+
-+	/* Loop through all the vports and mark them for deletion */
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_for_each_entry_safe(vport, next_vport, &fc_host->vports, peers) {
-+		if (vport->flags & (FC_VPORT_DEL | FC_VPORT_CREATING)) {
-+			continue;
-+		} else {
-+			vport->flags |= FC_VPORT_DELETING;
-+			queue_work(fc_host_work_q(shost),
-+				   &vport->vport_delete_work);
-+		}
+ 	LIBFCOE_FIP_DBG(fip, "Clear Virtual Link received\n");
+ 
+-	if (!fcf || !lport->port_id)
++	if (!fcf || !lport->port_id) {
++		/*
++		 * We are yet to select best FCF, but we got CVL in the
++		 * meantime. reset the ctlr and let it rediscover the FCF
++		 */
++		mutex_lock(&fip->ctlr_mutex);
++		fcoe_ctlr_reset(fip);
++		mutex_unlock(&fip->ctlr_mutex);
+ 		return;
 +	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	flush_workqueue(fc_host_work_q(shost));
-+
- 	mutex_lock(&fcoe_config_mutex);
  
- 	fcoe = port->priv;
+ 	/*
+ 	 * mask of required descriptors.  Validating each one clears its bit.
 
