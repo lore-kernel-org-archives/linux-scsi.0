@@ -1,93 +1,45 @@
-From: Felipe Balbi <balbi@ti.com>
-Subject: Re: SYSFS "errors"
-Date: Tue, 19 Feb 2013 16:53:24 +0200
-Message-ID: <20130219145324.GE4390@arwen.pp.htv.fi>
-References: <20130219114345.GA26623@pd.tnic>
- <20130219091610.2b746a30@redhat.com>
- <20130219123502.GD26623@pd.tnic>
- <20130219094640.2abf1a66@redhat.com>
- <20130219130626.GE26623@pd.tnic>
- <20130219131500.GW23197@arwen.pp.htv.fi>
- <20130219132853.GG26623@pd.tnic>
- <20130219133809.GA4390@arwen.pp.htv.fi>
- <20130219135056.GH26623@pd.tnic>
- <20130219113521.510db290@redhat.com>
-Reply-To: <balbi@ti.com>
+From: Rob Evers <revers@redhat.com>
+Subject: Re: [PATCH v2 1/3] Encapsulate scsi_do_report_luns
+Date: Tue, 19 Feb 2013 10:57:26 -0500
+Message-ID: <5123A0E6.6090701@redhat.com>
+References: <1361214952-28978-1-git-send-email-revers@redhat.com> <1361214952-28978-2-git-send-email-revers@redhat.com> <51232675.4090104@acm.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3XA6nns4nE4KvaS/"
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130219113521.510db290@redhat.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: Borislav Petkov <bp@alien8.de>, Felipe Balbi <balbi@ti.com>, Greg KH <gregkh@linuxfoundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>, Ingo Molnar <mingo@redhat.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, davem@davemloft.net, netdev@vger.kernel.org, Doug Thompson <dougthompson@xmission.com>, linux-edac@vger.kernel.org, rjw@sisk.pl, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:14027 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758382Ab3BSP5c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2013 10:57:32 -0500
+In-Reply-To: <51232675.4090104@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
---3XA6nns4nE4KvaS/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 02/19/2013 02:15 AM, Bart Van Assche wrote:
+> On 02/18/13 20:15, Rob Evers wrote:
+>> +    /*
+>> +     * bytes 6 - 9: length of the command.
+>> +     */
+>> +    scsi_cmd[6] = (unsigned char) (length >> 24) & 0xff;
+>> +    scsi_cmd[7] = (unsigned char) (length >> 16) & 0xff;
+>> +    scsi_cmd[8] = (unsigned char) (length >> 8) & 0xff;
+>> +    scsi_cmd[9] = (unsigned char) length & 0xff;
+>
+> Have you considered using put_unaligned_be32() here ?
+>
+> Bart.
 
-On Tue, Feb 19, 2013 at 11:35:21AM -0300, Mauro Carvalho Chehab wrote:
-> Em Tue, 19 Feb 2013 14:50:56 +0100
-> Borislav Petkov <bp@alien8.de> escreveu:
->=20
-> > On Tue, Feb 19, 2013 at 03:38:09PM +0200, Felipe Balbi wrote:
-> > > because changing the permission will cause the same issue:
-> >=20
-> > Actually, I take that back. Mauro's patch will already create the file
-> > anyway:
-> >=20
-> > 	if (mci->set_sdram_scrub_rate || mci->get_sdram_scrub_rate)
-> >=20
-> > Adjusting the permissions is simply the last missing piece to this patch
-> > to make the interface to userspace 100% coherent.
->=20
-> That's covers everything but Hannes arguments. I don't think that
-> adding just one more device_create_file() on a driver that creates
-> dozens (or hundreds) of sys nodes, depending on the number of DIMMS
-> on the system would make it any worse.
->=20
-> Regards,
-> Mauro
->=20
-> [PATCH EDAC] edac: only create sdram_scrub_rate where supported
->=20
-> Currently, sdram_scrub_rate sysfs node is created even if the device
-> doesn't support get/set the scub rate. Change the logic to only
-> create this device node when the operation is supported.
->=20
-> Reported-by: Felipe Balbi <balbi@ti.com>
-> Signed-off-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+Thanks for the suggestion Bart.
 
-looks alright to me:
+James,
 
-Reviewed-by: Felipe Balbi <balbi@ti.com>
+Are you in favor of the type of change
+Bart is suggesting?
 
---=20
-balbi
+I thought I saw some email a while back where
+you disagreed with stylistic only changes to existing
+code.  Is that true and does it apply here?
 
---3XA6nns4nE4KvaS/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRI5HkAAoJEIaOsuA1yqREa5kP/0Zv2X9u7znMsYofXocxvmX3
-BCrtM3ZDIn4ygfMJfbA+eVLTxDXanThEiM15PwXj9xiJRoWfQt2TG+MtmaYNS8QA
-SmALUtFvg6Azm337Nn23/E0QEjxh0XXc9hz4O5pOyKQWRTRl+GIh52CWEPHkpGqA
-3I4NANCKm3j2vrG2Paia/+PJ0sX7sGkmx88qb2WJESXCMOeUe8Lvyim6957mkOaO
-40JPJriYMByEEpMs7HnALz7vIUn/vh7bZ2VhE7PHgs5QyunKmoEueR0fXpCQUHaO
-FtiZNmEPdlkEw1ZruEihbma1IvjyWoTqmEUhHhwnWddxpVc87y0EJ8Hw6hHDXOW5
-c9COqI3GtSt3jtJa/wGrt4N8P9Qa6SlmW4GjFk1k5qXP/mC63/hL1GmtAaInj+EL
-VhUOk04yt4lXGnCkANNuJkAVgUqMXhSUGU2pJUq3TTe/wi1yMMPQ3KZ5g2pCE3T8
-swyvZ8r67mac7oHBoCGGKTlX18mZALw/hbkGjtxY/9i3G1MmKulwTtA93OtHxd7f
-yjX92juXSP5gksj+xGPmaITItLTzX5YiCFNAcw2H6et8z6P/I8W0qpyWMnRf5rqx
-XXUqJlj+prHo9Nyk7Rr+LCB7m1wMLdZMsNKEwiO0ndtYWXtPZkC9s0ne4oGVxYPY
-GDm7+tNoOyst5JvLm+tj
-=uOh6
------END PGP SIGNATURE-----
-
---3XA6nns4nE4KvaS/--
+Rob
