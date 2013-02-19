@@ -1,48 +1,74 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 02/21] Documentation: Add missing devices/ to devices path
-Date: Tue, 19 Feb 2013 11:30:42 -0800
-Message-ID: <20130219193042.10192.73166.stgit@fritz>
+Subject: [PATCH 04/21] libfcoe: Add fcoe_sysfs debug logging level
+Date: Tue, 19 Feb 2013 11:30:53 -0800
+Message-ID: <20130219193053.10192.81878.stgit@fritz>
 References: <20130219193031.10192.33777.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:8036 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:32958 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933237Ab3BSTa6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2013 14:30:58 -0500
+	id S933237Ab3BSTay (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2013 14:30:54 -0500
 In-Reply-To: <20130219193031.10192.33777.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>
+Cc: Neil Horman <nhorman@tuxdriver.com>
 
-Add missing 'devices/ subdirectory to /sys/bus/fcoe/devices/ctlr_X
-and /sys/bus/fcoe/devices/fcf_X references.
+Add a macro to print fcoe_sysfs debug statements.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
+Acked-by: Neil Horman <nhorman@tuxdriver.com>
 ---
- Documentation/ABI/testing/sysfs-bus-fcoe |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe_sysfs.c |    7 +++++++
+ drivers/scsi/fcoe/libfcoe.h    |   11 ++++++++---
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-fcoe b/Documentation/ABI/testing/sysfs-bus-fcoe
-index 50e2a80..971dc22 100644
---- a/Documentation/ABI/testing/sysfs-bus-fcoe
-+++ b/Documentation/ABI/testing/sysfs-bus-fcoe
-@@ -1,4 +1,4 @@
--What:		/sys/bus/fcoe/ctlr_X
-+What:		/sys/bus/fcoe/devices/ctlr_X
- Date:		March 2012
- KernelVersion:	TBD
- Contact:	Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org
-@@ -26,7 +26,7 @@ Attributes:
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index e6fce28..9c74374 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -24,6 +24,13 @@
  
- Notes: ctlr_X (global increment starting at 0)
+ #include <scsi/fcoe_sysfs.h>
  
--What:		/sys/bus/fcoe/fcf_X
-+What:		/sys/bus/fcoe/devices/fcf_X
- Date:		March 2012
- KernelVersion:	TBD
- Contact:	Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org
++/*
++ * OK to include local libfcoe.h for debug_logging, but cannot include
++ * <scsi/libfcoe.h> otherwise non-netdev based fcoe solutions would have
++ * have to include more than fcoe_sysfs.h.
++ */
++#include "libfcoe.h"
++
+ static atomic_t ctlr_num;
+ static atomic_t fcf_num;
+ 
+diff --git a/drivers/scsi/fcoe/libfcoe.h b/drivers/scsi/fcoe/libfcoe.h
+index 6af5fc3..63d8fae 100644
+--- a/drivers/scsi/fcoe/libfcoe.h
++++ b/drivers/scsi/fcoe/libfcoe.h
+@@ -2,9 +2,10 @@
+ #define _FCOE_LIBFCOE_H_
+ 
+ extern unsigned int libfcoe_debug_logging;
+-#define LIBFCOE_LOGGING	    0x01 /* General logging, not categorized */
+-#define LIBFCOE_FIP_LOGGING 0x02 /* FIP logging */
+-#define LIBFCOE_TRANSPORT_LOGGING	0x04 /* FCoE transport logging */
++#define LIBFCOE_LOGGING	          0x01 /* General logging, not categorized */
++#define LIBFCOE_FIP_LOGGING       0x02 /* FIP logging */
++#define LIBFCOE_TRANSPORT_LOGGING 0x04 /* FCoE transport logging */
++#define LIBFCOE_SYSFS_LOGGING     0x08 /* fcoe_sysfs logging */
+ 
+ #define LIBFCOE_CHECK_LOGGING(LEVEL, CMD)		\
+ do {							\
+@@ -28,4 +29,8 @@ do {							\
+ 			      printk(KERN_INFO "%s: " fmt,		\
+ 				     __func__, ##args);)
+ 
++#define LIBFCOE_SYSFS_DBG(cdev, fmt, args...)				\
++	LIBFCOE_CHECK_LOGGING(LIBFCOE_SYSFS_LOGGING,			\
++			      pr_info("ctlr_%d: " fmt, cdev->id, ##args);)
++
+ #endif /* _FCOE_LIBFCOE_H_ */
 
