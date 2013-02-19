@@ -1,132 +1,3082 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 18/21] fcoe: close race on link speed detection in fcoe code
-Date: Tue, 19 Feb 2013 11:32:10 -0800
-Message-ID: <20130219193210.10192.26226.stgit@fritz>
+Subject: [PATCH 17/21] UAPI: (Scripted) Disintegrate include/scsi/fc
+Date: Tue, 19 Feb 2013 11:32:05 -0800
+Message-ID: <20130219193205.10192.70003.stgit@fritz>
 References: <20130219193031.10192.33777.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:58462 "EHLO mga14.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:51107 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933397Ab3BSTcV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Feb 2013 14:32:21 -0500
+	id S932928Ab3BSTcU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Feb 2013 14:32:20 -0500
 In-Reply-To: <20130219193031.10192.33777.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>, Yi Zou <yi.zou@intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, David Howells <dhowells@redhat.com>, Michael Kerrisk <mtk.manpages@gmail.com>, Dave Jones <davej@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 
-From: Neil Horman <nhorman@tuxdriver.com>
+From: David Howells <dhowells@redhat.com>
 
-When creating an fcoe interfce, we call fcoe_link_speed_update before we add the
-lports fcoe interface to the fc_hostlist.  Since network device events like
-NETDEV_CHANGE are only processed if an fcoe interface is found with an
-underlying netdev that matches the netdev of the event.  Since this processing
-in fcoe_device_notification is how link_speed changes get communicated to the
-libfc  code (via fcoe_link_speed_update), we have a race condition - if a
-NETDEV_CHANGE event is sent after the call to fcoe_link_speed_update in
-fcoe_netdev_config, but before we add the interface to the fc_hostlist, we will
-loose the event and attributes like /sys/class/fc_host/hostX/speed will not get
-updated properly.
-
-Fix this by moving the add to the fc_hostlist above the serialized call to
-fcoe_netdev_config, ensuring that we catch netdev envents before we make a
-direct call to fcoe_link_speed_update.
-
-Also use this opportunity to clean up access to the fc_hostlist a bit by
-creating a fcoe_hostlist_del accessor and replacing the cleanup in fcoe_exit to
-use it properly.
-
-Tested by myself successfully
-
-[ Comment over 80 chars broken into multi-line by Robert Love to
-  satisfy checkpatch.pl ]
-
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-Reviewed-by: Yi Zou <yi.zou@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Michael Kerrisk <mtk.manpages@gmail.com>
+Acked-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Acked-by: Dave Jones <davej@redhat.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   31 +++++++++++++++++++++++++++----
- 1 file changed, 27 insertions(+), 4 deletions(-)
+ include/scsi/fc/Kbuild        |    4 
+ include/scsi/fc/fc_els.h      |  831 -----------------------------------------
+ include/scsi/fc/fc_fs.h       |  348 -----------------
+ include/scsi/fc/fc_gs.h       |   96 -----
+ include/scsi/fc/fc_ns.h       |  208 ----------
+ include/uapi/scsi/fc/Kbuild   |    4 
+ include/uapi/scsi/fc/fc_els.h |  831 +++++++++++++++++++++++++++++++++++++++++
+ include/uapi/scsi/fc/fc_fs.h  |  348 +++++++++++++++++
+ include/uapi/scsi/fc/fc_gs.h  |   96 +++++
+ include/uapi/scsi/fc/fc_ns.h  |  208 ++++++++++
+ 10 files changed, 1487 insertions(+), 1487 deletions(-)
+ delete mode 100644 include/scsi/fc/fc_els.h
+ delete mode 100644 include/scsi/fc/fc_fs.h
+ delete mode 100644 include/scsi/fc/fc_gs.h
+ delete mode 100644 include/scsi/fc/fc_ns.h
+ create mode 100644 include/uapi/scsi/fc/fc_els.h
+ create mode 100644 include/uapi/scsi/fc/fc_fs.h
+ create mode 100644 include/uapi/scsi/fc/fc_gs.h
+ create mode 100644 include/uapi/scsi/fc/fc_ns.h
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 0b33368..d605700 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -86,6 +86,7 @@ static int fcoe_link_ok(struct fc_lport *);
- 
- static struct fc_lport *fcoe_hostlist_lookup(const struct net_device *);
- static int fcoe_hostlist_add(const struct fc_lport *);
-+static void fcoe_hostlist_del(const struct fc_lport *);
- 
- static int fcoe_device_notification(struct notifier_block *, ulong, void *);
- static void fcoe_dev_setup(void);
-@@ -1119,6 +1120,12 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
- 	port->min_queue_depth = FCOE_MIN_QUEUE_DEPTH;
- 	INIT_WORK(&port->destroy_work, fcoe_destroy_work);
- 
-+	/*
-+	 * Need to add the lport to the hostlist
-+	 * so we catch NETDEV_CHANGE events.
-+	 */
-+	fcoe_hostlist_add(lport);
-+
- 	/* configure a fc_lport including the exchange manager */
- 	rc = fcoe_lport_config(lport);
- 	if (rc) {
-@@ -1190,6 +1197,7 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
- out_lp_destroy:
- 	fc_exch_mgr_free(lport);
- out_host_put:
-+	fcoe_hostlist_del(lport);
- 	scsi_host_put(lport->host);
- out:
- 	return ERR_PTR(rc);
-@@ -2313,9 +2321,6 @@ static int _fcoe_create(struct net_device *netdev, enum fip_state fip_mode,
- 	/* setup DCB priority attributes. */
- 	fcoe_dcb_create(fcoe);
- 
--	/* add to lports list */
--	fcoe_hostlist_add(lport);
+diff --git a/include/scsi/fc/Kbuild b/include/scsi/fc/Kbuild
+index 5660381..e69de29 100644
+--- a/include/scsi/fc/Kbuild
++++ b/include/scsi/fc/Kbuild
+@@ -1,4 +0,0 @@
+-header-y += fc_els.h
+-header-y += fc_fs.h
+-header-y += fc_gs.h
+-header-y += fc_ns.h
+diff --git a/include/scsi/fc/fc_els.h b/include/scsi/fc/fc_els.h
+deleted file mode 100644
+index 481abbd..0000000
+--- a/include/scsi/fc/fc_els.h
++++ /dev/null
+@@ -1,831 +0,0 @@
+-/*
+- * Copyright(c) 2007 Intel Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * Maintained at www.Open-FCoE.org
+- */
 -
- 	/* start FIP Discovery and FLOGI */
- 	lport->boot_time = jiffies;
- 	fc_fabric_login(lport);
-@@ -2523,6 +2528,24 @@ static int fcoe_hostlist_add(const struct fc_lport *lport)
- 	return 0;
- }
- 
-+/**
-+ * fcoe_hostlist_del() - Remove the FCoE interface identified by a local
-+ *			 port to the hostlist
-+ * @lport: The local port that identifies the FCoE interface to be added
+-#ifndef _FC_ELS_H_
+-#define	_FC_ELS_H_
+-
+-#include <linux/types.h>
+-
+-/*
+- * Fibre Channel Switch - Enhanced Link Services definitions.
+- * From T11 FC-LS Rev 1.2 June 7, 2005.
+- */
+-
+-/*
+- * ELS Command codes - byte 0 of the frame payload
+- */
+-enum fc_els_cmd {
+-	ELS_LS_RJT =	0x01,	/* ESL reject */
+-	ELS_LS_ACC =	0x02,	/* ESL Accept */
+-	ELS_PLOGI =	0x03,	/* N_Port login */
+-	ELS_FLOGI =	0x04,	/* F_Port login */
+-	ELS_LOGO =	0x05,	/* Logout */
+-	ELS_ABTX =	0x06,	/* Abort exchange - obsolete */
+-	ELS_RCS =	0x07,	/* read connection status */
+-	ELS_RES =	0x08,	/* read exchange status block */
+-	ELS_RSS =	0x09,	/* read sequence status block */
+-	ELS_RSI =	0x0a,	/* read sequence initiative */
+-	ELS_ESTS =	0x0b,	/* establish streaming */
+-	ELS_ESTC =	0x0c,	/* estimate credit */
+-	ELS_ADVC =	0x0d,	/* advise credit */
+-	ELS_RTV =	0x0e,	/* read timeout value */
+-	ELS_RLS =	0x0f,	/* read link error status block */
+-	ELS_ECHO =	0x10,	/* echo */
+-	ELS_TEST =	0x11,	/* test */
+-	ELS_RRQ =	0x12,	/* reinstate recovery qualifier */
+-	ELS_REC =	0x13,	/* read exchange concise */
+-	ELS_SRR =	0x14,	/* sequence retransmission request */
+-	ELS_PRLI =	0x20,	/* process login */
+-	ELS_PRLO =	0x21,	/* process logout */
+-	ELS_SCN =	0x22,	/* state change notification */
+-	ELS_TPLS =	0x23,	/* test process login state */
+-	ELS_TPRLO =	0x24,	/* third party process logout */
+-	ELS_LCLM =	0x25,	/* login control list mgmt (obs) */
+-	ELS_GAID =	0x30,	/* get alias_ID */
+-	ELS_FACT =	0x31,	/* fabric activate alias_id */
+-	ELS_FDACDT =	0x32,	/* fabric deactivate alias_id */
+-	ELS_NACT =	0x33,	/* N-port activate alias_id */
+-	ELS_NDACT =	0x34,	/* N-port deactivate alias_id */
+-	ELS_QOSR =	0x40,	/* quality of service request */
+-	ELS_RVCS =	0x41,	/* read virtual circuit status */
+-	ELS_PDISC =	0x50,	/* discover N_port service params */
+-	ELS_FDISC =	0x51,	/* discover F_port service params */
+-	ELS_ADISC =	0x52,	/* discover address */
+-	ELS_RNC =	0x53,	/* report node cap (obs) */
+-	ELS_FARP_REQ =	0x54,	/* FC ARP request */
+-	ELS_FARP_REPL =	0x55,	/* FC ARP reply */
+-	ELS_RPS =	0x56,	/* read port status block */
+-	ELS_RPL =	0x57,	/* read port list */
+-	ELS_RPBC =	0x58,	/* read port buffer condition */
+-	ELS_FAN =	0x60,	/* fabric address notification */
+-	ELS_RSCN =	0x61,	/* registered state change notification */
+-	ELS_SCR =	0x62,	/* state change registration */
+-	ELS_RNFT =	0x63,	/* report node FC-4 types */
+-	ELS_CSR =	0x68,	/* clock synch. request */
+-	ELS_CSU =	0x69,	/* clock synch. update */
+-	ELS_LINIT =	0x70,	/* loop initialize */
+-	ELS_LSTS =	0x72,	/* loop status */
+-	ELS_RNID =	0x78,	/* request node ID data */
+-	ELS_RLIR =	0x79,	/* registered link incident report */
+-	ELS_LIRR =	0x7a,	/* link incident record registration */
+-	ELS_SRL =	0x7b,	/* scan remote loop */
+-	ELS_SBRP =	0x7c,	/* set bit-error reporting params */
+-	ELS_RPSC =	0x7d,	/* report speed capabilities */
+-	ELS_QSA =	0x7e,	/* query security attributes */
+-	ELS_EVFP =	0x7f,	/* exchange virt. fabrics params */
+-	ELS_LKA =	0x80,	/* link keep-alive */
+-	ELS_AUTH_ELS =	0x90,	/* authentication ELS */
+-};
+-
+-/*
+- * Initializer useful for decoding table.
+- * Please keep this in sync with the above definitions.
+- */
+-#define	FC_ELS_CMDS_INIT {			\
+-	[ELS_LS_RJT] =	"LS_RJT",		\
+-	[ELS_LS_ACC] =	"LS_ACC",		\
+-	[ELS_PLOGI] =	"PLOGI",		\
+-	[ELS_FLOGI] =	"FLOGI",		\
+-	[ELS_LOGO] =	"LOGO",			\
+-	[ELS_ABTX] =	"ABTX",			\
+-	[ELS_RCS] =	"RCS",			\
+-	[ELS_RES] =	"RES",			\
+-	[ELS_RSS] =	"RSS",			\
+-	[ELS_RSI] =	"RSI",			\
+-	[ELS_ESTS] =	"ESTS",			\
+-	[ELS_ESTC] =	"ESTC",			\
+-	[ELS_ADVC] =	"ADVC",			\
+-	[ELS_RTV] =	"RTV",			\
+-	[ELS_RLS] =	"RLS",			\
+-	[ELS_ECHO] =	"ECHO",			\
+-	[ELS_TEST] =	"TEST",			\
+-	[ELS_RRQ] =	"RRQ",			\
+-	[ELS_REC] =	"REC",			\
+-	[ELS_SRR] =	"SRR",			\
+-	[ELS_PRLI] =	"PRLI",			\
+-	[ELS_PRLO] =	"PRLO",			\
+-	[ELS_SCN] =	"SCN",			\
+-	[ELS_TPLS] =	"TPLS",			\
+-	[ELS_TPRLO] =	"TPRLO",		\
+-	[ELS_LCLM] =	"LCLM",			\
+-	[ELS_GAID] =	"GAID",			\
+-	[ELS_FACT] =	"FACT",			\
+-	[ELS_FDACDT] =	"FDACDT",		\
+-	[ELS_NACT] =	"NACT",			\
+-	[ELS_NDACT] =	"NDACT",		\
+-	[ELS_QOSR] =	"QOSR",			\
+-	[ELS_RVCS] =	"RVCS",			\
+-	[ELS_PDISC] =	"PDISC",		\
+-	[ELS_FDISC] =	"FDISC",		\
+-	[ELS_ADISC] =	"ADISC",		\
+-	[ELS_RNC] =	"RNC",			\
+-	[ELS_FARP_REQ] = "FARP_REQ",		\
+-	[ELS_FARP_REPL] =  "FARP_REPL",		\
+-	[ELS_RPS] =	"RPS",			\
+-	[ELS_RPL] =	"RPL",			\
+-	[ELS_RPBC] =	"RPBC",			\
+-	[ELS_FAN] =	"FAN",			\
+-	[ELS_RSCN] =	"RSCN",			\
+-	[ELS_SCR] =	"SCR",			\
+-	[ELS_RNFT] =	"RNFT",			\
+-	[ELS_CSR] =	"CSR",			\
+-	[ELS_CSU] =	"CSU",			\
+-	[ELS_LINIT] =	"LINIT",		\
+-	[ELS_LSTS] =	"LSTS",			\
+-	[ELS_RNID] =	"RNID",			\
+-	[ELS_RLIR] =	"RLIR",			\
+-	[ELS_LIRR] =	"LIRR",			\
+-	[ELS_SRL] =	"SRL",			\
+-	[ELS_SBRP] =	"SBRP",			\
+-	[ELS_RPSC] =	"RPSC",			\
+-	[ELS_QSA] =	"QSA",			\
+-	[ELS_EVFP] =	"EVFP",			\
+-	[ELS_LKA] =	"LKA",			\
+-	[ELS_AUTH_ELS] = "AUTH_ELS",		\
+-}
+-
+-/*
+- * LS_ACC payload.
+- */
+-struct fc_els_ls_acc {
+-	__u8          la_cmd;		/* command code ELS_LS_ACC */
+-	__u8          la_resv[3];	/* reserved */
+-};
+-
+-/*
+- * ELS reject payload.
+- */
+-struct fc_els_ls_rjt {
+-	__u8	er_cmd;		/* command code ELS_LS_RJT */
+-	__u8	er_resv[4];	/* reserved must be zero */
+-	__u8	er_reason;	/* reason (enum fc_els_rjt_reason below) */
+-	__u8	er_explan;	/* explanation (enum fc_els_rjt_explan below) */
+-	__u8	er_vendor;	/* vendor specific code */
+-};
+-
+-/*
+- * ELS reject reason codes (er_reason).
+- */
+-enum fc_els_rjt_reason {
+-	ELS_RJT_NONE =		0,	/* no reject - not to be sent */
+-	ELS_RJT_INVAL =		0x01,	/* invalid ELS command code */
+-	ELS_RJT_LOGIC =		0x03,	/* logical error */
+-	ELS_RJT_BUSY =		0x05,	/* logical busy */
+-	ELS_RJT_PROT =		0x07,	/* protocol error */
+-	ELS_RJT_UNAB =		0x09,	/* unable to perform command request */
+-	ELS_RJT_UNSUP =		0x0b,	/* command not supported */
+-	ELS_RJT_INPROG =	0x0e,	/* command already in progress */
+-	ELS_RJT_FIP =		0x20,	/* FIP error */
+-	ELS_RJT_VENDOR =	0xff,	/* vendor specific error */
+-};
+-
+-
+-/*
+- * reason code explanation (er_explan).
+- */
+-enum fc_els_rjt_explan {
+-	ELS_EXPL_NONE =		0x00,	/* No additional explanation */
+-	ELS_EXPL_SPP_OPT_ERR =	0x01,	/* service parameter error - options */
+-	ELS_EXPL_SPP_ICTL_ERR =	0x03,	/* service parm error - initiator ctl */
+-	ELS_EXPL_AH =		0x11,	/* invalid association header */
+-	ELS_EXPL_AH_REQ =	0x13,	/* association_header required */
+-	ELS_EXPL_SID =		0x15,	/* invalid originator S_ID */
+-	ELS_EXPL_OXID_RXID =	0x17,	/* invalid OX_ID-RX_ID combination */
+-	ELS_EXPL_INPROG =	0x19,	/* Request already in progress */
+-	ELS_EXPL_PLOGI_REQD =	0x1e,	/* N_Port login required */
+-	ELS_EXPL_INSUF_RES =	0x29,	/* insufficient resources */
+-	ELS_EXPL_UNAB_DATA =	0x2a,	/* unable to supply requested data */
+-	ELS_EXPL_UNSUPR =	0x2c,	/* Request not supported */
+-	ELS_EXPL_INV_LEN =	0x2d,	/* Invalid payload length */
+-	ELS_EXPL_NOT_NEIGHBOR = 0x62,	/* VN2VN_Port not in neighbor set */
+-	/* TBD - above definitions incomplete */
+-};
+-
+-/*
+- * Common service parameters (N ports).
+- */
+-struct fc_els_csp {
+-	__u8		sp_hi_ver;	/* highest version supported (obs.) */
+-	__u8		sp_lo_ver;	/* highest version supported (obs.) */
+-	__be16		sp_bb_cred;	/* buffer-to-buffer credits */
+-	__be16		sp_features;	/* common feature flags */
+-	__be16		sp_bb_data;	/* b-b state number and data field sz */
+-	union {
+-		struct {
+-			__be16	_sp_tot_seq; /* total concurrent sequences */
+-			__be16	_sp_rel_off; /* rel. offset by info cat */
+-		} sp_plogi;
+-		struct {
+-			__be32	_sp_r_a_tov; /* resource alloc. timeout msec */
+-		} sp_flogi_acc;
+-	} sp_u;
+-	__be32		sp_e_d_tov;	/* error detect timeout value */
+-};
+-#define	sp_tot_seq	sp_u.sp_plogi._sp_tot_seq
+-#define	sp_rel_off	sp_u.sp_plogi._sp_rel_off
+-#define	sp_r_a_tov	sp_u.sp_flogi_acc._sp_r_a_tov
+-
+-#define	FC_SP_BB_DATA_MASK 0xfff /* mask for data field size in sp_bb_data */
+-
+-/*
+- * Minimum and maximum values for max data field size in service parameters.
+- */
+-#define	FC_SP_MIN_MAX_PAYLOAD	FC_MIN_MAX_PAYLOAD
+-#define	FC_SP_MAX_MAX_PAYLOAD	FC_MAX_PAYLOAD
+-
+-/*
+- * sp_features
+- */
+-#define	FC_SP_FT_NPIV	0x8000	/* multiple N_Port_ID support (FLOGI) */
+-#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel off (PLOGI) */
+-#define	FC_SP_FT_CLAD	0x8000	/* clean address (in FLOGI LS_ACC) */
+-#define	FC_SP_FT_RAND	0x4000	/* random relative offset */
+-#define	FC_SP_FT_VAL	0x2000	/* valid vendor version level */
+-#define	FC_SP_FT_NPIV_ACC	0x2000	/* NPIV assignment (FLOGI LS_ACC) */
+-#define	FC_SP_FT_FPORT	0x1000	/* F port (1) vs. N port (0) */
+-#define	FC_SP_FT_ABB	0x0800	/* alternate BB_credit management */
+-#define	FC_SP_FT_EDTR	0x0400	/* E_D_TOV Resolution is nanoseconds */
+-#define	FC_SP_FT_MCAST	0x0200	/* multicast */
+-#define	FC_SP_FT_BCAST	0x0100	/* broadcast */
+-#define	FC_SP_FT_HUNT	0x0080	/* hunt group */
+-#define	FC_SP_FT_SIMP	0x0040	/* dedicated simplex */
+-#define	FC_SP_FT_SEC	0x0020	/* reserved for security */
+-#define	FC_SP_FT_CSYN	0x0010	/* clock synch. supported */
+-#define	FC_SP_FT_RTTOV	0x0008	/* R_T_TOV value 100 uS, else 100 mS */
+-#define	FC_SP_FT_HALF	0x0004	/* dynamic half duplex */
+-#define	FC_SP_FT_SEQC	0x0002	/* SEQ_CNT */
+-#define	FC_SP_FT_PAYL	0x0001	/* FLOGI payload length 256, else 116 */
+-
+-/*
+- * Class-specific service parameters.
+- */
+-struct fc_els_cssp {
+-	__be16		cp_class;	/* class flags */
+-	__be16		cp_init;	/* initiator flags */
+-	__be16		cp_recip;	/* recipient flags */
+-	__be16		cp_rdfs;	/* receive data field size */
+-	__be16		cp_con_seq;	/* concurrent sequences */
+-	__be16		cp_ee_cred;	/* N-port end-to-end credit */
+-	__u8		cp_resv1;	/* reserved */
+-	__u8		cp_open_seq;	/* open sequences per exchange */
+-	__u8		_cp_resv2[2];	/* reserved */
+-};
+-
+-/*
+- * cp_class flags.
+- */
+-#define	FC_CPC_VALID	0x8000		/* class valid */
+-#define	FC_CPC_IMIX	0x4000		/* intermix mode */
+-#define	FC_CPC_SEQ	0x0800		/* sequential delivery */
+-#define	FC_CPC_CAMP	0x0200		/* camp-on */
+-#define	FC_CPC_PRI	0x0080		/* priority */
+-
+-/*
+- * cp_init flags.
+- * (TBD: not all flags defined here).
+- */
+-#define	FC_CPI_CSYN	0x0010		/* clock synch. capable */
+-
+-/*
+- * cp_recip flags.
+- */
+-#define	FC_CPR_CSYN	0x0008		/* clock synch. capable */
+-
+-/*
+- * NFC_ELS_FLOGI: Fabric login request.
+- * NFC_ELS_PLOGI: Port login request (same format).
+- */
+-struct fc_els_flogi {
+-	__u8		fl_cmd;		/* command */
+-	__u8		_fl_resvd[3];	/* must be zero */
+-	struct fc_els_csp fl_csp;	/* common service parameters */
+-	__be64		fl_wwpn;	/* port name */
+-	__be64		fl_wwnn;	/* node name */
+-	struct fc_els_cssp fl_cssp[4];	/* class 1-4 service parameters */
+-	__u8		fl_vend[16];	/* vendor version level */
+-} __attribute__((__packed__));
+-
+-/*
+- * Process login service parameter page.
+- */
+-struct fc_els_spp {
+-	__u8		spp_type;	/* type code or common service params */
+-	__u8		spp_type_ext;	/* type code extension */
+-	__u8		spp_flags;
+-	__u8		_spp_resvd;
+-	__be32		spp_orig_pa;	/* originator process associator */
+-	__be32		spp_resp_pa;	/* responder process associator */
+-	__be32		spp_params;	/* service parameters */
+-};
+-
+-/*
+- * spp_flags.
+- */
+-#define	FC_SPP_OPA_VAL	    0x80	/* originator proc. assoc. valid */
+-#define	FC_SPP_RPA_VAL	    0x40	/* responder proc. assoc. valid */
+-#define	FC_SPP_EST_IMG_PAIR 0x20	/* establish image pair */
+-#define	FC_SPP_RESP_MASK    0x0f	/* mask for response code (below) */
+-
+-/*
+- * SPP response code in spp_flags - lower 4 bits.
+- */
+-enum fc_els_spp_resp {
+-	FC_SPP_RESP_ACK	=	1,	/* request executed */
+-	FC_SPP_RESP_RES =	2,	/* unable due to lack of resources */
+-	FC_SPP_RESP_INIT =	3,	/* initialization not complete */
+-	FC_SPP_RESP_NO_PA = 	4,	/* unknown process associator */
+-	FC_SPP_RESP_CONF = 	5,	/* configuration precludes image pair */
+-	FC_SPP_RESP_COND = 	6,	/* request completed conditionally */
+-	FC_SPP_RESP_MULT = 	7,	/* unable to handle multiple SPPs */
+-	FC_SPP_RESP_INVL = 	8,	/* SPP is invalid */
+-};
+-
+-/*
+- * ELS_RRQ - Reinstate Recovery Qualifier
+- */
+-struct fc_els_rrq {
+-	__u8		rrq_cmd;	/* command (0x12) */
+-	__u8		rrq_zero[3];	/* specified as zero - part of cmd */
+-	__u8		rrq_resvd;	/* reserved */
+-	__u8		rrq_s_id[3];	/* originator FID */
+-	__be16		rrq_ox_id;	/* originator exchange ID */
+-	__be16		rrq_rx_id;	/* responders exchange ID */
+-};
+-
+-/*
+- * ELS_REC - Read exchange concise.
+- */
+-struct fc_els_rec {
+-	__u8		rec_cmd;	/* command (0x13) */
+-	__u8		rec_zero[3];	/* specified as zero - part of cmd */
+-	__u8		rec_resvd;	/* reserved */
+-	__u8		rec_s_id[3];	/* originator FID */
+-	__be16		rec_ox_id;	/* originator exchange ID */
+-	__be16		rec_rx_id;	/* responders exchange ID */
+-};
+-
+-/*
+- * ELS_REC LS_ACC payload.
+- */
+-struct fc_els_rec_acc {
+-	__u8		reca_cmd;	/* accept (0x02) */
+-	__u8		reca_zero[3];	/* specified as zero - part of cmd */
+-	__be16		reca_ox_id;	/* originator exchange ID */
+-	__be16		reca_rx_id;	/* responders exchange ID */
+-	__u8		reca_resvd1;	/* reserved */
+-	__u8		reca_ofid[3];	/* originator FID */
+-	__u8		reca_resvd2;	/* reserved */
+-	__u8		reca_rfid[3];	/* responder FID */
+-	__be32		reca_fc4value;	/* FC4 value */
+-	__be32		reca_e_stat;	/* ESB (exchange status block) status */
+-};
+-
+-/*
+- * ELS_PRLI - Process login request and response.
+- */
+-struct fc_els_prli {
+-	__u8		prli_cmd;	/* command */
+-	__u8		prli_spp_len;	/* length of each serv. parm. page */
+-	__be16		prli_len;	/* length of entire payload */
+-	/* service parameter pages follow */
+-};
+-
+-/*
+- * ELS_PRLO - Process logout request and response.
+- */
+-struct fc_els_prlo {
+-	__u8            prlo_cmd;       /* command */
+-	__u8            prlo_obs;       /* obsolete, but shall be set to 10h */
+-	__be16          prlo_len;       /* payload length */
+-};
+-
+-/*
+- * ELS_ADISC payload
+- */
+-struct fc_els_adisc {
+-	__u8		adisc_cmd;
+-	__u8		adisc_resv[3];
+-	__u8            adisc_resv1;
+-	__u8            adisc_hard_addr[3];
+-	__be64          adisc_wwpn;
+-	__be64          adisc_wwnn;
+-	__u8            adisc_resv2;
+-	__u8            adisc_port_id[3];
+-} __attribute__((__packed__));
+-
+-/*
+- * ELS_LOGO - process or fabric logout.
+- */
+-struct fc_els_logo {
+-	__u8		fl_cmd;		/* command code */
+-	__u8		fl_zero[3];	/* specified as zero - part of cmd */
+-	__u8		fl_resvd;	/* reserved */
+-	__u8		fl_n_port_id[3];/* N port ID */
+-	__be64		fl_n_port_wwn;	/* port name */
+-};
+-
+-/*
+- * ELS_RTV - read timeout value.
+- */
+-struct fc_els_rtv {
+-	__u8		rtv_cmd;	/* command code 0x0e */
+-	__u8		rtv_zero[3];	/* specified as zero - part of cmd */
+-};
+-
+-/*
+- * LS_ACC for ELS_RTV - read timeout value.
+- */
+-struct fc_els_rtv_acc {
+-	__u8		rtv_cmd;	/* command code 0x02 */
+-	__u8		rtv_zero[3];	/* specified as zero - part of cmd */
+-	__be32		rtv_r_a_tov;	/* resource allocation timeout value */
+-	__be32		rtv_e_d_tov;	/* error detection timeout value */
+-	__be32		rtv_toq;	/* timeout qualifier (see below) */
+-};
+-
+-/*
+- * rtv_toq bits.
+- */
+-#define	FC_ELS_RTV_EDRES (1 << 26)	/* E_D_TOV resolution is nS else mS */
+-#define	FC_ELS_RTV_RTTOV (1 << 19)	/* R_T_TOV is 100 uS else 100 mS */
+-
+-/*
+- * ELS_SCR - state change registration payload.
+- */
+-struct fc_els_scr {
+-	__u8		scr_cmd;	/* command code */
+-	__u8		scr_resv[6];	/* reserved */
+-	__u8		scr_reg_func;	/* registration function (see below) */
+-};
+-
+-enum fc_els_scr_func {
+-	ELS_SCRF_FAB =	1,	/* fabric-detected registration */
+-	ELS_SCRF_NPORT = 2,	/* Nx_Port-detected registration */
+-	ELS_SCRF_FULL =	3,	/* full registration */
+-	ELS_SCRF_CLEAR = 255,	/* remove any current registrations */
+-};
+-
+-/*
+- * ELS_RSCN - registered state change notification payload.
+- */
+-struct fc_els_rscn {
+-	__u8		rscn_cmd;	/* RSCN opcode (0x61) */
+-	__u8		rscn_page_len;	/* page length (4) */
+-	__be16		rscn_plen;	/* payload length including this word */
+-
+-	/* followed by 4-byte generic affected Port_ID pages */
+-};
+-
+-struct fc_els_rscn_page {
+-	__u8		rscn_page_flags; /* event and address format */
+-	__u8		rscn_fid[3];	/* fabric ID */
+-};
+-
+-#define	ELS_RSCN_EV_QUAL_BIT	2	/* shift count for event qualifier */
+-#define	ELS_RSCN_EV_QUAL_MASK	0xf	/* mask for event qualifier */
+-#define	ELS_RSCN_ADDR_FMT_BIT	0	/* shift count for address format */
+-#define	ELS_RSCN_ADDR_FMT_MASK	0x3	/* mask for address format */
+-
+-enum fc_els_rscn_ev_qual {
+-	ELS_EV_QUAL_NONE = 0,		/* unspecified */
+-	ELS_EV_QUAL_NS_OBJ = 1,		/* changed name server object */
+-	ELS_EV_QUAL_PORT_ATTR = 2,	/* changed port attribute */
+-	ELS_EV_QUAL_SERV_OBJ = 3,	/* changed service object */
+-	ELS_EV_QUAL_SW_CONFIG = 4,	/* changed switch configuration */
+-	ELS_EV_QUAL_REM_OBJ = 5,	/* removed object */
+-};
+-
+-enum fc_els_rscn_addr_fmt {
+-	ELS_ADDR_FMT_PORT = 0,	/* rscn_fid is a port address */
+-	ELS_ADDR_FMT_AREA = 1,	/* rscn_fid is a area address */
+-	ELS_ADDR_FMT_DOM = 2,	/* rscn_fid is a domain address */
+-	ELS_ADDR_FMT_FAB = 3,	/* anything on fabric may have changed */
+-};
+-
+-/*
+- * ELS_RNID - request Node ID.
+- */
+-struct fc_els_rnid {
+-	__u8		rnid_cmd;	/* RNID opcode (0x78) */
+-	__u8		rnid_resv[3];	/* reserved */
+-	__u8		rnid_fmt;	/* data format */
+-	__u8		rnid_resv2[3];	/* reserved */
+-};
+-
+-/*
+- * Node Identification Data formats (rnid_fmt)
+- */
+-enum fc_els_rnid_fmt {
+-	ELS_RNIDF_NONE = 0,		/* no specific identification data */
+-	ELS_RNIDF_GEN = 0xdf,		/* general topology discovery format */
+-};
+-
+-/*
+- * ELS_RNID response.
+- */
+-struct fc_els_rnid_resp {
+-	__u8		rnid_cmd;	/* response code (LS_ACC) */
+-	__u8		rnid_resv[3];	/* reserved */
+-	__u8		rnid_fmt;	/* data format */
+-	__u8		rnid_cid_len;	/* common ID data length */
+-	__u8		rnid_resv2;	/* reserved */
+-	__u8		rnid_sid_len;	/* specific ID data length */
+-};
+-
+-struct fc_els_rnid_cid {
+-	__be64		rnid_wwpn;	/* N port name */
+-	__be64		rnid_wwnn;	/* node name */
+-};
+-
+-struct fc_els_rnid_gen {
+-	__u8		rnid_vend_id[16]; /* vendor-unique ID */
+-	__be32		rnid_atype;	/* associated type (see below) */
+-	__be32		rnid_phys_port;	/* physical port number */
+-	__be32		rnid_att_nodes;	/* number of attached nodes */
+-	__u8		rnid_node_mgmt;	/* node management (see below) */
+-	__u8		rnid_ip_ver;	/* IP version (see below) */
+-	__be16		rnid_prot_port;	/* UDP / TCP port number */
+-	__be32		rnid_ip_addr[4]; /* IP address */
+-	__u8		rnid_resvd[2];	/* reserved */
+-	__be16		rnid_vend_spec;	/* vendor-specific field */
+-};
+-
+-enum fc_els_rnid_atype {
+-	ELS_RNIDA_UNK =		0x01,	/* unknown */
+-	ELS_RNIDA_OTHER =	0x02,	/* none of the following */
+-	ELS_RNIDA_HUB =		0x03,
+-	ELS_RNIDA_SWITCH =	0x04,
+-	ELS_RNIDA_GATEWAY =	0x05,
+-	ELS_RNIDA_CONV =	0x06,   /* Obsolete, do not use this value */
+-	ELS_RNIDA_HBA =	        0x07,   /* Obsolete, do not use this value */
+-	ELS_RNIDA_PROXY =       0x08,   /* Obsolete, do not use this value */
+-	ELS_RNIDA_STORAGE =	0x09,
+-	ELS_RNIDA_HOST =	0x0a,
+-	ELS_RNIDA_SUBSYS =	0x0b,	/* storage subsystem (e.g., RAID) */
+-	ELS_RNIDA_ACCESS =	0x0e,	/* access device (e.g. media changer) */
+-	ELS_RNIDA_NAS =		0x11,	/* NAS server */
+-	ELS_RNIDA_BRIDGE =	0x12,	/* bridge */
+-	ELS_RNIDA_VIRT =	0x13,	/* virtualization device */
+-	ELS_RNIDA_MF =		0xff,	/* multifunction device (bits below) */
+-	ELS_RNIDA_MF_HUB =	1UL << 31, 	/* hub */
+-	ELS_RNIDA_MF_SW =	1UL << 30, 	/* switch */
+-	ELS_RNIDA_MF_GW =	1UL << 29,	/* gateway */
+-	ELS_RNIDA_MF_ST =	1UL << 28,	/* storage */
+-	ELS_RNIDA_MF_HOST =	1UL << 27,	/* host */
+-	ELS_RNIDA_MF_SUB =	1UL << 26,	/* storage subsystem */
+-	ELS_RNIDA_MF_ACC =	1UL << 25,	/* storage access dev */
+-	ELS_RNIDA_MF_WDM =	1UL << 24,	/* wavelength division mux */
+-	ELS_RNIDA_MF_NAS =	1UL << 23,	/* NAS server */
+-	ELS_RNIDA_MF_BR =	1UL << 22,	/* bridge */
+-	ELS_RNIDA_MF_VIRT =	1UL << 21,	/* virtualization device */
+-};
+-
+-enum fc_els_rnid_mgmt {
+-	ELS_RNIDM_SNMP =	0,
+-	ELS_RNIDM_TELNET =	1,
+-	ELS_RNIDM_HTTP =	2,
+-	ELS_RNIDM_HTTPS =	3,
+-	ELS_RNIDM_XML =		4,	/* HTTP + XML */
+-};
+-
+-enum fc_els_rnid_ipver {
+-	ELS_RNIDIP_NONE =	0,	/* no IP support or node mgmt. */
+-	ELS_RNIDIP_V4 =		1,	/* IPv4 */
+-	ELS_RNIDIP_V6 =		2,	/* IPv6 */
+-};
+-
+-/*
+- * ELS RPL - Read Port List.
+- */
+-struct fc_els_rpl {
+-	__u8		rpl_cmd;	/* command */
+-	__u8		rpl_resv[5];	/* reserved - must be zero */
+-	__be16		rpl_max_size;	/* maximum response size or zero */
+-	__u8		rpl_resv1;	/* reserved - must be zero */
+-	__u8		rpl_index[3];	/* starting index */
+-};
+-
+-/*
+- * Port number block in RPL response.
+- */
+-struct fc_els_pnb {
+-	__be32		pnb_phys_pn;	/* physical port number */
+-	__u8		pnb_resv;	/* reserved */
+-	__u8		pnb_port_id[3];	/* port ID */
+-	__be64		pnb_wwpn;	/* port name */
+-};
+-
+-/*
+- * RPL LS_ACC response.
+- */
+-struct fc_els_rpl_resp {
+-	__u8		rpl_cmd;	/* ELS_LS_ACC */
+-	__u8		rpl_resv1;	/* reserved - must be zero */
+-	__be16		rpl_plen;	/* payload length */
+-	__u8		rpl_resv2;	/* reserved - must be zero */
+-	__u8		rpl_llen[3];	/* list length */
+-	__u8		rpl_resv3;	/* reserved - must be zero */
+-	__u8		rpl_index[3];	/* starting index */
+-	struct fc_els_pnb rpl_pnb[1];	/* variable number of PNBs */
+-};
+-
+-/*
+- * Link Error Status Block.
+- */
+-struct fc_els_lesb {
+-	__be32		lesb_link_fail;	/* link failure count */
+-	__be32		lesb_sync_loss;	/* loss of synchronization count */
+-	__be32		lesb_sig_loss;	/* loss of signal count */
+-	__be32		lesb_prim_err;	/* primitive sequence error count */
+-	__be32		lesb_inv_word;	/* invalid transmission word count */
+-	__be32		lesb_inv_crc;	/* invalid CRC count */
+-};
+-
+-/*
+- * ELS RPS - Read Port Status Block request.
+- */
+-struct fc_els_rps {
+-	__u8		rps_cmd;	/* command */
+-	__u8		rps_resv[2];	/* reserved - must be zero */
+-	__u8		rps_flag;	/* flag - see below */
+-	__be64		rps_port_spec;	/* port selection */
+-};
+-
+-enum fc_els_rps_flag {
+-	FC_ELS_RPS_DID =	0x00,	/* port identified by D_ID of req. */
+-	FC_ELS_RPS_PPN =	0x01,	/* port_spec is physical port number */
+-	FC_ELS_RPS_WWPN =	0x02,	/* port_spec is port WWN */
+-};
+-
+-/*
+- * ELS RPS LS_ACC response.
+- */
+-struct fc_els_rps_resp {
+-	__u8		rps_cmd;	/* command - LS_ACC */
+-	__u8		rps_resv[2];	/* reserved - must be zero */
+-	__u8		rps_flag;	/* flag - see below */
+-	__u8		rps_resv2[2];	/* reserved */
+-	__be16		rps_status;	/* port status - see below */
+-	struct fc_els_lesb rps_lesb;	/* link error status block */
+-};
+-
+-enum fc_els_rps_resp_flag {
+-	FC_ELS_RPS_LPEV =	0x01,	/* L_port extension valid */
+-};
+-
+-enum fc_els_rps_resp_status {
+-	FC_ELS_RPS_PTP =	1 << 5,	/* point-to-point connection */
+-	FC_ELS_RPS_LOOP =	1 << 4,	/* loop mode */
+-	FC_ELS_RPS_FAB =	1 << 3,	/* fabric present */
+-	FC_ELS_RPS_NO_SIG =	1 << 2,	/* loss of signal */
+-	FC_ELS_RPS_NO_SYNC =	1 << 1,	/* loss of synchronization */
+-	FC_ELS_RPS_RESET =	1 << 0,	/* in link reset protocol */
+-};
+-
+-/*
+- * ELS LIRR - Link Incident Record Registration request.
+- */
+-struct fc_els_lirr {
+-	__u8		lirr_cmd;	/* command */
+-	__u8		lirr_resv[3];	/* reserved - must be zero */
+-	__u8		lirr_func;	/* registration function */
+-	__u8		lirr_fmt;	/* FC-4 type of RLIR requested */
+-	__u8		lirr_resv2[2];	/* reserved - must be zero */
+-};
+-
+-enum fc_els_lirr_func {
+-	ELS_LIRR_SET_COND = 	0x01,	/* set - conditionally receive */
+-	ELS_LIRR_SET_UNCOND = 	0x02,	/* set - unconditionally receive */
+-	ELS_LIRR_CLEAR = 	0xff	/* clear registration */
+-};
+-
+-/*
+- * ELS SRL - Scan Remote Loop request.
+- */
+-struct fc_els_srl {
+-	__u8		srl_cmd;	/* command */
+-	__u8		srl_resv[3];	/* reserved - must be zero */
+-	__u8		srl_flag;	/* flag - see below */
+-	__u8		srl_flag_param[3];	/* flag parameter */
+-};
+-
+-enum fc_els_srl_flag {
+-	FC_ELS_SRL_ALL =	0x00,	/* scan all FL ports */
+-	FC_ELS_SRL_ONE =	0x01,	/* scan specified loop */
+-	FC_ELS_SRL_EN_PER =	0x02,	/* enable periodic scanning (param) */
+-	FC_ELS_SRL_DIS_PER =	0x03,	/* disable periodic scanning */
+-};
+-
+-/*
+- * ELS RLS - Read Link Error Status Block request.
+- */
+-struct fc_els_rls {
+-	__u8		rls_cmd;	/* command */
+-	__u8		rls_resv[4];	/* reserved - must be zero */
+-	__u8		rls_port_id[3];	/* port ID */
+-};
+-
+-/*
+- * ELS RLS LS_ACC Response.
+- */
+-struct fc_els_rls_resp {
+-	__u8		rls_cmd;	/* ELS_LS_ACC */
+-	__u8		rls_resv[3];	/* reserved - must be zero */
+-	struct fc_els_lesb rls_lesb;	/* link error status block */
+-};
+-
+-/*
+- * ELS RLIR - Registered Link Incident Report.
+- * This is followed by the CLIR and the CLID, described below.
+- */
+-struct fc_els_rlir {
+-	__u8		rlir_cmd;	/* command */
+-	__u8		rlir_resv[3];	/* reserved - must be zero */
+-	__u8		rlir_fmt;	/* format (FC4-type if type specific) */
+-	__u8		rlir_clr_len;	/* common link incident record length */
+-	__u8		rlir_cld_len;	/* common link incident desc. length */
+-	__u8		rlir_slr_len;	/* spec. link incident record length */
+-};
+-
+-/*
+- * CLIR - Common Link Incident Record Data. - Sent via RLIR.
+- */
+-struct fc_els_clir {
+-	__be64		clir_wwpn;	/* incident port name */
+-	__be64		clir_wwnn;	/* incident port node name */
+-	__u8		clir_port_type;	/* incident port type */
+-	__u8		clir_port_id[3];	/* incident port ID */
+-
+-	__be64		clir_conn_wwpn;	/* connected port name */
+-	__be64		clir_conn_wwnn;	/* connected node name */
+-	__be64		clir_fab_name;	/* fabric name */
+-	__be32		clir_phys_port;	/* physical port number */
+-	__be32		clir_trans_id;	/* transaction ID */
+-	__u8		clir_resv[3];	/* reserved */
+-	__u8		clir_ts_fmt;	/* time stamp format */
+-	__be64		clir_timestamp;	/* time stamp */
+-};
+-
+-/*
+- * CLIR clir_ts_fmt - time stamp format values.
+- */
+-enum fc_els_clir_ts_fmt {
+-	ELS_CLIR_TS_UNKNOWN = 	0,	/* time stamp field unknown */
+-	ELS_CLIR_TS_SEC_FRAC = 	1,	/* time in seconds and fractions */
+-	ELS_CLIR_TS_CSU =	2,	/* time in clock synch update format */
+-};
+-
+-/*
+- * Common Link Incident Descriptor - sent via RLIR.
+- */
+-struct fc_els_clid {
+-	__u8		clid_iq;	/* incident qualifier flags */
+-	__u8		clid_ic;	/* incident code */
+-	__be16		clid_epai;	/* domain/area of ISL */
+-};
+-
+-/*
+- * CLID incident qualifier flags.
+- */
+-enum fc_els_clid_iq {
+-	ELS_CLID_SWITCH =	0x20,	/* incident port is a switch node */
+-	ELS_CLID_E_PORT =	0x10,	/* incident is an ISL (E) port */
+-	ELS_CLID_SEV_MASK =	0x0c,	/* severity 2-bit field mask */
+-	ELS_CLID_SEV_INFO =	0x00,	/* report is informational */
+-	ELS_CLID_SEV_INOP =	0x08,	/* link not operational */
+-	ELS_CLID_SEV_DEG =	0x04,	/* link degraded but operational */
+-	ELS_CLID_LASER =	0x02,	/* subassembly is a laser */
+-	ELS_CLID_FRU =		0x01,	/* format can identify a FRU */
+-};
+-
+-/*
+- * CLID incident code.
+- */
+-enum fc_els_clid_ic {
+-	ELS_CLID_IC_IMPL =	1,	/* implicit incident */
+-	ELS_CLID_IC_BER =	2,	/* bit-error-rate threshold exceeded */
+-	ELS_CLID_IC_LOS =	3,	/* loss of synch or signal */
+-	ELS_CLID_IC_NOS =	4,	/* non-operational primitive sequence */
+-	ELS_CLID_IC_PST =	5,	/* primitive sequence timeout */
+-	ELS_CLID_IC_INVAL =	6,	/* invalid primitive sequence */
+-	ELS_CLID_IC_LOOP_TO =	7,	/* loop initialization time out */
+-	ELS_CLID_IC_LIP =	8,	/* receiving LIP */
+-};
+-
+-#endif /* _FC_ELS_H_ */
+diff --git a/include/scsi/fc/fc_fs.h b/include/scsi/fc/fc_fs.h
+deleted file mode 100644
+index 50f28b1..0000000
+--- a/include/scsi/fc/fc_fs.h
++++ /dev/null
+@@ -1,348 +0,0 @@
+-/*
+- * Copyright(c) 2007 Intel Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * Maintained at www.Open-FCoE.org
+- */
+-
+-#ifndef _FC_FS_H_
+-#define _FC_FS_H_
+-
+-#include <linux/types.h>
+-
+-/*
+- * Fibre Channel Framing and Signalling definitions.
+- * From T11 FC-FS-2 Rev 0.90 - 9 August 2005.
+- */
+-
+-/*
+- * Frame header
+- */
+-struct fc_frame_header {
+-	__u8          fh_r_ctl;	/* routing control */
+-	__u8          fh_d_id[3];	/* Destination ID */
+-
+-	__u8          fh_cs_ctl;	/* class of service control / pri */
+-	__u8          fh_s_id[3];	/* Source ID */
+-
+-	__u8          fh_type;		/* see enum fc_fh_type below */
+-	__u8          fh_f_ctl[3];	/* frame control */
+-
+-	__u8          fh_seq_id;	/* sequence ID */
+-	__u8          fh_df_ctl;	/* data field control */
+-	__be16        fh_seq_cnt;	/* sequence count */
+-
+-	__be16        fh_ox_id;		/* originator exchange ID */
+-	__be16        fh_rx_id;		/* responder exchange ID */
+-	__be32        fh_parm_offset;	/* parameter or relative offset */
+-};
+-
+-#define FC_FRAME_HEADER_LEN 24	/* expected length of structure */
+-
+-#define FC_MAX_PAYLOAD  2112U		/* max payload length in bytes */
+-#define FC_MIN_MAX_PAYLOAD  256U 	/* lower limit on max payload */
+-
+-#define FC_MAX_FRAME	(FC_MAX_PAYLOAD + FC_FRAME_HEADER_LEN)
+-#define FC_MIN_MAX_FRAME (FC_MIN_MAX_PAYLOAD + FC_FRAME_HEADER_LEN)
+-
+-/*
+- * fh_r_ctl - Routing control definitions.
+- */
+-    /*
+-     * FC-4 device_data.
+-     */
+-enum fc_rctl {
+-	FC_RCTL_DD_UNCAT = 0x00,	/* uncategorized information */
+-	FC_RCTL_DD_SOL_DATA = 0x01,	/* solicited data */
+-	FC_RCTL_DD_UNSOL_CTL = 0x02,	/* unsolicited control */
+-	FC_RCTL_DD_SOL_CTL = 0x03,	/* solicited control or reply */
+-	FC_RCTL_DD_UNSOL_DATA = 0x04,	/* unsolicited data */
+-	FC_RCTL_DD_DATA_DESC = 0x05,	/* data descriptor */
+-	FC_RCTL_DD_UNSOL_CMD = 0x06,	/* unsolicited command */
+-	FC_RCTL_DD_CMD_STATUS = 0x07,	/* command status */
+-
+-#define FC_RCTL_ILS_REQ FC_RCTL_DD_UNSOL_CTL	/* ILS request */
+-#define FC_RCTL_ILS_REP FC_RCTL_DD_SOL_CTL	/* ILS reply */
+-
+-	/*
+-	 * Extended Link_Data
+-	 */
+-	FC_RCTL_ELS_REQ = 0x22,	/* extended link services request */
+-	FC_RCTL_ELS_REP = 0x23,	/* extended link services reply */
+-	FC_RCTL_ELS4_REQ = 0x32, /* FC-4 ELS request */
+-	FC_RCTL_ELS4_REP = 0x33, /* FC-4 ELS reply */
+-	/*
+-	 * Optional Extended Headers
+-	 */
+-	FC_RCTL_VFTH = 0x50,	/* virtual fabric tagging header */
+-	FC_RCTL_IFRH = 0x51,	/* inter-fabric routing header */
+-	FC_RCTL_ENCH = 0x52,	/* encapsulation header */
+-	/*
+-	 * Basic Link Services fh_r_ctl values.
+-	 */
+-	FC_RCTL_BA_NOP = 0x80,	/* basic link service NOP */
+-	FC_RCTL_BA_ABTS = 0x81,	/* basic link service abort */
+-	FC_RCTL_BA_RMC = 0x82,	/* remove connection */
+-	FC_RCTL_BA_ACC = 0x84,	/* basic accept */
+-	FC_RCTL_BA_RJT = 0x85,	/* basic reject */
+-	FC_RCTL_BA_PRMT = 0x86,	/* dedicated connection preempted */
+-	/*
+-	 * Link Control Information.
+-	 */
+-	FC_RCTL_ACK_1 = 0xc0,	/* acknowledge_1 */
+-	FC_RCTL_ACK_0 = 0xc1,	/* acknowledge_0 */
+-	FC_RCTL_P_RJT = 0xc2,	/* port reject */
+-	FC_RCTL_F_RJT = 0xc3,	/* fabric reject */
+-	FC_RCTL_P_BSY = 0xc4,	/* port busy */
+-	FC_RCTL_F_BSY = 0xc5,	/* fabric busy to data frame */
+-	FC_RCTL_F_BSYL = 0xc6,	/* fabric busy to link control frame */
+-	FC_RCTL_LCR = 0xc7,	/* link credit reset */
+-	FC_RCTL_END = 0xc9,	/* end */
+-};
+-				    /* incomplete list of definitions */
+-
+-/*
+- * R_CTL names initializer.
+- * Please keep this matching the above definitions.
+- */
+-#define FC_RCTL_NAMES_INIT { \
+-	[FC_RCTL_DD_UNCAT] =		"uncat",			\
+-	[FC_RCTL_DD_SOL_DATA] =		"sol data",			\
+-	[FC_RCTL_DD_UNSOL_CTL] =	"unsol ctl",			\
+-	[FC_RCTL_DD_SOL_CTL] =		"sol ctl/reply",		\
+-	[FC_RCTL_DD_UNSOL_DATA] =	"unsol data",			\
+-	[FC_RCTL_DD_DATA_DESC] =	"data desc",			\
+-	[FC_RCTL_DD_UNSOL_CMD] =	"unsol cmd",			\
+-	[FC_RCTL_DD_CMD_STATUS] =	"cmd status",			\
+-	[FC_RCTL_ELS_REQ] =		"ELS req",			\
+-	[FC_RCTL_ELS_REP] =		"ELS rep",			\
+-	[FC_RCTL_ELS4_REQ] =		"FC-4 ELS req",			\
+-	[FC_RCTL_ELS4_REP] =		"FC-4 ELS rep",			\
+-	[FC_RCTL_BA_NOP] =		"BLS NOP",			\
+-	[FC_RCTL_BA_ABTS] =		"BLS abort",			\
+-	[FC_RCTL_BA_RMC] =		"BLS remove connection",	\
+-	[FC_RCTL_BA_ACC] =		"BLS accept",			\
+-	[FC_RCTL_BA_RJT] =		"BLS reject",			\
+-	[FC_RCTL_BA_PRMT] =		"BLS dedicated connection preempted", \
+-	[FC_RCTL_ACK_1] =		"LC ACK_1",			\
+-	[FC_RCTL_ACK_0] =		"LC ACK_0",			\
+-	[FC_RCTL_P_RJT] =		"LC port reject",		\
+-	[FC_RCTL_F_RJT] =		"LC fabric reject",		\
+-	[FC_RCTL_P_BSY] =		"LC port busy",			\
+-	[FC_RCTL_F_BSY] =		"LC fabric busy to data frame",	\
+-	[FC_RCTL_F_BSYL] =		"LC fabric busy to link control frame",\
+-	[FC_RCTL_LCR] =			"LC link credit reset",		\
+-	[FC_RCTL_END] =			"LC end",			\
+-}
+-
+-/*
+- * Well-known fabric addresses.
+- */
+-enum fc_well_known_fid {
+-	FC_FID_NONE =           0x000000,       /* No destination */
+-	FC_FID_BCAST =		0xffffff,	/* broadcast */
+-	FC_FID_FLOGI =		0xfffffe,	/* fabric login */
+-	FC_FID_FCTRL =		0xfffffd,	/* fabric controller */
+-	FC_FID_DIR_SERV =	0xfffffc,	/* directory server */
+-	FC_FID_TIME_SERV =	0xfffffb,	/* time server */
+-	FC_FID_MGMT_SERV =	0xfffffa,	/* management server */
+-	FC_FID_QOS =		0xfffff9,	/* QoS Facilitator */
+-	FC_FID_ALIASES =	0xfffff8,	/* alias server (FC-PH2) */
+-	FC_FID_SEC_KEY =	0xfffff7,	/* Security key dist. server */
+-	FC_FID_CLOCK =		0xfffff6,	/* clock synch server */
+-	FC_FID_MCAST_SERV =	0xfffff5,	/* multicast server */
+-};
+-
+-#define	FC_FID_WELL_KNOWN_MAX	0xffffff /* highest well-known fabric ID */
+-#define	FC_FID_WELL_KNOWN_BASE	0xfffff5 /* start of well-known fabric ID */
+-
+-/*
+- * Other well-known addresses, outside the above contiguous range.
+- */
+-#define	FC_FID_DOM_MGR		0xfffc00	/* domain manager base */
+-
+-/*
+- * Fabric ID bytes.
+- */
+-#define	FC_FID_DOMAIN		0
+-#define	FC_FID_PORT		1
+-#define	FC_FID_LINK		2
+-
+-/*
+- * fh_type codes
+- */
+-enum fc_fh_type {
+-	FC_TYPE_BLS =	0x00,	/* basic link service */
+-	FC_TYPE_ELS =	0x01,	/* extended link service */
+-	FC_TYPE_IP =	0x05,	/* IP over FC, RFC 4338 */
+-	FC_TYPE_FCP =	0x08,	/* SCSI FCP */
+-	FC_TYPE_CT =	0x20,	/* Fibre Channel Services (FC-CT) */
+-	FC_TYPE_ILS =	0x22,	/* internal link service */
+-};
+-
+-/*
+- * FC_TYPE names initializer.
+- * Please keep this matching the above definitions.
+- */
+-#define FC_TYPE_NAMES_INIT {				\
+-	[FC_TYPE_BLS] =		"BLS",			\
+-	[FC_TYPE_ELS] =		"ELS",			\
+-	[FC_TYPE_IP] =		"IP",			\
+-	[FC_TYPE_FCP] =		"FCP",			\
+-	[FC_TYPE_CT] =		"CT",			\
+-	[FC_TYPE_ILS] =		"ILS",			\
+-}
+-
+-/*
+- * Exchange IDs.
+- */
+-#define FC_XID_UNKNOWN  0xffff	/* unknown exchange ID */
+-#define FC_XID_MIN	0x0	/* supported min exchange ID */
+-#define FC_XID_MAX	0xfffe	/* supported max exchange ID */
+-
+-/*
+- * fh_f_ctl - Frame control flags.
+- */
+-#define	FC_FC_EX_CTX	(1 << 23)	/* sent by responder to exchange */
+-#define	FC_FC_SEQ_CTX	(1 << 22)	/* sent by responder to sequence */
+-#define	FC_FC_FIRST_SEQ (1 << 21)	/* first sequence of this exchange */
+-#define	FC_FC_LAST_SEQ	(1 << 20)	/* last sequence of this exchange */
+-#define	FC_FC_END_SEQ	(1 << 19)	/* last frame of sequence */
+-#define	FC_FC_END_CONN	(1 << 18)	/* end of class 1 connection pending */
+-#define	FC_FC_RES_B17	(1 << 17)	/* reserved */
+-#define	FC_FC_SEQ_INIT	(1 << 16)	/* transfer of sequence initiative */
+-#define	FC_FC_X_ID_REASS (1 << 15)	/* exchange ID has been changed */
+-#define	FC_FC_X_ID_INVAL (1 << 14)	/* exchange ID invalidated */
+-
+-#define	FC_FC_ACK_1	(1 << 12)	/* 13:12 = 1: ACK_1 expected */
+-#define	FC_FC_ACK_N	(2 << 12)	/* 13:12 = 2: ACK_N expected */
+-#define	FC_FC_ACK_0	(3 << 12)	/* 13:12 = 3: ACK_0 expected */
+-
+-#define	FC_FC_RES_B11	(1 << 11)	/* reserved */
+-#define	FC_FC_RES_B10	(1 << 10)	/* reserved */
+-#define	FC_FC_RETX_SEQ	(1 << 9)	/* retransmitted sequence */
+-#define	FC_FC_UNI_TX	(1 << 8)	/* unidirectional transmit (class 1) */
+-#define	FC_FC_CONT_SEQ(i) ((i) << 6)
+-#define	FC_FC_ABT_SEQ(i) ((i) << 4)
+-#define	FC_FC_REL_OFF	(1 << 3)	/* parameter is relative offset */
+-#define	FC_FC_RES2	(1 << 2)	/* reserved */
+-#define	FC_FC_FILL(i)	((i) & 3)	/* 1:0: bytes of trailing fill */
+-
+-/*
+- * BA_ACC payload.
+- */
+-struct fc_ba_acc {
+-	__u8		ba_seq_id_val;	/* SEQ_ID validity */
+-#define FC_BA_SEQ_ID_VAL 0x80
+-	__u8		ba_seq_id;	/* SEQ_ID of seq last deliverable */
+-	__u8		ba_resvd[2];	/* reserved */
+-	__be16		ba_ox_id;	/* OX_ID for aborted seq or exch */
+-	__be16		ba_rx_id;	/* RX_ID for aborted seq or exch */
+-	__be16		ba_low_seq_cnt;	/* low SEQ_CNT of aborted seq */
+-	__be16		ba_high_seq_cnt; /* high SEQ_CNT of aborted seq */
+-};
+-
+-/*
+- * BA_RJT: Basic Reject payload.
+- */
+-struct fc_ba_rjt {
+-	__u8		br_resvd;	/* reserved */
+-	__u8		br_reason;	/* reason code */
+-	__u8		br_explan;	/* reason explanation */
+-	__u8		br_vendor;	/* vendor unique code */
+-};
+-
+-/*
+- * BA_RJT reason codes.
+- * From FS-2.
+- */
+-enum fc_ba_rjt_reason {
+-	FC_BA_RJT_NONE =	0,	/* in software this means no reject */
+-	FC_BA_RJT_INVL_CMD =	0x01,	/* invalid command code */
+-	FC_BA_RJT_LOG_ERR =	0x03,	/* logical error */
+-	FC_BA_RJT_LOG_BUSY =	0x05,	/* logical busy */
+-	FC_BA_RJT_PROTO_ERR =	0x07,	/* protocol error */
+-	FC_BA_RJT_UNABLE =	0x09,	/* unable to perform request */
+-	FC_BA_RJT_VENDOR =	0xff,	/* vendor-specific (see br_vendor) */
+-};
+-
+-/*
+- * BA_RJT reason code explanations.
+- */
+-enum fc_ba_rjt_explan {
+-	FC_BA_RJT_EXP_NONE =	0x00,	/* no additional expanation */
+-	FC_BA_RJT_INV_XID =	0x03,	/* invalid OX_ID-RX_ID combination */
+-	FC_BA_RJT_ABT =		0x05,	/* sequence aborted, no seq info */
+-};
+-
+-/*
+- * P_RJT or F_RJT: Port Reject or Fabric Reject parameter field.
+- */
+-struct fc_pf_rjt {
+-	__u8		rj_action;	/* reserved */
+-	__u8		rj_reason;	/* reason code */
+-	__u8		rj_resvd;	/* reserved */
+-	__u8		rj_vendor;	/* vendor unique code */
+-};
+-
+-/*
+- * P_RJT and F_RJT reject reason codes.
+- */
+-enum fc_pf_rjt_reason {
+-	FC_RJT_NONE =		0,	/* non-reject (reserved by standard) */
+-	FC_RJT_INVL_DID =	0x01,	/* invalid destination ID */
+-	FC_RJT_INVL_SID =	0x02,	/* invalid source ID */
+-	FC_RJT_P_UNAV_T =	0x03,	/* port unavailable, temporary */
+-	FC_RJT_P_UNAV =		0x04,	/* port unavailable, permanent */
+-	FC_RJT_CLS_UNSUP =	0x05,	/* class not supported */
+-	FC_RJT_DEL_USAGE =	0x06,	/* delimiter usage error */
+-	FC_RJT_TYPE_UNSUP =	0x07,	/* type not supported */
+-	FC_RJT_LINK_CTL =	0x08,	/* invalid link control */
+-	FC_RJT_R_CTL =		0x09,	/* invalid R_CTL field */
+-	FC_RJT_F_CTL =		0x0a,	/* invalid F_CTL field */
+-	FC_RJT_OX_ID =		0x0b,	/* invalid originator exchange ID */
+-	FC_RJT_RX_ID =		0x0c,	/* invalid responder exchange ID */
+-	FC_RJT_SEQ_ID =		0x0d,	/* invalid sequence ID */
+-	FC_RJT_DF_CTL =		0x0e,	/* invalid DF_CTL field */
+-	FC_RJT_SEQ_CNT =	0x0f,	/* invalid SEQ_CNT field */
+-	FC_RJT_PARAM =		0x10,	/* invalid parameter field */
+-	FC_RJT_EXCH_ERR =	0x11,	/* exchange error */
+-	FC_RJT_PROTO =		0x12,	/* protocol error */
+-	FC_RJT_LEN =		0x13,	/* incorrect length */
+-	FC_RJT_UNEXP_ACK =	0x14,	/* unexpected ACK */
+-	FC_RJT_FAB_CLASS =	0x15,	/* class unsupported by fabric entity */
+-	FC_RJT_LOGI_REQ =	0x16,	/* login required */
+-	FC_RJT_SEQ_XS =		0x17,	/* excessive sequences attempted */
+-	FC_RJT_EXCH_EST =	0x18,	/* unable to establish exchange */
+-	FC_RJT_FAB_UNAV =	0x1a,	/* fabric unavailable */
+-	FC_RJT_VC_ID =		0x1b,	/* invalid VC_ID (class 4) */
+-	FC_RJT_CS_CTL =		0x1c,	/* invalid CS_CTL field */
+-	FC_RJT_INSUF_RES =	0x1d,	/* insuff. resources for VC (Class 4) */
+-	FC_RJT_INVL_CLS =	0x1f,	/* invalid class of service */
+-	FC_RJT_PREEMT_RJT =	0x20,	/* preemption request rejected */
+-	FC_RJT_PREEMT_DIS =	0x21,	/* preemption not enabled */
+-	FC_RJT_MCAST_ERR =	0x22,	/* multicast error */
+-	FC_RJT_MCAST_ET =	0x23,	/* multicast error terminate */
+-	FC_RJT_PRLI_REQ =	0x24,	/* process login required */
+-	FC_RJT_INVL_ATT =	0x25,	/* invalid attachment */
+-	FC_RJT_VENDOR =		0xff,	/* vendor specific reject */
+-};
+-
+-/* default timeout values */
+-
+-#define FC_DEF_E_D_TOV	2000UL
+-#define FC_DEF_R_A_TOV	10000UL
+-
+-#endif /* _FC_FS_H_ */
+diff --git a/include/scsi/fc/fc_gs.h b/include/scsi/fc/fc_gs.h
+deleted file mode 100644
+index a37346d..0000000
+--- a/include/scsi/fc/fc_gs.h
++++ /dev/null
+@@ -1,96 +0,0 @@
+-/*
+- * Copyright(c) 2007 Intel Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * Maintained at www.Open-FCoE.org
+- */
+-
+-#ifndef _FC_GS_H_
+-#define	_FC_GS_H_
+-
+-#include <linux/types.h>
+-
+-/*
+- * Fibre Channel Services - Common Transport.
+- * From T11.org FC-GS-2 Rev 5.3 November 1998.
+- */
+-
+-struct fc_ct_hdr {
+-	__u8		ct_rev;		/* revision */
+-	__u8		ct_in_id[3];	/* N_Port ID of original requestor */
+-	__u8		ct_fs_type;	/* type of fibre channel service */
+-	__u8		ct_fs_subtype;	/* subtype */
+-	__u8		ct_options;
+-	__u8		_ct_resvd1;
+-	__be16		ct_cmd;		/* command / response code */
+-	__be16		ct_mr_size;	/* maximum / residual size */
+-	__u8		_ct_resvd2;
+-	__u8		ct_reason;	/* reject reason */
+-	__u8		ct_explan;	/* reason code explanation */
+-	__u8		ct_vendor;	/* vendor unique data */
+-};
+-
+-#define	FC_CT_HDR_LEN	16	/* expected sizeof (struct fc_ct_hdr) */
+-
+-enum fc_ct_rev {
+-	FC_CT_REV = 1		/* common transport revision */
+-};
+-
+-/*
+- * ct_fs_type values.
+- */
+-enum fc_ct_fs_type {
+-	FC_FST_ALIAS =	0xf8,	/* alias service */
+-	FC_FST_MGMT =	0xfa,	/* management service */
+-	FC_FST_TIME =	0xfb,	/* time service */
+-	FC_FST_DIR =	0xfc,	/* directory service */
+-};
+-
+-/*
+- * ct_cmd: Command / response codes
+- */
+-enum fc_ct_cmd {
+-	FC_FS_RJT =	0x8001,	/* reject */
+-	FC_FS_ACC =	0x8002,	/* accept */
+-};
+-
+-/*
+- * FS_RJT reason codes.
+- */
+-enum fc_ct_reason {
+-	FC_FS_RJT_CMD =		0x01,	/* invalid command code */
+-	FC_FS_RJT_VER =		0x02,	/* invalid version level */
+-	FC_FS_RJT_LOG =		0x03,	/* logical error */
+-	FC_FS_RJT_IUSIZ =	0x04,	/* invalid IU size */
+-	FC_FS_RJT_BSY =		0x05,	/* logical busy */
+-	FC_FS_RJT_PROTO =	0x07,	/* protocol error */
+-	FC_FS_RJT_UNABL =	0x09,	/* unable to perform command request */
+-	FC_FS_RJT_UNSUP =	0x0b,	/* command not supported */
+-};
+-
+-/*
+- * FS_RJT reason code explanations.
+- */
+-enum fc_ct_explan {
+-	FC_FS_EXP_NONE =	0x00,	/* no additional explanation */
+-	FC_FS_EXP_PID =		0x01,	/* port ID not registered */
+-	FC_FS_EXP_PNAM =	0x02,	/* port name not registered */
+-	FC_FS_EXP_NNAM =	0x03,	/* node name not registered */
+-	FC_FS_EXP_COS =		0x04,	/* class of service not registered */
+-	FC_FS_EXP_FTNR =	0x07,	/* FC-4 types not registered */
+-	/* definitions not complete */
+-};
+-
+-#endif /* _FC_GS_H_ */
+diff --git a/include/scsi/fc/fc_ns.h b/include/scsi/fc/fc_ns.h
+deleted file mode 100644
+index f7751d5..0000000
+--- a/include/scsi/fc/fc_ns.h
++++ /dev/null
+@@ -1,208 +0,0 @@
+-/*
+- * Copyright(c) 2007 Intel Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * Maintained at www.Open-FCoE.org
+- */
+-
+-#ifndef _FC_NS_H_
+-#define	_FC_NS_H_
+-
+-#include <linux/types.h>
+-
+-/*
+- * Fibre Channel Services - Name Service (dNS)
+- * From T11.org FC-GS-2 Rev 5.3 November 1998.
+- */
+-
+-/*
+- * Common-transport sub-type for Name Server.
+- */
+-#define	FC_NS_SUBTYPE	    2	/* fs_ct_hdr.ct_fs_subtype */
+-
+-/*
+- * Name server Requests.
+- * Note:  this is an incomplete list, some unused requests are omitted.
+- */
+-enum fc_ns_req {
+-	FC_NS_GA_NXT =	0x0100,		/* get all next */
+-	FC_NS_GI_A =	0x0101,		/* get identifiers - scope */
+-	FC_NS_GPN_ID =	0x0112,		/* get port name by ID */
+-	FC_NS_GNN_ID =	0x0113,		/* get node name by ID */
+-	FC_NS_GSPN_ID = 0x0118,		/* get symbolic port name */
+-	FC_NS_GID_PN =	0x0121,		/* get ID for port name */
+-	FC_NS_GID_NN =	0x0131,		/* get IDs for node name */
+-	FC_NS_GID_FT =	0x0171,		/* get IDs by FC4 type */
+-	FC_NS_GPN_FT =	0x0172,		/* get port names by FC4 type */
+-	FC_NS_GID_PT =	0x01a1,		/* get IDs by port type */
+-	FC_NS_RPN_ID =	0x0212,		/* reg port name for ID */
+-	FC_NS_RNN_ID =	0x0213,		/* reg node name for ID */
+-	FC_NS_RFT_ID =	0x0217,		/* reg FC4 type for ID */
+-	FC_NS_RSPN_ID =	0x0218,		/* reg symbolic port name */
+-	FC_NS_RFF_ID =	0x021f,		/* reg FC4 Features for ID */
+-	FC_NS_RSNN_NN =	0x0239,		/* reg symbolic node name */
+-};
+-
+-/*
+- * Port type values.
+- */
+-enum fc_ns_pt {
+-	FC_NS_UNID_PORT = 0x00,	/* unidentified */
+-	FC_NS_N_PORT =	0x01,	/* N port */
+-	FC_NS_NL_PORT =	0x02,	/* NL port */
+-	FC_NS_FNL_PORT = 0x03,	/* F/NL port */
+-	FC_NS_NX_PORT =	0x7f,	/* Nx port */
+-	FC_NS_F_PORT =	0x81,	/* F port */
+-	FC_NS_FL_PORT =	0x82,	/* FL port */
+-	FC_NS_E_PORT =	0x84,	/* E port */
+-	FC_NS_B_PORT =	0x85,	/* B port */
+-};
+-
+-/*
+- * Port type object.
+- */
+-struct fc_ns_pt_obj {
+-	__u8		pt_type;
+-};
+-
+-/*
+- * Port ID object
+- */
+-struct fc_ns_fid {
+-	__u8		fp_flags;	/* flags for responses only */
+-	__u8		fp_fid[3];
+-};
+-
+-/*
+- * fp_flags in port ID object, for responses only.
+- */
+-#define	FC_NS_FID_LAST	0x80		/* last object */
+-
+-/*
+- * FC4-types object.
+- */
+-#define	FC_NS_TYPES	256	/* number of possible FC-4 types */
+-#define	FC_NS_BPW	32	/* bits per word in bitmap */
+-
+-struct fc_ns_fts {
+-	__be32	ff_type_map[FC_NS_TYPES / FC_NS_BPW]; /* bitmap of FC-4 types */
+-};
+-
+-/*
+- * FC4-features object.
+- */
+-struct fc_ns_ff	{
+-	__be32	fd_feat[FC_NS_TYPES * 4 / FC_NS_BPW]; /* 4-bits per FC-type */
+-};
+-
+-/*
+- * GID_PT request.
+- */
+-struct fc_ns_gid_pt {
+-	__u8		fn_pt_type;
+-	__u8		fn_domain_id_scope;
+-	__u8		fn_area_id_scope;
+-	__u8		fn_resvd;
+-};
+-
+-/*
+- * GID_FT or GPN_FT request.
+- */
+-struct fc_ns_gid_ft {
+-	__u8		fn_resvd;
+-	__u8		fn_domain_id_scope;
+-	__u8		fn_area_id_scope;
+-	__u8		fn_fc4_type;
+-};
+-
+-/*
+- * GPN_FT response.
+- */
+-struct fc_gpn_ft_resp {
+-	__u8		fp_flags;	/* see fp_flags definitions above */
+-	__u8		fp_fid[3];	/* port ID */
+-	__be32		fp_resvd;
+-	__be64		fp_wwpn;	/* port name */
+-};
+-
+-/*
+- * GID_PN request
+- */
+-struct fc_ns_gid_pn {
+-	__be64     fn_wwpn;    /* port name */
+-};
+-
+-/*
+- * GID_PN response or GSPN_ID request
+- */
+-struct fc_gid_pn_resp {
+-	__u8      fp_resvd;
+-	__u8      fp_fid[3];     /* port ID */
+-};
+-
+-/*
+- * GSPN_ID response
+- */
+-struct fc_gspn_resp {
+-	__u8	fp_name_len;
+-	char	fp_name[];
+-};
+-
+-/*
+- * RFT_ID request - register FC-4 types for ID.
+- */
+-struct fc_ns_rft_id {
+-	struct fc_ns_fid fr_fid;	/* port ID object */
+-	struct fc_ns_fts fr_fts;	/* FC-4 types object */
+-};
+-
+-/*
+- * RPN_ID request - register port name for ID.
+- * RNN_ID request - register node name for ID.
+- */
+-struct fc_ns_rn_id {
+-	struct fc_ns_fid fr_fid;	/* port ID object */
+-	__be64		fr_wwn;		/* node name or port name */
+-} __attribute__((__packed__));
+-
+-/*
+- * RSNN_NN request - register symbolic node name
+- */
+-struct fc_ns_rsnn {
+-	__be64		fr_wwn;		/* node name */
+-	__u8		fr_name_len;
+-	char		fr_name[];
+-} __attribute__((__packed__));
+-
+-/*
+- * RSPN_ID request - register symbolic port name
+- */
+-struct fc_ns_rspn {
+-	struct fc_ns_fid fr_fid;	/* port ID object */
+-	__u8		fr_name_len;
+-	char		fr_name[];
+-} __attribute__((__packed__));
+-
+-/*
+- * RFF_ID request - register FC-4 Features for ID.
+- */
+-struct fc_ns_rff_id {
+-	struct fc_ns_fid fr_fid;	/* port ID object */
+-	__u8		fr_resvd[2];
+-	__u8		fr_feat;	/* FC-4 Feature bits */
+-	__u8		fr_type;	/* FC-4 type */
+-} __attribute__((__packed__));
+-
+-#endif /* _FC_NS_H_ */
+diff --git a/include/uapi/scsi/fc/Kbuild b/include/uapi/scsi/fc/Kbuild
+index aafaa5a..5ead9fa 100644
+--- a/include/uapi/scsi/fc/Kbuild
++++ b/include/uapi/scsi/fc/Kbuild
+@@ -1 +1,5 @@
+ # UAPI Header export list
++header-y += fc_els.h
++header-y += fc_fs.h
++header-y += fc_gs.h
++header-y += fc_ns.h
+diff --git a/include/uapi/scsi/fc/fc_els.h b/include/uapi/scsi/fc/fc_els.h
+new file mode 100644
+index 0000000..481abbd
+--- /dev/null
++++ b/include/uapi/scsi/fc/fc_els.h
+@@ -0,0 +1,831 @@
++/*
++ * Copyright(c) 2007 Intel Corporation. All rights reserved.
 + *
-+ * Locking: must be called with the RTNL mutex held
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
 + *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Maintained at www.Open-FCoE.org
 + */
-+static void fcoe_hostlist_del(const struct fc_lport *lport)
-+{
-+	struct fcoe_interface *fcoe;
-+	struct fcoe_port *port;
 +
-+	port = lport_priv(lport);
-+	fcoe = port->priv;
-+	list_del(&fcoe->list);
-+	return;
++#ifndef _FC_ELS_H_
++#define	_FC_ELS_H_
++
++#include <linux/types.h>
++
++/*
++ * Fibre Channel Switch - Enhanced Link Services definitions.
++ * From T11 FC-LS Rev 1.2 June 7, 2005.
++ */
++
++/*
++ * ELS Command codes - byte 0 of the frame payload
++ */
++enum fc_els_cmd {
++	ELS_LS_RJT =	0x01,	/* ESL reject */
++	ELS_LS_ACC =	0x02,	/* ESL Accept */
++	ELS_PLOGI =	0x03,	/* N_Port login */
++	ELS_FLOGI =	0x04,	/* F_Port login */
++	ELS_LOGO =	0x05,	/* Logout */
++	ELS_ABTX =	0x06,	/* Abort exchange - obsolete */
++	ELS_RCS =	0x07,	/* read connection status */
++	ELS_RES =	0x08,	/* read exchange status block */
++	ELS_RSS =	0x09,	/* read sequence status block */
++	ELS_RSI =	0x0a,	/* read sequence initiative */
++	ELS_ESTS =	0x0b,	/* establish streaming */
++	ELS_ESTC =	0x0c,	/* estimate credit */
++	ELS_ADVC =	0x0d,	/* advise credit */
++	ELS_RTV =	0x0e,	/* read timeout value */
++	ELS_RLS =	0x0f,	/* read link error status block */
++	ELS_ECHO =	0x10,	/* echo */
++	ELS_TEST =	0x11,	/* test */
++	ELS_RRQ =	0x12,	/* reinstate recovery qualifier */
++	ELS_REC =	0x13,	/* read exchange concise */
++	ELS_SRR =	0x14,	/* sequence retransmission request */
++	ELS_PRLI =	0x20,	/* process login */
++	ELS_PRLO =	0x21,	/* process logout */
++	ELS_SCN =	0x22,	/* state change notification */
++	ELS_TPLS =	0x23,	/* test process login state */
++	ELS_TPRLO =	0x24,	/* third party process logout */
++	ELS_LCLM =	0x25,	/* login control list mgmt (obs) */
++	ELS_GAID =	0x30,	/* get alias_ID */
++	ELS_FACT =	0x31,	/* fabric activate alias_id */
++	ELS_FDACDT =	0x32,	/* fabric deactivate alias_id */
++	ELS_NACT =	0x33,	/* N-port activate alias_id */
++	ELS_NDACT =	0x34,	/* N-port deactivate alias_id */
++	ELS_QOSR =	0x40,	/* quality of service request */
++	ELS_RVCS =	0x41,	/* read virtual circuit status */
++	ELS_PDISC =	0x50,	/* discover N_port service params */
++	ELS_FDISC =	0x51,	/* discover F_port service params */
++	ELS_ADISC =	0x52,	/* discover address */
++	ELS_RNC =	0x53,	/* report node cap (obs) */
++	ELS_FARP_REQ =	0x54,	/* FC ARP request */
++	ELS_FARP_REPL =	0x55,	/* FC ARP reply */
++	ELS_RPS =	0x56,	/* read port status block */
++	ELS_RPL =	0x57,	/* read port list */
++	ELS_RPBC =	0x58,	/* read port buffer condition */
++	ELS_FAN =	0x60,	/* fabric address notification */
++	ELS_RSCN =	0x61,	/* registered state change notification */
++	ELS_SCR =	0x62,	/* state change registration */
++	ELS_RNFT =	0x63,	/* report node FC-4 types */
++	ELS_CSR =	0x68,	/* clock synch. request */
++	ELS_CSU =	0x69,	/* clock synch. update */
++	ELS_LINIT =	0x70,	/* loop initialize */
++	ELS_LSTS =	0x72,	/* loop status */
++	ELS_RNID =	0x78,	/* request node ID data */
++	ELS_RLIR =	0x79,	/* registered link incident report */
++	ELS_LIRR =	0x7a,	/* link incident record registration */
++	ELS_SRL =	0x7b,	/* scan remote loop */
++	ELS_SBRP =	0x7c,	/* set bit-error reporting params */
++	ELS_RPSC =	0x7d,	/* report speed capabilities */
++	ELS_QSA =	0x7e,	/* query security attributes */
++	ELS_EVFP =	0x7f,	/* exchange virt. fabrics params */
++	ELS_LKA =	0x80,	/* link keep-alive */
++	ELS_AUTH_ELS =	0x90,	/* authentication ELS */
++};
++
++/*
++ * Initializer useful for decoding table.
++ * Please keep this in sync with the above definitions.
++ */
++#define	FC_ELS_CMDS_INIT {			\
++	[ELS_LS_RJT] =	"LS_RJT",		\
++	[ELS_LS_ACC] =	"LS_ACC",		\
++	[ELS_PLOGI] =	"PLOGI",		\
++	[ELS_FLOGI] =	"FLOGI",		\
++	[ELS_LOGO] =	"LOGO",			\
++	[ELS_ABTX] =	"ABTX",			\
++	[ELS_RCS] =	"RCS",			\
++	[ELS_RES] =	"RES",			\
++	[ELS_RSS] =	"RSS",			\
++	[ELS_RSI] =	"RSI",			\
++	[ELS_ESTS] =	"ESTS",			\
++	[ELS_ESTC] =	"ESTC",			\
++	[ELS_ADVC] =	"ADVC",			\
++	[ELS_RTV] =	"RTV",			\
++	[ELS_RLS] =	"RLS",			\
++	[ELS_ECHO] =	"ECHO",			\
++	[ELS_TEST] =	"TEST",			\
++	[ELS_RRQ] =	"RRQ",			\
++	[ELS_REC] =	"REC",			\
++	[ELS_SRR] =	"SRR",			\
++	[ELS_PRLI] =	"PRLI",			\
++	[ELS_PRLO] =	"PRLO",			\
++	[ELS_SCN] =	"SCN",			\
++	[ELS_TPLS] =	"TPLS",			\
++	[ELS_TPRLO] =	"TPRLO",		\
++	[ELS_LCLM] =	"LCLM",			\
++	[ELS_GAID] =	"GAID",			\
++	[ELS_FACT] =	"FACT",			\
++	[ELS_FDACDT] =	"FDACDT",		\
++	[ELS_NACT] =	"NACT",			\
++	[ELS_NDACT] =	"NDACT",		\
++	[ELS_QOSR] =	"QOSR",			\
++	[ELS_RVCS] =	"RVCS",			\
++	[ELS_PDISC] =	"PDISC",		\
++	[ELS_FDISC] =	"FDISC",		\
++	[ELS_ADISC] =	"ADISC",		\
++	[ELS_RNC] =	"RNC",			\
++	[ELS_FARP_REQ] = "FARP_REQ",		\
++	[ELS_FARP_REPL] =  "FARP_REPL",		\
++	[ELS_RPS] =	"RPS",			\
++	[ELS_RPL] =	"RPL",			\
++	[ELS_RPBC] =	"RPBC",			\
++	[ELS_FAN] =	"FAN",			\
++	[ELS_RSCN] =	"RSCN",			\
++	[ELS_SCR] =	"SCR",			\
++	[ELS_RNFT] =	"RNFT",			\
++	[ELS_CSR] =	"CSR",			\
++	[ELS_CSU] =	"CSU",			\
++	[ELS_LINIT] =	"LINIT",		\
++	[ELS_LSTS] =	"LSTS",			\
++	[ELS_RNID] =	"RNID",			\
++	[ELS_RLIR] =	"RLIR",			\
++	[ELS_LIRR] =	"LIRR",			\
++	[ELS_SRL] =	"SRL",			\
++	[ELS_SBRP] =	"SBRP",			\
++	[ELS_RPSC] =	"RPSC",			\
++	[ELS_QSA] =	"QSA",			\
++	[ELS_EVFP] =	"EVFP",			\
++	[ELS_LKA] =	"LKA",			\
++	[ELS_AUTH_ELS] = "AUTH_ELS",		\
 +}
- 
- static struct fcoe_transport fcoe_sw_transport = {
- 	.name = {FCOE_TRANSPORT_DEFAULT},
-@@ -2613,9 +2636,9 @@ static void __exit fcoe_exit(void)
- 	/* releases the associated fcoe hosts */
- 	rtnl_lock();
- 	list_for_each_entry_safe(fcoe, tmp, &fcoe_hostlist, list) {
--		list_del(&fcoe->list);
- 		ctlr = fcoe_to_ctlr(fcoe);
- 		port = lport_priv(ctlr->lp);
-+		fcoe_hostlist_del(port->lport);
- 		queue_work(fcoe_wq, &port->destroy_work);
- 	}
- 	rtnl_unlock();
++
++/*
++ * LS_ACC payload.
++ */
++struct fc_els_ls_acc {
++	__u8          la_cmd;		/* command code ELS_LS_ACC */
++	__u8          la_resv[3];	/* reserved */
++};
++
++/*
++ * ELS reject payload.
++ */
++struct fc_els_ls_rjt {
++	__u8	er_cmd;		/* command code ELS_LS_RJT */
++	__u8	er_resv[4];	/* reserved must be zero */
++	__u8	er_reason;	/* reason (enum fc_els_rjt_reason below) */
++	__u8	er_explan;	/* explanation (enum fc_els_rjt_explan below) */
++	__u8	er_vendor;	/* vendor specific code */
++};
++
++/*
++ * ELS reject reason codes (er_reason).
++ */
++enum fc_els_rjt_reason {
++	ELS_RJT_NONE =		0,	/* no reject - not to be sent */
++	ELS_RJT_INVAL =		0x01,	/* invalid ELS command code */
++	ELS_RJT_LOGIC =		0x03,	/* logical error */
++	ELS_RJT_BUSY =		0x05,	/* logical busy */
++	ELS_RJT_PROT =		0x07,	/* protocol error */
++	ELS_RJT_UNAB =		0x09,	/* unable to perform command request */
++	ELS_RJT_UNSUP =		0x0b,	/* command not supported */
++	ELS_RJT_INPROG =	0x0e,	/* command already in progress */
++	ELS_RJT_FIP =		0x20,	/* FIP error */
++	ELS_RJT_VENDOR =	0xff,	/* vendor specific error */
++};
++
++
++/*
++ * reason code explanation (er_explan).
++ */
++enum fc_els_rjt_explan {
++	ELS_EXPL_NONE =		0x00,	/* No additional explanation */
++	ELS_EXPL_SPP_OPT_ERR =	0x01,	/* service parameter error - options */
++	ELS_EXPL_SPP_ICTL_ERR =	0x03,	/* service parm error - initiator ctl */
++	ELS_EXPL_AH =		0x11,	/* invalid association header */
++	ELS_EXPL_AH_REQ =	0x13,	/* association_header required */
++	ELS_EXPL_SID =		0x15,	/* invalid originator S_ID */
++	ELS_EXPL_OXID_RXID =	0x17,	/* invalid OX_ID-RX_ID combination */
++	ELS_EXPL_INPROG =	0x19,	/* Request already in progress */
++	ELS_EXPL_PLOGI_REQD =	0x1e,	/* N_Port login required */
++	ELS_EXPL_INSUF_RES =	0x29,	/* insufficient resources */
++	ELS_EXPL_UNAB_DATA =	0x2a,	/* unable to supply requested data */
++	ELS_EXPL_UNSUPR =	0x2c,	/* Request not supported */
++	ELS_EXPL_INV_LEN =	0x2d,	/* Invalid payload length */
++	ELS_EXPL_NOT_NEIGHBOR = 0x62,	/* VN2VN_Port not in neighbor set */
++	/* TBD - above definitions incomplete */
++};
++
++/*
++ * Common service parameters (N ports).
++ */
++struct fc_els_csp {
++	__u8		sp_hi_ver;	/* highest version supported (obs.) */
++	__u8		sp_lo_ver;	/* highest version supported (obs.) */
++	__be16		sp_bb_cred;	/* buffer-to-buffer credits */
++	__be16		sp_features;	/* common feature flags */
++	__be16		sp_bb_data;	/* b-b state number and data field sz */
++	union {
++		struct {
++			__be16	_sp_tot_seq; /* total concurrent sequences */
++			__be16	_sp_rel_off; /* rel. offset by info cat */
++		} sp_plogi;
++		struct {
++			__be32	_sp_r_a_tov; /* resource alloc. timeout msec */
++		} sp_flogi_acc;
++	} sp_u;
++	__be32		sp_e_d_tov;	/* error detect timeout value */
++};
++#define	sp_tot_seq	sp_u.sp_plogi._sp_tot_seq
++#define	sp_rel_off	sp_u.sp_plogi._sp_rel_off
++#define	sp_r_a_tov	sp_u.sp_flogi_acc._sp_r_a_tov
++
++#define	FC_SP_BB_DATA_MASK 0xfff /* mask for data field size in sp_bb_data */
++
++/*
++ * Minimum and maximum values for max data field size in service parameters.
++ */
++#define	FC_SP_MIN_MAX_PAYLOAD	FC_MIN_MAX_PAYLOAD
++#define	FC_SP_MAX_MAX_PAYLOAD	FC_MAX_PAYLOAD
++
++/*
++ * sp_features
++ */
++#define	FC_SP_FT_NPIV	0x8000	/* multiple N_Port_ID support (FLOGI) */
++#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel off (PLOGI) */
++#define	FC_SP_FT_CLAD	0x8000	/* clean address (in FLOGI LS_ACC) */
++#define	FC_SP_FT_RAND	0x4000	/* random relative offset */
++#define	FC_SP_FT_VAL	0x2000	/* valid vendor version level */
++#define	FC_SP_FT_NPIV_ACC	0x2000	/* NPIV assignment (FLOGI LS_ACC) */
++#define	FC_SP_FT_FPORT	0x1000	/* F port (1) vs. N port (0) */
++#define	FC_SP_FT_ABB	0x0800	/* alternate BB_credit management */
++#define	FC_SP_FT_EDTR	0x0400	/* E_D_TOV Resolution is nanoseconds */
++#define	FC_SP_FT_MCAST	0x0200	/* multicast */
++#define	FC_SP_FT_BCAST	0x0100	/* broadcast */
++#define	FC_SP_FT_HUNT	0x0080	/* hunt group */
++#define	FC_SP_FT_SIMP	0x0040	/* dedicated simplex */
++#define	FC_SP_FT_SEC	0x0020	/* reserved for security */
++#define	FC_SP_FT_CSYN	0x0010	/* clock synch. supported */
++#define	FC_SP_FT_RTTOV	0x0008	/* R_T_TOV value 100 uS, else 100 mS */
++#define	FC_SP_FT_HALF	0x0004	/* dynamic half duplex */
++#define	FC_SP_FT_SEQC	0x0002	/* SEQ_CNT */
++#define	FC_SP_FT_PAYL	0x0001	/* FLOGI payload length 256, else 116 */
++
++/*
++ * Class-specific service parameters.
++ */
++struct fc_els_cssp {
++	__be16		cp_class;	/* class flags */
++	__be16		cp_init;	/* initiator flags */
++	__be16		cp_recip;	/* recipient flags */
++	__be16		cp_rdfs;	/* receive data field size */
++	__be16		cp_con_seq;	/* concurrent sequences */
++	__be16		cp_ee_cred;	/* N-port end-to-end credit */
++	__u8		cp_resv1;	/* reserved */
++	__u8		cp_open_seq;	/* open sequences per exchange */
++	__u8		_cp_resv2[2];	/* reserved */
++};
++
++/*
++ * cp_class flags.
++ */
++#define	FC_CPC_VALID	0x8000		/* class valid */
++#define	FC_CPC_IMIX	0x4000		/* intermix mode */
++#define	FC_CPC_SEQ	0x0800		/* sequential delivery */
++#define	FC_CPC_CAMP	0x0200		/* camp-on */
++#define	FC_CPC_PRI	0x0080		/* priority */
++
++/*
++ * cp_init flags.
++ * (TBD: not all flags defined here).
++ */
++#define	FC_CPI_CSYN	0x0010		/* clock synch. capable */
++
++/*
++ * cp_recip flags.
++ */
++#define	FC_CPR_CSYN	0x0008		/* clock synch. capable */
++
++/*
++ * NFC_ELS_FLOGI: Fabric login request.
++ * NFC_ELS_PLOGI: Port login request (same format).
++ */
++struct fc_els_flogi {
++	__u8		fl_cmd;		/* command */
++	__u8		_fl_resvd[3];	/* must be zero */
++	struct fc_els_csp fl_csp;	/* common service parameters */
++	__be64		fl_wwpn;	/* port name */
++	__be64		fl_wwnn;	/* node name */
++	struct fc_els_cssp fl_cssp[4];	/* class 1-4 service parameters */
++	__u8		fl_vend[16];	/* vendor version level */
++} __attribute__((__packed__));
++
++/*
++ * Process login service parameter page.
++ */
++struct fc_els_spp {
++	__u8		spp_type;	/* type code or common service params */
++	__u8		spp_type_ext;	/* type code extension */
++	__u8		spp_flags;
++	__u8		_spp_resvd;
++	__be32		spp_orig_pa;	/* originator process associator */
++	__be32		spp_resp_pa;	/* responder process associator */
++	__be32		spp_params;	/* service parameters */
++};
++
++/*
++ * spp_flags.
++ */
++#define	FC_SPP_OPA_VAL	    0x80	/* originator proc. assoc. valid */
++#define	FC_SPP_RPA_VAL	    0x40	/* responder proc. assoc. valid */
++#define	FC_SPP_EST_IMG_PAIR 0x20	/* establish image pair */
++#define	FC_SPP_RESP_MASK    0x0f	/* mask for response code (below) */
++
++/*
++ * SPP response code in spp_flags - lower 4 bits.
++ */
++enum fc_els_spp_resp {
++	FC_SPP_RESP_ACK	=	1,	/* request executed */
++	FC_SPP_RESP_RES =	2,	/* unable due to lack of resources */
++	FC_SPP_RESP_INIT =	3,	/* initialization not complete */
++	FC_SPP_RESP_NO_PA = 	4,	/* unknown process associator */
++	FC_SPP_RESP_CONF = 	5,	/* configuration precludes image pair */
++	FC_SPP_RESP_COND = 	6,	/* request completed conditionally */
++	FC_SPP_RESP_MULT = 	7,	/* unable to handle multiple SPPs */
++	FC_SPP_RESP_INVL = 	8,	/* SPP is invalid */
++};
++
++/*
++ * ELS_RRQ - Reinstate Recovery Qualifier
++ */
++struct fc_els_rrq {
++	__u8		rrq_cmd;	/* command (0x12) */
++	__u8		rrq_zero[3];	/* specified as zero - part of cmd */
++	__u8		rrq_resvd;	/* reserved */
++	__u8		rrq_s_id[3];	/* originator FID */
++	__be16		rrq_ox_id;	/* originator exchange ID */
++	__be16		rrq_rx_id;	/* responders exchange ID */
++};
++
++/*
++ * ELS_REC - Read exchange concise.
++ */
++struct fc_els_rec {
++	__u8		rec_cmd;	/* command (0x13) */
++	__u8		rec_zero[3];	/* specified as zero - part of cmd */
++	__u8		rec_resvd;	/* reserved */
++	__u8		rec_s_id[3];	/* originator FID */
++	__be16		rec_ox_id;	/* originator exchange ID */
++	__be16		rec_rx_id;	/* responders exchange ID */
++};
++
++/*
++ * ELS_REC LS_ACC payload.
++ */
++struct fc_els_rec_acc {
++	__u8		reca_cmd;	/* accept (0x02) */
++	__u8		reca_zero[3];	/* specified as zero - part of cmd */
++	__be16		reca_ox_id;	/* originator exchange ID */
++	__be16		reca_rx_id;	/* responders exchange ID */
++	__u8		reca_resvd1;	/* reserved */
++	__u8		reca_ofid[3];	/* originator FID */
++	__u8		reca_resvd2;	/* reserved */
++	__u8		reca_rfid[3];	/* responder FID */
++	__be32		reca_fc4value;	/* FC4 value */
++	__be32		reca_e_stat;	/* ESB (exchange status block) status */
++};
++
++/*
++ * ELS_PRLI - Process login request and response.
++ */
++struct fc_els_prli {
++	__u8		prli_cmd;	/* command */
++	__u8		prli_spp_len;	/* length of each serv. parm. page */
++	__be16		prli_len;	/* length of entire payload */
++	/* service parameter pages follow */
++};
++
++/*
++ * ELS_PRLO - Process logout request and response.
++ */
++struct fc_els_prlo {
++	__u8            prlo_cmd;       /* command */
++	__u8            prlo_obs;       /* obsolete, but shall be set to 10h */
++	__be16          prlo_len;       /* payload length */
++};
++
++/*
++ * ELS_ADISC payload
++ */
++struct fc_els_adisc {
++	__u8		adisc_cmd;
++	__u8		adisc_resv[3];
++	__u8            adisc_resv1;
++	__u8            adisc_hard_addr[3];
++	__be64          adisc_wwpn;
++	__be64          adisc_wwnn;
++	__u8            adisc_resv2;
++	__u8            adisc_port_id[3];
++} __attribute__((__packed__));
++
++/*
++ * ELS_LOGO - process or fabric logout.
++ */
++struct fc_els_logo {
++	__u8		fl_cmd;		/* command code */
++	__u8		fl_zero[3];	/* specified as zero - part of cmd */
++	__u8		fl_resvd;	/* reserved */
++	__u8		fl_n_port_id[3];/* N port ID */
++	__be64		fl_n_port_wwn;	/* port name */
++};
++
++/*
++ * ELS_RTV - read timeout value.
++ */
++struct fc_els_rtv {
++	__u8		rtv_cmd;	/* command code 0x0e */
++	__u8		rtv_zero[3];	/* specified as zero - part of cmd */
++};
++
++/*
++ * LS_ACC for ELS_RTV - read timeout value.
++ */
++struct fc_els_rtv_acc {
++	__u8		rtv_cmd;	/* command code 0x02 */
++	__u8		rtv_zero[3];	/* specified as zero - part of cmd */
++	__be32		rtv_r_a_tov;	/* resource allocation timeout value */
++	__be32		rtv_e_d_tov;	/* error detection timeout value */
++	__be32		rtv_toq;	/* timeout qualifier (see below) */
++};
++
++/*
++ * rtv_toq bits.
++ */
++#define	FC_ELS_RTV_EDRES (1 << 26)	/* E_D_TOV resolution is nS else mS */
++#define	FC_ELS_RTV_RTTOV (1 << 19)	/* R_T_TOV is 100 uS else 100 mS */
++
++/*
++ * ELS_SCR - state change registration payload.
++ */
++struct fc_els_scr {
++	__u8		scr_cmd;	/* command code */
++	__u8		scr_resv[6];	/* reserved */
++	__u8		scr_reg_func;	/* registration function (see below) */
++};
++
++enum fc_els_scr_func {
++	ELS_SCRF_FAB =	1,	/* fabric-detected registration */
++	ELS_SCRF_NPORT = 2,	/* Nx_Port-detected registration */
++	ELS_SCRF_FULL =	3,	/* full registration */
++	ELS_SCRF_CLEAR = 255,	/* remove any current registrations */
++};
++
++/*
++ * ELS_RSCN - registered state change notification payload.
++ */
++struct fc_els_rscn {
++	__u8		rscn_cmd;	/* RSCN opcode (0x61) */
++	__u8		rscn_page_len;	/* page length (4) */
++	__be16		rscn_plen;	/* payload length including this word */
++
++	/* followed by 4-byte generic affected Port_ID pages */
++};
++
++struct fc_els_rscn_page {
++	__u8		rscn_page_flags; /* event and address format */
++	__u8		rscn_fid[3];	/* fabric ID */
++};
++
++#define	ELS_RSCN_EV_QUAL_BIT	2	/* shift count for event qualifier */
++#define	ELS_RSCN_EV_QUAL_MASK	0xf	/* mask for event qualifier */
++#define	ELS_RSCN_ADDR_FMT_BIT	0	/* shift count for address format */
++#define	ELS_RSCN_ADDR_FMT_MASK	0x3	/* mask for address format */
++
++enum fc_els_rscn_ev_qual {
++	ELS_EV_QUAL_NONE = 0,		/* unspecified */
++	ELS_EV_QUAL_NS_OBJ = 1,		/* changed name server object */
++	ELS_EV_QUAL_PORT_ATTR = 2,	/* changed port attribute */
++	ELS_EV_QUAL_SERV_OBJ = 3,	/* changed service object */
++	ELS_EV_QUAL_SW_CONFIG = 4,	/* changed switch configuration */
++	ELS_EV_QUAL_REM_OBJ = 5,	/* removed object */
++};
++
++enum fc_els_rscn_addr_fmt {
++	ELS_ADDR_FMT_PORT = 0,	/* rscn_fid is a port address */
++	ELS_ADDR_FMT_AREA = 1,	/* rscn_fid is a area address */
++	ELS_ADDR_FMT_DOM = 2,	/* rscn_fid is a domain address */
++	ELS_ADDR_FMT_FAB = 3,	/* anything on fabric may have changed */
++};
++
++/*
++ * ELS_RNID - request Node ID.
++ */
++struct fc_els_rnid {
++	__u8		rnid_cmd;	/* RNID opcode (0x78) */
++	__u8		rnid_resv[3];	/* reserved */
++	__u8		rnid_fmt;	/* data format */
++	__u8		rnid_resv2[3];	/* reserved */
++};
++
++/*
++ * Node Identification Data formats (rnid_fmt)
++ */
++enum fc_els_rnid_fmt {
++	ELS_RNIDF_NONE = 0,		/* no specific identification data */
++	ELS_RNIDF_GEN = 0xdf,		/* general topology discovery format */
++};
++
++/*
++ * ELS_RNID response.
++ */
++struct fc_els_rnid_resp {
++	__u8		rnid_cmd;	/* response code (LS_ACC) */
++	__u8		rnid_resv[3];	/* reserved */
++	__u8		rnid_fmt;	/* data format */
++	__u8		rnid_cid_len;	/* common ID data length */
++	__u8		rnid_resv2;	/* reserved */
++	__u8		rnid_sid_len;	/* specific ID data length */
++};
++
++struct fc_els_rnid_cid {
++	__be64		rnid_wwpn;	/* N port name */
++	__be64		rnid_wwnn;	/* node name */
++};
++
++struct fc_els_rnid_gen {
++	__u8		rnid_vend_id[16]; /* vendor-unique ID */
++	__be32		rnid_atype;	/* associated type (see below) */
++	__be32		rnid_phys_port;	/* physical port number */
++	__be32		rnid_att_nodes;	/* number of attached nodes */
++	__u8		rnid_node_mgmt;	/* node management (see below) */
++	__u8		rnid_ip_ver;	/* IP version (see below) */
++	__be16		rnid_prot_port;	/* UDP / TCP port number */
++	__be32		rnid_ip_addr[4]; /* IP address */
++	__u8		rnid_resvd[2];	/* reserved */
++	__be16		rnid_vend_spec;	/* vendor-specific field */
++};
++
++enum fc_els_rnid_atype {
++	ELS_RNIDA_UNK =		0x01,	/* unknown */
++	ELS_RNIDA_OTHER =	0x02,	/* none of the following */
++	ELS_RNIDA_HUB =		0x03,
++	ELS_RNIDA_SWITCH =	0x04,
++	ELS_RNIDA_GATEWAY =	0x05,
++	ELS_RNIDA_CONV =	0x06,   /* Obsolete, do not use this value */
++	ELS_RNIDA_HBA =	        0x07,   /* Obsolete, do not use this value */
++	ELS_RNIDA_PROXY =       0x08,   /* Obsolete, do not use this value */
++	ELS_RNIDA_STORAGE =	0x09,
++	ELS_RNIDA_HOST =	0x0a,
++	ELS_RNIDA_SUBSYS =	0x0b,	/* storage subsystem (e.g., RAID) */
++	ELS_RNIDA_ACCESS =	0x0e,	/* access device (e.g. media changer) */
++	ELS_RNIDA_NAS =		0x11,	/* NAS server */
++	ELS_RNIDA_BRIDGE =	0x12,	/* bridge */
++	ELS_RNIDA_VIRT =	0x13,	/* virtualization device */
++	ELS_RNIDA_MF =		0xff,	/* multifunction device (bits below) */
++	ELS_RNIDA_MF_HUB =	1UL << 31, 	/* hub */
++	ELS_RNIDA_MF_SW =	1UL << 30, 	/* switch */
++	ELS_RNIDA_MF_GW =	1UL << 29,	/* gateway */
++	ELS_RNIDA_MF_ST =	1UL << 28,	/* storage */
++	ELS_RNIDA_MF_HOST =	1UL << 27,	/* host */
++	ELS_RNIDA_MF_SUB =	1UL << 26,	/* storage subsystem */
++	ELS_RNIDA_MF_ACC =	1UL << 25,	/* storage access dev */
++	ELS_RNIDA_MF_WDM =	1UL << 24,	/* wavelength division mux */
++	ELS_RNIDA_MF_NAS =	1UL << 23,	/* NAS server */
++	ELS_RNIDA_MF_BR =	1UL << 22,	/* bridge */
++	ELS_RNIDA_MF_VIRT =	1UL << 21,	/* virtualization device */
++};
++
++enum fc_els_rnid_mgmt {
++	ELS_RNIDM_SNMP =	0,
++	ELS_RNIDM_TELNET =	1,
++	ELS_RNIDM_HTTP =	2,
++	ELS_RNIDM_HTTPS =	3,
++	ELS_RNIDM_XML =		4,	/* HTTP + XML */
++};
++
++enum fc_els_rnid_ipver {
++	ELS_RNIDIP_NONE =	0,	/* no IP support or node mgmt. */
++	ELS_RNIDIP_V4 =		1,	/* IPv4 */
++	ELS_RNIDIP_V6 =		2,	/* IPv6 */
++};
++
++/*
++ * ELS RPL - Read Port List.
++ */
++struct fc_els_rpl {
++	__u8		rpl_cmd;	/* command */
++	__u8		rpl_resv[5];	/* reserved - must be zero */
++	__be16		rpl_max_size;	/* maximum response size or zero */
++	__u8		rpl_resv1;	/* reserved - must be zero */
++	__u8		rpl_index[3];	/* starting index */
++};
++
++/*
++ * Port number block in RPL response.
++ */
++struct fc_els_pnb {
++	__be32		pnb_phys_pn;	/* physical port number */
++	__u8		pnb_resv;	/* reserved */
++	__u8		pnb_port_id[3];	/* port ID */
++	__be64		pnb_wwpn;	/* port name */
++};
++
++/*
++ * RPL LS_ACC response.
++ */
++struct fc_els_rpl_resp {
++	__u8		rpl_cmd;	/* ELS_LS_ACC */
++	__u8		rpl_resv1;	/* reserved - must be zero */
++	__be16		rpl_plen;	/* payload length */
++	__u8		rpl_resv2;	/* reserved - must be zero */
++	__u8		rpl_llen[3];	/* list length */
++	__u8		rpl_resv3;	/* reserved - must be zero */
++	__u8		rpl_index[3];	/* starting index */
++	struct fc_els_pnb rpl_pnb[1];	/* variable number of PNBs */
++};
++
++/*
++ * Link Error Status Block.
++ */
++struct fc_els_lesb {
++	__be32		lesb_link_fail;	/* link failure count */
++	__be32		lesb_sync_loss;	/* loss of synchronization count */
++	__be32		lesb_sig_loss;	/* loss of signal count */
++	__be32		lesb_prim_err;	/* primitive sequence error count */
++	__be32		lesb_inv_word;	/* invalid transmission word count */
++	__be32		lesb_inv_crc;	/* invalid CRC count */
++};
++
++/*
++ * ELS RPS - Read Port Status Block request.
++ */
++struct fc_els_rps {
++	__u8		rps_cmd;	/* command */
++	__u8		rps_resv[2];	/* reserved - must be zero */
++	__u8		rps_flag;	/* flag - see below */
++	__be64		rps_port_spec;	/* port selection */
++};
++
++enum fc_els_rps_flag {
++	FC_ELS_RPS_DID =	0x00,	/* port identified by D_ID of req. */
++	FC_ELS_RPS_PPN =	0x01,	/* port_spec is physical port number */
++	FC_ELS_RPS_WWPN =	0x02,	/* port_spec is port WWN */
++};
++
++/*
++ * ELS RPS LS_ACC response.
++ */
++struct fc_els_rps_resp {
++	__u8		rps_cmd;	/* command - LS_ACC */
++	__u8		rps_resv[2];	/* reserved - must be zero */
++	__u8		rps_flag;	/* flag - see below */
++	__u8		rps_resv2[2];	/* reserved */
++	__be16		rps_status;	/* port status - see below */
++	struct fc_els_lesb rps_lesb;	/* link error status block */
++};
++
++enum fc_els_rps_resp_flag {
++	FC_ELS_RPS_LPEV =	0x01,	/* L_port extension valid */
++};
++
++enum fc_els_rps_resp_status {
++	FC_ELS_RPS_PTP =	1 << 5,	/* point-to-point connection */
++	FC_ELS_RPS_LOOP =	1 << 4,	/* loop mode */
++	FC_ELS_RPS_FAB =	1 << 3,	/* fabric present */
++	FC_ELS_RPS_NO_SIG =	1 << 2,	/* loss of signal */
++	FC_ELS_RPS_NO_SYNC =	1 << 1,	/* loss of synchronization */
++	FC_ELS_RPS_RESET =	1 << 0,	/* in link reset protocol */
++};
++
++/*
++ * ELS LIRR - Link Incident Record Registration request.
++ */
++struct fc_els_lirr {
++	__u8		lirr_cmd;	/* command */
++	__u8		lirr_resv[3];	/* reserved - must be zero */
++	__u8		lirr_func;	/* registration function */
++	__u8		lirr_fmt;	/* FC-4 type of RLIR requested */
++	__u8		lirr_resv2[2];	/* reserved - must be zero */
++};
++
++enum fc_els_lirr_func {
++	ELS_LIRR_SET_COND = 	0x01,	/* set - conditionally receive */
++	ELS_LIRR_SET_UNCOND = 	0x02,	/* set - unconditionally receive */
++	ELS_LIRR_CLEAR = 	0xff	/* clear registration */
++};
++
++/*
++ * ELS SRL - Scan Remote Loop request.
++ */
++struct fc_els_srl {
++	__u8		srl_cmd;	/* command */
++	__u8		srl_resv[3];	/* reserved - must be zero */
++	__u8		srl_flag;	/* flag - see below */
++	__u8		srl_flag_param[3];	/* flag parameter */
++};
++
++enum fc_els_srl_flag {
++	FC_ELS_SRL_ALL =	0x00,	/* scan all FL ports */
++	FC_ELS_SRL_ONE =	0x01,	/* scan specified loop */
++	FC_ELS_SRL_EN_PER =	0x02,	/* enable periodic scanning (param) */
++	FC_ELS_SRL_DIS_PER =	0x03,	/* disable periodic scanning */
++};
++
++/*
++ * ELS RLS - Read Link Error Status Block request.
++ */
++struct fc_els_rls {
++	__u8		rls_cmd;	/* command */
++	__u8		rls_resv[4];	/* reserved - must be zero */
++	__u8		rls_port_id[3];	/* port ID */
++};
++
++/*
++ * ELS RLS LS_ACC Response.
++ */
++struct fc_els_rls_resp {
++	__u8		rls_cmd;	/* ELS_LS_ACC */
++	__u8		rls_resv[3];	/* reserved - must be zero */
++	struct fc_els_lesb rls_lesb;	/* link error status block */
++};
++
++/*
++ * ELS RLIR - Registered Link Incident Report.
++ * This is followed by the CLIR and the CLID, described below.
++ */
++struct fc_els_rlir {
++	__u8		rlir_cmd;	/* command */
++	__u8		rlir_resv[3];	/* reserved - must be zero */
++	__u8		rlir_fmt;	/* format (FC4-type if type specific) */
++	__u8		rlir_clr_len;	/* common link incident record length */
++	__u8		rlir_cld_len;	/* common link incident desc. length */
++	__u8		rlir_slr_len;	/* spec. link incident record length */
++};
++
++/*
++ * CLIR - Common Link Incident Record Data. - Sent via RLIR.
++ */
++struct fc_els_clir {
++	__be64		clir_wwpn;	/* incident port name */
++	__be64		clir_wwnn;	/* incident port node name */
++	__u8		clir_port_type;	/* incident port type */
++	__u8		clir_port_id[3];	/* incident port ID */
++
++	__be64		clir_conn_wwpn;	/* connected port name */
++	__be64		clir_conn_wwnn;	/* connected node name */
++	__be64		clir_fab_name;	/* fabric name */
++	__be32		clir_phys_port;	/* physical port number */
++	__be32		clir_trans_id;	/* transaction ID */
++	__u8		clir_resv[3];	/* reserved */
++	__u8		clir_ts_fmt;	/* time stamp format */
++	__be64		clir_timestamp;	/* time stamp */
++};
++
++/*
++ * CLIR clir_ts_fmt - time stamp format values.
++ */
++enum fc_els_clir_ts_fmt {
++	ELS_CLIR_TS_UNKNOWN = 	0,	/* time stamp field unknown */
++	ELS_CLIR_TS_SEC_FRAC = 	1,	/* time in seconds and fractions */
++	ELS_CLIR_TS_CSU =	2,	/* time in clock synch update format */
++};
++
++/*
++ * Common Link Incident Descriptor - sent via RLIR.
++ */
++struct fc_els_clid {
++	__u8		clid_iq;	/* incident qualifier flags */
++	__u8		clid_ic;	/* incident code */
++	__be16		clid_epai;	/* domain/area of ISL */
++};
++
++/*
++ * CLID incident qualifier flags.
++ */
++enum fc_els_clid_iq {
++	ELS_CLID_SWITCH =	0x20,	/* incident port is a switch node */
++	ELS_CLID_E_PORT =	0x10,	/* incident is an ISL (E) port */
++	ELS_CLID_SEV_MASK =	0x0c,	/* severity 2-bit field mask */
++	ELS_CLID_SEV_INFO =	0x00,	/* report is informational */
++	ELS_CLID_SEV_INOP =	0x08,	/* link not operational */
++	ELS_CLID_SEV_DEG =	0x04,	/* link degraded but operational */
++	ELS_CLID_LASER =	0x02,	/* subassembly is a laser */
++	ELS_CLID_FRU =		0x01,	/* format can identify a FRU */
++};
++
++/*
++ * CLID incident code.
++ */
++enum fc_els_clid_ic {
++	ELS_CLID_IC_IMPL =	1,	/* implicit incident */
++	ELS_CLID_IC_BER =	2,	/* bit-error-rate threshold exceeded */
++	ELS_CLID_IC_LOS =	3,	/* loss of synch or signal */
++	ELS_CLID_IC_NOS =	4,	/* non-operational primitive sequence */
++	ELS_CLID_IC_PST =	5,	/* primitive sequence timeout */
++	ELS_CLID_IC_INVAL =	6,	/* invalid primitive sequence */
++	ELS_CLID_IC_LOOP_TO =	7,	/* loop initialization time out */
++	ELS_CLID_IC_LIP =	8,	/* receiving LIP */
++};
++
++#endif /* _FC_ELS_H_ */
+diff --git a/include/uapi/scsi/fc/fc_fs.h b/include/uapi/scsi/fc/fc_fs.h
+new file mode 100644
+index 0000000..50f28b1
+--- /dev/null
++++ b/include/uapi/scsi/fc/fc_fs.h
+@@ -0,0 +1,348 @@
++/*
++ * Copyright(c) 2007 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Maintained at www.Open-FCoE.org
++ */
++
++#ifndef _FC_FS_H_
++#define _FC_FS_H_
++
++#include <linux/types.h>
++
++/*
++ * Fibre Channel Framing and Signalling definitions.
++ * From T11 FC-FS-2 Rev 0.90 - 9 August 2005.
++ */
++
++/*
++ * Frame header
++ */
++struct fc_frame_header {
++	__u8          fh_r_ctl;	/* routing control */
++	__u8          fh_d_id[3];	/* Destination ID */
++
++	__u8          fh_cs_ctl;	/* class of service control / pri */
++	__u8          fh_s_id[3];	/* Source ID */
++
++	__u8          fh_type;		/* see enum fc_fh_type below */
++	__u8          fh_f_ctl[3];	/* frame control */
++
++	__u8          fh_seq_id;	/* sequence ID */
++	__u8          fh_df_ctl;	/* data field control */
++	__be16        fh_seq_cnt;	/* sequence count */
++
++	__be16        fh_ox_id;		/* originator exchange ID */
++	__be16        fh_rx_id;		/* responder exchange ID */
++	__be32        fh_parm_offset;	/* parameter or relative offset */
++};
++
++#define FC_FRAME_HEADER_LEN 24	/* expected length of structure */
++
++#define FC_MAX_PAYLOAD  2112U		/* max payload length in bytes */
++#define FC_MIN_MAX_PAYLOAD  256U 	/* lower limit on max payload */
++
++#define FC_MAX_FRAME	(FC_MAX_PAYLOAD + FC_FRAME_HEADER_LEN)
++#define FC_MIN_MAX_FRAME (FC_MIN_MAX_PAYLOAD + FC_FRAME_HEADER_LEN)
++
++/*
++ * fh_r_ctl - Routing control definitions.
++ */
++    /*
++     * FC-4 device_data.
++     */
++enum fc_rctl {
++	FC_RCTL_DD_UNCAT = 0x00,	/* uncategorized information */
++	FC_RCTL_DD_SOL_DATA = 0x01,	/* solicited data */
++	FC_RCTL_DD_UNSOL_CTL = 0x02,	/* unsolicited control */
++	FC_RCTL_DD_SOL_CTL = 0x03,	/* solicited control or reply */
++	FC_RCTL_DD_UNSOL_DATA = 0x04,	/* unsolicited data */
++	FC_RCTL_DD_DATA_DESC = 0x05,	/* data descriptor */
++	FC_RCTL_DD_UNSOL_CMD = 0x06,	/* unsolicited command */
++	FC_RCTL_DD_CMD_STATUS = 0x07,	/* command status */
++
++#define FC_RCTL_ILS_REQ FC_RCTL_DD_UNSOL_CTL	/* ILS request */
++#define FC_RCTL_ILS_REP FC_RCTL_DD_SOL_CTL	/* ILS reply */
++
++	/*
++	 * Extended Link_Data
++	 */
++	FC_RCTL_ELS_REQ = 0x22,	/* extended link services request */
++	FC_RCTL_ELS_REP = 0x23,	/* extended link services reply */
++	FC_RCTL_ELS4_REQ = 0x32, /* FC-4 ELS request */
++	FC_RCTL_ELS4_REP = 0x33, /* FC-4 ELS reply */
++	/*
++	 * Optional Extended Headers
++	 */
++	FC_RCTL_VFTH = 0x50,	/* virtual fabric tagging header */
++	FC_RCTL_IFRH = 0x51,	/* inter-fabric routing header */
++	FC_RCTL_ENCH = 0x52,	/* encapsulation header */
++	/*
++	 * Basic Link Services fh_r_ctl values.
++	 */
++	FC_RCTL_BA_NOP = 0x80,	/* basic link service NOP */
++	FC_RCTL_BA_ABTS = 0x81,	/* basic link service abort */
++	FC_RCTL_BA_RMC = 0x82,	/* remove connection */
++	FC_RCTL_BA_ACC = 0x84,	/* basic accept */
++	FC_RCTL_BA_RJT = 0x85,	/* basic reject */
++	FC_RCTL_BA_PRMT = 0x86,	/* dedicated connection preempted */
++	/*
++	 * Link Control Information.
++	 */
++	FC_RCTL_ACK_1 = 0xc0,	/* acknowledge_1 */
++	FC_RCTL_ACK_0 = 0xc1,	/* acknowledge_0 */
++	FC_RCTL_P_RJT = 0xc2,	/* port reject */
++	FC_RCTL_F_RJT = 0xc3,	/* fabric reject */
++	FC_RCTL_P_BSY = 0xc4,	/* port busy */
++	FC_RCTL_F_BSY = 0xc5,	/* fabric busy to data frame */
++	FC_RCTL_F_BSYL = 0xc6,	/* fabric busy to link control frame */
++	FC_RCTL_LCR = 0xc7,	/* link credit reset */
++	FC_RCTL_END = 0xc9,	/* end */
++};
++				    /* incomplete list of definitions */
++
++/*
++ * R_CTL names initializer.
++ * Please keep this matching the above definitions.
++ */
++#define FC_RCTL_NAMES_INIT { \
++	[FC_RCTL_DD_UNCAT] =		"uncat",			\
++	[FC_RCTL_DD_SOL_DATA] =		"sol data",			\
++	[FC_RCTL_DD_UNSOL_CTL] =	"unsol ctl",			\
++	[FC_RCTL_DD_SOL_CTL] =		"sol ctl/reply",		\
++	[FC_RCTL_DD_UNSOL_DATA] =	"unsol data",			\
++	[FC_RCTL_DD_DATA_DESC] =	"data desc",			\
++	[FC_RCTL_DD_UNSOL_CMD] =	"unsol cmd",			\
++	[FC_RCTL_DD_CMD_STATUS] =	"cmd status",			\
++	[FC_RCTL_ELS_REQ] =		"ELS req",			\
++	[FC_RCTL_ELS_REP] =		"ELS rep",			\
++	[FC_RCTL_ELS4_REQ] =		"FC-4 ELS req",			\
++	[FC_RCTL_ELS4_REP] =		"FC-4 ELS rep",			\
++	[FC_RCTL_BA_NOP] =		"BLS NOP",			\
++	[FC_RCTL_BA_ABTS] =		"BLS abort",			\
++	[FC_RCTL_BA_RMC] =		"BLS remove connection",	\
++	[FC_RCTL_BA_ACC] =		"BLS accept",			\
++	[FC_RCTL_BA_RJT] =		"BLS reject",			\
++	[FC_RCTL_BA_PRMT] =		"BLS dedicated connection preempted", \
++	[FC_RCTL_ACK_1] =		"LC ACK_1",			\
++	[FC_RCTL_ACK_0] =		"LC ACK_0",			\
++	[FC_RCTL_P_RJT] =		"LC port reject",		\
++	[FC_RCTL_F_RJT] =		"LC fabric reject",		\
++	[FC_RCTL_P_BSY] =		"LC port busy",			\
++	[FC_RCTL_F_BSY] =		"LC fabric busy to data frame",	\
++	[FC_RCTL_F_BSYL] =		"LC fabric busy to link control frame",\
++	[FC_RCTL_LCR] =			"LC link credit reset",		\
++	[FC_RCTL_END] =			"LC end",			\
++}
++
++/*
++ * Well-known fabric addresses.
++ */
++enum fc_well_known_fid {
++	FC_FID_NONE =           0x000000,       /* No destination */
++	FC_FID_BCAST =		0xffffff,	/* broadcast */
++	FC_FID_FLOGI =		0xfffffe,	/* fabric login */
++	FC_FID_FCTRL =		0xfffffd,	/* fabric controller */
++	FC_FID_DIR_SERV =	0xfffffc,	/* directory server */
++	FC_FID_TIME_SERV =	0xfffffb,	/* time server */
++	FC_FID_MGMT_SERV =	0xfffffa,	/* management server */
++	FC_FID_QOS =		0xfffff9,	/* QoS Facilitator */
++	FC_FID_ALIASES =	0xfffff8,	/* alias server (FC-PH2) */
++	FC_FID_SEC_KEY =	0xfffff7,	/* Security key dist. server */
++	FC_FID_CLOCK =		0xfffff6,	/* clock synch server */
++	FC_FID_MCAST_SERV =	0xfffff5,	/* multicast server */
++};
++
++#define	FC_FID_WELL_KNOWN_MAX	0xffffff /* highest well-known fabric ID */
++#define	FC_FID_WELL_KNOWN_BASE	0xfffff5 /* start of well-known fabric ID */
++
++/*
++ * Other well-known addresses, outside the above contiguous range.
++ */
++#define	FC_FID_DOM_MGR		0xfffc00	/* domain manager base */
++
++/*
++ * Fabric ID bytes.
++ */
++#define	FC_FID_DOMAIN		0
++#define	FC_FID_PORT		1
++#define	FC_FID_LINK		2
++
++/*
++ * fh_type codes
++ */
++enum fc_fh_type {
++	FC_TYPE_BLS =	0x00,	/* basic link service */
++	FC_TYPE_ELS =	0x01,	/* extended link service */
++	FC_TYPE_IP =	0x05,	/* IP over FC, RFC 4338 */
++	FC_TYPE_FCP =	0x08,	/* SCSI FCP */
++	FC_TYPE_CT =	0x20,	/* Fibre Channel Services (FC-CT) */
++	FC_TYPE_ILS =	0x22,	/* internal link service */
++};
++
++/*
++ * FC_TYPE names initializer.
++ * Please keep this matching the above definitions.
++ */
++#define FC_TYPE_NAMES_INIT {				\
++	[FC_TYPE_BLS] =		"BLS",			\
++	[FC_TYPE_ELS] =		"ELS",			\
++	[FC_TYPE_IP] =		"IP",			\
++	[FC_TYPE_FCP] =		"FCP",			\
++	[FC_TYPE_CT] =		"CT",			\
++	[FC_TYPE_ILS] =		"ILS",			\
++}
++
++/*
++ * Exchange IDs.
++ */
++#define FC_XID_UNKNOWN  0xffff	/* unknown exchange ID */
++#define FC_XID_MIN	0x0	/* supported min exchange ID */
++#define FC_XID_MAX	0xfffe	/* supported max exchange ID */
++
++/*
++ * fh_f_ctl - Frame control flags.
++ */
++#define	FC_FC_EX_CTX	(1 << 23)	/* sent by responder to exchange */
++#define	FC_FC_SEQ_CTX	(1 << 22)	/* sent by responder to sequence */
++#define	FC_FC_FIRST_SEQ (1 << 21)	/* first sequence of this exchange */
++#define	FC_FC_LAST_SEQ	(1 << 20)	/* last sequence of this exchange */
++#define	FC_FC_END_SEQ	(1 << 19)	/* last frame of sequence */
++#define	FC_FC_END_CONN	(1 << 18)	/* end of class 1 connection pending */
++#define	FC_FC_RES_B17	(1 << 17)	/* reserved */
++#define	FC_FC_SEQ_INIT	(1 << 16)	/* transfer of sequence initiative */
++#define	FC_FC_X_ID_REASS (1 << 15)	/* exchange ID has been changed */
++#define	FC_FC_X_ID_INVAL (1 << 14)	/* exchange ID invalidated */
++
++#define	FC_FC_ACK_1	(1 << 12)	/* 13:12 = 1: ACK_1 expected */
++#define	FC_FC_ACK_N	(2 << 12)	/* 13:12 = 2: ACK_N expected */
++#define	FC_FC_ACK_0	(3 << 12)	/* 13:12 = 3: ACK_0 expected */
++
++#define	FC_FC_RES_B11	(1 << 11)	/* reserved */
++#define	FC_FC_RES_B10	(1 << 10)	/* reserved */
++#define	FC_FC_RETX_SEQ	(1 << 9)	/* retransmitted sequence */
++#define	FC_FC_UNI_TX	(1 << 8)	/* unidirectional transmit (class 1) */
++#define	FC_FC_CONT_SEQ(i) ((i) << 6)
++#define	FC_FC_ABT_SEQ(i) ((i) << 4)
++#define	FC_FC_REL_OFF	(1 << 3)	/* parameter is relative offset */
++#define	FC_FC_RES2	(1 << 2)	/* reserved */
++#define	FC_FC_FILL(i)	((i) & 3)	/* 1:0: bytes of trailing fill */
++
++/*
++ * BA_ACC payload.
++ */
++struct fc_ba_acc {
++	__u8		ba_seq_id_val;	/* SEQ_ID validity */
++#define FC_BA_SEQ_ID_VAL 0x80
++	__u8		ba_seq_id;	/* SEQ_ID of seq last deliverable */
++	__u8		ba_resvd[2];	/* reserved */
++	__be16		ba_ox_id;	/* OX_ID for aborted seq or exch */
++	__be16		ba_rx_id;	/* RX_ID for aborted seq or exch */
++	__be16		ba_low_seq_cnt;	/* low SEQ_CNT of aborted seq */
++	__be16		ba_high_seq_cnt; /* high SEQ_CNT of aborted seq */
++};
++
++/*
++ * BA_RJT: Basic Reject payload.
++ */
++struct fc_ba_rjt {
++	__u8		br_resvd;	/* reserved */
++	__u8		br_reason;	/* reason code */
++	__u8		br_explan;	/* reason explanation */
++	__u8		br_vendor;	/* vendor unique code */
++};
++
++/*
++ * BA_RJT reason codes.
++ * From FS-2.
++ */
++enum fc_ba_rjt_reason {
++	FC_BA_RJT_NONE =	0,	/* in software this means no reject */
++	FC_BA_RJT_INVL_CMD =	0x01,	/* invalid command code */
++	FC_BA_RJT_LOG_ERR =	0x03,	/* logical error */
++	FC_BA_RJT_LOG_BUSY =	0x05,	/* logical busy */
++	FC_BA_RJT_PROTO_ERR =	0x07,	/* protocol error */
++	FC_BA_RJT_UNABLE =	0x09,	/* unable to perform request */
++	FC_BA_RJT_VENDOR =	0xff,	/* vendor-specific (see br_vendor) */
++};
++
++/*
++ * BA_RJT reason code explanations.
++ */
++enum fc_ba_rjt_explan {
++	FC_BA_RJT_EXP_NONE =	0x00,	/* no additional expanation */
++	FC_BA_RJT_INV_XID =	0x03,	/* invalid OX_ID-RX_ID combination */
++	FC_BA_RJT_ABT =		0x05,	/* sequence aborted, no seq info */
++};
++
++/*
++ * P_RJT or F_RJT: Port Reject or Fabric Reject parameter field.
++ */
++struct fc_pf_rjt {
++	__u8		rj_action;	/* reserved */
++	__u8		rj_reason;	/* reason code */
++	__u8		rj_resvd;	/* reserved */
++	__u8		rj_vendor;	/* vendor unique code */
++};
++
++/*
++ * P_RJT and F_RJT reject reason codes.
++ */
++enum fc_pf_rjt_reason {
++	FC_RJT_NONE =		0,	/* non-reject (reserved by standard) */
++	FC_RJT_INVL_DID =	0x01,	/* invalid destination ID */
++	FC_RJT_INVL_SID =	0x02,	/* invalid source ID */
++	FC_RJT_P_UNAV_T =	0x03,	/* port unavailable, temporary */
++	FC_RJT_P_UNAV =		0x04,	/* port unavailable, permanent */
++	FC_RJT_CLS_UNSUP =	0x05,	/* class not supported */
++	FC_RJT_DEL_USAGE =	0x06,	/* delimiter usage error */
++	FC_RJT_TYPE_UNSUP =	0x07,	/* type not supported */
++	FC_RJT_LINK_CTL =	0x08,	/* invalid link control */
++	FC_RJT_R_CTL =		0x09,	/* invalid R_CTL field */
++	FC_RJT_F_CTL =		0x0a,	/* invalid F_CTL field */
++	FC_RJT_OX_ID =		0x0b,	/* invalid originator exchange ID */
++	FC_RJT_RX_ID =		0x0c,	/* invalid responder exchange ID */
++	FC_RJT_SEQ_ID =		0x0d,	/* invalid sequence ID */
++	FC_RJT_DF_CTL =		0x0e,	/* invalid DF_CTL field */
++	FC_RJT_SEQ_CNT =	0x0f,	/* invalid SEQ_CNT field */
++	FC_RJT_PARAM =		0x10,	/* invalid parameter field */
++	FC_RJT_EXCH_ERR =	0x11,	/* exchange error */
++	FC_RJT_PROTO =		0x12,	/* protocol error */
++	FC_RJT_LEN =		0x13,	/* incorrect length */
++	FC_RJT_UNEXP_ACK =	0x14,	/* unexpected ACK */
++	FC_RJT_FAB_CLASS =	0x15,	/* class unsupported by fabric entity */
++	FC_RJT_LOGI_REQ =	0x16,	/* login required */
++	FC_RJT_SEQ_XS =		0x17,	/* excessive sequences attempted */
++	FC_RJT_EXCH_EST =	0x18,	/* unable to establish exchange */
++	FC_RJT_FAB_UNAV =	0x1a,	/* fabric unavailable */
++	FC_RJT_VC_ID =		0x1b,	/* invalid VC_ID (class 4) */
++	FC_RJT_CS_CTL =		0x1c,	/* invalid CS_CTL field */
++	FC_RJT_INSUF_RES =	0x1d,	/* insuff. resources for VC (Class 4) */
++	FC_RJT_INVL_CLS =	0x1f,	/* invalid class of service */
++	FC_RJT_PREEMT_RJT =	0x20,	/* preemption request rejected */
++	FC_RJT_PREEMT_DIS =	0x21,	/* preemption not enabled */
++	FC_RJT_MCAST_ERR =	0x22,	/* multicast error */
++	FC_RJT_MCAST_ET =	0x23,	/* multicast error terminate */
++	FC_RJT_PRLI_REQ =	0x24,	/* process login required */
++	FC_RJT_INVL_ATT =	0x25,	/* invalid attachment */
++	FC_RJT_VENDOR =		0xff,	/* vendor specific reject */
++};
++
++/* default timeout values */
++
++#define FC_DEF_E_D_TOV	2000UL
++#define FC_DEF_R_A_TOV	10000UL
++
++#endif /* _FC_FS_H_ */
+diff --git a/include/uapi/scsi/fc/fc_gs.h b/include/uapi/scsi/fc/fc_gs.h
+new file mode 100644
+index 0000000..a37346d
+--- /dev/null
++++ b/include/uapi/scsi/fc/fc_gs.h
+@@ -0,0 +1,96 @@
++/*
++ * Copyright(c) 2007 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Maintained at www.Open-FCoE.org
++ */
++
++#ifndef _FC_GS_H_
++#define	_FC_GS_H_
++
++#include <linux/types.h>
++
++/*
++ * Fibre Channel Services - Common Transport.
++ * From T11.org FC-GS-2 Rev 5.3 November 1998.
++ */
++
++struct fc_ct_hdr {
++	__u8		ct_rev;		/* revision */
++	__u8		ct_in_id[3];	/* N_Port ID of original requestor */
++	__u8		ct_fs_type;	/* type of fibre channel service */
++	__u8		ct_fs_subtype;	/* subtype */
++	__u8		ct_options;
++	__u8		_ct_resvd1;
++	__be16		ct_cmd;		/* command / response code */
++	__be16		ct_mr_size;	/* maximum / residual size */
++	__u8		_ct_resvd2;
++	__u8		ct_reason;	/* reject reason */
++	__u8		ct_explan;	/* reason code explanation */
++	__u8		ct_vendor;	/* vendor unique data */
++};
++
++#define	FC_CT_HDR_LEN	16	/* expected sizeof (struct fc_ct_hdr) */
++
++enum fc_ct_rev {
++	FC_CT_REV = 1		/* common transport revision */
++};
++
++/*
++ * ct_fs_type values.
++ */
++enum fc_ct_fs_type {
++	FC_FST_ALIAS =	0xf8,	/* alias service */
++	FC_FST_MGMT =	0xfa,	/* management service */
++	FC_FST_TIME =	0xfb,	/* time service */
++	FC_FST_DIR =	0xfc,	/* directory service */
++};
++
++/*
++ * ct_cmd: Command / response codes
++ */
++enum fc_ct_cmd {
++	FC_FS_RJT =	0x8001,	/* reject */
++	FC_FS_ACC =	0x8002,	/* accept */
++};
++
++/*
++ * FS_RJT reason codes.
++ */
++enum fc_ct_reason {
++	FC_FS_RJT_CMD =		0x01,	/* invalid command code */
++	FC_FS_RJT_VER =		0x02,	/* invalid version level */
++	FC_FS_RJT_LOG =		0x03,	/* logical error */
++	FC_FS_RJT_IUSIZ =	0x04,	/* invalid IU size */
++	FC_FS_RJT_BSY =		0x05,	/* logical busy */
++	FC_FS_RJT_PROTO =	0x07,	/* protocol error */
++	FC_FS_RJT_UNABL =	0x09,	/* unable to perform command request */
++	FC_FS_RJT_UNSUP =	0x0b,	/* command not supported */
++};
++
++/*
++ * FS_RJT reason code explanations.
++ */
++enum fc_ct_explan {
++	FC_FS_EXP_NONE =	0x00,	/* no additional explanation */
++	FC_FS_EXP_PID =		0x01,	/* port ID not registered */
++	FC_FS_EXP_PNAM =	0x02,	/* port name not registered */
++	FC_FS_EXP_NNAM =	0x03,	/* node name not registered */
++	FC_FS_EXP_COS =		0x04,	/* class of service not registered */
++	FC_FS_EXP_FTNR =	0x07,	/* FC-4 types not registered */
++	/* definitions not complete */
++};
++
++#endif /* _FC_GS_H_ */
+diff --git a/include/uapi/scsi/fc/fc_ns.h b/include/uapi/scsi/fc/fc_ns.h
+new file mode 100644
+index 0000000..f7751d5
+--- /dev/null
++++ b/include/uapi/scsi/fc/fc_ns.h
+@@ -0,0 +1,208 @@
++/*
++ * Copyright(c) 2007 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Maintained at www.Open-FCoE.org
++ */
++
++#ifndef _FC_NS_H_
++#define	_FC_NS_H_
++
++#include <linux/types.h>
++
++/*
++ * Fibre Channel Services - Name Service (dNS)
++ * From T11.org FC-GS-2 Rev 5.3 November 1998.
++ */
++
++/*
++ * Common-transport sub-type for Name Server.
++ */
++#define	FC_NS_SUBTYPE	    2	/* fs_ct_hdr.ct_fs_subtype */
++
++/*
++ * Name server Requests.
++ * Note:  this is an incomplete list, some unused requests are omitted.
++ */
++enum fc_ns_req {
++	FC_NS_GA_NXT =	0x0100,		/* get all next */
++	FC_NS_GI_A =	0x0101,		/* get identifiers - scope */
++	FC_NS_GPN_ID =	0x0112,		/* get port name by ID */
++	FC_NS_GNN_ID =	0x0113,		/* get node name by ID */
++	FC_NS_GSPN_ID = 0x0118,		/* get symbolic port name */
++	FC_NS_GID_PN =	0x0121,		/* get ID for port name */
++	FC_NS_GID_NN =	0x0131,		/* get IDs for node name */
++	FC_NS_GID_FT =	0x0171,		/* get IDs by FC4 type */
++	FC_NS_GPN_FT =	0x0172,		/* get port names by FC4 type */
++	FC_NS_GID_PT =	0x01a1,		/* get IDs by port type */
++	FC_NS_RPN_ID =	0x0212,		/* reg port name for ID */
++	FC_NS_RNN_ID =	0x0213,		/* reg node name for ID */
++	FC_NS_RFT_ID =	0x0217,		/* reg FC4 type for ID */
++	FC_NS_RSPN_ID =	0x0218,		/* reg symbolic port name */
++	FC_NS_RFF_ID =	0x021f,		/* reg FC4 Features for ID */
++	FC_NS_RSNN_NN =	0x0239,		/* reg symbolic node name */
++};
++
++/*
++ * Port type values.
++ */
++enum fc_ns_pt {
++	FC_NS_UNID_PORT = 0x00,	/* unidentified */
++	FC_NS_N_PORT =	0x01,	/* N port */
++	FC_NS_NL_PORT =	0x02,	/* NL port */
++	FC_NS_FNL_PORT = 0x03,	/* F/NL port */
++	FC_NS_NX_PORT =	0x7f,	/* Nx port */
++	FC_NS_F_PORT =	0x81,	/* F port */
++	FC_NS_FL_PORT =	0x82,	/* FL port */
++	FC_NS_E_PORT =	0x84,	/* E port */
++	FC_NS_B_PORT =	0x85,	/* B port */
++};
++
++/*
++ * Port type object.
++ */
++struct fc_ns_pt_obj {
++	__u8		pt_type;
++};
++
++/*
++ * Port ID object
++ */
++struct fc_ns_fid {
++	__u8		fp_flags;	/* flags for responses only */
++	__u8		fp_fid[3];
++};
++
++/*
++ * fp_flags in port ID object, for responses only.
++ */
++#define	FC_NS_FID_LAST	0x80		/* last object */
++
++/*
++ * FC4-types object.
++ */
++#define	FC_NS_TYPES	256	/* number of possible FC-4 types */
++#define	FC_NS_BPW	32	/* bits per word in bitmap */
++
++struct fc_ns_fts {
++	__be32	ff_type_map[FC_NS_TYPES / FC_NS_BPW]; /* bitmap of FC-4 types */
++};
++
++/*
++ * FC4-features object.
++ */
++struct fc_ns_ff	{
++	__be32	fd_feat[FC_NS_TYPES * 4 / FC_NS_BPW]; /* 4-bits per FC-type */
++};
++
++/*
++ * GID_PT request.
++ */
++struct fc_ns_gid_pt {
++	__u8		fn_pt_type;
++	__u8		fn_domain_id_scope;
++	__u8		fn_area_id_scope;
++	__u8		fn_resvd;
++};
++
++/*
++ * GID_FT or GPN_FT request.
++ */
++struct fc_ns_gid_ft {
++	__u8		fn_resvd;
++	__u8		fn_domain_id_scope;
++	__u8		fn_area_id_scope;
++	__u8		fn_fc4_type;
++};
++
++/*
++ * GPN_FT response.
++ */
++struct fc_gpn_ft_resp {
++	__u8		fp_flags;	/* see fp_flags definitions above */
++	__u8		fp_fid[3];	/* port ID */
++	__be32		fp_resvd;
++	__be64		fp_wwpn;	/* port name */
++};
++
++/*
++ * GID_PN request
++ */
++struct fc_ns_gid_pn {
++	__be64     fn_wwpn;    /* port name */
++};
++
++/*
++ * GID_PN response or GSPN_ID request
++ */
++struct fc_gid_pn_resp {
++	__u8      fp_resvd;
++	__u8      fp_fid[3];     /* port ID */
++};
++
++/*
++ * GSPN_ID response
++ */
++struct fc_gspn_resp {
++	__u8	fp_name_len;
++	char	fp_name[];
++};
++
++/*
++ * RFT_ID request - register FC-4 types for ID.
++ */
++struct fc_ns_rft_id {
++	struct fc_ns_fid fr_fid;	/* port ID object */
++	struct fc_ns_fts fr_fts;	/* FC-4 types object */
++};
++
++/*
++ * RPN_ID request - register port name for ID.
++ * RNN_ID request - register node name for ID.
++ */
++struct fc_ns_rn_id {
++	struct fc_ns_fid fr_fid;	/* port ID object */
++	__be64		fr_wwn;		/* node name or port name */
++} __attribute__((__packed__));
++
++/*
++ * RSNN_NN request - register symbolic node name
++ */
++struct fc_ns_rsnn {
++	__be64		fr_wwn;		/* node name */
++	__u8		fr_name_len;
++	char		fr_name[];
++} __attribute__((__packed__));
++
++/*
++ * RSPN_ID request - register symbolic port name
++ */
++struct fc_ns_rspn {
++	struct fc_ns_fid fr_fid;	/* port ID object */
++	__u8		fr_name_len;
++	char		fr_name[];
++} __attribute__((__packed__));
++
++/*
++ * RFF_ID request - register FC-4 Features for ID.
++ */
++struct fc_ns_rff_id {
++	struct fc_ns_fid fr_fid;	/* port ID object */
++	__u8		fr_resvd[2];
++	__u8		fr_feat;	/* FC-4 Feature bits */
++	__u8		fr_type;	/* FC-4 type */
++} __attribute__((__packed__));
++
++#endif /* _FC_NS_H_ */
 
