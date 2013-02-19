@@ -1,52 +1,65 @@
-From: Sachin Kamat <sachin.kamat@linaro.org>
-Subject: Re: [PATCH 1/1] [SCSI] fnic: Remove unneeded version.h header file include
-Date: Tue, 19 Feb 2013 15:22:55 +0530
-Message-ID: <CAK9yfHx-6+F_azVHowUUqZtY1PYmiSzfXy4a1Z3w9vuMhOhJeg@mail.gmail.com>
-References: <1359965717-2615-1-git-send-email-sachin.kamat@linaro.org>
+From: Mauro Carvalho Chehab <mchehab@redhat.com>
+Subject: Re: SYSFS "errors"
+Date: Tue, 19 Feb 2013 07:03:10 -0300
+Message-ID: <20130219070310.2cadad7a@redhat.com>
+References: <20130218171334.GA31329@kroah.com>
+	<20130218172700.GH2663@arwen.pp.htv.fi>
+	<20130218174916.GA2070@kroah.com>
+	<20130218184633.GC10755@arwen.pp.htv.fi>
+	<20130218164638.7cb53baa@redhat.com>
+	<20130218200542.GB20137@arwen.pp.htv.fi>
+	<20130218184742.5a4c3c06@redhat.com>
+	<20130218215434.GB16794@kroah.com>
+	<20130218221306.GA21493@pd.tnic>
+	<20130218222618.GA21818@kroah.com>
+	<20130218224405.GB21493@pd.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:58850 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791Ab3BSJw4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Feb 2013 04:52:56 -0500
-Received: by mail-oa0-f50.google.com with SMTP id l20so6590435oag.23
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Feb 2013 01:52:56 -0800 (PST)
-In-Reply-To: <1359965717-2615-1-git-send-email-sachin.kamat@linaro.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <20130218224405.GB21493@pd.tnic>
+Sender: linux-pm-owner@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>
+Cc: Greg KH <gregkh@linuxfoundation.org>, balbi@ti.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>, Ingo Molnar <mingo@redhat.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, davem@davemloft.net, netdev@vger.kernel.org, Doug Thompson <dougthompson@xmission.com>, linux-edac@vger.kernel.org, rjw@sisk.pl, linux-pm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: hiralpat@cisco.com, JBottomley@parallels.com, sramars@cisco.com, buchino@cisco.com, sachin.kamat@linaro.org
 
-On 4 February 2013 13:45, Sachin Kamat <sachin.kamat@linaro.org> wrote:
-> version.h header file inclusion is not necessary.
->
-> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> ---
->  drivers/scsi/fnic/fnic_trace.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
+Em Mon, 18 Feb 2013 23:44:05 +0100
+Borislav Petkov <bp@alien8.de> escreveu:
 
-ping..
+> On Mon, Feb 18, 2013 at 02:26:18PM -0800, Greg KH wrote:
+> > I don't know, it depends on if userspace can handle this properly or
+> > not. What tools rely on this sysfs file? WHat happens when they get a
+> > non-number in the file?
 
->
-> diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-> index 0b18bf4..63f6f5b 100644
-> --- a/drivers/scsi/fnic/fnic_trace.c
-> +++ b/drivers/scsi/fnic/fnic_trace.c
-> @@ -19,7 +19,6 @@
->  #include <linux/mempool.h>
->  #include <linux/errno.h>
->  #include <linux/spinlock.h>
-> -#include <linux/version.h>
->  #include <linux/kallsyms.h>
->  #include "fnic_io.h"
->  #include "fnic.h"
-> --
-> 1.7.4.1
->
+The thing with "sdram_scrub_rate" is that this is not supported by any
+userspace application I know. I suspect that this is used by userspace
+scripts. So, we'll never know in advance what behavior those scripts would
+expect.
 
+> 
+> I'm not aware of any, frankly speaking.
+> 
+> If there are any, those tools should be able to handle the -ENODEV
+> they get. Now, if this gets changed this way, the read would succeed
+> but they'll have to parse the returned value and see that it is not an
+> integer.
+> 
+> So I don't know either.
+> 
+> But my gut feeling says to stay concervative and not touch this code -
+> we don't know what uses it and how much we would break by "fixing" it.
+> The current situation is not that big of a deal IMVHO and I'd be willing
+> to accept the small inconcistency versus possibly breaking userspace.
 
+I remember I saw some discussions about it in the past at bluesmoke ML,
+saying that -ENODEV is the expected behavior when this is not supported.
 
--- 
-With warm regards,
-Sachin
+Changing from -ENODEV to "N/A" will break anything that would be relying
+on the previous behavior. So, I think that such change will for sure break
+userspace.
+
+If we're willing to change it, not creating the "sdram_scrub_rate" sysfs 
+node is less likely to affect userspace.
+
+Regards,
+Mauro
