@@ -1,51 +1,185 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: SYSFS "errors"
-Date: Mon, 18 Feb 2013 23:44:05 +0100
-Message-ID: <20130218224405.GB21493@pd.tnic>
-References: <20130218171334.GA31329@kroah.com>
- <20130218172700.GH2663@arwen.pp.htv.fi>
- <20130218174916.GA2070@kroah.com>
- <20130218184633.GC10755@arwen.pp.htv.fi>
- <20130218164638.7cb53baa@redhat.com>
- <20130218200542.GB20137@arwen.pp.htv.fi>
- <20130218184742.5a4c3c06@redhat.com>
- <20130218215434.GB16794@kroah.com>
- <20130218221306.GA21493@pd.tnic>
- <20130218222618.GA21818@kroah.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v9 3/4] block: implement runtime pm strategy
+Date: Tue, 19 Feb 2013 10:29:00 +0800
+Message-ID: <20130219022900.GA2285@aaronlu.sh.intel.com>
+References: <1360051396-3080-1-git-send-email-aaron.lu@intel.com>
+ <1360051396-3080-4-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130218222618.GA21818@kroah.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>, balbi@ti.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>, Ingo Molnar <mingo@redhat.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, davem@davemloft.net, netdev@vger.kernel.org, Doug Thompson <dougthompson@xmission.com>, linux-edac@vger.kernel.org, rjw@sisk.pl, linux-pm@vger.kernel.org
+In-Reply-To: <1360051396-3080-4-git-send-email-aaron.lu@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 18, 2013 at 02:26:18PM -0800, Greg KH wrote:
-> I don't know, it depends on if userspace can handle this properly or
-> not. What tools rely on this sysfs file? WHat happens when they get a
-> non-number in the file?
+Hi Alan,
 
-I'm not aware of any, frankly speaking.
+On Tue, Feb 05, 2013 at 04:03:15PM +0800, Aaron Lu wrote:
+> From: Lin Ming <ming.m.lin@intel.com>
+> 
+> When a request is added:
+>     If device is suspended or is suspending and the request is not a
+>     PM request, resume the device.
+> 
+> When the last request finishes:
+>     Call pm_runtime_mark_last_busy().
+> 
+> When pick a request:
+>     If device is resuming/suspending, then only PM request is allowed
+>     to go.
 
-If there are any, those tools should be able to handle the -ENODEV
-they get. Now, if this gets changed this way, the read would succeed
-but they'll have to parse the returned value and see that it is not an
-integer.
+I think I should add the following words in patch 2 & 3's changelog:
 
-So I don't know either.
+The idea and API is designed by Alan Stern and described here:
+http://marc.info/?l=linux-scsi&m=133727953625963&w=2
 
-But my gut feeling says to stay concervative and not touch this code -
-we don't know what uses it and how much we would break by "fixing" it.
-The current situation is not that big of a deal IMVHO and I'd be willing
-to accept the small inconcistency versus possibly breaking userspace.
+to reflect your credit if you don't object.
 
-Thanks.
+Please let me know what do you think, or if there is a better way to
+reflect this, please feel free to let me know.
 
--- 
-Regards/Gruss,
-    Boris.
+Thanks,
+Aaron
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+> 
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  block/blk-core.c | 39 +++++++++++++++++++++++++++++++++++++++
+>  block/elevator.c | 26 ++++++++++++++++++++++++++
+>  2 files changed, 65 insertions(+)
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index ce7d366..81f173e 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -1264,6 +1264,16 @@ void part_round_stats(int cpu, struct hd_struct *part)
+>  }
+>  EXPORT_SYMBOL_GPL(part_round_stats);
+>  
+> +#ifdef CONFIG_PM_RUNTIME
+> +static void blk_pm_put_request(struct request *rq)
+> +{
+> +	if (rq->q->dev && !(rq->cmd_flags & REQ_PM) && !--rq->q->nr_pending)
+> +		pm_runtime_mark_last_busy(rq->q->dev);
+> +}
+> +#else
+> +static inline void blk_pm_put_request(struct request *rq) {}
+> +#endif
+> +
+>  /*
+>   * queue lock must be held
+>   */
+> @@ -1274,6 +1284,8 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+>  	if (unlikely(--req->ref_count))
+>  		return;
+>  
+> +	blk_pm_put_request(req);
+> +
+>  	elv_completed_request(q, req);
+>  
+>  	/* this is a bio leak */
+> @@ -2051,6 +2063,28 @@ static void blk_account_io_done(struct request *req)
+>  	}
+>  }
+>  
+> +#ifdef CONFIG_PM_RUNTIME
+> +/*
+> + * Don't process normal requests when queue is suspended
+> + * or in the process of suspending/resuming
+> + */
+> +static struct request *blk_pm_peek_request(struct request_queue *q,
+> +					   struct request *rq)
+> +{
+> +	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
+> +	    (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM))))
+> +		return NULL;
+> +	else
+> +		return rq;
+> +}
+> +#else
+> +static inline struct request *blk_pm_peek_request(struct request_queue *q,
+> +						  struct request *rq)
+> +{
+> +	return rq;
+> +}
+> +#endif
+> +
+>  /**
+>   * blk_peek_request - peek at the top of a request queue
+>   * @q: request queue to peek at
+> @@ -2073,6 +2107,11 @@ struct request *blk_peek_request(struct request_queue *q)
+>  	int ret;
+>  
+>  	while ((rq = __elv_next_request(q)) != NULL) {
+> +
+> +		rq = blk_pm_peek_request(q, rq);
+> +		if (!rq)
+> +			break;
+> +
+>  		if (!(rq->cmd_flags & REQ_STARTED)) {
+>  			/*
+>  			 * This is the first time the device driver
+> diff --git a/block/elevator.c b/block/elevator.c
+> index 11683bb..29c5c7e 100644
+> --- a/block/elevator.c
+> +++ b/block/elevator.c
+> @@ -34,6 +34,7 @@
+>  #include <linux/blktrace_api.h>
+>  #include <linux/hash.h>
+>  #include <linux/uaccess.h>
+> +#include <linux/pm_runtime.h>
+>  
+>  #include <trace/events/block.h>
+>  
+> @@ -515,6 +516,27 @@ void elv_bio_merged(struct request_queue *q, struct request *rq,
+>  		e->type->ops.elevator_bio_merged_fn(q, rq, bio);
+>  }
+>  
+> +#ifdef CONFIG_PM_RUNTIME
+> +static void blk_pm_requeue_request(struct request *rq)
+> +{
+> +	if (rq->q->dev && !(rq->cmd_flags & REQ_PM))
+> +		rq->q->nr_pending--;
+> +}
+> +
+> +static void blk_pm_add_request(struct request_queue *q, struct request *rq)
+> +{
+> +	if (q->dev && !(rq->cmd_flags & REQ_PM) && q->nr_pending++ == 0 &&
+> +	    (q->rpm_status == RPM_SUSPENDED || q->rpm_status == RPM_SUSPENDING))
+> +		pm_request_resume(q->dev);
+> +}
+> +#else
+> +static inline void blk_pm_requeue_request(struct request *rq) {}
+> +static inline void blk_pm_add_request(struct request_queue *q,
+> +				      struct request *rq)
+> +{
+> +}
+> +#endif
+> +
+>  void elv_requeue_request(struct request_queue *q, struct request *rq)
+>  {
+>  	/*
+> @@ -529,6 +551,8 @@ void elv_requeue_request(struct request_queue *q, struct request *rq)
+>  
+>  	rq->cmd_flags &= ~REQ_STARTED;
+>  
+> +	blk_pm_requeue_request(rq);
+> +
+>  	__elv_add_request(q, rq, ELEVATOR_INSERT_REQUEUE);
+>  }
+>  
+> @@ -551,6 +575,8 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
+>  {
+>  	trace_block_rq_insert(q, rq);
+>  
+> +	blk_pm_add_request(q, rq);
+> +
+>  	rq->q = q;
+>  
+>  	if (rq->cmd_flags & REQ_SOFTBARRIER) {
+> -- 
+> 1.8.1
+> 
