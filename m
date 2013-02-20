@@ -1,85 +1,83 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/4] scsi: use 64-bit value for 'max_luns'
-Date: Wed, 20 Feb 2013 07:43:57 +0100
-Message-ID: <512470AD.8020307@suse.de>
-References: <1361261883-41467-1-git-send-email-hare@suse.de>  <1361261883-41467-4-git-send-email-hare@suse.de>  <26C9F254-62B6-460A-BEB3-BE41516B5186@cs.wisc.edu> <1361291625.2382.54.camel@dabdike.int.hansenpartnership.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] SCSI: amd_iommu dma_boundary overflow
+Date: Wed, 20 Feb 2013 09:37:26 +0000
+Message-ID: <1361353044.2581.16.camel@dabdike.int.hansenpartnership.com>
+References: <Eddie Wai <eddie.wai@broadcom.com>
+	 <1361327453-1838-1-git-send-email-eddie.wai@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33562 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750815Ab3BTGoG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Feb 2013 01:44:06 -0500
-In-Reply-To: <1361291625.2382.54.camel@dabdike.int.hansenpartnership.com>
+Received: from mx0.parallels.com ([199.115.104.20]:44806 "EHLO
+	mx0.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932714Ab3BTJhb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Feb 2013 04:37:31 -0500
+In-Reply-To: <1361327453-1838-1-git-send-email-eddie.wai@broadcom.com>
+Content-Language: en-US
+Content-ID: <719EEEDA1975AB408C99A9439EF2837E@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Michael Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jeremy Linton <jlinton@tributary.com>, Robert Elliott <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>
+To: Eddie Wai <eddie.wai@broadcom.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Joerg Roedel <joro@8bytes.org>
 
-On 02/19/2013 05:33 PM, James Bottomley wrote:
-> On Tue, 2013-02-19 at 10:30 -0600, Michael Christie wrote:
->> On Feb 19, 2013, at 2:18 AM, Hannes Reinecke <hare@suse.de> wrote:
->>
->>> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/lib=
-cxgbi.c
->>> index b44c1cf..95105c0 100644
->>> --- a/drivers/scsi/cxgbi/libcxgbi.c
->>> +++ b/drivers/scsi/cxgbi/libcxgbi.c
->>> @@ -245,7 +245,7 @@ void cxgbi_hbas_remove(struct cxgbi_device *cde=
-v)
->>> }
->>> EXPORT_SYMBOL_GPL(cxgbi_hbas_remove);
->>>
->>> -int cxgbi_hbas_add(struct cxgbi_device *cdev, unsigned int max_lun=
-,
->>> +int cxgbi_hbas_add(struct cxgbi_device *cdev, uint64_t max_lun,
->>> 		unsigned int max_id, struct scsi_host_template *sht,
->>> 		struct scsi_transport_template *stt)
->>> {
->>> diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/lib=
-cxgbi.h
->>> index 80fa99b..d3b27f8 100644
->>> --- a/drivers/scsi/cxgbi/libcxgbi.h
->>> +++ b/drivers/scsi/cxgbi/libcxgbi.h
->>> @@ -692,7 +692,7 @@ struct cxgbi_device *cxgbi_device_register(unsi=
-gned int, unsigned int);
->>> void cxgbi_device_unregister(struct cxgbi_device *);
->>> void cxgbi_device_unregister_all(unsigned int flag);
->>> struct cxgbi_device *cxgbi_device_find_by_lldev(void *);
->>> -int cxgbi_hbas_add(struct cxgbi_device *, unsigned int, unsigned i=
-nt,
->>> +int cxgbi_hbas_add(struct cxgbi_device *, uint64_t, unsigned int,
->>> 			struct scsi_host_template *,
->>> 			struct scsi_transport_template *);
->>> void cxgbi_hbas_remove(struct cxgbi_device *);
->>> diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
->>> index dfe90ce..9acdb9c 100644
->>
->>
->> Could it be possible to use u64, so it matches the rest of the drive=
-r
->> coding style? The rest of the driver uses the u* definitions instead=
- f
->> the uint*_t ones.
->
-> In general we should use u64 for kernel internal stuff (which this is=
-).
-> uint64_t is supposed to be reserved for user interfaces.
->
-Ok. Will fix it up with the next series.
+This is a bit tricky, since AMD laid off the team who were maintaining
+this, but I added to the cc' one of the original maintainers in the
+hopes they can take a look.
 
-Cheers,
+James
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+On Tue, 2013-02-19 at 18:30 -0800, Eddie Wai wrote:
+> Hello,
+> 
+> For a 64-bit DMA capable PCIe storage HBA running under the 64-bit
+> AMD-VI IOMMU environment, the amd_iommu code was observed to hit an
+> overflow when it tries to page align the dma_parms->segment_boundary_mask.
+> This overflow would eventually trigger the BUG_ON in the iommu-helper's
+> iommu_is_span_boundary is_power_of_2 check.
+> 
+> A little back tracking shows that since the device is 64-bit DMA capable,
+> the pcidev->dma_mask was correctly set to DMA_BIT_MASK(64).  This dma_mask
+> was then transferred to the SCSI host's dma_boundary param (by the iSCSI
+> driver) and was eventually used to populate the q->limits.seg_boundary_mask
+> (via blk_queue_segment_boundary) and the dma_parms->segment_boundary_mask
+> (via dma_set_seg_boundary) during the scsi queue allocation.
+> 
+> The code seems correct as it make sense to impose the same hardware
+> segment boundary limit on both the blk queue and the DMA code.  It would
+> be an easy alternative to simply prevent the shost->dma_boundary from
+> being set to DMA_BIT_MASK(64), but it seems more correct to fix the
+> amd_iommu code itself to detect and handle this max 64-bit mask condition.
+> 
+> Please let me know your comments.
+> 
+> Thanks,
+> Eddie
+> 
+> Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+> ---
+>  drivers/iommu/amd_iommu.c |    7 +++++--
+>  1 files changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+> index d90a421..63185a1 100644
+> --- a/drivers/iommu/amd_iommu.c
+> +++ b/drivers/iommu/amd_iommu.c
+> @@ -1526,11 +1526,14 @@ static unsigned long dma_ops_area_alloc(struct device *dev,
+>  	unsigned long boundary_size;
+>  	unsigned long address = -1;
+>  	unsigned long limit;
+> +	unsigned long mask;
+>  
+>  	next_bit >>= PAGE_SHIFT;
+>  
+> -	boundary_size = ALIGN(dma_get_seg_boundary(dev) + 1,
+> -			PAGE_SIZE) >> PAGE_SHIFT;
+> +	mask = dma_get_seg_boundary(dev);
+> +	boundary_size = mask + 1 ?
+> +			ALIGN(mask + 1, PAGE_SIZE) >> PAGE_SHIFT :
+> +			1UL << (BITS_PER_LONG - PAGE_SHIFT);
+>  
+>  	for (;i < max_index; ++i) {
+>  		unsigned long offset = dom->aperture[i]->offset >> PAGE_SHIFT;
+
