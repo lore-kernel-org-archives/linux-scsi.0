@@ -1,39 +1,60 @@
-From: Xiaotian Feng <xtfeng@gmail.com>
-Subject: [PATCH] [SCSI] mptfusion: delete rphy info in mptsas_del_end_device()
-Date: Wed, 20 Feb 2013 19:09:52 +0800
-Message-ID: <1361358592-13256-1-git-send-email-xtfeng@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi.Nandigama@lsi.com
-Cc: Xiaotian Feng <xtfeng@gmail.com>, Xiaotian Feng <dannyfeng@tencent.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/4] scsi_scan: Fixup scsilun_to_int()
+Date: Wed, 20 Feb 2013 14:47:11 +0100
+Message-ID: <1361368034-54444-2-git-send-email-hare@suse.de>
+References: <1361368034-54444-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:49193 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935493Ab3BTNrU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Feb 2013 08:47:20 -0500
+In-Reply-To: <1361368034-54444-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <jbottomley@parallels.com>, Jeremy Linton <jlinton@tributary.com>, Robert Elliott <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>
 
-Otherwise, we might get wrong rphy attributes through sysfs when
-a end device is not responding.
+scsilun_to_int() has an error which prevents it from generating
+correct LUN numbers for 64bit values.
+Also we should remove the misleading comment about portions of
+the LUN being ignored; the initiator should treat the LUN as
+an opaque value.
 
-Signed-off-by: Xiaotian Feng <dannyfeng@tencent.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/message/fusion/mptsas.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/scsi_scan.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index fa43c39..4845d18 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -1572,6 +1572,8 @@ mptsas_del_end_device(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info)
- 	     port->port_identifier, (unsigned long long)sas_address);
- 	sas_port_delete(port);
- 	mptsas_set_port(ioc, phy_info, NULL);
-+	sas_rphy_delete(rphy);
-+	mptsas_set_rphy(ioc, phy_info, NULL);
- 	mptsas_port_delete(ioc, phy_info->port_details);
- }
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 3e58b22..4f315f5 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1228,14 +1228,11 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
+  *     truncation before using this function.
+  *
+  * Notes:
+- *     The struct scsi_lun is assumed to be four levels, with each level
+- *     effectively containing a SCSI byte-ordered (big endian) short; the
+- *     addressing bits of each level are ignored (the highest two bits).
+  *     For a description of the LUN format, post SCSI-3 see the SCSI
+  *     Architecture Model, for SCSI-3 see the SCSI Controller Commands.
+  *
+- *     Given a struct scsi_lun of: 0a 04 0b 03 00 00 00 00, this function returns
+- *     the integer: 0x0b030a04
++ *     Given a struct scsi_lun of: 0a 04 0b 03 00 00 00 00, this function
++ *     returns the integer: 0x0b030a04
+  **/
+ int scsilun_to_int(struct scsi_lun *scsilun)
+ {
+@@ -1244,7 +1241,7 @@ int scsilun_to_int(struct scsi_lun *scsilun)
  
+ 	lun = 0;
+ 	for (i = 0; i < sizeof(lun); i += 2)
+-		lun = lun | (((scsilun->scsi_lun[i] << 8) |
++		lun = lun | (((scsilun->scsi_lun[i] << ((i + 1) * 8)) |
+ 			      scsilun->scsi_lun[i + 1]) << (i * 8));
+ 	return lun;
+ }
 -- 
-1.7.9.5
+1.7.4.2
+
