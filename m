@@ -1,109 +1,89 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target/file: Add WRITE_SAME w/ UNMAP=0 emulation
- support
-Date: Wed, 20 Feb 2013 12:32:56 -0800
-Message-ID: <1361392376.3667.10.camel@haakon2.linux-iscsi.org>
-References: <1361324623-17041-1-git-send-email-nab@linux-iscsi.org>
-	 <51244031.5000302@redhat.com>
+Subject: Re: Read I/O starvation with writeback RAID controller
+Date: Wed, 20 Feb 2013 12:48:15 -0800
+Message-ID: <1361393295.3667.21.camel@haakon2.linux-iscsi.org>
+References: <5124EDF4.4010309@zoner.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <51244031.5000302@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Asias He <asias@redhat.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5124EDF4.4010309@zoner.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Martin Svec <martin.svec@zoner.cz>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2013-02-20 at 11:17 +0800, Asias He wrote:
-> On 02/20/2013 09:43 AM, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Hi mkp, hch, & Co,
-> > 
-> > Please review this patch to add support for WRITE_SAME w/ UNMAP=0
-> > emulation into FILEIO, as I'd really like to include this in the
-> > upcoming for-3.9 target merge.
-> > 
-> > Thank you,
-> > 
-> > --nab
-> > 
-> > ---------------------------------------------------------------------
-> > 
-> > This patch adds support for emulation of WRITE_SAME w/ UNMAP=0 within
-> > fd_execute_write_same() backend code.
-> > 
-> > The emulation uses vfs_writev() to submit a locally populated buffer
-> > from the received WRITE_SAME scatterlist block for duplication, and by
-> > default enforces a limit of max_write_same_len=0x1000 (8192) sectors up
-> > to the limit of 1024 iovec entries for the single call to vfs_writev().
-> > 
-> > It also sets max_write_same_len to the operational default at setup ->
-> > fd_configure_device() time.
-> > 
-> > Tested with 512, 1k, 2k, and 4k block_sizes.
-> > 
-> > Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Asias He <asias@redhat.com>
-> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  drivers/target/target_core_file.c |  115 +++++++++++++++++++++++++++++++++++++
-> >  1 files changed, 115 insertions(+), 0 deletions(-)
-> > 
+Hi Martin,
 
-<SNIP>
-
-> > +
-> > +static sense_reason_t
-> > +fd_execute_write_same(struct se_cmd *cmd)
-> > +{
-> > +	struct se_device *se_dev = cmd->se_dev;
-> > +	struct fd_dev *fd_dev = FD_DEV(se_dev);
-> > +	struct file *f = fd_dev->fd_file;
-> > +	struct scatterlist *sg;
-> > +	struct iovec *iov;
-> > +	mm_segment_t old_fs;
-> > +	sector_t nolb = spc_get_write_same_sectors(cmd);
-> > +	loff_t pos = cmd->t_task_lba * se_dev->dev_attrib.block_size;
-> > +	unsigned int len, len_tmp, iov_num;
-> > +	int i, rc;
-> > +	unsigned char *buf;
-> > +
-> > +	if (!nolb) {
-> > +		target_complete_cmd(cmd, SAM_STAT_GOOD);
-> > +		return 0;
-> > +	}
-> > +	sg = &cmd->t_data_sg[0];
-> > +
-> > +	if (cmd->t_data_nents > 1 ||
-> > +	    sg->length != cmd->se_dev->dev_attrib.block_size) {
-> > +		pr_err("WRITE_SAME: Illegal SGL t_data_nents: %u length: %u"
-> > +			" block_size: %u\n", cmd->t_data_nents, sg->length,
-> > +			cmd->se_dev->dev_attrib.block_size);
-> > +		return TCM_INVALID_CDB_FIELD;
-> > +	}
-> > +
-> > +	len = len_tmp = nolb * se_dev->dev_attrib.block_size;
-> > +	iov_num = DIV_ROUND_UP(len, PAGE_SIZE);
-> > +
-> > +	buf = fd_setup_write_same_buf(cmd, sg, len);
-> > +	if (!buf)
-> > +		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> > +
-> > +	iov = vmalloc(sizeof(struct iovec) * iov_num);
-> > +	if (!iov) {
-> > +		pr_err("Unable to allocate fd_execute_write_same iovecs\n");
-> > +		kfree(buf);
-> > +		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> > +	}
-> > +	memset(iov, 0, sizeof(struct iovec) * iov_num);
-> 
-> Use vzalloc()?
-
-Of course..  Changed to vzalloc + dropped memset.
-
-Thanks for reviewing!
+CC'ing linux-scsi here, as aacraid doesn't have an official maintainer
+atm.
 
 --nab
+
+On Wed, 2013-02-20 at 16:38 +0100, Martin Svec wrote:
+> Hello,
+> 
+> I've noticed read I/O starvation problems of LIO iSCSI target when
+> used on top of writeback-enabled HW RAID controller (PERC H700 with
+> 1GB cache). For intensive mixed read-write workload in virtualized
+> environments, writes are able to consume over 95% of the IOPS
+> throughput and cause starvation of reads.
+> 
+> After a number of tests it seems to me it's a general issue of block
+> layer I/O scheduling when running on top of a writeback device. If
+> there is a write-intensive task, all writes go to the writeback cache
+> with near-zero latency. This allows writer to quickly saturate the
+> device with thousands of writes while using only a minimal fraction of
+> queue depth. However, non-cached reads depend on spinning drive
+> latencies which are orders of magnitude higher than writeback cache
+> latencies, and so readers cannot submit so many requests per second as
+> writers. Consequently, I guess the controller has totally wrong view
+> of the incoming workload pattern, tries to satisfy the write flood
+> first and the net result is inacceptable starvation of reads, with
+> latencies up to hundreds of milliseconds.
+> 
+> A simple fio test with 1TiB block device where one thread does 4k
+> random sync writes with iodepth=32 and one thread does 4k random reads
+> with iodepth=32 shows that instead of the theoretical 50:50 IOPS
+> ratio, the block device runs with 95:5 ratio in favor of writes. In
+> fact, the imbalance is so high that even write iodepth=2 is enaugh to
+> achieve the same numbers.
+> 
+> Real workloads that tend to exhibit this problem are: initial zeroing
+> of a virtual machine disk, virtual machine migration, virtual machine
+> cloning, intensive swapping of one virtual machine etc.
+> 
+> I tried to set WCE=1 on target iblock device, played with queue
+> depths, tested all three I/O schedulers and their parameters,
+> controller's parameters, but with no luck. To achieve reasonably good
+> fairness, the only solution is to set nr_requests to 1 or disable
+> controller's writeback cache at all -- at the expense of degraded
+> overall performance :-(
+> 
+> Regarding nr_requests, there's obvious relation between iodepths and
+> read starvation: if (nr_requests >= workload iodepth) then starvation
+> surely occurs. Lowering nr_requests below this threshold slowly starts
+> improving fairness and for every rd+wr iodepths pair, there exists
+> sufficiently low nr_requests value at which IOPS ratio is finally
+> balanced according to rd:wr iodepth ratio. Unfortunately it means
+> there is no minimal nr_requests value suitable for all workloads. For
+> iodepths around 2 to 8, only nr_requests=1 provides fair load balancing.
+> 
+> Is this a known problem? Does anybody find block layer parameters that
+> elliminate this problem for iscsi-target storage in mixed random
+> read-write environments like virtualization? Or should I start writing
+> my own I/O scheduler? ;-)
+> 
+> Update: I've just found https://lkml.org/lkml/2012/12/10/550 (Read
+> starvation by sync writes), where Jan Kara describes identical
+> symptoms. But setting nr_requests=10000 doesn't help in my case.
+> CC'ing LKML too (I'm not LKML subscriber).
+> 
+> Thanks,
+> 
+> Martin
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
