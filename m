@@ -1,17 +1,17 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 2/5] hpsa: Check for dma_mapping_error for all code paths
-	using fill_cmd
-Date: Wed, 20 Feb 2013 11:24:41 -0600
-Message-ID: <20130220172441.12929.43652.stgit@beardog.cce.hp.com>
+Subject: [PATCH 3/5] hpsa: check for dma_mapping_error in
+	hpsa_map_sg_chain_block
+Date: Wed, 20 Feb 2013 11:24:46 -0600
+Message-ID: <20130220172446.12929.56695.stgit@beardog.cce.hp.com>
 References: <20130220172243.12929.69579.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t0185.atlanta.hp.com ([15.193.32.62]:42660 "EHLO
-	g6t0185.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964880Ab3BTQYo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Feb 2013 11:24:44 -0500
+Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:46193 "EHLO
+	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964874Ab3BTQYu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Feb 2013 11:24:50 -0500
 In-Reply-To: <20130220172243.12929.69579.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,189 +22,48 @@ From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   59 ++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 39 insertions(+), 20 deletions(-)
+ drivers/scsi/hpsa.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3b4d195..137ed33 100644
+index 137ed33..38c8aa5 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -165,7 +165,7 @@ static void cmd_free(struct ctlr_info *h, struct CommandList *c);
- static void cmd_special_free(struct ctlr_info *h, struct CommandList *c);
- static struct CommandList *cmd_alloc(struct ctlr_info *h);
- static struct CommandList *cmd_special_alloc(struct ctlr_info *h);
--static void fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
-+static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 	void *buff, size_t size, u8 page_code, unsigned char *scsi3addr,
- 	int cmd_type);
- 
-@@ -1390,7 +1390,7 @@ static void hpsa_pci_unmap(struct pci_dev *pdev,
- 	}
+@@ -1131,7 +1131,7 @@ clean:
+ 	return -ENOMEM;
  }
  
--static void hpsa_map_one(struct pci_dev *pdev,
-+static int hpsa_map_one(struct pci_dev *pdev,
- 		struct CommandList *cp,
- 		unsigned char *buf,
- 		size_t buflen,
-@@ -1401,14 +1401,15 @@ static void hpsa_map_one(struct pci_dev *pdev,
- 	if (buflen == 0 || data_direction == PCI_DMA_NONE) {
- 		cp->Header.SGList = 0;
- 		cp->Header.SGTotal = 0;
--		return;
-+		return 0;
- 	}
- 
- 	addr64 = (u64) pci_map_single(pdev, buf, buflen, data_direction);
- 	if (dma_mapping_error(&pdev->dev, addr64)) {
-+		/* Prevent subsequent unmap of something never mapped */
- 		cp->Header.SGList = 0;
- 		cp->Header.SGTotal = 0;
--		return;
-+		return -1;
- 	}
- 	cp->SG[0].Addr.lower =
- 	  (u32) (addr64 & (u64) 0x00000000FFFFFFFF);
-@@ -1417,6 +1418,7 @@ static void hpsa_map_one(struct pci_dev *pdev,
- 	cp->SG[0].Len = buflen;
- 	cp->Header.SGList = (u8) 1;   /* no. SGs contig in this cmd */
- 	cp->Header.SGTotal = (u16) 1; /* total sgs in this cmd list */
-+	return 0;
- }
- 
- static inline void hpsa_scsi_do_simple_cmd_core(struct ctlr_info *h,
-@@ -1545,13 +1547,18 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
- 		return -ENOMEM;
- 	}
- 
--	fill_cmd(c, HPSA_INQUIRY, h, buf, bufsize, page, scsi3addr, TYPE_CMD);
-+	if (fill_cmd(c, HPSA_INQUIRY, h, buf, bufsize,
-+			page, scsi3addr, TYPE_CMD)) {
-+		rc = -1;
-+		goto out;
-+	}
- 	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
- 	ei = c->err_info;
- 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
- 		hpsa_scsi_interpret_error(c);
- 		rc = -1;
- 	}
-+out:
- 	cmd_special_free(h, c);
- 	return rc;
- }
-@@ -1569,7 +1576,9 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr)
- 		return -ENOMEM;
- 	}
- 
--	fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0, scsi3addr, TYPE_MSG);
-+	/* fill_cmd can't fail here, no data buffer to map. */
-+	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h,
-+			NULL, 0, 0, scsi3addr, TYPE_MSG);
- 	hpsa_scsi_do_simple_cmd_core(h, c);
- 	/* no unmap needed here because no data xfer. */
- 
-@@ -1636,8 +1645,11 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
- 	}
- 	/* address the controller */
- 	memset(scsi3addr, 0, sizeof(scsi3addr));
--	fill_cmd(c, logical ? HPSA_REPORT_LOG : HPSA_REPORT_PHYS, h,
--		buf, bufsize, 0, scsi3addr, TYPE_CMD);
-+	if (fill_cmd(c, logical ? HPSA_REPORT_LOG : HPSA_REPORT_PHYS, h,
-+		buf, bufsize, 0, scsi3addr, TYPE_CMD)) {
-+		rc = -1;
-+		goto out;
-+	}
- 	if (extended_response)
- 		c->Request.CDB[1] = extended_response;
- 	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
-@@ -1647,6 +1659,7 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
- 		hpsa_scsi_interpret_error(c);
- 		rc = -1;
- 	}
-+out:
- 	cmd_special_free(h, c);
- 	return rc;
- }
-@@ -2358,8 +2371,9 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
- 		if (waittime < HPSA_MAX_WAIT_INTERVAL_SECS)
- 			waittime = waittime * 2;
- 
--		/* Send the Test Unit Ready */
--		fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, lunaddr, TYPE_CMD);
-+		/* Send the Test Unit Ready, fill_cmd can't fail, no mapping */
-+		(void) fill_cmd(c, TEST_UNIT_READY, h,
-+				NULL, 0, 0, lunaddr, TYPE_CMD);
- 		hpsa_scsi_do_simple_cmd_core(h, c);
- 		/* no unmap needed here because no data xfer. */
- 
-@@ -2444,7 +2458,9 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
- 		return -ENOMEM;
- 	}
- 
--	fill_cmd(c, HPSA_ABORT_MSG, h, abort, 0, 0, scsi3addr, TYPE_MSG);
-+	/* fill_cmd can't fail here, no buffer to map */
-+	(void) fill_cmd(c, HPSA_ABORT_MSG, h, abort,
-+		0, 0, scsi3addr, TYPE_MSG);
- 	if (swizzle)
- 		swizzle_abort_tag(&c->Request.CDB[4]);
- 	hpsa_scsi_do_simple_cmd_core(h, c);
-@@ -3195,7 +3211,8 @@ static int hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
- 	c = cmd_alloc(h);
- 	if (!c)
- 		return -ENOMEM;
--	fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
-+	/* fill_cmd can't fail here, no data buffer to map */
-+	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
- 		RAID_CTLR_LUNID, TYPE_MSG);
- 	c->Request.CDB[1] = reset_type; /* fill_cmd defaults to target reset */
- 	c->waiting = NULL;
-@@ -3207,7 +3224,7 @@ static int hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
- 	return 0;
- }
- 
--static void fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
-+static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 	void *buff, size_t size, u8 page_code, unsigned char *scsi3addr,
- 	int cmd_type)
+-static void hpsa_map_sg_chain_block(struct ctlr_info *h,
++static int hpsa_map_sg_chain_block(struct ctlr_info *h,
+ 	struct CommandList *c)
  {
-@@ -3276,7 +3293,7 @@ static void fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 		default:
- 			dev_warn(&h->pdev->dev, "unknown command 0x%c\n", cmd);
- 			BUG();
--			return;
-+			return -1;
- 		}
- 	} else if (cmd_type == TYPE_MSG) {
- 		switch (cmd) {
-@@ -3348,10 +3365,9 @@ static void fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 	default:
- 		pci_dir = PCI_DMA_BIDIRECTIONAL;
- 	}
--
--	hpsa_map_one(h->pdev, c, buff, size, pci_dir);
--
--	return;
-+	if (hpsa_map_one(h->pdev, c, buff, size, pci_dir))
+ 	struct SGDescriptor *chain_sg, *chain_block;
+@@ -1144,8 +1144,15 @@ static void hpsa_map_sg_chain_block(struct ctlr_info *h,
+ 		(c->Header.SGTotal - h->max_cmd_sg_entries);
+ 	temp64 = pci_map_single(h->pdev, chain_block, chain_sg->Len,
+ 				PCI_DMA_TODEVICE);
++	if (dma_mapping_error(&h->pdev->dev, temp64)) {
++		/* prevent subsequent unmapping */
++		chain_sg->Addr.lower = 0;
++		chain_sg->Addr.upper = 0;
 +		return -1;
++	}
+ 	chain_sg->Addr.lower = (u32) (temp64 & 0x0FFFFFFFFULL);
+ 	chain_sg->Addr.upper = (u32) ((temp64 >> 32) & 0x0FFFFFFFFULL);
 +	return 0;
  }
  
- /*
-@@ -4887,10 +4903,13 @@ static void hpsa_flush_cache(struct ctlr_info *h)
- 		dev_warn(&h->pdev->dev, "cmd_special_alloc returned NULL!\n");
- 		goto out_of_memory;
+ static void hpsa_unmap_sg_chain_block(struct ctlr_info *h,
+@@ -2123,7 +2130,10 @@ static int hpsa_scatter_gather(struct ctlr_info *h,
+ 	if (chained) {
+ 		cp->Header.SGList = h->max_cmd_sg_entries;
+ 		cp->Header.SGTotal = (u16) (use_sg + 1);
+-		hpsa_map_sg_chain_block(h, cp);
++		if (hpsa_map_sg_chain_block(h, cp)) {
++			scsi_dma_unmap(cmd);
++			return -1;
++		}
+ 		return 0;
  	}
--	fill_cmd(c, HPSA_CACHE_FLUSH, h, flush_buf, 4, 0,
--		RAID_CTLR_LUNID, TYPE_CMD);
-+	if (fill_cmd(c, HPSA_CACHE_FLUSH, h, flush_buf, 4, 0,
-+		RAID_CTLR_LUNID, TYPE_CMD)) {
-+		goto out;
-+	}
- 	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_TODEVICE);
- 	if (c->err_info->CommandStatus != 0)
-+out:
- 		dev_warn(&h->pdev->dev,
- 			"error flushing cache on controller\n");
- 	cmd_special_free(h, c);
+ 
 
