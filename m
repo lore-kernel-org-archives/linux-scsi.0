@@ -1,83 +1,77 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] SCSI: amd_iommu dma_boundary overflow
-Date: Wed, 20 Feb 2013 09:37:26 +0000
-Message-ID: <1361353044.2581.16.camel@dabdike.int.hansenpartnership.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
-	 <1361327453-1838-1-git-send-email-eddie.wai@broadcom.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] [SCSI] aacraid: silence two GCC warnings
+Date: Wed, 20 Feb 2013 10:40:23 +0000
+Message-ID: <1361356823.2581.43.camel@dabdike.int.hansenpartnership.com>
+References: <1360440561.1350.27.camel@x61.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0.parallels.com ([199.115.104.20]:44806 "EHLO
-	mx0.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932714Ab3BTJhb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Feb 2013 04:37:31 -0500
-In-Reply-To: <1361327453-1838-1-git-send-email-eddie.wai@broadcom.com>
-Content-Language: en-US
-Content-ID: <719EEEDA1975AB408C99A9439EF2837E@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1360440561.1350.27.camel@x61.thuisdomein>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Joerg Roedel <joro@8bytes.org>
 
-This is a bit tricky, since AMD laid off the team who were maintaining
-this, but I added to the cc' one of the original maintainers in the
-hopes they can take a look.
+On Sat, 2013-02-09 at 21:09 +0100, Paul Bolle wrote:
+> Compiling src.o for a 32 bit system triggers two GCC warnings:
+>     drivers/scsi/aacraid/src.c: In function =E2=80=98aac_src_deliver_=
+message=E2=80=99:
+>     drivers/scsi/aacraid/src.c:410:3: warning: right shift count >=3D=
+ width of type [enabled by default]
+>     drivers/scsi/aacraid/src.c:434:2: warning: right shift count >=3D=
+ width of type [enabled by default]
+>=20
+> Silence these warnings by casting the 'address' variable (of type
+> dma_addr_t) to u64 on those two lines.
+>=20
+> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> ---
+> 0) Compile tested only.
+>=20
+> 1) Changing '0L' to 'OUL' might be a bit of cargo cult programming. I
+> doubt it's necessary. Members of that cult might also change
+> '0xffffffff' to '0xffffffffUL', but I didn't.
+>=20
+>  drivers/scsi/aacraid/src.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+> index 3b021ec..dfa8a37 100644
+> --- a/drivers/scsi/aacraid/src.c
+> +++ b/drivers/scsi/aacraid/src.c
+> @@ -407,7 +407,7 @@ static int aac_src_deliver_message(struct fib *fi=
+b)
+>  		fib->hw_fib_va->header.StructType =3D FIB_MAGIC2;
+>  		fib->hw_fib_va->header.SenderFibAddress =3D (u32)address;
+>  		fib->hw_fib_va->header.u.TimeStamp =3D 0;
+> -		BUG_ON((u32)(address >> 32) !=3D 0L);
+> +		BUG_ON(((u64)address >> 32) !=3D 0UL);
+
+Actually, this isn't the right way to do this.  The correct way would b=
+e
+address >> 16 >> 16, but no-one is expected to remember this, so we hav=
+e
+it macroised in kernel.h as upper_32_bits().
+
+So this should become
+
+BUG_ON(upper_32_bits(address) !=3D 0L);
+
+and a similar change for the below.
 
 James
 
-
-On Tue, 2013-02-19 at 18:30 -0800, Eddie Wai wrote:
-> Hello,
-> 
-> For a 64-bit DMA capable PCIe storage HBA running under the 64-bit
-> AMD-VI IOMMU environment, the amd_iommu code was observed to hit an
-> overflow when it tries to page align the dma_parms->segment_boundary_mask.
-> This overflow would eventually trigger the BUG_ON in the iommu-helper's
-> iommu_is_span_boundary is_power_of_2 check.
-> 
-> A little back tracking shows that since the device is 64-bit DMA capable,
-> the pcidev->dma_mask was correctly set to DMA_BIT_MASK(64).  This dma_mask
-> was then transferred to the SCSI host's dma_boundary param (by the iSCSI
-> driver) and was eventually used to populate the q->limits.seg_boundary_mask
-> (via blk_queue_segment_boundary) and the dma_parms->segment_boundary_mask
-> (via dma_set_seg_boundary) during the scsi queue allocation.
-> 
-> The code seems correct as it make sense to impose the same hardware
-> segment boundary limit on both the blk queue and the DMA code.  It would
-> be an easy alternative to simply prevent the shost->dma_boundary from
-> being set to DMA_BIT_MASK(64), but it seems more correct to fix the
-> amd_iommu code itself to detect and handle this max 64-bit mask condition.
-> 
-> Please let me know your comments.
-> 
-> Thanks,
-> Eddie
-> 
-> Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-> ---
->  drivers/iommu/amd_iommu.c |    7 +++++--
->  1 files changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-> index d90a421..63185a1 100644
-> --- a/drivers/iommu/amd_iommu.c
-> +++ b/drivers/iommu/amd_iommu.c
-> @@ -1526,11 +1526,14 @@ static unsigned long dma_ops_area_alloc(struct device *dev,
->  	unsigned long boundary_size;
->  	unsigned long address = -1;
->  	unsigned long limit;
-> +	unsigned long mask;
->  
->  	next_bit >>= PAGE_SHIFT;
->  
-> -	boundary_size = ALIGN(dma_get_seg_boundary(dev) + 1,
-> -			PAGE_SIZE) >> PAGE_SHIFT;
-> +	mask = dma_get_seg_boundary(dev);
-> +	boundary_size = mask + 1 ?
-> +			ALIGN(mask + 1, PAGE_SIZE) >> PAGE_SHIFT :
-> +			1UL << (BITS_PER_LONG - PAGE_SHIFT);
->  
->  	for (;i < max_index; ++i) {
->  		unsigned long offset = dom->aperture[i]->offset >> PAGE_SHIFT;
-
+>  		address |=3D fibsize;
+>  	} else {
+>  		/* Calculate the amount to the fibsize bits */
+> @@ -431,7 +431,7 @@ static int aac_src_deliver_message(struct fib *fi=
+b)
+>  		address |=3D fibsize;
+>  	}
+> =20
+> -	src_writel(dev, MUnit.IQ_H, (address >> 32) & 0xffffffff);
+> +	src_writel(dev, MUnit.IQ_H, ((u64)address >> 32) & 0xffffffff);
+>  	src_writel(dev, MUnit.IQ_L, address & 0xffffffff);
+> =20
+>  	return 0;
