@@ -1,43 +1,86 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] scsi: storvsc: avoid usage of WRITE_SAME
-Date: Wed, 20 Feb 2013 21:48:24 +0000
-Message-ID: <5634aede223b4b388846e08010ef2483@BLUPR03MB050.namprd03.prod.outlook.com>
-References: <1359557094-13625-1-git-send-email-olaf@aepfle.de>
- <20130211160638.GB15243@aepfle.de>
+From: Jan Vesely <jvesely@redhat.com>
+Subject: [PATCH] block: modify __bio_add_page check to accept pages that don't
+ start a new segment
+Date: Thu, 21 Feb 2013 09:30:26 +0100
+Message-ID: <5125DB22.7020901@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [65.55.169.28] ([65.55.169.28]:12633 "EHLO
-	na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751603Ab3BTVx7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Feb 2013 16:53:59 -0500
-Received: from mail127-tx2 (localhost [127.0.0.1])	by
- mail127-tx2-R.bigfish.com (Postfix) with ESMTP id 6A7EC180239	for
- <linux-scsi@vger.kernel.org.FOPE.CONNECTOR.OVERRIDE>; Wed, 20 Feb 2013
- 21:49:22 +0000 (UTC)
-In-Reply-To: <20130211160638.GB15243@aepfle.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: KY Srinivasan <kys@microsoft.com>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogT2xhZiBIZXJpbmcgW21h
-aWx0bzpvbGFmQGFlcGZsZS5kZV0NCj4gU2VudDogTW9uZGF5LCBGZWJydWFyeSAxMSwgMjAxMyAx
-MTowNyBBTQ0KPiBUbzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IEphbWVzIEJvdHRvbWxl
-eQ0KPiBDYzogS1kgU3Jpbml2YXNhbg0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBzY3NpOiBzdG9y
-dnNjOiBhdm9pZCB1c2FnZSBvZiBXUklURV9TQU1FDQo+IA0KPiBKYW1lcywNCj4gDQo+IHRoaXMg
-cGF0Y2ggZml4ZXMgYSByZWdyZXNzaW9uIGluIDMuOC4gUGxlYXNlIHRyeSB0byBpbmNsdWRlIGl0
-IGluIGZpbmFsIDMuOC4NCj4gVGhlcmUgaXMgYWxzbyBhbm90aGVyIG91dHN0YW5kaW5nIGZpeCBy
-ZWdhcmRpbmcgc2dsaXN0IGluaXQgZnJvbSBLWS4NCj4gDQo+IE9sYWYNCg0KUGluZy4NCg0KSy4g
-WQ0KPiANCj4gT24gV2VkLCBKYW4gMzAsIE9sYWYgSGVyaW5nIHdyb3RlOg0KPiANCj4gPiBTZXQg
-c2NzaV9kZXZpY2UtPm5vX3dyaXRlX3NhbWUgYmVjYXVzZSB0aGUgaG9zdCBkb2VzIG5vdCBzdXBw
-b3J0IGl0Lg0KPiA+IEFsc28gYmxhY2tsaXN0IFdSSVRFX1NBTUUgdG8gYXZvaWQgKGFuZCBsb2cp
-IGFjY2lkZW50IHVzYWdlLg0KPiA+DQo+ID4gSWYgdGhlIGd1ZXN0IHVzZXMgdGhlIGV4dDQgZmls
-ZXN5c3RlbSwgc3RvcnZzYyBoYW5ncyB3aGlsZSBpdCBwcmludHMNCj4gPiB0aGVzZSBtZXNzYWdl
-cyBpbiBhbiBlbmRsZXNzIGxvb3A6DQo+IA0KPiANCj4gPiAgZHJpdmVycy9zY3NpL3N0b3J2c2Nf
-ZHJ2LmMgfCA0ICsrKysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKQ0KPiAN
-Cj4gPiArCXNkZXZpY2UtPm5vX3dyaXRlX3NhbWUgPSAxOw0KPiANCj4gDQoNCg==
+The original behavior was to refuse all pages after the maximum number of
+segments has been reached. However, some drivers (like st) craft their buffers
+to potentially require exactly max segments and multiple pages in the last
+segment. This patch modifies the check to allow pages that can be merged into
+the last segment.
 
+This change fixes EBUSY failures when using large (1mb) tape block size in high
+memory fragmentation condition.
+
+Signed-off-by: Jan Vesely <jvesely@redhat.com>
+---
+  fs/bio.c |   26 ++++++++++++++++----------
+  1 files changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/fs/bio.c b/fs/bio.c
+index b96fc6c..02efbd5 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -500,7 +500,6 @@ static int __bio_add_page(struct request_queue *q, struct 
+bio *bio, struct page
+  			  *page, unsigned int len, unsigned int offset,
+  			  unsigned short max_sectors)
+  {
+-	int retried_segments = 0;
+  	struct bio_vec *bvec;
+
+  	/*
+@@ -551,18 +550,12 @@ static int __bio_add_page(struct request_queue *q, struct 
+bio *bio, struct page
+  		return 0;
+
+  	/*
+-	 * we might lose a segment or two here, but rather that than
+-	 * make this too complex.
++	 * prepare segment count check, reduce segment count if possible
+  	 */
+
+-	while (bio->bi_phys_segments >= queue_max_segments(q)) {
+-
+-		if (retried_segments)
+-			return 0;
+-
+-		retried_segments = 1;
++	if (bio->bi_phys_segments >= queue_max_segments(q))
+  		blk_recount_segments(q, bio);
+-	}
++
+
+  	/*
+  	 * setup the new entry, we might clear it again later if we
+@@ -572,6 +565,19 @@ static int __bio_add_page(struct request_queue *q, struct 
+bio *bio, struct page
+  	bvec->bv_page = page;
+  	bvec->bv_len = len;
+  	bvec->bv_offset = offset;
++	
++	/*
++	 * the other part of the segment count check, allow mergeable pages
++	 */
++	if ((bio->bi_phys_segments > queue_max_segments(q)) ||
++		( (bio->bi_phys_segments == queue_max_segments(q)) &&
++		!BIOVEC_PHYS_MERGEABLE(bvec - 1, bvec))) {
++			bvec->bv_page = NULL;
++			bvec->bv_len = 0;
++			bvec->bv_offset = 0;
++			return 0;
++	}
++
+
+  	/*
+  	 * if queue has other restrictions (eg varying max sector size
+-- 
+1.7.1
