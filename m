@@ -1,86 +1,46 @@
-From: Jan Vesely <jvesely@redhat.com>
-Subject: [PATCH] block: modify __bio_add_page check to accept pages that don't
- start a new segment
-Date: Thu, 21 Feb 2013 09:30:26 +0100
-Message-ID: <5125DB22.7020901@redhat.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v10 0/4] block layer runtime pm
+Date: Thu, 21 Feb 2013 17:19:34 +0800
+Message-ID: <20130221091934.GA8612@aaronlu.sh.intel.com>
+References: <1361340717-8991-1-git-send-email-aaron.lu@intel.com>
+ <Pine.LNX.4.44L0.1302201042400.1671-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1302201042400.1671-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The original behavior was to refuse all pages after the maximum number of
-segments has been reached. However, some drivers (like st) craft their buffers
-to potentially require exactly max segments and multiple pages in the last
-segment. This patch modifies the check to allow pages that can be merged into
-the last segment.
+On Wed, Feb 20, 2013 at 10:43:50AM -0500, Alan Stern wrote:
+> On Wed, 20 Feb 2013, Aaron Lu wrote:
+> 
+> > In August 2010, Jens and Alan discussed about "Runtime PM and the block
+> > layer". http://marc.info/?t=128259108400001&r=1&w=2
+> > And then Alan has given a detailed implementation guide:
+> > http://marc.info/?l=linux-scsi&m=133727953625963&w=2
+> 
+> > v10:
+> > - Add link of Alan Stern's ideas on block layer runtime PM to patch 2
+> >   and 3's changelog;
+> > - Add back code to schdule device suspend if scsi driver return -EBUSY.
+> 
+> This all looks okay now.  You can add
+> 
+> Acked-by: Alan Stern <stern@rowland.harvard.edu>
+> 
+> to each of the patches.
 
-This change fixes EBUSY failures when using large (1mb) tape block size in high
-memory fragmentation condition.
+Great, thanks a lot for your kind help.
 
-Signed-off-by: Jan Vesely <jvesely@redhat.com>
----
-  fs/bio.c |   26 ++++++++++++++++----------
-  1 files changed, 16 insertions(+), 10 deletions(-)
+Hi James,
+Can I have your ack for patch 1 and 4?
 
-diff --git a/fs/bio.c b/fs/bio.c
-index b96fc6c..02efbd5 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -500,7 +500,6 @@ static int __bio_add_page(struct request_queue *q, struct 
-bio *bio, struct page
-  			  *page, unsigned int len, unsigned int offset,
-  			  unsigned short max_sectors)
-  {
--	int retried_segments = 0;
-  	struct bio_vec *bvec;
+And Jens,
+Do you have any comments for this series?
 
-  	/*
-@@ -551,18 +550,12 @@ static int __bio_add_page(struct request_queue *q, struct 
-bio *bio, struct page
-  		return 0;
+Thanks,
+Aaron
 
-  	/*
--	 * we might lose a segment or two here, but rather that than
--	 * make this too complex.
-+	 * prepare segment count check, reduce segment count if possible
-  	 */
-
--	while (bio->bi_phys_segments >= queue_max_segments(q)) {
--
--		if (retried_segments)
--			return 0;
--
--		retried_segments = 1;
-+	if (bio->bi_phys_segments >= queue_max_segments(q))
-  		blk_recount_segments(q, bio);
--	}
-+
-
-  	/*
-  	 * setup the new entry, we might clear it again later if we
-@@ -572,6 +565,19 @@ static int __bio_add_page(struct request_queue *q, struct 
-bio *bio, struct page
-  	bvec->bv_page = page;
-  	bvec->bv_len = len;
-  	bvec->bv_offset = offset;
-+	
-+	/*
-+	 * the other part of the segment count check, allow mergeable pages
-+	 */
-+	if ((bio->bi_phys_segments > queue_max_segments(q)) ||
-+		( (bio->bi_phys_segments == queue_max_segments(q)) &&
-+		!BIOVEC_PHYS_MERGEABLE(bvec - 1, bvec))) {
-+			bvec->bv_page = NULL;
-+			bvec->bv_len = 0;
-+			bvec->bv_offset = 0;
-+			return 0;
-+	}
-+
-
-  	/*
-  	 * if queue has other restrictions (eg varying max sector size
--- 
-1.7.1
