@@ -1,80 +1,188 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH RESEND 2/4] scsi: storvsc: avoid usage of WRITE_SAME
-Date: Thu, 21 Feb 2013 12:04:51 -0800
-Message-ID: <1361477093-17549-2-git-send-email-kys@microsoft.com>
-References: <1361477060-17505-1-git-send-email-kys@microsoft.com>
- <1361477093-17549-1-git-send-email-kys@microsoft.com>
+From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Subject: Re: [usb-storage] Issue with mini-SaS to eSATA to USB 3.0 setup
+Date: Thu, 21 Feb 2013 12:16:03 -0800
+Message-ID: <CAA6KcBBJbmHXem97fiqDZweCgE90p+VfYz=KHn=J5qtZL6VqKQ@mail.gmail.com>
+References: <CAAfSSYhT+r07yQfok_BvKj_bTnCUv7nMX8Wafd-xjB1ejEZusQ@mail.gmail.com>
+ <CAAfSSYj4ycBUVW3rVy1jrbJEY2hW_Ui88MyWdA5yGose80Vggw@mail.gmail.com> <20130221192646.GE27219@xanatos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1361477093-17549-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
- <mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel/>
-List-Post: <mailto:devel@linuxdriverproject.org>
-List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
- <mailto:devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: devel-bounces@linuxdriverproject.org
-Sender: "devel" <devel-bounces@linuxdriverproject.org>
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
-Cc: Olaf Hering <olaf@aepfle.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:39651 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754051Ab3BUUQY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Feb 2013 15:16:24 -0500
+Received: by mail-wg0-f46.google.com with SMTP id fg15so7531584wgb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Feb 2013 12:16:23 -0800 (PST)
+In-Reply-To: <20130221192646.GE27219@xanatos>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Fabio David <fabiodavid@gmail.com>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-From: Olaf Hering <olaf@aepfle.de>
+I highly doubt hot-insert and hot-remove of HDDs from the 4-bay
+container (without removing the corresponding USB/eSATA adaptor) will
+work.
 
-Set scsi_device->no_write_same because the host does not support it.
-Also blacklist WRITE_SAME to avoid (and log) accident usage.
+The USB/eSATA adaptor does not have a way to inform the host that the
+eSATA side has been disconnected from the HDD.  That functionality
+isn't in the usb-storage protocol.
 
-If the guest uses the ext4 filesystem, storvsc hangs while it prints
-these messages in an endless loop:
-...
-[  161.459523] hv_storvsc vmbus_0_1: cmd 0x41 scsi status 0x2 srb status 0x6
-[  161.462157] sd 2:0:0:0: [sda]
-[  161.463135] Sense Key : No Sense [current]
-[  161.464983] sd 2:0:0:0: [sda]
-[  161.465899] Add. Sense: No additional sense information
-[  161.468211] hv_storvsc vmbus_0_1: cmd 0x41 scsi status 0x2 srb status 0x6
-[  161.475766] sd 2:0:0:0: [sda]
-[  161.476728] Sense Key : No Sense [current]
-[  161.478284] sd 2:0:0:0: [sda]
-[  161.479441] Add. Sense: No additional sense information
-...
+This type of functionality *might* be supported in the UAS protocol,
+but I don't know.
 
-This happens with a guest running on Windows Server 2012, but happens to
-work while running on Windows Server 2008. WRITE_SAME isnt really
-supported by both versions, so disable the command usage globally.
+Matt
 
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
-Cc: KY Srinivasan <kys@microsoft.com>
-Cc: <linux-scsi@vger.kernel.org>
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+On Thu, Feb 21, 2013 at 11:26 AM, Sarah Sharp
+<sarah.a.sharp@linux.intel.com> wrote:
+> Cc-ing the SCSI and USB storage list.
+>
+> Folks, does the attached picture look like a sane setup?  I've never
+> used mini-SaS to eSATA adapter before, let alone with four eSATA to USB
+> 3.0 adapters.
+>
+> On Tue, Jan 29, 2013 at 12:56:02PM -0200, Fabio David wrote:
+>> Hi Sarah,
+>>
+>> My name is Fabio David and I am from Brazil. I've seen your posts on
+>> several forums and read articles about you. I really admire your work.
+>>
+>> Maybe you can help me. I'm trying to connect a PC running Centos 6.3
+>> to a CRU dataport 4-bay storage device. This device only has a miniSaS
+>> port.
+>>
+>> Here is my scenario:
+>>
+>> - DataCRU device with 4 hot-swapables bays.
+>> http://www.cru-inc.com/slideshow.php?dir=//Digital-Cinema//&sel=5
+>> - MiniSaS cable connects to the DataCRU device and on the other side
+>> there are 4 eSata connectors
+>>   http://www.elpeus.com/sas-mini-sas/external-mini-sas-cables/sff-8088-to-4-esata/3m-mini-sas-sff-8088-to-4-esata-cable/
+>> - 4 eSata<->USB3.0 adaptors connected to each eSata connector
+>> - Adaptors connected to a USB3.0 HUB
+>> - USB3.0 hub connected to PC
+>>
+>> Everything works ok, I can mount/read the HDs, but sometimes the
+>> system does not detect when a hard drive is inserted/removed from a
+>> DataCru bay. No events are generated, nothing appears in
+>> /proc/partitions nor udev
+>> is called to apply my rules.
+>
+> Do you lose only hard drive insertion events, or do you lose remove
+> events as well?
+>
+> For example, what happens when you do this:
+>
+> 1. Unplug the eSATA to USB adapters from the USB 3.0 hub.
+> 2. Insert a hard drive into the bay.
+> 3. Connect the eSATA to USB adapter to the USB 3.0 hub.
+> 4. Wait for hard drive detection, then hot-remove the drive from the
+> bay.
+>
+>> However, everything works fine when connected directly to PC's USB
+>> port. Please look at the attached picture.
+>
+> It looks like you're only attaching one eSATA to USB adapter to the
+> roothub.  Do you only have one USB 3.0 port on the host, or can you try
+> plugging in multiple eSATA to USB adapters into the roothub?
+>
+> Does the setup work when only one eSATA to USB adapter is plugged into
+> the USB 3.0 hub?
+>
+>> Do you have any suggestions?
+>
+> A couple possible root causes come to mind:
+>
+> 1. Perhaps the USB 3.0 hub is interfering with communication to your
+> eSATA to USB 3.0 adapters.
+>
+> 2. Maybe USB device suspend is to blame.  Do you have USB device suspend
+> enabled for the eSATA to USB adapters?
+>
+> 3. Perhaps the SATA adapters aren't responding with a Medium Changed
+> status when the USB storage device is plugged in.
+>
+> Can you send me dmesg, starting from just before you insert a hard drive
+> into the drive bays?  I need dmesg for both when the SATA adapter is
+> connected directly to the roothub, and when it's connected to the USB
+> 3.0 hub.
+>
+> A usbmon trace might also be useful for the USB storage developers.
+> Documentation on how to take that trace is here:
+>
+> http://lxr.linux.no/#linux/Documentation/usb/usbmon.txt
+>
+> Sarah Sharp
+>
+>> ===================================================================
+>>
+>> lsusb returns
+>>
+>> Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+>> Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>> Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>> Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>> Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>> Bus 001 Device 002: ID 13d3:3323 IMC Networks
+>> Bus 001 Device 009: ID 2109:3431  <----------------------------  HUB 3.0
+>> Bus 006 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+>> Bus 007 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+>> Bus 007 Device 040: ID 2109:0810  <----------------------------  HUB 3.0
+>> Bus 007 Device 041: ID 1234:5678 Brain Actuated Technologies
+>> Bus 007 Device 042: ID 1234:5678 Brain Actuated Technologies
+>> Bus 007 Device 043: ID 1234:5678 Brain Actuated Technologies
+>> Bus 007 Device 044: ID 1234:5678 Brain Actuated Technologies
+>>
+>> /var/log/messages
+>> ....
+>> Jan 27 18:00:28 localhost kernel: usb 7-1: New USB device found,
+>> idVendor=2109, idProduct=0810
+>> Jan 27 18:00:28 localhost kernel: usb 7-1: New USB device strings:
+>> Mfr=1, Product=2, SerialNumber=0
+>> Jan 27 18:00:28 localhost kernel: usb 7-1: Product: 4-Port USB 3.0 Hub
+>> Jan 27 18:00:28 localhost kernel: usb 7-1: Manufacturer: VIA Labs, Inc.
+>> Jan 27 18:00:28 localhost kernel: usb 7-1: configuration #1 chosen from 1 choice
+>> Jan 27 18:00:28 localhost kernel: hub 7-1:1.0: USB hub found
+>> Jan 27 18:00:28 localhost kernel: hub 7-1:1.0: 4 ports detected
+>> ....
+>> Jan 28 21:32:02 localhost kernel: usb 7-1.1: new SuperSpeed USB device
+>> number 9 using xhci_hcd
+>> Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: PCI INT A ->
+>> GSI 16 (level, low) -> IRQ 16
+>> Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: xHCI Host Controller
+>> Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: new USB bus
+>> registered, assigned bus number 6
+>> Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: irq 16, io
+>> mem 0xdfe00000
+>> Jan 28 21:32:56 localhost kernel: usb usb6: Manufacturer: Linux
+>> 2.6.32-279.19.1.el6.i686 xhci_hcd
+>> Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: xHCI Host Controller
+>> Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: new USB bus
+>> registered, assigned bus number 7
+>> Jan 28 21:32:56 localhost kernel: usb usb7: Manufacturer: Linux
+>> 2.6.32-279.19.1.el6.i686 xhci_hcd
+>> Jan 28 21:32:56 localhost kernel: usb 7-1: new SuperSpeed USB device
+>> number 2 using xhci_hcd
+>> Jan 28 21:32:56 localhost kernel: usb 7-1.1: new SuperSpeed USB device
+>> number 3 using xhci_hcd
+>> Jan 28 21:32:56 localhost kernel: usb 7-1.2: new SuperSpeed USB device
+>> number 4 using xhci_hcd
+>> Jan 28 21:32:56 localhost kernel: usb 7-1.3: new SuperSpeed USB device
+>> number 5 using xhci_hcd
+>> Jan 28 21:32:56 localhost kernel: usb 7-1.4: new SuperSpeed USB device
+>> number 6 using xhci_hcd
+>
+>
+> --
+> You received this message because you are subscribed to the Google Groups "USB Mass Storage on Linux" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to usb-storage+unsubscribe@lists.one-eyed-alien.net.
+> To post to this group, send email to usb-storage@lists.one-eyed-alien.net.
+> Visit this group at http://groups.google.com/a/lists.one-eyed-alien.net/group/usb-storage/?hl=en.
+> For more options, visit https://groups.google.com/a/lists.one-eyed-alien.net/groups/opt_out.
+>
+>
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 5ada1d0..2060509 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1156,6 +1156,8 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
- 
- 	blk_queue_bounce_limit(sdevice->request_queue, BLK_BOUNCE_ANY);
- 
-+	sdevice->no_write_same = 1;
-+
- 	return 0;
- }
- 
-@@ -1238,6 +1240,8 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
- 	u8 scsi_op = scmnd->cmnd[0];
- 
- 	switch (scsi_op) {
-+	/* the host does not handle WRITE_SAME, log accident usage */
-+	case WRITE_SAME:
- 	/*
- 	 * smartd sends this command and the host does not handle
- 	 * this. So, don't send it.
--- 
-1.7.4.1
+
+
+--
+Matthew Dharm
+Maintainer, USB Mass Storage driver for Linux
