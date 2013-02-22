@@ -1,105 +1,198 @@
-From: Jean Delvare <jdelvare@suse.de>
-Subject: Kernel oops on st module cycling
-Date: Fri, 22 Feb 2013 14:02:50 +0100
-Message-ID: <1361538170.24311.209.camel@amber.site>
+From: Fabio David <fabiodavid@gmail.com>
+Subject: Re: Issue with mini-SaS to eSATA to USB 3.0 setup
+Date: Fri, 22 Feb 2013 11:54:56 -0300
+Message-ID: <CAAfSSYh_+YmwJ36qhy0C2hMXWHtDPoUT-VYFusd_Jp4WX5MhVg@mail.gmail.com>
+References: <CAAfSSYhT+r07yQfok_BvKj_bTnCUv7nMX8Wafd-xjB1ejEZusQ@mail.gmail.com>
+ <CAAfSSYj4ycBUVW3rVy1jrbJEY2hW_Ui88MyWdA5yGose80Vggw@mail.gmail.com>
+ <20130221192646.GE27219@xanatos> <CAAfSSYhUzSv+R8qkhBpvM0z39mKFH07FZ3Vuk_y3XVM81aAnSw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56153 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756865Ab3BVNCo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Feb 2013 08:02:44 -0500
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:60077 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755306Ab3BVOzS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2013 09:55:18 -0500
+In-Reply-To: <CAAfSSYhUzSv+R8qkhBpvM0z39mKFH07FZ3Vuk_y3XVM81aAnSw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai =?ISO-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-Hi Kai, James,
+resent
 
-It only takes a few st module rmmod/modprobe cycles to get a kernel
-oops. It was reported to me, and reproduced by me, on kernel 3.0.58 /
-SLES11 SP2, but I was also able to reproduce it on more recent kernels
-(3.4.6 / openSUSE 12.2 and 3.7.6 / openSUSE 12.3 RC1.)
+On Thu, Feb 21, 2013 at 4:26 PM, Sarah Sharp <sarah.a.sharp@linux.intel.com>
+wrote:
+>
+> Cc-ing the SCSI and USB storage list.
+>
+> Folks, does the attached picture look like a sane setup?  I've never
+> used mini-SaS to eSATA adapter before, let alone with four eSATA to USB
+> 3.0 adapters.
+>
 
-The oops doesn't happen on modprobe proper, but on an scsi_id command
-ran by udev right after modprobe:
-KERNEL=="st*[0-9]|nst*[0-9]", ENV{ID_SERIAL}!="?*", WAIT_FOR="$env{BSG_DEV}", IMPORT="scsi_id --whitelisted --export --device=$env{BSG_DEV}", ENV{ID_BUS}="scsi"
+I know it is a weird setup...
 
-Using kdb I could gather the following backtrace:
-Stack traceback for pid 4037
-0xffff880039dfa040     4037     4027  1    0   R  0xffff880039dfa4e0 *scsi_id
- [<ffffffff812482d9>] blk_get_queue+0x9/0x30
- [<ffffffff81255f88>] bsg_add_device+0x38/0x1c0
- [<ffffffff81256214>] bsg_get_device+0x104/0x140
- [<ffffffff81256266>] bsg_open+0x16/0x40
- [<ffffffff8117949f>] chrdev_open+0x13f/0x200
- [<ffffffff8117303e>] __dentry_open+0x18e/0x310
- [<ffffffff811732bb>] nameidata_to_filp+0x7b/0x80
- [<ffffffff81182942>] do_last+0x1f2/0x7f0
- [<ffffffff81183ed8>] path_openat+0xc8/0x3f0
- [<ffffffff81184328>] do_filp_open+0x48/0xa0
- [<ffffffff811744c2>] do_sys_open+0x162/0x1f0
- [<ffffffff81174590>] sys_open+0x20/0x30
- [<ffffffff814984c2>] system_call_fastpath+0x16/0x1b
- [<00007f205bf94da0>] 0x7f205bf94da0
-     r15 = 0xffff88003b9887b8      r14 = 0xffff88003c469368 
-     r13 = 0xffff88003bac5b50      r12 = 0x6b6b6b6b6b6b6b6b 
-      bp = 0xffff88003bb23bd8       bx = 0xfffffffffffffffa 
-     r11 = 0x0000000000000001      r10 = 0x0000000000000000 
-      r9 = 0xffff88003d637290       r8 = 0x0000000000000000 
-      ax = 0x0000000000000000       cx = 0xffff88003fc00000 
-      dx = 0xffff88003bac5b50       si = 0x6b6b6b6b6b6b6b6b 
-      di = 0x6b6b6b6b6b6b6b6b  orig_ax = 0xffffffffffffffff 
-      ip = 0xffffffff812482d9       cs = 0x0000000000000010 
-   flags = 0x0000000000010286       sp = 0xffff88003bb23bc0 
-      ss = 0x0000000000000018 &regs = 0xffff88003bb23b28
+> On Tue, Jan 29, 2013 at 12:56:02PM -0200, Fabio David wrote:
+> > Hi Sarah,
+> >
+> > My name is Fabio David and I am from Brazil. I've seen your posts on
+> > several forums and read articles about you. I really admire your work.
+> >
+> > Maybe you can help me. I'm trying to connect a PC running Centos 6.3
+> > to a CRU dataport 4-bay storage device. This device only has a miniSaS
+> > port.
+> >
+> > Here is my scenario:
+> >
+> > - DataCRU device with 4 hot-swapables bays.
+> > http://www.cru-inc.com/slideshow.php?dir=//Digital-Cinema//&sel=5
+> > - MiniSaS cable connects to the DataCRU device and on the other side
+> > there are 4 eSata connectors
+> >
+> > http://www.elpeus.com/sas-mini-sas/external-mini-sas-cables/sff-8088-to-4-esata/3m-mini-sas-sff-8088-to-4-esata-cable/
+> > - 4 eSata<->USB3.0 adaptors connected to each eSata connector
+> > - Adaptors connected to a USB3.0 HUB
+> > - USB3.0 hub connected to PC
+> >
+> > Everything works ok, I can mount/read the HDs, but sometimes the
+> > system does not detect when a hard drive is inserted/removed from a
+> > DataCru bay. No events are generated, nothing appears in
+> > /proc/partitions nor udev
+> > is called to apply my rules.
+>
+> Do you lose only hard drive insertion events, or do you lose remove
+> events as well?
+>
 
-Note that the kernel log message right before the oops are suspicious.
-Normally I would get:
+It loses both events, randomly.
 
-[  272.155460] st: Version 20101219, fixed bufsize 32768, s/g segs 256
-[  272.156586] st 3:0:4:0: Attached scsi tape st0
-[  272.156592] st 3:0:4:0: st0: try direct i/o: yes (alignment 4 B)
+>
+> For example, what happens when you do this:
+>
+> 1. Unplug the eSATA to USB adapters from the USB 3.0 hub.
+> 2. Insert a hard drive into the bay.
+> 3. Connect the eSATA to USB adapter to the USB 3.0 hub.
+> 4. Wait for hard drive detection, then hot-remove the drive from the
+> bay.
 
-but before the oops I get:
 
-[  482.428527] st: Version 20101219, fixed bufsize 32768, s/g segs 256
-[  482.429509] st 3:0:4:0: Attached scsi tape st0
-[  482.429515] st 3:0:4:0: st0: try direct i/o: yes (alignment 1802201964 B)
-[  482.449542] general protection fault: 0000 [#1] SMP 
+Sometimes it will detect, sometimes dont.
 
-Note the odd alignment value.
+>
+> > However, everything works fine when connected directly to PC's USB
+> > port. Please look at the attached picture.
+>
+> It looks like you're only attaching one eSATA to USB adapter to the
+> roothub.  Do you only have one USB 3.0 port on the host, or can you try
+> plugging in multiple eSATA to USB adapters into the roothub?
 
-According to gdb, blk_get_queue+0x9 is:
 
-563	if (likely(!test_bit(QUEUE_FLAG_DEAD, &q->queue_flag))) {
+Unfortunately, the host only has 1 USB3.0 port
 
-where test_bit is implemented by inline function constant_test_bit().
+>
+>
+> Does the setup work when only one eSATA to USB adapter is plugged into
+> the USB 3.0 hub?
 
-With kernel 3.4.6 I got a different backtrace, I had no serial console
-setup at the time so I could only take a picture, below if a manual copy
-of the trace, hope I didn't make any typo:
 
-RIP: elv_may_queue+0x7/0x20
-Call trace:
- get_request+0x112/0x4a0
- get_request_wait+0x2d/0x210
- blk_get_request+0x6c/0x90
- bsg_map_hdr.isra.7+0xbe/0x340
- bsg_ioctl+0x187/0x230
- do_vfs_ioctl+0x8f/0x530
- sys_ioctl+0x98/0xa0
- system_call_fastpath+0x1a/0x1f
+Same problem...
 
-Original pictures are here if needed:
-http://users.suse.com/~jdelvare/work/st-oops/
+>
+> > Do you have any suggestions?
+>
+> A couple possible root causes come to mind:
+>
+> 1. Perhaps the USB 3.0 hub is interfering with communication to your
+> eSATA to USB 3.0 adapters.
+>
+> 2. Maybe USB device suspend is to blame.  Do you have USB device suspend
+> enabled for the eSATA to USB adapters?
 
-I'd like this bug to be fixed. What extra information can I provide that
-would be helpful?
 
-Thanks,
--- 
-Jean Delvare
-Suse L3
+I am not sure, I thought it was disabled by default. How can I check?
 
+>
+> 3. Perhaps the SATA adapters aren't responding with a Medium Changed
+> status when the USB storage device is plugged in.
+>
+> Can you send me dmesg, starting from just before you insert a hard drive
+> into the drive bays?  I need dmesg for both when the SATA adapter is
+> connected directly to the roothub, and when it's connected to the USB
+> 3.0 hub.
+>
+> A usbmon trace might also be useful for the USB storage developers.
+> Documentation on how to take that trace is here:
+>
+> http://lxr.linux.no/#linux/Documentation/usb/usbmon.txt
+>
+
+I will send you as soon as possible
+
+Thanks in advance for your help
+
+Fabio
+
+>
+> Sarah Sharp
+>
+> > ===================================================================
+> >
+> > lsusb returns
+> >
+> > Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+> > Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+> > Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+> > Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+> > Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+> > Bus 001 Device 002: ID 13d3:3323 IMC Networks
+> > Bus 001 Device 009: ID 2109:3431  <----------------------------  HUB 3.0
+> > Bus 006 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+> > Bus 007 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+> > Bus 007 Device 040: ID 2109:0810  <----------------------------  HUB 3.0
+> > Bus 007 Device 041: ID 1234:5678 Brain Actuated Technologies
+> > Bus 007 Device 042: ID 1234:5678 Brain Actuated Technologies
+> > Bus 007 Device 043: ID 1234:5678 Brain Actuated Technologies
+> > Bus 007 Device 044: ID 1234:5678 Brain Actuated Technologies
+> >
+> > /var/log/messages
+> > ....
+> > Jan 27 18:00:28 localhost kernel: usb 7-1: New USB device found,
+> > idVendor=2109, idProduct=0810
+> > Jan 27 18:00:28 localhost kernel: usb 7-1: New USB device strings:
+> > Mfr=1, Product=2, SerialNumber=0
+> > Jan 27 18:00:28 localhost kernel: usb 7-1: Product: 4-Port USB 3.0 Hub
+> > Jan 27 18:00:28 localhost kernel: usb 7-1: Manufacturer: VIA Labs, Inc.
+> > Jan 27 18:00:28 localhost kernel: usb 7-1: configuration #1 chosen from
+> > 1 choice
+> > Jan 27 18:00:28 localhost kernel: hub 7-1:1.0: USB hub found
+> > Jan 27 18:00:28 localhost kernel: hub 7-1:1.0: 4 ports detected
+> > ....
+> > Jan 28 21:32:02 localhost kernel: usb 7-1.1: new SuperSpeed USB device
+> > number 9 using xhci_hcd
+> > Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: PCI INT A ->
+> > GSI 16 (level, low) -> IRQ 16
+> > Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: xHCI Host
+> > Controller
+> > Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: new USB bus
+> > registered, assigned bus number 6
+> > Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: irq 16, io
+> > mem 0xdfe00000
+> > Jan 28 21:32:56 localhost kernel: usb usb6: Manufacturer: Linux
+> > 2.6.32-279.19.1.el6.i686 xhci_hcd
+> > Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: xHCI Host
+> > Controller
+> > Jan 28 21:32:56 localhost kernel: xhci_hcd 0000:01:00.0: new USB bus
+> > registered, assigned bus number 7
+> > Jan 28 21:32:56 localhost kernel: usb usb7: Manufacturer: Linux
+> > 2.6.32-279.19.1.el6.i686 xhci_hcd
+> > Jan 28 21:32:56 localhost kernel: usb 7-1: new SuperSpeed USB device
+> > number 2 using xhci_hcd
+> > Jan 28 21:32:56 localhost kernel: usb 7-1.1: new SuperSpeed USB device
+> > number 3 using xhci_hcd
+> > Jan 28 21:32:56 localhost kernel: usb 7-1.2: new SuperSpeed USB device
+> > number 4 using xhci_hcd
+> > Jan 28 21:32:56 localhost kernel: usb 7-1.3: new SuperSpeed USB device
+> > number 5 using xhci_hcd
+> > Jan 28 21:32:56 localhost kernel: usb 7-1.4: new SuperSpeed USB device
+> > number 6 using xhci_hcd
+>
+>
