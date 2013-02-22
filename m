@@ -1,52 +1,48 @@
-From: Joe Lawrence <Joe.Lawrence@stratus.com>
-Subject: Re: Kernel oops on st module cycling
-Date: Fri, 22 Feb 2013 10:30:36 -0500 (EST)
-Message-ID: <alpine.DEB.2.02.1302221017330.1736@jlaw-desktop.mno.stratus.com>
-References: <1361538170.24311.209.camel@amber.site>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 01/15] pm80xx: fix for memory region free
+Date: Fri, 22 Feb 2013 16:06:35 +0000
+Message-ID: <1361549195.2372.39.camel@dabdike.int.hansenpartnership.com>
+References: <511A34D1.4070207@pmc-sierra.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.stratus.com ([134.111.1.17]:41888 "EHLO
-	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755947Ab3BVPgA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2013 10:36:00 -0500
-In-Reply-To: <1361538170.24311.209.camel@amber.site>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42323 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757553Ab3BVQGk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Feb 2013 11:06:40 -0500
+In-Reply-To: <511A34D1.4070207@pmc-sierra.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jean Delvare <jdelvare@suse.de>
-Cc: =?ISO-8859-15?Q?Kai_M=E4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Anand <anandkumar_santhanam@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org, jack_wang@usish.com, Sangeetha.Gnanasekaran@pmcs.com, Vishwanath.Maram@pmcs.com, Harry.Yang@pmcs.com
 
-On Fri, 22 Feb 2013, Jean Delvare wrote:
-
-> Hi Kai, James,
+On Tue, 2013-02-12 at 04:25 -0800, Anand wrote:
+> >From 56ee53f01663fa479c0624b81e36545ea5b1ab94 Mon Sep 17 00:00:00 2001
+> From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
+> Date: Mon, 4 Feb 2013 12:10:02 +0530
+> Subject: [PATCH 01/15] pm80xx: fix for memory region free
 > 
-> It only takes a few st module rmmod/modprobe cycles to get a kernel
-> oops. It was reported to me, and reproduced by me, on kernel 3.0.58 /
-> SLES11 SP2, but I was also able to reproduce it on more recent kernels
-> (3.4.6 / openSUSE 12.2 and 3.7.6 / openSUSE 12.3 RC1.)
->
-> [ ... snip .. ]
+> All memory regions are allocated based on variables total_len
+> and alignment but free was based on element_size.
 > 
-> Thanks,
-> -- 
-> Jean Delvare
-> Suse L3
+> Signed-off-by: Sakthivel K <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
+> Signed-off-by: Anand Kumar S <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 4c9fe73..3d5e522 100755
 
-Hi Jean,
+Can you please fix whatever it is you're doing that's causing this.  The
+100755 at the end of the index directive indicates that you've
+incorrectly added execute permissions to the file.  I've stripped all
+these off again, but it's annoying.
 
-I remember finding an st module load/unload kref accounting bug a while 
-ago: http://thread.gmane.org/gmane.linux.scsi/77539  I replied to the 
-report with a hack-patch that grabbed an extra reference to avoid the 
-crash.
+Thanks,
 
-There was an attempt at fixing this up in the block layer [1] but that 
-change was pulled when problems were found with that patch [2].
+James
 
-[1] https://lkml.org/lkml/2012/8/27/354
-[2] https://lkml.org/lkml/2012/9/22/113
 
-Maybe this is the same bug?
-
-Hope this helps,
-
--- Joe
