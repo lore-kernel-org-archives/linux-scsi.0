@@ -1,72 +1,105 @@
-From: Darren Lavender <dcl@hppine99.uksr.hp.com>
-Subject: Re: [Patch][RFC] st: provide tape statistics via sysfs
-Date: Fri, 22 Feb 2013 11:47:24 +0000
-Message-ID: <51275ACC.4060207@hppine99.uksr.hp.com>
-References: <DDB9C85B850785449757F9914A034FCB34340D6F@G4W3219.americas.hpqcorp.net> <1361530259.2372.28.camel@dabdike.int.hansenpartnership.com> <512756AB.2040504@hppine99.uksr.hp.com>
+From: Jean Delvare <jdelvare@suse.de>
+Subject: Kernel oops on st module cycling
+Date: Fri, 22 Feb 2013 14:02:50 +0100
+Message-ID: <1361538170.24311.209.camel@amber.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:19298 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756308Ab3BVLre (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2013 06:47:34 -0500
-In-Reply-To: <512756AB.2040504@hppine99.uksr.hp.com>
+Received: from cantor2.suse.de ([195.135.220.15]:56153 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756865Ab3BVNCo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Feb 2013 08:02:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Seymour, Shane M" <shane.seymour@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Kai =?ISO-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
 
+Hi Kai, James,
 
+It only takes a few st module rmmod/modprobe cycles to get a kernel
+oops. It was reported to me, and reproduced by me, on kernel 3.0.58 /
+SLES11 SP2, but I was also able to reproduce it on more recent kernels
+(3.4.6 / openSUSE 12.2 and 3.7.6 / openSUSE 12.3 RC1.)
 
-......
->> I'm afraid we can't do it the way you're proposing.  files in sysfs must
->> conform to the one value per file rule (so we avoid the ABI nastiness
->> that plagues /proc).  You can create a stat directory with a bunch of
->> files, but not a single file that gives all values.
->
-> That was initially my understanding, but when I looked at this the precedent had already been set, see for example the block subsys:
->
-> [root@darwin ~]# grep . /sys/block/sd*/stat
-> /sys/block/sda/stat:   27351     6890   609272   228129    36810   920727  7660304  1333950        0   556889  1562009
-> /sys/block/sdb/stat:    2369     6762    18890    39003        0        0        0        0        0     4059    39002
-> [root@darwin ~]#
->
-> I can only assume it was implemented this way for the sake of
-> efficiency, eg avoid a huge amount of file open/read/close calls in
-> sar/iostat. It's not unusual for us to see a thousand block devices
-> on enterprise servers, multiply that by the number of above entries
-> and you would be talking about 11 x block-dev-count per iostat read
-> iteration. Okay for tapes we typically don't see anything like this
-> number but the patch just follows the precedent set with the block
-> device. Nevertheless, if opinion is really strong against this we
-> could split each stat out in to a single file.
+The oops doesn't happen on modprobe proper, but on an scsi_id command
+ran by udev right after modprobe:
+KERNEL=="st*[0-9]|nst*[0-9]", ENV{ID_SERIAL}!="?*", WAIT_FOR="$env{BSG_DEV}", IMPORT="scsi_id --whitelisted --export --device=$env{BSG_DEV}", ENV{ID_BUS}="scsi"
 
+Using kdb I could gather the following backtrace:
+Stack traceback for pid 4037
+0xffff880039dfa040     4037     4027  1    0   R  0xffff880039dfa4e0 *scsi_id
+ [<ffffffff812482d9>] blk_get_queue+0x9/0x30
+ [<ffffffff81255f88>] bsg_add_device+0x38/0x1c0
+ [<ffffffff81256214>] bsg_get_device+0x104/0x140
+ [<ffffffff81256266>] bsg_open+0x16/0x40
+ [<ffffffff8117949f>] chrdev_open+0x13f/0x200
+ [<ffffffff8117303e>] __dentry_open+0x18e/0x310
+ [<ffffffff811732bb>] nameidata_to_filp+0x7b/0x80
+ [<ffffffff81182942>] do_last+0x1f2/0x7f0
+ [<ffffffff81183ed8>] path_openat+0xc8/0x3f0
+ [<ffffffff81184328>] do_filp_open+0x48/0xa0
+ [<ffffffff811744c2>] do_sys_open+0x162/0x1f0
+ [<ffffffff81174590>] sys_open+0x20/0x30
+ [<ffffffff814984c2>] system_call_fastpath+0x16/0x1b
+ [<00007f205bf94da0>] 0x7f205bf94da0
+     r15 = 0xffff88003b9887b8      r14 = 0xffff88003c469368 
+     r13 = 0xffff88003bac5b50      r12 = 0x6b6b6b6b6b6b6b6b 
+      bp = 0xffff88003bb23bd8       bx = 0xfffffffffffffffa 
+     r11 = 0x0000000000000001      r10 = 0x0000000000000000 
+      r9 = 0xffff88003d637290       r8 = 0x0000000000000000 
+      ax = 0x0000000000000000       cx = 0xffff88003fc00000 
+      dx = 0xffff88003bac5b50       si = 0x6b6b6b6b6b6b6b6b 
+      di = 0x6b6b6b6b6b6b6b6b  orig_ax = 0xffffffffffffffff 
+      ip = 0xffffffff812482d9       cs = 0x0000000000000010 
+   flags = 0x0000000000010286       sp = 0xffff88003bb23bc0 
+      ss = 0x0000000000000018 &regs = 0xffff88003bb23b28
 
-Actually, to be a little more thorough I checked the kernel Docs:
+Note that the kernel log message right before the oops are suspicious.
+Normally I would get:
 
+[  272.155460] st: Version 20101219, fixed bufsize 32768, s/g segs 256
+[  272.156586] st 3:0:4:0: Attached scsi tape st0
+[  272.156592] st 3:0:4:0: st0: try direct i/o: yes (alignment 4 B)
 
-[root@darwin Documentation]# less ./filesystems/sysfs.txt
+but before the oops I get:
 
-....
-Attributes
-~~~~~~~~~~
+[  482.428527] st: Version 20101219, fixed bufsize 32768, s/g segs 256
+[  482.429509] st 3:0:4:0: Attached scsi tape st0
+[  482.429515] st 3:0:4:0: st0: try direct i/o: yes (alignment 1802201964 B)
+[  482.449542] general protection fault: 0000 [#1] SMP 
 
-Attributes can be exported for kobjects in the form of regular files in
-the filesystem. Sysfs forwards file I/O operations to methods defined
-for the attributes, providing a means to read and write kernel
-attributes.
+Note the odd alignment value.
 
-Attributes should be ASCII text files, preferably with only one value
-per file. It is noted that it may not be efficient to contain only one
-value per file, so it is socially acceptable to express an array of
-values of the same type.
-....
+According to gdb, blk_get_queue+0x9 is:
 
+563	if (likely(!test_bit(QUEUE_FLAG_DEAD, &q->queue_flag))) {
 
-Technically speaking we are not providing an array of the same types, so again I'd say if opinion is really strong then we can break this out. It's really then a question of file-io efficiency. The biggest tape library I've seen has 2700 drives installed, however I think devices of that number are few and far between....
+where test_bit is implemented by inline function constant_test_bit().
 
+With kernel 3.4.6 I got a different backtrace, I had no serial console
+setup at the time so I could only take a picture, below if a manual copy
+of the trace, hope I didn't make any typo:
 
-Regards
+RIP: elv_may_queue+0x7/0x20
+Call trace:
+ get_request+0x112/0x4a0
+ get_request_wait+0x2d/0x210
+ blk_get_request+0x6c/0x90
+ bsg_map_hdr.isra.7+0xbe/0x340
+ bsg_ioctl+0x187/0x230
+ do_vfs_ioctl+0x8f/0x530
+ sys_ioctl+0x98/0xa0
+ system_call_fastpath+0x1a/0x1f
 
-Darren
+Original pictures are here if needed:
+http://users.suse.com/~jdelvare/work/st-oops/
+
+I'd like this bug to be fixed. What extra information can I provide that
+would be helpful?
+
+Thanks,
+-- 
+Jean Delvare
+Suse L3
+
