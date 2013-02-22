@@ -1,49 +1,62 @@
-From: Chris Friesen <chris.friesen@genband.com>
-Subject: Re: Read I/O starvation with writeback RAID controller
-Date: Fri, 22 Feb 2013 14:58:20 -0600
-Message-ID: <5127DBEC.1000504@genband.com>
-References: <5124EDF4.4010309@zoner.cz>  <1361393295.3667.21.camel@haakon2.linux-iscsi.org>  <51260869.20105@zoner.cz> <1361484084.3667.73.camel@haakon2.linux-iscsi.org> <5127C6C4.2060505@zoner.cz> <alpine.LNX.2.01.1302222133130.25382@nerf07.vanv.qr>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH v2] SG_SCSI_RESET ioctl: add no_escalate values
+Date: Fri, 22 Feb 2013 15:30:11 -0600
+Message-ID: <5127E363.9060100@tributary.com>
+References: <511FD7DE.3040606@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.01.1302222133130.25382@nerf07.vanv.qr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@inai.de>
-Cc: Martin Svec <martin.svec@zoner.cz>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay.ihostexchange.net ([66.46.182.58]:19118 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757324Ab3BVVaS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2013 16:30:18 -0500
+In-Reply-To: <511FD7DE.3040606@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
-On 02/22/2013 02:35 PM, Jan Engelhardt wrote:
->
-> On Friday 2013-02-22 20:28, Martin Svec wrote:
->>
->> Yes, I've already tried the ROW scheduler. It helped for some low iodepths
->> depending on quantum settings but generally didn't solve the problem. I think
->> the key issue is that none of the schedulers can throttle I/O according to e.g.
->> average request roundtrip time. Shaohua Li is right here:
->> https://lkml.org/lkml/2012/12/11/598 -- as long as there's free room in
->> device's queue they blindly dispatch requests to it.
->>
->> Which is exactly what I see in deadline scheduler fifo queues: There're no read
->> requests to be scheduled between writes because all readers are starving. So
->> the scheduler keeps dispatching writes using all the remaining capacity of
->> device queue. Which in turn worses the read starvation. Bigger queue depth and
->> bigger writeback cache means higher chance for read starvation even from a
->> single writer.
->
-> Sounds just like the bufferbloat problem in networking.
-> Waiting for codel for the block layer  :)
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Is there any way to somehow have the reads jump to the head of the queue 
-in the disk controller?
+Tested-by: Jeremy Linton jlinton@tributary.com
 
-Otherwise it seems like we might need to minimize the disk cache usage 
-and do the scheduling in software.
 
-This effectively mirrors what the codel people are doing with using tiny 
-tx ring buffers to fight bufferbloat.  The difference is that with a NIC 
-all you have to do is make sure the buffer doesn't empty and you get 
-full speed whereas with a disk the more you stuff in the cache the 
-better it can schedule things.
+I tested this patch in an environment where the lun and target reset is
+"failing" because the target device is misbehaving.
 
-Chris
+This patch appears to work as advertised.
+
+
+
+That said, I changed my testing methodology for this patch (vs the one I
+originally posted). The results were "interesting", there are some really
+strange things that happen in some of the LLD error paths. Its obvious that
+error injection is not part of testing many of them, and what at first glance
+should be a fairly straightforward error can create quite a mess. So anyone
+sending any kind of reset (especially without the ESCALATE flag which tends to
+isolate the error handling) to the LLD's should be aware that behavior between
+them can vary significantly.
+
+
+
+
+
+
+
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJRJ+NjAAoJEL5i86xrzcy7GI0H/2XKCZvhLmE8WeQtMXlHhVyA
+G3Y34fKeEx9ek56Sr6AcipvV9mUBR9uYvydxZfdGjBT83I2bYGRHEfVEx22WKFXr
+JShVv43eIl5y/inUr8THNTBfggFcYaBIx21ieLwvR/+cBGWbpiIwi16ktaENX2O7
+nHgHVSvFOam9Qy8ewQ2YcULsGFkHQd1SN2LXKSh5bp42eZ998Od4t+agADlNipNz
+OShNyJO9fHr4XC/pNMdujjDd+eaOPv5/furYAgkU/aQutxjIs5a0OtDiNi0hzmQ+
+ZVfoQWk4Bh4LJdQ2ZiqiKBi54z8YxJu5n2WmbKTzwWcabumOWqebNG8JaYDDYjI=
+=2mMo
+-----END PGP SIGNATURE-----
