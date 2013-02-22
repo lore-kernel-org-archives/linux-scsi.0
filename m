@@ -1,36 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] mvsas: fixed timeout issue when removing module
-Date: Fri, 22 Feb 2013 11:19:59 +0000
-Message-ID: <1361531999.2372.32.camel@dabdike.int.hansenpartnership.com>
-References: <1359476753-19361-1-git-send-email-yxlraid@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 2/2] dm: Avoid use-after-free of a mapped device
+Date: Fri, 22 Feb 2013 12:22:09 +0100
+Message-ID: <512754E1.9080008@acm.org>
+References: <51274C2F.6070500@acm.org> <51274CC3.9070204@acm.org> <20130222110829.GA30269@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41479 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754534Ab3BVLUC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Feb 2013 06:20:02 -0500
-In-Reply-To: <1359476753-19361-1-git-send-email-yxlraid@gmail.com>
+Received: from georges.telenet-ops.be ([195.130.137.68]:47940 "EHLO
+	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755897Ab3BVLWP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2013 06:22:15 -0500
+In-Reply-To: <20130222110829.GA30269@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: yxlraid@gmail.com
-Cc: linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>
 
-On Wed, 2013-01-30 at 00:25 +0800, yxlraid@gmail.com wrote:
-> From: Xiangliang Yu <yuxiangl@marvell.com>
-> 
-> - Root cause is libsas will clear asd_sas_port
->   phy_mask value in sas_port_deform after triggering
->   destruct workqueue, but the workqueue will send
->   sync cmd and still need phy_mask value.
->   Now, mvsas using asd_sas_phy setting instead of
->   asd_sas_port setting.
-> ---
+On 02/22/13 12:08, Mike Snitzer wrote:
+> On Fri, Feb 22 2013 at  5:47am -0500,
+> Bart Van Assche <bvanassche@acm.org> wrote:
+>
+>> As the comment above rq_completed() explains, md members must
+>> not be touched after the dm_put() at the end of that function
+>> has been invoked. Avoid that the md->queue can be run
+>> asynchronously after the last md reference has been dropped by
+>> running that queue synchronously.
+>
+> Your commit header should probably reference commit
+> a8c32a5c98943d370ea606a2e7dc04717eb92206 ("dm: fix deadlock with request
+> based dm and queue request_fn recursion") and cc: stable with "v3.7+"
+> guidance.
+>
+> Acked-by: Mike Snitzer <snitzer@redhat.com>
 
-Signed-off-by missing ... please don't forget next time.
+Hello Mike,
 
-James
+Thanks for reviewing this patch and for the ack. Regarding the stable 
+tag: had you noticed that commit a8c32a5 had a "Cc: stable" tag itself 
+and hence probably has already been backported to kernels older than v3.7 ?
+
+Bart.
 
 
