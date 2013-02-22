@@ -1,62 +1,51 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH v2] SG_SCSI_RESET ioctl: add no_escalate values
-Date: Fri, 22 Feb 2013 15:30:11 -0600
-Message-ID: <5127E363.9060100@tributary.com>
-References: <511FD7DE.3040606@interlog.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 01/15] pm80xx: fix for memory region free
+Date: Fri, 22 Feb 2013 23:05:29 +0000
+Message-ID: <1361574329.2372.59.camel@dabdike.int.hansenpartnership.com>
+References: <511A34D1.4070207@pmc-sierra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.58]:19118 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757324Ab3BVVaS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2013 16:30:18 -0500
-In-Reply-To: <511FD7DE.3040606@interlog.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43482 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755117Ab3BVXFd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Feb 2013 18:05:33 -0500
+In-Reply-To: <511A34D1.4070207@pmc-sierra.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "dgilbert@interlog.com" <dgilbert@interlog.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+To: Anand <anandkumar_santhanam@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org, jack_wang@usish.com, Sangeetha.Gnanasekaran@pmcs.com, Vishwanath.Maram@pmcs.com, Harry.Yang@pmcs.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Tue, 2013-02-12 at 04:25 -0800, Anand wrote:
+> >From 56ee53f01663fa479c0624b81e36545ea5b1ab94 Mon Sep 17 00:00:00 2001
+> From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
+> Date: Mon, 4 Feb 2013 12:10:02 +0530
+> Subject: [PATCH 01/15] pm80xx: fix for memory region free
+> 
+> All memory regions are allocated based on variables total_len
+> and alignment but free was based on element_size.
+> 
+> Signed-off-by: Sakthivel K <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
+> Signed-off-by: Anand Kumar S <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
 
-Tested-by: Jeremy Linton jlinton@tributary.com
+This address doesn't resolve either
+
+> Reporting-MTA: dns;bby1exg01.pmc_nt.nt.pmc-sierra.bc.ca
+> Received-From-MTA: dns;bby1mta02.pmc-sierra.bc.ca
+> Arrival-Date: Fri, 22 Feb 2013 10:19:53 -0800
+> 
+> Original-Recipient: rfc822;DL.Team.PMC.SPC.Linux.open.source@pmcs.com
+> Final-Recipient: rfc822;DL.Team.PMC.SPC.Linux.open.source@pmcs.com
+> Action: failed
+> Status: 5.7.1
+> X-Display-Name: DL Team PMC SPC Linux open source
+> 
+We need resolvable addresses for signoffs, please.
+
+Thanks,
+
+James
 
 
-I tested this patch in an environment where the lun and target reset is
-"failing" because the target device is misbehaving.
-
-This patch appears to work as advertised.
-
-
-
-That said, I changed my testing methodology for this patch (vs the one I
-originally posted). The results were "interesting", there are some really
-strange things that happen in some of the LLD error paths. Its obvious that
-error injection is not part of testing many of them, and what at first glance
-should be a fairly straightforward error can create quite a mess. So anyone
-sending any kind of reset (especially without the ESCALATE flag which tends to
-isolate the error handling) to the LLD's should be aware that behavior between
-them can vary significantly.
-
-
-
-
-
-
-
-
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJRJ+NjAAoJEL5i86xrzcy7GI0H/2XKCZvhLmE8WeQtMXlHhVyA
-G3Y34fKeEx9ek56Sr6AcipvV9mUBR9uYvydxZfdGjBT83I2bYGRHEfVEx22WKFXr
-JShVv43eIl5y/inUr8THNTBfggFcYaBIx21ieLwvR/+cBGWbpiIwi16ktaENX2O7
-nHgHVSvFOam9Qy8ewQ2YcULsGFkHQd1SN2LXKSh5bp42eZ998Od4t+agADlNipNz
-OShNyJO9fHr4XC/pNMdujjDd+eaOPv5/furYAgkU/aQutxjIs5a0OtDiNi0hzmQ+
-ZVfoQWk4Bh4LJdQ2ZiqiKBi54z8YxJu5n2WmbKTzwWcabumOWqebNG8JaYDDYjI=
-=2mMo
------END PGP SIGNATURE-----
