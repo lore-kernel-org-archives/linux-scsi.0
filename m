@@ -1,82 +1,85 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 08/10] fnic: FIP VLAN Discovery Feature Support
-Date: Fri, 22 Feb 2013 18:09:45 +0000
-Message-ID: <1361556583.2372.55.camel@dabdike.int.hansenpartnership.com>
-References: <1360717265-14130-1-git-send-email-hiralpat@cisco.com>
-	 <1360717265-14130-6-git-send-email-hiralpat@cisco.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] block: Avoid invoking blk_run_queue() recursively
+Date: Fri, 22 Feb 2013 10:14:16 -0800
+Message-ID: <20130222181416.GO3570@htj.dyndns.org>
+References: <51274C2F.6070500@acm.org>
+ <51274C76.8080007@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0.parallels.com ([199.115.104.20]:37722 "EHLO
-	mx0.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759219Ab3BVSJr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2013 13:09:47 -0500
-In-Reply-To: <1360717265-14130-6-git-send-email-hiralpat@cisco.com>
-Content-Language: en-US
-Content-ID: <0E42C6CB24F27C4AA5D491796E76A875@sw.swsoft.com>
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:46869 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759315Ab3BVSOV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Feb 2013 13:14:21 -0500
+Received: by mail-pb0-f41.google.com with SMTP id um15so541963pbc.28
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Feb 2013 10:14:21 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <51274C76.8080007@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hiral Patel <hiralpat@cisco.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Anantha Prakash T <atungara@cisco.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@redhat.com>, James Bottomley <JBottomley@parallels.com>
 
-On Tue, 2013-02-12 at 17:01 -0800, Hiral Patel wrote:
-> FIP VLAN discovery discovers the FCoE VLAN that will be used by all other FIP protocols
-> as well as by the FCoE encapsulation for Fibre Channel payloads on the established
-> virtual link. One of the goals of FC-BB-5 was to be as nonintrusive as possible on
-> initiators and targets, and therefore FIP VLAN discovery occurs in the native VLAN
-> used by the initiator or target to exchange Ethernet traffic. The FIP VLAN discovery
-> protocol is the only FIP protocol running on the native VLAN; all other FIP protocols
-> run on the discovered FCoE VLANs.
-> 
-> If an administrator has manually configured FCoE VLANs on ENodes and FCFs, there is no need
-> to use this protocol. FIP and FCoE will run over the configured VLANs.
-> 
-> An ENode without FCoE VLANs configuration would use this automated discovery protocol to
-> discover over which VLANs FCoE is running.
-> 
-> The ENode sends a FIP VLAN discovery request to a multicast MAC address called All-FCF-MACs,
-> which is a multicast MAC address to which all FCFs listen.
-> 
-> All FCFs that can be reached in the native VLAN of the ENode are expected to respond on the
-> same VLAN with a response that lists one or more FCoE VLANs that are available for the ENode's
-> VN_Port login. This protocol has the sole purpose of allowing the ENode to discover all the
-> available FCoE VLANs.
-> 
-> Now the ENode may enable a subset of these VLANs for FCoE Running the FIP protocol in these
-> VLANs on a per VLAN basis. And FCoE data transactions also would occur on this VLAN. Hence,
-> Except for FIP VLAN discovery, all other FIP and FCoE traffic runs on the selected FCoE VLAN.
-> Its only the FIP VLAN Discovery protocol that is permitted to run on the Default native VLAN
-> of the system.
-> 
-> [**** NOTE ****]
-> We are working on moving this feature definitions and functionality to libfcoe module. We need
-> this patch to be approved, as Suse is looking forward to merge this feature in SLES 11 SP3 release.
-> Once this patch is approved, we will submit patch which should move vlan discovery feature to libfoce.
-> 
-> Signed-off-by: Anantha Prakash T <atungara@cisco.com>
-> Signed-off-by: Hiral Patel <hiralpat@cisco.com>
+Hello, Bart.
 
-This is still rejecting:
+On Fri, Feb 22, 2013 at 11:46:14AM +0100, Bart Van Assche wrote:
+> Some block drivers, e.g. dm and SCSI, need to trigger a queue
+> run from inside functions that may be invoked by their request_fn()
+> implementation. Make sure that invoking blk_run_queue() instead
+> of blk_run_queue_async() from such functions does not trigger
+> recursion. Making blk_run_queue() skip queue processing when
+> invoked recursively is safe because the only two affected
+> request_fn() implementations (dm and SCSI) guarantee that the
+> request queue will be reexamined sooner or later before returning
+> from their request_fn() implementation.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: James Bottomley <JBottomley@parallels.com>
+> Cc: Alasdair G Kergon <agk@redhat.com>
+> Cc: Mike Snitzer <snitzer@redhat.com>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  block/blk-core.c |   21 +++++++++++++--------
+>  1 file changed, 13 insertions(+), 8 deletions(-)
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index c973249..cf26e3a 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -304,19 +304,24 @@ EXPORT_SYMBOL(blk_sync_queue);
+>   *    This variant runs the queue whether or not the queue has been
+>   *    stopped. Must be called with the queue lock held and interrupts
+>   *    disabled. See also @blk_run_queue.
+> + *
+> + * Note:
+> + *    Request handling functions are allowed to invoke __blk_run_queue() or
+> + *    blk_run_queue() directly or indirectly. This will not result in a
+> + *    recursive call of the request handler. However, such request handling
+> + *    functions must, before they return, either reexamine the request queue
+> + *    or invoke blk_delay_queue() to avoid that queue processing stops.
+> + *
+> + *    Some request handler implementations, e.g. scsi_request_fn() and
+> + *    dm_request_fn(), unlock the queue lock internally. Returning immediately
+> + *    if q->request_fn_active > 0 avoids that for the same queue multiple
+> + *    threads execute the request handling function concurrently.
+>   */
+>  inline void __blk_run_queue_uncond(struct request_queue *q)
+>  {
+> -	if (unlikely(blk_queue_dead(q)))
+> +	if (unlikely(blk_queue_dead(q) || q->request_fn_active))
+>  		return;
 
-jejb@dabdike> patch -p1 < .git/rebase-apply/patch 
-patching file drivers/scsi/fnic/fnic.h
-patching file drivers/scsi/fnic/fnic_fcs.c
-patching file drivers/scsi/fnic/fnic_fip.h
-patching file drivers/scsi/fnic/fnic_main.c
-Hunk #3 FAILED at 411.
-Hunk #4 succeeded at 628 (offset -1 lines).
-Hunk #5 succeeded at 837 (offset -1 lines).
-Hunk #6 succeeded at 926 (offset -1 lines).
-Hunk #7 succeeded at 988 (offset -1 lines).
-1 out of 7 hunks FAILED -- saving rejects to file
-drivers/scsi/fnic/fnic_main.c.rej
+Hmmm... I can't say I like this.  Silently ignoring explicit
+blk_run_queue() call like this is likely to introduce nasty queue hang
+bugs later on even if it's okay for the current users and there isn't
+even debugging aid to detect what's going on.  If somebody invokes
+blk_run_queue(), block layer better guarantee that the queue will be
+run at least once afterwards no matter what, so please don't it this
+way.
 
-The rejection is because of the __devinit removal patch that went into
-the 3.8 merge window.  This definitely means you're not building with
-the misc branch of the scsi tree, which is based on 3.8-rc6.
+Thanks.
 
-I fixed it up because we were making no progress otherwise.
-
-James
-
+-- 
+tejun
