@@ -1,62 +1,46 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/4] scsi: 64-bit LUN support
-Date: Sat, 23 Feb 2013 10:31:11 +0100
-Message-ID: <51288C5F.1080802@suse.de>
-References: <1361261883-41467-1-git-send-email-hare@suse.de> <94D0CD8314A33A4D9D801C0FE68B402950D7A4E0@G9W0745.americas.hpqcorp.net>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 1/2] block: Avoid invoking blk_run_queue() recursively
+Date: Sat, 23 Feb 2013 13:34:53 +0100
+Message-ID: <5128B76D.4040004@acm.org>
+References: <51274C2F.6070500@acm.org> <51274C76.8080007@acm.org> <20130222181416.GO3570@htj.dyndns.org> <5127BF8E.9080604@acm.org> <20130222190129.GD25064@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59917 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753561Ab3BWIbW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Feb 2013 03:31:22 -0500
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402950D7A4E0@G9W0745.americas.hpqcorp.net>
+Received: from georges.telenet-ops.be ([195.130.137.68]:57263 "EHLO
+	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758827Ab3BWMe7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Feb 2013 07:34:59 -0500
+In-Reply-To: <20130222190129.GD25064@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jeremy Linton <jlinton@tributary.com>, Bart Van Assche <bvanassche@acm.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, James Bottomley <JBottomley@parallels.com>
 
-On 02/21/2013 05:15 PM, Elliott, Robert (Server Storage) wrote:
-> Regarding changes like this:
-> -			printk(MYIOC_s_NOTE_FMT "[%d:%d:%d:%d] "
-> +			printk(MYIOC_s_NOTE_FMT "[%d:%d:%d:%llu] "
->   			"FCP_ResponseInfo=%08xh\n", ioc->name,
->   			sc->device->host->host_no, sc->device->channel,
->   			sc->device->id, sc->device->lun,
+On 02/22/13 20:01, Jens Axboe wrote:
+> That'd be fine. I agree with Tejun that just returning is error prone
+> and could cause hard-to-debug hangs or stalls. So something ala
 >
-> It might be preferable to print the LUN values in hex rather than decimal,
- > particularly if they are large values.  SAM-5 includes some guidance for
- > displaying LUNs, shown below.
+>          if (blk_queue(dead))
+>                  return;
+>          else if (q->request_fn_active) {
+>                  blk_delay_queue(q, 0);
+>                  return;
+>          }
 >
-> One important goal is to match the format, if any, that the user must use
- > in a configuration file or command line argument, so cutting-and-pasting
- > the LUN value works.  So, the answer might differ for prints from 
-different
- > drivers.  If a driver expects decimal input values, then print decimal.
->
-Yes. And no.
+> would work. Alternatively, you could mark the queue as needing a re-run,
+> so any existing runner of it would notice and clear this flag and re-run
+> the queue. But that's somewhat more fragile, and since it isn't a
+> hot/performance path, I suspect the simple "just re-run me soon" is good
+> enough.
 
-The patchset is meant to be as a drop-in replacement, ie with _no_ user 
-visible changes.
-So I retained the original output.
+I'm worried that in the device mapper the approach using 
+blk_delay_queue() could trigger a queue run after the final dm_put(). 
+And I'm also afraid that that approach could trigger several needless 
+context switches before q->request_fn_active finally drops to zero. So 
+the approach with the "need re-run" flag seems preferable to me. But 
+maybe I'm overlooking something ?
 
-Also, the above number is identical to the sysfs representation, where
-the user will find a device like
+Bart.
 
-/sys/class/scsi_device/X:Y:Z:L
-
-with each X, Y, Z, and L being a decimal number.
-
-_If_ we were to change that we would have to do it consistently for all 
-instances, plus the sysfs layout.
-
-But I guess we need to have a discussion about this, as I think not 
-everybody agrees with that assessment.
-
-Would be a nice topic for LSF, though.
-
-Cheers,
-
-Hannes
 
