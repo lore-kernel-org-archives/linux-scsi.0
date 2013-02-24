@@ -1,72 +1,139 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [scsi:misc 102/104] drivers/scsi/fnic/fnic_fcs.c:381:31:
- sparse: cast to restricted __be16
-Date: Sun, 24 Feb 2013 08:18:39 +0000
-Message-ID: <1361693917.2457.1.camel@dabdike.int.hansenpartnership.com>
-References: <5127c1e9.pbebaAT25aJl2osg%fengguang.wu@intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RESEND][PATCH 2/8][SCSI] mpt2sas : Fix for issue Missing delay
+ not getting set during system bootup
+Date: Sun, 24 Feb 2013 08:56:16 +0000
+Message-ID: <1361696176.2457.7.camel@dabdike.int.hansenpartnership.com>
+References: <20130201192448.GA23994@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0.parallels.com ([199.115.104.20]:43526 "EHLO
-	mx0.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921Ab3BXISl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Feb 2013 03:18:41 -0500
-In-Reply-To: <5127c1e9.pbebaAT25aJl2osg%fengguang.wu@intel.com>
-Content-Language: en-US
-Content-ID: <88DA06F74C59904DAF68C42E50C0EC6B@sw.swsoft.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45965 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754478Ab3BXI4V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Feb 2013 03:56:21 -0500
+In-Reply-To: <20130201192448.GA23994@lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: Hiral Patel <hiralpat@cisco.com>, Anantha Prakash T <atungara@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: Nagalakshmi.Nandigama@lsi.com, linux-scsi@vger.kernel.org, sathya.prakash@lsi.com, stable@vger.kernel.org
 
-On Sat, 2013-02-23 at 03:07 +0800, kbuild test robot wrote:
-> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
-> head:   c2983bd66114a8047bb74e4d347db8ffde381f71
-> commit: 5f0d0de727c055e15c2602e4905c6b75509ce9d7 [102/104] [SCSI] fnic: FIP VLAN Discovery Feature Support
+On Sat, 2013-02-02 at 00:54 +0530, Sreekanth Reddy wrote:
+> Missing delay is not getting set properly. The reason is it is not defined in the same file from where it is being invoked.
 > 
+> The fix is to move the missing delay module parameter from mpt2sas_base.c to mpt2sas_scsh.c.
 > 
-> sparse warnings: (new ones prefixed by >>)
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> Cc: stable@vger.kernel.org
+> ---  
 > 
-> >> drivers/scsi/fnic/fnic_fcs.c:381:31: sparse: cast to restricted __be16
-> >> drivers/scsi/fnic/fnic_fcs.c:381:31: sparse: cast to restricted __be16
-> >> drivers/scsi/fnic/fnic_fcs.c:381:31: sparse: cast to restricted __be16
-> >> drivers/scsi/fnic/fnic_fcs.c:381:31: sparse: cast to restricted __be16
->    drivers/scsi/fnic/cq_enet_desc.h:142:39: sparse: restricted __le16 degrades to integer
->    include/scsi/fc/fc_fcoe.h:101:36: sparse: cast truncates bits from constant value (efc becomes fc)
->    include/scsi/fc/fc_fcoe.h:102:23: sparse: cast truncates bits from constant value (efc00 becomes 0)
-> >> drivers/scsi/fnic/fnic_fcs.c:1198:6: sparse: context imbalance in 'fnic_handle_fip_timer' - different lock contexts for basic block
-> 
-> vim +381 drivers/scsi/fnic/fnic_fcs.c
-> 
->    365			  "Received VLAN response...\n");
->    366	
->    367		fiph = (struct fip_header *) skb->data;
->    368	
->    369		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
->    370			  "Received VLAN response... OP 0x%x SUB_OP 0x%x\n",
->    371			  ntohs(fiph->fip_op), fiph->fip_subcode);
->    372	
->    373		rlen = ntohs(fiph->fip_dl_len) * 4;
->    374		fnic_fcoe_reset_vlans(fnic);
->    375		spin_lock_irqsave(&fnic->vlans_lock, flags);
->    376		desc = (struct fip_desc *)(fiph + 1);
->    377		while (rlen > 0) {
->    378			dlen = desc->fip_dlen * FIP_BPW;
->    379			switch (desc->fip_dtype) {
->    380			case FIP_DT_VLAN:
->  > 381				vid = ntohs(((struct fip_vlan_desc *)desc)->fd_vlan);
->    382				shost_printk(KERN_INFO, fnic->lport->host,
->    383					  "process_vlan_resp: FIP VLAN %d\n", vid);
->    384				vlan = (struct fcoe_vlan *) kmalloc(sizeof(*vlan),
->    385								GFP_ATOMIC);
->    386				if (!vlan) {
->    387					/* retry from timer */
->    388					spin_unlock_irqrestore(&fnic->vlans_lock,
->    389								flags);
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> index 0bb2b30..ce89b14 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -80,10 +80,6 @@ static int msix_disable = -1;
+>  module_param(msix_disable, int, 0);
+>  MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
+>  
+> -static int missing_delay[2] = {-1, -1};
+> -module_param_array(missing_delay, int, NULL, 0);
+> -MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
+> -
+>  static int mpt2sas_fwfault_debug;
+>  MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
+>  	"and halt firmware - (default=0)");
+> @@ -2183,7 +2179,7 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
+>  }
+>  
+>  /**
+> - * _base_update_missing_delay - change the missing delay timers
+> + * mpt2sas_base_update_missing_delay - change the missing delay timers
+>   * @ioc: per adapter object
+>   * @device_missing_delay: amount of time till device is reported missing
+>   * @io_missing_delay: interval IO is returned when there is a missing device
+> @@ -2194,8 +2190,8 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
+>   * delay, as well as the io missing delay. This should be called at driver
+>   * load time.
+>   */
+> -static void
+> -_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
+> +void
+> +mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
+>  	u16 device_missing_delay, u8 io_missing_delay)
+>  {
+>  	u16 dmd, dmd_new, dmd_orignal;
+> @@ -4391,10 +4387,6 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+>  	if (r)
+>  		goto out_free_resources;
+>  
+> -	if (missing_delay[0] != -1 && missing_delay[1] != -1)
+> -		_base_update_missing_delay(ioc, missing_delay[0],
+> -		    missing_delay[1]);
+> -
+>  	return 0;
+>  
+>   out_free_resources:
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> index b46024c..ee7a030 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> @@ -1054,6 +1054,9 @@ void mpt2sas_base_validate_event_type(struct MPT2SAS_ADAPTER *ioc, u32 *event_ty
+>  
+>  void mpt2sas_halt_firmware(struct MPT2SAS_ADAPTER *ioc);
+>  
+> +void mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
+> +	u16 device_missing_delay, u8 io_missing_delay);
+> +
+>  int mpt2sas_port_enable(struct MPT2SAS_ADAPTER *ioc);
+>  
+>  /* scsih shared API */
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> index af4e6c4..ab89b2d 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> @@ -101,6 +101,10 @@ static ushort max_sectors = 0xFFFF;
+>  module_param(max_sectors, ushort, 0);
+>  MODULE_PARM_DESC(max_sectors, "max sectors, range 64 to 32767  default=32767");
+>  
+> +static int missing_delay[2] = {-1, -1};
+> +module_param_array(missing_delay, int, NULL, 0);
+> +MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
+> +
+>  /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
+>  #define MPT2SAS_MAX_LUN (16895)
+>  static int max_lun = MPT2SAS_MAX_LUN;
+> @@ -7303,7 +7307,9 @@ _firmware_event_work(struct work_struct *work)
+>  	case MPT2SAS_PORT_ENABLE_COMPLETE:
+>  		ioc->start_scan = 0;
+>  
+> -
+> +		if (missing_delay[0] != -1 && missing_delay[1] != -1)
+> +			mpt2sas_base_update_missing_delay(ioc, missing_delay[0],
+> +				missing_delay[1]);
 
-OK, I'll drop the series from this patch on.  I take it the sparse and
-other problems in the patches before this are all fixed?
+This patch is rejecting here.  It looks to be because a previous patch
+of yours:
+
+commit b4730fb6e54a634a145c9c71c5cf856f00beb5cd
+Author: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Date:   Tue Dec 18 14:45:30 2012 +0100
+
+    [SCSI] mpt2sas: fix for driver fails EEH, recovery from injected pci
+bus error
+
+Added
+
+@@ -4386,6 +4402,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+        if (missing_delay[0] != -1 && missing_delay[1] != -1)
+                _base_update_missing_delay(ioc, missing_delay[0],
+                    missing_delay[1]);
++       ioc->non_operational_loop = 0;
+ 
+        return 0;
+ 
+I'm stopping here because correct resolution doesn't look trivial.
 
 James
+
 
