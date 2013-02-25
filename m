@@ -1,67 +1,51 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] [SCSI] fnic: convert to use simple_open()
-Date: Mon, 25 Feb 2013 21:21:23 +0800
-Message-ID: <CAPgLHd9QLWGbHFEz7f7i2Fe3225DB_gqunt-tGU3MwiEUHq87A@mail.gmail.com>
+From: Masatake YAMATO <yamato@redhat.com>
+Subject: [RESEND3 PATCH] libiscsi: avoid unnecessary multiple NULL
+ assignments
+Date: Mon, 25 Feb 2013 23:29:05 +0900 (JST)
+Message-ID: <20130225.232905.2064482459783060269.yamato@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:55614 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759189Ab3BYNVZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2013 08:21:25 -0500
-Received: by mail-bk0-f51.google.com with SMTP id ik5so1286655bkc.38
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Feb 2013 05:21:23 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:20846 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759876Ab3BYO3Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Feb 2013 09:29:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hiralpat@cisco.com, sramars@cisco.com, buchino@cisco.com, JBottomley@parallels.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+In iscsi_free_task, NULL is assigned to task->sc twice: before and
+after kfifo_in invocatoin. Allocating and freeing iscsi_task are guarded
+with session->lock, so multiple NULL assignments cause no trouble. But
+people reading the source code may be confused.
 
-This removes an open coded simple_open() function and
-replaces file operations references to the function
-with simple_open() instead.
+The second NULL assignment comes from commit:
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+    3e5c28ad0391389959ccae81c938c7533efb3490
+
+It seems that the line after kfifo_in invocation was introduced
+accidentally.
+
+Signed-off-by: Masatake YAMATO <yamato@redhat.com>
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/fnic/fnic_debugfs.c | 19 +------------------
- 1 file changed, 1 insertion(+), 18 deletions(-)
+ drivers/scsi/libiscsi.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
-index bc06f9b..26db5b5 100644
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -25,23 +25,6 @@ static struct dentry *fnic_trace_debugfs_file;
- static struct dentry *fnic_trace_enable;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 82c3fd4..7aacf3a 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -507,7 +507,6 @@ static void iscsi_free_task(struct iscsi_task *task)
+ 	kfifo_in(&session->cmdpool.queue, (void*)&task, sizeof(void*));
  
- /*
-- * fnic_trace_ctrl_open - Open the trace_enable file
-- * @inode: The inode pointer.
-- * @file: The file pointer to attach the trace enable/disable flag.
-- *
-- * Description:
-- * This routine opens a debugsfs file trace_enable.
-- *
-- * Returns:
-- * This function returns zero if successful.
-- */
--static int fnic_trace_ctrl_open(struct inode *inode, struct file *filp)
--{
--	filp->private_data = inode->i_private;
--	return 0;
--}
--
--/*
-  * fnic_trace_ctrl_read - Read a trace_enable debugfs file
-  * @filp: The file pointer to read from.
-  * @ubuf: The buffer to copy the data to.
-@@ -232,7 +215,7 @@ static int fnic_trace_debugfs_release(struct inode *inode,
- 
- static const struct file_operations fnic_trace_ctrl_fops = {
- 	.owner = THIS_MODULE,
--	.open = fnic_trace_ctrl_open,
-+	.open = simple_open,
- 	.read = fnic_trace_ctrl_read,
- 	.write = fnic_trace_ctrl_write,
- };
+ 	if (sc) {
+-		task->sc = NULL;
+ 		/* SCSI eh reuses commands to verify us */
+ 		sc->SCp.ptr = NULL;
+ 		/*
+-- 
+1.7.11.7
 
