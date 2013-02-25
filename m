@@ -1,53 +1,48 @@
-From: vinayak holikatti <vinholikatti@gmail.com>
-Subject: Re: [PATCH V6 Resend 0/4] [SCSI] ufs: Adds glue drivers to ufshcd
-Date: Mon, 25 Feb 2013 21:48:05 +0530
-Message-ID: <CAKVbJB-Q+3VZBu+vw_y94EKgKXVLhaO2Ue369mEPiLF2j_u5sg@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH V6 Resend 2/4] [SCSI] drivers/scsi/ufs: Separate PCI
+ code into glue driver
+Date: Mon, 25 Feb 2013 17:01:23 +0000
+Message-ID: <1361811683.2384.41.camel@dabdike.int.hansenpartnership.com>
 References: <1361808875-2803-1-git-send-email-vinholikatti@gmail.com>
+	 <1361808875-2803-3-git-send-email-vinholikatti@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:54245 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758979Ab3BYQSI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2013 11:18:08 -0500
-In-Reply-To: <1361808875-2803-1-git-send-email-vinholikatti@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-Reply-To: <1361808875-2803-3-git-send-email-vinholikatti@gmail.com>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: linux-scsi@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, linux-samsung-soc@vger.kernel.org, venkat@linaro.org, subhashj@codeaurora.org, sthumma@codeaurora.org, merez@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, linux-samsung-soc@vger.kernel.org, venkat@linaro.org, subhashj@codeaurora.org, sthumma@codeaurora.org, merez@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>
 
-James,
+On Mon, 2013-02-25 at 21:44 +0530, Vinayak Holikatti wrote:
+> This patch separates PCI code from ufshcd.c and makes it as a
+> core driver module and adds a new file ufshcd-pci.c as PCI glue
+> driver.
 
-I have rebased these patches with top scsi-misc tree.
+You rebased this, but didn't compile it:
 
+  CC [M]  drivers/scsi/ufs/ufshcd-pci.o
+drivers/scsi/ufs/ufshcd-pci.c:131:1: error: expected =E2=80=98=3D=E2=80=
+=99, =E2=80=98,=E2=80=99, =E2=80=98;=E2=80=99,
+=E2=80=98asm=E2=80=99 or =E2=80=98__attribute__=E2=80=99 before =E2=80=98=
+ufshcd_pci_probe=E2=80=99
+drivers/scsi/ufs/ufshcd-pci.c:196:11: error: =E2=80=98ufshcd_pci_probe=E2=
+=80=99
+undeclared here (not in a function)
+drivers/scsi/ufs/ufshcd-pci.c:197:2: error: implicit declaration of
+function =E2=80=98__devexit_p=E2=80=99 [-Werror=3Dimplicit-function-dec=
+laration]
+drivers/scsi/ufs/ufshcd-pci.c:197:2: error: initializer element is not
+constant
+drivers/scsi/ufs/ufshcd-pci.c:197:2: error: (near initialization for
+=E2=80=98ufshcd_pci_driver.remove=E2=80=99)
+drivers/scsi/ufs/ufshcd-pci.c:110:12: warning: =E2=80=98ufshcd_set_dma_=
+mask=E2=80=99
+defined but not used [-Wunused-function]
+cc1: some warnings being treated as errors
+make[3]: *** [drivers/scsi/ufs/ufshcd-pci.o] Error 1
 
-On Mon, Feb 25, 2013 at 9:44 PM, Vinayak Holikatti
-<vinholikatti@gmail.com> wrote:
-> This patch set adds following features
->  - Seggregate PCI specific code in ufshcd.c and corrected copyright
->  - Adds PCI glue driver ufshcd-pci.c and ufshcd.c become core module
->  - Adds Platform glue driver ufshcd-pltfrm.c
->  - Update correct transfer size in Command UPIU
->
-> Vinayak Holikatti (4):
->   [SCSI] drivers/scsi/ufs: Seggregate PCI Specific Code
->   [SCSI] drivers/scsi/ufs: Separate PCI code into glue driver
->   [SCSI] ufs: Add Platform glue driver for ufshcd
->   [SCSI] ufs: Correct the expected data transfersize
->
->  drivers/scsi/ufs/Kconfig         |   87 +++++---
->  drivers/scsi/ufs/Makefile        |    2 +
->  drivers/scsi/ufs/ufs.h           |   44 ++---
->  drivers/scsi/ufs/ufshcd-pci.c    |  211 +++++++++++++++++++
->  drivers/scsi/ufs/ufshcd-pltfrm.c |  217 +++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.c        |  425 ++++++++------------------------------
->  drivers/scsi/ufs/ufshcd.h        |  202 ++++++++++++++++++
->  drivers/scsi/ufs/ufshci.h        |   44 ++---
->  8 files changed, 811 insertions(+), 421 deletions(-)
->  create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
->  create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.c
->  create mode 100644 drivers/scsi/ufs/ufshcd.h
->
-> --
-> 1.7.5.4
->
+That's because of a stray __devinit and devexit_p() which no-longer
+exist in the kernel.  I've fixed this up.
+James
