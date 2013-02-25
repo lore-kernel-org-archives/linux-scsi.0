@@ -1,48 +1,53 @@
-From: Vinayak Holikatti <vinholikatti@gmail.com>
-Subject: [PATCH V6 Resend 4/4] [SCSI] ufs: Correct the expected data transfersize
-Date: Mon, 25 Feb 2013 21:44:35 +0530
-Message-ID: <1361808875-2803-5-git-send-email-vinholikatti@gmail.com>
+From: vinayak holikatti <vinholikatti@gmail.com>
+Subject: Re: [PATCH V6 Resend 0/4] [SCSI] ufs: Adds glue drivers to ufshcd
+Date: Mon, 25 Feb 2013 21:48:05 +0530
+Message-ID: <CAKVbJB-Q+3VZBu+vw_y94EKgKXVLhaO2Ue369mEPiLF2j_u5sg@mail.gmail.com>
 References: <1361808875-2803-1-git-send-email-vinholikatti@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:55256 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932075Ab3BYQPu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2013 11:15:50 -0500
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:54245 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758979Ab3BYQSI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2013 11:18:08 -0500
 In-Reply-To: <1361808875-2803-1-git-send-email-vinholikatti@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, linux-samsung-soc@vger.kernel.org, venkat@linaro.org, subhashj@codeaurora.org, sthumma@codeaurora.org, merez@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>
 
-This patch corrects the expected data transfer size of the
-command UPIU. The current implementation of cmd->transfersize
-is wrong as it probably equal to sector size. With this
-implementation the transfer size is updated correctly
+James,
 
-Reported-by: KOBAYASHI Yoshitake <yoshitake.kobayashi@toshiba.co.jp>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
-Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-Tested-by: Maya Erez <merez@codeaurora.org>
-Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
-Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
----
- drivers/scsi/ufs/ufshcd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I have rebased these patches with top scsi-misc tree.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 60fd40c..c32a478 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -478,7 +478,7 @@ static void ufshcd_compose_upiu(struct ufshcd_lrb *lrbp)
- 		ucd_cmd_ptr->header.dword_2 = 0;
- 
- 		ucd_cmd_ptr->exp_data_transfer_len =
--			cpu_to_be32(lrbp->cmd->transfersize);
-+			cpu_to_be32(lrbp->cmd->sdb.length);
- 
- 		memcpy(ucd_cmd_ptr->cdb,
- 		       lrbp->cmd->cmnd,
--- 
-1.7.5.4
 
+On Mon, Feb 25, 2013 at 9:44 PM, Vinayak Holikatti
+<vinholikatti@gmail.com> wrote:
+> This patch set adds following features
+>  - Seggregate PCI specific code in ufshcd.c and corrected copyright
+>  - Adds PCI glue driver ufshcd-pci.c and ufshcd.c become core module
+>  - Adds Platform glue driver ufshcd-pltfrm.c
+>  - Update correct transfer size in Command UPIU
+>
+> Vinayak Holikatti (4):
+>   [SCSI] drivers/scsi/ufs: Seggregate PCI Specific Code
+>   [SCSI] drivers/scsi/ufs: Separate PCI code into glue driver
+>   [SCSI] ufs: Add Platform glue driver for ufshcd
+>   [SCSI] ufs: Correct the expected data transfersize
+>
+>  drivers/scsi/ufs/Kconfig         |   87 +++++---
+>  drivers/scsi/ufs/Makefile        |    2 +
+>  drivers/scsi/ufs/ufs.h           |   44 ++---
+>  drivers/scsi/ufs/ufshcd-pci.c    |  211 +++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd-pltfrm.c |  217 +++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.c        |  425 ++++++++------------------------------
+>  drivers/scsi/ufs/ufshcd.h        |  202 ++++++++++++++++++
+>  drivers/scsi/ufs/ufshci.h        |   44 ++---
+>  8 files changed, 811 insertions(+), 421 deletions(-)
+>  create mode 100644 drivers/scsi/ufs/ufshcd-pci.c
+>  create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.c
+>  create mode 100644 drivers/scsi/ufs/ufshcd.h
+>
+> --
+> 1.7.5.4
+>
