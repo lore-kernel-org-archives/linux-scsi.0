@@ -1,264 +1,133 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/4] scsi: use 64-bit LUNs
-Date: Mon, 25 Feb 2013 16:52:51 +0100
-Message-ID: <512B88D3.1030801@suse.de>
-References: <1361261883-41467-1-git-send-email-hare@suse.de> <1361261883-41467-3-git-send-email-hare@suse.de> <512B8454.4050806@linux.vnet.ibm.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 0/4] scsi: 64-bit LUN support
+Date: Mon, 25 Feb 2013 11:02:18 -0500
+Message-ID: <512B8B0A.6080708@interlog.com>
+References: <1361261883-41467-1-git-send-email-hare@suse.de>  <94D0CD8314A33A4D9D801C0FE68B402950D7A4E0@G9W0745.americas.hpqcorp.net> <1361464328.2389.65.camel@dabdike.int.hansenpartnership.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54710 "EHLO mx2.suse.de"
+Received: from smtp.infotech.no ([82.134.31.41]:49011 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758721Ab3BYPwx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Feb 2013 10:52:53 -0500
-In-Reply-To: <512B8454.4050806@linux.vnet.ibm.com>
+	id S1758721Ab3BYQCY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Feb 2013 11:02:24 -0500
+In-Reply-To: <1361464328.2389.65.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, Jeremy Linton <jlinton@tributary.com>, Robert Elliott <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jeremy Linton <jlinton@tributary.com>, Bart Van Assche <bvanassche@acm.org>
 
-On 02/25/2013 04:33 PM, Steffen Maier wrote:
-> Hi Hannes,
->
-> I like the idea and most of the patch set, so I only have a few quest=
-ions left
- > and some review comments below.
->
-> Just curious: Do you also plan to adapt systemd/udev, especially path=
-_id for
- > fc transport with its open coded copy of int_to_scsilun()?
->
-Yes.
-
-> Since I don't see zfcp touched in this patch set, assuming this set w=
-ill get
- > merged, I plan to adapt a few spots in zfcp that might not work=20
-with 64 bit
- > luns out of the box although most of it already works with 64 bit=20
-luns inside.
->
-Ah. Yes, this might be a good idea. I've already got a patch from=20
-QLogic regarding qla4xxx, so maybe we should be adding them as=20
-separate patches on top of the original patchset.
-
-> Speaking of opaque handling of scsi luns: Lately I noticed that some =
-sg3_utils
- > tools decode the lun format and only report parts of the entire=20
-64 bit fcp lun,
- > e.g. sg_scan or "sg_luns -d". I don't have enough historical scsi=20
-experience to
- > know why that is, maybe because of some SPI background. By itself=20
-this is not a
- > problem, however, rescan-scsi-bus.sh makes use of those scsi lun=20
-parts and then
- > fails when matching those with the full scsi lun exposed by the=20
-midlayer to user
- > space. E.g. with flat space addresses of IBM DS8000 this does not=20
-seem to work:
->
-> # sg_luns -v -s2 -d /dev/sg2 | head
->      report luns cdb: a0 00 02 00 00 00 00 00 20 00 00 00
->      report luns: requested 8192 bytes but got 4112 bytes
-> Lun list length =3D 4104 which imples 513 lun entries
-> Report luns [select_report=3D2]:
->      c101000000000000
->        REPORT LUNS well known logical unit
->      4020400000000000
->        Flat space addressing: lun=3D32
->      4020400100000000
->        Flat space addressing: lun=3D32
->      4020400200000000
->        Flat space addressing: lun=3D32
->                                   ^^<=3D=3D=3D 0x20 of the lun's 1st =
-short
->
-> Did I overlook something or are rescan-scsi-bus.sh and maybe other to=
-ols really
- > broken with some "modern" scsi targets?
->
-Should've been fixed by now.
-There was a bug in rescan-scsi-bus.sh which indeed tried to decode=20
-LUNs, but that has been fixed.
-
-> On 02/19/2013 09:18 AM, Hannes Reinecke wrote:
->> The SCSI standard uses a 64-bit value for LUNs, and large arrays
->> employing large LUN numbers become more and more common.
->> So move the linux SCSI stack to use 64-bit LUN numbers.
+On 13-02-21 11:32 AM, James Bottomley wrote:
+> On Thu, 2013-02-21 at 16:15 +0000, Elliott, Robert (Server Storage)
+> wrote:
+>> Regarding changes like this:
+>> -			printk(MYIOC_s_NOTE_FMT "[%d:%d:%d:%d] "
+>> +			printk(MYIOC_s_NOTE_FMT "[%d:%d:%d:%llu] "
+>>   			"FCP_ResponseInfo=%08xh\n", ioc->name,
+>>   			sc->device->host->host_no, sc->device->channel,
+>>   			sc->device->id, sc->device->lun,
 >>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
+>> It might be preferable to print the LUN values in hex rather than
+>> decimal, particularly if they are large values.  SAM-5 includes some
+>> guidance for displaying LUNs, shown below.
 >
->>    drivers/scsi/scsi_proc.c                |    2 +-
+> We can't really change from decimal to hex without causing confusion and
+> possibly breaking ABIs.  All the existing SCSI references look like
+> h:c:t:l and all expect l to be a simple decimal.  It's not just in the
+> logs, we have active use of this form in all the /sys/class/scsi_*/
+> directories and some tools may parse this value.
 >
->>    drivers/scsi/scsi_sysfs.c               |   14 ++++----
->>    drivers/scsi/scsi_transport_fc.c        |    4 +-
->>    drivers/scsi/scsi_transport_iscsi.c     |    4 +-
->>    drivers/scsi/scsi_transport_sas.c       |    2 +-
->>    drivers/scsi/sg.c                       |    4 +-
->
->>    include/scsi/scsi.h                     |    2 +-
->>    include/scsi/scsi_device.h              |   22 ++++++------
->>    include/scsi/scsi_transport.h           |    2 +-
->>    50 files changed, 239 insertions(+), 247 deletions(-)
->
->> --- a/drivers/scsi/scsi_proc.c
->> +++ b/drivers/scsi/scsi_proc.c
->> @@ -196,7 +196,7 @@ static int proc_print_scsidevice(struct device *=
-dev, void *data)
+>> One important goal is to match the format, if any, that the user must
+>> use in a configuration file or command line argument, so
+>> cutting-and-pasting the LUN value works.  So, the answer might differ
+>> for prints from different drivers.  If a driver expects decimal input
+>> values, then print decimal.
 >>
->>    	sdev =3D to_scsi_device(dev);
->>    	seq_printf(s,
->> -		"Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",
->> +		"Host: scsi%d Channel: %02d Id: %02d Lun: %02llu\n  Vendor: ",
->>    		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
->>    	for (i =3D 0; i < 8; i++) {
->>    		if (sdev->vendor[i] >=3D 0x20)
+>> SAM-5 excerpt:
+>> 4.7.2 Logical unit representation format
+> [...]
 >
-> Is it intentional that you did not adapt scsi_add_single_device(),
- > scsi_remove_single_device(), proc_scsi_write() to cope with 64=20
-bit luns?
-> (in the admittedly old and probably somewhat deprecated procfs interf=
-ace;
- > but then again, proc_print_scsidevice can output 64 bit luns now)
->
-I deliberately did _not_ touch procfs (apart from the necessary=20
-bits). Precisely because it's being marked as deprecated.
+> We're a bit bound by kernel convention here as well.  To retain
+> compatibility with SPI and flat addressing schemes, we really need to
+> show the 8 and 16 bit flat addresses as simple decimal numerics.
+> However, we *might* be free to move to a more hierarchical scheme with
+> the multi-level luns, since I don't think there's to many people who've
+> got arrays that output them (yet).
 
->> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->> index 931a7d9..6e98f05 100644
->> --- a/drivers/scsi/scsi_sysfs.c
->> +++ b/drivers/scsi/scsi_sysfs.c
->> @@ -80,7 +80,7 @@ const char *scsi_host_state_name(enum scsi_host_st=
-ate state)
->>    	return name;
->>    }
->>
->> -static int check_set(unsigned int *val, char *src)
->> +static int check_set(unsigned long long *val, char *src)
->>    {
->>    	char *last;
->>
->> @@ -90,7 +90,7 @@ static int check_set(unsigned int *val, char *src)
->>    		/*
->>    		 * Doesn't check for int overflow
->>    		 */
->> -		*val =3D simple_strtoul(src, &last, 0);
->> +		*val =3D simple_strtoull(src, &last, 0);
->>    		if (*last !=3D '\0')
->>    			return 1;
->>    	}
->> @@ -99,11 +99,11 @@ static int check_set(unsigned int *val, char *sr=
-c)
->>
->>    static int scsi_scan(struct Scsi_Host *shost, const char *str)
->>    {
->> -	char s1[15], s2[15], s3[15], junk;
->> -	unsigned int channel, id, lun;
->> +	char s1[15], s2[15], s3[17], junk;
->
-> Since we use automatic base detection with the 3rd argument of simple=
-_strtoull()
- > being 0 in check_set() above, I think the user is free to specify=20
-the lun to scan
- > for in decimal/octal/hex base for s3.
- >
-Yes, we could (in principle).
-However, it's not quite clear to me what the user is supposed to=20
-enter here in these cases.
-Original output from REPORT LUNS?
-Output from scsilun_to_int?
-So we would need to come up with a proper naming scheme to identify=20
-these kind of things.
-However, this should be done with another patch as it's a different=20
-story. scsi_debug has a similar issue, and will need to be updated=20
-for this, too.
+For those of you that don't remember, back when the Linux
+OS was born, a SCSI READ(6) command looked like this:
 
-> With 64 bits, couldn't this need a maximum of 20 decimal digits (plus=
- '\0' termination)
- > which is more than 16? I think this is a legitimate use case as=20
-long as the scsi lun is
- > represented in decimal in sysfs so users might just have it from=20
-the h:c:t:l device name there.
-> While I don't think anyone would specify the lun in octal, it could e=
-ven need 22 digits.
-> [Maximum number of digits is ceil(ln(2**64-1)/ln(base)) if I'm not mi=
-staken.]
->
-Yeah, you're right. I need to increase this to the correct size.
+==============================================================================
+   Bit|   7    |   6    |   5    |   4    |   3    |   2    |   1    |   0    |
+Byte |        |        |        |        |        |        |        |        |
+==============================================================================
+  0   |                           Operation Code (08h)                        |
+-----|-----------------------------------------------------------------------|
+  1   | Logical Unit Number      | (MSB)                                      |
+-----|------------------------------                                      ---|
+  2   |                           Logical Block Address                       |
+-----|---                                                                 ---|
+  3   |                                                                 (LSB) |
+-----|-----------------------------------------------------------------------|
+  4   |                           Transfer Length                             |
+-----|-----------------------------------------------------------------------|
+  5   |                           Control                                     |
+==============================================================================
 
->> +	unsigned long long channel, id, lun;
->>    	int res;
->>
->> -	res =3D sscanf(str, "%10s %10s %10s %c", s1, s2, s3, &junk);
->> +	res =3D sscanf(str, "%10s %10s %16s %c", s1, s2, s3, &junk);
->
-> ditto
->
->>    	if (res !=3D 3)
->>    		return -EINVAL;
->>    	if (check_set(&channel, s1))
->
->> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_tr=
-ansport_fc.c
->> index e894ca7..091210f 100644
->> --- a/drivers/scsi/scsi_transport_fc.c
->> +++ b/drivers/scsi/scsi_transport_fc.c
->> @@ -2093,7 +2093,7 @@ fc_timed_out(struct scsi_cmnd *scmd)
->>     * on the rport.
->>     */
->>    static void
->> -fc_user_scan_tgt(struct Scsi_Host *shost, uint channel, uint id, ui=
-nt lun)
->> +fc_user_scan_tgt(struct Scsi_Host *shost, uint channel, uint id, ui=
-nt64_t lun)
->>    {
->>    	struct fc_rport *rport;
->>    	unsigned long flags;
->> @@ -2125,7 +2125,7 @@ fc_user_scan_tgt(struct Scsi_Host *shost, uint=
- channel, uint id, uint lun)
->>     * object as the parent.
->>     */
->>    static int
->> -fc_user_scan(struct Scsi_Host *shost, uint channel, uint id, uint l=
-un)
->> +fc_user_scan(struct Scsi_Host *shost, uint channel, uint id, uint64=
-_t lun)
->
-> Is it OK, that the maximum lun 2**64-1 overlaps with SCAN_WILD_CARD=3D=
-=3D~0 from scsi.h?
->
-It's the same as today, isn't it?
+Notice that 3 bit LUN field tucked into byte 1 of the cdb.
+There may be still remnants of code in the Linux SCSI
+subsystem to support that. Since then LUNs have grown to 16,
+32 and now 64 bits. Will they keep expanding?
+My point is that a T10 sanctioned LUN representation
+can be a hard act for an OS to follow.
 
->> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
->> index be2c9a6..271d23d 100644
->> --- a/drivers/scsi/sg.c
->> +++ b/drivers/scsi/sg.c
->
-> I guess we cannot adapt sg_ioctl SG_GET_SCSI_ID that easily without b=
-reaking
- > the user space interface. But how does a user of this interface=20
-know that there
- > are 64 bit luns in the kernel but the ioctl cannot handle the new=20
-kernel functionality
- > (and may be affected by aliasing)?
->
-Hmm. I thought that SG_GET_SCSI_ID is largely deprecated by now;=20
-every user should be converted to use sysfs.
-But yeah, you're right. I'll be looking into that.
+Fixing Linux's broken 32 bit "word-flipped" LUN
+should be done as a matter of urgency, IMO. Here I am
+referring to Hannes Reinecke patch:
+    [PATCH 1/4] scsi_scan: Fixup scsilun_to_int()
 
-Thanks for your input.
+Extending Linux's 32 bit word-flipped LUN to a 64 bit
+word-flipped LUN seems like the least disruptive change
+for the Linux user space. Existing small LUN formats
+would continue to yield the same sysfs and bsg
+file/directory names. And my lsscsi utility would
+continue to work.
 
-Cheers,
+lsscsi will still need some work to support 64 bit
+word-flipped LUNs. The simple one is to expand the LUN
+decoding (currently expecting a 32 bit signed integer)
+to accept uint64_t . Also I would like to add a
+--lunhex option ('-x' as the more obvious short option
+letters are already used) to show the LUN in hex along
+the lines of what Robert Elliott (and SAM-5) propose.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As an example showing the REPORT LUNS well known LUNS
+as a non-trivial LUN:
+
+# lsscsi
+[0:0:0:0]    disk    ATA      INTEL SSDSC2CW12 400i  /dev/sda
+[6:0:0:1]    disk    Linux    scsi_debug       0004  /dev/sdb
+[6:0:0:49409]wlun    Linux    scsi_debug       0004  -
+
+# lsscsi -x
+[0:0:0:0x0000]              disk    ATA      INTEL SSDSC2CW12 400i  /dev/sda
+[6:0:0:0x0001]              disk    Linux    scsi_debug       0004  /dev/sdb
+[6:0:0:0xc101]              wlun    Linux    scsi_debug       0004  -
+
+# lsscsi -xx
+[0:0:0:0x0000000000000000]  disk    ATA      INTEL SSDSC2CW12 400i  /dev/sda
+[6:0:0:0x0001000000000000]  disk    Linux    scsi_debug       0004  /dev/sdb
+[6:0:0:0xc101000000000000]  wlun    Linux    scsi_debug       0004  -
+
+
+Also, given an hierarchical LUN like 02 3a 00 4b 00 00 00 00
+the 'lsscsi -x' representation would be something like:
+[6:0:0:0x023a_004b]
+
+Doug Gilbert
+
+
+
+
+
