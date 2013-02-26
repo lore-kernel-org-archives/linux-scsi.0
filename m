@@ -1,50 +1,286 @@
 From: Vinayak Holikatti <vinholikatti@gmail.com>
-Subject: [PATCH V6 Resend2 2/2] [SCSI] ufs: Correct the expected data transfersize
-Date: Tue, 26 Feb 2013 18:04:46 +0530
-Message-ID: <1361882086-2548-2-git-send-email-vinholikatti@gmail.com>
-References: <1361882086-2548-1-git-send-email-vinholikatti@gmail.com>
+Subject: [PATCH V6 Resend2 1/2] [SCSI] ufs: Add Platform glue driver for ufshcd
+Date: Tue, 26 Feb 2013 18:04:45 +0530
+Message-ID: <1361882086-2548-1-git-send-email-vinholikatti@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:56602 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756051Ab3BZMf1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Feb 2013 07:35:27 -0500
-Received: by mail-pb0-f49.google.com with SMTP id xa12so2321613pbc.22
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Feb 2013 04:35:27 -0800 (PST)
-In-Reply-To: <1361882086-2548-1-git-send-email-vinholikatti@gmail.com>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:37794 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756051Ab3BZMfX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Feb 2013 07:35:23 -0500
+Received: by mail-pa0-f43.google.com with SMTP id bh2so2422750pad.2
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Feb 2013 04:35:22 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, venkat@linaro.org, subhashj@codeaurora.org, sthumma@codeaurora.org, merez@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>
 
-This patch corrects the expected data transfer size of the
-command UPIU. The current implementation of cmd->transfersize
-is wrong as it probably equal to sector size. With this
-implementation the transfer size is updated correctly
+This patch adds Platform glue driver for ufshcd.
 
-Reported-by: KOBAYASHI Yoshitake <yoshitake.kobayashi@toshiba.co.jp>
 Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+Reviewed-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Tested-by: Maya Erez <merez@codeaurora.org>
-Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
 Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
+Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
 ---
- drivers/scsi/ufs/ufshcd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/ufs/Kconfig         |   11 ++
+ drivers/scsi/ufs/Makefile        |    1 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c |  217 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 229 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.c
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 60fd40c..c32a478 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -478,7 +478,7 @@ static void ufshcd_compose_upiu(struct ufshcd_lrb *lrbp)
- 		ucd_cmd_ptr->header.dword_2 = 0;
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index 0371047..35faf24 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -57,3 +57,14 @@ config SCSI_UFSHCD_PCI
+ 	  If you have a controller with this interface, say Y or M here.
  
- 		ucd_cmd_ptr->exp_data_transfer_len =
--			cpu_to_be32(lrbp->cmd->transfersize);
-+			cpu_to_be32(lrbp->cmd->sdb.length);
- 
- 		memcpy(ucd_cmd_ptr->cdb,
- 		       lrbp->cmd->cmnd,
+ 	  If unsure, say N.
++
++config SCSI_UFSHCD_PLATFORM
++	tristate "Platform bus based UFS Controller support"
++	depends on SCSI_UFSHCD
++	---help---
++	This selects the UFS host controller support. Select this if
++	you have an UFS controller on Platform bus.
++
++	If you have a controller with this interface, say Y or M here.
++
++	  If unsure, say N.
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 9eda0df..1e5bd48 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -1,3 +1,4 @@
+ # UFSHCD makefile
+ obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
++obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+new file mode 100644
+index 0000000..03319ac
+--- /dev/null
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -0,0 +1,217 @@
++/*
++ * Universal Flash Storage Host controller Platform bus based glue driver
++ *
++ * This code is based on drivers/scsi/ufs/ufshcd-pltfrm.c
++ * Copyright (C) 2011-2013 Samsung India Software Operations
++ *
++ * Authors:
++ *	Santosh Yaraganavi <santosh.sy@samsung.com>
++ *	Vinayak Holikatti <h.vinayak@samsung.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ * See the COPYING file in the top-level directory or visit
++ * <http://www.gnu.org/licenses/gpl-2.0.html>
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * This program is provided "AS IS" and "WITH ALL FAULTS" and
++ * without warranty of any kind. You are solely responsible for
++ * determining the appropriateness of using and distributing
++ * the program and assume all risks associated with your exercise
++ * of rights with respect to the program, including but not limited
++ * to infringement of third party rights, the risks and costs of
++ * program errors, damage to or loss of data, programs or equipment,
++ * and unavailability or interruption of operations. Under no
++ * circumstances will the contributor of this Program be liable for
++ * any damages of any kind arising from your use or distribution of
++ * this program.
++ */
++
++#include "ufshcd.h"
++#include <linux/platform_device.h>
++
++#ifdef CONFIG_PM
++/**
++ * ufshcd_pltfrm_suspend - suspend power management function
++ * @dev: pointer to device handle
++ *
++ *
++ * Returns 0
++ */
++static int ufshcd_pltfrm_suspend(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++
++	/*
++	 * TODO:
++	 * 1. Call ufshcd_suspend
++	 * 2. Do bus specific power management
++	 */
++
++	disable_irq(hba->irq);
++
++	return 0;
++}
++
++/**
++ * ufshcd_pltfrm_resume - resume power management function
++ * @dev: pointer to device handle
++ *
++ * Returns 0
++ */
++static int ufshcd_pltfrm_resume(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++
++	/*
++	 * TODO:
++	 * 1. Call ufshcd_resume.
++	 * 2. Do bus specific wake up
++	 */
++
++	enable_irq(hba->irq);
++
++	return 0;
++}
++#else
++#define ufshcd_pltfrm_suspend	NULL
++#define ufshcd_pltfrm_resume	NULL
++#endif
++
++/**
++ * ufshcd_pltfrm_probe - probe routine of the driver
++ * @pdev: pointer to Platform device handle
++ *
++ * Returns 0 on success, non-zero value on failure
++ */
++static int ufshcd_pltfrm_probe(struct platform_device *pdev)
++{
++	struct ufs_hba *hba;
++	void __iomem *mmio_base;
++	struct resource *mem_res;
++	struct resource *irq_res;
++	resource_size_t mem_size;
++	int err;
++	struct device *dev = &pdev->dev;
++
++	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!mem_res) {
++		dev_err(&pdev->dev,
++			"Memory resource not available\n");
++		err = -ENODEV;
++		goto out_error;
++	}
++
++	mem_size = resource_size(mem_res);
++	if (!request_mem_region(mem_res->start, mem_size, "ufshcd")) {
++		dev_err(&pdev->dev,
++			"Cannot reserve the memory resource\n");
++		err = -EBUSY;
++		goto out_error;
++	}
++
++	mmio_base = ioremap_nocache(mem_res->start, mem_size);
++	if (!mmio_base) {
++		dev_err(&pdev->dev, "memory map failed\n");
++		err = -ENOMEM;
++		goto out_release_regions;
++	}
++
++	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (!irq_res) {
++		dev_err(&pdev->dev, "IRQ resource not available\n");
++		err = -ENODEV;
++		goto out_iounmap;
++	}
++
++	err = dma_set_coherent_mask(dev, dev->coherent_dma_mask);
++	if (err) {
++		dev_err(&pdev->dev, "set dma mask failed\n");
++		goto out_iounmap;
++	}
++
++	err = ufshcd_init(&pdev->dev, &hba, mmio_base, irq_res->start);
++	if (err) {
++		dev_err(&pdev->dev, "Intialization failed\n");
++		goto out_iounmap;
++	}
++
++	platform_set_drvdata(pdev, hba);
++
++	return 0;
++
++out_iounmap:
++	iounmap(mmio_base);
++out_release_regions:
++	release_mem_region(mem_res->start, mem_size);
++out_error:
++	return err;
++}
++
++/**
++ * ufshcd_pltfrm_remove - remove platform driver routine
++ * @pdev: pointer to platform device handle
++ *
++ * Returns 0 on success, non-zero value on failure
++ */
++static int ufshcd_pltfrm_remove(struct platform_device *pdev)
++{
++	struct resource *mem_res;
++	resource_size_t mem_size;
++	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++
++	disable_irq(hba->irq);
++
++	/* Some buggy controllers raise interrupt after
++	 * the resources are removed. So first we unregister the
++	 * irq handler and then the resources used by driver
++	 */
++
++	free_irq(hba->irq, hba);
++	ufshcd_remove(hba);
++	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!mem_res)
++		dev_err(&pdev->dev, "ufshcd: Memory resource not available\n");
++	else {
++		mem_size = resource_size(mem_res);
++		release_mem_region(mem_res->start, mem_size);
++	}
++	platform_set_drvdata(pdev, NULL);
++	return 0;
++}
++
++static const struct of_device_id ufs_of_match[] = {
++	{ .compatible = "jedec,ufs-1.1"},
++};
++
++static const struct dev_pm_ops ufshcd_dev_pm_ops = {
++	.suspend	= ufshcd_pltfrm_suspend,
++	.resume		= ufshcd_pltfrm_resume,
++};
++
++static struct platform_driver ufshcd_pltfrm_driver = {
++	.probe	= ufshcd_pltfrm_probe,
++	.remove	= ufshcd_pltfrm_remove,
++	.driver	= {
++		.name	= "ufshcd",
++		.owner	= THIS_MODULE,
++		.pm	= &ufshcd_dev_pm_ops,
++		.of_match_table = ufs_of_match,
++	},
++};
++
++module_platform_driver(ufshcd_pltfrm_driver);
++
++MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
++MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
++MODULE_DESCRIPTION("UFS host controller Pltform bus based glue driver");
++MODULE_LICENSE("GPL");
++MODULE_VERSION(UFSHCD_DRIVER_VERSION);
 -- 
 1.7.5.4
 
