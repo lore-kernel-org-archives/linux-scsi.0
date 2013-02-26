@@ -1,117 +1,253 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: [PATCH] dm: do not replace bioset for request-based dm
-Date: Tue, 26 Feb 2013 13:49:54 +0900
-Message-ID: <512C3EF2.80204@ce.jp.nec.com>
+From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
+Subject: Re: [RESEND][PATCH 2/8][SCSI] mpt2sas : Fix for issue Missing delay
+ not getting set during system bootup
+Date: Tue, 26 Feb 2013 16:59:59 +0530
+Message-ID: <20130226112959.GA1556@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO202.gate.nec.co.jp ([210.143.35.52]:47197 "EHLO
-	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759324Ab3BZEvn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2013 23:51:43 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: stable-owner@vger.kernel.org
+To: jejb@kernel.org, Nagalakshmi.Nandigama@lsi.com
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, sreekanth.reddy@lsi.com
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@acm.org>
 
-This patch fixes a regression introduced in v3.8, which causes oops
-like this when dm-multipath is used:
+> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+> Sent: Sunday, February 24, 2013 2:26 PM
+> To: Reddy, Sreekanth
+> Cc: Nandigama, Nagalakshmi; linux-scsi@vger.kernel.org; Prakash, Sathya;
+> stable@vger.kernel.org
+> Subject: Re: [RESEND][PATCH 2/8][SCSI] mpt2sas : Fix for issue Missing delay
+> not getting set during system bootup
+> 
+> On Sat, 2013-02-02 at 00:54 +0530, Sreekanth Reddy wrote:
+> > Missing delay is not getting set properly. The reason is it is not defined in
+> the same file from where it is being invoked.
+> >
+> > The fix is to move the missing delay module parameter from
+> mpt2sas_base.c to mpt2sas_scsh.c.
+> >
+> > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> > Cc: stable@vger.kernel.org
+> > ---
+> >
+> > diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> > b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> > index 0bb2b30..ce89b14 100644
+> > --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> > +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> > @@ -80,10 +80,6 @@ static int msix_disable = -1;
+> > module_param(msix_disable, int, 0);  MODULE_PARM_DESC(msix_disable,
+> "
+> > disable msix routed interrupts (default=0)");
+> >
+> > -static int missing_delay[2] = {-1, -1};
+> > -module_param_array(missing_delay, int, NULL, 0);
+> > -MODULE_PARM_DESC(missing_delay, " device missing delay , io missing
+> > delay");
+> > -
+> >  static int mpt2sas_fwfault_debug;
+> >  MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of
+> firmware fault "
+> >  	"and halt firmware - (default=0)");
+> > @@ -2183,7 +2179,7 @@ _base_display_ioc_capabilities(struct
+> > MPT2SAS_ADAPTER *ioc)  }
+> >
+> >  /**
+> > - * _base_update_missing_delay - change the missing delay timers
+> > + * mpt2sas_base_update_missing_delay - change the missing delay
+> > + timers
+> >   * @ioc: per adapter object
+> >   * @device_missing_delay: amount of time till device is reported missing
+> >   * @io_missing_delay: interval IO is returned when there is a missing
+> > device @@ -2194,8 +2190,8 @@ _base_display_ioc_capabilities(struct
+> MPT2SAS_ADAPTER *ioc)
+> >   * delay, as well as the io missing delay. This should be called at driver
+> >   * load time.
+> >   */
+> > -static void
+> > -_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
+> > +void
+> > +mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
+> >  	u16 device_missing_delay, u8 io_missing_delay)  {
+> >  	u16 dmd, dmd_new, dmd_orignal;
+> > @@ -4391,10 +4387,6 @@ mpt2sas_base_attach(struct
+> MPT2SAS_ADAPTER *ioc)
+> >  	if (r)
+> >  		goto out_free_resources;
+> >
+> > -	if (missing_delay[0] != -1 && missing_delay[1] != -1)
+> > -		_base_update_missing_delay(ioc, missing_delay[0],
+> > -		    missing_delay[1]);
+> > -
+> >  	return 0;
+> >
+> >   out_free_resources:
+> > diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h
+> > b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> > index b46024c..ee7a030 100644
+> > --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
+> > +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> > @@ -1054,6 +1054,9 @@ void mpt2sas_base_validate_event_type(struct
+> > MPT2SAS_ADAPTER *ioc, u32 *event_ty
+> >
+> >  void mpt2sas_halt_firmware(struct MPT2SAS_ADAPTER *ioc);
+> >
+> > +void mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER
+> *ioc,
+> > +	u16 device_missing_delay, u8 io_missing_delay);
+> > +
+> >  int mpt2sas_port_enable(struct MPT2SAS_ADAPTER *ioc);
+> >
+> >  /* scsih shared API */
+> > diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > index af4e6c4..ab89b2d 100644
+> > --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > @@ -101,6 +101,10 @@ static ushort max_sectors = 0xFFFF;
+> > module_param(max_sectors, ushort, 0);
+> MODULE_PARM_DESC(max_sectors,
+> > "max sectors, range 64 to 32767  default=32767");
+> >
+> > +static int missing_delay[2] = {-1, -1};
+> > +module_param_array(missing_delay, int, NULL, 0);
+> > +MODULE_PARM_DESC(missing_delay, " device missing delay , io missing
+> > +delay");
+> > +
+> >  /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
+> > #define MPT2SAS_MAX_LUN (16895)  static int max_lun =
+> MPT2SAS_MAX_LUN;
+> > @@ -7303,7 +7307,9 @@ _firmware_event_work(struct work_struct
+> *work)
+> >  	case MPT2SAS_PORT_ENABLE_COMPLETE:
+> >  		ioc->start_scan = 0;
+> >
+> > -
+> > +		if (missing_delay[0] != -1 && missing_delay[1] != -1)
+> > +			mpt2sas_base_update_missing_delay(ioc,
+> missing_delay[0],
+> > +				missing_delay[1]);
+> 
+> This patch is rejecting here.  It looks to be because a previous patch of yours:
+> 
+> commit b4730fb6e54a634a145c9c71c5cf856f00beb5cd
+> Author: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> Date:   Tue Dec 18 14:45:30 2012 +0100
+> 
+>     [SCSI] mpt2sas: fix for driver fails EEH, recovery from injected pci bus error
+> 
+> Added
+> 
+> @@ -4386,6 +4402,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER
+> *ioc)
+>         if (missing_delay[0] != -1 && missing_delay[1] != -1)
+>                 _base_update_missing_delay(ioc, missing_delay[0],
+>                     missing_delay[1]);
+> +       ioc->non_operational_loop = 0;
+> 
+>         return 0;
+> 
+> I'm stopping here because correct resolution doesn't look trivial.
+> 
+> James
+> 
 
-general protection fault: 0000 [#1] SMP
-RIP: 0010:[<ffffffff810fe754>]  [<ffffffff810fe754>] mempool_free+0x24/0xb0
-Call Trace:
-  <IRQ>
-  [<ffffffff81187417>] bio_put+0x97/0xc0
-  [<ffffffffa02247a5>] end_clone_bio+0x35/0x90 [dm_mod]
-  [<ffffffff81185efd>] bio_endio+0x1d/0x30
-  [<ffffffff811f03a3>] req_bio_endio.isra.51+0xa3/0xe0
-  [<ffffffff811f2f68>] blk_update_request+0x118/0x520
-  [<ffffffff811f3397>] blk_update_bidi_request+0x27/0xa0
-  [<ffffffff811f343c>] blk_end_bidi_request+0x2c/0x80
-  [<ffffffff811f34d0>] blk_end_request+0x10/0x20
-  [<ffffffffa000b32b>] scsi_io_completion+0xfb/0x6c0 [scsi_mod]
-  [<ffffffffa000107d>] scsi_finish_command+0xbd/0x120 [scsi_mod]
-  [<ffffffffa000b12f>] scsi_softirq_done+0x13f/0x160 [scsi_mod]
-  [<ffffffff811f9fd0>] blk_done_softirq+0x80/0xa0
-  [<ffffffff81044551>] __do_softirq+0xf1/0x250
-  [<ffffffff8142ee8c>] call_softirq+0x1c/0x30
-  [<ffffffff8100420d>] do_softirq+0x8d/0xc0
-  [<ffffffff81044885>] irq_exit+0xd5/0xe0
-  [<ffffffff8142f3e3>] do_IRQ+0x63/0xe0
-  [<ffffffff814257af>] common_interrupt+0x6f/0x6f
-  <EOI>
-  [<ffffffffa021737c>] srp_queuecommand+0x8c/0xcb0 [ib_srp]
-  [<ffffffffa0002f18>] scsi_dispatch_cmd+0x148/0x310 [scsi_mod]
-  [<ffffffffa000a38e>] scsi_request_fn+0x31e/0x520 [scsi_mod]
-  [<ffffffff811f1e57>] __blk_run_queue+0x37/0x50
-  [<ffffffff811f1f69>] blk_delay_work+0x29/0x40
-  [<ffffffff81059003>] process_one_work+0x1c3/0x5c0
-  [<ffffffff8105b22e>] worker_thread+0x15e/0x440
-  [<ffffffff8106164b>] kthread+0xdb/0xe0
-  [<ffffffff8142db9c>] ret_from_fork+0x7c/0xb0
+Hi James,
 
-The regression was introduced by the change
-c0820cf5 "dm: introduce per_bio_data", where dm started to replace
-bioset during table replacement.
-For bio-based dm, it is good because clone bios do not exist during the
-table replacement.
-For request-based dm, however, (not-yet-mapped) clone bios may stay in
-request queue and survive during the table replacement.
-So freeing the old bioset could cause the oops in bio_put().
+Here is the updated patch, which will be easily patched on the latest mpt2sas code
 
-Since the size of front_pad may change only with bio-based dm,
-it is not necessary to replace bioset for request-based dm.
+Patch Description:
 
-Reported-by: Bart Van Assche <bvanassche@acm.org>
-Tested-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Alasdair G Kergon <agk@redhat.com>
-Cc: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Cc: <stable@vger.kernel.org>
+Missing delay is not getting set properly. The reason is that it is not defined in the same file from where it is being invoked.
+The fix is to move the missing delay module parameter from mpt2sas_base.c to mpt2sas_scsh.c.
+
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/md/dm.c |   30 +++++++++++++++++++++---------
- 1 file changed, 21 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 314a0e2..51fefb5 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1973,15 +1973,27 @@ static void __bind_mempools(struct mapped_device *md, struct dm_table *t)
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index bcb23d2..c76b18b 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -80,10 +80,6 @@ static int msix_disable = -1;
+ module_param(msix_disable, int, 0);
+ MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
+ 
+-static int missing_delay[2] = {-1, -1};
+-module_param_array(missing_delay, int, NULL, 0);
+-MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
+-
+ static int mpt2sas_fwfault_debug;
+ MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
+ 	"and halt firmware - (default=0)");
+@@ -2199,7 +2195,7 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
+ }
+ 
+ /**
+- * _base_update_missing_delay - change the missing delay timers
++ * mpt2sas_base_update_missing_delay - change the missing delay timers
+  * @ioc: per adapter object
+  * @device_missing_delay: amount of time till device is reported missing
+  * @io_missing_delay: interval IO is returned when there is a missing device
+@@ -2210,8 +2206,8 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
+  * delay, as well as the io missing delay. This should be called at driver
+  * load time.
+  */
+-static void
+-_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
++void
++mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
+ 	u16 device_missing_delay, u8 io_missing_delay)
  {
- 	struct dm_md_mempools *p = dm_table_get_md_mempools(t);
+ 	u16 dmd, dmd_new, dmd_orignal;
+@@ -4407,9 +4403,6 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 	if (r)
+ 		goto out_free_resources;
  
--	if (md->io_pool && (md->tio_pool || dm_table_get_type(t) == DM_TYPE_BIO_BASED) && md->bs) {
--		/*
--		 * The md already has necessary mempools. Reload just the
--		 * bioset because front_pad may have changed because
--		 * a different table was loaded.
--		 */
--		bioset_free(md->bs);
--		md->bs = p->bs;
--		p->bs = NULL;
-+	if (md->io_pool && md->bs) {
-+		/* The md already has necessary mempools. */
-+		if (dm_table_get_type(t) == DM_TYPE_BIO_BASED) {
-+			/*
-+			 * Reload bioset because front_pad may have changed
-+			 * because a different table was loaded.
-+			 */
-+			bioset_free(md->bs);
-+			md->bs = p->bs;
-+			p->bs = NULL;
-+		} else if (dm_table_get_type(t) == DM_TYPE_REQUEST_BASED) {
-+			BUG_ON(!md->tio_pool);
-+			/*
-+			 * No need to reload in case of request-based dm
-+			 * because of fixed size front_pad.
-+			 * Note for future: if you are to reload bioset,
-+			 * prep-ed requests in queue may have reference
-+			 * to bio from the old bioset.
-+			 * So you must walk through the queue to unprep.
-+			 */
-+		}
- 		goto out;
- 	}
+-	if (missing_delay[0] != -1 && missing_delay[1] != -1)
+-		_base_update_missing_delay(ioc, missing_delay[0],
+-		    missing_delay[1]);
+ 	ioc->non_operational_loop = 0;
  
+ 	return 0;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 4caaac1..1130197 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -1055,6 +1055,9 @@ void mpt2sas_base_validate_event_type(struct MPT2SAS_ADAPTER *ioc, u32 *event_ty
+ 
+ void mpt2sas_halt_firmware(struct MPT2SAS_ADAPTER *ioc);
+ 
++void mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
++	u16 device_missing_delay, u8 io_missing_delay);
++
+ int mpt2sas_port_enable(struct MPT2SAS_ADAPTER *ioc);
+ 
+ /* scsih shared API */
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 197ccad..7436ba8 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -101,6 +101,10 @@ static ushort max_sectors = 0xFFFF;
+ module_param(max_sectors, ushort, 0);
+ MODULE_PARM_DESC(max_sectors, "max sectors, range 64 to 32767  default=32767");
+ 
++static int missing_delay[2] = {-1, -1};
++module_param_array(missing_delay, int, NULL, 0);
++MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
++
+ /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
+ #define MPT2SAS_MAX_LUN (16895)
+ static int max_lun = MPT2SAS_MAX_LUN;
+@@ -7304,7 +7308,9 @@ _firmware_event_work(struct work_struct *work)
+ 	case MPT2SAS_PORT_ENABLE_COMPLETE:
+ 		ioc->start_scan = 0;
+ 
+-
++		if (missing_delay[0] != -1 && missing_delay[1] != -1)
++			mpt2sas_base_update_missing_delay(ioc, missing_delay[0],
++				missing_delay[1]);
+ 
+ 		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "port enable: complete "
+ 		    "from worker thread\n", ioc->name));
