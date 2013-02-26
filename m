@@ -1,120 +1,117 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target updates for v3.9-rc1
-Date: Mon, 25 Feb 2013 17:37:29 -0800
-Message-ID: <1361842649.16778.67.camel@haakon2.linux-iscsi.org>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: [PATCH] dm: do not replace bioset for request-based dm
+Date: Tue, 26 Feb 2013 13:49:54 +0900
+Message-ID: <512C3EF2.80204@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Asias He <asias@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@infradead.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from TYO202.gate.nec.co.jp ([210.143.35.52]:47197 "EHLO
+	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759324Ab3BZEvn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Feb 2013 23:51:43 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@acm.org>
 
-Hi Linus,
+This patch fixes a regression introduced in v3.8, which causes oops
+like this when dm-multipath is used:
 
-Here are the target pending updates for v3.9-rc1 code.  Please go ahead
-and pull from:
+general protection fault: 0000 [#1] SMP
+RIP: 0010:[<ffffffff810fe754>]  [<ffffffff810fe754>] mempool_free+0x24/0xb0
+Call Trace:
+  <IRQ>
+  [<ffffffff81187417>] bio_put+0x97/0xc0
+  [<ffffffffa02247a5>] end_clone_bio+0x35/0x90 [dm_mod]
+  [<ffffffff81185efd>] bio_endio+0x1d/0x30
+  [<ffffffff811f03a3>] req_bio_endio.isra.51+0xa3/0xe0
+  [<ffffffff811f2f68>] blk_update_request+0x118/0x520
+  [<ffffffff811f3397>] blk_update_bidi_request+0x27/0xa0
+  [<ffffffff811f343c>] blk_end_bidi_request+0x2c/0x80
+  [<ffffffff811f34d0>] blk_end_request+0x10/0x20
+  [<ffffffffa000b32b>] scsi_io_completion+0xfb/0x6c0 [scsi_mod]
+  [<ffffffffa000107d>] scsi_finish_command+0xbd/0x120 [scsi_mod]
+  [<ffffffffa000b12f>] scsi_softirq_done+0x13f/0x160 [scsi_mod]
+  [<ffffffff811f9fd0>] blk_done_softirq+0x80/0xa0
+  [<ffffffff81044551>] __do_softirq+0xf1/0x250
+  [<ffffffff8142ee8c>] call_softirq+0x1c/0x30
+  [<ffffffff8100420d>] do_softirq+0x8d/0xc0
+  [<ffffffff81044885>] irq_exit+0xd5/0xe0
+  [<ffffffff8142f3e3>] do_IRQ+0x63/0xe0
+  [<ffffffff814257af>] common_interrupt+0x6f/0x6f
+  <EOI>
+  [<ffffffffa021737c>] srp_queuecommand+0x8c/0xcb0 [ib_srp]
+  [<ffffffffa0002f18>] scsi_dispatch_cmd+0x148/0x310 [scsi_mod]
+  [<ffffffffa000a38e>] scsi_request_fn+0x31e/0x520 [scsi_mod]
+  [<ffffffff811f1e57>] __blk_run_queue+0x37/0x50
+  [<ffffffff811f1f69>] blk_delay_work+0x29/0x40
+  [<ffffffff81059003>] process_one_work+0x1c3/0x5c0
+  [<ffffffff8105b22e>] worker_thread+0x15e/0x440
+  [<ffffffff8106164b>] kthread+0xdb/0xe0
+  [<ffffffff8142db9c>] ret_from_fork+0x7c/0xb0
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
+The regression was introduced by the change
+c0820cf5 "dm: introduce per_bio_data", where dm started to replace
+bioset during table replacement.
+For bio-based dm, it is good because clone bios do not exist during the
+table replacement.
+For request-based dm, however, (not-yet-mapped) clone bios may stay in
+request queue and survive during the table replacement.
+So freeing the old bioset could cause the oops in bio_put().
 
-The highlights in this series include:
+Since the size of front_pad may change only with bio-based dm,
+it is not necessary to replace bioset for request-based dm.
 
-- Improve sg_table lookup scalability in RAMDISK_MCP (martin)
-- Add device attribute to expose config name for INQUIRY model (tregaron)
-- Convert tcm_vhost to use lock-less list for cmd completion (asias)
-- Add tcm_vhost support for multiple target's per endpoint (asias)
-- Add tcm_vhost support for multiple queues per vhost (asias)
-- Add missing mapped_lun bounds checking during make_mappedlun
-  setup in generic fabric configfs code (jan engelhardt + nab)
-- Enforce individual iscsi-target network portal export once per
-  TargetName endpoint (grover + nab)
-- Add WRITE_SAME w/ UNMAP=0 emulation to FILEIO backend (nab)
+Reported-by: Bart Van Assche <bvanassche@acm.org>
+Tested-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: Alasdair G Kergon <agk@redhat.com>
+Cc: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/md/dm.c |   30 +++++++++++++++++++++---------
+ 1 file changed, 21 insertions(+), 9 deletions(-)
 
-Things have been mostly quiet this round, with majority of the work
-being done on the iser-target WIP driver + associated iscsi-target
-refactoring patches currently in flight for v3.10 code.
-
-At this point there is one patch series left outstanding from Asias to
-add support for UNMAP + WRITE_SAME w/ UNMAP=1 to FILEIO awaiting
-feedback from hch & Co, that will likely be included in a post v3.9-rc1
-PULL request if there are no objections.
-
-Also, there is a regression bug recently reported off-list that seems to
-be effecting v3.5 and v3.6 kernels with MSFT iSCSI initiators that is
-still being tracked down.  No word if this effects >= v3.7 just yet, but
-if so there will likely another PULL request coming your way..
-
-Thank you,
-
---nab
-
-Asias He (6):
-  tcm_vhost: Use llist for cmd completion list
-  tcm_vhost: Introduce iov_num_pages
-  tcm_vhost: Use iov_num_pages to calculate sgl_count
-  tcm_vhost: Optimize gup in vhost_scsi_map_to_sgl
-  tcm_vhost: Multi-target support
-  tcm_vhost: Multi-queue support
-
-Dan Carpenter (4):
-  target: change sprintf to snprintf in transport_dump_vpd_ident
-  iscsi-target: make some temporary buffers larger
-  target: don't always say "ipv6" as address type
-  target: don't truncate the fail intr address
-
-Hannes Reinecke (2):
-  target: Export SPC inquiry emulation
-  target_core_rd: break out unterminated loop during copy
-
-Martin Svec (1):
-  target/rd: improve sg_table lookup scalability
-
-Nicholas Bellinger (6):
-  target/iblock: Use backend REQ_FLUSH hint for WriteCacheEnabled
-    status
-  target: Fix lookup of dynamic NodeACLs during cached demo-mode
-    operation
-  target: Add missing mapped_lun bounds checking during make_mappedlun
-    setup
-  iscsi-target: Refactor iscsit_get_np sockaddr matching into
-    iscsit_check_np_match
-  iscsi-target: Enforce individual network portal export once per
-    TargetName
-  target/file: Add WRITE_SAME w/ UNMAP=0 emulation support
-
-Roland Dreier (6):
-  target: Remove useless if statement
-  target: Remove never-used TMR_FABRIC_TMR enum value
-  target: Fix sense data for out-of-bounds IO operations
-  target: Fix error checking for UNMAP commands
-  target: Fix parameter list length checking in MODE SELECT
-  target: Rename spc_get_write_same_sectors ->
-    sbc_get_write_same_sectors
-
-Tregaron Bayly (1):
-  target: Add device attribute to expose config_item_name for INQUIRY
-    model
-
- drivers/target/iscsi/iscsi_target.c            |   65 ++++---
- drivers/target/iscsi/iscsi_target.h            |    2 +
- drivers/target/iscsi/iscsi_target_parameters.c |    8 +-
- drivers/target/iscsi/iscsi_target_stat.c       |   25 ++-
- drivers/target/iscsi/iscsi_target_tpg.c        |   39 ++++
- drivers/target/target_core_configfs.c          |    4 +
- drivers/target/target_core_device.c            |   58 ++++-
- drivers/target/target_core_fabric_configfs.c   |   12 +-
- drivers/target/target_core_file.c              |  114 ++++++++++
- drivers/target/target_core_iblock.c            |   46 +++-
- drivers/target/target_core_internal.h          |    3 +-
- drivers/target/target_core_rd.c                |   18 ++-
- drivers/target/target_core_sbc.c               |    8 +-
- drivers/target/target_core_spc.c               |   42 +++-
- drivers/target/target_core_tmr.c               |   12 -
- drivers/target/target_core_tpg.c               |   10 +-
- drivers/target/target_core_transport.c         |   19 ++-
- drivers/vhost/tcm_vhost.c                      |  287 +++++++++++++-----------
- drivers/vhost/tcm_vhost.h                      |    8 +-
- include/target/target_core_backend.h           |    5 +-
- include/target/target_core_base.h              |    7 +-
- 21 files changed, 563 insertions(+), 229 deletions(-)
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 314a0e2..51fefb5 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1973,15 +1973,27 @@ static void __bind_mempools(struct mapped_device *md, struct dm_table *t)
+ {
+ 	struct dm_md_mempools *p = dm_table_get_md_mempools(t);
+ 
+-	if (md->io_pool && (md->tio_pool || dm_table_get_type(t) == DM_TYPE_BIO_BASED) && md->bs) {
+-		/*
+-		 * The md already has necessary mempools. Reload just the
+-		 * bioset because front_pad may have changed because
+-		 * a different table was loaded.
+-		 */
+-		bioset_free(md->bs);
+-		md->bs = p->bs;
+-		p->bs = NULL;
++	if (md->io_pool && md->bs) {
++		/* The md already has necessary mempools. */
++		if (dm_table_get_type(t) == DM_TYPE_BIO_BASED) {
++			/*
++			 * Reload bioset because front_pad may have changed
++			 * because a different table was loaded.
++			 */
++			bioset_free(md->bs);
++			md->bs = p->bs;
++			p->bs = NULL;
++		} else if (dm_table_get_type(t) == DM_TYPE_REQUEST_BASED) {
++			BUG_ON(!md->tio_pool);
++			/*
++			 * No need to reload in case of request-based dm
++			 * because of fixed size front_pad.
++			 * Note for future: if you are to reload bioset,
++			 * prep-ed requests in queue may have reference
++			 * to bio from the old bioset.
++			 * So you must walk through the queue to unprep.
++			 */
++		}
+ 		goto out;
+ 	}
+ 
