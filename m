@@ -1,24 +1,24 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] dm: do not replace bioset for request-based dm
-Date: Tue, 26 Feb 2013 16:20:48 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.1302261619570.5243@file.rdu.redhat.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm: do not replace bioset for request-based dm
+Date: Tue, 26 Feb 2013 17:33:25 -0500
+Message-ID: <20130226223325.GA31981@redhat.com>
 References: <512C3EF2.80204@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29637 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57802 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759924Ab3BZVVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Feb 2013 16:21:06 -0500
+	id S1756266Ab3BZWdf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Feb 2013 17:33:35 -0500
+Content-Disposition: inline
 In-Reply-To: <512C3EF2.80204@ce.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@redhat.com>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bvanassche@acm.org>
+Cc: device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, Tejun Heo <tj@kernel.org>, Alasdair G Kergon <agk@redhat.com>, Bart Van Assche <bvanassche@acm.org>
 
-Acked-by: Mikulas Patocka <mpatocka@redhat.com>
-
-On Tue, 26 Feb 2013, Jun'ichi Nomura wrote:
+On Mon, Feb 25 2013 at 11:49pm -0500,
+Jun'ichi Nomura <j-nomura@ce.jp.nec.com> wrote:
 
 > This patch fixes a regression introduced in v3.8, which causes oops
 > like this when dm-multipath is used:
@@ -75,49 +75,5 @@ On Tue, 26 Feb 2013, Jun'ichi Nomura wrote:
 > Cc: Mikulas Patocka <mpatocka@redhat.com>
 > Cc: Mike Snitzer <snitzer@redhat.com>
 > Cc: <stable@vger.kernel.org>
-> ---
->  drivers/md/dm.c |   30 +++++++++++++++++++++---------
->  1 file changed, 21 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 314a0e2..51fefb5 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -1973,15 +1973,27 @@ static void __bind_mempools(struct mapped_device *md, struct dm_table *t)
->  {
->  	struct dm_md_mempools *p = dm_table_get_md_mempools(t);
->  
-> -	if (md->io_pool && (md->tio_pool || dm_table_get_type(t) == DM_TYPE_BIO_BASED) && md->bs) {
-> -		/*
-> -		 * The md already has necessary mempools. Reload just the
-> -		 * bioset because front_pad may have changed because
-> -		 * a different table was loaded.
-> -		 */
-> -		bioset_free(md->bs);
-> -		md->bs = p->bs;
-> -		p->bs = NULL;
-> +	if (md->io_pool && md->bs) {
-> +		/* The md already has necessary mempools. */
-> +		if (dm_table_get_type(t) == DM_TYPE_BIO_BASED) {
-> +			/*
-> +			 * Reload bioset because front_pad may have changed
-> +			 * because a different table was loaded.
-> +			 */
-> +			bioset_free(md->bs);
-> +			md->bs = p->bs;
-> +			p->bs = NULL;
-> +		} else if (dm_table_get_type(t) == DM_TYPE_REQUEST_BASED) {
-> +			BUG_ON(!md->tio_pool);
-> +			/*
-> +			 * No need to reload in case of request-based dm
-> +			 * because of fixed size front_pad.
-> +			 * Note for future: if you are to reload bioset,
-> +			 * prep-ed requests in queue may have reference
-> +			 * to bio from the old bioset.
-> +			 * So you must walk through the queue to unprep.
-> +			 */
-> +		}
->  		goto out;
->  	}
->  
-> 
+
+Acked-by: Mike Snitzer <snitzer@redhat.com>
