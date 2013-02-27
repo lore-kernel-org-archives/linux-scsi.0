@@ -1,56 +1,50 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH 1/1] ipr: ipr_test_msi() fails when running with msi-x enabled adapter
-Date: Wed, 27 Feb 2013 12:37:45 -0600
-Message-ID: <20130227184347.437115470@linux.vnet.ibm.com>
-References: <20130227183744.430469620@linux.vnet.ibm.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] cxgb4i: a couple invalid dereference bugs
+Date: Thu, 28 Feb 2013 00:33:58 +0300
+Message-ID: <20130227213358.GB11300@longonot.mountain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.65] ([32.97.110.65]:21599 "HELO
-	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1759862Ab3B0SqM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Feb 2013 13:46:12 -0500
-Content-Disposition: inline; filename=test_msi_fail
+Received: from aserp1040.oracle.com ([141.146.126.69]:17751 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750955Ab3B0VgG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2013 16:36:06 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, klebers@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-Loading ipr modules failed(-22) with msi-x enabled adapter. In ipr_test_msi(),
-We need to pass the first vector of msix vectors instead of using pdev->irq 
-to request_irq() when adapter enables msix feature.
+"tid" and "opc" come from skb->data so Smatch complains that the
+bounds checking is inadequate.  If "tid" is out of bounds it would
+lead to a NULL dereference when debugging is enabled.  If "opc" is
+invalid we would dereference a bogus function pointer.
 
-Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2013-02-26 20:13:42.000000000 -0600
-+++ b/drivers/scsi/ipr.c	2013-02-27 12:02:32.578032480 -0600
-@@ -9349,7 +9349,10 @@ static int ipr_test_msi(struct ipr_ioa_c
- 	int_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 3fecf35..4facd10 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -1047,8 +1047,11 @@ static void do_set_tcb_rpl(struct cxgbi_device *cdev, struct sk_buff *skb)
+ 	struct cxgbi_sock *csk;
  
--	rc = request_irq(pdev->irq, ipr_test_intr, 0, IPR_NAME, ioa_cfg);
-+	if (ioa_cfg->intr_flag == IPR_USE_MSIX)
-+		rc = request_irq(ioa_cfg->vectors_info[0].vec, ipr_test_intr, 0, IPR_NAME, ioa_cfg);
-+	else
-+		rc = request_irq(pdev->irq, ipr_test_intr, 0, IPR_NAME, ioa_cfg);
- 	if (rc) {
- 		dev_err(&pdev->dev, "Can not assign irq %d\n", pdev->irq);
- 		return rc;
-@@ -9371,7 +9374,10 @@ static int ipr_test_msi(struct ipr_ioa_c
+ 	csk = lookup_tid(t, tid);
+-	if (!csk)
++	if (!csk) {
+ 		pr_err("can't find conn. for tid %u.\n", tid);
++		__kfree_skb(skb);
++		return;
++	}
  
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 
--	free_irq(pdev->irq, ioa_cfg);
-+	if (ioa_cfg->intr_flag == IPR_USE_MSIX)
-+		free_irq(ioa_cfg->vectors_info[0].vec, ioa_cfg);
-+	else
-+		free_irq(pdev->irq, ioa_cfg);
- 
- 	LEAVE;
- 
-
--- 
+ 	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
+ 		"csk 0x%p,%u,%lx,%u, status 0x%x.\n",
+@@ -1534,7 +1537,7 @@ static int t4_uld_rx_handler(void *handle, const __be64 *rsp,
+ 	log_debug(1 << CXGBI_DBG_TOE,
+ 		"cdev %p, opcode 0x%x(0x%x,0x%x), skb %p.\n",
+ 		 cdev, opc, rpl->ot.opcode_tid, ntohl(rpl->ot.opcode_tid), skb);
+-	if (cxgb4i_cplhandlers[opc])
++	if (opc < ARRAY_SIZE(cxgb4i_cplhandlers) && cxgb4i_cplhandlers[opc])
+ 		cxgb4i_cplhandlers[opc](cdev, skb);
+ 	else {
+ 		pr_err("No handler for opcode 0x%x.\n", opc);
