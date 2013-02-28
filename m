@@ -1,53 +1,164 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: [PATCH v2 0/2] dm: Avoid use-after-free of a mapped device
-Date: Thu, 28 Feb 2013 09:42:27 +0900
-Message-ID: <512EA7F3.6010607@ce.jp.nec.com>
-References: <512E1C06.2000903@acm.org>
+From: Chen Gang <gang.chen@asianux.com>
+Subject: Re: [PATCH] drivers/scsi/cxgbi: correcting the include path, so can
+ pass compiling.
+Date: Thu, 28 Feb 2013 11:24:12 +0800
+Message-ID: <512ECDDC.2020607@asianux.com>
+References: <50F15A35.4000400@asianux.com> <50FB9A33.2090204@asianux.com> <51077BB3.2010809@asianux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO201.gate.nec.co.jp ([210.143.35.51]:38942 "EHLO
-	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813Ab3B1AnO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2013 19:43:14 -0500
-In-Reply-To: <512E1C06.2000903@acm.org>
+Received: from intranet.asianux.com ([58.214.24.6]:4630 "EHLO
+	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751190Ab3B1DYc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2013 22:24:32 -0500
+In-Reply-To: <51077BB3.2010809@asianux.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@redhat.com>, Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>
+To: JBottomley@parallels.com, David Miller <davem@davemloft.net>, kxie@chelsio.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Hi Bart,
+Hello relative Maintainers:
 
-On 02/27/13 23:45, Bart Van Assche wrote:
-> This mini-series of two patches avoids that the device mapper
-> implementation can trigger a use-after-free during removal of a
-> mapped device. The two patches in this series are:
-> - block: Convert blk_run_queue() recursion into iteration.
-> - dm: Avoid running the md queue after the last dm_put().
-> 
-> Note: these patches are the result of source reading. As far as I know this issue has not (yet) caused any harm.
+  could any one help checking this patch ?
 
-Ref-counting of mapped device is like this:
-  - dm depends on the fact that the block device is opened while there
-    is bio/request submitted.  So dm_get/put in dm_blk_open/close is
-    enough to keep mapped device while there are bios.
-  - Request-based target has a tiny window between dm_blk_close()
-    and the end of rq_completed() because the opener may close the device
-    once the last bio completes even if request is still finishing.
-    dm_get/dm_put in dm_start_request/rq_completed closes this window.
-    (See comments in dm_start_request())
-  - So, when dm_put() puts the last reference, there should be no
-    requests in the queue.
-  - If there is no reference to the mapped device, dm_destroy() may
-    start tearing it down.
-    It is ok if there is pending delayed work for the request queue
-    because blk_cleanup_queue() is called before freeing the mapped device
-    and cancels the delayed work.
+    this patch fixes the compiling issue.
+    the make command in my x86_64 laptop is: "make V=3D1 allmodconfig"
+    the patch was sent in Jan-12-2013, and get non-reply now.
 
-So as far as blk_run_queue_async() in rq_completed() is concerned,
-it is not a problem from "use-after-free" point of view.
+  could you please give a glance when you have time.
 
--- 
-Jun'ichi Nomura, NEC Corporation
+  thanks.
 
+  :-)
+
+gchen.
+
+
+=D3=DA 2013=C4=EA01=D4=C229=C8=D5 15:35, Chen Gang =D0=B4=B5=C0:
+> Hello JBottomley@parallels.com
+>=20
+>   have you already fixed it by another patches ?
+>=20
+>   if so:
+>     better to let me know about it, so I should not bother you, again=
+=2E
+>   else
+>     please give a glance to this patch, when you have time
+>      (since compiling errors are always belong to critical errors)
+>=20
+>   thanks.
+>=20
+>=20
+> by the way:
+>    I get the sending mail address from ./script/get_maintainer.pl.
+>    if I sent to an incorrect member, please tell me.
+>=20
+>   thanks.
+>=20
+> gchen.
+>=20
+>=20
+> =D3=DA 2013=C4=EA01=D4=C220=C8=D5 15:18, Chen Gang =D0=B4=B5=C0:
+>> Hello JBottomley@parallels.com
+>>
+>>   when you have free time, could you give a glance for this patch ?
+>>
+>>   thanks.
+>>
+>> gchen.
+>>
+>>
+>> =D3=DA 2013=C4=EA01=D4=C212=C8=D5 20:42, Chen Gang =D0=B4=B5=C0:
+>>>
+>>>   correct the include path,
+>>>   or the compiler will report can not find "common.h"...
+>>>
+>>>   both cxgb3/ and cxgb4/ sub directly have l2t.h (they are differen=
+t).
+>>>   so it is not suitable to '-I' sub-directy, directly.
+>>>
+>>>
+>>> Signed-off-by: Chen Gang <gang.chen@asianux.com>
+>>> ---
+>>>  drivers/scsi/cxgbi/Makefile        |    4 ++++
+>>>  drivers/scsi/cxgbi/cxgb3i/cxgb3i.c |   14 +++++++-------
+>>>  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   10 +++++-----
+>>>  3 files changed, 16 insertions(+), 12 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/cxgbi/Makefile b/drivers/scsi/cxgbi/Makef=
+ile
+>>> index 86007e3..aff2998 100644
+>>> --- a/drivers/scsi/cxgbi/Makefile
+>>> +++ b/drivers/scsi/cxgbi/Makefile
+>>> @@ -1,2 +1,6 @@
+>>> +
+>>> +ccflags-y			:=3D -Idrivers/net/ethernet/chelsio
+>>> +subdir-ccflags-y		:=3D -Idrivers/net/ethernet/chelsio
+>>> +
+>>>  obj-$(CONFIG_SCSI_CXGB3_ISCSI)	+=3D libcxgbi.o cxgb3i/
+>>>  obj-$(CONFIG_SCSI_CXGB4_ISCSI)	+=3D libcxgbi.o cxgb4i/
+>>> diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgb=
+i/cxgb3i/cxgb3i.c
+>>> index 49692a1..ca92e72 100644
+>>> --- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+>>> +++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+>>> @@ -18,13 +18,13 @@
+>>>  #include <linux/moduleparam.h>
+>>>  #include <scsi/scsi_host.h>
+>>> =20
+>>> -#include "common.h"
+>>> -#include "t3_cpl.h"
+>>> -#include "t3cdev.h"
+>>> -#include "cxgb3_defs.h"
+>>> -#include "cxgb3_ctl_defs.h"
+>>> -#include "cxgb3_offload.h"
+>>> -#include "firmware_exports.h"
+>>> +#include "cxgb3/common.h"
+>>> +#include "cxgb3/t3_cpl.h"
+>>> +#include "cxgb3/t3cdev.h"
+>>> +#include "cxgb3/cxgb3_defs.h"
+>>> +#include "cxgb3/cxgb3_ctl_defs.h"
+>>> +#include "cxgb3/cxgb3_offload.h"
+>>> +#include "cxgb3/firmware_exports.h"
+>>>  #include "cxgb3i.h"
+>>> =20
+>>>  static unsigned int dbg_level;
+>>> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgb=
+i/cxgb4i/cxgb4i.c
+>>> index f924b3c..a5795d5 100644
+>>> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+>>> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+>>> @@ -20,11 +20,11 @@
+>>>  #include <net/dst.h>
+>>>  #include <linux/netdevice.h>
+>>> =20
+>>> -#include "t4_msg.h"
+>>> -#include "cxgb4.h"
+>>> -#include "cxgb4_uld.h"
+>>> -#include "t4fw_api.h"
+>>> -#include "l2t.h"
+>>> +#include "cxgb4/t4_msg.h"
+>>> +#include "cxgb4/cxgb4.h"
+>>> +#include "cxgb4/cxgb4_uld.h"
+>>> +#include "cxgb4/t4fw_api.h"
+>>> +#include "cxgb4/l2t.h"
+>>>  #include "cxgb4i.h"
+>>> =20
+>>>  static unsigned int dbg_level;
+>>>
+>>
+>>
+>=20
+>=20
+
+
+--=20
+Chen Gang
+
+Asianux Corporation
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
