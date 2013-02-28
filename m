@@ -1,50 +1,53 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] cxgb4i: a couple invalid dereference bugs
-Date: Thu, 28 Feb 2013 00:33:58 +0300
-Message-ID: <20130227213358.GB11300@longonot.mountain>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [PATCH v2 0/2] dm: Avoid use-after-free of a mapped device
+Date: Thu, 28 Feb 2013 09:42:27 +0900
+Message-ID: <512EA7F3.6010607@ce.jp.nec.com>
+References: <512E1C06.2000903@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17751 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955Ab3B0VgG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2013 16:36:06 -0500
-Content-Disposition: inline
+Received: from TYO201.gate.nec.co.jp ([210.143.35.51]:38942 "EHLO
+	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813Ab3B1AnO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Feb 2013 19:43:14 -0500
+In-Reply-To: <512E1C06.2000903@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@redhat.com>, Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>
 
-"tid" and "opc" come from skb->data so Smatch complains that the
-bounds checking is inadequate.  If "tid" is out of bounds it would
-lead to a NULL dereference when debugging is enabled.  If "opc" is
-invalid we would dereference a bogus function pointer.
+Hi Bart,
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+On 02/27/13 23:45, Bart Van Assche wrote:
+> This mini-series of two patches avoids that the device mapper
+> implementation can trigger a use-after-free during removal of a
+> mapped device. The two patches in this series are:
+> - block: Convert blk_run_queue() recursion into iteration.
+> - dm: Avoid running the md queue after the last dm_put().
+> 
+> Note: these patches are the result of source reading. As far as I know this issue has not (yet) caused any harm.
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 3fecf35..4facd10 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1047,8 +1047,11 @@ static void do_set_tcb_rpl(struct cxgbi_device *cdev, struct sk_buff *skb)
- 	struct cxgbi_sock *csk;
- 
- 	csk = lookup_tid(t, tid);
--	if (!csk)
-+	if (!csk) {
- 		pr_err("can't find conn. for tid %u.\n", tid);
-+		__kfree_skb(skb);
-+		return;
-+	}
- 
- 	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
- 		"csk 0x%p,%u,%lx,%u, status 0x%x.\n",
-@@ -1534,7 +1537,7 @@ static int t4_uld_rx_handler(void *handle, const __be64 *rsp,
- 	log_debug(1 << CXGBI_DBG_TOE,
- 		"cdev %p, opcode 0x%x(0x%x,0x%x), skb %p.\n",
- 		 cdev, opc, rpl->ot.opcode_tid, ntohl(rpl->ot.opcode_tid), skb);
--	if (cxgb4i_cplhandlers[opc])
-+	if (opc < ARRAY_SIZE(cxgb4i_cplhandlers) && cxgb4i_cplhandlers[opc])
- 		cxgb4i_cplhandlers[opc](cdev, skb);
- 	else {
- 		pr_err("No handler for opcode 0x%x.\n", opc);
+Ref-counting of mapped device is like this:
+  - dm depends on the fact that the block device is opened while there
+    is bio/request submitted.  So dm_get/put in dm_blk_open/close is
+    enough to keep mapped device while there are bios.
+  - Request-based target has a tiny window between dm_blk_close()
+    and the end of rq_completed() because the opener may close the device
+    once the last bio completes even if request is still finishing.
+    dm_get/dm_put in dm_start_request/rq_completed closes this window.
+    (See comments in dm_start_request())
+  - So, when dm_put() puts the last reference, there should be no
+    requests in the queue.
+  - If there is no reference to the mapped device, dm_destroy() may
+    start tearing it down.
+    It is ok if there is pending delayed work for the request queue
+    because blk_cleanup_queue() is called before freeing the mapped device
+    and cancels the delayed work.
+
+So as far as blk_run_queue_async() in rq_completed() is concerned,
+it is not a problem from "use-after-free" point of view.
+
+-- 
+Jun'ichi Nomura, NEC Corporation
+
