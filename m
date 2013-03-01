@@ -1,434 +1,162 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/11] lpfc 8.3.38: Fixed NMI watch dog panic's when
- resetting the hba.
-Date: Fri, 1 Mar 2013 16:35:12 -0500
-Message-ID: <1362173712.8283.17.camel@myfc17>
+Subject: [PATCH 2/11] lpfc 8.3.38: Fixed degraded performance after cable
+ pulls
+Date: Fri, 1 Mar 2013 16:35:38 -0500
+Message-ID: <1362173738.8283.18.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:47942 "EHLO
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:47944 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590Ab3CAVgk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Mar 2013 16:36:40 -0500
+	with ESMTP id S1751590Ab3CAVhF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Mar 2013 16:37:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed NMI watch dog panic's when resetting the hba.
+Fixed degraded performance after cable pulls
+
+The service parameters for the VPI/RPIs were incorrect, resulting in
+lower utilization
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_attr.c      |    2 -
- lpfc_bsg.c       |    2 -
- lpfc_els.c       |    6 +--
- lpfc_hbadisc.c   |    5 +-
- lpfc_init.c      |    1 
- lpfc_nportdisc.c |    1 
- lpfc_scsi.c      |    4 +-
- lpfc_sli.c       |   92 +++++++++++++++++++++++++++++++++++++------------------
- 8 files changed, 70 insertions(+), 43 deletions(-)
+ lpfc_crtn.h    |    1 +
+ lpfc_els.c     |   15 +++++++++++++++
+ lpfc_hbadisc.c |    5 +++++
+ lpfc_hw4.h     |    3 +++
+ lpfc_mbox.c    |   24 ++++++++++++++++--------
+ 5 files changed, 40 insertions(+), 8 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2013-02-22 14:06:17.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2013-02-27 09:05:41.294113469 -0500
-@@ -692,7 +692,7 @@ lpfc_do_offline(struct lpfc_hba *phba, u
- 	 */
- 	for (i = 0; i < psli->num_rings; i++) {
- 		pring = &psli->ring[i];
--		while (pring->txcmplq_cnt) {
-+		while (!list_empty(&pring->txcmplq)) {
- 			msleep(10);
- 			if (cnt++ > 500) {  /* 5 secs */
- 				lpfc_printf_log(phba,
-diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
---- a/drivers/scsi/lpfc/lpfc_bsg.c	2013-02-22 14:06:17.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c	2013-02-27 09:05:41.301113469 -0500
-@@ -1559,7 +1559,7 @@ lpfc_bsg_diag_mode_enter(struct lpfc_hba
- 		scsi_block_requests(shost);
- 	}
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2013-02-22 14:06:17.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2013-02-27 09:07:15.254115609 -0500
+@@ -106,6 +106,7 @@ void lpfc_cleanup_discovery_resources(st
+ void lpfc_cleanup(struct lpfc_vport *);
+ void lpfc_disc_timeout(unsigned long);
  
--	while (pring->txcmplq_cnt) {
-+	while (!list_empty(&pring->txcmplq)) {
- 		if (i++ > 500)  /* wait up to 5 seconds */
- 			break;
- 		msleep(10);
++int lpfc_unregister_fcf_prep(struct lpfc_hba *);
+ struct lpfc_nodelist *__lpfc_findnode_rpi(struct lpfc_vport *, uint16_t);
+ struct lpfc_nodelist *lpfc_findnode_rpi(struct lpfc_vport *, uint16_t);
+ void lpfc_worker_wake_up(struct lpfc_hba *);
 diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2013-02-22 14:06:17.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2013-02-27 09:05:41.311113469 -0500
-@@ -6225,7 +6225,7 @@ lpfc_els_timeout_handler(struct lpfc_vpo
- 		spin_unlock_irq(&phba->hbalock);
- 	}
- 
--	if (phba->sli.ring[LPFC_ELS_RING].txcmplq_cnt)
-+	if (!list_empty(&phba->sli.ring[LPFC_ELS_RING].txcmplq))
- 		mod_timer(&vport->els_tmofunc, jiffies + HZ * timeout);
- }
- 
-@@ -6279,7 +6279,6 @@ lpfc_els_flush_cmd(struct lpfc_vport *vp
- 			continue;
- 
- 		list_move_tail(&piocb->list, &completions);
--		pring->txq_cnt--;
- 	}
- 
- 	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
-@@ -6339,7 +6338,6 @@ lpfc_els_flush_all_cmd(struct lpfc_hba
- 		    cmd->ulpCommand == CMD_ABORT_XRI_CN)
- 			continue;
- 		list_move_tail(&piocb->list, &completions);
--		pring->txq_cnt--;
- 	}
- 	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
- 		if (piocb->iocb_flag & LPFC_IO_LIBDFC)
-@@ -8065,7 +8063,7 @@ lpfc_sli4_els_xri_aborted(struct lpfc_hb
- 				rxid, 1);
- 
- 			/* Check if TXQ queue needs to be serviced */
--			if (pring->txq_cnt)
-+			if (!(list_empty(&pring->txq)))
- 				lpfc_worker_wake_up(phba);
- 			return;
+--- a/drivers/scsi/lpfc/lpfc_els.c	2013-02-27 09:05:41.311113469 -0500
++++ b/drivers/scsi/lpfc/lpfc_els.c	2013-02-27 09:07:15.262115609 -0500
+@@ -484,6 +484,7 @@ lpfc_issue_reg_vfi(struct lpfc_vport *vp
+ 	vport->port_state = LPFC_FABRIC_CFG_LINK;
+ 	memcpy(dmabuf->virt, &phba->fc_fabparam, sizeof(vport->fc_sparam));
+ 	lpfc_reg_vfi(mboxq, vport, dmabuf->phys);
++
+ 	mboxq->mbox_cmpl = lpfc_mbx_cmpl_reg_vfi;
+ 	mboxq->vport = vport;
+ 	mboxq->context1 = dmabuf;
+@@ -700,6 +701,20 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_v
  		}
+ 	}
+ 
++	/*
++	 * For FC we need to do some special processing because of the SLI
++	 * Port's default settings of the Common Service Parameters.
++	 */
++	if (phba->sli4_hba.lnk_info.lnk_tp == LPFC_LNK_TYPE_FC) {
++		/* If physical FC port changed, unreg VFI and ALL VPIs / RPIs */
++		if ((phba->sli_rev == LPFC_SLI_REV4) && fabric_param_changed)
++			lpfc_unregister_fcf_prep(phba);
++
++		/* This should just update the VFI CSPs*/
++		if (vport->fc_flag & FC_VFI_REGISTERED)
++			lpfc_issue_reg_vfi(vport);
++	}
++
+ 	if (fabric_param_changed &&
+ 		!(vport->fc_flag & FC_VPORT_NEEDS_REG_VPI)) {
+ 
 diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-02-22 14:06:17.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-02-27 09:05:41.320113469 -0500
-@@ -696,7 +696,8 @@ lpfc_work_done(struct lpfc_hba *phba)
- 							(status &
- 							 HA_RXMASK));
- 		}
--		if ((phba->sli_rev == LPFC_SLI_REV4) && pring->txq_cnt)
-+		if ((phba->sli_rev == LPFC_SLI_REV4) &
-+				 (!list_empty(&pring->txq)))
- 			lpfc_drain_txq(phba);
- 		/*
- 		 * Turn on Ring interrupts
-@@ -4354,7 +4355,6 @@ lpfc_no_rpi(struct lpfc_hba *phba, struc
- 					   with an error */
- 					list_move_tail(&iocb->list,
- 						       &completions);
--					pring->txq_cnt--;
- 				}
- 			}
- 			spin_unlock_irq(&phba->hbalock);
-@@ -5055,7 +5055,6 @@ lpfc_free_tx(struct lpfc_hba *phba, stru
- 		    (icmd->ulpCommand == CMD_XMIT_ELS_RSP64_CX)) {
- 
- 			list_move_tail(&iocb->list, &completions);
--			pring->txq_cnt--;
- 		}
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-02-27 09:05:41.320113469 -0500
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-02-27 09:07:15.274115609 -0500
+@@ -2889,6 +2889,11 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
+ 		lpfc_vport_set_state(vport, FC_VPORT_FAILED);
+ 		goto out_free_mem;
  	}
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2013-02-22 14:06:17.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2013-02-27 09:05:41.341113470 -0500
-@@ -839,7 +839,6 @@ lpfc_hba_down_post_s3(struct lpfc_hba *p
- 		 * way, nothing should be on txcmplq as it will NEVER complete.
- 		 */
- 		list_splice_init(&pring->txcmplq, &completions);
--		pring->txcmplq_cnt = 0;
- 		spin_unlock_irq(&phba->hbalock);
- 
- 		/* Cancel all the IOCBs from the completions list */
-diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-02-22 14:06:17.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-02-27 09:05:41.350113470 -0500
-@@ -226,7 +226,6 @@ lpfc_els_abort(struct lpfc_hba *phba, st
- 		if (lpfc_check_sli_ndlp(phba, pring, iocb, ndlp)) {
- 			/* It matches, so deque and call compl with anp error */
- 			list_move_tail(&iocb->list, &completions);
--			pring->txq_cnt--;
- 		}
- 	}
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2013-02-22 14:06:17.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2013-02-27 09:05:41.355113470 -0500
-@@ -732,7 +732,7 @@ lpfc_sli4_fcp_xri_aborted(struct lpfc_hb
- 		psb = container_of(iocbq, struct lpfc_scsi_buf, cur_iocbq);
- 		psb->exch_busy = 0;
- 		spin_unlock_irqrestore(&phba->hbalock, iflag);
--		if (pring->txq_cnt)
-+		if (!list_empty(&pring->txq))
- 			lpfc_worker_wake_up(phba);
- 		return;
- 
-@@ -4246,7 +4246,7 @@ static __inline__ void lpfc_poll_rearm_t
- 	unsigned long  poll_tmo_expires =
- 		(jiffies + msecs_to_jiffies(phba->cfg_poll_tmo));
- 
--	if (phba->sli.ring[LPFC_FCP_RING].txcmplq_cnt)
-+	if (!list_empty(&phba->sli.ring[LPFC_FCP_RING].txcmplq))
- 		mod_timer(&phba->fcp_poll_timer,
- 			  poll_tmo_expires);
- }
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2013-02-26 10:53:30.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-02-27 09:05:41.385113471 -0500
-@@ -1008,6 +1008,18 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_
- 	else
- 		sglq = __lpfc_clear_active_sglq(phba, iocbq->sli4_lxritag);
- 
-+	/*
-+	** This should have been removed from the txcmplq before calling
-+	** iocbq_release. The normal completion
-+	** path should have already done the list_del_init.
-+	*/
-+	if (unlikely(!list_empty(&iocbq->list))) {
-+		if (iocbq->iocb_flag & LPFC_IO_ON_TXCMPLQ)
-+			iocbq->iocb_flag &= ~LPFC_IO_ON_TXCMPLQ;
-+		list_del_init(&iocbq->list);
-+	}
 +
++	/* If the VFI is already registered, there is nothing else to do */
++	if (vport->fc_flag & FC_VFI_REGISTERED)
++		goto out_free_mem;
 +
- 	if (sglq)  {
- 		if ((iocbq->iocb_flag & LPFC_EXCHANGE_BUSY) &&
- 			(sglq->state != SGL_XRI_ABORTED)) {
-@@ -1024,7 +1036,7 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_
- 				&phba->sli4_hba.lpfc_sgl_list);
+ 	/* The VPI is implicitly registered when the VFI is registered */
+ 	spin_lock_irq(shost->host_lock);
+ 	vport->vpi_state |= LPFC_VPI_REGISTERED;
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2013-02-22 14:06:17.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2013-02-27 09:07:15.279115609 -0500
+@@ -1958,6 +1958,9 @@ struct lpfc_mbx_init_vfi {
  
- 			/* Check if TXQ queue needs to be serviced */
--			if (pring->txq_cnt)
-+			if (!list_empty(&pring->txq))
- 				lpfc_worker_wake_up(phba);
- 		}
- 	}
-@@ -1056,6 +1068,14 @@ __lpfc_sli_release_iocbq_s3(struct lpfc_
- 	size_t start_clean = offsetof(struct lpfc_iocbq, iocb);
- 
- 	/*
-+	** This should have been removed from the txcmplq before calling
-+	** iocbq_release. The normal completion
-+	** path should have already done the list_del_init.
-+	*/
-+	if (unlikely(!list_empty(&iocbq->list)))
-+		list_del_init(&iocbq->list);
-+
-+	/*
- 	 * Clean all volatile data fields, preserve iotag and node struct.
- 	 */
- 	memset((char*)iocbq + start_clean, 0, sizeof(*iocbq) - start_clean);
-@@ -1121,7 +1141,6 @@ lpfc_sli_cancel_iocbs(struct lpfc_hba *p
- 
- 	while (!list_empty(iocblist)) {
- 		list_remove_head(iocblist, piocb, struct lpfc_iocbq, list);
--
- 		if (!piocb->iocb_cmpl)
- 			lpfc_sli_release_iocbq(phba, piocb);
- 		else {
-@@ -1309,9 +1328,6 @@ lpfc_sli_ringtxcmpl_put(struct lpfc_hba
+ struct lpfc_mbx_reg_vfi {
+ 	uint32_t word1;
++#define lpfc_reg_vfi_upd_SHIFT		29
++#define lpfc_reg_vfi_upd_MASK		0x00000001
++#define lpfc_reg_vfi_upd_WORD		word1
+ #define lpfc_reg_vfi_vp_SHIFT		28
+ #define lpfc_reg_vfi_vp_MASK		0x00000001
+ #define lpfc_reg_vfi_vp_WORD		word1
+diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+--- a/drivers/scsi/lpfc/lpfc_mbox.c	2013-02-22 14:06:17.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_mbox.c	2013-02-27 09:07:15.281115609 -0500
+@@ -2126,32 +2126,40 @@ void
+ lpfc_reg_vfi(struct lpfcMboxq *mbox, struct lpfc_vport *vport, dma_addr_t phys)
  {
- 	list_add_tail(&piocb->list, &pring->txcmplq);
- 	piocb->iocb_flag |= LPFC_IO_ON_TXCMPLQ;
--	pring->txcmplq_cnt++;
--	if (pring->txcmplq_cnt > pring->txcmplq_max)
--		pring->txcmplq_max = pring->txcmplq_cnt;
+ 	struct lpfc_mbx_reg_vfi *reg_vfi;
++	struct lpfc_hba *phba = vport->phba;
  
- 	if ((unlikely(pring->ringno == LPFC_ELS_RING)) &&
- 	   (piocb->iocb.ulpCommand != CMD_ABORT_XRI_CN) &&
-@@ -1343,8 +1359,6 @@ lpfc_sli_ringtx_get(struct lpfc_hba *phb
- 	struct lpfc_iocbq *cmd_iocb;
- 
- 	list_remove_head((&pring->txq), cmd_iocb, struct lpfc_iocbq, list);
--	if (cmd_iocb != NULL)
--		pring->txq_cnt--;
- 	return cmd_iocb;
- }
- 
-@@ -1613,8 +1627,9 @@ lpfc_sli_resume_iocb(struct lpfc_hba *ph
- 	 *  (c) link attention events can be processed (fcp ring only)
- 	 *  (d) IOCB processing is not blocked by the outstanding mbox command.
- 	 */
--	if (pring->txq_cnt &&
--	    lpfc_is_link_up(phba) &&
+ 	memset(mbox, 0, sizeof(*mbox));
+ 	reg_vfi = &mbox->u.mqe.un.reg_vfi;
+ 	bf_set(lpfc_mqe_command, &mbox->u.mqe, MBX_REG_VFI);
+ 	bf_set(lpfc_reg_vfi_vp, reg_vfi, 1);
+ 	bf_set(lpfc_reg_vfi_vfi, reg_vfi,
+-	       vport->phba->sli4_hba.vfi_ids[vport->vfi]);
+-	bf_set(lpfc_reg_vfi_fcfi, reg_vfi, vport->phba->fcf.fcfi);
+-	bf_set(lpfc_reg_vfi_vpi, reg_vfi, vport->phba->vpi_ids[vport->vpi]);
++	       phba->sli4_hba.vfi_ids[vport->vfi]);
++	bf_set(lpfc_reg_vfi_fcfi, reg_vfi, phba->fcf.fcfi);
++	bf_set(lpfc_reg_vfi_vpi, reg_vfi, phba->vpi_ids[vport->vpi]);
+ 	memcpy(reg_vfi->wwn, &vport->fc_portname, sizeof(struct lpfc_name));
+ 	reg_vfi->wwn[0] = cpu_to_le32(reg_vfi->wwn[0]);
+ 	reg_vfi->wwn[1] = cpu_to_le32(reg_vfi->wwn[1]);
+-	reg_vfi->e_d_tov = vport->phba->fc_edtov;
+-	reg_vfi->r_a_tov = vport->phba->fc_ratov;
++	reg_vfi->e_d_tov = phba->fc_edtov;
++	reg_vfi->r_a_tov = phba->fc_ratov;
+ 	reg_vfi->bde.addrHigh = putPaddrHigh(phys);
+ 	reg_vfi->bde.addrLow = putPaddrLow(phys);
+ 	reg_vfi->bde.tus.f.bdeSize = sizeof(vport->fc_sparam);
+ 	reg_vfi->bde.tus.f.bdeFlags = BUFF_TYPE_BDE_64;
+ 	bf_set(lpfc_reg_vfi_nport_id, reg_vfi, vport->fc_myDID);
 +
-+	if (lpfc_is_link_up(phba) &&
-+	    (!list_empty(&pring->txq)) &&
- 	    (pring->ringno != phba->sli.fcp_ring ||
- 	     phba->sli.sli_flag & LPFC_PROCESS_LA)) {
- 
-@@ -2611,7 +2626,6 @@ lpfc_sli_iocbq_lookup(struct lpfc_hba *p
- 		cmd_iocb = phba->sli.iocbq_lookup[iotag];
- 		list_del_init(&cmd_iocb->list);
- 		if (cmd_iocb->iocb_flag & LPFC_IO_ON_TXCMPLQ) {
--			pring->txcmplq_cnt--;
- 			cmd_iocb->iocb_flag &= ~LPFC_IO_ON_TXCMPLQ;
- 		}
- 		return cmd_iocb;
-@@ -2649,7 +2663,6 @@ lpfc_sli_iocbq_lookup_by_tag(struct lpfc
- 			/* remove from txcmpl queue list */
- 			list_del_init(&cmd_iocb->list);
- 			cmd_iocb->iocb_flag &= ~LPFC_IO_ON_TXCMPLQ;
--			pring->txcmplq_cnt--;
- 			return cmd_iocb;
- 		}
- 	}
-@@ -3498,7 +3511,6 @@ lpfc_sli_abort_iocb_ring(struct lpfc_hba
- 	 */
- 	spin_lock_irq(&phba->hbalock);
- 	list_splice_init(&pring->txq, &completions);
--	pring->txq_cnt = 0;
- 
- 	/* Next issue ABTS for everything on the txcmplq */
- 	list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
-@@ -3535,11 +3547,9 @@ lpfc_sli_flush_fcp_rings(struct lpfc_hba
- 	spin_lock_irq(&phba->hbalock);
- 	/* Retrieve everything on txq */
- 	list_splice_init(&pring->txq, &txq);
--	pring->txq_cnt = 0;
- 
- 	/* Retrieve everything on the txcmplq */
- 	list_splice_init(&pring->txcmplq, &txcmplq);
--	pring->txcmplq_cnt = 0;
- 
- 	/* Indicate the I/O queues are flushed */
- 	phba->hba_flag |= HBA_FCP_IOQ_FLUSH;
-@@ -7614,7 +7624,6 @@ __lpfc_sli_ringtx_put(struct lpfc_hba *p
- {
- 	/* Insert the caller's iocb in the txq tail for later processing. */
- 	list_add_tail(&piocb->list, &pring->txq);
--	pring->txq_cnt++;
- }
- 
- /**
-@@ -8386,7 +8395,7 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba
- 		    piocb->iocb.ulpCommand == CMD_CLOSE_XRI_CN)
- 			sglq = NULL;
- 		else {
--			if (pring->txq_cnt) {
-+			if (!list_empty(&pring->txq)) {
- 				if (!(flag & SLI_IOCB_RET_IOCB)) {
- 					__lpfc_sli_ringtx_put(phba,
- 						pring, piocb);
-@@ -9054,7 +9063,6 @@ lpfc_sli_host_down(struct lpfc_vport *vp
- 			if (iocb->vport != vport)
- 				continue;
- 			list_move_tail(&iocb->list, &completions);
--			pring->txq_cnt--;
- 		}
- 
- 		/* Next issue ABTS for everything on the txcmplq */
-@@ -9123,8 +9131,6 @@ lpfc_sli_hba_down(struct lpfc_hba *phba)
- 		 * given to the FW yet.
- 		 */
- 		list_splice_init(&pring->txq, &completions);
--		pring->txq_cnt = 0;
--
- 	}
- 	spin_unlock_irqrestore(&phba->hbalock, flags);
- 
-@@ -9965,6 +9971,9 @@ lpfc_sli_issue_iocb_wait(struct lpfc_hba
- 	long timeleft, timeout_req = 0;
- 	int retval = IOCB_SUCCESS;
- 	uint32_t creg_val;
-+	struct lpfc_iocbq *iocb;
-+	int txq_cnt = 0;
-+	int txcmplq_cnt = 0;
- 	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
- 	/*
- 	 * If the caller has provided a response iocbq buffer, then context2
-@@ -10012,9 +10021,17 @@ lpfc_sli_issue_iocb_wait(struct lpfc_hba
- 			retval = IOCB_TIMEDOUT;
- 		}
- 	} else if (retval == IOCB_BUSY) {
--		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
--			"2818 Max IOCBs %d txq cnt %d txcmplq cnt %d\n",
--			phba->iocb_cnt, pring->txq_cnt, pring->txcmplq_cnt);
-+		if (phba->cfg_log_verbose & LOG_SLI) {
-+			list_for_each_entry(iocb, &pring->txq, list) {
-+				txq_cnt++;
-+			}
-+			list_for_each_entry(iocb, &pring->txcmplq, list) {
-+				txcmplq_cnt++;
-+			}
-+			lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+				"2818 Max IOCBs %d txq cnt %d txcmplq cnt %d\n",
-+				phba->iocb_cnt, txq_cnt, txcmplq_cnt);
-+		}
- 		return retval;
- 	} else {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-@@ -11297,16 +11314,25 @@ lpfc_sli4_sp_handle_els_wcqe(struct lpfc
- 	struct lpfc_iocbq *irspiocbq;
- 	unsigned long iflags;
- 	struct lpfc_sli_ring *pring = cq->pring;
-+	int txq_cnt = 0;
-+	int txcmplq_cnt = 0;
-+	int fcp_txcmplq_cnt = 0;
- 
- 	/* Get an irspiocbq for later ELS response processing use */
- 	irspiocbq = lpfc_sli_get_iocbq(phba);
- 	if (!irspiocbq) {
-+		if (!list_empty(&pring->txq))
-+			txq_cnt++;
-+		if (!list_empty(&pring->txcmplq))
-+			txcmplq_cnt++;
-+		if (!list_empty(&phba->sli.ring[LPFC_FCP_RING].txcmplq))
-+			fcp_txcmplq_cnt++;
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 			"0387 NO IOCBQ data: txq_cnt=%d iocb_cnt=%d "
- 			"fcp_txcmplq_cnt=%d, els_txcmplq_cnt=%d\n",
--			pring->txq_cnt, phba->iocb_cnt,
--			phba->sli.ring[LPFC_FCP_RING].txcmplq_cnt,
--			phba->sli.ring[LPFC_ELS_RING].txcmplq_cnt);
-+			txq_cnt, phba->iocb_cnt,
-+			fcp_txcmplq_cnt,
-+			txcmplq_cnt);
- 		return false;
- 	}
- 
-@@ -16244,14 +16270,19 @@ lpfc_drain_txq(struct lpfc_hba *phba)
- 	char *fail_msg = NULL;
- 	struct lpfc_sglq *sglq;
- 	union lpfc_wqe wqe;
-+	int txq_cnt = 0;
- 
- 	spin_lock_irqsave(&phba->hbalock, iflags);
--	if (pring->txq_cnt > pring->txq_max)
--		pring->txq_max = pring->txq_cnt;
-+	list_for_each_entry(piocbq, &pring->txq, list) {
-+		txq_cnt++;
++	/* Only FC supports upd bit */
++	if ((phba->sli4_hba.lnk_info.lnk_tp == LPFC_LNK_TYPE_FC) &&
++	    (vport->fc_flag & FC_VFI_REGISTERED)) {
++		bf_set(lpfc_reg_vfi_vp, reg_vfi, 0);
++		bf_set(lpfc_reg_vfi_upd, reg_vfi, 1);
 +	}
-+
-+	if (txq_cnt > pring->txq_max)
-+		pring->txq_max = txq_cnt;
- 
- 	spin_unlock_irqrestore(&phba->hbalock, iflags);
- 
--	while (pring->txq_cnt) {
-+	while (!list_empty(&pring->txq)) {
- 		spin_lock_irqsave(&phba->hbalock, iflags);
- 
- 		piocbq = lpfc_sli_ringtx_get(phba, pring);
-@@ -16259,7 +16290,7 @@ lpfc_drain_txq(struct lpfc_hba *phba)
- 			spin_unlock_irqrestore(&phba->hbalock, iflags);
- 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 				"2823 txq empty and txq_cnt is %d\n ",
--				pring->txq_cnt);
-+				txq_cnt);
- 			break;
- 		}
- 		sglq = __lpfc_sli_get_sglq(phba, piocbq);
-@@ -16268,6 +16299,7 @@ lpfc_drain_txq(struct lpfc_hba *phba)
- 			spin_unlock_irqrestore(&phba->hbalock, iflags);
- 			break;
- 		}
-+		txq_cnt--;
- 
- 		/* The xri and iocb resources secured,
- 		 * attempt to issue request
-@@ -16299,5 +16331,5 @@ lpfc_drain_txq(struct lpfc_hba *phba)
- 	lpfc_sli_cancel_iocbs(phba, &completions, IOSTAT_LOCAL_REJECT,
- 				IOERR_SLI_ABORTED);
- 
--	return pring->txq_cnt;
-+	return txq_cnt;
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_MBOX,
+ 			"3134 Register VFI, mydid:x%x, fcfi:%d, "
+ 			" vfi:%d, vpi:%d, fc_pname:%x%x\n",
+ 			vport->fc_myDID,
+-			vport->phba->fcf.fcfi,
+-			vport->phba->sli4_hba.vfi_ids[vport->vfi],
+-			vport->phba->vpi_ids[vport->vpi],
++			phba->fcf.fcfi,
++			phba->sli4_hba.vfi_ids[vport->vfi],
++			phba->vpi_ids[vport->vpi],
+ 			reg_vfi->wwn[0], reg_vfi->wwn[1]);
  }
+ 
 
 
 
