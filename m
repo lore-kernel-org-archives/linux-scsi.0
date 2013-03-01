@@ -1,43 +1,94 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 9/11] lpfc 8.3.38: Fix default value for lpfc_enable_rrq.
-Date: Fri, 1 Mar 2013 16:38:01 -0500
-Message-ID: <1362173881.8283.26.camel@myfc17>
+Subject: [PATCH 10/11] lpfc 8.3.38: Fixed potential mis-interpretation of
+ READ_TOPOLOGY reserved fields
+Date: Fri, 1 Mar 2013 16:38:14 -0500
+Message-ID: <1362173894.8283.27.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:41708 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:41715 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688Ab3CAVj3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Mar 2013 16:39:29 -0500
+	with ESMTP id S1751688Ab3CAVjm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Mar 2013 16:39:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix default value for lpfc_enable_rrq.
+Fixed potential mis-interpretation of READ_TOPOLOGY reserved fields
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_attr.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ lpfc_hbadisc.c |   28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2013-02-27 08:17:26.095047546 -0500
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2013-02-27 08:17:34.450047736 -0500
-@@ -2302,7 +2302,7 @@ static DEVICE_ATTR(lpfc_enable_npiv, S_I
- LPFC_ATTR_R(fcf_failover_policy, 1, 1, 2,
- 	"FCF Fast failover=1 Priority failover=2");
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-02-27 08:17:28.588047603 -0500
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-02-27 08:17:38.528047829 -0500
+@@ -3249,8 +3249,7 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_
+ 		vport->fc_flag &= ~FC_BYPASSED_MODE;
+ 	spin_unlock_irq(shost->host_lock);
  
--int lpfc_enable_rrq;
-+int lpfc_enable_rrq = 2;
- module_param(lpfc_enable_rrq, int, S_IRUGO);
- MODULE_PARM_DESC(lpfc_enable_rrq, "Enable RRQ functionality");
- lpfc_param_show(enable_rrq);
+-	if ((phba->fc_eventTag  < la->eventTag) ||
+-	    (phba->fc_eventTag == la->eventTag)) {
++	if (phba->fc_eventTag <= la->eventTag) {
+ 		phba->fc_stat.LinkMultiEvent++;
+ 		if (bf_get(lpfc_mbx_read_top_att_type, la) == LPFC_ATT_LINK_UP)
+ 			if (phba->fc_eventTag != 0)
+@@ -3258,16 +3257,18 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_
+ 	}
+ 
+ 	phba->fc_eventTag = la->eventTag;
+-	spin_lock_irq(&phba->hbalock);
+-	if (bf_get(lpfc_mbx_read_top_mm, la))
+-		phba->sli.sli_flag |= LPFC_MENLO_MAINT;
+-	else
+-		phba->sli.sli_flag &= ~LPFC_MENLO_MAINT;
+-	spin_unlock_irq(&phba->hbalock);
++	if (phba->sli_rev < LPFC_SLI_REV4) {
++		spin_lock_irq(&phba->hbalock);
++		if (bf_get(lpfc_mbx_read_top_mm, la))
++			phba->sli.sli_flag |= LPFC_MENLO_MAINT;
++		else
++			phba->sli.sli_flag &= ~LPFC_MENLO_MAINT;
++		spin_unlock_irq(&phba->hbalock);
++	}
+ 
+ 	phba->link_events++;
+ 	if ((bf_get(lpfc_mbx_read_top_att_type, la) == LPFC_ATT_LINK_UP) &&
+-	    (!bf_get(lpfc_mbx_read_top_mm, la))) {
++	    !(phba->sli.sli_flag & LPFC_MENLO_MAINT)) {
+ 		phba->fc_stat.LinkUp++;
+ 		if (phba->link_flag & LS_LOOPBACK_MODE) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_LINK_EVENT,
+@@ -3312,8 +3313,8 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_
+ 				bf_get(lpfc_mbx_read_top_fa, la));
+ 		lpfc_mbx_issue_link_down(phba);
+ 	}
+-	if ((bf_get(lpfc_mbx_read_top_mm, la)) &&
+-	    (bf_get(lpfc_mbx_read_top_att_type, la) == LPFC_ATT_LINK_UP)) {
++	if ((phba->sli.sli_flag & LPFC_MENLO_MAINT) &&
++	    ((bf_get(lpfc_mbx_read_top_att_type, la) == LPFC_ATT_LINK_UP))) {
+ 		if (phba->link_state != LPFC_LINK_DOWN) {
+ 			phba->fc_stat.LinkDown++;
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_LINK_EVENT,
+@@ -3341,8 +3342,9 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_
+ 		}
+ 	}
+ 
+-	if (bf_get(lpfc_mbx_read_top_fa, la)) {
+-		if (bf_get(lpfc_mbx_read_top_mm, la))
++	if ((phba->sli_rev < LPFC_SLI_REV4) &&
++	    bf_get(lpfc_mbx_read_top_fa, la)) {
++		if (phba->sli.sli_flag & LPFC_MENLO_MAINT)
+ 			lpfc_issue_clear_la(phba, vport);
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_LINK_EVENT,
+ 				"1311 fa %d\n",
 
 
 
