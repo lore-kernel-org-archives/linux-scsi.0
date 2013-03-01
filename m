@@ -1,36 +1,42 @@
-From: "Wenzhou Ourvis" <info-noreply@ourvis.com>
-Subject: Re: Hello
-Date: Wed, 27 Feb 2013 05:35:23 -0500
-Message-ID: <20130227104122.51BCE4DAA108__38042.2788941816$1362106246$gmane$org@mail.swrs.ap.gov.in>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [PATCH v2 0/2] dm: Avoid use-after-free of a mapped device
+Date: Fri, 01 Mar 2013 17:18:54 +0900
+Message-ID: <5130646E.1010803@ce.jp.nec.com>
+References: <512E1C06.2000903@acm.org> <512EA7F3.6010607@ce.jp.nec.com> <512F54D0.5030405@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.swrs.ap.gov.in ([110.234.138.54]:46349 "EHLO
-	mail.swrs.ap.gov.in" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985Ab3CACt5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Feb 2013 21:49:57 -0500
-Content-Description: Mail message body
+Received: from TYO202.gate.nec.co.jp ([210.143.35.52]:53516 "EHLO
+	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055Ab3CAITe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Mar 2013 03:19:34 -0500
+In-Reply-To: <512F54D0.5030405@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: info-noreply@ourvis.com
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@redhat.com>, Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>
 
-Dear E-mail User,
+On 02/28/13 22:00, Bart Van Assche wrote:
+> How about reposting these patches as a performance optimization ?
 
+How and when do they improve performance?
 
-  This is to immediately inform you that your email address with Micros ID: IDJT-32238-EHI-676GI-8ED has won you 2,485,000.00 GBP and a brand new Range Rover SUV from the Wenzhou Ourvis yearly draw promo.
+> With these patches I see a slightly lower latency and slightly higher
+> throughput. With a dm-linear mapping on top of a RAM disk (brd), a
+> request size of 512 bytes and 100% reads fio reports 2063K IOPS without
+> these patches and 2083K IOPS with these two patches applied. That's an
+> improvement of about 1%. It's not much but that comes on top of the
 
-Use the details below to login and fill in the claim form to immediately begin your claims.
+dm-linear + brd is not appropriate for testing your patches.
+They are both bio-based drivers while your patches change request
+processing.  To test the patches, you have to use request-based drivers,
+e.g. dm-multipath on top of scsi.
 
+Also, IMO, the measurement should be done not only for IO performance
+but also how other processes are interrupted by IO processing.
+The use of blk_run_queue_async should have reduced the foot print of
+softirq handling.
 
-
-WEBSITE: www.wenzhourvis.cla.fr
-USERNAME: SI03JK78
-PASSWORD: XN043P
-
-
-Regards,
-Dr. Warren Payne,
-Wenzhou Ourvis Company.
-European Zonal Coordinator,
-United Kingdom.
+-- 
+Jun'ichi Nomura, NEC Corporation
