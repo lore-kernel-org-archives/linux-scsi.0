@@ -1,68 +1,72 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 4/11] lpfc 8.3.38: Fixed deadlock condition in FCF round
- robin handling
-Date: Fri, 1 Mar 2013 16:36:54 -0500
-Message-ID: <1362173814.8283.21.camel@myfc17>
+Subject: [PATCH 6/11] lpfc 8.3.38: Fixed OXID reuse issue.
+Date: Fri, 1 Mar 2013 16:37:14 -0500
+Message-ID: <1362173834.8283.22.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:41659 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:41671 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632Ab3CAViW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Mar 2013 16:38:22 -0500
+	with ESMTP id S1751632Ab3CAVil (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Mar 2013 16:38:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed deadlock condition in FCF round robin handling
+Fixed OXID reuse issue.
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_hbadisc.c |    2 ++
- lpfc_sli.c     |    9 ++++++++-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ lpfc_attr.c |    8 +++++++-
+ lpfc_sli.c  |    6 ++++--
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-02-27 08:17:19.696047400 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-02-27 08:17:23.290047483 -0500
-@@ -1793,6 +1793,8 @@ lpfc_sli4_fcf_rec_mbox_parse(struct lpfc
- 	virt_addr = mboxq->sge_array->addr[0];
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2013-02-27 08:17:19.665047400 -0500
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2013-02-27 08:17:26.095047546 -0500
+@@ -2306,7 +2306,13 @@ int lpfc_enable_rrq;
+ module_param(lpfc_enable_rrq, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_enable_rrq, "Enable RRQ functionality");
+ lpfc_param_show(enable_rrq);
+-lpfc_param_init(enable_rrq, 0, 0, 1);
++/*
++# lpfc_enable_rrq: Track XRI/OXID reuse after IO failures
++#	0x0 = disabled, XRI/OXID use not tracked.
++#	0x1 = XRI/OXID reuse is timed with ratov, RRQ sent.
++#	0x2 = XRI/OXID reuse is timed with ratov, No RRQ sent.
++*/
++lpfc_param_init(enable_rrq, 2, 0, 2);
+ static DEVICE_ATTR(lpfc_enable_rrq, S_IRUGO, lpfc_enable_rrq_show, NULL);
  
- 	shdr = (union lpfc_sli4_cfg_shdr *)virt_addr;
-+	lpfc_sli_pcimem_bcopy(shdr, shdr,
-+			      sizeof(union lpfc_sli4_cfg_shdr));
- 	shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
- 	shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
- 	if (shdr_status || shdr_add_status) {
+ /*
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2013-02-27 08:17:19.736047401 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-02-27 08:17:23.341047483 -0500
-@@ -15507,11 +15507,18 @@ lpfc_check_next_fcf_pri_level(struct lpf
- 			LPFC_SLI4_FCF_TBL_INDX_MAX);
- 	lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
- 			"3060 Last IDX %d\n", last_index);
--	if (list_empty(&phba->fcf.fcf_pri_list)) {
-+
-+	/* Verify the priority list has 2 or more entries */
-+	spin_lock_irq(&phba->hbalock);
-+	if (list_empty(&phba->fcf.fcf_pri_list) ||
-+	    list_is_singular(&phba->fcf.fcf_pri_list)) {
-+		spin_unlock_irq(&phba->hbalock);
- 		lpfc_printf_log(phba, KERN_ERR, LOG_FIP,
- 			"3061 Last IDX %d\n", last_index);
- 		return 0; /* Empty rr list */
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2013-02-27 08:17:23.341047483 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-02-27 08:17:26.100047546 -0500
+@@ -872,14 +872,16 @@ lpfc_set_rrq_active(struct lpfc_hba *phb
+ 				xritag, rxid, ndlp->nlp_DID, send_rrq);
+ 		return -EINVAL;
  	}
-+	spin_unlock_irq(&phba->hbalock);
-+
- 	next_fcf_pri = 0;
- 	/*
- 	 * Clear the rr_bmask and set all of the bits that are at this
+-	rrq->send_rrq = send_rrq;
++	if (phba->cfg_enable_rrq == 1)
++		rrq->send_rrq = send_rrq;
++	else
++		rrq->send_rrq = 0;
+ 	rrq->xritag = xritag;
+ 	rrq->rrq_stop_time = jiffies + HZ * (phba->fc_ratov + 1);
+ 	rrq->ndlp = ndlp;
+ 	rrq->nlp_DID = ndlp->nlp_DID;
+ 	rrq->vport = ndlp->vport;
+ 	rrq->rxid = rxid;
+-	rrq->send_rrq = send_rrq;
+ 	spin_lock_irqsave(&phba->hbalock, iflags);
+ 	empty = list_empty(&phba->active_rrq_list);
+ 	list_add_tail(&rrq->list, &phba->active_rrq_list);
 
 
 
