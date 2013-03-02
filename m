@@ -1,44 +1,83 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 11/11] lpfc 8.3.38: Update lpfc version for 8.3.38 driver
- release
-Date: Fri, 1 Mar 2013 16:38:29 -0500
-Message-ID: <1362173909.8283.28.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
+From: "Anand Kumar Santhanam" <AnandKumar.Santhanam@pmcs.com>
+Subject: RE: [PATCH 01/15] pm80xx: fix for memory region free
+Date: Sat, 2 Mar 2013 07:18:02 -0800
+Message-ID: <E5DEE6F468524847995699AD11E80885015853FB@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <511A34D1.4070207@pmc-sierra.com> <1361574329.2372.59.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:48035 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688Ab3CAVj7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Mar 2013 16:39:59 -0500
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:39076 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752156Ab3CBPrW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Mar 2013 10:47:22 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1361574329.2372.59.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, jack_wang@usish.com, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>, Vishwanath Maram <Vishwanath.Maram@pmcs.com>, Harry Yang <Harry.Yang@pmcs.com>
 
-Update lpfc version for 8.3.38 driver release
+Hi James,
 
+We are planning to resubmit the patchset for pm8001 from patch 2 onwards
 
-Signed-off-by: James Smart <james.smart@emulex.com>
+with  your comments addressed.
+In short we will address the following
 
- ---
+1. Use resolvable email addressed in patch.
+2. Change the permission for patchset to 644 instead of 755.
+3. We have merged patch 2, 3, 4 into a single patch to resolve
+compilation and 
+individual patch functionality issue.
+4. We will be attaching the individual patches in the email as well as
+submit 
+the patch inline within the email.
 
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Regards
+Anand
 
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Saturday, February 23, 2013 4:35 AM
+To: Anand Kumar Santhanam
+Cc: linux-scsi@vger.kernel.org; jack_wang@usish.com; Sangeetha
+Gnanasekaran; Vishwanath Maram; Harry Yang
+Subject: Re: [PATCH 01/15] pm80xx: fix for memory region free
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2013-02-22 14:06:17.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2013-02-27 08:17:48.810048063 -0500
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.37"
-+#define LPFC_DRIVER_VERSION "8.3.38"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
+On Tue, 2013-02-12 at 04:25 -0800, Anand wrote:
+> >From 56ee53f01663fa479c0624b81e36545ea5b1ab94 Mon Sep 17 00:00:00 
+> >2001
+> From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
+> Date: Mon, 4 Feb 2013 12:10:02 +0530
+> Subject: [PATCH 01/15] pm80xx: fix for memory region free
+> 
+> All memory regions are allocated based on variables total_len and 
+> alignment but free was based on element_size.
+> 
+> Signed-off-by: Sakthivel K 
+> <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
+> Signed-off-by: Anand Kumar S 
+> <DL.Team.PMC.SPC.Linux.open.source@pmcs.com>
 
+This address doesn't resolve either
+
+> Reporting-MTA: dns;bby1exg01.pmc_nt.nt.pmc-sierra.bc.ca
+> Received-From-MTA: dns;bby1mta02.pmc-sierra.bc.ca
+> Arrival-Date: Fri, 22 Feb 2013 10:19:53 -0800
+> 
+> Original-Recipient: rfc822;DL.Team.PMC.SPC.Linux.open.source@pmcs.com
+> Final-Recipient: rfc822;DL.Team.PMC.SPC.Linux.open.source@pmcs.com
+> Action: failed
+> Status: 5.7.1
+> X-Display-Name: DL Team PMC SPC Linux open source
+> 
+We need resolvable addresses for signoffs, please.
+
+Thanks,
+
+James
 
 
