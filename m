@@ -1,103 +1,105 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RESEND] [PATCH 05/13] pm80xx: MSI-X implementation for using
- 64 interrupts
-Date: Mon, 04 Mar 2013 11:16:20 +0100
-Message-ID: <51347474.6070100@suse.de>
-References: <51322D50.7080302@pmc-sierra.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35558 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756331Ab3CDKQZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Mar 2013 05:16:25 -0500
-In-Reply-To: <51322D50.7080302@pmc-sierra.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH -v3 15/23] scsi: rename random32() to prandom_u32()
+Date: Mon,  4 Mar 2013 21:58:23 +0900
+Message-ID: <1362401911-14074-16-git-send-email-akinobu.mita@gmail.com>
+References: <1362401911-14074-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1362401911-14074-1-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anand <anandkumar_santhanam@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org, Harry.Yang@pmcs.com, jack_wang@usish.com, Vishwanath.Maram@pmcs.com, Sangeetha.Gnanasekaran@pmcs.com
 
-On 03/02/2013 05:48 PM, Anand wrote:
->  From c5db2e0b6cf65fbef66fb2f4e345bf6856e242a4 Mon Sep 17 00:00:00 20=
-01
-> From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-> Date: Wed, 27 Feb 2013 20:32:56 +0530
-> Subject: [PATCH 05/13] pm80xx: MSI-X implementation for using 64 inte=
-rrupts
->
-> Implementation of 64 interrupt handlers and tasklets to support
-> upto 64 interrupt for the device.
->
-> Signed-off-by: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-> Signed-off-by: Anand Kumar S <AnandKumar.Santhanam@pmcs.com>
-> Ack-by: Jack Wang <jack_wang@usish.com>
-> ---
->   drivers/scsi/pm8001/pm8001_init.c | 1233 ++++++++++++++++++++++++++=
-++++++++++-
->   drivers/scsi/pm8001/pm8001_sas.h  |    3 +-
->   2 files changed, 1205 insertions(+), 31 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/=
-pm8001_init.c
-> index e8a983f..f0c5075 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -163,7 +163,13 @@ static void pm8001_free(struct pm8001_hba_info *=
-pm8001_ha)
->   }
->
->   #ifdef PM8001_USE_TASKLET
-> -static void pm8001_tasklet(unsigned long opaque)
-> +
-> +/**
-> + * tasklets for 64 msi-x interrupt handlers
-> + * @opaque: the passed general host adapter struct
-> + * Note: pm8001_tasklet0 is common for pm8001 & pm80xx
-> + */
-> +static void pm8001_tasklet0(unsigned long opaque)
->   {
->   	struct pm8001_hba_info *pm8001_ha;
->   	pm8001_ha =3D (struct pm8001_hba_info *)opaque;
-> @@ -171,16 +177,521 @@ static void pm8001_tasklet(unsigned long opaqu=
-e)
->   		BUG_ON(1);
->   	PM8001_CHIP_DISP->isr(pm8001_ha, 0);
->   }
-> +static void pm8001_tasklet1(unsigned long opaque)
-> +{
-> +	struct pm8001_hba_info *pm8001_ha;
-> +	pm8001_ha =3D (struct pm8001_hba_info *)opaque;
-> +	if (unlikely(!pm8001_ha))
-> +		BUG_ON(1);
-> +	PM8001_CHIP_DISP->isr(pm8001_ha, 1);
-> +}
-> +static void pm8001_tasklet2(unsigned long opaque)
-> +{
-> +	struct pm8001_hba_info *pm8001_ha;
-> +	pm8001_ha =3D (struct pm8001_hba_info *)opaque;
-> +	if (unlikely(!pm8001_ha))
-> +		BUG_ON(1);
-> +	PM8001_CHIP_DISP->isr(pm8001_ha, 2);
-> +}
-[ ... ]
+Use more preferable function name which implies using a pseudo-random
+number generator.
 
-This is stupid.
-Please merge all the individual tasklets etc.
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Robert Love <robert.w.love@intel.com>
+Cc: devel@open-fcoe.org
+Cc: James Smart <james.smart@emulex.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-driver@qlogic.com
+Cc: linux-scsi@vger.kernel.org
+---
 
-Having 64 identical functions makes the code unreadable and=20
-unmaintainable.
+No change from v2
 
-Cheers,
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ drivers/scsi/fcoe/fcoe_ctlr.c    | 4 ++--
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 6 +++---
+ drivers/scsi/qla2xxx/qla_attr.c  | 7 +++++--
+ 3 files changed, 10 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 08c3bc3..43bb558 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2161,7 +2161,7 @@ static void fcoe_ctlr_vn_restart(struct fcoe_ctlr *fip)
+ 
+ 	if (fip->probe_tries < FIP_VN_RLIM_COUNT) {
+ 		fip->probe_tries++;
+-		wait = random32() % FIP_VN_PROBE_WAIT;
++		wait = prandom_u32() % FIP_VN_PROBE_WAIT;
+ 	} else
+ 		wait = FIP_VN_RLIM_INT;
+ 	mod_timer(&fip->timer, jiffies + msecs_to_jiffies(wait));
+@@ -2794,7 +2794,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 					  fcoe_all_vn2vn, 0);
+ 			fip->port_ka_time = jiffies +
+ 				 msecs_to_jiffies(FIP_VN_BEACON_INT +
+-					(random32() % FIP_VN_BEACON_FUZZ));
++					(prandom_u32() % FIP_VN_BEACON_FUZZ));
+ 		}
+ 		if (time_before(fip->port_ka_time, next_time))
+ 			next_time = fip->port_ka_time;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index d7096ad..bfda184 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -1732,7 +1732,7 @@ lpfc_check_pending_fcoe_event(struct lpfc_hba *phba, uint8_t unreg_fcf)
+  * use through a sequence of @fcf_cnt eligible FCF records with equal
+  * probability. To perform integer manunipulation of random numbers with
+  * size unit32_t, the lower 16 bits of the 32-bit random number returned
+- * from random32() are taken as the random random number generated.
++ * from prandom_u32() are taken as the random random number generated.
+  *
+  * Returns true when outcome is for the newly read FCF record should be
+  * chosen; otherwise, return false when outcome is for keeping the previously
+@@ -1744,7 +1744,7 @@ lpfc_sli4_new_fcf_random_select(struct lpfc_hba *phba, uint32_t fcf_cnt)
+ 	uint32_t rand_num;
+ 
+ 	/* Get 16-bit uniform random number */
+-	rand_num = (0xFFFF & random32());
++	rand_num = 0xFFFF & prandom_u32();
+ 
+ 	/* Decision with probability 1/fcf_cnt */
+ 	if ((fcf_cnt * rand_num) < 0xFFFF)
+@@ -2380,7 +2380,7 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 		phba->fcf.eligible_fcf_cnt = 1;
+ 		/* Seeding the random number generator for random selection */
+ 		seed = (uint32_t)(0xFFFFFFFF & jiffies);
+-		srandom32(seed);
++		prandom_seed(seed);
+ 	}
+ 	spin_unlock_irq(&phba->hbalock);
+ 	goto read_next_fcf;
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 1d82eef..04bf7b8 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1940,8 +1940,11 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ 
+ 	/* No pending activities shall be there on the vha now */
+ 	if (ql2xextended_error_logging & ql_dbg_user)
+-		msleep(random32()%10);  /* Just to see if something falls on
+-					* the net we have placed below */
++		msleep(prandom_u32() % 10);
++		/*
++		 * Just to see if something falls on the net we have placed
++		 * below
++		 */
+ 
+ 	BUG_ON(atomic_read(&vha->vref_count));
+ 
+-- 
+1.8.1.2
