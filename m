@@ -1,96 +1,103 @@
 From: Joe Lawrence <Joe.Lawrence@stratus.com>
-Subject: [PATCH 2/2] mpt2sas, mpt3sas: set async scan finished on adapter
- removal
-Date: Mon, 4 Mar 2013 10:57:12 -0500 (EST)
-Message-ID: <alpine.DEB.2.02.1303041056030.1736@jlaw-desktop.mno.stratus.com>
-References: <alpine.DEB.2.02.1303041046230.1736@jlaw-desktop.mno.stratus.com>
+Subject: [PATCH] st: Take additional queue ref in st_probe
+Date: Mon, 4 Mar 2013 11:14:23 -0500 (EST)
+Message-ID: <alpine.DEB.2.02.1303041101450.1736@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323329-36944806-1362413663=:1736"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.stratus.com ([134.111.1.18]:53829 "EHLO
+Received: from mailhub5.stratus.com ([134.111.1.18]:54018 "EHLO
 	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758378Ab3CDQA4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Mar 2013 11:00:56 -0500
-In-Reply-To: <alpine.DEB.2.02.1303041046230.1736@jlaw-desktop.mno.stratus.com>
+	with ESMTP id S1754493Ab3CDQSf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Mar 2013 11:18:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: DL-MPTFusionLinux@lsi.com, support@lsi.com, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Ewan Milne <emilne@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, =?ISO-8859-15?Q?Kai_M=E4kisara?= <Kai.Makisara@kolumbus.fi>
 
-If a scsi host is removed during an asynchronous SCSI scan, the mpt2sas
-and mpt3sas .scan_finished callback function may take up to 5 minutes to
-timeout and notify the SCSI layer that the operation has failed.  Once the
-driver determines that an adapter is gone, stop waiting for the scan to
-complete.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+--8323329-36944806-1362413663=:1736
+Content-Type: TEXT/PLAIN; charset=ISO-8859-15
+Content-Transfer-Encoding: 8BIT
+
+These changes were applied to scsi.git, branch "misc".  This patch
+fixes a reference count bug in the SCSI tape driver which can be
+reproduced with the following:
+
+* Boot with slub_debug=FZPU, tape drive attached
+* echo 1 > /sys/devices/... tape device pci path .../remove
+* Wait for device removal
+* echo 1 > /sys/kernel/slab/blkdev_queue/validate
+* Slub debug complains about corrupted poison pattern
+
+In commit 523e1d39 (block: make gendisk hold a reference to its queue) 
+add_disk() and disk_release() were modified to get/put an additional
+reference on a disk queue to fix a reference counting discrepency
+between bdev release and SCSI device removal.  The ST driver never
+calls add_disk(), so this commit introduced an extra kref put when the
+ST driver frees its struct gendisk.
+
+Attempts were made to fix this bug at the block level [1] but later
+abandoned due to floppy driver issues [2].
+
+[1] https://lkml.org/lkml/2012/8/27/354
+[2] https://lkml.org/lkml/2012/9/22/113
+
+Regards,
+
+-- Joe
+
+>From f209bda3ee16a70e714b55c372ed4265bfa91784 Mon Sep 17 00:00:00 2001
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Date: Fri, 1 Mar 2013 17:32:30 -0500
+Subject: [PATCH] st: Take additional queue ref in st_probe
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The SCSI tape driver employs a struct gendisk, calling alloc_disk() to
+create an instance, but does not register it via add_disk().  When the
+gendisk is torn down, disk_release() is called and expects to return a
+disk queue reference that add_disk() normally would have taken out. (See
+commit 523e1d39.)  Fix the kref accounting by adding a blk_get_queue()
+to st_probe().
 
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+Tested-by: Ewan Milne <emilne@redhat.com>
+Cc: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 Cc: James E.J. Bottomley <JBottomley@parallels.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com
+Cc: Ewan Milne <emilne@redhat.com>
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 10 ++++++++--
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 +++++++++---
- 2 files changed, 17 insertions(+), 5 deletions(-)
+ drivers/scsi/st.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index c6bdc92..d1e24e7 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -7951,14 +7951,20 @@ _scsih_scan_start(struct Scsi_Host *shost)
-  * @time: elapsed time of the scan in jiffies
-  *
-  * This function will be called periodically until it returns 1 with the
-- * scsi_host and the elapsed time of the scan in jiffies. In our implemention,
-- * we wait for firmware discovery to complete, then return 1.
-+ * scsi_host and the elapsed time of the scan in jiffies. In our
-+ * implementation, we wait for firmware discovery to complete, then return 1.
-  */
- static int
- _scsih_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
- 	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 98156a9..eef8ddc 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4112,6 +4112,10 @@ static int st_probe(struct device *dev)
+ 	tpnt->disk = disk;
+ 	disk->private_data = &tpnt->driver;
+ 	disk->queue = SDp->request_queue;
++	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
++	 * take queue reference that release_disk() expects. */
++	if (!blk_get_queue(disk->queue))
++		goto out_put_queue;
+ 	tpnt->driver = &st_template;
  
-+	if (ioc->remove_host) {
-+		printk(MPT2SAS_INFO_FMT "port enable: FAILED host removed\n",
-+		    ioc->name);
-+		return 1;
-+	}
-+
- 	if (disable_discovery > 0) {
- 		ioc->is_driver_loading = 0;
- 		ioc->wait_for_discovery_to_complete = 0;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 6421a06..170f485 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -7665,15 +7665,21 @@ _scsih_scan_start(struct Scsi_Host *shost)
-  * @shost: SCSI host pointer
-  * @time: elapsed time of the scan in jiffies
-  *
-- * This function will be called periodicallyn until it returns 1 with the
-- * scsi_host and the elapsed time of the scan in jiffies. In our implemention,
-- * we wait for firmware discovery to complete, then return 1.
-+ * This function will be called periodically until it returns 1 with the
-+ * scsi_host and the elapsed time of the scan in jiffies. In our
-+ * implementation, we wait for firmware discovery to complete, then return 1.
-  */
- static int
- _scsih_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 
-+	if (ioc->remove_host) {
-+		pr_info(MPT3SAS_FMT "port enable: FAILED host removed\n",
-+			ioc->name);
-+		return 1;
-+	}
-+
- 	if (disable_discovery > 0) {
- 		ioc->is_driver_loading = 0;
- 		ioc->wait_for_discovery_to_complete = 0;
+ 	tpnt->device = SDp;
+@@ -4222,6 +4226,8 @@ out_put_index:
+ 	spin_lock(&st_index_lock);
+ 	idr_remove(&st_index_idr, dev_num);
+ 	spin_unlock(&st_index_lock);
++out_put_queue:
++	blk_put_queue(disk->queue);
+ out_put_disk:
+ 	put_disk(disk);
+ 	kfree(tpnt);
 -- 
 1.8.1.2
 
+--8323329-36944806-1362413663=:1736--
