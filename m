@@ -1,103 +1,339 @@
-From: Joe Lawrence <Joe.Lawrence@stratus.com>
-Subject: [PATCH] st: Take additional queue ref in st_probe
-Date: Mon, 4 Mar 2013 11:14:23 -0500 (EST)
-Message-ID: <alpine.DEB.2.02.1303041101450.1736@jlaw-desktop.mno.stratus.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH 1/2] mptfusion, mpt2sas, mpt3sas: Don't remove dead IOC
+ PCI device
+Date: Mon, 4 Mar 2013 23:32:42 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED75E690FE449@inbmail01.lsi.com>
+References: <alpine.DEB.2.02.1303041046230.1736@jlaw-desktop.mno.stratus.com>
+ <alpine.DEB.2.02.1303041052420.1736@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323329-36944806-1362413663=:1736"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub5.stratus.com ([134.111.1.18]:54018 "EHLO
-	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754493Ab3CDQSf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Mar 2013 11:18:35 -0500
+Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:21026 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758158Ab3CDSC4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Mar 2013 13:02:56 -0500
+In-Reply-To: <alpine.DEB.2.02.1303041052420.1736@jlaw-desktop.mno.stratus.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Ewan Milne <emilne@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, =?ISO-8859-15?Q?Kai_M=E4kisara?= <Kai.Makisara@kolumbus.fi>
+To: Joe Lawrence <Joe.Lawrence@stratus.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, Support <support@lsi.com>, "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Bjorn Helgaas <bhelgaas@google.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323329-36944806-1362413663=:1736
-Content-Type: TEXT/PLAIN; charset=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
 
-These changes were applied to scsi.git, branch "misc".  This patch
-fixes a reference count bug in the SCSI tape driver which can be
-reproduced with the following:
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Joe Lawrence
+> Sent: Monday, March 04, 2013 9:26 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: DL-MPT Fusion Linux; Support; Reddy, Sreekanth; Nandigama,
+> Nagalakshmi; James E.J. Bottomley; Bjorn Helgaas
+> Subject: [PATCH 1/2] mptfusion, mpt2sas, mpt3sas: Don't remove dead IOC
+> PCI device
+> 
+> Device removal/addition is a PCI core function, not an HBA function.
+> Calling pci_stop_and_remove_bus_device() from a SCSI LLD may introduce
+> device removal races with PCI hotplug.  Remove these calls from
+> mptfusion, mpt2sas, and mpt3sas, but leave remaining dead IOC code in
+> place that flushes outstanding commands and sets IOC state.
 
-* Boot with slub_debug=FZPU, tape drive attached
-* echo 1 > /sys/devices/... tape device pci path .../remove
-* Wait for device removal
-* echo 1 > /sys/kernel/slab/blkdev_queue/validate
-* Slub debug complains about corrupted poison pattern
+Joe: I agree that only mptsas/mpt2sas/mpt3sas is calling " pci_stop_and_remove_bus_device" from LLD. If through sysfs we can hot add/remove the device, It would be OK to allow similar simulation from LLD. (In case it is really require.) I agree that calling " pci_stop_and_remove_bus_device" is PCI subsystem's responsibility. 
+Please consider that finding bad IOC on field is very rare. 
 
-In commit 523e1d39 (block: make gendisk hold a reference to its queue) 
-add_disk() and disk_release() were modified to get/put an additional
-reference on a disk queue to fix a reference counting discrepency
-between bdev release and SCSI device removal.  The ST driver never
-calls add_disk(), so this commit introduced an extra kref put when the
-ST driver frees its struct gendisk.
 
-Attempts were made to fix this bug at the block level [1] but later
-abandoned due to floppy driver issues [2].
+In our case, user wants BAD IOC to be detected immediately (due to performance and mission critical IOs) and it should be removed from the topology ASAP to allow other good IOC and connected topology to work well.
 
-[1] https://lkml.org/lkml/2012/8/27/354
-[2] https://lkml.org/lkml/2012/9/22/113
+With the new proposed change you posted with this patch half of the problem still do not resolve.
 
-Regards,
+ Driver set ioc->remove_host = 1 when bad IOC is detected, but IOs to the connected topology will still continue to flood ( if we do not detach bad IOC from topology) and Scsi Mid layer be busy sending inactive IOs to the bad IOC, and IOs will be return to the OS with "DID_NO_CONNECT".
 
--- Joe
+So finally to release the topology from BAD IOC from OS is also equally important. This can be achieved either calling ".remove" entry point or what currently driver is doing "remove the IOC from PCI layer which will allow better cleanup.
 
->From f209bda3ee16a70e714b55c372ed4265bfa91784 Mon Sep 17 00:00:00 2001
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Date: Fri, 1 Mar 2013 17:32:30 -0500
-Subject: [PATCH] st: Take additional queue ref in st_probe
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In summary, I do not ACK this patch due to practical reason where customers are expecting above mentioned behavior on field.
 
-The SCSI tape driver employs a struct gendisk, calling alloc_disk() to
-create an instance, but does not register it via add_disk().  When the
-gendisk is torn down, disk_release() is called and expects to return a
-disk queue reference that add_disk() normally would have taken out. (See
-commit 523e1d39.)  Fix the kref accounting by adding a blk_get_queue()
-to st_probe().
+Thanks, Kashyap
 
-Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
-Tested-by: Ewan Milne <emilne@redhat.com>
-Cc: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
-Cc: James E.J. Bottomley <JBottomley@parallels.com>
-Cc: Ewan Milne <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/st.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+> 
+> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: James E.J. Bottomley <JBottomley@parallels.com>
+> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> Cc: support@lsi.com
+> Cc: DL-MPTFusionLinux@lsi.com
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/message/fusion/mptbase.c    | 41 +-----------------------------
+> ------
+>  drivers/scsi/mpt2sas/mpt2sas_base.c | 42 ++----------------------------
+> -------
+>  drivers/scsi/mpt3sas/mpt3sas_base.c | 40 ++----------------------------
+> -----
+>  3 files changed, 5 insertions(+), 118 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/mptbase.c
+> b/drivers/message/fusion/mptbase.c
+> index fb69baa..28a421d 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -63,7 +63,6 @@
+>  #ifdef CONFIG_MTRR
+>  #include <asm/mtrr.h>
+>  #endif
+> -#include <linux/kthread.h>
+>  #include <scsi/scsi_host.h>
+> 
+>  #include "mptbase.h"
+> @@ -328,31 +327,6 @@ mpt_is_discovery_complete(MPT_ADAPTER *ioc)
+> 
+> 
+>  /**
+> - *  mpt_remove_dead_ioc_func - kthread context to remove dead ioc
+> - * @arg: input argument, used to derive ioc
+> - *
+> - * Return 0 if controller is removed from pci subsystem.
+> - * Return -1 for other case.
+> - */
+> -static int mpt_remove_dead_ioc_func(void *arg) -{
+> -	MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
+> -	struct pci_dev *pdev;
+> -
+> -	if ((ioc == NULL))
+> -		return -1;
+> -
+> -	pdev = ioc->pcidev;
+> -	if ((pdev == NULL))
+> -		return -1;
+> -
+> -	pci_stop_and_remove_bus_device(pdev);
+> -	return 0;
+> -}
+> -
+> -
+> -
+> -/**
+>   *	mpt_fault_reset_work - work performed on workq after ioc fault
+>   *	@work: input argument, used to derive ioc
+>   *
+> @@ -366,7 +340,6 @@ mpt_fault_reset_work(struct work_struct *work)
+>  	int		 rc;
+>  	unsigned long	 flags;
+>  	MPT_SCSI_HOST	*hd;
+> -	struct task_struct *p;
+> 
+>  	if (ioc->ioc_reset_in_progress || !ioc->active)
+>  		goto out;
+> @@ -380,25 +353,13 @@ mpt_fault_reset_work(struct work_struct *work)
+>  		/*
+>  		 * Call mptscsih_flush_pending_cmds callback so that we
+>  		 * flush all pending commands back to OS.
+> -		 * This call is required to aovid deadlock at block layer.
+> +		 * This call is required to avoid deadlock at block layer.
+>  		 * Dead IOC will fail to do diag reset,and this call is safe
+>  		 * since dead ioc will never return any command back from
+> HW.
+>  		 */
+>  		hd = shost_priv(ioc->sh);
+>  		ioc->schedule_dead_ioc_flush_running_cmds(hd);
+> 
+> -		/*Remove the Dead Host */
+> -		p = kthread_run(mpt_remove_dead_ioc_func, ioc,
+> -				"mpt_dead_ioc_%d", ioc->id);
+> -		if (IS_ERR(p))	{
+> -			printk(MYIOC_s_ERR_FMT
+> -				"%s: Running mpt_dead_ioc thread failed !\n",
+> -				ioc->name, __func__);
+> -		} else {
+> -			printk(MYIOC_s_WARN_FMT
+> -				"%s: Running mpt_dead_ioc thread success !\n",
+> -				ioc->name, __func__);
+> -		}
+>  		return; /* don't rearm timer */
+>  	}
+> 
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> index ffd85c5..a97d10c 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -57,7 +57,6 @@
+>  #include <linux/sort.h>
+>  #include <linux/io.h>
+>  #include <linux/time.h>
+> -#include <linux/kthread.h>
+>  #include <linux/aer.h>
+> 
+>  #include "mpt2sas_base.h"
+> @@ -115,29 +114,6 @@ module_param_call(mpt2sas_fwfault_debug,
+> _scsih_set_fwfault_debug,
+>      param_get_int, &mpt2sas_fwfault_debug, 0644);
+> 
+>  /**
+> - *  mpt2sas_remove_dead_ioc_func - kthread context to remove dead ioc
+> - * @arg: input argument, used to derive ioc
+> - *
+> - * Return 0 if controller is removed from pci subsystem.
+> - * Return -1 for other case.
+> - */
+> -static int mpt2sas_remove_dead_ioc_func(void *arg) -{
+> -		struct MPT2SAS_ADAPTER *ioc = (struct MPT2SAS_ADAPTER *)arg;
+> -		struct pci_dev *pdev;
+> -
+> -		if ((ioc == NULL))
+> -			return -1;
+> -
+> -		pdev = ioc->pdev;
+> -		if ((pdev == NULL))
+> -			return -1;
+> -		pci_stop_and_remove_bus_device(pdev);
+> -		return 0;
+> -}
+> -
+> -
+> -/**
+>   * _base_fault_reset_work - workq handling ioc fault conditions
+>   * @work: input argument, used to derive ioc
+>   * Context: sleep.
+> @@ -152,7 +128,6 @@ _base_fault_reset_work(struct work_struct *work)
+>  	unsigned long	 flags;
+>  	u32 doorbell;
+>  	int rc;
+> -	struct task_struct *p;
+> 
+>  	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+>  	if (ioc->shost_recovery)
+> @@ -166,29 +141,16 @@ _base_fault_reset_work(struct work_struct *work)
+> 
+>  		/*
+>  		 * Call _scsih_flush_pending_cmds callback so that we flush
+> all
+> -		 * pending commands back to OS. This call is required to
+> aovid
+> +		 * pending commands back to OS. This call is required to
+> avoid
+>  		 * deadlock at block layer. Dead IOC will fail to do diag
+> reset,
+>  		 * and this call is safe since dead ioc will never return
+> any
+>  		 * command back from HW.
+>  		 */
+>  		ioc->schedule_dead_ioc_flush_running_cmds(ioc);
+>  		/*
+> -		 * Set remove_host flag early since kernel thread will
+> -		 * take some time to execute.
+> +		 * Indicate to scsi callbacks that the host has been
+> removed.
+>  		 */
+>  		ioc->remove_host = 1;
+> -		/*Remove the Dead Host */
+> -		p = kthread_run(mpt2sas_remove_dead_ioc_func, ioc,
+> -		    "mpt2sas_dead_ioc_%d", ioc->id);
+> -		if (IS_ERR(p)) {
+> -			printk(MPT2SAS_ERR_FMT
+> -			"%s: Running mpt2sas_dead_ioc thread failed !!!!\n",
+> -			ioc->name, __func__);
+> -		} else {
+> -		    printk(MPT2SAS_ERR_FMT
+> -			"%s: Running mpt2sas_dead_ioc thread success !!!!\n",
+> -			ioc->name, __func__);
+> -		}
+> 
+>  		return; /* don't rearm timer */
+>  	}
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 04f8010..24fd122 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -57,7 +57,6 @@
+>  #include <linux/dma-mapping.h>
+>  #include <linux/io.h>
+>  #include <linux/time.h>
+> -#include <linux/kthread.h>
+>  #include <linux/aer.h>
+> 
+> 
+> @@ -111,28 +110,6 @@ module_param_call(mpt3sas_fwfault_debug,
+> _scsih_set_fwfault_debug,
+>  	param_get_int, &mpt3sas_fwfault_debug, 0644);
+> 
+>  /**
+> - *  mpt3sas_remove_dead_ioc_func - kthread context to remove dead ioc
+> - * @arg: input argument, used to derive ioc
+> - *
+> - * Return 0 if controller is removed from pci subsystem.
+> - * Return -1 for other case.
+> - */
+> -static int mpt3sas_remove_dead_ioc_func(void *arg) -{
+> -	struct MPT3SAS_ADAPTER *ioc = (struct MPT3SAS_ADAPTER *)arg;
+> -	struct pci_dev *pdev;
+> -
+> -	if ((ioc == NULL))
+> -		return -1;
+> -
+> -	pdev = ioc->pdev;
+> -	if ((pdev == NULL))
+> -		return -1;
+> -	pci_stop_and_remove_bus_device(pdev);
+> -	return 0;
+> -}
+> -
+> -/**
+>   * _base_fault_reset_work - workq handling ioc fault conditions
+>   * @work: input argument, used to derive ioc
+>   * Context: sleep.
+> @@ -147,7 +124,6 @@ _base_fault_reset_work(struct work_struct *work)
+>  	unsigned long	 flags;
+>  	u32 doorbell;
+>  	int rc;
+> -	struct task_struct *p;
+> 
+> 
+>  	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags); @@ -
+> 162,28 +138,16 @@ _base_fault_reset_work(struct work_struct *work)
+> 
+>  		/*
+>  		 * Call _scsih_flush_pending_cmds callback so that we flush
+> all
+> -		 * pending commands back to OS. This call is required to
+> aovid
+> +		 * pending commands back to OS. This call is required to
+> avoid
+>  		 * deadlock at block layer. Dead IOC will fail to do diag
+> reset,
+>  		 * and this call is safe since dead ioc will never return
+> any
+>  		 * command back from HW.
+>  		 */
+>  		ioc->schedule_dead_ioc_flush_running_cmds(ioc);
+>  		/*
+> -		 * Set remove_host flag early since kernel thread will
+> -		 * take some time to execute.
+> +		 * Indicate to scsi callbacks that the host has been
+> removed.
+>  		 */
+>  		ioc->remove_host = 1;
+> -		/*Remove the Dead Host */
+> -		p = kthread_run(mpt3sas_remove_dead_ioc_func, ioc,
+> -		    "mpt3sas_dead_ioc_%d", ioc->id);
+> -		if (IS_ERR(p))
+> -			pr_err(MPT3SAS_FMT
+> -			"%s: Running mpt3sas_dead_ioc thread failed !!!!\n",
+> -			ioc->name, __func__);
+> -		else
+> -			pr_err(MPT3SAS_FMT
+> -			"%s: Running mpt3sas_dead_ioc thread success !!!!\n",
+> -			ioc->name, __func__);
+>  		return; /* don't rearm timer */
+>  	}
+> 
+> --
+> 1.8.1.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info
+> at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 98156a9..eef8ddc 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4112,6 +4112,10 @@ static int st_probe(struct device *dev)
- 	tpnt->disk = disk;
- 	disk->private_data = &tpnt->driver;
- 	disk->queue = SDp->request_queue;
-+	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
-+	 * take queue reference that release_disk() expects. */
-+	if (!blk_get_queue(disk->queue))
-+		goto out_put_queue;
- 	tpnt->driver = &st_template;
- 
- 	tpnt->device = SDp;
-@@ -4222,6 +4226,8 @@ out_put_index:
- 	spin_lock(&st_index_lock);
- 	idr_remove(&st_index_idr, dev_num);
- 	spin_unlock(&st_index_lock);
-+out_put_queue:
-+	blk_put_queue(disk->queue);
- out_put_disk:
- 	put_disk(disk);
- 	kfree(tpnt);
--- 
-1.8.1.2
-
---8323329-36944806-1362413663=:1736--
