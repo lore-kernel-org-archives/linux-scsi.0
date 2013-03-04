@@ -1,105 +1,46 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH -v3 15/23] scsi: rename random32() to prandom_u32()
-Date: Mon,  4 Mar 2013 21:58:23 +0900
-Message-ID: <1362401911-14074-16-git-send-email-akinobu.mita@gmail.com>
-References: <1362401911-14074-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1362401911-14074-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Robert Love <robert.w.love@intel.com>, devel@open-fcoe.org, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+Subject: [PATCH 0/2] LSI SAS device removal fixes
+Date: Mon, 4 Mar 2013 10:52:18 -0500 (EST)
+Message-ID: <alpine.DEB.2.02.1303041046230.1736@jlaw-desktop.mno.stratus.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailhub.stratus.com ([134.111.1.17]:38699 "EHLO
+	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758499Ab3CDP4u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Mar 2013 10:56:50 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: DL-MPTFusionLinux@lsi.com, support@lsi.com, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Bjorn Helgaas <bhelgaas@google.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-Use more preferable function name which implies using a pseudo-random
-number generator.
+Hi folks,
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Robert Love <robert.w.love@intel.com>
-Cc: devel@open-fcoe.org
-Cc: James Smart <james.smart@emulex.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-driver@qlogic.com
-Cc: linux-scsi@vger.kernel.org
----
+I have two LSI fusion / mpt2sas / mpt3sas device removal patches. These
+changes were tested against 3.8.0, but still apply cleanly to scsi.git,
+branch "misc".
 
-No change from v2
+The first deletes pci_stop_and_remove_bus_device() calls from the three
+drivers. I don't believe that this call is safe with respect to PCI
+hotplug.  Interestingly these are the only SCSI LLD that attempt to do
+this.
 
- drivers/scsi/fcoe/fcoe_ctlr.c    | 4 ++--
- drivers/scsi/lpfc/lpfc_hbadisc.c | 6 +++---
- drivers/scsi/qla2xxx/qla_attr.c  | 7 +++++--
- 3 files changed, 10 insertions(+), 7 deletions(-)
+The second is an optimization in mpt2sas / mpt3sas for when an HBA is
+removed during an async scan.  If the driver has determined that the HBA
+is dead (once set, never cleared), it should not wait the entire async
+scan timeout period of five minutes.
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 08c3bc3..43bb558 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -2161,7 +2161,7 @@ static void fcoe_ctlr_vn_restart(struct fcoe_ctlr *fip)
- 
- 	if (fip->probe_tries < FIP_VN_RLIM_COUNT) {
- 		fip->probe_tries++;
--		wait = random32() % FIP_VN_PROBE_WAIT;
-+		wait = prandom_u32() % FIP_VN_PROBE_WAIT;
- 	} else
- 		wait = FIP_VN_RLIM_INT;
- 	mod_timer(&fip->timer, jiffies + msecs_to_jiffies(wait));
-@@ -2794,7 +2794,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
- 					  fcoe_all_vn2vn, 0);
- 			fip->port_ka_time = jiffies +
- 				 msecs_to_jiffies(FIP_VN_BEACON_INT +
--					(random32() % FIP_VN_BEACON_FUZZ));
-+					(prandom_u32() % FIP_VN_BEACON_FUZZ));
- 		}
- 		if (time_before(fip->port_ka_time, next_time))
- 			next_time = fip->port_ka_time;
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index d7096ad..bfda184 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1732,7 +1732,7 @@ lpfc_check_pending_fcoe_event(struct lpfc_hba *phba, uint8_t unreg_fcf)
-  * use through a sequence of @fcf_cnt eligible FCF records with equal
-  * probability. To perform integer manunipulation of random numbers with
-  * size unit32_t, the lower 16 bits of the 32-bit random number returned
-- * from random32() are taken as the random random number generated.
-+ * from prandom_u32() are taken as the random random number generated.
-  *
-  * Returns true when outcome is for the newly read FCF record should be
-  * chosen; otherwise, return false when outcome is for keeping the previously
-@@ -1744,7 +1744,7 @@ lpfc_sli4_new_fcf_random_select(struct lpfc_hba *phba, uint32_t fcf_cnt)
- 	uint32_t rand_num;
- 
- 	/* Get 16-bit uniform random number */
--	rand_num = (0xFFFF & random32());
-+	rand_num = 0xFFFF & prandom_u32();
- 
- 	/* Decision with probability 1/fcf_cnt */
- 	if ((fcf_cnt * rand_num) < 0xFFFF)
-@@ -2380,7 +2380,7 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 		phba->fcf.eligible_fcf_cnt = 1;
- 		/* Seeding the random number generator for random selection */
- 		seed = (uint32_t)(0xFFFFFFFF & jiffies);
--		srandom32(seed);
-+		prandom_seed(seed);
- 	}
- 	spin_unlock_irq(&phba->hbalock);
- 	goto read_next_fcf;
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 1d82eef..04bf7b8 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1940,8 +1940,11 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
- 
- 	/* No pending activities shall be there on the vha now */
- 	if (ql2xextended_error_logging & ql_dbg_user)
--		msleep(random32()%10);  /* Just to see if something falls on
--					* the net we have placed below */
-+		msleep(prandom_u32() % 10);
-+		/*
-+		 * Just to see if something falls on the net we have placed
-+		 * below
-+		 */
- 
- 	BUG_ON(atomic_read(&vha->vref_count));
- 
+Joe Lawrence (2):
+  mptfusion, mpt2sas, mpt3sas: Don't remove dead IOC PCI device
+  mpt2sas, mpt3sas: set async scan finished on adapter removal
+
+ drivers/message/fusion/mptbase.c     | 41 +----------------------------------
+ drivers/scsi/mpt2sas/mpt2sas_base.c  | 42 ++----------------------------------
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c | 10 +++++++--
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 40 ++--------------------------------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 ++++++++---
+ 5 files changed, 22 insertions(+), 123 deletions(-)
+
 -- 
 1.8.1.2
+
