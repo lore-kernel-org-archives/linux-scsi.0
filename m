@@ -1,81 +1,79 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 2/2] [SCSI] a3000: use module_platform_driver_probe()
-Date: Tue, 5 Mar 2013 21:43:31 +0100
-Message-ID: <CAMuHMdUx1jHiOQRSoEDtbhPrLzrp3x7u-BCgL3bdhn5MDydhYQ@mail.gmail.com>
-References: <005601ce1953$5b83b020$128b1060$%han@samsung.com>
-	<005701ce1953$77188a40$65499ec0$%han@samsung.com>
-	<1362474522.22821.8.camel@dabdike.int.hansenpartnership.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: qla2xxx: issues when creating a new target port
+Date: Tue, 05 Mar 2013 13:52:55 -0800
+Message-ID: <1362520375.7905.166.camel@haakon2.linux-iscsi.org>
+References: <B1C4F02B-5252-49BC-9FF9-7FB0A74872D8@bootc.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:52740 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755190Ab3CEUnc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Mar 2013 15:43:32 -0500
-Received: by mail-ie0-f180.google.com with SMTP id bn7so8250863ieb.25
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Mar 2013 12:43:31 -0800 (PST)
-In-Reply-To: <1362474522.22821.8.camel@dabdike.int.hansenpartnership.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58066 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751921Ab3CEVw5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Mar 2013 16:52:57 -0500
+In-Reply-To: <B1C4F02B-5252-49BC-9FF9-7FB0A74872D8@bootc.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jingoo Han <jg1.han@samsung.com>, linux-scsi@vger.kernel.org
+To: Chris Boot <bootc@bootc.net>
+Cc: andrew.vasquez@qlogic.com, linux-driver@qlogic.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
 
-On Tue, Mar 5, 2013 at 10:08 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Tue, 2013-03-05 at 12:42 +0900, Jingoo Han wrote:
->> This patch uses module_platform_driver_probe() macro which makes
->> the code smaller and simpler.
->
-> These drivers are in deep maintenance mode.  Unless you can find someone
-> to actually test the changes, we err on the side of not touching the
-> code except for serious bugs.
->
-> I've cc'd Geert because he may actually have one of these things.
+Hi Chris,
 
-I don't have one, but there are A3000s in active use as Debian build daemons.
+On Sun, 2013-03-03 at 13:49 +0000, Chris Boot wrote:
+> Hi all,
+> 
+> When creating a new target port in targetcli (/qla2xxx create
+> 21:0x:...), and I have nothing plugged-in to the port, the creation
+> process takes quite some time. After a few seconds, the kernel prints
+> a message saying "Cable is unplugged...". So far so good.
+> 
 
->> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+AFAIK the delay is expected here when no physical link is detected.
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> It seems that when the target is created, it comes up in the 'enabled'
+> state, regardless of me having set 'auto_enable_tpgt=false'. Running
+> 'disable' from targetcli seems to try to bring the link up again
+> ("Performing ISP error recovery" then "Cable is unplugged...") and the
+> target remains in the enabled state.
+> 
 
->> ---
->>  drivers/scsi/a3000.c |   13 +------------
->>  1 files changed, 1 insertions(+), 12 deletions(-)
->>
->> diff --git a/drivers/scsi/a3000.c b/drivers/scsi/a3000.c
->> index e29fe0e..519832d 100644
->> --- a/drivers/scsi/a3000.c
->> +++ b/drivers/scsi/a3000.c
->> @@ -279,18 +279,7 @@ static struct platform_driver
->> amiga_a3000_scsi_driver = {
->>         },
->>  };
->>
->> -static int __init amiga_a3000_scsi_init(void)
->> -{
->> -       return platform_driver_probe(&amiga_a3000_scsi_driver,
->> -                                    amiga_a3000_scsi_probe);
->> -}
->> -module_init(amiga_a3000_scsi_init);
->> -
->> -static void __exit amiga_a3000_scsi_exit(void)
->> -{
->> -       platform_driver_unregister(&amiga_a3000_scsi_driver);
->> -}
->> -module_exit(amiga_a3000_scsi_exit);
->> +module_platform_driver_probe(amiga_a3000_scsi_driver,
->> amiga_a3000_scsi_probe);
->>
->>  MODULE_DESCRIPTION("Amiga 3000 built-in SCSI");
->>  MODULE_LICENSE("GPL");
+Running 'disable' from targetcli will perform:
 
-Gr{oetje,eeting}s,
+  echo 0 > /sys/kernel/config/target/qla2xxx/$FC_WWPN/$TPGT/enable
 
-                        Geert
+that will effectively disable target mode on the $FC_WWPN port in
+question, regardless of what else (LUNs, ACLs) are configured.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Target mode is only re-enabled at the HW level for the port with:
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+  echo 1 > /sys/kernel/config/target/qla2xxx/$FC_WWPN/$TPGT/enable
+
+
+> If I then add LUNs and ACLs to the target, everything appears OK, but
+> plugging the target port into an initiator gives odd behaviour. The
+> initiator spends a very long time scanning the target and eventually
+> times out and finds no LUNs. The only way to get the port working
+> again is to save the configuration and reboot the target server, which
+> is very frustrating.
+> 
+
+Can you double check the value of ../qla2xxx/$FC_WWPN/$TPGT/enable when
+this happens..?  From the description above it sounds like your
+explicitly disabling target mode on the port.
+
+> I'm using targetcli as found in Debian wheezy with kernel 3.8.0,
+> though I have had this problem for a little while now...
+> 
+
+For reference, can you provide the HBAs that your reproducing with..?
+
+Also, a target side log with
+
+   modprobe qla2xxx ql2xextended_error_logging=0x7fffffff
+
+would be helpful as well.
+
+Thanks,
+
+--nab
+
