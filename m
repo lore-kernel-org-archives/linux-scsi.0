@@ -1,91 +1,353 @@
-From: Chris Boot <bootc@bootc.net>
-Subject: Re: qla2xxx: issues when creating a new target port
-Date: Tue, 05 Mar 2013 22:15:01 +0000
-Message-ID: <51366E65.9070209@bootc.net>
-References: <B1C4F02B-5252-49BC-9FF9-7FB0A74872D8@bootc.net> <1362520375.7905.166.camel@haakon2.linux-iscsi.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/2] mptfusion, mpt2sas, mpt3sas: Don't remove dead IOC
+ PCI device
+Date: Tue, 5 Mar 2013 16:13:16 -0700
+Message-ID: <CAErSpo5BFPE3CxycQpER9A4c-gpdRuMKDbnuvr7BXL-hSdi2aQ@mail.gmail.com>
+References: <alpine.DEB.2.02.1303041046230.1736@jlaw-desktop.mno.stratus.com>
+ <alpine.DEB.2.02.1303041052420.1736@jlaw-desktop.mno.stratus.com> <B2FD678A64EAAD45B089B123FDFC3ED75E690FE449@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1362520375.7905.166.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: andrew.vasquez@qlogic.com, linux-driver@qlogic.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:56764 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752869Ab3CEXNh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Mar 2013 18:13:37 -0500
+Received: by mail-oa0-f54.google.com with SMTP id n12so11682299oag.27
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Mar 2013 15:13:37 -0800 (PST)
+In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED75E690FE449@inbmail01.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: Joe Lawrence <Joe.Lawrence@stratus.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, Support <support@lsi.com>, "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-pci@vger.kernel.org
 
-On 05/03/2013 21:52, Nicholas A. Bellinger wrote:
-> Hi Chris,
+[+cc linux-pci]
+
+On Mon, Mar 4, 2013 at 11:02 AM, Desai, Kashyap <Kashyap.Desai@lsi.com> wrote:
 >
-> On Sun, 2013-03-03 at 13:49 +0000, Chris Boot wrote:
->> Hi all,
+>
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Joe Lawrence
+>> Sent: Monday, March 04, 2013 9:26 PM
+>> To: linux-scsi@vger.kernel.org
+>> Cc: DL-MPT Fusion Linux; Support; Reddy, Sreekanth; Nandigama,
+>> Nagalakshmi; James E.J. Bottomley; Bjorn Helgaas
+>> Subject: [PATCH 1/2] mptfusion, mpt2sas, mpt3sas: Don't remove dead IOC
+>> PCI device
 >>
->> When creating a new target port in targetcli (/qla2xxx create
->> 21:0x:...), and I have nothing plugged-in to the port, the creation
->> process takes quite some time. After a few seconds, the kernel prints
->> a message saying "Cable is unplugged...". So far so good.
+>> Device removal/addition is a PCI core function, not an HBA function.
+>> Calling pci_stop_and_remove_bus_device() from a SCSI LLD may introduce
+>> device removal races with PCI hotplug.  Remove these calls from
+>> mptfusion, mpt2sas, and mpt3sas, but leave remaining dead IOC code in
+>> place that flushes outstanding commands and sets IOC state.
+>
+> Joe: I agree that only mptsas/mpt2sas/mpt3sas is calling " pci_stop_and_remove_bus_device" from LLD. If through sysfs we can hot add/remove the device, It would be OK to allow similar simulation from LLD. (In case it is really require.) I agree that calling " pci_stop_and_remove_bus_device" is PCI subsystem's responsibility.
+> Please consider that finding bad IOC on field is very rare.
+>
+> In our case, user wants BAD IOC to be detected immediately (due to performance and mission critical IOs) and it should be removed from the topology ASAP to allow other good IOC and connected topology to work well.
+
+It doesn't matter how rare bad IOCs are.  But I certainly agree that
+when we do find a bad IOC, we want to detect it and stop using it as
+soon as possible.
+
+> With the new proposed change you posted with this patch half of the problem still do not resolve.
+>
+>  Driver set ioc->remove_host = 1 when bad IOC is detected, but IOs to the connected topology will still continue to flood ( if we do not detach bad IOC from topology) and Scsi Mid layer be busy sending inactive IOs to the bad IOC, and IOs will be return to the OS with "DID_NO_CONNECT".
+>
+> So finally to release the topology from BAD IOC from OS is also equally important. This can be achieved either calling ".remove" entry point or what currently driver is doing "remove the IOC from PCI layer which will allow better cleanup.
+
+Joe's patch remove the call to pci_stop_and_remove_bus_device(), so
+the IOC will remain attached to the driver.  What if he *did* call the
+driver's . remove() method instead of calling
+pci_stop_and_remove_bus_device()?  Would that resolve your concern?
+If not, why not?
+
+I would really like to get rid of pci_stop_and_remove_bus_device() in
+drivers.  I don't think there's anything special about
+mptsas/mpt2sas/mpt3sas that makes it useful for these drivers but not
+others.
+
+Bjorn
+
+>> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: James E.J. Bottomley <JBottomley@parallels.com>
+>> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+>> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+>> Cc: support@lsi.com
+>> Cc: DL-MPTFusionLinux@lsi.com
+>> Cc: linux-scsi@vger.kernel.org
+>> ---
+>>  drivers/message/fusion/mptbase.c    | 41 +-----------------------------
+>> ------
+>>  drivers/scsi/mpt2sas/mpt2sas_base.c | 42 ++----------------------------
+>> -------
+>>  drivers/scsi/mpt3sas/mpt3sas_base.c | 40 ++----------------------------
+>> -----
+>>  3 files changed, 5 insertions(+), 118 deletions(-)
 >>
-> AFAIK the delay is expected here when no physical link is detected.
-
-Yes, I expected the delay at this point.
-
->> It seems that when the target is created, it comes up in the 'enabled'
->> state, regardless of me having set 'auto_enable_tpgt=false'. Running
->> 'disable' from targetcli seems to try to bring the link up again
->> ("Performing ISP error recovery" then "Cable is unplugged...") and the
->> target remains in the enabled state.
+>> diff --git a/drivers/message/fusion/mptbase.c
+>> b/drivers/message/fusion/mptbase.c
+>> index fb69baa..28a421d 100644
+>> --- a/drivers/message/fusion/mptbase.c
+>> +++ b/drivers/message/fusion/mptbase.c
+>> @@ -63,7 +63,6 @@
+>>  #ifdef CONFIG_MTRR
+>>  #include <asm/mtrr.h>
+>>  #endif
+>> -#include <linux/kthread.h>
+>>  #include <scsi/scsi_host.h>
 >>
-> Running 'disable' from targetcli will perform:
->
->   echo 0 > /sys/kernel/config/target/qla2xxx/$FC_WWPN/$TPGT/enable
->
-> that will effectively disable target mode on the $FC_WWPN port in
-> question, regardless of what else (LUNs, ACLs) are configured.
->
-> Target mode is only re-enabled at the HW level for the port with:
->
->   echo 1 > /sys/kernel/config/target/qla2xxx/$FC_WWPN/$TPGT/enable
-
-I can't easily perform this test again now, maybe I can do it later this
-weekend. From memory, though, running 'disable' in targetcli _or_
-running 'echo 0 >
-/sys/kernel/config/target/qla2xxx/$FC_WWPN/$TPGT/enable' both indeed
-have the same effect.
-
->> If I then add LUNs and ACLs to the target, everything appears OK, but
->> plugging the target port into an initiator gives odd behaviour. The
->> initiator spends a very long time scanning the target and eventually
->> times out and finds no LUNs. The only way to get the port working
->> again is to save the configuration and reboot the target server, which
->> is very frustrating.
+>>  #include "mptbase.h"
+>> @@ -328,31 +327,6 @@ mpt_is_discovery_complete(MPT_ADAPTER *ioc)
 >>
-> Can you double check the value of ../qla2xxx/$FC_WWPN/$TPGT/enable when
-> this happens..?  From the description above it sounds like your
-> explicitly disabling target mode on the port.
-
-Again, from memory, after doing a 'disable' or 'echo 0 > .../enable'
-results in the 'enable' file still returning value 1. I also seem to
-remember, when trying to unload the qla2xxx module, getting odd
-behaviour and OOPSes - though I would want to double check this. I had
-the same behaviour with two qla2xxx HBAs (one 2460 and one 2464).
-
->> I'm using targetcli as found in Debian wheezy with kernel 3.8.0,
->> though I have had this problem for a little while now...
 >>
-> For reference, can you provide the HBAs that your reproducing with..?
+>>  /**
+>> - *  mpt_remove_dead_ioc_func - kthread context to remove dead ioc
+>> - * @arg: input argument, used to derive ioc
+>> - *
+>> - * Return 0 if controller is removed from pci subsystem.
+>> - * Return -1 for other case.
+>> - */
+>> -static int mpt_remove_dead_ioc_func(void *arg) -{
+>> -     MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
+>> -     struct pci_dev *pdev;
+>> -
+>> -     if ((ioc == NULL))
+>> -             return -1;
+>> -
+>> -     pdev = ioc->pcidev;
+>> -     if ((pdev == NULL))
+>> -             return -1;
+>> -
+>> -     pci_stop_and_remove_bus_device(pdev);
+>> -     return 0;
+>> -}
+>> -
+>> -
+>> -
+>> -/**
+>>   *   mpt_fault_reset_work - work performed on workq after ioc fault
+>>   *   @work: input argument, used to derive ioc
+>>   *
+>> @@ -366,7 +340,6 @@ mpt_fault_reset_work(struct work_struct *work)
+>>       int              rc;
+>>       unsigned long    flags;
+>>       MPT_SCSI_HOST   *hd;
+>> -     struct task_struct *p;
+>>
+>>       if (ioc->ioc_reset_in_progress || !ioc->active)
+>>               goto out;
+>> @@ -380,25 +353,13 @@ mpt_fault_reset_work(struct work_struct *work)
+>>               /*
+>>                * Call mptscsih_flush_pending_cmds callback so that we
+>>                * flush all pending commands back to OS.
+>> -              * This call is required to aovid deadlock at block layer.
+>> +              * This call is required to avoid deadlock at block layer.
+>>                * Dead IOC will fail to do diag reset,and this call is safe
+>>                * since dead ioc will never return any command back from
+>> HW.
+>>                */
+>>               hd = shost_priv(ioc->sh);
+>>               ioc->schedule_dead_ioc_flush_running_cmds(hd);
+>>
+>> -             /*Remove the Dead Host */
+>> -             p = kthread_run(mpt_remove_dead_ioc_func, ioc,
+>> -                             "mpt_dead_ioc_%d", ioc->id);
+>> -             if (IS_ERR(p))  {
+>> -                     printk(MYIOC_s_ERR_FMT
+>> -                             "%s: Running mpt_dead_ioc thread failed !\n",
+>> -                             ioc->name, __func__);
+>> -             } else {
+>> -                     printk(MYIOC_s_WARN_FMT
+>> -                             "%s: Running mpt_dead_ioc thread success !\n",
+>> -                             ioc->name, __func__);
+>> -             }
+>>               return; /* don't rearm timer */
+>>       }
+>>
+>> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> b/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> index ffd85c5..a97d10c 100644
+>> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> @@ -57,7 +57,6 @@
+>>  #include <linux/sort.h>
+>>  #include <linux/io.h>
+>>  #include <linux/time.h>
+>> -#include <linux/kthread.h>
+>>  #include <linux/aer.h>
+>>
+>>  #include "mpt2sas_base.h"
+>> @@ -115,29 +114,6 @@ module_param_call(mpt2sas_fwfault_debug,
+>> _scsih_set_fwfault_debug,
+>>      param_get_int, &mpt2sas_fwfault_debug, 0644);
+>>
+>>  /**
+>> - *  mpt2sas_remove_dead_ioc_func - kthread context to remove dead ioc
+>> - * @arg: input argument, used to derive ioc
+>> - *
+>> - * Return 0 if controller is removed from pci subsystem.
+>> - * Return -1 for other case.
+>> - */
+>> -static int mpt2sas_remove_dead_ioc_func(void *arg) -{
+>> -             struct MPT2SAS_ADAPTER *ioc = (struct MPT2SAS_ADAPTER *)arg;
+>> -             struct pci_dev *pdev;
+>> -
+>> -             if ((ioc == NULL))
+>> -                     return -1;
+>> -
+>> -             pdev = ioc->pdev;
+>> -             if ((pdev == NULL))
+>> -                     return -1;
+>> -             pci_stop_and_remove_bus_device(pdev);
+>> -             return 0;
+>> -}
+>> -
+>> -
+>> -/**
+>>   * _base_fault_reset_work - workq handling ioc fault conditions
+>>   * @work: input argument, used to derive ioc
+>>   * Context: sleep.
+>> @@ -152,7 +128,6 @@ _base_fault_reset_work(struct work_struct *work)
+>>       unsigned long    flags;
+>>       u32 doorbell;
+>>       int rc;
+>> -     struct task_struct *p;
+>>
+>>       spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+>>       if (ioc->shost_recovery)
+>> @@ -166,29 +141,16 @@ _base_fault_reset_work(struct work_struct *work)
+>>
+>>               /*
+>>                * Call _scsih_flush_pending_cmds callback so that we flush
+>> all
+>> -              * pending commands back to OS. This call is required to
+>> aovid
+>> +              * pending commands back to OS. This call is required to
+>> avoid
+>>                * deadlock at block layer. Dead IOC will fail to do diag
+>> reset,
+>>                * and this call is safe since dead ioc will never return
+>> any
+>>                * command back from HW.
+>>                */
+>>               ioc->schedule_dead_ioc_flush_running_cmds(ioc);
+>>               /*
+>> -              * Set remove_host flag early since kernel thread will
+>> -              * take some time to execute.
+>> +              * Indicate to scsi callbacks that the host has been
+>> removed.
+>>                */
+>>               ioc->remove_host = 1;
+>> -             /*Remove the Dead Host */
+>> -             p = kthread_run(mpt2sas_remove_dead_ioc_func, ioc,
+>> -                 "mpt2sas_dead_ioc_%d", ioc->id);
+>> -             if (IS_ERR(p)) {
+>> -                     printk(MPT2SAS_ERR_FMT
+>> -                     "%s: Running mpt2sas_dead_ioc thread failed !!!!\n",
+>> -                     ioc->name, __func__);
+>> -             } else {
+>> -                 printk(MPT2SAS_ERR_FMT
+>> -                     "%s: Running mpt2sas_dead_ioc thread success !!!!\n",
+>> -                     ioc->name, __func__);
+>> -             }
+>>
+>>               return; /* don't rearm timer */
+>>       }
+>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> index 04f8010..24fd122 100644
+>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> @@ -57,7 +57,6 @@
+>>  #include <linux/dma-mapping.h>
+>>  #include <linux/io.h>
+>>  #include <linux/time.h>
+>> -#include <linux/kthread.h>
+>>  #include <linux/aer.h>
+>>
+>>
+>> @@ -111,28 +110,6 @@ module_param_call(mpt3sas_fwfault_debug,
+>> _scsih_set_fwfault_debug,
+>>       param_get_int, &mpt3sas_fwfault_debug, 0644);
+>>
+>>  /**
+>> - *  mpt3sas_remove_dead_ioc_func - kthread context to remove dead ioc
+>> - * @arg: input argument, used to derive ioc
+>> - *
+>> - * Return 0 if controller is removed from pci subsystem.
+>> - * Return -1 for other case.
+>> - */
+>> -static int mpt3sas_remove_dead_ioc_func(void *arg) -{
+>> -     struct MPT3SAS_ADAPTER *ioc = (struct MPT3SAS_ADAPTER *)arg;
+>> -     struct pci_dev *pdev;
+>> -
+>> -     if ((ioc == NULL))
+>> -             return -1;
+>> -
+>> -     pdev = ioc->pdev;
+>> -     if ((pdev == NULL))
+>> -             return -1;
+>> -     pci_stop_and_remove_bus_device(pdev);
+>> -     return 0;
+>> -}
+>> -
+>> -/**
+>>   * _base_fault_reset_work - workq handling ioc fault conditions
+>>   * @work: input argument, used to derive ioc
+>>   * Context: sleep.
+>> @@ -147,7 +124,6 @@ _base_fault_reset_work(struct work_struct *work)
+>>       unsigned long    flags;
+>>       u32 doorbell;
+>>       int rc;
+>> -     struct task_struct *p;
+>>
+>>
+>>       spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags); @@ -
+>> 162,28 +138,16 @@ _base_fault_reset_work(struct work_struct *work)
+>>
+>>               /*
+>>                * Call _scsih_flush_pending_cmds callback so that we flush
+>> all
+>> -              * pending commands back to OS. This call is required to
+>> aovid
+>> +              * pending commands back to OS. This call is required to
+>> avoid
+>>                * deadlock at block layer. Dead IOC will fail to do diag
+>> reset,
+>>                * and this call is safe since dead ioc will never return
+>> any
+>>                * command back from HW.
+>>                */
+>>               ioc->schedule_dead_ioc_flush_running_cmds(ioc);
+>>               /*
+>> -              * Set remove_host flag early since kernel thread will
+>> -              * take some time to execute.
+>> +              * Indicate to scsi callbacks that the host has been
+>> removed.
+>>                */
+>>               ioc->remove_host = 1;
+>> -             /*Remove the Dead Host */
+>> -             p = kthread_run(mpt3sas_remove_dead_ioc_func, ioc,
+>> -                 "mpt3sas_dead_ioc_%d", ioc->id);
+>> -             if (IS_ERR(p))
+>> -                     pr_err(MPT3SAS_FMT
+>> -                     "%s: Running mpt3sas_dead_ioc thread failed !!!!\n",
+>> -                     ioc->name, __func__);
+>> -             else
+>> -                     pr_err(MPT3SAS_FMT
+>> -                     "%s: Running mpt3sas_dead_ioc thread success !!!!\n",
+>> -                     ioc->name, __func__);
+>>               return; /* don't rearm timer */
+>>       }
+>>
+>> --
+>> 1.8.1.2
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org More majordomo info
+>> at  http://vger.kernel.org/majordomo-info.html
 >
-> Also, a target side log with
->
->    modprobe qla2xxx ql2xextended_error_logging=0x7fffffff
->
-> would be helpful as well.
-
-I'll see if I can get enough hardware and time together to test this
-over the weekend to confirm everything I said above and gather the logs
-with the error logging enabled. I'll keep you posted.
-
-Cheers,
-Chris
-
--- 
-Chris Boot
-bootc@bootc.net
