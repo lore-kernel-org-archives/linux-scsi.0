@@ -1,15 +1,15 @@
 From: "Jack Wang" <jack_wang@usish.com>
-Subject: [PATCH] pm8001: updated MAINTAINERS list
-Date: Wed, 6 Mar 2013 10:38:34 +0800
-Message-ID: <00bb01ce1a13$b3549a10$19fdce30$@com>
+Subject: [PATCH] libsas: use right function to alloc smp response
+Date: Wed, 6 Mar 2013 10:43:03 +0800
+Message-ID: <00bf01ce1a14$54f3b950$fedb2bf0$@com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_00BC_01CE1A56.C177DA10"
+	boundary="----=_NextPart_000_00C0_01CE1A57.6316F950"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:45763 "EHLO
+Received: from sr-smtp.usish.com ([210.5.144.203]:45872 "EHLO
 	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759Ab3CFCih (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Mar 2013 21:38:37 -0500
+	with ESMTP id S1750827Ab3CFCmz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Mar 2013 21:42:55 -0500
 Content-Language: zh-cn
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,73 +18,79 @@ Cc: linux-scsi@vger.kernel.org, 'lindar_liu' <lindar_liu@usish.com>, xjtuwjp@gma
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_00BC_01CE1A56.C177DA10
+------=_NextPart_000_00C0_01CE1A57.6316F950
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 
-Sorry for resend, I forget to change the format to text.
->From 960e481828a03d211f5e20e626036876b39600dc Mon Sep 17 00:00:00 2001
-From: Jack Wang <jack_wang@usish.com>
-Date: Tue, 5 Mar 2013 21:17:55 -0500
-Subject: [PATCH] update mail address with my private gmail address for
-pm8001 driver
+In fact the disc_resp buffer will be overwrite by smp response, so we never
+found this typo, correct it by using the right one.
 
+>From 43c522be7a5b4ce89de725926a1fbabd70674c64 Mon Sep 17 00:00:00 2001
+From: John Gong <john_gong@usish.com>
+Date: Fri, 1 Mar 2013 04:08:18 -0500
+Subject: [PATCH] use right function to alloc smp reponse
+
+Signed-off-by: John Gong <john_gong@usish.com>
 Signed-off-by: Jack Wang <jack_wang@usish.com>
 ---
- MAINTAINERS |    2 +-
+ drivers/scsi/libsas/sas_expander.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9386a63..d85aee8 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5739,7 +5739,7 @@ S:	Supported
- F:	drivers/scsi/pmcraid.*
+diff --git a/drivers/scsi/libsas/sas_expander.c
+b/drivers/scsi/libsas/sas_expander.c
+index efc6e72..e071e08 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -388,7 +388,7 @@ int sas_ex_phy_discover(struct domain_device *dev, int
+single)
+ 	if (!disc_req)
+ 		return -ENOMEM;
  
- PMC SIERRA PM8001 DRIVER
--M:	jack_wang@usish.com
-+M:	xjtuwjp@gmail.com
- M:	lindar_liu@usish.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
+-	disc_resp = alloc_smp_req(DISCOVER_RESP_SIZE);
++	disc_resp = alloc_smp_resp(DISCOVER_RESP_SIZE);
+ 	if (!disc_resp) {
+ 		kfree(disc_req);
+ 		return -ENOMEM;
 -- 
 1.7.1
 
-------=_NextPart_000_00BC_01CE1A56.C177DA10
+------=_NextPart_000_00C0_01CE1A57.6316F950
 Content-Type: application/octet-stream;
-	name="0001-update-mail-address-with-my-private-gmail-address-fo.patch"
+	name="0001-use-right-function-to-alloc-smp-reponse.patch"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: attachment;
-	filename="0001-update-mail-address-with-my-private-gmail-address-fo.patch"
+	filename="0001-use-right-function-to-alloc-smp-reponse.patch"
 
->From 960e481828a03d211f5e20e626036876b39600dc Mon Sep 17 00:00:00 2001=0A=
-From: Jack Wang <jack_wang@usish.com>=0A=
-Date: Tue, 5 Mar 2013 21:17:55 -0500=0A=
-Subject: [PATCH] update mail address with my private gmail address for =
-pm8001 driver=0A=
+>From 43c522be7a5b4ce89de725926a1fbabd70674c64 Mon Sep 17 00:00:00 2001=0A=
+From: John Gong <john_gong@usish.com>=0A=
+Date: Fri, 1 Mar 2013 04:08:18 -0500=0A=
+Subject: [PATCH] use right function to alloc smp reponse=0A=
 =0A=
+Signed-off-by: John Gong <john_gong@usish.com>=0A=
 Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
 ---=0A=
- MAINTAINERS |    2 +-=0A=
+ drivers/scsi/libsas/sas_expander.c |    2 +-=0A=
  1 files changed, 1 insertions(+), 1 deletions(-)=0A=
 =0A=
-diff --git a/MAINTAINERS b/MAINTAINERS=0A=
-index 9386a63..d85aee8 100644=0A=
---- a/MAINTAINERS=0A=
-+++ b/MAINTAINERS=0A=
-@@ -5739,7 +5739,7 @@ S:	Supported=0A=
- F:	drivers/scsi/pmcraid.*=0A=
+diff --git a/drivers/scsi/libsas/sas_expander.c =
+b/drivers/scsi/libsas/sas_expander.c=0A=
+index efc6e72..e071e08 100644=0A=
+--- a/drivers/scsi/libsas/sas_expander.c=0A=
++++ b/drivers/scsi/libsas/sas_expander.c=0A=
+@@ -388,7 +388,7 @@ int sas_ex_phy_discover(struct domain_device *dev, =
+int single)=0A=
+ 	if (!disc_req)=0A=
+ 		return -ENOMEM;=0A=
  =0A=
- PMC SIERRA PM8001 DRIVER=0A=
--M:	jack_wang@usish.com=0A=
-+M:	xjtuwjp@gmail.com=0A=
- M:	lindar_liu@usish.com=0A=
- L:	linux-scsi@vger.kernel.org=0A=
- S:	Supported=0A=
+-	disc_resp =3D alloc_smp_req(DISCOVER_RESP_SIZE);=0A=
++	disc_resp =3D alloc_smp_resp(DISCOVER_RESP_SIZE);=0A=
+ 	if (!disc_resp) {=0A=
+ 		kfree(disc_req);=0A=
+ 		return -ENOMEM;=0A=
 -- =0A=
 1.7.1=0A=
 =0A=
 
-------=_NextPart_000_00BC_01CE1A56.C177DA10--
+------=_NextPart_000_00C0_01CE1A57.6316F950--
 
