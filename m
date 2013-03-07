@@ -1,44 +1,98 @@
-From: "Coca-Cola Company" <info@coca-cola.co.uk>
-Subject: YOUR REF:BT:12052011/20
-Date: Wed, 06 Mar 2013 20:29:31 -0800
-Message-ID: <20130307042812.922638815BB@mail.tvi.cl>
-Reply-To: ccbc@tnctr.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 1/8] qla4xxx: Take E-port out of reset before disabling pause frames
+Date: Thu,  7 Mar 2013 05:43:07 -0500
+Message-ID: <1362652994-7593-2-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1362652994-7593-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.via.cl ([200.75.31.110]:41780 "EHLO mail.tvi.cl"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751049Ab3CGGS7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Mar 2013 01:18:59 -0500
-Content-Description: Mail message body
+Received: from mvnat01.qlogic.com ([198.186.3.73]:18173 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1752800Ab3CGLFW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Mar 2013 06:05:22 -0500
+In-Reply-To: <1362652994-7593-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <info@coca-cola.co.uk>
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Manish Dusane <manish.dusane@qlogic.com>
 
-Dear e-mail user; 
+From: Manish Dusane <manish.dusane@qlogic.com>
 
-Good to hear from you regarding the COCA-COLA EMAIL DRAWS. 
-My name is Mrs.Meena Anderson, i'm the COCA-COLA Cash officer assigned to winners on EMAIL sweepstakes,
-your EMAIL ID just won the sum of 1,000,000.00GBP in 
-on going COCA-COLA SWEEPSTAKES DRAWS,In line with commemorating event marking of our 125th anniversary.
+Problem Description:
+Disabling pause frames might cause hardware wedging needing a power cycle.
+This might happen if the Eport is not initialized and is in reset.
 
+Solution:
+Before disabling pause frames ensure that eport is out of reset.
 
-VERIFICATION FORM:
-1.FULL NAMES:
-2.ADDRESS:
-3.AGE:
-4.MOBILE NUMBER & ALTERNATE MOBILE NUMBERS:
-5.PERSONAL EMAIL:
-6.COUNTRY:
-7.OCCUPATION:
-8.NATIONALITY:
+Signed-off-by: Manish Dusane <manish.dusane@qlogic.com>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_83xx.c | 28 ++++++++++++++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_83xx.h | 10 ++++++++++
+ 2 files changed, 38 insertions(+)
 
-To email: ccbc@tnctr.com
+diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
+index 5d8fe4f..d607eb8 100644
+--- a/drivers/scsi/qla4xxx/ql4_83xx.c
++++ b/drivers/scsi/qla4xxx/ql4_83xx.c
+@@ -1629,9 +1629,37 @@ static void __qla4_83xx_disable_pause(struct scsi_qla_host *ha)
+ 	ql4_printk(KERN_INFO, ha, "Disabled pause frames successfully.\n");
+ }
+ 
++/**
++ * qla4_83xx_eport_init - Initialize EPort.
++ * @ha: Pointer to host adapter structure.
++ *
++ * If EPort hardware is in reset state before disabling pause, there would be
++ * serious hardware wedging issues. To prevent this perform eport init everytime
++ * before disabling pause frames.
++ **/
++static void qla4_83xx_eport_init(struct scsi_qla_host *ha)
++{
++	/* Clear the 8 registers */
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_RESET_REG, 0x0);
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_RESET_PORT0, 0x0);
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_RESET_PORT1, 0x0);
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_RESET_PORT2, 0x0);
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_RESET_PORT3, 0x0);
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_RESET_SRE_SHIM, 0x0);
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_RESET_EPG_SHIM, 0x0);
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_RESET_ETHER_PCS, 0x0);
++
++	/* Write any value to Reset Control register */
++	qla4_83xx_wr_reg_indirect(ha, QLA83XX_RESET_CONTROL, 0xFF);
++
++	ql4_printk(KERN_INFO, ha, "EPORT is out of reset.\n");
++}
++
+ void qla4_83xx_disable_pause(struct scsi_qla_host *ha)
+ {
+ 	ha->isp_ops->idc_lock(ha);
++	/* Before disabling pause frames, ensure that eport is not in reset */
++	qla4_83xx_eport_init(ha);
+ 	qla4_83xx_dump_pause_control_regs(ha);
+ 	__qla4_83xx_disable_pause(ha);
+ 	ha->isp_ops->idc_unlock(ha);
+diff --git a/drivers/scsi/qla4xxx/ql4_83xx.h b/drivers/scsi/qla4xxx/ql4_83xx.h
+index 6a00f90..fab237f 100644
+--- a/drivers/scsi/qla4xxx/ql4_83xx.h
++++ b/drivers/scsi/qla4xxx/ql4_83xx.h
+@@ -55,6 +55,16 @@
+ #define QLA83XX_SET_PAUSE_VAL		0x0
+ #define QLA83XX_SET_TC_MAX_CELL_VAL	0x03FF03FF
+ 
++#define QLA83XX_RESET_CONTROL		0x28084E50
++#define QLA83XX_RESET_REG		0x28084E60
++#define QLA83XX_RESET_PORT0		0x28084E70
++#define QLA83XX_RESET_PORT1		0x28084E80
++#define QLA83XX_RESET_PORT2		0x28084E90
++#define QLA83XX_RESET_PORT3		0x28084EA0
++#define QLA83XX_RESET_SRE_SHIM		0x28084EB0
++#define QLA83XX_RESET_EPG_SHIM		0x28084EC0
++#define QLA83XX_RESET_ETHER_PCS		0x28084ED0
++
+ /* qla_83xx_reg_tbl registers */
+ #define QLA83XX_PEG_HALT_STATUS1	0x34A8
+ #define QLA83XX_PEG_HALT_STATUS2	0x34AC
+-- 
+1.8.0
 
-Yours faithfully
-Mrs.Meena Anderson
-Cordinator For COCA-COLA EMAIL DRAWS PROMO
-FOR FURTHER CLARIFICATION CONTACT
-PHONENUMBER: +448719745576
-EMAIL: ccbc@tnctr.com
