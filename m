@@ -1,163 +1,50 @@
 From: Rob Evers <revers@redhat.com>
-Subject: [PATCH V3 1/4] Encapsulate scsi_do_report_luns
-Date: Thu,  7 Mar 2013 08:38:32 -0500
-Message-ID: <1362663515-3476-2-git-send-email-revers@redhat.com>
-References: <1362663515-3476-1-git-send-email-revers@redhat.com>
+Subject: [PATCH V3 0/4] Configure number of LUs reported by 'report-luns'
+Date: Thu,  7 Mar 2013 08:38:31 -0500
+Message-ID: <1362663515-3476-1-git-send-email-revers@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61131 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:4464 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932873Ab3CGNim (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Mar 2013 08:38:42 -0500
-In-Reply-To: <1362663515-3476-1-git-send-email-revers@redhat.com>
+	id S932872Ab3CGNil (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Mar 2013 08:38:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: revers@redhat.com, michaelc@cs.wisc.edu, bvanassche@acm.org, emilne@redhat.com
 
----
- drivers/scsi/scsi_scan.c | 109 +++++++++++++++++++++++++----------------------
- 1 file changed, 59 insertions(+), 50 deletions(-)
+This patch set retrieves the number of LUs available on a target
+using the report-luns command.  The initial size of the report-luns
+command is 512 entries, as the previous default initial number was.
+If more LUs than 511 are present on a target, the report-luns is
+re-issued with the size indicated in the result of the original
+report-luns, up to max_report_luns.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3e58b22..b2abf22 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1282,6 +1282,64 @@ void int_to_scsilun(unsigned int lun, struct scsi_lun *scsilun)
- }
- EXPORT_SYMBOL(int_to_scsilun);
- 
-+int scsi_do_report_luns(struct scsi_device *sdev, int length,
-+			struct scsi_lun *lun_data, char *devname)
-+{
-+	unsigned int retries;
-+	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
-+	struct scsi_sense_hdr sshdr;
-+	int result;
-+
-+	scsi_cmd[0] = REPORT_LUNS;
-+
-+	/*
-+	 * bytes 1 - 5: reserved, set to zero.
-+	 */
-+	memset(&scsi_cmd[1], 0, 5);
-+
-+	/*
-+	 * bytes 6 - 9: length of the command.
-+	 */
-+	scsi_cmd[6] = (unsigned char) (length >> 24) & 0xff;
-+	scsi_cmd[7] = (unsigned char) (length >> 16) & 0xff;
-+	scsi_cmd[8] = (unsigned char) (length >> 8) & 0xff;
-+	scsi_cmd[9] = (unsigned char) length & 0xff;
-+
-+	scsi_cmd[10] = 0;	/* reserved */
-+	scsi_cmd[11] = 0;	/* control */
-+
-+	/*
-+	 * We can get a UNIT ATTENTION, for example a power on/reset, so
-+	 * retry a few times (like sd.c does for TEST UNIT READY).
-+	 * Experience shows some combinations of adapter/devices get at
-+	 * least two power on/resets.
-+	 *
-+	 * Illegal requests (for devices that do not support REPORT LUNS)
-+	 * should come through as a check condition, and will not generate
-+	 * a retry.
-+	 */
-+	for (retries = 0; retries < 3; retries++) {
-+		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: Sending"
-+				  " REPORT LUNS to %s (try %d)\n", devname,
-+				  retries));
-+		result = scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
-+					  lun_data, length, &sshdr,
-+					  SCSI_TIMEOUT + 4 * HZ, 3, NULL);
-+
-+		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: REPORT LUNS"
-+				  " %s (try %d) result 0x%x\n", result
-+				  ?  "failed" : "successful", retries, result));
-+		if (result == 0)
-+			break;
-+		else if (scsi_sense_valid(&sshdr)) {
-+			if (sshdr.sense_key != UNIT_ATTENTION)
-+				break;
-+		}
-+	}
-+
-+	return result;
-+}
-+
- /**
-  * scsi_report_lun_scan - Scan using SCSI REPORT LUN results
-  * @starget: which target
-@@ -1306,15 +1364,12 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 				int rescan)
- {
- 	char devname[64];
--	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
- 	unsigned int length;
- 	unsigned int lun;
- 	unsigned int num_luns;
--	unsigned int retries;
- 	int result;
- 	struct scsi_lun *lunp, *lun_data;
- 	u8 *data;
--	struct scsi_sense_hdr sshdr;
- 	struct scsi_device *sdev;
- 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
- 	int ret = 0;
-@@ -1369,53 +1424,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 		goto out;
- 	}
- 
--	scsi_cmd[0] = REPORT_LUNS;
--
--	/*
--	 * bytes 1 - 5: reserved, set to zero.
--	 */
--	memset(&scsi_cmd[1], 0, 5);
--
--	/*
--	 * bytes 6 - 9: length of the command.
--	 */
--	scsi_cmd[6] = (unsigned char) (length >> 24) & 0xff;
--	scsi_cmd[7] = (unsigned char) (length >> 16) & 0xff;
--	scsi_cmd[8] = (unsigned char) (length >> 8) & 0xff;
--	scsi_cmd[9] = (unsigned char) length & 0xff;
--
--	scsi_cmd[10] = 0;	/* reserved */
--	scsi_cmd[11] = 0;	/* control */
--
--	/*
--	 * We can get a UNIT ATTENTION, for example a power on/reset, so
--	 * retry a few times (like sd.c does for TEST UNIT READY).
--	 * Experience shows some combinations of adapter/devices get at
--	 * least two power on/resets.
--	 *
--	 * Illegal requests (for devices that do not support REPORT LUNS)
--	 * should come through as a check condition, and will not generate
--	 * a retry.
--	 */
--	for (retries = 0; retries < 3; retries++) {
--		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: Sending"
--				" REPORT LUNS to %s (try %d)\n", devname,
--				retries));
--
--		result = scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
--					  lun_data, length, &sshdr,
--					  SCSI_TIMEOUT + 4 * HZ, 3, NULL);
--
--		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: REPORT LUNS"
--				" %s (try %d) result 0x%x\n", result
--				?  "failed" : "successful", retries, result));
--		if (result == 0)
--			break;
--		else if (scsi_sense_valid(&sshdr)) {
--			if (sshdr.sense_key != UNIT_ATTENTION)
--				break;
--		}
--	}
-+	result = scsi_do_report_luns(sdev, length, lun_data, devname);
- 
- 	if (result) {
- 		/*
+The default value of max_report_luns is increased to 16k-1 from 512-1.
+
+3rd version changes from 2nd posting:
+
+ - add a patch to use get/put_unaligned_be32() in report-luns code
+
+2nd version changes from first posting:
+
+ - Minor tweak added in 2nd patch to use the number of luns
+   reported in the 2nd report-luns command, if it is executed.
+   There is a chance that the number changed between the
+   1st and 2nd report-luns.
+
+ - Add 3rd patch changing kmalloc flag in report luns from
+   GFP_ATOMIC to GFP_KERNEL, as this is more consistent with
+   the allocation flag in blk_alloc_queue_node()
+
+Rob Evers (4):
+  Encapsulate scsi_do_report_luns
+  Configure reported luns
+  Change kmallocs in report_luns to use GFP_KERNEL
+  Use set/get_unaligned_be32 in report_luns
+
+ drivers/scsi/scsi_scan.c | 192 +++++++++++++++++++++++++++++------------------
+ 1 file changed, 120 insertions(+), 72 deletions(-)
+
 -- 
 1.7.11.7
 
