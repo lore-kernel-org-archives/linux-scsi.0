@@ -1,89 +1,99 @@
-From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 6/8] qla4xxx: Fix debug level to avoid floods of same message
-Date: Thu,  7 Mar 2013 05:43:12 -0500
-Message-ID: <1362652994-7593-7-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1362652994-7593-1-git-send-email-vikas.chaudhary@qlogic.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:48202 "HELO linux-zupk.site"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1756010Ab3CGLFW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Mar 2013 06:05:22 -0500
-In-Reply-To: <1362652994-7593-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jan Vesely <jvesely@redhat.com>
+Subject: Re: [PATCH] block: modify __bio_add_page check to accept pages that
+ don't start a new segment
+Date: Thu, 07 Mar 2013 12:23:13 +0100
+Message-ID: <513878A1.3020701@redhat.com>
+References: <5125DB22.7020901@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5125DB22.7020901@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Hi Jens,
 
-Move "Incorrect function ID" print message in case INTX interrupt
-from DEBUG2 to DEBUG7. This will avoid floods of this message if
-DEBUG2 is enabled.
+I have added you to cc, I'm not sure who to bug to get this patch 
+merged.
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_dbg.h | 7 +++++++
- drivers/scsi/qla4xxx/ql4_isr.c | 8 ++++----
- 2 files changed, 11 insertions(+), 4 deletions(-)
+thanks,
+Jan Vesely
 
-diff --git a/drivers/scsi/qla4xxx/ql4_dbg.h b/drivers/scsi/qla4xxx/ql4_dbg.h
-index 5b0afc1..51c365b 100644
---- a/drivers/scsi/qla4xxx/ql4_dbg.h
-+++ b/drivers/scsi/qla4xxx/ql4_dbg.h
-@@ -12,6 +12,7 @@
- /* #define QL_DEBUG_LEVEL_3  */		/* Output function tracing */
- /* #define QL_DEBUG_LEVEL_4  */
- /* #define QL_DEBUG_LEVEL_5  */
-+/* #define QL_DEBUG_LEVEL_7  */
- /* #define QL_DEBUG_LEVEL_9  */
- 
- #define QL_DEBUG_LEVEL_2	/* ALways enable error messagess */
-@@ -48,6 +49,12 @@
- #define DEBUG5(x)	do {} while (0);
- #endif				/*  */
- 
-+#if defined(QL_DEBUG_LEVEL_7)
-+#define DEBUG7(x)	do {x; } while (0)
-+#else				/*  */
-+#define DEBUG7(x)	do {} while (0)
-+#endif				/*  */
-+
- #if defined(QL_DEBUG_LEVEL_9)
- #define DEBUG9(x)	do {x;} while (0);
- #else				/*  */
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 1b83dc2..e02a884 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -1099,8 +1099,8 @@ irqreturn_t qla4_82xx_intr_handler(int irq, void *dev_id)
- 
- 	status = qla4_82xx_rd_32(ha, ISR_INT_STATE_REG);
- 	if (!ISR_IS_LEGACY_INTR_TRIGGERED(status)) {
--		DEBUG2(ql4_printk(KERN_INFO, ha,
--		    "%s legacy Int not triggered\n", __func__));
-+		DEBUG7(ql4_printk(KERN_INFO, ha,
-+				  "%s legacy Int not triggered\n", __func__));
- 		return IRQ_NONE;
- 	}
- 
-@@ -1158,7 +1158,7 @@ irqreturn_t qla4_83xx_intr_handler(int irq, void *dev_id)
- 
- 	/* Legacy interrupt is valid if bit31 of leg_int_ptr is set */
- 	if (!(leg_int_ptr & LEG_INT_PTR_B31)) {
--		DEBUG2(ql4_printk(KERN_ERR, ha,
-+		DEBUG7(ql4_printk(KERN_ERR, ha,
- 				  "%s: Legacy Interrupt Bit 31 not set, spurious interrupt!\n",
- 				  __func__));
- 		return IRQ_NONE;
-@@ -1166,7 +1166,7 @@ irqreturn_t qla4_83xx_intr_handler(int irq, void *dev_id)
- 
- 	/* Validate the PCIE function ID set in leg_int_ptr bits [19..16] */
- 	if ((leg_int_ptr & PF_BITS_MASK) != ha->pf_bit) {
--		DEBUG2(ql4_printk(KERN_ERR, ha,
-+		DEBUG7(ql4_printk(KERN_ERR, ha,
- 				  "%s: Incorrect function ID 0x%x in legacy interrupt register, ha->pf_bit = 0x%x\n",
- 				  __func__, (leg_int_ptr & PF_BITS_MASK),
- 				  ha->pf_bit));
--- 
-1.8.0
+On Thu 21 Feb 2013 09:30:26 CET, Jan Vesely wrote:
+> The original behavior was to refuse all pages after the maximum number of
+> segments has been reached. However, some drivers (like st) craft their buffers
+> to potentially require exactly max segments and multiple pages in the last
+> segment. This patch modifies the check to allow pages that can be merged into
+> the last segment.
+>
+> This change fixes EBUSY failures when using large (1mb) tape block size in high
+> memory fragmentation condition.
+>
+> Signed-off-by: Jan Vesely <jvesely@redhat.com>
+> ---
+>  fs/bio.c |   26 ++++++++++++++++----------
+>  1 files changed, 16 insertions(+), 10 deletions(-)
+>
+> diff --git a/fs/bio.c b/fs/bio.c
+> index b96fc6c..02efbd5 100644
+> --- a/fs/bio.c
+> +++ b/fs/bio.c
+> @@ -500,7 +500,6 @@ static int __bio_add_page(struct request_queue *q, struct
+> bio *bio, struct page
+>                *page, unsigned int len, unsigned int offset,
+>                unsigned short max_sectors)
+>  {
+> -    int retried_segments = 0;
+>      struct bio_vec *bvec;
+>
+>      /*
+> @@ -551,18 +550,12 @@ static int __bio_add_page(struct request_queue *q,
+> struct bio *bio, struct page
+>          return 0;
+>
+>      /*
+> -     * we might lose a segment or two here, but rather that than
+> -     * make this too complex.
+> +     * prepare segment count check, reduce segment count if possible
+>       */
+>
+> -    while (bio->bi_phys_segments >= queue_max_segments(q)) {
+> -
+> -        if (retried_segments)
+> -            return 0;
+> -
+> -        retried_segments = 1;
+> +    if (bio->bi_phys_segments >= queue_max_segments(q))
+>          blk_recount_segments(q, bio);
+> -    }
+> +
+>
+>      /*
+>       * setup the new entry, we might clear it again later if we
+> @@ -572,6 +565,19 @@ static int __bio_add_page(struct request_queue *q, struct
+> bio *bio, struct page
+>      bvec->bv_page = page;
+>      bvec->bv_len = len;
+>      bvec->bv_offset = offset;
+> +
+> +    /*
+> +     * the other part of the segment count check, allow mergeable pages
+> +     */
+> +    if ((bio->bi_phys_segments > queue_max_segments(q)) ||
+> +        ( (bio->bi_phys_segments == queue_max_segments(q)) &&
+> +        !BIOVEC_PHYS_MERGEABLE(bvec - 1, bvec))) {
+> +            bvec->bv_page = NULL;
+> +            bvec->bv_len = 0;
+> +            bvec->bv_offset = 0;
+> +            return 0;
+> +    }
+> +
+>
+>      /*
+>       * if queue has other restrictions (eg varying max sector size
 
+--
+Jan Vesely <jvesely@redhat.com>
