@@ -1,35 +1,24 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Jeremy Linton <jlinton@tributary.com>
 Subject: Re: [PATCH v2][RFC] scsi_transport_fc: Implement I_T nexus reset
-Date: Thu, 07 Mar 2013 14:24:58 -0600
-Message-ID: <5138F79A.1060601@cs.wisc.edu>
+Date: Thu, 7 Mar 2013 14:35:45 -0600
+Message-ID: <5138FA21.8000000@tributary.com>
 References: <1355214219-17343-1-git-send-email-hare@suse.de> <5138E84B.8030803@cs.wisc.edu> <5138F4DF.9010906@tributary.com> <5138F67D.3070703@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:51449 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759658Ab3CGUZ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Mar 2013 15:25:57 -0500
+Received: from relay.ihostexchange.net ([66.46.182.52]:33785 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751391Ab3CGUfs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Mar 2013 15:35:48 -0500
 In-Reply-To: <5138F67D.3070703@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jlinton@tributary.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
 Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Krishna C Gudipati <kgudipat@brocade.com>, James Bottomley <jbottomley@parallels.com>
 
-On 03/07/2013 02:20 PM, Mike Christie wrote:
+On 3/7/2013 2:20 PM, Mike Christie wrote:
 > On 03/07/2013 02:13 PM, Jeremy Linton wrote:
->> -----BEGIN PGP SIGNED MESSAGE-----
->> Hash: SHA1
->>
->> On 3/7/2013 1:19 PM, Mike Christie wrote:
->>> What happens for lpfc? It seems __fc_remote_port_delete ends up calling the
->>> fast io fail code right away and that sets FC_RPORT_FAST_FAIL_TIMEDOUT. We
->>> will then call lpfc_terminate_rport_io which only will send aborts for the
->>> commands. We will then call fc_block_scsi_eh above and that returns
->>> FAST_IO_FAIL and we will pass that back up to the scsi eh right away.
->>
->> 	
 >> 	For lpfc, you never get to the code. Or rather when I was testing it, I
 >> couldn't find any way to propagate an error beyond the initial
 >> lpfc_reset_flush_io_context() call in lpfc_device_reset_handler().
@@ -41,7 +30,17 @@ On 03/07/2013 02:20 PM, Mike Christie wrote:
 >> 	
 > 
 > Your lpfc patch fixes that right?
-> 
 
-Nevermind. Found your patch. It looks like it does fix that problem.
+
+	Yes. It allows the device reset to fail if the device doesn't respond to the
+task mgmt request, or rejects it, etc.
+
+	It doesn't unjam the commands that get aborted by the flush_io_context() call.
+Those have to depend on their timeouts. That is another patch...
+
+
+
+
+	
+
 
