@@ -1,65 +1,163 @@
-From: Jean Delvare <jdelvare@suse.de>
-Subject: Re: Kernel oops on st module cycling
-Date: Thu, 07 Mar 2013 13:48:04 +0100
-Message-ID: <1362660484.4312.11.camel@amber.site>
-References: <1361538170.24311.209.camel@amber.site>
-	 <alpine.DEB.2.02.1302221017330.1736@jlaw-desktop.mno.stratus.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Rob Evers <revers@redhat.com>
+Subject: [PATCH V3 1/4] Encapsulate scsi_do_report_luns
+Date: Thu,  7 Mar 2013 08:38:32 -0500
+Message-ID: <1362663515-3476-2-git-send-email-revers@redhat.com>
+References: <1362663515-3476-1-git-send-email-revers@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:32774 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:61131 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751625Ab3CGMsA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Mar 2013 07:48:00 -0500
-In-Reply-To: <alpine.DEB.2.02.1302221017330.1736@jlaw-desktop.mno.stratus.com>
+	id S932873Ab3CGNim (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Mar 2013 08:38:42 -0500
+In-Reply-To: <1362663515-3476-1-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <Joe.Lawrence@stratus.com>
-Cc: Kai =?ISO-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: revers@redhat.com, michaelc@cs.wisc.edu, bvanassche@acm.org, emilne@redhat.com
 
-Hi Joe,
+---
+ drivers/scsi/scsi_scan.c | 109 +++++++++++++++++++++++++----------------------
+ 1 file changed, 59 insertions(+), 50 deletions(-)
 
-Thanks for your fast answer.
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 3e58b22..b2abf22 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1282,6 +1282,64 @@ void int_to_scsilun(unsigned int lun, struct scsi_lun *scsilun)
+ }
+ EXPORT_SYMBOL(int_to_scsilun);
+ 
++int scsi_do_report_luns(struct scsi_device *sdev, int length,
++			struct scsi_lun *lun_data, char *devname)
++{
++	unsigned int retries;
++	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
++	struct scsi_sense_hdr sshdr;
++	int result;
++
++	scsi_cmd[0] = REPORT_LUNS;
++
++	/*
++	 * bytes 1 - 5: reserved, set to zero.
++	 */
++	memset(&scsi_cmd[1], 0, 5);
++
++	/*
++	 * bytes 6 - 9: length of the command.
++	 */
++	scsi_cmd[6] = (unsigned char) (length >> 24) & 0xff;
++	scsi_cmd[7] = (unsigned char) (length >> 16) & 0xff;
++	scsi_cmd[8] = (unsigned char) (length >> 8) & 0xff;
++	scsi_cmd[9] = (unsigned char) length & 0xff;
++
++	scsi_cmd[10] = 0;	/* reserved */
++	scsi_cmd[11] = 0;	/* control */
++
++	/*
++	 * We can get a UNIT ATTENTION, for example a power on/reset, so
++	 * retry a few times (like sd.c does for TEST UNIT READY).
++	 * Experience shows some combinations of adapter/devices get at
++	 * least two power on/resets.
++	 *
++	 * Illegal requests (for devices that do not support REPORT LUNS)
++	 * should come through as a check condition, and will not generate
++	 * a retry.
++	 */
++	for (retries = 0; retries < 3; retries++) {
++		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: Sending"
++				  " REPORT LUNS to %s (try %d)\n", devname,
++				  retries));
++		result = scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
++					  lun_data, length, &sshdr,
++					  SCSI_TIMEOUT + 4 * HZ, 3, NULL);
++
++		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: REPORT LUNS"
++				  " %s (try %d) result 0x%x\n", result
++				  ?  "failed" : "successful", retries, result));
++		if (result == 0)
++			break;
++		else if (scsi_sense_valid(&sshdr)) {
++			if (sshdr.sense_key != UNIT_ATTENTION)
++				break;
++		}
++	}
++
++	return result;
++}
++
+ /**
+  * scsi_report_lun_scan - Scan using SCSI REPORT LUN results
+  * @starget: which target
+@@ -1306,15 +1364,12 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 				int rescan)
+ {
+ 	char devname[64];
+-	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	unsigned int length;
+ 	unsigned int lun;
+ 	unsigned int num_luns;
+-	unsigned int retries;
+ 	int result;
+ 	struct scsi_lun *lunp, *lun_data;
+ 	u8 *data;
+-	struct scsi_sense_hdr sshdr;
+ 	struct scsi_device *sdev;
+ 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
+ 	int ret = 0;
+@@ -1369,53 +1424,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 		goto out;
+ 	}
+ 
+-	scsi_cmd[0] = REPORT_LUNS;
+-
+-	/*
+-	 * bytes 1 - 5: reserved, set to zero.
+-	 */
+-	memset(&scsi_cmd[1], 0, 5);
+-
+-	/*
+-	 * bytes 6 - 9: length of the command.
+-	 */
+-	scsi_cmd[6] = (unsigned char) (length >> 24) & 0xff;
+-	scsi_cmd[7] = (unsigned char) (length >> 16) & 0xff;
+-	scsi_cmd[8] = (unsigned char) (length >> 8) & 0xff;
+-	scsi_cmd[9] = (unsigned char) length & 0xff;
+-
+-	scsi_cmd[10] = 0;	/* reserved */
+-	scsi_cmd[11] = 0;	/* control */
+-
+-	/*
+-	 * We can get a UNIT ATTENTION, for example a power on/reset, so
+-	 * retry a few times (like sd.c does for TEST UNIT READY).
+-	 * Experience shows some combinations of adapter/devices get at
+-	 * least two power on/resets.
+-	 *
+-	 * Illegal requests (for devices that do not support REPORT LUNS)
+-	 * should come through as a check condition, and will not generate
+-	 * a retry.
+-	 */
+-	for (retries = 0; retries < 3; retries++) {
+-		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: Sending"
+-				" REPORT LUNS to %s (try %d)\n", devname,
+-				retries));
+-
+-		result = scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
+-					  lun_data, length, &sshdr,
+-					  SCSI_TIMEOUT + 4 * HZ, 3, NULL);
+-
+-		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: REPORT LUNS"
+-				" %s (try %d) result 0x%x\n", result
+-				?  "failed" : "successful", retries, result));
+-		if (result == 0)
+-			break;
+-		else if (scsi_sense_valid(&sshdr)) {
+-			if (sshdr.sense_key != UNIT_ATTENTION)
+-				break;
+-		}
+-	}
++	result = scsi_do_report_luns(sdev, length, lun_data, devname);
+ 
+ 	if (result) {
+ 		/*
+-- 
+1.7.11.7
 
-Le vendredi 22 f=C3=A9vrier 2013 =C3=A0 10:30 -0500, Joe Lawrence a =C3=
-=A9crit :
-> I remember finding an st module load/unload kref accounting bug a whi=
-le=20
-> ago: http://thread.gmane.org/gmane.linux.scsi/77539  I replied to the=
-=20
-> report with a hack-patch that grabbed an extra reference to avoid the=
-=20
-> crash.
->=20
-> There was an attempt at fixing this up in the block layer [1] but tha=
-t=20
-> change was pulled when problems were found with that patch [2].
->=20
-> [1] https://lkml.org/lkml/2012/8/27/354
-> [2] https://lkml.org/lkml/2012/9/22/113
->=20
-> Maybe this is the same bug?
-
-Seems so. Meanwhile I saw you posted an update at:
-http://marc.info/?l=3Dlinux-scsi&m=3D136249932603011&w=3D2
-
-I have tested this patch successfully, and apparently others have as
-well, so I would suggest to get this upstream ASAP. I think this fix is
-a candidate for stable kernel series as well.
-
-Note for backporters: the value returned by blk_get_queue() changed in
-kernel 3.3, so care must be taken when backporting the fix to kernel 3.=
-2
-or older, otherwise success becomes failure and vice versa.
-
-Thanks,
---=20
-Jean Delvare
-Suse L3
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
