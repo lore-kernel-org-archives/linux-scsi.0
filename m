@@ -1,12 +1,12 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 8/8] qla4xxx: Update driver version to 5.03.00-k5
-Date: Thu,  7 Mar 2013 05:43:14 -0500
-Message-ID: <1362652994-7593-9-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 6/8] qla4xxx: Fix debug level to avoid floods of same message
+Date: Thu,  7 Mar 2013 05:43:12 -0500
+Message-ID: <1362652994-7593-7-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1362652994-7593-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:16730 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:48202 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1756384Ab3CGLFW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1756010Ab3CGLFW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 7 Mar 2013 06:05:22 -0500
 In-Reply-To: <1362652994-7593-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,21 +16,74 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
+Move "Incorrect function ID" print message in case INTX interrupt
+from DEBUG2 to DEBUG7. This will avoid floods of this message if
+DEBUG2 is enabled.
+
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla4xxx/ql4_dbg.h | 7 +++++++
+ drivers/scsi/qla4xxx/ql4_isr.c | 8 ++++----
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index 6775a45..4540028 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,4 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
+diff --git a/drivers/scsi/qla4xxx/ql4_dbg.h b/drivers/scsi/qla4xxx/ql4_dbg.h
+index 5b0afc1..51c365b 100644
+--- a/drivers/scsi/qla4xxx/ql4_dbg.h
++++ b/drivers/scsi/qla4xxx/ql4_dbg.h
+@@ -12,6 +12,7 @@
+ /* #define QL_DEBUG_LEVEL_3  */		/* Output function tracing */
+ /* #define QL_DEBUG_LEVEL_4  */
+ /* #define QL_DEBUG_LEVEL_5  */
++/* #define QL_DEBUG_LEVEL_7  */
+ /* #define QL_DEBUG_LEVEL_9  */
  
--#define QLA4XXX_DRIVER_VERSION	"5.03.00-k4"
-+#define QLA4XXX_DRIVER_VERSION	"5.03.00-k5"
+ #define QL_DEBUG_LEVEL_2	/* ALways enable error messagess */
+@@ -48,6 +49,12 @@
+ #define DEBUG5(x)	do {} while (0);
+ #endif				/*  */
+ 
++#if defined(QL_DEBUG_LEVEL_7)
++#define DEBUG7(x)	do {x; } while (0)
++#else				/*  */
++#define DEBUG7(x)	do {} while (0)
++#endif				/*  */
++
+ #if defined(QL_DEBUG_LEVEL_9)
+ #define DEBUG9(x)	do {x;} while (0);
+ #else				/*  */
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index 1b83dc2..e02a884 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -1099,8 +1099,8 @@ irqreturn_t qla4_82xx_intr_handler(int irq, void *dev_id)
+ 
+ 	status = qla4_82xx_rd_32(ha, ISR_INT_STATE_REG);
+ 	if (!ISR_IS_LEGACY_INTR_TRIGGERED(status)) {
+-		DEBUG2(ql4_printk(KERN_INFO, ha,
+-		    "%s legacy Int not triggered\n", __func__));
++		DEBUG7(ql4_printk(KERN_INFO, ha,
++				  "%s legacy Int not triggered\n", __func__));
+ 		return IRQ_NONE;
+ 	}
+ 
+@@ -1158,7 +1158,7 @@ irqreturn_t qla4_83xx_intr_handler(int irq, void *dev_id)
+ 
+ 	/* Legacy interrupt is valid if bit31 of leg_int_ptr is set */
+ 	if (!(leg_int_ptr & LEG_INT_PTR_B31)) {
+-		DEBUG2(ql4_printk(KERN_ERR, ha,
++		DEBUG7(ql4_printk(KERN_ERR, ha,
+ 				  "%s: Legacy Interrupt Bit 31 not set, spurious interrupt!\n",
+ 				  __func__));
+ 		return IRQ_NONE;
+@@ -1166,7 +1166,7 @@ irqreturn_t qla4_83xx_intr_handler(int irq, void *dev_id)
+ 
+ 	/* Validate the PCIE function ID set in leg_int_ptr bits [19..16] */
+ 	if ((leg_int_ptr & PF_BITS_MASK) != ha->pf_bit) {
+-		DEBUG2(ql4_printk(KERN_ERR, ha,
++		DEBUG7(ql4_printk(KERN_ERR, ha,
+ 				  "%s: Incorrect function ID 0x%x in legacy interrupt register, ha->pf_bit = 0x%x\n",
+ 				  __func__, (leg_int_ptr & PF_BITS_MASK),
+ 				  ha->pf_bit));
 -- 
 1.8.0
 
