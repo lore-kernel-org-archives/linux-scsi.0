@@ -1,36 +1,36 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] bfa: Use GFP_ATOMIC under spin_lock
-Date: Fri, 8 Mar 2013 15:01:15 +0300
-Message-ID: <20130308120115.GA18712@longonot.mountain>
+Subject: [patch] [SCSI] scsi_transport_sas: check for allocation failure
+Date: Fri, 8 Mar 2013 15:02:15 +0300
+Message-ID: <20130308120215.GB18712@longonot.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is always called with spinlocks held so it should use
-GFP_ATOMIC.  The call tree is:
-
--> bfad_drv_start()
-   Takes spin_lock_irqsave(&bfad->bfad_lock, flags);
-   -> bfa_fcs_pbc_vport_init()
-      -> bfa_fcb_pbc_vport_create()
+Static checkers complain that this allocation isn't checked.  We
+should return zero if the allocation fails.
 
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index a5f7690..d144a06 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -491,7 +491,7 @@ bfa_fcb_pbc_vport_create(struct bfad_s *bfad, struct bfi_pbc_vport_s pbc_vport)
- 	struct bfad_vport_s   *vport;
- 	int rc;
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 1b68142..a022997 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -379,9 +379,12 @@ sas_tlr_supported(struct scsi_device *sdev)
+ {
+ 	const int vpd_len = 32;
+ 	struct sas_end_device *rdev = sas_sdev_to_rdev(sdev);
+-	char *buffer = kzalloc(vpd_len, GFP_KERNEL);
++	char *buffer;
+ 	int ret = 0;
  
--	vport = kzalloc(sizeof(struct bfad_vport_s), GFP_KERNEL);
-+	vport = kzalloc(sizeof(struct bfad_vport_s), GFP_ATOMIC);
- 	if (!vport) {
- 		bfa_trc(bfad, 0);
- 		return;
++	buffer = kzalloc(vpd_len, GFP_KERNEL);
++	if (!buffer)
++		goto out;
+ 	if (scsi_get_vpd_page(sdev, 0x90, buffer, vpd_len))
+ 		goto out;
+ 
