@@ -1,36 +1,40 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] scsi_transport_sas: check for allocation failure
-Date: Fri, 8 Mar 2013 15:02:15 +0300
-Message-ID: <20130308120215.GB18712@longonot.mountain>
+From: Or Gerlitz <or.gerlitz@gmail.com>
+Subject: Re: [RFC 01/11] iscsi-target: Add iscsit_transport API template
+Date: Fri, 8 Mar 2013 14:36:27 +0200
+Message-ID: <CAJZOPZLnVLXqcvmjhxuhDghkuAHdf5RmxNSM2gy8LqgCqvh8HQ@mail.gmail.com>
+References: <1362707116-31406-1-git-send-email-nab@linux-iscsi.org>
+	<1362707116-31406-2-git-send-email-nab@linux-iscsi.org>
+	<CAG4TOxM=PDYXCAMNdRx629aAP+XF7oZmykg0k4b+a688PzzayA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qe0-f45.google.com ([209.85.128.45]:38172 "EHLO
+	mail-qe0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753105Ab3CHMg2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Mar 2013 07:36:28 -0500
+In-Reply-To: <CAG4TOxM=PDYXCAMNdRx629aAP+XF7oZmykg0k4b+a688PzzayA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Alexander Nezhinsky <alexandern@mellanox.com>
 
-Static checkers complain that this allocation isn't checked.  We
-should return zero if the allocation fails.
+On Fri, Mar 8, 2013 at 6:14 AM, Roland Dreier <roland@kernel.org> wrote:
+> Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
+> > +EXPORT_SYMBOL(iscsit_get_transport);
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> It's not clear to me why this needs to be exported.  Who would use it
+> outside the core iscsi target module?
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 1b68142..a022997 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -379,9 +379,12 @@ sas_tlr_supported(struct scsi_device *sdev)
- {
- 	const int vpd_len = 32;
- 	struct sas_end_device *rdev = sas_sdev_to_rdev(sdev);
--	char *buffer = kzalloc(vpd_len, GFP_KERNEL);
-+	char *buffer;
- 	int ret = 0;
- 
-+	buffer = kzalloc(vpd_len, GFP_KERNEL);
-+	if (!buffer)
-+		goto out;
- 	if (scsi_get_vpd_page(sdev, 0x90, buffer, vpd_len))
- 		goto out;
- 
+Yep, as Nic noted, we're adding here an iscsi transport concept e.g in
+the same manner Mike did libiscsi back in 2005/6 when the iser
+initiator was pushed. This allows for multiple iscsi flavours to use a
+common code  for common functionality. In the initiator area initially
+there were iscsi tcp and iser, later few iscsi HW offloads were merged
+too. Same story here. I think that the point is whether or not these
+APIs are needed, since once we agree on that, we need an header file
+and exporting of functions. As libiscsi.h resided under include/ it
+makes sense to me for this include to be located there too.
+
+Or.
+
+Or.
