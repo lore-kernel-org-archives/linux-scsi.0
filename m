@@ -1,48 +1,40 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 1/5] bnx2fc: Enable cached tasks to improve performance
-Date: Fri, 8 Mar 2013 13:28:50 -0800
-Message-ID: <1362778134-21045-2-git-send-email-bprakash@broadcom.com>
-References: <1362778134-21045-1-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 0/5] bnx2fc version 1.0.14
+Date: Fri, 8 Mar 2013 13:28:49 -0800
+Message-ID: <1362778134-21045-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1629 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1626 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754216Ab3CHV3C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Mar 2013 16:29:02 -0500
-In-Reply-To: <1362778134-21045-1-git-send-email-bprakash@broadcom.com>
+	id S1751264Ab3CHV3D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Mar 2013 16:29:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Set perf_config to 3 during firmware initialization to enable both
-cached connections as well as cached tasks.
+Hi James,
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc_hwi.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Please consider including the following patches for 3.9+ merge window.
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 85ea98a..c1fa69e 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -126,7 +126,11 @@ int bnx2fc_send_fw_fcoe_init_msg(struct bnx2fc_hba *hba)
- 	fcoe_init3.error_bit_map_lo = 0xffffffff;
- 	fcoe_init3.error_bit_map_hi = 0xffffffff;
- 
--	fcoe_init3.perf_config = 1;
-+	/*
-+	 * enable both cached connection and cached tasks
-+	 * 0 = none, 1 = cached connection, 2 = cached tasks, 3 = both
-+	 */
-+	fcoe_init3.perf_config = 3;
- 
- 	kwqe_arr[0] = (struct kwqe *) &fcoe_init1;
- 	kwqe_arr[1] = (struct kwqe *) &fcoe_init2;
--- 
-1.7.1
+Thanks,
+Bhanu
+
+Bhanu Prakash Gollapudi (5):
+  bnx2fc: Enable cached tasks to improve performance
+  bnx2fc: Include chip number in the symbolic name
+  bnx2fc: Fix race condition between IO completion and abort
+  bnx2fc: Update copyright information
+  bnx2fc: Bumped version to 1.0.14
+
+ drivers/scsi/bnx2fc/bnx2fc.h      |   57 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/bnx2fc/bnx2fc_els.c  |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   55 ++++++++++++++++++++++++++++++-----
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c  |    8 ++++-
+ drivers/scsi/bnx2fc/bnx2fc_io.c   |    9 ++++--
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c  |    2 +-
+ 6 files changed, 116 insertions(+), 17 deletions(-)
 
 
