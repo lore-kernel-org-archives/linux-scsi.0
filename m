@@ -1,45 +1,30 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 0/4] qla2xxx: Patches for 3.9-rc.
-Date: Sat,  9 Mar 2013 06:04:50 -0500
-Message-ID: <1362827094-13912-1-git-send-email-chad.dupuis@qlogic.com>
+From: anjayawo@yahoo.com
+Subject: Hello
+Date: Fri, 08 Mar 2013 15:51:08 +0200
+Message-ID: <5139eccc.320.19d0.22464__38707.4213278995$1362859133$gmane$org@econetmobile.co.zw>
+Reply-To: anjayawo@yahoo.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:24803 "HELO linux-zupk.site"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1758254Ab3CIL1F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 Mar 2013 06:27:05 -0500
+Received: from comms.econetmobile.co.zw ([217.15.120.8]:40043 "EHLO
+	econetmobile.co.zw" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750840Ab3CIT6T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Mar 2013 14:58:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Hi James,
-
-Please apply the following patches for 3.9-rc.
-
-Thanks,
-~Saurav
- 
-
-Arun Easi (1):
-  qla2xxx: Fix crash during firmware dump procedure.
-
-Joe Carnuccio (1):
-  Revert "qla2xxx: Add setting of driver version string for vendor
-    application."
-
-Saurav Kashyap (2):
-  qla2xxx: Update copyright information in LICENSE.qla2xxx file.
-  qla2xxx: Update the driver version to 8.04.00.13-k.
-
- Documentation/scsi/LICENSE.qla2xxx |    2 +-
- drivers/scsi/qla2xxx/qla_dbg.c     |    3 +-
- drivers/scsi/qla2xxx/qla_def.h     |    1 -
- drivers/scsi/qla2xxx/qla_gbl.h     |    3 --
- drivers/scsi/qla2xxx/qla_init.c    |    4 +--
- drivers/scsi/qla2xxx/qla_mbx.c     |   58 ------------------------------------
- drivers/scsi/qla2xxx/qla_version.h |    2 +-
- 7 files changed, 5 insertions(+), 68 deletions(-)
-
--- 
-1.7.7
+Hello
+My name is AnJa. a 22 yrs old girl . I am average in height
+and fair in complexion ,am a loving, romantic and caring
+angel. I read your profile. truely is quiet intresting to me
+then , i deciede to contact you. i really want to have a
+good relationship with you. Beside i have a special
+something i want to discusse with you , so you can reach me
+through this Email: (anjayawo@yahoo.com) Hope to hear from
+you soon. i will send my beautiful pictures to you and also
+tell you more about my self. I know age will not be a
+bearier to our relationship, what i need is just your love
+and caring. I will give you my best, bye for now. contact me
+from here (anjayawo@yahoo.com)
+care from AnJa
 
