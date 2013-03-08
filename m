@@ -1,522 +1,206 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC 09/11] iser-target: Add logic for verbs
-Date: Fri,  8 Mar 2013 01:45:14 +0000
-Message-ID: <1362707116-31406-10-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC 08/11] iser-target: Add base + proto includes
+Date: Fri,  8 Mar 2013 01:45:13 +0000
+Message-ID: <1362707116-31406-9-git-send-email-nab@linux-iscsi.org>
 References: <1362707116-31406-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:39379 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759941Ab3CHB4D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Mar 2013 20:56:03 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1362707116-31406-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Alexander Nezhinsky <alexandern@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/infiniband/ulp/isert/isert_verbs.c |  476 ++++++++++++++++++++++++++++
- drivers/infiniband/ulp/isert/isert_verbs.h |    5 +
- 2 files changed, 481 insertions(+), 0 deletions(-)
- create mode 100644 drivers/infiniband/ulp/isert/isert_verbs.c
- create mode 100644 drivers/infiniband/ulp/isert/isert_verbs.h
+ drivers/infiniband/ulp/isert/isert_base.h  |  123 ++++++++++++++++++++++++++++
+ drivers/infiniband/ulp/isert/isert_proto.h |   47 +++++++++++
+ 2 files changed, 170 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/infiniband/ulp/isert/isert_base.h
+ create mode 100644 drivers/infiniband/ulp/isert/isert_proto.h
 
-diff --git a/drivers/infiniband/ulp/isert/isert_verbs.c b/drivers/infiniband/ulp/isert/isert_verbs.c
+diff --git a/drivers/infiniband/ulp/isert/isert_base.h b/drivers/infiniband/ulp/isert/isert_base.h
 new file mode 100644
-index 0000000..2b44eb8
+index 0000000..a7c8bc9
 --- /dev/null
-+++ b/drivers/infiniband/ulp/isert/isert_verbs.c
-@@ -0,0 +1,476 @@
-+/*******************************************************************************
-+ * This file contains iSCSI extentions for RDMA (iSER) Verbs
-+ *
-+ * (c) Copyright 2013 RisingTide Systems LLC.
-+ *
-+ * Nicholas A. Bellinger <nab@linux-iscsi.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ ****************************************************************************/
++++ b/drivers/infiniband/ulp/isert/isert_base.h
+@@ -0,0 +1,123 @@
 +#include <linux/socket.h>
 +#include <linux/in.h>
 +#include <linux/in6.h>
-+
 +#include <rdma/ib_verbs.h>
 +#include <rdma/ib_fmr_pool.h>
 +#include <rdma/rdma_cm.h>
-+#include <target/iscsi/iscsi_transport.h>
 +
-+#include "isert_proto.h"
-+#include "isert_base.h"
-+#include "isert_core.h"
-+
-+#define ISERT_ADDR_ROUTE_TIMEOUT 1000
-+
-+#define	ISERT_MAX_CONN		8
-+#define ISER_MAX_RX_CQ_LEN	(ISERT_QP_MAX_RECV_DTOS * ISERT_MAX_CONN)
-+#define ISER_MAX_TX_CQ_LEN	(ISERT_QP_MAX_REQ_DTOS  * ISERT_MAX_CONN)
-+
-+static void
-+isert_qp_event_callback(struct ib_event *e, void *context)
-+{
-+	pr_err("isert_qp_event_callback event: %d\n", e->event);
-+}
-+
-+static int
-+isert_query_device(struct ib_device *ib_dev, struct ib_device_attr *devattr)
-+{
-+	int ret;
-+
-+	ret = ib_query_device(ib_dev, devattr);
-+	if (ret) {
-+		pr_err("ib_query_device() failed: %d\n", ret);
-+		return ret;
-+	}
-+	pr_debug("devattr->max_mr_size: 0x%016Lx\n", devattr->max_mr_size);
-+	pr_debug("devattr->page_size_cap: 0x%016Lx\n", devattr->page_size_cap);
-+	pr_debug("devattr->max_qp: %d\n", devattr->max_qp);
-+	pr_debug("devattr->max_qp_wr: %d\n", devattr->max_qp_wr);
-+	pr_debug("devattr->device_cap_flags: 0x%08x\n", devattr->device_cap_flags);
-+	pr_debug("devattr->max_sge: %d\n", devattr->max_sge);
-+	pr_debug("devattr->max_sge_rd: %d\n", devattr->max_sge_rd);
-+	pr_debug("devattr->max_cq: %d\n", devattr->max_cq);
-+	pr_debug("devattr->max_cqe: %d\n", devattr->max_cqe);
-+	pr_debug("devattr->max_mr: %d\n", devattr->max_mr);
-+	pr_debug("devattr->max_pd: %d\n", devattr->max_pd);
-+	pr_debug("devattr->max_rdd: %d\n", devattr->max_rdd);
-+	pr_debug("devattr->max_mw: %d\n", devattr->max_mw);
-+	pr_debug("devattr->max_srq: %d\n", devattr->max_srq);
-+	pr_debug("devattr->max_srq_wr: %d\n", devattr->max_srq_wr);
-+	pr_debug("devattr->max_srq_sge: %d\n", devattr->max_srq_sge);
-+
-+	return 0;
-+}
-+
-+static int
-+isert_conn_setup_qp(struct isert_conn *isert_conn, struct rdma_cm_id *cma_id)
-+{
-+	struct ib_qp_init_attr attr;
-+	struct ib_device_attr devattr;
-+	int ret;
-+
-+	memset(&devattr, 0, sizeof(struct ib_device_attr));
-+	ret = isert_query_device(cma_id->device, &devattr);
-+
-+	memset(&attr, 0, sizeof(struct ib_qp_init_attr));
-+	attr.event_handler = isert_qp_event_callback;
-+	attr.qp_context = isert_conn;
-+	attr.send_cq = isert_conn->conn_tx_cq;
-+	attr.recv_cq = isert_conn->conn_rx_cq;
-+	attr.cap.max_send_wr = ISERT_QP_MAX_REQ_DTOS;
-+	attr.cap.max_recv_wr = ISERT_QP_MAX_RECV_DTOS;
-+#warning FIXME: max_sge hardcoded to 16
-+#if 0
-+	attr.cap.max_send_sge = devattr.max_sge;
-+	isert_conn->max_sge = devattr.max_sge;
-+#else
-+	attr.cap.max_send_sge = 16;
-+	isert_conn->max_sge = 16;
-+#endif
-+	attr.cap.max_recv_sge = 1;
-+	attr.sq_sig_type = IB_SIGNAL_REQ_WR;
-+	attr.qp_type = IB_QPT_RC;
-+
-+	pr_debug("isert_conn_setup_qp cma_id->device: %p\n", cma_id->device);
-+	pr_debug("isert_conn_setup_qp conn_pd->device: %p\n", isert_conn->conn_pd->device);
-+
-+	ret = rdma_create_qp(cma_id, isert_conn->conn_pd, &attr);
-+	if (ret) {
-+		pr_err("rdma_create_qp failed for cma_id %d\n", ret);
-+		return ret;
-+	}
-+	isert_conn->conn_qp = cma_id->qp;
-+	pr_debug("rdma_create_qp() returned success >>>>>>>>>>>>>>>>>>>>>>>>>.\n");
-+
-+	return 0;
-+}
-+
-+static void
-+isert_cq_event_callback(struct ib_event *e, void *context)
-+{
-+	pr_debug("isert_cq_event_callback event: %d\n", e->event);
-+
-+	switch(e->event) {
-+	case IB_EVENT_QP_LAST_WQE_REACHED:
-+		pr_warn("Reached TX IB_EVENT_QP_LAST_WQE_REACHED:\n");
-+		break;
-+	default:
-+		pr_warn("Unknown e->event; %d\n", e->event);
-+		break;
-+	}
-+}
-+
-+static int
-+isert_connect_request(struct rdma_cm_id *cma_id, struct rdma_cm_event *event)
-+{
-+	struct iscsi_np *np = cma_id->context;
-+	struct isert_np *isert_np = np->np_context;
-+	struct isert_conn *isert_conn;
-+	struct ib_device *ib_dev = cma_id->device;
-+	int ret;
-+
-+	pr_debug("Entering isert_connect_request cma_id: %p, context: %p\n",
-+			cma_id, cma_id->context);
-+
-+	isert_conn = kzalloc(sizeof(struct isert_conn), GFP_KERNEL);
-+	if (!isert_conn) {
-+		pr_err("Unable to allocate isert_conn\n");
-+		return -ENOMEM;
-+	}
-+	isert_conn->state = ISER_CONN_INIT;
-+	INIT_LIST_HEAD(&isert_conn->conn_accept_node);
-+	init_completion(&isert_conn->conn_login_comp);
-+	init_waitqueue_head(&isert_conn->conn_wait);
-+	kref_init(&isert_conn->conn_kref);
-+	kref_get(&isert_conn->conn_kref);
-+
-+	cma_id->context = isert_conn;
-+	pr_debug("isert_connect_request: Setup new cma_id->context: %p\n", cma_id->context);
-+	isert_conn->conn_cm_id = cma_id;
-+	isert_conn->responder_resources = event->param.conn.responder_resources;
-+	isert_conn->initiator_depth = event->param.conn.initiator_depth;
-+	pr_debug("Using responder_resources: %u initiator_depth: %u\n",
-+		isert_conn->responder_resources, isert_conn->initiator_depth);
-+
-+	isert_conn->login_buf = kzalloc(ISCSI_DEF_MAX_RECV_SEG_LEN +
-+					ISER_RX_LOGIN_SIZE, GFP_KERNEL);
-+	if (!isert_conn->login_buf) {
-+		pr_err("Unable to allocate isert_conn->login_buf\n");
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	isert_conn->login_req_buf = isert_conn->login_buf;
-+	isert_conn->login_rsp_buf = isert_conn->login_buf + ISCSI_DEF_MAX_RECV_SEG_LEN;
-+	pr_debug("Set login_buf: %p login_req_buf: %p login_rsp_buf: %p\n",
-+		isert_conn->login_buf, isert_conn->login_req_buf,
-+		isert_conn->login_rsp_buf);
-+
-+	isert_conn->login_req_dma = ib_dma_map_single(ib_dev,
-+					(void *)isert_conn->login_req_buf,
-+					ISCSI_DEF_MAX_RECV_SEG_LEN, DMA_FROM_DEVICE);
-+
-+	ret = ib_dma_mapping_error(ib_dev, isert_conn->login_req_dma);
-+	if (ret) {
-+		pr_err("ib_dma_mapping_error failed for login_req_dma: %d\n", ret);
-+		isert_conn->login_req_dma = 0;
-+		goto out_login_buf;
-+	}
-+
-+	isert_conn->login_rsp_dma = ib_dma_map_single(ib_dev,
-+					(void *)isert_conn->login_rsp_buf,
-+					ISER_RX_LOGIN_SIZE, DMA_TO_DEVICE);
-+
-+	ret = ib_dma_mapping_error(ib_dev, isert_conn->login_rsp_dma);
-+	if (ret) {
-+		pr_err("ib_dma_mapping_error failed for login_rsp_dma: %d\n", ret);
-+		isert_conn->login_rsp_dma = 0;
-+		goto out_req_dma_map;
-+	}
-+
-+	isert_conn->conn_pd = ib_alloc_pd(ib_dev);
-+	if (IS_ERR(isert_conn->conn_pd)) {
-+		ret = PTR_ERR(isert_conn->conn_pd);
-+		pr_err("ib_alloc_pd failed for conn_pd: %d\n", ret);
-+		goto out_rsp_dma_map;
-+	}
-+
-+	isert_conn->conn_rx_cq = ib_create_cq(ib_dev, isert_cq_rx_callback,
-+						isert_cq_event_callback,
-+						(void *)isert_conn,
-+						ISER_MAX_RX_CQ_LEN, 0);
-+	if (IS_ERR(isert_conn->conn_rx_cq)) {
-+		ret = PTR_ERR(isert_conn->conn_rx_cq);
-+		pr_err("ib_create_cq failed for conn_rx_cq: %d\n", ret);
-+		goto out_alloc_pd;
-+	}
-+
-+	isert_conn->conn_tx_cq = ib_create_cq(ib_dev, isert_cq_tx_callback,
-+						isert_cq_event_callback,
-+						(void *)isert_conn,
-+						ISER_MAX_TX_CQ_LEN, 0);
-+	if (IS_ERR(isert_conn->conn_tx_cq)) {
-+		ret = PTR_ERR(isert_conn->conn_tx_cq);
-+		pr_err("ib_create_cq failed for conn_tx_cq: %d\n", ret);
-+		goto out_rx_cq;
-+	}
-+
-+	ret = ib_req_notify_cq(isert_conn->conn_rx_cq, IB_CQ_NEXT_COMP);
-+	if (ret) {
-+		pr_err("ib_req_notify_cq failed for conn_rx_cq: %d\n", ret);
-+		goto out_tx_cq;
-+	}
-+	ret = ib_req_notify_cq(isert_conn->conn_tx_cq, IB_CQ_NEXT_COMP);
-+	if (ret) {
-+		pr_err("ib_req_notify_cq failed for conn_tx_cq: %d\n", ret);
-+		goto out_tx_cq;
-+	}
-+
-+	tasklet_init(&isert_conn->conn_rx_tasklet, iser_cq_rx_tasklet,
-+				(unsigned long)isert_conn);
-+	tasklet_init(&isert_conn->conn_tx_tasklet, iser_cq_tx_tasklet,
-+				(unsigned long)isert_conn);
-+
-+	isert_conn->conn_mr = ib_get_dma_mr(isert_conn->conn_pd,
-+				IB_ACCESS_LOCAL_WRITE |
-+				IB_ACCESS_REMOTE_WRITE |
-+				IB_ACCESS_REMOTE_READ);
-+	if (IS_ERR(isert_conn->conn_mr)) {
-+		ret = PTR_ERR(isert_conn->conn_mr);
-+		pr_err("ib_get_dma_mr failed for conn->conn_mr: %d\n", ret);
-+		goto out_tx_cq;
-+	}
-+
-+	ret = isert_conn_setup_qp(isert_conn, cma_id);
-+	if (ret)
-+		goto out_conn_mr;
-+
-+	mutex_lock(&isert_np->np_accept_mutex);
-+	list_add_tail(&isert_np->np_accept_list, &isert_conn->conn_accept_node);
-+	mutex_unlock(&isert_np->np_accept_mutex);
-+
-+	pr_debug("isert_connect_request() waking up np_accept_wq: np: %p\n", np);
-+	wake_up(&isert_np->np_accept_wq);
-+	return 0;
-+
-+out_conn_mr:
-+	ib_dereg_mr(isert_conn->conn_mr);
-+	tasklet_kill(&isert_conn->conn_rx_tasklet);
-+	tasklet_kill(&isert_conn->conn_tx_tasklet);
-+out_tx_cq:
-+	ib_destroy_cq(isert_conn->conn_tx_cq);
-+out_rx_cq:
-+	ib_destroy_cq(isert_conn->conn_rx_cq);
-+out_alloc_pd:
-+	ib_dealloc_pd(isert_conn->conn_pd);
-+out_rsp_dma_map:
-+	ib_dma_unmap_single(ib_dev, isert_conn->login_rsp_dma,
-+				ISER_RX_LOGIN_SIZE, DMA_TO_DEVICE);
-+out_req_dma_map:
-+	ib_dma_unmap_single(ib_dev, isert_conn->login_req_dma,
-+				ISCSI_DEF_MAX_RECV_SEG_LEN, DMA_FROM_DEVICE);
-+out_login_buf:
-+	kfree(isert_conn->login_buf);
-+out:
-+	kfree(isert_conn);
-+	return ret;
-+}
-+
-+static void
-+isert_connect_release(struct isert_conn *isert_conn)
-+{
-+	struct ib_device *ib_dev = isert_conn->conn_cm_id->device;
-+
-+	pr_debug("Entering isert_connect_release(): >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
-+
-+	if (isert_conn->conn_qp)
-+		rdma_destroy_qp(isert_conn->conn_cm_id);
-+
-+	isert_free_rx_descriptors(isert_conn);
-+
-+	tasklet_kill(&isert_conn->conn_rx_tasklet);
-+	tasklet_kill(&isert_conn->conn_tx_tasklet);
-+
-+	ib_dereg_mr(isert_conn->conn_mr);
-+	ib_destroy_cq(isert_conn->conn_tx_cq);
-+	ib_destroy_cq(isert_conn->conn_rx_cq);
-+	ib_dealloc_pd(isert_conn->conn_pd);
-+
-+	if (isert_conn->conn_cm_id != NULL)
-+		rdma_destroy_id(isert_conn->conn_cm_id);
-+
-+	if (isert_conn->login_buf) {
-+		ib_dma_unmap_single(ib_dev, isert_conn->login_rsp_dma,
-+				ISER_RX_LOGIN_SIZE, DMA_TO_DEVICE);
-+		ib_dma_unmap_single(ib_dev, isert_conn->login_req_dma,
-+				ISCSI_DEF_MAX_RECV_SEG_LEN, DMA_FROM_DEVICE);
-+		kfree(isert_conn->login_buf);
-+	}
-+	kfree(isert_conn);
-+
-+	pr_debug("Leaving isert_connect_release >>>>>>>>>>>>\n");
-+}
-+
-+static void
-+isert_connected_handler(struct rdma_cm_id *cma_id)
-+{
-+	return;
-+}
-+
-+static void
-+isert_release_conn_kref(struct kref *kref)
-+{
-+	struct isert_conn *isert_conn = container_of(kref,
-+				struct isert_conn, conn_kref);
-+
-+	pr_debug("Calling isert_connect_release for final kref %s/%d\n",
-+			current->comm, current->pid);
-+
-+	isert_connect_release(isert_conn);
-+}
-+
-+void
-+isert_put_conn(struct isert_conn *isert_conn)
-+{
-+	kref_put(&isert_conn->conn_kref, isert_release_conn_kref);
-+}
-+
-+static void
-+isert_disconnect_work(struct work_struct *work)
-+{
-+	struct isert_conn *isert_conn = container_of(work,
-+				struct isert_conn, conn_logout_work);
-+
-+	pr_debug("isert_disconnect_work(): >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
-+
-+	if (isert_conn->post_recv_buf_count == 0 &&
-+	    atomic_read(&isert_conn->post_send_buf_count) == 0) {
-+
-+		pr_debug("Calling wake_up(&isert_conn->conn_wait);\n");
-+		isert_conn->state = ISER_CONN_DOWN;
-+		wake_up(&isert_conn->conn_wait);
-+	}
-+
-+	isert_put_conn(isert_conn);
-+}
-+
-+static void
-+isert_disconnected_handler(struct rdma_cm_id *cma_id)
-+{
-+	struct isert_conn *isert_conn = (struct isert_conn *)cma_id->context;
-+
-+	INIT_WORK(&isert_conn->conn_logout_work, isert_disconnect_work);
-+	schedule_work(&isert_conn->conn_logout_work);
-+}
-+
-+int
-+isert_cma_handler(struct rdma_cm_id *cma_id, struct rdma_cm_event *event)
-+{
-+	int ret = 0;
-+
-+	pr_debug("isert_cma_handler: event %d status %d conn %p id %p\n",
-+		event->event, event->status, cma_id->context, cma_id);
-+
-+	switch (event->event) {
-+	case RDMA_CM_EVENT_CONNECT_REQUEST:
-+		pr_debug("RDMA_CM_EVENT_CONNECT_REQUEST: >>>>>>>>>>>>>>>\n");
-+		ret = isert_connect_request(cma_id, event);
-+		break;
-+	case RDMA_CM_EVENT_ESTABLISHED:
-+		pr_debug("RDMA_CM_EVENT_ESTABLISHED >>>>>>>>>>>>>>\n");
-+		isert_connected_handler(cma_id);
-+		break;
-+	case RDMA_CM_EVENT_DISCONNECTED:
-+		pr_debug("RDMA_CM_EVENT_DISCONNECTED: >>>>>>>>>>>>>>\n");
-+		isert_disconnected_handler(cma_id);
-+		break;
-+	case RDMA_CM_EVENT_DEVICE_REMOVAL:
-+	case RDMA_CM_EVENT_ADDR_CHANGE:
-+		break;
-+	case RDMA_CM_EVENT_ADDR_ERROR:
-+	case RDMA_CM_EVENT_ROUTE_ERROR:
-+	case RDMA_CM_EVENT_CONNECT_ERROR:
-+	default:
-+		pr_err("Unknown RDMA CMA event: %d\n", event->event);
-+		break;
-+	}
-+
-+	if (ret != 0) {
-+		pr_err("isert_cma_handler failed RDMA_CM_EVENT: 0x%08x,"
-+				" ret: %d\n", event->event, ret);
-+		dump_stack();
-+	}
-+
-+	return ret;
-+}
-+
-+int
-+isert_post_recv(struct isert_conn *isert_conn, u32 count)
-+{
-+	struct ib_recv_wr *rx_wr, *rx_wr_failed;
-+	int i, ret;
-+	unsigned int rx_head = isert_conn->conn_rx_desc_head;
-+	struct isert_rx_desc *rx_desc;
-+	struct iser_rx_desc *desc;
-+
-+	for (rx_wr = isert_conn->conn_rx_wr, i = 0; i < count; i++, rx_wr++) {
-+		rx_desc		= &isert_conn->conn_rx_descs[rx_head];
-+		desc		= &rx_desc->desc;
-+		rx_wr->wr_id	= (unsigned long)desc;
-+		rx_wr->sg_list	= &desc->rx_sg;
-+		rx_wr->num_sge	= 1;
-+		rx_wr->next	= rx_wr + 1;
-+		rx_head = (rx_head + 1) & (ISERT_QP_MAX_RECV_DTOS - 1);
-+	}
-+
-+	rx_wr--;
-+	rx_wr->next = NULL; /* mark end of work requests list */
-+
-+	isert_conn->post_recv_buf_count += count;
-+	ret = ib_post_recv(isert_conn->conn_qp, isert_conn->conn_rx_wr,
-+				&rx_wr_failed);
-+	if (ret) {
-+		pr_err("ib_post_recv() failed with ret: %d\n", ret);
-+		isert_conn->post_recv_buf_count -= count;
-+	} else {
-+		pr_debug("isert_post_recv(): Posted %d RX buffers\n", count);
-+		isert_conn->conn_rx_desc_head = rx_head;
-+	}
-+	return ret;
-+}
-+
-+int
-+isert_post_send(struct isert_conn *isert_conn, struct iser_tx_desc *tx_desc)
-+{
-+	struct ib_device *ib_dev = isert_conn->conn_cm_id->device;
-+	struct ib_send_wr send_wr, *send_wr_failed;
-+	int ret;
-+
-+	ib_dma_sync_single_for_device(ib_dev, tx_desc->dma_addr,
-+				ISER_HEADERS_LEN, DMA_TO_DEVICE);
-+
-+	send_wr.next	= NULL;
-+	send_wr.wr_id	= (unsigned long)tx_desc;
-+	send_wr.sg_list	= tx_desc->tx_sg;
-+	send_wr.num_sge	= tx_desc->num_sge;
-+	send_wr.opcode	= IB_WR_SEND;
-+	send_wr.send_flags = IB_SEND_SIGNALED;
-+
-+	atomic_inc(&isert_conn->post_send_buf_count);
-+
-+	ret = ib_post_send(isert_conn->conn_qp, &send_wr, &send_wr_failed);
-+	if (ret) {
-+		pr_err("ib_post_send() failed, ret: %d\n", ret);
-+		atomic_dec(&isert_conn->post_send_buf_count);
-+	}
-+
-+	return ret;
-+}
-diff --git a/drivers/infiniband/ulp/isert/isert_verbs.h b/drivers/infiniband/ulp/isert/isert_verbs.h
++#define ISERT_RDMA_LISTEN_BACKLOG	10
++
++enum isert_desc_type {
++	ISCSI_TX_CONTROL,
++	ISCSI_TX_DATAIN
++};
++
++enum iser_ib_op_code {
++	ISER_IB_RECV,
++	ISER_IB_SEND,
++	ISER_IB_RDMA_WRITE,
++	ISER_IB_RDMA_READ,
++};
++
++enum iser_conn_state {
++	ISER_CONN_INIT,
++	ISER_CONN_UP,
++	ISER_CONN_TERMINATING,
++	ISER_CONN_DOWN,
++};
++
++struct iser_rx_desc {
++	struct iser_hdr iser_header;
++	struct iscsi_hdr iscsi_header;
++	char		data[ISER_RECV_DATA_SEG_LEN];
++	u64		dma_addr;
++	struct ib_sge	rx_sg;
++	char		pad[ISER_RX_PAD_SIZE];
++} __attribute__((packed));
++
++struct isert_rx_desc {
++	struct isert_conn	*desc_conn;
++	struct work_struct	desc_work;
++	struct iser_rx_desc	desc;
++}  __attribute__((packed));
++
++struct iser_tx_desc {
++        struct iser_hdr iser_header;
++        struct iscsi_hdr iscsi_header;
++        enum isert_desc_type type;
++        u64             dma_addr;
++        struct ib_sge   tx_sg[2];
++        int             num_sge;
++	struct isert_cmd *isert_cmd;
++	struct ib_send_wr send_wr;
++} __attribute__((packed));
++
++struct isert_rdma_wr {
++	struct list_head	wr_list;
++	struct isert_cmd	*isert_cmd;
++	enum iser_ib_op_code	iser_ib_op;
++	struct ib_sge		*ib_sge;
++	int			num_sge;
++	struct scatterlist	*sge;
++	int 			send_wr_num;
++	struct ib_send_wr	*send_wr;
++};
++
++struct isert_cmd {
++	uint32_t		read_stag;
++	uint32_t		write_stag;
++	uint64_t		read_va;
++	uint64_t		write_va;
++	u64			sense_buf_dma;
++	u32			sense_buf_len;
++	u32			read_va_off;
++	u32			write_va_off;
++	u32			rdma_wr_num;
++	struct isert_conn	*conn;
++	struct iscsi_cmd	iscsi_cmd;
++	struct ib_sge		*ib_sge;
++	struct iser_tx_desc	tx_desc;
++	struct isert_rdma_wr	rdma_wr;
++	struct work_struct	comp_work;
++	struct kref		cmd_kref;
++};
++
++struct isert_conn {
++	enum iser_conn_state	state;
++	int			post_recv_buf_count;
++	atomic_t		post_send_buf_count;
++	u32			responder_resources;
++	u32			initiator_depth;
++	u32			max_sge;
++	char			*login_buf;
++	char			*login_req_buf;
++	char			*login_rsp_buf;
++	u64			login_req_dma;
++	u64			login_rsp_dma;
++	unsigned int		conn_rx_desc_head;
++	struct isert_rx_desc	*conn_rx_descs;
++	struct ib_recv_wr	conn_rx_wr[ISERT_MIN_POSTED_RX];
++	struct iscsi_conn	*conn;
++	struct list_head	conn_accept_node;
++	struct completion	conn_login_comp;
++	struct iser_tx_desc	conn_login_tx_desc;
++	struct rdma_cm_id	*conn_cm_id;
++	struct ib_pd		*conn_pd;
++	struct ib_cq		*conn_rx_cq;
++	struct ib_cq		*conn_tx_cq;
++	struct ib_mr		*conn_mr;
++	struct ib_qp		*conn_qp;
++	struct tasklet_struct	conn_rx_tasklet;
++	struct tasklet_struct	conn_tx_tasklet;
++	struct work_struct	conn_logout_work;
++	wait_queue_head_t	conn_wait;
++	struct kref		conn_kref;
++};
++
++struct isert_np {
++	wait_queue_head_t	np_accept_wq;
++	struct rdma_cm_id	*np_cm_id;
++	struct mutex		np_accept_mutex;
++	struct list_head	np_accept_list;
++	struct completion	np_login_comp;
++};
+diff --git a/drivers/infiniband/ulp/isert/isert_proto.h b/drivers/infiniband/ulp/isert/isert_proto.h
 new file mode 100644
-index 0000000..da7924d
+index 0000000..ae38b92
 --- /dev/null
-+++ b/drivers/infiniband/ulp/isert/isert_verbs.h
-@@ -0,0 +1,5 @@
-+extern void isert_connect_release(struct isert_conn *);
-+extern void isert_put_conn(struct isert_conn *);
-+extern int isert_cma_handler(struct rdma_cm_id *, struct rdma_cm_event *);
-+extern int isert_post_recv(struct isert_conn *, u32);
-+extern int isert_post_send(struct isert_conn *, struct iser_tx_desc *);
++++ b/drivers/infiniband/ulp/isert/isert_proto.h
+@@ -0,0 +1,47 @@
++/* From iscsi_iser.h */
++
++struct iser_hdr {
++	u8	flags;
++	u8	rsvd[3];
++	__be32	write_stag; /* write rkey */
++	__be64	write_va;
++	__be32	read_stag;  /* read rkey */
++	__be64	read_va;
++} __attribute__((packed));
++
++/*Constant PDU lengths calculations */
++#define ISER_HEADERS_LEN  (sizeof(struct iser_hdr) + sizeof(struct iscsi_hdr))
++
++#define ISER_RECV_DATA_SEG_LEN  8192
++#define ISER_RX_PAYLOAD_SIZE    (ISER_HEADERS_LEN + ISER_RECV_DATA_SEG_LEN)
++#define ISER_RX_LOGIN_SIZE      (ISER_HEADERS_LEN + ISCSI_DEF_MAX_RECV_SEG_LEN)
++
++/* QP settings */
++/* Maximal bounds on received asynchronous PDUs */
++#define ISERT_MAX_TX_MISC_PDUS	4 /* NOOP_IN(2) , ASYNC_EVENT(2)   */
++
++#define ISERT_MAX_RX_MISC_PDUS	6 /* NOOP_OUT(2), TEXT(1),         *
++                                           * SCSI_TMFUNC(2), LOGOUT(1) */
++
++#define ISCSI_DEF_XMIT_CMDS_MAX 128	/* from libiscsi.h, must be power of 2 */
++
++#define ISERT_QP_MAX_RECV_DTOS	(ISCSI_DEF_XMIT_CMDS_MAX)
++
++#define ISERT_MIN_POSTED_RX	(ISCSI_DEF_XMIT_CMDS_MAX >> 2)
++
++#define ISERT_INFLIGHT_DATAOUTS	8
++
++#define ISERT_QP_MAX_REQ_DTOS	(ISCSI_DEF_XMIT_CMDS_MAX *    \
++				(1 + ISERT_INFLIGHT_DATAOUTS) + \
++				ISERT_MAX_TX_MISC_PDUS	+ \
++				ISERT_MAX_RX_MISC_PDUS)
++
++#define ISER_RX_PAD_SIZE	(16384 - (ISER_RX_PAYLOAD_SIZE + \
++					sizeof(u64) + sizeof(struct ib_sge)))
++
++#define ISER_VER	0x10
++#define ISER_WSV	0x08
++#define ISER_RSV	0x04
++#define ISCSI_CTRL	0x10
++#define ISER_HELLO	0x20
++#define ISER_HELLORPLY	0x30
 -- 
 1.7.2.5
-
