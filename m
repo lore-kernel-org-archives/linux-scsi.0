@@ -1,77 +1,111 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 01/11] iscsi-target: Add iscsit_transport API template
-Date: Fri, 08 Mar 2013 13:26:16 -0800
-Message-ID: <1362777976.7905.326.camel@haakon2.linux-iscsi.org>
-References: <1362707116-31406-1-git-send-email-nab@linux-iscsi.org>
-	 <1362707116-31406-2-git-send-email-nab@linux-iscsi.org>
-	 <CAG4TOxM=PDYXCAMNdRx629aAP+XF7oZmykg0k4b+a688PzzayA@mail.gmail.com>
-	 <CAJZOPZLnVLXqcvmjhxuhDghkuAHdf5RmxNSM2gy8LqgCqvh8HQ@mail.gmail.com>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: [PATCH 4/5] bnx2fc: Update copyright information
+Date: Fri, 8 Mar 2013 13:28:53 -0800
+Message-ID: <1362778134-21045-5-git-send-email-bprakash@broadcom.com>
+References: <1362778134-21045-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:40284 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756158Ab3CHV0T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Mar 2013 16:26:19 -0500
-In-Reply-To: <CAJZOPZLnVLXqcvmjhxuhDghkuAHdf5RmxNSM2gy8LqgCqvh8HQ@mail.gmail.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1916 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752940Ab3CHV2u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Mar 2013 16:28:50 -0500
+In-Reply-To: <1362778134-21045-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Or Gerlitz <or.gerlitz@gmail.com>
-Cc: Roland Dreier <roland@kernel.org>, target-devel <target-devel@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Alexander Nezhinsky <alexandern@mellanox.com>
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-On Fri, 2013-03-08 at 14:36 +0200, Or Gerlitz wrote:
-> On Fri, Mar 8, 2013 at 6:14 AM, Roland Dreier <roland@kernel.org> wrote:
-> > Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
-> > > +EXPORT_SYMBOL(iscsit_get_transport);
-> 
-> > It's not clear to me why this needs to be exported.  Who would use it
-> > outside the core iscsi target module?
-> 
-> Yep, as Nic noted, we're adding here an iscsi transport concept e.g in
-> the same manner Mike did libiscsi back in 2005/6 when the iser
-> initiator was pushed. This allows for multiple iscsi flavours to use a
-> common code  for common functionality. In the initiator area initially
-> there were iscsi tcp and iser, later few iscsi HW offloads were merged
-> too. Same story here. I think that the point is whether or not these
-> APIs are needed, since once we agree on that, we need an header file
-> and exporting of functions. As libiscsi.h resided under include/ it
-> makes sense to me for this include to be located there too.
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_els.c  |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c  |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_io.c   |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c  |    2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
-So my main concern with putting iscsit_transport definitions into
-include/target/iscsi/ is the number of dependencies required from
-iscsi_target_core.h.
-
-Currently with iscsi_cmd embedded into isert_cmd, this will require most
-existing iscsi_target_core.h definitions to be pushed out into
-include/target/iscsi/.  This also includes some namespace conflicts
-between libiscsi.h and iscsi_target_core.h, but those can be solved
-easily enough.
-
-I'm still leaning towards just keeping iscsi_transport.h definitions
-local to drivers/target/iscsi, if there is really not going to be other
-drivers aside from ib_isert that end up using it.  If there was interest
-in traditional iscsi-target HW offloads using this interface then the
-story would be different, but every HW offload that I've seen thus far
-using LIO is based on out-of-tree NIC code to start.
-
---nab
-
-
-
-
-
-
-
- 
-
-> 
-> Or.
-> 
-> Or.
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 2f118e3..676dba3 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -2,7 +2,7 @@
+ #define _BNX2FC_H_
+ /* bnx2fc.h: Broadcom NetXtreme II Linux FCoE offload driver.
+  *
+- * Copyright (c) 2008 - 2011 Broadcom Corporation
++ * Copyright (c) 2008 - 2013 Broadcom Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
+index bdbbb13..b1c9a4f 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_els.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
+@@ -3,7 +3,7 @@
+  * This file contains helper routines that handle ELS requests
+  * and responses.
+  *
+- * Copyright (c) 2008 - 2011 Broadcom Corporation
++ * Copyright (c) 2008 - 2013 Broadcom Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index dd2c5c9..1e852d6 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -3,7 +3,7 @@
+  * cnic modules to create FCoE instances, send/receive non-offloaded
+  * FIP/FCoE packets, listen to link events etc.
+  *
+- * Copyright (c) 2008 - 2011 Broadcom Corporation
++ * Copyright (c) 2008 - 2013 Broadcom Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index c1fa69e..b3ee916 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -2,7 +2,7 @@
+  * This file contains the code that low level functions that interact
+  * with 57712 FCoE firmware.
+  *
+- * Copyright (c) 2008 - 2011 Broadcom Corporation
++ * Copyright (c) 2008 - 2013 Broadcom Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 539b95b..9701d6f 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1,7 +1,7 @@
+ /* bnx2fc_io.c: Broadcom NetXtreme II Linux FCoE offload driver.
+  * IO manager and SCSI IO processing.
+  *
+- * Copyright (c) 2008 - 2011 Broadcom Corporation
++ * Copyright (c) 2008 - 2013 Broadcom Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+index c57a3bb..4d93177 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+@@ -2,7 +2,7 @@
+  * Handles operations such as session offload/upload etc, and manages
+  * session resources such as connection id and qp resources.
+  *
+- * Copyright (c) 2008 - 2011 Broadcom Corporation
++ * Copyright (c) 2008 - 2013 Broadcom Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+-- 
+1.7.1
 
 
