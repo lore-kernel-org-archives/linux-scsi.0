@@ -1,72 +1,102 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [patch] [SCSI] scsi_transport_sas: check for allocation failure
-Date: Fri, 08 Mar 2013 18:25:00 -0500
-Message-ID: <513A734C.80807@interlog.com>
-References: <20130308120215.GB18712@longonot.mountain>  <513A2678.5000803@interlog.com> <1362783019.2370.45.camel@dabdike.int.hansenpartnership.com>
-Reply-To: dgilbert@interlog.com
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH 5/5] bnx2fc: Bumped version to 1.0.14
+Date: Fri, 8 Mar 2013 15:53:26 -0800
+Message-ID: <513A79F6.5070301@broadcom.com>
+References: <1362778134-21045-1-git-send-email-bprakash@broadcom.com>
+ <1362778134-21045-6-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1362783019.2370.45.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:1585 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754610Ab3CHX6b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Mar 2013 18:58:31 -0500
+In-Reply-To: <1362778134-21045-6-git-send-email-bprakash@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 
-On 13-03-08 05:50 PM, James Bottomley wrote:
-> On Fri, 2013-03-08 at 12:57 -0500, Douglas Gilbert wrote:
->> On 13-03-08 07:02 AM, Dan Carpenter wrote:
->>> Static checkers complain that this allocation isn't checked.  We
->>> should return zero if the allocation fails.
->>>
->>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->>>
->>> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
->>> index 1b68142..a022997 100644
->>> --- a/drivers/scsi/scsi_transport_sas.c
->>> +++ b/drivers/scsi/scsi_transport_sas.c
->>> @@ -379,9 +379,12 @@ sas_tlr_supported(struct scsi_device *sdev)
->>>    {
->>>    	const int vpd_len = 32;
->>>    	struct sas_end_device *rdev = sas_sdev_to_rdev(sdev);
->>> -	char *buffer = kzalloc(vpd_len, GFP_KERNEL);
->>> +	char *buffer;
->>>    	int ret = 0;
->>>
->>> +	buffer = kzalloc(vpd_len, GFP_KERNEL);
->>> +	if (!buffer)
->>> +		goto out;
->>>    	if (scsi_get_vpd_page(sdev, 0x90, buffer, vpd_len))
->>>    		goto out;
->>>
->>
->> For 32 bytes, why not use the stack?
+On 03/08/2013 01:28 PM, Bhanu Prakash Gollapudi wrote:
+> Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+> ---
+>   drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
+>   drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+>   2 files changed, 2 insertions(+), 2 deletions(-)
 >
-> Because the buffer is a DMA target.  You can't DMA to stack because of
-> padding and cacheline issues.
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+> index 676dba3..1ece6e9 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc.h
+> +++ b/drivers/scsi/bnx2fc/bnx2fc.h
+> @@ -64,7 +64,7 @@
+>   #include "bnx2fc_constants.h"
+>   
+>   #define BNX2FC_NAME		"bnx2fc"
+> -#define BNX2FC_VERSION		"1.0.13"
+> +#define BNX2FC_VERSION		"1.0.14"
+>   
+>   #define PFX			"bnx2fc: "
+>   
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index 1e852d6..9ab62da 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> @@ -22,7 +22,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
+>   
+>   #define DRV_MODULE_NAME		"bnx2fc"
+>   #define DRV_MODULE_VERSION	BNX2FC_VERSION
+> -#define DRV_MODULE_RELDATE	"Dec 21, 2012"
+> +#define DRV_MODULE_RELDATE	"Mar 08, 2012"
+James, I realized there was a typo in the date - 2012 instead of 2013.
 
-And I went to the definition of scsi_get_vpd_page()
-to see if that was called out in the header comments.
-Guess what ... and those same header comments talked
-about freeing a returned pointer. It needs to be
-cleaned up, IMO.
+Please apply this patch instead. Sorry for the inconvenience.
 
-Doug Gilbert
 
-/**
-  * scsi_get_vpd_page - Get Vital Product Data from a SCSI device
-  * @sdev: The device to ask
-  * @page: Which Vital Product Data to return
-  * @buf: where to store the VPD
-  * @buf_len: number of bytes in the VPD buffer area
-  *
-  * SCSI devices may optionally supply Vital Product Data.  Each 'page'
-  * of VPD is defined in the appropriate SCSI document (eg SPC, SBC).
-  * If the device supports this VPD page, this routine returns a pointer
-  * to a buffer containing the data from that page.  The caller is
-  * responsible for calling kfree() on this pointer when it is no longer
-  * needed.  If we cannot retrieve the VPD page this routine returns %NULL.
-  */
-int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
-                       int buf_len)
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+  drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
+  drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+  2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 676dba3..1ece6e9 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -64,7 +64,7 @@
+  #include "bnx2fc_constants.h"
+
+  #define BNX2FC_NAME        "bnx2fc"
+-#define BNX2FC_VERSION        "1.0.13"
++#define BNX2FC_VERSION        "1.0.14"
+
+  #define PFX            "bnx2fc: "
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c 
+b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 1e852d6..9ab62da 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -22,7 +22,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
+
+  #define DRV_MODULE_NAME        "bnx2fc"
+  #define DRV_MODULE_VERSION    BNX2FC_VERSION
+-#define DRV_MODULE_RELDATE    "Dec 21, 2012"
++#define DRV_MODULE_RELDATE    "Mar 08, 2013"
+
+
+  static char version[] =
+-- 
+1.7.1
+
+
+thanks,
+Bhanu
+>   
+>   
+>   static char version[] =
+
+
+
