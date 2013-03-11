@@ -1,36 +1,21 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] mpt3sas: move dereference under check
-Date: Mon, 11 Mar 2013 14:40:15 +0300
-Message-ID: <20130311114014.GA8235@longonot.mountain>
+From: "=?windows-1251?Q?=C0=E2=F0=EE=F0=E0_=CA=EE=E6=F3=F0=EE=E2=E0?="
+	<lawrenceso@westnet.com.au>
+Subject: =?windows-1251?Q?=CA=E0=F7e=F1=F2=E2o_=E4o=F1=F2a=E2=EA=E8_=F2o=EB=FC=EAo_=E4=EB=FF_=E2a=F1_?=
+Date: Mon, 11 Mar 2013 13:22:48 +0100
+Message-ID: <1242665679.20130311132248@westnet.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from outbound-mail01.westnet.com.au ([203.10.1.242]:16759 "EHLO
+	outbound-mail01.westnet.com.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753828Ab3CKMWz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Mar 2013 08:22:55 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-pci_pool_free() dereferences "ioc->sense_dma_pool" but we check it
-for NULL on the following line.
+                                          http://gou.xinezu.com/_vti_pvt/u3.php
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 1836003..06a84ef 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2479,9 +2479,11 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	}
- 
- 	if (ioc->sense) {
--		pci_pool_free(ioc->sense_dma_pool, ioc->sense, ioc->sense_dma);
--		if (ioc->sense_dma_pool)
-+		if (ioc->sense_dma_pool) {
-+			pci_pool_free(ioc->sense_dma_pool, ioc->sense,
-+				      ioc->sense_dma);
- 			pci_pool_destroy(ioc->sense_dma_pool);
-+		}
- 		dexitprintk(ioc, pr_info(MPT3SAS_FMT
- 			"sense_pool(0x%p): free\n",
- 			ioc->name, ioc->sense));
