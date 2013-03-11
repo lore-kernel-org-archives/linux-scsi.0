@@ -1,77 +1,51 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: STANDBY IMMEDIATE failed on NVIDIA MCP5x controllers when
- system suspend
-Date: Mon, 11 Mar 2013 08:49:02 +0000
-Message-ID: <1362991742.2395.9.camel@dabdike.int.hansenpartnership.com>
-References: <513D52BE.7040307@intel.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH V4 1/5] virtio-scsi: redo allocation of target data
+Date: Mon, 11 Mar 2013 12:31:19 +0100
+Message-ID: <513DC087.6000508@redhat.com>
+References: <1362969842-9145-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	<1362969842-9145-2-git-send-email-gaowanlong@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36280 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752724Ab3CKItK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Mar 2013 04:49:10 -0400
-In-Reply-To: <513D52BE.7040307@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1362969842-9145-2-git-send-email-gaowanlong@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-On Mon, 2013-03-11 at 11:42 +0800, Aaron Lu wrote:
-> Hi all,
+Il 11/03/2013 03:43, Wanlong Gao ha scritto:
+> virtio_scsi_target_state is now empty, but we will find new uses
+> for it in the next few patches.  However, dropping the sglist lets
+> us turn the array-of-pointers into a simple array, which simplifies
+> the allocation.
 > 
-> I've seen some reports on STANDBY IMMEDIATE failed on NVIDIA MCP5x
-> controllers when system goes to suspend(this command is sent by scsi sd
-> driver on system suspend as a SCSI STOP command, which is translated to
-> STANDBY IMMEDIATE ATA command). I've no idea of why this happened, so
-> I wrote this email in hope of getting some new idea.
-> 
-> The related bug report:
-> https://bugzilla.kernel.org/show_bug.cgi?id=48951
-> 
-> And google search showed that Peter reported a similar problem here:
-> http://marc.info/?l=linux-ide&m=133534061316338&w=2
-> 
-> And bladud has found that, disable asyn suspend for the scsi target
-> device can work around this problem.
-> 
-> Please feel free to suggest what can possibly be the cause, thanks.
+> However, we do not leave the virtio_scsi_target_state structs in the
+> flexible array member at the end of struct virtio_scsi, because
+> we will place the virtqueues there in the next patches.
 
-I sometimes despair of people getting PM stuff right.  What on earth is
-the point of refusing to suspend if the disk refuses to stop?  In theory
-it gives the device more time to park its head, but almost no modern
-drive requires this.  The next action suspend will take (if allowed) is
-to power down peripherals which will forcibly stop the device.  The stop
-request is purely informational for the device.  If it ignores it, then
-the bigger hammer still works.
+If you have to respin, consider improving the grammar:
 
-You really need to discriminate better between conditions we should and
-shouldn't care about for suspend.  so in sd_suspend, we definitely care
-if we can't flush the cache of a write back device because the power off
-could lose data.  We don't really care if the disk says I can't stop, so
-this is probably the correct fix.
+virtio_scsi_target_state is now empty.  We will find new uses for it in
+the next few patches, so this patch does not drop it completely.
+However, having dropped the sglist flexible array member, we can turn
+the tgt array-of-pointers into a simple array.  This simplifies the
+allocation.
 
-James
+Even simpler would be to place the virtio_scsi_target_state structs in a
+flexible array member at the end of struct virtio_scsi.  But we do not
+do that, because we will place the virtqueues there in the next patches.
 
----
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 7992635..384b621d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3079,7 +3079,11 @@ static int sd_suspend(struct device *dev)
- 
- 	if (sdkp->device->manage_start_stop) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
--		ret = sd_start_stop_device(sdkp, 0);
-+		/*
-+		 * this is informational for the disk we're going to power it
-+		 * off anyway, so don't bother about the return status
-+		 */
-+		sd_start_stop_device(sdkp, 0);
- 	}
- 
- done:
+Paolo
 
-
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+> Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
