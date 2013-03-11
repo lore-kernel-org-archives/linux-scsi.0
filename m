@@ -1,99 +1,65 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: STANDBY IMMEDIATE failed on NVIDIA MCP5x controllers when system suspend
-Date: Mon, 11 Mar 2013 08:35:41 -0600
-Message-ID: <CADLC3L1+z=Nx_MFBz60z3Ow_98hetLYDjK5On-zxwdpUf+quzA@mail.gmail.com>
-References: <513D52BE.7040307@intel.com>
-	<1362991742.2395.9.camel@dabdike.int.hansenpartnership.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [patch] [SCSI] scsi_transport_sas: check for allocation failure
+Date: Mon, 11 Mar 2013 10:48:54 -0400
+Message-ID: <513DEED6.3090709@interlog.com>
+References: <20130308120215.GB18712@longonot.mountain> <513A2678.5000803@interlog.com> <1362783019.2370.45.camel@dabdike.int.hansenpartnership.com> <20130311131032.GO9189@mwanda>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1362991742.2395.9.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130311131032.GO9189@mwanda>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-(resending due to GMail mess-up, sorry)
-
-On Mon, Mar 11, 2013 at 2:49 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Mon, 2013-03-11 at 11:42 +0800, Aaron Lu wrote:
->> Hi all,
+On 13-03-11 09:10 AM, Dan Carpenter wrote:
+> On Fri, Mar 08, 2013 at 10:50:19PM +0000, James Bottomley wrote:
+>> On Fri, 2013-03-08 at 12:57 -0500, Douglas Gilbert wrote:
+>>> On 13-03-08 07:02 AM, Dan Carpenter wrote:
+>>>> Static checkers complain that this allocation isn't checked.  We
+>>>> should return zero if the allocation fails.
+>>>>
+>>>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>>>>
+>>>> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+>>>> index 1b68142..a022997 100644
+>>>> --- a/drivers/scsi/scsi_transport_sas.c
+>>>> +++ b/drivers/scsi/scsi_transport_sas.c
+>>>> @@ -379,9 +379,12 @@ sas_tlr_supported(struct scsi_device *sdev)
+>>>>    {
+>>>>    	const int vpd_len = 32;
+>>>>    	struct sas_end_device *rdev = sas_sdev_to_rdev(sdev);
+>>>> -	char *buffer = kzalloc(vpd_len, GFP_KERNEL);
+>>>> +	char *buffer;
+>>>>    	int ret = 0;
+>>>>
+>>>> +	buffer = kzalloc(vpd_len, GFP_KERNEL);
+>>>> +	if (!buffer)
+>>>> +		goto out;
+>>>>    	if (scsi_get_vpd_page(sdev, 0x90, buffer, vpd_len))
+>>>>    		goto out;
+>>>>
+>>>
+>>> For 32 bytes, why not use the stack?
 >>
->> I've seen some reports on STANDBY IMMEDIATE failed on NVIDIA MCP5x
->> controllers when system goes to suspend(this command is sent by scsi sd
->> driver on system suspend as a SCSI STOP command, which is translated to
->> STANDBY IMMEDIATE ATA command). I've no idea of why this happened, so
->> I wrote this email in hope of getting some new idea.
+>> Because the buffer is a DMA target.  You can't DMA to stack because of
+>> padding and cacheline issues.
 >>
->> The related bug report:
->> https://bugzilla.kernel.org/show_bug.cgi?id=48951
->>
->> And google search showed that Peter reported a similar problem here:
->> http://marc.info/?l=linux-ide&m=133534061316338&w=2
->>
->> And bladud has found that, disable asyn suspend for the scsi target
->> device can work around this problem.
->>
->> Please feel free to suggest what can possibly be the cause, thanks.
 >
-> I sometimes despair of people getting PM stuff right.  What on earth is
-> the point of refusing to suspend if the disk refuses to stop?  In theory
-> it gives the device more time to park its head, but almost no modern
-> drive requires this.  The next action suspend will take (if allowed) is
-> to power down peripherals which will forcibly stop the device.  The stop
-> request is purely informational for the device.  If it ignores it, then
-> the bigger hammer still works.
+> I think stack data works here.  scsi_execute() calls
+> blk_rq_map_kern() which handles stack memory and alignment issues.
 
-This really does matter. Especially on laptop hard drives (but on many
-desktop ones as well), we really want to stop the drive, and therefore
-unload the heads, before the power is shut off. Drives are often rated
-for a much lower number of emergency head unloads (caused by power
-loss) over their lifespan than normal software-commanded ones. So over
-a long period of time, repeatedly failing to stop the drive before
-power off will shorten its life. Maybe aborting suspend for this is a
-bit harsh but it's not something that should be ignored.
+That being the case, several other callers of
+scsi_get_vpd_page() 9and friends) could be
+simplified and sped up.
 
-Just to add to this point, it doesn't just matter for rotational
-drives, either. A lot of SSDs use the "standby now" command to do some
-kind of cleanup before power off. Some drives document that a
-subsequent power up may take longer for the drive to be ready if it
-wasn't "spun down" prior to the last power off. It's conceivable that
-in some crappy drives, lack of proper power-off sequence could even
-cause data loss.
+Also since VPD pages don't change and they can carry
+a lot of disparate information (e.g. the Extended
+Inquiry and Block Limits pages) perhaps they could
+be cached by the appropriate level (e.g. Extended
+Inquiry cached by mid-level; Block Limits cached
+by sd driver).
 
-The question is, at the point where we are stopping the drive, has
-anything been done to the ATA controller to suspend it? If so, that
-sounds like a definite bug somewhere. It has to be something we are
-doing on the kernel side, otherwise why would this work if async
-suspend was disabled?
-
->
-> You really need to discriminate better between conditions we should and
-> shouldn't care about for suspend.  so in sd_suspend, we definitely care
-> if we can't flush the cache of a write back device because the power off
-> could lose data.  We don't really care if the disk says I can't stop, so
-> this is probably the correct fix.
->
-> James
->
-> ---
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 7992635..384b621d 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3079,7 +3079,11 @@ static int sd_suspend(struct device *dev)
->
->         if (sdkp->device->manage_start_stop) {
->                 sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
-> -               ret = sd_start_stop_device(sdkp, 0);
-> +               /*
-> +                * this is informational for the disk we're going to power it
-> +                * off anyway, so don't bother about the return status
-> +                */
-> +               sd_start_stop_device(sdkp, 0);
->         }
->
->  done:
->
->
+Doug Gilbert
