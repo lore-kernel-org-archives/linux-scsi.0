@@ -1,90 +1,77 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH -mmotm] scsi: fix the wrong position of the comment
-Date: Sun, 10 Mar 2013 21:10:19 -0700
-Message-ID: <20130311041019.GB37523@n8021av7gqvyn1.qlogic.org>
-References: <1362902990-25137-1-git-send-email-akinobu.mita@gmail.com>
- <1362903765.3003.2.camel@dabdike.int.hansenpartnership.com>
- <20130310005718.2d6579ea.akpm@linux-foundation.org>
- <1362905945.3003.4.camel@dabdike.int.hansenpartnership.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: STANDBY IMMEDIATE failed on NVIDIA MCP5x controllers when
+ system suspend
+Date: Mon, 11 Mar 2013 08:49:02 +0000
+Message-ID: <1362991742.2395.9.camel@dabdike.int.hansenpartnership.com>
+References: <513D52BE.7040307@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:24771
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750912Ab3CKEKb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Mar 2013 00:10:31 -0400
-Content-Disposition: inline
-In-Reply-To: <1362905945.3003.4.camel@dabdike.int.hansenpartnership.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36280 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752724Ab3CKItK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Mar 2013 04:49:10 -0400
+In-Reply-To: <513D52BE.7040307@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Akinobu Mita <akinobu.mita@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-On Sun, 10 Mar 2013, James Bottomley wrote:
+On Mon, 2013-03-11 at 11:42 +0800, Aaron Lu wrote:
+> Hi all,
+> 
+> I've seen some reports on STANDBY IMMEDIATE failed on NVIDIA MCP5x
+> controllers when system goes to suspend(this command is sent by scsi sd
+> driver on system suspend as a SCSI STOP command, which is translated to
+> STANDBY IMMEDIATE ATA command). I've no idea of why this happened, so
+> I wrote this email in hope of getting some new idea.
+> 
+> The related bug report:
+> https://bugzilla.kernel.org/show_bug.cgi?id=48951
+> 
+> And google search showed that Peter reported a similar problem here:
+> http://marc.info/?l=linux-ide&m=133534061316338&w=2
+> 
+> And bladud has found that, disable asyn suspend for the scsi target
+> device can work around this problem.
+> 
+> Please feel free to suggest what can possibly be the cause, thanks.
 
-> On Sun, 2013-03-10 at 00:57 -0800, Andrew Morton wrote:
-> > On Sun, 10 Mar 2013 08:22:47 +0000 James Bottomley <jbottomley@parallels.com> wrote:
-> >
-> > > [missing SCSI cc added]
-> > > On Sun, 2013-03-10 at 17:09 +0900, Akinobu Mita wrote:
-> > > > This fixes the wrong position of the comment introduced by
-> > > > scsi-rename-random32-to-prandom_u32.patch in the -mm tree.
-> > > >
-> > > > Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> > > > Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> > > > Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> > > > ---
-> > > >  drivers/scsi/qla2xxx/qla_attr.c | 6 +++---
-> > > >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > > >
-> > > > diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-> > > > index 04bf7b8..e44d47e 100644
-> > > > --- a/drivers/scsi/qla2xxx/qla_attr.c
-> > > > +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> > > > @@ -1939,13 +1939,13 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
-> > > >         }
-> > > >
-> > > >         /* No pending activities shall be there on the vha now */
-> > > > -       if (ql2xextended_error_logging & ql_dbg_user)
-> > > > -               msleep(prandom_u32() % 10);
-> > > > +       if (ql2xextended_error_logging & ql_dbg_user) {
-> > > >                 /*
-> > > >                  * Just to see if something falls on the net we have placed
-> > > >                  * below
-> > > >                  */
-> > > > -
-> > > > +               msleep(prandom_u32() % 10);
-> > > > +       }
-> > >
-> > > I don't git a toss if it's random or prandom: Andrew: get rid of it; we
-> > > do not sleep in kernel for random intervals whatever the provocation ...
-> > > if this is supposed to be a warning or error condition then print
-> > > something.
-> >
-> > That msleep was added by
-> >
-> > commit feafb7b1714cf599a6d0fed45801ab3f66046cbd
-> > Author:     Arun Easi <arun.easi@qlogic.com>
-> > AuthorDate: Fri Sep 3 14:57:00 2010 -0700
-> > Commit:     James Bottomley <James.Bottomley@suse.de>
-> > CommitDate: Sun Sep 5 15:13:12 2010 -0300
-> >
-> >     [SCSI] qla2xxx: Fix vport delete issues
->
-> Sorry, I didn't notice multiple Andrews on the cc list.  I meant Andrew
-> Vasquez (or other member of the qla team) remove this, please (and
-> preferably do something correct).
->
+I sometimes despair of people getting PM stuff right.  What on earth is
+the point of refusing to suspend if the disk refuses to stop?  In theory
+it gives the device more time to park its head, but almost no modern
+drive requires this.  The next action suspend will take (if allowed) is
+to power down peripherals which will forcibly stop the device.  The stop
+request is purely informational for the device.  If it ignores it, then
+the bigger hammer still works.
 
-James,
+You really need to discriminate better between conditions we should and
+shouldn't care about for suspend.  so in sd_suspend, we definitely care
+if we can't flush the cache of a write back device because the power off
+could lose data.  We don't really care if the disk says I can't stop, so
+this is probably the correct fix.
 
-We'll take a look at this, yes.  Adding Giri and Co. to the CC.
+James
 
-Thanks, AV
+---
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7992635..384b621d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3079,7 +3079,11 @@ static int sd_suspend(struct device *dev)
+ 
+ 	if (sdkp->device->manage_start_stop) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+-		ret = sd_start_stop_device(sdkp, 0);
++		/*
++		 * this is informational for the disk we're going to power it
++		 * off anyway, so don't bother about the return status
++		 */
++		sd_start_stop_device(sdkp, 0);
+ 	}
+ 
+ done:
 
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
