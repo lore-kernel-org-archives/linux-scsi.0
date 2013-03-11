@@ -1,155 +1,117 @@
-From: Vijay Mohan Guvva <vmohan@Brocade.com>
-Subject: RE: [PATCH v2][RFC] scsi_transport_fc: Implement I_T nexus reset
-Date: Mon, 11 Mar 2013 12:32:03 -0600
-Message-ID: <51BD2AE8016AE441B63F5661159C990203A17E0D14@BRM-EXCH-3.corp.brocade.com>
-References: <1355214219-17343-1-git-send-email-hare@suse.de>
- <5138E84B.8030803@cs.wisc.edu> <5138F4DF.9010906@tributary.com>
- <5138F67D.3070703@cs.wisc.edu> <5138FA21.8000000@tributary.com>
- <513E0EE6.7010909@suse.de>
- <b5c314a7-83ce-469e-8a59-7e35bd92b2b6@CMEXHTCAS2.ad.emulex.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: STANDBY IMMEDIATE failed on NVIDIA MCP5x controllers when system suspend
+Date: Mon, 11 Mar 2013 13:30:32 -0600
+Message-ID: <CADLC3L0nM+3ttR8V8cCOZWGY+eJqGZdmKiTRieYr_d+Xqh36UA@mail.gmail.com>
+References: <513D52BE.7040307@intel.com>
+	<1362991742.2395.9.camel@dabdike.int.hansenpartnership.com>
+	<CADLC3L1+z=Nx_MFBz60z3Ow_98hetLYDjK5On-zxwdpUf+quzA@mail.gmail.com>
+	<1363013464.2395.63.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:54660 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752011Ab3CKSb7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Mar 2013 14:31:59 -0400
-Received: from pps.filterd (m0000700 [127.0.0.1])
-	by mx0b-000f0801.pphosted.com (8.14.5/8.14.5) with SMTP id r2BISdob020175
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 11:31:58 -0700
-Received: from brmwp-exchub02.corp.brocade.com ([208.47.132.227])
-	by mx0b-000f0801.pphosted.com with ESMTP id 1b0s4d8m4n-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 11:31:58 -0700
-In-Reply-To: <b5c314a7-83ce-469e-8a59-7e35bd92b2b6@CMEXHTCAS2.ad.emulex.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1363013464.2395.63.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Smart@emulex.com" <James.Smart@emulex.com>, Hannes Reinecke <hare@suse.de>
-Cc: Jeremy Linton <jlinton@tributary.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Robert Elliot <elliot@hp.com>, Anil Gurumurthy <agurumur@Brocade.com>
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of James Smart
-> Sent: Monday, March 11, 2013 11:04 AM
-> To: Hannes Reinecke
-> Cc: Jeremy Linton; Mike Christie; linux-scsi@vger.kernel.org; Andrew
-> Vasquez; Chad Dupuis; Robert Elliot; Smart, James
-> Subject: Re: [PATCH v2][RFC] scsi_transport_fc: Implement I_T nexus reset
-> 
-> 
-> On 3/11/2013 1:05 PM, Hannes Reinecke wrote:
-> > On 03/07/2013 09:35 PM, Jeremy Linton wrote:
-> >> On 3/7/2013 2:20 PM, Mike Christie wrote:
-> >>> On 03/07/2013 02:13 PM, Jeremy Linton wrote:
-> >>>>     For lpfc, you never get to the code. Or rather when I was
-> >>>> testing it, I couldn't find any way to propagate an error beyond
-> >>>> the initial
-> >>>> lpfc_reset_flush_io_context() call in lpfc_device_reset_handler().
-> >>>>
-> >>>>     That call pretty much always returns success indpependent of
-> >>>> the remote device because the firmware acks the context clear
-> >>>> aborts, resulting in the outstanding iocb count being zero
-> >>>> (independent of both the mid layer status and the actual device
-> >>>> state).
-> >>>>
-> >>>
-> >>> Your lpfc patch fixes that right?
-> >>
-> >>     Yes. It allows the device reset to fail if the device doesn't
-> >> respond to the task mgmt request, or rejects it, etc.
-> >>
-> >>     It doesn't unjam the commands that get aborted by the
-> >> flush_io_context() call.
-> >> Those have to depend on their timeouts. That is another patch...
-> >>
-> >>
-> >
-> > It's actually worse than that.
-> > lpfc_terminate_rport_io() calls lpfc_sli_abort_iocb(), which has this:
-> >
-> >
-> >          if (lpfc_is_link_up(phba))
-> >             abtsiocb->iocb.ulpCommand = CMD_ABORT_XRI_CN;
-> >         else
-> >             abtsiocb->iocb.ulpCommand = CMD_CLOSE_XRI_CN;
-> >
-> >         /* Setup callback routine and issue the command. */
-> >         abtsiocb->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
-> >         ret_val = lpfc_sli_issue_iocb(phba, pring->ringno,
-> >                           abtsiocb, 0);
-> >         if (ret_val == IOCB_ERROR) {
-> >             lpfc_sli_release_iocbq(phba, abtsiocb);
-> >             errcnt++;
-> >             continue;
-> >         }
-> >
-> >
-> > Ie we're calling into firmware and waiting for an async event telling
-> > us that the command has been aborted (ideally).
-> > What I would like is some kind of synchronous call here, which would
-> > guarantee us that we won't run into use-after-free issues.
-> >
-> > Also 'lpfc_is_link_up' is clearly deficient here as the link itself
-> > most likely is up, it's the I_T Nexus which is not.
-> >
-> > James, is it safe to use 'CMD_CLOSE_XRI_CN' even when the link is up?
-> 
-> No, it's not safe.  The ABORT, which sends an ABTS, is mandated so that the
-> other end and ourselves maintain proper (unique) exchange id
-> state.   CLOSE sends no link traffic - but can only be used if the login
-> is broken (e.g. there's a different mechanism that communicated
-> termination of exchange states).   I don't believe I can trust the logic
-> in the OS about frames laying in wait in the fabric (maybe sent earlier,
-> delayed at a switch, delivered after os thinks nexus is gone), so driver needs
-> to terminate them properly.
-> 
-> 
-> >
-> > Which makes me wonder, how _exactly_ is I_T nexus reset supposed to
-> > work? After all, we're trying to tell the target port that we cannot
-> > talk to it anymore, right?
-> > Which has some hurdles, conceptually ...
-> > So from my POV I_T nexus reset can only be implemented on the
-> > _initiator_ side, disregarding any target implementation.
-> > (which would be pointless anyway).
-> >
-> > Hmm. Probably have to ask T10 for clarification. Robert, any insights?
-> 
-> 
-> The I_T nexus reset should be a FC transport implicit logout call to the LLDD.
-> E.g. this becomes a transport-specific action on what it means to
-> break the I_T nexus, which for FC, is to terminate the login.   This
-> logout call allows the driver to do all the implicit work to kill exchange
-> contexts and allows it to adjust the state of the target in
-> it's FC discovery engine.  Question is - should the driver re-login ?
-> Typically, this would be driven by a RSCN, which I'm guessing for this
-> scenario, would not be occurring. If you knew it would, you could let
-> the driver respond to the RSCN and re-login later.   If there's no RSCN,
-> then I would assume we put a heartbeat into the transport to retry login (to a
-> WWPN/WWNN basis - remembered from the I_T nexus reset) with the LLDD
-> - a new interface as well - call it "establish I_T_nexus".
-> 
-> In lpfc's case - the Logout would allow the driver to take the CLOSE_XRI case,
-> giving you the speed/asynchronicity you desire. Reuse of scsi job structures
-> still can't occur until the driver returns then via the completion routines (as
-> DMA related to them must be cancelled within the card by the ABORT/CLOSE
-> commands - even if we know there shouldn't be something to DMA).
-> 
-> -- james s
-> 
-> 
-> >
-> > Cheers,
-> >
-> > Hannes
-> >
-> >
+On Mon, Mar 11, 2013 at 8:51 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Mon, 2013-03-11 at 08:35 -0600, Robert Hancock wrote:
+>> (resending due to GMail mess-up, sorry)
+>>
+>> On Mon, Mar 11, 2013 at 2:49 AM, James Bottomley
+>> <James.Bottomley@hansenpartnership.com> wrote:
+>> > On Mon, 2013-03-11 at 11:42 +0800, Aaron Lu wrote:
+>> >> Hi all,
+>> >>
+>> >> I've seen some reports on STANDBY IMMEDIATE failed on NVIDIA MCP5x
+>> >> controllers when system goes to suspend(this command is sent by scsi sd
+>> >> driver on system suspend as a SCSI STOP command, which is translated to
+>> >> STANDBY IMMEDIATE ATA command). I've no idea of why this happened, so
+>> >> I wrote this email in hope of getting some new idea.
+>> >>
+>> >> The related bug report:
+>> >> https://bugzilla.kernel.org/show_bug.cgi?id=48951
+>> >>
+>> >> And google search showed that Peter reported a similar problem here:
+>> >> http://marc.info/?l=linux-ide&m=133534061316338&w=2
+>> >>
+>> >> And bladud has found that, disable asyn suspend for the scsi target
+>> >> device can work around this problem.
+>> >>
+>> >> Please feel free to suggest what can possibly be the cause, thanks.
+>> >
+>> > I sometimes despair of people getting PM stuff right.  What on earth is
+>> > the point of refusing to suspend if the disk refuses to stop?  In theory
+>> > it gives the device more time to park its head, but almost no modern
+>> > drive requires this.  The next action suspend will take (if allowed) is
+>> > to power down peripherals which will forcibly stop the device.  The stop
+>> > request is purely informational for the device.  If it ignores it, then
+>> > the bigger hammer still works.
+>>
+>> This really does matter. Especially on laptop hard drives (but on many
+>> desktop ones as well), we really want to stop the drive, and therefore
+>> unload the heads, before the power is shut off. Drives are often rated
+>> for a much lower number of emergency head unloads (caused by power
+>> loss) over their lifespan than normal software-commanded ones. So over
+>> a long period of time, repeatedly failing to stop the drive before
+>> power off will shorten its life. Maybe aborting suspend for this is a
+>> bit harsh but it's not something that should be ignored.
+>
+> Where do you get this information from?  The only smart parameter
+> tracking this is the power off retract count (it may originally have
+> been the emergency head retract count, but it was renamed a while ago),
+> and that happens for any head unload, however caused.  I know SCSI
+> devices long ago ceased caring about this, because the in-drive
+> capacitance is sufficient to achieve a head unload before the device
+> completely spins down in forced power off (I admit the really old IDE
+> devices ... the ones that required the OS to do everything did have a
+> nasty habit of crashing their heads onto the surface, but they stopped
+> being manufactured years ago) ... I really don't see how any modern SATA
+> device would fail to do this.
 
-Adding BROCADE BFA FC SCSI DRIVER maintainer Anil to the CC.
+They do still unload the heads if you cut power (I seem to recall
+hearing that some of them actually used the rotational energy in the
+spinning platters as a power source to do this). But it's not nearly
+as nice for the drive as the normal commanded unload. You can kind of
+tell just from the sound of it that it's not really the same at all.
 
-Thanks,
-Vijay
+Many drives do track these separately in SMART attributes. The one for
+normal unloads is Load_Cycle_Count, the other is
+Power-Off_Retract_Count. The drive on the machine I'm on right now,
+for example, has a Load_Cycle_Count of 88 and Power-Off_Retract_Count
+of 27. I haven't seen what the actual cycle limits are for these but
+I'm willing to bet that the power-off retract count limit is a lot
+lower.
 
+>
+>> Just to add to this point, it doesn't just matter for rotational
+>> drives, either. A lot of SSDs use the "standby now" command to do some
+>> kind of cleanup before power off. Some drives document that a
+>> subsequent power up may take longer for the drive to be ready if it
+>> wasn't "spun down" prior to the last power off. It's conceivable that
+>> in some crappy drives, lack of proper power-off sequence could even
+>> cause data loss.
+>
+> Well, no, they shouldn't ... not unless the drive violates its data
+> integrity commitment, which is going to cause a whole load of FS
+> corruption.  All our Jornalled FS guarantees rely on this data integrity
+> commitment.  If they're violated, we have a whole boat load of data
+> safety issues.
 
+I'm sure there are some SSDs that do violate their data integrity
+commitments - a while ago some tests were done (don't have a link
+handy and I don't think they identified the actual vendor/model of the
+drives in any case) but there were definitely some SSDs that did do
+nasty things like trash unrelated data if power was lost while
+writing, etc. So we definitely don't want to risk this sort of thing
+occurring on a normal power-off or suspend.
+
+There's a reference to this in SMART here, for example:
+http://www.thomas-krenn.com/en/wiki/SMART_attributes_of_Intel_SSDs
+They refer to what's normally called "Power-off Retract Count" for
+HDDs as "Unsafe Shutdown Count ": "The raw value reports the
+cumulative number of unsafe (unclean) shutdown events over the life of
+the device. An unsafe shutdown occurs whenever the device is powered
+off without STANDBY IMMEDIATE being the last command."
