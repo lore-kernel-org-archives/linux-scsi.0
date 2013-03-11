@@ -1,58 +1,155 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: Re: [PATCH] [SCSI] Wake blockdev queue in scsi_internal_device_unblock()
- for SDEV_RUNNING
-Date: Mon, 11 Mar 2013 11:21:47 -0700
-Message-ID: <CAG4TOxMv28sN4pQWz_DCrmEx2dyuLEk3oYM-98ZK44Van7JkAw@mail.gmail.com>
-References: <1361814905-7201-1-git-send-email-roland@kernel.org> <513E1DB5.8040404@cs.wisc.edu>
+From: Vijay Mohan Guvva <vmohan@Brocade.com>
+Subject: RE: [PATCH v2][RFC] scsi_transport_fc: Implement I_T nexus reset
+Date: Mon, 11 Mar 2013 12:32:03 -0600
+Message-ID: <51BD2AE8016AE441B63F5661159C990203A17E0D14@BRM-EXCH-3.corp.brocade.com>
+References: <1355214219-17343-1-git-send-email-hare@suse.de>
+ <5138E84B.8030803@cs.wisc.edu> <5138F4DF.9010906@tributary.com>
+ <5138F67D.3070703@cs.wisc.edu> <5138FA21.8000000@tributary.com>
+ <513E0EE6.7010909@suse.de>
+ <b5c314a7-83ce-469e-8a59-7e35bd92b2b6@CMEXHTCAS2.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:56293 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319Ab3CKSWJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Mar 2013 14:22:09 -0400
-Received: by mail-we0-f177.google.com with SMTP id d7so3807062wer.36
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 11:22:07 -0700 (PDT)
-In-Reply-To: <513E1DB5.8040404@cs.wisc.edu>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:54660 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752011Ab3CKSb7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Mar 2013 14:31:59 -0400
+Received: from pps.filterd (m0000700 [127.0.0.1])
+	by mx0b-000f0801.pphosted.com (8.14.5/8.14.5) with SMTP id r2BISdob020175
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 11:31:58 -0700
+Received: from brmwp-exchub02.corp.brocade.com ([208.47.132.227])
+	by mx0b-000f0801.pphosted.com with ESMTP id 1b0s4d8m4n-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 11:31:58 -0700
+In-Reply-To: <b5c314a7-83ce-469e-8a59-7e35bd92b2b6@CMEXHTCAS2.ad.emulex.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "James.Smart@emulex.com" <James.Smart@emulex.com>, Hannes Reinecke <hare@suse.de>
+Cc: Jeremy Linton <jlinton@tributary.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Robert Elliot <elliot@hp.com>, Anil Gurumurthy <agurumur@Brocade.com>
 
-On Mon, Mar 11, 2013 at 11:08 AM, Mike Christie <michaelc@cs.wisc.edu> wrote:
->> If at the same time a SAS fabric event goes to the HBA, what can
->> happen is the following:
->>
->>      - mpt2sas calls _scsih_block_io_all_device() -> scsi_internal_device_block(sdev)
->>
->>        (In response to some HBA firmware event like MPI2_EVENT_SAS_BROADCAST_PRIMITIVE)
->>        Now sdev state is SDEV_BLOCK and blockdev queue has QUEUE_FLAG_STOPPED set.
->>
->>      - Someone like scsi_add_lun() calls scsi_device_set_state(sdev, SDEV_RUNNING)
->>
->>        (SCSI bus scanning runs asynchronously to firmware event handling)
->>        Now sdev state is SDEV_RUNNING but blockdev queue still has QUEUE_FLAG_STOPPED set
->
-> Is this a valid state change? Should it be failed in
-> scsi_device_set_state when we try to go from SDEV_BLOCKED ->
-> SDEV_RUNNING? I am not sure if it make senses to ever have a device in
-> SDEV_RUNNING but have the stopped queue bit set.
->
-> It used to be that scsi_internal_device_unblock called
-> scsi_device_set_state so the transition from SDEV_BLOCKED to
-> SDEV_RUNNUNG had to be a valid transition. scsi_internal_device_unblock
-> then started the queue. I am not sure if the sequence you were hitting
-> was actually a transition that was intended or just worked by accident.
->
-> Should we be failing the above call to scsi_device_set_state, and then
-> the call to scsi_internal_device_unblock would work as expected.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of James Smart
+> Sent: Monday, March 11, 2013 11:04 AM
+> To: Hannes Reinecke
+> Cc: Jeremy Linton; Mike Christie; linux-scsi@vger.kernel.org; Andrew
+> Vasquez; Chad Dupuis; Robert Elliot; Smart, James
+> Subject: Re: [PATCH v2][RFC] scsi_transport_fc: Implement I_T nexus reset
+> 
+> 
+> On 3/11/2013 1:05 PM, Hannes Reinecke wrote:
+> > On 03/07/2013 09:35 PM, Jeremy Linton wrote:
+> >> On 3/7/2013 2:20 PM, Mike Christie wrote:
+> >>> On 03/07/2013 02:13 PM, Jeremy Linton wrote:
+> >>>>     For lpfc, you never get to the code. Or rather when I was
+> >>>> testing it, I couldn't find any way to propagate an error beyond
+> >>>> the initial
+> >>>> lpfc_reset_flush_io_context() call in lpfc_device_reset_handler().
+> >>>>
+> >>>>     That call pretty much always returns success indpependent of
+> >>>> the remote device because the firmware acks the context clear
+> >>>> aborts, resulting in the outstanding iocb count being zero
+> >>>> (independent of both the mid layer status and the actual device
+> >>>> state).
+> >>>>
+> >>>
+> >>> Your lpfc patch fixes that right?
+> >>
+> >>     Yes. It allows the device reset to fail if the device doesn't
+> >> respond to the task mgmt request, or rejects it, etc.
+> >>
+> >>     It doesn't unjam the commands that get aborted by the
+> >> flush_io_context() call.
+> >> Those have to depend on their timeouts. That is another patch...
+> >>
+> >>
+> >
+> > It's actually worse than that.
+> > lpfc_terminate_rport_io() calls lpfc_sli_abort_iocb(), which has this:
+> >
+> >
+> >          if (lpfc_is_link_up(phba))
+> >             abtsiocb->iocb.ulpCommand = CMD_ABORT_XRI_CN;
+> >         else
+> >             abtsiocb->iocb.ulpCommand = CMD_CLOSE_XRI_CN;
+> >
+> >         /* Setup callback routine and issue the command. */
+> >         abtsiocb->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
+> >         ret_val = lpfc_sli_issue_iocb(phba, pring->ringno,
+> >                           abtsiocb, 0);
+> >         if (ret_val == IOCB_ERROR) {
+> >             lpfc_sli_release_iocbq(phba, abtsiocb);
+> >             errcnt++;
+> >             continue;
+> >         }
+> >
+> >
+> > Ie we're calling into firmware and waiting for an async event telling
+> > us that the command has been aborted (ideally).
+> > What I would like is some kind of synchronous call here, which would
+> > guarantee us that we won't run into use-after-free issues.
+> >
+> > Also 'lpfc_is_link_up' is clearly deficient here as the link itself
+> > most likely is up, it's the I_T Nexus which is not.
+> >
+> > James, is it safe to use 'CMD_CLOSE_XRI_CN' even when the link is up?
+> 
+> No, it's not safe.  The ABORT, which sends an ABTS, is mandated so that the
+> other end and ourselves maintain proper (unique) exchange id
+> state.   CLOSE sends no link traffic - but can only be used if the login
+> is broken (e.g. there's a different mechanism that communicated
+> termination of exchange states).   I don't believe I can trust the logic
+> in the OS about frames laying in wait in the fabric (maybe sent earlier,
+> delayed at a switch, delivered after os thinks nexus is gone), so driver needs
+> to terminate them properly.
+> 
+> 
+> >
+> > Which makes me wonder, how _exactly_ is I_T nexus reset supposed to
+> > work? After all, we're trying to tell the target port that we cannot
+> > talk to it anymore, right?
+> > Which has some hurdles, conceptually ...
+> > So from my POV I_T nexus reset can only be implemented on the
+> > _initiator_ side, disregarding any target implementation.
+> > (which would be pointless anyway).
+> >
+> > Hmm. Probably have to ask T10 for clarification. Robert, any insights?
+> 
+> 
+> The I_T nexus reset should be a FC transport implicit logout call to the LLDD.
+> E.g. this becomes a transport-specific action on what it means to
+> break the I_T nexus, which for FC, is to terminate the login.   This
+> logout call allows the driver to do all the implicit work to kill exchange
+> contexts and allows it to adjust the state of the target in
+> it's FC discovery engine.  Question is - should the driver re-login ?
+> Typically, this would be driven by a RSCN, which I'm guessing for this
+> scenario, would not be occurring. If you knew it would, you could let
+> the driver respond to the RSCN and re-login later.   If there's no RSCN,
+> then I would assume we put a heartbeat into the transport to retry login (to a
+> WWPN/WWNN basis - remembered from the I_T nexus reset) with the LLDD
+> - a new interface as well - call it "establish I_T_nexus".
+> 
+> In lpfc's case - the Logout would allow the driver to take the CLOSE_XRI case,
+> giving you the speed/asynchronicity you desire. Reuse of scsi job structures
+> still can't occur until the driver returns then via the completion routines (as
+> DMA related to them must be cancelled within the card by the ABORT/CLOSE
+> commands - even if we know there shouldn't be something to DMA).
+> 
+> -- james s
+> 
+> 
+> >
+> > Cheers,
+> >
+> > Hannes
+> >
+> >
 
-Dunno ... I was a bit scared to go too deep into this sdev_state
-stuff, since it looks very old and fragile.  With that said the big
-question to me is who really owns the state -- is it the low-level
-driver or the midlayer?  I don't quite understand what it means for
-the midlayer to try and start a device if the low-level driver has
-temporarily paused things.  However since we have the blockdev queue
-stopped state also, it seems to make things work out OK.
+Adding BROCADE BFA FC SCSI DRIVER maintainer Anil to the CC.
 
- - R.
+Thanks,
+Vijay
+
+
