@@ -1,77 +1,69 @@
-From: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ipr: fix addition of abort command to HRRQ free queue
-Date: Mon, 11 Mar 2013 16:40:16 -0300
-Message-ID: <513E3320.4030101@linux.vnet.ibm.com>
-References: <1363030382-29007-1-git-send-email-klebers@linux.vnet.ibm.com>
+From: Vijay Mohan Guvva <vmohan@Brocade.com>
+Subject: RE: [PATCH] bfa: Fix possible NULL pointer dereference & magic no
+Date: Mon, 11 Mar 2013 16:43:18 -0600
+Message-ID: <51BD2AE8016AE441B63F5661159C990203A17E0D9D@BRM-EXCH-3.corp.brocade.com>
+References: <1361747271-29352-1-git-send-email-s.syam@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp03.br.ibm.com ([32.104.18.24]:41579 "EHLO
-	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754223Ab3CKTkX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Mar 2013 15:40:23 -0400
-Received: from /spool/local
-	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <klebers@linux.vnet.ibm.com>;
-	Mon, 11 Mar 2013 16:40:21 -0300
-Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 5E36C3520065
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 15:40:19 -0400 (EDT)
-Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
-	by d24relay02.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2BJdWBL18809046
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 16:39:33 -0300
-Received: from d24av05.br.ibm.com (loopback [127.0.0.1])
-	by d24av05.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2BJeIJq030352
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 16:40:18 -0300
-In-Reply-To: <1363030382-29007-1-git-send-email-klebers@linux.vnet.ibm.com>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:45762 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754188Ab3CKXS6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Mar 2013 19:18:58 -0400
+Received: from pps.filterd (m0000542 [127.0.0.1])
+	by mx0a-000f0801.pphosted.com (8.14.5/8.14.5) with SMTP id r2BMgLZc028987
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 15:43:13 -0700
+Received: from brmwp-exchub01.corp.brocade.com ([208.47.132.227])
+	by mx0a-000f0801.pphosted.com with ESMTP id 1b1pcgg2e4-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 15:43:13 -0700
+In-Reply-To: <1361747271-29352-1-git-send-email-s.syam@samsung.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, brking@linux.vnet.ibm.com
-Cc: wenxiong@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
+To: Syam Sidhardhan <syamsidhardh@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Anil Gurumurthy <agurumur@Brocade.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
 
-Please ignore this one. Messed up with send-email --annotate.
-
-
-Thanks,
-Kleber
-
-On 03/11/2013 04:33 PM, Kleber Sacilotto de Souza wrote:
-> Brian/Wendy,
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Syam Sidhardhan
+> Sent: Sunday, February 24, 2013 3:08 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: syamsidhardh@gmail.com; Anil Gurumurthy; Vijay Mohan Guvva;
+> JBottomley@parallels.com
+> Subject: [PATCH] bfa: Fix possible NULL pointer dereference & magic no
 > 
-> This is a patch for bug #89324. We were not using the right HRRQ pointer,
-> so we were adding the command to the wrong free queue, which can be
-> not initialized and cause a null-pointer dereference when calling
-> list_add_tail().
+> Check for (port == NULL) has to be done before accessing port.
+> Also fixes the magic number.
 > 
-> Kleber
-> 
+> Signed-off-by: Syam Sidhardhan <s.syam@samsung.com>
 > ---
-> The abort command issued by ipr_cancel_op() is being added to the wrong
-> HRRQ free queue after the command returns. Fix it by using the HRRQ
-> pointer in the ipr command struct itself.
+>  drivers/scsi/bfa/bfa_fcs_lport.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> Signed-off-by: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/ipr.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+> index 1224d04..69cf977 100644
+> --- a/drivers/scsi/bfa/bfa_fcs_lport.c
+> +++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+> @@ -5615,11 +5615,13 @@
+> bfa_fcs_lport_get_rport_max_speed(bfa_fcs_lport_t *port)
+>  	bfa_port_speed_t max_speed = 0;
+>  	struct bfa_port_attr_s port_attr;
+>  	bfa_port_speed_t port_speed, rport_speed;
+> -	bfa_boolean_t trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
+> +	bfa_boolean_t trl_enabled;
 > 
-> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-> index f328089..b222dae 100644
-> --- a/drivers/scsi/ipr.c
-> +++ b/drivers/scsi/ipr.c
-> @@ -5148,7 +5148,7 @@ static int ipr_cancel_op(struct scsi_cmnd *scsi_cmd)
->  		ipr_trace;
->  	}
 > 
-> -	list_add_tail(&ipr_cmd->queue, &hrrq->hrrq_free_q);
-> +	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  	if (!ipr_is_naca_model(res))
->  		res->needs_sync_complete = 1;
+>  	if (port == NULL)
+> -		return 0;
+> +		return BFA_PORT_SPEED_UNKNOWN;
+> +
+> +	trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
+> 
+>  	fcs = port->fcs;
 > 
 
-
--- 
-Kleber Sacilotto de Souza
-IBM Linux Technology Center
+Thanks for the patch Shyam.
+Acked-by: Vijay Mohan Guvva <vmohan@Brocade.com>
 
