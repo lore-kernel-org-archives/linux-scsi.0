@@ -1,102 +1,90 @@
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: [PATCH V4 3/5] virtio-scsi: push vq lock/unlock into virtscsi_vq_done
-Date: Mon, 11 Mar 2013 10:44:00 +0800
-Message-ID: <1362969842-9145-4-git-send-email-gaowanlong@cn.fujitsu.com>
-References: <1362969842-9145-1-git-send-email-gaowanlong@cn.fujitsu.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH -mmotm] scsi: fix the wrong position of the comment
+Date: Sun, 10 Mar 2013 21:10:19 -0700
+Message-ID: <20130311041019.GB37523@n8021av7gqvyn1.qlogic.org>
+References: <1362902990-25137-1-git-send-email-akinobu.mita@gmail.com>
+ <1362903765.3003.2.camel@dabdike.int.hansenpartnership.com>
+ <20130310005718.2d6579ea.akpm@linux-foundation.org>
+ <1362905945.3003.4.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1362969842-9145-1-git-send-email-gaowanlong@cn.fujitsu.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: linux-kernel@vger.kernel.org
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:24771
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750912Ab3CKEKb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Mar 2013 00:10:31 -0400
+Content-Disposition: inline
+In-Reply-To: <1362905945.3003.4.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Akinobu Mita <akinobu.mita@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-From: Paolo Bonzini <pbonzini@redhat.com>
+On Sun, 10 Mar 2013, James Bottomley wrote:
 
-Avoid duplicated code in all of the callers.
+> On Sun, 2013-03-10 at 00:57 -0800, Andrew Morton wrote:
+> > On Sun, 10 Mar 2013 08:22:47 +0000 James Bottomley <jbottomley@parallels.com> wrote:
+> >
+> > > [missing SCSI cc added]
+> > > On Sun, 2013-03-10 at 17:09 +0900, Akinobu Mita wrote:
+> > > > This fixes the wrong position of the comment introduced by
+> > > > scsi-rename-random32-to-prandom_u32.patch in the -mm tree.
+> > > >
+> > > > Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> > > > Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> > > > Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> > > > ---
+> > > >  drivers/scsi/qla2xxx/qla_attr.c | 6 +++---
+> > > >  1 file changed, 3 insertions(+), 3 deletions(-)
+> > > >
+> > > > diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+> > > > index 04bf7b8..e44d47e 100644
+> > > > --- a/drivers/scsi/qla2xxx/qla_attr.c
+> > > > +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> > > > @@ -1939,13 +1939,13 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
+> > > >         }
+> > > >
+> > > >         /* No pending activities shall be there on the vha now */
+> > > > -       if (ql2xextended_error_logging & ql_dbg_user)
+> > > > -               msleep(prandom_u32() % 10);
+> > > > +       if (ql2xextended_error_logging & ql_dbg_user) {
+> > > >                 /*
+> > > >                  * Just to see if something falls on the net we have placed
+> > > >                  * below
+> > > >                  */
+> > > > -
+> > > > +               msleep(prandom_u32() % 10);
+> > > > +       }
+> > >
+> > > I don't git a toss if it's random or prandom: Andrew: get rid of it; we
+> > > do not sleep in kernel for random intervals whatever the provocation ...
+> > > if this is supposed to be a warning or error condition then print
+> > > something.
+> >
+> > That msleep was added by
+> >
+> > commit feafb7b1714cf599a6d0fed45801ab3f66046cbd
+> > Author:     Arun Easi <arun.easi@qlogic.com>
+> > AuthorDate: Fri Sep 3 14:57:00 2010 -0700
+> > Commit:     James Bottomley <James.Bottomley@suse.de>
+> > CommitDate: Sun Sep 5 15:13:12 2010 -0300
+> >
+> >     [SCSI] qla2xxx: Fix vport delete issues
+>
+> Sorry, I didn't notice multiple Andrews on the cc list.  I meant Andrew
+> Vasquez (or other member of the qla team) remove this, please (and
+> preferably do something correct).
+>
 
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
----
- drivers/scsi/virtio_scsi.c | 22 +++++++++-------------
- 1 file changed, 9 insertions(+), 13 deletions(-)
+James,
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index fdb0132..3573704 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -167,28 +167,30 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
- 	sc->scsi_done(sc);
- }
- 
--static void virtscsi_vq_done(struct virtio_scsi *vscsi, struct virtqueue *vq,
-+static void virtscsi_vq_done(struct virtio_scsi *vscsi,
-+			     struct virtio_scsi_vq *virtscsi_vq,
- 			     void (*fn)(struct virtio_scsi *vscsi, void *buf))
- {
- 	void *buf;
- 	unsigned int len;
-+	unsigned long flags;
-+	struct virtqueue *vq = virtscsi_vq->vq;
- 
-+	spin_lock_irqsave(&virtscsi_vq->vq_lock, flags);
- 	do {
- 		virtqueue_disable_cb(vq);
- 		while ((buf = virtqueue_get_buf(vq, &len)) != NULL)
- 			fn(vscsi, buf);
- 	} while (!virtqueue_enable_cb(vq));
-+	spin_unlock_irqrestore(&virtscsi_vq->vq_lock, flags);
- }
- 
- static void virtscsi_req_done(struct virtqueue *vq)
- {
- 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	unsigned long flags;
- 
--	spin_lock_irqsave(&vscsi->req_vq.vq_lock, flags);
--	virtscsi_vq_done(vscsi, vq, virtscsi_complete_cmd);
--	spin_unlock_irqrestore(&vscsi->req_vq.vq_lock, flags);
-+	virtscsi_vq_done(vscsi, &vscsi->req_vq, virtscsi_complete_cmd);
- };
- 
- static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
-@@ -205,11 +207,8 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
- {
- 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	unsigned long flags;
- 
--	spin_lock_irqsave(&vscsi->ctrl_vq.vq_lock, flags);
--	virtscsi_vq_done(vscsi, vq, virtscsi_complete_free);
--	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
-+	virtscsi_vq_done(vscsi, &vscsi->ctrl_vq, virtscsi_complete_free);
- };
- 
- static int virtscsi_kick_event(struct virtio_scsi *vscsi,
-@@ -344,11 +343,8 @@ static void virtscsi_event_done(struct virtqueue *vq)
- {
- 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	unsigned long flags;
- 
--	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
--	virtscsi_vq_done(vscsi, vq, virtscsi_complete_event);
--	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
-+	virtscsi_vq_done(vscsi, &vscsi->event_vq, virtscsi_complete_event);
- };
- 
- /**
--- 
-1.8.2.rc2
+We'll take a look at this, yes.  Adding Giri and Co. to the CC.
+
+Thanks, AV
+
+________________________________
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
