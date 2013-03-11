@@ -1,11 +1,14 @@
 From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: [PATCH V4 0/5] virtio-scsi multiqueue
-Date: Mon, 11 Mar 2013 10:43:57 +0800
-Message-ID: <1362969842-9145-1-git-send-email-gaowanlong@cn.fujitsu.com>
+Subject: [PATCH V4 2/5] virtio-scsi: pass struct virtio_scsi to virtqueue
+	completion function
+Date: Mon, 11 Mar 2013 10:43:59 +0800
+Message-ID: <1362969842-9145-3-git-send-email-gaowanlong@cn.fujitsu.com>
+References: <1362969842-9145-1-git-send-email-gaowanlong@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1362969842-9145-1-git-send-email-gaowanlong@cn.fujitsu.com>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -19,34 +22,90 @@ To: linux-kernel@vger.kernel.org
 Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This series implements virtio-scsi queue steering, which gives
-performance improvements of up to 50% (measured both with QEMU and
-tcm_vhost backends).
+From: Paolo Bonzini <pbonzini@redhat.com>
 
-This version rebased on Rusty's virtio ring rework patches.
-We hope this can go into virtio-next together with the virtio ring
-rework pathes.
+This will be needed soon in order to retrieve the per-target
+struct.
 
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+---
+ drivers/scsi/virtio_scsi.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-V4: rebase on virtio ring rework patches (rusty's pending-rebases branch)
-
-V3 and be found http://marc.info/?l=linux-virtualization&m=136067440717154&w=2
-
-
-It would probably be easier to get it in via Rusty's tree
-because of the prerequisites.  James, can we get your Acked-by?
-
-Paolo Bonzini (4):
-  virtio-scsi: redo allocation of target data
-  virtio-scsi: pass struct virtio_scsi to virtqueue completion function
-  virtio-scsi: push vq lock/unlock into virtscsi_vq_done
-  virtio-scsi: introduce multiqueue support
-
-Wanlong Gao (1):
-  virtio-scsi: reset virtqueue affinity when doing cpu hotplug
-
- drivers/scsi/virtio_scsi.c | 364 ++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 291 insertions(+), 73 deletions(-)
-
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 75ccde1..fdb0132 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -106,7 +106,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
+  *
+  * Called with vq_lock held.
+  */
+-static void virtscsi_complete_cmd(void *buf)
++static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+ {
+ 	struct virtio_scsi_cmd *cmd = buf;
+ 	struct scsi_cmnd *sc = cmd->sc;
+@@ -167,7 +167,8 @@ static void virtscsi_complete_cmd(void *buf)
+ 	sc->scsi_done(sc);
+ }
+ 
+-static void virtscsi_vq_done(struct virtqueue *vq, void (*fn)(void *buf))
++static void virtscsi_vq_done(struct virtio_scsi *vscsi, struct virtqueue *vq,
++			     void (*fn)(struct virtio_scsi *vscsi, void *buf))
+ {
+ 	void *buf;
+ 	unsigned int len;
+@@ -175,7 +176,7 @@ static void virtscsi_vq_done(struct virtqueue *vq, void (*fn)(void *buf))
+ 	do {
+ 		virtqueue_disable_cb(vq);
+ 		while ((buf = virtqueue_get_buf(vq, &len)) != NULL)
+-			fn(buf);
++			fn(vscsi, buf);
+ 	} while (!virtqueue_enable_cb(vq));
+ }
+ 
+@@ -186,11 +187,11 @@ static void virtscsi_req_done(struct virtqueue *vq)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&vscsi->req_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_cmd);
++	virtscsi_vq_done(vscsi, vq, virtscsi_complete_cmd);
+ 	spin_unlock_irqrestore(&vscsi->req_vq.vq_lock, flags);
+ };
+ 
+-static void virtscsi_complete_free(void *buf)
++static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
+ {
+ 	struct virtio_scsi_cmd *cmd = buf;
+ 
+@@ -207,7 +208,7 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&vscsi->ctrl_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_free);
++	virtscsi_vq_done(vscsi, vq, virtscsi_complete_free);
+ 	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
+ };
+ 
+@@ -331,7 +332,7 @@ static void virtscsi_handle_event(struct work_struct *work)
+ 	virtscsi_kick_event(vscsi, event_node);
+ }
+ 
+-static void virtscsi_complete_event(void *buf)
++static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
+ {
+ 	struct virtio_scsi_event_node *event_node = buf;
+ 
+@@ -346,7 +347,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_event);
++	virtscsi_vq_done(vscsi, vq, virtscsi_complete_event);
+ 	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
+ };
+ 
 -- 
 1.8.2.rc2
