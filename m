@@ -1,81 +1,85 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch] [SCSI] scsi_transport_sas: check for allocation failure
-Date: Mon, 11 Mar 2013 15:10:55 +0000
-Message-ID: <1363014655.2395.69.camel@dabdike.int.hansenpartnership.com>
-References: <20130308120215.GB18712@longonot.mountain>
-	 <513A2678.5000803@interlog.com>
-	 <1362783019.2370.45.camel@dabdike.int.hansenpartnership.com>
-	 <20130311131032.GO9189@mwanda> <513DEED6.3090709@interlog.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2][RFC] scsi_transport_fc: Implement I_T nexus reset
+Date: Mon, 11 Mar 2013 18:05:42 +0100
+Message-ID: <513E0EE6.7010909@suse.de>
+References: <1355214219-17343-1-git-send-email-hare@suse.de> <5138E84B.8030803@cs.wisc.edu> <5138F4DF.9010906@tributary.com> <5138F67D.3070703@cs.wisc.edu> <5138FA21.8000000@tributary.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <513DEED6.3090709@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:58740 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753801Ab3CKQFu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Mar 2013 12:05:50 -0400
+In-Reply-To: <5138FA21.8000000@tributary.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeremy Linton <jlinton@tributary.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Robert Elliot <elliot@hp.com>
 
-On Mon, 2013-03-11 at 10:48 -0400, Douglas Gilbert wrote:
-> On 13-03-11 09:10 AM, Dan Carpenter wrote:
-> > On Fri, Mar 08, 2013 at 10:50:19PM +0000, James Bottomley wrote:
-> >> On Fri, 2013-03-08 at 12:57 -0500, Douglas Gilbert wrote:
-> >>> On 13-03-08 07:02 AM, Dan Carpenter wrote:
-> >>>> Static checkers complain that this allocation isn't checked.  We
-> >>>> should return zero if the allocation fails.
-> >>>>
-> >>>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> >>>>
-> >>>> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-> >>>> index 1b68142..a022997 100644
-> >>>> --- a/drivers/scsi/scsi_transport_sas.c
-> >>>> +++ b/drivers/scsi/scsi_transport_sas.c
-> >>>> @@ -379,9 +379,12 @@ sas_tlr_supported(struct scsi_device *sdev)
-> >>>>    {
-> >>>>    	const int vpd_len = 32;
-> >>>>    	struct sas_end_device *rdev = sas_sdev_to_rdev(sdev);
-> >>>> -	char *buffer = kzalloc(vpd_len, GFP_KERNEL);
-> >>>> +	char *buffer;
-> >>>>    	int ret = 0;
-> >>>>
-> >>>> +	buffer = kzalloc(vpd_len, GFP_KERNEL);
-> >>>> +	if (!buffer)
-> >>>> +		goto out;
-> >>>>    	if (scsi_get_vpd_page(sdev, 0x90, buffer, vpd_len))
-> >>>>    		goto out;
-> >>>>
-> >>>
-> >>> For 32 bytes, why not use the stack?
-> >>
-> >> Because the buffer is a DMA target.  You can't DMA to stack because of
-> >> padding and cacheline issues.
-> >>
-> >
-> > I think stack data works here.  scsi_execute() calls
-> > blk_rq_map_kern() which handles stack memory and alignment issues.
-> 
-> That being the case, several other callers of
-> scsi_get_vpd_page() 9and friends) could be
-> simplified and sped up.
+On 03/07/2013 09:35 PM, Jeremy Linton wrote:
+> On 3/7/2013 2:20 PM, Mike Christie wrote:
+>> On 03/07/2013 02:13 PM, Jeremy Linton wrote:
+>>> 	For lpfc, you never get to the code. Or rather when I was testing it, I
+>>> couldn't find any way to propagate an error beyond the initial
+>>> lpfc_reset_flush_io_context() call in lpfc_device_reset_handler().
+>>>
+>>> 	That call pretty much always returns success indpependent of the remote
+>>> device because the firmware acks the context clear aborts, resulting in the
+>>> outstanding iocb count being zero (independent of both the mid layer status
+>>> and the actual device state).
+>>> 	
+>>
+>> Your lpfc patch fixes that right?
+>
+> 	Yes. It allows the device reset to fail if the device doesn't respond to the
+> task mgmt request, or rejects it, etc.
+>
+> 	It doesn't unjam the commands that get aborted by the flush_io_context() call.
+> Those have to depend on their timeouts. That is another patch...
+>
+>
 
-Um, I'm not sure you'll speed stuff up by doing this: have you seen what
-bio_copy_kern() does?  it will allocate a page per iov entry (in this
-case probably only a single entry) and copy the data into and out of
-that page, so not only do we get the copy overhead. We also get page
-allocation overheads instead of the small number of bytes we might need,
-which could cause quite a stall in a low memory situation.
+It's actually worse than that.
+lpfc_terminate_rport_io() calls lpfc_sli_abort_iocb(), which has this:
 
-I'm not saying don't do it, I'm just saying think of the consequences
-over the fiddle of doing a small kmalloc.
 
-> Also since VPD pages don't change and they can carry
-> a lot of disparate information (e.g. the Extended
-> Inquiry and Block Limits pages) perhaps they could
-> be cached by the appropriate level (e.g. Extended
-> Inquiry cached by mid-level; Block Limits cached
-> by sd driver).
+  		if (lpfc_is_link_up(phba))
+			abtsiocb->iocb.ulpCommand = CMD_ABORT_XRI_CN;
+		else
+			abtsiocb->iocb.ulpCommand = CMD_CLOSE_XRI_CN;
 
-We cache the ones we care about, but we could always add more if there's
-enough call, I suppose.
+		/* Setup callback routine and issue the command. */
+		abtsiocb->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
+		ret_val = lpfc_sli_issue_iocb(phba, pring->ringno,
+					      abtsiocb, 0);
+		if (ret_val == IOCB_ERROR) {
+			lpfc_sli_release_iocbq(phba, abtsiocb);
+			errcnt++;
+			continue;
+		}
 
-James
+
+Ie we're calling into firmware and waiting for an async event telling us 
+that the command has been aborted (ideally).
+What I would like is some kind of synchronous call here, which would
+guarantee us that we won't run into use-after-free issues.
+
+Also 'lpfc_is_link_up' is clearly deficient here as the link itself most 
+likely is up, it's the I_T Nexus which is not.
+
+James, is it safe to use 'CMD_CLOSE_XRI_CN' even when the link is up?
+
+Which makes me wonder, how _exactly_ is I_T nexus reset supposed to 
+work? After all, we're trying to tell the target port that we cannot 
+talk to it anymore, right?
+Which has some hurdles, conceptually ...
+So from my POV I_T nexus reset can only be implemented on the 
+_initiator_ side, disregarding any target implementation.
+(which would be pointless anyway).
+
+Hmm. Probably have to ask T10 for clarification. Robert, any insights?
+
+Cheers,
+
+Hannes
