@@ -1,71 +1,140 @@
-From: ronnie sahlberg <ronniesahlberg@gmail.com>
-Subject: [LSF/MM TOPIC] Making sure soft SCSI Targets are Valid
-Date: Sun, 10 Mar 2013 16:27:20 -0700
-Message-ID: <CAN05THS92Rw-nFA49UoohcY6ZFfngAH6sDgcq7tdeiVTb3JZfA@mail.gmail.com>
-References: <51081F68.1030808@suse.com>
+From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Subject: [PATCH V4 1/5] virtio-scsi: redo allocation of target data
+Date: Mon, 11 Mar 2013 10:43:58 +0800
+Message-ID: <1362969842-9145-2-git-send-email-gaowanlong@cn.fujitsu.com>
+References: <1362969842-9145-1-git-send-email-gaowanlong@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:54043 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751377Ab3CJX1W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Mar 2013 19:27:22 -0400
-Received: by mail-we0-f179.google.com with SMTP id p43so2847282wea.38
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Mar 2013 16:27:20 -0700 (PDT)
-In-Reply-To: <51081F68.1030808@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1362969842-9145-1-git-send-email-gaowanlong@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-kernel@vger.kernel.org
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-Hi All
+From: Paolo Bonzini <pbonzini@redhat.com>
 
-I would like to attend LSF/MM and talk with people about scsi and iscsi testing.
+virtio_scsi_target_state is now empty, but we will find new uses
+for it in the next few patches.  However, dropping the sglist lets
+us turn the array-of-pointers into a simple array, which simplifies
+the allocation.
 
-I am the author/maintainer for libiscsi which is userspace initiator
-used primarily by KVM/QEMU.
-This package also includes a pretty big test suite for mainly SCSI but
-also a lot of interesting iSCSI tests.
+However, we do not leave the virtio_scsi_target_state structs in the
+flexible array member at the end of struct virtio_scsi, because
+we will place the virtqueues there in the next patches.
 
-As someone hacking on a testsuite, I would like to meet with initiator
-and target implementors and talk
-about the existing test suites, and how we can work together from here.
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+---
+ drivers/scsi/virtio_scsi.c | 45 ++++++++++++---------------------------------
+ 1 file changed, 12 insertions(+), 33 deletions(-)
 
-
-What can i bring to FSF/MM?
-========================
-I like SCSI and I like writing tests.
-I have a big existing testsuite that I think at least some of you can
-benefit from.
-I would like to talk to people on how to make the test suite even better.
-Can we work out a platform where we can build even better and more
-comprehensive test suites ?
-etc.
-
-
-regards
-ronnie sahlberg
-
-On Tue, Jan 29, 2013 at 11:13 AM, Lee Duncan <lduncan@suse.com> wrote:
-> Hi:
->
-> I'm not sure if there is much interest in this, but I've recently
-> realized that there is no good free software to validate iSCSI targets,
-> not to mention FCOE targets, IB soft targets, etc. There's just no way
-> to know if any change you make is "legal" short of learning to speak
-> SCSI geek spec (or waiting to see what fails when you make a subtle change).
->
-> So I have been working with the (user-space) libiscsi creator and
-> maintainer, Ronnie Sahlberg, to enhance his test suite. But this only
-> addresses iSCSI targets. Some of his tests have already shown problems
-> like kernel panics when an incorrect bit is injected, showing the need
-> for such testing.
->
-> It occurs to me it would be most valuable if we had more generic SCSI
-> tests, not even limited to soft targets, available to developers and
-> manufacturers. How best to support such tests with our SCSI layer, and
-> what tests are needed now and in the future may be a good topic for
-> discussion.
-> --
-> Lee Duncan
-> SUSE Labs
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 6307099..75ccde1 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -76,7 +76,7 @@ struct virtio_scsi {
+ 	/* Get some buffers ready for event vq */
+ 	struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
+ 
+-	struct virtio_scsi_target_state *tgt[];
++	struct virtio_scsi_target_state *tgt;
+ };
+ 
+ static struct kmem_cache *virtscsi_cmd_cache;
+@@ -568,18 +568,9 @@ static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
+ 	virtscsi_vq->vq = vq;
+ }
+ 
+-static struct virtio_scsi_target_state *virtscsi_alloc_tgt(
+-	struct virtio_device *vdev, int sg_elems)
++static void virtscsi_init_tgt(struct virtio_scsi_target_state *tgt)
+ {
+-	struct virtio_scsi_target_state *tgt;
+-	gfp_t gfp_mask = GFP_KERNEL;
+-
+-	tgt = kmalloc(sizeof(*tgt), gfp_mask);
+-	if (!tgt)
+-		return NULL;
+-
+ 	spin_lock_init(&tgt->tgt_lock);
+-	return tgt;
+ }
+ 
+ static void virtscsi_scan(struct virtio_device *vdev)
+@@ -593,17 +584,10 @@ static void virtscsi_remove_vqs(struct virtio_device *vdev)
+ {
+ 	struct Scsi_Host *sh = virtio_scsi_host(vdev);
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+-	u32 i, num_targets;
+ 
+ 	/* Stop all the virtqueues. */
+ 	vdev->config->reset(vdev);
+-
+-	num_targets = sh->max_id;
+-	for (i = 0; i < num_targets; i++) {
+-		kfree(vscsi->tgt[i]);
+-		vscsi->tgt[i] = NULL;
+-	}
+-
++	kfree(vscsi->tgt);
+ 	vdev->config->del_vqs(vdev);
+ }
+ 
+@@ -612,7 +596,7 @@ static int virtscsi_init(struct virtio_device *vdev,
+ {
+ 	int err;
+ 	struct virtqueue *vqs[3];
+-	u32 i, sg_elems;
++	u32 i;
+ 
+ 	vq_callback_t *callbacks[] = {
+ 		virtscsi_ctrl_done,
+@@ -640,16 +624,14 @@ static int virtscsi_init(struct virtio_device *vdev,
+ 	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG))
+ 		virtscsi_kick_event_all(vscsi);
+ 
+-	/* We need to know how many segments before we allocate.  */
+-	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
+-
+-	for (i = 0; i < num_targets; i++) {
+-		vscsi->tgt[i] = virtscsi_alloc_tgt(vdev, sg_elems);
+-		if (!vscsi->tgt[i]) {
+-			err = -ENOMEM;
+-			goto out;
+-		}
++	vscsi->tgt = kmalloc(num_targets * sizeof(vscsi->tgt[0]), GFP_KERNEL);
++	if (!vscsi->tgt) {
++		err = -ENOMEM;
++		goto out;
+ 	}
++	for (i = 0; i < num_targets; i++)
++		virtscsi_init_tgt(&vscsi->tgt[i]);
++
+ 	err = 0;
+ 
+ out:
+@@ -668,10 +650,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 
+ 	/* Allocate memory and link the structs together.  */
+ 	num_targets = virtscsi_config_get(vdev, max_target) + 1;
+-	shost = scsi_host_alloc(&virtscsi_host_template,
+-		sizeof(*vscsi)
+-		+ num_targets * sizeof(struct virtio_scsi_target_state));
+-
++	shost = scsi_host_alloc(&virtscsi_host_template, sizeof(*vscsi));
+ 	if (!shost)
+ 		return -ENOMEM;
+ 
+-- 
+1.8.2.rc2
