@@ -1,15 +1,15 @@
 From: jayamohank@gmail.com
-Subject: [PATCH 09/15] be2iscsi: Fix displaying the Active Session Count from driver
-Date: Mon, 11 Mar 2013 21:39:39 -0700
-Message-ID: <1363063186-4902-9-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 10/15] be2iscsi: Fix the Port Link Status issue
+Date: Mon, 11 Mar 2013 21:39:40 -0700
+Message-ID: <1363063186-4902-10-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1363063186-4902-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:55734 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753771Ab3CLEkL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Mar 2013 00:40:11 -0400
-Received: by mail-pb0-f51.google.com with SMTP id un15so4572816pbc.10
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 21:40:10 -0700 (PDT)
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:44633 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754038Ab3CLEkN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Mar 2013 00:40:13 -0400
+Received: by mail-pb0-f42.google.com with SMTP id xb4so4550041pbc.29
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 21:40:12 -0700 (PDT)
 In-Reply-To: <1363063186-4902-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,80 +18,85 @@ Cc: "Jayamohan.Kallickal" <jayamohan.kallickal@emulex.com>, John Soni Jose <sony
 
 From: "Jayamohan.Kallickal" <jayamohan.kallickal@emulex.com>
 
-	This patch fixes the displaying of number of active
-sessions in use.
+ Check the Logical Link status also as part of the port link status.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |    2 ++
- drivers/scsi/be2iscsi/be_mgmt.c |   20 ++++++++++++++++++++
- drivers/scsi/be2iscsi/be_mgmt.h |    3 +++
- 3 files changed, 25 insertions(+)
+ drivers/scsi/be2iscsi/be_cmds.c |   26 +++++++++++---------------
+ drivers/scsi/be2iscsi/be_cmds.h |    6 +++++-
+ 2 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 5631a19..218f7ee 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -154,11 +154,13 @@ BEISCSI_RW_ATTR(log_enable, 0x00,
- DEVICE_ATTR(beiscsi_drvr_ver, S_IRUGO, beiscsi_drvr_ver_disp, NULL);
- DEVICE_ATTR(beiscsi_adapter_family, S_IRUGO, beiscsi_adap_family_disp, NULL);
- DEVICE_ATTR(beiscsi_fw_ver, S_IRUGO, beiscsi_fw_ver_disp, NULL);
-+DEVICE_ATTR(beiscsi_active_cid_count, S_IRUGO, beiscsi_active_cid_disp, NULL);
- struct device_attribute *beiscsi_attrs[] = {
- 	&dev_attr_beiscsi_log_enable,
- 	&dev_attr_beiscsi_drvr_ver,
- 	&dev_attr_beiscsi_adapter_family,
- 	&dev_attr_beiscsi_fw_ver,
-+	&dev_attr_beiscsi_active_cid_count,
- 	NULL,
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 39d2dd4..48ad4ea 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -348,30 +348,26 @@ static void be2iscsi_fail_session(struct iscsi_cls_session *cls_session)
+ void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
+ 		struct be_async_event_link_state *evt)
+ {
+-	switch (evt->port_link_status) {
+-	case ASYNC_EVENT_LINK_DOWN:
++	if ((evt->port_link_status == ASYNC_EVENT_LINK_DOWN) ||
++	    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
++	     (evt->port_fault != BEISCSI_PHY_LINK_FAULT_NONE))) {
++		phba->state = BE_ADAPTER_LINK_DOWN;
++
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_INIT,
+-			    "BC_%d : Link Down on Physical Port %d\n",
++			    "BC_%d : Link Down on Port %d\n",
+ 			    evt->physical_port);
+ 
+-		phba->state |= BE_ADAPTER_LINK_DOWN;
+ 		iscsi_host_for_each_session(phba->shost,
+ 					    be2iscsi_fail_session);
+-		break;
+-	case ASYNC_EVENT_LINK_UP:
++	} else if ((evt->port_link_status & ASYNC_EVENT_LINK_UP) ||
++		    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
++		     (evt->port_fault == BEISCSI_PHY_LINK_FAULT_NONE))) {
+ 		phba->state = BE_ADAPTER_UP;
++
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_INIT,
+-			    "BC_%d : Link UP on Physical Port %d\n",
+-			    evt->physical_port);
+-		break;
+-	default:
+-		beiscsi_log(phba, KERN_ERR,
+-			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_INIT,
+-			    "BC_%d : Unexpected Async Notification %d on"
+-			    "Physical Port %d\n",
+-			    evt->port_link_status,
++			    "BC_%d : Link UP on Port %d\n",
+ 			    evt->physical_port);
+ 	}
+ }
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 9b64b36..97871cc 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -122,7 +122,8 @@ struct be_async_event_trailer {
+ 
+ enum {
+ 	ASYNC_EVENT_LINK_DOWN = 0x0,
+-	ASYNC_EVENT_LINK_UP = 0x1
++	ASYNC_EVENT_LINK_UP = 0x1,
++	ASYNC_EVENT_LOGICAL = 0x2
  };
  
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 7fe8595..8662f73 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1281,6 +1281,26 @@ beiscsi_fw_ver_disp(struct device *dev, struct device_attribute *attr,
- }
- 
  /**
-+ * beiscsi_active_cid_disp()- Display Sessions Active
-+ * @dev: ptr to device not used.
-+ * @attr: device attribute, not used.
-+ * @buf: contains formatted text Session Count
-+ *
-+ * return
-+ * size of the formatted string
-+ **/
-+ssize_t
-+beiscsi_active_cid_disp(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n",
-+		       (phba->params.cxns_per_ctrl - phba->avlbl_cids));
-+}
-+
-+/**
-  * beiscsi_adap_family_disp()- Display adapter family.
-  * @dev: ptr to device to get priv structure
-  * @attr: device attribute, not used.
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 0a406a4..ed5aa0f 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -315,6 +315,9 @@ ssize_t beiscsi_drvr_ver_disp(struct device *dev,
- ssize_t beiscsi_fw_ver_disp(struct device *dev,
- 			     struct device_attribute *attr, char *buf);
- 
-+ssize_t beiscsi_active_cid_disp(struct device *dev,
-+				 struct device_attribute *attr, char *buf);
-+
- ssize_t beiscsi_adap_family_disp(struct device *dev,
- 				  struct device_attribute *attr, char *buf);
- 
+@@ -134,6 +135,9 @@ struct be_async_event_link_state {
+ 	u8 port_link_status;
+ 	u8 port_duplex;
+ 	u8 port_speed;
++#define BEISCSI_PHY_LINK_FAULT_NONE	0x00
++#define BEISCSI_PHY_LINK_FAULT_LOCAL	0x01
++#define BEISCSI_PHY_LINK_FAULT_REMOTE	0x02
+ 	u8 port_fault;
+ 	u8 rsvd0[7];
+ 	struct be_async_event_trailer trailer;
 -- 
 1.7.10.4
 
