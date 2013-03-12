@@ -1,71 +1,60 @@
 From: Silviu Popescu <silviupopescu1990@gmail.com>
-Subject: Re: [PATCH] aic7xxx: use kzalloc instead of kmalloc + memset
-Date: Tue, 12 Mar 2013 08:47:40 +0200
-Message-ID: <CAPWTe+KQ3+AFGOsET6FeNmmtx4A4aFLydvOuCSGyi0oh8fE5cQ@mail.gmail.com>
-References: <1362918403-6530-1-git-send-email-silviupopescu1990@gmail.com>
+Subject: Re: [PATCH] aic7xxx: fix coccicheck warnings
+Date: Tue, 12 Mar 2013 08:48:24 +0200
+Message-ID: <CAPWTe+JAmhnaxbfW2LW1=YGM4PKDyfW7WGgMHEwiPmw3yKtbTw@mail.gmail.com>
+References: <1362945896-18475-1-git-send-email-silviupopescu1990@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1362918403-6530-1-git-send-email-silviupopescu1990@gmail.com>
+In-Reply-To: <1362945896-18475-1-git-send-email-silviupopescu1990@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: hare@suse.de, JBottomley@parallels.com, linux-kernel@vger.kernel.org
+Cc: hare@suse.de, JBottomley@parallels.com, linux-kernel@vger.kernel.org, Silviu-Mihai Popescu <silviupopescu1990@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Mar 10, 2013 at 2:26 PM, Silviu-Mihai Popescu
+On Sun, Mar 10, 2013 at 10:04 PM, Silviu-Mihai Popescu
 <silviupopescu1990@gmail.com> wrote:
 > This replaces a call to kmalloc() followed by memset() with just one
-> call to kzalloc(). This was found using make coccicheck.
+> call to kzalloc().
 >
 > Signed-off-by: Silviu-Mihai Popescu <silviupopescu1990@gmail.com>
 > ---
->  drivers/scsi/aic7xxx/aic7xxx_core.c |    9 +++------
->  1 file changed, 3 insertions(+), 6 deletions(-)
+>  drivers/scsi/aic7xxx/aic79xx_osm.c |    3 +--
+>  drivers/scsi/aic7xxx/aic7xxx_osm.c |    3 +--
+>  2 files changed, 2 insertions(+), 4 deletions(-)
 >
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-> index 10172a3..7f34d25 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-> @@ -4464,10 +4464,9 @@ ahc_softc_init(struct ahc_softc *ahc)
->         ahc->pause = ahc->unpause | PAUSE;
->         /* XXX The shared scb data stuff should be deprecated */
->         if (ahc->scb_data == NULL) {
-> -               ahc->scb_data = kmalloc(sizeof(*ahc->scb_data), GFP_ATOMIC);
-> +               ahc->scb_data = kzalloc(sizeof(*ahc->scb_data), GFP_ATOMIC);
->                 if (ahc->scb_data == NULL)
->                         return (ENOMEM);
-> -               memset(ahc->scb_data, 0, sizeof(*ahc->scb_data));
->         }
->
->         return (0);
-> @@ -4780,10 +4779,9 @@ ahc_init_scbdata(struct ahc_softc *ahc)
->         SLIST_INIT(&scb_data->sg_maps);
->
->         /* Allocate SCB resources */
-> -       scb_data->scbarray = kmalloc(sizeof(struct scb) * AHC_SCB_MAX_ALLOC, GFP_ATOMIC);
-> +       scb_data->scbarray = kzalloc(sizeof(struct scb) * AHC_SCB_MAX_ALLOC, GFP_ATOMIC);
->         if (scb_data->scbarray == NULL)
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> index 9328121..f6fdb65 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> @@ -1324,10 +1324,9 @@ int
+>  ahd_platform_alloc(struct ahd_softc *ahd, void *platform_arg)
+>  {
+>         ahd->platform_data =
+> -           kmalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
+> +           kzalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
+>         if (ahd->platform_data == NULL)
 >                 return (ENOMEM);
-> -       memset(scb_data->scbarray, 0, sizeof(struct scb) * AHC_SCB_MAX_ALLOC);
+> -       memset(ahd->platform_data, 0, sizeof(struct ahd_platform_data));
+>         ahd->platform_data->irq = AHD_LINUX_NOIRQ;
+>         ahd_lockinit(ahd);
+>         ahd->seltime = (aic79xx_seltime & 0x3) << 4;
+> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> index 5a477cd..54bb1de 100644
+> --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> @@ -1222,10 +1222,9 @@ ahc_platform_alloc(struct ahc_softc *ahc, void *platform_arg)
+>  {
 >
->         /* Determine the number of hardware SCBs and initialize them */
->
-> @@ -7558,14 +7556,13 @@ ahc_handle_en_lun(struct ahc_softc *ahc, struct cam_sim *sim, union ccb *ccb)
->                                 return;
->                         }
->                 }
-> -               lstate = kmalloc(sizeof(*lstate), GFP_ATOMIC);
-> +               lstate = kzalloc(sizeof(*lstate), GFP_ATOMIC);
->                 if (lstate == NULL) {
->                         xpt_print_path(ccb->ccb_h.path);
->                         printk("Couldn't allocate lstate\n");
->                         ccb->ccb_h.status = CAM_RESRC_UNAVAIL;
->                         return;
->                 }
-> -               memset(lstate, 0, sizeof(*lstate));
->                 status = xpt_create_path(&lstate->path, /*periph*/NULL,
->                                          xpt_path_path_id(ccb->ccb_h.path),
->                                          xpt_path_target_id(ccb->ccb_h.path),
+>         ahc->platform_data =
+> -           kmalloc(sizeof(struct ahc_platform_data), GFP_ATOMIC);
+> +           kzalloc(sizeof(struct ahc_platform_data), GFP_ATOMIC);
+>         if (ahc->platform_data == NULL)
+>                 return (ENOMEM);
+> -       memset(ahc->platform_data, 0, sizeof(struct ahc_platform_data));
+>         ahc->platform_data->irq = AHC_LINUX_NOIRQ;
+>         ahc_lockinit(ahc);
+>         ahc->seltime = (aic7xxx_seltime & 0x3) << 4;
 > --
 > 1.7.9.5
 >
