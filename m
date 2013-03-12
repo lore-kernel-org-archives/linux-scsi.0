@@ -1,69 +1,69 @@
-From: Vijay Mohan Guvva <vmohan@Brocade.com>
-Subject: RE: [PATCH] bfa: Fix possible NULL pointer dereference & magic no
-Date: Mon, 11 Mar 2013 16:43:18 -0600
-Message-ID: <51BD2AE8016AE441B63F5661159C990203A17E0D9D@BRM-EXCH-3.corp.brocade.com>
-References: <1361747271-29352-1-git-send-email-s.syam@samsung.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: STANDBY IMMEDIATE failed on NVIDIA MCP5x controllers when system
+ suspend
+Date: Tue, 12 Mar 2013 10:53:27 +0800
+Message-ID: <513E98A7.3040307@intel.com>
+References: <Pine.LNX.4.44L0.1303111053060.2246-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:45762 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754188Ab3CKXS6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Mar 2013 19:18:58 -0400
-Received: from pps.filterd (m0000542 [127.0.0.1])
-	by mx0a-000f0801.pphosted.com (8.14.5/8.14.5) with SMTP id r2BMgLZc028987
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 15:43:13 -0700
-Received: from brmwp-exchub01.corp.brocade.com ([208.47.132.227])
-	by mx0a-000f0801.pphosted.com with ESMTP id 1b1pcgg2e4-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 15:43:13 -0700
-In-Reply-To: <1361747271-29352-1-git-send-email-s.syam@samsung.com>
-Content-Language: en-US
+Received: from mga02.intel.com ([134.134.136.20]:28993 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753549Ab3CLCwX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Mar 2013 22:52:23 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1303111053060.2246-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Syam Sidhardhan <syamsidhardh@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Anil Gurumurthy <agurumur@Brocade.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Syam Sidhardhan
-> Sent: Sunday, February 24, 2013 3:08 PM
-> To: linux-scsi@vger.kernel.org
-> Cc: syamsidhardh@gmail.com; Anil Gurumurthy; Vijay Mohan Guvva;
-> JBottomley@parallels.com
-> Subject: [PATCH] bfa: Fix possible NULL pointer dereference & magic no
-> 
-> Check for (port == NULL) has to be done before accessing port.
-> Also fixes the magic number.
-> 
-> Signed-off-by: Syam Sidhardhan <s.syam@samsung.com>
-> ---
->  drivers/scsi/bfa/bfa_fcs_lport.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-> index 1224d04..69cf977 100644
-> --- a/drivers/scsi/bfa/bfa_fcs_lport.c
-> +++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-> @@ -5615,11 +5615,13 @@
-> bfa_fcs_lport_get_rport_max_speed(bfa_fcs_lport_t *port)
->  	bfa_port_speed_t max_speed = 0;
->  	struct bfa_port_attr_s port_attr;
->  	bfa_port_speed_t port_speed, rport_speed;
-> -	bfa_boolean_t trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
-> +	bfa_boolean_t trl_enabled;
-> 
-> 
->  	if (port == NULL)
-> -		return 0;
-> +		return BFA_PORT_SPEED_UNKNOWN;
-> +
-> +	trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
-> 
->  	fcs = port->fcs;
-> 
+Hi James and Alan,
 
-Thanks for the patch Shyam.
-Acked-by: Vijay Mohan Guvva <vmohan@Brocade.com>
+On 03/11/2013 11:00 PM, Alan Stern wrote:
+> On Mon, 11 Mar 2013, James Bottomley wrote:
+> 
+>> Oh, that seems to be the suspend order isn't careful enough.
+>> __device_suspend() waits for its children, but the host disk are too far
+>> separated in the device tree.  If the immediate children of the host are
+>> all sync, that wait never actually waits for anything.
+> 
+> I was going to make exactly this same point.  During async suspend, the
+> PM core is careful to make sure that no device is suspended before its
+> children.  But there aren't any other checks, so if device A isn't an
+> ancestor of device B then it's possible for async suspend to power down
+> A before B.  This can cause problems if B needs A to be active while B
+> is suspending.
 
+Thanks for the suggestions.
+
+> 
+> Does the ATA system have any non-ancestor dependencies like this?  If 
+> it does, the appropriate driver can be fixed to take them into account.
+
+I don't think there is, and the relationship is like this:
+
+    ata_host_controller* (named sata_nv xxx)
+	    |
+	ata_port* (named atax, while "ata_port atax" is another device)
+	/	\
+scsi_host	ata_link
+    |		   |
+scsi_target	ata_device
+    |
+scsi_device* (named sd x:x:x:x)
+
+With the devices that have actual PM operation functions defined have
+the asterisk next to it.
+
+So ata_host_controller waits for all of the ata_ports, and the ata_port
+waits for both scsi_host and ata_link. scsi_host waits for scsi_target,
+and scsi_target waits for scsi_device. So if scsi_device is not done,
+ata_port will not start. Doesn't look like a problem to me.
+
+And from the log:
+https://bugzilla.kernel.org/attachment.cgi?id=95101
+It also looks like the order is correct.
+
+Thanks,
+Aaron
