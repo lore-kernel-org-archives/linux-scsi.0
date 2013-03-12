@@ -1,36 +1,32 @@
-From: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
-Subject: Re: [PATCH net-next 05/22] cxgb4: Add T5 write combining support
-Date: Tue, 12 Mar 2013 09:42:05 -0500
-Message-ID: <513F3EBD.5020504@opengridcomputing.com>
-References: <1363088794-31453-1-git-send-email-vipul@chelsio.com> <1363088794-31453-6-git-send-email-vipul@chelsio.com> <20130312.081927.1036246728528667686.davem@davemloft.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: STANDBY IMMEDIATE failed on NVIDIA MCP5x controllers when system
+ suspend
+Date: Tue, 12 Mar 2013 11:08:37 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1303121107230.2153-100000@iolanthe.rowland.org>
+References: <513E98A7.3040307@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130312.081927.1036246728528667686.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Cc: vipul-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, dm-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, leedom-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, naresh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, divy-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, santosh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, arvindb-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, abhishek-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <513E98A7.3040307@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Aaron Lu <aaron.lwe@gmail.com>, bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/12/2013 7:19 AM, David Miller wrote:
-> From: Vipul Pandya <vipul-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-> Date: Tue, 12 Mar 2013 17:16:17 +0530
->
->> +				writel(n,  adap->bar2 + q->udb + 8);
->> +#if defined(CONFIG_X86_32) || defined(CONFIG_X86_64)
->> +			asm volatile("sfence" : : : "memory");
->> +#endif
-> There is absolutely no way I'm letting anyone put crap like this
-> into a driver.
->
-> Use a portable inteface, and if one does not exist create one.
+On Tue, 12 Mar 2013, Aaron Lu wrote:
 
-I guess you'll have to add a wc_wmb() function for all the hw platforms 
-supported by the kernel.  I see libibverbs defines this for the user 
-side in include/infiniband/arch.h, and that could be used as the meat of 
-the hw platform-specific implementations.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> So ata_host_controller waits for all of the ata_ports, and the ata_port
+> waits for both scsi_host and ata_link. scsi_host waits for scsi_target,
+> and scsi_target waits for scsi_device. So if scsi_device is not done,
+> ata_port will not start. Doesn't look like a problem to me.
+> 
+> And from the log:
+> https://bugzilla.kernel.org/attachment.cgi?id=95101
+> It also looks like the order is correct.
+
+You could compare the PM debugging logs for an async suspend and a 
+synchronous suspend.  There might be an obvious difference in the 
+ordering that would explain the problem.
+
+Alan Stern
+
