@@ -1,15 +1,15 @@
 From: jayamohank@gmail.com
-Subject: [PATCH 08/15] be2iscsi: Fix displaying the FW Version from driver.
-Date: Mon, 11 Mar 2013 21:39:38 -0700
-Message-ID: <1363063186-4902-8-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 06/15] be2iscsi: Fix MACRO for checking the adapter type
+Date: Mon, 11 Mar 2013 21:39:36 -0700
+Message-ID: <1363063186-4902-6-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1363063186-4902-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61486 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753282Ab3CLEkJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Mar 2013 00:40:09 -0400
-Received: by mail-pb0-f46.google.com with SMTP id uo15so4558578pbc.33
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 21:40:09 -0700 (PDT)
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:44386 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753282Ab3CLEkG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Mar 2013 00:40:06 -0400
+Received: by mail-pb0-f54.google.com with SMTP id rr4so4537755pbb.41
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 21:40:06 -0700 (PDT)
 In-Reply-To: <1363063186-4902-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,164 +18,308 @@ Cc: "Jayamohan.Kallickal" <jayamohan.kallickal@emulex.com>, John Soni Jose <sony
 
 From: "Jayamohan.Kallickal" <jayamohan.kallickal@emulex.com>
 
-	This patch fixes the display of proper FW Version from the driver.
+ Fixed the code flow based on the MACRO defined to check for
+ adapter.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |    2 ++
- drivers/scsi/be2iscsi/be_main.h |    2 ++
- drivers/scsi/be2iscsi/be_mgmt.c |   21 +++++++++++++++++++++
- drivers/scsi/be2iscsi/be_mgmt.h |   32 ++++++++++++++++++--------------
- 4 files changed, 43 insertions(+), 14 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c |   28 ++++-----
+ drivers/scsi/be2iscsi/be_main.c |  123 ++++++++++++++++++++-------------------
+ drivers/scsi/be2iscsi/be_main.h |    4 +-
+ 3 files changed, 79 insertions(+), 76 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index dfbe7e4..db6c50b 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -855,20 +855,7 @@ int beiscsi_cmd_cq_create(struct be_ctrl_info *ctrl,
+ 			OPCODE_COMMON_CQ_CREATE, sizeof(*req));
+ 
+ 	req->num_pages = cpu_to_le16(PAGES_4K_SPANNED(q_mem->va, q_mem->size));
+-	if (chip_skh_r(ctrl->pdev)) {
+-		req->hdr.version = MBX_CMD_VER2;
+-		req->page_size = 1;
+-		AMAP_SET_BITS(struct amap_cq_context_v2, coalescwm,
+-			      ctxt, coalesce_wm);
+-		AMAP_SET_BITS(struct amap_cq_context_v2, nodelay,
+-			      ctxt, no_delay);
+-		AMAP_SET_BITS(struct amap_cq_context_v2, count, ctxt,
+-			      __ilog2_u32(cq->len / 256));
+-		AMAP_SET_BITS(struct amap_cq_context_v2, valid, ctxt, 1);
+-		AMAP_SET_BITS(struct amap_cq_context_v2, eventable, ctxt, 1);
+-		AMAP_SET_BITS(struct amap_cq_context_v2, eqid, ctxt, eq->id);
+-		AMAP_SET_BITS(struct amap_cq_context_v2, armed, ctxt, 1);
+-	} else {
++	if (is_chip_be2_be3r(phba)) {
+ 		AMAP_SET_BITS(struct amap_cq_context, coalescwm,
+ 			      ctxt, coalesce_wm);
+ 		AMAP_SET_BITS(struct amap_cq_context, nodelay, ctxt, no_delay);
+@@ -881,6 +868,19 @@ int beiscsi_cmd_cq_create(struct be_ctrl_info *ctrl,
+ 		AMAP_SET_BITS(struct amap_cq_context, armed, ctxt, 1);
+ 		AMAP_SET_BITS(struct amap_cq_context, func, ctxt,
+ 			      PCI_FUNC(ctrl->pdev->devfn));
++	} else {
++		req->hdr.version = MBX_CMD_VER2;
++		req->page_size = 1;
++		AMAP_SET_BITS(struct amap_cq_context_v2, coalescwm,
++			      ctxt, coalesce_wm);
++		AMAP_SET_BITS(struct amap_cq_context_v2, nodelay,
++			      ctxt, no_delay);
++		AMAP_SET_BITS(struct amap_cq_context_v2, count, ctxt,
++			      __ilog2_u32(cq->len / 256));
++		AMAP_SET_BITS(struct amap_cq_context_v2, valid, ctxt, 1);
++		AMAP_SET_BITS(struct amap_cq_context_v2, eventable, ctxt, 1);
++		AMAP_SET_BITS(struct amap_cq_context_v2, eqid, ctxt, eq->id);
++		AMAP_SET_BITS(struct amap_cq_context_v2, armed, ctxt, 1);
+ 	}
+ 
+ 	be_dws_cpu_to_le(ctxt, sizeof(req->context));
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index d879703..5631a19 100644
+index 22882cb..d879703 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -153,10 +153,12 @@ BEISCSI_RW_ATTR(log_enable, 0x00,
+@@ -1368,15 +1368,15 @@ hwi_complete_drvr_msgs(struct beiscsi_conn *beiscsi_conn,
+ 	uint16_t wrb_index, cid;
  
- DEVICE_ATTR(beiscsi_drvr_ver, S_IRUGO, beiscsi_drvr_ver_disp, NULL);
- DEVICE_ATTR(beiscsi_adapter_family, S_IRUGO, beiscsi_adap_family_disp, NULL);
-+DEVICE_ATTR(beiscsi_fw_ver, S_IRUGO, beiscsi_fw_ver_disp, NULL);
- struct device_attribute *beiscsi_attrs[] = {
- 	&dev_attr_beiscsi_log_enable,
- 	&dev_attr_beiscsi_drvr_ver,
- 	&dev_attr_beiscsi_adapter_family,
-+	&dev_attr_beiscsi_fw_ver,
- 	NULL,
- };
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+-	if (chip_skh_r(phba->pcidev)) {
+-		wrb_index = AMAP_GET_BITS(struct amap_it_dmsg_cqe_v2,
++	if (is_chip_be2_be3r(phba)) {
++		wrb_index = AMAP_GET_BITS(struct amap_it_dmsg_cqe,
+ 					  wrb_idx, psol);
+-		cid = AMAP_GET_BITS(struct amap_it_dmsg_cqe_v2,
++		cid = AMAP_GET_BITS(struct amap_it_dmsg_cqe,
+ 				    cid, psol);
+ 	} else {
+-		wrb_index = AMAP_GET_BITS(struct amap_it_dmsg_cqe,
++		wrb_index = AMAP_GET_BITS(struct amap_it_dmsg_cqe_v2,
+ 					  wrb_idx, psol);
+-		cid = AMAP_GET_BITS(struct amap_it_dmsg_cqe,
++		cid = AMAP_GET_BITS(struct amap_it_dmsg_cqe_v2,
+ 				    cid, psol);
+ 	}
  
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 77b13c3..3c5df92 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -68,6 +68,7 @@
- #define BEISCSI_MAX_NUM_CPUS	7
- #define OC_SKH_MAX_NUM_CPUS	31
- 
-+#define BEISCSI_VER_STRLEN 32
- 
- #define BEISCSI_SGLIST_ELEMENTS	30
- 
-@@ -341,6 +342,7 @@ struct beiscsi_hba {
- 	struct delayed_work beiscsi_hw_check_task;
- 
- 	u8 mac_address[ETH_ALEN];
-+	char fw_ver_str[BEISCSI_VER_STRLEN];
- 	char wq_name[20];
- 	struct workqueue_struct *wq;	/* The actuak work queue */
- 	struct be_ctrl_info ctrl;
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index a6c2fe4..7fe8595 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -368,6 +368,8 @@ int mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
- 		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
- 			    "BM_%d : phba->fw_config.iscsi_features = %d\n",
- 			    phba->fw_config.iscsi_features);
-+		memcpy(phba->fw_ver_str, resp->params.hba_attribs.
-+		       firmware_version_string, BEISCSI_VER_STRLEN);
- 	} else
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 			    "BG_%d :  Failed in mgmt_check_supported_fw\n");
-@@ -1260,6 +1262,25 @@ beiscsi_drvr_ver_disp(struct device *dev, struct device_attribute *attr,
+@@ -1418,7 +1418,26 @@ static void adapter_get_sol_cqe(struct beiscsi_hba *phba,
+ 		struct sol_cqe *psol,
+ 		struct common_sol_cqe *csol_cqe)
+ {
+-	if (chip_skh_r(phba->pcidev)) {
++	if (is_chip_be2_be3r(phba)) {
++		csol_cqe->exp_cmdsn = AMAP_GET_BITS(struct amap_sol_cqe,
++						    i_exp_cmd_sn, psol);
++		csol_cqe->res_cnt = AMAP_GET_BITS(struct amap_sol_cqe,
++						  i_res_cnt, psol);
++		csol_cqe->cmd_wnd = AMAP_GET_BITS(struct amap_sol_cqe,
++						  i_cmd_wnd, psol);
++		csol_cqe->wrb_index = AMAP_GET_BITS(struct amap_sol_cqe,
++						    wrb_index, psol);
++		csol_cqe->cid = AMAP_GET_BITS(struct amap_sol_cqe,
++					      cid, psol);
++		csol_cqe->hw_sts = AMAP_GET_BITS(struct amap_sol_cqe,
++						 hw_sts, psol);
++		csol_cqe->i_resp = AMAP_GET_BITS(struct amap_sol_cqe,
++						 i_resp, psol);
++		csol_cqe->i_sts = AMAP_GET_BITS(struct amap_sol_cqe,
++						i_sts, psol);
++		csol_cqe->i_flags = AMAP_GET_BITS(struct amap_sol_cqe,
++						  i_flags, psol);
++	} else {
+ 		csol_cqe->exp_cmdsn = AMAP_GET_BITS(struct amap_sol_cqe_v2,
+ 						    i_exp_cmd_sn, psol);
+ 		csol_cqe->res_cnt = AMAP_GET_BITS(struct amap_sol_cqe_v2,
+@@ -1445,25 +1464,6 @@ static void adapter_get_sol_cqe(struct beiscsi_hba *phba,
+ 		if (AMAP_GET_BITS(struct amap_sol_cqe_v2,
+ 				  o, psol))
+ 			csol_cqe->i_flags |= ISCSI_FLAG_CMD_OVERFLOW;
+-	} else {
+-		csol_cqe->exp_cmdsn = AMAP_GET_BITS(struct amap_sol_cqe,
+-						    i_exp_cmd_sn, psol);
+-		csol_cqe->res_cnt = AMAP_GET_BITS(struct amap_sol_cqe,
+-						  i_res_cnt, psol);
+-		csol_cqe->cmd_wnd = AMAP_GET_BITS(struct amap_sol_cqe,
+-						  i_cmd_wnd, psol);
+-		csol_cqe->wrb_index = AMAP_GET_BITS(struct amap_sol_cqe,
+-						    wrb_index, psol);
+-		csol_cqe->cid = AMAP_GET_BITS(struct amap_sol_cqe,
+-					      cid, psol);
+-		csol_cqe->hw_sts = AMAP_GET_BITS(struct amap_sol_cqe,
+-						 hw_sts, psol);
+-		csol_cqe->i_resp = AMAP_GET_BITS(struct amap_sol_cqe,
+-						 i_resp, psol);
+-		csol_cqe->i_sts = AMAP_GET_BITS(struct amap_sol_cqe,
+-						i_sts, psol);
+-		csol_cqe->i_flags = AMAP_GET_BITS(struct amap_sol_cqe,
+-						  i_flags, psol);
+ 	}
  }
  
- /**
-+ * beiscsi_fw_ver_disp()- Display Firmware Version
-+ * @dev: ptr to device not used.
-+ * @attr: device attribute, not used.
-+ * @buf: contains formatted text Firmware version
-+ *
-+ * return
-+ * size of the formatted string
-+ **/
-+ssize_t
-+beiscsi_fw_ver_disp(struct device *dev, struct device_attribute *attr,
-+		     char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+
-+	return snprintf(buf, PAGE_SIZE, "%s\n", phba->fw_ver_str);
-+}
-+
-+/**
-  * beiscsi_adap_family_disp()- Display adapter family.
-  * @dev: ptr to device to get priv structure
-  * @attr: device attribute, not used.
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 2e4968a..0a406a4 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -156,25 +156,25 @@ union invalidate_commands_params {
+@@ -1561,15 +1561,15 @@ hwi_get_async_handle(struct beiscsi_hba *phba,
+ 	unsigned char is_header = 0;
+ 	unsigned int index, dpl;
+ 
+-	if (chip_skh_r(phba->pcidev)) {
+-		dpl = AMAP_GET_BITS(struct amap_i_t_dpdu_cqe_v2,
++	if (is_chip_be2_be3r(phba)) {
++		dpl = AMAP_GET_BITS(struct amap_i_t_dpdu_cqe,
+ 				    dpl, pdpdu_cqe);
+-		index = AMAP_GET_BITS(struct amap_i_t_dpdu_cqe_v2,
++		index = AMAP_GET_BITS(struct amap_i_t_dpdu_cqe,
+ 				      index, pdpdu_cqe);
+ 	} else {
+-		dpl = AMAP_GET_BITS(struct amap_i_t_dpdu_cqe,
++		dpl = AMAP_GET_BITS(struct amap_i_t_dpdu_cqe_v2,
+ 				    dpl, pdpdu_cqe);
+-		index = AMAP_GET_BITS(struct amap_i_t_dpdu_cqe,
++		index = AMAP_GET_BITS(struct amap_i_t_dpdu_cqe_v2,
+ 				      index, pdpdu_cqe);
+ 	}
+ 
+@@ -2028,7 +2028,9 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 			 32] & CQE_CODE_MASK);
+ 
+ 		 /* Get the CID */
+-		if (chip_skh_r(phba->pcidev)) {
++		if (is_chip_be2_be3r(phba)) {
++			cid = AMAP_GET_BITS(struct amap_sol_cqe, cid, sol);
++		} else {
+ 			if ((code == DRIVERMSG_NOTIFY) ||
+ 			    (code == UNSOL_HDR_NOTIFY) ||
+ 			    (code == UNSOL_DATA_NOTIFY))
+@@ -2038,8 +2040,7 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
+ 			 else
+ 				 cid = AMAP_GET_BITS(struct amap_sol_cqe_v2,
+ 						     cid, sol);
+-		   } else
+-			 cid = AMAP_GET_BITS(struct amap_sol_cqe, cid, sol);
++		}
+ 
+ 		ep = phba->ep_array[cid - phba->fw_config.iscsi_cid_start];
+ 		beiscsi_ep = ep->dd_data;
+@@ -2416,11 +2417,11 @@ static void hwi_write_buffer(struct iscsi_wrb *pwrb, struct iscsi_task *task)
+ 		/* Check for the data_count */
+ 		dsp_value = (task->data_count) ? 1 : 0;
+ 
+-		if (chip_skh_r(phba->pcidev))
+-			AMAP_SET_BITS(struct amap_iscsi_wrb_v2, dsp,
++		if (is_chip_be2_be3r(phba))
++			AMAP_SET_BITS(struct amap_iscsi_wrb, dsp,
+ 				      pwrb, dsp_value);
+ 		else
+-			AMAP_SET_BITS(struct amap_iscsi_wrb, dsp,
++			AMAP_SET_BITS(struct amap_iscsi_wrb_v2, dsp,
+ 				      pwrb, dsp_value);
+ 
+ 		/* Map addr only if there is data_count */
+@@ -4175,11 +4176,11 @@ beiscsi_offload_connection(struct beiscsi_conn *beiscsi_conn,
+ 				       phba->fw_config.iscsi_cid_start));
+ 
+ 	/* Check for the adapter family */
+-	if (chip_skh_r(phba->pcidev))
+-		beiscsi_offload_cxn_v2(params, pwrb_handle);
+-	else
++	if (is_chip_be2_be3r(phba))
+ 		beiscsi_offload_cxn_v0(params, pwrb_handle,
+ 				       phba->init_mem);
++	else
++		beiscsi_offload_cxn_v2(params, pwrb_handle);
+ 
+ 	be_dws_le_to_cpu(pwrb_handle->pwrb,
+ 			 sizeof(struct iscsi_target_context_update_wrb));
+@@ -4490,19 +4491,7 @@ static int beiscsi_mtask(struct iscsi_task *task)
+ 	pwrb = io_task->pwrb_handle->pwrb;
+ 	memset(pwrb, 0, sizeof(*pwrb));
+ 
+-	if (chip_skh_r(phba->pcidev)) {
+-		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, cmdsn_itt, pwrb,
+-			      be32_to_cpu(task->cmdsn));
+-		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, wrb_idx, pwrb,
+-			      io_task->pwrb_handle->wrb_index);
+-		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, sgl_idx, pwrb,
+-			      io_task->psgl_handle->sgl_index);
+-		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, r2t_exp_dtl, pwrb,
+-			      task->data_count);
+-		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, ptr2nextwrb, pwrb,
+-			      io_task->pwrb_handle->nxt_wrb_index);
+-		pwrb_typeoffset = SKH_WRB_TYPE_OFFSET;
+-	} else {
++	if (is_chip_be2_be3r(phba)) {
+ 		AMAP_SET_BITS(struct amap_iscsi_wrb, cmdsn_itt, pwrb,
+ 			      be32_to_cpu(task->cmdsn));
+ 		AMAP_SET_BITS(struct amap_iscsi_wrb, wrb_idx, pwrb,
+@@ -4514,6 +4503,18 @@ static int beiscsi_mtask(struct iscsi_task *task)
+ 		AMAP_SET_BITS(struct amap_iscsi_wrb, ptr2nextwrb, pwrb,
+ 			      io_task->pwrb_handle->nxt_wrb_index);
+ 		pwrb_typeoffset = BE_WRB_TYPE_OFFSET;
++	} else {
++		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, cmdsn_itt, pwrb,
++			      be32_to_cpu(task->cmdsn));
++		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, wrb_idx, pwrb,
++			      io_task->pwrb_handle->wrb_index);
++		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, sgl_idx, pwrb,
++			      io_task->psgl_handle->sgl_index);
++		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, r2t_exp_dtl, pwrb,
++			      task->data_count);
++		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, ptr2nextwrb, pwrb,
++			      io_task->pwrb_handle->nxt_wrb_index);
++		pwrb_typeoffset = SKH_WRB_TYPE_OFFSET;
+ 	}
+ 
+ 
+@@ -4526,19 +4527,19 @@ static int beiscsi_mtask(struct iscsi_task *task)
+ 	case ISCSI_OP_NOOP_OUT:
+ 		if (task->hdr->ttt != ISCSI_RESERVED_TAG) {
+ 			ADAPTER_SET_WRB_TYPE(pwrb, TGT_DM_CMD, pwrb_typeoffset);
+-			if (chip_skh_r(phba->pcidev))
+-				AMAP_SET_BITS(struct amap_iscsi_wrb_v2,
++			if (is_chip_be2_be3r(phba))
++				AMAP_SET_BITS(struct amap_iscsi_wrb,
+ 					      dmsg, pwrb, 1);
+ 			else
+-				AMAP_SET_BITS(struct amap_iscsi_wrb,
++				AMAP_SET_BITS(struct amap_iscsi_wrb_v2,
+ 					      dmsg, pwrb, 1);
+ 		} else {
+ 			ADAPTER_SET_WRB_TYPE(pwrb, INI_RD_CMD, pwrb_typeoffset);
+-			if (chip_skh_r(phba->pcidev))
+-				AMAP_SET_BITS(struct amap_iscsi_wrb_v2,
++			if (is_chip_be2_be3r(phba))
++				AMAP_SET_BITS(struct amap_iscsi_wrb,
+ 					      dmsg, pwrb, 0);
+ 			else
+-				AMAP_SET_BITS(struct amap_iscsi_wrb,
++				AMAP_SET_BITS(struct amap_iscsi_wrb_v2,
+ 					      dmsg, pwrb, 0);
+ 		}
+ 		hwi_write_buffer(pwrb, task);
+@@ -4565,9 +4566,9 @@ static int beiscsi_mtask(struct iscsi_task *task)
+ 	}
+ 
+ 	/* Set the task type */
+-	io_task->wrb_type = (chip_skh_r(phba->pcidev)) ?
+-		AMAP_GET_BITS(struct amap_iscsi_wrb_v2, type, pwrb) :
+-		AMAP_GET_BITS(struct amap_iscsi_wrb, type, pwrb);
++	io_task->wrb_type = (is_chip_be2_be3r(phba)) ?
++		AMAP_GET_BITS(struct amap_iscsi_wrb, type, pwrb) :
++		AMAP_GET_BITS(struct amap_iscsi_wrb_v2, type, pwrb);
+ 
+ 	doorbell |= cid & DB_WRB_POST_CID_MASK;
+ 	doorbell |= (io_task->pwrb_handle->wrb_index &
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index b098b5b..77b13c3 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -265,7 +265,9 @@ struct invalidate_command_table {
+ 	unsigned short cid;
  } __packed;
  
- struct mgmt_hba_attributes {
--	u8 flashrom_version_string[32];
--	u8 manufacturer_name[32];
-+	u8 flashrom_version_string[BEISCSI_VER_STRLEN];
-+	u8 manufacturer_name[BEISCSI_VER_STRLEN];
- 	u32 supported_modes;
- 	u8 seeprom_version_lo;
- 	u8 seeprom_version_hi;
- 	u8 rsvd0[2];
--	u32 fw_cmd_data_struct_version;
-+	u32 ioctl_data_struct_version;
- 	u32 ep_fw_data_struct_version;
--	u32 future_reserved[12];
-+	u8 ncsi_version_string[12];
- 	u32 default_extended_timeout;
--	u8 controller_model_number[32];
-+	u8 controller_model_number[BEISCSI_VER_STRLEN];
- 	u8 controller_description[64];
--	u8 controller_serial_number[32];
--	u8 ip_version_string[32];
--	u8 firmware_version_string[32];
--	u8 bios_version_string[32];
--	u8 redboot_version_string[32];
--	u8 driver_version_string[32];
--	u8 fw_on_flash_version_string[32];
-+	u8 controller_serial_number[BEISCSI_VER_STRLEN];
-+	u8 ip_version_string[BEISCSI_VER_STRLEN];
-+	u8 firmware_version_string[BEISCSI_VER_STRLEN];
-+	u8 bios_version_string[BEISCSI_VER_STRLEN];
-+	u8 redboot_version_string[BEISCSI_VER_STRLEN];
-+	u8 driver_version_string[BEISCSI_VER_STRLEN];
-+	u8 fw_on_flash_version_string[BEISCSI_VER_STRLEN];
- 	u32 functionalities_supported;
- 	u16 max_cdblength;
- 	u8 asic_revision;
-@@ -190,7 +190,8 @@ struct mgmt_hba_attributes {
- 	u32 firmware_post_status;
- 	u32 hba_mtu[8];
- 	u8 iscsi_features;
--	u8 future_u8[3];
-+	u8 asic_generation;
-+	u8 future_u8[2];
- 	u32 future_u32[3];
- } __packed;
- 
-@@ -207,7 +208,7 @@ struct mgmt_controller_attributes {
- 	u64 unique_identifier;
- 	u8 netfilters;
- 	u8 rsvd0[3];
--	u8 future_u32[4];
-+	u32 future_u32[4];
- } __packed;
- 
- struct be_mgmt_controller_attributes {
-@@ -311,6 +312,9 @@ int mgmt_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
- ssize_t beiscsi_drvr_ver_disp(struct device *dev,
- 			       struct device_attribute *attr, char *buf);
- 
-+ssize_t beiscsi_fw_ver_disp(struct device *dev,
-+			     struct device_attribute *attr, char *buf);
-+
- ssize_t beiscsi_adap_family_disp(struct device *dev,
- 				  struct device_attribute *attr, char *buf);
- 
+-#define chip_skh_r(pdev)	(pdev->device == OC_SKH_ID1)
++#define chip_be2(phba)      (phba->generation == BE_GEN2)
++#define chip_be3_r(phba)    (phba->generation == BE_GEN3)
++#define is_chip_be2_be3r(phba) (chip_be3_r(phba) || (chip_be2(phba)))
+ struct beiscsi_hba {
+ 	struct hba_parameters params;
+ 	struct hwi_controller *phwi_ctrlr;
 -- 
 1.7.10.4
 
