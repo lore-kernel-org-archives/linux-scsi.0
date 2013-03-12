@@ -1,64 +1,78 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH -next] [SCSI] qla2xxx: remove duplicated include from
- qla_isr.c
-Date: Tue, 12 Mar 2013 06:08:47 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D2AB615@AVMB1.qlogic.org>
-References: <CAPgLHd_8XvGmK_YCXWcM0xTEo0z=ptWR40gfVxW5AK=92m2GPw@mail.gmail.com>
+From: Silviu Popescu <silviupopescu1990@gmail.com>
+Subject: Re: [PATCH] aic7xxx: use kzalloc instead of kmalloc + memset
+Date: Tue, 12 Mar 2013 08:47:40 +0200
+Message-ID: <CAPWTe+KQ3+AFGOsET6FeNmmtx4A4aFLydvOuCSGyi0oh8fE5cQ@mail.gmail.com>
+References: <1362918403-6530-1-git-send-email-silviupopescu1990@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db8lp0188.outbound.messaging.microsoft.com ([213.199.154.188]:19115
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752880Ab3CLGYA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Mar 2013 02:24:00 -0400
-In-Reply-To: <CAPgLHd_8XvGmK_YCXWcM0xTEo0z=ptWR40gfVxW5AK=92m2GPw@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <5DE0AB132C667C45A77B32E0688E549B@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1362918403-6530-1-git-send-email-silviupopescu1990@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: hare@suse.de, JBottomley@parallels.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
-Cc: "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+On Sun, Mar 10, 2013 at 2:26 PM, Silviu-Mihai Popescu
+<silviupopescu1990@gmail.com> wrote:
+> This replaces a call to kmalloc() followed by memset() with just one
+> call to kzalloc(). This was found using make coccicheck.
+>
+> Signed-off-by: Silviu-Mihai Popescu <silviupopescu1990@gmail.com>
+> ---
+>  drivers/scsi/aic7xxx/aic7xxx_core.c |    9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+> index 10172a3..7f34d25 100644
+> --- a/drivers/scsi/aic7xxx/aic7xxx_core.c
+> +++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+> @@ -4464,10 +4464,9 @@ ahc_softc_init(struct ahc_softc *ahc)
+>         ahc->pause = ahc->unpause | PAUSE;
+>         /* XXX The shared scb data stuff should be deprecated */
+>         if (ahc->scb_data == NULL) {
+> -               ahc->scb_data = kmalloc(sizeof(*ahc->scb_data), GFP_ATOMIC);
+> +               ahc->scb_data = kzalloc(sizeof(*ahc->scb_data), GFP_ATOMIC);
+>                 if (ahc->scb_data == NULL)
+>                         return (ENOMEM);
+> -               memset(ahc->scb_data, 0, sizeof(*ahc->scb_data));
+>         }
+>
+>         return (0);
+> @@ -4780,10 +4779,9 @@ ahc_init_scbdata(struct ahc_softc *ahc)
+>         SLIST_INIT(&scb_data->sg_maps);
+>
+>         /* Allocate SCB resources */
+> -       scb_data->scbarray = kmalloc(sizeof(struct scb) * AHC_SCB_MAX_ALLOC, GFP_ATOMIC);
+> +       scb_data->scbarray = kzalloc(sizeof(struct scb) * AHC_SCB_MAX_ALLOC, GFP_ATOMIC);
+>         if (scb_data->scbarray == NULL)
+>                 return (ENOMEM);
+> -       memset(scb_data->scbarray, 0, sizeof(struct scb) * AHC_SCB_MAX_ALLOC);
+>
+>         /* Determine the number of hardware SCBs and initialize them */
+>
+> @@ -7558,14 +7556,13 @@ ahc_handle_en_lun(struct ahc_softc *ahc, struct cam_sim *sim, union ccb *ccb)
+>                                 return;
+>                         }
+>                 }
+> -               lstate = kmalloc(sizeof(*lstate), GFP_ATOMIC);
+> +               lstate = kzalloc(sizeof(*lstate), GFP_ATOMIC);
+>                 if (lstate == NULL) {
+>                         xpt_print_path(ccb->ccb_h.path);
+>                         printk("Couldn't allocate lstate\n");
+>                         ccb->ccb_h.status = CAM_RESRC_UNAVAIL;
+>                         return;
+>                 }
+> -               memset(lstate, 0, sizeof(*lstate));
+>                 status = xpt_create_path(&lstate->path, /*periph*/NULL,
+>                                          xpt_path_path_id(ccb->ccb_h.path),
+>                                          xpt_path_target_id(ccb->ccb_h.path),
+> --
+> 1.7.9.5
+>
+
+Hello,
+
+Would anyone be so kind as to review this?
 
 Thanks,
-~Saurav
-
-
->From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->
->Remove duplicated include.
->
->Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->---
-> drivers/scsi/qla2xxx/qla_isr.c | 2 --
-> 1 file changed, 2 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_isr.c
->b/drivers/scsi/qla2xxx/qla_isr.c
->index 26a3086..cb7a1c1 100644
->--- a/drivers/scsi/qla2xxx/qla_isr.c
->+++ b/drivers/scsi/qla2xxx/qla_isr.c
->@@ -13,8 +13,6 @@
-> #include <scsi/scsi_bsg_fc.h>
-> #include <scsi/scsi_eh.h>
->
->-#include "qla_target.h"
->-
-> static void qla2x00_mbx_completion(scsi_qla_host_t *, uint16_t);
-> static void qla2x00_process_completed_request(struct scsi_qla_host *,
->       struct req_que *, uint32_t);
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-
+Silviu Popescu
