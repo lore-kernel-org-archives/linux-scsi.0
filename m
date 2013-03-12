@@ -1,15 +1,15 @@
 From: jayamohank@gmail.com
-Subject: [PATCH 04/15] be2iscsi: Fix MSIx support in SKH-R to 32
-Date: Mon, 11 Mar 2013 21:39:34 -0700
-Message-ID: <1363063186-4902-4-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 03/15] be2iscsi: Fix MBX Command issues
+Date: Mon, 11 Mar 2013 21:39:33 -0700
+Message-ID: <1363063186-4902-3-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1363063186-4902-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:36310 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714Ab3CLEkD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Mar 2013 00:40:03 -0400
-Received: by mail-pb0-f43.google.com with SMTP id md12so4552401pbc.2
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 21:40:02 -0700 (PDT)
+Received: from mail-da0-f50.google.com ([209.85.210.50]:59501 "EHLO
+	mail-da0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751343Ab3CLEkC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Mar 2013 00:40:02 -0400
+Received: by mail-da0-f50.google.com with SMTP id t1so744929dae.23
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2013 21:40:01 -0700 (PDT)
 In-Reply-To: <1363063186-4902-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,40 +18,92 @@ Cc: "Jayamohan.Kallickal" <jayamohan.kallickal@emulex.com>, John Soni Jose <sony
 
 From: "Jayamohan.Kallickal" <jayamohan.kallickal@emulex.com>
 
-This patch limits the max number of msix vectors to 32.
+ - Check Ready Bit before posting the BMBX Hi Address
+ - Fix the parameters passed to beiscsi_mccq_compl
+   in beiscsi_open_conn()
+ - Fix tag value check in beiscsi_ep_connect.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |    1 +
- drivers/scsi/be2iscsi/be_main.h |    2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/be2iscsi/be_cmds.c  |   10 +++++++++-
+ drivers/scsi/be2iscsi/be_iscsi.c |    7 +++----
+ 2 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 3fb997f..72e4052 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4835,6 +4835,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	case OC_SKH_ID1:
- 		phba->generation = BE_GEN4;
- 		phba->iotask_fn = beiscsi_iotask_v2;
-+		break;
- 	default:
- 		phba->generation = 0;
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 3ad95c7..dfbe7e4 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -492,7 +492,7 @@ static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
+ {
+ 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
+ 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+-	int wait = 0;
++	uint32_t wait = 0;
+ 	u32 ready;
+ 
+ 	do {
+@@ -540,6 +540,10 @@ int be_mbox_notify(struct be_ctrl_info *ctrl)
+ 	struct be_mcc_compl *compl = &mbox->compl;
+ 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+ 
++	status = be_mbox_db_ready_wait(ctrl);
++	if (status)
++		return status;
++
+ 	val &= ~MPU_MAILBOX_DB_RDY_MASK;
+ 	val |= MPU_MAILBOX_DB_HI_MASK;
+ 	val |= (upper_32_bits(mbox_mem->dma) >> 2) << 2;
+@@ -593,6 +597,10 @@ static int be_mbox_notify_wait(struct beiscsi_hba *phba)
+ 	struct be_mcc_compl *compl = &mbox->compl;
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 
++	status = be_mbox_db_ready_wait(ctrl);
++	if (status)
++		return status;
++
+ 	val |= MPU_MAILBOX_DB_HI_MASK;
+ 	/* at bits 2 - 31 place mbox dma addr msb bits 34 - 63 */
+ 	val |= (upper_32_bits(mbox_mem->dma) >> 2) << 2;
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 214d691..1097fa2 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1009,7 +1009,6 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ {
+ 	struct beiscsi_endpoint *beiscsi_ep = ep->dd_data;
+ 	struct beiscsi_hba *phba = beiscsi_ep->phba;
+-	struct be_mcc_wrb *wrb;
+ 	struct tcp_connect_and_offload_out *ptcpcnct_out;
+ 	struct be_dma_mem nonemb_cmd;
+ 	unsigned int tag;
+@@ -1055,7 +1054,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 	nonemb_cmd.size = sizeof(struct tcp_connect_and_offload_in);
+ 	memset(nonemb_cmd.va, 0, nonemb_cmd.size);
+ 	tag = mgmt_open_connection(phba, dst_addr, beiscsi_ep, &nonemb_cmd);
+-	if (!tag) {
++	if (tag <= 0) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+ 			    "BS_%d : mgmt_open_connection Failed for cid=%d\n",
+ 			    beiscsi_ep->ep_cid);
+@@ -1066,7 +1065,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 		return -EAGAIN;
  	}
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 5946577..e53d087 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -66,7 +66,7 @@
  
- #define MAX_CPUS		64
- #define BEISCSI_MAX_NUM_CPUS	7
--#define OC_SKH_MAX_NUM_CPUS	63
-+#define OC_SKH_MAX_NUM_CPUS	31
+-	ret = beiscsi_mccq_compl(phba, tag, &wrb, NULL);
++	ret = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd.va);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+@@ -1077,7 +1076,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 		goto free_ep;
+ 	}
  
- 
- #define BEISCSI_SGLIST_ELEMENTS	30
+-	ptcpcnct_out = embedded_payload(wrb);
++	ptcpcnct_out = (struct tcp_connect_and_offload_out *)nonemb_cmd.va;
+ 	beiscsi_ep = ep->dd_data;
+ 	beiscsi_ep->fw_handle = ptcpcnct_out->connection_handle;
+ 	beiscsi_ep->cid_vld = 1;
 -- 
 1.7.10.4
 
