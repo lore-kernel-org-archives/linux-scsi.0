@@ -1,56 +1,64 @@
-From: Zhang Yanfei <zhangyanfei@cn.fujitsu.com>
-Subject: [PATCH 12/18] driver: scsi: remove cast for kmalloc/kzalloc return
- value
-Date: Tue, 12 Mar 2013 13:25:03 +0800
-Message-ID: <513EBC2F.6030601@cn.fujitsu.com>
-References: <513EB23D.7020303@cn.fujitsu.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH -next] [SCSI] qla2xxx: remove duplicated include from
+ qla_isr.c
+Date: Tue, 12 Mar 2013 06:08:47 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D2AB615@AVMB1.qlogic.org>
+References: <CAPgLHd_8XvGmK_YCXWcM0xTEo0z=ptWR40gfVxW5AK=92m2GPw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <513EB23D.7020303@cn.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-db8lp0188.outbound.messaging.microsoft.com ([213.199.154.188]:19115
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752880Ab3CLGYA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Mar 2013 02:24:00 -0400
+In-Reply-To: <CAPgLHd_8XvGmK_YCXWcM0xTEo0z=ptWR40gfVxW5AK=92m2GPw@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <5DE0AB132C667C45A77B32E0688E549B@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
+Cc: "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-remove cast for kmalloc/kzalloc return value.
+Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-Signed-off-by: Zhang Yanfei <zhangyanfei@cn.fujitsu.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/hpsa.c           |    3 +--
- drivers/scsi/lpfc/lpfc_init.c |    2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+Thanks,
+~Saurav
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 7f4f790..7a5a002 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3071,8 +3071,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		return -EINVAL;
- 	if (!capable(CAP_SYS_RAWIO))
- 		return -EPERM;
--	ioc = (BIG_IOCTL_Command_struct *)
--	    kmalloc(sizeof(*ioc), GFP_KERNEL);
-+	ioc = kmalloc(sizeof(*ioc), GFP_KERNEL);
- 	if (!ioc) {
- 		status = -ENOMEM;
- 		goto cleanup1;
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 314b4f6..f9a3b30 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4674,7 +4674,7 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
- 	}
- 
- 	if (!phba->sli.ring)
--		phba->sli.ring = (struct lpfc_sli_ring *)
-+		phba->sli.ring =
- 			kzalloc(LPFC_SLI3_MAX_RING *
- 			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
- 	if (!phba->sli.ring)
--- 
-1.7.1
+
+>From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+>Remove duplicated include.
+>
+>Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>---
+> drivers/scsi/qla2xxx/qla_isr.c | 2 --
+> 1 file changed, 2 deletions(-)
+>
+>diff --git a/drivers/scsi/qla2xxx/qla_isr.c
+>b/drivers/scsi/qla2xxx/qla_isr.c
+>index 26a3086..cb7a1c1 100644
+>--- a/drivers/scsi/qla2xxx/qla_isr.c
+>+++ b/drivers/scsi/qla2xxx/qla_isr.c
+>@@ -13,8 +13,6 @@
+> #include <scsi/scsi_bsg_fc.h>
+> #include <scsi/scsi_eh.h>
+>
+>-#include "qla_target.h"
+>-
+> static void qla2x00_mbx_completion(scsi_qla_host_t *, uint16_t);
+> static void qla2x00_process_completed_request(struct scsi_qla_host *,
+>       struct req_que *, uint32_t);
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+________________________________
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
