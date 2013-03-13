@@ -1,39 +1,50 @@
-From: Mark Lord <kernel@start.ca>
-Subject: Re: STANDBY IMMEDIATE failed on NVIDIA MCP5x controllers when system
- suspend
-Date: Tue, 12 Mar 2013 12:34:08 -0400
-Message-ID: <513F5900.9030503@start.ca>
-References: <513D52BE.7040307@intel.com> <1362991742.2395.9.camel@dabdike.int.hansenpartnership.com> <CADLC3L1+z=Nx_MFBz60z3Ow_98hetLYDjK5On-zxwdpUf+quzA@mail.gmail.com> <1363013464.2395.63.camel@dabdike.int.hansenpartnership.com> <CADLC3L0nM+3ttR8V8cCOZWGY+eJqGZdmKiTRieYr_d+Xqh36UA@mail.gmail.com>
+From: Vipul Pandya <vipul-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH net-next 05/22] cxgb4: Add T5 write combining support
+Date: Wed, 13 Mar 2013 20:06:04 +0530
+Message-ID: <51408ED4.40400@chelsio.com>
+References: <1363088794-31453-1-git-send-email-vipul@chelsio.com> <1363088794-31453-6-git-send-email-vipul@chelsio.com> <20130312.081927.1036246728528667686.davem@davemloft.net> <513F3EBD.5020504@opengridcomputing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mouse.start.ca ([64.140.120.56]:58221 "EHLO mouse.start.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932153Ab3CLQzq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Mar 2013 12:55:46 -0400
-In-Reply-To: <CADLC3L0nM+3ttR8V8cCOZWGY+eJqGZdmKiTRieYr_d+Xqh36UA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <513F3EBD.5020504-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
+Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org" <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, "JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Dimitrios Michailidis <dm-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Casey Leedom <leedom-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Naresh Kumar Inna <naresh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Divy Le Ray <divy-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Santosh Rastapur <santosh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Arvind Bhushan <arvindb-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Abhishek Agrawal <abhishek-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Aaron Lu <aaron.lu@intel.com>, bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
-
-On 13-03-11 03:30 PM, Robert Hancock wrote:
-..
-> I'm sure there are some SSDs that do violate their data integrity
-> commitments - a while ago some tests were done (don't have a link
-> handy and I don't think they identified the actual vendor/model of the
-> drives in any case) but there were definitely some SSDs that did do
-> nasty things like trash unrelated data if power was lost while
-> writing, etc. So we definitely don't want to risk this sort of thing
-> occurring on a normal power-off or suspend.
 
 
-Just about all current SATA SSDs advertise having some form(s)
-of "background garbage collection".  That "feature" has always concerned me,
-because of the real possibility of power being removed (system shutdown)
-while the drive firmware is in the midst of re-shuffling my data around.
 
-One would hope that "STANDBY IMMEDIATE" is taken by the drive
-as a signal to stop that fussing about and prepare for full/sudden power-off.
+On 12-03-2013 20:12, Steve Wise wrote:
+> On 3/12/2013 7:19 AM, David Miller wrote:
+>> From: Vipul Pandya <vipul-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+>> Date: Tue, 12 Mar 2013 17:16:17 +0530
+>>
+>>> +				writel(n,  adap->bar2 + q->udb + 8);
+>>> +#if defined(CONFIG_X86_32) || defined(CONFIG_X86_64)
+>>> +			asm volatile("sfence" : : : "memory");
+>>> +#endif
+>> There is absolutely no way I'm letting anyone put crap like this
+>> into a driver.
+>>
+>> Use a portable inteface, and if one does not exist create one.
+> 
+> I guess you'll have to add a wc_wmb() function for all the hw platforms 
+> supported by the kernel.  I see libibverbs defines this for the user 
+> side in include/infiniband/arch.h, and that could be used as the meat of 
+> the hw platform-specific implementations.
+> 
+I see that normal wmb() code for x86_64 architecture is same as what
+above #ifdef condition is doing. To be more clear I looked at the
+assembly code for wmb and find that it is converted into 'sfence'
+instruction. So, I think above code should be replaced with wmb call
+which will also take care of portability on different architecture. I
+will submit the series again soon.
 
+I would like to request RDMA/cxgb4 and csiostor driver maintainer to
+review the series if it has not been done already. It would be great If
+I can include review comments from them in my next version of series.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
