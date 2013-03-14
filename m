@@ -1,23 +1,77 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v2 net-next 00/22] Add support for Chelsio T5 adapter
-Date: Thu, 14 Mar 2013 11:45:33 -0400 (EDT)
-Message-ID: <20130314.114533.485492257267245931.davem@davemloft.net>
-References: <1363273748-25330-1-git-send-email-vipul@chelsio.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH v2 net-next 05/22] cxgb4: Add T5 write combining support
+Date: Thu, 14 Mar 2013 16:30:16 -0000
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B718E@saturn3.aculab.com>
+References: <1363273748-25330-1-git-send-email-vipul@chelsio.com> <1363273748-25330-6-git-send-email-vipul@chelsio.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
 Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1363273748-25330-1-git-send-email-vipul@chelsio.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <1363273748-25330-6-git-send-email-vipul@chelsio.com>
 Sender: netdev-owner@vger.kernel.org
-To: vipul@chelsio.com
-Cc: netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, roland@purestorage.com, JBottomley@parallels.com, dm@chelsio.com, swise@opengridcomputing.com, leedom@chelsio.com, naresh@chelsio.com, divy@chelsio.com, santosh@chelsio.com, arvindb@chelsio.com, abhishek@chelsio.com
+To: Vipul Pandya <vipul@chelsio.com>, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: davem@davemloft.net, roland@purestorage.com, JBottomley@parallels.com, dm@chelsio.com, swise@opengridcomputing.com, leedom@chelsio.com, naresh@chelsio.com, divy@chelsio.com, santosh@chelsio.com, arvindb@chelsio.com, abhishek@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Vipul Pandya <vipul@chelsio.com>
-Date: Thu, 14 Mar 2013 20:38:46 +0530
+> This patch implements a low latency Write Combining (aka Write Coalescing) work
+> request path. PCIE maps User Space Doorbell BAR2 region writes to the new
+> interface to SGE. SGE pulls a new message from PCIE new interface and if its a
+> coalesced write work request then pushes it for processing. This patch copies
+> coalesced work request to memory mapped BAR2 space.
+...
+> +	} else {
+> +		memset(data, 0, 2 * sizeof(u64));
+> +		*data += 2;
+> +	}
 
-> We request to merge this patch series via David Miller's net-next tree. We are
-> copying respective maintainers of all the drivers for reviewing the changes.
-> Kindly let us know in case of any review comments.
+Using memset is overkill (or rather a big overhead if it isn't
+detected by the compiler). Nothing wrong with:
+		(*data)[0] = 0;
+		(*data)[1] = 0;
+		*data += 2;
+Actually, typing that, I realise that you should probably have
+read *data into a local variable, and then updated it when finished.
+Otherwise some of the accesses might be ones which force the
+compiler to reload the value.
+		
+>  static inline void ring_tx_db(struct adapter *adap, struct sge_txq *q, int n)
+>  {
+> +	unsigned int *wr, index;
+> +
+>  	wmb();            /* write descriptors before telling HW */
+>  	spin_lock(&q->db_lock);
+>  	if (!q->db_disabled) {
+> -		t4_write_reg(adap, MYPF_REG(SGE_PF_KDOORBELL),
+> -			     QID(q->cntxt_id) | PIDX(n));
+> +		if (is_t4(adap->chip)) {
+> +			t4_write_reg(adap, MYPF_REG(SGE_PF_KDOORBELL),
+> +				     QID(q->cntxt_id) | PIDX(n));
+> +		} else {
+> +			if (n == 1) {
+> +				index = q->pidx ? (q->pidx - 1) : (q->size - 1);
+> +				wr = (unsigned int *)&q->desc[index];
+> +				cxgb_pio_copy((u64 __iomem *)
+> +					      (adap->bar2 + q->udb + 64),
+> +					      (u64 *)wr);
 
-All applied to net-next, thanks.
+Why all the casts on 'wr' ?
+
+> +			} else
+> +				writel(n,  adap->bar2 + q->udb + 8);
+> +			wmb();
+
+Since you actually need memory barriers here on x86 you definitely
+need a comment saying so, and it would (IMHO) better to use a
+different define in the source (even if it is currently converted
+to wmb() in a local header file).
+
+Thinking further, for portability you might want to find some way
+of abstracting the multi-word writes somehow.
+For example, some of the ppc have a dma engine associated with the
+PCIe master interface that can be used to generate large TLP.
+The code would still want to spin waiting for the dma to complete
+(since the transfer would be far faster than any interrupt path).
+
+	David
