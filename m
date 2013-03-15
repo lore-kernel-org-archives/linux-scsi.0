@@ -1,7 +1,7 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH RESEND v11 3/4] block: implement runtime pm strategy
-Date: Fri, 15 Mar 2013 17:05:04 +0800
-Message-ID: <1363338305-4987-4-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH RESEND v11 1/4] block: add a flag to identify PM request
+Date: Fri, 15 Mar 2013 17:05:02 +0800
+Message-ID: <1363338305-4987-2-git-send-email-aaron.lu@intel.com>
 References: <1363338305-4987-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1363338305-4987-1-git-send-email-aaron.lu@intel.com>
@@ -12,156 +12,134 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Lin Ming <ming.m.lin@intel.com>
 
-When a request is added:
-    If device is suspended or is suspending and the request is not a
-    PM request, resume the device.
+Add a flag REQ_PM to identify the request is PM related, such requests
+will not change the device request queue's runtime status. It is
+intended to be used in driver's runtime PM callback, so that driver can
+perform some IO to the device there with the queue's runtime status
+unaffected. e.g. in SCSI disk's runtime suspend callback, the disk will
+be put into stopped power state, and this require sending a command to
+the device. Such command processing should not change the disk's runtime
+status.
 
-When the last request finishes:
-    Call pm_runtime_mark_last_busy().
-
-When pick a request:
-    If device is resuming/suspending, then only PM request is allowed
-    to go.
-
-The idea and API is designed by Alan Stern and described here:
-http://marc.info/?l=linux-scsi&m=133727953625963&w=2
+As an example, modify scsi code to use this flag.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 Acked-by: Alan Stern <stern@rowland.harvard.edu>
 ---
- block/blk-core.c | 39 +++++++++++++++++++++++++++++++++++++++
- block/elevator.c | 26 ++++++++++++++++++++++++++
- 2 files changed, 65 insertions(+)
+ drivers/scsi/scsi_lib.c    |  9 ++++-----
+ drivers/scsi/sd.c          |  9 +++++----
+ include/linux/blk_types.h  |  2 ++
+ include/scsi/scsi_device.h | 16 ++++++++++++----
+ 4 files changed, 23 insertions(+), 13 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 123d240..441f348 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1264,6 +1264,16 @@ void part_round_stats(int cpu, struct hd_struct *part)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 765398c..23f795f 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -271,11 +271,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
  }
- EXPORT_SYMBOL_GPL(part_round_stats);
+ EXPORT_SYMBOL(scsi_execute);
  
-+#ifdef CONFIG_PM_RUNTIME
-+static void blk_pm_put_request(struct request *rq)
-+{
-+	if (rq->q->dev && !(rq->cmd_flags & REQ_PM) && !--rq->q->nr_pending)
-+		pm_runtime_mark_last_busy(rq->q->dev);
-+}
-+#else
-+static inline void blk_pm_put_request(struct request *rq) {}
-+#endif
-+
- /*
-  * queue lock must be held
-  */
-@@ -1274,6 +1284,8 @@ void __blk_put_request(struct request_queue *q, struct request *req)
- 	if (unlikely(--req->ref_count))
- 		return;
- 
-+	blk_pm_put_request(req);
-+
- 	elv_completed_request(q, req);
- 
- 	/* this is a bio leak */
-@@ -2053,6 +2065,28 @@ static void blk_account_io_done(struct request *req)
+-
+-int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
++int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned char *cmd,
+ 		     int data_direction, void *buffer, unsigned bufflen,
+ 		     struct scsi_sense_hdr *sshdr, int timeout, int retries,
+-		     int *resid)
++		     int *resid, int flags)
+ {
+ 	char *sense = NULL;
+ 	int result;
+@@ -286,14 +285,14 @@ int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
+ 			return DRIVER_ERROR << 24;
  	}
+ 	result = scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
+-			      sense, timeout, retries, 0, resid);
++			      sense, timeout, retries, flags, resid);
+ 	if (sshdr)
+ 		scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, sshdr);
+ 
+ 	kfree(sense);
+ 	return result;
  }
+-EXPORT_SYMBOL(scsi_execute_req);
++EXPORT_SYMBOL(scsi_execute_req_flags);
  
-+#ifdef CONFIG_PM_RUNTIME
-+/*
-+ * Don't process normal requests when queue is suspended
-+ * or in the process of suspending/resuming
-+ */
-+static struct request *blk_pm_peek_request(struct request_queue *q,
-+					   struct request *rq)
+ /*
+  * Function:    scsi_init_cmd_errh()
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7992635..c6e2b34 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1424,8 +1424,9 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+ 		 * Leave the rest of the command zero to indicate
+ 		 * flush everything.
+ 		 */
+-		res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
+-				       SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL);
++		res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0,
++					     &sshdr, SD_FLUSH_TIMEOUT,
++					     SD_MAX_RETRIES, NULL, REQ_PM);
+ 		if (res == 0)
+ 			break;
+ 	}
+@@ -3021,8 +3022,8 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ 	if (!scsi_device_online(sdp))
+ 		return -ENODEV;
+ 
+-	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
+-			       SD_TIMEOUT, SD_MAX_RETRIES, NULL);
++	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
++			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
+ 	if (res) {
+ 		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
+ 		sd_print_result(sdkp, res);
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index cdf1119..fcc1ce2 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -175,6 +175,7 @@ enum rq_flag_bits {
+ 	__REQ_IO_STAT,		/* account I/O stat */
+ 	__REQ_MIXED_MERGE,	/* merge of different types, fail separately */
+ 	__REQ_KERNEL, 		/* direct IO to kernel pages */
++	__REQ_PM,		/* runtime pm request */
+ 	__REQ_NR_BITS,		/* stops here */
+ };
+ 
+@@ -223,5 +224,6 @@ enum rq_flag_bits {
+ #define REQ_MIXED_MERGE		(1 << __REQ_MIXED_MERGE)
+ #define REQ_SECURE		(1 << __REQ_SECURE)
+ #define REQ_KERNEL		(1 << __REQ_KERNEL)
++#define REQ_PM			(1 << __REQ_PM)
+ 
+ #endif /* __LINUX_BLK_TYPES_H */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index a7f9cba..cc64587 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -394,10 +394,18 @@ extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 			int data_direction, void *buffer, unsigned bufflen,
+ 			unsigned char *sense, int timeout, int retries,
+ 			int flag, int *resid);
+-extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
+-			    int data_direction, void *buffer, unsigned bufflen,
+-			    struct scsi_sense_hdr *, int timeout, int retries,
+-			    int *resid);
++extern int scsi_execute_req_flags(struct scsi_device *sdev,
++	const unsigned char *cmd, int data_direction, void *buffer,
++	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
++	int retries, int *resid, int flags);
++static inline int scsi_execute_req(struct scsi_device *sdev,
++	const unsigned char *cmd, int data_direction, void *buffer,
++	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
++	int retries, int *resid)
 +{
-+	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
-+	    (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM))))
-+		return NULL;
-+	else
-+		return rq;
++	return scsi_execute_req_flags(sdev, cmd, data_direction, buffer,
++		bufflen, sshdr, timeout, retries, resid, 0);
 +}
-+#else
-+static inline struct request *blk_pm_peek_request(struct request_queue *q,
-+						  struct request *rq)
-+{
-+	return rq;
-+}
-+#endif
-+
- /**
-  * blk_peek_request - peek at the top of a request queue
-  * @q: request queue to peek at
-@@ -2075,6 +2109,11 @@ struct request *blk_peek_request(struct request_queue *q)
- 	int ret;
+ extern void sdev_disable_disk_events(struct scsi_device *sdev);
+ extern void sdev_enable_disk_events(struct scsi_device *sdev);
  
- 	while ((rq = __elv_next_request(q)) != NULL) {
-+
-+		rq = blk_pm_peek_request(q, rq);
-+		if (!rq)
-+			break;
-+
- 		if (!(rq->cmd_flags & REQ_STARTED)) {
- 			/*
- 			 * This is the first time the device driver
-diff --git a/block/elevator.c b/block/elevator.c
-index a0ffdd9..eba5b04 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -34,6 +34,7 @@
- #include <linux/blktrace_api.h>
- #include <linux/hash.h>
- #include <linux/uaccess.h>
-+#include <linux/pm_runtime.h>
- 
- #include <trace/events/block.h>
- 
-@@ -536,6 +537,27 @@ void elv_bio_merged(struct request_queue *q, struct request *rq,
- 		e->type->ops.elevator_bio_merged_fn(q, rq, bio);
- }
- 
-+#ifdef CONFIG_PM_RUNTIME
-+static void blk_pm_requeue_request(struct request *rq)
-+{
-+	if (rq->q->dev && !(rq->cmd_flags & REQ_PM))
-+		rq->q->nr_pending--;
-+}
-+
-+static void blk_pm_add_request(struct request_queue *q, struct request *rq)
-+{
-+	if (q->dev && !(rq->cmd_flags & REQ_PM) && q->nr_pending++ == 0 &&
-+	    (q->rpm_status == RPM_SUSPENDED || q->rpm_status == RPM_SUSPENDING))
-+		pm_request_resume(q->dev);
-+}
-+#else
-+static inline void blk_pm_requeue_request(struct request *rq) {}
-+static inline void blk_pm_add_request(struct request_queue *q,
-+				      struct request *rq)
-+{
-+}
-+#endif
-+
- void elv_requeue_request(struct request_queue *q, struct request *rq)
- {
- 	/*
-@@ -550,6 +572,8 @@ void elv_requeue_request(struct request_queue *q, struct request *rq)
- 
- 	rq->cmd_flags &= ~REQ_STARTED;
- 
-+	blk_pm_requeue_request(rq);
-+
- 	__elv_add_request(q, rq, ELEVATOR_INSERT_REQUEUE);
- }
- 
-@@ -572,6 +596,8 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
- {
- 	trace_block_rq_insert(q, rq);
- 
-+	blk_pm_add_request(q, rq);
-+
- 	rq->q = q;
- 
- 	if (rq->cmd_flags & REQ_SOFTBARRIER) {
 -- 
 1.8.1.4
