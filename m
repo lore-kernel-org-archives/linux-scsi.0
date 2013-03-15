@@ -1,145 +1,139 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH RESEND v11 1/4] block: add a flag to identify PM request
-Date: Fri, 15 Mar 2013 17:05:02 +0800
-Message-ID: <1363338305-4987-2-git-send-email-aaron.lu@intel.com>
-References: <1363338305-4987-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1363338305-4987-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
+From: Jan Vesely <jvesely@redhat.com>
+Subject: Re: [PATCH v2] st: Take additional queue ref in st_probe
+Date: Fri, 15 Mar 2013 10:13:13 +0100
+Message-ID: <5142E629.60900@redhat.com>
+References: <alpine.DEB.2.02.1303041101450.1736@jlaw-desktop.mno.stratus.com> <5135E780.6040303@redhat.com> <alpine.DEB.2.02.1303051053040.1736@jlaw-desktop.mno.stratus.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:13752 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753282Ab3COJNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Mar 2013 05:13:31 -0400
+In-Reply-To: <alpine.DEB.2.02.1303051053040.1736@jlaw-desktop.mno.stratus.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Lawrence <Joe.Lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, "Seymour, Shane M" <shane.seymour@hp.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, =?ISO-8859-15?Q?Kai_M=E4kisara?= <Kai.Makisara@kolumbus.fi>, "Ewan D. Milne" <emilne@redhat.com>
 
-From: Lin Ming <ming.m.lin@intel.com>
 
-Add a flag REQ_PM to identify the request is PM related, such requests
-will not change the device request queue's runtime status. It is
-intended to be used in driver's runtime PM callback, so that driver can
-perform some IO to the device there with the queue's runtime status
-unaffected. e.g. in SCSI disk's runtime suspend callback, the disk will
-be put into stopped power state, and this require sending a command to
-the device. Such command processing should not change the disk's runtime
-status.
 
-As an example, modify scsi code to use this flag.
+On 05/03/13 16:57, Joe Lawrence wrote:
+> Changes from v1:
+>   Corrected error paths as noted by Ewan Milne and Jan Vesely.
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
----
- drivers/scsi/scsi_lib.c    |  9 ++++-----
- drivers/scsi/sd.c          |  9 +++++----
- include/linux/blk_types.h  |  2 ++
- include/scsi/scsi_device.h | 16 ++++++++++++----
- 4 files changed, 23 insertions(+), 13 deletions(-)
+thanks,
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 765398c..23f795f 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -271,11 +271,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- }
- EXPORT_SYMBOL(scsi_execute);
- 
--
--int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
-+int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned char *cmd,
- 		     int data_direction, void *buffer, unsigned bufflen,
- 		     struct scsi_sense_hdr *sshdr, int timeout, int retries,
--		     int *resid)
-+		     int *resid, int flags)
- {
- 	char *sense = NULL;
- 	int result;
-@@ -286,14 +285,14 @@ int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
- 			return DRIVER_ERROR << 24;
- 	}
- 	result = scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
--			      sense, timeout, retries, 0, resid);
-+			      sense, timeout, retries, flags, resid);
- 	if (sshdr)
- 		scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, sshdr);
- 
- 	kfree(sense);
- 	return result;
- }
--EXPORT_SYMBOL(scsi_execute_req);
-+EXPORT_SYMBOL(scsi_execute_req_flags);
- 
- /*
-  * Function:    scsi_init_cmd_errh()
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 7992635..c6e2b34 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1424,8 +1424,9 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 		 * Leave the rest of the command zero to indicate
- 		 * flush everything.
- 		 */
--		res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
--				       SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL);
-+		res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0,
-+					     &sshdr, SD_FLUSH_TIMEOUT,
-+					     SD_MAX_RETRIES, NULL, REQ_PM);
- 		if (res == 0)
- 			break;
- 	}
-@@ -3021,8 +3022,8 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 	if (!scsi_device_online(sdp))
- 		return -ENODEV;
- 
--	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
--			       SD_TIMEOUT, SD_MAX_RETRIES, NULL);
-+	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
- 	if (res) {
- 		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
- 		sd_print_result(sdkp, res);
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index cdf1119..fcc1ce2 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -175,6 +175,7 @@ enum rq_flag_bits {
- 	__REQ_IO_STAT,		/* account I/O stat */
- 	__REQ_MIXED_MERGE,	/* merge of different types, fail separately */
- 	__REQ_KERNEL, 		/* direct IO to kernel pages */
-+	__REQ_PM,		/* runtime pm request */
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
-@@ -223,5 +224,6 @@ enum rq_flag_bits {
- #define REQ_MIXED_MERGE		(1 << __REQ_MIXED_MERGE)
- #define REQ_SECURE		(1 << __REQ_SECURE)
- #define REQ_KERNEL		(1 << __REQ_KERNEL)
-+#define REQ_PM			(1 << __REQ_PM)
- 
- #endif /* __LINUX_BLK_TYPES_H */
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index a7f9cba..cc64587 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -394,10 +394,18 @@ extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 			int data_direction, void *buffer, unsigned bufflen,
- 			unsigned char *sense, int timeout, int retries,
- 			int flag, int *resid);
--extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
--			    int data_direction, void *buffer, unsigned bufflen,
--			    struct scsi_sense_hdr *, int timeout, int retries,
--			    int *resid);
-+extern int scsi_execute_req_flags(struct scsi_device *sdev,
-+	const unsigned char *cmd, int data_direction, void *buffer,
-+	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
-+	int retries, int *resid, int flags);
-+static inline int scsi_execute_req(struct scsi_device *sdev,
-+	const unsigned char *cmd, int data_direction, void *buffer,
-+	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
-+	int retries, int *resid)
-+{
-+	return scsi_execute_req_flags(sdev, cmd, data_direction, buffer,
-+		bufflen, sshdr, timeout, retries, resid, 0);
-+}
- extern void sdev_disable_disk_events(struct scsi_device *sdev);
- extern void sdev_enable_disk_events(struct scsi_device *sdev);
- 
--- 
-1.8.1.4
+Acked-by: Jan Vesely <jvesely@redhat.com>
+
+>=20
+> These changes were applied to scsi.git, branch "misc".  This patch
+> fixes a reference count bug in the SCSI tape driver which can be
+> reproduced with the following:
+>=20
+> * Boot with slub_debug=3DFZPU, tape drive attached
+> * echo 1 > /sys/devices/... tape device pci path .../remove
+> * Wait for device removal
+> * echo 1 > /sys/kernel/slab/blkdev_queue/validate
+> * Slub debug complains about corrupted poison pattern
+>=20
+> In commit 523e1d39 (block: make gendisk hold a reference to its queue=
+)=20
+> add_disk() and disk_release() were modified to get/put an additional
+> reference on a disk queue to fix a reference counting discrepency
+> between bdev release and SCSI device removal.  The ST driver never
+> calls add_disk(), so this commit introduced an extra kref put when th=
+e
+> ST driver frees its struct gendisk.
+>=20
+> Attempts were made to fix this bug at the block level [1] but later
+> abandoned due to floppy driver issues [2].
+>=20
+> [1] https://lkml.org/lkml/2012/8/27/354
+> [2] https://lkml.org/lkml/2012/9/22/113
+>=20
+> From a50a6ee28748b7c1620af6f76772164ec0fc4a1d Mon Sep 17 00:00:00 200=
+1
+> From: Joe Lawrence <joe.lawrence@stratus.com>
+> Date: Tue, 5 Mar 2013 09:30:14 -0500
+> Subject: [PATCH v2] st: Take additional queue ref in st_probe
+> MIME-Version: 1.0
+> Content-Type: text/plain; charset=3DUTF-8
+> Content-Transfer-Encoding: 8bit
+>=20
+> The SCSI tape driver employs a struct gendisk, calling alloc_disk() t=
+o
+> create an instance, but does not register it via add_disk().  When th=
+e
+> gendisk is torn down, disk_release() is called and expects to return =
+a
+> disk queue reference that add_disk() normally would have taken out. (=
+See
+> commit 523e1d39.)  Fix the kref accounting by adding a blk_get_queue(=
+)
+> to st_probe().
+>=20
+> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+> Tested-by: Ewan D. Milne <emilne@redhat.com>=20
+> Cc: Kai M=E4kisara <Kai.Makisara@kolumbus.fi>
+> Cc: James E.J. Bottomley <JBottomley@parallels.com>
+> Cc: "Seymour, Shane M" <shane.seymour@hp.com>
+> Cc: Jan Vesely <jvesely@redhat.com>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/scsi/st.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> index 98156a9..96f3363 100644
+> --- a/drivers/scsi/st.c
+> +++ b/drivers/scsi/st.c
+> @@ -4112,6 +4112,10 @@ static int st_probe(struct device *dev)
+>  	tpnt->disk =3D disk;
+>  	disk->private_data =3D &tpnt->driver;
+>  	disk->queue =3D SDp->request_queue;
+> +	/* SCSI tape doesn't register this gendisk via add_disk().  Manuall=
+y
+> +	 * take queue reference that release_disk() expects. */
+> +	if (!blk_get_queue(disk->queue))
+> +		goto out_put_disk;
+>  	tpnt->driver =3D &st_template;
+> =20
+>  	tpnt->device =3D SDp;
+> @@ -4181,7 +4185,7 @@ static int st_probe(struct device *dev)
+>  	if (!idr_pre_get(&st_index_idr, GFP_KERNEL)) {
+>  		pr_warn("st: idr expansion failed\n");
+>  		error =3D -ENOMEM;
+> -		goto out_put_disk;
+> +		goto out_put_queue;
+>  	}
+> =20
+>  	spin_lock(&st_index_lock);
+> @@ -4189,7 +4193,7 @@ static int st_probe(struct device *dev)
+>  	spin_unlock(&st_index_lock);
+>  	if (error) {
+>  		pr_warn("st: idr allocation failed: %d\n", error);
+> -		goto out_put_disk;
+> +		goto out_put_queue;
+>  	}
+> =20
+>  	if (dev_num > ST_MAX_TAPES) {
+> @@ -4222,6 +4226,8 @@ out_put_index:
+>  	spin_lock(&st_index_lock);
+>  	idr_remove(&st_index_idr, dev_num);
+>  	spin_unlock(&st_index_lock);
+> +out_put_queue:
+> +	blk_put_queue(disk->queue);
+>  out_put_disk:
+>  	put_disk(disk);
+>  	kfree(tpnt);
+>=20
+
+--=20
+Jan Vesely <jvesely@redhat.com>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
