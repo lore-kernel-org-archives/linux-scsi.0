@@ -1,50 +1,221 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi_transport_fc: Make 'port_state' writeable
-Date: Fri, 15 Mar 2013 14:41:23 +0100
-Message-ID: <51432503.5000703@acm.org>
-References: <1358262138-13378-1-git-send-email-hare@suse.de> <51421272.2000706@linux.vnet.ibm.com> <51430C4A.7090308@suse.de> <5143130F.4090702@acm.org> <514315F7.4010101@redhat.com> <5143183B.1070300@acm.org> <514321FD.7090507@redhat.com>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: Re: [PATCH][RFC] scsi: Use W_LUN for scanning
+Date: Fri, 15 Mar 2013 16:54:29 +0100
+Message-ID: <51434435.2060900@linux.vnet.ibm.com>
+References: <1363340771-46925-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:49769 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753867Ab3CONl2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Mar 2013 09:41:28 -0400
-In-Reply-To: <514321FD.7090507@redhat.com>
+Received: from e06smtp15.uk.ibm.com ([195.75.94.111]:39161 "EHLO
+	e06smtp15.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753993Ab3COPyf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Mar 2013 11:54:35 -0400
+Received: from /spool/local
+	by e06smtp15.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
+	Fri, 15 Mar 2013 15:52:16 -0000
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
+	by d06dlp01.portsmouth.uk.ibm.com (Postfix) with ESMTP id A7FD317D801E
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Mar 2013 15:55:10 +0000 (GMT)
+Received: from d06av06.portsmouth.uk.ibm.com (d06av06.portsmouth.uk.ibm.com [9.149.37.217])
+	by b06cxnps4074.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2FFsLmY26280084
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Mar 2013 15:54:21 GMT
+Received: from d06av06.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av06.portsmouth.uk.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2FFsTUh017112
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Mar 2013 09:54:30 -0600
+In-Reply-To: <1363340771-46925-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bryn M. Reeves" <bmr@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, James Smart <james.smart@emulex.com>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, George Martin <marting@netapp.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-On 03/15/13 14:28, Bryn M. Reeves wrote:
-> On 03/15/2013 12:46 PM, Bart Van Assche wrote:
->> The SCSI EH keeps trying until all outstanding request have been
->> finished. Does lpfc_host_reset_handler() invoke scsi_done() for
->
-> I don't think so (ends up calling lpfc_sli_cancel_iocbs() via
-> lpfc_hba_down_post() after shutting down the mailbox) but I've not seen
-> the EH escalate all the way to host reset in most of my testing -
-> usually some time after reaching the bus reset remaining IOs timeout and
-> the error bubbles up to device-mapper (all the cases I'm looking at are
-> devices managed by a dm-multipath target).
->
-> The problem is that getting to this stage can take a very long time -
-> much longer than most cluster's node eviction timer for e.g. which is
-> the source of much of the complaint about this behaviour.
->
->> outstanding requests ? If not, how about modifying
->> lpfc_host_reset_handler() such that it finishes all outstanding requests
->> if the remote port is not reachable ?
->
-> I'm not sure how safe that is in this situation - James mentioned in the
-> I_T nexus reset thread concerns about frames that could be delayed etc.
-> in the fabric if the host unilaterally abandons IOs (not sure of the
-> details for lpfc at this level).
+While we're at it: I recently figured that there are targets responding=
+=20
+to inquiry with PQ=3D1 && PDT=3D31 for LUN0 if LUN0 has no backing devi=
+ce=20
+(e.g. no disk mapped for the initiator host). While this is likely to=20
+work with in-kernel lun scanning, the kernel does not even allocate an=20
+sg dev in this case.
+If the target (such do exist) now also does not support report_luns on=20
+WLUN, this effectively prevents any user space lun discovery.
+E.g. non-NPIV zfcp-attached LUNs cannot be discovered, because we canno=
+t=20
+do in-kernel scanning due to the lack of initiator lun masking.
 
-How about using the value of scsi_cmnd.jiffies_at_alloc to finish only 
-those SCSI commands in the host reset handler that exceeded a certain 
-processing time ?
+The reason for Linux ignoring LUNs with PDT=3D31 and PQ=3D1 is:
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?=
+id=3D84961f28e9d13a4b193d0c8545f3c060c1890ff3
+[SCSI] Don't add scsi_device for devices that return PQ=3D1, PDT=3D0x1f
+from kernel 2.6.19.
+Since Linux on System z could no longer perform report luns with IBM=20
+DS8000, the following workaround was implemented:
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?=
+id=3D01b291bd66564b4bd826326af6bd0b6d17e99439
+[SCSI] fix check of PQ and PDT bits for WLUNs
+in kernel 2.6.27.
+However, this only works for WLUNs reporting PDT=3D31 and PQ=3D1 but no=
+t for=20
+LUN0.
+What made it worse is that, the attached LUN looks perfect from a zfcp=20
+status point of view but is still missing any user visible handle for=20
+the scsi midlayer, so I was puzzled as a user despite the otherwise=20
+clear scsi log message:
+"scsi scan: peripheral device type of 31, ***no device added***".
 
-Bart.
+On 03/15/2013 10:46 AM, Hannes Reinecke wrote:
+> SAM advertises the use of a Well-known LUN (W_LUN) for scanning.
+> As this avoids exposing LUN 0 (which might be a valid LUN) for
+> all initiators it is the preferred method for LUN scanning on
+> some arrays.
+> So we should be using W_LUN for scanning, too. If the W_LUN is
+> not supported we'll fall back to use LUN 0.
+> For broken W_LUN implementations a new blacklist flag
+> 'BLIST_NO_WLUN' is added.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 3e58b22..f4ccdea 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1312,6 +1312,7 @@ static int scsi_report_lun_scan(struct scsi_tar=
+get *starget, int bflags,
+>   	unsigned int num_luns;
+>   	unsigned int retries;
+>   	int result;
+> +	int w_lun =3D SCSI_W_LUN_REPORT_LUNS;
+>   	struct scsi_lun *lunp, *lun_data;
+>   	u8 *data;
+>   	struct scsi_sense_hdr sshdr;
+> @@ -1337,11 +1338,20 @@ static int scsi_report_lun_scan(struct scsi_t=
+arget *starget, int bflags,
+>   		return 0;
+>   	if (starget->no_report_luns)
+>   		return 1;
+> +	if (bflags & BLIST_NO_WLUN)
+> +		w_lun =3D 0;
+>
+> +retry_report_lun_scan:
+>   	if (!(sdev =3D scsi_device_lookup_by_target(starget, 0))) {
+> -		sdev =3D scsi_alloc_sdev(starget, 0, NULL);
+> -		if (!sdev)
+> -			return 0;
+> +		sdev =3D scsi_alloc_sdev(starget, w_lun, NULL);
+> +		if (!sdev) {
+> +			if (w_lun !=3D 0) {
+> +				w_lun =3D 0;
+> +				sdev =3D scsi_alloc_sdev(starget, w_lun, NULL);
+> +			}
 
+> +			if (!sdev)
+> +				return 0;
+
+Semantically this belongs to the 2nd scsi_alloc_sdev(starget, w_lun,=20
+NULL) i.e. inside (at the end of) the body of if (w_lun !=3D 0).
+Then you can even merge the outer and inner if statement to
+if (!sdev && wlun !=3D 0)
+Semantics: WLUN did not work and we haven't already tried LUN0.
+Maybe it's just me but I found it more difficult to read if the 2nd=20
+check is on its own inside the outer if statement with exactly the same=
+=20
+boolean expression.
+
+
+> +		}
+>   		if (scsi_device_get(sdev)) {
+>   			__scsi_remove_device(sdev);
+>   			return 0;
+
+Now that we not only use LUN0, it would be nice to reflect the currentl=
+y=20
+used LUN in the corresponding scsi logging statements for debugging and=
+=20
+problem determination purposes.
+It seems as if devname only contains HCT but not L, which can now be=20
+either WLUN or LUN0, e.g. here:
+
+> 	for (retries =3D 0; retries < 3; retries++) {
+> 		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: Sending"
+> 				" REPORT LUNS to %s (try %d)\n", devname,
+> 				retries));
+>
+> 		result =3D scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
+> 					  lun_data, length, &sshdr,
+> 					  SCSI_TIMEOUT + 4 * HZ, 3, NULL);
+>
+> 		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: REPORT LUNS"
+> 				" %s (try %d) result 0x%x\n", result
+> 				?  "failed" : "successful", retries, result));
+
+> @@ -1418,6 +1428,18 @@ static int scsi_report_lun_scan(struct scsi_ta=
+rget *starget, int bflags,
+>   	}
+>
+>   	if (result) {
+> +		if (w_lun !=3D 0 && scsi_device_created(sdev)) {
+
+Did you mean _!_scsi_device_created(sdev), i.e. we tried WLUN but could=
+=20
+not attach it?
+
+> +			/*
+> +			 * W_LUN probably not supported, try with LUN 0
+> +			 */
+
+Does this only check for an sg dev having been created or does it check=
+=20
+for the response to the report_luns cmnd? It should be the latter since=
+=20
+there are targets allowing attachment of WLUN (with PQ=3D1 && PDT=3D31)=
+ but=20
+refuse to answer report_luns, e.g. IBM SVC / Storwize V7000.
+Remember your changes to zfcp_san_disc reacting on sg_luns return code?=
+=20
+[Novell bug 742352]
+It would be nice if we could avoid start using BLIST_NO_WLUN right away=
+=2E ;-)
+
+> +			SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan:"
+> +					"W_LUN not supported, try LUN 0\n"));
+> +			kfree(lun_data);
+> +			scsi_device_put(sdev);
+> +			__scsi_remove_device(sdev);
+> +			w_lun =3D 0;
+> +			goto retry_report_lun_scan;
+> +		}
+>   		/*
+>   		 * The device probably does not support a REPORT LUN command
+>   		 */
+> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.=
+h
+> index cc1f3e7..ffb42b1 100644
+> --- a/include/scsi/scsi_devinfo.h
+> +++ b/include/scsi/scsi_devinfo.h
+> @@ -31,4 +31,5 @@
+>   #define BLIST_MAX_512		0x800000 /* maximum 512 sector cdb length */
+>   #define BLIST_ATTACH_PQ3	0x1000000 /* Scan: Attach to PQ3 devices *=
+/
+>   #define BLIST_NO_DIF		0x2000000 /* Disable T10 PI (DIF) */
+> +#define BLIST_NO_WLUN		0x4000000 /* Disable W_LUN scanning */
+>   #endif
+>
+
+The overall idea seems reasonable to me.
+
+Steffen
+
+Linux on System z Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Gesch=E4ftsf=FChrung: Dirk Wittkopp
+Sitz der Gesellschaft: B=F6blingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
