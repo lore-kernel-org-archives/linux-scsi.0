@@ -1,241 +1,140 @@
-From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: Re: [PATCH][RFC] scsi: Use W_LUN for scanning
-Date: Sun, 17 Mar 2013 22:50:26 +0100
-Message-ID: <51463AA2.4090901@linux.vnet.ibm.com>
-References: <1363340771-46925-1-git-send-email-hare@suse.de> <51434435.2060900@linux.vnet.ibm.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] block,scsi: verify return pointer from blk_get_request
+Date: Sun, 17 Mar 2013 16:44:24 -0600
+Message-ID: <20130317224416.GA7421@kernel.dk>
+References: <alpine.DEB.2.02.1303171328250.1736@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e06smtp16.uk.ibm.com ([195.75.94.112]:44096 "EHLO
-	e06smtp16.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756517Ab3CQVud convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Mar 2013 17:50:33 -0400
-Received: from /spool/local
-	by e06smtp16.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-	Sun, 17 Mar 2013 21:47:48 -0000
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-	by d06dlp02.portsmouth.uk.ibm.com (Postfix) with ESMTP id 84BBD219005A
-	for <linux-scsi@vger.kernel.org>; Sun, 17 Mar 2013 21:52:09 +0000 (GMT)
-Received: from d06av06.portsmouth.uk.ibm.com (d06av06.portsmouth.uk.ibm.com [9.149.37.217])
-	by b06cxnps3074.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2HLoJcZ47906870
-	for <linux-scsi@vger.kernel.org>; Sun, 17 Mar 2013 21:50:19 GMT
-Received: from d06av06.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av06.portsmouth.uk.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2HLoSLS019114
-	for <linux-scsi@vger.kernel.org>; Sun, 17 Mar 2013 15:50:28 -0600
-In-Reply-To: <51434435.2060900@linux.vnet.ibm.com>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:44818
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932562Ab3CQWqA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Mar 2013 18:46:00 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1303171328250.1736@jlaw-desktop.mno.stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, George Martin <marting@netapp.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Joe Lawrence <Joe.Lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-just a small addendum regarding the naming of the w_lun variable
+On Sun, Mar 17 2013, Joe Lawrence wrote:
+> Hello James / Jiri / Jens,
+> 
+> Stratus hit a NULL ptr deference bug when removing a USB CD-ROM while
+> burning a DVD.  The stack trace below was produced on a RHEL 6.4-GA
+> kernel, however it looks like the bug still exists in 3.9.0-rc2: not all
+> callers of blk_get_request bother to verify the return pointer value
+> before using it. 
+> 
+> There are other unsafe blk_get_request callers in the kernel, but they
+> live in the obsolete drivers/ide directory.  Patches from the Linux
+> Driver Verification to harden those calls were rejected in Aug 2012 [1],
+> so I'll let them be.
+> 
+> [1] https://lkml.org/lkml/2012/8/9/561
+> 
+> Stack trace and notes:
+> 
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000044
+> usb 3-1.6: USB disconnect, device number 4
+> usb 3-1.6.1: USB disconnect, device number 5
+> IP: [<ffffffff8126687b>] blk_send_start_stop+0x3b/0xa0
+> PGD 4034327067 PUD 4041356067 PMD 0
+> Oops: 0002 [#1] SMP
+> last sysfs file: /sys/devices/pci0000:00/0000:00:01.0/class
+> CPU 0
+> Modules linked in: nfs lockd fscache auth_rpcgss nfs_acl nls_utf8 fuse autofs4 sunrpc configfs bonding 8021q garp stp llc vhost_net macvtap macvlan tun uinput ipmi_devintf ftmod(P)(U) sg matroxfb(U) fosil(U) ext4 mbcache jbd2 sr_mod cdrom raid1 ixgbe(U) usb_storage mpt2sas(U) scsi_hbas(U) sd_mod(U) crc_t10dif scsi_transport_sas raid_class igb(U) dca ptp pps_core dm_mirror dm_region_hash dm_log dm_mod ipv6 cxgb4 cxgb3 mdio libiscsi_tcp libiscsi scsi_transport_iscsi [last unloaded: scsi_wait_scan]
+> 
+> Pid: 13461, comm: k3b Tainted: P           ---------------    2.6.32-358.el6.x86_64 #1 Stratus ftServer 4700/G7LAY
+> RIP: 0010:[<ffffffff8126687b>]  [<ffffffff8126687b>] blk_send_start_stop+0x3b/0xa0
+> RSP: 0018:ffff884050545b98  EFLAGS: 00010282
+> RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+> RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88204e64c0f8
+> RBP: ffff884050545bb8 R08: 000000000297a798 R09: 0000000000000000
+> R10: 00000000000007e4 R11: 0000000000000001 R12: ffff88204e64c0f8
+> R13: ffff88204d1a3800 R14: 0000000000000002 R15: 000000000000005d
+> FS:  00007f480bfff700(0000) GS:ffff880040200000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000000044 CR3: 00000040414ca000 CR4: 00000000000407f0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Process k3b (pid: 13461, threadinfo ffff884050544000, task ffff884046de1500)
+> Stack:
+>  ffff88204e64c0f8 00000000fffffffa ffff88204d1a3800 000000000297a798
+> <d> ffff884050545cb8 ffffffff8126726a ffff880040236798 ffff880040236700
+> <d> ffff884050f7b538 ffff8840504ca0b8 ffff884050f7b500 0000000000000000
+> Call Trace:
+>  [<ffffffff8126726a>] scsi_cmd_ioctl+0x18a/0x470
+>  [<ffffffff8103392e>] ? physflat_send_IPI_mask+0xe/0x10
+>  [<ffffffff8102dd89>] ? native_smp_send_reschedule+0x49/0x60
+>  [<ffffffff81052258>] ? resched_task+0x68/0x80
+>  [<ffffffff810570e0>] ? check_preempt_wakeup+0x1c0/0x260
+>  [<ffffffff81054f13>] ? ftrace_raw_event_id_sched_wakeup_template+0xe3/0xf0
+>  [<ffffffff812675a1>] scsi_cmd_blk_ioctl+0x51/0x70
+>  [<ffffffffa01c1a1d>] cdrom_ioctl+0x4d/0xe60 [cdrom]
+>  [<ffffffff812231f1>] ? avc_has_perm+0x71/0x90
+>  [<ffffffffa0082440>] sr_block_ioctl+0x60/0xb0 [sr_mod]
+>  [<ffffffff812642f7>] __blkdev_driver_ioctl+0x67/0x80
+>  [<ffffffff8126477d>] blkdev_ioctl+0x1ed/0x6e0
+>  [<ffffffff811bb76c>] block_ioctl+0x3c/0x40
+>  [<ffffffff81194ed2>] vfs_ioctl+0x22/0xa0
+>  [<ffffffff81195074>] do_vfs_ioctl+0x84/0x580
+>  [<ffffffff811955f1>] sys_ioctl+0x81/0xa0
+>  [<ffffffff8100b288>] tracesys+0xd9/0xde
+> Code: 08 4c 89 6c 24 10 4c 89 74 24 18 0f 1f 44 00 00 49 89 f5 41 89 d6 be 01 00 00 00 ba 10 00 00 00 49 89 fc e8 b8 82 ff ff 48 89 c3 <c7> 40 44 02 00 00 00 c7 80 38 01 00 00 60 ea 00 00 48 8b 80 00
+> RIP  [<ffffffff8126687b>] blk_send_start_stop+0x3b/0xa0
+>  RSP <ffff884050545b98>
+> CR2: 0000000000000044
+> 
+> What is blk_send_start_stop (inline __blk_send_generic) doing?
+> 
+> block/scsi_ioctl.c: 783
+>   <blk_send_start_stop+0x33>:  callq  0xffffffff8125eb30 <blk_get_request>
+>   <blk_send_start_stop+0x38>:  mov    %rax,%rbx
+> block/scsi_ioctl.c: 784
+>   <blk_send_start_stop+0x3b>:  movl   $0x2,0x44(%rax)
+> 
+> Where RAX: 0000000000000000
+> 
+> block/scsi_ioctl.c: 
+> 
+> 776 /* Send basic block requests */
+> 777 static int __blk_send_generic(struct request_queue *q, struct gendisk *bd_di
+> 778                               int cmd, int data)
+> 779 {
+> 780         struct request *rq;
+> 781         int err;
+> 782
+> 783         rq = blk_get_request(q, WRITE, __GFP_WAIT);
+> 784         rq->cmd_type = REQ_TYPE_BLOCK_PC;                        <<
+> 785         rq->timeout = BLK_DEFAULT_SG_TIMEOUT;
+> 786         rq->cmd[0] = cmd;
+> 787         rq->cmd[4] = data;
+> 788         rq->cmd_len = 6;
+> 789         err = blk_execute_rq(q, bd_disk, rq, 0);
+> 790         blk_put_request(rq);
+> 791
+> 792         return err;
+> 793 }
+> 
+> A quick verify of offset from "movl   $0x2,0x44(%rax)":
+> 
+> crash> struct -o request | grep 0x44
+>    [0x44] enum rq_cmd_type_bits cmd_type;
+> 
+> So blk_get_request returned a NULL struct request pointer, but
+> __blk_send_generic continued on without checking it first.
 
-On 03/15/2013 04:54 PM, Steffen Maier wrote:
-> While we're at it: I recently figured that there are targets respondi=
-ng
-> to inquiry with PQ=3D1 && PDT=3D31 for LUN0 if LUN0 has no backing de=
-vice
-> (e.g. no disk mapped for the initiator host). While this is likely to
-> work with in-kernel lun scanning, the kernel does not even allocate a=
-n
-> sg dev in this case.
-> If the target (such do exist) now also does not support report_luns o=
-n
-> WLUN, this effectively prevents any user space lun discovery.
-> E.g. non-NPIV zfcp-attached LUNs cannot be discovered, because we can=
-not
-> do in-kernel scanning due to the lack of initiator lun masking.
->
-> The reason for Linux ignoring LUNs with PDT=3D31 and PQ=3D1 is:
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit=
-/?id=3D84961f28e9d13a4b193d0c8545f3c060c1890ff3
-> [SCSI] Don't add scsi_device for devices that return PQ=3D1, PDT=3D0x=
-1f
-> from kernel 2.6.19.
-> Since Linux on System z could no longer perform report luns with IBM
-> DS8000, the following workaround was implemented:
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit=
-/?id=3D01b291bd66564b4bd826326af6bd0b6d17e99439
-> [SCSI] fix check of PQ and PDT bits for WLUNs
-> in kernel 2.6.27.
-> However, this only works for WLUNs reporting PDT=3D31 and PQ=3D1 but =
-not for
-> LUN0.
-> What made it worse is that, the attached LUN looks perfect from a zfc=
-p
-> status point of view but is still missing any user visible handle for
-> the scsi midlayer, so I was puzzled as a user despite the otherwise
-> clear scsi log message:
-> "scsi scan: peripheral device type of 31, ***no device added***".
->
-> On 03/15/2013 10:46 AM, Hannes Reinecke wrote:
->> SAM advertises the use of a Well-known LUN (W_LUN) for scanning.
->> As this avoids exposing LUN 0 (which might be a valid LUN) for
->> all initiators it is the preferred method for LUN scanning on
->> some arrays.
->> So we should be using W_LUN for scanning, too. If the W_LUN is
->> not supported we'll fall back to use LUN 0.
->> For broken W_LUN implementations a new blacklist flag
->> 'BLIST_NO_WLUN' is added.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>
->> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->> index 3e58b22..f4ccdea 100644
->> --- a/drivers/scsi/scsi_scan.c
->> +++ b/drivers/scsi/scsi_scan.c
->> @@ -1312,6 +1312,7 @@ static int scsi_report_lun_scan(struct
->> scsi_target *starget, int bflags,
->>       unsigned int num_luns;
->>       unsigned int retries;
->>       int result;
->> +    int w_lun =3D SCSI_W_LUN_REPORT_LUNS;
+The reason why the above code does not check for NULL return, is because
+__GFP_WAIT is set. But since queue dead checks were added, we can
+trigger this now. So with that in mind, ENOMEM is not the right error
+code for this, as it has nothing to do with running out of memory.
 
-Meanwhile I realized why I sometimes had to think twice to understand=20
-below code: The naming of the identifier "w_lun" is misleading to me=20
-because it seems to imply that the variable (always) contains the value=
-=20
-of the WLUN while in fact it could also contain LUN0. Maybe the variabl=
-e=20
-should just be called "lun"?
+Would probably be best to return the correct error pointer from
+blk_get_request(), as you would otherwise have to assume this knowledge
+in the callers.
 
->>       struct scsi_lun *lunp, *lun_data;
->>       u8 *data;
->>       struct scsi_sense_hdr sshdr;
->> @@ -1337,11 +1338,20 @@ static int scsi_report_lun_scan(struct
->> scsi_target *starget, int bflags,
->>           return 0;
->>       if (starget->no_report_luns)
->>           return 1;
->> +    if (bflags & BLIST_NO_WLUN)
->> +        w_lun =3D 0;
->>
->> +retry_report_lun_scan:
->>       if (!(sdev =3D scsi_device_lookup_by_target(starget, 0))) {
->> -        sdev =3D scsi_alloc_sdev(starget, 0, NULL);
->> -        if (!sdev)
->> -            return 0;
->> +        sdev =3D scsi_alloc_sdev(starget, w_lun, NULL);
->> +        if (!sdev) {
->> +            if (w_lun !=3D 0) {
->> +                w_lun =3D 0;
->> +                sdev =3D scsi_alloc_sdev(starget, w_lun, NULL);
->> +            }
->
->> +            if (!sdev)
->> +                return 0;
->
-> Semantically this belongs to the 2nd scsi_alloc_sdev(starget, w_lun,
-> NULL) i.e. inside (at the end of) the body of if (w_lun !=3D 0).
-> Then you can even merge the outer and inner if statement to
-> if (!sdev && wlun !=3D 0)
-> Semantics: WLUN did not work and we haven't already tried LUN0.
-> Maybe it's just me but I found it more difficult to read if the 2nd
-> check is on its own inside the outer if statement with exactly the sa=
-me
-> boolean expression.
->
->
->> +        }
->>           if (scsi_device_get(sdev)) {
->>               __scsi_remove_device(sdev);
->>               return 0;
->
-> Now that we not only use LUN0, it would be nice to reflect the curren=
-tly
-> used LUN in the corresponding scsi logging statements for debugging a=
-nd
-> problem determination purposes.
-> It seems as if devname only contains HCT but not L, which can now be
-> either WLUN or LUN0, e.g. here:
->
->>     for (retries =3D 0; retries < 3; retries++) {
->>         SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: Sending"
->>                 " REPORT LUNS to %s (try %d)\n", devname,
->>                 retries));
->>
->>         result =3D scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
->>                       lun_data, length, &sshdr,
->>                       SCSI_TIMEOUT + 4 * HZ, 3, NULL);
->>
->>         SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: REPORT LU=
-NS"
->>                 " %s (try %d) result 0x%x\n", result
->>                 ?  "failed" : "successful", retries, result));
->
->> @@ -1418,6 +1428,18 @@ static int scsi_report_lun_scan(struct
->> scsi_target *starget, int bflags,
->>       }
->>
->>       if (result) {
->> +        if (w_lun !=3D 0 && scsi_device_created(sdev)) {
->
-> Did you mean _!_scsi_device_created(sdev), i.e. we tried WLUN but cou=
-ld
-> not attach it?
->
->> +            /*
->> +             * W_LUN probably not supported, try with LUN 0
->> +             */
->
-> Does this only check for an sg dev having been created or does it che=
-ck
-> for the response to the report_luns cmnd? It should be the latter sin=
-ce
-> there are targets allowing attachment of WLUN (with PQ=3D1 && PDT=3D3=
-1) but
-> refuse to answer report_luns, e.g. IBM SVC / Storwize V7000.
-> Remember your changes to zfcp_san_disc reacting on sg_luns return cod=
-e?
-> [Novell bug 742352]
-> It would be nice if we could avoid start using BLIST_NO_WLUN right aw=
-ay.
-> ;-)
->
->> +            SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan:"
->> +                    "W_LUN not supported, try LUN 0\n"));
->> +            kfree(lun_data);
->> +            scsi_device_put(sdev);
->> +            __scsi_remove_device(sdev);
->> +            w_lun =3D 0;
->> +            goto retry_report_lun_scan;
->> +        }
->>           /*
->>            * The device probably does not support a REPORT LUN comma=
-nd
->>            */
->> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo=
-=2Eh
->> index cc1f3e7..ffb42b1 100644
->> --- a/include/scsi/scsi_devinfo.h
->> +++ b/include/scsi/scsi_devinfo.h
->> @@ -31,4 +31,5 @@
->>   #define BLIST_MAX_512        0x800000 /* maximum 512 sector cdb
->> length */
->>   #define BLIST_ATTACH_PQ3    0x1000000 /* Scan: Attach to PQ3 devic=
-es */
->>   #define BLIST_NO_DIF        0x2000000 /* Disable T10 PI (DIF) */
->> +#define BLIST_NO_WLUN        0x4000000 /* Disable W_LUN scanning */
->>   #endif
->>
->
-> The overall idea seems reasonable to me.
+-- 
+Jens Axboe
 
-Steffen
-
-Linux on System z Development
-
-IBM Deutschland Research & Development GmbH
-Vorsitzende des Aufsichtsrats: Martina Koederitz
-Gesch=E4ftsf=FChrung: Dirk Wittkopp
-Sitz der Gesellschaft: B=F6blingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
