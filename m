@@ -1,58 +1,49 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch -next] csiostor: off by one error
-Date: Sat, 16 Mar 2013 13:07:56 +0300
-Message-ID: <20130316100755.GB10825@longonot.mountain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40980 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752935Ab3CPKJu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Mar 2013 06:09:50 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH] [SCSI]: print the msgbytes and statusbyte from scsi result
+Date: Sun, 17 Mar 2013 17:29:11 +0900
+Message-ID: <1363508951-3011-1-git-send-email-linkinjeon@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>, "David S. Miller" <davem@davemloft.net>, Arvind Bhushan <arvindb@chelsio.com>, linux-scsi@vger.kernel.org, kbuild@01.org
 
-We need to store PROTO_ERR_IMPL_LOGO (26) things here, but the
-first element isn't used so the array should have 27 elements.
-This matches fwevt_to_rnevt[] which has 27 elements.
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
-The patch solves a Smatch static checker warning on my system:
-drivers/scsi/csiostor/csio_rnode.c:880 csio_rnode_fwevt_handler()
-	error: buffer overflow '(rn)->stats.n_evt_fw' 26 <= 26
+Introduce msgbyte and statusbyte in the prints as part of the
+result which is returned by the lower layer driver in response to
+SCSI command issued, in case of any error conditions.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Purpose of adding these prints is to convey, during any I/O
+error case, which condition exactly has happened in lower device and
+from the prints we can directly deduce, what is the status of command
+issued. This will help to quickly debug the scenario and also making
+a test case to create new scenarios.
+
+Also change the printk to more appropriate pr_* macro.
+
+Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
 ---
-This goes on top of d69630e8a4222 "csiostor: Header file
-modifications for chip support and bug fixes." That patch is in
-linux-next but I don't know which tree it came from.  It's not
-the scsi for-next tree.
+ drivers/scsi/constants.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_rnode.h b/drivers/scsi/csiostor/csio_rnode.h
-index 6594009..4334342 100644
---- a/drivers/scsi/csiostor/csio_rnode.h
-+++ b/drivers/scsi/csiostor/csio_rnode.h
-@@ -63,7 +63,7 @@ struct csio_rnode_stats {
- 	uint32_t	n_err_nomem;	/* error nomem */
- 	uint32_t	n_evt_unexp;	/* unexpected event */
- 	uint32_t	n_evt_drop;	/* unexpected event */
--	uint32_t	n_evt_fw[PROTO_ERR_IMPL_LOGO];	/* fw events */
-+	uint32_t	n_evt_fw[PROTO_ERR_IMPL_LOGO + 1];	/* fw events */
- 	enum csio_rn_ev	n_evt_sm[CSIO_RNFE_MAX_EVENT];	/* State m/c events */
- 	uint32_t	n_lun_rst;	/* Number of resets of
- 					 * of LUNs under this
-diff --git a/drivers/scsi/csiostor/csio_lnode.h b/drivers/scsi/csiostor/csio_lnode.h
-index 0f9c041..372a67d 100644
---- a/drivers/scsi/csiostor/csio_lnode.h
-+++ b/drivers/scsi/csiostor/csio_lnode.h
-@@ -114,7 +114,7 @@ struct csio_lnode_stats {
- 	uint32_t	n_rnode_match;  /* matched rnode */
- 	uint32_t	n_dev_loss_tmo; /* Device loss timeout */
- 	uint32_t	n_fdmi_err;	/* fdmi err */
--	uint32_t	n_evt_fw[PROTO_ERR_IMPL_LOGO];	/* fw events */
-+	uint32_t	n_evt_fw[PROTO_ERR_IMPL_LOGO + 1];	/* fw events */
- 	enum csio_ln_ev	n_evt_sm[CSIO_LNE_MAX_EVENT];	/* State m/c events */
- 	uint32_t	n_rnode_alloc;	/* rnode allocated */
- 	uint32_t	n_rnode_free;	/* rnode freed */
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 76e4c03..77bb1dc 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1445,8 +1445,10 @@ void scsi_show_result(int result)
+ 
+ void scsi_show_result(int result)
+ {
+-	printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
+-	       host_byte(result), driver_byte(result));
++	pr_info("Result: hostbyte=0x%02x driverbyte=0x%02x"
++			"msgbyte=0x%02x statusbyte=0x%02x\n",
++	       host_byte(result), driver_byte(result), msg_byte(result),
++							status_byte(result));
+ }
+ 
+ #endif
+-- 
+1.7.9.5
