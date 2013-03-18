@@ -1,120 +1,69 @@
-From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: [PATCH 1/1] aacraid: Dual firmware image support
-Date: Mon, 18 Mar 2013 10:28:34 +0530
-Message-ID: <1363582714-23666-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 53281] megaraid_mbox kernel panic during boot
+Date: Mon, 18 Mar 2013 11:52:34 +0000 (UTC)
+Message-ID: <20130318115234.243B311FB85@bugzilla.kernel.org>
+References: <bug-53281-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55985 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751158Ab3CRLER (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Mar 2013 07:04:17 -0400
+Received: from mail.kernel.org ([198.145.19.201]:48697 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751426Ab3CRLwh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Mar 2013 07:52:37 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 6D59120341
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Mar 2013 11:52:36 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 2BC2C20334
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Mar 2013 11:52:34 +0000 (UTC)
+In-Reply-To: <bug-53281-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com, Achim.Leubner@pmcs.com, Tony.Ruiz@pmcs.com, Mahesh.Rajashekhara@pmcs.com
+To: linux-scsi@vger.kernel.org
 
-This patch adds dual flash firmware support for Series 7 and above controllers.
+https://bugzilla.kernel.org/show_bug.cgi?id=53281
 
-Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
----
- drivers/scsi/aacraid/aacraid.h  |    6 +++++-
- drivers/scsi/aacraid/comminit.c |    2 +-
- drivers/scsi/aacraid/src.c      |   31 ++++++++++++++++++++++++++++++-
- 3 files changed, 36 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index a6f7190..9323d05 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -12,7 +12,7 @@
-  *----------------------------------------------------------------------------*/
- 
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 30000
-+# define AAC_DRIVER_BUILD 30200
- # define AAC_DRIVER_BRANCH "-ms"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
-@@ -1918,6 +1918,10 @@ extern struct aac_common aac_config;
- #define	MONITOR_PANIC			0x00000020
- #define	KERNEL_UP_AND_RUNNING		0x00000080
- #define	KERNEL_PANIC			0x00000100
-+#define	FLASH_UPD_PENDING		0x00002000
-+#define	FLASH_UPD_SUCCESS		0x00004000
-+#define	FLASH_UPD_FAILED		0x00008000
-+#define	FWUPD_TIMEOUT			(5 * 60)
- 
- /*
-  *	Doorbell bit defines
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index 3f75995..177b094 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -214,7 +214,7 @@ int aac_send_shutdown(struct aac_dev * dev)
- 	cmd = (struct aac_close *) fib_data(fibctx);
- 
- 	cmd->command = cpu_to_le32(VM_CloseAll);
--	cmd->cid = cpu_to_le32(0xffffffff);
-+	cmd->cid = cpu_to_le32(0xfffffffe);
- 
- 	status = aac_fib_send(ContainerCommand,
- 			  fibctx,
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index e2e3492..b8be2ab 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -685,6 +685,7 @@ int aac_srcv_init(struct aac_dev *dev)
- 	unsigned long status;
- 	int restart = 0;
- 	int instance = dev->id;
-+	int waitCount;
- 	const char *name = dev->name;
- 
- 	dev->a_ops.adapter_ioremap = aac_srcv_ioremap;
-@@ -703,6 +704,32 @@ int aac_srcv_init(struct aac_dev *dev)
- 		!aac_src_restart_adapter(dev, 0))
- 		++restart;
- 	/*
-+	 *	Check to see if flash update is running.
-+	 *	Wait for the adapter to be up and running. Wait up to 5 minutes
-+	 */
-+	status = src_readl(dev, MUnit.OMR);
-+	if (status & FLASH_UPD_PENDING) {
-+		start = jiffies;
-+		do {
-+			status = src_readl(dev, MUnit.OMR);
-+			if (time_after(jiffies, start+HZ*FWUPD_TIMEOUT)) {
-+				printk(KERN_ERR "%s%d: adapter flash update failed.\n",
-+					dev->name, instance);
-+				goto error_iounmap;
-+			}
-+		} while (!(status & FLASH_UPD_SUCCESS) &&
-+			 !(status & FLASH_UPD_FAILED));
-+		/* Delay 10 seconds.
-+		 * Because right now FW is doing a soft reset,
-+		 * do not read scratch pad register at this time
-+		 */
-+		waitCount = 10 * 10000;
-+		while (waitCount) {
-+			udelay(100);	/* delay 100 microseconds */
-+			waitCount--;
-+		}
-+	}
-+	/*
- 	 *	Check to see if the board panic'd while booting.
- 	 */
- 	status = src_readl(dev, MUnit.OMR);
-@@ -730,7 +757,9 @@ int aac_srcv_init(struct aac_dev *dev)
- 	/*
- 	 *	Wait for the adapter to be up and running. Wait up to 3 minutes
- 	 */
--	while (!((status = src_readl(dev, MUnit.OMR)) & KERNEL_UP_AND_RUNNING)) {
-+	while (!((status = src_readl(dev, MUnit.OMR)) &
-+		KERNEL_UP_AND_RUNNING) ||
-+		status == 0xffffffff) {
- 		if ((restart &&
- 		  (status & (KERNEL_PANIC|SELF_TEST_FAILED|MONITOR_PANIC))) ||
- 		  time_after(jiffies, start+HZ*startup_timeout)) {
+justgivemeafkenaccountplx@yahoo.co.uk changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |justgivemeafkenaccountplx@y
+                   |                            |ahoo.co.uk
+
+
+
+
+--- Comment #10 from justgivemeafkenaccountplx@yahoo.co.uk  2013-03-18 11:52:33 ---
+I'm getting a very similar kernel dump on an LSI MegaRaid SATA 300-8X card.
+(1000:0409) This card also uses the megaraid_mbox driver. Boots fine, but
+crashes consistently when running badblocks -wsv over an array, usually within
+an hour. Sometimes it will dump to console and flash the keyboard lights,
+sometimes it just hangs.
+
+Server is running nothing else at the moment beyond the basics, and the LSI
+currently has no filesystems. I have no reason to suspect the card or the
+server as both were running Win2003 server for the last 5 - 6 years without any
+issues beyond the fact Windows was running on it :)
+
+Ubuntu 12.04 i386 server, same results with Ubuntu kernel 3.5.0-25 and latest
+compiled kernel 3.8.3. If there is any interest here I can post the kernel
+dump, hardware details, etc. In a nutshell it's a single hyperthread P4 Xeon
+2.4GHz on an Intel PCI-X server board with one jigglybyte of DDR1 ECC. LSI card
+is running four 200GB SATA drives in a RAID5, configured with Write Through
+caching and DirectIO, 128MB of cache, no backup battery.
+
+I have tried various kernel flags to no avail but seemed to have some success
+when I turned off all the performance enhancing settings in the LSI BIOS.
+(Multiple PCI delayed transactions, command queuing, HDD write caching) It got
+4 - 5 hours through badblocks without crashing but I stopped it as it was
+taking forever. Could well have been just a result of decreased load though.
+Turning hyperthread on/off makes no difference.
+
+Currently testing various different settings in the LSI BIOS but it's slow
+going. Any help would be appreciated here.
+
 -- 
-1.7.7.6
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
