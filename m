@@ -1,107 +1,129 @@
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: Re: [PATCH] [SCSI]: print the msgbytes and statusbyte from scsi result
-Date: Mon, 18 Mar 2013 20:57:38 +0900
-Message-ID: <CAKYAXd-thiuWagZPf8825=eKLQPyx3w+h5vzKXn_O_g7n9CpDg@mail.gmail.com>
-References: <1363508951-3011-1-git-send-email-linkinjeon@gmail.com>
-	<1363601689.2412.12.camel@dabdike.int.hansenpartnership.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 1/1] aacraid: Dual firmware image support
+Date: Mon, 18 Mar 2013 15:15:11 +0100
+Message-ID: <5147216F.3020607@redhat.com>
+References: <1363582714-23666-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1363601689.2412.12.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:62017 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751330Ab3CROPR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Mar 2013 10:15:17 -0400
+In-Reply-To: <1363582714-23666-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, aacraid@pmc-sierra.com, Achim.Leubner@pmcs.com, Tony.Ruiz@pmcs.com
 
-2013/3/18, James Bottomley <James.Bottomley@hansenpartnership.com>:
-> On Sun, 2013-03-17 at 17:29 +0900, Namjae Jeon wrote:
->> From: Namjae Jeon <namjae.jeon@samsung.com>
->>
->> Introduce msgbyte and statusbyte in the prints as part of the
->> result which is returned by the lower layer driver in response to
->> SCSI command issued, in case of any error conditions.
->>
->> Purpose of adding these prints is to convey, during any I/O
->> error case, which condition exactly has happened in lower device and
->> from the prints we can directly deduce, what is the status of comman=
-d
->> issued. This will help to quickly debug the scenario and also making
->> a test case to create new scenarios.
->>
->> Also change the printk to more appropriate pr_* macro.
->>
->> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
->> Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
->> ---
->>  drivers/scsi/constants.c |    6 ++++--
->>  1 file changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
->> index 76e4c03..77bb1dc 100644
->> --- a/drivers/scsi/constants.c
->> +++ b/drivers/scsi/constants.c
->> @@ -1445,8 +1445,10 @@ void scsi_show_result(int result)
->>
->>  void scsi_show_result(int result)
->>  {
->> -	printk("Result: hostbyte=3D0x%02x driverbyte=3D0x%02x\n",
->> -	       host_byte(result), driver_byte(result));
->> +	pr_info("Result: hostbyte=3D0x%02x driverbyte=3D0x%02x"
->> +			"msgbyte=3D0x%02x statusbyte=3D0x%02x\n",
->> +	       host_byte(result), driver_byte(result), msg_byte(result),
->> +							status_byte(result));
-Hi James.
+On 03/18/2013 05:58 AM, Mahesh Rajashekhara wrote:
+> This patch adds dual flash firmware support for Series 7 and above controllers.
 >
-> You didn't test this, did you? If you did, you'd have noticed the cha=
-nge
-> from printk to pr_info gives you an unwanted "6" in the message.
-Yes, we tested with "printk" version of the patch, but before sending
-the patch, when we checked for issues using "checkpatch.pl" it showed
-warning.
-So, we thought that to be a cosmetic change and replaced the printk
-with  pr_info. Sorry, if below your douting is clear, I will change
-log level as current one.
-
+> Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+> ---
+>  drivers/scsi/aacraid/aacraid.h  |    6 +++++-
+>  drivers/scsi/aacraid/comminit.c |    2 +-
+>  drivers/scsi/aacraid/src.c      |   31 ++++++++++++++++++++++++++++++-
+>  3 files changed, 36 insertions(+), 3 deletions(-)
 >
-> Also, what are you hoping to achieve? scsi_show_result() is only used=
- by
-> sd in a very few special command situations.  I can't believe the msg
-> byte would be anything other than zero and the status byte check
-> condition.
-Regarding the introduction of additional information in prints.
-We encountered an error with error logs like:
-[ 131.673096] sd 0:0:0:0: [sda] Result: hostbyte=3D0x00 driverbyte=3D0x=
-08
-[ 131.679038] sd 0:0:0:0: [sda] Sense Key : 0xb [current]
-[ 131.684801] sd 0:0:0:0: [sda] ASC=3D0x8 ASCQ=3D0x3
-[ 131.689241] sd 0:0:0:0: [sda] CDB: cdb[0]=3D0x2a: 2a 00 00 cb 0c 00 0=
-0 00 f0 00
+> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+> index a6f7190..9323d05 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -12,7 +12,7 @@
+>   *----------------------------------------------------------------------------*/
+>  
+>  #ifndef AAC_DRIVER_BUILD
+> -# define AAC_DRIVER_BUILD 30000
+> +# define AAC_DRIVER_BUILD 30200
+>  # define AAC_DRIVER_BRANCH "-ms"
+>  #endif
+>  #define MAXIMUM_NUM_CONTAINERS	32
+> @@ -1918,6 +1918,10 @@ extern struct aac_common aac_config;
+>  #define	MONITOR_PANIC			0x00000020
+>  #define	KERNEL_UP_AND_RUNNING		0x00000080
+>  #define	KERNEL_PANIC			0x00000100
+> +#define	FLASH_UPD_PENDING		0x00002000
+> +#define	FLASH_UPD_SUCCESS		0x00004000
+> +#define	FLASH_UPD_FAILED		0x00008000
+> +#define	FWUPD_TIMEOUT			(5 * 60)
+>  
+>  /*
+>   *	Doorbell bit defines
+> diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+> index 3f75995..177b094 100644
+> --- a/drivers/scsi/aacraid/comminit.c
+> +++ b/drivers/scsi/aacraid/comminit.c
+> @@ -214,7 +214,7 @@ int aac_send_shutdown(struct aac_dev * dev)
+>  	cmd = (struct aac_close *) fib_data(fibctx);
+>  
+>  	cmd->command = cpu_to_le32(VM_CloseAll);
+> -	cmd->cid = cpu_to_le32(0xffffffff);
+> +	cmd->cid = cpu_to_le32(0xfffffffe);
+>  
+>  	status = aac_fib_send(ContainerCommand,
+>  			  fibctx,
+> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+> index e2e3492..b8be2ab 100644
+> --- a/drivers/scsi/aacraid/src.c
+> +++ b/drivers/scsi/aacraid/src.c
+> @@ -685,6 +685,7 @@ int aac_srcv_init(struct aac_dev *dev)
+>  	unsigned long status;
+>  	int restart = 0;
+>  	int instance = dev->id;
+> +	int waitCount;
+>  	const char *name = dev->name;
+>  
+>  	dev->a_ops.adapter_ioremap = aac_srcv_ioremap;
+> @@ -703,6 +704,32 @@ int aac_srcv_init(struct aac_dev *dev)
+>  		!aac_src_restart_adapter(dev, 0))
+>  		++restart;
+>  	/*
+> +	 *	Check to see if flash update is running.
+> +	 *	Wait for the adapter to be up and running. Wait up to 5 minutes
+> +	 */
+> +	status = src_readl(dev, MUnit.OMR);
+> +	if (status & FLASH_UPD_PENDING) {
+> +		start = jiffies;
+> +		do {
+> +			status = src_readl(dev, MUnit.OMR);
+> +			if (time_after(jiffies, start+HZ*FWUPD_TIMEOUT)) {
+> +				printk(KERN_ERR "%s%d: adapter flash update failed.\n",
+> +					dev->name, instance);
+> +				goto error_iounmap;
+> +			}
+> +		} while (!(status & FLASH_UPD_SUCCESS) &&
+> +			 !(status & FLASH_UPD_FAILED));
+> +		/* Delay 10 seconds.
+> +		 * Because right now FW is doing a soft reset,
+> +		 * do not read scratch pad register at this time
+> +		 */
+> +		waitCount = 10 * 10000;
+> +		while (waitCount) {
+> +			udelay(100);	/* delay 100 microseconds */
+> +			waitCount--;
 
-Looking at the logs it was clear it was due "ABORTED command" but we
-wanted to check in the code if there was any retry in such case:
-In =E2=80=98scsi_decide_disposition=E2=80=99 there are "3" main conditi=
-ons
+Hi Mahesh,
+what is the reason for udelay here ? 
+Maybe a ssleep (10); does the same job.
+Regards, Tomas
 
-switch (host_byte(scmd->result)) -> this returned "DID_OK"
-        if (msg_byte(scmd->result) !=3D COMMAND_COMPLETE)
-                return FAILED;
+> +		}
+> +	}
+> +	/*
+>  	 *	Check to see if the board panic'd while booting.
+>  	 */
+>  	status = src_readl(dev, MUnit.OMR);
+> @@ -730,7 +757,9 @@ int aac_srcv_init(struct aac_dev *dev)
+>  	/*
+>  	 *	Wait for the adapter to be up and running. Wait up to 3 minutes
+>  	 */
+> -	while (!((status = src_readl(dev, MUnit.OMR)) & KERNEL_UP_AND_RUNNING)) {
+> +	while (!((status = src_readl(dev, MUnit.OMR)) &
+> +		KERNEL_UP_AND_RUNNING) ||
+> +		status == 0xffffffff) {
+>  		if ((restart &&
+>  		  (status & (KERNEL_PANIC|SELF_TEST_FAILED|MONITOR_PANIC))) ||
+>  		  time_after(jiffies, start+HZ*startup_timeout)) {
 
-And the last was:
-switch (status_byte(scmd->result)) {
-=E2=80=A6
-    case TASK_ABORTED:
-                goto maybe_retry;
-    case CHECK_CONDITION:
-=E2=80=A6
-
-So, if the status/host bytes were known - we could have directly
-deduced from the code. Instead we needed to introduce prints and then
-check the path.
-
-Thanks.
->
-> James
->
->
->
