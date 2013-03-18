@@ -1,65 +1,56 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] tcm_fc: using kfree_rcu() to simplify the code
-Date: Mon, 18 Mar 2013 13:24:21 -0700
-Message-ID: <1363638261.3156.0.camel@haakon2.linux-iscsi.org>
-References: <CAPgLHd9BaUSZf4PmF9UMn8c5CEJXEq9taNtYme5RV6COBztqAA@mail.gmail.com>
+Subject: Re: [PATCH -next] target: fix possible memory leak in
+ core_tpg_register()
+Date: Mon, 18 Mar 2013 13:25:30 -0700
+Message-ID: <1363638330.3156.1.camel@haakon2.linux-iscsi.org>
+References: <CAPgLHd-_WeOFu7-FedBnneXwdTkWNBc8iUpypJdtCpCG29h0TA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAPgLHd9BaUSZf4PmF9UMn8c5CEJXEq9taNtYme5RV6COBztqAA@mail.gmail.com>
+In-Reply-To: <CAPgLHd-_WeOFu7-FedBnneXwdTkWNBc8iUpypJdtCpCG29h0TA@mail.gmail.com>
 Sender: target-devel-owner@vger.kernel.org
 To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: mark.d.rustad@intel.com, bprakash@broadcom.com, sasha.levin@oracle.com, akpm@linux-foundation.org, yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Wei,
-
-On Mon, 2013-03-11 at 21:48 +0800, Wei Yongjun wrote:
+On Fri, 2013-03-15 at 17:19 +0800, Wei Yongjun wrote:
 > From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > 
-> The callback function of call_rcu() just calls a kfree(), so we
-> can use kfree_rcu() instead of call_rcu() + callback function.
+> 'se_tpg->tpg_lun_list' is malloced in core_tpg_register() and should be freed
+> before leaving from the error handling cases, otherwise it will cause memory
+> leak. 
+> 'se_tpg' is malloced out of this function, and will be freed if we return error, so
+> remove free for 'se_tpg'.
 > 
 > Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > ---
 
-Apologies for the delay.
+Applied to target-pending/master, and including in the next
+v3.9-rc-fixes pull request.
 
-Applied to target-pending/for-next.
-
-Thanks!
+Thanks Wei!
 
 --nab
 
->  drivers/target/tcm_fc/tfc_sess.c | 9 +--------
->  1 file changed, 1 insertion(+), 8 deletions(-)
+>  drivers/target/target_core_tpg.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-> index 113f335..4859505 100644
-> --- a/drivers/target/tcm_fc/tfc_sess.c
-> +++ b/drivers/target/tcm_fc/tfc_sess.c
-> @@ -428,19 +428,12 @@ static int ft_prli(struct fc_rport_priv *rdata, u32 spp_len,
->  	return ret;
->  }
+> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+> index 9169d6a..aac9d27 100644
+> --- a/drivers/target/target_core_tpg.c
+> +++ b/drivers/target/target_core_tpg.c
+> @@ -711,7 +711,8 @@ int core_tpg_register(
 >  
-> -static void ft_sess_rcu_free(struct rcu_head *rcu)
-> -{
-> -	struct ft_sess *sess = container_of(rcu, struct ft_sess, rcu);
-> -
-> -	kfree(sess);
-> -}
-> -
->  static void ft_sess_free(struct kref *kref)
->  {
->  	struct ft_sess *sess = container_of(kref, struct ft_sess, kref);
->  
->  	transport_deregister_session(sess->se_sess);
-> -	call_rcu(&sess->rcu, ft_sess_rcu_free);
-> +	kfree_rcu(sess, rcu);
->  }
->  
->  void ft_sess_put(struct ft_sess *sess)
+>  	if (se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL) {
+>  		if (core_tpg_setup_virtual_lun0(se_tpg) < 0) {
+> -			kfree(se_tpg);
+> +			array_free(se_tpg->tpg_lun_list,
+> +				   TRANSPORT_MAX_LUNS_PER_TPG);
+>  			return -ENOMEM;
+>  		}
+>  	}
+> 
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe target-devel" in
