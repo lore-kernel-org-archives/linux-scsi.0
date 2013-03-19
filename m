@@ -1,11 +1,14 @@
 From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: [PATCH V5 0/5] virtio-scsi multiqueue
-Date: Tue, 19 Mar 2013 17:57:32 +0800
-Message-ID: <1363687057-13580-1-git-send-email-gaowanlong@cn.fujitsu.com>
+Subject: [PATCH V5 5/5] virtio-scsi: reset virtqueue affinity when doing cpu
+	hotplug
+Date: Tue, 19 Mar 2013 17:57:37 +0800
+Message-ID: <1363687057-13580-6-git-send-email-gaowanlong@cn.fujitsu.com>
+References: <1363687057-13580-1-git-send-email-gaowanlong@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1363687057-13580-1-git-send-email-gaowanlong@cn.fujitsu.com>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -19,36 +22,77 @@ To: linux-kernel@vger.kernel.org
 Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This series implements virtio-scsi queue steering, which gives
-performance improvements of up to 50% (measured both with QEMU and
-tcm_vhost backends).
+Add hot cpu notifier to reset the request virtqueue affinity
+when doing cpu hotplug.
 
-This version rebased on Rusty's virtio ring rework patches.
-We hope this can go into virtio-next together with the virtio ring
-rework pathes.
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Reviewed-by: Asias He <asias@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-V5: improving the grammar of 1/5 (Paolo)
-    move the dropping of sg_elems to 'virtio-scsi: use virtqueue_add_sgs for command buffers'. (Asias)
-
-V4: rebase on virtio ring rework patches (rusty's pending-rebases branch)
-
-V3 and be found http://marc.info/?l=linux-virtualization&m=136067440717154&w=2
-
-
-It would probably be easier to get it in via Rusty's tree
-because of the prerequisites.  James, can we get your Acked-by?
-
-Paolo Bonzini (4):
-  virtio-scsi: redo allocation of target data
-  virtio-scsi: pass struct virtio_scsi to virtqueue completion function
-  virtio-scsi: push vq lock/unlock into virtscsi_vq_done
-  virtio-scsi: introduce multiqueue support
-
-Wanlong Gao (1):
-  virtio-scsi: reset virtqueue affinity when doing cpu hotplug
-
- drivers/scsi/virtio_scsi.c | 359 ++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 290 insertions(+), 69 deletions(-)
-
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 1d95295..83023f5 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -112,6 +112,9 @@ struct virtio_scsi {
+ 	/* Does the affinity hint is set for virtqueues? */
+ 	bool affinity_hint_set;
+ 
++	/* CPU hotplug notifier */
++	struct notifier_block nb;
++
+ 	struct virtio_scsi_vq ctrl_vq;
+ 	struct virtio_scsi_vq event_vq;
+ 	struct virtio_scsi_vq req_vqs[];
+@@ -736,6 +739,23 @@ static void virtscsi_set_affinity(struct virtio_scsi *vscsi, bool affinity)
+ 	put_online_cpus();
+ }
+ 
++static int virtscsi_cpu_callback(struct notifier_block *nfb,
++				 unsigned long action, void *hcpu)
++{
++	struct virtio_scsi *vscsi = container_of(nfb, struct virtio_scsi, nb);
++	switch(action) {
++	case CPU_ONLINE:
++	case CPU_ONLINE_FROZEN:
++	case CPU_DEAD:
++	case CPU_DEAD_FROZEN:
++		__virtscsi_set_affinity(vscsi, true);
++		break;
++	default:
++		break;
++	}
++	return NOTIFY_OK;
++}
++
+ static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
+ 			     struct virtqueue *vq)
+ {
+@@ -874,6 +894,13 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	if (err)
+ 		goto virtscsi_init_failed;
+ 
++	vscsi->nb.notifier_call = &virtscsi_cpu_callback;
++	err = register_hotcpu_notifier(&vscsi->nb);
++	if (err) {
++		pr_err("registering cpu notifier failed\n");
++		goto scsi_add_host_failed;
++	}
++
+ 	cmd_per_lun = virtscsi_config_get(vdev, cmd_per_lun) ?: 1;
+ 	shost->cmd_per_lun = min_t(u32, cmd_per_lun, shost->can_queue);
+ 	shost->max_sectors = virtscsi_config_get(vdev, max_sectors) ?: 0xFFFF;
+@@ -911,6 +938,8 @@ static void virtscsi_remove(struct virtio_device *vdev)
+ 
+ 	scsi_remove_host(shost);
+ 
++	unregister_hotcpu_notifier(&vscsi->nb);
++
+ 	virtscsi_remove_vqs(vdev);
+ 	scsi_host_put(shost);
+ }
 -- 
 1.8.2.rc2
