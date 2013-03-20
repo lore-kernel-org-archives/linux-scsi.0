@@ -1,64 +1,60 @@
-From: Ren Mingxin <renmx@cn.fujitsu.com>
-Subject: scsi_error: improve the recovery latency for timeouted scsi cmds
-Date: Wed, 20 Mar 2013 11:24:49 +0800
-Message-ID: <51492C01.504@cn.fujitsu.com>
+From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Subject: [PATCH V6 0/5] virtio-scsi multiqueue
+Date: Wed, 20 Mar 2013 15:01:19 +0800
+Message-ID: <1363762884-11000-1-git-send-email-gaowanlong@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:15431 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751878Ab3CTDXP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Mar 2013 23:23:15 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-kernel@vger.kernel.org
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@Parallels.com>
-Cc: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>, SCSI <linux-scsi@vger.kernel.org>
 
-Hi,
+This series implements virtio-scsi queue steering, which gives
+performance improvements of up to 50% (measured both with QEMU and
+tcm_vhost backends).
 
-Please let me ask one question about improving the recovery latency
-for timeouted scmds:
+This version rebased on Rusty's virtio ring rework patches, which
+has already gone into virtio-next today.
+We hope this can go into virtio-next together with the virtio ring
+rework pathes.
 
-In the functions 'scsi_eh_wakeup()' & 'scsi_error_handler()', there
-are two same condition judgements which ensure the number of active
-scmds equals to the number of failed scmds:
+V6: rework "redo allocation of target data" (James)
+    fix comments (Venkatesh)
+    rebase to virtio-next
 
-   void scsi_eh_wakeup(struct Scsi_Host *shost)
-   {
-       if (shost->host_busy == shost->host_failed)
-           wake_up_process(shost->ehandler);
-   }
+V5: improving the grammar of 1/5 (Paolo)
+    move the dropping of sg_elems to 'virtio-scsi: use virtqueue_add_sgs for command buffers'. (Asias)
 
-   int scsi_error_handler(void *data)
-   {
-       while (!kthread_should_stop()) {
-           if ((shost->host_failed == 0 &&
-                shost->host_eh_scheduled == 0) ||
-                shost->host_failed != shost->host_busy) {
-               schedule();
-               continue;
-           }
-           ....
-       }
-       ....
-   }
+V4: rebase on virtio ring rework patches (rusty's pending-rebases branch)
 
-I think the original reason for waking up eh thread until all scmds
-complete/fail may be in case of more overhead produced by threads
-waking up time after time, right?
+V3 and be found http://marc.info/?l=linux-virtualization&m=136067440717154&w=2
 
-But in the below condition, the strategy above seems not appropriate:
 
-   If a scmd is issued and stuck and another scmd is issued, scsi eh
-   detects a timeout of the first scmd, but has to wait for the second
-   one to be timedout/completed. Which means the first timeouted scmds
-   couldn't be handled in time.
+It would probably be easier to get it in via Rusty's tree
+because of the prerequisites.  James, can we get your Acked-by?
 
-This may be fatal to a certain extent(the critical system especially).
-So, please let me know the starting point for the wakeup strategy in
-eh. We'd investigate further based on your comments. Any suggestions
-will be appreciated.
 
-Thanks,
-Ren
+Paolo Bonzini (3):
+  virtio-scsi: pass struct virtio_scsi to virtqueue completion function
+  virtio-scsi: push vq lock/unlock into virtscsi_vq_done
+  virtio-scsi: introduce multiqueue support
+
+Wanlong Gao (2):
+  virtio-scsi: redo allocation of target data
+  virtio-scsi: reset virtqueue affinity when doing cpu hotplug
+
+ drivers/scsi/virtio_scsi.c | 387 ++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 309 insertions(+), 78 deletions(-)
+
+-- 
+1.8.2.rc2
