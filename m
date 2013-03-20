@@ -1,55 +1,63 @@
-From: Shlomo Pongratz <shlomop@mellanox.com>
-Subject: [PATCH] [SCSI] be2iscsi: fix reentrancy issue in be_iopoll
-Date: Wed, 20 Mar 2013 11:09:55 +0200
-Message-ID: <1363770595-16912-1-git-send-email-shlomop@mellanox.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eu1sys200aog108.obsmtp.com ([207.126.144.125]:45318 "EHLO
-	eu1sys200aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754808Ab3CTJKD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Mar 2013 05:10:03 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH V5 4/5] virtio-scsi: introduce multiqueue support
+Date: Wed, 20 Mar 2013 10:53:59 +0100
+Message-ID: <51498737.8000800@redhat.com>
+References: <1363687057-13580-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	<1363687057-13580-5-git-send-email-gaowanlong@cn.fujitsu.com>
+	<20130320014657.GA14714@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20130320014657.GA14714@google.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Venkatesh Srinivas <venkateshs@google.com>
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, vsrinivas@ops101.org, mikew@google.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jayamohank@serverengines.com, michaelc@cs.wisc.edu, Shlomo Pongratz <shlomop@mellanox.com>
 
-The driver creates "NAPI" context per core which is fine,
-however the above routine declares the ret variable as static!
-Thus there is only one instance of this variable!
-When this routine is called from more than one thread of execution,
-than the result is unpredictable.
+Il 20/03/2013 02:46, Venkatesh Srinivas ha scritto:
+> This looks pretty good!
+> 
+> I rather like the (lack of) locking in I/O completion (around the req
+> count vs. target/queue binding). It is unfortunate that you need to hold
+> the per-target lock in virtscsi_pick_vq() though; have any idea
+> how much that lock hurts?
 
-         static unsigned int ret;
-         .....
+It doesn't hurt, the lock is mostly uncontended.
 
-         ret = beiscsi_process_cq(pbe_eq);
-                 <--------Another thread can enter here and change "ret".
-         if (ret < budget) {
-                ....
-         }
-                 <--------Another thread can enter here and change "ret".
-         return ret;
+- if you have lots of I/O, it's held for a very small period of time; if
+you have little I/O, it's uncontended anyway.
 
-Fix - remove the "static"
+- the SCSI layer will serialize on the host lock anyway before calling
+into the LLD.  Locks are "pipelined" so that in the end the host lock
+will be a bigger bottleneck than the others.
 
-Signed-off-by: Shlomo Pongratz <shlomop@mellanox.com>
----
- drivers/scsi/be2iscsi/be_main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Most of the time it only costs 2 extra atomic operations, which should
+be galf a microsecond or less.
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 4e2733d..8efe216 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2191,7 +2191,7 @@ void beiscsi_process_all_cqs(struct work_struct *work)
- 
- static int be_iopoll(struct blk_iopoll *iop, int budget)
- {
--	static unsigned int ret;
-+	unsigned int ret;
- 	struct beiscsi_hba *phba;
- 	struct be_eq_obj *pbe_eq;
- 
--- 
-1.7.1
+Paolo
 
+> Just two minor comments:
+> 
+> (in struct virtio_scsi_target_data):
+> +       /* This spinlock never help at the same time as vq_lock. */
+>                                ^^^^ held?
+> 
+> (in struct virtio_scsi):
+> +       /* Does the affinity hint is set for virtqueues? */
+> Could you rephrase that, please?
+> 
+> Tested on qemu and w/ Google Compute Engine's virtio-scsi device.
+> 
+> Reviewed-and-tested-by: Venkatesh Srinivas <venkateshs@google.com>
+> 
+> Thanks,
+> -- vs;
