@@ -1,8 +1,7 @@
 From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: [PATCH V6 2/5] virtio-scsi: pass struct virtio_scsi to virtqueue
-	completion function
-Date: Wed, 20 Mar 2013 15:01:21 +0800
-Message-ID: <1363762884-11000-3-git-send-email-gaowanlong@cn.fujitsu.com>
+Subject: [PATCH V6 1/5] virtio-scsi: redo allocation of target data
+Date: Wed, 20 Mar 2013 15:01:20 +0800
+Message-ID: <1363762884-11000-2-git-send-email-gaowanlong@cn.fujitsu.com>
 References: <1363762884-11000-1-git-send-email-gaowanlong@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -19,94 +18,177 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
 To: linux-kernel@vger.kernel.org
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, James Bottomley <James.Bottomley@HansenPartnership.com>, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Paolo Bonzini <pbonzini@redhat.com>
+virtio_scsi_target_state is now empty.  We will find new uses for it in
+the next few patches, so this patch does not drop it completely.
 
-This will be needed soon in order to retrieve the per-target
-struct.
+And as James suggested, we use entries target_alloc and target_destroy
+in the host template to allocate and destroy the virtio_scsi_target_state
+of each target, attach this struct to scsi_target->hostdata. Now
+we can get at it from the sdev with scsi_target(sdev)->hostdata.
+No messing around with fixed size arrays and bulk memory allocation
+and no need to pass in the maximum target size as a parameter because
+everything should now happen dynamically.
 
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Reviewed-by: Asias He <asias@redhat.com>
 ---
- drivers/scsi/virtio_scsi.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ drivers/scsi/virtio_scsi.c | 71 ++++++++++++++++------------------------------
+ 1 file changed, 25 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index ffa03e8..c23560c 100644
+index b53ba9e..ffa03e8 100644
 --- a/drivers/scsi/virtio_scsi.c
 +++ b/drivers/scsi/virtio_scsi.c
-@@ -104,7 +104,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
-  *
-  * Called with vq_lock held.
-  */
--static void virtscsi_complete_cmd(void *buf)
-+static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
- {
- 	struct virtio_scsi_cmd *cmd = buf;
- 	struct scsi_cmnd *sc = cmd->sc;
-@@ -165,7 +165,8 @@ static void virtscsi_complete_cmd(void *buf)
- 	sc->scsi_done(sc);
- }
+@@ -75,8 +75,6 @@ struct virtio_scsi {
  
--static void virtscsi_vq_done(struct virtqueue *vq, void (*fn)(void *buf))
-+static void virtscsi_vq_done(struct virtio_scsi *vscsi, struct virtqueue *vq,
-+			     void (*fn)(struct virtio_scsi *vscsi, void *buf))
- {
- 	void *buf;
- 	unsigned int len;
-@@ -173,7 +174,7 @@ static void virtscsi_vq_done(struct virtqueue *vq, void (*fn)(void *buf))
- 	do {
- 		virtqueue_disable_cb(vq);
- 		while ((buf = virtqueue_get_buf(vq, &len)) != NULL)
--			fn(buf);
-+			fn(vscsi, buf);
- 	} while (!virtqueue_enable_cb(vq));
- }
- 
-@@ -184,11 +185,11 @@ static void virtscsi_req_done(struct virtqueue *vq)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&vscsi->req_vq.vq_lock, flags);
--	virtscsi_vq_done(vq, virtscsi_complete_cmd);
-+	virtscsi_vq_done(vscsi, vq, virtscsi_complete_cmd);
- 	spin_unlock_irqrestore(&vscsi->req_vq.vq_lock, flags);
+ 	/* Get some buffers ready for event vq */
+ 	struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
+-
+-	struct virtio_scsi_target_state *tgt[];
  };
  
--static void virtscsi_complete_free(void *buf)
-+static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
- {
- 	struct virtio_scsi_cmd *cmd = buf;
- 
-@@ -205,7 +206,7 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&vscsi->ctrl_vq.vq_lock, flags);
--	virtscsi_vq_done(vq, virtscsi_complete_free);
-+	virtscsi_vq_done(vscsi, vq, virtscsi_complete_free);
- 	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
- };
- 
-@@ -329,7 +330,7 @@ static void virtscsi_handle_event(struct work_struct *work)
- 	virtscsi_kick_event(vscsi, event_node);
+ static struct kmem_cache *virtscsi_cmd_cache;
+@@ -530,6 +528,25 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
+ 	return virtscsi_tmf(vscsi, cmd);
  }
  
--static void virtscsi_complete_event(void *buf)
-+static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
- {
- 	struct virtio_scsi_event_node *event_node = buf;
- 
-@@ -344,7 +345,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
--	virtscsi_vq_done(vq, virtscsi_complete_event);
-+	virtscsi_vq_done(vscsi, vq, virtscsi_complete_event);
- 	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
++static int virtscsi_target_alloc(struct scsi_target *starget)
++{
++	struct virtio_scsi_target_state *tgt =
++				kmalloc(sizeof(*tgt), GFP_KERNEL);
++	if (!tgt)
++		return -ENOMEM;
++
++	spin_lock_init(&tgt->tgt_lock);
++
++	starget->hostdata = tgt;
++	return 0;
++}
++
++static void virtscsi_target_destroy(struct scsi_target *starget)
++{
++	struct virtio_scsi_target_state *tgt = starget->hostdata;
++	kfree(tgt);
++}
++
+ static struct scsi_host_template virtscsi_host_template = {
+ 	.module = THIS_MODULE,
+ 	.name = "Virtio SCSI HBA",
+@@ -542,6 +559,8 @@ static struct scsi_host_template virtscsi_host_template = {
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
+ 	.use_clustering = ENABLE_CLUSTERING,
++	.target_alloc = virtscsi_target_alloc,
++	.target_destroy = virtscsi_target_destroy,
  };
+ 
+ #define virtscsi_config_get(vdev, fld) \
+@@ -568,20 +587,6 @@ static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
+ 	virtscsi_vq->vq = vq;
+ }
+ 
+-static struct virtio_scsi_target_state *virtscsi_alloc_tgt(
+-	struct virtio_device *vdev)
+-{
+-	struct virtio_scsi_target_state *tgt;
+-	gfp_t gfp_mask = GFP_KERNEL;
+-
+-	tgt = kmalloc(sizeof(*tgt), gfp_mask);
+-	if (!tgt)
+-		return NULL;
+-
+-	spin_lock_init(&tgt->tgt_lock);
+-	return tgt;
+-}
+-
+ static void virtscsi_scan(struct virtio_device *vdev)
+ {
+ 	struct Scsi_Host *shost = (struct Scsi_Host *)vdev->priv;
+@@ -591,28 +596,17 @@ static void virtscsi_scan(struct virtio_device *vdev)
+ 
+ static void virtscsi_remove_vqs(struct virtio_device *vdev)
+ {
+-	struct Scsi_Host *sh = virtio_scsi_host(vdev);
+-	struct virtio_scsi *vscsi = shost_priv(sh);
+-	u32 i, num_targets;
+-
+ 	/* Stop all the virtqueues. */
+ 	vdev->config->reset(vdev);
+ 
+-	num_targets = sh->max_id;
+-	for (i = 0; i < num_targets; i++) {
+-		kfree(vscsi->tgt[i]);
+-		vscsi->tgt[i] = NULL;
+-	}
+-
+ 	vdev->config->del_vqs(vdev);
+ }
+ 
+ static int virtscsi_init(struct virtio_device *vdev,
+-			 struct virtio_scsi *vscsi, int num_targets)
++			 struct virtio_scsi *vscsi)
+ {
+ 	int err;
+ 	struct virtqueue *vqs[3];
+-	u32 i;
+ 
+ 	vq_callback_t *callbacks[] = {
+ 		virtscsi_ctrl_done,
+@@ -640,18 +634,6 @@ static int virtscsi_init(struct virtio_device *vdev,
+ 	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG))
+ 		virtscsi_kick_event_all(vscsi);
+ 
+-	for (i = 0; i < num_targets; i++) {
+-		vscsi->tgt[i] = virtscsi_alloc_tgt(vdev);
+-		if (!vscsi->tgt[i]) {
+-			err = -ENOMEM;
+-			goto out;
+-		}
+-	}
+-	err = 0;
+-
+-out:
+-	if (err)
+-		virtscsi_remove_vqs(vdev);
+ 	return err;
+ }
+ 
+@@ -663,12 +645,9 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	u32 sg_elems, num_targets;
+ 	u32 cmd_per_lun;
+ 
+-	/* Allocate memory and link the structs together.  */
+ 	num_targets = virtscsi_config_get(vdev, max_target) + 1;
+-	shost = scsi_host_alloc(&virtscsi_host_template,
+-		sizeof(*vscsi)
+-		+ num_targets * sizeof(struct virtio_scsi_target_state));
+ 
++	shost = scsi_host_alloc(&virtscsi_host_template, sizeof(*vscsi));
+ 	if (!shost)
+ 		return -ENOMEM;
+ 
+@@ -678,7 +657,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	vscsi->vdev = vdev;
+ 	vdev->priv = shost;
+ 
+-	err = virtscsi_init(vdev, vscsi, num_targets);
++	err = virtscsi_init(vdev, vscsi);
+ 	if (err)
+ 		goto virtscsi_init_failed;
+ 
+@@ -735,7 +714,7 @@ static int virtscsi_restore(struct virtio_device *vdev)
+ 	struct Scsi_Host *sh = virtio_scsi_host(vdev);
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+ 
+-	return virtscsi_init(vdev, vscsi, sh->max_id);
++	return virtscsi_init(vdev, vscsi);
+ }
+ #endif
  
 -- 
 1.8.2.rc2
