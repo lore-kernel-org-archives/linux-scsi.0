@@ -1,26 +1,48 @@
-From: "MR .EMMMANUEL KWESI" <sylvainyao333@gmail.com>
-Subject: Hello,
-Date: Tue, 19 Mar 2013 19:49:27 +0000
-Message-ID: <CABQWp-jTt-LuNkri_ZP-n1uAbWCm3ZZ0WV5Hwo28XTVwrTFtdQ__2640.34326323799$1363722597$gmane$org@mail.gmail.com>
-Reply-To: privateemmakwesi@gmail.com
+From: Venkatesh Srinivas <venkateshs@google.com>
+Subject: Re: [PATCH V5 4/5] virtio-scsi: introduce multiqueue support
+Date: Tue, 19 Mar 2013 18:46:57 -0700
+Message-ID: <20130320014657.GA14714@google.com>
+References: <1363687057-13580-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	<1363687057-13580-5-git-send-email-gaowanlong@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f196.google.com ([209.85.212.196]:64455 "EHLO
-	mail-wi0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932538Ab3CSTt2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Mar 2013 15:49:28 -0400
-Received: by mail-wi0-f196.google.com with SMTP id hq4so319783wib.3
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Mar 2013 12:49:27 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <1363687057-13580-5-git-send-email-gaowanlong@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, vsrinivas@ops101.org, pbonzini@redhat.com, mikew@google.com
 List-Id: linux-scsi@vger.kernel.org
 
--- 
- Hello,
+This looks pretty good!
 
-How are you? I will like you to be my foreign partner to invest the
-sum of $8.4Million in your country. Write for more details: Reply (
-privateemmakwesi@gmail.com )
+I rather like the (lack of) locking in I/O completion (around the req
+count vs. target/queue binding). It is unfortunate that you need to 
+hold the per-target lock in virtscsi_pick_vq() though; have any idea
+how much that lock hurts?
 
-Regards.
-Mr. Emmanuel Kwesi.
+Just two minor comments:
+
+(in struct virtio_scsi_target_data):
++       /* This spinlock never help at the same time as vq_lock. */
+                                ^^^^ held?
+
+(in struct virtio_scsi):
++       /* Does the affinity hint is set for virtqueues? */
+Could you rephrase that, please?
+
+Tested on qemu and w/ Google Compute Engine's virtio-scsi device.
+
+Reviewed-and-tested-by: Venkatesh Srinivas <venkateshs@google.com>
+
+Thanks,
+-- vs;
