@@ -1,48 +1,64 @@
-From: Venkatesh Srinivas <venkateshs@google.com>
-Subject: Re: [PATCH V5 4/5] virtio-scsi: introduce multiqueue support
-Date: Tue, 19 Mar 2013 18:46:57 -0700
-Message-ID: <20130320014657.GA14714@google.com>
-References: <1363687057-13580-1-git-send-email-gaowanlong@cn.fujitsu.com>
-	<1363687057-13580-5-git-send-email-gaowanlong@cn.fujitsu.com>
+From: Ren Mingxin <renmx@cn.fujitsu.com>
+Subject: scsi_error: improve the recovery latency for timeouted scsi cmds
+Date: Wed, 20 Mar 2013 11:24:49 +0800
+Message-ID: <51492C01.504@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1363687057-13580-5-git-send-email-gaowanlong@cn.fujitsu.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, vsrinivas@ops101.org, pbonzini@redhat.com, mikew@google.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:15431 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751878Ab3CTDXP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Mar 2013 23:23:15 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@Parallels.com>
+Cc: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>, SCSI <linux-scsi@vger.kernel.org>
 
-This looks pretty good!
+Hi,
 
-I rather like the (lack of) locking in I/O completion (around the req
-count vs. target/queue binding). It is unfortunate that you need to 
-hold the per-target lock in virtscsi_pick_vq() though; have any idea
-how much that lock hurts?
+Please let me ask one question about improving the recovery latency
+for timeouted scmds:
 
-Just two minor comments:
+In the functions 'scsi_eh_wakeup()' & 'scsi_error_handler()', there
+are two same condition judgements which ensure the number of active
+scmds equals to the number of failed scmds:
 
-(in struct virtio_scsi_target_data):
-+       /* This spinlock never help at the same time as vq_lock. */
-                                ^^^^ held?
+   void scsi_eh_wakeup(struct Scsi_Host *shost)
+   {
+       if (shost->host_busy == shost->host_failed)
+           wake_up_process(shost->ehandler);
+   }
 
-(in struct virtio_scsi):
-+       /* Does the affinity hint is set for virtqueues? */
-Could you rephrase that, please?
+   int scsi_error_handler(void *data)
+   {
+       while (!kthread_should_stop()) {
+           if ((shost->host_failed == 0 &&
+                shost->host_eh_scheduled == 0) ||
+                shost->host_failed != shost->host_busy) {
+               schedule();
+               continue;
+           }
+           ....
+       }
+       ....
+   }
 
-Tested on qemu and w/ Google Compute Engine's virtio-scsi device.
+I think the original reason for waking up eh thread until all scmds
+complete/fail may be in case of more overhead produced by threads
+waking up time after time, right?
 
-Reviewed-and-tested-by: Venkatesh Srinivas <venkateshs@google.com>
+But in the below condition, the strategy above seems not appropriate:
+
+   If a scmd is issued and stuck and another scmd is issued, scsi eh
+   detects a timeout of the first scmd, but has to wait for the second
+   one to be timedout/completed. Which means the first timeouted scmds
+   couldn't be handled in time.
+
+This may be fatal to a certain extent(the critical system especially).
+So, please let me know the starting point for the wakeup strategy in
+eh. We'd investigate further based on your comments. Any suggestions
+will be appreciated.
 
 Thanks,
--- vs;
+Ren
