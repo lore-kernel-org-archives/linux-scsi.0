@@ -1,8 +1,8 @@
 From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 2/3] PCI: Handle device quirks when accessing sysfs
-	resource<N> entries
-Date: Wed, 20 Mar 2013 22:35:02 -0600
-Message-ID: <20130321043502.7229.43877.stgit@amt.stowe>
+Subject: [PATCH 3/3] PCI, scsi, ahci: Unify usages of 0x1b4b vendor ID to use
+	PCI_VENDOR_ID_MARVELL_EXT
+Date: Wed, 20 Mar 2013 22:35:09 -0600
+Message-ID: <20130321043509.7229.93525.stgit@amt.stowe>
 References: <20130321043449.7229.81056.stgit@amt.stowe>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,180 +14,101 @@ To: bhelgaas@google.com
 Cc: linux-pci@vger.kernel.org, yuxiangl@marvell.com, yxlraid@gmail.com, greg@kroah.com, alex.williamson@redhat.com, kay@vrfy.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Sysfs includes entries to memory regions that back a PCI device's BARs.
-The pci-sysfs entries backing I/O Port BARs can be accessed by userspace,
-providing direct access to the device's registers.  File permissions
-prevent random users from accessing the device's registers through these
-files, but don't stop a privileged app that chooses to ignore the purpose
-of these files from doing so.
+With the 0x1b4b vendor ID #define in place, convert hard-coded ID values.
+Also, unify the previous SCSI specific use of this vendor ID to the new
+macro.
 
-There are devices with abnormally strict restrictions with respect to
-accessing their registers; aspects that are typically handled by the
-device's driver.  When these access restrictions are not followed - as
-when a userspace app such as "udevadm info --attribute-walk
---path=/sys/..." parses though reading all the device's sysfs entries - it
-can cause such devices to fail.
-
-This patch introduces a quirking mechanism that can be used to detect
-accesses that do no meet the device's restrictions, letting a device
-specific method intervene and decide how to progress.
-
-Reported-by: Xiangliang Yu <yuxiangl@marvell.com>
 Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
 
- drivers/pci/pci-sysfs.c |   11 +++----
- drivers/pci/pci.h       |   13 +++++++++
- drivers/pci/quirks.c    |   70 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 88 insertions(+), 6 deletions(-)
+ drivers/ata/ahci.c           |   10 +++++-----
+ drivers/scsi/mvsas/mv_init.c |    6 +++---
+ drivers/scsi/mvumi.c         |    4 ++--
+ drivers/scsi/mvumi.h         |    1 -
+ 4 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 9c6e9bb..8e80c33 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -974,10 +974,9 @@ pci_mmap_resource_wc(struct file *filp, struct kobject *kobj,
- 	return pci_mmap_resource(kobj, attr, vma, 1);
- }
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a99112c..616952f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -413,17 +413,17 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* Marvell */
+ 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
+ 	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
+-	{ PCI_DEVICE(0x1b4b, 0x9123),
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9123),
+ 	  .class = PCI_CLASS_STORAGE_SATA_AHCI,
+ 	  .class_mask = 0xffffff,
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
+-	{ PCI_DEVICE(0x1b4b, 0x9125),
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9125),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9125 */
+-	{ PCI_DEVICE(0x1b4b, 0x917a),
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x917a),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 */
+-	{ PCI_DEVICE(0x1b4b, 0x9192),
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9192),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 on some Gigabyte */
+-	{ PCI_DEVICE(0x1b4b, 0x91a3),
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a3),
+ 	  .driver_data = board_ahci_yes_fbs },
  
--static ssize_t
--pci_resource_io(struct file *filp, struct kobject *kobj,
--		struct bin_attribute *attr, char *buf,
--		loff_t off, size_t count, bool write)
-+ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
-+			struct bin_attribute *attr, char *buf,
-+			loff_t off, size_t count, bool write)
- {
- 	struct pci_dev *pdev = to_pci_dev(container_of(kobj,
- 						       struct device, kobj));
-@@ -1027,7 +1026,7 @@ pci_read_resource_io(struct file *filp, struct kobject *kobj,
- 		     struct bin_attribute *attr, char *buf,
- 		     loff_t off, size_t count)
- {
--	return pci_resource_io(filp, kobj, attr, buf, off, count, false);
-+	return pci_resource_io_filter(filp, kobj, attr, buf, off, count, false);
- }
+ 	/* Promise */
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index ce90d05..7455092 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -703,7 +703,7 @@ static struct pci_device_id mvs_pci_table[] = {
+ 	{ PCI_VDEVICE(TTI, 0x2744), chip_9480 },
+ 	{ PCI_VDEVICE(TTI, 0x2760), chip_9480 },
+ 	{
+-		.vendor		= 0x1b4b,
++		.vendor		= PCI_VENDOR_ID_MARVELL_EXT,
+ 		.device		= 0x9480,
+ 		.subvendor	= PCI_ANY_ID,
+ 		.subdevice	= 0x9480,
+@@ -712,7 +712,7 @@ static struct pci_device_id mvs_pci_table[] = {
+ 		.driver_data	= chip_9480,
+ 	},
+ 	{
+-		.vendor		= 0x1b4b,
++		.vendor		= PCI_VENDOR_ID_MARVELL_EXT,
+ 		.device		= 0x9445,
+ 		.subvendor	= PCI_ANY_ID,
+ 		.subdevice	= 0x9480,
+@@ -721,7 +721,7 @@ static struct pci_device_id mvs_pci_table[] = {
+ 		.driver_data	= chip_9445,
+ 	},
+ 	{
+-		.vendor		= 0x1b4b,
++		.vendor		= PCI_VENDOR_ID_MARVELL_EXT,
+ 		.device		= 0x9485,
+ 		.subvendor	= PCI_ANY_ID,
+ 		.subdevice	= 0x9480,
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 4594cca..c3601b5 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -49,8 +49,8 @@ MODULE_AUTHOR("jyli@marvell.com");
+ MODULE_DESCRIPTION("Marvell UMI Driver");
  
- static ssize_t
-@@ -1035,7 +1034,7 @@ pci_write_resource_io(struct file *filp, struct kobject *kobj,
- 		      struct bin_attribute *attr, char *buf,
- 		      loff_t off, size_t count)
- {
--	return pci_resource_io(filp, kobj, attr, buf, off, count, true);
-+	return pci_resource_io_filter(filp, kobj, attr, buf, off, count, true);
- }
+ static DEFINE_PCI_DEVICE_TABLE(mvumi_pci_table) = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_2, PCI_DEVICE_ID_MARVELL_MV9143) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_2, PCI_DEVICE_ID_MARVELL_MV9580) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, PCI_DEVICE_ID_MARVELL_MV9143) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, PCI_DEVICE_ID_MARVELL_MV9580) },
+ 	{ 0 }
+ };
  
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 7346ee6..a47611d 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -29,6 +29,9 @@ extern int pci_mmap_fits(struct pci_dev *pdev, int resno,
- 			 struct vm_area_struct *vmai,
- 			 enum pci_mmap_api mmap_api);
- #endif
-+extern ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
-+			       struct bin_attribute *attr, char *buf,
-+			       loff_t off, size_t count, bool write);
- int pci_probe_reset_function(struct pci_dev *dev);
+diff --git a/drivers/scsi/mvumi.h b/drivers/scsi/mvumi.h
+index e360135..41f1687 100644
+--- a/drivers/scsi/mvumi.h
++++ b/drivers/scsi/mvumi.h
+@@ -32,7 +32,6 @@
+ #define VER_BUILD		1500
  
- /**
-@@ -308,11 +311,21 @@ struct pci_dev_reset_methods {
+ #define MV_DRIVER_NAME			"mvumi"
+-#define PCI_VENDOR_ID_MARVELL_2		0x1b4b
+ #define PCI_DEVICE_ID_MARVELL_MV9143	0x9143
+ #define PCI_DEVICE_ID_MARVELL_MV9580	0x9580
  
- #ifdef CONFIG_PCI_QUIRKS
- extern int pci_dev_specific_reset(struct pci_dev *dev, int probe);
-+ssize_t pci_resource_io_filter(struct file *fp, struct kobject *kobj,
-+			       struct bin_attribute *attr, char *buf,
-+			       loff_t offset, size_t size, bool write);
- #else
- static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- {
- 	return -ENOTTY;
- }
-+static inline ssize_t
-+pci_resource_io_filter(struct file *fp, struct kobject *kobj,
-+		       struct bin_attribute *attr, char *buf,
-+		       loff_t offset, size_t size, bool write)
-+{
-+	return pci_resource_io(fp, kobj, attr, buf, offset, size, write);
-+}
- #endif
- 
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 0369fb6..8b68cd2 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3324,3 +3324,73 @@ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
- 
- 	return -ENOTTY;
- }
-+
-+static ssize_t marvell9125_quirk(struct file *fp, struct kobject *kobj,
-+				 struct bin_attribute *attr, char *buf,
-+				 loff_t offset, size_t size, bool write)
-+{
-+	/*
-+	 * Short circuit out of trying to access this device's I/O port
-+	 * region.
-+	 */
-+	return -EINVAL;
-+}
-+
-+static const struct pci_resource_io_quirk {
-+        u16	vendor;
-+        u16	device;
-+	int	bar;
-+	size_t	size;
-+	loff_t	offset;
-+	ssize_t (*iores_access)(struct file *fp, struct kobject *kobj,
-+				struct bin_attribute *attr, char *buf,
-+				loff_t offset, size_t size, bool write);
-+} pci_resource_io_quirks[] = {
-+	/*
-+	 * Some devices have abnormally strict restrictions when accessing
-+	 * their I/O port regions.
-+	 * https://lkml.org/lkml/2013/3/16/168
-+	 */
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 1, 4, 0, marvell9125_quirk },
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 1, 2, 2, marvell9125_quirk },
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 1, 1, 0, marvell9125_quirk },
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 1, 1, 1, marvell9125_quirk },
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 1, 1, 3, marvell9125_quirk },
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 3, 4, 0, marvell9125_quirk },
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 3, 2, 2, marvell9125_quirk },
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 3, 1, 0, marvell9125_quirk },
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 3, 1, 1, marvell9125_quirk },
-+        { PCI_VENDOR_ID_MARVELL_EXT, 0x9125, 3, 1, 3, marvell9125_quirk },
-+        { 0 }
-+};
-+
-+ssize_t pci_resource_io_filter(struct file *fp, struct kobject *kobj,
-+			       struct bin_attribute *attr, char *buf,
-+			       loff_t offset, size_t size, bool write)
-+{
-+	int bar;
-+	struct resource *res = attr->private;
-+	const struct pci_resource_io_quirk *i;
-+	struct pci_dev *dev = to_pci_dev(container_of(kobj,
-+						      struct device, kobj));
-+
-+	for (bar = 0; bar < PCI_ROM_RESOURCE; bar++)
-+                if (res == &dev->resource[bar])
-+                        break;
-+	if (bar >= PCI_ROM_RESOURCE)
-+                return -ENODEV;
-+
-+	for (i = pci_resource_io_quirks; i->iores_access; i++) {
-+		if ((i->vendor == dev->vendor ||
-+		     i->vendor == (u16)PCI_ANY_ID) &&
-+		    (i->device == dev->device ||
-+		     i->device == (u16)PCI_ANY_ID) &&
-+		     i->bar == bar &&
-+		     i->size == size &&
-+		     i->offset == offset)
-+			return i->iores_access(fp, kobj, attr, buf, offset,
-+					       size, write);
-+	}
-+
-+	return pci_resource_io(fp, kobj, attr, buf, offset, size, write);
-+}
