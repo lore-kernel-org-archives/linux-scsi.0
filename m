@@ -1,12 +1,12 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 1/4] scsi_transport_iscsi: Add flash node mgmt support
-Date: Fri, 22 Mar 2013 07:41:29 -0400
-Message-ID: <1363952492-16205-2-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 3/4] qla4xxx: Add flash node mgmt support
+Date: Fri, 22 Mar 2013 07:41:31 -0400
+Message-ID: <1363952492-16205-4-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1363952492-16205-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:30894 "HELO linux-zupk.site"
+Received: from mvnat01.qlogic.com ([198.186.3.73]:38581 "HELO linux-zupk.site"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751675Ab3CVMEN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753583Ab3CVMEN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 22 Mar 2013 08:04:13 -0400
 In-Reply-To: <1363952492-16205-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,1412 +17,2030 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
 This patch allows iscsiadm to manage iSCSI target information stored on
-adapter flash on per host basis.
-
-The sysfs entries will look as cited below:
-	/sys/bus/iscsi_flashnode/devices/flashnode_sess-<host_no>:<flashnode_id>/<session attrs>
-	/sys/bus/iscsi_flashnode/devices/flashnode_conn-<host_no>:<flashnode_id>:<conn_id>/<conn attrs>
+qla4xxx adapter flash on per host basis.
 
 Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 Signed-off-by: Manish Rangankar <manish.rangankar@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 1002 ++++++++++++++++++++++++++++++++++-
- include/scsi/iscsi_if.h             |  113 ++++
- include/scsi/scsi_transport_iscsi.h |  151 ++++++
- 3 files changed, 1265 insertions(+), 1 deletions(-)
+ drivers/scsi/qla4xxx/ql4_def.h  |   22 +
+ drivers/scsi/qla4xxx/ql4_fw.h   |   34 +
+ drivers/scsi/qla4xxx/ql4_glbl.h |    7 +
+ drivers/scsi/qla4xxx/ql4_mbx.c  |  106 +++-
+ drivers/scsi/qla4xxx/ql4_nx.c   |   12 +-
+ drivers/scsi/qla4xxx/ql4_os.c   | 1647 +++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 1824 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 0a74b97..ce06e87 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -25,6 +25,7 @@
- #include <linux/slab.h>
- #include <linux/bsg-lib.h>
- #include <linux/idr.h>
-+#include <linux/list.h>
- #include <net/tcp.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
-@@ -460,6 +461,689 @@ void iscsi_destroy_iface(struct iscsi_iface *iface)
- EXPORT_SYMBOL_GPL(iscsi_destroy_iface);
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 129f5dd..b487b0a 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -159,6 +159,25 @@
+ #define LSDW(x) ((u32)((u64)(x)))
+ #define MSDW(x) ((u32)((((u64)(x)) >> 16) >> 16))
  
++#define DEV_TYPE_IPV4	"ipv4"
++#define DEV_TYPE_IPV6	"ipv6"
++
++#define DEV_DB_NON_PERSISTENT	0
++#define DEV_DB_PERSISTENT	1
++
++#define COPY_ISID(dst_isid, src_isid) {			\
++	int i, j;					\
++	for (i = 0, j = ISID_SIZE - 1; i < ISID_SIZE;)	\
++		dst_isid[i++] = src_isid[j--];		\
++}
++
++#define SET_BITVAL(o, n, v) {	\
++	if (o)			\
++		n |= v;		\
++	else			\
++		n &= ~v;	\
++}
++
  /*
-+ * Interface to display flash node params to sysfs
+  * Retry & Timeout Values
+  */
+@@ -363,6 +382,8 @@ struct ql82xx_hw_data {
+ 	uint32_t flt_iscsi_param;
+ 	uint32_t flt_region_chap;
+ 	uint32_t flt_chap_size;
++	uint32_t flt_region_ddb;
++	uint32_t flt_ddb_size;
+ };
+ 
+ struct qla4_8xxx_legacy_intr_set {
+@@ -501,6 +522,7 @@ struct scsi_qla_host {
+ #define AF_INIT_DONE			1 /* 0x00000002 */
+ #define AF_MBOX_COMMAND			2 /* 0x00000004 */
+ #define AF_MBOX_COMMAND_DONE		3 /* 0x00000008 */
++#define AF_ST_DISCOVERY_IN_PROGRESS	4 /* 0x00000010 */
+ #define AF_INTERRUPTS_ON		6 /* 0x00000040 */
+ #define AF_GET_CRASH_RECORD		7 /* 0x00000080 */
+ #define AF_LINK_UP			8 /* 0x00000100 */
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index ad9d2e2..5945829 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -288,6 +288,8 @@ union external_hw_config_reg {
+ #define FA_GOLD_RISC_CODE_ADDR_82	0x80000
+ #define FA_FLASH_ISCSI_CHAP		0x540000
+ #define FA_FLASH_CHAP_SIZE		0xC0000
++#define FA_FLASH_ISCSI_DDB		0x420000
++#define FA_FLASH_DDB_SIZE		0x080000
+ 
+ /* Flash Description Table */
+ struct qla_fdt_layout {
+@@ -348,6 +350,7 @@ struct qla_flt_header {
+ #define FLT_REG_BOOT_CODE_82	0x78
+ #define FLT_REG_ISCSI_PARAM	0x65
+ #define FLT_REG_ISCSI_CHAP	0x63
++#define FLT_REG_ISCSI_DDB	0x6A
+ 
+ struct qla_flt_region {
+ 	uint32_t code;
+@@ -779,12 +782,41 @@ struct dev_db_entry {
+ #define DDB_OPT_IPV6_NULL_LINK_LOCAL		0x800 /* post connection */
+ #define DDB_OPT_IPV6_FW_DEFINED_LINK_LOCAL	0x800 /* pre connection */
+ 
++#define OPT_IS_FW_ASSIGNED_IPV6		11
++#define OPT_IPV6_DEVICE			8
++#define OPT_AUTO_SENDTGTS_DISABLE	6
++#define OPT_DISC_SESSION		4
++#define OPT_ENTRY_STATE			3
+ 	uint16_t exec_throttle;	/* 02-03 */
+ 	uint16_t exec_count;	/* 04-05 */
+ 	uint16_t res0;	/* 06-07 */
+ 	uint16_t iscsi_options;	/* 08-09 */
++#define ISCSIOPT_HEADER_DIGEST_EN		13
++#define ISCSIOPT_DATA_DIGEST_EN			12
++#define ISCSIOPT_IMMEDIATE_DATA_EN		11
++#define ISCSIOPT_INITIAL_R2T_EN			10
++#define ISCSIOPT_DATA_SEQ_IN_ORDER		9
++#define ISCSIOPT_DATA_PDU_IN_ORDER		8
++#define ISCSIOPT_CHAP_AUTH_EN			7
++#define ISCSIOPT_SNACK_REQ_EN			6
++#define ISCSIOPT_DISCOVERY_LOGOUT_EN		5
++#define ISCSIOPT_BIDI_CHAP_EN			4
++#define ISCSIOPT_DISCOVERY_AUTH_OPTIONAL	3
++#define ISCSIOPT_ERL1				1
++#define ISCSIOPT_ERL0				0
++
+ 	uint16_t tcp_options;	/* 0A-0B */
++#define TCPOPT_TIMESTAMP_STAT	6
++#define TCPOPT_NAGLE_DISABLE	5
++#define TCPOPT_WSF_DISABLE	4
++#define TCPOPT_TIMER_SCALE3	3
++#define TCPOPT_TIMER_SCALE2	2
++#define TCPOPT_TIMER_SCALE1	1
++#define TCPOPT_TIMESTAMP_EN	0
++
+ 	uint16_t ip_options;	/* 0C-0D */
++#define IPOPT_FRAGMENT_DISABLE	4
++
+ 	uint16_t iscsi_max_rcv_data_seg_len;	/* 0E-0F */
+ #define BYTE_UNITS	512
+ 	uint32_t res1;	/* 10-13 */
+@@ -816,6 +848,8 @@ struct dev_db_entry {
+ 					 * much RAM */
+ 	uint8_t link_local_ipv6_addr[0x10]; /* 1A0-1AF */
+ 	uint8_t res5[0x10];	/* 1B0-1BF */
++#define DDB_NO_LINK	0xFFFF
++#define DDB_ISNS	0xFFFD
+ 	uint16_t ddb_link;	/* 1C0-1C1 */
+ 	uint16_t chap_tbl_idx;	/* 1C2-1C3 */
+ 	uint16_t tgt_portal_grp; /* 1C4-1C5 */
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 22706f6..4a42800 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -191,6 +191,9 @@ int qla4xxx_ping_iocb(struct scsi_qla_host *ha, uint32_t options,
+ int qla4xxx_post_ping_evt_work(struct scsi_qla_host *ha,
+ 			       uint32_t status, uint32_t pid,
+ 			       uint32_t data_size, uint8_t *data);
++int qla4xxx_flashdb_by_index(struct scsi_qla_host *ha,
++			     struct dev_db_entry *fw_ddb_entry,
++			     dma_addr_t fw_ddb_entry_dma, uint16_t ddb_index);
+ 
+ /* BSG Functions */
+ int qla4xxx_bsg_request(struct bsg_job *bsg_job);
+@@ -259,6 +262,10 @@ int qla4_83xx_post_idc_ack(struct scsi_qla_host *ha);
+ void qla4_83xx_disable_pause(struct scsi_qla_host *ha);
+ void qla4_83xx_enable_mbox_intrs(struct scsi_qla_host *ha);
+ int qla4_83xx_can_perform_reset(struct scsi_qla_host *ha);
++int qla4xxx_get_default_ddb(struct scsi_qla_host *ha, uint32_t options,
++			    dma_addr_t dma_addr);
++int qla4xxx_get_uni_chap_at_index(struct scsi_qla_host *ha, char *username,
++				  char *password, uint16_t chap_index);
+ 
+ extern int ql4xextended_error_logging;
+ extern int ql4xdontresethba;
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index ce46545..8985997 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -1288,8 +1288,8 @@ exit_about_fw:
+ 	return status;
+ }
+ 
+-static int qla4xxx_get_default_ddb(struct scsi_qla_host *ha, uint32_t options,
+-				   dma_addr_t dma_addr)
++int qla4xxx_get_default_ddb(struct scsi_qla_host *ha, uint32_t options,
++			    dma_addr_t dma_addr)
+ {
+ 	uint32_t mbox_cmd[MBOX_REG_COUNT];
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
+@@ -1417,6 +1417,52 @@ exit_bootdb_failed:
+ 	return status;
+ }
+ 
++int qla4xxx_flashdb_by_index(struct scsi_qla_host *ha,
++			     struct dev_db_entry *fw_ddb_entry,
++			     dma_addr_t fw_ddb_entry_dma, uint16_t ddb_index)
++{
++	uint32_t dev_db_start_offset = FLASH_OFFSET_DB_INFO;
++	uint32_t dev_db_end_offset;
++	int status = QLA_ERROR;
++
++	memset(fw_ddb_entry, 0, sizeof(*fw_ddb_entry));
++
++	if (is_qla40XX(ha)) {
++		dev_db_start_offset = FLASH_OFFSET_DB_INFO;
++	} else {
++		dev_db_start_offset = FLASH_RAW_ACCESS_ADDR +
++				      (ha->hw.flt_region_ddb << 2);
++		/* flt_ddb_size is DDB table size for both ports
++		 * so divide it by 2 to calculate the offset for second port
++		 */
++		if (ha->port_num == 1)
++			dev_db_start_offset += (ha->hw.flt_ddb_size / 2);
++	}
++
++	dev_db_end_offset = dev_db_start_offset + (ha->hw.flt_ddb_size / 2);
++	dev_db_start_offset += (ddb_index * sizeof(*fw_ddb_entry));
++
++	if (dev_db_start_offset > dev_db_end_offset) {
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s:Invalid DDB index %d", __func__,
++				  ddb_index));
++		goto exit_fdb_failed;
++	}
++
++	if (qla4xxx_get_flash(ha, fw_ddb_entry_dma, dev_db_start_offset,
++			      sizeof(*fw_ddb_entry)) != QLA_SUCCESS) {
++		ql4_printk(KERN_ERR, ha, "scsi%ld: %s: Get Flash failed\n",
++			   ha->host_no, __func__);
++		goto exit_fdb_failed;
++	}
++
++	if (fw_ddb_entry->cookie == DDB_VALID_COOKIE)
++		status = QLA_SUCCESS;
++
++exit_fdb_failed:
++	return status;
++}
++
+ int qla4xxx_get_chap(struct scsi_qla_host *ha, char *username, char *password,
+ 		     uint16_t idx)
+ {
+@@ -1510,6 +1556,62 @@ exit_set_chap:
+ 	return ret;
+ }
+ 
++
++int qla4xxx_get_uni_chap_at_index(struct scsi_qla_host *ha, char *username,
++				  char *password, uint16_t chap_index)
++{
++	int rval = QLA_ERROR;
++	struct ql4_chap_table *chap_table = NULL;
++	int max_chap_entries;
++
++	if (!ha->chap_list) {
++		ql4_printk(KERN_ERR, ha, "Do not have CHAP table cache\n");
++		rval = QLA_ERROR;
++		goto exit_uni_chap;
++	}
++
++	if (!username || !password) {
++		ql4_printk(KERN_ERR, ha, "No memory for username & secret\n");
++		rval = QLA_ERROR;
++		goto exit_uni_chap;
++	}
++
++	if (is_qla80XX(ha))
++		max_chap_entries = (ha->hw.flt_chap_size / 2) /
++				   sizeof(struct ql4_chap_table);
++	else
++		max_chap_entries = MAX_CHAP_ENTRIES_40XX;
++
++	if (chap_index > max_chap_entries) {
++		ql4_printk(KERN_ERR, ha, "Invalid Chap index\n");
++		rval = QLA_ERROR;
++		goto exit_uni_chap;
++	}
++
++	mutex_lock(&ha->chap_sem);
++	chap_table = (struct ql4_chap_table *)ha->chap_list + chap_index;
++	if (chap_table->cookie != __constant_cpu_to_le16(CHAP_VALID_COOKIE)) {
++		rval = QLA_ERROR;
++		goto exit_unlock_uni_chap;
++	}
++
++	if (!(chap_table->flags & BIT_6)) {
++		ql4_printk(KERN_ERR, ha, "Unidirectional entry not set\n");
++		rval = QLA_ERROR;
++		goto exit_unlock_uni_chap;
++	}
++
++	strncpy(password, chap_table->secret, MAX_CHAP_SECRET_LEN);
++	strncpy(username, chap_table->name, MAX_CHAP_NAME_LEN);
++
++	rval = QLA_SUCCESS;
++
++exit_unlock_uni_chap:
++	mutex_unlock(&ha->chap_sem);
++exit_uni_chap:
++	return rval;
++}
++
+ /**
+  * qla4xxx_get_chap_index - Get chap index given username and secret
+  * @ha: pointer to adapter structure
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 31fac90..5f1dbb7 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -3154,6 +3154,10 @@ qla4_8xxx_get_flt_info(struct scsi_qla_host *ha, uint32_t flt_addr)
+ 			hw->flt_region_chap =  start;
+ 			hw->flt_chap_size =  le32_to_cpu(region->size);
+ 			break;
++		case FLT_REG_ISCSI_DDB:
++			hw->flt_region_ddb =  start;
++			hw->flt_ddb_size =  le32_to_cpu(region->size);
++			break;
+ 		}
+ 	}
+ 	goto done;
+@@ -3168,13 +3172,17 @@ no_flash_data:
+ 	hw->flt_region_fw       = FA_RISC_CODE_ADDR_82;
+ 	hw->flt_region_chap	= FA_FLASH_ISCSI_CHAP >> 2;
+ 	hw->flt_chap_size	= FA_FLASH_CHAP_SIZE;
++	hw->flt_region_ddb	= FA_FLASH_ISCSI_DDB >> 2;
++	hw->flt_ddb_size	= FA_FLASH_DDB_SIZE;
+ 
+ done:
+ 	DEBUG2(ql4_printk(KERN_INFO, ha,
+-			  "FLT[%s]: flt=0x%x fdt=0x%x boot=0x%x bootload=0x%x fw=0x%x chap=0x%x\n",
++			  "FLT[%s]: flt=0x%x fdt=0x%x boot=0x%x bootload=0x%x fw=0x%x chap=0x%x chap_size=0x%x ddb=0x%x  ddb_size=0x%x\n",
+ 			  loc, hw->flt_region_flt, hw->flt_region_fdt,
+ 			  hw->flt_region_boot, hw->flt_region_bootload,
+-			  hw->flt_region_fw, hw->flt_region_chap));
++			  hw->flt_region_fw, hw->flt_region_chap,
++			  hw->flt_chap_size, hw->flt_region_ddb,
++			  hw->flt_ddb_size));
+ }
+ 
+ static void
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index f3cf04e..497ac68 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -166,6 +166,26 @@ static int qla4xxx_host_reset(struct Scsi_Host *shost, int reset_type);
+ static int qla4xxx_change_queue_depth(struct scsi_device *sdev, int qdepth,
+ 				      int reason);
+ 
++/*
++ * iSCSI Flash DDB sysfs entry points
 + */
++static int
++qla4xxx_sysfs_ddb_set_param(struct iscsi_bus_flash_session *fnode_sess,
++			    struct iscsi_bus_flash_conn *fnode_conn,
++			    void *data, int len);
++static int
++qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
++			    int param, char *buf);
++static int qla4xxx_sysfs_ddb_add(struct Scsi_Host *shost, const char *buf,
++				 int len);
++static int
++qla4xxx_sysfs_ddb_delete(struct iscsi_bus_flash_session *fnode_sess);
++static int qla4xxx_sysfs_ddb_login(struct iscsi_bus_flash_session *fnode_sess,
++				   struct iscsi_bus_flash_conn *fnode_conn);
++static int qla4xxx_sysfs_ddb_logout(struct iscsi_bus_flash_session *fnode_sess,
++				    struct iscsi_bus_flash_conn *fnode_conn);
++static int qla4xxx_sysfs_ddb_logout_sid(struct iscsi_cls_session *cls_sess);
 +
-+#define ISCSI_FLASHNODE_ATTR(_prefix, _name, _mode, _show, _store)	\
-+struct device_attribute dev_attr_##_prefix##_##_name =			\
-+	__ATTR(_name, _mode, _show, _store)
-+
-+/* flash node session attrs show */
-+#define iscsi_flashnode_sess_attr_show(type, name, param)		\
-+static ssize_t								\
-+show_##type##_##name(struct device *dev, struct device_attribute *attr,	\
-+		     char *buf)						\
-+{									\
-+	struct iscsi_bus_flash_session *fnode_sess =			\
-+					iscsi_dev_to_flash_session(dev);\
-+	struct iscsi_transport *t = fnode_sess->transport;		\
-+	return t->get_flashnode_param(fnode_sess, param, buf);		\
-+}									\
-+
-+
-+#define iscsi_flashnode_sess_attr(type, name, param)			\
-+	iscsi_flashnode_sess_attr_show(type, name, param)		\
-+static ISCSI_FLASHNODE_ATTR(type, name, S_IRUGO,			\
-+			    show_##type##_##name, NULL);
-+
-+/* Flash node session attributes */
-+
-+iscsi_flashnode_sess_attr(fnode, auto_snd_tgt_disable,
-+			  ISCSI_FLASHNODE_AUTO_SND_TGT_DISABLE);
-+iscsi_flashnode_sess_attr(fnode, discovery_session,
-+			  ISCSI_FLASHNODE_DISCOVERY_SESS);
-+iscsi_flashnode_sess_attr(fnode, portal_type, ISCSI_FLASHNODE_PORTAL_TYPE);
-+iscsi_flashnode_sess_attr(fnode, entry_enable, ISCSI_FLASHNODE_ENTRY_EN);
-+iscsi_flashnode_sess_attr(fnode, immediate_data, ISCSI_FLASHNODE_IMM_DATA_EN);
-+iscsi_flashnode_sess_attr(fnode, initial_r2t, ISCSI_FLASHNODE_INITIAL_R2T_EN);
-+iscsi_flashnode_sess_attr(fnode, data_seq_in_order,
-+			  ISCSI_FLASHNODE_DATASEQ_INORDER);
-+iscsi_flashnode_sess_attr(fnode, data_pdu_in_order,
-+			  ISCSI_FLASHNODE_PDU_INORDER);
-+iscsi_flashnode_sess_attr(fnode, chap_auth, ISCSI_FLASHNODE_CHAP_AUTH_EN);
-+iscsi_flashnode_sess_attr(fnode, discovery_logout,
-+			  ISCSI_FLASHNODE_DISCOVERY_LOGOUT_EN);
-+iscsi_flashnode_sess_attr(fnode, bidi_chap, ISCSI_FLASHNODE_BIDI_CHAP_EN);
-+iscsi_flashnode_sess_attr(fnode, discovery_auth_optional,
-+			  ISCSI_FLASHNODE_DISCOVERY_AUTH_OPTIONAL);
-+iscsi_flashnode_sess_attr(fnode, erl, ISCSI_FLASHNODE_ERL);
-+iscsi_flashnode_sess_attr(fnode, first_burst_len, ISCSI_FLASHNODE_FIRST_BURST);
-+iscsi_flashnode_sess_attr(fnode, def_time2wait, ISCSI_FLASHNODE_DEF_TIME2WAIT);
-+iscsi_flashnode_sess_attr(fnode, def_time2retain,
-+			  ISCSI_FLASHNODE_DEF_TIME2RETAIN);
-+iscsi_flashnode_sess_attr(fnode, max_outstanding_r2t, ISCSI_FLASHNODE_MAX_R2T);
-+iscsi_flashnode_sess_attr(fnode, isid, ISCSI_FLASHNODE_ISID);
-+iscsi_flashnode_sess_attr(fnode, tsid, ISCSI_FLASHNODE_TSID);
-+iscsi_flashnode_sess_attr(fnode, max_burst_len, ISCSI_FLASHNODE_MAX_BURST);
-+iscsi_flashnode_sess_attr(fnode, def_taskmgmt_tmo,
-+			  ISCSI_FLASHNODE_DEF_TASKMGMT_TMO);
-+iscsi_flashnode_sess_attr(fnode, targetalias, ISCSI_FLASHNODE_ALIAS);
-+iscsi_flashnode_sess_attr(fnode, targetname, ISCSI_FLASHNODE_NAME);
-+iscsi_flashnode_sess_attr(fnode, tpgt, ISCSI_FLASHNODE_TPGT);
-+iscsi_flashnode_sess_attr(fnode, discovery_parent_idx,
-+			  ISCSI_FLASHNODE_DISCOVERY_PARENT_IDX);
-+iscsi_flashnode_sess_attr(fnode, discovery_parent_type,
-+			  ISCSI_FLASHNODE_DISCOVERY_PARENT_TYPE);
-+iscsi_flashnode_sess_attr(fnode, chap_in_idx, ISCSI_FLASHNODE_CHAP_IN_IDX);
-+iscsi_flashnode_sess_attr(fnode, chap_out_idx, ISCSI_FLASHNODE_CHAP_OUT_IDX);
-+iscsi_flashnode_sess_attr(fnode, username, ISCSI_FLASHNODE_USERNAME);
-+iscsi_flashnode_sess_attr(fnode, username_in, ISCSI_FLASHNODE_USERNAME_IN);
-+iscsi_flashnode_sess_attr(fnode, password, ISCSI_FLASHNODE_PASSWORD);
-+iscsi_flashnode_sess_attr(fnode, password_in, ISCSI_FLASHNODE_PASSWORD_IN);
-+iscsi_flashnode_sess_attr(fnode, is_boot_target, ISCSI_FLASHNODE_IS_BOOT_TGT);
-+
-+static struct attribute *iscsi_flashnode_sess_attrs[] = {
-+	&dev_attr_fnode_auto_snd_tgt_disable.attr,
-+	&dev_attr_fnode_discovery_session.attr,
-+	&dev_attr_fnode_portal_type.attr,
-+	&dev_attr_fnode_entry_enable.attr,
-+	&dev_attr_fnode_immediate_data.attr,
-+	&dev_attr_fnode_initial_r2t.attr,
-+	&dev_attr_fnode_data_seq_in_order.attr,
-+	&dev_attr_fnode_data_pdu_in_order.attr,
-+	&dev_attr_fnode_chap_auth.attr,
-+	&dev_attr_fnode_discovery_logout.attr,
-+	&dev_attr_fnode_bidi_chap.attr,
-+	&dev_attr_fnode_discovery_auth_optional.attr,
-+	&dev_attr_fnode_erl.attr,
-+	&dev_attr_fnode_first_burst_len.attr,
-+	&dev_attr_fnode_def_time2wait.attr,
-+	&dev_attr_fnode_def_time2retain.attr,
-+	&dev_attr_fnode_max_outstanding_r2t.attr,
-+	&dev_attr_fnode_isid.attr,
-+	&dev_attr_fnode_tsid.attr,
-+	&dev_attr_fnode_max_burst_len.attr,
-+	&dev_attr_fnode_def_taskmgmt_tmo.attr,
-+	&dev_attr_fnode_targetalias.attr,
-+	&dev_attr_fnode_targetname.attr,
-+	&dev_attr_fnode_tpgt.attr,
-+	&dev_attr_fnode_discovery_parent_idx.attr,
-+	&dev_attr_fnode_discovery_parent_type.attr,
-+	&dev_attr_fnode_chap_in_idx.attr,
-+	&dev_attr_fnode_chap_out_idx.attr,
-+	&dev_attr_fnode_username.attr,
-+	&dev_attr_fnode_username_in.attr,
-+	&dev_attr_fnode_password.attr,
-+	&dev_attr_fnode_password_in.attr,
-+	&dev_attr_fnode_is_boot_target.attr,
-+	NULL,
-+};
-+
-+static umode_t iscsi_flashnode_sess_attr_is_visible(struct kobject *kobj,
-+						    struct attribute *attr,
-+						    int i)
+ static struct qla4_8xxx_legacy_intr_set legacy_intr[] =
+     QLA82XX_LEGACY_INTR_CONFIG;
+ 
+@@ -232,6 +252,13 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
+ 	.send_ping		= qla4xxx_send_ping,
+ 	.get_chap		= qla4xxx_get_chap_list,
+ 	.delete_chap		= qla4xxx_delete_chap,
++	.get_flashnode_param	= qla4xxx_sysfs_ddb_get_param,
++	.set_flashnode_param	= qla4xxx_sysfs_ddb_set_param,
++	.new_flashnode		= qla4xxx_sysfs_ddb_add,
++	.del_flashnode		= qla4xxx_sysfs_ddb_delete,
++	.login_flashnode	= qla4xxx_sysfs_ddb_login,
++	.logout_flashnode	= qla4xxx_sysfs_ddb_logout,
++	.logout_flashnode_sid	= qla4xxx_sysfs_ddb_logout_sid,
+ };
+ 
+ static struct scsi_transport_template *qla4xxx_scsi_transport;
+@@ -376,6 +403,68 @@ static umode_t qla4_attr_is_visible(int param_type, int param)
+ 		default:
+ 			return 0;
+ 		}
++	case ISCSI_FLASHNODE_PARAM:
++		switch (param) {
++		case ISCSI_FLASHNODE_IS_FW_ASSIGNED_IPV6:
++		case ISCSI_FLASHNODE_PORTAL_TYPE:
++		case ISCSI_FLASHNODE_AUTO_SND_TGT_DISABLE:
++		case ISCSI_FLASHNODE_DISCOVERY_SESS:
++		case ISCSI_FLASHNODE_ENTRY_EN:
++		case ISCSI_FLASHNODE_HDR_DGST_EN:
++		case ISCSI_FLASHNODE_DATA_DGST_EN:
++		case ISCSI_FLASHNODE_IMM_DATA_EN:
++		case ISCSI_FLASHNODE_INITIAL_R2T_EN:
++		case ISCSI_FLASHNODE_DATASEQ_INORDER:
++		case ISCSI_FLASHNODE_PDU_INORDER:
++		case ISCSI_FLASHNODE_CHAP_AUTH_EN:
++		case ISCSI_FLASHNODE_SNACK_REQ_EN:
++		case ISCSI_FLASHNODE_DISCOVERY_LOGOUT_EN:
++		case ISCSI_FLASHNODE_BIDI_CHAP_EN:
++		case ISCSI_FLASHNODE_DISCOVERY_AUTH_OPTIONAL:
++		case ISCSI_FLASHNODE_ERL:
++		case ISCSI_FLASHNODE_TCP_TIMESTAMP_STAT:
++		case ISCSI_FLASHNODE_TCP_NAGLE_DISABLE:
++		case ISCSI_FLASHNODE_TCP_WSF_DISABLE:
++		case ISCSI_FLASHNODE_TCP_TIMER_SCALE:
++		case ISCSI_FLASHNODE_TCP_TIMESTAMP_EN:
++		case ISCSI_FLASHNODE_IP_FRAG_DISABLE:
++		case ISCSI_FLASHNODE_MAX_RECV_DLENGTH:
++		case ISCSI_FLASHNODE_MAX_XMIT_DLENGTH:
++		case ISCSI_FLASHNODE_FIRST_BURST:
++		case ISCSI_FLASHNODE_DEF_TIME2WAIT:
++		case ISCSI_FLASHNODE_DEF_TIME2RETAIN:
++		case ISCSI_FLASHNODE_MAX_R2T:
++		case ISCSI_FLASHNODE_KEEPALIVE_TMO:
++		case ISCSI_FLASHNODE_ISID:
++		case ISCSI_FLASHNODE_TSID:
++		case ISCSI_FLASHNODE_PORT:
++		case ISCSI_FLASHNODE_MAX_BURST:
++		case ISCSI_FLASHNODE_DEF_TASKMGMT_TMO:
++		case ISCSI_FLASHNODE_IPADDR:
++		case ISCSI_FLASHNODE_ALIAS:
++		case ISCSI_FLASHNODE_REDIRECT_IPADDR:
++		case ISCSI_FLASHNODE_MAX_SEGMENT_SIZE:
++		case ISCSI_FLASHNODE_LOCAL_PORT:
++		case ISCSI_FLASHNODE_IPV4_TOS:
++		case ISCSI_FLASHNODE_IPV6_TC:
++		case ISCSI_FLASHNODE_IPV6_FLOW_LABEL:
++		case ISCSI_FLASHNODE_NAME:
++		case ISCSI_FLASHNODE_TPGT:
++		case ISCSI_FLASHNODE_LINK_LOCAL_IPV6:
++		case ISCSI_FLASHNODE_DISCOVERY_PARENT_IDX:
++		case ISCSI_FLASHNODE_DISCOVERY_PARENT_TYPE:
++		case ISCSI_FLASHNODE_TCP_XMIT_WSF:
++		case ISCSI_FLASHNODE_TCP_RECV_WSF:
++		case ISCSI_FLASHNODE_CHAP_OUT_IDX:
++		case ISCSI_FLASHNODE_USERNAME:
++		case ISCSI_FLASHNODE_PASSWORD:
++		case ISCSI_FLASHNODE_STATSN:
++		case ISCSI_FLASHNODE_EXP_STATSN:
++		case ISCSI_FLASHNODE_IS_BOOT_TGT:
++			return S_IRUGO;
++		default:
++			return 0;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -1922,6 +2011,250 @@ static int qla4xxx_task_xmit(struct iscsi_task *task)
+ 	return -ENOSYS;
+ }
+ 
++static int qla4xxx_copy_from_fwddb_param(struct iscsi_bus_flash_session *sess,
++					 struct iscsi_bus_flash_conn *conn,
++					 struct dev_db_entry *fw_ddb_entry)
 +{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct iscsi_bus_flash_session *fnode_sess =
-+						iscsi_dev_to_flash_session(dev);
-+	struct iscsi_transport *t = fnode_sess->transport;
-+	int param;
++	unsigned long options = 0;
++	int rc = 0;
 +
-+	if (attr == &dev_attr_fnode_auto_snd_tgt_disable.attr) {
-+		param = ISCSI_FLASHNODE_AUTO_SND_TGT_DISABLE;
-+	} else if (attr == &dev_attr_fnode_discovery_session.attr) {
-+		param = ISCSI_FLASHNODE_DISCOVERY_SESS;
-+	} else if (attr == &dev_attr_fnode_portal_type.attr) {
-+		param = ISCSI_FLASHNODE_PORTAL_TYPE;
-+	} else if (attr == &dev_attr_fnode_entry_enable.attr) {
-+		param = ISCSI_FLASHNODE_ENTRY_EN;
-+	} else if (attr == &dev_attr_fnode_immediate_data.attr) {
-+		param = ISCSI_FLASHNODE_IMM_DATA_EN;
-+	} else if (attr == &dev_attr_fnode_initial_r2t.attr) {
-+		param = ISCSI_FLASHNODE_INITIAL_R2T_EN;
-+	} else if (attr == &dev_attr_fnode_data_seq_in_order.attr) {
-+		param = ISCSI_FLASHNODE_DATASEQ_INORDER;
-+	} else if (attr == &dev_attr_fnode_data_pdu_in_order.attr) {
-+		param = ISCSI_FLASHNODE_PDU_INORDER;
-+	} else if (attr == &dev_attr_fnode_chap_auth.attr) {
-+		param = ISCSI_FLASHNODE_CHAP_AUTH_EN;
-+	} else if (attr == &dev_attr_fnode_discovery_logout.attr) {
-+		param = ISCSI_FLASHNODE_DISCOVERY_LOGOUT_EN;
-+	} else if (attr == &dev_attr_fnode_bidi_chap.attr) {
-+		param = ISCSI_FLASHNODE_BIDI_CHAP_EN;
-+	} else if (attr == &dev_attr_fnode_discovery_auth_optional.attr) {
-+		param = ISCSI_FLASHNODE_DISCOVERY_AUTH_OPTIONAL;
-+	} else if (attr == &dev_attr_fnode_erl.attr) {
-+		param = ISCSI_FLASHNODE_ERL;
-+	} else if (attr == &dev_attr_fnode_first_burst_len.attr) {
-+		param = ISCSI_FLASHNODE_FIRST_BURST;
-+	} else if (attr == &dev_attr_fnode_def_time2wait.attr) {
-+		param = ISCSI_FLASHNODE_DEF_TIME2WAIT;
-+	} else if (attr == &dev_attr_fnode_def_time2retain.attr) {
-+		param = ISCSI_FLASHNODE_DEF_TIME2RETAIN;
-+	} else if (attr == &dev_attr_fnode_max_outstanding_r2t.attr) {
-+		param = ISCSI_FLASHNODE_MAX_R2T;
-+	} else if (attr == &dev_attr_fnode_isid.attr) {
-+		param = ISCSI_FLASHNODE_ISID;
-+	} else if (attr == &dev_attr_fnode_tsid.attr) {
-+		param = ISCSI_FLASHNODE_TSID;
-+	} else if (attr == &dev_attr_fnode_max_burst_len.attr) {
-+		param = ISCSI_FLASHNODE_MAX_BURST;
-+	} else if (attr == &dev_attr_fnode_def_taskmgmt_tmo.attr) {
-+		param = ISCSI_FLASHNODE_DEF_TASKMGMT_TMO;
-+	} else if (attr == &dev_attr_fnode_targetalias.attr) {
-+		param = ISCSI_FLASHNODE_ALIAS;
-+	} else if (attr == &dev_attr_fnode_targetname.attr) {
-+		param = ISCSI_FLASHNODE_NAME;
-+	} else if (attr == &dev_attr_fnode_tpgt.attr) {
-+		param = ISCSI_FLASHNODE_TPGT;
-+	} else if (attr == &dev_attr_fnode_discovery_parent_idx.attr) {
-+		param = ISCSI_FLASHNODE_DISCOVERY_PARENT_IDX;
-+	} else if (attr == &dev_attr_fnode_discovery_parent_type.attr) {
-+		param = ISCSI_FLASHNODE_DISCOVERY_PARENT_TYPE;
-+	} else if (attr == &dev_attr_fnode_chap_in_idx.attr) {
-+		param = ISCSI_FLASHNODE_CHAP_IN_IDX;
-+	} else if (attr == &dev_attr_fnode_chap_out_idx.attr) {
-+		param = ISCSI_FLASHNODE_CHAP_OUT_IDX;
-+	} else if (attr == &dev_attr_fnode_username.attr) {
-+		param = ISCSI_FLASHNODE_USERNAME;
-+	} else if (attr == &dev_attr_fnode_username_in.attr) {
-+		param = ISCSI_FLASHNODE_USERNAME_IN;
-+	} else if (attr == &dev_attr_fnode_password.attr) {
-+		param = ISCSI_FLASHNODE_PASSWORD;
-+	} else if (attr == &dev_attr_fnode_password_in.attr) {
-+		param = ISCSI_FLASHNODE_PASSWORD_IN;
-+	} else if (attr == &dev_attr_fnode_is_boot_target.attr) {
-+		param = ISCSI_FLASHNODE_IS_BOOT_TGT;
++	options = le16_to_cpu(fw_ddb_entry->options);
++	conn->is_fw_assigned_ipv6 = test_bit(OPT_IS_FW_ASSIGNED_IPV6, &options);
++	if (test_bit(OPT_IPV6_DEVICE, &options)) {
++		rc = iscsi_switch_str_param(&sess->portal_type, DEV_TYPE_IPV6);
++		if (rc)
++			goto exit_copy;
 +	} else {
-+		WARN_ONCE(1, "Invalid flashnode session attr");
-+		return 0;
++		rc = iscsi_switch_str_param(&sess->portal_type, DEV_TYPE_IPV4);
++		if (rc)
++			goto exit_copy;
 +	}
 +
-+	return t->attr_is_visible(ISCSI_FLASHNODE_PARAM, param);
-+}
++	sess->auto_snd_tgt_disable = test_bit(OPT_AUTO_SENDTGTS_DISABLE,
++					      &options);
++	sess->discovery_sess = test_bit(OPT_DISC_SESSION, &options);
++	sess->entry_state = test_bit(OPT_ENTRY_STATE, &options);
 +
-+static struct attribute_group iscsi_flashnode_sess_attr_group = {
-+	.attrs = iscsi_flashnode_sess_attrs,
-+	.is_visible = iscsi_flashnode_sess_attr_is_visible,
-+};
++	options = le16_to_cpu(fw_ddb_entry->iscsi_options);
++	conn->hdrdgst_en = test_bit(ISCSIOPT_HEADER_DIGEST_EN, &options);
++	conn->datadgst_en = test_bit(ISCSIOPT_DATA_DIGEST_EN, &options);
++	sess->imm_data_en = test_bit(ISCSIOPT_IMMEDIATE_DATA_EN, &options);
++	sess->initial_r2t_en = test_bit(ISCSIOPT_INITIAL_R2T_EN, &options);
++	sess->dataseq_inorder_en = test_bit(ISCSIOPT_DATA_SEQ_IN_ORDER,
++					    &options);
++	sess->pdu_inorder_en = test_bit(ISCSIOPT_DATA_PDU_IN_ORDER, &options);
++	sess->chap_auth_en = test_bit(ISCSIOPT_CHAP_AUTH_EN, &options);
++	conn->snack_req_en = test_bit(ISCSIOPT_SNACK_REQ_EN, &options);
++	sess->discovery_logout_en = test_bit(ISCSIOPT_DISCOVERY_LOGOUT_EN,
++					     &options);
++	sess->bidi_chap_en = test_bit(ISCSIOPT_BIDI_CHAP_EN, &options);
++	sess->discovery_auth_optional =
++			test_bit(ISCSIOPT_DISCOVERY_AUTH_OPTIONAL, &options);
++	if (test_bit(ISCSIOPT_ERL1, &options))
++		sess->erl |= BIT_1;
++	if (test_bit(ISCSIOPT_ERL0, &options))
++		sess->erl |= BIT_0;
 +
-+static const struct attribute_group *iscsi_flashnode_sess_attr_groups[] = {
-+	&iscsi_flashnode_sess_attr_group,
-+	NULL,
-+};
++	options = le16_to_cpu(fw_ddb_entry->tcp_options);
++	conn->tcp_timestamp_stat = test_bit(TCPOPT_TIMESTAMP_STAT, &options);
++	conn->tcp_nagle_disable = test_bit(TCPOPT_NAGLE_DISABLE, &options);
++	conn->tcp_wsf_disable = test_bit(TCPOPT_WSF_DISABLE, &options);
++	if (test_bit(TCPOPT_TIMER_SCALE3, &options))
++		conn->tcp_timer_scale |= BIT_3;
++	if (test_bit(TCPOPT_TIMER_SCALE2, &options))
++		conn->tcp_timer_scale |= BIT_2;
++	if (test_bit(TCPOPT_TIMER_SCALE1, &options))
++		conn->tcp_timer_scale |= BIT_1;
 +
-+static void iscsi_flashnode_sess_release(struct device *dev)
-+{
-+	struct iscsi_bus_flash_session *fnode_sess =
-+						iscsi_dev_to_flash_session(dev);
++	conn->tcp_timer_scale >>= 1;
++	conn->tcp_timestamp_en = test_bit(TCPOPT_TIMESTAMP_EN, &options);
 +
-+	kfree(fnode_sess->targetname);
-+	kfree(fnode_sess->targetalias);
-+	kfree(fnode_sess->portal_type);
-+	kfree(fnode_sess);
-+}
++	options = le16_to_cpu(fw_ddb_entry->ip_options);
++	conn->fragment_disable = test_bit(IPOPT_FRAGMENT_DISABLE, &options);
 +
-+struct device_type iscsi_flashnode_sess_dev_type = {
-+	.name = "iscsi_flashnode_sess_dev_type",
-+	.groups = iscsi_flashnode_sess_attr_groups,
-+	.release = iscsi_flashnode_sess_release,
-+};
++	conn->max_recv_dlength = BYTE_UNITS *
++			  le16_to_cpu(fw_ddb_entry->iscsi_max_rcv_data_seg_len);
++	conn->max_xmit_dlength = BYTE_UNITS *
++			  le16_to_cpu(fw_ddb_entry->iscsi_max_snd_data_seg_len);
++	sess->first_burst = BYTE_UNITS *
++			       le16_to_cpu(fw_ddb_entry->iscsi_first_burst_len);
++	sess->max_burst = BYTE_UNITS *
++				 le16_to_cpu(fw_ddb_entry->iscsi_max_burst_len);
++	sess->max_r2t = le16_to_cpu(fw_ddb_entry->iscsi_max_outsnd_r2t);
++	sess->time2wait = le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
++	sess->time2retain = le16_to_cpu(fw_ddb_entry->iscsi_def_time2retain);
++	sess->tpgt = le32_to_cpu(fw_ddb_entry->tgt_portal_grp);
++	conn->max_segment_size = le16_to_cpu(fw_ddb_entry->mss);
++	conn->tcp_xmit_wsf = fw_ddb_entry->tcp_xmt_wsf;
++	conn->tcp_recv_wsf = fw_ddb_entry->tcp_rcv_wsf;
++	conn->ipv6_flow_label = le16_to_cpu(fw_ddb_entry->ipv6_flow_lbl);
++	conn->keepalive_timeout = le16_to_cpu(fw_ddb_entry->ka_timeout);
++	conn->local_port = le16_to_cpu(fw_ddb_entry->lcl_port);
++	conn->statsn = le32_to_cpu(fw_ddb_entry->stat_sn);
++	conn->exp_statsn = le32_to_cpu(fw_ddb_entry->exp_stat_sn);
++	sess->discovery_parent_idx = le16_to_cpu(fw_ddb_entry->ddb_link);
++	sess->discovery_parent_type = le16_to_cpu(fw_ddb_entry->ddb_link);
++	sess->chap_out_idx = le16_to_cpu(fw_ddb_entry->chap_tbl_idx);
++	sess->tsid = le16_to_cpu(fw_ddb_entry->tsid);
 +
-+/* flash node connection attrs show */
-+#define iscsi_flashnode_conn_attr_show(type, name, param)		\
-+static ssize_t								\
-+show_##type##_##name(struct device *dev, struct device_attribute *attr,	\
-+		     char *buf)						\
-+{									\
-+	struct iscsi_bus_flash_conn *fnode_conn = iscsi_dev_to_flash_conn(dev);\
-+	struct iscsi_bus_flash_session *fnode_sess =			\
-+				iscsi_flash_conn_to_flash_session(fnode_conn);\
-+	struct iscsi_transport *t = fnode_conn->transport;		\
-+	return t->get_flashnode_param(fnode_sess, param, buf);		\
-+}									\
++	sess->default_taskmgmt_timeout =
++				le16_to_cpu(fw_ddb_entry->def_timeout);
++	conn->port = le16_to_cpu(fw_ddb_entry->port);
 +
-+
-+#define iscsi_flashnode_conn_attr(type, name, param)			\
-+	iscsi_flashnode_conn_attr_show(type, name, param)		\
-+static ISCSI_FLASHNODE_ATTR(type, name, S_IRUGO,			\
-+			    show_##type##_##name, NULL);
-+
-+/* Flash node connection attributes */
-+
-+iscsi_flashnode_conn_attr(fnode, is_fw_assigned_ipv6,
-+			  ISCSI_FLASHNODE_IS_FW_ASSIGNED_IPV6);
-+iscsi_flashnode_conn_attr(fnode, header_digest, ISCSI_FLASHNODE_HDR_DGST_EN);
-+iscsi_flashnode_conn_attr(fnode, data_digest, ISCSI_FLASHNODE_DATA_DGST_EN);
-+iscsi_flashnode_conn_attr(fnode, snack_req, ISCSI_FLASHNODE_SNACK_REQ_EN);
-+iscsi_flashnode_conn_attr(fnode, tcp_timestamp_stat,
-+			  ISCSI_FLASHNODE_TCP_TIMESTAMP_STAT);
-+iscsi_flashnode_conn_attr(fnode, tcp_nagle_disable,
-+			  ISCSI_FLASHNODE_TCP_NAGLE_DISABLE);
-+iscsi_flashnode_conn_attr(fnode, tcp_wsf_disable,
-+			  ISCSI_FLASHNODE_TCP_WSF_DISABLE);
-+iscsi_flashnode_conn_attr(fnode, tcp_timer_scale,
-+			  ISCSI_FLASHNODE_TCP_TIMER_SCALE);
-+iscsi_flashnode_conn_attr(fnode, tcp_timestamp_enable,
-+			  ISCSI_FLASHNODE_TCP_TIMESTAMP_EN);
-+iscsi_flashnode_conn_attr(fnode, fragment_disable,
-+			  ISCSI_FLASHNODE_IP_FRAG_DISABLE);
-+iscsi_flashnode_conn_attr(fnode, keepalive_tmo, ISCSI_FLASHNODE_KEEPALIVE_TMO);
-+iscsi_flashnode_conn_attr(fnode, port, ISCSI_FLASHNODE_PORT);
-+iscsi_flashnode_conn_attr(fnode, ipaddress, ISCSI_FLASHNODE_IPADDR);
-+iscsi_flashnode_conn_attr(fnode, max_recv_dlength,
-+			  ISCSI_FLASHNODE_MAX_RECV_DLENGTH);
-+iscsi_flashnode_conn_attr(fnode, max_xmit_dlength,
-+			  ISCSI_FLASHNODE_MAX_XMIT_DLENGTH);
-+iscsi_flashnode_conn_attr(fnode, local_port, ISCSI_FLASHNODE_LOCAL_PORT);
-+iscsi_flashnode_conn_attr(fnode, ipv4_tos, ISCSI_FLASHNODE_IPV4_TOS);
-+iscsi_flashnode_conn_attr(fnode, ipv6_traffic_class, ISCSI_FLASHNODE_IPV6_TC);
-+iscsi_flashnode_conn_attr(fnode, ipv6_flow_label,
-+			  ISCSI_FLASHNODE_IPV6_FLOW_LABEL);
-+iscsi_flashnode_conn_attr(fnode, redirect_ipaddr,
-+			  ISCSI_FLASHNODE_REDIRECT_IPADDR);
-+iscsi_flashnode_conn_attr(fnode, max_segment_size,
-+			  ISCSI_FLASHNODE_MAX_SEGMENT_SIZE);
-+iscsi_flashnode_conn_attr(fnode, link_local_ipv6,
-+			  ISCSI_FLASHNODE_LINK_LOCAL_IPV6);
-+iscsi_flashnode_conn_attr(fnode, tcp_xmit_wsf, ISCSI_FLASHNODE_TCP_XMIT_WSF);
-+iscsi_flashnode_conn_attr(fnode, tcp_recv_wsf, ISCSI_FLASHNODE_TCP_RECV_WSF);
-+iscsi_flashnode_conn_attr(fnode, statsn, ISCSI_FLASHNODE_STATSN);
-+iscsi_flashnode_conn_attr(fnode, exp_statsn, ISCSI_FLASHNODE_EXP_STATSN);
-+
-+static struct attribute *iscsi_flashnode_conn_attrs[] = {
-+	&dev_attr_fnode_is_fw_assigned_ipv6.attr,
-+	&dev_attr_fnode_header_digest.attr,
-+	&dev_attr_fnode_data_digest.attr,
-+	&dev_attr_fnode_snack_req.attr,
-+	&dev_attr_fnode_tcp_timestamp_stat.attr,
-+	&dev_attr_fnode_tcp_nagle_disable.attr,
-+	&dev_attr_fnode_tcp_wsf_disable.attr,
-+	&dev_attr_fnode_tcp_timer_scale.attr,
-+	&dev_attr_fnode_tcp_timestamp_enable.attr,
-+	&dev_attr_fnode_fragment_disable.attr,
-+	&dev_attr_fnode_max_recv_dlength.attr,
-+	&dev_attr_fnode_max_xmit_dlength.attr,
-+	&dev_attr_fnode_keepalive_tmo.attr,
-+	&dev_attr_fnode_port.attr,
-+	&dev_attr_fnode_ipaddress.attr,
-+	&dev_attr_fnode_redirect_ipaddr.attr,
-+	&dev_attr_fnode_max_segment_size.attr,
-+	&dev_attr_fnode_local_port.attr,
-+	&dev_attr_fnode_ipv4_tos.attr,
-+	&dev_attr_fnode_ipv6_traffic_class.attr,
-+	&dev_attr_fnode_ipv6_flow_label.attr,
-+	&dev_attr_fnode_link_local_ipv6.attr,
-+	&dev_attr_fnode_tcp_xmit_wsf.attr,
-+	&dev_attr_fnode_tcp_recv_wsf.attr,
-+	&dev_attr_fnode_statsn.attr,
-+	&dev_attr_fnode_exp_statsn.attr,
-+	NULL,
-+};
-+
-+static umode_t iscsi_flashnode_conn_attr_is_visible(struct kobject *kobj,
-+						    struct attribute *attr,
-+						    int i)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct iscsi_bus_flash_conn *fnode_conn = iscsi_dev_to_flash_conn(dev);
-+	struct iscsi_transport *t = fnode_conn->transport;
-+	int param;
-+
-+	if (attr == &dev_attr_fnode_is_fw_assigned_ipv6.attr) {
-+		param = ISCSI_FLASHNODE_IS_FW_ASSIGNED_IPV6;
-+	} else if (attr == &dev_attr_fnode_header_digest.attr) {
-+		param = ISCSI_FLASHNODE_HDR_DGST_EN;
-+	} else if (attr == &dev_attr_fnode_data_digest.attr) {
-+		param = ISCSI_FLASHNODE_DATA_DGST_EN;
-+	} else if (attr == &dev_attr_fnode_snack_req.attr) {
-+		param = ISCSI_FLASHNODE_SNACK_REQ_EN;
-+	} else if (attr == &dev_attr_fnode_tcp_timestamp_stat.attr) {
-+		param = ISCSI_FLASHNODE_TCP_TIMESTAMP_STAT;
-+	} else if (attr == &dev_attr_fnode_tcp_nagle_disable.attr) {
-+		param = ISCSI_FLASHNODE_TCP_NAGLE_DISABLE;
-+	} else if (attr == &dev_attr_fnode_tcp_wsf_disable.attr) {
-+		param = ISCSI_FLASHNODE_TCP_WSF_DISABLE;
-+	} else if (attr == &dev_attr_fnode_tcp_timer_scale.attr) {
-+		param = ISCSI_FLASHNODE_TCP_TIMER_SCALE;
-+	} else if (attr == &dev_attr_fnode_tcp_timestamp_enable.attr) {
-+		param = ISCSI_FLASHNODE_TCP_TIMESTAMP_EN;
-+	} else if (attr == &dev_attr_fnode_fragment_disable.attr) {
-+		param = ISCSI_FLASHNODE_IP_FRAG_DISABLE;
-+	} else if (attr == &dev_attr_fnode_max_recv_dlength.attr) {
-+		param = ISCSI_FLASHNODE_MAX_RECV_DLENGTH;
-+	} else if (attr == &dev_attr_fnode_max_xmit_dlength.attr) {
-+		param = ISCSI_FLASHNODE_MAX_XMIT_DLENGTH;
-+	} else if (attr == &dev_attr_fnode_keepalive_tmo.attr) {
-+		param = ISCSI_FLASHNODE_KEEPALIVE_TMO;
-+	} else if (attr == &dev_attr_fnode_port.attr) {
-+		param = ISCSI_FLASHNODE_PORT;
-+	} else if (attr == &dev_attr_fnode_ipaddress.attr) {
-+		param = ISCSI_FLASHNODE_IPADDR;
-+	} else if (attr == &dev_attr_fnode_redirect_ipaddr.attr) {
-+		param = ISCSI_FLASHNODE_REDIRECT_IPADDR;
-+	} else if (attr == &dev_attr_fnode_max_segment_size.attr) {
-+		param = ISCSI_FLASHNODE_MAX_SEGMENT_SIZE;
-+	} else if (attr == &dev_attr_fnode_local_port.attr) {
-+		param = ISCSI_FLASHNODE_LOCAL_PORT;
-+	} else if (attr == &dev_attr_fnode_ipv4_tos.attr) {
-+		param = ISCSI_FLASHNODE_IPV4_TOS;
-+	} else if (attr == &dev_attr_fnode_ipv6_traffic_class.attr) {
-+		param = ISCSI_FLASHNODE_IPV6_TC;
-+	} else if (attr == &dev_attr_fnode_ipv6_flow_label.attr) {
-+		param = ISCSI_FLASHNODE_IPV6_FLOW_LABEL;
-+	} else if (attr == &dev_attr_fnode_link_local_ipv6.attr) {
-+		param = ISCSI_FLASHNODE_LINK_LOCAL_IPV6;
-+	} else if (attr == &dev_attr_fnode_tcp_xmit_wsf.attr) {
-+		param = ISCSI_FLASHNODE_TCP_XMIT_WSF;
-+	} else if (attr == &dev_attr_fnode_tcp_recv_wsf.attr) {
-+		param = ISCSI_FLASHNODE_TCP_RECV_WSF;
-+	} else if (attr == &dev_attr_fnode_statsn.attr) {
-+		param = ISCSI_FLASHNODE_STATSN;
-+	} else if (attr == &dev_attr_fnode_exp_statsn.attr) {
-+		param = ISCSI_FLASHNODE_EXP_STATSN;
-+	} else {
-+		WARN_ONCE(1, "Invalid flashnode connection attr");
-+		return 0;
++	options = le16_to_cpu(fw_ddb_entry->options);
++	conn->ipaddress = kzalloc(IPv6_ADDR_LEN, GFP_KERNEL);
++	if (!conn->ipaddress) {
++		rc = -ENOMEM;
++		goto exit_copy;
 +	}
 +
-+	return t->attr_is_visible(ISCSI_FLASHNODE_PARAM, param);
++	conn->redirect_ipaddr = kzalloc(IPv6_ADDR_LEN, GFP_KERNEL);
++	if (!conn->redirect_ipaddr) {
++		rc = -ENOMEM;
++		goto exit_copy;
++	}
++
++	memcpy(conn->ipaddress, fw_ddb_entry->ip_addr, IPv6_ADDR_LEN);
++	memcpy(conn->redirect_ipaddr, fw_ddb_entry->tgt_addr, IPv6_ADDR_LEN);
++
++	if (test_bit(OPT_IPV6_DEVICE, &options)) {
++		conn->ipv6_traffic_class = fw_ddb_entry->ipv4_tos;
++
++		conn->link_local_ipv6_addr = kzalloc(IPv6_ADDR_LEN, GFP_KERNEL);
++		if (!conn->link_local_ipv6_addr) {
++			rc = -ENOMEM;
++			goto exit_copy;
++		}
++
++		memcpy(conn->link_local_ipv6_addr,
++		       fw_ddb_entry->link_local_ipv6_addr, IPv6_ADDR_LEN);
++	} else {
++		conn->ipv4_tos = fw_ddb_entry->ipv4_tos;
++	}
++
++	if (fw_ddb_entry->iscsi_name[0]) {
++		rc = iscsi_switch_str_param(&sess->targetname,
++					    (char *)fw_ddb_entry->iscsi_name);
++		if (rc)
++			goto exit_copy;
++	}
++
++	if (fw_ddb_entry->iscsi_alias[0]) {
++		rc = iscsi_switch_str_param(&sess->targetalias,
++					    (char *)fw_ddb_entry->iscsi_alias);
++		if (rc)
++			goto exit_copy;
++	}
++
++	COPY_ISID(sess->isid, fw_ddb_entry->isid);
++
++exit_copy:
++	return rc;
 +}
 +
-+static struct attribute_group iscsi_flashnode_conn_attr_group = {
-+	.attrs = iscsi_flashnode_conn_attrs,
-+	.is_visible = iscsi_flashnode_conn_attr_is_visible,
-+};
-+
-+static const struct attribute_group *iscsi_flashnode_conn_attr_groups[] = {
-+	&iscsi_flashnode_conn_attr_group,
-+	NULL,
-+};
-+
-+static void iscsi_flashnode_conn_release(struct device *dev)
++static int qla4xxx_copy_to_fwddb_param(struct iscsi_bus_flash_session *sess,
++				       struct iscsi_bus_flash_conn *conn,
++				       struct dev_db_entry *fw_ddb_entry)
 +{
-+	struct iscsi_bus_flash_conn *fnode_conn = iscsi_dev_to_flash_conn(dev);
++	uint16_t options;
++	int rc = 0;
 +
-+	kfree(fnode_conn->ipaddress);
-+	kfree(fnode_conn->redirect_ipaddr);
-+	kfree(fnode_conn->link_local_ipv6_addr);
-+	kfree(fnode_conn);
++	options = le16_to_cpu(fw_ddb_entry->options);
++	SET_BITVAL(conn->is_fw_assigned_ipv6,  options, BIT_11);
++	if (!strncmp(sess->portal_type, DEV_TYPE_IPV6, 4))
++		options |= BIT_8;
++	else
++		options &= ~BIT_8;
++
++	SET_BITVAL(sess->auto_snd_tgt_disable, options, BIT_6);
++	SET_BITVAL(sess->discovery_sess, options, BIT_4);
++	SET_BITVAL(sess->entry_state, options, BIT_3);
++	fw_ddb_entry->options = cpu_to_le16(options);
++
++	options = le16_to_cpu(fw_ddb_entry->iscsi_options);
++	SET_BITVAL(conn->hdrdgst_en, options, BIT_13);
++	SET_BITVAL(conn->datadgst_en, options, BIT_12);
++	SET_BITVAL(sess->imm_data_en, options, BIT_11);
++	SET_BITVAL(sess->initial_r2t_en, options, BIT_10);
++	SET_BITVAL(sess->dataseq_inorder_en, options, BIT_9);
++	SET_BITVAL(sess->pdu_inorder_en, options, BIT_8);
++	SET_BITVAL(sess->chap_auth_en, options, BIT_7);
++	SET_BITVAL(conn->snack_req_en, options, BIT_6);
++	SET_BITVAL(sess->discovery_logout_en, options, BIT_5);
++	SET_BITVAL(sess->bidi_chap_en, options, BIT_4);
++	SET_BITVAL(sess->discovery_auth_optional, options, BIT_3);
++	SET_BITVAL(sess->erl & BIT_1, options, BIT_1);
++	SET_BITVAL(sess->erl & BIT_0, options, BIT_0);
++	fw_ddb_entry->iscsi_options = cpu_to_le16(options);
++
++	options = le16_to_cpu(fw_ddb_entry->tcp_options);
++	SET_BITVAL(conn->tcp_timestamp_stat, options, BIT_6);
++	SET_BITVAL(conn->tcp_nagle_disable, options, BIT_5);
++	SET_BITVAL(conn->tcp_wsf_disable, options, BIT_4);
++	SET_BITVAL(conn->tcp_timer_scale & BIT_2, options, BIT_3);
++	SET_BITVAL(conn->tcp_timer_scale & BIT_1, options, BIT_2);
++	SET_BITVAL(conn->tcp_timer_scale & BIT_0, options, BIT_1);
++	SET_BITVAL(conn->tcp_timestamp_en, options, BIT_0);
++	fw_ddb_entry->tcp_options = cpu_to_le16(options);
++
++	options = le16_to_cpu(fw_ddb_entry->ip_options);
++	SET_BITVAL(conn->fragment_disable, options, BIT_4);
++	fw_ddb_entry->ip_options = cpu_to_le16(options);
++
++	fw_ddb_entry->iscsi_max_outsnd_r2t = cpu_to_le16(sess->max_r2t);
++	fw_ddb_entry->iscsi_max_rcv_data_seg_len =
++			       cpu_to_le16(conn->max_recv_dlength / BYTE_UNITS);
++	fw_ddb_entry->iscsi_max_snd_data_seg_len =
++			       cpu_to_le16(conn->max_xmit_dlength / BYTE_UNITS);
++	fw_ddb_entry->iscsi_first_burst_len =
++				cpu_to_le16(sess->first_burst / BYTE_UNITS);
++	fw_ddb_entry->iscsi_max_burst_len = cpu_to_le16(sess->max_burst /
++					    BYTE_UNITS);
++	fw_ddb_entry->iscsi_def_time2wait = cpu_to_le16(sess->time2wait);
++	fw_ddb_entry->iscsi_def_time2retain = cpu_to_le16(sess->time2retain);
++	fw_ddb_entry->tgt_portal_grp = cpu_to_le16(sess->tpgt);
++	fw_ddb_entry->mss = cpu_to_le16(conn->max_segment_size);
++	fw_ddb_entry->tcp_xmt_wsf = cpu_to_le16(conn->tcp_xmit_wsf);
++	fw_ddb_entry->tcp_rcv_wsf = cpu_to_le16(conn->tcp_recv_wsf);
++	fw_ddb_entry->ipv4_tos = conn->ipv4_tos;
++	fw_ddb_entry->ipv6_flow_lbl = cpu_to_le16(conn->ipv6_flow_label);
++	fw_ddb_entry->ka_timeout = cpu_to_le16(conn->keepalive_timeout);
++	fw_ddb_entry->lcl_port = cpu_to_le16(conn->local_port);
++	fw_ddb_entry->stat_sn = cpu_to_le16(conn->statsn);
++	fw_ddb_entry->exp_stat_sn = cpu_to_le16(conn->exp_statsn);
++	fw_ddb_entry->ddb_link = cpu_to_le16(sess->discovery_parent_type);
++	fw_ddb_entry->chap_tbl_idx = cpu_to_le16(sess->chap_out_idx);
++	fw_ddb_entry->tsid = cpu_to_le16(sess->tsid);
++	fw_ddb_entry->port = cpu_to_le16(conn->port);
++	fw_ddb_entry->def_timeout =
++				cpu_to_le16(sess->default_taskmgmt_timeout);
++
++	if (conn->ipaddress)
++		memcpy(fw_ddb_entry->ip_addr, conn->ipaddress,
++		       sizeof(fw_ddb_entry->ip_addr));
++
++	if (conn->redirect_ipaddr)
++		memcpy(fw_ddb_entry->tgt_addr, conn->redirect_ipaddr,
++		       sizeof(fw_ddb_entry->tgt_addr));
++
++	if (conn->link_local_ipv6_addr)
++		memcpy(fw_ddb_entry->link_local_ipv6_addr,
++		       conn->link_local_ipv6_addr,
++		       sizeof(fw_ddb_entry->link_local_ipv6_addr));
++
++	if (sess->targetname)
++		memcpy(fw_ddb_entry->iscsi_name, sess->targetname,
++		       sizeof(fw_ddb_entry->iscsi_name));
++
++	if (sess->targetalias)
++		memcpy(fw_ddb_entry->iscsi_alias, sess->targetalias,
++		       sizeof(fw_ddb_entry->iscsi_alias));
++
++	COPY_ISID(fw_ddb_entry->isid, sess->isid);
++
++	return rc;
 +}
 +
-+struct device_type iscsi_flashnode_conn_dev_type = {
-+	.name = "iscsi_flashnode_conn_dev_type",
-+	.groups = iscsi_flashnode_conn_attr_groups,
-+	.release = iscsi_flashnode_conn_release,
-+};
-+
-+struct bus_type iscsi_flashnode_bus;
-+
-+int iscsi_flashnode_bus_match(struct device *dev,
-+				     struct device_driver *drv)
+ static void qla4xxx_copy_fwddb_param(struct scsi_qla_host *ha,
+ 				     struct dev_db_entry *fw_ddb_entry,
+ 				     struct iscsi_cls_session *cls_sess,
+@@ -5062,6 +5395,1315 @@ exit_nt_list:
+ 		dma_pool_free(ha->fw_ddb_dma_pool, fw_ddb_entry, fw_ddb_dma);
+ }
+ 
++static void qla4xxx_build_new_nt_list(struct scsi_qla_host *ha,
++				      struct list_head *list_nt)
 +{
-+	if (dev->bus == &iscsi_flashnode_bus)
-+		return 1;
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_flashnode_bus_match);
++	struct dev_db_entry *fw_ddb_entry;
++	dma_addr_t fw_ddb_dma;
++	int max_ddbs;
++	int fw_idx_size;
++	int ret;
++	uint32_t idx = 0, next_idx = 0;
++	uint32_t state = 0, conn_err = 0;
++	uint16_t conn_id = 0;
++	struct qla_ddb_index  *nt_ddb_idx;
 +
-+struct bus_type iscsi_flashnode_bus = {
-+	.name = "iscsi_flashnode",
-+	.match = &iscsi_flashnode_bus_match,
-+};
++	fw_ddb_entry = dma_pool_alloc(ha->fw_ddb_dma_pool, GFP_KERNEL,
++				      &fw_ddb_dma);
++	if (fw_ddb_entry == NULL) {
++		DEBUG2(ql4_printk(KERN_ERR, ha, "Out of memory\n"));
++		goto exit_new_nt_list;
++	}
++	max_ddbs =  is_qla40XX(ha) ? MAX_DEV_DB_ENTRIES_40XX :
++				     MAX_DEV_DB_ENTRIES;
++	fw_idx_size = sizeof(struct qla_ddb_index);
++
++	for (idx = 0; idx < max_ddbs; idx = next_idx) {
++		ret = qla4xxx_get_fwddb_entry(ha, idx, fw_ddb_entry, fw_ddb_dma,
++					      NULL, &next_idx, &state,
++					      &conn_err, NULL, &conn_id);
++		if (ret == QLA_ERROR)
++			break;
++
++		/* Check if NT, then add it to list */
++		if (strlen((char *)fw_ddb_entry->iscsi_name) == 0)
++			goto continue_next_new_nt;
++
++		if (!(state == DDB_DS_NO_CONNECTION_ACTIVE))
++			goto continue_next_new_nt;
++
++		DEBUG2(ql4_printk(KERN_INFO, ha,
++				  "Adding  DDB to session = 0x%x\n", idx));
++
++		nt_ddb_idx = vmalloc(fw_idx_size);
++		if (!nt_ddb_idx)
++			break;
++
++		nt_ddb_idx->fw_ddb_idx = idx;
++
++		ret = qla4xxx_is_session_exists(ha, fw_ddb_entry);
++		if (ret == QLA_SUCCESS) {
++			/* free nt_ddb_idx and do not add to list_nt */
++			vfree(nt_ddb_idx);
++			goto continue_next_new_nt;
++		}
++
++		list_add_tail(&nt_ddb_idx->list, list_nt);
++
++		ret = qla4xxx_sess_conn_setup(ha, fw_ddb_entry, RESET_ADAPTER,
++					      idx);
++		if (ret == QLA_ERROR)
++			goto exit_new_nt_list;
++
++continue_next_new_nt:
++		if (next_idx == 0)
++			break;
++	}
++
++exit_new_nt_list:
++	if (fw_ddb_entry)
++		dma_pool_free(ha->fw_ddb_dma_pool, fw_ddb_entry, fw_ddb_dma);
++}
 +
 +/**
-+ * iscsi_create_flashnode_sess - Add flashnode session entry in sysfs
-+ * @shost: pointer to host data
-+ * @index: index of flashnode to add in sysfs
-+ * @transport: pointer to transport data
-+ * @dd_size: total size to allocate
-+ *
-+ * Adds a sysfs entry for the flashnode session attributes
++ * qla4xxx_sysfs_ddb_is_non_persistent - check for non-persistence of ddb entry
++ * @dev: dev associated with the sysfs entry
++ * @data: pointer to flashnode session object
 + *
 + * Returns:
-+ *  pointer to allocated flashnode sess on sucess
-+ *  %NULL on failure
-+ */
-+struct iscsi_bus_flash_session *
-+iscsi_create_flashnode_sess(struct Scsi_Host *shost, int index,
-+			    struct iscsi_transport *transport,
-+			    int dd_size)
++ *	1: if flashnode entry is non-persistent
++ *	0: if flashnode entry is persistent
++ **/
++static int qla4xxx_sysfs_ddb_is_non_persistent(struct device *dev, void *data)
 +{
 +	struct iscsi_bus_flash_session *fnode_sess;
-+	int err;
-+
-+	fnode_sess = kzalloc(sizeof(*fnode_sess) + dd_size, GFP_KERNEL);
-+	if (!fnode_sess)
-+		return NULL;
-+
-+	fnode_sess->transport = transport;
-+	fnode_sess->target_id = index;
-+	fnode_sess->dev.type = &iscsi_flashnode_sess_dev_type;
-+	fnode_sess->dev.bus = &iscsi_flashnode_bus;
-+	fnode_sess->dev.parent = &shost->shost_gendev;
-+	dev_set_name(&fnode_sess->dev, "flashnode_sess-%u:%u",
-+		     shost->host_no, index);
-+
-+	err = device_register(&fnode_sess->dev);
-+	if (err)
-+		goto free_fnode_sess;
-+
-+	if (dd_size)
-+		fnode_sess->dd_data = &fnode_sess[1];
-+
-+	return fnode_sess;
-+
-+free_fnode_sess:
-+	kfree(fnode_sess);
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_create_flashnode_sess);
-+
-+/**
-+ * iscsi_create_flashnode_conn - Add flashnode conn entry in sysfs
-+ * @shost: pointer to host data
-+ * @fnode_sess: pointer to the parent flashnode session entry
-+ * @transport: pointer to transport data
-+ * @dd_size: total size to allocate
-+ *
-+ * Adds a sysfs entry for the flashnode connection attributes
-+ *
-+ * Returns:
-+ *  pointer to allocated flashnode conn on success
-+ *  %NULL on failure
-+ */
-+struct iscsi_bus_flash_conn *
-+iscsi_create_flashnode_conn(struct Scsi_Host *shost,
-+			    struct iscsi_bus_flash_session *fnode_sess,
-+			    struct iscsi_transport *transport,
-+			    int dd_size)
-+{
-+	struct iscsi_bus_flash_conn *fnode_conn;
-+	int err;
-+
-+	fnode_conn = kzalloc(sizeof(*fnode_conn) + dd_size, GFP_KERNEL);
-+	if (!fnode_conn)
-+		return NULL;
-+
-+	fnode_conn->transport = transport;
-+	fnode_conn->dev.type = &iscsi_flashnode_conn_dev_type;
-+	fnode_conn->dev.bus = &iscsi_flashnode_bus;
-+	fnode_conn->dev.parent = &fnode_sess->dev;
-+	dev_set_name(&fnode_conn->dev, "flashnode_conn-%u:%u:0",
-+		     shost->host_no, fnode_sess->target_id);
-+
-+	err = device_register(&fnode_conn->dev);
-+	if (err)
-+		goto free_fnode_conn;
-+
-+	if (dd_size)
-+		fnode_conn->dd_data = &fnode_conn[1];
-+
-+	return fnode_conn;
-+
-+free_fnode_conn:
-+	kfree(fnode_conn);
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_create_flashnode_conn);
-+
-+/**
-+ * iscsi_is_flashnode_conn_dev - verify passed device is to be flashnode conn
-+ * @dev: device to verify
-+ * @data: pointer to data containing value to use for verification
-+ *
-+ * Verifies if the passed device is flashnode conn device
-+ *
-+ * Returns:
-+ *  1 on success
-+ *  0 on failure
-+ */
-+int iscsi_is_flashnode_conn_dev(struct device *dev, void *data)
-+{
-+	return dev->bus == &iscsi_flashnode_bus;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_is_flashnode_conn_dev);
-+
-+static int iscsi_destroy_flashnode_conn(struct iscsi_bus_flash_conn *fnode_conn)
-+{
-+	device_unregister(&fnode_conn->dev);
-+	return 0;
-+}
-+
-+static int flashnode_match_index(struct device *dev, void *data)
-+{
-+	struct iscsi_bus_flash_session *fnode_sess = NULL;
-+	int ret = 0;
 +
 +	if (!iscsi_flashnode_bus_match(dev, NULL))
-+		goto exit_match_index;
++		return 0;
 +
 +	fnode_sess = iscsi_dev_to_flash_session(dev);
-+	ret = (fnode_sess->target_id == *((int *)data)) ? 1 : 0;
 +
-+exit_match_index:
++	return (fnode_sess->flash_state == DEV_DB_NON_PERSISTENT);
++}
++
++/**
++ * qla4xxx_sysfs_ddb_tgt_create - Create sysfs entry for target
++ * @ha: pointer to host
++ * @fw_ddb_entry: flash ddb data
++ * @idx: target index
++ * @user: if set then this call is made from userland else from kernel
++ *
++ * Returns:
++ * On sucess: QLA_SUCCESS
++ * On failure: QLA_ERROR
++ *
++ * This create separate sysfs entries for session and connection attributes of
++ * the given fw ddb entry.
++ * If this is invoked as a result of a userspace call then the entry is marked
++ * as nonpersistent using flash_state field.
++ **/
++int qla4xxx_sysfs_ddb_tgt_create(struct scsi_qla_host *ha,
++				 struct dev_db_entry *fw_ddb_entry,
++				 uint16_t *idx, int user)
++{
++	struct iscsi_bus_flash_session *fnode_sess = NULL;
++	struct iscsi_bus_flash_conn *fnode_conn = NULL;
++	int rc = QLA_ERROR;
++
++	fnode_sess = iscsi_create_flashnode_sess(ha->host, *idx,
++						 &qla4xxx_iscsi_transport, 0);
++	if (!fnode_sess) {
++		ql4_printk(KERN_ERR, ha,
++			   "%s: Unable to create session sysfs entry for flashnode %d of host%lu\n",
++			   __func__, *idx, ha->host_no);
++		goto exit_tgt_create;
++	}
++
++	fnode_conn = iscsi_create_flashnode_conn(ha->host, fnode_sess,
++						 &qla4xxx_iscsi_transport, 0);
++	if (!fnode_conn) {
++		ql4_printk(KERN_ERR, ha,
++			   "%s: Unable to create conn sysfs entry for flashnode %d of host%lu\n",
++			   __func__, *idx, ha->host_no);
++		goto free_sess;
++	}
++
++	if (user) {
++		fnode_sess->flash_state = DEV_DB_NON_PERSISTENT;
++	} else {
++		fnode_sess->flash_state = DEV_DB_PERSISTENT;
++
++		if (*idx == ha->pri_ddb_idx || *idx == ha->sec_ddb_idx)
++			fnode_sess->is_boot_target = 1;
++		else
++			fnode_sess->is_boot_target = 0;
++	}
++
++	rc = qla4xxx_copy_from_fwddb_param(fnode_sess, fnode_conn,
++					   fw_ddb_entry);
++
++	ql4_printk(KERN_INFO, ha, "%s: sysfs entry %s created\n",
++		   __func__, fnode_sess->dev.kobj.name);
++
++	ql4_printk(KERN_INFO, ha, "%s: sysfs entry %s created\n",
++		   __func__, fnode_conn->dev.kobj.name);
++
++	return QLA_SUCCESS;
++
++free_sess:
++	iscsi_destroy_flashnode_sess(fnode_sess);
++
++exit_tgt_create:
++	return QLA_ERROR;
++}
++
++/**
++ * qla4xxx_sysfs_ddb_add - Add new ddb entry in flash
++ * @shost: pointer to host
++ * @buf: type of ddb entry (ipv4/ipv6)
++ * @len: length of buf
++ *
++ * This creates new ddb entry in the flash by finding first free index and
++ * storing default ddb there. And then create sysfs entry for the new ddb entry.
++ **/
++static int qla4xxx_sysfs_ddb_add(struct Scsi_Host *shost, const char *buf,
++				 int len)
++{
++	struct scsi_qla_host *ha = to_qla_host(shost);
++	struct dev_db_entry *fw_ddb_entry = NULL;
++	dma_addr_t fw_ddb_entry_dma;
++	struct device *dev;
++	uint16_t idx = 0;
++	uint16_t max_ddbs = 0;
++	uint32_t options = 0;
++	uint32_t rval = QLA_ERROR;
++
++	if (strncasecmp(DEV_TYPE_IPV4, buf, 4) &&
++	    strncasecmp(DEV_TYPE_IPV6, buf, 4)) {
++		DEBUG2(ql4_printk(KERN_ERR, ha, "%s: Invalid portal type\n",
++				  __func__));
++		goto exit_ddb_add;
++	}
++
++	max_ddbs =  is_qla40XX(ha) ? MAX_DEV_DB_ENTRIES_40XX :
++				     MAX_DEV_DB_ENTRIES;
++
++	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
++					  &fw_ddb_entry_dma, GFP_KERNEL);
++	if (!fw_ddb_entry) {
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s: Unable to allocate dma buffer\n",
++				  __func__));
++		goto exit_ddb_add;
++	}
++
++	dev = iscsi_find_flashnode_sess(ha->host, NULL,
++					qla4xxx_sysfs_ddb_is_non_persistent);
++	if (dev) {
++		ql4_printk(KERN_ERR, ha,
++			   "%s: A non-persistent entry %s found\n",
++			   __func__, dev->kobj.name);
++		goto exit_ddb_add;
++	}
++
++	for (idx = 0; idx < max_ddbs; idx++) {
++		if (qla4xxx_flashdb_by_index(ha, fw_ddb_entry,
++					     fw_ddb_entry_dma, idx))
++			break;
++	}
++
++	if (idx == max_ddbs)
++		goto exit_ddb_add;
++
++	if (!strncasecmp("ipv6", buf, 4))
++		options |= IPV6_DEFAULT_DDB_ENTRY;
++
++	rval = qla4xxx_get_default_ddb(ha, options, fw_ddb_entry_dma);
++	if (rval == QLA_ERROR)
++		goto exit_ddb_add;
++
++	rval = qla4xxx_sysfs_ddb_tgt_create(ha, fw_ddb_entry, &idx, 1);
++
++exit_ddb_add:
++	if (fw_ddb_entry)
++		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
++				  fw_ddb_entry, fw_ddb_entry_dma);
++	if (rval == QLA_SUCCESS)
++		return idx;
++	else
++		return -EIO;
++}
++
++/**
++ * qla4xxx_sysfs_ddb_apply - write the target ddb contents to Flash
++ * @fnode_sess: pointer to session attrs of flash ddb entry
++ * @fnode_conn: pointer to connection attrs of flash ddb entry
++ *
++ * This writes the contents of target ddb buffer to Flash with a valid cookie
++ * value in order to make the ddb entry persistent.
++ **/
++static int  qla4xxx_sysfs_ddb_apply(struct iscsi_bus_flash_session *fnode_sess,
++				    struct iscsi_bus_flash_conn *fnode_conn)
++{
++	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
++	struct scsi_qla_host *ha = to_qla_host(shost);
++	uint32_t dev_db_start_offset = FLASH_OFFSET_DB_INFO;
++	struct dev_db_entry *fw_ddb_entry = NULL;
++	dma_addr_t fw_ddb_entry_dma;
++	uint32_t options = 0;
++	int rval = 0;
++
++	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
++					  &fw_ddb_entry_dma, GFP_KERNEL);
++	if (!fw_ddb_entry) {
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s: Unable to allocate dma buffer\n",
++				  __func__));
++		rval = -ENOMEM;
++		goto exit_ddb_apply;
++	}
++
++	if (!strncasecmp(fnode_sess->portal_type, DEV_TYPE_IPV6, 4))
++		options |= IPV6_DEFAULT_DDB_ENTRY;
++
++	rval = qla4xxx_get_default_ddb(ha, options, fw_ddb_entry_dma);
++	if (rval == QLA_ERROR)
++		goto exit_ddb_apply;
++
++	dev_db_start_offset += (fnode_sess->target_id *
++				sizeof(*fw_ddb_entry));
++
++	qla4xxx_copy_to_fwddb_param(fnode_sess, fnode_conn, fw_ddb_entry);
++	fw_ddb_entry->cookie = DDB_VALID_COOKIE;
++
++	rval = qla4xxx_set_flash(ha, fw_ddb_entry_dma, dev_db_start_offset,
++				 sizeof(*fw_ddb_entry), FLASH_OPT_RMW_COMMIT);
++
++	if (rval == QLA_SUCCESS) {
++		fnode_sess->flash_state = DEV_DB_PERSISTENT;
++		ql4_printk(KERN_INFO, ha,
++			   "%s: flash node %u of host %lu written to flash\n",
++			   __func__, fnode_sess->target_id, ha->host_no);
++	} else {
++		rval = -EIO;
++		ql4_printk(KERN_ERR, ha,
++			   "%s: Error while writing flash node %u of host %lu to flash\n",
++			   __func__, fnode_sess->target_id, ha->host_no);
++	}
++
++exit_ddb_apply:
++	if (fw_ddb_entry)
++		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
++				  fw_ddb_entry, fw_ddb_entry_dma);
++	return rval;
++}
++
++static ssize_t qla4xxx_sysfs_ddb_conn_open(struct scsi_qla_host *ha,
++					   struct dev_db_entry *fw_ddb_entry,
++					   uint16_t idx)
++{
++	struct dev_db_entry *ddb_entry = NULL;
++	dma_addr_t ddb_entry_dma;
++	unsigned long wtime;
++	uint32_t mbx_sts = 0;
++	uint32_t state = 0, conn_err = 0;
++	uint16_t tmo = 0;
++	int ret = 0;
++
++	ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*ddb_entry),
++				       &ddb_entry_dma, GFP_KERNEL);
++	if (!ddb_entry) {
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s: Unable to allocate dma buffer\n",
++				  __func__));
++		return QLA_ERROR;
++	}
++
++	memcpy(ddb_entry, fw_ddb_entry, sizeof(*ddb_entry));
++
++	ret = qla4xxx_set_ddb_entry(ha, idx, ddb_entry_dma, &mbx_sts);
++	if (ret != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s: Unable to set ddb entry for index %d\n",
++				  __func__, idx));
++		goto exit_ddb_conn_open;
++	}
++
++	qla4xxx_conn_open(ha, idx);
++
++	/* To ensure that sendtargets is done, wait for at least 12 secs */
++	tmo = ((ha->def_timeout > LOGIN_TOV) &&
++	       (ha->def_timeout < LOGIN_TOV * 10) ?
++	       ha->def_timeout : LOGIN_TOV);
++
++	DEBUG2(ql4_printk(KERN_INFO, ha,
++			  "Default time to wait for login to ddb %d\n", tmo));
++
++	wtime = jiffies + (HZ * tmo);
++	do {
++		ret = qla4xxx_get_fwddb_entry(ha, idx, NULL, 0, NULL,
++					      NULL, &state, &conn_err, NULL,
++					      NULL);
++		if (ret == QLA_ERROR)
++			continue;
++
++		if (state == DDB_DS_NO_CONNECTION_ACTIVE ||
++		    state == DDB_DS_SESSION_FAILED)
++			break;
++
++		schedule_timeout_uninterruptible(HZ / 10);
++	} while (time_after(wtime, jiffies));
++
++exit_ddb_conn_open:
++	if (ddb_entry)
++		dma_free_coherent(&ha->pdev->dev, sizeof(*ddb_entry),
++				  ddb_entry, ddb_entry_dma);
++	return ret;
++}
++
++static int qla4xxx_ddb_login_st(struct scsi_qla_host *ha,
++				struct dev_db_entry *fw_ddb_entry)
++{
++	struct qla_ddb_index *ddb_idx, *ddb_idx_tmp;
++	struct list_head list_nt;
++	uint16_t ddb_index;
++	int ret = 0;
++
++	if (test_bit(AF_ST_DISCOVERY_IN_PROGRESS, &ha->flags)) {
++		ql4_printk(KERN_WARNING, ha,
++			   "%s: A discovery already in progress!\n", __func__);
++		return QLA_ERROR;
++	}
++
++	INIT_LIST_HEAD(&list_nt);
++
++	set_bit(AF_ST_DISCOVERY_IN_PROGRESS, &ha->flags);
++
++	ret = qla4xxx_get_ddb_index(ha, &ddb_index);
++	if (ret == QLA_ERROR)
++		goto exit_login_st_clr_bit;
++
++	ret = qla4xxx_sysfs_ddb_conn_open(ha, fw_ddb_entry, ddb_index);
++	if (ret == QLA_ERROR)
++		goto exit_login_st;
++
++	qla4xxx_build_new_nt_list(ha, &list_nt);
++
++	list_for_each_entry_safe(ddb_idx, ddb_idx_tmp, &list_nt, list) {
++		list_del_init(&ddb_idx->list);
++		qla4xxx_clear_ddb_entry(ha, ddb_idx->fw_ddb_idx);
++		vfree(ddb_idx);
++	}
++
++exit_login_st:
++	if (qla4xxx_clear_ddb_entry(ha, ddb_index) == QLA_ERROR) {
++		ql4_printk(KERN_ERR, ha,
++			   "Unable to clear DDB index = 0x%x\n", ddb_index);
++	}
++
++	clear_bit(ddb_index, ha->ddb_idx_map);
++
++exit_login_st_clr_bit:
++	clear_bit(AF_ST_DISCOVERY_IN_PROGRESS, &ha->flags);
++	return ret;
++}
++
++static int qla4xxx_ddb_login_nt(struct scsi_qla_host *ha,
++				struct dev_db_entry *fw_ddb_entry,
++				uint16_t idx)
++{
++	int ret = QLA_ERROR;
++
++	ret = qla4xxx_is_session_exists(ha, fw_ddb_entry);
++	if (ret != QLA_SUCCESS)
++		ret = qla4xxx_sess_conn_setup(ha, fw_ddb_entry, RESET_ADAPTER,
++					      idx);
++	else
++		ret = -EPERM;
++
 +	return ret;
 +}
 +
 +/**
-+ * iscsi_get_flashnode_by_index -finds flashnode session entry by index
-+ * @shost: pointer to host data
-+ * @data: pointer to data containing value to use for comparison
-+ * @fn: function pointer that does actual comparison
++ * qla4xxx_sysfs_ddb_login - Login to the specified target
++ * @fnode_sess: pointer to session attrs of flash ddb entry
++ * @fnode_conn: pointer to connection attrs of flash ddb entry
 + *
-+ * Finds the flashnode session object for the passed index
-+ *
-+ * Returns:
-+ *  pointer to found flashnode session object on success
-+ *  %NULL on failure
-+ */
-+static struct iscsi_bus_flash_session *
-+iscsi_get_flashnode_by_index(struct Scsi_Host *shost, void *data,
-+			     int (*fn)(struct device *dev, void *data))
++ * This logs in to the specified target
++ **/
++static int qla4xxx_sysfs_ddb_login(struct iscsi_bus_flash_session *fnode_sess,
++				   struct iscsi_bus_flash_conn *fnode_conn)
 +{
-+	struct iscsi_bus_flash_session *fnode_sess = NULL;
-+	struct device *dev;
++	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
++	struct scsi_qla_host *ha = to_qla_host(shost);
++	struct dev_db_entry *fw_ddb_entry = NULL;
++	dma_addr_t fw_ddb_entry_dma;
++	uint32_t options = 0;
++	int ret = 0;
 +
-+	dev = device_find_child(&shost->shost_gendev, data, fn);
-+	if (dev)
-+		fnode_sess = iscsi_dev_to_flash_session(dev);
++	if (fnode_sess->flash_state == DEV_DB_NON_PERSISTENT) {
++		ql4_printk(KERN_ERR, ha,
++			   "%s: Target info is not persistent\n", __func__);
++		ret = -EIO;
++		goto exit_ddb_login;
++	}
 +
-+	return fnode_sess;
++	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
++					  &fw_ddb_entry_dma, GFP_KERNEL);
++	if (!fw_ddb_entry) {
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s: Unable to allocate dma buffer\n",
++				  __func__));
++		ret = -ENOMEM;
++		goto exit_ddb_login;
++	}
++
++	if (!strncasecmp(fnode_sess->portal_type, DEV_TYPE_IPV6, 4))
++		options |= IPV6_DEFAULT_DDB_ENTRY;
++
++	ret = qla4xxx_get_default_ddb(ha, options, fw_ddb_entry_dma);
++	if (ret == QLA_ERROR)
++		goto exit_ddb_login;
++
++	qla4xxx_copy_to_fwddb_param(fnode_sess, fnode_conn, fw_ddb_entry);
++	fw_ddb_entry->cookie = DDB_VALID_COOKIE;
++
++	if (strlen((char *)fw_ddb_entry->iscsi_name) == 0)
++		ret = qla4xxx_ddb_login_st(ha, fw_ddb_entry);
++	else
++		ret = qla4xxx_ddb_login_nt(ha, fw_ddb_entry,
++					   fnode_sess->target_id);
++
++	if (ret > 0)
++		ret = -EIO;
++
++exit_ddb_login:
++	if (fw_ddb_entry)
++		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
++				  fw_ddb_entry, fw_ddb_entry_dma);
++	return ret;
 +}
 +
 +/**
-+ * iscsi_find_flashnode_sess - finds flashnode session entry
-+ * @shost: pointer to host data
-+ * @data: pointer to data containing value to use for comparison
-+ * @fn: function pointer that does actual comparison
++ * qla4xxx_sysfs_ddb_logout_sid - Logout session for the specified target
++ * @cls_sess: pointer to session to be logged out
 + *
-+ * Finds the flashnode session object comparing the data passed using logic
-+ * defined in passed function pointer
-+ *
-+ * Returns:
-+ *  pointer to found flashnode session device object on success
-+ *  %NULL on failure
-+ */
-+struct device *
-+iscsi_find_flashnode_sess(struct Scsi_Host *shost, void *data,
-+			  int (*fn)(struct device *dev, void *data))
++ * This performs session log out from the specified target
++ **/
++static int qla4xxx_sysfs_ddb_logout_sid(struct iscsi_cls_session *cls_sess)
 +{
-+	struct device *dev;
++	struct iscsi_session *sess;
++	struct ddb_entry *ddb_entry = NULL;
++	struct scsi_qla_host *ha;
++	struct dev_db_entry *fw_ddb_entry = NULL;
++	dma_addr_t fw_ddb_entry_dma;
++	unsigned long flags;
++	unsigned long wtime;
++	uint32_t ddb_state;
++	int options;
++	int ret = 0;
 +
-+	dev = device_find_child(&shost->shost_gendev, data, fn);
-+	return dev;
++	sess = cls_sess->dd_data;
++	ddb_entry = sess->dd_data;
++	ha = ddb_entry->ha;
++
++	if (ddb_entry->ddb_type != FLASH_DDB) {
++		ql4_printk(KERN_ERR, ha, "%s: Not a flash node session\n",
++			   __func__);
++		ret = -ENXIO;
++		goto exit_ddb_logout;
++	}
++
++	options = LOGOUT_OPTION_CLOSE_SESSION;
++	if (qla4xxx_session_logout_ddb(ha, ddb_entry, options) == QLA_ERROR) {
++		ql4_printk(KERN_ERR, ha, "%s: Logout failed\n", __func__);
++		ret = -EIO;
++		goto exit_ddb_logout;
++	}
++
++	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
++					  &fw_ddb_entry_dma, GFP_KERNEL);
++	if (!fw_ddb_entry) {
++		ql4_printk(KERN_ERR, ha,
++			   "%s: Unable to allocate dma buffer\n", __func__);
++		ret = -ENOMEM;
++		goto exit_ddb_logout;
++	}
++
++	wtime = jiffies + (HZ * LOGOUT_TOV);
++	do {
++		ret = qla4xxx_get_fwddb_entry(ha, ddb_entry->fw_ddb_index,
++					      fw_ddb_entry, fw_ddb_entry_dma,
++					      NULL, NULL, &ddb_state, NULL,
++					      NULL, NULL);
++		if (ret == QLA_ERROR)
++			goto ddb_logout_clr_sess;
++
++		if ((ddb_state == DDB_DS_NO_CONNECTION_ACTIVE) ||
++		    (ddb_state == DDB_DS_SESSION_FAILED))
++			goto ddb_logout_clr_sess;
++
++		schedule_timeout_uninterruptible(HZ);
++	} while ((time_after(wtime, jiffies)));
++
++ddb_logout_clr_sess:
++	qla4xxx_clear_ddb_entry(ha, ddb_entry->fw_ddb_index);
++	/*
++	 * we have decremented the reference count of the driver
++	 * when we setup the session to have the driver unload
++	 * to be seamless without actually destroying the
++	 * session
++	 **/
++	try_module_get(qla4xxx_iscsi_transport.owner);
++	iscsi_destroy_endpoint(ddb_entry->conn->ep);
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	qla4xxx_free_ddb(ha, ddb_entry);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++	iscsi_session_teardown(ddb_entry->sess);
++
++	ret = QLA_SUCCESS;
++
++exit_ddb_logout:
++	if (fw_ddb_entry)
++		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
++				  fw_ddb_entry, fw_ddb_entry_dma);
++	return ret;
 +}
-+EXPORT_SYMBOL_GPL(iscsi_find_flashnode_sess);
 +
 +/**
-+ * iscsi_find_flashnode_conn - finds flashnode connection entry
-+ * @fnode_sess: pointer to parent flashnode session entry
-+ * @data: pointer to data containing value to use for comparison
-+ * @fn: function pointer that does actual comparison
++ * qla4xxx_sysfs_ddb_logout - Logout from the specified target
++ * @fnode_sess: pointer to session attrs of flash ddb entry
++ * @fnode_conn: pointer to connection attrs of flash ddb entry
 + *
-+ * Finds the flashnode connection object comparing the data passed using logic
-+ * defined in passed function pointer
-+ *
-+ * Returns:
-+ *  pointer to found flashnode connection device object on success
-+ *  %NULL on failure
-+ */
-+struct device *
-+iscsi_find_flashnode_conn(struct iscsi_bus_flash_session *fnode_sess,
-+			  void *data,
-+			  int (*fn)(struct device *dev, void *data))
++ * This performs log out from the specified target
++ **/
++static int qla4xxx_sysfs_ddb_logout(struct iscsi_bus_flash_session *fnode_sess,
++				    struct iscsi_bus_flash_conn *fnode_conn)
 +{
-+	struct device *dev;
++	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
++	struct scsi_qla_host *ha = to_qla_host(shost);
++	struct ql4_tuple_ddb *flash_tddb = NULL;
++	struct ql4_tuple_ddb *tmp_tddb = NULL;
++	struct dev_db_entry *fw_ddb_entry = NULL;
++	struct ddb_entry *ddb_entry = NULL;
++	dma_addr_t fw_ddb_dma;
++	uint32_t next_idx = 0;
++	uint32_t state = 0, conn_err = 0;
++	uint16_t conn_id = 0;
++	int idx, index;
++	int status, ret = 0;
 +
-+	dev = device_find_child(&fnode_sess->dev, data, fn);
-+	return dev;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_find_flashnode_conn);
++	fw_ddb_entry = dma_pool_alloc(ha->fw_ddb_dma_pool, GFP_KERNEL,
++				      &fw_ddb_dma);
++	if (fw_ddb_entry == NULL) {
++		ql4_printk(KERN_ERR, ha, "%s:Out of memory\n", __func__);
++		ret = -ENOMEM;
++		goto exit_ddb_logout;
++	}
 +
-+static int iscsi_iter_destroy_flashnode_conn_fn(struct device *dev, void *data)
-+{
-+	if (!iscsi_is_flashnode_conn_dev(dev, NULL))
-+		return 0;
++	flash_tddb = vzalloc(sizeof(*flash_tddb));
++	if (!flash_tddb) {
++		ql4_printk(KERN_WARNING, ha,
++			   "%s:Memory Allocation failed.\n", __func__);
++		ret = -ENOMEM;
++		goto exit_ddb_logout;
++	}
 +
-+	return iscsi_destroy_flashnode_conn(iscsi_dev_to_flash_conn(dev));
-+}
++	tmp_tddb = vzalloc(sizeof(*tmp_tddb));
++	if (!tmp_tddb) {
++		ql4_printk(KERN_WARNING, ha,
++			   "%s:Memory Allocation failed.\n", __func__);
++		ret = -ENOMEM;
++		goto exit_ddb_logout;
++	}
 +
-+/**
-+ * iscsi_destroy_flashnode_sess - destory flashnode session entry
-+ * @fnode_sess: pointer to flashnode session entry to be destroyed
-+ *
-+ * Deletes the flashnode session entry and all children flashnode connection
-+ * entries from sysfs
-+ */
-+void iscsi_destroy_flashnode_sess(struct iscsi_bus_flash_session *fnode_sess)
-+{
-+	int err;
++	if (!fnode_sess->targetname) {
++		ql4_printk(KERN_ERR, ha,
++			   "%s:Cannot logout from SendTarget entry\n",
++			   __func__);
++		ret = -EPERM;
++		goto exit_ddb_logout;
++	}
 +
-+	err = device_for_each_child(&fnode_sess->dev, NULL,
-+				    iscsi_iter_destroy_flashnode_conn_fn);
-+	if (err)
-+		pr_err("Could not delete all connections for %s. Error %d.\n",
-+		       fnode_sess->dev.kobj.name, err);
++	if (fnode_sess->is_boot_target) {
++		ql4_printk(KERN_ERR, ha,
++			   "%s: Logout from boot target entry is not permitted.\n",
++			   __func__);
++		ret = -EPERM;
++		goto exit_ddb_logout;
++	}
 +
-+	device_unregister(&fnode_sess->dev);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_destroy_flashnode_sess);
++	strncpy(flash_tddb->iscsi_name, fnode_sess->targetname,
++		ISCSI_NAME_SIZE);
 +
-+static int iscsi_iter_destroy_flashnode_fn(struct device *dev, void *data)
-+{
-+	if (!iscsi_flashnode_bus_match(dev, NULL))
-+		return 0;
++	if (!strncmp(fnode_sess->portal_type, DEV_TYPE_IPV6, 4))
++		sprintf(flash_tddb->ip_addr, "%pI6", fnode_conn->ipaddress);
++	else
++		sprintf(flash_tddb->ip_addr, "%pI4", fnode_conn->ipaddress);
 +
-+	iscsi_destroy_flashnode_sess(iscsi_dev_to_flash_session(dev));
-+	return 0;
-+}
++	flash_tddb->tpgt = fnode_sess->tpgt;
++	flash_tddb->port = fnode_conn->port;
 +
-+/**
-+ * iscsi_destroy_all_flashnode - destory all flashnode session entries
-+ * @shost: pointer to host data
-+ *
-+ * Destroys all the flashnode session entries and all corresponding children
-+ * flashnode connection entries from sysfs
-+ */
-+void iscsi_destroy_all_flashnode(struct Scsi_Host *shost)
-+{
-+	device_for_each_child(&shost->shost_gendev, NULL,
-+			      iscsi_iter_destroy_flashnode_fn);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_destroy_all_flashnode);
++	COPY_ISID(flash_tddb->isid, fnode_sess->isid);
 +
-+/*
-  * BSG support
-  */
- /**
-@@ -2092,6 +2776,294 @@ static int iscsi_delete_chap(struct iscsi_transport *transport,
- 	return err;
- }
- 
-+static const struct {
-+	enum iscsi_discovery_parent_type value;
-+	char				*name;
-+} iscsi_discovery_parent_names[] = {
-+	{ISCSI_DISC_PARENT_UNKNOWN,	"Unknown" },
-+	{ISCSI_DISC_PARENT_SENDTGT,	"Sendtarget" },
-+	{ISCSI_DISC_PARENT_ISNS,	"isns" },
-+};
++	for (idx = 0; idx < MAX_DDB_ENTRIES; idx++) {
++		ddb_entry = qla4xxx_lookup_ddb_by_fw_index(ha, idx);
++		if (ddb_entry == NULL)
++			continue;
 +
-+char *iscsi_get_discovery_parent_name(int parent_type)
-+{
-+	int i;
-+	char *state = "Unknown!";
++		if (ddb_entry->ddb_type != FLASH_DDB)
++			continue;
 +
-+	for (i = 0; i < ARRAY_SIZE(iscsi_discovery_parent_names); i++) {
-+		if (iscsi_discovery_parent_names[i].value & parent_type) {
-+			state = iscsi_discovery_parent_names[i].name;
++		index = ddb_entry->sess->target_id;
++		status = qla4xxx_get_fwddb_entry(ha, index, fw_ddb_entry,
++						 fw_ddb_dma, NULL, &next_idx,
++						 &state, &conn_err, NULL,
++						 &conn_id);
++		if (status == QLA_ERROR) {
++			ret = -ENOMEM;
++			break;
++		}
++
++		qla4xxx_convert_param_ddb(fw_ddb_entry, tmp_tddb, NULL);
++
++		status = qla4xxx_compare_tuple_ddb(ha, flash_tddb, tmp_tddb,
++						   true);
++		if (status == QLA_SUCCESS) {
++			ret = qla4xxx_sysfs_ddb_logout_sid(ddb_entry->sess);
 +			break;
 +		}
 +	}
-+	return state;
++
++	if (idx == MAX_DDB_ENTRIES)
++		ret = -ESRCH;
++
++exit_ddb_logout:
++	if (flash_tddb)
++		vfree(flash_tddb);
++	if (tmp_tddb)
++		vfree(tmp_tddb);
++	if (fw_ddb_entry)
++		dma_pool_free(ha->fw_ddb_dma_pool, fw_ddb_entry, fw_ddb_dma);
++
++	return ret;
 +}
-+EXPORT_SYMBOL_GPL(iscsi_get_discovery_parent_name);
 +
-+static int iscsi_set_flashnode_param(struct iscsi_transport *transport,
-+				     struct iscsi_uevent *ev, uint32_t len)
++static int
++qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
++			    int param, char *buf)
 +{
-+	char *data = (char *)ev + sizeof(*ev);
-+	struct Scsi_Host *shost;
-+	struct iscsi_bus_flash_session *fnode_sess;
++	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
++	struct scsi_qla_host *ha = to_qla_host(shost);
 +	struct iscsi_bus_flash_conn *fnode_conn;
++	struct ql4_chap_table chap_tbl;
 +	struct device *dev;
-+	uint32_t *idx;
-+	int err = 0;
-+
-+	if (!transport->set_flashnode_param) {
-+		err = -ENOSYS;
-+		goto exit_set_fnode;
-+	}
-+
-+	shost = scsi_host_lookup(ev->u.set_flashnode.host_no);
-+	if (!shost) {
-+		pr_err("%s could not find host no %u\n",
-+		       __func__, ev->u.set_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	idx = &ev->u.set_flashnode.flashnode_idx;
-+	fnode_sess = iscsi_get_flashnode_by_index(shost, idx,
-+						  flashnode_match_index);
-+	if (!fnode_sess) {
-+		pr_err("%s could not find flashnode %u for host no %u\n",
-+		       __func__, *idx, ev->u.set_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
-+	}
++	int parent_type, parent_index = 0xffff;
++	int rc = 0;
 +
 +	dev = iscsi_find_flashnode_conn(fnode_sess, NULL,
 +					iscsi_is_flashnode_conn_dev);
-+	if (!dev) {
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	fnode_conn = iscsi_dev_to_flash_conn(dev);
-+	err = transport->set_flashnode_param(fnode_sess, fnode_conn, data, len);
-+
-+put_host:
-+	scsi_host_put(shost);
-+
-+exit_set_fnode:
-+	return err;
-+}
-+
-+static int iscsi_new_flashnode(struct iscsi_transport *transport,
-+			       struct iscsi_uevent *ev, uint32_t len)
-+{
-+	char *data = (char *)ev + sizeof(*ev);
-+	struct Scsi_Host *shost;
-+	int index;
-+	int err = 0;
-+
-+	if (!transport->new_flashnode) {
-+		err = -ENOSYS;
-+		goto exit_new_fnode;
-+	}
-+
-+	shost = scsi_host_lookup(ev->u.new_flashnode.host_no);
-+	if (!shost) {
-+		pr_err("%s could not find host no %u\n",
-+		       __func__, ev->u.new_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	index = transport->new_flashnode(shost, data, len);
-+
-+	if (index >= 0)
-+		ev->r.new_flashnode_ret.flashnode_idx = index;
-+	else
-+		err = -EIO;
-+
-+put_host:
-+	scsi_host_put(shost);
-+
-+exit_new_fnode:
-+	return err;
-+}
-+
-+static int iscsi_del_flashnode(struct iscsi_transport *transport,
-+			       struct iscsi_uevent *ev)
-+{
-+	struct Scsi_Host *shost;
-+	struct iscsi_bus_flash_session *fnode_sess;
-+	uint32_t *idx;
-+	int err = 0;
-+
-+	if (!transport->del_flashnode) {
-+		err = -ENOSYS;
-+		goto exit_del_fnode;
-+	}
-+
-+	shost = scsi_host_lookup(ev->u.del_flashnode.host_no);
-+	if (!shost) {
-+		pr_err("%s could not find host no %u\n",
-+		       __func__, ev->u.del_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	idx = &ev->u.del_flashnode.flashnode_idx;
-+	fnode_sess = iscsi_get_flashnode_by_index(shost, idx,
-+						  flashnode_match_index);
-+	if (!fnode_sess) {
-+		pr_err("%s could not find flashnode %u for host no %u\n",
-+		       __func__, *idx, ev->u.del_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	err = transport->del_flashnode(fnode_sess);
-+
-+put_host:
-+	scsi_host_put(shost);
-+
-+exit_del_fnode:
-+	return err;
-+}
-+
-+static int iscsi_login_flashnode(struct iscsi_transport *transport,
-+				 struct iscsi_uevent *ev)
-+{
-+	struct Scsi_Host *shost;
-+	struct iscsi_bus_flash_session *fnode_sess;
-+	struct iscsi_bus_flash_conn *fnode_conn;
-+	struct device *dev;
-+	uint32_t *idx;
-+	int err = 0;
-+
-+	if (!transport->login_flashnode) {
-+		err = -ENOSYS;
-+		goto exit_login_fnode;
-+	}
-+
-+	shost = scsi_host_lookup(ev->u.login_flashnode.host_no);
-+	if (!shost) {
-+		pr_err("%s could not find host no %u\n",
-+		       __func__, ev->u.login_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	idx = &ev->u.login_flashnode.flashnode_idx;
-+	fnode_sess = iscsi_get_flashnode_by_index(shost, idx,
-+						  flashnode_match_index);
-+	if (!fnode_sess) {
-+		pr_err("%s could not find flashnode %u for host no %u\n",
-+		       __func__, *idx, ev->u.login_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	dev = iscsi_find_flashnode_conn(fnode_sess, NULL,
-+					iscsi_is_flashnode_conn_dev);
-+	if (!dev) {
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	fnode_conn = iscsi_dev_to_flash_conn(dev);
-+	err = transport->login_flashnode(fnode_sess, fnode_conn);
-+
-+put_host:
-+	scsi_host_put(shost);
-+
-+exit_login_fnode:
-+	return err;
-+}
-+
-+static int iscsi_logout_flashnode(struct iscsi_transport *transport,
-+				  struct iscsi_uevent *ev)
-+{
-+	struct Scsi_Host *shost;
-+	struct iscsi_bus_flash_session *fnode_sess;
-+	struct iscsi_bus_flash_conn *fnode_conn;
-+	struct device *dev;
-+	uint32_t *idx;
-+	int err = 0;
-+
-+	if (!transport->logout_flashnode) {
-+		err = -ENOSYS;
-+		goto exit_logout_fnode;
-+	}
-+
-+	shost = scsi_host_lookup(ev->u.logout_flashnode.host_no);
-+	if (!shost) {
-+		pr_err("%s could not find host no %u\n",
-+		       __func__, ev->u.logout_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	idx = &ev->u.logout_flashnode.flashnode_idx;
-+	fnode_sess = iscsi_get_flashnode_by_index(shost, idx,
-+						  flashnode_match_index);
-+	if (!fnode_sess) {
-+		pr_err("%s could not find flashnode %u for host no %u\n",
-+		       __func__, *idx, ev->u.logout_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
-+	}
-+
-+	dev = iscsi_find_flashnode_conn(fnode_sess, NULL,
-+					iscsi_is_flashnode_conn_dev);
-+	if (!dev) {
-+		err = -ENODEV;
-+		goto put_host;
-+	}
++	if (!dev)
++		return -EIO;
 +
 +	fnode_conn = iscsi_dev_to_flash_conn(dev);
 +
-+	err = transport->logout_flashnode(fnode_sess, fnode_conn);
++	switch (param) {
++	case ISCSI_FLASHNODE_IS_FW_ASSIGNED_IPV6:
++		rc = sprintf(buf, "%u\n", fnode_conn->is_fw_assigned_ipv6);
++		break;
++	case ISCSI_FLASHNODE_PORTAL_TYPE:
++		rc = sprintf(buf, "%s\n", fnode_sess->portal_type);
++		break;
++	case ISCSI_FLASHNODE_AUTO_SND_TGT_DISABLE:
++		rc = sprintf(buf, "%u\n", fnode_sess->auto_snd_tgt_disable);
++		break;
++	case ISCSI_FLASHNODE_DISCOVERY_SESS:
++		rc = sprintf(buf, "%u\n", fnode_sess->discovery_sess);
++		break;
++	case ISCSI_FLASHNODE_ENTRY_EN:
++		rc = sprintf(buf, "%u\n", fnode_sess->entry_state);
++		break;
++	case ISCSI_FLASHNODE_HDR_DGST_EN:
++		rc = sprintf(buf, "%u\n", fnode_conn->hdrdgst_en);
++		break;
++	case ISCSI_FLASHNODE_DATA_DGST_EN:
++		rc = sprintf(buf, "%u\n", fnode_conn->datadgst_en);
++		break;
++	case ISCSI_FLASHNODE_IMM_DATA_EN:
++		rc = sprintf(buf, "%u\n", fnode_sess->imm_data_en);
++		break;
++	case ISCSI_FLASHNODE_INITIAL_R2T_EN:
++		rc = sprintf(buf, "%u\n", fnode_sess->initial_r2t_en);
++		break;
++	case ISCSI_FLASHNODE_DATASEQ_INORDER:
++		rc = sprintf(buf, "%u\n", fnode_sess->dataseq_inorder_en);
++		break;
++	case ISCSI_FLASHNODE_PDU_INORDER:
++		rc = sprintf(buf, "%u\n", fnode_sess->pdu_inorder_en);
++		break;
++	case ISCSI_FLASHNODE_CHAP_AUTH_EN:
++		rc = sprintf(buf, "%u\n", fnode_sess->chap_auth_en);
++		break;
++	case ISCSI_FLASHNODE_SNACK_REQ_EN:
++		rc = sprintf(buf, "%u\n", fnode_conn->snack_req_en);
++		break;
++	case ISCSI_FLASHNODE_DISCOVERY_LOGOUT_EN:
++		rc = sprintf(buf, "%u\n", fnode_sess->discovery_logout_en);
++		break;
++	case ISCSI_FLASHNODE_BIDI_CHAP_EN:
++		rc = sprintf(buf, "%u\n", fnode_sess->bidi_chap_en);
++		break;
++	case ISCSI_FLASHNODE_DISCOVERY_AUTH_OPTIONAL:
++		rc = sprintf(buf, "%u\n", fnode_sess->discovery_auth_optional);
++		break;
++	case ISCSI_FLASHNODE_ERL:
++		rc = sprintf(buf, "%u\n", fnode_sess->erl);
++		break;
++	case ISCSI_FLASHNODE_TCP_TIMESTAMP_STAT:
++		rc = sprintf(buf, "%u\n", fnode_conn->tcp_timestamp_stat);
++		break;
++	case ISCSI_FLASHNODE_TCP_NAGLE_DISABLE:
++		rc = sprintf(buf, "%u\n", fnode_conn->tcp_nagle_disable);
++		break;
++	case ISCSI_FLASHNODE_TCP_WSF_DISABLE:
++		rc = sprintf(buf, "%u\n", fnode_conn->tcp_wsf_disable);
++		break;
++	case ISCSI_FLASHNODE_TCP_TIMER_SCALE:
++		rc = sprintf(buf, "%u\n", fnode_conn->tcp_timer_scale);
++		break;
++	case ISCSI_FLASHNODE_TCP_TIMESTAMP_EN:
++		rc = sprintf(buf, "%u\n", fnode_conn->tcp_timestamp_en);
++		break;
++	case ISCSI_FLASHNODE_IP_FRAG_DISABLE:
++		rc = sprintf(buf, "%u\n", fnode_conn->fragment_disable);
++		break;
++	case ISCSI_FLASHNODE_MAX_RECV_DLENGTH:
++		rc = sprintf(buf, "%u\n", fnode_conn->max_recv_dlength);
++		break;
++	case ISCSI_FLASHNODE_MAX_XMIT_DLENGTH:
++		rc = sprintf(buf, "%u\n", fnode_conn->max_xmit_dlength);
++		break;
++	case ISCSI_FLASHNODE_FIRST_BURST:
++		rc = sprintf(buf, "%u\n", fnode_sess->first_burst);
++		break;
++	case ISCSI_FLASHNODE_DEF_TIME2WAIT:
++		rc = sprintf(buf, "%u\n", fnode_sess->time2wait);
++		break;
++	case ISCSI_FLASHNODE_DEF_TIME2RETAIN:
++		rc = sprintf(buf, "%u\n", fnode_sess->time2retain);
++		break;
++	case ISCSI_FLASHNODE_MAX_R2T:
++		rc = sprintf(buf, "%u\n", fnode_sess->max_r2t);
++		break;
++	case ISCSI_FLASHNODE_KEEPALIVE_TMO:
++		rc = sprintf(buf, "%u\n", fnode_conn->keepalive_timeout);
++		break;
++	case ISCSI_FLASHNODE_ISID:
++		rc = sprintf(buf, "%02x%02x%02x%02x%02x%02x\n",
++			     fnode_sess->isid[0], fnode_sess->isid[1],
++			     fnode_sess->isid[2], fnode_sess->isid[3],
++			     fnode_sess->isid[4], fnode_sess->isid[5]);
++		break;
++	case ISCSI_FLASHNODE_TSID:
++		rc = sprintf(buf, "%u\n", fnode_sess->tsid);
++		break;
++	case ISCSI_FLASHNODE_PORT:
++		rc = sprintf(buf, "%d\n", fnode_conn->port);
++		break;
++	case ISCSI_FLASHNODE_MAX_BURST:
++		rc = sprintf(buf, "%u\n", fnode_sess->max_burst);
++		break;
++	case ISCSI_FLASHNODE_DEF_TASKMGMT_TMO:
++		rc = sprintf(buf, "%u\n",
++			     fnode_sess->default_taskmgmt_timeout);
++		break;
++	case ISCSI_FLASHNODE_IPADDR:
++		if (!strncmp(fnode_sess->portal_type, DEV_TYPE_IPV6, 4))
++			rc = sprintf(buf, "%pI6\n", fnode_conn->ipaddress);
++		else
++			rc = sprintf(buf, "%pI4\n", fnode_conn->ipaddress);
++		break;
++	case ISCSI_FLASHNODE_ALIAS:
++		if (fnode_sess->targetalias)
++			rc = sprintf(buf, "%s\n", fnode_sess->targetalias);
++		else
++			rc = sprintf(buf, "\n");
++		break;
++	case ISCSI_FLASHNODE_REDIRECT_IPADDR:
++		if (!strncmp(fnode_sess->portal_type, DEV_TYPE_IPV6, 4))
++			rc = sprintf(buf, "%pI6\n",
++				     fnode_conn->redirect_ipaddr);
++		else
++			rc = sprintf(buf, "%pI4\n",
++				     fnode_conn->redirect_ipaddr);
++		break;
++	case ISCSI_FLASHNODE_MAX_SEGMENT_SIZE:
++		rc = sprintf(buf, "%u\n", fnode_conn->max_segment_size);
++		break;
++	case ISCSI_FLASHNODE_LOCAL_PORT:
++		rc = sprintf(buf, "%u\n", fnode_conn->local_port);
++		break;
++	case ISCSI_FLASHNODE_IPV4_TOS:
++		rc = sprintf(buf, "%u\n", fnode_conn->ipv4_tos);
++		break;
++	case ISCSI_FLASHNODE_IPV6_TC:
++		if (!strncmp(fnode_sess->portal_type, DEV_TYPE_IPV6, 4))
++			rc = sprintf(buf, "%u\n",
++				     fnode_conn->ipv6_traffic_class);
++		else
++			rc = sprintf(buf, "\n");
++		break;
++	case ISCSI_FLASHNODE_IPV6_FLOW_LABEL:
++		rc = sprintf(buf, "%u\n", fnode_conn->ipv6_flow_label);
++		break;
++	case ISCSI_FLASHNODE_LINK_LOCAL_IPV6:
++		if (!strncmp(fnode_sess->portal_type, DEV_TYPE_IPV6, 4))
++			rc = sprintf(buf, "%pI6\n",
++				     fnode_conn->link_local_ipv6_addr);
++		else
++			rc = sprintf(buf, "\n");
++		break;
++	case ISCSI_FLASHNODE_DISCOVERY_PARENT_IDX:
++		if ((fnode_sess->discovery_parent_idx) >= 0  &&
++		    (fnode_sess->discovery_parent_idx < MAX_DDB_ENTRIES))
++			parent_index = fnode_sess->discovery_parent_idx;
 +
-+put_host:
-+	scsi_host_put(shost);
++		rc = sprintf(buf, "%u\n", parent_index);
++		break;
++	case ISCSI_FLASHNODE_DISCOVERY_PARENT_TYPE:
++		if (fnode_sess->discovery_parent_type == DDB_ISNS)
++			parent_type = ISCSI_DISC_PARENT_ISNS;
++		else if (fnode_sess->discovery_parent_type == DDB_NO_LINK)
++			parent_type = ISCSI_DISC_PARENT_UNKNOWN;
++		else if (fnode_sess->discovery_parent_type >= 0  &&
++			 fnode_sess->discovery_parent_type < MAX_DDB_ENTRIES)
++			parent_type = ISCSI_DISC_PARENT_SENDTGT;
++		else
++			parent_type = ISCSI_DISC_PARENT_UNKNOWN;
 +
-+exit_logout_fnode:
-+	return err;
++		rc = sprintf(buf, "%s\n",
++			     iscsi_get_discovery_parent_name(parent_type));
++		break;
++	case ISCSI_FLASHNODE_NAME:
++		if (fnode_sess->targetname)
++			rc = sprintf(buf, "%s\n", fnode_sess->targetname);
++		else
++			rc = sprintf(buf, "\n");
++		break;
++	case ISCSI_FLASHNODE_TPGT:
++		rc = sprintf(buf, "%u\n", fnode_sess->tpgt);
++		break;
++	case ISCSI_FLASHNODE_TCP_XMIT_WSF:
++		rc = sprintf(buf, "%u\n", fnode_conn->tcp_xmit_wsf);
++		break;
++	case ISCSI_FLASHNODE_TCP_RECV_WSF:
++		rc = sprintf(buf, "%u\n", fnode_conn->tcp_recv_wsf);
++		break;
++	case ISCSI_FLASHNODE_CHAP_OUT_IDX:
++		rc = sprintf(buf, "%u\n", fnode_sess->chap_out_idx);
++		break;
++	case ISCSI_FLASHNODE_USERNAME:
++		if (fnode_sess->chap_auth_en) {
++			qla4xxx_get_uni_chap_at_index(ha,
++						      chap_tbl.name,
++						      chap_tbl.secret,
++						      fnode_sess->chap_out_idx);
++			rc = sprintf(buf, "%s\n", chap_tbl.name);
++		} else {
++			rc = sprintf(buf, "\n");
++		}
++		break;
++	case ISCSI_FLASHNODE_PASSWORD:
++		if (fnode_sess->chap_auth_en) {
++			qla4xxx_get_uni_chap_at_index(ha,
++						      chap_tbl.name,
++						      chap_tbl.secret,
++						      fnode_sess->chap_out_idx);
++			rc = sprintf(buf, "%s\n", chap_tbl.secret);
++		} else {
++			rc = sprintf(buf, "\n");
++		}
++		break;
++	case ISCSI_FLASHNODE_STATSN:
++		rc = sprintf(buf, "%u\n", fnode_conn->statsn);
++		break;
++	case ISCSI_FLASHNODE_EXP_STATSN:
++		rc = sprintf(buf, "%u\n", fnode_conn->exp_statsn);
++		break;
++	case ISCSI_FLASHNODE_IS_BOOT_TGT:
++		rc = sprintf(buf, "%u\n", fnode_sess->is_boot_target);
++		break;
++	default:
++		rc = -ENOSYS;
++		break;
++	}
++	return rc;
 +}
 +
-+static int iscsi_logout_flashnode_sid(struct iscsi_transport *transport,
-+				      struct iscsi_uevent *ev)
++/**
++ * qla4xxx_sysfs_ddb_set_param - Set parameter for firmware DDB entry
++ * @fnode_sess: pointer to session attrs of flash ddb entry
++ * @fnode_conn: pointer to connection attrs of flash ddb entry
++ * @data: Parameters and their values to update
++ * @len: len of data
++ *
++ * This sets the parameter of flash ddb entry and writes them to flash
++ **/
++static int
++qla4xxx_sysfs_ddb_set_param(struct iscsi_bus_flash_session *fnode_sess,
++			    struct iscsi_bus_flash_conn *fnode_conn,
++			    void *data, int len)
 +{
-+	struct Scsi_Host *shost;
-+	struct iscsi_cls_session *session;
-+	int err = 0;
++	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
++	struct scsi_qla_host *ha = to_qla_host(shost);
++	struct dev_db_entry *fw_ddb_entry = NULL;
++	struct iscsi_flashnode_param_info *fnode_param;
++	struct nlattr *attr;
++	int rc = QLA_ERROR;
++	uint32_t rem = len;
 +
-+	if (!transport->logout_flashnode_sid) {
-+		err = -ENOSYS;
-+		goto exit_logout_sid;
++	fw_ddb_entry = kzalloc(sizeof(*fw_ddb_entry), GFP_KERNEL);
++	if (!fw_ddb_entry) {
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s: Unable to allocate ddb buffer\n",
++				  __func__));
++		return -ENOMEM;
 +	}
 +
-+	shost = scsi_host_lookup(ev->u.logout_flashnode_sid.host_no);
-+	if (!shost) {
-+		pr_err("%s could not find host no %u\n",
-+		       __func__, ev->u.logout_flashnode.host_no);
-+		err = -ENODEV;
-+		goto put_host;
++	nla_for_each_attr(attr, data, len, rem) {
++		fnode_param = nla_data(attr);
++
++		switch (fnode_param->param) {
++		case ISCSI_FLASHNODE_IS_FW_ASSIGNED_IPV6:
++			fnode_conn->is_fw_assigned_ipv6 = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_PORTAL_TYPE:
++			memcpy(fnode_sess->portal_type, fnode_param->value,
++			       strlen(fnode_sess->portal_type));
++			break;
++		case ISCSI_FLASHNODE_AUTO_SND_TGT_DISABLE:
++			fnode_sess->auto_snd_tgt_disable =
++							fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_DISCOVERY_SESS:
++			fnode_sess->discovery_sess = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_ENTRY_EN:
++			fnode_sess->entry_state = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_HDR_DGST_EN:
++			fnode_conn->hdrdgst_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_DATA_DGST_EN:
++			fnode_conn->datadgst_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_IMM_DATA_EN:
++			fnode_sess->imm_data_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_INITIAL_R2T_EN:
++			fnode_sess->initial_r2t_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_DATASEQ_INORDER:
++			fnode_sess->dataseq_inorder_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_PDU_INORDER:
++			fnode_sess->pdu_inorder_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_CHAP_AUTH_EN:
++			fnode_sess->chap_auth_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_SNACK_REQ_EN:
++			fnode_conn->snack_req_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_DISCOVERY_LOGOUT_EN:
++			fnode_sess->discovery_logout_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_BIDI_CHAP_EN:
++			fnode_sess->bidi_chap_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_DISCOVERY_AUTH_OPTIONAL:
++			fnode_sess->discovery_auth_optional =
++							fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_ERL:
++			fnode_sess->erl = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_TCP_TIMESTAMP_STAT:
++			fnode_conn->tcp_timestamp_stat = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_TCP_NAGLE_DISABLE:
++			fnode_conn->tcp_nagle_disable = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_TCP_WSF_DISABLE:
++			fnode_conn->tcp_wsf_disable = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_TCP_TIMER_SCALE:
++			fnode_conn->tcp_timer_scale = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_TCP_TIMESTAMP_EN:
++			fnode_conn->tcp_timestamp_en = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_IP_FRAG_DISABLE:
++			fnode_conn->fragment_disable = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_MAX_RECV_DLENGTH:
++			fnode_conn->max_recv_dlength =
++					*(unsigned *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_MAX_XMIT_DLENGTH:
++			fnode_conn->max_xmit_dlength =
++					*(unsigned *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_FIRST_BURST:
++			fnode_sess->first_burst =
++					*(unsigned *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_DEF_TIME2WAIT:
++			fnode_sess->time2wait = *(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_DEF_TIME2RETAIN:
++			fnode_sess->time2retain =
++						*(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_MAX_R2T:
++			fnode_sess->max_r2t =
++					*(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_KEEPALIVE_TMO:
++			fnode_conn->keepalive_timeout =
++				*(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_ISID:
++			memcpy(fnode_sess->isid, fnode_param->value,
++			       sizeof(fnode_sess->isid));
++			break;
++		case ISCSI_FLASHNODE_TSID:
++			fnode_sess->tsid = *(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_PORT:
++			fnode_conn->port = *(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_MAX_BURST:
++			fnode_sess->max_burst = *(unsigned *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_DEF_TASKMGMT_TMO:
++			fnode_sess->default_taskmgmt_timeout =
++						*(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_IPADDR:
++			memcpy(fnode_conn->ipaddress, fnode_param->value,
++			       IPv6_ADDR_LEN);
++			break;
++		case ISCSI_FLASHNODE_ALIAS:
++			rc = iscsi_switch_str_param(&fnode_sess->targetalias,
++						    (char *)fnode_param->value);
++			break;
++		case ISCSI_FLASHNODE_REDIRECT_IPADDR:
++			memcpy(fnode_conn->redirect_ipaddr, fnode_param->value,
++			       IPv6_ADDR_LEN);
++			break;
++		case ISCSI_FLASHNODE_MAX_SEGMENT_SIZE:
++			fnode_conn->max_segment_size =
++					*(unsigned *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_LOCAL_PORT:
++			fnode_conn->local_port =
++						*(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_IPV4_TOS:
++			fnode_conn->ipv4_tos = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_IPV6_TC:
++			fnode_conn->ipv6_traffic_class = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_IPV6_FLOW_LABEL:
++			fnode_conn->ipv6_flow_label = fnode_param->value[0];
++			break;
++		case ISCSI_FLASHNODE_NAME:
++			rc = iscsi_switch_str_param(&fnode_sess->targetname,
++						    (char *)fnode_param->value);
++			break;
++		case ISCSI_FLASHNODE_TPGT:
++			fnode_sess->tpgt = *(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_LINK_LOCAL_IPV6:
++			memcpy(fnode_conn->link_local_ipv6_addr,
++			       fnode_param->value, IPv6_ADDR_LEN);
++			break;
++		case ISCSI_FLASHNODE_DISCOVERY_PARENT_TYPE:
++			fnode_sess->discovery_parent_type =
++						*(uint16_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_TCP_XMIT_WSF:
++			fnode_conn->tcp_xmit_wsf =
++						*(uint8_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_TCP_RECV_WSF:
++			fnode_conn->tcp_recv_wsf =
++						*(uint8_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_STATSN:
++			fnode_conn->statsn = *(uint32_t *)fnode_param->value;
++			break;
++		case ISCSI_FLASHNODE_EXP_STATSN:
++			fnode_conn->exp_statsn =
++						*(uint32_t *)fnode_param->value;
++			break;
++		default:
++			ql4_printk(KERN_ERR, ha,
++				   "%s: No such sysfs attribute\n", __func__);
++			rc = -ENOSYS;
++			goto exit_set_param;
++		}
 +	}
 +
-+	session = iscsi_session_lookup(ev->u.logout_flashnode_sid.sid);
-+	if (!session) {
-+		pr_err("%s could not find session id %u\n",
-+		       __func__, ev->u.logout_flashnode_sid.sid);
-+		err = -EINVAL;
-+		goto put_host;
-+	}
++	rc = qla4xxx_sysfs_ddb_apply(fnode_sess, fnode_conn);
 +
-+	err = transport->logout_flashnode_sid(session);
-+
-+put_host:
-+	scsi_host_put(shost);
-+
-+exit_logout_sid:
-+	return err;
++exit_set_param:
++	return rc;
 +}
 +
- static int
- iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- {
-@@ -2246,6 +3218,27 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 	case ISCSI_UEVENT_DELETE_CHAP:
- 		err = iscsi_delete_chap(transport, ev);
- 		break;
-+	case ISCSI_UEVENT_SET_FLASHNODE_PARAMS:
-+		err = iscsi_set_flashnode_param(transport, ev,
-+						nlmsg_attrlen(nlh,
-+							      sizeof(*ev)));
-+		break;
-+	case ISCSI_UEVENT_NEW_FLASHNODE:
-+		err = iscsi_new_flashnode(transport, ev,
-+					  nlmsg_attrlen(nlh, sizeof(*ev)));
-+		break;
-+	case ISCSI_UEVENT_DEL_FLASHNODE:
-+		err = iscsi_del_flashnode(transport, ev);
-+		break;
-+	case ISCSI_UEVENT_LOGIN_FLASHNODE:
-+		err = iscsi_login_flashnode(transport, ev);
-+		break;
-+	case ISCSI_UEVENT_LOGOUT_FLASHNODE:
-+		err = iscsi_logout_flashnode(transport, ev);
-+		break;
-+	case ISCSI_UEVENT_LOGOUT_FLASHNODE_SID:
-+		err = iscsi_logout_flashnode_sid(transport, ev);
-+		break;
- 	default:
- 		err = -ENOSYS;
- 		break;
-@@ -2981,10 +3974,14 @@ static __init int iscsi_transport_init(void)
- 	if (err)
- 		goto unregister_conn_class;
- 
-+	err = bus_register(&iscsi_flashnode_bus);
-+	if (err)
-+		goto unregister_session_class;
++/**
++ * qla4xxx_sysfs_ddb_delete - Delete firmware DDB entry
++ * @fnode_sess: pointer to session attrs of flash ddb entry
++ *
++ * This invalidates the flash ddb entry at the given index
++ **/
++static int qla4xxx_sysfs_ddb_delete(struct iscsi_bus_flash_session *fnode_sess)
++{
++	struct Scsi_Host *shost = iscsi_flash_session_to_shost(fnode_sess);
++	struct scsi_qla_host *ha = to_qla_host(shost);
++	uint32_t dev_db_start_offset;
++	uint32_t dev_db_end_offset;
++	struct dev_db_entry *fw_ddb_entry = NULL;
++	dma_addr_t fw_ddb_entry_dma;
++	uint16_t *ddb_cookie = NULL;
++	int target_id;
++	int rc = 0;
 +
- 	nls = netlink_kernel_create(&init_net, NETLINK_ISCSI, &cfg);
- 	if (!nls) {
- 		err = -ENOBUFS;
--		goto unregister_session_class;
-+		goto unregister_flashnode_bus;
- 	}
- 
- 	iscsi_eh_timer_workq = create_singlethread_workqueue("iscsi_eh");
-@@ -2995,6 +3992,8 @@ static __init int iscsi_transport_init(void)
- 
- release_nls:
- 	netlink_kernel_release(nls);
-+unregister_flashnode_bus:
-+	bus_unregister(&iscsi_flashnode_bus);
- unregister_session_class:
- 	transport_class_unregister(&iscsi_session_class);
- unregister_conn_class:
-@@ -3014,6 +4013,7 @@ static void __exit iscsi_transport_exit(void)
- {
- 	destroy_workqueue(iscsi_eh_timer_workq);
- 	netlink_kernel_release(nls);
-+	bus_unregister(&iscsi_flashnode_bus);
- 	transport_class_unregister(&iscsi_connection_class);
- 	transport_class_unregister(&iscsi_session_class);
- 	transport_class_unregister(&iscsi_host_class);
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index 917741b..f1b0183 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -63,6 +63,12 @@ enum iscsi_uevent_e {
- 	ISCSI_UEVENT_PING		= UEVENT_BASE + 22,
- 	ISCSI_UEVENT_GET_CHAP		= UEVENT_BASE + 23,
- 	ISCSI_UEVENT_DELETE_CHAP	= UEVENT_BASE + 24,
-+	ISCSI_UEVENT_SET_FLASHNODE_PARAMS	= UEVENT_BASE + 25,
-+	ISCSI_UEVENT_NEW_FLASHNODE	= UEVENT_BASE + 26,
-+	ISCSI_UEVENT_DEL_FLASHNODE	= UEVENT_BASE + 27,
-+	ISCSI_UEVENT_LOGIN_FLASHNODE	= UEVENT_BASE + 28,
-+	ISCSI_UEVENT_LOGOUT_FLASHNODE	= UEVENT_BASE + 29,
-+	ISCSI_UEVENT_LOGOUT_FLASHNODE_SID	= UEVENT_BASE + 30,
- 
- 	/* up events */
- 	ISCSI_KEVENT_RECV_PDU		= KEVENT_BASE + 1,
-@@ -210,6 +216,31 @@ struct iscsi_uevent {
- 		       uint32_t        host_no;
- 		       uint16_t        chap_tbl_idx;
- 		} delete_chap;
-+		struct msg_set_flashnode_param {
-+			uint32_t	host_no;
-+			uint32_t	flashnode_idx;
-+			uint32_t	count;
-+		} set_flashnode;
-+		struct msg_new_flashnode {
-+			uint32_t	host_no;
-+			uint32_t	len;
-+		} new_flashnode;
-+		struct msg_del_flashnode {
-+			uint32_t	host_no;
-+			uint32_t	flashnode_idx;
-+		} del_flashnode;
-+		struct msg_login_flashnode {
-+			uint32_t	host_no;
-+			uint32_t	flashnode_idx;
-+		} login_flashnode;
-+		struct msg_logout_flashnode {
-+			uint32_t	host_no;
-+			uint32_t	flashnode_idx;
-+		} logout_flashnode;
-+		struct msg_logout_flashnode_sid {
-+			uint32_t	host_no;
-+			uint32_t	sid;
-+		} logout_flashnode_sid;
- 	} u;
- 	union {
- 		/* messages k -> u */
-@@ -267,6 +298,9 @@ struct iscsi_uevent {
- 						   with each ping request */
- 			uint32_t        data_size;
- 		} ping_comp;
-+		struct msg_new_flashnode_ret {
-+			uint32_t	flashnode_idx;
-+		} new_flashnode_ret;
- 	} r;
- } __attribute__ ((aligned (sizeof(uint64_t))));
- 
-@@ -274,6 +308,7 @@ enum iscsi_param_type {
- 	ISCSI_PARAM,		/* iscsi_param (session, conn, target, LU) */
- 	ISCSI_HOST_PARAM,	/* iscsi_host_param */
- 	ISCSI_NET_PARAM,	/* iscsi_net_param */
-+	ISCSI_FLASHNODE_PARAM,	/* iscsi_flashnode_param */
- };
- 
- struct iscsi_iface_param_info {
-@@ -469,6 +504,84 @@ enum iscsi_host_param {
- 	ISCSI_HOST_PARAM_MAX,
- };
- 
-+/* iSCSI Flash Target params */
-+enum iscsi_flashnode_param {
-+	ISCSI_FLASHNODE_IS_FW_ASSIGNED_IPV6,
-+	ISCSI_FLASHNODE_PORTAL_TYPE,
-+	ISCSI_FLASHNODE_AUTO_SND_TGT_DISABLE,
-+	ISCSI_FLASHNODE_DISCOVERY_SESS,
-+	ISCSI_FLASHNODE_ENTRY_EN,
-+	ISCSI_FLASHNODE_HDR_DGST_EN,
-+	ISCSI_FLASHNODE_DATA_DGST_EN,
-+	ISCSI_FLASHNODE_IMM_DATA_EN,
-+	ISCSI_FLASHNODE_INITIAL_R2T_EN,
-+	ISCSI_FLASHNODE_DATASEQ_INORDER,
-+	ISCSI_FLASHNODE_PDU_INORDER,
-+	ISCSI_FLASHNODE_CHAP_AUTH_EN,
-+	ISCSI_FLASHNODE_SNACK_REQ_EN,
-+	ISCSI_FLASHNODE_DISCOVERY_LOGOUT_EN,
-+	ISCSI_FLASHNODE_BIDI_CHAP_EN,
-+	/* make authentication for discovery sessions optional */
-+	ISCSI_FLASHNODE_DISCOVERY_AUTH_OPTIONAL,
-+	ISCSI_FLASHNODE_ERL,
-+	ISCSI_FLASHNODE_TCP_TIMESTAMP_STAT,
-+	ISCSI_FLASHNODE_TCP_NAGLE_DISABLE,
-+	ISCSI_FLASHNODE_TCP_WSF_DISABLE,
-+	ISCSI_FLASHNODE_TCP_TIMER_SCALE,
-+	ISCSI_FLASHNODE_TCP_TIMESTAMP_EN,
-+	ISCSI_FLASHNODE_IP_FRAG_DISABLE,
-+	ISCSI_FLASHNODE_MAX_RECV_DLENGTH,
-+	ISCSI_FLASHNODE_MAX_XMIT_DLENGTH,
-+	ISCSI_FLASHNODE_FIRST_BURST,
-+	ISCSI_FLASHNODE_DEF_TIME2WAIT,
-+	ISCSI_FLASHNODE_DEF_TIME2RETAIN,
-+	ISCSI_FLASHNODE_MAX_R2T,
-+	ISCSI_FLASHNODE_KEEPALIVE_TMO,
-+	ISCSI_FLASHNODE_ISID,
-+	ISCSI_FLASHNODE_TSID,
-+	ISCSI_FLASHNODE_PORT,
-+	ISCSI_FLASHNODE_MAX_BURST,
-+	ISCSI_FLASHNODE_DEF_TASKMGMT_TMO,
-+	ISCSI_FLASHNODE_IPADDR,
-+	ISCSI_FLASHNODE_ALIAS,
-+	ISCSI_FLASHNODE_REDIRECT_IPADDR,
-+	ISCSI_FLASHNODE_MAX_SEGMENT_SIZE,
-+	ISCSI_FLASHNODE_LOCAL_PORT,
-+	ISCSI_FLASHNODE_IPV4_TOS,
-+	ISCSI_FLASHNODE_IPV6_TC,
-+	ISCSI_FLASHNODE_IPV6_FLOW_LABEL,
-+	ISCSI_FLASHNODE_NAME,
-+	ISCSI_FLASHNODE_TPGT,
-+	ISCSI_FLASHNODE_LINK_LOCAL_IPV6,
-+	ISCSI_FLASHNODE_DISCOVERY_PARENT_IDX,
-+	ISCSI_FLASHNODE_DISCOVERY_PARENT_TYPE,
-+	ISCSI_FLASHNODE_TCP_XMIT_WSF,
-+	ISCSI_FLASHNODE_TCP_RECV_WSF,
-+	ISCSI_FLASHNODE_CHAP_IN_IDX,
-+	ISCSI_FLASHNODE_CHAP_OUT_IDX,
-+	ISCSI_FLASHNODE_USERNAME,
-+	ISCSI_FLASHNODE_USERNAME_IN,
-+	ISCSI_FLASHNODE_PASSWORD,
-+	ISCSI_FLASHNODE_PASSWORD_IN,
-+	ISCSI_FLASHNODE_STATSN,
-+	ISCSI_FLASHNODE_EXP_STATSN,
-+	ISCSI_FLASHNODE_IS_BOOT_TGT,
++	if (!fnode_sess) {
++		rc = -EINVAL;
++		goto exit_ddb_del;
++	}
 +
-+	ISCSI_FLASHNODE_MAX,
-+};
++	if (fnode_sess->is_boot_target) {
++		rc = -EPERM;
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s: Deletion of boot target entry is not permitted.\n",
++				  __func__));
++		goto exit_ddb_del;
++	}
 +
-+struct iscsi_flashnode_param_info {
-+	uint32_t len;		/* Actual length of the param */
-+	uint16_t param;		/* iscsi param value */
-+	uint8_t value[0];	/* length sized value follows */
-+} __packed;
++	if (fnode_sess->flash_state == DEV_DB_NON_PERSISTENT)
++		goto sysfs_ddb_del;
 +
-+enum iscsi_discovery_parent_type {
-+	ISCSI_DISC_PARENT_UNKNOWN	= 0x1,
-+	ISCSI_DISC_PARENT_SENDTGT	= 0x2,
-+	ISCSI_DISC_PARENT_ISNS		= 0x3,
-+};
++	ddb_cookie = dma_alloc_coherent(&ha->pdev->dev, sizeof(*ddb_cookie),
++					&fw_ddb_entry_dma, GFP_KERNEL);
++	if (!ddb_cookie) {
++		rc = -ENOMEM;
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s: Unable to allocate dma buffer\n",
++				  __func__));
++		goto exit_ddb_del;
++	}
 +
- /* iSCSI port Speed */
- enum iscsi_port_speed {
- 	ISCSI_PORT_SPEED_UNKNOWN	= 0x1,
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 53f0b36..4a58cca 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -39,6 +39,8 @@ struct iscsi_task;
- struct sockaddr;
- struct iscsi_iface;
- struct bsg_job;
-+struct iscsi_bus_flash_session;
-+struct iscsi_bus_flash_conn;
- 
++	if (is_qla40XX(ha)) {
++		dev_db_start_offset = FLASH_OFFSET_DB_INFO;
++	} else {
++		dev_db_start_offset = FLASH_RAW_ACCESS_ADDR +
++				      (ha->hw.flt_region_ddb << 2);
++		/* flt_ddb_size is DDB table size for both ports
++		 * so divide it by 2 to calculate the offset for second port
++		 */
++		if (ha->port_num == 1)
++			dev_db_start_offset += (ha->hw.flt_ddb_size / 2);
++	}
++
++	dev_db_end_offset = dev_db_start_offset + (ha->hw.flt_ddb_size / 2);
++	dev_db_start_offset += (fnode_sess->target_id * sizeof(*fw_ddb_entry));
++	dev_db_start_offset += (void *)&(fw_ddb_entry->cookie) -
++			       (void *)fw_ddb_entry;
++
++	DEBUG2(ql4_printk(KERN_ERR, ha, "%s: start offset=%u, end offset=%u\n",
++			  __func__, dev_db_start_offset, dev_db_end_offset));
++
++	if (dev_db_start_offset > dev_db_end_offset) {
++		rc = -EIO;
++		DEBUG2(ql4_printk(KERN_ERR, ha, "%s:Invalid DDB index %u\n",
++				  __func__, fnode_sess->target_id));
++		goto exit_ddb_del;
++	}
++
++	/* invalidate the cookie */
++	*ddb_cookie = 0xFFEE;
++	qla4xxx_set_flash(ha, fw_ddb_entry_dma, dev_db_start_offset,
++			  sizeof(*ddb_cookie), FLASH_OPT_RMW_COMMIT);
++
++sysfs_ddb_del:
++	target_id = fnode_sess->target_id;
++	iscsi_destroy_flashnode_sess(fnode_sess);
++	ql4_printk(KERN_INFO, ha,
++		   "%s: session and conn entries for flashnode %u of host %lu deleted\n",
++		   __func__, target_id, ha->host_no);
++exit_ddb_del:
++	if (ddb_cookie)
++		dma_free_coherent(&ha->pdev->dev, sizeof(*ddb_cookie),
++				  ddb_cookie, fw_ddb_entry_dma);
++	return rc;
++}
++
++/**
++ * qla4xxx_sysfs_ddb_export - Create sysfs entries for firmware DDBs
++ * @ha: pointer to adapter structure
++ *
++ * Export the firmware DDB for all send targets and normal targets to sysfs.
++ **/
++static int qla4xxx_sysfs_ddb_export(struct scsi_qla_host *ha)
++{
++	struct dev_db_entry *fw_ddb_entry = NULL;
++	dma_addr_t fw_ddb_entry_dma;
++	uint16_t max_ddbs;
++	uint16_t idx = 0;
++	int ret = QLA_SUCCESS;
++
++	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev,
++					  sizeof(*fw_ddb_entry),
++					  &fw_ddb_entry_dma, GFP_KERNEL);
++	if (!fw_ddb_entry) {
++		DEBUG2(ql4_printk(KERN_ERR, ha,
++				  "%s: Unable to allocate dma buffer\n",
++				  __func__));
++		return -ENOMEM;
++	}
++
++	max_ddbs =  is_qla40XX(ha) ? MAX_DEV_DB_ENTRIES_40XX :
++				     MAX_DEV_DB_ENTRIES;
++
++	for (idx = 0; idx < max_ddbs; idx++) {
++		if (qla4xxx_flashdb_by_index(ha, fw_ddb_entry, fw_ddb_entry_dma,
++					     idx))
++			continue;
++
++		ret = qla4xxx_sysfs_ddb_tgt_create(ha, fw_ddb_entry, &idx, 0);
++		if (ret) {
++			ret = -EIO;
++			break;
++		}
++	}
++
++	dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry), fw_ddb_entry,
++			  fw_ddb_entry_dma);
++
++	return ret;
++}
++
++static void qla4xxx_sysfs_ddb_remove(struct scsi_qla_host *ha)
++{
++	iscsi_destroy_all_flashnode(ha->host);
++}
++
  /**
-  * struct iscsi_transport - iSCSI Transport template
-@@ -150,6 +152,19 @@ struct iscsi_transport {
- 	int (*get_chap) (struct Scsi_Host *shost, uint16_t chap_tbl_idx,
- 			 uint32_t *num_entries, char *buf);
- 	int (*delete_chap) (struct Scsi_Host *shost, uint16_t chap_tbl_idx);
-+	int (*get_flashnode_param) (struct iscsi_bus_flash_session *fnode_sess,
-+				    int param, char *buf);
-+	int (*set_flashnode_param) (struct iscsi_bus_flash_session *fnode_sess,
-+				    struct iscsi_bus_flash_conn *fnode_conn,
-+				    void *data, int len);
-+	int (*new_flashnode) (struct Scsi_Host *shost, const char *buf,
-+			      int len);
-+	int (*del_flashnode) (struct iscsi_bus_flash_session *fnode_sess);
-+	int (*login_flashnode) (struct iscsi_bus_flash_session *fnode_sess,
-+				struct iscsi_bus_flash_conn *fnode_conn);
-+	int (*logout_flashnode) (struct iscsi_bus_flash_session *fnode_sess,
-+				 struct iscsi_bus_flash_conn *fnode_conn);
-+	int (*logout_flashnode_sid) (struct iscsi_cls_session *cls_sess);
- };
+  * qla4xxx_build_ddb_list - Build ddb list and setup sessions
+  * @ha: pointer to adapter structure
+@@ -5452,6 +7094,10 @@ skip_retry_init:
+ 		ql4_printk(KERN_ERR, ha,
+ 			   "%s: No iSCSI boot target configured\n", __func__);
  
- /*
-@@ -286,6 +301,112 @@ struct iscsi_iface {
- #define iscsi_iface_to_shost(_iface) \
- 	dev_to_shost(_iface->dev.parent)
++	if (qla4xxx_sysfs_ddb_export(ha))
++		ql4_printk(KERN_ERR, ha,
++			   "%s: Error exporting ddb to sysfs\n", __func__);
++
+ 		/* Perform the build ddb list and login to each */
+ 	qla4xxx_build_ddb_list(ha, INIT_ADAPTER);
+ 	iscsi_host_for_each_session(ha->host, qla4xxx_login_flash_ddb);
+@@ -5577,6 +7223,7 @@ static void qla4xxx_remove_adapter(struct pci_dev *pdev)
+ 	qla4xxx_destroy_fw_ddb_session(ha);
+ 	qla4_8xxx_free_sysfs_attr(ha);
  
-+
-+struct iscsi_bus_flash_conn {
-+	struct list_head conn_list;	/* item in connlist */
-+	void *dd_data;			/* LLD private data */
-+	struct iscsi_transport *transport;
-+	struct device dev;		/* sysfs transport/container device */
-+	/* iscsi connection parameters */
-+	uint32_t		exp_statsn;
-+	uint32_t		statsn;
-+	unsigned		max_recv_dlength; /* initiator_max_recv_dsl*/
-+	unsigned		max_xmit_dlength; /* target_max_recv_dsl */
-+	unsigned		max_segment_size;
-+	unsigned		tcp_xmit_wsf;
-+	unsigned		tcp_recv_wsf;
-+	int			hdrdgst_en;
-+	int			datadgst_en;
-+	int			port;
-+	char			*ipaddress;
-+	char			*link_local_ipv6_addr;
-+	char			*redirect_ipaddr;
-+	uint16_t		keepalive_timeout;
-+	uint16_t		local_port;
-+	uint8_t			snack_req_en;
-+	/* tcp timestamp negotiation status */
-+	uint8_t			tcp_timestamp_stat;
-+	uint8_t			tcp_nagle_disable;
-+	/* tcp window scale factor */
-+	uint8_t			tcp_wsf_disable;
-+	uint8_t			tcp_timer_scale;
-+	uint8_t			tcp_timestamp_en;
-+	uint8_t			ipv4_tos;
-+	uint8_t			ipv6_traffic_class;
-+	uint8_t			ipv6_flow_label;
-+	uint8_t			fragment_disable;
-+	/* Link local IPv6 address is assigned by firmware or driver */
-+	uint8_t			is_fw_assigned_ipv6;
-+};
-+
-+#define iscsi_dev_to_flash_conn(_dev) \
-+	container_of(_dev, struct iscsi_bus_flash_conn, dev)
-+
-+#define iscsi_flash_conn_to_flash_session(_conn) \
-+	iscsi_dev_to_flash_session(_conn->dev.parent)
-+
-+#define ISID_SIZE 6
-+
-+struct iscsi_bus_flash_session {
-+	struct list_head sess_list;		/* item in session_list */
-+	struct iscsi_transport *transport;
-+	unsigned int target_id;
-+	int flash_state;	/* persistent or non-persistent */
-+	void *dd_data;				/* LLD private data */
-+	struct device dev;	/* sysfs transport/container device */
-+	/* iscsi session parameters */
-+	unsigned		first_burst;
-+	unsigned		max_burst;
-+	unsigned short		max_r2t;
-+	int			default_taskmgmt_timeout;
-+	int			initial_r2t_en;
-+	int			imm_data_en;
-+	int			time2wait;
-+	int			time2retain;
-+	int			pdu_inorder_en;
-+	int			dataseq_inorder_en;
-+	int			erl;
-+	int			tpgt;
-+	char			*username;
-+	char			*username_in;
-+	char			*password;
-+	char			*password_in;
-+	char			*targetname;
-+	char			*targetalias;
-+	char			*portal_type;
-+	uint16_t		tsid;
-+	uint16_t		chap_in_idx;
-+	uint16_t		chap_out_idx;
-+	/* index of iSCSI discovery session if the entry is
-+	 * discovered by iSCSI discovery session
-+	 */
-+	uint16_t		discovery_parent_idx;
-+	/* indicates if discovery was done through iSNS discovery service
-+	 * or through sendTarget */
-+	uint16_t		discovery_parent_type;
-+	/* Firmware auto sendtarget discovery disable */
-+	uint8_t			auto_snd_tgt_disable;
-+	uint8_t			discovery_sess;
-+	/* indicates if this flashnode entry is enabled or disabled */
-+	uint8_t			entry_state;
-+	uint8_t			chap_auth_en;
-+	/* enables firmware to auto logout the discovery session on discovery
-+	 * completion
-+	 */
-+	uint8_t			discovery_logout_en;
-+	uint8_t			bidi_chap_en;
-+	/* makes authentication for discovery session optional */
-+	uint8_t			discovery_auth_optional;
-+	uint8_t			isid[ISID_SIZE];
-+	uint8_t			is_boot_target;
-+};
-+
-+#define iscsi_dev_to_flash_session(_dev) \
-+	container_of(_dev, struct iscsi_bus_flash_session, dev)
-+
-+#define iscsi_flash_session_to_shost(_session) \
-+	dev_to_shost(_session->dev.parent)
-+
- /*
-  * session and connection functions that can be used by HW iSCSI LLDs
-  */
-@@ -330,4 +451,34 @@ extern char *iscsi_get_port_speed_name(struct Scsi_Host *shost);
- extern char *iscsi_get_port_state_name(struct Scsi_Host *shost);
- extern int iscsi_is_session_dev(const struct device *dev);
++	qla4xxx_sysfs_ddb_remove(ha);
+ 	scsi_remove_host(ha->host);
  
-+extern char *iscsi_get_discovery_parent_name(int parent_type);
-+extern struct device *
-+iscsi_find_flashnode(struct Scsi_Host *shost, void *data,
-+		     int (*fn)(struct device *dev, void *data));
-+
-+extern struct iscsi_bus_flash_session *
-+iscsi_create_flashnode_sess(struct Scsi_Host *shost, int index,
-+			    struct iscsi_transport *transport, int dd_size);
-+
-+extern struct iscsi_bus_flash_conn *
-+iscsi_create_flashnode_conn(struct Scsi_Host *shost,
-+			    struct iscsi_bus_flash_session *fnode_sess,
-+			    struct iscsi_transport *transport, int dd_size);
-+
-+extern void
-+iscsi_destroy_flashnode_sess(struct iscsi_bus_flash_session *fnode_sess);
-+
-+extern void iscsi_destroy_all_flashnode(struct Scsi_Host *shost);
-+extern int iscsi_flashnode_bus_match(struct device *dev,
-+				     struct device_driver *drv);
-+extern int iscsi_is_flashnode_conn_dev(struct device *dev, void *data);
-+
-+extern struct device *
-+iscsi_find_flashnode_sess(struct Scsi_Host *shost, void *data,
-+			  int (*fn)(struct device *dev, void *data));
-+
-+extern struct device *
-+iscsi_find_flashnode_conn(struct iscsi_bus_flash_session *fnode_sess,
-+			  void *data,
-+			  int (*fn)(struct device *dev, void *data));
- #endif
+ 	qla4xxx_free_adapter(ha);
 -- 
 1.7.1
 
