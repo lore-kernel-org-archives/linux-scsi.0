@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC-v2 01/12] target: Add export of target_get_sess_cmd symbol
-Date: Fri, 22 Mar 2013 23:55:25 +0000
-Message-ID: <1363996536-30644-2-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC-v2 02/12] iscsi-target: Add iscsit_transport API template
+Date: Fri, 22 Mar 2013 23:55:26 +0000
+Message-ID: <1363996536-30644-3-git-send-email-nab@linux-iscsi.org>
 References: <1363996536-30644-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1363996536-30644-1-git-send-email-nab@linux-iscsi.org>
@@ -12,56 +12,196 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Export target_get_sess_cmd() symbol so that it can be used by
-iscsi-target.
+Add basic struct iscsit_transport API template to allow iscsi-target for
+running with external transport modules using existing iscsi_target_core.h
+code.
+
+For all external modules, this calls try_module_get() and module_put()
+to obtain + release an external iscsit_transport module reference count.
+
+Also include the iscsi-target symbols necessary in iscsi_transport.h to
+allow external transport modules to function.
+
+v2 changes:
+
+- Drop unnecessary export of iscsit_get_transport + iscsit_put_transport (roland)
+- Add ->iscsit_queue_data_in() to remove extra context switch on RDMA_WRITE
+- Add ->iscsit_queue_status() to remove extra context switch on IB_SEND status
+- Add ->iscsit_get_dataout() to remove extra context switch on RDMA_READ
+- Drop ->iscsit_free_cmd()
+- Drop ->iscsit_unmap_cmd()
+- Rename iscsit_create_transport() -> iscsit_register_transport() (andy)
+- Rename iscsit_destroy_transport() -> iscsit_unregister_transport() (andy)
 
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |    4 ++--
- include/target/target_core_fabric.h    |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/target/iscsi/Makefile                 |    3 +-
+ drivers/target/iscsi/iscsi_target_transport.c |   55 +++++++++++++++++
+ include/target/iscsi/iscsi_transport.h        |   81 +++++++++++++++++++++++++
+ 3 files changed, 138 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/target/iscsi/iscsi_target_transport.c
+ create mode 100644 include/target/iscsi/iscsi_transport.h
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 6c325b1..ee28992 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -65,7 +65,6 @@ static void transport_complete_task_attr(struct se_cmd *cmd);
- static void transport_handle_queue_full(struct se_cmd *cmd,
- 		struct se_device *dev);
- static int transport_generic_get_mem(struct se_cmd *cmd);
--static int target_get_sess_cmd(struct se_session *, struct se_cmd *, bool);
- static void transport_put_cmd(struct se_cmd *cmd);
- static void target_complete_ok_work(struct work_struct *work);
+diff --git a/drivers/target/iscsi/Makefile b/drivers/target/iscsi/Makefile
+index 5b9a2cf..13a9240 100644
+--- a/drivers/target/iscsi/Makefile
++++ b/drivers/target/iscsi/Makefile
+@@ -15,6 +15,7 @@ iscsi_target_mod-y +=		iscsi_target_parameters.o \
+ 				iscsi_target_util.o \
+ 				iscsi_target.o \
+ 				iscsi_target_configfs.o \
+-				iscsi_target_stat.o
++				iscsi_target_stat.o \
++				iscsi_target_transport.o
  
-@@ -2177,7 +2176,7 @@ EXPORT_SYMBOL(transport_generic_free_cmd);
-  * @se_cmd:	command descriptor to add
-  * @ack_kref:	Signal that fabric will perform an ack target_put_sess_cmd()
-  */
--static int target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd,
-+int target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd,
- 			       bool ack_kref)
- {
- 	unsigned long flags;
-@@ -2206,6 +2205,7 @@ out:
- 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
- 	return ret;
- }
-+EXPORT_SYMBOL(target_get_sess_cmd);
- 
- static void target_release_cmd_kref(struct kref *kref)
- {
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index aaa1ee6..ba3471b 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -120,7 +120,7 @@ bool	transport_wait_for_tasks(struct se_cmd *);
- int	transport_check_aborted_status(struct se_cmd *, int);
- int	transport_send_check_condition_and_sense(struct se_cmd *,
- 		sense_reason_t, int);
--
-+int	target_get_sess_cmd(struct se_session *, struct se_cmd *, bool);
- int	target_put_sess_cmd(struct se_session *, struct se_cmd *);
- void	target_sess_cmd_list_set_waiting(struct se_session *);
- void	target_wait_for_sess_cmds(struct se_session *, int);
+ obj-$(CONFIG_ISCSI_TARGET)	+= iscsi_target_mod.o
+diff --git a/drivers/target/iscsi/iscsi_target_transport.c b/drivers/target/iscsi/iscsi_target_transport.c
+new file mode 100644
+index 0000000..882728f
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_transport.c
+@@ -0,0 +1,55 @@
++#include <linux/spinlock.h>
++#include <linux/list.h>
++#include <target/iscsi/iscsi_transport.h>
++
++static LIST_HEAD(g_transport_list);
++static DEFINE_MUTEX(transport_mutex);
++
++struct iscsit_transport *iscsit_get_transport(int type)
++{
++	struct iscsit_transport *t;
++
++	mutex_lock(&transport_mutex);
++	list_for_each_entry(t, &g_transport_list, t_node) {
++		if (t->transport_type == type) {
++			if (t->owner && !try_module_get(t->owner)) {
++				t = NULL;
++			}
++			mutex_unlock(&transport_mutex);
++			return t;
++		}
++	}
++	mutex_unlock(&transport_mutex);
++
++	return NULL;
++}
++
++void iscsit_put_transport(struct iscsit_transport *t)
++{
++	if (t->owner)
++		module_put(t->owner);
++}
++
++int iscsit_register_transport(struct iscsit_transport *t)
++{
++	INIT_LIST_HEAD(&t->t_node);
++
++	mutex_lock(&transport_mutex);
++	list_add_tail(&t->t_node, &g_transport_list);
++	mutex_unlock(&transport_mutex);
++
++	pr_debug("Registered iSCSI transport: %s\n", t->name);
++
++	return 0;
++}
++EXPORT_SYMBOL(iscsit_register_transport);
++
++void iscsit_unregister_transport(struct iscsit_transport *t)
++{
++	mutex_lock(&transport_mutex);
++	list_del(&t->t_node);
++	mutex_unlock(&transport_mutex);
++
++	pr_debug("Unregistered iSCSI transport: %s\n", t->name);
++}
++EXPORT_SYMBOL(iscsit_unregister_transport);
+diff --git a/include/target/iscsi/iscsi_transport.h b/include/target/iscsi/iscsi_transport.h
+new file mode 100644
+index 0000000..dcf7dd0f
+--- /dev/null
++++ b/include/target/iscsi/iscsi_transport.h
+@@ -0,0 +1,81 @@
++#include <linux/module.h>
++#include <linux/list.h>
++#include "../../../drivers/target/iscsi/iscsi_target_core.h"
++
++struct iscsit_transport {
++#define ISCSIT_TRANSPORT_NAME	16
++	char name[ISCSIT_TRANSPORT_NAME];
++	int transport_type;
++	struct module *owner;
++	struct list_head t_node;
++	int (*iscsit_setup_np)(struct iscsi_np *, struct __kernel_sockaddr_storage *);
++	int (*iscsit_accept_np)(struct iscsi_np *, struct iscsi_conn *);
++	void (*iscsit_free_np)(struct iscsi_np *);
++	void (*iscsit_free_conn)(struct iscsi_conn *);
++	struct iscsi_cmd *(*iscsit_alloc_cmd)(struct iscsi_conn *, gfp_t);
++	int (*iscsit_get_login_rx)(struct iscsi_conn *, struct iscsi_login *);
++	int (*iscsit_put_login_tx)(struct iscsi_conn *, struct iscsi_login *, u32);
++	int (*iscsit_immediate_queue)(struct iscsi_conn *, struct iscsi_cmd *, int);
++	int (*iscsit_response_queue)(struct iscsi_conn *, struct iscsi_cmd *, int);
++	int (*iscsit_get_dataout)(struct iscsi_conn *, struct iscsi_cmd *, bool);
++	int (*iscsit_queue_data_in)(struct iscsi_conn *, struct iscsi_cmd *);
++	int (*iscsit_queue_status)(struct iscsi_conn *, struct iscsi_cmd *);
++};
++
++/*
++ * From iscsi_target_transport.c
++ */
++
++extern int iscsit_register_transport(struct iscsit_transport *);
++extern void iscsit_unregister_transport(struct iscsit_transport *);
++extern struct iscsit_transport *iscsit_get_transport(int);
++extern void iscsit_put_transport(struct iscsit_transport *);
++
++/*
++ * From iscsi_target.c
++ */
++extern int iscsit_add_reject_from_cmd(u8, int, int, unsigned char *,
++				struct iscsi_cmd *);
++extern int iscsit_setup_scsi_cmd(struct iscsi_conn *, struct iscsi_cmd *,
++				unsigned char *);
++extern void iscsit_set_unsoliticed_dataout(struct iscsi_cmd *);
++extern int iscsit_process_scsi_cmd(struct iscsi_conn *, struct iscsi_cmd *,
++				struct iscsi_scsi_req *);
++extern int iscsit_check_dataout_hdr(struct iscsi_conn *, unsigned char *,
++				struct iscsi_cmd **);
++extern int iscsit_check_dataout_payload(struct iscsi_cmd *, struct iscsi_data *,
++				bool);
++extern int iscsit_handle_nop_out(struct iscsi_conn *, struct iscsi_cmd *,
++				unsigned char *);
++extern int iscsit_handle_logout_cmd(struct iscsi_conn *, struct iscsi_cmd *,
++				unsigned char *);
++extern int iscsit_handle_task_mgt_cmd(struct iscsi_conn *, struct iscsi_cmd *,
++				unsigned char *);
++extern void iscsit_build_rsp_pdu(struct iscsi_cmd *, struct iscsi_conn *,
++				bool, struct iscsi_scsi_rsp *);
++extern void iscsit_build_nopin_rsp(struct iscsi_cmd *, struct iscsi_conn *,
++				struct iscsi_nopin *, bool);
++extern void iscsit_build_task_mgt_rsp(struct iscsi_cmd *, struct iscsi_conn *,
++				struct iscsi_tm_rsp *);
++extern int iscsit_build_logout_rsp(struct iscsi_cmd *, struct iscsi_conn *,
++				struct iscsi_logout_rsp *);
++extern int iscsit_logout_post_handler(struct iscsi_cmd *, struct iscsi_conn *);
++/*
++ * From iscsi_target_device.c
++ */
++extern void iscsit_increment_maxcmdsn(struct iscsi_cmd *, struct iscsi_session *);
++/*
++ * From iscsi_target_erl1.c
++ */
++extern void iscsit_stop_dataout_timer(struct iscsi_cmd *);
++
++/*
++ * From iscsi_target_tmr.c
++ */
++extern int iscsit_tmr_post_handler(struct iscsi_cmd *, struct iscsi_conn *);
++
++/*
++ * From iscsi_target_util.c
++ */
++extern struct iscsi_cmd *iscsit_allocate_cmd(struct iscsi_conn *, gfp_t);
++extern int iscsit_sequence_cmd(struct iscsi_conn *, struct iscsi_cmd *, __be32);
 -- 
 1.7.2.5
