@@ -1,20 +1,20 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 03/11] iscsi-target: Add iser-target parameter keys +
- setup during login
-Date: Fri, 22 Mar 2013 15:57:55 -0700
-Message-ID: <1363993075.30339.37.camel@haakon2.linux-iscsi.org>
+Subject: Re: [RFC 04/11] iscsi-target: Add per transport iscsi_cmd
+ alloc/free
+Date: Fri, 22 Mar 2013 15:59:21 -0700
+Message-ID: <1363993161.30339.39.camel@haakon2.linux-iscsi.org>
 References: <1362707116-31406-1-git-send-email-nab@linux-iscsi.org>
-	 <1362707116-31406-4-git-send-email-nab@linux-iscsi.org>
-	 <514C938F.30301@redhat.com>
+	 <1362707116-31406-5-git-send-email-nab@linux-iscsi.org>
+	 <514C9394.7000501@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:48656 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:45471 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423359Ab3CVW56 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Mar 2013 18:57:58 -0400
-In-Reply-To: <514C938F.30301@redhat.com>
+	with ESMTP id S1423536Ab3CVW7Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Mar 2013 18:59:24 -0400
+In-Reply-To: <514C9394.7000501@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andy Grover <agrover@redhat.com>
@@ -24,192 +24,80 @@ On Fri, 2013-03-22 at 10:23 -0700, Andy Grover wrote:
 > On 03/07/2013 05:45 PM, Nicholas A. Bellinger wrote:
 > > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > >
-> > This patch adds RDMAExtensions, InitiatorRecvDataSegmentLength and
-> > TargetRecvDataSegmentLength parameters keys necessary for iser-target
-> > login to occur.
+> > This patch converts struct iscsi_cmd memory allocation + free to use
+> > ->iscsit_alloc_cmd() + ->iscsit_free_cmd() iscsit_transport API caller,
+> > and export iscsit_allocate_cmd() + iscsit_free_cmd() symbols
 > >
-> > This includes setting the necessary parameters during login path
-> > code within iscsi_login_zero_tsih_s2(), and currently PAGE_SIZE
-> > aligning the target's advertised MRDSL for immediate data and
-> > unsolicited data-out incoming payloads.
+> > Also update iscsit_free_cmd() to include a final ->iscsit_unmap_cmd()
+> > API call.
 > >
 > > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > > ---
-> >   drivers/target/iscsi/iscsi_target_core.h       |   10 +++
-> >   drivers/target/iscsi/iscsi_target_login.c      |   69 +++++++++++++++++++---
-> >   drivers/target/iscsi/iscsi_target_parameters.c |   75 ++++++++++++++++++++++--
-> >   drivers/target/iscsi/iscsi_target_parameters.h |   16 +++++-
-> >   4 files changed, 156 insertions(+), 14 deletions(-)
+> >   drivers/target/iscsi/iscsi_target.c      |    2 +
+> >   drivers/target/iscsi/iscsi_target_util.c |   34 ++++++++++++++++++++++++++---
+> >   drivers/target/iscsi/iscsi_target_util.h |    2 +
+> >   3 files changed, 34 insertions(+), 4 deletions(-)
 > >
-> > diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
-> > index 2587677..553cc1a 100644
-> > --- a/drivers/target/iscsi/iscsi_target_core.h
-> > +++ b/drivers/target/iscsi/iscsi_target_core.h
-> > @@ -244,6 +244,11 @@ struct iscsi_conn_ops {
-> >   	u8	IFMarker;			/* [0,1] == [No,Yes] */
-> >   	u32	OFMarkInt;			/* [1..65535] */
-> >   	u32	IFMarkInt;			/* [1..65535] */
-> > +	/*
-> > +	 * iSER specific connection parameters
-> > +	 */
-> > +	u32	InitiatorRecvDataSegmentLength;	/* [512..2**24-1] */
-> > +	u32	TargetRecvDataSegmentLength;	/* [512..2**24-1] */
-> >   };
-> >
-> >   struct iscsi_sess_ops {
-> > @@ -265,6 +270,10 @@ struct iscsi_sess_ops {
-> >   	u8	DataSequenceInOrder;		/* [0,1] == [No,Yes] */
-> >   	u8	ErrorRecoveryLevel;		/* [0..2] */
-> >   	u8	SessionType;			/* [0,1] == [Normal,Discovery]*/
-> > +	/*
-> > +	 * iSER specific session parameters
-> > +	 */
-> > +	u8	RDMAExtentions;			/* [0,1] == [No,Yes] */
-> 
-> Typo throughout.
-> 
+> > diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> > index 4dc1c9b..9cd7b7b 100644
+> > --- a/drivers/target/iscsi/iscsi_target.c
+> > +++ b/drivers/target/iscsi/iscsi_target.c
 
-Whoops..  Fixed.
+<SNIP>
 
-> >   };
+> > @@ -176,6 +186,7 @@ struct iscsi_cmd *iscsit_allocate_cmd(struct iscsi_conn *conn, gfp_t gfp_mask)
 > >
-> >   struct iscsi_queue_req {
-> > @@ -284,6 +293,7 @@ struct iscsi_data_count {
-> >   };
-> >
-> >   struct iscsi_param_list {
-> > +	bool			iser;
-> >   	struct list_head	param_list;
-> >   	struct list_head	extra_response_list;
-> >   };
-> > diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-> > index 9354a5f..bc4e0f8 100644
-> > --- a/drivers/target/iscsi/iscsi_target_login.c
-> > +++ b/drivers/target/iscsi/iscsi_target_login.c
-> > @@ -343,6 +343,7 @@ static int iscsi_login_zero_tsih_s2(
-> >   	struct iscsi_node_attrib *na;
-> >   	struct iscsi_session *sess = conn->sess;
-> >   	unsigned char buf[32];
-> > +	bool iser = false;
-> >
-> >   	sess->tpg = conn->tpg;
-> >
-> > @@ -364,7 +365,10 @@ static int iscsi_login_zero_tsih_s2(
-> >   		return -1;
-> >   	}
-> >
-> > -	iscsi_set_keys_to_negotiate(0, conn->param_list);
-> > +	if (conn->conn_transport->transport_type == ISCSI_INFINIBAND)
-> > +		iser = true;
-> > +
-> > +	iscsi_set_keys_to_negotiate(conn->param_list, iser);
-> >
-> >   	if (sess->sess_ops->SessionType)
-> >   		return iscsi_set_keys_irrelevant_for_discovery(
-> > @@ -402,6 +406,56 @@ static int iscsi_login_zero_tsih_s2(
-> >
-> >   	if (iscsi_login_disable_FIM_keys(conn->param_list, conn) < 0)
-> >   		return -1;
-> > +	/*
-> > +	 * Set RDMAExtensions=Yes by default for iSER enabled network portals
-> > +	 */
-> > +	if (iser == true) {
-> 
-> if (iser) {
-
-Changed.
-
-> 
-> > +		struct iscsi_param *param;
-> > +		unsigned long mrdsl, off;
-> > +		int rc;
-> > +
-> > +		sprintf(buf, "RDMAExtensions=Yes");
-> > +		if (iscsi_change_param_value(buf, conn->param_list, 0) < 0) {
-> > +			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
-> > +				ISCSI_LOGIN_STATUS_NO_RESOURCES);
-> > +			return -1;
-> > +		}
-> > +		/*
-> > +		 * Make MaxRecvDataSegmentLength PAGE_SIZE aligned for
-> > +		 * Immediate Data + Unsolicitied Data-OUT if necessary..
-> > +		 */
-> > +		param = iscsi_find_param_from_key("MaxRecvDataSegmentLength",
-> > +						  conn->param_list);
-> > +		if (!param) {
-> > +			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
-> > +				ISCSI_LOGIN_STATUS_NO_RESOURCES);
-> > +			return -1;
-> > +		}
-> > +		rc = strict_strtoul(param->value, 0, &mrdsl);
-> > +		if (rc < 0) {
-> > +			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
-> > +				ISCSI_LOGIN_STATUS_NO_RESOURCES);
-> > +			return -1;
-> > +		}
-> > +		off = mrdsl % PAGE_SIZE;
-> > +		if (!off)
-> > +			return 0;
-> > +
-> > +		if (mrdsl < PAGE_SIZE)
-> > +			mrdsl = PAGE_SIZE;
-> > +		else
-> > +			mrdsl -= off;
-> 
-> Is there some PAGE_ROUND_DOWN macro we might use here?
-> 
-
-Not AFAICT in current code..
-
-> > +
-> > +		pr_warn("Aligning ISER MaxRecvDataSegmentLength: %lu down"
-> > +			" to PAGE_SIZE\n", mrdsl);
-> > +
-> > +		sprintf(buf, "MaxRecvDataSegmentLength=%lu\n", mrdsl);
-> > +		if (iscsi_change_param_value(buf, conn->param_list, 0) < 0) {
-> > +			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
-> > +				ISCSI_LOGIN_STATUS_NO_RESOURCES);
-> > +			return -1;
-> > +		}
-> > +	}
-> >
-> >   	return 0;
+> >   	return cmd;
 > >   }
-> > @@ -481,6 +535,7 @@ static int iscsi_login_non_zero_tsih_s2(
-> >   	struct se_portal_group *se_tpg = &tpg->tpg_se_tpg;
-> >   	struct se_session *se_sess, *se_sess_tmp;
-> >   	struct iscsi_login_req *pdu = (struct iscsi_login_req *)buf;
-> > +	bool iser = false;
+> > +EXPORT_SYMBOL(iscsit_allocate_cmd);
 > >
-> >   	spin_lock_bh(&se_tpg->session_lock);
-> >   	list_for_each_entry_safe(se_sess, se_sess_tmp, &se_tpg->tpg_sess_list,
-> > @@ -530,7 +585,10 @@ static int iscsi_login_non_zero_tsih_s2(
-> >   		return -1;
+> >   struct iscsi_seq *iscsit_get_seq_holder_for_datain(
+> >   	struct iscsi_cmd *cmd,
+> > @@ -661,6 +672,11 @@ void iscsit_free_queue_reqs_for_conn(struct iscsi_conn *conn)
+> >   	spin_unlock_bh(&conn->response_queue_lock);
+> >   }
+> >
+> > +void iscsit_cache_free_cmd(struct iscsi_cmd *cmd)
+> 
+> Caching is an implementation detail, rename to iscsit_free_cmd()?
+> 
+
+Already removed for forth-coming RFC-v2 code.
+
+> > +{
+> > +	kmem_cache_free(lio_cmd_cache, cmd);
+> > +}
+> > +
+> >   void iscsit_release_cmd(struct iscsi_cmd *cmd)
+> >   {
+> >   	struct iscsi_conn *conn = cmd->conn;
+> > @@ -679,17 +695,26 @@ void iscsit_release_cmd(struct iscsi_cmd *cmd)
+> >   		iscsit_remove_cmd_from_response_queue(cmd, conn);
 > >   	}
 > >
-> > -	iscsi_set_keys_to_negotiate(0, conn->param_list);
-> > +	if (conn->conn_transport->transport_type == ISCSI_INFINIBAND)
-> > +		iser = true;
-> 
-> Can we avoid type checks in the transport-neutral code?
-> 
-
-For this case, not AFAICT.  As sess->sess_ops->RDMAExtensions has not
-been setup yet.
-
+> > -	kmem_cache_free(lio_cmd_cache, cmd);
+> > +	conn->conn_transport->iscsit_free_cmd(cmd);
+> >   }
+> >
+> >   void iscsit_free_cmd(struct iscsi_cmd *cmd)
+> >   {
+> > +	struct iscsi_conn *conn = cmd->conn;
+> >   	/*
+> >   	 * Determine if a struct se_cmd is associated with
+> >   	 * this struct iscsi_cmd.
+> >   	 */
+> >   	switch (cmd->iscsi_opcode) {
+> >   	case ISCSI_OP_SCSI_CMD:
+> > +		if (cmd->data_direction == DMA_TO_DEVICE)
+> > +			iscsit_stop_dataout_timer(cmd);
 > > +
-> > +	iscsi_set_keys_to_negotiate(conn->param_list, iser);
+> > +		if (conn->conn_transport->iscsit_unmap_cmd)
+> > +			conn->conn_transport->iscsit_unmap_cmd(cmd, conn);
 > 
-> Maybe it's too ugly to go that far, but it might be nicer to pass 
-> conn_transport to this fn and check transport_type inside, instead of 
-> passing the iser bool.
+> Don't check, just call it?
 > 
 
-I'd like to avoid any more transport_type other than the single one
-mentioned above.
-
-Thanks,
+->iscsit_unmap_cmd() has been dropped entirety for RFC-v2 code.
 
 --nab
-
 
