@@ -1,46 +1,45 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/4] qla4xxx: Patches for iSCSI flash node mgmt support
-Date: Sat, 23 Mar 2013 01:28:55 -0500
-Message-ID: <514D4BA7.7060308@cs.wisc.edu>
-References: <1363952492-16205-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH V6 5/5] virtio-scsi: reset virtqueue affinity when doing
+	cpu hotplug
+Date: Sat, 23 Mar 2013 07:36:30 +0100
+Message-ID: <514D4D6E.4000303@redhat.com>
+References: <1363762884-11000-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	<1363762884-11000-6-git-send-email-gaowanlong@cn.fujitsu.com>
+	<20130320072425.GA23182@hj.localdomain>
+	<51496BAF.2030202@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:60718 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754801Ab3CWG3F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Mar 2013 02:29:05 -0400
-In-Reply-To: <1363952492-16205-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <51496BAF.2030202@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: gaowanlong@cn.fujitsu.com
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, poornima.vonti@qlogic.com, manish.rangankar@qlogic.com
 
-On 03/22/2013 06:41 AM, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Il 20/03/2013 08:56, Wanlong Gao ha scritto:
+>> This one does not apply on top of virtio-next + patch 1-4 in this series.
 > 
-> James,
+> I'm very sorry.
 > 
-> Following patches allows iscsiadm to manage iSCSI target information
-> stored on adapter flash on per host basis and and perform various
-> operations like add, delete, login, logout, and update the target
-> information.
+> This fault is because I modified the 4/5 from 
+> "/* if the affinity hint is set for virtqueues */"
+> to
+> "/* If the affinity hint is set for virtqueues */"
+> by hand.
 > 
-> Please apply these patches to the scsi tree "misc" branch at your
-> earliest convenience.
-> 
-> Adheer Chandravanshi (3):
->       scsi_transport_iscsi: Add flash node mgmt support
->       libiscsi: export function iscsi_switch_str_param
->       qla4xxx: Add flash node mgmt support
-> 
+> You can also change "If" to "if" in 5/5 to apply this patch without 3-way merge.
 
-In the last patch, the
+Can you respin?
 
-+#define DEV_TYPE_IPV4  "ipv4"
-+#define DEV_TYPE_IPV6  "ipv6"
+So we can ask James for his Acked-by and get this merged in the next window.
 
-should probably go in the iscsi class, but if it is ok with James then I
-think that can be done in a later cleanup patch since there has been a
-lot of work done on these patches already and we should get them in.
+Paolo
