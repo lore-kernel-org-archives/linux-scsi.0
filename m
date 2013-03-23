@@ -1,178 +1,119 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v12 0/5] block layer runtime pm
-Date: Sat, 23 Mar 2013 11:42:23 +0800
-Message-ID: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-pm-owner@vger.kernel.org>
-Sender: linux-pm-owner@vger.kernel.org
+Subject: [PATCH v12 2/5] scsi: use REQ_PM in sd's runtime suspend operation
+Date: Sat, 23 Mar 2013 11:42:25 +0800
+Message-ID: <1364010148-8584-3-git-send-email-aaron.lu@intel.com>
+References: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>
 Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-In August 2010, Jens and Alan discussed about "Runtime PM and the block
-layer". http://marc.info/?t=128259108400001&r=1&w=2
-And then Alan has given a detailed implementation guide:
-http://marc.info/?l=linux-scsi&m=133727953625963&w=2
+From: Lin Ming <ming.m.lin@intel.com>
 
-To test:
-# ls -l /sys/block/sda
-/sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/block/sda
+With the introduction of REQ_PM, modify sd's runtime suspend operation
+functions to use that flag so that the operations to put the device into
+runtime suspended state(i.e. sync cache and stop device) will not affect
+its runtime PM status.
 
-# echo 10000 > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/autosuspend_delay_ms
-# echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/control
-Then you'll see sda is suspended after 10secs idle.
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+---
+ drivers/scsi/scsi_lib.c    |  9 ++++-----
+ drivers/scsi/sd.c          |  9 +++++----
+ include/scsi/scsi_device.h | 16 ++++++++++++----
+ 3 files changed, 21 insertions(+), 13 deletions(-)
 
-[ 1767.680192] sd 2:0:0:0: [sda] Synchronizing SCSI cache
-[ 1767.680317] sd 2:0:0:0: [sda] Stopping disk
-
-And if you do some IO, it will resume immediately.
-[ 1791.052438] sd 2:0:0:0: [sda] Starting disk
-
-For test, I often set the autosuspend time to 1 second. If you are using
-a GUI, the 10 seconds delay may be too long that the disk can not enter
-runtime suspended state.
-
-Note that sd's runtime suspend callback will dump some kernel messages
-and the syslog daemon will write kernel message to /var/log/messages,
-making the disk instantly resume after suspended. So for test, the
-syslog daemon should better be temporarily stopped.
-
-A git repo for it, on top of block/for-next:
-https://github.com/aaronlu/linux.git blockpm
-
-v12:
-- Split patch 1 into 2 patches, one introduces REQ_PM in block layer
-  and one uses that flag in SCSI layer, suggested by Jens Axboe.
-
-v11:
-- Add Alan Stern's Acked-by tag.
-
-v10:
-- Add link of Alan Stern's ideas on block layer runtime PM to patch 2
-  and 3's changelog;
-- Add back code to schdule device suspend if scsi driver return -EBUSY.
-
-v9:
-- No need to mark last busy and autosuspend in blk_pm_runtime_init as
-  suggested by Alan Stern;
-- mark last busy in blk_runtime_post_suspend if driver failed to runtime
-  suspend the device, so that PM core can try to autosuspend it some
-  time later;
-- Update scsi bus layer runtime callback to handle scsi devices which
-  use request based runtime PM and which don't.
-
-v8:
-- Set default autosuspend delay to -1 to avoid suspend till an updated
-  value is set as suggested by Alan Stern;
-- Always check the dev field of the queue structure, as it is incorrect
-  and meaningless to do any operation on devices that do not use block
-  layer runtime PM as reminded by Alan Stern;
-- Update scsi bus level runtime PM callback to take care of scsi devices
-  that use block layer runtime PM and that don't.
-
-v7:
-- Add kernel doc for block layer runtime PM API as suggested by
-  Alan Stern;
-
-- Add back check for q->dev, as that serves as a flag if driver
-  is using block layer runtime PM;
-
-- Do not auto suspend when last request is finished, as that's a hot
-  path and auto suspend is not a trivial function. Instead, mark last
-  busy in pre_suspend so that runtim PM core will retry suspend some
-  time later to solve the 1st problem demostrated in v6, suggested by
-  Alan Stern.
-
-- Move block layer runtime PM strtegy functions to where they are
-  needed instead of in include/linux/blkdev.h as suggested by Alan
-  Stern since clients of block layer do not need to know those
-  functions.
-
-v6:
-Take over from Lin Ming.
-
-- Instead of put the device into autosuspend state in
-  blk_post_runtime_suspend, do it when the last request is finished.
-  This can also solve the problem illustrated below:
-
-      thread A				      thread B
-|suspend timer expired			|
-|  ... ...				|a new request comes in,
-|  ... ...				|blk_pm_add_request
-|  ... ...				|skip request_resume due to
-|  ... ...				|q->status is still RPM_ACTIVE
-|  rpm_suspend				|  ... ...
-|    scsi_runtime_suspend		|  ... ...
-|      blk_pre_runtime_suspend		|  ... ...
-|      return -EBUSY due to nr_pending	|  ... ...
-|  rpm_suspend done			|  ... ...
-|					|    blk_pm_put_request, mark last busy
-
-But no more trigger point, and the device will stay at RPM_ACTIVE state.
-Run pm_runtime_autosuspend after the last request is finished solved
-this problem.
-
-- Requests which have the REQ_PM flag should not involve nr_pending
-  counting, or we may lose the condition to resume the device:
-  Suppose queue is active and nr_pending is 0. Then a REQ_PM request
-  comes and nr_pending will be increased to 1, but since the request has
-  REQ_PM flag, it will not cause resume. Before it is finished, a normal
-  request comes in, and since nr_pending is 1 now, it will not trigger
-  the resume of the device either. Bug.
-
-- Do not quiesce the device in scsi bus level runtime suspend callback.
-  Since the only reason the device is to be runtime suspended is due to
-  no more requests pending for it, quiesce it is pointless.
-
-- Remove scsi_autopm_* from sd_check_events as we are request driven.
-
-- Call blk_pm_runtime_init in scsi_sysfs_initialize_dev, so that we do
-  not need to check queue's device in blk_pm_add/put_request.
-
-- Do not mark last busy and initiate an autosuspend for the device in
-  blk_pm_runtime_init function.
-
-- Do not mark last busy and initiate an autosuspend for the device in
-  block_post_runtime_resume, as when the request that triggered the
-  resume finished, the blk_pm_put_request will mark last busy and
-  initiate an autosuspend.
-
-v5:
-- rename scsi_execute_req to scsi_execute_req_flags
-  and wrap scsi_execute_req around it.
-- add detail function descriptions in patch 2 log
-- define static helper functions to do runtime pm work on block layer
-  and put the definitions inside a #ifdef block
-
-v4:
-- add CONFIG_PM_RUNTIME check
-- update queue runtime pm status after system resume
-- use pm_runtime_autosuspend instead of pm_request_autosuspend in scsi_runtime_idle
-- always count PM request
-
-v3:
-- remove block layer suspend/resume callbacks
-- add block layer runtime pm helper functions
-
-v2:
-- remove queue idle timer, use runtime pm core's auto suspend
-
-Lin Ming (5):
-  block: add a flag to identify PM request
-  scsi: use REQ_PM in sd's runtime suspend operation
-  block: add runtime pm helpers
-  block: implement runtime pm strategy
-  sd: change to auto suspend mode
-
- block/blk-core.c           | 183 +++++++++++++++++++++++++++++++++++++++++++++
- block/elevator.c           |  26 +++++++
- drivers/scsi/scsi_lib.c    |   9 +--
- drivers/scsi/scsi_pm.c     |  84 +++++++++++++++++----
- drivers/scsi/sd.c          |  22 ++----
- include/linux/blk_types.h  |   2 +
- include/linux/blkdev.h     |  27 +++++++
- include/scsi/scsi_device.h |  16 +++-
- 8 files changed, 331 insertions(+), 38 deletions(-)
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c31187d..86d5220 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -276,11 +276,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ }
+ EXPORT_SYMBOL(scsi_execute);
+ 
+-
+-int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
++int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned char *cmd,
+ 		     int data_direction, void *buffer, unsigned bufflen,
+ 		     struct scsi_sense_hdr *sshdr, int timeout, int retries,
+-		     int *resid)
++		     int *resid, int flags)
+ {
+ 	char *sense = NULL;
+ 	int result;
+@@ -291,14 +290,14 @@ int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
+ 			return DRIVER_ERROR << 24;
+ 	}
+ 	result = scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
+-			      sense, timeout, retries, 0, resid);
++			      sense, timeout, retries, flags, resid);
+ 	if (sshdr)
+ 		scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, sshdr);
+ 
+ 	kfree(sense);
+ 	return result;
+ }
+-EXPORT_SYMBOL(scsi_execute_req);
++EXPORT_SYMBOL(scsi_execute_req_flags);
+ 
+ /*
+  * Function:    scsi_init_cmd_errh()
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7992635..c6e2b34 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1424,8 +1424,9 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+ 		 * Leave the rest of the command zero to indicate
+ 		 * flush everything.
+ 		 */
+-		res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
+-				       SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL);
++		res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0,
++					     &sshdr, SD_FLUSH_TIMEOUT,
++					     SD_MAX_RETRIES, NULL, REQ_PM);
+ 		if (res == 0)
+ 			break;
+ 	}
+@@ -3021,8 +3022,8 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ 	if (!scsi_device_online(sdp))
+ 		return -ENODEV;
+ 
+-	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
+-			       SD_TIMEOUT, SD_MAX_RETRIES, NULL);
++	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
++			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
+ 	if (res) {
+ 		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
+ 		sd_print_result(sdkp, res);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index a7f9cba..cc64587 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -394,10 +394,18 @@ extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 			int data_direction, void *buffer, unsigned bufflen,
+ 			unsigned char *sense, int timeout, int retries,
+ 			int flag, int *resid);
+-extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
+-			    int data_direction, void *buffer, unsigned bufflen,
+-			    struct scsi_sense_hdr *, int timeout, int retries,
+-			    int *resid);
++extern int scsi_execute_req_flags(struct scsi_device *sdev,
++	const unsigned char *cmd, int data_direction, void *buffer,
++	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
++	int retries, int *resid, int flags);
++static inline int scsi_execute_req(struct scsi_device *sdev,
++	const unsigned char *cmd, int data_direction, void *buffer,
++	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
++	int retries, int *resid)
++{
++	return scsi_execute_req_flags(sdev, cmd, data_direction, buffer,
++		bufflen, sshdr, timeout, retries, resid, 0);
++}
+ extern void sdev_disable_disk_events(struct scsi_device *sdev);
+ extern void sdev_enable_disk_events(struct scsi_device *sdev);
+ 
 -- 
 1.8.1.4
-
