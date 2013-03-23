@@ -1,51 +1,57 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v12 1/5] block: add a flag to identify PM request
-Date: Sat, 23 Mar 2013 11:42:24 +0800
-Message-ID: <1364010148-8584-2-git-send-email-aaron.lu@intel.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v12 0/5] block layer runtime pm
+Date: Fri, 22 Mar 2013 22:23:45 -0600
+Message-ID: <20130323042345.GR1628@kernel.dk>
 References: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Lin Ming <ming.m.lin@intel.com>
+On Sat, Mar 23 2013, Aaron Lu wrote:
+> In August 2010, Jens and Alan discussed about "Runtime PM and the block
+> layer". http://marc.info/?t=128259108400001&r=1&w=2
+> And then Alan has given a detailed implementation guide:
+> http://marc.info/?l=linux-scsi&m=133727953625963&w=2
+> 
+> To test:
+> # ls -l /sys/block/sda
+> /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/block/sda
+> 
+> # echo 10000 > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/autosuspend_delay_ms
+> # echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/control
+> Then you'll see sda is suspended after 10secs idle.
+> 
+> [ 1767.680192] sd 2:0:0:0: [sda] Synchronizing SCSI cache
+> [ 1767.680317] sd 2:0:0:0: [sda] Stopping disk
+> 
+> And if you do some IO, it will resume immediately.
+> [ 1791.052438] sd 2:0:0:0: [sda] Starting disk
+> 
+> For test, I often set the autosuspend time to 1 second. If you are using
+> a GUI, the 10 seconds delay may be too long that the disk can not enter
+> runtime suspended state.
+> 
+> Note that sd's runtime suspend callback will dump some kernel messages
+> and the syslog daemon will write kernel message to /var/log/messages,
+> making the disk instantly resume after suspended. So for test, the
+> syslog daemon should better be temporarily stopped.
+> 
+> A git repo for it, on top of block/for-next:
+> https://github.com/aaronlu/linux.git blockpm
+> 
+> v12:
+> - Split patch 1 into 2 patches, one introduces REQ_PM in block layer
+>   and one uses that flag in SCSI layer, suggested by Jens Axboe.
 
-Add a flag REQ_PM to identify the request is PM related, such requests
-will not change the device request queue's runtime status. It is
-intended to be used in driver's runtime PM callback, so that driver can
-perform some IO to the device there with the queue's runtime status
-unaffected. e.g. in SCSI disk's runtime suspend callback, the disk will
-be put into stopped power state, and this require sending a command to
-the device. Such command processing should not change the disk's runtime
-status.
+Thanks Aaron, I've applied 1, and 3-4. I'll leave 2 and 5 for James to
+pickup. James, if you want me to carry them, just let me know.
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
----
- include/linux/blk_types.h | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index cdf1119..fcc1ce2 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -175,6 +175,7 @@ enum rq_flag_bits {
- 	__REQ_IO_STAT,		/* account I/O stat */
- 	__REQ_MIXED_MERGE,	/* merge of different types, fail separately */
- 	__REQ_KERNEL, 		/* direct IO to kernel pages */
-+	__REQ_PM,		/* runtime pm request */
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
-@@ -223,5 +224,6 @@ enum rq_flag_bits {
- #define REQ_MIXED_MERGE		(1 << __REQ_MIXED_MERGE)
- #define REQ_SECURE		(1 << __REQ_SECURE)
- #define REQ_KERNEL		(1 << __REQ_KERNEL)
-+#define REQ_PM			(1 << __REQ_PM)
- 
- #endif /* __LINUX_BLK_TYPES_H */
 -- 
-1.8.1.4
+Jens Axboe
+
