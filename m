@@ -1,7 +1,8 @@
 From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: [PATCH V7 3/5] virtio-scsi: push vq lock/unlock into virtscsi_vq_done
-Date: Sat, 23 Mar 2013 19:28:42 +0800
-Message-ID: <1364038124-32479-4-git-send-email-gaowanlong@cn.fujitsu.com>
+Subject: [PATCH V7 2/5] virtio-scsi: pass struct virtio_scsi to virtqueue
+	completion function
+Date: Sat, 23 Mar 2013 19:28:41 +0800
+Message-ID: <1364038124-32479-3-git-send-email-gaowanlong@cn.fujitsu.com>
 References: <1364038124-32479-1-git-send-email-gaowanlong@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,81 +24,89 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Paolo Bonzini <pbonzini@redhat.com>
 
-Avoid duplicated code in all of the callers.
+This will be needed soon in order to retrieve the per-target
+struct.
 
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
 Reviewed-by: Asias He <asias@redhat.com>
 ---
- drivers/scsi/virtio_scsi.c | 22 +++++++++-------------
- 1 file changed, 9 insertions(+), 13 deletions(-)
+ drivers/scsi/virtio_scsi.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index c23560c..dc2daec 100644
+index ffa03e8..c23560c 100644
 --- a/drivers/scsi/virtio_scsi.c
 +++ b/drivers/scsi/virtio_scsi.c
-@@ -165,28 +165,30 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+@@ -104,7 +104,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
+  *
+  * Called with vq_lock held.
+  */
+-static void virtscsi_complete_cmd(void *buf)
++static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+ {
+ 	struct virtio_scsi_cmd *cmd = buf;
+ 	struct scsi_cmnd *sc = cmd->sc;
+@@ -165,7 +165,8 @@ static void virtscsi_complete_cmd(void *buf)
  	sc->scsi_done(sc);
  }
  
--static void virtscsi_vq_done(struct virtio_scsi *vscsi, struct virtqueue *vq,
-+static void virtscsi_vq_done(struct virtio_scsi *vscsi,
-+			     struct virtio_scsi_vq *virtscsi_vq,
- 			     void (*fn)(struct virtio_scsi *vscsi, void *buf))
+-static void virtscsi_vq_done(struct virtqueue *vq, void (*fn)(void *buf))
++static void virtscsi_vq_done(struct virtio_scsi *vscsi, struct virtqueue *vq,
++			     void (*fn)(struct virtio_scsi *vscsi, void *buf))
  {
  	void *buf;
  	unsigned int len;
-+	unsigned long flags;
-+	struct virtqueue *vq = virtscsi_vq->vq;
- 
-+	spin_lock_irqsave(&virtscsi_vq->vq_lock, flags);
+@@ -173,7 +174,7 @@ static void virtscsi_vq_done(struct virtqueue *vq, void (*fn)(void *buf))
  	do {
  		virtqueue_disable_cb(vq);
  		while ((buf = virtqueue_get_buf(vq, &len)) != NULL)
- 			fn(vscsi, buf);
+-			fn(buf);
++			fn(vscsi, buf);
  	} while (!virtqueue_enable_cb(vq));
-+	spin_unlock_irqrestore(&virtscsi_vq->vq_lock, flags);
  }
  
- static void virtscsi_req_done(struct virtqueue *vq)
- {
- 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	unsigned long flags;
+@@ -184,11 +185,11 @@ static void virtscsi_req_done(struct virtqueue *vq)
+ 	unsigned long flags;
  
--	spin_lock_irqsave(&vscsi->req_vq.vq_lock, flags);
--	virtscsi_vq_done(vscsi, vq, virtscsi_complete_cmd);
--	spin_unlock_irqrestore(&vscsi->req_vq.vq_lock, flags);
-+	virtscsi_vq_done(vscsi, &vscsi->req_vq, virtscsi_complete_cmd);
+ 	spin_lock_irqsave(&vscsi->req_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_cmd);
++	virtscsi_vq_done(vscsi, vq, virtscsi_complete_cmd);
+ 	spin_unlock_irqrestore(&vscsi->req_vq.vq_lock, flags);
  };
  
- static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
-@@ -203,11 +205,8 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
+-static void virtscsi_complete_free(void *buf)
++static void virtscsi_complete_free(struct virtio_scsi *vscsi, void *buf)
  {
- 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	unsigned long flags;
+ 	struct virtio_scsi_cmd *cmd = buf;
  
--	spin_lock_irqsave(&vscsi->ctrl_vq.vq_lock, flags);
--	virtscsi_vq_done(vscsi, vq, virtscsi_complete_free);
--	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
-+	virtscsi_vq_done(vscsi, &vscsi->ctrl_vq, virtscsi_complete_free);
+@@ -205,7 +206,7 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&vscsi->ctrl_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_free);
++	virtscsi_vq_done(vscsi, vq, virtscsi_complete_free);
+ 	spin_unlock_irqrestore(&vscsi->ctrl_vq.vq_lock, flags);
  };
  
- static int virtscsi_kick_event(struct virtio_scsi *vscsi,
-@@ -342,11 +341,8 @@ static void virtscsi_event_done(struct virtqueue *vq)
- {
- 	struct Scsi_Host *sh = virtio_scsi_host(vq->vdev);
- 	struct virtio_scsi *vscsi = shost_priv(sh);
--	unsigned long flags;
+@@ -329,7 +330,7 @@ static void virtscsi_handle_event(struct work_struct *work)
+ 	virtscsi_kick_event(vscsi, event_node);
+ }
  
--	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
--	virtscsi_vq_done(vscsi, vq, virtscsi_complete_event);
--	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
-+	virtscsi_vq_done(vscsi, &vscsi->event_vq, virtscsi_complete_event);
+-static void virtscsi_complete_event(void *buf)
++static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
+ {
+ 	struct virtio_scsi_event_node *event_node = buf;
+ 
+@@ -344,7 +345,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
+-	virtscsi_vq_done(vq, virtscsi_complete_event);
++	virtscsi_vq_done(vscsi, vq, virtscsi_complete_event);
+ 	spin_unlock_irqrestore(&vscsi->event_vq.vq_lock, flags);
  };
  
- /**
 -- 
 1.8.2.rc2
