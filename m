@@ -1,58 +1,38 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.9-rc4
-Date: Sat, 23 Mar 2013 16:50:18 -0700
-Message-ID: <1364082618.30339.312.camel@haakon2.linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Asias He <asias@redhat.com>, Andy Grover <agrover@redhat.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH 5/5] qla2xxx: Update the driver version to 8.04.00.13-k.
+Date: Mon, 25 Mar 2013 02:21:40 -0400
+Message-ID: <1364192500-17013-6-git-send-email-saurav.kashyap@qlogic.com>
+References: <1364192500-17013-1-git-send-email-saurav.kashyap@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mvnat01.qlogic.com ([198.186.3.73]:57446 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1755482Ab3CYGo1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Mar 2013 02:44:27 -0400
+In-Reply-To: <1364192500-17013-1-git-send-email-saurav.kashyap@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Hi Linus!
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Here is the current set of target-pending/master fixes for v3.9-rc4.
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index 2b6e478..ec54036 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,7 +7,7 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "8.04.00.08-k"
++#define QLA2XXX_VERSION      "8.04.00.13-k"
+ 
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	4
+-- 
+1.7.7
 
-Please go ahead and pull from:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
-
-These are mostly minor fixes this time around.  The iscsi-target CHAP
-big-endian bugfix and bump FD_MAX_SECTORS=2048 default patch to allow
-1MB sized I/Os for FILEIO backends on >= v3.5 code are both CC'ed to
-stable.
-
-Also, there is a persistent reservations regression that has recently
-been reported for >= v3.8.x code, that is currently being tracked down
-for v3.9.
-
-Thank you,
-
---nab
-
-Andy Grover (1):
-  target/iscsi: Fix mutual CHAP auth on big-endian arches
-
-Asias He (3):
-  tcm_vhost: Add missed lock in vhost_scsi_clear_endpoint()
-  tcm_vhost: Flush vhost_work in vhost_scsi_flush()
-  target/pscsi: Reject cross page boundary case in pscsi_map_sg
-
-Hannes Reinecke (1):
-  target_core_sbc: use noop for SYNCHRONIZE_CACHE
-
-Nicholas Bellinger (1):
-  target/file: Bump FD_MAX_SECTORS to 2048 to handle 1M sized I/Os
-
-Wei Yongjun (1):
-  target: fix possible memory leak in core_tpg_register()
-
- drivers/target/iscsi/iscsi_target_auth.c |    5 ++++-
- drivers/target/target_core_file.h        |    2 +-
- drivers/target/target_core_pscsi.c       |   11 ++++++++---
- drivers/target/target_core_sbc.c         |    7 +++++--
- drivers/target/target_core_tpg.c         |    3 ++-
- drivers/vhost/tcm_vhost.c                |   13 +++++++++----
- 6 files changed, 29 insertions(+), 12 deletions(-)
