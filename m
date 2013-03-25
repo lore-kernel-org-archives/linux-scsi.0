@@ -1,41 +1,60 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 4/5] qla2xxx: Remove debug code that msleeps for random duration.
-Date: Mon, 25 Mar 2013 02:21:39 -0400
-Message-ID: <1364192500-17013-5-git-send-email-saurav.kashyap@qlogic.com>
-References: <1364192500-17013-1-git-send-email-saurav.kashyap@qlogic.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:38858 "HELO linux-zupk.site"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755409Ab3CYGo0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Mar 2013 02:44:26 -0400
-In-Reply-To: <1364192500-17013-1-git-send-email-saurav.kashyap@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH V7 4/5] virtio-scsi: introduce multiqueue support
+Date: Mon, 25 Mar 2013 08:25:58 +0100
+Message-ID: <514FFC06.9030703@acm.org>
+References: <1364038124-32479-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	<1364038124-32479-5-git-send-email-gaowanlong@cn.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1364038124-32479-5-git-send-email-gaowanlong@cn.fujitsu.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_attr.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+On 03/23/13 12:28, Wanlong Gao wrote:
+> +static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
+> +					       struct virtio_scsi_target_state *tgt)
+> +{
+> +	struct virtio_scsi_vq *vq;
+> +	unsigned long flags;
+> +	u32 queue_num;
+> +
+> +	spin_lock_irqsave(&tgt->tgt_lock, flags);
+> +
+> +	/*
+> +	 * The memory barrier after atomic_inc_return matches
+> +	 * the smp_read_barrier_depends() in virtscsi_req_done.
+> +	 */
+> +	if (atomic_inc_return(&tgt->reqs) > 1)
+> +		vq = ACCESS_ONCE(tgt->req_vq);
+> +	else {
+> +		queue_num = smp_processor_id();
+> +		while (unlikely(queue_num >= vscsi->num_queues))
+> +			queue_num -= vscsi->num_queues;
+> +
+> +		tgt->req_vq = vq = &vscsi->req_vqs[queue_num];
+> +	}
+> +
+> +	spin_unlock_irqrestore(&tgt->tgt_lock, flags);
+> +	return vq;
+> +}
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 1d82eef..b3db9dc 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1938,11 +1938,6 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
- 		    "Timer for the VP[%d] has stopped\n", vha->vp_idx);
- 	}
- 
--	/* No pending activities shall be there on the vha now */
--	if (ql2xextended_error_logging & ql_dbg_user)
--		msleep(random32()%10);  /* Just to see if something falls on
--					* the net we have placed below */
--
- 	BUG_ON(atomic_read(&vha->vref_count));
- 
- 	qla2x00_free_fcports(vha);
--- 
-1.7.7
+Is there any reason why the smp_processor_id() % vscsi->num_queues 
+computation in virtscsi_pick_vq() has been implemented as a loop instead 
+of as an arithmetic operation ? If so, I would appreciate it if that 
+could be explained in a comment.
 
+Thanks,
+
+Bart.
