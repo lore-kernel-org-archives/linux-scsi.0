@@ -1,190 +1,116 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 2/5] fcoe: Fix deadlock between create and destroy paths
-Date: Mon, 25 Mar 2013 16:35:51 -0700
-Message-ID: <20130325233551.17257.95868.stgit@fritz>
+Subject: [PATCH 3/5] libfc, fcoe,
+ bnx2fc: Always use fcoe_disc_init for discovery layer initialization
+Date: Mon, 25 Mar 2013 16:35:56 -0700
+Message-ID: <20130325233556.17257.56489.stgit@fritz>
 References: <20130325233539.17257.76078.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:8166 "EHLO mga14.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:48318 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932338Ab3CYXfz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Mar 2013 19:35:55 -0400
+	id S933598Ab3CYXf5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Mar 2013 19:35:57 -0400
 In-Reply-To: <20130325233539.17257.76078.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Jack Morgan <jack.morgan@intel.com>
+Cc: Jack Morgan <jack.morgan@intel.com>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-We can deadlock (s_active and fcoe_config_mutex) if a
-port is being destroyed at the same time one is being created.
-
-[ 4200.503113] ======================================================
-[ 4200.503114] [ INFO: possible circular locking dependency detected ]
-[ 4200.503116] 3.8.0-rc5+ #8 Not tainted
-[ 4200.503117] -------------------------------------------------------
-[ 4200.503118] kworker/3:2/2492 is trying to acquire lock:
-[ 4200.503119]  (s_active#292){++++.+}, at: [<ffffffff8122d20b>] sysfs_addrm_finish+0x3b/0x70
-[ 4200.503127]
-but task is already holding lock:
-[ 4200.503128]  (fcoe_config_mutex){+.+.+.}, at: [<ffffffffa02f3338>] fcoe_destroy_work+0xe8/0x120 [fcoe]
-[ 4200.503133]
-which lock already depends on the new lock.
-
-[ 4200.503135]
-the existing dependency chain (in reverse order) is:
-[ 4200.503136]
--> #1 (fcoe_config_mutex){+.+.+.}:
-[ 4200.503139]        [<ffffffff810c7711>] lock_acquire+0xa1/0x140
-[ 4200.503143]        [<ffffffff816ca7be>] mutex_lock_nested+0x6e/0x360
-[ 4200.503146]        [<ffffffffa02f11bd>] fcoe_enable+0x1d/0xb0 [fcoe]
-[ 4200.503148]        [<ffffffffa02f127d>] fcoe_ctlr_enabled+0x2d/0x50 [fcoe]
-[ 4200.503151]        [<ffffffffa02ffbe8>] store_ctlr_enabled+0x38/0x90 [libfcoe]
-[ 4200.503154]        [<ffffffff81424878>] dev_attr_store+0x18/0x30
-[ 4200.503157]        [<ffffffff8122b750>] sysfs_write_file+0xe0/0x150
-[ 4200.503160]        [<ffffffff811b334c>] vfs_write+0xac/0x180
-[ 4200.503162]        [<ffffffff811b3692>] sys_write+0x52/0xa0
-[ 4200.503164]        [<ffffffff816d7159>] system_call_fastpath+0x16/0x1b
-[ 4200.503167]
--> #0 (s_active#292){++++.+}:
-[ 4200.503170]        [<ffffffff810c680f>] __lock_acquire+0x135f/0x1c90
-[ 4200.503172]        [<ffffffff810c7711>] lock_acquire+0xa1/0x140
-[ 4200.503174]        [<ffffffff8122c626>] sysfs_deactivate+0x116/0x160
-[ 4200.503176]        [<ffffffff8122d20b>] sysfs_addrm_finish+0x3b/0x70
-[ 4200.503178]        [<ffffffff8122b2eb>] sysfs_hash_and_remove+0x5b/0xb0
-[ 4200.503180]        [<ffffffff8122f3d1>] sysfs_remove_group+0x61/0x100
-[ 4200.503183]        [<ffffffff814251eb>] device_remove_groups+0x3b/0x60
-[ 4200.503185]        [<ffffffff81425534>] device_remove_attrs+0x44/0x80
-[ 4200.503187]        [<ffffffff81425e97>] device_del+0x127/0x1c0
-[ 4200.503189]        [<ffffffff81425f52>] device_unregister+0x22/0x60
-[ 4200.503191]        [<ffffffffa0300970>] fcoe_ctlr_device_delete+0xe0/0xf0 [libfcoe]
-[ 4200.503194]        [<ffffffffa02f1b5c>] fcoe_interface_cleanup+0x6c/0xa0 [fcoe]
-[ 4200.503196]        [<ffffffffa02f3355>] fcoe_destroy_work+0x105/0x120 [fcoe]
-[ 4200.503198]        [<ffffffff8107ee91>] process_one_work+0x1a1/0x580
-[ 4200.503203]        [<ffffffff81080c6e>] worker_thread+0x15e/0x440
-[ 4200.503205]        [<ffffffff8108715a>] kthread+0xea/0xf0
-[ 4200.503207]        [<ffffffff816d70ac>] ret_from_fork+0x7c/0xb0
-
-[ 4200.503209]
-other info that might help us debug this:
-
-[ 4200.503211]  Possible unsafe locking scenario:
-
-[ 4200.503212]        CPU0                    CPU1
-[ 4200.503213]        ----                    ----
-[ 4200.503214]   lock(fcoe_config_mutex);
-[ 4200.503215]                                lock(s_active#292);
-[ 4200.503218]                                lock(fcoe_config_mutex);
-[ 4200.503219]   lock(s_active#292);
-[ 4200.503221]
- *** DEADLOCK ***
-
-[ 4200.503223] 3 locks held by kworker/3:2/2492:
-[ 4200.503224]  #0:  (fcoe){.+.+.+}, at: [<ffffffff8107ee2b>] process_one_work+0x13b/0x580
-[ 4200.503228]  #1:  ((&port->destroy_work)){+.+.+.}, at: [<ffffffff8107ee2b>] process_one_work+0x13b/0x580
-[ 4200.503232]  #2:  (fcoe_config_mutex){+.+.+.}, at: [<ffffffffa02f3338>] fcoe_destroy_work+0xe8/0x120 [fcoe]
-[ 4200.503236]
-stack backtrace:
-[ 4200.503238] Pid: 2492, comm: kworker/3:2 Not tainted 3.8.0-rc5+ #8
-[ 4200.503240] Call Trace:
-[ 4200.503243]  [<ffffffff816c2f09>] print_circular_bug+0x1fb/0x20c
-[ 4200.503246]  [<ffffffff810c680f>] __lock_acquire+0x135f/0x1c90
-[ 4200.503248]  [<ffffffff810c463a>] ? debug_check_no_locks_freed+0x9a/0x180
-[ 4200.503250]  [<ffffffff810c7711>] lock_acquire+0xa1/0x140
-[ 4200.503253]  [<ffffffff8122d20b>] ? sysfs_addrm_finish+0x3b/0x70
-[ 4200.503255]  [<ffffffff8122c626>] sysfs_deactivate+0x116/0x160
-[ 4200.503258]  [<ffffffff8122d20b>] ? sysfs_addrm_finish+0x3b/0x70
-[ 4200.503260]  [<ffffffff8122d20b>] sysfs_addrm_finish+0x3b/0x70
-[ 4200.503262]  [<ffffffff8122b2eb>] sysfs_hash_and_remove+0x5b/0xb0
-[ 4200.503265]  [<ffffffff8122f3d1>] sysfs_remove_group+0x61/0x100
-[ 4200.503273]  [<ffffffff814251eb>] device_remove_groups+0x3b/0x60
-[ 4200.503275]  [<ffffffff81425534>] device_remove_attrs+0x44/0x80
-[ 4200.503277]  [<ffffffff81425e97>] device_del+0x127/0x1c0
-[ 4200.503279]  [<ffffffff81425f52>] device_unregister+0x22/0x60
-[ 4200.503282]  [<ffffffffa0300970>] fcoe_ctlr_device_delete+0xe0/0xf0 [libfcoe]
-[ 4200.503285]  [<ffffffffa02f1b5c>] fcoe_interface_cleanup+0x6c/0xa0 [fcoe]
-[ 4200.503287]  [<ffffffffa02f3355>] fcoe_destroy_work+0x105/0x120 [fcoe]
-[ 4200.503290]  [<ffffffff8107ee91>] process_one_work+0x1a1/0x580
-[ 4200.503292]  [<ffffffff8107ee2b>] ? process_one_work+0x13b/0x580
-[ 4200.503295]  [<ffffffffa02f3250>] ? fcoe_if_destroy+0x230/0x230 [fcoe]
-[ 4200.503297]  [<ffffffff81080c6e>] worker_thread+0x15e/0x440
-[ 4200.503299]  [<ffffffff81080b10>] ? busy_worker_rebind_fn+0x100/0x100
-[ 4200.503301]  [<ffffffff8108715a>] kthread+0xea/0xf0
-[ 4200.503304]  [<ffffffff81087070>] ? kthread_create_on_node+0x160/0x160
-[ 4200.503306]  [<ffffffff816d70ac>] ret_from_fork+0x7c/0xb0
-[ 4200.503308]  [<ffffffff81087070>] ? kthread_create_on_node+0x160/0x160
+Currently libfcoe is doing some libfc discovery layer initialization outside of
+libfc. This patch moves this code into libfc and sets up a split in discovery
+(one time) initialization code and (re-configurable) settings that will come in
+the next patch.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 Tested-by: Jack Morgan <jack.morgan@intel.com>
+Reviewed-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c     |   11 ++++++-----
+ drivers/scsi/libfc/fc_disc.c      |    5 +++--
+ include/scsi/libfc.h              |    2 +-
+ 4 files changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index b5d92fc..9bfdc9a 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -490,7 +490,6 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- {
- 	struct net_device *netdev = fcoe->netdev;
- 	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
--	struct fcoe_ctlr_device *ctlr_dev = fcoe_ctlr_to_ctlr_dev(fip);
- 
- 	rtnl_lock();
- 	if (!fcoe->removed)
-@@ -501,7 +500,6 @@ static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 	/* tear-down the FCoE controller */
- 	fcoe_ctlr_destroy(fip);
- 	scsi_host_put(fip->lp->host);
--	fcoe_ctlr_device_delete(ctlr_dev);
- 	dev_put(netdev);
- 	module_put(THIS_MODULE);
- }
-@@ -2194,6 +2192,8 @@ out_nodev:
-  */
- static void fcoe_destroy_work(struct work_struct *work)
- {
-+	struct fcoe_ctlr_device *cdev;
-+	struct fcoe_ctlr *ctlr;
- 	struct fcoe_port *port;
- 	struct fcoe_interface *fcoe;
- 	struct Scsi_Host *shost;
-@@ -2224,10 +2224,15 @@ static void fcoe_destroy_work(struct work_struct *work)
- 	mutex_lock(&fcoe_config_mutex);
- 
- 	fcoe = port->priv;
-+	ctlr = fcoe_to_ctlr(fcoe);
-+	cdev = fcoe_ctlr_to_ctlr_dev(ctlr);
-+
- 	fcoe_if_destroy(port->lport);
- 	fcoe_interface_cleanup(fcoe);
- 
- 	mutex_unlock(&fcoe_config_mutex);
-+
-+	fcoe_ctlr_device_delete(cdev);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index cc4791c..b867b1b 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -939,7 +939,7 @@ static int bnx2fc_libfc_config(struct fc_lport *lport)
+ 	fc_elsct_init(lport);
+ 	fc_exch_init(lport);
+ 	fc_rport_init(lport);
+-	fc_disc_init(lport);
++	fc_disc_init(lport, lport);
+ 	return 0;
  }
  
- /**
-@@ -2335,7 +2340,9 @@ static int _fcoe_create(struct net_device *netdev, enum fip_state fip_mode,
- 		rc = -EIO;
- 		rtnl_unlock();
- 		fcoe_interface_cleanup(fcoe);
--		goto out_nortnl;
-+		mutex_unlock(&fcoe_config_mutex);
-+		fcoe_ctlr_device_delete(ctlr_dev);
-+		goto out;
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 08c3bc3..ba2f977 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2826,6 +2826,8 @@ unlock:
+ int fcoe_libfc_config(struct fc_lport *lport, struct fcoe_ctlr *fip,
+ 		      const struct libfc_function_template *tt, int init_fcp)
+ {
++	void *priv = lport;
++
+ 	/* Set the function pointers set by the LLDD */
+ 	memcpy(&lport->tt, tt, sizeof(*tt));
+ 	if (init_fcp && fc_fcp_init(lport))
+@@ -2842,12 +2844,11 @@ int fcoe_libfc_config(struct fc_lport *lport, struct fcoe_ctlr *fip,
+ 		lport->tt.disc_start = fcoe_ctlr_disc_start;
+ 		lport->tt.disc_stop = fcoe_ctlr_disc_stop;
+ 		lport->tt.disc_stop_final = fcoe_ctlr_disc_stop_final;
+-		mutex_init(&lport->disc.disc_mutex);
+-		INIT_LIST_HEAD(&lport->disc.rports);
+-		lport->disc.priv = fip;
+-	} else {
+-		fc_disc_init(lport);
++		priv = fip;
  	}
- 
- 	/* Make this the "master" N_Port */
-@@ -2375,8 +2382,8 @@ static int _fcoe_create(struct net_device *netdev, enum fip_state fip_mode,
- 
- out_nodev:
- 	rtnl_unlock();
--out_nortnl:
- 	mutex_unlock(&fcoe_config_mutex);
-+out:
- 	return rc;
++
++	fc_disc_init(lport, priv);
++
+ 	return 0;
  }
+ EXPORT_SYMBOL_GPL(fcoe_libfc_config);
+diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+index 8e561e6..141c54b 100644
+--- a/drivers/scsi/libfc/fc_disc.c
++++ b/drivers/scsi/libfc/fc_disc.c
+@@ -714,8 +714,9 @@ static void fc_disc_stop_final(struct fc_lport *lport)
+ /**
+  * fc_disc_init() - Initialize the discovery layer for a local port
+  * @lport: The local port that needs the discovery layer to be initialized
++ * @priv: Private data structre for users of the discovery layer
+  */
+-int fc_disc_init(struct fc_lport *lport)
++int fc_disc_init(struct fc_lport *lport, void *priv)
+ {
+ 	struct fc_disc *disc;
  
+@@ -736,7 +737,7 @@ int fc_disc_init(struct fc_lport *lport)
+ 	mutex_init(&disc->disc_mutex);
+ 	INIT_LIST_HEAD(&disc->rports);
+ 
+-	disc->priv = lport;
++	disc->priv = priv;
+ 
+ 	return 0;
+ }
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 399162b..add2a49 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -1074,7 +1074,7 @@ void fc_rport_terminate_io(struct fc_rport *);
+ /*
+  * DISCOVERY LAYER
+  *****************************/
+-int fc_disc_init(struct fc_lport *);
++int fc_disc_init(struct fc_lport *, void *);
+ 
+ static inline struct fc_lport *fc_disc_lport(struct fc_disc *disc)
+ {
 
