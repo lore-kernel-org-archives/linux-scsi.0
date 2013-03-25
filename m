@@ -1,116 +1,140 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 3/5] libfc, fcoe,
- bnx2fc: Always use fcoe_disc_init for discovery layer initialization
-Date: Mon, 25 Mar 2013 16:35:56 -0700
-Message-ID: <20130325233556.17257.56489.stgit@fritz>
+Subject: [PATCH 5/5] libfcoe: Fix fcoe_sysfs VN2VN mode
+Date: Mon, 25 Mar 2013 16:36:06 -0700
+Message-ID: <20130325233606.17257.42919.stgit@fritz>
 References: <20130325233539.17257.76078.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48318 "EHLO mga09.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:22214 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933598Ab3CYXf5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Mar 2013 19:35:57 -0400
+	id S1752702Ab3CYXgI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Mar 2013 19:36:08 -0400
 In-Reply-To: <20130325233539.17257.76078.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Jack Morgan <jack.morgan@intel.com>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Currently libfcoe is doing some libfc discovery layer initialization outside of
-libfc. This patch moves this code into libfc and sets up a split in discovery
-(one time) initialization code and (re-configurable) settings that will come in
-the next patch.
+The libfc discovery layer is being initialized in the
+'create' paths for both legacy libfcoe module parameters
+and fcoe_sysfs control interfaces. The problem is that
+for VN2VN mode the discovery layer is initialized as if
+it were in 'fabric' mode and it is not re-configured when
+the mode is changed to 'vn2vn'.
+
+This patch splits out code that needs to be initialized
+once and code that can, and should be, re-configured when
+the mode changes. Additionally this patch makes that change
+so that the discovery layer can be reconfigured to the
+libfcoe implementation when in 'vn2vn' mode.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 Tested-by: Jack Morgan <jack.morgan@intel.com>
 Reviewed-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
- drivers/scsi/fcoe/fcoe_ctlr.c     |   11 ++++++-----
- drivers/scsi/libfc/fc_disc.c      |    5 +++--
- include/scsi/libfc.h              |    2 +-
- 4 files changed, 11 insertions(+), 9 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c |   60 +++++++++++++++++++++++++++++++----------
+ 1 file changed, 45 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index cc4791c..b867b1b 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -939,7 +939,7 @@ static int bnx2fc_libfc_config(struct fc_lport *lport)
- 	fc_elsct_init(lport);
- 	fc_exch_init(lport);
- 	fc_rport_init(lport);
--	fc_disc_init(lport);
-+	fc_disc_init(lport, lport);
- 	return 0;
- }
- 
 diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 08c3bc3..ba2f977 100644
+index 34ee56c..a762472 100644
 --- a/drivers/scsi/fcoe/fcoe_ctlr.c
 +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -2826,6 +2826,8 @@ unlock:
+@@ -2815,6 +2815,47 @@ unlock:
+ }
+ 
+ /**
++ * fcoe_ctlr_mode_set() - Set or reset the ctlr's mode
++ * @lport: The local port to be (re)configured
++ * @fip:   The FCoE controller whose mode is changing
++ * @fip_mode: The new fip mode
++ *
++ * Note that the we shouldn't be changing the libfc discovery settings
++ * (fc_disc_config) while an lport is going through the libfc state
++ * machine. The mode can only be changed when a fcoe_ctlr device is
++ * disabled, so that should ensure that this routine is only called
++ * when nothing is happening.
++ */
++void fcoe_ctlr_mode_set(struct fc_lport *lport, struct fcoe_ctlr *fip,
++			enum fip_state fip_mode)
++{
++	void *priv;
++
++	WARN_ON(lport->state != LPORT_ST_RESET &&
++		lport->state != LPORT_ST_DISABLED);
++
++	if (fip_mode == FIP_MODE_VN2VN) {
++		lport->rport_priv_size = sizeof(struct fcoe_rport);
++		lport->point_to_multipoint = 1;
++		lport->tt.disc_recv_req = fcoe_ctlr_disc_recv;
++		lport->tt.disc_start = fcoe_ctlr_disc_start;
++		lport->tt.disc_stop = fcoe_ctlr_disc_stop;
++		lport->tt.disc_stop_final = fcoe_ctlr_disc_stop_final;
++		priv = fip;
++	} else {
++		lport->rport_priv_size = 0;
++		lport->point_to_multipoint = 0;
++		lport->tt.disc_recv_req = NULL;
++		lport->tt.disc_start = NULL;
++		lport->tt.disc_stop = NULL;
++		lport->tt.disc_stop_final = NULL;
++		priv = lport;
++	}
++
++	fc_disc_config(lport, priv);
++}
++
++/**
+  * fcoe_libfc_config() - Sets up libfc related properties for local port
+  * @lport:    The local port to configure libfc for
+  * @fip:      The FCoE controller in use by the local port
+@@ -2826,8 +2867,6 @@ unlock:
  int fcoe_libfc_config(struct fc_lport *lport, struct fcoe_ctlr *fip,
  		      const struct libfc_function_template *tt, int init_fcp)
  {
-+	void *priv = lport;
-+
+-	void *priv = lport;
+-
  	/* Set the function pointers set by the LLDD */
  	memcpy(&lport->tt, tt, sizeof(*tt));
  	if (init_fcp && fc_fcp_init(lport))
-@@ -2842,12 +2844,11 @@ int fcoe_libfc_config(struct fc_lport *lport, struct fcoe_ctlr *fip,
- 		lport->tt.disc_start = fcoe_ctlr_disc_start;
- 		lport->tt.disc_stop = fcoe_ctlr_disc_stop;
- 		lport->tt.disc_stop_final = fcoe_ctlr_disc_stop_final;
--		mutex_init(&lport->disc.disc_mutex);
--		INIT_LIST_HEAD(&lport->disc.rports);
--		lport->disc.priv = fip;
--	} else {
--		fc_disc_init(lport);
-+		priv = fip;
- 	}
-+
-+	fc_disc_init(lport, priv);
-+
+@@ -2835,21 +2874,9 @@ int fcoe_libfc_config(struct fc_lport *lport, struct fcoe_ctlr *fip,
+ 	fc_exch_init(lport);
+ 	fc_elsct_init(lport);
+ 	fc_lport_init(lport);
+-	if (fip->mode == FIP_MODE_VN2VN)
+-		lport->rport_priv_size = sizeof(struct fcoe_rport);
+ 	fc_rport_init(lport);
+-	if (fip->mode == FIP_MODE_VN2VN) {
+-		lport->point_to_multipoint = 1;
+-		lport->tt.disc_recv_req = fcoe_ctlr_disc_recv;
+-		lport->tt.disc_start = fcoe_ctlr_disc_start;
+-		lport->tt.disc_stop = fcoe_ctlr_disc_stop;
+-		lport->tt.disc_stop_final = fcoe_ctlr_disc_stop_final;
+-		priv = fip;
+-	}
+-
+ 	fc_disc_init(lport);
+-	fc_disc_config(lport, priv);
+-
++	fcoe_ctlr_mode_set(lport, fip, fip->mode);
  	return 0;
  }
  EXPORT_SYMBOL_GPL(fcoe_libfc_config);
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 8e561e6..141c54b 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -714,8 +714,9 @@ static void fc_disc_stop_final(struct fc_lport *lport)
- /**
-  * fc_disc_init() - Initialize the discovery layer for a local port
-  * @lport: The local port that needs the discovery layer to be initialized
-+ * @priv: Private data structre for users of the discovery layer
-  */
--int fc_disc_init(struct fc_lport *lport)
-+int fc_disc_init(struct fc_lport *lport, void *priv)
+@@ -2877,6 +2904,7 @@ EXPORT_SYMBOL(fcoe_fcf_get_selected);
+ void fcoe_ctlr_set_fip_mode(struct fcoe_ctlr_device *ctlr_dev)
  {
- 	struct fc_disc *disc;
+ 	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(ctlr_dev);
++	struct fc_lport *lport = ctlr->lp;
  
-@@ -736,7 +737,7 @@ int fc_disc_init(struct fc_lport *lport)
- 	mutex_init(&disc->disc_mutex);
- 	INIT_LIST_HEAD(&disc->rports);
+ 	mutex_lock(&ctlr->ctlr_mutex);
+ 	switch (ctlr_dev->mode) {
+@@ -2890,5 +2918,7 @@ void fcoe_ctlr_set_fip_mode(struct fcoe_ctlr_device *ctlr_dev)
+ 	}
  
--	disc->priv = lport;
-+	disc->priv = priv;
- 
- 	return 0;
+ 	mutex_unlock(&ctlr->ctlr_mutex);
++
++	fcoe_ctlr_mode_set(lport, ctlr, ctlr->mode);
  }
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 399162b..add2a49 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -1074,7 +1074,7 @@ void fc_rport_terminate_io(struct fc_rport *);
- /*
-  * DISCOVERY LAYER
-  *****************************/
--int fc_disc_init(struct fc_lport *);
-+int fc_disc_init(struct fc_lport *, void *);
- 
- static inline struct fc_lport *fc_disc_lport(struct fc_disc *disc)
- {
+ EXPORT_SYMBOL(fcoe_ctlr_set_fip_mode);
 
