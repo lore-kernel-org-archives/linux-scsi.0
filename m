@@ -1,67 +1,84 @@
-From: Naresh Kumar Inna <naresh@chelsio.com>
-Subject: Re: [patch -next] csiostor: off by one error
-Date: Mon, 25 Mar 2013 17:30:04 +0530
-Message-ID: <51503C44.9070904@chelsio.com>
-References: <20130316100755.GB10825@longonot.mountain>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH 0/4] qla4xxx: Patches for iSCSI flash node mgmt support
+Date: Mon, 25 Mar 2013 12:29:04 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD28C127@avmb3.qlogic.org>
+References: <514D4BA7.7060308@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:7055 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756704Ab3CYMAT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Mar 2013 08:00:19 -0400
-In-Reply-To: <20130316100755.GB10825@longonot.mountain>
+Received: from am1ehsobe002.messaging.microsoft.com ([213.199.154.205]:32865
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757391Ab3CYM3Q convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Mar 2013 08:29:16 -0400
+In-Reply-To: <514D4BA7.7060308@cs.wisc.edu>
+Content-Language: en-US
+Content-ID: <570026FA5E4FA349A35AE71AA17506FD@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "David S. Miller" <davem@davemloft.net>, Arvind Bhushan <arvindb@chelsio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kbuild@01.org" <kbuild@01.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Poornima Vonti <poornima.vonti@qlogic.com>, Manish Rangankar <manish.rangankar@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-On 3/16/2013 3:37 PM, Dan Carpenter wrote:
-> We need to store PROTO_ERR_IMPL_LOGO (26) things here, but the
-> first element isn't used so the array should have 27 elements.
-> This matches fwevt_to_rnevt[] which has 27 elements.
-> 
-> The patch solves a Smatch static checker warning on my system:
-> drivers/scsi/csiostor/csio_rnode.c:880 csio_rnode_fwevt_handler()
-> 	error: buffer overflow '(rn)->stats.n_evt_fw' 26 <= 26
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> This goes on top of d69630e8a4222 "csiostor: Header file
-> modifications for chip support and bug fixes." That patch is in
-> linux-next but I don't know which tree it came from.  It's not
-> the scsi for-next tree.
-> 
-> diff --git a/drivers/scsi/csiostor/csio_rnode.h b/drivers/scsi/csiostor/csio_rnode.h
-> index 6594009..4334342 100644
-> --- a/drivers/scsi/csiostor/csio_rnode.h
-> +++ b/drivers/scsi/csiostor/csio_rnode.h
-> @@ -63,7 +63,7 @@ struct csio_rnode_stats {
->  	uint32_t	n_err_nomem;	/* error nomem */
->  	uint32_t	n_evt_unexp;	/* unexpected event */
->  	uint32_t	n_evt_drop;	/* unexpected event */
-> -	uint32_t	n_evt_fw[PROTO_ERR_IMPL_LOGO];	/* fw events */
-> +	uint32_t	n_evt_fw[PROTO_ERR_IMPL_LOGO + 1];	/* fw events */
->  	enum csio_rn_ev	n_evt_sm[CSIO_RNFE_MAX_EVENT];	/* State m/c events */
->  	uint32_t	n_lun_rst;	/* Number of resets of
->  					 * of LUNs under this
-> diff --git a/drivers/scsi/csiostor/csio_lnode.h b/drivers/scsi/csiostor/csio_lnode.h
-> index 0f9c041..372a67d 100644
-> --- a/drivers/scsi/csiostor/csio_lnode.h
-> +++ b/drivers/scsi/csiostor/csio_lnode.h
-> @@ -114,7 +114,7 @@ struct csio_lnode_stats {
->  	uint32_t	n_rnode_match;  /* matched rnode */
->  	uint32_t	n_dev_loss_tmo; /* Device loss timeout */
->  	uint32_t	n_fdmi_err;	/* fdmi err */
-> -	uint32_t	n_evt_fw[PROTO_ERR_IMPL_LOGO];	/* fw events */
-> +	uint32_t	n_evt_fw[PROTO_ERR_IMPL_LOGO + 1];	/* fw events */
->  	enum csio_ln_ev	n_evt_sm[CSIO_LNE_MAX_EVENT];	/* State m/c events */
->  	uint32_t	n_rnode_alloc;	/* rnode allocated */
->  	uint32_t	n_rnode_free;	/* rnode freed */
-> 
 
-Acked-by: Naresh Kumar Inna <naresh@chelsio.com>
+
+-----Original Message-----
+From: Mike Christie <michaelc@cs.wisc.edu>
+Date: Saturday 23 March 2013 11:58 AM
+To: Vikas <vikas.chaudhary@qlogic.com>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, scsi
+<linux-scsi@vger.kernel.org>, Lalit Chandivade
+<lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>,
+Poornima Vonti <poornima.vonti@qlogic.com>, Manish Rangankar
+<manish.rangankar@qlogic.com>
+Subject: Re: [PATCH 0/4] qla4xxx: Patches for iSCSI flash node mgmt support
+
+>On 03/22/2013 06:41 AM, vikas.chaudhary@qlogic.com wrote:
+>> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+>>
+>> James,
+>>
+>> Following patches allows iscsiadm to manage iSCSI target information
+>> stored on adapter flash on per host basis and and perform various
+>> operations like add, delete, login, logout, and update the target
+>> information.
+>>
+>> Please apply these patches to the scsi tree "misc" branch at your
+>> earliest convenience.
+>>
+>> Adheer Chandravanshi (3):
+>>       scsi_transport_iscsi: Add flash node mgmt support
+>>       libiscsi: export function iscsi_switch_str_param
+>>       qla4xxx: Add flash node mgmt support
+>>
+>
+>In the last patch, the
+>
+>+#define DEV_TYPE_IPV4  "ipv4"
+>+#define DEV_TYPE_IPV6  "ipv6"
+>
+>should probably go in the iscsi class, but if it is ok with James then I
+>think that can be done in a later cleanup patch since there has been a
+>lot of work done on these patches already and we should get them in.
+
+Thanks a lot for feedback.
+I am sending following two patches to make above macro generic.
+
+        scsi_transport_iscsi: Declare portal type string macros for generic use
+        qla4xxx: Replace dev type macros with generic portal type macros
+
+Also resending following driver version patch as it never went to the list.
+
+        qla4xxx: Update driver version to 5.03.00-k7
+
 
 Thanks,
-Naresh.
+Vikas.
+
+
+
+
+________________________________
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
