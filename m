@@ -1,140 +1,52 @@
-From: Jan Vesely <jvesely@redhat.com>
-Subject: Re: [PATCH RESEND v2] block: modify __bio_add_page check to accept
- pages that don't start a new segment
-Date: Mon, 25 Mar 2013 16:35:22 +0100
-Message-ID: <51506EBA.8060708@redhat.com>
-References: <51505AC1.60809@redhat.com> <20130325142457.GD5401@kernel.dk>
+From: Mark Lehrer <mark@tpsit.com>
+Subject: megaraid_sas (H710), fast SSD's, poor RAID0 performance
+Date: Mon, 25 Mar 2013 09:57:40 -0600 (MDT)
+Message-ID: <alpine.DEB.1.00.1303250922290.10890@shell>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130325142457.GD5401@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, fujita.tomonori@lab.ntt.co.jp, =?UTF-8?B?S2FpIE3DpGtpc2FyYQ==?= <kai.makisara@kolumbus.fi>, James Bottomley <james.bottomley@hansenpartnership.com>
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from knm.org ([173.10.24.5]:47888 "EHLO knm.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932231Ab3CYQ6Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Mar 2013 12:58:24 -0400
+Received: from [192.168.20.65] (account mark@knm.org HELO shell)
+  by knm.org (CommuniGate Pro SMTP 5.4.8 _community_)
+  with ESMTPSA id 9137895 for linux-scsi@vger.kernel.org; Mon, 25 Mar 2013 09:57:40 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Mon 25 Mar 2013 15:24:57 CET, Jens Axboe wrote:
-> On Mon, Mar 25 2013, Jan Vesely wrote:
->> v2: changed a comment
->>
->> The original behavior was to refuse all pages after the maximum number of
->> segments has been reached. However, some drivers (like st) craft their buffers
->> to potentially require exactly max segments and multiple pages in the last
->> segment. This patch modifies the check to allow pages that can be merged into
->> the last segment.
->>
->> Fixes EBUSY failures when using large tape block size in high
->> memory fragmentation condition.
->> This regression was introduced by commit
->>  46081b166415acb66d4b3150ecefcd9460bb48a1
->>  st: Increase success probability in driver buffer allocation
->>
->> Signed-off-by: Jan Vesely <jvesely@redhat.com>
->>
->> CC: Alexander Viro <viro@zeniv.linux.org.uk>
->> CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->> CC: Kai Makisara <kai.makisara@kolumbus.fi>
->> CC: James Bottomley <james.bottomley@hansenpartnership.com>
->> CC: Jens Axboe <axboe@kernel.dk>
->> CC: stable@vger.kernel.org
->> ---
->>  fs/bio.c | 27 +++++++++++++++++----------
->>  1 file changed, 17 insertions(+), 10 deletions(-)
->>
->> diff --git a/fs/bio.c b/fs/bio.c
->> index bb5768f..bc6af71 100644
->> --- a/fs/bio.c
->> +++ b/fs/bio.c
->> @@ -500,7 +500,6 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
->>  			  *page, unsigned int len, unsigned int offset,
->>  			  unsigned short max_sectors)
->>  {
->> -	int retried_segments = 0;
->>  	struct bio_vec *bvec;
->>
->>  	/*
->> @@ -551,18 +550,13 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
->>  		return 0;
->>
->>  	/*
->> -	 * we might lose a segment or two here, but rather that than
->> -	 * make this too complex.
->> +	 * The first part of the segment count check,
->> +	 * reduce segment count if possible
->>  	 */
->>
->> -	while (bio->bi_phys_segments >= queue_max_segments(q)) {
->> -
->> -		if (retried_segments)
->> -			return 0;
->> -
->> -		retried_segments = 1;
->> +	if (bio->bi_phys_segments >= queue_max_segments(q))
->>  		blk_recount_segments(q, bio);
->> -	}
->> +
->>
->>  	/*
->>  	 * setup the new entry, we might clear it again later if we
->> @@ -572,6 +566,19 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
->>  	bvec->bv_page = page;
->>  	bvec->bv_len = len;
->>  	bvec->bv_offset = offset;
->> +	
->> +	/*
->> +	 * the other part of the segment count check, allow mergeable pages
->> +	 */
->> +	if ((bio->bi_phys_segments > queue_max_segments(q)) ||
->> +		( (bio->bi_phys_segments == queue_max_segments(q)) &&
->> +		!BIOVEC_PHYS_MERGEABLE(bvec - 1, bvec))) {
->> +			bvec->bv_page = NULL;
->> +			bvec->bv_len = 0;
->> +			bvec->bv_offset = 0;
->> +			return 0;
->> +	}
->> +
->
-> This is a bit messy, I think. bi_phys_segments should never be allowed
-> to go beyond queue_ma_segments(), so the > test does not look right.
-> Maybe it's an artifact of when we fall through with this patch, we bump
-> bi_phys_segments even if the segments are physicall contig and
-> mergeable.
-
-yeah. it is messy, I tried to go for the least invasive changes.
-
-I took the '>' test from the original while loop '>='. The original 
-behavior
-guaranteed bio->bi_phys_segments <= max_segments, if the bio satisfied
-this condition to begin with.
-I did not find any guarantees that the 'bio' parameter of this function 
-has
-to satisfy this condition in general.
-
-My understanding is that if a caller of this function (or one of the 
-two that call this one)
-provides an invalid (segment-count-wise) bio, it will fail (return 0 
-added length),
-and let the caller handle the situation.
-I admit, I did not check all the call paths that use these functions.
-
->
-> What happens when the segment is physically mergeable, but the resulting
-> merged segment is too large (bigger than q->limits.max_segment_size)?
->
-
-ah, yes. I guess I need a check that follows __blk_recalc_rq_segments 
-more closely.
-We know that at this point all pages are merged into segments, so a 
-helper function that would be used
-by both  __blk_recalc_rq_segments and this check is possible.
+To: linux-scsi@vger.kernel.org
 
 
-I still assume that a temporary increase of bi_phys_segments above 
-max_segments is ok.
-If we want to avoid this situation we would need to merge tail pages 
-right away. That's imo uglier.
+Hello there, I have a server in our test lab (specs below) that
+doesn't appear to be getting nearly the write speeds that I was
+expecting (test details below).  In "top" terminology, there is one
+CPU core at about 30% SI and each core shows anywhere from 1 to 15 %
+SY and about the same for WA.
 
-thanks
---
-Jan Vesely <jvesely@redhat.com>
+My main question: what tools do I need to get some visibility as to
+what is going on within the megaraid_sas module and on the SAS
+controller itself?  I have gone about as far as I can go with
+utilities such as top and MegaCli.
+
+For simplicity, I am only focusing on raw write speed straight to the
+block device.  I have a few benchmarks I use, mainly Orion and some of
+the Phoronix suite, but Currently the easiest test is just:
+
+dd if=/dev/zero of=/dev/sdc ibs=1048576 obs=1048576
+
+The main symptom is that with a single disk I can push > 300MB/sec,
+and with a pair in RAID0 I can get over 600MB/sec, but with 5 of these
+in RAID0 it never goes above around 700MB/sec.  My next test will be
+to use each disk as a separate device and try software raid (or just
+writing to each disk simultaneously).
+
+
+Thanks,
+Mark
+
+p.s. system specs:
+
+Dell 720xd, H710 ("mini") controller
+5x Micron P300 SATA SLC SSD's
+
+
