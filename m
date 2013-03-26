@@ -1,44 +1,38 @@
 From: Joe Lawrence <Joe.Lawrence@stratus.com>
-Subject: [PATCH v2] block: handle pointer error from blk_get_request
-Date: Tue, 26 Mar 2013 15:06:41 -0400 (EDT)
-Message-ID: <alpine.DEB.2.02.1303261438130.26171@jlaw-desktop.mno.stratus.com>
-References: <alpine.DEB.2.02.1303171328250.1736@jlaw-desktop.mno.stratus.com>
+Subject: [PATCH v3] block: handle pointer error from blk_get_request
+Date: Tue, 26 Mar 2013 18:34:26 -0400 (EDT)
+Message-ID: <alpine.DEB.2.02.1303261826270.26171@jlaw-desktop.mno.stratus.com>
+References: <alpine.DEB.2.02.1303171328250.1736@jlaw-desktop.mno.stratus.com> <alpine.DEB.2.02.1303261438130.26171@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.stratus.com ([134.111.1.17]:37434 "EHLO
-	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912Ab3CZTKa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Mar 2013 15:10:30 -0400
-In-Reply-To: <alpine.DEB.2.02.1303171328250.1736@jlaw-desktop.mno.stratus.com>
+Received: from mailhub5.stratus.com ([134.111.1.18]:49958 "EHLO
+	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407Ab3CZWiM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Mar 2013 18:38:12 -0400
+In-Reply-To: <alpine.DEB.2.02.1303261438130.26171@jlaw-desktop.mno.stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <Joe.Lawrence@stratus.com>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Bart Van Assche <bvanassche@acm.org>
+To: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Bart Van Assche <bvanassche@acm.org>, Joe Lawrence <joe.lawrence@stratus.com>
 
-Updated to address comments from Jens and Bart.
+... one more caller to update (how did blk_make_request hide? :)  ...
 
-Accounting for the first change (below) introduces modifications to a
-bunch of files.  If this patch should be formatted differently or copied
-to additional people / lists, let me know.  The patch is based on the
-for-next branch from Jens' linux-block tree.
+Changes from v2:
+ - Updated blk_make_request to check IS_ERR from blk_get_request
 
-Changes from v1:
+That should account for all the callers of blk_get_request, save for the
+IDE drivers, which I left alone but for the lone caller in ide-park.c
+that does bother to check the return pointer.
 
- - Distinguish error conditions in __get_request using ERR_PTR instead
-   of NULL.  (blk_queue_dying will return ERR_PTR(-ENODEV), but should
-   the other error paths all return ERR_PTR(-ENOMEM) ?)
- - Propagate ERR_PTR out from __get_request through blk_get_request,
-   updating callers accordingly.
-
-Thanks,
+Regards,
 
 -- Joe
 
->From 7122dd3ba8c3b1e7edff42ff9c21247fcf4379c2 Mon Sep 17 00:00:00 2001
+>From 05646b66021df447207e327e3c7c8692a506cd4b Mon Sep 17 00:00:00 2001
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Date: Tue, 26 Mar 2013 14:30:28 -0400
-Subject: [PATCH v2] block: handle pointer error from blk_get_request
+Date: Tue, 26 Mar 2013 18:03:26 -0400
+Subject: [PATCH v3] block: handle pointer error from blk_get_request
 
 The blk_get_request function may fail in low-memory conditions or during
 device removal (even if __GFP_WAIT is set). To distinguish between these
@@ -52,9 +46,9 @@ Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Bart Van Assche <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
 ---
- block/blk-core.c                            | 30 ++++++++++++++---------------
- block/bsg.c                                 |  8 ++++----
- block/scsi_ioctl.c                          |  8 ++++++--
+ block/blk-core.c                            | 34 ++++++++++++++---------------
+ block/bsg.c                                 |  8 +++----
+ block/scsi_ioctl.c                          |  8 +++++--
  drivers/block/paride/pd.c                   |  2 ++
  drivers/block/pktcdvd.c                     |  3 ++-
  drivers/block/sx8.c                         |  2 +-
@@ -72,10 +66,10 @@ Cc: linux-scsi@vger.kernel.org
  drivers/scsi/sg.c                           |  4 ++--
  drivers/scsi/st.c                           |  2 +-
  drivers/target/target_core_pscsi.c          |  4 ++--
- 20 files changed, 50 insertions(+), 41 deletions(-)
+ 20 files changed, 52 insertions(+), 43 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index f224d17..f6789b7 100644
+index f224d17..9e254e4 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
 @@ -886,9 +886,9 @@ static struct io_context *rq_ioc(struct bio *bio)
@@ -164,6 +158,17 @@ index f224d17..f6789b7 100644
  		spin_unlock_irq(q->queue_lock);
  	/* q->queue_lock is unlocked at this point */
  
+@@ -1163,8 +1163,8 @@ struct request *blk_make_request(struct request_queue *q, struct bio *bio,
+ {
+ 	struct request *rq = blk_get_request(q, bio_data_dir(bio), gfp_mask);
+ 
+-	if (unlikely(!rq))
+-		return ERR_PTR(-ENOMEM);
++	if (unlikely(IS_ERR(rq)))
++		return rq;
+ 
+ 	for_each_bio(bio) {
+ 		struct bio *bounce_bio = bio;
 @@ -1528,8 +1528,8 @@ get_rq:
  	 * Returns with the queue unlocked.
  	 */
