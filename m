@@ -1,52 +1,57 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH V3 05/12] pm80xx: MSI-X implementation for using 64 interrupts
-Date: Tue, 26 Mar 2013 08:59:54 +0100
-Message-ID: <5151557A.7000409@suse.de>
-References: <5149F091.2060009@pmc-sierra.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH 0/4] scsi: 64-bit LUN support
+Date: Tue, 26 Mar 2013 14:00:01 -0400
+Message-ID: <alpine.WNT.2.00.1303261354360.5004@N5102REMCQXM4BS.qlogic.org>
+References: <1361261883-41467-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60873 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759520Ab3CZIAA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Mar 2013 04:00:00 -0400
-In-Reply-To: <5149F091.2060009@pmc-sierra.com>
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:10941
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753811Ab3CZSAK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Mar 2013 14:00:10 -0400
+In-Reply-To: <1361261883-41467-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anand <anandkumar_santhanam@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org, Harry.Yang@pmcs.com, Sangeetha.Gnanasekaran@pmcs.com, sakthivel.sk@hcl.com, xjtuwjp@gmail.com, rich.Bono@pmcs.com, Vishwanath.Maram@pmcs.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jeremy Linton <jlinton@tributary.com>, Robert Elliott <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>
 
-On 03/20/2013 06:23 PM, Anand wrote:
->  From b7704915fe98519155cb1c86d79afcc976b574b8 Mon Sep 17 00:00:00 20=
-01
-> From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-> Date: Tue, 19 Mar 2013 17:56:17 +0530
-> Subject: [PATCH V3 05/12] pm80xx: MSI-X implementation for using 64 i=
-nterrupts
+
+
+On Tue, 19 Feb 2013, Hannes Reinecke wrote:
+
+> This patchset updates the SCSI midlayer to use 64-bit LUNs internally.
+> It eliminates the need to limit the number of LUNs artificially to
+> avoid aliasing issues; the SCSI midlayer can now accept any LUN presented
+> to it.
 >
-> Implementation of interrupt handlers and tasklets to support
-> upto 64 interrupt for the device.
+> The LLDD specific settings for 'max_lun' have been left untouched;
+> it should be raised to '~0' if the HBA supports 64-bit LUNs internally.
+> However, it is up to the driver maintainer to raise that limit.
 >
-> Signed-off-by: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-> Signed-off-by: Anand Kumar S <AnandKumar.Santhanam@pmcs.com>
-> Ack-by: Jack Wang <jack_wang@usish.com>
+> Hannes Reinecke (4):
+>  scsi_scan: Fixup scsilun_to_int()
+>  scsi: use 64-bit LUNs
+>  scsi: use 64-bit value for 'max_luns'
+>  scsi: Remove CONFIG_SCSI_MULTI_LUN
+>
 
-Yep, that's what I had in mind.
+Hannes,
 
-Acked-by: Hannes Reinecke <hare@suse.de>
+As we've reviewed these patches internally, the one question that keeps
+coming up is how do we handle hardware that cannot handle a 64-bit LUN
+address? For example, some of our older 2G/bps hardware can only handle a
+16-bit LUN address.  Currently we convert the u32 value to u16.  Do we do
+the same for the 64-bit conversion? Can a way be devised to "opt-out" of
+receiving a 64-bit address in the first place (IIRC this was an option in
+the v1 patch set)?
 
-Cheers,
+Thanks,
+Chad
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+________________________________
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
