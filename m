@@ -1,50 +1,74 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/3] scsi_transport_iscsi: Declare portal type string
- macros for generic use
-Date: Mon, 25 Mar 2013 20:37:55 -0500
-Message-ID: <5150FBF3.5050503@cs.wisc.edu>
-References: <1364213313-17754-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH] isci: add CONFIG_PM_SLEEP to suspend/resume functions
+Date: Tue, 26 Mar 2013 16:01:38 +0900
+Message-ID: <001a01ce29ef$c3350f00$499f2d00$%han@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:37159 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754050Ab3CZBiL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Mar 2013 21:38:11 -0400
-In-Reply-To: <1364213313-17754-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:32475 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759396Ab3CZHBk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Mar 2013 03:01:40 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MK900HVNA6HBVG0@mailout1.samsung.com> for
+ linux-scsi@vger.kernel.org; Tue, 26 Mar 2013 16:01:39 +0900 (KST)
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, poornima.vonti@qlogic.com, manish.rangankar@qlogic.com, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+To: 'James Bottomley' <JBottomley@Parallels.com>
+Cc: linux-scsi@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-Patches 1 - 3 look ok to me.
+Add CONFIG_PM_SLEEP to suspend/resume functions to fix the following
+build warning when CONFIG_PM_SLEEP is not selected. This is because
+sleep PM callbacks defined by SIMPLE_DEV_PM_OPS are only used when
+the CONFIG_PM_SLEEP is enabled.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+drivers/scsi/isci/init.c:725:12: warning: 'isci_suspend' defined but not used [-Wunused-function]
+drivers/scsi/isci/init.c:743:12: warning: 'isci_resume' defined but not used [-Wunused-function]
 
-On 03/25/2013 07:08 AM, vikas.chaudhary@qlogic.com wrote:
-> From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
-> 
-> Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
-> Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> ---
->  include/scsi/iscsi_if.h | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-> index f1b0183..fe7f06c 100644
-> --- a/include/scsi/iscsi_if.h
-> +++ b/include/scsi/iscsi_if.h
-> @@ -504,6 +504,10 @@ enum iscsi_host_param {
->  	ISCSI_HOST_PARAM_MAX,
->  };
->  
-> +/* portal type */
-> +#define PORTAL_TYPE_IPV4	"ipv4"
-> +#define PORTAL_TYPE_IPV6	"ipv6"
-> +
->  /* iSCSI Flash Target params */
->  enum iscsi_flashnode_param {
->  	ISCSI_FLASHNODE_IS_FW_ASSIGNED_IPV6,
-> 
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/scsi/isci/init.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 2839baa..d25d0d8 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -721,7 +721,7 @@ static void isci_pci_remove(struct pci_dev *pdev)
+ 	}
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int isci_suspend(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+@@ -770,18 +770,16 @@ static int isci_resume(struct device *dev)
+ 
+ 	return 0;
+ }
++#endif
+ 
+ static SIMPLE_DEV_PM_OPS(isci_pm_ops, isci_suspend, isci_resume);
+-#endif
+ 
+ static struct pci_driver isci_pci_driver = {
+ 	.name		= DRV_NAME,
+ 	.id_table	= isci_id_table,
+ 	.probe		= isci_pci_probe,
+ 	.remove		= isci_pci_remove,
+-#ifdef CONFIG_PM
+ 	.driver.pm      = &isci_pm_ops,
+-#endif
+ };
+ 
+ static __init int isci_init(void)
+-- 
+1.7.2.5
+
 
