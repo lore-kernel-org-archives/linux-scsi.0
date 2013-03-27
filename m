@@ -1,57 +1,81 @@
-From: James Smart <James.Smart@emulex.com>
-Subject: error handler scheduling
-Date: Tue, 26 Mar 2013 22:11:44 -0400
-Message-ID: <51525560.3000008@emulex.com>
-Reply-To: <James.Smart@emulex.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 0/4] scsi: 64-bit LUN support
+Date: Wed, 27 Mar 2013 08:37:00 +0100
+Message-ID: <5152A19C.7010500@suse.de>
+References: <1361261883-41467-1-git-send-email-hare@suse.de> <alpine.WNT.2.00.1303261354360.5004@N5102REMCQXM4BS.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:51758 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751575Ab3C0CLq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Mar 2013 22:11:46 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:33155 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752706Ab3C0HhE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Mar 2013 03:37:04 -0400
+In-Reply-To: <alpine.WNT.2.00.1303261354360.5004@N5102REMCQXM4BS.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jeremy Linton <jlinton@tributary.com>, Robert Elliott <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>
 
-In looking through the error handler, if a command times out and is 
-added to the eh_cmd_q for the shost, the error handler is only awakened 
-once shost->host_busy (total number of i/os posted to the shost) is 
-equal to shost->host_failed (number of i/o that have been failed and put 
-on the eh_cmd_q).  Which means, any other i/o that was outstanding must 
-either complete or have their timeout fire.  Additionally, as all 
-further i/o is held off at the block layer as the shost is in recovery, 
-new i/o cannot be submitted until the error handler runs and resolves 
-the errored i/os.
+On 03/26/2013 07:00 PM, Chad Dupuis wrote:
+>
+>
+> On Tue, 19 Feb 2013, Hannes Reinecke wrote:
+>
+>> This patchset updates the SCSI midlayer to use 64-bit LUNs
+>> internally.
+>> It eliminates the need to limit the number of LUNs artificially to
+>> avoid aliasing issues; the SCSI midlayer can now accept any LUN
+>> presented
+>> to it.
+>>
+>> The LLDD specific settings for 'max_lun' have been left untouched;
+>> it should be raised to '~0' if the HBA supports 64-bit LUNs
+>> internally.
+>> However, it is up to the driver maintainer to raise that limit.
+>>
+>> Hannes Reinecke (4):
+>>  scsi_scan: Fixup scsilun_to_int()
+>>  scsi: use 64-bit LUNs
+>>  scsi: use 64-bit value for 'max_luns'
+>>  scsi: Remove CONFIG_SCSI_MULTI_LUN
+>>
+>
+> Hannes,
+>
+> As we've reviewed these patches internally, the one question that kee=
+ps
+> coming up is how do we handle hardware that cannot handle a 64-bit LU=
+N
+> address? For example, some of our older 2G/bps hardware can only
+> handle a 16-bit LUN address.  Currently we convert the u32 value to u=
+16.
+ >  Do we do the same for the 64-bit conversion? Can a way be=20
+devised to
+> "opt-out" of receiving a 64-bit address in the first place (IIRC this
+ > was an option in the v1 patch set)?
+>
+Yes, you can.
 
-Is this true ?
+The idea here is to let 'max_luns' control this behaviour;=20
+'max_luns' is the highest LUN number the host can support.
+So for 16-bit LUN you would set max_luns to '0xFFFF', and for 32-bit
+LUN addresses you would be setting max_luns to '0xFFFFFFFF'.
 
-I take it is also true that the midlayer thus expects every i/o to have 
-an i/o timeout.  True ?
+However, since you mention it, maybe I should add a 'scsilun_to_u32'
+conversion routine, as this is requested in several places.
 
-The crux of this point is that when the recovery thread runs to aborts 
-the timed out i/os, is at the mercy of the last command to complete or 
-timeout. Additionally, as all further i/o is held off at the block layer 
-as the shost is in recovery, new i/o cannot be submitted until the error 
-handler runs and resolves the errored i/os. So all I/O on the host is 
-stopped until that last i/o completes/times out.   The timeouts may be 
-eons later.  Consider SCSI format commands or verify commands that can 
-take hours to complete.
+Cheers,
 
-Specifically, I'm in a situation currently, where an application is 
-using sg to send a command to a target. The app selected no-timeout - by 
-setting timeout to MAX_INT. Effectively it's so large its infinite.   
-This I/O was one of those "lost" on the storage fabric. There was 
-another command that long ago timed out and is sitting on the error 
-handlers queue. But nothing is happening - new i/o, or error handler to 
-resolve the failed i/o, until that inifinite i/o completes.
-
-I'm hoping I hear that I just misunderstand things.  If not,  is there a 
-suggestion for how to resolve this predicament ?    IMHO, I'm surprised 
-we stop all i/o for error handling, and that it can be so long later...  
-I would assume there's a minimum bound we would wait in the error 
-handler (30s?) before we unconditionally run it and abort anything that 
-was outstanding.
-
--- james s
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
