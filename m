@@ -1,93 +1,372 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: error handler scheduling
-Date: Wed, 27 Mar 2013 10:39:07 -0400
-Message-ID: <5153048B.20905@interlog.com>
-References: <51525560.3000008@emulex.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:56923 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751428Ab3C0Ojr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Mar 2013 10:39:47 -0400
-In-Reply-To: <51525560.3000008@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hong Zhiguo <honkiko@gmail.com>
+Subject: [PATCH 5/6] scsi: replace obsolete NLMSG_* with type safe nlmsg_*
+Date: Thu, 28 Mar 2013 00:53:15 +0800
+Message-ID: <1364403195-32839-1-git-send-email-honkiko@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, davem@davemloft.net, tgraf@suug.ch
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@emulex.com
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 13-03-26 10:11 PM, James Smart wrote:
-> In looking through the error handler, if a command times out and is added to the
-> eh_cmd_q for the shost, the error handler is only awakened once shost->host_busy
-> (total number of i/os posted to the shost) is equal to shost->host_failed
-> (number of i/o that have been failed and put on the eh_cmd_q).  Which means, any
-> other i/o that was outstanding must either complete or have their timeout fire.
-> Additionally, as all further i/o is held off at the block layer as the shost is
-> in recovery, new i/o cannot be submitted until the error handler runs and
-> resolves the errored i/os.
->
-> Is this true ?
->
-> I take it is also true that the midlayer thus expects every i/o to have an i/o
-> timeout.  True ?
->
-> The crux of this point is that when the recovery thread runs to aborts the timed
-> out i/os, is at the mercy of the last command to complete or timeout.
-> Additionally, as all further i/o is held off at the block layer as the shost is
-> in recovery, new i/o cannot be submitted until the error handler runs and
-> resolves the errored i/os. So all I/O on the host is stopped until that last i/o
-> completes/times out.   The timeouts may be eons later.  Consider SCSI format
-> commands or verify commands that can take hours to complete.
->
-> Specifically, I'm in a situation currently, where an application is using sg to
-> send a command to a target. The app selected no-timeout - by setting timeout to
-> MAX_INT. Effectively it's so large its infinite. This I/O was one of those
-> "lost" on the storage fabric. There was another command that long ago timed out
-> and is sitting on the error handlers queue. But nothing is happening - new i/o,
-> or error handler to resolve the failed i/o, until that inifinite i/o completes.
->
-> I'm hoping I hear that I just misunderstand things.  If not,  is there a
-> suggestion for how to resolve this predicament ?    IMHO, I'm surprised we stop
-> all i/o for error handling, and that it can be so long later... I would assume
-> there's a minimum bound we would wait in the error handler (30s?) before we
-> unconditionally run it and abort anything that was outstanding.
+Signed-off-by: Hong Zhiguo <honkiko@gmail.com>
+---
+ drivers/scsi/scsi_netlink.c         |    4 +--
+ drivers/scsi/scsi_transport_fc.c    |   21 +++++--------
+ drivers/scsi/scsi_transport_iscsi.c |   56 +++++++++++++++++------------------
+ 3 files changed, 38 insertions(+), 43 deletions(-)
 
-James,
-After many encounters with the Linux SCSI mid-level error
-handler I have concluded it is uncontrollable and
-seemingly random, seen from the user space. Interestingly,
-several attempts to add finer grained controls over
-lu/target/host resets have been rebuffed.
-
-So my policy is to avoid timeout induced resets (like the
-plague). Hence the default with sg_format is to set the IMMED
-bit and use TEST UNIT READY or REQUEST SENSE polling to
-monitor progress **. With commands like VERIFY, send many
-reasonably sized commands, not one big one. And a special
-mention for the SCSI WRITE SAME command which probably
-has T10's silliest definition: if the NUMBER OF
-LOGICAL BLOCKS field is set to zero it means keep writing
-until the end of the disk *** and that might be 20 hours
-later! The equivalent field set to zero in a SCSI VERIFY
-or WRITE *** command means do nothing.
-
-Doug Gilbert
-
-
-**   You can still run into problems when a SCSI FORMAT UNIT
-      with the IMMED bit set: some other kernel subsystem or
-      user space program may decide to send a SCSI command to the
-      disk during format. Then said code may not comprehend why
-      the disk in question is not ready and ends up triggering
-      mid-level error handling which blows the format out of
-      the water. That leaves the disk in the "format corrupt"
-      state.
-
-***  recently the Block Limits VPD has (knee-)capped this
-      with the WSNZ bit
-
-**** apart from the obsolete WRITE(6) command which found
-      another non obvious interpretation for a zero transfer
-      length
+diff --git a/drivers/scsi/scsi_netlink.c b/drivers/scsi/scsi_netlink.c
+index 65123a2..fe30ea9 100644
+--- a/drivers/scsi/scsi_netlink.c
++++ b/drivers/scsi/scsi_netlink.c
+@@ -50,7 +50,7 @@ scsi_nl_rcv_msg(struct sk_buff *skb)
+ 	u32 rlen;
+ 	int err, tport;
+ 
+-	while (skb->len >= NLMSG_SPACE(0)) {
++	while (skb->len >= NLMSG_HDRLEN) {
+ 		err = 0;
+ 
+ 		nlh = nlmsg_hdr(skb);
+@@ -70,7 +70,7 @@ scsi_nl_rcv_msg(struct sk_buff *skb)
+ 			goto next_msg;
+ 		}
+ 
+-		hdr = NLMSG_DATA(nlh);
++		hdr = nlmsg_data(nlh);
+ 		if ((hdr->version != SCSI_NL_VERSION) ||
+ 		    (hdr->magic != SCSI_NL_MAGIC)) {
+ 			err = -EPROTOTYPE;
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index e894ca7..e106c27 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -35,7 +35,6 @@
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_fc.h>
+ #include <scsi/scsi_cmnd.h>
+-#include <linux/netlink.h>
+ #include <net/netlink.h>
+ #include <scsi/scsi_netlink_fc.h>
+ #include <scsi/scsi_bsg_fc.h>
+@@ -534,7 +533,7 @@ fc_host_post_event(struct Scsi_Host *shost, u32 event_number,
+ 	struct nlmsghdr	*nlh;
+ 	struct fc_nl_event *event;
+ 	const char *name;
+-	u32 len, skblen;
++	u32 len;
+ 	int err;
+ 
+ 	if (!scsi_nl_sock) {
+@@ -543,21 +542,19 @@ fc_host_post_event(struct Scsi_Host *shost, u32 event_number,
+ 	}
+ 
+ 	len = FC_NL_MSGALIGN(sizeof(*event));
+-	skblen = NLMSG_SPACE(len);
+ 
+-	skb = alloc_skb(skblen, GFP_KERNEL);
++	skb = nlmsg_new(len, GFP_KERNEL);
+ 	if (!skb) {
+ 		err = -ENOBUFS;
+ 		goto send_fail;
+ 	}
+ 
+-	nlh = nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG,
+-				skblen - sizeof(*nlh), 0);
++	nlh = nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG, len, 0);
+ 	if (!nlh) {
+ 		err = -ENOBUFS;
+ 		goto send_fail_skb;
+ 	}
+-	event = NLMSG_DATA(nlh);
++	event = nlmsg_data(nlh);
+ 
+ 	INIT_SCSI_NL_HDR(&event->snlh, SCSI_NL_TRANSPORT_FC,
+ 				FC_NL_ASYNC_EVENT, len);
+@@ -604,7 +601,7 @@ fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
+ 	struct sk_buff *skb;
+ 	struct nlmsghdr	*nlh;
+ 	struct fc_nl_event *event;
+-	u32 len, skblen;
++	u32 len;
+ 	int err;
+ 
+ 	if (!scsi_nl_sock) {
+@@ -613,21 +610,19 @@ fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
+ 	}
+ 
+ 	len = FC_NL_MSGALIGN(sizeof(*event) + data_len);
+-	skblen = NLMSG_SPACE(len);
+ 
+-	skb = alloc_skb(skblen, GFP_KERNEL);
++	skb = nlmsg_new(len, GFP_KERNEL);
+ 	if (!skb) {
+ 		err = -ENOBUFS;
+ 		goto send_vendor_fail;
+ 	}
+ 
+-	nlh = nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG,
+-				skblen - sizeof(*nlh), 0);
++	nlh = nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG, len, 0);
+ 	if (!nlh) {
+ 		err = -ENOBUFS;
+ 		goto send_vendor_fail_skb;
+ 	}
+-	event = NLMSG_DATA(nlh);
++	event = nlmsg_data(nlh);
+ 
+ 	INIT_SCSI_NL_HDR(&event->snlh, SCSI_NL_TRANSPORT_FC,
+ 				FC_NL_ASYNC_EVENT, len);
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 0a74b97..4de39e4 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1344,7 +1344,7 @@ int iscsi_recv_pdu(struct iscsi_cls_conn *conn, struct iscsi_hdr *hdr,
+ 	struct iscsi_uevent *ev;
+ 	char *pdu;
+ 	struct iscsi_internal *priv;
+-	int len = NLMSG_SPACE(sizeof(*ev) + sizeof(struct iscsi_hdr) +
++	int len = nlmsg_total_size(sizeof(*ev) + sizeof(struct iscsi_hdr) +
+ 			      data_size);
+ 
+ 	priv = iscsi_if_transport_lookup(conn->transport);
+@@ -1360,7 +1360,7 @@ int iscsi_recv_pdu(struct iscsi_cls_conn *conn, struct iscsi_hdr *hdr,
+ 	}
+ 
+ 	nlh = __nlmsg_put(skb, 0, 0, 0, (len - sizeof(*nlh)), 0);
+-	ev = NLMSG_DATA(nlh);
++	ev = nlmsg_data(nlh);
+ 	memset(ev, 0, sizeof(*ev));
+ 	ev->transport_handle = iscsi_handle(conn->transport);
+ 	ev->type = ISCSI_KEVENT_RECV_PDU;
+@@ -1381,7 +1381,7 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
+ 	struct nlmsghdr	*nlh;
+ 	struct sk_buff *skb;
+ 	struct iscsi_uevent *ev;
+-	int len = NLMSG_SPACE(sizeof(*ev) + data_size);
++	int len = nlmsg_total_size(sizeof(*ev) + data_size);
+ 
+ 	skb = alloc_skb(len, GFP_ATOMIC);
+ 	if (!skb) {
+@@ -1390,7 +1390,7 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
+ 	}
+ 
+ 	nlh = __nlmsg_put(skb, 0, 0, 0, (len - sizeof(*nlh)), 0);
+-	ev = NLMSG_DATA(nlh);
++	ev = nlmsg_data(nlh);
+ 	memset(ev, 0, sizeof(*ev));
+ 	ev->type = type;
+ 	ev->transport_handle = iscsi_handle(transport);
+@@ -1415,7 +1415,7 @@ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ 	struct sk_buff	*skb;
+ 	struct iscsi_uevent *ev;
+ 	struct iscsi_internal *priv;
+-	int len = NLMSG_SPACE(sizeof(*ev));
++	int len = nlmsg_total_size(sizeof(*ev));
+ 
+ 	priv = iscsi_if_transport_lookup(conn->transport);
+ 	if (!priv)
+@@ -1429,7 +1429,7 @@ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ 	}
+ 
+ 	nlh = __nlmsg_put(skb, 0, 0, 0, (len - sizeof(*nlh)), 0);
+-	ev = NLMSG_DATA(nlh);
++	ev = nlmsg_data(nlh);
+ 	ev->transport_handle = iscsi_handle(conn->transport);
+ 	ev->type = ISCSI_KEVENT_CONN_ERROR;
+ 	ev->r.connerror.error = error;
+@@ -1450,7 +1450,7 @@ void iscsi_conn_login_event(struct iscsi_cls_conn *conn,
+ 	struct sk_buff  *skb;
+ 	struct iscsi_uevent *ev;
+ 	struct iscsi_internal *priv;
+-	int len = NLMSG_SPACE(sizeof(*ev));
++	int len = nlmsg_total_size(sizeof(*ev));
+ 
+ 	priv = iscsi_if_transport_lookup(conn->transport);
+ 	if (!priv)
+@@ -1464,7 +1464,7 @@ void iscsi_conn_login_event(struct iscsi_cls_conn *conn,
+ 	}
+ 
+ 	nlh = __nlmsg_put(skb, 0, 0, 0, (len - sizeof(*nlh)), 0);
+-	ev = NLMSG_DATA(nlh);
++	ev = nlmsg_data(nlh);
+ 	ev->transport_handle = iscsi_handle(conn->transport);
+ 	ev->type = ISCSI_KEVENT_CONN_LOGIN_STATE;
+ 	ev->r.conn_login.state = state;
+@@ -1484,7 +1484,7 @@ void iscsi_post_host_event(uint32_t host_no, struct iscsi_transport *transport,
+ 	struct nlmsghdr *nlh;
+ 	struct sk_buff *skb;
+ 	struct iscsi_uevent *ev;
+-	int len = NLMSG_SPACE(sizeof(*ev) + data_size);
++	int len = nlmsg_total_size(sizeof(*ev) + data_size);
+ 
+ 	skb = alloc_skb(len, GFP_NOIO);
+ 	if (!skb) {
+@@ -1494,7 +1494,7 @@ void iscsi_post_host_event(uint32_t host_no, struct iscsi_transport *transport,
+ 	}
+ 
+ 	nlh = __nlmsg_put(skb, 0, 0, 0, (len - sizeof(*nlh)), 0);
+-	ev = NLMSG_DATA(nlh);
++	ev = nlmsg_data(nlh);
+ 	ev->transport_handle = iscsi_handle(transport);
+ 	ev->type = ISCSI_KEVENT_HOST_EVENT;
+ 	ev->r.host_event.host_no = host_no;
+@@ -1515,7 +1515,7 @@ void iscsi_ping_comp_event(uint32_t host_no, struct iscsi_transport *transport,
+ 	struct nlmsghdr *nlh;
+ 	struct sk_buff *skb;
+ 	struct iscsi_uevent *ev;
+-	int len = NLMSG_SPACE(sizeof(*ev) + data_size);
++	int len = nlmsg_total_size(sizeof(*ev) + data_size);
+ 
+ 	skb = alloc_skb(len, GFP_NOIO);
+ 	if (!skb) {
+@@ -1524,7 +1524,7 @@ void iscsi_ping_comp_event(uint32_t host_no, struct iscsi_transport *transport,
+ 	}
+ 
+ 	nlh = __nlmsg_put(skb, 0, 0, 0, (len - sizeof(*nlh)), 0);
+-	ev = NLMSG_DATA(nlh);
++	ev = nlmsg_data(nlh);
+ 	ev->transport_handle = iscsi_handle(transport);
+ 	ev->type = ISCSI_KEVENT_PING_COMP;
+ 	ev->r.ping_comp.host_no = host_no;
+@@ -1543,7 +1543,7 @@ iscsi_if_send_reply(uint32_t group, int seq, int type, int done, int multi,
+ {
+ 	struct sk_buff	*skb;
+ 	struct nlmsghdr	*nlh;
+-	int len = NLMSG_SPACE(size);
++	int len = nlmsg_total_size(size);
+ 	int flags = multi ? NLM_F_MULTI : 0;
+ 	int t = done ? NLMSG_DONE : type;
+ 
+@@ -1555,21 +1555,21 @@ iscsi_if_send_reply(uint32_t group, int seq, int type, int done, int multi,
+ 
+ 	nlh = __nlmsg_put(skb, 0, 0, t, (len - sizeof(*nlh)), 0);
+ 	nlh->nlmsg_flags = flags;
+-	memcpy(NLMSG_DATA(nlh), payload, size);
++	memcpy(nlmsg_data(nlh), payload, size);
+ 	return iscsi_multicast_skb(skb, group, GFP_ATOMIC);
+ }
+ 
+ static int
+ iscsi_if_get_stats(struct iscsi_transport *transport, struct nlmsghdr *nlh)
+ {
+-	struct iscsi_uevent *ev = NLMSG_DATA(nlh);
++	struct iscsi_uevent *ev = nlmsg_data(nlh);
+ 	struct iscsi_stats *stats;
+ 	struct sk_buff *skbstat;
+ 	struct iscsi_cls_conn *conn;
+ 	struct nlmsghdr	*nlhstat;
+ 	struct iscsi_uevent *evstat;
+ 	struct iscsi_internal *priv;
+-	int len = NLMSG_SPACE(sizeof(*ev) +
++	int len = nlmsg_total_size(sizeof(*ev) +
+ 			      sizeof(struct iscsi_stats) +
+ 			      sizeof(struct iscsi_stats_custom) *
+ 			      ISCSI_STATS_CUSTOM_MAX);
+@@ -1595,7 +1595,7 @@ iscsi_if_get_stats(struct iscsi_transport *transport, struct nlmsghdr *nlh)
+ 
+ 		nlhstat = __nlmsg_put(skbstat, 0, 0, 0,
+ 				      (len - sizeof(*nlhstat)), 0);
+-		evstat = NLMSG_DATA(nlhstat);
++		evstat = nlmsg_data(nlhstat);
+ 		memset(evstat, 0, sizeof(*evstat));
+ 		evstat->transport_handle = iscsi_handle(conn->transport);
+ 		evstat->type = nlh->nlmsg_type;
+@@ -1608,12 +1608,12 @@ iscsi_if_get_stats(struct iscsi_transport *transport, struct nlmsghdr *nlh)
+ 		memset(stats, 0, sizeof(*stats));
+ 
+ 		transport->get_stats(conn, stats);
+-		actual_size = NLMSG_SPACE(sizeof(struct iscsi_uevent) +
++		actual_size = nlmsg_total_size(sizeof(struct iscsi_uevent) +
+ 					  sizeof(struct iscsi_stats) +
+ 					  sizeof(struct iscsi_stats_custom) *
+ 					  stats->custom_length);
+ 		actual_size -= sizeof(*nlhstat);
+-		actual_size = NLMSG_LENGTH(actual_size);
++		actual_size = nlmsg_msg_size(actual_size);
+ 		skb_trim(skbstat, NLMSG_ALIGN(actual_size));
+ 		nlhstat->nlmsg_len = actual_size;
+ 
+@@ -1637,7 +1637,7 @@ int iscsi_session_event(struct iscsi_cls_session *session,
+ 	struct iscsi_uevent *ev;
+ 	struct sk_buff  *skb;
+ 	struct nlmsghdr *nlh;
+-	int rc, len = NLMSG_SPACE(sizeof(*ev));
++	int rc, len = nlmsg_total_size(sizeof(*ev));
+ 
+ 	priv = iscsi_if_transport_lookup(session->transport);
+ 	if (!priv)
+@@ -1653,7 +1653,7 @@ int iscsi_session_event(struct iscsi_cls_session *session,
+ 	}
+ 
+ 	nlh = __nlmsg_put(skb, 0, 0, 0, (len - sizeof(*nlh)), 0);
+-	ev = NLMSG_DATA(nlh);
++	ev = nlmsg_data(nlh);
+ 	ev->transport_handle = iscsi_handle(session->transport);
+ 
+ 	ev->type = event;
+@@ -2005,7 +2005,7 @@ iscsi_send_ping(struct iscsi_transport *transport, struct iscsi_uevent *ev)
+ static int
+ iscsi_get_chap(struct iscsi_transport *transport, struct nlmsghdr *nlh)
+ {
+-	struct iscsi_uevent *ev = NLMSG_DATA(nlh);
++	struct iscsi_uevent *ev = nlmsg_data(nlh);
+ 	struct Scsi_Host *shost = NULL;
+ 	struct iscsi_chap_rec *chap_rec;
+ 	struct iscsi_internal *priv;
+@@ -2024,7 +2024,7 @@ iscsi_get_chap(struct iscsi_transport *transport, struct nlmsghdr *nlh)
+ 		return -EINVAL;
+ 
+ 	chap_buf_size = (ev->u.get_chap.num_entries * sizeof(*chap_rec));
+-	len = NLMSG_SPACE(sizeof(*ev) + chap_buf_size);
++	len = nlmsg_total_size(sizeof(*ev) + chap_buf_size);
+ 
+ 	shost = scsi_host_lookup(ev->u.get_chap.host_no);
+ 	if (!shost) {
+@@ -2045,7 +2045,7 @@ iscsi_get_chap(struct iscsi_transport *transport, struct nlmsghdr *nlh)
+ 
+ 		nlhchap = __nlmsg_put(skbchap, 0, 0, 0,
+ 				      (len - sizeof(*nlhchap)), 0);
+-		evchap = NLMSG_DATA(nlhchap);
++		evchap = nlmsg_data(nlhchap);
+ 		memset(evchap, 0, sizeof(*evchap));
+ 		evchap->transport_handle = iscsi_handle(transport);
+ 		evchap->type = nlh->nlmsg_type;
+@@ -2058,7 +2058,7 @@ iscsi_get_chap(struct iscsi_transport *transport, struct nlmsghdr *nlh)
+ 		err = transport->get_chap(shost, ev->u.get_chap.chap_tbl_idx,
+ 				    &evchap->u.get_chap.num_entries, buf);
+ 
+-		actual_size = NLMSG_SPACE(sizeof(*ev) + chap_buf_size);
++		actual_size = nlmsg_total_size(sizeof(*ev) + chap_buf_size);
+ 		skb_trim(skbchap, NLMSG_ALIGN(actual_size));
+ 		nlhchap->nlmsg_len = actual_size;
+ 
+@@ -2096,7 +2096,7 @@ static int
+ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ {
+ 	int err = 0;
+-	struct iscsi_uevent *ev = NLMSG_DATA(nlh);
++	struct iscsi_uevent *ev = nlmsg_data(nlh);
+ 	struct iscsi_transport *transport = NULL;
+ 	struct iscsi_internal *priv;
+ 	struct iscsi_cls_session *session;
+@@ -2263,7 +2263,7 @@ static void
+ iscsi_if_rx(struct sk_buff *skb)
+ {
+ 	mutex_lock(&rx_queue_mutex);
+-	while (skb->len >= NLMSG_SPACE(0)) {
++	while (skb->len >= NLMSG_HDRLEN) {
+ 		int err;
+ 		uint32_t rlen;
+ 		struct nlmsghdr	*nlh;
+@@ -2276,7 +2276,7 @@ iscsi_if_rx(struct sk_buff *skb)
+ 			break;
+ 		}
+ 
+-		ev = NLMSG_DATA(nlh);
++		ev = nlmsg_data(nlh);
+ 		rlen = NLMSG_ALIGN(nlh->nlmsg_len);
+ 		if (rlen > skb->len)
+ 			rlen = skb->len;
+-- 
+1.7.10.4
