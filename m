@@ -1,69 +1,62 @@
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: Re: [PATCH V7 0/5] virtio-scsi multiqueue
-Date: Thu, 28 Mar 2013 10:22:11 +0800
-Message-ID: <5153A953.2000101@cn.fujitsu.com>
-References: <1364038124-32479-1-git-send-email-gaowanlong@cn.fujitsu.com>
-Reply-To: gaowanlong@cn.fujitsu.com
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v12 0/5] block layer runtime pm
+Date: Thu, 28 Mar 2013 16:54:35 +0800
+Message-ID: <5154054B.6050706@intel.com>
+References: <1364010148-8584-1-git-send-email-aaron.lu@intel.com> <20130323042345.GR1628@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1364038124-32479-1-git-send-email-gaowanlong@cn.fujitsu.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: JBottomley@parallels.com
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20130323042345.GR1628@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/23/2013 07:28 PM, Wanlong Gao wrote:
-> This series implements virtio-scsi queue steering, which gives
-> performance improvements of up to 50% (measured both with QEMU and
-> tcm_vhost backends).
+On 03/23/2013 12:23 PM, Jens Axboe wrote:
+> On Sat, Mar 23 2013, Aaron Lu wrote:
+>> In August 2010, Jens and Alan discussed about "Runtime PM and the block
+>> layer". http://marc.info/?t=128259108400001&r=1&w=2
+>> And then Alan has given a detailed implementation guide:
+>> http://marc.info/?l=linux-scsi&m=133727953625963&w=2
+>>
+>> To test:
+>> # ls -l /sys/block/sda
+>> /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/block/sda
+>>
+>> # echo 10000 > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/autosuspend_delay_ms
+>> # echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/control
+>> Then you'll see sda is suspended after 10secs idle.
+>>
+>> [ 1767.680192] sd 2:0:0:0: [sda] Synchronizing SCSI cache
+>> [ 1767.680317] sd 2:0:0:0: [sda] Stopping disk
+>>
+>> And if you do some IO, it will resume immediately.
+>> [ 1791.052438] sd 2:0:0:0: [sda] Starting disk
+>>
+>> For test, I often set the autosuspend time to 1 second. If you are using
+>> a GUI, the 10 seconds delay may be too long that the disk can not enter
+>> runtime suspended state.
+>>
+>> Note that sd's runtime suspend callback will dump some kernel messages
+>> and the syslog daemon will write kernel message to /var/log/messages,
+>> making the disk instantly resume after suspended. So for test, the
+>> syslog daemon should better be temporarily stopped.
+>>
+>> A git repo for it, on top of block/for-next:
+>> https://github.com/aaronlu/linux.git blockpm
+>>
+>> v12:
+>> - Split patch 1 into 2 patches, one introduces REQ_PM in block layer
+>>   and one uses that flag in SCSI layer, suggested by Jens Axboe.
 > 
-> This version rebased on Rusty's virtio ring rework patches, which
-> has already gone into virtio-next today.
-> We hope this can go into virtio-next together with the virtio ring
-> rework pathes.
-> 
-> V7: respin to fix the patch apply error
-> 
-> V6: rework "redo allocation of target data" (James)
->     fix comments (Venkatesh)
->     rebase to virtio-next
-> 
-> V5: improving the grammar of 1/5 (Paolo)
->     move the dropping of sg_elems to 'virtio-scsi: use virtqueue_add_sgs for command buffers'. (Asias)
-> 
-> V4: rebase on virtio ring rework patches (rusty's pending-rebases branch)
-> 
-> V3 and be found http://marc.info/?l=linux-virtualization&m=136067440717154&w=2
-> 
-> 
-> It would probably be easier to get it in via Rusty's tree
-> because of the prerequisites.  James, can we get your Acked-by?
+> Thanks Aaron, I've applied 1, and 3-4. I'll leave 2 and 5 for James to
+> pickup. James, if you want me to carry them, just let me know.
 
-James, any thoughts for this version?
+Hi James,
+
+May I know your opinion on the two SCSI patches in this series?
 
 Thanks,
-Wanlong Gao
+Aaron
 
-> 
-> Paolo Bonzini (3):
->   virtio-scsi: pass struct virtio_scsi to virtqueue completion function
->   virtio-scsi: push vq lock/unlock into virtscsi_vq_done
->   virtio-scsi: introduce multiqueue support
-> 
-> Wanlong Gao (2):
->   virtio-scsi: redo allocation of target data
->   virtio-scsi: reset virtqueue affinity when doing cpu hotplug
-> 
->  drivers/scsi/virtio_scsi.c | 387 ++++++++++++++++++++++++++++++++++++---------
->  1 file changed, 309 insertions(+), 78 deletions(-)
-> 
