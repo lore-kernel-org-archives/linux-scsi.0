@@ -1,95 +1,59 @@
-From: Jan Vesely <jvesely@redhat.com>
-Subject: [PATCH v3 2/2] block: modify __bio_add_page check to accept pages that don't start a new segment
-Date: Thu, 28 Mar 2013 10:38:29 +0100
-Message-ID: <1364463509-24975-3-git-send-email-jvesely@redhat.com>
-References: <1364463509-24975-1-git-send-email-jvesely@redhat.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH 0/5] qla2xxx: Patches for scsi "misc" branch.
+Date: Thu, 28 Mar 2013 08:21:22 -0400
+Message-ID: <1364473287-27640-1-git-send-email-saurav.kashyap@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4551 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756052Ab3C1Jiv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Mar 2013 05:38:51 -0400
-In-Reply-To: <1364463509-24975-1-git-send-email-jvesely@redhat.com>
+Received: from mvnat01.qlogic.com ([198.186.3.73]:27860 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1755079Ab3C1MoU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Mar 2013 08:44:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, axboe@kernel.dk
-Cc: James.Bottomley@hansenpartnership.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Jan Vesely <jvesely@redhat.com>
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-The original behavior was to refuse all pages after the maximum number of
-segments has been reached. However, some drivers (like st) craft their buffers
-to potentially require exactly max segments and multiple pages in the last
-segment. This patch modifies the check to allow pages that can be merged into
-the last segment.
+Hi James,
 
-Fixes EBUSY failures when using large  tape block size in high
-memory fragmentation condition. This regression was introduced by commit
-46081b166415acb66d4b3150ecefcd9460bb48a1
-st: Increase success probability in driver buffer allocation
+Please apply the following patches to the scsi tree at your earliest
+convenience for inclusion in the next mainline merge window.
 
-Signed-off-by: Jan Vesely <jvesely@redhat.com>
+Thanks,
+~Saurav
 
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jens Axboe <axboe@kernel.dk>
----
- fs/bio.c | 29 ++++++++++++++++++-----------
- 1 file changed, 18 insertions(+), 11 deletions(-)
+Giridhar Malavali (1):
+  qla2xxx: Enhancements to support ISPFx00.
 
-diff --git a/fs/bio.c b/fs/bio.c
-index bb5768f..cd5f961 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -500,7 +500,6 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
- 			  *page, unsigned int len, unsigned int offset,
- 			  unsigned short max_sectors)
- {
--	int retried_segments = 0;
- 	struct bio_vec *bvec;
- 
- 	/*
-@@ -551,18 +550,12 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
- 		return 0;
- 
- 	/*
--	 * we might lose a segment or two here, but rather that than
--	 * make this too complex.
-+	 * The first part of the segment count check,
-+	 * reduce segment count if possible
- 	 */
--
--	while (bio->bi_phys_segments >= queue_max_segments(q)) {
--
--		if (retried_segments)
--			return 0;
--
--		retried_segments = 1;
-+	if (bio->bi_phys_segments >= queue_max_segments(q))
- 		blk_recount_segments(q, bio);
--	}
-+
- 
- 	/*
- 	 * setup the new entry, we might clear it again later if we
-@@ -574,6 +567,20 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
- 	bvec->bv_offset = offset;
- 
- 	/*
-+	 * the other part of the segment count check, allow mergeable pages.
-+	 * BIO_SEG_VALID flag is cleared below
-+	 */
-+	if ((bio->bi_phys_segments > queue_max_segments(q)) ||
-+	    ((bio->bi_phys_segments == queue_max_segments(q)) &&
-+	     !bvec_mergeable(q, __BVEC_END(bio), bvec, bio->bi_seg_back_size))) {
-+			bvec->bv_page = NULL;
-+			bvec->bv_len = 0;
-+			bvec->bv_offset = 0;
-+			return 0;
-+	}
-+
-+
-+	/*
- 	 * if queue has other restrictions (eg varying max sector size
- 	 * depending on offset), it can specify a merge_bvec_fn in the
- 	 * queue to get further control
+Joe Carnuccio (2):
+  qla2xxx: Add clarifying printk to thermal access fail cases.
+  qla2xxx: Obtain loopback iteration count from bsg request.
+
+Saurav Kashyap (1):
+  qla2xxx: Update the driver version to 8.05.00.03-k.
+
+Wei Yongjun (1):
+  qla2xxx: Remove duplicated include form qla_isr.c
+
+ drivers/scsi/qla2xxx/Makefile      |    2 +-
+ drivers/scsi/qla2xxx/qla_attr.c    |   35 +-
+ drivers/scsi/qla2xxx/qla_bsg.c     |  154 ++-
+ drivers/scsi/qla2xxx/qla_bsg.h     |    1 +
+ drivers/scsi/qla2xxx/qla_dbg.c     |   27 +-
+ drivers/scsi/qla2xxx/qla_def.h     |  236 +++-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   47 +-
+ drivers/scsi/qla2xxx/qla_gs.c      |   16 +-
+ drivers/scsi/qla2xxx/qla_init.c    |   52 +-
+ drivers/scsi/qla2xxx/qla_inline.h  |   41 +-
+ drivers/scsi/qla2xxx/qla_iocb.c    |   67 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |   20 +-
+ drivers/scsi/qla2xxx/qla_mbx.c     |   10 +-
+ drivers/scsi/qla2xxx/qla_mr.c      | 3476 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_mr.h      |  510 ++++++
+ drivers/scsi/qla2xxx/qla_os.c      |  212 +++-
+ drivers/scsi/qla2xxx/qla_version.h |    4 +-
+ 17 files changed, 4803 insertions(+), 107 deletions(-)
+ create mode 100644 drivers/scsi/qla2xxx/qla_mr.c
+ create mode 100644 drivers/scsi/qla2xxx/qla_mr.h
+
 -- 
-1.8.1.4
+1.7.7
 
