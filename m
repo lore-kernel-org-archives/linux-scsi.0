@@ -1,27 +1,28 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 5/6] scsi: replace obsolete NLMSG_* with type safe nlmsg_*
-Date: Thu, 28 Mar 2013 11:36:05 -0500
-Message-ID: <51547175.409@cs.wisc.edu>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 5/6] scsi: replace obsolete NLMSG_* with type safe
+ nlmsg_*
+Date: Thu, 28 Mar 2013 14:01:17 -0400 (EDT)
+Message-ID: <20130328.140117.68651169941346627.davem@davemloft.net>
 References: <1364403195-32839-1-git-send-email-honkiko@gmail.com>
+	<20130328144502.GG23043@casper.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1364403195-32839-1-git-send-email-honkiko@gmail.com>
+In-Reply-To: <20130328144502.GG23043@casper.infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hong Zhiguo <honkiko@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, davem@davemloft.net, tgraf@suug.ch
+To: tgraf@suug.ch
+Cc: honkiko@gmail.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/27/2013 11:53 AM, Hong Zhiguo wrote:
-> Signed-off-by: Hong Zhiguo <honkiko@gmail.com>
-> ---
->  drivers/scsi/scsi_netlink.c         |    4 +--
->  drivers/scsi/scsi_transport_fc.c    |   21 +++++--------
->  drivers/scsi/scsi_transport_iscsi.c |   56 +++++++++++++++++------------------
->  3 files changed, 38 insertions(+), 43 deletions(-)
+From: Thomas Graf <tgraf@suug.ch>
+Date: Thu, 28 Mar 2013 14:45:02 +0000
+
+> On 03/28/13 at 12:53am, Hong Zhiguo wrote:
+>> Signed-off-by: Hong Zhiguo <honkiko@gmail.com>
+> 
+> There are some formatting errors but the Netlink bits themselves
+> look good.
 > 
 
-iscsi parts are ok. I also ran some quick tests on them.
-
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+I'll fix these up too when I commit.
