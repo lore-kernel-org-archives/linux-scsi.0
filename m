@@ -1,51 +1,54 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [patch] scsi_dh_hp_sw.c: return DEV_OFFLINED when
- blk_get_request fails
-Date: Thu, 28 Mar 2013 17:52:47 -0400
-Message-ID: <20130328175247.1f164783@jlaw-desktop.mno.stratus.com>
-References: <x49y5d7xqv7.fsf@segfault.boston.devel.redhat.com>
+From: "Stewart, Sean" <Sean.Stewart@netapp.com>
+Subject: [PATCH] scsi_dh_alua: Add module parameter to allow failover to non
+ preferred path without STPG
+Date: Thu, 28 Mar 2013 22:07:03 +0000
+Message-ID: <8255ED565A0EAA4A960625E27D49DBF21FF906FB@SACEXCMBX04-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub5.stratus.com ([134.111.1.18]:47337 "EHLO
-	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754225Ab3C1V4b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Mar 2013 17:56:31 -0400
-In-Reply-To: <x49y5d7xqv7.fsf@segfault.boston.devel.redhat.com>
+Received: from mx12.netapp.com ([216.240.18.77]:11893 "EHLO mx12.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752607Ab3C1WHG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Mar 2013 18:07:06 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "snitzer@redhat.com" <snitzer@redhat.com>, "hare@suse.de" <hare@suse.de>
 
-On Thu, 28 Mar 2013 15:32:12 -0400
-Jeff Moyer <jmoyer@redhat.com> wrote:
+Currently ALUA device handler sends STPG command during failover and failback.
+Failover can be optimized by implicit failover (by not to sending STPG command),
+when 1 is passed as hwhandler parameter in multipath.conf. ex "2 alua 1". We may
+need to pass the parameter through module param for alua device handler to optimize
+failover if incase retain_attached_hwhandler set in multipath.conf and hwhandler
+is set with non-tpgs device handler ex: '1 rdac'.
 
-> Hi,
-> 
-> If blk_get_requet fails here, it means that the queue is dead.  It
-> seems better to return a DEV_OFFLINED error code than the misleading
-> TEMP_UNAVAIL.  Comments?
-> 
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-> b/drivers/scsi/device_handler/scsi_dh_hp_sw.c index 084062b..eec24d3
-> 100644 --- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-> @@ -118,7 +118,7 @@ static int hp_sw_tur(struct scsi_device *sdev,
-> struct hp_sw_dh_data *h) retry:
->  	req = blk_get_request(sdev->request_queue, WRITE, GFP_NOIO);
->  	if (!req)
-> -		return SCSI_DH_RES_TEMP_UNAVAIL;
-> +		return SCSI_DH_DEV_OFFLINED;
->  
->  	req->cmd_type = REQ_TYPE_BLOCK_PC;
->  	req->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+Signed-off-by: Vijay Chauhan <vijay.chauhan@netapp.com>
+Signed-off-by: Sean Stewart <Sean.Stewart@netapp.com>
 
-Hi Jeff,
-
-How about hp_sw_start_stop?  It calls blk_get_request with GFP_ATOMIC,
-so it might see !req for dead queue or no memory.
-
--- Joe
+---
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c.orig	2013-03-27 12:18:35.000000000 +0530
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c	2013-03-27 13:23:16.000000000 +0530
+@@ -710,6 +710,10 @@ static int alua_set_params(struct scsi_d
+ 	return result;
+ }
+ 
++static uint optimize_stpg;
++module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(optimize_stpg, "Send STPG command for Failover on non-preferred path(0=Yes,1=No). Default is 0.");
++
+ /*
+  * alua_activate - activate a path
+  * @sdev: device on the path to be activated
+@@ -731,6 +735,9 @@ static int alua_activate(struct scsi_dev
+ 	if (err != SCSI_DH_OK)
+ 		goto out;
+ 
++	if (optimize_stpg)
++		h->flags |= ALUA_OPTIMIZE_STPG;
++
+ 	if (h->tpgs & TPGS_MODE_EXPLICIT) {
+ 		switch (h->state) {
+ 		case TPGS_STATE_NONOPTIMIZED:
+--
