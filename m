@@ -1,54 +1,84 @@
-From: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Subject: [PATCH] scsi_dh_alua: Add module parameter to allow failover to non
- preferred path without STPG
-Date: Thu, 28 Mar 2013 22:07:03 +0000
-Message-ID: <8255ED565A0EAA4A960625E27D49DBF21FF906FB@SACEXCMBX04-PRD.hq.netapp.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 0/4] scsi: 64-bit LUN support
+Date: Fri, 29 Mar 2013 17:32:53 +0100
+Message-ID: <5155C235.40807@redhat.com>
+References: <1361261883-41467-1-git-send-email-hare@suse.de> <alpine.WNT.2.00.1303261354360.5004@N5102REMCQXM4BS.qlogic.org> <5152A19C.7010500@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx12.netapp.com ([216.240.18.77]:11893 "EHLO mx12.netapp.com"
+Received: from mx1.redhat.com ([209.132.183.28]:3948 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752607Ab3C1WHG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Mar 2013 18:07:06 -0400
-Content-Language: en-US
+	id S1753263Ab3C2Qds (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Mar 2013 12:33:48 -0400
+In-Reply-To: <5152A19C.7010500@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "snitzer@redhat.com" <snitzer@redhat.com>, "hare@suse.de" <hare@suse.de>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jeremy Linton <jlinton@tributary.com>, Robert Elliott <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>
 
-Currently ALUA device handler sends STPG command during failover and failback.
-Failover can be optimized by implicit failover (by not to sending STPG command),
-when 1 is passed as hwhandler parameter in multipath.conf. ex "2 alua 1". We may
-need to pass the parameter through module param for alua device handler to optimize
-failover if incase retain_attached_hwhandler set in multipath.conf and hwhandler
-is set with non-tpgs device handler ex: '1 rdac'.
+On 03/27/2013 08:37 AM, Hannes Reinecke wrote:
+> On 03/26/2013 07:00 PM, Chad Dupuis wrote:
+>>
+>>
+>> On Tue, 19 Feb 2013, Hannes Reinecke wrote:
+>>
+>>> This patchset updates the SCSI midlayer to use 64-bit LUNs
+>>> internally.
+>>> It eliminates the need to limit the number of LUNs artificially to
+>>> avoid aliasing issues; the SCSI midlayer can now accept any LUN
+>>> presented
+>>> to it.
+>>>
+>>> The LLDD specific settings for 'max_lun' have been left untouched;
+>>> it should be raised to '~0' if the HBA supports 64-bit LUNs
+>>> internally.
+>>> However, it is up to the driver maintainer to raise that limit.
+>>>
+>>> Hannes Reinecke (4):
+>>>  scsi_scan: Fixup scsilun_to_int()
+>>>  scsi: use 64-bit LUNs
+>>>  scsi: use 64-bit value for 'max_luns'
+>>>  scsi: Remove CONFIG_SCSI_MULTI_LUN
+>>>
+>>
+>> Hannes,
+>>
+>> As we've reviewed these patches internally, the one question that keeps
+>> coming up is how do we handle hardware that cannot handle a 64-bit LUN
+>> address? For example, some of our older 2G/bps hardware can only
+>> handle a 16-bit LUN address.  Currently we convert the u32 value to u16.
+>  >  Do we do the same for the 64-bit conversion? Can a way be 
+> devised to
+>> "opt-out" of receiving a 64-bit address in the first place (IIRC this
+>  > was an option in the v1 patch set)?
+>>
+> Yes, you can.
+>
+> The idea here is to let 'max_luns' control this behaviour; 
+> 'max_luns' is the highest LUN number the host can support.
+> So for 16-bit LUN you would set max_luns to '0xFFFF', and for 32-bit
+> LUN addresses you would be setting max_luns to '0xFFFFFFFF'.
 
-Signed-off-by: Vijay Chauhan <vijay.chauhan@netapp.com>
-Signed-off-by: Sean Stewart <Sean.Stewart@netapp.com>
+Hi all,
 
----
---- a/drivers/scsi/device_handler/scsi_dh_alua.c.orig	2013-03-27 12:18:35.000000000 +0530
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c	2013-03-27 13:23:16.000000000 +0530
-@@ -710,6 +710,10 @@ static int alua_set_params(struct scsi_d
- 	return result;
- }
- 
-+static uint optimize_stpg;
-+module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(optimize_stpg, "Send STPG command for Failover on non-preferred path(0=Yes,1=No). Default is 0.");
-+
- /*
-  * alua_activate - activate a path
-  * @sdev: device on the path to be activated
-@@ -731,6 +735,9 @@ static int alua_activate(struct scsi_dev
- 	if (err != SCSI_DH_OK)
- 		goto out;
- 
-+	if (optimize_stpg)
-+		h->flags |= ALUA_OPTIMIZE_STPG;
-+
- 	if (h->tpgs & TPGS_MODE_EXPLICIT) {
- 		switch (h->state) {
- 		case TPGS_STATE_NONOPTIMIZED:
---
+in scsi_report_lun_scan is max_lun compared with the result of scsilun_to_int,
+but in that value is also stored the address method. This means, that we compare
+the max_lun to a LUN 'handle' which doesn't seem to make much sense.
+This makes that test dependent on which address method is used and not
+only to the LUN number which is I think expected.
+The solution is to have a new function 'scsilun_to_num', (I can send a patch)
+or let the individual drivers set the max_lun to -1 and test for the allowed LUNs
+in the driver.
+
+Thanks,
+Tomas
+
+>
+> However, since you mention it, maybe I should add a 'scsilun_to_u32'
+> conversion routine, as this is requested in several places.
+>
+> Cheers,
+>
+> Hannes
+
