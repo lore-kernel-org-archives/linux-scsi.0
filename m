@@ -1,16 +1,16 @@
 From: Or Gerlitz <or.gerlitz@gmail.com>
 Subject: Re: [RFC-v2 10/12] iser-target: Add logic for verbs
-Date: Tue, 2 Apr 2013 23:09:30 +0300
-Message-ID: <CAJZOPZL3WreQjbaeGgaUi3QxEuEAXFCcuMA6C3rEibzmRp7fUQ@mail.gmail.com>
+Date: Wed, 3 Apr 2013 00:13:20 +0300
+Message-ID: <CAJZOPZLHqhq4AbK0oWCJCtH5_xxwb7MW12AgqBRH4=mTOh2Qtw@mail.gmail.com>
 References: <1363996536-30644-1-git-send-email-nab@linux-iscsi.org>
 	<1363996536-30644-11-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:62458 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761364Ab3DBUJb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Apr 2013 16:09:31 -0400
+Received: from mail-qe0-f52.google.com ([209.85.128.52]:48286 "EHLO
+	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754460Ab3DBVNW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Apr 2013 17:13:22 -0400
 In-Reply-To: <1363996536-30644-11-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,7 +19,51 @@ Cc: target-devel <target-devel@vger.kernel.org>, linux-rdma <linux-rdma@vger.ker
 
 On Sat, Mar 23, 2013 at 1:55 AM, Nicholas A. Bellinger
 <nab@linux-iscsi.org> wrote:
-[...]
+
++       device->dev_mr = ib_get_dma_mr(device->dev_pd,
++                               IB_ACCESS_LOCAL_WRITE |
++                               IB_ACCESS_REMOTE_WRITE |
++                               IB_ACCESS_REMOTE_READ);
+
+
+remove IB_ACCESS_REMOTE_yyy access  flags, you're not letting anyone
+do remote rdma to this memory region
+> +/*******************************************************************************
+> + * This file contains iSCSI extentions for RDMA (iSER) Verbs
+> + *
+> + * (c) Copyright 2013 RisingTide Systems LLC.
+> + *
+> + * Nicholas A. Bellinger <nab@linux-iscsi.org>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation; either version 2 of the License, or
+> + * (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + ****************************************************************************/
+> +#include <linux/socket.h>
+> +#include <linux/in.h>
+> +#include <linux/in6.h>
+> +
+> +#include <rdma/ib_verbs.h>
+> +#include <rdma/rdma_cm.h>
+> +#include <target/iscsi/iscsi_transport.h>
+> +
+> +#include "isert_proto.h"
+> +#include "isert_base.h"
+> +#include "isert_core.h"
+> +
+> +#define        ISERT_MAX_CONN          8
+> +#define ISER_MAX_RX_CQ_LEN     (ISERT_QP_MAX_RECV_DTOS * ISERT_MAX_CONN)
+> +#define ISER_MAX_TX_CQ_LEN     (ISERT_QP_MAX_REQ_DTOS  * ISERT_MAX_CONN)
+> +
+> +static DEFINE_MUTEX(device_list_mutex);
+> +static LIST_HEAD(device_list);
+> +
 > +static void
 > +isert_qp_event_callback(struct ib_event *e, void *context)
 > +{
@@ -34,7 +78,79 @@ On Sat, Mar 23, 2013 at 1:55 AM, Nicholas A. Bellinger
 > +               break;
 > +       }
 > +}
-[...]
+> +
+> +static int
+> +isert_query_device(struct ib_device *ib_dev, struct ib_device_attr *devattr)
+> +{
+> +       int ret;
+> +
+> +       ret = ib_query_device(ib_dev, devattr);
+> +       if (ret) {
+> +               pr_err("ib_query_device() failed: %d\n", ret);
+> +               return ret;
+> +       }
+> +       pr_debug("devattr->max_sge: %d\n", devattr->max_sge);
+> +       pr_debug("devattr->max_sge_rd: %d\n", devattr->max_sge_rd);
+> +
+> +       return 0;
+> +}
+> +
+> +static int
+> +isert_conn_setup_qp(struct isert_conn *isert_conn, struct rdma_cm_id *cma_id)
+> +{
+> +       struct isert_device *device = isert_conn->conn_device;
+> +       struct ib_qp_init_attr attr;
+> +       struct ib_device_attr devattr;
+> +       int ret, index, min_index = 0;
+> +
+> +       memset(&devattr, 0, sizeof(struct ib_device_attr));
+> +       ret = isert_query_device(cma_id->device, &devattr);
+> +       if (ret)
+> +               return ret;
+> +
+> +       mutex_lock(&device_list_mutex);
+> +       for (index = 0; index < device->cqs_used; index++)
+> +               if (device->cq_active_qps[index] <
+> +                   device->cq_active_qps[min_index])
+> +                       min_index = index;
+> +       device->cq_active_qps[min_index]++;
+> +       pr_debug("isert_conn_setup_qp: Using min_index: %d\n", min_index);
+> +       mutex_unlock(&device_list_mutex);
+> +
+> +       memset(&attr, 0, sizeof(struct ib_qp_init_attr));
+> +       attr.event_handler = isert_qp_event_callback;
+> +       attr.qp_context = isert_conn;
+> +       attr.send_cq = device->dev_tx_cq[min_index];
+> +       attr.recv_cq = device->dev_rx_cq[min_index];
+> +       attr.cap.max_send_wr = ISERT_QP_MAX_REQ_DTOS;
+> +       attr.cap.max_recv_wr = ISERT_QP_MAX_RECV_DTOS;
+> +       /*
+> +        * FIXME: Use devattr.max_sge - 2 for max_send_sge as
+> +        * work-around for RDMA_READ..
+> +        */
+> +       attr.cap.max_send_sge = devattr.max_sge - 2;
+> +       isert_conn->max_sge = attr.cap.max_send_sge;
+> +
+> +       attr.cap.max_recv_sge = 1;
+> +       attr.sq_sig_type = IB_SIGNAL_REQ_WR;
+> +       attr.qp_type = IB_QPT_RC;
+> +
+> +       pr_debug("isert_conn_setup_qp cma_id->device: %p\n",
+> +                cma_id->device);
+> +       pr_debug("isert_conn_setup_qp conn_pd->device: %p\n",
+> +                isert_conn->conn_pd->device);
+> +
+> +       ret = rdma_create_qp(cma_id, isert_conn->conn_pd, &attr);
+> +       if (ret) {
+> +               pr_err("rdma_create_qp failed for cma_id %d\n", ret);
+> +               return ret;
+> +       }
+> +       isert_conn->conn_qp = cma_id->qp;
+> +       pr_debug("rdma_create_qp() returned success >>>>>>>>>>>>>>>>>>>>>>>>>.\n");
+> +
+> +       return 0;
+> +}
+> +
 > +static void
 > +isert_cq_event_callback(struct ib_event *e, void *context)
 > +{
@@ -49,29 +165,107 @@ On Sat, Mar 23, 2013 at 1:55 AM, Nicholas A. Bellinger
 > +               break;
 > +       }
 > +}
-
-This is QP not CQ event, move the case for it to QP event hander
-isert_qp_event_callback
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+> +
+> +static int
+> +isert_create_device_ib_res(struct isert_device *device)
+> +{
+> +       struct ib_device *ib_dev = device->ib_device;
+> +       struct isert_cq_desc *cq_desc;
+> +       int ret, i, j;
+> +
+> +       device->cqs_used = min_t(int, num_online_cpus(),
+> +                                device->ib_device->num_comp_vectors);
+> +       device->cqs_used = min(ISERT_MAX_CQ, device->cqs_used);
+> +       pr_debug("Using %d CQs, device %s supports %d vectors\n",
+> +                device->cqs_used, device->ib_device->name,
+> +                device->ib_device->num_comp_vectors);
+> +       device->cq_desc = kzalloc(sizeof(struct isert_cq_desc) *
+> +                               device->cqs_used, GFP_KERNEL);
+> +       if (!device->cq_desc) {
+> +               pr_err("Unable to allocate device->cq_desc\n");
+> +               return -ENOMEM;
+> +       }
+> +       cq_desc = device->cq_desc;
+> +
+> +       device->dev_pd = ib_alloc_pd(ib_dev);
+> +       if (IS_ERR(device->dev_pd)) {
+> +               ret = PTR_ERR(device->dev_pd);
+> +               pr_err("ib_alloc_pd failed for dev_pd: %d\n", ret);
+> +               goto out_cq_desc;
+> +       }
+> +
+> +       for (i = 0; i < device->cqs_used; i++) {
+> +               cq_desc[i].device = device;
+> +               cq_desc[i].cq_index = i;
+> +
+> +               device->dev_rx_cq[i] = ib_create_cq(device->ib_device,
+> +                                               isert_cq_rx_callback,
+> +                                               isert_cq_event_callback,
+> +                                               (void *)&cq_desc[i],
+> +                                               ISER_MAX_RX_CQ_LEN, i);
+> +               if (IS_ERR(device->dev_rx_cq[i]))
+> +                       goto out_cq;
+> +
+> +               device->dev_tx_cq[i] = ib_create_cq(device->ib_device,
+> +                                               isert_cq_tx_callback,
+> +                                               isert_cq_event_callback,
+> +                                               (void *)&cq_desc[i],
+> +                                               ISER_MAX_TX_CQ_LEN, i);
+> +               if (IS_ERR(device->dev_tx_cq[i]))
+> +                       goto out_cq;
+> +
+> +               if (ib_req_notify_cq(device->dev_rx_cq[i], IB_CQ_NEXT_COMP))
+> +                       goto out_cq;
+> +
+> +               if (ib_req_notify_cq(device->dev_tx_cq[i], IB_CQ_NEXT_COMP))
+> +                       goto out_cq;
+> +
+> +               tasklet_init(&device->dev_rx_tasklet[i],
+> +                            iser_cq_rx_tasklet, (unsigned long)&cq_desc[i]);
+> +               tasklet_init(&device->dev_tx_tasklet[i],
+> +                            iser_cq_tx_tasklet, (unsigned long)&cq_desc[i]);
+> +       }
+> +
+> +       device->dev_mr = ib_get_dma_mr(device->dev_pd,
+> +                               IB_ACCESS_LOCAL_WRITE |
+> +                               IB_ACCESS_REMOTE_WRITE |
+> +                               IB_ACCESS_REMOTE_READ);
+> +       if (IS_ERR(device->dev_mr)) {
+> +               ret = PTR_ERR(device->dev_mr);
+> +               pr_err("ib_get_dma_mr failed for dev_mr: %d\n", ret);
+> +               goto out_cq;
+> +       }
+> +
+> +       return 0;
+> +
+> +out_cq:
+> +       for (j = 0; j < i; j++) {
+> +               if (device->dev_rx_cq[j]) {
+> +                       tasklet_kill(&device->dev_rx_tasklet[j]);
+> +                       ib_destroy_cq(device->dev_rx_cq[j]);
+> +               }
+> +               if (device->dev_tx_cq[j]) {
+> +                       tasklet_kill(&device->dev_tx_tasklet[j]);
+> +                       ib_destroy_cq(device->dev_tx_cq[j]);
+> +               }
+> +       }
+> +       ib_dealloc_pd(device->dev_pd);
+> +
+> +out_cq_desc:
+> +       kfree(device->cq_desc);
+> +
+> +       return ret;
+> +}
+> +
+> +static void
+> +isert_free_device_ib_res(struct isert_device *device)
+> +{
+> +       int i;
+> +
+> +       for (i = 0; i < device->cqs_used; i++) {
+> +               tasklet_kill(&device->dev_rx_tasklet[i]);
+> +               tasklet_kill(&device->dev_tx_tasklet[i]);
+> +               ib_destroy_cq(device->dev_rx_cq[i]);
 > +               ib_destroy_cq(device->dev_tx_cq[i]);
 > +               device->dev_rx_cq[i] = NULL;
 > +               device->dev_tx_cq[i] = NULL;
