@@ -1,50 +1,35 @@
-From: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC-v2 11/12] iser-target: Add logic for core
-Date: Tue, 2 Apr 2013 11:33:33 +0300
-Message-ID: <515A97DD.40507@mellanox.com>
-References: <1363996536-30644-1-git-send-email-nab@linux-iscsi.org> <1363996536-30644-12-git-send-email-nab@linux-iscsi.org>
+From: Ewan Milne <emilne@redhat.com>
+Subject: RE: [PATCH] scsi_dh_alua: Add module parameter to allow failover
+ to non preferred path without STPG
+Date: Tue, 02 Apr 2013 08:38:16 -0400
+Message-ID: <1364906296.2647.0.camel@localhost.localdomain>
+References: <8255ED565A0EAA4A960625E27D49DBF21FF906FB@SACEXCMBX04-PRD.hq.netapp.com>
+	 <1364826280.3828.120.camel@localhost.localdomain>
+	 <8255ED565A0EAA4A960625E27D49DBF21FF95717@SACEXCMBX04-PRD.hq.netapp.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1363996536-30644-12-git-send-email-nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Cc: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexander Nezhinsky <alexandern-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:6524 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759812Ab3DBMjA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Apr 2013 08:39:00 -0400
+In-Reply-To: <8255ED565A0EAA4A960625E27D49DBF21FF95717@SACEXCMBX04-PRD.hq.netapp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Stewart, Sean" <Sean.Stewart@netapp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "snitzer@redhat.com" <snitzer@redhat.com>, "hare@suse.de" <hare@suse.de>
 
-On 23/03/2013 01:55, Nicholas A. Bellinger wrote:
-> +++ b/drivers/infiniband/ulp/isert/isert_core.h
-> @@ -0,0 +1,11 @@
-> +#include <linux/socket.h>
-> +#include <linux/in.h>
-> +#include <linux/in6.h>
-> +#include <rdma/ib_verbs.h>
-> +#include <rdma/rdma_cm.h>
-> +
-> +extern void iser_cq_tx_tasklet(unsigned long);
-> +extern void isert_cq_tx_callback(struct ib_cq *, void *);
-> +extern void iser_cq_rx_tasklet(unsigned long);
-> +extern void isert_cq_rx_callback(struct ib_cq *, void *);
-> +extern void isert_free_rx_descriptors(struct isert_conn *);
+On Mon, 2013-04-01 at 21:18 +0000, Stewart, Sean wrote:
+> How about the following?  Reworded in a way such that 0 means no and 1 means yes.
+> 
+> +static uint optimize_stpg;
+> +module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR); 
+> +MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, rather than sending a STPG, when implicit TPGS is supported (0=No,1=Yes). Default is 0.");
 
-no need for externs here too, agree? also, any reason for these two 
-header files not
-to be merged into one or into one of the other header files?
+Great, thank you.
 
-> diff --git a/drivers/infiniband/ulp/isert/isert_verbs.h b/drivers/infiniband/ulp/isert/isert_verbs.h
-> new file mode 100644
-> index 0000000..da7924d
-> --- /dev/null
-> +++ b/drivers/infiniband/ulp/isert/isert_verbs.h
-> @@ -0,0 +1,5 @@
-> +extern void isert_connect_release(struct isert_conn *);
-> +extern void isert_put_conn(struct isert_conn *);
-> +extern int isert_cma_handler(struct rdma_cm_id *, struct rdma_cm_event *);
-> +extern int isert_post_recv(struct isert_conn *, u32);
-> +extern int isert_post_send(struct isert_conn *, struct iser_tx_desc *);
+-Ewan D. Milne <emilne@redhat.com>
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
