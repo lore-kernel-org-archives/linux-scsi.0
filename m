@@ -1,89 +1,105 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC-v2 11/12] iser-target: Add logic for core
-Date: Tue, 02 Apr 2013 15:36:25 -0700
-Message-ID: <1364942185.3898.200.camel@haakon2.linux-iscsi.org>
-References: <1363996536-30644-1-git-send-email-nab@linux-iscsi.org>
-	 <1363996536-30644-12-git-send-email-nab@linux-iscsi.org>
-	 <CAJZOPZK888O4Hjjhf9=BMbdM8kM7sF56uFYPPaM1LV1gn5DJ=w@mail.gmail.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] scsi-dh-emc: fix activate vs set_params race
+Date: Tue, 2 Apr 2013 20:09:26 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.1304021954420.27554@file.rdu.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAJZOPZK888O4Hjjhf9=BMbdM8kM7sF56uFYPPaM1LV1gn5DJ=w@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Or Gerlitz <or.gerlitz@gmail.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Alexander Nezhinsky <alexandern@mellanox.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39223 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756493Ab3DCAKP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Apr 2013 20:10:15 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Wed, 2013-04-03 at 00:24 +0300, Or Gerlitz wrote:
-> On Sat, Mar 23, 2013 at 1:55 AM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > +static int
-> > +isert_put_response(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
-> > +{
-> > +       struct isert_cmd *isert_cmd = container_of(cmd,
-> > +                                       struct isert_cmd, iscsi_cmd);
-> > +       struct isert_conn *isert_conn = (struct isert_conn *)conn->context;
-> > +       struct ib_send_wr *send_wr = &isert_cmd->tx_desc.send_wr, *wr_failed;
-> > +       struct iscsi_scsi_rsp *hdr = (struct iscsi_scsi_rsp *)
-> > +                               &isert_cmd->tx_desc.iscsi_header;
-> > +       int ret;
-> > +
-> > +       isert_create_send_desc(isert_conn, isert_cmd, &isert_cmd->tx_desc);
-> > +       iscsit_build_rsp_pdu(cmd, conn, true, hdr);
-> > +       isert_init_tx_hdrs(isert_conn, &isert_cmd->tx_desc);
-> > +       /*
-> > +        * Attach SENSE DATA payload to iSCSI Response PDU
-> > +        */
-> > +       if (cmd->se_cmd.sense_buffer &&
-> > +           ((cmd->se_cmd.se_cmd_flags & SCF_TRANSPORT_TASK_SENSE) ||
-> > +           (cmd->se_cmd.se_cmd_flags & SCF_EMULATED_TASK_SENSE))) {
-> > +               struct ib_device *ib_dev = isert_conn->conn_cm_id->device;
-> > +               struct ib_sge *tx_dsg = &isert_cmd->tx_desc.tx_sg[1];
-> > +               u32 padding, sense_len;
-> > +
-> > +               put_unaligned_be16(cmd->se_cmd.scsi_sense_length,
-> > +                                  cmd->sense_buffer);
-> > +               cmd->se_cmd.scsi_sense_length += sizeof(__be16);
-> > +
-> > +               padding = -(cmd->se_cmd.scsi_sense_length) & 3;
-> > +               hton24(hdr->dlength, (u32)cmd->se_cmd.scsi_sense_length);
-> > +               sense_len = cmd->se_cmd.scsi_sense_length + padding;
-> > +
-> > +               isert_cmd->sense_buf_dma = ib_dma_map_single(ib_dev,
-> > +                               (void *)cmd->sense_buffer, sense_len,
-> > +                               DMA_TO_DEVICE);
-> > +
-> > +               isert_cmd->sense_buf_len = sense_len;
-> > +               ib_dma_sync_single_for_cpu(ib_dev, isert_cmd->sense_buf_dma,
-> > +                                          sense_len, DMA_TO_DEVICE);
-> > +               ib_dma_sync_single_for_device(ib_dev, isert_cmd->sense_buf_dma,
-> > +                                             sense_len, DMA_TO_DEVICE);
-> > +
-> > +               tx_dsg->addr    = isert_cmd->sense_buf_dma;
-> > +               tx_dsg->length  = sense_len;
-> > +               tx_dsg->lkey    = isert_conn->conn_mr->lkey;
-> > +               isert_cmd->tx_desc.num_sge = 2;
-> > +       }
-> > +
-> > +       isert_cmd->rdma_wr.iser_ib_op = ISER_IB_SEND;
-> 
-> [...]
-> > +       send_wr->wr_id = (unsigned long)&isert_cmd->tx_desc;
-> > +       send_wr->opcode = IB_WR_SEND;
-> > +       send_wr->send_flags = IB_SEND_SIGNALED;
-> > +       send_wr->sg_list = &isert_cmd->tx_desc.tx_sg[0];
-> > +       send_wr->num_sge = isert_cmd->tx_desc.num_sge;
-> > +       send_wr->next = NULL;
-> [...]
-> 
-> These seven lines are repeated 3-5 times below, a quick question and suggestion:
-> 
-> 1. can't we do it beforehand?
-> 2. we can move to helper function and call it when needed.
-> 
-> 
+Hi
 
-<nod>, adding common isert_init_send_wr() caller now.
+This fixes a possible race in scsi_dh_emc. It is untested because I don't 
+have the hardware. It could happen when we reload a multipath device and 
+path failure happens at the same time.
 
---nab
+This is a theoretical race condition (there are no reports of it 
+hapenning), but a different bug was already triggered under the same 
+conditions in QA testing.
+
+Mikulas
+
+---
+
+scsi-dh-emc: fix activate vs set_params race
+
+The activate routine may be called concurrently with the set_params
+routine. This can happen when dm-multipath device is reloaded. When we
+reload a device mapper device, the new target instance is being created
+(that could call the set_params method) while the old target instance is
+still active (that could call the activate method).
+
+The activate and set_params routine share the same data and sense buffer,
+so it could result in incorrect behaviour if they are called concurrently.
+This patch adds a mutex to fix the race.
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+
+---
+ drivers/scsi/device_handler/scsi_dh_emc.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+Index: linux-3.9-rc5-fast/drivers/scsi/device_handler/scsi_dh_emc.c
+===================================================================
+--- linux-3.9-rc5-fast.orig/drivers/scsi/device_handler/scsi_dh_emc.c	2013-04-03 01:32:16.000000000 +0200
++++ linux-3.9-rc5-fast/drivers/scsi/device_handler/scsi_dh_emc.c	2013-04-03 01:45:13.000000000 +0200
+@@ -111,6 +111,8 @@ struct clariion_dh_data {
+ 	 * path's mapped LUN
+ 	 */
+ 	int current_sp;
++
++	struct mutex mtx;
+ };
+ 
+ static inline struct clariion_dh_data
+@@ -536,6 +538,8 @@ static int clariion_activate(struct scsi
+ 	struct clariion_dh_data *csdev = get_clariion_data(sdev);
+ 	int result;
+ 
++	mutex_lock(&csdev->mtx);
++
+ 	result = clariion_send_inquiry(sdev, csdev);
+ 	if (result != SCSI_DH_OK)
+ 		goto done;
+@@ -562,6 +566,8 @@ done:
+ 		    csdev->port, lun_state[csdev->lun_state],
+ 		    csdev->default_sp + 'A');
+ 
++	mutex_unlock(&csdev->mtx);
++
+ 	if (fn)
+ 		fn(data, result);
+ 	return 0;
+@@ -602,6 +608,8 @@ static int clariion_set_params(struct sc
+ 	else
+ 		csdev->flags &= ~CLARIION_HONOR_RESERVATIONS;
+ 
++	mutex_lock(&csdev->mtx);
++
+ 	/*
+ 	 * If this path is owned, we have to send a trespass command
+ 	 * with the new parameters. If not, simply return. Next trespass
+@@ -618,6 +626,8 @@ static int clariion_set_params(struct sc
+ 	/* Update status */
+ 	result = clariion_send_inquiry(sdev, csdev);
+ 
++	mutex_unlock(&csdev->mtx);
++
+ done:
+ 	return result;
+ }
+@@ -683,6 +693,7 @@ static int clariion_bus_attach(struct sc
+ 	h->lun_state = CLARIION_LUN_UNINITIALIZED;
+ 	h->default_sp = CLARIION_UNBOUND_LU;
+ 	h->current_sp = CLARIION_UNBOUND_LU;
++	mutex_init(&h->mtx);
+ 
+ 	err = clariion_std_inquiry(sdev, h);
+ 	if (err != SCSI_DH_OK)
