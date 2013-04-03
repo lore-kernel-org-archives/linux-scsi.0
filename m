@@ -1,105 +1,81 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH] scsi-dh-emc: fix activate vs set_params race
-Date: Tue, 2 Apr 2013 20:09:26 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.1304021954420.27554@file.rdu.redhat.com>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] [SCSI] libsas: fix handling vacant phy in sas_set_ex_phy()
+Date: Wed, 03 Apr 2013 10:27:17 +0200
+Message-ID: <20130403082717.13404.40145.stgit@gklab-154-244.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39223 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756493Ab3DCAKP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Apr 2013 20:10:15 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <JBottomley@parallels.com>
+Cc: Pawel Baldysiak <pawel.baldysiak@intel.com>, Dave Jiang <dave.jiang@intel.com>, Maciej Patelczyk <maciej.patelczyk@intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-Hi
+If a result of the SMP discover function is PHY VACANT,
+the content of discover response structure (dr) is not valid.
+It sometimes happens that dr->attached_sas_addr can contain
+even SAS address of other phy. In such case an invalid phy
+is created, what causes NULL pointer dereference during
+destruction of expander's phys.
 
-This fixes a possible race in scsi_dh_emc. It is untested because I don't 
-have the hardware. It could happen when we reload a multipath device and 
-path failure happens at the same time.
+So if a result of SMP function is PHY VACANT, the content of discover
+response structure (dr) must not be copied to phy structure.
 
-This is a theoretical race condition (there are no reports of it 
-hapenning), but a different bug was already triggered under the same 
-conditions in QA testing.
+This patch fixes the following bug:
 
-Mikulas
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000030
+IP: [<ffffffff811c9002>] sysfs_find_dirent+0x12/0x90
+Call Trace:
+  [<ffffffff811c95f5>] sysfs_get_dirent+0x35/0x80
+  [<ffffffff811cb55e>] sysfs_unmerge_group+0x1e/0xb0
+  [<ffffffff813329f4>] dpm_sysfs_remove+0x24/0x90
+  [<ffffffff8132b0f4>] device_del+0x44/0x1d0
+  [<ffffffffa016fc59>] sas_rphy_delete+0x9/0x20 [scsi_transport_sas]
+  [<ffffffffa01a16f6>] sas_destruct_devices+0xe6/0x110 [libsas]
+  [<ffffffff8107ac7c>] process_one_work+0x16c/0x350
+  [<ffffffff8107d84a>] worker_thread+0x17a/0x410
+  [<ffffffff81081b76>] kthread+0x96/0xa0
+  [<ffffffff81464944>] kernel_thread_helper+0x4/0x10
 
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Reviewed-by: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: James Bottomley <JBottomley@parallels.com>
+Cc: <linux-scsi@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>
+Cc: <stable@vger.kernel.org>
 ---
+ drivers/scsi/libsas/sas_expander.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-scsi-dh-emc: fix activate vs set_params race
-
-The activate routine may be called concurrently with the set_params
-routine. This can happen when dm-multipath device is reloaded. When we
-reload a device mapper device, the new target instance is being created
-(that could call the set_params method) while the old target instance is
-still active (that could call the activate method).
-
-The activate and set_params routine share the same data and sense buffer,
-so it could result in incorrect behaviour if they are called concurrently.
-This patch adds a mutex to fix the race.
-
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-
----
- drivers/scsi/device_handler/scsi_dh_emc.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-Index: linux-3.9-rc5-fast/drivers/scsi/device_handler/scsi_dh_emc.c
-===================================================================
---- linux-3.9-rc5-fast.orig/drivers/scsi/device_handler/scsi_dh_emc.c	2013-04-03 01:32:16.000000000 +0200
-+++ linux-3.9-rc5-fast/drivers/scsi/device_handler/scsi_dh_emc.c	2013-04-03 01:45:13.000000000 +0200
-@@ -111,6 +111,8 @@ struct clariion_dh_data {
- 	 * path's mapped LUN
- 	 */
- 	int current_sp;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index e071e08..93ee4ef 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -235,6 +235,17 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 	linkrate  = phy->linkrate;
+ 	memcpy(sas_addr, phy->attached_sas_addr, SAS_ADDR_SIZE);
+ 
++	/* Handle vacant phy - rest of dr data is not valid so skip it */
++	if (phy->phy_state == PHY_VACANT) {
++		memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
++		phy->attached_dev_type = NO_DEVICE;
++		if (!test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)) {
++			phy->phy_id = phy_id;
++			goto skip;
++		} else
++			goto out;
++	}
 +
-+	struct mutex mtx;
- };
+ 	phy->attached_dev_type = to_dev_type(dr);
+ 	if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state))
+ 		goto out;
+@@ -272,6 +283,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 	phy->phy->maximum_linkrate = dr->pmax_linkrate;
+ 	phy->phy->negotiated_linkrate = phy->linkrate;
  
- static inline struct clariion_dh_data
-@@ -536,6 +538,8 @@ static int clariion_activate(struct scsi
- 	struct clariion_dh_data *csdev = get_clariion_data(sdev);
- 	int result;
- 
-+	mutex_lock(&csdev->mtx);
-+
- 	result = clariion_send_inquiry(sdev, csdev);
- 	if (result != SCSI_DH_OK)
- 		goto done;
-@@ -562,6 +566,8 @@ done:
- 		    csdev->port, lun_state[csdev->lun_state],
- 		    csdev->default_sp + 'A');
- 
-+	mutex_unlock(&csdev->mtx);
-+
- 	if (fn)
- 		fn(data, result);
- 	return 0;
-@@ -602,6 +608,8 @@ static int clariion_set_params(struct sc
- 	else
- 		csdev->flags &= ~CLARIION_HONOR_RESERVATIONS;
- 
-+	mutex_lock(&csdev->mtx);
-+
- 	/*
- 	 * If this path is owned, we have to send a trespass command
- 	 * with the new parameters. If not, simply return. Next trespass
-@@ -618,6 +626,8 @@ static int clariion_set_params(struct sc
- 	/* Update status */
- 	result = clariion_send_inquiry(sdev, csdev);
- 
-+	mutex_unlock(&csdev->mtx);
-+
- done:
- 	return result;
- }
-@@ -683,6 +693,7 @@ static int clariion_bus_attach(struct sc
- 	h->lun_state = CLARIION_LUN_UNINITIALIZED;
- 	h->default_sp = CLARIION_UNBOUND_LU;
- 	h->current_sp = CLARIION_UNBOUND_LU;
-+	mutex_init(&h->mtx);
- 
- 	err = clariion_std_inquiry(sdev, h);
- 	if (err != SCSI_DH_OK)
++ skip:
+ 	if (new_phy)
+ 		if (sas_phy_add(phy->phy)) {
+ 			sas_phy_free(phy->phy);
