@@ -1,51 +1,66 @@
-From: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Subject: [dm-devel] [PATCH] [RESEND] scsi_dh_alua: Add module parameter to
- allow failover to non preferred path without STPG
-Date: Thu, 4 Apr 2013 14:54:47 +0000
-Message-ID: <8255ED565A0EAA4A960625E27D49DBF21FF97F35@SACEXCMBX04-PRD.hq.netapp.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: scanning for LUNs
+Date: Thu, 4 Apr 2013 15:15:01 +0000
+Message-ID: <1365088500.2764.8.camel@dabdike>
+References: <1365088357-22624-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx12.netapp.com ([216.240.18.77]:1775 "EHLO mx12.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762207Ab3DDOyt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Apr 2013 10:54:49 -0400
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1365088357-22624-1-git-send-email-kys@microsoft.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <B4B43BB0144F154C8C05F0B446C514CA@sw.swsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "snitzer@redhat.com" <snitzer@redhat.com>
 
-Resending with requested rewording of the parameter description.
-Currently ALUA device handler sends STPG command during failover and failback.
-Failover can be optimized by implicit failover (by not to sending STPG command), when 1 is passed as hwhandler parameter in multipath.conf. ex "2 alua 1". We may need to pass the parameter through module param for alua device handler to optimize failover if incase retain_attached_hwhandler set in multipath.conf and hwhandler is set with non-tpgs device handler ex: '1 rdac'.
+On Thu, 2013-04-04 at 08:12 -0700, K. Y. Srinivasan wrote:
+> Here is the code snippet for scanning LUNS (drivers/scsi/scsi_scan.c in function 
+> __scsi_scan_target()):
+> 
+>         /*
+>          * Scan LUN 0, if there is some response, scan further. Ideally, we
+>          * would not configure LUN 0 until all LUNs are scanned.
+>          */
+>         res = scsi_probe_and_add_lun(starget, 0, &bflags, NULL, rescan, NULL);
+>         if (res == SCSI_SCAN_LUN_PRESENT || res == SCSI_SCAN_TARGET_PRESENT) {
+>                 if (scsi_report_lun_scan(starget, bflags, rescan) != 0)
+>  
+> 
+> So, if we don't get a response while scanning LUN0, we will not use
+> scsi_report_lun_scan().
+> On Hyper-V, the scsi emulation on the host does not treat LUN0 as
+> anything special and we 
+> could have situations where the only device under a scsi controller is
+> at a location other than 0
+> or 1. In this case the standard LUN scanning code in Linux fails to
+> detect this device. Is this
+> behaviour expected? Why is LUN0 treated differently here. Looking at
+> the scsi spec, I am not sure
+> if this is what is specified. Any help/guidance will be greatly
+> appreciated.
 
-Signed-off-by: Vijay Chauhan <vijay.chauhan@netapp.com>
-Signed-off-by: Sean Stewart <Sean.Stewart@netapp.com>
+Why don't you describe the problem.  We can't scan randomly a bunch of
+LUNs hoping for a response (the space is 10^19).  SAM thinks you use
+LUNW for this, but that's not well supported.  We can't annoy USB
+devices by probing with REPORT LUNS, so conventionally most arrays
+return something for LUN0 even if they don't actually have one (That's
+what the peripheral qualifier codes are supposed to be about).  We
+translate PQ1 and PQ2 to SCSI_SCAN_TARGET_PRESENT, which means no LUN,
+but there is a target to scan here.
 
----
---- a/drivers/scsi/device_handler/scsi_dh_alua.c.orig	2013-03-27 12:18:35.000000000 +0530
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c	2013-03-27 13:23:16.000000000 +0530
-@@ -710,6 +710,10 @@ static int alua_set_params(struct scsi_d
- 	return result;
- }
- 
-+static uint optimize_stpg;
-+module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR); 
-+MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, 
-+rather than sending a STPG, when implicit TPGS is supported (0=No,1=Yes). Default is 0.");
-+
- /*
-  * alua_activate - activate a path
-  * @sdev: device on the path to be activated @@ -731,6 +735,9 @@ static int alua_activate(struct scsi_dev
- 	if (err != SCSI_DH_OK)
- 		goto out;
- 
-+	if (optimize_stpg)
-+		h->flags |= ALUA_OPTIMIZE_STPG;
-+
- 	if (h->tpgs & TPGS_MODE_EXPLICIT) {
- 		switch (h->state) {
- 		case TPGS_STATE_NONOPTIMIZED:
---
+If you're sending back an error to an INQUIRY to LUN0, then you're out
+of spec.  The SCSI standards say:
+
+        SPC3 6.4.1: In response to an INQUIRY command received by an
+        incorrect logical unit, the SCSI target device shall return the
+        INQUIRY data with the peripheral qualifier set to the value
+        defined in 6.4.2. The INQUIRY command shall return CHECK
+        CONDITION status only when the device server is unable to return
+        the requested INQUIRY data
+
+James
+
+
+James
