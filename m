@@ -1,26 +1,53 @@
-From: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+From: Or Gerlitz <ogerlitz@mellanox.com>
 Subject: Re: [RFC-v3 9/9] iser-target: Add iSCSI Extensions for RDMA (iSER)
  target driver
-Date: Thu, 4 Apr 2013 12:20:54 +0300
-Message-ID: <515D45F6.9040903@mellanox.com>
+Date: Thu, 4 Apr 2013 12:45:57 +0300
+Message-ID: <515D4BD5.7020107@mellanox.com>
 References: <1365060256-21506-1-git-send-email-nab@linux-iscsi.org> <1365060256-21506-10-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1365060256-21506-10-git-send-email-nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Cc: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexander Nezhinsky <alexandern-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1365060256-21506-10-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Roland Dreier <roland@kernel.org>, Alexander Nezhinsky <alexandern@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 04/04/2013 10:24, Nicholas A. Bellinger wrote:
+
+> +#define ISER_RECV_DATA_SEG_LEN  8192
+> +#define ISER_RX_PAYLOAD_SIZE    (ISER_HEADERS_LEN + ISER_RECV_DATA_SEG_LEN)
+> [...]
+> +#define ISER_RX_PAD_SIZE	(16384 - (ISER_RX_PAYLOAD_SIZE + \
+> +					sizeof(u64) + sizeof(struct ib_sge)))
+
+We're eating here too much ram for the pad, you need 8K + something, so 
+the pad can count down
+from 12K and not 16K which means each such element will consume three 
+pages and not four.
+
+> +struct iser_rx_desc {
+> +	struct iser_hdr iser_header;
+> +	struct iscsi_hdr iscsi_header;
+> +	char		data[ISER_RECV_DATA_SEG_LEN];
+> +	u64		dma_addr;
+> +	struct ib_sge	rx_sg;
+> +	char		pad[ISER_RX_PAD_SIZE];
+> +} __packed;
 > +
-> +void isert_cq_tx_callback(struct ib_cq *, void *);
-> +void isert_cq_rx_callback(struct ib_cq *, void *);
-> +void isert_free_rx_descriptors(struct isert_conn *);
-any reason not to have these as static functions (same for isert_cq_rx_work)
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +struct isert_rx_desc {
+> +	struct isert_conn	*desc_conn;
+> +	struct work_struct	desc_work;
+> +	struct iser_rx_desc	desc;
+> +} __packed;
+
+You have way enough room in the pad field of struct iser_rx_desc to 
+place there the two fields
+added by struct isert_rx_desc (and you only use struct iser_rx_desc from 
+within isert_rx_desc) --> any reason
+not to unify  them?
+
+
+
+Or.
