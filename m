@@ -1,67 +1,78 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC-v3 1/9] target: Add export of target_get_sess_cmd symbol
-Date: Thu,  4 Apr 2013 07:24:08 +0000
-Message-ID: <1365060256-21506-2-git-send-email-nab@linux-iscsi.org>
-References: <1365060256-21506-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1365060256-21506-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Roland Dreier <roland@kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Alexander Nezhinsky <alexandern@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] isci: add CONFIG_PM_SLEEP to suspend/resume functions
+Date: Thu, 4 Apr 2013 08:50:45 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB19A2EDE3@IRSMSX102.ger.corp.intel.com>
+References: <001a01ce29ef$c3350f00$499f2d00$%han@samsung.com>
+ <5151C7BE.6040806@intel.com>
+ <D9FFE20C522965449E182ACE73889AEB19A2EDB8@IRSMSX102.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:16036 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933739Ab3DDIuy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Apr 2013 04:50:54 -0400
+In-Reply-To: <D9FFE20C522965449E182ACE73889AEB19A2EDB8@IRSMSX102.ger.corp.intel.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@Parallels.com>, Jingoo Han <jg1.han@samsung.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Jiang, Dave" <dave.jiang@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Tue, 26 Mar 2013 00:01:38 -0700 Jingoo Han <jg1.han@samsung.com> wrote:
+> Add CONFIG_PM_SLEEP to suspend/resume functions to fix the following
+> build warning when CONFIG_PM_SLEEP is not selected. This is because
+> sleep PM callbacks defined by SIMPLE_DEV_PM_OPS are only used when
+> the CONFIG_PM_SLEEP is enabled.
+> 
+> drivers/scsi/isci/init.c:725:12: warning: 'isci_suspend' defined but not used [-
+> Wunused-function]
+> drivers/scsi/isci/init.c:743:12: warning: 'isci_resume' defined but not used [-
+> Wunused-function]
+> 
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
-Export target_get_sess_cmd() symbol so that it can be used by
-iscsi-target.
 
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_transport.c |    4 ++--
- include/target/target_core_fabric.h    |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 493e9e5..f8388b4 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -65,7 +65,6 @@ static void transport_complete_task_attr(struct se_cmd *cmd);
- static void transport_handle_queue_full(struct se_cmd *cmd,
- 		struct se_device *dev);
- static int transport_generic_get_mem(struct se_cmd *cmd);
--static int target_get_sess_cmd(struct se_session *, struct se_cmd *, bool);
- static void transport_put_cmd(struct se_cmd *cmd);
- static void target_complete_ok_work(struct work_struct *work);
- 
-@@ -2179,7 +2178,7 @@ EXPORT_SYMBOL(transport_generic_free_cmd);
-  * @se_cmd:	command descriptor to add
-  * @ack_kref:	Signal that fabric will perform an ack target_put_sess_cmd()
-  */
--static int target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd,
-+int target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd,
- 			       bool ack_kref)
- {
- 	unsigned long flags;
-@@ -2208,6 +2207,7 @@ out:
- 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
- 	return ret;
- }
-+EXPORT_SYMBOL(target_get_sess_cmd);
- 
- static void target_release_cmd_kref(struct kref *kref)
- {
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index aaa1ee6..ba3471b 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -120,7 +120,7 @@ bool	transport_wait_for_tasks(struct se_cmd *);
- int	transport_check_aborted_status(struct se_cmd *, int);
- int	transport_send_check_condition_and_sense(struct se_cmd *,
- 		sense_reason_t, int);
--
-+int	target_get_sess_cmd(struct se_session *, struct se_cmd *, bool);
- int	target_put_sess_cmd(struct se_session *, struct se_cmd *);
- void	target_sess_cmd_list_set_waiting(struct se_session *);
- void	target_wait_for_sess_cmds(struct se_session *, int);
--- 
-1.7.2.5
+
+> ---
+>  drivers/scsi/isci/init.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+> index 2839baa..d25d0d8 100644
+> --- a/drivers/scsi/isci/init.c
+> +++ b/drivers/scsi/isci/init.c
+> @@ -721,7 +721,7 @@ static void isci_pci_remove(struct pci_dev *pdev)
+>  	}
+>  }
+> 
+> -#ifdef CONFIG_PM
+> +#ifdef CONFIG_PM_SLEEP
+>  static int isci_suspend(struct device *dev)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> @@ -770,18 +770,16 @@ static int isci_resume(struct device *dev)
+> 
+>  	return 0;
+>  }
+> +#endif
+> 
+>  static SIMPLE_DEV_PM_OPS(isci_pm_ops, isci_suspend, isci_resume);
+> -#endif
+> 
+>  static struct pci_driver isci_pci_driver = {
+>  	.name		= DRV_NAME,
+>  	.id_table	= isci_id_table,
+>  	.probe		= isci_pci_probe,
+>  	.remove		= isci_pci_remove,
+> -#ifdef CONFIG_PM
+>  	.driver.pm      = &isci_pm_ops,
+> -#endif
+>  };
+> 
+>  static __init int isci_init(void)
+> --
+> 1.7.2.5
