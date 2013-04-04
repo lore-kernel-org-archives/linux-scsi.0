@@ -1,82 +1,122 @@
-From: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC-v3 9/9] iser-target: Add iSCSI Extensions for RDMA (iSER)
- target driver
-Date: Thu, 4 Apr 2013 12:51:10 +0300
-Message-ID: <515D4D0E.40005@mellanox.com>
-References: <1365060256-21506-1-git-send-email-nab@linux-iscsi.org> <1365060256-21506-10-git-send-email-nab@linux-iscsi.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 0/4] scsi: 64-bit LUN support
+Date: Thu, 04 Apr 2013 12:17:32 +0200
+Message-ID: <515D533C.1070809@suse.de>
+References: <1361261883-41467-1-git-send-email-hare@suse.de> <alpine.WNT.2.00.1303261354360.5004@N5102REMCQXM4BS.qlogic.org> <5152A19C.7010500@suse.de> <5155C235.40807@redhat.com> <515718A3.1080302@suse.de> <51587619.1060208@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1365060256-21506-10-git-send-email-nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Cc: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexander Nezhinsky <alexandern-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:59705 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754994Ab3DDKRf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Apr 2013 06:17:35 -0400
+In-Reply-To: <51587619.1060208@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Jeremy Linton <jlinton@tributary.com>, Robert Elliott <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>, Bud Brown <bubrown@redhat.com>
 
-On 04/04/2013 10:24, Nicholas A. Bellinger wrote:
-> +static int
-> +isert_put_response(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
-> +{
-> +	struct isert_cmd *isert_cmd = container_of(cmd,
-> +					struct isert_cmd, iscsi_cmd);
-> +	struct isert_conn *isert_conn = (struct isert_conn *)conn->context;
-> +	struct ib_send_wr *send_wr = &isert_cmd->tx_desc.send_wr;
-> +	struct iscsi_scsi_rsp *hdr = (struct iscsi_scsi_rsp *)
-> +				&isert_cmd->tx_desc.iscsi_header;
-> +
-> +	isert_create_send_desc(isert_conn, isert_cmd, &isert_cmd->tx_desc);
-> +	iscsit_build_rsp_pdu(cmd, conn, true, hdr);
-> +	isert_init_tx_hdrs(isert_conn, &isert_cmd->tx_desc);
-> +	/*
-> +	 * Attach SENSE DATA payload to iSCSI Response PDU
-> +	 */
-> +	if (cmd->se_cmd.sense_buffer &&
-> +	    ((cmd->se_cmd.se_cmd_flags & SCF_TRANSPORT_TASK_SENSE) ||
-> +	    (cmd->se_cmd.se_cmd_flags & SCF_EMULATED_TASK_SENSE))) {
-> +		struct ib_device *ib_dev = isert_conn->conn_cm_id->device;
-> +		struct ib_sge *tx_dsg = &isert_cmd->tx_desc.tx_sg[1];
-> +		u32 padding, sense_len;
-> +
-> +		put_unaligned_be16(cmd->se_cmd.scsi_sense_length,
-> +				   cmd->sense_buffer);
-> +		cmd->se_cmd.scsi_sense_length += sizeof(__be16);
-> +
-> +		padding = -(cmd->se_cmd.scsi_sense_length) & 3;
-> +		hton24(hdr->dlength, (u32)cmd->se_cmd.scsi_sense_length);
-> +		sense_len = cmd->se_cmd.scsi_sense_length + padding;
-> +
-> +		isert_cmd->sense_buf_dma = ib_dma_map_single(ib_dev,
-> +				(void *)cmd->sense_buffer, sense_len,
-> +				DMA_TO_DEVICE);
-> +
-> +		isert_cmd->sense_buf_len = sense_len;
-> +		ib_dma_sync_single_for_cpu(ib_dev, isert_cmd->sense_buf_dma,
-> +					   sense_len, DMA_TO_DEVICE);
-> +		ib_dma_sync_single_for_device(ib_dev, isert_cmd->sense_buf_dma,
-> +					      sense_len, DMA_TO_DEVICE);
-> +
+On 03/31/2013 07:44 PM, Tomas Henzl wrote:
+> On 03/30/2013 05:53 PM, Hannes Reinecke wrote:
+>> On 03/29/2013 05:32 PM, Tomas Henzl wrote:
+[ .. ]
+>>>
+>>> in scsi_report_lun_scan is max_lun compared with the result of scsi=
+lun_to_int,
+>>> but in that value is also stored the address method. This means, th=
+at we compare
+>>> the max_lun to a LUN 'handle' which doesn't seem to make much sense=
+=2E
+>>> This makes that test dependent on which address method is used and =
+not
+>>> only to the LUN number which is I think expected.
+>>> The solution is to have a new function 'scsilun_to_num', (I can sen=
+d a patch)
+>>> or let the individual drivers set the max_lun to -1 and test for th=
+e allowed LUNs
+>>> in the driver.
+>>>
+>> You sure this is necessary?
+>=20
+> This is not directly related to your 64bit patch, I just 'used' this =
+thread
+> to discuss another issue - sorry.
+>=20
+Yeah, and thereby decreasing the chance of getting my patchset in :-(
 
-you just called dma_map_single, and not going to touch the buffer before 
-posting it to the wire,
-there's no point to sync it for the cpu and for the device, remove these 
-calls.
+>>
+>> I would like to avoid having to parse the LUN number for validity as=
+ we=20
+>> cannot guarantee this check has any meaning for the target.
+>> The only authoritative check can be made by the target.
+>=20
+> What we can do is to decode the LUN and compare it to max_lun provide=
+d by the driver,
+> I think that sg_luns is able to do that, so what is needed is just to=
+ follow the SAM.=20
+>=20
+> I have seen reports of problem on three different drivers connected t=
+o various=20
+> external storage, all of them having the same basic reason - the driv=
+er sets a max_lun
+> and then LUN comes encoded with a newer addressing method and somethi=
+ng like this is shown
+> 'kernel: scsi: host 2 channel 0 id 2 lun16643 has a LUN larger than a=
+llowed by the host adapter'
+>=20
+> Decoding the real LUN value would fix this problem, by decoding is on=
+ly meant the use in=20
+> scsi_report_lun_scan. The LUN would be stored exactly the same way as=
+ it is now.
+> I know we can patch the certain drivers too, but when max_lun were  w=
+hat the name says=20
+> - max LU number, it would fix my problem very easy.
+>=20
+Errm.
 
+No. Decoding LUNs is _evil_. It has only a relevance on the target,
+and even then it might choose to ignore it.
+So we cannot try to out-guess the target here.
 
-> +		tx_dsg->addr	= isert_cmd->sense_buf_dma;
-> +		tx_dsg->length	= sense_len;
-> +		tx_dsg->lkey	= isert_conn->conn_mr->lkey;
-> +		isert_cmd->tx_desc.num_sge = 2;
-> +	}
-> +
-> +	isert_init_send_wr(isert_cmd, send_wr);
-> +
-> +	pr_debug("Posting SCSI Response IB_WR_SEND >>>>>>>>>>>>>>>>>>>>>>\n");
-> +
-> +	return isert_post_response(isert_conn, isert_cmd);
-> +}
+The error you're reporting is that lpfc is setting max_luns to
+'255', which of course is less than 16643. Increasing max_luns on
+lpfc to '0xFFFF' will fix your problem; nothing to do with 64-bit
+LUNs ...
 
+>>
+>> In the 64-bit context the max_luns should rather be interpreted as a
+>> 'max bits' setting, ie the number of _bits_ per LUN number the HBA i=
+s=20
+>> able to transport.
+>> But renaming 'max_luns' to 'max_bits' is a bit pointless, as it woul=
+d=20
+>> break backwards compability for no real gain.
+>>
+>> So with my patchset we have a two-step LUN validation:
+>> - max_luns controls the max LUN number
+>>    (read: max number of bits per LUN) which can be transported
+>>    to the target
+>=20
+> This means in fact only 32 or 64 bit - so a single bit flag is enough=
+?
+>=20
+No, it is not.
+
+We have SPI narrow with max_luns =3D 8, SPI wide with max_luns =3D 16,
+some (older) FC HBAs supporting only 8 or 16 bits LUNs, some RAID
+arrays supporting 32-bit LUNs etc.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
