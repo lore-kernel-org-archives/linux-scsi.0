@@ -1,89 +1,103 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/3] PCI: Handle device quirks when accessing sysfs
- resource<N> entries
-Date: Thu, 4 Apr 2013 12:06:58 -0600
-Message-ID: <CAErSpo4FajG4hz8ELinnFLjk_3j=gQpC9zi4jR6pi=qoOda5cg@mail.gmail.com>
-References: <20130321043449.7229.81056.stgit@amt.stowe> <20130321043502.7229.43877.stgit@amt.stowe>
- <514BAB13.3000101@gmail.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: PING^3 Re: [PATCH v2 00/14] Corrections and customization of the
+ SG_IO command whitelist (CVE-2012-4542)
+Date: Thu, 04 Apr 2013 20:18:38 +0200
+Message-ID: <515DC3FE.1010405@redhat.com>
+References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com> <5124F600.9030908@redhat.com> <514CDB6F.9030505@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <514BAB13.3000101@gmail.com>
+In-Reply-To: <514CDB6F.9030505@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Xiangliang Yu <yuxiangl@marvell.com>, xiangliang yu <yxlraid@gmail.com>, Greg Kroah-Hartman <greg@kroah.com>, "alex.williamson@redhat.com" <alex.williamson@redhat.com>, Kay Sievers <kay@vrfy.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Mar 21, 2013 at 6:51 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> On 03/20/2013 10:35 PM, Myron Stowe wrote:
+Il 22/03/2013 23:30, Paolo Bonzini ha scritto:
+> Il 20/02/2013 17:12, Paolo Bonzini ha scritto:
+>> Il 06/02/2013 16:15, Paolo Bonzini ha scritto:
+>>> This series regards the whitelist that is used for the SG_IO ioctl.  This
+>>> whitelist has three problems:
+>>>
+>>> * the bitmap of allowed commands is designed for MMC devices (roughly,
+>>>   "play/burn CDs without requiring root") but some opcodes overlap across SCSI
+>>>   device classes and have different meanings for different classes.
+>>>
+>>> * also because the bitmap of allowed commands is designed for MMC devices
+>>>   only, some commands are missing even though they are generally useful and
+>>>   not insecure.  At least not more insecure than anything else you can
+>>>   do if you have access to /dev/sdX or /dev/stX nodes.
+>>>
+>>> * the whitelist can be disabled per-process but not per-disk.  In addition,
+>>>   the required capability (CAP_SYS_RAWIO) gives access to a range of other 
+>>>   resources, enough to make it insecure.
+>>>
+>>> The series corrects these problems.  Patches 1-4 solve the first problem,
+>>> which also has an assigned CVE, by using different bitmaps for the various
+>>> device classes.  Patches 5-11 solve the second by adding more commands
+>>> to the bitmaps.  Patches 12 and 13 solve the third, and were already
+>>> posted but ignored by the maintainers despite multiple pings.
+>>>
+>>> Note: checkpatch hates the formatting of the command table.  I know about this,
+>>> and ensured that there are no errors in the rest of the code.  The current
+>>> formatting is IMHO quite handy, and roughly based on the files available
+>>> from the SCSI standard body.
+>>>
+>>> Ok for the next merge window?
+>>>
+>>> Paolo
+>>>
+>>> v1->v2: remove 2 MMC commands and 6 SBC commands (see patches 6 and 9
+>>>         for details).  Added patch 14 and added a few more scanner
+>>>         commands based on SANE (scanners are not whitelisted by default,
+>>>         also were not in v1, but this makes it possible to opt into the
+>>>         whitelist out of paranoia).  Removed C++ comments.  Removed the
+>>>         large #if 0'd list of commands that the kernel does not pass
+>>>         though.  Marked blk_set_cmd_filter_defaults as __init.
 >>
->> Sysfs includes entries to memory regions that back a PCI device's BARs.
->> The pci-sysfs entries backing I/O Port BARs can be accessed by userspace,
->> providing direct access to the device's registers.  File permissions
->> prevent random users from accessing the device's registers through these
->> files, but don't stop a privileged app that chooses to ignore the purpose
->> of these files from doing so.
+>> Ping...
 >>
->> There are devices with abnormally strict restrictions with respect to
->> accessing their registers; aspects that are typically handled by the
->> device's driver.  When these access restrictions are not followed - as
->> when a userspace app such as "udevadm info --attribute-walk
->> --path=/sys/..." parses though reading all the device's sysfs entries - it
->> can cause such devices to fail.
+>> Jens/James, is anyone going to pick this up for 3.9?
+> 
+> Another month has passed, Ping^2...
+
+Ping^3, any hope for 3.10?
+
+Paolo
+
+> 
+> Paolo
+> 
+>> Paolo
 >>
->> This patch introduces a quirking mechanism that can be used to detect
->> accesses that do no meet the device's restrictions, letting a device
->> specific method intervene and decide how to progress.
+>>>
+>>> Paolo Bonzini (14):
+>>>   sg_io: pass request_queue to blk_verify_command
+>>>   sg_io: reorganize list of allowed commands
+>>>   sg_io: use different default filters for each device class
+>>>   sg_io: resolve conflicts between commands assigned to multiple
+>>>     classes (CVE-2012-4542)
+>>>   sg_io: whitelist a few more commands for rare & obsolete device types
+>>>   sg_io: whitelist another command for multimedia devices
+>>>   sg_io: whitelist a few more commands for media changers
+>>>   sg_io: whitelist a few more commands for tapes
+>>>   sg_io: whitelist a few more commands for disks
+>>>   sg_io: whitelist a few obsolete commands
+>>>   sg_io: mark blk_set_cmd_filter_defaults as __init
+>>>   sg_io: remove remnants of sysfs SG_IO filters
+>>>   sg_io: introduce unpriv_sgio queue flag
+>>>   sg_io: use unpriv_sgio to disable whitelisting for scanners
+>>>
+>>>  Documentation/block/queue-sysfs.txt |    8 +
+>>>  block/blk-sysfs.c                   |   33 +++
+>>>  block/bsg.c                         |    2 +-
+>>>  block/scsi_ioctl.c                  |  369 ++++++++++++++++++++++++++---------
+>>>  drivers/scsi/scsi_scan.c            |   14 ++-
+>>>  drivers/scsi/sg.c                   |    6 +-
+>>>  include/linux/blkdev.h              |    8 +-
+>>>  include/linux/genhd.h               |    9 -
+>>>  include/scsi/scsi.h                 |    3 +
+>>>  9 files changed, 344 insertions(+), 108 deletions(-)
+>>>
 >>
->> Reported-by: Xiangliang Yu <yuxiangl@marvell.com>
->> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
->
->
-> I honestly don't think there's much point in even attempting this strategy.
-> This list of devices in the quirk can't possibly be complete. It would
-> likely be easier to enumerate a white-list of devices that can deal with
-> their IO ports being read willy-nilly than a blacklist of those that don't,
-> as there's likely countless devices that fall into this category. Even if
-> they don't choke as badly as these ones do, it's quite likely that bad
-> behavior will result.
-
-I agree, I'm not inclined to add a bunch of code that only fixes one
-device when there are likely many others with similar problems.
-
-> I think there's a few things that need to be done:
->
-> -Fix the bug in udevadm that caused it to trawl through these files
-> willy-nilly,
-
-We can argue about whether this is actually a bug in udevadm, but
-either way, my opinion is that the data that udevadm prints out from
-these files is uninteresting in the same way the data from "uevent,"
-"dev," "modalias," "resource," etc. is uninteresting.  So to me, a
-udevadm change seems justified for that reason.
-
-> -Fix the kernel so that access through these files complies with the
-> kernel's mechanisms for claiming IO/memory regions to prevent access
-> conflicts (i.e. opening these files should claim the resource region they
-> refer to, and should fail with EBUSY or something if another process or a
-> kernel driver is using it).
->
-> -Reconsider whether supporting read/write on the resource files for IO port
-> regions like these makes any sense. Obviously mmap isn't very practical for
-> IO port access on x86 but you could even do something like an ioctl for this
-> purpose. Not very many pieces of software would need to access these files
-> so it's likely OK if the API is a bit ugly. That would prevent something
-> like grepping through sysfs from generating port accesses to random devices.
-
-This is the approach I'd like to push on for a kernel fix.  I'm not a
-VM person, but if it were possible to support .mmap() in such a way
-that a handler would be called for every access to the region, we
-could easily support I/O port access that way.
-
-Along that line, I'm concerned that we may have a hole in the MEM BAR
-.mmap() path.  What happens if we have BARs from two different devices
-in the same page, and we mmap() one of them?  Does the user also get
-access to the second device's BAR on the same page?  If so, that could
-also be fixed with an .mmap() trap approach.  Performance would suck
-for these small BARs, of course.
-
-Bjorn
+> 
