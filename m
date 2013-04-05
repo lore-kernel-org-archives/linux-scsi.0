@@ -1,36 +1,48 @@
-From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 5/5] qla4xxx: Update driver version to 5.03.00-k8
-Date: Fri,  5 Apr 2013 07:06:10 -0400
-Message-ID: <1365159970-17672-6-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1365159970-17672-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [OT] LDD3 Query
+Date: Fri, 5 Apr 2013 16:53:07 -0700
+Message-ID: <20130405235307.GA13235@kroah.com>
+References: <CAJ61zBAP3E6bSaKSm=qwxnMyY_BBkA9W=kOMg-QSv90wJc=iTw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:61845 "HELO linux-zupk.site"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751070Ab3DEL3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Apr 2013 07:29:51 -0400
-In-Reply-To: <1365159970-17672-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:49637 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1163089Ab3DEXxJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Apr 2013 19:53:09 -0400
+Received: by mail-pb0-f45.google.com with SMTP id ro12so1969404pbb.18
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2013 16:53:09 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <CAJ61zBAP3E6bSaKSm=qwxnMyY_BBkA9W=kOMg-QSv90wJc=iTw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+To: Vijay Chauhan <kernel.vijay@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+On Fri, Apr 05, 2013 at 12:17:54PM +0530, Vijay Chauhan wrote:
+> Hi,
+>=20
+> I am new to Linux Device Driver and reading LDD3.
+>=20
+> It mentions that the disadvantage of dynamic major number allocation
+> is that you can=E2=80=99t create the device nodes in
+> advance, because the major number assigned to your module will vary.
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That's extremely out of date, all distros now use udev (or mdev) and as
+such, dynamic major/minor are fine to use, and recommended.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index 18ad425..83e0fec 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,4 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
- 
--#define QLA4XXX_DRIVER_VERSION	"5.03.00-k7"
-+#define QLA4XXX_DRIVER_VERSION	"5.03.00-k8"
--- 
-1.8.2.GIT
+> To solve this problem, it says that create a script to invoke insmod
+> and after calling insmod, reads /proc/devices in order to create the
+> special file(s).
 
+Not needed anymore, udev handles this for you.
+
+Hope this helps,
+
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
