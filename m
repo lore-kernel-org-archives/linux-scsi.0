@@ -1,77 +1,52 @@
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: Re: [PATCH V7 0/5] virtio-scsi multiqueue
-Date: Fri, 05 Apr 2013 16:55:41 +0800
-Message-ID: <515E918D.3090307@cn.fujitsu.com>
-References: <1364038124-32479-1-git-send-email-gaowanlong@cn.fujitsu.com>
-	<5153A953.2000101@cn.fujitsu.com>
-Reply-To: gaowanlong@cn.fujitsu.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <5153A953.2000101@cn.fujitsu.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, James Bottomley <James.Bottomley@HansenPartnership.com>, pbonzini@redhat.com
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 3/5] qla4xxx: Use correct value for max flash node entries
+Date: Fri,  5 Apr 2013 07:06:08 -0400
+Message-ID: <1365159970-17672-4-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1365159970-17672-1-git-send-email-vikas.chaudhary@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mvnat01.qlogic.com ([198.186.3.73]:41394 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751763Ab3DEL3k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Apr 2013 07:29:40 -0400
+In-Reply-To: <1365159970-17672-1-git-send-email-vikas.chaudhary@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
-On 03/28/2013 10:22 AM, Wanlong Gao wrote:
-> On 03/23/2013 07:28 PM, Wanlong Gao wrote:
->> This series implements virtio-scsi queue steering, which gives
->> performance improvements of up to 50% (measured both with QEMU and
->> tcm_vhost backends).
->>
->> This version rebased on Rusty's virtio ring rework patches, which
->> has already gone into virtio-next today.
->> We hope this can go into virtio-next together with the virtio ring
->> rework pathes.
->>
->> V7: respin to fix the patch apply error
->>
->> V6: rework "redo allocation of target data" (James)
->>     fix comments (Venkatesh)
->>     rebase to virtio-next
->>
->> V5: improving the grammar of 1/5 (Paolo)
->>     move the dropping of sg_elems to 'virtio-scsi: use virtqueue_add_sgs for command buffers'. (Asias)
->>
->> V4: rebase on virtio ring rework patches (rusty's pending-rebases branch)
->>
->> V3 and be found http://marc.info/?l=linux-virtualization&m=136067440717154&w=2
->>
->>
->> It would probably be easier to get it in via Rusty's tree
->> because of the prerequisites.  James, can we get your Acked-by?
-> 
-> James, any thoughts for this version?
+From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
-Ping James....
+Use correct value for max flash node entries supported
+based on adapter type.
 
+Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_os.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> 
-> Thanks,
-> Wanlong Gao
-> 
->>
->> Paolo Bonzini (3):
->>   virtio-scsi: pass struct virtio_scsi to virtqueue completion function
->>   virtio-scsi: push vq lock/unlock into virtscsi_vq_done
->>   virtio-scsi: introduce multiqueue support
->>
->> Wanlong Gao (2):
->>   virtio-scsi: redo allocation of target data
->>   virtio-scsi: reset virtqueue affinity when doing cpu hotplug
->>
->>  drivers/scsi/virtio_scsi.c | 387 ++++++++++++++++++++++++++++++++++++---------
->>  1 file changed, 309 insertions(+), 78 deletions(-)
->>
-> 
-> 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index f82efcb..a47f999 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -5587,7 +5587,7 @@ static int qla4xxx_sysfs_ddb_add(struct Scsi_Host *shost, const char *buf,
+ 		goto exit_ddb_add;
+ 	}
+ 
+-	max_ddbs =  is_qla40XX(ha) ? MAX_DEV_DB_ENTRIES_40XX :
++	max_ddbs =  is_qla40XX(ha) ? MAX_PRST_DEV_DB_ENTRIES :
+ 				     MAX_DEV_DB_ENTRIES;
+ 
+ 	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
+@@ -6707,7 +6707,7 @@ static int qla4xxx_sysfs_ddb_export(struct scsi_qla_host *ha)
+ 		return -ENOMEM;
+ 	}
+ 
+-	max_ddbs =  is_qla40XX(ha) ? MAX_DEV_DB_ENTRIES_40XX :
++	max_ddbs =  is_qla40XX(ha) ? MAX_PRST_DEV_DB_ENTRIES :
+ 				     MAX_DEV_DB_ENTRIES;
+ 
+ 	for (idx = 0; idx < max_ddbs; idx++) {
+-- 
+1.8.2.GIT
+
