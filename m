@@ -1,55 +1,76 @@
-From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH V2 04/18] be2iscsi: Fix MSIX support in SKH-R to 32
-Date: Fri,  5 Apr 2013 20:38:24 -0700
-Message-ID: <1365219519-3457-4-git-send-email-jayamohan.kallickal@emulex.com>
-References: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:53799 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162255Ab3DFDiz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Apr 2013 23:38:55 -0400
-Received: by mail-pb0-f52.google.com with SMTP id mc8so2316210pbc.11
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2013 20:38:54 -0700 (PDT)
-In-Reply-To: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Subject: Re: [PATCH V7 0/5] virtio-scsi multiqueue
+Date: Sat, 06 Apr 2013 18:14:25 +0800
+Message-ID: <515FF581.5040403@cn.fujitsu.com>
+References: <1364038124-32479-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	<5153A953.2000101@cn.fujitsu.com> <515E918D.3090307@cn.fujitsu.com>
+	<1365237613.2787.1.camel@dabdike>
+Reply-To: gaowanlong@cn.fujitsu.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1365237613.2787.1.camel@dabdike>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-This patch limits the max number of msix vectors to 32.
+On 04/06/2013 04:40 PM, James Bottomley wrote:
+> On Fri, 2013-04-05 at 16:55 +0800, Wanlong Gao wrote:
+>> On 03/28/2013 10:22 AM, Wanlong Gao wrote:
+>>> On 03/23/2013 07:28 PM, Wanlong Gao wrote:
+>>>> This series implements virtio-scsi queue steering, which gives
+>>>> performance improvements of up to 50% (measured both with QEMU and
+>>>> tcm_vhost backends).
+>>>>
+>>>> This version rebased on Rusty's virtio ring rework patches, which
+>>>> has already gone into virtio-next today.
+>>>> We hope this can go into virtio-next together with the virtio ring
+>>>> rework pathes.
+>>>>
+>>>> V7: respin to fix the patch apply error
+>>>>
+>>>> V6: rework "redo allocation of target data" (James)
+>>>>     fix comments (Venkatesh)
+>>>>     rebase to virtio-next
+>>>>
+>>>> V5: improving the grammar of 1/5 (Paolo)
+>>>>     move the dropping of sg_elems to 'virtio-scsi: use virtqueue_add_sgs for command buffers'. (Asias)
+>>>>
+>>>> V4: rebase on virtio ring rework patches (rusty's pending-rebases branch)
+>>>>
+>>>> V3 and be found http://marc.info/?l=linux-virtualization&m=136067440717154&w=2
+>>>>
+>>>>
+>>>> It would probably be easier to get it in via Rusty's tree
+>>>> because of the prerequisites.  James, can we get your Acked-by?
+>>>
+>>> James, any thoughts for this version?
+>>
+>> Ping James....
+> 
+> Well, I haven't had time to look at anything other than the patch I
+> commented on.  I'm happy with your fix, so you can add my acked by to
+> that one.  Since it's going through the virtio tree, don't wait for me,
+> put it in and I'll make you fix up anything I find later that I'm
+> unhappy with.
 
-Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
----
- drivers/scsi/be2iscsi/be_main.c |    1 +
- drivers/scsi/be2iscsi/be_main.h |    2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+Got it, thank you James.
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 3fb997f..72e4052 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4835,6 +4835,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	case OC_SKH_ID1:
- 		phba->generation = BE_GEN4;
- 		phba->iotask_fn = beiscsi_iotask_v2;
-+		break;
- 	default:
- 		phba->generation = 0;
- 	}
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 5946577..e53d087 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -66,7 +66,7 @@
- 
- #define MAX_CPUS		64
- #define BEISCSI_MAX_NUM_CPUS	7
--#define OC_SKH_MAX_NUM_CPUS	63
-+#define OC_SKH_MAX_NUM_CPUS	31
- 
- 
- #define BEISCSI_SGLIST_ELEMENTS	30
--- 
-1.7.10.4
+Regards,
+Wanlong Gao
 
+> 
+> James
+> 
+> 
+> 
