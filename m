@@ -1,123 +1,86 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH V2 01/18] be2iscsi: Fix lack of  uninitialize pattern to FW
-Date: Fri,  5 Apr 2013 20:38:21 -0700
-Message-ID: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH V2 17/18] be2iscsi: Fix issue in passing the exp_cmdsn and  max_cmdsn
+Date: Fri,  5 Apr 2013 20:38:37 -0700
+Message-ID: <1365219519-3457-17-git-send-email-jayamohan.kallickal@emulex.com>
+References: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-da0-f44.google.com ([209.85.210.44]:38530 "EHLO
-	mail-da0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162255Ab3DFDiu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Apr 2013 23:38:50 -0400
-Received: by mail-da0-f44.google.com with SMTP id z20so1838125dae.17
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2013 20:38:49 -0700 (PDT)
+Received: from mail-da0-f49.google.com ([209.85.210.49]:44803 "EHLO
+	mail-da0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422650Ab3DFDjN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Apr 2013 23:39:13 -0400
+Received: by mail-da0-f49.google.com with SMTP id t11so1807765daj.8
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2013 20:39:13 -0700 (PDT)
+In-Reply-To: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-This patch sends uninitialize pattern to FW during driver unload
-which is expected by FW for cleanup
+ Command Window value from the CQE was used to calculate the
+ max_cmdsn for that session.The command window value extracted
+ for SKH-R adapter was not proper. The value was extracted from
+ BE adapter completion event. Fixed the issue by getting the
+ cmd_wnd value from SKH-R CQE.
+
+ The exp_cmdsn and max_cmdsn values were not converted to BE format
+ before calling the __iscsi_complete_pdu(). Fixed the issue of converting
+ to BE format.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |   51 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/be2iscsi/be_cmds.h |    1 +
- drivers/scsi/be2iscsi/be_main.c |    1 +
- 3 files changed, 53 insertions(+)
+ drivers/scsi/be2iscsi/be_main.c |   17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 5c87768..0b44cc9 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -732,6 +732,16 @@ int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
- 	return status;
- }
- 
-+/**
-+ * be_cmd_fw_initialize()- Initialize FW
-+ * @ctrl: Pointer to function control structure
-+ *
-+ * Send FW initialize pattern for the function.
-+ *
-+ * return
-+ * Success: 0
-+ * Failure: Non-Zero value
-+ **/
- int be_cmd_fw_initialize(struct be_ctrl_info *ctrl)
- {
- 	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
-@@ -762,6 +772,47 @@ int be_cmd_fw_initialize(struct be_ctrl_info *ctrl)
- 	return status;
- }
- 
-+/**
-+ * be_cmd_fw_uninit()- Uinitialize FW
-+ * @ctrl: Pointer to function control structure
-+ *
-+ * Send FW uninitialize pattern for the function
-+ *
-+ * return
-+ * Success: 0
-+ * Failure: Non-Zero value
-+ **/
-+int be_cmd_fw_uninit(struct be_ctrl_info *ctrl)
-+{
-+	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
-+	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
-+	int status;
-+	u8 *endian_check;
-+
-+	spin_lock(&ctrl->mbox_lock);
-+	memset(wrb, 0, sizeof(*wrb));
-+
-+	endian_check = (u8 *) wrb;
-+	*endian_check++ = 0xFF;
-+	*endian_check++ = 0xAA;
-+	*endian_check++ = 0xBB;
-+	*endian_check++ = 0xFF;
-+	*endian_check++ = 0xFF;
-+	*endian_check++ = 0xCC;
-+	*endian_check++ = 0xDD;
-+	*endian_check = 0xFF;
-+
-+	be_dws_cpu_to_le(wrb, sizeof(*wrb));
-+
-+	status = be_mbox_notify(ctrl);
-+	if (status)
-+		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-+			    "BC_%d : be_cmd_fw_uninit Failed\n");
-+
-+	spin_unlock(&ctrl->mbox_lock);
-+	return status;
-+}
-+
- int beiscsi_cmd_cq_create(struct be_ctrl_info *ctrl,
- 			  struct be_queue_info *cq, struct be_queue_info *eq,
- 			  bool sol_evts, bool no_delay, int coalesce_wm)
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index 23397d5..0f8c920 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -697,6 +697,7 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 			uint32_t tag, struct be_mcc_wrb **wrb, void *cmd_va);
- /*ISCSI Functuions */
- int be_cmd_fw_initialize(struct be_ctrl_info *ctrl);
-+int be_cmd_fw_uninit(struct be_ctrl_info *ctrl);
- 
- struct be_mcc_wrb *wrb_from_mbox(struct be_dma_mem *mbox_mem);
- struct be_mcc_wrb *wrb_from_mccq(struct beiscsi_hba *phba);
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 4e2733d..3fb997f 100644
+index 39ac051..77c6fe4 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3430,6 +3430,7 @@ static void hwi_cleanup(struct beiscsi_hba *phba)
- 			beiscsi_cmd_q_destroy(ctrl, q, QTYPE_EQ);
- 	}
- 	be_mcc_queues_destroy(phba);
-+	be_cmd_fw_uninit(ctrl);
- }
+@@ -1326,8 +1326,9 @@ be_complete_logout(struct beiscsi_conn *beiscsi_conn,
+ 	hdr->t2retain = 0;
+ 	hdr->flags = csol_cqe->i_flags;
+ 	hdr->response = csol_cqe->i_resp;
+-	hdr->exp_cmdsn = csol_cqe->exp_cmdsn;
+-	hdr->max_cmdsn = (csol_cqe->exp_cmdsn + csol_cqe->cmd_wnd - 1);
++	hdr->exp_cmdsn = cpu_to_be32(csol_cqe->exp_cmdsn);
++	hdr->max_cmdsn = cpu_to_be32(csol_cqe->exp_cmdsn +
++				     csol_cqe->cmd_wnd - 1);
  
- static int be_mcc_queues_create(struct beiscsi_hba *phba,
+ 	hdr->dlength[0] = 0;
+ 	hdr->dlength[1] = 0;
+@@ -1350,9 +1351,9 @@ be_complete_tmf(struct beiscsi_conn *beiscsi_conn,
+ 	hdr->opcode = ISCSI_OP_SCSI_TMFUNC_RSP;
+ 	hdr->flags = csol_cqe->i_flags;
+ 	hdr->response = csol_cqe->i_resp;
+-	hdr->exp_cmdsn = csol_cqe->exp_cmdsn;
+-	hdr->max_cmdsn = (csol_cqe->exp_cmdsn +
+-			  csol_cqe->cmd_wnd - 1);
++	hdr->exp_cmdsn = cpu_to_be32(csol_cqe->exp_cmdsn);
++	hdr->max_cmdsn = cpu_to_be32(csol_cqe->exp_cmdsn +
++				     csol_cqe->cmd_wnd - 1);
+ 
+ 	hdr->itt = io_task->libiscsi_itt;
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)hdr, NULL, 0);
+@@ -1404,8 +1405,8 @@ be_complete_nopin_resp(struct beiscsi_conn *beiscsi_conn,
+ 	hdr = (struct iscsi_nopin *)task->hdr;
+ 	hdr->flags = csol_cqe->i_flags;
+ 	hdr->exp_cmdsn = cpu_to_be32(csol_cqe->exp_cmdsn);
+-	hdr->max_cmdsn = be32_to_cpu(hdr->exp_cmdsn +
+-			 csol_cqe->cmd_wnd - 1);
++	hdr->max_cmdsn = cpu_to_be32(csol_cqe->exp_cmdsn +
++				     csol_cqe->cmd_wnd - 1);
+ 
+ 	hdr->opcode = ISCSI_OP_NOOP_IN;
+ 	hdr->itt = io_task->libiscsi_itt;
+@@ -1446,7 +1447,7 @@ static void adapter_get_sol_cqe(struct beiscsi_hba *phba,
+ 					      cid, psol);
+ 		csol_cqe->hw_sts = AMAP_GET_BITS(struct amap_sol_cqe_v2,
+ 						 hw_sts, psol);
+-		csol_cqe->cmd_wnd = AMAP_GET_BITS(struct amap_sol_cqe,
++		csol_cqe->cmd_wnd = AMAP_GET_BITS(struct amap_sol_cqe_v2,
+ 						  i_cmd_wnd, psol);
+ 		if (AMAP_GET_BITS(struct amap_sol_cqe_v2,
+ 				  cmd_cmpl, psol))
 -- 
 1.7.10.4
 
