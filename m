@@ -1,185 +1,143 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH V2 08/18] be2iscsi: Fix displaying the FW Version from driver.
-Date: Fri,  5 Apr 2013 20:38:28 -0700
-Message-ID: <1365219519-3457-8-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH V2 11/18] be2iscsi : Fix the NOP-In handling code path
+Date: Fri,  5 Apr 2013 20:38:31 -0700
+Message-ID: <1365219519-3457-11-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:57740 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1163203Ab3DFDjA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Apr 2013 23:39:00 -0400
-Received: by mail-pb0-f41.google.com with SMTP id mc17so2322291pbc.0
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2013 20:38:59 -0700 (PDT)
+Received: from mail-da0-f48.google.com ([209.85.210.48]:40110 "EHLO
+	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1163204Ab3DFDjE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Apr 2013 23:39:04 -0400
+Received: by mail-da0-f48.google.com with SMTP id p8so1826386dan.21
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2013 20:39:04 -0700 (PDT)
 In-Reply-To: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- The mgmt_hba_attributes structure declared was not proper and
- because of that the FW response returned for the MBX_CMD was not
- matching. This issue went unnoticed as mgmt_hba_attribs structure
- members were never used in the code path.
+ When target send a NOP-IN with valid TTT, driver issues a NOP-OUT
+ and the task was not freed from driver. The task list available for
+ the session used to run out, and as no more task list were available
+ no more iSCSI commands were exchanged on that session.
+ This patches fixed the issue, by calling iscsi_put_task.
 
- This fix of displaying the FW version had to change the mgmt_hba_attrib
- structure also. The latest driver will also work with the older FW as
- the issue was in the driver declaration.
-
+Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |    2 ++
- drivers/scsi/be2iscsi/be_main.h |    2 ++
- drivers/scsi/be2iscsi/be_mgmt.c |   21 +++++++++++++++++++++
- drivers/scsi/be2iscsi/be_mgmt.h |   30 +++++++++++++++++-------------
- 4 files changed, 42 insertions(+), 13 deletions(-)
+ drivers/scsi/be2iscsi/be_iscsi.c |    3 ++-
+ drivers/scsi/be2iscsi/be_main.c  |   21 ++++++++-------------
+ drivers/scsi/be2iscsi/be_main.h  |    3 ++-
+ 3 files changed, 12 insertions(+), 15 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index a4eb610..118089f 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1005,7 +1005,8 @@ static void beiscsi_free_ep(struct beiscsi_endpoint *beiscsi_ep)
+ 
+ 	beiscsi_conn = beiscsi_ep->conn;
+ 	if (beiscsi_conn->login_in_progress) {
+-		beiscsi_free_mgmt_task_handles(beiscsi_conn);
++		beiscsi_free_mgmt_task_handles(beiscsi_conn,
++					       beiscsi_conn->task);
+ 		beiscsi_conn->login_in_progress = 0;
+ 	}
+ }
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 6be5e29..adc662d 100644
+index ff89b4c..a60a43d 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -153,10 +153,12 @@ BEISCSI_RW_ATTR(log_enable, 0x00,
+@@ -1367,8 +1367,6 @@ hwi_complete_drvr_msgs(struct beiscsi_conn *beiscsi_conn,
+ 	struct hwi_controller *phwi_ctrlr;
+ 	struct iscsi_task *task;
+ 	struct beiscsi_io_task *io_task;
+-	struct iscsi_conn *conn = beiscsi_conn->conn;
+-	struct iscsi_session *session = conn->session;
+ 	uint16_t wrb_index, cid;
  
- DEVICE_ATTR(beiscsi_drvr_ver, S_IRUGO, beiscsi_drvr_ver_disp, NULL);
- DEVICE_ATTR(beiscsi_adapter_family, S_IRUGO, beiscsi_adap_family_disp, NULL);
-+DEVICE_ATTR(beiscsi_fw_ver, S_IRUGO, beiscsi_fw_ver_disp, NULL);
- struct device_attribute *beiscsi_attrs[] = {
- 	&dev_attr_beiscsi_log_enable,
- 	&dev_attr_beiscsi_drvr_ver,
- 	&dev_attr_beiscsi_adapter_family,
-+	&dev_attr_beiscsi_fw_ver,
- 	NULL,
- };
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+@@ -1390,12 +1388,8 @@ hwi_complete_drvr_msgs(struct beiscsi_conn *beiscsi_conn,
+ 	task = pwrb_handle->pio_handle;
  
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 77b13c3..3c5df92 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -68,6 +68,7 @@
- #define BEISCSI_MAX_NUM_CPUS	7
- #define OC_SKH_MAX_NUM_CPUS	31
- 
-+#define BEISCSI_VER_STRLEN 32
- 
- #define BEISCSI_SGLIST_ELEMENTS	30
- 
-@@ -341,6 +342,7 @@ struct beiscsi_hba {
- 	struct delayed_work beiscsi_hw_check_task;
- 
- 	u8 mac_address[ETH_ALEN];
-+	char fw_ver_str[BEISCSI_VER_STRLEN];
- 	char wq_name[20];
- 	struct workqueue_struct *wq;	/* The actuak work queue */
- 	struct be_ctrl_info ctrl;
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index a6c2fe4..7fe8595 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -368,6 +368,8 @@ int mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
- 		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
- 			    "BM_%d : phba->fw_config.iscsi_features = %d\n",
- 			    phba->fw_config.iscsi_features);
-+		memcpy(phba->fw_ver_str, resp->params.hba_attribs.
-+		       firmware_version_string, BEISCSI_VER_STRLEN);
- 	} else
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 			    "BG_%d :  Failed in mgmt_check_supported_fw\n");
-@@ -1260,6 +1262,25 @@ beiscsi_drvr_ver_disp(struct device *dev, struct device_attribute *attr,
+ 	io_task = task->dd_data;
+-	spin_lock_bh(&phba->mgmt_sgl_lock);
+-	free_mgmt_sgl_handle(phba, io_task->psgl_handle);
+-	spin_unlock_bh(&phba->mgmt_sgl_lock);
+-	spin_lock_bh(&session->lock);
+-	free_wrb_handle(phba, pwrb_context, pwrb_handle);
+-	spin_unlock_bh(&session->lock);
++	memset(io_task->pwrb_handle->pwrb, 0, sizeof(struct iscsi_wrb));
++	iscsi_put_task(task);
  }
  
+ static void
+@@ -4073,11 +4067,13 @@ static void beiscsi_clean_port(struct beiscsi_hba *phba)
  /**
-+ * beiscsi_fw_ver_disp()- Display Firmware Version
-+ * @dev: ptr to device not used.
-+ * @attr: device attribute, not used.
-+ * @buf: contains formatted text Firmware version
-+ *
-+ * return
-+ * size of the formatted string
-+ **/
-+ssize_t
-+beiscsi_fw_ver_disp(struct device *dev, struct device_attribute *attr,
-+		     char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+
-+	return snprintf(buf, PAGE_SIZE, "%s\n", phba->fw_ver_str);
-+}
-+
-+/**
-  * beiscsi_adap_family_disp()- Display adapter family.
-  * @dev: ptr to device to get priv structure
-  * @attr: device attribute, not used.
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 2e4968a..00f3a4f 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -156,25 +156,25 @@ union invalidate_commands_params {
- } __packed;
+  * beiscsi_free_mgmt_task_handles()- Free driver CXN resources
+  * @beiscsi_conn: ptr to the conn to be cleaned up
++ * @task: ptr to iscsi_task resource to be freed.
+  *
+  * Free driver mgmt resources binded to CXN.
+  **/
+ void
+-beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn)
++beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn,
++				struct iscsi_task *task)
+ {
+ 	struct beiscsi_io_task *io_task;
+ 	struct beiscsi_hba *phba = beiscsi_conn->phba;
+@@ -4088,7 +4084,7 @@ beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn)
+ 	pwrb_context = &phwi_ctrlr->wrb_context
+ 		       [beiscsi_conn->beiscsi_conn_cid
+ 		       - phba->fw_config.iscsi_cid_start];
+-	io_task = beiscsi_conn->task->dd_data;
++	io_task = task->dd_data;
  
- struct mgmt_hba_attributes {
--	u8 flashrom_version_string[32];
--	u8 manufacturer_name[32];
-+	u8 flashrom_version_string[BEISCSI_VER_STRLEN];
-+	u8 manufacturer_name[BEISCSI_VER_STRLEN];
- 	u32 supported_modes;
- 	u8 seeprom_version_lo;
- 	u8 seeprom_version_hi;
- 	u8 rsvd0[2];
- 	u32 fw_cmd_data_struct_version;
- 	u32 ep_fw_data_struct_version;
--	u32 future_reserved[12];
-+	u8 ncsi_version_string[12];
- 	u32 default_extended_timeout;
--	u8 controller_model_number[32];
-+	u8 controller_model_number[BEISCSI_VER_STRLEN];
- 	u8 controller_description[64];
--	u8 controller_serial_number[32];
--	u8 ip_version_string[32];
--	u8 firmware_version_string[32];
--	u8 bios_version_string[32];
--	u8 redboot_version_string[32];
--	u8 driver_version_string[32];
--	u8 fw_on_flash_version_string[32];
-+	u8 controller_serial_number[BEISCSI_VER_STRLEN];
-+	u8 ip_version_string[BEISCSI_VER_STRLEN];
-+	u8 firmware_version_string[BEISCSI_VER_STRLEN];
-+	u8 bios_version_string[BEISCSI_VER_STRLEN];
-+	u8 redboot_version_string[BEISCSI_VER_STRLEN];
-+	u8 driver_version_string[BEISCSI_VER_STRLEN];
-+	u8 fw_on_flash_version_string[BEISCSI_VER_STRLEN];
- 	u32 functionalities_supported;
- 	u16 max_cdblength;
- 	u8 asic_revision;
-@@ -190,7 +190,8 @@ struct mgmt_hba_attributes {
- 	u32 firmware_post_status;
- 	u32 hba_mtu[8];
- 	u8 iscsi_features;
--	u8 future_u8[3];
-+	u8 asic_generation;
-+	u8 future_u8[2];
- 	u32 future_u32[3];
- } __packed;
+ 	if (io_task->pwrb_handle) {
+ 		memset(io_task->pwrb_handle->pwrb, 0,
+@@ -4102,8 +4098,8 @@ beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn)
+ 		spin_lock_bh(&phba->mgmt_sgl_lock);
+ 		free_mgmt_sgl_handle(phba,
+ 				     io_task->psgl_handle);
+-		spin_unlock_bh(&phba->mgmt_sgl_lock);
+ 		io_task->psgl_handle = NULL;
++		spin_unlock_bh(&phba->mgmt_sgl_lock);
+ 	}
  
-@@ -207,7 +208,7 @@ struct mgmt_controller_attributes {
- 	u64 unique_identifier;
- 	u8 netfilters;
- 	u8 rsvd0[3];
--	u8 future_u32[4];
-+	u32 future_u32[4];
- } __packed;
+ 	if (io_task->mtask_addr)
+@@ -4153,7 +4149,7 @@ static void beiscsi_cleanup_task(struct iscsi_task *task)
+ 		}
+ 	} else {
+ 		if (!beiscsi_conn->login_in_progress)
+-			beiscsi_free_mgmt_task_handles(beiscsi_conn);
++			beiscsi_free_mgmt_task_handles(beiscsi_conn, task);
+ 	}
+ }
  
- struct be_mgmt_controller_attributes {
-@@ -311,6 +312,9 @@ int mgmt_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
- ssize_t beiscsi_drvr_ver_disp(struct device *dev,
- 			       struct device_attribute *attr, char *buf);
+@@ -4381,7 +4377,6 @@ int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterlist *sg,
+ 	unsigned int doorbell = 0;
  
-+ssize_t beiscsi_fw_ver_disp(struct device *dev,
-+			     struct device_attribute *attr, char *buf);
-+
- ssize_t beiscsi_adap_family_disp(struct device *dev,
- 				  struct device_attribute *attr, char *buf);
+ 	pwrb = io_task->pwrb_handle->pwrb;
+-	memset(pwrb, 0, sizeof(*pwrb));
  
+ 	io_task->cmd_bhs->iscsi_hdr.exp_statsn = 0;
+ 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 3c5df92..ac4ef34 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -753,7 +753,8 @@ void
+ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle);
+ 
+ void beiscsi_process_all_cqs(struct work_struct *work);
+-void beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn);
++void beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn,
++				     struct iscsi_task *task);
+ 
+ static inline bool beiscsi_error(struct beiscsi_hba *phba)
+ {
 -- 
 1.7.10.4
 
