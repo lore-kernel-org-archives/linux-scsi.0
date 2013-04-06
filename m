@@ -1,76 +1,95 @@
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: Re: [PATCH V7 0/5] virtio-scsi multiqueue
-Date: Sat, 06 Apr 2013 18:14:25 +0800
-Message-ID: <515FF581.5040403@cn.fujitsu.com>
-References: <1364038124-32479-1-git-send-email-gaowanlong@cn.fujitsu.com>
-	<5153A953.2000101@cn.fujitsu.com> <515E918D.3090307@cn.fujitsu.com>
-	<1365237613.2787.1.camel@dabdike>
-Reply-To: gaowanlong@cn.fujitsu.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1365237613.2787.1.camel@dabdike>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, pbonzini@redhat.com
+From: Jayamohan Kallickal <jayamohank@gmail.com>
+Subject: [PATCH V2 09/18] be2iscsi: Fix displaying the Active Session Count from driver
+Date: Fri,  5 Apr 2013 20:38:29 -0700
+Message-ID: <1365219519-3457-9-git-send-email-jayamohan.kallickal@emulex.com>
+References: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:38183 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1163204Ab3DFDjC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Apr 2013 23:39:02 -0400
+Received: by mail-pb0-f48.google.com with SMTP id xb4so2306566pbc.35
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2013 20:39:01 -0700 (PDT)
+In-Reply-To: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-On 04/06/2013 04:40 PM, James Bottomley wrote:
-> On Fri, 2013-04-05 at 16:55 +0800, Wanlong Gao wrote:
->> On 03/28/2013 10:22 AM, Wanlong Gao wrote:
->>> On 03/23/2013 07:28 PM, Wanlong Gao wrote:
->>>> This series implements virtio-scsi queue steering, which gives
->>>> performance improvements of up to 50% (measured both with QEMU and
->>>> tcm_vhost backends).
->>>>
->>>> This version rebased on Rusty's virtio ring rework patches, which
->>>> has already gone into virtio-next today.
->>>> We hope this can go into virtio-next together with the virtio ring
->>>> rework pathes.
->>>>
->>>> V7: respin to fix the patch apply error
->>>>
->>>> V6: rework "redo allocation of target data" (James)
->>>>     fix comments (Venkatesh)
->>>>     rebase to virtio-next
->>>>
->>>> V5: improving the grammar of 1/5 (Paolo)
->>>>     move the dropping of sg_elems to 'virtio-scsi: use virtqueue_add_sgs for command buffers'. (Asias)
->>>>
->>>> V4: rebase on virtio ring rework patches (rusty's pending-rebases branch)
->>>>
->>>> V3 and be found http://marc.info/?l=linux-virtualization&m=136067440717154&w=2
->>>>
->>>>
->>>> It would probably be easier to get it in via Rusty's tree
->>>> because of the prerequisites.  James, can we get your Acked-by?
->>>
->>> James, any thoughts for this version?
->>
->> Ping James....
-> 
-> Well, I haven't had time to look at anything other than the patch I
-> commented on.  I'm happy with your fix, so you can add my acked by to
-> that one.  Since it's going through the virtio tree, don't wait for me,
-> put it in and I'll make you fix up anything I find later that I'm
-> unhappy with.
+This patch fixes the displaying of number of active
+sessions in use.
 
-Got it, thank you James.
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+---
+ drivers/scsi/be2iscsi/be_main.c |    2 ++
+ drivers/scsi/be2iscsi/be_mgmt.c |   20 ++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_mgmt.h |    3 +++
+ 3 files changed, 25 insertions(+)
 
-Regards,
-Wanlong Gao
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index adc662d..ff89b4c 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -154,11 +154,13 @@ BEISCSI_RW_ATTR(log_enable, 0x00,
+ DEVICE_ATTR(beiscsi_drvr_ver, S_IRUGO, beiscsi_drvr_ver_disp, NULL);
+ DEVICE_ATTR(beiscsi_adapter_family, S_IRUGO, beiscsi_adap_family_disp, NULL);
+ DEVICE_ATTR(beiscsi_fw_ver, S_IRUGO, beiscsi_fw_ver_disp, NULL);
++DEVICE_ATTR(beiscsi_active_cid_count, S_IRUGO, beiscsi_active_cid_disp, NULL);
+ struct device_attribute *beiscsi_attrs[] = {
+ 	&dev_attr_beiscsi_log_enable,
+ 	&dev_attr_beiscsi_drvr_ver,
+ 	&dev_attr_beiscsi_adapter_family,
+ 	&dev_attr_beiscsi_fw_ver,
++	&dev_attr_beiscsi_active_cid_count,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 7fe8595..8662f73 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1281,6 +1281,26 @@ beiscsi_fw_ver_disp(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ /**
++ * beiscsi_active_cid_disp()- Display Sessions Active
++ * @dev: ptr to device not used.
++ * @attr: device attribute, not used.
++ * @buf: contains formatted text Session Count
++ *
++ * return
++ * size of the formatted string
++ **/
++ssize_t
++beiscsi_active_cid_disp(struct device *dev, struct device_attribute *attr,
++			 char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n",
++		       (phba->params.cxns_per_ctrl - phba->avlbl_cids));
++}
++
++/**
+  * beiscsi_adap_family_disp()- Display adapter family.
+  * @dev: ptr to device to get priv structure
+  * @attr: device attribute, not used.
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index 00f3a4f..4c7e0a2 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -315,6 +315,9 @@ ssize_t beiscsi_drvr_ver_disp(struct device *dev,
+ ssize_t beiscsi_fw_ver_disp(struct device *dev,
+ 			     struct device_attribute *attr, char *buf);
+ 
++ssize_t beiscsi_active_cid_disp(struct device *dev,
++				 struct device_attribute *attr, char *buf);
++
+ ssize_t beiscsi_adap_family_disp(struct device *dev,
+ 				  struct device_attribute *attr, char *buf);
+ 
+-- 
+1.7.10.4
 
-> 
-> James
-> 
-> 
-> 
