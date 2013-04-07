@@ -1,69 +1,108 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v10 9/9] Avoid reenabling I/O after the transport became offline
-Date: Sun, 07 Apr 2013 17:05:42 +0200
-Message-ID: <51618B46.2000409@acm.org>
-References: <516188E5.1040008@acm.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH][RFC] scsi: Use W_LUN for scanning
+Date: Sun, 07 Apr 2013 11:59:14 -0400
+Message-ID: <516197D2.20102@interlog.com>
+References: <1363340771-46925-1-git-send-email-hare@suse.de>  <1365239280.2787.11.camel@dabdike> <51617547.7040201@suse.de> <1365346182.1992.6.camel@dabdike>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from juliette.telenet-ops.be ([195.130.137.74]:41278 "EHLO
-	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933874Ab3DGPFn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Apr 2013 11:05:43 -0400
-In-Reply-To: <516188E5.1040008@acm.org>
+Received: from smtp.infotech.no ([82.134.31.41]:46411 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933979Ab3DGQAH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Apr 2013 12:00:07 -0400
+In-Reply-To: <1365346182.1992.6.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, George Martin <marting@netapp.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-Disallow the SDEV_TRANSPORT_OFFLINE to SDEV_CANCEL transition such
-that no I/O is sent to devices for which the transport is offline.
-Notes:
-- Functions like sd_shutdown() use scsi_execute_req() and hence
-  set the REQ_PREEMPT flag. Such requests are passed to the LLD
-  queuecommand callback in the SDEV_CANCEL state.
-- This patch does not affect Fibre Channel LLD drivers since these
-  drivers invoke fc_remote_port_chkready() before submitting a SCSI
-  request to the HBA. That prevents a timeout to occur in state
-  SDEV_CANCEL if the transport is offline.
+On 13-04-07 10:49 AM, James Bottomley wrote:
+> On Sun, 2013-04-07 at 15:31 +0200, Hannes Reinecke wrote:
+>> On 04/06/2013 11:08 AM, James Bottomley wrote:
+>>> On Fri, 2013-03-15 at 10:46 +0100, Hannes Reinecke wrote:
+>>>> SAM advertises the use of a Well-known LUN (W_LUN) for scanning.
+>>>> As this avoids exposing LUN 0 (which might be a valid LUN) for
+>>>> all initiators it is the preferred method for LUN scanning on
+>>>> some arrays.
+>>>> So we should be using W_LUN for scanning, too. If the W_LUN is
+>>>> not supported we'll fall back to use LUN 0.
+>>>> For broken W_LUN implementations a new blacklist flag
+>>>> 'BLIST_NO_WLUN' is added.
+>>>
+>>> Well, we could do this, but I don't really see the point.  By the time
+>>> we get into the report lun code, we've already probed LUN 0, so it's as
+>>> goeod as any for a REPORT LUN scan.
+>>>
+>> Did we? I thought I had avoided that and directly went for probing
+>> W_LUN _first_.
+>> Will be cross-checking.
+>>
+>>> What worries me slightly about the W-LUN is that for the first time
+>>> we'll  be assuming a device supports a particular address method
+>>> (Extended Logical Unit addressing) rather than treating LUNs as opaque
+>>> handles we keep and pass back to the target.  I appreciate you now have
+>>> a blacklist for failures, but if we didn't use W-LUNs we wouldn't need
+>>> that blacklist.
+>>>
+>>> So could you answer two questions clearly:
+>>>
+>>>        1. What does this buy us over the current LUN0 method?  I don't see
+>>>           LUN0 might be a valid LUN being a convincing reason.
+>>
+>> LUN masking.
+>> Some HBAs / virtualised devices use LUN masking to forward LUNs to the
+>> virtual machines.
+>> So for LUN0 you have the choice of exposing it to every virtual machine,
+>> meaning you cannot assign a device to LUN0, or have LUN0 as a no-device
+>> LUN which then can be exposed to every virtual machine.
+>
+> That shouldn't matter, should it?  The spec says that even a masked LUN
+> must respond to an inquiry (with PQ indicating appropriate
+> inaccessibility).
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>
----
- drivers/scsi/scsi_lib.c   |    1 -
- drivers/scsi/scsi_sysfs.c |    3 ++-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Which spec? I haven't seen a mention of LUN masking
+in any SCSI spec and I just rechecked SAM-2,3,4 and 5.
+Looked at FCP-4 as well.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index c8698a6..c6aeafd 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2163,7 +2163,6 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- 		case SDEV_RUNNING:
- 		case SDEV_QUIESCE:
- 		case SDEV_OFFLINE:
--		case SDEV_TRANSPORT_OFFLINE:
- 		case SDEV_BLOCK:
- 			break;
- 		default:
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 11318cc..dd2005c 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -963,7 +963,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 
- 	if (sdev->is_visible) {
- 		spin_lock_irqsave(shost->host_lock, flags);
--		WARN(scsi_device_set_state(sdev, SDEV_CANCEL) != 0,
-+		WARN(scsi_device_set_state(sdev, SDEV_CANCEL) != 0 &&
-+		     sdev->sdev_state != SDEV_TRANSPORT_OFFLINE,
- 		     "%s: unexpected state %d\n", dev_name(&sdev->sdev_gendev),
- 		     sdev->sdev_state);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
--- 
-1.7.10.4
+>> At which point you run into hardware limitations, as not every storage
+>> array allow for the first option.
+>> And not every LUN masking implementation allows you to expose a single
+>> LUN to several virtual machines. So you might be screwed either way.
+>>
+>> This was the main reason why zfcp could not use the standard LUN
+>> scanning method like every other HBA LLDD and had to resort to manual
+>> LUN activation.
+>
+> So this is an out of spec implementation of LUN masking ... as in it
+> doesn't respond correctly to an INQUIRY?
+
+No specs apply that I can see.
+
+>>>        2. What devices have you actually tested this on?
+>>>
+>> Netapp FAS, HP EVA, HP P2000 / MSA, EMC Clariion.
+>>
+>> But as mentioned, I'll be rechecking the patch.
+>> We should _not_ try to probe LUN0 first, but rather send REPORT_LUNS to
+>> the W_LUN directly. If it responds, good. If not, we'll fall back to LUN0.
+>
+> I don't think we can ever do that ... what about SCSI 2 devices that
+> don't support REPORT LUNS or USB devices that will crash on it?  We
+> might be able to try a host type whitelist, where if we were a USB or
+> traditional bus host (SPI) we never try this, but if we're a modern one
+> (SAS, FC) we do.
+
+The VERSION field (byte 2) of an INQUIRY response is always
+available, even on USB storage devices which usually claim
+SCSI-2 compliance:
+    2 == (rsp_buff[2] & 0x7)
+
+No need to try REPORT LUNS on such devices.
+
+
+Are there any SCSI-1 devices still out there?
+
+Doug Gilbert
 
