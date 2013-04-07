@@ -1,74 +1,65 @@
-From: Asias He <asias@redhat.com>
-Subject: Re: [PATCH V7 0/5] virtio-scsi multiqueue
-Date: Sun, 7 Apr 2013 10:01:40 +0800
-Message-ID: <20130407020140.GA6409@hj.localdomain>
-References: <1364038124-32479-1-git-send-email-gaowanlong@cn.fujitsu.com>
-	<5153A953.2000101@cn.fujitsu.com> <515E918D.3090307@cn.fujitsu.com>
-	<1365237613.2787.1.camel@dabdike>
+From: Chen Gang <gang.chen@asianux.com>
+Subject: Re: [PATCH] drivers/scsi/cxgbi: using ccflags-y instead of EXTRA_CFLAGS
+ in Kbuild
+Date: Sun, 07 Apr 2013 11:17:29 +0800
+Message-ID: <5160E549.4080702@asianux.com>
+References: <50F15A35.4000400@asianux.com> <50FB9A33.2090204@asianux.com> <51077BB3.2010809@asianux.com> <512ECDDC.2020607@asianux.com> <512EF43D.1070805@asianux.com> <512EFA91.5050101@asianux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1365237613.2787.1.camel@dabdike>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: rusty@rustcorp.com.au
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, James Bottomley <James.Bottomley@HansenPartnership.com>, pbonzini@redhat.com
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <512EFA91.5050101@asianux.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com, Greg KH <gregkh@linuxfoundation.org>, kxie@chelsio.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Apr 06, 2013 at 09:40:13AM +0100, James Bottomley wrote:
-> On Fri, 2013-04-05 at 16:55 +0800, Wanlong Gao wrote:
-> > On 03/28/2013 10:22 AM, Wanlong Gao wrote:
-> > > On 03/23/2013 07:28 PM, Wanlong Gao wrote:
-> > >> This series implements virtio-scsi queue steering, which gives
-> > >> performance improvements of up to 50% (measured both with QEMU and
-> > >> tcm_vhost backends).
-> > >>
-> > >> This version rebased on Rusty's virtio ring rework patches, which
-> > >> has already gone into virtio-next today.
-> > >> We hope this can go into virtio-next together with the virtio ring
-> > >> rework pathes.
-> > >>
-> > >> V7: respin to fix the patch apply error
-> > >>
-> > >> V6: rework "redo allocation of target data" (James)
-> > >>     fix comments (Venkatesh)
-> > >>     rebase to virtio-next
-> > >>
-> > >> V5: improving the grammar of 1/5 (Paolo)
-> > >>     move the dropping of sg_elems to 'virtio-scsi: use virtqueue_add_sgs for command buffers'. (Asias)
-> > >>
-> > >> V4: rebase on virtio ring rework patches (rusty's pending-rebases branch)
-> > >>
-> > >> V3 and be found http://marc.info/?l=linux-virtualization&m=136067440717154&w=2
-> > >>
-> > >>
-> > >> It would probably be easier to get it in via Rusty's tree
-> > >> because of the prerequisites.  James, can we get your Acked-by?
-> > > 
-> > > James, any thoughts for this version?
-> > 
-> > Ping James....
-> 
-> Well, I haven't had time to look at anything other than the patch I
-> commented on.  I'm happy with your fix, so you can add my acked by to
-> that one.  Since it's going through the virtio tree, don't wait for me,
-> put it in and I'll make you fix up anything I find later that I'm
-> unhappy with.
+Hello Maintainers:
 
-So, Rusty, could you pick this up in your virtio-next tree?
+  please help check it when you have time.
 
-> James
-> 
-> 
+  thanks.
 
--- 
-Asias
+gchen.
+
+On 2013=C4=EA02=D4=C228=C8=D5 14:34, Chen Gang wrote:
+>=20
+>   need using ccflags-y instead of EXTRA_CFLAGS
+>     can reference scripts/checkpatch.pl (1755..1766)
+>=20
+>   when make EXTRA_CFLAGS=3D-W, the compiling issue will be occured.
+>=20
+>=20
+> Signed-off-by: Chen Gang <gang.chen@asianux.com>
+> ---
+>  drivers/scsi/cxgbi/cxgb3i/Kbuild |    2 +-
+>  drivers/scsi/cxgbi/cxgb4i/Kbuild |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/cxgbi/cxgb3i/Kbuild b/drivers/scsi/cxgbi/cx=
+gb3i/Kbuild
+> index 6f095e2..961a12f 100644
+> --- a/drivers/scsi/cxgbi/cxgb3i/Kbuild
+> +++ b/drivers/scsi/cxgbi/cxgb3i/Kbuild
+> @@ -1,3 +1,3 @@
+> -EXTRA_CFLAGS +=3D -I$(srctree)/drivers/net/ethernet/chelsio/cxgb3
+> +ccflags-y +=3D -I$(srctree)/drivers/net/ethernet/chelsio/cxgb3
+> =20
+>  obj-$(CONFIG_SCSI_CXGB3_ISCSI) +=3D cxgb3i.o
+> diff --git a/drivers/scsi/cxgbi/cxgb4i/Kbuild b/drivers/scsi/cxgbi/cx=
+gb4i/Kbuild
+> index 8290cda..3745864 100644
+> --- a/drivers/scsi/cxgbi/cxgb4i/Kbuild
+> +++ b/drivers/scsi/cxgbi/cxgb4i/Kbuild
+> @@ -1,3 +1,3 @@
+> -EXTRA_CFLAGS +=3D -I$(srctree)/drivers/net/ethernet/chelsio/cxgb4
+> +ccflags-y +=3D -I$(srctree)/drivers/net/ethernet/chelsio/cxgb4
+> =20
+>  obj-$(CONFIG_SCSI_CXGB4_ISCSI) +=3D cxgb4i.o
+>=20
+
+
+--=20
+Chen Gang
+
+Asianux Corporation
