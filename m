@@ -1,7 +1,8 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v10 3/9] Avoid calling __scsi_remove_device() twice
-Date: Sun, 07 Apr 2013 16:59:51 +0200
-Message-ID: <516189E7.6020803@acm.org>
+Subject: [PATCH v10 4/9] Disallow changing the device state via sysfs into
+ "deleted"
+Date: Sun, 07 Apr 2013 17:00:40 +0200
+Message-ID: <51618A18.4050104@acm.org>
 References: <516188E5.1040008@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -9,72 +10,87 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from jacques.telenet-ops.be ([195.130.132.50]:47636 "EHLO
 	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933861Ab3DGO7z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Apr 2013 10:59:55 -0400
+	with ESMTP id S933858Ab3DGPAl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Apr 2013 11:00:41 -0400
 In-Reply-To: <516188E5.1040008@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-SCSI devices are added to the shost->__devices list from inside
-scsi_alloc_sdev(). If something goes wrong during LUN scanning,
-e.g. a transport layer failure occurs, then __scsi_remove_device()
-can get invoked by the LUN scanning code for a SCSI device in
-state SDEV_CREATED_BLOCK or SDEV_BLOCKED. If this happens then
-the SCSI device has not yet been added to sysfs (is_visible == 0).
-Make sure that if this happens these devices are transitioned
-into state SDEV_DEL. This avoids that __scsi_remove_device()
-gets invoked a second time by scsi_forget_host().
+Changing the state of a SCSI device via sysfs into "cancel" or
+"deleted" prevents removal of these devices by scsi_remove_host().
+Hence do not allow this. Also, introduce the symbolic name
+INVALID_SDEV_STATE, representing a value different from any valid
+SCSI device state. Update scsi_device_set_state() such that gcc
+does not issue a warning about an enumeration value not being
+handled inside a switch statement.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: Tejun Heo <tj@kernel.org>
 Cc: James Bottomley <JBottomley@Parallels.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>
 Cc: Hannes Reinecke <hare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>
+Cc: David Milburn <dmilburn@redhat.com>
 ---
- drivers/scsi/scsi_lib.c   |    2 ++
- drivers/scsi/scsi_sysfs.c |    7 ++++---
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_lib.c    |    2 ++
+ drivers/scsi/scsi_sysfs.c  |    5 +++--
+ include/scsi/scsi_device.h |    6 +++++-
+ 3 files changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d84cbd0..34cdcbc 100644
+index 34cdcbc..67d09a7 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -2176,6 +2176,8 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- 		case SDEV_OFFLINE:
- 		case SDEV_TRANSPORT_OFFLINE:
- 		case SDEV_CANCEL:
-+		case SDEV_BLOCK:
-+		case SDEV_CREATED_BLOCK:
- 			break;
- 		default:
- 			goto illegal;
+@@ -2184,6 +2184,8 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		}
+ 		break;
+ 
++	case INVALID_SDEV_STATE:
++		goto illegal;
+ 	}
+ 	sdev->sdev_state = state;
+ 	return 0;
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 34f1b39..f869ef85 100644
+index f869ef85..fe3ea686 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
-@@ -956,8 +956,9 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 	unsigned long flags;
+@@ -594,7 +594,7 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+ {
+ 	int i;
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+-	enum scsi_device_state state = 0;
++	enum scsi_device_state state = INVALID_SDEV_STATE;
  
- 	if (sdev->is_visible) {
--		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
--			return;
-+		WARN(scsi_device_set_state(sdev, SDEV_CANCEL) != 0,
-+		     "%s: unexpected state %d\n", dev_name(&sdev->sdev_gendev),
-+		     sdev->sdev_state);
+ 	for (i = 0; i < ARRAY_SIZE(sdev_states); i++) {
+ 		const int len = strlen(sdev_states[i].name);
+@@ -604,7 +604,8 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+ 			break;
+ 		}
+ 	}
+-	if (!state)
++	if (state == INVALID_SDEV_STATE || state == SDEV_CANCEL ||
++	    state == SDEV_DEL)
+ 		return -EINVAL;
  
- 		bsg_unregister_queue(sdev->request_queue);
- 		device_unregister(&sdev->sdev_dev);
-@@ -971,7 +972,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 	 * scsi_run_queue() invocations have finished before tearing down the
- 	 * device.
- 	 */
--	scsi_device_set_state(sdev, SDEV_DEL);
-+	WARN_ON_ONCE(scsi_device_set_state(sdev, SDEV_DEL) != 0);
- 	blk_cleanup_queue(sdev->request_queue);
- 	cancel_work_sync(&sdev->requeue_work);
- 
+ 	if (scsi_device_set_state(sdev, state))
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index a7f9cba..8539ce6 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -29,7 +29,11 @@ struct scsi_mode_data {
+  * scsi_lib:scsi_device_set_state().
+  */
+ enum scsi_device_state {
+-	SDEV_CREATED = 1,	/* device created but not added to sysfs
++	INVALID_SDEV_STATE,	/* Not a valid SCSI device state but a
++				 * symbolic name that can be used wherever
++				 * a value is needed that is different from
++				 * any valid SCSI device state. */
++	SDEV_CREATED,		/* device created but not added to sysfs
+ 				 * Only internal commands allowed (for inq) */
+ 	SDEV_RUNNING,		/* device properly configured
+ 				 * All commands allowed */
 -- 
 1.7.10.4
 
