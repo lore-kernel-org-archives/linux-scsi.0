@@ -1,55 +1,59 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Fix incorrect fallthrough of ALUA Standby/Offline/Transition CDBs
-Date: Wed, 10 Apr 2013 21:59:25 +0000
-Message-ID: <1365631165-15237-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH V2 15/18] be2iscsi: Fix the session cleanup when reboot/shutdown
+ happens
+Date: Wed, 10 Apr 2013 18:41:42 -0500
+Message-ID: <5165F8B6.8080506@cs.wisc.edu>
+References: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com> <1365219519-3457-15-git-send-email-jayamohan.kallickal@emulex.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:38503 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761256Ab3DJXlz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Apr 2013 19:41:55 -0400
+In-Reply-To: <1365219519-3457-15-git-send-email-jayamohan.kallickal@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jayamohan Kallickal <jayamohank@gmail.com>
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 4/5/13 10:38 PM, Jayamohan Kallickal wrote:
+>   During reboot/shutdown cycle, the active sessions were not updated.
+>   In iSCSI Boot case, the boot session was alive and this fix informs
+>   that the machine is going down, so no more ops happens on that session.
+>
+> Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> ---
+>   drivers/scsi/be2iscsi/be_cmds.c |    2 +-
+>   drivers/scsi/be2iscsi/be_cmds.h |    3 +++
+>   drivers/scsi/be2iscsi/be_main.c |    1 +
+>   3 files changed, 5 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+> index e66aa7c..a3bfc1d 100644
+> --- a/drivers/scsi/be2iscsi/be_cmds.c
+> +++ b/drivers/scsi/be2iscsi/be_cmds.c
+> @@ -340,7 +340,7 @@ static struct be_mcc_compl *be_mcc_compl_get(struct beiscsi_hba *phba)
+>   	return NULL;
+>   }
+>
+> -static void be2iscsi_fail_session(struct iscsi_cls_session *cls_session)
+> +void be2iscsi_fail_session(struct iscsi_cls_session *cls_session)
+>   {
+>   	iscsi_session_failure(cls_session->dd_data, ISCSI_ERR_CONN_FAILED);
 
-This patch fixes a bug where a handful of informational / control CDBs
-that should be allowed during ALUA access state Standby/Offline/Transition
-where incorrectly returning CHECK_CONDITION + ASCQ_04H_ALUA_TG_PT_*.
+I am not sure how this is working or what it fixes. During 
+shutdown/reboot when the pci_driver shutdown callback is called, without 
+the patch what is happening? Does the host shutdown cause iscsid to try 
+and recover the session and that causes a shutdown/reboot hang?
 
-This includes INQUIRY + REPORT_LUNS, which would end up preventing LUN
-registration when LUN scanning occured during these ALUA access states.
+I think you want to use ISCSI_ERR_INVALID_HOST. That would cause a clean 
+shutdown of the sessions if iscsid is still up at that time. This would 
+cause ep_disconnect to get called and a logout pdu to get sent.
 
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_alua.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ISCSI_ERR_CONN_FAILED just causes recovery to start (ep_disconnect will 
+run if the ep is up and we will try to reconnect).
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index ff1c5ee..cbe48ab 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -409,6 +409,7 @@ static inline int core_alua_state_standby(
- 	case REPORT_LUNS:
- 	case RECEIVE_DIAGNOSTIC:
- 	case SEND_DIAGNOSTIC:
-+		return 0;
- 	case MAINTENANCE_IN:
- 		switch (cdb[1] & 0x1f) {
- 		case MI_REPORT_TARGET_PGS:
-@@ -451,6 +452,7 @@ static inline int core_alua_state_unavailable(
- 	switch (cdb[0]) {
- 	case INQUIRY:
- 	case REPORT_LUNS:
-+		return 0;
- 	case MAINTENANCE_IN:
- 		switch (cdb[1] & 0x1f) {
- 		case MI_REPORT_TARGET_PGS:
-@@ -491,6 +493,7 @@ static inline int core_alua_state_transition(
- 	switch (cdb[0]) {
- 	case INQUIRY:
- 	case REPORT_LUNS:
-+		return 0;
- 	case MAINTENANCE_IN:
- 		switch (cdb[1] & 0x1f) {
- 		case MI_REPORT_TARGET_PGS:
--- 
-1.7.2.5
+
