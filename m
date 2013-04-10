@@ -1,63 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH V3 01/12] pm80xx: fix for memory region free
-Date: Wed, 10 Apr 2013 13:13:14 -0700
-Message-ID: <1365624794.1942.17.camel@dabdike>
-References: <5149EFF9.6070604@pmc-sierra.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39912 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935970Ab3DJUNQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Apr 2013 16:13:16 -0400
-In-Reply-To: <5149EFF9.6070604@pmc-sierra.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] target: Fix incorrect fallthrough of ALUA Standby/Offline/Transition CDBs
+Date: Wed, 10 Apr 2013 21:59:25 +0000
+Message-ID: <1365631165-15237-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Anand <anandkumar_santhanam@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org, Harry.Yang@pmcs.com, rich.Bono@pmcs.com, sakthivel.sk@hcl.com, Sangeetha.Gnanasekaran@pmcs.com, xjtuwjp@gmail.com, Vishwanath.Maram@pmcs.com
 
-On Wed, 2013-03-20 at 10:20 -0700, Anand wrote:
-> >From 700bfe79294e9f9e1a5def178af52b13928902a9 Mon Sep 17 00:00:00 2001
-> From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-> Date: Mon, 4 Feb 2013 12:10:02 +0530
-> Subject: [PATCH V3 01/12] pm80xx: fix for memory region free
-> 
-> All memory regions are allocated based on variables total_len
-> and alignment but free was based on element_size.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch doesn't compile.  It's giving
+This patch fixes a bug where a handful of informational / control CDBs
+that should be allowed during ALUA access state Standby/Offline/Transition
+where incorrectly returning CHECK_CONDITION + ASCQ_04H_ALUA_TG_PT_*.
 
-ERROR: "pm8001_80xx_dispatch" [drivers/scsi/pm8001/pm8001.ko] undefined!
-make[1]: *** [__modpost] Error 1
+This includes INQUIRY + REPORT_LUNS, which would end up preventing LUN
+registration when LUN scanning occured during these ALUA access states.
 
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_alua.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-This is because of this hunk:
-
-
-> @@ -44,8 +44,16 @@
->  
->  static struct scsi_transport_template *pm8001_stt;
->  
-> +/**
-> + * chip info structure to identify chip key functionality as
-> + * encryption available/not, no of ports, hw specific function ref
-> + */
->  static const struct pm8001_chip_info pm8001_chips[] = {
-> -	[chip_8001] = {  8, &pm8001_8001_dispatch,},
-> +	[chip_8001] = {0,  8, &pm8001_8001_dispatch,},
-> +	[chip_8008] = {0,  8, &pm8001_80xx_dispatch,},
-> +	[chip_8009] = {1,  8, &pm8001_80xx_dispatch,},
-> +	[chip_8018] = {0,  16, &pm8001_80xx_dispatch,},
-> +	[chip_8019] = {1,  16, &pm8001_80xx_dispatch,},
-
-But the structure isn't defined until patch 06/12.  This patch series
-has to be bisectable and buildable.  That means each individual patch
-must apply, compile and run in sequence.  Please fix this.
-
-Thanks,
-
-James
-
-
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index ff1c5ee..cbe48ab 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -409,6 +409,7 @@ static inline int core_alua_state_standby(
+ 	case REPORT_LUNS:
+ 	case RECEIVE_DIAGNOSTIC:
+ 	case SEND_DIAGNOSTIC:
++		return 0;
+ 	case MAINTENANCE_IN:
+ 		switch (cdb[1] & 0x1f) {
+ 		case MI_REPORT_TARGET_PGS:
+@@ -451,6 +452,7 @@ static inline int core_alua_state_unavailable(
+ 	switch (cdb[0]) {
+ 	case INQUIRY:
+ 	case REPORT_LUNS:
++		return 0;
+ 	case MAINTENANCE_IN:
+ 		switch (cdb[1] & 0x1f) {
+ 		case MI_REPORT_TARGET_PGS:
+@@ -491,6 +493,7 @@ static inline int core_alua_state_transition(
+ 	switch (cdb[0]) {
+ 	case INQUIRY:
+ 	case REPORT_LUNS:
++		return 0;
+ 	case MAINTENANCE_IN:
+ 		switch (cdb[1] & 0x1f) {
+ 		case MI_REPORT_TARGET_PGS:
+-- 
+1.7.2.5
