@@ -1,88 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, variables
- and modify for SPC
-Date: Thu, 11 Apr 2013 14:13:38 -0700
-Message-ID: <1365714818.1913.1.camel@dabdike>
-References: <5149F023.6060204@pmc-sierra.com>
-	 <1365621636.1942.5.camel@dabdike>
-	 <E5DEE6F468524847995699AD11E8088501700991@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH v2 0/8] [SCSI] Enhanced sense and Unit Attention handling
+Date: Thu, 11 Apr 2013 16:52:33 -0500
+Message-ID: <516730A1.4090302@tributary.com>
+References: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43007 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753490Ab3DKVNl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Apr 2013 17:13:41 -0400
-In-Reply-To: <E5DEE6F468524847995699AD11E8088501700991@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+Received: from relay.ihostexchange.net ([66.46.182.55]:27050 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100Ab3DKVwk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Apr 2013 17:52:40 -0400
+In-Reply-To: <1359741195-2641-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-Cc: linux-scsi@vger.kernel.org, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, sakthivel.sk@hcl.com, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>, xjtuwjp@gmail.com, Vishwanath Maram <Vishwanath.Maram@pmcs.com>
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 2013-04-10 at 23:36 -0700, Anand Kumar Santhanam wrote:
-> Hi James,
-> 
-> Did you take the patch attachment from the email? Pls let us know as to
-> which version of diff tool you are using.
-> I used the patch command to apply this patch against 3.8-rc6 tree to
-> check whether the patch is applying properly.
-
-The problem I quoted in the email below was in what you sent to the
-list.  If there were multiple versions in the email, then please just
-resend a clean series to the list that can be applied.
-
-Thanks,
-
-James
+On 2/1/2013 11:53 AM, Ewan D. Milne wrote:
+> The mechanism used is to flag when certain UA ASC/ASCQ codes are received 
+> that report asynchronous changes to the storage device configuration. An
+> appropriate uevent is then generated for the scsi_device or scsi_target 
+> object.  An aggregation mechanism is used to avoid generating uevents at 
+> too high a rate, and to coalesce multiple UAs reported by LUNs on the same
+> target for a REPORTED LUNS DATA HAS CHANGED sense code.
 
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-> Sent: Thursday, April 11, 2013 12:51 AM
-> To: Anand Kumar Santhanam
-> Cc: linux-scsi@vger.kernel.org; Harry Yang; Rich Bono;
-> sakthivel.sk@hcl.com; Sangeetha Gnanasekaran; xjtuwjp@gmail.com;
-> Vishwanath Maram
-> Subject: Re: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids,
-> variables and modify for SPC
-> 
-> On Wed, 2013-03-20 at 10:21 -0700, Anand wrote:
-> > >From ef678e2188866af926f2a089719c24ec99e4e88c Mon Sep 17 00:00:00 
-> > >2001
-> > From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-> > Date: Wed, 27 Feb 2013 20:22:50 +0530
-> > Subject: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, 
-> > variables and modify for SPC
-> > 
-> > Updated pci id table with device, vendor, subdevice and subvendor ids 
-> > for 8081, 8088, 8089 SAS/SATA controllers. Added SPCv/ve related
-> macros.
-> > Updated macros, hba info structure and other structures for SPCv/ve.
-> > Update of structure and variable names for SPC hardware
-> functionalities.
-> > 
-> > Signed-off-by: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-> > Signed-off-by: Anand Kumar S <AnandKumar.Santhanam@pmcs.com>
-> > Ack-by: Jack Wang <jack_wang@usish.com>
-> > ---
-> >  drivers/scsi/pm8001/pm8001_ctl.c  |   69 ++++++++++---
-> >  drivers/scsi/pm8001/pm8001_defs.h |   19 +++-
-> >  drivers/scsi/pm8001/pm8001_hwi.c  |  210 
-> > ++++++++++++++++++++++---------------
-> 
-> neither git nor diffstat on the patch agrees with this ... they both
-> think 212 lines changed.  Please fix the diff tool you're using.
-> 
-> Thanks,
-> 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	What happened to this patch? The trail of suggested fixes for the REPORT LUNS
+DATA HAS CHANGED check condition is getting pretty long. The number of devices
+(our product included) in the field that have the ability to on the fly modify
+the luns on an I_T nexus is not decreasing.
+
+	Is it because these patches are trying to fix more than one thing?
+
+	What is the preferred way to fix this?
+
+	Why not simply add a couple sdev_evt_send_simple()'s and an event coalesce
+function to collapse this event when its received from multiple LUNs on the
+I_T? A couple extra uevents isn't going to kill udev right? A really fancy
+patch could attempt to clear the check conditions from LUNs that share the I_T.
+
+	
+
+
 
 
