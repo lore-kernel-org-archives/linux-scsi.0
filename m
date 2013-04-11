@@ -1,97 +1,74 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/3] scsi_transport_iscsi: Declare portal type string
- macros for generic use
-Date: Thu, 11 Apr 2013 17:20:08 -0500
-Message-ID: <51673718.9020509@cs.wisc.edu>
-References: <1364213313-17754-1-git-send-email-vikas.chaudhary@qlogic.com>  <5150FBF3.5050503@cs.wisc.edu> <1365718628.6982.0.camel@dabdike>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [dm-devel] [PATCH] [RESEND] scsi_dh_alua: Add module parameter
+ to allow failover to non preferred path without STPG
+Date: Thu, 11 Apr 2013 15:58:36 -0700
+Message-ID: <1365721116.6982.3.camel@dabdike>
+References: <8255ED565A0EAA4A960625E27D49DBF21FF97F35@SACEXCMBX04-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080900010906000804010102"
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:40806 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754210Ab3DKWUV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Apr 2013 18:20:21 -0400
-In-Reply-To: <1365718628.6982.0.camel@dabdike>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43250 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761178Ab3DKW6i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Apr 2013 18:58:38 -0400
+In-Reply-To: <8255ED565A0EAA4A960625E27D49DBF21FF97F35@SACEXCMBX04-PRD.hq.netapp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "vikas.chaudhary@qlogic.com" <vikas.chaudhary@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lalit.chandivade@qlogic.com" <lalit.chandivade@qlogic.com>, "ravi.anand@qlogic.com" <ravi.anand@qlogic.com>, "poornima.vonti@qlogic.com" <poornima.vonti@qlogic.com>, "manish.rangankar@qlogic.com" <manish.rangankar@qlogic.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+To: "Stewart, Sean" <Sean.Stewart@netapp.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "snitzer@redhat.com" <snitzer@redhat.com>
 
-This is a multi-part message in MIME format.
---------------080900010906000804010102
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-On 04/11/2013 05:17 PM, James Bottomley wrote:
-> On Mon, 2013-03-25 at 20:37 -0500, Mike Christie wrote:
->> Patches 1 - 3 look ok to me.
+On Thu, 2013-04-04 at 14:54 +0000, Stewart, Sean wrote:
+> Resending with requested rewording of the parameter description.
+> Currently ALUA device handler sends STPG command during failover and failback.
+> Failover can be optimized by implicit failover (by not to sending STPG command), when 1 is passed as hwhandler parameter in multipath.conf. ex "2 alua 1". We may need to pass the parameter through module param for alua device handler to optimize failover if incase retain_attached_hwhandler set in multipath.conf and hwhandler is set with non-tpgs device handler ex: '1 rdac'.
 > 
-> it looks like we're missing a patch 3/3?
-> 
+> Signed-off-by: Vijay Chauhan <vijay.chauhan@netapp.com>
+> Signed-off-by: Sean Stewart <Sean.Stewart@netapp.com>
 
-Did only I get it. I attached the mail I got with the patch in it.
+Growl, next time don't hand edit the patch.  Humans rarely understand
+patch language well enough to get it right.  I fixed it this time, but
+this is the last time ...
 
+> ---
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c.orig	2013-03-27 12:18:35.000000000 +0530
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c	2013-03-27 13:23:16.000000000 +0530
+> @@ -710,6 +710,10 @@ static int alua_set_params(struct scsi_d
 
---------------080900010906000804010102
-Content-Type: message/rfc822;
- name="[PATCH 3_3] qla4xxx: Update driver version to 5.03.00-k7.eml"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="[PATCH 3_3] qla4xxx: Update driver version to 5.03.00-k7.eml"
+You actually added an extra line, so the second has to become +710,11
 
-Return-Path: <vikas.chaudhary@qlogic.com>
-X-Spam-Checker-Version: SpamAssassin 3.3.2 (2011-06-06) on slayer.cs.wisc.edu
-X-Spam-Level: 
-X-Spam-Status: No, score=-3.4 required=5.0 tests=BAYES_00,RCVD_IN_DNSWL_MED,
-	SPF_NEUTRAL autolearn=ham version=3.3.2
-Received: from limestone.cs.wisc.edu (limestone.cs.wisc.edu [128.105.6.27])
-	by crimson.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id r2PCvqPJ023683
-	for <michaelc@crimson.cs.wisc.edu>; Mon, 25 Mar 2013 07:57:55 -0500
-Received: from obsidian.cs.wisc.edu (obsidian.cs.wisc.edu [128.105.6.13])
-	by limestone.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id r2PCvo7s024392
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <michaelc@cs.wisc.edu>; Mon, 25 Mar 2013 07:57:50 -0500
-Received: from linux-zupk.site (mvnat01.qlogic.com [198.186.3.73])
-	by obsidian.cs.wisc.edu (8.14.1/8.14.1) with SMTP id r2PCvdmB004755
-	for <michaelc@cs.wisc.edu>; Mon, 25 Mar 2013 07:57:40 -0500
-Received: by linux-zupk.site (Postfix, from userid 0)
-	id 19AF65220B3; Mon, 25 Mar 2013 08:08:43 -0400 (EDT)
-From: vikas.chaudhary@qlogic.com
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com,
-        lalit.chandivade@qlogic.com, ravi.anand@qlogic.com,
-        poornima.vonti@qlogic.com, manish.rangankar@qlogic.com
-Subject: [PATCH 3/3] qla4xxx: Update driver version to 5.03.00-k7
-Date: Mon, 25 Mar 2013 08:08:33 -0400
-Message-Id: <1364213313-17754-3-git-send-email-vikas.chaudhary@qlogic.com>
-X-Mailer: git-send-email 1.7.7
-In-Reply-To: <1364213313-17754-1-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1364213313-17754-1-git-send-email-vikas.chaudhary@qlogic.com>
-X-Mailfromd-Misconfiguration: sending server 198.186.3.73 claimed to be server name linux-zupk.site, but that does not resolve; 
-X-Mailfromd: Total of 1 misconfiguration (15 mins)
-X-Mailfromd-Greylist-Time: May have had a total greylist delay of 15 minutes
-X-Seen-By: mailfromd 4.1 obsidian.cs.wisc.edu
-
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index 0cd824f..18ad425 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,4 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
- 
--#define QLA4XXX_DRIVER_VERSION	"5.03.00-k6"
-+#define QLA4XXX_DRIVER_VERSION	"5.03.00-k7"
--- 
-1.8.2.GIT
+>  	return result;
+>  }
+>  
+> +static uint optimize_stpg;
+> +module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR); 
+> +MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, 
+> +rather than sending a STPG, when implicit TPGS is supported (0=No,1=Yes). Default is 0.");
+> +
+>  /*
+>   * alua_activate - activate a path
+>   * @sdev: device on the path to be activated @@ -731,6 +735,9 @@ static int alua_activate(struct scsi_dev
 
 
---------------080900010906000804010102--
+This is mangled, I think ...
+
+James
+
+
+>  	if (err != SCSI_DH_OK)
+>  		goto out;
+>  
+> +	if (optimize_stpg)
+> +		h->flags |= ALUA_OPTIMIZE_STPG;
+> +
+>  	if (h->tpgs & TPGS_MODE_EXPLICIT) {
+>  		switch (h->state) {
+>  		case TPGS_STATE_NONOPTIMIZED:
+> --
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
