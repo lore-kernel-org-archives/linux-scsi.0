@@ -1,47 +1,30 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH v2 0/8] [SCSI] Enhanced sense and Unit Attention handling
-Date: Thu, 11 Apr 2013 16:52:33 -0500
-Message-ID: <516730A1.4090302@tributary.com>
-References: <1359741195-2641-1-git-send-email-emilne@redhat.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 1/3] scsi_transport_iscsi: Declare portal type string
+ macros for generic use
+Date: Thu, 11 Apr 2013 22:17:09 +0000
+Message-ID: <1365718628.6982.0.camel@dabdike>
+References: <1364213313-17754-1-git-send-email-vikas.chaudhary@qlogic.com>
+	 <5150FBF3.5050503@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.55]:27050 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753100Ab3DKVwk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Apr 2013 17:52:40 -0400
-In-Reply-To: <1359741195-2641-1-git-send-email-emilne@redhat.com>
+Received: from mx2.parallels.com ([199.115.105.18]:51604 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754054Ab3DKWRM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Apr 2013 18:17:12 -0400
+In-Reply-To: <5150FBF3.5050503@cs.wisc.edu>
+Content-Language: en-US
+Content-ID: <23FE14C7FF4E4B4A80294CDB26EB9366@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "vikas.chaudhary@qlogic.com" <vikas.chaudhary@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lalit.chandivade@qlogic.com" <lalit.chandivade@qlogic.com>, "ravi.anand@qlogic.com" <ravi.anand@qlogic.com>, "poornima.vonti@qlogic.com" <poornima.vonti@qlogic.com>, "manish.rangankar@qlogic.com" <manish.rangankar@qlogic.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
-On 2/1/2013 11:53 AM, Ewan D. Milne wrote:
-> The mechanism used is to flag when certain UA ASC/ASCQ codes are received 
-> that report asynchronous changes to the storage device configuration. An
-> appropriate uevent is then generated for the scsi_device or scsi_target 
-> object.  An aggregation mechanism is used to avoid generating uevents at 
-> too high a rate, and to coalesce multiple UAs reported by LUNs on the same
-> target for a REPORTED LUNS DATA HAS CHANGED sense code.
+On Mon, 2013-03-25 at 20:37 -0500, Mike Christie wrote:
+> Patches 1 - 3 look ok to me.
 
+it looks like we're missing a patch 3/3?
 
-	What happened to this patch? The trail of suggested fixes for the REPORT LUNS
-DATA HAS CHANGED check condition is getting pretty long. The number of devices
-(our product included) in the field that have the ability to on the fly modify
-the luns on an I_T nexus is not decreasing.
-
-	Is it because these patches are trying to fix more than one thing?
-
-	What is the preferred way to fix this?
-
-	Why not simply add a couple sdev_evt_send_simple()'s and an event coalesce
-function to collapse this event when its received from multiple LUNs on the
-I_T? A couple extra uevents isn't going to kill udev right? A really fancy
-patch could attempt to clear the check conditions from LUNs that share the I_T.
-
-	
-
-
-
+James
 
