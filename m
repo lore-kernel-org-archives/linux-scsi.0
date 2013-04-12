@@ -1,74 +1,107 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [dm-devel] [PATCH] [RESEND] scsi_dh_alua: Add module parameter
- to allow failover to non preferred path without STPG
-Date: Thu, 11 Apr 2013 15:58:36 -0700
-Message-ID: <1365721116.6982.3.camel@dabdike>
-References: <8255ED565A0EAA4A960625E27D49DBF21FF97F35@SACEXCMBX04-PRD.hq.netapp.com>
+From: "Anand Kumar Santhanam" <AnandKumar.Santhanam@pmcs.com>
+Subject: RE: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, variables and modify for SPC
+Date: Thu, 11 Apr 2013 19:38:59 -0700
+Message-ID: <E5DEE6F468524847995699AD11E8088501700A6F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <5149F023.6060204@pmc-sierra.com> <1365621636.1942.5.camel@dabdike> <E5DEE6F468524847995699AD11E8088501700991@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <1365714818.1913.1.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43250 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761178Ab3DKW6i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Apr 2013 18:58:38 -0400
-In-Reply-To: <8255ED565A0EAA4A960625E27D49DBF21FF97F35@SACEXCMBX04-PRD.hq.netapp.com>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:49818 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751026Ab3DLCjJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Apr 2013 22:39:09 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1365714818.1913.1.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "snitzer@redhat.com" <snitzer@redhat.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, sakthivel.sk@hcl.com, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>, xjtuwjp@gmail.com, Vishwanath Maram <Vishwanath.Maram@pmcs.com>
 
-On Thu, 2013-04-04 at 14:54 +0000, Stewart, Sean wrote:
-> Resending with requested rewording of the parameter description.
-> Currently ALUA device handler sends STPG command during failover and failback.
-> Failover can be optimized by implicit failover (by not to sending STPG command), when 1 is passed as hwhandler parameter in multipath.conf. ex "2 alua 1". We may need to pass the parameter through module param for alua device handler to optimize failover if incase retain_attached_hwhandler set in multipath.conf and hwhandler is set with non-tpgs device handler ex: '1 rdac'.
+Hi James,
+
+I will double check the same. Also can you pls provide the tool which
+you are using to apply the patch and also the kernel version?
+I will ensure that we locally apply the patches before sending to the
+list.
+
+Regards
+Anand
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Friday, April 12, 2013 2:44 AM
+To: Anand Kumar Santhanam
+Cc: linux-scsi@vger.kernel.org; Harry Yang; Rich Bono;
+sakthivel.sk@hcl.com; Sangeetha Gnanasekaran; xjtuwjp@gmail.com;
+Vishwanath Maram
+Subject: Re: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids,
+variables and modify for SPC
+
+On Wed, 2013-04-10 at 23:36 -0700, Anand Kumar Santhanam wrote:
+> Hi James,
 > 
-> Signed-off-by: Vijay Chauhan <vijay.chauhan@netapp.com>
-> Signed-off-by: Sean Stewart <Sean.Stewart@netapp.com>
+> Did you take the patch attachment from the email? Pls let us know as 
+> to which version of diff tool you are using.
+> I used the patch command to apply this patch against 3.8-rc6 tree to 
+> check whether the patch is applying properly.
 
-Growl, next time don't hand edit the patch.  Humans rarely understand
-patch language well enough to get it right.  I fixed it this time, but
-this is the last time ...
+The problem I quoted in the email below was in what you sent to the
+list.  If there were multiple versions in the email, then please just
+resend a clean series to the list that can be applied.
 
-> ---
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c.orig	2013-03-27 12:18:35.000000000 +0530
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c	2013-03-27 13:23:16.000000000 +0530
-> @@ -710,6 +710,10 @@ static int alua_set_params(struct scsi_d
-
-You actually added an extra line, so the second has to become +710,11
-
->  	return result;
->  }
->  
-> +static uint optimize_stpg;
-> +module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR); 
-> +MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, 
-> +rather than sending a STPG, when implicit TPGS is supported (0=No,1=Yes). Default is 0.");
-> +
->  /*
->   * alua_activate - activate a path
->   * @sdev: device on the path to be activated @@ -731,6 +735,9 @@ static int alua_activate(struct scsi_dev
-
-
-This is mangled, I think ...
+Thanks,
 
 James
 
 
->  	if (err != SCSI_DH_OK)
->  		goto out;
->  
-> +	if (optimize_stpg)
-> +		h->flags |= ALUA_OPTIMIZE_STPG;
-> +
->  	if (h->tpgs & TPGS_MODE_EXPLICIT) {
->  		switch (h->state) {
->  		case TPGS_STATE_NONOPTIMIZED:
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+> Sent: Thursday, April 11, 2013 12:51 AM
+> To: Anand Kumar Santhanam
+> Cc: linux-scsi@vger.kernel.org; Harry Yang; Rich Bono; 
+> sakthivel.sk@hcl.com; Sangeetha Gnanasekaran; xjtuwjp@gmail.com; 
+> Vishwanath Maram
+> Subject: Re: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, 
+> variables and modify for SPC
+> 
+> On Wed, 2013-03-20 at 10:21 -0700, Anand wrote:
+> > >From ef678e2188866af926f2a089719c24ec99e4e88c Mon Sep 17 00:00:00
+> > >2001
+> > From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
+> > Date: Wed, 27 Feb 2013 20:22:50 +0530
+> > Subject: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, 
+> > variables and modify for SPC
+> > 
+> > Updated pci id table with device, vendor, subdevice and subvendor 
+> > ids for 8081, 8088, 8089 SAS/SATA controllers. Added SPCv/ve related
+> macros.
+> > Updated macros, hba info structure and other structures for SPCv/ve.
+> > Update of structure and variable names for SPC hardware
+> functionalities.
+> > 
+> > Signed-off-by: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
+> > Signed-off-by: Anand Kumar S <AnandKumar.Santhanam@pmcs.com>
+> > Ack-by: Jack Wang <jack_wang@usish.com>
+> > ---
+> >  drivers/scsi/pm8001/pm8001_ctl.c  |   69 ++++++++++---
+> >  drivers/scsi/pm8001/pm8001_defs.h |   19 +++-
+> >  drivers/scsi/pm8001/pm8001_hwi.c  |  210
+> > ++++++++++++++++++++++---------------
+> 
+> neither git nor diffstat on the patch agrees with this ... they both 
+> think 212 lines changed.  Please fix the diff tool you're using.
+> 
+> Thanks,
+> 
+> James
+> 
+> 
 > --
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
+> in the body of a message to majordomo@vger.kernel.org More majordomo 
+> info at  http://vger.kernel.org/majordomo-info.html
 
 
