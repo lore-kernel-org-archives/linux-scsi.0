@@ -1,80 +1,74 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [scsi:misc 46/59] drivers/scsi/qla2xxx/qla_mr.c:3007:7: warning:
- large integer implicitly truncated to unsigned type
-Date: Fri, 12 Apr 2013 15:35:14 -0400
-Message-ID: <alpine.WNT.2.00.1304121534470.4012@N5102REMCQXM4BS.qlogic.org>
-References: <516764a0.CxAUmlQBEvv7Rtte%fengguang.wu@intel.com> <1365790013.1934.34.camel@dabdike>
+From: "Kallickal, Jayamohan" <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH V2 15/18] be2iscsi: Fix the session cleanup when
+ reboot/shutdown happens
+Date: Fri, 12 Apr 2013 20:08:04 +0000
+Message-ID: <8527c25b-b4d0-4902-ac6b-fdb71878e0d9@CMEXHTCAS2.ad.emulex.com>
+References: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
+ <1365219519-3457-15-git-send-email-jayamohan.kallickal@emulex.com>
+ <5165F8B6.8080506@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:56080
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754493Ab3DLTfW convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Apr 2013 15:35:22 -0400
-In-Reply-To: <1365790013.1934.34.camel@dabdike>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:35516 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755578Ab3DLUIK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Apr 2013 16:08:10 -0400
+In-Reply-To: <5165F8B6.8080506@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: kbuild test robot <fengguang.wu@intel.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Armen Baloyan <armen.baloyan@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "kbuild-all@01.org" <kbuild-all@01.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>, Jayamohan Kallickal <jayamohank@gmail.com>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "John, Sony" <Sony.John-N@Emulex.Com>
 
 
 
-On Fri, 12 Apr 2013, James Bottomley wrote:
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Wednesday, April 10, 2013 4:42 PM
+To: Jayamohan Kallickal
+Cc: jbottomley@parallels.com; linux-scsi@vger.kernel.org; Kallickal, Jayamohan; John, Sony
+Subject: Re: [PATCH V2 15/18] be2iscsi: Fix the session cleanup when reboot/shutdown happens
 
-> [linux-scsi cc added]
-> On Fri, 2013-04-12 at 09:34 +0800, kbuild test robot wrote:
->> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
->> head:   9e45dd73234af9a59613dc2989dcc2df2dab847f
->> commit: 8ae6d9c7eb1004bc134813287010d57a863ba13b [46/59] [SCSI] qla2xxx: Enhancements to support ISPFx00.
->> config: make ARCH=powerpc allmodconfig
->>
->> All warnings:
->>
->>    drivers/scsi/qla2xxx/qla_mr.c: In function 'qlafx00_build_scsi_iocbs':
->>>> drivers/scsi/qla2xxx/qla_mr.c:3007:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
->>>> drivers/scsi/qla2xxx/qla_mr.c:3011:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
->>
->> vim +3007 drivers/scsi/qla2xxx/qla_mr.c
->>
->>   3001                       return;
->>   3002               }
->>   3003
->>   3004               /* Set transfer direction */
->>   3005               if (cmd->sc_data_direction == DMA_TO_DEVICE) {
->>   3006                       lcmd_pkt->cntrl_flags =
->>> 3007                            __constant_cpu_to_le16(TMF_WRITE_DATA);
->>   3008                       vha->qla_stats.output_bytes += scsi_bufflen(cmd);
->>   3009               } else if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
->>   3010                       lcmd_pkt->cntrl_flags =
->>> 3011                            __constant_cpu_to_le16(TMF_READ_DATA);
->>   3012                       vha->qla_stats.input_bytes += scsi_bufflen(cmd);
->>   3013               }
->>   3014
+On 4/5/13 10:38 PM, Jayamohan Kallickal wrote:
+>   During reboot/shutdown cycle, the active sessions were not updated.
+>   In iSCSI Boot case, the boot session was alive and this fix informs
+>   that the machine is going down, so no more ops happens on that session.
 >
-> This is because of this definition in qla_mr.h:
+> Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> ---
+>   drivers/scsi/be2iscsi/be_cmds.c |    2 +-
+>   drivers/scsi/be2iscsi/be_cmds.h |    3 +++
+>   drivers/scsi/be2iscsi/be_main.c |    1 +
+>   3 files changed, 5 insertions(+), 1 deletion(-)
 >
-> struct cmd_type_7_fx00 {
-> ...
->       uint8_t cntrl_flags;
+> diff --git a/drivers/scsi/be2iscsi/be_cmds.c 
+> b/drivers/scsi/be2iscsi/be_cmds.c index e66aa7c..a3bfc1d 100644
+> --- a/drivers/scsi/be2iscsi/be_cmds.c
+> +++ b/drivers/scsi/be2iscsi/be_cmds.c
+> @@ -340,7 +340,7 @@ static struct be_mcc_compl *be_mcc_compl_get(struct beiscsi_hba *phba)
+>   	return NULL;
+>   }
 >
-> Which means that the assignment produces zero on a BE platform.  That
-> doesn't look right.  Please fix.
->
-> James
->
+> -static void be2iscsi_fail_session(struct iscsi_cls_session 
+> *cls_session)
+> +void be2iscsi_fail_session(struct iscsi_cls_session *cls_session)
+>   {
+>   	iscsi_session_failure(cls_session->dd_data, ISCSI_ERR_CONN_FAILED);
 
-Thanks for the head up James. Will send a fix soon.
+I am not sure how this is working or what it fixes. During shutdown/reboot when the pci_driver shutdown callback is called, without the patch what is happening? Does the host shutdown cause iscsid to try and recover the session and that causes a shutdown/reboot hang?
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+I think you want to use ISCSI_ERR_INVALID_HOST. That would cause a clean shutdown of the sessions if iscsid is still up at that time. This would cause ep_disconnect to get called and a logout pdu to get sent.
 
-________________________________
+ISCSI_ERR_CONN_FAILED just causes recovery to start (ep_disconnect will run if the ep is up and we will try to reconnect).
 
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+James,
+
+I am looking into this issue raised by MikeC and would send a patch later to resolve this.
+
+ So, I would like to withdraw this patch (15/18) now.
+
+Thanks
+Jay
 
