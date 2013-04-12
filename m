@@ -1,41 +1,40 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, variables
- and modify for SPC
-Date: Thu, 11 Apr 2013 20:07:14 -0700
-Message-ID: <1365736034.6982.4.camel@dabdike>
-References: <5149F023.6060204@pmc-sierra.com>
-	 <1365621636.1942.5.camel@dabdike>
-	 <E5DEE6F468524847995699AD11E8088501700991@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
-	 <1365714818.1913.1.camel@dabdike>
-	 <E5DEE6F468524847995699AD11E8088501700A6F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 18/26] megaraid: Don't use create_proc_read_entry() [RFC]
+Date: Fri, 12 Apr 2013 10:56:11 +0200
+Message-ID: <5167CC2B.7070005@suse.de>
+References: <20130411132739.32763.82609.stgit@warthog.procyon.org.uk> <20130411133001.32763.78829.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43929 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751001Ab3DLDHR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Apr 2013 23:07:17 -0400
-In-Reply-To: <E5DEE6F468524847995699AD11E8088501700A6F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130411133001.32763.78829.stgit@warthog.procyon.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Neela Syam Kolli <megaraidlinux@lsi.com>, viro@ZenIV.linux.org.uk, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-Cc: linux-scsi@vger.kernel.org, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, sakthivel.sk@hcl.com, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>, xjtuwjp@gmail.com, Vishwanath Maram <Vishwanath.Maram@pmcs.com>
 
-On Thu, 2013-04-11 at 19:38 -0700, Anand Kumar Santhanam wrote:
-> Hi James,
-> 
-> I will double check the same. Also can you pls provide the tool which
-> you are using to apply the patch and also the kernel version?
+On 04/11/2013 03:30 PM, David Howells wrote:
+> Don't use create_proc_read_entry() as that is deprecated, but rather =
+use
+> proc_create_data() and seq_file instead.
+>=20
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+> cc: James E.J. Bottomley <JBottomley@parallels.com>
+> cc: linux-scsi@vger.kernel.org
 
-It's git and the tip of the SCSI misc branch
+Hmm?
+What is the general stance on /proc entries for devices?
+I was under the impression that it was marked as deprecated.
 
-> I will ensure that we locally apply the patches before sending to the
-> list.
+Is it not? Has it been resurrected?
 
-Thanks,
+Cheers,
 
-James
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
