@@ -1,74 +1,72 @@
-From: "Kallickal, Jayamohan" <Jayamohan.Kallickal@Emulex.Com>
-Subject: RE: [PATCH V2 15/18] be2iscsi: Fix the session cleanup when
- reboot/shutdown happens
-Date: Fri, 12 Apr 2013 20:08:04 +0000
-Message-ID: <8527c25b-b4d0-4902-ac6b-fdb71878e0d9@CMEXHTCAS2.ad.emulex.com>
-References: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
- <1365219519-3457-15-git-send-email-jayamohan.kallickal@emulex.com>
- <5165F8B6.8080506@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [RFC-v4 1/9] target: Add export of target_get_sess_cmd symbol
+Date: Fri, 12 Apr 2013 20:52:34 +0000
+Message-ID: <1365799962-13543-2-git-send-email-nab@linux-iscsi.org>
+References: <1365799962-13543-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:35516 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755578Ab3DLUIK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Apr 2013 16:08:10 -0400
-In-Reply-To: <5165F8B6.8080506@cs.wisc.edu>
-Content-Language: en-US
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51921 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754101Ab3DLVEU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Apr 2013 17:04:20 -0400
+In-Reply-To: <1365799962-13543-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, Jayamohan Kallickal <jayamohank@gmail.com>
-Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "John, Sony" <Sony.John-N@Emulex.Com>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Roland Dreier <roland@kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Alexander Nezhinsky <alexandern@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
+Export target_get_sess_cmd() symbol so that it can be used by
+iscsi-target.
 
------Original Message-----
-From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-Sent: Wednesday, April 10, 2013 4:42 PM
-To: Jayamohan Kallickal
-Cc: jbottomley@parallels.com; linux-scsi@vger.kernel.org; Kallickal, Jayamohan; John, Sony
-Subject: Re: [PATCH V2 15/18] be2iscsi: Fix the session cleanup when reboot/shutdown happens
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_transport.c |    4 ++--
+ include/target/target_core_fabric.h    |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-On 4/5/13 10:38 PM, Jayamohan Kallickal wrote:
->   During reboot/shutdown cycle, the active sessions were not updated.
->   In iSCSI Boot case, the boot session was alive and this fix informs
->   that the machine is going down, so no more ops happens on that session.
->
-> Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-> ---
->   drivers/scsi/be2iscsi/be_cmds.c |    2 +-
->   drivers/scsi/be2iscsi/be_cmds.h |    3 +++
->   drivers/scsi/be2iscsi/be_main.c |    1 +
->   3 files changed, 5 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/be2iscsi/be_cmds.c 
-> b/drivers/scsi/be2iscsi/be_cmds.c index e66aa7c..a3bfc1d 100644
-> --- a/drivers/scsi/be2iscsi/be_cmds.c
-> +++ b/drivers/scsi/be2iscsi/be_cmds.c
-> @@ -340,7 +340,7 @@ static struct be_mcc_compl *be_mcc_compl_get(struct beiscsi_hba *phba)
->   	return NULL;
->   }
->
-> -static void be2iscsi_fail_session(struct iscsi_cls_session 
-> *cls_session)
-> +void be2iscsi_fail_session(struct iscsi_cls_session *cls_session)
->   {
->   	iscsi_session_failure(cls_session->dd_data, ISCSI_ERR_CONN_FAILED);
-
-I am not sure how this is working or what it fixes. During shutdown/reboot when the pci_driver shutdown callback is called, without the patch what is happening? Does the host shutdown cause iscsid to try and recover the session and that causes a shutdown/reboot hang?
-
-I think you want to use ISCSI_ERR_INVALID_HOST. That would cause a clean shutdown of the sessions if iscsid is still up at that time. This would cause ep_disconnect to get called and a logout pdu to get sent.
-
-ISCSI_ERR_CONN_FAILED just causes recovery to start (ep_disconnect will run if the ep is up and we will try to reconnect).
-
-James,
-
-I am looking into this issue raised by MikeC and would send a patch later to resolve this.
-
- So, I would like to withdraw this patch (15/18) now.
-
-Thanks
-Jay
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 493e9e5..f8388b4 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -65,7 +65,6 @@ static void transport_complete_task_attr(struct se_cmd *cmd);
+ static void transport_handle_queue_full(struct se_cmd *cmd,
+ 		struct se_device *dev);
+ static int transport_generic_get_mem(struct se_cmd *cmd);
+-static int target_get_sess_cmd(struct se_session *, struct se_cmd *, bool);
+ static void transport_put_cmd(struct se_cmd *cmd);
+ static void target_complete_ok_work(struct work_struct *work);
+ 
+@@ -2179,7 +2178,7 @@ EXPORT_SYMBOL(transport_generic_free_cmd);
+  * @se_cmd:	command descriptor to add
+  * @ack_kref:	Signal that fabric will perform an ack target_put_sess_cmd()
+  */
+-static int target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd,
++int target_get_sess_cmd(struct se_session *se_sess, struct se_cmd *se_cmd,
+ 			       bool ack_kref)
+ {
+ 	unsigned long flags;
+@@ -2208,6 +2207,7 @@ out:
+ 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+ 	return ret;
+ }
++EXPORT_SYMBOL(target_get_sess_cmd);
+ 
+ static void target_release_cmd_kref(struct kref *kref)
+ {
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index aaa1ee6..ba3471b 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -120,7 +120,7 @@ bool	transport_wait_for_tasks(struct se_cmd *);
+ int	transport_check_aborted_status(struct se_cmd *, int);
+ int	transport_send_check_condition_and_sense(struct se_cmd *,
+ 		sense_reason_t, int);
+-
++int	target_get_sess_cmd(struct se_session *, struct se_cmd *, bool);
+ int	target_put_sess_cmd(struct se_session *, struct se_cmd *);
+ void	target_sess_cmd_list_set_waiting(struct se_session *);
+ void	target_wait_for_sess_cmds(struct se_session *, int);
+-- 
+1.7.2.5
 
