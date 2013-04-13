@@ -1,57 +1,44 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.9-rc7
-Date: Fri, 12 Apr 2013 15:18:54 -0700
-Message-ID: <1365805134.26011.61.camel@haakon2.linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Steve Magnani <smagnani@iscandar.digidescorp.com>
+Subject: [PATCH, resend] sd: fix infinite kernel/udev loop on non-removable Medium Not Present
+Date: Fri, 12 Apr 2013 21:06:47 -0500
+Message-ID: <1365818807-12292-1-git-send-email-smagnani@iscandar.digidescorp.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Asias He <asias@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Steven J. Magnani" <steve@digidescorp.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Linus,
+Commit eface65c336eff420d70beb0fb6787a732e05ffb (2.6.38) altered
+set_media_not_present() in a way that prevents the sd driver from
+remembering that a non-removable device has reported "Medium Not Present".
+This condition can occur on hotplug of a (i.e.) USB Mass Storage device
+whose medium is offline due to an unrecoverable controller error,
+but which is otherwise capable of SCSI communication (to download new 
+microcode, etc.).
 
-Here are remaining target-pending items for v3.9-rc7 code.
+Under these conditions, the changed code results in an infinite loop
+between the kernel and udevd. When udevd attempts to open the device
+in response to a change notification, a SCSI "Medium Not Present" error
+occurs which causes the kernel to signal another change. The cycle
+repeats until the device is unplugged, resulting in udevd consuming ever-
+increasing amounts of CPU and virtual memory.
 
-Please go ahead and pull from:
+Resolve this by remembering "media not present" whether the device has
+declared itself "removable" or not.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
-
-The tcm_vhost patches are more than I'd usually include in a -rc7 PULL,
-but are changes required for v3.9 to work correctly with the pending
-vhost-scsi-pci QEMU upstream series merge.  (Paolo CC'ed)
-
-Plus Asias's conversion to use vhost_virtqueue->private_data + RCU for
-managing vhost-scsi endpoints has gotten alot of review + testing over
-the past weeks, and MST has ACKed the full series.
-
-Also, there is a target patch to fix a long-standing bug within control
-CDB handling with Standby/Offline/Transition ALUA port access states,
-that had been incorrectly rejecting the control CDBs required for LUN
-scan to work during these port group states.  CC'ing to stable.
-
-Thank you,
-
---nab
-
-Asias He (7):
-  tcm_vhost: Use ACCESS_ONCE for vs->vs_tpg[target] access
-  tcm_vhost: Use vq->private_data to indicate if the endpoint is setup
-  tcm_vhost: Initialize vq->last_used_idx when set endpoint
-  tcm_vhost: Remove double check of response
-  tcm_vhost: Fix tv_cmd leak in vhost_scsi_handle_vq
-  tcm_vhost: Add vhost_scsi_send_bad_target() helper
-  tcm_vhost: Send bad target to guest when cmd fails
-
-Nicholas Bellinger (1):
-  target: Fix incorrect fallthrough of ALUA Standby/Offline/Transition
-    CDBs
-
- drivers/target/target_core_alua.c |    3 +
- drivers/vhost/tcm_vhost.c         |  198 ++++++++++++++++++++++++-------------
- 2 files changed, 133 insertions(+), 68 deletions(-)
-
--- 
-1.7.2.5
+Signed-off-by: Steven J. Magnani <steve@digidescorp.com>
+---
+--- a/drivers/scsi/sd.c	2013-04-12 14:16:12.252531097 -0500
++++ b/drivers/scsi/sd.c	2013-04-12 14:21:55.197216521 -0500
+@@ -1298,10 +1298,8 @@ out:
+ 
+ static void set_media_not_present(struct scsi_disk *sdkp)
+ {
+-	if (sdkp->media_present)
++	if (sdkp->media_present) {
+ 		sdkp->device->changed = 1;
+-
+-	if (sdkp->device->removable) {
+ 		sdkp->media_present = 0;
+ 		sdkp->capacity = 0;
+ 	}
