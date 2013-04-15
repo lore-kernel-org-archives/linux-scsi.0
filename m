@@ -1,43 +1,44 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH v2 0/8] [SCSI] Enhanced sense and Unit Attention handling
-Date: Mon, 15 Apr 2013 11:20:43 -0500
-Message-ID: <516C28DB.2090809@tributary.com>
-References: <1359741195-2641-1-git-send-email-emilne@redhat.com>  <516730A1.4090302@tributary.com> <1366035182.30762.14.camel@localhost.localdomain>
+From: H Hartley Sweeten <hsweeten@visionengravers.com>
+Subject: [PATCH] scsi: pcmcia: nsp_cs: remove module init/exit function prototypes
+Date: Mon, 15 Apr 2013 09:42:37 -0700
+Message-ID: <201304150942.37837.hsweeten@visionengravers.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.55]:49409 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753599Ab3DOQUr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Apr 2013 12:20:47 -0400
-In-Reply-To: <1366035182.30762.14.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: fengguang.wu@intel.com, JBottomley@parallels.com, yokota@netlab.is.tsukuba.ac.jp, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "emilne@redhat.com" <emilne@redhat.com>, Linux Scsi <linux-scsi@vger.kernel.org>
 
-On 4/15/2013 9:13 AM, Ewan Milne wrote:
+This driver now uses the module_pcmcia_driver() macro to supply the
+init/exit code. The nsp_cs_{init,exit} prototypes should be removed.
 
->> patch could attempt to clear the check conditions from LUNs that share
->> the I_T.
-> 
-> I think the mid-layer will handle that automatically.  If check conditions
-> are reported the commands will have to be reissued.
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/pcmcia/nsp_cs.h | 4 ----
+ 1 file changed, 4 deletions(-)
 
-	But, not automatically (unless i'm missing something again). The UA is going to
-arrive when each lun gets sent a command, which could be a long time from the
-initial UA if the lun is idle. Enough time, that the attempts to coalesce the
-events are going to fail.
-
-	I guess it depends on what you have udev doing when it gets the event. If it
-triggers a rescan involving something besides inquiry/report luns then that will
-trigger the remaining UA's from the luns on the target that changed. But if it
-does something other than that, I don't see it by reading the
-patch/scsi_scan.c code.
-
-
-
-
-
-
-
+diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
+index afd64f0..ea5122f 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.h
++++ b/drivers/scsi/pcmcia/nsp_cs.h
+@@ -326,10 +326,6 @@ static struct Scsi_Host *nsp_detect(struct scsi_host_template *sht);
+ /* Interrupt handler */
+ //static irqreturn_t nspintr(int irq, void *dev_id);
+ 
+-/* Module entry point*/
+-static int  __init nsp_cs_init(void);
+-static void __exit nsp_cs_exit(void);
+-
+ /* Debug */
+ #ifdef NSP_DEBUG
+ static void show_command (struct scsi_cmnd *SCpnt);
+-- 
+1.8.1.4
