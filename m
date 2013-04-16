@@ -1,39 +1,56 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] megaraid_sas: release lock on error path
-Date: Tue, 16 Apr 2013 10:44:19 +0300
-Message-ID: <20130416074419.GA1571@elgon.mountain>
+From: Jan Vesely <jvesely@redhat.com>
+Subject: Re: block: Allow merging of tail pages into the last segment
+Date: Tue, 16 Apr 2013 10:24:31 +0200
+Message-ID: <516D0ABF.1000700@redhat.com>
+References: <1364463509-24975-1-git-send-email-jvesely@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26074 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753766Ab3DPHon (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Apr 2013 03:44:43 -0400
-Content-Disposition: inline
+Received: from mx1.redhat.com ([209.132.183.28]:59675 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932147Ab3DPIYi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Apr 2013 04:24:38 -0400
+In-Reply-To: <1364463509-24975-1-git-send-email-jvesely@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Neela Syam Kolli <megaraidlinux@lsi.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-scsi@vger.kernel.org, axboe@kernel.dk
+Cc: James.Bottomley@hansenpartnership.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org
 
-We should unlock here before returning.
+On 28/03/13 10:38, Jan Vesely wrote:
+> Hi
+> 
+> These patches modify __bio_add_page to accept pages that extent the last bio
+> segment. some drivers craft their buffers and rely on this behavior (see
+> message in patch 2 for details)
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+any comments on this version would be appreciated
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 9d53540..eb2385f 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4931,11 +4931,12 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
- 		printk(KERN_ERR "megaraid_sas: timed out while"
- 			"waiting for HBA to recover\n");
- 		error = -ENODEV;
--		goto out_kfree_ioc;
-+		goto out_up;
- 	}
- 	spin_unlock_irqrestore(&instance->hba_lock, flags);
- 
- 	error = megasas_mgmt_fw_ioctl(instance, user_ioc, ioc);
-+      out_up:
- 	up(&instance->ioctl_sem);
- 
-       out_kfree_ioc:
+thanks
+
+> 
+> jan
+> 
+> v3: Use code from __blk_recalc_rq_segments to decide whether the page is
+>     mergeable, 
+> 
+> v2: modify a comment
+> 
+> Jan Vesely (2):
+>       block: factor out vector mergeable decision to a helper function
+>       block: modify __bio_add_page check to accept pages that don't start a new
+> 
+>  block/blk-merge.c   | 52 +++++++++++++++++++++++++++++++---------------------
+>  fs/bio.c            | 29 ++++++++++++++++++-----------
+>  include/linux/bio.h |  3 +++
+>  3 files changed, 52 insertions(+), 32 deletions(-)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Jan Vesely <jvesely@redhat.com>
