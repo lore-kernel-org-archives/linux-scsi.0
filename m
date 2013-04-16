@@ -1,60 +1,103 @@
-From: Robert Jennings <rcj@linux.vnet.ibm.com>
-Subject: Re: [PATCH 5/5] ibmvfc: Driver version 1.0.11
-Date: Tue, 16 Apr 2013 15:25:23 -0500
-Message-ID: <20130416202523.GC17614@linux.vnet.ibm.com>
-References: <201304121325.r3CDPJIQ025089@d01av05.pok.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: wenxiong@linux.vnet.ibm.com
+Subject: [PATCH  V2 1/1] scsi: Handle MLQUEUE busy response in scsi_send_eh_cmnd
+Date: Tue, 16 Apr 2013 15:26:26 -0500
+Message-ID: <20130416203310.517593092@linux.vnet.ibm.com>
+References: <20130416202625.962009312@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:38563 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936128Ab3DPUZb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Apr 2013 16:25:31 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <rcj@linux.vnet.ibm.com>;
-	Wed, 17 Apr 2013 01:50:11 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 8B1801258055
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2013 01:56:55 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r3GKPMEb59441298
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2013 01:55:22 +0530
-Received: from d28av03.in.ibm.com (loopback [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r3GKPPbr025729
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2013 06:25:25 +1000
-Content-Disposition: inline
-In-Reply-To: <201304121325.r3CDPJIQ025089@d01av05.pok.ibm.com>
+Received: from [32.97.110.57] ([32.97.110.57]:25388 "HELO
+	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S964899Ab3DPUfl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Apr 2013 16:35:41 -0400
+Content-Disposition: inline; filename=scsi_error_v2
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-* Brian King (brking@linux.vnet.ibm.com) wrote:
-> 
-> Bump driver version to 1.0.11.
-> 
-> 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-Acked-by: Robert Jennings <rcj@linux.vnet.ibm.com>
-> ---
-> 
->  drivers/scsi/ibmvscsi/ibmvfc.h |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_version_1_0_11 drivers/scsi/ibmvscsi/ibmvfc.h
-> --- linux/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_version_1_0_11	2013-04-10 15:51:55.000000000 -0500
-> +++ linux-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2013-04-12 08:22:33.000000000 -0500
-> @@ -29,8 +29,8 @@
->  #include "viosrp.h"
-> 
->  #define IBMVFC_NAME	"ibmvfc"
-> -#define IBMVFC_DRIVER_VERSION		"1.0.10"
-> -#define IBMVFC_DRIVER_DATE		"(August 24, 2012)"
-> +#define IBMVFC_DRIVER_VERSION		"1.0.11"
-> +#define IBMVFC_DRIVER_DATE		"(April 12, 2013)"
-> 
->  #define IBMVFC_DEFAULT_TIMEOUT	60
->  #define IBMVFC_ADISC_CANCEL_TIMEOUT	45
-> _
+We discussed James's concern. We intergated James's patch and generated
+this updated patch.
 
+Fix scsi_send_eh_cmnd to check the return code of queuecommand when
+sending commands and retry for a bit if the LLDD returns a busy response.
+This fixes an issue seen with the ipr driver where an ipr initiated reset
+immediately following an eh_host_reset caused EH initiated commands to fail,
+resulting in devices being taken offline. This patch resolves the issue.
+
+
+Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+ drivers/scsi/scsi_error.c |   34 +++++++++++++++++++++++++---------
+ 1 file changed, 25 insertions(+), 9 deletions(-)
+
+Index: b/drivers/scsi/scsi_error.c
+===================================================================
+--- a/drivers/scsi/scsi_error.c	2013-04-16 12:56:16.617857960 -0500
++++ b/drivers/scsi/scsi_error.c	2013-04-16 12:57:00.279108838 -0500
+@@ -791,18 +791,21 @@ static int scsi_send_eh_cmnd(struct scsi
+ 	struct scsi_device *sdev = scmd->device;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	DECLARE_COMPLETION_ONSTACK(done);
+-	unsigned long timeleft;
++	unsigned long timeleft = timeout;
+ 	struct scsi_eh_save ses;
++	const int stall_for = min(HZ/10, 1);
+ 	int rtn;
+ 
+ 	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
++retry:
+ 	shost->eh_action = &done;
+ 
+ 	scsi_log_send(scmd);
+ 	scmd->scsi_done = scsi_eh_done;
+-	shost->hostt->queuecommand(shost, scmd);
++	rtn = shost->hostt->queuecommand(shost, scmd);
+ 
+-	timeleft = wait_for_completion_timeout(&done, timeout);
++	if (!rtn)
++		timeleft = wait_for_completion_timeout(&done, timeout);
+ 
+ 	shost->eh_action = NULL;
+ 
+@@ -819,10 +822,19 @@ static int scsi_send_eh_cmnd(struct scsi
+ 	 * about this command.
+ 	 */
+ 	if (timeleft) {
+-		rtn = scsi_eh_completed_normally(scmd);
+-		SCSI_LOG_ERROR_RECOVERY(3,
+-			printk("%s: scsi_eh_completed_normally %x\n",
+-			       __func__, rtn));
++		switch (rtn) {
++		case 0:
++			rtn = scsi_eh_completed_normally(scmd);
++			SCSI_LOG_ERROR_RECOVERY(3,
++				printk("%s: scsi_eh_completed_normally %x\n",
++				       __func__, rtn));
++			break;
++		case FAILED:
++			break;
++		default:
++			rtn = ADD_TO_MLQUEUE;
++			break;
++		}
+ 
+ 		switch (rtn) {
+ 		case SUCCESS:
+@@ -831,8 +843,12 @@ static int scsi_send_eh_cmnd(struct scsi
+ 		case TARGET_ERROR:
+ 			break;
+ 		case ADD_TO_MLQUEUE:
+-			rtn = NEEDS_RETRY;
+-			break;
++			if (timeleft > stall_for) {
++				timeout = timeleft - stall_for;
++				msleep(stall_for);
++				goto retry;
++			}
++			/* fall through */
+ 		default:
+ 			rtn = FAILED;
+ 			break;
+
+-- 
