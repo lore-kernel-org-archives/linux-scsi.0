@@ -1,60 +1,77 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 0/6] scsi_debug: fix logical block provisioning support
-Date: Tue, 16 Apr 2013 22:11:54 +0900
-Message-ID: <1366117920-11740-1-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH 1/6] scsi_debug: call map_region() and unmap_region() only when needed
+Date: Tue, 16 Apr 2013 22:11:55 +0900
+Message-ID: <1366117920-11740-2-git-send-email-akinobu.mita@gmail.com>
+References: <1366117920-11740-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:64449 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755214Ab3DPNMY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Apr 2013 09:12:24 -0400
-Received: by mail-pd0-f182.google.com with SMTP id 3so286414pdj.13
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Apr 2013 06:12:23 -0700 (PDT)
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:59728 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755214Ab3DPNM0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Apr 2013 09:12:26 -0400
+Received: by mail-pa0-f44.google.com with SMTP id bi5so342247pad.3
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Apr 2013 06:12:25 -0700 (PDT)
+In-Reply-To: <1366117920-11740-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-I tried testing the logical block provisioning support in scsi_debug,
-but it didn't work as I expected.
+If the logical block provisioning is not enabled, map_region() and
+unmap_region() have no effect and they don't need to be called.
 
-For example, load scsi_debug module with UNMAP command supported
-and fill the storage with random data.
+So this makes map_region() and unmap_region() to be called only
+when scsi_debug_lbp() returns true, i.e. logical block provisioning is
+enabled.
 
-	# modprobe scsi_debug lbpu=1
-	# dd if=/dev/urandom of=/dev/sdb
+While I'm at it, this also removes meaningless non-zero check for
+scsi_debug_unmap_granularity.
 
-Then, try to unmap LBA 0, but Get LBA status reports:
+Because scsi_debug_unmap_granularity cannot be zero with usual setting:
+scsi_debug_unmap_granularity is 1 by default, and it can be changed to
+zero with explicit module parameter setting only when the logical block
+provisioning is disabled.  But it is only meaningful module parameter
+when the logical block provisioning is enabled.
 
-	# sg_unmap --lba=0 --num=1 /dev/sdb
-	# sg_get_lba_status --lba=0 /dev/sdb
-	descriptor LBA: 0x0000000000000000  blocks: 16384  mapped
-
-This is unexpected result.  Because UNMAP command to LBA 0 finished
-without any errors, but Get LBA status shows that LBA 0 is still mapped.
-
-I looked around the logical block provisioning support in scsi_debug,
-and I found several problems there.  This patch series tries to fix
-these problems and it is broken into small patches as much as possible
-for ease of review.
-
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
 Cc: Douglas Gilbert <dgilbert@interlog.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/scsi_debug.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Akinobu Mita (6):
-  scsi_debug: call map_region() and unmap_region() only when needed
-  scsi_debug: prohibit scsi_debug_unmap_granularity ==
-    scsi_debug_unmap_alignment
-  scsi_debug: clear correct memory region when LBPRZ is enabled
-  scsi_debug: add translation functions between LBA and index of
-    provisioning map
-  scsi_debug: fix initialization of provisioning map
-  scsi_debug: fix logical block provisioning support
-
- drivers/scsi/scsi_debug.c | 97 ++++++++++++++++++++++++-----------------------
- 1 file changed, 50 insertions(+), 47 deletions(-)
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 5cda11c..05abf4e 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -2089,7 +2089,7 @@ static int resp_write(struct scsi_cmnd *SCpnt, unsigned long long lba,
+ 
+ 	write_lock_irqsave(&atomic_rw, iflags);
+ 	ret = do_device_access(SCpnt, devip, lba, num, 1);
+-	if (scsi_debug_unmap_granularity)
++	if (scsi_debug_lbp())
+ 		map_region(lba, num);
+ 	write_unlock_irqrestore(&atomic_rw, iflags);
+ 	if (-1 == ret)
+@@ -2122,7 +2122,7 @@ static int resp_write_same(struct scsi_cmnd *scmd, unsigned long long lba,
+ 
+ 	write_lock_irqsave(&atomic_rw, iflags);
+ 
+-	if (unmap && scsi_debug_unmap_granularity) {
++	if (unmap && scsi_debug_lbp()) {
+ 		unmap_region(lba, num);
+ 		goto out;
+ 	}
+@@ -2146,7 +2146,7 @@ static int resp_write_same(struct scsi_cmnd *scmd, unsigned long long lba,
+ 		       fake_storep + (lba * scsi_debug_sector_size),
+ 		       scsi_debug_sector_size);
+ 
+-	if (scsi_debug_unmap_granularity)
++	if (scsi_debug_lbp())
+ 		map_region(lba, num);
+ out:
+ 	write_unlock_irqrestore(&atomic_rw, iflags);
 -- 
 1.8.1.4
 
