@@ -1,50 +1,32 @@
-From: Benny Halevy <bhalevy@tonian.com>
-Subject: Re: [osd-dev] [patch] [SCSI] libosd: remover duplicate __bitwise
- annotation
-Date: Wed, 17 Apr 2013 11:32:51 +0300
-Message-ID: <516E5E33.1090506@tonian.com>
-References: <20130417071905.GE7923@elgon.mountain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 0/5] qla4xxx: Updates for scsi "misc" branch
+Date: Wed, 17 Apr 2013 05:15:25 -0400
+Message-ID: <1366190130-16556-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:48040 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965758Ab3DQIc4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Apr 2013 04:32:56 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hq17so2688430wib.17
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2013 01:32:55 -0700 (PDT)
-In-Reply-To: <20130417071905.GE7923@elgon.mountain>
+Received: from mvnat01.qlogic.com ([198.186.3.73]:38223 "HELO linux-zupk.site"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753260Ab3DQJjO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Apr 2013 05:39:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, kernel-janitors@vger.kernel.org, osd-dev@open-osd.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On 2013-04-17 10:19, Dan Carpenter wrote:
-> __be32 is already a __bitwise type so we don't need the second __bitwise
-> here.  It causes a Sparse error:
-> include/scsi/osd_protocol.h:110:26: error: invalid modifier
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-ACK
+James,
+ 
+Please apply the following patches to the scsi tree at your earliest
+convenience. 
 
-> 
-> diff --git a/include/scsi/osd_protocol.h b/include/scsi/osd_protocol.h
-> index a6026da..25ac628 100644
-> --- a/include/scsi/osd_protocol.h
-> +++ b/include/scsi/osd_protocol.h
-> @@ -107,7 +107,7 @@ enum osd_attributes_mode {
->   *		int exponent: 04;
->   *	}
->   */
-> -typedef __be32 __bitwise osd_cdb_offset;
-> +typedef __be32 osd_cdb_offset;
->  
->  enum {
->  	OSD_OFFSET_UNUSED = 0xFFFFFFFF,
-> _______________________________________________
-> osd-dev mailing list
-> osd-dev@open-osd.org
-> http://mailman.open-osd.org/mailman/listinfo/osd-dev
-> 
+Adheer Chandravanshi (2):
+      qla4xxx: Fix smatch warnings
+      qla4xxx: Assign values using correct datatype
+
+Vikas Chaudhary (3):
+      qla4xxx: Silence gcc warning
+      qla4xxx: Fix sparse warning for qla4xxx_sysfs_ddb_tgt_create
+      qla4xxx: Update driver version to 5.03.00-k9
+
+Thanks,
+Vikas.
