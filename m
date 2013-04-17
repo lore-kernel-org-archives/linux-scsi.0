@@ -1,36 +1,114 @@
-From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 5/5] qla4xxx: Update driver version to 5.03.00-k9
-Date: Wed, 17 Apr 2013 05:15:30 -0400
-Message-ID: <1366190130-16556-6-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1366190130-16556-1-git-send-email-vikas.chaudhary@qlogic.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mvnat01.qlogic.com ([198.186.3.73]:17556 "HELO linux-zupk.site"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754661Ab3DQJjO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Apr 2013 05:39:14 -0400
-In-Reply-To: <1366190130-16556-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: PING^4 aka The Jon Corbet Effect Re: [PATCH v2 00/14] Corrections
+ and customization of the SG_IO command whitelist (CVE-2012-4542)
+Date: Wed, 17 Apr 2013 14:26:15 +0200
+Message-ID: <516E94E7.4030202@redhat.com>
+References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com> <5124F600.9030908@redhat.com> <514CDB6F.9030505@redhat.com> <515DC3FE.1010405@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <515DC3FE.1010405@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, corbet@lwn.net
+Cc: Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+And a fourth ping comes...
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Jon, the next time I read "it seems likely to be picked up fairly soon"
+(http://lwn.net/Articles/535075/), I'll picture the author of the patch
+attempting open-heart surgery on a long-red-haired voodoo doll!
 
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index 83e0fec..fe873cf 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,4 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
- 
--#define QLA4XXX_DRIVER_VERSION	"5.03.00-k8"
-+#define QLA4XXX_DRIVER_VERSION	"5.03.00-k9"
--- 
-1.8.2.GIT
+Paolo
 
+Il 04/04/2013 20:18, Paolo Bonzini ha scritto:
+> Il 22/03/2013 23:30, Paolo Bonzini ha scritto:
+>> Il 20/02/2013 17:12, Paolo Bonzini ha scritto:
+>>> Il 06/02/2013 16:15, Paolo Bonzini ha scritto:
+>>>> This series regards the whitelist that is used for the SG_IO ioctl.  This
+>>>> whitelist has three problems:
+>>>>
+>>>> * the bitmap of allowed commands is designed for MMC devices (roughly,
+>>>>   "play/burn CDs without requiring root") but some opcodes overlap across SCSI
+>>>>   device classes and have different meanings for different classes.
+>>>>
+>>>> * also because the bitmap of allowed commands is designed for MMC devices
+>>>>   only, some commands are missing even though they are generally useful and
+>>>>   not insecure.  At least not more insecure than anything else you can
+>>>>   do if you have access to /dev/sdX or /dev/stX nodes.
+>>>>
+>>>> * the whitelist can be disabled per-process but not per-disk.  In addition,
+>>>>   the required capability (CAP_SYS_RAWIO) gives access to a range of other 
+>>>>   resources, enough to make it insecure.
+>>>>
+>>>> The series corrects these problems.  Patches 1-4 solve the first problem,
+>>>> which also has an assigned CVE, by using different bitmaps for the various
+>>>> device classes.  Patches 5-11 solve the second by adding more commands
+>>>> to the bitmaps.  Patches 12 and 13 solve the third, and were already
+>>>> posted but ignored by the maintainers despite multiple pings.
+>>>>
+>>>> Note: checkpatch hates the formatting of the command table.  I know about this,
+>>>> and ensured that there are no errors in the rest of the code.  The current
+>>>> formatting is IMHO quite handy, and roughly based on the files available
+>>>> from the SCSI standard body.
+>>>>
+>>>> Ok for the next merge window?
+>>>>
+>>>> Paolo
+>>>>
+>>>> v1->v2: remove 2 MMC commands and 6 SBC commands (see patches 6 and 9
+>>>>         for details).  Added patch 14 and added a few more scanner
+>>>>         commands based on SANE (scanners are not whitelisted by default,
+>>>>         also were not in v1, but this makes it possible to opt into the
+>>>>         whitelist out of paranoia).  Removed C++ comments.  Removed the
+>>>>         large #if 0'd list of commands that the kernel does not pass
+>>>>         though.  Marked blk_set_cmd_filter_defaults as __init.
+>>>
+>>> Ping...
+>>>
+>>> Jens/James, is anyone going to pick this up for 3.9?
+>>
+>> Another month has passed, Ping^2...
+> 
+> Ping^3, any hope for 3.10?
+> 
+> Paolo
+> 
+>>
+>> Paolo
+>>
+>>> Paolo
+>>>
+>>>>
+>>>> Paolo Bonzini (14):
+>>>>   sg_io: pass request_queue to blk_verify_command
+>>>>   sg_io: reorganize list of allowed commands
+>>>>   sg_io: use different default filters for each device class
+>>>>   sg_io: resolve conflicts between commands assigned to multiple
+>>>>     classes (CVE-2012-4542)
+>>>>   sg_io: whitelist a few more commands for rare & obsolete device types
+>>>>   sg_io: whitelist another command for multimedia devices
+>>>>   sg_io: whitelist a few more commands for media changers
+>>>>   sg_io: whitelist a few more commands for tapes
+>>>>   sg_io: whitelist a few more commands for disks
+>>>>   sg_io: whitelist a few obsolete commands
+>>>>   sg_io: mark blk_set_cmd_filter_defaults as __init
+>>>>   sg_io: remove remnants of sysfs SG_IO filters
+>>>>   sg_io: introduce unpriv_sgio queue flag
+>>>>   sg_io: use unpriv_sgio to disable whitelisting for scanners
+>>>>
+>>>>  Documentation/block/queue-sysfs.txt |    8 +
+>>>>  block/blk-sysfs.c                   |   33 +++
+>>>>  block/bsg.c                         |    2 +-
+>>>>  block/scsi_ioctl.c                  |  369 ++++++++++++++++++++++++++---------
+>>>>  drivers/scsi/scsi_scan.c            |   14 ++-
+>>>>  drivers/scsi/sg.c                   |    6 +-
+>>>>  include/linux/blkdev.h              |    8 +-
+>>>>  include/linux/genhd.h               |    9 -
+>>>>  include/scsi/scsi.h                 |    3 +
+>>>>  9 files changed, 344 insertions(+), 108 deletions(-)
+>>>>
+>>>
+>>
+> 
