@@ -1,41 +1,99 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: Need to reset adapter after the 6th EEH error
-Date: Wed, 17 Apr 2013 12:53:47 -0500
-Message-ID: <516EE1AB.6040103@linux.vnet.ibm.com>
-References: <20130417143405.849599713@linux.vnet.ibm.com> <20130417143720.845632047@linux.vnet.ibm.com>
+From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Subject: Re: [PATCH 2/4] Accelerated CRC T10 DIF computation with PCLMULQDQ
+ instruction
+Date: Wed, 17 Apr 2013 20:58:30 +0300
+Message-ID: <516EE2C6.6010901@iki.fi>
+References: <cover.1366120266.git.tim.c.chen@linux.intel.com> <5227e0b295142e1fbb3c7e0241646eb65319b18a.1366120266.git.tim.c.chen@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:49478 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935915Ab3DQRxy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Apr 2013 13:53:54 -0400
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Wed, 17 Apr 2013 13:53:53 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 8A5AF6E803F
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2013 13:53:46 -0400 (EDT)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r3HHrnVg13631530
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2013 13:53:49 -0400
-Received: from d01av05.pok.ibm.com (loopback [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r3HHrmWO012418
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2013 13:53:49 -0400
-In-Reply-To: <20130417143720.845632047@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <5227e0b295142e1fbb3c7e0241646eb65319b18a.1366120266.git.tim.c.chen@linux.intel.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Tim Chen <tim.c.chen@linux.intel.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, "H. Peter Anvin" <hpa@zytor.com>, "David S. Miller" <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <willy@linux.intel.com>, Jim Kukunas <james.t.kukunas@linux.intel.com>, Keith Busch <keith.busch@intel.com>, Erdinc Ozturk <erdinc.ozturk@intel.com>, Vinodh Gopal <vinodh.gopal@intel.com>, James Guilford <james.guilford@intel.com>, Wajdi Feghali <wajdi.k.feghali@intel.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: wenxiong@linux.vnet.ibm.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+On 16.04.2013 19:20, Tim Chen wrote:
+> This is the x86_64 CRC T10 DIF transform accelerated with the PCLMULQDQ
+> instructions.  Details discussing the implementation can be found in the
+> paper:
+> 
+> "Fast CRC Computation for Generic Polynomials Using PCLMULQDQ Instruction"
+> URL: http://download.intel.com/design/intarch/papers/323102.pdf
+
+URL does not work.
+
+> 
+> Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
+> Tested-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  arch/x86/crypto/crct10dif-pcl-asm_64.S | 659 +++++++++++++++++++++++++++++++++
+>  1 file changed, 659 insertions(+)
+>  create mode 100644 arch/x86/crypto/crct10dif-pcl-asm_64.S
+<snip>
+> +
+> +	# Allocate Stack Space
+> +	mov     %rsp, %rcx
+> +	sub	$16*10, %rsp
+> +	and     $~(0x20 - 1), %rsp
+> +
+> +	# push the xmm registers into the stack to maintain
+> +	movdqa %xmm10, 16*2(%rsp)
+> +	movdqa %xmm11, 16*3(%rsp)
+> +	movdqa %xmm8 , 16*4(%rsp)
+> +	movdqa %xmm12, 16*5(%rsp)
+> +	movdqa %xmm13, 16*6(%rsp)
+> +	movdqa %xmm6,  16*7(%rsp)
+> +	movdqa %xmm7,  16*8(%rsp)
+> +	movdqa %xmm9,  16*9(%rsp)
+
+You don't need to store (and restore) these, as 'crc_t10dif_pcl' is called between kernel_fpu_begin/_end.
+
+> +
+> +
+> +	# check if smaller than 256
+> +	cmp	$256, arg3
+> +
+<snip>
+> +_cleanup:
+> +	# scale the result back to 16 bits
+> +	shr	$16, %eax
+> +	movdqa	16*2(%rsp), %xmm10
+> +	movdqa	16*3(%rsp), %xmm11
+> +	movdqa	16*4(%rsp), %xmm8
+> +	movdqa	16*5(%rsp), %xmm12
+> +	movdqa	16*6(%rsp), %xmm13
+> +	movdqa	16*7(%rsp), %xmm6
+> +	movdqa	16*8(%rsp), %xmm7
+> +	movdqa	16*9(%rsp), %xmm9
+
+Registers are overwritten by kernel_fpu_end.
+
+> +	mov     %rcx, %rsp
+> +	ret
+> +ENDPROC(crc_t10dif_pcl)
+> +
+
+You should move ENDPROC at end of the full function.
+
+> +########################################################################
+> +
+> +.align 16
+> +_less_than_128:
+> +
+> +	# check if there is enough buffer to be able to fold 16B at a time
+> +	cmp	$32, arg3
+<snip>
+> +	movdqa	(%rsp), %xmm7
+> +	pshufb	%xmm11, %xmm7
+> +	pxor	%xmm0 , %xmm7   # xor the initial crc value
+> +
+> +	psrldq	$7, %xmm7
+> +
+> +	jmp	_barrett
+
+Move ENDPROC here.
 
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+ -Jussi
