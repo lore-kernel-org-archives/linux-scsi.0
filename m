@@ -1,7 +1,7 @@
 From: Tim Chen <tim.c.chen@linux.intel.com>
-Subject: [PATCH v2 3/4] Glue code to cast accelerated CRCT10DIF assembly as a crypto transform
-Date: Wed, 17 Apr 2013 09:12:54 -0700
-Message-ID: <5ad4989be86d8398ef9ef9ecc55e412c31c16d22.1366214842.git.tim.c.chen@linux.intel.com>
+Subject: [PATCH v2 2/4] Accelerated CRC T10 DIF computation with PCLMULQDQ instruction
+Date: Wed, 17 Apr 2013 09:12:53 -0700
+Message-ID: <b6ad3ab0b31bdba286d2f20265461ec8b47205ab.1366214842.git.tim.c.chen@linux.intel.com>
 References: <cover.1366214842.git.tim.c.chen@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1366214842.git.tim.c.chen@linux.intel.com>
@@ -12,226 +12,667 @@ To: Herbert Xu <herbert@gondor.apana.org.au>, "H. Peter Anvin" <hpa@zytor.com>, 
 Cc: Tim Chen <tim.c.chen@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Jim Kukunas <james.t.kukunas@linux.intel.com>, Keith Busch <keith.busch@intel.com>, Erdinc Ozturk <erdinc.ozturk@intel.com>, Vinodh Gopal <vinodh.gopal@intel.com>, James Guilford <james.guilford@intel.com>, Wajdi Feghali <wajdi.k.feghali@intel.com>, Jussi Kivilinna <jussi.kivilinna@iki.fi>, linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Glue code that plugs the PCLMULQDQ accelerated CRC T10 DIF hash into the
-crypto framework.  The config CRYPTO_CRCT10DIF_PCLMUL should be turned
-on to enable the feature.  The crc_t10dif crypto library function will
-use this faster algorithm when crct10dif_pclmul module is loaded.
+This is the x86_64 CRC T10 DIF transform accelerated with the PCLMULQDQ
+instructions.  Details discussing the implementation can be found in the
+paper:
+
+"Fast CRC Computation for Generic Polynomials Using PCLMULQDQ Instruction"
+http://www.intel.com/content/dam/www/public/us/en/documents/white-papers/fast-crc-computation-generic-polynomials-pclmulqdq-paper.pdf
 
 Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
 ---
- arch/x86/crypto/Makefile                |   2 +
- arch/x86/crypto/crct10dif-pclmul_glue.c | 153 ++++++++++++++++++++++++++++++++
- crypto/Kconfig                          |  21 +++++
- 3 files changed, 176 insertions(+)
- create mode 100644 arch/x86/crypto/crct10dif-pclmul_glue.c
+ arch/x86/crypto/crct10dif-pcl-asm_64.S | 643 +++++++++++++++++++++++++++++++++
+ 1 file changed, 643 insertions(+)
+ create mode 100644 arch/x86/crypto/crct10dif-pcl-asm_64.S
 
-diff --git a/arch/x86/crypto/Makefile b/arch/x86/crypto/Makefile
-index 03cd731..d544a66 100644
---- a/arch/x86/crypto/Makefile
-+++ b/arch/x86/crypto/Makefile
-@@ -27,6 +27,7 @@ obj-$(CONFIG_CRYPTO_SHA1_SSSE3) += sha1-ssse3.o
- obj-$(CONFIG_CRYPTO_CRC32_PCLMUL) += crc32-pclmul.o
- obj-$(CONFIG_CRYPTO_SHA256_SSSE3) += sha256-ssse3.o
- obj-$(CONFIG_CRYPTO_SHA512_SSSE3) += sha512-ssse3.o
-+obj-$(CONFIG_CRYPTO_CRCT10DIF_PCLMUL) += crct10dif-pclmul.o
- 
- # These modules require assembler to support AVX.
- ifeq ($(avx_supported),yes)
-@@ -70,3 +71,4 @@ crc32c-intel-$(CONFIG_64BIT) += crc32c-pcl-intel-asm_64.o
- crc32-pclmul-y := crc32-pclmul_asm.o crc32-pclmul_glue.o
- sha256-ssse3-y := sha256-ssse3-asm.o sha256-avx-asm.o sha256-avx2-asm.o sha256_ssse3_glue.o
- sha512-ssse3-y := sha512-ssse3-asm.o sha512-avx-asm.o sha512-avx2-asm.o sha512_ssse3_glue.o
-+crct10dif-pclmul-y := crct10dif-pcl-asm_64.o crct10dif-pclmul_glue.o
-diff --git a/arch/x86/crypto/crct10dif-pclmul_glue.c b/arch/x86/crypto/crct10dif-pclmul_glue.c
+diff --git a/arch/x86/crypto/crct10dif-pcl-asm_64.S b/arch/x86/crypto/crct10dif-pcl-asm_64.S
 new file mode 100644
-index 0000000..e87f8d8
+index 0000000..35e9756
 --- /dev/null
-+++ b/arch/x86/crypto/crct10dif-pclmul_glue.c
-@@ -0,0 +1,153 @@
-+/*
-+ * Cryptographic API.
-+ *
-+ * T10 Data Integrity Field CRC16 Crypto Xform using PCLMULQDQ Instructions
-+ *
-+ * Copyright (C) 2013 Intel Corporation
-+ * Author: Tim Chen <tim.c.chen@linux.intel.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the Free
-+ * Software Foundation; either version 2 of the License, or (at your option)
-+ * any later version.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ *
-+ */
++++ b/arch/x86/crypto/crct10dif-pcl-asm_64.S
+@@ -0,0 +1,643 @@
++########################################################################
++# Implement fast CRC-T10DIF computation with SSE and PCLMULQDQ instructions
++#
++# Copyright (c) 2013, Intel Corporation
++#
++# Authors:
++#     Erdinc Ozturk <erdinc.ozturk@intel.com>
++#     Vinodh Gopal <vinodh.gopal@intel.com>
++#     James Guilford <james.guilford@intel.com>
++#     Tim Chen <tim.c.chen@linux.intel.com>
++#
++# This software is available to you under a choice of one of two
++# licenses.  You may choose to be licensed under the terms of the GNU
++# General Public License (GPL) Version 2, available from the file
++# COPYING in the main directory of this source tree, or the
++# OpenIB.org BSD license below:
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions are
++# met:
++#
++# * Redistributions of source code must retain the above copyright
++#   notice, this list of conditions and the following disclaimer.
++#
++# * Redistributions in binary form must reproduce the above copyright
++#   notice, this list of conditions and the following disclaimer in the
++#   documentation and/or other materials provided with the
++#   distribution.
++#
++# * Neither the name of the Intel Corporation nor the names of its
++#   contributors may be used to endorse or promote products derived from
++#   this software without specific prior written permission.
++#
++#
++# THIS SOFTWARE IS PROVIDED BY INTEL CORPORATION ""AS IS"" AND ANY
++# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL INTEL CORPORATION OR
++# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++########################################################################
++#       Function API:
++#       UINT16 crc_t10dif_pcl(
++#               UINT16 init_crc, //initial CRC value, 16 bits
++#               const unsigned char *buf, //buffer pointer to calculate CRC on
++#               UINT64 len //buffer length in bytes (64-bit data)
++#       );
++#
++#       Reference paper titled "Fast CRC Computation for Generic
++#	Polynomials Using PCLMULQDQ Instruction"
++#       URL: http://www.intel.com/content/dam/www/public/us/en/documents
++#  /white-papers/fast-crc-computation-generic-polynomials-pclmulqdq-paper.pdf
++#
++#
 +
-+#include <linux/types.h>
-+#include <linux/module.h>
-+#include <linux/crc-t10dif.h>
-+#include <crypto/internal/hash.h>
-+#include <linux/init.h>
-+#include <linux/string.h>
-+#include <linux/kernel.h>
-+#include <asm/i387.h>
-+#include <asm/cpufeature.h>
++#include <linux/linkage.h>
 +
-+asmlinkage __u16 crc_t10dif_pcl(__u16 crc, const unsigned char *buf,
-+				size_t len);
++.text
 +
-+struct chksum_desc_ctx {
-+	__u16 crc;
-+};
++#define        arg1 %rdi
++#define        arg2 %rsi
++#define        arg3 %rdx
 +
-+/*
-+ * Steps through buffer one byte at at time, calculates reflected
-+ * crc using table.
-+ */
++#define        arg1_low32 %edi
 +
-+static int chksum_init(struct shash_desc *desc)
-+{
-+	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
++ENTRY(crc_t10dif_pcl)
++.align 16
 +
-+	ctx->crc = 0;
++	# adjust the 16-bit initial_crc value, scale it to 32 bits
++	shl	$16, arg1_low32
 +
-+	return 0;
-+}
++	# Allocate Stack Space
++	mov     %rsp, %rcx
++	sub	$16*2, %rsp
++	# align stack to 16 byte boundary
++	and     $~(0x10 - 1), %rsp
 +
-+static int chksum_update(struct shash_desc *desc, const u8 *data,
-+			 unsigned int length)
-+{
-+	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
++	# check if smaller than 256
++	cmp	$256, arg3
 +
-+	if (irq_fpu_usable()) {
-+		kernel_fpu_begin();
-+		ctx->crc = crc_t10dif_pcl(ctx->crc, data, length);
-+		kernel_fpu_end();
-+	} else
-+		ctx->crc = crc_t10dif_generic(ctx->crc, data, length);
-+	return 0;
-+}
++	# for sizes less than 128, we can't fold 64B at a time...
++	jl	_less_than_128
 +
-+static int chksum_final(struct shash_desc *desc, u8 *out)
-+{
-+	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
 +
-+	*(__u16 *)out = ctx->crc;
-+	return 0;
-+}
++	# load the initial crc value
++	movd	arg1_low32, %xmm10	# initial crc
 +
-+static int __chksum_finup(__u16 *crcp, const u8 *data, unsigned int len,
-+			u8 *out)
-+{
-+	if (irq_fpu_usable()) {
-+		kernel_fpu_begin();
-+		*(__u16 *)out = crc_t10dif_pcl(*crcp, data, len);
-+		kernel_fpu_end();
-+	} else
-+		*(__u16 *)out = crc_t10dif_generic(*crcp, data, len);
-+	return 0;
-+}
++	# crc value does not need to be byte-reflected, but it needs
++	# to be moved to the high part of the register.
++	# because data will be byte-reflected and will align with
++	# initial crc at correct place.
++	pslldq	$12, %xmm10
 +
-+static int chksum_finup(struct shash_desc *desc, const u8 *data,
-+			unsigned int len, u8 *out)
-+{
-+	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
++	movdqa  SHUF_MASK(%rip), %xmm11
++	# receive the initial 64B data, xor the initial crc value
++	movdqu	16*0(arg2), %xmm0
++	movdqu	16*1(arg2), %xmm1
++	movdqu	16*2(arg2), %xmm2
++	movdqu	16*3(arg2), %xmm3
++	movdqu	16*4(arg2), %xmm4
++	movdqu	16*5(arg2), %xmm5
++	movdqu	16*6(arg2), %xmm6
++	movdqu	16*7(arg2), %xmm7
 +
-+	return __chksum_finup(&ctx->crc, data, len, out);
-+}
++	pshufb	%xmm11, %xmm0
++	# XOR the initial_crc value
++	pxor	%xmm10, %xmm0
++	pshufb	%xmm11, %xmm1
++	pshufb	%xmm11, %xmm2
++	pshufb	%xmm11, %xmm3
++	pshufb	%xmm11, %xmm4
++	pshufb	%xmm11, %xmm5
++	pshufb	%xmm11, %xmm6
++	pshufb	%xmm11, %xmm7
 +
-+static int chksum_digest(struct shash_desc *desc, const u8 *data,
-+			 unsigned int length, u8 *out)
-+{
-+	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
++	movdqa	rk3(%rip), %xmm10	#xmm10 has rk3 and rk4
++					#imm value of pclmulqdq instruction
++					#will determine which constant to use
 +
-+	return __chksum_finup(&ctx->crc, data, length, out);
-+}
++	#################################################################
++	# we subtract 256 instead of 128 to save one instruction from the loop
++	sub	$256, arg3
 +
-+static struct shash_alg alg = {
-+	.digestsize		=	CRC_T10DIF_DIGEST_SIZE,
-+	.init		=	chksum_init,
-+	.update		=	chksum_update,
-+	.final		=	chksum_final,
-+	.finup		=	chksum_finup,
-+	.digest		=	chksum_digest,
-+	.descsize		=	sizeof(struct chksum_desc_ctx),
-+	.base			=	{
-+		.cra_name		=	"crct10dif",
-+		.cra_driver_name	=	"crct10dif-pclmul",
-+		.cra_priority		=	200,
-+		.cra_blocksize		=	CRC_T10DIF_BLOCK_SIZE,
-+		.cra_module		=	THIS_MODULE,
-+	}
-+};
++	# at this section of the code, there is 64*x+y (0<=y<64) bytes of
++	# buffer. The _fold_64_B_loop will fold 64B at a time
++	# until we have 64+y Bytes of buffer
 +
-+static int __init crct10dif_intel_mod_init(void)
-+{
-+	int ret;
 +
-+	ret = 0;
-+	if (cpu_has_pclmulqdq) {
-+		ret = crypto_register_shash(&alg);
-+		if (!ret)
-+			crc_t10dif_update_lib();
-+	}
-+	return ret;
-+}
++	# fold 64B at a time. This section of the code folds 4 xmm
++	# registers in parallel
++_fold_64_B_loop:
 +
-+static void __exit crct10dif_intel_mod_fini(void)
-+{
-+	/* switch crc_t10dif library back to generic algorithm */
-+	if (cpu_has_pclmulqdq) {
-+		crypto_unregister_shash(&alg);
-+		crc_t10dif_update_lib();
-+	}
-+}
++	# update the buffer pointer
++	add	$128, arg2		#    buf += 64#
 +
-+module_init(crct10dif_intel_mod_init);
-+module_exit(crct10dif_intel_mod_fini);
++	movdqu	16*0(arg2), %xmm9
++	movdqu	16*1(arg2), %xmm12
++	pshufb	%xmm11, %xmm9
++	pshufb	%xmm11, %xmm12
++	movdqa	%xmm0, %xmm8
++	movdqa	%xmm1, %xmm13
++	pclmulqdq	$0x0 , %xmm10, %xmm0
++	pclmulqdq	$0x11, %xmm10, %xmm8
++	pclmulqdq	$0x0 , %xmm10, %xmm1
++	pclmulqdq	$0x11, %xmm10, %xmm13
++	pxor	%xmm9 , %xmm0
++	xorps	%xmm8 , %xmm0
++	pxor	%xmm12, %xmm1
++	xorps	%xmm13, %xmm1
 +
-+MODULE_AUTHOR("Tim Chen <tim.c.chen@linux.intel.com>");
-+MODULE_DESCRIPTION("T10 DIF CRC calculation accelerated with PCLMULQDQ.");
-+MODULE_LICENSE("GPL");
++	movdqu	16*2(arg2), %xmm9
++	movdqu	16*3(arg2), %xmm12
++	pshufb	%xmm11, %xmm9
++	pshufb	%xmm11, %xmm12
++	movdqa	%xmm2, %xmm8
++	movdqa	%xmm3, %xmm13
++	pclmulqdq	$0x0, %xmm10, %xmm2
++	pclmulqdq	$0x11, %xmm10, %xmm8
++	pclmulqdq	$0x0, %xmm10, %xmm3
++	pclmulqdq	$0x11, %xmm10, %xmm13
++	pxor	%xmm9 , %xmm2
++	xorps	%xmm8 , %xmm2
++	pxor	%xmm12, %xmm3
++	xorps	%xmm13, %xmm3
 +
-+MODULE_ALIAS("crct10dif");
-+MODULE_ALIAS("crct10dif-pclmul");
-diff --git a/crypto/Kconfig b/crypto/Kconfig
-index 0e7a237..02075ff 100644
---- a/crypto/Kconfig
-+++ b/crypto/Kconfig
-@@ -376,6 +376,27 @@ config CRYPTO_CRC32_PCLMUL
- 	  which will enable any routine to use the CRC-32-IEEE 802.3 checksum
- 	  and gain better performance as compared with the table implementation.
- 
-+config CRYPTO_CRCT10DIF
-+	bool "CRCT10DIF algorithm"
-+	depends on CRC_T10DIF
-+	select CRYPTO_HASH
-+	help
-+	  CRC T10 Data Integrity Field computation is being cast as
-+	  a crypto transform.  This allows for faster crc t10 diff
-+	  transforms to be used if they are available.
++	movdqu	16*4(arg2), %xmm9
++	movdqu	16*5(arg2), %xmm12
++	pshufb	%xmm11, %xmm9
++	pshufb	%xmm11, %xmm12
++	movdqa	%xmm4, %xmm8
++	movdqa	%xmm5, %xmm13
++	pclmulqdq	$0x0,  %xmm10, %xmm4
++	pclmulqdq	$0x11, %xmm10, %xmm8
++	pclmulqdq	$0x0,  %xmm10, %xmm5
++	pclmulqdq	$0x11, %xmm10, %xmm13
++	pxor	%xmm9 ,  %xmm4
++	xorps	%xmm8 ,  %xmm4
++	pxor	%xmm12,  %xmm5
++	xorps	%xmm13,  %xmm5
 +
-+config CRYPTO_CRCT10DIF_PCLMUL
-+	tristate "CRCT10DIF PCLMULQDQ hardware acceleration"
-+	depends on X86 && 64BIT && CRC_T10DIF
-+	select CRYPTO_HASH
-+	select CRYPTO_CRCT10DIF
-+	help
-+	  For x86_64 processors with SSE4.2 and PCLMULQDQ supported,
-+	  CRC T10 DIF PCLMULQDQ computation can be hardware
-+	  accelerated PCLMULQDQ instruction. This option will create
-+	  'crct10dif-plcmul' module, which is faster when computing the
-+	  crct10dif checksum compared to the generic table implementation.
++	movdqu	16*6(arg2), %xmm9
++	movdqu	16*7(arg2), %xmm12
++	pshufb	%xmm11, %xmm9
++	pshufb	%xmm11, %xmm12
++	movdqa	%xmm6 , %xmm8
++	movdqa	%xmm7 , %xmm13
++	pclmulqdq	$0x0 , %xmm10, %xmm6
++	pclmulqdq	$0x11, %xmm10, %xmm8
++	pclmulqdq	$0x0 , %xmm10, %xmm7
++	pclmulqdq	$0x11, %xmm10, %xmm13
++	pxor	%xmm9 , %xmm6
++	xorps	%xmm8 , %xmm6
++	pxor	%xmm12, %xmm7
++	xorps	%xmm13, %xmm7
 +
- config CRYPTO_GHASH
- 	tristate "GHASH digest algorithm"
- 	select CRYPTO_GF128MUL
++	sub	$128, arg3
++
++	# check if there is another 64B in the buffer to be able to fold
++	jge	_fold_64_B_loop
++	##################################################################
++
++
++	add	$128, arg2
++	# at this point, the buffer pointer is pointing at the last y Bytes
++	# of the buffer the 64B of folded data is in 4 of the xmm
++	# registers: xmm0, xmm1, xmm2, xmm3
++
++
++	# fold the 8 xmm registers to 1 xmm register with different constants
++
++	movdqa	rk9(%rip), %xmm10
++	movdqa	%xmm0, %xmm8
++	pclmulqdq	$0x11, %xmm10, %xmm0
++	pclmulqdq	$0x0 , %xmm10, %xmm8
++	pxor	%xmm8, %xmm7
++	xorps	%xmm0, %xmm7
++
++	movdqa	rk11(%rip), %xmm10
++	movdqa	%xmm1, %xmm8
++	pclmulqdq	 $0x11, %xmm10, %xmm1
++	pclmulqdq	 $0x0 , %xmm10, %xmm8
++	pxor	%xmm8, %xmm7
++	xorps	%xmm1, %xmm7
++
++	movdqa	rk13(%rip), %xmm10
++	movdqa	%xmm2, %xmm8
++	pclmulqdq	 $0x11, %xmm10, %xmm2
++	pclmulqdq	 $0x0 , %xmm10, %xmm8
++	pxor	%xmm8, %xmm7
++	pxor	%xmm2, %xmm7
++
++	movdqa	rk15(%rip), %xmm10
++	movdqa	%xmm3, %xmm8
++	pclmulqdq	$0x11, %xmm10, %xmm3
++	pclmulqdq	$0x0 , %xmm10, %xmm8
++	pxor	%xmm8, %xmm7
++	xorps	%xmm3, %xmm7
++
++	movdqa	rk17(%rip), %xmm10
++	movdqa	%xmm4, %xmm8
++	pclmulqdq	$0x11, %xmm10, %xmm4
++	pclmulqdq	$0x0 , %xmm10, %xmm8
++	pxor	%xmm8, %xmm7
++	pxor	%xmm4, %xmm7
++
++	movdqa	rk19(%rip), %xmm10
++	movdqa	%xmm5, %xmm8
++	pclmulqdq	$0x11, %xmm10, %xmm5
++	pclmulqdq	$0x0 , %xmm10, %xmm8
++	pxor	%xmm8, %xmm7
++	xorps	%xmm5, %xmm7
++
++	movdqa	rk1(%rip), %xmm10	#xmm10 has rk1 and rk2
++					#imm value of pclmulqdq instruction
++					#will determine which constant to use
++	movdqa	%xmm6, %xmm8
++	pclmulqdq	$0x11, %xmm10, %xmm6
++	pclmulqdq	$0x0 , %xmm10, %xmm8
++	pxor	%xmm8, %xmm7
++	pxor	%xmm6, %xmm7
++
++
++	# instead of 64, we add 48 to the loop counter to save 1 instruction
++	# from the loop instead of a cmp instruction, we use the negative
++	# flag with the jl instruction
++	add	$128-16, arg3
++	jl	_final_reduction_for_128
++
++	# now we have 16+y bytes left to reduce. 16 Bytes is in register xmm7
++	# and the rest is in memory. We can fold 16 bytes at a time if y>=16
++	# continue folding 16B at a time
++
++_16B_reduction_loop:
++	movdqa	%xmm7, %xmm8
++	pclmulqdq	$0x11, %xmm10, %xmm7
++	pclmulqdq	$0x0 , %xmm10, %xmm8
++	pxor	%xmm8, %xmm7
++	movdqu	(arg2), %xmm0
++	pshufb	%xmm11, %xmm0
++	pxor	%xmm0 , %xmm7
++	add	$16, arg2
++	sub	$16, arg3
++	# instead of a cmp instruction, we utilize the flags with the
++	# jge instruction equivalent of: cmp arg3, 16-16
++	# check if there is any more 16B in the buffer to be able to fold
++	jge	_16B_reduction_loop
++
++	#now we have 16+z bytes left to reduce, where 0<= z < 16.
++	#first, we reduce the data in the xmm7 register
++
++
++_final_reduction_for_128:
++	# check if any more data to fold. If not, compute the CRC of
++	# the final 128 bits
++	add	$16, arg3
++	je	_128_done
++
++	# here we are getting data that is less than 16 bytes.
++	# since we know that there was data before the pointer, we can
++	# offset the input pointer before the actual point, to receive
++	# exactly 16 bytes. after that the registers need to be adjusted.
++_get_last_two_xmms:
++	movdqa	%xmm7, %xmm2
++
++	movdqu	-16(arg2, arg3), %xmm1
++	pshufb	%xmm11, %xmm1
++
++	# get rid of the extra data that was loaded before
++	# load the shift constant
++	lea	pshufb_shf_table+16(%rip), %rax
++	sub	arg3, %rax
++	movdqu	(%rax), %xmm0
++
++	# shift xmm2 to the left by arg3 bytes
++	pshufb	%xmm0, %xmm2
++
++	# shift xmm7 to the right by 16-arg3 bytes
++	pxor	mask1(%rip), %xmm0
++	pshufb	%xmm0, %xmm7
++	pblendvb	%xmm2, %xmm1	#xmm0 is implicit
++
++	# fold 16 Bytes
++	movdqa	%xmm1, %xmm2
++	movdqa	%xmm7, %xmm8
++	pclmulqdq	$0x11, %xmm10, %xmm7
++	pclmulqdq	$0x0 , %xmm10, %xmm8
++	pxor	%xmm8, %xmm7
++	pxor	%xmm2, %xmm7
++
++_128_done:
++	# compute crc of a 128-bit value
++	movdqa	rk5(%rip), %xmm10	# rk5 and rk6 in xmm10
++	movdqa	%xmm7, %xmm0
++
++	#64b fold
++	pclmulqdq	$0x1, %xmm10, %xmm7
++	pslldq	$8   ,  %xmm0
++	pxor	%xmm0,  %xmm7
++
++	#32b fold
++	movdqa	%xmm7, %xmm0
++
++	pand	mask2(%rip), %xmm0
++
++	psrldq	$12, %xmm7
++	pclmulqdq	$0x10, %xmm10, %xmm7
++	pxor	%xmm0, %xmm7
++
++	#barrett reduction
++_barrett:
++	movdqa	rk7(%rip), %xmm10	# rk7 and rk8 in xmm10
++	movdqa	%xmm7, %xmm0
++	pclmulqdq	$0x01, %xmm10, %xmm7
++	pslldq	$4, %xmm7
++	pclmulqdq	$0x11, %xmm10, %xmm7
++
++	pslldq	$4, %xmm7
++	pxor	%xmm0, %xmm7
++	pextrd	$1, %xmm7, %eax
++
++_cleanup:
++	# scale the result back to 16 bits
++	shr	$16, %eax
++	mov     %rcx, %rsp
++	ret
++
++########################################################################
++
++.align 16
++_less_than_128:
++
++	# check if there is enough buffer to be able to fold 16B at a time
++	cmp	$32, arg3
++	jl	_less_than_32
++	movdqa  SHUF_MASK(%rip), %xmm11
++
++	# now if there is, load the constants
++	movdqa	rk1(%rip), %xmm10	# rk1 and rk2 in xmm10
++
++	movd	arg1_low32, %xmm0	# get the initial crc value
++	pslldq	$12, %xmm0	# align it to its correct place
++	movdqu	(arg2), %xmm7	# load the plaintext
++	pshufb	%xmm11, %xmm7	# byte-reflect the plaintext
++	pxor	%xmm0, %xmm7
++
++
++	# update the buffer pointer
++	add	$16, arg2
++
++	# update the counter. subtract 32 instead of 16 to save one
++	# instruction from the loop
++	sub	$32, arg3
++
++	jmp	_16B_reduction_loop
++
++
++.align 16
++_less_than_32:
++	# mov initial crc to the return value. this is necessary for
++	# zero-length buffers.
++	mov	arg1_low32, %eax
++	test	arg3, arg3
++	je	_cleanup
++
++	movdqa  SHUF_MASK(%rip), %xmm11
++
++	movd	arg1_low32, %xmm0	# get the initial crc value
++	pslldq	$12, %xmm0	# align it to its correct place
++
++	cmp	$16, arg3
++	je	_exact_16_left
++	jl	_less_than_16_left
++
++	movdqu	(arg2), %xmm7	# load the plaintext
++	pshufb	%xmm11, %xmm7	# byte-reflect the plaintext
++	pxor	%xmm0 , %xmm7	# xor the initial crc value
++	add	$16, arg2
++	sub	$16, arg3
++	movdqa	rk1(%rip), %xmm10	# rk1 and rk2 in xmm10
++	jmp	_get_last_two_xmms
++
++
++.align 16
++_less_than_16_left:
++	# use stack space to load data less than 16 bytes, zero-out
++	# the 16B in memory first.
++
++	pxor	%xmm1, %xmm1
++	mov	%rsp, %r11
++	movdqa	%xmm1, (%r11)
++
++	cmp	$4, arg3
++	jl	_only_less_than_4
++
++	# backup the counter value
++	mov	arg3, %r9
++	cmp	$8, arg3
++	jl	_less_than_8_left
++
++	# load 8 Bytes
++	mov	(arg2), %rax
++	mov	%rax, (%r11)
++	add	$8, %r11
++	sub	$8, arg3
++	add	$8, arg2
++_less_than_8_left:
++
++	cmp	$4, arg3
++	jl	_less_than_4_left
++
++	# load 4 Bytes
++	mov	(arg2), %eax
++	mov	%eax, (%r11)
++	add	$4, %r11
++	sub	$4, arg3
++	add	$4, arg2
++_less_than_4_left:
++
++	cmp	$2, arg3
++	jl	_less_than_2_left
++
++	# load 2 Bytes
++	mov	(arg2), %ax
++	mov	%ax, (%r11)
++	add	$2, %r11
++	sub	$2, arg3
++	add	$2, arg2
++_less_than_2_left:
++	cmp     $1, arg3
++        jl      _zero_left
++
++	# load 1 Byte
++	mov	(arg2), %al
++	mov	%al, (%r11)
++_zero_left:
++	movdqa	(%rsp), %xmm7
++	pshufb	%xmm11, %xmm7
++	pxor	%xmm0 , %xmm7	# xor the initial crc value
++
++	# shl r9, 4
++	lea	pshufb_shf_table+16(%rip), %rax
++	sub	%r9, %rax
++	movdqu	(%rax), %xmm0
++	pxor	mask1(%rip), %xmm0
++
++	pshufb	%xmm0, %xmm7
++	jmp	_128_done
++
++.align 16
++_exact_16_left:
++	movdqu	(arg2), %xmm7
++	pshufb	%xmm11, %xmm7
++	pxor	%xmm0 , %xmm7   # xor the initial crc value
++
++	jmp	_128_done
++
++_only_less_than_4:
++	cmp	$3, arg3
++	jl	_only_less_than_3
++
++	# load 3 Bytes
++	mov	(arg2), %al
++	mov	%al, (%r11)
++
++	mov	1(arg2), %al
++	mov	%al, 1(%r11)
++
++	mov	2(arg2), %al
++	mov	%al, 2(%r11)
++
++	movdqa	 (%rsp), %xmm7
++	pshufb	 %xmm11, %xmm7
++	pxor	 %xmm0 , %xmm7  # xor the initial crc value
++
++	psrldq	$5, %xmm7
++
++	jmp	_barrett
++_only_less_than_3:
++	cmp	$2, arg3
++	jl	_only_less_than_2
++
++	# load 2 Bytes
++	mov	(arg2), %al
++	mov	%al, (%r11)
++
++	mov	1(arg2), %al
++	mov	%al, 1(%r11)
++
++	movdqa	(%rsp), %xmm7
++	pshufb	%xmm11, %xmm7
++	pxor	%xmm0 , %xmm7   # xor the initial crc value
++
++	psrldq	$6, %xmm7
++
++	jmp	_barrett
++_only_less_than_2:
++
++	# load 1 Byte
++	mov	(arg2), %al
++	mov	%al, (%r11)
++
++	movdqa	(%rsp), %xmm7
++	pshufb	%xmm11, %xmm7
++	pxor	%xmm0 , %xmm7   # xor the initial crc value
++
++	psrldq	$7, %xmm7
++
++	jmp	_barrett
++
++ENDPROC(crc_t10dif_pcl)
++
++.data
++
++# precomputed constants
++# these constants are precomputed from the poly:
++# 0x8bb70000 (0x8bb7 scaled to 32 bits)
++.align 16
++# Q = 0x18BB70000
++# rk1 = 2^(32*3) mod Q << 32
++# rk2 = 2^(32*5) mod Q << 32
++# rk3 = 2^(32*15) mod Q << 32
++# rk4 = 2^(32*17) mod Q << 32
++# rk5 = 2^(32*3) mod Q << 32
++# rk6 = 2^(32*2) mod Q << 32
++# rk7 = floor(2^64/Q)
++# rk8 = Q
++rk1:
++.quad 0x2d56000000000000
++rk2:
++.quad 0x06df000000000000
++rk3:
++.quad 0x9d9d000000000000
++rk4:
++.quad 0x7cf5000000000000
++rk5:
++.quad 0x2d56000000000000
++rk6:
++.quad 0x1368000000000000
++rk7:
++.quad 0x00000001f65a57f8
++rk8:
++.quad 0x000000018bb70000
++
++rk9:
++.quad 0xceae000000000000
++rk10:
++.quad 0xbfd6000000000000
++rk11:
++.quad 0x1e16000000000000
++rk12:
++.quad 0x713c000000000000
++rk13:
++.quad 0xf7f9000000000000
++rk14:
++.quad 0x80a6000000000000
++rk15:
++.quad 0x044c000000000000
++rk16:
++.quad 0xe658000000000000
++rk17:
++.quad 0xad18000000000000
++rk18:
++.quad 0xa497000000000000
++rk19:
++.quad 0x6ee3000000000000
++rk20:
++.quad 0xe7b5000000000000
++
++
++
++mask1:
++.octa 0x80808080808080808080808080808080
++mask2:
++.octa 0x00000000FFFFFFFFFFFFFFFFFFFFFFFF
++
++SHUF_MASK:
++.octa 0x000102030405060708090A0B0C0D0E0F
++
++pshufb_shf_table:
++# use these values for shift constants for the pshufb instruction
++# different alignments result in values as shown:
++#	DDQ 0x008f8e8d8c8b8a898887868584838281 # shl 15 (16-1) / shr1
++#	DDQ 0x01008f8e8d8c8b8a8988878685848382 # shl 14 (16-3) / shr2
++#	DDQ 0x0201008f8e8d8c8b8a89888786858483 # shl 13 (16-4) / shr3
++#	DDQ 0x030201008f8e8d8c8b8a898887868584 # shl 12 (16-4) / shr4
++#	DDQ 0x04030201008f8e8d8c8b8a8988878685 # shl 11 (16-5) / shr5
++#	DDQ 0x0504030201008f8e8d8c8b8a89888786 # shl 10 (16-6) / shr6
++#	DDQ 0x060504030201008f8e8d8c8b8a898887 # shl 9  (16-7) / shr7
++#	DDQ 0x07060504030201008f8e8d8c8b8a8988 # shl 8  (16-8) / shr8
++#	DDQ 0x0807060504030201008f8e8d8c8b8a89 # shl 7  (16-9) / shr9
++#	DDQ 0x090807060504030201008f8e8d8c8b8a # shl 6  (16-10) / shr10
++#	DDQ 0x0a090807060504030201008f8e8d8c8b # shl 5  (16-11) / shr11
++#	DDQ 0x0b0a090807060504030201008f8e8d8c # shl 4  (16-12) / shr12
++#	DDQ 0x0c0b0a090807060504030201008f8e8d # shl 3  (16-13) / shr13
++#	DDQ 0x0d0c0b0a090807060504030201008f8e # shl 2  (16-14) / shr14
++#	DDQ 0x0e0d0c0b0a090807060504030201008f # shl 1  (16-15) / shr15
++.octa 0x8f8e8d8c8b8a89888786858483828100
++.octa 0x000e0d0c0b0a09080706050403020100
 -- 
 1.7.11.7
