@@ -1,7 +1,7 @@
 From: Tim Chen <tim.c.chen@linux.intel.com>
-Subject: [PATCH v2 1/4] Wrap crc_t10dif function all to use crypto transform framework
-Date: Wed, 17 Apr 2013 09:12:52 -0700
-Message-ID: <ea4271721b5ca130849b03da4f172f12f66e5628.1366214842.git.tim.c.chen@linux.intel.com>
+Subject: [PATCH v2 3/4] Glue code to cast accelerated CRCT10DIF assembly as a crypto transform
+Date: Wed, 17 Apr 2013 09:12:54 -0700
+Message-ID: <5ad4989be86d8398ef9ef9ecc55e412c31c16d22.1366214842.git.tim.c.chen@linux.intel.com>
 References: <cover.1366214842.git.tim.c.chen@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1366214842.git.tim.c.chen@linux.intel.com>
@@ -12,158 +12,226 @@ To: Herbert Xu <herbert@gondor.apana.org.au>, "H. Peter Anvin" <hpa@zytor.com>, 
 Cc: Tim Chen <tim.c.chen@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Jim Kukunas <james.t.kukunas@linux.intel.com>, Keith Busch <keith.busch@intel.com>, Erdinc Ozturk <erdinc.ozturk@intel.com>, Vinodh Gopal <vinodh.gopal@intel.com>, James Guilford <james.guilford@intel.com>, Wajdi Feghali <wajdi.k.feghali@intel.com>, Jussi Kivilinna <jussi.kivilinna@iki.fi>, linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When CRC T10 DIF is calculated using the crypto transform framework, we
-wrap the crc_t10dif function call to utilize it.  This allows us to
-take advantage of any accelerated CRC T10 DIF transform that is
-plugged into the crypto framework.
+Glue code that plugs the PCLMULQDQ accelerated CRC T10 DIF hash into the
+crypto framework.  The config CRYPTO_CRCT10DIF_PCLMUL should be turned
+on to enable the feature.  The crc_t10dif crypto library function will
+use this faster algorithm when crct10dif_pclmul module is loaded.
 
 Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
 ---
- include/linux/crc-t10dif.h | 10 +++++
- lib/crc-t10dif.c           | 96 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 106 insertions(+)
+ arch/x86/crypto/Makefile                |   2 +
+ arch/x86/crypto/crct10dif-pclmul_glue.c | 153 ++++++++++++++++++++++++++++++++
+ crypto/Kconfig                          |  21 +++++
+ 3 files changed, 176 insertions(+)
+ create mode 100644 arch/x86/crypto/crct10dif-pclmul_glue.c
 
-diff --git a/include/linux/crc-t10dif.h b/include/linux/crc-t10dif.h
-index a9c96d8..f0eb4d5 100644
---- a/include/linux/crc-t10dif.h
-+++ b/include/linux/crc-t10dif.h
-@@ -3,6 +3,16 @@
+diff --git a/arch/x86/crypto/Makefile b/arch/x86/crypto/Makefile
+index 03cd731..d544a66 100644
+--- a/arch/x86/crypto/Makefile
++++ b/arch/x86/crypto/Makefile
+@@ -27,6 +27,7 @@ obj-$(CONFIG_CRYPTO_SHA1_SSSE3) += sha1-ssse3.o
+ obj-$(CONFIG_CRYPTO_CRC32_PCLMUL) += crc32-pclmul.o
+ obj-$(CONFIG_CRYPTO_SHA256_SSSE3) += sha256-ssse3.o
+ obj-$(CONFIG_CRYPTO_SHA512_SSSE3) += sha512-ssse3.o
++obj-$(CONFIG_CRYPTO_CRCT10DIF_PCLMUL) += crct10dif-pclmul.o
  
- #include <linux/types.h>
- 
-+#ifdef CONFIG_CRYPTO_CRCT10DIF
-+
-+#define CRC_T10DIF_DIGEST_SIZE 2
-+#define CRC_T10DIF_BLOCK_SIZE 1
-+
-+__u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer, size_t len);
-+void crc_t10dif_update_lib(void);
-+
-+#endif /* CONFIG_CRYPTO_CRCT10DIF */
-+
- __u16 crc_t10dif(unsigned char const *, size_t);
- 
- #endif
-diff --git a/lib/crc-t10dif.c b/lib/crc-t10dif.c
-index fbbd66e..41f469a 100644
---- a/lib/crc-t10dif.c
-+++ b/lib/crc-t10dif.c
-@@ -11,6 +11,9 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/crc-t10dif.h>
-+#include <linux/err.h>
-+#include <linux/init.h>
-+#include <crypto/hash.h>
- 
- /* Table generated using the following polynomium:
-  * x^16 + x^15 + x^11 + x^9 + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1
-@@ -51,6 +54,98 @@ static const __u16 t10_dif_crc_table[256] = {
- 	0xF0D8, 0x7B6F, 0x6C01, 0xE7B6, 0x42DD, 0xC96A, 0xDE04, 0x55B3
- };
- 
-+#ifdef CONFIG_CRYPTO_CRCT10DIF
-+
-+static struct crypto_shash *crct10dif_tfm;
-+
-+/* flag to indicate update to new algorithm in progress*/
-+static bool crc_t10dif_newalg;
-+
-+__u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer, size_t len)
-+{
-+	unsigned int i;
-+
-+	for (i = 0 ; i < len ; i++)
-+		crc = (crc << 8) ^ t10_dif_crc_table[((crc >> 8) ^ buffer[i]) & 0xff];
-+
-+	return crc;
-+}
-+EXPORT_SYMBOL(crc_t10dif_generic);
-+
+ # These modules require assembler to support AVX.
+ ifeq ($(avx_supported),yes)
+@@ -70,3 +71,4 @@ crc32c-intel-$(CONFIG_64BIT) += crc32c-pcl-intel-asm_64.o
+ crc32-pclmul-y := crc32-pclmul_asm.o crc32-pclmul_glue.o
+ sha256-ssse3-y := sha256-ssse3-asm.o sha256-avx-asm.o sha256-avx2-asm.o sha256_ssse3_glue.o
+ sha512-ssse3-y := sha512-ssse3-asm.o sha512-avx-asm.o sha512-avx2-asm.o sha512_ssse3_glue.o
++crct10dif-pclmul-y := crct10dif-pcl-asm_64.o crct10dif-pclmul_glue.o
+diff --git a/arch/x86/crypto/crct10dif-pclmul_glue.c b/arch/x86/crypto/crct10dif-pclmul_glue.c
+new file mode 100644
+index 0000000..e87f8d8
+--- /dev/null
++++ b/arch/x86/crypto/crct10dif-pclmul_glue.c
+@@ -0,0 +1,153 @@
 +/*
-+ * If we have defined crypto transform for CRC-T10DIF, use that instead.
-+ * This allows us to plug in fast version of CRC-T10DIF when available.
++ * Cryptographic API.
++ *
++ * T10 Data Integrity Field CRC16 Crypto Xform using PCLMULQDQ Instructions
++ *
++ * Copyright (C) 2013 Intel Corporation
++ * Author: Tim Chen <tim.c.chen@linux.intel.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the Free
++ * Software Foundation; either version 2 of the License, or (at your option)
++ * any later version.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ *
 + */
 +
-+void crc_t10dif_update_lib()
++#include <linux/types.h>
++#include <linux/module.h>
++#include <linux/crc-t10dif.h>
++#include <crypto/internal/hash.h>
++#include <linux/init.h>
++#include <linux/string.h>
++#include <linux/kernel.h>
++#include <asm/i387.h>
++#include <asm/cpufeature.h>
++
++asmlinkage __u16 crc_t10dif_pcl(__u16 crc, const unsigned char *buf,
++				size_t len);
++
++struct chksum_desc_ctx {
++	__u16 crc;
++};
++
++/*
++ * Steps through buffer one byte at at time, calculates reflected
++ * crc using table.
++ */
++
++static int chksum_init(struct shash_desc *desc)
 +{
-+	struct crypto_shash *old_tfm, *new_tfm;
++	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
 +
-+	old_tfm = crct10dif_tfm;
-+	crc_t10dif_newalg = true;
-+	/* make sure new alg flag is turned on before starting to switch tfm */
-+	mb();
++	ctx->crc = 0;
 +
-+	new_tfm = crypto_alloc_shash("crct10dif", 0, 0);
-+	if (IS_ERR(new_tfm))
-+		goto done;
-+
-+	if (old_tfm)
-+		if (crypto_tfm_alg_priority(&old_tfm->base) >=
-+		    crypto_tfm_alg_priority(&new_tfm->base)) {
-+			crypto_free_shash(new_tfm);
-+			goto done;
-+		}
-+	crct10dif_tfm = new_tfm;
-+	/* make sure update to tfm pointer is completed */
-+	mb();
-+	crypto_free_shash(old_tfm);
-+
-+done:
-+	crc_t10dif_newalg = false;
-+}
-+EXPORT_SYMBOL(crc_t10dif_update_lib);
-+
-+__u16 crc_t10dif(const unsigned char *buffer, size_t len)
-+{
-+	struct {
-+		struct shash_desc shash;
-+		char ctx[2];
-+	} desc;
-+	int err;
-+
-+	/* plugging in new alg or not using a tfm? */
-+	if (unlikely(crc_t10dif_newalg) || (!crct10dif_tfm))
-+		return crc_t10dif_generic(0, buffer, len);
-+
-+	desc.shash.tfm = crct10dif_tfm;
-+	desc.shash.flags = 0;
-+	*(__u16 *)desc.ctx = 0;
-+
-+	err = crypto_shash_update(&desc.shash, buffer, len);
-+	BUG_ON(err);
-+
-+	return *(__u16 *)desc.ctx;
-+}
-+EXPORT_SYMBOL(crc_t10dif);
-+
-+static int __init crc_t10dif_mod_init(void)
-+{
-+	crct10dif_tfm = NULL;
-+	crc_t10dif_newalg = false;
 +	return 0;
 +}
 +
-+static void __exit crc_t10dif_mod_fini(void)
++static int chksum_update(struct shash_desc *desc, const u8 *data,
++			 unsigned int length)
 +{
-+	if (crct10dif_tfm)
-+		crypto_free_shash(crct10dif_tfm);
++	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
++
++	if (irq_fpu_usable()) {
++		kernel_fpu_begin();
++		ctx->crc = crc_t10dif_pcl(ctx->crc, data, length);
++		kernel_fpu_end();
++	} else
++		ctx->crc = crc_t10dif_generic(ctx->crc, data, length);
++	return 0;
 +}
 +
-+module_init(crc_t10dif_mod_init);
-+module_exit(crc_t10dif_mod_fini);
++static int chksum_final(struct shash_desc *desc, u8 *out)
++{
++	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
 +
-+#else
- __u16 crc_t10dif(const unsigned char *buffer, size_t len)
- {
- 	__u16 crc = 0;
-@@ -62,6 +157,7 @@ __u16 crc_t10dif(const unsigned char *buffer, size_t len)
- 	return crc;
- }
- EXPORT_SYMBOL(crc_t10dif);
-+#endif
++	*(__u16 *)out = ctx->crc;
++	return 0;
++}
++
++static int __chksum_finup(__u16 *crcp, const u8 *data, unsigned int len,
++			u8 *out)
++{
++	if (irq_fpu_usable()) {
++		kernel_fpu_begin();
++		*(__u16 *)out = crc_t10dif_pcl(*crcp, data, len);
++		kernel_fpu_end();
++	} else
++		*(__u16 *)out = crc_t10dif_generic(*crcp, data, len);
++	return 0;
++}
++
++static int chksum_finup(struct shash_desc *desc, const u8 *data,
++			unsigned int len, u8 *out)
++{
++	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
++
++	return __chksum_finup(&ctx->crc, data, len, out);
++}
++
++static int chksum_digest(struct shash_desc *desc, const u8 *data,
++			 unsigned int length, u8 *out)
++{
++	struct chksum_desc_ctx *ctx = shash_desc_ctx(desc);
++
++	return __chksum_finup(&ctx->crc, data, length, out);
++}
++
++static struct shash_alg alg = {
++	.digestsize		=	CRC_T10DIF_DIGEST_SIZE,
++	.init		=	chksum_init,
++	.update		=	chksum_update,
++	.final		=	chksum_final,
++	.finup		=	chksum_finup,
++	.digest		=	chksum_digest,
++	.descsize		=	sizeof(struct chksum_desc_ctx),
++	.base			=	{
++		.cra_name		=	"crct10dif",
++		.cra_driver_name	=	"crct10dif-pclmul",
++		.cra_priority		=	200,
++		.cra_blocksize		=	CRC_T10DIF_BLOCK_SIZE,
++		.cra_module		=	THIS_MODULE,
++	}
++};
++
++static int __init crct10dif_intel_mod_init(void)
++{
++	int ret;
++
++	ret = 0;
++	if (cpu_has_pclmulqdq) {
++		ret = crypto_register_shash(&alg);
++		if (!ret)
++			crc_t10dif_update_lib();
++	}
++	return ret;
++}
++
++static void __exit crct10dif_intel_mod_fini(void)
++{
++	/* switch crc_t10dif library back to generic algorithm */
++	if (cpu_has_pclmulqdq) {
++		crypto_unregister_shash(&alg);
++		crc_t10dif_update_lib();
++	}
++}
++
++module_init(crct10dif_intel_mod_init);
++module_exit(crct10dif_intel_mod_fini);
++
++MODULE_AUTHOR("Tim Chen <tim.c.chen@linux.intel.com>");
++MODULE_DESCRIPTION("T10 DIF CRC calculation accelerated with PCLMULQDQ.");
++MODULE_LICENSE("GPL");
++
++MODULE_ALIAS("crct10dif");
++MODULE_ALIAS("crct10dif-pclmul");
+diff --git a/crypto/Kconfig b/crypto/Kconfig
+index 0e7a237..02075ff 100644
+--- a/crypto/Kconfig
++++ b/crypto/Kconfig
+@@ -376,6 +376,27 @@ config CRYPTO_CRC32_PCLMUL
+ 	  which will enable any routine to use the CRC-32-IEEE 802.3 checksum
+ 	  and gain better performance as compared with the table implementation.
  
- MODULE_DESCRIPTION("T10 DIF CRC calculation");
- MODULE_LICENSE("GPL");
++config CRYPTO_CRCT10DIF
++	bool "CRCT10DIF algorithm"
++	depends on CRC_T10DIF
++	select CRYPTO_HASH
++	help
++	  CRC T10 Data Integrity Field computation is being cast as
++	  a crypto transform.  This allows for faster crc t10 diff
++	  transforms to be used if they are available.
++
++config CRYPTO_CRCT10DIF_PCLMUL
++	tristate "CRCT10DIF PCLMULQDQ hardware acceleration"
++	depends on X86 && 64BIT && CRC_T10DIF
++	select CRYPTO_HASH
++	select CRYPTO_CRCT10DIF
++	help
++	  For x86_64 processors with SSE4.2 and PCLMULQDQ supported,
++	  CRC T10 DIF PCLMULQDQ computation can be hardware
++	  accelerated PCLMULQDQ instruction. This option will create
++	  'crct10dif-plcmul' module, which is faster when computing the
++	  crct10dif checksum compared to the generic table implementation.
++
+ config CRYPTO_GHASH
+ 	tristate "GHASH digest algorithm"
+ 	select CRYPTO_GF128MUL
 -- 
 1.7.11.7
