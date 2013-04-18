@@ -1,58 +1,54 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 1/1] cciss: add cciss_allow_hpsa module parameter
-Date: Thu, 18 Apr 2013 13:49:37 -0500
-Message-ID: <20130418184937.GA31252@beardog.cce.hp.com>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH 0/5] bnx2fc version 1.0.14
+Date: Thu, 18 Apr 2013 14:47:15 -0700
+Message-ID: <517069E3.8010100@broadcom.com>
+References: <1362778134-21045-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>
-Cc: LKML-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:2156 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936478Ab3DRVri (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Apr 2013 17:47:38 -0400
+In-Reply-To: <1362778134-21045-1-git-send-email-bprakash@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+
+On 03/08/2013 01:28 PM, Bhanu Prakash Gollapudi wrote:
+> Hi James,
+>
+> Please consider including the following patches for 3.9+ merge window.
+>
+> Thanks,
+> Bhanu
+>
+> Bhanu Prakash Gollapudi (5):
+>    bnx2fc: Enable cached tasks to improve performance
+>    bnx2fc: Include chip number in the symbolic name
+>    bnx2fc: Fix race condition between IO completion and abort
+>    bnx2fc: Update copyright information
+>    bnx2fc: Bumped version to 1.0.14
+>
+>   drivers/scsi/bnx2fc/bnx2fc.h      |   57 +++++++++++++++++++++++++++++++++++-
+>   drivers/scsi/bnx2fc/bnx2fc_els.c  |    2 +-
+>   drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   55 ++++++++++++++++++++++++++++++-----
+>   drivers/scsi/bnx2fc/bnx2fc_hwi.c  |    8 ++++-
+>   drivers/scsi/bnx2fc/bnx2fc_io.c   |    9 ++++--
+>   drivers/scsi/bnx2fc/bnx2fc_tgt.c  |    2 +-
+>   6 files changed, 116 insertions(+), 17 deletions(-)
+>
+
+Hi James,
+
+I see that these patches were not picked up by you yet.  Please let me 
+know if you're waiting for any information.
+
+thanks,
+Bhanu
 
 
-Add the cciss_allow_hpsa modules parameter. This allows users to use the hpsa
-driver instead of cciss for older controllers.
-Tested with 3.9.0-rc7 in combination with the bug fix submitted Tuesday. My
-apologies for not testing that patch with the correct kernel.
-
-From: Mike <mike.miller@hp.com>
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-
----
- drivers/block/cciss.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index a6c0973..081d1a8 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -75,6 +75,12 @@ module_param(cciss_simple_mode, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(cciss_simple_mode,
- 	"Use 'simple mode' rather than 'performant mode'");
- 
-+static int cciss_allow_hpsa;
-+module_param(cciss_allow_hpsa, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(cciss_allow_hpsa,
-+	"Prevent cciss driver from accessing hardware known to be "
-+	" supported by the hpsa driver");
-+
- static DEFINE_MUTEX(cciss_mutex);
- static struct proc_dir_entry *proc_cciss;
- 
-@@ -4116,9 +4122,13 @@ static int cciss_lookup_board_id(struct pci_dev *pdev, u32 *board_id)
- 	*board_id = ((subsystem_device_id << 16) & 0xffff0000) |
- 			subsystem_vendor_id;
- 
--	for (i = 0; i < ARRAY_SIZE(products); i++)
-+	for (i = 0; i < ARRAY_SIZE(products); i++) {
-+		/* Stand aside for hpsa driver on request */
-+		if (cciss_allow_hpsa)
-+			return -ENODEV;
- 		if (*board_id == products[i].board_id)
- 			return i;
-+	}
- 	dev_warn(&pdev->dev, "unrecognized board ID: 0x%08x, ignoring.\n",
- 		*board_id);
- 	return -ENODEV;
