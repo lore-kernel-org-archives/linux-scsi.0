@@ -1,107 +1,176 @@
 From: Anand <anandkumar_santhanam@pmc-sierra.com>
-Subject: [PATCH V4 07/12] pm80xx: SPC new firmware changes for device id 0x8081
- alone
-Date: Thu, 18 Apr 2013 11:34:58 -0700
-Message-ID: <51703CD2.7040304@pmc-sierra.com>
+Subject: [PATCH V4 08/12] pm80xx: Firmware flash memory free fix, with addition
+ of new memory region for it
+Date: Thu, 18 Apr 2013 11:36:55 -0700
+Message-ID: <51703D47.9090100@pmc-sierra.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:35974 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751584Ab3DRSdI (ORCPT
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55892 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752330Ab3DRSfF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Apr 2013 14:33:08 -0400
+	Thu, 18 Apr 2013 14:35:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Sangeetha.Gnanasekaran@pmcs.com, sakthivel.sk@hcl.com, Harry.Yang@pmcs.com, rich.Bono@pmcs.com, Vishwanath.Maram@pmcs.com
+To: linux-scsi@vger.kernel.org, Sangeetha.Gnanasekaran@pmcs.com, sakthivel.sk@hcl.com, rich.Bono@pmcs.com, Vishwanath.Maram@pmcs.com, Harry.Yang@pmcs.com
 
->From 2ce3ecb52358fcd358e1ea93a02522084fc7f968 Mon Sep 17 00:00:00 2001
+>From 4043d1eb8813a2fc0656815fe2e6d21d4df0da66 Mon Sep 17 00:00:00 2001
 From: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
-Date: Tue, 19 Mar 2013 18:05:55 +0530
-Subject: [PATCH V4 07/12] pm80xx: SPC new firmware changes for device id 0x8081 alone
+Date: Tue, 19 Mar 2013 18:06:40 +0530
+Subject: [PATCH V4 08/12] pm80xx: Firmware flash memory free fix, with addition of new memory region for it
 
-Additional bar shift for new SPC firmware, applicable to device
-id 0x8081 only.
+Performing pci_free_consistent in tasklet had result in a core dump. So
+allocated a new memory region for it. Fix for passing proper address
+and operation in firmware flash update.
 
 Signed-off-by: Sakthivel K <Sakthivel.SaravananKamalRaju@pmcs.com>
 Signed-off-by: Anand Kumar S <AnandKumar.Santhanam@pmcs.com>
 Ack-by: Jack Wang <jack_wang@usish.com>
 Ack-by: Hannes Reinecke <hare@suse.de> 
 ---
- drivers/scsi/pm8001/pm8001_hwi.c |   31 ++++++++++++++++++++++++++++---
- drivers/scsi/pm8001/pm8001_hwi.h |    2 ++
- 2 files changed, 30 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm8001_ctl.c  |    5 +++--
+ drivers/scsi/pm8001/pm8001_defs.h |    3 ++-
+ drivers/scsi/pm8001/pm8001_hwi.c  |   30 ++++++------------------------
+ drivers/scsi/pm8001/pm8001_init.c |    3 +++
+ 4 files changed, 14 insertions(+), 27 deletions(-)
 
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+index ae2b124..d99f41c 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.c
++++ b/drivers/scsi/pm8001/pm8001_ctl.c
+@@ -400,10 +400,11 @@ static int pm8001_set_nvmd(struct pm8001_hba_info *pm8001_ha)
+ 		goto out;
+ 	}
+ 	payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
+-	memcpy((u8 *)payload->func_specific, (u8 *)pm8001_ha->fw_image->data,
++	memcpy((u8 *)&payload->func_specific, (u8 *)pm8001_ha->fw_image->data,
+ 				pm8001_ha->fw_image->size);
+ 	payload->length = pm8001_ha->fw_image->size;
+ 	payload->id = 0;
++	payload->minor_function = 0x1;
+ 	pm8001_ha->nvmd_completion = &completion;
+ 	ret = PM8001_CHIP_DISP->set_nvmd_req(pm8001_ha, payload);
+ 	wait_for_completion(&completion);
+@@ -450,7 +451,7 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
+ 			payload->length = 1024*16;
+ 			payload->id = 0;
+ 			fwControl =
+-			      (struct fw_control_info *)payload->func_specific;
++			      (struct fw_control_info *)&payload->func_specific;
+ 			fwControl->len = IOCTL_BUF_SIZE;   /* IN */
+ 			fwControl->size = partitionSize + HEADER_LEN;/* IN */
+ 			fwControl->retcode = 0;/* OUT */
+diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
+index 26a2ee6..479c5a7 100644
+--- a/drivers/scsi/pm8001/pm8001_defs.h
++++ b/drivers/scsi/pm8001/pm8001_defs.h
+@@ -86,7 +86,7 @@ enum port_type {
+ #define	PM8001_MAX_DEVICES	 2048	/* max supported device */
+ #define	PM8001_MAX_MSIX_VEC	 64	/* max msi-x int for spcv/ve */
+ 
+-#define USI_MAX_MEMCNT_BASE	4
++#define USI_MAX_MEMCNT_BASE	5
+ #define IB			(USI_MAX_MEMCNT_BASE + 1)
+ #define CI			(IB + PM8001_MAX_SPCV_INB_NUM)
+ #define OB			(CI + PM8001_MAX_SPCV_INB_NUM)
+@@ -99,6 +99,7 @@ enum memory_region_num {
+ 	NVMD,	    /* NVM device */
+ 	DEV_MEM,    /* memory for devices */
+ 	CCB_MEM,    /* memory for command control block */
++	FW_FLASH    /* memory for fw flash update */
+ };
+ #define	PM8001_EVENT_LOG_SIZE	 (128 * 1024)
+ 
 diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index c335ae8..3adf499 100644
+index 3adf499..c124fc6 100644
 --- a/drivers/scsi/pm8001/pm8001_hwi.c
 +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -640,6 +640,18 @@ static void init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
- static int pm8001_chip_init(struct pm8001_hba_info *pm8001_ha)
- {
- 	u8 i = 0;
-+	u16 deviceid;
-+	pci_read_config_word(pm8001_ha->pdev, PCI_DEVICE_ID, &deviceid);
-+	/* 8081 controllers need BAR shift to access MPI space
-+	* as this is shared with BIOS data */
-+	if (deviceid == 0x8081) {
-+		if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_SM_BASE)) {
-+			PM8001_FAIL_DBG(pm8001_ha,
-+				pm8001_printk("Shift Bar4 to 0x%x failed\n",
-+					GSM_SM_BASE));
-+			return -1;
-+		}
-+	}
- 	/* check the firmware status */
- 	if (-1 == check_fw_ready(pm8001_ha)) {
- 		PM8001_FAIL_DBG(pm8001_ha,
-@@ -660,9 +672,12 @@ static int pm8001_chip_init(struct pm8001_hba_info *pm8001_ha)
- 		update_inbnd_queue_table(pm8001_ha, i);
- 	for (i = 0; i < PM8001_MAX_OUTB_NUM; i++)
- 		update_outbnd_queue_table(pm8001_ha, i);
--	mpi_set_phys_g3_with_ssc(pm8001_ha, 0);
--	/* 7->130ms, 34->500ms, 119->1.5s */
--	mpi_set_open_retry_interval_reg(pm8001_ha, 119);
-+	/* 8081 controller donot require these operations */
-+	if (deviceid != 0x8081) {
-+		mpi_set_phys_g3_with_ssc(pm8001_ha, 0);
-+		/* 7->130ms, 34->500ms, 119->1.5s */
-+		mpi_set_open_retry_interval_reg(pm8001_ha, 119);
-+	}
- 	/* notify firmware update finished and check initialization status */
- 	if (0 == mpi_init_check(pm8001_ha)) {
- 		PM8001_INIT_DBG(pm8001_ha,
-@@ -684,6 +699,16 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
- 	u32 max_wait_count;
- 	u32 value;
- 	u32 gst_len_mpistate;
-+	u16 deviceid;
-+	pci_read_config_word(pm8001_ha->pdev, PCI_DEVICE_ID, &deviceid);
-+	if (deviceid == 0x8081) {
-+		if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_SM_BASE)) {
-+			PM8001_FAIL_DBG(pm8001_ha,
-+				pm8001_printk("Shift Bar4 to 0x%x failed\n",
-+					GSM_SM_BASE));
-+			return -1;
-+		}
-+	}
- 	init_pci_device_addresses(pm8001_ha);
- 	/* Write bit1=1 to Inbound DoorBell Register to tell the SPC FW the
- 	table is stop */
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
-index 2399aab..d7c1e20 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.h
-+++ b/drivers/scsi/pm8001/pm8001_hwi.h
-@@ -131,6 +131,8 @@
- #define LINKRATE_30			(0x02 << 8)
- #define LINKRATE_60			(0x04 << 8)
+@@ -3481,10 +3481,6 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha,
+ 		break;
+ 	}
+ 	ccb->fw_control_context->fw_control->retcode = status;
+-	pci_free_consistent(pm8001_ha->pdev,
+-			fw_control_context.len,
+-			fw_control_context.virtAddr,
+-			fw_control_context.phys_addr);
+ 	complete(pm8001_ha->nvmd_completion);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+@@ -4474,7 +4470,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+ 	fw_control_context = kzalloc(sizeof(struct fw_control_ex), GFP_KERNEL);
+ 	if (!fw_control_context)
+ 		return -ENOMEM;
+-	fw_control_context->usrAddr = (u8 *)&ioctl_payload->func_specific[0];
++	fw_control_context->usrAddr = (u8 *)ioctl_payload->func_specific;
+ 	fw_control_context->len = ioctl_payload->length;
+ 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+ 	memset(&nvmd_req, 0, sizeof(nvmd_req));
+@@ -4556,7 +4552,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+ 		return -ENOMEM;
+ 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+ 	memcpy(pm8001_ha->memoryMap.region[NVMD].virt_ptr,
+-		ioctl_payload->func_specific,
++		&ioctl_payload->func_specific,
+ 		ioctl_payload->length);
+ 	memset(&nvmd_req, 0, sizeof(nvmd_req));
+ 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+@@ -4658,29 +4654,14 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
+ 	int rc;
+ 	u32 tag;
+ 	struct pm8001_ccb_info *ccb;
+-	void *buffer = NULL;
+-	dma_addr_t phys_addr;
+-	u32 phys_addr_hi;
+-	u32 phys_addr_lo;
++	void *buffer = pm8001_ha->memoryMap.region[FW_FLASH].virt_ptr;
++	dma_addr_t phys_addr = pm8001_ha->memoryMap.region[FW_FLASH].phys_addr;
+ 	struct pm8001_ioctl_payload *ioctl_payload = payload;
  
-+/* for new SPC controllers MEMBASE III is shared between BIOS and DATA */
-+#define GSM_SM_BASE			0x4F0000
- struct mpi_msg_hdr{
- 	__le32	header;	/* Bits [11:0]  - Message operation code */
- 	/* Bits [15:12] - Message Category */
+ 	fw_control_context = kzalloc(sizeof(struct fw_control_ex), GFP_KERNEL);
+ 	if (!fw_control_context)
+ 		return -ENOMEM;
+-	fw_control = (struct fw_control_info *)&ioctl_payload->func_specific[0];
+-	if (fw_control->len != 0) {
+-		if (pm8001_mem_alloc(pm8001_ha->pdev,
+-			(void **)&buffer,
+-			&phys_addr,
+-			&phys_addr_hi,
+-			&phys_addr_lo,
+-			fw_control->len, 0) != 0) {
+-				PM8001_FAIL_DBG(pm8001_ha,
+-					pm8001_printk("Mem alloc failure\n"));
+-				kfree(fw_control_context);
+-				return -ENOMEM;
+-		}
+-	}
++	fw_control = (struct fw_control_info *)&ioctl_payload->func_specific;
+ 	memcpy(buffer, fw_control->buffer, fw_control->len);
+ 	flash_update_info.sgl.addr = cpu_to_le64(phys_addr);
+ 	flash_update_info.sgl.im_len.len = cpu_to_le32(fw_control->len);
+@@ -4690,6 +4671,7 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
+ 	flash_update_info.total_image_len = fw_control->size;
+ 	fw_control_context->fw_control = fw_control;
+ 	fw_control_context->virtAddr = buffer;
++	fw_control_context->phys_addr = phys_addr;
+ 	fw_control_context->len = fw_control->len;
+ 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+ 	if (rc) {
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index e522e59..64168eb 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -341,6 +341,9 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+ 	pm8001_ha->memoryMap.region[CCB_MEM].total_len = PM8001_MAX_CCB *
+ 		sizeof(struct pm8001_ccb_info);
+ 
++	/* Memory region for fw flash */
++	pm8001_ha->memoryMap.region[FW_FLASH].total_len = 4096;
++
+ 	for (i = 0; i < USI_MAX_MEMCNT; i++) {
+ 		if (pm8001_mem_alloc(pm8001_ha->pdev,
+ 			&pm8001_ha->memoryMap.region[i].virt_ptr,
 -- 
 1.7.1
 
