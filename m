@@ -1,44 +1,48 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 22/22] lpfc 8.3.39: Update lpfc version for 8.3.39 driver
- release
-Date: Wed, 17 Apr 2013 20:20:10 -0400
-Message-ID: <1366244410.1513.23.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
+From: "Dolev Raviv" <draviv@codeaurora.org>
+Subject: Re: [PATCH V2] scsi: ufs: add support for query requests
+Date: Thu, 18 Apr 2013 01:24:14 -0700
+Message-ID: <4f618017941695cac811fc9c960874c4.squirrel@www.codeaurora.org>
+References: <1366024056-8429-1-git-send-email-draviv@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:24350 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964827Ab3DRAUM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Apr 2013 20:20:12 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1366024056-8429-1-git-send-email-draviv@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Update lpfc version for 8.3.39 driver release
+Hi All,
 
+A minor bug was spotted, as shown blow. The fix will be submitted with the
+next version.
 
-Signed-off-by: James Smart <james.smart@emulex.com>
+> +static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb
+> *lrbp)
+> +{
+> +	u32 upiu_flags;
+> +	int ret = 0;
+> +
+> +	if (!lrbp) {
+> +		dev_err(hba->dev, "%s: lrbp can not be NULL\n", __func__);
+> +		ret = -EINVAL;
+> +	} else if (!lrbp->ucd_req_ptr) {
+> +		dev_err(hba->dev, "%s: ucd_req_ptr can not be NULL\n",
+> +			__func__);
+> +		ret = -EINVAL;
+> +	} else if (!lrbp->utr_descriptor_ptr) {
+> +		dev_err(hba->dev, "%s: utr_descriptor_ptr can not be NULL\n",
+> +			__func__);
+> +		ret = -EINVAL;
+> +	}
+> +	if (!ret)
+> +		goto exit;
+should be:
+if (ret)
 
- ---
+Thanks,
+Dolev
 
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2013-04-10 16:46:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2013-04-15 18:26:58.178041602 -0400
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.38"
-+#define LPFC_DRIVER_VERSION "8.3.39"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
-
-
-
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
