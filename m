@@ -1,483 +1,438 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 3/22] lpfc 8.3.39: Remove driver dependency on HZ
-Date: Wed, 17 Apr 2013 20:14:58 -0400
-Message-ID: <1366244098.1513.3.camel@myfc17>
+Subject: [PATCH 4/22] lpfc 8.3.39: Fixed pt2pt and loop discovery problems
+ on topology changes.
+Date: Wed, 17 Apr 2013 20:15:19 -0400
+Message-ID: <1366244119.1513.5.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:24287 "EHLO
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:24289 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935459Ab3DRAPB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Apr 2013 20:15:01 -0400
+	with ESMTP id S935433Ab3DRAPW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Apr 2013 20:15:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Remove driver dependency on HZ
+Fixed pt2pt and loop discovery problems on topology changes.
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h           |    6 ++++--
- lpfc_bsg.c       |    6 ++++--
- lpfc_ct.c        |    3 ++-
- lpfc_els.c       |   10 ++++++----
- lpfc_hbadisc.c   |    5 +++--
- lpfc_init.c      |   45 +++++++++++++++++++++++++++++----------------
- lpfc_nportdisc.c |   19 ++++++++++++-------
- lpfc_scsi.c      |    2 +-
- lpfc_sli.c       |   33 +++++++++++++++++++--------------
- 9 files changed, 80 insertions(+), 49 deletions(-)
+ lpfc.h           |    1 
+ lpfc_attr.c      |    2 +
+ lpfc_els.c       |   93 +++++++++++++++++++++++++++++++++++++++++++++++--------
+ lpfc_hbadisc.c   |   55 ++++++++++++++++++++++++++++----
+ lpfc_mbox.c      |    9 +++--
+ lpfc_nportdisc.c |    6 ++-
+ lpfc_sli.c       |    8 +++-
+ 7 files changed, 149 insertions(+), 25 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
---- a/drivers/scsi/lpfc/lpfc_bsg.c	2013-04-10 16:46:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c	2013-04-15 18:26:24.122040826 -0400
-@@ -2576,7 +2576,8 @@ static int lpfcdiag_loop_get_xri(struct
- 	evt->wait_time_stamp = jiffies;
- 	time_left = wait_event_interruptible_timeout(
- 		evt->wq, !list_empty(&evt->events_to_see),
--		((phba->fc_ratov * 2) + LPFC_DRVR_TIMEOUT) * HZ);
-+		msecs_to_jiffies(1000 *
-+			((phba->fc_ratov * 2) + LPFC_DRVR_TIMEOUT)));
- 	if (list_empty(&evt->events_to_see))
- 		ret_val = (time_left) ? -EINTR : -ETIMEDOUT;
- 	else {
-@@ -3151,7 +3152,8 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg
- 	evt->waiting = 1;
- 	time_left = wait_event_interruptible_timeout(
- 		evt->wq, !list_empty(&evt->events_to_see),
--		((phba->fc_ratov * 2) + LPFC_DRVR_TIMEOUT) * HZ);
-+		msecs_to_jiffies(1000 *
-+			((phba->fc_ratov * 2) + LPFC_DRVR_TIMEOUT)));
- 	evt->waiting = 0;
- 	if (list_empty(&evt->events_to_see)) {
- 		rc = (time_left) ? -EINTR : -ETIMEDOUT;
-diff -upNr a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
---- a/drivers/scsi/lpfc/lpfc_ct.c	2013-04-10 16:46:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_ct.c	2013-04-15 18:26:24.128040826 -0400
-@@ -1811,7 +1811,8 @@ lpfc_fdmi_timeout_handler(struct lpfc_vp
- 		if (init_utsname()->nodename[0] != '\0')
- 			lpfc_fdmi_cmd(vport, ndlp, SLI_MGMT_DHBA);
- 		else
--			mod_timer(&vport->fc_fdmitmo, jiffies + HZ * 60);
-+			mod_timer(&vport->fc_fdmitmo, jiffies +
-+				  msecs_to_jiffies(1000 * 60));
- 	}
- 	return;
- }
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2013-04-10 16:46:40.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2013-04-15 18:26:26.892040889 -0400
+@@ -2801,6 +2801,8 @@ lpfc_topology_store(struct device *dev,
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+ 			"3054 lpfc_topology changed from %d to %d\n",
+ 			prev_val, val);
++		if (prev_val != val && phba->sli_rev == LPFC_SLI_REV4)
++			phba->fc_topology_changed = 1;
+ 		err = lpfc_issue_lip(lpfc_shost_from_vport(phba->pport));
+ 		if (err) {
+ 			phba->cfg_topology = prev_val;
 diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2013-04-10 16:46:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2013-04-15 18:26:24.178040827 -0400
-@@ -6241,7 +6241,8 @@ lpfc_els_timeout_handler(struct lpfc_vpo
+--- a/drivers/scsi/lpfc/lpfc_els.c	2013-04-15 18:26:24.178040827 -0400
++++ b/drivers/scsi/lpfc/lpfc_els.c	2013-04-15 18:26:26.898040889 -0400
+@@ -29,6 +29,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport_fc.h>
+ 
++
+ #include "lpfc_hw4.h"
+ #include "lpfc_hw.h"
+ #include "lpfc_sli.h"
+@@ -308,16 +309,20 @@ lpfc_prep_els_iocb(struct lpfc_vport *vp
+ 		/* Xmit ELS command <elsCmd> to remote NPORT <did> */
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 				 "0116 Xmit ELS command x%x to remote "
+-				 "NPORT x%x I/O tag: x%x, port state: x%x\n",
++				 "NPORT x%x I/O tag: x%x, port state:x%x"
++				 " fc_flag:x%x\n",
+ 				 elscmd, did, elsiocb->iotag,
+-				 vport->port_state);
++				 vport->port_state,
++				 vport->fc_flag);
+ 	} else {
+ 		/* Xmit ELS response <elsCmd> to remote NPORT <did> */
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 				 "0117 Xmit ELS response x%x to remote "
+-				 "NPORT x%x I/O tag: x%x, size: x%x\n",
++				 "NPORT x%x I/O tag: x%x, size: x%x "
++				 "port_state x%x fc_flag x%x\n",
+ 				 elscmd, ndlp->nlp_DID, elsiocb->iotag,
+-				 cmdSize);
++				 cmdSize, vport->port_state,
++				 vport->fc_flag);
+ 	}
+ 	return elsiocb;
+ 
+@@ -909,6 +914,23 @@ lpfc_cmpl_els_flogi_nport(struct lpfc_vp
+ 	spin_lock_irq(shost->host_lock);
+ 	vport->fc_flag |= FC_PT2PT;
+ 	spin_unlock_irq(shost->host_lock);
++	/* If physical FC port changed, unreg VFI and ALL VPIs / RPIs */
++	if ((phba->sli_rev == LPFC_SLI_REV4) && phba->fc_topology_changed) {
++		lpfc_unregister_fcf_prep(phba);
++
++		/* The FC_VFI_REGISTERED flag will get clear in the cmpl
++		 * handler for unreg_vfi, but if we don't force the
++		 * FC_VFI_REGISTERED flag then the reg_vfi mailbox could be
++		 * built with the update bit set instead of just the vp bit to
++		 * change the Nport ID.  We need to have the vp set and the
++		 * Upd cleared on topology changes.
++		 */
++		spin_lock_irq(shost->host_lock);
++		vport->fc_flag &= ~FC_VFI_REGISTERED;
++		spin_unlock_irq(shost->host_lock);
++		phba->fc_topology_changed = 0;
++		lpfc_issue_reg_vfi(vport);
++	}
+ 
+ 	/* Start discovery - this should just do CLEAR_LA */
+ 	lpfc_disc_start(vport);
+@@ -1030,9 +1052,19 @@ stop_rr_fcf_flogi:
+ 			vport->cfg_discovery_threads = LPFC_MAX_DISC_THREADS;
+ 		if ((phba->sli_rev == LPFC_SLI_REV4) &&
+ 		    (!(vport->fc_flag & FC_VFI_REGISTERED) ||
+-		     (vport->fc_prevDID != vport->fc_myDID))) {
+-			if (vport->fc_flag & FC_VFI_REGISTERED)
+-				lpfc_sli4_unreg_all_rpis(vport);
++		     (vport->fc_prevDID != vport->fc_myDID) ||
++			phba->fc_topology_changed)) {
++			if (vport->fc_flag & FC_VFI_REGISTERED) {
++				if (phba->fc_topology_changed) {
++					lpfc_unregister_fcf_prep(phba);
++					spin_lock_irq(shost->host_lock);
++					vport->fc_flag &= ~FC_VFI_REGISTERED;
++					spin_unlock_irq(shost->host_lock);
++					phba->fc_topology_changed = 0;
++				} else {
++					lpfc_sli4_unreg_all_rpis(vport);
++				}
++			}
+ 			lpfc_issue_reg_vfi(vport);
+ 			lpfc_nlp_put(ndlp);
+ 			goto out;
+@@ -1055,9 +1087,10 @@ stop_rr_fcf_flogi:
+ 	/* FLOGI completes successfully */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0101 FLOGI completes successfully "
+-			 "Data: x%x x%x x%x x%x\n",
++			 "Data: x%x x%x x%x x%x x%x x%x\n",
+ 			 irsp->un.ulpWord[4], sp->cmn.e_d_tov,
+-			 sp->cmn.w2.r_a_tov, sp->cmn.edtovResolution);
++			 sp->cmn.w2.r_a_tov, sp->cmn.edtovResolution,
++			 vport->port_state, vport->fc_flag);
+ 
+ 	if (vport->port_state == LPFC_FLOGI) {
+ 		/*
+@@ -5047,6 +5080,8 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vp
+ 	struct ls_rjt stat;
+ 	uint32_t cmd, did;
+ 	int rc;
++	uint32_t fc_flag = 0;
++	uint32_t port_state = 0;
+ 
+ 	cmd = *lp++;
+ 	sp = (struct serv_parm *) lp;
+@@ -5113,16 +5148,25 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vp
+ 			 * will be.
+ 			 */
+ 			vport->fc_myDID = PT2PT_LocalID;
+-		}
++		} else
++			vport->fc_myDID = PT2PT_RemoteID;
+ 
+ 		/*
+ 		 * The vport state should go to LPFC_FLOGI only
+ 		 * AFTER we issue a FLOGI, not receive one.
+ 		 */
+ 		spin_lock_irq(shost->host_lock);
++		fc_flag = vport->fc_flag;
++		port_state = vport->port_state;
+ 		vport->fc_flag |= FC_PT2PT;
+ 		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
++		vport->port_state = LPFC_FLOGI;
+ 		spin_unlock_irq(shost->host_lock);
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++				 "3311 Rcv Flogi PS x%x new PS x%x "
++				 "fc_flag x%x new fc_flag x%x\n",
++				 port_state, vport->port_state,
++				 fc_flag, vport->fc_flag);
+ 
+ 		/*
+ 		 * We temporarily set fc_myDID to make it look like we are
+@@ -6613,7 +6657,9 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 	/* ELS command <elsCmd> received from NPORT <did> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0112 ELS command x%x received from NPORT x%x "
+-			 "Data: x%x\n", cmd, did, vport->port_state);
++			 "Data: x%x x%x x%x x%x\n",
++			cmd, did, vport->port_state, vport->fc_flag,
++			vport->fc_myDID, vport->fc_prevDID);
+ 	switch (cmd) {
+ 	case ELS_CMD_PLOGI:
+ 		lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_UNSOL,
+@@ -6622,6 +6668,19 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 
+ 		phba->fc_stat.elsRcvPLOGI++;
+ 		ndlp = lpfc_plogi_confirm_nport(phba, payload, ndlp);
++		if (phba->sli_rev == LPFC_SLI_REV4 &&
++		    (phba->pport->fc_flag & FC_PT2PT)) {
++			vport->fc_prevDID = vport->fc_myDID;
++			/* Our DID needs to be updated before registering
++			 * the vfi. This is done in lpfc_rcv_plogi but
++			 * that is called after the reg_vfi.
++			 */
++			vport->fc_myDID = elsiocb->iocb.un.rcvels.parmRo;
++			lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++					 "3312 Remote port assigned DID x%x "
++					 "%x\n", vport->fc_myDID,
++					 vport->fc_prevDID);
++		}
+ 
+ 		lpfc_send_els_event(vport, ndlp, payload);
+ 
+@@ -6631,6 +6690,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 			rjt_exp = LSEXP_NOTHING_MORE;
+ 			break;
+ 		}
++		shost = lpfc_shost_from_vport(vport);
+ 		if (vport->port_state < LPFC_DISC_AUTH) {
+ 			if (!(phba->pport->fc_flag & FC_PT2PT) ||
+ 				(phba->pport->fc_flag & FC_PT2PT_PLOGI)) {
+@@ -6642,9 +6702,18 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
+ 			 * another NPort and the other side has initiated
+ 			 * the PLOGI before responding to our FLOGI.
+ 			 */
++			if (phba->sli_rev == LPFC_SLI_REV4 &&
++			    (phba->fc_topology_changed ||
++			     vport->fc_myDID != vport->fc_prevDID)) {
++				lpfc_unregister_fcf_prep(phba);
++				spin_lock_irq(shost->host_lock);
++				vport->fc_flag &= ~FC_VFI_REGISTERED;
++				spin_unlock_irq(shost->host_lock);
++				phba->fc_topology_changed = 0;
++				lpfc_issue_reg_vfi(vport);
++			}
+ 		}
+ 
+-		shost = lpfc_shost_from_vport(vport);
+ 		spin_lock_irq(shost->host_lock);
+ 		ndlp->nlp_flag &= ~NLP_TARGET_REMOVE;
+ 		spin_unlock_irq(shost->host_lock);
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2013-04-15 18:26:24.180040827 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2013-04-15 18:26:26.904040890 -0400
+@@ -673,6 +673,7 @@ struct lpfc_hba {
+ 	uint32_t lmt;
+ 
+ 	uint32_t fc_topology;	/* link topology, from LINK INIT */
++	uint32_t fc_topology_changed;	/* link topology, from LINK INIT */
+ 
+ 	struct lpfc_stats fc_stat;
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-04-15 18:26:24.187040829 -0400
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-04-15 18:26:26.937040890 -0400
+@@ -1436,7 +1436,8 @@ lpfc_register_fcf(struct lpfc_hba *phba)
+ 	if (phba->fcf.fcf_flag & FCF_REGISTERED) {
+ 		phba->fcf.fcf_flag |= (FCF_SCAN_DONE | FCF_IN_USE);
+ 		phba->hba_flag &= ~FCF_TS_INPROG;
+-		if (phba->pport->port_state != LPFC_FLOGI) {
++		if (phba->pport->port_state != LPFC_FLOGI &&
++		    phba->pport->fc_flag & FC_FABRIC) {
+ 			phba->hba_flag |= FCF_RR_INPROG;
+ 			spin_unlock_irq(&phba->hbalock);
+ 			lpfc_initial_flogi(phba->pport);
+@@ -2906,9 +2907,14 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
+ 		goto out_free_mem;
  	}
  
- 	if (!list_empty(&phba->sli.ring[LPFC_ELS_RING].txcmplq))
--		mod_timer(&vport->els_tmofunc, jiffies + HZ * timeout);
-+		mod_timer(&vport->els_tmofunc,
-+			  jiffies + msecs_to_jiffies(1000 * timeout));
+-	/* If the VFI is already registered, there is nothing else to do */
++	/* If the VFI is already registered, there is nothing else to do
++	 * Unless this was a VFI update and we are in PT2PT mode, then
++	 * we should drop through to set the port state to ready.
++	 */
+ 	if (vport->fc_flag & FC_VFI_REGISTERED)
+-		goto out_free_mem;
++		if (!(phba->sli_rev == LPFC_SLI_REV4 &&
++		      vport->fc_flag & FC_PT2PT))
++			goto out_free_mem;
+ 
+ 	/* The VPI is implicitly registered when the VFI is registered */
+ 	spin_lock_irq(shost->host_lock);
+@@ -2925,6 +2931,13 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
+ 		goto out_free_mem;
+ 	}
+ 
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
++			 "3313 cmpl reg vfi  port_state:%x fc_flag:%x myDid:%x "
++			 "alpacnt:%d LinkState:%x topology:%x\n",
++			 vport->port_state, vport->fc_flag, vport->fc_myDID,
++			 vport->phba->alpa_map[0],
++			 phba->link_state, phba->fc_topology);
++
+ 	if (vport->port_state == LPFC_FABRIC_CFG_LINK) {
+ 		/*
+ 		 * For private loop or for NPort pt2pt,
+@@ -2937,7 +2950,10 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
+ 			/* Use loop map to make discovery list */
+ 			lpfc_disc_list_loopmap(vport);
+ 			/* Start discovery */
+-			lpfc_disc_start(vport);
++			if (vport->fc_flag & FC_PT2PT)
++				vport->port_state = LPFC_VPORT_READY;
++			else
++				lpfc_disc_start(vport);
+ 		} else {
+ 			lpfc_start_fdiscs(phba);
+ 			lpfc_do_scr_ns_plogi(phba, vport);
+@@ -3019,6 +3035,15 @@ lpfc_mbx_process_link_up(struct lpfc_hba
+ 		break;
+ 	}
+ 
++	if (phba->fc_topology &&
++	    phba->fc_topology != bf_get(lpfc_mbx_read_top_topology, la)) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
++				"3314 Toplogy changed was 0x%x is 0x%x\n",
++				phba->fc_topology,
++				bf_get(lpfc_mbx_read_top_topology, la));
++		phba->fc_topology_changed = 1;
++	}
++
+ 	phba->fc_topology = bf_get(lpfc_mbx_read_top_topology, la);
+ 	phba->link_flag &= ~LS_NPIV_FAB_SUPPORTED;
+ 
+@@ -4961,8 +4986,12 @@ lpfc_disc_start(struct lpfc_vport *vport
+ 	uint32_t clear_la_pending;
+ 	int did_changed;
+ 
+-	if (!lpfc_is_link_up(phba))
++	if (!lpfc_is_link_up(phba)) {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
++				 "3315 Link is not up %x\n",
++				 phba->link_state);
+ 		return;
++	}
+ 
+ 	if (phba->link_state == LPFC_CLEAR_LA)
+ 		clear_la_pending = 1;
+@@ -5868,7 +5897,7 @@ lpfc_unregister_fcf_prep(struct lpfc_hba
+ 	struct lpfc_vport **vports;
+ 	struct lpfc_nodelist *ndlp;
+ 	struct Scsi_Host *shost;
+-	int i, rc;
++	int i = 0, rc;
+ 
+ 	/* Unregister RPIs */
+ 	if (lpfc_fcf_inuse(phba))
+@@ -5896,6 +5925,20 @@ lpfc_unregister_fcf_prep(struct lpfc_hba
+ 			spin_unlock_irq(shost->host_lock);
+ 		}
+ 	lpfc_destroy_vport_work_array(phba, vports);
++	if (i == 0 && (!(phba->sli3_options & LPFC_SLI3_NPIV_ENABLED))) {
++		ndlp = lpfc_findnode_did(phba->pport, Fabric_DID);
++		if (ndlp)
++			lpfc_cancel_retry_delay_tmo(phba->pport, ndlp);
++		lpfc_cleanup_pending_mbox(phba->pport);
++		if (phba->sli_rev == LPFC_SLI_REV4)
++			lpfc_sli4_unreg_all_rpis(phba->pport);
++		lpfc_mbx_unreg_vpi(phba->pport);
++		shost = lpfc_shost_from_vport(phba->pport);
++		spin_lock_irq(shost->host_lock);
++		phba->pport->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
++		phba->pport->vpi_state &= ~LPFC_VPI_REGISTERED;
++		spin_unlock_irq(shost->host_lock);
++	}
+ 
+ 	/* Cleanup any outstanding ELS commands */
+ 	lpfc_els_flush_all_cmd(phba);
+diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+--- a/drivers/scsi/lpfc/lpfc_mbox.c	2013-04-10 16:46:40.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_mbox.c	2013-04-15 18:26:26.977040891 -0400
+@@ -2149,18 +2149,21 @@ lpfc_reg_vfi(struct lpfcMboxq *mbox, str
+ 
+ 	/* Only FC supports upd bit */
+ 	if ((phba->sli4_hba.lnk_info.lnk_tp == LPFC_LNK_TYPE_FC) &&
+-	    (vport->fc_flag & FC_VFI_REGISTERED)) {
++	    (vport->fc_flag & FC_VFI_REGISTERED) &&
++	    (!phba->fc_topology_changed)) {
+ 		bf_set(lpfc_reg_vfi_vp, reg_vfi, 0);
+ 		bf_set(lpfc_reg_vfi_upd, reg_vfi, 1);
+ 	}
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_MBOX,
+ 			"3134 Register VFI, mydid:x%x, fcfi:%d, "
+-			" vfi:%d, vpi:%d, fc_pname:%x%x\n",
++			" vfi:%d, vpi:%d, fc_pname:%x%x fc_flag:x%x"
++			" port_state:x%x topology chg:%d\n",
+ 			vport->fc_myDID,
+ 			phba->fcf.fcfi,
+ 			phba->sli4_hba.vfi_ids[vport->vfi],
+ 			phba->vpi_ids[vport->vpi],
+-			reg_vfi->wwn[0], reg_vfi->wwn[1]);
++			reg_vfi->wwn[0], reg_vfi->wwn[1], vport->fc_flag,
++			vport->port_state, phba->fc_topology_changed);
  }
  
  /**
-@@ -7003,7 +7004,7 @@ lpfc_do_scr_ns_plogi(struct lpfc_hba *ph
- 	if (vport->fc_flag & FC_DISC_DELAYED) {
- 		spin_unlock_irq(shost->host_lock);
- 		mod_timer(&vport->delayed_disc_tmo,
--			jiffies + HZ * phba->fc_ratov);
-+			jiffies + msecs_to_jiffies(1000 * phba->fc_ratov));
- 		return;
- 	}
- 	spin_unlock_irq(shost->host_lock);
-@@ -7287,7 +7288,7 @@ lpfc_retry_pport_discovery(struct lpfc_h
- 		return;
- 
- 	shost = lpfc_shost_from_vport(phba->pport);
--	mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ);
-+	mod_timer(&ndlp->nlp_delayfunc, jiffies + msecs_to_jiffies(1000));
- 	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag |= NLP_DELAY_TMO;
- 	spin_unlock_irq(shost->host_lock);
-@@ -7791,7 +7792,8 @@ lpfc_block_fabric_iocbs(struct lpfc_hba
- 	blocked = test_and_set_bit(FABRIC_COMANDS_BLOCKED, &phba->bit_flags);
- 	/* Start a timer to unblock fabric iocbs after 100ms */
- 	if (!blocked)
--		mod_timer(&phba->fabric_block_timer, jiffies + HZ/10 );
-+		mod_timer(&phba->fabric_block_timer,
-+			  jiffies + msecs_to_jiffies(100));
- 
- 	return;
- }
-diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2013-04-10 16:46:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc.h	2013-04-15 18:26:24.180040827 -0400
-@@ -66,8 +66,10 @@ struct lpfc_sli2_slim;
-  * queue depths when there are driver resource error or Firmware
-  * resource error.
-  */
--#define QUEUE_RAMP_DOWN_INTERVAL	(1 * HZ)   /* 1 Second */
--#define QUEUE_RAMP_UP_INTERVAL		(300 * HZ) /* 5 minutes */
-+/* 1 Second */
-+#define QUEUE_RAMP_DOWN_INTERVAL	(msecs_to_jiffies(1000 * 1))
-+/* 5 minutes */
-+#define QUEUE_RAMP_UP_INTERVAL		(msecs_to_jiffies(1000 * 300))
- 
- /* Number of exchanges reserved for discovery to complete */
- #define LPFC_DISC_IOCB_BUFF_COUNT 20
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-04-15 18:26:14.814040614 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-04-15 18:26:24.187040829 -0400
-@@ -4247,7 +4247,7 @@ lpfc_set_disctmo(struct lpfc_vport *vpor
- 			tmo, vport->port_state, vport->fc_flag);
- 	}
- 
--	mod_timer(&vport->fc_disctmo, jiffies + HZ * tmo);
-+	mod_timer(&vport->fc_disctmo, jiffies + msecs_to_jiffies(1000 * tmo));
- 	spin_lock_irq(shost->host_lock);
- 	vport->fc_flag |= FC_DISC_TMO;
- 	spin_unlock_irq(shost->host_lock);
-@@ -5422,7 +5422,8 @@ lpfc_mbx_cmpl_fdmi_reg_login(struct lpfc
- 	if (vport->cfg_fdmi_on == 1)
- 		lpfc_fdmi_cmd(vport, ndlp, SLI_MGMT_DHBA);
- 	else
--		mod_timer(&vport->fc_fdmitmo, jiffies + HZ * 60);
-+		mod_timer(&vport->fc_fdmitmo,
-+			  jiffies + msecs_to_jiffies(1000 * 60));
- 
- 	/* decrement the node reference count held for this callback
- 	 * function.
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2013-04-15 18:26:14.875040617 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2013-04-15 18:26:24.220040829 -0400
-@@ -541,13 +541,16 @@ lpfc_config_port_post(struct lpfc_hba *p
- 
- 	/* Set up ring-0 (ELS) timer */
- 	timeout = phba->fc_ratov * 2;
--	mod_timer(&vport->els_tmofunc, jiffies + HZ * timeout);
-+	mod_timer(&vport->els_tmofunc,
-+		  jiffies + msecs_to_jiffies(1000 * timeout));
- 	/* Set up heart beat (HB) timer */
--	mod_timer(&phba->hb_tmofunc, jiffies + HZ * LPFC_HB_MBOX_INTERVAL);
-+	mod_timer(&phba->hb_tmofunc,
-+		  jiffies + msecs_to_jiffies(1000 * LPFC_HB_MBOX_INTERVAL));
- 	phba->hb_outstanding = 0;
- 	phba->last_completion_time = jiffies;
- 	/* Set up error attention (ERATT) polling timer */
--	mod_timer(&phba->eratt_poll, jiffies + HZ * LPFC_ERATT_POLL_INTERVAL);
-+	mod_timer(&phba->eratt_poll,
-+		  jiffies + msecs_to_jiffies(1000 * LPFC_ERATT_POLL_INTERVAL));
- 
- 	if (phba->hba_flag & LINK_DISABLED) {
- 		lpfc_printf_log(phba,
-@@ -1021,7 +1024,8 @@ lpfc_hb_mbox_cmpl(struct lpfc_hba * phba
- 		!(phba->link_state == LPFC_HBA_ERROR) &&
- 		!(phba->pport->load_flag & FC_UNLOADING))
- 		mod_timer(&phba->hb_tmofunc,
--			jiffies + HZ * LPFC_HB_MBOX_INTERVAL);
-+			  jiffies +
-+			  msecs_to_jiffies(1000 * LPFC_HB_MBOX_INTERVAL));
- 	return;
- }
- 
-@@ -1064,15 +1068,18 @@ lpfc_hb_timeout_handler(struct lpfc_hba
- 
- 	spin_lock_irq(&phba->pport->work_port_lock);
- 
--	if (time_after(phba->last_completion_time + LPFC_HB_MBOX_INTERVAL * HZ,
--		jiffies)) {
-+	if (time_after(phba->last_completion_time +
-+			msecs_to_jiffies(1000 * LPFC_HB_MBOX_INTERVAL),
-+			jiffies)) {
- 		spin_unlock_irq(&phba->pport->work_port_lock);
- 		if (!phba->hb_outstanding)
- 			mod_timer(&phba->hb_tmofunc,
--				jiffies + HZ * LPFC_HB_MBOX_INTERVAL);
-+				jiffies +
-+				msecs_to_jiffies(1000 * LPFC_HB_MBOX_INTERVAL));
- 		else
- 			mod_timer(&phba->hb_tmofunc,
--				jiffies + HZ * LPFC_HB_MBOX_TIMEOUT);
-+				jiffies +
-+				msecs_to_jiffies(1000 * LPFC_HB_MBOX_TIMEOUT));
- 		return;
- 	}
- 	spin_unlock_irq(&phba->pport->work_port_lock);
-@@ -1104,7 +1111,8 @@ lpfc_hb_timeout_handler(struct lpfc_hba
- 				if (!pmboxq) {
- 					mod_timer(&phba->hb_tmofunc,
- 						 jiffies +
--						 HZ * LPFC_HB_MBOX_INTERVAL);
-+						 msecs_to_jiffies(1000 *
-+						 LPFC_HB_MBOX_INTERVAL));
- 					return;
- 				}
- 
-@@ -1120,7 +1128,8 @@ lpfc_hb_timeout_handler(struct lpfc_hba
- 							phba->mbox_mem_pool);
- 					mod_timer(&phba->hb_tmofunc,
- 						jiffies +
--						HZ * LPFC_HB_MBOX_INTERVAL);
-+						msecs_to_jiffies(1000 *
-+						LPFC_HB_MBOX_INTERVAL));
- 					return;
- 				}
- 				phba->skipped_hb = 0;
-@@ -1136,7 +1145,8 @@ lpfc_hb_timeout_handler(struct lpfc_hba
- 				phba->skipped_hb = jiffies;
- 
- 			mod_timer(&phba->hb_tmofunc,
--				  jiffies + HZ * LPFC_HB_MBOX_TIMEOUT);
-+				 jiffies +
-+				 msecs_to_jiffies(1000 * LPFC_HB_MBOX_TIMEOUT));
- 			return;
- 		} else {
- 			/*
-@@ -1150,7 +1160,8 @@ lpfc_hb_timeout_handler(struct lpfc_hba
- 					jiffies_to_msecs(jiffies
- 						 - phba->last_completion_time));
- 			mod_timer(&phba->hb_tmofunc,
--				  jiffies + HZ * LPFC_HB_MBOX_TIMEOUT);
-+				jiffies +
-+				msecs_to_jiffies(1000 * LPFC_HB_MBOX_TIMEOUT));
- 		}
- 	}
- }
-@@ -3207,14 +3218,15 @@ int lpfc_scan_finished(struct Scsi_Host
- 		stat = 1;
- 		goto finished;
- 	}
--	if (time >= 30 * HZ) {
-+	if (time >= msecs_to_jiffies(30 * 1000)) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0461 Scanning longer than 30 "
- 				"seconds.  Continuing initialization\n");
- 		stat = 1;
- 		goto finished;
- 	}
--	if (time >= 15 * HZ && phba->link_state <= LPFC_LINK_DOWN) {
-+	if (time >= msecs_to_jiffies(15 * 1000) &&
-+	    phba->link_state <= LPFC_LINK_DOWN) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0465 Link down longer than 15 "
- 				"seconds.  Continuing initialization\n");
-@@ -3226,7 +3238,7 @@ int lpfc_scan_finished(struct Scsi_Host
- 		goto finished;
- 	if (vport->num_disc_nodes || vport->fc_prli_sent)
- 		goto finished;
--	if (vport->fc_map_cnt == 0 && time < 2 * HZ)
-+	if (vport->fc_map_cnt == 0 && time < msecs_to_jiffies(2 * 1000))
- 		goto finished;
- 	if ((phba->sli.sli_flag & LPFC_SLI_MBOX_ACTIVE) != 0)
- 		goto finished;
-@@ -4225,7 +4237,8 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba
- 			 * If there are other active VLinks present,
- 			 * re-instantiate the Vlink using FDISC.
- 			 */
--			mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ);
-+			mod_timer(&ndlp->nlp_delayfunc,
-+				  jiffies + msecs_to_jiffies(1000));
- 			shost = lpfc_shost_from_vport(vport);
- 			spin_lock_irq(shost->host_lock);
- 			ndlp->nlp_flag |= NLP_DELAY_TMO;
 diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-04-10 16:46:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-04-15 18:26:24.224040829 -0400
-@@ -574,7 +574,7 @@ out:
- 	lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb, ndlp, NULL);
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-04-15 18:26:24.224040829 -0400
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-04-15 18:26:26.978040891 -0400
+@@ -332,9 +332,11 @@ lpfc_rcv_plogi(struct lpfc_vport *vport,
  
- 	/* 1 sec timeout */
--	mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ);
-+	mod_timer(&ndlp->nlp_delayfunc, jiffies + msecs_to_jiffies(1000));
+ 	/* PLOGI chkparm OK */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+-			 "0114 PLOGI chkparm OK Data: x%x x%x x%x x%x\n",
++			 "0114 PLOGI chkparm OK Data: x%x x%x x%x "
++			 "x%x x%x x%x\n",
+ 			 ndlp->nlp_DID, ndlp->nlp_state, ndlp->nlp_flag,
+-			 ndlp->nlp_rpi);
++			 ndlp->nlp_rpi, vport->port_state,
++			 vport->fc_flag);
  
- 	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag |= NLP_DELAY_TMO;
-@@ -631,7 +631,8 @@ lpfc_rcv_logo(struct lpfc_vport *vport,
- 			 * If there are other active VLinks present,
- 			 * re-instantiate the Vlink using FDISC.
- 			 */
--			mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ);
-+			mod_timer(&ndlp->nlp_delayfunc,
-+				  jiffies + msecs_to_jiffies(1000));
- 			spin_lock_irq(shost->host_lock);
- 			ndlp->nlp_flag |= NLP_DELAY_TMO;
- 			spin_unlock_irq(shost->host_lock);
-@@ -648,7 +649,8 @@ lpfc_rcv_logo(struct lpfc_vport *vport,
- 		!(ndlp->nlp_type & NLP_FCP_INITIATOR))) ||
- 		(ndlp->nlp_state == NLP_STE_ADISC_ISSUE)) {
- 		/* Only try to re-login if this is NOT a Fabric Node */
--		mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ * 1);
-+		mod_timer(&ndlp->nlp_delayfunc,
-+			  jiffies + msecs_to_jiffies(1000 * 1));
- 		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag |= NLP_DELAY_TMO;
- 		spin_unlock_irq(shost->host_lock);
-@@ -969,7 +971,7 @@ lpfc_rcv_els_plogi_issue(struct lpfc_vpo
- 	}
- 
- 	/* Put ndlp in npr state set plogi timer for 1 sec */
--	mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ * 1);
-+	mod_timer(&ndlp->nlp_delayfunc, jiffies + msecs_to_jiffies(1000 * 1));
- 	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag |= NLP_DELAY_TMO;
- 	spin_unlock_irq(shost->host_lock);
-@@ -1303,7 +1305,8 @@ lpfc_cmpl_adisc_adisc_issue(struct lpfc_
- 	if ((irsp->ulpStatus) ||
- 	    (!lpfc_check_adisc(vport, ndlp, &ap->nodeName, &ap->portName))) {
- 		/* 1 sec timeout */
--		mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ);
-+		mod_timer(&ndlp->nlp_delayfunc,
-+			  jiffies + msecs_to_jiffies(1000));
- 		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag |= NLP_DELAY_TMO;
- 		spin_unlock_irq(shost->host_lock);
-@@ -1509,7 +1512,8 @@ lpfc_cmpl_reglogin_reglogin_issue(struct
- 		}
- 
- 		/* Put ndlp in npr state set plogi timer for 1 sec */
--		mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ * 1);
-+		mod_timer(&ndlp->nlp_delayfunc,
-+			  jiffies + msecs_to_jiffies(1000 * 1));
- 		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag |= NLP_DELAY_TMO;
- 		spin_unlock_irq(shost->host_lock);
-@@ -2145,7 +2149,8 @@ lpfc_rcv_prlo_npr_node(struct lpfc_vport
- 	lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
- 
- 	if ((ndlp->nlp_flag & NLP_DELAY_TMO) == 0) {
--		mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ * 1);
-+		mod_timer(&ndlp->nlp_delayfunc,
-+			  jiffies + msecs_to_jiffies(1000 * 1));
- 		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag |= NLP_DELAY_TMO;
- 		ndlp->nlp_flag &= ~NLP_NPR_ADISC;
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2013-04-15 18:26:21.124040758 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2013-04-15 18:26:24.228040829 -0400
-@@ -4771,7 +4771,7 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 	/* Wait for abort to complete */
- 	wait_event_timeout(waitq,
- 			  (lpfc_cmd->pCmd != cmnd),
--			   (2*vport->cfg_devloss_tmo*HZ));
-+			   msecs_to_jiffies(2*vport->cfg_devloss_tmo*1000));
- 	lpfc_cmd->waitq = NULL;
- 
- 	if (lpfc_cmd->pCmd == cmnd) {
+ 	if (vport->cfg_fcp_class == 2 && sp->cls2.classValid)
+ 		ndlp->nlp_fcp_info |= CLASS2;
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2013-04-15 18:26:14.915040617 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-04-15 18:26:24.252040829 -0400
-@@ -666,7 +666,7 @@ lpfc_handle_rrq_active(struct lpfc_hba *
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2013-04-15 18:26:24.252040829 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-04-15 18:26:26.986040891 -0400
+@@ -2341,7 +2341,8 @@ lpfc_sli_handle_mb_event(struct lpfc_hba
+ 		/* Mailbox cmd <cmd> Cmpl <cmpl> */
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
+ 				"(%d):0307 Mailbox cmd x%x (x%x/x%x) Cmpl x%p "
+-				"Data: x%x x%x x%x x%x x%x x%x x%x x%x x%x\n",
++				"Data: x%x x%x x%x x%x x%x x%x x%x x%x x%x "
++				"x%x x%x x%x\n",
+ 				pmb->vport ? pmb->vport->vpi : 0,
+ 				pmbox->mbxCommand,
+ 				lpfc_sli_config_mbox_subsys_get(phba, pmb),
+@@ -2355,7 +2356,10 @@ lpfc_sli_handle_mb_event(struct lpfc_hba
+ 				pmbox->un.varWords[4],
+ 				pmbox->un.varWords[5],
+ 				pmbox->un.varWords[6],
+-				pmbox->un.varWords[7]);
++				pmbox->un.varWords[7],
++				pmbox->un.varWords[8],
++				pmbox->un.varWords[9],
++				pmbox->un.varWords[10]);
  
- 	spin_lock_irqsave(&phba->hbalock, iflags);
- 	phba->hba_flag &= ~HBA_RRQ_ACTIVE;
--	next_time = jiffies + HZ * (phba->fc_ratov + 1);
-+	next_time = jiffies + msecs_to_jiffies(1000 * (phba->fc_ratov + 1));
- 	list_for_each_entry_safe(rrq, nextrrq,
- 				 &phba->active_rrq_list, list) {
- 		if (time_after(jiffies, rrq->rrq_stop_time))
-@@ -781,7 +781,7 @@ lpfc_cleanup_wt_rrqs(struct lpfc_hba *ph
- 		return;
- 	spin_lock_irqsave(&phba->hbalock, iflags);
- 	phba->hba_flag &= ~HBA_RRQ_ACTIVE;
--	next_time = jiffies + HZ * (phba->fc_ratov * 2);
-+	next_time = jiffies + msecs_to_jiffies(1000 * (phba->fc_ratov * 2));
- 	list_splice_init(&phba->active_rrq_list, &rrq_list);
- 	spin_unlock_irqrestore(&phba->hbalock, iflags);
- 
-@@ -877,7 +877,8 @@ lpfc_set_rrq_active(struct lpfc_hba *phb
- 	else
- 		rrq->send_rrq = 0;
- 	rrq->xritag = xritag;
--	rrq->rrq_stop_time = jiffies + HZ * (phba->fc_ratov + 1);
-+	rrq->rrq_stop_time = jiffies +
-+				msecs_to_jiffies(1000 * (phba->fc_ratov + 1));
- 	rrq->ndlp = ndlp;
- 	rrq->nlp_DID = ndlp->nlp_DID;
- 	rrq->vport = ndlp->vport;
-@@ -1338,7 +1339,8 @@ lpfc_sli_ringtxcmpl_put(struct lpfc_hba
- 			BUG();
- 		else
- 			mod_timer(&piocb->vport->els_tmofunc,
--				  jiffies + HZ * (phba->fc_ratov << 1));
-+				jiffies +
-+				msecs_to_jiffies(1000 * (phba->fc_ratov << 1)));
- 	}
- 
-
-@@ -2907,8 +2909,9 @@ void lpfc_poll_eratt(unsigned long ptr)
- 		lpfc_worker_wake_up(phba);
- 	else
- 		/* Restart the timer for next eratt poll */
--		mod_timer(&phba->eratt_poll, jiffies +
--					HZ * LPFC_ERATT_POLL_INTERVAL);
-+		mod_timer(&phba->eratt_poll,
-+			  jiffies +
-+			  msecs_to_jiffies(1000 * LPFC_ERATT_POLL_INTERVAL));
- 	return;
- }
- 
-@@ -6447,16 +6450,17 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
- 
- 	/* Start the ELS watchdog timer */
- 	mod_timer(&vport->els_tmofunc,
--		  jiffies + HZ * (phba->fc_ratov * 2));
-+		  jiffies + msecs_to_jiffies(1000 * (phba->fc_ratov * 2)));
- 
- 	/* Start heart beat timer */
- 	mod_timer(&phba->hb_tmofunc,
--		  jiffies + HZ * LPFC_HB_MBOX_INTERVAL);
-+		  jiffies + msecs_to_jiffies(1000 * LPFC_HB_MBOX_INTERVAL));
- 	phba->hb_outstanding = 0;
- 	phba->last_completion_time = jiffies;
- 
- 	/* Start error attention (ERATT) polling timer */
--	mod_timer(&phba->eratt_poll, jiffies + HZ * LPFC_ERATT_POLL_INTERVAL);
-+	mod_timer(&phba->eratt_poll,
-+		  jiffies + msecs_to_jiffies(1000 * LPFC_ERATT_POLL_INTERVAL));
- 
- 	/* Enable PCIe device Advanced Error Reporting (AER) if configured */
- 	if (phba->cfg_aer_support == 1 && !(phba->hba_flag & HBA_AER_ENABLED)) {
-@@ -6823,8 +6827,9 @@ lpfc_sli_issue_mbox_s3(struct lpfc_hba *
- 			goto out_not_finished;
- 		}
- 		/* timeout active mbox command */
--		mod_timer(&psli->mbox_tmo, (jiffies +
--			       (HZ * lpfc_mbox_tmo_val(phba, pmbox))));
-+		timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, pmbox) *
-+					   1000);
-+		mod_timer(&psli->mbox_tmo, jiffies + timeout);
- 	}
- 
- 	/* Mailbox cmd <cmd> issue */
-@@ -7497,7 +7502,7 @@ lpfc_sli4_post_async_mbox(struct lpfc_hb
- 
- 	/* Start timer for the mbox_tmo and log some mailbox post messages */
- 	mod_timer(&psli->mbox_tmo, (jiffies +
--		  (HZ * lpfc_mbox_tmo_val(phba, mboxq))));
-+		  msecs_to_jiffies(1000 * lpfc_mbox_tmo_val(phba, mboxq))));
- 
- 	lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
- 			"(%d):0355 Mailbox cmd x%x (x%x/x%x) issue Data: "
-@@ -10004,7 +10009,7 @@ lpfc_sli_issue_iocb_wait(struct lpfc_hba
- 	retval = lpfc_sli_issue_iocb(phba, ring_number, piocb,
- 				     SLI_IOCB_RET_IOCB);
- 	if (retval == IOCB_SUCCESS) {
--		timeout_req = timeout * HZ;
-+		timeout_req = msecs_to_jiffies(timeout * 1000);
- 		timeleft = wait_event_timeout(done_q,
- 				lpfc_chk_iocb_flg(phba, piocb, LPFC_IO_WAKE),
- 				timeout_req);
-@@ -10109,7 +10114,7 @@ lpfc_sli_issue_mbox_wait(struct lpfc_hba
- 	if (retval == MBX_BUSY || retval == MBX_SUCCESS) {
- 		wait_event_interruptible_timeout(done_q,
- 				pmboxq->mbox_flag & LPFC_MBX_WAKE,
--				timeout * HZ);
-+				msecs_to_jiffies(timeout * 1000));
- 
- 		spin_lock_irqsave(&phba->hbalock, flag);
- 		pmboxq->context1 = NULL;
+ 		if (pmb->mbox_cmpl)
+ 			pmb->mbox_cmpl(phba,pmb);
 
 
 
