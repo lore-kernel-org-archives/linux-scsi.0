@@ -1,57 +1,58 @@
-From: "Anand Kumar Santhanam" <AnandKumar.Santhanam@pmcs.com>
-Subject: RE: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, variables and modify for SPC
-Date: Thu, 18 Apr 2013 11:43:45 -0700
-Message-ID: <E5DEE6F468524847995699AD11E80885017C6915@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <5149F023.6060204@pmc-sierra.com> <1365621636.1942.5.camel@dabdike> <E5DEE6F468524847995699AD11E8088501700991@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <1365714818.1913.1.camel@dabdike> <E5DEE6F468524847995699AD11E8088501700A6F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <1365736034.6982.4.camel@dabdike>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/1] cciss: add cciss_allow_hpsa module parameter
+Date: Thu, 18 Apr 2013 13:49:37 -0500
+Message-ID: <20130418184937.GA31252@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:40385 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750917Ab3DRSny convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Apr 2013 14:43:54 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1365736034.6982.4.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>
+Cc: LKML-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, sakthivel.sk@hcl.com, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>, xjtuwjp@gmail.com, Vishwanath Maram <Vishwanath.Maram@pmcs.com>
-
-Hi James,
-
-I have resubmitted the patchset v4 after fixing the patch format
-problems.
-Pls apply from patch 1 of the series onwards.
-
-Regards
-Anand
-
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Friday, April 12, 2013 8:37 AM
-To: Anand Kumar Santhanam
-Cc: linux-scsi@vger.kernel.org; Harry Yang; Rich Bono;
-sakthivel.sk@hcl.com; Sangeetha Gnanasekaran; xjtuwjp@gmail.com;
-Vishwanath Maram
-Subject: Re: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids,
-variables and modify for SPC
-
-On Thu, 2013-04-11 at 19:38 -0700, Anand Kumar Santhanam wrote:
-> Hi James,
-> 
-> I will double check the same. Also can you pls provide the tool which 
-> you are using to apply the patch and also the kernel version?
-
-It's git and the tip of the SCSI misc branch
-
-> I will ensure that we locally apply the patches before sending to the 
-> list.
-
-Thanks,
-
-James
 
 
+Add the cciss_allow_hpsa modules parameter. This allows users to use the hpsa
+driver instead of cciss for older controllers.
+Tested with 3.9.0-rc7 in combination with the bug fix submitted Tuesday. My
+apologies for not testing that patch with the correct kernel.
+
+From: Mike <mike.miller@hp.com>
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+
+---
+ drivers/block/cciss.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index a6c0973..081d1a8 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -75,6 +75,12 @@ module_param(cciss_simple_mode, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(cciss_simple_mode,
+ 	"Use 'simple mode' rather than 'performant mode'");
+ 
++static int cciss_allow_hpsa;
++module_param(cciss_allow_hpsa, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(cciss_allow_hpsa,
++	"Prevent cciss driver from accessing hardware known to be "
++	" supported by the hpsa driver");
++
+ static DEFINE_MUTEX(cciss_mutex);
+ static struct proc_dir_entry *proc_cciss;
+ 
+@@ -4116,9 +4122,13 @@ static int cciss_lookup_board_id(struct pci_dev *pdev, u32 *board_id)
+ 	*board_id = ((subsystem_device_id << 16) & 0xffff0000) |
+ 			subsystem_vendor_id;
+ 
+-	for (i = 0; i < ARRAY_SIZE(products); i++)
++	for (i = 0; i < ARRAY_SIZE(products); i++) {
++		/* Stand aside for hpsa driver on request */
++		if (cciss_allow_hpsa)
++			return -ENODEV;
+ 		if (*board_id == products[i].board_id)
+ 			return i;
++	}
+ 	dev_warn(&pdev->dev, "unrecognized board ID: 0x%08x, ignoring.\n",
+ 		*board_id);
+ 	return -ENODEV;
