@@ -1,438 +1,108 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 4/22] lpfc 8.3.39: Fixed pt2pt and loop discovery problems
- on topology changes.
-Date: Wed, 17 Apr 2013 20:15:19 -0400
-Message-ID: <1366244119.1513.5.camel@myfc17>
+Subject: [PATCH 5/22] lpfc 8.3.39: Fix driver issues with large
+ lpfc_sg_seg_cnt values
+Date: Wed, 17 Apr 2013 20:16:05 -0400
+Message-ID: <1366244165.1513.6.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:24289 "EHLO
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:24293 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935433Ab3DRAPW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Apr 2013 20:15:22 -0400
+	with ESMTP id S934827Ab3DRAQH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Apr 2013 20:16:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed pt2pt and loop discovery problems on topology changes.
+Fix driver issues with large lpfc_sg_seg_cnt values
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h           |    1 
- lpfc_attr.c      |    2 +
- lpfc_els.c       |   93 +++++++++++++++++++++++++++++++++++++++++++++++--------
- lpfc_hbadisc.c   |   55 ++++++++++++++++++++++++++++----
- lpfc_mbox.c      |    9 +++--
- lpfc_nportdisc.c |    6 ++-
- lpfc_sli.c       |    8 +++-
- 7 files changed, 149 insertions(+), 25 deletions(-)
+ lpfc.h      |    3 +++
+ lpfc_init.c |   31 +++++++++++++------------------
+ 2 files changed, 16 insertions(+), 18 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2013-04-10 16:46:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2013-04-15 18:26:26.892040889 -0400
-@@ -2801,6 +2801,8 @@ lpfc_topology_store(struct device *dev,
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 			"3054 lpfc_topology changed from %d to %d\n",
- 			prev_val, val);
-+		if (prev_val != val && phba->sli_rev == LPFC_SLI_REV4)
-+			phba->fc_topology_changed = 1;
- 		err = lpfc_issue_lip(lpfc_shost_from_vport(phba->pport));
- 		if (err) {
- 			phba->cfg_topology = prev_val;
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2013-04-15 18:26:24.178040827 -0400
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2013-04-15 18:26:26.898040889 -0400
-@@ -29,6 +29,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport_fc.h>
- 
-+
- #include "lpfc_hw4.h"
- #include "lpfc_hw.h"
- #include "lpfc_sli.h"
-@@ -308,16 +309,20 @@ lpfc_prep_els_iocb(struct lpfc_vport *vp
- 		/* Xmit ELS command <elsCmd> to remote NPORT <did> */
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 				 "0116 Xmit ELS command x%x to remote "
--				 "NPORT x%x I/O tag: x%x, port state: x%x\n",
-+				 "NPORT x%x I/O tag: x%x, port state:x%x"
-+				 " fc_flag:x%x\n",
- 				 elscmd, did, elsiocb->iotag,
--				 vport->port_state);
-+				 vport->port_state,
-+				 vport->fc_flag);
- 	} else {
- 		/* Xmit ELS response <elsCmd> to remote NPORT <did> */
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 				 "0117 Xmit ELS response x%x to remote "
--				 "NPORT x%x I/O tag: x%x, size: x%x\n",
-+				 "NPORT x%x I/O tag: x%x, size: x%x "
-+				 "port_state x%x fc_flag x%x\n",
- 				 elscmd, ndlp->nlp_DID, elsiocb->iotag,
--				 cmdSize);
-+				 cmdSize, vport->port_state,
-+				 vport->fc_flag);
- 	}
- 	return elsiocb;
- 
-@@ -909,6 +914,23 @@ lpfc_cmpl_els_flogi_nport(struct lpfc_vp
- 	spin_lock_irq(shost->host_lock);
- 	vport->fc_flag |= FC_PT2PT;
- 	spin_unlock_irq(shost->host_lock);
-+	/* If physical FC port changed, unreg VFI and ALL VPIs / RPIs */
-+	if ((phba->sli_rev == LPFC_SLI_REV4) && phba->fc_topology_changed) {
-+		lpfc_unregister_fcf_prep(phba);
-+
-+		/* The FC_VFI_REGISTERED flag will get clear in the cmpl
-+		 * handler for unreg_vfi, but if we don't force the
-+		 * FC_VFI_REGISTERED flag then the reg_vfi mailbox could be
-+		 * built with the update bit set instead of just the vp bit to
-+		 * change the Nport ID.  We need to have the vp set and the
-+		 * Upd cleared on topology changes.
-+		 */
-+		spin_lock_irq(shost->host_lock);
-+		vport->fc_flag &= ~FC_VFI_REGISTERED;
-+		spin_unlock_irq(shost->host_lock);
-+		phba->fc_topology_changed = 0;
-+		lpfc_issue_reg_vfi(vport);
-+	}
- 
- 	/* Start discovery - this should just do CLEAR_LA */
- 	lpfc_disc_start(vport);
-@@ -1030,9 +1052,19 @@ stop_rr_fcf_flogi:
- 			vport->cfg_discovery_threads = LPFC_MAX_DISC_THREADS;
- 		if ((phba->sli_rev == LPFC_SLI_REV4) &&
- 		    (!(vport->fc_flag & FC_VFI_REGISTERED) ||
--		     (vport->fc_prevDID != vport->fc_myDID))) {
--			if (vport->fc_flag & FC_VFI_REGISTERED)
--				lpfc_sli4_unreg_all_rpis(vport);
-+		     (vport->fc_prevDID != vport->fc_myDID) ||
-+			phba->fc_topology_changed)) {
-+			if (vport->fc_flag & FC_VFI_REGISTERED) {
-+				if (phba->fc_topology_changed) {
-+					lpfc_unregister_fcf_prep(phba);
-+					spin_lock_irq(shost->host_lock);
-+					vport->fc_flag &= ~FC_VFI_REGISTERED;
-+					spin_unlock_irq(shost->host_lock);
-+					phba->fc_topology_changed = 0;
-+				} else {
-+					lpfc_sli4_unreg_all_rpis(vport);
-+				}
-+			}
- 			lpfc_issue_reg_vfi(vport);
- 			lpfc_nlp_put(ndlp);
- 			goto out;
-@@ -1055,9 +1087,10 @@ stop_rr_fcf_flogi:
- 	/* FLOGI completes successfully */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 			 "0101 FLOGI completes successfully "
--			 "Data: x%x x%x x%x x%x\n",
-+			 "Data: x%x x%x x%x x%x x%x x%x\n",
- 			 irsp->un.ulpWord[4], sp->cmn.e_d_tov,
--			 sp->cmn.w2.r_a_tov, sp->cmn.edtovResolution);
-+			 sp->cmn.w2.r_a_tov, sp->cmn.edtovResolution,
-+			 vport->port_state, vport->fc_flag);
- 
- 	if (vport->port_state == LPFC_FLOGI) {
- 		/*
-@@ -5047,6 +5080,8 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vp
- 	struct ls_rjt stat;
- 	uint32_t cmd, did;
- 	int rc;
-+	uint32_t fc_flag = 0;
-+	uint32_t port_state = 0;
- 
- 	cmd = *lp++;
- 	sp = (struct serv_parm *) lp;
-@@ -5113,16 +5148,25 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vp
- 			 * will be.
- 			 */
- 			vport->fc_myDID = PT2PT_LocalID;
--		}
-+		} else
-+			vport->fc_myDID = PT2PT_RemoteID;
- 
- 		/*
- 		 * The vport state should go to LPFC_FLOGI only
- 		 * AFTER we issue a FLOGI, not receive one.
- 		 */
- 		spin_lock_irq(shost->host_lock);
-+		fc_flag = vport->fc_flag;
-+		port_state = vport->port_state;
- 		vport->fc_flag |= FC_PT2PT;
- 		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
-+		vport->port_state = LPFC_FLOGI;
- 		spin_unlock_irq(shost->host_lock);
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+				 "3311 Rcv Flogi PS x%x new PS x%x "
-+				 "fc_flag x%x new fc_flag x%x\n",
-+				 port_state, vport->port_state,
-+				 fc_flag, vport->fc_flag);
- 
- 		/*
- 		 * We temporarily set fc_myDID to make it look like we are
-@@ -6613,7 +6657,9 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
- 	/* ELS command <elsCmd> received from NPORT <did> */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 			 "0112 ELS command x%x received from NPORT x%x "
--			 "Data: x%x\n", cmd, did, vport->port_state);
-+			 "Data: x%x x%x x%x x%x\n",
-+			cmd, did, vport->port_state, vport->fc_flag,
-+			vport->fc_myDID, vport->fc_prevDID);
- 	switch (cmd) {
- 	case ELS_CMD_PLOGI:
- 		lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_UNSOL,
-@@ -6622,6 +6668,19 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
- 
- 		phba->fc_stat.elsRcvPLOGI++;
- 		ndlp = lpfc_plogi_confirm_nport(phba, payload, ndlp);
-+		if (phba->sli_rev == LPFC_SLI_REV4 &&
-+		    (phba->pport->fc_flag & FC_PT2PT)) {
-+			vport->fc_prevDID = vport->fc_myDID;
-+			/* Our DID needs to be updated before registering
-+			 * the vfi. This is done in lpfc_rcv_plogi but
-+			 * that is called after the reg_vfi.
-+			 */
-+			vport->fc_myDID = elsiocb->iocb.un.rcvels.parmRo;
-+			lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+					 "3312 Remote port assigned DID x%x "
-+					 "%x\n", vport->fc_myDID,
-+					 vport->fc_prevDID);
-+		}
- 
- 		lpfc_send_els_event(vport, ndlp, payload);
- 
-@@ -6631,6 +6690,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
- 			rjt_exp = LSEXP_NOTHING_MORE;
- 			break;
- 		}
-+		shost = lpfc_shost_from_vport(vport);
- 		if (vport->port_state < LPFC_DISC_AUTH) {
- 			if (!(phba->pport->fc_flag & FC_PT2PT) ||
- 				(phba->pport->fc_flag & FC_PT2PT_PLOGI)) {
-@@ -6642,9 +6702,18 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
- 			 * another NPort and the other side has initiated
- 			 * the PLOGI before responding to our FLOGI.
- 			 */
-+			if (phba->sli_rev == LPFC_SLI_REV4 &&
-+			    (phba->fc_topology_changed ||
-+			     vport->fc_myDID != vport->fc_prevDID)) {
-+				lpfc_unregister_fcf_prep(phba);
-+				spin_lock_irq(shost->host_lock);
-+				vport->fc_flag &= ~FC_VFI_REGISTERED;
-+				spin_unlock_irq(shost->host_lock);
-+				phba->fc_topology_changed = 0;
-+				lpfc_issue_reg_vfi(vport);
-+			}
- 		}
- 
--		shost = lpfc_shost_from_vport(vport);
- 		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag &= ~NLP_TARGET_REMOVE;
- 		spin_unlock_irq(shost->host_lock);
 diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2013-04-15 18:26:24.180040827 -0400
-+++ b/drivers/scsi/lpfc/lpfc.h	2013-04-15 18:26:26.904040890 -0400
-@@ -673,6 +673,7 @@ struct lpfc_hba {
- 	uint32_t lmt;
+--- a/drivers/scsi/lpfc/lpfc.h	2013-04-15 18:26:26.904040890 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2013-04-15 18:26:31.051040984 -0400
+@@ -48,6 +48,9 @@ struct lpfc_sli2_slim;
+ 		downloads using bsg */
+ #define LPFC_DEFAULT_PROT_SG_SEG_CNT 4096 /* sg protection elements count */
+ #define LPFC_MAX_SG_SEG_CNT	4096	/* sg element count per scsi cmnd */
++#define LPFC_MAX_SGL_SEG_CNT	512	/* SGL element count per scsi cmnd */
++#define LPFC_MAX_BPL_SEG_CNT	4096	/* BPL element count per scsi cmnd */
++
+ #define LPFC_MAX_SGE_SIZE       0x80000000 /* Maximum data allowed in a SGE */
+ #define LPFC_MAX_PROT_SG_SEG_CNT 4096	/* prot sg element count per scsi cmd*/
+ #define LPFC_IOCB_LIST_CNT	2250	/* list of IOCBs for fast-path usage. */
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2013-04-15 18:26:24.220040829 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2013-04-15 18:26:31.068040984 -0400
+@@ -4739,7 +4739,7 @@ lpfc_sli_driver_resource_setup(struct lp
+ 			((phba->cfg_sg_seg_cnt + 2) * sizeof(struct ulp_bde64));
  
- 	uint32_t fc_topology;	/* link topology, from LINK INIT */
-+	uint32_t fc_topology_changed;	/* link topology, from LINK INIT */
- 
- 	struct lpfc_stats fc_stat;
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-04-15 18:26:24.187040829 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-04-15 18:26:26.937040890 -0400
-@@ -1436,7 +1436,8 @@ lpfc_register_fcf(struct lpfc_hba *phba)
- 	if (phba->fcf.fcf_flag & FCF_REGISTERED) {
- 		phba->fcf.fcf_flag |= (FCF_SCAN_DONE | FCF_IN_USE);
- 		phba->hba_flag &= ~FCF_TS_INPROG;
--		if (phba->pport->port_state != LPFC_FLOGI) {
-+		if (phba->pport->port_state != LPFC_FLOGI &&
-+		    phba->pport->fc_flag & FC_FABRIC) {
- 			phba->hba_flag |= FCF_RR_INPROG;
- 			spin_unlock_irq(&phba->hbalock);
- 			lpfc_initial_flogi(phba->pport);
-@@ -2906,9 +2907,14 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
- 		goto out_free_mem;
+ 	if (phba->cfg_enable_bg) {
+-		phba->cfg_sg_seg_cnt = LPFC_MAX_SG_SEG_CNT;
++		phba->cfg_sg_seg_cnt = LPFC_MAX_BPL_SEG_CNT;
+ 		phba->cfg_sg_dma_buf_size +=
+ 			phba->cfg_prot_sg_seg_cnt * sizeof(struct ulp_bde64);
  	}
+@@ -4817,7 +4817,7 @@ lpfc_sli4_driver_resource_setup(struct l
+ 	int rc, i, hbq_count, buf_size, dma_buf_size, max_buf_size;
+ 	uint8_t pn_page[LPFC_MAX_SUPPORTED_PAGES] = {0};
+ 	struct lpfc_mqe *mqe;
+-	int longs, sli_family;
++	int longs;
+ 	int sges_per_segment;
  
--	/* If the VFI is already registered, there is nothing else to do */
-+	/* If the VFI is already registered, there is nothing else to do
-+	 * Unless this was a VFI update and we are in PT2PT mode, then
-+	 * we should drop through to set the port state to ready.
+ 	/* Before proceed, wait for POST done and device ready */
+@@ -4901,6 +4901,17 @@ lpfc_sli4_driver_resource_setup(struct l
+ 			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
+ 	if (!phba->sli.ring)
+ 		return -ENOMEM;
++
++	/*
++	 * It doesn't matter what family our adapter is in, we are
++	 * limited to 2 Pages, 512 SGEs, for our SGL.
++	 * There are going to be 2 reserved SGEs: 1 FCP cmnd + 1 FCP rsp
 +	 */
- 	if (vport->fc_flag & FC_VFI_REGISTERED)
--		goto out_free_mem;
-+		if (!(phba->sli_rev == LPFC_SLI_REV4 &&
-+		      vport->fc_flag & FC_PT2PT))
-+			goto out_free_mem;
- 
- 	/* The VPI is implicitly registered when the VFI is registered */
- 	spin_lock_irq(shost->host_lock);
-@@ -2925,6 +2931,13 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
- 		goto out_free_mem;
- 	}
- 
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
-+			 "3313 cmpl reg vfi  port_state:%x fc_flag:%x myDid:%x "
-+			 "alpacnt:%d LinkState:%x topology:%x\n",
-+			 vport->port_state, vport->fc_flag, vport->fc_myDID,
-+			 vport->phba->alpa_map[0],
-+			 phba->link_state, phba->fc_topology);
++	max_buf_size = (2 * SLI4_PAGE_SIZE);
++	if (phba->cfg_sg_seg_cnt > LPFC_MAX_SGL_SEG_CNT - 2)
++		phba->cfg_sg_seg_cnt = LPFC_MAX_SGL_SEG_CNT - 2;
++	max_buf_size += (sizeof(struct fcp_cmnd) + sizeof(struct fcp_rsp));
 +
- 	if (vport->port_state == LPFC_FABRIC_CFG_LINK) {
- 		/*
- 		 * For private loop or for NPort pt2pt,
-@@ -2937,7 +2950,10 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
- 			/* Use loop map to make discovery list */
- 			lpfc_disc_list_loopmap(vport);
- 			/* Start discovery */
--			lpfc_disc_start(vport);
-+			if (vport->fc_flag & FC_PT2PT)
-+				vport->port_state = LPFC_VPORT_READY;
-+			else
-+				lpfc_disc_start(vport);
- 		} else {
- 			lpfc_start_fdiscs(phba);
- 			lpfc_do_scr_ns_plogi(phba, vport);
-@@ -3019,6 +3035,15 @@ lpfc_mbx_process_link_up(struct lpfc_hba
- 		break;
- 	}
+ 	/*
+ 	 * Since the sg_tablesize is module parameter, the sg_dma_buf_size
+ 	 * used to create the sg_dma_buf_pool must be dynamically calculated.
+@@ -4912,22 +4923,6 @@ lpfc_sli4_driver_resource_setup(struct l
+ 		    (((phba->cfg_sg_seg_cnt * sges_per_segment) + 2) *
+ 		    sizeof(struct sli4_sge)));
  
-+	if (phba->fc_topology &&
-+	    phba->fc_topology != bf_get(lpfc_mbx_read_top_topology, la)) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
-+				"3314 Toplogy changed was 0x%x is 0x%x\n",
-+				phba->fc_topology,
-+				bf_get(lpfc_mbx_read_top_topology, la));
-+		phba->fc_topology_changed = 1;
-+	}
-+
- 	phba->fc_topology = bf_get(lpfc_mbx_read_top_topology, la);
- 	phba->link_flag &= ~LS_NPIV_FAB_SUPPORTED;
- 
-@@ -4961,8 +4986,12 @@ lpfc_disc_start(struct lpfc_vport *vport
- 	uint32_t clear_la_pending;
- 	int did_changed;
- 
--	if (!lpfc_is_link_up(phba))
-+	if (!lpfc_is_link_up(phba)) {
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
-+				 "3315 Link is not up %x\n",
-+				 phba->link_state);
- 		return;
-+	}
- 
- 	if (phba->link_state == LPFC_CLEAR_LA)
- 		clear_la_pending = 1;
-@@ -5868,7 +5897,7 @@ lpfc_unregister_fcf_prep(struct lpfc_hba
- 	struct lpfc_vport **vports;
- 	struct lpfc_nodelist *ndlp;
- 	struct Scsi_Host *shost;
--	int i, rc;
-+	int i = 0, rc;
- 
- 	/* Unregister RPIs */
- 	if (lpfc_fcf_inuse(phba))
-@@ -5896,6 +5925,20 @@ lpfc_unregister_fcf_prep(struct lpfc_hba
- 			spin_unlock_irq(shost->host_lock);
- 		}
- 	lpfc_destroy_vport_work_array(phba, vports);
-+	if (i == 0 && (!(phba->sli3_options & LPFC_SLI3_NPIV_ENABLED))) {
-+		ndlp = lpfc_findnode_did(phba->pport, Fabric_DID);
-+		if (ndlp)
-+			lpfc_cancel_retry_delay_tmo(phba->pport, ndlp);
-+		lpfc_cleanup_pending_mbox(phba->pport);
-+		if (phba->sli_rev == LPFC_SLI_REV4)
-+			lpfc_sli4_unreg_all_rpis(phba->pport);
-+		lpfc_mbx_unreg_vpi(phba->pport);
-+		shost = lpfc_shost_from_vport(phba->pport);
-+		spin_lock_irq(shost->host_lock);
-+		phba->pport->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
-+		phba->pport->vpi_state &= ~LPFC_VPI_REGISTERED;
-+		spin_unlock_irq(shost->host_lock);
-+	}
- 
- 	/* Cleanup any outstanding ELS commands */
- 	lpfc_els_flush_all_cmd(phba);
-diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
---- a/drivers/scsi/lpfc/lpfc_mbox.c	2013-04-10 16:46:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c	2013-04-15 18:26:26.977040891 -0400
-@@ -2149,18 +2149,21 @@ lpfc_reg_vfi(struct lpfcMboxq *mbox, str
- 
- 	/* Only FC supports upd bit */
- 	if ((phba->sli4_hba.lnk_info.lnk_tp == LPFC_LNK_TYPE_FC) &&
--	    (vport->fc_flag & FC_VFI_REGISTERED)) {
-+	    (vport->fc_flag & FC_VFI_REGISTERED) &&
-+	    (!phba->fc_topology_changed)) {
- 		bf_set(lpfc_reg_vfi_vp, reg_vfi, 0);
- 		bf_set(lpfc_reg_vfi_upd, reg_vfi, 1);
- 	}
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_MBOX,
- 			"3134 Register VFI, mydid:x%x, fcfi:%d, "
--			" vfi:%d, vpi:%d, fc_pname:%x%x\n",
-+			" vfi:%d, vpi:%d, fc_pname:%x%x fc_flag:x%x"
-+			" port_state:x%x topology chg:%d\n",
- 			vport->fc_myDID,
- 			phba->fcf.fcfi,
- 			phba->sli4_hba.vfi_ids[vport->vfi],
- 			phba->vpi_ids[vport->vpi],
--			reg_vfi->wwn[0], reg_vfi->wwn[1]);
-+			reg_vfi->wwn[0], reg_vfi->wwn[1], vport->fc_flag,
-+			vport->port_state, phba->fc_topology_changed);
- }
- 
- /**
-diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-04-15 18:26:24.224040829 -0400
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2013-04-15 18:26:26.978040891 -0400
-@@ -332,9 +332,11 @@ lpfc_rcv_plogi(struct lpfc_vport *vport,
- 
- 	/* PLOGI chkparm OK */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
--			 "0114 PLOGI chkparm OK Data: x%x x%x x%x x%x\n",
-+			 "0114 PLOGI chkparm OK Data: x%x x%x x%x "
-+			 "x%x x%x x%x\n",
- 			 ndlp->nlp_DID, ndlp->nlp_state, ndlp->nlp_flag,
--			 ndlp->nlp_rpi);
-+			 ndlp->nlp_rpi, vport->port_state,
-+			 vport->fc_flag);
- 
- 	if (vport->cfg_fcp_class == 2 && sp->cls2.classValid)
- 		ndlp->nlp_fcp_info |= CLASS2;
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2013-04-15 18:26:24.252040829 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-04-15 18:26:26.986040891 -0400
-@@ -2341,7 +2341,8 @@ lpfc_sli_handle_mb_event(struct lpfc_hba
- 		/* Mailbox cmd <cmd> Cmpl <cmpl> */
- 		lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
- 				"(%d):0307 Mailbox cmd x%x (x%x/x%x) Cmpl x%p "
--				"Data: x%x x%x x%x x%x x%x x%x x%x x%x x%x\n",
-+				"Data: x%x x%x x%x x%x x%x x%x x%x x%x x%x "
-+				"x%x x%x x%x\n",
- 				pmb->vport ? pmb->vport->vpi : 0,
- 				pmbox->mbxCommand,
- 				lpfc_sli_config_mbox_subsys_get(phba, pmb),
-@@ -2355,7 +2356,10 @@ lpfc_sli_handle_mb_event(struct lpfc_hba
- 				pmbox->un.varWords[4],
- 				pmbox->un.varWords[5],
- 				pmbox->un.varWords[6],
--				pmbox->un.varWords[7]);
-+				pmbox->un.varWords[7],
-+				pmbox->un.varWords[8],
-+				pmbox->un.varWords[9],
-+				pmbox->un.varWords[10]);
- 
- 		if (pmb->mbox_cmpl)
- 			pmb->mbox_cmpl(phba,pmb);
+-	sli_family = bf_get(lpfc_sli_intf_sli_family, &phba->sli4_hba.sli_intf);
+-	max_buf_size = LPFC_SLI4_MAX_BUF_SIZE;
+-	switch (sli_family) {
+-	case LPFC_SLI_INTF_FAMILY_BE2:
+-	case LPFC_SLI_INTF_FAMILY_BE3:
+-		/* There is a single hint for BE - 2 pages per BPL. */
+-		if (bf_get(lpfc_sli_intf_sli_hint1, &phba->sli4_hba.sli_intf) ==
+-		    LPFC_SLI_INTF_SLI_HINT1_1)
+-			max_buf_size = LPFC_SLI4_FL1_MAX_BUF_SIZE;
+-		break;
+-	case LPFC_SLI_INTF_FAMILY_LNCR_A0:
+-	case LPFC_SLI_INTF_FAMILY_LNCR_B0:
+-	default:
+-		break;
+-	}
+-
+ 	for (dma_buf_size = LPFC_SLI4_MIN_BUF_SIZE;
+ 	     dma_buf_size < max_buf_size && buf_size > dma_buf_size;
+ 	     dma_buf_size = dma_buf_size << 1)
 
 
 
