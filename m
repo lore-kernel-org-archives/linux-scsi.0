@@ -1,53 +1,51 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: [patch 1/1] sd_dif: problem with verify of type 1 protection information (PI)
-Date: Thu, 18 Apr 2013 02:55:23 -0700
-Message-ID: <20130418095523.GA73004@sgi.com>
+From: "Mike Miller (OS Dev)" <mike.miller@hp.com>
+Subject: Re: [Patch 1/1] cciss: bug fix, prevent cciss from loading in
+ kdump kernel
+Date: Thu, 18 Apr 2013 09:20:45 -0500
+Message-ID: <1366294845.11907.33.camel@thumper.usa.hp.com>
+References: <20130415175906.GA16955@beardog.cce.hp.com>
+	 <20130416150041.ef8bac2a578c8cb0e5df4c49@linux-foundation.org>
+Reply-To: mike.miller@hp.com, mikem@beardog.cce.hp.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay1.sgi.com ([192.48.179.29]:57813 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966743Ab3DRJzZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Apr 2013 05:55:25 -0400
-Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 54C588F8052
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2013 02:55:24 -0700 (PDT)
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130416150041.ef8bac2a578c8cb0e5df4c49@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: mdr@sgi.com
 
-It appears to me that there is a problem with handling of type 1 protection information.
+On Tue, 2013-04-16 at 15:00 -0700, Andrew Morton wrote:
+> On Mon, 15 Apr 2013 12:59:06 -0500 Mike Miller <mike.miller@hp.com> wrote:
+> 
+> > Patch 1/1
+> > 
+> > If hpsa is selected as the Smart Array driver cciss may try to load in the
+> > kdump kernel. When this happens kdump fails and a core file cannot be created.
+> > This patch prevents cciss from trying to load in this scenario. This effects
+> > primarily older Smart Array controllers.
+> > 
+> 
+> OK, this is weird.  kdump and scsi drivers are pretty darn remote things
+> and I've never heard of such an interaction.  Can you tell us a bit more
+> about how and why this happened?  Is there something special about
+> cciss, or can we expect similar kdump interactions with other device drivers?
 
-It is considering a logical block reference tag of 0xffffffff to be an error,
-but it is actually valid any time ((lba & 0xffffffff) == 0xffffffff) [for
-example, 2TiB-1, 4TiB-1, 6TiB-1, etc.].
+I thought it was weird, too. I've never seen this happen before and it
+was very hard to duplicate this in the lab. I think the reason it did
+happen was twofold. The cciss driver was being loaded first from the
+kdump initramfs image and the driver load sequence is now different than
+it used to be. We used to call cciss_pci_init as one the first things we
+did from our probe function, cciss_init_one. Now if reset_devices is
+true we immediately call into cciss_hard_reset controller and we do not
+check to see if cciss_allow_hpsa is set. Sorry, that's the best
+explanation I have.
+Offhand, I don't know of any of any other hardware devices that have 2
+distinctly different drivers, one block and one scsi. So I don't _think_
+this would happen with other drivers/devices.
 
-I'm going by what's written in 4.18.3 of SBC3, where there doesn't appear
-to be any invalid value for the reference tag.
+-- mikem
 
-Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
-
-
- sd_dif.c |    8 --------
- 1 file changed, 8 deletions(-)
-
-
---- a/drivers/scsi/sd_dif.c	2013-04-14 17:45:16.000000000 -0700
-+++ b/drivers/scsi/sd_dif.c	2013-04-18 02:36:27.000000000 -0700
-@@ -93,14 +93,6 @@ static int sd_dif_type1_verify(struct bl
- 		if (sdt->app_tag == 0xffff)
- 			return 0;
- 
--		/* Bad ref tag received from disk */
--		if (sdt->ref_tag == 0xffffffff) {
--			printk(KERN_ERR
--			       "%s: bad phys ref tag on sector %lu\n",
--			       bix->disk_name, (unsigned long)sector);
--			return -EIO;
--		}
--
- 		if (be32_to_cpu(sdt->ref_tag) != (sector & 0xffffffff)) {
- 			printk(KERN_ERR
- 			       "%s: ref tag error on sector %lu (rcvd %u)\n",
+> 
+> 
