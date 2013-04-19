@@ -1,54 +1,41 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] [SCSI] qla2xxx: fix error return code in qla2x00_probe_one()
-Date: Fri, 19 Apr 2013 13:13:59 +0800
-Message-ID: <CAPgLHd92aCMGJ-CGaJt34_bYKbRVTgYCORsCL3m+Ue05wpL9GA@mail.gmail.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] ipr: SATA DVD probing failed with 64bit adapter
+Date: Fri, 19 Apr 2013 09:23:05 -0500
+Message-ID: <51715349.4010201@linux.vnet.ibm.com>
+References: <20130419023247.599912727@linux.vnet.ibm.com> <20130419023422.044330124@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:48622 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024Ab3DSFOA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Apr 2013 01:14:00 -0400
-Received: by mail-bk0-f51.google.com with SMTP id y8so1574969bkt.38
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2013 22:13:59 -0700 (PDT)
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:50103 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030421Ab3DSOXR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Apr 2013 10:23:17 -0400
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Fri, 19 Apr 2013 10:23:16 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 0D2636E803C
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Apr 2013 10:23:10 -0400 (EDT)
+Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r3JEN8V3283906
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Apr 2013 10:23:09 -0400
+Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r3JEPvPD008148
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Apr 2013 08:25:57 -0600
+In-Reply-To: <20130419023422.044330124@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com, JBottomley@parallels.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+To: wenxiong@linux.vnet.ibm.com
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-Fix to return a negative error code in the queues alloc error handling
-case instead of 0, as done elsewhere in this function.
-And also fix to return 0 from qla2x00_alloc_queues() when no error, otherwise
-this cause if (!qla2x00_alloc_queues(ha, req, rsp)) always be false.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/scsi/qla2xxx/qla_os.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 5307bf8..16fe011 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -344,7 +344,7 @@ static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
- 	ha->req_q_map[0] = req;
- 	set_bit(0, ha->rsp_qid_map);
- 	set_bit(0, ha->req_qid_map);
--	return 1;
-+	return 0;
- 
- fail_rsp_map:
- 	kfree(ha->req_q_map);
-@@ -2631,7 +2631,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- que_init:
- 	/* Alloc arrays of request and response ring ptrs */
--	if (!qla2x00_alloc_queues(ha, req, rsp)) {
-+	ret = qla2x00_alloc_queues(ha, req, rsp);
-+	if (ret) {
- 		ql_log(ql_log_fatal, base_vha, 0x003d,
- 		    "Failed to allocate memory for queue pointers..."
- 		    "aborting.\n");
 
