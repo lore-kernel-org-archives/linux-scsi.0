@@ -1,8 +1,8 @@
 From: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v2 6/9] nbd: use generic helper to set
+Subject: [PATCH v2 7/9] brd: use generic helper to set
 	max_discard_sectors
-Date: Sat, 20 Apr 2013 01:41:53 +0900
-Message-ID: <1366389713-19519-1-git-send-email-linkinjeon@gmail.com>
+Date: Sat, 20 Apr 2013 01:42:06 +0900
+Message-ID: <1366389726-19553-1-git-send-email-linkinjeon@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -37,22 +37,22 @@ This patch fixes this issue.
 Signed-off-by: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 Signed-off-by: Vivek Trivedi <t.vivek-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 ---
- drivers/block/nbd.c |    2 +-
+ drivers/block/brd.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index 037288e..b9d3d2e 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -854,7 +854,7 @@ static int __init nbd_init(void)
- 		 */
- 		queue_flag_set_unlocked(QUEUE_FLAG_NONROT, disk->queue);
- 		disk->queue->limits.discard_granularity = 512;
--		disk->queue->limits.max_discard_sectors = UINT_MAX;
-+		blk_queue_max_discard_sectors(disk->queue, UINT_MAX >> 9);
- 		disk->queue->limits.discard_zeroes_data = 0;
- 		blk_queue_max_hw_sectors(disk->queue, 65536);
- 		disk->queue->limits.max_sectors = 256;
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index f1a29f8..108646d 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -479,7 +479,7 @@ static struct brd_device *brd_alloc(int i)
+ 	blk_queue_bounce_limit(brd->brd_queue, BLK_BOUNCE_ANY);
+ 
+ 	brd->brd_queue->limits.discard_granularity = PAGE_SIZE;
+-	brd->brd_queue->limits.max_discard_sectors = UINT_MAX;
++	blk_queue_max_discard_sectors(brd->brd_queue, UINT_MAX >> 9);
+ 	brd->brd_queue->limits.discard_zeroes_data = 1;
+ 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, brd->brd_queue);
+ 
 -- 
 1.7.9.5
 
