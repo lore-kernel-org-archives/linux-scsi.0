@@ -1,41 +1,67 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: SATA DVD probing failed with 64bit adapter
-Date: Fri, 19 Apr 2013 09:23:05 -0500
-Message-ID: <51715349.4010201@linux.vnet.ibm.com>
-References: <20130419023247.599912727@linux.vnet.ibm.com> <20130419023422.044330124@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:50103 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030421Ab3DSOXR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Apr 2013 10:23:17 -0400
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 19 Apr 2013 10:23:16 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 0D2636E803C
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Apr 2013 10:23:10 -0400 (EDT)
-Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r3JEN8V3283906
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Apr 2013 10:23:09 -0400
-Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r3JEPvPD008148
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Apr 2013 08:25:57 -0600
-In-Reply-To: <20130419023422.044330124@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH v2 0/9] fix max discard sectors limit
+Date: Sat, 20 Apr 2013 01:40:02 +0900
+Message-ID: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com>
+Return-path: <linux-mmc-owner@vger.kernel.org>
+Sender: linux-mmc-owner@vger.kernel.org
+To: dwmw2@infradead.org, axboe@kernel.dk, shli@kernel.org, Paul.Clements@steeleye.com, npiggin@kernel.dk, neilb@suse.de, cjb@laptop.org, adrian.hunter@intel.com, James.Bottomley@HansenPartnership.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, nbd-general@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, jcmvbkbc@gmail.com, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: wenxiong@linux.vnet.ibm.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
+linux-v3.8-rc1 and later support for plug for blkdev_issue_discard with
+commit 0cfbcafcae8b7364b5fa96c2b26ccde7a3a296a9 
+(block: add plug for blkdev_issue_discard )
 
+For example,
+1) DISCARD rq-1 with size size 4GB
+2) DISCARD rq-2 with size size 1GB
+
+If these 2 discard requests get merged, final request size will be 5GB.
+
+In this case, request's __data_len field may overflow as it can store
+max 4GB(unsigned int).
+
+This issue was observed while doing mkfs.f2fs on 5GB SD card:
+https://lkml.org/lkml/2013/4/1/292
+
+# mkfs.f2fs /dev/mmcblk0p3
+Info: sector size = 512
+Info: total sectors = 11370496 (in 512bytes)
+Info: zone aligned segment0 blkaddr: 512
+[  257.789764] blk_update_request: bio idx 0 >= vcnt 0
+
+mkfs process gets stuck in D state and I see the following in the dmesg:
+
+[  257.789733] __end_that: dev mmcblk0: type=1, flags=122c8081
+[  257.789764]   sector 4194304, nr/cnr 2981888/4294959104
+[  257.789764]   bio df3840c0, biotail df3848c0, buffer   (null), len 1526726656
+[  257.789764] blk_update_request: bio idx 0 >= vcnt 0
+[  257.794921] request botched: dev mmcblk0: type=1, flags=122c8081
+[  257.794921]   sector 4194304, nr/cnr 2981888/4294959104
+[  257.794921]   bio df3840c0, biotail df3848c0, buffer   (null), len 1526726656
+
+Few drivers(e.g. mmc, mtd..) set q->limits.max_discard_sectors
+more than UINT_MAX >> 9 sectors which is incorrect and it may lead to overflow
+of request's __data_len field if merged discard request's size exceeds 4GB.
+
+This patchset fixes this issue by updating helper function
+blk_queue_max_discard_sectors which is used to set max_discard_sectors limit.
+
+This patchset also replaces "q->limits.max_discard_sector = max_discard_sectors"
+with blk_queue_max_discard_sectors call in other drivers like mmc, mtd etc.
+
+Namjae Jeon (9):
+  block: fix max discard sectors limit
+  mmc: fix max_discard_sectors
+  sd: use generic helper to set max_discard_sectors
+  mtd: use generic helper to set max_discard_sectors
+  loop: use generic helper to set max_discard_sectors
+  nbd: use generic helper to set max_discard_sectors
+  brd: use generic helper to set max_discard_sectors
+  dm thin: use generic helper to set max_discard_sectors
+  bcache: use generic helper to set max_discard_sectors
 -- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
+1.7.9.5
 
