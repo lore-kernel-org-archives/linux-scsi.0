@@ -1,45 +1,63 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] [SCSI] scsi_transport_iscsi: fix error return code in iscsi_transport_init()
-Date: Fri, 19 Apr 2013 09:23:28 +0800
-Message-ID: <CAPgLHd_o7fK8G8_T7Q=S0=XWkgR=g7qWE5uGhHv=bz4BxhB0zA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: wenxiong@linux.vnet.ibm.com
+Subject: [PATCH 1/1] ipr: SATA DVD probing failed with 64bit adapter
+Date: Thu, 18 Apr 2013 21:32:48 -0500
+Message-ID: <20130419023422.044330124@linux.vnet.ibm.com>
+References: <20130419023247.599912727@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:55325 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967641Ab3DSB3g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Apr 2013 21:29:36 -0400
-Received: by mail-bk0-f45.google.com with SMTP id j10so1514794bkw.32
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2013 18:29:35 -0700 (PDT)
+Received: from [32.97.110.57] ([32.97.110.57]:58654 "HELO
+	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S967724Ab3DSChP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Apr 2013 22:37:15 -0400
+Content-Disposition: inline; filename=fix_ipr_sata_dvd
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu, JBottomley@parallels.com
-Cc: yongjun_wei@trendmicro.com.cn, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Driver passed the wrong IOADL address to IOA adapter. The patch
+fixes the issue.
 
-Fix to return -ENOMEM in the create workqueue error case
-instead of 0, as done elsewhere in this function.
-
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/ipr.c |    4 ++--
+ drivers/scsi/ipr.h |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 47799a3..475265a 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -3985,8 +3985,10 @@ static __init int iscsi_transport_init(void)
- 	}
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2013-04-18 14:10:44.000000000 -0500
++++ b/drivers/scsi/ipr.c	2013-04-18 14:15:08.767887656 -0500
+@@ -6421,7 +6421,7 @@ static void ipr_build_ata_ioadl64(struct
+ {
+ 	u32 ioadl_flags = 0;
+ 	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
+-	struct ipr_ioadl64_desc *ioadl64 = ipr_cmd->i.ioadl64;
++	struct ipr_ioadl64_desc *ioadl64 = ipr_cmd->i.ata_ioadl.ioadl64;
+ 	struct ipr_ioadl64_desc *last_ioadl64 = NULL;
+ 	int len = qc->nbytes;
+ 	struct scatterlist *sg;
+@@ -6441,7 +6441,7 @@ static void ipr_build_ata_ioadl64(struct
+ 	ioarcb->ioadl_len =
+ 		cpu_to_be32(sizeof(struct ipr_ioadl64_desc) * ipr_cmd->dma_use_sg);
+ 	ioarcb->u.sis64_addr_data.data_ioadl_addr =
+-		cpu_to_be64(dma_addr + offsetof(struct ipr_cmnd, i.ata_ioadl));
++		cpu_to_be64(dma_addr + offsetof(struct ipr_cmnd, i.ata_ioadl.ioadl64));
  
- 	iscsi_eh_timer_workq = create_singlethread_workqueue("iscsi_eh");
--	if (!iscsi_eh_timer_workq)
-+	if (!iscsi_eh_timer_workq) {
-+		err = -ENOMEM;
- 		goto release_nls;
-+	}
+ 	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		ioadl64->flags = cpu_to_be32(ioadl_flags);
+Index: b/drivers/scsi/ipr.h
+===================================================================
+--- a/drivers/scsi/ipr.h	2013-04-18 14:08:22.000000000 -0500
++++ b/drivers/scsi/ipr.h	2013-04-18 14:12:50.677887864 -0500
+@@ -552,7 +552,7 @@ struct ipr_ioarcb_ata_regs {	/* 22 bytes
+ 	u8 hob_lbam;
+ 	u8 hob_lbah;
+ 	u8 ctl;
+-}__attribute__ ((packed, aligned(4)));
++}__attribute__ ((packed, aligned(2)));
  
- 	return 0;
- 
+ struct ipr_ioadl_desc {
+ 	__be32 flags_and_data_len;
 
+-- 
