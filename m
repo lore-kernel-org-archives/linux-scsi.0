@@ -1,8 +1,8 @@
 From: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v2 7/9] brd: use generic helper to set
+Subject: [PATCH v2 8/9] dm thin: use generic helper to set
 	max_discard_sectors
-Date: Sat, 20 Apr 2013 01:42:06 +0900
-Message-ID: <1366389726-19553-1-git-send-email-linkinjeon@gmail.com>
+Date: Sat, 20 Apr 2013 01:42:20 +0900
+Message-ID: <1366389740-19587-1-git-send-email-linkinjeon@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -37,22 +37,23 @@ This patch fixes this issue.
 Signed-off-by: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 Signed-off-by: Vivek Trivedi <t.vivek-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 ---
- drivers/block/brd.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/dm-thin.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index f1a29f8..108646d 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -479,7 +479,7 @@ static struct brd_device *brd_alloc(int i)
- 	blk_queue_bounce_limit(brd->brd_queue, BLK_BOUNCE_ANY);
+diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
+index 905b75f..237295a 100644
+--- a/drivers/md/dm-thin.c
++++ b/drivers/md/dm-thin.c
+@@ -2513,7 +2513,8 @@ static void set_discard_limits(struct pool_c *pt, struct queue_limits *limits)
+ 	struct pool *pool = pt->pool;
+ 	struct queue_limits *data_limits;
  
- 	brd->brd_queue->limits.discard_granularity = PAGE_SIZE;
--	brd->brd_queue->limits.max_discard_sectors = UINT_MAX;
-+	blk_queue_max_discard_sectors(brd->brd_queue, UINT_MAX >> 9);
- 	brd->brd_queue->limits.discard_zeroes_data = 1;
- 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, brd->brd_queue);
+-	limits->max_discard_sectors = pool->sectors_per_block;
++	blk_queue_max_discard_sectors(bdev_get_queue(pt->data_dev->bdev),
++					pool->sectors_per_block);
  
+ 	/*
+ 	 * discard_granularity is just a hint, and not enforced.
 -- 
 1.7.9.5
 
