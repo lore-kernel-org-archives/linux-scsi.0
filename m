@@ -1,7 +1,7 @@
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v2 4/9] mtd: mtd_blkdevs: use generic helper to set
-Date: Sat, 20 Apr 2013 01:41:13 +0900
-Message-ID: <1366389674-19451-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH v2 5/9] loop: use generic helper to set max_discard_sectors
+Date: Sat, 20 Apr 2013 01:41:39 +0900
+Message-ID: <1366389699-19485-1-git-send-email-linkinjeon@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: dwmw2@infradead.org, axboe@kernel.dk, shli@kernel.org, Paul.Clements@steeleye.com, npiggin@kernel.dk, neilb@suse.de, cjb@laptop.org, adrian.hunter@intel.com, James.Bottomley@HansenPartnership.com, JBottomley@parallels.com
@@ -26,21 +26,21 @@ This patch fixes this issue.
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
 ---
- drivers/mtd/mtd_blkdevs.c |    2 +-
+ drivers/block/loop.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
-index 5ad39bb..cf35f99 100644
---- a/drivers/mtd/mtd_blkdevs.c
-+++ b/drivers/mtd/mtd_blkdevs.c
-@@ -417,7 +417,7 @@ int add_mtd_blktrans_dev(struct mtd_blktrans_dev *new)
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index b2955b3..aedc341 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -814,7 +814,7 @@ static void loop_config_discard(struct loop_device *lo)
  
- 	if (tr->discard) {
- 		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, new->rq);
--		new->rq->limits.max_discard_sectors = UINT_MAX;
-+		blk_queue_max_discard_sectors(new->rq, UINT_MAX >> 9);
- 	}
- 
- 	gd->queue = new->rq;
+ 	q->limits.discard_granularity = inode->i_sb->s_blocksize;
+ 	q->limits.discard_alignment = 0;
+-	q->limits.max_discard_sectors = UINT_MAX >> 9;
++	blk_queue_max_discard_sectors(q, UINT_MAX >> 9);
+ 	q->limits.discard_zeroes_data = 1;
+ 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
+ }
 -- 
 1.7.9.5
