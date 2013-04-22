@@ -1,64 +1,79 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 2/2] dm mpath: attach scsi_dh during table resume
-Date: Mon, 22 Apr 2013 18:33:56 -0400
-Message-ID: <20130422223355.GA4803@redhat.com>
-References: <20130404131631.GA10208@redhat.com>
- <1365457816-31475-1-git-send-email-snitzer@redhat.com>
- <1365457816-31475-2-git-send-email-snitzer@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Fwd: [PATCH v4 01/22] [SCSI] megaraid_sas: Use correct #define for
+ MSI-X capability
+Date: Mon, 22 Apr 2013 17:54:49 -0600
+Message-ID: <CAErSpo6-VD1=-0b1TOk60A3=LLSuCVMHJ-=+iQfUoQEZFWNnxg@mail.gmail.com>
+References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop> <20130422231019.32621.25028.stgit@bhelgaas-glaptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53162 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753348Ab3DVWej (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Apr 2013 18:34:39 -0400
-Content-Disposition: inline
-In-Reply-To: <1365457816-31475-2-git-send-email-snitzer@redhat.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:36140 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423Ab3DVXzL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Apr 2013 19:55:11 -0400
+Received: by mail-ob0-f173.google.com with SMTP id xn12so36302obc.32
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Apr 2013 16:55:11 -0700 (PDT)
+In-Reply-To: <20130422231019.32621.25028.stgit@bhelgaas-glaptop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: mpatocka@redhat.com, hare@suse.de
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Apr 08 2013 at  5:50pm -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
+---------- Forwarded message ----------
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, Apr 22, 2013 at 5:10 PM
+Subject: [PATCH v4 01/22] [SCSI] megaraid_sas: Use correct #define for
+MSI-X capability
+To: linux-pci@vger.kernel.org
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, Gavin Shan
+<shangw@linux.vnet.ibm.com>, "James E.J. Bottomley"
+<JBottomley@parallels.com>
 
-> Preallocate scsi_dh_data using scsi_dh_alloc_data() during table load
-> but attach the scsi_dh for each path during table resume.  This avoids a
-> kernel crash that can happen when changing the scsi_dh during table
-> load.
-> 
-> When we reload a multipath device, there are two instances of the
-> multipath target - the first instance that is active and the second
-> instance that is being constructed during table load with "ctr" method.
-> 
-> If the multipath constructor finds out that the device is using a
-> different device handler, it detaches the existing handler and attaches
-> a new handler. However, the first instance of the multipath target still
-> exists and processes requests. If the first instance sends some
-> path-management request with scsi_dh_activate and the second instance
-> detaches the device handler while the path-management request is in
-> flight, a crash happens. The reason for the crash is that the endio
-> routine for the path-management request is working with structures that
-> were freed when the handler was detached.
-> 
-> References:
->   http://bugzilla.redhat.com/912245
->   http://bugzilla.redhat.com/902595
 
-While this patch addresses the problem of switching the SCSI device
-handler prematurely (during load rather than resume) it doesn't do
-anything to defend against the use after free NULL pointers that are
-possible with the scenario explained above (and as detailed in the
-referenced BZs).
+Previously we used PCI_MSI_FLAGS to locate a register in the MSI-X
+capability.  This did work because the MSI and MSI-X flags happen
+to be at the same offsets, but was confusing.
 
-I spoke with Hannes at LSF, to address the potential crashes in the
-endio path (e.g. stpg_endio) we'd have to bump the scsi_dh_data kref
-where appropriate (e.g. for ALUA kref_get in submit_stpg and kref_put in
-stpg_endio).
+PCI_MSIX_FLAGS_ENABLE is already defined in include/uapi/linux/pci_regs.h,
+so no need to define it again.
 
-But that is just the tip of the iceberg relative to scsi_dh lifetime.
-Seems we've been playing it pretty fast and loose with scsi_dh issued
-requests vs detach for quite some time.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Neela Syam Kolli <megaraidlinux@lsi.com>
+CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+---
+ drivers/scsi/megaraid/megaraid_sas.h      |    3 ---
+ drivers/scsi/megaraid/megaraid_sas_base.c |    4 ++--
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-I'm now inclined to not care about this issue.  Take away is: don't
-switch the device handler (attach the correct one from the start).
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+b/drivers/scsi/megaraid/megaraid_sas.h
+index 408d254..684cc34 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1488,7 +1488,4 @@ struct megasas_mgmt_info {
+        int max_index;
+ };
+
+-#define msi_control_reg(base) (base + PCI_MSI_FLAGS)
+-#define PCI_MSIX_FLAGS_ENABLE (1 << 15)
+-
+ #endif                         /*LSI_MEGARAID_SAS_H */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 9d53540..7c90d57 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3984,12 +3984,12 @@ static int megasas_probe_one(struct pci_dev *pdev,
+        if (reset_devices) {
+                pos = pci_find_capability(pdev, PCI_CAP_ID_MSIX);
+                if (pos) {
+-                       pci_read_config_word(pdev, msi_control_reg(pos),
++                       pci_read_config_word(pdev, pos + PCI_MSIX_FLAGS,
+                                             &control);
+                        if (control & PCI_MSIX_FLAGS_ENABLE) {
+                                dev_info(&pdev->dev, "resetting MSI-X\n");
+                                pci_write_config_word(pdev,
+-                                                     msi_control_reg(pos),
++                                                     pos + PCI_MSIX_FLAGS,
+                                                      control &
+                                                      ~PCI_MSIX_FLAGS_ENABLE);
+                        }
