@@ -1,34 +1,26 @@
-From: Kent Overstreet <koverstreet@google.com>
-Subject: Re: [PATCH v2 0/9] fix max discard sectors limit
-Date: Mon, 22 Apr 2013 14:23:24 -0700
-Message-ID: <20130422212324.GB4704@localhost>
-References: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/1] cciss: add cciss_allow_hpsa module parameter
+Date: Mon, 22 Apr 2013 15:10:38 -0700
+Message-ID: <20130422151038.6273759a2172b81ebd84e1af@linux-foundation.org>
+References: <20130418184937.GA31252@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: dwmw2@infradead.org, axboe@kernel.dk, shli@kernel.org, Paul.Clements@steeleye.com, npiggin@kernel.dk, neilb@suse.de, cjb@laptop.org, adrian.hunter@intel.com, James.Bottomley@HansenPartnership.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, nbd-general@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, jcmvbkbc@gmail.com, Namjae Jeon <namjae.jeon@samsung.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130418184937.GA31252@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Miller <mike.miller@hp.com>
+Cc: Jens Axboe <axboe@kernel.dk>, LKML-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Apr 20, 2013 at 01:40:02AM +0900, Namjae Jeon wrote:
-> From: Namjae Jeon <namjae.jeon@samsung.com>
-> 
-> linux-v3.8-rc1 and later support for plug for blkdev_issue_discard with
-> commit 0cfbcafcae8b7364b5fa96c2b26ccde7a3a296a9 
-> (block: add plug for blkdev_issue_discard )
-> 
-> For example,
-> 1) DISCARD rq-1 with size size 4GB
-> 2) DISCARD rq-2 with size size 1GB
-> 
-> If these 2 discard requests get merged, final request size will be 5GB.
-> 
-> In this case, request's __data_len field may overflow as it can store
-> max 4GB(unsigned int).
+On Thu, 18 Apr 2013 13:49:37 -0500 Mike Miller <mike.miller@hp.com> wrote:
 
-Complete NACK - like James said, this fix is nonsensical. This should be
-fixed by just checking for overflow before merging requests, not with
-weird hacks in the drivers.
+> Add the cciss_allow_hpsa modules parameter. This allows users to use the hpsa
+> driver instead of cciss for older controllers.
+> Tested with 3.9.0-rc7 in combination with the bug fix submitted Tuesday. My
+> apologies for not testing that patch with the correct kernel.
+
+Could you please resend Tuesday's bug fix, with a much better
+explanation than v1 had?  It's totally weird and wonderful that there's
+an interaction between kdump and one scsi/block driver so let's try to
+get a diagnosis into the record.
