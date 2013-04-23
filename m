@@ -1,67 +1,61 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Jeremy Linton <jlinton@tributary.com>
 Subject: Re: T10 WCE interpretation in Linux & device level access
-Date: Tue, 23 Apr 2013 16:28:01 -0400
-Message-ID: <5176EED1.7070305@interlog.com>
-References: <5176E3E8.3000809@redhat.com>
-Reply-To: dgilbert@interlog.com
+Date: Tue, 23 Apr 2013 17:39:38 -0500
+Message-ID: <51770DAA.4020409@tributary.com>
+References: <5176E3E8.3000809@redhat.com> <1366747622.1939.6.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:41733 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754866Ab3DWU3N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Apr 2013 16:29:13 -0400
-In-Reply-To: <5176E3E8.3000809@redhat.com>
+Received: from relay.ihostexchange.net ([66.46.182.57]:45003 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755896Ab3DWWjp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Apr 2013 18:39:45 -0400
+In-Reply-To: <1366747622.1939.6.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>
 
-On 13-04-23 03:41 PM, Ric Wheeler wrote:
->
-> For many years, we have used WCE as an indication that a device has a volatile
-> write cache (not just a write cache) and used this as a trigger to send down
-> SYNCHRONIZE_CACHE commands as needed.
->
-> Some arrays with non-volatile cache seem to have WCE set and simply ignore the
-> command.
->
-> Some arrays with non-volatile cache seem to not set WCE.
->
-> Others arrays with non-volatile cache - our problem arrays - set WCE and do
-> something horrible and slow when sent the SYNCHRONIZE_CACHE commands.
+On 4/23/2013 3:07 PM, James Bottomley wrote:
 
-Do the problematic arrays correctly set the NV_SUP** or V_SUP
-bits in the Extended Inquiry VPD pages? Does Linux take any
-notice of those bits? [Guess the answer.]
+> 
+> I bet they don't; they probably obey the spec.  There's a SYNC_NV bit
+> which if unset (which it is in our implementation) means only sync your
+> non-NV cache.  For a device with all NV, that equates to nop.
 
-If the problematic arrays correctly set the NV_SUP and Linux
-sends SYNCHRONIZE_CACHE commands then Linux should be named
-and shamed.
+	Yes, linux leaves the SYNC_NV bit unset in scsi_setup_flush_cmnd().
 
-> Note that for file systems, you can override this behavior by mounting with our
-> barriers disabled (mount -o nobarrier .....). There is currently no way do
-> disable this for anything using the device directly, not through the file system.
->
-> Some applications run against block devices - not through a file system - and
-> want not to slow to a crawl when they have an array in my problem set.
->
-> Giving them a hook to ignore WCE seems to be a hack, but one that would resolve
-> issues with users who won't want to wait months (years?) for us to convince the
-> array vendors.
+The draft specs, and a couple others I have laying about says: says the device
+shall sync cache to medium for both volatile and non volatile cache data if
+SYNC_NV is _unset_.
 
-> Is this a hook worth doing?
->
-> Have we hashed this out in the T10 committee?
+With it set, the table could be more confusing!
 
-There is also a NV_DIS bit in the caching mode page that if
-supported would allow the NV cache to be disabled.
+For volatile cache blocks with SYNC_NV set "If a non-volatile cache is present,
+then the device server shall synchronize to non-volatile cache or to the medium.
+If a non-volatile cache is not present, then the device server shall synchronize
+to the medium".
 
-Looks like T10 supplies enough knobs, it is up to the vendor
-to set them appropriately and Linux to take notice.
-
-Doug Gilbert
+And for Non-volatile cache with it set "No Requirement"
 
 
-** What JB called SYNC_NV ...
+Which to me says, don't expect any particular behavior if you set this bit and
+have NV it could flush to medium, flush to NV cache, or do nothing at all. But
+it seems pretty clear that with it unset its probably going to get synchronized
+to the medium.
+
+
+If T10 were to do something, maybe they could stop putting bits in the docs that
+aren't guaranteed to do anything (fill in rant).
+
+As for linux, seems the state of the spec really doesn't leave any good options
+other than provide the user the ability to disable the flush_cmnd() if  the
+NV_SUP bit is set. Or maybe a white list (ick!)...
+
+
+
+
+
+
+
