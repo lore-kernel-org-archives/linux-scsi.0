@@ -1,44 +1,36 @@
-From: Neil Horman <nhorman@tuxdriver.com>
-Subject: [PATCH] libcxgbi: supress warning when we request to much space from kmalloc
-Date: Tue, 23 Apr 2013 11:20:47 -0400
-Message-ID: <1366730447-32428-1-git-send-email-nhorman@tuxdriver.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org
+From: Western-Union <open06@cox.net>
+Subject: =?utf-8?Q?The_first_$5,000.00_was_sent_tod?=
+ =?utf-8?Q?ay._My_working_partner_has_helpe?=
+ =?utf-8?Q?d_me_to_send_the_first_$5,000.00?=
+ =?utf-8?Q?_to_you_through_western_union._S?=
+ =?utf-8?Q?o_contact_our_Western_Union_clai?=
+ =?utf-8?Q?ms_Agent_to_pick_up_this_$5,000_?=
+ =?utf-8?Q?now:_Contact_person:_Mr._Ben_Col?=
+ =?utf-8?Q?lins,_.mail_:_(mrbencollins001@m?=
+ =?utf-8?Q?sn.com)_Ask_him_to_give_you_the_?=
+ =?utf-8?Q?MTCN,_Sender_Name_to_pick_the_$5?=
+ =?utf-8?Q?,000.00._I_told_him_to_keep_send?=
+ =?utf-8?Q?ing_you_$5,000.00_daily_until_th?=
+ =?utf-8?Q?e_payment_of_$1.500,000.00_is_co?=
+ =?utf-8?Q?mpleted._Again_forward_him_your_?=
+ =?utf-8?Q?Full_Name,_Telephone_number_and_?=
+ =?utf-8?Q?address_so_that_he_will_be_sure.=E2=80=8F?=
+Date: Tue, 23 Apr 2013 9:26:38 -0700
+Message-ID: <20130423122638.NN2JO.104712.imail@fed1rmwml106>
+Reply-To: mrbencollins001@msn.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fed1rmfepi102.cox.net ([68.230.241.133]:53617 "EHLO
+	fed1rmfepi102.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756946Ab3DWQts (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Apr 2013 12:49:48 -0400
+Received: from fed1rmimpo110 ([68.230.241.159]) by fed1rmfepo103.cox.net
+          (InterMail vM.8.01.05.09 201-2260-151-124-20120717) with ESMTP
+          id <20130423162638.RJKT7388.fed1rmfepo103.cox.net@fed1rmimpo110>
+          for <linux-scsi@vger.kernel.org>; Tue, 23 Apr 2013 12:26:38 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-cxgbi_alloc_big_mem allocates large chunks of memory, and can occasionally
-request amounts from kmalloc that exceed the allocators capacity.  This
-typically leads to a stack trace from the zoned buddy allocator in the message
-log.  But if kmalloc fails, cxgbi_alloc_big_mem backs off and uses vmalloc
-instead.  Given that, and the fact that the two calls sites have their own error
-messages if both kmalloc and vmalloc fail, I think the stack trace printing
-isn't really needed.
 
-Modify the call to kmalloc to pass __GFP_NOWARN in as well, so that internal
-kmalloc warnings are suppressed.
-
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-Reported-by: Honggang LI <honli@redhat.com>
-CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-CC: linux-kernel@vger.kernel.org
----
- drivers/scsi/cxgbi/libcxgbi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-index 80fa99b..3daf996 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -658,7 +658,7 @@ static inline u32 cxgbi_tag_nonrsvd_bits(struct cxgbi_tag_format *tformat,
- static inline void *cxgbi_alloc_big_mem(unsigned int size,
- 					gfp_t gfp)
- {
--	void *p = kmalloc(size, gfp);
-+	void *p = kmalloc(size, gfp | __GFP_NOWARN);
- 	if (!p)
- 		p = vmalloc(size);
- 	if (p)
--- 
-1.8.1.4
