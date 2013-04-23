@@ -1,57 +1,49 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 1/1] cciss: bug fix to prevent cciss from loading in kdump crash kernel
-Date: Tue, 23 Apr 2013 12:25:39 -0500
-Message-ID: <20130423172539.GA11255@beardog.cce.hp.com>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: T10 WCE interpretation in Linux & device level access
+Date: Tue, 23 Apr 2013 15:41:28 -0400
+Message-ID: <5176E3E8.3000809@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55671 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752258Ab3DWTlf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Apr 2013 15:41:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>
+Cc: Mike Snitzer <snitzer@redhat.com>
 
-PATCH 1/1
 
-By default the cciss driver supports all "older" HP Smart Array controllers
-and hpsa supports all controllers starting with the G6 family. There are
-module parameters that allow a user to override those defaults and use hpsa
-for any HP Smart Array controller.
-If the user does override the default behavior and uses hpsa for older
-controllers it is possible that cciss may try to load in a kdump crash
-kernel. This may happen if cciss is loaded first from the kdump initrd
-image. If cciss does load rather than hpsa and reset_devices is true we
-immediately call cciss_hard_reset_controller. This will result in a kernel
-panic and the core file cannot be created.
-This patch prevents cciss from trying to load in this scenario.
+For many years, we have used WCE as an indication that a device has a volatile 
+write cache (not just a write cache) and used this as a trigger to send down 
+SYNCHRONIZE_CACHE commands as needed.
 
-Tested with 3.9.0-rc7.
+Some arrays with non-volatile cache seem to have WCE set and simply ignore the 
+command.
 
-From: Mike <mike.miller@hp.com>
-Signed-off-by: Mike Miller <mike.miller@hp.com>
+Some arrays with non-volatile cache seem to not set WCE.
 
----
- drivers/block/cciss.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+Others arrays with non-volatile cache - our problem arrays - set WCE and do 
+something horrible and slow when sent the SYNCHRONIZE_CACHE commands.
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 1c1b8e5..06c8dba 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -4960,6 +4960,16 @@ static int cciss_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	ctlr_info_t *h;
- 	unsigned long flags;
- 
-+	/*
-+	 * By default the cciss driver is used for all older HP Smart Array
-+	 * controllers. There are module paramaters that allow a user to
-+	 * override this behavior and instead use the hpsa SCSI driver. If
-+	 * this is the case cciss may be loaded first from the kdump initrd
-+	 * image and cause a kernel panic. So if reset_devices is true and
-+	 * cciss_allow_hpsa is set just bail.
-+	 */
-+	if ((reset_devices) && (cciss_allow_hpsa == 1))
-+		return -ENODEV;
- 	rc = cciss_init_reset_devices(pdev);
- 	if (rc) {
- 		if (rc != -ENOTSUPP)
+Note that for file systems, you can override this behavior by mounting with our 
+barriers disabled (mount -o nobarrier .....). There is currently no way do 
+disable this for anything using the device directly, not through the file system.
+
+Some applications run against block devices - not through a file system - and 
+want not to slow to a crawl when they have an array in my problem set.
+
+Giving them a hook to ignore WCE seems to be a hack, but one that would resolve 
+issues with users who won't want to wait months (years?) for us to convince the 
+array vendors.
+
+Is this a hook worth doing?
+
+Have we hashed this out in the T10 committee?
+
+Regards,
+
+Ric
+
