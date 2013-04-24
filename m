@@ -1,204 +1,154 @@
-From: Chris Dunlop <chris@onthe.net.au>
-Subject: sg_ses -j shows Transport protocol: Oxc not decoded
-Date: Wed, 24 Apr 2013 19:08:16 +1000
-Message-ID: <20130424090816.GA17732@onthe.net.au>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: T10 WCE interpretation in Linux & device level access
+Date: Wed, 24 Apr 2013 07:00:36 -0400
+Message-ID: <5177BB54.9090905@redhat.com>
+References: <5176E3E8.3000809@redhat.com> <1366747622.1939.6.camel@dabdike> <51770DAA.4020409@tributary.com> <94D0CD8314A33A4D9D801C0FE68B402950DFB8F2@G9W0745.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.onthe.net.au ([203.22.196.249]:42546 "EHLO
-	smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757400Ab3DXJIT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 05:08:19 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by smtp1.onthe.net.au (Postfix) with ESMTP id 764A4610C5
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2013 19:08:17 +1000 (EST)
-Received: from smtp1.onthe.net.au ([127.0.0.1])
-	by localhost (smtp1.onthe.net.au [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id mA-J5SNZ2IhP for <linux-scsi@vger.kernel.org>;
-	Wed, 24 Apr 2013 19:08:16 +1000 (EST)
-Received: from o1.office.otn.net.au (unknown [180.148.179.26])
-	by smtp1.onthe.net.au (Postfix) with ESMTP id C742360DDF
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2013 19:08:16 +1000 (EST)
-Received: from achates.office.onthe.net.au (achates.office.onthe.net.au [10.1.32.53])
-	by o1.office.otn.net.au (Postfix) with ESMTP id 94CC82AB6DE
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2013 19:09:42 +1000 (EST)
-Content-Disposition: inline
+Received: from mx1.redhat.com ([209.132.183.28]:44981 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932397Ab3DXLAw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Apr 2013 07:00:52 -0400
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402950DFB8F2@G9W0745.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: Jeremy Linton <jlinton@tributary.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "Black, David" <david.black@emc.com>, "Knight, Frederick" <Frederick.Knight@netapp.com>
 
-Hi,
+Hi Rob,
 
-I have 3 boxes, each with an LSI 9211-8i and a mix of LSI expanders (Supermicro
-SAS-846EL2, SAS-826EL2). For some of my expanders, 'sg_ses -j' (originally
-sg3_utils 1.33, now 1.35) is showing:
+Comments inline below.
 
-Slot 24 [0,23]  Element type: Array device slot
-  ...
-  Additional Element Status:
-    Transport protocol: Oxc not decoded
-
-...where the slot contains a SATA device. It's always Slot 24, and other
-slots show up fine. E.g. on one of the expanders with SATA drives in
-both Slot 23 and 24:
-
-h3# sg_ses -j /dev/sg81
-  LSI       SAS2X36           0e0b
-  Primary enclosure logical identifier (hex): 500304800013453f
-...
-Slot 23 [0,22]  Element type: Array device slot
-  Enclosure Status:
-    Predicted failure=0, Disabled=0, Swap=0, status: OK
-    OK=0, Reserved device=0, Hot spare=0, Cons check=0
-    In crit array=0, In failed array=0, Rebuild/remap=0, R/R abort=0
-    App client bypass A=0, Do not remove=0, Enc bypass A=0, Enc bypass B=0
-    Ready to insert=0, RMV=0, Ident=0, Report=0
-    App client bypass B=0, Fault sensed=0, Fault reqstd=0, Device off=0
-    Bypassed A=0, Bypassed B=0, Dev bypassed A=0, Dev bypassed B=0
-  Additional Element Status:
-    Transport protocol: SAS
-    number of phys: 1, not all phys: 0, device slot number: 22
-    phy index: 0
-      device type: no device attached
-      initiator port for:
-      target port for: SATA_device
-      attached SAS address: 0x500304800013453f
-      SAS address: 0x5003048000134522
-      phy identifier: 0x0
-Slot 24 [0,23]  Element type: Array device slot
-  Enclosure Status:
-    Predicted failure=0, Disabled=0, Swap=0, status: OK
-    OK=0, Reserved device=0, Hot spare=0, Cons check=0
-    In crit array=0, In failed array=0, Rebuild/remap=0, R/R abort=0
-    App client bypass A=0, Do not remove=0, Enc bypass A=0, Enc bypass B=0
-    Ready to insert=0, RMV=0, Ident=0, Report=0
-    App client bypass B=0, Fault sensed=0, Fault reqstd=0, Device off=0
-    Bypassed A=0, Bypassed B=0, Dev bypassed A=0, Dev bypassed B=0
-  Additional Element Status:
-    Transport protocol: Oxc not decoded
-...
-
-This may be unrelated, but 'sg_ses -j' is also coming up with the
-following error on 3 of the 6 expanders identified as "LSI SAS2X36 0e0b"
-(this doesn't include any of the expanders with the Slot 24 problem):
-
-join_work: oi=6, ei=255 (broken_ei=0) not in join_arr
+On 04/24/2013 01:44 AM, Elliott, Robert (Server Storage) wrote:
+> If the writeback cache is enabled (per the WCE bit in the Caching mode page),
+> prudent software uses the FUA bit in WRITE commands when writing metadata
+> and/or sends the SYNCHRONIZE CACHE command at important checkpoints to
+> ensure the data is not going to be lost due to a power loss.  Some
+> database software is particularly prolific at sending these commands.
+>
+> Around 2003, many RAID controllers with non-volatile writeback caches honored
+> the SYNCHRONIZE CACHE command, flushing the entire cache to the drives.  This
+> started causing timeouts as non-volatile write cache sizes grew.  Recently,
+> it's even causing trouble on individual disk drives with growing volatile
+> write caches.
+>
+> The intent of software using these commands and bits was unclear - it could be:
+> a) ensure data is in non-volatile cache (and will eventually be flushed)
+>     or on the medium; or
+> b) ensure data is on the medium (so the drives are ready for removal).
 
 
-The expander types are:
 
-----------------------------------------------------------------------
-$ for h in h1 h2 h3; do echo "=== $h ==="
-  ssh $h 'lsscsi | grep enclosu'
-done
-=== h1 ===
-[0:0:24:0]   enclosu LSI CORP SAS2X36          0717  -
-[0:0:27:0]   enclosu LSI      SAS2X36          0e0b  -
-[0:0:38:0]   enclosu LSI CORP SAS2X28          0717  -
-[0:0:62:0]   enclosu LSI      SAS2X36          0e0b  -
-[0:0:85:0]   enclosu LSI      SAS2X36          0e0b  -
-=== h2 ===
-[0:0:25:0]   enclosu LSI CORP SAS2X36          0717  -
-[0:0:29:0]   enclosu LSI CORP SAS2X28          0717  -
-=== h3 ===
-[0:0:23:0]   enclosu LSI CORP SAS2X36          0717  -
-[0:0:45:0]   enclosu LSI      SAS2X36          0e0b  -
-[0:0:57:0]   enclosu LSI CORP SAS2X28          0717  -
-[0:0:81:0]   enclosu LSI      SAS2X36          0e0b  -
-[0:0:88:0]   enclosu LSI      SAS2X36          0e0b  -
-----------------------------------------------------------------------
+Linux issues SYNCHRONIZE_CACHE commands when we need to make sure that the data 
+needs to be crash safe (after a transaction commit from a file system journal, 
+an explicit fsync call or write system call with O_SYNC set).
 
-...and they're daisy-chained like this:
+If the cache is nonvolatile (i.e., the target will have it after a power outage 
+or reboot), we are fine - pretty much your (a) clause above.
 
-----------------------------------------------------------------------
-for h in b2 b4 b5; do echo "=== $h ==="
-  ssh $h 'find /sys/bus/scsi/devices/host0/ -name expander\* | egrep -v "bsg|sas_(expander|device)"' 
-done
-=== h1 ===
-/sys/bus/scsi/devices/host0/port-0:0/expander-0:0
-/sys/bus/scsi/devices/host0/port-0:0/expander-0:0/port-0:0:0/expander-0:1
-/sys/bus/scsi/devices/host0/port-0:0/expander-0:0/port-0:0:0/expander-0:1/port-0:1:25/expander-0:4
-/sys/bus/scsi/devices/host0/port-0:1/expander-0:2
-/sys/bus/scsi/devices/host0/port-0:1/expander-0:2/port-0:2:0/expander-0:3
-=== h2 ===
-/sys/bus/scsi/devices/host0/port-0:0/expander-0:0
-/sys/bus/scsi/devices/host0/port-0:1/expander-0:1
-=== h3 ===
-/sys/bus/scsi/devices/host0/port-0:0/expander-0:0
-/sys/bus/scsi/devices/host0/port-0:0/expander-0:0/port-0:0:0/expander-0:1
-/sys/bus/scsi/devices/host0/port-0:1/expander-0:2
-/sys/bus/scsi/devices/host0/port-0:1/expander-0:2/port-0:2:0/expander-0:3
-/sys/bus/scsi/devices/host0/port-0:1/expander-0:2/port-0:2:0/expander-0:3/port-0:3:0/expander-0:4
-----------------------------------------------------------------------
+Not sure we have thought through (or can control) how an array would handle 
+pulling a drive from behind a RAID controller that has not flushed its state.
+>
+> As a short-term fix, many RAID controllers assumed intent (a) and started
+> interpreting the SYNCHRONIZE CACHE command as a NOP and ignoring the FUA bit.
 
-(Sorry, I don't know how to relate the /sys/bus/scsi stuff to the scsi ids or
-/dev/sgXX.)
+We have seen problems with some RAID controllers that leave the write cache 
+enabled on back end drives - their cache is battery backed, but the cache on 
+those backend drives is exposed to certain data loss on a power outage.
 
-The errors are showing up like:
+It would be nice if they always disabled the write cache on the backend drives 
+*or* advertised WCE and propagated the SYNCHRONIZE_CACHE commands to each drive 
+when we send them down.
+>
+> Surprise removal of a drive from a RAID controller is risky even if software
+> has run SYNCHRONIZE CACHE, since the RAID controller might be doing other
+> activity in the background. So, there are other reasons to justify assuming
+> that the user just won't do that.
+>
+> Afraid of breaking software with intent (b) (which was more likely in the
+> days of floppy disks, Bournelli Boxes, and other removable block devices),
+> T10 chose to clarify that the original meaning was (b) and added new
+> FUA_NV and SYNC_NV bits to let software express intent (a).  The hope
+> was that devices would implement the bits and software would start using
+> them at appropriate times.
+>
+> Unfortunately, the short-term fix worked well enough that it still prevails
+> today, and most standalone removable media block devices have disappeared.
+> There is not much software actually sending the FUA_NV and SYNC_NV bits
+> and few devices honoring the bits per the standard.
+>
+> As an SBC-3 letter ballot comment, I recently submitted T10 proposal
+> 13-050 (see http://www.t10.org/doc13.htm) to obsolete the SYNC_NV and
+> FUA_NV bits and change the meaning of the commands without those bits
+> to intent (a), reflecting what the industry has actually done.
 
-----------------------------------------------------------------------
-$ for h in h1 h2 h3; do
-  ssh $h '
-    for d in $(lsscsi -tg | awk "\$2 == \"enclosu\" { print \$5 }"); do
-      echo "=== $(hostname):$d ==="
-      sg_ses -j $d 2>&1 
-    done
-  '
-done | egrep 'LSI|^=|^Slot 24|join_work|not decoded' | sed -r 's/^=/\n=/'
+This is definitely something that we should review and take into account going 
+forward.
 
-=== h1:/dev/sg24 ===
-  LSI CORP  SAS2X36           0717
-Slot 24 [0,23]  Element type: Array device slot
+It does sound like we have a lot of confusion around WCE meaning in the storage 
+industry today though, which leads me to think that we will need to allow raw 
+block accessing applications to manually override our flush settings (reluctantly!).
 
-=== h1:/dev/sg27 ===
-  LSI       SAS2X36           0e0b
-Slot 24 [0,23]  Element type: Array device slot
-    Transport protocol: Oxc not decoded
+Regards,
 
-=== h1:/dev/sg38 ===
-  LSI CORP  SAS2X28           0717
+Ric
 
-=== h1:/dev/sg62 ===
-  LSI       SAS2X36           0e0b
-Slot 24 [0,23]  Element type: Array device slot
-    Transport protocol: Oxc not decoded
+>
+>
+>
+>
+>
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jeremy Linton
+> Sent: Tuesday, April 23, 2013 5:40 PM
+> To: James Bottomley
+> Cc: Ric Wheeler; linux-scsi@vger.kernel.org; Martin K. Petersen; Jeff Moyer; Tejun Heo; Mike Snitzer; dgilbert@interlog.com
+> Subject: Re: T10 WCE interpretation in Linux & device level access
+>
+> On 4/23/2013 3:07 PM, James Bottomley wrote:
+>
+>> I bet they don't; they probably obey the spec.  There's a SYNC_NV bit
+>> which if unset (which it is in our implementation) means only sync your
+>> non-NV cache.  For a device with all NV, that equates to nop.
+> 	Yes, linux leaves the SYNC_NV bit unset in scsi_setup_flush_cmnd().
+>
+> The draft specs, and a couple others I have laying about says: says the device
+> shall sync cache to medium for both volatile and non volatile cache data if
+> SYNC_NV is _unset_.
+>
+> With it set, the table could be more confusing!
+>
+> For volatile cache blocks with SYNC_NV set "If a non-volatile cache is present,
+> then the device server shall synchronize to non-volatile cache or to the medium.
+> If a non-volatile cache is not present, then the device server shall synchronize
+> to the medium".
+>
+> And for Non-volatile cache with it set "No Requirement"
+>
+>
+> Which to me says, don't expect any particular behavior if you set this bit and
+> have NV it could flush to medium, flush to NV cache, or do nothing at all. But
+> it seems pretty clear that with it unset its probably going to get synchronized
+> to the medium.
+>
+>
+> If T10 were to do something, maybe they could stop putting bits in the docs that
+> aren't guaranteed to do anything (fill in rant).
+>
+> As for linux, seems the state of the spec really doesn't leave any good options
+> other than provide the user the ability to disable the flush_cmnd() if  the
+> NV_SUP bit is set. Or maybe a white list (ick!)...
+>
+>
+>
+>
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-=== h1:/dev/sg81 ===
-join_work: oi=6, ei=255 (broken_ei=0) not in join_arr
-  LSI       SAS2X36           0e0b
-
-=== h2:/dev/sg25 ===
-  LSI CORP  SAS2X36           0717
-Slot 24 [0,23]  Element type: Array device slot
-
-=== h2:/dev/sg29 ===
-  LSI CORP  SAS2X28           0717
-
-=== h3:/dev/sg23 ===
-  LSI CORP  SAS2X36           0717
-Slot 24 [0,23]  Element type: Array device slot
-
-=== h3:/dev/sg45 ===
-join_work: oi=6, ei=255 (broken_ei=0) not in join_arr
-  LSI       SAS2X36           0e0b
-
-=== h3:/dev/sg57 ===
-  LSI CORP  SAS2X28           0717
-
-=== h3:/dev/sg81 ===
-  LSI       SAS2X36           0e0b
-Slot 24 [0,23]  Element type: Array device slot
-    Transport protocol: Oxc not decoded
-
-=== h3:/dev/sg88 ===
-join_work: oi=6, ei=255 (broken_ei=0) not in join_arr
-  LSI       SAS2X36           0e0b
-
-----------------------------------------------------------------------
-
-What should I be looking at, or what info I can provide to help track down
-these issues?
-
-Cheers,
-
-Chris.
