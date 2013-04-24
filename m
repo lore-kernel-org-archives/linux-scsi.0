@@ -1,104 +1,105 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH][v3] scsi: Handle MLQUEUE busy response in
- scsi_send_eh_cmnd
-Date: Wed, 24 Apr 2013 14:48:42 +0000
-Message-ID: <1366814922.1971.5.camel@dabdike>
-References: <1366803168-79391-1-git-send-email-hare@suse.de>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: T10 WCE interpretation in Linux & device level access
+Date: Wed, 24 Apr 2013 11:40:12 -0400
+Message-ID: <5177FCDC.6010304@interlog.com>
+References: <5176E3E8.3000809@redhat.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:55525 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755626Ab3DXOsm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 10:48:42 -0400
-In-Reply-To: <1366803168-79391-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <FACFD0D9DEE582489FE9505509748426@sw.swsoft.com>
+Received: from smtp.infotech.no ([82.134.31.41]:43703 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752450Ab3DXPlZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Apr 2013 11:41:25 -0400
+In-Reply-To: <5176E3E8.3000809@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>
 
-On Wed, 2013-04-24 at 13:32 +0200, Hannes Reinecke wrote:
-> scsi_send_eh_cmnd() is calling queuecommand() directly, so
-> it needs to check the return value here.
-> The only valid return codes for queuecommand() are 'busy'
-> states, so we need to wait for a bit to allow the LLDD
-> to recover.
-> 
-> Based on an earlier patch from Wen Xiong.
+On 13-04-23 03:41 PM, Ric Wheeler wrote:
+>
+> For many years, we have used WCE as an indication that a device has a volatile
+> write cache (not just a write cache) and used this as a trigger to send down
+> SYNCHRONIZE_CACHE commands as needed.
+>
+> Some arrays with non-volatile cache seem to have WCE set and simply ignore the
+> command.
+>
+> Some arrays with non-volatile cache seem to not set WCE.
+>
+> Others arrays with non-volatile cache - our problem arrays - set WCE and do
+> something horrible and slow when sent the SYNCHRONIZE_CACHE commands.
+>
+> Note that for file systems, you can override this behavior by mounting with our
+> barriers disabled (mount -o nobarrier .....). There is currently no way do
+> disable this for anything using the device directly, not through the file system.
+>
+> Some applications run against block devices - not through a file system - and
+> want not to slow to a crawl when they have an array in my problem set.
+>
+> Giving them a hook to ignore WCE seems to be a hack, but one that would resolve
+> issues with users who won't want to wait months (years?) for us to convince the
+> array vendors.
+>
+> Is this a hook worth doing?
+>
+> Have we hashed this out in the T10 committee?
 
-This looks good, only one minor nitpick:
+Naturally I'm biased, but I tend to think the user space
+is usually smarter than the kernel. That assumes skilled
+users.
 
-> Cc: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-> Cc: Brian King <brking@linux.vnet.ibm.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index c1b05a8..1fc6da94 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -791,22 +791,32 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->  	struct scsi_device *sdev = scmd->device;
->  	struct Scsi_Host *shost = sdev->host;
->  	DECLARE_COMPLETION_ONSTACK(done);
-> -	unsigned long timeleft;
-> +	unsigned long timeleft = timeout;
->  	struct scsi_eh_save ses;
-> +	const int stall_for = min(HZ/10, 1);
->  	int rtn;
->  
-> +retry:
->  	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
->  	shost->eh_action = &done;
->  
->  	scsi_log_send(scmd);
->  	scmd->scsi_done = scsi_eh_done;
-> -	shost->hostt->queuecommand(shost, scmd);
-> -
-> -	timeleft = wait_for_completion_timeout(&done, timeout);
-> +	rtn = shost->hostt->queuecommand(shost, scmd);
-> +	if (rtn) {
-> +		if (timeleft) {
-> +			scsi_eh_restore_cmnd(scmd, &ses);
-> +			timeleft -= stall_for;
-> +			msleep(stall_for);
+So if the user space issues a SYNCHRONIZE_CACHE with the
+IMMED bit set and for the whole disk then the user should
+have a way of forcing that command to be issued. The
+assumption here is that the skilled user is about to power
+down that array or pull some disks or SSDs *.
 
-Stall for is in HZ: need to convert to ms, so
-
-			msleep(stall_for * 1000/HZ);
-
-I also don't see a need to restore and reprep the command each time, but
-I don't see a problem with it either.
-
-James
+The more questionable cases are when a file system or the
+block layer is issuing a barrier or some such that
+translates to a SYNCHRONIZE_CACHE. That should be ignored
+in some cases already discussed in this thread.
 
 
-> +			goto retry;
-> +		}
-> +		rtn = NEEDS_RETRY;
-> +	} else
-> +		timeleft = wait_for_completion_timeout(&done, timeout);
->  
->  	shost->eh_action = NULL;
->  
-> -	scsi_log_completion(scmd, SUCCESS);
-> +	scsi_log_completion(scmd, rtn);
->  
->  	SCSI_LOG_ERROR_RECOVERY(3,
->  		printk("%s: scmd: %p, timeleft: %ld\n",
-> @@ -837,7 +847,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->  			rtn = FAILED;
->  			break;
->  		}
-> -	} else {
-> +	} else if (!rtn) {
->  		scsi_abort_eh_cmnd(scmd);
->  		rtn = FAILED;
->  	}
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+While working with SoCs I have noticed an interesting
+technique. Sub-system sized sections of the memory mapped
+IO space (e.g. a bank of GPIOs) can be write protected by
+a simple ASCII sequence **. Attempts to change configuration
+registers after write protect are ignored and an error
+is noted (if anyone cares). The same ACSII sequence can be
+used to un-write protect those sub-system configuration
+registers. Typically on a SoC if the GPIOs are randomly
+re-configured, it's game over.
+
+Back to the SCSI world: a better solution might be if an
+LLD could be informed of the reason a SCSI control command
+is being issued (a sort of "come from" field). Failing, or
+it addition to that, a sysfs interface could be added to
+filter out "dangerous" SCSI commands:
+   echo "SC" > /sys/class/scsi_device/8:0:0:0/device/filter
+
+   cat /sys/class/scsi_device/8:0:0:0/device/filter
+FU SC
+
+If, for whatever reason, we did ignore a SYNCHRONIZE_CACHE
+command we could use vendor specific sense data (vendor=Linux)
+to indicate that a command had been ignored. That could be
+extended to all SCSI commands that are filtered out ***;
+better that than EIO, EACCES etc.
+
+Doug Gilbert
+
+*   and if Linux doesn't permit this, then user might be
+     advised to run another, more obedient, host OS with
+     Linux running as a VM. A "pass-by" rather than a
+     "pass-through" ...
+
+**  only the configuration registers are write protected, so
+     data can still be written to the GPIOs
+
+*** like me, many pass-through users cannot see why SCSI
+     commands injected to the SCSI subsystem (e.g. via
+     sg or bsg) are filtered out silently by the block layer.
 
