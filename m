@@ -1,50 +1,104 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: T10 WCE interpretation in Linux & device level access
-Date: Wed, 24 Apr 2013 09:35:33 -0500
-Message-ID: <5177EDB5.5000105@tributary.com>
-References: <5176E3E8.3000809@redhat.com> <1366747622.1939.6.camel@dabdike> <5177BF53.3040305@redhat.com> <5177CAF5.6060506@suse.de> <5177CB23.5090802@redhat.com> <5177CFB6.9070105@redhat.com> <5177D6C2.6080705@redhat.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH][v3] scsi: Handle MLQUEUE busy response in
+ scsi_send_eh_cmnd
+Date: Wed, 24 Apr 2013 14:48:42 +0000
+Message-ID: <1366814922.1971.5.camel@dabdike>
+References: <1366803168-79391-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.57]:31680 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754964Ab3DXOfj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 10:35:39 -0400
-In-Reply-To: <5177D6C2.6080705@redhat.com>
+Received: from mx2.parallels.com ([199.115.105.18]:55525 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755626Ab3DXOsm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 10:48:42 -0400
+In-Reply-To: <1366803168-79391-1-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <FACFD0D9DEE582489FE9505509748426@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>, "Black, David" <david.black@emc.com>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "Knight, Frederick" <Frederick.Knight@netapp.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
 
-On 4/24/2013 7:57 AM, Paolo Bonzini wrote:
->> If the device can promise this, we don't care (and don't know) how it 
->> manages that promise. It can leave the data on battery backed DRAM, can 
->> archive it to flash or any other scheme that works.
+On Wed, 2013-04-24 at 13:32 +0200, Hannes Reinecke wrote:
+> scsi_send_eh_cmnd() is calling queuecommand() directly, so
+> it needs to check the return value here.
+> The only valid return codes for queuecommand() are 'busy'
+> states, so we need to wait for a bit to allow the LLDD
+> to recover.
 > 
-> That's exactly the point of SYNC_NV=1.
+> Based on an earlier patch from Wen Xiong.
 
-	Well its the point, but the specification is written such that the vendors can
-choose to implement it any way they wish, especially for split cache
-systems where there is both volatile and non volatile cache.
+This looks good, only one minor nitpick:
 
-	Flushing the NV cache to medium (as is the current behavior) may not be a bad
-idea anyway.
+> Cc: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+> Cc: Brian King <brking@linux.vnet.ibm.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index c1b05a8..1fc6da94 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -791,22 +791,32 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+>  	struct scsi_device *sdev = scmd->device;
+>  	struct Scsi_Host *shost = sdev->host;
+>  	DECLARE_COMPLETION_ONSTACK(done);
+> -	unsigned long timeleft;
+> +	unsigned long timeleft = timeout;
+>  	struct scsi_eh_save ses;
+> +	const int stall_for = min(HZ/10, 1);
+>  	int rtn;
+>  
+> +retry:
+>  	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
+>  	shost->eh_action = &done;
+>  
+>  	scsi_log_send(scmd);
+>  	scmd->scsi_done = scsi_eh_done;
+> -	shost->hostt->queuecommand(shost, scmd);
+> -
+> -	timeleft = wait_for_completion_timeout(&done, timeout);
+> +	rtn = shost->hostt->queuecommand(shost, scmd);
+> +	if (rtn) {
+> +		if (timeleft) {
+> +			scsi_eh_restore_cmnd(scmd, &ses);
+> +			timeleft -= stall_for;
+> +			msleep(stall_for);
 
-	Thats because I know of a large vendors array where the non-volatile cache
-might be better described as the "sometimes" non-volatile cache. That is because
-a failure to flush the volatile portions results in the non-volatile portions
-being considered invalid when power is restored. This fences the volume, and the
-usual method for recovering the array is to call support and have them
-invalidate the NV portions of the cache. Thereby negating the whole reason for
-having a NV cache. I'm sure they don't tell customers this fact when they sell
-the array, when it happened in our lab I was in a state of shock for about a week.
+Stall for is in HZ: need to convert to ms, so
+
+			msleep(stall_for * 1000/HZ);
+
+I also don't see a need to restore and reprep the command each time, but
+I don't see a problem with it either.
+
+James
 
 
-	
-
-
-
-
-
+> +			goto retry;
+> +		}
+> +		rtn = NEEDS_RETRY;
+> +	} else
+> +		timeleft = wait_for_completion_timeout(&done, timeout);
+>  
+>  	shost->eh_action = NULL;
+>  
+> -	scsi_log_completion(scmd, SUCCESS);
+> +	scsi_log_completion(scmd, rtn);
+>  
+>  	SCSI_LOG_ERROR_RECOVERY(3,
+>  		printk("%s: scmd: %p, timeleft: %ld\n",
+> @@ -837,7 +847,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+>  			rtn = FAILED;
+>  			break;
+>  		}
+> -	} else {
+> +	} else if (!rtn) {
+>  		scsi_abort_eh_cmnd(scmd);
+>  		rtn = FAILED;
+>  	}
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
