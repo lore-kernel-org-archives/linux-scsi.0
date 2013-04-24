@@ -1,260 +1,204 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH v2] qla2xxx: Fix for locking issue between driver ISR
- and mailbox routines
-Date: Wed, 24 Apr 2013 06:03:36 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D35330BDE@avmb2.qlogic.org>
-References: <1366737197-45460-1-git-send-email-gurinder.shergill@hp.com>
+From: Chris Dunlop <chris@onthe.net.au>
+Subject: sg_ses -j shows Transport protocol: Oxc not decoded
+Date: Wed, 24 Apr 2013 19:08:16 +1000
+Message-ID: <20130424090816.GA17732@onthe.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:37220
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753211Ab3DXGDm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Apr 2013 02:03:42 -0400
-In-Reply-To: <1366737197-45460-1-git-send-email-gurinder.shergill@hp.com>
-Content-Language: en-US
-Content-ID: <601ACCE85F3E274BB3869BC432C4447E@qlogic.com>
+Received: from smtp1.onthe.net.au ([203.22.196.249]:42546 "EHLO
+	smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757400Ab3DXJIT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 05:08:19 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by smtp1.onthe.net.au (Postfix) with ESMTP id 764A4610C5
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2013 19:08:17 +1000 (EST)
+Received: from smtp1.onthe.net.au ([127.0.0.1])
+	by localhost (smtp1.onthe.net.au [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id mA-J5SNZ2IhP for <linux-scsi@vger.kernel.org>;
+	Wed, 24 Apr 2013 19:08:16 +1000 (EST)
+Received: from o1.office.otn.net.au (unknown [180.148.179.26])
+	by smtp1.onthe.net.au (Postfix) with ESMTP id C742360DDF
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2013 19:08:16 +1000 (EST)
+Received: from achates.office.onthe.net.au (achates.office.onthe.net.au [10.1.32.53])
+	by o1.office.otn.net.au (Postfix) with ESMTP id 94CC82AB6DE
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2013 19:09:42 +1000 (EST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "gurinder.shergill@hp.com" <gurinder.shergill@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+To: linux-scsi@vger.kernel.org
+
+Hi,
+
+I have 3 boxes, each with an LSI 9211-8i and a mix of LSI expanders (Supermicro
+SAS-846EL2, SAS-826EL2). For some of my expanders, 'sg_ses -j' (originally
+sg3_utils 1.33, now 1.35) is showing:
+
+Slot 24 [0,23]  Element type: Array device slot
+  ...
+  Additional Element Status:
+    Transport protocol: Oxc not decoded
+
+...where the slot contains a SATA device. It's always Slot 24, and other
+slots show up fine. E.g. on one of the expanders with SATA drives in
+both Slot 23 and 24:
+
+h3# sg_ses -j /dev/sg81
+  LSI       SAS2X36           0e0b
+  Primary enclosure logical identifier (hex): 500304800013453f
+...
+Slot 23 [0,22]  Element type: Array device slot
+  Enclosure Status:
+    Predicted failure=0, Disabled=0, Swap=0, status: OK
+    OK=0, Reserved device=0, Hot spare=0, Cons check=0
+    In crit array=0, In failed array=0, Rebuild/remap=0, R/R abort=0
+    App client bypass A=0, Do not remove=0, Enc bypass A=0, Enc bypass B=0
+    Ready to insert=0, RMV=0, Ident=0, Report=0
+    App client bypass B=0, Fault sensed=0, Fault reqstd=0, Device off=0
+    Bypassed A=0, Bypassed B=0, Dev bypassed A=0, Dev bypassed B=0
+  Additional Element Status:
+    Transport protocol: SAS
+    number of phys: 1, not all phys: 0, device slot number: 22
+    phy index: 0
+      device type: no device attached
+      initiator port for:
+      target port for: SATA_device
+      attached SAS address: 0x500304800013453f
+      SAS address: 0x5003048000134522
+      phy identifier: 0x0
+Slot 24 [0,23]  Element type: Array device slot
+  Enclosure Status:
+    Predicted failure=0, Disabled=0, Swap=0, status: OK
+    OK=0, Reserved device=0, Hot spare=0, Cons check=0
+    In crit array=0, In failed array=0, Rebuild/remap=0, R/R abort=0
+    App client bypass A=0, Do not remove=0, Enc bypass A=0, Enc bypass B=0
+    Ready to insert=0, RMV=0, Ident=0, Report=0
+    App client bypass B=0, Fault sensed=0, Fault reqstd=0, Device off=0
+    Bypassed A=0, Bypassed B=0, Dev bypassed A=0, Dev bypassed B=0
+  Additional Element Status:
+    Transport protocol: Oxc not decoded
+...
+
+This may be unrelated, but 'sg_ses -j' is also coming up with the
+following error on 3 of the 6 expanders identified as "LSI SAS2X36 0e0b"
+(this doesn't include any of the expanders with the Slot 24 problem):
+
+join_work: oi=6, ei=255 (broken_ei=0) not in join_arr
 
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+The expander types are:
 
-Thanks,
-~Saurav
+----------------------------------------------------------------------
+$ for h in h1 h2 h3; do echo "=== $h ==="
+  ssh $h 'lsscsi | grep enclosu'
+done
+=== h1 ===
+[0:0:24:0]   enclosu LSI CORP SAS2X36          0717  -
+[0:0:27:0]   enclosu LSI      SAS2X36          0e0b  -
+[0:0:38:0]   enclosu LSI CORP SAS2X28          0717  -
+[0:0:62:0]   enclosu LSI      SAS2X36          0e0b  -
+[0:0:85:0]   enclosu LSI      SAS2X36          0e0b  -
+=== h2 ===
+[0:0:25:0]   enclosu LSI CORP SAS2X36          0717  -
+[0:0:29:0]   enclosu LSI CORP SAS2X28          0717  -
+=== h3 ===
+[0:0:23:0]   enclosu LSI CORP SAS2X36          0717  -
+[0:0:45:0]   enclosu LSI      SAS2X36          0e0b  -
+[0:0:57:0]   enclosu LSI CORP SAS2X28          0717  -
+[0:0:81:0]   enclosu LSI      SAS2X36          0e0b  -
+[0:0:88:0]   enclosu LSI      SAS2X36          0e0b  -
+----------------------------------------------------------------------
 
->The driver uses ha->mbx_cmd_flags variable to pass information between
->its ISR and mailbox routines, however, it does so without the protection
->of
->any locks.  Under certain conditions, this can lead to multiple mailbox
->command completions being signaled, which, in turn, leads to a false
->mailbox timeout error for the subsequently issued mailbox command.
->
->The issue occurs frequently but intermittenly with the Qlogic 8GFC mezz
->card during card initialization, resulting in card initialization failure.
->
->Signed-off-by: Gurinder (Sunny) Shergill <gurinder.shergill@hp.com>
->---
-> drivers/scsi/qla2xxx/qla_inline.h | 11 +++++++++++
-> drivers/scsi/qla2xxx/qla_isr.c    | 27 ++++-----------------------
-> drivers/scsi/qla2xxx/qla_mbx.c    |  2 --
-> drivers/scsi/qla2xxx/qla_mr.c     | 10 ++--------
-> drivers/scsi/qla2xxx/qla_nx.c     | 26 ++++++++++----------------
-> 5 files changed, 27 insertions(+), 49 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_inline.h
->b/drivers/scsi/qla2xxx/qla_inline.h
->index 98ab921..0a5c895 100644
->--- a/drivers/scsi/qla2xxx/qla_inline.h
->+++ b/drivers/scsi/qla2xxx/qla_inline.h
->@@ -278,3 +278,14 @@ qla2x00_do_host_ramp_up(scsi_qla_host_t *vha)
->
->       set_bit(HOST_RAMP_UP_QUEUE_DEPTH, &vha->dpc_flags);
-> }
->+
->+static inline void
->+qla2x00_handle_mbx_completion(struct qla_hw_data *ha, int status)
->+{
->+      if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
->+          (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
->+              set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
->+              clear_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags);
->+              complete(&ha->mbx_intr_comp);
->+      }
->+}
->diff --git a/drivers/scsi/qla2xxx/qla_isr.c
->b/drivers/scsi/qla2xxx/qla_isr.c
->index 259d920..d2a4c75 100644
->--- a/drivers/scsi/qla2xxx/qla_isr.c
->+++ b/drivers/scsi/qla2xxx/qla_isr.c
->@@ -104,14 +104,9 @@ qla2100_intr_handler(int irq, void *dev_id)
->                       RD_REG_WORD(&reg->hccr);
->               }
->       }
->+      qla2x00_handle_mbx_completion(ha, status);
->       spin_unlock_irqrestore(&ha->hardware_lock, flags);
->
->-      if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
->-          (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
->-              set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
->-              complete(&ha->mbx_intr_comp);
->-      }
->-
->       return (IRQ_HANDLED);
-> }
->
->@@ -221,14 +216,9 @@ qla2300_intr_handler(int irq, void *dev_id)
->               WRT_REG_WORD(&reg->hccr, HCCR_CLR_RISC_INT);
->               RD_REG_WORD_RELAXED(&reg->hccr);
->       }
->+      qla2x00_handle_mbx_completion(ha, status);
->       spin_unlock_irqrestore(&ha->hardware_lock, flags);
->
->-      if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
->-          (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
->-              set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
->-              complete(&ha->mbx_intr_comp);
->-      }
->-
->       return (IRQ_HANDLED);
-> }
->
->@@ -2613,14 +2603,9 @@ qla24xx_intr_handler(int irq, void *dev_id)
->               if (unlikely(IS_QLA83XX(ha) && (ha->pdev->revision == 1)))
->                       ndelay(3500);
->       }
->+      qla2x00_handle_mbx_completion(ha, status);
->       spin_unlock_irqrestore(&ha->hardware_lock, flags);
->
->-      if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
->-          (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
->-              set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
->-              complete(&ha->mbx_intr_comp);
->-      }
->-
->       return IRQ_HANDLED;
-> }
->
->@@ -2763,13 +2748,9 @@ qla24xx_msix_default(int irq, void *dev_id)
->               }
->               WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
->       } while (0);
->+      qla2x00_handle_mbx_completion(ha, status);
->       spin_unlock_irqrestore(&ha->hardware_lock, flags);
->
->-      if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
->-          (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
->-              set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
->-              complete(&ha->mbx_intr_comp);
->-      }
->       return IRQ_HANDLED;
-> }
->
->diff --git a/drivers/scsi/qla2xxx/qla_mbx.c
->b/drivers/scsi/qla2xxx/qla_mbx.c
->index 9e5d89d..3587ec2 100644
->--- a/drivers/scsi/qla2xxx/qla_mbx.c
->+++ b/drivers/scsi/qla2xxx/qla_mbx.c
->@@ -179,8 +179,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha,
->mbx_cmd_t *mcp)
->
->               wait_for_completion_timeout(&ha->mbx_intr_comp, mcp->tov * HZ);
->
->-              clear_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags);
->-
->       } else {
->               ql_dbg(ql_dbg_mbx, vha, 0x1011,
->                   "Cmd=%x Polling Mode.\n", command);
->diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
->index 729b743..5483da8 100644
->--- a/drivers/scsi/qla2xxx/qla_mr.c
->+++ b/drivers/scsi/qla2xxx/qla_mr.c
->@@ -148,9 +148,6 @@ qlafx00_mailbox_command(scsi_qla_host_t *vha, struct
->mbx_cmd_32 *mcp)
->               spin_unlock_irqrestore(&ha->hardware_lock, flags);
->
->               wait_for_completion_timeout(&ha->mbx_intr_comp, mcp->tov * HZ);
->-
->-              clear_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags);
->-
->       } else {
->               ql_dbg(ql_dbg_mbx, vha, 0x112c,
->                   "Cmd=%x Polling Mode.\n", command);
->@@ -2934,13 +2931,10 @@ qlafx00_intr_handler(int irq, void *dev_id)
->               QLAFX00_CLR_INTR_REG(ha, clr_intr);
->               QLAFX00_RD_INTR_REG(ha);
->       }
->+
->+      qla2x00_handle_mbx_completion(ha, status);
->       spin_unlock_irqrestore(&ha->hardware_lock, flags);
->
->-      if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
->-          (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
->-              set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
->-              complete(&ha->mbx_intr_comp);
->-      }
->       return IRQ_HANDLED;
-> }
->
->diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
->index 10754f51..cce0cd0 100644
->--- a/drivers/scsi/qla2xxx/qla_nx.c
->+++ b/drivers/scsi/qla2xxx/qla_nx.c
->@@ -2074,9 +2074,6 @@ qla82xx_intr_handler(int irq, void *dev_id)
->               }
->               WRT_REG_DWORD(&reg->host_int, 0);
->       }
->-      spin_unlock_irqrestore(&ha->hardware_lock, flags);
->-      if (!ha->flags.msi_enabled)
->-              qla82xx_wr_32(ha, ha->nx_legacy_intr.tgt_mask_reg, 0xfbff);
->
-> #ifdef QL_DEBUG_LEVEL_17
->       if (!irq && ha->flags.eeh_busy)
->@@ -2085,11 +2082,12 @@ qla82xx_intr_handler(int irq, void *dev_id)
->                   status, ha->mbx_cmd_flags, ha->flags.mbox_int, stat);
-> #endif
->
->-      if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
->-          (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
->-              set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
->-              complete(&ha->mbx_intr_comp);
->-      }
->+      qla2x00_handle_mbx_completion(ha, status);
->+      spin_unlock_irqrestore(&ha->hardware_lock, flags);
->+
->+      if (!ha->flags.msi_enabled)
->+              qla82xx_wr_32(ha, ha->nx_legacy_intr.tgt_mask_reg, 0xfbff);
->+
->       return IRQ_HANDLED;
-> }
->
->@@ -2149,8 +2147,6 @@ qla82xx_msix_default(int irq, void *dev_id)
->               WRT_REG_DWORD(&reg->host_int, 0);
->       } while (0);
->
->-      spin_unlock_irqrestore(&ha->hardware_lock, flags);
->-
-> #ifdef QL_DEBUG_LEVEL_17
->       if (!irq && ha->flags.eeh_busy)
->               ql_log(ql_log_warn, vha, 0x5044,
->@@ -2158,11 +2154,9 @@ qla82xx_msix_default(int irq, void *dev_id)
->                   status, ha->mbx_cmd_flags, ha->flags.mbox_int, stat);
-> #endif
->
->-      if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
->-              (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
->-                      set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
->-                      complete(&ha->mbx_intr_comp);
->-      }
->+      qla2x00_handle_mbx_completion(ha, status);
->+      spin_unlock_irqrestore(&ha->hardware_lock, flags);
->+
->       return IRQ_HANDLED;
-> }
->
->@@ -3345,7 +3339,7 @@ void qla82xx_clear_pending_mbx(scsi_qla_host_t *vha)
->               ha->flags.mbox_busy = 0;
->               ql_log(ql_log_warn, vha, 0x6010,
->                   "Doing premature completion of mbx command.\n");
->-              if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags))
->+              if (test_and_clear_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags))
->                       complete(&ha->mbx_intr_comp);
->       }
-> }
->--
->1.7.11.7
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+...and they're daisy-chained like this:
 
+----------------------------------------------------------------------
+for h in b2 b4 b5; do echo "=== $h ==="
+  ssh $h 'find /sys/bus/scsi/devices/host0/ -name expander\* | egrep -v "bsg|sas_(expander|device)"' 
+done
+=== h1 ===
+/sys/bus/scsi/devices/host0/port-0:0/expander-0:0
+/sys/bus/scsi/devices/host0/port-0:0/expander-0:0/port-0:0:0/expander-0:1
+/sys/bus/scsi/devices/host0/port-0:0/expander-0:0/port-0:0:0/expander-0:1/port-0:1:25/expander-0:4
+/sys/bus/scsi/devices/host0/port-0:1/expander-0:2
+/sys/bus/scsi/devices/host0/port-0:1/expander-0:2/port-0:2:0/expander-0:3
+=== h2 ===
+/sys/bus/scsi/devices/host0/port-0:0/expander-0:0
+/sys/bus/scsi/devices/host0/port-0:1/expander-0:1
+=== h3 ===
+/sys/bus/scsi/devices/host0/port-0:0/expander-0:0
+/sys/bus/scsi/devices/host0/port-0:0/expander-0:0/port-0:0:0/expander-0:1
+/sys/bus/scsi/devices/host0/port-0:1/expander-0:2
+/sys/bus/scsi/devices/host0/port-0:1/expander-0:2/port-0:2:0/expander-0:3
+/sys/bus/scsi/devices/host0/port-0:1/expander-0:2/port-0:2:0/expander-0:3/port-0:3:0/expander-0:4
+----------------------------------------------------------------------
 
-________________________________
+(Sorry, I don't know how to relate the /sys/bus/scsi stuff to the scsi ids or
+/dev/sgXX.)
 
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+The errors are showing up like:
 
+----------------------------------------------------------------------
+$ for h in h1 h2 h3; do
+  ssh $h '
+    for d in $(lsscsi -tg | awk "\$2 == \"enclosu\" { print \$5 }"); do
+      echo "=== $(hostname):$d ==="
+      sg_ses -j $d 2>&1 
+    done
+  '
+done | egrep 'LSI|^=|^Slot 24|join_work|not decoded' | sed -r 's/^=/\n=/'
+
+=== h1:/dev/sg24 ===
+  LSI CORP  SAS2X36           0717
+Slot 24 [0,23]  Element type: Array device slot
+
+=== h1:/dev/sg27 ===
+  LSI       SAS2X36           0e0b
+Slot 24 [0,23]  Element type: Array device slot
+    Transport protocol: Oxc not decoded
+
+=== h1:/dev/sg38 ===
+  LSI CORP  SAS2X28           0717
+
+=== h1:/dev/sg62 ===
+  LSI       SAS2X36           0e0b
+Slot 24 [0,23]  Element type: Array device slot
+    Transport protocol: Oxc not decoded
+
+=== h1:/dev/sg81 ===
+join_work: oi=6, ei=255 (broken_ei=0) not in join_arr
+  LSI       SAS2X36           0e0b
+
+=== h2:/dev/sg25 ===
+  LSI CORP  SAS2X36           0717
+Slot 24 [0,23]  Element type: Array device slot
+
+=== h2:/dev/sg29 ===
+  LSI CORP  SAS2X28           0717
+
+=== h3:/dev/sg23 ===
+  LSI CORP  SAS2X36           0717
+Slot 24 [0,23]  Element type: Array device slot
+
+=== h3:/dev/sg45 ===
+join_work: oi=6, ei=255 (broken_ei=0) not in join_arr
+  LSI       SAS2X36           0e0b
+
+=== h3:/dev/sg57 ===
+  LSI CORP  SAS2X28           0717
+
+=== h3:/dev/sg81 ===
+  LSI       SAS2X36           0e0b
+Slot 24 [0,23]  Element type: Array device slot
+    Transport protocol: Oxc not decoded
+
+=== h3:/dev/sg88 ===
+join_work: oi=6, ei=255 (broken_ei=0) not in join_arr
+  LSI       SAS2X36           0e0b
+
+----------------------------------------------------------------------
+
+What should I be looking at, or what info I can provide to help track down
+these issues?
+
+Cheers,
+
+Chris.
