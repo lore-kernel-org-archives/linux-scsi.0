@@ -1,35 +1,120 @@
-From: wins <ope12@cox.net>
-Subject: =?utf-8?Q?The_first_$5,000.00_was_sent_today._My_working_partner_has_help?=
- =?utf-8?Q?ed_me_to_send_the_first_$5,000.0?=
- =?utf-8?Q?0_to_you_through_western_union._?=
- =?utf-8?Q?So_contact_our_Western_Union_cla?=
- =?utf-8?Q?ims_Agent_to_pick_up_this_$5,000?=
- =?utf-8?Q?_now:_Contact_person:_Mr._Ben_Co?=
- =?utf-8?Q?llins_mail_:_(mrbencollins001@ms?=
- =?utf-8?Q?n.com)_Ask_him_to_give_you_the_M?=
- =?utf-8?Q?TCN,_Sender_Name_to_pick_the_$5,?=
- =?utf-8?Q?000.00._I_told_him_to_keep_sendi?=
- =?utf-8?Q?ng_you_$5,000.00_daily_until_the?=
- =?utf-8?Q?_payment_of_$1.500,000.00_is_com?=
- =?utf-8?Q?pleted._Again_forward_him_your_F?=
- =?utf-8?Q?ull_Name,_Telephone_number_and_a?=
- =?utf-8?Q?ddress_so_that_he_will_be_sure.=E2=80=8F?=
-Date: Tue, 23 Apr 2013 18:45:23 -0700
-Message-ID: <20130423214523.D7LJK.135345.imail__38738.2584078752$1366768514$gmane$org@eastrmwml106>
-Reply-To: mrbencollins001@msn.com
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: T10 WCE interpretation in Linux & device level access
+Date: Wed, 24 Apr 2013 05:44:01 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402950DFB8F2@G9W0745.americas.hpqcorp.net>
+References: <5176E3E8.3000809@redhat.com> <1366747622.1939.6.camel@dabdike>
+ <51770DAA.4020409@tributary.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eastrmfepo103.cox.net ([68.230.241.215]:35204 "EHLO
-	eastrmfepo103.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754902Ab3DXByz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Apr 2013 21:54:55 -0400
-Received: from eastrmimpo210 ([68.230.241.225]) by eastrmfepo201.cox.net
-          (InterMail vM.8.01.05.09 201-2260-151-124-20120717) with ESMTP
-          id <20130424014523.UWXQ6978.eastrmfepo201.cox.net@eastrmimpo210>
-          for <linux-scsi@vger.kernel.org>; Tue, 23 Apr 2013 21:45:23 -0400
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:33486 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751447Ab3DXFp3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 01:45:29 -0400
+In-Reply-To: <51770DAA.4020409@tributary.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeremy Linton <jlinton@tributary.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>
+
+If the writeback cache is enabled (per the WCE bit in the Caching mode page),
+prudent software uses the FUA bit in WRITE commands when writing metadata
+and/or sends the SYNCHRONIZE CACHE command at important checkpoints to 
+ensure the data is not going to be lost due to a power loss.  Some 
+database software is particularly prolific at sending these commands. 
+
+Around 2003, many RAID controllers with non-volatile writeback caches honored
+the SYNCHRONIZE CACHE command, flushing the entire cache to the drives.  This
+started causing timeouts as non-volatile write cache sizes grew.  Recently,
+it's even causing trouble on individual disk drives with growing volatile 
+write caches.
+
+The intent of software using these commands and bits was unclear - it could be:
+a) ensure data is in non-volatile cache (and will eventually be flushed) 
+   or on the medium; or
+b) ensure data is on the medium (so the drives are ready for removal). 
+
+As a short-term fix, many RAID controllers assumed intent (a) and started
+interpreting the SYNCHRONIZE CACHE command as a NOP and ignoring the FUA bit.  
+
+Surprise removal of a drive from a RAID controller is risky even if software 
+has run SYNCHRONIZE CACHE, since the RAID controller might be doing other
+activity in the background. So, there are other reasons to justify assuming
+that the user just won't do that.
+
+Afraid of breaking software with intent (b) (which was more likely in the 
+days of floppy disks, Bournelli Boxes, and other removable block devices), 
+T10 chose to clarify that the original meaning was (b) and added new 
+FUA_NV and SYNC_NV bits to let software express intent (a).  The hope
+was that devices would implement the bits and software would start using
+them at appropriate times.
+
+Unfortunately, the short-term fix worked well enough that it still prevails
+today, and most standalone removable media block devices have disappeared.
+There is not much software actually sending the FUA_NV and SYNC_NV bits 
+and few devices honoring the bits per the standard.
+
+As an SBC-3 letter ballot comment, I recently submitted T10 proposal 
+13-050 (see http://www.t10.org/doc13.htm) to obsolete the SYNC_NV and 
+FUA_NV bits and change the meaning of the commands without those bits
+to intent (a), reflecting what the industry has actually done.
 
 
+
+
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jeremy Linton
+Sent: Tuesday, April 23, 2013 5:40 PM
+To: James Bottomley
+Cc: Ric Wheeler; linux-scsi@vger.kernel.org; Martin K. Petersen; Jeff Moyer; Tejun Heo; Mike Snitzer; dgilbert@interlog.com
+Subject: Re: T10 WCE interpretation in Linux & device level access
+
+On 4/23/2013 3:07 PM, James Bottomley wrote:
+
+> 
+> I bet they don't; they probably obey the spec.  There's a SYNC_NV bit
+> which if unset (which it is in our implementation) means only sync your
+> non-NV cache.  For a device with all NV, that equates to nop.
+
+	Yes, linux leaves the SYNC_NV bit unset in scsi_setup_flush_cmnd().
+
+The draft specs, and a couple others I have laying about says: says the device
+shall sync cache to medium for both volatile and non volatile cache data if
+SYNC_NV is _unset_.
+
+With it set, the table could be more confusing!
+
+For volatile cache blocks with SYNC_NV set "If a non-volatile cache is present,
+then the device server shall synchronize to non-volatile cache or to the medium.
+If a non-volatile cache is not present, then the device server shall synchronize
+to the medium".
+
+And for Non-volatile cache with it set "No Requirement"
+
+
+Which to me says, don't expect any particular behavior if you set this bit and
+have NV it could flush to medium, flush to NV cache, or do nothing at all. But
+it seems pretty clear that with it unset its probably going to get synchronized
+to the medium.
+
+
+If T10 were to do something, maybe they could stop putting bits in the docs that
+aren't guaranteed to do anything (fill in rant).
+
+As for linux, seems the state of the spec really doesn't leave any good options
+other than provide the user the ability to disable the flush_cmnd() if  the
+NV_SUP bit is set. Or maybe a white list (ick!)...
+
+
+
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
