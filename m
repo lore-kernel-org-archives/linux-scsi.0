@@ -1,154 +1,87 @@
-From: Ric Wheeler <rwheeler@redhat.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
 Subject: Re: T10 WCE interpretation in Linux & device level access
-Date: Wed, 24 Apr 2013 07:00:36 -0400
-Message-ID: <5177BB54.9090905@redhat.com>
-References: <5176E3E8.3000809@redhat.com> <1366747622.1939.6.camel@dabdike> <51770DAA.4020409@tributary.com> <94D0CD8314A33A4D9D801C0FE68B402950DFB8F2@G9W0745.americas.hpqcorp.net>
+Date: Wed, 24 Apr 2013 13:17:39 +0200
+Message-ID: <5177BF53.3040305@redhat.com>
+References: <5176E3E8.3000809@redhat.com> <1366747622.1939.6.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44981 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932397Ab3DXLAw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Apr 2013 07:00:52 -0400
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402950DFB8F2@G9W0745.americas.hpqcorp.net>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:50862 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922Ab3DXLRy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 07:17:54 -0400
+Received: by mail-wi0-f174.google.com with SMTP id m6so7299024wiv.7
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2013 04:17:52 -0700 (PDT)
+In-Reply-To: <1366747622.1939.6.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Jeremy Linton <jlinton@tributary.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "Black, David" <david.black@emc.com>, "Knight, Frederick" <Frederick.Knight@netapp.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>
 
-Hi Rob,
+Il 23/04/2013 22:07, James Bottomley ha scritto:
+> On Tue, 2013-04-23 at 15:41 -0400, Ric Wheeler wrote:
+>> For many years, we have used WCE as an indication that a device has a volatile 
+>> write cache (not just a write cache) and used this as a trigger to send down 
+>> SYNCHRONIZE_CACHE commands as needed.
+>>
+>> Some arrays with non-volatile cache seem to have WCE set and simply ignore the 
+>> command.
+> 
+> I bet they don't; they probably obey the spec.  There's a SYNC_NV bit
+> which if unset (which it is in our implementation) means only sync your
+> non-NV cache.  For a device with all NV, that equates to nop.
 
-Comments inline below.
+Isn't it the other way round?
 
-On 04/24/2013 01:44 AM, Elliott, Robert (Server Storage) wrote:
-> If the writeback cache is enabled (per the WCE bit in the Caching mode page),
-> prudent software uses the FUA bit in WRITE commands when writing metadata
-> and/or sends the SYNCHRONIZE CACHE command at important checkpoints to
-> ensure the data is not going to be lost due to a power loss.  Some
-> database software is particularly prolific at sending these commands.
->
-> Around 2003, many RAID controllers with non-volatile writeback caches honored
-> the SYNCHRONIZE CACHE command, flushing the entire cache to the drives.  This
-> started causing timeouts as non-volatile write cache sizes grew.  Recently,
-> it's even causing trouble on individual disk drives with growing volatile
-> write caches.
->
-> The intent of software using these commands and bits was unclear - it could be:
-> a) ensure data is in non-volatile cache (and will eventually be flushed)
->     or on the medium; or
-> b) ensure data is on the medium (so the drives are ready for removal).
+SYNC_NV = 0 means "sync all your caches to the medium", and it's what we do.
 
+SYNC_NV = 1 means "sync volatile to non-volatile", and it's what Ric wants.
 
+So we should set SYNC_NV=1 if NV_SUP is set, perhaps only if the medium
+is non-removable just to err on the safe side.
 
-Linux issues SYNCHRONIZE_CACHE commands when we need to make sure that the data 
-needs to be crash safe (after a transaction commit from a file system journal, 
-an explicit fsync call or write system call with O_SYNC set).
+Ric, can you check what your arrays set in VPD page 0x86 byte 6 bit 1?
 
-If the cache is nonvolatile (i.e., the target will have it after a power outage 
-or reboot), we are fine - pretty much your (a) clause above.
+Paolo
 
-Not sure we have thought through (or can control) how an array would handle 
-pulling a drive from behind a RAID controller that has not flushed its state.
->
-> As a short-term fix, many RAID controllers assumed intent (a) and started
-> interpreting the SYNCHRONIZE CACHE command as a NOP and ignoring the FUA bit.
-
-We have seen problems with some RAID controllers that leave the write cache 
-enabled on back end drives - their cache is battery backed, but the cache on 
-those backend drives is exposed to certain data loss on a power outage.
-
-It would be nice if they always disabled the write cache on the backend drives 
-*or* advertised WCE and propagated the SYNCHRONIZE_CACHE commands to each drive 
-when we send them down.
->
-> Surprise removal of a drive from a RAID controller is risky even if software
-> has run SYNCHRONIZE CACHE, since the RAID controller might be doing other
-> activity in the background. So, there are other reasons to justify assuming
-> that the user just won't do that.
->
-> Afraid of breaking software with intent (b) (which was more likely in the
-> days of floppy disks, Bournelli Boxes, and other removable block devices),
-> T10 chose to clarify that the original meaning was (b) and added new
-> FUA_NV and SYNC_NV bits to let software express intent (a).  The hope
-> was that devices would implement the bits and software would start using
-> them at appropriate times.
->
-> Unfortunately, the short-term fix worked well enough that it still prevails
-> today, and most standalone removable media block devices have disappeared.
-> There is not much software actually sending the FUA_NV and SYNC_NV bits
-> and few devices honoring the bits per the standard.
->
-> As an SBC-3 letter ballot comment, I recently submitted T10 proposal
-> 13-050 (see http://www.t10.org/doc13.htm) to obsolete the SYNC_NV and
-> FUA_NV bits and change the meaning of the commands without those bits
-> to intent (a), reflecting what the industry has actually done.
-
-This is definitely something that we should review and take into account going 
-forward.
-
-It does sound like we have a lot of confusion around WCE meaning in the storage 
-industry today though, which leads me to think that we will need to allow raw 
-block accessing applications to manually override our flush settings (reluctantly!).
-
-Regards,
-
-Ric
-
->
->
->
->
->
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jeremy Linton
-> Sent: Tuesday, April 23, 2013 5:40 PM
-> To: James Bottomley
-> Cc: Ric Wheeler; linux-scsi@vger.kernel.org; Martin K. Petersen; Jeff Moyer; Tejun Heo; Mike Snitzer; dgilbert@interlog.com
-> Subject: Re: T10 WCE interpretation in Linux & device level access
->
-> On 4/23/2013 3:07 PM, James Bottomley wrote:
->
->> I bet they don't; they probably obey the spec.  There's a SYNC_NV bit
->> which if unset (which it is in our implementation) means only sync your
->> non-NV cache.  For a device with all NV, that equates to nop.
-> 	Yes, linux leaves the SYNC_NV bit unset in scsi_setup_flush_cmnd().
->
-> The draft specs, and a couple others I have laying about says: says the device
-> shall sync cache to medium for both volatile and non volatile cache data if
-> SYNC_NV is _unset_.
->
-> With it set, the table could be more confusing!
->
-> For volatile cache blocks with SYNC_NV set "If a non-volatile cache is present,
-> then the device server shall synchronize to non-volatile cache or to the medium.
-> If a non-volatile cache is not present, then the device server shall synchronize
-> to the medium".
->
-> And for Non-volatile cache with it set "No Requirement"
->
->
-> Which to me says, don't expect any particular behavior if you set this bit and
-> have NV it could flush to medium, flush to NV cache, or do nothing at all. But
-> it seems pretty clear that with it unset its probably going to get synchronized
-> to the medium.
->
->
-> If T10 were to do something, maybe they could stop putting bits in the docs that
-> aren't guaranteed to do anything (fill in rant).
->
-> As for linux, seems the state of the spec really doesn't leave any good options
-> other than provide the user the ability to disable the flush_cmnd() if  the
-> NV_SUP bit is set. Or maybe a white list (ick!)...
->
->
->
->
->
->
->
+>> Some arrays with non-volatile cache seem to not set WCE.
+>>
+>> Others arrays with non-volatile cache - our problem arrays - set WCE and do 
+>> something horrible and slow when sent the SYNCHRONIZE_CACHE commands.
+> 
+> These arrays sound to be out of spec, so we should probably just
+> blacklist them.
+> 
+>> Note that for file systems, you can override this behavior by mounting with our 
+>> barriers disabled (mount -o nobarrier .....). There is currently no way do 
+>> disable this for anything using the device directly, not through the file system.
+>>
+>> Some applications run against block devices - not through a file system - and 
+>> want not to slow to a crawl when they have an array in my problem set.
+>>
+>> Giving them a hook to ignore WCE seems to be a hack, but one that would resolve 
+>> issues with users who won't want to wait months (years?) for us to convince the 
+>> array vendors.
+>>
+>> Is this a hook worth doing?
+> 
+> We already have the ability to set the cache type in sysfs.  It tries to
+> do a mode select back to the array, but the USB guys want it for the
+> reverse problem (write back cache behind bridge declared as write
+> through).
+> 
+>> Have we hashed this out in the T10 committee?
+> 
+> SBC-3 contains everything one could wish for about handling devices with
+> volatile and NV cache, I thought.
+> 
+> James
+> 
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
