@@ -1,288 +1,313 @@
 From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: [PATCH 4/5] scsi: ufs: rework link start-up process
-Date: Thu, 25 Apr 2013 01:06:34 +0900
-Message-ID: <002101ce4105$b184dec0$148e9c40$%jun@samsung.com>
+Subject: [PATCH 2/5] scsi: ufs: wrap the i/o access operations
+Date: Thu, 25 Apr 2013 01:06:31 +0900
+Message-ID: <002001ce4105$afbcf000$0f36d000$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:40913 "EHLO
+Received: from mailout2.samsung.com ([203.254.224.25]:40909 "EHLO
 	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755298Ab3DXQGg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 12:06:36 -0400
+	with ESMTP id S1755298Ab3DXQGe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 12:06:34 -0400
 Received: from epcpsbgr3.samsung.com
  (u143.gpu120.samsung.co.kr [203.254.230.143])
  by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
  with ESMTP id <0MLR0051ZOQVUW30@mailout2.samsung.com> for
- linux-scsi@vger.kernel.org; Thu, 25 Apr 2013 01:06:35 +0900 (KST)
+ linux-scsi@vger.kernel.org; Thu, 25 Apr 2013 01:06:32 +0900 (KST)
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-Link start-up requires long time with multiphase handshakes
-between UFS host and device. This affects driver's probe time.
-This patch let link start-up run asynchronously.
-And completion time of uic command is defined to avoid a
-permanent wait.
+Simplify operations with hiding mmio_base.
 
 Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c |  114 +++++++++++++++++++++++++++++++++-----------
- drivers/scsi/ufs/ufshcd.h |    6 ++-
- 2 files changed, 89 insertions(+), 31 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |  106 +++++++++++++++++++--------------------------
+ drivers/scsi/ufs/ufshcd.h |    5 ++
+ 2 files changed, 49 insertions(+), 62 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index efe2256..76ff332 100644
+index 41b9639..b6c19b0 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -38,6 +38,7 @@
- #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
- 				 UTP_TASK_REQ_COMPL |\
- 				 UFSHCD_ERROR_MASK)
-+#define UIC_CMD_TIMEOUT	100
- 
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
-@@ -357,13 +358,15 @@ static inline void ufshcd_hba_capabilities(struct ufs_hba *hba)
- }
- 
- /**
-- * ufshcd_send_uic_command - Send UIC commands to unipro layers
-+ * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
-  * @hba: per adapter instance
-  * @uic_command: UIC command
+@@ -71,7 +71,7 @@ enum {
   */
- static inline void
--ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
-+ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmnd)
+ static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
  {
-+	init_completion(&uic_cmnd->done);
-+
+-	return readl(hba->mmio_base + REG_UFS_VERSION);
++	return ufshcd_readl(hba, REG_UFS_VERSION);
+ }
+ 
+ /**
+@@ -130,8 +130,7 @@ static inline int ufshcd_get_tm_free_slot(struct ufs_hba *hba)
+  */
+ static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
+ {
+-	writel(~(1 << pos),
+-		(hba->mmio_base + REG_UTP_TRANSFER_REQ_LIST_CLEAR));
++	ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_LIST_CLEAR, ~(1 << pos));
+ }
+ 
+ /**
+@@ -165,7 +164,7 @@ static inline int ufshcd_get_lists_status(u32 reg)
+  */
+ static inline int ufshcd_get_uic_cmd_result(struct ufs_hba *hba)
+ {
+-	return readl(hba->mmio_base + REG_UIC_COMMAND_ARG_2) &
++	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2) &
+ 	       MASK_UIC_COMMAND_RESULT;
+ }
+ 
+@@ -243,18 +242,14 @@ ufshcd_config_int_aggr(struct ufs_hba *hba, int option)
+ {
+ 	switch (option) {
+ 	case INT_AGGR_RESET:
+-		writel((INT_AGGR_ENABLE |
+-			INT_AGGR_COUNTER_AND_TIMER_RESET),
+-			(hba->mmio_base +
+-			 REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL));
++		ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL,
++			      INT_AGGR_ENABLE | INT_AGGR_COUNTER_AND_TIMER_RESET);
+ 		break;
+ 	case INT_AGGR_CONFIG:
+-		writel((INT_AGGR_ENABLE |
+-			INT_AGGR_PARAM_WRITE |
+-			INT_AGGR_COUNTER_THRESHOLD_VALUE |
+-			INT_AGGR_TIMEOUT_VALUE),
+-			(hba->mmio_base +
+-			 REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL));
++		ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL,
++			      INT_AGGR_ENABLE | INT_AGGR_PARAM_WRITE |
++			      INT_AGGR_COUNTER_THRESHOLD_VALUE |
++			      INT_AGGR_TIMEOUT_VALUE);
+ 		break;
+ 	}
+ }
+@@ -267,12 +262,10 @@ ufshcd_config_int_aggr(struct ufs_hba *hba, int option)
+  */
+ static void ufshcd_enable_run_stop_reg(struct ufs_hba *hba)
+ {
+-	writel(UTP_TASK_REQ_LIST_RUN_STOP_BIT,
+-	       (hba->mmio_base +
+-		REG_UTP_TASK_REQ_LIST_RUN_STOP));
+-	writel(UTP_TRANSFER_REQ_LIST_RUN_STOP_BIT,
+-	       (hba->mmio_base +
+-		REG_UTP_TRANSFER_REQ_LIST_RUN_STOP));
++	ufshcd_writel(hba, REG_UTP_TASK_REQ_LIST_RUN_STOP,
++		      UTP_TASK_REQ_LIST_RUN_STOP_BIT);
++	ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_LIST_RUN_STOP,
++		      UTP_TRANSFER_REQ_LIST_RUN_STOP_BIT);
+ }
+ 
+ /**
+@@ -281,7 +274,7 @@ static void ufshcd_enable_run_stop_reg(struct ufs_hba *hba)
+  */
+ static inline void ufshcd_hba_start(struct ufs_hba *hba)
+ {
+-	writel(CONTROLLER_ENABLE , (hba->mmio_base + REG_CONTROLLER_ENABLE));
++	ufshcd_writel(hba, REG_CONTROLLER_ENABLE, CONTROLLER_ENABLE);
+ }
+ 
+ /**
+@@ -290,7 +283,7 @@ static inline void ufshcd_hba_start(struct ufs_hba *hba)
+  */
+ static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+ {
+-	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
++	ufshcd_writel(hba, REG_CONTROLLER_ENABLE, CONTROLLER_DISABLE);
+ }
+ 
+ /**
+@@ -301,7 +294,7 @@ static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+  */
+ static inline int ufshcd_is_hba_active(struct ufs_hba *hba)
+ {
+-	return (readl(hba->mmio_base + REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
++	return (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
+ }
+ 
+ /**
+@@ -313,8 +306,7 @@ static inline
+ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ {
+ 	__set_bit(task_tag, &hba->outstanding_reqs);
+-	writel((1 << task_tag),
+-	       (hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL));
++	ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL, 1 << task_tag);
+ }
+ 
+ /**
+@@ -338,8 +330,7 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
+  */
+ static inline void ufshcd_hba_capabilities(struct ufs_hba *hba)
+ {
+-	hba->capabilities =
+-		readl(hba->mmio_base + REG_CONTROLLER_CAPABILITIES);
++	hba->capabilities = ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES);
+ 
+ 	/* nutrs and nutmrs are 0 based values */
+ 	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS) + 1;
+@@ -356,16 +347,13 @@ static inline void
+ ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
+ {
  	/* Write Args */
- 	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_1, uic_cmnd->argument1);
- 	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_2, uic_cmnd->argument2);
-@@ -375,6 +378,45 @@ ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
+-	writel(uic_cmnd->argument1,
+-	      (hba->mmio_base + REG_UIC_COMMAND_ARG_1));
+-	writel(uic_cmnd->argument2,
+-	      (hba->mmio_base + REG_UIC_COMMAND_ARG_2));
+-	writel(uic_cmnd->argument3,
+-	      (hba->mmio_base + REG_UIC_COMMAND_ARG_3));
++	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_1, uic_cmnd->argument1);
++	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_2, uic_cmnd->argument2);
++	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_3, uic_cmnd->argument3);
+ 
+ 	/* Write UIC Cmd */
+-	writel((uic_cmnd->command & COMMAND_OPCODE_MASK),
+-	       (hba->mmio_base + REG_UIC_COMMAND));
++	ufshcd_writel(hba, REG_UIC_COMMAND,
++		      uic_cmnd->command & COMMAND_OPCODE_MASK);
  }
  
  /**
-+ * ufshcd_wait_for_uic_cmd - Wait complectioin of UIC command
-+ * @hba: per adapter instance
-+ * @uic_command: UIC command
-+ *
-+ * Returns 0 only if success.
-+ */
-+static int ufshcd_wait_for_uic_cmd(struct ufs_hba *hba)
-+{
-+	struct uic_command *uic_cmd = &hba->active_uic_cmd;
-+	int ret;
-+
-+	if (wait_for_completion_timeout(&uic_cmd->done,
-+					msecs_to_jiffies(UIC_CMD_TIMEOUT)))
-+		ret = ufshcd_get_uic_cmd_result(hba);
-+	else
-+		ret = -ETIMEDOUT;
-+
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_ready_uic_cmd - Check if controller is ready
-+ *                        to accept UIC commands
-+ * @hba: per adapter instance
-+ * Return true on success, else false
-+ */
-+static inline bool ufshcd_ready_uic_cmd(struct ufs_hba *hba)
-+{
-+	if (ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY) {
-+		return true;
-+	} else {
-+		dev_err(hba->dev,
-+				"Controller not ready"
-+				" to accept UIC commands\n");
-+		return false;
-+	}
-+}
-+
-+/**
-  * ufshcd_map_sg - Map scatter-gather list to prdt
-  * @lrbp - pointer to local reference block
-  *
-@@ -735,15 +777,10 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+@@ -417,16 +405,15 @@ static void ufshcd_int_config(struct ufs_hba *hba, u32 option)
  {
- 	struct uic_command *uic_cmd;
- 	unsigned long flags;
-+	int ret;
- 
--	/* check if controller is ready to accept UIC commands */
--	if (((ufshcd_readl(hba, REG_CONTROLLER_STATUS)) &
--	    UIC_COMMAND_READY) == 0x0) {
--		dev_err(hba->dev,
--			"Controller not ready"
--			" to accept UIC commands\n");
-+	if (!ufshcd_ready_uic_cmd(hba))
- 		return -EIO;
--	}
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 
-@@ -754,13 +791,16 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
- 	uic_cmd->argument2 = 0;
- 	uic_cmd->argument3 = 0;
- 
--	/* enable UIC related interrupts */
--	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
-+	/* Dispatching UIC commands to controller */
-+	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
- 
--	/* sending UIC commands to controller */
--	ufshcd_send_uic_command(hba, uic_cmd);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
--	return 0;
-+
-+	ret = ufshcd_wait_for_uic_cmd(hba);
-+	if (ret)
-+		dev_err(hba->dev, "link startup: error code %d returned\n", ret);
-+
-+	return ret;
+ 	switch (option) {
+ 	case UFSHCD_INT_ENABLE:
+-		writel(hba->int_enable_mask,
+-		      (hba->mmio_base + REG_INTERRUPT_ENABLE));
++		ufshcd_writel(hba, REG_INTERRUPT_ENABLE, hba->int_enable_mask);
+ 		break;
+ 	case UFSHCD_INT_DISABLE:
+ 		if (hba->ufs_version == UFSHCI_VERSION_10)
+-			writel(INTERRUPT_DISABLE_MASK_10,
+-			      (hba->mmio_base + REG_INTERRUPT_ENABLE));
++			ufshcd_writel(hba, REG_INTERRUPT_ENABLE,
++				      INTERRUPT_DISABLE_MASK_10);
+ 		else
+-			writel(INTERRUPT_DISABLE_MASK_11,
+-			       (hba->mmio_base + REG_INTERRUPT_ENABLE));
++			ufshcd_writel(hba, REG_INTERRUPT_ENABLE,
++				      INTERRUPT_DISABLE_MASK_11);
+ 		break;
+ 	}
  }
+@@ -712,7 +699,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+ 	unsigned long flags;
  
- /**
-@@ -898,6 +938,9 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
- 	if (ufshcd_hba_enable(hba))
+ 	/* check if controller is ready to accept UIC commands */
+-	if (((readl(hba->mmio_base + REG_CONTROLLER_STATUS)) &
++	if (((ufshcd_readl(hba, REG_CONTROLLER_STATUS)) &
+ 	    UIC_COMMAND_READY) == 0x0) {
+ 		dev_err(hba->dev,
+ 			"Controller not ready"
+@@ -757,7 +744,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+ 	u32 reg;
+ 
+ 	/* check if device present */
+-	reg = readl((hba->mmio_base + REG_CONTROLLER_STATUS));
++	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
+ 	if (!ufshcd_is_device_present(reg)) {
+ 		dev_err(hba->dev, "cc: Device not present\n");
+ 		err = -ENXIO;
+@@ -879,14 +866,14 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
  		return -EIO;
  
-+	/* enable UIC related interrupts */
-+	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL | UIC_ERROR);
-+
  	/* Configure UTRL and UTMRL base address registers */
- 	ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_LIST_BASE_L,
- 		      lower_32_bits(hba->utrdl_dma_addr));
-@@ -909,7 +952,9 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
- 		      upper_32_bits(hba->utmrdl_dma_addr));
+-	writel(lower_32_bits(hba->utrdl_dma_addr),
+-	       (hba->mmio_base + REG_UTP_TRANSFER_REQ_LIST_BASE_L));
+-	writel(upper_32_bits(hba->utrdl_dma_addr),
+-	       (hba->mmio_base + REG_UTP_TRANSFER_REQ_LIST_BASE_H));
+-	writel(lower_32_bits(hba->utmrdl_dma_addr),
+-	       (hba->mmio_base + REG_UTP_TASK_REQ_LIST_BASE_L));
+-	writel(upper_32_bits(hba->utmrdl_dma_addr),
+-	       (hba->mmio_base + REG_UTP_TASK_REQ_LIST_BASE_H));
++	ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_LIST_BASE_L,
++		      lower_32_bits(hba->utrdl_dma_addr));
++	ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_LIST_BASE_H,
++		      upper_32_bits(hba->utrdl_dma_addr));
++	ufshcd_writel(hba, REG_UTP_TASK_REQ_LIST_BASE_L,
++		      lower_32_bits(hba->utmrdl_dma_addr));
++	ufshcd_writel(hba, REG_UTP_TASK_REQ_LIST_BASE_H,
++		      upper_32_bits(hba->utmrdl_dma_addr));
  
  	/* Initialize unipro link startup procedure */
--	return ufshcd_dme_link_startup(hba);
-+	schedule_work(&hba->link_startup_wq);
-+
-+	return 0;
- }
+ 	return ufshcd_dme_link_startup(hba);
+@@ -1178,8 +1165,7 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	int index;
  
- /**
-@@ -1186,6 +1231,16 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- }
+ 	lrb = hba->lrb;
+-	tr_doorbell =
+-		readl(hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
  
- /**
-+ * ufshcd_uic_cmd_compl - handle completion of uic command
-+ * @hba: per adapter instance
-+ */
-+static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
-+{
-+	if (intr_status & UIC_COMMAND_COMPL)
-+		complete(&hba->active_uic_cmd.done);
-+}
-+
-+/**
-  * ufshcd_transfer_req_compl - handle SCSI and query command completion
-  * @hba: per adapter instance
-  */
-@@ -1225,25 +1280,26 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
- }
+ 	for (index = 0; index < hba->nutrs; index++) {
+@@ -1253,9 +1239,7 @@ static void ufshcd_err_handler(struct ufs_hba *hba)
+ 		goto fatal_eh;
  
- /**
-- * ufshcd_uic_cc_handler - handle UIC command completion
-+ * ufshcd_link_startup - link initialization
-  * @work: pointer to a work queue structure
-- *
-- * Returns 0 on success, non-zero value on failure
-  */
--static void ufshcd_uic_cc_handler (struct work_struct *work)
-+static void ufshcd_link_startup(struct work_struct *work)
+ 	if (hba->errors & UIC_ERROR) {
+-
+-		reg = readl(hba->mmio_base +
+-			    REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
++		reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
+ 		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
+ 			goto fatal_eh;
+ 	}
+@@ -1273,7 +1257,7 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba)
  {
- 	struct ufs_hba *hba;
-+	int ret;
+ 	u32 tm_doorbell;
  
--	hba = container_of(work, struct ufs_hba, uic_workq);
-+	hba = container_of(work, struct ufs_hba, link_startup_wq);
- 
--	if ((hba->active_uic_cmd.command == UIC_CMD_DME_LINK_STARTUP) &&
--	    !(ufshcd_get_uic_cmd_result(hba))) {
-+	ret = ufshcd_dme_link_startup(hba);
-+	if (ret)
-+		goto out;
- 
--		if (ufshcd_make_hba_operational(hba))
--			dev_err(hba->dev,
--				"cc: hba not operational state\n");
--		return;
--	}
-+	ret = ufshcd_make_hba_operational(hba);
-+	if (ret)
-+		goto out;
-+	return;
-+out:
-+	dev_err(hba->dev, "link startup failed %d\n", ret);
+-	tm_doorbell = readl(hba->mmio_base + REG_UTP_TASK_REQ_DOOR_BELL);
++	tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+ 	hba->tm_condition = tm_doorbell ^ hba->outstanding_tasks;
+ 	wake_up_interruptible(&hba->ufshcd_tm_wait_queue);
  }
+@@ -1314,15 +1298,14 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 	struct ufs_hba *hba = __hba;
  
- /**
-@@ -1307,7 +1363,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- 		ufshcd_err_handler(hba);
+ 	spin_lock(hba->host->host_lock);
+-	intr_status = readl(hba->mmio_base + REG_INTERRUPT_STATUS);
++	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
  
- 	if (intr_status & UIC_COMMAND_COMPL)
--		schedule_work(&hba->uic_workq);
-+		ufshcd_uic_cmd_compl(hba, intr_status);
+ 	if (intr_status) {
+ 		ufshcd_sl_intr(hba, intr_status);
  
- 	if (intr_status & UTP_TASK_REQ_COMPL)
- 		ufshcd_tmc_handler(hba);
-@@ -1694,7 +1750,7 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 	init_waitqueue_head(&hba->ufshcd_tm_wait_queue);
+ 		/* If UFSHCI 1.0 then clear interrupt status register */
+ 		if (hba->ufs_version == UFSHCI_VERSION_10)
+-			writel(intr_status,
+-			       (hba->mmio_base + REG_INTERRUPT_STATUS));
++			ufshcd_writel(hba, REG_INTERRUPT_STATUS, intr_status);
+ 		retval = IRQ_HANDLED;
+ 	}
+ 	spin_unlock(hba->host->host_lock);
+@@ -1387,8 +1370,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
  
- 	/* Initialize work queues */
--	INIT_WORK(&hba->uic_workq, ufshcd_uic_cc_handler);
-+	INIT_WORK(&hba->link_startup_wq, ufshcd_link_startup);
- 	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
+ 	/* send command to the controller */
+ 	__set_bit(free_slot, &hba->outstanding_tasks);
+-	writel((1 << free_slot),
+-	       (hba->mmio_base + REG_UTP_TASK_REQ_DOOR_BELL));
++	ufshcd_writel(hba, REG_UTP_TASK_REQ_DOOR_BELL, 1 << free_slot);
  
- 	/* IRQ registration */
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+ 
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 87d5a94..2fb4d94 100644
+index 1680394..6728450 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -51,6 +51,7 @@
- #include <linux/bitops.h>
- #include <linux/pm_runtime.h>
- #include <linux/clk.h>
-+#include <linux/completion.h>
+@@ -190,4 +190,9 @@ int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
+ 			unsigned int);
+ void ufshcd_remove(struct ufs_hba *);
  
- #include <asm/irq.h>
- #include <asm/byteorder.h>
-@@ -83,6 +84,7 @@ struct uic_command {
- 	u32 argument3;
- 	int cmd_active;
- 	int result;
-+	struct completion done;
- };
- 
- /**
-@@ -140,7 +142,7 @@ struct ufshcd_lrb {
-  * @tm_condition: condition variable for task management
-  * @ufshcd_state: UFSHCD states
-  * @intr_mask: Interrupt Mask Bits
-- * @uic_workq: Work queue for UIC completion handling
-+ * @link_startup_wq: Work queue for link start-up
-  * @feh_workq: Work queue for fatal controller error handling
-  * @errors: HBA errors
-  */
-@@ -179,7 +181,7 @@ struct ufs_hba {
- 	u32 intr_mask;
- 
- 	/* Work Queues */
--	struct work_struct uic_workq;
-+	struct work_struct link_startup_wq;
- 	struct work_struct feh_workq;
- 
- 	/* HBA Errors */
++#define ufshcd_writel(hba, reg, val)	\
++	writel((val), (hba)->mmio_base + (reg))
++#define ufshcd_readl(hba, reg)	\
++	readl((hba)->mmio_base + (reg))
++
+ #endif /* End of Header */
 -- 
 1.7.0.4
 
