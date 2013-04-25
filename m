@@ -1,47 +1,77 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 2/2] qla2xxx: qla2x00_sp_compl can be static.
-Date: Thu, 25 Apr 2013 01:29:19 -0400
-Message-ID: <1366867759-3562-3-git-send-email-saurav.kashyap@qlogic.com>
-References: <1366867759-3562-1-git-send-email-saurav.kashyap@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: Handle MLQUEUE busy response in scsi_send_eh_cmnd
+Date: Thu, 25 Apr 2013 08:10:00 +0200
+Message-ID: <1366870200-6492-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [216.32.180.16] ([216.32.180.16]:30664 "EHLO
-	va3outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750982Ab3DYFzJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Apr 2013 01:55:09 -0400
-Received: from mail192-va3 (localhost [127.0.0.1])	by
- mail192-va3-R.bigfish.com (Postfix) with ESMTP id D3B1F1401DC	for
- <linux-scsi@vger.kernel.org>; Thu, 25 Apr 2013 05:53:17 +0000 (UTC)
-In-Reply-To: <1366867759-3562-1-git-send-email-saurav.kashyap@qlogic.com>
+Received: from cantor2.suse.de ([195.135.220.15]:45963 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751120Ab3DYGKE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Apr 2013 02:10:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>
 
-From: Fengguang Wu <fengguang.wu@intel.com>
+scsi_send_eh_cmnd() is calling queuecommand() directly, so
+it needs to check the return value here.
+The only valid return codes for queuecommand() are 'busy'
+states, so we need to wait for a bit to allow the LLDD
+to recover.
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_os.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Based on an earlier patch from Wen Xiong.
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index a083715..7b621c2 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -644,7 +644,7 @@ qla2x00_sp_free_dma(void *vha, void *ptr)
- 	qla2x00_rel_sp(sp->fcport->vha, sp);
- }
+Cc: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index d58db32..6a3c1d2 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -889,22 +889,32 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 	struct scsi_device *sdev = scmd->device;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	DECLARE_COMPLETION_ONSTACK(done);
+-	unsigned long timeleft;
++	unsigned long timeleft = timeout;
+ 	struct scsi_eh_save ses;
++	const int stall_for = min(HZ/10, 1);
+ 	int rtn;
  
--void
-+static void
- qla2x00_sp_compl(void *data, void *ptr, int res)
- {
- 	struct qla_hw_data *ha = (struct qla_hw_data *)data;
--- 
-1.7.7
-
-
++retry:
+ 	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
+ 	shost->eh_action = &done;
+ 
+ 	scsi_log_send(scmd);
+ 	scmd->scsi_done = scsi_eh_done;
+-	shost->hostt->queuecommand(shost, scmd);
+-
+-	timeleft = wait_for_completion_timeout(&done, timeout);
++	rtn = shost->hostt->queuecommand(shost, scmd);
++	if (rtn) {
++		if (timeleft) {
++			scsi_eh_restore_cmnd(scmd, &ses);
++			timeleft -= stall_for;
++			msleep(stall_for);
++			goto retry;
++		}
++		rtn = NEEDS_RETRY;
++	} else
++		timeleft = wait_for_completion_timeout(&done, timeout);
+ 
+ 	shost->eh_action = NULL;
+ 
+-	scsi_log_completion(scmd, SUCCESS);
++	scsi_log_completion(scmd, rtn);
+ 
+ 	SCSI_LOG_ERROR_RECOVERY(3,
+ 		printk("%s: scmd: %p, timeleft: %ld\n",
+@@ -935,7 +945,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 			rtn = FAILED;
+ 			break;
+ 		}
+-	} else {
++	} else if (!rtn) {
+ 		scsi_abort_eh_cmnd(scmd);
+ 		rtn = FAILED;
+ 	}
