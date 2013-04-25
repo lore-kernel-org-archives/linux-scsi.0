@@ -1,37 +1,53 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch 1/1] sd_dif: problem with verify of type 1 protection information (PI)
-Date: Wed, 24 Apr 2013 21:50:40 -0400
-Message-ID: <yq1d2tjtm33.fsf@sermon.lab.mkp.net>
-References: <20130418095523.GA73004@sgi.com>
+Subject: Re: [PATCH 1/6] scsi_debug: call map_region() and unmap_region() only when needed
+Date: Wed, 24 Apr 2013 21:59:51 -0400
+Message-ID: <yq18v47tlns.fsf@sermon.lab.mkp.net>
+References: <1366117920-11740-1-git-send-email-akinobu.mita@gmail.com>
+	<1366117920-11740-2-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21668 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:23834 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932261Ab3DYBuW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 21:50:22 -0400
-In-Reply-To: <20130418095523.GA73004@sgi.com> (Jeremy Higdon's message of
-	"Thu, 18 Apr 2013 02:55:23 -0700")
+	with ESMTP id S932335Ab3DYB7k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 21:59:40 -0400
+In-Reply-To: <1366117920-11740-2-git-send-email-akinobu.mita@gmail.com>
+	(Akinobu Mita's message of "Tue, 16 Apr 2013 22:11:55 +0900")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: linux-scsi@vger.kernel.org, mdr@sgi.com
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->>>>> "Jeremy" == Jeremy Higdon <jeremy@sgi.com> writes:
+>>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
 
-Jeremy> It appears to me that there is a problem with handling of type 1
-Jeremy> protection information.  It is considering a logical block
-Jeremy> reference tag of 0xffffffff to be an error, but it is actually
-Jeremy> valid any time ((lba & 0xffffffff) == 0xffffffff) [for example,
-Jeremy> 2TiB-1, 4TiB-1, 6TiB-1, etc.].
+Akinobu> If the logical block provisioning is not enabled, map_region()
+Akinobu> and unmap_region() have no effect and they don't need to be
+Akinobu> called.
 
-Yes, that's a bogus check. It's actually one I put in way back to debug
-a faulty device and forgot to back out. My DIF test tooling does not
-rely on the block layer generate/verify functions so I never noticed.
+Akinobu> So this makes map_region() and unmap_region() to be called only
+Akinobu> when scsi_debug_lbp() returns true, i.e. logical block
+Akinobu> provisioning is enabled.
 
-The same issue was reported recently by Keith Busch.
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+Akinobu> Because scsi_debug_unmap_granularity cannot be zero with usual
+Akinobu> setting: scsi_debug_unmap_granularity is 1 by default, and it
+Akinobu> can be changed to zero with explicit module parameter setting
+Akinobu> only when the logical block provisioning is disabled.  But it
+Akinobu> is only meaningful module parameter when the logical block
+Akinobu> provisioning is enabled.
+
+As you have found out, I generally allow module parameter values and
+combinations thereof that do not make strict sense. That's because the
+main reason for adding these parameters in the first place is to test
+the block and SCSI layer code that queries them. scsi_debug is a test
+vehicle and being able to simulate a device with broken reporting is
+something I use a lot.
+
+That said, I don't think we have any test scripts that actually depend
+on this combination of unmap parameters so I'm ok with you cleaning them
+up.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
