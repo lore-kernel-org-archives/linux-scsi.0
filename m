@@ -1,43 +1,44 @@
-From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Subject: [PATCH/for-next 0/3] iscsi-target/iser-target: Fix breakage
-Date: Thu, 25 Apr 2013 07:40:28 +0000
-Message-ID: <1366875631-18795-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH/for-next 3/3] iser-target: Add special case for early ISCSI_OP_SCSI_CMD exception handling
+Date: Thu, 25 Apr 2013 07:40:31 +0000
+Message-ID: <1366875631-18795-4-git-send-email-nab@linux-iscsi.org>
+References: <1366875631-18795-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1366875631-18795-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Roland Dreier <roland@kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi folks,
+During early ISCSI_OP_SCSI_CMD exception handling with non GOOD status, the
+TX thread context in isert_response_queue() needs to post IB_WR_SEND via
+isert_put_response() when processing ISTATE_SEND_STATUS.
 
-This series addresses two bugs within v3.10 for-next code related to
-the upcoming iscsi-target series adding multi-transport support, along
-with a third iser-target bugfix related to early ISCSI_OP_SCSI_CMD
-exception handling.
+Cc: Or Gerlitz <ogerlitz@mellanox.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/infiniband/ulp/isert/ib_isert.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-These three patches are being folded into for-next/for-next-merge code
-now..
-
-Thanks!
-
---nab
-
-Nicholas Bellinger (3):
-  iscsi-target: Fix solicited NopIN handling with RDMAExtentions=No
-  iscsi-target: Fix iscsit_handle_scsi_cmd() exception se_cmd leak
-  iser-target: Add special case for early ISCSI_OP_SCSI_CMD exception
-    handling
-
- drivers/infiniband/ulp/isert/ib_isert.c |    7 ++++++
- drivers/target/iscsi/iscsi_target.c     |   32 ++++++++++++++++++------------
- 2 files changed, 26 insertions(+), 13 deletions(-)
-
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index 1a150ef..41712f0 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -1947,6 +1947,13 @@ isert_response_queue(struct iscsi_conn *conn, struct iscsi_cmd *cmd, int state)
+ 	case ISTATE_SEND_REJECT:
+ 		ret = isert_put_reject(cmd, conn);
+ 		break;
++	case ISTATE_SEND_STATUS:
++		/*
++		 * Special case for sending non GOOD SCSI status from TX thread
++		 * context during pre se_cmd excecution failure.
++		 */
++		ret = isert_put_response(conn, cmd);
++		break;
+ 	default:
+ 		pr_err("Unknown response state: 0x%02x\n", state);
+ 		ret = -EINVAL;
 -- 
 1.7.2.5
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
