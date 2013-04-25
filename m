@@ -1,12 +1,18 @@
-From: Dolev Raviv <draviv@codeaurora.org>
+From: "Dolev Raviv" <draviv@codeaurora.org>
 Subject: [PATCH V3] scsi: ufs: add support for query requests
-Date: Thu, 25 Apr 2013 09:44:52 +0300
-Message-ID: <1366872292-21158-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ufs@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, "open list:UNIVERSAL FLASH S..." <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Date: Wed, 24 Apr 2013 23:51:29 -0700
+Message-ID: <235f98956e6b614c6d62b31e61e8d40c.squirrel@www.codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15774 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120Ab3DYGva (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Apr 2013 02:51:30 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 Add support for sending UFS query requests through tagged command
 queuing. This design allows queuing query requests in any open slot
@@ -71,7 +77,7 @@ index 139bc06..086ff03 100644
 @@ -36,10 +36,20 @@
  #ifndef _UFS_H
  #define _UFS_H
- 
+
 +#include <linux/mutex.h>
 +#include <linux/types.h>
 +
@@ -83,12 +89,12 @@ index 139bc06..086ff03 100644
 +					(sizeof(struct utp_upiu_header)))
 +#define UFS_QUERY_RESERVED_SCSI_CMD 0xCC
 +#define UFS_QUERY_CMD_SIZE 10
- 
+
  #define UPIU_HEADER_DWORD(byte3, byte2, byte1, byte0)\
 -			((byte3 << 24) | (byte2 << 16) |\
 +			cpu_to_be32((byte3 << 24) | (byte2 << 16) |\
  			 (byte1 << 8) | (byte0))
- 
+
  /*
 @@ -62,7 +72,7 @@ enum {
  	UPIU_TRANSACTION_COMMAND	= 0x01,
@@ -97,7 +103,7 @@ index 139bc06..086ff03 100644
 -	UPIU_TRANSACTION_QUERY_REQ	= 0x26,
 +	UPIU_TRANSACTION_QUERY_REQ	= 0x16,
  };
- 
+
  /* UTP UPIU Transaction Codes Target to Initiator */
 @@ -73,6 +83,7 @@ enum {
  	UPIU_TRANSACTION_TASK_RSP	= 0x24,
@@ -105,12 +111,12 @@ index 139bc06..086ff03 100644
  	UPIU_TRANSACTION_QUERY_RSP	= 0x36,
 +	UPIU_TRANSACTION_REJECT_UPIU	= 0x3F,
  };
- 
+
  /* UPIU Read/Write flags */
 @@ -90,6 +101,12 @@ enum {
  	UPIU_TASK_ATTR_ACA	= 0x03,
  };
- 
+
 +/* UPIU Query request function */
 +enum {
 +	UPIU_QUERY_FUNC_STANDARD_READ_REQUEST = 0x01,
@@ -123,7 +129,7 @@ index 139bc06..086ff03 100644
 @@ -103,6 +120,21 @@ enum {
  	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
  };
- 
+
 +/* Query response result code */
 +enum {
 +	QUERY_RESULT_SUCCESS			= 0x00,
@@ -145,7 +151,7 @@ index 139bc06..086ff03 100644
 @@ -110,10 +142,17 @@ enum {
  	UPIU_COMMAND_SET_TYPE_QUERY	= 0x2,
  };
- 
+
 +/* UTP Transfer Request Command Offset */
 +#define UPIU_COMMAND_TYPE_OFFSET	28
 +
@@ -158,10 +164,10 @@ index 139bc06..086ff03 100644
  	MASK_RSP_UPIU_RESULT	= 0xFFFF,
 +	MASK_QUERY_DATA_SEG_LEN	= 0xFFFF,
  };
- 
+
  /* Task management service response */
 @@ -138,26 +177,59 @@ struct utp_upiu_header {
- 
+
  /**
   * struct utp_upiu_cmd - Command UPIU structure
 - * @header: UPIU header structure DW-0 to DW-2
@@ -173,7 +179,7 @@ index 139bc06..086ff03 100644
  	u32 exp_data_transfer_len;
  	u8 cdb[MAX_CDB_SIZE];
  };
- 
+
  /**
 - * struct utp_upiu_rsp - Response UPIU structure
 - * @header: UPIU header DW-0 to DW-2
@@ -228,7 +234,7 @@ index 139bc06..086ff03 100644
  	u16 sense_data_len;
 @@ -165,6 +237,20 @@ struct utp_upiu_rsp {
  };
- 
+
  /**
 + * struct utp_upiu_rsp - general upiu response structure
 + * @header: UPIU header structure DW-0 to DW-2
@@ -250,7 +256,7 @@ index 139bc06..086ff03 100644
 @@ -194,4 +280,24 @@ struct utp_upiu_task_rsp {
  	u32 reserved[3];
  };
- 
+
 +/**
 + * struct ufs_query_req - parameters for building a query request
 + * @query_func: UPIU header query function
@@ -276,9 +282,10 @@ diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
 index c32a478..434c606 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -202,18 +202,13 @@ static inline void ufshcd_free_hba_memory(struct ufs_hba *hba)
+@@ -202,18 +202,13 @@ static inline void ufshcd_free_hba_memory(struct
+ufs_hba *hba)
  }
- 
+
  /**
 - * ufshcd_is_valid_req_rsp - checks if controller TR response is valid
 + * ufshcd_get_req_rsp - returns the TR response
@@ -296,9 +303,10 @@ index c32a478..434c606 100644
 -		 UPIU_TRANSACTION_RESPONSE) ? 0 : DID_ERROR << 16;
 +	return be32_to_cpu(ucd_rsp_ptr->header.dword_0) >> 24;
  }
- 
+
  /**
-@@ -316,14 +311,71 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
+@@ -316,14 +311,71 @@ static inline void ufshcd_copy_sense_data(struct
+ufshcd_lrb *lrbp)
  {
  	int len;
  	if (lrbp->sense_buffer) {
@@ -310,7 +318,7 @@ index c32a478..434c606 100644
  			min_t(int, len, SCSI_SENSE_BUFFERSIZE));
  	}
  }
- 
+
  /**
 + * ufshcd_query_to_cpu() - formats the received buffer in to the native cpu
 + * endian
@@ -372,9 +380,10 @@ index c32a478..434c606 100644
   * ufshcd_hba_capabilities - Read controller capabilities
   * @hba: per adapter instance
   */
-@@ -423,76 +475,159 @@ static void ufshcd_int_config(struct ufs_hba *hba, u32 option)
+@@ -423,76 +475,159 @@ static void ufshcd_int_config(struct ufs_hba *hba,
+u32 option)
  }
- 
+
  /**
 - * ufshcd_compose_upiu - form UFS Protocol Information Unit(UPIU)
 - * @lrb - pointer to local reference block
@@ -384,7 +393,8 @@ index c32a478..434c606 100644
 + * upiu_flags: flags required in the header
   */
 -static void ufshcd_compose_upiu(struct ufshcd_lrb *lrbp)
-+static void ufshcd_prepare_req_desc(struct ufshcd_lrb *lrbp, u32 *upiu_flags)
++static void ufshcd_prepare_req_desc(struct ufshcd_lrb *lrbp, u32
+*upiu_flags)
  {
 -	struct utp_transfer_req_desc *req_desc;
 -	struct utp_upiu_cmd *ucd_cmd_ptr;
@@ -405,12 +415,12 @@ index c32a478..434c606 100644
 +		data_direction = UTP_NO_DATA_TRANSFER;
 +		*upiu_flags = UPIU_CMD_FLAGS_NONE;
 +	}
- 
+
 -	ucd_cmd_ptr = lrbp->ucd_cmd_ptr;
 -	req_desc = lrbp->utr_descriptor_ptr;
 +	dword_0 = data_direction | (lrbp->command_type
 +				<< UPIU_COMMAND_TYPE_OFFSET);
- 
+
 -	switch (lrbp->command_type) {
 -	case UTP_CMD_TYPE_SCSI:
 -		if (lrbp->cmd->sc_data_direction == DMA_FROM_DEVICE) {
@@ -425,7 +435,7 @@ index c32a478..434c606 100644
 -		}
 +	/* Transfer request descriptor header fields */
 +	req_desc->header.dword_0 = cpu_to_le32(dword_0);
- 
+
 -		/* Transfer request descriptor header fields */
 -		req_desc->header.dword_0 =
 -			cpu_to_le32(data_direction | UTP_SCSI_COMMAND);
@@ -437,7 +447,7 @@ index c32a478..434c606 100644
 +	req_desc->header.dword_2 =
 +		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
 +}
- 
+
 -		/*
 -		 * assigning invalid value for command status. Controller
 -		 * updates OCS on command completion, with the command
@@ -450,7 +460,7 @@ index c32a478..434c606 100644
 +	return lrbp->cmd ? lrbp->cmd->cmnd[0] == UFS_QUERY_RESERVED_SCSI_CMD :
 +		false;
 +}
- 
+
 -		/* command descriptor fields */
 -		ucd_cmd_ptr->header.dword_0 =
 -			cpu_to_be32(UPIU_HEADER_DWORD(UPIU_TRANSACTION_COMMAND,
@@ -483,7 +493,8 @@ index c32a478..434c606 100644
 + * @upiu_flags - flags
 + */
 +static inline
-+void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
++void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32
+upiu_flags)
 +{
 +	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
 +
@@ -586,18 +597,19 @@ index c32a478..434c606 100644
 +
 +	return ret;
  }
- 
+
  /**
-@@ -527,10 +662,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+@@ -527,10 +662,13 @@ static int ufshcd_queuecommand(struct Scsi_Host
+*host, struct scsi_cmnd *cmd)
  	lrbp->task_tag = tag;
  	lrbp->lun = cmd->device->lun;
- 
+
 -	lrbp->command_type = UTP_CMD_TYPE_SCSI;
 +	if (ufshcd_is_query_req(lrbp))
 +		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
 +	else
 +		lrbp->command_type = UTP_CMD_TYPE_SCSI;
- 
+
  	/* form UPIU before issuing the command */
 -	ufshcd_compose_upiu(lrbp);
 +	ufshcd_compose_upiu(hba, lrbp);
@@ -606,7 +618,7 @@ index c32a478..434c606 100644
  		goto out;
 @@ -544,6 +682,110 @@ out:
  }
- 
+
  /**
 + *  ufshcd_query_request() - Entry point for issuing query request to a
 + *  ufs device.
@@ -712,12 +724,14 @@ index c32a478..434c606 100644
 +}
 +
 +/**
-  * ufshcd_memory_alloc - allocate memory for host memory space data structures
+  * ufshcd_memory_alloc - allocate memory for host memory space data
+structures
   * @hba: per adapter instance
   *
-@@ -677,8 +919,8 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+@@ -677,8 +919,8 @@ static void ufshcd_host_memory_configure(struct
+ufs_hba *hba)
  				cpu_to_le16(ALIGNED_UPIU_SIZE);
- 
+
  		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
 -		hba->lrb[i].ucd_cmd_ptr =
 -			(struct utp_upiu_cmd *)(cmd_descp + i);
@@ -726,7 +740,8 @@ index c32a478..434c606 100644
  		hba->lrb[i].ucd_rsp_ptr =
  			(struct utp_upiu_rsp *)cmd_descp[i].response_upiu;
  		hba->lrb[i].ucd_prdt_ptr =
-@@ -1101,7 +1343,9 @@ ufshcd_scsi_cmd_status(struct ufshcd_lrb *lrbp, int scsi_status)
+@@ -1101,7 +1343,9 @@ ufshcd_scsi_cmd_status(struct ufshcd_lrb *lrbp, int
+scsi_status)
   * @hba: per adapter instance
   * @lrb: pointer to local reference block of completed command
   *
@@ -737,8 +752,9 @@ index c32a478..434c606 100644
   */
  static inline int
  ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-@@ -1115,27 +1359,46 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 
+@@ -1115,27 +1359,46 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+struct ufshcd_lrb *lrbp)
+
  	switch (ocs) {
  	case OCS_SUCCESS:
 -
@@ -812,13 +828,14 @@ index c32a478..434c606 100644
  	task_req_upiup->header.dword_1 =
 -	cpu_to_be32(UPIU_HEADER_DWORD(0, tm_function, 0, 0));
 +		UPIU_HEADER_DWORD(0, tm_function, 0, 0);
- 
+
  	task_req_upiup->input_param1 = lrbp->lun;
  	task_req_upiup->input_param1 =
-@@ -1670,6 +1933,9 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+@@ -1670,6 +1933,9 @@ int ufshcd_init(struct device *dev, struct ufs_hba
+**hba_handle,
  	INIT_WORK(&hba->uic_workq, ufshcd_uic_cc_handler);
  	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
- 
+
 +	/* Initialize mutex for query requests */
 +	mutex_init(&hba->query.mutex);
 +
@@ -834,7 +851,7 @@ index 6b99a42..e6ca79f 100644
  #include <scsi/scsi_dbg.h>
  #include <scsi/scsi_eh.h>
 +#include <scsi/scsi_device.h>
- 
+
  #include "ufs.h"
  #include "ufshci.h"
 @@ -88,7 +89,7 @@ struct uic_command {
@@ -854,11 +871,11 @@ index 6b99a42..e6ca79f 100644
 +	struct utp_upiu_req *ucd_req_ptr;
  	struct utp_upiu_rsp *ucd_rsp_ptr;
  	struct ufshcd_sg_entry *ucd_prdt_ptr;
- 
+
 @@ -115,6 +116,19 @@ struct ufshcd_lrb {
  	unsigned int lun;
  };
- 
+
 +/**
 + * struct ufs_query - keeps the query request information
 + * @request: request upiu and function
@@ -872,7 +889,7 @@ index 6b99a42..e6ca79f 100644
 +	struct ufs_query_res *response;
 +	struct mutex mutex;
 +};
- 
+
  /**
   * struct ufs_hba - per adapter private structure
 @@ -143,6 +157,7 @@ struct ufshcd_lrb {
@@ -884,14 +901,14 @@ index 6b99a42..e6ca79f 100644
  struct ufs_hba {
  	void __iomem *mmio_base;
 @@ -184,6 +199,9 @@ struct ufs_hba {
- 
+
  	/* HBA Errors */
  	u32 errors;
 +
 +	/* Query Request */
 +	struct ufs_query query;
  };
- 
+
  int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
 diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
 index 0c16484..4a86247 100644
@@ -904,10 +921,11 @@ index 0c16484..4a86247 100644
 -	ALIGNED_UPIU_SIZE		= 128,
 +	ALIGNED_UPIU_SIZE		= 512,
  };
- 
+
  /* UFSHCI Registers */
 -- 
 1.7.6
 -- 
 QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
+
