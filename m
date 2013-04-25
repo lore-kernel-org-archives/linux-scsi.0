@@ -1,48 +1,63 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: T10 WCE interpretation in Linux & device level access
-Date: Thu, 25 Apr 2013 07:12:37 -0700
-Message-ID: <1366899157.2232.1.camel@dabdike>
-References: <5176E3E8.3000809@redhat.com> <1366747622.1939.6.camel@dabdike>
-	    <5177BF53.3040305@redhat.com> <5177CAF5.6060506@suse.de>
-	    <5177CB23.5090802@redhat.com> <5177CFB6.9070105@redhat.com>
-	    <5177D6C2.6080705@redhat.com> <5177EDB5.5000105@tributary.com>
-	    <8D3D17ACE214DC429325B2B98F3AE71293F3BBE2@MX15A.corp.emc.com>
-	    <5178438F.3010103@gmail.com> <1366837373.1971.28.camel@dabdike>
-	   <5178548D.6020805@redhat.com> <1366841383.1971.36.camel@dabdike>
-	  <51785E5C.8020204@redhat.com> <1366843580.1971.38.camel@dabdike>
-	 <517914FA.4040106@redhat.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 2/2] dm mpath: attach scsi_dh during table resume
+Date: Thu, 25 Apr 2013 10:17:08 -0400
+Message-ID: <20130425141707.GA1947@redhat.com>
+References: <20130404131631.GA10208@redhat.com>
+ <1365457816-31475-1-git-send-email-snitzer@redhat.com>
+ <1365457816-31475-2-git-send-email-snitzer@redhat.com>
+ <20130422223355.GA4803@redhat.com>
+ <Pine.LNX.4.64.1304250938480.8307@file.rdu.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60551 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753894Ab3DYOMj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Apr 2013 10:12:39 -0400
-In-Reply-To: <517914FA.4040106@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:14261 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932490Ab3DYORL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Apr 2013 10:17:11 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.1304250938480.8307@file.rdu.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, Ric Wheeler <ricwheeler@gmail.com>, "Black, David" <david.black@emc.com>, Jeremy Linton <jlinton@tributary.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "Knight, Frederick" <Frederick.Knight@netapp.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, hare@suse.de
 
-On Thu, 2013-04-25 at 07:35 -0400, Ric Wheeler wrote:
-> It was pointed out to me that RCD is "Read Cache Disable" so by
-> setting it to 
-> zero, we are enabling the read cache (not that we ever look at this
-> bit or send 
-> it down). The WCE bit is "write cache enable" so the polarity of the
-> bits is 
-> inverted.
+On Thu, Apr 25 2013 at  9:48am -0400,
+Mikulas Patocka <mpatocka@redhat.com> wrote:
+
 > 
-> Should be fine regardless :)
+> 
+> On Mon, 22 Apr 2013, Mike Snitzer wrote:
+> 
+> > I spoke with Hannes at LSF, to address the potential crashes in the
+> > endio path (e.g. stpg_endio) we'd have to bump the scsi_dh_data kref
+> > where appropriate (e.g. for ALUA kref_get in submit_stpg and kref_put in
+> > stpg_endio).
+> > 
+> > But that is just the tip of the iceberg relative to scsi_dh lifetime.
+> > Seems we've been playing it pretty fast and loose with scsi_dh issued
+> > requests vs detach for quite some time.
+> > 
+> > I'm now inclined to not care about this issue.  Take away is: don't
+> > switch the device handler (attach the correct one from the start).
+> 
+> I did a patch that disables device handler switching and it was NACKed by 
+> Hannes. The problem that he pointed out was - when we load SCSI device 
+> handler modules, they attach automatically to SCSI devices they think they 
+> belong to. The user then can't set the desired device handler in multipath 
+> configuration because a different handler is already attached.
 
-Just look at the code.  We already do the right thing.
+The handler that is automatically attached _should_ be the correct
+handler.  We now have the .match() hook for scsi_dh and it has made for
+reliable scsi_dh attachment of the correct handler.
+ 
+> So we need a functionality to change device handlers.
 
-The whole reason for combining both into cache policy is that half the
-world got the individual bits wrong.  We translate from an
-understandable cache policy to and from WCE/RCD speak.
+I really cannot think of a sequence where the scsi_dh .match() will
+attach the incorrect handler.  This is why I added the
+"retain_attached_hw_handler" feature to mpath (commit a58a935d5).
 
-James
+> (or maybe stop the scsi device handlers from attaching automatically, but 
+> it would surely generate a lot of other regressions)
 
-
+The need to support changing device handlers (via multipath table load)
+is overblown/historic.
