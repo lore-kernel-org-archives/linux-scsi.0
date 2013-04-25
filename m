@@ -1,34 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 5/6] scsi_debug: fix initialization of provisioning map
-Date: Wed, 24 Apr 2013 21:44:20 -0400
-Message-ID: <yq1li87tmdn.fsf@sermon.lab.mkp.net>
-References: <1366117920-11740-1-git-send-email-akinobu.mita@gmail.com>
-	<1366117920-11740-6-git-send-email-akinobu.mita@gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: sd: workaround invalid OPTIMAL TRANSFER LENGTH
+Date: Wed, 24 Apr 2013 21:44:55 -0400
+Message-ID: <20130425014455.GA28078@redhat.com>
+References: <20130403202124.GB2197@redhat.com>
+ <yq1bo93v230.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20280 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932154Ab3DYBoF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Apr 2013 21:44:05 -0400
-In-Reply-To: <1366117920-11740-6-git-send-email-akinobu.mita@gmail.com>
-	(Akinobu Mita's message of "Tue, 16 Apr 2013 22:11:59 +0900")
+Received: from mx1.redhat.com ([209.132.183.28]:49944 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932154Ab3DYBo6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Apr 2013 21:44:58 -0400
+Content-Disposition: inline
+In-Reply-To: <yq1bo93v230.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
+On Wed, Apr 24 2013 at  9:19pm -0400,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-Akinobu> provisioning map (map_storep) is a bitmap accessed by bitops.
-Akinobu> So the allocation size should be a multiple of sizeof(unsigned
-Akinobu> long) and also the bitmap should be cleared by using
-Akinobu> bitmap_clear() instead of memset().
+> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
+> 
+> Mike,
+> 
+> Following up on our discussion at LSF/MM last week...
+> 
+> Mike> Workaround disk firmware that improperly sets OPTIMAL TRANSFER
+> Mike> LENGTH to 0xFFFFFFFF (aka UINT_MAX or 4294967295U) by assuming
+> Mike> this _optional_ BLOCK LIMITS VPD field was not specified (0).
+> 
+> My only real objection is that UINT_MAX appears to be completely
+> coincidental. What if the next drive specifies UINT_MAX-1 or $RANDOM?
+> 
+> Lacking a decent heuristic I'd rather just blacklist the offending drive
+> using the skip_vpd_pages knob we already have in place.
 
-Akinobu> Otherwise it will cause problem on big-endian architecture if
-Akinobu> the number of bits is not a multiple of BITS_PER_LONG.
-
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+OK, sounds fine to me, thanks.
