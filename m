@@ -1,83 +1,53 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [nhorman@tuxdriver.com: [PATCH] libcxgbi: supress warning when we request to much space from kmalloc]
-Date: Fri, 26 Apr 2013 08:20:53 -0700
-Message-ID: <8A71B368A89016469F72CD08050AD3340CBE8487@maui.asicdesigners.com>
-References: <20130426110203.GA13204@hmsreliant.think-freely.org>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: [PATCH RESEND 5/9] zfcp: fix adapter (re)open recovery while link
+ to SAN is down
+Date: Fri, 26 Apr 2013 17:32:14 +0200
+Message-ID: <517A9DFE.7060207@linux.vnet.ibm.com>
+References: <1366985635-38270-1-git-send-email-maier@linux.vnet.ibm.com> <1366985635-38270-6-git-send-email-maier@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:27509 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751097Ab3DZPWD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Apr 2013 11:22:03 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1366985635-38270-6-git-send-email-maier@linux.vnet.ibm.com>
+Sender: stable-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Daniel Hansel <daniel.hansel@linux.vnet.ibm.com>, stable@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>, JBottomley@parallels.com, linux-kernel@vger.kernel.org
 
+From: Daniel Hansel <daniel.hansel@linux.vnet.ibm.com>
 
+FCP device remains in status ERP_FAILED when device is switched online
+or adapter recovery is triggered  while link to SAN is down.
 
------Original Message-----
-From: Neil Horman [mailto:nhorman@tuxdriver.com] 
-Sent: Friday, April 26, 2013 4:02 AM
-To: Karen Xie
-Subject: [nhorman@tuxdriver.com: [PATCH] libcxgbi: supress warning when
-we request to much space from kmalloc]
+When Exchange Configuration Data command returns the FSF status
+FSF_EXCHANGE_CONFIG_DATA_INCOMPLETE it aborts the exchange process.
+The only retries are done during the common error recovery procedure
+(i.e. max. 3 retries with 8sec sleep between) and remains in status
+ERP_FAILED with QDIO down.
 
-The patch looks fine to me.
+This commit reverts the commit 0df138476c8306478d6e726f044868b4bccf411c
+(zfcp: Fix adapter activation on link down).
+When FSF status FSF_EXCHANGE_CONFIG_DATA_INCOMPLETE is received the
+adapter recovery will be finished without any retries. QDIO will be
+up now and status changes such as LINK UP will be received now.
 
-Thanks,
-Karen
------ Forwarded message from Neil Horman <nhorman@tuxdriver.com> -----
-
-Date: Tue, 23 Apr 2013 11:20:47 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: linux-scsi@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>, "James E.J. Bottomley"
-<JBottomley@parallels.com>, linux-kernel@vger.kernel.org
-Subject: [PATCH] libcxgbi: supress warning when we request to much space
-from kmalloc
-X-Mailer: git-send-email 1.8.1.4
-
-cxgbi_alloc_big_mem allocates large chunks of memory, and can
-occasionally request amounts from kmalloc that exceed the allocators
-capacity.  This typically leads to a stack trace from the zoned buddy
-allocator in the message log.  But if kmalloc fails, cxgbi_alloc_big_mem
-backs off and uses vmalloc instead.  Given that, and the fact that the
-two calls sites have their own error messages if both kmalloc and
-vmalloc fail, I think the stack trace printing isn't really needed.
-
-Modify the call to kmalloc to pass __GFP_NOWARN in as well, so that
-internal kmalloc warnings are suppressed.
-
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-Reported-by: Honggang LI <honli@redhat.com>
-CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-CC: linux-kernel@vger.kernel.org
+Signed-off-by: Daniel Hansel <daniel.hansel@linux.vnet.ibm.com>
+Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+Cc: <stable@vger.kernel.org> #2.6.37+
 ---
- drivers/scsi/cxgbi/libcxgbi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/s390/scsi/zfcp_fsf.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h
-b/drivers/scsi/cxgbi/libcxgbi.h index 80fa99b..3daf996 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -658,7 +658,7 @@ static inline u32 cxgbi_tag_nonrsvd_bits(struct
-cxgbi_tag_format *tformat,  static inline void
-*cxgbi_alloc_big_mem(unsigned int size,
- 					gfp_t gfp)
- {
--	void *p = kmalloc(size, gfp);
-+	void *p = kmalloc(size, gfp | __GFP_NOWARN);
- 	if (!p)
- 		p = vmalloc(size);
- 	if (p)
---
-1.8.1.4
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -563,6 +563,10 @@ static void zfcp_fsf_exchange_config_dat
+ 		fc_host_port_type(shost) = FC_PORTTYPE_UNKNOWN;
+ 		adapter->hydra_version = 0;
 
-
-
------ End forwarded message -----
++		/* avoids adapter shutdown to be able to recognize
++		 * events such as LINK UP */
++		atomic_set_mask(ZFCP_STATUS_ADAPTER_XCONFIG_OK,
++				&adapter->status);
+ 		zfcp_fsf_link_down_info_eval(req,
+ 			&qtcb->header.fsf_status_qual.link_down_info);
+ 		break;
