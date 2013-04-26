@@ -1,319 +1,155 @@
-From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: RE: [PATCH 4/5] scsi: ufs: rework link start-up process
-Date: Fri, 26 Apr 2013 14:14:08 +0900
-Message-ID: <000c01ce423c$e11a6f00$a34f4d00$%jun@samsung.com>
-References: <002101ce4105$b184dec0$148e9c40$%jun@samsung.com>
- <5178B97F.3060405@codeaurora.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/2] dm mpath: attach scsi_dh during table resume
+Date: Fri, 26 Apr 2013 08:05:30 +0200
+Message-ID: <517A192A.1080400@suse.de>
+References: <20130404131631.GA10208@redhat.com> <1365457816-31475-1-git-send-email-snitzer@redhat.com> <1365457816-31475-2-git-send-email-snitzer@redhat.com> <20130422223355.GA4803@redhat.com> <Pine.LNX.4.64.1304250938480.8307@file.rdu.redhat.com> <20130425141707.GA1947@redhat.com> <Pine.LNX.4.64.1304251037320.18633@file.rdu.redhat.com> <20130425153147.GA2488@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:55348 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752594Ab3DZFOK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Apr 2013 01:14:10 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MLU0018CJVKFGO0@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Fri, 26 Apr 2013 14:14:08 +0900 (KST)
-In-reply-to: <5178B97F.3060405@codeaurora.org>
-Content-language: ko
+Received: from cantor2.suse.de ([195.135.220.15]:35647 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752870Ab3DZGFc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Apr 2013 02:05:32 -0400
+In-Reply-To: <20130425153147.GA2488@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Sujit Reddy Thumma' <sthumma@codeaurora.org>
-Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Mikulas Patocka <mpatocka@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Thursday, April 25, 2013 , Sujit Reddy Thumma wrote:
-> On 4/24/2013 9:36 PM, Seungwon Jeon wrote:
-> > Link start-up requires long time with multiphase handshakes
-> > between UFS host and device. This affects driver's probe time.
-> > This patch let link start-up run asynchronously.
-> > And completion time of uic command is defined to avoid a
-> > permanent wait.
-> 
-> I have similar patch posted few days back "scsi: ufs: Generalize UFS
-> Interconnect Layer (UIC) command support" which does a bit more (mutex,
-> error handling) than what is done here. Can that be used/improved?
-I completed to check your patch to compare it now.
-Though it's just my thought, the patch I sent is more intuitive on the whole.
-Considering other dme operations which I have introduced, it looks like matched.
-Of course, you may disagree.
-But I think the part of mutex is needed. It's a good point.
-In case of error handling, I didn't catch nothing special.
-Rather, handling link lost case is not proper.
-When ufs host meets link lost status, it should start with dme_reset not retried dme_linkstartup.
-And it would be good if link start-up procedure is done in separate process, not in driver probe.
-If it's all right with you, I'd like to update lock mechanism for uic command.
-I can add your signed-off. Please let me know your opinion.
+On 04/25/2013 05:31 PM, Mike Snitzer wrote:
+> On Thu, Apr 25 2013 at 10:50am -0400,
+> Mikulas Patocka <mpatocka@redhat.com> wrote:
+>=20
+>>
+>>
+>> On Thu, 25 Apr 2013, Mike Snitzer wrote:
+>>
+>>> On Thu, Apr 25 2013 at  9:48am -0400,
+>>> Mikulas Patocka <mpatocka@redhat.com> wrote:
+>>>
+>>>>
+>>>>
+>>>> On Mon, 22 Apr 2013, Mike Snitzer wrote:
+>>>>
+>>>>> I spoke with Hannes at LSF, to address the potential crashes in t=
+he
+>>>>> endio path (e.g. stpg_endio) we'd have to bump the scsi_dh_data k=
+ref
+>>>>> where appropriate (e.g. for ALUA kref_get in submit_stpg and kref=
+_put in
+>>>>> stpg_endio).
+>>>>>
+>>>>> But that is just the tip of the iceberg relative to scsi_dh lifet=
+ime.
+>>>>> Seems we've been playing it pretty fast and loose with scsi_dh is=
+sued
+>>>>> requests vs detach for quite some time.
+>>>>>
+>>>>> I'm now inclined to not care about this issue.  Take away is: don=
+'t
+>>>>> switch the device handler (attach the correct one from the start)=
+=2E
+>>>>
+>>>> I did a patch that disables device handler switching and it was NA=
+CKed by=20
+>>>> Hannes. The problem that he pointed out was - when we load SCSI de=
+vice=20
+>>>> handler modules, they attach automatically to SCSI devices they th=
+ink they=20
+>>>> belong to. The user then can't set the desired device handler in m=
+ultipath=20
+>>>> configuration because a different handler is already attached.
+>>>
+>>> The handler that is automatically attached _should_ be the correct
+>>> handler.  We now have the .match() hook for scsi_dh and it has made=
+ for
+>>> reliable scsi_dh attachment of the correct handler.
+>>
+>> The EMC devices work with both ALUA and EMC handlers - so there is n=
+o one=20
+>> "correct" handler, the correct handler is the one that the user spec=
+ified=20
+>> in multipath configuration.
+>>
+>>>> So we need a functionality to change device handlers.
+>>>
+>>> I really cannot think of a sequence where the scsi_dh .match() will
+>>> attach the incorrect handler.  This is why I added the
+>>> "retain_attached_hw_handler" feature to mpath (commit a58a935d5).
+>>
+>> The automatic handler assigment can't change existing handler.
+>>
+>> But if one handler was automatically selected and the user selects a=
+=20
+>> different handler in multipath configuration, the handler is changed=
+=2E
+>>
+>>>> (or maybe stop the scsi device handlers from attaching automatical=
+ly, but=20
+>>>> it would surely generate a lot of other regressions)
+>>>
+>>> The need to support changing device handlers (via multipath table l=
+oad)
+>>> is overblown/historic.
+>>
+>> So - do you mean that we make "retain_attached_hw_handler" the defau=
+lt=20
+>> option and don't allow the user to change existing device handler in=
+=20
+>> multipath configuration?
+>>
+>> That's what my patch did and it was NACKed by Hannes. The problem th=
+ere is=20
+>> that behavior depends on module loading order - if you activate mult=
+ipath=20
+>> with "EMC" option, it activates the EMC handler. If you load the ALU=
+A=20
+>> module and activate multipath with "EMC" option, it stays with the A=
+LUA=20
+>> handler.
+>=20
+> .match allows for correct scsi_dh selection in the decision of alua v=
+s
+> emc (alua has the tpgs bit set) -- but both scsi_dh modules must be
+> loaded.
+>=20
+> If the incorrect handler is getting attached then it is either a bug =
+in
+> the .match method (for the handler that should've been attached) or t=
+he
+> storage isn't configured how the user thought and they need to
+> adjust/reconfigure to have it be like they expected.
+>=20
+> Either way we really _could_ impose not allowing the scsi_dh handler =
+to
+> be changed (by multipath) -- which is why I Acked your patch.  There =
+is
+> always the scsi_dh sysfs interface to allow the user to change the
+> scsi_dh (and possibly shoot themselves in the foot).
+>=20
+Always providing there _is_ a correct way.
+=46or eg RDAC might run in ALUA mode, but this is by no means
+exclusively; the original 'rdac' mode will work there, too.
 
-Thanks,
-Seungwon Jeon
-> 
-> >
-> > Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> > ---
-> >   drivers/scsi/ufs/ufshcd.c |  114 +++++++++++++++++++++++++++++++++-----------
-> >   drivers/scsi/ufs/ufshcd.h |    6 ++-
-> >   2 files changed, 89 insertions(+), 31 deletions(-)
-> >
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index efe2256..76ff332 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -38,6 +38,7 @@
-> >   #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
-> >   				 UTP_TASK_REQ_COMPL |\
-> >   				 UFSHCD_ERROR_MASK)
-> > +#define UIC_CMD_TIMEOUT	100
-> >
-> >   enum {
-> >   	UFSHCD_MAX_CHANNEL	= 0,
-> > @@ -357,13 +358,15 @@ static inline void ufshcd_hba_capabilities(struct ufs_hba *hba)
-> >   }
-> >
-> >   /**
-> > - * ufshcd_send_uic_command - Send UIC commands to unipro layers
-> > + * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
-> >    * @hba: per adapter instance
-> >    * @uic_command: UIC command
-> >    */
-> >   static inline void
-> > -ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
-> > +ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmnd)
-> >   {
-> > +	init_completion(&uic_cmnd->done);
-> > +
-> >   	/* Write Args */
-> >   	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_1, uic_cmnd->argument1);
-> >   	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_2, uic_cmnd->argument2);
-> > @@ -375,6 +378,45 @@ ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
-> >   }
-> >
-> >   /**
-> > + * ufshcd_wait_for_uic_cmd - Wait complectioin of UIC command
-> > + * @hba: per adapter instance
-> > + * @uic_command: UIC command
-> > + *
-> > + * Returns 0 only if success.
-> > + */
-> > +static int ufshcd_wait_for_uic_cmd(struct ufs_hba *hba)
-> > +{
-> > +	struct uic_command *uic_cmd = &hba->active_uic_cmd;
-> > +	int ret;
-> > +
-> > +	if (wait_for_completion_timeout(&uic_cmd->done,
-> > +					msecs_to_jiffies(UIC_CMD_TIMEOUT)))
-> > +		ret = ufshcd_get_uic_cmd_result(hba);
-> > +	else
-> > +		ret = -ETIMEDOUT;
-> > +
-> > +	return ret;
-> > +}
-> > +
-> > +/**
-> > + * ufshcd_ready_uic_cmd - Check if controller is ready
-> > + *                        to accept UIC commands
-> > + * @hba: per adapter instance
-> > + * Return true on success, else false
-> > + */
-> > +static inline bool ufshcd_ready_uic_cmd(struct ufs_hba *hba)
-> > +{
-> > +	if (ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY) {
-> > +		return true;
-> > +	} else {
-> > +		dev_err(hba->dev,
-> > +				"Controller not ready"
-> > +				" to accept UIC commands\n");
-> > +		return false;
-> > +	}
-> > +}
-> > +
-> > +/**
-> >    * ufshcd_map_sg - Map scatter-gather list to prdt
-> >    * @lrbp - pointer to local reference block
-> >    *
-> > @@ -735,15 +777,10 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
-> >   {
-> >   	struct uic_command *uic_cmd;
-> >   	unsigned long flags;
-> > +	int ret;
-> >
-> > -	/* check if controller is ready to accept UIC commands */
-> > -	if (((ufshcd_readl(hba, REG_CONTROLLER_STATUS)) &
-> > -	    UIC_COMMAND_READY) == 0x0) {
-> > -		dev_err(hba->dev,
-> > -			"Controller not ready"
-> > -			" to accept UIC commands\n");
-> > +	if (!ufshcd_ready_uic_cmd(hba))
-> >   		return -EIO;
-> > -	}
-> >
-> >   	spin_lock_irqsave(hba->host->host_lock, flags);
-> >
-> > @@ -754,13 +791,16 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
-> >   	uic_cmd->argument2 = 0;
-> >   	uic_cmd->argument3 = 0;
-> >
-> > -	/* enable UIC related interrupts */
-> > -	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
-> > +	/* Dispatching UIC commands to controller */
-> > +	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
-> >
-> > -	/* sending UIC commands to controller */
-> > -	ufshcd_send_uic_command(hba, uic_cmd);
-> >   	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> > -	return 0;
-> > +
-> > +	ret = ufshcd_wait_for_uic_cmd(hba);
-> > +	if (ret)
-> > +		dev_err(hba->dev, "link startup: error code %d returned\n", ret);
-> > +
-> > +	return ret;
-> >   }
-> >
-> >   /**
-> > @@ -898,6 +938,9 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
-> >   	if (ufshcd_hba_enable(hba))
-> >   		return -EIO;
-> >
-> > +	/* enable UIC related interrupts */
-> > +	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL | UIC_ERROR);
-> > +
-> >   	/* Configure UTRL and UTMRL base address registers */
-> >   	ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_LIST_BASE_L,
-> >   		      lower_32_bits(hba->utrdl_dma_addr));
-> > @@ -909,7 +952,9 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
-> >   		      upper_32_bits(hba->utmrdl_dma_addr));
-> >
-> >   	/* Initialize unipro link startup procedure */
-> > -	return ufshcd_dme_link_startup(hba);
-> > +	schedule_work(&hba->link_startup_wq);
-> > +
-> > +	return 0;
-> >   }
-> >
-> >   /**
-> > @@ -1186,6 +1231,16 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> >   }
-> >
-> >   /**
-> > + * ufshcd_uic_cmd_compl - handle completion of uic command
-> > + * @hba: per adapter instance
-> > + */
-> > +static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
-> > +{
-> > +	if (intr_status & UIC_COMMAND_COMPL)
-> > +		complete(&hba->active_uic_cmd.done);
-> > +}
-> > +
-> > +/**
-> >    * ufshcd_transfer_req_compl - handle SCSI and query command completion
-> >    * @hba: per adapter instance
-> >    */
-> > @@ -1225,25 +1280,26 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
-> >   }
-> >
-> >   /**
-> > - * ufshcd_uic_cc_handler - handle UIC command completion
-> > + * ufshcd_link_startup - link initialization
-> >    * @work: pointer to a work queue structure
-> > - *
-> > - * Returns 0 on success, non-zero value on failure
-> >    */
-> > -static void ufshcd_uic_cc_handler (struct work_struct *work)
-> > +static void ufshcd_link_startup(struct work_struct *work)
-> >   {
-> >   	struct ufs_hba *hba;
-> > +	int ret;
-> >
-> > -	hba = container_of(work, struct ufs_hba, uic_workq);
-> > +	hba = container_of(work, struct ufs_hba, link_startup_wq);
-> >
-> > -	if ((hba->active_uic_cmd.command == UIC_CMD_DME_LINK_STARTUP) &&
-> > -	    !(ufshcd_get_uic_cmd_result(hba))) {
-> > +	ret = ufshcd_dme_link_startup(hba);
-> > +	if (ret)
-> > +		goto out;
-> >
-> > -		if (ufshcd_make_hba_operational(hba))
-> > -			dev_err(hba->dev,
-> > -				"cc: hba not operational state\n");
-> > -		return;
-> > -	}
-> > +	ret = ufshcd_make_hba_operational(hba);
-> > +	if (ret)
-> > +		goto out;
-> > +	return;
-> > +out:
-> > +	dev_err(hba->dev, "link startup failed %d\n", ret);
-> >   }
-> >
-> >   /**
-> > @@ -1307,7 +1363,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
-> >   		ufshcd_err_handler(hba);
-> >
-> >   	if (intr_status & UIC_COMMAND_COMPL)
-> > -		schedule_work(&hba->uic_workq);
-> > +		ufshcd_uic_cmd_compl(hba, intr_status);
-> >
-> >   	if (intr_status & UTP_TASK_REQ_COMPL)
-> >   		ufshcd_tmc_handler(hba);
-> > @@ -1694,7 +1750,7 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
-> >   	init_waitqueue_head(&hba->ufshcd_tm_wait_queue);
-> >
-> >   	/* Initialize work queues */
-> > -	INIT_WORK(&hba->uic_workq, ufshcd_uic_cc_handler);
-> > +	INIT_WORK(&hba->link_startup_wq, ufshcd_link_startup);
-> >   	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
-> >
-> >   	/* IRQ registration */
-> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> > index 87d5a94..2fb4d94 100644
-> > --- a/drivers/scsi/ufs/ufshcd.h
-> > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -51,6 +51,7 @@
-> >   #include <linux/bitops.h>
-> >   #include <linux/pm_runtime.h>
-> >   #include <linux/clk.h>
-> > +#include <linux/completion.h>
-> >
-> >   #include <asm/irq.h>
-> >   #include <asm/byteorder.h>
-> > @@ -83,6 +84,7 @@ struct uic_command {
-> >   	u32 argument3;
-> >   	int cmd_active;
-> >   	int result;
-> > +	struct completion done;
-> >   };
-> >
-> >   /**
-> > @@ -140,7 +142,7 @@ struct ufshcd_lrb {
-> >    * @tm_condition: condition variable for task management
-> >    * @ufshcd_state: UFSHCD states
-> >    * @intr_mask: Interrupt Mask Bits
-> > - * @uic_workq: Work queue for UIC completion handling
-> > + * @link_startup_wq: Work queue for link start-up
-> >    * @feh_workq: Work queue for fatal controller error handling
-> >    * @errors: HBA errors
-> >    */
-> > @@ -179,7 +181,7 @@ struct ufs_hba {
-> >   	u32 intr_mask;
-> >
-> >   	/* Work Queues */
-> > -	struct work_struct uic_workq;
-> > +	struct work_struct link_startup_wq;
-> >   	struct work_struct feh_workq;
-> >
-> >   	/* HBA Errors */
-> >
-> 
-> --
-> Regards,
-> Sujit
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Plus some vendors / admins might prefer for whatever reasons
+to continue to use the original mode.
 
+So I don't think there is a 'correct' hardware handler.
+Only a preferred one. And the preference is set by the user,
+not the installation. Hence it would be a bad idea to
+disallow scsi_dh changes.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
