@@ -1,144 +1,118 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] dm mpath: attach scsi_dh during table resume
-Date: Fri, 26 Apr 2013 08:05:30 +0200
-Message-ID: <517A192A.1080400@suse.de>
-References: <20130404131631.GA10208@redhat.com> <1365457816-31475-1-git-send-email-snitzer@redhat.com> <1365457816-31475-2-git-send-email-snitzer@redhat.com> <20130422223355.GA4803@redhat.com> <Pine.LNX.4.64.1304250938480.8307@file.rdu.redhat.com> <20130425141707.GA1947@redhat.com> <Pine.LNX.4.64.1304251037320.18633@file.rdu.redhat.com> <20130425153147.GA2488@redhat.com>
+Subject: Re: [PATCH v2 0/9] fix max discard sectors limit
+Date: Fri, 26 Apr 2013 09:33:17 +0200
+Message-ID: <517A2DBD.3080506@suse.de>
+References: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com> <1366487439.1993.9.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35647 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:38460 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752870Ab3DZGFc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Apr 2013 02:05:32 -0400
-In-Reply-To: <20130425153147.GA2488@redhat.com>
+	id S1757683Ab3DZHdX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Apr 2013 03:33:23 -0400
+In-Reply-To: <1366487439.1993.9.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Namjae Jeon <linkinjeon@gmail.com>, dwmw2@infradead.org, axboe@kernel.dk, shli@kernel.org, Paul.Clements@steeleye.com, npiggin@kernel.dk, neilb@suse.de, cjb@laptop.org, adrian.hunter@intel.com, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, nbd-general@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, jcmvbkbc@gmail.com, Namjae Jeon <namjae.jeon@samsung.com>
 
-On 04/25/2013 05:31 PM, Mike Snitzer wrote:
-> On Thu, Apr 25 2013 at 10:50am -0400,
-> Mikulas Patocka <mpatocka@redhat.com> wrote:
+On 04/20/2013 09:50 PM, James Bottomley wrote:
+> On Sat, 2013-04-20 at 01:40 +0900, Namjae Jeon wrote:
+>> From: Namjae Jeon <namjae.jeon@samsung.com>
+>>
+>> linux-v3.8-rc1 and later support for plug for blkdev_issue_discard w=
+ith
+>> commit 0cfbcafcae8b7364b5fa96c2b26ccde7a3a296a9=20
+>> (block: add plug for blkdev_issue_discard )
+>>
+>> For example,
+>> 1) DISCARD rq-1 with size size 4GB
+>> 2) DISCARD rq-2 with size size 1GB
+>>
+>> If these 2 discard requests get merged, final request size will be 5=
+GB.
+>>
+>> In this case, request's __data_len field may overflow as it can stor=
+e
+>> max 4GB(unsigned int).
+>>
+>> This issue was observed while doing mkfs.f2fs on 5GB SD card:
+>> https://lkml.org/lkml/2013/4/1/292
+>>
+>> # mkfs.f2fs /dev/mmcblk0p3
+>> Info: sector size =3D 512
+>> Info: total sectors =3D 11370496 (in 512bytes)
+>> Info: zone aligned segment0 blkaddr: 512
+>> [  257.789764] blk_update_request: bio idx 0 >=3D vcnt 0
+>>
+>> mkfs process gets stuck in D state and I see the following in the dm=
+esg:
+>>
+>> [  257.789733] __end_that: dev mmcblk0: type=3D1, flags=3D122c8081
+>> [  257.789764]   sector 4194304, nr/cnr 2981888/4294959104
+>> [  257.789764]   bio df3840c0, biotail df3848c0, buffer   (null), le=
+n 1526726656
+>> [  257.789764] blk_update_request: bio idx 0 >=3D vcnt 0
+>> [  257.794921] request botched: dev mmcblk0: type=3D1, flags=3D122c8=
+081
+>> [  257.794921]   sector 4194304, nr/cnr 2981888/4294959104
+>> [  257.794921]   bio df3840c0, biotail df3848c0, buffer   (null), le=
+n 1526726656
+>>
+>> Few drivers(e.g. mmc, mtd..) set q->limits.max_discard_sectors
+>> more than UINT_MAX >> 9 sectors which is incorrect and it may lead t=
+o overflow
+>> of request's __data_len field if merged discard request's size excee=
+ds 4GB.
+>>
+>> This patchset fixes this issue by updating helper function
+>> blk_queue_max_discard_sectors which is used to set max_discard_secto=
+rs limit.
+>>
+>> This patchset also replaces "q->limits.max_discard_sector =3D max_di=
+scard_sectors"
+>> with blk_queue_max_discard_sectors call in other drivers like mmc, m=
+td etc.
 >=20
->>
->>
->> On Thu, 25 Apr 2013, Mike Snitzer wrote:
->>
->>> On Thu, Apr 25 2013 at  9:48am -0400,
->>> Mikulas Patocka <mpatocka@redhat.com> wrote:
->>>
->>>>
->>>>
->>>> On Mon, 22 Apr 2013, Mike Snitzer wrote:
->>>>
->>>>> I spoke with Hannes at LSF, to address the potential crashes in t=
-he
->>>>> endio path (e.g. stpg_endio) we'd have to bump the scsi_dh_data k=
-ref
->>>>> where appropriate (e.g. for ALUA kref_get in submit_stpg and kref=
-_put in
->>>>> stpg_endio).
->>>>>
->>>>> But that is just the tip of the iceberg relative to scsi_dh lifet=
-ime.
->>>>> Seems we've been playing it pretty fast and loose with scsi_dh is=
-sued
->>>>> requests vs detach for quite some time.
->>>>>
->>>>> I'm now inclined to not care about this issue.  Take away is: don=
-'t
->>>>> switch the device handler (attach the correct one from the start)=
-=2E
->>>>
->>>> I did a patch that disables device handler switching and it was NA=
-CKed by=20
->>>> Hannes. The problem that he pointed out was - when we load SCSI de=
-vice=20
->>>> handler modules, they attach automatically to SCSI devices they th=
-ink they=20
->>>> belong to. The user then can't set the desired device handler in m=
-ultipath=20
->>>> configuration because a different handler is already attached.
->>>
->>> The handler that is automatically attached _should_ be the correct
->>> handler.  We now have the .match() hook for scsi_dh and it has made=
- for
->>> reliable scsi_dh attachment of the correct handler.
->>
->> The EMC devices work with both ALUA and EMC handlers - so there is n=
-o one=20
->> "correct" handler, the correct handler is the one that the user spec=
-ified=20
->> in multipath configuration.
->>
->>>> So we need a functionality to change device handlers.
->>>
->>> I really cannot think of a sequence where the scsi_dh .match() will
->>> attach the incorrect handler.  This is why I added the
->>> "retain_attached_hw_handler" feature to mpath (commit a58a935d5).
->>
->> The automatic handler assigment can't change existing handler.
->>
->> But if one handler was automatically selected and the user selects a=
-=20
->> different handler in multipath configuration, the handler is changed=
-=2E
->>
->>>> (or maybe stop the scsi device handlers from attaching automatical=
-ly, but=20
->>>> it would surely generate a lot of other regressions)
->>>
->>> The need to support changing device handlers (via multipath table l=
-oad)
->>> is overblown/historic.
->>
->> So - do you mean that we make "retain_attached_hw_handler" the defau=
-lt=20
->> option and don't allow the user to change existing device handler in=
-=20
->> multipath configuration?
->>
->> That's what my patch did and it was NACKed by Hannes. The problem th=
-ere is=20
->> that behavior depends on module loading order - if you activate mult=
-ipath=20
->> with "EMC" option, it activates the EMC handler. If you load the ALU=
-A=20
->> module and activate multipath with "EMC" option, it stays with the A=
-LUA=20
->> handler.
+> I really don't understand this explanation.  How can you be affected =
+by
+> the incorrect setting of q->limits.max_discard sectors when  n the
+> blkdev_issue_discard() code you see:
 >=20
-> .match allows for correct scsi_dh selection in the decision of alua v=
-s
-> emc (alua has the tpgs bit set) -- but both scsi_dh modules must be
-> loaded.
+> 	max_discard_sectors =3D min(q->limits.max_discard_sectors, UINT_MAX =
+>>
+> 9);
 >=20
-> If the incorrect handler is getting attached then it is either a bug =
-in
-> the .match method (for the handler that should've been attached) or t=
-he
-> storage isn't configured how the user thought and they need to
-> adjust/reconfigure to have it be like they expected.
+> ?
 >=20
-> Either way we really _could_ impose not allowing the scsi_dh handler =
-to
-> be changed (by multipath) -- which is why I Acked your patch.  There =
-is
-> always the scsi_dh sysfs interface to allow the user to change the
-> scsi_dh (and possibly shoot themselves in the foot).
+> The problem is not that we issue discards bigger than __data_len can
+> allow, the problem is that we merge them larger than __data_len will
+> allow.  That means the merge code needs fixing to pay attention to
+> max_discard_sectors, so isn't this the correct fix:
 >=20
-Always providing there _is_ a correct way.
-=46or eg RDAC might run in ALUA mode, but this is by no means
-exclusively; the original 'rdac' mode will work there, too.
-
-Plus some vendors / admins might prefer for whatever reasons
-to continue to use the original mode.
-
-So I don't think there is a 'correct' hardware handler.
-Only a preferred one. And the preference is set by the user,
-not the installation. Hence it would be a bad idea to
-disallow scsi_dh changes.
+> James
+>=20
+> ---
+>=20
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 78feda9..33f358f 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -838,7 +838,7 @@ static inline unsigned int blk_queue_get_max_sect=
+ors(struct request_queue *q,
+>  						     unsigned int cmd_flags)
+>  {
+>  	if (unlikely(cmd_flags & REQ_DISCARD))
+> -		return q->limits.max_discard_sectors;
+> +		return min(q->limits.max_discard_sectors, UINT_MAX >> 9);
+> =20
+>  	if (unlikely(cmd_flags & REQ_WRITE_SAME))
+>  		return q->limits.max_write_same_sectors;
+>=20
+>=20
+Patch works, and fixes the discard failing issue I've been pestering
+mkp with at LSF. Please apply.
 
 Cheers,
 
