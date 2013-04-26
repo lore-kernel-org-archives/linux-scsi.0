@@ -1,74 +1,140 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH RESEND 6/9] zfcp: block queue limits with data router
-Date: Fri, 26 Apr 2013 17:33:45 +0200
-Message-ID: <517A9E59.5060806@linux.vnet.ibm.com>
-References: <1366985635-38270-1-git-send-email-maier@linux.vnet.ibm.com> <1366985635-38270-7-git-send-email-maier@linux.vnet.ibm.com>
+Subject: [PATCH RESEND 9/9] zfcp: status read buffers on first adapter open
+ with link down
+Date: Fri, 26 Apr 2013 17:34:54 +0200
+Message-ID: <517A9E9E.6000108@linux.vnet.ibm.com>
+References: <1366985635-38270-1-git-send-email-maier@linux.vnet.ibm.com> <1366985635-38270-10-git-send-email-maier@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1366985635-38270-7-git-send-email-maier@linux.vnet.ibm.com>
+In-Reply-To: <1366985635-38270-10-git-send-email-maier@linux.vnet.ibm.com>
 Sender: stable-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Commit 86a9668a8d29ea711613e1cb37efa68e7c4db564
-"[SCSI] zfcp: support for hardware data router"
-reduced the initial block queue limits in the scsi_host_template to the
-absolute minimum and adjusted them later on. However, the adjustment was
-too late for the BSG devices of Scsi_Host and fc_host.
+Commit 64deb6efdc5504ce97b5c1c6f281fffbc150bd93
+"[SCSI] zfcp: Use status_read_buf_num provided by FCP channel"
+started using a value returned by the channel but only evaluated the value
+if the fabric link is up.
+Commit 8d88cf3f3b9af4713642caeb221b6d6a42019001
+"[SCSI] zfcp: Update status read mempool"
+introduced mempool resizings based on the above value.
+On setting an FCP device online for the very first time since boot, a new
+zeroed adapter object is allocated. If the link is down, the number of
+status read requests remains zero. Since just the config data exchange is
+incomplete, we proceed with adapter open recovery. However, we
+unconditionally call mempool_resize with adapter->stat_read_buf_num == 0 in
+this case.
 
-Therefore, ioctl(..., SG_IO, ...) with request or response size > 4kB to a
-BSG device of an fc_host or a Scsi_Host fails with EINVAL. As a result,
-users of such ioctl such as HBA_SendCTPassThru() in libzfcphbaapi return
-with error HBA_STATUS_ERROR.
+This causes a kernel message "kernel BUG at mm/mempool.c:131!" in process
+"zfcperp<FCP-device-bus-ID>" with last function mempool_resize in Krnl PSW
+and zfcp_erp_thread in the Call Trace.
 
-Initialize the block queue limits in zfcp_scsi_host_template to the
-greatest common denominator (GCD).
-
-While we cannot exploit the slightly enlarged maximum request size with
-data router, this should be neglectible. Doing so also avoids running into
-trouble after live guest relocation (LGR) / migration from a data router
-FCP device to an FCP device that does not support data router. In that
-case, zfcp would figure out the new limits on adapter recovery, but the
-fc_host and Scsi_Host (plus in fact all sdevs) still exist with the old and
-now too large queue limits.
-
-It should also OK, not to use half the size as in the DIX case, because
-fc_host and Scsi_Host do not transport FCP requests including SCSI commands
-using protection data.
+Don't evaluate channel values which are invalid on link down. The number of
+status read requests is always valid, evaluated, and set to a positive
+minimum greater than zero. The adapter open recovery can proceed and the
+channel has status read buffers to inform us on a future link up event.
+While we are not aware of any other code path that could result in mempool
+resize attempts of size zero, we still also initialize the number of status
+read buffers to be posted to a static minimum number on adapter object
+allocation.
 
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Reviewed-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Cc: <stable@vger.kernel.org> #3.2+
+Cc: <stable@vger.kernel.org> #2.6.35+
 ---
- drivers/s390/scsi/zfcp_scsi.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c |    5 ++++-
+ drivers/s390/scsi/zfcp_fsf.c |   23 ++++++++++++++++-------
+ 2 files changed, 20 insertions(+), 8 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
+--- a/drivers/s390/scsi/zfcp_aux.c
++++ b/drivers/s390/scsi/zfcp_aux.c
 @@ -3,7 +3,7 @@
   *
-  * Interface to Linux SCSI midlayer.
+  * Module interface and handling of zfcp data structures.
+  *
+- * Copyright IBM Corp. 2002, 2010
++ * Copyright IBM Corp. 2002, 2013
+  */
+
+ /*
+@@ -23,6 +23,7 @@
+  *            Christof Schmitt
+  *            Martin Petermann
+  *            Sven Schuetz
++ *            Steffen Maier
+  */
+
+ #define KMSG_COMPONENT "zfcp"
+@@ -405,6 +406,8 @@ struct zfcp_adapter *zfcp_adapter_enqueu
+ 	adapter->dma_parms.max_segment_size = ZFCP_QDIO_SBALE_LEN;
+ 	adapter->ccw_device->dev.dma_parms = &adapter->dma_parms;
+
++	adapter->stat_read_buf_num = FSF_STATUS_READS_RECOM;
++
+ 	if (!zfcp_scsi_adapter_register(adapter))
+ 		return adapter;
+
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -3,7 +3,7 @@
+  *
+  * Implementation of FSF commands.
   *
 - * Copyright IBM Corp. 2002, 2010
 + * Copyright IBM Corp. 2002, 2013
   */
 
  #define KMSG_COMPONENT "zfcp"
-@@ -311,8 +311,12 @@ static struct scsi_host_template zfcp_sc
- 	.proc_name		 = "zfcp",
- 	.can_queue		 = 4096,
- 	.this_id		 = -1,
--	.sg_tablesize		 = 1, /* adjusted later */
--	.max_sectors		 = 8, /* adjusted later */
-+	.sg_tablesize		 = (((QDIO_MAX_ELEMENTS_PER_BUFFER - 1)
-+				     * ZFCP_QDIO_MAX_SBALS_PER_REQ) - 2),
-+				   /* GCD, adjusted later */
-+	.max_sectors		 = (((QDIO_MAX_ELEMENTS_PER_BUFFER - 1)
-+				     * ZFCP_QDIO_MAX_SBALS_PER_REQ) - 2) * 8,
-+				   /* GCD, adjusted later */
- 	.dma_boundary		 = ZFCP_QDIO_SBALE_LEN - 1,
- 	.cmd_per_lun		 = 1,
- 	.use_clustering		 = 1,
+@@ -478,12 +478,8 @@ static int zfcp_fsf_exchange_config_eval
+
+ 	fc_host_port_name(shost) = nsp->fl_wwpn;
+ 	fc_host_node_name(shost) = nsp->fl_wwnn;
+-	fc_host_port_id(shost) = ntoh24(bottom->s_id);
+-	fc_host_speed(shost) =
+-		zfcp_fsf_convert_portspeed(bottom->fc_link_speed);
+ 	fc_host_supported_classes(shost) = FC_COS_CLASS2 | FC_COS_CLASS3;
+
+-	adapter->hydra_version = bottom->adapter_type;
+ 	adapter->timer_ticks = bottom->timer_interval & ZFCP_FSF_TIMER_INT_MASK;
+ 	adapter->stat_read_buf_num = max(bottom->status_read_buf_num,
+ 					 (u16)FSF_STATUS_READS_RECOM);
+@@ -491,6 +487,19 @@ static int zfcp_fsf_exchange_config_eval
+ 	if (fc_host_permanent_port_name(shost) == -1)
+ 		fc_host_permanent_port_name(shost) = fc_host_port_name(shost);
+
++	zfcp_scsi_set_prot(adapter);
++
++	/* no error return above here, otherwise must fix call chains */
++	/* do not evaluate invalid fields */
++	if (req->qtcb->header.fsf_status == FSF_EXCHANGE_CONFIG_DATA_INCOMPLETE)
++		return 0;
++
++	fc_host_port_id(shost) = ntoh24(bottom->s_id);
++	fc_host_speed(shost) =
++		zfcp_fsf_convert_portspeed(bottom->fc_link_speed);
++
++	adapter->hydra_version = bottom->adapter_type;
++
+ 	switch (bottom->fc_topology) {
+ 	case FSF_TOPO_P2P:
+ 		adapter->peer_d_id = ntoh24(bottom->peer_d_id);
+@@ -512,8 +521,6 @@ static int zfcp_fsf_exchange_config_eval
+ 		return -EIO;
+ 	}
+
+-	zfcp_scsi_set_prot(adapter);
+-
+ 	return 0;
+ }
+
+@@ -564,6 +571,8 @@ static void zfcp_fsf_exchange_config_dat
+ 				&adapter->status);
+ 		zfcp_fsf_link_down_info_eval(req,
+ 			&qtcb->header.fsf_status_qual.link_down_info);
++		if (zfcp_fsf_exchange_config_evaluate(req))
++			return;
+ 		break;
+ 	default:
+ 		zfcp_erp_adapter_shutdown(adapter, 0, "fsecdh3");
