@@ -1,140 +1,65 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH RESEND 9/9] zfcp: status read buffers on first adapter open
- with link down
-Date: Fri, 26 Apr 2013 17:34:54 +0200
-Message-ID: <517A9E9E.6000108@linux.vnet.ibm.com>
-References: <1366985635-38270-1-git-send-email-maier@linux.vnet.ibm.com> <1366985635-38270-10-git-send-email-maier@linux.vnet.ibm.com>
+Subject: Re: [PATCH RESEND 0/9] zfcp features and bugfixes for 3.10 merge
+ window
+Date: Fri, 26 Apr 2013 17:44:41 +0200
+Message-ID: <517AA0E9.6060008@linux.vnet.ibm.com>
+References: <1366985635-38270-1-git-send-email-maier@linux.vnet.ibm.com> <1366989019.1927.2.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1366985635-38270-10-git-send-email-maier@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e06smtp16.uk.ibm.com ([195.75.94.112]:36674 "EHLO
+	e06smtp16.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756509Ab3DZPor convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Apr 2013 11:44:47 -0400
+Received: from /spool/local
+	by e06smtp16.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
+	Fri, 26 Apr 2013 16:41:03 +0100
+In-Reply-To: <1366989019.1927.2.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-Commit 64deb6efdc5504ce97b5c1c6f281fffbc150bd93
-"[SCSI] zfcp: Use status_read_buf_num provided by FCP channel"
-started using a value returned by the channel but only evaluated the value
-if the fabric link is up.
-Commit 8d88cf3f3b9af4713642caeb221b6d6a42019001
-"[SCSI] zfcp: Update status read mempool"
-introduced mempool resizings based on the above value.
-On setting an FCP device online for the very first time since boot, a new
-zeroed adapter object is allocated. If the link is down, the number of
-status read requests remains zero. Since just the config data exchange is
-incomplete, we proceed with adapter open recovery. However, we
-unconditionally call mempool_resize with adapter->stat_read_buf_num == 0 in
-this case.
+On 04/26/2013 05:10 PM, James Bottomley wrote:
+> On Fri, 2013-04-26 at 16:13 +0200, Steffen Maier wrote:
+>> James,
+>>
+>> here is a series of zfcp features and bugfixes.
+>> We would very much appreciate if you could integrate them for the
+>> upcoming merge window preparing kernel v3.10.
+>> The patches apply on top of the current misc branch of your scsi.git=
+=2E
+>>
+>> Apparently, I did something wrong on git-send-email so the mails
+>> did not appear on the mailing lists. Apologies for resending.
+>
+> Since no-one saw the originals, apologies aren't necessary.
+> Unfortunately, you're still missing three patches: 5,6,9/9
 
-This causes a kernel message "kernel BUG at mm/mempool.c:131!" in process
-"zfcperp<FCP-device-bus-ID>" with last function mempool_resize in Krnl PSW
-and zfcp_erp_thread in the Call Trace.
+Hm, just the patches that had something like this in the signature area=
+:
+Cc: <stable@vger.kernel.org> #2.6.37+
+I guess they got stuck because some MTA or the list do not like what=20
+git-send-email converted this into as a CC recipient:
+<stable@vger.kernel.org> #2.6.37+
 
-Don't evaluate channel values which are invalid on link down. The number of
-status read requests is always valid, evaluated, and set to a positive
-minimum greater than zero. The adapter open recovery can proceed and the
-channel has status read buffers to inform us on a future link up event.
-While we are not aware of any other code path that could result in mempool
-resize attempts of size zero, we still also initialize the number of status
-read buffers to be posted to a static minimum number on adapter object
-allocation.
+I resent those three as replies to the stuck/lost ones.
 
-Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: <stable@vger.kernel.org> #2.6.35+
----
- drivers/s390/scsi/zfcp_aux.c |    5 ++++-
- drivers/s390/scsi/zfcp_fsf.c |   23 ++++++++++++++++-------
- 2 files changed, 20 insertions(+), 8 deletions(-)
+Steffen
 
---- a/drivers/s390/scsi/zfcp_aux.c
-+++ b/drivers/s390/scsi/zfcp_aux.c
-@@ -3,7 +3,7 @@
-  *
-  * Module interface and handling of zfcp data structures.
-  *
-- * Copyright IBM Corp. 2002, 2010
-+ * Copyright IBM Corp. 2002, 2013
-  */
+Linux on System z Development
 
- /*
-@@ -23,6 +23,7 @@
-  *            Christof Schmitt
-  *            Martin Petermann
-  *            Sven Schuetz
-+ *            Steffen Maier
-  */
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Gesch=E4ftsf=FChrung: Dirk Wittkopp
+Sitz der Gesellschaft: B=F6blingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
 
- #define KMSG_COMPONENT "zfcp"
-@@ -405,6 +406,8 @@ struct zfcp_adapter *zfcp_adapter_enqueu
- 	adapter->dma_parms.max_segment_size = ZFCP_QDIO_SBALE_LEN;
- 	adapter->ccw_device->dev.dma_parms = &adapter->dma_parms;
-
-+	adapter->stat_read_buf_num = FSF_STATUS_READS_RECOM;
-+
- 	if (!zfcp_scsi_adapter_register(adapter))
- 		return adapter;
-
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -3,7 +3,7 @@
-  *
-  * Implementation of FSF commands.
-  *
-- * Copyright IBM Corp. 2002, 2010
-+ * Copyright IBM Corp. 2002, 2013
-  */
-
- #define KMSG_COMPONENT "zfcp"
-@@ -478,12 +478,8 @@ static int zfcp_fsf_exchange_config_eval
-
- 	fc_host_port_name(shost) = nsp->fl_wwpn;
- 	fc_host_node_name(shost) = nsp->fl_wwnn;
--	fc_host_port_id(shost) = ntoh24(bottom->s_id);
--	fc_host_speed(shost) =
--		zfcp_fsf_convert_portspeed(bottom->fc_link_speed);
- 	fc_host_supported_classes(shost) = FC_COS_CLASS2 | FC_COS_CLASS3;
-
--	adapter->hydra_version = bottom->adapter_type;
- 	adapter->timer_ticks = bottom->timer_interval & ZFCP_FSF_TIMER_INT_MASK;
- 	adapter->stat_read_buf_num = max(bottom->status_read_buf_num,
- 					 (u16)FSF_STATUS_READS_RECOM);
-@@ -491,6 +487,19 @@ static int zfcp_fsf_exchange_config_eval
- 	if (fc_host_permanent_port_name(shost) == -1)
- 		fc_host_permanent_port_name(shost) = fc_host_port_name(shost);
-
-+	zfcp_scsi_set_prot(adapter);
-+
-+	/* no error return above here, otherwise must fix call chains */
-+	/* do not evaluate invalid fields */
-+	if (req->qtcb->header.fsf_status == FSF_EXCHANGE_CONFIG_DATA_INCOMPLETE)
-+		return 0;
-+
-+	fc_host_port_id(shost) = ntoh24(bottom->s_id);
-+	fc_host_speed(shost) =
-+		zfcp_fsf_convert_portspeed(bottom->fc_link_speed);
-+
-+	adapter->hydra_version = bottom->adapter_type;
-+
- 	switch (bottom->fc_topology) {
- 	case FSF_TOPO_P2P:
- 		adapter->peer_d_id = ntoh24(bottom->peer_d_id);
-@@ -512,8 +521,6 @@ static int zfcp_fsf_exchange_config_eval
- 		return -EIO;
- 	}
-
--	zfcp_scsi_set_prot(adapter);
--
- 	return 0;
- }
-
-@@ -564,6 +571,8 @@ static void zfcp_fsf_exchange_config_dat
- 				&adapter->status);
- 		zfcp_fsf_link_down_info_eval(req,
- 			&qtcb->header.fsf_status_qual.link_down_info);
-+		if (zfcp_fsf_exchange_config_evaluate(req))
-+			return;
- 		break;
- 	default:
- 		zfcp_erp_adapter_shutdown(adapter, 0, "fsecdh3");
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
