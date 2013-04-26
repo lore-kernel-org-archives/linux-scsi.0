@@ -1,38 +1,83 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND 0/9] zfcp features and bugfixes for 3.10 merge
- window
-Date: Fri, 26 Apr 2013 08:10:19 -0700
-Message-ID: <1366989019.1927.2.camel@dabdike>
-References: <1366985635-38270-1-git-send-email-maier@linux.vnet.ibm.com>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [nhorman@tuxdriver.com: [PATCH] libcxgbi: supress warning when we request to much space from kmalloc]
+Date: Fri, 26 Apr 2013 08:20:53 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD3340CBE8487@maui.asicdesigners.com>
+References: <20130426110203.GA13204@hmsreliant.think-freely.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35281 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750936Ab3DZPKW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Apr 2013 11:10:22 -0400
-In-Reply-To: <1366985635-38270-1-git-send-email-maier@linux.vnet.ibm.com>
+Received: from stargate.chelsio.com ([67.207.112.58]:27509 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097Ab3DZPWD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Apr 2013 11:22:03 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
-
-On Fri, 2013-04-26 at 16:13 +0200, Steffen Maier wrote:
-> James,
-> 
-> here is a series of zfcp features and bugfixes.
-> We would very much appreciate if you could integrate them for the
-> upcoming merge window preparing kernel v3.10.
-> The patches apply on top of the current misc branch of your scsi.git.
-> 
-> Apparently, I did something wrong on git-send-email so the mails
-> did not appear on the mailing lists. Apologies for resending.
-
-Since no-one saw the originals, apologies aren't necessary.
-Unfortunately, you're still missing three patches: 5,6,9/9
-
-James
+To: linux-scsi@vger.kernel.org
+Cc: Neil Horman <nhorman@tuxdriver.com>, JBottomley@parallels.com, linux-kernel@vger.kernel.org
 
 
+
+-----Original Message-----
+From: Neil Horman [mailto:nhorman@tuxdriver.com] 
+Sent: Friday, April 26, 2013 4:02 AM
+To: Karen Xie
+Subject: [nhorman@tuxdriver.com: [PATCH] libcxgbi: supress warning when
+we request to much space from kmalloc]
+
+The patch looks fine to me.
+
+Thanks,
+Karen
+----- Forwarded message from Neil Horman <nhorman@tuxdriver.com> -----
+
+Date: Tue, 23 Apr 2013 11:20:47 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: linux-scsi@vger.kernel.org
+Cc: Neil Horman <nhorman@tuxdriver.com>, "James E.J. Bottomley"
+<JBottomley@parallels.com>, linux-kernel@vger.kernel.org
+Subject: [PATCH] libcxgbi: supress warning when we request to much space
+from kmalloc
+X-Mailer: git-send-email 1.8.1.4
+
+cxgbi_alloc_big_mem allocates large chunks of memory, and can
+occasionally request amounts from kmalloc that exceed the allocators
+capacity.  This typically leads to a stack trace from the zoned buddy
+allocator in the message log.  But if kmalloc fails, cxgbi_alloc_big_mem
+backs off and uses vmalloc instead.  Given that, and the fact that the
+two calls sites have their own error messages if both kmalloc and
+vmalloc fail, I think the stack trace printing isn't really needed.
+
+Modify the call to kmalloc to pass __GFP_NOWARN in as well, so that
+internal kmalloc warnings are suppressed.
+
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+Reported-by: Honggang LI <honli@redhat.com>
+CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+CC: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/cxgbi/libcxgbi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/cxgbi/libcxgbi.h
+b/drivers/scsi/cxgbi/libcxgbi.h index 80fa99b..3daf996 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.h
++++ b/drivers/scsi/cxgbi/libcxgbi.h
+@@ -658,7 +658,7 @@ static inline u32 cxgbi_tag_nonrsvd_bits(struct
+cxgbi_tag_format *tformat,  static inline void
+*cxgbi_alloc_big_mem(unsigned int size,
+ 					gfp_t gfp)
+ {
+-	void *p = kmalloc(size, gfp);
++	void *p = kmalloc(size, gfp | __GFP_NOWARN);
+ 	if (!p)
+ 		p = vmalloc(size);
+ 	if (p)
+--
+1.8.1.4
+
+
+
+----- End forwarded message -----
