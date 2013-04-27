@@ -1,61 +1,60 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH 1/3] scsi_debug: fix data integrity support on highmem machine
-Date: Sat, 27 Apr 2013 17:51:02 +0900
-Message-ID: <CAC5umyjZbRDA7L5V=uFW0LA5AXMbtU7wSebvvn5E8OtdamZRHQ@mail.gmail.com>
-References: <1366535879-20775-1-git-send-email-akinobu.mita@gmail.com>
-	<1366535879-20775-2-git-send-email-akinobu.mita@gmail.com>
-	<yq11u9ztl1d.fsf@sermon.lab.mkp.net>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [PATCH RESEND 0/9] zfcp features and bugfixes for 3.10 merge
+ window
+Date: Sat, 27 Apr 2013 11:44:09 +0200
+Message-ID: <20130427094409.GA3588@osiris>
+References: <1366985635-38270-1-git-send-email-maier@linux.vnet.ibm.com>
+ <1366989019.1927.2.camel@dabdike>
+ <517AA0E9.6060008@linux.vnet.ibm.com>
+ <1366992644.14612.1.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:48557 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752543Ab3D0IvD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Apr 2013 04:51:03 -0400
-Received: by mail-oa0-f45.google.com with SMTP id o17so4641389oag.4
-        for <linux-scsi@vger.kernel.org>; Sat, 27 Apr 2013 01:51:02 -0700 (PDT)
-In-Reply-To: <yq11u9ztl1d.fsf@sermon.lab.mkp.net>
+Received: from e06smtp15.uk.ibm.com ([195.75.94.111]:44204 "EHLO
+	e06smtp15.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754750Ab3D0Jot (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Apr 2013 05:44:49 -0400
+Received: from /spool/local
+	by e06smtp15.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <heiko.carstens@de.ibm.com>;
+	Sat, 27 Apr 2013 10:41:33 +0100
+Content-Disposition: inline
+In-Reply-To: <1366992644.14612.1.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>
 
-2013/4/25 Martin K. Petersen <martin.petersen@oracle.com>:
->>>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
->
-> Akinobu> kmap_atomic() is now using stack based implementation and
-> Akinobu> doesn't take the KM_type argument anymore.  So nesting
-> Akinobu> kmap_atomic() calls must be properly stacked.
->
-> Akinobu> This fixes nesting kmap_atomic() calls for scsi_sglist and
-> Akinobu> scsi_prot_sglist in prot_verify_write().
->
-> I don't see how the prog_sglist is incorrectly nested? Also, with your
-> code you also end up mapping and unmapping the protection page for every
-> data segment. The two scatterlists have different cadence.
+On Fri, Apr 26, 2013 at 09:10:44AM -0700, James Bottomley wrote:
+> On Fri, 2013-04-26 at 17:44 +0200, Steffen Maier wrote:
+> > On 04/26/2013 05:10 PM, James Bottomley wrote:
+> > > On Fri, 2013-04-26 at 16:13 +0200, Steffen Maier wrote:
+> > >> James,
+> > >>
+> > >> here is a series of zfcp features and bugfixes.
+> > >> We would very much appreciate if you could integrate them for the
+> > >> upcoming merge window preparing kernel v3.10.
+> > >> The patches apply on top of the current misc branch of your scsi.git.
+> > >>
+> > >> Apparently, I did something wrong on git-send-email so the mails
+> > >> did not appear on the mailing lists. Apologies for resending.
+> > >
+> > > Since no-one saw the originals, apologies aren't necessary.
+> > > Unfortunately, you're still missing three patches: 5,6,9/9
+> > 
+> > Hm, just the patches that had something like this in the signature area:
+> > Cc: <stable@vger.kernel.org> #2.6.37+
+> > I guess they got stuck because some MTA or the list do not like what 
+> > git-send-email converted this into as a CC recipient:
+> > <stable@vger.kernel.org> #2.6.37+
+> 
+> Hm, that would appear to be a bug in git-send-email.  You can turn off
+> these with the --suppress-cc=cc flag I think.
 
-I meant that the unmapped address by kunmap_atomic() should be the
-address returned by the last kmap_atomic() call which is not yet unmapped.
-Because kmap_atomic was changed to stack based implementation.
+FWIW, I just installed git 1.8.1.6 on the machine these patches were sent
+from. That version doesn't seem to have the problem:
 
-Specifically,
+The Cc recipient looks sane (tested with --dry-run):
 
-    /* For each data page */
-    scsi_for_each_sg(SCpnt, dsgl, scsi_sg_count(SCpnt), i) {
-        daddr = kmap_atomic(sg_page(dsgl)) + dsgl->offset;
+<stable@vger.kernel.org>
 
-This kmapped address 'daddr' will not unmapped during the next for-loop.
-
-        /* For each sector-sized chunk in data page */
-        for (j = 0 ; j < dsgl->length ; j += scsi_debug_sector_size) {
-
-            /* If we're at the end of the current
-             * protection page advance to the next one
-             */
-            if (ppage_offset >= psgl->length) {
-                kunmap_atomic(paddr);
-                ...
-
-But this kunmap_atomic() for the first time in this loop is called.
-The last two kmap_atomic() and kunmap_atomic() do not correspond and
-it breaks kmap_atomic/kunmap_atomic stack.
