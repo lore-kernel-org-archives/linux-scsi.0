@@ -1,60 +1,124 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: [PATCH RESEND 0/9] zfcp features and bugfixes for 3.10 merge
- window
-Date: Sat, 27 Apr 2013 11:44:09 +0200
-Message-ID: <20130427094409.GA3588@osiris>
-References: <1366985635-38270-1-git-send-email-maier@linux.vnet.ibm.com>
- <1366989019.1927.2.camel@dabdike>
- <517AA0E9.6060008@linux.vnet.ibm.com>
- <1366992644.14612.1.camel@dabdike>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: PING^5 aka New ways to attract attentions Re: [PATCH v2 00/14] Corrections
+ and customization of the SG_IO command whitelist (CVE-2012-4542)
+Date: Sat, 27 Apr 2013 15:31:46 +0200
+Message-ID: <517BD342.9080005@redhat.com>
+References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com> <5124F600.9030908@redhat.com> <514CDB6F.9030505@redhat.com> <515DC3FE.1010405@redhat.com> <516E94E7.4030202@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e06smtp15.uk.ibm.com ([195.75.94.111]:44204 "EHLO
-	e06smtp15.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754750Ab3D0Jot (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Apr 2013 05:44:49 -0400
-Received: from /spool/local
-	by e06smtp15.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <heiko.carstens@de.ibm.com>;
-	Sat, 27 Apr 2013 10:41:33 +0100
-Content-Disposition: inline
-In-Reply-To: <1366992644.14612.1.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <516E94E7.4030202@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, corbet@lwn.net, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>
 
-On Fri, Apr 26, 2013 at 09:10:44AM -0700, James Bottomley wrote:
-> On Fri, 2013-04-26 at 17:44 +0200, Steffen Maier wrote:
-> > On 04/26/2013 05:10 PM, James Bottomley wrote:
-> > > On Fri, 2013-04-26 at 16:13 +0200, Steffen Maier wrote:
-> > >> James,
-> > >>
-> > >> here is a series of zfcp features and bugfixes.
-> > >> We would very much appreciate if you could integrate them for the
-> > >> upcoming merge window preparing kernel v3.10.
-> > >> The patches apply on top of the current misc branch of your scsi.git.
-> > >>
-> > >> Apparently, I did something wrong on git-send-email so the mails
-> > >> did not appear on the mailing lists. Apologies for resending.
-> > >
-> > > Since no-one saw the originals, apologies aren't necessary.
-> > > Unfortunately, you're still missing three patches: 5,6,9/9
-> > 
-> > Hm, just the patches that had something like this in the signature area:
-> > Cc: <stable@vger.kernel.org> #2.6.37+
-> > I guess they got stuck because some MTA or the list do not like what 
-> > git-send-email converted this into as a CC recipient:
-> > <stable@vger.kernel.org> #2.6.37+
+PING^5
+
+So a blatant attempt at getting attention from LWN didn't work.  I'm
+desperate, so...
+
+... look!  I'm top posting!
+
+Paolo
+
+Il 17/04/2013 14:26, Paolo Bonzini ha scritto:
+> And a fourth ping comes...
 > 
-> Hm, that would appear to be a bug in git-send-email.  You can turn off
-> these with the --suppress-cc=cc flag I think.
-
-FWIW, I just installed git 1.8.1.6 on the machine these patches were sent
-from. That version doesn't seem to have the problem:
-
-The Cc recipient looks sane (tested with --dry-run):
-
-<stable@vger.kernel.org>
-
+> Jon, the next time I read "it seems likely to be picked up fairly soon"
+> (http://lwn.net/Articles/535075/), I'll picture the author of the patch
+> attempting open-heart surgery on a long-red-haired voodoo doll!
+> 
+> Paolo
+> 
+> Il 04/04/2013 20:18, Paolo Bonzini ha scritto:
+>> Il 22/03/2013 23:30, Paolo Bonzini ha scritto:
+>>> Il 20/02/2013 17:12, Paolo Bonzini ha scritto:
+>>>> Il 06/02/2013 16:15, Paolo Bonzini ha scritto:
+>>>>> This series regards the whitelist that is used for the SG_IO ioctl.  This
+>>>>> whitelist has three problems:
+>>>>>
+>>>>> * the bitmap of allowed commands is designed for MMC devices (roughly,
+>>>>>   "play/burn CDs without requiring root") but some opcodes overlap across SCSI
+>>>>>   device classes and have different meanings for different classes.
+>>>>>
+>>>>> * also because the bitmap of allowed commands is designed for MMC devices
+>>>>>   only, some commands are missing even though they are generally useful and
+>>>>>   not insecure.  At least not more insecure than anything else you can
+>>>>>   do if you have access to /dev/sdX or /dev/stX nodes.
+>>>>>
+>>>>> * the whitelist can be disabled per-process but not per-disk.  In addition,
+>>>>>   the required capability (CAP_SYS_RAWIO) gives access to a range of other 
+>>>>>   resources, enough to make it insecure.
+>>>>>
+>>>>> The series corrects these problems.  Patches 1-4 solve the first problem,
+>>>>> which also has an assigned CVE, by using different bitmaps for the various
+>>>>> device classes.  Patches 5-11 solve the second by adding more commands
+>>>>> to the bitmaps.  Patches 12 and 13 solve the third, and were already
+>>>>> posted but ignored by the maintainers despite multiple pings.
+>>>>>
+>>>>> Note: checkpatch hates the formatting of the command table.  I know about this,
+>>>>> and ensured that there are no errors in the rest of the code.  The current
+>>>>> formatting is IMHO quite handy, and roughly based on the files available
+>>>>> from the SCSI standard body.
+>>>>>
+>>>>> Ok for the next merge window?
+>>>>>
+>>>>> Paolo
+>>>>>
+>>>>> v1->v2: remove 2 MMC commands and 6 SBC commands (see patches 6 and 9
+>>>>>         for details).  Added patch 14 and added a few more scanner
+>>>>>         commands based on SANE (scanners are not whitelisted by default,
+>>>>>         also were not in v1, but this makes it possible to opt into the
+>>>>>         whitelist out of paranoia).  Removed C++ comments.  Removed the
+>>>>>         large #if 0'd list of commands that the kernel does not pass
+>>>>>         though.  Marked blk_set_cmd_filter_defaults as __init.
+>>>>
+>>>> Ping...
+>>>>
+>>>> Jens/James, is anyone going to pick this up for 3.9?
+>>>
+>>> Another month has passed, Ping^2...
+>>
+>> Ping^3, any hope for 3.10?
+>>
+>> Paolo
+>>
+>>>
+>>> Paolo
+>>>
+>>>> Paolo
+>>>>
+>>>>>
+>>>>> Paolo Bonzini (14):
+>>>>>   sg_io: pass request_queue to blk_verify_command
+>>>>>   sg_io: reorganize list of allowed commands
+>>>>>   sg_io: use different default filters for each device class
+>>>>>   sg_io: resolve conflicts between commands assigned to multiple
+>>>>>     classes (CVE-2012-4542)
+>>>>>   sg_io: whitelist a few more commands for rare & obsolete device types
+>>>>>   sg_io: whitelist another command for multimedia devices
+>>>>>   sg_io: whitelist a few more commands for media changers
+>>>>>   sg_io: whitelist a few more commands for tapes
+>>>>>   sg_io: whitelist a few more commands for disks
+>>>>>   sg_io: whitelist a few obsolete commands
+>>>>>   sg_io: mark blk_set_cmd_filter_defaults as __init
+>>>>>   sg_io: remove remnants of sysfs SG_IO filters
+>>>>>   sg_io: introduce unpriv_sgio queue flag
+>>>>>   sg_io: use unpriv_sgio to disable whitelisting for scanners
+>>>>>
+>>>>>  Documentation/block/queue-sysfs.txt |    8 +
+>>>>>  block/blk-sysfs.c                   |   33 +++
+>>>>>  block/bsg.c                         |    2 +-
+>>>>>  block/scsi_ioctl.c                  |  369 ++++++++++++++++++++++++++---------
+>>>>>  drivers/scsi/scsi_scan.c            |   14 ++-
+>>>>>  drivers/scsi/sg.c                   |    6 +-
+>>>>>  include/linux/blkdev.h              |    8 +-
+>>>>>  include/linux/genhd.h               |    9 -
+>>>>>  include/scsi/scsi.h                 |    3 +
+>>>>>  9 files changed, 344 insertions(+), 108 deletions(-)
+>>>>>
+>>>>
+>>>
+>>
+> 
