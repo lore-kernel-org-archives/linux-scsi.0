@@ -1,34 +1,45 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: T10 WCE interpretation in Linux & device level access
-Date: Sat, 27 Apr 2013 08:03:21 +0200
-Message-ID: <517B6A29.7040406@redhat.com>
-References: <5176E3E8.3000809@redhat.com> <1366747622.1939.6.camel@dabdike> <5177BF53.3040305@redhat.com> <5177CAF5.6060506@suse.de> <5177CB23.5090802@redhat.com> <5177CFB6.9070105@redhat.com> <5177D6C2.6080705@redhat.com> <5177EDB5.5000105@tributary.com> <8D3D17ACE214DC429325B2B98F3AE71293F3BBE2@MX15A.corp.emc.com> <5178438F.3010103@gmail.com> <1366837373.1971.28.camel@dabdike> <5178548D.6020805@redhat.com> <1366841383.1971.36.camel@dabdike> <yq17gjrv1h8.fsf@sermon.lab.mkp.net>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH 2/3] scsi_debug: fix NULL pointer dereference with
+ parameters dif=0 dix=1
+Date: Sat, 27 Apr 2013 17:37:39 +0900
+Message-ID: <CAC5umygV+Dregh-hACW1yVzQMfPcQYc7jBpUZ59ptht+n4SCWQ@mail.gmail.com>
+References: <1366535879-20775-1-git-send-email-akinobu.mita@gmail.com>
+	<1366535879-20775-3-git-send-email-akinobu.mita@gmail.com>
+	<yq1sj2fs5p7.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:54337 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753373Ab3D0GDf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Apr 2013 02:03:35 -0400
-Received: by mail-ea0-f181.google.com with SMTP id a11so1879403eae.26
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Apr 2013 23:03:33 -0700 (PDT)
-In-Reply-To: <yq17gjrv1h8.fsf@sermon.lab.mkp.net>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:40174 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753957Ab3D0Ihj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Apr 2013 04:37:39 -0400
+Received: by mail-ob0-f178.google.com with SMTP id 16so4249164obc.9
+        for <linux-scsi@vger.kernel.org>; Sat, 27 Apr 2013 01:37:39 -0700 (PDT)
+In-Reply-To: <yq1sj2fs5p7.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Ric Wheeler <ricwheeler@gmail.com>, "Black, David" <david.black@emc.com>, Jeremy Linton <jlinton@tributary.com>, Ric Wheeler <rwheeler@redhat.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "Knight, Frederick" <Frederick.Knight@netapp.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-Il 25/04/2013 03:32, Martin K. Petersen ha scritto:
-> I'm ok with your patch. And a strong believer in not altering the
-> SYNCHRONIZE CACHE behavior that's been rigorously tested in the field by
-> adding SYNC_NV to the mix.
+2013/4/25 Martin K. Petersen <martin.petersen@oracle.com>:
+>>>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
+>
+> Akinobu> The protection info dif_storep is allocated only when parameter
+> Akinobu> dif is not zero.  But it will be accessed when reading or
+> Akinobu> writing to the storage installed with parameter dix is not
+> Akinobu> zero.
+>
+> Akinobu> So kernel crashes if scsi_debug module is loaded with
+> Akinobu> parameters dix=1 and dif=0.
+>
+> The full story is that scsi_debug does not support DIF and DIX correctly
+> by virtue of simultaneously being the HBA and the target. And since
+> there is no actual data transfer between the HBA and the target the
+> notion of DIF is weak at best.
+>
+> I did look into making scsi_debug do the right thing but it's quite a
+> bit of code and I lost interest about halfway through the effort. If
+> you'd like to fix this properly I can probably find the patch to use as
+> baseline?
 
-SYNC_NV is absolutely necessary for targets that (a) have both volatile
-and non-volatile cache, and (b) actually follow the standards behavior
-for SYNC_NV=0.
-
-I used NV_SUP as a guess that the SYNC_NV bit is supported, perhaps
-V_SUP && NV_SUP is a better guess.
-
-Paolo
+I'm interested in the patch.  So could you provide it?
