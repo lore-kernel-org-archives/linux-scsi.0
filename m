@@ -1,89 +1,104 @@
-From: ronnie sahlberg <ronniesahlberg@gmail.com>
-Subject: SCSI testing/USB devices are amazing
-Date: Sun, 28 Apr 2013 09:19:36 -0700
-Message-ID: <CAN05THR+P7nzzTe6FCmG+F8_frkL=z-PS1GvoBVn57EyDMo-dw@mail.gmail.com>
+From: "Gurinder (Sunny) Shergill" <gurinder.shergill@gmail.com>
+Subject: Re: lpfc and FLOGI failure.
+Date: Sun, 28 Apr 2013 09:38:47 -0700
+Message-ID: <517D5097.2030406@gmail.com>
+References: <517D44FB.5050206@linuxsolutions.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:58884 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781Ab3D1QTg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Apr 2013 12:19:36 -0400
-Received: by mail-pd0-f174.google.com with SMTP id y13so2830882pdi.33
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Apr 2013 09:19:36 -0700 (PDT)
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:49598 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753977Ab3D1Qit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Apr 2013 12:38:49 -0400
+Received: by mail-ie0-f171.google.com with SMTP id e11so6581480iej.30
+        for <linux-scsi@vger.kernel.org>; Sun, 28 Apr 2013 09:38:49 -0700 (PDT)
+In-Reply-To: <517D44FB.5050206@linuxsolutions.fi>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?Johnny_Str=F6m?= <johnny.strom@linuxsolutions.fi>
+Cc: linux-scsi@vger.kernel.org
 
-Hi List,
+On 4/28/2013 8:49 AM, Johnny Str=F6m wrote:
+>
+> Hello
+>
+> We have an Emulex LPe1150 that is causing FLOGI failure when the driv=
+er
+> is loaded.
+>
+> We have updated the firmware on the card. It is working ok with an ol=
+d
+> HP MSA.
+>
+> But with an new MD36xxf so dose it not work.
+>
+> when the lpfc driver is loded so dose it take about 7 seconds to load
+> and efter that so
+> do we only see these LUN's: We do not see the other disk LUN's
+>
+> [16:0:0:0]   disk    DELL     MD36xxf          0784  -
+> [16:0:0:31]  disk    DELL     Universal Xport  0784  -
+>
+>
+> dmesg shows this after the driver is loaded.
+>
+> [15313.555729] scsi12 : Emulex LPe1150 1Gb PCIe Fibre Channel Adapter=
+ on
+> PCI bus 0e device 00 irq 30
+> [15317.795558] lpfc 0000:0e:00.0: 1:1303 Link Up Event x1 received Da=
+ta:
+> x1 x1 x10 x2 x0 x0 0
+> [15317.795680] lpfc 0000:0e:00.0: 1:1309 Link Up Event npiv not
+> supported in loop topology
+> [15317.796111] lpfc 0000:0e:00.0: 1:(0):2858 FLOGI failure Status:x3/=
+x18
+> TMO:x0
+> [15317.796423] lpfc 0000:0e:00.0: 1:(0):2858 FLOGI failure Status:x3/=
+x18
+> TMO:x0
+> [15317.796726] lpfc 0000:0e:00.0: 1:(0):2858 FLOGI failure Status:x3/=
+x18
+> TMO:x0
+> [15317.796825] lpfc 0000:0e:00.0: 1:(0):0100 FLOGI failure Status:x3/=
+x18
+> TMO:x0
+>
+> Could it be an bug in the lpfc driver when it is used with MD36xxf?
+> Any suggestions what to do or try?
 
-Interested in SCSI tests?
+=46irst thing to note here is that FLOGI is issued to log into a switch=
+=20
+and not to an end-port. Next thing is that the logs you emailed show yo=
+u=20
+are most probably in a "loop topology" and not in a Fabric topology. So=
+,=20
+=46LOGI messages are probably not relevant, unless you can confirm that=
+=20
+LPe1150 is indeed connected to a FC switch.
 
+Now, moving to the array side as a potential cause, disk arrays normall=
+y=20
+have setting associated with the front-side ports, which when not=20
+configured properly may cause issues with FC discovery (especially, whe=
+n=20
+in loop topology). I certainly don't know if that is the case here, but=
+=20
+I'd make sure to go thru the Dell MD36xx guide to ensure you have=20
+configured they array properly for loop topology. For example, some=20
+initiators won't "connect" with a array if the array port doesn't have=20
+Hard-addressing enabled when in loop topology.
 
-I have a reasonable SCSI (mainly SBC) testsuite at
-https://github.com/sahlberg/libiscsi
-while I am mainly interested in testing of iSCSI targets, most of my
-tests so far are for the SCSI protocol
-so they work quite well on devices connected to any kind of transport,
-as long as you re-export them via iSCSI.
-(For example using a simple passthrough device with TGT.)
-At some stage I will redo some of the framework so that it can
-optionally talk directly to a /dev/sg* device, but reexporting via TGT
-works well enough for now.
+One more thing (this is an obvious one, so sorry, if you have already=20
+done this one) -- I am assuming you have properly presented the disk=20
+LUNs in MD36xx to the LPe1105 port WWN. Right ?
 
+Hope this helps,
+Sunny
 
-The test suite is fairly comprehensive for SBC so far, you can find a
-list of all the current tests at
-https://sites.google.com/site/libiscsitarballs/libiscsitarballs/
-
-Based on hearing about the problems with USB devices, I added a
-special family with the tests I think would be relevant to USB SBC
-devices.
-
-Oh boy, I thought soft iSCSI targets were bad...
-USB seems like a completely new level of badness.
-In testing some random sticks I had I found no usb stick actually
-claiming SBC support in the standard inq page,  but one stick claimed
-support for SSC !
-Another stick never really reported LBA OUT OF RANGE and it just kept
-wrapping the LBA once you wrote beyond the end of the stick.
-I.e. write at LBA modulo size-of-stick.
-Another one didnt supported VERIFY10 with bytchk set (whats the point
-supporting VERIFY10 at all then?),   and if you sent too many VERIFY10
-to it it would lock up completely.
-
-Wow. And I thought iSCSI targets were bad.
-
-
-
-I added changes to the tests so that IF a device claims SBC-3 support
-then both READCAPACITY16 and READ16 are mandatory so the tests will
-fail if the commands are missing. If SBC-3 is not claimed, I allow
-these commands to fail and just skip that particular test.
-
-To get an overview of what it tests so far for SCSI-USB-SBC  I have
-pasted the output of
-./bin/iscsi-test-cu iscsi://127.0.0.1/iqn.ronnie.test/3 --dataloss -V
---usb --test SCSI-USB-SBC
-also at
-https://sites.google.com/site/libiscsitarballs/libiscsitarballs/
-
-
-I think this could be very useful for testing USB devices  and maybe
-if you can get vendors to test their devices before release ?
-
-I am very happy to add more tests for specific pain point you have
-with devices but since I have little experience with USB devices
-I would need your help to identify what I should add tests for.
-
-
-So to sum it up:
-* please have a look at the tests and the test results I linked to
-above. I currently have quite a few tests but am happy to add more.
-* do you think this is something you guys could find useful ?
-* then if so, do you want to work with me to improve it so it tests
-and flags the problem areas you find with usb (and other) devices ?
-
-
-regards
-ronnie sahlberg
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
