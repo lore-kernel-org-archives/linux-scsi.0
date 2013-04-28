@@ -1,54 +1,62 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH v2 1/4] Wrap crc_t10dif function all to use crypto
- transform framework
-Date: Sun, 28 Apr 2013 08:11:22 +0800
-Message-ID: <20130428001122.GA6973@gondor.apana.org.au>
-References: <cover.1366214842.git.tim.c.chen@linux.intel.com>
- <ea4271721b5ca130849b03da4f172f12f66e5628.1366214842.git.tim.c.chen@linux.intel.com>
- <20130425132203.GA29501@gondor.apana.org.au>
- <1366910910.27102.126.camel@schen9-DESK>
- <20130426125224.GA4855@gondor.apana.org.au>
- <1366994657.27102.129.camel@schen9-DESK>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 31212] aacraid is generally unstable with newer kernels
+Date: Sun, 28 Apr 2013 08:45:58 +0000 (UTC)
+Message-ID: <20130428084558.8280711FB8B@bugzilla.kernel.org>
+References: <bug-31212-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-crypto-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1366994657.27102.129.camel@schen9-DESK>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Tim Chen <tim.c.chen@linux.intel.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, "David S. Miller" <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <willy@linux.intel.com>, Jim Kukunas <james.t.kukunas@linux.intel.com>, Keith Busch <keith.busch@intel.com>, Erdinc Ozturk <erdinc.ozturk@intel.com>, Vinodh Gopal <vinodh.gopal@intel.com>, James Guilford <james.guilford@intel.com>, Wajdi Feghali <wajdi.k.feghali@intel.com>, Jussi Kivilinna <jussi.kivilinna@iki.fi>, linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:39910 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751779Ab3D1IqB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Apr 2013 04:46:01 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id F1F6920578
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Apr 2013 08:45:59 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 88F3A20566
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Apr 2013 08:45:58 +0000 (UTC)
+In-Reply-To: <bug-31212-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Apr 26, 2013 at 09:44:17AM -0700, Tim Chen wrote:
->
-> +	old_tfm = crct10dif_tfm;
-> +	crc_t10dif_newalg = true;
-> +	/* make sure new alg flag is turned on before starting to switch tfm */
-> +	mb();
-> +
-> +	new_tfm = crypto_alloc_shash("crct10dif", 0, 0);
-> +	if (IS_ERR(new_tfm))
-> +		goto done;
-> +
-> +	if (old_tfm)
-> +		if (crypto_tfm_alg_priority(&old_tfm->base) >=
-> +		    crypto_tfm_alg_priority(&new_tfm->base)) {
-> +			crypto_free_shash(new_tfm);
-> +			goto done;
-> +		}
-> +	crct10dif_tfm = new_tfm;
-> +	/* make sure update to tfm pointer is completed */
-> +	mb();
-> +	crypto_free_shash(old_tfm);
+https://bugzilla.kernel.org/show_bug.cgi?id=31212
 
-This is not safe at all.  You'd need to use something like RCU.
 
-However, I think this is an overkill.  Initialising it once should
-be enough.  If someone really wanted to change things at run-time,
-they could always build this as a module and unload/reload it.
+Sid <eu4ao0qfv2jhiuq@jetable.org> changed:
 
-Cheers,
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |eu4ao0qfv2jhiuq@jetable.org
+
+
+
+
+--- Comment #13 from Sid <eu4ao0qfv2jhiuq@jetable.org>  2013-04-28 08:45:57 ---
+Hi everyone, 
+
+
+I have Adaptec 6405E HW Card which make me crazy with these errors : 
+
+[661903.992040] aacraid: Host adapter abort request (2,0,0,0)
+[661904.064211] aacraid: Host adapter abort request (2,0,0,0)
+[661904.136081] aacraid: Host adapter reset request. SCSI hang ?
+
+
+This issue is when you use a new kernel. I have found the issue. 
+
+Go to http://www.adaptec.com/fr-fr/ and upgrade the firmware of your hw card. 
+
+I have 6405E and with all OS I have this errors (ebord request, SCSI hang) 
+After the upgrade (yesterday) 18668 to 19076 and 19109 it works very well now. 
+
+So, upgrade the firmware of your card and it could fix this error. 
+
+
+I hope it can helps you.
+
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
