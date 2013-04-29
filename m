@@ -1,389 +1,43 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH 4/5] scsi: ufs: rework link start-up process
-Date: Mon, 29 Apr 2013 18:35:33 +0530
-Message-ID: <517E701D.4000403@codeaurora.org>
-References: <002101ce4105$b184dec0$148e9c40$%jun@samsung.com> <5178B97F.3060405@codeaurora.org> <000c01ce423c$e11a6f00$a34f4d00$%jun@samsung.com> <517DF613.3060702@codeaurora.org> <000901ce44c3$b42a5df0$1c7f19d0$%jun@samsung.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 10/21] [SCSI] nsp32: use mdelay instead of large udelay
+ constants
+Date: Mon, 29 Apr 2013 15:21:14 +0200
+Message-ID: <201304291521.14195.arnd@arndb.de>
+References: <1366910944-3033663-1-git-send-email-arnd@arndb.de>
+ <1366910944-3033663-11-git-send-email-arnd@arndb.de>
+ <CALZLnaFeLcaGM7_McTZ=pKBRnpXk0AvqOTF=1YCqJv-53yk4XQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62674 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751206Ab3D2NFi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Apr 2013 09:05:38 -0400
-In-Reply-To: <000901ce44c3$b42a5df0$1c7f19d0$%jun@samsung.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <CALZLnaFeLcaGM7_McTZ=pKBRnpXk0AvqOTF=1YCqJv-53yk4XQ@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Masanori Goto <gotom@sanori.org>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-On 4/29/2013 3:54 PM, Seungwon Jeon wrote:
-> On Monday, April 29, 2013, Sujit Reddy Thumma wrote:
->> On 4/26/2013 10:44 AM, Seungwon Jeon wrote:
->>> On Thursday, April 25, 2013 , Sujit Reddy Thumma wrote:
->>>> On 4/24/2013 9:36 PM, Seungwon Jeon wrote:
->>>>> Link start-up requires long time with multiphase handshakes
->>>>> between UFS host and device. This affects driver's probe time.
->>>>> This patch let link start-up run asynchronously.
->>>>> And completion time of uic command is defined to avoid a
->>>>> permanent wait.
->>>>
->>>> I have similar patch posted few days back "scsi: ufs: Generalize UFS
->>>> Interconnect Layer (UIC) command support" which does a bit more (mutex,
->>>> error handling) than what is done here. Can that be used/improved?
->>> I completed to check your patch to compare it now.
->>> Though it's just my thought, the patch I sent is more intuitive on the whole.
->>> Considering other dme operations which I have introduced, it looks like matched.
->>
->> There are lot of code duplications you might want to minimize building a
->> DME command.
->>
->>> Of course, you may disagree.
->>> But I think the part of mutex is needed. It's a good point.
->>> In case of error handling, I didn't catch nothing special.
->>> Rather, handling link lost case is not proper.
->>> When ufs host meets link lost status, it should start with dme_reset not retried dme_linkstartup.
->>
->> In section 7.2.1 (Host Controller Initialization) of JESD223A UFS HCI
->> v1.1  specification I find this -
->>
->> 6. Sent DME_LINKSTARTUP command to start the link startup procedure
->> 9. Check value of HCS.DP and make sure that there is a device attached
->> to the Link. If presence of a device is detected, go to step 10;
->> otherwise, resend the DME_LINKSTARTUP command after IS.ULLS has been set
->> to 1 (Go to step 6). IS.ULLS equal 1 indicates that the UFS Device is
->> ready for a link startup.
->>
->> Going by the spec. just retrying with DME_LINKSTARTUP is correct.
-> Yes, as you quoted above, HCI standard mentions that.
-> Also, the following is mentioned.
-> UIC Link Lost Status (ULLS) corresponds to the UniPro DME_LINKLOST.ind
-> I just referred unipro specification.
-> When DME_LINKLOST.ind is generated, this affects the Link is put in the LinkLost state.
-> Unipro spec says that DME User must apply a DME_RESET to redo the boot sequence.
-> If there is misunderstood meaning and I have something to miss, we can discuss more.
-> Please let me know.
+On Friday 26 April 2013, Masanori Goto wrote:
+> 2013/4/25 Arnd Bergmann <arnd@arndb.de>
+> >
+> > ARM cannot handle udelay for more than 2 miliseconds, so we
+> > should use mdelay instead for those.
+> >
+> 
+> Singed-off-by: GOTO Masanori <gotom@debian.or.jp>
 
-Yes, it looks like the two specs. are conflicting each other. I guess we 
-need to take this to Jedec for clarification. Meanwhile, to be on safe 
-side can we add a retry mechanism that does ufshcd_hba_enable() before 
-sending DME_LINKSTARTUP again? This way we can be sure that the 
-DME_RESET and DME_ENABLE is taken care by the host reset itself.
+Thanks. I assume you mean "Acked-by", not "Singed-off" as in "burnt"
+or "Signed-off" as a notification that you have applied it to your
+own git tree.
 
->
->>
->> In addition, it doesn't say what happens if IS.ULLS never sets to 1.
->> Probably, the case which never happens.
->>
->>> And it would be good if link start-up procedure is done in separate process, not in driver probe.
->> True.
->>
->>> If it's all right with you, I'd like to update lock mechanism for uic command.
->>> I can add your signed-off. Please let me know your opinion.
->> I would like to get a third opinion as both the patches needs modifications.
->>
->> Some comments below:
->>
->>>>
->>>>>
->>>>> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
->>>>> ---
->>>>>     drivers/scsi/ufs/ufshcd.c |  114 +++++++++++++++++++++++++++++++++-----------
->>>>>     drivers/scsi/ufs/ufshcd.h |    6 ++-
->>>>>     2 files changed, 89 insertions(+), 31 deletions(-)
->>>>>
->>>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>>>> index efe2256..76ff332 100644
->>>>> --- a/drivers/scsi/ufs/ufshcd.c
->>>>> +++ b/drivers/scsi/ufs/ufshcd.c
->>>>> @@ -38,6 +38,7 @@
->>>>>     #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
->>>>>     				 UTP_TASK_REQ_COMPL |\
->>>>>     				 UFSHCD_ERROR_MASK)
->>>>> +#define UIC_CMD_TIMEOUT	100
->>>>>
->>>>>     enum {
->>>>>     	UFSHCD_MAX_CHANNEL	= 0,
->>>>> @@ -357,13 +358,15 @@ static inline void ufshcd_hba_capabilities(struct ufs_hba *hba)
->>>>>     }
->>>>>
->>>>>     /**
->>>>> - * ufshcd_send_uic_command - Send UIC commands to unipro layers
->>>>> + * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
->>>>>      * @hba: per adapter instance
->>>>>      * @uic_command: UIC command
->>>>>      */
->>>>>     static inline void
->>>>> -ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
->>>>> +ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmnd)
->>>>>     {
->>>>> +	init_completion(&uic_cmnd->done);
->>>>> +
->>>>>     	/* Write Args */
->>>>>     	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_1, uic_cmnd->argument1);
->>>>>     	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_2, uic_cmnd->argument2);
->>>>> @@ -375,6 +378,45 @@ ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
->>>>>     }
->>>>>
->>>>>     /**
->>>>> + * ufshcd_wait_for_uic_cmd - Wait complectioin of UIC command
->>>>> + * @hba: per adapter instance
->>>>> + * @uic_command: UIC command
->>>>> + *
->>>>> + * Returns 0 only if success.
->>>>> + */
->>>>> +static int ufshcd_wait_for_uic_cmd(struct ufs_hba *hba)
->>>>> +{
->>>>> +	struct uic_command *uic_cmd = &hba->active_uic_cmd;
->>>>> +	int ret;
->>>>> +
->>>>> +	if (wait_for_completion_timeout(&uic_cmd->done,
->>>>> +					msecs_to_jiffies(UIC_CMD_TIMEOUT)))
->>>>> +		ret = ufshcd_get_uic_cmd_result(hba);
->>>>> +	else
->>>>> +		ret = -ETIMEDOUT;
->>>>> +
->>>>> +	return ret;
->>>>> +}
->>>>> +
->>>>> +/**
->>>>> + * ufshcd_ready_uic_cmd - Check if controller is ready
->>>>> + *                        to accept UIC commands
->>>>> + * @hba: per adapter instance
->>>>> + * Return true on success, else false
->>>>> + */
->>>>> +static inline bool ufshcd_ready_uic_cmd(struct ufs_hba *hba)
->>>>> +{
->>>>> +	if (ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY) {
->>>>> +		return true;
->>>>> +	} else {
->>>>> +		dev_err(hba->dev,
->>>>> +				"Controller not ready"
->>>>> +				" to accept UIC commands\n");
->>>>> +		return false;
->>>>> +	}
->>>>> +}
->>>>> +
->>>>> +/**
->>>>>      * ufshcd_map_sg - Map scatter-gather list to prdt
->>>>>      * @lrbp - pointer to local reference block
->>>>>      *
->>>>> @@ -735,15 +777,10 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
->>>>>     {
->>>>>     	struct uic_command *uic_cmd;
->>>>>     	unsigned long flags;
->>>>> +	int ret;
->>>>>
->>>>> -	/* check if controller is ready to accept UIC commands */
->>>>> -	if (((ufshcd_readl(hba, REG_CONTROLLER_STATUS)) &
->>>>> -	    UIC_COMMAND_READY) == 0x0) {
->>>>> -		dev_err(hba->dev,
->>>>> -			"Controller not ready"
->>>>> -			" to accept UIC commands\n");
->>>>> +	if (!ufshcd_ready_uic_cmd(hba))
->>>>>     		return -EIO;
->>>>> -	}
->>>>>
->>>>>     	spin_lock_irqsave(hba->host->host_lock, flags);
->>>>>
->>>>> @@ -754,13 +791,16 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
->>>>>     	uic_cmd->argument2 = 0;
->>>>>     	uic_cmd->argument3 = 0;
->>>>>
->>>>> -	/* enable UIC related interrupts */
->>>>> -	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
->>>>> +	/* Dispatching UIC commands to controller */
->>>>> +	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
->>>>>
->>>>> -	/* sending UIC commands to controller */
->>>>> -	ufshcd_send_uic_command(hba, uic_cmd);
->>>>>     	spin_unlock_irqrestore(hba->host->host_lock, flags);
->>>>> -	return 0;
->>>>> +
->>>>> +	ret = ufshcd_wait_for_uic_cmd(hba);
->>
->> Error code is incorrect. only -ETIMEDOUT is valid others are just DME
->> errors.
-> Only success returns '0', other positive value from dme and -ETIMEDOUT mean failure.
-> Error code can be reused purely, not being redefined.
-> I am seeing that -EINVAL represents from 01h to 07h in your handling.
-> It looks like error's detail is disappear. Exact return might be needed from DME.
-okay.
+I'll keep the patch with an your "Acked-by" line in my tree unless
+James wants to apply to the scsi tree.
 
->
->>
->> Also, spec. clearly mentions a retry mechanism which means that there
->> could be some timing issues anticipated where the UIC layer cannot
->> respond properly.
-> Sorry, I didn't catch your meaning fully. Where can I refer to it?
-
-I meant the same retry mechanism mentioned in the section 7.2.1 (Host 
-Controller Initialization) of JESD223A UFS HCI v1.1.
-
->
->>
->>
->>>>> +	if (ret)
->>>>> +		dev_err(hba->dev, "link startup: error code %d returned\n", ret);
->>>>> +
->>>>> +	return ret;
->>>>>     }
->>>>>
->>>>>     /**
->>>>> @@ -898,6 +938,9 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
->>>>>     	if (ufshcd_hba_enable(hba))
->>>>>     		return -EIO;
->>>>>
->>>>> +	/* enable UIC related interrupts */
->>>>> +	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL | UIC_ERROR);
->>
->> The recovery when UIC_ERROR happens is broken because of re-entrancy to
->> dme_link_startup from ufshcd_fatal_err_handler(). So better handle with
->> timeout than allowing controller to raise a UIC_ERROR until that is fixed?
-> I also recognize error handling should be done further.
-> Ok, I agree with you.
->
->>
->>>>> +
->>>>>     	/* Configure UTRL and UTMRL base address registers */
->>>>>     	ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_LIST_BASE_L,
->>>>>     		      lower_32_bits(hba->utrdl_dma_addr));
->>>>> @@ -909,7 +952,9 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
->>>>>     		      upper_32_bits(hba->utmrdl_dma_addr));
->>>>>
->>>>>     	/* Initialize unipro link startup procedure */
->>>>> -	return ufshcd_dme_link_startup(hba);
->>>>> +	schedule_work(&hba->link_startup_wq);
->>>>> +
->>>>> +	return 0;
->>>>>     }
->>>>>
->>>>>     /**
->>>>> @@ -1186,6 +1231,16 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
->>>>>     }
->>>>>
->>>>>     /**
->>>>> + * ufshcd_uic_cmd_compl - handle completion of uic command
->>>>> + * @hba: per adapter instance
->>>>> + */
->>>>> +static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
->>>>> +{
->>>>> +	if (intr_status & UIC_COMMAND_COMPL)
->>
->> why this redundant check if it is already checked in ufshcd_sl_intr()?
-> Yes, it's currently not needed.
-> It will be used to identify several uic command. ([PATCH 5/5] scsi: ufs: add dme operations)
-> Anyway, it's better to be removed here.
->
->>
->>>>> +		complete(&hba->active_uic_cmd.done);
->>>>> +}
->>>>> +
->>>>> +/**
->>>>>      * ufshcd_transfer_req_compl - handle SCSI and query command completion
->>>>>      * @hba: per adapter instance
->>>>>      */
->>>>> @@ -1225,25 +1280,26 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
->>>>>     }
->>>>>
->>>>>     /**
->>>>> - * ufshcd_uic_cc_handler - handle UIC command completion
->>>>> + * ufshcd_link_startup - link initialization
->>>>>      * @work: pointer to a work queue structure
->>>>> - *
->>>>> - * Returns 0 on success, non-zero value on failure
->>>>>      */
->>>>> -static void ufshcd_uic_cc_handler (struct work_struct *work)
->>>>> +static void ufshcd_link_startup(struct work_struct *work)
->>>>>     {
->>>>>     	struct ufs_hba *hba;
->>>>> +	int ret;
->>>>>
->>>>> -	hba = container_of(work, struct ufs_hba, uic_workq);
->>>>> +	hba = container_of(work, struct ufs_hba, link_startup_wq);
->>>>>
->>>>> -	if ((hba->active_uic_cmd.command == UIC_CMD_DME_LINK_STARTUP) &&
->>>>> -	    !(ufshcd_get_uic_cmd_result(hba))) {
->>>>> +	ret = ufshcd_dme_link_startup(hba);
->>>>> +	if (ret)
->>>>> +		goto out;
->>>>>
->>>>> -		if (ufshcd_make_hba_operational(hba))
->>>>> -			dev_err(hba->dev,
->>>>> -				"cc: hba not operational state\n");
->>>>> -		return;
->>>>> -	}
->>>>> +	ret = ufshcd_make_hba_operational(hba);
->>>>> +	if (ret)
->>>>> +		goto out;
->>>>> +	return;
->>>>> +out:
->>>>> +	dev_err(hba->dev, "link startup failed %d\n", ret);
->>>>>     }
->>>>>
->>>>>     /**
->>>>> @@ -1307,7 +1363,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
->>>>>     		ufshcd_err_handler(hba);
->>>>>
->>>>>     	if (intr_status & UIC_COMMAND_COMPL)
->>>>> -		schedule_work(&hba->uic_workq);
->>>>> +		ufshcd_uic_cmd_compl(hba, intr_status);
->>>>>
->>>>>     	if (intr_status & UTP_TASK_REQ_COMPL)
->>>>>     		ufshcd_tmc_handler(hba);
->>>>> @@ -1694,7 +1750,7 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
->>>>>     	init_waitqueue_head(&hba->ufshcd_tm_wait_queue);
->>>>>
->>>>>     	/* Initialize work queues */
->>>>> -	INIT_WORK(&hba->uic_workq, ufshcd_uic_cc_handler);
->>>>> +	INIT_WORK(&hba->link_startup_wq, ufshcd_link_startup);
->>
->> Can we use async function calls kernel/async.c instead of having work
->> queues as this is only used during boot up?
-> As we know, both probe and resume are sensitive to execution time.
-> I guess link startup procedure will also be activated in driver's resume.
-> Do you have any specific reason for async function?
->
-
-I guess most UFS devices currently are embedded and have rootfs on them. 
-If we use schedule_work there is no synchronization mechanism to check 
-whether the device link startup is completed and device is available for 
-the userspace to mount the partitions. Having async mechanism in place, 
-the prepare_namespace() does wait for such async probes to be completed 
-before mounting the rootfs.
-
-I agree that the resume is sensitive to execute time but during resume 
-you can't schedule link startup work because the fs/block/scsi layer 
-expects the device availability as soon as resume operation is 
-completed. So ufshcd_link_startup() should be called in the resume 
-context itself or implement a synchronization mechanism like blocking 
-scsi layer queuing requests until link startup is completed.
-
-Would following implementation looks better?
-
-
-ufshcd_async_probe()
-{
-...
-   ufshcd_link_startup(hba);
-...
-}
-
-ufshcd_resume()
-{
-...
-ufshcd_link_startup(hba);
-...
-}
-
-ufshcd_init()
-{
-...
-async_schedule(ufshcd_async_probe, hba);
-...
-}
-
-
--- 
-Regards,
-Sujit
+	Arnd
