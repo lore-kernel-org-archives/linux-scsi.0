@@ -1,54 +1,41 @@
-From: Masanori Goto <gotom@sanori.org>
-Subject: Re: [PATCH 10/21] [SCSI] nsp32: use mdelay instead of large udelay
- constants
-Date: Tue, 30 Apr 2013 06:41:38 +0900
-Message-ID: <CALZLnaEbXRJY2qntWucm00mNq78CRD8Vhp7KoTw6Me0frxtaDw@mail.gmail.com>
-References: <1366910944-3033663-1-git-send-email-arnd@arndb.de>
- <1366910944-3033663-11-git-send-email-arnd@arndb.de>
- <CALZLnaFeLcaGM7_McTZ=pKBRnpXk0AvqOTF=1YCqJv-53yk4XQ@mail.gmail.com>
- <201304291521.14195.arnd@arndb.de>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH RESEND^2] sd: fix infinite kernel/udev loop on
+ non-removable Medium Not Present
+Date: Mon, 29 Apr 2013 23:14:47 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402950E011DA@G9W0745.americas.hpqcorp.net>
+References: <1366994373-13324-1-git-send-email-steve@digidescorp.com>
+	 <1366997459.16829.4.camel@dabdike>
+ <1367268334.1653.47.camel@iscandar.digidescorp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <201304291521.14195.arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:12501 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757307Ab3D2XP6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Apr 2013 19:15:58 -0400
+In-Reply-To: <1367268334.1653.47.camel@iscandar.digidescorp.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Steven J. Magnani" <steve@digidescorp.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Oops, you're absolutely correct.  Thanks for the follow up!  Please
-change it as follow as you mentioned:
-
-Acked-by: GOTO Masanori <gotom@debian.or.jp>
-
-Best regrads,
--- gotom
-
-2013/4/29 Arnd Bergmann <arnd@arndb.de>:
-> On Friday 26 April 2013, Masanori Goto wrote:
->> 2013/4/25 Arnd Bergmann <arnd@arndb.de>
->> >
->> > ARM cannot handle udelay for more than 2 miliseconds, so we
->> > should use mdelay instead for those.
->> >
->>
->> Singed-off-by: GOTO Masanori <gotom@debian.or.jp>
->
-> Thanks. I assume you mean "Acked-by", not "Singed-off" as in "burnt"
-> or "Signed-off" as a notification that you have applied it to your
-> own git tree.
->
-> I'll keep the patch with an your "Acked-by" line in my tree unless
-> James wants to apply to the scsi tree.
->
->         Arnd
->
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBTdGV2ZW4gSi4gTWFnbmFuaQ0KPiBTZW50OiBNb25kYXksIDI5
+IEFwcmlsLCAyMDEzIDM6NDYgUE0NCj4gVG86IEphbWVzIEJvdHRvbWxleQ0KPiBDYzogVGVqdW4g
+SGVvOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVs
+Lm9yZzsNCj4gc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFJF
+U0VORF4yXSBzZDogZml4IGluZmluaXRlIGtlcm5lbC91ZGV2IGxvb3Agb24gbm9uLQ0KPiByZW1v
+dmFibGUgTWVkaXVtIE5vdCBQcmVzZW50DQo+IA0KPiBPbiBGcmksIDIwMTMtMDQtMjYgYXQgMTE6
+MzkgLTA1MDAsIFN0ZXZlbiBKLiBNYWduYW5pIHdyb3RlOg0KDQo+IFRoZSBzY2VuYXJpbyBpcyBn
+ZW5lcmFsbHkgb25lIG9mIHRoZXNlIHR3byB1bmNvbW1vbiB1c2UgY2FzZXM6DQo+IA0KPiAxLiBU
+aGUgZGV2aWNlIGhhcyBjb21lIHVwIGluICJmYWlsc2FmZSBtb2RlIiBiZWNhdXNlIHRoZSB1c2Vy
+IGRhbWFnZWQNCj4gdGhlIG5vcm1hbCAib3BlcmF0aW9uYWwiIG1pY3JvY29kZSBieSB5YW5raW5n
+IHBvd2VyIGR1cmluZyBhbg0KPiBvcGVyYXRpb25hbCBtaWNyb2NvZGUgdXBkYXRlLiBGYWlsc2Fm
+ZSBtb2RlIGFsbG93cyBmb3IgbWljcm9jb2RlIHVwZGF0ZSwNCj4gYW5kIG5vdCBtdWNoIGVsc2Uu
+DQoNCkl0IG1heSBub3QgaGVscCBzaGlwcGluZyBkZXZpY2VzLCBidXQgd291bGQgYSBuZXcgc2Vu
+c2Uga2V5L2FkZGl0aW9uYWwgc2Vuc2UgY29kZSANCmNvbWJpbmF0aW9uIGJlIGhlbHBmdWwgZm9y
+IGRldmljZXMgaW4gc3VjaCBhIHN0YXRlPw0KDQpOT1QgUkVBRFkvTE9HSUNBTCBVTklUIE5PVCBS
+RUFEWSwgRE9XTkxPQUQgTUlDUk9DT0RFIFJFUVVJUkVEDQoNCg==
