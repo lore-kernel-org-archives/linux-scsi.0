@@ -1,43 +1,28 @@
-From: Evgeni Golov <evgeni@debian.org>
-Subject: [PATCH] ISCI: add more PCI IDs
-Date: Tue, 30 Apr 2013 15:12:48 +0200
-Message-ID: <1367327568-12196-1-git-send-email-evgeni@debian.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chi.die-welt.net ([84.246.123.210]:42540 "EHLO chi.die-welt.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760611Ab3D3NTW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Apr 2013 09:19:22 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ric Wheeler <ricwheeler@gmail.com>
+Subject: LPC2013: File and Storage Systems uconf Approved
+Date: Tue, 30 Apr 2013 12:19:40 -0400
+Message-ID: <517FEF1C.7020404@gmail.com>
+References: <wrfj38u8owm5.fsf@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <wrfj38u8owm5.fsf@redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+Cc: David Cantrell <dcantrel@redhat.com>, David Lehman <dlehman@redhat.com>, Tony Asleson <tasleson@redhat.com>, Kay Sievers <kay@redhat.com>, Lennart Poettering <lpoetter@redhat.com>, Matthew Garrett <mjg59@srcf.ucam.org>
 List-Id: linux-scsi@vger.kernel.org
-To: intel-linux-scu@intel.com, linux-scsi@vger.kernel.org
-Cc: Evgeni Golov <evgeni@debian.org>
 
-These are found in e.g. the R2000GZ/GL machines.
----
- drivers/scsi/isci/init.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 2839baa..d1ec2bd 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -82,12 +82,16 @@ static DEFINE_PCI_DEVICE_TABLE(isci_id_table) = {
- 	{ PCI_VDEVICE(INTEL, 0x1D67),},
- 	{ PCI_VDEVICE(INTEL, 0x1D69),},
- 	{ PCI_VDEVICE(INTEL, 0x1D6B),},
-+	{ PCI_VDEVICE(INTEL, 0x1D6D),},
-+	{ PCI_VDEVICE(INTEL, 0x1D6F),},
- 	{ PCI_VDEVICE(INTEL, 0x1D60),},
- 	{ PCI_VDEVICE(INTEL, 0x1D62),},
- 	{ PCI_VDEVICE(INTEL, 0x1D64),},
- 	{ PCI_VDEVICE(INTEL, 0x1D66),},
- 	{ PCI_VDEVICE(INTEL, 0x1D68),},
- 	{ PCI_VDEVICE(INTEL, 0x1D6A),},
-+	{ PCI_VDEVICE(INTEL, 0x1D6C),},
-+	{ PCI_VDEVICE(INTEL, 0x1D6E),},
- 	{}
- };
- 
--- 
-1.7.2.5
+Just a heads up, Linux Plumbers has approved the FS & Storage micro-conf for 
+this year. Please have a look at the wiki for details:
+
+http://www.linuxplumbersconf.org/2013/
+
+I have posted some suggested topics at the site, let's get the planning rolling 
+so we can get people registered in time for the early bird price :)
+
+Thanks!
+
+Ric
 
