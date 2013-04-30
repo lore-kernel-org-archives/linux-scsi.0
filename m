@@ -1,49 +1,309 @@
-From: Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [PATCH] ISCI: add more PCI IDs
-Date: Tue, 30 Apr 2013 13:35:33 -0700
-Message-ID: <51802B15.2020205@intel.com>
-References: <1367327568-12196-1-git-send-email-evgeni@debian.org> <51800071.1060001@intel.com> <51800CC0.3010609@debian.org>
+From: merez@codeaurora.org
+Subject: Re: [PATCH V6 Resend2 1/2] [SCSI] ufs: Add Platform glue driver for
+ ufshcd
+Date: Tue, 30 Apr 2013 13:39:19 -0700
+Message-ID: <fdcbdba692a738c621d3b8286723cf2c.squirrel@www.codeaurora.org>
+References: <1361882086-2548-1-git-send-email-vinholikatti@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:63629 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933393Ab3D3Ufe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Apr 2013 16:35:34 -0400
-In-Reply-To: <51800CC0.3010609@debian.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54959 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933555Ab3D3UjT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Apr 2013 16:39:19 -0400
+In-Reply-To: <1361882086-2548-1-git-send-email-vinholikatti@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Evgeni Golov <evgeni@debian.org>
-Cc: "Dorau, Lukasz" <lukasz.dorau@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, venkat@linaro.org, subhashj@codeaurora.org, sthumma@codeaurora.org, merez@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>
 
-On 04/30/2013 11:26 AM, Evgeni Golov wrote:
-> On 04/30/2013 07:33 PM, Dave Jiang wrote:
->>> These are found in e.g. the R2000GZ/GL machines.
->> Nack. These PCI device IDs are reserved for third party device drivers.
->> Most likely that machine has a third party OROM as well.
-> OROM = option ROM? Yes, it has the "white" C600 expansion pack, so we
-> can use all 8 ports of the SAS controller. But we do not want (and
-> actually cannot) use the Intel-provided megasr driver (the machines run
-> Debian Wheezy with the 3.2 kernel).
+Hi James,
+
+Can this patch be poushed to 3.9+ merge window?
+
+Thnaks,
+Maya
+> This patch adds Platform glue driver for ufshcd.
 >
-> Can we get the controller to use the "regular" PCI ID instead?
-Yes. You need an Intel Option ROM instead of the LSI. You need to talk 
-to whomever sold you the system and get the Intel OROM. Also just an 
-FYI, the isci driver didn't get a lot of the issues sorted out until 
-kernel 3.7. The 3.2 driver is quite old and you may run into issues. 
-Obviously you already know you can patch the driver to pick up those 
-device IDs, but I don't know what the LSI OROM does with the OEM 
-parameters and if will provide it to the isci driver properly.
-
-> Regards
-> Evgeni
+> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+> Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
+> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Reviewed-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+> Tested-by: Maya Erez <merez@codeaurora.org>
+> Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
+> Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
+> ---
+>  drivers/scsi/ufs/Kconfig         |   11 ++
+>  drivers/scsi/ufs/Makefile        |    1 +
+>  drivers/scsi/ufs/ufshcd-pltfrm.c |  217
+> ++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 229 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.c
+>
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index 0371047..35faf24 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -57,3 +57,14 @@ config SCSI_UFSHCD_PCI
+>  	  If you have a controller with this interface, say Y or M here.
+>
+>  	  If unsure, say N.
+> +
+> +config SCSI_UFSHCD_PLATFORM
+> +	tristate "Platform bus based UFS Controller support"
+> +	depends on SCSI_UFSHCD
+> +	---help---
+> +	This selects the UFS host controller support. Select this if
+> +	you have an UFS controller on Platform bus.
+> +
+> +	If you have a controller with this interface, say Y or M here.
+> +
+> +	  If unsure, say N.
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index 9eda0df..1e5bd48 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -1,3 +1,4 @@
+>  # UFSHCD makefile
+>  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+> +obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> new file mode 100644
+> index 0000000..03319ac
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -0,0 +1,217 @@
+> +/*
+> + * Universal Flash Storage Host controller Platform bus based glue driver
+> + *
+> + * This code is based on drivers/scsi/ufs/ufshcd-pltfrm.c
+> + * Copyright (C) 2011-2013 Samsung India Software Operations
+> + *
+> + * Authors:
+> + *	Santosh Yaraganavi <santosh.sy@samsung.com>
+> + *	Vinayak Holikatti <h.vinayak@samsung.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + * See the COPYING file in the top-level directory or visit
+> + * <http://www.gnu.org/licenses/gpl-2.0.html>
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * This program is provided "AS IS" and "WITH ALL FAULTS" and
+> + * without warranty of any kind. You are solely responsible for
+> + * determining the appropriateness of using and distributing
+> + * the program and assume all risks associated with your exercise
+> + * of rights with respect to the program, including but not limited
+> + * to infringement of third party rights, the risks and costs of
+> + * program errors, damage to or loss of data, programs or equipment,
+> + * and unavailability or interruption of operations. Under no
+> + * circumstances will the contributor of this Program be liable for
+> + * any damages of any kind arising from your use or distribution of
+> + * this program.
+> + */
+> +
+> +#include "ufshcd.h"
+> +#include <linux/platform_device.h>
+> +
+> +#ifdef CONFIG_PM
+> +/**
+> + * ufshcd_pltfrm_suspend - suspend power management function
+> + * @dev: pointer to device handle
+> + *
+> + *
+> + * Returns 0
+> + */
+> +static int ufshcd_pltfrm_suspend(struct device *dev)
+> +{
+> +	struct platform_device *pdev = to_platform_device(dev);
+> +	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+> +
+> +	/*
+> +	 * TODO:
+> +	 * 1. Call ufshcd_suspend
+> +	 * 2. Do bus specific power management
+> +	 */
+> +
+> +	disable_irq(hba->irq);
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * ufshcd_pltfrm_resume - resume power management function
+> + * @dev: pointer to device handle
+> + *
+> + * Returns 0
+> + */
+> +static int ufshcd_pltfrm_resume(struct device *dev)
+> +{
+> +	struct platform_device *pdev = to_platform_device(dev);
+> +	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+> +
+> +	/*
+> +	 * TODO:
+> +	 * 1. Call ufshcd_resume.
+> +	 * 2. Do bus specific wake up
+> +	 */
+> +
+> +	enable_irq(hba->irq);
+> +
+> +	return 0;
+> +}
+> +#else
+> +#define ufshcd_pltfrm_suspend	NULL
+> +#define ufshcd_pltfrm_resume	NULL
+> +#endif
+> +
+> +/**
+> + * ufshcd_pltfrm_probe - probe routine of the driver
+> + * @pdev: pointer to Platform device handle
+> + *
+> + * Returns 0 on success, non-zero value on failure
+> + */
+> +static int ufshcd_pltfrm_probe(struct platform_device *pdev)
+> +{
+> +	struct ufs_hba *hba;
+> +	void __iomem *mmio_base;
+> +	struct resource *mem_res;
+> +	struct resource *irq_res;
+> +	resource_size_t mem_size;
+> +	int err;
+> +	struct device *dev = &pdev->dev;
+> +
+> +	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	if (!mem_res) {
+> +		dev_err(&pdev->dev,
+> +			"Memory resource not available\n");
+> +		err = -ENODEV;
+> +		goto out_error;
+> +	}
+> +
+> +	mem_size = resource_size(mem_res);
+> +	if (!request_mem_region(mem_res->start, mem_size, "ufshcd")) {
+> +		dev_err(&pdev->dev,
+> +			"Cannot reserve the memory resource\n");
+> +		err = -EBUSY;
+> +		goto out_error;
+> +	}
+> +
+> +	mmio_base = ioremap_nocache(mem_res->start, mem_size);
+> +	if (!mmio_base) {
+> +		dev_err(&pdev->dev, "memory map failed\n");
+> +		err = -ENOMEM;
+> +		goto out_release_regions;
+> +	}
+> +
+> +	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+> +	if (!irq_res) {
+> +		dev_err(&pdev->dev, "IRQ resource not available\n");
+> +		err = -ENODEV;
+> +		goto out_iounmap;
+> +	}
+> +
+> +	err = dma_set_coherent_mask(dev, dev->coherent_dma_mask);
+> +	if (err) {
+> +		dev_err(&pdev->dev, "set dma mask failed\n");
+> +		goto out_iounmap;
+> +	}
+> +
+> +	err = ufshcd_init(&pdev->dev, &hba, mmio_base, irq_res->start);
+> +	if (err) {
+> +		dev_err(&pdev->dev, "Intialization failed\n");
+> +		goto out_iounmap;
+> +	}
+> +
+> +	platform_set_drvdata(pdev, hba);
+> +
+> +	return 0;
+> +
+> +out_iounmap:
+> +	iounmap(mmio_base);
+> +out_release_regions:
+> +	release_mem_region(mem_res->start, mem_size);
+> +out_error:
+> +	return err;
+> +}
+> +
+> +/**
+> + * ufshcd_pltfrm_remove - remove platform driver routine
+> + * @pdev: pointer to platform device handle
+> + *
+> + * Returns 0 on success, non-zero value on failure
+> + */
+> +static int ufshcd_pltfrm_remove(struct platform_device *pdev)
+> +{
+> +	struct resource *mem_res;
+> +	resource_size_t mem_size;
+> +	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+> +
+> +	disable_irq(hba->irq);
+> +
+> +	/* Some buggy controllers raise interrupt after
+> +	 * the resources are removed. So first we unregister the
+> +	 * irq handler and then the resources used by driver
+> +	 */
+> +
+> +	free_irq(hba->irq, hba);
+> +	ufshcd_remove(hba);
+> +	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	if (!mem_res)
+> +		dev_err(&pdev->dev, "ufshcd: Memory resource not available\n");
+> +	else {
+> +		mem_size = resource_size(mem_res);
+> +		release_mem_region(mem_res->start, mem_size);
+> +	}
+> +	platform_set_drvdata(pdev, NULL);
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id ufs_of_match[] = {
+> +	{ .compatible = "jedec,ufs-1.1"},
+> +};
+> +
+> +static const struct dev_pm_ops ufshcd_dev_pm_ops = {
+> +	.suspend	= ufshcd_pltfrm_suspend,
+> +	.resume		= ufshcd_pltfrm_resume,
+> +};
+> +
+> +static struct platform_driver ufshcd_pltfrm_driver = {
+> +	.probe	= ufshcd_pltfrm_probe,
+> +	.remove	= ufshcd_pltfrm_remove,
+> +	.driver	= {
+> +		.name	= "ufshcd",
+> +		.owner	= THIS_MODULE,
+> +		.pm	= &ufshcd_dev_pm_ops,
+> +		.of_match_table = ufs_of_match,
+> +	},
+> +};
+> +
+> +module_platform_driver(ufshcd_pltfrm_driver);
+> +
+> +MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
+> +MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
+> +MODULE_DESCRIPTION("UFS host controller Pltform bus based glue driver");
+> +MODULE_LICENSE("GPL");
+> +MODULE_VERSION(UFSHCD_DRIVER_VERSION);
+> --
+> 1.7.5.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 
 -- 
-
-Dave Jiang
-Application Engineer, Storage Divsion
-Intel Corp.
-dave.jiang@intel.com
+Maya Erez
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
 
