@@ -1,221 +1,43 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 3/5] scsi: ufs: amend interrupt configuration
-Date: Tue, 30 Apr 2013 17:20:58 +0530
-Message-ID: <517FB022.1060400@codeaurora.org>
-References: <001f01ce4105$af6a3c20$0e3eb460$%jun@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Evgeni Golov <evgeni@debian.org>
+Subject: [PATCH] ISCI: add more PCI IDs
+Date: Tue, 30 Apr 2013 15:12:48 +0200
+Message-ID: <1367327568-12196-1-git-send-email-evgeni@debian.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46974 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759401Ab3D3LvD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Apr 2013 07:51:03 -0400
-In-Reply-To: <001f01ce4105$af6a3c20$0e3eb460$%jun@samsung.com>
+Received: from chi.die-welt.net ([84.246.123.210]:42540 "EHLO chi.die-welt.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760611Ab3D3NTW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Apr 2013 09:19:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
+To: intel-linux-scu@intel.com, linux-scsi@vger.kernel.org
+Cc: Evgeni Golov <evgeni@debian.org>
 
-Patch looks good but one minor comment below.
+These are found in e.g. the R2000GZ/GL machines.
+---
+ drivers/scsi/isci/init.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-On 4/24/2013 9:36 PM, Seungwon Jeon wrote:
-> It makes interrupt setting more flexible especially
-> for disabling. And wrong bit mask is fixed for ver 1.0.
-> [17:16] is added for mask.
->
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> ---
->   drivers/scsi/ufs/ufshcd.c |   86 ++++++++++++++++++++++++++++++++-------------
->   drivers/scsi/ufs/ufshcd.h |    4 +-
->   drivers/scsi/ufs/ufshci.h |    5 ++-
->   3 files changed, 66 insertions(+), 29 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index b6c19b0..efe2256 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -35,6 +35,10 @@
->   
->   #include "ufshcd.h"
->   
-> +#define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
-> +				 UTP_TASK_REQ_COMPL |\
-> +				 UFSHCD_ERROR_MASK)
-> +
-
-I don't see any use of this macro in this patch. could you please remove 
-it or move it to the patch-set where its really being used.
-
->   enum {
->   	UFSHCD_MAX_CHANNEL	= 0,
->   	UFSHCD_MAX_ID		= 1,
-> @@ -64,6 +68,20 @@ enum {
->   };
->   
->   /**
-> + * ufshcd_get_intr_mask - Get the interrupt bit mask
-> + * @hba - Pointer to adapter instance
-> + *
-> + * Returns interrupt bit mask per version
-> + */
-> +static inline u32 ufshcd_get_intr_mask(struct ufs_hba *hba)
-> +{
-> +	if (hba->ufs_version == UFSHCI_VERSION_10)
-> +		return INTERRUPT_MASK_ALL_VER_10;
-> +	else
-> +		return INTERRUPT_MASK_ALL_VER_11;
-> +}
-> +
-> +/**
->    * ufshcd_get_ufs_version - Get the UFS version supported by the HBA
->    * @hba - Pointer to adapter instance
->    *
-> @@ -397,25 +415,45 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
->   }
->   
->   /**
-> - * ufshcd_int_config - enable/disable interrupts
-> + * ufshcd_enable_intr - enable interrupts
->    * @hba: per adapter instance
-> - * @option: interrupt option
-> + * @intrs: interrupt bits
->    */
-> -static void ufshcd_int_config(struct ufs_hba *hba, u32 option)
-> +static void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
->   {
-> -	switch (option) {
-> -	case UFSHCD_INT_ENABLE:
-> -		ufshcd_writel(hba, REG_INTERRUPT_ENABLE, hba->int_enable_mask);
-> -		break;
-> -	case UFSHCD_INT_DISABLE:
-> -		if (hba->ufs_version == UFSHCI_VERSION_10)
-> -			ufshcd_writel(hba, REG_INTERRUPT_ENABLE,
-> -				      INTERRUPT_DISABLE_MASK_10);
-> -		else
-> -			ufshcd_writel(hba, REG_INTERRUPT_ENABLE,
-> -				      INTERRUPT_DISABLE_MASK_11);
-> -		break;
-> +	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
-> +
-> +	if (hba->ufs_version == UFSHCI_VERSION_10) {
-> +		u32 rw;
-> +		rw = set & INTERRUPT_MASK_RW_VER_10;
-> +		set = rw | ((set ^ intrs) & intrs);
-> +	} else {
-> +		set |= intrs;
-> +	}
-> +
-> +	ufshcd_writel(hba, REG_INTERRUPT_ENABLE, set);
-> +}
-> +
-> +/**
-> + * ufshcd_disable_intr - disable interrupts
-> + * @hba: per adapter instance
-> + * @intrs: interrupt bits
-> + */
-> +static void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
-> +{
-> +	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
-> +
-> +	if (hba->ufs_version == UFSHCI_VERSION_10) {
-> +		u32 rw;
-> +		rw = (set & INTERRUPT_MASK_RW_VER_10) &
-> +			~(intrs & INTERRUPT_MASK_RW_VER_10);
-> +		set = rw | ((set & intrs) & ~INTERRUPT_MASK_RW_VER_10);
-> +
-> +	} else {
-> +		set &= ~intrs;
->   	}
-> +
-> +	ufshcd_writel(hba, REG_INTERRUPT_ENABLE, set);
->   }
->   
->   /**
-> @@ -717,8 +755,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
->   	uic_cmd->argument3 = 0;
->   
->   	/* enable UIC related interrupts */
-> -	hba->int_enable_mask |= UIC_COMMAND_COMPL;
-> -	ufshcd_int_config(hba, UFSHCD_INT_ENABLE);
-> +	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
->   
->   	/* sending UIC commands to controller */
->   	ufshcd_send_uic_command(hba, uic_cmd);
-> @@ -765,13 +802,9 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
->   	}
->   
->   	/* Enable required interrupts */
-> -	hba->int_enable_mask |= (UTP_TRANSFER_REQ_COMPL |
-> -				 UIC_ERROR |
-> -				 UTP_TASK_REQ_COMPL |
-> -				 DEVICE_FATAL_ERROR |
-> -				 CONTROLLER_FATAL_ERROR |
-> -				 SYSTEM_BUS_FATAL_ERROR);
-> -	ufshcd_int_config(hba, UFSHCD_INT_ENABLE);
-> +	ufshcd_enable_intr(hba, UTP_TRANSFER_REQ_COMPL | UIC_ERROR |
-> +			   UTP_TASK_REQ_COMPL | DEVICE_FATAL_ERROR |
-> +			   CONTROLLER_FATAL_ERROR | SYSTEM_BUS_FATAL_ERROR);
->   
->   	/* Configure interrupt aggregation */
->   	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
-> @@ -1578,7 +1611,7 @@ static void ufshcd_hba_free(struct ufs_hba *hba)
->   void ufshcd_remove(struct ufs_hba *hba)
->   {
->   	/* disable interrupts */
-> -	ufshcd_int_config(hba, UFSHCD_INT_DISABLE);
-> +	ufshcd_disable_intr(hba, hba->intr_mask);
->   
->   	ufshcd_hba_stop(hba);
->   	ufshcd_hba_free(hba);
-> @@ -1636,6 +1669,9 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
->   	/* Get UFS version supported by the controller */
->   	hba->ufs_version = ufshcd_get_ufs_version(hba);
->   
-> +	/* Get Interrupt bit mask per version */
-> +	hba->intr_mask = ufshcd_get_intr_mask(hba);
-> +
->   	/* Allocate memory for host memory space */
->   	err = ufshcd_memory_alloc(hba);
->   	if (err) {
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 6728450..87d5a94 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -139,7 +139,7 @@ struct ufshcd_lrb {
->    * @ufshcd_tm_wait_queue: wait queue for task management
->    * @tm_condition: condition variable for task management
->    * @ufshcd_state: UFSHCD states
-> - * @int_enable_mask: Interrupt Mask Bits
-> + * @intr_mask: Interrupt Mask Bits
->    * @uic_workq: Work queue for UIC completion handling
->    * @feh_workq: Work queue for fatal controller error handling
->    * @errors: HBA errors
-> @@ -176,7 +176,7 @@ struct ufs_hba {
->   	unsigned long tm_condition;
->   
->   	u32 ufshcd_state;
-> -	u32 int_enable_mask;
-> +	u32 intr_mask;
->   
->   	/* Work Queues */
->   	struct work_struct uic_workq;
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> index 0c16484..d5c5f14 100644
-> --- a/drivers/scsi/ufs/ufshci.h
-> +++ b/drivers/scsi/ufs/ufshci.h
-> @@ -232,10 +232,11 @@ enum {
->   /* Interrupt disable masks */
->   enum {
->   	/* Interrupt disable mask for UFSHCI v1.0 */
-> -	INTERRUPT_DISABLE_MASK_10	= 0xFFFF,
-> +	INTERRUPT_MASK_ALL_VER_10	= 0x30FFF,
-> +	INTERRUPT_MASK_RW_VER_10	= 0x30000,
->   
->   	/* Interrupt disable mask for UFSHCI v1.1 */
-> -	INTERRUPT_DISABLE_MASK_11	= 0x0,
-> +	INTERRUPT_MASK_ALL_VER_11	= 0x31FFF,
->   };
->   
->   /*
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 2839baa..d1ec2bd 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -82,12 +82,16 @@ static DEFINE_PCI_DEVICE_TABLE(isci_id_table) = {
+ 	{ PCI_VDEVICE(INTEL, 0x1D67),},
+ 	{ PCI_VDEVICE(INTEL, 0x1D69),},
+ 	{ PCI_VDEVICE(INTEL, 0x1D6B),},
++	{ PCI_VDEVICE(INTEL, 0x1D6D),},
++	{ PCI_VDEVICE(INTEL, 0x1D6F),},
+ 	{ PCI_VDEVICE(INTEL, 0x1D60),},
+ 	{ PCI_VDEVICE(INTEL, 0x1D62),},
+ 	{ PCI_VDEVICE(INTEL, 0x1D64),},
+ 	{ PCI_VDEVICE(INTEL, 0x1D66),},
+ 	{ PCI_VDEVICE(INTEL, 0x1D68),},
+ 	{ PCI_VDEVICE(INTEL, 0x1D6A),},
++	{ PCI_VDEVICE(INTEL, 0x1D6C),},
++	{ PCI_VDEVICE(INTEL, 0x1D6E),},
+ 	{}
+ };
+ 
+-- 
+1.7.2.5
 
