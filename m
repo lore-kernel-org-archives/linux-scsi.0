@@ -1,66 +1,63 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] checkpatch: Make camelcase test --strict and less noisy
-Date: Wed, 01 May 2013 06:50:38 -0700
-Message-ID: <1367416238.4791.7.camel@dabdike.int.hansenpartnership.com>
-References: <1365544254.2946.53.camel@dabdike> <20130410132628.GV7511@dm>
-	 <1365604558.27174.36.camel@joe-AO722> <20130410145213.GA6854@pd.tnic>
-	 <1365606461.1942.3.camel@dabdike> <20130410151911.GG6857@pd.tnic>
-	 <1365691503.1929.15.camel@joe-AO722> <20130501123419.GA29567@pd.tnic>
+Subject: Re: [PATCH 10/21] [SCSI] nsp32: use mdelay instead of large udelay
+ constants
+Date: Wed, 01 May 2013 06:55:54 -0700
+Message-ID: <1367416554.4791.8.camel@dabdike.int.hansenpartnership.com>
+References: <1366910944-3033663-1-git-send-email-arnd@arndb.de>
+	 <1366910944-3033663-11-git-send-email-arnd@arndb.de>
+	 <CALZLnaFeLcaGM7_McTZ=pKBRnpXk0AvqOTF=1YCqJv-53yk4XQ@mail.gmail.com>
+	 <201304291521.14195.arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48166 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48186 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754200Ab3EANul (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 May 2013 09:50:41 -0400
-In-Reply-To: <20130501123419.GA29567@pd.tnic>
+	by vger.kernel.org with ESMTP id S1754325Ab3EANzz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 May 2013 09:55:55 -0400
+In-Reply-To: <201304291521.14195.arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: Joe Perches <joe@perches.com>, Andy Whitcroft <apw@canonical.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Masanori Goto <gotom@sanori.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi@vger.kernel.org
 
-On Wed, 2013-05-01 at 14:34 +0200, Borislav Petkov wrote:
-> On Thu, Apr 11, 2013 at 07:45:03AM -0700, Joe Perches wrote:
-> > CamelCase tests are a bit noisy against certain
-> > types of code acceptable to some kernel developers.
+
+On Mon, 2013-04-29 at 15:21 +0200, Arnd Bergmann wrote:
+> On Friday 26 April 2013, Masanori Goto wrote:
+> > 2013/4/25 Arnd Bergmann <arnd@arndb.de>
+> > >
+> > > ARM cannot handle udelay for more than 2 miliseconds, so we
+> > > should use mdelay instead for those.
+> > >
 > > 
-> > Make the test applicable only with --strict.
-> > 
-> > Do not bleat a message on nominally acceptable
-> > CamelCase uses that are separated by an _ like
-> > drm_core_has_MTRR.
-> > 
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> > ---
-> >  scripts/checkpatch.pl | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-> > index 3fb6d86..97226fb 100755
-> > --- a/scripts/checkpatch.pl
-> > +++ b/scripts/checkpatch.pl
-> > @@ -2937,12 +2937,12 @@ sub process {
-> >  		while ($line =~ m{($Constant|$Lval)}g) {
-> >  			my $var = $1;
-> >  			if ($var !~ /$Constant/ &&
-> > -			    $var =~ /[A-Z]\w*[a-z]|[a-z]\w*[A-Z]/ &&
-> > +			    $var =~ /[A-Z][a-z]|[a-z][A-Z]/ &&
-> >  			    $var !~ /"^(?:Clear|Set|TestClear|TestSet|)Page[A-Z]/ &&
-> >  			    !defined $camelcase{$var}) {
-> >  				$camelcase{$var} = 1;
-> > -				WARN("CAMELCASE",
-> > -				     "Avoid CamelCase: <$var>\n" . $herecurr);
-> > +				CHK("CAMELCASE",
-> > +				    "Avoid CamelCase: <$var>\n" . $herecurr);
+> > Singed-off-by: GOTO Masanori <gotom@debian.or.jp>
 > 
-> Yep, this is better.
+> Thanks. I assume you mean "Acked-by", not "Singed-off" as in "burnt"
+> or "Signed-off" as a notification that you have applied it to your
+> own git tree.
+> 
+> I'll keep the patch with an your "Acked-by" line in my tree unless
+> James wants to apply to the scsi tree.
 
-Fine with me ... I don't use --strict so it will make the message deluge
-go away.
+I can, certainly.  I'll be sending the first scsi set today, but I'll be
+doing another one for just before the close of the merge window.
+
+Goto-san, while I have your attention, is the nsp_cs driver orphaned? I
+know it's not your driver, but you did once work with its author (YOKOTA
+Hiroshi <yokota@netlab.is.tsukuba.ac.jp>) and I'm trying to get some
+cleanup on the static functions in the header files.
 
 Thanks,
 
 James
+
+
+
+
+
+
+
+
+
 
 
