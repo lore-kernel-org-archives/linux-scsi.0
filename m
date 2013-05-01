@@ -1,78 +1,92 @@
 From: merez@codeaurora.org
-Subject: Re: [PATCH 1/5] scsi: ufs: move the ufshcd_hba_stop to ufshcd.c
-Date: Wed, 1 May 2013 00:46:13 -0700
-Message-ID: <834f89cbe5f4830db1547ed8fbcff7c2.squirrel@www.codeaurora.org>
-References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
-    <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com>
-    <517FA84B.2070009@codeaurora.org>
+Subject: Re: [PATCH 2/5] scsi: ufs: wrap the i/o access operations
+Date: Wed, 1 May 2013 00:49:26 -0700
+Message-ID: <a3807486896956a4775acf473ddc7423.squirrel@www.codeaurora.org>
+References: <002001ce4105$afbcf000$0f36d000$%jun@samsung.com>
+    <5178B5C9.90000@codeaurora.org>
+    <000b01ce423b$d626e520$8274af60$%jun@samsung.com>
+    <517FA9AA.1060101@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22164 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52815 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752634Ab3EAHqO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 May 2013 03:46:14 -0400
-In-Reply-To: <517FA84B.2070009@codeaurora.org>
+	with ESMTP id S1754148Ab3EAHt0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 May 2013 03:49:26 -0400
+In-Reply-To: <517FA9AA.1060101@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Seungwon Jeon <tgih.jun@samsung.com>, linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <jbottomley@parallels.com>
+Cc: Seungwon Jeon <tgih.jun@samsung.com>, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <jbottomley@parallels.com>
 
 Tested-by: Maya Erez <merez@codeaurora.org>
 
+I also tend to agree with Sujit on the order of the wrappers parameters.
+
+Thanks,
+Maya
+
+> On 4/26/2013 10:36 AM, Seungwon Jeon wrote:
+>> Hi,
+>>
+>> On Thursday, April 25, 2013, Sujit Reddy Thumma wrote:
+>>> On 4/24/2013 9:36 PM, Seungwon Jeon wrote:
+>>>> Simplify operations with hiding mmio_base.
+>>>>
+>>>> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+>>>> ---
+>>>>    drivers/scsi/ufs/ufshcd.c |  106
+>>>> +++++++++++++++++++--------------------------
+>>>>    drivers/scsi/ufs/ufshcd.h |    5 ++
+>>>>    2 files changed, 49 insertions(+), 62 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>>>> index 1680394..6728450 100644
+>>>> --- a/drivers/scsi/ufs/ufshcd.h
+>>>> +++ b/drivers/scsi/ufs/ufshcd.h
+>>>> @@ -190,4 +190,9 @@ int ufshcd_init(struct device *, struct ufs_hba **
+>>>> , void __iomem * ,
+>>>>    			unsigned int);
+>>>>    void ufshcd_remove(struct ufs_hba *);
+>>>>
+>>>> +#define ufshcd_writel(hba, reg, val)	\
+>>> Let this be consistent with writel() arguments - "val" as second arg
+>>> and
+>>> "reg" as third?
+>> You got a point there.
+>> When considering an array of arguments in two functions and value part
+>> can be some long expression,
+>> I think it seems more coherent.
+>> 	ufshcd_readl(hba, reg);
+>> 	ufshcd_writel(hba, reg, val);
+>> How about keeping these?
 >
-> Looks good. Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+> I somehow tend to agree with what Sujit suggested. Its good to be
+> consitent with writel() for better code readability.
 >
-> On 4/24/2013 9:36 PM, Seungwon Jeon wrote:
->> Move the ufshcd_hba_stop from header file.
 >>
->> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
->> ---
->>  drivers/scsi/ufs/ufshcd.c |    9 +++++++++
->>  drivers/scsi/ufs/ufshcd.h |    9 ---------
->>  2 files changed, 9 insertions(+), 9 deletions(-)
+>> Thanks,
+>> Seungwon Jeon
 >>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 60fd40c..41b9639 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -285,6 +285,15 @@ static inline void ufshcd_hba_start(struct ufs_hba
->> *hba)
->>  }
->>
->>  /**
->> + * ufshcd_hba_stop - Send controller to reset state
->> + * @hba: per adapter instance
->> + */
->> +static inline void ufshcd_hba_stop(struct ufs_hba *hba)
->> +{
->> +	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
->> +}
->> +
->> +/**
->>   * ufshcd_is_hba_active - Get controller state
->>   * @hba: per adapter instance
->>   *
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index 6b99a42..1680394 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -190,13 +190,4 @@ int ufshcd_init(struct device *, struct ufs_hba **
->> , void __iomem * ,
->>  			unsigned int);
->>  void ufshcd_remove(struct ufs_hba *);
->>
->> -/**
->> - * ufshcd_hba_stop - Send controller to reset state
->> - * @hba: per adapter instance
->> - */
->> -static inline void ufshcd_hba_stop(struct ufs_hba *hba)
->> -{
->> -	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
->> -}
->> -
->>  #endif /* End of Header */
+>>>> +	writel((val), (hba)->mmio_base + (reg))
+>>>> +#define ufshcd_readl(hba, reg)	\
+>>>> +	readl((hba)->mmio_base + (reg))
+>>>> +
+>>>>    #endif /* End of Header */
+>>>>
+>>> --
+>>> Regards,
+>>> Sujit
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+>>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
