@@ -1,62 +1,83 @@
 From: merez@codeaurora.org
-Subject: Re: [PATCH V6 Resend2 2/2] [SCSI] ufs: Correct the expected data
- transfersize
-Date: Tue, 30 Apr 2013 13:39:34 -0700
-Message-ID: <2b37ba8d8fb30c725313c73c8d8db6cd.squirrel@www.codeaurora.org>
-References: <1361882086-2548-1-git-send-email-vinholikatti@gmail.com>
-    <1361882086-2548-2-git-send-email-vinholikatti@gmail.com>
+Subject: Re: [PATCH 1/5] scsi: ufs: move the ufshcd_hba_stop to ufshcd.c
+Date: Wed, 1 May 2013 00:46:13 -0700
+Message-ID: <834f89cbe5f4830db1547ed8fbcff7c2.squirrel@www.codeaurora.org>
+References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
+    <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com>
+    <517FA84B.2070009@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:54986 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22164 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933362Ab3D3Uje (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Apr 2013 16:39:34 -0400
-In-Reply-To: <1361882086-2548-2-git-send-email-vinholikatti@gmail.com>
+	with ESMTP id S1752634Ab3EAHqO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 May 2013 03:46:14 -0400
+In-Reply-To: <517FA84B.2070009@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, santoshsy@gmail.com, arnd@linaro.org, venkat@linaro.org, subhashj@codeaurora.org, sthumma@codeaurora.org, merez@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Seungwon Jeon <tgih.jun@samsung.com>, linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <jbottomley@parallels.com>
 
-Hi James,
+Tested-by: Maya Erez <merez@codeaurora.org>
 
-Can this patch be poushed to 3.9+ merge window?
-
-Thnaks,
-Maya
-> This patch corrects the expected data transfer size of the
-> command UPIU. The current implementation of cmd->transfersize
-> is wrong as it probably equal to sector size. With this
-> implementation the transfer size is updated correctly
 >
-> Reported-by: KOBAYASHI Yoshitake <yoshitake.kobayashi@toshiba.co.jp>
-> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
-> Reviewed-by: Namjae Jeon <linkinjeon@gmail.com>
-> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Tested-by: Maya Erez <merez@codeaurora.org>
-> Signed-off-by: Santosh Yaraganavi <santoshsy@gmail.com>
-> Signed-off-by: Vinayak Holikatti <vinholikatti@gmail.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> Looks good. Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 >
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 60fd40c..c32a478 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -478,7 +478,7 @@ static void ufshcd_compose_upiu(struct ufshcd_lrb
-> *lrbp)
->  		ucd_cmd_ptr->header.dword_2 = 0;
+> On 4/24/2013 9:36 PM, Seungwon Jeon wrote:
+>> Move the ufshcd_hba_stop from header file.
+>>
+>> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+>> ---
+>>  drivers/scsi/ufs/ufshcd.c |    9 +++++++++
+>>  drivers/scsi/ufs/ufshcd.h |    9 ---------
+>>  2 files changed, 9 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 60fd40c..41b9639 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -285,6 +285,15 @@ static inline void ufshcd_hba_start(struct ufs_hba
+>> *hba)
+>>  }
+>>
+>>  /**
+>> + * ufshcd_hba_stop - Send controller to reset state
+>> + * @hba: per adapter instance
+>> + */
+>> +static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+>> +{
+>> +	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
+>> +}
+>> +
+>> +/**
+>>   * ufshcd_is_hba_active - Get controller state
+>>   * @hba: per adapter instance
+>>   *
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index 6b99a42..1680394 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -190,13 +190,4 @@ int ufshcd_init(struct device *, struct ufs_hba **
+>> , void __iomem * ,
+>>  			unsigned int);
+>>  void ufshcd_remove(struct ufs_hba *);
+>>
+>> -/**
+>> - * ufshcd_hba_stop - Send controller to reset state
+>> - * @hba: per adapter instance
+>> - */
+>> -static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+>> -{
+>> -	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
+>> -}
+>> -
+>>  #endif /* End of Header */
 >
->  		ucd_cmd_ptr->exp_data_transfer_len =
-> -			cpu_to_be32(lrbp->cmd->transfersize);
-> +			cpu_to_be32(lrbp->cmd->sdb.length);
->
->  		memcpy(ucd_cmd_ptr->cdb,
->  		       lrbp->cmd->cmnd,
 > --
-> 1.7.5.4
->
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
 
