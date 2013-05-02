@@ -1,44 +1,103 @@
-From: Tim Chen <tim.c.chen@linux.intel.com>
-Subject: Re: [PATCH v2 1/4] Wrap crc_t10dif function all to use crypto
- transform framework
-Date: Wed, 01 May 2013 19:59:34 -0700
-Message-ID: <1367463574.27102.207.camel@schen9-DESK>
-References: <cover.1366214842.git.tim.c.chen@linux.intel.com>
-	 <ea4271721b5ca130849b03da4f172f12f66e5628.1366214842.git.tim.c.chen@linux.intel.com>
-	 <20130425132203.GA29501@gondor.apana.org.au>
-	 <1366910910.27102.126.camel@schen9-DESK>
-	 <20130426125224.GA4855@gondor.apana.org.au>
-	 <1366994657.27102.129.camel@schen9-DESK>
-	 <20130428001122.GA6973@gondor.apana.org.au>
-	 <1367268030.27102.172.camel@schen9-DESK>
-	 <20130430032733.GB20471@gondor.apana.org.au>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH 5/5] bnx2fc: Bumped version to 1.0.14
+Date: Wed, 1 May 2013 20:05:29 -0700
+Message-ID: <5181D7F9.1080705@broadcom.com>
+References: <1362778134-21045-1-git-send-email-bprakash@broadcom.com>
+ <1362778134-21045-6-git-send-email-bprakash@broadcom.com>
+ <513A79F6.5070301@broadcom.com> <1367456736.26485.1.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=iso-8859-15;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <20130430032733.GB20471@gondor.apana.org.au>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, "David S. Miller" <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <willy@linux.intel.com>, Jim Kukunas <james.t.kukunas@linux.intel.com>, Keith Busch <keith.busch@intel.com>, Erdinc Ozturk <erdinc.ozturk@intel.com>, Vinodh Gopal <vinodh.gopal@intel.com>, James Guilford <james.guilford@intel.com>, Wajdi Feghali <wajdi.k.feghali@intel.com>, Jussi Kivilinna <jussi.kivilinna@iki.fi>, linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:3693 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757098Ab3EBDHr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 May 2013 23:07:47 -0400
+In-Reply-To: <1367456736.26485.1.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2013-04-30 at 11:27 +0800, Herbert Xu wrote:
-> On Mon, Apr 29, 2013 at 01:40:30PM -0700, Tim Chen wrote:
-> >
-> > If I allocate the transform under the mod init instead, how can I make
-> > sure that the fast version is already registered if I have it compiled
-> > in?  It is not clear to me how that's done looking at the libcrc32c
-> > code.  
-> 
-> This is only an issue when everything is built-in to the kernel.
-> 
-> In that case we could make the crc implementations register at a
-> point earlier than device_initcall, but no earlier than subsys_initcall
-> since that's where cryptomgr sits.
+On 05/01/2013 06:05 PM, James Bottomley wrote:
+> On Fri, 2013-03-08 at 15:53 -0800, Bhanu Prakash Gollapudi wrote:
+>> On 03/08/2013 01:28 PM, Bhanu Prakash Gollapudi wrote:
+>>> Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+>>> ---
+>>>    drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
+>>>    drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+>>>    2 files changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+>>> index 676dba3..1ece6e9 100644
+>>> --- a/drivers/scsi/bnx2fc/bnx2fc.h
+>>> +++ b/drivers/scsi/bnx2fc/bnx2fc.h
+>>> @@ -64,7 +64,7 @@
+>>>    #include "bnx2fc_constants.h"
+>>>    
+>>>    #define BNX2FC_NAME		"bnx2fc"
+>>> -#define BNX2FC_VERSION		"1.0.13"
+>>> +#define BNX2FC_VERSION		"1.0.14"
+>>>    
+>>>    #define PFX			"bnx2fc: "
+>>>    
+>>> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>> index 1e852d6..9ab62da 100644
+>>> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>> @@ -22,7 +22,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
+>>>    
+>>>    #define DRV_MODULE_NAME		"bnx2fc"
+>>>    #define DRV_MODULE_VERSION	BNX2FC_VERSION
+>>> -#define DRV_MODULE_RELDATE	"Dec 21, 2012"
+>>> +#define DRV_MODULE_RELDATE	"Mar 08, 2012"
+>> James, I realized there was a typo in the date - 2012 instead of 2013.
+>>
+>> Please apply this patch instead. Sorry for the inconvenience.
+>>
+>>
+>> Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+>> ---
+>>    drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
+>>    drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+>>    2 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+>> index 676dba3..1ece6e9 100644
+>> --- a/drivers/scsi/bnx2fc/bnx2fc.h
+>> +++ b/drivers/scsi/bnx2fc/bnx2fc.h
+>> @@ -64,7 +64,7 @@
+>>    #include "bnx2fc_constants.h"
+>>
+>>    #define BNX2FC_NAME        "bnx2fc"
+>> -#define BNX2FC_VERSION        "1.0.13"
+>> +#define BNX2FC_VERSION        "1.0.14"
+>>
+>>    #define PFX            "bnx2fc: "
+>>
+>> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>> b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>> index 1e852d6..9ab62da 100644
+>> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>> @@ -22,7 +22,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
+>>
+>>    #define DRV_MODULE_NAME        "bnx2fc"
+>>    #define DRV_MODULE_VERSION    BNX2FC_VERSION
+>> -#define DRV_MODULE_RELDATE    "Dec 21, 2012"
+>> +#define DRV_MODULE_RELDATE    "Mar 08, 2013"
+> This doesn't actually apply ... your mailer has converted tabs to
+> spaces.  Since it's only a couple of lines, I fixed it up by hand this
+> time ...
+>
+> James
+>
+>
+>
+Thanks for taking care of this, James.
 
-I've spun version 3 of this patch series to address the concerns about
-version 2.  The patches are sent separately.
+Bhanu
 
-Thanks.
 
-Tim
