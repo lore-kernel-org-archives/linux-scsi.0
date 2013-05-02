@@ -1,109 +1,104 @@
-From: merez@codeaurora.org
-Subject: Re: [PATCH 1/5] scsi: ufs: move the ufshcd_hba_stop to ufshcd.c
-Date: Thu, 2 May 2013 11:49:30 -0700
-Message-ID: <9cecae517114529824387aac48cf94f9.squirrel@www.codeaurora.org>
-References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
-    <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com>
-    <CALMYJDteQFvFcW3E8pXKLTigqj42fd=dwfdknE3SiG6zH9zMJQ@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: initial LIO iSER performance numbers [was: GIT PULL] target
+ updates for v3.10-rc1)
+Date: Thu, 02 May 2013 12:31:55 -0700
+Message-ID: <1367523115.23900.118.camel@haakon3.risingtidesystems.com>
+References: <1367290766.16334.77.camel@haakon3.risingtidesystems.com>
+	 <51827114.9010907@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64289 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761925Ab3EBSta (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 May 2013 14:49:30 -0400
-In-Reply-To: <CALMYJDteQFvFcW3E8pXKLTigqj42fd=dwfdknE3SiG6zH9zMJQ@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51827114.9010907-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: "linux-rdma (linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org)" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Asias He <asias-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, ewg-ZwoEplunGu1OwGhvXhtEPSCwEArCW2h5@public.gmane.org, Shlomi Sasson <shlomis-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Santosh Y <santoshsy@gmail.com>
-Cc: Seungwon Jeon <tgih.jun@samsung.com>, linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>
 
-Hi,
+On Thu, 2013-05-02 at 16:58 +0300, Or Gerlitz wrote:
+> On 30/04/2013 05:59, Nicholas A. Bellinger wrote:
+> > Hello Linus!
+> >
+> > Here are the target pending changes for the v3.10-rc1 merge window.
+> >
+> > Please go ahead and pull from:
+> >
+> >    git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next-merge
+> >
 
-Can you please rebase the next version on top of the following patches
-which are the next candidates for merge?
-Vinayak Holikatti (2):
-  ufs: Add Platform glue driver for ufshcd
-  ufs: Correct the expected data transfersize
-Dolev Raviv (1):
-  scsi: ufs: add support for query requests
+<SNIP>
 
-Thanks,
-Maya
-> On Wed, Apr 24, 2013 at 9:36 PM, Seungwon Jeon <tgih.jun@samsung.com>
-> wrote:
->> Move the ufshcd_hba_stop from header file.
->>
->> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
->> ---
->>  drivers/scsi/ufs/ufshcd.c |    9 +++++++++
->>  drivers/scsi/ufs/ufshcd.h |    9 ---------
->>  2 files changed, 9 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 60fd40c..41b9639 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -285,6 +285,15 @@ static inline void ufshcd_hba_start(struct ufs_hba
->> *hba)
->>  }
->>
->>  /**
->> + * ufshcd_hba_stop - Send controller to reset state
->> + * @hba: per adapter instance
->> + */
->> +static inline void ufshcd_hba_stop(struct ufs_hba *hba)
->> +{
->> +       writel(CONTROLLER_DISABLE, (hba->mmio_base +
->> REG_CONTROLLER_ENABLE));
->> +}
->> +
->> +/**
->>   * ufshcd_is_hba_active - Get controller state
->>   * @hba: per adapter instance
->>   *
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index 6b99a42..1680394 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -190,13 +190,4 @@ int ufshcd_init(struct device *, struct ufs_hba **
->> , void __iomem * ,
->>                         unsigned int);
->>  void ufshcd_remove(struct ufs_hba *);
->>
->> -/**
->> - * ufshcd_hba_stop - Send controller to reset state
->> - * @hba: per adapter instance
->> - */
->> -static inline void ufshcd_hba_stop(struct ufs_hba *hba)
->> -{
->> -       writel(CONTROLLER_DISABLE, (hba->mmio_base +
->> REG_CONTROLLER_ENABLE));
->> -}
->> -
->>  #endif /* End of Header */
->> --
->> 1.7.0.4
->>
->>
->
-> The patch doesn't apply due to the character set.
->
-> "fatal: cannot convert from ks_c_5601-1987 to UTF-8"
->
->
-> --
-> ~Santosh
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Hi Nic, everyone,
+> 
+> So LIO iser target code is now merged into Linus tree, and will be in 
+> kernel 3.10, exciting!
+> 
+> Here's some data on raw performance numbers we were able to get with the 
+> LIO iser code.
+> 
+> For single initiator and single lun, block sizes varying over the range 
+> 1KB,2KB... 128KB
+> doing random read:
+> 
+> 1KB 227,870K
+> 2KB 458,099K
+> 4KB 909,761K
+> 8KB 1,679,922K
+> 16KB 3,233,753K
+> 32KB 4,905,139K
+> 64KB 5,294,873K
+> 128KB 5,565,235K
+> 
+> When enlarging the number of luns and still with single initiator, for 
+> 1KB randomreads we get:
+> 
+> 1 LUN  = 230k IOPS
+> 2 LUNs = 420k IOPS
+> 4 LUNs = 740k IOPS
+> 
+> When enlarging the number of initiators, and each having four lunswe get 
+> for 1KB random reads:
+> 
+> 1 initiator  x 4 LUNs = 740k  IOPS
+> 2 initiators x 4 LUNs = 1480k IOPS
+> 3 initiators x 4 LUNs = 1570k IOPS
+> 
+> So all in all, things scale pretty nicely, and we observe a some bottleneck
+> in the IOPS rate around 1.6 Million IOPS, so there's where to improve...
+> 
 
+Excellent.  Thanks for the posting these initial performance results.
 
--- 
-Maya Erez
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+> Here's the fio command line used by the initiators
+> 
+> $ fio --cpumask=0xfc --rw=randread --bs=1k --numjobs=2 --iodepth=128 
+> --runtime=62 --time_based --size=1073741824k --loops=1 --ioengine=libaio 
+> --direct=1 --invalidate=1 --fsync_on_close=1 --randrepeat=1 
+> --norandommap --group_reporting --exitall --name 
+> dev-sdb-randread-1k-2thr-libaio-128iodepth-62sec --filename=/dev/sdb
+> 
+> And some details on the setup:
+> 
+> The nodes are HP ProLiant DL380p Gen8 with the following CPU: Intel(R) 
+> Xeon(R) CPU E5-2650 0 @ 2.00GHz
+> two NUMA nodes with eight cores each, 32GB RAM, PCI express gen3 8x, the 
+> HCA being Mellanox ConnectX3 with firmware 2.11.500
+> 
+> The target node was running upstream kernel and the initiators RHEL 6.3 
+> kernel, all X86_64
+> 
+> We used RAMDISK_MCP backend which was patched to act as NULL device, so 
+> we can test the raw iSER wire performance.
+> 
 
+Btw, I'll be including a similar patch to allow for RAMDISK_NULL to be
+configured as a NULL device mode.
+
+Thanks Or & Co!
+
+--nab
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
