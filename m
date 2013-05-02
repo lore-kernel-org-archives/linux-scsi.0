@@ -1,41 +1,71 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH] qla4xxx: Fix iocb_cnt calculation in qla4xxx_send_mbox_iocb()
-Date: Thu, 2 May 2013 03:42:10 -0400
-Message-ID: <1367480530-21626-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Santosh Y <santoshsy@gmail.com>
+Subject: Re: [PATCH V4] scsi: ufs: add support for query requests
+Date: Thu, 2 May 2013 13:54:30 +0530
+Message-ID: <CALMYJDv2wWuLHucARDMMoAE_zqDce6BDUMt6U4hAPT3=DiLMYA@mail.gmail.com>
+References: <1367422015-23651-1-git-send-email-draviv@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db9lp0248.outbound.messaging.microsoft.com ([213.199.154.248]:23994
-	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753250Ab3EBIVf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 May 2013 04:21:35 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1367422015-23651-1-git-send-email-draviv@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Dolev Raviv <draviv@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> +
+> +/**
+> + * ufshcd_compose_upiu - form UFS Protocol Information Unit(UPIU)
+> + * @hba - UFS hba
+> + * @lrb - pointer to local reference block
+> + */
+> +static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+> +{
+> +       u32 upiu_flags;
+> +       int ret = 0;
+> +
+> +       switch (lrbp->command_type) {
+> +       case UTP_CMD_TYPE_SCSI:
+>         case UTP_CMD_TYPE_DEV_MANAGE:
+> -               /* For query function implementation */
+> +               ufshcd_prepare_req_desc(lrbp, &upiu_flags);
+> +               if (lrbp->cmd && lrbp->command_type == UTP_CMD_TYPE_SCSI)
 
-Increment 'ha->iocb_cnt' before adding mbox_iocb to iocb queue.
+Sorry, probably missed it in the initial review. Here no need to check
+for 'lrbp->cmd'.
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_iocb.c | 1 +
- 1 file changed, 1 insertion(+)
+> +                       ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
+> +               else if (lrbp->cmd)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
-index 14fec97..fad71ed 100644
---- a/drivers/scsi/qla4xxx/ql4_iocb.c
-+++ b/drivers/scsi/qla4xxx/ql4_iocb.c
-@@ -507,6 +507,7 @@ static int qla4xxx_send_mbox_iocb(struct scsi_qla_host *ha, struct mrb *mrb,
- 	mrb->mbox_cmd = in_mbox[0];
- 	wmb();
- 
-+	ha->iocb_cnt += mrb->iocb_cnt;
- 	ha->isp_ops->queue_iocb(ha);
- exit_mbox_iocb:
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+no need to check here also
+
+> +                       ufshcd_prepare_utp_query_req_upiu(hba, lrbp,
+> +                                                               upiu_flags);
+> +               else {
+> +                       dev_err(hba->dev, "%s: Invalid UPIU request\n",
+> +                               __func__);
+> +                       ret = -EINVAL;
+> +               }
+
+remove this else part, this condition will never be true.
+
+>                 break;
+>         case UTP_CMD_TYPE_UFS:
+>                 /* For UFS native command implementation */
+> +               dev_err(hba->dev, "%s: UFS native command are not supported\n",
+> +                       __func__);
+> +               ret = -ENOTSUPP;
+> +               break;
+> +       default:
+> +               ret = -ENOTSUPP;
+> +               dev_err(hba->dev, "%s: unknown command type: 0x%x\n",
+> +                               __func__, lrbp->command_type);
+>                 break;
+>         } /* end of switch */
+> +
+> +       return ret;
+>  }
+>
+
+
 -- 
-1.8.2.GIT
-
-
+~Santosh
