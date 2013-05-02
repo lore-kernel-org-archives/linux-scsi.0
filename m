@@ -1,83 +1,90 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH 1/1] scsi: ufs: Generalize UFS Interconnect Layer (UIC)
- command support
-Date: Thu, 2 May 2013 12:49:57 +0530
-Message-ID: <CALMYJDtE=GnETSi7KfLCWWqow3Let3Q5aL70ei3MkJKH6FWzFg@mail.gmail.com>
-References: <1366736234-8964-1-git-send-email-sthumma@codeaurora.org>
+Subject: Re: [PATCH 1/1] scsi: ufs: Add support for sending NOP OUT UPIU
+Date: Thu, 2 May 2013 12:57:07 +0530
+Message-ID: <CALMYJDut2=gwVsNxfeEM5mR2K9uJ0nMiV2y=xu3WZEUpfN-z7w@mail.gmail.com>
+References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1366736234-8964-1-git-send-email-sthumma@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-> -static inline void
-> -ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
-> +static int ufshcd_send_uic_command(struct ufs_hba *hba,
-> +               struct uic_command *uic_cmnd, int retries)
->  {
-> +       int err = 0;
-> +       unsigned long flags;
 > +
-> +       if (unlikely(mutex_trylock(&hba->uic_cmd_mutex))) {
-> +               mutex_unlock(&hba->uic_cmd_mutex);
-> +               dev_err(hba->dev, "%s: called without prepare command\n",
-> +                               __func__);
-> +               BUG();
-> +       }
+> +/**
+> + * ufshcd_validate_dev_connection() - Check device connection status
+> + * @hba: per-adapter instance
+> + *
+> + * Send NOP OUT UPIU and wait for NOP IN response to check whether the
+> + * device Transport Protocol (UTP) layer is ready after a reset.
+> + * If the UTP layer at the device side is not initialized, it may
+> + * not respond with NOP IN UPIU within timeout of %NOP_OUT_TIMEOUT
+> + * and we retry sending NOP OUT for %NOP_OUT_RETRIES iterations.
+> + */
+> +static int ufshcd_validate_dev_connection(struct ufs_hba *hba)
+> +{
+> +       int err;
+> +       struct ufshcd_lrb *lrbp;
+> +       unsigned long timeout;
+> +       unsigned long flags;
+> +       struct completion wait;
+> +       int retries = NOP_OUT_RETRIES;
 > +
 > +retry:
-> +       /* check if controller is ready to accept UIC commands */
-> +       if (!(readl(hba->mmio_base + REG_CONTROLLER_STATUS) &
-> +                               UIC_COMMAND_READY)) {
-> +               dev_err(hba->dev, "Controller not ready to accept UIC commands\n");
-> +               err = -EIO;
-> +               goto out;
-> +       }
-> +
-> +       init_completion(&uic_cmnd->completion);
-> +
 > +       spin_lock_irqsave(hba->host->host_lock, flags);
+> +       lrbp = &hba->lrb[INTERNAL_CMD_TAG];
+> +       init_completion(&wait);
 > +
-> +       /* enable UIC related interrupts */
-> +       if (!(hba->int_enable_mask & UIC_COMMAND_COMPL)) {
-> +               hba->int_enable_mask |= UIC_COMMAND_COMPL;
-> +               ufshcd_int_config(hba, UFSHCD_INT_ENABLE);
-> +       }
+> +       err = ufshcd_compose_nop_out_upiu(hba, lrbp);
+> +       if (err)
+> +               goto may_retry;
 > +
-
-No need to check if the interrupt is already enabled, it can be
-directly enabled.
-
-
->         /* Write Args */
->         writel(uic_cmnd->argument1,
->               (hba->mmio_base + REG_UIC_COMMAND_ARG_1));
-> @@ -415,6 +491,45 @@ ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
->         /* Write UIC Cmd */
->         writel((uic_cmnd->command & COMMAND_OPCODE_MASK),
->                (hba->mmio_base + REG_UIC_COMMAND));
-> +
-> +       /* flush to make sure h/w sees the write */
-> +       readl(hba->mmio_base + REG_UIC_COMMAND);
-> +
+> +       lrbp->completion = &wait;
+> +       ufshcd_send_command(hba, INTERNAL_CMD_TAG);
 > +       spin_unlock_irqrestore(hba->host->host_lock, flags);
 > +
-
-mutex lock/unlock can be done in the send_uic_command, It will
-simplify the process for the caller.
-
-> +       err = wait_for_completion_timeout(
-> +                       &uic_cmnd->completion, UIC_COMMAND_TIMEOUT);
-> +       if (!err) {
-> +               err = -ETIMEDOUT;
-> +       } else if (uic_cmnd->argument2 & MASK_UIC_COMMAND_RESULT) {
-> +               /* something bad with h/w or arguments, try again */
-> +               if (--retries)
-> +                       goto retry;
+> +       timeout = wait_for_completion_timeout(
+> +                       &wait, msecs_to_jiffies(NOP_OUT_TIMEOUT));
 > +
+> +       spin_lock_irqsave(hba->host->host_lock, flags);
+> +       if (timeout > 0) {
+> +               int ocs;
+> +
+> +               ocs = ufshcd_get_tr_ocs(lrbp);
+> +               switch (ocs) {
+> +               case OCS_SUCCESS:
+> +                       goto out;
+> +               default:
+> +                       dev_dbg(hba->dev, "%s: OCS error %d\n", __func__, ocs);
+> +                       err = -EIO;
+> +                       goto may_retry;
+> +               }
+> +       } else {
+> +               u32 reg;
+> +
+> +               err = -ETIMEDOUT;
+> +
+> +               /* clear outstanding transaction before retry */
+> +               ufshcd_utrl_clear(hba, INTERNAL_CMD_TAG);
+> +               __clear_bit(INTERNAL_CMD_TAG, &hba->outstanding_reqs);
+> +
+> +               /* poll for max. 1 sec to clear door bell register by h/w */
+> +               spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +               if (readl_poll_timeout(
+> +                               hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL,
+> +                               reg, !(reg & INTERNAL_CMD_TAG), 1000, 1000))
+
+Condition is always true here, change it to !(reg & (1 << INTERNAL_CMD_TAG)).
+
+> +                       retries = 0;
+> +               spin_lock_irqsave(hba->host->host_lock, flags);
+> +               goto may_retry;
+> +       }
+> +
+
+
 
 -- 
 ~Santosh
