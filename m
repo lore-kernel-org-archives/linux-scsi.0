@@ -1,108 +1,293 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH 1/1] scsi: ufs: Generalize UFS Interconnect Layer (UIC)
- command support
-Date: Thu, 02 May 2013 17:03:22 +0530
-Message-ID: <51824F02.9070103@codeaurora.org>
-References: <1366736234-8964-1-git-send-email-sthumma@codeaurora.org> <CALMYJDtE=GnETSi7KfLCWWqow3Let3Q5aL70ei3MkJKH6FWzFg@mail.gmail.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH 4/5] scsi: ufs: rework link start-up process
+Date: Thu, 02 May 2013 17:16:47 +0530
+Message-ID: <51825227.1010005@codeaurora.org>
+References: <002101ce4105$b184dec0$148e9c40$%jun@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CALMYJDtE=GnETSi7KfLCWWqow3Let3Q5aL70ei3MkJKH6FWzFg@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Santosh Y <santoshsy@gmail.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8001 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751746Ab3EBLqx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 May 2013 07:46:53 -0400
+In-Reply-To: <002101ce4105$b184dec0$148e9c40$%jun@samsung.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Seungwon Jeon <tgih.jun@samsung.com>
+Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-On 5/2/2013 12:49 PM, Santosh Y wrote:
->> -static inline void
->> -ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
->> +static int ufshcd_send_uic_command(struct ufs_hba *hba,
->> +               struct uic_command *uic_cmnd, int retries)
->>   {
->> +       int err = 0;
->> +       unsigned long flags;
->> +
->> +       if (unlikely(mutex_trylock(&hba->uic_cmd_mutex))) {
->> +               mutex_unlock(&hba->uic_cmd_mutex);
->> +               dev_err(hba->dev, "%s: called without prepare command\n",
->> +                               __func__);
->> +               BUG();
->> +       }
->> +
->> +retry:
->> +       /* check if controller is ready to accept UIC commands */
->> +       if (!(readl(hba->mmio_base + REG_CONTROLLER_STATUS) &
->> +                               UIC_COMMAND_READY)) {
->> +               dev_err(hba->dev, "Controller not ready to accept UIC commands\n");
->> +               err = -EIO;
->> +               goto out;
->> +       }
->> +
->> +       init_completion(&uic_cmnd->completion);
->> +
->> +       spin_lock_irqsave(hba->host->host_lock, flags);
->> +
->> +       /* enable UIC related interrupts */
->> +       if (!(hba->int_enable_mask & UIC_COMMAND_COMPL)) {
->> +               hba->int_enable_mask |= UIC_COMMAND_COMPL;
->> +               ufshcd_int_config(hba, UFSHCD_INT_ENABLE);
->> +       }
->> +
+Few minor comments other than what Sujit/Santosh have already commented.
+
+On 4/24/2013 9:36 PM, Seungwon Jeon wrote:
+> Link start-up requires long time with multiphase handshakes
+> between UFS host and device. This affects driver's probe time.
+> This patch let link start-up run asynchronously.
+> And completion time of uic command is defined to avoid a
+> permanent wait.
 >
-> No need to check if the interrupt is already enabled, it can be
-> directly enabled.
-
-That would be unnecessary device access (writel) every time we send a 
-UIC command.
-
+> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> ---
+>   drivers/scsi/ufs/ufshcd.c |  114 +++++++++++++++++++++++++++++++++-----------
+>   drivers/scsi/ufs/ufshcd.h |    6 ++-
+>   2 files changed, 89 insertions(+), 31 deletions(-)
 >
->
->>          /* Write Args */
->>          writel(uic_cmnd->argument1,
->>                (hba->mmio_base + REG_UIC_COMMAND_ARG_1));
->> @@ -415,6 +491,45 @@ ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
->>          /* Write UIC Cmd */
->>          writel((uic_cmnd->command & COMMAND_OPCODE_MASK),
->>                 (hba->mmio_base + REG_UIC_COMMAND));
->> +
->> +       /* flush to make sure h/w sees the write */
->> +       readl(hba->mmio_base + REG_UIC_COMMAND);
->> +
->> +       spin_unlock_irqrestore(hba->host->host_lock, flags);
->> +
->
-> mutex lock/unlock can be done in the send_uic_command, It will
-> simplify the process for the caller.
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index efe2256..76ff332 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -38,6 +38,7 @@
+>   #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
+>   				 UTP_TASK_REQ_COMPL |\
+>   				 UFSHCD_ERROR_MASK)
+> +#define UIC_CMD_TIMEOUT	100
 
-  ufshcd_dme_get_attr()
-  {
-    1) ufshcd_prepare_uic_command_lck();
-    2) ufshcd_send_uic_command();
-    3) Read arg3 to know the value of Uni-pro attribute.
-    4) ufshcd_unprepare_uic_command_unlck();
-  }
+What is the timeout unit here (us/ms/sec)? Please add the same in the 
+comment.
 
-Step 3 above is optional for some of the UIC commands but when it is 
-required it should be done with mutex lock held as the 
-hba->active_uic_cmd might be modified by some one else before value 
-present hba->active_uic_cmd->argument3 is read.
+>   
+>   enum {
+>   	UFSHCD_MAX_CHANNEL	= 0,
+> @@ -357,13 +358,15 @@ static inline void ufshcd_hba_capabilities(struct ufs_hba *hba)
+>   }
+>   
+>   /**
+> - * ufshcd_send_uic_command - Send UIC commands to unipro layers
+> + * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
+>    * @hba: per adapter instance
+>    * @uic_command: UIC command
+>    */
+>   static inline void
+> -ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
+> +ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmnd)
+>   {
+> +	init_completion(&uic_cmnd->done);
+> +
+>   	/* Write Args */
+>   	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_1, uic_cmnd->argument1);
+>   	ufshcd_writel(hba, REG_UIC_COMMAND_ARG_2, uic_cmnd->argument2);
+> @@ -375,6 +378,45 @@ ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
+>   }
+>   
+>   /**
+> + * ufshcd_wait_for_uic_cmd - Wait complectioin of UIC command
+> + * @hba: per adapter instance
+> + * @uic_command: UIC command
+> + *
+> + * Returns 0 only if success.
+> + */
+> +static int ufshcd_wait_for_uic_cmd(struct ufs_hba *hba)
+> +{
+> +	struct uic_command *uic_cmd = &hba->active_uic_cmd;
+> +	int ret;
+> +
+> +	if (wait_for_completion_timeout(&uic_cmd->done,
+> +					msecs_to_jiffies(UIC_CMD_TIMEOUT)))
+> +		ret = ufshcd_get_uic_cmd_result(hba);
+> +	else
+> +		ret = -ETIMEDOUT;
+> +
+> +	return ret;
+> +}
+> +
+> +/**
+> + * ufshcd_ready_uic_cmd - Check if controller is ready
+> + *                        to accept UIC commands
+> + * @hba: per adapter instance
+> + * Return true on success, else false
+> + */
+> +static inline bool ufshcd_ready_uic_cmd(struct ufs_hba *hba)
 
-But thinking more on this holding lock only in send_uic_command() is 
-feasible.
+I guess this might sound more readable: 
+s/ufshcd_ready_uic_cmd/ufshcd_ready_for_uic_cmd
+> +{
+> +	if (ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY) {
+> +		return true;
+> +	} else {
+> +		dev_err(hba->dev,
+> +				"Controller not ready"
+> +				" to accept UIC commands\n");
+Please have the full string on the same line even if it exceeeds 80 
+characters limit per line.
+> +		return false;
+> +	}
+> +}
+> +
+> +/**
+>    * ufshcd_map_sg - Map scatter-gather list to prdt
+>    * @lrbp - pointer to local reference block
+>    *
+> @@ -735,15 +777,10 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+>   {
+>   	struct uic_command *uic_cmd;
+>   	unsigned long flags;
+> +	int ret;
+>   
+> -	/* check if controller is ready to accept UIC commands */
+> -	if (((ufshcd_readl(hba, REG_CONTROLLER_STATUS)) &
+> -	    UIC_COMMAND_READY) == 0x0) {
+> -		dev_err(hba->dev,
+> -			"Controller not ready"
+> -			" to accept UIC commands\n");
+> +	if (!ufshcd_ready_uic_cmd(hba))
+>   		return -EIO;
+> -	}
+>   
+>   	spin_lock_irqsave(hba->host->host_lock, flags);
+>   
+> @@ -754,13 +791,16 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+>   	uic_cmd->argument2 = 0;
+>   	uic_cmd->argument3 = 0;
+>   
+> -	/* enable UIC related interrupts */
+> -	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+> +	/* Dispatching UIC commands to controller */
+> +	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
+>   
+> -	/* sending UIC commands to controller */
+> -	ufshcd_send_uic_command(hba, uic_cmd);
+>   	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> -	return 0;
+> +
+> +	ret = ufshcd_wait_for_uic_cmd(hba);
+> +	if (ret)
+> +		dev_err(hba->dev, "link startup: error code %d returned\n", ret);
+> +
+> +	return ret;
+>   }
+>   
+>   /**
+> @@ -898,6 +938,9 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
+>   	if (ufshcd_hba_enable(hba))
+>   		return -EIO;
+>   
+> +	/* enable UIC related interrupts */
+> +	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL | UIC_ERROR);
+> +
+>   	/* Configure UTRL and UTMRL base address registers */
+>   	ufshcd_writel(hba, REG_UTP_TRANSFER_REQ_LIST_BASE_L,
+>   		      lower_32_bits(hba->utrdl_dma_addr));
+> @@ -909,7 +952,9 @@ static int ufshcd_initialize_hba(struct ufs_hba *hba)
+>   		      upper_32_bits(hba->utmrdl_dma_addr));
+>   
+>   	/* Initialize unipro link startup procedure */
+> -	return ufshcd_dme_link_startup(hba);
+> +	schedule_work(&hba->link_startup_wq);
+> +
+> +	return 0;
+>   }
+>   
+>   /**
+> @@ -1186,6 +1231,16 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>   }
+>   
+>   /**
+> + * ufshcd_uic_cmd_compl - handle completion of uic command
+> + * @hba: per adapter instance
+> + */
+> +static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
+> +{
+> +	if (intr_status & UIC_COMMAND_COMPL)
+> +		complete(&hba->active_uic_cmd.done);
+> +}
+> +
+> +/**
+>    * ufshcd_transfer_req_compl - handle SCSI and query command completion
+>    * @hba: per adapter instance
+>    */
+> @@ -1225,25 +1280,26 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>   }
+>   
+>   /**
+> - * ufshcd_uic_cc_handler - handle UIC command completion
+> + * ufshcd_link_startup - link initialization
+>    * @work: pointer to a work queue structure
+> - *
+> - * Returns 0 on success, non-zero value on failure
+>    */
+> -static void ufshcd_uic_cc_handler (struct work_struct *work)
+> +static void ufshcd_link_startup(struct work_struct *work)
+>   {
+>   	struct ufs_hba *hba;
+> +	int ret;
+>   
+> -	hba = container_of(work, struct ufs_hba, uic_workq);
+> +	hba = container_of(work, struct ufs_hba, link_startup_wq);
+>   
+> -	if ((hba->active_uic_cmd.command == UIC_CMD_DME_LINK_STARTUP) &&
+> -	    !(ufshcd_get_uic_cmd_result(hba))) {
+> +	ret = ufshcd_dme_link_startup(hba);
+> +	if (ret)
+> +		goto out;
+>   
+> -		if (ufshcd_make_hba_operational(hba))
+> -			dev_err(hba->dev,
+> -				"cc: hba not operational state\n");
+> -		return;
+> -	}
+> +	ret = ufshcd_make_hba_operational(hba);
+> +	if (ret)
+> +		goto out;
+> +	return;
+> +out:
+> +	dev_err(hba->dev, "link startup failed %d\n", ret);
+>   }
+>   
+>   /**
+> @@ -1307,7 +1363,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+>   		ufshcd_err_handler(hba);
+>   
+>   	if (intr_status & UIC_COMMAND_COMPL)
+> -		schedule_work(&hba->uic_workq);
+> +		ufshcd_uic_cmd_compl(hba, intr_status);
+>   
+>   	if (intr_status & UTP_TASK_REQ_COMPL)
+>   		ufshcd_tmc_handler(hba);
+> @@ -1694,7 +1750,7 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+>   	init_waitqueue_head(&hba->ufshcd_tm_wait_queue);
+>   
+>   	/* Initialize work queues */
+> -	INIT_WORK(&hba->uic_workq, ufshcd_uic_cc_handler);
+> +	INIT_WORK(&hba->link_startup_wq, ufshcd_link_startup);
+>   	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
+>   
+>   	/* IRQ registration */
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 87d5a94..2fb4d94 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -51,6 +51,7 @@
+>   #include <linux/bitops.h>
+>   #include <linux/pm_runtime.h>
+>   #include <linux/clk.h>
+> +#include <linux/completion.h>
+>   
+>   #include <asm/irq.h>
+>   #include <asm/byteorder.h>
+> @@ -83,6 +84,7 @@ struct uic_command {
+>   	u32 argument3;
+>   	int cmd_active;
+>   	int result;
+> +	struct completion done;
+>   };
+>   
+>   /**
+> @@ -140,7 +142,7 @@ struct ufshcd_lrb {
+>    * @tm_condition: condition variable for task management
+>    * @ufshcd_state: UFSHCD states
+>    * @intr_mask: Interrupt Mask Bits
+> - * @uic_workq: Work queue for UIC completion handling
+> + * @link_startup_wq: Work queue for link start-up
+>    * @feh_workq: Work queue for fatal controller error handling
+>    * @errors: HBA errors
+>    */
+> @@ -179,7 +181,7 @@ struct ufs_hba {
+>   	u32 intr_mask;
+>   
+>   	/* Work Queues */
+> -	struct work_struct uic_workq;
+> +	struct work_struct link_startup_wq;
+>   	struct work_struct feh_workq;
+>   
+>   	/* HBA Errors */
 
->
->> +       err = wait_for_completion_timeout(
->> +                       &uic_cmnd->completion, UIC_COMMAND_TIMEOUT);
->> +       if (!err) {
->> +               err = -ETIMEDOUT;
->> +       } else if (uic_cmnd->argument2 & MASK_UIC_COMMAND_RESULT) {
->> +               /* something bad with h/w or arguments, try again */
->> +               if (--retries)
->> +                       goto retry;
->> +
->
-
--- 
-Regards,
-Sujit
