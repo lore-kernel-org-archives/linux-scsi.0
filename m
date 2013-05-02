@@ -1,66 +1,97 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: Double completion on retry
-Date: Thu, 02 May 2013 10:34:59 +0200
-Message-ID: <51822533.5080505@suse.de>
-References: <1367483462-22576-1-git-send-email-hare@suse.de>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: Re: [PATCH 1/1] scsi: ufs: Add support for sending NOP OUT UPIU
+Date: Thu, 02 May 2013 17:01:18 +0530
+Message-ID: <51824E86.6010805@codeaurora.org>
+References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org> <CALMYJDut2=gwVsNxfeEM5mR2K9uJ0nMiV2y=xu3WZEUpfN-z7w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:32978 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751880Ab3EBIfB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 May 2013 04:35:01 -0400
-In-Reply-To: <1367483462-22576-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <CALMYJDut2=gwVsNxfeEM5mR2K9uJ0nMiV2y=xu3WZEUpfN-z7w@mail.gmail.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Santosh Y <santoshsy@gmail.com>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>
 
-On 05/02/2013 10:31 AM, Hannes Reinecke wrote:
-> When blk_end_request() returns 'false' in scsi_end_request the
-> request is invalid after blk_end_request_all(). So we must not
-> return the then stale request pointer. Doing so will result
-> in a potential double completion.
-> And we should be calling scsi_release_buffers() before
-> blk_end_request_all().
->=20
-> Cc: Mike Christie <michaelc@cs.wisc.edu>
-> Cc: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
->=20
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index c31187d..8dba66b 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -581,9 +581,11 @@ static struct scsi_cmnd *scsi_end_request(struct=
- scsi_cmnd *cmd, int error,
->  	 */
->  	if (blk_end_request(req, error, bytes)) {
->  		/* kill remainder if no retrys */
-> -		if (error && scsi_noretry_cmd(cmd))
-> +		if (error && scsi_noretry_cmd(cmd)) {
-> +			scsi_release_buffers(cmd);
->  			blk_end_request_all(req, error);
-> -		else {
-> +			cmd =3D NULL;
-> +		} else {
->  			if (requeue) {
->  				/*
->  				 * Bleah.  Leftovers again.  Stick the
->=20
-Bah, forget it. Patch is wrong.
+On 5/2/2013 12:57 PM, Santosh Y wrote:
+>> +
+>> +/**
+>> + * ufshcd_validate_dev_connection() - Check device connection status
+>> + * @hba: per-adapter instance
+>> + *
+>> + * Send NOP OUT UPIU and wait for NOP IN response to check whether the
+>> + * device Transport Protocol (UTP) layer is ready after a reset.
+>> + * If the UTP layer at the device side is not initialized, it may
+>> + * not respond with NOP IN UPIU within timeout of %NOP_OUT_TIMEOUT
+>> + * and we retry sending NOP OUT for %NOP_OUT_RETRIES iterations.
+>> + */
+>> +static int ufshcd_validate_dev_connection(struct ufs_hba *hba)
+>> +{
+>> +       int err;
+>> +       struct ufshcd_lrb *lrbp;
+>> +       unsigned long timeout;
+>> +       unsigned long flags;
+>> +       struct completion wait;
+>> +       int retries = NOP_OUT_RETRIES;
+>> +
+>> +retry:
+>> +       spin_lock_irqsave(hba->host->host_lock, flags);
+>> +       lrbp = &hba->lrb[INTERNAL_CMD_TAG];
+>> +       init_completion(&wait);
+>> +
+>> +       err = ufshcd_compose_nop_out_upiu(hba, lrbp);
+>> +       if (err)
+>> +               goto may_retry;
+>> +
+>> +       lrbp->completion = &wait;
+>> +       ufshcd_send_command(hba, INTERNAL_CMD_TAG);
+>> +       spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +
+>> +       timeout = wait_for_completion_timeout(
+>> +                       &wait, msecs_to_jiffies(NOP_OUT_TIMEOUT));
+>> +
+>> +       spin_lock_irqsave(hba->host->host_lock, flags);
+>> +       if (timeout > 0) {
+>> +               int ocs;
+>> +
+>> +               ocs = ufshcd_get_tr_ocs(lrbp);
+>> +               switch (ocs) {
+>> +               case OCS_SUCCESS:
+>> +                       goto out;
+>> +               default:
+>> +                       dev_dbg(hba->dev, "%s: OCS error %d\n", __func__, ocs);
+>> +                       err = -EIO;
+>> +                       goto may_retry;
+>> +               }
+>> +       } else {
+>> +               u32 reg;
+>> +
+>> +               err = -ETIMEDOUT;
+>> +
+>> +               /* clear outstanding transaction before retry */
+>> +               ufshcd_utrl_clear(hba, INTERNAL_CMD_TAG);
+>> +               __clear_bit(INTERNAL_CMD_TAG, &hba->outstanding_reqs);
+>> +
+>> +               /* poll for max. 1 sec to clear door bell register by h/w */
+>> +               spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +               if (readl_poll_timeout(
+>> +                               hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL,
+>> +                               reg, !(reg & INTERNAL_CMD_TAG), 1000, 1000))
+>
+> Condition is always true here, change it to !(reg & (1 << INTERNAL_CMD_TAG)).
 
-Cheers,
+Good catch. I will update.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>> +                       retries = 0;
+>> +               spin_lock_irqsave(hba->host->host_lock, flags);
+>> +               goto may_retry;
+>> +       }
+>> +
+>
+>
+>
+
+-- 
+Regards,
+Sujit
