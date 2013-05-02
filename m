@@ -1,58 +1,71 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH V2 16/18] be2iscsi: Fix possible reentrancy issue in
- be_iopoll
-Date: Thu, 2 May 2013 15:20:48 +0000
-Message-ID: <1367508048.3133.2.camel@dabdike>
-References: <1365219519-3457-1-git-send-email-jayamohan.kallickal@emulex.com>
-	 <1365219519-3457-16-git-send-email-jayamohan.kallickal@emulex.com>
+From: "Anand Kumar Santhanam" <AnandKumar.Santhanam@pmcs.com>
+Subject: RE: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, variables and modify for SPC
+Date: Thu, 2 May 2013 09:09:00 -0700
+Message-ID: <E5DEE6F468524847995699AD11E80885013304B8@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <E5DEE6F468524847995699AD11E808850123609A@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:54285 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759940Ab3EBPUw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 May 2013 11:20:52 -0400
-In-Reply-To: <1365219519-3457-16-git-send-email-jayamohan.kallickal@emulex.com>
-Content-Language: en-US
-Content-ID: <6651C9C69F412A40839CF856E97AE358@sw.swsoft.com>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:42316 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757990Ab3EBQKA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 May 2013 12:10:00 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kallickal <jayamohank@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Shlomo Pongratz <shlomop@mellanox.com>
+To: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, sakthivel.sk@hcl.com, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>, xjtuwjp@gmail.com, Vishwanath Maram <Vishwanath.Maram@pmcs.com>
 
-On Fri, 2013-04-05 at 20:38 -0700, Jayamohan Kallickal wrote:
-> From: Shlomo Pongratz <shlomop@mellanox.com>
-> 
->  The driver creates "NAPI" context per core which is fine,
->  however the above routine declares the ret variable as static!
->  Thus there is only one instance of this variable!
->  When this routine is called from more than one thread of execution,
->  than the result is unpredictable.
-> 
->          static unsigned int ret;
->          .....
-> 
->          ret = beiscsi_process_cq(pbe_eq);
->                  <--------Another thread can enter here and change "ret".
->          if (ret < budget) {
->                 ....
->          }
->                  <--------Another thread can enter here and change "ret".
->          return ret;
-> 
->  Fix - remove the "static"
-> 
-> Signed-off-by: Shlomo Pongratz <shlomop@mellanox.com>
-> Acked-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Hi James,
+ 
+This is a scsi pull request for the PM80xx patchset resubmitted on the 18th April. Pls go ahead and use
+the patchset for 3.9+ merge.
+ 
+Regards
+Anand
 
-The rule here is that this needs to be Signed-off-by: from you because
-you sent the patch to me (signoffs follow the transmission path for the
-patch).  If you just see the patch on the list and want me to apply it,
-you give me an Acked-by, but if you actually pick the patch up and send
-it to me it must have a signed-off-by.
+________________________________
 
-I assumed your consent and changed the tag.
+From: Anand Kumar Santhanam
+Sent: Thu 4/18/2013 11:43 AM
+To: 'James Bottomley'
+Cc: 'linux-scsi@vger.kernel.org'; Harry Yang; Rich Bono; 'sakthivel.sk@hcl.com'; Sangeetha Gnanasekaran; 'xjtuwjp@gmail.com'; Vishwanath Maram
+Subject: RE: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, variables and modify for SPC
+
+
+
+Hi James,
+
+I have resubmitted the patchset v4 after fixing the patch format problems.
+Pls apply from patch 1 of the series onwards.
+
+Regards
+Anand
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+Sent: Friday, April 12, 2013 8:37 AM
+To: Anand Kumar Santhanam
+Cc: linux-scsi@vger.kernel.org; Harry Yang; Rich Bono; sakthivel.sk@hcl.com; Sangeetha Gnanasekaran; xjtuwjp@gmail.com; Vishwanath Maram
+Subject: Re: [PATCH V3 02/12] pm80xx: Added SPCv/ve specific ids, variables and modify for SPC
+
+On Thu, 2013-04-11 at 19:38 -0700, Anand Kumar Santhanam wrote:
+> Hi James,
+>
+> I will double check the same. Also can you pls provide the tool which
+> you are using to apply the patch and also the kernel version?
+
+It's git and the tip of the SCSI misc branch
+
+> I will ensure that we locally apply the patches before sending to the
+> list.
+
+Thanks,
 
 James
+
+
+
 
