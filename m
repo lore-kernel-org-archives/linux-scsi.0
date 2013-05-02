@@ -1,71 +1,43 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH V4] scsi: ufs: add support for query requests
-Date: Thu, 2 May 2013 13:54:30 +0530
-Message-ID: <CALMYJDv2wWuLHucARDMMoAE_zqDce6BDUMt6U4hAPT3=DiLMYA@mail.gmail.com>
-References: <1367422015-23651-1-git-send-email-draviv@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1367422015-23651-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: Double completion on retry
+Date: Thu,  2 May 2013 10:31:02 +0200
+Message-ID: <1367483462-22576-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:32843 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751746Ab3EBIbI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 May 2013 04:31:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>
 
-> +
-> +/**
-> + * ufshcd_compose_upiu - form UFS Protocol Information Unit(UPIU)
-> + * @hba - UFS hba
-> + * @lrb - pointer to local reference block
-> + */
-> +static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> +{
-> +       u32 upiu_flags;
-> +       int ret = 0;
-> +
-> +       switch (lrbp->command_type) {
-> +       case UTP_CMD_TYPE_SCSI:
->         case UTP_CMD_TYPE_DEV_MANAGE:
-> -               /* For query function implementation */
-> +               ufshcd_prepare_req_desc(lrbp, &upiu_flags);
-> +               if (lrbp->cmd && lrbp->command_type == UTP_CMD_TYPE_SCSI)
+When blk_end_request() returns 'false' in scsi_end_request the
+request is invalid after blk_end_request_all(). So we must not
+return the then stale request pointer. Doing so will result
+in a potential double completion.
+And we should be calling scsi_release_buffers() before
+blk_end_request_all().
 
-Sorry, probably missed it in the initial review. Here no need to check
-for 'lrbp->cmd'.
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Tejun Heo <tj@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-> +                       ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
-> +               else if (lrbp->cmd)
-
-no need to check here also
-
-> +                       ufshcd_prepare_utp_query_req_upiu(hba, lrbp,
-> +                                                               upiu_flags);
-> +               else {
-> +                       dev_err(hba->dev, "%s: Invalid UPIU request\n",
-> +                               __func__);
-> +                       ret = -EINVAL;
-> +               }
-
-remove this else part, this condition will never be true.
-
->                 break;
->         case UTP_CMD_TYPE_UFS:
->                 /* For UFS native command implementation */
-> +               dev_err(hba->dev, "%s: UFS native command are not supported\n",
-> +                       __func__);
-> +               ret = -ENOTSUPP;
-> +               break;
-> +       default:
-> +               ret = -ENOTSUPP;
-> +               dev_err(hba->dev, "%s: unknown command type: 0x%x\n",
-> +                               __func__, lrbp->command_type);
->                 break;
->         } /* end of switch */
-> +
-> +       return ret;
->  }
->
-
-
--- 
-~Santosh
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c31187d..8dba66b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -581,9 +581,11 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+ 	 */
+ 	if (blk_end_request(req, error, bytes)) {
+ 		/* kill remainder if no retrys */
+-		if (error && scsi_noretry_cmd(cmd))
++		if (error && scsi_noretry_cmd(cmd)) {
++			scsi_release_buffers(cmd);
+ 			blk_end_request_all(req, error);
+-		else {
++			cmd = NULL;
++		} else {
+ 			if (requeue) {
+ 				/*
+ 				 * Bleah.  Leftovers again.  Stick the
