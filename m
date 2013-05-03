@@ -1,134 +1,92 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] scsi: Handle MLQUEUE busy response in scsi_send_eh_cmnd
-Date: Fri, 3 May 2013 18:23:22 +0000
-Message-ID: <1367605401.5981.45.camel@dabdike>
-References: <1366870200-6492-1-git-send-email-hare@suse.de>
-	 <20130503102400.Horde.TQF1IJir309Rg8iARNPkSKA@imap.linux.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 3/3] scsi: ufs: add support for query requests
+Date: Fri, 03 May 2013 11:31:40 -0700
+Message-ID: <1367605900.5981.47.camel@dabdike>
+References: <1367495736-8927-1-git-send-email-santoshsy@gmail.com>
+	 <1367495736-8927-4-git-send-email-santoshsy@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:36940 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753525Ab3ECSX1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 May 2013 14:23:27 -0400
-In-Reply-To: <20130503102400.Horde.TQF1IJir309Rg8iARNPkSKA@imap.linux.ibm.com>
-Content-Language: en-US
-Content-ID: <1386F6F301BB1A49855755364871F436@sw.swsoft.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55648 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934023Ab3ECSbm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 May 2013 14:31:42 -0400
+In-Reply-To: <1367495736-8927-4-git-send-email-santoshsy@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "wenxiong@linux.vnet.ibm.com" <wenxiong@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
+To: Santosh Y <santoshsy@gmail.com>
+Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 
-On Fri, 2013-05-03 at 10:24 -0400, wenxiong@linux.vnet.ibm.com wrote:
-> Quoting Hannes Reinecke <hare@suse.de>:
+On Thu, 2013-05-02 at 17:25 +0530, Santosh Y wrote:
+> From: Dolev Raviv <draviv@codeaurora.org>
 > 
-> > scsi_send_eh_cmnd() is calling queuecommand() directly, so
-> > it needs to check the return value here.
-> > The only valid return codes for queuecommand() are 'busy'
-> > states, so we need to wait for a bit to allow the LLDD
-> > to recover.
-> >
-> > Based on an earlier patch from Wen Xiong.
-> >
-> > Cc: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-> > Cc: Brian King <brking@linux.vnet.ibm.com>
-> > Signed-off-by: Hannes Reinecke <hare@suse.de>
-> >
-> Hi James,
+> Add support for sending UFS query requests through tagged command
+> queuing. This design allows queuing query requests in any open slot
+> along with other SCSI commands. In this way there is no need to
+> save a slot in the requests queue and decrease its size.
 > 
-> I have verified this patch with two new ipr adapters. EEH error can be  
-> recoery successfully.
-> Do you have any question about this new patch?
+> A query request is posing to a SCSI command to use native flow. But
+> unlike normal SCSI command flow, the data and response fields are
+> filled in UFS host data structure instead of passing as arguments
+> while queuing into SCSI mlqueue (mid-layer SCSI queue, the requests
+> from this queue are submitted to the device queue). As per specification
+> only one query request is allowed to be processed by device. Hence a
+> mutex lock for protecting data and response fields (hba->query.request and
+> hba->query.response) needs to be held while query request is in
+> progress.
+> 
+> The API for submitting a query request is ufs_query_request() in
+> ufshcd.c. This function is responsible for:
+> 1. Obtaining the SCSI device from the host
+> 2. Keeping the query mutex to prevent multiple queries
+> 3. Storing the required data for sending a query request in ufs_hba
+> 4. Queuing a SCSI vendor specific command to trigger a query request
+>    in the UFS driver.
+> 
+> The callers of ufs_query_request() are expected to fill the query
+> command data fields and are to provide an allocated response field
+> for the driver to fill response fields after request completion.
+> 
+> The request and response upiu is extended in a union to enable using the
+> same data structure, both for command upiu and query request upiu.
+> 
+> The query request flow is separated from the scsi command flow in:
+> 1. Preparing the request
+> 2. Validating response (error) codes
+> 3. Copying data (only used for descriptor read/write query requests)
+> 4. Copying response/sense
+> 
+> Data error can't be handled in the scsi command native flow. Hence,
+> we pass the code as without a change back to the submitting layer.
+> 
+> UPIU (UFS Protocol Information Unit) size is increased to 512 bytes
+> from 128. The UPIU header and the transaction specific fields (SCSI
+> command or Query Request OSF - Op-code Specific Fields) are 32 bytes
+> together, the rest is used to transfer extra request data (such as
+> descriptor in query requests). In order to accommodate the largest
+> descriptor in the UFS spec (256 bytes) we need to increase the UPIU
+> size.
+> 
+> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+> Signed-off-by: Santosh Y <santoshsy@gmail.com>
+> 
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index 35faf24..82417d6 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -35,6 +35,7 @@
+>  config SCSI_UFSHCD
+>  	tristate "Universal Flash Storage Controller Driver Core"
+>  	depends on SCSI
+> +	default y
+>  	---help---
+>  	This selects the support for UFS devices in Linux, say Y and make
+>  	  sure that you know the name of your UFS host adapter (the card
 
-Yes, it's not correct: stall_for is in jiffies not msec, so
-msleep(stall_for) is taking far too long.  Plus you don't know that
-stall_for is a divisor of timeleft, so timeleft -= stall_for could wrap
-and cause the retry loop to go on effectively forever.
-
-I think the below is the correct patch, so I'll commit it unless there
-are objections.
+I don't think you want to force this on in every configuration since
+it's only appropriate to non server/desktop.  I stripped this hunk.
 
 James
 
----
->From a74498dda7acf6f5fb99e43df54f2c1f5c6beec9 Mon Sep 17 00:00:00 2001
-From: Hannes Reinecke <hare@suse.de>
-Date: Thu, 25 Apr 2013 08:10:00 +0200
-Subject: [PATCH] [SCSI] Handle MLQUEUE busy response in scsi_send_eh_cmnd
-
-scsi_send_eh_cmnd() is calling queuecommand() directly, so
-it needs to check the return value here.
-The only valid return codes for queuecommand() are 'busy'
-states, so we need to wait for a bit to allow the LLDD
-to recover.
-
-Based on an earlier patch from Wen Xiong.
-
-[jejb: fix confusion between msec and jiffies values and other issues]
-Cc: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: James Bottomley <JBottomley@Parallels.com>
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index c1b05a8..cfd1ef2 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -25,6 +25,7 @@
- #include <linux/interrupt.h>
- #include <linux/blkdev.h>
- #include <linux/delay.h>
-+#include <linux/jiffies.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -791,22 +792,33 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 	struct scsi_device *sdev = scmd->device;
- 	struct Scsi_Host *shost = sdev->host;
- 	DECLARE_COMPLETION_ONSTACK(done);
--	unsigned long timeleft;
-+	unsigned long timeleft = timeout;
- 	struct scsi_eh_save ses;
-+	const unsigned long stall_for = min(msecs_to_jiffies(10), 1UL);
- 	int rtn;
- 
-+retry:
- 	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
- 	shost->eh_action = &done;
- 
- 	scsi_log_send(scmd);
- 	scmd->scsi_done = scsi_eh_done;
--	shost->hostt->queuecommand(shost, scmd);
--
--	timeleft = wait_for_completion_timeout(&done, timeout);
-+	rtn = shost->hostt->queuecommand(shost, scmd);
-+	if (rtn) {
-+		if (timeleft > stall_for) {
-+			scsi_eh_restore_cmnd(scmd, &ses);
-+			timeleft -= stall_for;
-+			msleep(jiffies_to_msecs(stall_for));
-+			goto retry;
-+		}
-+		timeleft = 0;
-+		rtn = NEEDS_RETRY;
-+	} else
-+		timeleft = wait_for_completion_timeout(&done, timeout);
- 
- 	shost->eh_action = NULL;
- 
--	scsi_log_completion(scmd, SUCCESS);
-+	scsi_log_completion(scmd, rtn);
- 
- 	SCSI_LOG_ERROR_RECOVERY(3,
- 		printk("%s: scmd: %p, timeleft: %ld\n",
-@@ -837,7 +849,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 			rtn = FAILED;
- 			break;
- 		}
--	} else {
-+	} else if (!rtn) {
- 		scsi_abort_eh_cmnd(scmd);
- 		rtn = FAILED;
- 	}
 
