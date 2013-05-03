@@ -1,111 +1,125 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: Re: [PATCH] scsi: Handle MLQUEUE busy response in scsi_send_eh_cmnd
-Date: Fri, 03 May 2013 10:24:00 -0400
-Message-ID: <20130503102400.Horde.TQF1IJir309Rg8iARNPkSKA@imap.linux.ibm.com>
-References: <1366870200-6492-1-git-send-email-hare@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] cciss: bug fix to prevent cciss from loading in
+ kdump crash kernel
+Date: Fri, 03 May 2013 11:02:47 -0700
+Message-ID: <1367604167.5981.40.camel@dabdike>
+References: <20130423172539.GA11255@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:55530 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762217Ab3ECOYJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 May 2013 10:24:09 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
-	Fri, 3 May 2013 10:24:08 -0400
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 1688F6E8044
-	for <linux-scsi@vger.kernel.org>; Fri,  3 May 2013 10:24:02 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r43EO4Br294346
-	for <linux-scsi@vger.kernel.org>; Fri, 3 May 2013 10:24:04 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r43EO18r018054
-	for <linux-scsi@vger.kernel.org>; Fri, 3 May 2013 10:24:03 -0400
-In-Reply-To: <1366870200-6492-1-git-send-email-hare@suse.de>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130423172539.GA11255@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Miller <mike.miller@hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Brian King <brking@linux.vnet.ibm.com>
 
+On Tue, 2013-04-23 at 12:25 -0500, Mike Miller wrote:
+> PATCH 1/1
+> 
+> By default the cciss driver supports all "older" HP Smart Array controllers
+> and hpsa supports all controllers starting with the G6 family. There are
+> module parameters that allow a user to override those defaults and use hpsa
+> for any HP Smart Array controller.
+> If the user does override the default behavior and uses hpsa for older
+> controllers it is possible that cciss may try to load in a kdump crash
+> kernel. This may happen if cciss is loaded first from the kdump initrd
+> image. If cciss does load rather than hpsa and reset_devices is true we
+> immediately call cciss_hard_reset_controller. This will result in a kernel
+> panic and the core file cannot be created.
+> This patch prevents cciss from trying to load in this scenario.
+> 
+> Tested with 3.9.0-rc7.
+> 
+> From: Mike <mike.miller@hp.com>
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> 
+> ---
+>  drivers/block/cciss.c |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+> index 1c1b8e5..06c8dba 100644
+> --- a/drivers/block/cciss.c
+> +++ b/drivers/block/cciss.c
+> @@ -4960,6 +4960,16 @@ static int cciss_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	ctlr_info_t *h;
+>  	unsigned long flags;
+>  
+> +	/*
+> +	 * By default the cciss driver is used for all older HP Smart Array
+> +	 * controllers. There are module paramaters that allow a user to
+> +	 * override this behavior and instead use the hpsa SCSI driver. If
+> +	 * this is the case cciss may be loaded first from the kdump initrd
+> +	 * image and cause a kernel panic. So if reset_devices is true and
+> +	 * cciss_allow_hpsa is set just bail.
+> +	 */
+> +	if ((reset_devices) && (cciss_allow_hpsa == 1))
+> +		return -ENODEV;
+>  	rc = cciss_init_reset_devices(pdev);
+>  	if (rc) {
+>  		if (rc != -ENOTSUPP)
 
-Quoting Hannes Reinecke <hare@suse.de>:
+Sigh, right change log, incomplete bug fix.
 
-> scsi_send_eh_cmnd() is calling queuecommand() directly, so
-> it needs to check the return value here.
-> The only valid return codes for queuecommand() are 'busy'
-> states, so we need to wait for a bit to allow the LLDD
-> to recover.
->
-> Based on an earlier patch from Wen Xiong.
->
-> Cc: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-> Cc: Brian King <brking@linux.vnet.ibm.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
->
-Hi James,
+Can we all agree that this is the right one?
 
-I have verified this patch with two new ipr adapters. EEH error can be  
-recoery successfully.
-Do you have any question about this new patch?
+James
 
-Thanks,
-Wendy
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index d58db32..6a3c1d2 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -889,22 +889,32 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd  
-> *scmd, unsigned char *cmnd,
->  	struct scsi_device *sdev = scmd->device;
->  	struct Scsi_Host *shost = sdev->host;
->  	DECLARE_COMPLETION_ONSTACK(done);
-> -	unsigned long timeleft;
-> +	unsigned long timeleft = timeout;
->  	struct scsi_eh_save ses;
-> +	const int stall_for = min(HZ/10, 1);
->  	int rtn;
->
-> +retry:
->  	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
->  	shost->eh_action = &done;
->
->  	scsi_log_send(scmd);
->  	scmd->scsi_done = scsi_eh_done;
-> -	shost->hostt->queuecommand(shost, scmd);
-> -
-> -	timeleft = wait_for_completion_timeout(&done, timeout);
-> +	rtn = shost->hostt->queuecommand(shost, scmd);
-> +	if (rtn) {
-> +		if (timeleft) {
-> +			scsi_eh_restore_cmnd(scmd, &ses);
-> +			timeleft -= stall_for;
-> +			msleep(stall_for);
-> +			goto retry;
-> +		}
-> +		rtn = NEEDS_RETRY;
-> +	} else
-> +		timeleft = wait_for_completion_timeout(&done, timeout);
->
->  	shost->eh_action = NULL;
->
-> -	scsi_log_completion(scmd, SUCCESS);
-> +	scsi_log_completion(scmd, rtn);
->
->  	SCSI_LOG_ERROR_RECOVERY(3,
->  		printk("%s: scmd: %p, timeleft: %ld\n",
-> @@ -935,7 +945,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd  
-> *scmd, unsigned char *cmnd,
->  			rtn = FAILED;
->  			break;
->  		}
-> -	} else {
-> +	} else if (!rtn) {
->  		scsi_abort_eh_cmnd(scmd);
->  		rtn = FAILED;
->  	}
+---
+>From 746ba9f715b9037264ae0b8175c6286f5f8f62d4 Mon Sep 17 00:00:00 2001
+From: Mike Miller <mike.miller@hp.com>
+Date: Thu, 18 Apr 2013 13:49:37 -0500
+Subject: [PATCH] [SCSI] cciss: bug fix to prevent cciss from loading in kdump
+ crash kernel
 
+By default the cciss driver supports all "older" HP Smart Array controllers
+and hpsa supports all controllers starting with the G6 family. There are
+module parameters that allow a user to override those defaults and use hpsa
+for any HP Smart Array controller.
+If the user does override the default behavior and uses hpsa for older
+controllers it is possible that cciss may try to load in a kdump crash
+kernel. This may happen if cciss is loaded first from the kdump initrd
+image. If cciss does load rather than hpsa and reset_devices is true we
+immediately call cciss_hard_reset_controller. This will result in a kernel
+panic and the core file cannot be created.
+This patch prevents cciss from trying to load in this scenario.
 
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: James Bottomley <JBottomley@Parallels.com>
 
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 1c1b8e5..daaab88 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -75,6 +75,12 @@ module_param(cciss_simple_mode, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(cciss_simple_mode,
+ 	"Use 'simple mode' rather than 'performant mode'");
+ 
++static int cciss_allow_hpsa;
++module_param(cciss_allow_hpsa, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(cciss_allow_hpsa,
++	"Prevent cciss driver from accessing hardware known to be "
++	" supported by the hpsa driver");
++
+ static DEFINE_MUTEX(cciss_mutex);
+ static struct proc_dir_entry *proc_cciss;
+ 
+@@ -4960,6 +4966,16 @@ static int cciss_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	ctlr_info_t *h;
+ 	unsigned long flags;
+ 
++	/*
++	 * By default the cciss driver is used for all older HP Smart Array
++	 * controllers. There are module paramaters that allow a user to
++	 * override this behavior and instead use the hpsa SCSI driver. If
++	 * this is the case cciss may be loaded first from the kdump initrd
++	 * image and cause a kernel panic. So if reset_devices is true and
++	 * cciss_allow_hpsa is set just bail.
++	 */
++	if ((reset_devices) && (cciss_allow_hpsa == 1))
++		return -ENODEV;
+ 	rc = cciss_init_reset_devices(pdev);
+ 	if (rc) {
+ 		if (rc != -ENOTSUPP)
