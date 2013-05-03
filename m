@@ -1,38 +1,40 @@
-From: Asias He <asias@redhat.com>
-Subject: Re: initial LIO iSER performance numbers [was: GIT PULL] target
- updates for v3.10-rc1)
-Date: Fri, 3 May 2013 15:40:57 +0800
-Message-ID: <20130503074057.GA20544@hj.localdomain>
-References: <1367290766.16334.77.camel@haakon3.risingtidesystems.com>
- <51827114.9010907@mellanox.com>
- <1367523115.23900.118.camel@haakon3.risingtidesystems.com>
- <CAJZOPZ+9kwqDm5xvxZ8jLDSRnR_f7L7r7SfApNwU6fVN3o8C4g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAJZOPZ+9kwqDm5xvxZ8jLDSRnR_f7L7r7SfApNwU6fVN3o8C4g@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Or Gerlitz <or.gerlitz@gmail.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Or Gerlitz <ogerlitz@mellanox.com>, "linux-rdma (linux-rdma@vger.kernel.org)" <linux-rdma@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, ewg@lists.openfabrics.org, Shlomi Sasson <shlomis@mellanox.com>
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Subject: [PATCH 1/1] [scsi] ufs: Remove redundant platform_set_drvdata()
+Date: Fri,  3 May 2013 15:32:28 +0530
+Message-ID: <1367575348-20068-1-git-send-email-sachin.kamat@linaro.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:43429 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758945Ab3ECKPZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 May 2013 06:15:25 -0400
+Received: by mail-pb0-f44.google.com with SMTP id wz17so832771pbc.31
+        for <linux-scsi@vger.kernel.org>; Fri, 03 May 2013 03:15:25 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, vinholikatti@gmail.com, santoshsy@gmail.com, sachin.kamat@linaro.org, patches@linaro.org
 
-On Fri, May 03, 2013 at 09:57:20AM +0300, Or Gerlitz wrote:
-> On Thu, May 2, 2013 at 10:31 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> 
-> >> We used RAMDISK_MCP backend which was patched to act as NULL device, so
-> >> we can test the raw iSER wire performance.
-> 
-> > Btw, I'll be including a similar patch to allow for RAMDISK_NULL to be
-> > configured as a NULL device mode.
-> 
-> yep, that would be very helpful, so people can do that sort of testing
-> without hacks...
+Commit 0998d06310 (device-core: Ensure drvdata = NULL when no
+driver is bound) removes the need to set driver data field to
+NULL.
 
-+1, I used to hack drivers/block/brd.c to get a NULL ramdisk.
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+---
+ drivers/scsi/ufs/ufshcd-pltfrm.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-> Or.
-
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 03319ac..3db2ee1 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -184,7 +184,6 @@ static int ufshcd_pltfrm_remove(struct platform_device *pdev)
+ 		mem_size = resource_size(mem_res);
+ 		release_mem_region(mem_res->start, mem_size);
+ 	}
+-	platform_set_drvdata(pdev, NULL);
+ 	return 0;
+ }
+ 
 -- 
-Asias
+1.7.9.5
+
