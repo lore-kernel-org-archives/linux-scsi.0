@@ -1,305 +1,538 @@
 From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: [PATCH v2 7/7] scsi: ufs: add dme control primitives
-Date: Sat, 04 May 2013 17:45:50 +0900
-Message-ID: <000f01ce48a3$c74d8ae0$55e8a0a0$%jun@samsung.com>
+Subject: [PATCH v2 5/7] scsi: ufs: rework link start-up process
+Date: Sat, 04 May 2013 17:46:03 +0900
+Message-ID: <001001ce48a3$cf5e0e80$6e1a2b80$%jun@samsung.com>
 References: <002201ce4105$b6a26120$23e72360$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:16794 "EHLO
+Received: from mailout3.samsung.com ([203.254.224.33]:16805 "EHLO
 	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757955Ab3EDIpw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 May 2013 04:45:52 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
+	with ESMTP id S1757340Ab3EDIqF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 May 2013 04:46:05 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
  by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MM90096RN0E66E0@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Sat, 04 May 2013 17:45:50 +0900 (KST)
+ with ESMTP id <0MM90096UN0R66E0@mailout3.samsung.com> for
+ linux-scsi@vger.kernel.org; Sat, 04 May 2013 17:46:04 +0900 (KST)
 In-reply-to: <002201ce4105$b6a26120$23e72360$%jun@samsung.com>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
+Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-Implements to support the following operations.
-Currently, this patch doesn't introduce DME_ENABLE and DME_RESET
-because host controller's HCE enable contains these roles.
+Link start-up requires long time with multiphase handshakes
+between UFS host and device. This affects driver's probe time.
+This patch let link start-up run asynchronously. Link start-up
+will be executed at the end of prove separately.
+Along with this change, the following is worked.
 
-DME_POWERON{OFF}, DME_HIBERNATE_ENTER{EXIT}, DME_ENDPOINTRESET.
+Defined completion time of uic command to avoid a permanent wait.
+Added mutex to guarantee of uic command at a time.
+Adapted some sequence of controller initialization after link statup
+according to HCI standard.
 
 Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c |  133 ++++++++++++++++++++++++++++++++++++++++++---
- drivers/scsi/ufs/ufshcd.h |   26 +++++++++
- drivers/scsi/ufs/ufshci.h |   15 +++++
- 3 files changed, 166 insertions(+), 8 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |  287 ++++++++++++++++++++++++++++++---------------
+ drivers/scsi/ufs/ufshcd.h |   10 +-
+ 2 files changed, 200 insertions(+), 97 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 956041c..54cd61a 100644
+index 442195c..9c94d42 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -39,6 +39,7 @@
+@@ -33,11 +33,15 @@
+  * this program.
+  */
+ 
++#include <linux/async.h>
++
+ #include "ufshcd.h"
  
  #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
  				 UTP_TASK_REQ_COMPL |\
-+				 UFSHCD_HIBERNATE_MASK |\
  				 UFSHCD_ERROR_MASK)
- /* UIC command timeout, unit: ms */
- #define UIC_CMD_TIMEOUT	500
-@@ -203,6 +204,18 @@ static inline u32 ufshcd_get_dme_attr_val(struct ufs_hba *hba)
++/* UIC command timeout, unit: ms */
++#define UIC_CMD_TIMEOUT	500
+ 
+ enum {
+ 	UFSHCD_MAX_CHANNEL	= 0,
+@@ -410,24 +414,115 @@ static inline void ufshcd_hba_capabilities(struct ufs_hba *hba)
  }
  
  /**
-+ * ufshcd_get_upmcrs - Get the power mode change request status
-+ * @hba: Pointer to adapter instance
-+ *
-+ * This function gets the UPMCRS field of HCS register
-+ * Returns value of UPMCRS field
+- * ufshcd_send_uic_command - Send UIC commands to unipro layers
++ * ufshcd_ready_for_uic_cmd - Check if controller is ready
++ *                            to accept UIC commands
+  * @hba: per adapter instance
+- * @uic_command: UIC command
++ * Return true on success, else false
 + */
-+static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
++static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
 +{
-+	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) >> 8) & 0x7;
++	if (ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY)
++		return true;
++	else
++		return false;
 +}
 +
 +/**
-  * ufshcd_free_hba_memory - Free allocated memory for LRB, request
-  *			    and task lists
-  * @hba: Pointer to adapter instance
-@@ -1161,6 +1174,104 @@ int ufshcd_dme_xxx_get(struct ufs_hba *hba, u32 attr_sel,
- EXPORT_SYMBOL_GPL(ufshcd_dme_xxx_get);
++ * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
++ * @hba: per adapter instance
++ * @uic_cmd: UIC command
++ *
++ * Mutex must be held.
+  */
+ static inline void
+-ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command *uic_cmnd)
++ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ {
++	hba->active_uic_cmd = uic_cmd;
++
+ 	/* Write Args */
+-	ufshcd_writel(hba, uic_cmnd->argument1, REG_UIC_COMMAND_ARG_1);
+-	ufshcd_writel(hba, uic_cmnd->argument2, REG_UIC_COMMAND_ARG_2);
+-	ufshcd_writel(hba, uic_cmnd->argument3, REG_UIC_COMMAND_ARG_3);
++	ufshcd_writel(hba, uic_cmd->argument1, REG_UIC_COMMAND_ARG_1);
++	ufshcd_writel(hba, uic_cmd->argument2, REG_UIC_COMMAND_ARG_2);
++	ufshcd_writel(hba, uic_cmd->argument3, REG_UIC_COMMAND_ARG_3);
+ 
+ 	/* Write UIC Cmd */
+-	ufshcd_writel(hba, uic_cmnd->command & COMMAND_OPCODE_MASK,
++	ufshcd_writel(hba, uic_cmd->command & COMMAND_OPCODE_MASK,
+ 		      REG_UIC_COMMAND);
+ }
  
  /**
-+ * ufshcd_dme_power_xxx - UIC command for DME_POWERON, DME_POWEROFF
++ * ufshcd_wait_for_uic_cmd - Wait complectioin of UIC command
 + * @hba: per adapter instance
-+ * @on: indicate wherter power_on or power_off
++ * @uic_command: UIC command
 + *
-+ * Returns 0 on success, non-zero value on failure
++ * Must be called with mutex held.
++ * Returns 0 only if success.
 + */
-+int ufshcd_dme_power_xxx(struct ufs_hba *hba, u8 on)
++static int
++ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
 +{
-+	struct uic_command uic_cmd = {0};
-+	static const char *const action[] = {
-+		"dme-power-off",
-+		"dme-power-on"
-+	};
-+	const char *power = action[!!on];
 +	int ret;
 +
-+	uic_cmd.command = on ?
-+		UIC_CMD_DME_POWERON : UIC_CMD_DME_POWEROFF;
-+
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev, "%s: error code %d\n", power, ret);
++	if (wait_for_completion_timeout(&uic_cmd->done,
++					msecs_to_jiffies(UIC_CMD_TIMEOUT)))
++		ret = uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
++	else
++		ret = -ETIMEDOUT;
 +
 +	return ret;
 +}
-+EXPORT_SYMBOL_GPL(ufshcd_dme_power_xxx);
 +
 +/**
-+ * ufshcd_dme_hibern8_xxx - UIC command for DME_HIBERNATE_ENTER,
-+ *			    DME_HIBERNATE_EXIT
++ * __ufshcd_send_uic_cmd - Send UIC commands and retrieve the result
 + * @hba: per adapter instance
-+ * @enter: indicate wherter hibernation enter or exit
++ * @uic_cmd: UIC command
 + *
-+ * Returns 0 on success, non-zero value on failure
++ * Identical to ufshcd_send_uic_cmd() expect mutex. Must be called
++ * with mutex held.
++ * Returns 0 only if success.
 + */
-+int ufshcd_dme_hibern8_xxx(struct ufs_hba *hba, u8 enter)
++static int
++__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
 +{
-+	struct uic_command uic_cmd = {0};
-+	static const char *const action[] = {
-+		"dme-hibernate-exit",
-+		"dme-hibernate-enter"
-+	};
-+	const char *hibern8 = action[!!enter];
-+	u8 status;
 +	int ret;
++	unsigned long flags;
 +
-+	uic_cmd.command = enter ?
-+		UIC_CMD_DME_HIBER_ENTER : UIC_CMD_DME_HIBER_EXIT;
++	if (!ufshcd_ready_for_uic_cmd(hba)) {
++		dev_err(hba->dev,
++			"Controller not ready to accept UIC commands\n");
++		return -EIO;
++	}
++
++	init_completion(&uic_cmd->done);
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++	ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
++
++	return ret;
++}
++
++/**
++ * ufshcd_send_uic_cmd - Send UIC commands and retrieve the result
++ * @hba: per adapter instance
++ * @uic_cmd: UIC command
++ *
++ * Returns 0 only if success.
++ */
++static int
++ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
++{
++	int ret;
 +
 +	mutex_lock(&hba->uic_cmd_mutex);
-+	ret = __ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret) {
-+		dev_err(hba->dev, "%s: error code %d\n", hibern8, ret);
-+		goto out;
-+	}
-+
-+	init_completion(&hba->hibern8_done);
-+
-+	if (wait_for_completion_timeout(&hba->hibern8_done,
-+					msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
-+		status = ufshcd_get_upmcrs(hba);
-+		if (status != PWR_LOCAL) {
-+			dev_err(hba->dev, "%s: failed, host upmcrs:%x\n",
-+				hibern8, status);
-+			ret = status;
-+		}
-+	} else {
-+		dev_err(hba->dev, "%s: timeout\n", hibern8);
-+		ret = -ETIMEDOUT;
-+	}
-+out:
++	ret = __ufshcd_send_uic_cmd(hba, uic_cmd);
 +	mutex_unlock(&hba->uic_cmd_mutex);
++
 +	return ret;
 +}
-+EXPORT_SYMBOL_GPL(ufshcd_dme_hibern8_xxx);
 +
 +/**
-+ * ufshcd_dme_endpt_reset - UIC command for DME_ENDPOINTRESET
-+ * @hba: per adapter instance
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+int ufshcd_dme_endpt_reset(struct ufs_hba *hba)
-+{
+  * ufshcd_map_sg - Map scatter-gather list to prdt
+  * @lrbp - pointer to local reference block
+  *
+@@ -971,34 +1066,16 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+  */
+ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+ {
+-	struct uic_command *uic_cmd;
+-	unsigned long flags;
 +	struct uic_command uic_cmd = {0};
 +	int ret;
-+
-+	uic_cmd.command = UIC_CMD_DME_END_PT_RST;
-+
+ 
+-	/* check if controller is ready to accept UIC commands */
+-	if ((ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
+-	    UIC_COMMAND_READY) == 0x0) {
+-		dev_err(hba->dev,
+-			"Controller not ready"
+-			" to accept UIC commands\n");
+-		return -EIO;
+-	}
+-
+-	spin_lock_irqsave(hba->host->host_lock, flags);
++	uic_cmd.command = UIC_CMD_DME_LINK_STARTUP;
+ 
+-	/* form UIC command */
+-	uic_cmd = &hba->active_uic_cmd;
+-	uic_cmd->command = UIC_CMD_DME_LINK_STARTUP;
+-	uic_cmd->argument1 = 0;
+-	uic_cmd->argument2 = 0;
+-	uic_cmd->argument3 = 0;
+-
+-	/* enable UIC related interrupts */
+-	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+-
+-	/* sending UIC commands to controller */
+-	ufshcd_send_uic_command(hba, uic_cmd);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	return 0;
 +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
 +	if (ret)
-+		dev_err(hba->dev, "endpoint reset: error code %d\n", ret);
-+
++		dev_err(hba->dev,
++			"link startup: error code %d\n", ret);
 +	return ret;
-+}
-+EXPORT_SYMBOL_GPL(ufshcd_dme_endpt_reset);
-+
-+/**
-  * ufshcd_make_hba_operational - Make UFS controller operational
-  * @hba: per adapter instance
-  *
-@@ -1617,14 +1728,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- /**
-  * ufshcd_uic_cmd_compl - handle completion of uic command
-  * @hba: per adapter instance
-+ * @intr_status: interrupt status generated by the controller
-  */
--static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
-+static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- {
--	hba->active_uic_cmd->argument2 |=
--		ufshcd_get_uic_cmd_result(hba);
--	hba->active_uic_cmd->argument3 =
--		ufshcd_get_dme_attr_val(hba);
--	complete(&hba->active_uic_cmd->done);
-+	if (intr_status & UIC_COMMAND_COMPL) {
-+		hba->active_uic_cmd->argument2 |=
-+			ufshcd_get_uic_cmd_result(hba);
-+		hba->active_uic_cmd->argument3 =
-+			ufshcd_get_dme_attr_val(hba);
-+		complete(&hba->active_uic_cmd->done);
-+	}
-+
-+	if (intr_status & UFSHCD_HIBERNATE_MASK)
-+		complete(&hba->hibern8_done);
  }
  
  /**
-@@ -1726,8 +1843,8 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- 	if (hba->errors)
+@@ -1007,9 +1084,10 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+  *
+  * To bring UFS host controller to operational state,
+  * 1. Check if device is present
+- * 2. Configure run-stop-registers
+- * 3. Enable required interrupts
+- * 4. Configure interrupt aggregation
++ * 2. Enable required interrupts
++ * 3. Configure interrupt aggregation
++ * 4. Program UTRL and UTMRL base addres
++ * 5. Configure run-stop-registers
+  *
+  * Returns 0 on success, non-zero value on failure
+  */
+@@ -1026,6 +1104,22 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
++	/* Enable required interrupts */
++	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
++
++	/* Configure interrupt aggregation */
++	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
++
++	/* Configure UTRL and UTMRL base address registers */
++	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
++			REG_UTP_TRANSFER_REQ_LIST_BASE_L);
++	ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
++			REG_UTP_TRANSFER_REQ_LIST_BASE_H);
++	ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
++			REG_UTP_TASK_REQ_LIST_BASE_L);
++	ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
++			REG_UTP_TASK_REQ_LIST_BASE_H);
++
+ 	/*
+ 	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
+ 	 * DEI, HEI bits must be 0
+@@ -1039,17 +1133,11 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
+-	/* Enable required interrupts */
+-	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
+-
+-	/* Configure interrupt aggregation */
+-	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
+-
+ 	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+ 		scsi_unblock_requests(hba->host);
+ 
+ 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+-	scsi_scan_host(hba->host);
++
+ out:
+ 	return err;
+ }
+@@ -1118,34 +1206,29 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+ }
+ 
+ /**
+- * ufshcd_initialize_hba - start the initialization process
++ * ufshcd_link_startup - Initialize unipro link startup
+  * @hba: per adapter instance
+  *
+- * 1. Enable the controller via ufshcd_hba_enable.
+- * 2. Program the Transfer Request List Address with the starting address of
+- * UTRDL.
+- * 3. Program the Task Management Request List Address with starting address
+- * of UTMRDL.
+- *
+- * Returns 0 on success, non-zero value on failure.
++ * Returns 0 for success, non-zero in case of failure
+  */
+-static int ufshcd_initialize_hba(struct ufs_hba *hba)
++static int ufshcd_link_startup(struct ufs_hba *hba)
+ {
+-	if (ufshcd_hba_enable(hba))
+-		return -EIO;
++	int ret;
+ 
+-	/* Configure UTRL and UTMRL base address registers */
+-	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
+-		      REG_UTP_TRANSFER_REQ_LIST_BASE_L);
+-	ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
+-		      REG_UTP_TRANSFER_REQ_LIST_BASE_H);
+-	ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
+-		      REG_UTP_TASK_REQ_LIST_BASE_L);
+-	ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
+-		      REG_UTP_TASK_REQ_LIST_BASE_H);
++	/* enable UIC related interrupts */
++	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
++
++	ret = ufshcd_dme_link_startup(hba);
++	if (ret)
++		goto out;
+ 
+-	/* Initialize unipro link startup procedure */
+-	return ufshcd_dme_link_startup(hba);
++	ret = ufshcd_make_hba_operational(hba);
++	if (ret)
++		goto out;
++
++out:
++	dev_err(hba->dev, "link startup failed %d\n", ret);
++	return ret;
+ }
+ 
+ /**
+@@ -1185,12 +1268,19 @@ static int ufshcd_do_reset(struct ufs_hba *hba)
+ 	hba->outstanding_reqs = 0;
+ 	hba->outstanding_tasks = 0;
+ 
+-	/* start the initialization process */
+-	if (ufshcd_initialize_hba(hba)) {
++	/* Host controller enable */
++	if (ufshcd_hba_enable(hba)) {
+ 		dev_err(hba->dev,
+ 			"Reset: Controller initialization failed\n");
+ 		return FAILED;
+ 	}
++
++	if (ufshcd_link_startup(hba)) {
++		dev_err(hba->dev,
++			"Reset: Link start-up failed\n");
++		return FAILED;
++	}
++
+ 	return SUCCESS;
+ }
+ 
+@@ -1443,6 +1533,17 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ }
+ 
+ /**
++ * ufshcd_uic_cmd_compl - handle completion of uic command
++ * @hba: per adapter instance
++ */
++static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
++{
++	hba->active_uic_cmd->argument2 |=
++		ufshcd_get_uic_cmd_result(hba);
++	complete(&hba->active_uic_cmd->done);
++}
++
++/**
+  * ufshcd_transfer_req_compl - handle SCSI and query command completion
+  * @hba: per adapter instance
+  */
+@@ -1482,28 +1583,6 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ }
+ 
+ /**
+- * ufshcd_uic_cc_handler - handle UIC command completion
+- * @work: pointer to a work queue structure
+- *
+- * Returns 0 on success, non-zero value on failure
+- */
+-static void ufshcd_uic_cc_handler (struct work_struct *work)
+-{
+-	struct ufs_hba *hba;
+-
+-	hba = container_of(work, struct ufs_hba, uic_workq);
+-
+-	if ((hba->active_uic_cmd.command == UIC_CMD_DME_LINK_STARTUP) &&
+-	    !(ufshcd_get_uic_cmd_result(hba))) {
+-
+-		if (ufshcd_make_hba_operational(hba))
+-			dev_err(hba->dev,
+-				"cc: hba not operational state\n");
+-		return;
+-	}
+-}
+-
+-/**
+  * ufshcd_fatal_err_handler - handle fatal errors
+  * @hba: per adapter instance
+  */
+@@ -1564,7 +1643,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
  		ufshcd_err_handler(hba);
  
--	if (intr_status & UIC_COMMAND_COMPL)
--		ufshcd_uic_cmd_compl(hba);
-+	if (intr_status & UFSHCD_UIC_MASK)
-+		ufshcd_uic_cmd_compl(hba, intr_status);
+ 	if (intr_status & UIC_COMMAND_COMPL)
+-		schedule_work(&hba->uic_workq);
++		ufshcd_uic_cmd_compl(hba);
  
  	if (intr_status & UTP_TASK_REQ_COMPL)
  		ufshcd_tmc_handler(hba);
+@@ -1787,6 +1866,21 @@ out:
+ 	return err;
+ }
+ 
++/**
++ * ufshcd_async_scan - asynchronous execution for link startup
++ * @data: data pointer to pass to this function
++ * @cookie: cookie data
++ */
++static void ufshcd_async_scan(void *data, async_cookie_t cookie)
++{
++	struct ufs_hba *hba = (struct ufs_hba *)data;
++	int ret;
++
++	ret = ufshcd_link_startup(hba);
++	if (!ret)
++		scsi_scan_host(hba->host);
++}
++
+ static struct scsi_host_template ufshcd_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= UFSHCD,
+@@ -1948,12 +2042,14 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+ 	init_waitqueue_head(&hba->ufshcd_tm_wait_queue);
+ 
+ 	/* Initialize work queues */
+-	INIT_WORK(&hba->uic_workq, ufshcd_uic_cc_handler);
+ 	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
+ 
+ 	/* Initialize mutex for query requests */
+ 	mutex_init(&hba->query.lock_ufs_query);
+ 
++	/* Initialize UIC command mutex */
++	mutex_init(&hba->uic_cmd_mutex);
++
+ 	/* IRQ registration */
+ 	err = request_irq(irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
+ 	if (err) {
+@@ -1974,14 +2070,17 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+ 		goto out_free_irq;
+ 	}
+ 
+-	/* Initialization routine */
+-	err = ufshcd_initialize_hba(hba);
++	/* Host controller enable */
++	err = ufshcd_hba_enable(hba);
+ 	if (err) {
+-		dev_err(hba->dev, "Initialization failed\n");
++		dev_err(hba->dev, "Host controller enable failed\n");
+ 		goto out_remove_scsi_host;
+ 	}
++
+ 	*hba_handle = hba;
+ 
++	async_schedule(ufshcd_async_scan, hba);
++
+ 	return 0;
+ 
+ out_remove_scsi_host:
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index b47de70..c60f5f1 100644
+index a874452..6095b3b 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -156,6 +156,7 @@ struct ufs_query {
-  * @uic_cmd_mutex: mutex for uic command
+@@ -51,6 +51,7 @@
+ #include <linux/bitops.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/clk.h>
++#include <linux/completion.h>
+ 
+ #include <asm/irq.h>
+ #include <asm/byteorder.h>
+@@ -76,6 +77,7 @@
+  * @argument3: UIC command argument 3
+  * @cmd_active: Indicate if UIC command is outstanding
+  * @result: UIC command result
++ * @done: UIC command completion
+  */
+ struct uic_command {
+ 	u32 command;
+@@ -84,6 +86,7 @@ struct uic_command {
+ 	u32 argument3;
+ 	int cmd_active;
+ 	int result;
++	struct completion done;
+ };
+ 
+ /**
+@@ -150,11 +153,11 @@ struct ufs_query {
+  * @ufs_version: UFS Version to which controller complies
+  * @irq: Irq number of the controller
+  * @active_uic_cmd: handle of active UIC command
++ * @uic_cmd_mutex: mutex for uic command
   * @ufshcd_tm_wait_queue: wait queue for task management
   * @tm_condition: condition variable for task management
-+ * @hibern8_done: completion for hibernate
   * @ufshcd_state: UFSHCD states
   * @intr_mask: Interrupt Mask Bits
+- * @uic_workq: Work queue for UIC completion handling
   * @feh_workq: Work queue for fatal controller error handling
-@@ -195,6 +196,8 @@ struct ufs_hba {
+  * @errors: HBA errors
+  * @query: query request information
+@@ -186,7 +189,9 @@ struct ufs_hba {
+ 	u32 ufs_version;
+ 	unsigned int irq;
+ 
+-	struct uic_command active_uic_cmd;
++	struct uic_command *active_uic_cmd;
++	struct mutex uic_cmd_mutex;
++
  	wait_queue_head_t ufshcd_tm_wait_queue;
  	unsigned long tm_condition;
  
-+	struct completion hibern8_done;
-+
- 	u32 ufshcd_state;
+@@ -194,7 +199,6 @@ struct ufs_hba {
  	u32 intr_mask;
  
-@@ -221,6 +224,9 @@ extern int ufshcd_dme_xxx_set(struct ufs_hba *hba, u32 attr_sel,
- 			      u8 attr_set, u32 mib_val, u8 peer);
- extern int ufshcd_dme_xxx_get(struct ufs_hba *hba, u32 attr_sel,
- 			      u32 *mib_val, u8 peer);
-+extern int ufshcd_dme_power_xxx(struct ufs_hba *hba, u8 on);
-+extern int ufshcd_dme_hibern8_xxx(struct ufs_hba *hba, u8 enter);
-+extern int ufshcd_dme_endpt_reset(struct ufs_hba *hba);
+ 	/* Work Queues */
+-	struct work_struct uic_workq;
+ 	struct work_struct feh_workq;
  
- static inline int ufshcd_dme_set(struct ufs_hba *hba, u32 attr_sel,
- 				 u8 attr_set, u32 mib_val)
-@@ -246,4 +252,24 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
- 	return ufshcd_dme_xxx_get(hba, attr_sel, mib_val, 1);
- }
- 
-+static inline int ufshcd_dme_power_on(struct ufs_hba *hba)
-+{
-+	return ufshcd_dme_power_xxx(hba, 1);
-+}
-+
-+static inline int ufshcd_dme_power_off(struct ufs_hba *hba)
-+{
-+	return ufshcd_dme_power_xxx(hba, 0);
-+}
-+
-+static inline int ufshcd_dme_hibern8_enter(struct ufs_hba *hba)
-+{
-+	return ufshcd_dme_hibern8_xxx(hba, 1);
-+}
-+
-+static inline int ufshcd_dme_hibern8_exit(struct ufs_hba *hba)
-+{
-+	return ufshcd_dme_hibern8_xxx(hba, 0);
-+}
-+
- #endif /* End of Header */
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index c7d6a1b..d60703f 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -124,6 +124,12 @@ enum {
- #define CONTROLLER_FATAL_ERROR			UFS_BIT(16)
- #define SYSTEM_BUS_FATAL_ERROR			UFS_BIT(17)
- 
-+#define UFSHCD_HIBERNATE_MASK	(UIC_HIBERNATE_ENTER |\
-+				 UIC_HIBERNATE_EXIT)
-+
-+#define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL |\
-+				 UFSHCD_HIBERNATE_MASK)
-+
- #define UFSHCD_ERROR_MASK	(UIC_ERROR |\
- 				DEVICE_FATAL_ERROR |\
- 				CONTROLLER_FATAL_ERROR |\
-@@ -142,6 +148,15 @@ enum {
- #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
- #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
- 
-+enum {
-+	PWR_OK          = 0x0,
-+	PWR_LOCAL       = 0x01,
-+	PWR_REMOTE      = 0x02,
-+	PWR_BUSY        = 0x03,
-+	PWR_ERROR_CAP   = 0x04,
-+	PWR_FATAL_ERROR = 0x05,
-+};
-+
- /* HCE - Host Controller Enable 34h */
- #define CONTROLLER_ENABLE	UFS_BIT(0)
- #define CONTROLLER_DISABLE	0x0
+ 	/* HBA Errors */
 -- 
 1.7.0.4
 
