@@ -1,102 +1,86 @@
-From: "Dolev Raviv" <draviv@codeaurora.org>
-Subject: Re: [PATCH 3/3] scsi: ufs: add support for query requests
-Date: Sun, 5 May 2013 03:32:23 -0700
-Message-ID: <81efb1ec20c4c2ddf523f1cc34d8962b.squirrel@www.codeaurora.org>
-References: <1367495736-8927-1-git-send-email-santoshsy@gmail.com>
-    <1367495736-8927-4-git-send-email-santoshsy@gmail.com>
-    <1367605900.5981.47.camel@dabdike>
+From: merez@codeaurora.org
+Subject: Re: [PATCH v2 1/7] scsi: ufs: move the ufshcd_hba_stop to ufshcd.c
+Date: Sun, 5 May 2013 04:22:53 -0700
+Message-ID: <3081f2d4913dc74ded32bff2b8a68cd4.squirrel@www.codeaurora.org>
+References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
+    <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com>
+    <000b01ce48a3$ad7072e0$085158a0$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48369 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441Ab3EEKcX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 May 2013 06:32:23 -0400
-In-Reply-To: <1367605900.5981.47.camel@dabdike>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:40879 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750814Ab3EELWx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 May 2013 07:22:53 -0400
+In-Reply-To: <000b01ce48a3$ad7072e0$085158a0$%jun@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Santosh Y <santoshsy@gmail.com>, linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Dolev Raviv <draviv@codeaurora.org>
+To: Seungwon Jeon <tgih.jun@samsung.com>
+Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <jbottomley@parallels.com>
 
-Hi James,
-I've noticed you haven't merged this patch.
-To avoid further problems I resent a V5 to this patch removing the Kconfig
-change.
+Hi,
 
-Dolev
+ufshcd_pci_shutdown (in ufshcd_pci.c) is using ufshcd_hba_stop so it
+cannot be moved to ufshcd.c.
+Sorry for missing it last time I tested, I returned ufshcd_hba_stop to
+ufshcd.h by mistake when I resolved conflicts of the next patch so I
+didn't hit the compilation errors.
 
-> On Thu, 2013-05-02 at 17:25 +0530, Santosh Y wrote:
->> From: Dolev Raviv <draviv@codeaurora.org>
->>
->> Add support for sending UFS query requests through tagged command
->> queuing. This design allows queuing query requests in any open slot
->> along with other SCSI commands. In this way there is no need to
->> save a slot in the requests queue and decrease its size.
->>
->> A query request is posing to a SCSI command to use native flow. But
->> unlike normal SCSI command flow, the data and response fields are
->> filled in UFS host data structure instead of passing as arguments
->> while queuing into SCSI mlqueue (mid-layer SCSI queue, the requests
->> from this queue are submitted to the device queue). As per specification
->> only one query request is allowed to be processed by device. Hence a
->> mutex lock for protecting data and response fields (hba->query.request
->> and
->> hba->query.response) needs to be held while query request is in
->> progress.
->>
->> The API for submitting a query request is ufs_query_request() in
->> ufshcd.c. This function is responsible for:
->> 1. Obtaining the SCSI device from the host
->> 2. Keeping the query mutex to prevent multiple queries
->> 3. Storing the required data for sending a query request in ufs_hba
->> 4. Queuing a SCSI vendor specific command to trigger a query request
->>    in the UFS driver.
->>
->> The callers of ufs_query_request() are expected to fill the query
->> command data fields and are to provide an allocated response field
->> for the driver to fill response fields after request completion.
->>
->> The request and response upiu is extended in a union to enable using the
->> same data structure, both for command upiu and query request upiu.
->>
->> The query request flow is separated from the scsi command flow in:
->> 1. Preparing the request
->> 2. Validating response (error) codes
->> 3. Copying data (only used for descriptor read/write query requests)
->> 4. Copying response/sense
->>
->> Data error can't be handled in the scsi command native flow. Hence,
->> we pass the code as without a change back to the submitting layer.
->>
->> UPIU (UFS Protocol Information Unit) size is increased to 512 bytes
->> from 128. The UPIU header and the transaction specific fields (SCSI
->> command or Query Request OSF - Op-code Specific Fields) are 32 bytes
->> together, the rest is used to transfer extra request data (such as
->> descriptor in query requests). In order to accommodate the largest
->> descriptor in the UFS spec (256 bytes) we need to increase the UPIU
->> size.
->>
->> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
->> Signed-off-by: Santosh Y <santoshsy@gmail.com>
->>
->> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
->> index 35faf24..82417d6 100644
->> --- a/drivers/scsi/ufs/Kconfig
->> +++ b/drivers/scsi/ufs/Kconfig
->> @@ -35,6 +35,7 @@
->>  config SCSI_UFSHCD
->>  	tristate "Universal Flash Storage Controller Driver Core"
->>  	depends on SCSI
->> +	default y
->>  	---help---
->>  	This selects the support for UFS devices in Linux, say Y and make
->>  	  sure that you know the name of your UFS host adapter (the card
+Thanks,
+Maya
+> Move the ufshcd_hba_stop from header file.
 >
-> I don't think you want to force this on in every configuration since
-> it's only appropriate to non server/desktop.  I stripped this hunk.
+> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Tested-by: Maya Erez <merez@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c |    9 +++++++++
+>  drivers/scsi/ufs/ufshcd.h |    9 ---------
+>  2 files changed, 9 insertions(+), 9 deletions(-)
 >
-> James
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index f244812..d932239 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -280,6 +280,15 @@ static inline void ufshcd_hba_start(struct ufs_hba
+> *hba)
+>  }
+>
+>  /**
+> + * ufshcd_hba_stop - Send controller to reset state
+> + * @hba: per adapter instance
+> + */
+> +static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+> +{
+> +	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
+> +}
+> +
+> +/**
+>   * ufshcd_is_hba_active - Get controller state
+>   * @hba: per adapter instance
+>   *
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 336980b..3a1052d 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -208,13 +208,4 @@ int ufshcd_init(struct device *, struct ufs_hba ** ,
+> void __iomem * ,
+>  			unsigned int);
+>  void ufshcd_remove(struct ufs_hba *);
+>
+> -/**
+> - * ufshcd_hba_stop - Send controller to reset state
+> - * @hba: per adapter instance
+> - */
+> -static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+> -{
+> -	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
+> -}
+> -
+>  #endif /* End of Header */
+> --
+> 1.7.0.4
 >
 >
 > --
@@ -107,7 +91,7 @@ Dolev
 
 
 -- 
+Maya Erez
 QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
-
 
