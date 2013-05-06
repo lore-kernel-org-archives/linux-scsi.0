@@ -1,43 +1,41 @@
-From: Patrick Monnerat <pm@datasphere.ch>
-Subject: Re: [PATCH 1/1] Create megaraid ioctl device node
-Date: Mon, 06 May 2013 17:13:47 +0200
-Message-ID: <5187C8AB.90501@datasphere.ch>
-References: <AB5E58B87EB73C46A38073D8F459F113D9FBA4@dataspheresrv01> <87a9o86vbj.fsf@nemi.mork.no>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: linux-next: Tree for May 6 (lpfc)
+Date: Mon, 06 May 2013 09:14:41 -0700
+Message-ID: <5187D6F1.9070103@infradead.org>
+References: <20130506144207.c812a0227d7763d26e5fec80@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87a9o86vbj.fsf@nemi.mork.no>
+In-Reply-To: <20130506144207.c812a0227d7763d26e5fec80@canb.auug.org.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: =?UTF-8?B?QmrDuHJuIE1vcms=?= <bjorn@mork.no>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, James Smart <james.smart@emulex.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/06/2013 04:23 PM, Bj=C3=B8rn Mork wrote:
-> "Patrick Monnerat" <Patrick.Monnerat@datasphere.ch> writes:
->>    Create ioctl device node for megaraid_sas driver. Let this node b=
-e
->> managed by udev. Fix a typo.
->
-> Or maybe just simplify it all and use a misc device instead?  See how
-> this is done in e.g. drivers/scsi/mpt3sas/mpt3sas_ctl.c or
-> drivers/message/fusion/mptctl.c
+On 05/05/13 21:42, Stephen Rothwell wrote:
+> Hi all,
+> 
+> Please do not add any v3.11 destined work to your linux-next included
+> branches until after v3.10-rc1 is released.
+> 
+> I am receiving a (un)reasonable number of conflicts from there being
+> multiple copies of some commits in various trees.   Please clean this up
+> and resist the temptataion to rebase your trees on the way to your
+> upstream ...
+> 
+> Changes since 20130506:
+> 
 
-Yes, could be done that way, But I want to retain compatibility with=20
-existing shell scripts doing things like:
+on i386:
+# CONFIG_CRC_T10DIF is not set
 
-DEVICE=3D/dev/megaraid_sas_ioctl_node
-DEVICENAME=3Dmegaraid_sas_ioctl
-DEVICEPERM=3D400
-MAJOR=3D`grep "$DEVICENAME" /proc/devices | awk '{print $1}'`
 
-if [ -n "$MAJOR" -a ! -e "$DEVICE" ]; then
-     mknod "$DEVICE" c "$MAJOR" 0
-     chmod "$DEVICEPERM" "$DEVICE"
-fi
+drivers/built-in.o: In function `lpfc_bg_crc':
+(.text+0x3cb3c9): undefined reference to `crc_t10dif'
 
-Snippets like this one appear both in open-source projects and Dell scr=
-ipts.
 
-Patrick
+
+
+-- 
+~Randy
