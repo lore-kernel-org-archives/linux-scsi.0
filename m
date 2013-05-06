@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/5] dc395: Move 'last_reset' into internal host structure
-Date: Mon,  6 May 2013 09:20:39 +0200
-Message-ID: <1367824841-47767-4-git-send-email-hare@suse.de>
+Subject: [PATCH 1/5] scsi: remove 'resetting' field from struct Scsi_Host
+Date: Mon,  6 May 2013 09:20:37 +0200
+Message-ID: <1367824841-47767-2-git-send-email-hare@suse.de>
 References: <1367824841-47767-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38801 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:38798 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753112Ab3EFHUp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753061Ab3EFHUp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 6 May 2013 03:20:45 -0400
 In-Reply-To: <1367824841-47767-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,114 +14,126 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-'last_reset' is only used internally, so move it into the
-internal host structure.
+struct Scsi_Host has a field 'resetting' which is only ever used
+in dpt_i2o. And even there the usage is questionable.
+So remove the field and have dpt_i2o use the standard mechanism
+for delaying I/O.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/dc395x.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+ drivers/scsi/dpt_i2o.c   | 22 +++-------------------
+ drivers/scsi/scsi.c      | 25 +------------------------
+ include/scsi/scsi_host.h |  1 -
+ 3 files changed, 4 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 694e13c..42e8624 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -308,6 +308,8 @@ struct AdapterCtlBlk {
- 	struct timer_list waiting_timer;
- 	struct timer_list selto_timer;
- 
-+	unsigned long last_reset;
-+
- 	u16 srb_count;
- 
- 	u8 sel_timeout;
-@@ -860,9 +862,9 @@ static void waiting_set_timer(struct AdapterCtlBlk *acb, unsigned long to)
- 	init_timer(&acb->waiting_timer);
- 	acb->waiting_timer.function = waiting_timeout;
- 	acb->waiting_timer.data = (unsigned long) acb;
--	if (time_before(jiffies + to, acb->scsi_host->last_reset - HZ / 2))
-+	if (time_before(jiffies + to, acb->last_reset - HZ / 2))
- 		acb->waiting_timer.expires =
--		    acb->scsi_host->last_reset - HZ / 2 + 1;
-+		    acb->last_reset - HZ / 2 + 1;
- 	else
- 		acb->waiting_timer.expires = jiffies + to + 1;
- 	add_timer(&acb->waiting_timer);
-@@ -1319,7 +1321,7 @@ static int __dc395x_eh_bus_reset(struct scsi_cmnd *cmd)
- 	udelay(500);
- 
- 	/* We may be in serious trouble. Wait some seconds */
--	acb->scsi_host->last_reset =
-+	acb->last_reset =
- 	    jiffies + 3 * HZ / 2 +
- 	    HZ * acb->eeprom.delay_time;
- 
-@@ -1462,9 +1464,9 @@ static void selto_timer(struct AdapterCtlBlk *acb)
- 	acb->selto_timer.function = selection_timeout_missed;
- 	acb->selto_timer.data = (unsigned long) acb;
- 	if (time_before
--	    (jiffies + HZ, acb->scsi_host->last_reset + HZ / 2))
-+	    (jiffies + HZ, acb->last_reset + HZ / 2))
- 		acb->selto_timer.expires =
--		    acb->scsi_host->last_reset + HZ / 2 + 1;
-+		    acb->last_reset + HZ / 2 + 1;
- 	else
- 		acb->selto_timer.expires = jiffies + HZ + 1;
- 	add_timer(&acb->selto_timer);
-@@ -1535,7 +1537,7 @@ static u8 start_scsi(struct AdapterCtlBlk* acb, struct DeviceCtlBlk* dcb,
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 19e1b42..943d9c0 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -448,18 +448,8 @@ static int adpt_queue_lck(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd
  	}
- 	/* Allow starting of SCSI commands half a second before we allow the mid-level
- 	 * to queue them again after a reset */
--	if (time_before(jiffies, acb->scsi_host->last_reset - HZ / 2)) {
-+	if (time_before(jiffies, acb->last_reset - HZ / 2)) {
- 		dprintkdbg(DBG_KG, "start_scsi: Refuse cmds (reset wait)\n");
- 		return 1;
+ 
+ 	rmb();
+-	/*
+-	 * TODO: I need to block here if I am processing ioctl cmds
+-	 * but if the outstanding cmds all finish before the ioctl,
+-	 * the scsi-core will not know to start sending cmds to me again.
+-	 * I need to a way to restart the scsi-cores queues or should I block
+-	 * calling scsi_done on the outstanding cmds instead
+-	 * for now we don't set the IOCTL state
+-	 */
+-	if(((pHba->state) & DPTI_STATE_IOCTL) || ((pHba->state) & DPTI_STATE_RESET)) {
+-		pHba->host->last_reset = jiffies;
+-		pHba->host->resetting = 1;
+-		return 1;
++	if(((pHba->state) & DPTI_STATE_RESET)) {
++		return SCSI_MLQUEUE_HOST_BUSY;
  	}
-@@ -3031,7 +3033,7 @@ static void disconnect(struct AdapterCtlBlk *acb)
- 		dprintkl(KERN_ERR, "disconnect: No such device\n");
- 		udelay(500);
- 		/* Suspend queue for a while */
--		acb->scsi_host->last_reset =
-+		acb->last_reset =
- 		    jiffies + HZ / 2 +
- 		    HZ * acb->eeprom.delay_time;
- 		clear_fifo(acb, "disconnectEx");
-@@ -3053,7 +3055,7 @@ static void disconnect(struct AdapterCtlBlk *acb)
- 		waiting_process_next(acb);
- 	} else if (srb->state & SRB_ABORT_SENT) {
- 		dcb->flag &= ~ABORT_DEV_;
--		acb->scsi_host->last_reset = jiffies + HZ / 2 + 1;
-+		acb->last_reset = jiffies + HZ / 2 + 1;
- 		dprintkl(KERN_ERR, "disconnect: SRB_ABORT_SENT\n");
- 		doing_srb_done(acb, DID_ABORT, srb->cmd, 1);
- 		waiting_process_next(acb);
-@@ -3649,7 +3651,7 @@ static void scsi_reset_detect(struct AdapterCtlBlk *acb)
- 	/*DC395x_write8(acb, TRM_S1040_DMA_CONTROL,STOPDMAXFER); */
- 	udelay(500);
- 	/* Maybe we locked up the bus? Then lets wait even longer ... */
--	acb->scsi_host->last_reset =
-+	acb->last_reset =
- 	    jiffies + 5 * HZ / 2 +
- 	    HZ * acb->eeprom.delay_time;
  
-@@ -4426,7 +4428,7 @@ static void adapter_init_scsi_host(struct Scsi_Host *host)
- 	host->dma_channel = -1;
- 	host->unique_id = acb->io_port_base;
- 	host->irq = acb->irq_level;
--	host->last_reset = jiffies;
-+	acb->last_reset = jiffies;
+ 	// TODO if the cmd->device if offline then I may need to issue a bus rescan
+@@ -1813,19 +1803,13 @@ static int adpt_i2o_passthru(adpt_hba* pHba, u32 __user *arg)
+ 	do {
+ 		if(pHba->host)
+ 			spin_lock_irqsave(pHba->host->host_lock, flags);
+-		// This state stops any new commands from enterring the
+-		// controller while processing the ioctl
+-//		pHba->state |= DPTI_STATE_IOCTL;
+-//		We can't set this now - The scsi subsystem sets host_blocked and
+-//		the queue empties and stops.  We need a way to restart the queue
+ 		rcode = adpt_i2o_post_wait(pHba, msg, size, FOREVER);
+ 		if (rcode != 0)
+ 			printk("adpt_i2o_passthru: post wait failed %d %p\n",
+ 					rcode, reply);
+-//		pHba->state &= ~DPTI_STATE_IOCTL;
+ 		if(pHba->host)
+ 			spin_unlock_irqrestore(pHba->host->host_lock, flags);
+-	} while(rcode == -ETIMEDOUT);  
++	} while(rcode == -ETIMEDOUT);
  
- 	host->max_id = 16;
- 	if (host->max_id - 1 == eeprom->scsi_id)
-@@ -4484,7 +4486,7 @@ static void adapter_init_chip(struct AdapterCtlBlk *acb)
- 		/*spin_unlock_irq (&io_request_lock); */
- 		udelay(500);
+ 	if(rcode){
+ 		goto cleanup;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2c0d0ec..173c6bc 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -658,7 +658,6 @@ EXPORT_SYMBOL(scsi_cmd_get_serial);
+ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+-	unsigned long timeout;
+ 	int rtn = 0;
  
--		acb->scsi_host->last_reset =
-+		acb->last_reset =
- 		    jiffies + HZ / 2 +
- 		    HZ * acb->eeprom.delay_time;
+ 	atomic_inc(&cmd->device->iorequest_cnt);
+@@ -695,7 +694,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		goto out;
+ 	}
  
+-	/* 
++	/*
+ 	 * If SCSI-2 or lower, store the LUN value in cmnd.
+ 	 */
+ 	if (cmd->device->scsi_level <= SCSI_2 &&
+@@ -704,28 +703,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 			       (cmd->device->lun << 5 & 0xe0);
+ 	}
+ 
+-	/*
+-	 * We will wait MIN_RESET_DELAY clock ticks after the last reset so
+-	 * we can avoid the drive not being ready.
+-	 */
+-	timeout = host->last_reset + MIN_RESET_DELAY;
+-
+-	if (host->resetting && time_before(jiffies, timeout)) {
+-		int ticks_remaining = timeout - jiffies;
+-		/*
+-		 * NOTE: This may be executed from within an interrupt
+-		 * handler!  This is bad, but for now, it'll do.  The irq
+-		 * level of the interrupt handler has been masked out by the
+-		 * platform dependent interrupt handling code already, so the
+-		 * sti() here will not cause another call to the SCSI host's
+-		 * interrupt handler (assuming there is one irq-level per
+-		 * host).
+-		 */
+-		while (--ticks_remaining >= 0)
+-			mdelay(1 + 999 / HZ);
+-		host->resetting = 0;
+-	}
+-
+ 	scsi_log_send(cmd);
+ 
+ 	/*
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 7552435..af7ad0e 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -598,7 +598,6 @@ struct Scsi_Host {
+ 	unsigned int host_eh_scheduled;    /* EH scheduled without command */
+     
+ 	unsigned int host_no;  /* Used for IOCTL_GET_IDLUN, /proc/scsi et al. */
+-	int resetting; /* if set, it means that last_reset is a valid value */
+ 	unsigned long last_reset;
+ 
+ 	/*
 -- 
 1.7.12.4
 
