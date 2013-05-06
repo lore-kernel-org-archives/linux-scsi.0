@@ -1,307 +1,321 @@
-From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: [PATCH v3 6/6] scsi: ufs: add dme control primitives
-Date: Mon, 06 May 2013 14:39:16 +0900
-Message-ID: <001601ce4a1c$0c485610$24d90230$%jun@samsung.com>
-References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
- <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com>
- <000b01ce48a3$ad7072e0$085158a0$%jun@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ks_c_5601-1987
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:47127 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752438Ab3EFFjS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 May 2013 01:39:18 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MMD00G4M3OZLFI0@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Mon, 06 May 2013 14:39:17 +0900 (KST)
-In-reply-to: <000b01ce48a3$ad7072e0$085158a0$%jun@samsung.com>
-Content-language: ko
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: [PATCH V2 1/1] scsi: ufs: Add support for sending NOP OUT UPIU
+Date: Mon,  6 May 2013 12:28:57 +0530
+Message-ID: <1367823537-5706-1-git-send-email-sthumma@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-Implements to support the following operations.
-Currently, this patch doesn't introduce DME_ENABLE and DME_RESET
-because host controller's HCE enable contains these roles.
+As part of device initialization sequence, sending NOP OUT UPIU and
+waiting for NOP IN UPIU response is mandatory. This confirms that the
+device UFS Transport (UTP) layer is functional and the host can configure
+the device with further commands. Add support for sending NOP OUT UPIU to
+check the device connection path and test whether the UTP layer on the
+device side is functional during initialization.
 
-DME_POWERON{OFF}, DME_HIBERNATE_ENTER{EXIT}, DME_ENDPOINTRESET.
+Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c |  132 ++++++++++++++++++++++++++++++++++++++++++---
- drivers/scsi/ufs/ufshcd.h |   26 +++++++++
- drivers/scsi/ufs/ufshci.h |   15 +++++
- 3 files changed, 165 insertions(+), 8 deletions(-)
+v2:
+   - fixed INTERNAL_CMD_TAG check in readl_poll_timeout
+   - minor cleanup from v1
+   - rebased on Seungwon Jeon's UFS V3 patchset
+---
+ drivers/scsi/ufs/ufshcd.c |  161 ++++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/ufs/ufshcd.h |    4 +
+ 2 files changed, 156 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index aa06210..3607ffb 100644
+index 3607ffb..ecbae40 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -39,6 +39,7 @@
+@@ -34,6 +34,7 @@
+  */
  
- #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
- 				 UTP_TASK_REQ_COMPL |\
-+				 UFSHCD_HIBERNATE_MASK |\
- 				 UFSHCD_ERROR_MASK)
+ #include <linux/async.h>
++#include <linux/iopoll.h>
+ 
+ #include "ufshcd.h"
+ 
+@@ -44,6 +45,13 @@
  /* UIC command timeout, unit: ms */
  #define UIC_CMD_TIMEOUT	500
-@@ -203,6 +204,18 @@ static inline u32 ufshcd_get_dme_attr_val(struct ufs_hba *hba)
+ 
++/* NOP OUT retries waiting for NOP IN response */
++#define NOP_OUT_RETRIES    10
++/* Timeout after 30 msecs if NOP OUT hangs without response */
++#define NOP_OUT_TIMEOUT    30 /* msecs */
++/* Reserved tag for internal commands */
++#define INTERNAL_CMD_TAG   0
++
+ enum {
+ 	UFSHCD_MAX_CHANNEL	= 0,
+ 	UFSHCD_MAX_ID		= 1,
+@@ -630,7 +638,7 @@ static void ufshcd_prepare_req_desc(struct ufshcd_lrb *lrbp, u32 *upiu_flags)
+ {
+ 	struct utp_transfer_req_desc *req_desc = lrbp->utr_descriptor_ptr;
+ 	enum dma_data_direction cmd_dir =
+-		lrbp->cmd->sc_data_direction;
++		lrbp->cmd ? lrbp->cmd->sc_data_direction : DMA_NONE;
+ 	u32 data_direction;
+ 	u32 dword_0;
+ 
+@@ -647,6 +655,8 @@ static void ufshcd_prepare_req_desc(struct ufshcd_lrb *lrbp, u32 *upiu_flags)
+ 
+ 	dword_0 = data_direction | (lrbp->command_type
+ 				<< UPIU_COMMAND_TYPE_OFFSET);
++	if (lrbp->intr_cmd)
++		dword_0 |= UTP_REQ_DESC_INT_CMD;
+ 
+ 	/* Transfer request descriptor header fields */
+ 	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+@@ -735,6 +745,18 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
+ 
  }
  
- /**
-+ * ufshcd_get_upmcrs - Get the power mode change request status
-+ * @hba: Pointer to adapter instance
-+ *
-+ * This function gets the UPMCRS field of HCS register
-+ * Returns value of UPMCRS field
-+ */
-+static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
++static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
 +{
-+	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) >> 8) & 0x7;
++	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
++
++	memset(ucd_req_ptr, 0, sizeof(struct utp_upiu_req));
++
++	/* command descriptor fields */
++	ucd_req_ptr->header.dword_0 =
++		UPIU_HEADER_DWORD(
++			UPIU_TRANSACTION_NOP_OUT, 0, 0, lrbp->task_tag);
 +}
 +
-+/**
-  * ufshcd_free_hba_memory - Free allocated memory for LRB, request
-  *			    and task lists
-  * @hba: Pointer to adapter instance
-@@ -1152,6 +1165,103 @@ int ufshcd_dme_xxx_get(struct ufs_hba *hba, u32 attr_sel,
- EXPORT_SYMBOL_GPL(ufshcd_dme_xxx_get);
+ /**
+  * ufshcd_compose_upiu - form UFS Protocol Information Unit(UPIU)
+  * @hba - UFS hba
+@@ -749,11 +771,13 @@ static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	case UTP_CMD_TYPE_SCSI:
+ 	case UTP_CMD_TYPE_DEV_MANAGE:
+ 		ufshcd_prepare_req_desc(lrbp, &upiu_flags);
+-		if (lrbp->command_type == UTP_CMD_TYPE_SCSI)
++		if (lrbp->cmd && lrbp->command_type == UTP_CMD_TYPE_SCSI)
+ 			ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
+-		else
++		else if (lrbp->cmd && ufshcd_is_query_req(lrbp))
+ 			ufshcd_prepare_utp_query_req_upiu(hba, lrbp,
+ 								upiu_flags);
++		else if (!lrbp->cmd)
++			ufshcd_prepare_utp_nop_upiu(lrbp);
+ 		break;
+ 	case UTP_CMD_TYPE_UFS:
+ 		/* For UFS native command implementation */
+@@ -802,6 +826,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	lrbp->sense_buffer = cmd->sense_buffer;
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = cmd->device->lun;
++	lrbp->intr_cmd = false;
  
- /**
-+ * ufshcd_dme_power_xxx - UIC command for DME_POWERON, DME_POWEROFF
-+ * @hba: per adapter instance
-+ * @on: indicate wherter power_on or power_off
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+int ufshcd_dme_power_xxx(struct ufs_hba *hba, u8 on)
+ 	if (ufshcd_is_query_req(lrbp))
+ 		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
+@@ -1261,6 +1286,101 @@ int ufshcd_dme_endpt_reset(struct ufs_hba *hba)
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_dme_endpt_reset);
+ 
++static int
++ufshcd_compose_nop_out_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
 +{
-+	struct uic_command uic_cmd = {0};
-+	static const char *const action[] = {
-+		"dme-power-off",
-+		"dme-power-on"
-+	};
-+	const char *power = action[!!on];
-+	int ret;
++	lrbp->cmd = NULL;
++	lrbp->sense_bufflen = 0;
++	lrbp->sense_buffer = NULL;
++	lrbp->task_tag = INTERNAL_CMD_TAG;
++	lrbp->lun = 0; /* NOP OUT is not specific to any LUN */
++	lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
++	lrbp->intr_cmd = true; /* No interrupt aggregation */
 +
-+	uic_cmd.command = on ?
-+		UIC_CMD_DME_POWERON : UIC_CMD_DME_POWEROFF;
-+
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev, "%s: error code %d\n", power, ret);
-+
-+	return ret;
++	return ufshcd_compose_upiu(hba, lrbp);
 +}
-+EXPORT_SYMBOL_GPL(ufshcd_dme_power_xxx);
 +
-+/**
-+ * ufshcd_dme_hibern8_xxx - UIC command for DME_HIBERNATE_ENTER,
-+ *			    DME_HIBERNATE_EXIT
-+ * @hba: per adapter instance
-+ * @enter: indicate wherter hibernation enter or exit
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+int ufshcd_dme_hibern8_xxx(struct ufs_hba *hba, u8 enter)
++static int ufshcd_wait_for_nop_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
 +{
-+	struct uic_command uic_cmd = {0};
-+	static const char *const action[] = {
-+		"dme-hibernate-exit",
-+		"dme-hibernate-enter"
-+	};
-+	const char *hibern8 = action[!!enter];
-+	u8 status;
-+	int ret;
++	int err = 0;
++	unsigned long timeout;
++	unsigned long flags;
 +
-+	uic_cmd.command = enter ?
-+		UIC_CMD_DME_HIBER_ENTER : UIC_CMD_DME_HIBER_EXIT;
++	timeout = wait_for_completion_timeout(
++			lrbp->completion, msecs_to_jiffies(NOP_OUT_TIMEOUT));
 +
-+	mutex_lock(&hba->uic_cmd_mutex);
-+	init_completion(&hba->hibern8_done);
-+	ret = __ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret) {
-+		dev_err(hba->dev, "%s: error code %d\n", hibern8, ret);
-+		goto out;
-+	}
-+
-+	if (wait_for_completion_timeout(&hba->hibern8_done,
-+					msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
-+		status = ufshcd_get_upmcrs(hba);
-+		if (status != PWR_LOCAL) {
-+			dev_err(hba->dev, "%s: failed, host upmcrs:%x\n",
-+				hibern8, status);
-+			ret = status;
-+		}
++	if (timeout) {
++		spin_lock_irqsave(hba->host->host_lock, flags);
++		err = ufshcd_get_tr_ocs(lrbp);
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
 +	} else {
-+		dev_err(hba->dev, "%s: timeout\n", hibern8);
-+		ret = -ETIMEDOUT;
++		err = -ETIMEDOUT;
 +	}
-+out:
-+	mutex_unlock(&hba->uic_cmd_mutex);
-+	return ret;
++
++	return err;
 +}
-+EXPORT_SYMBOL_GPL(ufshcd_dme_hibern8_xxx);
 +
 +/**
-+ * ufshcd_dme_endpt_reset - UIC command for DME_ENDPOINTRESET
-+ * @hba: per adapter instance
++ * ufshcd_validate_dev_connection() - Check device connection status
++ * @hba: per-adapter instance
 + *
-+ * Returns 0 on success, non-zero value on failure
++ * Send NOP OUT UPIU and wait for NOP IN response to check whether the
++ * device Transport Protocol (UTP) layer is ready after a reset.
++ * If the UTP layer at the device side is not initialized, it may
++ * not respond with NOP IN UPIU within timeout of %NOP_OUT_TIMEOUT
++ * and we retry sending NOP OUT for %NOP_OUT_RETRIES iterations.
 + */
-+int ufshcd_dme_endpt_reset(struct ufs_hba *hba)
++static int ufshcd_validate_dev_connection(struct ufs_hba *hba)
 +{
-+	struct uic_command uic_cmd = {0};
-+	int ret;
++	int err;
++	struct ufshcd_lrb *lrbp;
++	unsigned long flags;
++	struct completion wait;
++	int retries = NOP_OUT_RETRIES;
 +
-+	uic_cmd.command = UIC_CMD_DME_END_PT_RST;
++retry:
++	init_completion(&wait);
 +
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev, "endpoint reset: error code %d\n", ret);
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	lrbp = &hba->lrb[INTERNAL_CMD_TAG];
++	err = ufshcd_compose_nop_out_upiu(hba, lrbp);
++	if (err)
++		goto out;
 +
-+	return ret;
++	lrbp->completion = &wait;
++	ufshcd_send_command(hba, INTERNAL_CMD_TAG);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++	err = ufshcd_wait_for_nop_cmd(hba, lrbp);
++
++	if (err == -ETIMEDOUT) {
++		u32 reg;
++
++		/* clear outstanding transaction before retry */
++		spin_lock_irqsave(hba->host->host_lock, flags);
++		ufshcd_utrl_clear(hba, INTERNAL_CMD_TAG);
++		__clear_bit(INTERNAL_CMD_TAG, &hba->outstanding_reqs);
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++		/* poll for max. 1 sec to clear door bell register by h/w */
++		if (readl_poll_timeout(
++				hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL,
++				reg, !(reg & (1 << INTERNAL_CMD_TAG)),
++				1000, 1000))
++			retries = 0;
++	}
++
++	if (err && retries--) {
++		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err);
++		goto retry;
++	}
++
++out:
++	if (err)
++		dev_err(hba->dev, "%s: NOP OUT failed %d\n", __func__, err);
++	return err;
 +}
-+EXPORT_SYMBOL_GPL(ufshcd_dme_endpt_reset);
 +
-+/**
+ /**
   * ufshcd_make_hba_operational - Make UFS controller operational
   * @hba: per adapter instance
-  *
-@@ -1608,14 +1718,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- /**
-  * ufshcd_uic_cmd_compl - handle completion of uic command
-  * @hba: per adapter instance
-+ * @intr_status: interrupt status generated by the controller
-  */
--static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
-+static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- {
--	hba->active_uic_cmd->argument2 |=
--		ufshcd_get_uic_cmd_result(hba);
--	hba->active_uic_cmd->argument3 =
--		ufshcd_get_dme_attr_val(hba);
--	complete(&hba->active_uic_cmd->done);
-+	if (intr_status & UIC_COMMAND_COMPL) {
-+		hba->active_uic_cmd->argument2 |=
-+			ufshcd_get_uic_cmd_result(hba);
-+		hba->active_uic_cmd->argument3 =
-+			ufshcd_get_dme_attr_val(hba);
-+		complete(&hba->active_uic_cmd->done);
-+	}
+@@ -1734,6 +1854,16 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
+ 		complete(&hba->hibern8_done);
+ }
+ 
++/*
++ * ufshcd_is_nop_out_upiu() - check if the command is NOP OUT UPIU
++ * @lrbp: pointer to logical reference block
++ */
++static inline bool ufshcd_is_nop_out_upiu(struct ufshcd_lrb *lrbp)
++{
++	return (be32_to_cpu(lrbp->ucd_req_ptr->header.dword_0) >> 24) ==
++				UPIU_TRANSACTION_NOP_OUT;
++}
 +
-+	if (intr_status & UFSHCD_HIBERNATE_MASK)
-+		complete(&hba->hibern8_done);
+ /**
+  * ufshcd_transfer_req_compl - handle SCSI and query command completion
+  * @hba: per adapter instance
+@@ -1745,6 +1875,7 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	u32 tr_doorbell;
+ 	int result;
+ 	int index;
++	bool int_aggr_reset = true;
+ 
+ 	lrb = hba->lrb;
+ 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+@@ -1752,17 +1883,20 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 
+ 	for (index = 0; index < hba->nutrs; index++) {
+ 		if (test_bit(index, &completed_reqs)) {
+-
+-			result = ufshcd_transfer_rsp_status(hba, &lrb[index]);
+-
+ 			if (lrb[index].cmd) {
++				result = ufshcd_transfer_rsp_status(
++						hba, &lrb[index]);
+ 				scsi_dma_unmap(lrb[index].cmd);
+ 				lrb[index].cmd->result = result;
+ 				lrb[index].cmd->scsi_done(lrb[index].cmd);
+ 
+ 				/* Mark completed command as NULL in LRB */
+ 				lrb[index].cmd = NULL;
++			} else if (ufshcd_is_nop_out_upiu(&lrb[index])) {
++				complete(lrb[index].completion);
+ 			}
++			/* Don't reset counters for interrupt cmd */
++			int_aggr_reset = lrb[index].intr_cmd ? false : true;
+ 		} /* end of if */
+ 	} /* end of for */
+ 
+@@ -1770,7 +1904,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	hba->outstanding_reqs ^= completed_reqs;
+ 
+ 	/* Reset interrupt aggregation counters */
+-	ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
++	if (int_aggr_reset)
++		ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
  }
  
  /**
-@@ -1717,8 +1833,8 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- 	if (hba->errors)
- 		ufshcd_err_handler(hba);
+@@ -2068,8 +2203,16 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	int ret;
  
--	if (intr_status & UIC_COMMAND_COMPL)
--		ufshcd_uic_cmd_compl(hba);
-+	if (intr_status & UFSHCD_UIC_MASK)
-+		ufshcd_uic_cmd_compl(hba, intr_status);
+ 	ret = ufshcd_link_startup(hba);
+-	if (!ret)
+-		scsi_scan_host(hba->host);
++	if (ret)
++		goto out;
++
++	ret = ufshcd_validate_dev_connection(hba);
++	if (ret)
++		goto out;
++
++	scsi_scan_host(hba->host);
++out:
++	return;
+ }
  
- 	if (intr_status & UTP_TASK_REQ_COMPL)
- 		ufshcd_tmc_handler(hba);
+ static struct scsi_host_template ufshcd_driver_template = {
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 93965b9..84f758e 100644
+index 84f758e..17f4995 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -156,6 +156,7 @@ struct ufs_query {
-  * @uic_cmd_mutex: mutex for uic command
-  * @ufshcd_tm_wait_queue: wait queue for task management
-  * @tm_condition: condition variable for task management
-+ * @hibern8_done: completion for hibernate
-  * @ufshcd_state: UFSHCD states
-  * @intr_mask: Interrupt Mask Bits
-  * @feh_workq: Work queue for fatal controller error handling
-@@ -195,6 +196,8 @@ struct ufs_hba {
- 	wait_queue_head_t ufshcd_tm_wait_queue;
- 	unsigned long tm_condition;
- 
-+	struct completion hibern8_done;
-+
- 	u32 ufshcd_state;
- 	u32 intr_mask;
- 
-@@ -221,6 +224,9 @@ extern int ufshcd_dme_xxx_set(struct ufs_hba *hba, u32 attr_sel,
- 			      u8 attr_set, u32 mib_val, u8 peer);
- extern int ufshcd_dme_xxx_get(struct ufs_hba *hba, u32 attr_sel,
- 			      u32 *mib_val, u8 peer);
-+extern int ufshcd_dme_power_xxx(struct ufs_hba *hba, u8 on);
-+extern int ufshcd_dme_hibern8_xxx(struct ufs_hba *hba, u8 enter);
-+extern int ufshcd_dme_endpt_reset(struct ufs_hba *hba);
+@@ -102,6 +102,8 @@ struct uic_command {
+  * @command_type: SCSI, UFS, Query.
+  * @task_tag: Task tag of the command
+  * @lun: LUN of the command
++ * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
++ * @completion: holds the state of completion (used for internal commands)
+  */
+ struct ufshcd_lrb {
+ 	struct utp_transfer_req_desc *utr_descriptor_ptr;
+@@ -117,6 +119,8 @@ struct ufshcd_lrb {
+ 	int command_type;
+ 	int task_tag;
+ 	unsigned int lun;
++	bool intr_cmd;
++	struct completion *completion;
+ };
  
  /**
-  * ufshcd_hba_stop - Send controller to reset state
-@@ -256,4 +262,24 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
- 	return ufshcd_dme_xxx_get(hba, attr_sel, mib_val, 1);
- }
- 
-+static inline int ufshcd_dme_power_on(struct ufs_hba *hba)
-+{
-+	return ufshcd_dme_power_xxx(hba, 1);
-+}
-+
-+static inline int ufshcd_dme_power_off(struct ufs_hba *hba)
-+{
-+	return ufshcd_dme_power_xxx(hba, 0);
-+}
-+
-+static inline int ufshcd_dme_hibern8_enter(struct ufs_hba *hba)
-+{
-+	return ufshcd_dme_hibern8_xxx(hba, 1);
-+}
-+
-+static inline int ufshcd_dme_hibern8_exit(struct ufs_hba *hba)
-+{
-+	return ufshcd_dme_hibern8_xxx(hba, 0);
-+}
-+
- #endif /* End of Header */
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index c7d6a1b..d60703f 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -124,6 +124,12 @@ enum {
- #define CONTROLLER_FATAL_ERROR			UFS_BIT(16)
- #define SYSTEM_BUS_FATAL_ERROR			UFS_BIT(17)
- 
-+#define UFSHCD_HIBERNATE_MASK	(UIC_HIBERNATE_ENTER |\
-+				 UIC_HIBERNATE_EXIT)
-+
-+#define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL |\
-+				 UFSHCD_HIBERNATE_MASK)
-+
- #define UFSHCD_ERROR_MASK	(UIC_ERROR |\
- 				DEVICE_FATAL_ERROR |\
- 				CONTROLLER_FATAL_ERROR |\
-@@ -142,6 +148,15 @@ enum {
- #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
- #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
- 
-+enum {
-+	PWR_OK          = 0x0,
-+	PWR_LOCAL       = 0x01,
-+	PWR_REMOTE      = 0x02,
-+	PWR_BUSY        = 0x03,
-+	PWR_ERROR_CAP   = 0x04,
-+	PWR_FATAL_ERROR = 0x05,
-+};
-+
- /* HCE - Host Controller Enable 34h */
- #define CONTROLLER_ENABLE	UFS_BIT(0)
- #define CONTROLLER_DISABLE	0x0
 -- 
-1.7.0.4
-
-
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation.
