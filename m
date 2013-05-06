@@ -1,20 +1,18 @@
 From: merez@codeaurora.org
-Subject: Re: [PATCH v3 2/6] scsi: ufs: amend interrupt configuration
-Date: Mon, 6 May 2013 03:39:48 -0700
-Message-ID: <31bfa33332406cce4bcec3ba68bdba34.squirrel@www.codeaurora.org>
-References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
-    <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com>
-    <000b01ce48a3$ad7072e0$085158a0$%jun@samsung.com>
-    <001201ce4a1b$c3b9f700$4b2de500$%jun@samsung.com>
+Subject: Re: [PATCH v2 3/7] scsi: ufs: amend interrupt configuration
+Date: Mon, 6 May 2013 03:40:10 -0700
+Message-ID: <a4a34657e8957d3ee2d6dc2f6212b4cd.squirrel@www.codeaurora.org>
+References: <001f01ce4105$af6a3c20$0e3eb460$%jun@samsung.com>
+    <000c01ce48a3$b1e00200$15a00600$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31458 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753723Ab3EFKjs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 May 2013 06:39:48 -0400
-In-Reply-To: <001201ce4a1b$c3b9f700$4b2de500$%jun@samsung.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46490 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753787Ab3EFKkK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 May 2013 06:40:10 -0400
+In-Reply-To: <000c01ce48a3$b1e00200$15a00600$%jun@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Seungwon Jeon <tgih.jun@samsung.com>
@@ -40,7 +38,7 @@ Maya
 >  3 files changed, 64 insertions(+), 29 deletions(-)
 >
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index cf7c8e4..feaf221 100644
+> index af7b81b..bc956e8 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
 > @@ -35,6 +35,10 @@
@@ -75,7 +73,7 @@ Maya
 >   * ufshcd_get_ufs_version - Get the UFS version supported by the HBA
 >   * @hba - Pointer to adapter instance
 >   *
-> @@ -441,25 +459,45 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+> @@ -450,25 +468,45 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
 >  }
 >
 >  /**
@@ -136,7 +134,7 @@ Maya
 >  }
 >
 >  /**
-> @@ -946,8 +984,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba
+> @@ -955,8 +993,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba
 > *hba)
 >  	uic_cmd->argument3 = 0;
 >
@@ -147,7 +145,7 @@ Maya
 >
 >  	/* sending UIC commands to controller */
 >  	ufshcd_send_uic_command(hba, uic_cmd);
-> @@ -994,13 +1031,7 @@ static int ufshcd_make_hba_operational(struct
+> @@ -1003,13 +1040,7 @@ static int ufshcd_make_hba_operational(struct
 > ufs_hba *hba)
 >  	}
 >
@@ -163,7 +161,7 @@ Maya
 >
 >  	/* Configure interrupt aggregation */
 >  	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
-> @@ -1828,7 +1859,7 @@ static void ufshcd_hba_free(struct ufs_hba *hba)
+> @@ -1837,7 +1868,7 @@ static void ufshcd_hba_free(struct ufs_hba *hba)
 >  void ufshcd_remove(struct ufs_hba *hba)
 >  {
 >  	/* disable interrupts */
@@ -172,7 +170,7 @@ Maya
 >
 >  	ufshcd_hba_stop(hba);
 >  	ufshcd_hba_free(hba);
-> @@ -1886,6 +1917,9 @@ int ufshcd_init(struct device *dev, struct ufs_hba
+> @@ -1895,6 +1926,9 @@ int ufshcd_init(struct device *dev, struct ufs_hba
 > **hba_handle,
 >  	/* Get UFS version supported by the controller */
 >  	hba->ufs_version = ufshcd_get_ufs_version(hba);
@@ -184,7 +182,7 @@ Maya
 >  	err = ufshcd_memory_alloc(hba);
 >  	if (err) {
 > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 6429bed..d98e046 100644
+> index f4fa183..a874452 100644
 > --- a/drivers/scsi/ufs/ufshcd.h
 > +++ b/drivers/scsi/ufs/ufshcd.h
 > @@ -153,7 +153,7 @@ struct ufs_query {
