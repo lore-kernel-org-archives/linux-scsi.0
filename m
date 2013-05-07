@@ -1,45 +1,42 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH] [ARM] rpc: acornscsi: fix error return code in acornscsi_probe()
-Date: Tue, 7 May 2013 19:58:17 +0800
-Message-ID: <CAPgLHd-M=0gj1_-ip51qbhHfBszSBkiW5VD8cp_-AVOjn7XP7A@mail.gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] ufs: add support for query requests
+Date: Tue, 7 May 2013 17:25:41 +0300
+Message-ID: <20130507142540.GA20764@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:63410 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756001Ab3EGL6S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 07:58:18 -0400
-Received: by mail-bk0-f51.google.com with SMTP id ji2so239385bkc.24
-        for <linux-scsi@vger.kernel.org>; Tue, 07 May 2013 04:58:17 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:23034 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753644Ab3EGOZs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 10:25:48 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux@arm.linux.org.uk, JBottomley@parallels.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+To: draviv@codeaurora.org
+Cc: linux-scsi@vger.kernel.org, kbuild@01.org
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Hello Dolev Raviv,
 
-Fix to return -ENOMEM in the ecardm_iomap() error handling
-case instead of 0, as done elsewhere in this function.
+This is a semi-automatic email about new static checker warnings.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/scsi/arm/acornscsi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+The patch 3aee47c623a3: "[SCSI] ufs: add support for query requests"
+from May 2, 2013, leads to the following Smatch complaint:
 
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index 09ba186..bee7142 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -2961,8 +2961,10 @@ static int acornscsi_probe(struct expansion_card *ec, const struct ecard_id *id)
- 
- 	ashost->base = ecardm_iomap(ec, ECARD_RES_MEMC, 0, 0);
- 	ashost->fast = ecardm_iomap(ec, ECARD_RES_IOCFAST, 0, 0);
--	if (!ashost->base || !ashost->fast)
-+	if (!ashost->base || !ashost->fast) {
-+		ret = -ENOMEM;
- 		goto out_put;
-+	}
- 
- 	host->irq = ec->irq;
- 	ashost->host = host;
+drivers/scsi/ufs/ufshcd.c:723 ufshcd_query_request()
+	 error: we previously assumed 'hba' could be null (see line 722)
 
+drivers/scsi/ufs/ufshcd.c
+   721	
+   722		if (!hba || !query || !response) {
+                    ^^^^
+New check.
+
+   723			dev_err(hba->dev,
+                                ^^^^^^^^
+New dereference.
+
+   724				"%s: NULL pointer hba = %p, query = %p response = %p\n",
+   725				__func__, hba, query, response);
+
+regards,
+dan carpenter
