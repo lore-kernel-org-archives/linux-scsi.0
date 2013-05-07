@@ -1,64 +1,65 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: 32-byte CDB support in Libsas?
-Date: Tue, 07 May 2013 13:06:47 -0700
-Message-ID: <1367957207.4108.7.camel@dabdike>
-References: <405BE55790F03349A85344435F25B01C0784369E@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-	<1367867773.1868.39.camel@dabdike>
-	 <CAD+HZHUynKmSgebmoLfPNgfbj8OVGaTUuFhJoJhNJxfvsNUFvg@mail.gmail.com>
-	 <405BE55790F03349A85344435F25B01C07843842@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+From: "Kamaljit Singh" <Kamaljit.Singh@pmcs.com>
+Subject: RE: 32-byte CDB support in Libsas?
+Date: Tue, 7 May 2013 13:26:44 -0700
+Message-ID: <405BE55790F03349A85344435F25B01C07843852@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <405BE55790F03349A85344435F25B01C0784369E@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca><1367867773.1868.39.camel@dabdike> <CAD+HZHUynKmSgebmoLfPNgfbj8OVGaTUuFhJoJhNJxfvsNUFvg@mail.gmail.com> <405BE55790F03349A85344435F25B01C07843842@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca> <1367957207.4108.7.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47567 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751923Ab3EGUGu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 16:06:50 -0400
-In-Reply-To: <405BE55790F03349A85344435F25B01C07843842@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:42273 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756807Ab3EGU0r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 16:26:47 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1367957207.4108.7.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kamaljit Singh <Kamaljit.Singh@pmcs.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Jack Wang <xjtuwjp@gmail.com>, Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, linux-scsi@vger.kernel.org, Harry Yang <Harry.Yang@pmcs.com>, Vishwanath Maram <Vishwanath.Maram@pmcs.com>, Sakthivel Saravanan Kamal Raju <sakthivel.sk@hcl.com>, Rich Bono <Rich.Bono@pmcs.com>, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>
 
-On Tue, 2013-05-07 at 12:46 -0700, Kamaljit Singh wrote:
-> James,  Jack,
->=20
-> Thanks for your responses.
->=20
-> > I don't understand the question ... it should just work; is it
-> broken?
-> sas_create_task() only copies 16 bytes to the sas_ssp_task struct=E2=80=
-=99s
-> cdb field, which itself is a 16 byte wide array.  So it looks like
-> sas_queuecommand() doesn=E2=80=99t support a 32-byte cdb.
-
-Hm, it does it as a bare 16 instead of SCSI_MAX_CDB which is probably
-how it got missed in the long command conversion.
-
-> > It's easy to add that, define cdb 32 to ssp_task and modify
-> sas_queuecommand, and lldd to pass it to fw
-> Yes, that=E2=80=99s exactly what I=E2=80=99ve designed it as, i.e. in=
- my lldd=E2=80=99s
-> queuecommand function.  At the moment I only need this function for
-> 32-byte cdb support.  But if there are plans to add that to libsas
-> then I=E2=80=99d prefer to use sas_queuecommand rather than having to=
- do
-> manual merges from future libsas fixes/updates.
-
-I wouldn't do it that way.  Since everything has to form a command IU
-anyway by copying, I'd just make sas_ssp->cdb a pointer to the actual
-command instead of an array of the command; if it points to the
-scsi_cmnd, then it has access to cmd_len as well.  That way no copying
-and no problem when anyone wants longer commands.  There should probabl=
-y
-also be a macro to populate the command IU since the format of CDB > 16
-is different.
-
-James
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PiBJIHdvdWxkbid0IGRvIGl0IHRoYXQgd2F5LiAgU2luY2UgZXZlcnl0aGluZyBoYXMgdG8gZm9y
+bSBhIGNvbW1hbmQgSVUNCj4gYW55d2F5IGJ5IGNvcHlpbmcsIEknZCBqdXN0IG1ha2Ugc2FzX3Nz
+cC0+Y2RiIGEgcG9pbnRlciB0byB0aGUgYWN0dWFsDQo+IGNvbW1hbmQgaW5zdGVhZCBvZiBhbiBh
+cnJheSBvZiB0aGUgY29tbWFuZDsgaWYgaXQgcG9pbnRzIHRvIHRoZQ0KSSdkIHByZWZlciB0aGF0
+IHRvbywgc3BlY2lhbGx5IHNpbmNlIHNjc2lfY21uZC0+Y21uZCBpcyBhbHJlYWR5IGEgcG9pbnRl
+ci4gIEkgY29uc2lkZXJlZCB0aGF0IGJ1dCBhbnkgc3VjaCBjaGFuZ2VzIHRvIGxpYnNhcy5oIHdv
+dWxkJ3ZlIGhhZCB3aWRlIHJlcGVyY3Vzc2lvbnMuICBIZW5jZSwgSSBkaWRuJ3QgZ28gZG93biB0
+aGF0IHJhdGhvbGUgYXQgdGhlIG1vbWVudC4gIA0KDQo+IG5vIHByb2JsZW0gd2hlbiBhbnlvbmUg
+d2FudHMgbG9uZ2VyIGNvbW1hbmRzLiAgVGhlcmUgc2hvdWxkIHByb2JhYmx5DQo+YWxzbyBiZSBh
+IG1hY3JvIHRvIHBvcHVsYXRlIHRoZSBjb21tYW5kIElVIHNpbmNlIHRoZSBmb3JtYXQgb2YgQ0RC
+ID4gMTYNCj4gaXMgZGlmZmVyZW50Lg0KVGhhbmtzIGZvciByZWNvbmduaXppbmcgdGhhdC4gIENv
+bW1hbmRzID4zMiBieXRlcyBhcmUgc3VwcG9ydGVkIGJ5IFBNQydzIFNBUyBDb250cm9sbGVycy4N
+Cg0KS2FtYWxqaXQNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEphbWVzIEJv
+dHRvbWxleSBbbWFpbHRvOkphbWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb21dIA0K
+U2VudDogVHVlc2RheSwgTWF5IDA3LCAyMDEzIDE6MDcgUE0NClRvOiBLYW1hbGppdCBTaW5naA0K
+Q2M6IEphY2sgV2FuZzsgQW5hbmQgS3VtYXIgU2FudGhhbmFtOyBsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZzsgSGFycnkgWWFuZzsgVmlzaHdhbmF0aCBNYXJhbTsgU2FrdGhpdmVsIFNhcmF2YW5h
+biBLYW1hbCBSYWp1OyBSaWNoIEJvbm87IFNhbmdlZXRoYSBHbmFuYXNla2FyYW4NClN1YmplY3Q6
+IFJlOiAzMi1ieXRlIENEQiBzdXBwb3J0IGluIExpYnNhcz8NCg0KT24gVHVlLCAyMDEzLTA1LTA3
+IGF0IDEyOjQ2IC0wNzAwLCBLYW1hbGppdCBTaW5naCB3cm90ZToNCj4gSmFtZXMsICBKYWNrLA0K
+PiANCj4gVGhhbmtzIGZvciB5b3VyIHJlc3BvbnNlcy4NCj4gDQo+ID4gSSBkb24ndCB1bmRlcnN0
+YW5kIHRoZSBxdWVzdGlvbiAuLi4gaXQgc2hvdWxkIGp1c3Qgd29yazsgaXMgaXQNCj4gYnJva2Vu
+Pw0KPiBzYXNfY3JlYXRlX3Rhc2soKSBvbmx5IGNvcGllcyAxNiBieXRlcyB0byB0aGUgc2FzX3Nz
+cF90YXNrIHN0cnVjdOKAmXMNCj4gY2RiIGZpZWxkLCB3aGljaCBpdHNlbGYgaXMgYSAxNiBieXRl
+IHdpZGUgYXJyYXkuICBTbyBpdCBsb29rcyBsaWtlDQo+IHNhc19xdWV1ZWNvbW1hbmQoKSBkb2Vz
+buKAmXQgc3VwcG9ydCBhIDMyLWJ5dGUgY2RiLg0KDQpIbSwgaXQgZG9lcyBpdCBhcyBhIGJhcmUg
+MTYgaW5zdGVhZCBvZiBTQ1NJX01BWF9DREIgd2hpY2ggaXMgcHJvYmFibHkNCmhvdyBpdCBnb3Qg
+bWlzc2VkIGluIHRoZSBsb25nIGNvbW1hbmQgY29udmVyc2lvbi4NCg0KPiA+IEl0J3MgZWFzeSB0
+byBhZGQgdGhhdCwgZGVmaW5lIGNkYiAzMiB0byBzc3BfdGFzayBhbmQgbW9kaWZ5DQo+IHNhc19x
+dWV1ZWNvbW1hbmQsIGFuZCBsbGRkIHRvIHBhc3MgaXQgdG8gZncNCj4gWWVzLCB0aGF04oCZcyBl
+eGFjdGx5IHdoYXQgSeKAmXZlIGRlc2lnbmVkIGl0IGFzLCBpLmUuIGluIG15IGxsZGTigJlzDQo+
+IHF1ZXVlY29tbWFuZCBmdW5jdGlvbi4gIEF0IHRoZSBtb21lbnQgSSBvbmx5IG5lZWQgdGhpcyBm
+dW5jdGlvbiBmb3INCj4gMzItYnl0ZSBjZGIgc3VwcG9ydC4gIEJ1dCBpZiB0aGVyZSBhcmUgcGxh
+bnMgdG8gYWRkIHRoYXQgdG8gbGlic2FzDQo+IHRoZW4gSeKAmWQgcHJlZmVyIHRvIHVzZSBzYXNf
+cXVldWVjb21tYW5kIHJhdGhlciB0aGFuIGhhdmluZyB0byBkbw0KPiBtYW51YWwgbWVyZ2VzIGZy
+b20gZnV0dXJlIGxpYnNhcyBmaXhlcy91cGRhdGVzLg0KDQpJIHdvdWxkbid0IGRvIGl0IHRoYXQg
+d2F5LiAgU2luY2UgZXZlcnl0aGluZyBoYXMgdG8gZm9ybSBhIGNvbW1hbmQgSVUNCmFueXdheSBi
+eSBjb3B5aW5nLCBJJ2QganVzdCBtYWtlIHNhc19zc3AtPmNkYiBhIHBvaW50ZXIgdG8gdGhlIGFj
+dHVhbA0KY29tbWFuZCBpbnN0ZWFkIG9mIGFuIGFycmF5IG9mIHRoZSBjb21tYW5kOyBpZiBpdCBw
+b2ludHMgdG8gdGhlDQpzY3NpX2NtbmQsIHRoZW4gaXQgaGFzIGFjY2VzcyB0byBjbWRfbGVuIGFz
+IHdlbGwuICBUaGF0IHdheSBubyBjb3B5aW5nDQphbmQgbm8gcHJvYmxlbSB3aGVuIGFueW9uZSB3
+YW50cyBsb25nZXIgY29tbWFuZHMuICBUaGVyZSBzaG91bGQgcHJvYmFibHkNCmFsc28gYmUgYSBt
+YWNybyB0byBwb3B1bGF0ZSB0aGUgY29tbWFuZCBJVSBzaW5jZSB0aGUgZm9ybWF0IG9mIENEQiA+
+IDE2DQppcyBkaWZmZXJlbnQuDQoNCkphbWVzDQoNCg0K
