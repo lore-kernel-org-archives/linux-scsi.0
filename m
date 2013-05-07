@@ -1,32 +1,45 @@
-From: Jan Engelhardt <jengelh@inai.de>
-Subject: Arbitrary SCSI commands and CAP_SYS_ADMIN
-Date: Tue, 7 May 2013 18:12:26 +0200 (CEST)
-Message-ID: <alpine.LNX.2.01.1305071807230.27782@nerf07.vanv.qr>
+From: Kyle McMartin <kyle@infradead.org>
+Subject: [PATCH trivial] mvsas: fix build warning about enum comparisons
+Date: Tue, 7 May 2013 12:57:04 -0400
+Message-ID: <20130507165704.GB20643@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ares07.inai.de ([5.9.24.206]:37972 "EHLO ares07.inai.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753413Ab3EGQM2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 May 2013 12:12:28 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by ares07.inai.de (Postfix) with ESMTP id DB89D96A07D4
-	for <linux-scsi@vger.kernel.org>; Tue,  7 May 2013 18:12:26 +0200 (CEST)
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:42343
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751391Ab3EGQ5G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 12:57:06 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: yuxiangl@marvell.com, JBottomley@Parallels.com
 
+device_type is a sas_device_type, not a sas_dev_type.
 
-In include/uapi/linux/capability.h, next to CAP_SYS_ADMIN, one will find 
-the notice
+  1 drivers/scsi/mvsas/mv_sas.c: In function 'mvs_update_phyinfo':                                                                             
+  2 drivers/scsi/mvsas/mv_sas.c:1162:34: warning: comparison between
+'enum sas_device_type' and 'enum sas_dev_type' [-Wenum-compare]           
+  3     if (phy->identify.device_type == SAS_END_DEV)                                                                                          
+  4                                   ^                                                                                                        
+  5 drivers/scsi/mvsas/mv_sas.c:1165:39: warning: comparison between
+'enum sas_device_type' and 'enum sas_dev_type' [-Wenum-compare]           
+  6     else if (phy->identify.device_type != NO_DEVICE) 
 
-/* Allow enabling/disabling tagged queuing on SCSI controllers and sending
-   arbitrary SCSI commands */
+Signed-off-by: Kyle McMartin <kyle@redhat.com>
 
-#define CAP_SYS_ADMIN 21
-
-To the best of my knowledge, arbitrary commands can be issued with 
-the SG_IO ioctl. However, in drivers/scsi/sg.c, SG_IO does not need any 
-capabilities. Furthermore, in block/bsg.c, SG_IO suddenly needs 
-CAP_SYS_RAWIO (blk_fill_sgv4_hdr_rq < bsg_map_hdr < bsg_ioctl, or 
-through __bsg_write). Is the source documentation out of date?
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1159,10 +1159,10 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st)
+ 			phy->identify.device_type =
+ 				phy->att_dev_info & PORT_DEV_TYPE_MASK;
+ 
+-			if (phy->identify.device_type == SAS_END_DEV)
++			if (phy->identify.device_type == SAS_END_DEVICE)
+ 				phy->identify.target_port_protocols =
+ 							SAS_PROTOCOL_SSP;
+-			else if (phy->identify.device_type != NO_DEVICE)
++			else if (phy->identify.device_type != SAS_PHY_UNUSED)
+ 				phy->identify.target_port_protocols =
+ 							SAS_PROTOCOL_SMP;
+ 			if (oob_done)
