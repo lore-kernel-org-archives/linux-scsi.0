@@ -1,45 +1,53 @@
-From: Kyle McMartin <kyle@infradead.org>
-Subject: [PATCH trivial] mvsas: fix build warning about enum comparisons
-Date: Tue, 7 May 2013 12:57:04 -0400
-Message-ID: <20130507165704.GB20643@bombadil.infradead.org>
+From: "Kamaljit Singh" <Kamaljit.Singh@pmcs.com>
+Subject: RE: 32-byte CDB support in Libsas?
+Date: Tue, 7 May 2013 12:46:01 -0700
+Message-ID: <405BE55790F03349A85344435F25B01C07843842@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <405BE55790F03349A85344435F25B01C0784369E@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca><1367867773.1868.39.camel@dabdike> <CAD+HZHUynKmSgebmoLfPNgfbj8OVGaTUuFhJoJhNJxfvsNUFvg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:42343
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751391Ab3EGQ5G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 12:57:06 -0400
-Content-Disposition: inline
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:47106 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755865Ab3EGTqD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 15:46:03 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <CAD+HZHUynKmSgebmoLfPNgfbj8OVGaTUuFhJoJhNJxfvsNUFvg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: yuxiangl@marvell.com, JBottomley@Parallels.com
+To: Jack Wang <xjtuwjp@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, linux-scsi@vger.kernel.org, Harry Yang <Harry.Yang@pmcs.com>, Vishwanath Maram <Vishwanath.Maram@pmcs.com>, Sakthivel Saravanan Kamal Raju <sakthivel.sk@hcl.com>, Rich Bono <Rich.Bono@pmcs.com>, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>
 
-device_type is a sas_device_type, not a sas_dev_type.
-
-  1 drivers/scsi/mvsas/mv_sas.c: In function 'mvs_update_phyinfo':                                                                             
-  2 drivers/scsi/mvsas/mv_sas.c:1162:34: warning: comparison between
-'enum sas_device_type' and 'enum sas_dev_type' [-Wenum-compare]           
-  3     if (phy->identify.device_type == SAS_END_DEV)                                                                                          
-  4                                   ^                                                                                                        
-  5 drivers/scsi/mvsas/mv_sas.c:1165:39: warning: comparison between
-'enum sas_device_type' and 'enum sas_dev_type' [-Wenum-compare]           
-  6     else if (phy->identify.device_type != NO_DEVICE) 
-
-Signed-off-by: Kyle McMartin <kyle@redhat.com>
-
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1159,10 +1159,10 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st)
- 			phy->identify.device_type =
- 				phy->att_dev_info & PORT_DEV_TYPE_MASK;
- 
--			if (phy->identify.device_type == SAS_END_DEV)
-+			if (phy->identify.device_type == SAS_END_DEVICE)
- 				phy->identify.target_port_protocols =
- 							SAS_PROTOCOL_SSP;
--			else if (phy->identify.device_type != NO_DEVICE)
-+			else if (phy->identify.device_type != SAS_PHY_UNUSED)
- 				phy->identify.target_port_protocols =
- 							SAS_PROTOCOL_SMP;
- 			if (oob_done)
+SmFtZXMsICBKYWNrLA0KDQpUaGFua3MgZm9yIHlvdXIgcmVzcG9uc2VzLg0KDQo+IEkgZG9uJ3Qg
+dW5kZXJzdGFuZCB0aGUgcXVlc3Rpb24gLi4uIGl0IHNob3VsZCBqdXN0IHdvcms7IGlzIGl0IGJy
+b2tlbj8NCnNhc19jcmVhdGVfdGFzaygpIG9ubHkgY29waWVzIDE2IGJ5dGVzIHRvIHRoZSBzYXNf
+c3NwX3Rhc2sgc3RydWN04oCZcyBjZGIgZmllbGQsIHdoaWNoIGl0c2VsZiBpcyBhIDE2IGJ5dGUg
+d2lkZSBhcnJheS4gIFNvIGl0IGxvb2tzIGxpa2Ugc2FzX3F1ZXVlY29tbWFuZCgpIGRvZXNu4oCZ
+dCBzdXBwb3J0IGEgMzItYnl0ZSBjZGIuDQoNCj4gSXQncyBlYXN5IHRvIGFkZCB0aGF0LCBkZWZp
+bmUgY2RiIDMyIHRvIHNzcF90YXNrIGFuZCBtb2RpZnkgc2FzX3F1ZXVlY29tbWFuZCwgYW5kIGxs
+ZGQgdG8gcGFzcyBpdCB0byBmdw0KWWVzLCB0aGF04oCZcyBleGFjdGx5IHdoYXQgSeKAmXZlIGRl
+c2lnbmVkIGl0IGFzLCBpLmUuIGluIG15IGxsZGTigJlzIHF1ZXVlY29tbWFuZCBmdW5jdGlvbi4g
+IEF0IHRoZSBtb21lbnQgSSBvbmx5IG5lZWQgdGhpcyBmdW5jdGlvbiBmb3IgMzItYnl0ZSBjZGIg
+c3VwcG9ydC4gIEJ1dCBpZiB0aGVyZSBhcmUgcGxhbnMgdG8gYWRkIHRoYXQgdG8gbGlic2FzIHRo
+ZW4gSeKAmWQgcHJlZmVyIHRvIHVzZSBzYXNfcXVldWVjb21tYW5kIHJhdGhlciB0aGFuIGhhdmlu
+ZyB0byBkbyBtYW51YWwgbWVyZ2VzIGZyb20gZnV0dXJlIGxpYnNhcyBmaXhlcy91cGRhdGVzLg0K
+DQo+IEkgd29uZGVyIGFueSB1c2VyIGFzayBmb3IgY2RiIDMyIHN1cHBvcnQNCk5vLiAgSnVzdCB0
+ZXN0aW5nIHJpZ2h0IG5vdy4NCg0KVGhhbmtzLA0KDQpLYW1hbGppdA0KDQoNCkZyb206IEphY2sg
+V2FuZyBbbWFpbHRvOnhqdHV3anBAZ21haWwuY29tXSANClNlbnQ6IE1vbmRheSwgTWF5IDA2LCAy
+MDEzIDEyOjM4IFBNDQpUbzogSmFtZXMgQm90dG9tbGV5DQpDYzogS2FtYWxqaXQgU2luZ2g7IEFu
+YW5kIEt1bWFyIFNhbnRoYW5hbTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IEhhcnJ5IFlh
+bmc7IFZpc2h3YW5hdGggTWFyYW07IFNha3RoaXZlbCBTYXJhdmFuYW4gS2FtYWwgUmFqdTsgUmlj
+aCBCb25vOyBTYW5nZWV0aGEgR25hbmFzZWthcmFuDQpTdWJqZWN0OiBSZTogMzItYnl0ZSBDREIg
+c3VwcG9ydCBpbiBMaWJzYXM/DQoNCkl0J3MgZWFzeSB0byBhZGQgdGhhdCwgZGVmaW5lIGNkYiAz
+MiB0byBzc3BfdGFzayBhbmQgbW9kaWZ5IHNhc19xdWV1ZWNvbW1hbmQsIGFuZCBsbGRkIHRvIHBh
+c3MgaXQgdG8gZncuDQoNCkkgd29uZGVyIGFueSB1c2VyIGFzayBmb3IgY2RiIDMyIHN1cHBvcnQ/
+wqANCg0KUmVnYXJkcw0KSmFjaw0KDQoyMDEzLzUvNiBKYW1lcyBCb3R0b21sZXkgPEphbWVzLkJv
+dHRvbWxleUBoYW5zZW5wYXJ0bmVyc2hpcC5jb20+DQpPbiBNb24sIDIwMTMtMDUtMDYgYXQgMTE6
+NDEgLTA3MDAsIEthbWFsaml0IFNpbmdoIHdyb3RlOg0KPiBBcmUgdGhlcmUgYW55IHBsYW5zIHRv
+IGFkZCAzMi1ieXRlIENEQiBzdXBwb3J0IGluIExpYnNhcz8NCkkgZG9uJ3QgdW5kZXJzdGFuZCB0
+aGUgcXVlc3Rpb24gLi4uIGl0IHNob3VsZCBqdXN0IHdvcms7IGlzIGl0IGJyb2tlbj8NCg0KSmFt
+ZXMNCg0KDQotLQ0KVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUg
+InVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQp0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFq
+b3Jkb21vQHZnZXIua2VybmVsLm9yZw0KTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCDCoGh0dHA6Ly92
+Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
