@@ -1,65 +1,1200 @@
-From: "Kamaljit Singh" <Kamaljit.Singh@pmcs.com>
-Subject: RE: 32-byte CDB support in Libsas?
-Date: Tue, 7 May 2013 13:26:44 -0700
-Message-ID: <405BE55790F03349A85344435F25B01C07843852@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <405BE55790F03349A85344435F25B01C0784369E@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca><1367867773.1868.39.camel@dabdike> <CAD+HZHUynKmSgebmoLfPNgfbj8OVGaTUuFhJoJhNJxfvsNUFvg@mail.gmail.com> <405BE55790F03349A85344435F25B01C07843842@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca> <1367957207.4108.7.camel@dabdike>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH trivial] mvsas: fix build warning about enum comparisons
+Date: Tue, 07 May 2013 14:20:37 -0700
+Message-ID: <1367961637.4108.15.camel@dabdike>
+References: <20130507165704.GB20643@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:42273 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756807Ab3EGU0r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 16:26:47 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1367957207.4108.7.camel@dabdike>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47763 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759704Ab3EGVUk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 17:20:40 -0400
+In-Reply-To: <20130507165704.GB20643@bombadil.infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jack Wang <xjtuwjp@gmail.com>, Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, linux-scsi@vger.kernel.org, Harry Yang <Harry.Yang@pmcs.com>, Vishwanath Maram <Vishwanath.Maram@pmcs.com>, Sakthivel Saravanan Kamal Raju <sakthivel.sk@hcl.com>, Rich Bono <Rich.Bono@pmcs.com>, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>
+To: Kyle McMartin <kyle@infradead.org>
+Cc: linux-scsi@vger.kernel.org, yuxiangl@marvell.com
 
-PiBJIHdvdWxkbid0IGRvIGl0IHRoYXQgd2F5LiAgU2luY2UgZXZlcnl0aGluZyBoYXMgdG8gZm9y
-bSBhIGNvbW1hbmQgSVUNCj4gYW55d2F5IGJ5IGNvcHlpbmcsIEknZCBqdXN0IG1ha2Ugc2FzX3Nz
-cC0+Y2RiIGEgcG9pbnRlciB0byB0aGUgYWN0dWFsDQo+IGNvbW1hbmQgaW5zdGVhZCBvZiBhbiBh
-cnJheSBvZiB0aGUgY29tbWFuZDsgaWYgaXQgcG9pbnRzIHRvIHRoZQ0KSSdkIHByZWZlciB0aGF0
-IHRvbywgc3BlY2lhbGx5IHNpbmNlIHNjc2lfY21uZC0+Y21uZCBpcyBhbHJlYWR5IGEgcG9pbnRl
-ci4gIEkgY29uc2lkZXJlZCB0aGF0IGJ1dCBhbnkgc3VjaCBjaGFuZ2VzIHRvIGxpYnNhcy5oIHdv
-dWxkJ3ZlIGhhZCB3aWRlIHJlcGVyY3Vzc2lvbnMuICBIZW5jZSwgSSBkaWRuJ3QgZ28gZG93biB0
-aGF0IHJhdGhvbGUgYXQgdGhlIG1vbWVudC4gIA0KDQo+IG5vIHByb2JsZW0gd2hlbiBhbnlvbmUg
-d2FudHMgbG9uZ2VyIGNvbW1hbmRzLiAgVGhlcmUgc2hvdWxkIHByb2JhYmx5DQo+YWxzbyBiZSBh
-IG1hY3JvIHRvIHBvcHVsYXRlIHRoZSBjb21tYW5kIElVIHNpbmNlIHRoZSBmb3JtYXQgb2YgQ0RC
-ID4gMTYNCj4gaXMgZGlmZmVyZW50Lg0KVGhhbmtzIGZvciByZWNvbmduaXppbmcgdGhhdC4gIENv
-bW1hbmRzID4zMiBieXRlcyBhcmUgc3VwcG9ydGVkIGJ5IFBNQydzIFNBUyBDb250cm9sbGVycy4N
-Cg0KS2FtYWxqaXQNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEphbWVzIEJv
-dHRvbWxleSBbbWFpbHRvOkphbWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb21dIA0K
-U2VudDogVHVlc2RheSwgTWF5IDA3LCAyMDEzIDE6MDcgUE0NClRvOiBLYW1hbGppdCBTaW5naA0K
-Q2M6IEphY2sgV2FuZzsgQW5hbmQgS3VtYXIgU2FudGhhbmFtOyBsaW51eC1zY3NpQHZnZXIua2Vy
-bmVsLm9yZzsgSGFycnkgWWFuZzsgVmlzaHdhbmF0aCBNYXJhbTsgU2FrdGhpdmVsIFNhcmF2YW5h
-biBLYW1hbCBSYWp1OyBSaWNoIEJvbm87IFNhbmdlZXRoYSBHbmFuYXNla2FyYW4NClN1YmplY3Q6
-IFJlOiAzMi1ieXRlIENEQiBzdXBwb3J0IGluIExpYnNhcz8NCg0KT24gVHVlLCAyMDEzLTA1LTA3
-IGF0IDEyOjQ2IC0wNzAwLCBLYW1hbGppdCBTaW5naCB3cm90ZToNCj4gSmFtZXMsICBKYWNrLA0K
-PiANCj4gVGhhbmtzIGZvciB5b3VyIHJlc3BvbnNlcy4NCj4gDQo+ID4gSSBkb24ndCB1bmRlcnN0
-YW5kIHRoZSBxdWVzdGlvbiAuLi4gaXQgc2hvdWxkIGp1c3Qgd29yazsgaXMgaXQNCj4gYnJva2Vu
-Pw0KPiBzYXNfY3JlYXRlX3Rhc2soKSBvbmx5IGNvcGllcyAxNiBieXRlcyB0byB0aGUgc2FzX3Nz
-cF90YXNrIHN0cnVjdOKAmXMNCj4gY2RiIGZpZWxkLCB3aGljaCBpdHNlbGYgaXMgYSAxNiBieXRl
-IHdpZGUgYXJyYXkuICBTbyBpdCBsb29rcyBsaWtlDQo+IHNhc19xdWV1ZWNvbW1hbmQoKSBkb2Vz
-buKAmXQgc3VwcG9ydCBhIDMyLWJ5dGUgY2RiLg0KDQpIbSwgaXQgZG9lcyBpdCBhcyBhIGJhcmUg
-MTYgaW5zdGVhZCBvZiBTQ1NJX01BWF9DREIgd2hpY2ggaXMgcHJvYmFibHkNCmhvdyBpdCBnb3Qg
-bWlzc2VkIGluIHRoZSBsb25nIGNvbW1hbmQgY29udmVyc2lvbi4NCg0KPiA+IEl0J3MgZWFzeSB0
-byBhZGQgdGhhdCwgZGVmaW5lIGNkYiAzMiB0byBzc3BfdGFzayBhbmQgbW9kaWZ5DQo+IHNhc19x
-dWV1ZWNvbW1hbmQsIGFuZCBsbGRkIHRvIHBhc3MgaXQgdG8gZncNCj4gWWVzLCB0aGF04oCZcyBl
-eGFjdGx5IHdoYXQgSeKAmXZlIGRlc2lnbmVkIGl0IGFzLCBpLmUuIGluIG15IGxsZGTigJlzDQo+
-IHF1ZXVlY29tbWFuZCBmdW5jdGlvbi4gIEF0IHRoZSBtb21lbnQgSSBvbmx5IG5lZWQgdGhpcyBm
-dW5jdGlvbiBmb3INCj4gMzItYnl0ZSBjZGIgc3VwcG9ydC4gIEJ1dCBpZiB0aGVyZSBhcmUgcGxh
-bnMgdG8gYWRkIHRoYXQgdG8gbGlic2FzDQo+IHRoZW4gSeKAmWQgcHJlZmVyIHRvIHVzZSBzYXNf
-cXVldWVjb21tYW5kIHJhdGhlciB0aGFuIGhhdmluZyB0byBkbw0KPiBtYW51YWwgbWVyZ2VzIGZy
-b20gZnV0dXJlIGxpYnNhcyBmaXhlcy91cGRhdGVzLg0KDQpJIHdvdWxkbid0IGRvIGl0IHRoYXQg
-d2F5LiAgU2luY2UgZXZlcnl0aGluZyBoYXMgdG8gZm9ybSBhIGNvbW1hbmQgSVUNCmFueXdheSBi
-eSBjb3B5aW5nLCBJJ2QganVzdCBtYWtlIHNhc19zc3AtPmNkYiBhIHBvaW50ZXIgdG8gdGhlIGFj
-dHVhbA0KY29tbWFuZCBpbnN0ZWFkIG9mIGFuIGFycmF5IG9mIHRoZSBjb21tYW5kOyBpZiBpdCBw
-b2ludHMgdG8gdGhlDQpzY3NpX2NtbmQsIHRoZW4gaXQgaGFzIGFjY2VzcyB0byBjbWRfbGVuIGFz
-IHdlbGwuICBUaGF0IHdheSBubyBjb3B5aW5nDQphbmQgbm8gcHJvYmxlbSB3aGVuIGFueW9uZSB3
-YW50cyBsb25nZXIgY29tbWFuZHMuICBUaGVyZSBzaG91bGQgcHJvYmFibHkNCmFsc28gYmUgYSBt
-YWNybyB0byBwb3B1bGF0ZSB0aGUgY29tbWFuZCBJVSBzaW5jZSB0aGUgZm9ybWF0IG9mIENEQiA+
-IDE2DQppcyBkaWZmZXJlbnQuDQoNCkphbWVzDQoNCg0K
+On Tue, 2013-05-07 at 12:57 -0400, Kyle McMartin wrote:
+> device_type is a sas_device_type, not a sas_dev_type.
+
+Heh, months ago, someone who submitted the same trivial but insufficient
+fix was asked to go and see if they could unify sas_device_type and
+sas_dev_type, which is the correct fix.  They were never heard from
+again.  I suppose that shows that if you want something doing properly,
+you should do it yourself.
+
+James
+
+---
+ drivers/scsi/aic94xx/aic94xx_dev.c |   24 ++++----
+ drivers/scsi/aic94xx/aic94xx_hwi.c |    2 
+ drivers/scsi/aic94xx/aic94xx_tmf.c |    2 
+ drivers/scsi/isci/remote_device.c  |    4 -
+ drivers/scsi/isci/remote_device.h  |    2 
+ drivers/scsi/isci/request.c        |    6 +-
+ drivers/scsi/isci/task.c           |    2 
+ drivers/scsi/libsas/sas_ata.c      |   18 +++---
+ drivers/scsi/libsas/sas_discover.c |   34 +++++------
+ drivers/scsi/libsas/sas_expander.c |  110 ++++++++++++++++++-------------------
+ drivers/scsi/libsas/sas_internal.h |   10 +--
+ drivers/scsi/libsas/sas_port.c     |    2 
+ drivers/scsi/mvsas/mv_init.c       |    2 
+ drivers/scsi/mvsas/mv_sas.c        |   16 ++---
+ drivers/scsi/mvsas/mv_sas.h        |    4 -
+ drivers/scsi/pm8001/pm8001_hwi.c   |   18 +++---
+ drivers/scsi/pm8001/pm8001_init.c  |    2 
+ drivers/scsi/pm8001/pm8001_sas.c   |   14 ++--
+ drivers/scsi/pm8001/pm8001_sas.h   |    4 -
+ drivers/scsi/pm8001/pm80xx_hwi.c   |   12 ++--
+ include/scsi/libsas.h              |    4 -
+ include/scsi/sas.h                 |   22 ++++---
+ include/scsi/sas_ata.h             |    4 -
+ include/scsi/scsi_transport_sas.h  |    7 --
+ 24 files changed, 160 insertions(+), 165 deletions(-)
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_dev.c b/drivers/scsi/aic94xx/aic94xx_dev.c
+index 64136c56..3307238 100644
+--- a/drivers/scsi/aic94xx/aic94xx_dev.c
++++ b/drivers/scsi/aic94xx/aic94xx_dev.c
+@@ -84,7 +84,7 @@ static void asd_set_ddb_type(struct domain_device *dev)
+ 	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
+ 	int ddb = (int) (unsigned long) dev->lldd_dev;
+ 
+-	if (dev->dev_type == SATA_PM_PORT)
++	if (dev->dev_type == SAS_SATA_PM_PORT)
+ 		asd_ddbsite_write_byte(asd_ha,ddb, DDB_TYPE, DDB_TYPE_PM_PORT);
+ 	else if (dev->tproto)
+ 		asd_ddbsite_write_byte(asd_ha,ddb, DDB_TYPE, DDB_TYPE_TARGET);
+@@ -116,7 +116,7 @@ void asd_set_dmamode(struct domain_device *dev)
+ 	int ddb = (int) (unsigned long) dev->lldd_dev;
+ 	u32 qdepth = 0;
+ 
+-	if (dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM_PORT) {
++	if (dev->dev_type == SAS_SATA_DEV || dev->dev_type == SAS_SATA_PM_PORT) {
+ 		if (ata_id_has_ncq(ata_dev->id))
+ 			qdepth = ata_id_queue_depth(ata_dev->id);
+ 		asd_ddbsite_write_dword(asd_ha, ddb, SATA_TAG_ALLOC_MASK,
+@@ -140,8 +140,8 @@ static int asd_init_sata(struct domain_device *dev)
+ 	int ddb = (int) (unsigned long) dev->lldd_dev;
+ 
+ 	asd_ddbsite_write_word(asd_ha, ddb, ATA_CMD_SCBPTR, 0xFFFF);
+-	if (dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM ||
+-	    dev->dev_type == SATA_PM_PORT) {
++	if (dev->dev_type == SAS_SATA_DEV || dev->dev_type == SAS_SATA_PM ||
++	    dev->dev_type == SAS_SATA_PM_PORT) {
+ 		struct dev_to_host_fis *fis = (struct dev_to_host_fis *)
+ 			dev->frame_rcvd;
+ 		asd_ddbsite_write_byte(asd_ha, ddb, SATA_STATUS, fis->status);
+@@ -174,7 +174,7 @@ static int asd_init_target_ddb(struct domain_device *dev)
+ 	asd_ddbsite_write_byte(asd_ha, ddb, CONN_MASK, dev->port->phy_mask);
+ 	if (dev->port->oob_mode != SATA_OOB_MODE) {
+ 		flags |= OPEN_REQUIRED;
+-		if ((dev->dev_type == SATA_DEV) ||
++		if ((dev->dev_type == SAS_SATA_DEV) ||
+ 		    (dev->tproto & SAS_PROTOCOL_STP)) {
+ 			struct smp_resp *rps_resp = &dev->sata_dev.rps_resp;
+ 			if (rps_resp->frame_type == SMP_RESPONSE &&
+@@ -188,8 +188,8 @@ static int asd_init_target_ddb(struct domain_device *dev)
+ 		} else {
+ 			flags |= CONCURRENT_CONN_SUPP;
+ 			if (!dev->parent &&
+-			    (dev->dev_type == EDGE_DEV ||
+-			     dev->dev_type == FANOUT_DEV))
++			    (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
++			     dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE))
+ 				asd_ddbsite_write_byte(asd_ha, ddb, MAX_CCONN,
+ 						       4);
+ 			else
+@@ -198,7 +198,7 @@ static int asd_init_target_ddb(struct domain_device *dev)
+ 			asd_ddbsite_write_byte(asd_ha, ddb, NUM_CTX, 1);
+ 		}
+ 	}
+-	if (dev->dev_type == SATA_PM)
++	if (dev->dev_type == SAS_SATA_PM)
+ 		flags |= SATA_MULTIPORT;
+ 	asd_ddbsite_write_byte(asd_ha, ddb, DDB_TARG_FLAGS, flags);
+ 
+@@ -211,7 +211,7 @@ static int asd_init_target_ddb(struct domain_device *dev)
+ 	asd_ddbsite_write_word(asd_ha, ddb, SEND_QUEUE_TAIL, 0xFFFF);
+ 	asd_ddbsite_write_word(asd_ha, ddb, SISTER_DDB, 0xFFFF);
+ 
+-	if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) {
++	if (dev->dev_type == SAS_SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) {
+ 		i = asd_init_sata(dev);
+ 		if (i < 0) {
+ 			asd_free_ddb(asd_ha, ddb);
+@@ -219,7 +219,7 @@ static int asd_init_target_ddb(struct domain_device *dev)
+ 		}
+ 	}
+ 
+-	if (dev->dev_type == SAS_END_DEV) {
++	if (dev->dev_type == SAS_END_DEVICE) {
+ 		struct sas_end_device *rdev = rphy_to_end_device(dev->rphy);
+ 		if (rdev->I_T_nexus_loss_timeout > 0)
+ 			asd_ddbsite_write_word(asd_ha, ddb, ITNL_TIMEOUT,
+@@ -328,10 +328,10 @@ int asd_dev_found(struct domain_device *dev)
+ 
+ 	spin_lock_irqsave(&asd_ha->hw_prof.ddb_lock, flags);
+ 	switch (dev->dev_type) {
+-	case SATA_PM:
++	case SAS_SATA_PM:
+ 		res = asd_init_sata_pm_ddb(dev);
+ 		break;
+-	case SATA_PM_PORT:
++	case SAS_SATA_PM_PORT:
+ 		res = asd_init_sata_pm_port_ddb(dev);
+ 		break;
+ 	default:
+diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.c b/drivers/scsi/aic94xx/aic94xx_hwi.c
+index 81b736c..4df867e 100644
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.c
++++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
+@@ -74,7 +74,7 @@ static void asd_init_phy_identify(struct asd_phy *phy)
+ 
+ 	memset(phy->identify_frame, 0, sizeof(*phy->identify_frame));
+ 
+-	phy->identify_frame->dev_type = SAS_END_DEV;
++	phy->identify_frame->dev_type = SAS_END_DEVICE;
+ 	if (phy->sas_phy.role & PHY_ROLE_INITIATOR)
+ 		phy->identify_frame->initiator_bits = phy->sas_phy.iproto;
+ 	if (phy->sas_phy.role & PHY_ROLE_TARGET)
+diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+index cf90409..d4c35df 100644
+--- a/drivers/scsi/aic94xx/aic94xx_tmf.c
++++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+@@ -184,7 +184,7 @@ int asd_I_T_nexus_reset(struct domain_device *dev)
+ 	struct sas_phy *phy = sas_get_local_phy(dev);
+ 	/* Standard mandates link reset for ATA  (type 0) and
+ 	 * hard reset for SSP (type 1) */
+-	int reset_type = (dev->dev_type == SATA_DEV ||
++	int reset_type = (dev->dev_type == SAS_SATA_DEV ||
+ 			  (dev->tproto & SAS_PROTOCOL_STP)) ? 0 : 1;
+ 
+ 	asd_clear_nexus_I_T(dev, NEXUS_PHASE_PRE);
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index c3aa6c5..96a26f4 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -1085,7 +1085,7 @@ static void sci_remote_device_ready_state_enter(struct sci_base_state_machine *s
+ 	struct isci_host *ihost = idev->owning_port->owning_controller;
+ 	struct domain_device *dev = idev->domain_dev;
+ 
+-	if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_SATA)) {
++	if (dev->dev_type == SAS_SATA_DEV || (dev->tproto & SAS_PROTOCOL_SATA)) {
+ 		sci_change_state(&idev->sm, SCI_STP_DEV_IDLE);
+ 	} else if (dev_is_expander(dev)) {
+ 		sci_change_state(&idev->sm, SCI_SMP_DEV_IDLE);
+@@ -1098,7 +1098,7 @@ static void sci_remote_device_ready_state_exit(struct sci_base_state_machine *sm
+ 	struct isci_remote_device *idev = container_of(sm, typeof(*idev), sm);
+ 	struct domain_device *dev = idev->domain_dev;
+ 
+-	if (dev->dev_type == SAS_END_DEV) {
++	if (dev->dev_type == SAS_END_DEVICE) {
+ 		struct isci_host *ihost = idev->owning_port->owning_controller;
+ 
+ 		isci_remote_device_not_ready(ihost, idev,
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 7674caa..47a013f 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -297,7 +297,7 @@ static inline struct isci_remote_device *rnc_to_dev(struct sci_remote_node_conte
+ 
+ static inline bool dev_is_expander(struct domain_device *dev)
+ {
+-	return dev->dev_type == EDGE_DEV || dev->dev_type == FANOUT_DEV;
++	return dev->dev_type == SAS_EDGE_EXPANDER_DEVICE || dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE;
+ }
+ 
+ static inline void sci_remote_device_decrement_request_count(struct isci_remote_device *idev)
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index 9594ab6..e3e3bcb 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -2978,7 +2978,7 @@ static void sci_request_started_state_enter(struct sci_base_state_machine *sm)
+ 	/* all unaccelerated request types (non ssp or ncq) handled with
+ 	 * substates
+ 	 */
+-	if (!task && dev->dev_type == SAS_END_DEV) {
++	if (!task && dev->dev_type == SAS_END_DEVICE) {
+ 		state = SCI_REQ_TASK_WAIT_TC_COMP;
+ 	} else if (task && task->task_proto == SAS_PROTOCOL_SMP) {
+ 		state = SCI_REQ_SMP_WAIT_RESP;
+@@ -3101,7 +3101,7 @@ sci_io_request_construct(struct isci_host *ihost,
+ 	if (idev->rnc.remote_node_index == SCIC_SDS_REMOTE_NODE_CONTEXT_INVALID_INDEX)
+ 		return SCI_FAILURE_INVALID_REMOTE_DEVICE;
+ 
+-	if (dev->dev_type == SAS_END_DEV)
++	if (dev->dev_type == SAS_END_DEVICE)
+ 		/* pass */;
+ 	else if (dev_is_sata(dev))
+ 		memset(&ireq->stp.cmd, 0, sizeof(ireq->stp.cmd));
+@@ -3125,7 +3125,7 @@ enum sci_status sci_task_request_construct(struct isci_host *ihost,
+ 	/* Build the common part of the request */
+ 	sci_general_request_construct(ihost, idev, ireq);
+ 
+-	if (dev->dev_type == SAS_END_DEV || dev_is_sata(dev)) {
++	if (dev->dev_type == SAS_END_DEVICE || dev_is_sata(dev)) {
+ 		set_bit(IREQ_TMF, &ireq->flags);
+ 		memset(ireq->tc, 0, sizeof(struct scu_task_context));
+ 
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index b6f19a1..9bb020a 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -250,7 +250,7 @@ static struct isci_request *isci_task_request_build(struct isci_host *ihost,
+ 	}
+ 
+ 	/* XXX convert to get this from task->tproto like other drivers */
+-	if (dev->dev_type == SAS_END_DEV) {
++	if (dev->dev_type == SAS_END_DEVICE) {
+ 		isci_tmf->proto = SAS_PROTOCOL_SSP;
+ 		status = sci_task_request_construct_ssp(ireq);
+ 		if (status != SCI_SUCCESS)
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index bdb81cd..161c98e 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -285,14 +285,14 @@ int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy)
+ 	if (phy->attached_tproto & SAS_PROTOCOL_STP)
+ 		dev->tproto = phy->attached_tproto;
+ 	if (phy->attached_sata_dev)
+-		dev->tproto |= SATA_DEV;
++		dev->tproto |= SAS_SATA_DEV;
+ 
+-	if (phy->attached_dev_type == SATA_PENDING)
+-		dev->dev_type = SATA_PENDING;
++	if (phy->attached_dev_type == SAS_SATA_PENDING)
++		dev->dev_type = SAS_SATA_PENDING;
+ 	else {
+ 		int res;
+ 
+-		dev->dev_type = SATA_DEV;
++		dev->dev_type = SAS_SATA_DEV;
+ 		res = sas_get_report_phy_sata(dev->parent, phy->phy_id,
+ 					      &dev->sata_dev.rps_resp);
+ 		if (res) {
+@@ -314,7 +314,7 @@ static int sas_ata_clear_pending(struct domain_device *dev, struct ex_phy *phy)
+ 	int res;
+ 
+ 	/* we weren't pending, so successfully end the reset sequence now */
+-	if (dev->dev_type != SATA_PENDING)
++	if (dev->dev_type != SAS_SATA_PENDING)
+ 		return 1;
+ 
+ 	/* hmmm, if this succeeds do we need to repost the domain_device to the
+@@ -348,9 +348,9 @@ static int smp_ata_check_ready(struct ata_link *link)
+ 		return 0;
+ 
+ 	switch (ex_phy->attached_dev_type) {
+-	case SATA_PENDING:
++	case SAS_SATA_PENDING:
+ 		return 0;
+-	case SAS_END_DEV:
++	case SAS_END_DEVICE:
+ 		if (ex_phy->attached_sata_dev)
+ 			return sas_ata_clear_pending(dev, ex_phy);
+ 	default:
+@@ -631,7 +631,7 @@ static void sas_get_ata_command_set(struct domain_device *dev)
+ 	struct dev_to_host_fis *fis =
+ 		(struct dev_to_host_fis *) dev->frame_rcvd;
+ 
+-	if (dev->dev_type == SATA_PENDING)
++	if (dev->dev_type == SAS_SATA_PENDING)
+ 		return;
+ 
+ 	if ((fis->sector_count == 1 && /* ATA */
+@@ -797,7 +797,7 @@ int sas_discover_sata(struct domain_device *dev)
+ {
+ 	int res;
+ 
+-	if (dev->dev_type == SATA_PM)
++	if (dev->dev_type == SAS_SATA_PM)
+ 		return -ENODEV;
+ 
+ 	sas_get_ata_command_set(dev);
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index a0c3003..62b58d3 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -39,11 +39,11 @@
+ void sas_init_dev(struct domain_device *dev)
+ {
+ 	switch (dev->dev_type) {
+-	case SAS_END_DEV:
++	case SAS_END_DEVICE:
+ 		INIT_LIST_HEAD(&dev->ssp_dev.eh_list_node);
+ 		break;
+-	case EDGE_DEV:
+-	case FANOUT_DEV:
++	case SAS_EDGE_EXPANDER_DEVICE:
++	case SAS_FANOUT_EXPANDER_DEVICE:
+ 		INIT_LIST_HEAD(&dev->ex_dev.children);
+ 		mutex_init(&dev->ex_dev.cmd_mutex);
+ 		break;
+@@ -93,9 +93,9 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 		if (fis->interrupt_reason == 1 && fis->lbal == 1 &&
+ 		    fis->byte_count_low==0x69 && fis->byte_count_high == 0x96
+ 		    && (fis->device & ~0x10) == 0)
+-			dev->dev_type = SATA_PM;
++			dev->dev_type = SAS_SATA_PM;
+ 		else
+-			dev->dev_type = SATA_DEV;
++			dev->dev_type = SAS_SATA_DEV;
+ 		dev->tproto = SAS_PROTOCOL_SATA;
+ 	} else {
+ 		struct sas_identify_frame *id =
+@@ -109,21 +109,21 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 
+ 	dev->port = port;
+ 	switch (dev->dev_type) {
+-	case SATA_DEV:
++	case SAS_SATA_DEV:
+ 		rc = sas_ata_init(dev);
+ 		if (rc) {
+ 			rphy = NULL;
+ 			break;
+ 		}
+ 		/* fall through */
+-	case SAS_END_DEV:
++	case SAS_END_DEVICE:
+ 		rphy = sas_end_device_alloc(port->port);
+ 		break;
+-	case EDGE_DEV:
++	case SAS_EDGE_EXPANDER_DEVICE:
+ 		rphy = sas_expander_alloc(port->port,
+ 					  SAS_EDGE_EXPANDER_DEVICE);
+ 		break;
+-	case FANOUT_DEV:
++	case SAS_FANOUT_EXPANDER_DEVICE:
+ 		rphy = sas_expander_alloc(port->port,
+ 					  SAS_FANOUT_EXPANDER_DEVICE);
+ 		break;
+@@ -156,7 +156,7 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 	dev->rphy = rphy;
+ 	get_device(&dev->rphy->dev);
+ 
+-	if (dev_is_sata(dev) || dev->dev_type == SAS_END_DEV)
++	if (dev_is_sata(dev) || dev->dev_type == SAS_END_DEVICE)
+ 		list_add_tail(&dev->disco_list_node, &port->disco_list);
+ 	else {
+ 		spin_lock_irq(&port->dev_list_lock);
+@@ -315,7 +315,7 @@ void sas_free_device(struct kref *kref)
+ 	dev->phy = NULL;
+ 
+ 	/* remove the phys and ports, everything else should be gone */
+-	if (dev->dev_type == EDGE_DEV || dev->dev_type == FANOUT_DEV)
++	if (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE || dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
+ 		kfree(dev->ex_dev.ex_phy);
+ 
+ 	if (dev_is_sata(dev) && dev->sata_dev.ap) {
+@@ -343,7 +343,7 @@ static void sas_unregister_common_dev(struct asd_sas_port *port, struct domain_d
+ 	spin_unlock_irq(&port->dev_list_lock);
+ 
+ 	spin_lock_irq(&ha->lock);
+-	if (dev->dev_type == SAS_END_DEV &&
++	if (dev->dev_type == SAS_END_DEVICE &&
+ 	    !list_empty(&dev->ssp_dev.eh_list_node)) {
+ 		list_del_init(&dev->ssp_dev.eh_list_node);
+ 		ha->eh_active--;
+@@ -457,15 +457,15 @@ static void sas_discover_domain(struct work_struct *work)
+ 		    task_pid_nr(current));
+ 
+ 	switch (dev->dev_type) {
+-	case SAS_END_DEV:
++	case SAS_END_DEVICE:
+ 		error = sas_discover_end_dev(dev);
+ 		break;
+-	case EDGE_DEV:
+-	case FANOUT_DEV:
++	case SAS_EDGE_EXPANDER_DEVICE:
++	case SAS_FANOUT_EXPANDER_DEVICE:
+ 		error = sas_discover_root_expander(dev);
+ 		break;
+-	case SATA_DEV:
+-	case SATA_PM:
++	case SAS_SATA_DEV:
++	case SAS_SATA_PM:
+ #ifdef CONFIG_SCSI_SAS_ATA
+ 		error = sas_discover_sata(dev);
+ 		break;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 55cbd01..74cc4a0 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -183,21 +183,21 @@ static char sas_route_char(struct domain_device *dev, struct ex_phy *phy)
+ 	}
+ }
+ 
+-static enum sas_dev_type to_dev_type(struct discover_resp *dr)
++static enum sas_device_type to_dev_type(struct discover_resp *dr)
+ {
+ 	/* This is detecting a failure to transmit initial dev to host
+ 	 * FIS as described in section J.5 of sas-2 r16
+ 	 */
+-	if (dr->attached_dev_type == NO_DEVICE && dr->attached_sata_dev &&
++	if (dr->attached_dev_type == SAS_PHY_UNUSED && dr->attached_sata_dev &&
+ 	    dr->linkrate >= SAS_LINK_RATE_1_5_GBPS)
+-		return SATA_PENDING;
++		return SAS_SATA_PENDING;
+ 	else
+ 		return dr->attached_dev_type;
+ }
+ 
+ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ {
+-	enum sas_dev_type dev_type;
++	enum sas_device_type dev_type;
+ 	enum sas_linkrate linkrate;
+ 	u8 sas_addr[SAS_ADDR_SIZE];
+ 	struct smp_resp *resp = rsp;
+@@ -238,7 +238,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 	/* Handle vacant phy - rest of dr data is not valid so skip it */
+ 	if (phy->phy_state == PHY_VACANT) {
+ 		memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
+-		phy->attached_dev_type = NO_DEVICE;
++		phy->attached_dev_type = SAS_PHY_UNUSED;
+ 		if (!test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)) {
+ 			phy->phy_id = phy_id;
+ 			goto skip;
+@@ -259,7 +259,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 	/* help some expanders that fail to zero sas_address in the 'no
+ 	 * device' case
+ 	 */
+-	if (phy->attached_dev_type == NO_DEVICE ||
++	if (phy->attached_dev_type == SAS_PHY_UNUSED ||
+ 	    phy->linkrate < SAS_LINK_RATE_1_5_GBPS)
+ 		memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
+ 	else
+@@ -292,13 +292,13 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 
+  out:
+ 	switch (phy->attached_dev_type) {
+-	case SATA_PENDING:
++	case SAS_SATA_PENDING:
+ 		type = "stp pending";
+ 		break;
+-	case NO_DEVICE:
++	case SAS_PHY_UNUSED:
+ 		type = "no device";
+ 		break;
+-	case SAS_END_DEV:
++	case SAS_END_DEVICE:
+ 		if (phy->attached_iproto) {
+ 			if (phy->attached_tproto)
+ 				type = "host+target";
+@@ -311,8 +311,8 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id, void *rsp)
+ 				type = "ssp";
+ 		}
+ 		break;
+-	case EDGE_DEV:
+-	case FANOUT_DEV:
++	case SAS_EDGE_EXPANDER_DEVICE:
++	case SAS_FANOUT_EXPANDER_DEVICE:
+ 		type = "smp";
+ 		break;
+ 	default:
+@@ -833,7 +833,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 	} else
+ #endif
+ 	  if (phy->attached_tproto & SAS_PROTOCOL_SSP) {
+-		child->dev_type = SAS_END_DEV;
++		child->dev_type = SAS_END_DEVICE;
+ 		rphy = sas_end_device_alloc(phy->port);
+ 		/* FIXME: error handling */
+ 		if (unlikely(!rphy))
+@@ -932,11 +932,11 @@ static struct domain_device *sas_ex_discover_expander(
+ 
+ 
+ 	switch (phy->attached_dev_type) {
+-	case EDGE_DEV:
++	case SAS_EDGE_EXPANDER_DEVICE:
+ 		rphy = sas_expander_alloc(phy->port,
+ 					  SAS_EDGE_EXPANDER_DEVICE);
+ 		break;
+-	case FANOUT_DEV:
++	case SAS_FANOUT_EXPANDER_DEVICE:
+ 		rphy = sas_expander_alloc(phy->port,
+ 					  SAS_FANOUT_EXPANDER_DEVICE);
+ 		break;
+@@ -1013,7 +1013,7 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
+ 	if (sas_dev_present_in_domain(dev->port, ex_phy->attached_sas_addr))
+ 		sas_ex_disable_port(dev, ex_phy->attached_sas_addr);
+ 
+-	if (ex_phy->attached_dev_type == NO_DEVICE) {
++	if (ex_phy->attached_dev_type == SAS_PHY_UNUSED) {
+ 		if (ex_phy->routing_attr == DIRECT_ROUTING) {
+ 			memset(ex_phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
+ 			sas_configure_routing(dev, ex_phy->attached_sas_addr);
+@@ -1022,10 +1022,10 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
+ 	} else if (ex_phy->linkrate == SAS_LINK_RATE_UNKNOWN)
+ 		return 0;
+ 
+-	if (ex_phy->attached_dev_type != SAS_END_DEV &&
+-	    ex_phy->attached_dev_type != FANOUT_DEV &&
+-	    ex_phy->attached_dev_type != EDGE_DEV &&
+-	    ex_phy->attached_dev_type != SATA_PENDING) {
++	if (ex_phy->attached_dev_type != SAS_END_DEVICE &&
++	    ex_phy->attached_dev_type != SAS_FANOUT_EXPANDER_DEVICE &&
++	    ex_phy->attached_dev_type != SAS_EDGE_EXPANDER_DEVICE &&
++	    ex_phy->attached_dev_type != SAS_SATA_PENDING) {
+ 		SAS_DPRINTK("unknown device type(0x%x) attached to ex %016llx "
+ 			    "phy 0x%x\n", ex_phy->attached_dev_type,
+ 			    SAS_ADDR(dev->sas_addr),
+@@ -1049,11 +1049,11 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
+ 	}
+ 
+ 	switch (ex_phy->attached_dev_type) {
+-	case SAS_END_DEV:
+-	case SATA_PENDING:
++	case SAS_END_DEVICE:
++	case SAS_SATA_PENDING:
+ 		child = sas_ex_discover_end_dev(dev, phy_id);
+ 		break;
+-	case FANOUT_DEV:
++	case SAS_FANOUT_EXPANDER_DEVICE:
+ 		if (SAS_ADDR(dev->port->disc.fanout_sas_addr)) {
+ 			SAS_DPRINTK("second fanout expander %016llx phy 0x%x "
+ 				    "attached to ex %016llx phy 0x%x\n",
+@@ -1067,7 +1067,7 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
+ 			memcpy(dev->port->disc.fanout_sas_addr,
+ 			       ex_phy->attached_sas_addr, SAS_ADDR_SIZE);
+ 		/* fallthrough */
+-	case EDGE_DEV:
++	case SAS_EDGE_EXPANDER_DEVICE:
+ 		child = sas_ex_discover_expander(dev, phy_id);
+ 		break;
+ 	default:
+@@ -1111,8 +1111,8 @@ static int sas_find_sub_addr(struct domain_device *dev, u8 *sub_addr)
+ 		    phy->phy_state == PHY_NOT_PRESENT)
+ 			continue;
+ 
+-		if ((phy->attached_dev_type == EDGE_DEV ||
+-		     phy->attached_dev_type == FANOUT_DEV) &&
++		if ((phy->attached_dev_type == SAS_EDGE_EXPANDER_DEVICE ||
++		     phy->attached_dev_type == SAS_FANOUT_EXPANDER_DEVICE) &&
+ 		    phy->routing_attr == SUBTRACTIVE_ROUTING) {
+ 
+ 			memcpy(sub_addr, phy->attached_sas_addr,SAS_ADDR_SIZE);
+@@ -1130,8 +1130,8 @@ static int sas_check_level_subtractive_boundary(struct domain_device *dev)
+ 	u8 sub_addr[8] = {0, };
+ 
+ 	list_for_each_entry(child, &ex->children, siblings) {
+-		if (child->dev_type != EDGE_DEV &&
+-		    child->dev_type != FANOUT_DEV)
++		if (child->dev_type != SAS_EDGE_EXPANDER_DEVICE &&
++		    child->dev_type != SAS_FANOUT_EXPANDER_DEVICE)
+ 			continue;
+ 		if (sub_addr[0] == 0) {
+ 			sas_find_sub_addr(child, sub_addr);
+@@ -1208,7 +1208,7 @@ static int sas_check_ex_subtractive_boundary(struct domain_device *dev)
+ 	int i;
+ 	u8  *sub_sas_addr = NULL;
+ 
+-	if (dev->dev_type != EDGE_DEV)
++	if (dev->dev_type != SAS_EDGE_EXPANDER_DEVICE)
+ 		return 0;
+ 
+ 	for (i = 0; i < ex->num_phys; i++) {
+@@ -1218,8 +1218,8 @@ static int sas_check_ex_subtractive_boundary(struct domain_device *dev)
+ 		    phy->phy_state == PHY_NOT_PRESENT)
+ 			continue;
+ 
+-		if ((phy->attached_dev_type == FANOUT_DEV ||
+-		     phy->attached_dev_type == EDGE_DEV) &&
++		if ((phy->attached_dev_type == SAS_FANOUT_EXPANDER_DEVICE ||
++		     phy->attached_dev_type == SAS_EDGE_EXPANDER_DEVICE) &&
+ 		    phy->routing_attr == SUBTRACTIVE_ROUTING) {
+ 
+ 			if (!sub_sas_addr)
+@@ -1245,8 +1245,8 @@ static void sas_print_parent_topology_bug(struct domain_device *child,
+ 						 struct ex_phy *child_phy)
+ {
+ 	static const char *ex_type[] = {
+-		[EDGE_DEV] = "edge",
+-		[FANOUT_DEV] = "fanout",
++		[SAS_EDGE_EXPANDER_DEVICE] = "edge",
++		[SAS_FANOUT_EXPANDER_DEVICE] = "fanout",
+ 	};
+ 	struct domain_device *parent = child->parent;
+ 
+@@ -1321,8 +1321,8 @@ static int sas_check_parent_topology(struct domain_device *child)
+ 	if (!child->parent)
+ 		return 0;
+ 
+-	if (child->parent->dev_type != EDGE_DEV &&
+-	    child->parent->dev_type != FANOUT_DEV)
++	if (child->parent->dev_type != SAS_EDGE_EXPANDER_DEVICE &&
++	    child->parent->dev_type != SAS_FANOUT_EXPANDER_DEVICE)
+ 		return 0;
+ 
+ 	parent_ex = &child->parent->ex_dev;
+@@ -1341,8 +1341,8 @@ static int sas_check_parent_topology(struct domain_device *child)
+ 		child_phy = &child_ex->ex_phy[parent_phy->attached_phy_id];
+ 
+ 		switch (child->parent->dev_type) {
+-		case EDGE_DEV:
+-			if (child->dev_type == FANOUT_DEV) {
++		case SAS_EDGE_EXPANDER_DEVICE:
++			if (child->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
+ 				if (parent_phy->routing_attr != SUBTRACTIVE_ROUTING ||
+ 				    child_phy->routing_attr != TABLE_ROUTING) {
+ 					sas_print_parent_topology_bug(child, parent_phy, child_phy);
+@@ -1366,7 +1366,7 @@ static int sas_check_parent_topology(struct domain_device *child)
+ 				}
+ 			}
+ 			break;
+-		case FANOUT_DEV:
++		case SAS_FANOUT_EXPANDER_DEVICE:
+ 			if (parent_phy->routing_attr != TABLE_ROUTING ||
+ 			    child_phy->routing_attr != SUBTRACTIVE_ROUTING) {
+ 				sas_print_parent_topology_bug(child, parent_phy, child_phy);
+@@ -1619,8 +1619,8 @@ static int sas_ex_level_discovery(struct asd_sas_port *port, const int level)
+ 	struct domain_device *dev;
+ 
+ 	list_for_each_entry(dev, &port->dev_list, dev_list_node) {
+-		if (dev->dev_type == EDGE_DEV ||
+-		    dev->dev_type == FANOUT_DEV) {
++		if (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
++		    dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
+ 			struct sas_expander_device *ex =
+ 				rphy_to_expander_device(dev->rphy);
+ 
+@@ -1720,7 +1720,7 @@ static int sas_get_phy_change_count(struct domain_device *dev,
+ }
+ 
+ static int sas_get_phy_attached_dev(struct domain_device *dev, int phy_id,
+-				    u8 *sas_addr, enum sas_dev_type *type)
++				    u8 *sas_addr, enum sas_device_type *type)
+ {
+ 	int res;
+ 	struct smp_resp *disc_resp;
+@@ -1849,7 +1849,7 @@ static int sas_find_bcast_dev(struct domain_device *dev,
+ 			SAS_DPRINTK("Expander phys DID NOT change\n");
+ 	}
+ 	list_for_each_entry(ch, &ex->children, siblings) {
+-		if (ch->dev_type == EDGE_DEV || ch->dev_type == FANOUT_DEV) {
++		if (ch->dev_type == SAS_EDGE_EXPANDER_DEVICE || ch->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
+ 			res = sas_find_bcast_dev(ch, src_dev);
+ 			if (*src_dev)
+ 				return res;
+@@ -1866,8 +1866,8 @@ static void sas_unregister_ex_tree(struct asd_sas_port *port, struct domain_devi
+ 
+ 	list_for_each_entry_safe(child, n, &ex->children, siblings) {
+ 		set_bit(SAS_DEV_GONE, &child->state);
+-		if (child->dev_type == EDGE_DEV ||
+-		    child->dev_type == FANOUT_DEV)
++		if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
++		    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
+ 			sas_unregister_ex_tree(port, child);
+ 		else
+ 			sas_unregister_dev(port, child);
+@@ -1887,8 +1887,8 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
+ 			if (SAS_ADDR(child->sas_addr) ==
+ 			    SAS_ADDR(phy->attached_sas_addr)) {
+ 				set_bit(SAS_DEV_GONE, &child->state);
+-				if (child->dev_type == EDGE_DEV ||
+-				    child->dev_type == FANOUT_DEV)
++				if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
++				    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
+ 					sas_unregister_ex_tree(parent->port, child);
+ 				else
+ 					sas_unregister_dev(parent->port, child);
+@@ -1916,8 +1916,8 @@ static int sas_discover_bfs_by_root_level(struct domain_device *root,
+ 	int res = 0;
+ 
+ 	list_for_each_entry(child, &ex_root->children, siblings) {
+-		if (child->dev_type == EDGE_DEV ||
+-		    child->dev_type == FANOUT_DEV) {
++		if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
++		    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
+ 			struct sas_expander_device *ex =
+ 				rphy_to_expander_device(child->rphy);
+ 
+@@ -1970,8 +1970,8 @@ static int sas_discover_new(struct domain_device *dev, int phy_id)
+ 	list_for_each_entry(child, &dev->ex_dev.children, siblings) {
+ 		if (SAS_ADDR(child->sas_addr) ==
+ 		    SAS_ADDR(ex_phy->attached_sas_addr)) {
+-			if (child->dev_type == EDGE_DEV ||
+-			    child->dev_type == FANOUT_DEV)
++			if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
++			    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
+ 				res = sas_discover_bfs_by_root(child);
+ 			break;
+ 		}
+@@ -1979,16 +1979,16 @@ static int sas_discover_new(struct domain_device *dev, int phy_id)
+ 	return res;
+ }
+ 
+-static bool dev_type_flutter(enum sas_dev_type new, enum sas_dev_type old)
++static bool dev_type_flutter(enum sas_device_type new, enum sas_device_type old)
+ {
+ 	if (old == new)
+ 		return true;
+ 
+ 	/* treat device directed resets as flutter, if we went
+-	 * SAS_END_DEV to SATA_PENDING the link needs recovery
++	 * SAS_END_DEVICE to SAS_SATA_PENDING the link needs recovery
+ 	 */
+-	if ((old == SATA_PENDING && new == SAS_END_DEV) ||
+-	    (old == SAS_END_DEV && new == SATA_PENDING))
++	if ((old == SAS_SATA_PENDING && new == SAS_END_DEVICE) ||
++	    (old == SAS_END_DEVICE && new == SAS_SATA_PENDING))
+ 		return true;
+ 
+ 	return false;
+@@ -1998,7 +1998,7 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
+ {
+ 	struct expander_device *ex = &dev->ex_dev;
+ 	struct ex_phy *phy = &ex->ex_phy[phy_id];
+-	enum sas_dev_type type = NO_DEVICE;
++	enum sas_device_type type = SAS_PHY_UNUSED;
+ 	u8 sas_addr[8];
+ 	int res;
+ 
+@@ -2032,7 +2032,7 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
+ 
+ 		sas_ex_phy_discover(dev, phy_id);
+ 
+-		if (ata_dev && phy->attached_dev_type == SATA_PENDING)
++		if (ata_dev && phy->attached_dev_type == SAS_SATA_PENDING)
+ 			action = ", needs recovery";
+ 		SAS_DPRINTK("ex %016llx phy 0x%x broadcast flutter%s\n",
+ 			    SAS_ADDR(dev->sas_addr), phy_id, action);
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 1de6796..7e7ba83 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -131,16 +131,16 @@ static inline void sas_fill_in_rphy(struct domain_device *dev,
+ 	rphy->identify.initiator_port_protocols = dev->iproto;
+ 	rphy->identify.target_port_protocols = dev->tproto;
+ 	switch (dev->dev_type) {
+-	case SATA_DEV:
++	case SAS_SATA_DEV:
+ 		/* FIXME: need sata device type */
+-	case SAS_END_DEV:
+-	case SATA_PENDING:
++	case SAS_END_DEVICE:
++	case SAS_SATA_PENDING:
+ 		rphy->identify.device_type = SAS_END_DEVICE;
+ 		break;
+-	case EDGE_DEV:
++	case SAS_EDGE_EXPANDER_DEVICE:
+ 		rphy->identify.device_type = SAS_EDGE_EXPANDER_DEVICE;
+ 		break;
+-	case FANOUT_DEV:
++	case SAS_FANOUT_EXPANDER_DEVICE:
+ 		rphy->identify.device_type = SAS_FANOUT_EXPANDER_DEVICE;
+ 		break;
+ 	default:
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index 1398b71..d3c5297 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -69,7 +69,7 @@ static void sas_resume_port(struct asd_sas_phy *phy)
+ 			continue;
+ 		}
+ 
+-		if (dev->dev_type == EDGE_DEV || dev->dev_type == FANOUT_DEV) {
++		if (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE || dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
+ 			dev->ex_dev.ex_change_count = -1;
+ 			for (i = 0; i < dev->ex_dev.num_phys; i++) {
+ 				struct ex_phy *phy = &dev->ex_dev.ex_phy[i];
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 7455092..7b7381d 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -254,7 +254,7 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+ 	}
+ 	for (i = 0; i < MVS_MAX_DEVICES; i++) {
+ 		mvi->devices[i].taskfileset = MVS_ID_NOT_MAPPED;
+-		mvi->devices[i].dev_type = NO_DEVICE;
++		mvi->devices[i].dev_type = SAS_PHY_UNUSED;
+ 		mvi->devices[i].device_id = i;
+ 		mvi->devices[i].dev_status = MVS_DEV_NORMAL;
+ 		init_timer(&mvi->devices[i].timer);
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 532110f..c9e2449 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -706,7 +706,7 @@ static int mvs_task_prep_ssp(struct mvs_info *mvi,
+ 	return 0;
+ }
+ 
+-#define	DEV_IS_GONE(mvi_dev)	((!mvi_dev || (mvi_dev->dev_type == NO_DEVICE)))
++#define	DEV_IS_GONE(mvi_dev)	((!mvi_dev || (mvi_dev->dev_type == SAS_PHY_UNUSED)))
+ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf,
+ 				struct mvs_tmf_task *tmf, int *pass)
+ {
+@@ -726,7 +726,7 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+ 		 * libsas will use dev->port, should
+ 		 * not call task_done for sata
+ 		 */
+-		if (dev->dev_type != SATA_DEV)
++		if (dev->dev_type != SAS_SATA_DEV)
+ 			task->task_done(task);
+ 		return rc;
+ 	}
+@@ -1159,10 +1159,10 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st)
+ 			phy->identify.device_type =
+ 				phy->att_dev_info & PORT_DEV_TYPE_MASK;
+ 
+-			if (phy->identify.device_type == SAS_END_DEV)
++			if (phy->identify.device_type == SAS_END_DEVICE)
+ 				phy->identify.target_port_protocols =
+ 							SAS_PROTOCOL_SSP;
+-			else if (phy->identify.device_type != NO_DEVICE)
++			else if (phy->identify.device_type != SAS_PHY_UNUSED)
+ 				phy->identify.target_port_protocols =
+ 							SAS_PROTOCOL_SMP;
+ 			if (oob_done)
+@@ -1260,7 +1260,7 @@ struct mvs_device *mvs_alloc_dev(struct mvs_info *mvi)
+ {
+ 	u32 dev;
+ 	for (dev = 0; dev < MVS_MAX_DEVICES; dev++) {
+-		if (mvi->devices[dev].dev_type == NO_DEVICE) {
++		if (mvi->devices[dev].dev_type == SAS_PHY_UNUSED) {
+ 			mvi->devices[dev].device_id = dev;
+ 			return &mvi->devices[dev];
+ 		}
+@@ -1278,7 +1278,7 @@ void mvs_free_dev(struct mvs_device *mvi_dev)
+ 	u32 id = mvi_dev->device_id;
+ 	memset(mvi_dev, 0, sizeof(*mvi_dev));
+ 	mvi_dev->device_id = id;
+-	mvi_dev->dev_type = NO_DEVICE;
++	mvi_dev->dev_type = SAS_PHY_UNUSED;
+ 	mvi_dev->dev_status = MVS_DEV_NORMAL;
+ 	mvi_dev->taskfileset = MVS_ID_NOT_MAPPED;
+ }
+@@ -1480,7 +1480,7 @@ static int mvs_debug_I_T_nexus_reset(struct domain_device *dev)
+ {
+ 	int rc;
+ 	struct sas_phy *phy = sas_get_local_phy(dev);
+-	int reset_type = (dev->dev_type == SATA_DEV ||
++	int reset_type = (dev->dev_type == SAS_SATA_DEV ||
+ 			(dev->tproto & SAS_PROTOCOL_STP)) ? 0 : 1;
+ 	rc = sas_phy_reset(phy, reset_type);
+ 	sas_put_local_phy(phy);
+@@ -1629,7 +1629,7 @@ int mvs_abort_task(struct sas_task *task)
+ 
+ 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
+ 		task->task_proto & SAS_PROTOCOL_STP) {
+-		if (SATA_DEV == dev->dev_type) {
++		if (SAS_SATA_DEV == dev->dev_type) {
+ 			struct mvs_slot_info *slot = task->lldd_task;
+ 			u32 slot_idx = (u32)(slot - mvi->slot_info);
+ 			mv_dprintk("mvs_abort_task() mvi=%p task=%p "
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index 9f3cc13..60e2fb7 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -67,7 +67,7 @@ extern const struct mvs_dispatch mvs_94xx_dispatch;
+ extern struct kmem_cache *mvs_task_list_cache;
+ 
+ #define DEV_IS_EXPANDER(type)	\
+-	((type == EDGE_DEV) || (type == FANOUT_DEV))
++	((type == SAS_EDGE_EXPANDER_DEVICE) || (type == SAS_FANOUT_EXPANDER_DEVICE))
+ 
+ #define bit(n) ((u64)1 << n)
+ 
+@@ -241,7 +241,7 @@ struct mvs_phy {
+ 
+ struct mvs_device {
+ 	struct list_head		dev_entry;
+-	enum sas_dev_type dev_type;
++	enum sas_device_type dev_type;
+ 	struct mvs_info *mvi_info;
+ 	struct domain_device *sas_device;
+ 	struct timer_list timer;
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 95d04cc..69dd49c 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -1505,7 +1505,7 @@ void pm8001_work_fn(struct work_struct *work)
+ 	pm8001_dev = pw->data; /* Most stash device structure */
+ 	if ((pm8001_dev == NULL)
+ 	 || ((pw->handler != IO_XFER_ERROR_BREAK)
+-	  && (pm8001_dev->dev_type == NO_DEVICE))) {
++	  && (pm8001_dev->dev_type == SAS_PHY_UNUSED))) {
+ 		kfree(pw);
+ 		return;
+ 	}
+@@ -3443,7 +3443,7 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		sizeof(struct dev_to_host_fis));
+ 	phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
+ 	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
+-	phy->identify.device_type = SATA_DEV;
++	phy->identify.device_type = SAS_SATA_DEV;
+ 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
+ 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
+ 	pm8001_bytes_dmaed(pm8001_ha, phy_id);
+@@ -4465,7 +4465,7 @@ pm8001_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
+ 	payload.ase_sh_lm_slr_phyid = cpu_to_le32(SPINHOLD_DISABLE |
+ 		LINKMODE_AUTO |	LINKRATE_15 |
+ 		LINKRATE_30 | LINKRATE_60 | phy_id);
+-	payload.sas_identify.dev_type = SAS_END_DEV;
++	payload.sas_identify.dev_type = SAS_END_DEVICE;
+ 	payload.sas_identify.initiator_bits = SAS_PROTOCOL_ALL;
+ 	memcpy(payload.sas_identify.sas_addr,
+ 		pm8001_ha->sas_addr, SAS_ADDR_SIZE);
+@@ -4527,11 +4527,11 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+ 	if (flag == 1)
+ 		stp_sspsmp_sata = 0x02; /*direct attached sata */
+ 	else {
+-		if (pm8001_dev->dev_type == SATA_DEV)
++		if (pm8001_dev->dev_type == SAS_SATA_DEV)
+ 			stp_sspsmp_sata = 0x00; /* stp*/
+-		else if (pm8001_dev->dev_type == SAS_END_DEV ||
+-			pm8001_dev->dev_type == EDGE_DEV ||
+-			pm8001_dev->dev_type == FANOUT_DEV)
++		else if (pm8001_dev->dev_type == SAS_END_DEVICE ||
++			pm8001_dev->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
++			pm8001_dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
+ 			stp_sspsmp_sata = 0x01; /*ssp or smp*/
+ 	}
+ 	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
+@@ -4662,9 +4662,9 @@ int pm8001_chip_abort_task(struct pm8001_hba_info *pm8001_ha,
+ 	PM8001_EH_DBG(pm8001_ha,
+ 		pm8001_printk("cmd_tag = %x, abort task tag = 0x%x",
+ 			cmd_tag, task_tag));
+-	if (pm8001_dev->dev_type == SAS_END_DEV)
++	if (pm8001_dev->dev_type == SAS_END_DEVICE)
+ 		opc = OPC_INB_SSP_ABORT;
+-	else if (pm8001_dev->dev_type == SATA_DEV)
++	else if (pm8001_dev->dev_type == SAS_SATA_DEV)
+ 		opc = OPC_INB_SATA_ABORT;
+ 	else
+ 		opc = OPC_INB_SMP_ABORT;/* SMP */
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 1c71852..e4b9bc7 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -361,7 +361,7 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+ 
+ 	pm8001_ha->devices = pm8001_ha->memoryMap.region[DEV_MEM].virt_ptr;
+ 	for (i = 0; i < PM8001_MAX_DEVICES; i++) {
+-		pm8001_ha->devices[i].dev_type = NO_DEVICE;
++		pm8001_ha->devices[i].dev_type = SAS_PHY_UNUSED;
+ 		pm8001_ha->devices[i].id = i;
+ 		pm8001_ha->devices[i].device_id = PM8001_MAX_DEVICES;
+ 		pm8001_ha->devices[i].running_req = 0;
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 9af9585..a85d73d 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -357,7 +357,7 @@ static int sas_find_local_port_id(struct domain_device *dev)
+   * @tmf: the task management IU
+   */
+ #define DEV_IS_GONE(pm8001_dev)	\
+-	((!pm8001_dev || (pm8001_dev->dev_type == NO_DEVICE)))
++	((!pm8001_dev || (pm8001_dev->dev_type == SAS_PHY_UNUSED)))
+ static int pm8001_task_exec(struct sas_task *task, const int num,
+ 	gfp_t gfp_flags, int is_tmf, struct pm8001_tmf_task *tmf)
+ {
+@@ -375,7 +375,7 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
+ 		struct task_status_struct *tsm = &t->task_status;
+ 		tsm->resp = SAS_TASK_UNDELIVERED;
+ 		tsm->stat = SAS_PHY_DOWN;
+-		if (dev->dev_type != SATA_DEV)
++		if (dev->dev_type != SAS_SATA_DEV)
+ 			t->task_done(t);
+ 		return 0;
+ 	}
+@@ -553,7 +553,7 @@ struct pm8001_device *pm8001_alloc_dev(struct pm8001_hba_info *pm8001_ha)
+ {
+ 	u32 dev;
+ 	for (dev = 0; dev < PM8001_MAX_DEVICES; dev++) {
+-		if (pm8001_ha->devices[dev].dev_type == NO_DEVICE) {
++		if (pm8001_ha->devices[dev].dev_type == SAS_PHY_UNUSED) {
+ 			pm8001_ha->devices[dev].id = dev;
+ 			return &pm8001_ha->devices[dev];
+ 		}
+@@ -589,7 +589,7 @@ static void pm8001_free_dev(struct pm8001_device *pm8001_dev)
+ 	u32 id = pm8001_dev->id;
+ 	memset(pm8001_dev, 0, sizeof(*pm8001_dev));
+ 	pm8001_dev->id = id;
+-	pm8001_dev->dev_type = NO_DEVICE;
++	pm8001_dev->dev_type = SAS_PHY_UNUSED;
+ 	pm8001_dev->device_id = PM8001_MAX_DEVICES;
+ 	pm8001_dev->sas_device = NULL;
+ }
+@@ -647,7 +647,7 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
+ 			res = -1;
+ 		}
+ 	} else {
+-		if (dev->dev_type == SATA_DEV) {
++		if (dev->dev_type == SAS_SATA_DEV) {
+ 			pm8001_device->attached_phy =
+ 				dev->rphy->identify.phy_identifier;
+ 				flag = 1; /* directly sata*/
+@@ -657,7 +657,7 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
+ 	PM8001_CHIP_DISP->reg_dev_req(pm8001_ha, pm8001_device, flag);
+ 	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 	wait_for_completion(&completion);
+-	if (dev->dev_type == SAS_END_DEV)
++	if (dev->dev_type == SAS_END_DEVICE)
+ 		msleep(50);
+ 	pm8001_ha->flags = PM8001F_RUN_TIME;
+ 	return 0;
+@@ -927,7 +927,7 @@ void pm8001_open_reject_retry(
+ 		struct pm8001_ccb_info *ccb = &pm8001_ha->ccb_info[i];
+ 
+ 		pm8001_dev = ccb->device;
+-		if (!pm8001_dev || (pm8001_dev->dev_type == NO_DEVICE))
++		if (!pm8001_dev || (pm8001_dev->dev_type == SAS_PHY_UNUSED))
+ 			continue;
+ 		if (!device_to_close) {
+ 			uintptr_t d = (uintptr_t)pm8001_dev
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index 72d46ea..5708194 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -103,7 +103,7 @@ do {						\
+ #define PM8001_READ_VPD
+ 
+ 
+-#define DEV_IS_EXPANDER(type)	((type == EDGE_DEV) || (type == FANOUT_DEV))
++#define DEV_IS_EXPANDER(type)	((type == SAS_EDGE_EXPANDER_DEVICE) || (type == SAS_FANOUT_EXPANDER_DEVICE))
+ 
+ #define PM8001_NAME_LENGTH		32/* generic length of strings */
+ extern struct list_head hba_list;
+@@ -206,7 +206,7 @@ struct pm8001_phy {
+ };
+ 
+ struct pm8001_device {
+-	enum sas_dev_type	dev_type;
++	enum sas_device_type	dev_type;
+ 	struct domain_device	*sas_device;
+ 	u32			attached_phy;
+ 	u32			id;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 670998a..302514d 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -2684,7 +2684,7 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		sizeof(struct dev_to_host_fis));
+ 	phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
+ 	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
+-	phy->identify.device_type = SATA_DEV;
++	phy->identify.device_type = SAS_SATA_DEV;
+ 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
+ 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
+ 	pm8001_bytes_dmaed(pm8001_ha, phy_id);
+@@ -3952,7 +3952,7 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
+ 	Have to add "SAS PHY Analog Setup SPASTI 1 Byte" Based on need
+ 	**/
+ 
+-	payload.sas_identify.dev_type = SAS_END_DEV;
++	payload.sas_identify.dev_type = SAS_END_DEVICE;
+ 	payload.sas_identify.initiator_bits = SAS_PROTOCOL_ALL;
+ 	memcpy(payload.sas_identify.sas_addr,
+ 		pm8001_ha->sas_addr, SAS_ADDR_SIZE);
+@@ -4015,11 +4015,11 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+ 	if (flag == 1) {
+ 		stp_sspsmp_sata = 0x02; /*direct attached sata */
+ 	} else {
+-		if (pm8001_dev->dev_type == SATA_DEV)
++		if (pm8001_dev->dev_type == SAS_SATA_DEV)
+ 			stp_sspsmp_sata = 0x00; /* stp*/
+-		else if (pm8001_dev->dev_type == SAS_END_DEV ||
+-			pm8001_dev->dev_type == EDGE_DEV ||
+-			pm8001_dev->dev_type == FANOUT_DEV)
++		else if (pm8001_dev->dev_type == SAS_END_DEVICE ||
++			pm8001_dev->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
++			pm8001_dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
+ 			stp_sspsmp_sata = 0x01; /*ssp or smp*/
+ 	}
+ 	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index ef937b5..e646706 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -118,7 +118,7 @@ struct ex_phy {
+ 
+ 	enum ex_phy_state phy_state;
+ 
+-	enum sas_dev_type attached_dev_type;
++	enum sas_device_type attached_dev_type;
+ 	enum sas_linkrate linkrate;
+ 
+ 	u8   attached_sata_host:1;
+@@ -195,7 +195,7 @@ enum {
+ 
+ struct domain_device {
+ 	spinlock_t done_lock;
+-        enum sas_dev_type dev_type;
++        enum sas_device_type dev_type;
+ 
+         enum sas_linkrate linkrate;
+         enum sas_linkrate min_linkrate;
+diff --git a/include/scsi/sas.h b/include/scsi/sas.h
+index be3eb0b..0d2607d 100644
+--- a/include/scsi/sas.h
++++ b/include/scsi/sas.h
+@@ -90,16 +90,18 @@ enum sas_oob_mode {
+ };
+ 
+ /* See sas_discover.c if you plan on changing these */
+-enum sas_dev_type {
+-	NO_DEVICE   = 0,	  /* protocol */
+-	SAS_END_DEV = 1,	  /* protocol */
+-	EDGE_DEV    = 2,	  /* protocol */
+-	FANOUT_DEV  = 3,	  /* protocol */
+-	SAS_HA      = 4,
+-	SATA_DEV    = 5,
+-	SATA_PM     = 7,
+-	SATA_PM_PORT= 8,
+-	SATA_PENDING  = 9,
++enum sas_device_type {
++	/* these are SAS protocol defined (attached device type field) */
++	SAS_PHY_UNUSED = 0,
++	SAS_END_DEVICE = 1,
++	SAS_EDGE_EXPANDER_DEVICE = 2,
++	SAS_FANOUT_EXPANDER_DEVICE = 3,
++	/* these are internal to libsas */
++	SAS_HA = 4,
++	SAS_SATA_DEV = 5,
++	SAS_SATA_PM = 7,
++	SAS_SATA_PM_PORT = 8,
++	SAS_SATA_PENDING = 9,
+ };
+ 
+ enum sas_protocol {
+diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+index ff71a56..00f41ae 100644
+--- a/include/scsi/sas_ata.h
++++ b/include/scsi/sas_ata.h
+@@ -32,8 +32,8 @@
+ 
+ static inline int dev_is_sata(struct domain_device *dev)
+ {
+-	return dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM ||
+-	       dev->dev_type == SATA_PM_PORT || dev->dev_type == SATA_PENDING;
++	return dev->dev_type == SAS_SATA_DEV || dev->dev_type == SAS_SATA_PM ||
++	       dev->dev_type == SAS_SATA_PM_PORT || dev->dev_type == SAS_SATA_PENDING;
+ }
+ 
+ int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy);
+diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
+index 9b8e088..0bd71e2 100644
+--- a/include/scsi/scsi_transport_sas.h
++++ b/include/scsi/scsi_transport_sas.h
+@@ -10,13 +10,6 @@ struct scsi_transport_template;
+ struct sas_rphy;
+ struct request;
+ 
+-enum sas_device_type {
+-	SAS_PHY_UNUSED = 0,
+-	SAS_END_DEVICE = 1,
+-	SAS_EDGE_EXPANDER_DEVICE = 2,
+-	SAS_FANOUT_EXPANDER_DEVICE = 3,
+-};
+-
+ static inline int sas_protocol_ata(enum sas_protocol proto)
+ {
+ 	return ((proto & SAS_PROTOCOL_SATA) ||
+
+
+
