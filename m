@@ -1,34 +1,40 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH trivial] mvsas: fix build warning about enum comparisons
-Date: Tue, 07 May 2013 14:20:37 -0700
-Message-ID: <1367961637.4108.15.camel@dabdike>
-References: <20130507165704.GB20643@bombadil.infradead.org>
+Subject: [PATCH] sas: unify the pointlessly separated enums sas_dev_type and
+ sas_device_type
+Date: Tue, 07 May 2013 14:44:06 -0700
+Message-ID: <1367963046.4108.25.camel@dabdike>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47763 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47815 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759704Ab3EGVUk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 17:20:40 -0400
-In-Reply-To: <20130507165704.GB20643@bombadil.infradead.org>
+	by vger.kernel.org with ESMTP id S1756450Ab3EGVoI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 17:44:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kyle McMartin <kyle@infradead.org>
-Cc: linux-scsi@vger.kernel.org, yuxiangl@marvell.com
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Lukasz Dorau <lukasz.dorau@intel.com>, Maciej Patelczyk <maciej.patelczyk@intel.com>, Dave Jiang <dave.jiang@intel.com>, xjtuwjp@gmail.com, lindar_liu@usish.com, Xiangliang Yu <yuxiangl@marvell.com>
 
-On Tue, 2013-05-07 at 12:57 -0400, Kyle McMartin wrote:
-> device_type is a sas_device_type, not a sas_dev_type.
+These enums have been separate since the dawn of SAS, mainly because the
+latter is a procotol only enum and the former includes additional state
+for libsas.  The dichotomy causes endless confusion about which one you
+should use where and leads to pointless warnings like this:
 
-Heh, months ago, someone who submitted the same trivial but insufficient
-fix was asked to go and see if they could unify sas_device_type and
-sas_dev_type, which is the correct fix.  They were never heard from
-again.  I suppose that shows that if you want something doing properly,
-you should do it yourself.
+drivers/scsi/mvsas/mv_sas.c: In function 'mvs_update_phyinfo':                                                                             
+drivers/scsi/mvsas/mv_sas.c:1162:34: warning: comparison between 'enum sas_device_type' and 'enum sas_dev_type' [-Wenum-compare]
 
-James
+Fix by eliminating one of them.  The one kept is effectively the sas.h
+one, but call it sas_device_type and make sure the enums are all
+properly namespaced with the SAS_ prefix.
+
+Signed-off-by: James Bottomley <JBottomley@Parallels.com>
 
 ---
+
+I'll put this in as the last patch to go to Linus so it should avoid
+conflicting with any in process patches for this merge window.
+
  drivers/scsi/aic94xx/aic94xx_dev.c |   24 ++++----
  drivers/scsi/aic94xx/aic94xx_hwi.c |    2 
  drivers/scsi/aic94xx/aic94xx_tmf.c |    2 
