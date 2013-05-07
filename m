@@ -1,42 +1,360 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] ufs: add support for query requests
-Date: Tue, 7 May 2013 17:25:41 +0300
-Message-ID: <20130507142540.GA20764@elgon.mountain>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: Re: [PATCH V3 1/1] scsi: ufs: Add support for sending NOP OUT UPIU
+Date: Tue, 07 May 2013 21:23:00 +0530
+Message-ID: <5189235C.202@codeaurora.org>
+References: <1367834878-22865-1-git-send-email-sthumma@codeaurora.org> <001d01ce4b05$1e5723b0$5b056b10$%jun@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=EUC-KR
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23034 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644Ab3EGOZs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 10:25:48 -0400
-Content-Disposition: inline
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37328 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755343Ab3EGPxG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 11:53:06 -0400
+In-Reply-To: <001d01ce4b05$1e5723b0$5b056b10$%jun@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: draviv@codeaurora.org
-Cc: linux-scsi@vger.kernel.org, kbuild@01.org
+To: Seungwon Jeon <tgih.jun@samsung.com>
+Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-arm-msm@vger.kernel.org
 
-Hello Dolev Raviv,
+On 5/7/2013 2:57 PM, Seungwon Jeon wrote:
+> On Monday, May 06, 2013, Sujit Reddy Thumma wrote:
+>> As part of device initialization sequence, sending NOP OUT UPIU and
+>> waiting for NOP IN UPIU response is mandatory. This confirms that the
+>> device UFS Transport (UTP) layer is functional and the host can configure
+>> the device with further commands. Add support for sending NOP OUT UPIU to
+>> check the device connection path and test whether the UTP layer on the
+>> device side is functional during initialization.
+>>
+>> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+>>
+>> ---
+>> v3:
+>>     - minor bug fix in error path
+>> v2:
+>>     - fixed INTERNAL_CMD_TAG check in readl_poll_timeout
+>>     - minor cleanup from v1
+>>     - rebased on Seungwon Jeon's UFS V3 patchset
+>> ---
+>>   drivers/scsi/ufs/ufshcd.c |  163 ++++++++++++++++++++++++++++++++++++++++++---
+>>   drivers/scsi/ufs/ufshcd.h |    4 +
+>>   2 files changed, 158 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 3607ffb..4090f6c 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -34,6 +34,7 @@
+>>    */
+>>
+>>   #include <linux/async.h>
+>> +#include <linux/iopoll.h>
+> linux/iopoll.h: No such file or directory
+> Please check.
+> 
+>>
+>>   #include "ufshcd.h"
+>>
+>> @@ -44,6 +45,13 @@
+>>   /* UIC command timeout, unit: ms */
+>>   #define UIC_CMD_TIMEOUT	500
+>>
+>> +/* NOP OUT retries waiting for NOP IN response */
+>> +#define NOP_OUT_RETRIES    10
+>> +/* Timeout after 30 msecs if NOP OUT hangs without response */
+>> +#define NOP_OUT_TIMEOUT    30 /* msecs */
+>> +/* Reserved tag for internal commands */
+>> +#define INTERNAL_CMD_TAG   0
+>> +
+>>   enum {
+>>   	UFSHCD_MAX_CHANNEL	= 0,
+>>   	UFSHCD_MAX_ID		= 1,
+>> @@ -630,7 +638,7 @@ static void ufshcd_prepare_req_desc(struct ufshcd_lrb *lrbp, u32 *upiu_flags)
+>>   {
+>>   	struct utp_transfer_req_desc *req_desc = lrbp->utr_descriptor_ptr;
+>>   	enum dma_data_direction cmd_dir =
+>> -		lrbp->cmd->sc_data_direction;
+>> +		lrbp->cmd ? lrbp->cmd->sc_data_direction : DMA_NONE;
+>>   	u32 data_direction;
+>>   	u32 dword_0;
+>>
+>> @@ -647,6 +655,8 @@ static void ufshcd_prepare_req_desc(struct ufshcd_lrb *lrbp, u32 *upiu_flags)
+>>
+>>   	dword_0 = data_direction | (lrbp->command_type
+>>   				<< UPIU_COMMAND_TYPE_OFFSET);
+>> +	if (lrbp->intr_cmd)
+>> +		dword_0 |= UTP_REQ_DESC_INT_CMD;
+>>
+>>   	/* Transfer request descriptor header fields */
+>>   	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+>> @@ -735,6 +745,18 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
+>>
+>>   }
+>>
+>> +static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
+>> +{
+>> +	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
+>> +
+>> +	memset(ucd_req_ptr, 0, sizeof(struct utp_upiu_req));
+>> +
+>> +	/* command descriptor fields */
+>> +	ucd_req_ptr->header.dword_0 =
+>> +		UPIU_HEADER_DWORD(
+>> +			UPIU_TRANSACTION_NOP_OUT, 0, 0, lrbp->task_tag);
+>> +}
+>> +
+>>   /**
+>>    * ufshcd_compose_upiu - form UFS Protocol Information Unit(UPIU)
+>>    * @hba - UFS hba
+>> @@ -749,11 +771,13 @@ static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>>   	case UTP_CMD_TYPE_SCSI:
+>>   	case UTP_CMD_TYPE_DEV_MANAGE:
+>>   		ufshcd_prepare_req_desc(lrbp, &upiu_flags);
+>> -		if (lrbp->command_type == UTP_CMD_TYPE_SCSI)
+>> +		if (lrbp->cmd && lrbp->command_type == UTP_CMD_TYPE_SCSI)
+>>   			ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
+>> -		else
+>> +		else if (lrbp->cmd && ufshcd_is_query_req(lrbp))
+>>   			ufshcd_prepare_utp_query_req_upiu(hba, lrbp,
+>>   								upiu_flags);
+>> +		else if (!lrbp->cmd)
+>> +			ufshcd_prepare_utp_nop_upiu(lrbp);
+>>   		break;
+>>   	case UTP_CMD_TYPE_UFS:
+>>   		/* For UFS native command implementation */
+>> @@ -802,6 +826,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+>>   	lrbp->sense_buffer = cmd->sense_buffer;
+>>   	lrbp->task_tag = tag;
+>>   	lrbp->lun = cmd->device->lun;
+>> +	lrbp->intr_cmd = false;
+>>
+>>   	if (ufshcd_is_query_req(lrbp))
+>>   		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
+>> @@ -1261,6 +1286,103 @@ int ufshcd_dme_endpt_reset(struct ufs_hba *hba)
+>>   }
+>>   EXPORT_SYMBOL_GPL(ufshcd_dme_endpt_reset);
+>>
+>> +static int
+>> +ufshcd_compose_nop_out_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>> +{
+>> +	lrbp->cmd = NULL;
+>> +	lrbp->sense_bufflen = 0;
+>> +	lrbp->sense_buffer = NULL;
+>> +	lrbp->task_tag = INTERNAL_CMD_TAG;
+>> +	lrbp->lun = 0; /* NOP OUT is not specific to any LUN */
+>> +	lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
+>> +	lrbp->intr_cmd = true; /* No interrupt aggregation */
+>> +
+>> +	return ufshcd_compose_upiu(hba, lrbp);
+>> +}
+>> +
+>> +static int ufshcd_wait_for_nop_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>> +{
+>> +	int err = 0;
+>> +	unsigned long timeout;
+>> +	unsigned long flags;
+>> +
+>> +	timeout = wait_for_completion_timeout(
+>> +			lrbp->completion, msecs_to_jiffies(NOP_OUT_TIMEOUT));
+>> +
+>> +	if (timeout) {
+>> +		spin_lock_irqsave(hba->host->host_lock, flags);
+>> +		err = ufshcd_get_tr_ocs(lrbp);
+>> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +	} else {
+>> +		err = -ETIMEDOUT;
+>> +	}
+>> +
+>> +	return err;
+>> +}
+>> +
+>> +/**
+>> + * ufshcd_validate_dev_connection() - Check device connection status
+>> + * @hba: per-adapter instance
+>> + *
+>> + * Send NOP OUT UPIU and wait for NOP IN response to check whether the
+>> + * device Transport Protocol (UTP) layer is ready after a reset.
+>> + * If the UTP layer at the device side is not initialized, it may
+>> + * not respond with NOP IN UPIU within timeout of %NOP_OUT_TIMEOUT
+>> + * and we retry sending NOP OUT for %NOP_OUT_RETRIES iterations.
+>> + */
+>> +static int ufshcd_validate_dev_connection(struct ufs_hba *hba)
+>> +{
+>> +	int err;
+>> +	struct ufshcd_lrb *lrbp;
+>> +	unsigned long flags;
+>> +	struct completion wait;
+>> +	int retries = NOP_OUT_RETRIES;
+>> +
+>> +retry:
+>> +	init_completion(&wait);
+>> +
+>> +	spin_lock_irqsave(hba->host->host_lock, flags);
+>> +	lrbp = &hba->lrb[INTERNAL_CMD_TAG];
+>> +	err = ufshcd_compose_nop_out_upiu(hba, lrbp);
+>> +	if (unlikely(err)) {
+>> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +		goto out;
+>> +	}
+>> +
+>> +	lrbp->completion = &wait;
+>> +	ufshcd_send_command(hba, INTERNAL_CMD_TAG);
+>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +
+>> +	err = ufshcd_wait_for_nop_cmd(hba, lrbp);
+>> +
+>> +	if (err == -ETIMEDOUT) {
+>> +		u32 reg;
+>> +
+>> +		/* clear outstanding transaction before retry */
+>> +		spin_lock_irqsave(hba->host->host_lock, flags);
+>> +		ufshcd_utrl_clear(hba, INTERNAL_CMD_TAG);
+>> +		__clear_bit(INTERNAL_CMD_TAG, &hba->outstanding_reqs);
+>> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +
+>> +		/* poll for max. 1 sec to clear door bell register by h/w */
+>> +		if (readl_poll_timeout(
+>> +				hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL,
+>> +				reg, !(reg & (1 << INTERNAL_CMD_TAG)),
+>> +				1000, 1000))
+>> +			retries = 0;
+> Also, readl_poll_timeout function is not present in Linux kernel.
+> Could you check your kernel?
 
-This is a semi-automatic email about new static checker warnings.
+Ah.. Sorry about that. Just realized that the API and iopoll.h exist
+only in codeaurora kernel versions. Thanks for pointing this out.
 
-The patch 3aee47c623a3: "[SCSI] ufs: add support for query requests"
-from May 2, 2013, leads to the following Smatch complaint:
+> You should implement this part in other way.
+> Additionally, is there no need to clear 'lrbp->completion'?
+> It will have invalid value after current function is out.
 
-drivers/scsi/ufs/ufshcd.c:723 ufshcd_query_request()
-	 error: we previously assumed 'hba' could be null (see line 722)
+Right. Will clear it accordingly. Thanks.
 
-drivers/scsi/ufs/ufshcd.c
-   721	
-   722		if (!hba || !query || !response) {
-                    ^^^^
-New check.
+> 
+> Thanks,
+> Seungwon Jeon
+> 
+>> +	}
+>> +
+>> +	if (err && retries--) {
+>> +		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err);
+>> +		goto retry;
+>> +	}
+>> +
+>> +out:
+>> +	if (err)
+>> +		dev_err(hba->dev, "%s: NOP OUT failed %d\n", __func__, err);
+>> +	return err;
+>> +}
+>> +
+>>   /**
+>>    * ufshcd_make_hba_operational - Make UFS controller operational
+>>    * @hba: per adapter instance
+>> @@ -1734,6 +1856,16 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
+>>   		complete(&hba->hibern8_done);
+>>   }
+>>
+>> +/*
+>> + * ufshcd_is_nop_out_upiu() - check if the command is NOP OUT UPIU
+>> + * @lrbp: pointer to logical reference block
+>> + */
+>> +static inline bool ufshcd_is_nop_out_upiu(struct ufshcd_lrb *lrbp)
+>> +{
+>> +	return (be32_to_cpu(lrbp->ucd_req_ptr->header.dword_0) >> 24) ==
+>> +				UPIU_TRANSACTION_NOP_OUT;
+>> +}
+>> +
+>>   /**
+>>    * ufshcd_transfer_req_compl - handle SCSI and query command completion
+>>    * @hba: per adapter instance
+>> @@ -1745,6 +1877,7 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>>   	u32 tr_doorbell;
+>>   	int result;
+>>   	int index;
+>> +	bool int_aggr_reset = true;
+>>
+>>   	lrb = hba->lrb;
+>>   	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>> @@ -1752,17 +1885,20 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>>
+>>   	for (index = 0; index < hba->nutrs; index++) {
+>>   		if (test_bit(index, &completed_reqs)) {
+>> -
+>> -			result = ufshcd_transfer_rsp_status(hba, &lrb[index]);
+>> -
+>>   			if (lrb[index].cmd) {
+>> +				result = ufshcd_transfer_rsp_status(
+>> +						hba, &lrb[index]);
+>>   				scsi_dma_unmap(lrb[index].cmd);
+>>   				lrb[index].cmd->result = result;
+>>   				lrb[index].cmd->scsi_done(lrb[index].cmd);
+>>
+>>   				/* Mark completed command as NULL in LRB */
+>>   				lrb[index].cmd = NULL;
+>> +			} else if (ufshcd_is_nop_out_upiu(&lrb[index])) {
+>> +				complete(lrb[index].completion);
+>>   			}
+>> +			/* Don't reset counters for interrupt cmd */
+>> +			int_aggr_reset = lrb[index].intr_cmd ? false : true;
+>>   		} /* end of if */
+>>   	} /* end of for */
+>>
+>> @@ -1770,7 +1906,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>>   	hba->outstanding_reqs ^= completed_reqs;
+>>
+>>   	/* Reset interrupt aggregation counters */
+>> -	ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
+>> +	if (int_aggr_reset)
+>> +		ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
+>>   }
+>>
+>>   /**
+>> @@ -2068,8 +2205,16 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+>>   	int ret;
+>>
+>>   	ret = ufshcd_link_startup(hba);
+>> -	if (!ret)
+>> -		scsi_scan_host(hba->host);
+>> +	if (ret)
+>> +		goto out;
+>> +
+>> +	ret = ufshcd_validate_dev_connection(hba);
+>> +	if (ret)
+>> +		goto out;
+>> +
+>> +	scsi_scan_host(hba->host);
+>> +out:
+>> +	return;
+>>   }
+>>
+>>   static struct scsi_host_template ufshcd_driver_template = {
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index 84f758e..17f4995 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -102,6 +102,8 @@ struct uic_command {
+>>    * @command_type: SCSI, UFS, Query.
+>>    * @task_tag: Task tag of the command
+>>    * @lun: LUN of the command
+>> + * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
+>> + * @completion: holds the state of completion (used for internal commands)
+>>    */
+>>   struct ufshcd_lrb {
+>>   	struct utp_transfer_req_desc *utr_descriptor_ptr;
+>> @@ -117,6 +119,8 @@ struct ufshcd_lrb {
+>>   	int command_type;
+>>   	int task_tag;
+>>   	unsigned int lun;
+>> +	bool intr_cmd;
+>> +	struct completion *completion;
+>>   };
+>>
+>>   /**
+>> --
+>> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+>> of Code Aurora Forum, hosted by The Linux Foundation.
+>>
 
-   723			dev_err(hba->dev,
-                                ^^^^^^^^
-New dereference.
-
-   724				"%s: NULL pointer hba = %p, query = %p response = %p\n",
-   725				__func__, hba, query, response);
-
-regards,
-dan carpenter
+-- 
+Regards,
+Sujit
