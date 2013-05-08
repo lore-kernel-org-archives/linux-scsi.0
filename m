@@ -1,313 +1,51 @@
-From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V2] scsi: ufs: Add fDeviceInit set flag during initialization
-Date: Wed,  8 May 2013 17:19:41 +0300
-Message-ID: <1368022782-27178-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: [PATCH RESEND] qla2xxx: Update firmware link in Kconfig file.
+Date: Wed, 8 May 2013 10:39:35 -0400
+Message-ID: <1368023975-5825-1-git-send-email-chad.dupuis@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:9052
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755583Ab3EHPEH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 11:04:07 -0400
+Received: from mail4-co1 (localhost [127.0.0.1])	by mail4-co1-R.bigfish.com
+ (Postfix) with ESMTP id E80EA1C0242	for <linux-scsi@vger.kernel.org>; Wed,  8
+ May 2013 15:04:06 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Send fDeviceInit flag during device initialization. Than poll until the
-device clears the flag. This step is required during the device
-initialization process.
-The flag set is used to communicate to the UFS device that it can complete
-its initialization. The UFS device will then move from Boot W-LU READY
-state to Device Initialization IN PROGRESS state. When the initialization
-is complete the device will reset the fDeviceInit flag.
+Hi James,
 
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Can you apply this for inclusion in 3.10-rc?
 
---- 
-Changes for V2:
-- Add the query sending api via SCSI from the original query patch
+Thanks,
+Chad
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 086ff03..742363d 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -107,8 +107,13 @@ enum {
- 	UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST = 0x81,
- };
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+---
+ drivers/scsi/qla2xxx/Kconfig |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
+index 317a7fd..23d6072 100644
+--- a/drivers/scsi/qla2xxx/Kconfig
++++ b/drivers/scsi/qla2xxx/Kconfig
+@@ -24,7 +24,9 @@ config SCSI_QLA_FC
  
-+/* Flag idn for Query Requests*/
-+enum flag_idn {
-+	QUERY_FLAG_IDN_FDEVICEINIT = 0x01,
-+};
-+
- /* UTP QUERY Transaction Specific Fields OpCode */
--enum {
-+enum query_opcode {
- 	UPIU_QUERY_OPCODE_NOP		= 0x0,
- 	UPIU_QUERY_OPCODE_READ_DESC	= 0x1,
- 	UPIU_QUERY_OPCODE_WRITE_DESC	= 0x2,
-@@ -208,6 +213,9 @@ struct utp_upiu_query {
- 	u32 reserved[2];
- };
+ 	Firmware images can be retrieved from:
  
-+/* Expose the flag value from utp_upiu_query.value */
-+#define MASK_QUERY_UPIU_FLAG_LOC 0xFF
+-		ftp://ftp.qlogic.com/outgoing/linux/firmware/
++		http://ldriver.qlogic.com/firmware/
 +
- /**
-  * struct utp_upiu_req - general upiu request structure
-  * @header:UPIU header structure DW-0 to DW-2
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index bcdc576..7036550 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -51,6 +51,15 @@
- /* Reserved tag for internal commands */
- #define INTERNAL_CMD_TAG   0
++	They are also included in the linux-firmware tree as well.
  
-+/* Query request standart retries */
-+#define QUERY_REQ_RETRIES 10
-+/* Query request standart timeout  in seconds */
-+#define QUERY_REQ_TIMEOUT 5
-+/* Send Query Requst with default parameters */
-+#define send_query_request(ARG1, ARG2, ARG3, ARG4)	\
-+	ufshcd_query_request(ARG1, ARG2, ARG3, ARG4,	\
-+			QUERY_REQ_TIMEOUT, QUERY_REQ_RETRIES)
-+
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
- 	UFSHCD_MAX_ID		= 1,
-@@ -887,6 +896,161 @@ out:
- }
- 
- /**
-+ *  ufshcd_query_request() - Entry point for issuing query request to a
-+ *  ufs device.
-+ *  @hba: ufs driver context
-+ *  @query: params for query request
-+ *  @descriptor: buffer for sending/receiving descriptor
-+ *  @response: pointer to a buffer that will contain the response code and
-+ *           response upiu
-+ *  @timeout: time limit for the command in seconds
-+ *  @retries: number of times to try executing the command
-+ *
-+ *  The query request is submitted to the same request queue as the rest of
-+ *  the scsi commands passed to the UFS controller. In order to use this
-+ *  queue, we need to receive a tag, same as all other commands. The tags
-+ *  are issued from the block layer. To simulate a request from the block
-+ *  layer, we use the same interface as the SCSI layer does when it issues
-+ *  commands not generated by users. To distinguish a query request from
-+ *  the SCSI commands, we use a vendor specific unused SCSI command
-+ *  op-code. This op-code is not part of the SCSI command subset used in
-+ *  UFS. In such way it is easy to check the command in the driver and
-+ *  handle it appropriately.
-+ *
-+ *  All necessary fields for issuing a query and receiving its response are
-+ *  stored in the UFS hba struct. We can use this method since we know
-+ *  there is only one active query request at all times.
-+ *
-+ *  The request that will pass to the device is stored in "query" argument
-+ *  passed to this function, while the "response" argument (which is output
-+ *  field) will hold the query response from the device along with the
-+ *  response code.
-+ */
-+int ufshcd_query_request(struct ufs_hba *hba,
-+			struct ufs_query_req *query,
-+			u8 *descriptor,
-+			struct ufs_query_res *response,
-+			int timeout,
-+			int retries)
-+{
-+	struct scsi_device *sdev;
-+	u8 cmd[UFS_QUERY_CMD_SIZE] = {0};
-+	int result;
-+	bool sdev_lookup = true;
-+
-+	if (!hba || !query || !response) {
-+		dev_err(hba->dev,
-+			"%s: NULL pointer hba = %p, query = %p response = %p\n",
-+			__func__, hba, query, response);
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * A SCSI command structure is composed from opcode at the
-+	 * begining and 0 at the end.
-+	 */
-+	cmd[0] = UFS_QUERY_RESERVED_SCSI_CMD;
-+
-+	/* extracting the SCSI Device */
-+	sdev = scsi_device_lookup(hba->host, 0, 0, 0);
-+	if (!sdev) {
-+		/**
-+		 * There are some Query Requests that are sent during device
-+		 * initialization, this happens before the scsi device was
-+		 * initialized. If there is no scsi device, we generate a
-+		 * temporary device to allow the Query Request flow.
-+		 */
-+		sdev_lookup = false;
-+		sdev = scsi_get_host_dev(hba->host);
-+	}
-+
-+	if (!sdev) {
-+		dev_err(hba->dev, "%s: Could not fetch scsi device\n",
-+			__func__);
-+		return -ENODEV;
-+	}
-+
-+	mutex_lock(&hba->query.lock_ufs_query);
-+	hba->query.request = query;
-+	hba->query.descriptor = descriptor;
-+	hba->query.response = response;
-+
-+	/* wait until request is completed */
-+	result = scsi_execute(sdev, cmd, DMA_NONE, NULL, 0, NULL,
-+				timeout, retries, 0, NULL);
-+	if (result) {
-+		dev_err(hba->dev,
-+			"%s: Query with opcode 0x%x, failed with result %d\n",
-+			__func__, query->upiu_req.opcode, result);
-+		result = -EIO;
-+	}
-+
-+	hba->query.request = NULL;
-+	hba->query.descriptor = NULL;
-+	hba->query.response = NULL;
-+	mutex_unlock(&hba->query.lock_ufs_query);
-+
-+	/* Releasing scsi device resource */
-+	if (sdev_lookup)
-+		scsi_device_put(sdev);
-+	else
-+		scsi_free_host_dev(sdev);
-+
-+	return result;
-+}
-+
-+/**
-+ * ufshcd_query_flag() - Helper function for composing flag query requests
-+ * hba: per-adapter instance
-+ * query_opcode: flag query to perform
-+ * idn: flag idn to access
-+ * flag_res: the flag value after the query request completes
-+ *
-+ * Returns 0 for success, non-zero in case of failure
-+ */
-+int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
-+			enum flag_idn idn, bool *flag_res)
-+{
-+	struct ufs_query_req query = {0};
-+	struct ufs_query_res response = {0};
-+	int err;
-+
-+	switch (opcode) {
-+	case UPIU_QUERY_OPCODE_SET_FLAG:
-+	case UPIU_QUERY_OPCODE_CLEAR_FLAG:
-+	case UPIU_QUERY_OPCODE_TOGGLE_FLAG:
-+		query.query_func = UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
-+		break;
-+	case UPIU_QUERY_OPCODE_READ_FLAG:
-+		query.query_func = UPIU_QUERY_FUNC_STANDARD_READ_REQUEST;
-+		break;
-+	default:
-+		dev_err(hba->dev,
-+			"%s: Expected query flag opcode but got = %d\n",
-+			__func__, opcode);
-+		err = -EINVAL;
-+		goto out;
-+	}
-+	query.upiu_req.opcode = opcode;
-+	query.upiu_req.idn = idn;
-+
-+	/* Send query request */
-+	err = send_query_request(hba, &query, NULL, &response);
-+
-+	if (err) {
-+		dev_err(hba->dev,
-+			"%s: Sending flag query for idn %d failed, err = %d\n",
-+			__func__, idn, err);
-+		goto out;
-+	}
-+
-+	*flag_res = (response.upiu_res.value & MASK_QUERY_UPIU_FLAG_LOC) & 0x1;
-+
-+out:
-+	return err;
-+}
-+
-+/**
-  * ufshcd_memory_alloc - allocate memory for host memory space data structures
-  * @hba: per adapter instance
-  *
-@@ -1324,6 +1488,44 @@ out:
- }
- 
- /**
-+ * ufshcd_validate_device_init() - checks device readines
-+ * hba: per-adapter instance
-+ *
-+ * Set fDeviceInit flag, than, query the flag untill the device clears the
-+ * flag.
-+ */
-+static int ufshcd_validate_device_init(struct ufs_hba *hba)
-+{
-+	int i, err;
-+	bool flag_res = 0;
-+
-+	err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-+				QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
-+	if (err) {
-+		dev_err(hba->dev,
-+			"%s setting fDeviceInit flag failed with error %d\n",
-+			__func__, err);
-+		goto out;
-+	}
-+
-+	for (i = 0; i < QUERY_REQ_RETRIES && !err && flag_res; i++) {
-+		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
-+				QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
-+	}
-+	if (err)
-+		dev_err(hba->dev,
-+			"%s reading fDeviceInit flag failed with error %d\n",
-+			__func__, err);
-+	else if (flag_res)
-+		dev_err(hba->dev,
-+			"%s fDeviceInit was not cleared by the device\n",
-+			__func__);
-+
-+out:
-+	return err;
-+}
-+
-+/**
-  * ufshcd_make_hba_operational - Make UFS controller operational
-  * @hba: per adapter instance
-  *
-@@ -2153,6 +2355,10 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	if (ret)
- 		goto out;
- 
-+	ret = ufshcd_validate_device_init(hba);
-+	if (ret)
-+		goto out;
-+
- 	scsi_scan_host(hba->host);
- out:
- 	return;
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index a91c558..76485da 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -286,4 +286,11 @@ static inline int ufshcd_dme_hibern8_exit(struct ufs_hba *hba)
- 	return ufshcd_dme_hibern8_ctrl(hba, 0);
- }
- 
-+int ufs_query_request(struct ufs_hba *hba,
-+			struct ufs_query_req *query,
-+			u8 *descriptor,
-+			struct ufs_query_res *response,
-+			int timeout,
-+			int retries);
-+
- #endif /* End of Header */
+ config TCM_QLA2XXX
+ 	tristate "TCM_QLA2XXX fabric module for Qlogic 2xxx series target mode HBAs"
 -- 
-1.7.6
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+1.7.7
+
+
