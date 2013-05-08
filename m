@@ -1,81 +1,42 @@
-From: "web2013s@libero.it" <web2013s@libero.it>
-Subject: claim uk
-Date: Wed, 8 May 2013 15:49:26 +0200 (CEST)
-Message-ID: <29716324.262431368020966937.JavaMail.defaultUser__17742.9403448061$1368021146$gmane$org@defaultHost>
-Reply-To: "web2013s@libero.it" <web2013s@libero.it>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: [PATCH v10 0/9] More device removal fixes
+Date: Wed, 8 May 2013 09:58:07 -0400
+Message-ID: <20130508095807.2d841fb5@jlaw-desktop.mno.stratus.com>
+References: <516188E5.1040008@acm.org>
 Mime-Version: 1.0
-Content-Type: APPLICATION/OCTET-STREAM; name=bbc.docx
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outrelay02.libero.it ([212.52.84.102]:59377 "EHLO
-	outrelay02.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755821Ab3EHNwB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 09:52:01 -0400
-Content-Disposition: attachment; filename=bbc.docx; size=3631
+Received: from mailhub4.stratus.com ([134.111.1.17]:36234 "EHLO
+	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755592Ab3EHOBv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 10:01:51 -0400
+In-Reply-To: <516188E5.1040008@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-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
+On Sun, 07 Apr 2013 16:55:33 +0200
+Bart Van Assche <bvanassche@acm.org> wrote:
+
+> Fix a few issues that can be triggered by removing a device:
+> - Fix a race between starved list processing and device removal.
+> - Avoid that a SCSI LLD callback can get invoked after
+>    scsi_remove_host() finished.
+> - Speed up device removal by stopping error handling as soon as
+>    the SHOST_DEL or SHOST_DEL_RECOVERY state has been reached.
+> - Save and restore the host_scribble field during error handling.
+> 
+> These patches have been tested on top of kernel v3.9-rc5.
+
+Hi Bart,
+
+I tested the patchset against 3.9 and ran surprise HBA device removals
+during device initialization (3sec, 6sec, 12sec) while running IO out
+to a multipath LUN and an MD RAID1 SAS pair.  No warnings in the logs
+and everything looks consistent this morning.
+
+Regards,
+
+-- Joe
