@@ -1,53 +1,69 @@
-From: "lindar_liu" <lindar_liu@usish.com>
-Subject: RE: [PATCH] sas: unify the pointlessly separated enums sas_dev_type and sas_device_type
-Date: Wed, 8 May 2013 09:50:12 +0800
-Message-ID: <007301ce4b8e$63b441c0$2b1cc540$@com>
-References: <1367963046.4108.25.camel@dabdike>
+From: "Dolev Raviv" <draviv@codeaurora.org>
+Subject: Re: [SCSI] ufs: add support for query requests
+Date: Tue, 7 May 2013 23:27:26 -0700
+Message-ID: <a68a1a1bc5658e8e61acda91340f2aa4.squirrel@www.codeaurora.org>
+References: <20130507142540.GA20764@elgon.mountain>
+    <1367964184.4108.27.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:42006 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755443Ab3EHCBH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 May 2013 22:01:07 -0400
-In-Reply-To: <1367963046.4108.25.camel@dabdike>
-Content-Language: zh-cn
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21063 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031Ab3EHG10 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 02:27:26 -0400
+In-Reply-To: <1367964184.4108.27.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>
-Cc: 'Lukasz Dorau' <lukasz.dorau@intel.com>, 'Maciej Patelczyk' <maciej.patelczyk@intel.com>, 'Dave Jiang' <dave.jiang@intel.com>, xjtuwjp@gmail.com, 'Xiangliang Yu' <yuxiangl@marvell.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, draviv@codeaurora.org, linux-scsi@vger.kernel.org, kbuild@01.org
 
-Thanks for fix.
 
-Lindar.
+> On Tue, 2013-05-07 at 17:25 +0300, Dan Carpenter wrote:
+>> Hello Dolev Raviv,
+>>
+>> This is a semi-automatic email about new static checker warnings.
+>>
+>> The patch 3aee47c623a3: "[SCSI] ufs: add support for query requests"
+>> from May 2, 2013, leads to the following Smatch complaint:
+>>
+>> drivers/scsi/ufs/ufshcd.c:723 ufshcd_query_request()
+>> 	 error: we previously assumed 'hba' could be null (see line 722)
+>>
+>> drivers/scsi/ufs/ufshcd.c
+>>    721
+>>    722		if (!hba || !query || !response) {
+>>                     ^^^^
+>> New check.
+>>
+>>    723			dev_err(hba->dev,
+>>                                 ^^^^^^^^
+>> New dereference.
+>>
+>>    724				"%s: NULL pointer hba = %p, query = %p response = %p\n",
+>>    725				__func__, hba, query, response);
+>
+> We don't actually have any callers of this function either, so nothing
+> ever exercises the code.  Given that we're not supposed to put stuff in
+> the tree without a use case anyway, I can just remove it and then it can
+> be resubmitted when the function has a user.
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Wednesday, May 08, 2013 5:44 AM
-To: linux-scsi
-Cc: Lukasz Dorau; Maciej Patelczyk; Dave Jiang; xjtuwjp@gmail.com;
-lindar_liu@usish.com; Xiangliang Yu
-Subject: [PATCH] sas: unify the pointlessly separated enums sas_dev_type and
-sas_device_type
+This is fine, this patch introduce the infrastructure and the api.
+I could upload the api as part of the fDeviceInit patch that was sent before.
 
-These enums have been separate since the dawn of SAS, mainly because the
-latter is a procotol only enum and the former includes additional state for
-libsas.  The dichotomy causes endless confusion about which one you should
-use where and leads to pointless warnings like this:
+>
+> James
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-drivers/scsi/mvsas/mv_sas.c: In function 'mvs_update_phyinfo':
 
-drivers/scsi/mvsas/mv_sas.c:1162:34: warning: comparison between 'enum
-sas_device_type' and 'enum sas_dev_type' [-Wenum-compare]
-
-Fix by eliminating one of them.  The one kept is effectively the sas.h one,
-but call it sas_device_type and make sure the enums are all properly
-namespaced with the SAS_ prefix.
-
-Signed-off-by: James Bottomley <JBottomley@Parallels.com>
-
----
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
 
 
