@@ -1,362 +1,348 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: [PATCH V4 1/1] scsi: ufs: Add support for sending NOP OUT UPIU
-Date: Wed,  8 May 2013 15:20:12 +0530
-Message-ID: <1368006612-2710-1-git-send-email-sthumma@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
+From: merez@codeaurora.org
+Subject: Re: [PATCH v4 1/6] scsi: ufs: wrap the i/o access operations
+Date: Wed, 8 May 2013 04:58:28 -0700
+Message-ID: <11ef49ee5d0eddabc94ca9b4dc3d7a13.squirrel@www.codeaurora.org>
+References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
+    <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com>
+    <000b01ce48a3$ad7072e0$085158a0$%jun@samsung.com>
+    <002401ce4bc7$cda068a0$68e139e0$%jun@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11620 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754227Ab3EHL62 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 07:58:28 -0400
+In-Reply-To: <002401ce4bc7$cda068a0$68e139e0$%jun@samsung.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Seungwon Jeon <tgih.jun@samsung.com>
+Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <jbottomley@parallels.com>
 
-As part of device initialization sequence, sending NOP OUT UPIU and
-waiting for NOP IN UPIU response is mandatory. This confirms that the
-device UFS Transport (UTP) layer is functional and the host can configure
-the device with further commands. Add support for sending NOP OUT UPIU to
-check the device connection path and test whether the UTP layer on the
-device side is functional during initialization.
+Hi,
 
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+I tested the new set of patches (v4 1-6) and it works.
 
----
-v4:
-   - Removed readl_poll_timeout and replaced with wait logic
-   - additional checks for completion
-v3:
-   - minor bug fix in error path
-v2:
-   - fixed INTERNAL_CMD_TAG check in readl_poll_timeout
-   - minor cleanup from v1
-   - rebased on Seungwon Jeon's UFS V3 patchset
----
- drivers/scsi/ufs/ufshcd.c |  197 ++++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h |    4 +
- 2 files changed, 192 insertions(+), 9 deletions(-)
+Thanks,
+Maya
+> Simplify operations with hiding mmio_base.
+>
+> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> Tested-by: Maya Erez <merez@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c |  105
+> +++++++++++++++++++--------------------------
+>  drivers/scsi/ufs/ufshcd.h |    7 +++-
+>  2 files changed, 50 insertions(+), 62 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index f244812..cf7c8e4 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -71,7 +71,7 @@ enum {
+>   */
+>  static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
+>  {
+> -	return readl(hba->mmio_base + REG_UFS_VERSION);
+> +	return ufshcd_readl(hba, REG_UFS_VERSION);
+>  }
+>
+>  /**
+> @@ -130,8 +130,7 @@ static inline int ufshcd_get_tm_free_slot(struct
+> ufs_hba *hba)
+>   */
+>  static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
+>  {
+> -	writel(~(1 << pos),
+> -		(hba->mmio_base + REG_UTP_TRANSFER_REQ_LIST_CLEAR));
+> +	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
+>  }
+>
+>  /**
+> @@ -165,7 +164,7 @@ static inline int ufshcd_get_lists_status(u32 reg)
+>   */
+>  static inline int ufshcd_get_uic_cmd_result(struct ufs_hba *hba)
+>  {
+> -	return readl(hba->mmio_base + REG_UIC_COMMAND_ARG_2) &
+> +	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2) &
+>  	       MASK_UIC_COMMAND_RESULT;
+>  }
+>
+> @@ -238,18 +237,15 @@ ufshcd_config_int_aggr(struct ufs_hba *hba, int
+> option)
+>  {
+>  	switch (option) {
+>  	case INT_AGGR_RESET:
+> -		writel((INT_AGGR_ENABLE |
+> -			INT_AGGR_COUNTER_AND_TIMER_RESET),
+> -			(hba->mmio_base +
+> -			 REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL));
+> +		ufshcd_writel(hba, INT_AGGR_ENABLE |
+> +			      INT_AGGR_COUNTER_AND_TIMER_RESET,
+> +			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
+>  		break;
+>  	case INT_AGGR_CONFIG:
+> -		writel((INT_AGGR_ENABLE |
+> -			INT_AGGR_PARAM_WRITE |
+> -			INT_AGGR_COUNTER_THRESHOLD_VALUE |
+> -			INT_AGGR_TIMEOUT_VALUE),
+> -			(hba->mmio_base +
+> -			 REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL));
+> +		ufshcd_writel(hba, INT_AGGR_ENABLE | INT_AGGR_PARAM_WRITE |
+> +			      INT_AGGR_COUNTER_THRESHOLD_VALUE |
+> +			      INT_AGGR_TIMEOUT_VALUE,
+> +			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
+>  		break;
+>  	}
+>  }
+> @@ -262,12 +258,10 @@ ufshcd_config_int_aggr(struct ufs_hba *hba, int
+> option)
+>   */
+>  static void ufshcd_enable_run_stop_reg(struct ufs_hba *hba)
+>  {
+> -	writel(UTP_TASK_REQ_LIST_RUN_STOP_BIT,
+> -	       (hba->mmio_base +
+> -		REG_UTP_TASK_REQ_LIST_RUN_STOP));
+> -	writel(UTP_TRANSFER_REQ_LIST_RUN_STOP_BIT,
+> -	       (hba->mmio_base +
+> -		REG_UTP_TRANSFER_REQ_LIST_RUN_STOP));
+> +	ufshcd_writel(hba, UTP_TASK_REQ_LIST_RUN_STOP_BIT,
+> +		      REG_UTP_TASK_REQ_LIST_RUN_STOP);
+> +	ufshcd_writel(hba, UTP_TRANSFER_REQ_LIST_RUN_STOP_BIT,
+> +		      REG_UTP_TRANSFER_REQ_LIST_RUN_STOP);
+>  }
+>
+>  /**
+> @@ -276,7 +270,7 @@ static void ufshcd_enable_run_stop_reg(struct ufs_hba
+> *hba)
+>   */
+>  static inline void ufshcd_hba_start(struct ufs_hba *hba)
+>  {
+> -	writel(CONTROLLER_ENABLE , (hba->mmio_base + REG_CONTROLLER_ENABLE));
+> +	ufshcd_writel(hba, CONTROLLER_ENABLE, REG_CONTROLLER_ENABLE);
+>  }
+>
+>  /**
+> @@ -287,7 +281,7 @@ static inline void ufshcd_hba_start(struct ufs_hba
+> *hba)
+>   */
+>  static inline int ufshcd_is_hba_active(struct ufs_hba *hba)
+>  {
+> -	return (readl(hba->mmio_base + REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
+> +	return (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
+>  }
+>
+>  /**
+> @@ -299,8 +293,7 @@ static inline
+>  void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+>  {
+>  	__set_bit(task_tag, &hba->outstanding_reqs);
+> -	writel((1 << task_tag),
+> -	       (hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL));
+> +	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>  }
+>
+>  /**
+> @@ -381,8 +374,7 @@ void ufshcd_copy_query_response(struct ufs_hba *hba,
+> struct ufshcd_lrb *lrbp)
+>   */
+>  static inline void ufshcd_hba_capabilities(struct ufs_hba *hba)
+>  {
+> -	hba->capabilities =
+> -		readl(hba->mmio_base + REG_CONTROLLER_CAPABILITIES);
+> +	hba->capabilities = ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES);
+>
+>  	/* nutrs and nutmrs are 0 based values */
+>  	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS) + 1;
+> @@ -399,16 +391,13 @@ static inline void
+>  ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command
+> *uic_cmnd)
+>  {
+>  	/* Write Args */
+> -	writel(uic_cmnd->argument1,
+> -	      (hba->mmio_base + REG_UIC_COMMAND_ARG_1));
+> -	writel(uic_cmnd->argument2,
+> -	      (hba->mmio_base + REG_UIC_COMMAND_ARG_2));
+> -	writel(uic_cmnd->argument3,
+> -	      (hba->mmio_base + REG_UIC_COMMAND_ARG_3));
+> +	ufshcd_writel(hba, uic_cmnd->argument1, REG_UIC_COMMAND_ARG_1);
+> +	ufshcd_writel(hba, uic_cmnd->argument2, REG_UIC_COMMAND_ARG_2);
+> +	ufshcd_writel(hba, uic_cmnd->argument3, REG_UIC_COMMAND_ARG_3);
+>
+>  	/* Write UIC Cmd */
+> -	writel((uic_cmnd->command & COMMAND_OPCODE_MASK),
+> -	       (hba->mmio_base + REG_UIC_COMMAND));
+> +	ufshcd_writel(hba, uic_cmnd->command & COMMAND_OPCODE_MASK,
+> +		      REG_UIC_COMMAND);
+>  }
+>
+>  /**
+> @@ -460,16 +449,15 @@ static void ufshcd_int_config(struct ufs_hba *hba,
+> u32 option)
+>  {
+>  	switch (option) {
+>  	case UFSHCD_INT_ENABLE:
+> -		writel(hba->int_enable_mask,
+> -		      (hba->mmio_base + REG_INTERRUPT_ENABLE));
+> +		ufshcd_writel(hba, hba->int_enable_mask, REG_INTERRUPT_ENABLE);
+>  		break;
+>  	case UFSHCD_INT_DISABLE:
+>  		if (hba->ufs_version == UFSHCI_VERSION_10)
+> -			writel(INTERRUPT_DISABLE_MASK_10,
+> -			      (hba->mmio_base + REG_INTERRUPT_ENABLE));
+> +			ufshcd_writel(hba, INTERRUPT_DISABLE_MASK_10,
+> +				      REG_INTERRUPT_ENABLE);
+>  		else
+> -			writel(INTERRUPT_DISABLE_MASK_11,
+> -			       (hba->mmio_base + REG_INTERRUPT_ENABLE));
+> +			ufshcd_writel(hba, INTERRUPT_DISABLE_MASK_11,
+> +				      REG_INTERRUPT_ENABLE);
+>  		break;
+>  	}
+>  }
+> @@ -940,7 +928,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba
+> *hba)
+>  	unsigned long flags;
+>
+>  	/* check if controller is ready to accept UIC commands */
+> -	if (((readl(hba->mmio_base + REG_CONTROLLER_STATUS)) &
+> +	if ((ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
+>  	    UIC_COMMAND_READY) == 0x0) {
+>  		dev_err(hba->dev,
+>  			"Controller not ready"
+> @@ -985,7 +973,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba
+> *hba)
+>  	u32 reg;
+>
+>  	/* check if device present */
+> -	reg = readl((hba->mmio_base + REG_CONTROLLER_STATUS));
+> +	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
+>  	if (!ufshcd_is_device_present(reg)) {
+>  		dev_err(hba->dev, "cc: Device not present\n");
+>  		err = -ENXIO;
+> @@ -1107,14 +1095,14 @@ static int ufshcd_initialize_hba(struct ufs_hba
+> *hba)
+>  		return -EIO;
+>
+>  	/* Configure UTRL and UTMRL base address registers */
+> -	writel(lower_32_bits(hba->utrdl_dma_addr),
+> -	       (hba->mmio_base + REG_UTP_TRANSFER_REQ_LIST_BASE_L));
+> -	writel(upper_32_bits(hba->utrdl_dma_addr),
+> -	       (hba->mmio_base + REG_UTP_TRANSFER_REQ_LIST_BASE_H));
+> -	writel(lower_32_bits(hba->utmrdl_dma_addr),
+> -	       (hba->mmio_base + REG_UTP_TASK_REQ_LIST_BASE_L));
+> -	writel(upper_32_bits(hba->utmrdl_dma_addr),
+> -	       (hba->mmio_base + REG_UTP_TASK_REQ_LIST_BASE_H));
+> +	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
+> +		      REG_UTP_TRANSFER_REQ_LIST_BASE_L);
+> +	ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
+> +		      REG_UTP_TRANSFER_REQ_LIST_BASE_H);
+> +	ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
+> +		      REG_UTP_TASK_REQ_LIST_BASE_L);
+> +	ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
+> +		      REG_UTP_TASK_REQ_LIST_BASE_H);
+>
+>  	/* Initialize unipro link startup procedure */
+>  	return ufshcd_dme_link_startup(hba);
+> @@ -1427,8 +1415,7 @@ static void ufshcd_transfer_req_compl(struct ufs_hba
+> *hba)
+>  	int index;
+>
+>  	lrb = hba->lrb;
+> -	tr_doorbell =
+> -		readl(hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> +	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>  	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
+>
+>  	for (index = 0; index < hba->nutrs; index++) {
+> @@ -1502,9 +1489,7 @@ static void ufshcd_err_handler(struct ufs_hba *hba)
+>  		goto fatal_eh;
+>
+>  	if (hba->errors & UIC_ERROR) {
+> -
+> -		reg = readl(hba->mmio_base +
+> -			    REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
+> +		reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
+>  		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
+>  			goto fatal_eh;
+>  	}
+> @@ -1522,7 +1507,7 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba)
+>  {
+>  	u32 tm_doorbell;
+>
+> -	tm_doorbell = readl(hba->mmio_base + REG_UTP_TASK_REQ_DOOR_BELL);
+> +	tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+>  	hba->tm_condition = tm_doorbell ^ hba->outstanding_tasks;
+>  	wake_up_interruptible(&hba->ufshcd_tm_wait_queue);
+>  }
+> @@ -1563,15 +1548,14 @@ static irqreturn_t ufshcd_intr(int irq, void
+> *__hba)
+>  	struct ufs_hba *hba = __hba;
+>
+>  	spin_lock(hba->host->host_lock);
+> -	intr_status = readl(hba->mmio_base + REG_INTERRUPT_STATUS);
+> +	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>
+>  	if (intr_status) {
+>  		ufshcd_sl_intr(hba, intr_status);
+>
+>  		/* If UFSHCI 1.0 then clear interrupt status register */
+>  		if (hba->ufs_version == UFSHCI_VERSION_10)
+> -			writel(intr_status,
+> -			       (hba->mmio_base + REG_INTERRUPT_STATUS));
+> +			ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+>  		retval = IRQ_HANDLED;
+>  	}
+>  	spin_unlock(hba->host->host_lock);
+> @@ -1636,8 +1620,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+>
+>  	/* send command to the controller */
+>  	__set_bit(free_slot, &hba->outstanding_tasks);
+> -	writel((1 << free_slot),
+> -	       (hba->mmio_base + REG_UTP_TASK_REQ_DOOR_BELL));
+> +	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
+>
+>  	spin_unlock_irqrestore(host->host_lock, flags);
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 336980b..6429bed 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -204,6 +204,11 @@ struct ufs_hba {
+>  	struct ufs_query query;
+>  };
+>
+> +#define ufshcd_writel(hba, val, reg)	\
+> +	writel((val), (hba)->mmio_base + (reg))
+> +#define ufshcd_readl(hba, reg)	\
+> +	readl((hba)->mmio_base + (reg))
+> +
+>  int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
+>  			unsigned int);
+>  void ufshcd_remove(struct ufs_hba *);
+> @@ -214,7 +219,7 @@ void ufshcd_remove(struct ufs_hba *);
+>   */
+>  static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+>  {
+> -	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
+> +	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
+>  }
+>
+>  #endif /* End of Header */
+> --
+> 1.7.0.4
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3607ffb..ded770d 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -44,6 +44,13 @@
- /* UIC command timeout, unit: ms */
- #define UIC_CMD_TIMEOUT	500
- 
-+/* NOP OUT retries waiting for NOP IN response */
-+#define NOP_OUT_RETRIES    10
-+/* Timeout after 30 msecs if NOP OUT hangs without response */
-+#define NOP_OUT_TIMEOUT    30 /* msecs */
-+/* Reserved tag for internal commands */
-+#define INTERNAL_CMD_TAG   0
-+
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
- 	UFSHCD_MAX_ID		= 1,
-@@ -72,6 +79,39 @@ enum {
- 	INT_AGGR_CONFIG,
- };
- 
-+/*
-+ * ufshcd_wait_for_register - wait for register value to change
-+ * @hba - per-adapter interface
-+ * @reg - mmio register offset
-+ * @mask - mask to apply to read register value
-+ * @val - wait condition
-+ * @interval_us - polling interval in microsecs
-+ * @timeout_ms - timeout in millisecs
-+ *
-+ * Returns final register value after iteration
-+ */
-+static u32 ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
-+		u32 val, unsigned long interval_us, unsigned long timeout_ms)
-+{
-+	u32 tmp;
-+	ktime_t start;
-+	unsigned long diff;
-+
-+	tmp = ufshcd_readl(hba, reg);
-+
-+	start = ktime_get();
-+	while ((tmp & mask) == val) {
-+		/* wakeup within 50us of expiry */
-+		usleep_range(interval_us, interval_us + 50);
-+		tmp = ufshcd_readl(hba, reg);
-+		diff = ktime_to_ms(ktime_sub(ktime_get(), start));
-+		if (diff > timeout_ms)
-+			break;
-+	}
-+
-+	return tmp;
-+}
-+
- /**
-  * ufshcd_get_intr_mask - Get the interrupt bit mask
-  * @hba - Pointer to adapter instance
-@@ -630,7 +670,7 @@ static void ufshcd_prepare_req_desc(struct ufshcd_lrb *lrbp, u32 *upiu_flags)
- {
- 	struct utp_transfer_req_desc *req_desc = lrbp->utr_descriptor_ptr;
- 	enum dma_data_direction cmd_dir =
--		lrbp->cmd->sc_data_direction;
-+		lrbp->cmd ? lrbp->cmd->sc_data_direction : DMA_NONE;
- 	u32 data_direction;
- 	u32 dword_0;
- 
-@@ -647,6 +687,8 @@ static void ufshcd_prepare_req_desc(struct ufshcd_lrb *lrbp, u32 *upiu_flags)
- 
- 	dword_0 = data_direction | (lrbp->command_type
- 				<< UPIU_COMMAND_TYPE_OFFSET);
-+	if (lrbp->intr_cmd)
-+		dword_0 |= UTP_REQ_DESC_INT_CMD;
- 
- 	/* Transfer request descriptor header fields */
- 	req_desc->header.dword_0 = cpu_to_le32(dword_0);
-@@ -735,6 +777,18 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
- 
- }
- 
-+static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
-+{
-+	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
-+
-+	memset(ucd_req_ptr, 0, sizeof(struct utp_upiu_req));
-+
-+	/* command descriptor fields */
-+	ucd_req_ptr->header.dword_0 =
-+		UPIU_HEADER_DWORD(
-+			UPIU_TRANSACTION_NOP_OUT, 0, 0, lrbp->task_tag);
-+}
-+
- /**
-  * ufshcd_compose_upiu - form UFS Protocol Information Unit(UPIU)
-  * @hba - UFS hba
-@@ -749,11 +803,13 @@ static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	case UTP_CMD_TYPE_SCSI:
- 	case UTP_CMD_TYPE_DEV_MANAGE:
- 		ufshcd_prepare_req_desc(lrbp, &upiu_flags);
--		if (lrbp->command_type == UTP_CMD_TYPE_SCSI)
-+		if (lrbp->cmd && lrbp->command_type == UTP_CMD_TYPE_SCSI)
- 			ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
--		else
-+		else if (lrbp->cmd && ufshcd_is_query_req(lrbp))
- 			ufshcd_prepare_utp_query_req_upiu(hba, lrbp,
- 								upiu_flags);
-+		else if (!lrbp->cmd)
-+			ufshcd_prepare_utp_nop_upiu(lrbp);
- 		break;
- 	case UTP_CMD_TYPE_UFS:
- 		/* For UFS native command implementation */
-@@ -802,6 +858,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	lrbp->sense_buffer = cmd->sense_buffer;
- 	lrbp->task_tag = tag;
- 	lrbp->lun = cmd->device->lun;
-+	lrbp->intr_cmd = false;
- 
- 	if (ufshcd_is_query_req(lrbp))
- 		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
-@@ -1261,6 +1318,104 @@ int ufshcd_dme_endpt_reset(struct ufs_hba *hba)
- }
- EXPORT_SYMBOL_GPL(ufshcd_dme_endpt_reset);
- 
-+static int
-+ufshcd_compose_nop_out_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+{
-+	lrbp->cmd = NULL;
-+	lrbp->sense_bufflen = 0;
-+	lrbp->sense_buffer = NULL;
-+	lrbp->task_tag = INTERNAL_CMD_TAG;
-+	lrbp->lun = 0; /* NOP OUT is not specific to any LUN */
-+	lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
-+	lrbp->intr_cmd = true; /* No interrupt aggregation */
-+
-+	return ufshcd_compose_upiu(hba, lrbp);
-+}
-+
-+static int ufshcd_wait_for_nop_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+{
-+	int err = 0;
-+	unsigned long timeout;
-+	unsigned long flags;
-+
-+	timeout = wait_for_completion_timeout(
-+			lrbp->completion, msecs_to_jiffies(NOP_OUT_TIMEOUT));
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	lrbp->completion = NULL;
-+	if (timeout)
-+		err = ufshcd_get_tr_ocs(lrbp);
-+	else
-+		err = -ETIMEDOUT;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	return err;
-+}
-+
-+/**
-+ * ufshcd_validate_dev_connection() - Check device connection status
-+ * @hba: per-adapter instance
-+ *
-+ * Send NOP OUT UPIU and wait for NOP IN response to check whether the
-+ * device Transport Protocol (UTP) layer is ready after a reset.
-+ * If the UTP layer at the device side is not initialized, it may
-+ * not respond with NOP IN UPIU within timeout of %NOP_OUT_TIMEOUT
-+ * and we retry sending NOP OUT for %NOP_OUT_RETRIES iterations.
-+ */
-+static int ufshcd_validate_dev_connection(struct ufs_hba *hba)
-+{
-+	int err;
-+	struct ufshcd_lrb *lrbp;
-+	unsigned long flags;
-+	struct completion wait;
-+	int retries = NOP_OUT_RETRIES;
-+
-+retry:
-+	init_completion(&wait);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	lrbp = &hba->lrb[INTERNAL_CMD_TAG];
-+	err = ufshcd_compose_nop_out_upiu(hba, lrbp);
-+	if (unlikely(err)) {
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		goto out;
-+	}
-+
-+	lrbp->completion = &wait;
-+	ufshcd_send_command(hba, INTERNAL_CMD_TAG);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	err = ufshcd_wait_for_nop_cmd(hba, lrbp);
-+
-+	if (err == -ETIMEDOUT) {
-+		u32 reg;
-+		u32 mask = 1 << INTERNAL_CMD_TAG;
-+
-+		/* clear outstanding transaction before retry */
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		ufshcd_utrl_clear(hba, INTERNAL_CMD_TAG);
-+		__clear_bit(INTERNAL_CMD_TAG, &hba->outstanding_reqs);
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+		/* poll for max. 1 sec to clear door bell register by h/w */
-+		reg = ufshcd_wait_for_register(hba,
-+				REG_UTP_TRANSFER_REQ_DOOR_BELL,
-+				mask, mask, 1000, 1000);
-+		if ((reg & mask) == mask)
-+			retries = 0;
-+	}
-+
-+	if (err && retries--) {
-+		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err);
-+		goto retry;
-+	}
-+
-+out:
-+	if (err)
-+		dev_err(hba->dev, "%s: NOP OUT failed %d\n", __func__, err);
-+	return err;
-+}
-+
- /**
-  * ufshcd_make_hba_operational - Make UFS controller operational
-  * @hba: per adapter instance
-@@ -1734,6 +1889,16 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- 		complete(&hba->hibern8_done);
- }
- 
-+/*
-+ * ufshcd_is_nop_out_upiu() - check if the command is NOP OUT UPIU
-+ * @lrbp: pointer to logical reference block
-+ */
-+static inline bool ufshcd_is_nop_out_upiu(struct ufshcd_lrb *lrbp)
-+{
-+	return (be32_to_cpu(lrbp->ucd_req_ptr->header.dword_0) >> 24) ==
-+				UPIU_TRANSACTION_NOP_OUT;
-+}
-+
- /**
-  * ufshcd_transfer_req_compl - handle SCSI and query command completion
-  * @hba: per adapter instance
-@@ -1745,6 +1910,7 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 	u32 tr_doorbell;
- 	int result;
- 	int index;
-+	bool int_aggr_reset = true;
- 
- 	lrb = hba->lrb;
- 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-@@ -1752,17 +1918,21 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 
- 	for (index = 0; index < hba->nutrs; index++) {
- 		if (test_bit(index, &completed_reqs)) {
--
--			result = ufshcd_transfer_rsp_status(hba, &lrb[index]);
--
- 			if (lrb[index].cmd) {
-+				result = ufshcd_transfer_rsp_status(
-+						hba, &lrb[index]);
- 				scsi_dma_unmap(lrb[index].cmd);
- 				lrb[index].cmd->result = result;
- 				lrb[index].cmd->scsi_done(lrb[index].cmd);
- 
- 				/* Mark completed command as NULL in LRB */
- 				lrb[index].cmd = NULL;
-+			} else if (ufshcd_is_nop_out_upiu(&lrb[index])) {
-+				if (lrb[index].completion)
-+					complete(lrb[index].completion);
- 			}
-+			/* Don't reset counters for interrupt cmd */
-+			int_aggr_reset = lrb[index].intr_cmd ? false : true;
- 		} /* end of if */
- 	} /* end of for */
- 
-@@ -1770,7 +1940,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 	hba->outstanding_reqs ^= completed_reqs;
- 
- 	/* Reset interrupt aggregation counters */
--	ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
-+	if (int_aggr_reset)
-+		ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
- }
- 
- /**
-@@ -2068,8 +2239,16 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	int ret;
- 
- 	ret = ufshcd_link_startup(hba);
--	if (!ret)
--		scsi_scan_host(hba->host);
-+	if (ret)
-+		goto out;
-+
-+	ret = ufshcd_validate_dev_connection(hba);
-+	if (ret)
-+		goto out;
-+
-+	scsi_scan_host(hba->host);
-+out:
-+	return;
- }
- 
- static struct scsi_host_template ufshcd_driver_template = {
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 84f758e..17f4995 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -102,6 +102,8 @@ struct uic_command {
-  * @command_type: SCSI, UFS, Query.
-  * @task_tag: Task tag of the command
-  * @lun: LUN of the command
-+ * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
-+ * @completion: holds the state of completion (used for internal commands)
-  */
- struct ufshcd_lrb {
- 	struct utp_transfer_req_desc *utr_descriptor_ptr;
-@@ -117,6 +119,8 @@ struct ufshcd_lrb {
- 	int command_type;
- 	int task_tag;
- 	unsigned int lun;
-+	bool intr_cmd;
-+	struct completion *completion;
- };
- 
- /**
+
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation.
+Maya Erez
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
+
