@@ -1,69 +1,72 @@
-From: "Dolev Raviv" <draviv@codeaurora.org>
-Subject: Re: [SCSI] ufs: add support for query requests
-Date: Tue, 7 May 2013 23:27:26 -0700
-Message-ID: <a68a1a1bc5658e8e61acda91340f2aa4.squirrel@www.codeaurora.org>
-References: <20130507142540.GA20764@elgon.mountain>
-    <1367964184.4108.27.camel@dabdike>
+From: Paul Guo <ggang@tilera.com>
+Subject: [SCSI] mvsas: Fix the kernel panic due to unaligned data access
+Date: Wed, 8 May 2013 15:01:56 +0800
+Message-ID: <5189F864.5080808@tilera.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="GB2312"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21063 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031Ab3EHG10 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 02:27:26 -0400
-In-Reply-To: <1367964184.4108.27.camel@dabdike>
+Received: from usmamail.tilera.com ([12.216.194.151]:46663 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752485Ab3EHHCB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 03:02:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, draviv@codeaurora.org, linux-scsi@vger.kernel.org, kbuild@01.org
+To: Xiangliang Yu <yuxiangl@marvell.com>, linux-scsi@vger.kernel.org
+Cc: JBottomley@Parallels.com
+
+It's easy to find the address and symbol that causes the unalignd data
+access according to the stack dump information. The following small
+patch will fix it.
+
+This change is harmless for platforms (like x86/x64) which support
+unaligned data access but is critical for platforms those do not support
+unaligned data access (like our platform: arch/tile).
+
+I sent the patch but did not ping the status. I sync-up the workspace
+and re-generate the patch again. Feel free to give me any feedback. It's
+really annoying to maintain the change internally.
+
+Thanks,
+Paul
 
 
-> On Tue, 2013-05-07 at 17:25 +0300, Dan Carpenter wrote:
->> Hello Dolev Raviv,
->>
->> This is a semi-automatic email about new static checker warnings.
->>
->> The patch 3aee47c623a3: "[SCSI] ufs: add support for query requests"
->> from May 2, 2013, leads to the following Smatch complaint:
->>
->> drivers/scsi/ufs/ufshcd.c:723 ufshcd_query_request()
->> 	 error: we previously assumed 'hba' could be null (see line 722)
->>
->> drivers/scsi/ufs/ufshcd.c
->>    721
->>    722		if (!hba || !query || !response) {
->>                     ^^^^
->> New check.
->>
->>    723			dev_err(hba->dev,
->>                                 ^^^^^^^^
->> New dereference.
->>
->>    724				"%s: NULL pointer hba = %p, query = %p response = %p\n",
->>    725				__func__, hba, query, response);
->
-> We don't actually have any callers of this function either, so nothing
-> ever exercises the code.  Given that we're not supposed to put stuff in
-> the tree without a use case anyway, I can just remove it and then it can
-> be resubmitted when the function has a user.
+Signed-off-by: Paul Guo <ggang@tilera.com>
+---
+ drivers/scsi/mvsas/mv_sas.c |    5 +++--
+ drivers/scsi/mvsas/mv_sas.h |    1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-This is fine, this patch introduce the infrastructure and the api.
-I could upload the api as part of the fDeviceInit patch that was sent before.
-
->
-> James
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index fd3b283..18e133e 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1852,10 +1852,11 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
+ 	}
+ 
+ 	/* error info record present */
+-	if (unlikely((rx_desc & RXQ_ERR) && (*(u64 *) slot->response))) {
++	if (unlikely((rx_desc & RXQ_ERR) &&
++		      get_unaligned_le64((u64 *) slot->response))) {
+ 		mv_dprintk("port %d slot %d rx_desc %X has error info"
+ 			"%016llX.\n", slot->port->sas_port.id, slot_idx,
+-			 rx_desc, (u64)(*(u64 *)slot->response));
++			 rx_desc, get_unaligned_le64((u64 *) slot->response));
+ 		tstat->stat = mvs_slot_err(mvi, task, slot_idx);
+ 		tstat->resp = SAS_TASK_COMPLETE;
+ 		goto out;
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index c04a4f5..c89c145 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -39,6 +39,7 @@
+ #include <linux/irq.h>
+ #include <linux/slab.h>
+ #include <linux/vmalloc.h>
++#include <linux/unaligned.h>
+ #include <scsi/libsas.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_tcq.h>
 -- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
-
+1.7.10.3
 
