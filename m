@@ -1,348 +1,172 @@
-From: merez@codeaurora.org
-Subject: Re: [PATCH v4 1/6] scsi: ufs: wrap the i/o access operations
-Date: Wed, 8 May 2013 04:58:28 -0700
-Message-ID: <11ef49ee5d0eddabc94ca9b4dc3d7a13.squirrel@www.codeaurora.org>
-References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
-    <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com>
-    <000b01ce48a3$ad7072e0$085158a0$%jun@samsung.com>
-    <002401ce4bc7$cda068a0$68e139e0$%jun@samsung.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH] scsi: add put_device() after device_find_child()
+Date: Wed, 8 May 2013 12:46:53 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD30EEBAC0@avmb3.qlogic.org>
+References: <5187E330.1030806@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EEBAC0avmb3qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11620 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754227Ab3EHL62 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 07:58:28 -0400
-In-Reply-To: <002401ce4bc7$cda068a0$68e139e0$%jun@samsung.com>
+Received: from mail-db9lp0253.outbound.messaging.microsoft.com ([213.199.154.253]:9713
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754323Ab3EHMrA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 08:47:00 -0400
+Received: from mail91-db9 (localhost [127.0.0.1])	by mail91-db9-R.bigfish.com
+ (Postfix) with ESMTP id 01F29C03B5	for <linux-scsi@vger.kernel.org>; Wed,  8
+ May 2013 12:46:59 +0000 (UTC)
+Received: from DB9EHSMHS025.bigfish.com (unknown [10.174.16.246])	by
+ mail91-db9.bigfish.com (Postfix) with ESMTP id 4BFCE4C004C	for
+ <linux-scsi@vger.kernel.org>; Wed,  8 May 2013 12:46:57 +0000 (UTC)
+In-Reply-To: <5187E330.1030806@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <jbottomley@parallels.com>
+To: Mike Christie <michaelc@cs.wisc.edu>, Zhao Hongjiang <zhaohongjiang@huawei.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, Ravi Anand <ravi.anand@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
-
-I tested the new set of patches (v4 1-6) and it works.
-
-Thanks,
-Maya
-> Simplify operations with hiding mmio_base.
->
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> Tested-by: Maya Erez <merez@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c |  105
-> +++++++++++++++++++--------------------------
->  drivers/scsi/ufs/ufshcd.h |    7 +++-
->  2 files changed, 50 insertions(+), 62 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index f244812..cf7c8e4 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -71,7 +71,7 @@ enum {
->   */
->  static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
->  {
-> -	return readl(hba->mmio_base + REG_UFS_VERSION);
-> +	return ufshcd_readl(hba, REG_UFS_VERSION);
->  }
->
->  /**
-> @@ -130,8 +130,7 @@ static inline int ufshcd_get_tm_free_slot(struct
-> ufs_hba *hba)
->   */
->  static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
->  {
-> -	writel(~(1 << pos),
-> -		(hba->mmio_base + REG_UTP_TRANSFER_REQ_LIST_CLEAR));
-> +	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
->  }
->
->  /**
-> @@ -165,7 +164,7 @@ static inline int ufshcd_get_lists_status(u32 reg)
->   */
->  static inline int ufshcd_get_uic_cmd_result(struct ufs_hba *hba)
->  {
-> -	return readl(hba->mmio_base + REG_UIC_COMMAND_ARG_2) &
-> +	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2) &
->  	       MASK_UIC_COMMAND_RESULT;
->  }
->
-> @@ -238,18 +237,15 @@ ufshcd_config_int_aggr(struct ufs_hba *hba, int
-> option)
->  {
->  	switch (option) {
->  	case INT_AGGR_RESET:
-> -		writel((INT_AGGR_ENABLE |
-> -			INT_AGGR_COUNTER_AND_TIMER_RESET),
-> -			(hba->mmio_base +
-> -			 REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL));
-> +		ufshcd_writel(hba, INT_AGGR_ENABLE |
-> +			      INT_AGGR_COUNTER_AND_TIMER_RESET,
-> +			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
->  		break;
->  	case INT_AGGR_CONFIG:
-> -		writel((INT_AGGR_ENABLE |
-> -			INT_AGGR_PARAM_WRITE |
-> -			INT_AGGR_COUNTER_THRESHOLD_VALUE |
-> -			INT_AGGR_TIMEOUT_VALUE),
-> -			(hba->mmio_base +
-> -			 REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL));
-> +		ufshcd_writel(hba, INT_AGGR_ENABLE | INT_AGGR_PARAM_WRITE |
-> +			      INT_AGGR_COUNTER_THRESHOLD_VALUE |
-> +			      INT_AGGR_TIMEOUT_VALUE,
-> +			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
->  		break;
->  	}
->  }
-> @@ -262,12 +258,10 @@ ufshcd_config_int_aggr(struct ufs_hba *hba, int
-> option)
->   */
->  static void ufshcd_enable_run_stop_reg(struct ufs_hba *hba)
->  {
-> -	writel(UTP_TASK_REQ_LIST_RUN_STOP_BIT,
-> -	       (hba->mmio_base +
-> -		REG_UTP_TASK_REQ_LIST_RUN_STOP));
-> -	writel(UTP_TRANSFER_REQ_LIST_RUN_STOP_BIT,
-> -	       (hba->mmio_base +
-> -		REG_UTP_TRANSFER_REQ_LIST_RUN_STOP));
-> +	ufshcd_writel(hba, UTP_TASK_REQ_LIST_RUN_STOP_BIT,
-> +		      REG_UTP_TASK_REQ_LIST_RUN_STOP);
-> +	ufshcd_writel(hba, UTP_TRANSFER_REQ_LIST_RUN_STOP_BIT,
-> +		      REG_UTP_TRANSFER_REQ_LIST_RUN_STOP);
->  }
->
->  /**
-> @@ -276,7 +270,7 @@ static void ufshcd_enable_run_stop_reg(struct ufs_hba
-> *hba)
->   */
->  static inline void ufshcd_hba_start(struct ufs_hba *hba)
->  {
-> -	writel(CONTROLLER_ENABLE , (hba->mmio_base + REG_CONTROLLER_ENABLE));
-> +	ufshcd_writel(hba, CONTROLLER_ENABLE, REG_CONTROLLER_ENABLE);
->  }
->
->  /**
-> @@ -287,7 +281,7 @@ static inline void ufshcd_hba_start(struct ufs_hba
-> *hba)
->   */
->  static inline int ufshcd_is_hba_active(struct ufs_hba *hba)
->  {
-> -	return (readl(hba->mmio_base + REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
-> +	return (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
->  }
->
->  /**
-> @@ -299,8 +293,7 @@ static inline
->  void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
->  {
->  	__set_bit(task_tag, &hba->outstanding_reqs);
-> -	writel((1 << task_tag),
-> -	       (hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL));
-> +	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
->  }
->
->  /**
-> @@ -381,8 +374,7 @@ void ufshcd_copy_query_response(struct ufs_hba *hba,
-> struct ufshcd_lrb *lrbp)
->   */
->  static inline void ufshcd_hba_capabilities(struct ufs_hba *hba)
->  {
-> -	hba->capabilities =
-> -		readl(hba->mmio_base + REG_CONTROLLER_CAPABILITIES);
-> +	hba->capabilities = ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES);
->
->  	/* nutrs and nutmrs are 0 based values */
->  	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS) + 1;
-> @@ -399,16 +391,13 @@ static inline void
->  ufshcd_send_uic_command(struct ufs_hba *hba, struct uic_command
-> *uic_cmnd)
->  {
->  	/* Write Args */
-> -	writel(uic_cmnd->argument1,
-> -	      (hba->mmio_base + REG_UIC_COMMAND_ARG_1));
-> -	writel(uic_cmnd->argument2,
-> -	      (hba->mmio_base + REG_UIC_COMMAND_ARG_2));
-> -	writel(uic_cmnd->argument3,
-> -	      (hba->mmio_base + REG_UIC_COMMAND_ARG_3));
-> +	ufshcd_writel(hba, uic_cmnd->argument1, REG_UIC_COMMAND_ARG_1);
-> +	ufshcd_writel(hba, uic_cmnd->argument2, REG_UIC_COMMAND_ARG_2);
-> +	ufshcd_writel(hba, uic_cmnd->argument3, REG_UIC_COMMAND_ARG_3);
->
->  	/* Write UIC Cmd */
-> -	writel((uic_cmnd->command & COMMAND_OPCODE_MASK),
-> -	       (hba->mmio_base + REG_UIC_COMMAND));
-> +	ufshcd_writel(hba, uic_cmnd->command & COMMAND_OPCODE_MASK,
-> +		      REG_UIC_COMMAND);
->  }
->
->  /**
-> @@ -460,16 +449,15 @@ static void ufshcd_int_config(struct ufs_hba *hba,
-> u32 option)
->  {
->  	switch (option) {
->  	case UFSHCD_INT_ENABLE:
-> -		writel(hba->int_enable_mask,
-> -		      (hba->mmio_base + REG_INTERRUPT_ENABLE));
-> +		ufshcd_writel(hba, hba->int_enable_mask, REG_INTERRUPT_ENABLE);
->  		break;
->  	case UFSHCD_INT_DISABLE:
->  		if (hba->ufs_version == UFSHCI_VERSION_10)
-> -			writel(INTERRUPT_DISABLE_MASK_10,
-> -			      (hba->mmio_base + REG_INTERRUPT_ENABLE));
-> +			ufshcd_writel(hba, INTERRUPT_DISABLE_MASK_10,
-> +				      REG_INTERRUPT_ENABLE);
->  		else
-> -			writel(INTERRUPT_DISABLE_MASK_11,
-> -			       (hba->mmio_base + REG_INTERRUPT_ENABLE));
-> +			ufshcd_writel(hba, INTERRUPT_DISABLE_MASK_11,
-> +				      REG_INTERRUPT_ENABLE);
->  		break;
->  	}
->  }
-> @@ -940,7 +928,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba
-> *hba)
->  	unsigned long flags;
->
->  	/* check if controller is ready to accept UIC commands */
-> -	if (((readl(hba->mmio_base + REG_CONTROLLER_STATUS)) &
-> +	if ((ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
->  	    UIC_COMMAND_READY) == 0x0) {
->  		dev_err(hba->dev,
->  			"Controller not ready"
-> @@ -985,7 +973,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba
-> *hba)
->  	u32 reg;
->
->  	/* check if device present */
-> -	reg = readl((hba->mmio_base + REG_CONTROLLER_STATUS));
-> +	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
->  	if (!ufshcd_is_device_present(reg)) {
->  		dev_err(hba->dev, "cc: Device not present\n");
->  		err = -ENXIO;
-> @@ -1107,14 +1095,14 @@ static int ufshcd_initialize_hba(struct ufs_hba
-> *hba)
->  		return -EIO;
->
->  	/* Configure UTRL and UTMRL base address registers */
-> -	writel(lower_32_bits(hba->utrdl_dma_addr),
-> -	       (hba->mmio_base + REG_UTP_TRANSFER_REQ_LIST_BASE_L));
-> -	writel(upper_32_bits(hba->utrdl_dma_addr),
-> -	       (hba->mmio_base + REG_UTP_TRANSFER_REQ_LIST_BASE_H));
-> -	writel(lower_32_bits(hba->utmrdl_dma_addr),
-> -	       (hba->mmio_base + REG_UTP_TASK_REQ_LIST_BASE_L));
-> -	writel(upper_32_bits(hba->utmrdl_dma_addr),
-> -	       (hba->mmio_base + REG_UTP_TASK_REQ_LIST_BASE_H));
-> +	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
-> +		      REG_UTP_TRANSFER_REQ_LIST_BASE_L);
-> +	ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
-> +		      REG_UTP_TRANSFER_REQ_LIST_BASE_H);
-> +	ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
-> +		      REG_UTP_TASK_REQ_LIST_BASE_L);
-> +	ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
-> +		      REG_UTP_TASK_REQ_LIST_BASE_H);
->
->  	/* Initialize unipro link startup procedure */
->  	return ufshcd_dme_link_startup(hba);
-> @@ -1427,8 +1415,7 @@ static void ufshcd_transfer_req_compl(struct ufs_hba
-> *hba)
->  	int index;
->
->  	lrb = hba->lrb;
-> -	tr_doorbell =
-> -		readl(hba->mmio_base + REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> +	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
->  	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
->
->  	for (index = 0; index < hba->nutrs; index++) {
-> @@ -1502,9 +1489,7 @@ static void ufshcd_err_handler(struct ufs_hba *hba)
->  		goto fatal_eh;
->
->  	if (hba->errors & UIC_ERROR) {
-> -
-> -		reg = readl(hba->mmio_base +
-> -			    REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
-> +		reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
->  		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
->  			goto fatal_eh;
->  	}
-> @@ -1522,7 +1507,7 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba)
->  {
->  	u32 tm_doorbell;
->
-> -	tm_doorbell = readl(hba->mmio_base + REG_UTP_TASK_REQ_DOOR_BELL);
-> +	tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
->  	hba->tm_condition = tm_doorbell ^ hba->outstanding_tasks;
->  	wake_up_interruptible(&hba->ufshcd_tm_wait_queue);
->  }
-> @@ -1563,15 +1548,14 @@ static irqreturn_t ufshcd_intr(int irq, void
-> *__hba)
->  	struct ufs_hba *hba = __hba;
->
->  	spin_lock(hba->host->host_lock);
-> -	intr_status = readl(hba->mmio_base + REG_INTERRUPT_STATUS);
-> +	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
->
->  	if (intr_status) {
->  		ufshcd_sl_intr(hba, intr_status);
->
->  		/* If UFSHCI 1.0 then clear interrupt status register */
->  		if (hba->ufs_version == UFSHCI_VERSION_10)
-> -			writel(intr_status,
-> -			       (hba->mmio_base + REG_INTERRUPT_STATUS));
-> +			ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
->  		retval = IRQ_HANDLED;
->  	}
->  	spin_unlock(hba->host->host_lock);
-> @@ -1636,8 +1620,7 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
->
->  	/* send command to the controller */
->  	__set_bit(free_slot, &hba->outstanding_tasks);
-> -	writel((1 << free_slot),
-> -	       (hba->mmio_base + REG_UTP_TASK_REQ_DOOR_BELL));
-> +	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
->
->  	spin_unlock_irqrestore(host->host_lock, flags);
->
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 336980b..6429bed 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -204,6 +204,11 @@ struct ufs_hba {
->  	struct ufs_query query;
->  };
->
-> +#define ufshcd_writel(hba, val, reg)	\
-> +	writel((val), (hba)->mmio_base + (reg))
-> +#define ufshcd_readl(hba, reg)	\
-> +	readl((hba)->mmio_base + (reg))
-> +
->  int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
->  			unsigned int);
->  void ufshcd_remove(struct ufs_hba *);
-> @@ -214,7 +219,7 @@ void ufshcd_remove(struct ufs_hba *);
->   */
->  static inline void ufshcd_hba_stop(struct ufs_hba *hba)
->  {
-> -	writel(CONTROLLER_DISABLE, (hba->mmio_base + REG_CONTROLLER_ENABLE));
-> +	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
->  }
->
->  #endif /* End of Header */
-> --
-> 1.7.0.4
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EEBAC0avmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <D10DE1F40B2A134E90C732726AC77E65@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-Maya Erez
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+-----Original Message-----
+From: Mike Christie <michaelc@cs.wisc.edu>
+Date: Monday 6 May 2013 10:36 PM
+To: Zhao Hongjiang <zhaohongjiang@huawei.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, Ravi Anand
+<ravi.anand@qlogic.com>, Vikas <vikas.chaudhary@qlogic.com>, scsi
+<linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH] scsi: add put_device() after device_find_child()
 
+>On 05/06/2013 06:55 AM, Zhao Hongjiang wrote:
+>> The qla4xxx_sysfs_ddb_add() function uses device_find_child() but it
+>>does not drop
+>> the reference of the retrieved child.
+>>=20
+>> Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
+>> ---
+>>  drivers/scsi/qla4xxx/ql4_os.c |    1 +
+>>  1 files changed, 1 insertions(+), 0 deletions(-)
+>>=20
+>> diff --git a/drivers/scsi/qla4xxx/ql4_os.c
+>>b/drivers/scsi/qla4xxx/ql4_os.c
+>> index a47f999..b378d9e 100644
+>> --- a/drivers/scsi/qla4xxx/ql4_os.c
+>> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+>> @@ -5605,6 +5605,7 @@ static int qla4xxx_sysfs_ddb_add(struct Scsi_Host
+>>*shost, const char *buf,
+>>  		ql4_printk(KERN_ERR, ha,
+>>  			   "%s: A non-persistent entry %s found\n",
+>>  			   __func__, dev->kobj.name);
+>> +		put_device(dev);
+>>  		goto exit_ddb_add;
+>>  	}
+>> =20
+>>=20
+>
+>Thanks for catching this. I messed up when reviewing it. For some dumb
+>reason I thought it was not doing refcounting.
+>
+>I think there are a couple bugs from other similar functions. What about
+>the attached patch? It is only compile tested. If it is ok, Vikas,
+>please test.
+
+We have tested this patch and it looks good in our testing.
+I am resending this patch for inclusion with our next patch-set which I am
+sending in next email.
+Thanks for fixing this.
+
+Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EEBAC0avmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+1vk8nEFjJJBLEEtyMyQkwD80FTN/Mko8nBVCo5AAAB8AQgABAAAAIAAAAFYAaQBrAGEAcwAgAEMA
+aABhAHUAZABoAGEAcgB5AAAAHwBlAAEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQBy
+AHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEA
+AQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBWAGkAawBhAHMAIABDAGgAYQB1AGQAaABh
+AHIAeQAAAFMATQBUAFAAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAfAAJdAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8BAAAAPgAAAHMAaQBwADoAdgBpAGsAYQBzAC4A
+YwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAACAAAABW
+AGkAawBhAHMAIABDAGgAYQB1AGQAaABhAHIAeQAAAB8AHwwBAAAANgAAAHYAaQBrAGEAcwAuAGMA
+aABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBN
+AFQAUAAAAAAAAgEZDAEAAAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAVgBpAGsAYQBzACAA
+QwBoAGEAdQBkAGgAYQByAHkAAABTAE0AVABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQBy
+AHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEA
+dQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAAACAAAABWAGkAawBh
+AHMAIABDAGgAYQB1AGQAaABhAHIAeQAAAB8AI0ABAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUA
+ZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAA
+AAAAAgH5PwEAAAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAVgBpAGsAYQBzACAAQwBoAGEA
+dQBkAGgAYQByAHkAAABTAE0AVABQAAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABx
+AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgA
+YQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAALAEA6AQAAAB8AGgABAAAAEgAAAEkAUABN
+AC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAlGWfpjD/
+fUyK+HLfzsTHHAMAFwABAAAAQAA5AIDchB3qS84BQAAIMPFllB3qS84BCwAAgAggBgAAAAAAwAAA
+AAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQA
+bABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAA
+AABGAAAAAAaFAAAAAAAAHwA3AAEAAAB6AAAAUgBlADoAIABbAFAAQQBUAEMASABdACAAcwBjAHMA
+aQA6ACAAYQBkAGQAIABwAHUAdABfAGQAZQB2AGkAYwBlACgAKQAgAGEAZgB0AGUAcgAgAGQAZQB2
+AGkAYwBlAF8AZgBpAG4AZABfAGMAaABpAGwAZAAoACkAAAAAAB8APQABAAAACgAAAFIAZQA6ACAA
+AAAAAAMANgAAAAAAHwBCEAEAAAA+AAAAPAA1ADEAOAA3AEUAMwAzADAALgAxADAAMwAwADgAMAA2
+AEAAYwBzAC4AdwBpAHMAYwAuAGUAZAB1AD4AAAAAAAIBcQABAAAAIAAAAAEBzkpQqLsXK+gn5NhP
+jOzO/OWdSUeY+NjxAIADODEAHwBwAAEAAAByAAAAWwBQAEEAVABDAEgAXQAgAHMAYwBzAGkAOgAg
+AGEAZABkACAAcAB1AHQAXwBkAGUAdgBpAGMAZQAoACkAIABhAGYAdABlAHIAIABkAGUAdgBpAGMA
+ZQBfAGYAaQBuAGQAXwBjAGgAaQBsAGQAKAApAAAAAAAfADUQAQAAAHgAAAA8ADMARgBDADQAQQBC
+ADgAQgA0ADcARQBDAEQANQA0ADYAQgBDAEQANABCADMANgAxAEEANgA0AEIARQBBAEMARAAzADAA
+RQBFAEIAQQBDADAAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAADAN4/n04A
+AEAABzAKQo0d6kvOAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1C
+My0xMzA1MDgxMjQ2NTNaLTE3Nzg3AAAAHwAVEAEAAABYAAAARAAxADAARABFADEARgA0ADAAQgAy
+AEEAMQAzADQARQA5ADAAQwA3ADMAMgA3ADIANgBBAEMANwA3AEUANgA1AEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAAIBFDABAAAADAAAALcAAAABriq/LQAAAB8A+j8BAAAAIAAAAFYAaQBrAGEAcwAg
+AEMAaABhAHUAZABoAGEAcgB5AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIA
+LQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABs
+AG8AbwBrAC8AMQA0AC4AMgAuADQALgAxADIAMAA4ADIANAAAAAAAHwAAgB+k6zOoei5Cvnt54amO
+VLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBu
+AGcARQB4AAAAAQAAABABAABJAEkAPQAwADEAMAAxAEMARQA0AEIARQBBADEARABGADcAQQAyAEYA
+QgBGADAAOAAyADQARAAyAEIANABEADkAMgBEADUAMgA3AEYARQAyAEQANgA4ADAAMgBCADkAOwBT
+AEIATQBJAEQAPQAxADcAOwBTADEAPQA8ADUAMQA4ADcARQAzADMAMAAuADEAMAAzADAAOAAwADYA
+QABjAHMALgB3AGkAcwBjAC4AZQBkAHUAPgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBzAGkAbwBu
+ACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwAxADgALgAwACkALAAgAFMAdABhAGcAZQA9AEgA
+MgAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAt
+AGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgA
+LQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAu
+ADEAMABdAAAAe8A=
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EEBAC0avmb3qlogicorg_--
