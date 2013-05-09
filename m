@@ -1,78 +1,320 @@
-From: Denis Efremov <yefremov.denis@gmail.com>
-Subject: [PATCH 01/21] [SCSI] libiscsi: remove inline marking of EXPORT_SYMBOL functions
-Date: Thu,  9 May 2013 11:58:23 +0400
-Message-ID: <1368086323-9412-1-git-send-email-yefremov.denis@gmail.com>
-References: <1368086241-9357-1-git-send-email-yefremov.denis@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1368086241-9357-1-git-send-email-yefremov.denis@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Denis Efremov <yefremov.denis@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, trivial@kernel.org, ldv-project@linuxtesting.org
+From: Dolev Raviv <draviv@codeaurora.org>
+Subject: [PATCH V4] scsi: ufs: Set fDeviceInit flag to initiate device initialization
+Date: Thu,  9 May 2013 13:06:30 +0300
+Message-ID: <1368093990-20654-1-git-send-email-draviv@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-arm-msm@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-EXPORT_SYMBOL and inline directives are contradictory to each other.
-The patch fixes this inconsistency.
+Allow UFS device to complete its initialization and accept
+SCSI commands by setting fDeviceInit flag. The device may take
+time for this operation and hence the host should poll until
+fDeviceInit flag is toggled to zero. This step is mandated by
+UFS device specification for device initialization completion.
 
-Found by Linux Driver Verification project (linuxtesting.org).
+Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 
-Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
----
- drivers/scsi/libiscsi.c     | 2 +-
- drivers/scsi/libiscsi_tcp.c | 8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+--
+Changes for V4:
+- Add NULL pointer check
+- Changed fix from v3 to bug on since hba can't be null
+Changes for V3:
+- Fix static checker error
+Changes for V2:
+- Add the query sending api via SCSI from the original query patch
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 5de9469..8d8d3a5 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -85,7 +85,7 @@ MODULE_PARM_DESC(debug_libiscsi_eh,
- 					     __func__, ##arg);		\
- 	} while (0);
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 086ff03..742363d 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -107,8 +107,13 @@ enum {
+ 	UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST = 0x81,
+ };
  
--inline void iscsi_conn_queue_work(struct iscsi_conn *conn)
-+void iscsi_conn_queue_work(struct iscsi_conn *conn)
- {
- 	struct Scsi_Host *shost = conn->session->host;
- 	struct iscsi_host *ihost = shost_priv(shost);
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index 552e8a2..2e37fcc 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -309,7 +309,7 @@ iscsi_tcp_segment_recv(struct iscsi_tcp_conn *tcp_conn,
- 	return copied;
++/* Flag idn for Query Requests*/
++enum flag_idn {
++	QUERY_FLAG_IDN_FDEVICEINIT = 0x01,
++};
++
+ /* UTP QUERY Transaction Specific Fields OpCode */
+-enum {
++enum query_opcode {
+ 	UPIU_QUERY_OPCODE_NOP		= 0x0,
+ 	UPIU_QUERY_OPCODE_READ_DESC	= 0x1,
+ 	UPIU_QUERY_OPCODE_WRITE_DESC	= 0x2,
+@@ -208,6 +213,9 @@ struct utp_upiu_query {
+ 	u32 reserved[2];
+ };
+ 
++/* Expose the flag value from utp_upiu_query.value */
++#define MASK_QUERY_UPIU_FLAG_LOC 0xFF
++
+ /**
+  * struct utp_upiu_req - general upiu request structure
+  * @header:UPIU header structure DW-0 to DW-2
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index bcdc576..2248189 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -51,6 +51,15 @@
+ /* Reserved tag for internal commands */
+ #define INTERNAL_CMD_TAG   0
+ 
++/* Query request standart retries */
++#define QUERY_REQ_RETRIES 10
++/* Query request standart timeout  in seconds */
++#define QUERY_REQ_TIMEOUT 5
++/* Send Query Requst with default parameters */
++#define send_query_request(ARG1, ARG2, ARG3, ARG4)	\
++	ufshcd_query_request(ARG1, ARG2, ARG3, ARG4,	\
++			QUERY_REQ_TIMEOUT, QUERY_REQ_RETRIES)
++
+ enum {
+ 	UFSHCD_MAX_CHANNEL	= 0,
+ 	UFSHCD_MAX_ID		= 1,
+@@ -887,6 +896,164 @@ out:
  }
  
--inline void
-+void
- iscsi_tcp_dgst_header(struct hash_desc *hash, const void *hdr, size_t hdrlen,
- 		      unsigned char digest[ISCSI_DIGEST_SIZE])
- {
-@@ -353,7 +353,7 @@ __iscsi_segment_init(struct iscsi_segment *segment, size_t size,
- 	}
+ /**
++ *  ufshcd_query_request() - Entry point for issuing query request to a
++ *  ufs device.
++ *  @hba: ufs driver context
++ *  @query: params for query request
++ *  @descriptor: buffer for sending/receiving descriptor
++ *  @response: pointer to a buffer that will contain the response code and
++ *           response upiu
++ *  @timeout: time limit for the command in seconds
++ *  @retries: number of times to try executing the command
++ *
++ *  The query request is submitted to the same request queue as the rest of
++ *  the scsi commands passed to the UFS controller. In order to use this
++ *  queue, we need to receive a tag, same as all other commands. The tags
++ *  are issued from the block layer. To simulate a request from the block
++ *  layer, we use the same interface as the SCSI layer does when it issues
++ *  commands not generated by users. To distinguish a query request from
++ *  the SCSI commands, we use a vendor specific unused SCSI command
++ *  op-code. This op-code is not part of the SCSI command subset used in
++ *  UFS. In such way it is easy to check the command in the driver and
++ *  handle it appropriately.
++ *
++ *  All necessary fields for issuing a query and receiving its response are
++ *  stored in the UFS hba struct. We can use this method since we know
++ *  there is only one active query request at all times.
++ *
++ *  The request that will pass to the device is stored in "query" argument
++ *  passed to this function, while the "response" argument (which is output
++ *  field) will hold the query response from the device along with the
++ *  response code.
++ */
++int ufshcd_query_request(struct ufs_hba *hba,
++			struct ufs_query_req *query,
++			u8 *descriptor,
++			struct ufs_query_res *response,
++			int timeout,
++			int retries)
++{
++	struct scsi_device *sdev;
++	u8 cmd[UFS_QUERY_CMD_SIZE] = {0};
++	int result;
++	bool sdev_lookup = true;
++
++	BUG_ON(!hba);
++	if (!query || !response) {
++		dev_err(hba->dev,
++		"%s: NULL pointer hba = %p, query = %p response = %p\n",
++		__func__, hba, query, response);
++		return -EINVAL;
++	}
++
++	/*
++	 * A SCSI command structure is composed from opcode at the
++	 * begining and 0 at the end.
++	 */
++	cmd[0] = UFS_QUERY_RESERVED_SCSI_CMD;
++
++	/* extracting the SCSI Device */
++	sdev = scsi_device_lookup(hba->host, 0, 0, 0);
++	if (!sdev) {
++		/**
++		 * There are some Query Requests that are sent during device
++		 * initialization, this happens before the scsi device was
++		 * initialized. If there is no scsi device, we generate a
++		 * temporary device to allow the Query Request flow.
++		 */
++		sdev_lookup = false;
++		sdev = scsi_get_host_dev(hba->host);
++	}
++
++	if (!sdev) {
++		dev_err(hba->dev, "%s: Could not fetch scsi device\n",
++			__func__);
++		return -ENODEV;
++	}
++
++	mutex_lock(&hba->query.lock_ufs_query);
++	hba->query.request = query;
++	hba->query.descriptor = descriptor;
++	hba->query.response = response;
++
++	/* wait until request is completed */
++	result = scsi_execute(sdev, cmd, DMA_NONE, NULL, 0, NULL,
++				timeout, retries, 0, NULL);
++	if (result) {
++		dev_err(hba->dev,
++			"%s: Query with opcode 0x%x, failed with result %d\n",
++			__func__, query->upiu_req.opcode, result);
++		result = -EIO;
++	}
++
++	hba->query.request = NULL;
++	hba->query.descriptor = NULL;
++	hba->query.response = NULL;
++	mutex_unlock(&hba->query.lock_ufs_query);
++
++	/* Releasing scsi device resource */
++	if (sdev_lookup)
++		scsi_device_put(sdev);
++	else
++		scsi_free_host_dev(sdev);
++
++	return result;
++}
++
++/**
++ * ufshcd_query_flag() - Helper function for composing flag query requests
++ * hba: per-adapter instance
++ * query_opcode: flag query to perform
++ * idn: flag idn to access
++ * flag_res: the flag value after the query request completes
++ *
++ * Returns 0 for success, non-zero in case of failure
++ */
++int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
++			enum flag_idn idn, bool *flag_res)
++{
++	struct ufs_query_req query = {0};
++	struct ufs_query_res response = {0};
++	int err;
++
++	switch (opcode) {
++	case UPIU_QUERY_OPCODE_SET_FLAG:
++	case UPIU_QUERY_OPCODE_CLEAR_FLAG:
++	case UPIU_QUERY_OPCODE_TOGGLE_FLAG:
++		query.query_func = UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
++		break;
++	case UPIU_QUERY_OPCODE_READ_FLAG:
++		query.query_func = UPIU_QUERY_FUNC_STANDARD_READ_REQUEST;
++		break;
++	default:
++		dev_err(hba->dev,
++			"%s: Expected query flag opcode but got = %d\n",
++			__func__, opcode);
++		err = -EINVAL;
++		goto out;
++	}
++	query.upiu_req.opcode = opcode;
++	query.upiu_req.idn = idn;
++
++	/* Send query request */
++	err = send_query_request(hba, &query, NULL, &response);
++
++	if (err) {
++		dev_err(hba->dev,
++			"%s: Sending flag query for idn %d failed, err = %d\n",
++			__func__, idn, err);
++		goto out;
++	}
++
++	if (flag_res)
++		*flag_res = (response.upiu_res.value &
++				MASK_QUERY_UPIU_FLAG_LOC) & 0x1;
++
++out:
++	return err;
++}
++
++/**
+  * ufshcd_memory_alloc - allocate memory for host memory space data structures
+  * @hba: per adapter instance
+  *
+@@ -1324,6 +1491,44 @@ out:
  }
  
--inline void
-+void
- iscsi_segment_init_linear(struct iscsi_segment *segment, void *data,
- 			  size_t size, iscsi_segment_done_fn_t *done,
- 			  struct hash_desc *hash)
-@@ -364,7 +364,7 @@ iscsi_segment_init_linear(struct iscsi_segment *segment, void *data,
- }
- EXPORT_SYMBOL_GPL(iscsi_segment_init_linear);
+ /**
++ * ufshcd_validate_device_init() - checks device readines
++ * hba: per-adapter instance
++ *
++ * Set fDeviceInit flag, than, query the flag untill the device clears the
++ * flag.
++ */
++static int ufshcd_validate_device_init(struct ufs_hba *hba)
++{
++	int i, err;
++	bool flag_res = 0;
++
++	err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
++				QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
++	if (err) {
++		dev_err(hba->dev,
++			"%s setting fDeviceInit flag failed with error %d\n",
++			__func__, err);
++		goto out;
++	}
++
++	for (i = 0; i < QUERY_REQ_RETRIES && !err && flag_res; i++) {
++		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
++				QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
++	}
++	if (err)
++		dev_err(hba->dev,
++			"%s reading fDeviceInit flag failed with error %d\n",
++			__func__, err);
++	else if (flag_res)
++		dev_err(hba->dev,
++			"%s fDeviceInit was not cleared by the device\n",
++			__func__);
++
++out:
++	return err;
++}
++
++/**
+  * ufshcd_make_hba_operational - Make UFS controller operational
+  * @hba: per adapter instance
+  *
+@@ -2153,6 +2358,10 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	if (ret)
+ 		goto out;
  
--inline int
-+int
- iscsi_segment_seek_sg(struct iscsi_segment *segment,
- 		      struct scatterlist *sg_list, unsigned int sg_count,
- 		      unsigned int offset, size_t size,
-@@ -852,7 +852,7 @@ iscsi_tcp_hdr_recv_done(struct iscsi_tcp_conn *tcp_conn,
-  * returns non zero if we are currently processing or setup to process
-  * a header.
-  */
--inline int iscsi_tcp_recv_segment_is_hdr(struct iscsi_tcp_conn *tcp_conn)
-+int iscsi_tcp_recv_segment_is_hdr(struct iscsi_tcp_conn *tcp_conn)
- {
- 	return tcp_conn->in.segment.done == iscsi_tcp_hdr_recv_done;
++	ret = ufshcd_validate_device_init(hba);
++	if (ret)
++		goto out;
++
+ 	scsi_scan_host(hba->host);
+ out:
+ 	return;
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index a91c558..76485da 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -286,4 +286,11 @@ static inline int ufshcd_dme_hibern8_exit(struct ufs_hba *hba)
+ 	return ufshcd_dme_hibern8_ctrl(hba, 0);
  }
+ 
++int ufs_query_request(struct ufs_hba *hba,
++			struct ufs_query_req *query,
++			u8 *descriptor,
++			struct ufs_query_res *response,
++			int timeout,
++			int retries);
++
+ #endif /* End of Header */
 -- 
-1.8.1.4
+1.7.6
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
