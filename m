@@ -1,65 +1,110 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v4 1/6] scsi: ufs: wrap the i/o access operations
-Date: Thu, 09 May 2013 07:21:50 -0700
-Message-ID: <1368109310.1966.3.camel@dabdike>
-References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
-	 <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com>
-	 <000b01ce48a3$ad7072e0$085158a0$%jun@samsung.com>
-	 <002401ce4bc7$cda068a0$68e139e0$%jun@samsung.com>
-	 <CALMYJDtFA9PTu++4ijuUujOU=N9Sw=+=pH4KpTCVqLQmL6uE7A@mail.gmail.com>
-	 <000201ce4c58$e3bc3b00$ab34b100$%jun@samsung.com>
-	 <CALMYJDuj9SH8isLD-CjOivBAGE80P85KkUTErki-PJFXH3Scgw@mail.gmail.com>
-	 <000901ce4c7f$f47fd920$dd7f8b60$%jun@samsung.com>
-	 <CALMYJDudt2T1QXH6AidO31by_UfeLRFiz6VBz7GqApMn_kw63g@mail.gmail.com>
+From: wenxiong@linux.vnet.ibm.com
+Subject: Re: [PATCH 3/3] ipr: Avoid target_destroy accessing memory after it
+ was freed
+Date: Thu, 09 May 2013 12:32:51 -0400
+Message-ID: <20130509123251.Horde.QCkcE5ir309Ri8_zg1zUKrA@imap.linux.ibm.com>
+References: <20130314185222.994529433@linux.vnet.ibm.com>
+ <20130314185803.484999352@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50663 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751222Ab3EIOVy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 May 2013 10:21:54 -0400
-In-Reply-To: <CALMYJDudt2T1QXH6AidO31by_UfeLRFiz6VBz7GqApMn_kw63g@mail.gmail.com>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:46612 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751969Ab3EIQc7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 May 2013 12:32:59 -0400
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
+	Thu, 9 May 2013 12:32:58 -0400
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 4EB846E803C
+	for <linux-scsi@vger.kernel.org>; Thu,  9 May 2013 12:32:49 -0400 (EDT)
+Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r49GWqms304928
+	for <linux-scsi@vger.kernel.org>; Thu, 9 May 2013 12:32:52 -0400
+Received: from d01av05.pok.ibm.com (loopback [127.0.0.1])
+	by d01av05.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r49GWpq0026345
+	for <linux-scsi@vger.kernel.org>; Thu, 9 May 2013 12:32:52 -0400
+In-Reply-To: <20130314185803.484999352@linux.vnet.ibm.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Santosh Y <santoshsy@gmail.com>
-Cc: Seungwon Jeon <tgih.jun@samsung.com>, linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, klebers@linux.vnet.ibm.com
 
-On Thu, 2013-05-09 at 12:22 +0530, Santosh Y wrote:
-> On Thu, May 9, 2013 at 12:09 PM, Seungwon Jeon <tgih.jun@samsung.com> wrote:
-> > On Thursday, May 09, 2013 Santosh wrote:
-> >> > There are two patches remained. These are applied with your final comments.
-> >> > Do you have any idea?
-> >> > [PATCH v4 5/6] scsi: ufs: add dme configuration primitives
-> >> > [PATCH v4 6/6] scsi: ufs: add dme control primitives
-> >> >
-> >>
-> >> Since there is no use case for these implementations yet, except for
-> >> ufshcd_get_dme_attr_val(), as per James's suggestion
-> >> [http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg20207.html]
-> >> I did not ACK the patches.
-> >> The same patches can be used to implement related features and resubmit later.
-> > I respect your decision. But I have another opinion.
-> > The remained patches are basic operations which should be supported by ufshcd.
-> > Especially, dme_set/set will be used in vender specific part of host controller rather than in ufshcd itself.
-> > And above all, Maya Erez completed to test and reported working fine.
-> > If these patches are merged this time, it would be helpful to various hosts.
-> >
-> 
-> I'm ok with merging these patches if James is fine with it. I will ACK
-> the patches.
+Hi James,
 
-Well, no, not really.  The rule is simple: we don't add new functions to
-the kernel without callers.  The reason is also simple: trying to do
-interface first and then user some time later is a "make work"
-development strategy that practically guarantees the interface is either
-never used or needs modification.  From the kernel's point of view,
-which is more important, review of a function with no callers is only
-partial because you've no idea how it will be used.  Whereas if you
-review a function and its callers, you can see how the API works and
-possibly suggest improvements.
+Patch 1 and Patch 2 merged into next-scsi and 3.9.0 on 4/6/13 but  
+Patch3 is missed in both of next-scsi
+and 3.9.0 tree. Can you merge Patch 3 or I need to re-send the Patch3?
 
-James
+Thanks for your help!
+Wendy
+
+Quoting wenxiong@linux.vnet.ibm.com:
+
+> Defined target_ids,array_ids and vsets_ids as unsigned long to avoid
+> target_destroy accessing memory after it was freed.
+>
+>
+> Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/ipr.c |   16 ----------------
+>  drivers/scsi/ipr.h |    6 +++---
+>  2 files changed, 3 insertions(+), 19 deletions(-)
+>
+> Index: b/drivers/scsi/ipr.c
+> ===================================================================
+> --- a/drivers/scsi/ipr.c	2013-03-14 13:16:03.398966326 -0500
+> +++ b/drivers/scsi/ipr.c	2013-03-14 13:17:04.828022126 -0500
+> @@ -8972,19 +8972,6 @@ static int ipr_alloc_mem(struct ipr_ioa_
+>  	if (!ioa_cfg->res_entries)
+>  		goto out;
+>
+> -	if (ioa_cfg->sis64) {
+> -		ioa_cfg->target_ids = kzalloc(sizeof(unsigned long) *
+> -					      BITS_TO_LONGS(ioa_cfg->max_devs_supported), GFP_KERNEL);
+> -		ioa_cfg->array_ids = kzalloc(sizeof(unsigned long) *
+> -					     BITS_TO_LONGS(ioa_cfg->max_devs_supported), GFP_KERNEL);
+> -		ioa_cfg->vset_ids = kzalloc(sizeof(unsigned long) *
+> -					    BITS_TO_LONGS(ioa_cfg->max_devs_supported), GFP_KERNEL);
+> -
+> -		if (!ioa_cfg->target_ids || !ioa_cfg->array_ids
+> -			|| !ioa_cfg->vset_ids)
+> -			goto out_free_res_entries;
+> -	}
+> -
+>  	for (i = 0; i < ioa_cfg->max_devs_supported; i++) {
+>  		list_add_tail(&ioa_cfg->res_entries[i].queue, &ioa_cfg->free_res_q);
+>  		ioa_cfg->res_entries[i].ioa_cfg = ioa_cfg;
+> @@ -9081,9 +9068,6 @@ out_free_vpd_cbs:
+>  			    ioa_cfg->vpd_cbs, ioa_cfg->vpd_cbs_dma);
+>  out_free_res_entries:
+>  	kfree(ioa_cfg->res_entries);
+> -	kfree(ioa_cfg->target_ids);
+> -	kfree(ioa_cfg->array_ids);
+> -	kfree(ioa_cfg->vset_ids);
+>  	goto out;
+>  }
+>
+> Index: b/drivers/scsi/ipr.h
+> ===================================================================
+> --- a/drivers/scsi/ipr.h	2013-03-14 11:49:21.408965542 -0500
+> +++ b/drivers/scsi/ipr.h	2013-03-14 13:16:20.131452448 -0500
+> @@ -1440,9 +1440,9 @@ struct ipr_ioa_cfg {
+>  	/*
+>  	 * Bitmaps for SIS64 generated target values
+>  	 */
+> -	unsigned long *target_ids;
+> -	unsigned long *array_ids;
+> -	unsigned long *vset_ids;
+> +	unsigned long target_ids[BITS_TO_LONGS(IPR_MAX_SIS64_DEVS)];
+> +	unsigned long array_ids[BITS_TO_LONGS(IPR_MAX_SIS64_DEVS)];
+> +	unsigned long vset_ids[BITS_TO_LONGS(IPR_MAX_SIS64_DEVS)];
+>
+>  	u16 type; /* CCIN of the card */
+>
+>
+> --
 
 
 
