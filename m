@@ -1,37 +1,40 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH v4 1/6] scsi: ufs: wrap the i/o access operations
-Date: Thu, 9 May 2013 08:57:49 +0530
-Message-ID: <CALMYJDuj9SH8isLD-CjOivBAGE80P85KkUTErki-PJFXH3Scgw@mail.gmail.com>
-References: <1366812872-26331-1-git-send-email-sthumma@codeaurora.org>
- <001e01ce4105$ab4e2430$01ea6c90$%jun@samsung.com> <000b01ce48a3$ad7072e0$085158a0$%jun@samsung.com>
- <002401ce4bc7$cda068a0$68e139e0$%jun@samsung.com> <CALMYJDtFA9PTu++4ijuUujOU=N9Sw=+=pH4KpTCVqLQmL6uE7A@mail.gmail.com>
- <000201ce4c58$e3bc3b00$ab34b100$%jun@samsung.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [ANNOUNCE] lsscsi version 0.27 released
+Date: Thu, 09 May 2013 00:08:00 -0400
+Message-ID: <518B2120.9040607@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:47097 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753353Ab3EID2L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 May 2013 23:28:11 -0400
-Received: by mail-bk0-f50.google.com with SMTP id ik5so1215908bkc.23
-        for <linux-scsi@vger.kernel.org>; Wed, 08 May 2013 20:28:09 -0700 (PDT)
-In-Reply-To: <000201ce4c58$e3bc3b00$ab34b100$%jun@samsung.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, =?ISO-8859-1?Q?Dan_Hor?= =?ISO-8859-1?Q?=E1k?= <dhorak@redhat.com>, Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>
 
-> There are two patches remained. These are applied with your final comments.
-> Do you have any idea?
-> [PATCH v4 5/6] scsi: ufs: add dme configuration primitives
-> [PATCH v4 6/6] scsi: ufs: add dme control primitives
->
+lsscsi is a command line utility that probes sysfs in Linux
+2.6 and 3 series kernels in order to list information about
+SCSI devices and SCSI hosts. Both a compact format which is
+one line per device and a "classic" format (like the output
+of 'cat /proc/scsi/scsi') are supported.
 
-Since there is no use case for these implementations yet, except for
-ufshcd_get_dme_attr_val(), as per James's suggestion
-[http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg20207.html]
-I did not ACK the patches.
-The same patches can be used to implement related features and resubmit later.
+Version 0.27 is available at:
+     http://sg.danny.cz/scsi/lsscsi.html
+More information can be found on that page including examples
+plus a Download and Build information section containing
+tarballs, rpm and deb packages.
 
--- 
-~Santosh
+
+ChangeLog:
+Version 0.27 2013/05/08 [svn: r111]
+   - rework buffer handling for systems with many disks
+   - add --lunhex option for displaying LUNs in hex
+   - accept LUNs from sysfs as large as a 64 bit unsigned
+     decimal number (largest was signed 32 bit decimal)
+   - accept LSSCSI_LUNHEX_OPT environment variable
+   - add --scsi_id option for /dev/disk/by-id/scsi*
+
+Version 0.26 2012/01/31 [svn: r97]
+....
+
+Doug Gilbert
