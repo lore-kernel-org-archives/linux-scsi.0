@@ -1,14 +1,14 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 2/8] iscsi_transport: Additional parameters for net settings
-Date: Thu, 9 May 2013 06:02:06 -0400
-Message-ID: <1368093732-8524-3-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 3/8] qla4xxx: Additional parameters for net settings
+Date: Thu, 9 May 2013 06:02:07 -0400
+Message-ID: <1368093732-8524-4-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1368093732-8524-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db8lp0187.outbound.messaging.microsoft.com ([213.199.154.187]:27620
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753597Ab3EIK0t (ORCPT
+Received: from co9ehsobe003.messaging.microsoft.com ([207.46.163.26]:27099
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753669Ab3EIK0t (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 May 2013 06:26:49 -0400
 In-Reply-To: <1368093732-8524-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,520 +18,1478 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
-Added support to display and update additional network parameters
-through iscsiadm
-
 Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 331 +++++++++++++++++++++++++++++++++++-
- include/scsi/iscsi_if.h             |  78 +++++++++
- include/scsi/scsi_transport_iscsi.h |   3 +
- 3 files changed, 411 insertions(+), 1 deletion(-)
+ drivers/scsi/qla4xxx/ql4_def.h  |   31 ++
+ drivers/scsi/qla4xxx/ql4_fw.h   |   53 +-
+ drivers/scsi/qla4xxx/ql4_glbl.h |    1 +
+ drivers/scsi/qla4xxx/ql4_isr.c  |   32 ++
+ drivers/scsi/qla4xxx/ql4_mbx.c  |  119 ++++-
+ drivers/scsi/qla4xxx/ql4_os.c   | 1057 +++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 1283 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 133926b..315c8b6 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -306,11 +306,38 @@ show_##type##_##name(struct device *dev, struct device_attribute *attr,	\
- 	iscsi_iface_attr_show(type, name, ISCSI_NET_PARAM, param)	\
- static ISCSI_IFACE_ATTR(type, name, S_IRUGO, show_##type##_##name, NULL);
- 
--/* generic read only ipvi4 attribute */
-+/* generic read only ipv4 attribute */
- iscsi_iface_net_attr(ipv4_iface, ipaddress, ISCSI_NET_PARAM_IPV4_ADDR);
- iscsi_iface_net_attr(ipv4_iface, gateway, ISCSI_NET_PARAM_IPV4_GW);
- iscsi_iface_net_attr(ipv4_iface, subnet, ISCSI_NET_PARAM_IPV4_SUBNET);
- iscsi_iface_net_attr(ipv4_iface, bootproto, ISCSI_NET_PARAM_IPV4_BOOTPROTO);
-+iscsi_iface_net_attr(ipv4_iface, dhcp_dns_address_enabled,
-+		     ISCSI_NET_PARAM_IPV4_DHCP_DNS_ADDR_EN);
-+iscsi_iface_net_attr(ipv4_iface, dhcp_slp_da_info_enabled,
-+		     ISCSI_NET_PARAM_IPV4_DHCP_SLP_DA_EN);
-+iscsi_iface_net_attr(ipv4_iface, dhcp_req_isns_info_enabled,
-+		     ISCSI_NET_PARAM_IPV4_DHCP_REQ_ISNS_INFO_EN);
-+iscsi_iface_net_attr(ipv4_iface, tos_enabled, ISCSI_NET_PARAM_IPV4_TOS_EN);
-+iscsi_iface_net_attr(ipv4_iface, tos, ISCSI_NET_PARAM_IPV4_TOS);
-+iscsi_iface_net_attr(ipv4_iface, grat_arp_enabled,
-+		     ISCSI_NET_PARAM_IPV4_GRAT_ARP_EN);
-+iscsi_iface_net_attr(ipv4_iface, dhcp_alt_client_id_enabled,
-+		     ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID_EN);
-+iscsi_iface_net_attr(ipv4_iface, dhcp_alt_client_id,
-+		     ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID);
-+iscsi_iface_net_attr(ipv4_iface, dhcp_req_vendor_id_enabled,
-+		     ISCSI_NET_PARAM_IPV4_DHCP_REQ_VENDOR_ID_EN);
-+iscsi_iface_net_attr(ipv4_iface, dhcp_use_vendor_id_enabled,
-+		     ISCSI_NET_PARAM_IPV4_DHCP_USE_VENDOR_ID_EN);
-+iscsi_iface_net_attr(ipv4_iface, dhcp_vendor_id,
-+		     ISCSI_NET_PARAM_IPV4_DHCP_VENDOR_ID);
-+iscsi_iface_net_attr(ipv4_iface, dhcp_learn_iqn_enabled,
-+		     ISCSI_NET_PARAM_IPV4_DHCP_LEARN_IQN_EN);
-+iscsi_iface_net_attr(ipv4_iface, fragmentation_enabled,
-+		     ISCSI_NET_PARAM_IPV4_FRAGMENT_EN);
-+iscsi_iface_net_attr(ipv4_iface, incoming_forwarding_enabled,
-+		     ISCSI_NET_PARAM_IPV4_IN_FORWARD_EN);
-+iscsi_iface_net_attr(ipv4_iface, ttl, ISCSI_NET_PARAM_IPV4_TTL);
- 
- /* generic read only ipv6 attribute */
- iscsi_iface_net_attr(ipv6_iface, ipaddress, ISCSI_NET_PARAM_IPV6_ADDR);
-@@ -320,6 +347,27 @@ iscsi_iface_net_attr(ipv6_iface, ipaddr_autocfg,
- 		     ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG);
- iscsi_iface_net_attr(ipv6_iface, link_local_autocfg,
- 		     ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG);
-+iscsi_iface_net_attr(ipv6_iface, link_local_state,
-+		     ISCSI_NET_PARAM_IPV6_LINKLOCAL_STATE);
-+iscsi_iface_net_attr(ipv6_iface, router_state,
-+		     ISCSI_NET_PARAM_IPV6_ROUTER_STATE);
-+iscsi_iface_net_attr(ipv6_iface, grat_neighbor_adv_enabled,
-+		     ISCSI_NET_PARAM_IPV6_GRAT_NEIGHBOR_ADV_EN);
-+iscsi_iface_net_attr(ipv6_iface, mld_enabled, ISCSI_NET_PARAM_IPV6_MLD_EN);
-+iscsi_iface_net_attr(ipv6_iface, flow_label, ISCSI_NET_PARAM_IPV6_FLOW_LABEL);
-+iscsi_iface_net_attr(ipv6_iface, traffic_class,
-+		     ISCSI_NET_PARAM_IPV6_TRAFFIC_CLASS);
-+iscsi_iface_net_attr(ipv6_iface, hop_limit, ISCSI_NET_PARAM_IPV6_HOP_LIMIT);
-+iscsi_iface_net_attr(ipv6_iface, nd_reachable_tmo,
-+		     ISCSI_NET_PARAM_IPV6_ND_REACHABLE_TMO);
-+iscsi_iface_net_attr(ipv6_iface, nd_rexmit_time,
-+		     ISCSI_NET_PARAM_IPV6_ND_REXMIT_TIME);
-+iscsi_iface_net_attr(ipv6_iface, nd_stale_tmo,
-+		     ISCSI_NET_PARAM_IPV6_ND_STALE_TMO);
-+iscsi_iface_net_attr(ipv6_iface, dup_addr_det_cnt,
-+		     ISCSI_NET_PARAM_IPV6_DUP_ADDR_DET_CNT);
-+iscsi_iface_net_attr(ipv6_iface, router_adv_link_mtu,
-+		     ISCSI_NET_PARAM_IPV6_RTR_ADV_LINK_MTU);
- 
- /* common read only iface attribute */
- iscsi_iface_net_attr(iface, enabled, ISCSI_NET_PARAM_IFACE_ENABLE);
-@@ -328,6 +376,51 @@ iscsi_iface_net_attr(iface, vlan_priority, ISCSI_NET_PARAM_VLAN_PRIORITY);
- iscsi_iface_net_attr(iface, vlan_enabled, ISCSI_NET_PARAM_VLAN_ENABLED);
- iscsi_iface_net_attr(iface, mtu, ISCSI_NET_PARAM_MTU);
- iscsi_iface_net_attr(iface, port, ISCSI_NET_PARAM_PORT);
-+iscsi_iface_net_attr(iface, ipaddress_state, ISCSI_NET_PARAM_IPADDR_STATE);
-+iscsi_iface_net_attr(iface, delayed_ack_enabled,
-+		     ISCSI_NET_PARAM_DELAYED_ACK_EN);
-+iscsi_iface_net_attr(iface, isns_enabled, ISCSI_NET_PARAM_ISNS_EN);
-+iscsi_iface_net_attr(iface, isns_address, ISCSI_NET_PARAM_ISNS_ADDR);
-+iscsi_iface_net_attr(iface, isns_port, ISCSI_NET_PARAM_ISNS_PORT);
-+iscsi_iface_net_attr(iface, nagle_enabled, ISCSI_NET_PARAM_NAGLE_EN);
-+iscsi_iface_net_attr(iface, tcp_window_scale_enabled,
-+		     ISCSI_NET_PARAM_TCP_WIN_SCALE_EN);
-+iscsi_iface_net_attr(iface, tcp_window_scale, ISCSI_NET_PARAM_TCP_WIN_SCALE);
-+iscsi_iface_net_attr(iface, tcp_timer_scale, ISCSI_NET_PARAM_TCP_TIMER_SCALE);
-+iscsi_iface_net_attr(iface, tcp_timestamp_enabled,
-+		     ISCSI_NET_PARAM_TCP_TIMESTAMP_EN);
-+iscsi_iface_net_attr(iface, cache_id, ISCSI_NET_PARAM_CACHE_ID);
-+iscsi_iface_net_attr(iface, def_tmf_timeout, ISCSI_NET_PARAM_DEF_TMF_TMO);
-+iscsi_iface_net_attr(iface, def_hdr_dgst_enabled,
-+		     ISCSI_NET_PARAM_DEF_HDRDGST_EN);
-+iscsi_iface_net_attr(iface, def_data_dgst_enabled,
-+		     ISCSI_NET_PARAM_DEF_DATADGST_EN);
-+iscsi_iface_net_attr(iface, def_immediate_data_enabled,
-+		     ISCSI_NET_PARAM_DEF_IMM_DATA_EN);
-+iscsi_iface_net_attr(iface, def_initial_r2t_enabled,
-+		     ISCSI_NET_PARAM_DEF_INITIAL_R2T_EN);
-+iscsi_iface_net_attr(iface, def_data_seq_inorder_enabled,
-+		     ISCSI_NET_PARAM_DEF_DATASEQ_INORDER_EN);
-+iscsi_iface_net_attr(iface, def_data_pdu_inorder_enabled,
-+		     ISCSI_NET_PARAM_DEF_PDU_INORDER_EN);
-+iscsi_iface_net_attr(iface, def_erl, ISCSI_NET_PARAM_DEF_ERL);
-+iscsi_iface_net_attr(iface, def_max_recv_dlen,
-+		     ISCSI_NET_PARAM_DEF_MAX_RECV_DLENGTH);
-+iscsi_iface_net_attr(iface, def_first_burst, ISCSI_NET_PARAM_DEF_FIRST_BURST);
-+iscsi_iface_net_attr(iface, def_max_r2t, ISCSI_NET_PARAM_DEF_MAX_R2T);
-+iscsi_iface_net_attr(iface, def_max_burst, ISCSI_NET_PARAM_DEF_MAX_BURST);
-+iscsi_iface_net_attr(iface, def_chap_auth_enabled,
-+		     ISCSI_NET_PARAM_DEF_CHAP_AUTH_EN);
-+iscsi_iface_net_attr(iface, def_bidi_chap_enabled,
-+		     ISCSI_NET_PARAM_DEF_BIDI_CHAP_EN);
-+iscsi_iface_net_attr(iface, def_strict_login_comp_enabled,
-+		     ISCSI_NET_PARAM_DEF_STRICT_LOGIN_COMP_EN);
-+iscsi_iface_net_attr(iface, def_discovery_auth_enabled,
-+		     ISCSI_NET_PARAM_DEF_DISCOVERY_AUTH_EN);
-+iscsi_iface_net_attr(iface, def_discovery_logout_enabled,
-+		     ISCSI_NET_PARAM_DEF_DISCOVERY_LOGOUT_EN);
-+iscsi_iface_net_attr(iface, def_iscsi_name, ISCSI_NET_PARAM_DEF_ISCSI_NAME);
-+iscsi_iface_net_attr(iface, redirect_enabled, ISCSI_NET_PARAM_REDIRECT_EN);
- 
- static umode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
- 					  struct attribute *attr, int i)
-@@ -349,6 +442,66 @@ static umode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
- 		param = ISCSI_NET_PARAM_MTU;
- 	else if (attr == &dev_attr_iface_port.attr)
- 		param = ISCSI_NET_PARAM_PORT;
-+	else if (attr == &dev_attr_iface_ipaddress_state.attr)
-+		param = ISCSI_NET_PARAM_IPADDR_STATE;
-+	else if (attr == &dev_attr_iface_delayed_ack_enabled.attr)
-+		param = ISCSI_NET_PARAM_DELAYED_ACK_EN;
-+	else if (attr == &dev_attr_iface_isns_enabled.attr)
-+		param = ISCSI_NET_PARAM_ISNS_EN;
-+	else if (attr == &dev_attr_iface_isns_address.attr)
-+		param = ISCSI_NET_PARAM_ISNS_ADDR;
-+	else if (attr == &dev_attr_iface_isns_port.attr)
-+		param = ISCSI_NET_PARAM_ISNS_PORT;
-+	else if (attr == &dev_attr_iface_nagle_enabled.attr)
-+		param = ISCSI_NET_PARAM_NAGLE_EN;
-+	else if (attr == &dev_attr_iface_tcp_window_scale_enabled.attr)
-+		param = ISCSI_NET_PARAM_TCP_WIN_SCALE_EN;
-+	else if (attr == &dev_attr_iface_tcp_window_scale.attr)
-+		param = ISCSI_NET_PARAM_TCP_WIN_SCALE;
-+	else if (attr == &dev_attr_iface_tcp_timer_scale.attr)
-+		param = ISCSI_NET_PARAM_TCP_TIMER_SCALE;
-+	else if (attr == &dev_attr_iface_tcp_timestamp_enabled.attr)
-+		param = ISCSI_NET_PARAM_TCP_TIMESTAMP_EN;
-+	else if (attr == &dev_attr_iface_cache_id.attr)
-+		param = ISCSI_NET_PARAM_CACHE_ID;
-+	else if (attr == &dev_attr_iface_def_tmf_timeout.attr)
-+		param = ISCSI_NET_PARAM_DEF_TMF_TMO;
-+	else if (attr == &dev_attr_iface_def_hdr_dgst_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_HDRDGST_EN;
-+	else if (attr == &dev_attr_iface_def_data_dgst_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_DATADGST_EN;
-+	else if (attr == &dev_attr_iface_def_immediate_data_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_IMM_DATA_EN;
-+	else if (attr == &dev_attr_iface_def_initial_r2t_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_INITIAL_R2T_EN;
-+	else if (attr == &dev_attr_iface_def_data_seq_inorder_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_DATASEQ_INORDER_EN;
-+	else if (attr == &dev_attr_iface_def_data_pdu_inorder_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_PDU_INORDER_EN;
-+	else if (attr == &dev_attr_iface_def_erl.attr)
-+		param = ISCSI_NET_PARAM_DEF_ERL;
-+	else if (attr == &dev_attr_iface_def_max_recv_dlen.attr)
-+		param = ISCSI_NET_PARAM_DEF_MAX_RECV_DLENGTH;
-+	else if (attr == &dev_attr_iface_def_first_burst.attr)
-+		param = ISCSI_NET_PARAM_DEF_FIRST_BURST;
-+	else if (attr == &dev_attr_iface_def_max_r2t.attr)
-+		param = ISCSI_NET_PARAM_DEF_MAX_R2T;
-+	else if (attr == &dev_attr_iface_def_max_burst.attr)
-+		param = ISCSI_NET_PARAM_DEF_MAX_BURST;
-+	else if (attr == &dev_attr_iface_def_chap_auth_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_CHAP_AUTH_EN;
-+	else if (attr == &dev_attr_iface_def_bidi_chap_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_BIDI_CHAP_EN;
-+	else if (attr == &dev_attr_iface_def_strict_login_comp_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_STRICT_LOGIN_COMP_EN;
-+	else if (attr == &dev_attr_iface_def_discovery_auth_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_DISCOVERY_AUTH_EN;
-+	else if (attr == &dev_attr_iface_def_discovery_logout_enabled.attr)
-+		param = ISCSI_NET_PARAM_DEF_DISCOVERY_LOGOUT_EN;
-+	else if (attr == &dev_attr_iface_def_iscsi_name.attr)
-+		param = ISCSI_NET_PARAM_DEF_ISCSI_NAME;
-+	else if (attr == &dev_attr_iface_redirect_enabled.attr)
-+		param = ISCSI_NET_PARAM_REDIRECT_EN;
- 	else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4) {
- 		if (attr == &dev_attr_ipv4_iface_ipaddress.attr)
- 			param = ISCSI_NET_PARAM_IPV4_ADDR;
-@@ -358,6 +511,45 @@ static umode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
- 			param = ISCSI_NET_PARAM_IPV4_SUBNET;
- 		else if (attr == &dev_attr_ipv4_iface_bootproto.attr)
- 			param = ISCSI_NET_PARAM_IPV4_BOOTPROTO;
-+		else if (attr ==
-+			 &dev_attr_ipv4_iface_dhcp_dns_address_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_DHCP_DNS_ADDR_EN;
-+		else if (attr ==
-+			 &dev_attr_ipv4_iface_dhcp_slp_da_info_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_DHCP_SLP_DA_EN;
-+		else if (attr ==
-+			 &dev_attr_ipv4_iface_dhcp_req_isns_info_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_DHCP_REQ_ISNS_INFO_EN;
-+		else if (attr == &dev_attr_ipv4_iface_tos_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_TOS_EN;
-+		else if (attr == &dev_attr_ipv4_iface_tos.attr)
-+			param = ISCSI_NET_PARAM_IPV4_TOS;
-+		else if (attr == &dev_attr_ipv4_iface_grat_arp_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_GRAT_ARP_EN;
-+		else if (attr ==
-+			 &dev_attr_ipv4_iface_dhcp_alt_client_id_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID_EN;
-+		else if (attr == &dev_attr_ipv4_iface_dhcp_alt_client_id.attr)
-+			param = ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID;
-+		else if (attr ==
-+			 &dev_attr_ipv4_iface_dhcp_req_vendor_id_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_DHCP_REQ_VENDOR_ID_EN;
-+		else if (attr ==
-+			 &dev_attr_ipv4_iface_dhcp_use_vendor_id_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_DHCP_USE_VENDOR_ID_EN;
-+		else if (attr == &dev_attr_ipv4_iface_dhcp_vendor_id.attr)
-+			param = ISCSI_NET_PARAM_IPV4_DHCP_VENDOR_ID;
-+		else if (attr ==
-+			 &dev_attr_ipv4_iface_dhcp_learn_iqn_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_DHCP_LEARN_IQN_EN;
-+		else if (attr ==
-+			 &dev_attr_ipv4_iface_fragmentation_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_FRAGMENT_EN;
-+		else if (attr ==
-+			 &dev_attr_ipv4_iface_incoming_forwarding_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV4_IN_FORWARD_EN;
-+		else if (attr == &dev_attr_ipv4_iface_ttl.attr)
-+			param = ISCSI_NET_PARAM_IPV4_TTL;
- 		else
- 			return 0;
- 	} else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6) {
-@@ -371,6 +563,31 @@ static umode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
- 			param = ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG;
- 		else if (attr == &dev_attr_ipv6_iface_link_local_autocfg.attr)
- 			param = ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG;
-+		else if (attr == &dev_attr_ipv6_iface_link_local_state.attr)
-+			param = ISCSI_NET_PARAM_IPV6_LINKLOCAL_STATE;
-+		else if (attr == &dev_attr_ipv6_iface_router_state.attr)
-+			param = ISCSI_NET_PARAM_IPV6_ROUTER_STATE;
-+		else if (attr ==
-+			 &dev_attr_ipv6_iface_grat_neighbor_adv_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV6_GRAT_NEIGHBOR_ADV_EN;
-+		else if (attr == &dev_attr_ipv6_iface_mld_enabled.attr)
-+			param = ISCSI_NET_PARAM_IPV6_MLD_EN;
-+		else if (attr == &dev_attr_ipv6_iface_flow_label.attr)
-+			param = ISCSI_NET_PARAM_IPV6_FLOW_LABEL;
-+		else if (attr == &dev_attr_ipv6_iface_traffic_class.attr)
-+			param = ISCSI_NET_PARAM_IPV6_TRAFFIC_CLASS;
-+		else if (attr == &dev_attr_ipv6_iface_hop_limit.attr)
-+			param = ISCSI_NET_PARAM_IPV6_HOP_LIMIT;
-+		else if (attr == &dev_attr_ipv6_iface_nd_reachable_tmo.attr)
-+			param = ISCSI_NET_PARAM_IPV6_ND_REACHABLE_TMO;
-+		else if (attr == &dev_attr_ipv6_iface_nd_rexmit_time.attr)
-+			param = ISCSI_NET_PARAM_IPV6_ND_REXMIT_TIME;
-+		else if (attr == &dev_attr_ipv6_iface_nd_stale_tmo.attr)
-+			param = ISCSI_NET_PARAM_IPV6_ND_STALE_TMO;
-+		else if (attr == &dev_attr_ipv6_iface_dup_addr_det_cnt.attr)
-+			param = ISCSI_NET_PARAM_IPV6_DUP_ADDR_DET_CNT;
-+		else if (attr == &dev_attr_ipv6_iface_router_adv_link_mtu.attr)
-+			param = ISCSI_NET_PARAM_IPV6_RTR_ADV_LINK_MTU;
- 		else
- 			return 0;
- 	} else {
-@@ -397,6 +614,63 @@ static struct attribute *iscsi_iface_attrs[] = {
- 	&dev_attr_ipv6_iface_link_local_autocfg.attr,
- 	&dev_attr_iface_mtu.attr,
- 	&dev_attr_iface_port.attr,
-+	&dev_attr_iface_ipaddress_state.attr,
-+	&dev_attr_iface_delayed_ack_enabled.attr,
-+	&dev_attr_iface_isns_enabled.attr,
-+	&dev_attr_iface_isns_address.attr,
-+	&dev_attr_iface_isns_port.attr,
-+	&dev_attr_iface_nagle_enabled.attr,
-+	&dev_attr_iface_tcp_window_scale_enabled.attr,
-+	&dev_attr_iface_tcp_window_scale.attr,
-+	&dev_attr_iface_tcp_timer_scale.attr,
-+	&dev_attr_iface_tcp_timestamp_enabled.attr,
-+	&dev_attr_iface_cache_id.attr,
-+	&dev_attr_ipv4_iface_dhcp_dns_address_enabled.attr,
-+	&dev_attr_ipv4_iface_dhcp_slp_da_info_enabled.attr,
-+	&dev_attr_ipv4_iface_dhcp_req_isns_info_enabled.attr,
-+	&dev_attr_ipv4_iface_tos_enabled.attr,
-+	&dev_attr_ipv4_iface_tos.attr,
-+	&dev_attr_ipv4_iface_grat_arp_enabled.attr,
-+	&dev_attr_ipv4_iface_dhcp_alt_client_id_enabled.attr,
-+	&dev_attr_ipv4_iface_dhcp_alt_client_id.attr,
-+	&dev_attr_ipv4_iface_dhcp_req_vendor_id_enabled.attr,
-+	&dev_attr_ipv4_iface_dhcp_use_vendor_id_enabled.attr,
-+	&dev_attr_ipv4_iface_dhcp_vendor_id.attr,
-+	&dev_attr_ipv4_iface_dhcp_learn_iqn_enabled.attr,
-+	&dev_attr_ipv4_iface_fragmentation_enabled.attr,
-+	&dev_attr_ipv4_iface_incoming_forwarding_enabled.attr,
-+	&dev_attr_ipv4_iface_ttl.attr,
-+	&dev_attr_ipv6_iface_link_local_state.attr,
-+	&dev_attr_ipv6_iface_router_state.attr,
-+	&dev_attr_ipv6_iface_grat_neighbor_adv_enabled.attr,
-+	&dev_attr_ipv6_iface_mld_enabled.attr,
-+	&dev_attr_ipv6_iface_flow_label.attr,
-+	&dev_attr_ipv6_iface_traffic_class.attr,
-+	&dev_attr_ipv6_iface_hop_limit.attr,
-+	&dev_attr_ipv6_iface_nd_reachable_tmo.attr,
-+	&dev_attr_ipv6_iface_nd_rexmit_time.attr,
-+	&dev_attr_ipv6_iface_nd_stale_tmo.attr,
-+	&dev_attr_ipv6_iface_dup_addr_det_cnt.attr,
-+	&dev_attr_ipv6_iface_router_adv_link_mtu.attr,
-+	&dev_attr_iface_def_tmf_timeout.attr,
-+	&dev_attr_iface_def_hdr_dgst_enabled.attr,
-+	&dev_attr_iface_def_data_dgst_enabled.attr,
-+	&dev_attr_iface_def_immediate_data_enabled.attr,
-+	&dev_attr_iface_def_initial_r2t_enabled.attr,
-+	&dev_attr_iface_def_data_seq_inorder_enabled.attr,
-+	&dev_attr_iface_def_data_pdu_inorder_enabled.attr,
-+	&dev_attr_iface_def_erl.attr,
-+	&dev_attr_iface_def_max_recv_dlen.attr,
-+	&dev_attr_iface_def_first_burst.attr,
-+	&dev_attr_iface_def_max_r2t.attr,
-+	&dev_attr_iface_def_max_burst.attr,
-+	&dev_attr_iface_def_chap_auth_enabled.attr,
-+	&dev_attr_iface_def_bidi_chap_enabled.attr,
-+	&dev_attr_iface_def_strict_login_comp_enabled.attr,
-+	&dev_attr_iface_def_discovery_auth_enabled.attr,
-+	&dev_attr_iface_def_discovery_logout_enabled.attr,
-+	&dev_attr_iface_def_iscsi_name.attr,
-+	&dev_attr_iface_redirect_enabled.attr,
- 	NULL,
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index ddf16a8..fcd4110 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -469,6 +469,37 @@ struct ipaddress_config {
+ 	uint16_t eth_mtu_size;
+ 	uint16_t ipv4_port;
+ 	uint16_t ipv6_port;
++	uint8_t control;
++	uint16_t ipv6_tcp_options;
++	uint8_t isns_addr[IP_ADDR_LEN];
++	uint16_t isns_port;
++	struct in6_addr ipv6_isns_addr;
++	uint8_t tcp_wsf;
++	uint8_t ipv6_tcp_wsf;
++	uint8_t ipv4_tos;
++	uint8_t ipv4_cache_id;
++	uint8_t ipv6_cache_id;
++	uint8_t ipv4_alt_cid_len;
++	uint8_t ipv4_alt_cid[11];
++	uint8_t ipv4_vid_len;
++	uint8_t ipv4_vid[11];
++	uint8_t ipv4_ttl;
++	uint16_t ipv6_flow_lbl;
++	uint8_t ipv6_traffic_class;
++	uint8_t ipv6_hop_limit;
++	uint32_t ipv6_nd_reach_time;
++	uint32_t ipv6_nd_rexmit_timer;
++	uint32_t ipv6_nd_stale_timeout;
++	uint8_t ipv6_dup_addr_detect_count;
++	uint32_t ipv6_gw_advrt_mtu;
++	uint16_t def_timeout;
++	uint8_t abort_timer;
++	uint16_t iscsi_options;
++	uint16_t iscsi_max_pdu_size;
++	uint16_t iscsi_fburst_len;
++	uint16_t iscsi_max_outstnd_r2t;
++	uint16_t iscsi_max_burst_len;
++	uint8_t iscsi_name[224];
  };
  
-@@ -405,6 +679,61 @@ static struct attribute_group iscsi_iface_group = {
- 	.is_visible = iscsi_iface_attr_is_visible,
- };
+ #define QL4_CHAP_MAX_NAME_LEN 256
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index c7b8892..79c53eb 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -541,6 +541,7 @@ struct addr_ctrl_blk {
+ #define  IFCB_VER_MIN			0x01
+ #define  IFCB_VER_MAX			0x02
+ 	uint8_t control;	/* 01 */
++#define	 CTRLOPT_NEW_CONN_DISABLE	0x0002
  
-+/* convert iscsi_ipaddress_state values to ascii string name */
-+static const struct {
-+	enum iscsi_ipaddress_state	value;
-+	char				*name;
-+} iscsi_ipaddress_state_names[] = {
-+	{ISCSI_IPDDRESS_STATE_UNCONFIGURED,	"Unconfigured" },
-+	{ISCSI_IPDDRESS_STATE_ACQUIRING,	"Acquiring" },
-+	{ISCSI_IPDDRESS_STATE_TENTATIVE,	"Tentative" },
-+	{ISCSI_IPDDRESS_STATE_VALID,		"Valid" },
-+	{ISCSI_IPDDRESS_STATE_DISABLING,	"Disabling" },
-+	{ISCSI_IPDDRESS_STATE_INVALID,		"Invalid" },
-+	{ISCSI_IPDDRESS_STATE_DEPRECATED,	"Deprecated" },
-+};
-+
-+char *iscsi_get_ipaddress_state_name(enum iscsi_ipaddress_state port_state)
+ 	uint16_t fw_options;	/* 02-03 */
+ #define	 FWOPT_HEARTBEAT_ENABLE		  0x1000
+@@ -572,11 +573,42 @@ struct addr_ctrl_blk {
+ 	uint32_t shdwreg_addr_hi;	/* 2C-2F */
+ 
+ 	uint16_t iscsi_opts;	/* 30-31 */
++#define ISCSIOPT_HEADER_DIGEST_ENABLE		0x2000
++#define ISCSIOPT_DATA_DIGEST_ENABLE		0x1000
++#define ISCSIOPT_IMMEDIATE_DATA_ENABLE		0x0800
++#define ISCSIOPT_INITIAL_R2T_ENABLE		0x0400
++#define ISCSIOPT_DATA_SEQ_INORDER_ENABLE	0x0200
++#define ISCSIOPT_DATA_PDU_INORDER_ENABLE	0x0100
++#define ISCSIOPT_CHAP_AUTH_ENABLE		0x0080
++#define ISCSIOPT_SNACK_ENABLE			0x0040
++#define ISCSIOPT_DISCOVERY_LOGOUT_ENABLE	0x0020
++#define ISCSIOPT_BIDI_CHAP_ENABLE		0x0010
++#define ISCSIOPT_DISCOVERY_AUTH_ENABLE		0x0008
++#define ISCSIOPT_STRICT_LOGIN_COMP_ENABLE	0x0004
++#define ISCSIOPT_ERR_RECOVERY_LEVEL_MASK	0x0003
+ 	uint16_t ipv4_tcp_opts;	/* 32-33 */
++#define TCPOPT_DELAYED_ACK_DISABLE	0x8000
++#define TCPOPT_ISNS_ENABLE		0x4000
+ #define TCPOPT_DHCP_ENABLE		0x0200
++#define TCPOPT_DNS_SERVER_IP_ENABLE	0x0100
++#define TCPOPT_SLP_DA_INFO_ENABLE	0x0080
++#define TCPOPT_ISNS_INFO_ENABLE		0x0040
++#define TCPOPT_NAGLE_ALGO_DISABLE	0x0020
++#define TCPOPT_WINDOW_SCALE_DISABLE	0x0010
++#define TCPOPT_TIMER_SCALE		0x000E
++#define TCPOPT_TIMESTAMP_ENABLE		0x0001
+ 	uint16_t ipv4_ip_opts;	/* 34-35 */
+ #define IPOPT_IPV4_PROTOCOL_ENABLE	0x8000
++#define IPOPT_IPV4_TOS_ENABLE		0x4000
+ #define IPOPT_VLAN_TAGGING_ENABLE	0x2000
++#define IPOPT_GRAT_ARP_ENABLE		0x1000
++#define IPOPT_ALT_CID_ENABLE		0x0800
++#define IPOPT_REQ_VID_ENABLE		0x0400
++#define IPOPT_USE_VID_ENABLE		0x0200
++#define IPOPT_LEARN_IQN_ENABLE		0x0100
++#define IPOPT_FRAGMENTATION_DISABLE	0x0010
++#define IPOPT_INCOM_FORWARD_ENABLE	0x0008
++#define IPOPT_ARP_REDIRECT_ENABLE	0x0004
+ 
+ 	uint16_t iscsi_max_pdu_size;	/* 36-37 */
+ 	uint8_t ipv4_tos;	/* 38 */
+@@ -619,7 +651,9 @@ struct addr_ctrl_blk {
+ 	uint8_t ipv4_sec_ip_addr[4];	/* D0-D3 */
+ 	uint8_t ipv4_dhcp_vid_len;	/* D4 */
+ 	uint8_t ipv4_dhcp_vid[11];	/* D5-DF */
+-	uint8_t res11[20];	/* E0-F3 */
++	uint8_t ipv4_isns_addr[4];	/* E0-E3 */
++	uint16_t ipv4_isns_port;		/* E4-E5 */
++	uint8_t res11[14];	/* E6-F3 */
+ 	uint8_t ipv4_dhcp_alt_cid_len;	/* F4 */
+ 	uint8_t ipv4_dhcp_alt_cid[11];	/* F5-FF */
+ 	uint8_t iscsi_name[224];	/* 100-1DF */
+@@ -627,15 +661,25 @@ struct addr_ctrl_blk {
+ 	uint32_t cookie;	/* 200-203 */
+ 	uint16_t ipv6_port;	/* 204-205 */
+ 	uint16_t ipv6_opts;	/* 206-207 */
+-#define IPV6_OPT_IPV6_PROTOCOL_ENABLE	0x8000
+-#define IPV6_OPT_VLAN_TAGGING_ENABLE	0x2000
++#define IPV6_OPT_IPV6_PROTOCOL_ENABLE		0x8000
++#define IPV6_OPT_VLAN_TAGGING_ENABLE		0x2000
++#define IPV6_OPT_GRAT_NEIGHBOR_ADV_ENABLE	0x1000
++#define IPV6_OPT_REDIRECT_ENABLE		0x0004
+ 
+ 	uint16_t ipv6_addtl_opts;	/* 208-209 */
++#define IPV6_ADDOPT_IGNORE_ICMP_ECHO_REQ		0x0040
++#define IPV6_ADDOPT_MLD_ENABLE				0x0004
+ #define IPV6_ADDOPT_NEIGHBOR_DISCOVERY_ADDR_ENABLE	0x0002 /* Pri ACB
+ 								  Only */
+ #define IPV6_ADDOPT_AUTOCONFIG_LINK_LOCAL_ADDR		0x0001
+ 
+ 	uint16_t ipv6_tcp_opts;	/* 20A-20B */
++#define IPV6_TCPOPT_DELAYED_ACK_DISABLE		0x8000
++#define IPV6_TCPOPT_ISNS_ENABLE			0x4000
++#define IPV6_TCPOPT_NAGLE_ALGO_DISABLE		0x0020
++#define IPV6_TCPOPT_WINDOW_SCALE_DISABLE	0x0010
++#define IPV6_TCPOPT_TIMER_SCALE			0x000E
++#define IPV6_TCPOPT_TIMESTAMP_ENABLE		0x0001
+ 	uint8_t ipv6_tcp_wsf;	/* 20C */
+ 	uint16_t ipv6_flow_lbl;	/* 20D-20F */
+ 	uint8_t ipv6_dflt_rtr_addr[16]; /* 210-21F */
+@@ -667,7 +711,8 @@ struct addr_ctrl_blk {
+ 	uint32_t ipv6_nd_stale_timeout;	/* 258-25B */
+ 	uint8_t ipv6_dup_addr_detect_count;	/* 25C */
+ 	uint8_t ipv6_cache_id;	/* 25D */
+-	uint8_t res13[18];	/* 25E-26F */
++	uint8_t res13[2];	/* 25E-25F */
++	uint8_t ipv6_isns_addr[16];	/* 260-26F */
+ 	uint32_t ipv6_gw_advrt_mtu;	/* 270-273 */
+ 	uint8_t res14[140];	/* 274-2FF */
+ };
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 4a42800..48d6b5d 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -266,6 +266,7 @@ int qla4xxx_get_default_ddb(struct scsi_qla_host *ha, uint32_t options,
+ 			    dma_addr_t dma_addr);
+ int qla4xxx_get_uni_chap_at_index(struct scsi_qla_host *ha, char *username,
+ 				  char *password, uint16_t chap_index);
++uint8_t qla4xxx_set_ipaddr_state(uint8_t fw_ipaddr_state);
+ 
+ extern int ql4xextended_error_logging;
+ extern int ql4xdontresethba;
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index 482287f..6d94543 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -606,6 +606,36 @@ static int qla4_83xx_loopback_in_progress(struct scsi_qla_host *ha)
+ 	return rval;
+ }
+ 
++static void qla4xxx_update_ipaddr_state(struct scsi_qla_host *ha,
++					uint32_t ipaddr_idx,
++					uint32_t ipaddr_fw_state)
 +{
-+	int i;
-+	char *state = NULL;
++	uint8_t ipaddr_state;
++	uint8_t ip_idx;
 +
-+	for (i = 0; i < ARRAY_SIZE(iscsi_ipaddress_state_names); i++) {
-+		if (iscsi_ipaddress_state_names[i].value == port_state) {
-+			state = iscsi_ipaddress_state_names[i].name;
-+			break;
-+		}
++	ip_idx = ipaddr_idx & 0xF;
++	ipaddr_state = qla4xxx_set_ipaddr_state((uint8_t)ipaddr_fw_state);
++
++	switch (ip_idx) {
++	case 0:
++		ha->ip_config.ipv4_addr_state = ipaddr_state;
++		break;
++	case 1:
++		ha->ip_config.ipv6_link_local_state = ipaddr_state;
++		break;
++	case 2:
++		ha->ip_config.ipv6_addr0_state = ipaddr_state;
++		break;
++	case 3:
++		ha->ip_config.ipv6_addr1_state = ipaddr_state;
++		break;
++	default:
++		ql4_printk(KERN_INFO, ha, "%s: Invalid IPADDR index %d\n",
++			   __func__, ip_idx);
 +	}
-+	return state;
 +}
-+EXPORT_SYMBOL_GPL(iscsi_get_ipaddress_state_name);
 +
-+/* convert iscsi_router_state values to ascii string name */
-+static const struct {
-+	enum iscsi_router_state	value;
-+	char			*name;
-+} iscsi_router_state_names[] = {
-+	{ISCSI_ROUTER_STATE_UNKNOWN,		"Unknown" },
-+	{ISCSI_ROUTER_STATE_ADVERTISED,		"Advertised" },
-+	{ISCSI_ROUTER_STATE_MANUAL,		"Manual" },
-+	{ISCSI_ROUTER_STATE_STALE,		"Stale" },
-+};
 +
-+char *iscsi_get_router_state_name(enum iscsi_router_state router_state)
+ /**
+  * qla4xxx_isr_decode_mailbox - decodes mailbox status
+  * @ha: Pointer to host adapter structure.
+@@ -740,6 +770,8 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
+ 			    "mbox_sts[3]=%04x\n", ha->host_no, mbox_sts[0],
+ 			    mbox_sts[2], mbox_sts[3]);
+ 
++			qla4xxx_update_ipaddr_state(ha, mbox_sts[5],
++						    mbox_sts[3]);
+ 			/* mbox_sts[2] = Old ACB state
+ 			 * mbox_sts[3] = new ACB state */
+ 			if ((mbox_sts[3] == ACB_STATE_VALID) &&
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index a501bea..1f7909e 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -417,6 +417,38 @@ qla4xxx_get_ifcb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
+ 	return QLA_SUCCESS;
+ }
+ 
++uint8_t qla4xxx_set_ipaddr_state(uint8_t fw_ipaddr_state)
 +{
-+	int i;
-+	char *state = NULL;
++	uint8_t ipaddr_state;
 +
-+	for (i = 0; i < ARRAY_SIZE(iscsi_router_state_names); i++) {
-+		if (iscsi_router_state_names[i].value & router_state) {
-+			state = iscsi_router_state_names[i].name;
-+			break;
-+		}
++	switch (fw_ipaddr_state) {
++	case IP_ADDRSTATE_UNCONFIGURED:
++		ipaddr_state = ISCSI_IPDDRESS_STATE_UNCONFIGURED;
++		break;
++	case IP_ADDRSTATE_INVALID:
++		ipaddr_state = ISCSI_IPDDRESS_STATE_INVALID;
++		break;
++	case IP_ADDRSTATE_ACQUIRING:
++		ipaddr_state = ISCSI_IPDDRESS_STATE_ACQUIRING;
++		break;
++	case IP_ADDRSTATE_TENTATIVE:
++		ipaddr_state = ISCSI_IPDDRESS_STATE_TENTATIVE;
++		break;
++	case IP_ADDRSTATE_DEPRICATED:
++		ipaddr_state = ISCSI_IPDDRESS_STATE_DEPRECATED;
++		break;
++	case IP_ADDRSTATE_PREFERRED:
++		ipaddr_state = ISCSI_IPDDRESS_STATE_VALID;
++		break;
++	case IP_ADDRSTATE_DISABLING:
++		ipaddr_state = ISCSI_IPDDRESS_STATE_DISABLING;
++		break;
++	default:
++		ipaddr_state = ISCSI_IPDDRESS_STATE_UNCONFIGURED;
 +	}
-+	return state;
++	return ipaddr_state;
 +}
-+EXPORT_SYMBOL_GPL(iscsi_get_router_state_name);
 +
- struct iscsi_iface *
- iscsi_create_iface(struct Scsi_Host *shost, struct iscsi_transport *transport,
- 		   uint32_t iface_type, uint32_t iface_num, int dd_size)
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index 2bc5d1c..c2ee3b3 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -374,6 +374,10 @@ struct iscsi_path {
- #define ISCSI_VLAN_DISABLE	0x01
- #define ISCSI_VLAN_ENABLE	0x02
+ static void
+ qla4xxx_update_local_ip(struct scsi_qla_host *ha,
+ 			struct addr_ctrl_blk *init_fw_cb)
+@@ -424,7 +456,7 @@ qla4xxx_update_local_ip(struct scsi_qla_host *ha,
+ 	ha->ip_config.tcp_options = le16_to_cpu(init_fw_cb->ipv4_tcp_opts);
+ 	ha->ip_config.ipv4_options = le16_to_cpu(init_fw_cb->ipv4_ip_opts);
+ 	ha->ip_config.ipv4_addr_state =
+-				le16_to_cpu(init_fw_cb->ipv4_addr_state);
++			qla4xxx_set_ipaddr_state(init_fw_cb->ipv4_addr_state);
+ 	ha->ip_config.eth_mtu_size =
+ 				le16_to_cpu(init_fw_cb->eth_mtu_size);
+ 	ha->ip_config.ipv4_port = le16_to_cpu(init_fw_cb->ipv4_port);
+@@ -433,6 +465,8 @@ qla4xxx_update_local_ip(struct scsi_qla_host *ha,
+ 		ha->ip_config.ipv6_options = le16_to_cpu(init_fw_cb->ipv6_opts);
+ 		ha->ip_config.ipv6_addl_options =
+ 				le16_to_cpu(init_fw_cb->ipv6_addtl_opts);
++		ha->ip_config.ipv6_tcp_options =
++				le16_to_cpu(init_fw_cb->ipv6_tcp_opts);
+ 	}
  
-+/* iscsi generic enable/disabled setting for various features */
-+#define ISCSI_NET_PARAM_DISABLE		0x01
-+#define ISCSI_NET_PARAM_ENABLE		0x02
-+
- /* iSCSI network params */
- enum iscsi_net_param {
- 	ISCSI_NET_PARAM_IPV4_ADDR		= 1,
-@@ -396,6 +400,80 @@ enum iscsi_net_param {
- 	ISCSI_NET_PARAM_IFACE_NAME,
- 	ISCSI_NET_PARAM_MTU,
- 	ISCSI_NET_PARAM_PORT,
-+	ISCSI_NET_PARAM_IPADDR_STATE,
-+	ISCSI_NET_PARAM_IPV6_LINKLOCAL_STATE,
-+	ISCSI_NET_PARAM_IPV6_ROUTER_STATE,
-+	ISCSI_NET_PARAM_DELAYED_ACK_EN,
-+	ISCSI_NET_PARAM_ISNS_EN,
-+	ISCSI_NET_PARAM_ISNS_ADDR,
-+	ISCSI_NET_PARAM_ISNS_PORT,
-+	ISCSI_NET_PARAM_NAGLE_EN,
-+	ISCSI_NET_PARAM_TCP_WIN_SCALE_EN,
-+	ISCSI_NET_PARAM_TCP_WIN_SCALE,
-+	ISCSI_NET_PARAM_TCP_TIMER_SCALE,
-+	ISCSI_NET_PARAM_TCP_TIMESTAMP_EN,
-+	ISCSI_NET_PARAM_CACHE_ID,
-+	ISCSI_NET_PARAM_IPV4_DHCP_DNS_ADDR_EN,
-+	ISCSI_NET_PARAM_IPV4_DHCP_SLP_DA_EN,
-+	ISCSI_NET_PARAM_IPV4_DHCP_REQ_ISNS_INFO_EN,
-+	ISCSI_NET_PARAM_IPV4_TOS_EN,
-+	ISCSI_NET_PARAM_IPV4_TOS,
-+	ISCSI_NET_PARAM_IPV4_GRAT_ARP_EN,
-+	ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID_EN,
-+	ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID,
-+	ISCSI_NET_PARAM_IPV4_DHCP_REQ_VENDOR_ID_EN,
-+	ISCSI_NET_PARAM_IPV4_DHCP_USE_VENDOR_ID_EN,
-+	ISCSI_NET_PARAM_IPV4_DHCP_VENDOR_ID,
-+	ISCSI_NET_PARAM_IPV4_DHCP_LEARN_IQN_EN,
-+	ISCSI_NET_PARAM_IPV4_FRAGMENT_EN,
-+	ISCSI_NET_PARAM_IPV4_IN_FORWARD_EN,
-+	ISCSI_NET_PARAM_IPV4_TTL,
-+	ISCSI_NET_PARAM_IPV6_GRAT_NEIGHBOR_ADV_EN,
-+	ISCSI_NET_PARAM_IPV6_MLD_EN,
-+	ISCSI_NET_PARAM_IPV6_FLOW_LABEL,
-+	ISCSI_NET_PARAM_IPV6_TRAFFIC_CLASS,
-+	ISCSI_NET_PARAM_IPV6_HOP_LIMIT,
-+	ISCSI_NET_PARAM_IPV6_ND_REACHABLE_TMO,
-+	ISCSI_NET_PARAM_IPV6_ND_REXMIT_TIME,
-+	ISCSI_NET_PARAM_IPV6_ND_STALE_TMO,
-+	ISCSI_NET_PARAM_IPV6_DUP_ADDR_DET_CNT,
-+	ISCSI_NET_PARAM_IPV6_RTR_ADV_LINK_MTU,
-+	ISCSI_NET_PARAM_REDIRECT_EN,
-+	ISCSI_NET_PARAM_DEF_TMF_TMO,
-+	ISCSI_NET_PARAM_DEF_HDRDGST_EN,
-+	ISCSI_NET_PARAM_DEF_DATADGST_EN,
-+	ISCSI_NET_PARAM_DEF_IMM_DATA_EN,
-+	ISCSI_NET_PARAM_DEF_INITIAL_R2T_EN,
-+	ISCSI_NET_PARAM_DEF_DATASEQ_INORDER_EN,
-+	ISCSI_NET_PARAM_DEF_PDU_INORDER_EN,
-+	ISCSI_NET_PARAM_DEF_ERL,
-+	ISCSI_NET_PARAM_DEF_MAX_RECV_DLENGTH,
-+	ISCSI_NET_PARAM_DEF_FIRST_BURST,
-+	ISCSI_NET_PARAM_DEF_MAX_R2T,
-+	ISCSI_NET_PARAM_DEF_MAX_BURST,
-+	ISCSI_NET_PARAM_DEF_CHAP_AUTH_EN,
-+	ISCSI_NET_PARAM_DEF_BIDI_CHAP_EN,
-+	ISCSI_NET_PARAM_DEF_STRICT_LOGIN_COMP_EN,
-+	ISCSI_NET_PARAM_DEF_DISCOVERY_AUTH_EN,
-+	ISCSI_NET_PARAM_DEF_DISCOVERY_LOGOUT_EN,
-+	ISCSI_NET_PARAM_DEF_ISCSI_NAME,
-+};
-+
-+enum iscsi_ipaddress_state {
-+	ISCSI_IPDDRESS_STATE_UNCONFIGURED,
-+	ISCSI_IPDDRESS_STATE_ACQUIRING,
-+	ISCSI_IPDDRESS_STATE_TENTATIVE,
-+	ISCSI_IPDDRESS_STATE_VALID,
-+	ISCSI_IPDDRESS_STATE_DISABLING,
-+	ISCSI_IPDDRESS_STATE_INVALID,
-+	ISCSI_IPDDRESS_STATE_DEPRECATED,
-+};
-+
-+enum iscsi_router_state {
-+	ISCSI_ROUTER_STATE_UNKNOWN,
-+	ISCSI_ROUTER_STATE_ADVERTISED,
-+	ISCSI_ROUTER_STATE_MANUAL,
-+	ISCSI_ROUTER_STATE_STALE,
- };
+ 	/* Save IPv4 Address Info */
+@@ -447,17 +481,69 @@ qla4xxx_update_local_ip(struct scsi_qla_host *ha,
+ 		   sizeof(init_fw_cb->ipv4_gw_addr)));
  
- enum iscsi_conn_state {
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index d0f1602..d6f2420 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -477,4 +477,7 @@ iscsi_find_flashnode_sess(struct Scsi_Host *shost, void *data,
- extern struct device *
- iscsi_find_flashnode_conn(struct iscsi_bus_flash_session *fnode_sess);
+ 	ha->ip_config.ipv4_vlan_tag = be16_to_cpu(init_fw_cb->ipv4_vlan_tag);
++	ha->ip_config.control = init_fw_cb->control;
++	memcpy(ha->ip_config.isns_addr, init_fw_cb->ipv4_isns_addr,
++	       min(sizeof(ha->ip_config.isns_addr),
++		   sizeof(init_fw_cb->ipv4_isns_addr)));
++	ha->ip_config.isns_port = le16_to_cpu(init_fw_cb->ipv4_isns_port);
++	ha->ip_config.tcp_wsf = init_fw_cb->ipv4_tcp_wsf;
++	ha->ip_config.ipv4_tos = init_fw_cb->ipv4_tos;
++	ha->ip_config.ipv4_cache_id = init_fw_cb->ipv4_cacheid;
++	ha->ip_config.ipv4_alt_cid_len = init_fw_cb->ipv4_dhcp_alt_cid_len;
++	memcpy(ha->ip_config.ipv4_alt_cid, init_fw_cb->ipv4_dhcp_alt_cid,
++	       min(sizeof(ha->ip_config.ipv4_alt_cid),
++		   sizeof(init_fw_cb->ipv4_dhcp_alt_cid)));
++	ha->ip_config.ipv4_vid_len = init_fw_cb->ipv4_dhcp_vid_len;
++	memcpy(ha->ip_config.ipv4_vid, init_fw_cb->ipv4_dhcp_vid,
++	       min(sizeof(ha->ip_config.ipv4_vid),
++		   sizeof(init_fw_cb->ipv4_dhcp_vid)));
++	ha->ip_config.ipv4_ttl = init_fw_cb->ipv4_ttl;
++	ha->ip_config.def_timeout = le16_to_cpu(init_fw_cb->def_timeout);
++	ha->ip_config.abort_timer = init_fw_cb->abort_timer;
++	ha->ip_config.iscsi_options = le16_to_cpu(init_fw_cb->iscsi_opts);
++	ha->ip_config.iscsi_max_pdu_size =
++				le16_to_cpu(init_fw_cb->iscsi_max_pdu_size);
++	ha->ip_config.iscsi_fburst_len =
++				le16_to_cpu(init_fw_cb->iscsi_fburst_len);
++	ha->ip_config.iscsi_max_outstnd_r2t =
++				le16_to_cpu(init_fw_cb->iscsi_max_outstnd_r2t);
++	ha->ip_config.iscsi_max_burst_len =
++				le16_to_cpu(init_fw_cb->iscsi_max_burst_len);
++	memcpy(ha->ip_config.iscsi_name, init_fw_cb->iscsi_name,
++	       min(sizeof(ha->ip_config.iscsi_name),
++		   sizeof(init_fw_cb->iscsi_name)));
  
-+extern char *
-+iscsi_get_ipaddress_state_name(enum iscsi_ipaddress_state port_state);
-+extern char *iscsi_get_router_state_name(enum iscsi_router_state router_state);
- #endif
+ 	if (is_ipv6_enabled(ha)) {
+ 		/* Save IPv6 Address */
+ 		ha->ip_config.ipv6_link_local_state =
+-			le16_to_cpu(init_fw_cb->ipv6_lnk_lcl_addr_state);
++		  qla4xxx_set_ipaddr_state(init_fw_cb->ipv6_lnk_lcl_addr_state);
+ 		ha->ip_config.ipv6_addr0_state =
+-				le16_to_cpu(init_fw_cb->ipv6_addr0_state);
++			qla4xxx_set_ipaddr_state(init_fw_cb->ipv6_addr0_state);
+ 		ha->ip_config.ipv6_addr1_state =
+-				le16_to_cpu(init_fw_cb->ipv6_addr1_state);
+-		ha->ip_config.ipv6_default_router_state =
+-				le16_to_cpu(init_fw_cb->ipv6_dflt_rtr_state);
++			qla4xxx_set_ipaddr_state(init_fw_cb->ipv6_addr1_state);
++
++		switch (le16_to_cpu(init_fw_cb->ipv6_dflt_rtr_state)) {
++		case IPV6_RTRSTATE_UNKNOWN:
++			ha->ip_config.ipv6_default_router_state =
++						ISCSI_ROUTER_STATE_UNKNOWN;
++			break;
++		case IPV6_RTRSTATE_MANUAL:
++			ha->ip_config.ipv6_default_router_state =
++						ISCSI_ROUTER_STATE_MANUAL;
++			break;
++		case IPV6_RTRSTATE_ADVERTISED:
++			ha->ip_config.ipv6_default_router_state =
++						ISCSI_ROUTER_STATE_ADVERTISED;
++			break;
++		case IPV6_RTRSTATE_STALE:
++			ha->ip_config.ipv6_default_router_state =
++						ISCSI_ROUTER_STATE_STALE;
++			break;
++		default:
++			ha->ip_config.ipv6_default_router_state =
++						ISCSI_ROUTER_STATE_UNKNOWN;
++		}
++
+ 		ha->ip_config.ipv6_link_local_addr.in6_u.u6_addr8[0] = 0xFE;
+ 		ha->ip_config.ipv6_link_local_addr.in6_u.u6_addr8[1] = 0x80;
+ 
+@@ -478,6 +564,27 @@ qla4xxx_update_local_ip(struct scsi_qla_host *ha,
+ 		ha->ip_config.ipv6_vlan_tag =
+ 				be16_to_cpu(init_fw_cb->ipv6_vlan_tag);
+ 		ha->ip_config.ipv6_port = le16_to_cpu(init_fw_cb->ipv6_port);
++		ha->ip_config.ipv6_cache_id = init_fw_cb->ipv6_cache_id;
++		memcpy(&ha->ip_config.ipv6_isns_addr,
++		       init_fw_cb->ipv6_isns_addr,
++		       min(sizeof(ha->ip_config.ipv6_isns_addr),
++			   sizeof(init_fw_cb->ipv6_isns_addr)));
++		ha->ip_config.ipv6_flow_lbl =
++				le16_to_cpu(init_fw_cb->ipv6_flow_lbl);
++		ha->ip_config.ipv6_traffic_class =
++				init_fw_cb->ipv6_traffic_class;
++		ha->ip_config.ipv6_hop_limit = init_fw_cb->ipv6_hop_limit;
++		ha->ip_config.ipv6_nd_reach_time =
++				le32_to_cpu(init_fw_cb->ipv6_nd_reach_time);
++		ha->ip_config.ipv6_nd_rexmit_timer =
++				le32_to_cpu(init_fw_cb->ipv6_nd_rexmit_timer);
++		ha->ip_config.ipv6_nd_stale_timeout =
++				le32_to_cpu(init_fw_cb->ipv6_nd_stale_timeout);
++		ha->ip_config.ipv6_dup_addr_detect_count =
++					init_fw_cb->ipv6_dup_addr_detect_count;
++		ha->ip_config.ipv6_gw_advrt_mtu =
++				le32_to_cpu(init_fw_cb->ipv6_gw_advrt_mtu);
++		ha->ip_config.ipv6_tcp_wsf = init_fw_cb->ipv6_tcp_wsf;
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 4d231c1..3313358 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -399,6 +399,63 @@ static umode_t qla4_attr_is_visible(int param_type, int param)
+ 		case ISCSI_NET_PARAM_VLAN_ENABLED:
+ 		case ISCSI_NET_PARAM_MTU:
+ 		case ISCSI_NET_PARAM_PORT:
++		case ISCSI_NET_PARAM_IPADDR_STATE:
++		case ISCSI_NET_PARAM_IPV6_LINKLOCAL_STATE:
++		case ISCSI_NET_PARAM_IPV6_ROUTER_STATE:
++		case ISCSI_NET_PARAM_DELAYED_ACK_EN:
++		case ISCSI_NET_PARAM_ISNS_EN:
++		case ISCSI_NET_PARAM_ISNS_ADDR:
++		case ISCSI_NET_PARAM_ISNS_PORT:
++		case ISCSI_NET_PARAM_NAGLE_EN:
++		case ISCSI_NET_PARAM_TCP_WIN_SCALE_EN:
++		case ISCSI_NET_PARAM_TCP_WIN_SCALE:
++		case ISCSI_NET_PARAM_TCP_TIMER_SCALE:
++		case ISCSI_NET_PARAM_TCP_TIMESTAMP_EN:
++		case ISCSI_NET_PARAM_CACHE_ID:
++		case ISCSI_NET_PARAM_IPV4_DHCP_DNS_ADDR_EN:
++		case ISCSI_NET_PARAM_IPV4_DHCP_SLP_DA_EN:
++		case ISCSI_NET_PARAM_IPV4_DHCP_REQ_ISNS_INFO_EN:
++		case ISCSI_NET_PARAM_IPV4_TOS_EN:
++		case ISCSI_NET_PARAM_IPV4_TOS:
++		case ISCSI_NET_PARAM_IPV4_GRAT_ARP_EN:
++		case ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID_EN:
++		case ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID:
++		case ISCSI_NET_PARAM_IPV4_DHCP_REQ_VENDOR_ID_EN:
++		case ISCSI_NET_PARAM_IPV4_DHCP_USE_VENDOR_ID_EN:
++		case ISCSI_NET_PARAM_IPV4_DHCP_VENDOR_ID:
++		case ISCSI_NET_PARAM_IPV4_DHCP_LEARN_IQN_EN:
++		case ISCSI_NET_PARAM_IPV4_FRAGMENT_EN:
++		case ISCSI_NET_PARAM_IPV4_IN_FORWARD_EN:
++		case ISCSI_NET_PARAM_REDIRECT_EN:
++		case ISCSI_NET_PARAM_IPV4_TTL:
++		case ISCSI_NET_PARAM_IPV6_GRAT_NEIGHBOR_ADV_EN:
++		case ISCSI_NET_PARAM_IPV6_MLD_EN:
++		case ISCSI_NET_PARAM_IPV6_FLOW_LABEL:
++		case ISCSI_NET_PARAM_IPV6_TRAFFIC_CLASS:
++		case ISCSI_NET_PARAM_IPV6_HOP_LIMIT:
++		case ISCSI_NET_PARAM_IPV6_ND_REACHABLE_TMO:
++		case ISCSI_NET_PARAM_IPV6_ND_REXMIT_TIME:
++		case ISCSI_NET_PARAM_IPV6_ND_STALE_TMO:
++		case ISCSI_NET_PARAM_IPV6_DUP_ADDR_DET_CNT:
++		case ISCSI_NET_PARAM_IPV6_RTR_ADV_LINK_MTU:
++		case ISCSI_NET_PARAM_DEF_TMF_TMO:
++		case ISCSI_NET_PARAM_DEF_HDRDGST_EN:
++		case ISCSI_NET_PARAM_DEF_DATADGST_EN:
++		case ISCSI_NET_PARAM_DEF_IMM_DATA_EN:
++		case ISCSI_NET_PARAM_DEF_INITIAL_R2T_EN:
++		case ISCSI_NET_PARAM_DEF_DATASEQ_INORDER_EN:
++		case ISCSI_NET_PARAM_DEF_PDU_INORDER_EN:
++		case ISCSI_NET_PARAM_DEF_ERL:
++		case ISCSI_NET_PARAM_DEF_MAX_RECV_DLENGTH:
++		case ISCSI_NET_PARAM_DEF_FIRST_BURST:
++		case ISCSI_NET_PARAM_DEF_MAX_R2T:
++		case ISCSI_NET_PARAM_DEF_MAX_BURST:
++		case ISCSI_NET_PARAM_DEF_CHAP_AUTH_EN:
++		case ISCSI_NET_PARAM_DEF_BIDI_CHAP_EN:
++		case ISCSI_NET_PARAM_DEF_STRICT_LOGIN_COMP_EN:
++		case ISCSI_NET_PARAM_DEF_DISCOVERY_AUTH_EN:
++		case ISCSI_NET_PARAM_DEF_DISCOVERY_LOGOUT_EN:
++		case ISCSI_NET_PARAM_DEF_ISCSI_NAME:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+@@ -758,6 +815,339 @@ static int qla4xxx_get_iface_param(struct iscsi_iface *iface,
+ 		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
+ 			len = sprintf(buf, "%d\n", ha->ip_config.ipv6_port);
+ 		break;
++	case ISCSI_NET_PARAM_IPADDR_STATE:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4) {
++			len = sprintf(buf, "%s\n",
++				      iscsi_get_ipaddress_state_name(
++						ha->ip_config.ipv4_addr_state));
++		} else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6) {
++			if (iface->iface_num == 0)
++				len = sprintf(buf, "%s\n",
++					      iscsi_get_ipaddress_state_name(
++					      ha->ip_config.ipv6_addr0_state));
++			else if (iface->iface_num == 1)
++				len = sprintf(buf, "%s\n",
++					      iscsi_get_ipaddress_state_name(
++					      ha->ip_config.ipv6_addr1_state));
++		}
++		break;
++	case ISCSI_NET_PARAM_IPV6_LINKLOCAL_STATE:
++		len = sprintf(buf, "%s\n",
++			      iscsi_get_ipaddress_state_name(
++					ha->ip_config.ipv6_link_local_state));
++		break;
++	case ISCSI_NET_PARAM_IPV6_ROUTER_STATE:
++		len = sprintf(buf, "%s\n",
++			      iscsi_get_router_state_name(
++				ha->ip_config.ipv6_default_router_state));
++		break;
++	case ISCSI_NET_PARAM_DELAYED_ACK_EN:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.tcp_options &
++				       TCPOPT_DELAYED_ACK_DISABLE) ?
++				      "disabled" : "enabled");
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.ipv6_tcp_options &
++				       IPV6_TCPOPT_DELAYED_ACK_DISABLE) ?
++				      "disabled" : "enabled");
++		break;
++	case ISCSI_NET_PARAM_ISNS_EN:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.tcp_options &
++				       TCPOPT_ISNS_ENABLE) ?
++				      "enabled" : "disabled");
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.ipv6_tcp_options &
++				       IPV6_TCPOPT_ISNS_ENABLE) ?
++				      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_ISNS_ADDR:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%pI4\n", &ha->ip_config.isns_addr);
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%pI6\n",
++				      &ha->ip_config.ipv6_isns_addr);
++		break;
++	case ISCSI_NET_PARAM_ISNS_PORT:
++		len = sprintf(buf, "%d\n", ha->ip_config.isns_port);
++		break;
++	case ISCSI_NET_PARAM_NAGLE_EN:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.tcp_options &
++				       TCPOPT_NAGLE_ALGO_DISABLE) ?
++				      "disabled" : "enabled");
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.ipv6_tcp_options &
++				       IPV6_TCPOPT_NAGLE_ALGO_DISABLE) ?
++				      "disabled" : "enabled");
++		break;
++	case ISCSI_NET_PARAM_TCP_WIN_SCALE_EN:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.tcp_options &
++				       TCPOPT_WINDOW_SCALE_DISABLE) ?
++				      "disabled" : "enabled");
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.ipv6_tcp_options &
++				       IPV6_TCPOPT_WINDOW_SCALE_DISABLE) ?
++				      "disabled" : "enabled");
++		break;
++	case ISCSI_NET_PARAM_TCP_WIN_SCALE:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%d\n", ha->ip_config.tcp_wsf);
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%d\n", ha->ip_config.ipv6_tcp_wsf);
++		break;
++	case ISCSI_NET_PARAM_TCP_TIMER_SCALE:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%d\n",
++				      ((ha->ip_config.tcp_options &
++					TCPOPT_TIMER_SCALE) >> 1));
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%d\n",
++				      ((ha->ip_config.ipv6_tcp_options &
++					IPV6_TCPOPT_TIMER_SCALE) >> 1));
++		break;
++	case ISCSI_NET_PARAM_TCP_TIMESTAMP_EN:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.tcp_options &
++				       TCPOPT_TIMESTAMP_ENABLE) ?
++				      "enabled" : "disabled");
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.ipv6_tcp_options &
++				       IPV6_TCPOPT_TIMESTAMP_ENABLE) ?
++				      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_CACHE_ID:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%d\n", ha->ip_config.ipv4_cache_id);
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%d\n", ha->ip_config.ipv6_cache_id);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_DNS_ADDR_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.tcp_options &
++			       TCPOPT_DNS_SERVER_IP_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_SLP_DA_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.tcp_options &
++			       TCPOPT_SLP_DA_INFO_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_REQ_ISNS_INFO_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.tcp_options &
++			       TCPOPT_ISNS_INFO_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_TOS_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv4_options &
++			       IPOPT_IPV4_TOS_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_TOS:
++		len = sprintf(buf, "%d\n", ha->ip_config.ipv4_tos);
++		break;
++	case ISCSI_NET_PARAM_IPV4_GRAT_ARP_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv4_options &
++			       IPOPT_GRAT_ARP_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv4_options &
++			       IPOPT_ALT_CID_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID:
++		len = sprintf(buf, "%s\n", ha->ip_config.ipv4_alt_cid);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_REQ_VENDOR_ID_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv4_options &
++			       IPOPT_REQ_VID_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_USE_VENDOR_ID_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv4_options &
++			       IPOPT_USE_VID_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_VENDOR_ID:
++		len = sprintf(buf, "%s\n", ha->ip_config.ipv4_vid);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_LEARN_IQN_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv4_options &
++			       IPOPT_LEARN_IQN_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_FRAGMENT_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv4_options &
++			       IPOPT_FRAGMENTATION_DISABLE) ?
++			      "disabled" : "enabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_IN_FORWARD_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv4_options &
++			       IPOPT_INCOM_FORWARD_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_REDIRECT_EN:
++		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.ipv4_options &
++				       IPOPT_ARP_REDIRECT_ENABLE) ?
++				      "enabled" : "disabled");
++		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
++			len = sprintf(buf, "%s\n",
++				      (ha->ip_config.ipv6_options &
++				       IPV6_OPT_REDIRECT_ENABLE) ?
++				      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV4_TTL:
++		len = sprintf(buf, "%d\n", ha->ip_config.ipv4_ttl);
++		break;
++	case ISCSI_NET_PARAM_IPV6_GRAT_NEIGHBOR_ADV_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv6_options &
++			       IPV6_OPT_GRAT_NEIGHBOR_ADV_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV6_MLD_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.ipv6_addl_options &
++			       IPV6_ADDOPT_MLD_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_IPV6_FLOW_LABEL:
++		len = sprintf(buf, "%d\n", ha->ip_config.ipv6_flow_lbl);
++		break;
++	case ISCSI_NET_PARAM_IPV6_TRAFFIC_CLASS:
++		len = sprintf(buf, "%d\n", ha->ip_config.ipv6_traffic_class);
++		break;
++	case ISCSI_NET_PARAM_IPV6_HOP_LIMIT:
++		len = sprintf(buf, "%d\n", ha->ip_config.ipv6_hop_limit);
++		break;
++	case ISCSI_NET_PARAM_IPV6_ND_REACHABLE_TMO:
++		len = sprintf(buf, "%d\n", ha->ip_config.ipv6_nd_reach_time);
++		break;
++	case ISCSI_NET_PARAM_IPV6_ND_REXMIT_TIME:
++		len = sprintf(buf, "%d\n", ha->ip_config.ipv6_nd_rexmit_timer);
++		break;
++	case ISCSI_NET_PARAM_IPV6_ND_STALE_TMO:
++		len = sprintf(buf, "%d\n", ha->ip_config.ipv6_nd_stale_timeout);
++		break;
++	case ISCSI_NET_PARAM_IPV6_DUP_ADDR_DET_CNT:
++		len = sprintf(buf, "%d\n",
++			      ha->ip_config.ipv6_dup_addr_detect_count);
++		break;
++	case ISCSI_NET_PARAM_IPV6_RTR_ADV_LINK_MTU:
++		len = sprintf(buf, "%d\n", ha->ip_config.ipv6_gw_advrt_mtu);
++		break;
++	case ISCSI_NET_PARAM_DEF_TMF_TMO:
++		len = sprintf(buf, "%d\n", ha->ip_config.def_timeout);
++		break;
++	case ISCSI_NET_PARAM_DEF_HDRDGST_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_HEADER_DIGEST_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_DATADGST_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_DATA_DIGEST_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_IMM_DATA_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_IMMEDIATE_DATA_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_INITIAL_R2T_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_INITIAL_R2T_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_DATASEQ_INORDER_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_DATA_SEQ_INORDER_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_PDU_INORDER_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_DATA_PDU_INORDER_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_ERL:
++		len = sprintf(buf, "%d\n", (ha->ip_config.iscsi_options &
++					    ISCSIOPT_ERR_RECOVERY_LEVEL_MASK));
++		break;
++	case ISCSI_NET_PARAM_DEF_MAX_RECV_DLENGTH:
++		len = sprintf(buf, "%d\n", ha->ip_config.iscsi_max_pdu_size);
++		break;
++	case ISCSI_NET_PARAM_DEF_FIRST_BURST:
++		len = sprintf(buf, "%d\n", ha->ip_config.iscsi_fburst_len);
++		break;
++	case ISCSI_NET_PARAM_DEF_MAX_R2T:
++		len = sprintf(buf, "%d\n", ha->ip_config.iscsi_max_outstnd_r2t);
++		break;
++	case ISCSI_NET_PARAM_DEF_MAX_BURST:
++		len = sprintf(buf, "%d\n", ha->ip_config.iscsi_max_burst_len);
++		break;
++	case ISCSI_NET_PARAM_DEF_CHAP_AUTH_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_CHAP_AUTH_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_BIDI_CHAP_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_BIDI_CHAP_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_STRICT_LOGIN_COMP_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_STRICT_LOGIN_COMP_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_DISCOVERY_AUTH_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_DISCOVERY_AUTH_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_DISCOVERY_LOGOUT_EN:
++		len = sprintf(buf, "%s\n",
++			      (ha->ip_config.iscsi_options &
++			       ISCSIOPT_DISCOVERY_LOGOUT_ENABLE) ?
++			      "enabled" : "disabled");
++		break;
++	case ISCSI_NET_PARAM_DEF_ISCSI_NAME:
++		len = sprintf(buf, "%s\n", ha->ip_config.iscsi_name);
++		break;
+ 	default:
+ 		len = -ENOSYS;
+ 	}
+@@ -1198,6 +1588,300 @@ static void qla4xxx_set_ipv6(struct scsi_qla_host *ha,
+ 		init_fw_cb->ipv6_port =
+ 				cpu_to_le16(*(uint16_t *)iface_param->value);
+ 		break;
++	case ISCSI_NET_PARAM_DELAYED_ACK_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_DISABLE)
++			init_fw_cb->ipv6_tcp_opts |=
++				cpu_to_le16(IPV6_TCPOPT_DELAYED_ACK_DISABLE);
++		else
++			init_fw_cb->ipv6_tcp_opts &=
++				cpu_to_le16(~IPV6_TCPOPT_DELAYED_ACK_DISABLE &
++					    0xFFFF);
++		break;
++	case ISCSI_NET_PARAM_ISNS_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv6_tcp_opts |=
++				cpu_to_le16(IPV6_TCPOPT_ISNS_ENABLE);
++		else
++			init_fw_cb->ipv6_tcp_opts &=
++				cpu_to_le16(~IPV6_TCPOPT_ISNS_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_ISNS_ADDR:
++		if (iface_param->iface_num & 0x1)
++			break;
++		memcpy(init_fw_cb->ipv6_isns_addr, iface_param->value,
++		       sizeof(init_fw_cb->ipv6_isns_addr));
++		break;
++	case ISCSI_NET_PARAM_NAGLE_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_DISABLE)
++			init_fw_cb->ipv6_tcp_opts |=
++				cpu_to_le16(IPV6_TCPOPT_NAGLE_ALGO_DISABLE);
++		else
++			init_fw_cb->ipv6_tcp_opts &=
++				cpu_to_le16(~IPV6_TCPOPT_NAGLE_ALGO_DISABLE);
++		break;
++	case ISCSI_NET_PARAM_TCP_WIN_SCALE_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_DISABLE)
++			init_fw_cb->ipv6_tcp_opts |=
++				cpu_to_le16(IPV6_TCPOPT_WINDOW_SCALE_DISABLE);
++		else
++			init_fw_cb->ipv6_tcp_opts &=
++				cpu_to_le16(~IPV6_TCPOPT_WINDOW_SCALE_DISABLE);
++		break;
++	case ISCSI_NET_PARAM_TCP_WIN_SCALE:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_tcp_wsf = iface_param->value[0];
++		break;
++	case ISCSI_NET_PARAM_TCP_TIMER_SCALE:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_tcp_opts &= cpu_to_le16(~TCPOPT_TIMER_SCALE);
++		init_fw_cb->ipv6_tcp_opts |=
++				cpu_to_le16((iface_param->value[0] << 1) &
++					    TCPOPT_TIMER_SCALE);
++		break;
++	case ISCSI_NET_PARAM_TCP_TIMESTAMP_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv6_tcp_opts |=
++				cpu_to_le16(IPV6_TCPOPT_TIMESTAMP_ENABLE);
++		else
++			init_fw_cb->ipv6_tcp_opts &=
++				cpu_to_le16(~IPV6_TCPOPT_TIMESTAMP_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV6_GRAT_NEIGHBOR_ADV_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv6_opts |=
++				cpu_to_le16(IPV6_OPT_GRAT_NEIGHBOR_ADV_ENABLE);
++		else
++			init_fw_cb->ipv6_opts &=
++				cpu_to_le16(~IPV6_OPT_GRAT_NEIGHBOR_ADV_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_REDIRECT_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv6_opts |=
++				cpu_to_le16(IPV6_OPT_REDIRECT_ENABLE);
++		else
++			init_fw_cb->ipv6_opts &=
++				cpu_to_le16(~IPV6_OPT_REDIRECT_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV6_MLD_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv6_addtl_opts |=
++				cpu_to_le16(IPV6_ADDOPT_MLD_ENABLE);
++		else
++			init_fw_cb->ipv6_addtl_opts &=
++				cpu_to_le16(~IPV6_ADDOPT_MLD_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV6_FLOW_LABEL:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_flow_lbl =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_IPV6_TRAFFIC_CLASS:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_traffic_class = iface_param->value[0];
++		break;
++	case ISCSI_NET_PARAM_IPV6_HOP_LIMIT:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_hop_limit = iface_param->value[0];
++		break;
++	case ISCSI_NET_PARAM_IPV6_ND_REACHABLE_TMO:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_nd_reach_time =
++				cpu_to_le32(*(uint32_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_IPV6_ND_REXMIT_TIME:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_nd_rexmit_timer =
++				cpu_to_le32(*(uint32_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_IPV6_ND_STALE_TMO:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_nd_stale_timeout =
++				cpu_to_le32(*(uint32_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_IPV6_DUP_ADDR_DET_CNT:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_dup_addr_detect_count = iface_param->value[0];
++		break;
++	case ISCSI_NET_PARAM_IPV6_RTR_ADV_LINK_MTU:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv6_gw_advrt_mtu =
++				cpu_to_le32(*(uint32_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_TMF_TMO:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->def_timeout =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_HDRDGST_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_HEADER_DIGEST_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_HEADER_DIGEST_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_DATADGST_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DATA_DIGEST_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DATA_DIGEST_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_IMM_DATA_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_IMMEDIATE_DATA_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_IMMEDIATE_DATA_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_INITIAL_R2T_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_INITIAL_R2T_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_INITIAL_R2T_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_DATASEQ_INORDER_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DATA_SEQ_INORDER_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DATA_SEQ_INORDER_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_PDU_INORDER_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DATA_PDU_INORDER_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DATA_PDU_INORDER_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_ERL:
++		if (iface_param->iface_num & 0x1)
++			break;
++		/* Set lower 2 bits to zero */
++		init_fw_cb->iscsi_opts &= 0xFFFC;
++		init_fw_cb->iscsi_opts |=
++				cpu_to_le16(iface_param->value[0] &
++					    ISCSIOPT_ERR_RECOVERY_LEVEL_MASK);
++		break;
++	case ISCSI_NET_PARAM_DEF_MAX_RECV_DLENGTH:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->iscsi_max_pdu_size =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_FIRST_BURST:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->iscsi_fburst_len =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_MAX_R2T:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->iscsi_max_outstnd_r2t =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_MAX_BURST:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->iscsi_max_burst_len =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_CHAP_AUTH_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_CHAP_AUTH_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_CHAP_AUTH_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_BIDI_CHAP_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_BIDI_CHAP_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_BIDI_CHAP_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_STRICT_LOGIN_COMP_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_STRICT_LOGIN_COMP_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_STRICT_LOGIN_COMP_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_DISCOVERY_AUTH_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DISCOVERY_AUTH_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DISCOVERY_AUTH_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_DISCOVERY_LOGOUT_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DISCOVERY_LOGOUT_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DISCOVERY_LOGOUT_ENABLE);
++		break;
+ 	default:
+ 		ql4_printk(KERN_ERR, ha, "Unknown IPv6 param = %d\n",
+ 			   iface_param->param);
+@@ -1266,6 +1950,379 @@ static void qla4xxx_set_ipv4(struct scsi_qla_host *ha,
+ 		init_fw_cb->ipv4_port =
+ 				cpu_to_le16(*(uint16_t *)iface_param->value);
+ 		break;
++	case ISCSI_NET_PARAM_DELAYED_ACK_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_DISABLE)
++			init_fw_cb->ipv4_tcp_opts |=
++				cpu_to_le16(TCPOPT_DELAYED_ACK_DISABLE);
++		else
++			init_fw_cb->ipv4_tcp_opts &=
++				cpu_to_le16(~TCPOPT_DELAYED_ACK_DISABLE &
++					    0xFFFF);
++		break;
++	case ISCSI_NET_PARAM_ISNS_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_tcp_opts |=
++				cpu_to_le16(TCPOPT_ISNS_ENABLE);
++		else
++			init_fw_cb->ipv4_tcp_opts &=
++				cpu_to_le16(~TCPOPT_ISNS_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_ISNS_ADDR:
++		if (iface_param->iface_num & 0x1)
++			break;
++		memcpy(init_fw_cb->ipv4_isns_addr, iface_param->value,
++		       sizeof(init_fw_cb->ipv4_isns_addr));
++		break;
++	case ISCSI_NET_PARAM_ISNS_PORT:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv4_isns_port =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_NAGLE_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_DISABLE)
++			init_fw_cb->ipv4_tcp_opts |=
++				cpu_to_le16(TCPOPT_NAGLE_ALGO_DISABLE);
++		else
++			init_fw_cb->ipv4_tcp_opts &=
++				cpu_to_le16(~TCPOPT_NAGLE_ALGO_DISABLE);
++		break;
++	case ISCSI_NET_PARAM_TCP_WIN_SCALE_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_DISABLE)
++			init_fw_cb->ipv4_tcp_opts |=
++				cpu_to_le16(TCPOPT_WINDOW_SCALE_DISABLE);
++		else
++			init_fw_cb->ipv4_tcp_opts &=
++				cpu_to_le16(~TCPOPT_WINDOW_SCALE_DISABLE);
++		break;
++	case ISCSI_NET_PARAM_TCP_WIN_SCALE:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv4_tcp_wsf = iface_param->value[0];
++		break;
++	case ISCSI_NET_PARAM_TCP_TIMER_SCALE:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv4_tcp_opts &= cpu_to_le16(~TCPOPT_TIMER_SCALE);
++		init_fw_cb->ipv4_tcp_opts |=
++				cpu_to_le16((iface_param->value[0] << 1) &
++					    TCPOPT_TIMER_SCALE);
++		break;
++	case ISCSI_NET_PARAM_TCP_TIMESTAMP_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_tcp_opts |=
++				cpu_to_le16(TCPOPT_TIMESTAMP_ENABLE);
++		else
++			init_fw_cb->ipv4_tcp_opts &=
++				cpu_to_le16(~TCPOPT_TIMESTAMP_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_DNS_ADDR_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_tcp_opts |=
++				cpu_to_le16(TCPOPT_DNS_SERVER_IP_ENABLE);
++		else
++			init_fw_cb->ipv4_tcp_opts &=
++				cpu_to_le16(~TCPOPT_DNS_SERVER_IP_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_SLP_DA_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_tcp_opts |=
++				cpu_to_le16(TCPOPT_SLP_DA_INFO_ENABLE);
++		else
++			init_fw_cb->ipv4_tcp_opts &=
++				cpu_to_le16(~TCPOPT_SLP_DA_INFO_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_REQ_ISNS_INFO_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_tcp_opts |=
++				cpu_to_le16(TCPOPT_ISNS_INFO_ENABLE);
++		else
++			init_fw_cb->ipv4_tcp_opts &=
++				cpu_to_le16(~TCPOPT_ISNS_INFO_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_TOS_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_ip_opts |=
++				cpu_to_le16(IPOPT_IPV4_TOS_ENABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++				cpu_to_le16(~IPOPT_IPV4_TOS_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_TOS:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv4_tos = iface_param->value[0];
++		break;
++	case ISCSI_NET_PARAM_IPV4_GRAT_ARP_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_ip_opts |=
++					cpu_to_le16(IPOPT_GRAT_ARP_ENABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++					cpu_to_le16(~IPOPT_GRAT_ARP_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_ip_opts |=
++				cpu_to_le16(IPOPT_ALT_CID_ENABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++				cpu_to_le16(~IPOPT_ALT_CID_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_ALT_CLIENT_ID:
++		if (iface_param->iface_num & 0x1)
++			break;
++		memcpy(init_fw_cb->ipv4_dhcp_alt_cid, iface_param->value,
++		       (sizeof(init_fw_cb->ipv4_dhcp_alt_cid) - 1));
++		init_fw_cb->ipv4_dhcp_alt_cid_len =
++					strlen(init_fw_cb->ipv4_dhcp_alt_cid);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_REQ_VENDOR_ID_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_ip_opts |=
++					cpu_to_le16(IPOPT_REQ_VID_ENABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++					cpu_to_le16(~IPOPT_REQ_VID_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_USE_VENDOR_ID_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_ip_opts |=
++					cpu_to_le16(IPOPT_USE_VID_ENABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++					cpu_to_le16(~IPOPT_USE_VID_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_VENDOR_ID:
++		if (iface_param->iface_num & 0x1)
++			break;
++		memcpy(init_fw_cb->ipv4_dhcp_vid, iface_param->value,
++		       (sizeof(init_fw_cb->ipv4_dhcp_vid) - 1));
++		init_fw_cb->ipv4_dhcp_vid_len =
++					strlen(init_fw_cb->ipv4_dhcp_vid);
++		break;
++	case ISCSI_NET_PARAM_IPV4_DHCP_LEARN_IQN_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_ip_opts |=
++					cpu_to_le16(IPOPT_LEARN_IQN_ENABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++					cpu_to_le16(~IPOPT_LEARN_IQN_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_FRAGMENT_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_DISABLE)
++			init_fw_cb->ipv4_ip_opts |=
++				cpu_to_le16(IPOPT_FRAGMENTATION_DISABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++				cpu_to_le16(~IPOPT_FRAGMENTATION_DISABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_IN_FORWARD_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_ip_opts |=
++				cpu_to_le16(IPOPT_INCOM_FORWARD_ENABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++				cpu_to_le16(~IPOPT_INCOM_FORWARD_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_REDIRECT_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->ipv4_ip_opts |=
++				cpu_to_le16(IPOPT_ARP_REDIRECT_ENABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++				cpu_to_le16(~IPOPT_ARP_REDIRECT_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_IPV4_TTL:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->ipv4_ttl = iface_param->value[0];
++		break;
++	case ISCSI_NET_PARAM_DEF_TMF_TMO:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->def_timeout =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_HDRDGST_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_HEADER_DIGEST_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_HEADER_DIGEST_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_DATADGST_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DATA_DIGEST_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DATA_DIGEST_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_IMM_DATA_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_IMMEDIATE_DATA_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_IMMEDIATE_DATA_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_INITIAL_R2T_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_INITIAL_R2T_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_INITIAL_R2T_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_DATASEQ_INORDER_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DATA_SEQ_INORDER_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DATA_SEQ_INORDER_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_PDU_INORDER_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DATA_PDU_INORDER_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DATA_PDU_INORDER_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_ERL:
++		if (iface_param->iface_num & 0x1)
++			break;
++		/* Set lower 2 bits to zero */
++		init_fw_cb->iscsi_opts >>= 2;
++		init_fw_cb->iscsi_opts <<= 2;
++
++		init_fw_cb->iscsi_opts |=
++				cpu_to_le16(iface_param->value[0] &
++					    ISCSIOPT_ERR_RECOVERY_LEVEL_MASK);
++		break;
++	case ISCSI_NET_PARAM_DEF_MAX_RECV_DLENGTH:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->iscsi_max_pdu_size =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_FIRST_BURST:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->iscsi_fburst_len =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_MAX_R2T:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->iscsi_max_outstnd_r2t =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_MAX_BURST:
++		if (iface_param->iface_num & 0x1)
++			break;
++		init_fw_cb->iscsi_max_burst_len =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
++	case ISCSI_NET_PARAM_DEF_CHAP_AUTH_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_CHAP_AUTH_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_CHAP_AUTH_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_BIDI_CHAP_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_BIDI_CHAP_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_BIDI_CHAP_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_STRICT_LOGIN_COMP_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_STRICT_LOGIN_COMP_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_STRICT_LOGIN_COMP_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_DISCOVERY_AUTH_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DISCOVERY_AUTH_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DISCOVERY_AUTH_ENABLE);
++		break;
++	case ISCSI_NET_PARAM_DEF_DISCOVERY_LOGOUT_EN:
++		if (iface_param->iface_num & 0x1)
++			break;
++		if (iface_param->value[0] == ISCSI_NET_PARAM_ENABLE)
++			init_fw_cb->iscsi_opts |=
++				cpu_to_le16(ISCSIOPT_DISCOVERY_LOGOUT_ENABLE);
++		else
++			init_fw_cb->iscsi_opts &=
++				cpu_to_le16(~ISCSIOPT_DISCOVERY_LOGOUT_ENABLE);
++		break;
+ 	default:
+ 		ql4_printk(KERN_ERR, ha, "Unknown IPv4 param = %d\n",
+ 			   iface_param->param);
 -- 
 1.8.2.GIT
 
