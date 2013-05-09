@@ -1,40 +1,58 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] lsscsi version 0.27 released
-Date: Thu, 09 May 2013 00:08:00 -0400
-Message-ID: <518B2120.9040607@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: "Dolev Raviv" <draviv@codeaurora.org>
+Subject: Re: [PATCH V2] scsi: ufs: Add fDeviceInit set flag during
+ initialization
+Date: Wed, 8 May 2013 23:38:13 -0700
+Message-ID: <6a3ae402d24ff869517c73209b1edb79.squirrel@www.codeaurora.org>
+References: <1368022782-27178-1-git-send-email-draviv@codeaurora.org>
+    <CALMYJDsYSfDjZ6pug3cZ+wkFaL0VcZnNMk11DFAW7Ay56PjbdA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, =?ISO-8859-1?Q?Dan_Hor?= =?ISO-8859-1?Q?=E1k?= <dhorak@redhat.com>, Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <CALMYJDsYSfDjZ6pug3cZ+wkFaL0VcZnNMk11DFAW7Ay56PjbdA@mail.gmail.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Santosh Y <santoshsy@gmail.com>
+Cc: Dolev Raviv <draviv@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-lsscsi is a command line utility that probes sysfs in Linux
-2.6 and 3 series kernels in order to list information about
-SCSI devices and SCSI hosts. Both a compact format which is
-one line per device and a "classic" format (like the output
-of 'cat /proc/scsi/scsi') are supported.
+>> + */
+>> +int ufshcd_query_request(struct ufs_hba *hba,
+>> +                       struct ufs_query_req *query,
+>> +                       u8 *descriptor,
+>> +                       struct ufs_query_res *response,
+>> +                       int timeout,
+>> +                       int retries)
+>> +{
+>> +       struct scsi_device *sdev;
+>> +       u8 cmd[UFS_QUERY_CMD_SIZE] = {0};
+>> +       int result;
+>> +       bool sdev_lookup = true;
+>> +
+>> +       if (!hba || !query || !response) {
+>> +               dev_err(hba->dev,
+>
+> Please fix the static checker warnings mentioned by Dan in the previous
+> mail.
+> Re-base it on Seungwon's V4 patch series and you can add my Acked-by:
+> Santosh Y <santoshsy@gmail.com>
+>
 
-Version 0.27 is available at:
-     http://sg.danny.cz/scsi/lsscsi.html
-More information can be found on that page including examples
-plus a Download and Build information section containing
-tarballs, rpm and deb packages.
+The fix is ready.
+I have to base it on top of Sujit's patch since it is inserted in the flow
+he introduced.
 
+>
+>
+> --
+> ~Santosh
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-ChangeLog:
-Version 0.27 2013/05/08 [svn: r111]
-   - rework buffer handling for systems with many disks
-   - add --lunhex option for displaying LUNs in hex
-   - accept LUNs from sysfs as large as a 64 bit unsigned
-     decimal number (largest was signed 32 bit decimal)
-   - accept LSSCSI_LUNHEX_OPT environment variable
-   - add --scsi_id option for /dev/disk/by-id/scsi*
-
-Version 0.26 2012/01/31 [svn: r97]
-....
-
-Doug Gilbert
+-- 
+Dolev
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
