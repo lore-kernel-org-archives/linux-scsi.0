@@ -1,55 +1,106 @@
-From: Baruch Even <baruch@ev-en.org>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH] scsi: Allow error handling timeout to be specified
-Date: Fri, 10 May 2013 20:55:35 +0300
-Message-ID: <CAC9+anLYv5RvwLDuQ-Dxg87Ojx3vshmyuJJ0jDNQjE7-CSMS3A@mail.gmail.com>
-References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net> <1368189791.3319.31.camel@localhost.localdomain>
- <CAC9+anJ9Y-SnCOK6EOCavTNJwx=xhAbL_X__MsEsL7DroawaJg@mail.gmail.com> <yq1k3n6dgy2.fsf@sermon.lab.mkp.net>
+Date: Fri, 10 May 2013 22:18:02 +0200
+Message-ID: <518D55FA.4080302@suse.de>
+References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net> <1368189791.3319.31.camel@localhost.localdomain> <CAC9+an+UBY3Cbxryn3O0KMVMuwdXBpf9EsVJ08tV=5Y0dpkjdA@mail.gmail.com> <1368194460.3319.40.camel@localhost.localdomain> <CAC9+anK-E2pok_eU2EdZxgaBY7-68rbj19C7G4w5rhTmZB7vzw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:48455 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571Ab3EJRz4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 May 2013 13:55:56 -0400
-Received: by mail-ea0-f176.google.com with SMTP id h14so2420032eak.21
-        for <linux-scsi@vger.kernel.org>; Fri, 10 May 2013 10:55:55 -0700 (PDT)
-In-Reply-To: <yq1k3n6dgy2.fsf@sermon.lab.mkp.net>
+Received: from cantor2.suse.de ([195.135.220.15]:38899 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753679Ab3EJTSH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 May 2013 15:18:07 -0400
+In-Reply-To: <CAC9+anK-E2pok_eU2EdZxgaBY7-68rbj19C7G4w5rhTmZB7vzw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: emilne <emilne@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, michaelc <michaelc@cs.wisc.edu>
+To: Baruch Even <baruch@ev-en.org>
+Cc: emilne@redhat.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, michaelc <michaelc@cs.wisc.edu>
 
-On Fri, May 10, 2013 at 5:53 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Baruch" == Baruch Even <baruch@ev-en.org> writes:
+On 05/10/2013 07:51 PM, Baruch Even wrote:
+> On Fri, May 10, 2013 at 5:01 PM, Ewan Milne <emilne@redhat.com> wrote:
+>> On Fri, 2013-05-10 at 16:22 +0300, Baruch Even wrote:
+>>> On Fri, May 10, 2013 at 3:43 PM, Ewan Milne <emilne@redhat.com> wrote:
+>>>>
+>>>> On Thu, 2013-05-09 at 23:11 -0400, Martin K. Petersen wrote:
+>>>>> Introduce eh_timeout which can be used for error handling purposes. This
+>>>>> was previously hardcoded to 10 seconds in the SCSI error handling
+>>>>> code. However, for some fast-fail scenarios it is necessary to be able
+>>>>> to tune this as it can take several iterations (bus device, target, bus,
+>>>>> controller) before we give up.
+>>>>>
+>>>>> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+>>>>>
+>>>>
+>>>> Thanks for posting this.  It will be very helpful to have this
+>>>> capability, particularly when alternate paths to the device exist.
+>>>>
+>>>> Acked-by: Ewan D. Milne <emilne@redhat.com>
+>>>
+>>>
+>>> I would argue that waiting for the eh to timeout before you switch to
+>>> another path is most likely to be wrong. If you did the first pass of
+>>> error recovery (task abort) and that failed the
+>>> path/hba/logical-device is doomed. If you will switch to another path
+>>> it will either work (meaning the path/hba were bad) or not (logical
+>>> device was the culprit).
+>>
+>> It is necessary to either know the disposition of a command or
+>> else wait for a defined amount of time before retrying the command on
+>> another path.  Otherwise you run the risk that the command will
+>> eventually complete on the first path.  So yes, we need to do the abort
+>> (and its timeout).
+>>
+>>>
+>>> Actually reducing the timeouts is probably not a good approach since
+>>> it will cause the host to take a more radical approach without waiting
+>>> sufficiently for a potential recovery. In addition the more radical
+>>> error handlings such as host reset will destroy other paths for
+>>> completely unrelated devices/links, from my experience a host reset is
+>>> usually not required and the Linux kernel currently reaches to this
+>>> big hammer too fast.
+>>
+>> I believe that Hannes is working on a better error handling algorithm
+>> that e.g. does not cause an emulated bus reset in an FC environment
+>> by resetting all the targets (and affecting I/O to unrelated targets in
+>> the process).
 >
-> Baruch> Actually reducing the timeouts is probably not a good approach
-> Baruch> since it will cause the host to take a more radical approach
-> Baruch> without waiting sufficiently for a potential recovery.
+> The error handling I have in mind (admittedly, not fully thought out)
+> should work for both FC and SAS. Currently the error recovery
+> progresses at the host level regardless of if the errors are on one
+> device or all of them, it also stops the IOs on all devices and LUNs.
+> It would be nice if that was taken into account. My ideas may be more
+> suitable to the environment I work in (enterprise storage devices
+> rather than hosts) but I believe the same approach would benefit the
+> hosts as well.
 >
-> Reducing the eh timeout is a requirement in many clustered setups. We've
-> been shipping a predecessor to this patch in our kernels for a long
-> time.
-
-> Baruch> In addition the more radical error handlings such as host reset
-> Baruch> will destroy other paths for completely unrelated devices/links,
-> Baruch> from my experience a host reset is usually not required and the
-> Baruch> Linux kernel currently reaches to this big hammer too fast.
+> It would be interesting to see what approach the new error handling will take.
 >
-> I'm also working on a patch to add some heuristics to avoid the HBA and
-> bus resets if I/O is completing successfully on other attached
-> targets. But that's an orthogonal issue.
+So, my general idea is this:
 
-Why?
+1) Send command aborts from scsi_times_out(). There is no requirement
+    on stopping I/O on the host simply because a single command times
+    out. And as scsi_times_out() is run from a separate thread anyway
+    we should be able to send ABORT TASK TMFs without a problem
+2) Modify recovery sequence.
+    One of the major pitfalls of the current scsi_eh is that it
+    spills over onto unrelated LUNs for higher levels. So for the
+    new EH we should be using a sequence of
+    - ABORT TASK
+    - ABORT TASK SET
+    - (Terminate I_T nexus)
+    - (Host reset)
+    'Terminate I_T nexus' for FibreChannel is equivalent to a LOGO.
+    'Host reset' is the current host reset function.
+3) Finegrained recovery setting.
+    There is no need to stop the entire host when doing a recovery;
+    it should be sufficient to stop I/O to the unit
+    (LUN, I_T nexus, host) when the error recovery is at the
+    respective level.
 
-In my experience (again, SAS based inside a storage device) the
-reduced eh timeout is more likely to cause escalated problems rather
-than resolve the issue.
+As usual, comments are welcome.
 
-I actually find that the higher level should have a small timeout of
-its own to do its own recovery work, which normally entails going to
-other copies of the data where available and let the device try to get
-the IO done if possible. Not sure how applicable it is to the kernel
-itself but I do feel it could be relevant.
+Cheers,
 
-Baruch
+Hannes
+
