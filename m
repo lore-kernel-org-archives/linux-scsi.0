@@ -1,106 +1,72 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Baruch Even <baruch@ev-en.org>
 Subject: Re: [PATCH] scsi: Allow error handling timeout to be specified
-Date: Fri, 10 May 2013 22:18:02 +0200
-Message-ID: <518D55FA.4080302@suse.de>
-References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net> <1368189791.3319.31.camel@localhost.localdomain> <CAC9+an+UBY3Cbxryn3O0KMVMuwdXBpf9EsVJ08tV=5Y0dpkjdA@mail.gmail.com> <1368194460.3319.40.camel@localhost.localdomain> <CAC9+anK-E2pok_eU2EdZxgaBY7-68rbj19C7G4w5rhTmZB7vzw@mail.gmail.com>
+Date: Fri, 10 May 2013 22:27:37 +0300
+Message-ID: <CAC9+anKxnDBYh15uwQQoTUzGZkwUe6wuV=8wf6NUVsC4+_TUgw@mail.gmail.com>
+References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net> <1368189791.3319.31.camel@localhost.localdomain>
+ <CAC9+an+UBY3Cbxryn3O0KMVMuwdXBpf9EsVJ08tV=5Y0dpkjdA@mail.gmail.com>
+ <1368194460.3319.40.camel@localhost.localdomain> <CAC9+anK-E2pok_eU2EdZxgaBY7-68rbj19C7G4w5rhTmZB7vzw@mail.gmail.com>
+ <518D55FA.4080302@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38899 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753679Ab3EJTSH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 May 2013 15:18:07 -0400
-In-Reply-To: <CAC9+anK-E2pok_eU2EdZxgaBY7-68rbj19C7G4w5rhTmZB7vzw@mail.gmail.com>
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:32856 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753089Ab3EJT16 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 May 2013 15:27:58 -0400
+Received: by mail-ee0-f43.google.com with SMTP id b15so2413828eek.30
+        for <linux-scsi@vger.kernel.org>; Fri, 10 May 2013 12:27:57 -0700 (PDT)
+In-Reply-To: <518D55FA.4080302@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Baruch Even <baruch@ev-en.org>
-Cc: emilne@redhat.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, michaelc <michaelc@cs.wisc.edu>
+To: Hannes Reinecke <hare@suse.de>
+Cc: emilne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, michaelc <michaelc@cs.wisc.edu>
 
-On 05/10/2013 07:51 PM, Baruch Even wrote:
-> On Fri, May 10, 2013 at 5:01 PM, Ewan Milne <emilne@redhat.com> wrote:
->> On Fri, 2013-05-10 at 16:22 +0300, Baruch Even wrote:
->>> On Fri, May 10, 2013 at 3:43 PM, Ewan Milne <emilne@redhat.com> wrote:
->>>>
->>>> On Thu, 2013-05-09 at 23:11 -0400, Martin K. Petersen wrote:
->>>>> Introduce eh_timeout which can be used for error handling purposes. This
->>>>> was previously hardcoded to 10 seconds in the SCSI error handling
->>>>> code. However, for some fast-fail scenarios it is necessary to be able
->>>>> to tune this as it can take several iterations (bus device, target, bus,
->>>>> controller) before we give up.
->>>>>
->>>>> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
->>>>>
->>>>
->>>> Thanks for posting this.  It will be very helpful to have this
->>>> capability, particularly when alternate paths to the device exist.
->>>>
->>>> Acked-by: Ewan D. Milne <emilne@redhat.com>
->>>
->>>
->>> I would argue that waiting for the eh to timeout before you switch to
->>> another path is most likely to be wrong. If you did the first pass of
->>> error recovery (task abort) and that failed the
->>> path/hba/logical-device is doomed. If you will switch to another path
->>> it will either work (meaning the path/hba were bad) or not (logical
->>> device was the culprit).
+On Fri, May 10, 2013 at 11:18 PM, Hannes Reinecke <hare@suse.de> wrote:
+> On 05/10/2013 07:51 PM, Baruch Even wrote:
 >>
->> It is necessary to either know the disposition of a command or
->> else wait for a defined amount of time before retrying the command on
->> another path.  Otherwise you run the risk that the command will
->> eventually complete on the first path.  So yes, we need to do the abort
->> (and its timeout).
+>> The error handling I have in mind (admittedly, not fully thought out)
+>> should work for both FC and SAS. Currently the error recovery
+>> progresses at the host level regardless of if the errors are on one
+>> device or all of them, it also stops the IOs on all devices and LUNs.
+>> It would be nice if that was taken into account. My ideas may be more
+>> suitable to the environment I work in (enterprise storage devices
+>> rather than hosts) but I believe the same approach would benefit the
+>> hosts as well.
 >>
->>>
->>> Actually reducing the timeouts is probably not a good approach since
->>> it will cause the host to take a more radical approach without waiting
->>> sufficiently for a potential recovery. In addition the more radical
->>> error handlings such as host reset will destroy other paths for
->>> completely unrelated devices/links, from my experience a host reset is
->>> usually not required and the Linux kernel currently reaches to this
->>> big hammer too fast.
+>> It would be interesting to see what approach the new error handling will
+>> take.
 >>
->> I believe that Hannes is working on a better error handling algorithm
->> that e.g. does not cause an emulated bus reset in an FC environment
->> by resetting all the targets (and affecting I/O to unrelated targets in
->> the process).
+> So, my general idea is this:
 >
-> The error handling I have in mind (admittedly, not fully thought out)
-> should work for both FC and SAS. Currently the error recovery
-> progresses at the host level regardless of if the errors are on one
-> device or all of them, it also stops the IOs on all devices and LUNs.
-> It would be nice if that was taken into account. My ideas may be more
-> suitable to the environment I work in (enterprise storage devices
-> rather than hosts) but I believe the same approach would benefit the
-> hosts as well.
->
-> It would be interesting to see what approach the new error handling will take.
->
-So, my general idea is this:
+> 1) Send command aborts from scsi_times_out(). There is no requirement
+>    on stopping I/O on the host simply because a single command times
+>    out. And as scsi_times_out() is run from a separate thread anyway
+>    we should be able to send ABORT TASK TMFs without a problem
+> 2) Modify recovery sequence.
+>    One of the major pitfalls of the current scsi_eh is that it
+>    spills over onto unrelated LUNs for higher levels. So for the
+>    new EH we should be using a sequence of
+>    - ABORT TASK
+>    - ABORT TASK SET
+>    - (Terminate I_T nexus)
+>    - (Host reset)
+>    'Terminate I_T nexus' for FibreChannel is equivalent to a LOGO.
+>    'Host reset' is the current host reset function.
+> 3) Finegrained recovery setting.
+>    There is no need to stop the entire host when doing a recovery;
+>    it should be sufficient to stop I/O to the unit
+>    (LUN, I_T nexus, host) when the error recovery is at the
+>    respective level.
 
-1) Send command aborts from scsi_times_out(). There is no requirement
-    on stopping I/O on the host simply because a single command times
-    out. And as scsi_times_out() is run from a separate thread anyway
-    we should be able to send ABORT TASK TMFs without a problem
-2) Modify recovery sequence.
-    One of the major pitfalls of the current scsi_eh is that it
-    spills over onto unrelated LUNs for higher levels. So for the
-    new EH we should be using a sequence of
-    - ABORT TASK
-    - ABORT TASK SET
-    - (Terminate I_T nexus)
-    - (Host reset)
-    'Terminate I_T nexus' for FibreChannel is equivalent to a LOGO.
-    'Host reset' is the current host reset function.
-3) Finegrained recovery setting.
-    There is no need to stop the entire host when doing a recovery;
-    it should be sufficient to stop I/O to the unit
-    (LUN, I_T nexus, host) when the error recovery is at the
-    respective level.
+This looks great and much in line with what I'm thinking.
 
-As usual, comments are welcome.
+What about not going to the higher level if not everything at that
+level had failed?
+I mean that if at the target not all LUNs failed it will be quite
+troublesome to other LUNs if I-T-Nexus is terminated and that at the
+host level if there are still targets that are functioning it will
+kill them too to reset the host.
 
-Cheers,
+Will this replace all of EH or just FC EH?
 
-Hannes
-
+Baruch
