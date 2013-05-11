@@ -1,49 +1,45 @@
-From: zheng@physics.ucdavis.edu
-Subject: Claims Requirements
-Date: Fri, 10 May 2013 20:38:51 -0700 (PDT)
-Message-ID: <51891.41.71.202.177.1368243531.squirrel__48586.2888549038$1368248426$gmane$org@ms.physics.ucdavis.edu>
-Reply-To: mr.fredpetersclaimsagent038@y7mail.com
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH] qla2x00t: Fix a memory leak in an error path
+Date: Sat, 11 May 2013 14:38:15 +0200
+Message-ID: <518E3BB7.20109@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms.physics.ucdavis.edu ([169.237.42.210]:43841 "EHLO
-	ms.physics.ucdavis.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122Ab3EKE7p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 May 2013 00:59:45 -0400
+Received: from jacques.telenet-ops.be ([195.130.132.50]:44106 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069Ab3EKMiS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 May 2013 08:38:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is to inform you that you have been
-selected for a cash prize of =A31,000,000
-(British Pounds) held on the 8th of May
-2013 in London (United Kingdom). The
-selection process was carried out through
-random selection in Our computerized email
-selection system (ESS) London Uk.
+Avoid that the fcport structure gets leaked if
+bsg_job->request->msgcode == FC_BSG_HST_ELS_NOLOGIN, the fcport
+allocation succeeds and the !vha->flags.online branch is taken.
+Detected by Coverity.
 
-You have therefore been approved to claim
-a total sum of 1 Million Pounds,(One Million Pounds)
-in cash credited to fileKTU/ 9023118308/03.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_bsg.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Claims Requirements:
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 39719f8..af35707 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -329,7 +329,7 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
+ 	if (!vha->flags.online) {
+ 		ql_log(ql_log_warn, vha, 0x7005, "Host not online.\n");
+ 		rval = -EIO;
+-		goto done;
++		goto done_free_fcport;
+ 	}
+ 
+ 	req_sg_cnt =
+-- 
+1.7.10.4
 
-1.Full Name
-2.Full Address
-3.Marital Status
-4.Occupation
-5.Age
-6.Sex
-7.Nationality
-8.Country Of Residence
-9.Telephone Number
-
-Agent Name: Mr. Fred Peters
-Tel: +447031989477
- +447031963824
-Email: mr.fredpetersclaimsagent037@y7mail.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
