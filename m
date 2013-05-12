@@ -1,43 +1,32 @@
-From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V1 5/8] scsi: ufs: fix interrupt status clears
-Date: Sun, 12 May 2013 17:23:57 +0300
-Message-ID: <1368368640-10167-6-git-send-email-draviv@codeaurora.org>
-References: <1368368640-10167-1-git-send-email-draviv@codeaurora.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [GIT PULL] Final round of SCSI updates for the 3.9+ merge window
+Date: Sun, 12 May 2013 19:21:48 +0200
+Message-ID: <518FCFAC.8030306@redhat.com>
+References: <1368226800.2024.32.camel@dabdike>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1368368640-10167-1-git-send-email-draviv@codeaurora.org>
+In-Reply-To: <1368226800.2024.32.camel@dabdike>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Seungwon Jeon <tgih.jun@samsung.com>, open list <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-There is no need to check the version to clear
-the interrupt status. And the order is changed
-prior to actual handling.
+Il 11/05/2013 01:00, James Bottomley ha scritto:
+> This is the final round of SCSI patches for the merge window.  It
+> consists mostly of driver updates (bnx2fc, ibmfc, fnic, lpfc, be2iscsi,
+> pm80xx, qla4x and ipr).  There's also the power management updates that
+> complete the patches in Jens' tree, an iscsi refcounting problem fix
+> from the last pull, some dif handling in scsi_debug fixes, a few nice
+> code cleanups and an error handling busy bug fix.
+> 
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-Tested-by: Maya Erez <merez@codeaurora.org>
+James,
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c342a38..f4293d1 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1478,11 +1478,8 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
- 
- 	if (intr_status) {
-+		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
- 		ufshcd_sl_intr(hba, intr_status);
--
--		/* If UFSHCI 1.0 then clear interrupt status register */
--		if (hba->ufs_version == UFSHCI_VERSION_10)
--			ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
- 		retval = IRQ_HANDLED;
- 	}
- 	spin_unlock(hba->host->host_lock);
--- 
-1.7.6
+can I have an answer about who is going to apply
+http://thread.gmane.org/gmane.linux.kernel/1436904?  It is both a bugfix
+and a minor security fix, has an Acked-by from Tejun, and has otherwise
+been sitting there for almost three months.
 
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+Paolo
