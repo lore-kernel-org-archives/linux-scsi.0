@@ -1,355 +1,307 @@
 From: Vijaya Mohan Guvva <vmohan@brocade.com>
-Subject: [PATCH V1 05/17] bfa: FDMI enhancements
-Date: Mon, 13 May 2013 02:33:23 -0700
-Message-ID: <1368437615-9867-6-git-send-email-vmohan@brocade.com>
+Subject: [PATCH V1 10/17] bfa: fru vpd date update changes
+Date: Mon, 13 May 2013 02:33:28 -0700
+Message-ID: <1368437615-9867-11-git-send-email-vmohan@brocade.com>
 References: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50283 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50285 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753922Ab3EMJtM (ORCPT
+	by vger.kernel.org with ESMTP id S1754799Ab3EMJtP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 May 2013 05:49:12 -0400
+	Mon, 13 May 2013 05:49:15 -0400
 In-Reply-To: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, adapter_linux_open_src_team@Brocade.COM, Vijaya Mohan Guvva <vmohan@Brocade.COM>, Anil Gurumurthy <agurumur@Brocade.COM>
+Cc: JBottomley@parallels.com, adapter_linux_open_src_team@Brocade.COM, Vijaya Mohan Guvva <vmohan@Brocade.COM>
 
-Update addl. fields in FDMI to confirm to FC-GS6 standard for RPA and
-RHBA commands.
+1. While FRU VPD data update, inform firmware to send a completion event
+   on I2C bus. Without this change, firmware used to send completion
+   message on I2C bus for every chunk of FRU VPD update.
+2. Support for FRU VPN update on CHINOOK2 cards.
+3. Append port count to the model name to differentiate between single
+   port and dual port model of 1860.
+4. Update the size of the model name to 16bytes
 
-Signed-off-by: Anil Gurumurthy <agurumur@brocade.com>
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfa_fc.h        |  15 ++++
- drivers/scsi/bfa/bfa_fcs.h       |  21 ++++-
- drivers/scsi/bfa/bfa_fcs_lport.c | 190 +++++++++++++++++++++++++++++++++++++++
- 3 files changed, 224 insertions(+), 2 deletions(-)
+ drivers/scsi/bfa/bfa_defs.h |  9 +++++++--
+ drivers/scsi/bfa/bfa_fcs.h  |  8 ++++----
+ drivers/scsi/bfa/bfa_ioc.c  | 29 +++++++++++++++++++++--------
+ drivers/scsi/bfa/bfa_ioc.h  |  3 ++-
+ drivers/scsi/bfa/bfad_bsg.c |  2 +-
+ drivers/scsi/bfa/bfad_bsg.h |  4 +++-
+ drivers/scsi/bfa/bfi.h      |  6 +++++-
+ 7 files changed, 43 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
-index bea821b..562ef73 100644
---- a/drivers/scsi/bfa/bfa_fc.h
-+++ b/drivers/scsi/bfa/bfa_fc.h
-@@ -1531,6 +1531,12 @@ enum fdmi_hba_attribute_type {
- 	FDMI_HBA_ATTRIB_FW_VERSION,	/* 0x0009 */
- 	FDMI_HBA_ATTRIB_OS_NAME,	/* 0x000A */
- 	FDMI_HBA_ATTRIB_MAX_CT,		/* 0x000B */
-+	FDMI_HBA_ATTRIB_NODE_SYM_NAME,  /* 0x000C */
-+	FDMI_HBA_ATTRIB_VENDOR_INFO,    /* 0x000D */
-+	FDMI_HBA_ATTRIB_NUM_PORTS,  /* 0x000E */
-+	FDMI_HBA_ATTRIB_FABRIC_NAME,    /* 0x000F */
-+	FDMI_HBA_ATTRIB_BIOS_VER,   /* 0x0010 */
-+	FDMI_HBA_ATTRIB_VENDOR_ID = 0x00E0,
- 
- 	FDMI_HBA_ATTRIB_MAX_TYPE
+diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
+index d65a9b4..bef16d2 100644
+--- a/drivers/scsi/bfa/bfa_defs.h
++++ b/drivers/scsi/bfa/bfa_defs.h
+@@ -45,6 +45,7 @@ enum {
+ 	BFA_MFG_TYPE_PROWLER_C = 1710,   /*  Prowler CNA only cards	*/
+ 	BFA_MFG_TYPE_PROWLER_D = 1860,   /*  Prowler Dual cards		*/
+ 	BFA_MFG_TYPE_CHINOOK   = 1867,   /*  Chinook cards		*/
++	BFA_MFG_TYPE_CHINOOK2   = 1869,	 /*!< Chinook2 cards		*/
+ 	BFA_MFG_TYPE_INVALID = 0,        /*  Invalid card type		*/
  };
-@@ -1545,6 +1551,15 @@ enum fdmi_port_attribute_type {
- 	FDMI_PORT_ATTRIB_FRAME_SIZE,	/* 0x0004 */
- 	FDMI_PORT_ATTRIB_DEV_NAME,	/* 0x0005 */
- 	FDMI_PORT_ATTRIB_HOST_NAME,	/* 0x0006 */
-+	FDMI_PORT_ATTRIB_NODE_NAME,     /* 0x0007 */
-+	FDMI_PORT_ATTRIB_PORT_NAME,     /* 0x0008 */
-+	FDMI_PORT_ATTRIB_PORT_SYM_NAME, /* 0x0009 */
-+	FDMI_PORT_ATTRIB_PORT_TYPE,     /* 0x000A */
-+	FDMI_PORT_ATTRIB_SUPP_COS,      /* 0x000B */
-+	FDMI_PORT_ATTRIB_PORT_FAB_NAME, /* 0x000C */
-+	FDMI_PORT_ATTRIB_PORT_FC4_TYPE, /* 0x000D */
-+	FDMI_PORT_ATTRIB_PORT_STATE = 0x101,    /* 0x0101 */
-+	FDMI_PORT_ATTRIB_PORT_NUM_RPRT = 0x102, /* 0x0102 */
  
- 	FDMI_PORT_ATTR_MAX_TYPE
+@@ -59,7 +60,8 @@ enum {
+ 	(type) == BFA_MFG_TYPE_ASTRA || \
+ 	(type) == BFA_MFG_TYPE_LIGHTNING_P0 || \
+ 	(type) == BFA_MFG_TYPE_LIGHTNING || \
+-	(type) == BFA_MFG_TYPE_CHINOOK))
++	(type) == BFA_MFG_TYPE_CHINOOK || \
++	(type) == BFA_MFG_TYPE_CHINOOK2))
+ 
+ /*
+  * Check if the card having old wwn/mac handling
+@@ -263,6 +265,7 @@ enum {
+ 	BFA_ADAPTER_MFG_NAME_LEN    = 8,   /*  manufacturer name length */
+ 	BFA_ADAPTER_SYM_NAME_LEN    = 64,  /*  adapter symbolic name length */
+ 	BFA_ADAPTER_OS_TYPE_LEN	    = 64,  /*  adapter os type length */
++	BFA_ADAPTER_UUID_LEN	    = 16,  /* adapter uuid length */
  };
+ 
+ struct bfa_adapter_attr_s {
+@@ -296,6 +299,7 @@ struct bfa_adapter_attr_s {
+ 	u8		mfg_month;	/* manufacturing month */
+ 	u16		mfg_year;	/* manufacturing year */
+ 	u16		rsvd;
++	u8		uuid[BFA_ADAPTER_UUID_LEN];
+ };
+ 
+ /*
+@@ -409,7 +413,8 @@ struct bfa_ioc_attr_s {
+ 	u8				port_mode;	/*  bfa_mode_s	*/
+ 	u8				cap_bm;		/*  capability	*/
+ 	u8				port_mode_cfg;	/*  bfa_mode_s	*/
+-	u8				rsvd[4];	/*  64bit align	*/
++	u8				def_fn;		/* 1 if default fn */
++	u8				rsvd[3];	/*  64bit align	*/
+ };
+ 
+ /*
 diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
-index 1369682..4f1e650 100644
+index 4f1e650..94d5d01 100644
 --- a/drivers/scsi/bfa/bfa_fcs.h
 +++ b/drivers/scsi/bfa/bfa_fcs.h
-@@ -627,6 +627,9 @@ void bfa_fcs_fcpim_uf_recv(struct bfa_fcs_itnim_s *itnim,
- 
- #define BFA_FCS_FDMI_SUPP_SPEEDS_10G	FDMI_TRANS_SPEED_10G
- 
-+#define BFA_FCS_FDMI_VENDOR_INFO_LEN    8
-+#define BFA_FCS_FDMI_FC4_TYPE_LEN       32
-+
- /*
-  * HBA Attribute Block : BFA internal representation. Note : Some variable
-  * sizes have been trimmed to suit BFA For Ex : Model will be "Brocade". Based
-@@ -637,25 +640,39 @@ struct bfa_fcs_fdmi_hba_attr_s {
- 	u8         manufacturer[64];
- 	u8         serial_num[64];
- 	u8         model[16];
--	u8         model_desc[256];
-+	u8         model_desc[128];
- 	u8         hw_version[8];
- 	u8         driver_version[BFA_VERSION_LEN];
- 	u8         option_rom_ver[BFA_VERSION_LEN];
- 	u8         fw_version[BFA_VERSION_LEN];
- 	u8         os_name[256];
- 	__be32        max_ct_pyld;
-+	struct      bfa_lport_symname_s node_sym_name;
-+	u8     vendor_info[BFA_FCS_FDMI_VENDOR_INFO_LEN];
-+	__be32    num_ports;
-+	wwn_t       fabric_name;
-+	u8     bios_ver[BFA_VERSION_LEN];
- };
- 
- /*
-  * Port Attribute Block
+@@ -243,19 +243,19 @@ struct bfa_fcs_fabric_s;
+  *  Symbolic Name.
+  *
+  *  Physical Port's symbolic name Format : (Total 128 bytes)
+- *  Adapter Model number/name : 12 bytes
++ *  Adapter Model number/name : 16 bytes
+  *  Driver Version     : 10 bytes
+  *  Host Machine Name  : 30 bytes
+- *  Host OS Info	   : 48 bytes
++ *  Host OS Info	   : 44 bytes
+  *  Host OS PATCH Info : 16 bytes
+  *  ( remaining 12 bytes reserved to be used for separator)
   */
- struct bfa_fcs_fdmi_port_attr_s {
--	u8         supp_fc4_types[32];	/* supported FC4 types */
-+	u8         supp_fc4_types[BFA_FCS_FDMI_FC4_TYPE_LEN];
- 	__be32        supp_speed;	/* supported speed */
- 	__be32        curr_speed;	/* current Speed */
- 	__be32        max_frm_size;	/* max frame size */
- 	u8         os_device_name[256];	/* OS device Name */
- 	u8         host_name[256];	/* host name */
-+	wwn_t       port_name;
-+	wwn_t       node_name;
-+	struct      bfa_lport_symname_s port_sym_name;
-+	__be32    port_type;
-+	enum fc_cos    scos;
-+	wwn_t       port_fabric_name;
-+	u8     port_act_fc4_type[BFA_FCS_FDMI_FC4_TYPE_LEN];
-+	__be32    port_state;
-+	__be32    num_ports;
- };
+ #define BFA_FCS_PORT_SYMBNAME_SEPARATOR			" | "
  
- struct bfa_fcs_stats_s {
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 1224d04..8773d5e 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -2048,10 +2048,71 @@ bfa_fcs_lport_fdmi_build_rhba_pyld(struct bfa_fcs_lport_fdmi_s *fdmi, u8 *pyld)
- 	attr->type = cpu_to_be16(FDMI_HBA_ATTRIB_MAX_CT);
- 	templen = sizeof(fcs_hba_attr->max_ct_pyld);
- 	memcpy(attr->value, &fcs_hba_attr->max_ct_pyld, templen);
-+	templen = fc_roundup(templen, sizeof(u32));
-+	curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
- 	len += templen;
- 	count++;
- 	attr->len = cpu_to_be16(templen + sizeof(attr->type) +
- 			     sizeof(templen));
-+	/*
-+	 * Send extended attributes ( FOS 7.1 support )
-+	 */
-+	if (fdmi->retry_cnt == 0) {
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_HBA_ATTRIB_NODE_SYM_NAME);
-+		templen = sizeof(fcs_hba_attr->node_sym_name);
-+		memcpy(attr->value, &fcs_hba_attr->node_sym_name, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		count++;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+					sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_HBA_ATTRIB_VENDOR_ID);
-+		templen = sizeof(fcs_hba_attr->vendor_info);
-+		memcpy(attr->value, &fcs_hba_attr->vendor_info, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		count++;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+					sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_HBA_ATTRIB_NUM_PORTS);
-+		templen = sizeof(fcs_hba_attr->num_ports);
-+		memcpy(attr->value, &fcs_hba_attr->num_ports, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		count++;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+					sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_HBA_ATTRIB_FABRIC_NAME);
-+		templen = sizeof(fcs_hba_attr->fabric_name);
-+		memcpy(attr->value, &fcs_hba_attr->fabric_name, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		count++;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+					sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_HBA_ATTRIB_BIOS_VER);
-+		templen = sizeof(fcs_hba_attr->bios_ver);
-+		memcpy(attr->value, &fcs_hba_attr->bios_ver, templen);
-+		templen = fc_roundup(attr->len, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		count++;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+					sizeof(templen));
-+	}
- 
- 	/*
- 	 * Update size of payload
-@@ -2252,6 +2313,113 @@ bfa_fcs_lport_fdmi_build_portattr_block(struct bfa_fcs_lport_fdmi_s *fdmi,
- 				sizeof(templen));
- 	}
- 
-+	if (fdmi->retry_cnt == 0) {
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_PORT_ATTRIB_NODE_NAME);
-+		templen = sizeof(fcs_port_attr.node_name);
-+		memcpy(attr->value, &fcs_port_attr.node_name, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		++count;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+				 sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_PORT_ATTRIB_PORT_NAME);
-+		templen = sizeof(fcs_port_attr.port_name);
-+		memcpy(attr->value, &fcs_port_attr.port_name, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(attr->len) + templen;
-+		len += templen;
-+		++count;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+				 sizeof(templen));
-+
-+		if (fcs_port_attr.port_sym_name.symname[0] != '\0') {
-+			attr = (struct fdmi_attr_s *) curr_ptr;
-+			attr->type =
-+				cpu_to_be16(FDMI_PORT_ATTRIB_PORT_SYM_NAME);
-+			templen = sizeof(fcs_port_attr.port_sym_name);
-+			memcpy(attr->value,
-+				&fcs_port_attr.port_sym_name, templen);
-+			templen = fc_roundup(templen, sizeof(u32));
-+			curr_ptr += sizeof(attr->type) +
-+					sizeof(templen) + templen;
-+			len += templen;
-+			++count;
-+			attr->len = cpu_to_be16(templen +
-+				sizeof(attr->type) + sizeof(templen));
-+		}
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_PORT_ATTRIB_PORT_TYPE);
-+		templen = sizeof(fcs_port_attr.port_type);
-+		memcpy(attr->value, &fcs_port_attr.port_type, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		++count;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+				 sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_PORT_ATTRIB_SUPP_COS);
-+		templen = sizeof(fcs_port_attr.scos);
-+		memcpy(attr->value, &fcs_port_attr.scos, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		++count;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+				 sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_PORT_ATTRIB_PORT_FAB_NAME);
-+		templen = sizeof(fcs_port_attr.port_fabric_name);
-+		memcpy(attr->value, &fcs_port_attr.port_fabric_name, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		++count;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+				 sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_PORT_ATTRIB_PORT_FC4_TYPE);
-+		templen = sizeof(fcs_port_attr.port_act_fc4_type);
-+		memcpy(attr->value, fcs_port_attr.port_act_fc4_type,
-+				templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		++count;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+				 sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_PORT_ATTRIB_PORT_STATE);
-+		templen = sizeof(fcs_port_attr.port_state);
-+		memcpy(attr->value, &fcs_port_attr.port_state, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		++count;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+				 sizeof(templen));
-+
-+		attr = (struct fdmi_attr_s *) curr_ptr;
-+		attr->type = cpu_to_be16(FDMI_PORT_ATTRIB_PORT_NUM_RPRT);
-+		templen = sizeof(fcs_port_attr.num_ports);
-+		memcpy(attr->value, &fcs_port_attr.num_ports, templen);
-+		templen = fc_roundup(templen, sizeof(u32));
-+		curr_ptr += sizeof(attr->type) + sizeof(templen) + templen;
-+		len += templen;
-+		++count;
-+		attr->len = cpu_to_be16(templen + sizeof(attr->type) +
-+				sizeof(templen));
-+	}
-+
- 	/*
- 	 * Update size of payload
- 	 */
-@@ -2458,6 +2626,15 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
- 	/* Retrieve the max frame size from the port attr */
- 	bfa_fcs_fdmi_get_portattr(fdmi, &fcs_port_attr);
- 	hba_attr->max_ct_pyld = fcs_port_attr.max_frm_size;
-+
-+	strncpy(hba_attr->node_sym_name.symname,
-+		port->port_cfg.node_sym_name.symname, BFA_SYMNAME_MAXLEN);
-+	strcpy(hba_attr->vendor_info, "BROCADE");
-+	hba_attr->num_ports =
-+		cpu_to_be32(bfa_ioc_get_nports(&port->fcs->bfa->ioc));
-+	hba_attr->fabric_name = port->fabric->lps->pr_nwwn;
-+	strncpy(hba_attr->bios_ver, hba_attr->option_rom_ver, BFA_VERSION_LEN);
-+
- }
- 
- static void
-@@ -2467,6 +2644,7 @@ bfa_fcs_fdmi_get_portattr(struct bfa_fcs_lport_fdmi_s *fdmi,
- 	struct bfa_fcs_lport_s *port = fdmi->ms->port;
- 	struct bfa_fcs_driver_info_s  *driver_info = &port->fcs->driver_info;
- 	struct bfa_port_attr_s pport_attr;
-+	struct bfa_lport_attr_s lport_attr;
- 
- 	memset(port_attr, 0, sizeof(struct bfa_fcs_fdmi_port_attr_s));
- 
-@@ -2531,6 +2709,18 @@ bfa_fcs_fdmi_get_portattr(struct bfa_fcs_lport_fdmi_s *fdmi,
- 	strncpy(port_attr->host_name, (char *)driver_info->host_machine_name,
- 		sizeof(port_attr->host_name));
- 
-+	port_attr->node_name = bfa_fcs_lport_get_nwwn(port);
-+	port_attr->port_name = bfa_fcs_lport_get_pwwn(port);
-+
-+	strncpy(port_attr->port_sym_name.symname,
-+		(char *)&bfa_fcs_lport_get_psym_name(port), BFA_SYMNAME_MAXLEN);
-+	bfa_fcs_lport_get_attr(port, &lport_attr);
-+	port_attr->port_type = cpu_to_be32(lport_attr.port_type);
-+	port_attr->scos = pport_attr.cos_supported;
-+	port_attr->port_fabric_name = port->fabric->lps->pr_nwwn;
-+	fc_get_fc4type_bitmask(FC_TYPE_FCP, port_attr->port_act_fc4_type);
-+	port_attr->port_state = cpu_to_be32(pport_attr.port_state);
-+	port_attr->num_ports = cpu_to_be32(port->num_rports);
- }
+-#define BFA_FCS_PORT_SYMBNAME_MODEL_SZ			12
++#define BFA_FCS_PORT_SYMBNAME_MODEL_SZ			16
+ #define BFA_FCS_PORT_SYMBNAME_VERSION_SZ		10
+ #define BFA_FCS_PORT_SYMBNAME_MACHINENAME_SZ		30
+-#define BFA_FCS_PORT_SYMBNAME_OSINFO_SZ			48
++#define BFA_FCS_PORT_SYMBNAME_OSINFO_SZ			44
+ #define BFA_FCS_PORT_SYMBNAME_OSPATCH_SZ		16
  
  /*
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 8928b68..c31cb3c 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -2508,6 +2508,7 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
+ 	ad_attr->mfg_day = ioc_attr->mfg_day;
+ 	ad_attr->mfg_month = ioc_attr->mfg_month;
+ 	ad_attr->mfg_year = ioc_attr->mfg_year;
++	memcpy(ad_attr->uuid, ioc_attr->uuid, BFA_ADAPTER_UUID_LEN);
+ }
+ 
+ enum bfa_ioc_type_e
+@@ -2572,13 +2573,19 @@ void
+ bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model)
+ {
+ 	struct bfi_ioc_attr_s	*ioc_attr;
++	u8 nports = bfa_ioc_get_nports(ioc);
+ 
+ 	WARN_ON(!model);
+ 	memset((void *)model, 0, BFA_ADAPTER_MODEL_NAME_LEN);
+ 
+ 	ioc_attr = ioc->attr;
+ 
+-	snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN, "%s-%u",
++	if (bfa_asic_id_ct2(ioc->pcidev.device_id) &&
++		(!bfa_mfg_is_mezz(ioc_attr->card_type)))
++		snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN, "%s-%u-%u%s",
++			BFA_MFG_NAME, ioc_attr->card_type, nports, "p");
++	else
++		snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN, "%s-%u",
+ 			BFA_MFG_NAME, ioc_attr->card_type);
+ }
+ 
+@@ -2628,7 +2635,7 @@ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
+ 	memset((void *)ioc_attr, 0, sizeof(struct bfa_ioc_attr_s));
+ 
+ 	ioc_attr->state = bfa_ioc_get_state(ioc);
+-	ioc_attr->port_id = ioc->port_id;
++	ioc_attr->port_id = bfa_ioc_portid(ioc);
+ 	ioc_attr->port_mode = ioc->port_mode;
+ 	ioc_attr->port_mode_cfg = ioc->port_mode_cfg;
+ 	ioc_attr->cap_bm = ioc->ad_cap_bm;
+@@ -2637,8 +2644,9 @@ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
+ 
+ 	bfa_ioc_get_adapter_attr(ioc, &ioc_attr->adapter_attr);
+ 
+-	ioc_attr->pci_attr.device_id = ioc->pcidev.device_id;
+-	ioc_attr->pci_attr.pcifn = ioc->pcidev.pci_func;
++	ioc_attr->pci_attr.device_id = bfa_ioc_devid(ioc);
++	ioc_attr->pci_attr.pcifn = bfa_ioc_pcifn(ioc);
++	ioc_attr->def_fn = (bfa_ioc_pcifn(ioc) == bfa_ioc_portid(ioc));
+ 	bfa_ioc_get_pci_chip_rev(ioc, ioc_attr->pci_attr.chip_rev);
+ }
+ 
+@@ -6018,6 +6026,7 @@ bfa_fru_write_send(void *cbarg, enum bfi_fru_h2i_msgs msg_type)
+ 	 */
+ 	msg->last = (len == fru->residue) ? 1 : 0;
+ 
++	msg->trfr_cmpl = (len == fru->residue) ? fru->trfr_cmpl : 0;
+ 	bfi_h2i_set(msg->mh, BFI_MC_FRU, msg_type, bfa_ioc_portid(fru->ioc));
+ 	bfa_alen_set(&msg->alen, len, fru->dbuf_pa);
+ 
+@@ -6132,13 +6141,14 @@ bfa_fru_memclaim(struct bfa_fru_s *fru, u8 *dm_kva, u64 dm_pa,
+  */
+ bfa_status_t
+ bfa_fruvpd_update(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
+-		  bfa_cb_fru_t cbfn, void *cbarg)
++		  bfa_cb_fru_t cbfn, void *cbarg, u8 trfr_cmpl)
+ {
+ 	bfa_trc(fru, BFI_FRUVPD_H2I_WRITE_REQ);
+ 	bfa_trc(fru, len);
+ 	bfa_trc(fru, offset);
+ 
+-	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2)
++	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2 &&
++		fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK2)
+ 		return BFA_STATUS_FRU_NOT_PRESENT;
+ 
+ 	if (fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK)
+@@ -6160,6 +6170,7 @@ bfa_fruvpd_update(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
+ 	fru->offset = 0;
+ 	fru->addr_off = offset;
+ 	fru->ubuf = buf;
++	fru->trfr_cmpl = trfr_cmpl;
+ 
+ 	bfa_fru_write_send(fru, BFI_FRUVPD_H2I_WRITE_REQ);
+ 
+@@ -6189,7 +6200,8 @@ bfa_fruvpd_read(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
+ 	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2)
+ 		return BFA_STATUS_FRU_NOT_PRESENT;
+ 
+-	if (fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK)
++	if (fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK &&
++		fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK2)
+ 		return BFA_STATUS_CMD_NOTSUPP;
+ 
+ 	if (!bfa_ioc_is_operational(fru->ioc))
+@@ -6230,7 +6242,8 @@ bfa_fruvpd_get_max_size(struct bfa_fru_s *fru, u32 *max_size)
+ 	if (!bfa_ioc_is_operational(fru->ioc))
+ 		return BFA_STATUS_IOC_NON_OP;
+ 
+-	if (fru->ioc->attr->card_type == BFA_MFG_TYPE_CHINOOK)
++	if (fru->ioc->attr->card_type == BFA_MFG_TYPE_CHINOOK ||
++		fru->ioc->attr->card_type == BFA_MFG_TYPE_CHINOOK2)
+ 		*max_size = BFA_FRU_CHINOOK_MAX_SIZE;
+ 	else
+ 		return BFA_STATUS_CMD_NOTSUPP;
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index de62b68..90814fe 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -731,6 +731,7 @@ struct bfa_fru_s {
+ 	struct bfa_mbox_cmd_s mb;	/* mailbox */
+ 	struct bfa_ioc_notify_s ioc_notify; /* ioc event notify */
+ 	struct bfa_mem_dma_s	fru_dma;
++	u8		trfr_cmpl;
+ };
+ 
+ #define BFA_FRU(__bfa)	(&(__bfa)->modules.fru)
+@@ -738,7 +739,7 @@ struct bfa_fru_s {
+ 
+ bfa_status_t bfa_fruvpd_update(struct bfa_fru_s *fru,
+ 			void *buf, u32 len, u32 offset,
+-			bfa_cb_fru_t cbfn, void *cbarg);
++			bfa_cb_fru_t cbfn, void *cbarg, u8 trfr_cmpl);
+ bfa_status_t bfa_fruvpd_read(struct bfa_fru_s *fru,
+ 			void *buf, u32 len, u32 offset,
+ 			bfa_cb_fru_t cbfn, void *cbarg);
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 9863b1c..0467c34 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -2716,7 +2716,7 @@ bfad_iocmd_fruvpd_update(struct bfad_s *bfad, void *cmd)
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	iocmd->status = bfa_fruvpd_update(BFA_FRU(&bfad->bfa),
+ 				&iocmd->data, iocmd->len, iocmd->offset,
+-				bfad_hcb_comp, &fcomp);
++				bfad_hcb_comp, &fcomp, iocmd->trfr_cmpl);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 	if (iocmd->status == BFA_STATUS_OK) {
+ 		wait_for_completion(&fcomp.comp);
+diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
+index b0b5ac7..05f0fc9 100644
+--- a/drivers/scsi/bfa/bfad_bsg.h
++++ b/drivers/scsi/bfa/bfad_bsg.h
+@@ -794,10 +794,12 @@ struct bfa_bsg_tfru_s {
+ struct bfa_bsg_fruvpd_s {
+ 	bfa_status_t	status;
+ 	u16		bfad_num;
+-	u16		rsvd;
++	u16		rsvd1;
+ 	u32		offset;
+ 	u32		len;
+ 	u8		data[BFA_MAX_FRUVPD_TRANSFER_SIZE];
++	u8		trfr_cmpl;
++	u8		rsvd2[3];
+ };
+ 
+ struct bfa_bsg_fruvpd_max_size_s {
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index bf0a58d..37bd256 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -264,6 +264,7 @@ struct bfi_ioc_getattr_req_s {
+ 	union bfi_addr_u	attr_addr;
+ };
+ 
++#define BFI_IOC_ATTR_UUID_SZ	16
+ struct bfi_ioc_attr_s {
+ 	wwn_t		mfg_pwwn;	/*  Mfg port wwn	   */
+ 	wwn_t		mfg_nwwn;	/*  Mfg node wwn	   */
+@@ -292,6 +293,7 @@ struct bfi_ioc_attr_s {
+ 	u8	mfg_day;	/* manufacturing day */
+ 	u8	mfg_month;	/* manufacturing month */
+ 	u16	mfg_year;	/* manufacturing year */
++	u8	uuid[BFI_IOC_ATTR_UUID_SZ];	/*!< chinook uuid */
+ };
+ 
+ /*
+@@ -1253,7 +1255,9 @@ enum bfi_fru_i2h_msgs {
+ struct bfi_fru_write_req_s {
+ 	struct bfi_mhdr_s	mh;	/* Common msg header */
+ 	u8			last;
+-	u8			rsv[3];
++	u8			rsv_1[3];
++	u8			trfr_cmpl;
++	u8			rsv_2[3];
+ 	u32			offset;
+ 	u32			length;
+ 	struct bfi_alen_s	alen;
 -- 
 1.7.12
 
