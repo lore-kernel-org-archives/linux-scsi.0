@@ -1,97 +1,729 @@
 From: Vijaya Mohan Guvva <vmohan@brocade.com>
-Subject: [PATCH V1 16/17] bfa: dis-associate bfa path_tov with dev_loss_tmo
-Date: Mon, 13 May 2013 02:33:34 -0700
-Message-ID: <1368437615-9867-17-git-send-email-vmohan@brocade.com>
+Subject: [PATCH V1 01/17] bfa: Support for FC BB credit recovery
+Date: Mon, 13 May 2013 02:33:19 -0700
+Message-ID: <1368437615-9867-2-git-send-email-vmohan@brocade.com>
 References: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50388 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50398 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752511Ab3EMJwy (ORCPT
+	by vger.kernel.org with ESMTP id S1752509Ab3EMJxG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 May 2013 05:52:54 -0400
+	Mon, 13 May 2013 05:53:06 -0400
 In-Reply-To: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: JBottomley@parallels.com, adapter_linux_open_src_team@Brocade.COM, Vijaya Mohan Guvva <vmohan@Brocade.COM>
 
-Disassoicate path_tov in the driver with the dev_loss_tmo set by the
-application.
+This patch includes changes to  1) Enable/disable fc credit recovery on
+Brocade FC adapter port operating at max supported speed. 2) Get credit
+recovery status and stats related to credit loss and recovered credits
 
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfad_attr.c | 33 +++++++--------------------------
- 1 file changed, 7 insertions(+), 26 deletions(-)
+ drivers/scsi/bfa/bfa_defs.h      | 10 +++++
+ drivers/scsi/bfa/bfa_defs_svc.h  | 49 +++++++++++++++++----
+ drivers/scsi/bfa/bfa_fcs.c       | 62 +++-----------------------
+ drivers/scsi/bfa/bfa_fcs.h       |  5 ---
+ drivers/scsi/bfa/bfa_fcs_rport.c |  2 +-
+ drivers/scsi/bfa/bfa_svc.c       | 95 +++++++++++++++++++++++++++++++++++-----
+ drivers/scsi/bfa/bfa_svc.h       | 12 ++---
+ drivers/scsi/bfa/bfad_bsg.c      | 47 ++++++++++++++------
+ drivers/scsi/bfa/bfad_bsg.h      | 19 +++++++-
+ drivers/scsi/bfa/bfi_ms.h        |  5 +--
+ 10 files changed, 202 insertions(+), 104 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
-index 72f5dc3..e9a681d 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -335,23 +335,10 @@ bfad_im_reset_stats(struct Scsi_Host *shost)
+diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
+index 0efdf31..bdd1bae 100644
+--- a/drivers/scsi/bfa/bfa_defs.h
++++ b/drivers/scsi/bfa/bfa_defs.h
+@@ -185,6 +185,8 @@ enum bfa_status {
+ 	BFA_STATUS_FAA_DISABLED = 198,	/* FAA is already disabled */
+ 	BFA_STATUS_FAA_ACQUIRED = 199,	/* FAA is already acquired */
+ 	BFA_STATUS_FAA_ACQ_ADDR = 200,	/* Acquiring addr */
++	BFA_STATUS_BBCR_FC_ONLY = 201, /*!< BBCredit Recovery is supported for *
++					* FC mode only */
+ 	BFA_STATUS_ERROR_TRUNK_ENABLED = 203,	/* Trunk enabled on adapter */
+ 	BFA_STATUS_MAX_ENTRY_REACHED = 212,	/* MAX entry reached */
+ 	BFA_STATUS_TOPOLOGY_LOOP = 230, /* Topology is set to Loop */
+@@ -198,6 +200,14 @@ enum bfa_status {
+ 	BFA_STATUS_CMD_NOTSUPP_MEZZ = 239, /* Cmd not supported for MEZZ card */
+ 	BFA_STATUS_FRU_NOT_PRESENT = 240, /* fru module not present */
+ 	BFA_STATUS_DPORT_ERR = 245,	/* D-port mode is enabled */
++	BFA_STATUS_ERR_BBCR_SPEED_UNSUPPORT = 258, /*!< BB credit recovery is
++					* supported at max port speed alone */
++	BFA_STATUS_ERROR_BBCR_ENABLED  = 259, /*!< BB credit recovery
++					* is enabled */
++	BFA_STATUS_INVALID_BBSCN = 260, /*!< Invalid BBSCN value.
++					 * Valid range is [1-15] */
++	BFA_STATUS_BBCR_CFG_NO_CHANGE = 265, /*!< BBCR is operational.
++			* Disable BBCR and try this operation again. */
+ 	BFA_STATUS_MAX_VAL		/* Unknown error code */
+ };
+ #define bfa_status_t enum bfa_status
+diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
+index ec03c8c..efbf0a9 100644
+--- a/drivers/scsi/bfa/bfa_defs_svc.h
++++ b/drivers/scsi/bfa/bfa_defs_svc.h
+@@ -257,8 +257,6 @@ struct bfa_fw_port_lksm_stats_s {
+ 	u32    nos_tx;             /*  No. of times NOS tx started         */
+ 	u32    hwsm_lrr_rx;        /*  No. of times LRR rx-ed by HWSM      */
+ 	u32    hwsm_lr_rx;         /*  No. of times LR rx-ed by HWSM       */
+-	u32    bbsc_lr;		   /* LKSM LR tx for credit recovery       */
+-	u32	rsvd;
+ };
+ 
+ struct bfa_fw_port_snsm_stats_s {
+@@ -409,7 +407,7 @@ struct bfa_fw_trunk_stats_s {
+ 	u32 rsvd;		/*  padding for 64 bit alignment */
+ };
+ 
+-struct bfa_fw_advsm_stats_s {
++struct bfa_fw_aport_stats_s {
+ 	u32 flogi_sent;		/*  Flogi sent			*/
+ 	u32 flogi_acc_recvd;	/*  Flogi Acc received		*/
+ 	u32 flogi_rjt_recvd;	/*  Flogi rejects received	*/
+@@ -419,6 +417,12 @@ struct bfa_fw_advsm_stats_s {
+ 	u32 elp_accepted;	/*  ELP Accepted		*/
+ 	u32 elp_rejected;	/*  ELP rejected		*/
+ 	u32 elp_dropped;	/*  ELP dropped			*/
++
++	u32 bbcr_lr_count;	/*!< BBCR Link Resets		*/
++	u32 frame_lost_intrs;	/*!< BBCR Frame loss intrs	*/
++	u32 rrdy_lost_intrs;	/*!< BBCR Rrdy loss intrs	*/
++
++	u32 rsvd;
+ };
+ 
+ /*
+@@ -489,7 +493,7 @@ struct bfa_fw_stats_s {
+ 	struct bfa_fw_fcxchg_stats_s	fcxchg_stats;
+ 	struct bfa_fw_lps_stats_s	lps_stats;
+ 	struct bfa_fw_trunk_stats_s	trunk_stats;
+-	struct bfa_fw_advsm_stats_s	advsm_stats;
++	struct bfa_fw_aport_stats_s	aport_stats;
+ 	struct bfa_fw_mac_mod_stats_s	macmod_stats;
+ 	struct bfa_fw_ct_mod_stats_s	ctmod_stats;
+ 	struct bfa_fw_eth_sndrcv_stats_s	ethsndrcv_stats;
+@@ -545,6 +549,27 @@ struct bfa_qos_attr_s {
+ 	struct bfa_qos_bw_s qos_bw_op;	/* QOS bw operational */
+ };
+ 
++enum bfa_bbcr_state {
++	BFA_BBCR_DISABLED,	/*!< BBCR is disable */
++	BFA_BBCR_ONLINE,	/*!< BBCR is online  */
++	BFA_BBCR_OFFLINE,	/*!< BBCR is offline */
++};
++
++enum bfa_bbcr_err_reason {
++	BFA_BBCR_ERR_REASON_NONE, /*!< Unknown */
++	BFA_BBCR_ERR_REASON_SPEED_UNSUP, /*!< Port speed < max sup_speed */
++	BFA_BBCR_ERR_REASON_PEER_UNSUP,	/*!< BBCR is disable on peer port */
++	BFA_BBCR_ERR_REASON_NON_BRCD_SW, /*!< Connected to non BRCD switch */
++	BFA_BBCR_ERR_REASON_FLOGI_RJT, /*!< Login rejected by the switch */
++};
++
++struct bfa_bbcr_attr_s {
++	u8	state;
++	u8	peer_bb_scn;
++	u8	reason;
++	u8	rsvd;
++};
++
+ /*
+  * These fields should be displayed only from the CLI.
+  * There will be a separate BFAL API (get_qos_vc_attr ?)
+@@ -892,6 +917,9 @@ struct bfa_defs_fcpim_throttle_s {
+ 	u16	rsvd;
+ };
+ 
++#define BFA_BB_SCN_DEF 3
++#define BFA_BB_SCN_MAX 0x0F
++
+ /*
+  *      Physical port configuration
+  */
+@@ -907,8 +935,8 @@ struct bfa_port_cfg_s {
+ 	u8	 tx_bbcredit;	/*  transmit buffer credits	*/
+ 	u8	 ratelimit;	/*  ratelimit enabled or not	*/
+ 	u8	 trl_def_speed;	/*  ratelimit default speed	*/
+-	u8	 bb_scn;	/*  BB_SCN value from FLOGI Exchg */
+-	u8	 bb_scn_state;	/*  Config state of BB_SCN */
++	u8	 bb_cr_enabled; /*!< Config state of BB_SCN	*/
++	u8	 bb_scn;	/*!< BB_SCN value for FLOGI Exchg */
+ 	u8	 faa_state;	/*  FAA enabled/disabled        */
+ 	u8	 rsvd1;
+ 	u16	 path_tov;	/*  device path timeout	*/
+@@ -1052,6 +1080,7 @@ struct bfa_port_link_s {
+ 	struct bfa_qos_attr_s  qos_attr;   /* QoS Attributes */
+ 	union {
+ 		struct bfa_fcport_loop_info_s loop_info;
++		struct bfa_bbcr_attr_s bbcr_attr;
+ 		union {
+ 			struct bfa_qos_vc_attr_s qos_vc_attr;
+ 					/*  VC info from ELP */
+@@ -1215,9 +1244,11 @@ struct bfa_port_fc_stats_s {
+ 	u64     bad_os_count;   /*  Invalid ordered sets        */
+ 	u64     err_enc_out;    /*  Encoding err nonframe_8b10b */
+ 	u64     err_enc;        /*  Encoding err frame_8b10b    */
+-	u64	bbsc_frames_lost; /* Credit Recovery-Frames Lost  */
+-	u64	bbsc_credits_lost; /* Credit Recovery-Credits Lost */
+-	u64	bbsc_link_resets; /* Credit Recovery-Link Resets   */
++	u64	bbcr_frames_lost; /*!< BBCR Frames Lost */
++	u64	bbcr_rrdys_lost; /*!< BBCR RRDYs Lost */
++	u64	bbcr_link_resets; /*!< BBCR Link Resets */
++	u64	bbcr_frame_lost_intrs; /*!< BBCR Frame loss intrs */
++	u64	bbcr_rrdy_lost_intrs; /*!< BBCR Rrdy loss intrs */
+ 	u64	loop_timeouts;	/*  Loop timeouts		*/
+ };
+ 
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index d428808..a3ab5cc 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -240,9 +240,6 @@ static void bfa_fcs_fabric_flogiacc_comp(void *fcsarg,
+ 					 u32 rsp_len,
+ 					 u32 resid_len,
+ 					 struct fchs_s *rspfchs);
+-static u8 bfa_fcs_fabric_oper_bbscn(struct bfa_fcs_fabric_s *fabric);
+-static bfa_boolean_t bfa_fcs_fabric_is_bbscn_enabled(
+-				struct bfa_fcs_fabric_s *fabric);
+ 
+ static void	bfa_fcs_fabric_sm_uninit(struct bfa_fcs_fabric_s *fabric,
+ 					 enum bfa_fcs_fabric_event event);
+@@ -404,8 +401,7 @@ bfa_fcs_fabric_sm_flogi(struct bfa_fcs_fabric_s *fabric,
+ 	case BFA_FCS_FABRIC_SM_CONT_OP:
+ 
+ 		bfa_fcport_set_tx_bbcredit(fabric->fcs->bfa,
+-					   fabric->bb_credit,
+-					   bfa_fcs_fabric_oper_bbscn(fabric));
++					   fabric->bb_credit);
+ 		fabric->fab_type = BFA_FCS_FABRIC_SWITCHED;
+ 
+ 		if (fabric->auth_reqd && fabric->is_auth) {
+@@ -433,8 +429,7 @@ bfa_fcs_fabric_sm_flogi(struct bfa_fcs_fabric_s *fabric,
+ 	case BFA_FCS_FABRIC_SM_NO_FABRIC:
+ 		fabric->fab_type = BFA_FCS_FABRIC_N2N;
+ 		bfa_fcport_set_tx_bbcredit(fabric->fcs->bfa,
+-					   fabric->bb_credit,
+-					   bfa_fcs_fabric_oper_bbscn(fabric));
++					   fabric->bb_credit);
+ 		bfa_fcs_fabric_notify_online(fabric);
+ 		bfa_sm_set_state(fabric, bfa_fcs_fabric_sm_nofabric);
+ 		break;
+@@ -602,8 +597,7 @@ bfa_fcs_fabric_sm_nofabric(struct bfa_fcs_fabric_s *fabric,
+ 	case BFA_FCS_FABRIC_SM_NO_FABRIC:
+ 		bfa_trc(fabric->fcs, fabric->bb_credit);
+ 		bfa_fcport_set_tx_bbcredit(fabric->fcs->bfa,
+-					   fabric->bb_credit,
+-					   bfa_fcs_fabric_oper_bbscn(fabric));
++					   fabric->bb_credit);
+ 		break;
+ 
+ 	case BFA_FCS_FABRIC_SM_RETRY_OP:
+@@ -965,10 +959,6 @@ bfa_cb_lps_flogi_comp(void *bfad, void *uarg, bfa_status_t status)
+ 
+ 	case BFA_STATUS_FABRIC_RJT:
+ 		fabric->stats.flogi_rejects++;
+-		if (fabric->lps->lsrjt_rsn == FC_LS_RJT_RSN_LOGICAL_ERROR &&
+-		    fabric->lps->lsrjt_expl == FC_LS_RJT_EXP_NO_ADDL_INFO)
+-			fabric->fcs->bbscn_flogi_rjt = BFA_TRUE;
+-
+ 		bfa_sm_send_event(fabric, BFA_FCS_FABRIC_SM_RETRY_OP);
+ 		return;
+ 
+@@ -1014,14 +1004,11 @@ bfa_fcs_fabric_login(struct bfa_fcs_fabric_s *fabric)
+ {
+ 	struct bfa_s		*bfa = fabric->fcs->bfa;
+ 	struct bfa_lport_cfg_s	*pcfg = &fabric->bport.port_cfg;
+-	u8			alpa = 0, bb_scn = 0;
++	u8			alpa = 0;
+ 
+-	if (bfa_fcs_fabric_is_bbscn_enabled(fabric) &&
+-	    (!fabric->fcs->bbscn_flogi_rjt))
+-		bb_scn = BFA_FCS_PORT_DEF_BB_SCN;
+ 
+ 	bfa_lps_flogi(fabric->lps, fabric, alpa, bfa_fcport_get_maxfrsize(bfa),
+-		      pcfg->pwwn, pcfg->nwwn, fabric->auth_reqd, bb_scn);
++		      pcfg->pwwn, pcfg->nwwn, fabric->auth_reqd);
+ 
+ 	fabric->stats.flogi_sent++;
+ }
+@@ -1102,40 +1089,6 @@ bfa_fcs_fabric_stop(struct bfa_fcs_fabric_s *fabric)
  }
  
  /*
-- * FC transport template entry, get rport loss timeout.
+- * Computes operating BB_SCN value
 - */
--static void
--bfad_im_get_rport_loss_tmo(struct fc_rport *rport)
+-static u8
+-bfa_fcs_fabric_oper_bbscn(struct bfa_fcs_fabric_s *fabric)
 -{
--	struct bfad_itnim_data_s *itnim_data = rport->dd_data;
--	struct bfad_itnim_s   *itnim = itnim_data->itnim;
--	struct bfad_s         *bfad = itnim->im->bfad;
--	unsigned long   flags;
+-	u8	pr_bbscn = fabric->lps->pr_bbscn;
+-	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(fabric->fcs->bfa);
 -
--	spin_lock_irqsave(&bfad->bfad_lock, flags);
--	rport->dev_loss_tmo = bfa_fcpim_path_tov_get(&bfad->bfa);
--	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+-	if (!(fcport->cfg.bb_scn_state && pr_bbscn))
+-		return 0;
+-
+-	/* return max of local/remote bb_scn values */
+-	return ((pr_bbscn > BFA_FCS_PORT_DEF_BB_SCN) ?
+-		pr_bbscn : BFA_FCS_PORT_DEF_BB_SCN);
 -}
 -
 -/*
-  * FC transport template entry, set rport loss timeout.
-+ * Update dev_loss_tmo based on the value pushed down by the stack
-+ * In case it is lesser than path_tov of driver, set it to path_tov + 1
-+ * to ensure that the driver times out before the application
+- * Check if BB_SCN can be enabled.
+- */
+-static bfa_boolean_t
+-bfa_fcs_fabric_is_bbscn_enabled(struct bfa_fcs_fabric_s *fabric)
+-{
+-	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(fabric->fcs->bfa);
+-
+-	if (bfa_ioc_get_fcmode(&fabric->fcs->bfa->ioc) &&
+-			fcport->cfg.bb_scn_state &&
+-			!bfa_fcport_is_qos_enabled(fabric->fcs->bfa) &&
+-			!bfa_fcport_is_trunk_enabled(fabric->fcs->bfa))
+-		return BFA_TRUE;
+-	else
+-		return BFA_FALSE;
+-}
+-
+-/*
+  * Delete all vports and wait for vport delete completions.
   */
  static void
- bfad_im_set_rport_loss_tmo(struct fc_rport *rport, u32 timeout)
-@@ -359,15 +346,11 @@ bfad_im_set_rport_loss_tmo(struct fc_rport *rport, u32 timeout)
- 	struct bfad_itnim_data_s *itnim_data = rport->dd_data;
- 	struct bfad_itnim_s   *itnim = itnim_data->itnim;
- 	struct bfad_s         *bfad = itnim->im->bfad;
--	unsigned long   flags;
--
--	if (timeout > 0) {
--		spin_lock_irqsave(&bfad->bfad_lock, flags);
--		bfa_fcpim_path_tov_set(&bfad->bfa, timeout);
--		rport->dev_loss_tmo = bfa_fcpim_path_tov_get(&bfad->bfa);
--		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
--	}
-+	uint16_t path_tov = bfa_fcpim_path_tov_get(&bfad->bfa);
- 
-+	rport->dev_loss_tmo = timeout;
-+	if (timeout < path_tov)
-+		rport->dev_loss_tmo = path_tov + 1;
+@@ -1273,7 +1226,6 @@ void
+ bfa_fcs_fabric_link_down(struct bfa_fcs_fabric_s *fabric)
+ {
+ 	bfa_trc(fabric->fcs, fabric->bport.port_cfg.pwwn);
+-	fabric->fcs->bbscn_flogi_rjt = BFA_FALSE;
+ 	bfa_sm_send_event(fabric, BFA_FCS_FABRIC_SM_LINK_DOWN);
  }
  
- static int
-@@ -665,7 +648,6 @@ struct fc_function_template bfad_im_fc_function_template = {
- 	.show_rport_maxframe_size = 1,
- 	.show_rport_supported_classes = 1,
- 	.show_rport_dev_loss_tmo = 1,
--	.get_rport_dev_loss_tmo = bfad_im_get_rport_loss_tmo,
- 	.set_rport_dev_loss_tmo = bfad_im_set_rport_loss_tmo,
- 	.issue_fc_host_lip = bfad_im_issue_fc_host_lip,
- 	.vport_create = bfad_im_vport_create,
-@@ -723,7 +705,6 @@ struct fc_function_template bfad_im_vport_fc_function_template = {
- 	.show_rport_maxframe_size = 1,
- 	.show_rport_supported_classes = 1,
- 	.show_rport_dev_loss_tmo = 1,
--	.get_rport_dev_loss_tmo = bfad_im_get_rport_loss_tmo,
- 	.set_rport_dev_loss_tmo = bfad_im_set_rport_loss_tmo,
+@@ -1480,7 +1432,6 @@ bfa_fcs_fabric_process_flogi(struct bfa_fcs_fabric_s *fabric,
+ 	}
+ 
+ 	fabric->bb_credit = be16_to_cpu(flogi->csp.bbcred);
+-	fabric->lps->pr_bbscn = (be16_to_cpu(flogi->csp.rxsz) >> 12);
+ 	bport->port_topo.pn2n.rem_port_wwn = flogi->port_name;
+ 	bport->port_topo.pn2n.reply_oxid = fchs->ox_id;
+ 
+@@ -1513,8 +1464,7 @@ bfa_fcs_fabric_send_flogi_acc(struct bfa_fcs_fabric_s *fabric)
+ 				    n2n_port->reply_oxid, pcfg->pwwn,
+ 				    pcfg->nwwn,
+ 				    bfa_fcport_get_maxfrsize(bfa),
+-				    bfa_fcport_get_rx_bbcredit(bfa),
+-				    bfa_fcs_fabric_oper_bbscn(fabric));
++				    bfa_fcport_get_rx_bbcredit(bfa), 0);
+ 
+ 	bfa_fcxp_send(fcxp, NULL, fabric->vf_id, fabric->lps->bfa_tag,
+ 		      BFA_FALSE, FC_CLASS_3,
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index a449706..1369682 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -258,9 +258,6 @@ struct bfa_fcs_fabric_s;
+ #define BFA_FCS_PORT_SYMBNAME_OSINFO_SZ			48
+ #define BFA_FCS_PORT_SYMBNAME_OSPATCH_SZ		16
+ 
+-/* bb_scn value in 2^bb_scn */
+-#define BFA_FCS_PORT_DEF_BB_SCN				3
+-
+ /*
+  * Get FC port ID for a logical port.
+  */
+@@ -683,8 +680,6 @@ struct bfa_fcs_s {
+ 	struct bfa_trc_mod_s  *trcmod;	/*  tracing module */
+ 	bfa_boolean_t	vf_enabled;	/*  VF mode is enabled */
+ 	bfa_boolean_t	fdmi_enabled;	/*  FDMI is enabled */
+-	bfa_boolean_t	bbscn_enabled;	/*  Driver Config Parameter */
+-	bfa_boolean_t	bbscn_flogi_rjt;/*  FLOGI reject due to BB_SCN */
+ 	bfa_boolean_t min_cfg;		/* min cfg enabled/disabled */
+ 	u16	port_vfid;	/*  port default VF ID */
+ 	struct bfa_fcs_driver_info_s driver_info;
+diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
+index 58ac643..807622b 100644
+--- a/drivers/scsi/bfa/bfa_fcs_rport.c
++++ b/drivers/scsi/bfa/bfa_fcs_rport.c
+@@ -2577,7 +2577,7 @@ bfa_fcs_rport_update(struct bfa_fcs_rport_s *rport, struct fc_logi_s *plogi)
+ 
+ 		port->fabric->bb_credit = be16_to_cpu(plogi->csp.bbcred);
+ 		bfa_fcport_set_tx_bbcredit(port->fcs->bfa,
+-					  port->fabric->bb_credit, 0);
++					  port->fabric->bb_credit);
+ 	}
+ 
+ }
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 299c1c8..0fff5ec 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -1614,7 +1614,6 @@ bfa_lps_login_rsp(struct bfa_s *bfa, struct bfi_lps_login_rsp_s *rsp)
+ 		lps->lp_mac	= rsp->lp_mac;
+ 		lps->brcd_switch = rsp->brcd_switch;
+ 		lps->fcf_mac	= rsp->fcf_mac;
+-		lps->pr_bbscn	= rsp->bb_scn;
+ 
+ 		break;
+ 
+@@ -1744,7 +1743,6 @@ bfa_lps_send_login(struct bfa_lps_s *lps)
+ 	m->nwwn		= lps->nwwn;
+ 	m->fdisc	= lps->fdisc;
+ 	m->auth_en	= lps->auth_en;
+-	m->bb_scn	= lps->bb_scn;
+ 
+ 	bfa_reqq_produce(lps->bfa, lps->reqq, m->mh);
+ 	list_del(&lps->qe);
+@@ -1940,7 +1938,7 @@ bfa_lps_delete(struct bfa_lps_s *lps)
+  */
+ void
+ bfa_lps_flogi(struct bfa_lps_s *lps, void *uarg, u8 alpa, u16 pdusz,
+-	wwn_t pwwn, wwn_t nwwn, bfa_boolean_t auth_en, uint8_t bb_scn)
++	wwn_t pwwn, wwn_t nwwn, bfa_boolean_t auth_en)
+ {
+ 	lps->uarg	= uarg;
+ 	lps->alpa	= alpa;
+@@ -1949,7 +1947,6 @@ bfa_lps_flogi(struct bfa_lps_s *lps, void *uarg, u8 alpa, u16 pdusz,
+ 	lps->nwwn	= nwwn;
+ 	lps->fdisc	= BFA_FALSE;
+ 	lps->auth_en	= auth_en;
+-	lps->bb_scn	= bb_scn;
+ 	bfa_sm_send_event(lps, BFA_LPS_SM_LOGIN);
+ }
+ 
+@@ -3158,6 +3155,8 @@ bfa_fcport_update_linkinfo(struct bfa_fcport_s *fcport)
+ 	fcport->qos_attr = pevent->link_state.qos_attr;
+ 	fcport->qos_vc_attr = pevent->link_state.attr.vc_fcf.qos_vc_attr;
+ 
++	if (fcport->cfg.bb_cr_enabled)
++		fcport->bbcr_attr = pevent->link_state.attr.bbcr_attr;
+ 	/*
+ 	 * update trunk state if applicable
+ 	 */
+@@ -3177,7 +3176,6 @@ bfa_fcport_reset_linkinfo(struct bfa_fcport_s *fcport)
+ {
+ 	fcport->speed = BFA_PORT_SPEED_UNKNOWN;
+ 	fcport->topology = BFA_PORT_TOPOLOGY_NONE;
+-	fcport->bbsc_op_state = BFA_FALSE;
+ }
+ 
+ /*
+@@ -3629,6 +3627,11 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
+ 			fcport->qos_attr.qos_bw_op =
+ 					i2hmsg.penable_rsp->port_cfg.qos_bw;
+ 
++			if (fcport->cfg.bb_cr_enabled)
++				fcport->bbcr_attr.state = BFA_BBCR_OFFLINE;
++			else
++				fcport->bbcr_attr.state = BFA_BBCR_DISABLED;
++
+ 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
+ 		}
+ 		break;
+@@ -3639,6 +3642,11 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
+ 		break;
+ 
+ 	case BFI_FCPORT_I2H_EVENT:
++		if (fcport->cfg.bb_cr_enabled)
++			fcport->bbcr_attr.state = BFA_BBCR_OFFLINE;
++		else
++			fcport->bbcr_attr.state = BFA_BBCR_DISABLED;
++
+ 		if (i2hmsg.event->link_state.linkstate == BFA_PORT_LINKUP)
+ 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_LINKUP);
+ 		else {
+@@ -3964,14 +3972,11 @@ bfa_fcport_get_rx_bbcredit(struct bfa_s *bfa)
+ }
+ 
+ void
+-bfa_fcport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit, u8 bb_scn)
++bfa_fcport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit)
+ {
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+ 
+ 	fcport->cfg.tx_bbcredit = (u8)tx_bbcredit;
+-	fcport->cfg.bb_scn = bb_scn;
+-	if (bb_scn)
+-		fcport->bbsc_op_state = BFA_TRUE;
+ }
+ 
+ /*
+@@ -4021,7 +4026,6 @@ bfa_fcport_get_attr(struct bfa_s *bfa, struct bfa_port_attr_s *attr)
+ 	attr->pport_cfg.path_tov  = bfa_fcpim_path_tov_get(bfa);
+ 	attr->pport_cfg.q_depth  = bfa_fcpim_qdepth_get(bfa);
+ 	attr->port_state = bfa_sm_to_state(hal_port_sm_table, fcport->sm);
+-	attr->bbsc_op_status =  fcport->bbsc_op_state;
+ 
+ 	/* PBC Disabled State */
+ 	if (bfa_fcport_is_pbcdisabled(bfa))
+@@ -4217,6 +4221,77 @@ bfa_fcport_is_trunk_enabled(struct bfa_s *bfa)
+ 	return fcport->cfg.trunked;
+ }
+ 
++bfa_status_t
++bfa_fcport_cfg_bbcr(struct bfa_s *bfa, bfa_boolean_t on_off, u8 bb_scn)
++{
++	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
++
++	bfa_trc(bfa, on_off);
++
++	if (bfa_ioc_get_type(&fcport->bfa->ioc) != BFA_IOC_TYPE_FC)
++		return BFA_STATUS_BBCR_FC_ONLY;
++
++	if (bfa_mfg_is_mezz(bfa->ioc.attr->card_type) &&
++		(bfa->ioc.attr->card_type != BFA_MFG_TYPE_CHINOOK))
++		return BFA_STATUS_CMD_NOTSUPP_MEZZ;
++
++	if (on_off) {
++		if (fcport->cfg.topology == BFA_PORT_TOPOLOGY_LOOP)
++			return BFA_STATUS_TOPOLOGY_LOOP;
++
++		if (fcport->cfg.qos_enabled)
++			return BFA_STATUS_ERROR_QOS_ENABLED;
++
++		if (fcport->cfg.trunked)
++			return BFA_STATUS_TRUNK_ENABLED;
++
++		if ((fcport->cfg.speed != BFA_PORT_SPEED_AUTO) &&
++			(fcport->cfg.speed < bfa_ioc_speed_sup(&bfa->ioc)))
++			return BFA_STATUS_ERR_BBCR_SPEED_UNSUPPORT;
++
++		if (bfa_ioc_speed_sup(&bfa->ioc) < BFA_PORT_SPEED_8GBPS)
++			return BFA_STATUS_FEATURE_NOT_SUPPORTED;
++
++		if (fcport->cfg.bb_cr_enabled) {
++			if (bb_scn != fcport->cfg.bb_scn)
++				return BFA_STATUS_BBCR_CFG_NO_CHANGE;
++			else
++				return BFA_STATUS_NO_CHANGE;
++		}
++
++		if ((bb_scn == 0) || (bb_scn > BFA_BB_SCN_MAX))
++			bb_scn = BFA_BB_SCN_DEF;
++
++		fcport->cfg.bb_cr_enabled = on_off;
++		fcport->cfg.bb_scn = bb_scn;
++	} else {
++		if (!fcport->cfg.bb_cr_enabled)
++			return BFA_STATUS_NO_CHANGE;
++
++		fcport->cfg.bb_cr_enabled = on_off;
++		fcport->cfg.bb_scn = 0;
++	}
++
++	return BFA_STATUS_OK;
++}
++
++bfa_status_t
++bfa_fcport_get_bbcr_attr(struct bfa_s *bfa,
++		struct bfa_bbcr_attr_s *bbcr_attr)
++{
++	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
++
++	if (bfa_ioc_get_type(&fcport->bfa->ioc) != BFA_IOC_TYPE_FC)
++		return BFA_STATUS_BBCR_FC_ONLY;
++
++	if (fcport->cfg.topology == BFA_PORT_TOPOLOGY_LOOP)
++		return BFA_STATUS_TOPOLOGY_LOOP;
++
++	*bbcr_attr = fcport->bbcr_attr;
++
++	return BFA_STATUS_OK;
++}
++
+ void
+ bfa_fcport_dportenable(struct bfa_s *bfa)
+ {
+diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
+index 8d7fbec..c2fb834 100644
+--- a/drivers/scsi/bfa/bfa_svc.h
++++ b/drivers/scsi/bfa/bfa_svc.h
+@@ -405,8 +405,6 @@ struct bfa_lps_s {
+ 	bfa_status_t	status;		/*  login status		*/
+ 	u16		pdusz;		/*  max receive PDU size	*/
+ 	u16		pr_bbcred;	/*  BB_CREDIT from peer		*/
+-	u8		pr_bbscn;	/*  BB_SCN from peer		*/
+-	u8		bb_scn;		/*  local BB_SCN		*/
+ 	u8		lsrjt_rsn;	/*  LSRJT reason		*/
+ 	u8		lsrjt_expl;	/*  LSRJT explanation		*/
+ 	u8		lun_mask;	/*  LUN mask flag		*/
+@@ -510,11 +508,11 @@ struct bfa_fcport_s {
+ 	bfa_boolean_t		diag_busy; /*  diag busy status */
+ 	bfa_boolean_t		beacon; /*  port beacon status */
+ 	bfa_boolean_t		link_e2e_beacon; /*  link beacon status */
+-	bfa_boolean_t		bbsc_op_state;	/* Cred recov Oper State */
+ 	struct bfa_fcport_trunk_s trunk;
+ 	u16		fcoe_vlan;
+ 	struct bfa_mem_dma_s	fcport_dma;
+ 	bfa_boolean_t		stats_dma_ready;
++	struct bfa_bbcr_attr_s	bbcr_attr;
  };
  
+ #define BFA_FCPORT_MOD(__bfa)	(&(__bfa)->modules.fcport)
+@@ -556,7 +554,7 @@ bfa_status_t bfa_fcport_set_qos_bw(struct bfa_s *bfa,
+ 				   struct bfa_qos_bw_s *qos_bw);
+ enum bfa_port_speed bfa_fcport_get_ratelim_speed(struct bfa_s *bfa);
+ 
+-void bfa_fcport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit, u8 bb_scn);
++void bfa_fcport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit);
+ bfa_boolean_t     bfa_fcport_is_ratelim(struct bfa_s *bfa);
+ void bfa_fcport_beacon(void *dev, bfa_boolean_t beacon,
+ 			bfa_boolean_t link_e2e_beacon);
+@@ -571,6 +569,10 @@ void bfa_fcport_dportenable(struct bfa_s *bfa);
+ void bfa_fcport_dportdisable(struct bfa_s *bfa);
+ bfa_status_t bfa_fcport_is_pbcdisabled(struct bfa_s *bfa);
+ void bfa_fcport_cfg_faa(struct bfa_s *bfa, u8 state);
++bfa_status_t bfa_fcport_cfg_bbcr(struct bfa_s *bfa,
++			bfa_boolean_t on_off, u8 bb_scn);
++bfa_status_t bfa_fcport_get_bbcr_attr(struct bfa_s *bfa,
++			struct bfa_bbcr_attr_s *bbcr_attr);
+ 
+ /*
+  * bfa rport API functions
+@@ -667,7 +669,7 @@ struct bfa_lps_s *bfa_lps_alloc(struct bfa_s *bfa);
+ void bfa_lps_delete(struct bfa_lps_s *lps);
+ void bfa_lps_flogi(struct bfa_lps_s *lps, void *uarg, u8 alpa,
+ 		   u16 pdusz, wwn_t pwwn, wwn_t nwwn,
+-		   bfa_boolean_t auth_en, u8 bb_scn);
++		   bfa_boolean_t auth_en);
+ void bfa_lps_fdisc(struct bfa_lps_s *lps, void *uarg, u16 pdusz,
+ 		   wwn_t pwwn, wwn_t nwwn);
+ void bfa_lps_fdisclogo(struct bfa_lps_s *lps);
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 555e7db..bda1500 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -402,25 +402,43 @@ bfad_iocmd_port_cfg_maxfrsize(struct bfad_s *bfad, void *cmd)
+ }
+ 
+ int
+-bfad_iocmd_port_cfg_bbsc(struct bfad_s *bfad, void *cmd, unsigned int v_cmd)
++bfad_iocmd_port_cfg_bbcr(struct bfad_s *bfad, unsigned int cmd, void *pcmd)
+ {
+-	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)cmd;
+-	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(&bfad->bfa);
+-	unsigned long	flags;
++	struct bfa_bsg_bbcr_enable_s *iocmd =
++			(struct bfa_bsg_bbcr_enable_s *)pcmd;
++	unsigned long flags;
++	int rc;
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+-	if (bfa_ioc_get_type(&bfad->bfa.ioc) == BFA_IOC_TYPE_FC) {
+-		if (v_cmd == IOCMD_PORT_BBSC_ENABLE)
+-			fcport->cfg.bb_scn_state = BFA_TRUE;
+-		else if (v_cmd == IOCMD_PORT_BBSC_DISABLE)
+-			fcport->cfg.bb_scn_state = BFA_FALSE;
++	if (cmd == IOCMD_PORT_BBCR_ENABLE)
++		rc = bfa_fcport_cfg_bbcr(&bfad->bfa, BFA_TRUE, iocmd->bb_scn);
++	else if (cmd == IOCMD_PORT_BBCR_DISABLE)
++		rc = bfa_fcport_cfg_bbcr(&bfad->bfa, BFA_FALSE, 0);
++	else {
++		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++		return -EINVAL;
+ 	}
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+-	iocmd->status = BFA_STATUS_OK;
++	iocmd->status = rc;
+ 	return 0;
+ }
+ 
++int
++bfad_iocmd_port_get_bbcr_attr(struct bfad_s *bfad, void *pcmd)
++{
++	struct bfa_bsg_bbcr_attr_s *iocmd = (struct bfa_bsg_bbcr_attr_s *) pcmd;
++	unsigned long flags;
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status =
++		bfa_fcport_get_bbcr_attr(&bfad->bfa, &iocmd->attr);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++
++	return 0;
++}
++
++
+ static int
+ bfad_iocmd_lport_get_attr(struct bfad_s *bfad, void *cmd)
+ {
+@@ -2750,9 +2768,12 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 	case IOCMD_PORT_CFG_MAXFRSZ:
+ 		rc = bfad_iocmd_port_cfg_maxfrsize(bfad, iocmd);
+ 		break;
+-	case IOCMD_PORT_BBSC_ENABLE:
+-	case IOCMD_PORT_BBSC_DISABLE:
+-		rc = bfad_iocmd_port_cfg_bbsc(bfad, iocmd, cmd);
++	case IOCMD_PORT_BBCR_ENABLE:
++	case IOCMD_PORT_BBCR_DISABLE:
++		rc = bfad_iocmd_port_cfg_bbcr(bfad, cmd, iocmd);
++		break;
++	case IOCMD_PORT_BBCR_GET_ATTR:
++		rc = bfad_iocmd_port_get_bbcr_attr(bfad, iocmd);
+ 		break;
+ 	case IOCMD_LPORT_GET_ATTR:
+ 		rc = bfad_iocmd_lport_get_attr(bfad, iocmd);
+diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
+index 15e1fc8..612463b 100644
+--- a/drivers/scsi/bfa/bfad_bsg.h
++++ b/drivers/scsi/bfa/bfad_bsg.h
+@@ -46,8 +46,9 @@ enum {
+ 	IOCMD_PORT_CFG_ALPA,
+ 	IOCMD_PORT_CFG_MAXFRSZ,
+ 	IOCMD_PORT_CLR_ALPA,
+-	IOCMD_PORT_BBSC_ENABLE,
+-	IOCMD_PORT_BBSC_DISABLE,
++	IOCMD_PORT_BBCR_ENABLE,
++	IOCMD_PORT_BBCR_DISABLE,
++	IOCMD_PORT_BBCR_GET_ATTR,
+ 	IOCMD_LPORT_GET_ATTR,
+ 	IOCMD_LPORT_GET_RPORTS,
+ 	IOCMD_LPORT_GET_STATS,
+@@ -495,6 +496,20 @@ struct bfa_bsg_port_cfg_mode_s {
+ 	struct bfa_port_cfg_mode_s cfg;
+ };
+ 
++struct bfa_bsg_bbcr_enable_s {
++	bfa_status_t    status;
++	u16		bfad_num;
++	u8		bb_scn;
++	u8		rsvd;
++};
++
++struct bfa_bsg_bbcr_attr_s {
++	bfa_status_t    status;
++	u16		bfad_num;
++	u16		rsvd;
++	struct bfa_bbcr_attr_s attr;
++};
++
+ struct bfa_bsg_faa_attr_s {
+ 	bfa_status_t		status;
+ 	u16			bfad_num;
+diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
+index 5ae2c16..1a3fe5a 100644
+--- a/drivers/scsi/bfa/bfi_ms.h
++++ b/drivers/scsi/bfa/bfi_ms.h
+@@ -276,8 +276,7 @@ struct bfi_fcport_enable_req_s {
+ struct bfi_fcport_set_svc_params_req_s {
+ 	struct bfi_mhdr_s  mh;		/*  msg header */
+ 	__be16	   tx_bbcredit;	/*  Tx credits */
+-	u8	bb_scn;		/* BB_SC FC credit recovery */
+-	u8	rsvd;
++	u8	rsvd[2];
+ };
+ 
+ /*
+@@ -446,8 +445,8 @@ struct bfi_lps_login_rsp_s {
+ 	mac_t		fcf_mac;
+ 	u8		ext_status;
+ 	u8		brcd_switch;	/*  attached peer is brcd switch */
+-	u8		bb_scn;		/* atatched port's bb_scn */
+ 	u8		bfa_tag;
++	u8		rsvd;
+ };
+ 
+ struct bfi_lps_logout_req_s {
 -- 
 1.7.12
 
