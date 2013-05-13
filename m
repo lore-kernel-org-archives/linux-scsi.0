@@ -1,57 +1,61 @@
 From: Vijaya Mohan Guvva <vmohan@brocade.com>
-Subject: [PATCH V1 06/17] bfa: Fix 1860 port initialize when ATC is enabled
-Date: Mon, 13 May 2013 02:33:24 -0700
-Message-ID: <1368437615-9867-7-git-send-email-vmohan@brocade.com>
+Subject: [PATCH V1 17/17] bfa: Update the driver version to 3.2.21.1
+Date: Mon, 13 May 2013 02:33:35 -0700
+Message-ID: <1368437615-9867-18-git-send-email-vmohan@brocade.com>
 References: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50359 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50343 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754095Ab3EMJv7 (ORCPT
+	by vger.kernel.org with ESMTP id S1754095Ab3EMJwF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 May 2013 05:51:59 -0400
+	Mon, 13 May 2013 05:52:05 -0400
 In-Reply-To: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, adapter_linux_open_src_team@Brocade.COM, Vijaya Mohan Guvva <vmohan@Brocade.COM>, Anil Gurumurthy <agurumur@Brocade.COM>
+Cc: JBottomley@parallels.com, adapter_linux_open_src_team@Brocade.COM, Vijaya Mohan Guvva <vmohan@Brocade.COM>
 
-On Xen kernels, if ATC (address translation cache) is enabled, the
-first PCIe DMA read from the adapter fails with an error. This is due to
-a bug ASIC, which leads to a failure of 1860 ports to be initialised.
+Update bfa driver version to 3.2.21.1
+Update bfa to use firmware image versions 3.2.1.0
 
-This patch includes the fix to disable Invalidated Tag Match Enable
-capability by setting the bit 26 of CHIP_MISC_PRG to 0, by default it is
-set to 1.
-
-Signed-off-by: Anil Gurumurthy <agurumur@brocade.com>
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfa_ioc_ct.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/bfa/bfad.c     | 6 +++---
+ drivers/scsi/bfa/bfad_drv.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
-index de4e726..a8e52a1 100644
---- a/drivers/scsi/bfa/bfa_ioc_ct.c
-+++ b/drivers/scsi/bfa/bfa_ioc_ct.c
-@@ -918,6 +918,16 @@ bfa_ioc_ct2_pll_init(void __iomem *rb, enum bfi_asic_mode mode)
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index bf5c5d3..9611195 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -63,9 +63,9 @@ int		max_rport_logins = BFA_FCS_MAX_RPORT_LOGINS;
+ u32	bfi_image_cb_size, bfi_image_ct_size, bfi_image_ct2_size;
+ u32	*bfi_image_cb, *bfi_image_ct, *bfi_image_ct2;
  
- 		}
- 	}
-+	/*
-+	* The very first PCIe DMA Read done by LPU fails with a fatal error,
-+	* when Address Translation Cache (ATC) has been enabled by system BIOS.
-+	*
-+	* Workaround:
-+	* Disable Invalidated Tag Match Enable capability by setting the bit 26
-+	* of CHIP_MISC_PRG to 0, by default it is set to 1.
-+	*/
-+	r32 = readl(rb + CT2_CHIP_MISC_PRG);
-+	writel((r32 & 0xfbffffff), (rb + CT2_CHIP_MISC_PRG));
+-#define BFAD_FW_FILE_CB		"cbfw-3.1.0.0.bin"
+-#define BFAD_FW_FILE_CT		"ctfw-3.1.0.0.bin"
+-#define BFAD_FW_FILE_CT2	"ct2fw-3.1.0.0.bin"
++#define BFAD_FW_FILE_CB		"cbfw-3.2.1.0.bin"
++#define BFAD_FW_FILE_CT		"ctfw-3.2.1.0.bin"
++#define BFAD_FW_FILE_CT2	"ct2fw-3.2.1.0.bin"
  
- 	/*
- 	 * Mask the interrupts and clear any
+ static u32 *bfad_load_fwimg(struct pci_dev *pdev);
+ static void bfad_free_fwimg(void);
+diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
+index 0c64a04..78d3401 100644
+--- a/drivers/scsi/bfa/bfad_drv.h
++++ b/drivers/scsi/bfa/bfad_drv.h
+@@ -57,7 +57,7 @@
+ #ifdef BFA_DRIVER_VERSION
+ #define BFAD_DRIVER_VERSION    BFA_DRIVER_VERSION
+ #else
+-#define BFAD_DRIVER_VERSION    "3.1.2.1"
++#define BFAD_DRIVER_VERSION    "3.2.21.1"
+ #endif
+ 
+ #define BFAD_PROTO_NAME FCPI_NAME
 -- 
 1.7.12
 
