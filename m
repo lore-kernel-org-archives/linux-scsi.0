@@ -1,49 +1,45 @@
-From: "Dolev Raviv" <draviv@codeaurora.org>
-Subject: RE: [PATCH V1 3/8] scsi: ufs: wrap the i/o access operations
-Date: Sun, 12 May 2013 23:29:55 -0700
-Message-ID: <74fe9162e1de73d086bd7e987a8fce6d.squirrel@www.codeaurora.org>
-References: <1368368640-10167-1-git-send-email-draviv@codeaurora.org>
-    <1368368640-10167-4-git-send-email-draviv@codeaurora.org>
-    <002301ce4f8f$5bc02600$13407200$%jun@samsung.com>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH] [SCSI] mvsas: fix error return code in mvs_task_prep()
+Date: Mon, 13 May 2013 14:53:48 +0800
+Message-ID: <CAPgLHd90hmH+WozPSftAU9OKOkG_-hSL0sAdJM8s8B6_3gtPFw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <002301ce4f8f$5bc02600$13407200$%jun@samsung.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: 'Dolev Raviv' <draviv@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, 'open list' <linux-kernel@vger.kernel.org>, 'Santosh Y' <santoshsy@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:52643 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752210Ab3EMGyK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 May 2013 02:54:10 -0400
+Received: by mail-bk0-f54.google.com with SMTP id it16so34402bkc.13
+        for <linux-scsi@vger.kernel.org>; Sun, 12 May 2013 23:53:48 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, dan.j.williams@intel.com, majianpeng@gmail.com, gregkh@linuxfoundation.org, dan.carpenter@oracle.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org
 
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-> On Sunday, May 12, 2013, Dolev Raviv wrote:
-> Author should be identified here. (From: author...)
-> Except last patch of series(8/8), all of patches are not from you.
->
->> Simplify operations with hiding mmio_base.
->>
->> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
->> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> I'm not sure that your signed-off is proper here including (3/8 ~ 6/8)
-> And maintainer, Santosh's ack is omitted.
+Fix to return -ENOMEM in the pci_pool_alloc() error handling
+case instead of 0, as done elsewhere in this function.
 
-Thanks for your comment I wasn't sure about the appropriate custom.
-I will remove it later today if it is ok with you.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/scsi/mvsas/mv_sas.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Dolev
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index c9e2449..801cd35 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -790,8 +790,10 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+ 	slot->slot_tag = tag;
+ 
+ 	slot->buf = pci_pool_alloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
+-	if (!slot->buf)
++	if (!slot->buf) {
++		rc = -ENOMEM;
+ 		goto err_out_tag;
++	}
+ 	memset(slot->buf, 0, MVS_SLOT_BUF_SZ);
+ 
+ 	tei.task = task;
 
->
->> Tested-by: Maya Erez <merez@codeaurora.org>
-> Thanks,
-> Seungwon Jeon
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
