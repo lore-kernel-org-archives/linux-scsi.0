@@ -1,76 +1,428 @@
 From: Vijaya Mohan Guvva <vmohan@brocade.com>
-Subject: [PATCH V1 09/17] bfa: driver compatibility with 32bit libs
-Date: Mon, 13 May 2013 02:33:27 -0700
-Message-ID: <1368437615-9867-10-git-send-email-vmohan@brocade.com>
+Subject: [PATCH V1 08/17] bfa: kdump fix on 815 and 825 adapters
+Date: Mon, 13 May 2013 02:33:26 -0700
+Message-ID: <1368437615-9867-9-git-send-email-vmohan@brocade.com>
 References: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50332 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50343 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754024Ab3EMJvF (ORCPT
+	by vger.kernel.org with ESMTP id S1753994Ab3EMJvK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 May 2013 05:51:05 -0400
+	Mon, 13 May 2013 05:51:10 -0400
 In-Reply-To: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: JBottomley@parallels.com, adapter_linux_open_src_team@Brocade.COM, Vijaya Mohan Guvva <vmohan@Brocade.COM>
 
-Replaced usage of void * with u64 in data structure shared between
-brocade user space libraries and the bfa driver to address pointer
-size changes across 32-bit vs 64-bit to have the compatibility between
-32bit library and 64bit driver and vice versa.
+Root cause: When kernel crashes, On brocade 815/825 adapters,
+ bfa IOC state machine and FW doesn't get a notification and
+hence are not cleanly shutdown. So registers holding driver/IOC
+state information are not reset back to valid disabled/parking
+values. This causes subsequent driver initialization to fail
+during kdump kernel boot.
+
+Fix description: during the initialization of first PCI function, reset
+corresponding register when unclean shutown is detect by reading chip
+registers. This will make sure that ioc/fw gets clean re-initialization.
 
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfad_bsg.c | 7 ++++---
- drivers/scsi/bfa/bfad_bsg.h | 4 +++-
- 2 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/bfa/bfa_ioc.c    | 42 ++++++++++++---------
+ drivers/scsi/bfa/bfa_ioc.h    |  6 +++
+ drivers/scsi/bfa/bfa_ioc_cb.c | 86 +++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/bfa/bfa_ioc_ct.c | 36 ++++++++++++++++++
+ drivers/scsi/bfa/bfi.h        |  4 ++
+ 5 files changed, 150 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index f31acfa..9863b1c 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -3371,7 +3371,8 @@ bfad_im_bsg_els_ct_request(struct fc_bsg_job *job)
- 		goto out;
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 0116c10..8928b68 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -67,6 +67,14 @@ BFA_TRC_FILE(CNA, IOC);
+ 			((__ioc)->ioc_hwif->ioc_sync_ack(__ioc))
+ #define bfa_ioc_sync_complete(__ioc)            \
+ 			((__ioc)->ioc_hwif->ioc_sync_complete(__ioc))
++#define bfa_ioc_set_cur_ioc_fwstate(__ioc, __fwstate)		\
++			((__ioc)->ioc_hwif->ioc_set_fwstate(__ioc, __fwstate))
++#define bfa_ioc_get_cur_ioc_fwstate(__ioc)		\
++			((__ioc)->ioc_hwif->ioc_get_fwstate(__ioc))
++#define bfa_ioc_set_alt_ioc_fwstate(__ioc, __fwstate)		\
++		((__ioc)->ioc_hwif->ioc_set_alt_fwstate(__ioc, __fwstate))
++#define bfa_ioc_get_alt_ioc_fwstate(__ioc)		\
++			((__ioc)->ioc_hwif->ioc_get_alt_fwstate(__ioc))
+ 
+ #define bfa_ioc_mbox_cmd_pending(__ioc)		\
+ 			(!list_empty(&((__ioc)->mbox_mod.cmd_q)) || \
+@@ -698,7 +706,7 @@ bfa_iocpf_sm_fwcheck_entry(struct bfa_iocpf_s *iocpf)
  	}
  
--	if (copy_from_user((uint8_t *)bsg_fcpt, bsg_data->payload,
-+	if (copy_from_user((uint8_t *)bsg_fcpt,
-+				(void *)(unsigned long)bsg_data->payload,
- 				bsg_data->payload_len)) {
- 		kfree(bsg_fcpt);
- 		rc = -EIO;
-@@ -3525,8 +3526,8 @@ out_free_mem:
- 	kfree(rsp_kbuf);
+ 	/* h/w sem init */
+-	fwstate = readl(iocpf->ioc->ioc_regs.ioc_fwstate);
++	fwstate = bfa_ioc_get_cur_ioc_fwstate(iocpf->ioc);
+ 	if (fwstate == BFI_IOC_UNINIT) {
+ 		writel(1, iocpf->ioc->ioc_regs.ioc_init_sem_reg);
+ 		goto sem_get;
+@@ -725,8 +733,8 @@ bfa_iocpf_sm_fwcheck_entry(struct bfa_iocpf_s *iocpf)
  
- 	/* Need a copy to user op */
--	if (copy_to_user(bsg_data->payload, (void *) bsg_fcpt,
--			 bsg_data->payload_len))
-+	if (copy_to_user((void *)(unsigned long)bsg_data->payload,
-+			(void *)bsg_fcpt, bsg_data->payload_len))
- 		rc = -EIO;
+ 	bfa_trc(iocpf->ioc, fwstate);
+ 	bfa_trc(iocpf->ioc, swab32(fwhdr.exec));
+-	writel(BFI_IOC_UNINIT, iocpf->ioc->ioc_regs.ioc_fwstate);
+-	writel(BFI_IOC_UNINIT, iocpf->ioc->ioc_regs.alt_ioc_fwstate);
++	bfa_ioc_set_cur_ioc_fwstate(iocpf->ioc, BFI_IOC_UNINIT);
++	bfa_ioc_set_alt_ioc_fwstate(iocpf->ioc, BFI_IOC_UNINIT);
  
- 	kfree(bsg_fcpt);
-diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index 3ef321c..b0b5ac7 100644
---- a/drivers/scsi/bfa/bfad_bsg.h
-+++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -819,10 +819,12 @@ struct bfa_bsg_fcpt_s {
+ 	/*
+ 	 * Unlock the hw semaphore. Should be here only once per boot.
+@@ -1037,7 +1045,7 @@ bfa_iocpf_sm_disabling(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
+ 		 */
+ 
+ 	case IOCPF_E_TIMEOUT:
+-		writel(BFI_IOC_FAIL, ioc->ioc_regs.ioc_fwstate);
++		bfa_ioc_set_cur_ioc_fwstate(ioc, BFI_IOC_FAIL);
+ 		bfa_fsm_set_state(iocpf, bfa_iocpf_sm_disabling_sync);
+ 		break;
+ 
+@@ -1138,7 +1146,7 @@ bfa_iocpf_sm_initfail_sync(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
+ 	case IOCPF_E_SEMLOCKED:
+ 		bfa_ioc_notify_fail(ioc);
+ 		bfa_ioc_sync_leave(ioc);
+-		writel(BFI_IOC_FAIL, ioc->ioc_regs.ioc_fwstate);
++		bfa_ioc_set_cur_ioc_fwstate(ioc, BFI_IOC_FAIL);
+ 		writel(1, ioc->ioc_regs.ioc_sem_reg);
+ 		bfa_fsm_set_state(iocpf, bfa_iocpf_sm_initfail);
+ 		break;
+@@ -1227,7 +1235,7 @@ bfa_iocpf_sm_fail_sync(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
+ 		bfa_ioc_notify_fail(ioc);
+ 		if (!iocpf->auto_recover) {
+ 			bfa_ioc_sync_leave(ioc);
+-			writel(BFI_IOC_FAIL, ioc->ioc_regs.ioc_fwstate);
++			bfa_ioc_set_cur_ioc_fwstate(ioc, BFI_IOC_FAIL);
+ 			writel(1, ioc->ioc_regs.ioc_sem_reg);
+ 			bfa_fsm_set_state(iocpf, bfa_iocpf_sm_fail);
+ 		} else {
+@@ -1519,7 +1527,7 @@ bfa_ioc_hwinit(struct bfa_ioc_s *ioc, bfa_boolean_t force)
+ 	u32 boot_type;
+ 	u32 boot_env;
+ 
+-	ioc_fwstate = readl(ioc->ioc_regs.ioc_fwstate);
++	ioc_fwstate = bfa_ioc_get_cur_ioc_fwstate(ioc);
+ 
+ 	if (force)
+ 		ioc_fwstate = BFI_IOC_UNINIT;
+@@ -2006,11 +2014,11 @@ bfa_ioc_boot(struct bfa_ioc_s *ioc, u32 boot_type, u32 boot_env)
+ 	 * Initialize IOC state of all functions on a chip reset.
+ 	 */
+ 	if (boot_type == BFI_FWBOOT_TYPE_MEMTEST) {
+-		writel(BFI_IOC_MEMTEST, ioc->ioc_regs.ioc_fwstate);
+-		writel(BFI_IOC_MEMTEST, ioc->ioc_regs.alt_ioc_fwstate);
++		bfa_ioc_set_cur_ioc_fwstate(ioc, BFI_IOC_MEMTEST);
++		bfa_ioc_set_alt_ioc_fwstate(ioc, BFI_IOC_MEMTEST);
+ 	} else {
+-		writel(BFI_IOC_INITING, ioc->ioc_regs.ioc_fwstate);
+-		writel(BFI_IOC_INITING, ioc->ioc_regs.alt_ioc_fwstate);
++		bfa_ioc_set_cur_ioc_fwstate(ioc, BFI_IOC_INITING);
++		bfa_ioc_set_alt_ioc_fwstate(ioc, BFI_IOC_INITING);
+ 	}
+ 
+ 	bfa_ioc_msgflush(ioc);
+@@ -2038,7 +2046,7 @@ bfa_ioc_is_operational(struct bfa_ioc_s *ioc)
+ bfa_boolean_t
+ bfa_ioc_is_initialized(struct bfa_ioc_s *ioc)
+ {
+-	u32 r32 = readl(ioc->ioc_regs.ioc_fwstate);
++	u32 r32 = bfa_ioc_get_cur_ioc_fwstate(ioc);
+ 
+ 	return ((r32 != BFI_IOC_UNINIT) &&
+ 		(r32 != BFI_IOC_INITING) &&
+@@ -2430,12 +2438,12 @@ bfa_ioc_adapter_is_disabled(struct bfa_ioc_s *ioc)
+ 	if (!bfa_fsm_cmp_state(ioc, bfa_ioc_sm_disabled))
+ 		return BFA_FALSE;
+ 
+-	ioc_state = readl(ioc->ioc_regs.ioc_fwstate);
++	ioc_state = bfa_ioc_get_cur_ioc_fwstate(ioc);
+ 	if (!bfa_ioc_state_disabled(ioc_state))
+ 		return BFA_FALSE;
+ 
+ 	if (ioc->pcidev.device_id != BFA_PCI_DEVICE_ID_FC_8G1P) {
+-		ioc_state = readl(ioc->ioc_regs.alt_ioc_fwstate);
++		ioc_state = bfa_ioc_get_cur_ioc_fwstate(ioc);
+ 		if (!bfa_ioc_state_disabled(ioc_state))
+ 			return BFA_FALSE;
+ 	}
+@@ -2449,8 +2457,8 @@ bfa_ioc_adapter_is_disabled(struct bfa_ioc_s *ioc)
+ void
+ bfa_ioc_reset_fwstate(struct bfa_ioc_s *ioc)
+ {
+-	writel(BFI_IOC_UNINIT, ioc->ioc_regs.ioc_fwstate);
+-	writel(BFI_IOC_UNINIT, ioc->ioc_regs.alt_ioc_fwstate);
++	bfa_ioc_set_cur_ioc_fwstate(ioc, BFI_IOC_UNINIT);
++	bfa_ioc_set_alt_ioc_fwstate(ioc, BFI_IOC_UNINIT);
+ }
+ 
+ #define BFA_MFG_NAME "Brocade"
+@@ -2917,7 +2925,7 @@ bfa_iocpf_sem_timeout(void *ioc_arg)
+ static void
+ bfa_ioc_poll_fwinit(struct bfa_ioc_s *ioc)
+ {
+-	u32 fwstate = readl(ioc->ioc_regs.ioc_fwstate);
++	u32 fwstate = bfa_ioc_get_cur_ioc_fwstate(ioc);
+ 
+ 	bfa_trc(ioc, fwstate);
+ 
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 23a90e7..de62b68 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -346,6 +346,12 @@ struct bfa_ioc_hwif_s {
+ 	void		(*ioc_sync_ack)		(struct bfa_ioc_s *ioc);
+ 	bfa_boolean_t	(*ioc_sync_complete)	(struct bfa_ioc_s *ioc);
+ 	bfa_boolean_t	(*ioc_lpu_read_stat)	(struct bfa_ioc_s *ioc);
++	void		(*ioc_set_fwstate)	(struct bfa_ioc_s *ioc,
++					enum bfi_ioc_state fwstate);
++	enum bfi_ioc_state	(*ioc_get_fwstate)	(struct bfa_ioc_s *ioc);
++	void		(*ioc_set_alt_fwstate)	(struct bfa_ioc_s *ioc,
++					enum bfi_ioc_state fwstate);
++	enum bfi_ioc_state	(*ioc_get_alt_fwstate)	(struct bfa_ioc_s *ioc);
  };
- #define bfa_bsg_fcpt_t struct bfa_bsg_fcpt_s
  
-+#pragma pack(1)
- struct bfa_bsg_data {
- 	int payload_len;
--	void *payload;
-+	u64 payload;
+ /*
+diff --git a/drivers/scsi/bfa/bfa_ioc_cb.c b/drivers/scsi/bfa/bfa_ioc_cb.c
+index 30df8a2..e3b9287 100644
+--- a/drivers/scsi/bfa/bfa_ioc_cb.c
++++ b/drivers/scsi/bfa/bfa_ioc_cb.c
+@@ -22,6 +22,8 @@
+ 
+ BFA_TRC_FILE(CNA, IOC_CB);
+ 
++#define bfa_ioc_cb_join_pos(__ioc) ((u32) (1 << BFA_IOC_CB_JOIN_SH))
++
+ /*
+  * forward declarations
+  */
+@@ -37,6 +39,12 @@ static void bfa_ioc_cb_sync_join(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_cb_sync_leave(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_cb_sync_ack(struct bfa_ioc_s *ioc);
+ static bfa_boolean_t bfa_ioc_cb_sync_complete(struct bfa_ioc_s *ioc);
++static void bfa_ioc_cb_set_cur_ioc_fwstate(
++			struct bfa_ioc_s *ioc, enum bfi_ioc_state fwstate);
++static enum bfi_ioc_state bfa_ioc_cb_get_cur_ioc_fwstate(struct bfa_ioc_s *ioc);
++static void bfa_ioc_cb_set_alt_ioc_fwstate(
++			struct bfa_ioc_s *ioc, enum bfi_ioc_state fwstate);
++static enum bfi_ioc_state bfa_ioc_cb_get_alt_ioc_fwstate(struct bfa_ioc_s *ioc);
+ 
+ static struct bfa_ioc_hwif_s hwif_cb;
+ 
+@@ -59,6 +67,10 @@ bfa_ioc_set_cb_hwif(struct bfa_ioc_s *ioc)
+ 	hwif_cb.ioc_sync_leave = bfa_ioc_cb_sync_leave;
+ 	hwif_cb.ioc_sync_ack = bfa_ioc_cb_sync_ack;
+ 	hwif_cb.ioc_sync_complete = bfa_ioc_cb_sync_complete;
++	hwif_cb.ioc_set_fwstate = bfa_ioc_cb_set_cur_ioc_fwstate;
++	hwif_cb.ioc_get_fwstate = bfa_ioc_cb_get_cur_ioc_fwstate;
++	hwif_cb.ioc_set_alt_fwstate = bfa_ioc_cb_set_alt_ioc_fwstate;
++	hwif_cb.ioc_get_alt_fwstate = bfa_ioc_cb_get_alt_ioc_fwstate;
+ 
+ 	ioc->ioc_hwif = &hwif_cb;
+ }
+@@ -187,6 +199,20 @@ bfa_ioc_cb_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix)
+ static bfa_boolean_t
+ bfa_ioc_cb_sync_start(struct bfa_ioc_s *ioc)
+ {
++	u32 ioc_fwstate = readl(ioc->ioc_regs.ioc_fwstate);
++
++	/**
++	 * Driver load time.  If the join bit is set,
++	 * it is due to an unclean exit by the driver for this
++	 * PCI fn in the previous incarnation. Whoever comes here first
++	 * should clean it up, no matter which PCI fn.
++	 */
++	if (ioc_fwstate & BFA_IOC_CB_JOIN_MASK) {
++		writel(BFI_IOC_UNINIT, ioc->ioc_regs.ioc_fwstate);
++		writel(BFI_IOC_UNINIT, ioc->ioc_regs.alt_ioc_fwstate);
++		return BFA_TRUE;
++	}
++
+ 	return bfa_ioc_cb_sync_complete(ioc);
+ }
+ 
+@@ -212,24 +238,66 @@ bfa_ioc_cb_ownership_reset(struct bfa_ioc_s *ioc)
+ static void
+ bfa_ioc_cb_sync_join(struct bfa_ioc_s *ioc)
+ {
++	u32 r32 = readl(ioc->ioc_regs.ioc_fwstate);
++	u32 join_pos = bfa_ioc_cb_join_pos(ioc);
++
++	writel((r32 | join_pos), ioc->ioc_regs.ioc_fwstate);
+ }
+ 
+ static void
+ bfa_ioc_cb_sync_leave(struct bfa_ioc_s *ioc)
+ {
++	u32 r32 = readl(ioc->ioc_regs.ioc_fwstate);
++	u32 join_pos = bfa_ioc_cb_join_pos(ioc);
++
++	writel((r32 & ~join_pos), ioc->ioc_regs.ioc_fwstate);
++}
++
++static void
++bfa_ioc_cb_set_cur_ioc_fwstate(struct bfa_ioc_s *ioc,
++			enum bfi_ioc_state fwstate)
++{
++	u32 r32 = readl(ioc->ioc_regs.ioc_fwstate);
++
++	writel((fwstate | (r32 & BFA_IOC_CB_JOIN_MASK)),
++				ioc->ioc_regs.ioc_fwstate);
++}
++
++static enum bfi_ioc_state
++bfa_ioc_cb_get_cur_ioc_fwstate(struct bfa_ioc_s *ioc)
++{
++	return (enum bfi_ioc_state)(readl(ioc->ioc_regs.ioc_fwstate) &
++			BFA_IOC_CB_FWSTATE_MASK);
++}
++
++static void
++bfa_ioc_cb_set_alt_ioc_fwstate(struct bfa_ioc_s *ioc,
++			enum bfi_ioc_state fwstate)
++{
++	u32 r32 = readl(ioc->ioc_regs.alt_ioc_fwstate);
++
++	writel((fwstate | (r32 & BFA_IOC_CB_JOIN_MASK)),
++				ioc->ioc_regs.alt_ioc_fwstate);
++}
++
++static enum bfi_ioc_state
++bfa_ioc_cb_get_alt_ioc_fwstate(struct bfa_ioc_s *ioc)
++{
++	return (enum bfi_ioc_state)(readl(ioc->ioc_regs.alt_ioc_fwstate) &
++			BFA_IOC_CB_FWSTATE_MASK);
+ }
+ 
+ static void
+ bfa_ioc_cb_sync_ack(struct bfa_ioc_s *ioc)
+ {
+-	writel(BFI_IOC_FAIL, ioc->ioc_regs.ioc_fwstate);
++	bfa_ioc_cb_set_cur_ioc_fwstate(ioc, BFI_IOC_FAIL);
+ }
+ 
+ static bfa_boolean_t
+ bfa_ioc_cb_sync_complete(struct bfa_ioc_s *ioc)
+ {
+-	uint32_t fwstate, alt_fwstate;
+-	fwstate = readl(ioc->ioc_regs.ioc_fwstate);
++	u32 fwstate, alt_fwstate;
++	fwstate = bfa_ioc_cb_get_cur_ioc_fwstate(ioc);
+ 
+ 	/*
+ 	 * At this point, this IOC is hoding the hw sem in the
+@@ -257,7 +325,7 @@ bfa_ioc_cb_sync_complete(struct bfa_ioc_s *ioc)
+ 		fwstate == BFI_IOC_OP)
+ 		return BFA_TRUE;
+ 	else {
+-		alt_fwstate = readl(ioc->ioc_regs.alt_ioc_fwstate);
++		alt_fwstate = bfa_ioc_cb_get_alt_ioc_fwstate(ioc);
+ 		if (alt_fwstate == BFI_IOC_FAIL ||
+ 			alt_fwstate == BFI_IOC_DISABLED ||
+ 			alt_fwstate == BFI_IOC_UNINIT ||
+@@ -272,7 +340,7 @@ bfa_ioc_cb_sync_complete(struct bfa_ioc_s *ioc)
+ bfa_status_t
+ bfa_ioc_cb_pll_init(void __iomem *rb, enum bfi_asic_mode fcmode)
+ {
+-	u32	pll_sclk, pll_fclk;
++	u32	pll_sclk, pll_fclk, join_bits;
+ 
+ 	pll_sclk = __APP_PLL_SCLK_ENABLE | __APP_PLL_SCLK_LRESETN |
+ 		__APP_PLL_SCLK_P0_1(3U) |
+@@ -282,8 +350,12 @@ bfa_ioc_cb_pll_init(void __iomem *rb, enum bfi_asic_mode fcmode)
+ 		__APP_PLL_LCLK_RSEL200500 | __APP_PLL_LCLK_P0_1(3U) |
+ 		__APP_PLL_LCLK_JITLMT0_1(3U) |
+ 		__APP_PLL_LCLK_CNTLMT0_1(3U);
+-	writel(BFI_IOC_UNINIT, (rb + BFA_IOC0_STATE_REG));
+-	writel(BFI_IOC_UNINIT, (rb + BFA_IOC1_STATE_REG));
++	join_bits = readl(rb + BFA_IOC0_STATE_REG) &
++			BFA_IOC_CB_JOIN_MASK;
++	writel((BFI_IOC_UNINIT | join_bits), (rb + BFA_IOC0_STATE_REG));
++	join_bits = readl(rb + BFA_IOC1_STATE_REG) &
++			BFA_IOC_CB_JOIN_MASK;
++	writel((BFI_IOC_UNINIT | join_bits), (rb + BFA_IOC1_STATE_REG));
+ 	writel(0xffffffffU, (rb + HOSTFN0_INT_MSK));
+ 	writel(0xffffffffU, (rb + HOSTFN1_INT_MSK));
+ 	writel(0xffffffffU, (rb + HOSTFN0_INT_STATUS));
+diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
+index a8e52a1..bd53150 100644
+--- a/drivers/scsi/bfa/bfa_ioc_ct.c
++++ b/drivers/scsi/bfa/bfa_ioc_ct.c
+@@ -43,6 +43,12 @@ static void bfa_ioc_ct_sync_join(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_ct_sync_leave(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_ct_sync_ack(struct bfa_ioc_s *ioc);
+ static bfa_boolean_t bfa_ioc_ct_sync_complete(struct bfa_ioc_s *ioc);
++static void bfa_ioc_ct_set_cur_ioc_fwstate(
++			struct bfa_ioc_s *ioc, enum bfi_ioc_state fwstate);
++static enum bfi_ioc_state bfa_ioc_ct_get_cur_ioc_fwstate(struct bfa_ioc_s *ioc);
++static void bfa_ioc_ct_set_alt_ioc_fwstate(
++			struct bfa_ioc_s *ioc, enum bfi_ioc_state fwstate);
++static enum bfi_ioc_state bfa_ioc_ct_get_alt_ioc_fwstate(struct bfa_ioc_s *ioc);
+ 
+ static struct bfa_ioc_hwif_s hwif_ct;
+ static struct bfa_ioc_hwif_s hwif_ct2;
+@@ -512,6 +518,10 @@ bfa_ioc_set_ctx_hwif(struct bfa_ioc_s *ioc, struct bfa_ioc_hwif_s *hwif)
+ 	hwif->ioc_sync_leave = bfa_ioc_ct_sync_leave;
+ 	hwif->ioc_sync_ack = bfa_ioc_ct_sync_ack;
+ 	hwif->ioc_sync_complete = bfa_ioc_ct_sync_complete;
++	hwif->ioc_set_fwstate = bfa_ioc_ct_set_cur_ioc_fwstate;
++	hwif->ioc_get_fwstate = bfa_ioc_ct_get_cur_ioc_fwstate;
++	hwif->ioc_set_alt_fwstate = bfa_ioc_ct_set_alt_ioc_fwstate;
++	hwif->ioc_get_alt_fwstate = bfa_ioc_ct_get_alt_ioc_fwstate;
+ }
+ 
+ /**
+@@ -959,3 +969,29 @@ bfa_ioc_ct2_pll_init(void __iomem *rb, enum bfi_asic_mode mode)
+ 
+ 	return BFA_STATUS_OK;
+ }
++
++static void
++bfa_ioc_ct_set_cur_ioc_fwstate(struct bfa_ioc_s *ioc,
++		enum bfi_ioc_state fwstate)
++{
++	writel(fwstate, ioc->ioc_regs.ioc_fwstate);
++}
++
++static enum bfi_ioc_state
++bfa_ioc_ct_get_cur_ioc_fwstate(struct bfa_ioc_s *ioc)
++{
++	return (enum bfi_ioc_state)readl(ioc->ioc_regs.ioc_fwstate);
++}
++
++static void
++bfa_ioc_ct_set_alt_ioc_fwstate(struct bfa_ioc_s *ioc,
++		enum bfi_ioc_state fwstate)
++{
++	writel(fwstate, ioc->ioc_regs.alt_ioc_fwstate);
++}
++
++static enum bfi_ioc_state
++bfa_ioc_ct_get_alt_ioc_fwstate(struct bfa_ioc_s *ioc)
++{
++	return (enum bfi_ioc_state) readl(ioc->ioc_regs.alt_ioc_fwstate);
++}
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index e70e083..bf0a58d 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -374,6 +374,10 @@ enum bfi_ioc_state {
+ 	BFI_IOC_MEMTEST		= 9,	/*  IOC is doing memtest	     */
  };
-+#pragma pack()
  
- #define bfad_chk_iocmd_sz(__payload_len, __hdrsz, __bufsz)	\
- 	(((__payload_len) != ((__hdrsz) + (__bufsz))) ?		\
++#define BFA_IOC_CB_JOIN_SH	16
++#define BFA_IOC_CB_FWSTATE_MASK	0x0000ffff
++#define BFA_IOC_CB_JOIN_MASK	0xffff0000
++
+ #define BFI_IOC_ENDIAN_SIG  0x12345678
+ 
+ enum {
 -- 
 1.7.12
 
