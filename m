@@ -1,84 +1,42 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH] scsi: Allow error handling timeout to be specified
-Date: Mon, 13 May 2013 15:16:03 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402950E1D3A7@G9W0745.americas.hpqcorp.net>
-References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net>
-	 <1368189791.3319.31.camel@localhost.localdomain>
-	 <CAC9+an+UBY3Cbxryn3O0KMVMuwdXBpf9EsVJ08tV=5Y0dpkjdA@mail.gmail.com>
-	 <1368194460.3319.40.camel@localhost.localdomain> <518D0311.9010208@suse.de>
- <1368205140.3319.70.camel@localhost.localdomain>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH] scsi: Allow error handling timeout to be specified
+Date: Mon, 13 May 2013 10:58:40 -0500
+Message-ID: <51910DB0.70009@tributary.com>
+References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net> <1368189791.3319.31.camel@localhost.localdomain> <CAC9+an+UBY3Cbxryn3O0KMVMuwdXBpf9EsVJ08tV=5Y0dpkjdA@mail.gmail.com> <1368194460.3319.40.camel@localhost.localdomain> <CAC9+anK-E2pok_eU2EdZxgaBY7-68rbj19C7G4w5rhTmZB7vzw@mail.gmail.com> <518D55FA.4080302@suse.de> <CAC9+anKxnDBYh15uwQQoTUzGZkwUe6wuV=8wf6NUVsC4+_TUgw@mail.gmail.com> <51907E45.7010409@suse.de> <5190FB4E.4000900@tributary.com> <519100A5.2060509@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:40698 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314Ab3EMPQ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 May 2013 11:16:58 -0400
-In-Reply-To: <1368205140.3319.70.camel@localhost.localdomain>
-Content-Language: en-US
+Received: from relay.ihostexchange.net ([66.46.182.57]:44512 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751540Ab3EMP6s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 May 2013 11:58:48 -0400
+In-Reply-To: <519100A5.2060509@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "emilne@redhat.com" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
-Cc: Baruch Even <baruch@ev-en.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, michaelc <michaelc@cs.wisc.edu>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Baruch Even <baruch@ev-en.org>, emilne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, michaelc <michaelc@cs.wisc.edu>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
-bC5vcmddIE9uIEJlaGFsZiBPZiBFd2FuIE1pbG5lDQo+IFNlbnQ6IEZyaWRheSwgMTAgTWF5LCAy
-MDEzIDExOjU5IEFNDQo+IFRvOiBIYW5uZXMgUmVpbmVja2UNCj4gQ2M6IEJhcnVjaCBFdmVuOyBN
-YXJ0aW4gSy4gUGV0ZXJzZW47IGxpbnV4LXNjc2k7IG1pY2hhZWxjDQo+IFN1YmplY3Q6IFJlOiBb
-UEFUQ0hdIHNjc2k6IEFsbG93IGVycm9yIGhhbmRsaW5nIHRpbWVvdXQgdG8gYmUgc3BlY2lmaWVk
-DQo+IA0KPiBPbiBGcmksIDIwMTMtMDUtMTAgYXQgMTY6MjQgKzAyMDAsIEhhbm5lcyBSZWluZWNr
-ZSB3cm90ZToNCj4gPiBPbiAwNS8xMC8yMDEzIDA0OjAxIFBNLCBFd2FuIE1pbG5lIHdyb3RlOg0K
-PiA+ID4gT24gRnJpLCAyMDEzLTA1LTEwIGF0IDE2OjIyICswMzAwLCBCYXJ1Y2ggRXZlbiB3cm90
-ZToNCj4gPiA+PiBPbiBGcmksIE1heSAxMCwgMjAxMyBhdCAzOjQzIFBNLCBFd2FuIE1pbG5lIDxl
-bWlsbmVAcmVkaGF0LmNvbT4NCj4gd3JvdGU6DQo+ID4gPj4NCj4gPiA+Pg0KPiA+ID4+IEkgd291
-bGQgYXJndWUgdGhhdCB3YWl0aW5nIGZvciB0aGUgZWggdG8gdGltZW91dCBiZWZvcmUgeW91IHN3
-aXRjaCB0bw0KPiA+ID4+IGFub3RoZXIgcGF0aCBpcyBtb3N0IGxpa2VseSB0byBiZSB3cm9uZy4g
-SWYgeW91IGRpZCB0aGUgZmlyc3QgcGFzcyBvZg0KPiA+ID4+IGVycm9yIHJlY292ZXJ5ICh0YXNr
-IGFib3J0KSBhbmQgdGhhdCBmYWlsZWQgdGhlDQo+ID4gPj4gcGF0aC9oYmEvbG9naWNhbC1kZXZp
-Y2UgaXMgZG9vbWVkLiBJZiB5b3Ugd2lsbCBzd2l0Y2ggdG8gYW5vdGhlciBwYXRoDQo+ID4gPj4g
-aXQgd2lsbCBlaXRoZXIgd29yayAobWVhbmluZyB0aGUgcGF0aC9oYmEgd2VyZSBiYWQpIG9yIG5v
-dCAobG9naWNhbA0KPiA+ID4+IGRldmljZSB3YXMgdGhlIGN1bHByaXQpLg0KPiA+ID4NCj4gPiA+
-IEl0IGlzIG5lY2Vzc2FyeSB0byBlaXRoZXIga25vdyB0aGUgZGlzcG9zaXRpb24gb2YgYSBjb21t
-YW5kIG9yDQo+ID4gPiBlbHNlIHdhaXQgZm9yIGEgZGVmaW5lZCBhbW91bnQgb2YgdGltZSBiZWZv
-cmUgcmV0cnlpbmcgdGhlIGNvbW1hbmQgb24NCj4gPiA+IGFub3RoZXIgcGF0aC4gIE90aGVyd2lz
-ZSB5b3UgcnVuIHRoZSByaXNrIHRoYXQgdGhlIGNvbW1hbmQgd2lsbA0KPiA+ID4gZXZlbnR1YWxs
-eSBjb21wbGV0ZSBvbiB0aGUgZmlyc3QgcGF0aC4gIFNvIHllcywgd2UgbmVlZCB0byBkbyB0aGUg
-YWJvcnQNCj4gPiA+IChhbmQgaXRzIHRpbWVvdXQpLg0KPiA+ID4NCj4gPiBTdHJpY3RseSBzcGVh
-a2luZyB0aGF0J3Mgbm90IHRydWUuDQo+ID4gWWVzLCB3ZSBkbyBuZWVkIHRvIHdhaXQgZm9yIGEg
-Y2VydGFpbiBhbW91bnQgb2YgdGltZSBmb3IgdGhlIGNvbW1hbmQNCj4gPiBjb21wbGV0aW9uIHRv
-IGNvbWUgaW4uDQo+ID4NCj4gPiBIb3dldmVyLCB0aGlzIHRpbWUgaXMgb25seSBkZWZpbmVkIF9v
-biB0aGUgaW5pdGlhdG9yXy4NCj4gPiBUaGUgc3BlY2lmaWNhdGlvbiBkb2VzIF9OT1RfIGhhdmUg
-YW55IGZpeGVkIHRpbWVvdXQgdmFsdWVzIGZvciBfYW55Xw0KPiA+IGNvbW1hbmQuIEFzIHN1Y2gg
-aXQgY291bGQgaW4gdGhlb3J5IChhbmQgZG9lcywgaWYgeW91IGhhcHBlbiB0byBydW4NCj4gPiBh
-Z2FpbnN0IGNlcnRhaW4gYXJyYXlzIHVuZGVyIGNlcnRhaW4gY29uZGl0aW9ucykgdGFrZSBzZXZl
-cmFsDQo+ID4gbWludXRlcyB0byByZXR1cm4gYSBjb21wbGV0aW9uLg0KDQpUaGUgUkVQT1JUIFNV
-UFBPUlRFRCBPUEVSQVRJT04gQ09ERVMgY29tbWFuZCAoc2VlIFNQQy00KSANCnJldHVybnMgbm9t
-aW5hbCBhbmQgcmVjb21tZW5kZWQgdGltZW91dCB2YWx1ZXMgZm9yIGVhY2ggc3VwcG9ydGVkDQpj
-b21tYW5kLiAgU2ltaWxhcmx5LCBSRVBPUlQgU1VQUE9SVEVEIFRBU0sgTUFOQUdFTUVOVCBGVU5D
-VElPTlMNCnJldHVybnMgdGltZW91dHMgZm9yIHRhc2sgbWFuYWdlbWVudCBmdW5jdGlvbnMuDQoN
-ClRob3NlIHRpbWVzIGFyZSBmcm9tIHRoZSBkZXZpY2Ugc2VydmVyJ3MgcGVyc3BlY3RpdmUsIHNv
-IGFueSBmYWJyaWMgDQpvdmVyaGVhZCBuZWVkcyB0byBiZSBhZGRlZC4NCg0KVGhvc2UgY29tbWFu
-ZHMgYW5kIHRoZSBjb21tYW5kIHRpbWVvdXQgZGVzY3JpcHRvcnMgYXJlIG9wdGlvbmFsLg0KVGhl
-eSBhcmUgcHJvcG9zZWQgdG8gYmUgbWFuZGF0b3J5IGluIHRoZSBCYXNlIGZlYXR1cmUgc2V0LCB0
-aG91Z2guDQoNCj4gR3JhbnRlZC4gIChlLmcuIGluIHRoZSBjYXNlIG9mIFdSSVRFIFNBTUUsIGl0
-IGNvdWxkIGJlIGEgd2hpbGUgYmVmb3JlDQo+IHRoZSBjb21tYW5kIGNvbXBsZXRlcywgYW5kIHJl
-dHJ5aW5nIGl0IG9uIGFub3RoZXIgcGF0aCB0b28gcXVpY2tseSwNCj4gZm9sbG93ZWQgYnkgb3Ro
-ZXIgV1JJVEUgY29tbWFuZHMgY291bGQgYmUgYSBkaXNhc3RlcikuICBTbyB0aGUgdGltZW91dA0K
-PiB1c2VkIGZvciB0aGUgb3JpZ2luYWwgY29tbWFuZCBoYXMgdG8gYmUgYXBwcm9wcmlhdGUgZm9y
-IHRoZSBjb21tYW5kLg0KPiBSZWR1Y2luZyB0aGF0IHRpbWVvdXQgYW5kIGlzc3VpbmcgYW4gYWJv
-cnQgLyBsdW4gcmVzZXQgLyB0YXJnZXQgcmVzZXQNCj4gdG8gdHJ5IHRvIGZhaWwgb3ZlciB0byBh
-bm90aGVyIHBhdGggZWFybGllciB3b24ndCB3b3JrIGlmIHRoZSBkZXZpY2UNCj4gbmV2ZXIgZ2V0
-cyB0aGUgYWJvcnQgLyBsdW4gcmVzZXQgLyB0YXJnZXQgcmVzZXQgYW5kIHRoZSBjb21tYW5kIGlz
-IHN0aWxsDQo+IGV4ZWN1dGluZy4NCg0KT25lIHByb2JsZW0gd2l0aCB0aGUgQUJPUlQgVEFTSyBh
-bmQgSV9UIE5FWFVTIFJFU0VUIHRhc2sgbWFuYWdlbWVudA0KZnVuY3Rpb25zIGlzIHRoZXkgbXVz
-dCBiZSBzZW50IGRvd24gdGhlIHNhbWUgSV9UIG5leHVzIGFzIHRoZSBjb21tYW5kKHMpDQp0aGF0
-IHJhbiBpbnRvIHRpbWVvdXRzLiAgSWYgdGhhdCBJX1QgbmV4dXMgaXMgdGhlIHNvdXJjZSBvZiB0
-aGUgcHJvYmxlbSwNCnRoZW4gdGhleSBhcmUgbGlrZWx5IHRvIHRpbWVvdXQgYXMgd2VsbC4NCg0K
-VGhlIFJFTU9WRSBJX1QgTkVYVVMgY29tbWFuZCAoc3RhbmRhcmRpemVkIGluIE1hcmNoIDIwMTIg
-aW4gDQpTUEMtNCByZXZpc2lvbiAzNSkgaXMgZGVzaWduZWQgdG8gYmUgc2VudCBkb3duIGEgZGlm
-ZmVyZW50IElfVCBuZXh1cyAtIHRoZSANCmZhaWxvdmVyIHBhdGguICBJdCBlbnN1cmVzIHRoYXQg
-Y29tbWFuZHMgb24gdGhlIG9yaWdpbmFsIElfVCBuZXh1cyB3b24ndCANCnN1ZGRlbmx5IHJlc3Vt
-ZS4gIFRoYXQgY29tbWFuZCBpcyBvcHRpb25hbCBhbmQgc3RpbGwgdmVyeSBuZXcgaW4NCnN0YW5k
-YXJkcyB0aW1lLg0KDQoNCg==
+On 5/13/2013 10:03 AM, Hannes Reinecke wrote:
+> The other LUNs haven't reported an error. But how do you know whether they
+> are still okay? The other LUNs might simply be idle, and no commands have
+> been send to them.
+
+	Well, how about generating std inquiry against them if they are idle and the
+given HBA has a device in error state? Then you can make a rough approximation
+of what has failed, and escalate the error handling if all the devices at a
+particular level have failed.
+
+	The midlayer may not even need to send the inquiries. If the individual
+device drivers (sd/st/etc) are responsible for monitoring and error recovery
+then they can be tasked with determining device availability as well. I think
+this solves other problems too. For example, the use of TUR in the midlayer,
+is a problem because it doesn't have enough knowledge about the possible check
+conditions being returned to act on them appropriately.
+
+
+
+
+
+
+
