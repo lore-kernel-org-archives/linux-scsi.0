@@ -1,149 +1,84 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: Allow error handling timeout to be specified
-Date: Mon, 13 May 2013 17:03:01 +0200
-Message-ID: <519100A5.2060509@suse.de>
-References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net> <1368189791.3319.31.camel@localhost.localdomain> <CAC9+an+UBY3Cbxryn3O0KMVMuwdXBpf9EsVJ08tV=5Y0dpkjdA@mail.gmail.com> <1368194460.3319.40.camel@localhost.localdomain> <CAC9+anK-E2pok_eU2EdZxgaBY7-68rbj19C7G4w5rhTmZB7vzw@mail.gmail.com> <518D55FA.4080302@suse.de> <CAC9+anKxnDBYh15uwQQoTUzGZkwUe6wuV=8wf6NUVsC4+_TUgw@mail.gmail.com> <51907E45.7010409@suse.de> <5190FB4E.4000900@tributary.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH] scsi: Allow error handling timeout to be specified
+Date: Mon, 13 May 2013 15:16:03 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402950E1D3A7@G9W0745.americas.hpqcorp.net>
+References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net>
+	 <1368189791.3319.31.camel@localhost.localdomain>
+	 <CAC9+an+UBY3Cbxryn3O0KMVMuwdXBpf9EsVJ08tV=5Y0dpkjdA@mail.gmail.com>
+	 <1368194460.3319.40.camel@localhost.localdomain> <518D0311.9010208@suse.de>
+ <1368205140.3319.70.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54352 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751697Ab3EMPDD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 May 2013 11:03:03 -0400
-In-Reply-To: <5190FB4E.4000900@tributary.com>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:40698 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751314Ab3EMPQ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 May 2013 11:16:58 -0400
+In-Reply-To: <1368205140.3319.70.camel@localhost.localdomain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jlinton@tributary.com>
-Cc: Baruch Even <baruch@ev-en.org>, emilne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, michaelc <michaelc@cs.wisc.edu>
+To: "emilne@redhat.com" <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
+Cc: Baruch Even <baruch@ev-en.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, michaelc <michaelc@cs.wisc.edu>
 
-On 05/13/2013 04:40 PM, Jeremy Linton wrote:
-> On 5/13/2013 12:46 AM, Hannes Reinecke wrote:
->=20
->> True. But and the end of the day, we _do_ want to recover the failed=
- LUN.
->> If we were to disable that faulty LUN and continue running with the =
-others
->> we won't have a chance of _ever_ recovering that one LUN.
->=20
-> 	I don't buy this. Especially for FC devices, the vast majority of er=
-rors I see
-> are related to zoning, SFP and cabling problems. Once one of those ha=
-ppens you
-> tend to get a lot of shotgun debugging, which injects all kinds of
-> further errors.	None of these errors are fixed by the linux error rec=
-overy paths.
->=20
-> 	That said, if the admin fixes something, for FC/SAS (and potentially=
- others)
-> you _WILL_ get notification that the device is online again.
->=20
-
-Well, yes, of course.
-Sadly, these kind of errors tend to be very erratic and very hard to
-diagnose. There simply is no way telling that the error you've had
-is due to a bad cable or bad SFP.
-Bad zoning is easy; then the device is simply not reachable anymore.
-
-So for error recovery we first have to assume that the error is
-fixable. And then we have a standard way of trying to fix this error.
-The problem we have is that we lose all information about the error
-once it's 'fixed' (ie after eh is done). Which is the main problem
-with bad cabling: we're running the same sequence all over again,
-without ever figuring out 'hey, I've done this already'.
-
-sd.c has some _very_ limited support for this. But trying to
-generalise things here will be _hard_.
-
-So yeah, I see your point. In fact, I've been bitten by this, too.
-But the error scenarios I've seen are far to complex to have them
-modelled into something re-usable.
-
->> SET when the link is down). So we basically _have_ to escalate it to=
- the
->> next level. Even though that will mean to stop I/O to other, hithert=
-o
->> unaffected instances.
->=20
-> 	And a single failure, turns into performance bubbles and further err=
-ors on
-> other devices. Particularly if the functional devices are stateful, a=
-nd the
-> error recovery mechanism isn't sufficiently intelligent about that st=
-ate (see
-> tape drives). Think about what happens when a marginal SFP on a targe=
-t causes
-> a device to repeatably drop off and reappear at some random point in =
-the future.
->=20
->=20
-> 	Anyway, It is possible to make a determination about the topology an=
-d make
-> decisions about the likely-hood of any given portion being at fault. =
-=46or
-> example, if one lun on a target has failed and the remainder continue=
- to work,
-> then its unlikely that if abort and lun reset fail that anything high=
-er up in
-> the stack is going to succeed.
->=20
-Which is why I suggested 'ABORT TASK SET' instead of 'LUN reset'.
-That will be restricted to the I_T_L nexus, and leave the rest of
-the LUN alone (or so one hopes).
-
-> 	I feel pretty strongly, at that point your better off providing good
-> diagnostics about the failure and expecting user interaction rather t=
-han
-> muddying the waters by causing other device interruptions. If the use=
-r tries
-> everything and determines that a HBA reset is the right choice, provi=
-de that
-> option, don't do it for them.
->=20
-> 	If every device attached to the HBA fails then resetting the HBA is =
-a valid
-> choice, not before. Same for I_T.
->=20
-Hmm. Really not sure.
-
-Take the 'target not responding' case. (which is what triggered this
-whole issue anyway). Say a target port went out to lunch and don't
-respond to FC commands anymore.
-
-With our current EH it'll take _ages_, but eventually the big hammer
-hits (or the device comes back) and everything is back to normal again.
-So LUN reset (or ABORT TASK SET) fails.
-The other LUNs haven't reported an error. But how do you know
-whether they are still okay? The other LUNs might simply be idle,
-and no commands have been send to them.
-So the state's still good. Do we reset the I_T nexus or not?
-
-If we do, we would find that the entire rport doesn't respond, so
-the devloss_tmo mechanism would trigger, and eventually the rport
-will disappear and we're back on normal operation.
-
-If we don't the LUN will be stuck forever, until someone actually
-issues I/O to the other LUNs for that rport. And only when I/O is
-issued to the _last_ LUN we'll decide to reset the I_T nexus.
-Not a very appealing scenario.
-
-And 'reset I_T nexus' should be a rather fast operation; with a bit
-of luck the other rports wouldn't even notice.
-I've had a prototype running which would just kick off the
-dev_loss_tmo mechanism; that worked like a charm.
-(Agreed, as James Smart indicated 'only by luck', but nevertheless)
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBFd2FuIE1pbG5lDQo+IFNlbnQ6IEZyaWRheSwgMTAgTWF5LCAy
+MDEzIDExOjU5IEFNDQo+IFRvOiBIYW5uZXMgUmVpbmVja2UNCj4gQ2M6IEJhcnVjaCBFdmVuOyBN
+YXJ0aW4gSy4gUGV0ZXJzZW47IGxpbnV4LXNjc2k7IG1pY2hhZWxjDQo+IFN1YmplY3Q6IFJlOiBb
+UEFUQ0hdIHNjc2k6IEFsbG93IGVycm9yIGhhbmRsaW5nIHRpbWVvdXQgdG8gYmUgc3BlY2lmaWVk
+DQo+IA0KPiBPbiBGcmksIDIwMTMtMDUtMTAgYXQgMTY6MjQgKzAyMDAsIEhhbm5lcyBSZWluZWNr
+ZSB3cm90ZToNCj4gPiBPbiAwNS8xMC8yMDEzIDA0OjAxIFBNLCBFd2FuIE1pbG5lIHdyb3RlOg0K
+PiA+ID4gT24gRnJpLCAyMDEzLTA1LTEwIGF0IDE2OjIyICswMzAwLCBCYXJ1Y2ggRXZlbiB3cm90
+ZToNCj4gPiA+PiBPbiBGcmksIE1heSAxMCwgMjAxMyBhdCAzOjQzIFBNLCBFd2FuIE1pbG5lIDxl
+bWlsbmVAcmVkaGF0LmNvbT4NCj4gd3JvdGU6DQo+ID4gPj4NCj4gPiA+Pg0KPiA+ID4+IEkgd291
+bGQgYXJndWUgdGhhdCB3YWl0aW5nIGZvciB0aGUgZWggdG8gdGltZW91dCBiZWZvcmUgeW91IHN3
+aXRjaCB0bw0KPiA+ID4+IGFub3RoZXIgcGF0aCBpcyBtb3N0IGxpa2VseSB0byBiZSB3cm9uZy4g
+SWYgeW91IGRpZCB0aGUgZmlyc3QgcGFzcyBvZg0KPiA+ID4+IGVycm9yIHJlY292ZXJ5ICh0YXNr
+IGFib3J0KSBhbmQgdGhhdCBmYWlsZWQgdGhlDQo+ID4gPj4gcGF0aC9oYmEvbG9naWNhbC1kZXZp
+Y2UgaXMgZG9vbWVkLiBJZiB5b3Ugd2lsbCBzd2l0Y2ggdG8gYW5vdGhlciBwYXRoDQo+ID4gPj4g
+aXQgd2lsbCBlaXRoZXIgd29yayAobWVhbmluZyB0aGUgcGF0aC9oYmEgd2VyZSBiYWQpIG9yIG5v
+dCAobG9naWNhbA0KPiA+ID4+IGRldmljZSB3YXMgdGhlIGN1bHByaXQpLg0KPiA+ID4NCj4gPiA+
+IEl0IGlzIG5lY2Vzc2FyeSB0byBlaXRoZXIga25vdyB0aGUgZGlzcG9zaXRpb24gb2YgYSBjb21t
+YW5kIG9yDQo+ID4gPiBlbHNlIHdhaXQgZm9yIGEgZGVmaW5lZCBhbW91bnQgb2YgdGltZSBiZWZv
+cmUgcmV0cnlpbmcgdGhlIGNvbW1hbmQgb24NCj4gPiA+IGFub3RoZXIgcGF0aC4gIE90aGVyd2lz
+ZSB5b3UgcnVuIHRoZSByaXNrIHRoYXQgdGhlIGNvbW1hbmQgd2lsbA0KPiA+ID4gZXZlbnR1YWxs
+eSBjb21wbGV0ZSBvbiB0aGUgZmlyc3QgcGF0aC4gIFNvIHllcywgd2UgbmVlZCB0byBkbyB0aGUg
+YWJvcnQNCj4gPiA+IChhbmQgaXRzIHRpbWVvdXQpLg0KPiA+ID4NCj4gPiBTdHJpY3RseSBzcGVh
+a2luZyB0aGF0J3Mgbm90IHRydWUuDQo+ID4gWWVzLCB3ZSBkbyBuZWVkIHRvIHdhaXQgZm9yIGEg
+Y2VydGFpbiBhbW91bnQgb2YgdGltZSBmb3IgdGhlIGNvbW1hbmQNCj4gPiBjb21wbGV0aW9uIHRv
+IGNvbWUgaW4uDQo+ID4NCj4gPiBIb3dldmVyLCB0aGlzIHRpbWUgaXMgb25seSBkZWZpbmVkIF9v
+biB0aGUgaW5pdGlhdG9yXy4NCj4gPiBUaGUgc3BlY2lmaWNhdGlvbiBkb2VzIF9OT1RfIGhhdmUg
+YW55IGZpeGVkIHRpbWVvdXQgdmFsdWVzIGZvciBfYW55Xw0KPiA+IGNvbW1hbmQuIEFzIHN1Y2gg
+aXQgY291bGQgaW4gdGhlb3J5IChhbmQgZG9lcywgaWYgeW91IGhhcHBlbiB0byBydW4NCj4gPiBh
+Z2FpbnN0IGNlcnRhaW4gYXJyYXlzIHVuZGVyIGNlcnRhaW4gY29uZGl0aW9ucykgdGFrZSBzZXZl
+cmFsDQo+ID4gbWludXRlcyB0byByZXR1cm4gYSBjb21wbGV0aW9uLg0KDQpUaGUgUkVQT1JUIFNV
+UFBPUlRFRCBPUEVSQVRJT04gQ09ERVMgY29tbWFuZCAoc2VlIFNQQy00KSANCnJldHVybnMgbm9t
+aW5hbCBhbmQgcmVjb21tZW5kZWQgdGltZW91dCB2YWx1ZXMgZm9yIGVhY2ggc3VwcG9ydGVkDQpj
+b21tYW5kLiAgU2ltaWxhcmx5LCBSRVBPUlQgU1VQUE9SVEVEIFRBU0sgTUFOQUdFTUVOVCBGVU5D
+VElPTlMNCnJldHVybnMgdGltZW91dHMgZm9yIHRhc2sgbWFuYWdlbWVudCBmdW5jdGlvbnMuDQoN
+ClRob3NlIHRpbWVzIGFyZSBmcm9tIHRoZSBkZXZpY2Ugc2VydmVyJ3MgcGVyc3BlY3RpdmUsIHNv
+IGFueSBmYWJyaWMgDQpvdmVyaGVhZCBuZWVkcyB0byBiZSBhZGRlZC4NCg0KVGhvc2UgY29tbWFu
+ZHMgYW5kIHRoZSBjb21tYW5kIHRpbWVvdXQgZGVzY3JpcHRvcnMgYXJlIG9wdGlvbmFsLg0KVGhl
+eSBhcmUgcHJvcG9zZWQgdG8gYmUgbWFuZGF0b3J5IGluIHRoZSBCYXNlIGZlYXR1cmUgc2V0LCB0
+aG91Z2guDQoNCj4gR3JhbnRlZC4gIChlLmcuIGluIHRoZSBjYXNlIG9mIFdSSVRFIFNBTUUsIGl0
+IGNvdWxkIGJlIGEgd2hpbGUgYmVmb3JlDQo+IHRoZSBjb21tYW5kIGNvbXBsZXRlcywgYW5kIHJl
+dHJ5aW5nIGl0IG9uIGFub3RoZXIgcGF0aCB0b28gcXVpY2tseSwNCj4gZm9sbG93ZWQgYnkgb3Ro
+ZXIgV1JJVEUgY29tbWFuZHMgY291bGQgYmUgYSBkaXNhc3RlcikuICBTbyB0aGUgdGltZW91dA0K
+PiB1c2VkIGZvciB0aGUgb3JpZ2luYWwgY29tbWFuZCBoYXMgdG8gYmUgYXBwcm9wcmlhdGUgZm9y
+IHRoZSBjb21tYW5kLg0KPiBSZWR1Y2luZyB0aGF0IHRpbWVvdXQgYW5kIGlzc3VpbmcgYW4gYWJv
+cnQgLyBsdW4gcmVzZXQgLyB0YXJnZXQgcmVzZXQNCj4gdG8gdHJ5IHRvIGZhaWwgb3ZlciB0byBh
+bm90aGVyIHBhdGggZWFybGllciB3b24ndCB3b3JrIGlmIHRoZSBkZXZpY2UNCj4gbmV2ZXIgZ2V0
+cyB0aGUgYWJvcnQgLyBsdW4gcmVzZXQgLyB0YXJnZXQgcmVzZXQgYW5kIHRoZSBjb21tYW5kIGlz
+IHN0aWxsDQo+IGV4ZWN1dGluZy4NCg0KT25lIHByb2JsZW0gd2l0aCB0aGUgQUJPUlQgVEFTSyBh
+bmQgSV9UIE5FWFVTIFJFU0VUIHRhc2sgbWFuYWdlbWVudA0KZnVuY3Rpb25zIGlzIHRoZXkgbXVz
+dCBiZSBzZW50IGRvd24gdGhlIHNhbWUgSV9UIG5leHVzIGFzIHRoZSBjb21tYW5kKHMpDQp0aGF0
+IHJhbiBpbnRvIHRpbWVvdXRzLiAgSWYgdGhhdCBJX1QgbmV4dXMgaXMgdGhlIHNvdXJjZSBvZiB0
+aGUgcHJvYmxlbSwNCnRoZW4gdGhleSBhcmUgbGlrZWx5IHRvIHRpbWVvdXQgYXMgd2VsbC4NCg0K
+VGhlIFJFTU9WRSBJX1QgTkVYVVMgY29tbWFuZCAoc3RhbmRhcmRpemVkIGluIE1hcmNoIDIwMTIg
+aW4gDQpTUEMtNCByZXZpc2lvbiAzNSkgaXMgZGVzaWduZWQgdG8gYmUgc2VudCBkb3duIGEgZGlm
+ZmVyZW50IElfVCBuZXh1cyAtIHRoZSANCmZhaWxvdmVyIHBhdGguICBJdCBlbnN1cmVzIHRoYXQg
+Y29tbWFuZHMgb24gdGhlIG9yaWdpbmFsIElfVCBuZXh1cyB3b24ndCANCnN1ZGRlbmx5IHJlc3Vt
+ZS4gIFRoYXQgY29tbWFuZCBpcyBvcHRpb25hbCBhbmQgc3RpbGwgdmVyeSBuZXcgaW4NCnN0YW5k
+YXJkcyB0aW1lLg0KDQoNCg==
