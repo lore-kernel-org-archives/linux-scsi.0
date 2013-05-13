@@ -1,58 +1,43 @@
 From: Vijaya Mohan Guvva <vmohan@brocade.com>
-Subject: [PATCH V1 12/17] bfa: Allow rsp queue process during ioc disable
-Date: Mon, 13 May 2013 02:33:30 -0700
-Message-ID: <1368437615-9867-13-git-send-email-vmohan@brocade.com>
+Subject: [PATCH V1 04/17] bfa: Fix WARN_ON condition check
+Date: Mon, 13 May 2013 02:33:22 -0700
+Message-ID: <1368437615-9867-5-git-send-email-vmohan@brocade.com>
 References: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50359 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751083Ab3EMJv6 (ORCPT
+	by vger.kernel.org with ESMTP id S1754405Ab3EMJwA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 May 2013 05:51:58 -0400
+	Mon, 13 May 2013 05:52:00 -0400
 In-Reply-To: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: JBottomley@parallels.com, adapter_linux_open_src_team@Brocade.COM, Vijaya Mohan Guvva <vmohan@Brocade.COM>
 
-Allow processing completions from firmware during IOC_DISABLE request is
-being processed by the firmware, by setting the queue_process flag
-appropriately.
+The WARN_ON condition check in IO completion path is wrong. IOtags
+returned by the firmware is compared with driver/bfa iotag after masking
+the retry count bits.
 
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/bfa/bfa_fcpim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 342d7d9..520540a 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -1432,6 +1432,7 @@ bfa_iocfc_disable_cbfn(void *bfa_arg)
- {
- 	struct bfa_s	*bfa = bfa_arg;
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 27b5609..d7385d1 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -2882,7 +2882,7 @@ bfa_ioim_good_comp_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ 	iotag = be16_to_cpu(rsp->io_tag);
  
-+	bfa->queue_process = BFA_FALSE;
- 	bfa_fsm_send_event(&bfa->iocfc, IOCFC_E_IOC_DISABLED);
- }
+ 	ioim = BFA_IOIM_FROM_TAG(fcpim, iotag);
+-	WARN_ON(BFA_IOIM_TAG_2_ID(ioim->iotag) != iotag);
++	WARN_ON(ioim->iotag != iotag);
  
-@@ -1567,7 +1568,6 @@ bfa_iocfc_start(struct bfa_s *bfa)
- void
- bfa_iocfc_stop(struct bfa_s *bfa)
- {
--	bfa->queue_process = BFA_FALSE;
- 	bfa_fsm_send_event(&bfa->iocfc, IOCFC_E_STOP);
- }
- 
-@@ -1674,7 +1674,6 @@ bfa_iocfc_disable(struct bfa_s *bfa)
- 	bfa_plog_str(bfa->plog, BFA_PL_MID_HAL, BFA_PL_EID_MISC, 0,
- 		     "IOC Disable");
- 
--	bfa->queue_process = BFA_FALSE;
- 	bfa_fsm_send_event(&bfa->iocfc, IOCFC_E_DISABLE);
- }
+ 	bfa_ioim_cb_profile_comp(fcpim, ioim);
  
 -- 
 1.7.12
