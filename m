@@ -1,307 +1,69 @@
-From: Vijaya Mohan Guvva <vmohan@brocade.com>
-Subject: [PATCH V1 10/17] bfa: fru vpd date update changes
-Date: Mon, 13 May 2013 02:33:28 -0700
-Message-ID: <1368437615-9867-11-git-send-email-vmohan@brocade.com>
-References: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
+From: Vijay Mohan Guvva <vmohan@Brocade.com>
+Subject: [PATCH V1] bfa: fix faulty handling of events in lps sm
+Date: Mon, 13 May 2013 03:49:44 -0600
+Message-ID: <51BD2AE8016AE441B63F5661159C990203A1C103B5@BRM-EXCH-3.corp.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:50285 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754799Ab3EMJtP (ORCPT
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34206 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752114Ab3EMJtv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 May 2013 05:49:15 -0400
-In-Reply-To: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
+	Mon, 13 May 2013 05:49:51 -0400
+Received: from pps.filterd (m0000542 [127.0.0.1])
+	by mx0a-000f0801.pphosted.com (8.14.5/8.14.5) with SMTP id r4D9npUJ016045
+	for <linux-scsi@vger.kernel.org>; Mon, 13 May 2013 02:49:51 -0700
+Received: from brmwp-exchub01.corp.brocade.com ([208.47.132.227])
+	by mx0a-000f0801.pphosted.com with ESMTP id 1c8y1n1epb-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 13 May 2013 02:49:51 -0700
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, adapter_linux_open_src_team@Brocade.COM, Vijaya Mohan Guvva <vmohan@Brocade.COM>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>
+Cc: Anil Gurumurthy <agurumur@Brocade.com>, Vijay Mohan Guvva <vmohan@Brocade.com>
 
-1. While FRU VPD data update, inform firmware to send a completion event
-   on I2C bus. Without this change, firmware used to send completion
-   message on I2C bus for every chunk of FRU VPD update.
-2. Support for FRU VPN update on CHINOOK2 cards.
-3. Append port count to the model name to differentiate between single
-   port and dual port model of 1860.
-4. Update the size of the model name to 16bytes
+Resending the patch as it didn't make the link-scsi list.
+
+When a switch disable/enable or a reboot is done, the HBA port gets an
+offline and a subsequent online notification. When the port comes up a
+link up notification is sent to bfa from the firmware. The bfa then send
+an FLOGI to the firmware which is sent out on the wire.
+The switch port meanwhile goes offline (presumably for diagnostics)
+which causes the switch not to respond to the FLOGI.
+The link down notification is sent to the HBA driver. However owing to a
+bug in the lps state machine handling the lps state machine does not
+move to sm_init state (it remains in sm_login state and send a login
+complete message to fcs). This results in a zero PID assignment as the
+login is not really complete.
+
+This fix is to correctly handle the events in lps state machine.
 
 Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
 ---
- drivers/scsi/bfa/bfa_defs.h |  9 +++++++--
- drivers/scsi/bfa/bfa_fcs.h  |  8 ++++----
- drivers/scsi/bfa/bfa_ioc.c  | 29 +++++++++++++++++++++--------
- drivers/scsi/bfa/bfa_ioc.h  |  3 ++-
- drivers/scsi/bfa/bfad_bsg.c |  2 +-
- drivers/scsi/bfa/bfad_bsg.h |  4 +++-
- drivers/scsi/bfa/bfi.h      |  6 +++++-
- 7 files changed, 43 insertions(+), 18 deletions(-)
+ drivers/scsi/bfa/bfa_svc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
-index d65a9b4..bef16d2 100644
---- a/drivers/scsi/bfa/bfa_defs.h
-+++ b/drivers/scsi/bfa/bfa_defs.h
-@@ -45,6 +45,7 @@ enum {
- 	BFA_MFG_TYPE_PROWLER_C = 1710,   /*  Prowler CNA only cards	*/
- 	BFA_MFG_TYPE_PROWLER_D = 1860,   /*  Prowler Dual cards		*/
- 	BFA_MFG_TYPE_CHINOOK   = 1867,   /*  Chinook cards		*/
-+	BFA_MFG_TYPE_CHINOOK2   = 1869,	 /*!< Chinook2 cards		*/
- 	BFA_MFG_TYPE_INVALID = 0,        /*  Invalid card type		*/
- };
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 299c1c8..7ed2c57 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -1276,7 +1276,6 @@ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
  
-@@ -59,7 +60,8 @@ enum {
- 	(type) == BFA_MFG_TYPE_ASTRA || \
- 	(type) == BFA_MFG_TYPE_LIGHTNING_P0 || \
- 	(type) == BFA_MFG_TYPE_LIGHTNING || \
--	(type) == BFA_MFG_TYPE_CHINOOK))
-+	(type) == BFA_MFG_TYPE_CHINOOK || \
-+	(type) == BFA_MFG_TYPE_CHINOOK2))
+ 	switch (event) {
+ 	case BFA_LPS_SM_FWRSP:
+-	case BFA_LPS_SM_OFFLINE:
+ 		if (lps->status == BFA_STATUS_OK) {
+ 			bfa_sm_set_state(lps, bfa_lps_sm_online);
+ 			if (lps->fdisc)
+@@ -1305,6 +1304,7 @@ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ 		bfa_lps_login_comp(lps);
+ 		break;
  
- /*
-  * Check if the card having old wwn/mac handling
-@@ -263,6 +265,7 @@ enum {
- 	BFA_ADAPTER_MFG_NAME_LEN    = 8,   /*  manufacturer name length */
- 	BFA_ADAPTER_SYM_NAME_LEN    = 64,  /*  adapter symbolic name length */
- 	BFA_ADAPTER_OS_TYPE_LEN	    = 64,  /*  adapter os type length */
-+	BFA_ADAPTER_UUID_LEN	    = 16,  /* adapter uuid length */
- };
- 
- struct bfa_adapter_attr_s {
-@@ -296,6 +299,7 @@ struct bfa_adapter_attr_s {
- 	u8		mfg_month;	/* manufacturing month */
- 	u16		mfg_year;	/* manufacturing year */
- 	u16		rsvd;
-+	u8		uuid[BFA_ADAPTER_UUID_LEN];
- };
- 
- /*
-@@ -409,7 +413,8 @@ struct bfa_ioc_attr_s {
- 	u8				port_mode;	/*  bfa_mode_s	*/
- 	u8				cap_bm;		/*  capability	*/
- 	u8				port_mode_cfg;	/*  bfa_mode_s	*/
--	u8				rsvd[4];	/*  64bit align	*/
-+	u8				def_fn;		/* 1 if default fn */
-+	u8				rsvd[3];	/*  64bit align	*/
- };
- 
- /*
-diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
-index 4f1e650..94d5d01 100644
---- a/drivers/scsi/bfa/bfa_fcs.h
-+++ b/drivers/scsi/bfa/bfa_fcs.h
-@@ -243,19 +243,19 @@ struct bfa_fcs_fabric_s;
-  *  Symbolic Name.
-  *
-  *  Physical Port's symbolic name Format : (Total 128 bytes)
-- *  Adapter Model number/name : 12 bytes
-+ *  Adapter Model number/name : 16 bytes
-  *  Driver Version     : 10 bytes
-  *  Host Machine Name  : 30 bytes
-- *  Host OS Info	   : 48 bytes
-+ *  Host OS Info	   : 44 bytes
-  *  Host OS PATCH Info : 16 bytes
-  *  ( remaining 12 bytes reserved to be used for separator)
-  */
- #define BFA_FCS_PORT_SYMBNAME_SEPARATOR			" | "
- 
--#define BFA_FCS_PORT_SYMBNAME_MODEL_SZ			12
-+#define BFA_FCS_PORT_SYMBNAME_MODEL_SZ			16
- #define BFA_FCS_PORT_SYMBNAME_VERSION_SZ		10
- #define BFA_FCS_PORT_SYMBNAME_MACHINENAME_SZ		30
--#define BFA_FCS_PORT_SYMBNAME_OSINFO_SZ			48
-+#define BFA_FCS_PORT_SYMBNAME_OSINFO_SZ			44
- #define BFA_FCS_PORT_SYMBNAME_OSPATCH_SZ		16
- 
- /*
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 8928b68..c31cb3c 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -2508,6 +2508,7 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
- 	ad_attr->mfg_day = ioc_attr->mfg_day;
- 	ad_attr->mfg_month = ioc_attr->mfg_month;
- 	ad_attr->mfg_year = ioc_attr->mfg_year;
-+	memcpy(ad_attr->uuid, ioc_attr->uuid, BFA_ADAPTER_UUID_LEN);
- }
- 
- enum bfa_ioc_type_e
-@@ -2572,13 +2573,19 @@ void
- bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model)
- {
- 	struct bfi_ioc_attr_s	*ioc_attr;
-+	u8 nports = bfa_ioc_get_nports(ioc);
- 
- 	WARN_ON(!model);
- 	memset((void *)model, 0, BFA_ADAPTER_MODEL_NAME_LEN);
- 
- 	ioc_attr = ioc->attr;
- 
--	snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN, "%s-%u",
-+	if (bfa_asic_id_ct2(ioc->pcidev.device_id) &&
-+		(!bfa_mfg_is_mezz(ioc_attr->card_type)))
-+		snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN, "%s-%u-%u%s",
-+			BFA_MFG_NAME, ioc_attr->card_type, nports, "p");
-+	else
-+		snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN, "%s-%u",
- 			BFA_MFG_NAME, ioc_attr->card_type);
- }
- 
-@@ -2628,7 +2635,7 @@ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
- 	memset((void *)ioc_attr, 0, sizeof(struct bfa_ioc_attr_s));
- 
- 	ioc_attr->state = bfa_ioc_get_state(ioc);
--	ioc_attr->port_id = ioc->port_id;
-+	ioc_attr->port_id = bfa_ioc_portid(ioc);
- 	ioc_attr->port_mode = ioc->port_mode;
- 	ioc_attr->port_mode_cfg = ioc->port_mode_cfg;
- 	ioc_attr->cap_bm = ioc->ad_cap_bm;
-@@ -2637,8 +2644,9 @@ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
- 
- 	bfa_ioc_get_adapter_attr(ioc, &ioc_attr->adapter_attr);
- 
--	ioc_attr->pci_attr.device_id = ioc->pcidev.device_id;
--	ioc_attr->pci_attr.pcifn = ioc->pcidev.pci_func;
-+	ioc_attr->pci_attr.device_id = bfa_ioc_devid(ioc);
-+	ioc_attr->pci_attr.pcifn = bfa_ioc_pcifn(ioc);
-+	ioc_attr->def_fn = (bfa_ioc_pcifn(ioc) == bfa_ioc_portid(ioc));
- 	bfa_ioc_get_pci_chip_rev(ioc, ioc_attr->pci_attr.chip_rev);
- }
- 
-@@ -6018,6 +6026,7 @@ bfa_fru_write_send(void *cbarg, enum bfi_fru_h2i_msgs msg_type)
- 	 */
- 	msg->last = (len == fru->residue) ? 1 : 0;
- 
-+	msg->trfr_cmpl = (len == fru->residue) ? fru->trfr_cmpl : 0;
- 	bfi_h2i_set(msg->mh, BFI_MC_FRU, msg_type, bfa_ioc_portid(fru->ioc));
- 	bfa_alen_set(&msg->alen, len, fru->dbuf_pa);
- 
-@@ -6132,13 +6141,14 @@ bfa_fru_memclaim(struct bfa_fru_s *fru, u8 *dm_kva, u64 dm_pa,
-  */
- bfa_status_t
- bfa_fruvpd_update(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
--		  bfa_cb_fru_t cbfn, void *cbarg)
-+		  bfa_cb_fru_t cbfn, void *cbarg, u8 trfr_cmpl)
- {
- 	bfa_trc(fru, BFI_FRUVPD_H2I_WRITE_REQ);
- 	bfa_trc(fru, len);
- 	bfa_trc(fru, offset);
- 
--	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2)
-+	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2 &&
-+		fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK2)
- 		return BFA_STATUS_FRU_NOT_PRESENT;
- 
- 	if (fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK)
-@@ -6160,6 +6170,7 @@ bfa_fruvpd_update(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
- 	fru->offset = 0;
- 	fru->addr_off = offset;
- 	fru->ubuf = buf;
-+	fru->trfr_cmpl = trfr_cmpl;
- 
- 	bfa_fru_write_send(fru, BFI_FRUVPD_H2I_WRITE_REQ);
- 
-@@ -6189,7 +6200,8 @@ bfa_fruvpd_read(struct bfa_fru_s *fru, void *buf, u32 len, u32 offset,
- 	if (fru->ioc->asic_gen != BFI_ASIC_GEN_CT2)
- 		return BFA_STATUS_FRU_NOT_PRESENT;
- 
--	if (fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK)
-+	if (fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK &&
-+		fru->ioc->attr->card_type != BFA_MFG_TYPE_CHINOOK2)
- 		return BFA_STATUS_CMD_NOTSUPP;
- 
- 	if (!bfa_ioc_is_operational(fru->ioc))
-@@ -6230,7 +6242,8 @@ bfa_fruvpd_get_max_size(struct bfa_fru_s *fru, u32 *max_size)
- 	if (!bfa_ioc_is_operational(fru->ioc))
- 		return BFA_STATUS_IOC_NON_OP;
- 
--	if (fru->ioc->attr->card_type == BFA_MFG_TYPE_CHINOOK)
-+	if (fru->ioc->attr->card_type == BFA_MFG_TYPE_CHINOOK ||
-+		fru->ioc->attr->card_type == BFA_MFG_TYPE_CHINOOK2)
- 		*max_size = BFA_FRU_CHINOOK_MAX_SIZE;
- 	else
- 		return BFA_STATUS_CMD_NOTSUPP;
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index de62b68..90814fe 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -731,6 +731,7 @@ struct bfa_fru_s {
- 	struct bfa_mbox_cmd_s mb;	/* mailbox */
- 	struct bfa_ioc_notify_s ioc_notify; /* ioc event notify */
- 	struct bfa_mem_dma_s	fru_dma;
-+	u8		trfr_cmpl;
- };
- 
- #define BFA_FRU(__bfa)	(&(__bfa)->modules.fru)
-@@ -738,7 +739,7 @@ struct bfa_fru_s {
- 
- bfa_status_t bfa_fruvpd_update(struct bfa_fru_s *fru,
- 			void *buf, u32 len, u32 offset,
--			bfa_cb_fru_t cbfn, void *cbarg);
-+			bfa_cb_fru_t cbfn, void *cbarg, u8 trfr_cmpl);
- bfa_status_t bfa_fruvpd_read(struct bfa_fru_s *fru,
- 			void *buf, u32 len, u32 offset,
- 			bfa_cb_fru_t cbfn, void *cbarg);
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 9863b1c..0467c34 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -2716,7 +2716,7 @@ bfad_iocmd_fruvpd_update(struct bfad_s *bfad, void *cmd)
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	iocmd->status = bfa_fruvpd_update(BFA_FRU(&bfad->bfa),
- 				&iocmd->data, iocmd->len, iocmd->offset,
--				bfad_hcb_comp, &fcomp);
-+				bfad_hcb_comp, &fcomp, iocmd->trfr_cmpl);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 	if (iocmd->status == BFA_STATUS_OK) {
- 		wait_for_completion(&fcomp.comp);
-diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index b0b5ac7..05f0fc9 100644
---- a/drivers/scsi/bfa/bfad_bsg.h
-+++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -794,10 +794,12 @@ struct bfa_bsg_tfru_s {
- struct bfa_bsg_fruvpd_s {
- 	bfa_status_t	status;
- 	u16		bfad_num;
--	u16		rsvd;
-+	u16		rsvd1;
- 	u32		offset;
- 	u32		len;
- 	u8		data[BFA_MAX_FRUVPD_TRANSFER_SIZE];
-+	u8		trfr_cmpl;
-+	u8		rsvd2[3];
- };
- 
- struct bfa_bsg_fruvpd_max_size_s {
-diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index bf0a58d..37bd256 100644
---- a/drivers/scsi/bfa/bfi.h
-+++ b/drivers/scsi/bfa/bfi.h
-@@ -264,6 +264,7 @@ struct bfi_ioc_getattr_req_s {
- 	union bfi_addr_u	attr_addr;
- };
- 
-+#define BFI_IOC_ATTR_UUID_SZ	16
- struct bfi_ioc_attr_s {
- 	wwn_t		mfg_pwwn;	/*  Mfg port wwn	   */
- 	wwn_t		mfg_nwwn;	/*  Mfg node wwn	   */
-@@ -292,6 +293,7 @@ struct bfi_ioc_attr_s {
- 	u8	mfg_day;	/* manufacturing day */
- 	u8	mfg_month;	/* manufacturing month */
- 	u16	mfg_year;	/* manufacturing year */
-+	u8	uuid[BFI_IOC_ATTR_UUID_SZ];	/*!< chinook uuid */
- };
- 
- /*
-@@ -1253,7 +1255,9 @@ enum bfi_fru_i2h_msgs {
- struct bfi_fru_write_req_s {
- 	struct bfi_mhdr_s	mh;	/* Common msg header */
- 	u8			last;
--	u8			rsv[3];
-+	u8			rsv_1[3];
-+	u8			trfr_cmpl;
-+	u8			rsv_2[3];
- 	u32			offset;
- 	u32			length;
- 	struct bfi_alen_s	alen;
++	case BFA_LPS_SM_OFFLINE:
+ 	case BFA_LPS_SM_DELETE:
+ 		bfa_sm_set_state(lps, bfa_lps_sm_init);
+ 		break;
 -- 
-1.7.12
+1.8.2.1
 
