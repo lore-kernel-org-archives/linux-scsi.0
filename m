@@ -1,63 +1,62 @@
-From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: RE: [PATCH V1 0/8] ufs patch siries
-Date: Mon, 13 May 2013 20:50:57 +0900
-Message-ID: <003b01ce4fd0$219de1b0$64d9a510$%jun@samsung.com>
-References: <1368439340-26346-1-git-send-email-draviv@codeaurora.org>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH] scsi: Allow error handling timeout to be specified
+Date: Mon, 13 May 2013 09:40:14 -0500
+Message-ID: <5190FB4E.4000900@tributary.com>
+References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net> <1368189791.3319.31.camel@localhost.localdomain> <CAC9+an+UBY3Cbxryn3O0KMVMuwdXBpf9EsVJ08tV=5Y0dpkjdA@mail.gmail.com> <1368194460.3319.40.camel@localhost.localdomain> <CAC9+anK-E2pok_eU2EdZxgaBY7-68rbj19C7G4w5rhTmZB7vzw@mail.gmail.com> <518D55FA.4080302@suse.de> <CAC9+anKxnDBYh15uwQQoTUzGZkwUe6wuV=8wf6NUVsC4+_TUgw@mail.gmail.com> <51907E45.7010409@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ks_c_5601-1987
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-reply-to: <1368439340-26346-1-git-send-email-draviv@codeaurora.org>
-Content-language: ko
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: 'Dolev Raviv' <draviv@codeaurora.org>, linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay.ihostexchange.net ([66.46.182.57]:37450 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992Ab3EMOkX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 May 2013 10:40:23 -0400
+In-Reply-To: <51907E45.7010409@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Baruch Even <baruch@ev-en.org>, emilne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, michaelc <michaelc@cs.wisc.edu>
 
-On Monday, May 13, 2013, Dolev Raviv wrote:
-> This patch series clusters the latest version of all the UFS patches in the
-> SCSI mailing list. It gives a stable functional base line for the UFS driver.
-> 
-> It includes the following versions:
-> > [PATCH 1/2] Documentation: devicetree: Add DT bindings for UFS host
-> > controller
-> > [PATCH 2/2] scsi: ufs: Fix the response UPIU length setting
-> > [PATCH v4 1/6] scsi: ufs: wrap the i/o access operations
-> > [PATCH v4 2/6] scsi: ufs: amend interrupt configuration
-> > [PATCH v4 3/6] scsi: ufs: fix interrupt status clears
-> > [PATCH v4 4/6] scsi: ufs: rework link start-up process
-> > [PATCH V5 1/1] scsi: ufs: Add support for sending NOP OUT UPIU
-> > [PATCH V4] scsi: ufs: Set fDeviceInit flag to initiate device
-> > initialization
-> 
-> But does not include:
-> > [PATCH v4 5/6] scsi: ufs: add dme configuration primit
-> > [PATCH v4 6/6] scsi: ufs: add dme control primitives
-> 
-> 
-> Dolev Raviv (8):
->   Documentation: devicetree: Add DT bindings for UFS host controller
->   scsi: ufs: Fix the response UPIU length setting
->   scsi: ufs: wrap the i/o access operations
->   scsi: ufs: amend interrupt configuration
->   scsi: ufs: fix interrupt status clears
->   scsi: ufs: rework link start-up process
->   scsi: ufs: Add support for sending NOP OUT UPIU
->   scsi: ufs: Set fDeviceInit flag to initiate device initialization
+On 5/13/2013 12:46 AM, Hannes Reinecke wrote:
 
-It seems that you missed my first comment on previous mailing.
+> True. But and the end of the day, we _do_ want to recover the failed LUN.
+> If we were to disable that faulty LUN and continue running with the others
+> we won't have a chance of _ever_ recovering that one LUN.
 
-RE: [PATCH V1 3/8] scsi: ufs: wrap the i/o access operations
-Could you check the e-mail?
+	I don't buy this. Especially for FC devices, the vast majority of errors I see
+are related to zoning, SFP and cabling problems. Once one of those happens you
+tend to get a lot of shotgun debugging, which injects all kinds of
+further errors.	None of these errors are fixed by the linux error recovery paths.
 
-If you intended to sort the patches instead of Santosh, 
-you should have identify the author per patch e-mail expect 8/8 which is from you.
-'From: Author name <Author e-mail>' is expected in the head of e-mail.
-I feel that maintainer has this role, though.
+	That said, if the admin fixes something, for FC/SAS (and potentially others)
+you _WILL_ get notification that the device is online again.
 
-And there is need to check the base of tree for ufshcd.
-' scsi: ufs: add support for query requests' is not merged finally.
-I think we can talk with Santosh for those.
 
-Thanks,
-Seungwon Jeon
+> SET when the link is down). So we basically _have_ to escalate it to the
+> next level. Even though that will mean to stop I/O to other, hitherto
+> unaffected instances.
+
+	And a single failure, turns into performance bubbles and further errors on
+other devices. Particularly if the functional devices are stateful, and the
+error recovery mechanism isn't sufficiently intelligent about that state (see
+tape drives). Think about what happens when a marginal SFP on a target causes
+a device to repeatably drop off and reappear at some random point in the future.
+
+
+	Anyway, It is possible to make a determination about the topology and make
+decisions about the likely-hood of any given portion being at fault. For
+example, if one lun on a target has failed and the remainder continue to work,
+then its unlikely that if abort and lun reset fail that anything higher up in
+the stack is going to succeed.
+
+	I feel pretty strongly, at that point your better off providing good
+diagnostics about the failure and expecting user interaction rather than
+muddying the waters by causing other device interruptions. If the user tries
+everything and determines that a HBA reset is the right choice, provide that
+option, don't do it for them.
+
+	If every device attached to the HBA fails then resetting the HBA is a valid
+choice, not before. Same for I_T.
+
+
+
