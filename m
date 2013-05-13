@@ -1,207 +1,89 @@
-From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V1 4/8] scsi: ufs: amend interrupt configuration
-Date: Mon, 13 May 2013 13:02:14 +0300
-Message-ID: <1368439340-26346-5-git-send-email-draviv@codeaurora.org>
-References: <1368439340-26346-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1368439340-26346-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Seungwon Jeon <tgih.jun@samsung.com>, open list <linux-kernel@vger.kernel.org>
+From: Vijaya Mohan Guvva <vmohan@brocade.com>
+Subject: [PATCH V1 07/17] bfa: Fix FDISC timeout handling
+Date: Mon, 13 May 2013 02:33:25 -0700
+Message-ID: <1368437615-9867-8-git-send-email-vmohan@brocade.com>
+References: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34607 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752220Ab3EMKEz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 May 2013 06:04:55 -0400
+In-Reply-To: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, adapter_linux_open_src_team@Brocade.COM, Vijaya Mohan Guvva <vmohan@Brocade.COM>, Anil Gurumurthy <agurumur@Brocade.COM>
 
-It makes interrupt setting more flexible especially
-for disabling. And wrong bit mask is fixed for ver 1.0.
-[17:16] is added for mask.
+Retry FDISC a max of 6 times. Introduce new events to handle vport
+login fails due to max logins to fabric/switch.
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-Tested-by: Maya Erez <merez@codeaurora.org>
-Acked-by: Santosh Y <santoshsy@gmail.com>
+Signed-off-by: Anil Gurumurthy <agurumur@brocade.com>
+Signed-off-by: Vijaya Mohan Guvva <vmohan@brocade.com>
+---
+ drivers/scsi/bfa/bfa_fcs_lport.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3946b9d..c342a38 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -35,6 +35,10 @@
- 
- #include "ufshcd.h"
- 
-+#define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
-+				 UTP_TASK_REQ_COMPL |\
-+				 UFSHCD_ERROR_MASK)
-+
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
- 	UFSHCD_MAX_ID		= 1,
-@@ -64,6 +68,20 @@ enum {
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 8773d5e..2f61a5a 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -5988,6 +5988,7 @@ enum bfa_fcs_vport_event {
+ 	BFA_FCS_VPORT_SM_RSP_DUP_WWN = 12,	/*  Dup wnn error*/
+ 	BFA_FCS_VPORT_SM_RSP_FAILED = 13,	/*  non-retryable failure */
+ 	BFA_FCS_VPORT_SM_STOPCOMP = 14,	/* vport delete completion */
++	BFA_FCS_VPORT_SM_FABRIC_MAX = 15, /* max vports on fabric */
  };
  
- /**
-+ * ufshcd_get_intr_mask - Get the interrupt bit mask
-+ * @hba - Pointer to adapter instance
-+ *
-+ * Returns interrupt bit mask per version
-+ */
-+static inline u32 ufshcd_get_intr_mask(struct ufs_hba *hba)
-+{
-+	if (hba->ufs_version == UFSHCI_VERSION_10)
-+		return INTERRUPT_MASK_ALL_VER_10;
-+	else
-+		return INTERRUPT_MASK_ALL_VER_11;
-+}
+ static void     bfa_fcs_vport_sm_uninit(struct bfa_fcs_vport_s *vport,
+@@ -6173,6 +6174,7 @@ bfa_fcs_vport_sm_fdisc(struct bfa_fcs_vport_s *vport,
+ 		break;
+ 
+ 	case BFA_FCS_VPORT_SM_RSP_FAILED:
++	case BFA_FCS_VPORT_SM_FABRIC_MAX:
+ 		bfa_sm_set_state(vport, bfa_fcs_vport_sm_offline);
+ 		break;
+ 
+@@ -6243,6 +6245,7 @@ bfa_fcs_vport_sm_fdisc_rsp_wait(struct bfa_fcs_vport_s *vport,
+ 	case BFA_FCS_VPORT_SM_OFFLINE:
+ 	case BFA_FCS_VPORT_SM_RSP_ERROR:
+ 	case BFA_FCS_VPORT_SM_RSP_FAILED:
++	case BFA_FCS_VPORT_SM_FABRIC_MAX:
+ 	case BFA_FCS_VPORT_SM_RSP_DUP_WWN:
+ 		bfa_sm_set_state(vport, bfa_fcs_vport_sm_cleanup);
+ 		bfa_sm_send_event(vport->lps, BFA_LPS_SM_OFFLINE);
+@@ -6528,7 +6531,7 @@ bfa_fcs_vport_fdisc_rejected(struct bfa_fcs_vport_s *vport)
+ 		else {
+ 			bfa_fcs_vport_aen_post(&vport->lport,
+ 					BFA_LPORT_AEN_NPIV_FABRIC_MAX);
+-			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_FAILED);
++			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_FABRIC_MAX);
+ 		}
+ 		break;
+ 
+@@ -6914,7 +6917,19 @@ bfa_cb_lps_fdisc_comp(void *bfad, void *uarg, bfa_status_t status)
+ 			break;
+ 		}
+ 
+-		bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
++		if (vport->fdisc_retries < BFA_FCS_VPORT_MAX_RETRIES)
++			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
++		else
++			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_FAILED);
 +
-+/**
-  * ufshcd_get_ufs_version - Get the UFS version supported by the HBA
-  * @hba - Pointer to adapter instance
-  *
-@@ -441,25 +459,45 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
- }
- 
- /**
-- * ufshcd_int_config - enable/disable interrupts
-+ * ufshcd_enable_intr - enable interrupts
-  * @hba: per adapter instance
-- * @option: interrupt option
-+ * @intrs: interrupt bits
-  */
--static void ufshcd_int_config(struct ufs_hba *hba, u32 option)
-+static void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
- {
--	switch (option) {
--	case UFSHCD_INT_ENABLE:
--		ufshcd_writel(hba, hba->int_enable_mask, REG_INTERRUPT_ENABLE);
--		break;
--	case UFSHCD_INT_DISABLE:
--		if (hba->ufs_version == UFSHCI_VERSION_10)
--			ufshcd_writel(hba, INTERRUPT_DISABLE_MASK_10,
--				      REG_INTERRUPT_ENABLE);
--		else
--			ufshcd_writel(hba, INTERRUPT_DISABLE_MASK_11,
--				      REG_INTERRUPT_ENABLE);
--		break;
-+	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
++		break;
 +
-+	if (hba->ufs_version == UFSHCI_VERSION_10) {
-+		u32 rw;
-+		rw = set & INTERRUPT_MASK_RW_VER_10;
-+		set = rw | ((set ^ intrs) & intrs);
-+	} else {
-+		set |= intrs;
-+	}
-+
-+	ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
-+}
-+
-+/**
-+ * ufshcd_disable_intr - disable interrupts
-+ * @hba: per adapter instance
-+ * @intrs: interrupt bits
-+ */
-+static void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
-+{
-+	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
-+
-+	if (hba->ufs_version == UFSHCI_VERSION_10) {
-+		u32 rw;
-+		rw = (set & INTERRUPT_MASK_RW_VER_10) &
-+			~(intrs & INTERRUPT_MASK_RW_VER_10);
-+		set = rw | ((set & intrs) & ~INTERRUPT_MASK_RW_VER_10);
-+
-+	} else {
-+		set &= ~intrs;
- 	}
-+
-+	ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
- }
++	case BFA_STATUS_ETIMER:
++		vport->vport_stats.fdisc_timeouts++;
++		if (vport->fdisc_retries < BFA_FCS_VPORT_MAX_RETRIES)
++			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
++		else
++			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_FAILED);
+ 		break;
  
- /**
-@@ -842,8 +880,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
- 	uic_cmd->argument3 = 0;
- 
- 	/* enable UIC related interrupts */
--	hba->int_enable_mask |= UIC_COMMAND_COMPL;
--	ufshcd_int_config(hba, UFSHCD_INT_ENABLE);
-+	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
- 
- 	/* sending UIC commands to controller */
- 	ufshcd_send_uic_command(hba, uic_cmd);
-@@ -890,13 +927,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 	}
- 
- 	/* Enable required interrupts */
--	hba->int_enable_mask |= (UTP_TRANSFER_REQ_COMPL |
--				 UIC_ERROR |
--				 UTP_TASK_REQ_COMPL |
--				 DEVICE_FATAL_ERROR |
--				 CONTROLLER_FATAL_ERROR |
--				 SYSTEM_BUS_FATAL_ERROR);
--	ufshcd_int_config(hba, UFSHCD_INT_ENABLE);
-+	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
- 
- 	/* Configure interrupt aggregation */
- 	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
-@@ -1724,7 +1755,7 @@ static void ufshcd_hba_free(struct ufs_hba *hba)
- void ufshcd_remove(struct ufs_hba *hba)
- {
- 	/* disable interrupts */
--	ufshcd_int_config(hba, UFSHCD_INT_DISABLE);
-+	ufshcd_disable_intr(hba, hba->intr_mask);
- 
- 	ufshcd_hba_stop(hba);
- 	ufshcd_hba_free(hba);
-@@ -1782,6 +1813,9 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 	/* Get UFS version supported by the controller */
- 	hba->ufs_version = ufshcd_get_ufs_version(hba);
- 
-+	/* Get Interrupt bit mask per version */
-+	hba->intr_mask = ufshcd_get_intr_mask(hba);
-+
- 	/* Allocate memory for host memory space */
- 	err = ufshcd_memory_alloc(hba);
- 	if (err) {
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 6429bed..d98e046 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -153,7 +153,7 @@ struct ufs_query {
-  * @ufshcd_tm_wait_queue: wait queue for task management
-  * @tm_condition: condition variable for task management
-  * @ufshcd_state: UFSHCD states
-- * @int_enable_mask: Interrupt Mask Bits
-+ * @intr_mask: Interrupt Mask Bits
-  * @uic_workq: Work queue for UIC completion handling
-  * @feh_workq: Work queue for fatal controller error handling
-  * @errors: HBA errors
-@@ -191,7 +191,7 @@ struct ufs_hba {
- 	unsigned long tm_condition;
- 
- 	u32 ufshcd_state;
--	u32 int_enable_mask;
-+	u32 intr_mask;
- 
- 	/* Work Queues */
- 	struct work_struct uic_workq;
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 4a86247..f1e1b74 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -232,10 +232,11 @@ enum {
- /* Interrupt disable masks */
- enum {
- 	/* Interrupt disable mask for UFSHCI v1.0 */
--	INTERRUPT_DISABLE_MASK_10	= 0xFFFF,
-+	INTERRUPT_MASK_ALL_VER_10	= 0x30FFF,
-+	INTERRUPT_MASK_RW_VER_10	= 0x30000,
- 
- 	/* Interrupt disable mask for UFSHCI v1.1 */
--	INTERRUPT_DISABLE_MASK_11	= 0x0,
-+	INTERRUPT_MASK_ALL_VER_11	= 0x31FFF,
- };
- 
- /*
+ 	case BFA_STATUS_FABRIC_RJT:
 -- 
-1.7.6
+1.7.12
 
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
