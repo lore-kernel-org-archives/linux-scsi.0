@@ -1,53 +1,100 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: Allow error handling timeout to be specified
-Date: Tue, 14 May 2013 18:21:15 -0400
-Message-ID: <yq138tp9p9g.fsf@sermon.lab.mkp.net>
-References: <yq1fvxvedg6.fsf@sermon.lab.mkp.net>
-	<1368189791.3319.31.camel@localhost.localdomain>
-	<CAC9+an+UBY3Cbxryn3O0KMVMuwdXBpf9EsVJ08tV=5Y0dpkjdA@mail.gmail.com>
-	<1368194460.3319.40.camel@localhost.localdomain>
-	<CAC9+anK-E2pok_eU2EdZxgaBY7-68rbj19C7G4w5rhTmZB7vzw@mail.gmail.com>
-	<518D55FA.4080302@suse.de>
-	<CAC9+anKxnDBYh15uwQQoTUzGZkwUe6wuV=8wf6NUVsC4+_TUgw@mail.gmail.com>
-	<51907E45.7010409@suse.de> <5190FB4E.4000900@tributary.com>
-	<519100A5.2060509@suse.de> <51910DB0.70009@tributary.com>
-	<yq18v3ibp3n.fsf@sermon.lab.mkp.net> <519154AA.5010500@tributary.com>
+Subject: Re: SCSI testing/USB devices are amazing
+Date: Tue, 14 May 2013 18:43:12 -0400
+Message-ID: <yq1r4h989of.fsf@sermon.lab.mkp.net>
+References: <CAN05THR+P7nzzTe6FCmG+F8_frkL=z-PS1GvoBVn57EyDMo-dw@mail.gmail.com>
+	<yq1k3n7eer4.fsf@sermon.lab.mkp.net>
+	<CAN05THQ3ugPcgz7obJZKc=c6uGY47KTKahcxrAG9RW=sRn4yoQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23202 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758437Ab3ENWVk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 May 2013 18:21:40 -0400
-In-Reply-To: <519154AA.5010500@tributary.com> (Jeremy Linton's message of
-	"Mon, 13 May 2013 16:01:30 -0500")
+Received: from aserp1040.oracle.com ([141.146.126.69]:35439 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758429Ab3ENWmv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 May 2013 18:42:51 -0400
+In-Reply-To: <CAN05THQ3ugPcgz7obJZKc=c6uGY47KTKahcxrAG9RW=sRn4yoQ@mail.gmail.com>
+	(ronnie sahlberg's message of "Mon, 13 May 2013 19:36:59 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jlinton@tributary.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Baruch Even <baruch@ev-en.org>, emilne <emilne@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, michaelc <michaelc@cs.wisc.edu>
+To: ronnie sahlberg <ronniesahlberg@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
->>>>> "Jeremy" == Jeremy Linton <jlinton@tributary.com> writes:
+>>>>> "Ronnie" == ronnie sahlberg <ronniesahlberg@gmail.com> writes:
 
->> others. We see cases fairly often where a misbehaving target has
->> confused the HBA enough that we can not bring the device back without
->> doing an HBA firmware reset. Despite I/O completing successfully on
->> other targets connected to the same HBA.
+Ronnie,
 
-Jeremy> 	This would seem to indicate a HBA/driver bug...
+Ronnie> I have added tests for the block limits VPD as
+Ronnie> SCSI.Inquiry.InquiryBlockLimits.  It checks that the pagelength
+Ronnie> is valid. 3C if SBC3 is claimed and 0C if prior to SBC3.
 
-Yep. It's not just targets that go bad!
+Well, there are devices out there that claim SPC3/SBC2 compliance but do
+support some of the newer features from SPC4/SBC3.
+
+In this case I'd rely on the supported VPD page list. And if the BL VPD
+is present and the device reports SPC3/SBC2 I'd print a warning.
 
 
-Jeremy> Except that I've seen the linux error recovery cause more
-Jeremy> problems than it solves on a fairly regular basis. I would
-Jeremy> rather have a solution designed to isolate failures, than one
-Jeremy> that makes a lot of mistakes and causes further problems
-Jeremy> (sometimes with other machines). I'm pretty convinced that
-Jeremy> attempting everything possible to recover a device when the
-Jeremy> underlying problem is unknown is a bad strategy.
+Ronnie> It then validates that the UNMAP counts are sane.  Sane being
+Ronnie> that if LBPU==0 then these must be 0, and if LBPU==1 then these
+Ronnie> must be >1, must be >than 2**LBPPBE and either 0xffffffff or
+Ronnie> <1M. (1M is arbitrary for "crazy large" number of blocks)
 
-There is no one size that fits all. Which is why we're taking steps to
-make the error recovery parameters tweakable.
+That's a good start, anyway.
+
+
+Ronnie> The other fields I had a hard time to come up with good sanity
+Ronnie> tests for. Any suggestions ?  Do you have examples of things
+Ronnie> that vendors get wrong here ?
+
+Maximum Write Same Length vs. support for WS10 and WS16.
+
+Another interesting Write Same test: I have several devices that support
+WS16 but which only support a 2-byte block count in WS16. I.e. you get
+the larger LBA but not a bigger block count with WS16.
+
+There's also the Logical Block Provisioning VPD page. You could verify
+that UNMAP is supported when LBPU=1. Repeat for LBPWS and LBPWS10.
+
+You could verify that the device actually returns zeroes when LBPRZ=1.
+
+
+Ronnie> I will add tests for when protection information is enabled in
+Ronnie> the future, I will need to find time to add it to tgt first.
+
+I have a fairly extensive set of PI tests in my test suite. But that
+gets pretty involved. We can deal with those later.
+
+
+Ronnie> Very nice document.  Section 1.3 could update
+Ronnie> though. READCAPACITY16 is only mandatory in SBC-2 IF the device
+Ronnie> supports protection information, but optional if it does not.
+Ronnie> In SBC-3 it is always mandatory though. Thin provisioning and
+Ronnie> different logical/physical block sizes were only added to this
+Ronnie> command in SBC-3 not SBC-2.
+
+I describe what we actually do, not what's spec compliant :)
+
+This is our current heuristic for READ CAPACITY(16):
+
+static int sd_try_rc16_first(struct scsi_device *sdp)
+{
+        if (sdp->host->max_cmd_len < 16)
+                return 0;
+        if (sdp->scsi_level > SCSI_SPC_2)
+                return 1;
+        if (scsi_device_protection(sdp))
+                return 1;
+        return 0;
+}
+
+
+Ronnie> I have thus updated my READCAPACITY16 tests so that IF SBC-3 is
+Ronnie> claimed, or if IQN->PROTECT is set then the device must support
+Ronnie> this opcode or the test will fail.  Otherwise, if it is not
+Ronnie> SBC-3 and if PROTECT is clear, then the test will be skipped but
+Ronnie> not fail if the opcode is missing.
+
+*nod*
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
