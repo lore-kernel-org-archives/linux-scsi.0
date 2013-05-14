@@ -1,63 +1,57 @@
-From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V2 0/9] ufs patch siries
-Date: Tue, 14 May 2013 10:08:39 +0300
-Message-ID: <1368515328-31535-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:35611 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752778Ab3ENHJT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 May 2013 03:09:19 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH 1/2] Kernel/time: Introduce a new timestamp function local_time_seconds()
+Date: Tue, 14 May 2013 15:45:43 +0800
+Message-ID: <5191EBA7.9010303@cn.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: john.stultz@linaro.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>
 
-This patch series clusters the latest version of all the UFS patches in the
-SCSI mailing list. It gives a stable functional base line for the UFS driver.
+>From 18072c1c3506a7e37ee485307a2c343efe5af4d0 Mon Sep 17 00:00:00 2001
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Mon, 13 May 2013 15:45:24 +0900
+Subject: [PATCH 1/2] Kernel/time: Introduce a new timestamp function local_time_seconds()
 
-It includes the following versions:
-> [PATCH V5] scsi: ufs: add support for query requests
-> [PATCH 1/2] Documentation: devicetree: Add DT bindings for UFS host
-> controller
-> [PATCH 2/2] scsi: ufs: Fix the response UPIU length setting
-> [PATCH v4 1/6] scsi: ufs: wrap the i/o access operations
-> [PATCH v4 2/6] scsi: ufs: amend interrupt configuration
-> [PATCH v4 3/6] scsi: ufs: fix interrupt status clears
-> [PATCH v4 4/6] scsi: ufs: rework link start-up process
-> [PATCH V5 1/1] scsi: ufs: Add support for sending NOP OUT UPIU
-> [PATCH V4] scsi: ufs: Set fDeviceInit flag to initiate device
-> initialization
+Introduce a new timestamp function local_time_seconds() to hide the conversion of system time in UTC to local time seconds.
 
-But does not include:
-> [PATCH v4 5/6] scsi: ufs: add dme configuration primit
-> [PATCH v4 6/6] scsi: ufs: add dme control primitives
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+---
+ include/linux/time.h |    1 +
+ kernel/time.c        |   11 +++++++++++
+ 2 files changed, 12 insertions(+), 0 deletions(-)
 
+diff --git a/include/linux/time.h b/include/linux/time.h
+index 22d81b3..1aec534 100644
+--- a/include/linux/time.h
++++ b/include/linux/time.h
+@@ -271,4 +271,5 @@ static __always_inline void timespec_add_ns(struct timespec *a, u64 ns)
+ 	a->tv_nsec = ns;
+ }
+ 
++extern u32 local_time_seconds(void);
+ #endif
+diff --git a/kernel/time.c b/kernel/time.c
+index d3617db..715377d 100644
+--- a/kernel/time.c
++++ b/kernel/time.c
+@@ -712,3 +712,14 @@ struct timespec timespec_add_safe(const struct timespec lhs,
+ 
+ 	return res;
+ }
++
++/*
++ * Convert system time in UTC to local time seconds.
++ */
++u32 local_time_seconds(void)
++{
++	struct timeval utc;
++	do_gettimeofday(&utc);
++	return (u32)(utc.tv_sec - (sys_tz.tz_minuteswest * 60));
++}
++EXPORT_SYMBOL(local_time_seconds);
 -- 
-V2:
-- Add query requst support patch which was ommited from the merge window
-
-Dolev Raviv (9):
-  scsi: ufs: add support for query requests
-  Documentation: devicetree: Add DT bindings for UFS host controller
-  scsi: ufs: Fix the response UPIU length setting
-  scsi: ufs: wrap the i/o access operations
-  scsi: ufs: amend interrupt configuration
-  scsi: ufs: fix interrupt status clears
-  scsi: ufs: rework link start-up process
-  scsi: ufs: Add support for sending NOP OUT UPIU
-  scsi: ufs: Set fDeviceInit flag to initiate device initialization
-
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   16 +
- drivers/scsi/ufs/ufs.h                             |  132 ++-
- drivers/scsi/ufs/ufshcd.c                          | 1172 +++++++++++++++-----
- drivers/scsi/ufs/ufshcd.h                          |   47 +-
- drivers/scsi/ufs/ufshci.h                          |    7 +-
- 5 files changed, 1101 insertions(+), 273 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-
--- 
-1.7.6
-
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+1.7.1
