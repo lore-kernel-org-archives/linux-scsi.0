@@ -1,42 +1,52 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 1/3] ufs: Remove redundant platform_set_drvdata()
-Date: Tue, 14 May 2013 21:34:13 +0530
-Message-ID: <1368547455-5211-2-git-send-email-santoshsy@gmail.com>
+Subject: [PATCH 3/3] Documentation: devicetree: Add DT bindings for UFS host controller
+Date: Tue, 14 May 2013 21:34:15 +0530
+Message-ID: <1368547455-5211-4-git-send-email-santoshsy@gmail.com>
 References: <1368547455-5211-1-git-send-email-santoshsy@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:49410 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932182Ab3ENQEs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 May 2013 12:04:48 -0400
-Received: by mail-pa0-f46.google.com with SMTP id fa10so653711pad.19
-        for <linux-scsi@vger.kernel.org>; Tue, 14 May 2013 09:04:47 -0700 (PDT)
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:44427 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932182Ab3ENQEz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 May 2013 12:04:55 -0400
+Received: by mail-pd0-f180.google.com with SMTP id t10so552732pdi.11
+        for <linux-scsi@vger.kernel.org>; Tue, 14 May 2013 09:04:55 -0700 (PDT)
 In-Reply-To: <1368547455-5211-1-git-send-email-santoshsy@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Sachin Kamat <sachin.kamat@linaro.org>, Santosh Y <santoshsy@gmail.com>
+Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, Santosh Y <santoshsy@gmail.com>
 
-From: Sachin Kamat <sachin.kamat@linaro.org>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
 
-Commit 0998d06310 (device-core: Ensure drvdata = NULL when no
-driver is bound) removes the need to set driver data field to
-NULL.
+Compatible list is used in commit 03b1781 but is not documented.
+Add necessary device tree bindings to describe on-chip UFS host
+controllers.
 
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Signed-off-by: Santosh Y <santoshsy@gmail.com>
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 03319ac..3db2ee1 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -184,7 +184,6 @@ static int ufshcd_pltfrm_remove(struct platform_device *pdev)
- 		mem_size = resource_size(mem_res);
- 		release_mem_region(mem_res->start, mem_size);
- 	}
--	platform_set_drvdata(pdev, NULL);
- 	return 0;
- }
- 
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+new file mode 100644
+index 0000000..20468b2
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -0,0 +1,16 @@
++* Universal Flash Storage (UFS) Host Controller
++
++UFSHC nodes are defined to describe on-chip UFS host controllers.
++Each UFS controller instance should have its own node.
++
++Required properties:
++- compatible        : compatible list, contains "jedec,ufs-1.1"
++- interrupts        : <interrupt mapping for UFS host controller IRQ>
++- reg               : <registers mapping>
++
++Example:
++	ufshc@0xfc598000 {
++		compatible = "jedec,ufs-1.1";
++		reg = <0xfc598000 0x800>;
++		interrupts = <0 28 0>;
++	};
 -- 
 1.8.1.2
 
