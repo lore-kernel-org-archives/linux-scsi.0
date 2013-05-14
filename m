@@ -1,126 +1,83 @@
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH 2/2] driver/scsi: Use local_time_seconds() to simplify the
- get local timestamp operation
-Date: Tue, 14 May 2013 15:45:50 +0800
-Message-ID: <5191EBAE.5080200@cn.fujitsu.com>
+From: "Dolev Raviv" <draviv@codeaurora.org>
+Subject: RE: [PATCH V1 0/8] ufs patch siries
+Date: Tue, 14 May 2013 01:01:45 -0700
+Message-ID: <185188a3c2c85814f5484250cf9e91ee.squirrel@www.codeaurora.org>
+References: <1368439340-26346-1-git-send-email-draviv@codeaurora.org>
+    <003b01ce4fd0$219de1b0$64d9a510$%jun@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <003b01ce4fd0$219de1b0$64d9a510$%jun@samsung.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Seungwon Jeon <tgih.jun@samsung.com>
+Cc: 'Dolev Raviv' <draviv@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->From 1abbcf9fa5ce6c9a0b005a445c53b9412b42fa83 Mon Sep 17 00:00:00 2001
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Date: Mon, 13 May 2013 14:58:49 +0900
-Subject: [PATCH 2/2] driver/scsi: Use local_time_seconds() to simplify the get local timestamp operation
+Yes, apparently I have, and I missed this mail as well until it was
+brought to my attention earlier.
+
+I apologise for re sending the patch series with mistakes, I withdraw it
+and let Santosh send it as he see fit.
+
+> On Monday, May 13, 2013, Dolev Raviv wrote:
+>> This patch series clusters the latest version of all the UFS patches in
+>> the
+>> SCSI mailing list. It gives a stable functional base line for the UFS
+>> driver.
+>>
+>> It includes the following versions:
+>> > [PATCH 1/2] Documentation: devicetree: Add DT bindings for UFS host
+>> > controller
+>> > [PATCH 2/2] scsi: ufs: Fix the response UPIU length setting
+>> > [PATCH v4 1/6] scsi: ufs: wrap the i/o access operations
+>> > [PATCH v4 2/6] scsi: ufs: amend interrupt configuration
+>> > [PATCH v4 3/6] scsi: ufs: fix interrupt status clears
+>> > [PATCH v4 4/6] scsi: ufs: rework link start-up process
+>> > [PATCH V5 1/1] scsi: ufs: Add support for sending NOP OUT UPIU
+>> > [PATCH V4] scsi: ufs: Set fDeviceInit flag to initiate device
+>> > initialization
+>>
+>> But does not include:
+>> > [PATCH v4 5/6] scsi: ufs: add dme configuration primit
+>> > [PATCH v4 6/6] scsi: ufs: add dme control primitives
+>>
+>>
+>> Dolev Raviv (8):
+>>   Documentation: devicetree: Add DT bindings for UFS host controller
+>>   scsi: ufs: Fix the response UPIU length setting
+>>   scsi: ufs: wrap the i/o access operations
+>>   scsi: ufs: amend interrupt configuration
+>>   scsi: ufs: fix interrupt status clears
+>>   scsi: ufs: rework link start-up process
+>>   scsi: ufs: Add support for sending NOP OUT UPIU
+>>   scsi: ufs: Set fDeviceInit flag to initiate device initialization
+>
+> It seems that you missed my first comment on previous mailing.
+>
+> RE: [PATCH V1 3/8] scsi: ufs: wrap the i/o access operations
+> Could you check the e-mail?
+>
+> If you intended to sort the patches instead of Santosh,
+> you should have identify the author per patch e-mail expect 8/8 which is
+> from you.
+> 'From: Author name <Author e-mail>' is expected in the head of e-mail.
+> I feel that maintainer has this role, though.
+>
+> And there is need to check the base of tree for ufshcd.
+> ' scsi: ufs: add support for query requests' is not merged finally.
+> I think we can talk with Santosh for those.
+>
+> Thanks,
+> Seungwon Jeon
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 
-Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
----
- drivers/scsi/3w-9xxx.c |   14 ++------------
- drivers/scsi/3w-sas.c  |   14 ++------------
- 2 files changed, 4 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index 5e1e12c..44b3ea8 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -374,8 +374,6 @@ out:
- /* This function will queue an event */
- static void twa_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_Header *header)
- {
--	u32 local_time;
--	struct timeval time;
- 	TW_Event *event;
- 	unsigned short aen;
- 	char host[16];
-@@ -398,9 +396,7 @@ static void twa_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
- 	memset(event, 0, sizeof(TW_Event));
- 
- 	event->severity = TW_SEV_OUT(header->status_block.severity__reserved);
--	do_gettimeofday(&time);
--	local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
--	event->time_stamp_sec = local_time;
-+	event->time_stamp_sec = local_time_seconds();
- 	event->aen_code = aen;
- 	event->retrieved = TW_AEN_NOT_RETRIEVED;
- 	event->sequence_id = tw_dev->error_sequence_id;
-@@ -479,11 +475,9 @@ out:
- static void twa_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
- {
- 	u32 schedulertime;
--	struct timeval utc;
- 	TW_Command_Full *full_command_packet;
- 	TW_Command *command_packet;
- 	TW_Param_Apache *param;
--	u32 local_time;
- 
- 	/* Fill out the command packet */
- 	full_command_packet = tw_dev->command_packet_virt[request_id];
-@@ -503,11 +497,7 @@ static void twa_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
- 	param->parameter_id = cpu_to_le16(0x3); /* SchedulerTime */
- 	param->parameter_size_bytes = cpu_to_le16(4);
- 
--	/* Convert system time in UTC to local time seconds since last 
--           Sunday 12:00AM */
--	do_gettimeofday(&utc);
--	local_time = (u32)(utc.tv_sec - (sys_tz.tz_minuteswest * 60));
--	schedulertime = local_time - (3 * 86400);
-+	schedulertime = local_time_seconds() - (3 * 86400);
- 	schedulertime = cpu_to_le32(schedulertime % 604800);
- 
- 	memcpy(param->data, &schedulertime, sizeof(u32));
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index c845bdb..69f1d8a 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -236,8 +236,6 @@ out:
- /* This function will queue an event */
- static void twl_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_Header *header)
- {
--	u32 local_time;
--	struct timeval time;
- 	TW_Event *event;
- 	unsigned short aen;
- 	char host[16];
-@@ -256,9 +254,7 @@ static void twl_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
- 	memset(event, 0, sizeof(TW_Event));
- 
- 	event->severity = TW_SEV_OUT(header->status_block.severity__reserved);
--	do_gettimeofday(&time);
--	local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
--	event->time_stamp_sec = local_time;
-+	event->time_stamp_sec = local_time_seconds();
- 	event->aen_code = aen;
- 	event->retrieved = TW_AEN_NOT_RETRIEVED;
- 	event->sequence_id = tw_dev->error_sequence_id;
-@@ -444,11 +440,9 @@ out:
- static void twl_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
- {
- 	u32 schedulertime;
--	struct timeval utc;
- 	TW_Command_Full *full_command_packet;
- 	TW_Command *command_packet;
- 	TW_Param_Apache *param;
--	u32 local_time;
- 
- 	/* Fill out the command packet */
- 	full_command_packet = tw_dev->command_packet_virt[request_id];
-@@ -468,11 +462,7 @@ static void twl_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
- 	param->parameter_id = cpu_to_le16(0x3); /* SchedulerTime */
- 	param->parameter_size_bytes = cpu_to_le16(4);
- 
--	/* Convert system time in UTC to local time seconds since last 
--           Sunday 12:00AM */
--	do_gettimeofday(&utc);
--	local_time = (u32)(utc.tv_sec - (sys_tz.tz_minuteswest * 60));
--	schedulertime = local_time - (3 * 86400);
-+	schedulertime = local_time_seconds() - (3 * 86400);
- 	schedulertime = cpu_to_le32(schedulertime % 604800);
- 
- 	memcpy(param->data, &schedulertime, sizeof(u32));
 -- 
-1.7.1
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
