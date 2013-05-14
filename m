@@ -1,44 +1,40 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V2 2/9] Documentation: devicetree: Add DT bindings for UFS host controller
-Date: Tue, 14 May 2013 10:08:41 +0300
-Message-ID: <1368515328-31535-3-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH V2 6/9] scsi: ufs: fix interrupt status clears
+Date: Tue, 14 May 2013 10:08:45 +0300
+Message-ID: <1368515328-31535-7-git-send-email-draviv@codeaurora.org>
 References: <1368515328-31535-1-git-send-email-draviv@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1368515328-31535-1-git-send-email-draviv@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, "moderated list:OPEN FIRMWARE
-	AND..." <devicetree-discuss@lists.ozlabs.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Seungwon Jeon <tgih.jun@samsung.com>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Compatible list is used in commit 03b1781 but is not documented.
-Add necessary device tree bindings to describe on-chip UFS host
-controllers.
+There is no need to check the version to clear
+the interrupt status. And the order is changed
+prior to actual handling.
 
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+Tested-by: Maya Erez <merez@codeaurora.org>
+Acked-by: Santosh Y <santoshsy@gmail.com>
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-new file mode 100644
-index 0000000..20468b2
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -0,0 +1,16 @@
-+* Universal Flash Storage (UFS) Host Controller
-+
-+UFSHC nodes are defined to describe on-chip UFS host controllers.
-+Each UFS controller instance should have its own node.
-+
-+Required properties:
-+- compatible        : compatible list, contains "jedec,ufs-1.1"
-+- interrupts        : <interrupt mapping for UFS host controller IRQ>
-+- reg               : <registers mapping>
-+
-+Example:
-+	ufshc@0xfc598000 {
-+		compatible = "jedec,ufs-1.1";
-+		reg = <0xfc598000 0x800>;
-+		interrupts = <0 28 0>;
-+	};
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c342a38..f4293d1 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1478,11 +1478,8 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+ 
+ 	if (intr_status) {
++		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+ 		ufshcd_sl_intr(hba, intr_status);
+-
+-		/* If UFSHCI 1.0 then clear interrupt status register */
+-		if (hba->ufs_version == UFSHCI_VERSION_10)
+-			ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+ 		retval = IRQ_HANDLED;
+ 	}
+ 	spin_unlock(hba->host->host_lock);
 -- 
 1.7.6
 
