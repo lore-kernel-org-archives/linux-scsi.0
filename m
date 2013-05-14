@@ -1,64 +1,43 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 2/3] SCSI_UFSHCD should depend on SCSI_DMA
-Date: Tue, 14 May 2013 21:34:14 +0530
-Message-ID: <1368547455-5211-3-git-send-email-santoshsy@gmail.com>
-References: <1368547455-5211-1-git-send-email-santoshsy@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:36737 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932182Ab3ENQEw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 May 2013 12:04:52 -0400
-Received: by mail-pb0-f41.google.com with SMTP id xb12so558576pbc.14
-        for <linux-scsi@vger.kernel.org>; Tue, 14 May 2013 09:04:51 -0700 (PDT)
-In-Reply-To: <1368547455-5211-1-git-send-email-santoshsy@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Liu Jiang <liuj97@gmail.com>
+Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+Date: Wed, 15 May 2013 00:57:26 +0800
+Message-ID: <51926CF6.1050706@gmail.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-4-git-send-email-jiang.liu@huawei.com> <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com> <5191F53E.4000305@cn.fujitsu.com> <51925136.5050302@gmail.com> <CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J . Wysocki" <rjw@sisk.pl>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Toshi Kani <toshi.kani@hp.com>, Myron Stowe <myron.stowe@redhat.com>, Yijing Wang <wangyijing@huawei.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>, Jiang Liu <jiang.liu@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Santosh Y <santoshsy@gmail.com>
 
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+On Tue 14 May 2013 11:10:33 PM CST, Yinghai Lu wrote:
+> On Tue, May 14, 2013 at 7:59 AM, Liu Jiang <liuj97@gmail.com> wrote:
+>> On 05/14/2013 04:26 PM, Gu Zheng wrote:
+>>      I suggest to use pci_release_dev() instead because it also needs to
+>> release OF related resources.
+>> I will update it in next version.
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index bc075a3..2ac6338 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1281,7 +1281,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus
+>> *bus
+>>          pci_set_of_node(dev);
+>>
+>>          if (pci_setup_device(dev)) {
+>> -               kfree(dev);
+>> +               pci_release_dev(&dev->dev);
+>>                  return NULL;
+>
+> no, should move pci_set_of_node calling into pci_setup_device.
+>
+> Yinghai
 
-If NO_DMA=y:
-
-drivers/built-in.o: In function `ufshcd_transfer_req_compl':
-drivers/scsi/ufs/ufshcd.c:1182: undefined reference to `scsi_dma_unmap'
-drivers/built-in.o: In function `ufshcd_map_sg':
-drivers/scsi/ufs/ufshcd.c:377: undefined reference to `scsi_dma_map'
-drivers/built-in.o: In function `ufshcd_do_reset':
-drivers/scsi/ufs/ufshcd.c:912: undefined reference to `scsi_dma_unmap'
-drivers/built-in.o: In function `ufshcd_memory_alloc':
-drivers/scsi/ufs/ufshcd.c:565: undefined reference to `dma_alloc_coherent'
-drivers/built-in.o: In function `ufshcd_free_hba_memory':
-drivers/scsi/ufs/ufshcd.c:185: undefined reference to `dma_free_coherent'
-drivers/scsi/ufs/ufshcd.c:192: undefined reference to `dma_free_coherent'
-drivers/scsi/ufs/ufshcd.c:199: undefined reference to `dma_free_coherent'
-drivers/scsi/ufs/ufshcd.c:185: undefined reference to `dma_free_coherent'
-drivers/scsi/ufs/ufshcd.c:192: undefined reference to `dma_free_coherent'
-drivers/built-in.o:drivers/scsi/ufs/ufshcd.c:199: more undefined references to `dma_free_coherent' follow
-drivers/built-in.o: In function `ufshcd_abort':
-drivers/scsi/ufs/ufshcd.c:1498: undefined reference to `scsi_dma_unmap'
-drivers/built-in.o: In function `ufshcd_device_reset':
-drivers/scsi/ufs/ufshcd.c:1436: undefined reference to `scsi_dma_unmap'
-
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: James E.J. Bottomley <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Santosh Y <santoshsy@gmail.com>
-
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 35faf24..f07f901 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -34,7 +34,7 @@
- 
- config SCSI_UFSHCD
- 	tristate "Universal Flash Storage Controller Driver Core"
--	depends on SCSI
-+	depends on SCSI && SCSI_DMA
- 	---help---
- 	This selects the support for UFS devices in Linux, say Y and make
- 	  sure that you know the name of your UFS host adapter (the card
--- 
-1.8.1.2
-
+I'm not sure whether we should call pci_set_of_node() for SR-IOV 
+devices too,
+any suggestions here?
