@@ -1,41 +1,34 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to
- pci_alloc_dev(bus) instead
-Date: Tue, 14 May 2013 08:10:33 -0700
-Message-ID: <CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-	<1368461313-4371-4-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
-	<5191F53E.4000305@cn.fujitsu.com>
-	<51925136.5050302@gmail.com>
+From: John Stultz <john.stultz@linaro.org>
+Subject: Re: [PATCH 1/2] Kernel/time: Introduce a new timestamp function local_time_seconds()
+Date: Tue, 14 May 2013 08:57:16 -0700
+Message-ID: <51925EDC.2080307@linaro.org>
+References: <5191EBA7.9010303@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <51925136.5050302@gmail.com>
-Sender: sparclinux-owner@vger.kernel.org
-To: Liu Jiang <liuj97@gmail.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J . Wysocki" <rjw@sisk.pl>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Toshi Kani <toshi.kani@hp.com>, Myron Stowe <myron.stowe@redhat.com>, Yijing Wang <wangyijing@huawei.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>, Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:56434 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755889Ab3ENP5T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 May 2013 11:57:19 -0400
+Received: by mail-pb0-f43.google.com with SMTP id md12so549643pbc.30
+        for <linux-scsi@vger.kernel.org>; Tue, 14 May 2013 08:57:19 -0700 (PDT)
+In-Reply-To: <5191EBA7.9010303@cn.fujitsu.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-On Tue, May 14, 2013 at 7:59 AM, Liu Jiang <liuj97@gmail.com> wrote:
-> On 05/14/2013 04:26 PM, Gu Zheng wrote:
->     I suggest to use pci_release_dev() instead because it also needs to
-> release OF related resources.
-> I will update it in next version.
+On 05/14/2013 12:45 AM, Gu Zheng wrote:
+>  From 18072c1c3506a7e37ee485307a2c343efe5af4d0 Mon Sep 17 00:00:00 2001
+> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Date: Mon, 13 May 2013 15:45:24 +0900
+> Subject: [PATCH 1/2] Kernel/time: Introduce a new timestamp function local_time_seconds()
 >
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index bc075a3..2ac6338 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1281,7 +1281,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus
-> *bus
->         pci_set_of_node(dev);
->
->         if (pci_setup_device(dev)) {
-> -               kfree(dev);
-> +               pci_release_dev(&dev->dev);
->                 return NULL;
+> Introduce a new timestamp function local_time_seconds() to hide the conversion of system time in UTC to local time seconds.
 
-no, should move pci_set_of_node calling into pci_setup_device.
+So, why is this useful/needed?
 
-Yinghai
+thanks
+-john
+
