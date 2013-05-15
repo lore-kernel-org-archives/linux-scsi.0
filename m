@@ -1,44 +1,84 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to
- pci_alloc_dev(bus) instead
-Date: Thu, 16 May 2013 07:29:31 +1000
-Message-ID: <1368653371.9603.18.camel@pasglop>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
- <1368461313-4371-4-git-send-email-jiang.liu@huawei.com>
- <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
- <5191F53E.4000305@cn.fujitsu.com> <51925136.5050302@gmail.com>
- <CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com>
- <51926CF6.1050706@gmail.com>
- <CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
- <51939E16.9090105@gmail.com>
- <CAE9FiQUXrOmN0rkvOwE1G_acEGY3-gouzaXjBMT7EE6uAqvuZA@mail.gmail.com>
- <51939FB1.20203@gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.10-rc2
+Date: Wed, 15 May 2013 14:50:07 -0700
+Message-ID: <1368654607.6899.16.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <51939FB1.20203@gmail.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Liu Jiang <liuj97@gmail.com>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, Toshi Kani <toshi.kani@hp.com>, Linux-Scsi <linux-scsi@vger.kernel.org>, Myron Stowe <myron.stowe@redhat.com>, David Airlie <airlied@linux.ie>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linuxppc-dev@lists.ozlabs.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <jbottomley@parallels.com>, "Rafael J . Wysocki" <rjw@sisk.pl>, Bjorn Helgaas <bhelgaas@google.com>, Yijing Wang <wangyijing@huawei.com>, Paul Mackerras <paulus@samba.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Gu Zheng <guz.fnst@cn.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Yinghai Lu <yinghai@kernel.org>, "David
- S. Miller" <davem@davemloft.net>, Jiang Liu <jiang.liu@huawei.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Shlomo Pongratz <shlomop@mellanox.com>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>, Chris Boot <bootc@bootc.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2013-05-15 at 22:46 +0800, Liu Jiang wrote:
->        I don't know any OF exports, could you please help to CC
-> some OF experts?
+Hi Linus,
 
-I wrote that code I think. Sorry, I've missed the beginning of the
-thread, what is the problem ?
+The following are target fixes currently in the queue for v3.10-rc2.  
 
-Cheers,
-Ben.
+Please go ahead and pull from:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git queue
+
+A handful of fixes + minor changes this time around, along with one
+important >= v3.9 regression fix for IBLOCK backends.  The highlights
+include:
+
+ - Use FD_MAX_SECTORS in FILEIO for block_device as well as files (agrover)
+ - Fix processing of out-of-order CmdSNs with iSBD driver (shlomo)
+ - Close long-standing target_put_sess_cmd() vs. core_tmr_abort_task() race
+   with the addition of kref_put_spinlock_irqsave() (joern + greg-kh)
+ - Fix IBLOCK WCE=1 + DPOFUA=1 backend WRITE regression in >= v3.9 (nab + bootc)
+
+Note these four patches are CC'ed to stable.
+
+Also, there is still some work left to be done on the active I/O
+shutdown path in target_wait_for_sess_cmds() used by tcm_qla2xxx +
+ib_isert fabrics that is still being discussed on the list, and will
+hopefully be resolved soon.
+
+Thank you,
+
+--nab
+
+Andy Grover (3):
+  target: Remove unused struct members in se_dev_entry
+  target: Use FD_MAX_SECTORS/FD_BLOCKSIZE for blockdevs using fileio
+  target: Have dev/enable show if TCM device is configured
+
+Geert Uytterhoeven (1):
+  iscsi-target: Make buf param of iscsit_do_crypto_hash_buf() const
+    void *
+
+Joern Engel (2):
+  target: removed unused transport_state flag
+  target: close target_put_sess_cmd() vs. core_tmr_abort_task() race
+
+Nicholas Bellinger (5):
+  iscsi-target: Fix NULL pointer dereference in iscsit_send_reject
+  target/rd: Add ramdisk bit for NULLIO operation
+  iscsi-target: Fix typos in RDMAEXTENSIONS macro usage
+  MAINTAINERS: Update target git tree URL
+  target/iblock: Fix WCE=1 + DPOFUA=1 backend WRITE regression
+
+Shlomo Pongratz (1):
+  iscsi-target: Fix processing of OOO commands
+
+ MAINTAINERS                                    |    2 +-
+ drivers/target/iscsi/iscsi_target.c            |   63 ++++++++++--------------
+ drivers/target/iscsi/iscsi_target_erl1.c       |    7 ++-
+ drivers/target/iscsi/iscsi_target_parameters.c |    8 ++--
+ drivers/target/iscsi/iscsi_target_parameters.h |    4 +-
+ drivers/target/target_core_configfs.c          |   11 +++-
+ drivers/target/target_core_device.c            |   14 -----
+ drivers/target/target_core_file.c              |    9 +---
+ drivers/target/target_core_iblock.c            |    2 +
+ drivers/target/target_core_internal.h          |    1 -
+ drivers/target/target_core_rd.c                |   21 +++++++-
+ drivers/target/target_core_rd.h                |    1 +
+ drivers/target/target_core_transport.c         |   13 ++---
+ include/linux/kref.h                           |   33 ++++++++++++
+ include/target/target_core_base.h              |    5 --
+ 15 files changed, 107 insertions(+), 87 deletions(-)
+
+-- 
+1.7.2.5
