@@ -1,84 +1,42 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.10-rc2
-Date: Wed, 15 May 2013 14:50:07 -0700
-Message-ID: <1368654607.6899.16.camel@haakon3.risingtidesystems.com>
+From: Liu Jiang <liuj97@gmail.com>
+Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+Date: Thu, 16 May 2013 07:46:57 +0800
+Message-ID: <51941E71.8010309@gmail.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-4-git-send-email-jiang.liu@huawei.com> <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com> <5191F53E.4000305@cn.fujitsu.com> <51925136.5050302@gmail.com> <CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com> <51926CF6.1050706@gmail.com> <CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com> <51939E16.9090105@gmail.com> <CAE9FiQUXrOmN0rkvOwE1G_acEGY3-gouzaXjBMT7EE6uAqvuZA@mail.gmail.com> <51939FB1.20203@gmail.com> <1368653371.9603.18.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Shlomo Pongratz <shlomop@mellanox.com>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>, Chris Boot <bootc@bootc.net>
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <1368653371.9603.18.camel@pasglop>
+Sender: sparclinux-owner@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Yinghai Lu <yinghai@kernel.org>, Gu Zheng <guz.fnst@cn.fujitsu.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J . Wysocki" <rjw@sisk.pl>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Toshi Kani <toshi.kani@hp.com>, Myron Stowe <myron.stowe@redhat.com>, Yijing Wang <wangyijing@huawei.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Paul Mackerras <paulus@samba.org>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>, Jiang Liu <jiang.liu@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+On Thu 16 May 2013 05:29:31 AM CST, Benjamin Herrenschmidt wrote:
+> On Wed, 2013-05-15 at 22:46 +0800, Liu Jiang wrote:
+>>         I don't know any OF exports, could you please help to CC
+>> some OF experts?
+>
+> I wrote that code I think. Sorry, I've missed the beginning of the
+> thread, what is the problem ?
+>
+> Cheers,
+> Ben.
+>
+>
+Hi,
+     Just found a little memory leak issue that we should call 
+pci_release_of_node()
+on error recovery path in function pci_scan_device().
+        pci_set_of_node(dev);
 
-The following are target fixes currently in the queue for v3.10-rc2.  
+        if (pci_setup_device(dev)) {
+                kfree(dev);
+                return NULL;
+        }
 
-Please go ahead and pull from:
+Regards!
+Gerry
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git queue
-
-A handful of fixes + minor changes this time around, along with one
-important >= v3.9 regression fix for IBLOCK backends.  The highlights
-include:
-
- - Use FD_MAX_SECTORS in FILEIO for block_device as well as files (agrover)
- - Fix processing of out-of-order CmdSNs with iSBD driver (shlomo)
- - Close long-standing target_put_sess_cmd() vs. core_tmr_abort_task() race
-   with the addition of kref_put_spinlock_irqsave() (joern + greg-kh)
- - Fix IBLOCK WCE=1 + DPOFUA=1 backend WRITE regression in >= v3.9 (nab + bootc)
-
-Note these four patches are CC'ed to stable.
-
-Also, there is still some work left to be done on the active I/O
-shutdown path in target_wait_for_sess_cmds() used by tcm_qla2xxx +
-ib_isert fabrics that is still being discussed on the list, and will
-hopefully be resolved soon.
-
-Thank you,
-
---nab
-
-Andy Grover (3):
-  target: Remove unused struct members in se_dev_entry
-  target: Use FD_MAX_SECTORS/FD_BLOCKSIZE for blockdevs using fileio
-  target: Have dev/enable show if TCM device is configured
-
-Geert Uytterhoeven (1):
-  iscsi-target: Make buf param of iscsit_do_crypto_hash_buf() const
-    void *
-
-Joern Engel (2):
-  target: removed unused transport_state flag
-  target: close target_put_sess_cmd() vs. core_tmr_abort_task() race
-
-Nicholas Bellinger (5):
-  iscsi-target: Fix NULL pointer dereference in iscsit_send_reject
-  target/rd: Add ramdisk bit for NULLIO operation
-  iscsi-target: Fix typos in RDMAEXTENSIONS macro usage
-  MAINTAINERS: Update target git tree URL
-  target/iblock: Fix WCE=1 + DPOFUA=1 backend WRITE regression
-
-Shlomo Pongratz (1):
-  iscsi-target: Fix processing of OOO commands
-
- MAINTAINERS                                    |    2 +-
- drivers/target/iscsi/iscsi_target.c            |   63 ++++++++++--------------
- drivers/target/iscsi/iscsi_target_erl1.c       |    7 ++-
- drivers/target/iscsi/iscsi_target_parameters.c |    8 ++--
- drivers/target/iscsi/iscsi_target_parameters.h |    4 +-
- drivers/target/target_core_configfs.c          |   11 +++-
- drivers/target/target_core_device.c            |   14 -----
- drivers/target/target_core_file.c              |    9 +---
- drivers/target/target_core_iblock.c            |    2 +
- drivers/target/target_core_internal.h          |    1 -
- drivers/target/target_core_rd.c                |   21 +++++++-
- drivers/target/target_core_rd.h                |    1 +
- drivers/target/target_core_transport.c         |   13 ++---
- include/linux/kref.h                           |   33 ++++++++++++
- include/target/target_core_base.h              |    5 --
- 15 files changed, 107 insertions(+), 87 deletions(-)
-
--- 
-1.7.2.5
