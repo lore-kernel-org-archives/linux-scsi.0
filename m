@@ -1,355 +1,402 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 1/6] Drivers: hv: vmbus: Implement multi-channel support
-Date: Wed, 15 May 2013 15:02:29 -0700
-Message-ID: <1368655354-27651-1-git-send-email-kys@microsoft.com>
+Subject: [PATCH 4/6] Drivers: scsi: storvsc: Update the storage protocol to win8 level
+Date: Wed, 15 May 2013 15:02:32 -0700
+Message-ID: <1368655354-27651-4-git-send-email-kys@microsoft.com>
 References: <1368655320-27599-1-git-send-email-kys@microsoft.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1368655320-27599-1-git-send-email-kys@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+ <1368655354-27651-1-git-send-email-kys@microsoft.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:56392
+	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751448Ab3EOV2n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 May 2013 17:28:43 -0400
+In-Reply-To: <1368655354-27651-1-git-send-email-kys@microsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, jasowang@redhat.com
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Starting with Win8, the host supports multiple sub-channels for a given
-device. As in the past, the initial channel offer specifies the device and
-is associated with both the type and the instance GUIDs. For performance
-critical devices, the host may support multiple sub-channels. The sub-channels
-share the same type and instance GUID as the primary channel. The number of
-sub-channels offerrred to the guest depends on the number of virtual CPUs
-assigned to the guest. The guest can request the creation of these sub-channels
-and once created and opened, the guest can distribute the traffic across all
-the channels (the primary and the sub-channels). A request sent on a sub-channel
-will have the response delivered on the same sub-channel.
-
-At channel (sub-channel) creation we bind the channel interrupt to a CPU and
-with this sub-channel support we will be able to spread the interrupt load
-of a given device across all available CPUs.
+Update the storage protocol to the win8 level.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
 ---
- drivers/hv/channel.c      |   41 ++++++++++++++--
- drivers/hv/channel_mgmt.c |  117 +++++++++++++++++++++++++++++++++++++++++++--
- include/linux/hyperv.h    |   62 +++++++++++++++++++++++-
- 3 files changed, 211 insertions(+), 9 deletions(-)
+ drivers/scsi/storvsc_drv.c |  203 ++++++++++++++++++++++++++++++++++++--------
+ 1 files changed, 168 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
-index 0b122f8..c219e9f 100644
---- a/drivers/hv/channel.c
-+++ b/drivers/hv/channel.c
-@@ -216,6 +216,9 @@ int vmbus_open(struct vmbus_channel *newchannel, u32 send_ringbuffer_size,
- 	list_del(&open_info->msglistentry);
- 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
- 
-+	if (err == 0)
-+		newchannel->state = CHANNEL_OPENED_STATE;
-+
- 	kfree(open_info);
- 	return err;
- 
-@@ -500,15 +503,14 @@ int vmbus_teardown_gpadl(struct vmbus_channel *channel, u32 gpadl_handle)
- }
- EXPORT_SYMBOL_GPL(vmbus_teardown_gpadl);
- 
--/*
-- * vmbus_close - Close the specified channel
-- */
--void vmbus_close(struct vmbus_channel *channel)
-+static void vmbus_close_internal(struct vmbus_channel *channel)
- {
- 	struct vmbus_channel_close_channel *msg;
- 	int ret;
- 	unsigned long flags;
- 
-+	channel->state = CHANNEL_OPEN_STATE;
-+	channel->sc_creation_callback = NULL;
- 	/* Stop callback and cancel the timer asap */
- 	spin_lock_irqsave(&channel->inbound_lock, flags);
- 	channel->onchannel_callback = NULL;
-@@ -538,6 +540,37 @@ void vmbus_close(struct vmbus_channel *channel)
- 
- 
- }
-+
-+/*
-+ * vmbus_close - Close the specified channel
-+ */
-+void vmbus_close(struct vmbus_channel *channel)
-+{
-+	struct list_head *cur, *tmp;
-+	struct vmbus_channel *cur_channel;
-+
-+	if (channel->primary_channel != NULL) {
-+		/*
-+		 * We will only close sub-channels when
-+		 * the primary is closed.
-+		 */
-+		return;
-+	}
-+	/*
-+	 * Close all the sub-channels first and then close the
-+	 * primary channel.
-+	 */
-+	list_for_each_safe(cur, tmp, &channel->sc_list) {
-+		cur_channel = list_entry(cur, struct vmbus_channel, sc_list);
-+		if (cur_channel->state != CHANNEL_OPENED_STATE)
-+			continue;
-+		vmbus_close_internal(cur_channel);
-+	}
-+	/*
-+	 * Now close the primary.
-+	 */
-+	vmbus_close_internal(channel);
-+}
- EXPORT_SYMBOL_GPL(vmbus_close);
- 
- /**
-diff --git a/drivers/hv/channel_mgmt.c b/drivers/hv/channel_mgmt.c
-index 21ef689..834dff3 100644
---- a/drivers/hv/channel_mgmt.c
-+++ b/drivers/hv/channel_mgmt.c
-@@ -115,6 +115,9 @@ static struct vmbus_channel *alloc_channel(void)
- 		return NULL;
- 
- 	spin_lock_init(&channel->inbound_lock);
-+	spin_lock_init(&channel->sc_lock);
-+
-+	INIT_LIST_HEAD(&channel->sc_list);
- 
- 	channel->controlwq = create_workqueue("hv_vmbus_ctl");
- 	if (!channel->controlwq) {
-@@ -166,6 +169,7 @@ static void vmbus_process_rescind_offer(struct work_struct *work)
- 						     struct vmbus_channel,
- 						     work);
- 	unsigned long flags;
-+	struct vmbus_channel *primary_channel;
- 	struct vmbus_channel_relid_released msg;
- 
- 	vmbus_device_unregister(channel->device_obj);
-@@ -174,9 +178,16 @@ static void vmbus_process_rescind_offer(struct work_struct *work)
- 	msg.header.msgtype = CHANNELMSG_RELID_RELEASED;
- 	vmbus_post_msg(&msg, sizeof(struct vmbus_channel_relid_released));
- 
--	spin_lock_irqsave(&vmbus_connection.channel_lock, flags);
--	list_del(&channel->listentry);
--	spin_unlock_irqrestore(&vmbus_connection.channel_lock, flags);
-+	if (channel->primary_channel == NULL) {
-+		spin_lock_irqsave(&vmbus_connection.channel_lock, flags);
-+		list_del(&channel->listentry);
-+		spin_unlock_irqrestore(&vmbus_connection.channel_lock, flags);
-+	} else {
-+		primary_channel = channel->primary_channel;
-+		spin_lock_irqsave(&primary_channel->sc_lock, flags);
-+		list_del(&channel->listentry);
-+		spin_unlock_irqrestore(&primary_channel->sc_lock, flags);
-+	}
- 	free_channel(channel);
- }
- 
-@@ -228,6 +239,21 @@ static void vmbus_process_offer(struct work_struct *work)
- 	spin_unlock_irqrestore(&vmbus_connection.channel_lock, flags);
- 
- 	if (!fnew) {
-+		/*
-+		 * Check to see if this is a sub-channel.
-+		 */
-+		if (newchannel->offermsg.offer.sub_channel_index != 0) {
-+			/*
-+			 * Process the sub-channel.
-+			 */
-+			newchannel->primary_channel = channel;
-+			spin_lock_irqsave(&channel->sc_lock, flags);
-+			list_add_tail(&newchannel->sc_list, &channel->sc_list);
-+			spin_unlock_irqrestore(&channel->sc_lock, flags);
-+			newchannel->state = CHANNEL_OPEN_STATE;
-+			return;
-+		}
-+
- 		free_channel(newchannel);
- 		return;
- 	}
-@@ -685,4 +711,87 @@ cleanup:
- 	return ret;
- }
- 
--/* eof */
-+/*
-+ * Retrieve the (sub) channel on which to send an outgoing request.
-+ * When a primary channel has multiple sub-channels, we choose a
-+ * channel whose VCPU binding is closest to the VCPU on which
-+ * this call is being made.
-+ */
-+struct vmbus_channel *get_outgoing_channel(struct vmbus_channel *primary)
-+{
-+	struct list_head *cur, *tmp;
-+	int cur_cpu = hv_context.vp_index[smp_processor_id()];
-+	struct vmbus_channel *cur_channel;
-+	struct vmbus_channel *outgoing_channel = primary;
-+	int cpu_distance, new_cpu_distance;
-+
-+	if (list_empty(&primary->sc_list))
-+		return outgoing_channel;
-+
-+	list_for_each_safe(cur, tmp, &primary->sc_list) {
-+		cur_channel = list_entry(cur, struct vmbus_channel, sc_list);
-+		if (cur_channel->state != CHANNEL_OPENED_STATE)
-+			continue;
-+
-+		if (cur_channel->target_vp == cur_cpu)
-+			return cur_channel;
-+
-+		cpu_distance = ((outgoing_channel->target_vp > cur_cpu) ?
-+				(outgoing_channel->target_vp - cur_cpu) :
-+				(cur_cpu - outgoing_channel->target_vp));
-+
-+		new_cpu_distance = ((cur_channel->target_vp > cur_cpu) ?
-+				(cur_channel->target_vp - cur_cpu) :
-+				(cur_cpu - cur_channel->target_vp));
-+
-+		if (cpu_distance < new_cpu_distance)
-+			continue;
-+
-+		outgoing_channel = cur_channel;
-+	}
-+
-+	return outgoing_channel;
-+}
-+EXPORT_SYMBOL_GPL(get_outgoing_channel);
-+
-+static void invoke_sc_cb(struct vmbus_channel *primary_channel)
-+{
-+	struct list_head *cur, *tmp;
-+	struct vmbus_channel *cur_channel;
-+
-+	if (primary_channel->sc_creation_callback == NULL)
-+		return;
-+
-+	list_for_each_safe(cur, tmp, &primary_channel->sc_list) {
-+		cur_channel = list_entry(cur, struct vmbus_channel, sc_list);
-+
-+		primary_channel->sc_creation_callback(cur_channel);
-+	}
-+}
-+
-+void set_sc_create_callback(struct vmbus_channel *primary_channel,
-+				void (*sc_cr_cb)(struct vmbus_channel *new_sc))
-+{
-+	primary_channel->sc_creation_callback = sc_cr_cb;
-+	invoke_sc_cb(primary_channel);
-+}
-+EXPORT_SYMBOL_GPL(set_sc_create_callback);
-+
-+bool subchannels_present(struct vmbus_channel *primary)
-+{
-+	bool ret;
-+
-+	ret = !list_empty(&primary->sc_list);
-+
-+	if (ret) {
-+		/*
-+		 * Invoke the callback on sub-channel creation.
-+		 * This will present a uniform interface to the
-+		 * clients.
-+		 */
-+		invoke_sc_cb(primary);
-+	}
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(subchannels_present);
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index c255984..a1a97a7 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -909,6 +909,7 @@ enum vmbus_channel_state {
- 	CHANNEL_OFFER_STATE,
- 	CHANNEL_OPENING_STATE,
- 	CHANNEL_OPEN_STATE,
-+	CHANNEL_OPENED_STATE,
- };
- 
- struct vmbus_channel_debug_info {
-@@ -1046,6 +1047,38 @@ struct vmbus_channel {
- 	 * preserve the earlier behavior.
- 	 */
- 	u32 target_vp;
-+	/*
-+	 * Support for sub-channels. For high performance devices,
-+	 * it will be useful to have multiple sub-channels to support
-+	 * a scalable communication infrastructure with the host.
-+	 * The support for sub-channels is implemented as an extention
-+	 * to the current infrastructure.
-+	 * The initial offer is considered the primary channel and this
-+	 * offer message will indicate if the host supports sub-channels.
-+	 * The guest is free to ask for sub-channels to be offerred and can
-+	 * open these sub-channels as a normal "primary" channel. However,
-+	 * all sub-channels will have the same type and instance guids as the
-+	 * primary channel. Requests sent on a given channel will result in a
-+	 * response on the same channel.
-+	 */
-+
-+	/*
-+	 * Sub-channel creation callback. This callback will be called in
-+	 * process context when a sub-channel offer is received from the host.
-+	 * The guest can open the sub-channel in the context of this callback.
-+	 */
-+	void (*sc_creation_callback)(struct vmbus_channel *new_sc);
-+
-+	spinlock_t sc_lock;
-+	/*
-+	 * All Sub-channels of a primary channel are linked here.
-+	 */
-+	struct list_head sc_list;
-+	/*
-+	 * The primary channel this sub-channel belongs to.
-+	 * This will be NULL for the primary channel.
-+	 */
-+	struct vmbus_channel *primary_channel;
- };
- 
- static inline void set_channel_read_state(struct vmbus_channel *c, bool state)
-@@ -1057,6 +1090,34 @@ void vmbus_onmessage(void *context);
- 
- int vmbus_request_offers(void);
- 
-+/*
-+ * APIs for managing sub-channels.
-+ */
-+
-+void set_sc_create_callback(struct vmbus_channel *primary_channel,
-+			void (*sc_cr_cb)(struct vmbus_channel *new_sc));
-+
-+/*
-+ * Retrieve the (sub) channel on which to send an outgoing request.
-+ * When a primary channel has multiple sub-channels, we choose a
-+ * channel whose VCPU binding is closest to the VCPU on which
-+ * this call is being made.
-+ */
-+struct vmbus_channel *get_outgoing_channel(struct vmbus_channel *primary);
-+
-+/*
-+ * Check if sub-channels have already been offerred. This API will be useful
-+ * when the driver is unloaded after establishing sub-channels. In this case,
-+ * when the driver is re-loaded, the driver would have to check if the
-+ * subchannels have already been established before attempting to request
-+ * the creation of sub-channels.
-+ * This function returns TRUE to indicate that subchannels have already been
-+ * created.
-+ * This function should be invoked after setting the callback function for
-+ * sub-channel creation.
-+ */
-+bool subchannels_present(struct vmbus_channel *primary);
-+
- /* The format must be the same as struct vmdata_gpa_direct */
- struct vmbus_channel_packet_page_buffer {
- 	u16 type;
-@@ -1327,7 +1388,6 @@ void vmbus_driver_unregister(struct hv_driver *hv_driver);
- 			0x8e, 0x77, 0x05, 0x58, 0xeb, 0x10, 0x73, 0xf8 \
- 		}
- 
--
- /*
-  * Common header for Hyper-V ICs
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 8d29a95..a3cf85c 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -55,10 +55,15 @@
+  * V1 RC < 2008/1/31: 1.0
+  * V1 RC > 2008/1/31:  2.0
+  * Win7: 4.2
++ * Win8: 5.1
   */
+ 
+-#define VMSTOR_CURRENT_MAJOR  4
+-#define VMSTOR_CURRENT_MINOR  2
++
++#define VMSTOR_WIN7_MAJOR 4
++#define VMSTOR_WIN7_MINOR 2
++
++#define VMSTOR_WIN8_MAJOR 5
++#define VMSTOR_WIN8_MINOR 1
+ 
+ 
+ /*  Packet structure describing virtual storage requests. */
+@@ -74,18 +79,103 @@ enum vstor_packet_operation {
+ 	VSTOR_OPERATION_QUERY_PROTOCOL_VERSION	= 9,
+ 	VSTOR_OPERATION_QUERY_PROPERTIES	= 10,
+ 	VSTOR_OPERATION_ENUMERATE_BUS		= 11,
+-	VSTOR_OPERATION_MAXIMUM			= 11
++	VSTOR_OPERATION_FCHBA_DATA              = 12,
++	VSTOR_OPERATION_CREATE_SUB_CHANNELS     = 13,
++	VSTOR_OPERATION_MAXIMUM                 = 13
++};
++
++/*
++ * WWN packet for Fiber Channel HBA
++ */
++
++struct hv_fc_wwn_packet {
++	bool	primary_active;
++	u8	reserved1;
++	u8	reserved2;
++	u8	primary_port_wwn[8];
++	u8	primary_node_wwn[8];
++	u8	secondary_port_wwn[8];
++	u8	secondary_node_wwn[8];
+ };
+ 
++
++
++/*
++ * SRB Flag Bits
++ */
++
++#define SRB_FLAGS_QUEUE_ACTION_ENABLE		0x00000002
++#define SRB_FLAGS_DISABLE_DISCONNECT		0x00000004
++#define SRB_FLAGS_DISABLE_SYNCH_TRANSFER	0x00000008
++#define SRB_FLAGS_BYPASS_FROZEN_QUEUE		0x00000010
++#define SRB_FLAGS_DISABLE_AUTOSENSE		0x00000020
++#define SRB_FLAGS_DATA_IN			0x00000040
++#define SRB_FLAGS_DATA_OUT			0x00000080
++#define SRB_FLAGS_NO_DATA_TRANSFER		0x00000000
++#define SRB_FLAGS_UNSPECIFIED_DIRECTION	(SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT)
++#define SRB_FLAGS_NO_QUEUE_FREEZE		0x00000100
++#define SRB_FLAGS_ADAPTER_CACHE_ENABLE		0x00000200
++#define SRB_FLAGS_FREE_SENSE_BUFFER		0x00000400
++
++/*
++ * This flag indicates the request is part of the workflow for processing a D3.
++ */
++#define SRB_FLAGS_D3_PROCESSING			0x00000800
++#define SRB_FLAGS_IS_ACTIVE			0x00010000
++#define SRB_FLAGS_ALLOCATED_FROM_ZONE		0x00020000
++#define SRB_FLAGS_SGLIST_FROM_POOL		0x00040000
++#define SRB_FLAGS_BYPASS_LOCKED_QUEUE		0x00080000
++#define SRB_FLAGS_NO_KEEP_AWAKE			0x00100000
++#define SRB_FLAGS_PORT_DRIVER_ALLOCSENSE	0x00200000
++#define SRB_FLAGS_PORT_DRIVER_SENSEHASPORT	0x00400000
++#define SRB_FLAGS_DONT_START_NEXT_PACKET	0x00800000
++#define SRB_FLAGS_PORT_DRIVER_RESERVED		0x0F000000
++#define SRB_FLAGS_CLASS_DRIVER_RESERVED		0xF0000000
++
++
+ /*
+  * Platform neutral description of a scsi request -
+  * this remains the same across the write regardless of 32/64 bit
+  * note: it's patterned off the SCSI_PASS_THROUGH structure
+  */
+ #define STORVSC_MAX_CMD_LEN			0x10
+-#define STORVSC_SENSE_BUFFER_SIZE		0x12
++
++#define POST_WIN7_STORVSC_SENSE_BUFFER_SIZE	0x14
++#define PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE	0x12
++
++#define STORVSC_SENSE_BUFFER_SIZE		0x14
+ #define STORVSC_MAX_BUF_LEN_WITH_PADDING	0x14
+ 
++/*
++ * Sense buffer size changed in win8; have a run-time
++ * variable to track the size we should use.
++ */
++static int sense_buffer_size;
++
++/*
++ * The size of the vmscsi_request has changed in win8. The
++ * additional size is because of new elements added to the
++ * structure. These elements are valid only when we are talking
++ * to a win8 host.
++ * Track the correction to size we need to apply.
++ */
++
++static int vmscsi_size_delta;
++static int vmstor_current_major;
++static int vmstor_current_minor;
++
++struct vmscsi_win8_extension {
++	/*
++	 * The following were added in Windows 8
++	 */
++	u16 reserve;
++	u8  queue_tag;
++	u8  queue_action;
++	u32 srb_flags;
++	u32 time_out_value;
++	u32 queue_sort_ey;
++} __packed;
++
+ struct vmscsi_request {
+ 	u16 length;
+ 	u8 srb_status;
+@@ -108,6 +198,11 @@ struct vmscsi_request {
+ 		u8 sense_data[STORVSC_SENSE_BUFFER_SIZE];
+ 		u8 reserved_array[STORVSC_MAX_BUF_LEN_WITH_PADDING];
+ 	};
++	/*
++	 * The following was added in win8.
++	 */
++	struct vmscsi_win8_extension win8_extension;
++
+ } __attribute((packed));
+ 
+ 
+@@ -115,22 +210,18 @@ struct vmscsi_request {
+  * This structure is sent during the intialization phase to get the different
+  * properties of the channel.
+  */
++
++#define STORAGE_CHANNEL_SUPPORTS_MULTI_CHANNEL		0x1
++
+ struct vmstorage_channel_properties {
+-	u16 protocol_version;
+-	u8  path_id;
+-	u8 target_id;
++	u32 reserved;
++	u16 max_channel_cnt;
++	u16 reserved1;
+ 
+-	/* Note: port number is only really known on the client side */
+-	u32  port_number;
+-	u32  flags;
++	u32 flags;
+ 	u32   max_transfer_bytes;
+ 
+-	/*
+-	 * This id is unique for each channel and will correspond with
+-	 * vendor specific data in the inquiry data.
+-	 */
+-
+-	u64  unique_id;
++	u64  reserved2;
+ } __packed;
+ 
+ /*  This structure is sent during the storage protocol negotiations. */
+@@ -175,6 +266,15 @@ struct vstor_packet {
+ 
+ 		/* Used during version negotiations. */
+ 		struct vmstorage_protocol_version version;
++
++		/* Fiber channel address packet */
++		struct hv_fc_wwn_packet wwn_packet;
++
++		/* Number of sub-channels to create */
++		u16 sub_channel_count;
++
++		/* This will be the maximum of the union members */
++		u8  buffer[0x34];
+ 	};
+ } __packed;
+ 
+@@ -681,7 +781,8 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+-			       sizeof(struct vstor_packet),
++			       (sizeof(struct vstor_packet) -
++			       vmscsi_size_delta),
+ 			       (unsigned long)request,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+@@ -705,7 +806,7 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 
+ 	vstor_packet->version.major_minor =
+-		storvsc_get_version(VMSTOR_CURRENT_MAJOR, VMSTOR_CURRENT_MINOR);
++		storvsc_get_version(vmstor_current_major, vmstor_current_minor);
+ 
+ 	/*
+ 	 * The revision number is only used in Windows; set it to 0.
+@@ -713,7 +814,8 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	vstor_packet->version.revision = 0;
+ 
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+-			       sizeof(struct vstor_packet),
++			       (sizeof(struct vstor_packet) -
++				vmscsi_size_delta),
+ 			       (unsigned long)request,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+@@ -734,11 +836,10 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
+ 	vstor_packet->operation = VSTOR_OPERATION_QUERY_PROPERTIES;
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+-	vstor_packet->storage_channel_properties.port_number =
+-					stor_device->port_number;
+ 
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+-			       sizeof(struct vstor_packet),
++			       (sizeof(struct vstor_packet) -
++				vmscsi_size_delta),
+ 			       (unsigned long)request,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+@@ -756,16 +857,13 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	    vstor_packet->status != 0)
+ 		goto cleanup;
+ 
+-	stor_device->path_id = vstor_packet->storage_channel_properties.path_id;
+-	stor_device->target_id
+-		= vstor_packet->storage_channel_properties.target_id;
+-
+ 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
+ 	vstor_packet->operation = VSTOR_OPERATION_END_INITIALIZATION;
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+-			       sizeof(struct vstor_packet),
++			       (sizeof(struct vstor_packet) -
++				vmscsi_size_delta),
+ 			       (unsigned long)request,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+@@ -1019,7 +1117,8 @@ static void storvsc_on_channel_callback(void *context)
+ 
+ 	do {
+ 		ret = vmbus_recvpacket(device->channel, packet,
+-				       ALIGN(sizeof(struct vstor_packet), 8),
++				       ALIGN((sizeof(struct vstor_packet) -
++					     vmscsi_size_delta), 8),
+ 				       &bytes_recvd, &request_id);
+ 		if (ret == 0 && bytes_recvd > 0) {
+ 
+@@ -1030,7 +1129,8 @@ static void storvsc_on_channel_callback(void *context)
+ 			    (request == &stor_device->reset_request)) {
+ 
+ 				memcpy(&request->vstor_packet, packet,
+-				       sizeof(struct vstor_packet));
++				       (sizeof(struct vstor_packet) -
++					vmscsi_size_delta));
+ 				complete(&request->wait_event);
+ 			} else {
+ 				storvsc_on_receive(device,
+@@ -1123,10 +1223,11 @@ static int storvsc_do_io(struct hv_device *device,
+ 
+ 	vstor_packet->flags |= REQUEST_COMPLETION_FLAG;
+ 
+-	vstor_packet->vm_srb.length = sizeof(struct vmscsi_request);
++	vstor_packet->vm_srb.length = (sizeof(struct vmscsi_request) -
++					vmscsi_size_delta);
+ 
+ 
+-	vstor_packet->vm_srb.sense_info_length = STORVSC_SENSE_BUFFER_SIZE;
++	vstor_packet->vm_srb.sense_info_length = sense_buffer_size;
+ 
+ 
+ 	vstor_packet->vm_srb.data_transfer_length =
+@@ -1138,11 +1239,13 @@ static int storvsc_do_io(struct hv_device *device,
+ 		ret = vmbus_sendpacket_multipagebuffer(device->channel,
+ 				&request->data_buffer,
+ 				vstor_packet,
+-				sizeof(struct vstor_packet),
++				(sizeof(struct vstor_packet) -
++				vmscsi_size_delta),
+ 				(unsigned long)request);
+ 	} else {
+ 		ret = vmbus_sendpacket(device->channel, vstor_packet,
+-			       sizeof(struct vstor_packet),
++			       (sizeof(struct vstor_packet) -
++				vmscsi_size_delta),
+ 			       (unsigned long)request,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+@@ -1266,7 +1369,8 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
+ 	vstor_packet->vm_srb.path_id = stor_device->path_id;
+ 
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+-			       sizeof(struct vstor_packet),
++			       (sizeof(struct vstor_packet) -
++				vmscsi_size_delta),
+ 			       (unsigned long)&stor_device->reset_request,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+@@ -1351,18 +1455,28 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	scmnd->host_scribble = (unsigned char *)cmd_request;
+ 
+ 	vm_srb = &cmd_request->vstor_packet.vm_srb;
++	vm_srb->win8_extension.time_out_value = 60;
+ 
+ 
+ 	/* Build the SRB */
+ 	switch (scmnd->sc_data_direction) {
+ 	case DMA_TO_DEVICE:
+ 		vm_srb->data_in = WRITE_TYPE;
++		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_OUT;
++		vm_srb->win8_extension.srb_flags |=
++			(SRB_FLAGS_QUEUE_ACTION_ENABLE |
++			SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
+ 		break;
+ 	case DMA_FROM_DEVICE:
+ 		vm_srb->data_in = READ_TYPE;
++		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_IN;
++		vm_srb->win8_extension.srb_flags |=
++			(SRB_FLAGS_QUEUE_ACTION_ENABLE |
++			SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
+ 		break;
+ 	default:
+ 		vm_srb->data_in = UNKNOWN_TYPE;
++		vm_srb->win8_extension.srb_flags = 0;
+ 		break;
+ 	}
+ 
+@@ -1494,6 +1608,24 @@ static int storvsc_probe(struct hv_device *device,
+ 	int target = 0;
+ 	struct storvsc_device *stor_device;
+ 
++	/*
++	 * Based on the windows host we are running on,
++	 * set state to properly communicate with the host.
++	 */
++
++	if (vmbus_proto_version == VERSION_WIN8) {
++		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
++		vmscsi_size_delta = 0;
++		vmstor_current_major = VMSTOR_WIN8_MAJOR;
++		vmstor_current_minor = VMSTOR_WIN8_MINOR;
++	} else {
++		sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
++		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
++		vmstor_current_major = VMSTOR_WIN7_MAJOR;
++		vmstor_current_minor = VMSTOR_WIN7_MINOR;
++	}
++
++
+ 	host = scsi_host_alloc(&scsi_driver,
+ 			       sizeof(struct hv_host_device));
+ 	if (!host)
+@@ -1603,7 +1735,8 @@ static int __init storvsc_drv_init(void)
+ 	max_outstanding_req_per_channel =
+ 		((storvsc_ringbuffer_size - PAGE_SIZE) /
+ 		ALIGN(MAX_MULTIPAGE_BUFFER_PACKET +
+-		sizeof(struct vstor_packet) + sizeof(u64),
++		sizeof(struct vstor_packet) + sizeof(u64) -
++		vmscsi_size_delta,
+ 		sizeof(u64)));
+ 
+ 	if (max_outstanding_req_per_channel <
 -- 
 1.7.4.1
+
