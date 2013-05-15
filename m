@@ -1,79 +1,73 @@
-From: Liu Jiang <liuj97@gmail.com>
-Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
- instead
-Date: Wed, 15 May 2013 22:46:09 +0800
-Message-ID: <51939FB1.20203@gmail.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-4-git-send-email-jiang.liu@huawei.com> <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com> <5191F53E.4000305@cn.fujitsu.com> <51925136.5050302@gmail.com> <CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com> <51926CF6.1050706@gmail.com> <CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com> <51939E16.9090105@gmail.com> <CAE9FiQUXrOmN0rkvOwE1G_acEGY3-gouzaXjBMT7EE6uAqvuZA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE9FiQUXrOmN0rkvOwE1G_acEGY3-gouzaXjBMT7EE6uAqvuZA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J . Wysocki" <rjw@sisk.pl>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Toshi Kani <toshi.kani@hp.com>, Myron Stowe <myron.stowe@redhat.com>, Yijing Wang <wangyijing@huawei.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>, Jiang Liu <jiang.liu@huawei.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ibmvfc: Fix for offlining devices during error recovery
+Date: Wed, 15 May 2013 10:24:47 -0500
+Message-ID: <201305151524.r4FFOlW0012047@d01av01.pok.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e39.co.us.ibm.com ([32.97.110.160]:35504 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758029Ab3EOPYw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 May 2013 11:24:52 -0400
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 15 May 2013 09:24:51 -0600
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 1F06A6E8040
+	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2013 11:24:46 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r4FFOmqY332308
+	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2013 11:24:49 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r4FFOm7H012073
+	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2013 11:24:48 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-On Wed 15 May 2013 10:43:02 PM CST, Yinghai Lu wrote:
-> On Wed, May 15, 2013 at 7:39 AM, Liu Jiang <liuj97@gmail.com> wrote:
->> On Wed 15 May 2013 02:52:51 AM CST, Yinghai Lu wrote:
->>>
->>> On Tue, May 14, 2013 at 9:57 AM, Liu Jiang <liuj97@gmail.com> wrote:
->>>>
->>>> On Tue 14 May 2013 11:10:33 PM CST, Yinghai Lu wrote:
->>>>>
->>>>>
->>>>> On Tue, May 14, 2013 at 7:59 AM, Liu Jiang <liuj97@gmail.com> wrote:
->>>>>>
->>>>>>
->>>>>> On 05/14/2013 04:26 PM, Gu Zheng wrote:
->>>>>>        I suggest to use pci_release_dev() instead because it also needs
->>>>>> to
->>>>>> release OF related resources.
->>>>>> I will update it in next version.
->>>>>>
->>>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>>>> index bc075a3..2ac6338 100644
->>>>>> --- a/drivers/pci/probe.c
->>>>>> +++ b/drivers/pci/probe.c
->>>>>> @@ -1281,7 +1281,7 @@ static struct pci_dev *pci_scan_device(struct
->>>>>> pci_bus
->>>>>> *bus
->>>>>>            pci_set_of_node(dev);
->>>>>>
->>>>>>            if (pci_setup_device(dev)) {
->>>>>> -               kfree(dev);
->>>>>> +               pci_release_dev(&dev->dev);
->>>>>>                    return NULL;
->>>>>
->>>>>
->>>>>
->>>>> no, should move pci_set_of_node calling into pci_setup_device.
->>>>>
->>>>> Yinghai
->>>>
->>>>
->>>>
->>>> I'm not sure whether we should call pci_set_of_node() for SR-IOV devices
->>>> too,
->>>> any suggestions here?
->>>
->>>
->>> or just move down pci_set_of_node after pci_setup_device?
->>>
->>> anyway that is another bug.
->
->> I'm not familiar with the OF logic and can't make sure whether
->> pci_setup_device()
->> has dependency on dev->of_node. Feel it's more safe to call
->> pci_release_of_node()
->> on failing path instead of tuning call-site of pci_set_of_node().
->
-> that is another bug, let of guy handle it.
->
-> Yinghai
-Hi Yinghai,
-       I don't know any OF exports, could you please help to CC
-some OF experts?
-Thanks,
-Gerry
+
+This fixes an issue seen with devices getting marked offline
+in a scenario where a VIOS was getting rebooted while a
+client VFC adapter is in SCSI EH and prevents unnecessary
+EH escalation in some scenarios.
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/ibmvscsi/ibmvfc.c |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_abort_during_reset drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_abort_during_reset	2013-05-15 10:02:13.000000000 -0500
++++ linux-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2013-05-15 10:02:13.000000000 -0500
+@@ -2208,7 +2208,10 @@ static int ibmvfc_cancel_all(struct scsi
+ 
+ 	if (rsp_rc != 0) {
+ 		sdev_printk(KERN_ERR, sdev, "Failed to send cancel event. rc=%d\n", rsp_rc);
+-		return -EIO;
++		/* If failure is received, the host adapter is most likely going
++		 through reset, return success so the caller will wait for the command
++		 being cancelled to get returned */
++		return 0;
+ 	}
+ 
+ 	sdev_printk(KERN_INFO, sdev, "Cancelling outstanding commands.\n");
+@@ -2221,7 +2224,15 @@ static int ibmvfc_cancel_all(struct scsi
+ 
+ 	if (status != IBMVFC_MAD_SUCCESS) {
+ 		sdev_printk(KERN_WARNING, sdev, "Cancel failed with rc=%x\n", status);
+-		return -EIO;
++		switch (status) {
++		case IBMVFC_MAD_DRIVER_FAILED:
++		case IBMVFC_MAD_CRQ_ERROR:
++			/* Host adapter most likely going through reset, return success to
++			 the caller will wait for the command being cancelled to get returned */
++			return 0;
++		default:
++			return -EIO;
++		};
+ 	}
+ 
+ 	sdev_printk(KERN_INFO, sdev, "Successfully cancelled outstanding commands\n");
+_
+
