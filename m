@@ -1,38 +1,53 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH V1 7/7] Drivers: scsi: storvsc: Increase the value of
- STORVSC_MAX_IO_REQUESTS
-Date: Thu, 16 May 2013 17:08:16 +0300
-Message-ID: <20130516140816.GY30128@mwanda>
-References: <1368706784-32276-1-git-send-email-kys@microsoft.com>
- <1368706879-32321-1-git-send-email-kys@microsoft.com>
- <1368706879-32321-7-git-send-email-kys@microsoft.com>
- <20130516120200.GN1360@mwanda>
- <797ed8d967414124a00ee151077c70fa@SN2PR03MB061.namprd03.prod.outlook.com>
- <20130516135528.GX30128@mwanda>
- <fe60584bb8f2485abebffab2d0e8722d@SN2PR03MB061.namprd03.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17627 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115Ab3EPOJF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 May 2013 10:09:05 -0400
-Content-Disposition: inline
-In-Reply-To: <fe60584bb8f2485abebffab2d0e8722d@SN2PR03MB061.namprd03.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Subject: [PATCH 0/2] scsi: Port buslogic driver to 64 bits
+Date: Thu, 16 May 2013 12:27:57 -0600
+Message-ID: <cover.1368725030.git.khalid.aziz@oracle.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: Khalid Aziz <khalid.aziz@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "jasowang@redhat.com" <jasowang@redhat.com>
 
-On Thu, May 16, 2013 at 02:01:12PM +0000, KY Srinivasan wrote:
-> > Would the right fix be to add some sanity checks in module_init()?
-> 
-> The check is already there (as I noted above). Look at the function:
-> storvsc_drv_init(). If the ring size is picked incorrectly, the load is failed.
-> 
 
-Ah.  I see that now.  My mistake.
+This patchset ports buslogic driver to 64-bit.
 
-regards,
-dan carpenter
+Current buslogic driver is composed of two components - SCCB manager
+which communicates with adapter to execute SCSI commands (contained in
+FlashPoint.c), and Linux driver part that interfaces with rest of the
+kernel (contained in BusLogic.c). SCCB manager code came from the
+Mylex SDK. SCCB manager code is used by flashpoint adapters only.
+Multimaster adapters do not need SCCB manager since the SCSI state
+machine is implemented in firmware on these adapters. If the filenames
+alone did not give it away already, buslogic driver code is full of
+CamelCase, besides being full of very ling lines, and is just very
+difficult to read and understand. So the first step was to clean up
+the existing code. First patch in the set does just that. Second patch
+includes necessary code modifications to allow the driver to build and
+run on 64-bit kernel. Since SCCB manager code came from Mylex SDK, I
+have tried to touch it only when necessary which includes not fixing
+all CamelCase issues in FlashPoint.c. Many lines over 80 characters
+remain in BusLogic.c. These fall into two categories generally -
+(1) it prints a message and I didn't want to touch driver messages
+in case there are scripts out there that parse driver messages,
+(2) code is indented deeply and is hard to keep it under 80 characters.
+Such code could use refactoring at some point.
 
+I have tested this patch with a flashpoint adapter on 64-bit and 
+32-bit kernels with fio running random read/write test while verifying
+data. I also measured performance for current buslogic driver and 
+buslogic driver with these patches with 32-bit and 64-bit kernel and
+ensured there was no degradation in performance.
+
+
+Khalid Aziz (2):
+  Fix CamelCase and extra long lines in the BusLogic driver
+  Port buslogic driver to 64-bit.
+
+ drivers/scsi/BusLogic.c   | 4490 ++++++++++++++++++++++++---------------------
+ drivers/scsi/BusLogic.h   | 1489 ++++++++-------
+ drivers/scsi/FlashPoint.c |  625 +++----
+ drivers/scsi/Kconfig      |    2 +-
+ 4 files changed, 3395 insertions(+), 3211 deletions(-)
+
+-- 
+1.7.10.4
