@@ -1,14 +1,15 @@
 From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 0/6] Drivers: hv/scsi: Implement multi-channel support
-Date: Thu, 16 May 2013 10:15:57 +0000
-Message-ID: <31aae5e3bf764ae7a4458d18452aab9c@SN2PR03MB061.namprd03.prod.outlook.com>
+Subject: RE: [PATCH 1/6] Drivers: hv: vmbus: Implement multi-channel support
+Date: Thu, 16 May 2013 10:18:49 +0000
+Message-ID: <8313b08b52704644b5c72f70ea4d0403@SN2PR03MB061.namprd03.prod.outlook.com>
 References: <1368655320-27599-1-git-send-email-kys@microsoft.com>
- <20130516040009.GA16728@kroah.com>
+ <1368655354-27651-1-git-send-email-kys@microsoft.com>
+ <20130516040130.GB16728@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130516040009.GA16728@kroah.com>
+In-Reply-To: <20130516040130.GB16728@kroah.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Greg KH <gregkh@linuxfoundation.org>
@@ -19,28 +20,29 @@ List-Id: linux-scsi@vger.kernel.org
 
 > -----Original Message-----
 > From: Greg KH [mailto:gregkh@linuxfoundation.org]
-> Sent: Thursday, May 16, 2013 12:00 AM
+> Sent: Thursday, May 16, 2013 12:02 AM
 > To: KY Srinivasan
 > Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
 > ohering@suse.com; jbottomley@parallels.com; hch@infradead.org; linux-
 > scsi@vger.kernel.org; apw@canonical.com; jasowang@redhat.com
-> Subject: Re: [PATCH 0/6] Drivers: hv/scsi: Implement multi-channel support
+> Subject: Re: [PATCH 1/6] Drivers: hv: vmbus: Implement multi-channel support
 > 
-> On Wed, May 15, 2013 at 03:02:00PM -0700, K. Y. Srinivasan wrote:
-> > This patch-set implements multi-channel support for Hyper-V devices. Also
-> > support for synthetic Fiber Channel device is included. The first two
-> > patches in the series are the foundational pieces for the remaining patches.
-> >
-> > James, once Greg accepts the first two patches, you can consider the scsi
-> > patches.
+> On Wed, May 15, 2013 at 03:02:29PM -0700, K. Y. Srinivasan wrote:
+> > +/*
+> > + * Retrieve the (sub) channel on which to send an outgoing request.
+> > + * When a primary channel has multiple sub-channels, we choose a
+> > + * channel whose VCPU binding is closest to the VCPU on which
+> > + * this call is being made.
+> > + */
+> > +struct vmbus_channel *get_outgoing_channel(struct vmbus_channel
+> *primary)
 > 
-> I have no objection for these first two patches to go through James's
-> tree, I'll go add my ack to them.  That should make it easier for
-> everyone involved.
+> That's a _very_ vague global symbol name you are adding to the kernel.
+> Same goes for the other functions you are adding here, please fix that,
+> and make them have the vmbus_ prefix, like everything else in this
+> patch.
 
-Thanks Greg.
 
-Regards,
+Will do.
 
 K. Y
- 
