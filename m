@@ -1,36 +1,30 @@
-From: Or Gerlitz <or.gerlitz@gmail.com>
-Subject: Re: [GIT PULL] target fixes for v3.10-rc2
-Date: Wed, 15 May 2013 23:40:17 -0400
-Message-ID: <CAJZOPZK7_VPzcJnc1s9oZVshvGMbm-LDVO-ZoKu63tD1bqcvDg@mail.gmail.com>
-References: <1368654607.6899.16.camel@haakon3.risingtidesystems.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 0/6] Drivers: hv/scsi: Implement multi-channel support
+Date: Thu, 16 May 2013 00:00:09 -0400
+Message-ID: <20130516040009.GA16728@kroah.com>
+References: <1368655320-27599-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1368654607.6899.16.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, shlomop@mellanox.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1368655320-27599-1-git-send-email-kys@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, jasowang@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, May 15, 2013 at 5:50 PM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> A handful of fixes + minor changes this time around, along with one
-> important >= v3.9 regression fix for IBLOCK backends.  The highlights include:
+On Wed, May 15, 2013 at 03:02:00PM -0700, K. Y. Srinivasan wrote:
+> This patch-set implements multi-channel support for Hyper-V devices. Also
+> support for synthetic Fiber Channel device is included. The first two
+> patches in the series are the foundational pieces for the remaining patches.
+> 
+> James, once Greg accepts the first two patches, you can consider the scsi
+> patches.
 
-Hi Nic,
+I have no objection for these first two patches to go through James's
+tree, I'll go add my ack to them.  That should make it easier for
+everyone involved.
 
-Are you pushing also a patch which would allow to actually test NULL
-based RAM target (e.g target backend that does no actual IO)
+thanks,
 
-Or.
-
-
-> Nicholas Bellinger (5):
->   iscsi-target: Fix NULL pointer dereference in iscsit_send_reject
->   target/rd: Add ramdisk bit for NULLIO operation
->   iscsi-target: Fix typos in RDMAEXTENSIONS macro usage
->   MAINTAINERS: Update target git tree URL
->   target/iblock: Fix WCE=1 + DPOFUA=1 backend WRITE regression
->
-> Shlomo Pongratz (1):
->   iscsi-target: Fix processing of OOO commands
+greg k-h
