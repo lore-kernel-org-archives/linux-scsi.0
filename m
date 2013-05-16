@@ -1,75 +1,46 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target fixes for v3.10-rc2
-Date: Wed, 15 May 2013 21:53:49 -0700
-Message-ID: <1368680029.15002.32.camel@haakon3.risingtidesystems.com>
-References: <1368654607.6899.16.camel@haakon3.risingtidesystems.com>
-	 <CAJZOPZK7_VPzcJnc1s9oZVshvGMbm-LDVO-ZoKu63tD1bqcvDg@mail.gmail.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 0/6] Drivers: hv/scsi: Implement multi-channel support
+Date: Thu, 16 May 2013 10:15:57 +0000
+Message-ID: <31aae5e3bf764ae7a4458d18452aab9c@SN2PR03MB061.namprd03.prod.outlook.com>
+References: <1368655320-27599-1-git-send-email-kys@microsoft.com>
+ <20130516040009.GA16728@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:49033 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767Ab3EPEut (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 May 2013 00:50:49 -0400
-In-Reply-To: <CAJZOPZK7_VPzcJnc1s9oZVshvGMbm-LDVO-ZoKu63tD1bqcvDg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130516040009.GA16728@kroah.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "jasowang@redhat.com" <jasowang@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Or Gerlitz <or.gerlitz@gmail.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, shlomop@mellanox.com
 
-On Wed, 2013-05-15 at 23:40 -0400, Or Gerlitz wrote:
-> On Wed, May 15, 2013 at 5:50 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > A handful of fixes + minor changes this time around, along with one
-> > important >= v3.9 regression fix for IBLOCK backends.  The highlights include:
+
+
+> -----Original Message-----
+> From: Greg KH [mailto:gregkh@linuxfoundation.org]
+> Sent: Thursday, May 16, 2013 12:00 AM
+> To: KY Srinivasan
+> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> ohering@suse.com; jbottomley@parallels.com; hch@infradead.org; linux-
+> scsi@vger.kernel.org; apw@canonical.com; jasowang@redhat.com
+> Subject: Re: [PATCH 0/6] Drivers: hv/scsi: Implement multi-channel support
 > 
-> Hi Nic,
-> 
-> Are you pushing also a patch which would allow to actually test NULL
-> based RAM target (e.g target backend that does no actual IO)
-> 
-
-Yes, that's the patch included in the PULL request here:
-
-http://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit/?h=queue&id=52c07423a819091b0fe9abbf26977098b996f85b
-
-Btw, It still needs to be enabled in userspace, but appending a
-rd_nullio=1 to the /control parameters with the following lio-utils
-patch should work for your testing purposes atm..
-
---nab
-
-diff --git a/tcm-py/tcm_ramdisk.py b/tcm-py/tcm_ramdisk.py
-index 2f66aeb..3340705 100755
---- a/tcm-py/tcm_ramdisk.py
-+++ b/tcm-py/tcm_ramdisk.py
-@@ -14,7 +14,7 @@ def createvirtdev(path, params):
- #      print "Calling ramdisk createvirtdev: params " + str(params)
-        rd_pages = params[0]
- 
--       rd_params = "rd_pages=" + rd_pages
-+       rd_params = "rd_pages=" + rd_pages + ",rd_nullio=1"
- #      print "rd_params: " + rd_params
- 
-        control_opt = "echo -n " + rd_params.rstrip() + " > " + cfs_path + "/control"
-
-
-> Or.
-> 
-> 
-> > Nicholas Bellinger (5):
-> >   iscsi-target: Fix NULL pointer dereference in iscsit_send_reject
-> >   target/rd: Add ramdisk bit for NULLIO operation
-> >   iscsi-target: Fix typos in RDMAEXTENSIONS macro usage
-> >   MAINTAINERS: Update target git tree URL
-> >   target/iblock: Fix WCE=1 + DPOFUA=1 backend WRITE regression
+> On Wed, May 15, 2013 at 03:02:00PM -0700, K. Y. Srinivasan wrote:
+> > This patch-set implements multi-channel support for Hyper-V devices. Also
+> > support for synthetic Fiber Channel device is included. The first two
+> > patches in the series are the foundational pieces for the remaining patches.
 > >
-> > Shlomo Pongratz (1):
-> >   iscsi-target: Fix processing of OOO commands
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > James, once Greg accepts the first two patches, you can consider the scsi
+> > patches.
+> 
+> I have no objection for these first two patches to go through James's
+> tree, I'll go add my ack to them.  That should make it easier for
+> everyone involved.
 
+Thanks Greg.
 
+Regards,
+
+K. Y
+ 
