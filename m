@@ -1,32 +1,34 @@
-From: Khalid Aziz <khalid.aziz@oracle.com>
-Subject: Re: [PATCH 3/3] BusLogic: Use more conventional argument order for
- logging
-Date: Fri, 17 May 2013 14:19:42 -0600
-Message-ID: <1368821982.24376.3.camel@concerto>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 0/3] BusLogic: Message logging neatening
+Date: Fri, 17 May 2013 13:35:23 -0700
+Message-ID: <1368822923.2194.95.camel@joe-AO722>
 References: <cover.1368754556.git.khalid.aziz@oracle.com>
-	 <5fdcd2200869713c58b52d550281da9aa9195efb.1368765873.git.joe@perches.com>
+	 <cover.1368765873.git.joe@perches.com> <1368821880.24376.0.camel@concerto>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5fdcd2200869713c58b52d550281da9aa9195efb.1368765873.git.joe@perches.com>
+In-Reply-To: <1368821880.24376.0.camel@concerto>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2013-05-16 at 21:58 -0700, Joe Perches wrote:
-> Subsystem specific logging messages generally use
-> 	subsystem_<level>(struct subsystem *, fmt, ...)
-> not
-> 	subsystem_<level>(fmt, struct subsystem *, ...)
+On Fri, 2013-05-17 at 14:18 -0600, Khalid Aziz wrote:
+> On Thu, 2013-05-16 at 21:58 -0700, Joe Perches wrote:
+> > If you're going through the trouble to fix this CamelCase stuff
+> > and make it work on 64 bit, how about a little more cleanup?
 > 
-> Convert to use the more generally used kernel style.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/scsi/BusLogic.c | 304 ++++++++++++++++++++++++------------------------
->  drivers/scsi/BusLogic.h |  24 ++--
->  2 files changed, 161 insertions(+), 167 deletions(-)
+> Sounds good to me.
 
-Reviewed-by: Khalid Aziz <khalid.aziz@oracle.com>
+btw, for the BusLogic code:
+
+There seem to be places where addresses are cast to u32.
+
+I don't know the code at all, but that could likely
+cause problems with 64 bit addresses.
+
+$ git grep "(u32)" drivers/scsi/BusLogic.c
+drivers/scsi/BusLogic.c:                ccb->dma_handle = (u32) blkp + offset;
+drivers/scsi/BusLogic.c:                fpinfo->base_addr = (u32) adapter->io_addr;
+drivers/scsi/BusLogic.c:        extmbox_req.base_mbox_addr = (u32) adapter->mbox_space_handle;
