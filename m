@@ -1,68 +1,115 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: mpt2sas,mpt3sas watchdog device removal
-Date: Fri, 17 May 2013 17:42:37 -0400
-Message-ID: <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
-References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
-	<20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com>
-	<CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
+From: ronnie sahlberg <ronniesahlberg@gmail.com>
+Subject: Re: SCSI testing/USB devices are amazing
+Date: Fri, 17 May 2013 16:53:07 -0700
+Message-ID: <CAN05THQ16Aw3MedzTCw4bV6AKt4o0-cuYUXM4-_5DxMxG0R20Q@mail.gmail.com>
+References: <CAN05THR+P7nzzTe6FCmG+F8_frkL=z-PS1GvoBVn57EyDMo-dw@mail.gmail.com>
+	<yq1k3n7eer4.fsf@sermon.lab.mkp.net>
+	<CAN05THQ3ugPcgz7obJZKc=c6uGY47KTKahcxrAG9RW=sRn4yoQ@mail.gmail.com>
+	<yq1r4h989of.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:40139 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139Ab3EQXxI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 May 2013 19:53:08 -0400
+Received: by mail-pb0-f42.google.com with SMTP id up7so3766404pbc.15
+        for <linux-scsi@vger.kernel.org>; Fri, 17 May 2013 16:53:07 -0700 (PDT)
+In-Reply-To: <yq1r4h989of.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 17 May 2013 09:29:06 -0600
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+Martin,
+Thansk for your suggestions.
 
-> [+cc linux-pci]
-> 
-> On Wed, May 15, 2013 at 11:29 AM, Joe Lawrence
-> <joe.lawrence@stratus.com> wrote:
-> > From 84ac7a35ebd61e84d4254eae78bb967de17254c2 Mon Sep 17 00:00:00
-> > 2001 From: Joe Lawrence <joe.lawrence@stratus.com>
-> > Date: Wed, 15 May 2013 12:52:31 -0400
-> > Subject: [PATCH] mpt2sas,mpt3sas: make watchdog instantiated device
-> > removal safe
-> >
-> > Calling pci_stop_and_remove_bus_device from a SCSI LLD may introduce
-> > device removal races with PCI callback functions.
-> >
-> > Simplify the mpt2sas watchdog mechanism by separating PCI device
-> > removal from SCSI midlayer detachment. When the watchdog wishes to
-> > remove a SCSI device from the topology, detach from the SCSI
-> > midlayer, leaving the PCI device alone. Adjust various pci_driver
-> > callbacks to account for a potentially SCSI detached PCI device.
-> 
-> I don't know the details of the SCSI detachment, but this approach
-> looks much cleaner to me.
+On Tue, May 14, 2013 at 3:43 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Ronnie" == ronnie sahlberg <ronniesahlberg@gmail.com> writes:
+...
+> Ronnie> I have added tests for the block limits VPD as
+> Ronnie> SCSI.Inquiry.InquiryBlockLimits.  It checks that the pagelength
+> Ronnie> is valid. 3C if SBC3 is claimed and 0C if prior to SBC3.
+>
+> Well, there are devices out there that claim SPC3/SBC2 compliance but do
+> support some of the newer features from SPC4/SBC3.
+>
+> In this case I'd rely on the supported VPD page list. And if the BL VPD
+> is present and the device reports SPC3/SBC2 I'd print a warning.
 
-Thanks for commenting, Bjorn.  I think this approach more closely
-represents what this watchdog is trying to accomplish.  
+I have updated the tests so that IF the device claims SBC-3 then the
+SBC-3 page of pagelength 0x3c must be present.
+If the device is not SBC-3, then I allow either the SBC-2 version of
+the page that is 0x0c in length OR the SBC-3 version.
 
-Off list, Sreekanth from LSI tested and noticed a few issues with this
-patch:
+If the device returns a SBC-3 style page without claiming SBC-3
+support I print a warning but allow the test to pass.
 
- - mpt2sas_base_stop_watchdog is called twice: The call from
-   mpt2sas_base_detach is safe, but now unnecessary (as a call was
-   added earlier up in the PCI driver callbacks to ensure that the
-   watchdog was out of the way.) This second invocation can be removed.
+This is now part of the test  --test SCSI.Inquiry.InquiryBlockLimits
 
- - If the watchdog detects a bad IOC, the watchdog remains running:
-   The watchdog workqueue isn't cleaned up until
-   mpt2sas_base_stop_watchdog is called, so in the case that the
-   watchdog removes the device from SCSI topo, the workqueue will
-   remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
-   single watchdog that iterates over all adapters would be simpler?
+> Ronnie> The other fields I had a hard time to come up with good sanity
+> Ronnie> tests for. Any suggestions ?  Do you have examples of things
+> Ronnie> that vendors get wrong here ?
+>
+> Maximum Write Same Length vs. support for WS10 and WS16.
+>
+> Another interesting Write Same test: I have several devices that support
+> WS16 but which only support a 2-byte block count in WS16. I.e. you get
+> the larger LBA but not a bigger block count with WS16.
 
-Finally, if SCSI topo detachment is all that is interesting here, would
-it make more sense to move the watchdog into the MPT "scsi" code?  I
-haven't looked at the code yet, but this might make an MPT fusion patch
-easier (due to dependencies between its "scsi" and "base" modules).
+I have added tests to verify that WS16 supports >16 bit block count.
+I also added tests that both WS10 and WS16 support >8 bit block counts.
 
-Regards,
+These are part of:
 
--- Joe
+--test SCSI.WriteSame10.WriteSame10Unmap
+--test SCSI.WriteSame16.WriteSame16Unmap
+
+
+Could you check if these tests catch the devices that you have that
+had problem in this area?
+
+
+>
+> There's also the Logical Block Provisioning VPD page. You could verify
+> that UNMAP is supported when LBPU=1. Repeat for LBPWS and LBPWS10.
+
+I added tests that IF UNMAP works, then both LBPU and LPBME must be clear.
+Analog for WS10/WS16.
+
+If either of them does not work, then I check that the corresponding
+LBPU/LBPWS10/LBPWS flags are clear.
+
+This is tested in
+--test SCSI.Unmap.UnmapVPD
+--test SCSI.WriteSame10.WriteSame10UnmapVPD
+--test SCSI.WriteSame16.WriteSame16UnmapVPD
+>
+> You could verify that the device actually returns zeroes when LBPRZ=1.
+
+Tested in
+--test SCSI.Unmap.Unmap
+--test SCSI.WriteSame10.WriteSame10Unmap
+--test SCSI.WriteSame16.WriteSame16Unmap
+
+
+>
+>
+> Ronnie> I will add tests for when protection information is enabled in
+> Ronnie> the future, I will need to find time to add it to tgt first.
+>
+> I have a fairly extensive set of PI tests in my test suite. But that
+> gets pretty involved. We can deal with those later.
+
+I would love to implement those tests in my testsuite,  but that is
+probably not near future since I would have to add support for PI to
+both wireshark and tgtd first.
+
+
+
+Other tests you would like to see in the test tool ?
+
+
+regards
+ronnie sahlberg
