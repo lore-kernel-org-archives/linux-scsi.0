@@ -1,260 +1,206 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 2/3] BusLogic: Coalesce formats with multiple string fragments
-Date: Thu, 16 May 2013 21:58:31 -0700
-Message-ID: <1fe580d1ae95bff774f2561837a22ea772733863.1368765873.git.joe@perches.com>
-References: <cover.1368754556.git.khalid.aziz@oracle.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1368754556.git.khalid.aziz@oracle.com>
-In-Reply-To: <cover.1368765873.git.joe@perches.com>
-References: <cover.1368765873.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH] qla2x00t: Fix a memory leak in an error path
+Date: Fri, 17 May 2013 05:00:19 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D3538B3ED@AVMB1.qlogic.org>
+References: <518E3BB7.20109@acm.org>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D3538B3EDAVMB1qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from co9ehsobe005.messaging.microsoft.com ([207.46.163.28]:10804
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751217Ab3EQFAi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 May 2013 01:00:38 -0400
+Received: from mail57-co9 (localhost [127.0.0.1])	by mail57-co9-R.bigfish.com
+ (Postfix) with ESMTP id 1AF60C20D35	for <linux-scsi@vger.kernel.org>; Fri, 17
+ May 2013 05:00:37 +0000 (UTC)
+Received: from CO9EHSMHS027.bigfish.com (unknown [10.236.132.237])	by
+ mail57-co9.bigfish.com (Postfix) with ESMTP id 2B242C0010B	for
+ <linux-scsi@vger.kernel.org>; Fri, 17 May 2013 05:00:22 +0000 (UTC)
+In-Reply-To: <518E3BB7.20109@acm.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Strings fragments coalesced by the compiler are
-difficult to grep.  Coalesce them instead.
+--_000_F5D084D6342F9B479C34599BB0A03E4D3538B3EDAVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <F318CC6A8F9ED84F8204225453F39E15@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/BusLogic.c | 66 ++++++++++++++++++++++++-------------------------
- 1 file changed, 33 insertions(+), 33 deletions(-)
+Hi Bart,
 
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index 28c2051..bd588cf 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -141,7 +141,7 @@ static char *blogic_cmd_failure_reason;
- static void blogic_announce_drvr(struct blogic_adapter *adapter)
- {
- 	blogic_announce("***** BusLogic SCSI Driver Version " blogic_drvr_version " of " blogic_drvr_date " *****\n", adapter);
--	blogic_announce("Copyright 1995-1998 by Leonard N. Zubkoff " "<lnz@dandelion.com>\n", adapter);
-+	blogic_announce("Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>\n", adapter);
- }
- 
- 
-@@ -444,7 +444,7 @@ static int blogic_cmd(struct blogic_adapter *adapter, enum blogic_opcode opcode,
- 			goto done;
- 		}
- 		if (blogic_global_options.trace_config)
--			blogic_notice("blogic_cmd(%02X) Status = %02X: " "(Modify I/O Address)\n", adapter, opcode, statusreg.all);
-+			blogic_notice("blogic_cmd(%02X) Status = %02X: (Modify I/O Address)\n", adapter, opcode, statusreg.all);
- 		result = 0;
- 		goto done;
- 	}
-@@ -720,22 +720,22 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
- 		pci_addr = base_addr1 = pci_resource_start(pci_device, 1);
- 
- 		if (pci_resource_flags(pci_device, 0) & IORESOURCE_MEM) {
--			blogic_err("BusLogic: Base Address0 0x%lX not I/O for " "MultiMaster Host Adapter\n", NULL, base_addr0);
-+			blogic_err("BusLogic: Base Address0 0x%lX not I/O for MultiMaster Host Adapter\n", NULL, base_addr0);
- 			blogic_err("at PCI Bus %d Device %d I/O Address 0x%lX\n", NULL, bus, device, io_addr);
- 			continue;
- 		}
- 		if (pci_resource_flags(pci_device, 1) & IORESOURCE_IO) {
--			blogic_err("BusLogic: Base Address1 0x%lX not Memory for " "MultiMaster Host Adapter\n", NULL, base_addr1);
-+			blogic_err("BusLogic: Base Address1 0x%lX not Memory for MultiMaster Host Adapter\n", NULL, base_addr1);
- 			blogic_err("at PCI Bus %d Device %d PCI Address 0x%lX\n", NULL, bus, device, pci_addr);
- 			continue;
- 		}
- 		if (irq_ch == 0) {
--			blogic_err("BusLogic: IRQ Channel %d invalid for " "MultiMaster Host Adapter\n", NULL, irq_ch);
-+			blogic_err("BusLogic: IRQ Channel %d invalid for MultiMaster Host Adapter\n", NULL, irq_ch);
- 			blogic_err("at PCI Bus %d Device %d I/O Address 0x%lX\n", NULL, bus, device, io_addr);
- 			continue;
- 		}
- 		if (blogic_global_options.trace_probe) {
--			blogic_notice("BusLogic: PCI MultiMaster Host Adapter " "detected at\n", NULL);
-+			blogic_notice("BusLogic: PCI MultiMaster Host Adapter detected at\n", NULL);
- 			blogic_notice("BusLogic: PCI Bus %d Device %d I/O Address 0x%lX PCI Address 0x%lX\n", NULL, bus, device, io_addr, pci_addr);
- 		}
- 		/*
-@@ -822,7 +822,7 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
- 			nonpr_mmcount++;
- 			mmcount++;
- 		} else
--			blogic_warn("BusLogic: Too many Host Adapters " "detected\n", NULL);
-+			blogic_warn("BusLogic: Too many Host Adapters detected\n", NULL);
- 	}
- 	/*
- 	   If the AutoSCSI "Use Bus And Device # For PCI Scanning Seq."
-@@ -960,22 +960,22 @@ static int __init blogic_init_fp_probeinfo(struct blogic_adapter *adapter)
- 		pci_addr = base_addr1 = pci_resource_start(pci_device, 1);
- #ifdef CONFIG_SCSI_FLASHPOINT
- 		if (pci_resource_flags(pci_device, 0) & IORESOURCE_MEM) {
--			blogic_err("BusLogic: Base Address0 0x%lX not I/O for " "FlashPoint Host Adapter\n", NULL, base_addr0);
-+			blogic_err("BusLogic: Base Address0 0x%lX not I/O for FlashPoint Host Adapter\n", NULL, base_addr0);
- 			blogic_err("at PCI Bus %d Device %d I/O Address 0x%lX\n", NULL, bus, device, io_addr);
- 			continue;
- 		}
- 		if (pci_resource_flags(pci_device, 1) & IORESOURCE_IO) {
--			blogic_err("BusLogic: Base Address1 0x%lX not Memory for " "FlashPoint Host Adapter\n", NULL, base_addr1);
-+			blogic_err("BusLogic: Base Address1 0x%lX not Memory for FlashPoint Host Adapter\n", NULL, base_addr1);
- 			blogic_err("at PCI Bus %d Device %d PCI Address 0x%lX\n", NULL, bus, device, pci_addr);
- 			continue;
- 		}
- 		if (irq_ch == 0) {
--			blogic_err("BusLogic: IRQ Channel %d invalid for " "FlashPoint Host Adapter\n", NULL, irq_ch);
-+			blogic_err("BusLogic: IRQ Channel %d invalid for FlashPoint Host Adapter\n", NULL, irq_ch);
- 			blogic_err("at PCI Bus %d Device %d I/O Address 0x%lX\n", NULL, bus, device, io_addr);
- 			continue;
- 		}
- 		if (blogic_global_options.trace_probe) {
--			blogic_notice("BusLogic: FlashPoint Host Adapter " "detected at\n", NULL);
-+			blogic_notice("BusLogic: FlashPoint Host Adapter detected at\n", NULL);
- 			blogic_notice("BusLogic: PCI Bus %d Device %d I/O Address 0x%lX PCI Address 0x%lX\n", NULL, bus, device, io_addr, pci_addr);
- 		}
- 		if (blogic_probeinfo_count < BLOGIC_MAX_ADAPTERS) {
-@@ -991,11 +991,11 @@ static int __init blogic_init_fp_probeinfo(struct blogic_adapter *adapter)
- 			probeinfo->pci_device = pci_dev_get(pci_device);
- 			fpcount++;
- 		} else
--			blogic_warn("BusLogic: Too many Host Adapters " "detected\n", NULL);
-+			blogic_warn("BusLogic: Too many Host Adapters detected\n", NULL);
- #else
--		blogic_err("BusLogic: FlashPoint Host Adapter detected at " "PCI Bus %d Device %d\n", NULL, bus, device);
--		blogic_err("BusLogic: I/O Address 0x%X PCI Address 0x%X, irq %d, " "but FlashPoint\n", NULL, io_addr, pci_addr, irq_ch);
--		blogic_err("BusLogic: support was omitted in this kernel " "configuration.\n", NULL);
-+		blogic_err("BusLogic: FlashPoint Host Adapter detected at PCI Bus %d Device %d\n", NULL, bus, device);
-+		blogic_err("BusLogic: I/O Address 0x%X PCI Address 0x%X, irq %d, but FlashPoint\n", NULL, io_addr, pci_addr, irq_ch);
-+		blogic_err("BusLogic: support was omitted in this kernel configuration.\n", NULL);
- #endif
- 	}
- 	/*
-@@ -1936,10 +1936,10 @@ static bool __init blogic_reportconfig(struct blogic_adapter *adapter)
- 	blogic_info("  Disconnect/Reconnect: %s, Tagged Queuing: %s\n", adapter,
- 			discon_msg, tagq_msg);
- 	if (blogic_multimaster_type(adapter)) {
--		blogic_info("  Scatter/Gather Limit: %d of %d segments, " "Mailboxes: %d\n", adapter, adapter->drvr_sglimit, adapter->adapter_sglimit, adapter->mbox_count);
--		blogic_info("  Driver Queue Depth: %d, " "Host Adapter Queue Depth: %d\n", adapter, adapter->drvr_qdepth, adapter->adapter_qdepth);
-+		blogic_info("  Scatter/Gather Limit: %d of %d segments, Mailboxes: %d\n", adapter, adapter->drvr_sglimit, adapter->adapter_sglimit, adapter->mbox_count);
-+		blogic_info("  Driver Queue Depth: %d, Host Adapter Queue Depth: %d\n", adapter, adapter->drvr_qdepth, adapter->adapter_qdepth);
- 	} else
--		blogic_info("  Driver Queue Depth: %d, " "Scatter/Gather Limit: %d segments\n", adapter, adapter->drvr_qdepth, adapter->drvr_sglimit);
-+		blogic_info("  Driver Queue Depth: %d, Scatter/Gather Limit: %d segments\n", adapter, adapter->drvr_qdepth, adapter->drvr_sglimit);
- 	blogic_info("  Tagged Queue Depth: ", adapter);
- 	common_tagq_depth = true;
- 	for (tgt_id = 1; tgt_id < adapter->maxdev; tgt_id++)
-@@ -2719,7 +2719,7 @@ static void blogic_scan_inbox(struct blogic_adapter *adapter)
- 				   then there is most likely a bug in
- 				   the Host Adapter firmware.
- 				 */
--				blogic_warn("Illegal CCB #%ld status %d in " "Incoming Mailbox\n", adapter, ccb->serial, ccb->status);
-+				blogic_warn("Illegal CCB #%ld status %d in Incoming Mailbox\n", adapter, ccb->serial, ccb->status);
- 			}
- 		}
- 		next_inbox->comp_code = BLOGIC_INBOX_FREE;
-@@ -2754,7 +2754,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
- 		if (ccb->opcode == BLOGIC_BDR) {
- 			int tgt_id = ccb->tgt_id;
- 
--			blogic_warn("Bus Device Reset CCB #%ld to Target " "%d Completed\n", adapter, ccb->serial, tgt_id);
-+			blogic_warn("Bus Device Reset CCB #%ld to Target %d Completed\n", adapter, ccb->serial, tgt_id);
- 			blogic_inc_count(&adapter->tgt_stats[tgt_id].bdr_done);
- 			adapter->tgt_flags[tgt_id].tagq_active = false;
- 			adapter->cmds_since_rst[tgt_id] = 0;
-@@ -2831,7 +2831,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
- 					if (blogic_global_options.trace_err) {
- 						int i;
- 						blogic_notice("CCB #%ld Target %d: Result %X Host "
--								"Adapter Status %02X " "Target Status %02X\n", adapter, ccb->serial, ccb->tgt_id, command->result, ccb->adapter_status, ccb->tgt_status);
-+								"Adapter Status %02X Target Status %02X\n", adapter, ccb->serial, ccb->tgt_id, command->result, ccb->adapter_status, ccb->tgt_status);
- 						blogic_notice("CDB   ", adapter);
- 						for (i = 0; i < ccb->cdblen; i++)
- 							blogic_notice(" %02X", adapter, ccb->cdb[i]);
-@@ -3197,12 +3197,12 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
- 		 */
- 		if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START, ccb)) {
- 			spin_unlock_irq(adapter->scsi_host->host_lock);
--			blogic_warn("Unable to write Outgoing Mailbox - " "Pausing for 1 second\n", adapter);
-+			blogic_warn("Unable to write Outgoing Mailbox - Pausing for 1 second\n", adapter);
- 			blogic_delay(1);
- 			spin_lock_irq(adapter->scsi_host->host_lock);
- 			if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START,
- 						ccb)) {
--				blogic_warn("Still unable to write Outgoing Mailbox - " "Host Adapter Dead?\n", adapter);
-+				blogic_warn("Still unable to write Outgoing Mailbox - Host Adapter Dead?\n", adapter);
- 				blogic_dealloc_ccb(ccb);
- 				command->result = DID_ERROR << 16;
- 				command->scsi_done(command);
-@@ -3437,8 +3437,8 @@ static int blogic_diskparam(struct scsi_device *sdev, struct block_device *dev,
- 			if (diskparam->cylinders != saved_cyl)
- 				blogic_warn("Adopting Geometry %d/%d from Partition Table\n", adapter, diskparam->heads, diskparam->sectors);
- 		} else if (part_end_head > 0 || part_end_sector > 0) {
--			blogic_warn("Warning: Partition Table appears to " "have Geometry %d/%d which is\n", adapter, part_end_head + 1, part_end_sector);
--			blogic_warn("not compatible with current BusLogic " "Host Adapter Geometry %d/%d\n", adapter, diskparam->heads, diskparam->sectors);
-+			blogic_warn("Warning: Partition Table appears to have Geometry %d/%d which is\n", adapter, part_end_head + 1, part_end_sector);
-+			blogic_warn("not compatible with current BusLogic Host Adapter Geometry %d/%d\n", adapter, diskparam->heads, diskparam->sectors);
- 		}
- 	}
- 	kfree(buf);
-@@ -3696,7 +3696,7 @@ static int __init blogic_parseopts(char *options)
- 				for (tgt_id = 0; tgt_id < BLOGIC_MAXDEV; tgt_id++) {
- 					unsigned short qdepth = simple_strtoul(options, &options, 0);
- 					if (qdepth > BLOGIC_MAX_TAG_DEPTH) {
--						blogic_err("BusLogic: Invalid Driver Options " "(invalid Queue Depth %d)\n", NULL, qdepth);
-+						blogic_err("BusLogic: Invalid Driver Options (invalid Queue Depth %d)\n", NULL, qdepth);
- 						return 0;
- 					}
- 					drvr_opts->qdepth[tgt_id] = qdepth;
-@@ -3705,12 +3705,12 @@ static int __init blogic_parseopts(char *options)
- 					else if (*options == ']')
- 						break;
- 					else {
--						blogic_err("BusLogic: Invalid Driver Options " "(',' or ']' expected at '%s')\n", NULL, options);
-+						blogic_err("BusLogic: Invalid Driver Options (',' or ']' expected at '%s')\n", NULL, options);
- 						return 0;
- 					}
- 				}
- 				if (*options != ']') {
--					blogic_err("BusLogic: Invalid Driver Options " "(']' expected at '%s')\n", NULL, options);
-+					blogic_err("BusLogic: Invalid Driver Options (']' expected at '%s')\n", NULL, options);
- 					return 0;
- 				} else
- 					options++;
-@@ -3718,7 +3718,7 @@ static int __init blogic_parseopts(char *options)
- 				unsigned short qdepth = simple_strtoul(options, &options, 0);
- 				if (qdepth == 0 ||
- 						qdepth > BLOGIC_MAX_TAG_DEPTH) {
--					blogic_err("BusLogic: Invalid Driver Options " "(invalid Queue Depth %d)\n", NULL, qdepth);
-+					blogic_err("BusLogic: Invalid Driver Options (invalid Queue Depth %d)\n", NULL, qdepth);
- 					return 0;
- 				}
- 				drvr_opts->common_qdepth = qdepth;
-@@ -3764,7 +3764,7 @@ static int __init blogic_parseopts(char *options)
- 				unsigned short bus_settle_time =
- 					simple_strtoul(options, &options, 0);
- 				if (bus_settle_time > 5 * 60) {
--					blogic_err("BusLogic: Invalid Driver Options " "(invalid Bus Settle Time %d)\n", NULL, bus_settle_time);
-+					blogic_err("BusLogic: Invalid Driver Options (invalid Bus Settle Time %d)\n", NULL, bus_settle_time);
- 					return 0;
- 				}
- 				drvr_opts->bus_settle_time = bus_settle_time;
-@@ -3789,14 +3789,14 @@ static int __init blogic_parseopts(char *options)
- 			if (*options == ',')
- 				options++;
- 			else if (*options != ';' && *options != '\0') {
--				blogic_err("BusLogic: Unexpected Driver Option '%s' " "ignored\n", NULL, options);
-+				blogic_err("BusLogic: Unexpected Driver Option '%s' ignored\n", NULL, options);
- 				*options = '\0';
- 			}
- 		}
- 		if (!(blogic_drvr_options_count == 0 ||
- 			blogic_probeinfo_count == 0 ||
- 			blogic_drvr_options_count == blogic_probeinfo_count)) {
--			blogic_err("BusLogic: Invalid Driver Options " "(all or no I/O Addresses must be specified)\n", NULL);
-+			blogic_err("BusLogic: Invalid Driver Options (all or no I/O Addresses must be specified)\n", NULL);
- 			return 0;
- 		}
- 		/*
-@@ -3851,7 +3851,7 @@ static int __init blogic_setup(char *str)
- 	(void) get_options(str, ARRAY_SIZE(ints), ints);
- 
- 	if (ints[0] != 0) {
--		blogic_err("BusLogic: Obsolete Command Line Entry " "Format Ignored\n", NULL);
-+		blogic_err("BusLogic: Obsolete Command Line Entry Format Ignored\n", NULL);
- 		return 0;
- 	}
- 	if (str == NULL || *str == '\0')
--- 
-1.8.1.2.459.gbcd45b4.dirty
+Instead of doing this I would move this check to the top of the function,
+something like this
+-----------------8<----------
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c
+b/drivers/scsi/qla2xxx/qla_bsg.c
+index 371bb86..b5f84ae 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -255,6 +255,12 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
+        int rval =3D  (DRIVER_ERROR << 16);
+        uint16_t nextlid =3D 0;
+
+=20
++       if (!vha->flags.online) {
++               ql_log(ql_log_warn, vha, 0x7005, "Host not online.\n");
++               rval =3D -EIO;
++               goto done;
++       }
++
+        if (bsg_job->request->msgcode =3D=3D FC_BSG_RPT_ELS) {
+                rport =3D bsg_job->rport;
+                fcport =3D *(fc_port_t **) rport->dd_data;
+@@ -326,12 +332,6 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
+                        NPH_FABRIC_CONTROLLER : NPH_F_PORT;
+        }
+
+=20
+-       if (!vha->flags.online) {
+-               ql_log(ql_log_warn, vha, 0x7005, "Host not online.\n");
+-               rval =3D -EIO;
+-               goto done;
+-       }
+-
+        req_sg_cnt =3D
+                dma_map_sg(&ha->pdev->dev,
+bsg_job->request_payload.sg_list,
+                bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
+
+----------------8<---------
+
+Thanks,
+~Saurav
+
+
+
+
+>Avoid that the fcport structure gets leaked if
+>bsg_job->request->msgcode =3D=3D FC_BSG_HST_ELS_NOLOGIN, the fcport
+>allocation succeeds and the !vha->flags.online branch is taken.
+>Detected by Coverity.
+>
+>Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+>Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>---
+> drivers/scsi/qla2xxx/qla_bsg.c |    2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>diff --git a/drivers/scsi/qla2xxx/qla_bsg.c
+>b/drivers/scsi/qla2xxx/qla_bsg.c
+>index 39719f8..af35707 100644
+>--- a/drivers/scsi/qla2xxx/qla_bsg.c
+>+++ b/drivers/scsi/qla2xxx/qla_bsg.c
+>@@ -329,7 +329,7 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
+> 	if (!vha->flags.online) {
+> 		ql_log(ql_log_warn, vha, 0x7005, "Host not online.\n");
+> 		rval =3D -EIO;
+>-		goto done;
+>+		goto done_free_fcport;
+> 	}
+>=20
+> 	req_sg_cnt =3D
+>--=20
+>1.7.10.4
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D3538B3EDAVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+Y8ASAI+1kQMizHrRIjF1eC2yciI+MYYW2yYSBuBkk3AjgWEk0LZRd7ogJjIk0GG3sAsgA3Bv9EB2
+GDBynXAEkbaQmAL9hhZNBbAZ4NLXPjECEK8ACQVAIGgCQHA6Ly9V030v0tct1dIu1mBtDwlQIjsV
+QtogAAAfAEIAAQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AZQABAAAA
+NAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
+AGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAA
+AIBTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAABTAE0AVABQAAAAcwBhAHUAcgBhAHYALgBr
+AGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAANAAAAHMAYQB1AHIA
+YQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAOVfAQAAADwAAABz
+AGkAcAA6AHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAAfABoMAQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AHwwBAAAANAAA
+AHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAB4M
+AQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBT
+AGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAABTAE0AVABQAAAAcwBhAHUAcgBhAHYALgBrAGEA
+cwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANAAAAHMAYQB1AHIAYQB2
+AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAPg/AQAAAB4AAABTAGEA
+dQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AI0ABAAAANAAAAHMAYQB1AHIAYQB2AC4AawBh
+AHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAA
+AAACAfk/AQAAAHQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBTAGEAdQByAGEAdgAgAEsAYQBz
+AGgAeQBhAHAAAABTAE0AVABQAAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAALAEA6AQAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQA
+ZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA36ZHZcjj3Um1Pz4HqRbe
+CwMAFwABAAAAQAA5AIAzg227Us4BQAAIMAlO1m27Us4BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA
+FIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1
+AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaF
+AAAAAAAAHwA3AAEAAAByAAAAUgBlADoAIABbAFAAQQBUAEMASABdACAAcQBsAGEAMgB4ADAAMAB0
+ADoAIABGAGkAeAAgAGEAIABtAGUAbQBvAHIAeQAgAGwAZQBhAGsAIABpAG4AIABhAG4AIABlAHIA
+cgBvAHIAIABwAGEAdABoAAAAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhAB
+AAAAMgAAADwANQAxADgARQAzAEIAQgA3AC4AMgAwADEAMAA5AEAAYQBjAG0ALgBvAHIAZwA+AAAA
+AAACAXEAAQAAABsAAAABAc5ORIZrkx/gl815RrIxf1JtjPY+mQmr24AAHwBwAAEAAABqAAAAWwBQ
+AEEAVABDAEgAXQAgAHEAbABhADIAeAAwADAAdAA6ACAARgBpAHgAIABhACAAbQBlAG0AbwByAHkA
+IABsAGUAYQBrACAAaQBuACAAYQBuACAAZQByAHIAbwByACAAcABhAHQAaAAAAAAAHwA1EAEAAAB4
+AAAAPABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAA
+QQAwADMARQA0AEQAMwA1ADMAOABCADMARQBEAEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBv
+AHIAZwA+AAAAAwDeP59OAABAAAcwSIvRbbtSzgEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0g
+O3A9UUxvZ2ljO2w9QVZNQjEtMTMwNTE3MDUwMDE5Wi0xNjE3MAAAAB8AFRABAAAAWAAAAEYAMwAx
+ADgAQwBDADYAQQA4AEYAOQBFAEQAOAA0AEYAOAAyADAANAAyADIANQA0ADUAMwBGADMAOQBFADEA
+NQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAAC0AAAAhkRZrkgAAAAfAPo/AQAA
+AB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABG
+AQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAASAAAAE0AaQBjAHIAbwBzAG8AZgB0
+AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADEAMAAuADAALgAxADEAMAAzADEAMAAAAB8A
+AIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABl
+AHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAACAQAASQBJAD0AMAAxADAAMQBDAEUANQAyAEIA
+QgA2AEQARQA4AEQANwBDADQAQgBDADMAOAAyAEEAMwBGADQAMABBADIAMwAwAEMAOABFADQARABD
+AEYAMABEAEYARgBGADsAUwBCAE0ASQBEAD0AMwA7AFMAMQA9ADwANQAxADgARQAzAEIAQgA3AC4A
+MgAwADEAMAA5AEAAYQBjAG0ALgBvAHIAZwA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBv
+AG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0A
+SAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABh
+AHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIA
+AAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGgAAAFsAMQAwAC4AMwA1
+AC4ANwAuADUANABdAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEA
+aQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAAKNs=
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D3538B3EDAVMB1qlogicorg_--
