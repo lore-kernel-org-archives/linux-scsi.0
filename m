@@ -1,44 +1,65 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH RESEND] scsi/trivial: Spelling hsot -> host
-Date: Fri, 17 May 2013 13:22:29 +0200
-Message-ID: <1368789749-4413-1-git-send-email-geert@linux-m68k.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, Jiri Kosina <trivial@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] qla2x00t: Fix a memory leak in an error path
+Date: Fri, 17 May 2013 14:03:47 +0200
+Message-ID: <51961CA3.9060709@acm.org>
+References: <F5D084D6342F9B479C34599BB0A03E4D3538B3ED@AVMB1.qlogic.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:48178 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753384Ab3EQMDu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 May 2013 08:03:50 -0400
+In-Reply-To: <F5D084D6342F9B479C34599BB0A03E4D3538B3ED@AVMB1.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/scsi/aic7xxx_old/aic7xxx.seq |    2 +-
- drivers/scsi/scsi_error.c            |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+On 05/17/13 07:00, Saurav Kashyap wrote:
+> Instead of doing this I would move this check to the top of the function,
+> something like this
+> -----------------8<----------
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c
+> b/drivers/scsi/qla2xxx/qla_bsg.c
+> index 371bb86..b5f84ae 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -255,6 +255,12 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
+>          int rval =  (DRIVER_ERROR << 16);
+>          uint16_t nextlid = 0;
+>
+>
+> +       if (!vha->flags.online) {
+> +               ql_log(ql_log_warn, vha, 0x7005, "Host not online.\n");
+> +               rval = -EIO;
+> +               goto done;
+> +       }
+> +
+>          if (bsg_job->request->msgcode == FC_BSG_RPT_ELS) {
+>                  rport = bsg_job->rport;
+>                  fcport = *(fc_port_t **) rport->dd_data;
+> @@ -326,12 +332,6 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
+>                          NPH_FABRIC_CONTROLLER : NPH_F_PORT;
+>          }
+>
+>
+> -       if (!vha->flags.online) {
+> -               ql_log(ql_log_warn, vha, 0x7005, "Host not online.\n");
+> -               rval = -EIO;
+> -               goto done;
+> -       }
+> -
+>          req_sg_cnt =
+>                  dma_map_sg(&ha->pdev->dev,
+> bsg_job->request_payload.sg_list,
+>                  bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
+>
+> ----------------8<---------
 
-diff --git a/drivers/scsi/aic7xxx_old/aic7xxx.seq b/drivers/scsi/aic7xxx_old/aic7xxx.seq
-index 823ff28..dc3bb81 100644
---- a/drivers/scsi/aic7xxx_old/aic7xxx.seq
-+++ b/drivers/scsi/aic7xxx_old/aic7xxx.seq
-@@ -693,7 +693,7 @@ p_status:
-  * it's own message.
-  * 
-  * If MSG_OUT is == HOST_MSG, also interrupt the host and take a message.
-- * This is done to allow the hsot to send messages outside of an identify
-+ * This is done to allow the host to send messages outside of an identify
-  * sequence while protecting the seqencer from testing the MK_MESSAGE bit
-  * on an SCB that might not be for the current nexus. (For example, a
-  * BDR message in response to a bad reselection would leave us pointed to
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index f43de1e..ade98e2 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -538,7 +538,7 @@ static void scsi_eh_done(struct scsi_cmnd *scmd)
- 
- /**
-  * scsi_try_host_reset - ask host adapter to reset itself
-- * @scmd:	SCSI cmd to send hsot reset.
-+ * @scmd:	SCSI cmd to send host reset.
-  */
- static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- {
--- 
-1.7.0.4
+Hello Saurav,
+
+I will update the patch, retest and repost it. Thanks for the feedback.
+
+Bart.
