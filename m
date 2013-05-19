@@ -1,42 +1,47 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 8/8] scsi: ufs: Fix the response UPIU length setting
-Date: Sun, 19 May 2013 13:51:43 +0530
-Message-ID: <1368951703-2672-9-git-send-email-santoshsy@gmail.com>
-References: <1368951703-2672-1-git-send-email-santoshsy@gmail.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v2 0/5] scsi_debug: bug fixes and cleanups for data integrity support
+Date: Sun, 19 May 2013 22:42:04 +0900
+Message-ID: <1368970929-20006-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-da0-f48.google.com ([209.85.210.48]:47534 "EHLO
-	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441Ab3ESIWd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 May 2013 04:22:33 -0400
-Received: by mail-da0-f48.google.com with SMTP id h32so3258310dak.35
-        for <linux-scsi@vger.kernel.org>; Sun, 19 May 2013 01:22:32 -0700 (PDT)
-In-Reply-To: <1368951703-2672-1-git-send-email-santoshsy@gmail.com>
+Received: from mail-da0-f47.google.com ([209.85.210.47]:60783 "EHLO
+	mail-da0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435Ab3ESNmc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 May 2013 09:42:32 -0400
+Received: by mail-da0-f47.google.com with SMTP id k13so3314998dae.6
+        for <linux-scsi@vger.kernel.org>; Sun, 19 May 2013 06:42:32 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, Maya Erez <merez@codeaurora.org>, Santosh Y <santoshsy@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+This patch set includes bug fixes which I hit when I was tried testing
+the data integrity support in scsi_debug on x86_32.
 
-The response UPIU length should be in DWORD and not in bytes.
+And it also includes cleanups which helps increasing readability and
+further bug fixing in data integrity support.
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Signed-off-by: Santosh Y <santoshsy@gmail.com>
+* Changes from v1
+- Split the patch "fix data integrity support on highmem machine" into
+  two separate patches.
+- Add new cleanup patch "reduce duplication between prot_verify_read and
+  prot_verify_write".
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 18dead4..e9dba33 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1159,7 +1159,7 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
- 		utrdlp[i].prd_table_offset =
- 				cpu_to_le16((prdt_offset >> 2));
- 		utrdlp[i].response_upiu_length =
--				cpu_to_le16(ALIGNED_UPIU_SIZE);
-+				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
- 
- 		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
- 		hba->lrb[i].ucd_req_ptr =
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+
+Akinobu Mita (5):
+  scsi_debug: fix invalid address passed to kunmap_atomic()
+  scsi_debug: fix incorrectly nested kmap_atomic()
+  scsi_debug: fix NULL pointer dereference with parameters dif=0 dix=1
+  scsi_debug: simplify offset calculation for dif_storep
+  scsi_debug: reduce duplication between prot_verify_read and
+    prot_verify_write
+
+ drivers/scsi/scsi_debug.c | 164 +++++++++++++++++++---------------------------
+ 1 file changed, 66 insertions(+), 98 deletions(-)
+
 -- 
-1.8.2.3
+1.8.1.4
 
