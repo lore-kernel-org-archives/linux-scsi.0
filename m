@@ -1,27 +1,33 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 1/5] scsi_debug: fix invalid address passed to kunmap_atomic()
-Date: Sun, 19 May 2013 22:42:05 +0900
-Message-ID: <1368970929-20006-2-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v2 2/5] scsi_debug: fix incorrectly nested kmap_atomic()
+Date: Sun, 19 May 2013 22:42:06 +0900
+Message-ID: <1368970929-20006-3-git-send-email-akinobu.mita@gmail.com>
 References: <1368970929-20006-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:53667 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435Ab3ESNme (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 May 2013 09:42:34 -0400
-Received: by mail-pd0-f179.google.com with SMTP id q10so4636203pdj.38
-        for <linux-scsi@vger.kernel.org>; Sun, 19 May 2013 06:42:33 -0700 (PDT)
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:48513 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435Ab3ESNmg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 May 2013 09:42:36 -0400
+Received: by mail-pb0-f49.google.com with SMTP id rp8so3302919pbb.22
+        for <linux-scsi@vger.kernel.org>; Sun, 19 May 2013 06:42:35 -0700 (PDT)
 In-Reply-To: <1368970929-20006-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-In the function prot_verify_write(), the kmap address 'daddr' is
-incremented in the loop for each data page.  Finally 'daddr' reaches
-the next page boundary in the end of the loop, and the invalid address
-is passed to kunmap_atomic().
+In the function prot_verify_write(), kmap_atomic()/kunmap_atomic() for
+data page and kmap_atomic()/kunmap_atomic() for protection information
+page are not nested each other.
 
-Fix it by passing original value to kunmap_atomic().
+It worked perfectly before commit 3e4d3af501cccdc8a8cca41bdbe57d54ad7e7e73
+("mm: stack based kmap_atomic()").  Because the kmap_atomic slot KM_IRQ0
+was used for data page and the slot KM_IRQ1 was used for protection page.
+
+But KM_types are gone and kmap_atomic() is using stack based implementation.
+So two different kmap_atomic() usages must be strictly nested now.
+
+This change ensures kmap_atomic() usage is strictly nested.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
@@ -34,22 +40,49 @@ Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 * New patch from v2
 - Splitted from the patch "fix data integrity support on highmem machine" in v1
 
- drivers/scsi/scsi_debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_debug.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 0a537a0..caf6a94 100644
+index caf6a94..0a428b6 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -1981,7 +1981,7 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+@@ -1891,12 +1891,12 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 	BUG_ON(scsi_sg_count(SCpnt) == 0);
+ 	BUG_ON(scsi_prot_sg_count(SCpnt) == 0);
+ 
+-	paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
+ 	ppage_offset = 0;
+ 
+ 	/* For each data page */
+ 	scsi_for_each_sg(SCpnt, dsgl, scsi_sg_count(SCpnt), i) {
+ 		daddr = kmap_atomic(sg_page(dsgl)) + dsgl->offset;
++		paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
+ 
+ 		/* For each sector-sized chunk in data page */
+ 		for (j = 0 ; j < dsgl->length ; j += scsi_debug_sector_size) {
+@@ -1981,19 +1981,18 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
  			ppage_offset += sizeof(struct sd_dif_tuple);
  		}
  
--		kunmap_atomic(daddr);
-+		kunmap_atomic(daddr - dsgl->length);
++		kunmap_atomic(paddr);
+ 		kunmap_atomic(daddr - dsgl->length);
  	}
  
+-	kunmap_atomic(paddr);
+-
+ 	dix_writes++;
+ 
+ 	return 0;
+ 
+ out:
+ 	dif_errors++;
+-	kunmap_atomic(daddr);
  	kunmap_atomic(paddr);
++	kunmap_atomic(daddr);
+ 	return ret;
+ }
+ 
 -- 
 1.8.1.4
 
