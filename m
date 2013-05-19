@@ -1,205 +1,121 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 5/5] scsi_debug: reduce duplication between prot_verify_read and prot_verify_write
-Date: Sun, 19 May 2013 22:42:09 +0900
-Message-ID: <1368970929-20006-6-git-send-email-akinobu.mita@gmail.com>
-References: <1368970929-20006-1-git-send-email-akinobu.mita@gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: SCSI testing/USB devices are amazing
+Date: Sun, 19 May 2013 13:39:16 -0400
+Message-ID: <51990E44.5050602@interlog.com>
+References: <CAN05THR+P7nzzTe6FCmG+F8_frkL=z-PS1GvoBVn57EyDMo-dw@mail.gmail.com> <yq1k3n7eer4.fsf@sermon.lab.mkp.net> <CAN05THQ3ugPcgz7obJZKc=c6uGY47KTKahcxrAG9RW=sRn4yoQ@mail.gmail.com> <yq1r4h989of.fsf@sermon.lab.mkp.net> <CAN05THQ16Aw3MedzTCw4bV6AKt4o0-cuYUXM4-_5DxMxG0R20Q@mail.gmail.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:38106 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435Ab3ESNmm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 May 2013 09:42:42 -0400
-Received: by mail-pb0-f47.google.com with SMTP id rr4so4609393pbb.20
-        for <linux-scsi@vger.kernel.org>; Sun, 19 May 2013 06:42:41 -0700 (PDT)
-In-Reply-To: <1368970929-20006-1-git-send-email-akinobu.mita@gmail.com>
+Received: from smtp.infotech.no ([82.134.31.41]:47463 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752439Ab3ESShp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 May 2013 14:37:45 -0400
+In-Reply-To: <CAN05THQ16Aw3MedzTCw4bV6AKt4o0-cuYUXM4-_5DxMxG0R20Q@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: ronnie sahlberg <ronniesahlberg@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Elliott, Robert (Server Storage)" <elliott@hp.com>
 
-In order to reduce code duplication between prot_verify_read() and
-prot_verify_write(), this moves common code into the new functions.
+On 13-05-17 07:53 PM, ronnie sahlberg wrote:
+> Martin,
+> Thansk for your suggestions.
+>
+> On Tue, May 14, 2013 at 3:43 PM, Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+>>>>>>> "Ronnie" == ronnie sahlberg <ronniesahlberg@gmail.com> writes:
+> ...
+>> Ronnie> I have added tests for the block limits VPD as
+>> Ronnie> SCSI.Inquiry.InquiryBlockLimits.  It checks that the pagelength
+>> Ronnie> is valid. 3C if SBC3 is claimed and 0C if prior to SBC3.
+>>
+>> Well, there are devices out there that claim SPC3/SBC2 compliance but do
+>> support some of the newer features from SPC4/SBC3.
+>>
+>> In this case I'd rely on the supported VPD page list. And if the BL VPD
+>> is present and the device reports SPC3/SBC2 I'd print a warning.
+>
+> I have updated the tests so that IF the device claims SBC-3 then the
+> SBC-3 page of pagelength 0x3c must be present.
+> If the device is not SBC-3, then I allow either the SBC-2 version of
+> the page that is 0x0c in length OR the SBC-3 version.
+>
+> If the device returns a SBC-3 style page without claiming SBC-3
+> support I print a warning but allow the test to pass.
+>
+> This is now part of the test  --test SCSI.Inquiry.InquiryBlockLimits
+>
+>> Ronnie> The other fields I had a hard time to come up with good sanity
+>> Ronnie> tests for. Any suggestions ?  Do you have examples of things
+>> Ronnie> that vendors get wrong here ?
+>>
+>> Maximum Write Same Length vs. support for WS10 and WS16.
+>>
+>> Another interesting Write Same test: I have several devices that support
+>> WS16 but which only support a 2-byte block count in WS16. I.e. you get
+>> the larger LBA but not a bigger block count with WS16.
+>
+> I have added tests to verify that WS16 supports >16 bit block count.
+> I also added tests that both WS10 and WS16 support >8 bit block counts.
+>
+> These are part of:
+>
+> --test SCSI.WriteSame10.WriteSame10Unmap
+> --test SCSI.WriteSame16.WriteSame16Unmap
+>
+>
+> Could you check if these tests catch the devices that you have that
+> had problem in this area?
+>
+>
+>>
+>> There's also the Logical Block Provisioning VPD page. You could verify
+>> that UNMAP is supported when LBPU=1. Repeat for LBPWS and LBPWS10.
+>
+> I added tests that IF UNMAP works, then both LBPU and LPBME must be clear.
+> Analog for WS10/WS16.
+>
+> If either of them does not work, then I check that the corresponding
+> LBPU/LBPWS10/LBPWS flags are clear.
+>
+> This is tested in
+> --test SCSI.Unmap.UnmapVPD
+> --test SCSI.WriteSame10.WriteSame10UnmapVPD
+> --test SCSI.WriteSame16.WriteSame16UnmapVPD
+>>
+>> You could verify that the device actually returns zeroes when LBPRZ=1.
+>
+> Tested in
+> --test SCSI.Unmap.Unmap
+> --test SCSI.WriteSame10.WriteSame10Unmap
+> --test SCSI.WriteSame16.WriteSame16Unmap
+>
+>
+>>
+>>
+>> Ronnie> I will add tests for when protection information is enabled in
+>> Ronnie> the future, I will need to find time to add it to tgt first.
+>>
+>> I have a fairly extensive set of PI tests in my test suite. But that
+>> gets pretty involved. We can deal with those later.
+>
+> I would love to implement those tests in my testsuite,  but that is
+> probably not near future since I would have to add support for PI to
+> both wireshark and tgtd first.
+>
+>
+>
+> Other tests you would like to see in the test tool ?
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
----
+Hi,
+If you are working in the WRITE SAME (WS) area, you could make
+this addition: T10/Robert Elliott just added a NDOB bit
+('no data-out buffer') to WS(16) and WS(32) in sbc3r35d.pdf .
 
-* New patch from v2
+Using it vastly simplifies my sg_write_same code but I don't
+understand why NDOB=1,UNMAP=0 is disallowed.
 
- drivers/scsi/scsi_debug.c | 135 +++++++++++++++++++---------------------------
- 1 file changed, 54 insertions(+), 81 deletions(-)
+Doug Gilbert
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 152ead6..bd14e12 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1710,6 +1710,50 @@ static int do_device_access(struct scsi_cmnd *scmd,
- 	return ret;
- }
- 
-+static u16 dif_compute_csum(const void *buf, int len)
-+{
-+	u16 csum;
-+
-+	switch (scsi_debug_guard) {
-+	case 1:
-+		csum = ip_compute_csum(buf, len);
-+		break;
-+	case 0:
-+		csum = cpu_to_be16(crc_t10dif(buf, len));
-+		break;
-+	default:
-+		BUG();
-+	}
-+	return csum;
-+}
-+
-+static int dif_verify(struct sd_dif_tuple *sdt, u16 csum, sector_t sector,
-+		      u32 ei_lba)
-+{
-+	if (sdt->guard_tag != csum) {
-+		pr_err("%s: GUARD check failed on sector %lu rcvd 0x%04x, data 0x%04x\n",
-+			__func__,
-+			(unsigned long)sector,
-+			be16_to_cpu(sdt->guard_tag),
-+			be16_to_cpu(csum));
-+		return 0x01;
-+	}
-+	if (scsi_debug_dif == SD_DIF_TYPE1_PROTECTION &&
-+	    be32_to_cpu(sdt->ref_tag) != (sector & 0xffffffff)) {
-+		pr_err("%s: REF check failed on sector %lu\n",
-+			__func__, (unsigned long)sector);
-+		return 0x03;
-+	}
-+	if (scsi_debug_dif == SD_DIF_TYPE2_PROTECTION &&
-+	    be32_to_cpu(sdt->ref_tag) != ei_lba) {
-+		pr_err("%s: REF check failed on sector %lu\n",
-+			__func__, (unsigned long)sector);
-+			dif_errors++;
-+		return 0x03;
-+	}
-+	return 0;
-+}
-+
- static int prot_verify_read(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 			    unsigned int sectors, u32 ei_lba)
- {
-@@ -1726,52 +1770,21 @@ static int prot_verify_read(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 
- 	for (i = 0 ; i < sectors ; i++) {
- 		u16 csum;
-+		int ret;
- 
- 		if (sdt[i].app_tag == 0xffff)
- 			continue;
- 
- 		sector = start_sec + i;
- 
--		switch (scsi_debug_guard) {
--		case 1:
--			csum = ip_compute_csum(fake_storep +
--					       sector * scsi_debug_sector_size,
--					       scsi_debug_sector_size);
--			break;
--		case 0:
--			csum = crc_t10dif(fake_storep +
--					  sector * scsi_debug_sector_size,
--					  scsi_debug_sector_size);
--			csum = cpu_to_be16(csum);
--			break;
--		default:
--			BUG();
--		}
-+		csum = dif_compute_csum(fake_storep +
-+					sector * scsi_debug_sector_size,
-+					scsi_debug_sector_size);
- 
--		if (sdt[i].guard_tag != csum) {
--			printk(KERN_ERR "%s: GUARD check failed on sector %lu" \
--			       " rcvd 0x%04x, data 0x%04x\n", __func__,
--			       (unsigned long)sector,
--			       be16_to_cpu(sdt[i].guard_tag),
--			       be16_to_cpu(csum));
-+		ret = dif_verify(&sdt[i], csum, sector, ei_lba);
-+		if (ret) {
- 			dif_errors++;
--			return 0x01;
--		}
--
--		if (scsi_debug_dif == SD_DIF_TYPE1_PROTECTION &&
--		    be32_to_cpu(sdt[i].ref_tag) != (sector & 0xffffffff)) {
--			printk(KERN_ERR "%s: REF check failed on sector %lu\n",
--			       __func__, (unsigned long)sector);
--			dif_errors++;
--			return 0x03;
--		}
--
--		if (scsi_debug_dif == SD_DIF_TYPE2_PROTECTION &&
--		    be32_to_cpu(sdt[i].ref_tag) != ei_lba) {
--			printk(KERN_ERR "%s: REF check failed on sector %lu\n",
--			       __func__, (unsigned long)sector);
--			dif_errors++;
--			return 0x03;
-+			return ret;
- 		}
- 
- 		ei_lba++;
-@@ -1911,50 +1924,10 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 
- 			sdt = paddr + ppage_offset;
- 
--			switch (scsi_debug_guard) {
--			case 1:
--				csum = ip_compute_csum(daddr,
--						       scsi_debug_sector_size);
--				break;
--			case 0:
--				csum = cpu_to_be16(crc_t10dif(daddr,
--						      scsi_debug_sector_size));
--				break;
--			default:
--				BUG();
--				ret = 0;
--				goto out;
--			}
--
--			if (sdt->guard_tag != csum) {
--				printk(KERN_ERR
--				       "%s: GUARD check failed on sector %lu " \
--				       "rcvd 0x%04x, calculated 0x%04x\n",
--				       __func__, (unsigned long)sector,
--				       be16_to_cpu(sdt->guard_tag),
--				       be16_to_cpu(csum));
--				ret = 0x01;
--				dump_sector(daddr, scsi_debug_sector_size);
--				goto out;
--			}
--
--			if (scsi_debug_dif == SD_DIF_TYPE1_PROTECTION &&
--			    be32_to_cpu(sdt->ref_tag)
--			    != (start_sec & 0xffffffff)) {
--				printk(KERN_ERR
--				       "%s: REF check failed on sector %lu\n",
--				       __func__, (unsigned long)sector);
--				ret = 0x03;
--				dump_sector(daddr, scsi_debug_sector_size);
--				goto out;
--			}
-+			csum = dif_compute_csum(daddr, scsi_debug_sector_size);
- 
--			if (scsi_debug_dif == SD_DIF_TYPE2_PROTECTION &&
--			    be32_to_cpu(sdt->ref_tag) != ei_lba) {
--				printk(KERN_ERR
--				       "%s: REF check failed on sector %lu\n",
--				       __func__, (unsigned long)sector);
--				ret = 0x03;
-+			ret = dif_verify(sdt, csum, start_sec, ei_lba);
-+			if (ret) {
- 				dump_sector(daddr, scsi_debug_sector_size);
- 				goto out;
- 			}
--- 
-1.8.1.4
 
