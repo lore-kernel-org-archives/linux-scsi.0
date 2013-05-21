@@ -1,7 +1,7 @@
 From: Peter Huewe <peterhuewe@gmx.de>
-Subject: [PATCH 2/6] scsi/hpsa: Use module_pci_driver to register driver
-Date: Tue, 21 May 2013 23:36:17 +0200
-Message-ID: <1369172181-22070-2-git-send-email-peterhuewe@gmx.de>
+Subject: [PATCH 6/6] scsi/dmx3191d: Use module_pci_driver to register driver
+Date: Tue, 21 May 2013 23:36:21 +0200
+Message-ID: <1369172181-22070-6-git-send-email-peterhuewe@gmx.de>
 References: <1369172181-22070-1-git-send-email-peterhuewe@gmx.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1369172181-22070-1-git-send-email-peterhuewe@gmx.de>
@@ -15,29 +15,33 @@ register and unregister in the otherwise empty init/exit functions.
 
 Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
 ---
- drivers/scsi/hpsa.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+ drivers/scsi/dmx3191d.c | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 7f4f790..0e2d91b 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -5176,15 +5176,4 @@ clean_up:
-  *  This is it.  Register the PCI driver information for the cards we control
-  *  the OS will call our registered routines when it finds one of our cards.
-  */
--static int __init hpsa_init(void)
+diff --git a/drivers/scsi/dmx3191d.c b/drivers/scsi/dmx3191d.c
+index 4b0dd8c..2e4456d 100644
+--- a/drivers/scsi/dmx3191d.c
++++ b/drivers/scsi/dmx3191d.c
+@@ -153,19 +153,7 @@ static struct pci_driver dmx3191d_pci_driver = {
+ 	.remove		= dmx3191d_remove_one,
+ };
+ 
+-static int __init dmx3191d_init(void)
 -{
--	return pci_register_driver(&hpsa_pci_driver);
+-	return pci_register_driver(&dmx3191d_pci_driver);
 -}
 -
--static void __exit hpsa_cleanup(void)
+-static void __exit dmx3191d_exit(void)
 -{
--	pci_unregister_driver(&hpsa_pci_driver);
+-	pci_unregister_driver(&dmx3191d_pci_driver);
 -}
 -
--module_init(hpsa_init);
--module_exit(hpsa_cleanup);
-+module_pci_driver(hpsa_pci_driver);
+-module_init(dmx3191d_init);
+-module_exit(dmx3191d_exit);
+-
++module_pci_driver(dmx3191d_pci_driver);
+ MODULE_AUTHOR("Massimo Piccioni <dafastidio@libero.it>");
+ MODULE_DESCRIPTION("Domex DMX3191D SCSI driver");
+ MODULE_LICENSE("GPL");
 -- 
 1.8.1.5
