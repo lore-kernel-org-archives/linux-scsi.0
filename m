@@ -1,15 +1,15 @@
 From: Peter Huewe <peterhuewe@gmx.de>
-Subject: [PATCH 3/6] scsi/dc395x: Use module_pci_driver to register driver
-Date: Tue, 21 May 2013 23:36:18 +0200
-Message-ID: <1369172181-22070-3-git-send-email-peterhuewe@gmx.de>
+Subject: [PATCH 4/6] scsi/mvumi: Use module_pci_driver to register driver
+Date: Tue, 21 May 2013 23:36:19 +0200
+Message-ID: <1369172181-22070-4-git-send-email-peterhuewe@gmx.de>
 References: <1369172181-22070-1-git-send-email-peterhuewe@gmx.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:59966 "EHLO mout.gmx.net"
+Received: from mout.gmx.net ([212.227.17.20]:56910 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752683Ab3EUVbO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 May 2013 17:31:14 -0400
+	id S1751282Ab3EUVbP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 May 2013 17:31:15 -0400
 Received: from mailout-de.gmx.net ([10.1.76.32]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0MFfRr-1Uk6g00ISb-00Ec5h for
+ (mrigmx001) with ESMTP (Nemesis) id 0MC6gQ-1UnfZh3196-008r5F for
  <linux-scsi@vger.kernel.org>; Tue, 21 May 2013 23:31:13 +0200
 In-Reply-To: <1369172181-22070-1-git-send-email-peterhuewe@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -22,45 +22,45 @@ register and unregister in the otherwise empty init/exit functions.
 
 Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
 ---
- drivers/scsi/dc395x.c | 25 +------------------------
- 1 file changed, 1 insertion(+), 24 deletions(-)
+ drivers/scsi/mvumi.c | 21 +--------------------
+ 1 file changed, 1 insertion(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 694e13c..4e6f29f 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -4882,30 +4882,7 @@ static struct pci_driver dc395x_driver = {
- 	.remove         = dc395x_remove_one,
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index c3601b5..92a3254 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -2723,7 +2723,6 @@ fail:
+ }
+ 
+ static struct pci_driver mvumi_pci_driver = {
+-
+ 	.name = MV_DRIVER_NAME,
+ 	.id_table = mvumi_pci_table,
+ 	.probe = mvumi_probe_one,
+@@ -2735,22 +2734,4 @@ static struct pci_driver mvumi_pci_driver = {
+ #endif
  };
  
--
 -/**
-- * dc395x_module_init - Module initialization function
-- *
-- * Used by both module and built-in driver to initialise this driver.
-- **/
--static int __init dc395x_module_init(void)
+- * mvumi_init - Driver load entry point
+- */
+-static int __init mvumi_init(void)
 -{
--	return pci_register_driver(&dc395x_driver);
+-	return pci_register_driver(&mvumi_pci_driver);
 -}
 -
--
 -/**
-- * dc395x_module_exit - Module cleanup function.
-- **/
--static void __exit dc395x_module_exit(void)
+- * mvumi_exit - Driver unload entry point
+- */
+-static void __exit mvumi_exit(void)
 -{
--	pci_unregister_driver(&dc395x_driver);
+-
+-	pci_unregister_driver(&mvumi_pci_driver);
 -}
 -
--
--module_init(dc395x_module_init);
--module_exit(dc395x_module_exit);
--
-+module_pci_driver(dc395x_driver);
- MODULE_AUTHOR("C.L. Huang / Erich Chen / Kurt Garloff");
- MODULE_DESCRIPTION("SCSI host adapter driver for Tekram TRM-S1040 based adapters: Tekram DC395 and DC315 series");
- MODULE_LICENSE("GPL");
+-module_init(mvumi_init);
+-module_exit(mvumi_exit);
++module_pci_driver(mvumi_pci_driver);
 -- 
 1.8.1.5
 
