@@ -1,41 +1,32 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: [PATCH] ipr: qc_fill_rtf() method should not store alternate status register
-Date: Tue, 21 May 2013 23:24:22 +0400
-Message-ID: <201305212324.22822.sergei.shtylyov@cogentembedded.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/3] sd_try_extended_inquiry for SPC-3 targets
+Date: Tue, 21 May 2013 15:33:28 -0400
+Message-ID: <yq1zjvo5drr.fsf@sermon.lab.mkp.net>
+References: <35421216.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: brking@us.ibm.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, tj@kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:25091 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752737Ab3EUTdK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 May 2013 15:33:10 -0400
+In-Reply-To: <35421216.post@talk.nabble.com> (Ilan Steinberg's message of
+	"Tue, 21 May 2013 06:40:56 -0700 (PDT)")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ilan Steinberg <ilan.steinberg@kaminario.com>
+Cc: linux-scsi@vger.kernel.org
 
-The 'ctl' field of  the 'struct ata_taskfile' is not really dual purpose, i.e.
-it is not intended  for storing the alternate status register (which is mapped
-at the same address in the legacy IDE controllers) in the qc_fill_rtf() method.
-No other 'libata' driver except 'drivers/scsi/ipr.c' stores the alternate status
-register's value in the 'ctl' field of 'qc->result_tf', hence this driver should
-not do this as well...
+>>>>> "Ilan" == Ilan Steinberg <ilan.steinberg@kaminario.com> writes:
 
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Ilan> If you read the comment it seams to me that the test
+Ilan> (sdp->scsi_level > SCSI_SPC_2) is incorrect.
 
----
-The patch is against the recent Linus' tree.
+scsi_device->scsi_level is not in sync with SPC-n. We set scsi_level
+to match the offset Linux constants at device discovery time.
 
- drivers/scsi/ipr.c |    1 -
- 1 file changed, 1 deletion(-)
+Did you remember to include the Block Device Characteristics VPD page in
+your page 0?
 
-Index: linux/drivers/scsi/ipr.c
-===================================================================
---- linux.orig/drivers/scsi/ipr.c
-+++ linux/drivers/scsi/ipr.c
-@@ -6662,7 +6662,6 @@ static bool ipr_qc_fill_rtf(struct ata_q
- 	tf->hob_lbal = g->hob_lbal;
- 	tf->hob_lbam = g->hob_lbam;
- 	tf->hob_lbah = g->hob_lbah;
--	tf->ctl = g->alt_status;
- 
- 	return true;
- }
+-- 
+Martin K. Petersen	Oracle Linux Engineering
