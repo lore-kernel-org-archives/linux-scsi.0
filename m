@@ -1,20 +1,20 @@
 From: Ilan Steinberg <ilan.steinberg@kaminario.com>
 Subject: [PATCH 1/3] sd_try_extended_inquiry for SPC-3 targets
-Date: Tue, 21 May 2013 06:39:26 -0700 (PDT)
-Message-ID: <35421210.post@talk.nabble.com>
+Date: Tue, 21 May 2013 06:40:24 -0700 (PDT)
+Message-ID: <35421213.post@talk.nabble.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sam.nabble.com ([216.139.236.26]:34479 "EHLO sam.nabble.com"
+Received: from sam.nabble.com ([216.139.236.26]:35352 "EHLO sam.nabble.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753370Ab3EUNj1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 May 2013 09:39:27 -0400
+	id S1752026Ab3EUNkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 May 2013 09:40:24 -0400
 Received: from telerig.nabble.com ([192.168.236.162])
 	by sam.nabble.com with esmtp (Exim 4.72)
 	(envelope-from <lists@nabble.com>)
-	id 1Uemmk-0006dF-Na
-	for linux-scsi@vger.kernel.org; Tue, 21 May 2013 06:39:26 -0700
+	id 1Uemng-0007Ij-4X
+	for linux-scsi@vger.kernel.org; Tue, 21 May 2013 06:40:24 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -95,6 +95,6 @@ since the initial git)?
 Thank you,
 Ilan Steinberg
 -- 
-View this message in context: http://old.nabble.com/sd_try_extended_inquiry-for-SPC-3-targets-tp35421210p35421210.html
+View this message in context: http://old.nabble.com/sd_try_extended_inquiry-for-SPC-3-targets-tp35421213p35421213.html
 Sent from the linux-scsi mailing list archive at Nabble.com.
 
