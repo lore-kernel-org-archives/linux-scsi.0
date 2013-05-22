@@ -1,99 +1,84 @@
 From: <Sumit.Saxena@lsi.com>
-Subject: [PATCH 11/12] megaraid_sas : Add support to differentiate between iMR vs MR Firmware
-Date: Wed, 22 May 2013 12:35:33 +0530
-Message-ID: <201305221235.r4MCZnQH013033@cosmhbs0.lsi.com>
+Subject: [PATCH 12/12] megaraid_sas : Changelog and driver version update
+Date: Wed, 22 May 2013 12:36:17 +0530
+Message-ID: <201305221236.r4MCaXt6013120@cosmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:40583
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751035Ab3EVMgU (ORCPT
+Received: from mail-db9lp0252.outbound.messaging.microsoft.com ([213.199.154.252]:9630
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753981Ab3EVMvs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 May 2013 08:36:20 -0400
+	Wed, 22 May 2013 08:51:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: jbottomley@parallels.com, kashyap.desai@lsi.com, aradford@gmail.com
 
-Add support to differentiate between iMR(no external memory) and MR(with external memory) controllers.
+This patch updates the megaraid_sas driver version and updates Documentation/scsi/ChangeLog.megaraid_sas.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
+diff --git a/Documentation/scsi/ChangeLog.megaraid_sas b/Documentation/scsi/ChangeLog.megaraid_sas
+index 09673c7..cc92ca8 100644
+--- a/Documentation/scsi/ChangeLog.megaraid_sas
++++ b/Documentation/scsi/ChangeLog.megaraid_sas
+@@ -1,3 +1,25 @@
++Release Date    : Wed. May 15, 2013 17:00:00 PST 2013 -
++			(emaild-id:megaraidlinux@lsi.com)
++			Adam Radford
++			Kashyap Desai
++			Sumit Saxena
++Current Version : 06.600.18.00-rc1
++Old Version     : 06.506.00.00-rc1
++    1. Return DID_ERROR for scsi io, when controller is in critical h/w error.
++    2. Fix the interrupt mask for Gen2 controller.
++    3. Update balance count in driver to be in sync of firmware.
++    4. Free event detail memory without device ID check.
++    5. Set IO request timeout value provided by OS timeout for Tape devices.
++    6. Add support for MegaRAID Fury (device ID-0x005f) 12Gb/s controllers.
++    7. Add support to display Customer branding details in syslog.
++    8. Set IoFlags to enable Fast Path for JBODs for Invader/Fury(12 Gb/s)
++    controllers.
++    9. Add support for Extended MSI-x vectors for Invader and Fury(12Gb/s
++    HBA).
++    10.Add support for Uneven Span PRL11.
++    11.Add support to differentiate between iMR and MR Firmware.
++    12.Version and Changelog update.
++-------------------------------------------------------------------------------
+ Release Date    : Sat. Feb 9, 2013 17:00:00 PST 2013 -
+ 			(emaild-id:megaraidlinux@lsi.com)
+ 			Adam Radford
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index dab46c2..1c2b1b9 100644
+index 408d254..89f11be 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1533,6 +1533,7 @@ struct megasas_instance {
- 	struct mutex reset_mutex;
- 	int throttlequeuedepth;
- 	u8 mask_interrupts;
-+	u8 is_imr;
- };
+@@ -33,9 +33,9 @@
+ /*
+  * MegaRAID SAS Driver meta data
+  */
+-#define MEGASAS_VERSION				"06.506.00.00-rc1"
+-#define MEGASAS_RELDATE				"Feb. 9, 2013"
+-#define MEGASAS_EXT_VERSION			"Sat. Feb. 9 17:00:00 PDT 2013"
++#define MEGASAS_VERSION				"06.600.18.00-rc1"
++#define MEGASAS_RELDATE				"May. 15, 2013"
++#define MEGASAS_EXT_VERSION			"Wed. May. 15 17:00:00 PDT 2013"
  
- enum {
+ /*
+  * Device IDs
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 21f0434..adb3911 100644
+index 9d53540..171811e 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1641,10 +1641,7 @@ megasas_check_and_restore_queue_depth(struct megasas_instance *instance)
- 
- 		spin_lock_irqsave(instance->host->host_lock, flags);
- 		instance->flag &= ~MEGASAS_FW_BUSY;
--		if ((instance->pdev->device ==
--			PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
--			(instance->pdev->device ==
--			PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
-+		if (instance->is_imr) {
- 			instance->host->can_queue =
- 				instance->max_fw_cmds - MEGASAS_SKINNY_INT_CMDS;
- 		} else
-@@ -3662,6 +3659,18 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 		max_sectors_2 = ctrl_info->max_request_size;
- 
- 		tmp_sectors = min_t(u32, max_sectors_1 , max_sectors_2);
-+
-+		/*Check whether controller is iMR or MR */
-+		if (ctrl_info->memory_size) {
-+			instance->is_imr = 0;
-+			dev_info(&instance->pdev->dev, "Controller type: MR,"
-+				"Memory size is: %dMB\n",
-+				ctrl_info->memory_size);
-+		} else {
-+			instance->is_imr = 1;
-+			dev_info(&instance->pdev->dev,
-+				"Controller type: iMR\n");
-+		}
- 		instance->disableOnlineCtrlReset =
- 		ctrl_info->properties.OnOffProperties.disableOnlineCtrlReset;
- 		instance->UnevenSpanSupport =
-@@ -3686,8 +3695,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	kfree(ctrl_info);
- 
- 	/* Check for valid throttlequeuedepth module parameter */
--	if (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY ||
--	    instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY) {
-+	if (instance->is_imr) {
- 		if (throttlequeuedepth > (instance->max_fw_cmds -
- 					  MEGASAS_SKINNY_INT_CMDS))
- 			instance->throttlequeuedepth =
-@@ -3971,8 +3979,7 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 	 */
- 	host->irq = instance->pdev->irq;
- 	host->unique_id = instance->unique_id;
--	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
--		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
-+	if (instance->is_imr) {
- 		host->can_queue =
- 			instance->max_fw_cmds - MEGASAS_SKINNY_INT_CMDS;
- 	} else
-@@ -4167,6 +4174,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	instance->ev = NULL;
- 	instance->issuepend_done = 1;
- 	instance->adprecovery = MEGASAS_HBA_OPERATIONAL;
-+	instance->is_imr = 0;
- 	megasas_poll_wait_aen = 0;
- 
- 	instance->evt_detail = pci_alloc_consistent(pdev,
+@@ -18,7 +18,7 @@
+  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+  *
+  *  FILE: megaraid_sas_base.c
+- *  Version : v06.506.00.00-rc1
++ *  Version : 06.600.18.00-rc1
+  *
+  *  Authors: LSI Corporation
+  *           Sreenivas Bagalkote
 
