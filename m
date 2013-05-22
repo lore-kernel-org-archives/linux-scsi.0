@@ -1,323 +1,142 @@
 From: <Sumit.Saxena@lsi.com>
-Subject: [PATCH 06/12] megaraid_sas : Add support for MegaRAID Fury
- (device ID-0x005f) 12Gb/s controllers
-Date: Wed, 22 May 2013 12:31:43 +0530
-Message-ID: <201305221232.r4MCVx3u012154@cosmhbs0.lsi.com>
+Subject: [PATCH 07/12] megaraid_sas : Add support to display Customer
+ branding details in syslog
+Date: Wed, 22 May 2013 12:32:43 +0530
+Message-ID: <201305221233.r4MCWx8x012554@cosmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:42215
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:24525
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755815Ab3EVMcG (ORCPT
+	by vger.kernel.org with ESMTP id S1754617Ab3EVMdF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 May 2013 08:32:06 -0400
+	Wed, 22 May 2013 08:33:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: jbottomley@parallels.com, kashyap.desai@lsi.com, aradford@gmail.com
 
-Add support for MegaRAID Fury (device ID-0x005f) 12Gb/s controllers.
+Add support to display Customer branding details in syslog.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 408d254..64cc4d4 100644
+index 64cc4d4..474f79f 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -49,6 +49,7 @@
- #define	PCI_DEVICE_ID_LSI_SAS0071SKINNY		0x0071
- #define	PCI_DEVICE_ID_LSI_FUSION		0x005b
- #define PCI_DEVICE_ID_LSI_INVADER		0x005d
-+#define PCI_DEVICE_ID_LSI_FURY			0x005f
+@@ -52,6 +52,32 @@
+ #define PCI_DEVICE_ID_LSI_FURY			0x005f
  
  /*
-  * =====================================
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 5beea2f..07dbeb8 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -122,6 +122,8 @@ static struct pci_device_id megasas_pci_table[] = {
- 	/* Fusion */
- 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_INVADER)},
- 	/* Invader */
-+	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FURY)},
-+	/* Fury */
- 	{}
- };
- 
-@@ -223,6 +225,7 @@ megasas_return_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
- 	cmd->frame_count = 0;
- 	if ((instance->pdev->device != PCI_DEVICE_ID_LSI_FUSION) &&
- 	    (instance->pdev->device != PCI_DEVICE_ID_LSI_INVADER) &&
-+	    (instance->pdev->device != PCI_DEVICE_ID_LSI_FURY) &&
- 	    (reset_devices))
- 		cmd->frame->hdr.cmd = MFI_CMD_INVALID;
- 	list_add_tail(&cmd->list, &instance->cmd_pool);
-@@ -1599,7 +1602,8 @@ void megaraid_sas_kill_hba(struct megasas_instance *instance)
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
- 	    (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY) ||
- 	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
--	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER)) {
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
- 		writel(MFI_STOP_ADP, &instance->reg_set->doorbell);
- 	} else {
- 		writel(MFI_STOP_ADP, &instance->reg_set->inbound_doorbell);
-@@ -1974,7 +1978,8 @@ static int megasas_reset_bus_host(struct scsi_cmnd *scmd)
- 	 * First wait for all commands to complete
- 	 */
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
--	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER))
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FURY))
- 		ret = megasas_reset_fusion(scmd->device->host);
- 	else
- 		ret = megasas_generic_reset(scmd);
-@@ -2680,9 +2685,11 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 				(instance->pdev->device ==
- 				 PCI_DEVICE_ID_LSI_SAS0071SKINNY) ||
- 				(instance->pdev->device ==
--				 PCI_DEVICE_ID_LSI_FUSION) ||
-+				PCI_DEVICE_ID_LSI_FUSION) ||
- 				(instance->pdev->device ==
--				PCI_DEVICE_ID_LSI_INVADER)) {
-+				PCI_DEVICE_ID_LSI_INVADER) ||
-+				(instance->pdev->device ==
-+				PCI_DEVICE_ID_LSI_FURY)) {
- 				writel(
- 				  MFI_INIT_CLEAR_HANDSHAKE|MFI_INIT_HOTPLUG,
- 				  &instance->reg_set->doorbell);
-@@ -2704,7 +2711,9 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 			    (instance->pdev->device ==
- 			     PCI_DEVICE_ID_LSI_FUSION) ||
- 			    (instance->pdev->device ==
--			     PCI_DEVICE_ID_LSI_INVADER)) {
-+			     PCI_DEVICE_ID_LSI_INVADER) ||
-+			    (instance->pdev->device ==
-+			     PCI_DEVICE_ID_LSI_FURY)) {
- 				writel(MFI_INIT_HOTPLUG,
- 				       &instance->reg_set->doorbell);
- 			} else
-@@ -2727,13 +2736,17 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 				(instance->pdev->device
- 					== PCI_DEVICE_ID_LSI_FUSION) ||
- 				(instance->pdev->device
--					== PCI_DEVICE_ID_LSI_INVADER)) {
-+					== PCI_DEVICE_ID_LSI_INVADER) ||
-+				(instance->pdev->device
-+					== PCI_DEVICE_ID_LSI_FURY)) {
- 				writel(MFI_RESET_FLAGS,
- 					&instance->reg_set->doorbell);
- 				if ((instance->pdev->device ==
--				    PCI_DEVICE_ID_LSI_FUSION) ||
--				    (instance->pdev->device ==
--				     PCI_DEVICE_ID_LSI_INVADER)) {
-+					PCI_DEVICE_ID_LSI_FUSION) ||
-+					(instance->pdev->device ==
-+					PCI_DEVICE_ID_LSI_INVADER) ||
-+					(instance->pdev->device ==
-+					PCI_DEVICE_ID_LSI_FURY)) {
- 					for (i = 0; i < (10 * 1000); i += 20) {
- 						if (readl(
- 							    &instance->
-@@ -2958,6 +2971,7 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
- 		cmd->frame->io.pad_0 = 0;
- 		if ((instance->pdev->device != PCI_DEVICE_ID_LSI_FUSION) &&
- 		    (instance->pdev->device != PCI_DEVICE_ID_LSI_INVADER) &&
-+			(instance->pdev->device != PCI_DEVICE_ID_LSI_FURY) &&
- 		    (reset_devices))
- 			cmd->frame->hdr.cmd = MFI_CMD_INVALID;
- 	}
-@@ -3495,6 +3509,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	switch (instance->pdev->device) {
- 	case PCI_DEVICE_ID_LSI_FUSION:
- 	case PCI_DEVICE_ID_LSI_INVADER:
-+	case PCI_DEVICE_ID_LSI_FURY:
- 		instance->instancet = &megasas_instance_template_fusion;
- 		break;
- 	case PCI_DEVICE_ID_LSI_SAS1078R:
-@@ -3528,7 +3543,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	if (msix_enable && !msix_disable) {
- 		/* Check max MSI-X vectors */
- 		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
--		    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER)) {
-+			(instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+			(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
- 			instance->msix_vectors = (readl(&instance->reg_set->
- 							outbound_scratch_pad_2
- 							  ) & 0x1F) + 1;
-@@ -3933,7 +3949,8 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 
- 	/* Fusion only supports host reset */
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
--	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER)) {
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
- 		host->hostt->eh_device_reset_handler = NULL;
- 		host->hostt->eh_bus_reset_handler = NULL;
- 	}
-@@ -4044,6 +4061,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	switch (instance->pdev->device) {
- 	case PCI_DEVICE_ID_LSI_FUSION:
- 	case PCI_DEVICE_ID_LSI_INVADER:
-+	case PCI_DEVICE_ID_LSI_FURY:
- 	{
- 		struct fusion_context *fusion;
- 
-@@ -4136,7 +4154,8 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	instance->disableOnlineCtrlReset = 1;
- 
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
--	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER))
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FURY))
- 		INIT_WORK(&instance->work_init, megasas_fusion_ocr_wq);
- 	else
- 		INIT_WORK(&instance->work_init, process_fw_state_change_wq);
-@@ -4227,7 +4246,8 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 		free_irq(instance->pdev->irq, &instance->irq_context[0]);
- fail_irq:
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
--	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER))
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FURY))
- 		megasas_release_fusion(instance);
- 	else
- 		megasas_release_mfi(instance);
-@@ -4438,6 +4458,7 @@ megasas_resume(struct pci_dev *pdev)
- 	switch (instance->pdev->device) {
- 	case PCI_DEVICE_ID_LSI_FUSION:
- 	case PCI_DEVICE_ID_LSI_INVADER:
-+	case PCI_DEVICE_ID_LSI_FURY:
- 	{
- 		megasas_reset_reply_desc(instance);
- 		if (megasas_ioc_init_fusion(instance)) {
-@@ -4587,6 +4608,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 	switch (instance->pdev->device) {
- 	case PCI_DEVICE_ID_LSI_FUSION:
- 	case PCI_DEVICE_ID_LSI_INVADER:
-+	case PCI_DEVICE_ID_LSI_FURY:
- 		megasas_release_fusion(instance);
- 		for (i = 0; i < 2 ; i++)
- 			if (fusion->ld_map[i])
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index b06a240..8e62b87 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -238,6 +238,11 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	u64         row;
- 	u8	    retval = TRUE;
- 	int	    error_code = 0;
-+	u8          do_invader = 0;
++ * Intel HBA SSDIDs
++ */
++#define MEGARAID_INTEL_RS3DC080_SSDID		0x9360
++#define MEGARAID_INTEL_RS3DC040_SSDID		0x9362
++#define MEGARAID_INTEL_RS3SC008_SSDID		0x9380
++#define MEGARAID_INTEL_RS3MC044_SSDID		0x9381
++#define MEGARAID_INTEL_RS3WC080_SSDID		0x9341
++#define MEGARAID_INTEL_RS3WC040_SSDID		0x9343
 +
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER ||
-+		instance->pdev->device == PCI_DEVICE_ID_LSI_FURY))
-+		do_invader = 1;
- 
- 	row =  mega_div64_32(stripRow, raid->rowDataSize);
- 
-@@ -282,9 +287,8 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	else {
- 		*pDevHandle = MR_PD_INVALID; /* set dev handle as invalid. */
- 		if ((raid->level >= 5) &&
--		    ((instance->pdev->device != PCI_DEVICE_ID_LSI_INVADER) ||
--		     (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER &&
--		      raid->regTypeReqOnRead != REGION_TYPE_UNUSED)))
-+			(!do_invader  || (do_invader &&
-+			(raid->regTypeReqOnRead != REGION_TYPE_UNUSED))))
- 			pRAID_Context->regLockFlags = REGION_TYPE_EXCLUSIVE;
- 		else if (raid->level == 1) {
- 			/* Get alternate Pd. */
-@@ -405,7 +409,8 @@ MR_BuildRaidContext(struct megasas_instance *instance,
- 	}
- 
- 	pRAID_Context->timeoutValue     = map->raidMap.fpPdIoTimeoutSec;
--	if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER)
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+		(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY))
- 		pRAID_Context->regLockFlags = (isRead) ?
- 			raid->regTypeReqOnRead : raid->regTypeReqOnWrite;
- 	else
++/*
++ * Intel HBA branding
++ */
++#define MEGARAID_INTEL_RS3DC080_BRANDING	\
++	"Intel(R) RAID Controller RS3DC080"
++#define MEGARAID_INTEL_RS3DC040_BRANDING	\
++	"Intel(R) RAID Controller RS3DC040"
++#define MEGARAID_INTEL_RS3SC008_BRANDING	\
++	"Intel(R) RAID Controller RS3SC008"
++#define MEGARAID_INTEL_RS3MC044_BRANDING	\
++	"Intel(R) RAID Controller RS3MC044"
++#define MEGARAID_INTEL_RS3WC080_BRANDING	\
++	"Intel(R) RAID Controller RS3WC080"
++#define MEGARAID_INTEL_RS3WC040_BRANDING	\
++	"Intel(R) RAID Controller RS3WC040"
++
++/*
+  * =====================================
+  * MegaRAID SAS MFI firmware definitions
+  * =====================================
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 750cbdf..454743d 100644
+index 454743d..73aa68e 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1071,7 +1071,8 @@ megasas_make_sgl_fusion(struct megasas_instance *instance,
+@@ -864,6 +864,66 @@ megasas_sync_map_info(struct megasas_instance *instance)
+ 	return ret;
+ }
  
- 	fusion = instance->ctrl_context;
++/*
++ * meagasas_display_intel_branding - Display branding string
++ * @instance: per adapter object
++ *
++ * Return nothing.
++ */
++static void
++megasas_display_intel_branding(struct megasas_instance *instance)
++{
++	if (instance->pdev->subsystem_vendor != PCI_VENDOR_ID_INTEL)
++		return;
++
++	switch (instance->pdev->device) {
++	case PCI_DEVICE_ID_LSI_INVADER:
++		switch (instance->pdev->subsystem_device) {
++		case MEGARAID_INTEL_RS3DC080_SSDID:
++			dev_info(&instance->pdev->dev, "scsi host %d: %s\n",
++				instance->host->host_no,
++				MEGARAID_INTEL_RS3DC080_BRANDING);
++			break;
++		case MEGARAID_INTEL_RS3DC040_SSDID:
++			dev_info(&instance->pdev->dev, "scsi host %d: %s\n",
++				instance->host->host_no,
++				MEGARAID_INTEL_RS3DC040_BRANDING);
++			break;
++		case MEGARAID_INTEL_RS3SC008_SSDID:
++			dev_info(&instance->pdev->dev, "scsi host %d: %s\n",
++				instance->host->host_no,
++				MEGARAID_INTEL_RS3SC008_BRANDING);
++			break;
++		case MEGARAID_INTEL_RS3MC044_SSDID:
++			dev_info(&instance->pdev->dev, "scsi host %d: %s\n",
++				instance->host->host_no,
++				MEGARAID_INTEL_RS3MC044_BRANDING);
++			break;
++		default:
++			break;
++		}
++		break;
++	case PCI_DEVICE_ID_LSI_FURY:
++		switch (instance->pdev->subsystem_device) {
++		case MEGARAID_INTEL_RS3WC080_SSDID:
++			dev_info(&instance->pdev->dev, "scsi host %d: %s\n",
++				instance->host->host_no,
++				MEGARAID_INTEL_RS3WC080_BRANDING);
++			break;
++		case MEGARAID_INTEL_RS3WC040_SSDID:
++			dev_info(&instance->pdev->dev, "scsi host %d: %s\n",
++				instance->host->host_no,
++				MEGARAID_INTEL_RS3WC040_BRANDING);
++			break;
++		default:
++			break;
++		}
++		break;
++	default:
++		break;
++	}
++}
++
+ /**
+  * megasas_init_adapter_fusion -	Initializes the FW
+  * @instance:		Adapter soft state
+@@ -944,6 +1004,8 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ 	if (megasas_ioc_init_fusion(instance))
+ 		goto fail_ioc_init;
  
--	if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+		(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
- 		struct MPI25_IEEE_SGE_CHAIN64 *sgl_ptr_end = sgl_ptr;
- 		sgl_ptr_end += fusion->max_sge_in_main_msg - 1;
- 		sgl_ptr_end->Flags = 0;
-@@ -1088,7 +1089,8 @@ megasas_make_sgl_fusion(struct megasas_instance *instance,
- 		sgl_ptr->Length = sg_dma_len(os_sgl);
- 		sgl_ptr->Address = sg_dma_address(os_sgl);
- 		sgl_ptr->Flags = 0;
--		if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+			(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
- 			if (i == sge_count - 1)
- 				sgl_ptr->Flags = IEEE_SGE_FLAGS_END_OF_LIST;
- 		}
-@@ -1100,8 +1102,10 @@ megasas_make_sgl_fusion(struct megasas_instance *instance,
- 		    (sge_count > fusion->max_sge_in_main_msg)) {
++	megasas_display_intel_branding(instance);
++
+ 	instance->flag_ieee = 1;
  
- 			struct MPI25_IEEE_SGE_CHAIN64 *sg_chain;
--			if (instance->pdev->device ==
--			    PCI_DEVICE_ID_LSI_INVADER) {
-+			if ((instance->pdev->device ==
-+				PCI_DEVICE_ID_LSI_INVADER) ||
-+				(instance->pdev->device ==
-+				PCI_DEVICE_ID_LSI_FURY)) {
- 				if ((cmd->io_request->IoFlags &
- 				MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH) !=
- 				MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH)
-@@ -1117,8 +1121,10 @@ megasas_make_sgl_fusion(struct megasas_instance *instance,
- 			sg_chain = sgl_ptr;
- 			/* Prepare chain element */
- 			sg_chain->NextChainOffset = 0;
--			if (instance->pdev->device ==
--			    PCI_DEVICE_ID_LSI_INVADER)
-+			if ((instance->pdev->device ==
-+				PCI_DEVICE_ID_LSI_INVADER) ||
-+				(instance->pdev->device ==
-+				PCI_DEVICE_ID_LSI_FURY))
- 				sg_chain->Flags = IEEE_SGE_FLAGS_CHAIN_ELEMENT;
- 			else
- 				sg_chain->Flags =
-@@ -1434,7 +1440,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 		cmd->request_desc->SCSIIO.RequestFlags =
- 			(MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY
- 			 << MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
--		if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+			(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
- 			if (io_request->RaidContext.regLockFlags ==
- 			    REGION_TYPE_UNUSED)
- 				cmd->request_desc->SCSIIO.RequestFlags =
-@@ -1465,7 +1472,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 		cmd->request_desc->SCSIIO.RequestFlags =
- 			(MEGASAS_REQ_DESCRIPT_FLAGS_LD_IO
- 			 << MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
--		if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+			(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
- 			if (io_request->RaidContext.regLockFlags ==
- 			    REGION_TYPE_UNUSED)
- 				cmd->request_desc->SCSIIO.RequestFlags =
-@@ -1941,7 +1949,8 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
- 	fusion = instance->ctrl_context;
- 	io_req = cmd->io_request;
- 
--	if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+		(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
- 		struct MPI25_IEEE_SGE_CHAIN64 *sgl_ptr_end =
- 			(struct MPI25_IEEE_SGE_CHAIN64 *)&io_req->SGL;
- 		sgl_ptr_end += fusion->max_sge_in_main_msg - 1;
+ 	fusion->map_sz =  sizeof(struct MR_FW_RAID_MAP) +
 
