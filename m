@@ -1,50 +1,56 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: PING^7 (was Re: [PATCH v2 00/14] Corrections and customization
- of the SG_IO command whitelist (CVE-2012-4542))
-Date: Wed, 22 May 2013 18:31:02 +0200
-Message-ID: <519CF2C6.4020906@redhat.com>
-References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com> <519C674A.50700@redhat.com> <20130522093249.GC3466@mtj.dyndns.org> <519C959A.3090100@redhat.com> <20130522100212.GE3466@mtj.dyndns.org> <519C9CBC.3050003@redhat.com> <1369224435.1811.22.camel@dabdike> <519430357.5931281.1369231627092.JavaMail.root@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: PING^7 (was Re: [PATCH v2 00/14] Corrections and customization of the SG_IO command whitelist (CVE-2012-4542))
+Date: Wed, 22 May 2013 12:32:33 -0400
+Message-ID: <yq1vc6b561q.fsf@sermon.lab.mkp.net>
+References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com>
+	<519C674A.50700@redhat.com> <20130522093249.GC3466@mtj.dyndns.org>
+	<519C959A.3090100@redhat.com> <20130522100212.GE3466@mtj.dyndns.org>
+	<519C9CBC.3050003@redhat.com> <20130522134134.GA15189@mtj.dyndns.org>
+	<519CD234.40608@redhat.com> <20130522150335.GC2777@thunk.org>
+	<519CE9FE.2030007@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <519430357.5931281.1369231627092.JavaMail.root@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:47811 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754399Ab3EVQcZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 May 2013 12:32:25 -0400
+In-Reply-To: <519CE9FE.2030007@redhat.com> (Paolo Bonzini's message of "Wed,
+	22 May 2013 17:53:34 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Il 22/05/2013 16:07, Paolo Bonzini ha scritto:
->> Finally, the patch for the feature I think you actually want, which is
->> 13/14, could have been implemented fairly simply as a single patch and
->> doesn't have to be part of this series.
-> 
-> It was, and it was ignored.  I sent it together because of the common
-> dependency on the first patch.
-> 
-> However, it is not the only feature I need; that patch should be just for things
-> like reservations or vendor-specific commands.  I also need that SG_IO works
-> well without any privileges, neither CAP_SYS_RAWIO (needed for a process to
-> bypass the whitelist) neither CAP_SYS_ADMIN (needed for a process to disable
-> the whitelist for others as in patch 13/14).  I need that at least for disks,
-> tapes and media changers.
+>>>>> "Paolo" == Paolo Bonzini <pbonzini@redhat.com> writes:
 
-In fact,  I'd much rather go back to userspace-configurable filters
-(http://thread.gmane.org/gmane.linux.scsi/77783/focus=1378071); then
-policy can be implemented entirely in userspace based on INQUIRY data.
-There was a patch here for the bitmaps:
-http://permalink.gmane.org/gmane.linux.kernel/1378071
+Paolo> First of all, I'll note that SG_IO and block-device-specific
+Paolo> ioctls both have their place.  My usecase for SG_IO is
+Paolo> virtualization, where I need to pass information from the LUN to
+Paolo> the virtual machine with as much fidelity as possible if I choose
+Paolo> to virtualize at the SCSI level.  
 
-IIRC turning it into a full implementation requires exposing the queue
-parameters for all SCSI devices in sysfs, even for those devices that
-are not visible as block devices.  (Again IIRC) non-block devices such
-as tapes do not have a /sys/bus/scsi/devices/h:c:i:l/block directory,
-hence they also have no block/queue to export the whitelist knobs.
+Now there's your problem! Several people told you way back that the SCSI
+virt approach was a really poor choice. The SG_IO permissions problem is
+a classic "Doctor, it hurts when I do this".
 
-You can then add a kernel config knob that would enable only the bare
-minimum set of commands (basically INQUIRY, REPORT LUNS, TEST UNIT
-READY; maybe also some of these: REQUEST SENSE, START STOP UNIT, MODE
-SENSE, LOG SENSE).  If people know that udev (or something else) is new
-enough to know how to initialize the required bitmaps, they can enable
-the knob.
+The kernel's fundamental task is to provide abstraction between
+applications and intricacies of hardware. The right way to solve the
+problem would have been to provide a better device abstraction built on
+top of the block/SCSI infrastructure we already have in place. If you
+need more fidelity, add fidelity to the block layer instead of punching
+a giant hole through it.
 
-Paolo
+I seem to recall that reservations were part of your motivation for
+going the SCSI route in the first place. A better approach would have
+been to create a generic reservations mechanism that could be exposed to
+the guest. And then let the baremetal kernel worry about the appropriate
+way to communicate with the physical hardware. Just like we've done with
+reads and writes, discard, write same, etc.
+
+The fact that burning CDs requires SG_IO in the first place is just a
+symptom that we got that interface totally wrong. cat iso.img > /dev/sr0
+would have been much more in line with how Unix works...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
