@@ -1,34 +1,52 @@
-From: Or Gerlitz <or.gerlitz@gmail.com>
-Subject: Re: [GIT PULL] target fixes for v3.10-rc2
-Date: Wed, 22 May 2013 23:38:32 +0300
-Message-ID: <CAJZOPZLkizPeFPjVzsBjwYZ3ARWgVciSgaexmyJHNAN7KAe1Og@mail.gmail.com>
-References: <1368654607.6899.16.camel@haakon3.risingtidesystems.com>
-	<CAJZOPZK7_VPzcJnc1s9oZVshvGMbm-LDVO-ZoKu63tD1bqcvDg@mail.gmail.com>
-	<1368680029.15002.32.camel@haakon3.risingtidesystems.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: PING^7 (was Re: [PATCH v2 00/14] Corrections and customization
+ of the SG_IO command whitelist (CVE-2012-4542))
+Date: Thu, 23 May 2013 05:39:06 +0900
+Message-ID: <20130522203906.GC23845@mtj.dyndns.org>
+References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com>
+ <519C674A.50700@redhat.com>
+ <20130522093249.GC3466@mtj.dyndns.org>
+ <519C959A.3090100@redhat.com>
+ <20130522100212.GE3466@mtj.dyndns.org>
+ <519C9CBC.3050003@redhat.com>
+ <20130522134134.GA15189@mtj.dyndns.org>
+ <519CD234.40608@redhat.com>
+ <20130522150335.GC2777@thunk.org>
+ <519CE9FE.2030007@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1368680029.15002.32.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, shlomop@mellanox.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <519CE9FE.2030007@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 16, 2013 at 7:53 AM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
+Hey,
 
-> Yes, that's the patch included in the PULL request here:
-> http://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit/?h=queue&id=52c07423a819091b0fe9abbf26977098b996f85b
+On Wed, May 22, 2013 at 05:53:34PM +0200, Paolo Bonzini wrote:
+> I do listen to review feedback, but I also expect the other side to
+> listen to me, ask me what is not clear, and possess some knowledge of
+> the domain that he's reviewing patches for.  All of which, quite
+> frankly, I have not seen in this case.
 
-Cool!
+Heh, nice one.  As we've talked on RH mailing list, I don't doubt this
+has been a pretty bad experience for you but it also has been one of
+the worst review experiences for me too.  It's on both of us that we
+do get frustrated easily and the discussions escalate very quickly;
+however, the biggest issue from my side is that it's very difficult to
+get a point across and even when the point seems to have been made
+what comes out of it is the mimum possible change around that point
+rather than wider interpretation and application of the point made.
+I'm not saying you don't listen to reviews at all but the reception
+definitely feels very low-gain.
 
->
-> Btw, It still needs to be enabled in userspace, but appending a
-> rd_nullio=1 to the /control parameters with the following lio-utils
-> patch should work for your testing purposes atm..
+Anyways, at this point, the easiest way to make forward progress is
+completely separating out security fix from the rest along with the
+"count me out" knob, which should be able to cover most of the
+described use cases anyway.  Let's please do further modifications to
+the filtering table as a separate step.
 
-are you merging this into the lio-utils git tree and maybe sparing a
-word on that in the documentation (where?) we'd like to point people
-to these bits and guidelines.
-
-Or.
+-- 
+tejun
