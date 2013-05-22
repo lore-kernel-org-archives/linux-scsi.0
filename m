@@ -1,56 +1,46 @@
-From: Marc Dietrich <marvin24@gmx.de>
-Subject: [PATCH 1/2] SCSI: nsp32: replace large udelay by mdelay
-Date: Wed, 22 May 2013 21:48:41 +0200
-Message-ID: <495d02a8263a553dd3f67b354f5ec9beb784a5d3.1369251478.git.marvin24@gmx.de>
-References: <cover.1369251478.git.marvin24@gmx.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1369251478.git.marvin24@gmx.de>
-In-Reply-To: <cover.1369251478.git.marvin24@gmx.de>
-References: <cover.1369251478.git.marvin24@gmx.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: PING^7 (was Re: [PATCH v2 00/14] Corrections and customization
+ of the SG_IO command whitelist (CVE-2012-4542))
+Date: Wed, 22 May 2013 16:19:57 -0400
+Message-ID: <20130522201957.GD20848@thunk.org>
+References: <20130522100212.GE3466@mtj.dyndns.org>
+ <519C9CBC.3050003@redhat.com>
+ <20130522134134.GA15189@mtj.dyndns.org>
+ <519CD234.40608@redhat.com>
+ <20130522150335.GC2777@thunk.org>
+ <519CE9FE.2030007@redhat.com>
+ <yq1vc6b561q.fsf@sermon.lab.mkp.net>
+ <519CF99E.6010804@redhat.com>
+ <20130522181135.GC20848@thunk.org>
+ <519D1E92.7030505@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from li9-11.members.linode.com ([67.18.176.11]:50906 "EHLO
+	imap.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752843Ab3EVUUH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 May 2013 16:20:07 -0400
+Content-Disposition: inline
+In-Reply-To: <519D1E92.7030505@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-ARM has a maximum of 2000 usec delay. Use mdelay for larger delays.
-This affects distro kernels mostly.
+On Wed, May 22, 2013 at 09:37:54PM +0200, Paolo Bonzini wrote:
+> > If it's not theoretical, how does the cloud service control who has
+> > access to the CD burner, and how are the disks loaded into the CD
+> > burner?
+> 
+> CD burning would be used in a VM that runs on your local workstation, so
+> the VM gets access to the CD burner under your desk.  There was also a
+> developer of a CD burning tool that wanted to test it inside BSD,
+> Solaris and Windows VMs; the idea is the same.
 
-Cc: GOTO Masanori <gotom@debian.or.jp>
-Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Marc Dietrich <marvin24@gmx.de>
----
- drivers/scsi/nsp32.c |    2 +-
- drivers/scsi/nsp32.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+So in both cases all of the VM's and the host OS are within the same
+trust boundary.  This simplifies the security requirements than in the
+more generic cloud server caser where the VM's are mutually
+suspicious.  This simplifies the requirements of what we need to push
+into the kernel, yes?
 
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index 1e3879d..e2f796f 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -2899,7 +2899,7 @@ static void nsp32_do_bus_reset(nsp32_hw_data *data)
- 	 * reset SCSI bus
- 	 */
- 	nsp32_write1(base, SCSI_BUS_CONTROL, BUSCTL_RST);
--	udelay(RESET_HOLD_TIME);
-+	mdelay(RESET_HOLD_TIME);
- 	nsp32_write1(base, SCSI_BUS_CONTROL, 0);
- 	for(i = 0; i < 5; i++) {
- 		intrdat = nsp32_read2(base, IRQ_STATUS); /* dummy read */
-diff --git a/drivers/scsi/nsp32.h b/drivers/scsi/nsp32.h
-index c022182..b2b3dc6 100644
---- a/drivers/scsi/nsp32.h
-+++ b/drivers/scsi/nsp32.h
-@@ -605,7 +605,7 @@ typedef struct _nsp32_hw_data {
- /*
-  * TIME definition
-  */
--#define RESET_HOLD_TIME		10000	/* reset time in us (SCSI-2 says the
-+#define RESET_HOLD_TIME		10	/* reset time in ms (SCSI-2 says the
- 					   minimum is 25us) */
- #define SEL_TIMEOUT_TIME	10000	/* 250ms defined in SCSI specification
- 					   (25.6us/1unit) */
--- 
-1.7.9.5
+						- Ted
