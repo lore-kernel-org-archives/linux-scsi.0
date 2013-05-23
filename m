@@ -1,61 +1,49 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH V1 1/7] Drivers: hv: vmbus: Implement multi-channel
- support
-Date: Thu, 23 May 2013 17:26:14 +0000
-Message-ID: <ad436d7ee6d64ddfb45f0b31e4e142fc@SN2PR03MB061.namprd03.prod.outlook.com>
-References: <1368706784-32276-1-git-send-email-kys@microsoft.com>
- <1368706879-32321-1-git-send-email-kys@microsoft.com>
- <20130516140113.GB2629@kroah.com>
+From: Roland Dreier <roland@purestorage.com>
+Subject: SCSI error handling -- one error blocks the whole SCSI host
+Date: Thu, 23 May 2013 11:14:40 -0700
+Message-ID: <CAL1RGDWuriBQQcTngjn5M3fUg0VC9XUKC_0iMQbf2p2DKfxJsQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130516140113.GB2629@kroah.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "jasowang@redhat.com" <jasowang@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys010aog106.obsmtp.com ([74.125.245.80]:58604 "HELO
+	na3sys010aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758108Ab3EWSV0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 May 2013 14:21:26 -0400
+Received: by mail-lb0-f180.google.com with SMTP id r10so3788396lbi.11
+        for <linux-scsi@vger.kernel.org>; Thu, 23 May 2013 11:21:24 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Jej B <James.Bottomley@hansenpartnership.com>
 
+At LSF this year, we had a discussion about error handling and in
+particular the problem that SCSI midlayer error handling waits for the
+entire SCSI host (HBA) to quiesce before it starts to abort commands
+etc.
 
-> -----Original Message-----
-> From: Greg KH [mailto:gregkh@linuxfoundation.org]
-> Sent: Thursday, May 16, 2013 10:01 AM
-> To: KY Srinivasan
-> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
-> ohering@suse.com; jbottomley@parallels.com; hch@infradead.org; linux-
-> scsi@vger.kernel.org; apw@canonical.com; jasowang@redhat.com
-> Subject: Re: [PATCH V1 1/7] Drivers: hv: vmbus: Implement multi-channel
-> support
-> 
-> On Thu, May 16, 2013 at 05:21:13AM -0700, K. Y. Srinivasan wrote:
-> > Starting with Win8, the host supports multiple sub-channels for a given
-> > device. As in the past, the initial channel offer specifies the device and
-> > is associated with both the type and the instance GUIDs. For performance
-> > critical devices, the host may support multiple sub-channels. The sub-channels
-> > share the same type and instance GUID as the primary channel. The number of
-> > sub-channels offerrred to the guest depends on the number of virtual CPUs
-> > assigned to the guest. The guest can request the creation of these sub-
-> channels
-> > and once created and opened, the guest can distribute the traffic across all
-> > the channels (the primary and the sub-channels). A request sent on a sub-
-> channel
-> > will have the response delivered on the same sub-channel.
-> >
-> > At channel (sub-channel) creation we bind the channel interrupt to a CPU and
-> > with this sub-channel support we will be able to spread the interrupt load
-> > of a given device across all available CPUs.
-> >
-> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> > Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
-> 
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> 
+James made the suggestion that FC should handle things the way SAS
+does, because SAS has a strategy handler that does things the right
+way.  However, now that I finally sit down and look at the code, I
+don't see how this is the case.  It seems inherent in the way that
+scsi_eh_scmd_add() and the thread in scsi_error_handler() work (in
+particular the strategy handler can't even be called until host_failed
+== host_busy; we don't bump host_failed without SHOST_RECOVERY set,
+which stops queueing commands to any devices attached to the whole
+HBA).
 
-James,
+James, am I understanding your suggestion properly?  If so can you
+explain what you meant about the libsas code -- I see that it has its
+own strategy handler but as I said before we've already stopped every
+device attached to the HBA before we ever get there.
 
-Please drop this patch-set. I fixed a couple of bugs in the vmbus support for multi-channel and I would need to resubmit this. Greg, I think it may make sense to first get the vmbus support checked in before I submit the storage related patches. There are networking related patches for multi-channel support that we will be submitting shortly. Getting the vmbus support in first would allow us to decouple network and storage patches. Greg, I will shortly submit the next version of the vmbus related patches for your consideration.
+To recapitulate the problem here, we might have a whole fabric
+attached to an HBA via SAS or FC, and be doing 500K IOPS happily to 50
+devices.  Then a single LUN goes wonky and all the IO stops while we
+try to recover that single device, which might take minutes.
 
-Regards,
+I know this has been discussed before, but can we find a way forward
+here?  Is there some way we can start with per-device error recovery
+and avoid disrupting IO that we can see is working fine?
 
-K. Y
+Thanks,
+  Roland
