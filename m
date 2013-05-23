@@ -1,163 +1,101 @@
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH] scsi: use platform_{get,set}_drvdata()
-Date: Thu, 23 May 2013 19:37:44 +0900
-Message-ID: <002e01ce57a1$8f11e970$ad35bc50$@samsung.com>
+From: Vijay Mohan Guvva <vmohan@Brocade.com>
+Subject: RE: [PATCH V1 00/17] Update the driver version to 3.2.21.1
+Date: Thu, 23 May 2013 04:55:22 -0600
+Message-ID: <51BD2AE8016AE441B63F5661159C99020F1DF1879A@BRM-EXCH-3.corp.brocade.com>
+References: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:37900 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757532Ab3EWKhp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 May 2013 06:37:45 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MN800DVHYTRVO80@mailout1.samsung.com> for
- linux-scsi@vger.kernel.org; Thu, 23 May 2013 19:37:44 +0900 (KST)
-Content-language: ko
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:57685 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758168Ab3EWLCE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 May 2013 07:02:04 -0400
+Received: from pps.filterd (m0000542 [127.0.0.1])
+	by mx0a-000f0801.pphosted.com (8.14.5/8.14.5) with SMTP id r4NAuGiO003374
+	for <linux-scsi@vger.kernel.org>; Thu, 23 May 2013 04:02:02 -0700
+Received: from brmwp-exchub01.corp.brocade.com ([208.47.132.227])
+	by mx0a-000f0801.pphosted.com with ESMTP id 1chhsf8029-4
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 23 May 2013 04:02:02 -0700
+In-Reply-To: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <JBottomley@Parallels.com>
-Cc: linux-scsi@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+To: "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
 
-Use the wrapper functions for getting and setting the driver data using
-platform_device instead of using dev_{get,set}_drvdata() with &pdev->dev,
-so we can directly pass a struct platform_device.
+> -----Original Message-----
+> From: Vijay Mohan Guvva
+> Sent: Monday, May 13, 2013 3:03 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: JBottomley@parallels.com; Adapter Linux Open SRC Team; Vijay Mohan
+> Guvva
+> Subject: [PATCH V1 00/17] Update the driver version to 3.2.21.1
+> 
+> Hi James,
+> Re-submitting the patch sets, Update the driver version to 3.2.21.0 and
+> Update the driver version to 3.2.21.1.
+> It includes bug-fixes, changes to use firmware version 3.2.1.0, adds new
+> features such as Forward Error Correction, FC BB credit recovery, dynamic
+> diagnostic Port (D-port), enabled support for new hardware - chinook quad
+> and updates the Brocade BFA driver to v3.2.21.1.
+> 
+> Thanks,
+> Vijaya Mohan Guvva
+> 
+> Vijaya Mohan Guvva (17):
+>   bfa: Support for FC BB credit recovery
+>   bfa: Forward Error Correction status query
+>   bfa: Add dynamic diagnostic port support
+>   bfa: Fix WARN_ON condition check
+>   bfa: FDMI enhancements
+>   bfa: Fix 1860 port initialize when ATC is enabled
+>   bfa: Fix FDISC timeout handling
+>   bfa: kdump fix on 815 and 825 adapters
+>   bfa: driver compatibility with 32bit libs
+>   bfa: fru vpd date update changes
+>   bfa: firmware statistics update
+>   bfa: Allow rsp queue process during ioc disable
+>   bfa: Fix bug_on condition in RPSC rsp handling
+>   bfa: fix endianess issue for firmware stats
+>   bfa: Support for chinook-quad port card
+>   bfa: dis-associate bfa path_tov with dev_loss_tmo
+>   bfa: Update the driver version to 3.2.21.1
+> 
+>  drivers/scsi/bfa/bfa_core.c      |   3 +-
+>  drivers/scsi/bfa/bfa_defs.h      | 103 +++++-
+>  drivers/scsi/bfa/bfa_defs_svc.h  |  77 ++++-
+>  drivers/scsi/bfa/bfa_fc.h        |  15 +
+>  drivers/scsi/bfa/bfa_fcpim.c     |   2 +-
+>  drivers/scsi/bfa/bfa_fcs.c       |  62 +---
+>  drivers/scsi/bfa/bfa_fcs.h       |  34 +-
+>  drivers/scsi/bfa/bfa_fcs_lport.c | 209 +++++++++++-
+>  drivers/scsi/bfa/bfa_fcs_rport.c |   7 +-
+>  drivers/scsi/bfa/bfa_ioc.c       |  74 +++--
+>  drivers/scsi/bfa/bfa_ioc.h       |   9 +-
+>  drivers/scsi/bfa/bfa_ioc_cb.c    |  86 ++++-
+>  drivers/scsi/bfa/bfa_ioc_ct.c    |  46 +++
+>  drivers/scsi/bfa/bfa_svc.c       | 698
+> ++++++++++++++++++++++++++++++++++++---
+>  drivers/scsi/bfa/bfa_svc.h       |  34 +-
+>  drivers/scsi/bfa/bfad.c          |  14 +-
+>  drivers/scsi/bfa/bfad_attr.c     |  33 +-
+>  drivers/scsi/bfa/bfad_bsg.c      | 137 +++++---
+>  drivers/scsi/bfa/bfad_bsg.h      |  52 ++-
+>  drivers/scsi/bfa/bfad_drv.h      |   2 +-
+>  drivers/scsi/bfa/bfi.h           |  78 ++++-
+>  drivers/scsi/bfa/bfi_ms.h        |   5 +-
+>  22 files changed, 1498 insertions(+), 282 deletions(-)
+> 
+> --
+> 1.7.12
 
-Also, unnecessary dev_set_drvdata() is removed, because the driver core
-clears the driver data to NULL after device_release or on probe failure.
+> The patch you're replying to didn't make the list, which is also a necessary precursor to getting stuff into the tree.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/scsi/jazz_esp.c   |    4 ++--
- drivers/scsi/qlogicpti.c  |    4 ++--
- drivers/scsi/sni_53c710.c |    4 ++--
- drivers/scsi/sun3x_esp.c  |    4 ++--
- drivers/scsi/sun_esp.c    |    6 ++----
- 5 files changed, 10 insertions(+), 12 deletions(-)
+Hi James,
+I have resubmitted the patch set and verified them in MARC.
+Please pull the set if you don't have any comments.
 
-diff --git a/drivers/scsi/jazz_esp.c b/drivers/scsi/jazz_esp.c
-index 69efbf1..0063b1b 100644
---- a/drivers/scsi/jazz_esp.c
-+++ b/drivers/scsi/jazz_esp.c
-@@ -180,7 +180,7 @@ static int esp_jazz_probe(struct platform_device *dev)
- 	esp->scsi_id_mask = (1 << esp->scsi_id);
- 	esp->cfreq = 40000000;
- 
--	dev_set_drvdata(&dev->dev, esp);
-+	platform_set_drvdata(dev, esp);
- 
- 	err = scsi_esp_register(esp, &dev->dev);
- 	if (err)
-@@ -203,7 +203,7 @@ fail:
- 
- static int esp_jazz_remove(struct platform_device *dev)
- {
--	struct esp *esp = dev_get_drvdata(&dev->dev);
-+	struct esp *esp = platform_get_drvdata(dev);
- 	unsigned int irq = esp->host->irq;
- 
- 	scsi_esp_unregister(esp);
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 6d48d30..4ad93e8 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -1367,7 +1367,7 @@ static int qpti_sbus_probe(struct platform_device *op)
- 		goto fail_unmap_queues;
- 	}
- 
--	dev_set_drvdata(&op->dev, qpti);
-+	platform_set_drvdata(op, qpti);
- 
- 	qpti_chain_add(qpti);
- 
-@@ -1404,7 +1404,7 @@ fail_unlink:
- 
- static int qpti_sbus_remove(struct platform_device *op)
- {
--	struct qlogicpti *qpti = dev_get_drvdata(&op->dev);
-+	struct qlogicpti *qpti = platform_get_drvdata(op);
- 
- 	qpti_chain_del(qpti);
- 
-diff --git a/drivers/scsi/sni_53c710.c b/drivers/scsi/sni_53c710.c
-index 52d54e7..4f5f3a2 100644
---- a/drivers/scsi/sni_53c710.c
-+++ b/drivers/scsi/sni_53c710.c
-@@ -104,7 +104,7 @@ static int snirm710_probe(struct platform_device *dev)
- 		goto out_put_host;
- 	}
- 
--	dev_set_drvdata(&dev->dev, host);
-+	platform_set_drvdata(dev, host);
- 	scsi_scan_host(host);
- 
- 	return 0;
-@@ -119,7 +119,7 @@ static int snirm710_probe(struct platform_device *dev)
- 
- static int __exit snirm710_driver_remove(struct platform_device *dev)
- {
--	struct Scsi_Host *host = dev_get_drvdata(&dev->dev);
-+	struct Scsi_Host *host = platform_get_drvdata(dev);
- 	struct NCR_700_Host_Parameters *hostdata =
- 		(struct NCR_700_Host_Parameters *)host->hostdata[0];
- 
-diff --git a/drivers/scsi/sun3x_esp.c b/drivers/scsi/sun3x_esp.c
-index 534eb96..2edbce3 100644
---- a/drivers/scsi/sun3x_esp.c
-+++ b/drivers/scsi/sun3x_esp.c
-@@ -244,7 +244,7 @@ static int esp_sun3x_probe(struct platform_device *dev)
- 	esp->scsi_id_mask = (1 << esp->scsi_id);
- 	esp->cfreq = 20000000;
- 
--	dev_set_drvdata(&dev->dev, esp);
-+	platform_set_drvdata(dev, esp);
- 
- 	err = scsi_esp_register(esp, &dev->dev);
- 	if (err)
-@@ -270,7 +270,7 @@ fail:
- 
- static int esp_sun3x_remove(struct platform_device *dev)
- {
--	struct esp *esp = dev_get_drvdata(&dev->dev);
-+	struct esp *esp = platform_get_drvdata(dev);
- 	unsigned int irq = esp->host->irq;
- 	u32 val;
- 
-diff --git a/drivers/scsi/sun_esp.c b/drivers/scsi/sun_esp.c
-index f2e6845..db1397e 100644
---- a/drivers/scsi/sun_esp.c
-+++ b/drivers/scsi/sun_esp.c
-@@ -538,7 +538,7 @@ static int esp_sbus_probe_one(struct platform_device *op,
- 		dma_write32(val & ~DMA_RST_SCSI, DMA_CSR);
- 	}
- 
--	dev_set_drvdata(&op->dev, esp);
-+	platform_set_drvdata(op, esp);
- 
- 	err = scsi_esp_register(esp, &op->dev);
- 	if (err)
-@@ -585,7 +585,7 @@ static int esp_sbus_probe(struct platform_device *op)
- 
- static int esp_sbus_remove(struct platform_device *op)
- {
--	struct esp *esp = dev_get_drvdata(&op->dev);
-+	struct esp *esp = platform_get_drvdata(op);
- 	struct platform_device *dma_of = esp->dma;
- 	unsigned int irq = esp->host->irq;
- 	bool is_hme;
-@@ -611,8 +611,6 @@ static int esp_sbus_remove(struct platform_device *op)
- 
- 	scsi_host_put(esp->host);
- 
--	dev_set_drvdata(&op->dev, NULL);
--
- 	return 0;
- }
- 
--- 
-1.7.10.4
-
-
+Thanks,
+Vijay
