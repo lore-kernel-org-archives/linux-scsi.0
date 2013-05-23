@@ -1,123 +1,163 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: PING^7 (was Re: [PATCH v2 00/14] Corrections and customization
- of the SG_IO command whitelist (CVE-2012-4542))
-Date: Thu, 23 May 2013 11:47:25 +0200
-Message-ID: <519DE5AD.7080303@redhat.com>
-References: <20130522100212.GE3466@mtj.dyndns.org> <519C9CBC.3050003@redhat.com> <20130522134134.GA15189@mtj.dyndns.org> <519CD234.40608@redhat.com> <20130522143019.GA18541@mtj.dyndns.org> <519CDDA4.2050100@redhat.com> <20130522193009.GA23845@mtj.dyndns.org> <519D360D.4050309@redhat.com> <20130522221737.GA12339@mtj.dyndns.org> <519DC926.4000106@redhat.com> <20130523090222.GA26592@mtj.dyndns.org>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH] scsi: use platform_{get,set}_drvdata()
+Date: Thu, 23 May 2013 19:37:44 +0900
+Message-ID: <002e01ce57a1$8f11e970$ad35bc50$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130523090222.GA26592@mtj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:37900 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757532Ab3EWKhp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 May 2013 06:37:45 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MN800DVHYTRVO80@mailout1.samsung.com> for
+ linux-scsi@vger.kernel.org; Thu, 23 May 2013 19:37:44 +0900 (KST)
+Content-language: ko
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <JBottomley@Parallels.com>
+Cc: linux-scsi@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-Il 23/05/2013 11:02, Tejun Heo ha scritto:
-> On Thu, May 23, 2013 at 09:45:42AM +0200, Paolo Bonzini wrote:
->> Il 23/05/2013 00:17, Tejun Heo ha scritto:
->>> Then let's make it fit the use case better.  I really can't see much
->>> point in crafting the cdb filter when you basically have to entrust
->>> the device to the user anyway.  Let's either trust the user with the
->>> device or not.  I'm very doubtful that the filtered access via SG_IO
->>> can be reliable or secure enough.  Let's please avoid extending a
->>> broken thing.
->>
->> Sorry to say that, but "I'm very doubtful that..." is just conspiracy
->> theory.
->>
->> It is not broken.  I'm not _that_ clueless, if it were broken I wouldn't
->> have had users use it in production.
-> 
-> No no, I'm not talking about it not working for the users - it's just
-> passing the commands, it of course works.  I'm doubting about it being
-> a worthy security isolation layer.  cdb filtering (of any form really)
-> has always been something on the border.  It always was something we
-> got stuck with due to lack of other immediate options.
+Use the wrapper functions for getting and setting the driver data using
+platform_device instead of using dev_{get,set}_drvdata() with &pdev->dev,
+so we can directly pass a struct platform_device.
 
-I understood correctly then. :)  I agree it's not the best, but it's not
-completely broken either.  It has bugs, and that's what these patches
-try to fix.
+Also, unnecessary dev_set_drvdata() is removed, because the driver core
+clears the driver data to NULL after device_release or on probe failure.
 
->>> One more thing, is it really necessary to have finer granularity than
->>> provided by file permissions?  What would be the use case?  Do you
->>> expect to have multiple - two - differing levels of access with and
->>> without SG_IO?
->>
->> No, I don't.  I want four levels:
->>
->> 1) no access;
->> 2) read-only access;
->> 3) read-write whitelisted access;
->> 4) generic access;
->>
->> but it's indeed fine to assume that 3 and 4 will never be given together
->> to the same disk.  The important point is that 2 and 3 should not
->> require any privileges except for opening the file.
-> 
-> I'm wondering whether combining 3 into 4 would be good enough.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/scsi/jazz_esp.c   |    4 ++--
+ drivers/scsi/qlogicpti.c  |    4 ++--
+ drivers/scsi/sni_53c710.c |    4 ++--
+ drivers/scsi/sun3x_esp.c  |    4 ++--
+ drivers/scsi/sun_esp.c    |    6 ++----
+ 5 files changed, 10 insertions(+), 12 deletions(-)
 
-No, it wouldn't.  I learnt it the hard way (by having a patch nacked :))
-at http://thread.gmane.org/gmane.linux.kernel/1311887.
+diff --git a/drivers/scsi/jazz_esp.c b/drivers/scsi/jazz_esp.c
+index 69efbf1..0063b1b 100644
+--- a/drivers/scsi/jazz_esp.c
++++ b/drivers/scsi/jazz_esp.c
+@@ -180,7 +180,7 @@ static int esp_jazz_probe(struct platform_device *dev)
+ 	esp->scsi_id_mask = (1 << esp->scsi_id);
+ 	esp->cfreq = 40000000;
+ 
+-	dev_set_drvdata(&dev->dev, esp);
++	platform_set_drvdata(dev, esp);
+ 
+ 	err = scsi_esp_register(esp, &dev->dev);
+ 	if (err)
+@@ -203,7 +203,7 @@ fail:
+ 
+ static int esp_jazz_remove(struct platform_device *dev)
+ {
+-	struct esp *esp = dev_get_drvdata(&dev->dev);
++	struct esp *esp = platform_get_drvdata(dev);
+ 	unsigned int irq = esp->host->irq;
+ 
+ 	scsi_esp_unregister(esp);
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 6d48d30..4ad93e8 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -1367,7 +1367,7 @@ static int qpti_sbus_probe(struct platform_device *op)
+ 		goto fail_unmap_queues;
+ 	}
+ 
+-	dev_set_drvdata(&op->dev, qpti);
++	platform_set_drvdata(op, qpti);
+ 
+ 	qpti_chain_add(qpti);
+ 
+@@ -1404,7 +1404,7 @@ fail_unlink:
+ 
+ static int qpti_sbus_remove(struct platform_device *op)
+ {
+-	struct qlogicpti *qpti = dev_get_drvdata(&op->dev);
++	struct qlogicpti *qpti = platform_get_drvdata(op);
+ 
+ 	qpti_chain_del(qpti);
+ 
+diff --git a/drivers/scsi/sni_53c710.c b/drivers/scsi/sni_53c710.c
+index 52d54e7..4f5f3a2 100644
+--- a/drivers/scsi/sni_53c710.c
++++ b/drivers/scsi/sni_53c710.c
+@@ -104,7 +104,7 @@ static int snirm710_probe(struct platform_device *dev)
+ 		goto out_put_host;
+ 	}
+ 
+-	dev_set_drvdata(&dev->dev, host);
++	platform_set_drvdata(dev, host);
+ 	scsi_scan_host(host);
+ 
+ 	return 0;
+@@ -119,7 +119,7 @@ static int snirm710_probe(struct platform_device *dev)
+ 
+ static int __exit snirm710_driver_remove(struct platform_device *dev)
+ {
+-	struct Scsi_Host *host = dev_get_drvdata(&dev->dev);
++	struct Scsi_Host *host = platform_get_drvdata(dev);
+ 	struct NCR_700_Host_Parameters *hostdata =
+ 		(struct NCR_700_Host_Parameters *)host->hostdata[0];
+ 
+diff --git a/drivers/scsi/sun3x_esp.c b/drivers/scsi/sun3x_esp.c
+index 534eb96..2edbce3 100644
+--- a/drivers/scsi/sun3x_esp.c
++++ b/drivers/scsi/sun3x_esp.c
+@@ -244,7 +244,7 @@ static int esp_sun3x_probe(struct platform_device *dev)
+ 	esp->scsi_id_mask = (1 << esp->scsi_id);
+ 	esp->cfreq = 20000000;
+ 
+-	dev_set_drvdata(&dev->dev, esp);
++	platform_set_drvdata(dev, esp);
+ 
+ 	err = scsi_esp_register(esp, &dev->dev);
+ 	if (err)
+@@ -270,7 +270,7 @@ fail:
+ 
+ static int esp_sun3x_remove(struct platform_device *dev)
+ {
+-	struct esp *esp = dev_get_drvdata(&dev->dev);
++	struct esp *esp = platform_get_drvdata(dev);
+ 	unsigned int irq = esp->host->irq;
+ 	u32 val;
+ 
+diff --git a/drivers/scsi/sun_esp.c b/drivers/scsi/sun_esp.c
+index f2e6845..db1397e 100644
+--- a/drivers/scsi/sun_esp.c
++++ b/drivers/scsi/sun_esp.c
+@@ -538,7 +538,7 @@ static int esp_sbus_probe_one(struct platform_device *op,
+ 		dma_write32(val & ~DMA_RST_SCSI, DMA_CSR);
+ 	}
+ 
+-	dev_set_drvdata(&op->dev, esp);
++	platform_set_drvdata(op, esp);
+ 
+ 	err = scsi_esp_register(esp, &op->dev);
+ 	if (err)
+@@ -585,7 +585,7 @@ static int esp_sbus_probe(struct platform_device *op)
+ 
+ static int esp_sbus_remove(struct platform_device *op)
+ {
+-	struct esp *esp = dev_get_drvdata(&op->dev);
++	struct esp *esp = platform_get_drvdata(op);
+ 	struct platform_device *dma_of = esp->dma;
+ 	unsigned int irq = esp->host->irq;
+ 	bool is_hme;
+@@ -611,8 +611,6 @@ static int esp_sbus_remove(struct platform_device *op)
+ 
+ 	scsi_host_put(esp->host);
+ 
+-	dev_set_drvdata(&op->dev, NULL);
+-
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
 
->> With the opt-out knob, you still need a long-lived privileged process in
->> order to set the knob back to "no access", and that's undesirable.
->> Long-lived privileged processes can be SIGKILLed and leave things open
->> for misuse; instead, if I need something privileged I want to confine it
->> to a helper that opens the file and passes back the file descriptor.
-> 
-> Hmmm?  Somebody has to give out the access rights anyway, be it a udev
-> rule or polkit.  While not having to depend on them could be nice, I
-> don't think involving userland is a big deal.  It's already involved
-> in closely related capacities anyway.
 
-Polkit need not do anything to give out the access rights, it only has
-to just confirm the credentials.  A helper setgid-disk can consult
-polkit, open the file, pass the file descriptor back, and exit.  We
-already do something similar for tap devices.
-
->>>> There are many use cases, I listed some in my reply to Martin.
->>>> Sometimes you have trust over the guest and can use count-me-out.  But
->>>> in some cases you don't, and yet the current whitelist is not enough
->>>> (e.g. tapes).
->>>
->>> Can you elaborate?  Why can't a tape device be entrusted to the user?
->
-> I was curious why they wouldn't be able to use count-me-out knob.  The
-> white list was nasty but we did it anyway because there were some
-> horrible commands which, ISTR, could even affect other devices sharing
-> the bus and at least at the beginning the list of commands which
-> should be allowed were pretty compact.
-
-Exactly.  Though these commands do not really affect other devices
-sharing the bus, they affect other initiators trying to use the device.
- And these commands are generic, so they apply to disks as well as tapes.
-
-Unfortunately, a purely userspace whitelist would be too easy to circumvent.
-
-> Whitelisting those commands is likely to be mostly harmless most of
-> the time but I would be surprised if there aren't devices out in the
-> wild which can be bricked / affected adversely with carefully crafted
-> commands within the allowed cdbs.  The level of security isolation
-> which can be provided by command code filtering is somewhat flimsy,
-> which is why cdb filtering was always seen as a kludge, which in turn
-> is why there's reluctance against extending it to more use cases.
-
-Yes, I understand that.  But I don't believe it is a serious concern.
-In the case of tapes, for example, you're not talking about 10 dollar
-USB pendrives whose firmware was written in fire-and-forget mode.
-Firmware bugs would be updated by the manufacturers.
-
-I cannot exclude there will _never_ be a bug like this, of course.  But
-even if there will be one, IMHO it would be exceptional enough that we
-can afford fixing it with a per-device quirk.
-
-Scanners have never had any CDB filtering done on them; I searched for
-this kind of bug, and I couldn't find any report.
-
-What I am trying to do is to reach a compromise.  The one I'm proposing
-is to forbid reserved or vendor-specific commands, while at the same
-time opening the doors on more standardized commands.
-
-Paolo
