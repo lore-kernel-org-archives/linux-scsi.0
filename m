@@ -1,77 +1,84 @@
-From: Vijay Mohan Guvva <vmohan@Brocade.com>
-Subject: RE: [PATCH 1/1] bfa: Fixes for 0-terminated strncpy and possible
- null pointer dereference
-Date: Thu, 23 May 2013 06:09:42 -0600
-Message-ID: <51BD2AE8016AE441B63F5661159C99020F1DF187A0@BRM-EXCH-3.corp.brocade.com>
-References: <1368646911-22620-1-git-send-email-jakobnormark@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:56831 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758549Ab3EWMJ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 May 2013 08:09:58 -0400
-In-Reply-To: <1368646911-22620-1-git-send-email-jakobnormark@gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH v3 part1 4/4] sg_io: resolve conflicts between commands assigned to multiple classes (CVE-2012-4542)
+Date: Thu, 23 May 2013 15:58:23 +0200
+Message-ID: <1369317503-4095-5-git-send-email-pbonzini@redhat.com>
+References: <1369317503-4095-1-git-send-email-pbonzini@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1369317503-4095-1-git-send-email-pbonzini@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: tj@kernel.org, stable@gnu.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: Jakob Normark <jakobnormark@gmail.com>, Anil Gurumurthy <agurumur@Brocade.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Jakob Normark
-> Sent: Thursday, May 16, 2013 1:12 AM
-> To: Anil Gurumurthy; Vijay Mohan Guvva; James E.J. Bottomley
-> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Jakob Normark
-> Subject: [PATCH 1/1] bfa: Fixes for 0-terminated strncpy and possible null
-> pointer dereference
-> 
-> This patch fixes two cppcheck errors in drivers/scsi/bfa/bfad_im.c Kernel
-> version: v3.10-rc1
-> 
-> Signed-off-by: Jakob Normark <jakobnormark@gmail.com>
-> ---
->  drivers/scsi/bfa/bfad_im.c |    9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c index
-> 5864f98..9489c56 100644
-> --- a/drivers/scsi/bfa/bfad_im.c
-> +++ b/drivers/scsi/bfa/bfad_im.c
-> @@ -944,13 +944,15 @@ static int
->  bfad_im_slave_alloc(struct scsi_device *sdev)  {
->  	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
-> -	struct bfad_itnim_data_s *itnim_data =
-> -				(struct bfad_itnim_data_s *) rport->dd_data;
-> -	struct bfa_s *bfa = itnim_data->itnim->bfa_itnim->bfa;
-> +	struct bfad_itnim_data_s *itnim_data;
-> +	struct bfa_s *bfa;
-> 
->  	if (!rport || fc_remote_port_chkready(rport))
->  		return -ENXIO;
-> 
-> +	itnim_data = (struct bfad_itnim_data_s *) rport->dd_data;
-> +	bfa = itnim_data->itnim->bfa_itnim->bfa;
-> +
->  	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_ENABLED) {
->  		/*
->  		 * We should not mask LUN 0 - since this will translate @@ -
-> 1037,6 +1039,7 @@ bfad_fc_host_init(struct bfad_im_port_s *im_port)
-> 
->  	strncpy(symname, bfad-
-> >bfa_fcs.fabric.bport.port_cfg.sym_name.symname,
->  		BFA_SYMNAME_MAXLEN);
-> +	symname[BFA_SYMNAME_MAXLEN - 1] = '\0';
->  	sprintf(fc_host_symbolic_name(host), "%s", symname);
-> 
->  	fc_host_supported_speeds(host) =
-> bfad_im_supported_speeds(&bfad->bfa);
-> --
-> 1.7.9.5
+Some SCSI commands can be sent to disks via SG_IO even by unprivileged
+users.  Unfortunately, some opcodes overlap across SCSI device classes
+and have different meanings for different classes.  Four of them can
+be used for read-only file descriptors on MMC, but should be limited to
+descriptors opened for read-write on SBC:
 
-Changes looks good. Thanks for the patch.
-Acked-by: Vijay Mohan Guvva <vmohan@brocade.com>
+- READ SUBCHANNEL <-> UNMAP (destructive, but no control on written
+  data)
 
+- GET PERFORMANCE <-> ERASE (not really a problem, no one supports
+  ERASE anyway)
 
+- READ DISC INFORMATION <-> XPWRITE (not commonly implemented but
+  most dangerous)
+
+- PLAY AUDIO TI <-> SANITIZE (a very new command)
+
+In addition, REPORT KEY's opcode A4h is used in SPC for SET TARGET PORT
+GROUPS and various other management commands, and should be blocked
+for everything except CD-ROMs and the like.
+
+To fix this, the series modifies the bitmap entries for these five
+commands.  This is the smallest change that fixes this bug.
+
+Cc: stable@gnu.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+ block/scsi_ioctl.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 6e18156..7a1d9f6 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -199,6 +199,32 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	sgio_bitmap_set(GPCMD_SET_STREAMING, write);
+ 	sgio_bitmap_set(GPCMD_SET_READ_AHEAD, write);
+ #undef sgio_bitmap_set
++
++	/*
++	 * Treat specially those commands that have a different meaning
++	 * for disks: READ SUBCHANNEL conflicts with UNMAP.
++	 */
++	filter->read_ok[GPCMD_READ_SUBCHANNEL] &= ~(1 << TYPE_DISK);
++	filter->write_ok[GPCMD_READ_SUBCHANNEL] |= (1 << TYPE_DISK);
++
++	/* PLAY AUDIO TI conflicts with SANITIZE.  */
++	filter->read_ok[GPCMD_PLAY_AUDIO_TI] &= ~((1 << TYPE_DISK) | (1 << TYPE_RBC));
++	filter->write_ok[GPCMD_PLAY_AUDIO_TI] |= (1 << TYPE_DISK) | (1 << TYPE_RBC);
++
++	/* READ DISC INFORMATION conflicts with XPWRITE.  */
++	filter->read_ok[GPCMD_READ_DISC_INFO] &= ~(1 << TYPE_DISK);
++	filter->write_ok[GPCMD_READ_DISC_INFO] |= (1 << TYPE_DISK);
++
++	/* GET PERFORMANCE conflicts with ERASE.  */
++	filter->read_ok[GPCMD_GET_PERFORMANCE] &= ~(1 << TYPE_MOD);
++	filter->write_ok[GPCMD_GET_PERFORMANCE] |= (1 << TYPE_MOD);
++
++	/*
++	 * REPORT KEY conflicts with many management commands under operation
++	 * code 0xA4, enable it only for MMC devices.
++	 */
++	filter->read_ok[GPCMD_REPORT_KEY] = (1 << TYPE_ROM);
++	filter->write_ok[GPCMD_REPORT_KEY] = (1 << TYPE_ROM);
+ }
+ 
+ int blk_verify_command(struct request_queue *q,
+-- 
+1.8.1.4
