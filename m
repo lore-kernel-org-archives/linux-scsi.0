@@ -1,84 +1,67 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: PING^7 (was Re: [PATCH v2 00/14] Corrections and customization
- of the SG_IO command whitelist (CVE-2012-4542))
-Date: Fri, 24 May 2013 11:45:33 +0200
-Message-ID: <519F36BD.1030806@redhat.com>
-References: <20130522134134.GA15189@mtj.dyndns.org> <519CD234.40608@redhat.com> <20130522143019.GA18541@mtj.dyndns.org> <519CDDA4.2050100@redhat.com> <20130522193009.GA23845@mtj.dyndns.org> <519D360D.4050309@redhat.com> <20130522221737.GA12339@mtj.dyndns.org> <519DC926.4000106@redhat.com> <20130523090222.GA26592@mtj.dyndns.org> <519DE5AD.7080303@redhat.com> <20130524014405.GB16882@mtj.dyndns.org> <519F12FF.6090809@redhat.com> <CAOS58YODjkSF=V7wADqbn_z8c6bmj=r03hWxEs5B1O+1cd0n6g@mail.gmail.com> <519F2566.2000008@redhat.com> <CAOS58YMSw6wJU07WfVG8wd_BnU4TXr7VDBHeDPa4XjSpn2p3Ag@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAOS58YMSw6wJU07WfVG8wd_BnU4TXr7VDBHeDPa4XjSpn2p3Ag@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/4] New FC timeout handler
+Date: Fri, 24 May 2013 11:50:46 +0200
+Message-ID: <1369389050-118628-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:40928 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750933Ab3EXJux (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 May 2013 05:50:53 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Bryn Reeves <bmr@redhat.com>, Roland Dreier <roland@purestorage.com>, Hannes Reinecke <hare@suse.de>
 
-Il 24/05/2013 11:07, Tejun Heo ha scritto:
-> On Fri, May 24, 2013 at 5:31 PM, Paolo Bonzini <pbonzini@redhat.com> wrote:
->> I agree intuition may not count, and it's perfectly possible that
->> firmware writers forgot a "break;" or put the wrong location in a jump
->> table, so that unimplemented commands give interesting results.
-> 
-> It's not just unimplemented commands. Exposing any new command exposes
-> its borderline problems together with it.
+Hi all,
 
-For commands that are used by Linux already, the right way to fix the
-problems is not obscuring the commands from userspace's view.  You can
-hit the same problems with ioctls or even with normal operation of the
-device.
+this is the first step towards a new FC error handler.
+This patch implements a new FC command timeout handler
+which will be sending command aborts inline without
+engaging SCSI EH.
 
->> However, the _fact_ is that this might happen anyway with the buttload
->> of commands that are already enabled by the whitelist and that most
->> disks will never implement.
-> 
-> Yes and that's why the whitelist is generally frowned upon. It's
-> inherently fragile. These devices simply aren't designed and
-> implemented to be exposed to lesser security domains directly. It's
-> true that it's already kinda broken that way but as I wrote before
-> it's a vicious cycle and we don't wanna keep building on top of it.
-> This expansion is gonna increase the usage of whitelisting which will
-> in turn attract further use cases which are likely to call for even
-> more expansion.
+In addition the commands will be returned directly
+if the command abort succeeded, cutting down recovery
+times dramatically.
 
-And prohibiting the extension of whitelists is gonna increase the
-usage of unpriv_sgio and less-secure userspace whitelists.
+With the original scsi error recovery I got:
+# time dd if=/dev/zero of=/mnt/test.blk bs=512 count=2048 oflag=sync
+2048+0 records in
+2048+0 records out
+1048576 bytes (1.0 MB) copied, 3.72732 s, 281 kB/s
 
-Anvil, meet hammer.
+real	2m14.475s
+user	0m0.000s
+sys	0m0.104s
 
->>> The thing is that both approaches aren't perfect here so you can make
->>> similar type of argument from the other side. If the system wants to
->>> give out raw hardware access to VMs, requiring it to delegate the
->>> device fully could be reasonable.
->>
->> No, it is not unfortunately.  Allowing to do discards is one thing,
->> allowing to disrupt the settings of a SAN is another.  You can only
->> delegate the device fully in these cases:
->>
->> (a) of course, if the guest is trusted;
->> (b) if QEMU is running as a confined user;
-> 
-> If the bulk of filtering can be solved with userland whitelisting as a
-> confined user, it should be possible to resolve peripheral problems
-> like log messages in simpler way, no? Can you please elaborate on the
-> log message problem? Who's spewing those messages?
+with this patchset I got:
+# time dd if=/dev/zero of=/mnt/test.blk bs=512 count=2048 oflag=sync
+2048+0 records in
+2048+0 records out
+1048576 bytes (1.0 MB) copied, 79.6376 s, 13.2 kB/s
 
-For example:
+real	1m19.642s
+user	0m0.000s
+sys	0m0.100s
 
-        if (bdev_write_same(bdev)) {
-                unsigned char bdn[BDEVNAME_SIZE];
+Test was to disable RSCN on the target port, disable the
+target port, and then start the 'dd' command as indicated.
 
-                if (!blkdev_issue_write_same(bdev, sector, nr_sects, gfp_mask,
-                                             ZERO_PAGE(0)))
-                        return 0;
+Comments etc are welcome.
 
-                bdevname(bdev, bdn);
-                pr_err("%s: WRITE SAME failed. Manually zeroing.\n", bdn);
-        }
+Hannes Reinecke (4):
+  scsi: move initialization of scmd->eh_entry
+  blk-timeout: add BLK_EH_SCHEDULED return code
+  scsi: export functions for new fc timeout handler
+  scsi_transport_fc: FC timeout handler
 
-        return __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
+ drivers/scsi/scsi_error.c        |  8 ++++-
+ drivers/scsi/scsi_lib.c          |  6 ++--
+ drivers/scsi/scsi_priv.h         |  2 ++
+ drivers/scsi/scsi_transport_fc.c | 63 +++++++++++++++++++++++++++++++++++++++-
+ include/linux/blkdev.h           |  1 +
+ include/scsi/scsi_transport_fc.h |  2 ++
+ 6 files changed, 78 insertions(+), 4 deletions(-)
 
-The device exposes the ability to zero out LUN blocks, but the command is
-not whitelisted and it fails.
+-- 
+1.7.12.4
 
-Paolo
