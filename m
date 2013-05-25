@@ -1,195 +1,66 @@
-From: Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3, part1 03/10] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus) instead
-Date: Sat, 25 May 2013 21:48:31 +0800
-Message-ID: <1369489718-25869-4-git-send-email-jiang.liu@huawei.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
-Sender: sparclinux-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, "Rafael J . Wysocki" <rjw@sisk.pl>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Toshi Kani <toshi.kani@hp.com>, Myron Stowe <myron.stowe@redhat.com>, Yijing Wang <wangyijing@huawei.com>, Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+From: James Smart <James.Smart@emulex.com>
+Subject: Re: SCSI error handling -- one error blocks the whole SCSI host
+Date: Sat, 25 May 2013 14:07:32 -0400
+Message-ID: <51A0FDE4.7050506@emulex.com>
+References: <CAL1RGDWuriBQQcTngjn5M3fUg0VC9XUKC_0iMQbf2p2DKfxJsQ@mail.gmail.com>
+Reply-To: <James.Smart@emulex.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:14523 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757546Ab3EYSHe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 May 2013 14:07:34 -0400
+In-Reply-To: <CAL1RGDWuriBQQcTngjn5M3fUg0VC9XUKC_0iMQbf2p2DKfxJsQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@purestorage.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Jej B <James.Bottomley@hansenpartnership.com>
 
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Roland,
 
-Use the new pci_alloc_dev(bus) to replace the existing using of
-alloc_pci_dev(void).
+I agree, and am already working around that limitation.
 
-v2:
-  Follow Bjorn's correction to move pci_bus_put() to
-  pci_release_dev() instead.
+-- james s
 
-v3:
-  release reference to bus on error recovery path
 
-Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: David Airlie <airlied@linux.ie>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-kernel@vger.kernel.org
-Cc: sparclinux@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
----
- arch/powerpc/kernel/pci_of_scan.c | 3 +--
- arch/sparc/kernel/pci.c           | 3 +--
- drivers/char/agp/alpha-agp.c      | 2 +-
- drivers/char/agp/parisc-agp.c     | 2 +-
- drivers/pci/iov.c                 | 8 +++++---
- drivers/pci/probe.c               | 5 +++--
- drivers/scsi/megaraid.c           | 2 +-
- 7 files changed, 13 insertions(+), 12 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index d2d407d..6b0ba58 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
- 	const char *type;
- 	struct pci_slot *slot;
- 
--	dev = alloc_pci_dev();
-+	dev = pci_alloc_dev(bus);
- 	if (!dev)
- 		return NULL;
- 	type = of_get_property(node, "device_type", NULL);
-@@ -137,7 +137,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
- 
- 	pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
- 
--	dev->bus = bus;
- 	dev->dev.of_node = of_node_get(node);
- 	dev->dev.parent = bus->bridge;
- 	dev->dev.bus = &pci_bus_type;
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 972892a..b16f624 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -254,7 +254,7 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
- 	const char *type;
- 	u32 class;
- 
--	dev = alloc_pci_dev();
-+	dev = pci_alloc_dev(bus);
- 	if (!dev)
- 		return NULL;
- 
-@@ -281,7 +281,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
- 		printk("    create device, devfn: %x, type: %s\n",
- 		       devfn, type);
- 
--	dev->bus = bus;
- 	dev->sysdata = node;
- 	dev->dev.parent = bus->bridge;
- 	dev->dev.bus = &pci_bus_type;
-diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
-index dd84af4..199b8e9 100644
---- a/drivers/char/agp/alpha-agp.c
-+++ b/drivers/char/agp/alpha-agp.c
-@@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
- 	/*
- 	 * Build a fake pci_dev struct
- 	 */
--	pdev = alloc_pci_dev();
-+	pdev = pci_alloc_dev(NULL);
- 	if (!pdev)
- 		return -ENOMEM;
- 	pdev->vendor = 0xffff;
-diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
-index 94821ab..bf5d247 100644
---- a/drivers/char/agp/parisc-agp.c
-+++ b/drivers/char/agp/parisc-agp.c
-@@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
- 	struct agp_bridge_data *bridge;
- 	int error = 0;
- 
--	fake_bridge_dev = alloc_pci_dev();
-+	fake_bridge_dev = pci_alloc_dev(NULL);
- 	if (!fake_bridge_dev) {
- 		error = -ENOMEM;
- 		goto fail;
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index c93071d..2652ca0 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -75,18 +75,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct pci_dev *virtfn;
- 	struct resource *res;
- 	struct pci_sriov *iov = dev->sriov;
-+	struct pci_bus *bus;
- 
--	virtfn = alloc_pci_dev();
-+	virtfn = pci_alloc_dev(NULL);
- 	if (!virtfn)
- 		return -ENOMEM;
- 
- 	mutex_lock(&iov->dev->sriov->lock);
--	virtfn->bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
--	if (!virtfn->bus) {
-+	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-+	if (!bus) {
- 		kfree(virtfn);
- 		mutex_unlock(&iov->dev->sriov->lock);
- 		return -ENOMEM;
- 	}
-+	virtfn->bus = pci_bus_get(bus);
- 	virtfn->devfn = virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 26df9c8..d5d18a0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1130,6 +1130,7 @@ static void pci_release_dev(struct device *dev)
- 	struct pci_dev *pci_dev;
- 
- 	pci_dev = to_pci_dev(dev);
-+	pci_bus_put(pci_dev->bus);
- 	pci_release_capabilities(pci_dev);
- 	pci_release_of_node(pci_dev);
- 	kfree(pci_dev);
-@@ -1269,11 +1270,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
- 		return NULL;
- 
--	dev = alloc_pci_dev();
-+	dev = pci_alloc_dev(bus);
- 	if (!dev)
- 		return NULL;
- 
--	dev->bus = bus;
- 	dev->devfn = devfn;
- 	dev->vendor = l & 0xffff;
- 	dev->device = (l >> 16) & 0xffff;
-@@ -1281,6 +1281,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	pci_set_of_node(dev);
- 
- 	if (pci_setup_device(dev)) {
-+		pci_bus_put(dev->bus);
- 		kfree(dev);
- 		return NULL;
- 	}
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 846f475f..90c95a3 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -2026,7 +2026,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- static inline int
- make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
- {
--	*pdev = alloc_pci_dev();
-+	*pdev = pci_alloc_dev(NULL);
- 
- 	if( *pdev == NULL ) return -1;
- 
--- 
-1.8.1.2
+On 5/23/2013 2:14 PM, Roland Dreier wrote:
+> At LSF this year, we had a discussion about error handling and in
+> particular the problem that SCSI midlayer error handling waits for the
+> entire SCSI host (HBA) to quiesce before it starts to abort commands
+> etc.
+>
+> James made the suggestion that FC should handle things the way SAS
+> does, because SAS has a strategy handler that does things the right
+> way.  However, now that I finally sit down and look at the code, I
+> don't see how this is the case.  It seems inherent in the way that
+> scsi_eh_scmd_add() and the thread in scsi_error_handler() work (in
+> particular the strategy handler can't even be called until host_failed
+> == host_busy; we don't bump host_failed without SHOST_RECOVERY set,
+> which stops queueing commands to any devices attached to the whole
+> HBA).
+>
+> James, am I understanding your suggestion properly?  If so can you
+> explain what you meant about the libsas code -- I see that it has its
+> own strategy handler but as I said before we've already stopped every
+> device attached to the HBA before we ever get there.
+>
+> To recapitulate the problem here, we might have a whole fabric
+> attached to an HBA via SAS or FC, and be doing 500K IOPS happily to 50
+> devices.  Then a single LUN goes wonky and all the IO stops while we
+> try to recover that single device, which might take minutes.
+>
+> I know this has been discussed before, but can we find a way forward
+> here?  Is there some way we can start with per-device error recovery
+> and avoid disrupting IO that we can see is working fine?
+>
+> Thanks,
+>    Roland
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
