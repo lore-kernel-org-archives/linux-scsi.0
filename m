@@ -1,33 +1,30 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v3 2/6] scsi_debug: fix incorrectly nested kmap_atomic()
-Date: Sun, 26 May 2013 17:01:18 +0900
-Message-ID: <1369555282-17864-3-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v3 3/6] scsi_debug: fix NULL pointer dereference with parameters dif=0 dix=1
+Date: Sun, 26 May 2013 17:01:19 +0900
+Message-ID: <1369555282-17864-4-git-send-email-akinobu.mita@gmail.com>
 References: <1369555282-17864-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:45923 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759203Ab3EZIBu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 May 2013 04:01:50 -0400
-Received: by mail-pb0-f41.google.com with SMTP id xb12so5742847pbc.0
-        for <linux-scsi@vger.kernel.org>; Sun, 26 May 2013 01:01:50 -0700 (PDT)
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:64637 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759206Ab3EZIBw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 May 2013 04:01:52 -0400
+Received: by mail-pd0-f181.google.com with SMTP id bv13so3711558pdb.26
+        for <linux-scsi@vger.kernel.org>; Sun, 26 May 2013 01:01:52 -0700 (PDT)
 In-Reply-To: <1369555282-17864-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-In the function prot_verify_write(), kmap_atomic()/kunmap_atomic() for
-data page and kmap_atomic()/kunmap_atomic() for protection information
-page are not nested each other.
+The protection info dif_storep is allocated only when parameter dif is
+not zero.  But it will be accessed when reading or writing to the storage
+installed with parameter dix is not zero.
 
-It worked perfectly before commit 3e4d3af501cccdc8a8cca41bdbe57d54ad7e7e73
-("mm: stack based kmap_atomic()").  Because the kmap_atomic slot KM_IRQ0
-was used for data page and the slot KM_IRQ1 was used for protection page.
+So kernel crashes if scsi_debug module is loaded with parameters dix=1 and
+dif=0.
 
-But KM_types are gone and kmap_atomic() is using stack based implementation.
-So two different kmap_atomic() usages must be strictly nested now.
-
-This change ensures kmap_atomic() usage is strictly nested.
+This fixes it by making dif_storep available if parameter dix is not zero
+instead of checking if parameter dif is not zero.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
@@ -35,53 +32,27 @@ Cc: Douglas Gilbert <dgilbert@interlog.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Acked-by: "Martin K. Petersen" <martin.petersen@oracle.com>
 ---
 
-* No changes from v2
+* No changes from v1
 
- drivers/scsi/scsi_debug.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index d51bddd..bcf73e4 100644
+index bcf73e4..e83e661 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -1891,12 +1891,12 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 	BUG_ON(scsi_sg_count(SCpnt) == 0);
- 	BUG_ON(scsi_prot_sg_count(SCpnt) == 0);
+@@ -3372,7 +3372,7 @@ static int __init scsi_debug_init(void)
+ 	if (scsi_debug_num_parts > 0)
+ 		sdebug_build_parts(fake_storep, sz);
  
--	paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
- 	ppage_offset = 0;
+-	if (scsi_debug_dif) {
++	if (scsi_debug_dix) {
+ 		int dif_size;
  
- 	/* For each data page */
- 	scsi_for_each_sg(SCpnt, dsgl, scsi_sg_count(SCpnt), i) {
- 		daddr = kmap_atomic(sg_page(dsgl)) + dsgl->offset;
-+		paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
- 
- 		/* For each sector-sized chunk in data page */
- 		for (j = 0; j < dsgl->length; j += scsi_debug_sector_size) {
-@@ -1980,19 +1980,18 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 			ppage_offset += sizeof(struct sd_dif_tuple);
- 		}
- 
-+		kunmap_atomic(paddr);
- 		kunmap_atomic(daddr);
- 	}
- 
--	kunmap_atomic(paddr);
--
- 	dix_writes++;
- 
- 	return 0;
- 
- out:
- 	dif_errors++;
--	kunmap_atomic(daddr);
- 	kunmap_atomic(paddr);
-+	kunmap_atomic(daddr);
- 	return ret;
- }
- 
+ 		dif_size = sdebug_store_sectors * sizeof(struct sd_dif_tuple);
 -- 
 1.8.1.4
 
