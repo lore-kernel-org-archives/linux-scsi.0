@@ -1,106 +1,76 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [RFC PATCH 4/4] scsi: lock out SG_IO by default to unprivileged users
-Date: Mon, 27 May 2013 15:50:22 +0200
-Message-ID: <1369662622-5959-5-git-send-email-pbonzini__47351.7887563959$1369666544$gmane$org@redhat.com>
-References: <1369662622-5959-1-git-send-email-pbonzini@redhat.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH] [SCSI] sd: Fix parsing of 'temporary ' cache mode prefix
+Date: Mon, 27 May 2013 19:07:19 +0100
+Message-ID: <1369678039.3469.395.camel@deadeye.wl.decadent.org.uk>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-JDsINHFEkEnTRycEmRaP"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([208.118.235.10]:56362 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932717Ab3E0Ozb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 May 2013 10:55:31 -0400
-Received: from bonzini by fencepost.gnu.org with local (Exim 4.71)
-	(envelope-from <bonzini@gnu.org>)
-	id 1Ugype-0003WM-V3
-	for linux-scsi@vger.kernel.org; Mon, 27 May 2013 10:55:31 -0400
-In-Reply-To: <1369662622-5959-1-git-send-email-pbonzini@redhat.com>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:51254 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755265Ab3E0SH2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 May 2013 14:07:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: tj@kernel.org, msnitzer@redhat.com, ksievers@redhat.com, jbottomley@parallels.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@Parallels.com>
+Cc: linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>
 
-Move policy on SG_IO access to userspace.  Some level of checking
-at the kernel level (compared to just having an opt-out for the
-default whitelist) is needed because any userspace whitelist is too
-easily circumvented by doing ptrace on the program that has a file
-descriptor open.  This would be a regression for those who are using Unix
-permissions, security modules or the device cgroup to confine programs.
 
-A meaningful whitelist can then be set by udev, for example.
+--=-JDsINHFEkEnTRycEmRaP
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Commit 39c60a0948cc '[SCSI] sd: fix array cache flushing bug causing
+performance problems' added temp as a pointer to "temporary " and used
+sizeof(temp) - 1 as its length.  But sizeof(temp) is the size of the
+pointer, not the size of the string constant.  Change temp to a static
+array so that sizeof() does what was intended.
+
+Compile-tested only.
+
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Cc: stable@vger.kernel.org
 ---
-	This is not yet usable, because sg devices do not have a link
-	to the queue object.
+ drivers/scsi/sd.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- block/Kconfig      | 12 ++++++++++++
- block/scsi_ioctl.c | 10 ++++++----
- 2 files changed, 18 insertions(+), 4 deletions(-)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index c1c5552..6f6a1b4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -142,7 +142,7 @@ sd_store_cache_type(struct device *dev, struct device_a=
+ttribute *attr,
+ 	char *buffer_data;
+ 	struct scsi_mode_data data;
+ 	struct scsi_sense_hdr sshdr;
+-	const char *temp =3D "temporary ";
++	static const char temp[] =3D "temporary ";
+ 	int len;
+=20
+ 	if (sdp->type !=3D TYPE_DISK)
 
-diff --git a/block/Kconfig b/block/Kconfig
-index e89d6a2..67d1f68 100644
---- a/block/Kconfig
-+++ b/block/Kconfig
-@@ -75,6 +75,18 @@ config BLK_DEV_SG_FILTER_SYSFS
- 
- 	  If unsure, say Y.
- 
-+config BLK_DEV_SG_FILTER_MMC
-+	bool "Backwards-compatible default SG_IO filter"
-+	default y
-+	help
-+	  Saying Y here will let you send several commands (mostly based
-+	  on the MMC command set) by default to SCSI devices via /dev/sg,
-+	  /dev/bsg or ioctls such as SG_IO) even for unprivileged users.
-+	  Saying N will restrict the set of commands that unprivileged
-+	  users can send to the bare minimum.
-+
-+	  If unsure, say Y.
-+
- config BLK_DEV_BSGLIB
- 	bool "Block layer SG support v4 helper lib"
- 	default n
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 5db39b5..079dfa2 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -113,9 +113,12 @@ static int sg_emulated_host(struct request_queue *q, int __user *p)
- static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
- {
- 	memset(filter, 0, sizeof(*filter));
--
--	/* Basic read-only commands */
-+	__set_bit(INQUIRY, filter->read_ok);
- 	__set_bit(TEST_UNIT_READY, filter->read_ok);
-+	__set_bit(REPORT_LUNS, filter->read_ok);
-+
-+#ifdef BLK_DEV_SG_FILTER_MMC
-+	/* Basic read-only commands */
- 	__set_bit(REQUEST_SENSE, filter->read_ok);
- 	__set_bit(READ_6, filter->read_ok);
- 	__set_bit(READ_10, filter->read_ok);
-@@ -125,14 +128,12 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
- 	__set_bit(READ_DEFECT_DATA, filter->read_ok);
- 	__set_bit(READ_CAPACITY, filter->read_ok);
- 	__set_bit(READ_LONG, filter->read_ok);
--	__set_bit(INQUIRY, filter->read_ok);
- 	__set_bit(MODE_SENSE, filter->read_ok);
- 	__set_bit(MODE_SENSE_10, filter->read_ok);
- 	__set_bit(LOG_SENSE, filter->read_ok);
- 	__set_bit(START_STOP, filter->read_ok);
- 	__set_bit(GPCMD_VERIFY_10, filter->read_ok);
- 	__set_bit(VERIFY_16, filter->read_ok);
--	__set_bit(REPORT_LUNS, filter->read_ok);
- 	__set_bit(SERVICE_ACTION_IN, filter->read_ok);
- 	__set_bit(RECEIVE_DIAGNOSTIC, filter->read_ok);
- 	__set_bit(MAINTENANCE_IN, filter->read_ok);
-@@ -193,6 +194,7 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
- 	__set_bit(GPCMD_LOAD_UNLOAD, filter->write_ok);
- 	__set_bit(GPCMD_SET_STREAMING, filter->write_ok);
- 	__set_bit(GPCMD_SET_READ_AHEAD, filter->write_ok);
-+#endif
- }
- 
- int blk_verify_command(struct blk_cmd_filter *filter,
--- 
-1.8.1.4
 
+--=-JDsINHFEkEnTRycEmRaP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAUaOg1+e/yOyVhhEJAQqVeA//fJrYmRlaoNJIMqPEa6M7PuuYLWWqMlJU
+Aa5hLZasBXM/bvXwPQUmLfZx+NzOBG4HzkQaiWzXH54YTeZuGqRBnX3mLRrJoieU
+nlFQTgFB79Pzc5IY/AQs/erpKEqX45gSqDFBl3ElZPoLHaj8gjOvEDVzRu4Xl/x6
+huHiqaoZcglyH+RFrPKXOqdVOQFxzDaD3giaSqoQQ7SAoD/n2j2i8YJv3av/kaDk
+wdlmd24XsBYWhZ8GlSFTiX32RRwFtXma4eJPK2wCxocaviSD97Wu2hmEIaRfsM2B
+MWST0C2eoL+TdD9jFb+XAn4+sbtfU6LnZe7Gz4hGxPZmI4U0C0uWQ6raRPfpMmVi
+ikYsJwHbSh/l4ggxECxE3oEskuDkf+gnqwvQXf2hVFpqBYzbhArYmqxZjV2RPawA
+jDqIdqpUpmOms5sDZfiBuRuYfHCNrYiTKV0awUSlUsbWE2UMW0lNM8nFE6vc+xLU
+QrRZXMw2UG8A6QXYw0Yw0SO+vGCMhP4MZAl3Sw8Fv7C1sx3bzI2V2BUzxRKSCb5t
+bxbnOr+bNeDLmufD7lYPgW6yNFqFxW48hLighuf8UrHOLAlIuiO5csAlgQg/a2f4
+IRgURiNAojw2TA1/jPcYJV2kbiAMpwPTW5ewJGZDdtnXSOCgYg7fHq3dMkvtICm8
+4MX+PZE4pWQ=
+=UJiX
+-----END PGP SIGNATURE-----
+
+--=-JDsINHFEkEnTRycEmRaP--
