@@ -1,80 +1,53 @@
-From: Marc Dietrich <marvin24@gmx.de>
-Subject: Re: [PATCH 1/2] SCSI: nsp32: replace large udelay by mdelay
-Date: Mon, 27 May 2013 11:04:48 +0200
-Message-ID: <1772560.cdelMaBfqM@fb07-iapwap2.physik.uni-giessen.de>
-References: <cover.1369251478.git.marvin24@gmx.de> <495d02a8263a553dd3f67b354f5ec9beb784a5d3.1369251478.git.marvin24@gmx.de> <3402164.UHqBT8YQpR@fb07-iapwap2.physik.uni-giessen.de>
+From: Santosh Y <santoshsy@gmail.com>
+Subject: Re: [PATCH] ufshcd-pltfrm: add missing empty slot in ufs_of_match[]
+Date: Mon, 27 May 2013 17:13:44 +0530
+Message-ID: <CALMYJDs=L18BinOnqp_f9FUJaKZ=i8Z6TVFo5pc_N0AAWmXwQg@mail.gmail.com>
+References: <1369567481-30685-1-git-send-email-mita@fixstars.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3402164.UHqBT8YQpR@fb07-iapwap2.physik.uni-giessen.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:50311 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757825Ab3E0LoG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 May 2013 07:44:06 -0400
+Received: by mail-bk0-f54.google.com with SMTP id it16so3278698bkc.13
+        for <linux-scsi@vger.kernel.org>; Mon, 27 May 2013 04:44:05 -0700 (PDT)
+In-Reply-To: <1369567481-30685-1-git-send-email-mita@fixstars.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <mita@fixstars.com>
+Cc: linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-James,
+On Sun, May 26, 2013 at 4:54 PM, Akinobu Mita <mita@fixstars.com> wrote:
+> of_match_table member in struct device_driver must be terminated by
+> empty slot as a sentinel.
+>
+> Signed-off-by: Akinobu Mita <mita@fixstars.com>
+> Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+> Cc: Santosh Y <santoshsy@gmail.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/scsi/ufs/ufshcd-pltfrm.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> index 03319ac..0014e28 100644
+> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -190,6 +190,7 @@ static int ufshcd_pltfrm_remove(struct platform_device *pdev)
+>
+>  static const struct of_device_id ufs_of_match[] = {
+>         { .compatible = "jedec,ufs-1.1"},
+> +       {},
+>  };
+>
+>  static const struct dev_pm_ops ufshcd_dev_pm_ops = {
+> --
+> 1.8.1.4
+>
 
-Am Mittwoch, 22. Mai 2013, 22:33:18 schrieb Marc Dietrich:
-> Looks like Arnd already send a fix for this. Sorry for the noise.
+Acked-by: Santosh Y <santoshsy@gmail.com>
 
-are you going to pick up Arnd's patch [1] for scsi-stable (3.10) branch? 
-
-Marc
-
-[1] https://patchwork.kernel.org/patch/2489251/
-
-> Am Mittwoch, 22. Mai 2013, 21:48:41 schrieb Marc Dietrich:
-> > ARM has a maximum of 2000 usec delay. Use mdelay for larger delays.
-> > This affects distro kernels mostly.
-> > 
-> > Cc: GOTO Masanori <gotom@debian.or.jp>
-> > Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-> > Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> > Cc: linux-scsi@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> > Signed-off-by: Marc Dietrich <marvin24@gmx.de>
-> > ---
-> > 
-> >  drivers/scsi/nsp32.c |    2 +-
-> >  drivers/scsi/nsp32.h |    2 +-
-> >  2 files changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-> > index 1e3879d..e2f796f 100644
-> > --- a/drivers/scsi/nsp32.c
-> > +++ b/drivers/scsi/nsp32.c
-> > @@ -2899,7 +2899,7 @@ static void nsp32_do_bus_reset(nsp32_hw_data *data)
-> > 
-> >  	 * reset SCSI bus
-> >  	 */
-> >  	
-> >  	nsp32_write1(base, SCSI_BUS_CONTROL, BUSCTL_RST);
-> > 
-> > -	udelay(RESET_HOLD_TIME);
-> > +	mdelay(RESET_HOLD_TIME);
-> > 
-> >  	nsp32_write1(base, SCSI_BUS_CONTROL, 0);
-> >  	for(i = 0; i < 5; i++) {
-> >  	
-> >  		intrdat = nsp32_read2(base, IRQ_STATUS); /* dummy read */
-> > 
-> > diff --git a/drivers/scsi/nsp32.h b/drivers/scsi/nsp32.h
-> > index c022182..b2b3dc6 100644
-> > --- a/drivers/scsi/nsp32.h
-> > +++ b/drivers/scsi/nsp32.h
-> > @@ -605,7 +605,7 @@ typedef struct _nsp32_hw_data {
-> > 
-> >  /*
-> >  
-> >   * TIME definition
-> >   */
-> > 
-> > -#define RESET_HOLD_TIME		10000	/* reset time in us (SCSI-2 says the
-> > +#define RESET_HOLD_TIME		10	/* reset time in ms (SCSI-2 says the
-> > 
-> >  					   minimum is 25us) */
-> >  
-> >  #define SEL_TIMEOUT_TIME	10000	/* 250ms defined in SCSI specification
-> >  
-> >  					   (25.6us/1unit) */
+-- 
+~Santosh
