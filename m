@@ -1,54 +1,74 @@
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: Re: [PATCH v5 2/2] block,scsi: convert and handle ERR_PTR from
- blk_get_request
-Date: Mon, 27 May 2013 16:42:17 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1305271642050.3914@pobox.suse.cz>
-References: <alpine.DEB.2.02.1303171328250.1736@jlaw-desktop.mno.stratus.com> <20130524141531.737073a8@jlaw-desktop.mno.stratus.com> <20130524141728.30abc1ce@jlaw-desktop.mno.stratus.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [RFC PATCH 0/4] SG_IO filtering via sysfs and minimal whitelist
+Date: Mon, 27 May 2013 15:50:18 +0200
+Message-ID: <1369662622-5959-1-git-send-email-pbonzini__802.478011655872$1369666532$gmane$org@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33557 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932833Ab3E0OmS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 May 2013 10:42:18 -0400
-In-Reply-To: <20130524141728.30abc1ce@jlaw-desktop.mno.stratus.com>
+Received: from fencepost.gnu.org ([208.118.235.10]:56360 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758207Ab3E0OzX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 May 2013 10:55:23 -0400
+Received: from bonzini by fencepost.gnu.org with local (Exim 4.71)
+	(envelope-from <bonzini@gnu.org>)
+	id 1UgypV-0003Vq-VH
+	for linux-scsi@vger.kernel.org; Mon, 27 May 2013 10:55:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Bart Van Assche <bvanassche@acm.org>
+To: linux-kernel@vger.kernel.org
+Cc: tj@kernel.org, msnitzer@redhat.com, ksievers@redhat.com, jbottomley@parallels.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
-On Fri, 24 May 2013, Joe Lawrence wrote:
-
-> From 5b26d593807b30f60ed41f6fd5a16a56c3c9a43c Mon Sep 17 00:00:00 2001
-> From: Joe Lawrence <joe.lawrence@stratus.com>
-> Date: Fri, 24 May 2013 13:05:09 -0400
-> Subject: [PATCH v5 2/2] block,scsi: convert and handle ERR_PTR from blk_get_request
+On Wed, 12 Sep 2012 09:05:41 +0100, James Bottomley wrote:
+> This is why the whole filter thing was mutable via sysfs.  That way the
+> admin could set this up per device.  It sounds like this is what you
+> want to fix, rather than opening up more holes in an already leaky
+> security apparatus.  The ideal is that we would be much more restrictive
+> by default and give root the ability to override this both globally and
+> per-device to conform to whatever policy it has for the virtual
+> environments.
 > 
-> The blk_get_request function may fail in low-memory conditions or during
-> device removal (even if __GFP_WAIT is set). To distinguish between these
-> errors, modify the blk_get_request call stack to return the appropriate
-> ERR_PTR. Verify that all callers check the return status and consider
-> IS_ERR instead of a simple NULL pointer check.
+> The patch which removed all of the sysfs pieces was:
 > 
-> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Jiri Kosina <jkosina@suse.cz>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: linux-scsi@vger.kernel.org
-> ---
->  block/blk-core.c                            | 34 ++++++++++++++---------------
->  block/bsg.c                                 |  8 +++----
->  block/scsi_ioctl.c                          | 12 +++++-----
->  drivers/block/paride/pd.c                   |  4 ++--
->  drivers/block/pktcdvd.c                     |  4 ++--
+> commit 018e0446890661504783f92388ecce7138c1566d
+> Author: Jens Axboe <jens.axboe@oracle.com>
+> Date:   Fri Jun 26 16:27:10 2009 +0200
+>
+>     block: get rid of queue-private command filter
+> 
+> So that's probably the place to start for putting it back properly.
 
-Acked-by: Jiri Kosina <jkosina@suse.cz>
+[https://lkml.org/lkml/2012/9/12/76]
 
-for the pktdvd.c change.
+We've been running in circles for nine months now.  Let's restart from
+the maintainer's suggestion, which was probably dismissed too quickly.
 
-Thanks Joe.
+This is still not a complete solution, because /dev/sgN does not have
+access to its queue object.  Still, it can be a base for discussion.
+
+If accepted (in a complete form with access to the queue object for
+non-block devices), this series removes the need to fix the opcode
+conflicts as far as I'm concerned.  We could just consider that a
+feature of CONFIG_BLK_DEV_SG_FILTER_MMC.
+
+Previously posted at https://lkml.org/lkml/2012/9/25/397 (short thread).
+Rebased just fine, this one is compile-tested only.
+
+Paolo
+
+Paolo Bonzini (4):
+  block: add back queue-private command filter
+  scsi: create an all-zero filter for scanners
+  block: add back command filter modification via sysfs
+  scsi: lock out SG_IO by default to unprivileged users
+
+ Documentation/block/queue-sysfs.txt |  16 +++++
+ block/Kconfig                       |  22 ++++++
+ block/blk-sysfs.c                   |  43 ++++++++++++
+ block/bsg.c                         |   2 +-
+ block/scsi_ioctl.c                  | 131 +++++++++++++++++++++++++++++++-----
+ drivers/scsi/scsi_scan.c            |   8 ++-
+ drivers/scsi/sg.c                   |   7 +-
+ include/linux/blkdev.h              |  31 ++++++++-
+ 8 files changed, 238 insertions(+), 22 deletions(-)
 
 -- 
-Jiri Kosina
-SUSE Labs
+1.8.1.4
+
