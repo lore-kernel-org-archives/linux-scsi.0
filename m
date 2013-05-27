@@ -1,107 +1,49 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: SCSI error handling -- one error blocks the whole SCSI host
-Date: Mon, 27 May 2013 16:39:21 +0200
-Message-ID: <51A37019.3050604@suse.de>
-References: <CAL1RGDWuriBQQcTngjn5M3fUg0VC9XUKC_0iMQbf2p2DKfxJsQ@mail.gmail.com> <1369608242.1904.7.camel@dabdike>
+From: Jiri Kosina <jkosina@suse.cz>
+Subject: Re: [PATCH v5 1/2] block,scsi: verify return pointer from
+ blk_get_request
+Date: Mon, 27 May 2013 16:42:02 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1305271641380.3914@pobox.suse.cz>
+References: <alpine.DEB.2.02.1303171328250.1736@jlaw-desktop.mno.stratus.com> <20130524141531.737073a8@jlaw-desktop.mno.stratus.com> <20130524141637.405c7f39@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33476 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:33546 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932758Ab3E0OjX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 May 2013 10:39:23 -0400
-In-Reply-To: <1369608242.1904.7.camel@dabdike>
+	id S932737Ab3E0OmF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 May 2013 10:42:05 -0400
+In-Reply-To: <20130524141637.405c7f39@jlaw-desktop.mno.stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Roland Dreier <roland@purestorage.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, Bart Van Assche <bvanassche@acm.org>
 
-On 05/27/2013 12:44 AM, James Bottomley wrote:
->=20
-> On Thu, 2013-05-23 at 11:14 -0700, Roland Dreier wrote:
->> At LSF this year, we had a discussion about error handling and in
->> particular the problem that SCSI midlayer error handling waits for t=
-he
->> entire SCSI host (HBA) to quiesce before it starts to abort commands
->> etc.
->>
->> James made the suggestion that FC should handle things the way SAS
->> does, because SAS has a strategy handler that does things the right
->> way.  However, now that I finally sit down and look at the code, I
->> don't see how this is the case.  It seems inherent in the way that
->> scsi_eh_scmd_add() and the thread in scsi_error_handler() work (in
->> particular the strategy handler can't even be called until host_fail=
-ed
->> =3D=3D host_busy; we don't bump host_failed without SHOST_RECOVERY s=
-et,
->> which stops queueing commands to any devices attached to the whole
->> HBA).
->>
->> James, am I understanding your suggestion properly?  If so can you
->> explain what you meant about the libsas code -- I see that it has it=
-s
->> own strategy handler but as I said before we've already stopped ever=
-y
->> device attached to the HBA before we ever get there.
->=20
-> It is, but I checked: Apparently it's not implemented in the sas
-> transport class.  The original discussion when libsas was constructed=
-,
-> as I remember it, was about using the scsi timeout handler to impleme=
-nt
-> a running abort.  The idea is fairly simple: you use the first fire o=
-f
-> eh_timed_out to trigger the abort (or LUN reset) while simultaneously
-> returning BLK_EH_RESET_TIMER.  If the timer fires again and the abort
-> hasn't returned, you escalate, otherwise you resend the command when =
-the
-> abort returns.  This allows you to handle single command failures (up=
- to
-> LUN reset) without stopping the host.  Obviously, if you have to
-> escalate to device reset, then you need to start the eh thread.
->=20
-There are some problems with that:
+On Fri, 24 May 2013, Joe Lawrence wrote:
 
-- Returning BLK_EH_RESET_TIMER will restart the timer with the
-  _default_ blk timeout. Whereas the _abort_ timeout might
-  (and, for some LLDDs, it definitely is) different from
-  that.
-- Leaving the command running while abort is active will
-  inevitably risk a double completion on the original command;
-  the command abort might terminate the command at the
-  same time as the (real) completion comes in.
-  'Normal' command timeouts are protected against this via
-  REQ_ATOM_COMPLETE; commands aborted via scsi_finish_cmnd()
-  are not.
-- LLDDs typically won't return a command status even for a
-  command which has been aborted via ABORT TASK TMF.
-  So the midlayer probably will never get notified if
-  the command got aborted via ABORT TASK.
+> From 22307be1bc6e404622b1f074094902e385a1bd30 Mon Sep 17 00:00:00 2001
+> From: Joe Lawrence <joe.lawrence@stratus.com>
+> Date: Fri, 24 May 2013 12:39:04 -0400
+> Subject: [PATCH v5 1/2] block,scsi: verify return pointer from blk_get_request
+> 
+> The blk-core dead queue checks introduced in commit 70460571 added an
+> error scenario to blk_get_request that returns NULL if the request queue
+> has been shutdown. This changed the behavior for __GFP_WAIT callers, who
+> should now verify the return value before dereferencing.
+> 
+> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Jiri Kosina <jkosina@suse.cz>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  block/scsi_ioctl.c        | 9 ++++++++-
+>  drivers/block/paride/pd.c | 2 ++
+>  drivers/block/pktcdvd.c   | 2 ++
 
-Especially the last point made me abandon this idea for my EH
-rewrite. We would be having a real benefit if we somehow could get
-the command status _from the target_ for an aborted command.
-But as it appears we won't.
-So as any status is made up anyway I'd very much prefer to have it
-set by the midlayer. Which renders the whole operation quite
-pointless and we're better off using the existing syntax for command
-aborts.
-Plus it makes life _so much_ easier for the implementation ...
+Acked-by: Jiri Kosina <jkosina@suse.cz>
 
-But to answer Roland: Have you checked my patchset?
-It should help for command timeouts ...
+for the pktdvd.c change.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jiri Kosina
+SUSE Labs
