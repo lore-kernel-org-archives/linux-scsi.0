@@ -1,55 +1,77 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH 2/2] scsi: qla2xxx: print MAC via %pMR
-Date: Tue, 28 May 2013 11:44:42 +0300
-Message-ID: <1369730682.29283.220.camel@smile>
-References: <1342079490-20191-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1342079490-20191-2-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <alpine.WNT.2.00.1207260822340.4880@N5102REMCQXM4BS.qlogic.org>
+Subject: Re: [PATCH] fusion: print lan address via %pMR
+Date: Tue, 28 May 2013 11:46:38 +0300
+Message-ID: <1369730798.29283.221.camel@smile>
+References: <1342079727-22040-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29840 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:7776 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933607Ab3E1Ios convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 May 2013 04:44:48 -0400
-In-Reply-To: <alpine.WNT.2.00.1207260822340.4880@N5102REMCQXM4BS.qlogic.org>
+	id S933576Ab3E1Iqm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 May 2013 04:46:42 -0400
+In-Reply-To: <1342079727-22040-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>
-
-On Thu, 2012-07-26 at 08:23 -0400, Chad Dupuis wrote: 
-> 
-> On Thu, 12 Jul 2012, Andy Shevchenko wrote:
-> 
-> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > ---
-> > drivers/scsi/qla2xxx/qla_attr.c |    5 +----
-> > 1 file changed, 1 insertion(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-> > index 5ab9530..095ba85 100644
-> > --- a/drivers/scsi/qla2xxx/qla_attr.c
-> > +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> > @@ -1193,10 +1193,7 @@ qla2x00_vn_port_mac_address_show(struct device *dev,
-> >       if (!IS_CNA_CAPABLE(vha->hw))
-> >               return snprintf(buf, PAGE_SIZE, "\n");
-> >
-> > -     return snprintf(buf, PAGE_SIZE, "%02x:%02x:%02x:%02x:%02x:%02x\n",
-> > -         vha->fcoe_vn_port_mac[5], vha->fcoe_vn_port_mac[4],
-> > -         vha->fcoe_vn_port_mac[3], vha->fcoe_vn_port_mac[2],
-> > -         vha->fcoe_vn_port_mac[1], vha->fcoe_vn_port_mac[0]);
-> > +     return snprintf(buf, PAGE_SIZE, "%pMR\n", vha->fcoe_vn_port_mac);
-> > }
-> >
-> > static ssize_t
-> >
-> 
-> Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+To: linux-scsi@vger.kernel.org
+Cc: Eric Moore <Eric.Moore@lsi.com>, DL-MPTFusionLinux@lsi.com, "James E.J. Bottomley" <JBottomley@parallels.com>
 
 
-James, do you have any comments on this patch and patch 1/2?
+On Thu, 2012-07-12 at 10:55 +0300, Andy Shevchenko wrote: 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/message/fusion/mptbase.c |   14 ++++----------
+>  1 file changed, 4 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index d99db56..d202f25 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -2562,10 +2562,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+>  				(void) GetLanConfigPages(ioc);
+>  				a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
+>  				dprintk(ioc, printk(MYIOC_s_DEBUG_FMT
+> -					"LanAddr = %02X:%02X:%02X"
+> -					":%02X:%02X:%02X\n",
+> -					ioc->name, a[5], a[4],
+> -					a[3], a[2], a[1], a[0]));
+> +					"LanAddr = %pMR\n", ioc->name, a));
+>  			}
+>  			break;
+>  
+> @@ -6785,8 +6782,7 @@ static int mpt_iocinfo_proc_show(struct seq_file *m, void *v)
+>  		if (ioc->bus_type == FC) {
+>  			if (ioc->pfacts[p].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN) {
+>  				u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
+> -				seq_printf(m, "    LanAddr = %02X:%02X:%02X:%02X:%02X:%02X\n",
+> -						a[5], a[4], a[3], a[2], a[1], a[0]);
+> +				seq_printf(m, "    LanAddr = %pMR\n", a);
+>  			}
+>  			seq_printf(m, "    WWN = %08X%08X:%08X%08X\n",
+>  					ioc->fc_port_page0[p].WWNN.High,
+> @@ -6863,8 +6859,7 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
+>  
+>  	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
+>  		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
+> -		y += sprintf(buffer+len+y, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
+> -			a[5], a[4], a[3], a[2], a[1], a[0]);
+> +		y += sprintf(buffer+len+y, ", LanAddr=%pMR", a);
+>  	}
+>  
+>  	y += sprintf(buffer+len+y, ", IRQ=%d", ioc->pci_irq);
+> @@ -6897,8 +6892,7 @@ static void seq_mpt_print_ioc_summary(MPT_ADAPTER *ioc, struct seq_file *m, int
+>  
+>  	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
+>  		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
+> -		seq_printf(m, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
+> -			a[5], a[4], a[3], a[2], a[1], a[0]);
+> +		seq_printf(m, ", LanAddr=%pMR", a);
+>  	}
+>  
+>  	seq_printf(m, ", IRQ=%d", ioc->pci_irq);
+
+James, do you have any comments on this one?
 
 -- 
 Andy Shevchenko <andriy.shevchenko@linux.intel.com>
