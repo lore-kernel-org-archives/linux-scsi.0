@@ -1,75 +1,56 @@
-From: Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>
-Subject: Re: [PATCH V2 2/9] Documentation: devicetree: Add DT bindings for
- UFS host controller
-Date: Mon, 27 May 2013 22:31:40 -0700
-Message-ID: <20130528053140.GA18476@quad.lixom.net>
-References: <1368515328-31535-1-git-send-email-draviv@codeaurora.org>
- <1368515328-31535-3-git-send-email-draviv@codeaurora.org>
- <CAOesGMij6oKDr0BCRAnmz-r48S5FzzMcU_iyCyCyqkafWsmyNA@mail.gmail.com>
- <51933768.20107@codeaurora.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH 2/2] scsi: qla2xxx: print MAC via %pMR
+Date: Tue, 28 May 2013 11:44:42 +0300
+Message-ID: <1369730682.29283.220.camel@smile>
+References: <1342079490-20191-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1342079490-20191-2-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <alpine.WNT.2.00.1207260822340.4880@N5102REMCQXM4BS.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <51933768.20107-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/devicetree-discuss/>
-List-Post: <mailto:devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-List-Help: <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=subscribe>
-Errors-To: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-Sender: "devicetree-discuss"
- <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-To: Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, DOCUMENTATION <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "moderated list:OPEN FIRMWARE AND..." <devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:29840 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933607Ab3E1Ios convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 May 2013 04:44:48 -0400
+In-Reply-To: <alpine.WNT.2.00.1207260822340.4880@N5102REMCQXM4BS.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-On Wed, May 15, 2013 at 12:51:12PM +0530, Sujit Reddy Thumma wrote:
-> On 5/14/2013 11:38 PM, Olof Johansson wrote:
-> >On Tue, May 14, 2013 at 12:08 AM, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org> wrote:
-> >>Compatible list is used in commit 03b1781 but is not documented.
-> >>Add necessary device tree bindings to describe on-chip UFS host
-> >>controllers.
-> >>
-> >>Signed-off-by: Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-> >>
-> >>diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >>new file mode 100644
-> >>index 0000000..20468b2
-> >>--- /dev/null
-> >>+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >>@@ -0,0 +1,16 @@
-> >>+* Universal Flash Storage (UFS) Host Controller
-> >>+
-> >>+UFSHC nodes are defined to describe on-chip UFS host controllers.
-> >>+Each UFS controller instance should have its own node.
-> >>+
-> >>+Required properties:
-> >>+- compatible        : compatible list, contains "jedec,ufs-1.1"
-> >>+- interrupts        : <interrupt mapping for UFS host controller IRQ>
-> >>+- reg               : <registers mapping>
-> >>+
-> >>+Example:
-> >>+       ufshc@0xfc598000 {
-> >>+               compatible = "jedec,ufs-1.1";
-> >
-> >Hmm.
-> >
-> >Does jedec really specify the programming interface of this type of
-> >device, register layout and meaning? It seems to be more about the
-> >command set and electrical/connectivity specifications, no?
+On Thu, 2012-07-26 at 08:23 -0400, Chad Dupuis wrote: 
 > 
-> That's true with UFS device specification. For UFS Host Controller
-> specification Jedec indeed standardized the hardware registers,
-> memory structures and register programming sequence to talk to UFS
-> device.
+> On Thu, 12 Jul 2012, Andy Shevchenko wrote:
+> 
+> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > ---
+> > drivers/scsi/qla2xxx/qla_attr.c |    5 +----
+> > 1 file changed, 1 insertion(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+> > index 5ab9530..095ba85 100644
+> > --- a/drivers/scsi/qla2xxx/qla_attr.c
+> > +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> > @@ -1193,10 +1193,7 @@ qla2x00_vn_port_mac_address_show(struct device *dev,
+> >       if (!IS_CNA_CAPABLE(vha->hw))
+> >               return snprintf(buf, PAGE_SIZE, "\n");
+> >
+> > -     return snprintf(buf, PAGE_SIZE, "%02x:%02x:%02x:%02x:%02x:%02x\n",
+> > -         vha->fcoe_vn_port_mac[5], vha->fcoe_vn_port_mac[4],
+> > -         vha->fcoe_vn_port_mac[3], vha->fcoe_vn_port_mac[2],
+> > -         vha->fcoe_vn_port_mac[1], vha->fcoe_vn_port_mac[0]);
+> > +     return snprintf(buf, PAGE_SIZE, "%pMR\n", vha->fcoe_vn_port_mac);
+> > }
+> >
+> > static ssize_t
+> >
+> 
+> Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
 
-Ok, fair enough. However, I think "jedec,ufshc-1.1" would be more
-appropriate to avoid ambiguities. Compare to SD where "sdhci" is the
-only compatible string used for the standard interface.
 
+James, do you have any comments on this patch and patch 1/2?
 
--Olof
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
