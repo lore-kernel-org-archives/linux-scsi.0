@@ -1,99 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: PING^7 (was Re: [PATCH v2 00/14] Corrections and customization of the SG_IO command whitelist (CVE-2012-4542))
-Date: Tue, 28 May 2013 16:25:12 -0400
-Message-ID: <yq17gii3l93.fsf@sermon.lab.mkp.net>
-References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com>
-	<519C674A.50700@redhat.com> <20130522093249.GC3466@mtj.dyndns.org>
-	<519C959A.3090100@redhat.com> <20130522100212.GE3466@mtj.dyndns.org>
-	<519C9CBC.3050003@redhat.com> <20130522134134.GA15189@mtj.dyndns.org>
-	<519CD234.40608@redhat.com> <20130522150335.GC2777@thunk.org>
-	<519CE9FE.2030007@redhat.com> <yq1vc6b561q.fsf@sermon.lab.mkp.net>
-	<51A035FA.6070409@vlnb.net>
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+Subject: [PATCH 0/2] Minor scsi_dh_emc error path fixes
+Date: Tue, 28 May 2013 17:18:37 -0400 (EDT)
+Message-ID: <alpine.DEB.2.02.1305281713410.25762@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <51A035FA.6070409@vlnb.net> (Vladislav Bolkhovitin's message of
-	"Fri, 24 May 2013 20:54:34 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailhub.stratus.com ([134.111.1.18]:58835 "EHLO
+	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757691Ab3E1VWy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 May 2013 17:22:54 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>
 
->>>>> "Vladislav" == Vladislav Bolkhovitin <vst@vlnb.net> writes:
+These two patches spun out of the blk_get_request return type changes
+I've been working on [1].
 
-Vladislav> Linux block layer is purely artificial creature slowly
-Vladislav> reinventing wheel creating more problems, than solving.
+  [1] http://thread.gmane.org/gmane.linux.scsi/80934
 
-On the contrary. I do think we solve a whole bunch of problems.
+Should that patch go in, there are a few other device handler changes
+possible for 3.11 [2], but the following bugfixes are unrelated, so I
+thought I'd post them in case they could apply for 3.10.
 
+  [2] http://thread.gmane.org/gmane.linux.scsi/81130
 
-Vladislav> It enforces approach, where often "impossible" means
-Vladislav> "impossible in this interface".
+The first bug was spotted by Mike in thread [2], the second when I
+traced the call path of clariion_send_inquiry back out through
+clariion_set_params and its caller parse_path. The latter fix could have
+been made in parse_path, but it didn't seem appropriate for that file to
+sort through SCSI_DH enums.
 
-I agree we have limitations. I do not agree that all limitations are
-bad. Sometimes it's OK to say no.
+Comments welcome, unfortunately I don't have the HW to verify, so these
+are only compile tested.
 
+Thanks,
 
-Vladislav> For instance, how about copy offload?  How about atomic
-Vladislav> writes?
+Joe Lawrence (2):
+  scsi_dh_emc: handle zero-senselen send_inquiry_cmd errors
+  scsi_dh_emc: set_params callback should consistently return errno
 
-I'm actively working on copy offload. Nobody appears to be interested in
-atomic writes. Otherwise I'd work on those as well.
-
-
-Vladislav> Why was it needed to create special blk integrity interface
-Vladislav> with the only end user - SCSI?
-
-Simple. Because we did not want to interleave data and PI 512+8+512+8
-neither in memory, nor at DMA time. Furthermore, the ATA EPP proposal
-was still on the table so I also needed to support ATA.
-
-And finally, NVM Express uses the blk_integrity interface as well.
-
-
-Vladislav> The block layer keeps repeating SCSI. So, maybe, after all,
-Vladislav> it's better to acknowledge that direct usage of SCSI without
-Vladislav> any intermediate layers and translations is more productive?
-Vladislav> And for those minors not using SCSI internally, translate
-Vladislav> from SCSI to their internal commands? Creating and filling
-Vladislav> CDB fields for most cases isn't anyhow harder, than creating
-Vladislav> and feeling bio fields.
-
-This is quite possibly the worst idea I have heard all week.
-
-As it stands it's a headache for the disk ULD driver to figure out which
-of the bazillion READ/WRITE variants to send to a SCSI/ATA device. What
-makes you think that an application or filesystem would be better
-equipped to make that call?
-
-See also: WRITE SAME w/ zeroes vs. WRITE SAME w/ UNMAP vs. UNMAP 
-
-See also: EXTENDED COPY vs. the PROXY command set
-
-See also: USB-ATA bridge chips
-
-You make it sound like all the block layer does is filling out
-CDBs. Which it doesn't in fact have anything to do with at all.
-
-When you are talking about CDBs we're down in the SBC/SSC territory.
-Which is such a tiny bit of what's going on. We have transports, we have
-SAM, we have HBA controller DMA constraints, system DMA constraints,
-buffer bouncing, etc. There's a ton of stuff that needs to happen before
-the CDB and the data physically reach the storage.
-
-You seem to be advocating that everything up to the point where the
-device receives the command is in the way. Well, by all means. Why limit
-ourselves to the confines of SCSI? Why not get rid of POSIX
-read()/write(), page cache, filesystems and let applications speak
-ST-506 directly?
-
-I know we're doing different things. My job is to make a general purpose
-operating system with interfaces that make sense to normal applications.
-That does not preclude special cases where it may make sense to poke at
-the device directly. For testing purposes, for instance. But I consider
-it a failure when we start having applications that know about hardware
-intricacies, cylinders/heads/sectors, etc. That road leads straight to
-the 1980s...
+ drivers/scsi/device_handler/scsi_dh_emc.c |   17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.7.10.4
+
