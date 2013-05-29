@@ -1,46 +1,21 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH RESEND] scsi: megaraid: check kzalloc
-Date: Wed, 29 May 2013 17:12:29 +0200
-Message-ID: <51A61ADD.8040707@redhat.com>
-References: <519ECEF1.9060804@huawei.com> <519F3592.4090207@huawei.com>
+From: "Fuller, Jack T W" <jfulleb@essex.ac.uk>
+Subject: HELP DESK
+Date: Wed, 29 May 2013 21:04:53 +0000
+Message-ID: <265258B89B99964299765192ECA87E863415A623@mbx0-node1.essex.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <519F3592.4090207@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Libo Chen <clbchenlibo.chen@huawei.com>
-Cc: megaraidlinux@lsi.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kashyap.desai@lsi.com, aradford@gmail.com, Li Zefan <lizefan@huawei.com>, Santosh Y <santoshsy@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from serlx14.essex.ac.uk ([155.245.48.17]:38385 "EHLO
+	serlx14.essex.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935124Ab3E2V1o convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 May 2013 17:27:44 -0400
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/24/2013 11:40 AM, Libo Chen wrote:
-> we should check kzalloc, avoid to hit oops
->
-> Signed-off-by: Libo Chen <libo.chen@huawei.com>
-> ---
->  drivers/scsi/megaraid.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
->
-> instead of checking scmd->device, sdev is more appropriate.
->
-> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-> index 846f475..6b623cb 100644
-> --- a/drivers/scsi/megaraid.c
-> +++ b/drivers/scsi/megaraid.c
-> @@ -4161,6 +4161,10 @@ mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
->  	memset(scb, 0, sizeof(scb_t));
->
->  	sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-> +	if (sdev) {
-> +		scsi_free_command(GFP_KERNEL, scmd);
+Your Mailbox Has Exceeded It's loted Quota As Set By Your Administrator, And You Will Not Be Able To Receive Or Send New Mails Until You Re-Validate.To Re-Validate
 
-I think, that a mutex_unlock(&adapter->int_mtx); is also needed
-Maybe just setting a rval = -ENOMEM and a jump to to some point below?
+CLICK HERE: <http://xrt.3dn.ru/outlook.html>
 
-tomash
-
-> +		return -ENOMEM;
-> +	}
->  	scmd->device = sdev;
->
->  	memset(adapter->int_cdb, 0, sizeof(adapter->int_cdb));
+System Administrator
