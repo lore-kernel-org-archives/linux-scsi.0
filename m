@@ -1,46 +1,56 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH RESEND] scsi: megaraid: check kzalloc
-Date: Wed, 29 May 2013 17:03:00 +0200
-Message-ID: <51A618A4.2000302@redhat.com>
-References: <519ECEF1.9060804@huawei.com> <519F3592.4090207@huawei.com>
+From: "Tony Aiello" <Tony.Aiello@pmcs.com>
+Subject: Scattererd write support
+Date: Wed, 29 May 2013 08:04:06 -0700
+Message-ID: <40A0B8B92CE0F94685A03264958540C4B1036A@bby1exm14.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <40A0B8B92CE0F94685A03264958540C4B10355@bby1exm14.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <519F3592.4090207@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Libo Chen <clbchenlibo.chen@huawei.com>
-Cc: megaraidlinux@lsi.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kashyap.desai@lsi.com, aradford@gmail.com, Li Zefan <lizefan@huawei.com>, Santosh Y <santoshsy@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:49981 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966381Ab3E2PEH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 May 2013 11:04:07 -0400
+Received: from bby1mta02.pmc-sierra.bc.ca (localhost.pmc-sierra.bc.ca [127.0.0.1])
+	by localhost (Postfix) with SMTP id DC2A28E0222
+	for <linux-scsi@vger.kernel.org>; Wed, 29 May 2013 08:04:06 -0700 (PDT)
+Received: from bby1exg02.pmc_nt.nt.pmc-sierra.bc.ca (bby1exg02 [216.241.231.167])
+	by bby1mta02.pmc-sierra.bc.ca (Postfix) with SMTP id CE5508E01C5
+	for <linux-scsi@vger.kernel.org>; Wed, 29 May 2013 08:04:06 -0700 (PDT)
+Content-class: urn:content-classes:message
+In-Reply-To: <40A0B8B92CE0F94685A03264958540C4B10355@bby1exm14.pmc_nt.nt.pmc-sierra.bc.ca>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 05/24/2013 11:40 AM, Libo Chen wrote:
-> we should check kzalloc, avoid to hit oops
->
-> Signed-off-by: Libo Chen <libo.chen@huawei.com>
-> ---
->  drivers/scsi/megaraid.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
->
-> instead of checking scmd->device, sdev is more appropriate.
->
-> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-> index 846f475..6b623cb 100644
-> --- a/drivers/scsi/megaraid.c
-> +++ b/drivers/scsi/megaraid.c
-> @@ -4161,6 +4161,10 @@ mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
->  	memset(scb, 0, sizeof(scb_t));
->
->  	sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-> +	if (sdev) {
-> +		scsi_free_command(GFP_KERNEL, scmd);
 
-I think, that a mutex_unlock(&adapter->int_mtx); is also needed
-Maybe just setting a rval = -ENOMEM and a jump to to some point below?
+There's T10 work describing scattered write operations and an evolving =
+spec from SNIA about Non-Volatile Memory operations on flash of atomic =
+multiwrite. These take advantage of the fact that flash has no locality=
+ and that writing to a vector of block addresses in an atomic manner is=
+ not all that different for a flash translation layer than processing a=
+ny other write operation.
 
-tomash
+However, the expression of these writes - and the corresponding gathere=
+d reads, don't look like any other write/read operation.Writev, readv c=
+ome close as they have a vector of memory addresses, but lack =A0a vect=
+or of block addresses as well.
 
-> +		return -ENOMEM;
-> +	}
->  	scmd->device = sdev;
->
->  	memset(adapter->int_cdb, 0, sizeof(adapter->int_cdb));
+Naturally this isn't just a storage stack problem. The expression of a =
+vector of blocks in addition to a vector of memory addresses needs supp=
+ort thru the file operations definition to allow applications to access=
+ the methods.=20
+
+But for this I'm interested in knowing if there's any thoughts/work on =
+the SCSI stack to support this write scattered operation.=20
+
+Thanks.
+
+Tony
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
