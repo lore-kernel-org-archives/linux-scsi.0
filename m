@@ -1,77 +1,116 @@
-From: Dr Chang <chinsang63@yahoo.com>
-Subject: Good Day To You My Friend.
-Date: Tue, 28 May 2013 23:42:05 +0530
-Message-ID: <20130528234205.j1d3f0jm8gck8w40__4365.69335074655$1369791859$gmane$org@webmail.swastikcoal.com>
-Reply-To: chang.cchang@yahoo.com.hk
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: PING^7 (was Re: [PATCH v2 00/14] Corrections and customization
+ of the SG_IO command whitelist (CVE-2012-4542))
+Date: Tue, 28 May 2013 23:12:28 -0700
+Message-ID: <51A59C4C.1050005@vlnb.net>
+References: <1360163761-8541-1-git-send-email-pbonzini@redhat.com>	<519C674A.50700@redhat.com> <20130522093249.GC3466@mtj.dyndns.org>	<519C959A.3090100@redhat.com> <20130522100212.GE3466@mtj.dyndns.org>	<519C9CBC.3050003@redhat.com> <20130522134134.GA15189@mtj.dyndns.org>	<519CD234.40608@redhat.com> <20130522150335.GC2777@thunk.org>	<519CE9FE.2030007@redhat.com> <yq1vc6b561q.fsf@sermon.lab.mkp.net>	<51A035FA.6070409@vlnb.net> <yq17gii3l93.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qmail1.indiatimeshostingpanel.com ([202.54.119.151]:37934 "EHLO
-	qmail1.indiatimeshostingpanel.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934522Ab3E2BoG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 May 2013 21:44:06 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq17gii3l93.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Good Day To You My Friend.
+Martin K. Petersen, on 05/28/2013 01:25 PM wrote:
+> Vladislav> Linux block layer is purely artificial creature slowly
+> Vladislav> reinventing wheel creating more problems, than solving.
+> 
+> On the contrary. I do think we solve a whole bunch of problems.
+> 
+> 
+> Vladislav> It enforces approach, where often "impossible" means
+> Vladislav> "impossible in this interface".
+> 
+> I agree we have limitations. I do not agree that all limitations are
+> bad. Sometimes it's OK to say no.
+> 
+> 
+> Vladislav> For instance, how about copy offload?  How about atomic
+> Vladislav> writes?
+> 
+> I'm actively working on copy offload. Nobody appears to be interested in
+> atomic writes. Otherwise I'd work on those as well.
+> 
+> 
+> Vladislav> Why was it needed to create special blk integrity interface
+> Vladislav> with the only end user - SCSI?
+> 
+> Simple. Because we did not want to interleave data and PI 512+8+512+8
+> neither in memory, nor at DMA time.
 
-Es ist verst=E4ndlich, dass Sie vielleicht ein bisschen besorgt, weil =20
-Sie mich nicht kennen, aber ich habe ein lukratives
-Business-Vorschlag von gemeinsamem Interesse mit Ihnen teilen.
+It can similarly be done in SCSI-like interface without need for any middleman.
 
-Ich habe Ihren Hinweis in meiner Suche nach jemandem, der mir =20
-passtvorgeschlagen Gesch=E4ftsbeziehung. Ich war beunruhigt, bevor ich =
-=20
-in Ihrem Profil kam, obwohl ich nicht mit Ihnen getroffen haben
-bevor jetzt, aber ich glaube, man hat das Vertrauen in jemanden, der =20
-manchmal gelingt, Leben zu riskieren.
+> Furthermore, the ATA EPP proposal
+> was still on the table so I also needed to support ATA.
+> 
+> And finally, NVM Express uses the blk_integrity interface as well.
+> 
+> 
+> Vladislav> The block layer keeps repeating SCSI. So, maybe, after all,
+> Vladislav> it's better to acknowledge that direct usage of SCSI without
+> Vladislav> any intermediate layers and translations is more productive?
+> Vladislav> And for those minors not using SCSI internally, translate
+> Vladislav> from SCSI to their internal commands? Creating and filling
+> Vladislav> CDB fields for most cases isn't anyhow harder, than creating
+> Vladislav> and feeling bio fields.
+> 
+> This is quite possibly the worst idea I have heard all week.
+> 
+> As it stands it's a headache for the disk ULD driver to figure out which
+> of the bazillion READ/WRITE variants to send to a SCSI/ATA device. What
+> makes you think that an application or filesystem would be better
+> equipped to make that call?
+> 
+> See also: WRITE SAME w/ zeroes vs. WRITE SAME w/ UNMAP vs. UNMAP 
+> 
+> See also: EXTENDED COPY vs. the PROXY command set
+> 
+> See also: USB-ATA bridge chips
+> 
+> You make it sound like all the block layer does is filling out
+> CDBs. Which it doesn't in fact have anything to do with at all.
+> 
+> When you are talking about CDBs we're down in the SBC/SSC territory.
+> Which is such a tiny bit of what's going on. We have transports, we have
+> SAM, we have HBA controller DMA constraints, system DMA constraints,
+> buffer bouncing, etc. There's a ton of stuff that needs to happen before
+> the CDB and the data physically reach the storage.
+> 
+> You seem to be advocating that everything up to the point where the
+> device receives the command is in the way. Well, by all means. Why limit
+> ourselves to the confines of SCSI? Why not get rid of POSIX
+> read()/write(), page cache, filesystems and let applications speak
+> ST-506 directly?
+> 
+> I know we're doing different things. My job is to make a general purpose
+> operating system with interfaces that make sense to normal applications.
+> That does not preclude special cases where it may make sense to poke at
+> the device directly. For testing purposes, for instance. But I consider
+> it a failure when we start having applications that know about hardware
+> intricacies, cylinders/heads/sectors, etc. That road leads straight to
+> the 1980s...
 
-Ich bin Herr chang T.C. Lee eine s=FCdkoreanische von Geburt, gl=FCckli=
-ch =20
-verheiratet mit Kindern, und ich bin ein Direktor der Hang Seng
-Bank Ltd Ich habe eine vertrauliche Gesch=E4ftsinformationen Vorschlag =
-=20
-f=FCr Sie. Ich brauche dich um mich bei der Ausf=FChrung eines =20
-Unternehmens zu unterst=FCtzen
-Projekt aus Hong Kong zu Ihrem Land. Es geht um die =DCbertragung einer=
- =20
-gro=DFen Summe Geld. Alles =FCber diese
-Transaktion gilt rechtlich ohne reibungslos durchgef=FChrt werden. Bitt=
-e =20
-bem=FChen, h=F6chste Diskretion in allen Angelegenheiten zu beobachten
-Zusammenhang mit diesem Problem.
+What you mean is true, but my point is that this abstraction is better to be done in
+SCSI, i.e. SAM, manner. Now need to write fields inside of CDBs, it would be pretty
+inconvenient ;). But CDBs fields can be fields in some scsi_io structure. Exact opcodes
+can be easily abstracted to be filled on the last stage, where end CDB is constructed
+from those fields.
 
+Problem with block abstraction is that it is the least common denominator of all block
+devices capabilities, hence advanced capabilities, available only some class of
+devices, are automatically become "impossible". Hence, it would be more productive
+instead to use the most capable abstraction, which is SAM. In this abstraction there's
+no need to reinvent complex interfaces and write complex middleman code for every
+advanced capability. All advanced capabilities there are available by definition, if
+supported by underlying hardware. That's my point.
 
-Sobald die Mittel wurden erfolgreich in Ihr Konto =FCberwiesen, so =20
-werden wir im Verh=E4ltnis zu teilen, indem vereinbart werden
-uns beide. Ich will lieber Sie erreichen mich auf meiner privaten =20
-E-Mail-Adresse (chang.cchang@yahoo.com.hk) und schlie=DFlich nach
-da=DF ich Ihnen weitere Informationen zu diesem Vorgang ist zu =20
-erbringen. Sollten Sie Interesse haben, senden Sie bitte dennach mir =20
-dringend:
-1. Vollst=E4ndige Namen
-2. Beruf
-3. Privat Telefonnummer
-4. Aktuelle Adresse
+POSIX is for simple applications, for which read()/write() calls are sufficient. They
+are outside of our discussions. But advanced applications need more. I know plenty of
+applications issuing direct SCSI commands, but how many can you name applications using
+block interface (bsg)? I can recall only one quite relatively used Linux specific
+library. That's all. This interface is not demanded by applications.
 
-Bitte, wenn Sie nicht daran interessiert sind diese E-Mail l=F6schen un=
-d =20
-jagen mich nicht, weil ich mir das meine Karriere und das Leben bin
-meiner Familie auf dem Spiel mit diesem Wagnis. Obwohl nichts wagte =20
-ist nichts gewonnen.
-Ihre fr=FCheste Reaktion auf dieses Schreiben wird gesch=E4tzt.
-Mit freundlichen Gr=FC=DFen,
-
-Mr.Pt. Lee
-Hang Seng Bank Limited
-Hong Kong. {Asia}
-E-Mail: - chang.cchang@yahoo.com.hk
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Vlad
