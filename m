@@ -1,15 +1,15 @@
 From: Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: [PATCH 5/5] scsi: sni: use module_platform_driver() and platform_{set,get}_drvdata
-Date: Thu, 30 May 2013 20:09:46 +0800
-Message-ID: <1369915786-2660-6-git-send-email-wangkefeng.wang@huawei.com>
+Subject: [PATCH 3/5] scsi: qlogicpti: use module_platform_driver() and platform_{set,get}_drvdata
+Date: Thu, 30 May 2013 20:09:44 +0800
+Message-ID: <1369915786-2660-4-git-send-email-wangkefeng.wang@huawei.com>
 References: <1369915786-2660-1-git-send-email-wangkefeng.wang@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:15657 "EHLO
+Received: from szxga01-in.huawei.com ([119.145.14.64]:16024 "EHLO
 	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752568Ab3E3MLj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 May 2013 08:11:39 -0400
+	with ESMTP id S1752771Ab3E3MMu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 May 2013 08:12:50 -0400
 In-Reply-To: <1369915786-2660-1-git-send-email-wangkefeng.wang@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,48 +20,54 @@ Use helper macro and wrapper functions to simpily code.
 
 Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
 ---
- drivers/scsi/sni_53c710.c | 17 +++--------------
+ drivers/scsi/qlogicpti.c | 17 +++--------------
  1 file changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/sni_53c710.c b/drivers/scsi/sni_53c710.c
-index 52d54e7..eff84c4 100644
---- a/drivers/scsi/sni_53c710.c
-+++ b/drivers/scsi/sni_53c710.c
-@@ -104,7 +104,7 @@ static int snirm710_probe(struct platform_device *dev)
- 		goto out_put_host;
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 6d48d30..1349374 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -1367,7 +1367,7 @@ static int qpti_sbus_probe(struct platform_device *op)
+ 		goto fail_unmap_queues;
  	}
  
--	dev_set_drvdata(&dev->dev, host);
-+	platform_set_drvdata(dev, host);
- 	scsi_scan_host(host);
+-	dev_set_drvdata(&op->dev, qpti);
++	platform_set_drvdata(op, qpti);
  
- 	return 0;
-@@ -119,7 +119,7 @@ static int snirm710_probe(struct platform_device *dev)
+ 	qpti_chain_add(qpti);
  
- static int __exit snirm710_driver_remove(struct platform_device *dev)
+@@ -1404,7 +1404,7 @@ fail_unlink:
+ 
+ static int qpti_sbus_remove(struct platform_device *op)
  {
--	struct Scsi_Host *host = dev_get_drvdata(&dev->dev);
-+	struct Scsi_Host *host = platform_get_drvdata(dev);
- 	struct NCR_700_Host_Parameters *hostdata =
- 		(struct NCR_700_Host_Parameters *)host->hostdata[0];
+-	struct qlogicpti *qpti = dev_get_drvdata(&op->dev);
++	struct qlogicpti *qpti = platform_get_drvdata(&op->dev);
  
-@@ -141,15 +141,4 @@ static struct platform_driver snirm710_driver = {
- 	},
+ 	qpti_chain_del(qpti);
+ 
+@@ -1462,21 +1462,10 @@ static struct platform_driver qpti_sbus_driver = {
+ 	.remove		= qpti_sbus_remove,
  };
  
--static int __init snirm710_init(void)
+-static int __init qpti_init(void)
 -{
--	return platform_driver_register(&snirm710_driver);
+-	return platform_driver_register(&qpti_sbus_driver);
 -}
 -
--static void __exit snirm710_exit(void)
+-static void __exit qpti_exit(void)
 -{
--	platform_driver_unregister(&snirm710_driver);
+-	platform_driver_unregister(&qpti_sbus_driver);
 -}
++module_platform_driver(qpti_sbus_driver);
+ 
+ MODULE_DESCRIPTION("QlogicISP SBUS driver");
+ MODULE_AUTHOR("David S. Miller (davem@davemloft.net)");
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION("2.1");
+ MODULE_FIRMWARE("qlogic/isp1000.bin");
 -
--module_init(snirm710_init);
--module_exit(snirm710_exit);
-+module_platform_driver(snirm710_driver);
+-module_init(qpti_init);
+-module_exit(qpti_exit);
 -- 
 1.8.2.1
 
