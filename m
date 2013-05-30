@@ -1,34 +1,48 @@
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: [PATCH 0/5] scsi: use platform helper macro and wrapper functions
-Date: Thu, 30 May 2013 20:09:41 +0800
-Message-ID: <1369915786-2660-1-git-send-email-wangkefeng.wang@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, guohanjun@huawei.com, Kefeng Wang <wangkefeng.wang@huawei.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] [SCSI] Fix incorrect comment in scsi_logging.h
+Date: Thu, 30 May 2013 09:35:15 -0400
+Message-ID: <1369920915-15827-1-git-send-email-emilne@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44103 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755229Ab3E3NfQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 May 2013 09:35:16 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r4UDZGOv005380
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 30 May 2013 09:35:16 -0400
+Received: from emilne.csb (dhcp-185-251.bos.redhat.com [10.16.185.251])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r4UDZG2K012764
+	for <linux-scsi@vger.kernel.org>; Thu, 30 May 2013 09:35:16 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-use module_platform_driver() and paltform{set,get}_drvdata to simpily code,
-and patch 2/5 delete unnecessery drvdate set to null.
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-Kefeng Wang (5):
-  scsi: jazz: use module_platform_driver() and
-    platform_{set,get}_drvdata
-  scsi: sun: use module_platform_driver() and platform_{set,get}_drvdata
-  scsi: qlogicpti: use module_platform_driver() and
-    platform_{set,get}_drvdata
-  scsi: sun3x: use module_platform_driver() and
-    platform_{set,get}_drvdata
-  scsi: sni: use module_platform_driver() and platform_{set,get}_drvdata
+The scsi_logging_level word contains 10 3-bit fields,
+not 8 nibbles.  Fix the incorrect comment.
 
- drivers/scsi/jazz_esp.c   | 17 +++--------------
- drivers/scsi/qlogicpti.c  | 17 +++--------------
- drivers/scsi/sni_53c710.c | 17 +++--------------
- drivers/scsi/sun3x_esp.c  | 16 +++-------------
- drivers/scsi/sun_esp.c    | 19 +++----------------
- 5 files changed, 15 insertions(+), 71 deletions(-)
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/scsi_logging.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/scsi_logging.h b/drivers/scsi/scsi_logging.h
+index 1f65139..bd6f58a 100644
+--- a/drivers/scsi/scsi_logging.h
++++ b/drivers/scsi/scsi_logging.h
+@@ -5,8 +5,8 @@
+ /*
+  * This defines the scsi logging feature.  It is a means by which the user
+  * can select how much information they get about various goings on, and it
+- * can be really useful for fault tracing.  The logging word is divided into
+- * 8 nibbles, each of which describes a loglevel.  The division of things is
++ * can be really useful for fault tracing.  The logging word contains 10
++ * fields, each of which describes a loglevel.  The division of things is
+  * somewhat arbitrary, and the division of the word could be changed if it
+  * were really needed for any reason.  The numbers below are the only place
+  * where these are specified.  For a first go-around, 3 bits is more than
 -- 
-1.8.2.1
+1.7.11.7
+
