@@ -1,44 +1,44 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 17/17] lpfc 8.3.40: Update lpfc version to driver version
- 8.3.40
-Date: Fri, 31 May 2013 17:05:53 -0400
-Message-ID: <1370034353.17258.39.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 04/15] [SCSI] nsp32: use mdelay instead of large udelay constants
+Date: Sat,  1 Jun 2013 00:22:41 +0200
+Message-ID: <1370038972-2318779-5-git-send-email-arnd@arndb.de>
+References: <1370038972-2318779-1-git-send-email-arnd@arndb.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:5813 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757072Ab3EaVM2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 May 2013 17:12:28 -0400
+Received: from moutng.kundenserver.de ([212.227.17.9]:52824 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757394Ab3EaWXF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 May 2013 18:23:05 -0400
+In-Reply-To: <1370038972-2318779-1-git-send-email-arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: patches@lists.linaro.org, linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-Update lpfc version to driver version 8.3.40
+ARM cannot handle udelay for more than 2 miliseconds, so we
+should use mdelay instead for those.
 
-
-Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- lpfc_version.h |    2 +-
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: GOTO Masanori <gotom@debian.or.jp>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/nsp32.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2013-05-03 09:24:34.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2013-05-31 10:58:29.636057897 -0400
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.39"
-+#define LPFC_DRIVER_VERSION "8.3.40"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
-
-
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 1e3879d..0665f9c 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -2899,7 +2899,7 @@ static void nsp32_do_bus_reset(nsp32_hw_data *data)
+ 	 * reset SCSI bus
+ 	 */
+ 	nsp32_write1(base, SCSI_BUS_CONTROL, BUSCTL_RST);
+-	udelay(RESET_HOLD_TIME);
++	mdelay(RESET_HOLD_TIME / 1000);
+ 	nsp32_write1(base, SCSI_BUS_CONTROL, 0);
+ 	for(i = 0; i < 5; i++) {
+ 		intrdat = nsp32_read2(base, IRQ_STATUS); /* dummy read */
+-- 
+1.8.1.2
 
