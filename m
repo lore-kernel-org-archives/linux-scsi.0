@@ -1,120 +1,276 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/17] lpfc 8.3.40: Fix lpfc_used_cpu to be more dynamic
-Date: Fri, 31 May 2013 17:03:07 -0400
-Message-ID: <1370034187.17258.23.camel@myfc17>
+Subject: [PATCH 3/17] lpfc 8.3.40: Fix BlockGuard error checking
+Date: Fri, 31 May 2013 17:03:39 -0400
+Message-ID: <1370034219.17258.25.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:5769 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:5779 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754909Ab3EaVJn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 May 2013 17:09:43 -0400
+	with ESMTP id S1753375Ab3EaVKN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 May 2013 17:10:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix lpfc_used_cpu to be more dynamic
+Fix BlockGuard error checking
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_init.c |   30 +++++++++++++++++++++++-------
- lpfc_sli4.h |    1 -
- 2 files changed, 23 insertions(+), 8 deletions(-)
+ lpfc_scsi.c |  109 ++++++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 62 insertions(+), 47 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2013-05-20 09:31:12.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2013-05-31 10:58:00.278057229 -0400
-@@ -60,7 +60,8 @@ unsigned long _dump_buf_dif_order;
- spinlock_t _dump_buf_lock;
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2013-05-31 10:58:07.689057397 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2013-05-31 10:58:12.310057503 -0400
+@@ -68,14 +68,12 @@ struct scsi_dif_tuple {
+ 	__be32 ref_tag;         /* Target LBA or indirect LBA */
+ };
  
- /* Used when mapping IRQ vectors in a driver centric manner */
--uint16_t lpfc_used_cpu[LPFC_MAX_CPU];
-+uint16_t *lpfc_used_cpu;
-+uint32_t lpfc_present_cpu;
- 
- static void lpfc_get_hba_model_desc(struct lpfc_hba *, uint8_t *, uint8_t *);
- static int lpfc_post_rcv_buf(struct lpfc_hba *);
-@@ -5213,6 +5214,21 @@ lpfc_sli4_driver_resource_setup(struct l
- 		rc = -ENOMEM;
- 		goto out_free_msix;
- 	}
-+	if (lpfc_used_cpu == NULL) {
-+		lpfc_used_cpu = kzalloc((sizeof(uint16_t) * lpfc_present_cpu),
-+					 GFP_KERNEL);
-+		if (!lpfc_used_cpu) {
-+			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+					"3335 Failed allocate memory for msi-x "
-+					"interrupt vector mapping\n");
-+			kfree(phba->sli4_hba.cpu_map);
-+			rc = -ENOMEM;
-+			goto out_free_msix;
-+		}
-+		for (i = 0; i < lpfc_present_cpu; i++)
-+			lpfc_used_cpu[i] = LPFC_VECTOR_MAP_EMPTY;
-+	}
-+
- 	/* Initialize io channels for round robin */
- 	cpup = phba->sli4_hba.cpu_map;
- 	rc = 0;
-@@ -6824,8 +6840,6 @@ lpfc_sli4_queue_verify(struct lpfc_hba *
- 	int cfg_fcp_io_channel;
- 	uint32_t cpu;
- 	uint32_t i = 0;
--	uint32_t j = 0;
+-#if !defined(SCSI_PROT_GUARD_CHECK) || !defined(SCSI_PROT_REF_CHECK)
+-#define scsi_prot_flagged(sc, flg)	sc
+-#endif
 -
+ static void
+ lpfc_release_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb);
+ static void
+ lpfc_release_scsi_buf_s3(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb);
++static int
++lpfc_prot_group_type(struct lpfc_hba *phba, struct scsi_cmnd *sc);
  
- 	/*
- 	 * Sanity check for configured queue parameters against the run-time
-@@ -6839,10 +6853,9 @@ lpfc_sli4_queue_verify(struct lpfc_hba *
- 	for_each_present_cpu(cpu) {
- 		if (cpu_online(cpu))
- 			i++;
--		j++;
+ static void
+ lpfc_debug_save_data(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
+@@ -134,6 +132,30 @@ lpfc_debug_save_dif(struct lpfc_hba *phb
  	}
- 	phba->sli4_hba.num_online_cpu = i;
--	phba->sli4_hba.num_present_cpu = j;
-+	phba->sli4_hba.num_present_cpu = lpfc_present_cpu;
- 
- 	if (i < cfg_fcp_io_channel) {
- 		lpfc_printf_log(phba,
-@@ -10967,8 +10980,10 @@ lpfc_init(void)
- 	}
- 
- 	/* Initialize in case vector mapping is needed */
--	for (cpu = 0; cpu < LPFC_MAX_CPU; cpu++)
--		lpfc_used_cpu[cpu] = LPFC_VECTOR_MAP_EMPTY;
-+	lpfc_used_cpu = NULL;
-+	lpfc_present_cpu = 0;
-+	for_each_present_cpu(cpu)
-+		lpfc_present_cpu++;
- 
- 	error = pci_register_driver(&lpfc_driver);
- 	if (error) {
-@@ -11008,6 +11023,7 @@ lpfc_exit(void)
- 				(1L << _dump_buf_dif_order), _dump_buf_dif);
- 		free_pages((unsigned long)_dump_buf_dif, _dump_buf_dif_order);
- 	}
-+	kfree(lpfc_used_cpu);
  }
  
- module_init(lpfc_init);
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2013-05-03 09:24:34.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2013-05-31 10:58:00.283057229 -0400
-@@ -444,7 +444,6 @@ struct lpfc_vector_map_info {
- 	struct cpumask	maskbits;
- };
- #define LPFC_VECTOR_MAP_EMPTY	0xffff
--#define LPFC_MAX_CPU		256
++static inline unsigned
++lpfc_cmd_blksize(struct scsi_cmnd *sc)
++{
++	return sc->device->sector_size;
++}
++
++#define LPFC_CHECK_PROTECT_GUARD	1
++#define LPFC_CHECK_PROTECT_REF		2
++static inline unsigned
++lpfc_cmd_protect(struct scsi_cmnd *sc, int flag)
++{
++	return 1;
++}
++
++static inline unsigned
++lpfc_cmd_guard_csum(struct scsi_cmnd *sc)
++{
++	if (lpfc_prot_group_type(NULL, sc) == LPFC_PG_TYPE_NO_DIF)
++		return 0;
++	if (scsi_host_get_guard(sc->device->host) == SHOST_DIX_GUARD_IP)
++		return 1;
++	return 0;
++}
++
+ /**
+  * lpfc_sli4_set_rsp_sgl_last - Set the last bit in the response sge.
+  * @phba: Pointer to HBA object.
+@@ -1409,12 +1431,6 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hb
+ 	return 0;
+ }
  
- /* SLI4 HBA data structure entries */
- struct lpfc_sli4_hba {
+-static inline unsigned
+-lpfc_cmd_blksize(struct scsi_cmnd *sc)
+-{
+-	return sc->device->sector_size;
+-}
+-
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 
+ /* Return if if error injection is detected by Initiator */
+@@ -1847,10 +1863,9 @@ static int
+ lpfc_sc_to_bg_opcodes(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		uint8_t *txop, uint8_t *rxop)
+ {
+-	uint8_t guard_type = scsi_host_get_guard(sc->device->host);
+ 	uint8_t ret = 0;
+ 
+-	if (guard_type == SHOST_DIX_GUARD_IP) {
++	if (lpfc_cmd_guard_csum(sc)) {
+ 		switch (scsi_get_prot_op(sc)) {
+ 		case SCSI_PROT_READ_INSERT:
+ 		case SCSI_PROT_WRITE_STRIP:
+@@ -1928,10 +1943,9 @@ static int
+ lpfc_bg_err_opcodes(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		uint8_t *txop, uint8_t *rxop)
+ {
+-	uint8_t guard_type = scsi_host_get_guard(sc->device->host);
+ 	uint8_t ret = 0;
+ 
+-	if (guard_type == SHOST_DIX_GUARD_IP) {
++	if (lpfc_cmd_guard_csum(sc)) {
+ 		switch (scsi_get_prot_op(sc)) {
+ 		case SCSI_PROT_READ_INSERT:
+ 		case SCSI_PROT_WRITE_STRIP:
+@@ -2078,12 +2092,12 @@ lpfc_bg_setup_bpl(struct lpfc_hba *phba,
+ 	 * protection data is automatically generated, not checked.
+ 	 */
+ 	if (datadir == DMA_FROM_DEVICE) {
+-		if (scsi_prot_flagged(sc, SCSI_PROT_GUARD_CHECK))
++		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_GUARD))
+ 			bf_set(pde6_ce, pde6, checking);
+ 		else
+ 			bf_set(pde6_ce, pde6, 0);
+ 
+-		if (scsi_prot_flagged(sc, SCSI_PROT_REF_CHECK))
++		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_REF))
+ 			bf_set(pde6_re, pde6, checking);
+ 		else
+ 			bf_set(pde6_re, pde6, 0);
+@@ -2240,12 +2254,12 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
+ 		bf_set(pde6_optx, pde6, txop);
+ 		bf_set(pde6_oprx, pde6, rxop);
+ 
+-		if (scsi_prot_flagged(sc, SCSI_PROT_GUARD_CHECK))
++		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_GUARD))
+ 			bf_set(pde6_ce, pde6, checking);
+ 		else
+ 			bf_set(pde6_ce, pde6, 0);
+ 
+-		if (scsi_prot_flagged(sc, SCSI_PROT_REF_CHECK))
++		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_REF))
+ 			bf_set(pde6_re, pde6, checking);
+ 		else
+ 			bf_set(pde6_re, pde6, 0);
+@@ -2454,12 +2468,12 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba,
+ 	 * protection data is automatically generated, not checked.
+ 	 */
+ 	if (sc->sc_data_direction == DMA_FROM_DEVICE) {
+-		if (scsi_prot_flagged(sc, SCSI_PROT_GUARD_CHECK))
++		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_GUARD))
+ 			bf_set(lpfc_sli4_sge_dif_ce, diseed, checking);
+ 		else
+ 			bf_set(lpfc_sli4_sge_dif_ce, diseed, 0);
+ 
+-		if (scsi_prot_flagged(sc, SCSI_PROT_REF_CHECK))
++		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_REF))
+ 			bf_set(lpfc_sli4_sge_dif_re, diseed, checking);
+ 		else
+ 			bf_set(lpfc_sli4_sge_dif_re, diseed, 0);
+@@ -2610,7 +2624,7 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *
+ 		diseed->ref_tag = cpu_to_le32(reftag);
+ 		diseed->ref_tag_tran = diseed->ref_tag;
+ 
+-		if (scsi_prot_flagged(sc, SCSI_PROT_GUARD_CHECK)) {
++		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_GUARD)) {
+ 			bf_set(lpfc_sli4_sge_dif_ce, diseed, checking);
+ 
+ 		} else {
+@@ -2629,7 +2643,7 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *
+ 		}
+ 
+
+-		if (scsi_prot_flagged(sc, SCSI_PROT_REF_CHECK))
++		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_REF))
+ 			bf_set(lpfc_sli4_sge_dif_re, diseed, checking);
+ 		else
+ 			bf_set(lpfc_sli4_sge_dif_re, diseed, 0);
+@@ -2792,11 +2806,12 @@ lpfc_prot_group_type(struct lpfc_hba *ph
+ 		ret = LPFC_PG_TYPE_DIF_BUF;
+ 		break;
+ 	default:
+-		lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
+-				"9021 Unsupported protection op:%d\n", op);
++		if (phba)
++			lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
++					"9021 Unsupported protection op:%d\n",
++					op);
+ 		break;
+ 	}
+-
+ 	return ret;
+ }
+ 
+@@ -2821,22 +2836,22 @@ lpfc_bg_scsi_adjust_dl(struct lpfc_hba *
+ 
+ 	/* Check if there is protection data on the wire */
+ 	if (sc->sc_data_direction == DMA_FROM_DEVICE) {
+-		/* Read */
++		/* Read check for protection data */
+ 		if (scsi_get_prot_op(sc) ==  SCSI_PROT_READ_INSERT)
+ 			return fcpdl;
+ 
+ 	} else {
+-		/* Write */
++		/* Write check for protection data */
+ 		if (scsi_get_prot_op(sc) ==  SCSI_PROT_WRITE_STRIP)
+ 			return fcpdl;
+ 	}
+ 
+ 	/*
+ 	 * If we are in DIF Type 1 mode every data block has a 8 byte
+-	 * DIF (trailer) attached to it. Must ajust FCP data length.
++	 * DIF (trailer) attached to it. Must ajust FCP data length
++	 * to account for the protection data.
+ 	 */
+-	if (scsi_prot_flagged(sc, SCSI_PROT_TRANSFER_PI))
+-		fcpdl += (fcpdl / lpfc_cmd_blksize(sc)) * 8;
++	fcpdl += (fcpdl / lpfc_cmd_blksize(sc)) * 8;
+ 
+ 	return fcpdl;
+ }
+@@ -3090,25 +3105,10 @@ lpfc_calc_bg_err(struct lpfc_hba *phba,
+ 					goto skipit;
+ 				}
+ 
+-				/* App Tag checking */
+-				app_tag = src->app_tag;
+-				if (chk_app && (app_tag != start_app_tag)) {
+-					err_type = BGS_APPTAG_ERR_MASK;
+-					goto out;
+-				}
+-
+-				/* Reference Tag checking */
+-				ref_tag = be32_to_cpu(src->ref_tag);
+-				if (chk_ref && (ref_tag != start_ref_tag)) {
+-					err_type = BGS_REFTAG_ERR_MASK;
+-					goto out;
+-				}
+-				start_ref_tag++;
+-
+-				/* Guard Tag checking */
++				/* First Guard Tag checking */
+ 				if (chk_guard) {
+ 					guard_tag = src->guard_tag;
+-					if (guard_type == SHOST_DIX_GUARD_IP)
++					if (lpfc_cmd_guard_csum(cmd))
+ 						sum = lpfc_bg_csum(data_src,
+ 								   blksize);
+ 					else
+@@ -3119,6 +3119,21 @@ lpfc_calc_bg_err(struct lpfc_hba *phba,
+ 						goto out;
+ 					}
+ 				}
++
++				/* Reference Tag checking */
++				ref_tag = be32_to_cpu(src->ref_tag);
++				if (chk_ref && (ref_tag != start_ref_tag)) {
++					err_type = BGS_REFTAG_ERR_MASK;
++					goto out;
++				}
++				start_ref_tag++;
++
++				/* App Tag checking */
++				app_tag = src->app_tag;
++				if (chk_app && (app_tag != start_app_tag)) {
++					err_type = BGS_APPTAG_ERR_MASK;
++					goto out;
++				}
+ skipit:
+ 				len -= sizeof(struct scsi_dif_tuple);
+ 				if (len < 0)
 
 
 
