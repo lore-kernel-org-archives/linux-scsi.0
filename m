@@ -1,53 +1,51 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/8] iscsi_transport: Additional parameters for net settings
-Date: Fri, 31 May 2013 09:26:44 -0500
-Message-ID: <51A8B324.8010106@cs.wisc.edu>
-References: <3FC4AB8B47ECD546BCD4B361A64BEACD30EEFEA8@avmb3.qlogic.org>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 0/17] lpfc 8.3.40: Update lpfc to revision 8.3.40
+Date: Fri, 31 May 2013 17:02:51 -0400
+Message-ID: <1370034171.17258.22.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:51682 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751880Ab3EaO0y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 May 2013 10:26:54 -0400
-In-Reply-To: <3FC4AB8B47ECD546BCD4B361A64BEACD30EEFEA8@avmb3.qlogic.org>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:21339 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756387Ab3EaVJ1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 May 2013 17:09:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
-On 05/28/2013 06:36 AM, Vikas Chaudhary wrote:
-> 
-> 
-> -----Original Message-----
-> From: Mike Christie <michaelc@cs.wisc.edu>
-> Date: Tuesday 28 May 2013 2:19 PM
-> To: Vikas <vikas.chaudhary@qlogic.com>
-> Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, scsi
-> <linux-scsi@vger.kernel.org>, Lalit Chandivade
-> <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Harish
-> Zunjarrao <harish.zunjarrao@qlogic.com>
-> Subject: Re: [PATCH 2/8] iscsi_transport: Additional parameters for net
-> settings
-> 
->> Come on man, same comments as last patches like this :) Could you use
->> the same names that we currently use for existing params?
->>
->> Check for the inorder ones and the ones where we use en instead of
->> enabled for the postfix. Also check the others.
-> 
-> If we understand correctly you are suggesting to change macro postfix from
-> EN to ENABLED as in attached patch "iscsi_net_param-fix1.patch".
-> But we think changing old macro postfix from ENABLED to EN is better way
-> to fix it.
+This patch set updates the lpfc driver to revision 8.3.40
 
-I meant the second one. Also in the patch some of the names of sysfs
-files and variables use _enabled, but for sysfs we use _en and then some
-names just do not match at all.
+The patches for 8.3.40 contain:
 
-For example some iface names like data_pdu_inorder_enabled would be
-pdu_inorder_en and the data_seq_inorder_enabled would be
-dataseq_inorder_en to match what the naming used in the session. There
-are others that need to match like immediate data, etc. Check them
-before you resubmit.
+- Fix lpfc_used_cpu to be more dynamic
+- Fixed crash during FCoE failover testing.
+- Fix BlockGuard error checking
+- Fixed system panic during handling unsolicited receive buffer error condition
+- Fix inconsistent list removal causes crash.
+- Fix starting reference tag when calculating BG error
+- Fixed list corruption when lpfc_drain_tx runs.
+- Fixed some logging message fields
+- Fixed a missing return code in a logging message
+- Fix to allow OCM to report FEC status
+- Clarified the behavior of the lpfc_max_luns module parameter
+- Fixed FCoE connection list vlan identifier and add FCF list debug
+- Fixed system panic due to unsafe walking and deleting linked list
+- Fixed issue mailbox wait routine failed to issue dump memory mbox command
+- Fixed a race condition between SLI host and port failed FCF rediscovery
+- Update Copyrights to 2013 for 8.3.38, 8.3.39, and 8.3.40 modifications
+- Update lpfc version to driver version 8.3.40
+
+
+The patches were cut against scsi.git, branch "misc".
+
+-- james s
+
+
+Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+
+
