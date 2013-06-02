@@ -1,34 +1,47 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v3 0/6] scsi_debug: bug fixes and cleanups for data
- integrity support
-Date: Sun, 2 Jun 2013 11:51:10 +0900
-Message-ID: <CAC5umyiW02vB-bbhCic=zU8CxaQY-AebQ0PCj1eTCifAUHortg@mail.gmail.com>
-References: <1369555282-17864-1-git-send-email-akinobu.mita@gmail.com>
-	<51A5057F.9030703@interlog.com>
-	<yq1k3mi3nby.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Akinobu Mita <mita@fixstars.com>
+Subject: [PATCH] [SCSI] ufs: fix register address in UIC error interrupt handling
+Date: Sun,  2 Jun 2013 13:04:20 +0900
+Message-ID: <1370145860-16336-1-git-send-email-mita@fixstars.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:61428 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779Ab3FBCvL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jun 2013 22:51:11 -0400
-Received: by mail-oa0-f42.google.com with SMTP id i10so527237oag.29
-        for <linux-scsi@vger.kernel.org>; Sat, 01 Jun 2013 19:51:10 -0700 (PDT)
-In-Reply-To: <yq1k3mi3nby.fsf@sermon.lab.mkp.net>
+Received: from mo.fixstars.hdemail.jp ([176.34.54.138]:40090 "EHLO
+	mo.fixstars.hdemail.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834Ab3FBEIF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Jun 2013 00:08:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <mita@fixstars.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-2013/5/29 Martin K. Petersen <martin.petersen@oracle.com>:
-> I have some patches pending as part of my next DIF/DIX update that makes
-> some of these things more palatable at the block/SCSI level. Akinobu
-> voiced interest in finishing the scsi_debug work on top of my code.
+In UIC error interrupt handling, it checks if UIC data link layer error
+code indicates PA_INIT_ERROR in order to determine whether a fatal error
+handling is needed or not.
 
-Yes.  I'm interested in that work.  Before I start working on it, I would
-like to fix the problems which I found recently with virtual_gb option in
-scsi_debug.  Because the change is not small and may touch the DIX/DIF
-support code, too.
+But the code tries to read UIC data link layer error code from wrong
+REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER, it should be
+REG_UIC_ERROR_CODE_DATA_LINK_LAYER.
 
-So Martin and Douglas, can I have your ACKs on this patch series for now?
+Signed-off-by: Akinobu Mita <mita@fixstars.com>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Santosh Y <santoshsy@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c32a478..492f2b7 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1246,7 +1246,7 @@ static void ufshcd_err_handler(struct ufs_hba *hba)
+ 	if (hba->errors & UIC_ERROR) {
+ 
+ 		reg = readl(hba->mmio_base +
+-			    REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
++			    REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
+ 		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
+ 			goto fatal_eh;
+ 	}
+-- 
+1.8.1.4
+
