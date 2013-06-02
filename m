@@ -1,60 +1,51 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
 Subject: Re: [PATCH v3 0/6] scsi_debug: bug fixes and cleanups for data integrity
  support
-Date: Sun, 02 Jun 2013 12:16:47 -0400
-Message-ID: <51AB6FEF.5000701@interlog.com>
-References: <1369555282-17864-1-git-send-email-akinobu.mita@gmail.com>
+Date: Sun, 02 Jun 2013 13:01:57 -0400
+Message-ID: <51AB7A85.8060406@interlog.com>
+References: <1369555282-17864-1-git-send-email-akinobu.mita@gmail.com> <51A5057F.9030703@interlog.com> <yq1k3mi3nby.fsf@sermon.lab.mkp.net> <CAC5umyiW02vB-bbhCic=zU8CxaQY-AebQ0PCj1eTCifAUHortg@mail.gmail.com>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:32851 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:33056 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753044Ab3FBQRA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 Jun 2013 12:17:00 -0400
-In-Reply-To: <1369555282-17864-1-git-send-email-akinobu.mita@gmail.com>
+	id S1754354Ab3FBRCI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Jun 2013 13:02:08 -0400
+In-Reply-To: <CAC5umyiW02vB-bbhCic=zU8CxaQY-AebQ0PCj1eTCifAUHortg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-On 13-05-26 04:01 AM, Akinobu Mita wrote:
-> This patch set includes bug fixes which I hit when I was tried testing
-> the data integrity support in scsi_debug on x86_32.
+On 13-06-01 10:51 PM, Akinobu Mita wrote:
+> 2013/5/29 Martin K. Petersen <martin.petersen@oracle.com>:
+>> I have some patches pending as part of my next DIF/DIX update that makes
+>> some of these things more palatable at the block/SCSI level. Akinobu
+>> voiced interest in finishing the scsi_debug work on top of my code.
 >
-> And it also includes cleanups which helps increasing readability and
-> further bug fixing in data integrity support.
+> Yes.  I'm interested in that work.  Before I start working on it, I would
+> like to fix the problems which I found recently with virtual_gb option in
+> scsi_debug.  Because the change is not small and may touch the DIX/DIF
+> support code, too.
 >
-> * Changes from v2
-> - Add new bug fix patch for UNMAP command support
-> - Change the way to fix for the patch "fix invalid address passed to
->    kunmap_atomic()"
-> - Reduce more lines of code for the patch "reduce duplication between
->    prot_verify_read and prot_verify_writ"
->
-> * Changes from v1
-> - Split the patch "fix data integrity support on highmem machine" into
->    two separate patches.
-> - Add new cleanup patch "reduce duplication between prot_verify_read and
->    prot_verify_write".
->
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: Douglas Gilbert <dgilbert@interlog.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
->
-> Akinobu Mita (6):
->    scsi_debug: fix invalid address passed to kunmap_atomic()
->    scsi_debug: fix incorrectly nested kmap_atomic()
->    scsi_debug: fix NULL pointer dereference with parameters dif=0 dix=1
->    scsi_debug: invalidate protection info for unmapped region
->    scsi_debug: simplify offset calculation for dif_storep
->    scsi_debug: reduce duplication between prot_verify_read and
->      prot_verify_write
->
->   drivers/scsi/scsi_debug.c | 176 +++++++++++++++++++---------------------------
->   1 file changed, 72 insertions(+), 104 deletions(-)
+> So Martin and Douglas, can I have your ACKs on this patch series for now?
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Done.
+
+Just doing some debugging using scsi_debug and noticed
+that 'blockdev --rereadpt /dev/sdb' causes a SCSI
+REPORT SUPPORTED OPERATION CODES command to be issued.
+Perhaps we could add that one (and ... SUPPORTED TMFs) to
+scsi_debug's code.
+
+I was also testing setting the SWP bit in the Control
+mode page and that works, even though that field is
+marked as 'changeable=n'. Since scsi_debug allows all
+fields in that page to be changed, perhaps they could
+all be marked as changeable.
+
+Doug Gilbert
+
 
