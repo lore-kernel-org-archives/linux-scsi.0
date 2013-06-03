@@ -1,36 +1,57 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH V2 0/5] Drivers: scsi: storvsc
-Date: Mon,  3 Jun 2013 16:18:39 -0700
-Message-ID: <1370301519-27196-1-git-send-email-kys@microsoft.com>
+Subject: [PATCH 1/5] Drivers: scsi: storvsc: Make the scsi timeout a module parameter
+Date: Mon,  3 Jun 2013 16:21:24 -0700
+Message-ID: <1370301688-27286-1-git-send-email-kys@microsoft.com>
+References: <1370301519-27196-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:48153
+Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:50494
 	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758766Ab3FCWnh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Jun 2013 18:43:37 -0400
+	id S1757635Ab3FCWqY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Jun 2013 18:46:24 -0400
+In-Reply-To: <1370301519-27196-1-git-send-email-kys@microsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 
-This set adds multi-channel support as well synthetic Fibre Channel support
-to storvsc. The multi-channel support depends on infrastructure in the VMBUS
-driver. Greg has already checked in the relevant patches to VMBUS.
+The standard scsi timeout is not appropriate in some of the environments where
+Hyper-V is deployed. Set this timeout appropriately for all devices managed
+by this driver. Further make this a module parameter.
 
-I had posted an earlier version of this patch-set that included the VMBUS
-related changes. I have since separated the VMBUS chages and these have already been
-checked in.
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-K. Y. Srinivasan (5):
-  Drivers: scsi: storvsc: Make the scsi timeout a module parameter
-  Drivers: scsi: storvsc: Update the storage protocol to win8 level
-  Drivers: scsi: storvsc: Implement multi-channel support
-  Drivers: scsi: storvsc: Support FC devices
-  Drivers: scsi: storvsc: Increase the value of STORVSC_MAX_IO_REQUESTS
-
- drivers/scsi/storvsc_drv.c |  349 +++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 310 insertions(+), 39 deletions(-)
-
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 16a3a0c..8d29a95 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -221,6 +221,13 @@ static int storvsc_ringbuffer_size = (20 * PAGE_SIZE);
+ module_param(storvsc_ringbuffer_size, int, S_IRUGO);
+ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
+ 
++/*
++ * Timeout in seconds for all devices managed by this driver.
++ */
++static int storvsc_timeout = 180;
++module_param(storvsc_timeout, uint, (S_IRUGO | S_IWUSR));
++MODULE_PARM_DESC(storvsc_timeout, "Device timeout (seconds)");
++
+ #define STORVSC_MAX_IO_REQUESTS				128
+ 
+ /*
+@@ -1204,6 +1211,8 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ 
+ 	blk_queue_bounce_limit(sdevice->request_queue, BLK_BOUNCE_ANY);
+ 
++	blk_queue_rq_timeout(sdevice->request_queue, (storvsc_timeout * HZ));
++
+ 	sdevice->no_write_same = 1;
+ 
+ 	return 0;
 -- 
 1.7.4.1
 
