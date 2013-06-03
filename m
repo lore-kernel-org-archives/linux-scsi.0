@@ -1,83 +1,61 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH V2] scsi: replace strict_strtoul() with kstrtoul()
-Date: Mon, 3 Jun 2013 13:51:03 +0300
-Message-ID: <CAHp75VcAVtFx31_=BF=G5vDPKKXM4rkwZcFnZLp42E1nGD-gbw@mail.gmail.com>
-References: <000f01ce6039$984e6540$c8eb2fc0$@samsung.com>
+From: Jan Vesely <jvesely@redhat.com>
+Subject: Re: block: Allow merging of tail pages into the last segment
+Date: Mon, 03 Jun 2013 15:30:36 +0200
+Message-ID: <51AC9A7C.90306@redhat.com>
+References: <1364463509-24975-1-git-send-email-jvesely@redhat.com> <516D0ABF.1000700@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:60589 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293Ab3FCKvD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jun 2013 06:51:03 -0400
-Received: by mail-oa0-f43.google.com with SMTP id o6so934812oag.16
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Jun 2013 03:51:03 -0700 (PDT)
-In-Reply-To: <000f01ce6039$984e6540$c8eb2fc0$@samsung.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38343 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755177Ab3FCOZK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Jun 2013 10:25:10 -0400
+In-Reply-To: <516D0ABF.1000700@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: James Bottomley <JBottomley@parallels.com>, James Bottomley <jejb@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+To: linux-scsi@vger.kernel.org, axboe@kernel.dk
+Cc: James.Bottomley@hansenpartnership.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, =?UTF-8?B?S2FpIE3DpGtpc2FyYQ==?= <Kai.Makisara@kolumbus.fi>, fujita.tomonori@lab.ntt.co.jp
 
-On Mon, Jun 3, 2013 at 12:06 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> The usage of strict_strtoul() is not preferred, because
-> strict_strtoul() is obsolete. Thus, kstrtoul() should be
-> used.
->
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-
-> ---
-> Changes since v1:
-> - Used return code from kstrtoul().
->
->  drivers/scsi/pmcraid.c    |    6 ++++--
->  drivers/scsi/scsi_sysfs.c |    6 ++++--
->  2 files changed, 8 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-> index 8e1b737..39b42a4 100644
-> --- a/drivers/scsi/pmcraid.c
-> +++ b/drivers/scsi/pmcraid.c
-> @@ -4203,9 +4203,11 @@ static ssize_t pmcraid_store_log_level(
->         struct Scsi_Host *shost;
->         struct pmcraid_instance *pinstance;
->         unsigned long val;
-> +       int ret;
->
-> -       if (strict_strtoul(buf, 10, &val))
-> -               return -EINVAL;
-> +       ret = kstrtoul(buf, 10, &val);
-> +       if (ret)
-> +               return ret;
->         /* log-level should be from 0 to 2 */
->         if (val > 2)
->                 return -EINVAL;
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 931a7d9..4a8b675 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -789,9 +789,11 @@ sdev_store_queue_ramp_up_period(struct device *dev,
->  {
->         struct scsi_device *sdev = to_scsi_device(dev);
->         unsigned long period;
-> +       int ret;
->
-> -       if (strict_strtoul(buf, 10, &period))
-> -               return -EINVAL;
-> +       ret = kstrtoul(buf, 10, &period);
-> +       if (ret)
-> +               return ret;
->
->         sdev->queue_ramp_up_period = msecs_to_jiffies(period);
->         return period;
-> --
-> 1.7.10.4
->
->
+On 16/04/13 10:24, Jan Vesely wrote:
+> On 28/03/13 10:38, Jan Vesely wrote:
+>> Hi
+>>
+>> These patches modify __bio_add_page to accept pages that extent the last bio
+>> segment. some drivers craft their buffers and rely on this behavior (see
+>> message in patch 2 for details)
+> 
+> any comments on this version would be appreciated
+> 
+> thanks
+> 
+>>
+>> jan
+>>
+>> v3: Use code from __blk_recalc_rq_segments to decide whether the page is
+>>     mergeable, 
+>>
+>> v2: modify a comment
+>>
+>> Jan Vesely (2):
+>>       block: factor out vector mergeable decision to a helper function
+>>       block: modify __bio_add_page check to accept pages that don't start a new
+>>
+>>  block/blk-merge.c   | 52 +++++++++++++++++++++++++++++++---------------------
+>>  fs/bio.c            | 29 ++++++++++++++++++-----------
+>>  include/linux/bio.h |  3 +++
+>>  3 files changed, 52 insertions(+), 32 deletions(-)
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+ping?
 
 
+Jens, your input on v2 helped a lot, any comments on v3?
 
---
-With Best Regards,
-Andy Shevchenko
+thanks
+-- 
+Jan Vesely <jvesely@redhat.com>
