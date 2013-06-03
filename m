@@ -1,51 +1,73 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v3 0/6] scsi_debug: bug fixes and cleanups for data integrity
- support
-Date: Sun, 02 Jun 2013 13:01:57 -0400
-Message-ID: <51AB7A85.8060406@interlog.com>
-References: <1369555282-17864-1-git-send-email-akinobu.mita@gmail.com> <51A5057F.9030703@interlog.com> <yq1k3mi3nby.fsf@sermon.lab.mkp.net> <CAC5umyiW02vB-bbhCic=zU8CxaQY-AebQ0PCj1eTCifAUHortg@mail.gmail.com>
+Subject: [Announce] sg3_utils-1.36 available
+Date: Sun, 02 Jun 2013 23:38:32 -0400
+Message-ID: <51AC0FB8.8000908@interlog.com>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:33056 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:36214 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754354Ab3FBRCI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 Jun 2013 13:02:08 -0400
-In-Reply-To: <CAC5umyiW02vB-bbhCic=zU8CxaQY-AebQ0PCj1eTCifAUHortg@mail.gmail.com>
+	id S1750889Ab3FCDir (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Jun 2013 23:38:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On 13-06-01 10:51 PM, Akinobu Mita wrote:
-> 2013/5/29 Martin K. Petersen <martin.petersen@oracle.com>:
->> I have some patches pending as part of my next DIF/DIX update that makes
->> some of these things more palatable at the block/SCSI level. Akinobu
->> voiced interest in finishing the scsi_debug work on top of my code.
->
-> Yes.  I'm interested in that work.  Before I start working on it, I would
-> like to fix the problems which I found recently with virtual_gb option in
-> scsi_debug.  Because the change is not small and may touch the DIX/DIF
-> support code, too.
->
-> So Martin and Douglas, can I have your ACKs on this patch series for now?
+sg3_utils is a package of command line utilities for sending
+SCSI and some ATA commands to devices. This package targets
+the Linux 3, 2.6 and 2.4 kernel series. It also has ports to
+FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
 
-Done.
+Mainly small changes and fixes in this version including
+several contributed additions to sg_xcopy. There is also
+improved handling of 64 bit LUNs which may facilitate full
+64 bit LUN support being added to the Linux kernel. This
+version tracks various changes made by www.t10.org since
+January 2013.
 
-Just doing some debugging using scsi_debug and noticed
-that 'blockdev --rereadpt /dev/sdb' causes a SCSI
-REPORT SUPPORTED OPERATION CODES command to be issued.
-Perhaps we could add that one (and ... SUPPORTED TMFs) to
-scsi_debug's code.
+For an overview of sg3_utils and downloads see this page:
+     http://sg.danny.cz/sg/sg3_utils.html
+The sg_ses utility (for enclosure devices) is discussed at:
+     http://sg.danny.cz/sg/sg_ses.html
+The SG_IO ioctl is discussed at:
+     http://sg.danny.cz/sg/sg_io.html
+A full changelog can be found at:
+     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
 
-I was also testing setting the SWP bit in the Control
-mode page and that works, even though that field is
-marked as 'changeable=n'. Since scsi_debug allows all
-fields in that page to be changed, perhaps they could
-all be marked as changeable.
+A release announcement will be sent to freecode.com .
+
+Changelog for sg3_utils-1.36 [20130531] [svn: r497]
+   - sg_vpd: Protocol-specific port information VPD page
+     for SAS SSP, persistent connection (spl3r2), power
+     disable (spl3r3)
+     - block device characteristics: add FUAB bit
+   - sg_xcopy: handle more descriptor types; handle zero
+     maximum segment length; allow list IDs to be disabled;
+     improve skip/seek handling; allow xcopy on destination
+   - sg_reset: and --no-esc option to stop reset escalation
+     - clean up cli, add long option names
+   - sg_luns: add --test=ALUN option for decoding LUNs
+     - decoded luns output in decimal or hex (if -HH given)
+     - add '--linux' option to show Linux LUN after T10
+       representation, can map one to the other
+   - sg_inq: add --vendor option to show standard inquiry's
+     vendor specific fields in ASCII
+     - take resid into account with response output
+   - sg_sync: add --16 (for 16 byte command) and --timeout=
+   - sg_logs: add data compression page (ssc4)
+   - sg_sat_set_features: increase --lba from 1 to 4 bytes
+   - sg_write_same: add --ndob option (sbc3r35d)
+   - sg_map: mark as deprecated
+   - sginfo: mark as deprecated, especially -l (list)
+   - sg_lib: improve snprintf handling
+   - sg_lib_data: sync asc/ascq codes with T10 20130117
+   - sg_cmds (lib): if noisy given, give more UA info
+   - make code more C++ friendly
+
+Changelog for sg3_utils-1.35 [20130117] [svn: r476]
+...
 
 Doug Gilbert
-
-
