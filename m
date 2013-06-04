@@ -1,36 +1,34 @@
-From: Vijaya Mohan Guvva <vmohan@Brocade.com>
-Subject: RE: [PATCH V1 00/17] Update the driver version to 3.2.21.1
-Date: Tue, 4 Jun 2013 09:26:43 -0600
-Message-ID: <51BD2AE8016AE441B63F5661159C99020F29ED4CCE@BRM-EXCH-3.corp.brocade.com>
-References: <1368437615-9867-1-git-send-email-vmohan@brocade.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:19679 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751173Ab3FDP2S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jun 2013 11:28:18 -0400
-Received: from pps.filterd (m0000542 [127.0.0.1])
-	by mx0a-000f0801.pphosted.com (8.14.5/8.14.5) with SMTP id r54FEZuQ003473
-	for <linux-scsi@vger.kernel.org>; Tue, 4 Jun 2013 08:28:17 -0700
-Received: from brmwp-exchub01.corp.brocade.com ([208.47.132.227])
-	by mx0a-000f0801.pphosted.com with ESMTP id 1csjpw0066-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 04 Jun 2013 08:28:13 -0700
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH V3 0/5] Drivers: scsi: storvsc
+Date: Tue,  4 Jun 2013 12:04:34 -0700
+Message-ID: <1370372674-10046-1-git-send-email-kys@microsoft.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
 
->> The patch you're replying to didn't make the list, which is also a necessary precursor to getting stuff into the tree.
+This set adds multi-channel support as well synthetic Fibre Channel support
+to storvsc. The multi-channel support depends on infrastructure in the VMBUS
+driver. Greg has already checked in the relevant patches to VMBUS.
 
-> Hi James,
-> I have resubmitted the patch set and verified them in MARC.
-> Please pull the set if you don't have any comments.
+I had posted an earlier version of this patch-set that included the VMBUS
+related changes. I have since separated the VMBUS chages and these have already been
+checked in.
 
-Hi James,
-Do you have any comments on the patch set.
+In this version, based on comments from James, the timeout is no longer a module
+parameter.
 
-Thanks,
-Vijay
+K. Y. Srinivasan (5):
+  Drivers: scsi: storvsc: Increase the value of scsi timeout for
+    storvsc devices
+  Drivers: scsi: storvsc: Update the storage protocol to win8 level
+  Drivers: scsi: storvsc: Implement multi-channel support
+  Drivers: scsi: storvsc: Support FC devices
+  Drivers: scsi: storvsc: Increase the value of STORVSC_MAX_IO_REQUESTS
+
+ drivers/scsi/storvsc_drv.c |  347 +++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 308 insertions(+), 39 deletions(-)
+
+-- 
+1.7.4.1
