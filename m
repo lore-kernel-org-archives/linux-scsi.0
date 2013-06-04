@@ -1,69 +1,56 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: [ 078/184] scsi: Silence unnecessary warnings about ioctl to
-Date: Tue, 04 Jun 2013 19:22:48 +0200
-Message-ID: <20130604172133.538760934@1wt.eu>
-References: <58df134a4b98edf5b0073e2e1e988fe6@local>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <58df134a4b98edf5b0073e2e1e988fe6@local>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Paolo Bonzini <pbonzini@redhat.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Ben Hutchings <ben@decadent.org.uk>, Thomas Bork <tom@eisfair.net>, Willy Tarreau <w@1wt.eu>
+From: "Hiral Patel (hiralpat)" <hiralpat@cisco.com>
+Subject: Re: [patch] [SCSI] fnic: potential dead lock in
+ fnic_is_abts_pending()
+Date: Tue, 4 Jun 2013 23:12:43 +0000
+Message-ID: <DF334AB4E0858445841A5B5201E1C1B1289CC541@xmb-rcd-x08.cisco.com>
+References: <20130530074926.GA8148@debian>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcdn-iport-7.cisco.com ([173.37.86.78]:26775 "EHLO
+	rcdn-iport-7.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752575Ab3FDXWR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jun 2013 19:22:17 -0400
+In-Reply-To: <20130530074926.GA8148@debian>
+Content-Language: en-US
+Content-ID: <7879ACA98A5006468799483A61B9584B@emea.cisco.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "Suma Ramars (sramars)" <sramars@cisco.com>, "Brian Uchino (buchino)" <buchino@cisco.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-2.6.32-longterm review patch.  If anyone has any objections, please let me know.
 
-------------------
- partition
+On 5/30/13 12:50 AM, "Dan Carpenter" <dan.carpenter@oracle.com> wrote:
 
-From: Jan Kara <jack@suse.cz>
+>There is an unlock missing if the == FNIC_IOREQ_ABTS_PENDING is
+>false.
+>
+>Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>---
+>Static analysis.  I can't test this.
+>
+>diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+>index be99e75..a97e6e5 100644
+>--- a/drivers/scsi/fnic/fnic_scsi.c
+>+++ b/drivers/scsi/fnic/fnic_scsi.c
+>@@ -2432,11 +2432,9 @@ int fnic_is_abts_pending(struct fnic *fnic, struct
+>scsi_cmnd *lr_sc)
+> 			      "Found IO in %s on lun\n",
+> 			      fnic_ioreq_state_to_str(CMD_STATE(sc)));
+> 
+>-		if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING) {
+>-			spin_unlock_irqrestore(io_lock, flags);
+>+		if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING)
+> 			ret = 1;
+>-			continue;
+>-		}
+>+		spin_unlock_irqrestore(io_lock, flags);
+> 	}
+> 
+> 	return ret;
 
-commit 6d9359280753d2955f86d6411047516a9431eb51 upstream.
+Tested-by: Hiral Patel <hiralpat@cisco.com>
 
-Sometimes, warnings about ioctls to partition happen often enough that they
-form majority of the warnings in the kernel log and users complain. In some
-cases warnings are about ioctls such as SG_IO so it's not good to get rid of
-the warnings completely as they can ease debugging of userspace problems
-when ioctl is refused.
+Acked-by: Hiral Patel <hiralpat@cisco.com>
 
-Since I have seen warnings from lots of commands, including some proprietary
-userspace applications, I don't think disallowing the ioctls for processes
-with CAP_SYS_RAWIO will happen in the near future if ever. So lets just
-stop warning for processes with CAP_SYS_RAWIO for which ioctl is allowed.
-
-CC: Paolo Bonzini <pbonzini@redhat.com>
-CC: James Bottomley <JBottomley@parallels.com>
-CC: linux-scsi@vger.kernel.org
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-[bwh: Backported to 3.2: use ENOTTY, not ENOIOCTLCMD]
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-(cherry picked from commit f45c9a6eec20cd712421c442785e7a4e9215a230)
-Cc: Thomas Bork <tom@eisfair.net>
-Signed-off-by: Willy Tarreau <w@1wt.eu>
----
- block/scsi_ioctl.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 2be0a97..123eb17 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -720,11 +720,14 @@ int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
- 		break;
- 	}
- 
-+	if (capable(CAP_SYS_RAWIO))
-+		return 0;
-+
- 	/* In particular, rule out all resets and host-specific ioctls.  */
- 	printk_ratelimited(KERN_WARNING
- 			   "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
- 
--	return capable(CAP_SYS_RAWIO) ? 0 : -ENOTTY;
-+	return -ENOTTY;
- }
- EXPORT_SYMBOL(scsi_verify_blk_ioctl);
- 
--- 
-1.7.12.2.21.g234cd45.dirty
