@@ -1,33 +1,26 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v2] scsi: megaraid: check kzalloc
-Date: Tue, 04 Jun 2013 14:14:28 +0200
-Message-ID: <51ADDA24.7050609@redhat.com>
-References: <519ECEF1.9060804@huawei.com> <519F3592.4090207@huawei.com> <51ADB484.3060404@huawei.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: RE: [PATCH v2 2/2] Adds new device resume mode in PM core, async
+ plus non-blocking
+Date: Tue, 4 Jun 2013 10:06:51 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1306041006210.1093-100000@iolanthe.rowland.org>
+References: <11E08D716F0541429B7042699DD5C1A1706057ED@FMSMSX103.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55724 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751906Ab3FDMOi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Jun 2013 08:14:38 -0400
-In-Reply-To: <51ADB484.3060404@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <11E08D716F0541429B7042699DD5C1A1706057ED@FMSMSX103.amr.corp.intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: "Brandt, Todd E" <todd.e.brandt@intel.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>, Arjan van de Ven <arjan@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Libo Chen <libo.chen@huawei.com>
-Cc: megaraidlinux@lsi.com, JBottomley@parallels.com, Libo Chen <chenlibo.3@gmail.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kashyap.desai@lsi.com, aradford@gmail.com, Li Zefan <lizefan@huawei.com>, Santosh Y <santoshsy@gmail.com>
 
-On 06/04/2013 11:33 AM, Libo Chen wrote:
-> we should check kzalloc, avoid to hit oops
->
-> Change from v1:
-> - put kzalloc outside of mutex
->
-> Signed-off-by: Libo Chen <libo.chen@huawei.com>
+On Mon, 3 Jun 2013, Brandt, Todd E wrote:
 
-Your patch looks fine to me:
-Acked-by: Tomas Henzl <thenzl@redhat.com>
+> Thanks for the feedback, I've taken things back to the drawing board
+> in lieu of these issues and will be resubmitting once I have a patch
+> that fits better into the formal power management architecture. Would
+> you like to be CC'ed?
 
-Cheers,
-Tomas
+No need, since I am subscribed to the linux-pm mailing list.
+
+Alan Stern
 
