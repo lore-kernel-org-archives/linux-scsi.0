@@ -1,66 +1,69 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: IOA Status Code(IOASC) update
-Date: Tue, 04 Jun 2013 17:29:02 -0500
-Message-ID: <51AE6A2E.1040407@linux.vnet.ibm.com>
-References: <20130604031956.483531143@linux.vnet.ibm.com> <20130604032041.917550613@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:49266 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811Ab3FDW3J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Jun 2013 18:29:09 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Tue, 4 Jun 2013 18:29:08 -0400
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id DE54C38C8047
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Jun 2013 18:29:05 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r54MT61C334634
-	for <linux-scsi@vger.kernel.org>; Tue, 4 Jun 2013 18:29:06 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r54MT4IP017937
-	for <linux-scsi@vger.kernel.org>; Tue, 4 Jun 2013 18:29:05 -0400
-In-Reply-To: <20130604032041.917550613@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Willy Tarreau <w@1wt.eu>
+Subject: [ 078/184] scsi: Silence unnecessary warnings about ioctl to
+Date: Tue, 04 Jun 2013 19:22:48 +0200
+Message-ID: <20130604172133.538760934@1wt.eu>
+References: <58df134a4b98edf5b0073e2e1e988fe6@local>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <58df134a4b98edf5b0073e2e1e988fe6@local>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Paolo Bonzini <pbonzini@redhat.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Ben Hutchings <ben@decadent.org.uk>, Thomas Bork <tom@eisfair.net>, Willy Tarreau <w@1wt.eu>
 List-Id: linux-scsi@vger.kernel.org
-To: wenxiong@linux.vnet.ibm.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On 06/03/2013 10:19 PM, wenxiong@linux.vnet.ibm.com wrote:
+2.6.32-longterm review patch.  If anyone has any objections, please let me know.
 
-> @@ -407,10 +419,18 @@ struct ipr_error_table_t ipr_error_table
->  	"Illegal request, command sequence error"},
->  	{0x052C8000, 1, 0,
->  	"Illegal request, dual adapter support not enabled"},
-> +	{0x052C8100, 1, 0,
-> +	"Illegal request, another cable connector was physically disable"},
+------------------
+ partition
 
-disable should be disabled
+From: Jan Kara <jack@suse.cz>
 
-> @@ -507,10 +537,18 @@ struct ipr_error_table_t ipr_error_table
->  	"9062: One or more disks are missing from an array"},
->  	{0x07279900, 0, IPR_DEFAULT_LOG_LEVEL,
->  	"9063: Maximum number of functional arrays has been exceeded"},
-> +	{0x07279A00, 0, 0,
-> +	"Data protect, other volume set problem"},
->  	{0x0B260000, 0, 0,
->  	"Aborted command, invalid descriptor"},
-> +	{0x0B3F9000, 0, 0,
-> +	"Target operating conditions have changed, dua adapter takeover"},
+commit 6d9359280753d2955f86d6411047516a9431eb51 upstream.
 
-dua should be dual
+Sometimes, warnings about ioctls to partition happen often enough that they
+form majority of the warnings in the kernel log and users complain. In some
+cases warnings are about ioctls such as SG_IO so it's not good to get rid of
+the warnings completely as they can ease debugging of userspace problems
+when ioctl is refused.
 
-Thanks,
+Since I have seen warnings from lots of commands, including some proprietary
+userspace applications, I don't think disallowing the ioctls for processes
+with CAP_SYS_RAWIO will happen in the near future if ever. So lets just
+stop warning for processes with CAP_SYS_RAWIO for which ioctl is allowed.
 
-Brian
+CC: Paolo Bonzini <pbonzini@redhat.com>
+CC: James Bottomley <JBottomley@parallels.com>
+CC: linux-scsi@vger.kernel.org
+Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+[bwh: Backported to 3.2: use ENOTTY, not ENOIOCTLCMD]
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+(cherry picked from commit f45c9a6eec20cd712421c442785e7a4e9215a230)
+Cc: Thomas Bork <tom@eisfair.net>
+Signed-off-by: Willy Tarreau <w@1wt.eu>
+---
+ block/scsi_ioctl.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 2be0a97..123eb17 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -720,11 +720,14 @@ int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
+ 		break;
+ 	}
+ 
++	if (capable(CAP_SYS_RAWIO))
++		return 0;
++
+ 	/* In particular, rule out all resets and host-specific ioctls.  */
+ 	printk_ratelimited(KERN_WARNING
+ 			   "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
+ 
+-	return capable(CAP_SYS_RAWIO) ? 0 : -ENOTTY;
++	return -ENOTTY;
+ }
+ EXPORT_SYMBOL(scsi_verify_blk_ioctl);
+ 
 -- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+1.7.12.2.21.g234cd45.dirty
