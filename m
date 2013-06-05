@@ -1,124 +1,40 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH V2 1/1] ipr: IOA Status Code(IOASC) update
-Date: Tue, 04 Jun 2013 18:57:35 -0500
-Message-ID: <20130604235858.539018354@linux.vnet.ibm.com>
-References: <20130604235734.502182085@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.57] ([32.97.110.57]:44019 "HELO
-	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1751651Ab3FEABe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jun 2013 20:01:34 -0400
-Content-Disposition: inline; filename=ioasc_update
-Sender: linux-scsi-owner@vger.kernel.org
+From: Libo Chen <libo.chen@huawei.com>
+Subject: Re: [PATCH v2] scsi: megaraid: check kzalloc
+Date: Wed, 5 Jun 2013 09:27:34 +0800
+Message-ID: <51AE9406.7080102@huawei.com>
+References: <519ECEF1.9060804@huawei.com> <519F3592.4090207@huawei.com> <51ADB484.3060404@huawei.com> <51ADDA24.7050609@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <51ADDA24.7050609@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: megaraidlinux@lsi.com, JBottomley@parallels.com, Libo Chen <chenlibo.3@gmail.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kashyap.desai@lsi.com, aradford@gmail.com, Li Zefan <lizefan@huawei.com>, Santosh Y <santoshsy@gmail.com>, "zhangwei(Jovi)" <jovi.zhangwei@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-The patch updates some new IOA Status Code(IOASC) in ipr driver.
+On 2013/6/4 20:14, Tomas Henzl wrote:
+> On 06/04/2013 11:33 AM, Libo Chen wrote:
+>> we should check kzalloc, avoid to hit oops
+>>
+>> Change from v1:
+>> - put kzalloc outside of mutex
+>>
+>> Signed-off-by: Libo Chen <libo.chen@huawei.com>
+> 
+> Your patch looks fine to me:
+> Acked-by: Tomas Henzl <thenzl@redhat.com>
+> 
 
-Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |   40 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 39 insertions(+), 1 deletion(-)
+your ack is very helpfull for me.
 
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2013-05-30 12:40:37.000000000 -0500
-+++ b/drivers/scsi/ipr.c	2013-06-04 18:51:27.107964790 -0500
-@@ -281,12 +281,22 @@ struct ipr_error_table_t ipr_error_table
- 	"FFF6: Failure prediction threshold exceeded"},
- 	{0x015D9200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"8009: Impending cache battery pack failure"},
-+	{0x02040100, 0, 0,
-+	"Logical Unit in process of becoming ready"},
-+	{0x02040200, 0, 0,
-+	"Initializing command required"},
- 	{0x02040400, 0, 0,
- 	"34FF: Disk device format in progress"},
-+	{0x02040C00, 0, 0,
-+	"Logical unit not accessible, target port in unavailable state"},
- 	{0x02048000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9070: IOA requested reset"},
- 	{0x023F0000, 0, 0,
- 	"Synchronization required"},
-+	{0x02408500, 0, 0,
-+	"IOA microcode download required"},
-+	{0x02408600, 0, 0,
-+	"Device bus connection is prohibited by host"},
- 	{0x024E0000, 0, 0,
- 	"No ready, IOA shutdown"},
- 	{0x025A0000, 0, 0,
-@@ -385,6 +395,8 @@ struct ipr_error_table_t ipr_error_table
- 	"4030: Incorrect multipath connection"},
- 	{0x04679000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4110: Unsupported enclosure function"},
-+	{0x04679800, 0, IPR_DEFAULT_LOG_LEVEL,
-+	"4120: SAS cable VPD cannot be read"},
- 	{0x046E0000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF4: Command to logical unit failed"},
- 	{0x05240000, 1, 0,
-@@ -407,10 +419,18 @@ struct ipr_error_table_t ipr_error_table
- 	"Illegal request, command sequence error"},
- 	{0x052C8000, 1, 0,
- 	"Illegal request, dual adapter support not enabled"},
-+	{0x052C8100, 1, 0,
-+	"Illegal request, another cable connector was physically disabled"},
-+	{0x054E8000, 1, 0,
-+	"Illegal request, inconsistent group id/group count"},
- 	{0x06040500, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9031: Array protection temporarily suspended, protection resuming"},
- 	{0x06040600, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9040: Array protection temporarily suspended, protection resuming"},
-+	{0x060B0100, 0, IPR_DEFAULT_LOG_LEVEL,
-+	"4080: IOA exceeded maximum operating temperature"},
-+	{0x060B8000, 0, IPR_DEFAULT_LOG_LEVEL,
-+	"4085: Service required"},
- 	{0x06288000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3140: Device bus not ready to ready transition"},
- 	{0x06290000, 0, IPR_DEFAULT_LOG_LEVEL,
-@@ -423,6 +443,8 @@ struct ipr_error_table_t ipr_error_table
- 	"FFFB: SCSI bus was reset by another initiator"},
- 	{0x063F0300, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3029: A device replacement has occurred"},
-+	{0x063F8300, 0, IPR_DEFAULT_LOG_LEVEL,
-+	"4102: Device bus fabric performance degradation"},
- 	{0x064C8000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9051: IOA cache data exists for a missing or failed device"},
- 	{0x064C8100, 0, IPR_DEFAULT_LOG_LEVEL,
-@@ -445,6 +467,14 @@ struct ipr_error_table_t ipr_error_table
- 	"9076: Configuration error, missing remote IOA"},
- 	{0x06679100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4050: Enclosure does not support a required multipath function"},
-+	{0x06679800, 0, IPR_DEFAULT_LOG_LEVEL,
-+	"4121: Configuration error, required cable is missing"},
-+	{0x06679900, 0, IPR_DEFAULT_LOG_LEVEL,
-+	"4122: Cable is not plugged into the correct location on remote IOA"},
-+	{0x06679A00, 0, IPR_DEFAULT_LOG_LEVEL,
-+	"4123: Configuration error, invalid cable vital product data"},
-+	{0x06679B00, 0, IPR_DEFAULT_LOG_LEVEL,
-+	"4124: Configuration error, both cable ends are plugged into the same IOA"},
- 	{0x06690000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4070: Logically bad block written on device"},
- 	{0x06690200, 0, IPR_DEFAULT_LOG_LEVEL,
-@@ -507,10 +537,18 @@ struct ipr_error_table_t ipr_error_table
- 	"9062: One or more disks are missing from an array"},
- 	{0x07279900, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9063: Maximum number of functional arrays has been exceeded"},
-+	{0x07279A00, 0, 0,
-+	"Data protect, other volume set problem"},
- 	{0x0B260000, 0, 0,
- 	"Aborted command, invalid descriptor"},
-+	{0x0B3F9000, 0, 0,
-+	"Target operating conditions have changed, dual adapter takeover"},
-+	{0x0B530200, 0, 0,
-+	"Aborted command, medium removal prevented"},
- 	{0x0B5A0000, 0, 0,
--	"Command terminated by host"}
-+	"Command terminated by host"},
-+	{0x0B5B8000, 0, 0,
-+	"Aborted command, command terminated by host"}
- };
- 
- static const struct ipr_ses_table_entry ipr_ses_table[] = {
+Thanks,
 
--- 
+Libo
+
+> Cheers,
+> Tomas
+> 
+> 
+> .
+> 
