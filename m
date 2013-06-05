@@ -1,50 +1,97 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH V2 1/1] ipr: IOA Status Code(IOASC) update
-Date: Wed, 05 Jun 2013 10:56:51 -0500
-Message-ID: <51AF5FC3.6000105@linux.vnet.ibm.com>
-References: <20130604235734.502182085@linux.vnet.ibm.com> <20130604235858.539018354@linux.vnet.ibm.com>
+From: vaughan <vaughan.cao@oracle.com>
+Subject: Re: [PATCH] sg: atomize check and set sdp->exclude in sg_open
+Date: Thu, 06 Jun 2013 00:16:45 +0800
+Message-ID: <51AF646D.7030903@oracle.com>
+References: <51AF0269.9070900@oracle.com> <20130605132746.GA1690@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:56778 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756535Ab3FEP5v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Jun 2013 11:57:51 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Wed, 5 Jun 2013 11:57:50 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id C7B47C90043
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Jun 2013 11:57:46 -0400 (EDT)
-Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r55Fvk3g230428
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Jun 2013 11:57:47 -0400
-Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r55FxC27017618
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Jun 2013 09:59:12 -0600
-In-Reply-To: <20130604235858.539018354@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130605132746.GA1690@logfs.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
+Cc: dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: wenxiong@linux.vnet.ibm.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On 06/04/2013 06:57 PM, wenxiong@linux.vnet.ibm.com wrote:
-> The patch updates some new IOA Status Code(IOASC) in ipr driver.
-> 
-> Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-> ---
+=E4=BA=8E 2013=E5=B9=B406=E6=9C=8805=E6=97=A5 21:27, J=C3=B6rn Engel =E5=
+=86=99=E9=81=93:
+> On Wed, 5 June 2013 17:18:33 +0800, vaughan wrote:
+>>
+>> Check and set sdp->exclude should be atomic when set in sg_open().
+>
+> The patch is line-wrapped.  More importantly, it doesn't seem to do
+It's shorter than the original line, so I just leave it like this...
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+> what your description indicates it should do.  And lastly, does this
+> fix a bug, possibly even one you have a testcase for, or was it found
+> by code inspection?
+I found it by code inspection. A race condition may happen with the old=
+=20
+code if two threads are both trying to open the same sg with O_EXCL=20
+simultaneously. It's possible that they both find fsds list is empty an=
+d=20
+get_exclude(sdp) returns 0, then they both call set_exclude() and break=
+=20
+out from wait_event_interruptible and resume open. So it's necessary to=
+=20
+check again with sg_open_exclusive_lock held to ensure only one can set=
+=20
+sdp->exclude and return >0 to break out from wait_event loop.
 
-Thanks,
-
-Brian
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+>
+>> Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
+>> ---
+>>   drivers/scsi/sg.c | 17 ++++++++++++++++-
+>>   1 file changed, 16 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>> index 25b5455..0ede08f 100644
+>> --- a/drivers/scsi/sg.c
+>> +++ b/drivers/scsi/sg.c
+>> @@ -245,6 +245,21 @@ static int set_exclude(Sg_device *sdp, char val=
+)
+>>       return val;
+>>   }
+>>
+>> +/* Check if we can set exclude and then set, return 1 if success */
+>> +static int try_set_exclude(Sg_device *sdp)
+>> +{
+>> +    unsigned long flags;
+>> +
+>> +    spin_lock_irqsave(&sg_open_exclusive_lock, flags);
+>> +    if (sdp->exclude) {
+>> +        spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
+>> +        return 0;
+>> +    }
+>> +    sdp->exclude =3D 1;
+>> +    spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
+>> +    return 1;
+>> +}
+>> +
+>>   static int sfds_list_empty(Sg_device *sdp)
+>>   {
+>>       unsigned long flags;
+>> @@ -303,7 +318,7 @@ sg_open(struct inode *inode, struct file *filp)
+>>               goto error_out;
+>>           }
+>>           res =3D wait_event_interruptible(sdp->o_excl_wait,
+>> -                       ((!sfds_list_empty(sdp) || get_exclude(sdp))
+>> ? 0 : set_exclude(sdp, 1)));
+>> +            ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 :
+>> try_set_exclude(sdp)));
+>>           if (res) {
+>>               retval =3D res;    /* -ERESTARTSYS because signal hit =
+process */
+>>               goto error_out;
+>> --
+>> 1.7.11.7
+>>
+>
+> J=C3=B6rn
+>
+> --
+> Fantasy is more important than knowledge. Knowledge is limited,
+> while fantasy embraces the whole world.
+> -- Albert Einstein
+>
