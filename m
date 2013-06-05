@@ -1,57 +1,60 @@
-From: "Shergill, Gurinder" <gurinder.shergill@hp.com>
-Subject: RE: [PATCH] make dev_loss_tmo checks uniform across drivers
-Date: Wed, 5 Jun 2013 22:29:14 +0000
-Message-ID: <A591B01B4B9C42438AD944169026EEDC0158303A@G1W3776.americas.hpqcorp.net>
-References: <1370283919-11884-1-git-send-email-gurinder.shergill@hp.com>
- <51AD8F0A.9050007@acm.org>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH 4/4] scsi_transport_fc: FC timeout handler
+Date: Wed, 5 Jun 2013 17:55:34 -0400
+Message-ID: <20130605215534.GB2737@logfs.org>
+References: <1369389050-118628-1-git-send-email-hare@suse.de>
+ <1369389050-118628-5-git-send-email-hare@suse.de>
+ <20130525050842.GA6973@infradead.org>
+ <51A086AF.5050609@suse.de>
+ <20130525084222.GA27576@infradead.org>
+ <51A08AAE.1060501@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:17745 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757840Ab3FEWbT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jun 2013 18:31:19 -0400
-In-Reply-To: <51AD8F0A.9050007@acm.org>
-Content-Language: en-US
+Received: from longford.logfs.org ([213.229.74.203]:59400 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758079Ab3FEXYr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jun 2013 19:24:47 -0400
+Content-Disposition: inline
+In-Reply-To: <51A08AAE.1060501@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Bryn Reeves <bmr@redhat.com>, Roland Dreier <roland@purestorage.com>
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Bart Van Assche
-> Sent: Monday, June 03, 2013 11:54 PM
-> To: Shergill, Gurinder
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH] make dev_loss_tmo checks uniform across drivers
-> 
-> On 06/03/13 20:25, gurinder.shergill@hp.com wrote:
-> > The dev_loss_tmo parameter controls how long the FC transport layer
-> > insulates a loss of a remote port. It is defined to be between 1 and
-> > SCSI_DEVICE_BLOCK_MAX_TIMEOUT (600). Different drivers do slightly
-> > different checks when passed this parameter. This patch makes the
-> > dev_loss_tmo setting uniform across all the drivers by pulling the
-> > common logic into the transport layer function which is responsible
-> > for invoking the driver provided callouts.
+On Sat, 25 May 2013 11:55:58 +0200, Hannes Reinecke wrote:
 > >
-> > In addition, this patch also fixes a issue (see below), where
-> > dev_loss_tmo could end up with a value more than
-> > SCSI_DEVICE_BLOCK_MAX_TIMEOUT when fast_io_fail_tmo is enabled and
-> > then disabled.  The change is to never allow dev_loss_tmo to be out of
-> > its defined range. And, once that is a given, then fast_io_fail_tmo can
-> be capped by dev_loss_tmo.
-> 
-> Hello Sunny,
-> 
-> As far as I know some users set fast_io_fail_tmo such that dev_loss_tmo
-> can be set to a very large value in order to prevent that the SCSI host
-> number changes. Sorry but I'm not sure it's a good idea to remove that
-> functionality.
+> It should be possible to move the code into scsi_lib and just have
+> small hooks for the individual transports to use this.
 
-Fair enough. I wasn't aware of such usage of fast_io_fail_tmo. I'll take that part out of the patch.
+We have done something a bit tasteless and unconditionally enabled
+your new error handling for all scsi drivers.  That solved a rather
+serious problem for us and the subset of scsi drivers we actually
+exercise seems to be doing fine.  Maybe we could add a hook into
+scsi_times_out() that does the unconditional thing if users opt-in by
+setting CONFIG_I_MIGHT_BREAK_STUFF or so.
 
-Thanks for the feedback,
-Sunny
+We also have a scsi error injector now that should allow testing your
+patches on any hardware, including kvm.  On a trial run the system
+eventually rebooted (likely through a hung task timeout, haven't
+checked) with the old error handling and lost a single drive with your
+new code.  Awesome!
 
+So my vote is for ignoring the remaining bits and pushing forward.
+Your code is too useful to wait another half year.
+
+And we should brush up the error injector and send it out as well.
+Testing your code on cheap hardware would be nice.
+
+J=C3=B6rn
+
+--
+He who knows others is wise.
+He who knows himself is enlightened.
+-- Lao Tsu
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
