@@ -1,59 +1,40 @@
-From: vaughan <vaughan.cao@oracle.com>
-Subject: [PATCH] sg: atomize check and set sdp->exclude in sg_open
-Date: Wed, 05 Jun 2013 17:18:33 +0800
-Message-ID: <51AF0269.9070900@oracle.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 59301] mpt2sas0 fails after short time of work
+Date: Wed,  5 Jun 2013 09:23:03 +0000 (UTC)
+Message-ID: <20130605092303.36E4911FB30@bugzilla.kernel.org>
+References: <bug-59301-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, joern@logfs.org, xitao.cao@gmail.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:46028 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751557Ab3FEJXO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jun 2013 05:23:14 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 43AB220729
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Jun 2013 09:23:09 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id B3397206FF
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Jun 2013 09:23:03 +0000 (UTC)
+In-Reply-To: <bug-59301-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Check and set sdp->exclude should be atomic when set in sg_open().
+https://bugzilla.kernel.org/show_bug.cgi?id=59301
 
-Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
----
-  drivers/scsi/sg.c | 17 ++++++++++++++++-
-  1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 25b5455..0ede08f 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -245,6 +245,21 @@ static int set_exclude(Sg_device *sdp, char val)
-      return val;
-  }
+Anton Pomozov <pomozoff@gmail.com> changed:
 
-+/* Check if we can set exclude and then set, return 1 if success */
-+static int try_set_exclude(Sg_device *sdp)
-+{
-+    unsigned long flags;
-+
-+    spin_lock_irqsave(&sg_open_exclusive_lock, flags);
-+    if (sdp->exclude) {
-+        spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
-+        return 0;
-+    }
-+    sdp->exclude = 1;
-+    spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
-+    return 1;
-+}
-+
-  static int sfds_list_empty(Sg_device *sdp)
-  {
-      unsigned long flags;
-@@ -303,7 +318,7 @@ sg_open(struct inode *inode, struct file *filp)
-              goto error_out;
-          }
-          res = wait_event_interruptible(sdp->o_excl_wait,
--                       ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 
-: set_exclude(sdp, 1)));
-+            ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 : 
-try_set_exclude(sdp)));
-          if (res) {
-              retval = res;    /* -ERESTARTSYS because signal hit process */
-              goto error_out;
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+           Platform|All                         |x86-64
+           Severity|blocking                    |high
+
+
+
+
 -- 
-1.7.11.7
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
