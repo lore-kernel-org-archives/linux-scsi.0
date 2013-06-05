@@ -1,97 +1,59 @@
-From: vaughan <vaughan.cao@oracle.com>
-Subject: Re: [PATCH] sg: atomize check and set sdp->exclude in sg_open
-Date: Thu, 06 Jun 2013 00:16:45 +0800
-Message-ID: <51AF646D.7030903@oracle.com>
-References: <51AF0269.9070900@oracle.com> <20130605132746.GA1690@logfs.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130605132746.GA1690@logfs.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
-Cc: dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] tcm_qla2xxx: Fix residual for underrun commands that fail
+Date: Wed,  5 Jun 2013 09:54:17 -0700
+Message-ID: <1370451257-20892-1-git-send-email-roland@kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys010aog102.obsmtp.com ([74.125.245.72]:47850 "HELO
+	na3sys010aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756190Ab3FEQy1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jun 2013 12:54:27 -0400
+Received: by mail-pd0-f174.google.com with SMTP id 10so1109654pdc.5
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Jun 2013 09:54:22 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-driver@qlogic.com, Roland Dreier <roland@purestorage.com>
 
-=E4=BA=8E 2013=E5=B9=B406=E6=9C=8805=E6=97=A5 21:27, J=C3=B6rn Engel =E5=
-=86=99=E9=81=93:
-> On Wed, 5 June 2013 17:18:33 +0800, vaughan wrote:
->>
->> Check and set sdp->exclude should be atomic when set in sg_open().
->
-> The patch is line-wrapped.  More importantly, it doesn't seem to do
-It's shorter than the original line, so I just leave it like this...
+From: Roland Dreier <roland@purestorage.com>
 
-> what your description indicates it should do.  And lastly, does this
-> fix a bug, possibly even one you have a testcase for, or was it found
-> by code inspection?
-I found it by code inspection. A race condition may happen with the old=
-=20
-code if two threads are both trying to open the same sg with O_EXCL=20
-simultaneously. It's possible that they both find fsds list is empty an=
-d=20
-get_exclude(sdp) returns 0, then they both call set_exclude() and break=
-=20
-out from wait_event_interruptible and resume open. So it's necessary to=
-=20
-check again with sg_open_exclusive_lock held to ensure only one can set=
-=20
-sdp->exclude and return >0 to break out from wait_event loop.
+Suppose an initiator sends a DATA IN command with an allocation length
+shorter than the FC transfer length -- we get a target message like
 
->
->> Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
->> ---
->>   drivers/scsi/sg.c | 17 ++++++++++++++++-
->>   1 file changed, 16 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
->> index 25b5455..0ede08f 100644
->> --- a/drivers/scsi/sg.c
->> +++ b/drivers/scsi/sg.c
->> @@ -245,6 +245,21 @@ static int set_exclude(Sg_device *sdp, char val=
-)
->>       return val;
->>   }
->>
->> +/* Check if we can set exclude and then set, return 1 if success */
->> +static int try_set_exclude(Sg_device *sdp)
->> +{
->> +    unsigned long flags;
->> +
->> +    spin_lock_irqsave(&sg_open_exclusive_lock, flags);
->> +    if (sdp->exclude) {
->> +        spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
->> +        return 0;
->> +    }
->> +    sdp->exclude =3D 1;
->> +    spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
->> +    return 1;
->> +}
->> +
->>   static int sfds_list_empty(Sg_device *sdp)
->>   {
->>       unsigned long flags;
->> @@ -303,7 +318,7 @@ sg_open(struct inode *inode, struct file *filp)
->>               goto error_out;
->>           }
->>           res =3D wait_event_interruptible(sdp->o_excl_wait,
->> -                       ((!sfds_list_empty(sdp) || get_exclude(sdp))
->> ? 0 : set_exclude(sdp, 1)));
->> +            ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 :
->> try_set_exclude(sdp)));
->>           if (res) {
->>               retval =3D res;    /* -ERESTARTSYS because signal hit =
-process */
->>               goto error_out;
->> --
->> 1.7.11.7
->>
->
-> J=C3=B6rn
->
-> --
-> Fantasy is more important than knowledge. Knowledge is limited,
-> while fantasy embraces the whole world.
-> -- Albert Einstein
->
+    TARGET_CORE[qla2xxx]: Expected Transfer Length: 256 does not match SCSI CDB Length: 0 for SAM Opcode: 0x12
+
+In that case, the target core adjusts the data_length and sets
+se_cmd->residual_count for the underrun.  But now suppose that command
+fails and we end up in tcm_qla2xxx_queue_status() -- that function
+unconditionally overwrites residual_count with the already adjusted
+data_length, and the initiator will burp with a message like
+
+    qla2xxx [0000:00:06.0]-301d:0: Dropped frame(s) detected (0x100 of 0x100 bytes).
+
+Fix this by adding on to the existing underflow residual count instead.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 7a3870f..66b0b26 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -688,8 +688,12 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
+ 		 * For FCP_READ with CHECK_CONDITION status, clear cmd->bufflen
+ 		 * for qla_tgt_xmit_response LLD code
+ 		 */
++		if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) {
++			se_cmd->se_cmd_flags &= ~SCF_OVERFLOW_BIT;
++			se_cmd->residual_count = 0;
++		}
+ 		se_cmd->se_cmd_flags |= SCF_UNDERFLOW_BIT;
+-		se_cmd->residual_count = se_cmd->data_length;
++		se_cmd->residual_count += se_cmd->data_length;
+ 
+ 		cmd->bufflen = 0;
+ 	}
+-- 
+1.8.1.2
+
