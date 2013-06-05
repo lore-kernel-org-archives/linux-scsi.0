@@ -1,180 +1,42 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: Check if the device support WRITE_SAME_10
-Date: Wed, 05 Jun 2013 15:14:40 -0400
-Message-ID: <yq1r4ggpdy7.fsf@sermon.lab.mkp.net>
-References: <51AC1440.7020505@zytor.com>
-	<CAA9_cmddLfReYeAhgwh5=j6ELMBNx5Oq7Gg8K+fo0PneaEfrVA@mail.gmail.com>
-	<51AC3283.4000403@zytor.com>
-	<CAA9_cme6tYpYnrZDbrDduwPCjVn+PFbx_rZNPFazBEU9EF0upw@mail.gmail.com>
-	<51ACBAA0.40604@zytor.com>
-	<CAA9_cmc3Gs91C4aV6okUw-=q+fACm1+dooyafOZi+Lnj+Ne_ig@mail.gmail.com>
-	<51ACD511.4030604@zytor.com> <yq1y5art543.fsf@sermon.lab.mkp.net>
-	<51AD2485.9000601@zytor.com>
-	<alpine.DEB.2.02.1306041132260.19072@jlaw-desktop.mno.stratus.com>
-	<51AF0CCF.8000909@itwm.fraunhofer.de>
-	<51AF232C.8060209@itwm.fraunhofer.de>
-	<51AF34E0.3030609@itwm.fraunhofer.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v3, part1 03/10] PCI: Convert alloc_pci_dev(void) to
+ pci_alloc_dev(bus) instead
+Date: Wed, 5 Jun 2013 14:07:18 -0600
+Message-ID: <CAErSpo6C-QMFCbMMivBE5TN4sEOFR_EyPmtN=OUNo8eN-+t=GQ@mail.gmail.com>
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-4-git-send-email-jiang.liu@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51AF34E0.3030609@itwm.fraunhofer.de> (Bernd Schubert's message
-	of "Wed, 05 Jun 2013 14:53:52 +0200")
-Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: Joe Lawrence <joe.lawrence@stratus.com>, "H. Peter Anvin" <hpa@zytor.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Williams <dan.j.williams@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <1369489718-25869-4-git-send-email-jiang.liu@huawei.com>
+Sender: sparclinux-owner@vger.kernel.org
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Gu Zheng <guz.fnst@cn.fujitsu.com>, "Rafael J . Wysocki" <rjw@sisk.pl>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Toshi Kani <toshi.kani@hp.com>, Myron Stowe <myron.stowe@redhat.com>, Yijing Wang <wangyijing@huawei.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jiang Liu <jiang.liu@huawei.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, sparclinux@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Bernd" == Bernd Schubert <bernd.schubert@itwm.fraunhofer.de> writes:
+On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>
+> Use the new pci_alloc_dev(bus) to replace the existing using of
+> alloc_pci_dev(void).
+> ...
 
-Bernd> The md layer currently cannot handle failed WRITE_SAME commands
-Bernd> and the initial easiest fix is to check if the device supports
-Bernd> WRITE_SAME at all. It already tested for WRITE_SAME_16 and this
-Bernd> commit adds a test for WRITE_SAME_10.
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 26df9c8..d5d18a0 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1130,6 +1130,7 @@ static void pci_release_dev(struct device *dev)
+>         struct pci_dev *pci_dev;
+>
+>         pci_dev = to_pci_dev(dev);
+> +       pci_bus_put(pci_dev->bus);
+>         pci_release_capabilities(pci_dev);
+>         pci_release_of_node(pci_dev);
+>         kfree(pci_dev);
 
-No go. That'll disable WRITE SAME for drives which don't support
-RSOC. Which means almost all of them.
+I think we should drop the pci_bus reference *last* (before the
+kfree).  Otherwise, we have to audit pci_release_capabilities() and
+pci_release_of_node() to make sure they don't use pci_dev->bus.
 
-I propose the following...
+I made this change on my branch already; just let me know if you object.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
-
-[PATCH] sd: Update WRITE SAME heuristics
-
-SATA drives located behind a SAS controller would incorrectly receive
-WRITE SAME commands. Tweak the heuristics so that:
-
- - If REPORT SUPPORTED OPERATION CODES is provided we will use that to
-   choose between WRITE SAME(16), WRITE SAME(10) and disabled. This also
-   fixes an issue with the old code which would issue WRITE SAME(10)
-   despite the command not being whitelisted in REPORT SUPPORTED
-   OPERATION CODES.
-
- - If REPORT SUPPORTED OPERATION CODES is not provided we will fall back
-   to WRITE SAME(10) unless the device has an ATA Information VPD page.
-   The assumption is that a SATL which is smart enough to implement
-   WRITE SAME would also provide REPORT SUPPORTED OPERATION CODES.
-
-To facilitate the new heuristics scsi_report_opcode() has been modified
-to so we can distinguish between "operation not supported" and "RSOC not
-supported".
-
-Reported-by: H. Peter Anvin <hpa@zytor.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 2c0d0ec..3b1ea34 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -1070,8 +1070,8 @@ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
-  * @opcode:	opcode for command to look up
-  *
-  * Uses the REPORT SUPPORTED OPERATION CODES to look up the given
-- * opcode. Returns 0 if RSOC fails or if the command opcode is
-- * unsupported. Returns 1 if the device claims to support the command.
-+ * opcode. Returns -EINVAL if RSOC fails, 0 if the command opcode is
-+ * unsupported and 1 if the device claims to support the command.
-  */
- int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
- 		       unsigned int len, unsigned char opcode)
-@@ -1081,7 +1081,7 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
- 	int result;
- 
- 	if (sdev->no_report_opcodes || sdev->scsi_level < SCSI_SPC_3)
--		return 0;
-+		return -EINVAL;
- 
- 	memset(cmd, 0, 16);
- 	cmd[0] = MAINTENANCE_IN;
-@@ -1097,7 +1097,7 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
- 	if (result && scsi_sense_valid(&sshdr) &&
- 	    sshdr.sense_key == ILLEGAL_REQUEST &&
- 	    (sshdr.asc == 0x20 || sshdr.asc == 0x24) && sshdr.ascq == 0x00)
--		return 0;
-+		return -EINVAL;
- 
- 	if ((buffer[1] & 3) == 3) /* Command supported */
- 		return 1;
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a37eda9..366b661 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -442,8 +442,15 @@ sd_store_write_same_blocks(struct device *dev, struct device_attribute *attr,
- 
- 	if (max == 0)
- 		sdp->no_write_same = 1;
--	else if (max <= SD_MAX_WS16_BLOCKS)
--		sdkp->max_ws_blocks = max;
-+	else
-+		sdp->no_write_same = 0;
-+
-+	if (sdkp->ws16)
-+		sdkp->max_ws_blocks =
-+			max_t(unsigned long, max, SD_MAX_WS16_BLOCKS);
-+	else
-+		sdkp->max_ws_blocks =
-+			max_t(unsigned long, max, SD_MAX_WS10_BLOCKS);
- 
- 	sd_config_write_same(sdkp);
- 
-@@ -762,16 +769,16 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
- 	 * blocks per I/O unless the device explicitly advertises a
- 	 * bigger limit.
- 	 */
--	if (sdkp->max_ws_blocks == 0)
--		sdkp->max_ws_blocks = SD_MAX_WS10_BLOCKS;
--
--	if (sdkp->ws16 || sdkp->max_ws_blocks > SD_MAX_WS10_BLOCKS)
-+	if (sdkp->max_ws_blocks > SD_MAX_WS10_BLOCKS)
- 		blocks = min_not_zero(sdkp->max_ws_blocks,
- 				      (u32)SD_MAX_WS16_BLOCKS);
- 	else
- 		blocks = min_not_zero(sdkp->max_ws_blocks,
- 				      (u32)SD_MAX_WS10_BLOCKS);
- 
-+	if (sdkp->ws16 || sdkp->ws10 || sdkp->device->no_report_opcodes)
-+		sdkp->max_ws_blocks = blocks;
-+
- out:
- 	blk_queue_max_write_same_sectors(q, blocks * (logical_block_size >> 9));
- }
-@@ -2645,9 +2652,24 @@ static void sd_read_block_provisioning(struct scsi_disk *sdkp)
- 
- static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
- {
--	if (scsi_report_opcode(sdkp->device, buffer, SD_BUF_SIZE,
--			       WRITE_SAME_16))
-+	struct scsi_device *sdev = sdkp->device;
-+
-+	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, INQUIRY) < 0) {
-+		sdev->no_report_opcodes = 1;
-+
-+		/* Disable WRITE SAME if REPORT SUPPORTED OPERATION
-+		 * CODES is unsupported and the device has an ATA
-+		 * Information VPD page (SAT).
-+		 */
-+		if (!scsi_get_vpd_page(sdev, 0x89, buffer, SD_BUF_SIZE))
-+			sdev->no_write_same = 1;
-+	}
-+
-+	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, WRITE_SAME_16) == 1)
- 		sdkp->ws16 = 1;
-+
-+	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, WRITE_SAME) == 1)
-+		sdkp->ws10 = 1;
- }
- 
- static int sd_try_extended_inquiry(struct scsi_device *sdp)
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 2386aeb..7a049de 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -84,6 +84,7 @@ struct scsi_disk {
- 	unsigned	lbpws : 1;
- 	unsigned	lbpws10 : 1;
- 	unsigned	lbpvpd : 1;
-+	unsigned	ws10 : 1;
- 	unsigned	ws16 : 1;
- };
- #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+Bjorn
