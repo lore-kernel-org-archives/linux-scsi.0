@@ -1,59 +1,62 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH] tcm_qla2xxx: Fix residual for underrun commands that fail
-Date: Wed,  5 Jun 2013 09:54:17 -0700
-Message-ID: <1370451257-20892-1-git-send-email-roland@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog102.obsmtp.com ([74.125.245.72]:47850 "HELO
-	na3sys010aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756190Ab3FEQy1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jun 2013 12:54:27 -0400
-Received: by mail-pd0-f174.google.com with SMTP id 10so1109654pdc.5
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Jun 2013 09:54:22 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH] sg: atomize check and set sdp->exclude in sg_open
+Date: Wed, 5 Jun 2013 11:41:07 -0400
+Message-ID: <20130605154106.GA2737@logfs.org>
+References: <51AF0269.9070900@oracle.com>
+ <20130605132746.GA1690@logfs.org>
+ <51AF646D.7030903@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <51AF646D.7030903@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vaughan <vaughan.cao@oracle.com>
+Cc: dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-driver@qlogic.com, Roland Dreier <roland@purestorage.com>
 
-From: Roland Dreier <roland@purestorage.com>
+On Thu, 6 June 2013 00:16:45 +0800, vaughan wrote:
+> =E4=BA=8E 2013=E5=B9=B406=E6=9C=8805=E6=97=A5 21:27, J=C3=B6rn Engel =
+=E5=86=99=E9=81=93:
+> >On Wed, 5 June 2013 17:18:33 +0800, vaughan wrote:
+> >>
+> >>Check and set sdp->exclude should be atomic when set in sg_open().
+> >
+> >The patch is line-wrapped.  More importantly, it doesn't seem to do
+> It's shorter than the original line, so I just leave it like this...
 
-Suppose an initiator sends a DATA IN command with an allocation length
-shorter than the FC transfer length -- we get a target message like
+Sure.  What I meant by line-wrapped is that your mailer mangled the
+patch.  Those two lines should have been one:
+> >>-                       ((!sfds_list_empty(sdp) || get_exclude(sdp)=
+)
+> >>? 0 : set_exclude(sdp, 1)));
 
-    TARGET_CORE[qla2xxx]: Expected Transfer Length: 256 does not match SCSI CDB Length: 0 for SAM Opcode: 0x12
+> >what your description indicates it should do.  And lastly, does this
+> >fix a bug, possibly even one you have a testcase for, or was it foun=
+d
+> >by code inspection?
+> I found it by code inspection. A race condition may happen with the
+> old code if two threads are both trying to open the same sg with
+> O_EXCL simultaneously. It's possible that they both find fsds list
+> is empty and get_exclude(sdp) returns 0, then they both call
+> set_exclude() and break out from wait_event_interruptible and resume
+> open. So it's necessary to check again with sg_open_exclusive_lock
+> held to ensure only one can set sdp->exclude and return >0 to break
+> out from wait_event loop.
 
-In that case, the target core adjusts the data_length and sets
-se_cmd->residual_count for the underrun.  But now suppose that command
-fails and we end up in tcm_qla2xxx_queue_status() -- that function
-unconditionally overwrites residual_count with the already adjusted
-data_length, and the initiator will burp with a message like
+Makes sense.  And reading the code again, I have to wonder what monkey
+came up with the get_exclude/set_exclude functions.
 
-    qla2xxx [0000:00:06.0]-301d:0: Dropped frame(s) detected (0x100 of 0x100 bytes).
+Can I sucker you into a slightly larger cleanup?  I think the entire
+"get_exclude(sdp)) ? 0 : set_exclude(sdp, 1)" should be simplified.
+And once you add the try_set_exclude(), set_exclude will only ever do
+clear_exclude, so you might as well rename and simplify that as well.
 
-Fix this by adding on to the existing underflow residual count instead.
+Let no good deed go unpunished.
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+J=C3=B6rn
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 7a3870f..66b0b26 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -688,8 +688,12 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
- 		 * For FCP_READ with CHECK_CONDITION status, clear cmd->bufflen
- 		 * for qla_tgt_xmit_response LLD code
- 		 */
-+		if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) {
-+			se_cmd->se_cmd_flags &= ~SCF_OVERFLOW_BIT;
-+			se_cmd->residual_count = 0;
-+		}
- 		se_cmd->se_cmd_flags |= SCF_UNDERFLOW_BIT;
--		se_cmd->residual_count = se_cmd->data_length;
-+		se_cmd->residual_count += se_cmd->data_length;
- 
- 		cmd->bufflen = 0;
- 	}
--- 
-1.8.1.2
-
+--
+It's just what we asked for, but not what we want!
+-- anonymous
