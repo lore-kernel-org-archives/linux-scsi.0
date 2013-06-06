@@ -1,96 +1,91 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/3] scsi: Document enhanced error codes
-Date: Thu, 06 Jun 2013 08:58:07 +0200
-Message-ID: <51B032FF.9000607@suse.de>
-References: <1370416261-57005-1-git-send-email-hare@suse.de> <1370416261-57005-2-git-send-email-hare@suse.de> <51B022F8.4000200@cn.fujitsu.com>
+From: vaughan <vaughan.cao@oracle.com>
+Subject: Re: [PATCH] sg: atomize check and set sdp->exclude in sg_open
+Date: Thu, 06 Jun 2013 15:19:26 +0800
+Message-ID: <51B037FE.2020402@oracle.com>
+References: <51AF0269.9070900@oracle.com> <20130605132746.GA1690@logfs.org> <51AF646D.7030903@oracle.com> <20130605154106.GA2737@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40774 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752844Ab3FFF6M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jun 2013 01:58:12 -0400
-In-Reply-To: <51B022F8.4000200@cn.fujitsu.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130605154106.GA2737@logfs.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
+Cc: dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ren Mingxin <renmx@cn.fujitsu.com>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Theodore T'so <tytso@mit.edu>, linux-fsdevel@vger.kernel.org
 
-On 06/06/2013 07:49 AM, Ren Mingxin wrote:
-> Hi, Hannes:
+=E4=BA=8E 2013=E5=B9=B406=E6=9C=8805=E6=97=A5 23:41, J=C3=B6rn Engel =E5=
+=86=99=E9=81=93:
+> On Thu, 6 June 2013 00:16:45 +0800, vaughan wrote:
+>> =E4=BA=8E 2013=E5=B9=B406=E6=9C=8805=E6=97=A5 21:27, J=C3=B6rn Engel=
+ =E5=86=99=E9=81=93:
+>>> On Wed, 5 June 2013 17:18:33 +0800, vaughan wrote:
+>>>>
+>>>> Check and set sdp->exclude should be atomic when set in sg_open().
+>>>
+>>> The patch is line-wrapped.  More importantly, it doesn't seem to do
+>> It's shorter than the original line, so I just leave it like this...
 >
-> I have two questions about the comments:
+> Sure.  What I meant by line-wrapped is that your mailer mangled the
+> patch.  Those two lines should have been one:
+>>>> -                       ((!sfds_list_empty(sdp) || get_exclude(sdp=
+))
+>>>> ? 0 : set_exclude(sdp, 1)));
 >
-> On 06/05/2013 03:10 PM, Hannes Reinecke wrote:
->> Document the various error codes returned on I/O failure.
->>
->> Signed-off-by: Hannes Reinecke<hare@suse.de>
->> ---
->>   drivers/scsi/scsi_error.c |  7 +++++--
->>   drivers/scsi/scsi_lib.c   | 11 +++++++++++
->>   2 files changed, 16 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index f43de1e..443b0e3 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -229,8 +229,11 @@ static inline void scsi_eh_prt_fail_stats(struct
->> Scsi_Host *shost,
->>    * scsi_check_sense - Examine scsi cmd sense
->>    * @scmd:    Cmd to have sense checked.
->>    *
->> - * Return value:
->> - *    SUCCESS or FAILED or NEEDS_RETRY or TARGET_ERROR
->> + * Possible return values:
->> + *    SUCCESS
->> + *    FAILED
->> + *    NEEDS_RETRY
->> + *    TARGET_ERROR
+>>> what your description indicates it should do.  And lastly, does thi=
+s
+>>> fix a bug, possibly even one you have a testcase for, or was it fou=
+nd
+>>> by code inspection?
+>> I found it by code inspection. A race condition may happen with the
+>> old code if two threads are both trying to open the same sg with
+>> O_EXCL simultaneously. It's possible that they both find fsds list
+>> is empty and get_exclude(sdp) returns 0, then they both call
+>> set_exclude() and break out from wait_event_interruptible and resume
+>> open. So it's necessary to check again with sg_open_exclusive_lock
+>> held to ensure only one can set sdp->exclude and return >0 to break
+>> out from wait_event loop.
 >
-> This is more likely to be a historical non-update issue -
-> there is another possible return value 'ADD_TO_MLQUEUE' which may be
-> returned by the handler check_sense() or the case of this
-> scsi_check_sense() below, right?
+> Makes sense.  And reading the code again, I have to wonder what monke=
+y
+> came up with the get_exclude/set_exclude functions.
 >
->      switch (sshdr.sense_key) {
->      case HARDWARE_ERROR:
->          if (scmd->device->retry_hwerror)
->              return ADD_TO_MLQUEUE;
->
-Blast. You are correct. Will be fixing it up.
+> Can I sucker you into a slightly larger cleanup?  I think the entire
+> "get_exclude(sdp)) ? 0 : set_exclude(sdp, 1)" should be simplified.
+> And once you add the try_set_exclude(), set_exclude will only ever do
+> clear_exclude, so you might as well rename and simplify that as well.
+I find my patch is not enough to avoid this race condition said above.=20
+Since sg_add_sfp() just do an add_to_list without check and wait_event=20
+check don't set a sign to announce a future add_to_list is on going, th=
+e=20
+time window between wait_event and sg_add_sfp gives others to open sg=20
+before the prechecked sg_add_sfp() called.
 
->>
->>    *
->>    * Notes:
->>    *    When a deferred error is detected the current command has
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 86d5220..12bfa73 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -700,6 +700,17 @@ void scsi_release_buffers(struct scsi_cmnd *cmd)
->>   }
->>   EXPORT_SYMBOL(scsi_release_buffers);
->>
->> +/**
->> + * __scsi_error_from_host_byte - translate SCSI error code into errno
->> + * @cmd:    SCSI command (unused)
->> + * @result:    scsi error code
->> + *
->> + * Translate SCSI error code into standard UNIX errno.
->> + * Return values:
->> + * -ENOLINK    temporary transport failure
->> + * -EREMOTEIO    permanent target failure, do not retry
->> + * -EBADE    permanent nexus failure, retry on other path
->
-> Sorry, I'm afraid that I'm not clear why '-EIO' is not listed here...
->
-> Perhaps some of them are not necessary to document for some reasons?
->
-Hmm. What with EIO being the default I've seen no need to document this.
-But yes, you are right, it should be documented.
+The same case also happens when one shared and one exclude open occur=20
+simultaneously. If the shared open pass the precheck stage and ready to=
+=20
+sg_add_sfp(). At this time another exclude open will also pass the chec=
+k:
+   ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 :=20
+try_set_exclude(sdp)));
+Then, both open can succeed.
 
-Cheers,
+I think the point is we separate the check&add routine and haven't set=20
+an sign to let others wait until the whole actions complete. I suppose=20
+we may change the steps a bit to avoid trouble like this. If we can=20
+malloc&initialize sfp at first, and then check&add sfp under the=20
+protection of sg_index_lock, everything seems to be quite simple.
 
-Hannes
 
+Regards,
+Vaughan
+
+>
+> Let no good deed go unpunished.
+>
+> J=C3=B6rn
+>
+> --
+> It's just what we asked for, but not what we want!
+> -- anonymous
+>
