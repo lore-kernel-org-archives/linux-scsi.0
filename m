@@ -1,68 +1,93 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] [SCSI] scsilun_to_int should ignore the highest 2 bits
-Date: Thu, 06 Jun 2013 10:42:16 +0200
-Message-ID: <51B04B68.8080001@suse.de>
-References: <1370506691-22933-1-git-send-email-jvesely@redhat.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH] user_space_eject: unlock door before issuing CDROMEJECT command
+Date: Thu, 06 Jun 2013 16:47:15 +0800
+Message-ID: <51B04C93.8010508@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1370506691-22933-1-git-send-email-jvesely@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Vesely <jvesely@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>, Dan Williams <dan.j.williams@intel.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:34057 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756770Ab3FFIqs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Jun 2013 04:46:48 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Karel Zak <kzak@redhat.com>, Michal Luscon <mluscon@redhat.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Aaron Lu <aaron.lwe@gmail.com>
 
-On 06/06/2013 10:18 AM, Jan Vesely wrote:
-> From: Jan Vesely <jvesely@redhat.com>
->=20
-> The comment says the function does this but it does not.
-> Reported luns change from weirdly high numbers (like 16640)
-> to something saner (256), when using flat space addressing.
->=20
-> CC: James Bottomley <JBottomley@Parallels.com>
-> CC: Dan Williams <dan.j.williams@intel.com>
-> Signed-off-by: Jan Vesely <jvesely@redhat.com>
-> ---
->  drivers/scsi/scsi_scan.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 3e58b22..38dc093 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1244,7 +1244,7 @@ int scsilun_to_int(struct scsi_lun *scsilun)
-> =20
->  	lun =3D 0;
->  	for (i =3D 0; i < sizeof(lun); i +=3D 2)
-> -		lun =3D lun | (((scsilun->scsi_lun[i] << 8) |
-> +		lun =3D lun | ((((scsilun->scsi_lun[i] & 0x3f) << 8) |
->  			      scsilun->scsi_lun[i + 1]) << (i * 8));
->  	return lun;
->  }
->=20
-Bzzt. It's not that simple.
+Hi Karel & Michal,
+Not sure if I should send this to you, please kindly forward it to other
+people if they should take care of this instead, thanks.
 
-=46or SCSI-3 _all_ numbers are valid, and doesn't know of any
-addressing scheme. It's only SPC-2 which introduced the addressing
-scheme. So at the very least you should be checking the scsi
-revision before attempting something like this.
+Note that this is a patch for user space tool eject, but since it also
+has something to do with the SCSI driver, the SCSI mailing list is CC-ed
+in case people there think it should be solved in another way.
 
-But in general doing a sequential scan past 256 is criminally
-dangerous. Any array / device attempting to is in most cases
-misconfigured or does not have the correct BLIST flag set.
+Here is the patch.
 
-I know of some older Hitachi and EMC firmware which would pretend to
-be SCSI-2, but supporting more than 256 LUNs per host.
-Which, of course, it totally bonkers.
+>From d4202374d620bf72953a0b59f108521f94cefbd6 Mon Sep 17 00:00:00 2001
+From: Aaron Lu <aaron.lu@intel.com>
+Date: Thu, 6 Jun 2013 16:28:37 +0800
+Subject: [PATCH] eject: unlock door before issuing CDROMEJECT command
 
-I'll be posting my 64-bit LUN patchset, that should fix this issue.
+If user has inserted a disc into the drive, the drive will normally be
+locked. When using eject command to eject the drive, we need to unlock
+the door first, or the CDROMEJECT command will fail.
 
-Cheers,
+Though the 2nd attmpt to eject the drive with eject_scsi will succeed,
+it actually does two things: first to unlock the door and then to eject
+the tray, both with the SG_IO ioctl. The problem is, Linux SCSI driver
+keeps track of if a device is in locked state or not, if we go with
+SG_IO to do the unlocking, the driver will not be aware of the unlocking
+and would think the drive is locked while actually it has already been
+unlocked by the first SG_IO command.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Fix this by issuing a unlock door command before the CDROMEJECT command
+in cdrom_eject. Prior to this fix, the following output is expected when
+there is a disc inside:
+
+[aaron@aaronlu util-linux-2.22.2]$ eject -v /dev/sr0
+eject: device name is `/dev/sr0'
+eject: /dev/sr0: mounted on /run/media/aaron/CD_ROM
+eject: /dev/sr0: is whole-disk device
+eject: /dev/sr0: is removable device
+eject: /run/media/aaron/CD_ROM: unmounting
+eject: /dev/sr0: trying to eject using CD-ROM eject command
+eject: CD-ROM eject command failed
+eject: /dev/sr0: trying to eject using SCSI commands
+eject: SCSI eject succeeded
+
+After this fix, the following output is expected:
+[aaron@aaronlu util-linux-2.22.2]$ ./eject -v /dev/sr0
+lt-eject: device name is `/dev/sr0'
+lt-eject: /dev/sr0: mounted on /run/media/aaron/CD_ROM
+lt-eject: /dev/sr0: is whole-disk device
+lt-eject: /dev/sr0: is removable device
+lt-eject: /run/media/aaron/CD_ROM: unmounting
+lt-eject: /dev/sr0: trying to eject using CD-ROM eject command
+lt-eject: CD-ROM eject command succeeded
+
+And the SCSI device's locked state is correct now.
+
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+---
+ sys-utils/eject.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/sys-utils/eject.c b/sys-utils/eject.c
+index 6d0da18..72e2cb1 100644
+--- a/sys-utils/eject.c
++++ b/sys-utils/eject.c
+@@ -398,6 +398,9 @@ static void close_tray(int fd)
+ static int eject_cdrom(int fd)
+ {
+ #if defined(CDROMEJECT)
++	int ret = ioctl(fd, CDROM_LOCKDOOR, 0);
++	if (ret < 0)
++		return 0;
+ 	return ioctl(fd, CDROMEJECT) >= 0;
+ #elif defined(CDIOCEJECT)
+ 	return ioctl(fd, CDIOCEJECT) >= 0;
+-- 
+1.8.3.3.gfada522
+
