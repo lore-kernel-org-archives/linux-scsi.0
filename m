@@ -1,118 +1,140 @@
-From: vaughan <vaughan.cao@oracle.com>
-Subject: Re: [PATCH] sg: atomize check and set sdp->exclude in sg_open
-Date: Thu, 06 Jun 2013 15:29:21 +0800
-Message-ID: <51B03A51.9060602@oracle.com>
-References: <51AF0269.9070900@oracle.com> <20130605132746.GA1690@logfs.org> <51AF646D.7030903@oracle.com> <20130605154106.GA2737@logfs.org> <51B037FE.2020402@oracle.com>
+From: Ren Mingxin <renmx@cn.fujitsu.com>
+Subject: Re: [PATCH 3/3] scsi: Return ENODATA on medium error
+Date: Thu, 06 Jun 2013 15:52:58 +0800
+Message-ID: <51B03FDA.1080705@cn.fujitsu.com>
+References: <1370416261-57005-1-git-send-email-hare@suse.de> <1370416261-57005-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28414 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756706Ab3FFH0y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jun 2013 03:26:54 -0400
-In-Reply-To: <51B037FE.2020402@oracle.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:46637 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1754541Ab3FFHtp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Jun 2013 03:49:45 -0400
+In-Reply-To: <1370416261-57005-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
-Cc: dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Theodore T'so <tytso@mit.edu>, linux-fsdevel@vger.kernel.org
 
-=E4=BA=8E 2013=E5=B9=B406=E6=9C=8806=E6=97=A5 15:19, vaughan =E5=86=99=E9=
-=81=93:
-> =E4=BA=8E 2013=E5=B9=B406=E6=9C=8805=E6=97=A5 23:41, J=C3=B6rn Engel =
-=E5=86=99=E9=81=93:
->> On Thu, 6 June 2013 00:16:45 +0800, vaughan wrote:
->>> =E4=BA=8E 2013=E5=B9=B406=E6=9C=8805=E6=97=A5 21:27, J=C3=B6rn Enge=
-l =E5=86=99=E9=81=93:
->>>> On Wed, 5 June 2013 17:18:33 +0800, vaughan wrote:
->>>>>
->>>>> Check and set sdp->exclude should be atomic when set in sg_open()=
-=2E
->>>>
->>>> The patch is line-wrapped.  More importantly, it doesn't seem to d=
-o
->>> It's shorter than the original line, so I just leave it like this..=
-=2E
->>
->> Sure.  What I meant by line-wrapped is that your mailer mangled the
->> patch.  Those two lines should have been one:
->>>>> -                       ((!sfds_list_empty(sdp) || get_exclude(sd=
-p))
->>>>> ? 0 : set_exclude(sdp, 1)));
->>
->>>> what your description indicates it should do.  And lastly, does th=
-is
->>>> fix a bug, possibly even one you have a testcase for, or was it fo=
-und
->>>> by code inspection?
->>> I found it by code inspection. A race condition may happen with the
->>> old code if two threads are both trying to open the same sg with
->>> O_EXCL simultaneously. It's possible that they both find fsds list
->>> is empty and get_exclude(sdp) returns 0, then they both call
->>> set_exclude() and break out from wait_event_interruptible and resum=
-e
->>> open. So it's necessary to check again with sg_open_exclusive_lock
->>> held to ensure only one can set sdp->exclude and return >0 to break
->>> out from wait_event loop.
->>
->> Makes sense.  And reading the code again, I have to wonder what monk=
-ey
->> came up with the get_exclude/set_exclude functions.
->>
->> Can I sucker you into a slightly larger cleanup?  I think the entire
->> "get_exclude(sdp)) ? 0 : set_exclude(sdp, 1)" should be simplified.
->> And once you add the try_set_exclude(), set_exclude will only ever d=
-o
->> clear_exclude, so you might as well rename and simplify that as well=
-=2E
-> I find my patch is not enough to avoid this race condition said above=
-=2E
-> Since sg_add_sfp() just do an add_to_list without check and wait_even=
-t
-> check don't set a sign to announce a future add_to_list is on going, =
-the
-> time window between wait_event and sg_add_sfp gives others to open sg
-> before the prechecked sg_add_sfp() called.
->
-> The same case also happens when one shared and one exclude open occur
-> simultaneously. If the shared open pass the precheck stage and ready =
-to
-> sg_add_sfp(). At this time another exclude open will also pass the ch=
-eck:
->    ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 :
-> try_set_exclude(sdp)));
-> Then, both open can succeed.
->
-> I think the point is we separate the check&add routine and haven't se=
-t
-> an sign to let others wait until the whole actions complete. I suppos=
-e
-> we may change the steps a bit to avoid trouble like this. If we can
-> malloc&initialize sfp at first, and then check&add sfp under the
-> protection of sg_index_lock, everything seems to be quite simple.
-We also should prevent sg_device change those parameters which are=20
-needed to copy to sfp during sfp initialization.
+Hi, Hannes:
 
-Regards,
-Vaughan
+On 06/05/2013 03:11 PM, Hannes Reinecke wrote:
+> When a medium error is detected the SCSI stack should return
+> ENODATA to the upper layers.
+>
+> Signed-off-by: Hannes Reinecke<hare@suse.de>
+> ---
+>   drivers/scsi/scsi_error.c | 7 ++++++-
+>   drivers/scsi/scsi_lib.c   | 5 +++++
+>   include/scsi/scsi.h       | 2 ++
+>   3 files changed, 13 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index bf5e61a..2ded10a 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -235,6 +235,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
+>    *	NEEDS_RETRY
+>    *	TARGET_ERROR
+>    *	ALLOC_ERROR
+> + *	MEDIA_FAILURE
+>    *
+>    * Notes:
+>    *	When a deferred error is detected the current command has
+> @@ -375,7 +376,7 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+>   		if (sshdr.asc == 0x11 || /* UNRECOVERED READ ERR */
+>   		    sshdr.asc == 0x13 || /* AMNF DATA FIELD */
+>   		    sshdr.asc == 0x14) { /* RECORD NOT FOUND */
+> -			return TARGET_ERROR;
+> +			return MEDIA_FAILURE;
+>   		}
+>   		return NEEDS_RETRY;
+>
+> @@ -1598,6 +1599,10 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+>   			/* target hit out-of-space condition */
+>   			set_host_byte(scmd, DID_ALLOC_FAILURE);
+>   			rtn = SUCCESS;
+> +		} else if (rtn == MEDIA_FAILURE) {
+> +			/* medium error */
+> +			set_host_byte(scmd, DID_MEDIUM_ERROR);
+> +			rtn = SUCCESS;
+>   		}
+>   		/* if rtn == FAILED, we have no sense information;
+>   		 * returning FAILED will wake the error handler thread
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 209a4d5..39d626e 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -711,6 +711,7 @@ EXPORT_SYMBOL(scsi_release_buffers);
+>    * -EREMOTEIO	permanent target failure, do not retry
+>    * -EBADE	permanent nexus failure, retry on other path
+>    * -ENOSPC	No write space available
+> + * -ENODATA	Medium error
+>    */
+>   static int __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
+>   {
+> @@ -732,6 +733,10 @@ static int __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
+>   		set_host_byte(cmd, DID_OK);
+>   		error = -ENOSPC;
+>   		break;
+> +	case DID_MEDIUM_ERROR:
+> +		set_host_byte(cmd, DID_OK);
+> +		error = -ENODATA;
+> +		break;
 
+It seems that there is a debugging requirement to announce the
+meaning of these new added error codes in the function
+blk_update_request()like this:
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 33c33bc..a396eb6 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2315,6 +2315,12 @@ bool blk_update_request(struct request *req, int 
+error, unsigned int nr_bytes)
+                 case -EBADE:
+                         error_type = "critical nexus";
+                         break;
++               case -ENOSPC:
++                       error_type = "critical space allocation";
++                       break;
++               case -ENODATA:
++                       error_type = "critical medium";
++                       break;
+                 case -EIO:
+                 default:
+                         error_type = "I/O";
+
+# To tell the truth, I'm not understand why this patchset is needed
+# in practice for I've only just got limited info about LSF. I guess
+# this is one of the improvements for SCSI EH. Could you give an
+# example/condition the upper layers interest in?
+
+Thanks,
+Ren
+
+>   	default:
+>   		error = -EIO;
+>   		break;
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> index 5ead86b..c397684 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -453,6 +453,7 @@ static inline int scsi_is_wlun(unsigned int lun)
+>   #define DID_NEXUS_FAILURE 0x11  /* Permanent nexus failure, retry on other
+>   				 * paths might yield different results */
+>   #define DID_ALLOC_FAILURE 0x12  /* Space allocation on the device failed */
+> +#define DID_MEDIUM_ERROR  0x13  /* Medium error */
+>   #define DRIVER_OK       0x00	/* Driver status                           */
 >
+>   /*
+> @@ -484,6 +485,7 @@ static inline int scsi_is_wlun(unsigned int lun)
+>   #define FAST_IO_FAIL	0x2009
+>   #define TARGET_ERROR    0x200A
+>   #define ALLOC_ERROR     0x200B
+> +#define MEDIA_FAILURE   0x200C
 >
-> Regards,
-> Vaughan
->
->>
->> Let no good deed go unpunished.
->>
->> J=C3=B6rn
->>
->> --
->> It's just what we asked for, but not what we want!
->> -- anonymous
->>
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   /*
+>    * Midlevel queue return values.
+
