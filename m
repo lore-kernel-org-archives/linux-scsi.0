@@ -1,74 +1,50 @@
-From: Jan Vesely <jvesely@redhat.com>
-Subject: Re: [PATCH] [SCSI] scsilun_to_int should ignore the highest 2 bits
-Date: Thu, 06 Jun 2013 11:46:00 +0200
-Message-ID: <51B05A58.1070006@redhat.com>
-References: <1370506691-22933-1-git-send-email-jvesely@redhat.com> <51B04B68.8080001@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 59301] mpt2sas0 fails after short time of work
+Date: Thu,  6 Jun 2013 10:08:07 +0000 (UTC)
+Message-ID: <20130606100807.041D911FB30@bugzilla.kernel.org>
+References: <bug-59301-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <51B04B68.8080001@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:57142 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932690Ab3FFKIO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Jun 2013 06:08:14 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id CAB26207C8
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Jun 2013 10:08:08 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id C0EF0207BC
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Jun 2013 10:08:07 +0000 (UTC)
+In-Reply-To: <bug-59301-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu 06 Jun 2013 10:42:16 CEST, Hannes Reinecke wrote:
-> On 06/06/2013 10:18 AM, Jan Vesely wrote:
->> From: Jan Vesely <jvesely@redhat.com>
->>
->> The comment says the function does this but it does not.
->> Reported luns change from weirdly high numbers (like 16640)
->> to something saner (256), when using flat space addressing.
->>
->> CC: James Bottomley <JBottomley@Parallels.com>
->> CC: Dan Williams <dan.j.williams@intel.com>
->> Signed-off-by: Jan Vesely <jvesely@redhat.com>
->> ---
->>  drivers/scsi/scsi_scan.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->> index 3e58b22..38dc093 100644
->> --- a/drivers/scsi/scsi_scan.c
->> +++ b/drivers/scsi/scsi_scan.c
->> @@ -1244,7 +1244,7 @@ int scsilun_to_int(struct scsi_lun *scsilun)
->>
->>  	lun = 0;
->>  	for (i = 0; i < sizeof(lun); i += 2)
->> -		lun = lun | (((scsilun->scsi_lun[i] << 8) |
->> +		lun = lun | ((((scsilun->scsi_lun[i] & 0x3f) << 8) |
->>  			      scsilun->scsi_lun[i + 1]) << (i * 8));
->>  	return lun;
->>  }
->>
-> Bzzt. It's not that simple.
->
-> For SCSI-3 _all_ numbers are valid, and doesn't know of any
-> addressing scheme. It's only SPC-2 which introduced the addressing
-> scheme. So at the very least you should be checking the scsi
-> revision before attempting something like this.
->
-> But in general doing a sequential scan past 256 is criminally
-> dangerous. Any array / device attempting to is in most cases
-> misconfigured or does not have the correct BLIST flag set.
->
-> I know of some older Hitachi and EMC firmware which would pretend to
-> be SCSI-2, but supporting more than 256 LUNs per host.
-> Which, of course, it totally bonkers.
->
-> I'll be posting my 64-bit LUN patchset, that should fix this issue.
->
-> Cheers,
->
-> Hannes
+https://bugzilla.kernel.org/show_bug.cgi?id=59301
 
-thanks for your response.
 
-I'm concerned with iSCSI. it uses SAM2 LUN addressing scheme,
-and since I found that comment I did not investigate further.
+Anton Pomozov <pomozoff@gmail.com> changed:
 
-I'll wait for your lun64 patches,
-thanks again
---
-Jan Vesely <jvesely@redhat.com>
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+     Kernel Version|3.5.0-32-generic ubuntu     |3.5.0
+
+
+
+
+--- Comment #1 from Anton Pomozov <pomozoff@gmail.com>  2013-06-06 10:08:06 ---
+$ uname -a
+Linux devserv2 3.5.0-32-generic #53~precise1-Ubuntu SMP Wed May 29 20:33:37 UTC
+2013 x86_64 x86_64 x86_64 GNU/Linux
+
+$ cat /etc/lsb-release
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=12.04
+DISTRIB_CODENAME=precise
+DISTRIB_DESCRIPTION="Ubuntu 12.04.2 LTS"
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
