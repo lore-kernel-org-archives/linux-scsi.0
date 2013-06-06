@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/4] blk-timeout: add BLK_EH_SCHEDULED return code
-Date: Thu,  6 Jun 2013 11:43:53 +0200
-Message-ID: <1370511835-50072-3-git-send-email-hare@suse.de>
+Subject: [PATCH 1/4] scsi: move initialization of scmd->eh_entry
+Date: Thu,  6 Jun 2013 11:43:52 +0200
+Message-ID: <1370511835-50072-2-git-send-email-hare@suse.de>
 References: <1370511835-50072-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50387 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:50391 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752282Ab3FFJoA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752442Ab3FFJoA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 6 Jun 2013 05:44:00 -0400
 In-Reply-To: <1370511835-50072-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,41 +14,37 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
-Add a 'BLK_EH_SCHEDULED' return code for blk-timeout to indicate
-that a delayed error recovery has been initiated.
+The 'eh_entry' list might be used even before scsi_softirq_done()
+is called. Hence we should rather initialize it together with
+the other eh-related variables.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 3 +++
- include/linux/blkdev.h    | 1 +
- 2 files changed, 4 insertions(+)
+ drivers/scsi/scsi_lib.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index f43de1e..96b4bb6 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -146,6 +146,9 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- 		rtn = host->hostt->eh_timed_out(scmd);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 86d5220..c1774de 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -317,6 +317,8 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ 	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 	if (cmd->cmd_len == 0)
+ 		cmd->cmd_len = scsi_command_size(cmd->cmnd);
++	INIT_LIST_HEAD(&cmd->eh_entry);
++	cmd->eh_eflags = 0;
+ }
  
- 	scmd->result |= DID_TIME_OUT << 16;
-+	/* Check for delayed EH scheduling */
-+	if (rtn == BLK_EH_SCHEDULED)
-+		return BLK_EH_NOT_HANDLED;
+ void scsi_device_unbusy(struct scsi_device *sdev)
+@@ -1482,8 +1484,6 @@ static void scsi_softirq_done(struct request *rq)
+ 	unsigned long wait_for = (cmd->allowed + 1) * rq->timeout;
+ 	int disposition;
  
- 	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
- 		     !scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD)))
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 2fdb4a4..d846e2b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -238,6 +238,7 @@ enum blk_eh_timer_return {
- 	BLK_EH_NOT_HANDLED,
- 	BLK_EH_HANDLED,
- 	BLK_EH_RESET_TIMER,
-+	BLK_EH_SCHEDULED,
- };
- 
- typedef enum blk_eh_timer_return (rq_timed_out_fn)(struct request *);
+-	INIT_LIST_HEAD(&cmd->eh_entry);
+-
+ 	atomic_inc(&cmd->device->iodone_cnt);
+ 	if (cmd->result)
+ 		atomic_inc(&cmd->device->ioerr_cnt);
 -- 
 1.7.12.4
 
