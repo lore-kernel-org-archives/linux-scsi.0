@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 6/9] iscsi-target: Avoid unnecessary t_state_lock during unsolicited data-out check
-Date: Fri,  7 Jun 2013 21:34:21 +0000
-Message-ID: <1370640864-15568-7-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 8/9] vhost/scsi: Drop unnecessary wait_for_tasks=true usage with transport_generic_free_cmd
+Date: Fri,  7 Jun 2013 21:34:23 +0000
+Message-ID: <1370640864-15568-9-git-send-email-nab@linux-iscsi.org>
 References: <1370640864-15568-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:48621 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48638 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756072Ab3FGVr5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jun 2013 17:47:57 -0400
+	with ESMTP id S1756873Ab3FGVr6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jun 2013 17:47:58 -0400
 In-Reply-To: <1370640864-15568-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,48 +16,41 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Rol
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-In modern iscsi-target code, the setup and I/O submission is done within a
-single process context, so there is no need to acquire se_cmd->t_state_lock while
-checking SCF_SUPPORTED_SAM_OPCODE for determining when unsolicited data-out
-should be dumped.
+This patch changes vhost_scsi_free_cmd() to call transport_generic_free_cmd()
+with wait_for_tasks=false in order to avoid the extra se_cmd->t_state_lock
+access for the wait_for_tasks=true case.
+
+This is unnecessary because vhost_scsi_free_cmd() is only ever called by
+vhost_scsi_complete_cmd_work() after TCM completion handoff, and by
+vhost_scsi_handle_vq() exception code before TCM submission handoff, so
+there is never a case where se_cmd is still active from TCM's perspective
+when transport_generic_free_cmd() is called.
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Roland Dreier <roland@kernel.org>
 Cc: Kent Overstreet <koverstreet@google.com>
+Cc: Asias He <asias@redhat.com>
+Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Or Gerlitz <ogerlitz@mellanox.com>
 Cc: Moussa Ba <moussaba@micron.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+ drivers/vhost/scsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 262ef1f..24783ee 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1277,7 +1277,6 @@ iscsit_check_dataout_hdr(struct iscsi_conn *conn, unsigned char *buf,
- 	struct iscsi_data *hdr = (struct iscsi_data *)buf;
- 	struct iscsi_cmd *cmd = NULL;
- 	struct se_cmd *se_cmd;
--	unsigned long flags;
- 	u32 payload_length = ntoh24(hdr->dlength);
- 	int rc;
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index 7014202..aacf71e 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -557,7 +557,7 @@ static void vhost_scsi_free_cmd(struct tcm_vhost_cmd *tv_cmd)
+ 	struct se_cmd *se_cmd = &tv_cmd->tvc_se_cmd;
  
-@@ -1356,14 +1355,9 @@ iscsit_check_dataout_hdr(struct iscsi_conn *conn, unsigned char *buf,
- 		 */
+ 	/* TODO locking against target/backend threads? */
+-	transport_generic_free_cmd(se_cmd, 1);
++	transport_generic_free_cmd(se_cmd, 0);
  
- 		/* Something's amiss if we're not in WRITE_PENDING state... */
--		spin_lock_irqsave(&se_cmd->t_state_lock, flags);
- 		WARN_ON(se_cmd->t_state != TRANSPORT_WRITE_PENDING);
--		spin_unlock_irqrestore(&se_cmd->t_state_lock, flags);
--
--		spin_lock_irqsave(&se_cmd->t_state_lock, flags);
- 		if (!(se_cmd->se_cmd_flags & SCF_SUPPORTED_SAM_OPCODE))
- 			dump_unsolicited_data = 1;
--		spin_unlock_irqrestore(&se_cmd->t_state_lock, flags);
- 
- 		if (dump_unsolicited_data) {
- 			/*
+ 	if (tv_cmd->tvc_sgl_count) {
+ 		u32 i;
 -- 
 1.7.2.5
 
