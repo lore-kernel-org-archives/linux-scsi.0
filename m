@@ -1,88 +1,124 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [PATCH 3/4] scsi: improved eh timeout handler
-Date: Fri, 7 Jun 2013 12:21:08 -0400
-Message-ID: <20130607162108.GB25323@logfs.org>
-References: <1370511835-50072-1-git-send-email-hare@suse.de>
- <1370511835-50072-4-git-send-email-hare@suse.de>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH 0/10] qla2xxx: Reduce the number of Coverity warnings
+Date: Fri, 7 Jun 2013 19:06:41 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D35390335@AVMB1.qlogic.org>
+References: <51AF36BF.3030602@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D35390335AVMB1qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from longford.logfs.org ([213.229.74.203]:59451 "EHLO
-	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756392Ab3FGRuY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jun 2013 13:50:24 -0400
-Content-Disposition: inline
-In-Reply-To: <1370511835-50072-4-git-send-email-hare@suse.de>
+Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:47892
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756012Ab3FGTGq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jun 2013 15:06:46 -0400
+Received: from mail123-co1 (localhost [127.0.0.1])	by
+ mail123-co1-R.bigfish.com (Postfix) with ESMTP id B29A720054E	for
+ <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2013 19:06:45 +0000 (UTC)
+Received: from CO1EHSMHS022.bigfish.com (unknown [10.243.78.231])	by
+ mail123-co1.bigfish.com (Postfix) with ESMTP id 5C98E600B2D	for
+ <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2013 19:06:43 +0000 (UTC)
+In-Reply-To: <51AF36BF.3030602@acm.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>
+To: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-On Thu, 6 June 2013 11:43:54 +0200, Hannes Reinecke wrote:
->=20
-> +	spin_lock_irqsave(&sdev->list_lock, flags);
-> +	list_for_each_entry_safe(scmd, tmp, &sdev->eh_abort_list, eh_entry)=
- {
-> +		list_del_init(&scmd->eh_entry);
-> +		spin_unlock_irqrestore(&sdev->list_lock, flags);
+--_000_F5D084D6342F9B479C34599BB0A03E4D35390335AVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <BD63C12D48091E4BB9B5718F63DACE68@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-I never liked the list_for_each_entry_safe() loop but until this
-morning couldn't really say why.  The problem is that it can finish
-with commands left on the list.  And since your kick_worker checks for
-list_empty, there wouldn't be any more aborts.
+Hi Bart,
+Thanks for the patches. Please share the warnings reported by Coverity, so
+that its easy for us to review the patches.
 
-Thread1		list state		Thread2
-		head->1->2->head
-spin_lock_irqsave();
-scmd =3D 1; tmp =3D 2;
-list_del_init(scmd);
-spin_unlock_irqrestore();
-		head->2->head
-					spin_lock_irqsave();
-					kick_worker =3D 0;
-					list_add();
-					spin_unlock_irqrestore();
-		head->3->2->head=09
-spin_lock_irqsave();
-scmd =3D 2; tmp =3D head;
-list_del_init(scmd);
-spin_unlock_irqrestore();
-		head->3->head
+Thanks,
+~Saurav
 
-And now that I think about nasty races, you could also do
-schedule_work() when the list is empty, but the worker thread is still
-running.  I've had to debug similar cases and the approach is to waste
-a day or five, despair and eventually get lucky half a year later when
-you happen to notice the race.  Rare random crashes in the kworker
-code a not my favorite sight.
 
-> +void
-> +scsi_abort_command(struct scsi_cmnd *scmd)
-> +{
-> +	unsigned long flags;
-> +	int kick_worker =3D 0;
-> +	struct scsi_device *sdev =3D scmd->device;
-> +
-> +	spin_lock_irqsave(&sdev->list_lock, flags);
-> +	if (list_empty(&sdev->eh_abort_list))
-> +		kick_worker =3D 1;
-> +	list_add(&scmd->eh_entry, &sdev->eh_abort_list);
-> +	SCSI_LOG_ERROR_RECOVERY(3,
-> +		scmd_printk(KERN_INFO, scmd, "adding to eh_abort_list\n"));
-> +	spin_unlock_irqrestore(&sdev->list_lock, flags);
-> +	if (kick_worker)
-> +		schedule_work(&sdev->abort_work);
-> +}
-> +EXPORT_SYMBOL_GPL(scsi_abort_command);
+>The current implementation of the qla2xxx Fibre Channel initiator driver
+>triggers multiple warnings when analyzed with the Coverity static
+>analyzer. This patch series addresses a significant number of these
+>warnings.
+>
+>Note: patch 10/10 of this series is a reworked version of a patch that
+>had been posted a few weeks ago on the linux-scsi mailing list.
+>
 
-J=C3=B6rn
 
---
-Time? What's that? Time is only worth what you do with it.
--- Theo de Raadt
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--_000_F5D084D6342F9B479C34599BB0A03E4D35390335AVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IktlAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADU2NjkxNDEz
+Q0Q2NTAzNENBODU2NENFOUY1MzAxQTg0AAQHAQ2ABAACAAAAAgACAAEFgAMADgAAAN0HBgAHABMA
+BgApAAUAOAEBIIADAA4AAADdBwYABwATAAYAKQAFADgBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAEEAAABSZTogW1BBVENIIDAvMTBdIHFsYTJ4eHg6IFJlZHVjZSB0aGUg
+bnVtYmVyIG9mIENvdmVyaXR5IHdhcm5pbmdzAMAVAQOQBgAgDgAAMwAAAAIBfwABAAAAPAAAADxG
+NUQwODRENjM0MkY5QjQ3OUMzNDU5OUJCMEEwM0U0RDM1MzkwMzM1QEFWTUIxLnFsb2dpYy5vcmc+
+AAsAHw4BAAAAAgEJEAEAAACOAgAAigIAALMDAABMWkZ1quy4v2EACmZiaWQEAABjY8BwZzEyNTIA
+/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8J
+wxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQ
+bhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAg
+Qk1fQuBFR0lOfQr8AfEL8RggSGkfsB+BLFxs9QuAZQqAVBmhH1AccAWxbHRoGeAKsHQRwAeQLpQg
+UB5wYRIAIHMR0fsZ4CNCdwrAAwAZwAQgCXDGcAkRHFFieSAIUBox0Gl0eSwkcG8iJSNAfRiAICbA
+BCAkMSZQIwJ1/wQgGJAloR1iIzsiJSIrIhZmfgYQCHBhdipcIiU+eyKQGeBjCHAJcAIwJ+BtXQtQ
+ZQeAAjAYgGkCICBLGTAjM3ELYDJ4MEAg6EZpYiSxQxmhGFADIO8LgCbABzAYkmQFEBoxLWYadAUQ
+ZxgwEfAgbXXubC9ALsElGHcjUAOgAHD5B0B5ehxRA/AjQCMzJnbfJHAvIgDgLXU05XIj8CKQnwQA
+I3QkcAZxB5FhZDIAvweQEgA5ESRwMwADAGYOUPMAcAVAbnUG0BuxL5QSAJctZiUmKkY+LWZObxAg
+9jo4VR6QLx6QL4Q4MTjF1zgxOdAJcHcFsGscURox/wCQL2Q50DhkJ6ItZhHQJiFfCeEjcBkQHEI5
+0GYH0XfzCeAi0WFnKQAvYSNCIjH4dXgtBPAAkDNgC3AiMX5nRPEfYDyuIiUVQkggAAAfAEIAAQAA
+AB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AZQABAAAANAAAAHMAYQB1AHIA
+YQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAGQAAQAAAAoAAABT
+AE0AVABQAAAAAAACAUEAAQAAAHQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBTAGEAdQByAGEA
+dgAgAEsAYQBzAGgAeQBhAHAAAABTAE0AVABQAAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBw
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMA
+aAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAOVfAQAAADwAAABzAGkAcAA6AHMAYQB1
+AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAAB4A
+AABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AHwwBAAAANAAAAHMAYQB1AHIAYQB2
+AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAB4MAQAAAAoAAABTAE0A
+VABQAAAAAAACARkMAQAAAHQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBTAGEAdQByAGEAdgAg
+AEsAYQBzAGgAeQBhAHAAAABTAE0AVABQAAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAA
+cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5
+AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAPg/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsA
+YQBzAGgAeQBhAHAAAAAAAB8AI0ABAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHQA
+AAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAABT
+AE0AVABQAAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAB8ACV0BAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAALAEA6AQAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkE
+AAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAVmkUE81lA0yoVkzp9TAahAMAFwABAAAAQAA5
+AIA2niSyY84BQAAIMH0z0ySyY84BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACA
+hgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAAB
+AAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEA
+AACCAAAAUgBlADoAIABbAFAAQQBUAEMASAAgADAALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAg
+AFIAZQBkAHUAYwBlACAAdABoAGUAIABuAHUAbQBiAGUAcgAgAG8AZgAgAEMAbwB2AGUAcgBpAHQA
+eQAgAHcAYQByAG4AaQBuAGcAcwAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAf
+AEIQAQAAADYAAAA8ADUAMQBBAEYAMwA2AEIARgAuADMAMAAzADAANgAwADIAQABhAGMAbQAuAG8A
+cgBnAD4AAAAAAAIBcQABAAAAGwAAAAEBzmHs3K09NwC0/eJDt+ZaJoNXgVyZK3H5gAAfAHAAAQAA
+AHoAAABbAFAAQQBUAEMASAAgADAALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAgAFIAZQBkAHUA
+YwBlACAAdABoAGUAIABuAHUAbQBiAGUAcgAgAG8AZgAgAEMAbwB2AGUAcgBpAHQAeQAgAHcAYQBy
+AG4AaQBuAGcAcwAAAAAAHwA1EAEAAAB4AAAAPABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIA
+NAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQAMwA1ADMAOQAwADMAMwA1AEAAQQBW
+AE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAAwDeP59OAABAAAcwHce9JLJjzgEDACYA
+AAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTMwNjA3MTkwNjQxWi0z
+MTQ3OAAAAB8AFRABAAAAWAAAAEIARAA2ADMAQwAxADIARAA0ADgAMAA5ADEARQA0AEIAQgA5AEIA
+NQA3ADEAOABGADYAMwBEAEEAQwBFADYAOABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAA
+AAwAAABLAAAAuSNPb0gAAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAA
+AAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAAB
+AAAASAAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADEA
+MAAuADAALgAxADEAMAAzADEAMAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2
+AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAAIAQAA
+SQBJAD0AMAAxADAAMQBDAEUANgAzAEIAMgAyADQAOQAwADgAMgA1ADAARQBEADMAMgBFAEIANgA0
+ADQAMQBCAEIANABFADgARABDADMAQwAyAEUAOAAxADAAMwAxADsAUwBCAE0ASQBEAD0ANgAxADsA
+UwAxAD0APAA1ADEAQQBGADMANgBCAEYALgAzADAAMwAwADYAMAAyAEAAYQBjAG0ALgBvAHIAZwA+
+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQA
+IAAzADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMCAAAAAADA
+AAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAA
+AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAt
+AGkAcAAAAAAAAQAAABoAAABbADEAMAAuADMANQAuADcALgA2ADEAXQAAAAAAHwAAgIYDAgAAAAAA
+wAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBz
+AHMAAAAAAJyL
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D35390335AVMB1qlogicorg_--
