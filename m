@@ -1,93 +1,71 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/4] New SCSI command timeout handler
-Date: Fri, 07 Jun 2013 09:31:18 +0200
-Message-ID: <51B18C46.8050205@suse.de>
-References: <1370511835-50072-1-git-send-email-hare@suse.de> <51B18398.6000508@cn.fujitsu.com>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 1/3] [SCSI] megaraid: Remove 64-bit DMA_BIT_MASK capability
+Date: Fri, 07 Jun 2013 10:23:35 -0600
+Message-ID: <20130607162335.11205.24556.stgit@amt.stowe>
+References: <20130607162329.11205.95093.stgit@amt.stowe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41045 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752754Ab3FGHbU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jun 2013 03:31:20 -0400
-In-Reply-To: <51B18398.6000508@cn.fujitsu.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130607162329.11205.95093.stgit@amt.stowe>
+Sender: linux-kernel-owner@vger.kernel.org
+To: megaraidlinux@lsi.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ren Mingxin <renmx@cn.fujitsu.com>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-On 06/07/2013 08:54 AM, Ren Mingxin wrote:
-> Hi, Hannes:
->=20
-> On 06/06/2013 05:43 PM, Hannes Reinecke wrote:
->> this is the first step towards a new non-blocking
->> error handler. This patch implements a new command
->> timeout handler which will be sending command aborts
->> inline without engaging SCSI EH.
->>
->> In addition the commands will be returned directly
->> if the command abort succeeded, cutting down recovery
->> times dramatically.
->>
->> With the original scsi error recovery I got:
->> # time dd if=3D/dev/zero of=3D/mnt/test.blk bs=3D512 count=3D2048 of=
-lag=3Dsync
->> 2048+0 records in
->> 2048+0 records out
->> 1048576 bytes (1.0 MB) copied, 3.72732 s, 281 kB/s
->>
->> real    2m14.475s
->> user    0m0.000s
->> sys    0m0.104s
->>
->> with this patchset I got:
->> # time dd if=3D/dev/zero of=3D/mnt/test.blk bs=3D512 count=3D2048 of=
-lag=3Dsync
->> 2048+0 records in
->> 2048+0 records out
->> 1048576 bytes (1.0 MB) copied, 31.5151 s, 33.3 kB/s
->>
->> real    0m31.519s
->> user    0m0.000s
->> sys    0m0.088s
->>
->> Test was to disable RSCN on the target port, disable the
->> target port, and then start the 'dd' command as indicated.
->>
->> As a proof-of-concept I've also enabled the new timeout
->> handler for virtio, so that things can be tested out
->> more easily.
->=20
-> So this 31.5s is tested on virtio disks, right? Much faster than your
-> former test via fc.
->=20
-No. This was done on HP Proliant /QLogic FC running against HP P2000.
+If the megaraid device is 64-bit DMA capable then, once it is setup, any
+subsequent DMA allocations for "internal commands" would not be properly
+restricted due to megaraid_probe_one() having called pci_set_dma_mask() on
+pdev with DMA_BIT_MASK(64).  The driver attempts to solve this by using
+make_local_pdev() to dynamically create local pci_dev structures which are
+then set and used for allocating 32-bit address space restricted DMA
+buffers but I don't believe that the implementation works as intended.
 
-There is a reason why I posted this new patchset :-)
+For a 64-bit DMA capable device, the "originating pdev" will have its
+'dma_mask' set to 0xffffffffffffffff after the driver attaches.
+Subsequently, when an internal command is initiated, make_local_pdev() is
+called.  make_local_pdev() uses the PCI's core to allocate a "local pdev"
+and then copies the "originating pdev" content into the newly allocated
+"local pdev".  As a result of copying the "originating pdev" content into
+the "local pdev", pdev->dev.dma_mask will be pointing back to the
+"originating pdev's" 'dma_mask' member, not the "local pdev's" as
+intended.  Thus, when make_local_pdev() calls pci_set_dma_mask() in an
+attempt to set the "local pdev's" DMA mask to 32 it will instead overwrite
+the "originating pdev's" DMA mask.  So, after any user initiated commands
+are issued, all subsequent DMA allocations will be 32-bit restricted from
+that point onward regardless of whether they are internal commands or
+otherwise.
 
-(The old patchset had a bug where it wouldn't abort the TUR send by
-multipaths path-checker. Which were causing delays during
-switchover. This version now does terminate them properly)
-(Incidentally, it was the non-working scsi_noretry_cmd() which
-caused this bug :-)
+This patch fixes the issue by removing the setup of DMA_BIT_MASK to 64 in
+megaraid_probe_one(), leaving the driver setup for default 32-bit DMA
+capabilities, as it currently ends up in such a state anyway after any
+internal commands are initiated.
 
-> This approach may not work for some LLDDs as you said, but I wonder
-> whether SAS is applicable(whether there will be later patches for
-> SAS).
->=20
-SAS should be applicable for this, too. I'll check.
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-Cheers,
+ drivers/scsi/megaraid.c |   11 +++--------
+ 1 files changed, 3 insertions(+), 8 deletions(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 846f475..32cca61 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -4535,14 +4535,9 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	mcontroller[i].uid = (pci_bus << 8) | pci_dev_func;
+ 
+ 
+-	/* Set the Mode of addressing to 64 bit if we can */
+-	if ((adapter->flag & BOARD_64BIT) && (sizeof(dma_addr_t) == 8)) {
+-		pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+-		adapter->has_64bit_addr = 1;
+-	} else  {
+-		pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+-		adapter->has_64bit_addr = 0;
+-	}
++	/* Set the Mode of addressing to 32 bit */
++	pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++	adapter->has_64bit_addr = 0;
+ 		
+ 	mutex_init(&adapter->int_mtx);
+ 	init_completion(&adapter->int_waitq);
