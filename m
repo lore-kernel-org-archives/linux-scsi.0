@@ -1,124 +1,62 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 0/10] qla2xxx: Reduce the number of Coverity warnings
-Date: Fri, 7 Jun 2013 19:06:41 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D35390335@AVMB1.qlogic.org>
-References: <51AF36BF.3030602@acm.org>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D35390335AVMB1qlogicorg_"
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/9] target: Optimizations + cleanups for v3.11
+Date: Fri,  7 Jun 2013 21:34:15 +0000
+Message-ID: <1370640864-15568-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:47892
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756012Ab3FGTGq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jun 2013 15:06:46 -0400
-Received: from mail123-co1 (localhost [127.0.0.1])	by
- mail123-co1-R.bigfish.com (Postfix) with ESMTP id B29A720054E	for
- <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2013 19:06:45 +0000 (UTC)
-Received: from CO1EHSMHS022.bigfish.com (unknown [10.243.78.231])	by
- mail123-co1.bigfish.com (Postfix) with ESMTP id 5C98E600B2D	for
- <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2013 19:06:43 +0000 (UTC)
-In-Reply-To: <51AF36BF.3030602@acm.org>
-Content-Language: en-US
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48565 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751608Ab3FGVrs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jun 2013 17:47:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, Kent Overstreet <koverstreet@google.com>, Asias He <asias@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Or Gerlitz <ogerlitz@mellanox.com>, Moussa Ba <moussaba@micron.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D35390335AVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <BD63C12D48091E4BB9B5718F63DACE68@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi Bart,
-Thanks for the patches. Please share the warnings reported by Coverity, so
-that its easy for us to review the patches.
+Hi folks,
+
+This series contains a number of target optimizations added during
+recent prototype scsi-mq performance profiling in order to avoid
+unnecessary se_cmd->t_state_lock acquire/release in fast path I/O
+submission and completion code.
+
+All of the target optimizations are independent of driver code, so
+all fabrics should benefit from these improvements.
+
+Also included are two vhost/scsi specific patches, one in the same
+vein to avoid unnecessary se_cmd->t_state_lock access, and the second
+to convert vhost/scsi to proper cmd_kref TARGET_SCF_ACK_KREF usage.
+
+Please have a look.
 
 Thanks,
-~Saurav
 
+--nab
 
->The current implementation of the qla2xxx Fibre Channel initiator driver
->triggers multiple warnings when analyzed with the Coverity static
->analyzer. This patch series addresses a significant number of these
->warnings.
->
->Note: patch 10/10 of this series is a reworked version of a patch that
->had been posted a few weeks ago on the linux-scsi mailing list.
->
+Nicholas Bellinger (9):
+  target: Add transport_cmd_check_stop write_pending bit
+  target: Drop unnecessary CMD_T_DEV_ACTIVE check from
+    transport_lun_remove_cmd
+  target: Remove legacy t_fe_count + avoid t_state_lock access in
+    transport_put_cmd
+  target: Avoid extra t_state_lock access in __target_execute_cmd
+  target: Drop unnecessary t_state_lock access for
+    SCF_SUPPORTED_SAM_OPCODE assignment
+  iscsi-target: Avoid unnecessary t_state_lock during unsolicited
+    data-out check
+  target: Drop legacy se_cmd->check_release bit
+  vhost/scsi: Drop unnecessary wait_for_tasks=true usage with
+    transport_generic_free_cmd
+  vhost/scsi: Convert to se_cmd->cmd_kref TARGET_SCF_ACK_KREF usage
 
+ drivers/target/iscsi/iscsi_target.c    |    6 ---
+ drivers/target/target_core_tmr.c       |   12 +----
+ drivers/target/target_core_transport.c |   72 ++++++++-----------------------
+ drivers/vhost/scsi.c                   |   33 +++++++++------
+ include/target/target_core_base.h      |    3 -
+ 5 files changed, 41 insertions(+), 85 deletions(-)
 
---_000_F5D084D6342F9B479C34599BB0A03E4D35390335AVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+-- 
+1.7.2.5
 
-eJ8+IktlAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADU2NjkxNDEz
-Q0Q2NTAzNENBODU2NENFOUY1MzAxQTg0AAQHAQ2ABAACAAAAAgACAAEFgAMADgAAAN0HBgAHABMA
-BgApAAUAOAEBIIADAA4AAADdBwYABwATAAYAKQAFADgBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEEAAABSZTogW1BBVENIIDAvMTBdIHFsYTJ4eHg6IFJlZHVjZSB0aGUg
-bnVtYmVyIG9mIENvdmVyaXR5IHdhcm5pbmdzAMAVAQOQBgAgDgAAMwAAAAIBfwABAAAAPAAAADxG
-NUQwODRENjM0MkY5QjQ3OUMzNDU5OUJCMEEwM0U0RDM1MzkwMzM1QEFWTUIxLnFsb2dpYy5vcmc+
-AAsAHw4BAAAAAgEJEAEAAACOAgAAigIAALMDAABMWkZ1quy4v2EACmZiaWQEAABjY8BwZzEyNTIA
-/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8J
-wxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQ
-bhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAg
-Qk1fQuBFR0lOfQr8AfEL8RggSGkfsB+BLFxs9QuAZQqAVBmhH1AccAWxbHRoGeAKsHQRwAeQLpQg
-UB5wYRIAIHMR0fsZ4CNCdwrAAwAZwAQgCXDGcAkRHFFieSAIUBox0Gl0eSwkcG8iJSNAfRiAICbA
-BCAkMSZQIwJ1/wQgGJAloR1iIzsiJSIrIhZmfgYQCHBhdipcIiU+eyKQGeBjCHAJcAIwJ+BtXQtQ
-ZQeAAjAYgGkCICBLGTAjM3ELYDJ4MEAg6EZpYiSxQxmhGFADIO8LgCbABzAYkmQFEBoxLWYadAUQ
-ZxgwEfAgbXXubC9ALsElGHcjUAOgAHD5B0B5ehxRA/AjQCMzJnbfJHAvIgDgLXU05XIj8CKQnwQA
-I3QkcAZxB5FhZDIAvweQEgA5ESRwMwADAGYOUPMAcAVAbnUG0BuxL5QSAJctZiUmKkY+LWZObxAg
-9jo4VR6QLx6QL4Q4MTjF1zgxOdAJcHcFsGscURox/wCQL2Q50DhkJ6ItZhHQJiFfCeEjcBkQHEI5
-0GYH0XfzCeAi0WFnKQAvYSNCIjH4dXgtBPAAkDNgC3AiMX5nRPEfYDyuIiUVQkggAAAfAEIAAQAA
-AB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AZQABAAAANAAAAHMAYQB1AHIA
-YQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAGQAAQAAAAoAAABT
-AE0AVABQAAAAAAACAUEAAQAAAHQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBTAGEAdQByAGEA
-dgAgAEsAYQBzAGgAeQBhAHAAAABTAE0AVABQAAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBw
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMA
-aAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAOVfAQAAADwAAABzAGkAcAA6AHMAYQB1
-AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAAB4A
-AABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AHwwBAAAANAAAAHMAYQB1AHIAYQB2
-AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAB4MAQAAAAoAAABTAE0A
-VABQAAAAAAACARkMAQAAAHQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBTAGEAdQByAGEAdgAg
-AEsAYQBzAGgAeQBhAHAAAABTAE0AVABQAAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5
-AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAPg/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsA
-YQBzAGgAeQBhAHAAAAAAAB8AI0ABAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABA
-AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHQA
-AAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAABT
-AE0AVABQAAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAB8ACV0BAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAALAEA6AQAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkE
-AAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAVmkUE81lA0yoVkzp9TAahAMAFwABAAAAQAA5
-AIA2niSyY84BQAAIMH0z0ySyY84BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACA
-hgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAAB
-AAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEA
-AACCAAAAUgBlADoAIABbAFAAQQBUAEMASAAgADAALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAg
-AFIAZQBkAHUAYwBlACAAdABoAGUAIABuAHUAbQBiAGUAcgAgAG8AZgAgAEMAbwB2AGUAcgBpAHQA
-eQAgAHcAYQByAG4AaQBuAGcAcwAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAf
-AEIQAQAAADYAAAA8ADUAMQBBAEYAMwA2AEIARgAuADMAMAAzADAANgAwADIAQABhAGMAbQAuAG8A
-cgBnAD4AAAAAAAIBcQABAAAAGwAAAAEBzmHs3K09NwC0/eJDt+ZaJoNXgVyZK3H5gAAfAHAAAQAA
-AHoAAABbAFAAQQBUAEMASAAgADAALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAgAFIAZQBkAHUA
-YwBlACAAdABoAGUAIABuAHUAbQBiAGUAcgAgAG8AZgAgAEMAbwB2AGUAcgBpAHQAeQAgAHcAYQBy
-AG4AaQBuAGcAcwAAAAAAHwA1EAEAAAB4AAAAPABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIA
-NAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQAMwA1ADMAOQAwADMAMwA1AEAAQQBW
-AE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAAwDeP59OAABAAAcwHce9JLJjzgEDACYA
-AAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTMwNjA3MTkwNjQxWi0z
-MTQ3OAAAAB8AFRABAAAAWAAAAEIARAA2ADMAQwAxADIARAA0ADgAMAA5ADEARQA0AEIAQgA5AEIA
-NQA3ADEAOABGADYAMwBEAEEAQwBFADYAOABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAA
-AAwAAABLAAAAuSNPb0gAAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAA
-AAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAAB
-AAAASAAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADEA
-MAAuADAALgAxADEAMAAzADEAMAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2
-AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAAIAQAA
-SQBJAD0AMAAxADAAMQBDAEUANgAzAEIAMgAyADQAOQAwADgAMgA1ADAARQBEADMAMgBFAEIANgA0
-ADQAMQBCAEIANABFADgARABDADMAQwAyAEUAOAAxADAAMwAxADsAUwBCAE0ASQBEAD0ANgAxADsA
-UwAxAD0APAA1ADEAQQBGADMANgBCAEYALgAzADAAMwAwADYAMAAyAEAAYQBjAG0ALgBvAHIAZwA+
-ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQA
-IAAzADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMCAAAAAADA
-AAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAA
-AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAt
-AGkAcAAAAAAAAQAAABoAAABbADEAMAAuADMANQAuADcALgA2ADEAXQAAAAAAHwAAgIYDAgAAAAAA
-wAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBz
-AHMAAAAAAJyL
-
---_000_F5D084D6342F9B479C34599BB0A03E4D35390335AVMB1qlogicorg_--
