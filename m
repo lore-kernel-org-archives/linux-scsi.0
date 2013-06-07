@@ -1,7 +1,7 @@
 From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 2/3] [SCSI] megaraid: Remove local (struct pci_dev) pdev's
-Date: Fri, 07 Jun 2013 10:23:41 -0600
-Message-ID: <20130607162341.11205.76720.stgit@amt.stowe>
+Subject: [PATCH 3/3] [SCSI] megaraid: Remove 64-bit DMA related dead code
+Date: Fri, 07 Jun 2013 10:23:47 -0600
+Message-ID: <20130607162347.11205.68121.stgit@amt.stowe>
 References: <20130607162329.11205.95093.stgit@amt.stowe>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,291 +14,122 @@ Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.ker
 List-Id: linux-scsi@vger.kernel.org
 
 With the driver now setup for default 32-bit DMA capabilities, remove the
-broken make_local_pdev() implementation and usages.
+64-bit DMA related dead code.
 
 Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
 
- drivers/scsi/megaraid.c |   98 ++++++++---------------------------------------
- 1 files changed, 16 insertions(+), 82 deletions(-)
+ drivers/scsi/megaraid.c |   45 +++++++++------------------------------------
+ drivers/scsi/megaraid.h |    1 -
+ 2 files changed, 9 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 32cca61..316924c 100644
+index 316924c..58953ab 100644
 --- a/drivers/scsi/megaraid.c
 +++ b/drivers/scsi/megaraid.c
-@@ -2023,29 +2023,6 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- 	return FALSE;
- }
+@@ -713,12 +713,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 			pthru->cdblen = cmd->cmd_len;
+ 			memcpy(pthru->cdb, cmd->cmnd, cmd->cmd_len);
  
--static inline int
--make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
--{
--	*pdev = alloc_pci_dev();
--
--	if( *pdev == NULL ) return -1;
--
--	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
--
--	if( pci_set_dma_mask(*pdev, DMA_BIT_MASK(32)) != 0 ) {
--		kfree(*pdev);
--		return -1;
--	}
--
--	return 0;
--}
--
--static inline void
--free_local_pdev(struct pci_dev *pdev)
--{
--	kfree(pdev);
--}
--
- /**
-  * mega_allocate_inquiry()
-  * @dma_handle - handle returned for dma address
-@@ -2209,13 +2186,10 @@ proc_show_rebuild_rate(struct seq_file *m, void *v)
- 	adapter_t	*adapter = m->private;
- 	dma_addr_t	dma_handle;
- 	caddr_t		inquiry;
--	struct pci_dev	*pdev;
--
--	if( make_local_pdev(adapter, &pdev) != 0 )
--		return 0;
-+	struct pci_dev	*pdev = adapter->dev;
- 
- 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
--		goto free_pdev;
-+		return 0;
- 
- 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
- 		seq_puts(m, "Adapter inquiry failed.\n");
-@@ -2233,8 +2207,6 @@ proc_show_rebuild_rate(struct seq_file *m, void *v)
- 
- free_inquiry:
- 	mega_free_inquiry(inquiry, dma_handle, pdev);
--free_pdev:
--	free_local_pdev(pdev);
- 	return 0;
- }
- 
-@@ -2252,14 +2224,11 @@ proc_show_battery(struct seq_file *m, void *v)
- 	adapter_t	*adapter = m->private;
- 	dma_addr_t	dma_handle;
- 	caddr_t		inquiry;
--	struct pci_dev	*pdev;
-+	struct pci_dev	*pdev = adapter->dev;
- 	u8	battery_status;
- 
--	if( make_local_pdev(adapter, &pdev) != 0 )
--		return 0;
--
- 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
--		goto free_pdev;
-+		return 0;
- 
- 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
- 		seq_printf(m, "Adapter inquiry failed.\n");
-@@ -2308,8 +2277,6 @@ proc_show_battery(struct seq_file *m, void *v)
- 
- free_inquiry:
- 	mega_free_inquiry(inquiry, dma_handle, pdev);
--free_pdev:
--	free_local_pdev(pdev);
- 	return 0;
- }
- 
-@@ -2357,18 +2324,15 @@ proc_show_pdrv(struct seq_file *m, adapter_t *adapter, int channel)
- 	char		*scsi_inq;
- 	dma_addr_t	scsi_inq_dma_handle;
- 	caddr_t		inquiry;
--	struct pci_dev	*pdev;
-+	struct pci_dev	*pdev = adapter->dev;
- 	u8	*pdrv_state;
- 	u8	state;
- 	int	tgt;
- 	int	max_channels;
- 	int	i;
- 
--	if( make_local_pdev(adapter, &pdev) != 0 )
--		return 0;
--
- 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
--		goto free_pdev;
-+		return 0;
- 
- 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
- 		seq_puts(m, "Adapter inquiry failed.\n");
-@@ -2453,8 +2417,6 @@ free_pci:
- 	pci_free_consistent(pdev, 256, scsi_inq, scsi_inq_dma_handle);
- free_inquiry:
- 	mega_free_inquiry(inquiry, dma_handle, pdev);
--free_pdev:
--	free_local_pdev(pdev);
- 	return 0;
- }
- 
-@@ -2533,17 +2495,14 @@ proc_show_rdrv(struct seq_file *m, adapter_t *adapter, int start, int end )
- 	char		*disk_array;
- 	dma_addr_t	disk_array_dma_handle;
- 	caddr_t		inquiry;
--	struct pci_dev	*pdev;
-+	struct pci_dev	*pdev = adapter->dev;
- 	u8	*rdrv_state;
- 	int	num_ldrv;
- 	u32	array_sz;
- 	int	i;
- 
--	if( make_local_pdev(adapter, &pdev) != 0 )
--		return 0;
--
- 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
--		goto free_pdev;
-+		return 0;
- 
- 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
- 		seq_puts(m, "Adapter inquiry failed.\n");
-@@ -2694,8 +2653,6 @@ free_pci:
- 			disk_array_dma_handle);
- free_inquiry:
- 	mega_free_inquiry(inquiry, dma_handle, pdev);
--free_pdev:
--	free_local_pdev(pdev);
- 	return 0;
- }
- 
-@@ -3164,6 +3121,7 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 			return (-ENODEV);
- 
- 		adapter = hba_soft_state[adapno];
-+		pdev = adapter->dev;
- 
- 		/*
- 		 * Deletion of logical drive is a special case. The adapter
-@@ -3208,12 +3166,10 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 
- 		/*
- 		 * For all internal commands, the buffer must be allocated in
--		 * <4GB address range
-+		 * <4GB address range.
-+		 *
-+		 * Is it a passthru command or a DCMD
- 		 */
--		if( make_local_pdev(adapter, &pdev) != 0 )
--			return -EIO;
--
--		/* Is it a passthru command or a DCMD */
- 		if( uioc.uioc_rmbox[0] == MEGA_MBOXCMD_PASSTHRU ) {
- 			/* Passthru commands */
- 
-@@ -3221,10 +3177,8 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 					sizeof(mega_passthru),
- 					&pthru_dma_hndl);
- 
--			if( pthru == NULL ) {
--				free_local_pdev(pdev);
-+			if( pthru == NULL )
- 				return (-ENOMEM);
+-			if( adapter->has_64bit_addr ) {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU64;
 -			}
+-			else {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+-			}
++			mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+ 
+ 			scb->dma_direction = PCI_DMA_FROMDEVICE;
+ 
+@@ -750,16 +745,9 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 			 * A little hack: 2nd bit is zero for all scsi read
+ 			 * commands and is set for all scsi write commands
+ 			 */
+-			if( adapter->has_64bit_addr ) {
+-				mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
+-					MEGA_MBOXCMD_LWRITE64:
+-					MEGA_MBOXCMD_LREAD64 ;
+-			}
+-			else {
+-				mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
+-					MEGA_MBOXCMD_LWRITE:
+-					MEGA_MBOXCMD_LREAD ;
+-			}
++			mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
++				MEGA_MBOXCMD_LWRITE:
++				MEGA_MBOXCMD_LREAD ;
  
  			/*
- 			 * The user passthru structure
-@@ -3241,8 +3195,6 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 						sizeof(mega_passthru), pthru,
- 						pthru_dma_hndl);
+ 			 * 6-byte READ(0x08) or WRITE(0x0A) cdb
+@@ -929,13 +917,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 					channel, target);
  
--				free_local_pdev(pdev);
+ 			/* Initialize mailbox */
+-			if( adapter->has_64bit_addr ) {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU64;
+-			}
+-			else {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+-			}
 -
- 				return (-EFAULT);
- 			}
++			mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+ 			mbox->m_out.xferaddr = scb->pthru_dma_addr;
  
-@@ -3260,8 +3212,6 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- 							pthru,
- 							pthru_dma_hndl);
- 
--					free_local_pdev(pdev);
--
- 					return (-ENOMEM);
- 				}
- 
-@@ -3331,8 +3281,6 @@ freemem_and_return:
- 			pci_free_consistent(pdev, sizeof(mega_passthru),
- 					pthru, pthru_dma_hndl);
- 
--			free_local_pdev(pdev);
--
- 			return rval;
  		}
- 		else {
-@@ -3345,10 +3293,8 @@ freemem_and_return:
- 				data = pci_alloc_consistent(pdev,
- 						uioc.xferlen, &data_dma_hndl);
+@@ -1763,7 +1745,7 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
  
--				if( data == NULL ) {
--					free_local_pdev(pdev);
-+				if( data == NULL )
- 					return (-ENOMEM);
--				}
+ 	*len = 0;
  
- 				uxferaddr = MBOX(uioc)->xferaddr;
- 			}
-@@ -3367,8 +3313,6 @@ freemem_and_return:
- 							uioc.xferlen,
- 							data, data_dma_hndl);
+-	if (scsi_sg_count(cmd) == 1 && !adapter->has_64bit_addr) {
++	if (scsi_sg_count(cmd) == 1) {
+ 		sg = scsi_sglist(cmd);
+ 		scb->dma_h_bulkdata = sg_dma_address(sg);
+ 		*buf = (u32)scb->dma_h_bulkdata;
+@@ -1772,13 +1754,8 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
+ 	}
  
--					free_local_pdev(pdev);
--
- 					return (-EFAULT);
- 				}
- 			}
-@@ -3391,8 +3335,6 @@ freemem_and_return:
- 							data_dma_hndl);
- 				}
+ 	scsi_for_each_sg(cmd, sg, sgcnt, idx) {
+-		if (adapter->has_64bit_addr) {
+-			scb->sgl64[idx].address = sg_dma_address(sg);
+-			*len += scb->sgl64[idx].length = sg_dma_len(sg);
+-		} else {
+-			scb->sgl[idx].address = sg_dma_address(sg);
+-			*len += scb->sgl[idx].length = sg_dma_len(sg);
+-		}
++		scb->sgl[idx].address = sg_dma_address(sg);
++		*len += scb->sgl[idx].length = sg_dma_len(sg);
+ 	}
  
--				free_local_pdev(pdev);
--
- 				return rval;
- 			}
+ 	/* Reset pointer and length fields */
+@@ -2076,10 +2053,7 @@ proc_show_config(struct seq_file *m, void *v)
  
-@@ -3413,8 +3355,6 @@ freemem_and_return:
- 						data_dma_hndl);
- 			}
+ 	if(adapter->flag & BOARD_64BIT)
+ 		seq_puts(m, "Controller capable of 64-bit memory addressing\n");
+-	if( adapter->has_64bit_addr )
+-		seq_puts(m, "Controller using 64-bit memory addressing\n");
+-	else
+-		seq_puts(m, "Controller is not using 64-bit memory addressing\n");
++	seq_puts(m, "Controller is not using 64-bit memory addressing\n");
  
--			free_local_pdev(pdev);
--
- 			return rval;
- 		}
+ 	seq_printf(m, "Base = %08lx, Irq = %d, ",
+ 		   adapter->base, adapter->host->irq);
+@@ -4471,7 +4445,6 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
  
-@@ -4068,22 +4008,18 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, u8 tgt,
- 	dma_addr_t	pthru_dma_handle;
- 	megacmd_t	mc;
- 	int		rval;
--	struct pci_dev	*pdev;
-+	struct pci_dev	*pdev = adapter->dev;
+ 	/* Set the Mode of addressing to 32 bit */
+ 	pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+-	adapter->has_64bit_addr = 0;
+ 		
+ 	mutex_init(&adapter->int_mtx);
+ 	init_completion(&adapter->int_waitq);
+diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
+index 4d0ce4e..17e449b 100644
+--- a/drivers/scsi/megaraid.h
++++ b/drivers/scsi/megaraid.h
+@@ -827,7 +827,6 @@ typedef struct {
  
- 
- 	/*
- 	 * For all internal commands, the buffer must be allocated in <4GB
- 	 * address range
- 	 */
--	if( make_local_pdev(adapter, &pdev) != 0 ) return -1;
--
- 	pthru = pci_alloc_consistent(pdev, sizeof(mega_passthru),
- 			&pthru_dma_handle);
- 
--	if( pthru == NULL ) {
--		free_local_pdev(pdev);
-+	if( pthru == NULL )
- 		return -1;
--	}
- 
- 	pthru->timeout = 2;
- 	pthru->ars = 1;
-@@ -4117,8 +4053,6 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, u8 tgt,
- 	pci_free_consistent(pdev, sizeof(mega_passthru), pthru,
- 			pthru_dma_handle);
- 
--	free_local_pdev(pdev);
--
- 	return rval;
- }
  #endif
+ 
+-	int	has_64bit_addr;		/* are we using 64-bit addressing */
+ 	int	support_ext_cdb;
+ 	int	boot_ldrv_enabled;
+ 	int	boot_ldrv;
