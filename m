@@ -1,44 +1,112 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v3 0/6] scsi_debug: bug fixes and cleanups for data
- integrity support
-Date: Sat, 8 Jun 2013 23:53:05 +0900
-Message-ID: <CAC5umygKR4J4Y8FP-0WMvpiZc=yL2jdtJopFZvBXP3c6AEgjHg@mail.gmail.com>
-References: <1369555282-17864-1-git-send-email-akinobu.mita@gmail.com>
-	<51A5057F.9030703@interlog.com>
-	<yq1k3mi3nby.fsf@sermon.lab.mkp.net>
-	<CAC5umyiW02vB-bbhCic=zU8CxaQY-AebQ0PCj1eTCifAUHortg@mail.gmail.com>
-	<yq1y5ammyux.fsf@sermon.lab.mkp.net>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH 1/3] Percpu tag allocator
+Date: Sat, 8 Jun 2013 17:07:34 +0200
+Message-ID: <20130608150734.GA6818@redhat.com>
+References: <1370659338-23841-1-git-send-email-nab@linux-iscsi.org> <1370659338-23841-2-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:46938 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734Ab3FHOxH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Jun 2013 10:53:07 -0400
-Received: by mail-oa0-f41.google.com with SMTP id n9so4396522oag.14
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Jun 2013 07:53:05 -0700 (PDT)
-In-Reply-To: <yq1y5ammyux.fsf@sermon.lab.mkp.net>
+Received: from mx1.redhat.com ([209.132.183.28]:36146 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751875Ab3FHPMM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Jun 2013 11:12:12 -0400
+Content-Disposition: inline
+In-Reply-To: <1370659338-23841-2-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, Kent Overstreet <koverstreet@google.com>, Asias He <asias@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Or Gerlitz <ogerlitz@mellanox.com>, Moussa Ba <moussaba@micron.com>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Ingo Molnar <mingo@redhat.com>
 
-2013/6/7 Martin K. Petersen <martin.petersen@oracle.com>:
->>>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
+On 06/08, Nicholas A. Bellinger wrote:
 >
-> Akinobu> So Martin and Douglas, can I have your ACKs on this patch
-> Akinobu> series for now?
->
-> Only concern is the one I mentioned before: You're mapping and unmapping
-> the ppage for every 8 bytes of protection information. That seems a bit
-> excessive.
+> +unsigned tag_alloc(struct tag_pool *pool, bool wait)
+> +{
+> +	struct tag_cpu_freelist *tags;
+> +	unsigned long flags;
+> +	unsigned ret;
+> +retry:
+> +	preempt_disable();
+> +	local_irq_save(flags);
+> +	tags = this_cpu_ptr(pool->tag_cpu);
+> +
+> +	while (!tags->nr_free) {
+> +		spin_lock(&pool->lock);
+> +
+> +		if (pool->nr_free)
+> +			move_tags(tags->free, &tags->nr_free,
+> +				  pool->free, &pool->nr_free,
+> +				  min(pool->nr_free, pool->watermark));
+> +		else if (wait) {
+> +			struct tag_waiter wait = { .task = current };
+> +
+> +			__set_current_state(TASK_UNINTERRUPTIBLE);
+> +			list_add(&wait.list, &pool->wait);
+> +
+> +			spin_unlock(&pool->lock);
+> +			local_irq_restore(flags);
+> +			preempt_enable();
+> +
+> +			schedule();
+> +
+> +			if (!list_empty_careful(&wait.list)) {
+> +				spin_lock_irqsave(&pool->lock, flags);
+> +				list_del_init(&wait.list);
+> +				spin_unlock_irqrestore(&pool->lock, flags);
+> +			}
+> +
+> +			goto retry;
+> +		} else
+> +			goto fail;
+> +
+> +		spin_unlock(&pool->lock);
+> +	}
+> +
+> +	ret = tags->free[--tags->nr_free];
+> +
+> +	local_irq_restore(flags);
+> +	preempt_enable();
+> +
+> +	return ret;
+> +fail:
+> +	local_irq_restore(flags);
+> +	preempt_enable();
+> +	return 0;
+> +}
 
-I understand your concern.  That could be cured by changing the outer loop from
-'scsi_for_each_sg' to 'scsi_for_each_prot_sg'.  I'll try to do this and see
-how it looks.
+I still think this code should use the normal wait_event().
 
-> However, I personally don't care too much about 32-bit platforms, so...
->
-> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+See http://marc.info/?l=linux-kernel&m=136863269729888
 
-Thanks.
+> +void tag_free(struct tag_pool *pool, unsigned tag)
+> +{
+> +	struct tag_cpu_freelist *tags;
+> +	unsigned long flags;
+> +
+> +	preempt_disable();
+> +	local_irq_save(flags);
+> +	tags = this_cpu_ptr(pool->tag_cpu);
+> +
+> +	tags->free[tags->nr_free++] = tag;
+> +
+> +	if (tags->nr_free == pool->watermark * 2) {
+> +		spin_lock(&pool->lock);
+> +
+> +		move_tags(pool->free, &pool->nr_free,
+> +			  tags->free, &tags->nr_free,
+> +			  pool->watermark);
+> +
+> +		while (!list_empty(&pool->wait)) {
+> +			struct tag_waiter *wait;
+> +			wait = list_first_entry(&pool->wait,
+> +						struct tag_waiter, list);
+> +			list_del_init(&wait->list);
+> +			wake_up_process(wait->task);
+
+And this still looks racy.
+see http://marc.info/?l=linux-kernel&m=136853955229504
+
+And probably the changelog should mention that cpu_down() can
+lose the tags.
+
+Oleg.
+
