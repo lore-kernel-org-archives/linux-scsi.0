@@ -1,108 +1,69 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [SCSI] mvsas: Fix the kernel panic due to unaligned data access
-Date: Sun, 09 Jun 2013 09:23:16 -0700
-Message-ID: <1370794996.2097.12.camel@dabdike.int.hansenpartnership.com>
-References: <5189F864.5080808@tilera.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [ANNOUNCE] sdparm 1.08 available
+Date: Sun, 09 Jun 2013 12:26:19 -0400
+Message-ID: <51B4ACAB.20605@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33613 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751582Ab3FIQXS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jun 2013 12:23:18 -0400
-In-Reply-To: <5189F864.5080808@tilera.com>
+Received: from smtp.infotech.no ([82.134.31.41]:32986 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751811Ab3FIQ1Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Jun 2013 12:27:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Guo <ggang@tilera.com>
-Cc: Xiangliang Yu <yuxiangl@marvell.com>, linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Tomas Fasth <tomfa@debian.org>, Martin Pitt <mpitt@debian.org>, kumba@gentoo.org, =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, delphij@delphij.net
 
-On Wed, 2013-05-08 at 15:01 +0800, Paul Guo wrote:
-> It's easy to find the address and symbol that causes the unalignd data
-> access according to the stack dump information. The following small
-> patch will fix it.
+sdparm is a command line utility designed to get and set
+SCSI device parameters (cf hdparm for ATA disks). The
+parameters are held in mode pages. Apart from SCSI devices
+(e.g. disks, tapes and enclosures) sdparm can be used on
+any device that uses a SCSI command set. Almost all CD/DVD/BD
+drives use the SCSI MMC set irrespective of the transport.
+sdparm also can decode VPD pages including the device
+identification page. Commands to start and stop the media;
+load and unload removable media and some other housekeeping
+functions are supported. sdparm supports both the Linux
+kernel 2.4, 2.6 and 3 series with ports to FreeBSD, Solaris,
+Tru64 and Windows.
 
-Do you have the panic log?  because it sounds like a bug in your
-platform code.  All platforms have to support unaligned accesses because
-some of the kernel parsers generate them as well.  You can see examples
-of how to do this in e.g. arch/parisc/kernel/unaligned.c
+The version tracks changes in draft standards from
+www.t10.org since January 2012.
 
-> This change is harmless for platforms (like x86/x64) which support
-> unaligned data access but is critical for platforms those do not support
-> unaligned data access (like our platform: arch/tile).
-> 
-> I sent the patch but did not ping the status. I sync-up the workspace
-> and re-generate the patch again. Feel free to give me any feedback. It's
-> really annoying to maintain the change internally.
+For more information and downloads see:
+     http://sg.danny.cz/sg/sdparm.html
 
-First off, you didn't compile this on x86, did you?
+ChangeLog for sdparm-1.08 [20130606] [svn: r215]
+   - device id VPD: add protocol specific port identifier
+   - control extension mpage: add max sense data length
+   - power condition mpage: FIDCPC->CCF_IDLE,
+     FSBCPC->CCF_STAND, FSTCPC->CCF_STOPP (spc4r34+)
+   - caching mpage: add SYNC_PROG field (sbc3r33)
+   - block device characteristics VPD page additions sbc3r34
+   - extended inquiry vpd page: add max supported sense data
+     length
+   - protocol-specific port information VPD page for SAS SSP,
+     persistent connection (spl3r2), power disable (spl3r3)
+   - allow --readonly with --set= and --clear=
+   - add placeholder for third party copy VPD page
+   - supply more information if a UA occurs
+   - add Makefile so scripts/sas_disk_blink installed
+   - scripts/scsi_ch_swp: new, uses sdparm and blockdev
+   - ./configure options:
+     - change --enable-no-linux-bsg to --disable-linuxbsg
+     - add --disable-scsistrings to reduce utility size
+       with non-libsgutils build
+   - point svn:externals to rev 498 of sg3_utils
+     - report sdat_ovfl bit (if set) in sense data
+     - sg_pt_linux: expand DID_ (host_byte) codes
+       - cope with a transport error plus sense data
+       - prefer major() over MAJOR() macro
+     - win32: fixes for cygwin version 1.7.17 headers
 
-> @@ -39,6 +39,7 @@
->  #include <linux/irq.h>
->  #include <linux/slab.h>
->  #include <linux/vmalloc.h>
-> +#include <linux/unaligned.h>
->  #include <scsi/libsas.h>
->  #include <scsi/scsi.h>
->  #include <scsi/scsi_tcq.h>
-
-Causes
-
-  CC [M]  drivers/scsi/scsi_sysfs.o
-In file included from drivers/scsi/mvsas/mv_sas.c:26:0:
-drivers/scsi/mvsas/mv_sas.h:41:29: fatal error: linux/unaligned.h: No
-such file or directory
-
-because it should be asm/unaligned.h.  If it actually compiles on your
-platform, you've got a serious problem with the way include paths work.
-
-Secondly, the reason we have get_unaligned() macros is to speed up
-things by avoiding the trap when we know the data is unaligned, but it
-is really inefficient on most platforms because it will unroll a u64
-deref into 8 single byte loads.  In this case, the DMA buffer looks to
-be a word file, so the below is probably how it should be done.  Notice
-the efficient access in the fast path and the inefficient one in the
-error path.
-
-James
-
----
-
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index f14665a..6b1b4e9 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1857,11 +1857,16 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
- 		goto out;
- 	}
- 
--	/* error info record present */
--	if (unlikely((rx_desc & RXQ_ERR) && (*(u64 *) slot->response))) {
-+	/*
-+	 * error info record present; slot->response is 32 bit aligned but may
-+	 * not be 64 bit aligned, so check for zero in two 32 bit reads
-+	 */
-+	if (unlikely((rx_desc & RXQ_ERR)
-+		     && (*((u32 *)slot->response)
-+			 || *(((u32 *)slot->response) + 1)))) {
- 		mv_dprintk("port %d slot %d rx_desc %X has error info"
- 			"%016llX.\n", slot->port->sas_port.id, slot_idx,
--			 rx_desc, (u64)(*(u64 *)slot->response));
-+			 rx_desc, get_unaligned_le64(slot->response));
- 		tstat->stat = mvs_slot_err(mvi, task, slot_idx);
- 		tstat->resp = SAS_TASK_COMPLETE;
- 		goto out;
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 60e2fb7..d6b19dc 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -39,6 +39,7 @@
- #include <linux/irq.h>
- #include <linux/slab.h>
- #include <linux/vmalloc.h>
-+#include <asm/unaligned.h>
- #include <scsi/libsas.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_tcq.h>
+ChangeLog for sdparm-1.07 [20120121] [svn: r188]
+...
 
 
+Doug Gilbert
