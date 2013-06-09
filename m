@@ -1,121 +1,67 @@
-From: Paul Guo <ggang@tilera.com>
-Subject: Re: [PATCH] [SCSI] mvsas: Fix the kernel panic due to unaligned data
- access
-Date: Mon, 10 Jun 2013 00:31:54 +0800
-Message-ID: <51B4ADFA.5@tilera.com>
-References: <5189F864.5080808@tilera.com> <51B42AE9.2080405@tilera.com> <F766E4F80769BD478052FB6533FA745D3ED4419C13@SC-VEXCH4.marvell.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [SCSI] ufs: Add missing dependency on CONFIG_HAS_IOMEM
+Date: Sun, 09 Jun 2013 21:04:34 +0100
+Message-ID: <1370808274.5614.10.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-W31E72mh7h7kJAO93B0B"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:15299 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795Ab3FIQb7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jun 2013 12:31:59 -0400
-In-Reply-To: <F766E4F80769BD478052FB6533FA745D3ED4419C13@SC-VEXCH4.marvell.com>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:56321 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750822Ab3FIUEk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jun 2013 16:04:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>
-
-Xiangliang,
-
-I do not have a chance to test on x86 now. Not sure whether
-I can find an available environment for x86 testing.
-But this change is so simple and in theory it is harmless
-to x86. For architectures which do need aligned data access,
-they should have the same symptom as arch/tile.
-
-Thanks,
-Paul
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Debian kernel maintainers <debian-kernel@lists.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-s390@vger.kernel.org, stable@vger.kernel.org
 
 
-> Hi, Paul
-> Do you have tested it on X86 or arm? If work fine, I agree with it.
->=20
->=20
->> -----Original Message-----
->> From: Paul Guo [mailto:ggang@tilera.com]
->> Sent: 2013=C4=EA6=D4=C29=C8=D5 15:13
->> To: Xiangliang Yu; linux-scsi@vger.kernel.org
->> Cc: JBottomley@Parallels.com
->> Subject: Re: [PATCH] [SCSI] mvsas: Fix the kernel panic due to unali=
-gned data
->> access
->>
->> Ping. Anyone who knows the driver please speak up, either yes or no
->> or need more info. This is a really small fix.
->>
->> Thanks,
->> Paul
->>
->>> It's easy to find the address and symbol that causes the unalignd d=
-ata
->>> access according to the stack dump information. The following small
->>> patch will fix it.
->>>
->>> This change is harmless for platforms (like x86/x64) which support
->>> unaligned data access but is critical for platforms those do not su=
-pport
->>> unaligned data access (like our platform: arch/tile).
->>>
->>> I sent the patch but did not ping the status. I sync-up the workspa=
-ce
->>> and re-generate the patch again. Feel free to give me any feedback.=
- It's
->>> really annoying to maintain the change internally.
->>>
->>> Thanks,
->>> Paul
->>>
->>>
->>> Signed-off-by: Paul Guo <ggang@tilera.com>
->>> ---
->>>  drivers/scsi/mvsas/mv_sas.c |    5 +++--
->>>  drivers/scsi/mvsas/mv_sas.h |    1 +
->>>  2 files changed, 4 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sa=
-s.c
->>> index fd3b283..18e133e 100644
->>> --- a/drivers/scsi/mvsas/mv_sas.c
->>> +++ b/drivers/scsi/mvsas/mv_sas.c
->>> @@ -1852,10 +1852,11 @@ int mvs_slot_complete(struct mvs_info *mvi,=
- u32
->> rx_desc, u32 flags)
->>>     }
->>>
->>>     /* error info record present */
->>> -   if (unlikely((rx_desc & RXQ_ERR) && (*(u64 *) slot->response)))=
- {
->>> +   if (unlikely((rx_desc & RXQ_ERR) &&
->>> +                 get_unaligned_le64((u64 *) slot->response))) {
->>>             mv_dprintk("port %d slot %d rx_desc %X has error info"
->>>                     "%016llX.\n", slot->port->sas_port.id, slot_idx=
-,
->>> -                    rx_desc, (u64)(*(u64 *)slot->response));
->>> +                    rx_desc, get_unaligned_le64((u64 *) slot->resp=
-onse));
->>>             tstat->stat =3D mvs_slot_err(mvi, task, slot_idx);
->>>             tstat->resp =3D SAS_TASK_COMPLETE;
->>>             goto out;
->>> diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sa=
-s.h
->>> index c04a4f5..c89c145 100644
->>> --- a/drivers/scsi/mvsas/mv_sas.h
->>> +++ b/drivers/scsi/mvsas/mv_sas.h
->>> @@ -39,6 +39,7 @@
->>>  #include <linux/irq.h>
->>>  #include <linux/slab.h>
->>>  #include <linux/vmalloc.h>
->>> +#include <linux/unaligned.h>
->>>  #include <scsi/libsas.h>
->>>  #include <scsi/scsi.h>
->>>  #include <scsi/scsi_tcq.h>
->>>
->=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-W31E72mh7h7kJAO93B0B
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+The ufs driver doesn't build on s390 with CONFIG_PCI disabled as it
+requires MMIO functions.
+
+Marking for 3.9-stable only as CONFIG_SCSI_UFSHCD was previously
+dependent on CONFIG_PCI.
+
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Cc: stable@vger.kernel.org # 3.9
+---
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -34,7 +34,7 @@
+=20
+ config SCSI_UFSHCD
+ 	tristate "Universal Flash Storage Controller Driver Core"
+-	depends on SCSI
++	depends on SCSI && HAS_IOMEM
+ 	---help---
+ 	This selects the support for UFS devices in Linux, say Y and make
+ 	  sure that you know the name of your UFS host adapter (the card
+
+
+--=-W31E72mh7h7kJAO93B0B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAUbTf0ue/yOyVhhEJAQpF/xAArX9TH4T9NQ3doxLih5pV7VTumYT7M2S/
+RlMaLpB9ZilPy90dErSf2/JFvrvPJsIVga9BV+sj9Oz2hAZHAILLgjWTjwi9Kh9i
+dzMf0ztq7hDMyXw9YnK7/iwRA3Y/sQcXm9xV3dYSBExWyi6JMVWEU18aRy6nmrh4
+bi/rdehBI5MbBFAfwblPMNIZyzITprQ6Nq5z3FZZQKSYhkoNtr1VHFtaKsCkK5TM
+SNq4+mDrChjOL0ljw1KlBOE8gGGCjaF68C1NCcWE5Iu7DpwwMUdaRXbJquqETAUz
+q8viDDkSrxTEn+dQiPvYikQyEmDvYsN3xBIyWd34mV2B+7uJB66cBR+3ZRd4OMcZ
+e6UOPLzOoP1/xrTDwQVM9OHpPZIMLm9NdxSxSHd6AI7COsSg+ZXEVoApYjcecAyf
+EFC2yaoUrdezj6tMY0pNbsN7Nwu8s4OUtXu7JhXXHDYGwdB6OIdedrta3qP0VEQh
+YRCEgTJCXr1J+PYfWEIzFrIociplyUc93mqD5YWmdbz3HX657XURDWxbOlNKjr0m
+PNlVvWr3dmXP4m1AVUOYDgIvlJJV0ie8VXGEZJMnTEKWRl6A3mKclvu+wYamMbiU
+acSYzwp8hgTcnoO/l7fznnP9IjxBNeoEtg90Jj5uHPJyC0HiIDOSnF6G8bYeR4L+
+8JDPIdLHn08=
+=c41M
+-----END PGP SIGNATURE-----
+
+--=-W31E72mh7h7kJAO93B0B--
