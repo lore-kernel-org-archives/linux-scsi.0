@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/7] tmscsim: Move 'last_reset' into host structure
-Date: Mon, 10 Jun 2013 13:11:50 +0200
-Message-ID: <1370862713-41323-5-git-send-email-hare@suse.de>
+Subject: [PATCH 6/7] scsi: remove check for 'resetting'
+Date: Mon, 10 Jun 2013 13:11:52 +0200
+Message-ID: <1370862713-41323-7-git-send-email-hare@suse.de>
 References: <1370862713-41323-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43055 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:43057 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753271Ab3FJLMD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753050Ab3FJLMD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 10 Jun 2013 07:12:03 -0400
 In-Reply-To: <1370862713-41323-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,81 +14,66 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
-The 'last_reset' value is only used internally, so move it into
-the internal host structure.
+Field is now unused, so this is dead code.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/tmscsim.c | 14 +++++++-------
- drivers/scsi/tmscsim.h |  1 +
- 2 files changed, 8 insertions(+), 7 deletions(-)
+ drivers/scsi/scsi.c | 28 ----------------------------
+ 1 file changed, 28 deletions(-)
 
-diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
-index 9327f5f..1142361 100644
---- a/drivers/scsi/tmscsim.c
-+++ b/drivers/scsi/tmscsim.c
-@@ -521,7 +521,7 @@ dc390_StartSCSI( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_sr
- 	pACB->SelConn++;
- 	return 1;
-     }
--    if (time_before (jiffies, pACB->pScsiHost->last_reset))
-+    if (time_before (jiffies, pACB->last_reset))
-     {
- 	DEBUG0(printk ("DC390: We were just reset and don't accept commands yet!\n"));
- 	return 1;
-@@ -1863,7 +1863,7 @@ dc390_ScsiRstDetect( struct dc390_acb* pACB )
-     /* delay half a second */
-     udelay (1000);
-     DC390_write8 (ScsiCmd, CLEAR_FIFO_CMD);
--    pACB->pScsiHost->last_reset = jiffies + 5*HZ/2
-+    pACB->last_reset = jiffies + 5*HZ/2
- 		    + HZ * dc390_eepromBuf[pACB->AdapterIndex][EE_DELAY];
-     pACB->Connected = 0;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2c0d0ec..ebe3b0a 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -78,11 +78,6 @@ static void scsi_done(struct scsi_cmnd *cmd);
+  * Definitions and constants.
+  */
  
-@@ -2048,9 +2048,9 @@ static int DC390_bus_reset (struct scsi_cmnd *cmd)
+-#define MIN_RESET_DELAY (2*HZ)
+-
+-/* Do not call reset on error if we just did a reset within 15 sec. */
+-#define MIN_RESET_PERIOD (15*HZ)
+-
+ /*
+  * Note - the initial logging level can be set here to log events at boot time.
+  * After the system is up, you may enable logging via the /proc interface.
+@@ -658,7 +653,6 @@ EXPORT_SYMBOL(scsi_cmd_get_serial);
+ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+-	unsigned long timeout;
+ 	int rtn = 0;
  
- 	dc390_ResetDevParam(pACB);
- 	mdelay(1);
--	pACB->pScsiHost->last_reset = jiffies + 3*HZ/2 
-+	pACB->last_reset = jiffies + 3*HZ/2
- 		+ HZ * dc390_eepromBuf[pACB->AdapterIndex][EE_DELAY];
--    
-+
- 	DC390_write8(ScsiCmd, CLEAR_FIFO_CMD);
- 	DC390_read8(INT_Status);		/* Reset Pending INT */
- 
-@@ -2383,7 +2383,7 @@ static void dc390_init_hw(struct dc390_acb *pACB, u8 index)
- 	if (pACB->Gmode2 & RST_SCSI_BUS) {
- 		dc390_ResetSCSIBus(pACB);
- 		udelay(1000);
--		shost->last_reset = jiffies + HZ/2 +
-+		pACB->last_reset = jiffies + HZ/2 +
- 			HZ * dc390_eepromBuf[pACB->AdapterIndex][EE_DELAY];
+ 	atomic_inc(&cmd->device->iorequest_cnt);
+@@ -704,28 +698,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 			       (cmd->device->lun << 5 & 0xe0);
  	}
  
-@@ -2455,8 +2455,8 @@ static int dc390_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->irq = pdev->irq;
- 	shost->base = io_port;
- 	shost->unique_id = io_port;
--	shost->last_reset = jiffies;
--	
-+
-+	pACB->last_reset = jiffies;
- 	pACB->pScsiHost = shost;
- 	pACB->IOPortBase = (u16) io_port;
- 	pACB->IRQLevel = pdev->irq;
-diff --git a/drivers/scsi/tmscsim.h b/drivers/scsi/tmscsim.h
-index 77adc54..3d1bb4a 100644
---- a/drivers/scsi/tmscsim.h
-+++ b/drivers/scsi/tmscsim.h
-@@ -143,6 +143,7 @@ u8		Ignore_IRQ;	/* Not used */
+-	/*
+-	 * We will wait MIN_RESET_DELAY clock ticks after the last reset so
+-	 * we can avoid the drive not being ready.
+-	 */
+-	timeout = host->last_reset + MIN_RESET_DELAY;
+-
+-	if (host->resetting && time_before(jiffies, timeout)) {
+-		int ticks_remaining = timeout - jiffies;
+-		/*
+-		 * NOTE: This may be executed from within an interrupt
+-		 * handler!  This is bad, but for now, it'll do.  The irq
+-		 * level of the interrupt handler has been masked out by the
+-		 * platform dependent interrupt handling code already, so the
+-		 * sti() here will not cause another call to the SCSI host's
+-		 * interrupt handler (assuming there is one irq-level per
+-		 * host).
+-		 */
+-		while (--ticks_remaining >= 0)
+-			mdelay(1 + 999 / HZ);
+-		host->resetting = 0;
+-	}
+-
+ 	scsi_log_send(cmd);
  
- struct pci_dev	*pdev;
- 
-+unsigned long   last_reset;
- unsigned long	Cmds;
- u32		SelLost;
- u32		SelConn;
+ 	/*
 -- 
 1.7.12.4
 
