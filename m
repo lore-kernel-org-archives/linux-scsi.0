@@ -1,34 +1,72 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/9] scsi: move initialization of scmd->eh_entry
-Date: Mon, 10 Jun 2013 01:17:07 -0700
-Message-ID: <20130610081707.GA7816@infradead.org>
-References: <1370850058-27613-1-git-send-email-hare@suse.de>
- <1370850058-27613-2-git-send-email-hare@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/9] scsi: improved eh timeout handler
+Date: Mon, 10 Jun 2013 11:00:49 +0200
+Message-ID: <51B595C1.8040106@suse.de>
+References: <1370850058-27613-1-git-send-email-hare@suse.de> <1370850058-27613-4-git-send-email-hare@suse.de> <20130610082001.GB7816@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36903 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752284Ab3FJI7O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jun 2013 04:59:14 -0400
-Content-Disposition: inline
-In-Reply-To: <1370850058-27613-2-git-send-email-hare@suse.de>
+Received: from cantor2.suse.de ([195.135.220.15]:37756 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752284Ab3FJJAy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jun 2013 05:00:54 -0400
+In-Reply-To: <20130610082001.GB7816@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>
 
-On Mon, Jun 10, 2013 at 09:40:50AM +0200, Hannes Reinecke wrote:
-> The 'eh_entry' list might be used even before scsi_softirq_done()
-> is called. Hence we should rather initialize it together with
-> the other eh-related variables.
+On 06/10/2013 10:20 AM, Christoph Hellwig wrote:
+> On Mon, Jun 10, 2013 at 09:40:52AM +0200, Hannes Reinecke wrote:
+>> When a command runs into a timeout we need to send an 'ABORT TASK'
+>> TMF. This is typically done by the 'eh_abort_handler' LLDD callback.
+>>
+>> Conceptually, however, this function is a normal SCSI command, so
+>> there is no need to enter the error handler.
+>>
+>> This patch implements a new scsi_abort_command() function which
+>> invokes an asynchronous function scsi_eh_abort_handler() to
+>> abort the commands via 'eh_abort_handler'.
+>>
+>> If the 'eh_abort_handler' returns SUCCESS or FAST_IO_FAIL the
+>> command will be retried if possible. If no retries are allowed
+>> the command will be returned immediately, as we have to assume
+>> the TMF succeeded and the command is completed with the LLDD.
+>> If the TMF fails the command will be pushed back onto the
+>> list of failed commands and the SCSI EH handler will be
+>> called immediately for all timed-out commands.
+>=20
+> Why can't we use a work item per command?  Linking things into a list
+> just to queue it up to workqueues missed half of the point of the
+> workqueue infrastructure.
+>=20
+Hmm. I felt that using a per command workqueue might be a bit excessive=
+=2E
+Also the current semantics call for a synchronous command abort.
+So even using a per command workqueue won't buy us anything as the
+workqueue item would have to wait for the command abort to complete,
+which again is quite a waste.
+And concurrency would be hell; you'd have to flush the workqueue
+items for all outstanding if a device reset should attempted.
+And hope that no completion arrives at the time you're attempting to
+flush them. etc.
 
-As mentioned earlier I don't think moving the initialization from one
-random point in the middle of the lifetime of the command to another
-is a good idea.  If we initialize it it should be when it is allocated.
+I've been planning for asynchronous command aborts eventually, where
+using a per-command workqueue item comes in useful. Gut for now
+using existing callbacks makes life so much easier. And per-command
+workqueues will just complicate matters.
 
-But looking at the code I can't see why it needs to be initialized at
-all.  eh_entry is not used as the head of a list but just as the list
-link, and it's never tested for emptyness either, which shouldn't
-require it to be initialized at all.
+Cheers,
 
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
