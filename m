@@ -1,56 +1,76 @@
 From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [PATCH 3/9] scsi: improved eh timeout handler
-Date: Mon, 10 Jun 2013 11:19:16 -0400
-Message-ID: <20130610151916.GA18076@logfs.org>
+Subject: Re: [PATCH 8/9] mpt2sas: Enable new EH timeout handler
+Date: Mon, 10 Jun 2013 11:31:11 -0400
+Message-ID: <20130610153111.GB18076@logfs.org>
 References: <1370850058-27613-1-git-send-email-hare@suse.de>
- <1370850058-27613-4-git-send-email-hare@suse.de>
- <20130610082001.GB7816@infradead.org>
- <51B595C1.8040106@suse.de>
+ <1370850058-27613-9-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from longford.logfs.org ([213.229.74.203]:59496 "EHLO
+Received: from longford.logfs.org ([213.229.74.203]:59503 "EHLO
 	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861Ab3FJQsv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jun 2013 12:48:51 -0400
+	with ESMTP id S1752354Ab3FJRAg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jun 2013 13:00:36 -0400
 Content-Disposition: inline
-In-Reply-To: <51B595C1.8040106@suse.de>
+In-Reply-To: <1370850058-27613-9-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-On Mon, 10 June 2013 11:00:49 +0200, Hannes Reinecke wrote:
-> On 06/10/2013 10:20 AM, Christoph Hellwig wrote:
-> >=20
-> > Why can't we use a work item per command?  Linking things into a li=
-st
-> > just to queue it up to workqueues missed half of the point of the
-> > workqueue infrastructure.
-> >=20
-> Hmm. I felt that using a per command workqueue might be a bit excessi=
-ve.
-> Also the current semantics call for a synchronous command abort.
-> So even using a per command workqueue won't buy us anything as the
-> workqueue item would have to wait for the command abort to complete,
-> which again is quite a waste.
+On Mon, 10 June 2013 09:40:57 +0200, Hannes Reinecke wrote:
+>=20
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/mpt2sas/mpt2sas_scsih.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>=20
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2=
+sas/mpt2sas_scsih.c
+> index c6bdc92..47fc66c 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> @@ -2565,6 +2565,16 @@ _scsih_tm_display_info(struct MPT2SAS_ADAPTER =
+*ioc, struct scsi_cmnd *scmd)
+>  }
+> =20
+>  /**
+> + * _scsih_timed_out - eh timeout handler
+> + * @scmd: pointer to scsi command object
+> + */
+> +static enum blk_eh_timer_return
+> +_scsih_timed_out(struct scsi_cmnd *scmd)
+> +{
+> +	return scsi_abort_command(scmd);
+> +}
 
-Not sure if you confuse workqueue with workitem.  Either way, using a
-single work item to handle a queue of commands does not fly and we
-either have to use per-command work items or abandon work queues and
-use a kernel thread.  The middle ground is either racy or useless.
+Why did you create this function and not do the following?
++	.eh_timed_out			=3D scsi_abort_command,
 
-I don't care too much whether we use per-command work items or a
-single system-global thread.  This shouldn't ever become a hot path or
-the system is screwed anyway.  The only problem with our current error
-handling is that even rare errors can effectively break the system.
+> +/**
+>   * _scsih_abort - eh threads main abort routine
+>   * @scmd: pointer to scsi command object
+>   *
+> @@ -7515,6 +7525,7 @@ static struct scsi_host_template scsih_driver_t=
+emplate =3D {
+>  	.scan_start			=3D _scsih_scan_start,
+>  	.change_queue_depth 		=3D _scsih_change_queue_depth,
+>  	.change_queue_type		=3D _scsih_change_queue_type,
+> +	.eh_timed_out			=3D _scsih_timed_out,
+>  	.eh_abort_handler		=3D _scsih_abort,
+>  	.eh_device_reset_handler	=3D _scsih_dev_reset,
+>  	.eh_target_reset_handler	=3D _scsih_target_reset,
+> --=20
+> 1.7.12.4
+>=20
 
 J=C3=B6rn
 
 --
-Victory in war is not repetitious.
--- Sun Tzu
+The cheapest, fastest and most reliable components of a computer
+system are those that aren't there.
+-- Gordon Bell, DEC labratories
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
