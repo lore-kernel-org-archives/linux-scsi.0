@@ -1,67 +1,46 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [SCSI] ufs: Add missing dependency on CONFIG_HAS_IOMEM
-Date: Sun, 09 Jun 2013 21:04:34 +0100
-Message-ID: <1370808274.5614.10.camel@deadeye.wl.decadent.org.uk>
+From: Baruch Even <baruch@ev-en.org>
+Subject: Re: [PATCH 3/4] scsi: improved eh timeout handler
+Date: Mon, 10 Jun 2013 03:12:06 +0300
+Message-ID: <CAC9+an+BRiFQXVtyjLYwpJGzT_vabQco7hgbp_MQY06j7st5Aw@mail.gmail.com>
+References: <1370511835-50072-1-git-send-email-hare@suse.de> <1370511835-50072-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-W31E72mh7h7kJAO93B0B"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:56321 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750822Ab3FIUEk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jun 2013 16:04:40 -0400
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:59042 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752452Ab3FJAM1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jun 2013 20:12:27 -0400
+Received: by mail-ea0-f178.google.com with SMTP id l15so2897426eak.9
+        for <linux-scsi@vger.kernel.org>; Sun, 09 Jun 2013 17:12:26 -0700 (PDT)
+In-Reply-To: <1370511835-50072-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Debian kernel maintainers <debian-kernel@lists.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-s390@vger.kernel.org, stable@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>
+
+On Thu, Jun 6, 2013 at 12:43 PM, Hannes Reinecke <hare@suse.de> wrote:
+> When a command runs into a timeout we need to send an 'ABORT TASK'
+> TMF. This is typically done by the 'eh_abort_handler' LLDD callback.
+>
+> Conceptually, however, this function is a normal SCSI command, so
+> there is no need to enter the error handler.
+>
+> This patch implements a new scsi_abort_command() function which
+> invokes an asynchronous function scsi_eh_abort_handler() to
+> abort the commands via 'eh_abort_handler'.
+>
+> If the 'eh_abort_handler' returns SUCCESS or FAST_IO_FAIL the
+> command will be retried if possible. If no retries are allowed
+> the command will be returned immediately, as we have to assume
+> the TMF succeeded and the command is completed with the LLDD.
+> For any other return code from 'eh_abort_handler' the command
+> will be pushed onto the existing SCSI EH handler, or aborted
+> with DID_TIME_OUT if that fails.
+>
+
+Why would you do a retry at this low level? We already have a bad path,
+the IO may already be rerouted through another path and continuing with this
+IO here may interfere with the multipath handling.
 
 
---=-W31E72mh7h7kJAO93B0B
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-The ufs driver doesn't build on s390 with CONFIG_PCI disabled as it
-requires MMIO functions.
-
-Marking for 3.9-stable only as CONFIG_SCSI_UFSHCD was previously
-dependent on CONFIG_PCI.
-
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-Cc: stable@vger.kernel.org # 3.9
----
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -34,7 +34,7 @@
-=20
- config SCSI_UFSHCD
- 	tristate "Universal Flash Storage Controller Driver Core"
--	depends on SCSI
-+	depends on SCSI && HAS_IOMEM
- 	---help---
- 	This selects the support for UFS devices in Linux, say Y and make
- 	  sure that you know the name of your UFS host adapter (the card
-
-
---=-W31E72mh7h7kJAO93B0B
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUbTf0ue/yOyVhhEJAQpF/xAArX9TH4T9NQ3doxLih5pV7VTumYT7M2S/
-RlMaLpB9ZilPy90dErSf2/JFvrvPJsIVga9BV+sj9Oz2hAZHAILLgjWTjwi9Kh9i
-dzMf0ztq7hDMyXw9YnK7/iwRA3Y/sQcXm9xV3dYSBExWyi6JMVWEU18aRy6nmrh4
-bi/rdehBI5MbBFAfwblPMNIZyzITprQ6Nq5z3FZZQKSYhkoNtr1VHFtaKsCkK5TM
-SNq4+mDrChjOL0ljw1KlBOE8gGGCjaF68C1NCcWE5Iu7DpwwMUdaRXbJquqETAUz
-q8viDDkSrxTEn+dQiPvYikQyEmDvYsN3xBIyWd34mV2B+7uJB66cBR+3ZRd4OMcZ
-e6UOPLzOoP1/xrTDwQVM9OHpPZIMLm9NdxSxSHd6AI7COsSg+ZXEVoApYjcecAyf
-EFC2yaoUrdezj6tMY0pNbsN7Nwu8s4OUtXu7JhXXHDYGwdB6OIdedrta3qP0VEQh
-YRCEgTJCXr1J+PYfWEIzFrIociplyUc93mqD5YWmdbz3HX657XURDWxbOlNKjr0m
-PNlVvWr3dmXP4m1AVUOYDgIvlJJV0ie8VXGEZJMnTEKWRl6A3mKclvu+wYamMbiU
-acSYzwp8hgTcnoO/l7fznnP9IjxBNeoEtg90Jj5uHPJyC0HiIDOSnF6G8bYeR4L+
-8JDPIdLHn08=
-=c41M
------END PGP SIGNATURE-----
-
---=-W31E72mh7h7kJAO93B0B--
+Baruch
