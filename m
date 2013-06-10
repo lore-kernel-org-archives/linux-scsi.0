@@ -1,53 +1,54 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 9/9] mpt3sas: Enable new EH timeout handler
-Date: Mon, 10 Jun 2013 09:40:58 +0200
-Message-ID: <1370850058-27613-10-git-send-email-hare@suse.de>
+Subject: [PATCH 5/9] virtio-scsi: Implement TMF timeout
+Date: Mon, 10 Jun 2013 09:40:54 +0200
+Message-ID: <1370850058-27613-6-git-send-email-hare@suse.de>
 References: <1370850058-27613-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33797 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:33779 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752000Ab3FJHlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jun 2013 03:41:04 -0400
+	id S1751951Ab3FJHlD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jun 2013 03:41:03 -0400
 In-Reply-To: <1370850058-27613-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>
 
+Any TMF might be take longer as expected, or not return at all.
+So we need to use 'wait_for_completion_timeout' when sending
+a TMF to protect against these cases.
+
+Cc: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/scsi/virtio_scsi.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index dcbf7c8..3a35ddc 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2228,6 +2228,16 @@ _scsih_tm_display_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd)
- }
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 1efd219..abfc684 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -30,6 +30,7 @@
+ #define VIRTIO_SCSI_MEMPOOL_SZ 64
+ #define VIRTIO_SCSI_EVENT_LEN 8
+ #define VIRTIO_SCSI_VQ_BASE 2
++#define VIRTIO_SCSI_TMF_TIMEOUT 30
  
- /**
-+ * _scsih_timed_out - eh timeout handler
-+ * @scmd: pointer to scsi command object
-+ */
-+static enum blk_eh_timer_return
-+_scsih_timed_out(struct scsi_cmnd *scmd)
-+{
-+	return scsi_abort_command(scmd);
-+}
-+
-+/**
-  * _scsih_abort - eh threads main abort routine
-  * @scmd: pointer to scsi command object
-  *
-@@ -7230,6 +7240,7 @@ static struct scsi_host_template scsih_driver_template = {
- 	.scan_start			= _scsih_scan_start,
- 	.change_queue_depth		= _scsih_change_queue_depth,
- 	.change_queue_type		= _scsih_change_queue_type,
-+	.eh_timed_out			= _scsih_timed_out,
- 	.eh_abort_handler		= _scsih_abort,
- 	.eh_device_reset_handler	= _scsih_dev_reset,
- 	.eh_target_reset_handler	= _scsih_target_reset,
+ /* Command queue element */
+ struct virtio_scsi_cmd {
+@@ -597,8 +598,10 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+ 			      GFP_NOIO) < 0)
+ 		goto out;
+ 
+-	wait_for_completion(&comp);
+-	if (cmd->resp.tmf.response == VIRTIO_SCSI_S_OK ||
++	if (wait_for_completion_timeout(&comp,
++					VIRTIO_SCSI_TMF_TIMEOUT * HZ) == 0)
++		ret = FAILED;
++	else if (cmd->resp.tmf.response == VIRTIO_SCSI_S_OK ||
+ 	    cmd->resp.tmf.response == VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
+ 		ret = SUCCESS;
+ 
 -- 
 1.7.12.4
 
