@@ -1,53 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 8/9] mpt2sas: Enable new EH timeout handler
-Date: Mon, 10 Jun 2013 09:40:57 +0200
-Message-ID: <1370850058-27613-9-git-send-email-hare@suse.de>
+Subject: [PATCH 1/9] scsi: move initialization of scmd->eh_entry
+Date: Mon, 10 Jun 2013 09:40:50 +0200
+Message-ID: <1370850058-27613-2-git-send-email-hare@suse.de>
 References: <1370850058-27613-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33794 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:33748 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751984Ab3FJHlD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jun 2013 03:41:03 -0400
+	id S1751117Ab3FJHlC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jun 2013 03:41:02 -0400
 In-Reply-To: <1370850058-27613-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
+The 'eh_entry' list might be used even before scsi_softirq_done()
+is called. Hence we should rather initialize it together with
+the other eh-related variables.
+
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/scsi/scsi_lib.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index c6bdc92..47fc66c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2565,6 +2565,16 @@ _scsih_tm_display_info(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 86d5220..c1774de 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -317,6 +317,8 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ 	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 	if (cmd->cmd_len == 0)
+ 		cmd->cmd_len = scsi_command_size(cmd->cmnd);
++	INIT_LIST_HEAD(&cmd->eh_entry);
++	cmd->eh_eflags = 0;
  }
  
- /**
-+ * _scsih_timed_out - eh timeout handler
-+ * @scmd: pointer to scsi command object
-+ */
-+static enum blk_eh_timer_return
-+_scsih_timed_out(struct scsi_cmnd *scmd)
-+{
-+	return scsi_abort_command(scmd);
-+}
-+
-+/**
-  * _scsih_abort - eh threads main abort routine
-  * @scmd: pointer to scsi command object
-  *
-@@ -7515,6 +7525,7 @@ static struct scsi_host_template scsih_driver_template = {
- 	.scan_start			= _scsih_scan_start,
- 	.change_queue_depth 		= _scsih_change_queue_depth,
- 	.change_queue_type		= _scsih_change_queue_type,
-+	.eh_timed_out			= _scsih_timed_out,
- 	.eh_abort_handler		= _scsih_abort,
- 	.eh_device_reset_handler	= _scsih_dev_reset,
- 	.eh_target_reset_handler	= _scsih_target_reset,
+ void scsi_device_unbusy(struct scsi_device *sdev)
+@@ -1482,8 +1484,6 @@ static void scsi_softirq_done(struct request *rq)
+ 	unsigned long wait_for = (cmd->allowed + 1) * rq->timeout;
+ 	int disposition;
+ 
+-	INIT_LIST_HEAD(&cmd->eh_entry);
+-
+ 	atomic_inc(&cmd->device->iodone_cnt);
+ 	if (cmd->result)
+ 		atomic_inc(&cmd->device->ioerr_cnt);
 -- 
 1.7.12.4
 
