@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 7/9] mptsas: Enable new EH timeout handler
-Date: Mon, 10 Jun 2013 09:40:56 +0200
-Message-ID: <1370850058-27613-8-git-send-email-hare@suse.de>
+Subject: [PATCH 9/9] mpt3sas: Enable new EH timeout handler
+Date: Mon, 10 Jun 2013 09:40:58 +0200
+Message-ID: <1370850058-27613-10-git-send-email-hare@suse.de>
 References: <1370850058-27613-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33795 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:33797 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751933Ab3FJHlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752000Ab3FJHlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 10 Jun 2013 03:41:04 -0400
 In-Reply-To: <1370850058-27613-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,53 +16,38 @@ Cc: linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emiln
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/message/fusion/mptsas.c   | 1 +
- drivers/message/fusion/mptscsih.c | 7 +++++++
- drivers/message/fusion/mptscsih.h | 1 +
- 3 files changed, 9 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index dd239bd..ed56434 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -1987,6 +1987,7 @@ static struct scsi_host_template mptsas_driver_template = {
- 	.target_destroy			= mptsas_target_destroy,
- 	.slave_destroy			= mptscsih_slave_destroy,
- 	.change_queue_depth 		= mptscsih_change_queue_depth,
-+	.eh_timed_out			= mptscsih_timed_out,
- 	.eh_abort_handler		= mptscsih_abort,
- 	.eh_device_reset_handler	= mptscsih_dev_reset,
- 	.eh_host_reset_handler		= mptscsih_host_reset,
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 727819c..e743e84 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -1679,6 +1679,13 @@ mptscsih_get_tm_timeout(MPT_ADAPTER *ioc)
- 	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index dcbf7c8..3a35ddc 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2228,6 +2228,16 @@ _scsih_tm_display_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd)
  }
  
-+enum blk_eh_timer_return
-+mptscsih_timed_out(struct scsi_cmnd *SCpnt)
-+{
-+	return scsi_abort_command(SCpnt);
-+}
-+EXPORT_SYMBOL(mptscsih_timed_out);
-+
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
  /**
-  *	mptscsih_abort - Abort linux scsi_cmnd routine, new_eh variant
-diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
-index 83f5031..3f2dd05 100644
---- a/drivers/message/fusion/mptscsih.h
-+++ b/drivers/message/fusion/mptscsih.h
-@@ -118,6 +118,7 @@ extern int mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8 type, u8 channel,
- 	u8 id, int lun, int ctx2abort, ulong timeout);
- extern void mptscsih_slave_destroy(struct scsi_device *device);
- extern int mptscsih_slave_configure(struct scsi_device *device);
-+enum blk_eh_timer_return mptscsih_timed_out(struct scsi_cmnd *SCpnt);
- extern int mptscsih_abort(struct scsi_cmnd * SCpnt);
- extern int mptscsih_dev_reset(struct scsi_cmnd * SCpnt);
- extern int mptscsih_bus_reset(struct scsi_cmnd * SCpnt);
++ * _scsih_timed_out - eh timeout handler
++ * @scmd: pointer to scsi command object
++ */
++static enum blk_eh_timer_return
++_scsih_timed_out(struct scsi_cmnd *scmd)
++{
++	return scsi_abort_command(scmd);
++}
++
++/**
+  * _scsih_abort - eh threads main abort routine
+  * @scmd: pointer to scsi command object
+  *
+@@ -7230,6 +7240,7 @@ static struct scsi_host_template scsih_driver_template = {
+ 	.scan_start			= _scsih_scan_start,
+ 	.change_queue_depth		= _scsih_change_queue_depth,
+ 	.change_queue_type		= _scsih_change_queue_type,
++	.eh_timed_out			= _scsih_timed_out,
+ 	.eh_abort_handler		= _scsih_abort,
+ 	.eh_device_reset_handler	= _scsih_dev_reset,
+ 	.eh_target_reset_handler	= _scsih_target_reset,
 -- 
 1.7.12.4
 
