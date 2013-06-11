@@ -1,126 +1,111 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 59601] New: commit 97dec564fd4948e0e560869c80b76e166ca2a83e
- breaks communication with XYRATEX disk shelves
-Date: Tue, 11 Jun 2013 13:53:48 +0000 (UTC)
-Message-ID: <bug-59601-11613@https.bugzilla.kernel.org/>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH 3/9] scsi: improved eh timeout handler
+Date: Tue, 11 Jun 2013 12:35:40 -0400
+Message-ID: <20130611163539.GA25941@logfs.org>
+References: <1370850058-27613-1-git-send-email-hare@suse.de>
+ <1370850058-27613-4-git-send-email-hare@suse.de>
+ <20130610082001.GB7816@infradead.org>
+ <51B595C1.8040106@suse.de>
+ <20130610151916.GA18076@logfs.org>
+ <20130610232446.GD18076@logfs.org>
+ <51B6C14B.8010002@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:44611 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750994Ab3FKNxw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jun 2013 09:53:52 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 58A0C2028D
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jun 2013 13:53:51 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id AB93220258
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jun 2013 13:53:48 +0000 (UTC)
+Received: from longford.logfs.org ([213.229.74.203]:59529 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238Ab3FKSFT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jun 2013 14:05:19 -0400
+Content-Disposition: inline
+In-Reply-To: <51B6C14B.8010002@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=59601
+On Tue, 11 June 2013 08:18:51 +0200, Hannes Reinecke wrote:
+> On 06/11/2013 01:24 AM, J=C3=B6rn Engel wrote:
+> > On Mon, 10 June 2013 11:19:16 -0400, J=C3=B6rn Engel wrote:
+> >>
+> >> I don't care too much whether we use per-command work items or a
+> >> single system-global thread.
+> >=20
+> > Actually, I do care.  We have to abort the commands in parallel, as=
+ a
+> > fairly large number of abort can queue up and individual aborts can
+> > take 20s on hardware I care about.
+> >=20
+> > 20s for an abort is pretty bad, but given today's reality there is =
+no
+> > need to make things worse by serializing.
+> >=20
+> We're only serializing aborts per LUN, so this is a _big_
+> improvement as the original, where we would be serializing
+> per _host_.
 
-           Summary: commit 97dec564fd4948e0e560869c80b76e166ca2a83e breaks
-                    communication with XYRATEX disk shelves
-           Product: SCSI Drivers
-           Version: 2.5
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: QLOGIC QLA2XXX
-        AssignedTo: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
-        ReportedBy: jackhill@jackhill.us
-        Regression: Yes
+I agree it is a big improvement.  But I also have some evidence
+indicating it may not be enough.  So let me change my private patch to
+do parallel aborts and see how it fares.
 
+> Also, upon the first abort failure EH will be escalating to
+> LUN reset, so we won't have to wait for all aborts to time out.
 
-My setup:
+The case I saw was a successful abort taking 20s.
 
-I have a
+> More importantly, the current synchronous implementation of
+> command aborts does not allow for complete de-serialisation:
+> - There is no way to abort a running command abort, so we
+>   have to wait for it to complete, with the chance of running
+>   into a timeout.
+> - We will have to sent command aborts in parallel, and can
+>   only stop sending aborts once the first returns an error.
+> - After we've received an error we have to wait for the
+>   outstanding aborts to complete.
+> -> So the max wait-time will be 2 times the abort timeout.
+>   Not much of a gain here :-)
 
-Fibre Channel: QLogic Corp. ISP2322-based 2Gb Fibre Channel to PCI-X HBA (rev
-03)
+I have seen 10 commands get queued for aborts.  Assuming the 20s above
+are the worst case, it will make the difference between 200s and 40s.
 
-Connected via 2Gb Fibre Channel to a NetApp branded disk shelf, model RA-1402.
-The shelf has dual XYRATEX P/N: 106-00101+C0 Fribe Channel controllers. The
-shelf has 14 SATA disks connected via Fibre Channel to SATA converters.
+Granted, 40s is still horrible.  The command in question has just
+timed out and the kernel should inform userspace about this asap.  If
+a command with a 10s timeout takes 50s to complete, userspace will
+have to add another layer of timeouts.  That should never be
+necessary.
 
-Prior to commit 97dec564fd4948e0e560869c80b76e166ca2a83e (as determined with
-git bisect) Linux was able to see all the disks as well as the two XRATEX
-controllers and read and write to them normally.
+> The _correct_ way of handling asynchronous aborts would
+> be to mandate that the LLDD has to send a command completion
+> on the original command once an abort has been issued.
+> Then we could just kick off the TMF and rearm the request
+> timer. Everything else would then be handled via normal
+> I/O paths.
+>=20
+> However, this would mean to implement new callouts into
+> each and every driver. And the actual gain would be
+> dubious, as the several IHVs indicated that a command
+> abort might be handled lazily, ie the target will return
+> a good status, but abort the command only at a later time.
+> Other vendors treat a command abort as a best bet, and
+> rely on the LUN reset to clear up things.
+>=20
+> So overall I doubt we'd be gaining much from a fully
+> asynchronous command abort. I'd rather concentrate
+> on getting the remaining bits like LUN reset working
+> correctly.
 
-After the problem commit, niether the XYRATEX controllers nor the disks are
-visible.
+=46air approach.  Again, let me play with it and don't let this stop yo=
+u
+from making other improvements.
 
-Here is an excerpt of the working dmesg output
+J=C3=B6rn
 
-"""
-[    2.708225] QLogic Fibre Channel HBA Driver: 8.03.01-k6
-[    2.708302]   alloc irq_desc for 19 on node -1
-[    2.708304]   alloc kstat_irqs on node -1
-[    2.708309] qla2xxx 0000:03:07.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-[    2.708388] qla2xxx 0000:03:07.0: Found an ISP2322, irq 19, iobase
-0xffffc900021fe000
-[    2.709059] qla2xxx 0000:03:07.0: Configuring PCI space...
-[    2.709415] qla2xxx 0000:03:07.0: Configure NVRAM parameters...
-[    2.801997] qla2xxx 0000:03:07.0: Verifying loaded RISC code...
-[    2.813685] FDC 0 is a post-1991 82077
-[    2.832538] qla2xxx 0000:03:07.0: firmware: requesting ql2322_fw.bin
-[    2.972588] qla2xxx 0000:03:07.0: Allocated (1180 KB) for firmware dump...
-[    3.032548] scsi4 : qla2xxx
-[    3.032854] qla2xxx 0000:03:07.0: 
-[    3.032855]  QLogic Fibre Channel HBA Driver: 8.03.01-k6
-[    3.032856]   QLogic QLE2360 - PCI-Express to 2Gb FC, Single Channel
-[    3.032856]   ISP2322: PCI-X (66 MHz) @ 0000:03:07.0 hdma+, host#=4,
-fw=3.03.28 IPX
-[    3.313904] qla2xxx 0000:03:07.0: LIP reset occurred (f8f7).
-[    3.345574] qla2xxx 0000:03:07.0: LIP occurred (f8f7).
-[    3.452223] qla2xxx 0000:03:07.0: LIP reset occurred (f7f7).
-[    3.482427] qla2xxx 0000:03:07.0: LIP occurred (f7f7).
-[    3.544781] qla2xxx 0000:03:07.0: LOOP UP detected (2 Gbps).
-[    3.856407] scsi 4:0:0:0: Enclosure         XYRATEX  RS-1402-SA-XNS1  3033
-PQ: 0 ANSI: 3
-[    3.859343] scsi 4:0:1:0: Enclosure         XYRATEX  RS-1402-SA-XNS1  3033
-PQ: 0 ANSI: 3
-[    3.863781] scsi 4:0:2:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.866454] scsi 4:0:3:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.869147] scsi 4:0:4:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.871834] scsi 4:0:5:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.874515] scsi 4:0:6:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.877196] scsi 4:0:7:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.879867] scsi 4:0:8:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.882539] scsi 4:0:9:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.885218] scsi 4:0:10:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.888035] scsi 4:0:11:0: Direct-Access     ST332082 0AS           SX .AAE
-PQ: 0 ANSI: 3
-[    3.890712] scsi 4:0:12:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.893391] scsi 4:0:13:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.896142] scsi 4:0:14:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-[    3.898820] scsi 4:0:15:0: Direct-Access     HITACHI  HDS725050KLA36SX AB0A
-PQ: 0 ANSI: 3
-"""
-
-It would be super if the fix for this could be backported to 3.2.
-
-Let me know if you need more information or would like me to test anything.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--
+There's nothing that will change someone's moral outlook quicker
+than cash in large sums.
+-- Larry Flynt
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
