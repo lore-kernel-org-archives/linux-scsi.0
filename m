@@ -1,60 +1,69 @@
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH RESEND] scsi: Introduce a help function local_time_seconds()
- to simplify the getting time stamp operation
-Date: Tue, 11 Jun 2013 09:39:48 +0800
-Message-ID: <51B67FE4.4060103@cn.fujitsu.com>
-References: <51B53293.7090100@cn.fujitsu.com> <1370886422.1936.27.camel@dabdike>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 8/9] mpt2sas: Enable new EH timeout handler
+Date: Tue, 11 Jun 2013 07:41:31 +0200
+Message-ID: <51B6B88B.1030005@suse.de>
+References: <1370850058-27613-1-git-send-email-hare@suse.de> <1370850058-27613-9-git-send-email-hare@suse.de> <20130610153111.GB18076@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1370886422.1936.27.camel@dabdike>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linux-Scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:56015 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751820Ab3FKFlg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jun 2013 01:41:36 -0400
+In-Reply-To: <20130610153111.GB18076@logfs.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-On 06/11/2013 01:47 AM, James Bottomley wrote:
-
-> On Mon, 2013-06-10 at 09:57 +0800, Gu Zheng wrote:
->> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
->> index 66216c1..f3377ca 100644
->> --- a/include/scsi/scsi.h
->> +++ b/include/scsi/scsi.h
->> @@ -574,4 +574,13 @@ static inline __u32 scsi_to_u32(__u8 *ptr)
->>         return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
+On 06/10/2013 05:31 PM, J=C3=B6rn Engel wrote:
+> On Mon, 10 June 2013 09:40:57 +0200, Hannes Reinecke wrote:
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/scsi/mpt2sas/mpt2sas_scsih.c | 11 +++++++++++
+>>  1 file changed, 11 insertions(+)
+>>
+>> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt=
+2sas/mpt2sas_scsih.c
+>> index c6bdc92..47fc66c 100644
+>> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+>> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+>> @@ -2565,6 +2565,16 @@ _scsih_tm_display_info(struct MPT2SAS_ADAPTER=
+ *ioc, struct scsi_cmnd *scmd)
 >>  }
->>  
->> +/*
->> + * Convert system time in UTC to local time seconds.
+>> =20
+>>  /**
+>> + * _scsih_timed_out - eh timeout handler
+>> + * @scmd: pointer to scsi command object
 >> + */
->> +static inline u32 local_time_seconds(void)
+>> +static enum blk_eh_timer_return
+>> +_scsih_timed_out(struct scsi_cmnd *scmd)
 >> +{
->> +       struct timeval utc;
->> +       do_gettimeofday(&utc);
->> +       return (u32)(utc.tv_sec - (sys_tz.tz_minuteswest * 60));
+>> +	return scsi_abort_command(scmd);
 >> +}
->>  #endif /* _SCSI_SCSI_H */
-> 
-> This doesn't belong in SCSI.
-> 
-> It's not a common pattern, so just leave it open coded in the 3ware
-> drivers.  If there's a need for it to be a common pattern, John Stultz
-> will add it to the timer code, but at the moment, he doesn't seem to see
-> the need.
+>=20
+> Why did you create this function and not do the following?
+> +	.eh_timed_out			=3D scsi_abort_command,
+>=20
+Good point.
 
-Hi James,
-OK...Thanks for your reminder.
-As you mentioned in an old thread, what about using "jiffies to seconds" to replace
-the existed timestamps?
+That function was required for an earlier version (where
+I had 'void scsi_abort_command()').
+So yeah, that function isn't required.
 
-Best regards,
-Gu
+Cheers,
 
-
-
-> 
-> James
-> 
-> 
-> 
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
