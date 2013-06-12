@@ -1,69 +1,73 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v11 9/9] Avoid reenabling I/O after the transport became offline
-Date: Wed, 12 Jun 2013 14:58:48 +0200
-Message-ID: <51B87088.9000102@acm.org>
-References: <51B86E26.6030108@acm.org>
+Subject: [PATCH 0/14] IB SRP initiator patches for kernel 3.11
+Date: Wed, 12 Jun 2013 15:17:53 +0200
+Message-ID: <51B87501.4070005@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gerard.telenet-ops.be ([195.130.132.48]:36641 "EHLO
-	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402Ab3FLM6v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jun 2013 08:58:51 -0400
-In-Reply-To: <51B86E26.6030108@acm.org>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:57009 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752528Ab3FLNR4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jun 2013 09:17:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>
+To: linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@kernel.org>, David Dillow <dillowda@ornl.gov>, Vu Pham <vuhuong@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>
 
-Disallow the SDEV_TRANSPORT_OFFLINE to SDEV_CANCEL transition such
-that no I/O is sent to devices for which the transport is offline.
-Notes:
-- Functions like sd_shutdown() use scsi_execute_req() and hence
-  set the REQ_PREEMPT flag. Such requests are passed to the LLD
-  queuecommand callback in the SDEV_CANCEL state.
-- This patch does not affect Fibre Channel LLD drivers since these
-  drivers invoke fc_remote_port_chkready() before submitting a SCSI
-  request to the HBA. That prevents a timeout to occur in state
-  SDEV_CANCEL if the transport is offline.
+The purpose of this InfiniBand SRP initiator patch series is as follows:
+- Make the SRP initiator driver better suited for use in a H.A. setup.
+   Speed up failover by reducing the IB RC retry count and by notifying
+   multipathd faster about transport layer failures by adding
+   fast_io_fail_tmo and dev_loss_tmo parameters.
+- Make the SRP initiator better suited for use on NUMA systems by
+   making the HCA completion vector configurable.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>
----
- drivers/scsi/scsi_lib.c   |    1 -
- drivers/scsi/scsi_sysfs.c |    3 ++-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Some of the patches in this patch series were posted previously as "Make 
+ib_srp better suited for H.A. purposes". The changes compared to version 
+five of that patch series are:
+- Left out patches that are already upstream.
+- Made it possible to set dev_loss_tmo to "off". This is useful in a
+   setup using initiator side mirroring to avoid that new /dev/sd* names
+   are reassigned after a failover or cable pull and reinsert.
+- Added kernel module parameters to ib_srp for configuring default
+   values of the fast_io_fail_tmo and dev_loss_tmo parameters.
+- Added a patch from Dotan Barak that fixes a kernel oops during rmmod
+   triggered by resource allocation failure at module load time.
+- Avoid duplicate connections by refusing relogins instead of dropping
+   duplicate connections, as proposed by Sebastian Riemer.
+- Added a patch from Sebastian Riemer for failing SCSI commands
+   silently.
+- Added a patch from Vu Pham to make the transport layer (IB RC) retry
+   count configurable.
+- Made HCA completion vector configurable.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 10c054f..024e768 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2162,7 +2162,6 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- 		case SDEV_RUNNING:
- 		case SDEV_QUIESCE:
- 		case SDEV_OFFLINE:
--		case SDEV_TRANSPORT_OFFLINE:
- 		case SDEV_BLOCK:
- 			break;
- 		default:
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 11318cc..dd2005c 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -963,7 +963,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 
- 	if (sdev->is_visible) {
- 		spin_lock_irqsave(shost->host_lock, flags);
--		WARN(scsi_device_set_state(sdev, SDEV_CANCEL) != 0,
-+		WARN(scsi_device_set_state(sdev, SDEV_CANCEL) != 0 &&
-+		     sdev->sdev_state != SDEV_TRANSPORT_OFFLINE,
- 		     "%s: unexpected state %d\n", dev_name(&sdev->sdev_gendev),
- 		     sdev->sdev_state);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
--- 
-1.7.10.4
+Changes since v4:
+- Added a patch for removing SCSI devices upon a port down event
+
+Changes since v3:
+- Restored the dev_loss_tmo and fast_io_fail_tmo sysfs attributes.
+- Included a patch to fix an ib_srp crash that could be triggered by
+   cable pulling.
+
+Changes since v2:
+- Addressed the v2 review comments.
+- Dropped the patches that have already been merged.
+- Dropped the patches for integration with multipathd.
+- Dropped the micro-optimization of the IB completion handlers.
+
+The individual patches in this series are as follows:
+0001-IB-srp-Fix-remove_one-crash-due-to-resource-exhausti.patch
+0002-IB-srp-Fix-race-between-srp_queuecommand-and-srp_cla.patch
+0003-IB-srp-Avoid-that-srp_reset_host-is-skipped-after-a-.patch
+0004-IB-srp-Skip-host-settle-delay.patch
+0005-IB-srp-Maintain-a-single-connection-per-I_T-nexus.patch
+0006-IB-srp-Keep-rport-as-long-as-the-IB-transport-layer.patch
+0007-scsi_transport_srp-Add-transport-layer-error-handlin.patch
+0008-IB-srp-Add-srp_terminate_io.patch
+0009-IB-srp-Use-SRP-transport-layer-error-recovery.patch
+0010-IB-srp-Start-timers-if-a-transport-layer-error-occur.patch
+0011-IB-srp-Fail-SCSI-commands-silently.patch
+0012-IB-srp-Make-HCA-completion-vector-configurable.patch
+0013-IB-srp-Make-transport-layer-retry-count-configurable.patch
+0014-IB-srp-Bump-driver-version-and-release-date.patch
 
