@@ -1,75 +1,91 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: eh_abort_handler implementations
-Date: Wed, 12 Jun 2013 12:28:51 +0200
-Message-ID: <51B84D63.9040602@suse.de>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v11 0/9] More device removal fixes
+Date: Wed, 12 Jun 2013 14:48:38 +0200
+Message-ID: <51B86E26.6030108@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57955 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754179Ab3FLK2y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jun 2013 06:28:54 -0400
+Received: from juliette.telenet-ops.be ([195.130.137.74]:58846 "EHLO
+	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076Ab3FLMsr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jun 2013 08:48:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Smart <james.smart@emulex.com>, Ewan Milne <emilne@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>
 
-Hi all,
 
-as you might know, I'm trying to revamp the eh_abort_handler
-implementation by sending command aborts directly whenever
-the timeout triggers, without entering SCSI EH.
+Fix a few issues that can be triggered by removing a SCSI device:
+- Fix a race between starved list processing and device removal that
+   can trigger a kernel oops.
+- Avoid that a SCSI LLD callback can get invoked after
+   scsi_remove_host() finished.
+- Speed up device removal by stopping error handling as soon as
+   the SHOST_DEL or SHOST_DEL_RECOVERY state has been reached.
+- Save and restore the host_scribble field during error handling.
 
-So, during testing where the remote port is disabled I've seen this:
+Changes compared to v10:
+- Rebased and retested on top of Linux kernel v3.10-rc5.
 
-[  864.734937] qla2xxx [0000:41:00.0]-8802:1: Aborting from RISC
-nexus=3D1:0:0 sp=3Dffff880225b0dd40 cmd=3Dffff8802248d76c0
-[  864.737274] qla2xxx [0000:41:00.0]-1800:1: Entered
-qla2x00_mailbox_command.
-[  864.738720] qla2xxx [0000:41:00.0]-1806:1: Prepare to issue mbox
-cmd=3D0x54.
-[  864.740268] qla2xxx [0000:41:00.0]-180f:1: Going to unlock irq &
-waiting for interrupts. jiffies=3D100022781.
-[  864.740574] qla2xxx [0000:41:00.0]-1814:1: Cmd=3D54 completed.
-[  864.740596] qla2xxx [0000:41:00.0]-3822:1: FCP command status:
-0x5-0x0 (0x80000) nexus=3D1:0:0 portid=3D691400 oxid=3D0x38e
-cdb=3D28000000000000000800 len=3D0x1000 rsp_info=3D0x0 resid=3D0x0 fw_r=
-esid=3D0x0.
-[  864.740608] qla2xxx [0000:41:00.0]-1821:1: Done
-qla2x00_mailbox_command.
-[  864.740615] qla2xxx [0000:41:00.0]-8804:1: Abort command mbx
-success cmd=3Dffff8802248d76c0.
-[  864.740631] qla2xxx [0000:41:00.0]-801c:1: Abort command issued
-nexus=3D1:0:0 --  2002.
+Changes compared to v9:
+- Changed one WARN_ON() statement into a WARN() statement.
 
-Again, the port is disabled, so the TMF _cannot_ be received by the
-remote port, let alone processed.
-But still the command abort is processed correctly and the command
-is returned to the upper layers.
-So with the current thinking the command abort was successful, and
-EH would exit, as the remote port was assumed to be working.
-But most evidently the remote port is _still_ not reachable, so the
-TMF _should_ have returned 'FAILED'.
-At least that's what we expect.
-But it looks as if this expectation is slightly skewed, as most
-likely a successful ABORT TASK TMF just means that the command was
-terminated, not that the remote port itself was working.
+Changes compared to v8:
+- Addressed the feedback from Joe Lawrence - dropped the patch that
+   makes scsi_remove_host() wait until the last sdev user is gone.
+- Eliminated Scsi_Host.tmf_in_progress since it duplicates state
+   information available in Scsi_Host.eh_active.
+- Added a patch to avoid reenabling I/O after the transport layer
+   became offline.
 
-If _that_ should be the case it looks as if we _always_ should be
-issuing a RESET LUN TMF whenever command aborts have been processed.
-Would that be correct?
+Changes compared to v7:
+- Addressed the review comments posted by Hannes Reinecke and Rolf Eike
+   Beer.
+- Modified patch "Make scsi_remove_host() wait until error handling
+   finished" such that it is also safe for SCSI timeout values below
+   the maximum LLD response time by modifying scsi_send_eh_cmnd() such
+   that it does not invoke any LLD code after scsi_remove_host() started.
+- Added a patch to save and restore the host_scribble field.
+- Refined / clarified several patch descriptions.
+- Rebased and retested on top of kernel v3.8-rc6.
 
-Cheers,
+Changes compared to v6:
+- Dropped the first six patches since Jens queued these for 3.8.
+- Added patch to avoid that __scsi_remove_device() is invoked twice.
+- Restore error recovery in the SHOST_CANCEL state.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+Changes compared to v5:
+- Avoid that block layer work can be scheduled on a dead queue.
+- Do not invoke any SCSI LLD callback after scsi_remove_host() finished.
+- Stop error handling as soon as scsi_remove_host() started.
+- Remove the unused function bsg_goose_queue().
+- Avoid that scsi_device_set_state() triggers a race condition.
+
+Changes compared to v4:
+- Moved queue_flag_set(QUEUE_FLAG_DEAD, q) from blk_drain_queue() into
+   blk_cleanup_queue().
+- Declared the new __blk_run_queue_uncond() function inline. Checked in
+   the generated assembler code that this function is really inlined in
+   __blk_run_queue().
+- Elaborated several patch descriptions.
+- Added sparse annotations to scsi_request_fn().
+- Split several patches.
+
+Changes compared to v3:
+- Fixed a race condition by setting QUEUE_FLAG_DEAD earlier.
+- Added a patch for fixing a race between starved list processing
+   and device removal to this series.
+
+Changes compared to v2:
+- Split second patch into two patches.
+- Refined patch descriptions.
+
+Changes compared to v1:
+- Included a patch to rename QUEUE_FLAG_DEAD.
+- Refined the descriptions of the __blk_run_queue_uncond() and
+   blk_cleanup_queue() functions.
+-- 
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
