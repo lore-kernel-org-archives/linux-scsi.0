@@ -1,73 +1,124 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 0/14] IB SRP initiator patches for kernel 3.11
-Date: Wed, 12 Jun 2013 15:17:53 +0200
-Message-ID: <51B87501.4070005@acm.org>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: [PATCH 06/14] IB/srp: Keep rport as long as the IB transport layer
+Date: Wed, 12 Jun 2013 15:26:39 +0200
+Message-ID: <51B8770F.3080004@acm.org>
+References: <51B87501.4070005@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:57009 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752528Ab3FLNR4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jun 2013 09:17:56 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51B87501.4070005-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@kernel.org>, David Dillow <dillowda@ornl.gov>, Vu Pham <vuhuong@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>
 
-The purpose of this InfiniBand SRP initiator patch series is as follows:
-- Make the SRP initiator driver better suited for use in a H.A. setup.
-   Speed up failover by reducing the IB RC retry count and by notifying
-   multipathd faster about transport layer failures by adding
-   fast_io_fail_tmo and dev_loss_tmo parameters.
-- Make the SRP initiator better suited for use on NUMA systems by
-   making the HCA completion vector configurable.
+Keep the rport data structure around after srp_remove_host() has
+finished until cleanup of the IB transport layer has finished
+completely. This is necessary because later patches use the rport
+pointer inside the queuecommand callback. Without this patch
+accessing the rport from inside a queuecommand callback is racy
+because srp_remove_host() must be invoked before scsi_remove_host()
+and because the queuecommand callback may get invoked after
+srp_remove_host() has finished.
 
-Some of the patches in this patch series were posted previously as "Make 
-ib_srp better suited for H.A. purposes". The changes compared to version 
-five of that patch series are:
-- Left out patches that are already upstream.
-- Made it possible to set dev_loss_tmo to "off". This is useful in a
-   setup using initiator side mirroring to avoid that new /dev/sd* names
-   are reassigned after a failover or cable pull and reinsert.
-- Added kernel module parameters to ib_srp for configuring default
-   values of the fast_io_fail_tmo and dev_loss_tmo parameters.
-- Added a patch from Dotan Barak that fixes a kernel oops during rmmod
-   triggered by resource allocation failure at module load time.
-- Avoid duplicate connections by refusing relogins instead of dropping
-   duplicate connections, as proposed by Sebastian Riemer.
-- Added a patch from Sebastian Riemer for failing SCSI commands
-   silently.
-- Added a patch from Vu Pham to make the transport layer (IB RC) retry
-   count configurable.
-- Made HCA completion vector configurable.
+Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>
+Cc: James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>
+Cc: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Cc: Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+---
+ drivers/infiniband/ulp/srp/ib_srp.c |    3 +++
+ drivers/infiniband/ulp/srp/ib_srp.h |    1 +
+ drivers/scsi/scsi_transport_srp.c   |   18 ++++++++++++++++++
+ include/scsi/scsi_transport_srp.h   |    2 ++
+ 4 files changed, 24 insertions(+)
 
-Changes since v4:
-- Added a patch for removing SCSI devices upon a port down event
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index 1a73b24..2bd0587 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -526,11 +526,13 @@ static void srp_remove_target(struct srp_target_port *target)
+ 	WARN_ON_ONCE(target->state != SRP_TARGET_REMOVED);
+ 
+ 	srp_del_scsi_host_attr(target->scsi_host);
++	srp_rport_get(target->rport);
+ 	srp_remove_host(target->scsi_host);
+ 	scsi_remove_host(target->scsi_host);
+ 	srp_disconnect_target(target);
+ 	ib_destroy_cm_id(target->cm_id);
+ 	srp_free_target_ib(target);
++	srp_rport_put(target->rport);
+ 	srp_free_req_data(target);
+ 	scsi_host_put(target->scsi_host);
+ }
+@@ -2009,6 +2011,7 @@ static int srp_add_target(struct srp_host *host, struct srp_target_port *target)
+ 	}
+ 
+ 	rport->lld_data = target;
++	target->rport = rport;
+ 
+ 	spin_lock(&host->target_lock);
+ 	list_add_tail(&target->list, &host->target_list);
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
+index 66fbedd..1817ed5 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.h
++++ b/drivers/infiniband/ulp/srp/ib_srp.h
+@@ -153,6 +153,7 @@ struct srp_target_port {
+ 	u16			io_class;
+ 	struct srp_host	       *srp_host;
+ 	struct Scsi_Host       *scsi_host;
++	struct srp_rport       *rport;
+ 	char			target_name[32];
+ 	unsigned int		scsi_id;
+ 	unsigned int		sg_tablesize;
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index f379c7f..f7ba94a 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -185,6 +185,24 @@ static int srp_host_match(struct attribute_container *cont, struct device *dev)
+ }
+ 
+ /**
++ * srp_rport_get() - increment rport reference count
++ */
++void srp_rport_get(struct srp_rport *rport)
++{
++	get_device(&rport->dev);
++}
++EXPORT_SYMBOL(srp_rport_get);
++
++/**
++ * srp_rport_put() - decrement rport reference count
++ */
++void srp_rport_put(struct srp_rport *rport)
++{
++	put_device(&rport->dev);
++}
++EXPORT_SYMBOL(srp_rport_put);
++
++/**
+  * srp_rport_add - add a SRP remote port to the device hierarchy
+  * @shost:	scsi host the remote port is connected to.
+  * @ids:	The port id for the remote port.
+diff --git a/include/scsi/scsi_transport_srp.h b/include/scsi/scsi_transport_srp.h
+index ff0f04a..5a2d2d1 100644
+--- a/include/scsi/scsi_transport_srp.h
++++ b/include/scsi/scsi_transport_srp.h
+@@ -38,6 +38,8 @@ extern struct scsi_transport_template *
+ srp_attach_transport(struct srp_function_template *);
+ extern void srp_release_transport(struct scsi_transport_template *);
+ 
++extern void srp_rport_get(struct srp_rport *rport);
++extern void srp_rport_put(struct srp_rport *rport);
+ extern struct srp_rport *srp_rport_add(struct Scsi_Host *,
+ 				       struct srp_rport_identifiers *);
+ extern void srp_rport_del(struct srp_rport *);
+-- 
+1.7.10.4
 
-Changes since v3:
-- Restored the dev_loss_tmo and fast_io_fail_tmo sysfs attributes.
-- Included a patch to fix an ib_srp crash that could be triggered by
-   cable pulling.
-
-Changes since v2:
-- Addressed the v2 review comments.
-- Dropped the patches that have already been merged.
-- Dropped the patches for integration with multipathd.
-- Dropped the micro-optimization of the IB completion handlers.
-
-The individual patches in this series are as follows:
-0001-IB-srp-Fix-remove_one-crash-due-to-resource-exhausti.patch
-0002-IB-srp-Fix-race-between-srp_queuecommand-and-srp_cla.patch
-0003-IB-srp-Avoid-that-srp_reset_host-is-skipped-after-a-.patch
-0004-IB-srp-Skip-host-settle-delay.patch
-0005-IB-srp-Maintain-a-single-connection-per-I_T-nexus.patch
-0006-IB-srp-Keep-rport-as-long-as-the-IB-transport-layer.patch
-0007-scsi_transport_srp-Add-transport-layer-error-handlin.patch
-0008-IB-srp-Add-srp_terminate_io.patch
-0009-IB-srp-Use-SRP-transport-layer-error-recovery.patch
-0010-IB-srp-Start-timers-if-a-transport-layer-error-occur.patch
-0011-IB-srp-Fail-SCSI-commands-silently.patch
-0012-IB-srp-Make-HCA-completion-vector-configurable.patch
-0013-IB-srp-Make-transport-layer-retry-count-configurable.patch
-0014-IB-srp-Bump-driver-version-and-release-date.patch
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
