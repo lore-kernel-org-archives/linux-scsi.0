@@ -1,63 +1,33 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 5/9] virtio-scsi: Implement TMF timeout
-Date: Wed, 12 Jun 2013 10:54:53 -0400
-Message-ID: <51B88BBD.5050002@redhat.com>
-References: <1370850058-27613-1-git-send-email-hare@suse.de> <1370850058-27613-6-git-send-email-hare@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 01/10] qla2xxx: Clean up qla24xx_iidma()
+Date: Wed, 12 Jun 2013 11:59:03 -0700
+Message-ID: <1371063543.1978.22.camel@dabdike>
+References: <F5D084D6342F9B479C34599BB0A03E4D35390FB5@AVMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:37760 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107Ab3FLOy4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jun 2013 10:54:56 -0400
-Received: by mail-qa0-f45.google.com with SMTP id ci6so380243qab.18
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jun 2013 07:54:55 -0700 (PDT)
-In-Reply-To: <1370850058-27613-6-git-send-email-hare@suse.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56773 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756019Ab3FLS7H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jun 2013 14:59:07 -0400
+In-Reply-To: <F5D084D6342F9B479C34599BB0A03E4D35390FB5@AVMB1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Joern Engel <joern@logfs.org>, Ewan Milne <emilne@redhat.com>, James Smart <james.smart@emulex.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Roland Dreier <roland@purestorage.com>, Bryn Reeves <bmr@redhat.com>, Christoph Hellwig <hch@infradead.org>
+To: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-Il 10/06/2013 03:40, Hannes Reinecke ha scritto:
-> Any TMF might be take longer as expected, or not return at all.
-> So we need to use 'wait_for_completion_timeout' when sending
-> a TMF to protect against these cases.
-> 
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/virtio_scsi.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 1efd219..abfc684 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -30,6 +30,7 @@
->  #define VIRTIO_SCSI_MEMPOOL_SZ 64
->  #define VIRTIO_SCSI_EVENT_LEN 8
->  #define VIRTIO_SCSI_VQ_BASE 2
-> +#define VIRTIO_SCSI_TMF_TIMEOUT 30
->  
->  /* Command queue element */
->  struct virtio_scsi_cmd {
-> @@ -597,8 +598,10 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
->  			      GFP_NOIO) < 0)
->  		goto out;
->  
-> -	wait_for_completion(&comp);
-> -	if (cmd->resp.tmf.response == VIRTIO_SCSI_S_OK ||
-> +	if (wait_for_completion_timeout(&comp,
-> +					VIRTIO_SCSI_TMF_TIMEOUT * HZ) == 0)
-> +		ret = FAILED;
-> +	else if (cmd->resp.tmf.response == VIRTIO_SCSI_S_OK ||
->  	    cmd->resp.tmf.response == VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
->  		ret = SUCCESS;
->  
-> 
+On Wed, 2013-06-12 at 08:05 +0000, Saurav Kashyap wrote:
+> Hi Bart,
+> Missing msg ids needs to be updated in qla_dbg.c file. Here is an updated
+> patch
 
+OK, so since you modified the first patch in the series, you need to be
+the one who sends it all to me (with proper signoffs).
 
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+Thanks,
+
+James
 
 
