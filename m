@@ -1,12 +1,12 @@
 From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH 06/10] [RFC] SCSI: esas2r: Add flash and target database functions
-Date: Thu, 13 Jun 2013 10:31:04 -0400
-Message-ID: <1371133868-13794-7-git-send-email-bgrove@attotech.com>
+Subject: [PATCH 02/10] [RFC] SCSI: esas2r: Add main file
+Date: Thu, 13 Jun 2013 10:31:00 -0400
+Message-ID: <1371133868-13794-3-git-send-email-bgrove@attotech.com>
 References: <1371133868-13794-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:49870 "EHLO
+Received: from sw.attotech.com ([208.69.85.34]:14367 "EHLO
 	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758374Ab3FMOrB (ORCPT
+	with ESMTP id S1758349Ab3FMOrB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jun 2013 10:47:01 -0400
 In-Reply-To: <1371133868-13794-1-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,20 +17,18 @@ Cc: jseba@attotech.com, jbottomley@parallels.com, Bradley Grove <bgrove@attotech
 
 Signed-off-by: Bradley Grove <bgrove@attotech.com>
 ---
- drivers/scsi/esas2r/esas2r_flash.c  | 1518 +++++++++++++++++++++++++++++++++++
- drivers/scsi/esas2r/esas2r_targdb.c |  306 +++++++
- 2 files changed, 1824 insertions(+)
- create mode 100644 drivers/scsi/esas2r/esas2r_flash.c
- create mode 100644 drivers/scsi/esas2r/esas2r_targdb.c
+ drivers/scsi/esas2r/esas2r_main.c | 2177 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 2177 insertions(+)
+ create mode 100644 drivers/scsi/esas2r/esas2r_main.c
 
-diff --git a/drivers/scsi/esas2r/esas2r_flash.c b/drivers/scsi/esas2r/esas2r_flash.c
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
 new file mode 100644
-index 0000000..70a45d4
+index 0000000..ad5d427
 --- /dev/null
-+++ b/drivers/scsi/esas2r/esas2r_flash.c
-@@ -0,0 +1,1516 @@
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -0,0 +1,2177 @@
 +/*
-+ *  linux/drivers/scsi/esas2r/esas2r_flash.c
++ *  linux/drivers/scsi/esas2r/esas2r_main.c
 + *      For use with ATTO ExpressSAS R6xx SAS/SATA RAID controllers
 + *
 + *  Copyright (c) 2001-2013 ATTO Technology, Inc.
@@ -74,979 +72,1446 @@ index 0000000..70a45d4
 +
 +#include "esas2r.h"
 +
-+/* local macro defs */
-+#define esas2r_nvramcalc_cksum(n)     \
-+	(esas2r_calc_byte_cksum((u8 *)(n), sizeof(struct esas2r_sas_nvram), \
-+				SASNVR_CKSUM_SEED))
-+#define esas2r_nvramcalc_xor_cksum(n)  \
-+	(esas2r_calc_byte_xor_cksum((u8 *)(n), \
-+				    sizeof(struct esas2r_sas_nvram), 0))
++MODULE_DESCRIPTION(ESAS2R_DRVR_NAME ": " ESAS2R_LONGNAME " driver");
++MODULE_AUTHOR("ATTO Technology, Inc.");
++MODULE_LICENSE("GPL");
++MODULE_VERSION(ESAS2R_VERSION_STR);
 +
-+#define ESAS2R_FS_DRVR_VER 2
++/* global definitions */
 +
-+static struct esas2r_sas_nvram default_sas_nvram = {
-+	{ 'E',	'S',  'A',  'S'			},      /* signature          */
-+	SASNVR_VERSION,                                 /* version            */
-+	0,                                              /* checksum           */
-+	31,                                             /* max_lun_for_target */
-+	SASNVR_PCILAT_MAX,                              /* pci_latency        */
-+	SASNVR1_BOOT_DRVR,                              /* options1           */
-+	SASNVR2_HEARTBEAT   | SASNVR2_SINGLE_BUS        /* options2           */
-+	| SASNVR2_SW_MUX_CTRL,
-+	SASNVR_COAL_DIS,                                /* int_coalescing     */
-+	SASNVR_CMDTHR_NONE,                             /* cmd_throttle       */
-+	3,                                              /* dev_wait_time      */
-+	1,                                              /* dev_wait_count     */
-+	0,                                              /* spin_up_delay      */
-+	0,                                              /* ssp_align_rate     */
-+	{ 0x50, 0x01, 0x08, 0x60,                       /* sas_addr           */
-+	  0x00, 0x00, 0x00, 0x00 },
-+	{ SASNVR_SPEED_AUTO },                          /* phy_speed          */
-+	{ SASNVR_MUX_DISABLED },                        /* SAS multiplexing   */
-+	{ 0 },                                          /* phy_flags          */
-+	SASNVR_SORT_SAS_ADDR,                           /* sort_type          */
-+	3,                                              /* dpm_reqcmd_lmt     */
-+	3,                                              /* dpm_stndby_time    */
-+	0,                                              /* dpm_active_time    */
-+	{ 0 },                                          /* phy_target_id      */
-+	SASNVR_VSMH_DISABLED,                           /* virt_ses_mode      */
-+	SASNVR_RWM_DEFAULT,                             /* read_write_mode    */
-+	0,                                              /* link down timeout  */
-+	{ 0 }                                           /* reserved           */
-+};
++static int found_adapters;
++struct esas2r_adapter *esas2r_adapters[MAX_ADAPTERS];
 +
-+static u8 cmd_to_fls_func[] = {
-+	0xFF,
-+	VDA_FLASH_READ,
-+	VDA_FLASH_BEGINW,
-+	VDA_FLASH_WRITE,
-+	VDA_FLASH_COMMIT,
-+	VDA_FLASH_CANCEL
-+};
++#define ESAS2R_VDA_EVENT_PORT1       54414
++#define ESAS2R_VDA_EVENT_PORT2       54415
++#define ESAS2R_VDA_EVENT_SOCK_COUNT  2
 +
-+static u8 esas2r_calc_byte_xor_cksum(u8 *addr, u32 len, u8 seed)
++static struct socket *event_socket[ESAS2R_VDA_EVENT_SOCK_COUNT];
++
++static struct esas2r_adapter *esas2r_adapter_from_kobj(struct kobject *kobj)
 +{
-+	u32 cksum = seed;
-+	u8 *p = (u8 *)&cksum;
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct Scsi_Host *host = class_to_shost(dev);
 +
-+	while (len) {
-+		if (((uintptr_t)addr & 3) == 0)
-+			break;
-+
-+		cksum = cksum ^ *addr;
-+		addr++;
-+		len--;
-+	}
-+	while (len >= sizeof(u32)) {
-+		cksum = cksum ^ *(u32 *)addr;
-+		addr += 4;
-+		len -= 4;
-+	}
-+	while (len--) {
-+		cksum = cksum ^ *addr;
-+		addr++;
-+	}
-+	return p[0] ^ p[1] ^ p[2] ^ p[3];
++	return (struct esas2r_adapter *)host->hostdata;
 +}
 +
-+static u8 esas2r_calc_byte_cksum(void *addr, u32 len, u8 seed)
++static ssize_t read_fw(struct file *file, struct kobject *kobj,
++		       struct bin_attribute *attr,
++		       char *buf, loff_t off, size_t count)
 +{
-+	u8 *p = (u8 *)addr;
-+	u8 cksum = seed;
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
 +
-+	while (len--)
-+		cksum = cksum + p[len];
-+	return cksum;
++	return esas2r_read_fw(a, buf, off, count);
 +}
 +
-+/* Interrupt callback to process FM API write requests. */
-+static void esas2r_fmapi_callback(struct esas2r_adapter *a,
-+				  struct esas2r_request *rq)
++static ssize_t write_fw(struct file *file, struct kobject *kobj,
++			struct bin_attribute *attr,
++			char *buf, loff_t off, size_t count)
 +{
-+	struct atto_vda_flash_req *vrq = &rq->vrq->flash;
-+	struct esas2r_flash_context *fc =
-+		(struct esas2r_flash_context *)rq->interrupt_cx;
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
 +
-+	if (rq->req_stat == RS_SUCCESS) {
-+		/* Last request was successful.  See what to do now. */
-+		switch (vrq->sub_func) {
-+		case VDA_FLASH_BEGINW:
-+			if (fc->sgc.cur_offset == NULL)
-+				goto commit;
++	return esas2r_write_fw(a, buf, off, count);
++}
 +
-+			vrq->sub_func = VDA_FLASH_WRITE;
-+			rq->req_stat = RS_PENDING;
-+			break;
++static ssize_t read_fs(struct file *file, struct kobject *kobj,
++		       struct bin_attribute *attr,
++		       char *buf, loff_t off, size_t count)
++{
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
 +
-+		case VDA_FLASH_WRITE:
-+commit:
-+			vrq->sub_func = VDA_FLASH_COMMIT;
-+			rq->req_stat = RS_PENDING;
-+			rq->interrupt_cb = fc->interrupt_cb;
-+			break;
++	return esas2r_read_fs(a, buf, off, count);
++}
 +
-+		default:
-+			break;
++static ssize_t write_fs(struct file *file, struct kobject *kobj,
++			struct bin_attribute *attr,
++			char *buf, loff_t off, size_t count)
++{
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
++	int length = min(sizeof(struct esas2r_ioctl_fs), count);
++	int result = 0;
++
++	result = esas2r_write_fs(a, buf, off, count);
++
++	if (result < 0)
++		result = 0;
++
++	return length;
++}
++
++static ssize_t read_vda(struct file *file, struct kobject *kobj,
++			struct bin_attribute *attr,
++			char *buf, loff_t off, size_t count)
++{
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
++
++	return esas2r_read_vda(a, buf, off, count);
++}
++
++static ssize_t write_vda(struct file *file, struct kobject *kobj,
++			 struct bin_attribute *attr,
++			 char *buf, loff_t off, size_t count)
++{
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
++
++	return esas2r_write_vda(a, buf, off, count);
++}
++
++static ssize_t read_live_nvram(struct file *file, struct kobject *kobj,
++			       struct bin_attribute *attr,
++			       char *buf, loff_t off, size_t count)
++{
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
++	int length = min(sizeof(struct esas2r_sas_nvram), (size_t)PAGE_SIZE);
++
++	memmove(buf, a->nvram, length);
++	return length;
++}
++
++static ssize_t write_live_nvram(struct file *file, struct kobject *kobj,
++				struct bin_attribute *attr,
++				char *buf, loff_t off, size_t count)
++{
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
++	struct esas2r_request *rq;
++	int result = -EFAULT;
++
++	rq = esas2r_alloc_request(a);
++	if (rq == NULL)
++		return -ENOMEM;
++
++	if (esas2r_write_params(a, rq, (struct esas2r_sas_nvram *)buf))
++		result = count;
++
++	esas2r_free_request(a, rq);
++
++	return result;
++}
++
++static ssize_t read_default_nvram(struct file *file, struct kobject *kobj,
++				  struct bin_attribute *attr,
++				  char *buf, loff_t off, size_t count)
++{
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
++
++	esas2r_nvram_get_defaults(a, (struct esas2r_sas_nvram *)buf);
++
++	return sizeof(struct esas2r_sas_nvram);
++}
++
++static ssize_t read_hw(struct file *file, struct kobject *kobj,
++		       struct bin_attribute *attr,
++		       char *buf, loff_t off, size_t count)
++{
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
++	int length = min(sizeof(struct atto_ioctl), (size_t)PAGE_SIZE);
++
++	if (!a->local_atto_ioctl)
++		return -ENOMEM;
++
++	if (handle_hba_ioctl(a, a->local_atto_ioctl) != IOCTL_SUCCESS)
++		return -ENOMEM;
++
++	memmove(buf, a->local_atto_ioctl, length);
++
++	return length;
++}
++
++static ssize_t write_hw(struct file *file, struct kobject *kobj,
++			struct bin_attribute *attr,
++			char *buf, loff_t off, size_t count)
++{
++	struct esas2r_adapter *a = esas2r_adapter_from_kobj(kobj);
++	int length = min(sizeof(struct atto_ioctl), count);
++
++	if (!a->local_atto_ioctl) {
++		a->local_atto_ioctl = vmalloc(sizeof(struct atto_ioctl));
++		if (a->local_atto_ioctl == NULL) {
++			esas2r_log(ESAS2R_LOG_WARN,
++				   "write_hw vmalloc failed for %d bytes",
++				   sizeof(struct atto_ioctl));
++			return -ENOMEM;
 +		}
 +	}
 +
-+	if (rq->req_stat != RS_PENDING)
++	memset(a->local_atto_ioctl, 0, sizeof(struct atto_ioctl));
++	memmove(a->local_atto_ioctl, buf, length);
++
++	return length;
++}
++
++#define ESAS2R_RW_BIN_ATTR(_name) \
++	struct bin_attribute bin_attr_ ## _name = { \
++		.attr	= \
++		{ .name = __stringify(_name), .mode  = S_IRUSR | S_IWUSR }, \
++		.size	= 0, \
++		.read	= read_ ## _name, \
++		.write	= write_ ## _name }
++
++ESAS2R_RW_BIN_ATTR(fw);
++ESAS2R_RW_BIN_ATTR(fs);
++ESAS2R_RW_BIN_ATTR(vda);
++ESAS2R_RW_BIN_ATTR(hw);
++ESAS2R_RW_BIN_ATTR(live_nvram);
++
++struct bin_attribute bin_attr_default_nvram = {
++	.attr	= { .name = "default_nvram", .mode = S_IRUGO },
++	.size	= 0,
++	.read	= read_default_nvram,
++	.write	= NULL
++};
++
++static struct scsi_host_template driver_template = {
++	.module				= THIS_MODULE,
++	.show_info			= esas2r_show_info,
++	.name				= ESAS2R_LONGNAME,
++	.release			= esas2r_release,
++	.info				= esas2r_info,
++	.ioctl				= esas2r_ioctl,
++	.queuecommand			= esas2r_queuecommand,
++	.eh_abort_handler		= esas2r_eh_abort,
++	.eh_device_reset_handler	= esas2r_device_reset,
++	.eh_bus_reset_handler		= esas2r_bus_reset,
++	.eh_host_reset_handler		= esas2r_host_reset,
++	.eh_target_reset_handler	= esas2r_target_reset,
++	.can_queue			= 128,
++	.this_id			= -1,
++	.sg_tablesize			= SCSI_MAX_SG_SEGMENTS,
++	.cmd_per_lun			=
++		ESAS2R_DEFAULT_CMD_PER_LUN,
++	.present			= 0,
++	.unchecked_isa_dma		= 0,
++	.use_clustering			= ENABLE_CLUSTERING,
++	.emulated			= 0,
++	.proc_name			= ESAS2R_DRVR_NAME,
++	.slave_configure		= esas2r_slave_configure,
++	.slave_alloc			= esas2r_slave_alloc,
++	.slave_destroy			= esas2r_slave_destroy,
++	.change_queue_depth		= esas2r_change_queue_depth,
++	.change_queue_type		= esas2r_change_queue_type,
++	.max_sectors			= 0xFFFF,
++};
++
++int sgl_page_size = 512;
++module_param(sgl_page_size, int, 0);
++MODULE_PARM_DESC(sgl_page_size,
++		 "Scatter/gather list (SGL) page size in number of S/G "
++		 "entries.  If your application is doing a lot of very large "
++		 "transfers, you may want to increase the SGL page size.  "
++		 "Default 512.");
++
++int num_sg_lists = 1024;
++module_param(num_sg_lists, int, 0);
++MODULE_PARM_DESC(num_sg_lists,
++		 "Number of scatter/gather lists.  Default 1024.");
++
++int sg_tablesize = SCSI_MAX_SG_SEGMENTS;
++module_param(sg_tablesize, int, 0);
++MODULE_PARM_DESC(sg_tablesize,
++		 "Maximum number of entries in a scatter/gather table.");
++
++int num_requests = 256;
++module_param(num_requests, int, 0);
++MODULE_PARM_DESC(num_requests,
++		 "Number of requests.  Default 256.");
++
++int num_ae_requests = 4;
++module_param(num_ae_requests, int, 0);
++MODULE_PARM_DESC(num_ae_requests,
++		 "Number of VDA asynchromous event requests.  Default 4.");
++
++int cmd_per_lun = ESAS2R_DEFAULT_CMD_PER_LUN;
++module_param(cmd_per_lun, int, 0);
++MODULE_PARM_DESC(cmd_per_lun,
++		 "Maximum number of commands per LUN.  Default "
++		 DEFINED_NUM_TO_STR(ESAS2R_DEFAULT_CMD_PER_LUN) ".");
++
++int can_queue = 128;
++module_param(can_queue, int, 0);
++MODULE_PARM_DESC(can_queue,
++		 "Maximum number of commands per adapter.  Default 128.");
++
++int esas2r_max_sectors = 0xFFFF;
++module_param(esas2r_max_sectors, int, 0);
++MODULE_PARM_DESC(esas2r_max_sectors,
++		 "Maximum number of disk sectors in a single data transfer.  "
++		 "Default 65535 (largest possible setting).");
++
++int interrupt_mode = 1;
++module_param(interrupt_mode, int, 0);
++MODULE_PARM_DESC(interrupt_mode,
++		 "Defines the interrupt mode to use.  0 for legacy"
++		 ", 1 for MSI.  Default is MSI (1).");
++
++static struct pci_device_id
++	esas2r_pci_table[] = {
++	{ ATTO_VENDOR_ID, 0x0049, ATTO_VENDOR_ID, 0x0049,
++	  0,
++	  0, 0 },
++	{ ATTO_VENDOR_ID, 0x0049, ATTO_VENDOR_ID, 0x004A,
++	  0,
++	  0, 0 },
++	{ ATTO_VENDOR_ID, 0x0049, ATTO_VENDOR_ID, 0x004B,
++	  0,
++	  0, 0 },
++	{ ATTO_VENDOR_ID, 0x0049, ATTO_VENDOR_ID, 0x004C,
++	  0,
++	  0, 0 },
++	{ ATTO_VENDOR_ID, 0x0049, ATTO_VENDOR_ID, 0x004D,
++	  0,
++	  0, 0 },
++	{ ATTO_VENDOR_ID, 0x0049, ATTO_VENDOR_ID, 0x004E,
++	  0,
++	  0, 0 },
++	{ 0,		  0,	  0,		  0,
++	  0,
++	  0, 0 }
++};
++
++MODULE_DEVICE_TABLE(pci, esas2r_pci_table);
++
++static int
++esas2r_probe(struct pci_dev *pcid, const struct pci_device_id *id);
++
++static void
++esas2r_remove(struct pci_dev *pcid);
++
++static struct pci_driver
++	esas2r_pci_driver = {
++	.name		= ESAS2R_DRVR_NAME,
++	.id_table	= esas2r_pci_table,
++	.probe		= esas2r_probe,
++	.remove		= esas2r_remove,
++	.suspend	= esas2r_suspend,
++	.resume		= esas2r_resume,
++};
++
++static int esas2r_probe(struct pci_dev *pcid,
++			const struct pci_device_id *id)
++{
++	struct Scsi_Host *host = NULL;
++	struct esas2r_adapter *a;
++	int err;
++
++	size_t host_alloc_size = sizeof(struct esas2r_adapter)
++				 + ((num_requests) +
++				    1) * sizeof(struct esas2r_request);
++
++	esas2r_log_dev(ESAS2R_LOG_DEBG, &(pcid->dev),
++		       "esas2r_probe() 0x%02x 0x%02x 0x%02x 0x%02x",
++		       pcid->vendor,
++		       pcid->device,
++		       pcid->subsystem_vendor,
++		       pcid->subsystem_device);
++
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
++		       "before pci_enable_device() "
++		       "enable_cnt: %d",
++		       pcid->enable_cnt.counter);
++
++	err = pci_enable_device(pcid);
++	if (err != 0) {
++		esas2r_log_dev(ESAS2R_LOG_CRIT, &(pcid->dev),
++			       "pci_enable_device() FAIL (%d)",
++			       err);
++		return -ENODEV;
++	}
++
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
++		       "pci_enable_device() OK");
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
++		       "after pci_device_enable() enable_cnt: %d",
++		       pcid->enable_cnt.counter);
++
++	host = scsi_host_alloc(&driver_template, host_alloc_size);
++	if (host == NULL) {
++		esas2r_log(ESAS2R_LOG_CRIT, "scsi_host_alloc() FAIL");
++		return -ENODEV;
++	}
++
++	memset(host->hostdata, 0, host_alloc_size);
++
++	a = (struct esas2r_adapter *)host->hostdata;
++
++	esas2r_log(ESAS2R_LOG_INFO, "scsi_host_alloc() OK host: %p", host);
++
++	/* override max LUN and max target id */
++
++	host->max_id = ESAS2R_MAX_ID + 1;
++	host->max_lun = 255;
++
++	/* we can handle 16-byte CDbs */
++
++	host->max_cmd_len = 16;
++
++	host->can_queue = can_queue;
++	host->cmd_per_lun = cmd_per_lun;
++	host->this_id = host->max_id + 1;
++	host->max_channel = 0;
++	host->unique_id = found_adapters;
++	host->sg_tablesize = sg_tablesize;
++	host->max_sectors = esas2r_max_sectors;
++
++	/* set to bus master for BIOses that don't do it for us */
++
++	esas2r_log(ESAS2R_LOG_INFO, "pci_set_master() called");
++
++	pci_set_master(pcid);
++
++	if (!esas2r_init_adapter(host, pcid, found_adapters)) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "unable to initialize device at PCI bus %x:%x",
++			   pcid->bus->number,
++			   pcid->devfn);
++
++		esas2r_log_dev(ESAS2R_LOG_INFO, &(host->shost_gendev),
++			       "scsi_host_put() called");
++
++		scsi_host_put(host);
++
++		return 0;
++
++	}
++
++	esas2r_log(ESAS2R_LOG_INFO, "pci_set_drvdata(%p, %p) called", pcid,
++		   host->hostdata);
++
++	pci_set_drvdata(pcid, host);
++
++	esas2r_log(ESAS2R_LOG_INFO, "scsi_add_host() called");
++
++	err = scsi_add_host(host, &pcid->dev);
++
++	if (err) {
++		esas2r_log(ESAS2R_LOG_CRIT, "scsi_add_host returned %d", err);
++		esas2r_log_dev(ESAS2R_LOG_CRIT, &(host->shost_gendev),
++			       "scsi_add_host() FAIL");
++
++		esas2r_log_dev(ESAS2R_LOG_INFO, &(host->shost_gendev),
++			       "scsi_host_put() called");
++
++		scsi_host_put(host);
++
++		esas2r_log_dev(ESAS2R_LOG_INFO, &(host->shost_gendev),
++			       "pci_set_drvdata(%p, NULL) called",
++			       pcid);
++
++		pci_set_drvdata(pcid, NULL);
++
++		return -ENODEV;
++	}
++
++
++	esas2r_fw_event_on(a);
++
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(host->shost_gendev),
++		       "scsi_scan_host() called");
++
++	scsi_scan_host(host);
++
++	/* Add sysfs binary files */
++	if (sysfs_create_bin_file(&host->shost_dev.kobj, &bin_attr_fw))
++		esas2r_log_dev(ESAS2R_LOG_WARN, &(host->shost_gendev),
++			       "Failed to create sysfs binary file: fw");
++	if (sysfs_create_bin_file(&host->shost_dev.kobj, &bin_attr_fs))
++		esas2r_log_dev(ESAS2R_LOG_WARN, &(host->shost_gendev),
++			       "Failed to create sysfs binary file: fs");
++	if (sysfs_create_bin_file(&host->shost_dev.kobj, &bin_attr_vda))
++		esas2r_log_dev(ESAS2R_LOG_WARN, &(host->shost_gendev),
++			       "Failed to create sysfs binary file: vda");
++	if (sysfs_create_bin_file(&host->shost_dev.kobj, &bin_attr_hw))
++		esas2r_log_dev(ESAS2R_LOG_WARN, &(host->shost_gendev),
++			       "Failed to create sysfs binary file: hw");
++	if (sysfs_create_bin_file(&host->shost_dev.kobj, &bin_attr_live_nvram))
++		esas2r_log_dev(ESAS2R_LOG_WARN, &(host->shost_gendev),
++			       "Failed to create sysfs binary file: live_nvram");
++	if (sysfs_create_bin_file(&host->shost_dev.kobj,
++				  &bin_attr_default_nvram))
++		esas2r_log_dev(ESAS2R_LOG_WARN, &(host->shost_gendev),
++			       "Failed to create sysfs binary file: default_nvram");
++	found_adapters++;
++
++	return 0;
++}
++
++static void esas2r_remove(struct pci_dev *pdev)
++{
++	struct Scsi_Host *host;
++	int index;
++
++	if (pdev == NULL) {
++		esas2r_log(ESAS2R_LOG_WARN, "esas2r_remove pdev==NULL");
++		return;
++	}
++
++	host = pci_get_drvdata(pdev);
++
++	if (host == NULL) {
 +		/*
-+		 * All done. call the real callback to complete the FM API
-+		 * request.  We should only get here if a BEGINW or WRITE
-+		 * operation failed.
++		 * this can happen if pci_set_drvdata was already called
++		 * to clear the host pointer.  if this is the case, we
++		 * are okay; this channel has already been cleaned up.
 +		 */
-+		(*fc->interrupt_cb)(a, rq);
++
++		return;
++	}
++
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
++		       "esas2r_remove(%p) called; "
++		       "host:%p", pdev,
++		       host);
++
++	index = esas2r_cleanup(host);
++
++	if (index < 0)
++		esas2r_log_dev(ESAS2R_LOG_WARN, &(pdev->dev),
++			       "unknown host in %s",
++			       __func__);
++
++	found_adapters--;
++
++	/* if this was the last adapter, clean up the rest of the driver */
++
++	if (found_adapters == 0)
++		esas2r_cleanup(NULL);
 +}
 +
-+/*
-+ * Build a flash request based on the flash context.  The request status
-+ * is filled in on an error.
-+ */
-+static void build_flash_msg(struct esas2r_adapter *a,
-+			    struct esas2r_request *rq)
++static void cleanup_async_event_sockets(void)
 +{
-+	struct esas2r_flash_context *fc =
-+		(struct esas2r_flash_context *)rq->interrupt_cx;
-+	struct esas2r_sg_context *sgc = &fc->sgc;
-+	u8 cksum = 0;
++	int i;
 +
-+	/* calculate the checksum */
-+	if (fc->func == VDA_FLASH_BEGINW) {
-+		if (sgc->cur_offset)
-+			cksum = esas2r_calc_byte_xor_cksum(sgc->cur_offset,
-+							   sgc->length,
-+							   0);
-+		rq->interrupt_cb = esas2r_fmapi_callback;
-+	} else {
-+		rq->interrupt_cb = fc->interrupt_cb;
-+	}
-+	esas2r_build_flash_req(a,
-+			       rq,
-+			       fc->func,
-+			       cksum,
-+			       fc->flsh_addr,
-+			       sgc->length);
-+
-+	esas2r_rq_free_sg_lists(rq, a);
-+
-+	/*
-+	 * remember the length we asked for.  we have to keep track of
-+	 * the current amount done so we know how much to compare when
-+	 * doing the verification phase.
-+	 */
-+	fc->curr_len = fc->sgc.length;
-+
-+	if (sgc->cur_offset) {
-+		/* setup the S/G context to build the S/G table  */
-+		esas2r_sgc_init(sgc, a, rq, &rq->vrq->flash.data.sge[0]);
-+
-+		if (!esas2r_build_sg_list(a, rq, sgc)) {
-+			rq->req_stat = RS_BUSY;
-+			return;
++	for (i = 0; i < ESAS2R_VDA_EVENT_SOCK_COUNT; i++) {
++		if (event_socket[i]) {
++			sock_release(event_socket[i]);
++			event_socket[i] = NULL;
 +		}
-+	} else {
-+		fc->sgc.length = 0;
 +	}
-+
-+	/* update the flsh_addr to the next one to write to  */
-+	fc->flsh_addr += fc->curr_len;
 +}
 +
-+/* determine the method to process the flash request */
-+static bool load_image(struct esas2r_adapter *a, struct esas2r_request *rq)
++static int __init esas2r_init(void)
 +{
-+	/*
-+	 * assume we have more to do.  if we return with the status set to
-+	 * RS_PENDING, FM API tasks will continue.
-+	 */
-+	rq->req_stat = RS_PENDING;
-+	if (a->flags & AF_DEGRADED_MODE)
-+		/* not suppported for now */;
++	int i;
++
++	esas2r_log(ESAS2R_LOG_INFO, "%s called", __func__);
++
++	/* verify valid parameters */
++
++	if (can_queue < 1) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "warning: can_queue must be at least 1, value "
++			   "forced.");
++		can_queue = 1;
++	} else if (can_queue > 2048) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "warning: can_queue must be no larger than 2048, "
++			   "value forced.");
++		can_queue = 2048;
++	}
++
++	if (cmd_per_lun < 1) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "warning: cmd_per_lun must be at least 1, value "
++			   "forced.");
++		cmd_per_lun = 1;
++	} else if (cmd_per_lun > 2048) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "warning: cmd_per_lun must be no larger than "
++			   "2048, value forced.");
++		cmd_per_lun = 2048;
++	}
++
++	if (sg_tablesize < 32) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "warning: sg_tablesize must be at least 32, "
++			   "value forced.");
++		sg_tablesize = 32;
++	}
++
++	if (esas2r_max_sectors < 1) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "warning: esas2r_max_sectors must be at least "
++			   "1, value forced.");
++		esas2r_max_sectors = 1;
++	} else if (esas2r_max_sectors > 0xffff) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "warning: esas2r_max_sectors must be no larger "
++			   "than 0xffff, value forced.");
++		esas2r_max_sectors = 0xffff;
++	}
++
++	/* set up other globals */
++
++	for (i = 0; i < MAX_ADAPTERS; i++)
++		esas2r_adapters[i] = NULL;
++
++	/* Create two sockets for asynchronous event notification */
++
++	for (i = 0; i < ESAS2R_VDA_EVENT_SOCK_COUNT; i++) {
++		int res;
++		struct sockaddr_in sin;
++
++		if (event_socket[i])
++			continue;
++
++		res = sock_create(AF_INET, SOCK_DGRAM, 0, &event_socket[i]);
++
++		if (res < 0) {
++			esas2r_log(ESAS2R_LOG_CRIT,
++				   "could not create event socket %d (%d)\n",
++				   i, res);
++			cleanup_async_event_sockets();
++			return 0;
++		}
++
++		memset(&sin, 0, sizeof(sin));
++		sin.sin_family = AF_INET;
++		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
++		sin.sin_port = htons(ESAS2R_VDA_EVENT_PORT1 + i);
++
++		res = event_socket[i]->ops->connect(event_socket[i],
++						    (struct sockaddr *)&sin,
++						    sizeof(sin),
++						    0);
++
++		if (res < 0) {
++			esas2r_log(ESAS2R_LOG_CRIT,
++				   "could not bind event socket %d (%d)\n",
++				   i, res);
++			cleanup_async_event_sockets();
++			return 0;
++		}
++	}
++
++	/* initialize */
++
++	driver_template.module = THIS_MODULE;
++
++	if (pci_register_driver(&esas2r_pci_driver) != 0)
++		esas2r_log(ESAS2R_LOG_CRIT, "pci_register_driver FAILED");
 +	else
-+		build_flash_msg(a, rq);
++		esas2r_log(ESAS2R_LOG_INFO, "pci_register_driver() OK");
 +
-+	return rq->req_stat == RS_PENDING;
-+}
++	if (!found_adapters) {
++		pci_unregister_driver(&esas2r_pci_driver);
++		esas2r_cleanup(NULL);
 +
-+/*  boot image fixer uppers called before downloading the image. */
-+static void fix_bios(struct esas2r_adapter *a, struct esas2r_flash_img *fi)
-+{
-+	struct esas2r_component_header *ch = &fi->cmp_hdr[CH_IT_BIOS];
-+	struct esas2r_pc_image *pi;
-+	struct esas2r_boot_header *bh;
-+
-+	pi = (struct esas2r_pc_image *)((u8 *)fi + ch->image_offset);
-+	bh =
-+		(struct esas2r_boot_header *)((u8 *)pi +
-+					      le16_to_cpu(pi->header_offset));
-+	bh->device_id = cpu_to_le16(a->pcid->device);
-+
-+	/* Recalculate the checksum in the PNP header if there  */
-+	if (pi->pnp_offset) {
-+		u8 *pnp_header_bytes =
-+			((u8 *)pi + le16_to_cpu(pi->pnp_offset));
-+
-+		/* Identifier - dword that starts at byte 10 */
-+		*((u32 *)&pnp_header_bytes[10]) =
-+			cpu_to_le32(MAKEDWORD(le32_to_cpu(a->pci_cfg->
-+							  subsystem_vendor_id),
-+					      a->pcid->subsystem_device));
-+
-+		/* Checksum - byte 9 */
-+		pnp_header_bytes[9] -= esas2r_calc_byte_cksum(pnp_header_bytes,
-+							      32, 0);
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "driver will not be loaded because no ATTO "
++			   "%s devices were found",
++			   ESAS2R_DRVR_NAME);
++		return -1;
++	} else {
++		esas2r_log(ESAS2R_LOG_INFO, "found %d adapters",
++			   found_adapters);
 +	}
 +
-+	/* Recalculate the checksum needed by the PC */
-+	pi->checksum = pi->checksum -
-+		       esas2r_calc_byte_cksum((u8 *)pi, ch->length, 0);
++	return 0;
 +}
 +
-+static void fix_efi(struct esas2r_adapter *a, struct esas2r_flash_img *fi)
++/* Handle ioctl calls to "/proc/scsi/esas2r/ATTOnode" */
++static const struct file_operations esas2r_proc_fops = {
++	.compat_ioctl	= esas2r_proc_ioctl,
++	.unlocked_ioctl = esas2r_proc_ioctl,
++};
++
++static struct Scsi_Host *esas2r_proc_host;
++static int esas2r_proc_major;
++
++long esas2r_proc_ioctl(struct file *fp, unsigned int cmd, unsigned long arg)
 +{
-+	struct esas2r_component_header *ch = &fi->cmp_hdr[CH_IT_EFI];
-+	u32 len = ch->length;
-+	u32 offset = ch->image_offset;
-+	struct esas2r_efi_image *ei;
-+	struct esas2r_boot_header *bh;
++	return esas2r_ioctl_handler(esas2r_proc_host->hostdata,
++				    (int)cmd, (void __user *)arg);
++}
 +
-+	while (len) {
-+		u32 thislen;
++static void __exit esas2r_exit(void)
++{
++	esas2r_log(ESAS2R_LOG_INFO, "%s called", __func__);
 +
-+		ei = (struct esas2r_efi_image *)((u8 *)fi + offset);
-+		bh = (struct esas2r_boot_header *)((u8 *)ei +
-+						   le16_to_cpu(
-+							   ei->header_offset));
-+		bh->device_id = cpu_to_le16(a->pcid->device);
-+		thislen = (u32)le16_to_cpu(bh->image_length) * 512;
++	if (esas2r_proc_major > 0) {
++		esas2r_log(ESAS2R_LOG_INFO, "unregister proc");
 +
-+		if (thislen > len)
-+			break;
++		remove_proc_entry(ATTONODE_NAME,
++				  esas2r_proc_host->hostt->proc_dir);
++		unregister_chrdev(esas2r_proc_major, ESAS2R_DRVR_NAME);
 +
-+		len -= thislen;
-+		offset += thislen;
++		esas2r_proc_major = 0;
 +	}
++
++	cleanup_async_event_sockets();
++
++	esas2r_log(ESAS2R_LOG_INFO, "pci_unregister_driver() called");
++
++	pci_unregister_driver(&esas2r_pci_driver);
 +}
 +
-+/* Complete a FM API request with the specified status. */
-+static bool complete_fmapi_req(struct esas2r_adapter *a,
-+			       struct esas2r_request *rq, u8 fi_stat)
++int esas2r_show_info(struct seq_file *m, struct Scsi_Host *sh)
 +{
-+	struct esas2r_flash_context *fc =
-+		(struct esas2r_flash_context *)rq->interrupt_cx;
-+	struct esas2r_flash_img *fi = fc->fi;
++	struct esas2r_adapter *a = (struct esas2r_adapter *)sh->hostdata;
 +
-+	fi->status = fi_stat;
-+	fi->driver_error = rq->req_stat;
-+	rq->interrupt_cb = NULL;
-+	rq->req_stat = RS_SUCCESS;
++	struct esas2r_target *t;
++	int dev_count = 0;
 +
-+	if (fi_stat != FI_STAT_IMG_VER)
-+		memset(fc->scratch, 0, FM_BUF_SZ);
++	esas2r_log(ESAS2R_LOG_DEBG, "esas2r_show_info (%p,%d)", m, sh->host_no);
 +
-+	esas2r_enable_heartbeat(a);
-+	esas2r_lock_clear_flags(&a->flags, AF_FLASH_LOCK);
-+	return false;
++	seq_printf(m, ESAS2R_LONGNAME "\n"
++		   "Driver version: "ESAS2R_VERSION_STR "\n"
++		   "Flash version: %s\n"
++		   "Firmware version: %s\n"
++		   "Copyright "ESAS2R_COPYRIGHT_YEARS "\n"
++		   "http://www.attotech.com\n"
++		   "\n",
++		   a->flash_rev,
++		   a->fw_rev[0] ? a->fw_rev : "(none)");
++
++
++	seq_printf(m, "Adapter information:\n"
++		   "--------------------\n"
++		   "Model: %s\n"
++		   "SAS address: %02X%02X%02X%02X:%02X%02X%02X%02X\n",
++		   esas2r_get_model_name(a),
++		   a->nvram->sas_addr[0],
++		   a->nvram->sas_addr[1],
++		   a->nvram->sas_addr[2],
++		   a->nvram->sas_addr[3],
++		   a->nvram->sas_addr[4],
++		   a->nvram->sas_addr[5],
++		   a->nvram->sas_addr[6],
++		   a->nvram->sas_addr[7]);
++
++	seq_printf(m, "\n"
++		   "Discovered devices:\n"
++		   "\n"
++		   "   #  Target ID\n"
++		   "---------------\n");
++
++	for (t = a->targetdb; t < a->targetdb_end; t++)
++		if (t->buffered_target_state == TS_PRESENT) {
++			seq_printf(m, " %3d   %3d\n",
++				   ++dev_count,
++				   (u16)(uintptr_t)(t - a->targetdb));
++		}
++
++
++	if (dev_count == 0)
++		seq_printf(m, "none\n");
++
++	seq_printf(m, "\n");
++	return 0;
++
 +}
 +
-+/* Process each phase of the flash download process. */
-+static void fw_download_proc(struct esas2r_adapter *a,
-+			     struct esas2r_request *rq)
++int esas2r_release(struct Scsi_Host *sh)
 +{
-+	struct esas2r_flash_context *fc =
-+		(struct esas2r_flash_context *)rq->interrupt_cx;
-+	struct esas2r_flash_img *fi = fc->fi;
-+	struct esas2r_component_header *ch;
-+	u32 len;
-+	u8 *p, *q;
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(sh->shost_gendev),
++		       "esas2r_release() called");
 +
-+	/* If the previous operation failed, just return. */
-+	if (rq->req_stat != RS_SUCCESS)
-+		goto error;
++	esas2r_cleanup(sh);
++
++	return 0;
++}
++
++const char *esas2r_info(struct Scsi_Host *sh)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)sh->hostdata;
++	static char esas2r_info_str[512];
++
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(sh->shost_gendev),
++		       "esas2r_info() called");
 +
 +	/*
-+	 * If an upload just completed and the compare length is non-zero,
-+	 * then we just read back part of the image we just wrote.  verify the
-+	 * section and continue reading until the entire image is verified.
++	 * if we haven't done so already, register as a char driver
++	 * and stick a node under "/proc/scsi/esas2r/ATTOnode"
 +	 */
-+	if (fc->func == VDA_FLASH_READ
-+	    && fc->cmp_len) {
-+		ch = &fi->cmp_hdr[fc->comp_typ];
 +
-+		p = fc->scratch;
-+		q = (u8 *)fi                    /* start of the whole gob     */
-+		    + ch->image_offset          /* start of the current image */
-+		    + ch->length                /* end of the current image   */
-+		    - fc->cmp_len;              /* where we are now           */
++	if (esas2r_proc_major <= 0) {
++		esas2r_proc_host = sh;
++
++		esas2r_proc_major = register_chrdev(0, ESAS2R_DRVR_NAME,
++						    &esas2r_proc_fops);
++
++		esas2r_log_dev(ESAS2R_LOG_DEBG, &(sh->shost_gendev),
++			       "register_chrdev (major %d)",
++			       esas2r_proc_major);
++
++		if (esas2r_proc_major > 0) {
++			struct proc_dir_entry *pde;
++
++			pde = proc_create(ATTONODE_NAME, 0,
++					  sh->hostt->proc_dir,
++					  &esas2r_proc_fops);
++
++			if (!pde) {
++				esas2r_log_dev(ESAS2R_LOG_WARN,
++					       &(sh->shost_gendev),
++					       "failed to create_proc_entry");
++				esas2r_proc_major = -1;
++			}
++		}
++
++	}
++
++	sprintf(esas2r_info_str,
++		ESAS2R_LONGNAME " (bus 0x%02X, device 0x%02X, IRQ 0x%02X)"
++		" driver version: "ESAS2R_VERSION_STR "  firmware version: "
++		"%s\n",
++		a->pcid->bus->number, a->pcid->devfn, a->pcid->irq,
++		a->fw_rev[0] ? a->fw_rev : "(none)");
++
++	return esas2r_info_str;
++}
++
++/* Callback for building a request scatter/gather list */
++static u32 get_physaddr_from_sgc(struct esas2r_sg_context *sgc, u64 *addr)
++{
++	u32 len;
++
++	if (sgc->cur_offset == sgc->exp_offset) {
++		/*
++		 * the normal case: caller used all bytes from previous call, so
++		 * expected offset is the same as the current offset.
++		 */
++
++		if (sgc->sgel_count < sgc->num_sgel) {
++			/* retrieve next segment, except for first time */
++			if (sgc->exp_offset > (u8 *)0) {
++				/* advance current segment */
++				sgc->cur_sgel = sg_next(sgc->cur_sgel);
++				++(sgc->sgel_count);
++			}
++
++
++			len = sg_dma_len(sgc->cur_sgel);
++			(*addr) = sg_dma_address(sgc->cur_sgel);
++
++			/* save the total # bytes returned to caller so far */
++			sgc->exp_offset += len;
++
++		} else {
++			len = 0;
++		}
++	} else if (sgc->cur_offset < sgc->exp_offset) {
++		/*
++		 * caller did not use all bytes from previous call. need to
++		 * compute the address based on current segment.
++		 */
++
++		len = sg_dma_len(sgc->cur_sgel);
++		(*addr) = sg_dma_address(sgc->cur_sgel);
++
++		sgc->exp_offset -= len;
++
++		/* calculate PA based on prev segment address and offsets */
++		*addr = *addr +
++			(sgc->cur_offset - sgc->exp_offset);
++
++		sgc->exp_offset += len;
++
++		/* re-calculate length based on offset */
++		len = lower_32_bits(
++			sgc->exp_offset - sgc->cur_offset);
++	} else {   /* if ( sgc->cur_offset > sgc->exp_offset ) */
++		   /*
++		    * we don't expect the caller to skip ahead.
++		    * cur_offset will never exceed the len we return
++		    */
++		len = 0;
++	}
++
++	return len;
++}
++
++int esas2r_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
++{
++	struct esas2r_adapter *a =
++		(struct esas2r_adapter *)cmd->device->host->hostdata;
++	struct esas2r_request *rq;
++	struct esas2r_sg_context sgc;
++	unsigned bufflen;
++
++	/* Assume success, if it fails we will fix the result later. */
++	cmd->result = DID_OK << 16;
++
++	if (unlikely(a->flags & AF_DEGRADED_MODE)) {
++		cmd->result = DID_NO_CONNECT << 16;
++		cmd->scsi_done(cmd);
++		return 0;
++	}
++
++	rq = esas2r_alloc_request(a);
++	if (unlikely(rq == NULL)) {
++		esas2r_debug("esas2r_alloc_request failed");
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++
++	rq->cmd = cmd;
++	bufflen = scsi_bufflen(cmd);
++
++	if (likely(bufflen != 0)) {
++		if (cmd->sc_data_direction == DMA_TO_DEVICE)
++			rq->vrq->scsi.flags |= cpu_to_le32(FCP_CMND_WRD);
++		else if (cmd->sc_data_direction == DMA_FROM_DEVICE)
++			rq->vrq->scsi.flags |= cpu_to_le32(FCP_CMND_RDD);
++	}
++
++	memmove(rq->vrq->scsi.cdb, cmd->cmnd, cmd->cmd_len);
++	rq->vrq->scsi.length = cpu_to_le32(bufflen);
++	rq->target_id = cmd->device->id;
++	rq->vrq->scsi.flags |= cpu_to_le32(cmd->device->lun);
++	rq->sense_buf = cmd->sense_buffer;
++	rq->sense_len = SCSI_SENSE_BUFFERSIZE;
++
++	esas2r_sgc_init(&sgc, a, rq, NULL);
++
++	sgc.length = bufflen;
++	sgc.cur_offset = NULL;
++
++	sgc.cur_sgel = scsi_sglist(cmd);
++	sgc.exp_offset = NULL;
++	sgc.num_sgel = scsi_dma_map(cmd);
++	sgc.sgel_count = 0;
++
++	if (unlikely(sgc.num_sgel < 0)) {
++		esas2r_free_request(a, rq);
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++
++	sgc.get_phys_addr = (PGETPHYSADDR)get_physaddr_from_sgc;
++
++	if (unlikely(!esas2r_build_sg_list(a, rq,
++					   &sgc))) {
++		scsi_dma_unmap(cmd);
++		esas2r_free_request(a, rq);
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++
++	esas2r_debug("start request %p to %d:%d\n", rq, (int)cmd->device->id,
++		     (int)cmd->device->lun);
++
++	esas2r_start_request(a, rq);
++
++	return 0;
++}
++
++static void complete_task_management_request(struct esas2r_adapter *a,
++					     struct esas2r_request *rq)
++{
++	(*rq->task_management_status_ptr) = rq->req_stat;
++	esas2r_free_request(a, rq);
++}
++
++/**
++ * Searches the specified queue for the specified queue for the command
++ * to abort.
++ *
++ * @param [in] a
++ * @param [in] abort_request
++ * @param [in] curr
++ * @param [in] qend
++ * t
++ * @return 0 on failure, 1 if command was not found, 2 if command was found
++ */
++static int esas2r_check_active_queue(struct esas2r_adapter *a,
++				     struct esas2r_request **abort_request,
++				     struct scsi_cmnd *cmd,
++				     struct esas2r_request *curr,
++				     struct esas2r_request *qend)
++{
++	bool found = false;
++	struct esas2r_request *ar = *abort_request;
++
++	while (curr != qend) {
++		if (curr->cmd == cmd) {
++			/* Found the request.  See what to do with it. */
++			if (qend == a->dummy_active) {
++				/*
++				 * We are searching the active queue, which
++				 * means that we need to send an abort request
++				 * to the firmware.
++				 */
++				ar = esas2r_alloc_request(a);
++				if (ar == NULL) {
++					esas2r_log_dev(ESAS2R_LOG_WARN,
++						       &(a->host->shost_gendev),
++						       "unable to allocate an abort request for cmd %p",
++						       cmd);
++					return 0; /* Failure */
++				}
++
++				/*
++				 * Task management request must be formatted
++				 * with a lock held.
++				 */
++				ar->sense_len = 0;
++				ar->vrq->scsi.length = 0;
++				ar->target_id = curr->target_id;
++				ar->vrq->scsi.flags |= cpu_to_le32(
++					(u8)le32_to_cpu(curr->vrq->scsi.flags));
++
++				memset(ar->vrq->scsi.cdb, 0,
++				       sizeof(ar->vrq->scsi.cdb));
++
++				ar->vrq->scsi.flags |= cpu_to_le32(
++					FCP_CMND_TRM);
++				ar->vrq->scsi.u.abort_handle =
++					curr->vrq->scsi.handle;
++			} else {
++				/*
++				 * The request is pending but not active on
++				 * the firmware.  Just free it now and we'll
++				 * report the successful abort below.
++				 */
++				esas2r_dequeue(curr);
++				esas2r_free_request(a, curr);
++			}
++
++			found = true;
++			break;
++		}
++
++		curr = curr->next;
++	}
++
++	if (!found)
++		return 1;       /* Not found */
++
++	return 2;               /* found */
++
++
++}
++
++int esas2r_eh_abort(struct scsi_cmnd *cmd)
++{
++	struct esas2r_adapter *a =
++		(struct esas2r_adapter *)cmd->device->host->hostdata;
++	struct esas2r_request *abort_request = NULL;
++	unsigned long flags;
++	struct esas2r_request *curr;
++	struct esas2r_request *qend;
++	int result;
++
++	esas2r_log(ESAS2R_LOG_INFO, "eh_abort (%p)", cmd);
++
++	if (a->flags & AF_DEGRADED_MODE) {
++		cmd->result = DID_ABORT << 16;
++
++		scsi_set_resid(cmd, 0);
++
++		cmd->scsi_done(cmd);
++
++		return 0;
++	}
++
++	spin_lock_irqsave(&a->queue_lock, flags);
++
++	/*
++	 * Run through the defer and active queues looking for the request
++	 * to abort.
++	 */
++	curr = a->first_defer;
++	qend = a->dummy_defer;
++
++check_active_queue:
++
++	result = esas2r_check_active_queue(a, &abort_request, cmd, curr, qend);
++
++	if (!result) {
++		spin_unlock_irqrestore(&a->queue_lock, flags);
++		return FAILED;
++	} else if (result == 2 && (qend == a->dummy_defer)) {
++		curr = a->first_active;
++		qend = a->dummy_active;
++		goto check_active_queue;
++	}
++
++	spin_unlock_irqrestore(&a->queue_lock, flags);
++
++	if (abort_request) {
++		u8 task_management_status = RS_PENDING;
 +
 +		/*
-+		 * NOTE - curr_len is the exact count of bytes for the read
-+		 *        even when the end is read and its not a full buffer
++		 * the request is already active, so we need to tell
++		 * the firmware to abort it and wait for the response.
 +		 */
-+		for (len = fc->curr_len; len; len--)
-+			if (*p++ != *q++)
-+				goto error;
 +
-+		fc->cmp_len -= fc->curr_len; /* # left to compare    */
++		abort_request->comp_cb = complete_task_management_request;
++		abort_request->task_management_status_ptr =
++			&task_management_status;
 +
-+		/* Update fc and determine the length for the next upload */
-+		if (fc->cmp_len > FM_BUF_SZ)
-+			fc->sgc.length = FM_BUF_SZ;
-+		else
-+			fc->sgc.length = fc->cmp_len;
++		esas2r_start_request(a, abort_request);
 +
-+		fc->sgc.cur_offset = fc->sgc_offset +
-+				     ((u8 *)fc->scratch - (u8 *)fi);
++		if (atomic_read(&a->disable_cnt) == 0)
++			esas2r_do_deferred_processes(a);
++
++		while (task_management_status == RS_PENDING)
++			msleep(10);
++
++		/*
++		 * Once we get here, the original request will have been
++		 * completed by the firmware and the abort request will have
++		 * been cleaned up.  we're done!
++		 */
++
++		return SUCCESS;
 +	}
 +
 +	/*
-+	 * This code uses a 'while' statement since the next component may
-+	 * have a length = zero.  This can happen since some components are
-+	 * not required.  At the end of this 'while' we set up the length
-+	 * for the next request and therefore sgc.length can be = 0.
++	 * If we get here, either we found the inactive request and
++	 * freed it, or we didn't find it at all.  Either way, success!
 +	 */
-+	while (fc->sgc.length == 0) {
-+		ch = &fi->cmp_hdr[fc->comp_typ];
 +
-+		switch (fc->task) {
-+		case FMTSK_ERASE_BOOT:
-+			/* the BIOS image is written next */
-+			ch = &fi->cmp_hdr[CH_IT_BIOS];
-+			if (ch->length == 0)
-+				goto no_bios;
++	cmd->result = DID_ABORT << 16;
 +
-+			fc->task = FMTSK_WRTBIOS;
-+			fc->func = VDA_FLASH_BEGINW;
-+			fc->comp_typ = CH_IT_BIOS;
-+			fc->flsh_addr = FLS_OFFSET_BOOT;
-+			fc->sgc.length = ch->length;
-+			fc->sgc.cur_offset = fc->sgc_offset +
-+					     ch->image_offset;
-+			break;
++	scsi_set_resid(cmd, 0);
 +
-+		case FMTSK_WRTBIOS:
-+			/*
-+			 * The BIOS image has been written - read it and
-+			 * verify it
-+			 */
-+			fc->task = FMTSK_READBIOS;
-+			fc->func = VDA_FLASH_READ;
-+			fc->flsh_addr = FLS_OFFSET_BOOT;
-+			fc->cmp_len = ch->length;
-+			fc->sgc.length = FM_BUF_SZ;
-+			fc->sgc.cur_offset = fc->sgc_offset
-+					     + ((u8 *)fc->scratch -
-+						(u8 *)fi);
-+			break;
++	cmd->scsi_done(cmd);
 +
-+		case FMTSK_READBIOS:
-+no_bios:
-+			/*
-+			 * Mark the component header status for the image
-+			 * completed
-+			 */
-+			ch->status = CH_STAT_SUCCESS;
-+
-+			/* The MAC image is written next */
-+			ch = &fi->cmp_hdr[CH_IT_MAC];
-+			if (ch->length == 0)
-+				goto no_mac;
-+
-+			fc->task = FMTSK_WRTMAC;
-+			fc->func = VDA_FLASH_BEGINW;
-+			fc->comp_typ = CH_IT_MAC;
-+			fc->flsh_addr = FLS_OFFSET_BOOT
-+					+ fi->cmp_hdr[CH_IT_BIOS].length;
-+			fc->sgc.length = ch->length;
-+			fc->sgc.cur_offset = fc->sgc_offset +
-+					     ch->image_offset;
-+			break;
-+
-+		case FMTSK_WRTMAC:
-+			/* The MAC image has been written - read and verify */
-+			fc->task = FMTSK_READMAC;
-+			fc->func = VDA_FLASH_READ;
-+			fc->flsh_addr -= ch->length;
-+			fc->cmp_len = ch->length;
-+			fc->sgc.length = FM_BUF_SZ;
-+			fc->sgc.cur_offset = fc->sgc_offset
-+					     + ((u8 *)fc->scratch -
-+						(u8 *)fi);
-+			break;
-+
-+		case FMTSK_READMAC:
-+no_mac:
-+			/*
-+			 * Mark the component header status for the image
-+			 * completed
-+			 */
-+			ch->status = CH_STAT_SUCCESS;
-+
-+			/* The EFI image is written next */
-+			ch = &fi->cmp_hdr[CH_IT_EFI];
-+			if (ch->length == 0)
-+				goto no_efi;
-+
-+			fc->task = FMTSK_WRTEFI;
-+			fc->func = VDA_FLASH_BEGINW;
-+			fc->comp_typ = CH_IT_EFI;
-+			fc->flsh_addr = FLS_OFFSET_BOOT
-+					+ fi->cmp_hdr[CH_IT_BIOS].length
-+					+ fi->cmp_hdr[CH_IT_MAC].length;
-+			fc->sgc.length = ch->length;
-+			fc->sgc.cur_offset = fc->sgc_offset +
-+					     ch->image_offset;
-+			break;
-+
-+		case FMTSK_WRTEFI:
-+			/* The EFI image has been written - read and verify */
-+			fc->task = FMTSK_READEFI;
-+			fc->func = VDA_FLASH_READ;
-+			fc->flsh_addr -= ch->length;
-+			fc->cmp_len = ch->length;
-+			fc->sgc.length = FM_BUF_SZ;
-+			fc->sgc.cur_offset = fc->sgc_offset
-+					     + ((u8 *)fc->scratch -
-+						(u8 *)fi);
-+			break;
-+
-+		case FMTSK_READEFI:
-+no_efi:
-+			/*
-+			 * Mark the component header status for the image
-+			 * completed
-+			 */
-+			ch->status = CH_STAT_SUCCESS;
-+
-+			/* The CFG image is written next */
-+			ch = &fi->cmp_hdr[CH_IT_CFG];
-+
-+			if (ch->length == 0)
-+				goto no_cfg;
-+			fc->task = FMTSK_WRTCFG;
-+			fc->func = VDA_FLASH_BEGINW;
-+			fc->comp_typ = CH_IT_CFG;
-+			fc->flsh_addr = FLS_OFFSET_CPYR - ch->length;
-+			fc->sgc.length = ch->length;
-+			fc->sgc.cur_offset = fc->sgc_offset +
-+					     ch->image_offset;
-+			break;
-+
-+		case FMTSK_WRTCFG:
-+			/* The CFG image has been written - read and verify */
-+			fc->task = FMTSK_READCFG;
-+			fc->func = VDA_FLASH_READ;
-+			fc->flsh_addr = FLS_OFFSET_CPYR - ch->length;
-+			fc->cmp_len = ch->length;
-+			fc->sgc.length = FM_BUF_SZ;
-+			fc->sgc.cur_offset = fc->sgc_offset
-+					     + ((u8 *)fc->scratch -
-+						(u8 *)fi);
-+			break;
-+
-+		case FMTSK_READCFG:
-+no_cfg:
-+			/*
-+			 * Mark the component header status for the image
-+			 * completed
-+			 */
-+			ch->status = CH_STAT_SUCCESS;
-+
-+			/*
-+			 * The download is complete.  If in degraded mode,
-+			 * attempt a chip reset.
-+			 */
-+			if (a->flags & AF_DEGRADED_MODE)
-+				esas2r_local_reset_adapter(a);
-+
-+			a->flash_ver = fi->cmp_hdr[CH_IT_BIOS].version;
-+			esas2r_print_flash_rev(a);
-+
-+			/* Update the type of boot image on the card */
-+			memmove(a->image_type, fi->rel_version,
-+				sizeof(fi->rel_version));
-+			complete_fmapi_req(a, rq, FI_STAT_SUCCESS);
-+			return;
-+		}
-+
-+		/* If verifying, don't try reading more than what's there */
-+		if (fc->func == VDA_FLASH_READ
-+		    && fc->sgc.length > fc->cmp_len)
-+			fc->sgc.length = fc->cmp_len;
-+	}
-+
-+	/* Build the request to perform the next action */
-+	if (!load_image(a, rq)) {
-+error:
-+		if (fc->comp_typ < fi->num_comps) {
-+			ch = &fi->cmp_hdr[fc->comp_typ];
-+			ch->status = CH_STAT_FAILED;
-+		}
-+
-+		complete_fmapi_req(a, rq, FI_STAT_FAILED);
-+	}
++	return SUCCESS;
 +}
 +
-+/* Determine the flash image adaptyp for this adapter */
-+static u8 get_fi_adap_type(struct esas2r_adapter *a)
++static int esas2r_host_bus_reset(struct scsi_cmnd *cmd, bool host_reset)
 +{
-+	u8 type;
++	struct esas2r_adapter *a =
++		(struct esas2r_adapter *)cmd->device->host->hostdata;
 +
-+	/* use the device ID to get the correct adap_typ for this HBA */
-+	switch (a->pcid->device) {
-+	case ATTO_DID_INTEL_IOP348:
-+		type = FI_AT_SUN_LAKE;
-+		break;
++	if (a->flags & AF_DEGRADED_MODE)
++		return FAILED;
 +
-+	case ATTO_DID_MV_88RC9580:
-+	case ATTO_DID_MV_88RC9580TS:
-+	case ATTO_DID_MV_88RC9580TSE:
-+	case ATTO_DID_MV_88RC9580TL:
-+		type = FI_AT_MV_9580;
-+		break;
++	if (host_reset)
++		esas2r_reset_adapter(a);
++	else
++		esas2r_reset_bus(a);
 +
-+	default:
-+		type = FI_AT_UNKNWN;
-+		break;
++	/* above call sets the AF_OS_RESET flag.  wait for it to clear. */
++
++	while (a->flags & AF_OS_RESET) {
++		msleep(10);
++
++		if (a->flags & AF_DEGRADED_MODE)
++			return FAILED;
++	}
++
++	if (a->flags & AF_DEGRADED_MODE)
++		return FAILED;
++
++	return SUCCESS;
++}
++
++int esas2r_host_reset(struct scsi_cmnd *cmd)
++{
++	esas2r_log(ESAS2R_LOG_INFO, "host_reset (%p)", cmd);
++
++	return esas2r_host_bus_reset(cmd, true);
++}
++
++int esas2r_bus_reset(struct scsi_cmnd *cmd)
++{
++	esas2r_log(ESAS2R_LOG_INFO, "bus_reset (%p)", cmd);
++
++	return esas2r_host_bus_reset(cmd, false);
++}
++
++static int esas2r_dev_targ_reset(struct scsi_cmnd *cmd, bool target_reset)
++{
++	struct esas2r_adapter *a =
++		(struct esas2r_adapter *)cmd->device->host->hostdata;
++	struct esas2r_request *rq;
++	u8 task_management_status = RS_PENDING;
++	bool completed;
++
++	if (a->flags & AF_DEGRADED_MODE)
++		return FAILED;
++
++retry:
++	rq = esas2r_alloc_request(a);
++	if (rq == NULL) {
++		if (target_reset) {
++			esas2r_log(ESAS2R_LOG_CRIT,
++				   "unable to allocate a request for a "
++				   "target reset (%d)!",
++				   cmd->device->id);
++		} else {
++			esas2r_log(ESAS2R_LOG_CRIT,
++				   "unable to allocate a request for a "
++				   "device reset (%d:%d)!",
++				   cmd->device->id,
++				   cmd->device->lun);
++		}
++
++
++		return FAILED;
++	}
++
++	rq->target_id = cmd->device->id;
++	rq->vrq->scsi.flags |= cpu_to_le32(cmd->device->lun);
++	rq->req_stat = RS_PENDING;
++
++	rq->comp_cb = complete_task_management_request;
++	rq->task_management_status_ptr = &task_management_status;
++
++	if (target_reset) {
++		esas2r_debug("issuing target reset (%p) to id %d", rq,
++			     cmd->device->id);
++		completed = esas2r_send_task_mgmt(a, rq, 0x20);
++	} else {
++		esas2r_debug("issuing device reset (%p) to id %d lun %d", rq,
++			     cmd->device->id, cmd->device->lun);
++		completed = esas2r_send_task_mgmt(a, rq, 0x10);
++	}
++
++	if (completed) {
++		/* Task management cmd completed right away, need to free it. */
++
++		esas2r_free_request(a, rq);
++	} else {
++		/*
++		 * Wait for firmware to complete the request.  Completion
++		 * callback will free it.
++		 */
++		while (task_management_status == RS_PENDING)
++			msleep(10);
++	}
++
++	if (a->flags & AF_DEGRADED_MODE)
++		return FAILED;
++
++	if (task_management_status == RS_BUSY) {
++		/*
++		 * Busy, probably because we are flashing.  Wait a bit and
++		 * try again.
++		 */
++		msleep(100);
++		goto retry;
++	}
++
++	return SUCCESS;
++}
++
++int esas2r_device_reset(struct scsi_cmnd *cmd)
++{
++	esas2r_log(ESAS2R_LOG_INFO, "device_reset (%p)", cmd);
++
++	return esas2r_dev_targ_reset(cmd, false);
++
++}
++
++int esas2r_target_reset(struct scsi_cmnd *cmd)
++{
++	esas2r_log(ESAS2R_LOG_INFO, "target_reset (%p)", cmd);
++
++	return esas2r_dev_targ_reset(cmd, true);
++}
++
++int esas2r_change_queue_depth(struct scsi_device *dev, int depth, int reason)
++{
++	esas2r_log(ESAS2R_LOG_INFO, "change_queue_depth %p, %d", dev, depth);
++
++	scsi_adjust_queue_depth(dev, scsi_get_tag_type(dev), depth);
++
++	return dev->queue_depth;
++}
++
++int esas2r_change_queue_type(struct scsi_device *dev, int type)
++{
++	esas2r_log(ESAS2R_LOG_INFO, "change_queue_type %p, %d", dev, type);
++
++	if (dev->tagged_supported) {
++		scsi_set_tag_type(dev, type);
++
++		if (type)
++			scsi_activate_tcq(dev, dev->queue_depth);
++		else
++			scsi_deactivate_tcq(dev, dev->queue_depth);
++	} else {
++		type = 0;
 +	}
 +
 +	return type;
 +}
 +
-+/* Size of config + copyright + flash_ver images, 0 for failure. */
-+static u32 chk_cfg(u8 *cfg, u32 length, u32 *flash_ver)
++int esas2r_slave_alloc(struct scsi_device *dev)
 +{
-+	u16 *pw = (u16 *)cfg - 1;
-+	u32 sz = 0;
-+	u32 len = length;
-+
-+	if (len == 0)
-+		len = FM_BUF_SZ;
-+
-+	if (flash_ver)
-+		*flash_ver = 0;
-+
-+	while (true) {
-+		u16 type;
-+		u16 size;
-+
-+		type = le16_to_cpu(*pw--);
-+		size = le16_to_cpu(*pw--);
-+
-+		if (type != FBT_CPYR
-+		    && type != FBT_SETUP
-+		    && type != FBT_FLASH_VER)
-+			break;
-+
-+		if (type == FBT_FLASH_VER
-+		    && flash_ver)
-+			*flash_ver = le32_to_cpu(*(u32 *)(pw - 1));
-+
-+		sz += size + (2 * sizeof(u16));
-+		pw -= size / sizeof(u16);
-+
-+		if (sz > len - (2 * sizeof(u16)))
-+			break;
-+	}
-+
-+	/* See if we are comparing the size to the specified length */
-+	if (length && sz != length)
-+		return 0;
-+
-+	return sz;
++	return 0;
 +}
 +
-+/* Verify that the boot image is valid */
-+static u8 chk_boot(u8 *boot_img, u32 length)
++int esas2r_slave_configure(struct scsi_device *dev)
 +{
-+	struct esas2r_boot_image *bi = (struct esas2r_boot_image *)boot_img;
-+	u16 hdroffset = le16_to_cpu(bi->header_offset);
-+	struct esas2r_boot_header *bh;
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(dev->sdev_gendev),
++		       "esas2r_slave_configure()");
 +
-+	if (bi->signature != le16_to_cpu(0xaa55)
-+	    || (long)hdroffset >
-+	    (long)(65536L - sizeof(struct esas2r_boot_header))
-+	    || (hdroffset & 3)
-+	    || (hdroffset < sizeof(struct esas2r_boot_image))
-+	    || ((u32)hdroffset + sizeof(struct esas2r_boot_header) > length))
-+		return 0xff;
-+
-+	bh = (struct esas2r_boot_header *)((char *)bi + hdroffset);
-+
-+	if (bh->signature[0] != 'P'
-+	    || bh->signature[1] != 'C'
-+	    || bh->signature[2] != 'I'
-+	    || bh->signature[3] != 'R'
-+	    || le16_to_cpu(bh->struct_length) <
-+	    (u16)sizeof(struct esas2r_boot_header)
-+	    || bh->class_code[2] != 0x01
-+	    || bh->class_code[1] != 0x04
-+	    || bh->class_code[0] != 0x00
-+	    || (bh->code_type != CODE_TYPE_PC
-+		&& bh->code_type != CODE_TYPE_OPEN
-+		&& bh->code_type != CODE_TYPE_EFI))
-+		return 0xff;
-+
-+	return bh->code_type;
-+}
-+
-+/* The sum of all the WORDS of the image */
-+static u16 calc_fi_checksum(struct esas2r_flash_context *fc)
-+{
-+	struct esas2r_flash_img *fi = fc->fi;
-+	u16 cksum;
-+	u32 len;
-+	u16 *pw;
-+
-+	for (len = (fi->length - fc->fi_hdr_len) / 2,
-+	     pw = (u16 *)((u8 *)fi + fc->fi_hdr_len),
-+	     cksum = 0;
-+	     len;
-+	     len--, pw++)
-+		cksum = cksum + le16_to_cpu(*pw);
-+
-+	return cksum;
-+}
-+
-+/*
-+ * Verify the flash image structure.  The following verifications will
-+ * be performed:
-+ *              1)  verify the fi_version is correct
-+ *              2)  verify the checksum of the entire image.
-+ *              3)  validate the adap_typ, action and length fields.
-+ *              4)  valdiate each component header. check the img_type and
-+ *                  length fields
-+ *              5)  valdiate each component image.  validate signatures and
-+ *                  local checksums
-+ */
-+static bool verify_fi(struct esas2r_adapter *a,
-+		      struct esas2r_flash_context *fc)
-+{
-+	struct esas2r_flash_img *fi = fc->fi;
-+	u8 type;
-+	bool imgerr;
-+	u16 i;
-+	u32 len;
-+	struct esas2r_component_header *ch;
-+
-+	/* Verify the length - length must even since we do a word checksum */
-+	len = fi->length;
-+
-+	if ((len & 1)
-+	    || len < fc->fi_hdr_len) {
-+		fi->status = FI_STAT_LENGTH;
-+		return false;
++	if (dev->tagged_supported) {
++		scsi_set_tag_type(dev, MSG_SIMPLE_TAG);
++		scsi_activate_tcq(dev, cmd_per_lun);
++	} else {
++		scsi_set_tag_type(dev, 0);
++		scsi_deactivate_tcq(dev, cmd_per_lun);
 +	}
 +
-+	/* Get adapter type and verify type in flash image */
-+	type = get_fi_adap_type(a);
-+	if ((type == FI_AT_UNKNWN) || (fi->adap_typ != type)) {
-+		fi->status = FI_STAT_ADAPTYP;
-+		return false;
-+	}
++	return 0;
++}
 +
-+	/*
-+	 * Loop through each component and verify the img_type and length
-+	 * fields.  Keep a running count of the sizes sooze we can verify total
-+	 * size to additive size.
-+	 */
-+	imgerr = false;
++void esas2r_slave_destroy(struct scsi_device *dev)
++{
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(dev->sdev_gendev),
++		       "esas2r_slave_destroy()");
++}
 +
-+	for (i = 0, len = 0, ch = fi->cmp_hdr;
-+	     i < fi->num_comps;
-+	     i++, ch++) {
-+		bool cmperr = false;
++void esas2r_log_request_failure(struct esas2r_adapter *a,
++				struct esas2r_request *rq)
++{
++	u8 reqstatus = rq->req_stat;
 +
-+		/*
-+		 * Verify that the component header has the same index as the
-+		 * image type.  The headers must be ordered correctly
-+		 */
-+		if (i != ch->img_type) {
-+			imgerr = true;
-+			ch->status = CH_STAT_INVALID;
-+			continue;
-+		}
++	if (reqstatus == RS_SUCCESS)
++		return;
 +
-+		switch (ch->img_type) {
-+		case CH_IT_BIOS:
-+			type = CODE_TYPE_PC;
-+			break;
-+
-+		case CH_IT_MAC:
-+			type = CODE_TYPE_OPEN;
-+			break;
-+
-+		case CH_IT_EFI:
-+			type = CODE_TYPE_EFI;
-+			break;
-+		}
-+
-+		switch (ch->img_type) {
-+		case CH_IT_FW:
-+		case CH_IT_NVR:
-+			break;
-+
-+		case CH_IT_BIOS:
-+		case CH_IT_MAC:
-+		case CH_IT_EFI:
-+			if (ch->length & 0x1ff)
-+				cmperr = true;
-+
-+			/* Test if component image is present  */
-+			if (ch->length == 0)
-+				break;
-+
-+			/* Image is present - verify the image */
-+			if (chk_boot((u8 *)fi + ch->image_offset, ch->length)
-+			    != type)
-+				cmperr = true;
-+
-+			break;
-+
-+		case CH_IT_CFG:
-+
-+			/* Test if component image is present */
-+			if (ch->length == 0) {
-+				cmperr = true;
-+				break;
++	if (rq->vrq->scsi.function == VDA_FUNC_SCSI) {
++		if (reqstatus == RS_SCSI_ERROR) {
++			if (rq->func_rsp.scsi_rsp.sense_len >= 13) {
++				esas2r_log(ESAS2R_LOG_WARN,
++					   "request failure - SCSI error %x ASC:%x ASCQ:%x CDB:%x",
++					   rq->sense_buf[2], rq->sense_buf[12],
++					   rq->sense_buf[13],
++					   rq->vrq->scsi.cdb[0]);
++			} else {
++				esas2r_log(ESAS2R_LOG_WARN,
++					   "request failure - SCSI error CDB:%x\n",
++					   rq->vrq->scsi.cdb[0]);
 +			}
-+
-+			/* Image is present - verify the image */
-+			if (!chk_cfg((u8 *)fi + ch->image_offset + ch->length,
-+				     ch->length, NULL))
-+				cmperr = true;
-+
-+			break;
-+
-+		default:
-+
-+			fi->status = FI_STAT_UNKNOWN;
-+			return false;
-+		}
-+
-+		if (cmperr) {
-+			imgerr = true;
-+			ch->status = CH_STAT_INVALID;
-+		} else {
-+			ch->status = CH_STAT_PENDING;
-+			len += ch->length;
++		} else if ((rq->vrq->scsi.cdb[0] != INQUIRY
++			    && rq->vrq->scsi.cdb[0] != REPORT_LUNS)
++			   || (reqstatus != RS_SEL
++			       && reqstatus != RS_SEL2)) {
++			if ((reqstatus == RS_UNDERRUN) &&
++			    (rq->vrq->scsi.cdb[0] == INQUIRY)) {
++				/* Don't log inquiry underruns */
++			} else {
++				esas2r_log(ESAS2R_LOG_WARN,
++					   "request failure - cdb:%x reqstatus:%d target:%d",
++					   rq->vrq->scsi.cdb[0], reqstatus,
++					   rq->target_id);
++			}
 +		}
 +	}
-+
-+	if (imgerr) {
-+		fi->status = FI_STAT_MISSING;
-+		return false;
-+	}
-+
-+	/* Compare fi->length to the sum of ch->length fields */
-+	if (len != fi->length - fc->fi_hdr_len) {
-+		fi->status = FI_STAT_LENGTH;
-+		return false;
-+	}
-+
-+	/* Compute the checksum - it should come out zero */
-+	if (fi->checksum != calc_fi_checksum(fc)) {
-+		fi->status = FI_STAT_CHKSUM;
-+		return false;
-+	}
-+
-+	return true;
 +}
 +
-+/* Fill in the FS IOCTL response data from a completed request. */
-+static void esas2r_complete_fs_ioctl(struct esas2r_adapter *a,
-+				     struct esas2r_request *rq)
++void *esas2r_get_pci_cfg_hdr(struct esas2r_adapter *a, u8 cap_id)
 +{
-+	struct esas2r_ioctl_fs *fs =
-+		(struct esas2r_ioctl_fs *)rq->interrupt_cx;
++	u8 offset = a->pci_cfg->capabilities_ptr;
 +
-+	if (rq->vrq->flash.sub_func == VDA_FLASH_COMMIT)
-+		esas2r_enable_heartbeat(a);
++	while (offset) {
++		struct esas2r_pci_capabilities_header *cap =
++			(struct esas2r_pci_capabilities_header *)((u8 *)a->
++								  pci_cfg +
++								  offset);
 +
-+	fs->driver_error = rq->req_stat;
++		if (cap->cap_id == cap_id)
++			return cap;
 +
-+	if (fs->driver_error == RS_SUCCESS)
-+		fs->status = ATTO_STS_SUCCESS;
-+	else
-+		fs->status = ATTO_STS_FAILED;
++		offset = cap->nxt_ptr;
++	}
++
++	return NULL;
 +}
 +
-+/* Prepare an FS IOCTL request to be sent to the firmware. */
-+bool esas2r_process_fs_ioctl(struct esas2r_adapter *a,
-+			     struct esas2r_ioctl_fs *fs,
-+			     struct esas2r_request *rq,
-+			     struct esas2r_sg_context *sgc)
++u32 esas2r_stall_execution(struct esas2r_adapter *a, u32 start_time,
++			   u32 *delay)
 +{
-+	u8 cmdcnt = (u8)ARRAY_SIZE(cmd_to_fls_func);
-+	struct esas2r_ioctlfs_command *fsc = &fs->command;
-+	u8 func = 0;
-+	u32 datalen;
++	u32 del = *delay;
++	u32 delta;
++	u32 time;
 +
-+	fs->status = ATTO_STS_FAILED;
-+	fs->driver_error = RS_PENDING;
++	udelay(del);
 +
-+	if (fs->version > ESAS2R_FS_VER) {
-+		fs->status = ATTO_STS_INV_VERSION;
-+		return false;
-+	}
++	time = jiffies_to_msecs(jiffies);
 +
-+	func = cmd_to_fls_func[fsc->command];
-+	if (fsc->command >= cmdcnt || func == 0xFF) {
-+		fs->status = ATTO_STS_INV_FUNC;
-+		return false;
-+	}
++	delta = time - start_time;
 +
-+	if (fsc->command != ESAS2R_FS_CMD_CANCEL) {
-+		if ((a->pcid->device != ATTO_DID_MV_88RC9580
-+		     || fs->adap_type != ESAS2R_FS_AT_ESASRAID2)
-+		    && (a->pcid->device != ATTO_DID_MV_88RC9580TS
-+			|| fs->adap_type != ESAS2R_FS_AT_TSSASRAID2)
-+		    && (a->pcid->device != ATTO_DID_MV_88RC9580TSE
-+			|| fs->adap_type != ESAS2R_FS_AT_TSSASRAID2E)
-+		    && (a->pcid->device != ATTO_DID_MV_88RC9580TL
-+			|| fs->adap_type != ESAS2R_FS_AT_TLSASHBA)) {
-+			fs->status = ATTO_STS_INV_ADAPTER;
-+			return false;
-+		}
++	if (delta >= 50
++	    && del < 50000)
++		del = 50000;
++	else if (delta >= 10
++		 && del < 10000)
++		del = 10000;
++	else if (delta >= 1
++		 && del < 1000)
++		del = 1000;
 +
-+		if (fs->driver_ver > ESAS2R_FS_DRVR_VER) {
-+			fs->status = ATTO_STS_INV_DRVR_VER;
-+			return false;
-+		}
-+	}
++	*delay = del;
 +
-+	if (a->flags & AF_DEGRADED_MODE) {
-+		fs->status = ATTO_STS_DEGRADED;
-+		return false;
-+	}
++	if (del >= 50000)
++		/* yield every 50ms and update the time */
++		time = jiffies_to_msecs(jiffies);
 +
-+	rq->interrupt_cb = esas2r_complete_fs_ioctl;
-+	rq->interrupt_cx = fs;
-+	datalen = le32_to_cpu(fsc->length);
-+	esas2r_build_flash_req(a,
-+			       rq,
-+			       func,
-+			       fsc->checksum,
-+			       le32_to_cpu(fsc->flash_addr),
-+			       datalen);
-+
-+	if (func == VDA_FLASH_WRITE
-+	    || func == VDA_FLASH_READ) {
-+		if (datalen == 0) {
-+			fs->status = ATTO_STS_INV_FUNC;
-+			return false;
-+		}
-+
-+		esas2r_sgc_init(sgc, a, rq, rq->vrq->flash.data.sge);
-+		sgc->length = datalen;
-+
-+		if (!esas2r_build_sg_list(a, rq, sgc)) {
-+			fs->status = ATTO_STS_OUT_OF_RSRC;
-+			return false;
-+		}
-+	}
-+
-+	if (func == VDA_FLASH_COMMIT)
-+		esas2r_disable_heartbeat(a);
-+
-+	esas2r_start_request(a, rq);
-+
-+	return true;
++	return time;
 +}
 +
-+static bool esas2r_flash_access(struct esas2r_adapter *a, u32 function)
++void esas2r_wait_request(struct esas2r_adapter *a, struct esas2r_request *rq)
 +{
 +	u32 starttime;
 +	u32 timeout;
 +	u32 time;
 +	u32 delay;
-+	u32 intstat;
-+	u32 doorbell;
 +
-+	/* Disable chip interrupts awhile */
-+	if (function == DRBL_FLASH_REQ)
-+		esas2r_disable_chip_interrupts(a);
-+
-+	/* Issue the request to the firmware */
-+	esas2r_write_register_dword(a, MU_DOORBELL_IN, function);
-+
-+	/* Now wait for the firmware to process it */
 +	starttime = jiffies_to_msecs(jiffies);
-+	timeout = a->flags &
-+		  (AF_CHPRST_PENDING | AF_DISC_PENDING) ? 40000 : 5000;
-+	delay = 10;
++	timeout = rq->timeout ? rq->timeout : 5000;
++	delay = 100;
 +
 +	while (true) {
-+		intstat = esas2r_read_register_dword(a, MU_INT_STATUS_OUT);
++		esas2r_polled_interrupt(a);
 +
-+		if (intstat & MU_INTSTAT_DRBL) {
-+			/* Got a doorbell interrupt.  Check for the function */
-+			doorbell =
-+				esas2r_read_register_dword(a, MU_DOORBELL_OUT);
-+			esas2r_write_register_dword(a, MU_DOORBELL_OUT,
-+						    doorbell);
-+			if (doorbell & function)
-+				break;
-+		}
++		if (rq->req_stat != RS_STARTED)
++			break;
 +
 +		time = esas2r_stall_execution(a, starttime, &delay);
-+		if ((time - starttime) > timeout) {
-+			/*
-+			 * Iimeout.  If we were requesting flash access,
-+			 * indicate we are done so the firmware knows we gave
-+			 * up.  If this was a REQ, we also need to re-enable
-+			 * chip interrupts.
-+			 */
-+			if (function == DRBL_FLASH_REQ) {
-+				esas2r_hdebug("flash access timeout");
-+				esas2r_write_register_dword(a, MU_DOORBELL_IN,
-+							    DRBL_FLASH_DONE);
-+				esas2r_enable_chip_interrupts(a);
-+			} else {
-+				esas2r_hdebug("flash release timeout");
-+			}
 +
-+			return false;
++		if ((time - starttime) > timeout) {
++			esas2r_hdebug("request TMO");
++			esas2r_bugon();
++
++			rq->req_stat = RS_TIMEOUT;
++
++			esas2r_local_reset_adapter(a);
++			return;
 +		}
 +	}
-+
-+	/* if we're done, re-enable chip interrupts */
-+	if (function == DRBL_FLASH_DONE)
-+		esas2r_enable_chip_interrupts(a);
-+
-+	return true;
 +}
 +
-+#define WINDOW_SIZE ((signed int)MW_DATA_WINDOW_SIZE)
++u32 esas2r_map_data_window(struct esas2r_adapter *a, u32 addr_lo)
++{
++	u32 offset = addr_lo & (MW_DATA_WINDOW_SIZE - 1);
++	u32 base = addr_lo & -(signed int)MW_DATA_WINDOW_SIZE;
 +
-+bool esas2r_read_flash_block(struct esas2r_adapter *a,
-+			     void *to,
-+			     u32 from,
-+			     u32 size)
++	if (a->window_base != base) {
++		esas2r_write_register_dword(a, MVR_PCI_WIN1_REMAP,
++					    base | MVRPW1R_ENABLE);
++		esas2r_flush_register_dword(a, MVR_PCI_WIN1_REMAP);
++		a->window_base = base;
++	}
++
++	return offset;
++}
++
++/* Read a block of data from chip memory */
++bool esas2r_read_mem_block(struct esas2r_adapter *a,
++			   void *to,
++			   u32 from,
++			   u32 size)
 +{
 +	u8 *end = (u8 *)to;
-+
-+	/* Try to acquire access to the flash */
-+	if (!esas2r_flash_access(a, DRBL_FLASH_REQ))
-+		return false;
 +
 +	while (size) {
 +		u32 len;
 +		u32 offset;
 +		u32 iatvr;
 +
-+		if (a->flags2 & AF2_SERIAL_FLASH)
-+			iatvr = MW_DATA_ADDR_SER_FLASH + (from & -WINDOW_SIZE);
-+		else
-+			iatvr = MW_DATA_ADDR_PAR_FLASH + (from & -WINDOW_SIZE);
++		iatvr = (from & -(signed int)MW_DATA_WINDOW_SIZE);
 +
 +		esas2r_map_data_window(a, iatvr);
-+		offset = from & (WINDOW_SIZE - 1);
++
++		offset = from & (MW_DATA_WINDOW_SIZE - 1);
 +		len = size;
 +
-+		if (len > WINDOW_SIZE - offset)
-+			len = WINDOW_SIZE - offset;
++		if (len > MW_DATA_WINDOW_SIZE - offset)
++			len = MW_DATA_WINDOW_SIZE - offset;
 +
 +		from += len;
 +		size -= len;
@@ -1057,806 +1522,688 @@ index 0000000..70a45d4
 +		}
 +	}
 +
-+	/* Release flash access */
-+	esas2r_flash_access(a, DRBL_FLASH_DONE);
 +	return true;
 +}
 +
-+bool esas2r_read_flash_rev(struct esas2r_adapter *a)
++void esas2r_nuxi_mgt_data(u8 function, void *data)
 +{
-+	u8 bytes[256];
-+	u16 *pw;
-+	u16 *pwstart;
-+	u16 type;
-+	u16 size;
-+	u32 sz;
++	struct atto_vda_grp_info *g;
++	struct atto_vda_devinfo *d;
++	struct atto_vdapart_info *p;
++	struct atto_vda_dh_info *h;
++	struct atto_vda_metrics_info *m;
++	struct atto_vda_schedule_info *s;
++	struct atto_vda_buzzer_info *b;
++	u8 i;
 +
-+	sz = sizeof(bytes);
-+	pw = (u16 *)(bytes + sz);
-+	pwstart = (u16 *)bytes + 2;
++	switch (function) {
++	case VDAMGT_BUZZER_INFO:
++	case VDAMGT_BUZZER_SET:
 +
-+	if (!esas2r_read_flash_block(a, bytes, FLS_OFFSET_CPYR - sz, sz))
-+		goto invalid_rev;
++		b = (struct atto_vda_buzzer_info *)data;
 +
-+	while (pw >= pwstart) {
-+		pw--;
-+		type = le16_to_cpu(*pw);
-+		pw--;
-+		size = le16_to_cpu(*pw);
-+		pw -= size / 2;
++		b->duration = le32_to_cpu(b->duration);
++		break;
 +
-+		if (type == FBT_CPYR
-+		    || type == FBT_SETUP
-+		    || pw < pwstart)
-+			continue;
++	case VDAMGT_SCHEDULE_INFO:
++	case VDAMGT_SCHEDULE_EVENT:
 +
-+		if (type == FBT_FLASH_VER)
-+			a->flash_ver = le32_to_cpu(*(u32 *)pw);
++		s = (struct atto_vda_schedule_info *)data;
++
++		s->id = le32_to_cpu(s->id);
 +
 +		break;
-+	}
 +
-+invalid_rev:
-+	return esas2r_print_flash_rev(a);
++	case VDAMGT_DEV_INFO:
++	case VDAMGT_DEV_CLEAN:
++	case VDAMGT_DEV_PT_INFO:
++	case VDAMGT_DEV_FEATURES:
++	case VDAMGT_DEV_PT_FEATURES:
++	case VDAMGT_DEV_OPERATION:
++
++		d = (struct atto_vda_devinfo *)data;
++
++		d->capacity = le64_to_cpu(d->capacity);
++		d->block_size = le32_to_cpu(d->block_size);
++		d->ses_dev_index = le16_to_cpu(d->ses_dev_index);
++		d->target_id = le16_to_cpu(d->target_id);
++		d->lun = le16_to_cpu(d->lun);
++		d->features = le16_to_cpu(d->features);
++		break;
++
++	case VDAMGT_GRP_INFO:
++	case VDAMGT_GRP_CREATE:
++	case VDAMGT_GRP_DELETE:
++	case VDAMGT_ADD_STORAGE:
++	case VDAMGT_MEMBER_ADD:
++	case VDAMGT_GRP_COMMIT:
++	case VDAMGT_GRP_REBUILD:
++	case VDAMGT_GRP_COMMIT_INIT:
++	case VDAMGT_QUICK_RAID:
++	case VDAMGT_GRP_FEATURES:
++	case VDAMGT_GRP_COMMIT_INIT_AUTOMAP:
++	case VDAMGT_QUICK_RAID_INIT_AUTOMAP:
++	case VDAMGT_SPARE_LIST:
++	case VDAMGT_SPARE_ADD:
++	case VDAMGT_SPARE_REMOVE:
++	case VDAMGT_LOCAL_SPARE_ADD:
++	case VDAMGT_GRP_OPERATION:
++
++		g = (struct atto_vda_grp_info *)data;
++
++		g->capacity = le64_to_cpu(g->capacity);
++		g->block_size = le32_to_cpu(g->block_size);
++		g->interleave = le32_to_cpu(g->interleave);
++		g->features = le16_to_cpu(g->features);
++
++		for (i = 0; i < 32; i++)
++			g->members[i] = le16_to_cpu(g->members[i]);
++
++		break;
++
++	case VDAMGT_PART_INFO:
++	case VDAMGT_PART_MAP:
++	case VDAMGT_PART_UNMAP:
++	case VDAMGT_PART_AUTOMAP:
++	case VDAMGT_PART_SPLIT:
++	case VDAMGT_PART_MERGE:
++
++		p = (struct atto_vdapart_info *)data;
++
++		p->part_size = le64_to_cpu(p->part_size);
++		p->start_lba = le32_to_cpu(p->start_lba);
++		p->block_size = le32_to_cpu(p->block_size);
++		p->target_id = le16_to_cpu(p->target_id);
++		break;
++
++	case VDAMGT_DEV_HEALTH_REQ:
++
++		h = (struct atto_vda_dh_info *)data;
++
++		h->med_defect_cnt = le32_to_cpu(h->med_defect_cnt);
++		h->info_exc_cnt = le32_to_cpu(h->info_exc_cnt);
++		break;
++
++	case VDAMGT_DEV_METRICS:
++
++		m = (struct atto_vda_metrics_info *)data;
++
++		for (i = 0; i < 32; i++)
++			m->dev_indexes[i] = le16_to_cpu(m->dev_indexes[i]);
++
++		break;
++
++	default:
++		break;
++	}
 +}
 +
-+bool esas2r_print_flash_rev(struct esas2r_adapter *a)
++void esas2r_nuxi_cfg_data(u8 function, void *data)
 +{
-+	u16 year = LOWORD(a->flash_ver);
-+	u8 day = LOBYTE(HIWORD(a->flash_ver));
-+	u8 month = HIBYTE(HIWORD(a->flash_ver));
++	struct atto_vda_cfg_init *ci;
 +
-+	if (day == 0
-+	    || month == 0
-+	    || day > 31
-+	    || month > 12
-+	    || year < 2006
-+	    || year > 9999) {
-+		strcpy(a->flash_rev, "not found");
-+		a->flash_ver = 0;
-+		return false;
++	switch (function) {
++	case VDA_CFG_INIT:
++	case VDA_CFG_GET_INIT:
++	case VDA_CFG_GET_INIT2:
++
++		ci = (struct atto_vda_cfg_init *)data;
++
++		ci->date_time.year = le16_to_cpu(ci->date_time.year);
++		ci->sgl_page_size = le32_to_cpu(ci->sgl_page_size);
++		ci->vda_version = le32_to_cpu(ci->vda_version);
++		ci->epoch_time = le32_to_cpu(ci->epoch_time);
++		ci->ioctl_tunnel = le32_to_cpu(ci->ioctl_tunnel);
++		ci->num_targets_backend = le32_to_cpu(ci->num_targets_backend);
++		break;
++
++	default:
++		break;
 +	}
-+
-+	sprintf(a->flash_rev, "%02d/%02d/%04d", month, day, year);
-+	esas2r_hdebug("flash version: %s", a->flash_rev);
-+	return true;
 +}
 +
-+/*
-+ * Find the type of boot image type that is currently in the flash.
-+ * The chip only has a 64 KB PCI-e expansion ROM
-+ * size so only one image can be flashed at a time.
-+ */
-+bool esas2r_read_image_type(struct esas2r_adapter *a)
++void esas2r_nuxi_ae_data(union atto_vda_ae *ae)
 +{
-+	u8 bytes[256];
-+	struct esas2r_boot_image *bi;
-+	struct esas2r_boot_header *bh;
-+	u32 sz;
-+	u32 len;
-+	u32 offset;
++	struct atto_vda_ae_raid *r = &ae->raid;
++	struct atto_vda_ae_lu *l = &ae->lu;
 +
-+	/* Start at the base of the boot images and look for a valid image */
-+	sz = sizeof(bytes);
-+	len = FLS_LENGTH_BOOT;
-+	offset = 0;
++	switch (ae->hdr.bytype) {
++	case VDAAE_HDR_TYPE_RAID:
 +
-+	while (true) {
-+		if (!esas2r_read_flash_block(a, bytes, FLS_OFFSET_BOOT +
-+					     offset,
-+					     sz))
-+			goto invalid_rev;
++		r->dwflags = le32_to_cpu(r->dwflags);
++		break;
 +
-+		bi = (struct esas2r_boot_image *)bytes;
-+		bh = (struct esas2r_boot_header *)((u8 *)bi +
-+						   le16_to_cpu(
-+							   bi->header_offset));
-+		if (bi->signature != cpu_to_le16(0xAA55))
-+			goto invalid_rev;
++	case VDAAE_HDR_TYPE_LU:
 +
-+		if (bh->code_type == CODE_TYPE_PC) {
-+			strcpy(a->image_type, "BIOS");
++		l->dwevent = le32_to_cpu(l->dwevent);
++		l->wphys_target_id = le16_to_cpu(l->wphys_target_id);
++		l->id.tgtlun.wtarget_id = le16_to_cpu(l->id.tgtlun.wtarget_id);
 +
-+			return true;
-+		} else if (bh->code_type == CODE_TYPE_EFI) {
-+			struct esas2r_efi_image *ei;
-+
-+			/*
-+			 * So we have an EFI image.  There are several types
-+			 * so see which architecture we have.
-+			 */
-+			ei = (struct esas2r_efi_image *)bytes;
-+
-+			switch (le16_to_cpu(ei->machine_type)) {
-+			case EFI_MACHINE_IA32:
-+				strcpy(a->image_type, "EFI 32-bit");
-+				return true;
-+
-+			case EFI_MACHINE_IA64:
-+				strcpy(a->image_type, "EFI itanium");
-+				return true;
-+
-+			case EFI_MACHINE_X64:
-+				strcpy(a->image_type, "EFI 64-bit");
-+				return true;
-+
-+			case EFI_MACHINE_EBC:
-+				strcpy(a->image_type, "EFI EBC");
-+				return true;
-+
-+			default:
-+				goto invalid_rev;
-+			}
-+		} else {
-+			u32 thislen;
-+
-+			/* jump to the next image */
-+			thislen = (u32)le16_to_cpu(bh->image_length) * 512;
-+			if (thislen == 0
-+			    || thislen + offset > len
-+			    || bh->indicator == INDICATOR_LAST)
-+				break;
-+
-+			offset += thislen;
++		if (l->hdr.bylength >= offsetof(struct atto_vda_ae_lu, id)
++		    + sizeof(struct atto_vda_ae_lu_tgt_lun_raid)) {
++			l->id.tgtlun_raid.dwinterleave
++				= le32_to_cpu(l->id.tgtlun_raid.dwinterleave);
++			l->id.tgtlun_raid.dwblock_size
++				= le32_to_cpu(l->id.tgtlun_raid.dwblock_size);
 +		}
-+	}
 +
-+invalid_rev:
-+	strcpy(a->image_type, "no boot images");
-+	return false;
++		break;
++
++	case VDAAE_HDR_TYPE_DISK:
++	default:
++		break;
++	}
 +}
 +
-+/*
-+ *  Read and validate current NVRAM parameters by accessing
-+ *  physical NVRAM directly.  if currently stored parameters are
-+ *  invalid, use the defaults.
-+ */
-+bool esas2r_nvram_read_direct(struct esas2r_adapter *a)
++void esas2r_free_request(struct esas2r_adapter *a, struct esas2r_request *rq)
 +{
-+	bool result;
++	unsigned long flags;
 +
-+	if (down_interruptible(&a->nvram_semaphore))
-+		return false;
++	esas2r_rq_destroy_request(rq, a);
 +
-+	if (!esas2r_read_flash_block(a, a->nvram, FLS_OFFSET_NVR,
-+				     sizeof(struct esas2r_sas_nvram))) {
-+		esas2r_hdebug("NVRAM read failed, using defaults");
-+		return false;
-+	}
++	spin_lock_irqsave(&a->request_lock, flags);
 +
-+	result = esas2r_nvram_validate(a);
++	rq->next_req = a->avail_request;
++	a->avail_request = rq;
 +
-+	up(&a->nvram_semaphore);
-+
-+	return result;
++	spin_unlock_irqrestore(&a->request_lock, flags);
 +}
 +
-+/* Interrupt callback to process NVRAM completions. */
-+static void esas2r_nvram_callback(struct esas2r_adapter *a,
-+				  struct esas2r_request *rq)
++struct esas2r_request *esas2r_alloc_request(struct esas2r_adapter *a)
 +{
-+	struct atto_vda_flash_req *vrq = &rq->vrq->flash;
++	struct esas2r_request *rq;
++	unsigned long flags;
 +
-+	if (rq->req_stat == RS_SUCCESS) {
-+		/* last request was successful.  see what to do now. */
++	spin_lock_irqsave(&a->request_lock, flags);
 +
-+		switch (vrq->sub_func) {
-+		case VDA_FLASH_BEGINW:
-+			vrq->sub_func = VDA_FLASH_WRITE;
-+			rq->req_stat = RS_PENDING;
-+			break;
-+
-+		case VDA_FLASH_WRITE:
-+			vrq->sub_func = VDA_FLASH_COMMIT;
-+			rq->req_stat = RS_PENDING;
-+			break;
-+
-+		case VDA_FLASH_READ:
-+			esas2r_nvram_validate(a);
-+			break;
-+
-+		case VDA_FLASH_COMMIT:
-+		default:
-+			break;
-+		}
++	rq = a->avail_request;
++	if (unlikely(rq == NULL)) {
++		spin_unlock_irqrestore(&a->request_lock, flags);
++		return NULL;
 +	}
 +
-+	if (rq->req_stat != RS_PENDING) {
-+		/* update the NVRAM state */
-+		if (rq->req_stat == RS_SUCCESS)
-+			esas2r_lock_set_flags(&a->flags, AF_NVR_VALID);
++	a->avail_request = rq->next_req;
++	spin_unlock_irqrestore(&a->request_lock, flags);
++
++	esas2r_rq_init_request(rq, a);
++
++	return rq;
++
++}
++
++void esas2r_complete_request_cb(struct esas2r_adapter *a,
++				struct esas2r_request *rq)
++{
++	esas2r_debug("completing request %p\n", rq);
++
++	scsi_dma_unmap(rq->cmd);
++
++	if (unlikely(rq->req_stat != RS_SUCCESS)) {
++		esas2r_debug("[%x STATUS %x:%x (%x)]", rq->target_id,
++			     rq->req_stat,
++			     rq->func_rsp.scsi_rsp.scsi_stat,
++			     rq->cmd);
++
++		rq->cmd->result =
++			((esas2r_req_status_to_error(rq->req_stat) << 16)
++			 | (rq->func_rsp.scsi_rsp.scsi_stat & STATUS_MASK));
++
++		if (rq->req_stat == RS_UNDERRUN)
++			scsi_set_resid(rq->cmd,
++				       le32_to_cpu(rq->func_rsp.scsi_rsp.
++						   residual_length));
 +		else
-+			esas2r_lock_clear_flags(&a->flags, AF_NVR_VALID);
++			scsi_set_resid(rq->cmd, 0);
++	}
 +
-+		esas2r_enable_heartbeat(a);
++	rq->cmd->scsi_done(rq->cmd);
 +
-+		up(&a->nvram_semaphore);
++	esas2r_free_request(a, rq);
++}
++
++/*
++ * Deferred Procedural Call (DPC) to handle stuff outside of
++ * interrupt context.
++ */
++void esas2r_adapter_dpc(unsigned long context)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)context;
++
++	if (unlikely(a->flags2 & AF2_TIMER_TICK)) {
++		esas2r_lock_clear_flags(&a->flags2, AF2_TIMER_TICK);
++		esas2r_timer_tick(a);
++	}
++
++	if (likely(a->flags2 & AF2_INT_PENDING)) {
++		esas2r_lock_clear_flags(&a->flags2, AF2_INT_PENDING);
++		esas2r_adapter_interrupt(a);
++	}
++
++	if (esas2r_is_dpc_pending(a))
++		esas2r_do_dpc_tasks(a);
++
++	if (esas2r_is_dpc_pending(a)
++	    || (a->flags2 & AF2_INT_PENDING)
++	    || (a->flags2 & AF2_TIMER_TICK)) {
++		esas2r_lock_clear_flags(&a->flags, AF_DPC_SCHEDULED);
++		esas2r_schedule_dpc(a);
++	} else {
++		esas2r_lock_clear_flags(&a->flags, AF_DPC_SCHEDULED);
++	}
++}
++
++static void esas2r_timer_callback(unsigned long context);
++
++void esas2r_kickoff_timer(struct esas2r_adapter *a)
++{
++	init_timer(&a->timer);
++
++	a->timer.function = esas2r_timer_callback;
++	a->timer.data = (unsigned long)a;
++	a->timer.expires = jiffies +
++			   msecs_to_jiffies(100);
++
++	add_timer(&a->timer);
++}
++
++static void esas2r_timer_callback(unsigned long context)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)context;
++
++	esas2r_lock_set_flags(&a->flags2, AF2_TIMER_TICK);
++
++	esas2r_schedule_dpc(a);
++
++	esas2r_kickoff_timer(a);
++}
++
++/*
++ * Firmware events need to be handled outside of interrupt context
++ * so we schedule a delayed_work to handle them.
++ */
++
++static void
++esas2r_free_fw_event(struct esas2r_fw_event_work *fw_event)
++{
++	unsigned long flags;
++	struct esas2r_adapter *a = fw_event->a;
++
++	spin_lock_irqsave(&a->fw_event_lock, flags);
++	list_del(&fw_event->list);
++	kfree(fw_event);
++	spin_unlock_irqrestore(&a->fw_event_lock, flags);
++}
++
++void
++esas2r_fw_event_off(struct esas2r_adapter *a)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&a->fw_event_lock, flags);
++	a->fw_events_off = 1;
++	spin_unlock_irqrestore(&a->fw_event_lock, flags);
++}
++
++void
++esas2r_fw_event_on(struct esas2r_adapter *a)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&a->fw_event_lock, flags);
++	a->fw_events_off = 0;
++	spin_unlock_irqrestore(&a->fw_event_lock, flags);
++}
++
++static void esas2r_add_device(struct esas2r_adapter *a, u16 target_id)
++{
++	int ret;
++	struct scsi_device *scsi_dev;
++
++	scsi_dev = scsi_device_lookup(a->host, 0, target_id, 0);
++
++	if (scsi_dev) {
++		esas2r_log_dev(
++			ESAS2R_LOG_WARN,
++			&(scsi_dev->
++			  sdev_gendev),
++			"scsi device already exists at id %d", target_id);
++
++		scsi_device_put(scsi_dev);
++	} else {
++		esas2r_log_dev(
++			ESAS2R_LOG_INFO,
++			&(a->host->
++			  shost_gendev),
++			"scsi_add_device() called for 0:%d:0",
++			target_id);
++
++		ret = scsi_add_device(a->host, 0, target_id, 0);
++		if (ret) {
++			esas2r_log_dev(
++				ESAS2R_LOG_CRIT,
++				&(a->host->
++				  shost_gendev),
++				"scsi_add_device failed with %d for id %d",
++				ret, target_id);
++		}
++	}
++}
++
++static void esas2r_remove_device(struct esas2r_adapter *a, u16 target_id)
++{
++	struct scsi_device *scsi_dev;
++
++	scsi_dev = scsi_device_lookup(a->host, 0, target_id, 0);
++
++	if (scsi_dev) {
++		scsi_device_set_state(scsi_dev, SDEV_OFFLINE);
++
++		esas2r_log_dev(
++			ESAS2R_LOG_INFO,
++			&(scsi_dev->
++			  sdev_gendev),
++			"scsi_remove_device() called for 0:%d:0",
++			target_id);
++
++		scsi_remove_device(scsi_dev);
++
++		esas2r_log_dev(
++			ESAS2R_LOG_INFO,
++			&(scsi_dev->
++			  sdev_gendev),
++			"scsi_device_put() called");
++
++		scsi_device_put(scsi_dev);
++	} else {
++		esas2r_log_dev(
++			ESAS2R_LOG_WARN,
++			&(a->host->shost_gendev),
++			"no target found at id %d",
++			target_id);
 +	}
 +}
 +
 +/*
-+ * Write the contents of nvram to the adapter's physical NVRAM.
-+ * The cached copy of the NVRAM is also updated.
++ * Sends a firmware asynchronous event to anyone who happens to be
++ * listening on the defined ATTO VDA event ports.
 + */
-+bool esas2r_nvram_write(struct esas2r_adapter *a, struct esas2r_request *rq,
-+			struct esas2r_sas_nvram *nvram)
++static void esas2r_send_ae_event(struct esas2r_fw_event_work *fw_event)
 +{
-+	struct esas2r_sas_nvram *n = nvram;
-+	u8 sas_address_bytes[8];
-+	u32 *sas_address_dwords = (u32 *)&sas_address_bytes[0];
-+	struct atto_vda_flash_req *vrq = &rq->vrq->flash;
++	struct esas2r_vda_ae *ae = (struct esas2r_vda_ae *)fw_event->data;
++	char *type;
++	int res;
++	mm_segment_t oldfs;
++	struct iovec iov;
++	struct msghdr msg;
 +
-+	if (a->flags & AF_DEGRADED_MODE)
-+		return false;
++	switch (ae->vda_ae.hdr.bytype) {
++	case VDAAE_HDR_TYPE_RAID:
++		type = "RAID group state change";
++		break;
 +
-+	if (down_interruptible(&a->nvram_semaphore))
-+		return false;
++	case VDAAE_HDR_TYPE_LU:
++		type = "Mapped destination LU change";
++		break;
 +
-+	if (n == NULL)
-+		n = a->nvram;
++	case VDAAE_HDR_TYPE_DISK:
++		type = "Physical disk inventory change";
++		break;
 +
-+	/* check the validity of the settings */
-+	if (n->version > SASNVR_VERSION) {
-+		up(&a->nvram_semaphore);
-+		return false;
-+	}
++	case VDAAE_HDR_TYPE_RESET:
++		type = "Firmware reset";
++		break;
 +
-+	memmove(&sas_address_bytes[0], n->sas_addr, 8);
++	case VDAAE_HDR_TYPE_LOG_INFO:
++		type = "Event Log message (INFO level)";
++		break;
 +
-+	if (sas_address_bytes[0] != 0x50
-+	    || sas_address_bytes[1] != 0x01
-+	    || sas_address_bytes[2] != 0x08
-+	    || (sas_address_bytes[3] & 0xF0) != 0x60
-+	    || ((sas_address_bytes[3] & 0x0F) | sas_address_dwords[1]) == 0) {
-+		up(&a->nvram_semaphore);
-+		return false;
-+	}
++	case VDAAE_HDR_TYPE_LOG_WARN:
++		type = "Event Log message (WARN level)";
++		break;
 +
-+	if (n->spin_up_delay > SASNVR_SPINUP_MAX)
-+		n->spin_up_delay = SASNVR_SPINUP_MAX;
++	case VDAAE_HDR_TYPE_LOG_CRIT:
++		type = "Event Log message (CRIT level)";
++		break;
 +
-+	n->version = SASNVR_VERSION;
-+	n->checksum = n->checksum - esas2r_nvramcalc_cksum(n);
-+	memmove(a->nvram, n, sizeof(struct esas2r_sas_nvram));
++	case VDAAE_HDR_TYPE_LOG_FAIL:
++		type = "Event Log message (FAIL level)";
++		break;
 +
-+	/* write the NVRAM */
-+	n = a->nvram;
-+	esas2r_disable_heartbeat(a);
++	case VDAAE_HDR_TYPE_NVC:
++		type = "NVCache change";
++		break;
 +
-+	esas2r_build_flash_req(a,
-+			       rq,
-+			       VDA_FLASH_BEGINW,
-+			       esas2r_nvramcalc_xor_cksum(n),
-+			       FLS_OFFSET_NVR,
-+			       sizeof(struct esas2r_sas_nvram));
++	case VDAAE_HDR_TYPE_TLG_INFO:
++		type = "Time stamped log message (INFO level)";
++		break;
 +
-+	if (a->flags & AF_LEGACY_SGE_MODE) {
++	case VDAAE_HDR_TYPE_TLG_WARN:
++		type = "Time stamped log message (WARN level)";
++		break;
 +
-+		vrq->data.sge[0].length =
-+			cpu_to_le32(SGE_LAST |
-+				    sizeof(struct esas2r_sas_nvram));
-+		vrq->data.sge[0].address = cpu_to_le64(
-+			a->esas2r_uncached_phys + (u64)((u8 *)n -
-+							a->
-+							esas2r_uncached));
-+	} else {
-+		vrq->data.prde[0].ctl_len =
-+			cpu_to_le32(sizeof(struct esas2r_sas_nvram));
-+		vrq->data.prde[0].address = cpu_to_le64(
-+			a->esas2r_uncached_phys
-+			+ (u64)((u8 *)n - a->esas2r_uncached));
-+	}
-+	rq->interrupt_cb = esas2r_nvram_callback;
-+	esas2r_start_request(a, rq);
-+	return true;
-+}
++	case VDAAE_HDR_TYPE_TLG_CRIT:
++		type = "Time stamped log message (CRIT level)";
++		break;
 +
-+/* Validate the cached NVRAM.  if the NVRAM is invalid, load the defaults. */
-+bool esas2r_nvram_validate(struct esas2r_adapter *a)
-+{
-+	struct esas2r_sas_nvram *n = a->nvram;
-+	bool rslt = false;
++	case VDAAE_HDR_TYPE_PWRMGT:
++		type = "Power management";
++		break;
 +
-+	if (n->signature[0] != 'E'
-+	    || n->signature[1] != 'S'
-+	    || n->signature[2] != 'A'
-+	    || n->signature[3] != 'S') {
-+		esas2r_hdebug("invalid NVRAM signature");
-+	} else if (esas2r_nvramcalc_cksum(n)) {
-+		esas2r_hdebug("invalid NVRAM checksum");
-+	} else if (n->version > SASNVR_VERSION) {
-+		esas2r_hdebug("invalid NVRAM version");
-+	} else {
-+		esas2r_lock_set_flags(&a->flags, AF_NVR_VALID);
-+		rslt = true;
-+	}
++	case VDAAE_HDR_TYPE_MUTE:
++		type = "Mute button pressed";
++		break;
 +
-+	if (rslt == false) {
-+		esas2r_hdebug("using defaults");
-+		esas2r_nvram_set_defaults(a);
-+	}
-+
-+	return rslt;
-+}
-+
-+/*
-+ * Set the cached NVRAM to defaults.  note that this function sets the default
-+ * NVRAM when it has been determined that the physical NVRAM is invalid.
-+ * In this case, the SAS address is fabricated.
-+ */
-+void esas2r_nvram_set_defaults(struct esas2r_adapter *a)
-+{
-+	struct esas2r_sas_nvram *n = a->nvram;
-+	u32 time = jiffies_to_msecs(jiffies);
-+
-+	esas2r_lock_clear_flags(&a->flags, AF_NVR_VALID);
-+	memmove(n, &default_sas_nvram, sizeof(struct esas2r_sas_nvram));
-+	n->sas_addr[3] |= 0x0F;
-+	n->sas_addr[4] = HIBYTE(LOWORD(time));
-+	n->sas_addr[5] = LOBYTE(LOWORD(time));
-+	n->sas_addr[6] = a->pcid->bus->number;
-+	n->sas_addr[7] = a->pcid->devfn;
-+}
-+
-+void esas2r_nvram_get_defaults(struct esas2r_adapter *a,
-+			       struct esas2r_sas_nvram *nvram)
-+{
-+	u8 sas_addr[8];
-+
-+	/*
-+	 * in case we are copying the defaults into the adapter, copy the SAS
-+	 * address out first.
-+	 */
-+	memmove(&sas_addr[0], a->nvram->sas_addr, 8);
-+	memmove(nvram, &default_sas_nvram, sizeof(struct esas2r_sas_nvram));
-+	memmove(&nvram->sas_addr[0], &sas_addr[0], 8);
-+}
-+
-+bool esas2r_fm_api(struct esas2r_adapter *a, struct esas2r_flash_img *fi,
-+		   struct esas2r_request *rq, struct esas2r_sg_context *sgc)
-+{
-+	struct esas2r_flash_context *fc = a->flash_context;
-+	u8 j;
-+	struct esas2r_component_header *ch;
-+
-+	if (esas2r_lock_set_flags(&a->flags, AF_FLASH_LOCK) & AF_FLASH_LOCK) {
-+		/* flag was already set */
-+		fi->status = FI_STAT_BUSY;
-+		return false;
-+	}
-+
-+	memmove(&fc->sgc, sgc, sizeof(struct esas2r_sg_context));
-+	sgc = &fc->sgc;
-+	fc->fi = fi;
-+	fc->sgc_offset = sgc->cur_offset;
-+	rq->req_stat = RS_SUCCESS;
-+	rq->interrupt_cx = fc;
-+
-+	switch (fi->fi_version) {
-+	case FI_VERSION_1:
-+		fc->scratch = ((struct esas2r_flash_img *)fi)->scratch_buf;
-+		fc->num_comps = FI_NUM_COMPS_V1;
-+		fc->fi_hdr_len = sizeof(struct esas2r_flash_img);
++	case VDAAE_HDR_TYPE_DEV:
++		type = "Device attribute change";
 +		break;
 +
 +	default:
-+		return complete_fmapi_req(a, rq, FI_STAT_IMG_VER);
++		type = "Unknown";
++		break;
 +	}
 +
-+	if (a->flags & AF_DEGRADED_MODE)
-+		return complete_fmapi_req(a, rq, FI_STAT_DEGRADED);
++	esas2r_log(ESAS2R_LOG_WARN,
++		   "An async event of type \"%s\" was received from the firmware.  The event contents are:",
++		   type);
++	esas2r_log_hexdump(ESAS2R_LOG_WARN, &ae->vda_ae,
++			   ae->vda_ae.hdr.bylength);
 +
-+	switch (fi->action) {
-+	case FI_ACT_DOWN: /* Download the components */
-+		/* Verify the format of the flash image */
-+		if (!verify_fi(a, fc))
-+			return complete_fmapi_req(a, rq, fi->status);
++	memset(&iov, 0, sizeof(iov));
++	memset(&msg, 0, sizeof(msg));
 +
-+		/* Adjust the BIOS fields that are dependent on the HBA */
-+		ch = &fi->cmp_hdr[CH_IT_BIOS];
++	iov.iov_base = (void __user *)&ae->vda_ae;
++	iov.iov_len = sizeof(union atto_vda_ae);
 +
-+		if (ch->length)
-+			fix_bios(a, fi);
++	msg.msg_name = NULL;
++	msg.msg_namelen = 0;
++	msg.msg_iov = &iov;
++	msg.msg_iovlen = 1;
++	msg.msg_control = NULL;
++	msg.msg_controllen = 0;
++	msg.msg_flags = MSG_DONTWAIT | MSG_NOSIGNAL;
 +
-+		/* Adjust the EFI fields that are dependent on the HBA */
-+		ch = &fi->cmp_hdr[CH_IT_EFI];
++	oldfs = get_fs();
 +
-+		if (ch->length)
-+			fix_efi(a, fi);
++	set_fs(KERNEL_DS);
 +
-+		/*
-+		 * Since the image was just modified, compute the checksum on
-+		 * the modified image.  First update the CRC for the composite
-+		 * expansion ROM image.
-+		 */
-+		fi->checksum = calc_fi_checksum(fc);
++	if (event_socket[0])
++		res = sock_sendmsg(event_socket[0],
++				   &msg,
++				   sizeof(union atto_vda_ae));
++	else
++		res = -ENOTSOCK;
 +
-+		/* Disable the heartbeat */
-+		esas2r_disable_heartbeat(a);
++	set_fs(oldfs);
 +
-+		/* Now start up the download sequence */
-+		fc->task = FMTSK_ERASE_BOOT;
-+		fc->func = VDA_FLASH_BEGINW;
-+		fc->comp_typ = CH_IT_CFG;
-+		fc->flsh_addr = FLS_OFFSET_BOOT;
-+		fc->sgc.length = FLS_LENGTH_BOOT;
-+		fc->sgc.cur_offset = NULL;
++	if (res >= 0) {
++		if (event_socket[1])
++			res = sock_sendmsg(event_socket[1],
++					   &msg,
++					   sizeof(union atto_vda_ae));
++		else
++			res = -ENOTSOCK;
++	}
 +
-+		/* Setup the callback address */
-+		fc->interrupt_cb = fw_download_proc;
++	if (res < 0 && res != -ECONNREFUSED)
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "Failed to send an async event of type \"%s\"! (%d)",
++			   type, res);
++
++}
++
++static void
++esas2r_firmware_event_work(struct work_struct *work)
++{
++	struct esas2r_fw_event_work *fw_event =
++		container_of(work, struct esas2r_fw_event_work, work.work);
++
++	struct esas2r_adapter *a = fw_event->a;
++
++	u16 target_id = *(u16 *)&fw_event->data[0];
++
++	if (a->fw_events_off)
++		goto done;
++
++	switch (fw_event->type) {
++	case fw_event_null:
++		break; /* do nothing */
++
++	case fw_event_lun_change:
++		esas2r_remove_device(a, target_id);
++		esas2r_add_device(a, target_id);
 +		break;
 +
-+	case FI_ACT_UPSZ: /* Get upload sizes */
-+		fi->adap_typ = get_fi_adap_type(a);
-+		fi->flags = 0;
-+		fi->num_comps = fc->num_comps;
-+		fi->length = fc->fi_hdr_len;
++	case fw_event_present:
++		esas2r_add_device(a, target_id);
++		break;
 +
-+		/* Report the type of boot image in the rel_version string */
-+		memmove(fi->rel_version, a->image_type,
-+			sizeof(fi->rel_version));
++	case fw_event_not_present:
++		esas2r_remove_device(a, target_id);
++		break;
 +
-+		/* Build the component headers */
-+		for (j = 0, ch = fi->cmp_hdr;
-+		     j < fi->num_comps;
-+		     j++, ch++) {
-+			ch->img_type = j;
-+			ch->status = CH_STAT_PENDING;
-+			ch->length = 0;
-+			ch->version = 0xffffffff;
-+			ch->image_offset = 0;
-+			ch->pad[0] = 0;
-+			ch->pad[1] = 0;
-+		}
-+
-+		if (a->flash_ver != 0) {
-+			fi->cmp_hdr[CH_IT_BIOS].version =
-+				fi->cmp_hdr[CH_IT_MAC].version =
-+					fi->cmp_hdr[CH_IT_EFI].version =
-+						fi->cmp_hdr[CH_IT_CFG].version
-+							= a->flash_ver;
-+
-+			fi->cmp_hdr[CH_IT_BIOS].status =
-+				fi->cmp_hdr[CH_IT_MAC].status =
-+					fi->cmp_hdr[CH_IT_EFI].status =
-+						fi->cmp_hdr[CH_IT_CFG].status =
-+							CH_STAT_SUCCESS;
-+
-+			return complete_fmapi_req(a, rq, FI_STAT_SUCCESS);
-+		}
-+
-+	/* fall through */
-+
-+	case FI_ACT_UP: /* Upload the components */
-+	default:
-+		return complete_fmapi_req(a, rq, FI_STAT_INVALID);
++	case fw_event_vda_ae:
++		esas2r_send_ae_event(fw_event);
++		break;
 +	}
 +
-+	/*
-+	 * If we make it here, fc has been setup to do the first task.  Call
-+	 * load_image to format the request, start it, and get out.  The
-+	 * interrupt code will call the callback when the first message is
-+	 * complete.
-+	 */
-+	if (!load_image(a, rq))
-+		return complete_fmapi_req(a, rq, FI_STAT_FAILED);
-+
-+	esas2r_start_request(a, rq);
-+
-+	return true;
-+}
-diff --git a/drivers/scsi/esas2r/esas2r_targdb.c b/drivers/scsi/esas2r/esas2r_targdb.c
-new file mode 100644
-index 0000000..6398335
---- /dev/null
-+++ b/drivers/scsi/esas2r/esas2r_targdb.c
-@@ -0,0 +1,306 @@
-+/*
-+ *  linux/drivers/scsi/esas2r/esas2r_targdb.c
-+ *      For use with ATTO ExpressSAS R6xx SAS/SATA RAID controllers
-+ *
-+ *  Copyright (c) 2001-2013 ATTO Technology, Inc.
-+ *  (mailto:linuxdrivers@attotech.com)
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * NO WARRANTY
-+ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
-+ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
-+ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
-+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
-+ * solely responsible for determining the appropriateness of using and
-+ * distributing the Program and assumes all risks associated with its
-+ * exercise of rights under this Agreement, including but not limited to
-+ * the risks and costs of program errors, damage to or loss of data,
-+ * programs or equipment, and unavailability or interruption of operations.
-+ *
-+ * DISCLAIMER OF LIABILITY
-+ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
-+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
-+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-+ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
-+ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-+ * USA.
-+ */
-+
-+#include "esas2r.h"
-+
-+void esas2r_targ_db_initialize(struct esas2r_adapter *a)
-+{
-+	struct esas2r_target *t;
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		memset(t, 0, sizeof(struct esas2r_target));
-+
-+		t->target_state = TS_NOT_PRESENT;
-+		t->buffered_target_state = TS_NOT_PRESENT;
-+		t->new_target_state = TS_INVALID;
-+	}
++done:
++	esas2r_free_fw_event(fw_event);
 +}
 +
-+void esas2r_targ_db_remove_all(struct esas2r_adapter *a, bool notify)
++void esas2r_queue_fw_event(struct esas2r_adapter *a,
++			   enum fw_event_type type,
++			   void *data,
++			   int data_sz)
 +{
-+	struct esas2r_target *t;
++	struct esas2r_fw_event_work *fw_event;
 +	unsigned long flags;
 +
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		if (t->target_state != TS_PRESENT)
-+			continue;
-+
-+		spin_lock_irqsave(&a->mem_lock, flags);
-+		esas2r_targ_db_remove(a, t);
-+		spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+		if (notify) {
-+			esas2r_trace("remove id:%d", esas2r_targ_get_id(t,
-+									a));
-+			esas2r_target_state_changed(a, esas2r_targ_get_id(t,
-+									  a),
-+						    TS_NOT_PRESENT);
-+		}
-+	}
-+}
-+
-+void esas2r_targ_db_report_changes(struct esas2r_adapter *a)
-+{
-+	struct esas2r_target *t;
-+	unsigned long flags;
-+
-+	esas2r_trace_enter();
-+
-+	if (a->flags & AF_DISC_PENDING) {
-+		esas2r_trace_exit();
++	fw_event = kzalloc(sizeof(struct esas2r_fw_event_work), GFP_ATOMIC);
++	if (!fw_event) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "esas2r_queue_fw_event failed to alloc");
 +		return;
 +	}
 +
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		u8 state = TS_INVALID;
++	if (type == fw_event_vda_ae) {
++		struct esas2r_vda_ae *ae =
++			(struct esas2r_vda_ae *)fw_event->data;
 +
-+		spin_lock_irqsave(&a->mem_lock, flags);
-+		if (t->buffered_target_state != t->target_state)
-+			state = t->buffered_target_state = t->target_state;
-+
-+		spin_unlock_irqrestore(&a->mem_lock, flags);
-+		if (state != TS_INVALID) {
-+			esas2r_trace("targ_db_report_changes:%d",
-+				     esas2r_targ_get_id(
-+					     t,
-+					     a));
-+			esas2r_trace("state:%d", state);
-+
-+			esas2r_target_state_changed(a,
-+						    esas2r_targ_get_id(t,
-+								       a),
-+						    state);
-+		}
++		ae->signature = ESAS2R_VDA_EVENT_SIG;
++		ae->bus_number = a->pcid->bus->number;
++		ae->devfn = a->pcid->devfn;
++		memcpy(&ae->vda_ae, data, sizeof(ae->vda_ae));
++	} else {
++		memcpy(fw_event->data, data, data_sz);
 +	}
 +
-+	esas2r_trace_exit();
++	fw_event->type = type;
++	fw_event->a = a;
++
++	spin_lock_irqsave(&a->fw_event_lock, flags);
++	list_add_tail(&fw_event->list, &a->fw_event_list);
++	INIT_DELAYED_WORK(&fw_event->work, esas2r_firmware_event_work);
++	queue_delayed_work_on(
++		smp_processor_id(), a->fw_event_q, &fw_event->work,
++		msecs_to_jiffies(1));
++	spin_unlock_irqrestore(&a->fw_event_lock, flags);
 +}
 +
-+struct esas2r_target *esas2r_targ_db_add_raid(struct esas2r_adapter *a,
-+					      struct esas2r_disc_context *
-+					      dc)
++void esas2r_target_state_changed(struct esas2r_adapter *a, u16 targ_id,
++				 u8 state)
 +{
-+	struct esas2r_target *t;
-+
-+	esas2r_trace_enter();
-+
-+	if (dc->curr_virt_id >= ESAS2R_MAX_TARGETS) {
-+		esas2r_bugon();
-+		esas2r_trace_exit();
-+		return NULL;
-+	}
-+
-+	t = a->targetdb + dc->curr_virt_id;
-+
-+	if (t->target_state == TS_PRESENT) {
-+		esas2r_trace_exit();
-+		return NULL;
-+	}
-+
-+	esas2r_hdebug("add RAID %s, T:%d", dc->raid_grp_name,
-+		      esas2r_targ_get_id(
-+			      t,
-+			      a));
-+
-+	if (dc->interleave == 0
-+	    || dc->block_size  == 0) {
-+		/* these are invalid values, don't create the target entry. */
-+
-+		esas2r_hdebug("invalid RAID group dimensions");
-+
-+		esas2r_trace_exit();
-+
-+		return NULL;
-+	}
-+
-+	t->block_size = dc->block_size;
-+	t->inter_byte = dc->interleave;
-+	t->inter_block = dc->interleave / dc->block_size;
-+	t->virt_targ_id = dc->curr_virt_id;
-+	t->phys_targ_id = ESAS2R_TARG_ID_INV;
-+
-+	t->flags &= ~TF_PASS_THRU;
-+	t->flags |= TF_USED;
-+
-+	t->identifier_len = 0;
-+
-+	t->target_state = TS_PRESENT;
-+
-+	return t;
++	if (state == TS_LUN_CHANGE)
++		esas2r_queue_fw_event(a, fw_event_lun_change, &targ_id,
++				      sizeof(targ_id));
++	else if (state == TS_PRESENT)
++		esas2r_queue_fw_event(a, fw_event_present, &targ_id,
++				      sizeof(targ_id));
++	else if (state == TS_NOT_PRESENT)
++		esas2r_queue_fw_event(a, fw_event_not_present, &targ_id,
++				      sizeof(targ_id));
 +}
 +
-+struct esas2r_target *esas2r_targ_db_add_pthru(struct esas2r_adapter *a,
-+					       struct esas2r_disc_context *dc,
-+					       u8 *ident,
-+					       u8 ident_len)
++/* Translate status to a Linux SCSI mid-layer error code */
++int esas2r_req_status_to_error(u8 req_stat)
 +{
-+	struct esas2r_target *t;
++	switch (req_stat) {
++	case RS_OVERRUN:
++	case RS_UNDERRUN:
++	case RS_SUCCESS:
++	/*
++	 * NOTE: SCSI mid-layer wants a good status for a SCSI error, because
++	 *       it will check the scsi_stat value in the completion anyway.
++	 */
++	case RS_SCSI_ERROR:
++		return DID_OK;
 +
-+	esas2r_trace_enter();
++	case RS_SEL:
++	case RS_SEL2:
++		return DID_NO_CONNECT;
 +
-+	if (dc->curr_virt_id >= ESAS2R_MAX_TARGETS) {
-+		esas2r_bugon();
-+		esas2r_trace_exit();
-+		return NULL;
++	case RS_RESET:
++		return DID_RESET;
++
++	case RS_ABORTED:
++		return DID_ABORT;
++
++	case RS_BUSY:
++		return DID_BUS_BUSY;
 +	}
 +
-+	/* see if we found this device before. */
++	/* everything else is just an error. */
 +
-+	t = esas2r_targ_db_find_by_ident(a, ident, ident_len);
-+
-+	if (t == NULL) {
-+		t = a->targetdb + dc->curr_virt_id;
-+
-+		if (ident_len > sizeof(t->identifier)
-+		    || t->target_state == TS_PRESENT) {
-+			esas2r_trace_exit();
-+			return NULL;
-+		}
-+	}
-+
-+	esas2r_hdebug("add PT; T:%d, V:%d, P:%d", esas2r_targ_get_id(t, a),
-+		      dc->curr_virt_id,
-+		      dc->curr_phys_id);
-+
-+	t->block_size = 0;
-+	t->inter_byte = 0;
-+	t->inter_block = 0;
-+	t->virt_targ_id = dc->curr_virt_id;
-+	t->phys_targ_id = dc->curr_phys_id;
-+	t->identifier_len = ident_len;
-+
-+	memmove(t->identifier, ident, ident_len);
-+
-+	t->flags |= TF_PASS_THRU | TF_USED;
-+
-+	t->target_state = TS_PRESENT;
-+
-+	return t;
++	return DID_ERROR;
 +}
 +
-+void esas2r_targ_db_remove(struct esas2r_adapter *a, struct esas2r_target *t)
++/* Read a chunk of PCI configuration space */
++void esas2r_read_pci_cfg_space(struct esas2r_adapter *a,
++			       u16 offset,
++			       u16 length,
++			       void *dest)
 +{
-+	esas2r_trace_enter();
++	u16 count;
++	u8 *dst = (u8 *)dest;
 +
-+	t->target_state = TS_NOT_PRESENT;
-+
-+	esas2r_trace("remove id:%d", esas2r_targ_get_id(t, a));
-+
-+	esas2r_trace_exit();
++	for (count = 0; count < length; ++count)
++		pci_read_config_byte(a->pcid, offset + count, dst + count);
 +}
 +
-+struct esas2r_target *esas2r_targ_db_find_by_sas_addr(struct esas2r_adapter *a,
-+						      u64 *sas_addr)
++/* Write a chunk of PCI configuration space */
++void esas2r_write_pci_cfg_space(struct esas2r_adapter *a,
++				u16 offset,
++				u16 length,
++				void *src)
 +{
-+	struct esas2r_target *t;
++	u16 count;
++	u8 *buffer = (u8 *)src;
 +
-+	for (t = a->targetdb; t < a->targetdb_end; t++)
-+		if (t->sas_addr == *sas_addr)
-+			return t;
-+
-+	return NULL;
++	for (count = 0; count < length; ++count)
++		pci_write_config_byte(a->pcid, offset + count, buffer[count]);
 +}
 +
-+struct esas2r_target *esas2r_targ_db_find_by_ident(struct esas2r_adapter *a,
-+						   void *identifier,
-+						   u8 ident_len)
-+{
-+	struct esas2r_target *t;
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		if (ident_len == t->identifier_len
-+		    && memcmp(&t->identifier[0], identifier,
-+			      ident_len) == 0)
-+			return t;
-+	}
-+
-+	return NULL;
-+}
-+
-+u16 esas2r_targ_db_find_next_present(struct esas2r_adapter *a, u16 target_id)
-+{
-+	u16 id = target_id + 1;
-+
-+	while (id < ESAS2R_MAX_TARGETS) {
-+		struct esas2r_target *t = a->targetdb + id;
-+
-+		if (t->target_state == TS_PRESENT)
-+			break;
-+
-+		id++;
-+	}
-+
-+	return id;
-+}
-+
-+struct esas2r_target *esas2r_targ_db_find_by_virt_id(struct esas2r_adapter *a,
-+						     u16 virt_id)
-+{
-+	struct esas2r_target *t;
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		if (t->target_state != TS_PRESENT)
-+			continue;
-+
-+		if (t->virt_targ_id == virt_id)
-+			return t;
-+	}
-+
-+	return NULL;
-+}
-+
-+u16 esas2r_targ_db_get_tgt_cnt(struct esas2r_adapter *a)
-+{
-+	u16 devcnt = 0;
-+	struct esas2r_target *t;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&a->mem_lock, flags);
-+	for (t = a->targetdb; t < a->targetdb_end; t++)
-+		if (t->target_state == TS_PRESENT)
-+			devcnt++;
-+
-+	spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+	return devcnt;
-+}
++module_init(esas2r_init);
++module_exit(esas2r_exit);
 -- 
 1.8.1.4
 
