@@ -1,131 +1,155 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 01/10] qla2xxx: Clean up qla24xx_iidma()
-Date: Thu, 13 Jun 2013 05:20:55 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D353913C9@AVMB1.qlogic.org>
-References: <1371063543.1978.22.camel@dabdike>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D353913C9AVMB1qlogicorg_"
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: Fix erratic device offline during EH
+Date: Thu, 13 Jun 2013 10:09:13 +0200
+Message-ID: <1371110953-99904-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:7577 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752845Ab3FMFVD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Jun 2013 01:21:03 -0400
-Received: from mail81-tx2 (localhost [127.0.0.1])	by mail81-tx2-R.bigfish.com
- (Postfix) with ESMTP id 2BEE860107	for <linux-scsi@vger.kernel.org>; Thu, 13
- Jun 2013 05:21:01 +0000 (UTC)
-Received: from TX2EHSMHS040.bigfish.com (unknown [10.9.14.241])	by
- mail81-tx2.bigfish.com (Postfix) with ESMTP id EDEDA32004C	for
- <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2013 05:20:58 +0000 (UTC)
-In-Reply-To: <1371063543.1978.22.camel@dabdike>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:44062 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755405Ab3FMIJQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Jun 2013 04:09:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D353913C9AVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <97CB4E4830F4D64F9C13E687DC33EE87@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Commit 18a4d0a22ed6c54b67af7718c305cd010f09ddf8
+(Handle disk devices which can not process medium access commands)
+was introduced to offline any device which cannot process medium
+access commands.
+However, commit 3eef6257de48ff84a5d98ca533685df8a3beaeb8
+(Reduce error recovery time by reducing use of TURs) reduced
+the number of TURs by sending it only on the first failing
+command, which might or might not be a medium access command.
+So in combination this results in an erratic device offlining
+during EH; if the command where the TUR was sent upon happens
+to be a medium access command the device will be set offline,
+if not everything proceeds as normal.
 
+So instead of checking the EH command in the ->eh_action
+callback we should rather call ->eh_action when we're
+about to finish the command _and_ have sent a TUR previously.
+This should then set the device offline as advertised.
 
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Ewan Milne <emilne@redhat.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_error.c  | 26 +++++++++++++++++---------
+ drivers/scsi/sd.c          |  8 +++-----
+ include/scsi/scsi_driver.h |  2 +-
+ 3 files changed, 21 insertions(+), 15 deletions(-)
 
->On Wed, 2013-06-12 at 08:05 +0000, Saurav Kashyap wrote:
->> Hi Bart,
->> Missing msg ids needs to be updated in qla_dbg.c file. Here is an
->>updated
->> patch
->
->OK, so since you modified the first patch in the series, you need to be
->the one who sends it all to me (with proper signoffs).
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index ea056e0..49bdc00 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -877,12 +877,6 @@ retry:
+ 
+ 	scsi_eh_restore_cmnd(scmd, &ses);
+ 
+-	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+-		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+-		if (sdrv->eh_action)
+-			rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
+-	}
+-
+ 	return rtn;
+ }
+ 
+@@ -900,6 +894,16 @@ static int scsi_request_sense(struct scsi_cmnd *scmd)
+ 	return scsi_send_eh_cmnd(scmd, NULL, 0, scmd->device->eh_timeout, ~0);
+ }
+ 
++static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
++{
++	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
++		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
++		if (sdrv->eh_action)
++			rtn = sdrv->eh_action(scmd, rtn);
++	}
++	return rtn;
++}
++
+ /**
+  * scsi_eh_finish_cmd - Handle a cmd that eh is finished with.
+  * @scmd:	Original SCSI cmd that eh has finished.
+@@ -1071,7 +1075,9 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
+ 
+ 		list_for_each_entry_safe(scmd, next, cmd_list, eh_entry)
+ 			if (scmd->device == sdev) {
+-				if (finish_cmds)
++				if (finish_cmds &&
++				    (try_stu ||
++				     scsi_eh_action(scmd, SUCCESS) == SUCCESS))
+ 					scsi_eh_finish_cmd(scmd, done_q);
+ 				else
+ 					list_move_tail(&scmd->eh_entry, work_q);
+@@ -1208,7 +1214,8 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 			    !scsi_eh_tur(stu_scmd)) {
+ 				list_for_each_entry_safe(scmd, next,
+ 							  work_q, eh_entry) {
+-					if (scmd->device == sdev)
++					if (scmd->device == sdev &&
++					    scsi_eh_action(scmd, SUCCESS) == SUCCESS)
+ 						scsi_eh_finish_cmd(scmd, done_q);
+ 				}
+ 			}
+@@ -1274,7 +1281,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ 			    !scsi_eh_tur(bdr_scmd)) {
+ 				list_for_each_entry_safe(scmd, next,
+ 							 work_q, eh_entry) {
+-					if (scmd->device == sdev)
++					if (scmd->device == sdev &&
++					    scsi_eh_action(scmd, rtn) != FAILED)
+ 						scsi_eh_finish_cmd(scmd,
+ 								   done_q);
+ 				}
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index c1c5552..c4c16e3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -109,7 +109,7 @@ static int sd_suspend(struct device *);
+ static int sd_resume(struct device *);
+ static void sd_rescan(struct device *);
+ static int sd_done(struct scsi_cmnd *);
+-static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
++static int sd_eh_action(struct scsi_cmnd *, int);
+ static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
+ static void scsi_disk_release(struct device *cdev);
+ static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+@@ -1519,8 +1519,7 @@ static const struct block_device_operations sd_fops = {
+  *	stored in eh_cmnd. The result of sending the eh command is
+  *	passed in eh_disp.
+  **/
+-static int sd_eh_action(struct scsi_cmnd *scmd, unsigned char *eh_cmnd,
+-			int eh_cmnd_len, int eh_disp)
++static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
+ {
+ 	struct scsi_disk *sdkp = scsi_disk(scmd->request->rq_disk);
+ 
+@@ -1535,8 +1534,7 @@ static int sd_eh_action(struct scsi_cmnd *scmd, unsigned char *eh_cmnd,
+ 	 * process of recovering or has it suffered an internal failure
+ 	 * that prevents access to the storage medium.
+ 	 */
+-	if (host_byte(scmd->result) == DID_TIME_OUT && eh_disp == SUCCESS &&
+-	    eh_cmnd_len && eh_cmnd[0] == TEST_UNIT_READY)
++	if (host_byte(scmd->result) == DID_TIME_OUT && eh_disp == SUCCESS)
+ 		sdkp->medium_access_timed_out++;
+ 
+ 	/*
+diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+index d443aa0..20fdfc2 100644
+--- a/include/scsi/scsi_driver.h
++++ b/include/scsi/scsi_driver.h
+@@ -16,7 +16,7 @@ struct scsi_driver {
+ 
+ 	void (*rescan)(struct device *);
+ 	int (*done)(struct scsi_cmnd *);
+-	int (*eh_action)(struct scsi_cmnd *, unsigned char *, int, int);
++	int (*eh_action)(struct scsi_cmnd *, int);
+ };
+ #define to_scsi_driver(drv) \
+ 	container_of((drv), struct scsi_driver, gendrv)
+-- 
+1.7.12.4
 
-<SK> Sure, I will send all the patches in next scsi-misc submission.
-
-Thanks,
-~Saurav
-
->
->Thanks,
->
->James
->
->
->
-
-
---_000_F5D084D6342F9B479C34599BB0A03E4D353913C9AVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IjkdAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADdCMUZDMzQ5
-OEFGRDlDNERBRkVCOEQyMzJGQUZBM0Y5AKsHAQ2ABAACAAAAAgACAAEFgAMADgAAAN0HBgANAAUA
-FAA3AAQASwEBIIADAA4AAADdBwYADQAFABQANwAEAEsBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABADQAAABSZTogW1BBVENIIDAxLzEwXSBxbGEyeHh4OiBDbGVhbiB1cCBx
-bGEyNHh4X2lpZG1hKCkA7A8BA5AGANgNAAAzAAAAAgF/AAEAAAA8AAAAPEY1RDA4NEQ2MzQyRjlC
-NDc5QzM0NTk5QkIwQTAzRTREMzUzOTEzQzlAQVZNQjEucWxvZ2ljLm9yZz4ACwAfDgEAAAACAQkQ
-AQAAAFsCAABXAgAAdAMAAExaRnWg5FBHYQAKZmJpZAQAAGNjwHBnMTI1MgD+A0PwdGV4dAH3AqQD
-4wIABGNoCsBzZXQwIO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIKMhZxAoAVYioJ
-sHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQIAXABaAbZGSa
-IANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZzAZAAICBCTV9C4EVHSU59CvwB
-8QvymmwLgGUKgSGkPk8DoBJXCYAsIAHQMTMtKDA2LQ6QIBiAIDDAODowNSArHqAeoAci4AYQCHBh
-diBLYYBzaHlhcCB3A2CFECA6IgY+IEhpH7A9H4EsJggY0AQQC4BnIPxtcyggDdAEIBhQCYAEIIkY
-kCBiGeB1cGQYgBMcUQuAIHELYF9kYphnLmMccAMQZS4mkP8EkBngBAAjoAuQJhYphSYI3QqwdBHA
-IgYiB0si4Bkg6y7wC4BjGeB5CGAoMARw5waQCJAcYHRoGeAq0BHwvwVALXMp8jBiEgAIgXMi4H8v
-kijCKRQiBjBiAiAZ4HfuaC8RCfAokWkFQAdAAyDzKSEHgCAoA/AwYC1gA2BmcBuxAJBnbhkwA9Ap
-oi4hnDxTSyaAUwhw+mUi4EklkAMQAyA0cjT0fzBxLXMHkSoBGFAQQC7wYxkAkC1tBAAqsHN1Yu87
-MQCQAiA3DVQZoR9QJxY+fiS0IZ0iBj0cLjdKYT8HgS3OLc0hlRVCRDAAHwBCAAEAAAAeAAAAUwBh
-AHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsA
-YQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAA
-AAAAAgFBAAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEA
-cwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABv
-AGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAA
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAu
-AGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUA
-cgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBz
-AGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAA
-AgEZDAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBo
-AHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcA
-aQBjAC4AYwBvAG0AAAAfAAFdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
-YQBwAAAAAAAfACNAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIEr
-H6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAA
-AHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAld
-AQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEA
-AAADAP0/5AQAAAIBCzABAAAAEAAAAHsfw0mK/ZxNr+uNIy+vo/kDABcAAQAAAEAAOQCAFWHH9WfO
-AUAACDDAzLPH9WfOAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAA
-wAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABl
-AG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAaAAAAFIA
-ZQA6ACAAWwBQAEEAVABDAEgAIAAwADEALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAgAEMAbABl
-AGEAbgAgAHUAcAAgAHEAbABhADIANAB4AHgAXwBpAGkAZABtAGEAKAApAAAAHwA9AAEAAAAKAAAA
-UgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAEYAAAA8ADEAMwA3ADEAMAA2ADMANQA0ADMALgAx
-ADkANwA4AC4AMgAyAC4AYwBhAG0AZQBsAEAAZABhAGIAZABpAGsAZQA+AAAAAAACAXEAAQAAABsA
-AAABAc5nnu+SWyZTWAI3RLOjT0Hxh9OsmTPt1wAAHwBwAAEAAABgAAAAWwBQAEEAVABDAEgAIAAw
-ADEALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAgAEMAbABlAGEAbgAgAHUAcAAgAHEAbABhADIA
-NAB4AHgAXwBpAGkAZABtAGEAKAApAAAAHwA1EAEAAAB4AAAAPABGADUARAAwADgANABEADYAMwA0
-ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQAMwA1ADMAOQAxADMA
-QwA5AEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAAwDeP59OAABAAAcw4NqU
-x/VnzgEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTMwNjEz
-MDUyMDU1Wi0zNDY5OAAAAB8AFRABAAAAWAAAADkANwBDAEIANABFADQAOAAzADAARgA0AEQANgA0
-AEYAOQBDADEAMwBFADYAOAA3AEQAQwAzADMARQBFADgANwBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAACARQwAQAAAAwAAAA+AAAA/Jvl6D4AAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBz
-AGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUA
-bgB0AAAAAAABAAAASAAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAv
-ADEANAAuADEAMAAuADAALgAxADEAMAAzADEAMAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgA
-AABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAA
-AAEAAAAaAQAASQBJAD0AMAAxADAAMQBDAEUANgA3AEYANQBDADcANQA4ADUAMgA3ADEARQBFAEQA
-MQA2ADcAMAAzADQAQQBBADMAMwA5AEMAMgBEAEMAOQBFADMARABDADUANgA0ADsAUwBCAE0ASQBE
-AD0AMQAzADQAOwBTADEAPQA8ADEAMwA3ADEAMAA2ADMANQA0ADMALgAxADkANwA4AC4AMgAyAC4A
-YwBhAG0AZQBsAEAAZABhAGIAZABpAGsAZQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBv
-AG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0A
-SAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABh
-AHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIA
-AAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGgAAAFsAMQAwAC4AMwA1
-AC4ANwAuADYANABdAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEA
-aQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAA/3k=
-
---_000_F5D084D6342F9B479C34599BB0A03E4D353913C9AVMB1qlogicorg_--
