@@ -1,7 +1,7 @@
 From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: [PATCH 3/4] scsi: ufs: Fix device and host reset methods
-Date: Thu, 13 Jun 2013 20:00:59 +0530
-Message-ID: <1371133860-17574-4-git-send-email-sthumma@codeaurora.org>
+Subject: [PATCH 4/4] scsi: ufs: Improve UFS fatal error handling
+Date: Thu, 13 Jun 2013 20:01:00 +0530
+Message-ID: <1371133860-17574-5-git-send-email-sthumma@codeaurora.org>
 References: <1371133860-17574-1-git-send-email-sthumma@codeaurora.org>
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1371133860-17574-1-git-send-email-sthumma@codeaurora.org>
@@ -10,579 +10,515 @@ To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>,
 Cc: JBottomley@parallels.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-As of now SCSI initiated error handling is broken because,
-the reset APIs don't try to bring back the device initialized and
-ready for further transfers.
+Error handling in UFS driver is broken and resets the host controller
+for fatal errors without re-initialization. Correct the fatal error
+handling sequence according to UFS Host Controller Interface (HCI)
+v1.1 specification.
 
-In case of timeouts, the scsi error handler takes care of handling aborts
-and resets. Improve the error handling in such scenario by resetting the
-device and host and re-initializing them in proper manner.
+o Upon determining fatal error condition the host controller may hang
+  forever until a reset is applied, so just retrying the command doesn't
+  work without a reset. So, the reset is applied in the driver context
+  in a separate work and SCSI mid-layer isn't informed until reset is
+  applied.
+
+o Processed requests which are completed without error are reported to
+  SCSI layer as successful and any pending commands that are not started
+  yet or are not cause of the error are re-queued into scsi midlayer queue.
+  For the command that caused error, host controller or device is reset
+  and DID_ERROR is returned for command retry after applying reset.
+
+o SCSI is informed about the expected Unit-Attentioni exception from the
+  device for the immediate command after a reset so that the SCSI layer
+  take necessary steps to establish communication with the device.
 
 Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c |  446 +++++++++++++++++++++++++++++++++++++++------
+ drivers/scsi/ufs/ufshcd.c |  348 +++++++++++++++++++++++++++++++++++----------
  drivers/scsi/ufs/ufshcd.h |    2 +
- 2 files changed, 391 insertions(+), 57 deletions(-)
+ drivers/scsi/ufs/ufshci.h |   19 ++-
+ 3 files changed, 293 insertions(+), 76 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d576df2..e368bb0 100644
+index e368bb0..cca774e 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -73,9 +73,15 @@ enum {
+@@ -84,6 +84,14 @@ enum {
+ 	UFSHCD_EH_DEVICE_RESET_PENDING = (1 << 1),
+ };
  
- /* UFSHCD states */
- enum {
--	UFSHCD_STATE_OPERATIONAL,
- 	UFSHCD_STATE_RESET,
- 	UFSHCD_STATE_ERROR,
-+	UFSHCD_STATE_OPERATIONAL,
++/* UFSHCD UIC layer error flags */
++enum {
++	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer error */
++	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
++	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
++	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */
 +};
 +
-+/* UFSHCD error handling flags */
-+enum {
-+	UFSHCD_EH_HOST_RESET_PENDING = (1 << 0),
-+	UFSHCD_EH_DEVICE_RESET_PENDING = (1 << 1),
- };
- 
  /* Interrupt configuration options */
-@@ -91,6 +97,22 @@ enum {
- 	INT_AGGR_CONFIG,
- };
+ enum {
+ 	UFSHCD_INT_DISABLE,
+@@ -112,6 +120,7 @@ enum {
  
-+#define ufshcd_set_device_reset_pending(h) \
-+	(h->eh_flags |= UFSHCD_EH_DEVICE_RESET_PENDING)
-+#define ufshcd_set_host_reset_pending(h) \
-+	(h->eh_flags |= UFSHCD_EH_HOST_RESET_PENDING)
-+#define ufshcd_device_reset_pending(h) \
-+	(h->eh_flags & UFSHCD_EH_DEVICE_RESET_PENDING)
-+#define ufshcd_host_reset_pending(h) \
-+	(h->eh_flags & UFSHCD_EH_HOST_RESET_PENDING)
-+#define ufshcd_clear_device_reset_pending(h) \
-+	(h->eh_flags &= ~UFSHCD_EH_DEVICE_RESET_PENDING)
-+#define ufshcd_clear_host_reset_pending(h) \
-+	(h->eh_flags &= ~UFSHCD_EH_HOST_RESET_PENDING)
-+
-+static void ufshcd_tmc_handler(struct ufs_hba *hba);
-+static void ufshcd_async_scan(void *data, async_cookie_t cookie);
-+
+ static void ufshcd_tmc_handler(struct ufs_hba *hba);
+ static void ufshcd_async_scan(void *data, async_cookie_t cookie);
++static int ufshcd_reset_and_restore(struct ufs_hba *hba);
+ 
  /*
   * ufshcd_wait_for_register - wait for register value to change
-  * @hba - per-adapter interface
-@@ -879,9 +901,22 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 
- 	tag = cmd->request->tag;
- 
--	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
-+	switch (hba->ufshcd_state) {
-+	case UFSHCD_STATE_OPERATIONAL:
-+		break;
-+	case UFSHCD_STATE_RESET:
- 		err = SCSI_MLQUEUE_HOST_BUSY;
+@@ -1570,9 +1579,6 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
  		goto out;
-+	case UFSHCD_STATE_ERROR:
-+		set_host_byte(cmd, DID_ERROR);
-+		cmd->scsi_done(cmd);
-+		goto out;
-+	default:
-+		dev_WARN_ONCE(hba->dev, 1, "%s: invalid state %d\n",
-+				__func__, hba->ufshcd_state);
-+		set_host_byte(cmd, DID_BAD_TARGET);
-+		cmd->scsi_done(cmd);
-+		break;
  	}
  
- 	lrbp = &hba->lrb[tag];
-@@ -1538,8 +1573,6 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
- 		scsi_unblock_requests(hba->host);
- 
--	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+-	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+-		scsi_unblock_requests(hba->host);
 -
  out:
  	return err;
  }
-@@ -2229,6 +2262,106 @@ out:
+@@ -1698,65 +1704,6 @@ static int ufshcd_validate_dev_connection(struct ufs_hba *hba)
  }
  
  /**
-+ * ufshcd_utrl_is_rsr_enabled - check if run-stop register is enabled
-+ * @hba: per-adapter instance
-+ */
-+static bool ufshcd_utrl_is_rsr_enabled(struct ufs_hba *hba)
-+{
-+	return ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_LIST_RUN_STOP) & 0x1;
-+}
-+
-+/**
-+ * ufshcd_utmrl_is_rsr_enabled - check if run-stop register is enabled
-+ * @hba: per-adapter instance
-+ */
-+static bool ufshcd_utmrl_is_rsr_enabled(struct ufs_hba *hba)
-+{
-+	return ufshcd_readl(hba, REG_UTP_TASK_REQ_LIST_RUN_STOP) & 0x1;
-+}
-+
-+/**
-+ * ufshcd_complete_pending_tasks - complete outstanding tasks
-+ * @hba: per adapter instance
-+ *
-+ * Abort in-progress task management commands and wakeup
-+ * waiting threads.
-+ *
-+ * Returns non-zero error value when failed to clear all the commands.
-+ */
-+static int ufshcd_complete_pending_tasks(struct ufs_hba *hba)
-+{
-+	u32 reg;
-+	int err = 0;
-+	unsigned long flags;
-+
-+	if (!hba->outstanding_tasks)
-+		goto out;
-+
-+	/* Clear UTMRL only when run-stop is enabled */
-+	if (ufshcd_utmrl_is_rsr_enabled(hba))
-+		ufshcd_writel(hba, ~hba->outstanding_tasks,
-+				REG_UTP_TASK_REQ_LIST_CLEAR);
-+
-+	/* poll for max. 1 sec to clear door bell register by h/w */
-+	reg = ufshcd_wait_for_register(hba,
-+			REG_UTP_TASK_REQ_DOOR_BELL,
-+			hba->outstanding_tasks, 0, 1000, 1000);
-+	if (reg & hba->outstanding_tasks)
-+		err = -ETIMEDOUT;
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	/* complete commands that were cleared out */
-+	ufshcd_tmc_handler(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+out:
-+	if (err)
-+		dev_err(hba->dev, "%s: failed, still pending = 0x%.8x\n",
-+				__func__, reg);
-+	return err;
-+}
-+
-+/**
-+ * ufshcd_complete_pending_reqs - complete outstanding requests
-+ * @hba: per adapter instance
-+ *
-+ * Abort in-progress transfer request commands and return them to SCSI.
-+ *
-+ * Returns non-zero error value when failed to clear all the commands.
-+ */
-+static int ufshcd_complete_pending_reqs(struct ufs_hba *hba)
-+{
-+	u32 reg;
-+	int err = 0;
-+	unsigned long flags;
-+
-+	/* check if we completed all of them */
-+	if (!hba->outstanding_reqs)
-+		goto out;
-+
-+	/* Clear UTRL only when run-stop is enabled */
-+	if (ufshcd_utrl_is_rsr_enabled(hba))
-+		ufshcd_writel(hba, ~hba->outstanding_reqs,
-+				REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+
-+	/* poll for max. 1 sec to clear door bell register by h/w */
-+	reg = ufshcd_wait_for_register(hba,
-+			REG_UTP_TRANSFER_REQ_DOOR_BELL,
-+			hba->outstanding_reqs, 0, 1000, 1000);
-+	if (reg & hba->outstanding_reqs)
-+		err = -ETIMEDOUT;
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	/* complete commands that were cleared out */
-+	ufshcd_transfer_req_compl(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+out:
-+	if (err)
-+		dev_err(hba->dev, "%s: failed, still pending = 0x%.8x\n",
-+				__func__, reg);
-+	return err;
-+}
-+
-+/**
-  * ufshcd_fatal_err_handler - handle fatal errors
-  * @hba: per adapter instance
-  */
-@@ -2424,78 +2557,154 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
- }
- 
- /**
-- * ufshcd_device_reset - reset device and abort all the pending commands
-- * @cmd: SCSI command pointer
-+ * ufshcd_dme_end_point_reset - Notify device Unipro to perform reset
-+ * @hba: per adapter instance
-  *
+- * ufshcd_do_reset - reset the host controller
+- * @hba: per adapter instance
+- *
 - * Returns SUCCESS/FAILED
-+ * UIC_CMD_DME_END_PT_RST resets the UFS device completely, the UFS flags,
-+ * attributes and descriptors are reset to default state. Callers are
-+ * expected to initialize the whole device again after this.
-+ *
-+ * Returns zero on success, non-zero on failure
-  */
--static int ufshcd_device_reset(struct scsi_cmnd *cmd)
-+static int ufshcd_dme_end_point_reset(struct ufs_hba *hba)
- {
--	struct Scsi_Host *host;
--	struct ufs_hba *hba;
--	unsigned int tag;
--	u32 pos;
--	int err;
--	u8 resp;
+- */
+-static int ufshcd_do_reset(struct ufs_hba *hba)
+-{
 -	struct ufshcd_lrb *lrbp;
-+	struct uic_command uic_cmd = {0};
-+	int ret;
- 
--	host = cmd->device->host;
--	hba = shost_priv(host);
--	tag = cmd->request->tag;
-+	uic_cmd.command = UIC_CMD_DME_END_PT_RST;
- 
--	lrbp = &hba->lrb[tag];
--	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
--			UFS_LOGICAL_RESET, &resp);
--	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
--		err = FAILED;
--		goto out;
--	} else {
--		err = SUCCESS;
--	}
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev, "%s: error code %d\n", __func__, ret);
- 
--	for (pos = 0; pos < SCSI_CMD_QUEUE_SIZE; pos++) {
--		if (test_bit(pos, &hba->outstanding_reqs) &&
--		    (hba->lrb[tag].lun == hba->lrb[pos].lun)) {
-+	return ret;
-+}
- 
--			/* clear the respective UTRLCLR register bit */
--			ufshcd_utrl_clear(hba, pos);
-+/**
-+ * ufshcd_dme_reset - Local UniPro reset
-+ * @hba: per adapter instance
-+ *
-+ * Returns zero on success, non-zero on failure
-+ */
-+static int ufshcd_dme_reset(struct ufs_hba *hba)
-+{
-+	struct uic_command uic_cmd = {0};
-+	int ret;
- 
--			clear_bit(pos, &hba->outstanding_reqs);
-+	uic_cmd.command = UIC_CMD_DME_RESET;
- 
--			if (hba->lrb[pos].cmd) {
--				scsi_dma_unmap(hba->lrb[pos].cmd);
--				hba->lrb[pos].cmd->result =
--						DID_ABORT << 16;
--				hba->lrb[pos].cmd->scsi_done(cmd);
--				hba->lrb[pos].cmd = NULL;
+-	unsigned long flags;
+-	int tag;
+-
+-	/* block commands from midlayer */
+-	scsi_block_requests(hba->host);
+-
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	hba->ufshcd_state = UFSHCD_STATE_RESET;
+-
+-	/* send controller to reset state */
+-	ufshcd_hba_stop(hba);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-
+-	/* abort outstanding commands */
+-	for (tag = 0; tag < SCSI_CMD_QUEUE_SIZE; tag++) {
+-		if (test_bit(tag, &hba->outstanding_reqs)) {
+-			lrbp = &hba->lrb[tag];
+-			if (lrbp->cmd) {
+-				scsi_dma_unmap(lrbp->cmd);
+-				lrbp->cmd->result = DID_RESET << 16;
+-				lrbp->cmd->scsi_done(lrbp->cmd);
+-				lrbp->cmd = NULL;
 -			}
 -		}
--	} /* end of for */
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev, "%s: error code %d\n", __func__, ret);
- 
+-	}
+-
 -	/* complete internal command */
 -	if (hba->i_cmd.dev_cmd_complete)
 -		complete(hba->i_cmd.dev_cmd_complete);
-+	return ret;
-+
-+}
-+
-+/**
-+ * ufshcd_dme_enable - Local UniPro DME Enable
-+ * @hba: per adapter instance
-+ *
-+ * Returns zero on success, non-zero on failure
-+ */
-+static int ufshcd_dme_enable(struct ufs_hba *hba)
-+{
-+	struct uic_command uic_cmd = {0};
-+	int ret;
-+	uic_cmd.command = UIC_CMD_DME_ENABLE;
-+
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev, "%s: error code %d\n", __func__, ret);
-+
-+	return ret;
+-
+-	/* clear outstanding request/task bit maps */
+-	hba->outstanding_reqs = 0;
+-	hba->outstanding_tasks = 0;
+-
+-	/* Host controller enable */
+-	if (ufshcd_hba_enable(hba)) {
+-		dev_err(hba->dev,
+-			"Reset: Controller initialization failed\n");
+-		return FAILED;
+-	}
+-
+-	if (ufshcd_link_startup(hba)) {
+-		dev_err(hba->dev,
+-			"Reset: Link start-up failed\n");
+-		return FAILED;
+-	}
+-
+-	return SUCCESS;
+-}
+-
+-/**
+  * ufshcd_slave_alloc - handle initial SCSI device configurations
+  * @sdev: pointer to SCSI device
+  *
+@@ -1773,6 +1720,9 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
+ 	sdev->use_10_for_ms = 1;
+ 	scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
  
-+}
++	/* allow SCSI layer to restart the device in case of errors */
++	sdev->allow_restart = 1;
 +
-+/**
-+ * ufshcd_device_reset_and_restore - reset and restore device
-+ * @hba: per-adapter instance
-+ *
-+ * Note that the device reset issues DME_END_POINT_RESET which
-+ * may reset entire device and restore device attributes to
-+ * default state.
-+ *
-+ * Returns zero on success, non-zero on failure
-+ */
-+static int ufshcd_device_reset_and_restore(struct ufs_hba *hba)
-+{
-+	int err = 0;
-+	u32 reg;
-+
-+	err = ufshcd_dme_end_point_reset(hba);
-+	if (err)
-+		goto out;
-+	/* restore communication with the device */
-+	err = ufshcd_dme_reset(hba);
-+	if (err)
-+		goto out;
-+
-+	err = ufshcd_dme_enable(hba);
-+	if (err)
-+		goto out;
-+
-+	err = ufshcd_dme_link_startup(hba);
-+	if (err)
-+		goto out;
-+
-+	/* check if link is up and device is detected */
-+	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
-+	if (!ufshcd_is_device_present(reg)) {
-+		dev_err(hba->dev, "Device not present\n");
-+		err = -ENXIO;
-+		goto out;
-+	}
-+
-+	ufshcd_clear_device_reset_pending(hba);
- out:
-+	dev_dbg(hba->dev, "%s: done err = %d\n", __func__, err);
+ 	/*
+ 	 * Inform SCSI Midlayer that the LUN queue depth is same as the
+ 	 * controller queue depth. If a LUN queue depth is less than the
+@@ -1974,6 +1924,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	case OCS_ABORTED:
+ 		result |= DID_ABORT << 16;
+ 		break;
++	case OCS_INVALID_COMMAND_STATUS:
++		result |= DID_REQUEUE << 16;
++		break;
+ 	case OCS_INVALID_CMD_TABLE_ATTR:
+ 	case OCS_INVALID_PRDT_ATTR:
+ 	case OCS_MISMATCH_DATA_BUF_SIZE:
+@@ -2361,40 +2314,289 @@ out:
  	return err;
  }
  
++static void ufshcd_decide_eh_xfer_req(struct ufs_hba *hba, u32 ocs)
++{
++	switch (ocs) {
++	case OCS_SUCCESS:
++	case OCS_INVALID_COMMAND_STATUS:
++		break;
++	case OCS_MISMATCH_DATA_BUF_SIZE:
++	case OCS_MISMATCH_RESP_UPIU_SIZE:
++	case OCS_PEER_COMM_FAILURE:
++	case OCS_FATAL_ERROR:
++	case OCS_ABORTED:
++	case OCS_INVALID_CMD_TABLE_ATTR:
++	case OCS_INVALID_PRDT_ATTR:
++		ufshcd_set_host_reset_pending(hba);
++		break;
++	default:
++		dev_err(hba->dev, "%s: unknown OCS 0x%x\n",
++				__func__, ocs);
++		BUG();
++	}
++}
++
++static void ufshcd_decide_eh_task_req(struct ufs_hba *hba, u32 ocs)
++{
++	switch (ocs) {
++	case OCS_TMR_SUCCESS:
++	case OCS_TMR_INVALID_COMMAND_STATUS:
++		break;
++	case OCS_TMR_MISMATCH_REQ_SIZE:
++	case OCS_TMR_MISMATCH_RESP_SIZE:
++	case OCS_TMR_PEER_COMM_FAILURE:
++	case OCS_TMR_INVALID_ATTR:
++	case OCS_TMR_ABORTED:
++	case OCS_TMR_FATAL_ERROR:
++		ufshcd_set_host_reset_pending(hba);
++		break;
++	default:
++		dev_err(hba->dev, "%s: uknown TMR OCS 0x%x\n",
++				__func__, ocs);
++		BUG();
++	}
++}
++
  /**
-- * ufshcd_host_reset - Main reset function registered with scsi layer
-- * @cmd: SCSI command pointer
-+ * ufshcd_host_reset_and_restore - reset and restore host controller
-+ * @hba: per-adapter instance
-  *
-- * Returns SUCCESS/FAILED
-+ * Note that host controller reset may issue DME_RESET to
-+ * local and remote (device) Uni-Pro stack and the attributes
-+ * are reset to default state.
+- * ufshcd_fatal_err_handler - handle fatal errors
++ * ufshcd_error_autopsy_transfer_req() - reads OCS field of failed command and
++ *                          decide error handling
++ * @hba: per adapter instance
++ * @err_xfer: bit mask for transfer request errors
 + *
-+ * Returns zero on success, non-zero on failure
-  */
--static int ufshcd_host_reset(struct scsi_cmnd *cmd)
-+static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- {
--	struct ufs_hba *hba;
-+	int err;
-+	async_cookie_t cookie;
-+	unsigned long flags;
- 
--	hba = shost_priv(cmd->device->host);
-+	/* Reset the host controller */
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	ufshcd_hba_stop(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
--	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
--		return SUCCESS;
-+	err = ufshcd_hba_enable(hba);
-+	if (err)
++ * Iterate over completed transfer requests and
++ * set error handling flags.
++ */
++static void
++ufshcd_error_autopsy_transfer_req(struct ufs_hba *hba, u32 *err_xfer)
++{
++	unsigned long completed;
++	u32 doorbell;
++	int index;
++	int ocs;
++
++	if (!err_xfer)
 +		goto out;
 +
-+	/* Establish the link again and restore the device */
-+	cookie = async_schedule(ufshcd_async_scan, hba);
-+	/* wait for async scan to be completed */
-+	async_synchronize_cookie(++cookie);
-+	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL)
-+		err = -EIO;
-+out:
-+	if (err)
-+		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
-+	else
-+		ufshcd_clear_host_reset_pending(hba);
- 
--	return ufshcd_do_reset(hba);
-+	dev_dbg(hba->dev, "%s: done err = %d\n", __func__, err);
-+	return err;
- }
- 
- /**
-@@ -2592,6 +2801,124 @@ out:
- }
- 
- /**
-+ * ufshcd_reset_and_restore - resets device or host or both
-+ * @hba: per-adapter instance
-+ *
-+ * Reset and recover device, host and re-establish link. This
-+ * is helpful to recover the communication in fatal error conditions.
-+ *
-+ * Returns zero on success, non-zero on failure
-+ */
-+static int ufshcd_reset_and_restore(struct ufs_hba *hba)
-+{
-+	int err = 0;
++	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	completed = doorbell ^ (u32)hba->outstanding_reqs;
 +
-+	if (ufshcd_device_reset_pending(hba) &&
-+			!ufshcd_host_reset_pending(hba)) {
-+		err = ufshcd_device_reset_and_restore(hba);
-+		if (err) {
-+			ufshcd_clear_device_reset_pending(hba);
-+			ufshcd_set_host_reset_pending(hba);
++	for (index = 0; index < hba->nutrs; index++) {
++		if (test_bit(index, &completed)) {
++			ocs = ufshcd_get_tr_ocs(&hba->lrb[index]);
++			if ((ocs == OCS_SUCCESS) ||
++					(ocs == OCS_INVALID_COMMAND_STATUS))
++				continue;
++
++			*err_xfer |= (1 << index);
++			ufshcd_decide_eh_xfer_req(hba, ocs);
++		}
++	}
++out:
++	return;
++}
++
++/**
++ * ufshcd_error_autopsy_task_req() - reads OCS field of failed command and
++ *                          decide error handling
+  * @hba: per adapter instance
++ * @err_tm: bit mask for task management errors
++ *
++ * Iterate over completed task management requests and
++ * set error handling flags.
++ */
++static void
++ufshcd_error_autopsy_task_req(struct ufs_hba *hba, u32 *err_tm)
++{
++	unsigned long completed;
++	u32 doorbell;
++	int index;
++	int ocs;
++
++	if (!err_tm)
++		goto out;
++
++	doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
++	completed = doorbell ^ (u32)hba->outstanding_tasks;
++
++	for (index = 0; index < hba->nutmrs; index++) {
++		if (test_bit(index, &completed)) {
++			struct utp_task_req_desc *tm_descp;
++
++			tm_descp = hba->utmrdl_base_addr;
++			ocs = ufshcd_get_tmr_ocs(&tm_descp[index]);
++			if ((ocs == OCS_TMR_SUCCESS) ||
++					(ocs == OCS_TMR_INVALID_COMMAND_STATUS))
++				continue;
++
++			*err_tm |= (1 << index);
++			ufshcd_decide_eh_task_req(hba, ocs);
 +		}
 +	}
 +
-+	if (ufshcd_host_reset_pending(hba))
-+		err = ufshcd_host_reset_and_restore(hba);
++out:
++	return;
++}
++
++/**
++ * ufshcd_fatal_err_handler - handle fatal errors
++ * @work: pointer to work structure
+  */
+ static void ufshcd_fatal_err_handler(struct work_struct *work)
+ {
+ 	struct ufs_hba *hba;
++	unsigned long flags;
++	u32 err_xfer = 0;
++	u32 err_tm = 0;
++	int err;
++
+ 	hba = container_of(work, struct ufs_hba, feh_workq);
+ 
+-	/* check if reset is already in progress */
+-	if (hba->ufshcd_state != UFSHCD_STATE_RESET)
+-		ufshcd_do_reset(hba);
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
++		/* complete processed requests and exit */
++		ufshcd_transfer_req_compl(hba);
++		ufshcd_tmc_handler(hba);
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		return;
++	}
++
++	hba->ufshcd_state = UFSHCD_STATE_RESET;
++	ufshcd_error_autopsy_transfer_req(hba, &err_xfer);
++	ufshcd_error_autopsy_task_req(hba, &err_tm);
 +
 +	/*
-+	 * Due to reset the door-bell might be cleared, clear
-+	 * outstanding requests in s/w here.
++	 * Complete successful and pending transfer requests.
++	 * DID_REQUEUE is returned for pending requests as they have
++	 * nothing to do with error'ed request and SCSI layer should
++	 * not treat them as errors and decrement retry count.
 +	 */
++	hba->outstanding_reqs &= ~err_xfer;
++	ufshcd_transfer_req_compl(hba);
 +	ufshcd_complete_pending_reqs(hba);
++	hba->outstanding_reqs |= err_xfer;
++
++	/* Complete successful and pending task requests */
++	hba->outstanding_tasks &= ~err_tm;
++	ufshcd_tmc_handler(hba);
 +	ufshcd_complete_pending_tasks(hba);
++	hba->outstanding_tasks |= err_tm;
 +
-+	return err;
-+}
-+
-+/**
-+ * ufshcd_eh_device_reset_handler - device reset handler registered to
-+ *                                    scsi layer.
-+ * @cmd - SCSI command pointer
-+ *
-+ * Returns SUCCESS/FAILED
-+ */
-+static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
-+{
-+	struct ufs_hba *hba;
-+	int err;
-+	unsigned long flags;
-+
-+	hba = shost_priv(cmd->device->host);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
-+		dev_warn(hba->dev, "%s: reset in progress\n", __func__);
-+		err = SUCCESS;
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		goto out;
-+	}
-+
-+	hba->ufshcd_state = UFSHCD_STATE_RESET;
-+	ufshcd_set_device_reset_pending(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	err = ufshcd_reset_and_restore(hba);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (!err) {
-+		err = SUCCESS;
-+		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-+	} else {
-+		err = FAILED;
-+		hba->ufshcd_state = UFSHCD_STATE_ERROR;
++	/*
++	 * Controller may generate multiple fatal errors, handle
++	 * errors based on severity.
++	 * 1) DEVICE_FATAL_ERROR
++	 * 2) SYSTEM_BUS/CONTROLLER_FATAL_ERROR
++	 * 3) UIC_ERROR
++	 */
++	if (hba->errors & DEVICE_FATAL_ERROR) {
++		/*
++		 * Some HBAs may not clear UTRLDBR/UTMRLDBR or update
++		 * OCS field on device fatal error.
++		 */
++		ufshcd_set_host_reset_pending(hba);
++	} else if (hba->errors & (SYSTEM_BUS_FATAL_ERROR |
++				CONTROLLER_FATAL_ERROR)) {
++		/* eh flags should be set in err autopsy based on OCS values */
++		if (!hba->eh_flags)
++			WARN(1, "%s: fatal error without error handling\n",
++				dev_name(hba->dev));
++	} else if (hba->errors & UIC_ERROR) {
++		if (hba->uic_error & UFSHCD_UIC_DL_PA_INIT_ERROR) {
++			/* fatal error - reset controller */
++			ufshcd_set_host_reset_pending(hba);
++		} else if (hba->uic_error & (UFSHCD_UIC_NL_ERROR |
++					UFSHCD_UIC_TL_ERROR |
++					UFSHCD_UIC_DME_ERROR)) {
++			/* non-fatal, report error to SCSI layer */
++			if (!hba->eh_flags) {
++				ufshcd_complete_pending_reqs(hba);
++				ufshcd_complete_pending_tasks(hba);
++			}
++		}
 +	}
 +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+out:
-+	return err;
-+}
 +
-+/**
-+ * ufshcd_eh_host_reset_handler - host reset handler registered to scsi layer
-+ * @cmd - SCSI command pointer
-+ *
-+ * Returns SUCCESS/FAILED
-+ */
-+static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
-+{
-+	struct ufs_hba *hba;
-+	int err;
-+	unsigned long flags;
-+
-+	hba = shost_priv(cmd->device->host);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
-+		dev_warn(hba->dev, "%s: reset in progress\n", __func__);
-+		err = SUCCESS;
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		goto out;
++	if (hba->eh_flags) {
++		err = ufshcd_reset_and_restore(hba);
++		if (err) {
++			ufshcd_clear_host_reset_pending(hba);
++			ufshcd_clear_device_reset_pending(hba);
++			dev_err(hba->dev, "%s: reset and restore failed\n",
++					__func__);
++			hba->ufshcd_state = UFSHCD_STATE_ERROR;
++		}
++		/*
++		 * Inform scsi mid-layer that we did reset and allow to handle
++		 * Unit Attention properly.
++		 */
++		scsi_report_bus_reset(hba->host, 0);
++		hba->errors = 0;
++		hba->uic_error = 0;
 +	}
-+
-+	hba->ufshcd_state = UFSHCD_STATE_RESET;
-+	ufshcd_set_host_reset_pending(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	err = ufshcd_reset_and_restore(hba);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (!err) {
-+		err = SUCCESS;
-+		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-+	} else {
-+		err = FAILED;
-+		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-+	}
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+out:
-+	return err;
-+}
-+
-+/**
-  * ufshcd_async_scan - asynchronous execution for link startup
-  * @data: data pointer to pass to this function
-  * @cookie: cookie data
-@@ -2613,7 +2940,12 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	if (ret)
- 		goto out;
- 
--	scsi_scan_host(hba->host);
-+	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-+
-+	/* If we are in error handling context no need to scan the host */
-+	if (!(ufshcd_device_reset_pending(hba) ||
-+			ufshcd_host_reset_pending(hba)))
-+		scsi_scan_host(hba->host);
- out:
- 	return;
++	scsi_unblock_requests(hba->host);
  }
-@@ -2626,8 +2958,8 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.slave_alloc		= ufshcd_slave_alloc,
- 	.slave_destroy		= ufshcd_slave_destroy,
- 	.eh_abort_handler	= ufshcd_abort,
--	.eh_device_reset_handler = ufshcd_device_reset,
--	.eh_host_reset_handler	= ufshcd_host_reset,
-+	.eh_device_reset_handler = ufshcd_eh_device_reset_handler,
-+	.eh_host_reset_handler   = ufshcd_eh_host_reset_handler,
- 	.this_id		= -1,
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
+ 
+ /**
+- * ufshcd_err_handler - Check for fatal errors
+- * @work: pointer to a work queue structure
++ * ufshcd_update_uic_error - check and set fatal UIC error flags.
++ * @hba: per-adapter instance
+  */
+-static void ufshcd_err_handler(struct ufs_hba *hba)
++static void ufshcd_update_uic_error(struct ufs_hba *hba)
+ {
+ 	u32 reg;
+ 
++	/* PA_INIT_ERROR is fatal and needs UIC reset */
++	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
++	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
++		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
++
++	/* UIC NL/TL/DME errors needs software retry */
++	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
++	if (reg)
++		hba->uic_error |= UFSHCD_UIC_NL_ERROR;
++
++	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_TRANSPORT_LAYER);
++	if (reg)
++		hba->uic_error |= UFSHCD_UIC_TL_ERROR;
++
++	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DME);
++	if (reg)
++		hba->uic_error |= UFSHCD_UIC_DME_ERROR;
++
++	dev_dbg(hba->dev, "%s: UIC error flags = 0x%08x\n",
++			__func__, hba->uic_error);
++}
++
++/**
++ * ufshcd_err_handler - Check for fatal errors
++ * @hba: per-adapter instance
++ */
++static void ufshcd_err_handler(struct ufs_hba *hba)
++{
+ 	if (hba->errors & INT_FATAL_ERRORS)
+ 		goto fatal_eh;
+ 
+ 	if (hba->errors & UIC_ERROR) {
+-		reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
+-		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
++		hba->uic_error = 0;
++		ufshcd_update_uic_error(hba);
++		if (hba->uic_error)
+ 			goto fatal_eh;
+ 	}
++	/*
++	 * Other errors are either non-fatal or completed by the
++	 * controller by updating OCS fields with success/failure.
++	 */
+ 	return;
++
+ fatal_eh:
+-	hba->ufshcd_state = UFSHCD_STATE_ERROR;
+-	schedule_work(&hba->feh_workq);
++	/* handle fatal errors only when link is functional */
++	if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
++		/* block commands from midlayer */
++		scsi_block_requests(hba->host);
++
++		/* block commands at driver layer until error is handled */
++		hba->ufshcd_state = UFSHCD_STATE_ERROR;
++		schedule_work(&hba->feh_workq);
++	}
+ }
+ 
+ /**
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 8ca08fe..963aadd 100644
+index 963aadd..7daa722 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -176,6 +176,7 @@ struct ufs_internal_cmd {
-  * @tm_tag_wq: wait queue for free task management slots
-  * @tm_condition: condition variable for task management
-  * @ufshcd_state: UFSHCD states
-+ * @eh_flags: Error handling flags
-  * @intr_mask: Interrupt Mask Bits
-  * @ee_ctrl_mask: Exception event control mask
+@@ -182,6 +182,7 @@ struct ufs_internal_cmd {
   * @feh_workq: Work queue for fatal controller error handling
-@@ -219,6 +220,7 @@ struct ufs_hba {
- 	unsigned long tm_condition;
+  * @eeh_work: Worker to handle exception events
+  * @errors: HBA errors
++ * @uic_error: UFS interconnect layer error status
+  * @i_cmd: ufs internal command information
+  * @auto_bkops_disabled: to track whether bkops is enabled in device
+  */
+@@ -230,6 +231,7 @@ struct ufs_hba {
  
- 	u32 ufshcd_state;
-+	u32 eh_flags;
- 	u32 intr_mask;
- 	u16 ee_ctrl_mask;
+ 	/* HBA Errors */
+ 	u32 errors;
++	u32 uic_error;
  
+ 	/* Internal Request data */
+ 	struct ufs_internal_cmd i_cmd;
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index f1e1b74..36f68ef 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -264,7 +264,7 @@ enum {
+ 	UTP_DEVICE_TO_HOST	= 0x04000000,
+ };
+ 
+-/* Overall command status values */
++/* Overall command status values for transfer request */
+ enum {
+ 	OCS_SUCCESS			= 0x0,
+ 	OCS_INVALID_CMD_TABLE_ATTR	= 0x1,
+@@ -274,8 +274,21 @@ enum {
+ 	OCS_PEER_COMM_FAILURE		= 0x5,
+ 	OCS_ABORTED			= 0x6,
+ 	OCS_FATAL_ERROR			= 0x7,
+-	OCS_INVALID_COMMAND_STATUS	= 0x0F,
+-	MASK_OCS			= 0x0F,
++	OCS_INVALID_COMMAND_STATUS	= 0xF,
++	MASK_OCS			= 0xFF,
++};
++
++/* Overall command status values for task management request */
++enum {
++	OCS_TMR_SUCCESS			= 0x0,
++	OCS_TMR_INVALID_ATTR		= 0x1,
++	OCS_TMR_MISMATCH_REQ_SIZE	= 0x2,
++	OCS_TMR_MISMATCH_RESP_SIZE	= 0x3,
++	OCS_TMR_PEER_COMM_FAILURE	= 0x4,
++	OCS_TMR_ABORTED			= 0x5,
++	OCS_TMR_FATAL_ERROR		= 0x6,
++	OCS_TMR_INVALID_COMMAND_STATUS	= 0xF,
++	MASK_OCS_TMR			= 0xFF,
+ };
+ 
+ /**
 -- 
 QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation.
