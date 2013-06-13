@@ -1,30 +1,37 @@
-From: Karel Zak <kzak@redhat.com>
-Subject: Re: [PATCH] user_space_eject: unlock door before issuing CDROMEJECT
- command
-Date: Thu, 13 Jun 2013 13:29:19 +0200
-Message-ID: <20130613112919.GA26656@x2.net.home>
-References: <51B04C93.8010508@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20545 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752088Ab3FML3X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Jun 2013 07:29:23 -0400
-Content-Disposition: inline
-In-Reply-To: <51B04C93.8010508@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: [PATCH 0/2] scsi: ufs: Add support to control UFS device background operations
+Date: Thu, 13 Jun 2013 19:50:03 +0530
+Message-ID: <1371133205-17377-1-git-send-email-sthumma@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Michal Luscon <mluscon@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>, Aaron Lu <aaron.lwe@gmail.com>
 
-On Thu, Jun 06, 2013 at 04:47:15PM +0800, Aaron Lu wrote:
-> Hi Karel & Michal,
->  sys-utils/eject.c | 3 +++
->  1 file changed, 3 insertions(+)
+Add host assisted background operations for UFS device and runtime PM
+helpers for ufshcd platform and pci glue drivers. The background operations
+are disabled during runtime resume and enabled when the device is idle and
+runtime suspended.
 
- Applied, thanks.
+These patches depends on:
+[PATCH 2/8] scsi: ufs: wrap the i/o access operations
+[PATCH 3/8] scsi: ufs: amend interrupt configuration
+[PATCH 4/8] scsi: ufs: remove version check before IS reg clear
+[PATCH 5/8] scsi: ufs: rework link start-up process
+[PATCH 1/2] scsi: ufs: Add support for sending NOP OUT UPIU
+[PATCH 2/2] scsi: ufs: Set fDeviceInit flag to initiate device initialization
+
+Sujit Reddy Thumma (2):
+  scsi: ufs: Add support for host assisted background operations
+  scsi: ufs: Add runtime PM helpers for UFS host driver
+
+ drivers/scsi/ufs/ufs.h           |   25 +++-
+ drivers/scsi/ufs/ufshcd-pci.c    |   60 ++++++-
+ drivers/scsi/ufs/ufshcd-pltfrm.c |   41 +++++
+ drivers/scsi/ufs/ufshcd.c        |  343 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.h        |   10 +
+ 5 files changed, 472 insertions(+), 7 deletions(-)
 
 -- 
- Karel Zak  <kzak@redhat.com>
- http://karelzak.blogspot.com
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation.
