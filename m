@@ -1,13 +1,13 @@
 From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH 07/10] [RFC] SCSI: esas2r: Add IOCTL header file
-Date: Thu, 13 Jun 2013 10:31:05 -0400
-Message-ID: <1371133868-13794-8-git-send-email-bgrove@attotech.com>
+Subject: [PATCH 08/10] [RFC] SCSI: esas2r: Add IOCTL functions
+Date: Thu, 13 Jun 2013 10:31:06 -0400
+Message-ID: <1371133868-13794-9-git-send-email-bgrove@attotech.com>
 References: <1371133868-13794-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:14379 "EHLO
+Received: from sw.attotech.com ([208.69.85.34]:38348 "EHLO
 	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758414Ab3FMOrK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jun 2013 10:47:10 -0400
+	with ESMTP id S1758375Ab3FMOrB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jun 2013 10:47:01 -0400
 In-Reply-To: <1371133868-13794-1-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,1270 +17,2126 @@ Cc: jseba@attotech.com, jbottomley@parallels.com, Bradley Grove <bgrove@attotech
 
 Signed-off-by: Bradley Grove <bgrove@attotech.com>
 ---
- drivers/scsi/esas2r/atioctl.h | 1254 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 1254 insertions(+)
- create mode 100644 drivers/scsi/esas2r/atioctl.h
+ drivers/scsi/esas2r/esas2r_ioctl.c | 2110 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 2110 insertions(+)
+ create mode 100644 drivers/scsi/esas2r/esas2r_ioctl.c
 
-diff --git a/drivers/scsi/esas2r/atioctl.h b/drivers/scsi/esas2r/atioctl.h
+diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
 new file mode 100644
-index 0000000..4aca3d5
+index 0000000..b2c5289
 --- /dev/null
-+++ b/drivers/scsi/esas2r/atioctl.h
-@@ -0,0 +1,1254 @@
-+/*  linux/drivers/scsi/esas2r/atioctl.h
-+ *      ATTO IOCTL Handling
++++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+@@ -0,0 +1,2110 @@
++/*
++ *  linux/drivers/scsi/esas2r/esas2r_ioctl.c
++ *      For use with ATTO ExpressSAS R6xx SAS/SATA RAID controllers
 + *
 + *  Copyright (c) 2001-2013 ATTO Technology, Inc.
 + *  (mailto:linuxdrivers@attotech.com)
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * NO WARRANTY
++ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
++ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
++ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
++ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
++ * solely responsible for determining the appropriateness of using and
++ * distributing the Program and assumes all risks associated with its
++ * exercise of rights under this Agreement, including but not limited to
++ * the risks and costs of program errors, damage to or loss of data,
++ * programs or equipment, and unavailability or interruption of operations.
++ *
++ * DISCLAIMER OF LIABILITY
++ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
++ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
++ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
++ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
++ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
++ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
++ * USA.
 + */
-+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-+/*
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; version 2 of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  NO WARRANTY
-+ *  THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
-+ *  CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
-+ *  LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
-+ *  MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
-+ *  solely responsible for determining the appropriateness of using and
-+ *  distributing the Program and assumes all risks associated with its
-+ *  exercise of rights under this Agreement, including but not limited to
-+ *  the risks and costs of program errors, damage to or loss of data,
-+ *  programs or equipment, and unavailability or interruption of operations.
-+ *
-+ *  DISCLAIMER OF LIABILITY
-+ *  NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
-+ *  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ *  DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
-+ *  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-+ *  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-+ *  USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
-+ *  HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ */
-+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
 +
-+#include "atvda.h"
-+
-+#ifndef ATIOCTL_H
-+#define ATIOCTL_H
-+
-+#define EXPRESS_IOCTL_SIGNATURE        "Express"
-+#define EXPRESS_IOCTL_SIGNATURE_SIZE   8
-+
-+/* structure definitions for IOCTls */
-+
-+struct __packed atto_express_ioctl_header {
-+	u8 signature[EXPRESS_IOCTL_SIGNATURE_SIZE];
-+	u8 return_code;
-+
-+#define IOCTL_SUCCESS               0
-+#define IOCTL_ERR_INVCMD          101
-+#define IOCTL_INIT_FAILED         102
-+#define IOCTL_NOT_IMPLEMENTED     103
-+#define IOCTL_BAD_CHANNEL         104
-+#define IOCTL_TARGET_OVERRUN      105
-+#define IOCTL_TARGET_NOT_ENABLED  106
-+#define IOCTL_BAD_FLASH_IMGTYPE   107
-+#define IOCTL_OUT_OF_RESOURCES    108
-+#define IOCTL_GENERAL_ERROR       109
-+#define IOCTL_INVALID_PARAM       110
-+
-+	u8 channel;
-+	u8 retries;
-+	u8 pad[5];
-+};
++#include "esas2r.h"
 +
 +/*
-+ * NOTE - if channel == 0xFF, the request is
-+ * handled on the adapter it came in on.
++ * Buffered ioctl handlers.  A buffered ioctl is one which requires that we
++ * allocate a DMA-able memory area to communicate with the firmware.  In
++ * order to prevent continually allocating and freeing consistent memory,
++ * we will allocate a global buffer the first time we need it and re-use
++ * it for subsequent ioctl calls that require it.
 + */
-+#define MAX_NODE_NAMES  256
 +
-+struct __packed atto_firmware_rw_request {
-+	u8 function;
-+	#define FUNC_FW_DOWNLOAD        0x09
-+	#define FUNC_FW_UPLOAD          0x12
++u8 *esas2r_buffered_ioctl;
++dma_addr_t esas2r_buffered_ioctl_addr;
++u32 esas2r_buffered_ioctl_size;
++struct pci_dev *esas2r_buffered_ioctl_pcid;
 +
-+	u8 img_type;
-+	#define FW_IMG_FW               0x01
-+	#define FW_IMG_BIOS             0x02
-+	#define FW_IMG_NVR              0x03
-+	#define FW_IMG_RAW              0x04
-+	#define FW_IMG_FM_API           0x05
-+	#define FW_IMG_FS_API           0x06
++static DEFINE_SEMAPHORE(buffered_ioctl_semaphore);
++typedef int (*BUFFERED_IOCTL_CALLBACK)(struct esas2r_adapter *,
++				       struct esas2r_request *,
++				       struct esas2r_sg_context *,
++				       void *);
++typedef void (*BUFFERED_IOCTL_DONE_CALLBACK)(struct esas2r_adapter *,
++					     struct esas2r_request *, void *);
 +
-+	u8 pad[2];
-+	u32 img_offset;
-+	u32 img_size;
-+	u8 image[0x80000];
-+};
-+
-+struct __packed atto_param_rw_request {
-+	u16 code;
-+	char data_buffer[512];
-+};
-+
-+#define MAX_CHANNEL 256
-+
-+struct __packed atto_channel_list {
-+	u32 num_channels;
-+	u8 channel[MAX_CHANNEL];
-+};
-+
-+struct __packed atto_channel_info {
-+	u8 major_rev;
-+	u8 minor_rev;
-+	u8 IRQ;
-+	u8 revision_id;
-+	u8 pci_bus;
-+	u8 pci_dev_func;
-+	u8 core_rev;
-+	u8 host_no;
-+	u16 device_id;
-+	u16 vendor_id;
-+	u16 ven_dev_id;
-+	u8 pad[3];
-+	u32 hbaapi_rev;
-+};
-+
-+/*
-+ * CSMI control codes
-+ * class independent
-+ */
-+#define CSMI_CC_GET_DRVR_INFO        1
-+#define CSMI_CC_GET_CNTLR_CFG        2
-+#define CSMI_CC_GET_CNTLR_STS        3
-+#define CSMI_CC_FW_DOWNLOAD          4
-+
-+/* RAID class */
-+#define CSMI_CC_GET_RAID_INFO        10
-+#define CSMI_CC_GET_RAID_CFG         11
-+
-+/* HBA class */
-+#define CSMI_CC_GET_PHY_INFO         20
-+#define CSMI_CC_SET_PHY_INFO         21
-+#define CSMI_CC_GET_LINK_ERRORS      22
-+#define CSMI_CC_SMP_PASSTHRU         23
-+#define CSMI_CC_SSP_PASSTHRU         24
-+#define CSMI_CC_STP_PASSTHRU         25
-+#define CSMI_CC_GET_SATA_SIG         26
-+#define CSMI_CC_GET_SCSI_ADDR        27
-+#define CSMI_CC_GET_DEV_ADDR         28
-+#define CSMI_CC_TASK_MGT             29
-+#define CSMI_CC_GET_CONN_INFO        30
-+
-+/* PHY class */
-+#define CSMI_CC_PHY_CTRL             60
-+
-+/*
-+ * CSMI status codes
-+ * class independent
-+ */
-+#define CSMI_STS_SUCCESS             0
-+#define CSMI_STS_FAILED              1
-+#define CSMI_STS_BAD_CTRL_CODE       2
-+#define CSMI_STS_INV_PARAM           3
-+#define CSMI_STS_WRITE_ATTEMPTED     4
-+
-+/* RAID class */
-+#define CSMI_STS_INV_RAID_SET        1000
-+
-+/* HBA class */
-+#define CSMI_STS_PHY_CHANGED         CSMI_STS_SUCCESS
-+#define CSMI_STS_PHY_UNCHANGEABLE    2000
-+#define CSMI_STS_INV_LINK_RATE       2001
-+#define CSMI_STS_INV_PHY             2002
-+#define CSMI_STS_INV_PHY_FOR_PORT    2003
-+#define CSMI_STS_PHY_UNSELECTABLE    2004
-+#define CSMI_STS_SELECT_PHY_OR_PORT  2005
-+#define CSMI_STS_INV_PORT            2006
-+#define CSMI_STS_PORT_UNSELECTABLE   2007
-+#define CSMI_STS_CONNECTION_FAILED   2008
-+#define CSMI_STS_NO_SATA_DEV         2009
-+#define CSMI_STS_NO_SATA_SIGNATURE   2010
-+#define CSMI_STS_SCSI_EMULATION      2011
-+#define CSMI_STS_NOT_AN_END_DEV      2012
-+#define CSMI_STS_NO_SCSI_ADDR        2013
-+#define CSMI_STS_NO_DEV_ADDR         2014
-+
-+/* CSMI class independent structures */
-+struct atto_csmi_get_driver_info {
-+	char name[81];
-+	char description[81];
-+	u16 major_rev;
-+	u16 minor_rev;
-+	u16 build_rev;
-+	u16 release_rev;
-+	u16 csmi_major_rev;
-+	u16 csmi_minor_rev;
-+	#define CSMI_MAJOR_REV_0_81      0
-+	#define CSMI_MINOR_REV_0_81      81
-+
-+	#define CSMI_MAJOR_REV           CSMI_MAJOR_REV_0_81
-+	#define CSMI_MINOR_REV           CSMI_MINOR_REV_0_81
-+};
-+
-+struct atto_csmi_get_pci_bus_addr {
-+	u8 bus_num;
-+	u8 device_num;
-+	u8 function_num;
-+	u8 reserved;
-+};
-+
-+struct atto_csmi_get_cntlr_cfg {
-+	u32 base_io_addr;
-+
-+	struct {
-+		u32 base_memaddr_lo;
-+		u32 base_memaddr_hi;
-+	};
-+
-+	u32 board_id;
-+	u16 slot_num;
-+	#define CSMI_SLOT_NUM_UNKNOWN    0xFFFF
-+
-+	u8 cntlr_class;
-+	#define CSMI_CNTLR_CLASS_HBA     5
-+
-+	u8 io_bus_type;
-+	#define CSMI_BUS_TYPE_PCI        3
-+	#define CSMI_BUS_TYPE_PCMCIA     4
-+
-+	union {
-+		struct atto_csmi_get_pci_bus_addr pci_addr;
-+		u8 reserved[32];
-+	};
-+
-+	char serial_num[81];
-+	u16 major_rev;
-+	u16 minor_rev;
-+	u16 build_rev;
-+	u16 release_rev;
-+	u16 bios_major_rev;
-+	u16 bios_minor_rev;
-+	u16 bios_build_rev;
-+	u16 bios_release_rev;
-+	u32 cntlr_flags;
-+	#define CSMI_CNTLRF_SAS_HBA      0x00000001
-+	#define CSMI_CNTLRF_SAS_RAID     0x00000002
-+	#define CSMI_CNTLRF_SATA_HBA     0x00000004
-+	#define CSMI_CNTLRF_SATA_RAID    0x00000008
-+	#define CSMI_CNTLRF_FWD_SUPPORT  0x00010000
-+	#define CSMI_CNTLRF_FWD_ONLINE   0x00020000
-+	#define CSMI_CNTLRF_FWD_SRESET   0x00040000
-+	#define CSMI_CNTLRF_FWD_HRESET   0x00080000
-+	#define CSMI_CNTLRF_FWD_RROM     0x00100000
-+
-+	u16 rrom_major_rev;
-+	u16 rrom_minor_rev;
-+	u16 rrom_build_rev;
-+	u16 rrom_release_rev;
-+	u16 rrom_biosmajor_rev;
-+	u16 rrom_biosminor_rev;
-+	u16 rrom_biosbuild_rev;
-+	u16 rrom_biosrelease_rev;
-+	u8 reserved2[7];
-+};
-+
-+struct atto_csmi_get_cntlr_sts {
-+	u32 status;
-+	#define CSMI_CNTLR_STS_GOOD          1
-+	#define CSMI_CNTLR_STS_FAILED        2
-+	#define CSMI_CNTLR_STS_OFFLINE       3
-+	#define CSMI_CNTLR_STS_POWEROFF      4
-+
-+	u32 offline_reason;
-+	#define CSMI_OFFLINE_NO_REASON       0
-+	#define CSMI_OFFLINE_INITIALIZING    1
-+	#define CSMI_OFFLINE_BUS_DEGRADED    2
-+	#define CSMI_OFFLINE_BUS_FAILURE     3
-+
-+	u8 reserved[28];
-+};
-+
-+struct atto_csmi_fw_download {
-+	u32 buffer_len;
-+	u32 download_flags;
-+	#define CSMI_FWDF_VALIDATE       0x00000001
-+	#define CSMI_FWDF_SOFT_RESET     0x00000002
-+	#define CSMI_FWDF_HARD_RESET     0x00000004
-+
-+	u8 reserved[32];
-+	u16 status;
-+	#define CSMI_FWD_STS_SUCCESS     0
-+	#define CSMI_FWD_STS_FAILED      1
-+	#define CSMI_FWD_STS_USING_RROM  2
-+	#define CSMI_FWD_STS_REJECT      3
-+	#define CSMI_FWD_STS_DOWNREV     4
-+
-+	u16 severity;
-+	#define CSMI_FWD_SEV_INFO        0
-+	#define CSMI_FWD_SEV_WARNING     1
-+	#define CSMI_FWD_SEV_ERROR       2
-+	#define CSMI_FWD_SEV_FATAL       3
++struct esas2r_buffered_ioctl {
++	struct esas2r_adapter *a;
++	void *ioctl;
++	u32 length;
++	u32 control_code;
++	u32 offset;
++	BUFFERED_IOCTL_CALLBACK
++		callback;
++	void *context;
++	BUFFERED_IOCTL_DONE_CALLBACK
++		done_callback;
++	void *done_context;
 +
 +};
 +
-+/* CSMI RAID class structures */
-+struct atto_csmi_get_raid_info {
-+	u32 num_raid_sets;
-+	u32 max_drivesper_set;
-+	u8 reserved[92];
-+};
++static void complete_fm_api_req(struct esas2r_adapter *a,
++				struct esas2r_request *rq)
++{
++	a->fm_api_command_done = 1;
++	wake_up_interruptible(&a->fm_api_waiter);
++}
 +
-+struct atto_csmi_raid_drives {
-+	char model[40];
-+	char firmware[8];
-+	char serial_num[40];
-+	u8 sas_addr[8];
-+	u8 lun[8];
-+	u8 drive_sts;
-+	#define CSMI_DRV_STS_OK          0
-+	#define CSMI_DRV_STS_REBUILDING  1
-+	#define CSMI_DRV_STS_FAILED      2
-+	#define CSMI_DRV_STS_DEGRADED    3
++/* Callbacks for building scatter/gather lists for FM API requests */
++static u32 get_physaddr_fm_api(struct esas2r_sg_context *sgc, u64 *addr)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)sgc->adapter;
++	int offset = sgc->cur_offset - a->save_offset;
 +
-+	u8 drive_usage;
-+	#define CSMI_DRV_USE_NOT_USED    0
-+	#define CSMI_DRV_USE_MEMBER      1
-+	#define CSMI_DRV_USE_SPARE       2
++	(*addr) = a->firmware.phys + offset;
++	return a->firmware.orig_len - offset;
++}
 +
-+	u8 reserved[30]; /* spec says 22 */
-+};
++static u32 get_physaddr_fm_api_header(struct esas2r_sg_context *sgc, u64 *addr)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)sgc->adapter;
++	int offset = sgc->cur_offset - a->save_offset;
 +
-+struct atto_csmi_get_raid_cfg {
-+	u32 raid_set_index;
-+	u32 capacity;
-+	u32 stripe_size;
-+	u8 raid_type;
-+	u8 status;
-+	u8 information;
-+	u8 drive_cnt;
-+	u8 reserved[20];
++	(*addr) = a->firmware.header_buff_phys + offset;
++	return sizeof(struct esas2r_flash_img) - offset;
++}
 +
-+	struct atto_csmi_raid_drives drives[1];
-+};
++/* Handle EXPRESS_IOCTL_RW_FIRMWARE ioctl with img_type = FW_IMG_FM_API. */
++static void do_fm_api(struct esas2r_adapter *a, struct esas2r_flash_img *fi)
++{
++	struct esas2r_request *rq;
 +
-+/* CSMI HBA class structures */
-+struct atto_csmi_phy_entity {
-+	u8 ident_frame[0x1C];
-+	u8 port_id;
-+	u8 neg_link_rate;
-+	u8 min_link_rate;
-+	u8 max_link_rate;
-+	u8 phy_change_cnt;
-+	u8 auto_discover;
-+	#define CSMI_DISC_NOT_SUPPORTED  0x00
-+	#define CSMI_DISC_NOT_STARTED    0x01
-+	#define CSMI_DISC_IN_PROGRESS    0x02
-+	#define CSMI_DISC_COMPLETE       0x03
-+	#define CSMI_DISC_ERROR          0x04
++	if (down_interruptible(&a->fm_api_semaphore)) {
++		fi->status = FI_STAT_BUSY;
++		return;
++	}
 +
-+	u8 reserved[2];
-+	u8 attach_ident_frame[0x1C];
-+};
++	rq = esas2r_alloc_request(a);
++	if (rq == NULL) {
++		up(&a->fm_api_semaphore);
++		fi->status = FI_STAT_BUSY;
++		return;
++	}
 +
-+struct atto_csmi_get_phy_info {
-+	u8 number_of_phys;
-+	u8 reserved[3];
-+	struct atto_csmi_phy_entity
-+		phy[32];
-+};
++	if (fi == &a->firmware.header) {
++		a->firmware.header_buff = dma_alloc_coherent(&a->pcid->dev,
++							     (size_t)sizeof(
++								     struct
++								     esas2r_flash_img),
++							     (dma_addr_t *)&a->
++							     firmware.
++							     header_buff_phys,
++							     GFP_KERNEL);
 +
-+struct atto_csmi_set_phy_info {
-+	u8 phy_id;
-+	u8 neg_link_rate;
-+	#define CSMI_NEG_RATE_NEGOTIATE  0x00
-+	#define CSMI_NEG_RATE_PHY_DIS    0x01
++		if (a->firmware.header_buff == NULL) {
++			esas2r_debug("failed to allocate header buffer!");
++			fi->status = FI_STAT_BUSY;
++			return;
++		}
 +
-+	u8 prog_minlink_rate;
-+	u8 prog_maxlink_rate;
-+	u8 signal_class;
-+	#define CSMI_SIG_CLASS_UNKNOWN   0x00
-+	#define CSMI_SIG_CLASS_DIRECT    0x01
-+	#define CSMI_SIG_CLASS_SERVER    0x02
-+	#define CSMI_SIG_CLASS_ENCLOSURE 0x03
++		memmove(a->firmware.header_buff, fi,
++			sizeof(struct esas2r_flash_img));
++		a->save_offset = a->firmware.header_buff;
++		a->fm_api_sgc.get_phys_addr =
++			(PGETPHYSADDR)get_physaddr_fm_api_header;
++	} else {
++		a->save_offset = (u8 *)fi;
++		a->fm_api_sgc.get_phys_addr =
++			(PGETPHYSADDR)get_physaddr_fm_api;
++	}
 +
-+	u8 reserved[3];
-+};
++	rq->comp_cb = complete_fm_api_req;
++	a->fm_api_command_done = 0;
++	a->fm_api_sgc.cur_offset = a->save_offset;
 +
-+struct atto_csmi_get_link_errors {
-+	u8 phy_id;
-+	u8 reset_cnts;
-+	#define CSMI_RESET_CNTS_NO       0x00
-+	#define CSMI_RESET_CNTS_YES      0x01
++	if (!esas2r_fm_api(a, (struct esas2r_flash_img *)a->save_offset, rq,
++			   &a->fm_api_sgc))
++		goto all_done;
 +
-+	u8 reserved[2];
-+	u32 inv_dw_cnt;
-+	u32 disp_err_cnt;
-+	u32 loss_ofdw_sync_cnt;
-+	u32 phy_reseterr_cnt;
++	/* Now wait around for it to complete. */
++	while (!a->fm_api_command_done)
++		wait_event_interruptible(a->fm_api_waiter,
++					 a->fm_api_command_done);
++all_done:
++	if (fi == &a->firmware.header) {
++		memmove(fi, a->firmware.header_buff,
++			sizeof(struct esas2r_flash_img));
++
++		dma_free_coherent(&a->pcid->dev,
++				  (size_t)sizeof(struct esas2r_flash_img),
++				  a->firmware.header_buff,
++				  (dma_addr_t)a->firmware.header_buff_phys);
++	}
++
++	up(&a->fm_api_semaphore);
++	esas2r_free_request(a, (struct esas2r_request *)rq);
++	return;
++
++}
++
++static void complete_nvr_req(struct esas2r_adapter *a,
++			     struct esas2r_request *rq)
++{
++	a->nvram_command_done = 1;
++	wake_up_interruptible(&a->nvram_waiter);
++}
++
++/* Callback for building scatter/gather lists for buffered ioctls */
++static u32 get_physaddr_buffered_ioctl(struct esas2r_sg_context *sgc,
++				       u64 *addr)
++{
++	int offset = (u8 *)sgc->cur_offset - esas2r_buffered_ioctl;
++
++	(*addr) = esas2r_buffered_ioctl_addr + offset;
++	return esas2r_buffered_ioctl_size - offset;
++}
++
++static void complete_buffered_ioctl_req(struct esas2r_adapter *a,
++					struct esas2r_request *rq)
++{
++	a->buffered_ioctl_done = 1;
++	wake_up_interruptible(&a->buffered_ioctl_waiter);
++}
++
++static u8 handle_buffered_ioctl(struct esas2r_buffered_ioctl *bi)
++{
++	struct esas2r_adapter *a = bi->a;
++	struct esas2r_request *rq;
++	struct esas2r_sg_context sgc;
++	u8 result = IOCTL_SUCCESS;
++
++	if (down_interruptible(&buffered_ioctl_semaphore))
++		return IOCTL_OUT_OF_RESOURCES;
++
++	/* allocate a buffer or use the existing buffer. */
++	if (esas2r_buffered_ioctl) {
++		if (esas2r_buffered_ioctl_size < bi->length) {
++			/* free the too-small buffer and get a new one */
++			dma_free_coherent(&a->pcid->dev,
++					  (size_t)esas2r_buffered_ioctl_size,
++					  esas2r_buffered_ioctl,
++					  esas2r_buffered_ioctl_addr);
++
++			goto allocate_buffer;
++		}
++	} else {
++allocate_buffer:
++		esas2r_buffered_ioctl_size = bi->length;
++		esas2r_buffered_ioctl_pcid = a->pcid;
++		esas2r_buffered_ioctl = dma_alloc_coherent(&a->pcid->dev,
++							   (size_t)
++							   esas2r_buffered_ioctl_size,
++							   &
++							   esas2r_buffered_ioctl_addr,
++							   GFP_KERNEL);
++	}
++
++	if (!esas2r_buffered_ioctl) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "could not allocate %d bytes of consistent memory for a "
++			   "buffered ioctl!",
++			   bi->length);
++
++		esas2r_debug("buffered ioctl alloc failure");
++		result = IOCTL_OUT_OF_RESOURCES;
++		goto exit_cleanly;
++	}
++
++	memmove(esas2r_buffered_ioctl, bi->ioctl, bi->length);
++
++	rq = esas2r_alloc_request(a);
++	if (rq == NULL) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "could not allocate an internal request");
++
++		result = IOCTL_OUT_OF_RESOURCES;
++		esas2r_debug("buffered ioctl - no requests");
++		goto exit_cleanly;
++	}
++
++	a->buffered_ioctl_done = 0;
++	rq->comp_cb = complete_buffered_ioctl_req;
++	sgc.cur_offset = esas2r_buffered_ioctl + bi->offset;
++	sgc.get_phys_addr = (PGETPHYSADDR)get_physaddr_buffered_ioctl;
++	sgc.length = esas2r_buffered_ioctl_size;
++
++	if (!(*bi->callback)(a, rq, &sgc, bi->context)) {
++		/* completed immediately, no need to wait */
++		a->buffered_ioctl_done = 0;
++		goto free_andexit_cleanly;
++	}
++
++	/* now wait around for it to complete. */
++	while (!a->buffered_ioctl_done)
++		wait_event_interruptible(a->buffered_ioctl_waiter,
++					 a->buffered_ioctl_done);
++
++free_andexit_cleanly:
++	if (result == IOCTL_SUCCESS && bi->done_callback)
++		(*bi->done_callback)(a, rq, bi->done_context);
++
++	esas2r_free_request(a, rq);
++
++exit_cleanly:
++	if (result == IOCTL_SUCCESS)
++		memmove(bi->ioctl, esas2r_buffered_ioctl, bi->length);
++
++	up(&buffered_ioctl_semaphore);
++	return result;
++}
++
++/* SMP ioctl support */
++static int smp_ioctl_callback(struct esas2r_adapter *a,
++			      struct esas2r_request *rq,
++			      struct esas2r_sg_context *sgc, void *context)
++{
++	struct atto_ioctl_smp *si =
++		(struct atto_ioctl_smp *)esas2r_buffered_ioctl;
++
++	esas2r_sgc_init(sgc, a, rq, rq->vrq->ioctl.sge);
++	esas2r_build_ioctl_req(a, rq, sgc->length, VDA_IOCTL_SMP);
++
++	if (!esas2r_build_sg_list(a, rq, sgc)) {
++		si->status = ATTO_STS_OUT_OF_RSRC;
++		return false;
++	}
++
++	esas2r_start_request(a, rq);
++	return true;
++}
++
++static u8 handle_smp_ioctl(struct esas2r_adapter *a, struct atto_ioctl_smp *si)
++{
++	struct esas2r_buffered_ioctl bi;
++
++	memset(&bi, 0, sizeof(bi));
++
++	bi.a = a;
++	bi.ioctl = si;
++	bi.length = sizeof(struct atto_ioctl_smp)
++		    + le32_to_cpu(si->req_length)
++		    + le32_to_cpu(si->rsp_length);
++	bi.offset = 0;
++	bi.callback = smp_ioctl_callback;
++	return handle_buffered_ioctl(&bi);
++}
++
++
++/* CSMI ioctl support */
++static void esas2r_csmi_ioctl_tunnel_comp_cb(struct esas2r_adapter *a,
++					     struct esas2r_request *rq)
++{
++	rq->target_id = le16_to_cpu(rq->func_rsp.ioctl_rsp.csmi.target_id);
++	rq->vrq->scsi.flags |= cpu_to_le32(rq->func_rsp.ioctl_rsp.csmi.lun);
++
++	/* Now call the original completion callback. */
++	(*rq->aux_req_cb)(a, rq);
++}
++
++/* Tunnel a CSMI IOCTL to the back end driver for processing. */
++static bool csmi_ioctl_tunnel(struct esas2r_adapter *a,
++			      union atto_ioctl_csmi *ci,
++			      struct esas2r_request *rq,
++			      struct esas2r_sg_context *sgc,
++			      u32 ctrl_code,
++			      u16 target_id)
++{
++	struct atto_vda_ioctl_req *ioctl = &rq->vrq->ioctl;
++
++	if (a->flags & AF_DEGRADED_MODE)
++		return false;
++
++	esas2r_sgc_init(sgc, a, rq, rq->vrq->ioctl.sge);
++	esas2r_build_ioctl_req(a, rq, sgc->length, VDA_IOCTL_CSMI);
++	ioctl->csmi.ctrl_code = cpu_to_le32(ctrl_code);
++	ioctl->csmi.target_id = cpu_to_le16(target_id);
++	ioctl->csmi.lun = (u8)le32_to_cpu(rq->vrq->scsi.flags);
 +
 +	/*
-+	 * The following field has been added by ATTO for ease of
-+	 * implementation of additional statistics.  Drivers must validate
-+	 * the length of the IOCTL payload prior to filling them in so CSMI
-+	 * complaint applications function correctly.
++	 * Always usurp the completion callback since the interrupt callback
++	 * mechanism may be used.
++	 */
++	rq->aux_req_cx = ci;
++	rq->aux_req_cb = rq->comp_cb;
++	rq->comp_cb = esas2r_csmi_ioctl_tunnel_comp_cb;
++
++	if (!esas2r_build_sg_list(a, rq, sgc))
++		return false;
++
++	esas2r_start_request(a, rq);
++	return true;
++}
++
++static bool check_lun(struct scsi_lun lun)
++{
++	bool result;
++
++	result = ((lun.scsi_lun[7] == 0) &&
++		  (lun.scsi_lun[6] == 0) &&
++		  (lun.scsi_lun[5] == 0) &&
++		  (lun.scsi_lun[4] == 0) &&
++		  (lun.scsi_lun[3] == 0) &&
++		  (lun.scsi_lun[2] == 0) &&
++/* Byte 1 is intentionally skipped */
++		  (lun.scsi_lun[0] == 0));
++
++	return result;
++}
++
++static int csmi_ioctl_callback(struct esas2r_adapter *a,
++			       struct esas2r_request *rq,
++			       struct esas2r_sg_context *sgc, void *context)
++{
++	struct atto_csmi *ci = (struct atto_csmi *)context;
++	union atto_ioctl_csmi *ioctl_csmi =
++		(union atto_ioctl_csmi *)esas2r_buffered_ioctl;
++	u8 path = 0;
++	u8 tid = 0;
++	u8 lun = 0;
++	u32 sts = CSMI_STS_SUCCESS;
++	struct esas2r_target *t;
++	unsigned long flags;
++
++	if (ci->control_code == CSMI_CC_GET_DEV_ADDR) {
++		struct atto_csmi_get_dev_addr *gda = &ci->data.dev_addr;
++
++		path = gda->path_id;
++		tid = gda->target_id;
++		lun = gda->lun;
++	} else if (ci->control_code == CSMI_CC_TASK_MGT) {
++		struct atto_csmi_task_mgmt *tm = &ci->data.tsk_mgt;
++
++		path = tm->path_id;
++		tid = tm->target_id;
++		lun = tm->lun;
++	}
++
++	if (path > 0 || tid > ESAS2R_MAX_ID) {
++		rq->func_rsp.ioctl_rsp.csmi.csmi_status = cpu_to_le32(
++			CSMI_STS_INV_PARAM);
++		return false;
++	}
++
++	rq->target_id = tid;
++	rq->vrq->scsi.flags |= cpu_to_le32(lun);
++
++	switch (ci->control_code) {
++	case CSMI_CC_GET_DRVR_INFO:
++	{
++		struct atto_csmi_get_driver_info *gdi = &ioctl_csmi->drvr_info;
++
++		strcpy(gdi->description, esas2r_get_model_name(a));
++		gdi->csmi_major_rev = CSMI_MAJOR_REV;
++		gdi->csmi_minor_rev = CSMI_MINOR_REV;
++		break;
++	}
++
++	case CSMI_CC_GET_CNTLR_CFG:
++	{
++		struct atto_csmi_get_cntlr_cfg *gcc = &ioctl_csmi->cntlr_cfg;
++
++		gcc->base_io_addr = 0;
++		gcc->base_memaddr_lo = le32_to_cpu(
++			a->pci_cfg->base_address2);
++		gcc->base_memaddr_hi = le32_to_cpu(
++			a->pci_cfg->base_address3);
++		gcc->board_id = MAKEDWORD(a->pcid->subsystem_device,
++					  le32_to_cpu(a->pci_cfg->
++						      subsystem_vendor_id));
++		gcc->slot_num = CSMI_SLOT_NUM_UNKNOWN;
++		gcc->cntlr_class = CSMI_CNTLR_CLASS_HBA;
++		gcc->io_bus_type = CSMI_BUS_TYPE_PCI;
++		gcc->pci_addr.bus_num = a->pcid->bus->number;
++		gcc->pci_addr.device_num = PCI_SLOT(a->pcid->devfn);
++		gcc->pci_addr.function_num = PCI_FUNC(a->pcid->devfn);
++
++		memset(gcc->serial_num, 0, sizeof(gcc->serial_num));
++
++		gcc->major_rev = LOBYTE(LOWORD(a->fw_version));
++		gcc->minor_rev = HIBYTE(LOWORD(a->fw_version));
++		gcc->build_rev = LOBYTE(HIWORD(a->fw_version));
++		gcc->release_rev = HIBYTE(HIWORD(a->fw_version));
++		gcc->bios_major_rev = HIBYTE(HIWORD(a->flash_ver));
++		gcc->bios_minor_rev = LOBYTE(HIWORD(a->flash_ver));
++		gcc->bios_build_rev = LOWORD(a->flash_ver);
++
++		if (a->flags2 & AF2_THUNDERLINK)
++			gcc->cntlr_flags = CSMI_CNTLRF_SAS_HBA
++					   | CSMI_CNTLRF_SATA_HBA;
++		else
++			gcc->cntlr_flags = CSMI_CNTLRF_SAS_RAID
++					   | CSMI_CNTLRF_SATA_RAID;
++
++		gcc->rrom_major_rev = 0;
++		gcc->rrom_minor_rev = 0;
++		gcc->rrom_build_rev = 0;
++		gcc->rrom_release_rev = 0;
++		gcc->rrom_biosmajor_rev = 0;
++		gcc->rrom_biosminor_rev = 0;
++		gcc->rrom_biosbuild_rev = 0;
++		gcc->rrom_biosrelease_rev = 0;
++		break;
++	}
++
++	case CSMI_CC_GET_CNTLR_STS:
++	{
++		struct atto_csmi_get_cntlr_sts *gcs = &ioctl_csmi->cntlr_sts;
++
++		if (a->flags & AF_DEGRADED_MODE)
++			gcs->status = CSMI_CNTLR_STS_FAILED;
++		else
++			gcs->status = CSMI_CNTLR_STS_GOOD;
++
++		gcs->offline_reason = CSMI_OFFLINE_NO_REASON;
++		break;
++	}
++
++	case CSMI_CC_FW_DOWNLOAD:
++	case CSMI_CC_GET_RAID_INFO:
++	case CSMI_CC_GET_RAID_CFG:
++
++		sts = CSMI_STS_BAD_CTRL_CODE;
++		break;
++
++	case CSMI_CC_SMP_PASSTHRU:
++	case CSMI_CC_SSP_PASSTHRU:
++	case CSMI_CC_STP_PASSTHRU:
++	case CSMI_CC_GET_PHY_INFO:
++	case CSMI_CC_SET_PHY_INFO:
++	case CSMI_CC_GET_LINK_ERRORS:
++	case CSMI_CC_GET_SATA_SIG:
++	case CSMI_CC_GET_CONN_INFO:
++	case CSMI_CC_PHY_CTRL:
++
++		if (!csmi_ioctl_tunnel(a, ioctl_csmi, rq, sgc,
++				       ci->control_code,
++				       ESAS2R_TARG_ID_INV)) {
++			sts = CSMI_STS_FAILED;
++			break;
++		}
++
++		return true;
++
++	case CSMI_CC_GET_SCSI_ADDR:
++	{
++		struct atto_csmi_get_scsi_addr *gsa = &ioctl_csmi->scsi_addr;
++
++		struct scsi_lun lun;
++
++		memmove(&lun, gsa->sas_lun, sizeof(struct scsi_lun));
++
++		if (!check_lun(lun)) {
++			sts = CSMI_STS_NO_SCSI_ADDR;
++			break;
++		}
++
++		/* make sure the device is present */
++		spin_lock_irqsave(&a->mem_lock, flags);
++		t = esas2r_targ_db_find_by_sas_addr(a, (u64 *)gsa->sas_addr);
++		spin_unlock_irqrestore(&a->mem_lock, flags);
++
++		if (t == NULL) {
++			sts = CSMI_STS_NO_SCSI_ADDR;
++			break;
++		}
++
++		gsa->host_index = 0xFF;
++		gsa->lun = gsa->sas_lun[1];
++		rq->target_id = esas2r_targ_get_id(t, a);
++		break;
++	}
++
++	case CSMI_CC_GET_DEV_ADDR:
++	{
++		struct atto_csmi_get_dev_addr *gda = &ioctl_csmi->dev_addr;
++
++		/* make sure the target is present */
++		t = a->targetdb + rq->target_id;
++
++		if (t >= a->targetdb_end
++		    || t->target_state != TS_PRESENT
++		    || t->sas_addr == 0) {
++			sts = CSMI_STS_NO_DEV_ADDR;
++			break;
++		}
++
++		/* fill in the result */
++		*(u64 *)gda->sas_addr = t->sas_addr;
++		memset(gda->sas_lun, 0, sizeof(gda->sas_lun));
++		gda->sas_lun[1] = (u8)le32_to_cpu(rq->vrq->scsi.flags);
++		break;
++	}
++
++	case CSMI_CC_TASK_MGT:
++
++		/* make sure the target is present */
++		t = a->targetdb + rq->target_id;
++
++		if (t >= a->targetdb_end
++		    || t->target_state != TS_PRESENT
++		    || !(t->flags & TF_PASS_THRU)) {
++			sts = CSMI_STS_NO_DEV_ADDR;
++			break;
++		}
++
++		if (!csmi_ioctl_tunnel(a, ioctl_csmi, rq, sgc,
++				       ci->control_code,
++				       t->phys_targ_id)) {
++			sts = CSMI_STS_FAILED;
++			break;
++		}
++
++		return true;
++
++	default:
++
++		sts = CSMI_STS_BAD_CTRL_CODE;
++		break;
++	}
++
++	rq->func_rsp.ioctl_rsp.csmi.csmi_status = cpu_to_le32(sts);
++
++	return false;
++}
++
++
++static void csmi_ioctl_done_callback(struct esas2r_adapter *a,
++				     struct esas2r_request *rq, void *context)
++{
++	struct atto_csmi *ci = (struct atto_csmi *)context;
++	union atto_ioctl_csmi *ioctl_csmi =
++		(union atto_ioctl_csmi *)esas2r_buffered_ioctl;
++
++	switch (ci->control_code) {
++	case CSMI_CC_GET_DRVR_INFO:
++	{
++		struct atto_csmi_get_driver_info *gdi =
++			&ioctl_csmi->drvr_info;
++
++		strcpy(gdi->name, ESAS2R_VERSION_STR);
++
++		gdi->major_rev = ESAS2R_MAJOR_REV;
++		gdi->minor_rev = ESAS2R_MINOR_REV;
++		gdi->build_rev = 0;
++		gdi->release_rev = 0;
++		break;
++	}
++
++	case CSMI_CC_GET_SCSI_ADDR:
++	{
++		struct atto_csmi_get_scsi_addr *gsa = &ioctl_csmi->scsi_addr;
++
++		if (le32_to_cpu(rq->func_rsp.ioctl_rsp.csmi.csmi_status) ==
++		    CSMI_STS_SUCCESS) {
++			gsa->target_id = rq->target_id;
++			gsa->path_id = 0;
++		}
++
++		break;
++	}
++	}
++
++	ci->status = le32_to_cpu(rq->func_rsp.ioctl_rsp.csmi.csmi_status);
++}
++
++
++static u8 handle_csmi_ioctl(struct esas2r_adapter *a, struct atto_csmi *ci)
++{
++	struct esas2r_buffered_ioctl bi;
++
++	memset(&bi, 0, sizeof(bi));
++
++	bi.a = a;
++	bi.ioctl = &ci->data;
++	bi.length = sizeof(union atto_ioctl_csmi);
++	bi.offset = 0;
++	bi.callback = csmi_ioctl_callback;
++	bi.context = ci;
++	bi.done_callback = csmi_ioctl_done_callback;
++	bi.done_context = ci;
++
++	return handle_buffered_ioctl(&bi);
++}
++
++/* ATTO HBA ioctl support */
++
++/* Tunnel an ATTO HBA IOCTL to the back end driver for processing. */
++static bool hba_ioctl_tunnel(struct esas2r_adapter *a,
++			     struct atto_ioctl *hi,
++			     struct esas2r_request *rq,
++			     struct esas2r_sg_context *sgc)
++{
++	esas2r_sgc_init(sgc, a, rq, rq->vrq->ioctl.sge);
++
++	esas2r_build_ioctl_req(a, rq, sgc->length, VDA_IOCTL_HBA);
++
++	if (!esas2r_build_sg_list(a, rq, sgc)) {
++		hi->status = ATTO_STS_OUT_OF_RSRC;
++
++		return false;
++	}
++
++	esas2r_start_request(a, rq);
++
++	return true;
++}
++
++static void scsi_passthru_comp_cb(struct esas2r_adapter *a,
++				  struct esas2r_request *rq)
++{
++	struct atto_ioctl *hi = (struct atto_ioctl *)rq->aux_req_cx;
++	struct atto_hba_scsi_pass_thru *spt = &hi->data.scsi_pass_thru;
++	u8 sts = ATTO_SPT_RS_FAILED;
++
++	spt->scsi_status = rq->func_rsp.scsi_rsp.scsi_stat;
++	spt->sense_length = rq->sense_len;
++	spt->residual_length =
++		le32_to_cpu(rq->func_rsp.scsi_rsp.residual_length);
++
++	switch (rq->req_stat) {
++	case RS_SUCCESS:
++	case RS_SCSI_ERROR:
++		sts = ATTO_SPT_RS_SUCCESS;
++		break;
++	case RS_UNDERRUN:
++		sts = ATTO_SPT_RS_UNDERRUN;
++		break;
++	case RS_OVERRUN:
++		sts = ATTO_SPT_RS_OVERRUN;
++		break;
++	case RS_SEL:
++	case RS_SEL2:
++		sts = ATTO_SPT_RS_NO_DEVICE;
++		break;
++	case RS_NO_LUN:
++		sts = ATTO_SPT_RS_NO_LUN;
++		break;
++	case RS_TIMEOUT:
++		sts = ATTO_SPT_RS_TIMEOUT;
++		break;
++	case RS_DEGRADED:
++		sts = ATTO_SPT_RS_DEGRADED;
++		break;
++	case RS_BUSY:
++		sts = ATTO_SPT_RS_BUSY;
++		break;
++	case RS_ABORTED:
++		sts = ATTO_SPT_RS_ABORTED;
++		break;
++	case RS_RESET:
++		sts = ATTO_SPT_RS_BUS_RESET;
++		break;
++	}
++
++	spt->req_status = sts;
++
++	/* Update the target ID to the next one present. */
++	spt->target_id =
++		esas2r_targ_db_find_next_present(a, (u16)spt->target_id);
++
++	/* Done, call the completion callback. */
++	(*rq->aux_req_cb)(a, rq);
++}
++
++static int hba_ioctl_callback(struct esas2r_adapter *a,
++			      struct esas2r_request *rq,
++			      struct esas2r_sg_context *sgc,
++			      void *context)
++{
++	struct atto_ioctl *hi = (struct atto_ioctl *)esas2r_buffered_ioctl;
++
++	hi->status = ATTO_STS_SUCCESS;
++
++	switch (hi->function) {
++	case ATTO_FUNC_GET_ADAP_INFO:
++	{
++		struct atto_hba_get_adapter_info *gai =
++			&hi->data.get_adap_info;
++		struct  esas2r_pci_express_header *pcie;
++
++		if (hi->flags & HBAF_TUNNEL) {
++			hi->status = ATTO_STS_UNSUPPORTED;
++			break;
++		}
++
++		if (hi->version > ATTO_VER_GET_ADAP_INFO0) {
++			hi->status = ATTO_STS_INV_VERSION;
++			hi->version = ATTO_VER_GET_ADAP_INFO0;
++			break;
++		}
++
++		memset(gai, 0, sizeof(*gai));
++
++		gai->pci.vendor_id = a->pcid->vendor;
++		gai->pci.device_id = a->pcid->device;
++		gai->pci.ss_vendor_id = le32_to_cpu(
++			a->pci_cfg->subsystem_vendor_id);
++		gai->pci.ss_device_id = a->pcid->subsystem_device;
++		gai->pci.class_code[0] = a->pci_cfg->class_prog_if;
++		gai->pci.class_code[1] = a->pci_cfg->class_sub_code;
++		gai->pci.class_code[2] = a->pci_cfg->class_base_code;
++		gai->pci.rev_id = a->pcid->revision;
++		gai->pci.bus_num = a->pcid->bus->number;
++		gai->pci.dev_num = PCI_SLOT(a->pcid->devfn);
++		gai->pci.func_num = PCI_FUNC(a->pcid->devfn);
++
++		pcie =
++			(struct esas2r_pci_express_header *)
++			esas2r_get_pci_cfg_hdr(
++				a, PCIE_ID);
++
++		if (pcie) {
++			u16 stat = le16_to_cpu(pcie->link_status);
++			u32 caps = le16_to_cpu(pcie->link_cap);
++
++			gai->pci.link_speed_curr =
++				(u8)(stat & LNK_STAT_SPEED_MASK);
++			gai->pci.link_speed_max =
++				(u8)(caps & LNK_STAT_SPEED_MASK);
++			gai->pci.link_width_curr =
++				(u8)((stat & LNK_STAT_WIDTH_MASK)
++				     >> LNK_STAT_WIDTH_SHFT);
++			gai->pci.link_width_max =
++				(u8)((caps & LNK_STAT_WIDTH_MASK)
++				     >> LNK_STAT_WIDTH_SHFT);
++		}
++
++		if (a->flags2 & (AF2_MSI_ENABLED | AF2_MSIX_ENABLED)) {
++			if (a->flags2 & AF2_MSIX_ENABLED)
++				gai->pci.interrupt_mode = ATTO_GAI_PCIIM_MSIX;
++			else
++				gai->pci.interrupt_mode = ATTO_GAI_PCIIM_MSI;
++
++			gai->pci.msi_vector_cnt = a->msi_cnt;
++		} else {
++			gai->pci.interrupt_mode = ATTO_GAI_PCIIM_LEGACY;
++		}
++
++		gai->adap_type = ATTO_GAI_AT_ESASRAID2;
++
++		if (a->flags2 & AF2_THUNDERLINK)
++			gai->adap_type = ATTO_GAI_AT_TLSASHBA;
++
++		if (a->flags & AF_DEGRADED_MODE)
++			gai->adap_flags |= ATTO_GAI_AF_DEGRADED;
++
++		gai->adap_flags |= ATTO_GAI_AF_SPT_SUPP |
++				   ATTO_GAI_AF_DEVADDR_SUPP;
++
++		if (a->pcid->subsystem_device == ATTO_ESAS_R60F
++		    || a->pcid->subsystem_device == ATTO_ESAS_R608
++		    || a->pcid->subsystem_device == ATTO_ESAS_R644
++		    || a->pcid->subsystem_device == ATTO_TSSC_3808E)
++			gai->adap_flags |= ATTO_GAI_AF_VIRT_SES;
++
++		gai->num_ports = ESAS2R_NUM_PHYS;
++		gai->num_phys = ESAS2R_NUM_PHYS;
++
++		strcpy(gai->firmware_rev, a->fw_rev);
++		strcpy(gai->flash_rev, a->flash_rev);
++		strcpy(gai->model_name_short, esas2r_get_model_name_short(a));
++		strcpy(gai->model_name, esas2r_get_model_name(a));
++
++		gai->num_targets = ESAS2R_MAX_TARGETS;
++
++		gai->num_busses = 1;
++		gai->num_targsper_bus = gai->num_targets;
++		gai->num_lunsper_targ = 256;
++
++		if (a->pcid->subsystem_device == ATTO_ESAS_R6F0
++		    || a->pcid->subsystem_device == ATTO_ESAS_R60F)
++			gai->num_connectors = 4;
++		else
++			gai->num_connectors = 2;
++
++		gai->adap_flags2 |= ATTO_GAI_AF2_ADAP_CTRL_SUPP;
++
++		gai->num_targets_backend = a->num_targets_backend;
++
++		gai->tunnel_flags = a->ioctl_tunnel
++				    & (ATTO_GAI_TF_MEM_RW
++				       | ATTO_GAI_TF_TRACE
++				       | ATTO_GAI_TF_SCSI_PASS_THRU
++				       | ATTO_GAI_TF_GET_DEV_ADDR
++				       | ATTO_GAI_TF_PHY_CTRL
++				       | ATTO_GAI_TF_CONN_CTRL
++				       | ATTO_GAI_TF_GET_DEV_INFO);
++		break;
++	}
++
++	case ATTO_FUNC_GET_ADAP_ADDR:
++	{
++		struct atto_hba_get_adapter_address *gaa =
++			&hi->data.get_adap_addr;
++
++		if (hi->flags & HBAF_TUNNEL) {
++			hi->status = ATTO_STS_UNSUPPORTED;
++			break;
++		}
++
++		if (hi->version > ATTO_VER_GET_ADAP_ADDR0) {
++			hi->status = ATTO_STS_INV_VERSION;
++			hi->version = ATTO_VER_GET_ADAP_ADDR0;
++		} else if (gaa->addr_type == ATTO_GAA_AT_PORT
++			   || gaa->addr_type == ATTO_GAA_AT_NODE) {
++			if (gaa->addr_type == ATTO_GAA_AT_PORT
++			    && gaa->port_id >= ESAS2R_NUM_PHYS) {
++				hi->status = ATTO_STS_NOT_APPL;
++			} else {
++				memmove((u64 *)gaa->address,
++					&a->nvram->sas_addr[0], sizeof(u64));
++				gaa->addr_len = sizeof(u64);
++			}
++		} else {
++			hi->status = ATTO_STS_INV_PARAM;
++		}
++
++		break;
++	}
++
++	case ATTO_FUNC_MEM_RW:
++	{
++		if (hi->flags & HBAF_TUNNEL) {
++			if (hba_ioctl_tunnel(a, hi, rq, sgc))
++				return true;
++
++			break;
++		}
++
++		hi->status = ATTO_STS_UNSUPPORTED;
++
++		break;
++	}
++
++	case ATTO_FUNC_TRACE:
++	{
++		struct atto_hba_trace *trc = &hi->data.trace;
++
++		if (hi->flags & HBAF_TUNNEL) {
++			if (hba_ioctl_tunnel(a, hi, rq, sgc))
++				return true;
++
++			break;
++		}
++
++		if (hi->version > ATTO_VER_TRACE1) {
++			hi->status = ATTO_STS_INV_VERSION;
++			hi->version = ATTO_VER_TRACE1;
++			break;
++		}
++
++		if (trc->trace_type == ATTO_TRC_TT_FWCOREDUMP
++		    && hi->version >= ATTO_VER_TRACE1) {
++			if (a->fw_coredump_buff == NULL) {
++				hi->status = ATTO_STS_NOT_APPL;
++				break;
++			}
++
++			if (trc->trace_func == ATTO_TRC_TF_UPLOAD) {
++				u32 len = hi->data_length;
++				u32 offset = trc->current_offset;
++				u32 total_len = ESAS2R_FWCOREDUMP_SZ;
++
++				/* Size is zero if a core dump isn't present */
++				if (!(a->flags2 & AF2_COREDUMP_SAVED))
++					total_len = 0;
++
++				if (len > total_len)
++					len = total_len;
++
++				if (offset >= total_len
++				    || offset + len > total_len
++				    || len == 0) {
++					hi->status = ATTO_STS_INV_PARAM;
++					break;
++				}
++
++				memmove(trc + 1,
++					(u8 *)a->fw_coredump_buff + offset,
++					len);
++
++				hi->data_length = len;
++			} else if (trc->trace_func == ATTO_TRC_TF_RESET) {
++				memset(a->fw_coredump_buff, 0,
++				       ESAS2R_FWCOREDUMP_SZ);
++
++				esas2r_lock_clear_flags(&a->flags2,
++							AF2_COREDUMP_SAVED);
++			} else if (trc->trace_func != ATTO_TRC_TF_GET_INFO) {
++				hi->status = ATTO_STS_UNSUPPORTED;
++				break;
++			}
++
++			/* Always return all the info we can. */
++			trc->trace_mask = 0;
++			trc->current_offset = 0;
++			trc->total_length = ESAS2R_FWCOREDUMP_SZ;
++
++			/* Return zero length buffer if core dump not present */
++			if (!(a->flags2 & AF2_COREDUMP_SAVED))
++				trc->total_length = 0;
++		} else {
++			hi->status = ATTO_STS_UNSUPPORTED;
++		}
++
++		break;
++	}
++
++	case ATTO_FUNC_SCSI_PASS_THRU:
++	{
++		struct atto_hba_scsi_pass_thru *spt = &hi->data.scsi_pass_thru;
++		struct scsi_lun lun;
++
++		memmove(&lun, spt->lun, sizeof(struct scsi_lun));
++
++		if (hi->flags & HBAF_TUNNEL) {
++			if (hba_ioctl_tunnel(a, hi, rq, sgc))
++				return true;
++
++			break;
++		}
++
++		if (hi->version > ATTO_VER_SCSI_PASS_THRU0) {
++			hi->status = ATTO_STS_INV_VERSION;
++			hi->version = ATTO_VER_SCSI_PASS_THRU0;
++			break;
++		}
++
++		if (spt->target_id >= ESAS2R_MAX_TARGETS || !check_lun(lun)) {
++			hi->status = ATTO_STS_INV_PARAM;
++			break;
++		}
++
++		esas2r_sgc_init(sgc, a, rq, NULL);
++
++		sgc->length = hi->data_length;
++		sgc->cur_offset += offsetof(struct atto_ioctl, data.byte)
++				   + sizeof(struct atto_hba_scsi_pass_thru);
++
++		/* Finish request initialization */
++		rq->target_id = (u16)spt->target_id;
++		rq->vrq->scsi.flags |= cpu_to_le32(spt->lun[1]);
++		memmove(rq->vrq->scsi.cdb, spt->cdb, 16);
++		rq->vrq->scsi.length = cpu_to_le32(hi->data_length);
++		rq->sense_len = spt->sense_length;
++		rq->sense_buf = (u8 *)spt->sense_data;
++		/* NOTE: we ignore spt->timeout */
++
++		/*
++		 * always usurp the completion callback since the interrupt
++		 * callback mechanism may be used.
++		 */
++
++		rq->aux_req_cx = hi;
++		rq->aux_req_cb = rq->comp_cb;
++		rq->comp_cb = scsi_passthru_comp_cb;
++
++		if (spt->flags & ATTO_SPTF_DATA_IN) {
++			rq->vrq->scsi.flags |= cpu_to_le32(FCP_CMND_RDD);
++		} else if (spt->flags & ATTO_SPTF_DATA_OUT) {
++			rq->vrq->scsi.flags |= cpu_to_le32(FCP_CMND_WRD);
++		} else {
++			if (sgc->length) {
++				hi->status = ATTO_STS_INV_PARAM;
++				break;
++			}
++		}
++
++		if (spt->flags & ATTO_SPTF_ORDERED_Q)
++			rq->vrq->scsi.flags |=
++				cpu_to_le32(FCP_CMND_TA_ORDRD_Q);
++		else if (spt->flags & ATTO_SPTF_HEAD_OF_Q)
++			rq->vrq->scsi.flags |= cpu_to_le32(FCP_CMND_TA_HEAD_Q);
++
++		if (!esas2r_build_sg_list(a, rq, sgc)) {
++			hi->status = ATTO_STS_OUT_OF_RSRC;
++			break;
++		}
++
++		esas2r_start_request(a, rq);
++
++		return true;
++	}
++
++	case ATTO_FUNC_GET_DEV_ADDR:
++	{
++		struct atto_hba_get_device_address *gda =
++			&hi->data.get_dev_addr;
++		struct esas2r_target *t;
++
++		if (hi->flags & HBAF_TUNNEL) {
++			if (hba_ioctl_tunnel(a, hi, rq, sgc))
++				return true;
++
++			break;
++		}
++
++		if (hi->version > ATTO_VER_GET_DEV_ADDR0) {
++			hi->status = ATTO_STS_INV_VERSION;
++			hi->version = ATTO_VER_GET_DEV_ADDR0;
++			break;
++		}
++
++		if (gda->target_id >= ESAS2R_MAX_TARGETS) {
++			hi->status = ATTO_STS_INV_PARAM;
++			break;
++		}
++
++		t = a->targetdb + (u16)gda->target_id;
++
++		if (t->target_state != TS_PRESENT) {
++			hi->status = ATTO_STS_FAILED;
++		} else if (gda->addr_type == ATTO_GDA_AT_PORT) {
++			if (t->sas_addr == 0) {
++				hi->status = ATTO_STS_UNSUPPORTED;
++			} else {
++				*(u64 *)gda->address = t->sas_addr;
++
++				gda->addr_len = sizeof(u64);
++			}
++		} else if (gda->addr_type == ATTO_GDA_AT_NODE) {
++			hi->status = ATTO_STS_NOT_APPL;
++		} else {
++			hi->status = ATTO_STS_INV_PARAM;
++		}
++
++		/* update the target ID to the next one present. */
++
++		gda->target_id =
++			esas2r_targ_db_find_next_present(a,
++							 (u16)gda->target_id);
++		break;
++	}
++
++	case ATTO_FUNC_PHY_CTRL:
++	case ATTO_FUNC_CONN_CTRL:
++	{
++		if (hba_ioctl_tunnel(a, hi, rq, sgc))
++			return true;
++
++		break;
++	}
++
++	case ATTO_FUNC_ADAP_CTRL:
++	{
++		struct atto_hba_adap_ctrl *ac = &hi->data.adap_ctrl;
++
++		if (hi->flags & HBAF_TUNNEL) {
++			hi->status = ATTO_STS_UNSUPPORTED;
++			break;
++		}
++
++		if (hi->version > ATTO_VER_ADAP_CTRL0) {
++			hi->status = ATTO_STS_INV_VERSION;
++			hi->version = ATTO_VER_ADAP_CTRL0;
++			break;
++		}
++
++		if (ac->adap_func == ATTO_AC_AF_HARD_RST) {
++			esas2r_reset_adapter(a);
++		} else if (ac->adap_func != ATTO_AC_AF_GET_STATE) {
++			hi->status = ATTO_STS_UNSUPPORTED;
++			break;
++		}
++
++		if (a->flags & AF_CHPRST_NEEDED)
++			ac->adap_state = ATTO_AC_AS_RST_SCHED;
++		else if (a->flags & AF_CHPRST_PENDING)
++			ac->adap_state = ATTO_AC_AS_RST_IN_PROG;
++		else if (a->flags & AF_DISC_PENDING)
++			ac->adap_state = ATTO_AC_AS_RST_DISC;
++		else if (a->flags & AF_DISABLED)
++			ac->adap_state = ATTO_AC_AS_DISABLED;
++		else if (a->flags & AF_DEGRADED_MODE)
++			ac->adap_state = ATTO_AC_AS_DEGRADED;
++		else
++			ac->adap_state = ATTO_AC_AS_OK;
++
++		break;
++	}
++
++	case ATTO_FUNC_GET_DEV_INFO:
++	{
++		struct atto_hba_get_device_info *gdi = &hi->data.get_dev_info;
++		struct esas2r_target *t;
++
++		if (hi->flags & HBAF_TUNNEL) {
++			if (hba_ioctl_tunnel(a, hi, rq, sgc))
++				return true;
++
++			break;
++		}
++
++		if (hi->version > ATTO_VER_GET_DEV_INFO0) {
++			hi->status = ATTO_STS_INV_VERSION;
++			hi->version = ATTO_VER_GET_DEV_INFO0;
++			break;
++		}
++
++		if (gdi->target_id >= ESAS2R_MAX_TARGETS) {
++			hi->status = ATTO_STS_INV_PARAM;
++			break;
++		}
++
++		t = a->targetdb + (u16)gdi->target_id;
++
++		/* update the target ID to the next one present. */
++
++		gdi->target_id =
++			esas2r_targ_db_find_next_present(a,
++							 (u16)gdi->target_id);
++
++		if (t->target_state != TS_PRESENT) {
++			hi->status = ATTO_STS_FAILED;
++			break;
++		}
++
++		hi->status = ATTO_STS_UNSUPPORTED;
++		break;
++	}
++
++	default:
++
++		hi->status = ATTO_STS_INV_FUNC;
++		break;
++	}
++
++	return false;
++}
++
++static void hba_ioctl_done_callback(struct esas2r_adapter *a,
++				    struct esas2r_request *rq, void *context)
++{
++	struct atto_ioctl *ioctl_hba =
++		(struct atto_ioctl *)esas2r_buffered_ioctl;
++
++	esas2r_debug("hba_ioctl_done_callback %d", a->index);
++
++	if (ioctl_hba->function == ATTO_FUNC_GET_ADAP_INFO) {
++		struct atto_hba_get_adapter_info *gai =
++			&ioctl_hba->data.get_adap_info;
++
++		esas2r_debug("ATTO_FUNC_GET_ADAP_INFO");
++
++		gai->drvr_rev_major = ESAS2R_MAJOR_REV;
++		gai->drvr_rev_minor = ESAS2R_MINOR_REV;
++
++		strcpy(gai->drvr_rev_ascii, ESAS2R_VERSION_STR);
++		strcpy(gai->drvr_name, ESAS2R_DRVR_NAME);
++
++		gai->num_busses = 1;
++		gai->num_targsper_bus = ESAS2R_MAX_ID + 1;
++		gai->num_lunsper_targ = 1;
++	}
++}
++
++u8 handle_hba_ioctl(struct esas2r_adapter *a,
++		    struct atto_ioctl *ioctl_hba)
++{
++	struct esas2r_buffered_ioctl bi;
++
++	memset(&bi, 0, sizeof(bi));
++
++	bi.a = a;
++	bi.ioctl = ioctl_hba;
++	bi.length = sizeof(struct atto_ioctl) + ioctl_hba->data_length;
++	bi.callback = hba_ioctl_callback;
++	bi.context = NULL;
++	bi.done_callback = hba_ioctl_done_callback;
++	bi.done_context = NULL;
++	bi.offset = 0;
++
++	return handle_buffered_ioctl(&bi);
++}
++
++
++int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
++			struct esas2r_sas_nvram *data)
++{
++	int result = 0;
++
++	a->nvram_command_done = 0;
++	rq->comp_cb = complete_nvr_req;
++
++	if (esas2r_nvram_write(a, rq, data)) {
++		/* now wait around for it to complete. */
++		while (!a->nvram_command_done)
++			wait_event_interruptible(a->nvram_waiter,
++						 a->nvram_command_done);
++		;
++
++		/* done, check the status. */
++		if (rq->req_stat == RS_SUCCESS)
++			result = 1;
++	}
++	return result;
++}
++
++
++/* This function only cares about ATTO-specific ioctls (atto_express_ioctl) */
++int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
++{
++	struct atto_express_ioctl *ioctl = NULL;
++	struct esas2r_adapter *a;
++	struct esas2r_request *rq;
++	u16 code;
++	int err;
++
++	esas2r_log(ESAS2R_LOG_DEBG, "ioctl (%p, %x, %p)", hostdata, cmd, arg);
++
++	if (arg == NULL)
++		return -ENOTSUPP;
++
++	if (!access_ok(VERIFY_WRITE, arg, sizeof(struct atto_express_ioctl))) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "ioctl_handler access_ok failed for cmd %d, "
++			   "address %p", cmd,
++			   arg);
++		return -EFAULT;
++	}
++
++	/* allocate a kernel memory buffer for the IOCTL data */
++	ioctl = vmalloc(sizeof(struct atto_express_ioctl));
++	if (ioctl == NULL) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "ioctl_handler vmalloc failed for %d bytes",
++			   sizeof(struct atto_express_ioctl));
++		return -ENOMEM;
++	}
++
++	err = __copy_from_user(ioctl, arg, sizeof(struct atto_express_ioctl));
++	if (err != 0) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "copy_from_user didn't copy everything (err %d, cmd %d)",
++			   err,
++			   cmd);
++		vfree(ioctl);
++
++		return -EFAULT;
++	}
++
++	/* verify the signature */
++
++	if (memcmp(ioctl->header.signature,
++		   EXPRESS_IOCTL_SIGNATURE,
++		   EXPRESS_IOCTL_SIGNATURE_SIZE) != 0) {
++		esas2r_log(ESAS2R_LOG_WARN, "invalid signature");
++		vfree(ioctl);
++
++		return -ENOTSUPP;
++	}
++
++	/* assume success */
++
++	ioctl->header.return_code = IOCTL_SUCCESS;
++	err = 0;
++
++	/*
++	 * handle EXPRESS_IOCTL_GET_CHANNELS
++	 * without paying attention to channel
 +	 */
 +
-+	u32 crc_err_cnt;
-+};
++	if (cmd == EXPRESS_IOCTL_GET_CHANNELS) {
++		int i = 0, k = 0;
 +
-+struct atto_csmi_smp_passthru {
-+	u8 phy_id;
-+	u8 port_id;
-+	u8 conn_rate;
-+	u8 reserved;
-+	u8 dest_sas_addr[8];
-+	u32 req_len;
-+	u8 smp_req[1020];
-+	u8 conn_sts;
-+	u8 reserved2[3];
-+	u32 rsp_len;
-+	u8 smp_rsp[1020];
-+};
++		ioctl->data.chanlist.num_channels = 0;
 +
-+struct atto_csmi_ssp_passthru_sts {
-+	u8 conn_sts;
-+	u8 reserved[3];
-+	u8 data_present;
-+	u8 status;
-+	u16 rsp_length;
-+	u8 rsp[256];
-+	u32 data_bytes;
-+};
++		while (i < MAX_ADAPTERS) {
++			if (esas2r_adapters[i]) {
++				ioctl->data.chanlist.num_channels++;
++				ioctl->data.chanlist.channel[k] = i;
++				k++;
++			}
++			i++;
++		}
 +
-+struct atto_csmi_ssp_passthru {
-+	u8 phy_id;
-+	u8 port_id;
-+	u8 conn_rate;
-+	u8 reserved;
-+	u8 dest_sas_addr[8];
-+	u8 lun[8];
-+	u8 cdb_len;
-+	u8 add_cdb_len;
-+	u8 reserved2[2];
-+	u8 cdb[16];
-+	u32 flags;
-+	#define CSMI_SSPF_DD_READ        0x00000001
-+	#define CSMI_SSPF_DD_WRITE       0x00000002
-+	#define CSMI_SSPF_DD_UNSPECIFIED 0x00000004
-+	#define CSMI_SSPF_TA_SIMPLE      0x00000000
-+	#define CSMI_SSPF_TA_HEAD_OF_Q   0x00000010
-+	#define CSMI_SSPF_TA_ORDERED     0x00000020
-+	#define CSMI_SSPF_TA_ACA         0x00000040
++		goto ioctl_done;
++	}
 +
-+	u8 add_cdb[24];
-+	u32 data_len;
++	/* get the channel */
 +
-+	struct atto_csmi_ssp_passthru_sts sts;
-+};
++	if (ioctl->header.channel == 0xFF) {
++		a = (struct esas2r_adapter *)hostdata;
++	} else {
++		a = esas2r_adapters[ioctl->header.channel];
++		if (ioctl->header.channel >= MAX_ADAPTERS || (a == NULL)) {
++			ioctl->header.return_code = IOCTL_BAD_CHANNEL;
++			esas2r_log(ESAS2R_LOG_WARN, "bad channel value");
++			vfree(ioctl);
 +
-+struct atto_csmi_stp_passthru_sts {
-+	u8 conn_sts;
-+	u8 reserved[3];
-+	u8 sts_fis[20];
-+	u32 scr[16];
-+	u32 data_bytes;
-+};
++			return -ENOTSUPP;
++		}
++	}
 +
-+struct atto_csmi_stp_passthru {
-+	u8 phy_id;
-+	u8 port_id;
-+	u8 conn_rate;
-+	u8 reserved;
-+	u8 dest_sas_addr[8];
-+	u8 reserved2[4];
-+	u8 command_fis[20];
-+	u32 flags;
-+	#define CSMI_STPF_DD_READ        0x00000001
-+	#define CSMI_STPF_DD_WRITE       0x00000002
-+	#define CSMI_STPF_DD_UNSPECIFIED 0x00000004
-+	#define CSMI_STPF_PIO            0x00000010
-+	#define CSMI_STPF_DMA            0x00000020
-+	#define CSMI_STPF_PACKET         0x00000040
-+	#define CSMI_STPF_DMA_QUEUED     0x00000080
-+	#define CSMI_STPF_EXECUTE_DIAG   0x00000100
-+	#define CSMI_STPF_RESET_DEVICE   0x00000200
++	switch (cmd) {
++	case EXPRESS_IOCTL_RW_FIRMWARE:
 +
-+	u32 data_len;
++		if (ioctl->data.fwrw.img_type == FW_IMG_FM_API) {
++			err = esas2r_write_fw(a,
++					      (char *)ioctl->data.fwrw.image,
++					      0,
++					      sizeof(struct
++						     atto_express_ioctl));
 +
-+	struct atto_csmi_stp_passthru_sts sts;
-+};
++			if (err >= 0) {
++				err = esas2r_read_fw(a,
++						     (char *)ioctl->data.fwrw.
++						     image,
++						     0,
++						     sizeof(struct
++							    atto_express_ioctl));
++			}
++		} else if (ioctl->data.fwrw.img_type == FW_IMG_FS_API) {
++			err = esas2r_write_fs(a,
++					      (char *)ioctl->data.fwrw.image,
++					      0,
++					      sizeof(struct
++						     atto_express_ioctl));
 +
-+struct atto_csmi_get_sata_sig {
-+	u8 phy_id;
-+	u8 reserved[3];
-+	u8 reg_dth_fis[20];
-+};
++			if (err >= 0) {
++				err = esas2r_read_fs(a,
++						     (char *)ioctl->data.fwrw.
++						     image,
++						     0,
++						     sizeof(struct
++							    atto_express_ioctl));
++			}
++		} else {
++			ioctl->header.return_code = IOCTL_BAD_FLASH_IMGTYPE;
++		}
 +
-+struct atto_csmi_get_scsi_addr {
-+	u8 sas_addr[8];
-+	u8 sas_lun[8];
-+	u8 host_index;
-+	u8 path_id;
-+	u8 target_id;
-+	u8 lun;
-+};
++		break;
 +
-+struct atto_csmi_get_dev_addr {
-+	u8 host_index;
-+	u8 path_id;
-+	u8 target_id;
-+	u8 lun;
-+	u8 sas_addr[8];
-+	u8 sas_lun[8];
-+};
++	case EXPRESS_IOCTL_READ_PARAMS:
 +
-+struct atto_csmi_task_mgmt {
-+	u8 host_index;
-+	u8 path_id;
-+	u8 target_id;
-+	u8 lun;
-+	u32 flags;
-+	#define CSMI_TMF_TASK_IU         0x00000001
-+	#define CSMI_TMF_HARD_RST        0x00000002
-+	#define CSMI_TMF_SUPPRESS_RSLT   0x00000004
++		memmove(ioctl->data.prw.data_buffer, a->nvram,
++			sizeof(struct esas2r_sas_nvram));
++		ioctl->data.prw.code = 1;
++		break;
 +
-+	u32 queue_tag;
-+	u32 reserved;
-+	u8 task_mgt_func;
-+	u8 reserved2[7];
-+	u32 information;
-+	#define CSMI_TM_INFO_TEST        1
-+	#define CSMI_TM_INFO_EXCEEDED    2
-+	#define CSMI_TM_INFO_DEMAND      3
-+	#define CSMI_TM_INFO_TRIGGER     4
++	case EXPRESS_IOCTL_WRITE_PARAMS:
 +
-+	struct atto_csmi_ssp_passthru_sts sts;
++		rq = esas2r_alloc_request(a);
++		if (rq == NULL) {
++			up(&a->nvram_semaphore);
++			ioctl->data.prw.code = 0;
++			break;
++		}
 +
-+};
++		code = esas2r_write_params(a, rq,
++					   (struct esas2r_sas_nvram *)ioctl->data.prw.data_buffer);
++		ioctl->data.prw.code = code;
 +
-+struct atto_csmi_get_conn_info {
-+	u32 pinout;
-+	#define CSMI_CON_UNKNOWN         0x00000001
-+	#define CSMI_CON_SFF_8482        0x00000002
-+	#define CSMI_CON_SFF_8470_LANE_1 0x00000100
-+	#define CSMI_CON_SFF_8470_LANE_2 0x00000200
-+	#define CSMI_CON_SFF_8470_LANE_3 0x00000400
-+	#define CSMI_CON_SFF_8470_LANE_4 0x00000800
-+	#define CSMI_CON_SFF_8484_LANE_1 0x00010000
-+	#define CSMI_CON_SFF_8484_LANE_2 0x00020000
-+	#define CSMI_CON_SFF_8484_LANE_3 0x00040000
-+	#define CSMI_CON_SFF_8484_LANE_4 0x00080000
++		esas2r_free_request(a, rq);
 +
-+	u8 connector[16];
-+	u8 location;
-+	#define CSMI_CON_INTERNAL        0x02
-+	#define CSMI_CON_EXTERNAL        0x04
-+	#define CSMI_CON_SWITCHABLE      0x08
-+	#define CSMI_CON_AUTO            0x10
++		break;
 +
-+	u8 reserved[15];
-+};
++	case EXPRESS_IOCTL_DEFAULT_PARAMS:
 +
-+/* CSMI PHY class structures */
-+struct atto_csmi_character {
-+	u8 type_flags;
-+	#define CSMI_CTF_POS_DISP        0x01
-+	#define CSMI_CTF_NEG_DISP        0x02
-+	#define CSMI_CTF_CTRL_CHAR       0x04
++		esas2r_nvram_get_defaults(a,
++					  (struct esas2r_sas_nvram *)ioctl->data.prw.data_buffer);
++		ioctl->data.prw.code = 1;
++		break;
 +
-+	u8 value;
-+};
++	case EXPRESS_IOCTL_CHAN_INFO:
 +
-+struct atto_csmi_pc_ctrl {
-+	u8 type;
-+	#define CSMI_PC_TYPE_UNDEFINED   0x00
-+	#define CSMI_PC_TYPE_SATA        0x01
-+	#define CSMI_PC_TYPE_SAS         0x02
-+	u8 rate;
-+	u8 reserved[6];
-+	u32 vendor_unique[8];
-+	u32 tx_flags;
-+	#define CSMI_PC_TXF_PREEMP_DIS   0x00000001
++		ioctl->data.chaninfo.major_rev = ESAS2R_MAJOR_REV;
++		ioctl->data.chaninfo.minor_rev = ESAS2R_MINOR_REV;
++		ioctl->data.chaninfo.IRQ = a->pcid->irq;
++		ioctl->data.chaninfo.device_id = a->pcid->device;
++		ioctl->data.chaninfo.vendor_id = a->pcid->vendor;
++		ioctl->data.chaninfo.ven_dev_id = a->pcid->subsystem_device;
++		ioctl->data.chaninfo.revision_id = a->pcid->revision;
++		ioctl->data.chaninfo.pci_bus = a->pcid->bus->number;
++		ioctl->data.chaninfo.pci_dev_func = a->pcid->devfn;
++		ioctl->data.chaninfo.core_rev = 0;
++		ioctl->data.chaninfo.host_no = a->host->host_no;
++		ioctl->data.chaninfo.hbaapi_rev = 0;
++		break;
 +
-+	signed char tx_amplitude;
-+	signed char tx_preemphasis;
-+	signed char tx_slew_rate;
-+	signed char tx_reserved[13];
-+	u8 tx_vendor_unique[64];
-+	u32 rx_flags;
-+	#define CSMI_PC_RXF_EQ_DIS       0x00000001
++	case EXPRESS_IOCTL_SMP:
++		ioctl->header.return_code = handle_smp_ioctl(a,
++							     &ioctl->data.
++							     ioctl_smp);
++		break;
 +
-+	signed char rx_threshold;
-+	signed char rx_equalization_gain;
-+	signed char rx_reserved[14];
-+	u8 rx_vendor_unique[64];
-+	u32 pattern_flags;
-+	#define CSMI_PC_PATF_FIXED       0x00000001
-+	#define CSMI_PC_PATF_DIS_SCR     0x00000002
-+	#define CSMI_PC_PATF_DIS_ALIGN   0x00000004
-+	#define CSMI_PC_PATF_DIS_SSC     0x00000008
++	case EXPRESS_CSMI:
++		ioctl->header.return_code =
++			handle_csmi_ioctl(a, &ioctl->data.csmi);
++		break;
 +
-+	u8 fixed_pattern;
-+	#define CSMI_PC_FP_CJPAT         0x00000001
-+	#define CSMI_PC_FP_ALIGN         0x00000002
++	case EXPRESS_IOCTL_HBA:
++		ioctl->header.return_code = handle_hba_ioctl(a,
++							     &ioctl->data.
++							     ioctl_hba);
++		break;
 +
-+	u8 user_pattern_len;
-+	u8 pattern_reserved[6];
++	case EXPRESS_IOCTL_VDA:
++		err = esas2r_write_vda(a,
++				       (char *)&ioctl->data.ioctl_vda,
++				       0,
++				       sizeof(struct atto_ioctl_vda) +
++				       ioctl->data.ioctl_vda.data_length);
 +
-+	struct atto_csmi_character user_pattern_buffer[16];
-+};
++		if (err >= 0) {
++			err = esas2r_read_vda(a,
++					      (char *)&ioctl->data.ioctl_vda,
++					      0,
++					      sizeof(struct atto_ioctl_vda) +
++					      ioctl->data.ioctl_vda.data_length);
++		}
 +
-+struct atto_csmi_phy_ctrl {
-+	u32 function;
-+	#define CSMI_PC_FUNC_GET_SETUP   0x00000100
 +
-+	u8 phy_id;
-+	u16 len_of_cntl;
-+	u8 num_of_cntls;
-+	u8 reserved[4];
-+	u32 link_flags;
-+	#define CSMI_PHY_ACTIVATE_CTRL   0x00000001
-+	#define CSMI_PHY_UPD_SPINUP_RATE 0x00000002
-+	#define CSMI_PHY_AUTO_COMWAKE    0x00000004
 +
-+	u8 spinup_rate;
-+	u8 link_reserved[7];
-+	u32 vendor_unique[8];
 +
-+	struct atto_csmi_pc_ctrl control[1];
-+};
++		break;
 +
-+union atto_ioctl_csmi {
-+	struct atto_csmi_get_driver_info drvr_info;
-+	struct atto_csmi_get_cntlr_cfg cntlr_cfg;
-+	struct atto_csmi_get_cntlr_sts cntlr_sts;
-+	struct atto_csmi_fw_download fw_dwnld;
-+	struct atto_csmi_get_raid_info raid_info;
-+	struct atto_csmi_get_raid_cfg raid_cfg;
-+	struct atto_csmi_get_phy_info get_phy_info;
-+	struct atto_csmi_set_phy_info set_phy_info;
-+	struct atto_csmi_get_link_errors link_errs;
-+	struct atto_csmi_smp_passthru smp_pass_thru;
-+	struct atto_csmi_ssp_passthru ssp_pass_thru;
-+	struct atto_csmi_stp_passthru stp_pass_thru;
-+	struct atto_csmi_task_mgmt tsk_mgt;
-+	struct atto_csmi_get_sata_sig sata_sig;
-+	struct atto_csmi_get_scsi_addr scsi_addr;
-+	struct atto_csmi_get_dev_addr dev_addr;
-+	struct atto_csmi_get_conn_info conn_info[32];
-+	struct atto_csmi_phy_ctrl phy_ctrl;
-+};
++	case EXPRESS_IOCTL_GET_MOD_INFO:
 +
-+struct atto_csmi {
-+	u32 control_code;
-+	u32 status;
-+	union atto_ioctl_csmi data;
-+};
++		ioctl->data.modinfo.adapter = a;
++		ioctl->data.modinfo.pci_dev = a->pcid;
++		ioctl->data.modinfo.scsi_host = a->host;
++		ioctl->data.modinfo.host_no = a->host->host_no;
 +
-+struct atto_module_info {
-+	void *adapter;
-+	void *pci_dev;
-+	void *scsi_host;
-+	unsigned short host_no;
-+	union {
-+		struct {
-+			u64 node_name;
-+			u64 port_name;
-+		};
-+		u64 sas_addr;
-+	};
-+};
++		break;
 +
-+#define ATTO_FUNC_GET_ADAP_INFO      0x00
-+#define ATTO_VER_GET_ADAP_INFO0      0
-+#define ATTO_VER_GET_ADAP_INFO       ATTO_VER_GET_ADAP_INFO0
++	default:
++		esas2r_debug("esas2r_ioctl invalid cmd %p!", cmd);
++		ioctl->header.return_code = IOCTL_ERR_INVCMD;
++	}
 +
-+struct __packed atto_hba_get_adapter_info {
++ioctl_done:
 +
-+	struct {
-+		u16 vendor_id;
-+		u16 device_id;
-+		u16 ss_vendor_id;
-+		u16 ss_device_id;
-+		u8 class_code[3];
-+		u8 rev_id;
-+		u8 bus_num;
-+		u8 dev_num;
-+		u8 func_num;
-+		u8 link_width_max;
-+		u8 link_width_curr;
-+	    #define ATTO_GAI_PCILW_UNKNOWN   0x00
++	if (err < 0) {
++		esas2r_log(ESAS2R_LOG_WARN, "err %d on ioctl cmd %d", err,
++			   cmd);
 +
-+		u8 link_speed_max;
-+		u8 link_speed_curr;
-+	    #define ATTO_GAI_PCILS_UNKNOWN   0x00
-+	    #define ATTO_GAI_PCILS_GEN1      0x01
-+	    #define ATTO_GAI_PCILS_GEN2      0x02
-+	    #define ATTO_GAI_PCILS_GEN3      0x03
++		switch (err) {
++		case -ENOMEM:
++		case -EBUSY:
++			ioctl->header.return_code = IOCTL_OUT_OF_RESOURCES;
++			break;
 +
-+		u8 interrupt_mode;
-+	    #define ATTO_GAI_PCIIM_UNKNOWN   0x00
-+	    #define ATTO_GAI_PCIIM_LEGACY    0x01
-+	    #define ATTO_GAI_PCIIM_MSI       0x02
-+	    #define ATTO_GAI_PCIIM_MSIX      0x03
++		case -ENOSYS:
++		case -EINVAL:
++			ioctl->header.return_code = IOCTL_INVALID_PARAM;
++			break;
++		}
 +
-+		u8 msi_vector_cnt;
-+		u8 reserved[19];
-+	} pci;
++		ioctl->header.return_code = IOCTL_GENERAL_ERROR;
++	}
 +
-+	u8 adap_type;
-+	#define ATTO_GAI_AT_EPCIU320     0x00
-+	#define ATTO_GAI_AT_ESASRAID     0x01
-+	#define ATTO_GAI_AT_ESASRAID2    0x02
-+	#define ATTO_GAI_AT_ESASHBA      0x03
-+	#define ATTO_GAI_AT_ESASHBA2     0x04
-+	#define ATTO_GAI_AT_CELERITY     0x05
-+	#define ATTO_GAI_AT_CELERITY8    0x06
-+	#define ATTO_GAI_AT_FASTFRAME    0x07
-+	#define ATTO_GAI_AT_ESASHBA3     0x08
-+	#define ATTO_GAI_AT_CELERITY16   0x09
-+	#define ATTO_GAI_AT_TLSASHBA     0x0A
-+	#define ATTO_GAI_AT_ESASHBA4     0x0B
++	/* Always copy the buffer back, if only to pick up the status */
++	err = __copy_to_user(arg, ioctl, sizeof(struct atto_express_ioctl));
++	if (err != 0) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "ioctl_handler copy_to_user didn't copy "
++			   "everything (err %d, cmd %d)", err,
++			   cmd);
++		vfree(ioctl);
 +
-+	u8 adap_flags;
-+	#define ATTO_GAI_AF_DEGRADED     0x01
-+	#define ATTO_GAI_AF_SPT_SUPP     0x02
-+	#define ATTO_GAI_AF_DEVADDR_SUPP 0x04
-+	#define ATTO_GAI_AF_PHYCTRL_SUPP 0x08
-+	#define ATTO_GAI_AF_TEST_SUPP    0x10
-+	#define ATTO_GAI_AF_DIAG_SUPP    0x20
-+	#define ATTO_GAI_AF_VIRT_SES     0x40
-+	#define ATTO_GAI_AF_CONN_CTRL    0x80
++		return -EFAULT;
++	}
 +
-+	u8 num_ports;
-+	u8 num_phys;
-+	u8 drvr_rev_major;
-+	u8 drvr_rev_minor;
-+	u8 drvr_revsub_minor;
-+	u8 drvr_rev_build;
-+	char drvr_rev_ascii[16];
-+	char drvr_name[32];
-+	char firmware_rev[16];
-+	char flash_rev[16];
-+	char model_name_short[16];
-+	char model_name[32];
-+	u32 num_targets;
-+	u32 num_targsper_bus;
-+	u32 num_lunsper_targ;
-+	u8 num_busses;
-+	u8 num_connectors;
-+	u8 adap_flags2;
-+	#define ATTO_GAI_AF2_FCOE_SUPP       0x01
-+	#define ATTO_GAI_AF2_NIC_SUPP        0x02
-+	#define ATTO_GAI_AF2_LOCATE_SUPP     0x04
-+	#define ATTO_GAI_AF2_ADAP_CTRL_SUPP  0x08
-+	#define ATTO_GAI_AF2_DEV_INFO_SUPP   0x10
-+	#define ATTO_GAI_AF2_NPIV_SUPP       0x20
-+	#define ATTO_GAI_AF2_MP_SUPP         0x40
++	vfree(ioctl);
 +
-+	u8 num_temp_sensors;
-+	u32 num_targets_backend;
-+	u32 tunnel_flags;
-+	#define ATTO_GAI_TF_MEM_RW           0x00000001
-+	#define ATTO_GAI_TF_TRACE            0x00000002
-+	#define ATTO_GAI_TF_SCSI_PASS_THRU   0x00000004
-+	#define ATTO_GAI_TF_GET_DEV_ADDR     0x00000008
-+	#define ATTO_GAI_TF_PHY_CTRL         0x00000010
-+	#define ATTO_GAI_TF_CONN_CTRL        0x00000020
-+	#define ATTO_GAI_TF_GET_DEV_INFO     0x00000040
++	return 0;
++}
 +
-+	u8 reserved3[0x138];
-+};
++int esas2r_ioctl(struct scsi_device *sd, int cmd, void __user *arg)
++{
++	return esas2r_ioctl_handler(sd->host->hostdata, cmd, arg);
++}
 +
-+#define ATTO_FUNC_GET_ADAP_ADDR      0x01
-+#define ATTO_VER_GET_ADAP_ADDR0      0
-+#define ATTO_VER_GET_ADAP_ADDR       ATTO_VER_GET_ADAP_ADDR0
++static void free_fw_buffers(struct esas2r_adapter *a)
++{
++	if (a->firmware.data) {
++		dma_free_coherent(&a->pcid->dev,
++				  (size_t)a->firmware.orig_len,
++				  a->firmware.data,
++				  (dma_addr_t)a->firmware.phys);
 +
-+struct __packed atto_hba_get_adapter_address {
++		a->firmware.data = NULL;
++	}
++}
 +
-+	u8 addr_type;
-+	#define ATTO_GAA_AT_PORT         0x00
-+	#define ATTO_GAA_AT_NODE         0x01
-+	#define ATTO_GAA_AT_CURR_MAC     0x02
-+	#define ATTO_GAA_AT_PERM_MAC     0x03
-+	#define ATTO_GAA_AT_VNIC         0x04
++static int allocate_fw_buffers(struct esas2r_adapter *a, u32 length)
++{
++	free_fw_buffers(a);
 +
-+	u8 port_id;
-+	u16 addr_len;
-+	u8 address[256];
-+};
++	a->firmware.orig_len = length;
 +
-+#define ATTO_FUNC_MEM_RW             0x02
-+#define ATTO_VER_MEM_RW0             0
-+#define ATTO_VER_MEM_RW              ATTO_VER_MEM_RW0
++	a->firmware.data = (u8 *)dma_alloc_coherent(&a->pcid->dev,
++						    (size_t)length,
++						    (dma_addr_t *)&a->firmware.
++						    phys,
++						    GFP_KERNEL);
 +
-+struct __packed atto_hba_memory_read_write {
-+	u8 mem_func;
-+	u8 mem_type;
-+	union {
-+		u8 pci_index;
-+		u8 i2c_dev;
-+	};
-+	u8 i2c_status;
++	if (!a->firmware.data) {
++		esas2r_debug("buffer alloc failed!");
++		return 0;
++	}
++
++	return 1;
++}
++
++/* Handle a call to read firmware. */
++int esas2r_read_fw(struct esas2r_adapter *a, char *buf, long off, int count)
++{
++	esas2r_trace_enter();
++	/* if the cached header is a status, simply copy it over and return. */
++	if (a->firmware.state == FW_STATUS_ST) {
++		int size = min_t(int, count, sizeof(a->firmware.header));
++		esas2r_trace_exit();
++		memmove(buf, &a->firmware.header, size);
++		esas2r_debug("esas2r_read_fw: STATUS size %d", size);
++		return size;
++	}
++
++	/*
++	 * if the cached header is a command, do it if at
++	 * offset 0, otherwise copy the pieces.
++	 */
++
++	if (a->firmware.state == FW_COMMAND_ST) {
++		u32 length = a->firmware.header.length;
++		esas2r_trace_exit();
++
++		esas2r_debug("esas2r_read_fw: COMMAND length %d off %d",
++			     length,
++			     off);
++
++		if (off == 0) {
++			if (a->firmware.header.action == FI_ACT_UP) {
++				if (!allocate_fw_buffers(a, length))
++					return -ENOMEM;
++
++
++				/* copy header over */
++
++				memmove(a->firmware.data,
++					&a->firmware.header,
++					sizeof(a->firmware.header));
++
++				do_fm_api(a,
++					  (struct esas2r_flash_img *)a->firmware.data);
++			} else if (a->firmware.header.action == FI_ACT_UPSZ) {
++				int size =
++					min((int)count,
++					    (int)sizeof(a->firmware.header));
++				do_fm_api(a, &a->firmware.header);
++				memmove(buf, &a->firmware.header, size);
++				esas2r_debug("FI_ACT_UPSZ size %d", size);
++				return size;
++			} else {
++				esas2r_debug("invalid action %d",
++					     a->firmware.header.action);
++				return -ENOSYS;
++			}
++		}
++
++		if (count + off > length)
++			count = length - off;
++
++		if (count < 0)
++			return 0;
++
++		if (!a->firmware.data) {
++			esas2r_debug(
++				"read: nonzero offset but no buffer available!");
++			return -ENOMEM;
++		}
++
++		esas2r_debug("esas2r_read_fw: off %d count %d length %d ", off,
++			     count,
++			     length);
++
++		memmove(buf, &a->firmware.data[off], count);
++
++		/* when done, release the buffer */
++
++		if (length <= off + count) {
++			esas2r_debug("esas2r_read_fw: freeing buffer!");
++
++			free_fw_buffers(a);
++		}
++
++		return count;
++	}
++
++	esas2r_trace_exit();
++	esas2r_debug("esas2r_read_fw: invalid firmware state %d",
++		     a->firmware.state);
++
++	return -EINVAL;
++}
++
++/* Handle a call to write firmware. */
++int esas2r_write_fw(struct esas2r_adapter *a, const char *buf, long off,
++		    int count)
++{
 +	u32 length;
-+	u64 address;
-+	u8 reserved[48];
-+
-+};
-+
-+#define ATTO_FUNC_TRACE              0x03
-+#define ATTO_VER_TRACE0              0
-+#define ATTO_VER_TRACE1              1
-+#define ATTO_VER_TRACE               ATTO_VER_TRACE1
-+
-+struct __packed atto_hba_trace {
-+	u8 trace_func;
-+	#define ATTO_TRC_TF_GET_INFO     0x00
-+	#define ATTO_TRC_TF_ENABLE       0x01
-+	#define ATTO_TRC_TF_DISABLE      0x02
-+	#define ATTO_TRC_TF_SET_MASK     0x03
-+	#define ATTO_TRC_TF_UPLOAD       0x04
-+	#define ATTO_TRC_TF_RESET        0x05
-+
-+	u8 trace_type;
-+	#define ATTO_TRC_TT_DRIVER       0x00
-+	#define ATTO_TRC_TT_FWCOREDUMP   0x01
-+
-+	u8 reserved[2];
-+	u32 current_offset;
-+	u32 total_length;
-+	u32 trace_mask;
-+	u8 reserved2[48];
-+};
-+
-+#define ATTO_FUNC_SCSI_PASS_THRU     0x04
-+#define ATTO_VER_SCSI_PASS_THRU0     0
-+#define ATTO_VER_SCSI_PASS_THRU      ATTO_VER_SCSI_PASS_THRU0
-+
-+struct __packed atto_hba_scsi_pass_thru {
-+	u8 cdb[32];
-+	u8 cdb_length;
-+	u8 req_status;
-+	#define ATTO_SPT_RS_SUCCESS      0x00
-+	#define ATTO_SPT_RS_FAILED       0x01
-+	#define ATTO_SPT_RS_OVERRUN      0x02
-+	#define ATTO_SPT_RS_UNDERRUN     0x03
-+	#define ATTO_SPT_RS_NO_DEVICE    0x04
-+	#define ATTO_SPT_RS_NO_LUN       0x05
-+	#define ATTO_SPT_RS_TIMEOUT      0x06
-+	#define ATTO_SPT_RS_BUS_RESET    0x07
-+	#define ATTO_SPT_RS_ABORTED      0x08
-+	#define ATTO_SPT_RS_BUSY         0x09
-+	#define ATTO_SPT_RS_DEGRADED     0x0A
-+
-+	u8 scsi_status;
-+	u8 sense_length;
-+	u32 flags;
-+	#define ATTO_SPTF_DATA_IN    0x00000001
-+	#define ATTO_SPTF_DATA_OUT   0x00000002
-+	#define ATTO_SPTF_SIMPLE_Q   0x00000004
-+	#define ATTO_SPTF_HEAD_OF_Q  0x00000008
-+	#define ATTO_SPTF_ORDERED_Q  0x00000010
-+
-+	u32 timeout;
-+	u32 target_id;
-+	u8 lun[8];
-+	u32 residual_length;
-+	u8 sense_data[0xFC];
-+	u8 reserved[0x28];
-+};
-+
-+#define ATTO_FUNC_GET_DEV_ADDR       0x05
-+#define ATTO_VER_GET_DEV_ADDR0       0
-+#define ATTO_VER_GET_DEV_ADDR        ATTO_VER_GET_DEV_ADDR0
-+
-+struct __packed atto_hba_get_device_address {
-+	u8 addr_type;
-+	#define ATTO_GDA_AT_PORT         0x00
-+	#define ATTO_GDA_AT_NODE         0x01
-+	#define ATTO_GDA_AT_MAC          0x02
-+	#define ATTO_GDA_AT_PORTID       0x03
-+	#define ATTO_GDA_AT_UNIQUE       0x04
-+
-+	u8 reserved;
-+	u16 addr_len;
-+	u32 target_id;
-+	u8 address[256];
-+};
-+
-+/* The following functions are supported by firmware but do not have any
-+ * associated driver structures
-+ */
-+#define ATTO_FUNC_PHY_CTRL           0x06
-+#define ATTO_FUNC_CONN_CTRL          0x0C
-+#define ATTO_FUNC_ADAP_CTRL          0x0E
-+#define ATTO_VER_ADAP_CTRL0          0
-+#define ATTO_VER_ADAP_CTRL           ATTO_VER_ADAP_CTRL0
-+
-+struct __packed atto_hba_adap_ctrl {
-+	u8 adap_func;
-+	#define ATTO_AC_AF_HARD_RST      0x00
-+	#define ATTO_AC_AF_GET_STATE     0x01
-+	#define ATTO_AC_AF_GET_TEMP      0x02
-+
-+	u8 adap_state;
-+	#define ATTO_AC_AS_UNKNOWN       0x00
-+	#define ATTO_AC_AS_OK            0x01
-+	#define ATTO_AC_AS_RST_SCHED     0x02
-+	#define ATTO_AC_AS_RST_IN_PROG   0x03
-+	#define ATTO_AC_AS_RST_DISC      0x04
-+	#define ATTO_AC_AS_DEGRADED      0x05
-+	#define ATTO_AC_AS_DISABLED      0x06
-+	#define ATTO_AC_AS_TEMP          0x07
-+
-+	u8 reserved[2];
-+
-+	union {
-+		struct {
-+			u8 temp_sensor;
-+			u8 temp_state;
-+
-+	#define ATTO_AC_TS_UNSUPP        0x00
-+	#define ATTO_AC_TS_UNKNOWN       0x01
-+	#define ATTO_AC_TS_INIT_FAILED   0x02
-+	#define ATTO_AC_TS_NORMAL        0x03
-+	#define ATTO_AC_TS_OUT_OF_RANGE  0x04
-+	#define ATTO_AC_TS_FAULT         0x05
-+
-+			signed short temp_value;
-+			signed short temp_lower_lim;
-+			signed short temp_upper_lim;
-+			char temp_desc[32];
-+			u8 reserved2[20];
-+		};
-+	};
-+};
-+
-+#define ATTO_FUNC_GET_DEV_INFO       0x0F
-+#define ATTO_VER_GET_DEV_INFO0       0
-+#define ATTO_VER_GET_DEV_INFO        ATTO_VER_GET_DEV_INFO0
-+
-+struct __packed atto_hba_sas_device_info {
-+
-+    #define ATTO_SDI_MAX_PHYS_WIDE_PORT  16
-+
-+	u8 phy_id[ATTO_SDI_MAX_PHYS_WIDE_PORT]; /* IDs of parent exp/adapt */
-+	#define ATTO_SDI_PHY_ID_INV      ATTO_SAS_PHY_ID_INV
-+	u32 exp_target_id;
-+	u32 sas_port_mask;
-+	u8 sas_level;
-+	#define ATTO_SDI_SAS_LVL_INV     0xFF
-+
-+	u8 slot_num;
-+	#define ATTO_SDI_SLOT_NUM_INV    ATTO_SLOT_NUM_INV
-+
-+	u8 dev_type;
-+	#define ATTO_SDI_DT_END_DEVICE   0
-+	#define ATTO_SDI_DT_EXPANDER     1
-+	#define ATTO_SDI_DT_PORT_MULT    2
-+
-+	u8 ini_flags;
-+	u8 tgt_flags;
-+	u8 link_rate; /* SMP_RATE_XXX */
-+	u8 loc_flags;
-+	#define ATTO_SDI_LF_DIRECT       0x01
-+	#define ATTO_SDI_LF_EXPANDER     0x02
-+	#define ATTO_SDI_LF_PORT_MULT    0x04
-+	u8 pm_port;
-+	u8 reserved[0x60];
-+};
-+
-+union atto_hba_device_info {
-+	struct atto_hba_sas_device_info sas_dev_info;
-+};
-+
-+struct __packed atto_hba_get_device_info {
-+	u32 target_id;
-+	u8 info_type;
-+	#define ATTO_GDI_IT_UNKNOWN      0x00
-+	#define ATTO_GDI_IT_SAS          0x01
-+	#define ATTO_GDI_IT_FC           0x02
-+	#define ATTO_GDI_IT_FCOE         0x03
-+
-+	u8 reserved[11];
-+	union atto_hba_device_info dev_info;
-+};
-+
-+struct atto_ioctl {
-+	u8 version;
-+	u8 function; /* ATTO_FUNC_XXX */
-+	u8 status;
-+#define ATTO_STS_SUCCESS         0x00
-+#define ATTO_STS_FAILED          0x01
-+#define ATTO_STS_INV_VERSION     0x02
-+#define ATTO_STS_OUT_OF_RSRC     0x03
-+#define ATTO_STS_INV_FUNC        0x04
-+#define ATTO_STS_UNSUPPORTED     0x05
-+#define ATTO_STS_INV_ADAPTER     0x06
-+#define ATTO_STS_INV_DRVR_VER    0x07
-+#define ATTO_STS_INV_PARAM       0x08
-+#define ATTO_STS_TIMEOUT         0x09
-+#define ATTO_STS_NOT_APPL        0x0A
-+#define ATTO_STS_DEGRADED        0x0B
-+
-+	u8 flags;
-+	#define HBAF_TUNNEL      0x01
-+
-+	u32 data_length;
-+	u8 reserved2[56];
-+
-+	union {
-+		u8 byte[1];
-+		struct atto_hba_get_adapter_info get_adap_info;
-+		struct atto_hba_get_adapter_address get_adap_addr;
-+		struct atto_hba_scsi_pass_thru scsi_pass_thru;
-+		struct atto_hba_get_device_address get_dev_addr;
-+		struct atto_hba_adap_ctrl adap_ctrl;
-+		struct atto_hba_get_device_info get_dev_info;
-+		struct atto_hba_trace trace;
-+	} data;
-+
-+};
-+
-+struct __packed atto_ioctl_vda_scsi_cmd {
-+
-+    #define ATTO_VDA_SCSI_VER0   0
-+    #define ATTO_VDA_SCSI_VER    ATTO_VDA_SCSI_VER0
-+
-+	u8 cdb[16];
-+	u32 flags;
-+	u32 data_length;
-+	u32 residual_length;
-+	u16 target_id;
-+	u8 sense_len;
-+	u8 scsi_stat;
-+	u8 reserved[8];
-+	u8 sense_data[80];
-+};
-+
-+struct __packed atto_ioctl_vda_flash_cmd {
-+
-+    #define ATTO_VDA_FLASH_VER0  0
-+    #define ATTO_VDA_FLASH_VER   ATTO_VDA_FLASH_VER0
-+
-+	u32 flash_addr;
-+	u32 data_length;
-+	u8 sub_func;
-+	u8 reserved[15];
-+
-+	union {
-+		struct {
-+			u32 flash_size;
-+			u32 page_size;
-+			u8 prod_info[32];
-+		} info;
-+
-+		struct {
-+			char file_name[16]; /* 8.3 fname, NULL term, wc=* */
-+			u32 file_size;
-+		} file;
-+	} data;
-+
-+};
-+
-+struct __packed atto_ioctl_vda_diag_cmd {
-+
-+    #define ATTO_VDA_DIAG_VER0   0
-+    #define ATTO_VDA_DIAG_VER    ATTO_VDA_DIAG_VER0
-+
-+	u64 local_addr;
-+	u32 data_length;
-+	u8 sub_func;
-+	u8 flags;
-+	u8 reserved[3];
-+};
-+
-+struct __packed atto_ioctl_vda_cli_cmd {
-+
-+    #define ATTO_VDA_CLI_VER0    0
-+    #define ATTO_VDA_CLI_VER     ATTO_VDA_CLI_VER0
-+
-+	u32 cmd_rsp_len;
-+};
-+
-+struct __packed atto_ioctl_vda_smp_cmd {
-+
-+    #define ATTO_VDA_SMP_VER0    0
-+    #define ATTO_VDA_SMP_VER     ATTO_VDA_SMP_VER0
-+
-+	u64 dest;
-+	u32 cmd_rsp_len;
-+};
-+
-+struct __packed atto_ioctl_vda_cfg_cmd {
-+
-+    #define ATTO_VDA_CFG_VER0    0
-+    #define ATTO_VDA_CFG_VER     ATTO_VDA_CFG_VER0
-+
-+	u32 data_length;
-+	u8 cfg_func;
-+	u8 reserved[11];
-+
-+	union {
-+		u8 bytes[112];
-+		struct atto_vda_cfg_init init;
-+	} data;
-+
-+};
-+
-+struct __packed atto_ioctl_vda_mgt_cmd {
-+
-+    #define ATTO_VDA_MGT_VER0    0
-+    #define ATTO_VDA_MGT_VER     ATTO_VDA_MGT_VER0
-+
-+	u8 mgt_func;
-+	u8 scan_generation;
-+	u16 dev_index;
-+	u32 data_length;
-+	u8 reserved[8];
-+	union {
-+		u8 bytes[112];
-+		struct atto_vda_devinfo dev_info;
-+		struct atto_vda_grp_info grp_info;
-+		struct atto_vdapart_info part_info;
-+		struct atto_vda_dh_info dh_info;
-+		struct atto_vda_metrics_info metrics_info;
-+		struct atto_vda_schedule_info sched_info;
-+		struct atto_vda_n_vcache_info nvcache_info;
-+		struct atto_vda_buzzer_info buzzer_info;
-+		struct atto_vda_adapter_info adapter_info;
-+		struct atto_vda_temp_info temp_info;
-+		struct atto_vda_fan_info fan_info;
-+	} data;
-+};
-+
-+struct __packed atto_ioctl_vda_gsv_cmd {
-+
-+    #define ATTO_VDA_GSV_VER0    0
-+    #define ATTO_VDA_GSV_VER     ATTO_VDA_GSV_VER0
-+
-+	u8 rsp_len;
-+	u8 reserved[7];
-+	u8 version_info[1];
-+	#define ATTO_VDA_VER_UNSUPPORTED 0xFF
-+
-+};
-+
-+struct __packed atto_ioctl_vda {
-+	u8 version;
-+	u8 function;    /* VDA_FUNC_XXXX */
-+	u8 status;      /* ATTO_STS_XXX */
-+	u8 vda_status;  /* RS_XXX (if status == ATTO_STS_SUCCESS) */
-+	u32 data_length;
-+	u8 reserved[8];
-+
-+	union {
-+		struct atto_ioctl_vda_scsi_cmd scsi;
-+		struct atto_ioctl_vda_flash_cmd flash;
-+		struct atto_ioctl_vda_diag_cmd diag;
-+		struct atto_ioctl_vda_cli_cmd cli;
-+		struct atto_ioctl_vda_smp_cmd smp;
-+		struct atto_ioctl_vda_cfg_cmd cfg;
-+		struct atto_ioctl_vda_mgt_cmd mgt;
-+		struct atto_ioctl_vda_gsv_cmd gsv;
-+		u8 cmd_info[256];
-+	} cmd;
-+
-+	union {
-+		u8 data[1];
-+		struct atto_vda_devinfo2 dev_info2;
-+	} data;
-+
-+};
-+
-+struct __packed atto_ioctl_smp {
-+	u8 version;
-+	#define ATTO_SMP_VERSION0        0
-+	#define ATTO_SMP_VERSION1        1
-+	#define ATTO_SMP_VERSION2        2
-+	#define ATTO_SMP_VERSION         ATTO_SMP_VERSION2
-+
-+	u8 function;
-+#define ATTO_SMP_FUNC_DISC_SMP           0x00
-+#define ATTO_SMP_FUNC_DISC_TARG          0x01
-+#define ATTO_SMP_FUNC_SEND_CMD           0x02
-+#define ATTO_SMP_FUNC_DISC_TARG_DIRECT   0x03
-+#define ATTO_SMP_FUNC_SEND_CMD_DIRECT    0x04
-+#define ATTO_SMP_FUNC_DISC_SMP_DIRECT    0x05
-+
-+	u8 status;      /* ATTO_STS_XXX */
-+	u8 smp_status;  /* if status == ATTO_STS_SUCCESS */
-+	#define ATTO_SMP_STS_SUCCESS     0x00
-+	#define ATTO_SMP_STS_FAILURE     0x01
-+	#define ATTO_SMP_STS_RESCAN      0x02
-+	#define ATTO_SMP_STS_NOT_FOUND   0x03
-+
-+	u16 target_id;
-+	u8 phy_id;
-+	u8 dev_index;
-+	u64 smp_sas_addr;
-+	u64 targ_sas_addr;
-+	u32 req_length;
-+	u32 rsp_length;
-+	u8 flags;
-+	#define ATTO_SMPF_ROOT_EXP       0x01 /* expander direct attached */
-+
-+	u8 reserved[31];
-+
-+	union {
-+		u8 byte[1];
-+		u32 dword[1];
-+	} data;
-+
-+};
-+
-+struct __packed atto_express_ioctl {
-+	struct atto_express_ioctl_header header;
-+
-+	union {
-+		struct atto_firmware_rw_request fwrw;
-+		struct atto_param_rw_request prw;
-+		struct atto_channel_list chanlist;
-+		struct atto_channel_info chaninfo;
-+		struct atto_ioctl ioctl_hba;
-+		struct atto_module_info modinfo;
-+		struct atto_ioctl_vda ioctl_vda;
-+		struct atto_ioctl_smp ioctl_smp;
-+		struct atto_csmi csmi;
-+
-+	} data;
-+};
-+
-+/* The struct associated with the code is listed after the definition */
-+#define EXPRESS_IOCTL_MIN             0x4500
-+#define EXPRESS_IOCTL_RW_FIRMWARE     0x4500            /* FIRMWARERW    */
-+#define EXPRESS_IOCTL_READ_PARAMS     0x4501            /* PARAMRW       */
-+#define EXPRESS_IOCTL_WRITE_PARAMS    0x4502            /* PARAMRW       */
-+#define EXPRESS_IOCTL_FC_API          0x4503            /* internal      */
-+#define EXPRESS_IOCTL_GET_CHANNELS    0x4504            /* CHANNELLIST   */
-+#define EXPRESS_IOCTL_CHAN_INFO       0x4505            /* CHANNELINFO   */
-+#define EXPRESS_IOCTL_DEFAULT_PARAMS  0x4506            /* PARAMRW       */
-+#define EXPRESS_ADDR_MEMORY           0x4507            /* MEMADDR       */
-+#define EXPRESS_RW_MEMORY             0x4508            /* MEMRW         */
-+#define EXPRESS_TSDK_DUMP             0x4509            /* TSDKDUMP      */
-+#define EXPRESS_IOCTL_SMP             0x450A            /* IOCTL_SMP     */
-+#define EXPRESS_CSMI                  0x450B            /* CSMI          */
-+#define EXPRESS_IOCTL_HBA             0x450C            /* IOCTL_HBA     */
-+#define EXPRESS_IOCTL_VDA             0x450D            /* IOCTL_VDA     */
-+#define EXPRESS_IOCTL_GET_ID          0x450E            /* GET_ID        */
-+#define EXPRESS_IOCTL_GET_MOD_INFO    0x450F            /* MODULE_INFO   */
-+#define EXPRESS_IOCTL_MAX             0x450F
-+
-+#endif
++
++	if (off == 0) {
++		struct esas2r_flash_img *header =
++			(struct esas2r_flash_img *)buf;
++
++		/* assume version 0 flash image */
++
++		int min_size = sizeof(struct esas2r_flash_img_v0);
++
++		a->firmware.state = FW_INVALID_ST;
++
++		/* validate the version field first */
++
++		if (count < 4
++		    ||  header->fi_version > FI_VERSION_1) {
++			esas2r_debug(
++				"esas2r_write_fw: short header or invalid version");
++			return -EINVAL;
++		}
++
++		/* See if its a version 1 flash image */
++
++		if (header->fi_version == FI_VERSION_1)
++			min_size = sizeof(struct esas2r_flash_img);
++
++		/* If this is the start, the header must be full and valid. */
++		if (count < min_size) {
++			esas2r_debug("esas2r_write_fw: short header, aborting");
++			return -EINVAL;
++		}
++
++		/* Make sure the size is reasonable. */
++		length = header->length;
++
++		if (length > 1024 * 1024) {
++			esas2r_debug(
++				"esas2r_write_fw: hosed, length %d  fi_version %d",
++				length, header->fi_version);
++			return -EINVAL;
++		}
++
++		/*
++		 * If this is a write command, allocate memory because
++		 * we have to cache everything. otherwise, just cache
++		 * the header, because the read op will do the command.
++		 */
++
++		if (header->action == FI_ACT_DOWN) {
++			if (!allocate_fw_buffers(a, length))
++				return -ENOMEM;
++
++			/*
++			 * Store the command, so there is context on subsequent
++			 * calls.
++			 */
++			memmove(&a->firmware.header,
++				buf,
++				sizeof(*header));
++		} else if (header->action == FI_ACT_UP
++			   ||  header->action == FI_ACT_UPSZ) {
++			/* Save the command, result will be picked up on read */
++			memmove(&a->firmware.header,
++				buf,
++				sizeof(*header));
++
++			a->firmware.state = FW_COMMAND_ST;
++
++			esas2r_debug(
++				"esas2r_write_fw: COMMAND, count %d, action %d ",
++				count, header->action);
++
++			/*
++			 * Pretend we took the whole buffer,
++			 * so we don't get bothered again.
++			 */
++
++			return count;
++		} else {
++			esas2r_debug("esas2r_write_fw: invalid action %d ",
++				     a->firmware.header.action);
++			return -ENOSYS;
++		}
++	} else {
++		length = a->firmware.header.length;
++	}
++
++	/*
++	 * We only get here on a download command, regardless of offset.
++	 * the chunks written by the system need to be cached, and when
++	 * the final one arrives, issue the fmapi command.
++	 */
++
++	if (off + count > length)
++		count = length - off;
++
++	if (count > 0) {
++		esas2r_debug("esas2r_write_fw: off %d count %d length %d", off,
++			     count,
++			     length);
++
++		/*
++		 * On a full upload, the system tries sending the whole buffer.
++		 * there's nothing to do with it, so just drop it here, before
++		 * trying to copy over into unallocated memory!
++		 */
++		if (a->firmware.header.action == FI_ACT_UP)
++			return count;
++
++		if (!a->firmware.data) {
++			esas2r_debug(
++				"write: nonzero offset but no buffer available!");
++			return -ENOMEM;
++		}
++
++		memmove(&a->firmware.data[off], buf, count);
++
++		if (length == off + count) {
++			do_fm_api(a,
++				  (struct esas2r_flash_img *)a->firmware.data);
++
++			/*
++			 * Now copy the header result to be picked up by the
++			 * next read
++			 */
++			memmove(&a->firmware.header,
++				a->firmware.data,
++				sizeof(a->firmware.header));
++
++			a->firmware.state = FW_STATUS_ST;
++
++			esas2r_debug("write completed");
++
++			/*
++			 * Since the system has the data buffered, the only way
++			 * this can leak is if a root user writes a program
++			 * that writes a shorter buffer than it claims, and the
++			 * copyin fails.
++			 */
++			free_fw_buffers(a);
++		}
++	}
++
++	return count;
++}
++
++/* Callback for the completion of a VDA request. */
++static void vda_complete_req(struct esas2r_adapter *a,
++			     struct esas2r_request *rq)
++{
++	a->vda_command_done = 1;
++	wake_up_interruptible(&a->vda_waiter);
++}
++
++/* Scatter/gather callback for VDA requests */
++static u32 get_physaddr_vda(struct esas2r_sg_context *sgc, u64 *addr)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)sgc->adapter;
++	int offset = (u8 *)sgc->cur_offset - (u8 *)a->vda_buffer;
++
++	(*addr) = a->ppvda_buffer + offset;
++	return VDA_MAX_BUFFER_SIZE - offset;
++}
++
++/* Handle a call to read a VDA command. */
++int esas2r_read_vda(struct esas2r_adapter *a, char *buf, long off, int count)
++{
++	if (!a->vda_buffer)
++		return -ENOMEM;
++
++	if (off == 0) {
++		struct esas2r_request *rq;
++		struct atto_ioctl_vda *vi =
++			(struct atto_ioctl_vda *)a->vda_buffer;
++		struct esas2r_sg_context sgc;
++		bool wait_for_completion;
++
++		/*
++		 * Presumeably, someone has already written to the vda_buffer,
++		 * and now they are reading the node the response, so now we
++		 * will actually issue the request to the chip and reply.
++		 */
++
++		/* allocate a request */
++		rq = esas2r_alloc_request(a);
++		if (rq == NULL) {
++			esas2r_debug("esas2r_read_vda: out of requestss");
++			return -EBUSY;
++		}
++
++		rq->comp_cb = vda_complete_req;
++
++		sgc.first_req = rq;
++		sgc.adapter = a;
++		sgc.cur_offset = ((u8 *)a->vda_buffer) + VDA_BUFFER_HEADER_SZ;
++		sgc.get_phys_addr = (PGETPHYSADDR)get_physaddr_vda;
++
++		a->vda_command_done = 0;
++
++		wait_for_completion =
++			esas2r_process_vda_ioctl(a, vi, rq, &sgc);
++
++		if (wait_for_completion) {
++			/* now wait around for it to complete. */
++
++			while (!a->vda_command_done)
++				wait_event_interruptible(a->vda_waiter,
++							 a->vda_command_done);
++		}
++
++		esas2r_free_request(a, (struct esas2r_request *)rq);
++	}
++
++	if (off > VDA_MAX_BUFFER_SIZE)
++		return 0;
++
++	if (count + off > VDA_MAX_BUFFER_SIZE)
++		count = VDA_MAX_BUFFER_SIZE - off;
++
++	if (count < 0)
++		return 0;
++
++	memmove(buf, a->vda_buffer + off, count);
++
++	return count;
++}
++
++/* Handle a call to write a VDA command. */
++int esas2r_write_vda(struct esas2r_adapter *a, const char *buf, long off,
++		     int count)
++{
++	/*
++	 * allocate memory for it, if not already done.  once allocated,
++	 * we will keep it around until the driver is unloaded.
++	 */
++
++	if (!a->vda_buffer) {
++		a->vda_buffer = (u8 *)dma_alloc_coherent(&a->pcid->dev,
++							 (size_t)
++							 VDA_MAX_BUFFER_SIZE,
++							 (dma_addr_t *)&a->
++							 ppvda_buffer,
++							 GFP_KERNEL);
++	}
++
++	if (!a->vda_buffer)
++		return -ENOMEM;
++
++	if (off > VDA_MAX_BUFFER_SIZE)
++		return 0;
++
++	if (count + off > VDA_MAX_BUFFER_SIZE)
++		count = VDA_MAX_BUFFER_SIZE - off;
++
++	if (count < 1)
++		return 0;
++
++	memmove(a->vda_buffer + off, buf, count);
++
++	return count;
++}
++
++/* Callback for the completion of an FS_API request.*/
++static void fs_api_complete_req(struct esas2r_adapter *a,
++				struct esas2r_request *rq)
++{
++	a->fs_api_command_done = 1;
++
++	wake_up_interruptible(&a->fs_api_waiter);
++}
++
++/* Scatter/gather callback for VDA requests */
++static u32 get_physaddr_fs_api(struct esas2r_sg_context *sgc, u64 *addr)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)sgc->adapter;
++	struct esas2r_ioctl_fs *fs =
++		(struct esas2r_ioctl_fs *)a->fs_api_buffer;
++	u32 offset = (u8 *)sgc->cur_offset - (u8 *)fs;
++
++	(*addr) = a->ppfs_api_buffer + offset;
++
++	return a->fs_api_buffer_size - offset;
++}
++
++/* Handle a call to read firmware via FS_API. */
++int esas2r_read_fs(struct esas2r_adapter *a, char *buf, long off, int count)
++{
++	if (!a->fs_api_buffer)
++		return -ENOMEM;
++
++	if (off == 0) {
++		struct esas2r_request *rq;
++		struct esas2r_sg_context sgc;
++		struct esas2r_ioctl_fs *fs =
++			(struct esas2r_ioctl_fs *)a->fs_api_buffer;
++
++		/* If another flash request is already in progress, return. */
++		if (down_interruptible(&a->fs_api_semaphore)) {
++busy:
++			fs->status = ATTO_STS_OUT_OF_RSRC;
++			return -EBUSY;
++		}
++
++		/*
++		 * Presumeably, someone has already written to the
++		 * fs_api_buffer, and now they are reading the node the
++		 * response, so now we will actually issue the request to the
++		 * chip and reply. Allocate a request
++		 */
++
++		rq = esas2r_alloc_request(a);
++		if (rq == NULL) {
++			esas2r_debug("esas2r_read_fs: out of requests");
++			up(&a->fs_api_semaphore);
++			goto busy;
++		}
++
++		rq->comp_cb = fs_api_complete_req;
++
++		/* Set up the SGCONTEXT for to build the s/g table */
++
++		sgc.cur_offset = fs->data;
++		sgc.get_phys_addr = (PGETPHYSADDR)get_physaddr_fs_api;
++
++		a->fs_api_command_done = 0;
++
++		if (!esas2r_process_fs_ioctl(a, fs, rq, &sgc)) {
++			if (fs->status == ATTO_STS_OUT_OF_RSRC)
++				count = -EBUSY;
++
++			goto dont_wait;
++		}
++
++		/* Now wait around for it to complete. */
++
++		while (!a->fs_api_command_done)
++			wait_event_interruptible(a->fs_api_waiter,
++						 a->fs_api_command_done);
++		;
++dont_wait:
++		/* Free the request and keep going */
++		up(&a->fs_api_semaphore);
++		esas2r_free_request(a, (struct esas2r_request *)rq);
++
++		/* Pick up possible error code from above */
++		if (count < 0)
++			return count;
++	}
++
++	if (off > a->fs_api_buffer_size)
++		return 0;
++
++	if (count + off > a->fs_api_buffer_size)
++		count = a->fs_api_buffer_size - off;
++
++	if (count < 0)
++		return 0;
++
++	memmove(buf, a->fs_api_buffer + off, count);
++
++	return count;
++}
++
++/* Handle a call to write firmware via FS_API. */
++int esas2r_write_fs(struct esas2r_adapter *a, const char *buf, long off,
++		    int count)
++{
++	if (off == 0) {
++		struct esas2r_ioctl_fs *fs = (struct esas2r_ioctl_fs *)buf;
++		u32 length = fs->command.length + offsetof(
++			struct esas2r_ioctl_fs,
++			data);
++
++		/*
++		 * Special case, for BEGIN commands, the length field
++		 * is lying to us, so just get enough for the header.
++		 */
++
++		if (fs->command.command == ESAS2R_FS_CMD_BEGINW)
++			length = offsetof(struct esas2r_ioctl_fs, data);
++
++		/*
++		 * Beginning a command.  We assume we'll get at least
++		 * enough in the first write so we can look at the
++		 * header and see how much we need to alloc.
++		 */
++
++		if (count < offsetof(struct esas2r_ioctl_fs, data))
++			return -EINVAL;
++
++		/* Allocate a buffer or use the existing buffer. */
++		if (a->fs_api_buffer) {
++			if (a->fs_api_buffer_size < length) {
++				/* Free too-small buffer and get a new one */
++				dma_free_coherent(&a->pcid->dev,
++						  (size_t)a->fs_api_buffer_size,
++						  a->fs_api_buffer,
++						  (dma_addr_t)a->ppfs_api_buffer);
++
++				goto re_allocate_buffer;
++			}
++		} else {
++re_allocate_buffer:
++			a->fs_api_buffer_size = length;
++
++			a->fs_api_buffer = (u8 *)dma_alloc_coherent(
++				&a->pcid->dev,
++				(size_t)a->fs_api_buffer_size,
++				(dma_addr_t *)&a->ppfs_api_buffer,
++				GFP_KERNEL);
++		}
++	}
++
++	if (!a->fs_api_buffer)
++		return -ENOMEM;
++
++	if (off > a->fs_api_buffer_size)
++		return 0;
++
++	if (count + off > a->fs_api_buffer_size)
++		count = a->fs_api_buffer_size - off;
++
++	if (count < 1)
++		return 0;
++
++	memmove(a->fs_api_buffer + off, buf, count);
++
++	return count;
++}
 -- 
 1.8.1.4
 
