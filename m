@@ -1,76 +1,131 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH 2/2] scsi: ufs: Set fDeviceInit flag to initiate device
- initialization
-Date: Thu, 13 Jun 2013 10:06:36 +0530
-Message-ID: <51B94C54.8070209@codeaurora.org>
-References: <1370873118-18468-1-git-send-email-draviv@codeaurora.org> <1370873118-18468-3-git-send-email-draviv@codeaurora.org> <CALMYJDvXi7M8AgdJNpoL4H2-b3WBNZ3LLc2d8wkUMRJi5OQJQQ@mail.gmail.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH 01/10] qla2xxx: Clean up qla24xx_iidma()
+Date: Thu, 13 Jun 2013 05:20:55 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D353913C9@AVMB1.qlogic.org>
+References: <1371063543.1978.22.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CALMYJDvXi7M8AgdJNpoL4H2-b3WBNZ3LLc2d8wkUMRJi5OQJQQ@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Santosh Y <santoshsy@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D353913C9AVMB1qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:7577 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752845Ab3FMFVD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Jun 2013 01:21:03 -0400
+Received: from mail81-tx2 (localhost [127.0.0.1])	by mail81-tx2-R.bigfish.com
+ (Postfix) with ESMTP id 2BEE860107	for <linux-scsi@vger.kernel.org>; Thu, 13
+ Jun 2013 05:21:01 +0000 (UTC)
+Received: from TX2EHSMHS040.bigfish.com (unknown [10.9.14.241])	by
+ mail81-tx2.bigfish.com (Postfix) with ESMTP id EDEDA32004C	for
+ <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2013 05:20:58 +0000 (UTC)
+In-Reply-To: <1371063543.1978.22.camel@dabdike>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-On 6/12/2013 11:04 AM, Santosh Y wrote:
->>
->>   /**
->> + *  ufshcd_query_request() - API for issuing query request to the device.
->> + *  @hba: ufs driver context
->> + *  @query: params for query request
->> + *  @descriptor: buffer for sending/receiving descriptor
->> + *  @retries: number of times to try executing the command
->> + *
->> + *   All necessary fields for issuing a query and receiving its response
->> + *   are stored in the UFS hba struct. We can use this method since we know
->> + *   there is only one active query request or any internal command at all
->> + *   times.
->> + */
->> +static int ufshcd_send_query_request(struct ufs_hba *hba,
->> +                                       struct ufs_query_req *query,
->> +                                       u8 *descriptor,
->> +                                       struct ufs_query_res *response)
->> +{
->> +       int ret;
->> +
->> +       BUG_ON(!hba);
->> +       if (!query || !response) {
->> +               dev_err(hba->dev,
->> +                       "%s: NULL pointer query = %p, response = %p\n",
->> +                       __func__, query, response);
->> +               return -EINVAL;
->> +       }
->> +
->> +       mutex_lock(&hba->i_cmd.dev_cmd_lock);
->> +       hba->i_cmd.query.request = query;
->> +       hba->i_cmd.query.response = response;
->> +       hba->i_cmd.query.descriptor = descriptor;
->> +
->> +       ret = ufshcd_exec_internal_cmd(hba, DEV_CMD_TYPE_QUERY,
->> +                                       QUERY_REQ_TIMEOUT);
+--_000_F5D084D6342F9B479C34599BB0A03E4D353913C9AVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <97CB4E4830F4D64F9C13E687DC33EE87@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
+
+
+
+>On Wed, 2013-06-12 at 08:05 +0000, Saurav Kashyap wrote:
+>> Hi Bart,
+>> Missing msg ids needs to be updated in qla_dbg.c file. Here is an
+>>updated
+>> patch
 >
-> Can this be generic, as external query commands might also use it?
+>OK, so since you modified the first patch in the series, you need to be
+>the one who sends it all to me (with proper signoffs).
 
-External query commands can call ufshcd_send_query_request() directly, 
-without going into hassle of taking mutex lock and filling internal cmd 
-structure.
+<SK> Sure, I will send all the patches in next scsi-misc submission.
+
+Thanks,
+~Saurav
 
 >
->> +
->> +       hba->i_cmd.query.request = NULL;
->> +       hba->i_cmd.query.response = NULL;
->> +       hba->i_cmd.query.descriptor = NULL;
->> +       mutex_unlock(&hba->i_cmd.dev_cmd_lock);
->> +
->> +       return ret;
->> +}
->> +
->> +/**
+>Thanks,
+>
+>James
+>
 >
 >
 
--- 
-Regards,
-Sujit
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D353913C9AVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IjkdAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADdCMUZDMzQ5
+OEFGRDlDNERBRkVCOEQyMzJGQUZBM0Y5AKsHAQ2ABAACAAAAAgACAAEFgAMADgAAAN0HBgANAAUA
+FAA3AAQASwEBIIADAA4AAADdBwYADQAFABQANwAEAEsBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABADQAAABSZTogW1BBVENIIDAxLzEwXSBxbGEyeHh4OiBDbGVhbiB1cCBx
+bGEyNHh4X2lpZG1hKCkA7A8BA5AGANgNAAAzAAAAAgF/AAEAAAA8AAAAPEY1RDA4NEQ2MzQyRjlC
+NDc5QzM0NTk5QkIwQTAzRTREMzUzOTEzQzlAQVZNQjEucWxvZ2ljLm9yZz4ACwAfDgEAAAACAQkQ
+AQAAAFsCAABXAgAAdAMAAExaRnWg5FBHYQAKZmJpZAQAAGNjwHBnMTI1MgD+A0PwdGV4dAH3AqQD
+4wIABGNoCsBzZXQwIO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIKMhZxAoAVYioJ
+sHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQIAXABaAbZGSa
+IANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZzAZAAICBCTV9C4EVHSU59CvwB
+8QvymmwLgGUKgSGkPk8DoBJXCYAsIAHQMTMtKDA2LQ6QIBiAIDDAODowNSArHqAeoAci4AYQCHBh
+diBLYYBzaHlhcCB3A2CFECA6IgY+IEhpH7A9H4EsJggY0AQQC4BnIPxtcyggDdAEIBhQCYAEIIkY
+kCBiGeB1cGQYgBMcUQuAIHELYF9kYphnLmMccAMQZS4mkP8EkBngBAAjoAuQJhYphSYI3QqwdBHA
+IgYiB0si4Bkg6y7wC4BjGeB5CGAoMARw5waQCJAcYHRoGeAq0BHwvwVALXMp8jBiEgAIgXMi4H8v
+kijCKRQiBjBiAiAZ4HfuaC8RCfAokWkFQAdAAyDzKSEHgCAoA/AwYC1gA2BmcBuxAJBnbhkwA9Ap
+oi4hnDxTSyaAUwhw+mUi4EklkAMQAyA0cjT0fzBxLXMHkSoBGFAQQC7wYxkAkC1tBAAqsHN1Yu87
+MQCQAiA3DVQZoR9QJxY+fiS0IZ0iBj0cLjdKYT8HgS3OLc0hlRVCRDAAHwBCAAEAAAAeAAAAUwBh
+AHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsA
+YQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAA
+AAAAAgFBAAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEA
+cwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAu
+AGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUA
+cgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBz
+AGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAA
+AgEZDAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBo
+AHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAfAAFdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABx
+AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
+YQBwAAAAAAAfACNAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIEr
+H6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAA
+AHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAld
+AQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEA
+AAADAP0/5AQAAAIBCzABAAAAEAAAAHsfw0mK/ZxNr+uNIy+vo/kDABcAAQAAAEAAOQCAFWHH9WfO
+AUAACDDAzLPH9WfOAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAA
+wAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABl
+AG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAaAAAAFIA
+ZQA6ACAAWwBQAEEAVABDAEgAIAAwADEALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAgAEMAbABl
+AGEAbgAgAHUAcAAgAHEAbABhADIANAB4AHgAXwBpAGkAZABtAGEAKAApAAAAHwA9AAEAAAAKAAAA
+UgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAEYAAAA8ADEAMwA3ADEAMAA2ADMANQA0ADMALgAx
+ADkANwA4AC4AMgAyAC4AYwBhAG0AZQBsAEAAZABhAGIAZABpAGsAZQA+AAAAAAACAXEAAQAAABsA
+AAABAc5nnu+SWyZTWAI3RLOjT0Hxh9OsmTPt1wAAHwBwAAEAAABgAAAAWwBQAEEAVABDAEgAIAAw
+ADEALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAgAEMAbABlAGEAbgAgAHUAcAAgAHEAbABhADIA
+NAB4AHgAXwBpAGkAZABtAGEAKAApAAAAHwA1EAEAAAB4AAAAPABGADUARAAwADgANABEADYAMwA0
+ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQAMwA1ADMAOQAxADMA
+QwA5AEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAAwDeP59OAABAAAcw4NqU
+x/VnzgEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTMwNjEz
+MDUyMDU1Wi0zNDY5OAAAAB8AFRABAAAAWAAAADkANwBDAEIANABFADQAOAAzADAARgA0AEQANgA0
+AEYAOQBDADEAMwBFADYAOAA3AEQAQwAzADMARQBFADgANwBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAACARQwAQAAAAwAAAA+AAAA/Jvl6D4AAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBz
+AGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUA
+bgB0AAAAAAABAAAASAAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAv
+ADEANAAuADEAMAAuADAALgAxADEAMAAzADEAMAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgA
+AABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAA
+AAEAAAAaAQAASQBJAD0AMAAxADAAMQBDAEUANgA3AEYANQBDADcANQA4ADUAMgA3ADEARQBFAEQA
+MQA2ADcAMAAzADQAQQBBADMAMwA5AEMAMgBEAEMAOQBFADMARABDADUANgA0ADsAUwBCAE0ASQBE
+AD0AMQAzADQAOwBTADEAPQA8ADEAMwA3ADEAMAA2ADMANQA0ADMALgAxADkANwA4AC4AMgAyAC4A
+YwBhAG0AZQBsAEAAZABhAGIAZABpAGsAZQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBv
+AG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0A
+SAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABh
+AHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIA
+AAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGgAAAFsAMQAwAC4AMwA1
+AC4ANwAuADYANABdAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEA
+aQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAA/3k=
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D353913C9AVMB1qlogicorg_--
