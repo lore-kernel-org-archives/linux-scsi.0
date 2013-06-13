@@ -1,62 +1,37 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: Re: [PATCH V2 1/1] ipr: IOA Status Code(IOASC) update
-Date: Thu, 13 Jun 2013 13:09:06 -0400
-Message-ID: <20130613130906.Horde.UEszypir309RufyymuQDRPA@imap.linux.ibm.com>
-References: <20130604235734.502182085@linux.vnet.ibm.com>
- <20130604235858.539018354@linux.vnet.ibm.com>
- <51AF5FC3.6000105@linux.vnet.ibm.com>
+From: Bradley Grove <bgrove@attotech.com>
+Subject: Re: [PATCH 10/10] [RFC] SCSI: esas2r: Add Makefile, Kconfig, and
+ MAINTAINERS files
+Date: Thu, 13 Jun 2013 14:57:39 -0400
+Message-ID: <51BA1623.6000000@attotech.com>
+References: <51B9EA2E.5090501@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e9.ny.us.ibm.com ([32.97.182.139]:53674 "EHLO e9.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756306Ab3FMRK3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Jun 2013 13:10:29 -0400
-Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
-	Thu, 13 Jun 2013 13:10:28 -0400
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 9304838C8054
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2013 13:10:23 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r5DH98CS270972
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2013 13:09:08 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r5DH97fj003578
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2013 13:09:07 -0400
-In-Reply-To: <51AF5FC3.6000105@linux.vnet.ibm.com>
-Content-Disposition: inline
+Received: from sw.attotech.com ([208.69.85.34]:15782 "EHLO
+	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757377Ab3FMS5l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jun 2013 14:57:41 -0400
+In-Reply-To: <51B9EA2E.5090501@profitbricks.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Jack Wang <jinpu.wang@profitbricks.com>
+Cc: jseba@attotech.com, jbottomley@parallels.com, linux-scsi@vger.kernel.org
 
-Hi James,
-
-Can you double check if you have any questions about this patch?
-
-Thanks for your help!
-Wendy
-
-Quoting Brian King <brking@linux.vnet.ibm.com>:
-
-> On 06/04/2013 06:57 PM, wenxiong@linux.vnet.ibm.com wrote:
->> The patch updates some new IOA Status Code(IOASC) in ipr driver.
->>
->> Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
->> ---
+On 06/13/2013 11:50 AM, Jack Wang wrote:
+>>   S:     Supported
+>> -F:     drivers/block/nvme*
+>> +F:     drivers/block/nvme.c
+>>   F:     include/linux/nvme.h
 >
-> Acked-by: Brian King <brking@linux.vnet.ibm.com>
+> I don't think you want to change this, it seems you are not generate
+> your patch set against scsi misc branch?
 >
-> Thanks,
+> Regards,
+> Jack
 >
-> Brian
->
-> --
-> Brian King
-> Power Linux I/O
-> IBM Linux Technology Center
 
+I generated the patch from the kernel tree instead of the misc branch of 
+the scsi tree.  I'll fix that when I spin the next patch.
 
-
+Brad
