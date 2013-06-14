@@ -1,71 +1,48 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH 1/2] scsi: ufs: Add support for sending NOP OUT UPIU
-Date: Fri, 14 Jun 2013 13:10:38 +0530
-Message-ID: <51BAC8F6.5010601@codeaurora.org>
-References: <1370873118-18468-1-git-send-email-draviv@codeaurora.org> <1370873118-18468-2-git-send-email-draviv@codeaurora.org> <CALMYJDsJ3OGwmcEjgpLWv2SYYXiGQpk0GCmG6rEVD0KKCjj+ng@mail.gmail.com> <51B94BAF.2070203@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <51B94BAF.2070203@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Santosh Y <santoshsy@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+From: Isaku Yamahata <yamahata@valinux.co.jp>
+Subject: [PATCH net-next 2/5] net, scsi/csgb4i: convert skb->transport_header into skb_transport_header(skb)
+Date: Fri, 14 Jun 2013 17:58:32 +0900
+Message-ID: <7ae8c4225b5d19a2ad7d621bc7e08a74b1b4583e.1371200138.git.yamahata@valinux.co.jp>
+References: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.valinux.co.jp ([210.128.90.3]:39005 "EHLO
+	mail.valinux.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225Ab3FNI6g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jun 2013 04:58:36 -0400
+In-Reply-To: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
+In-Reply-To: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
+References: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: netdev@vger.kernel.org
+Cc: yamahata@valinux.co.jp, Simon Horman <horms@verge.net.au>, Li RongQing <roy.qing.li@gmail.com>, linux-scsi@vger.kernel.org
 
-On 6/13/2013 10:03 AM, Sujit Reddy Thumma wrote:
->>   static struct scsi_host_template ufshcd_driver_template = {
->> @@ -1771,8 +2064,8 @@ int ufshcd_init(struct device *dev, struct
->> ufs_hba **hba_handle,
->>          /* Configure LRB */
->>          ufshcd_host_memory_configure(hba);
->>
->> -       host->can_queue = hba->nutrs;
->> -       host->cmd_per_lun = hba->nutrs;
->> +       host->can_queue = SCSI_CMD_QUEUE_SIZE;
->
->
-> I don't think this is appropriate. Reserving a slot exclusively for
-> query/DM requests is not optimal.  can_queue should be changed
-> dynamically, scsi_adjust_queue_depth() maybe?
+The change set of 1a37e412, "net: Use 16bits for *_headers fields
+of struct skbuff" converted from sk_buff_data_t into 16bit integer.
+So skb->tail needs to be converted to skb_tail_pointer(skb).
 
-The motivation to change the design for this patch  is that routing
-query command through SCSI layer raised problems when we are trying to
-improve the fatal error handling as we need to block the SCSI layer and
-recover the link. Hence, the need to have the query/DM command send as
-internal commands. Which probably makes sense.
+Found by inspection. Compile tested only.
 
-One possible option was to look for a free command slot whenever we
-try to send an internal command, but getting a free slot is not always 
-guaranteed.
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Li RongQing <roy.qing.li@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Isaku Yamahata <yamahata@valinux.co.jp>
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Even if we get hold of a tag, there is no way we can explain this to
-SCSI/block layer that particular tag is in use internally (case where
-normal query requests are sent in tandem with SCSI requests). In which
-case, other option is to use tag[31] as you have said on need basis
-and change the queue depth to 31. This again has problems - one
-changing queue depth doesn't take effect immediately but for the next
-command. Second, if the command in tag[31] is the root cause of the
-fatal error and is stuck, then the internal command has to wait forever
-(until scsi timesout) to plan recovery. Considering, all these factors
-it is better to reserve a tag and use it for internal commands instead 
-of playing around with the tags internally without/partially informing 
-SCSI/block layers.
-
-I am open for discussion, if there are any suggestions to handle such 
-LLD requirements in the SCSI layer optimally.
-
-Coming to how optimal is to work with 31 slots instead of h/w defined 32 
-is something which we can answer when we have true multi queueing. 
-AFAIK, there may not exist real-world applications which utilize full 32 
-tags at particular instant. SATA AHCI controller driver which is 
-ubiquitous in modern systems also reserves a slot for internal commands 
-which is used only in case of error handling and AFAIK, no one has ever 
-reported performance problems with this (its about 7 years the commit to 
-reserve a slot is merged into Linux tree).
-
-I hope this explains the intent. Please let me know what do you think.
-
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 3fecf35..9138d4e 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -358,7 +358,7 @@ static inline unsigned int calc_tx_flits_ofld(const struct sk_buff *skb)
+ 		return DIV_ROUND_UP(skb->len, 8);
+ 	flits = skb_transport_offset(skb) / 8;
+ 	cnt = skb_shinfo(skb)->nr_frags;
+-	if (skb->tail != skb->transport_header)
++	if (skb_tail_pointer(skb) != skb_transport_header(skb))
+ 		cnt++;
+ 	return flits + sgl_len(cnt);
+ }
 -- 
-Regards,
-Sujit
+1.7.10.4
+
