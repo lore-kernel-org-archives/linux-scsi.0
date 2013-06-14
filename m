@@ -1,18 +1,73 @@
-From: "Oxfam International" <info-HVZTrXvOzrXYtjvyW6yDsg@public.gmane.org>
-Subject: Oxfam-GB Donation
-Date: Fri, 14 Jun 2013 16:35:34 +0200
-Message-ID: <201306132345.r5DNjbWC025634__23494.5880169564$1371221709$gmane$org@tx.cpta.com.cn>
-Reply-To: <oxfam-gb-donation-XGZiAJ+5fF/QJDZefrY4RA@public.gmane.org>
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Subject: Re: [PATCH v2 0/2] scsi: Port buslogic driver to 64 bits
+Date: Fri, 14 Jun 2013 09:07:07 -0600
+Message-ID: <1371222427.8771.1.camel@concerto>
+References: <cover.1368754556.git.khalid.aziz@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-yocto-EtnWKYl6rD/WsZ/bQMPhNw@public.gmane.org, listbuilding-hHKSG33TihhbjbujkaE4pw@public.gmane.org, listbuilder-hHKSG33TihhbjbujkaE4pw@public.gmane.org, list_of_lists-hHKSG33TihhbjbujkaE4pw@public.gmane.org, list_announcements-hHKSG33TihhbjbujkaE4pw@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lisa-6nR2UXtInKwP4zk7GpnZhA@public.gmane.org, listmom-talk-e2p/tEfsfSNBDgjK7y7TUQ@public.gmane.org, linux-sunucu-0bLklgfLClBeH41UXmfQsg7GVtzNuZZM@public.gmane.org, linux-sohbet-0bLklgfLClBeH41UXmfQsg7GVtzNuZZM@public.gmane.org, linux-programlama-0bLklgfLClBeH41UXmfQsg7GVtzNuZZM@public.gmane.org, list-Ts3cTPwE7wcgsBAKwltoeQ@public.gmane.org, liste-fPooXFW1RzTk1uMJSBkQmQ@public.gmane.org, liste-R2W0HhjHTqNg9hUCZPvPmw@public.gmane.org, lioneyes-3SybyYu0gLOad93SotYMzA@public.gmane.org, lisa-wZWK6ZW+89L0ZspJkgaKTw@public.gmane.org, linux-zigbee-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linuxwacom-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linuxsampler-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, list-aAvXoCwUuUu/b9cO8ncIzti2O/JbrIOy@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, linux-traipu-oU9gvf+ajcQ97yFScArB1dHuzzzSOjJt@public.gmane.org, listan-kbNT0qdlGY+ZGGTjOCLpSA@public.gmane.org, linux-users-33AaDErTWvCktP5/oUj3S5JgEAdE+9jU@public.gmane.org, list-header-z9heiE6wvqEK3IM9cGFl5Q@public.gmane.org, liste_gta-yq5T3NYgyCZdp4HXqLzBW0B+6BGkLq7r@public.gmane.org, lisa-C+9g/trKSetChVwAApbquw@public.gmane.org, lisa-oxpU9ijEUjhChVwAApbquw@public.gmane.org, linuxtv-commits-dJidKbW2IEtAfugRpC6u6w@public.gmane.org, linux-plug-Xh+NVF5n0LKq8026SyH74w@public.gmane.org, list-lyCs8yBtjBNg9hUCZPvPmw@public.gmane.org, list-QVYiWngmsdMdnm+yROfE0A@public.gmane.org, lisp-EgrivxUAwEY@public.gmane.org, lipmanharp-PkbjNfxxIARBDgjK7y7TUQ@public.gmane.org, listmom-19nr15rzP4Y@public.gmane.org, list-manager-19nr15rzP4Y@public.gmane.org, list-info-19nr15rzP4Y@public.gmane.org, list-19nr15rzP4Y@public.gmane.org, lisa-fhFa/xLVemSakBO8gow8eQ@public.gmane.org, lisp-br-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linuxtools-dev-j9T/66MeVpFAfugRpC6u6w@public.gmane.org, lisakd-3EbsBRZ6ScWgVpKiL0y/J0EOCMrvLtNR@public.gmane.org, liste-coolpaie-31+aB6svm45Wj0EZb7rXcA@public.gmane.org, lisdab-Wuw85uim5zDR7s880joybQ@public.gmane.org, lista-YiF6I8VljwMdnm+yROfE0A@public.gmane.org, liro-Bdlq13kUjeyLZ21kGMrzwg@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:36920 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752830Ab3FNPHL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jun 2013 11:07:11 -0400
+In-Reply-To: <cover.1368754556.git.khalid.aziz@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Your email has won 1,000.000.00 Great Britain Pounds Sterling.
-For claims, send BB101 and your telephone number to our email
-oxfam-gb-donation-XGZiAJ+5fF/QJDZefrY4RA@public.gmane.org and wait for our quick reply
-and more information.
+On Thu, 2013-05-16 at 19:44 -0600, Khalid Aziz wrote:
+> This patchset ports buslogic driver to 64-bit.
+> 
+> Current buslogic driver is composed of two components - SCCB manager
+> which communicates with adapter to execute SCSI commands (contained in
+> FlashPoint.c), and Linux driver part that interfaces with rest of the
+> kernel (contained in BusLogic.c). SCCB manager code came from the
+> Mylex SDK. SCCB manager code is used by flashpoint adapters only.
+> Multimaster adapters do not need SCCB manager since the SCSI state
+> machine is implemented in firmware on these adapters. If the filenames
+> alone did not give it away already, buslogic driver code is full of
+> CamelCase, besides being full of very ling lines, and is just very
+> difficult to read and understand. So the first step was to clean up
+> the existing code. First patch in the set does just that. Second patch
+> includes necessary code modifications to allow the driver to build and
+> run on 64-bit kernel. Since SCCB manager code came from Mylex SDK, I
+> have tried to touch it only when necessary which includes not fixing
+> all CamelCase issues in FlashPoint.c. Many lines over 80 characters
+> remain in BusLogic.c. These fall into two categories generally -
+> (1) it prints a message and I didn't want to touch driver messages
+> in case there are scripts out there that parse driver messages,
+> (2) code is indented deeply and is hard to keep it under 80 characters.
+> Such code could use refactoring at some point.
+> 
+> I have tested this patch with a flashpoint adapter on 64-bit and 
+> 32-bit kernels with fio running random read/write test while verifying
+> data. I also measured performance for current buslogic driver and 
+> buslogic driver with these patches with 32-bit and 64-bit kernel and
+> ensured there was no degradation in performance.
+> 
+> Changelog:
+> v2:
+> 	- Updated to apply on top of current Linus' tree as of May 16, 2013. 
+> 	  No functional changes.
+> 
+> Khalid Aziz (2):
+>   Fix CamelCase and extra long lines in the buslogic driver.
+>   Port buslogic driver to 64-bit.
+> 
+>  drivers/scsi/BusLogic.c   | 4452 ++++++++++++++++++++++++---------------------
+>  drivers/scsi/BusLogic.h   | 1487 ++++++++-------
+>  drivers/scsi/FlashPoint.c |  626 +++----
+>  drivers/scsi/Kconfig      |    2 +-
+>  4 files changed, 3377 insertions(+), 3190 deletions(-)
+> 
+
+Hello James,
+
+Any feedback on this set of patches?
+
+Thanks,
+Khalid
+
+
