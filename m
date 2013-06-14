@@ -1,100 +1,22 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH 2/2] scsi: ufs: Set fDeviceInit flag to initiate device initialization
-Date: Fri, 14 Jun 2013 19:25:44 +0530
-Message-ID: <CALMYJDtqCHN5UYTwi+DrUrQw+6iNZMcu4q_X+5DO_OaiaCKT0A@mail.gmail.com>
-References: <1370873118-18468-1-git-send-email-draviv@codeaurora.org>
- <1370873118-18468-3-git-send-email-draviv@codeaurora.org> <CALMYJDvXi7M8AgdJNpoL4H2-b3WBNZ3LLc2d8wkUMRJi5OQJQQ@mail.gmail.com>
- <51B94C54.8070209@codeaurora.org>
+From: "Oxfam International" <info@oxfam.org>
+Subject: Oxfam-GB Donation
+Date: Fri, 14 Jun 2013 16:35:34 +0200
+Message-ID: <201306132345.r5DNjbWC025634__16085.3018555374$1371221704$gmane$org@tx.cpta.com.cn>
+Reply-To: <oxfam-gb-donation@admin.in.th>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:47363 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362Ab3FNN4H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jun 2013 09:56:07 -0400
-In-Reply-To: <51B94C54.8070209@codeaurora.org>
+Received: from [114.255.29.133] ([114.255.29.133]:41905 "EHLO tx.cpta.com.cn"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751259Ab3FNOyt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jun 2013 10:54:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Dolev Raviv <draviv@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+To: linux-yocto@yoctoproject.org, listbuilding@yahoogroups.com, listbuilder@yahoogroups.com, list_of_lists@yahoogroups.com, list_announcements@yahoogroups.com, linux-usb@vger.kernel.org, linux-tegra@vger.kernel.org, linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-rdma@vger.kernel.org, lisa@theawareshow.com, listmom-talk@skyweyr.com, linux-sunucu@postaci.linux.org.tr, linux-sohbet@postaci.linux.org.tr, linux-programlama@postaci.linux.org.tr, list@openpgpjs.org, liste@netznetz.net, liste@netsectr.org, lioneyes@morrisonews.net, lisa@medscripts.net, linux-zigbee-devel@lists.sourceforge.net, linuxwacom-devel@lists.sourceforge.net, linuxsampler-devel@lists.sourceforge.net, list@lists.pfsense.org, linuxppc-dev@lists.ozlabs.org, linux-traipu@lists.launchpad.net, listan@lists.dfri.se, linux-users@lists.canterbury.ac.nz, list-header@list.nisto.com, liste_gta@list.accessiweb.org, lisa@lisaspurlock.com, lisa@lisaspirlock.com, linuxtv-commits@linuxtv.org, linux-plug@linux.org.pe, list@laborejo.org, list@jaxlug.org, lisp@ietf.org, lipmanharp@hotmail.com, listmom@host.com, list-manager@host.com, list-info@host.com, list@host.com, lisa@harpnotes.com, lisp-br@googlegroups.com, linuxtools-dev@eclipse.org, lisakd@cti-transcripts.com, liste-coolpaie@coolpaie.fr, lisdab@comcast.net, lista@cadius.org, liro@bellsouth.net
 
-On Thu, Jun 13, 2013 at 10:06 AM, Sujit Reddy Thumma
-<sthumma@codeaurora.org> wrote:
-> On 6/12/2013 11:04 AM, Santosh Y wrote:
->>>
->>>
->>>   /**
->>> + *  ufshcd_query_request() - API for issuing query request to the
->>> device.
->>> + *  @hba: ufs driver context
->>> + *  @query: params for query request
->>> + *  @descriptor: buffer for sending/receiving descriptor
->>> + *  @retries: number of times to try executing the command
->>> + *
->>> + *   All necessary fields for issuing a query and receiving its response
->>> + *   are stored in the UFS hba struct. We can use this method since we
->>> know
->>> + *   there is only one active query request or any internal command at
->>> all
->>> + *   times.
->>> + */
->>> +static int ufshcd_send_query_request(struct ufs_hba *hba,
->>> +                                       struct ufs_query_req *query,
->>> +                                       u8 *descriptor,
->>> +                                       struct ufs_query_res *response)
->>> +{
->>> +       int ret;
->>> +
->>> +       BUG_ON(!hba);
->>> +       if (!query || !response) {
->>> +               dev_err(hba->dev,
->>> +                       "%s: NULL pointer query = %p, response = %p\n",
->>> +                       __func__, query, response);
->>> +               return -EINVAL;
->>> +       }
->>> +
->>> +       mutex_lock(&hba->i_cmd.dev_cmd_lock);
->>> +       hba->i_cmd.query.request = query;
->>> +       hba->i_cmd.query.response = response;
->>> +       hba->i_cmd.query.descriptor = descriptor;
->>> +
->>> +       ret = ufshcd_exec_internal_cmd(hba, DEV_CMD_TYPE_QUERY,
->>> +                                       QUERY_REQ_TIMEOUT);
->>
->>
->> Can this be generic, as external query commands might also use it?
->
->
-> External query commands can call ufshcd_send_query_request() directly,
-> without going into hassle of taking mutex lock and filling internal cmd
-> structure.
->
-
-I was not clear.
-It might be confusing that user issued query commands also use methods
-with name *internal_cmd*.
-
->
->>
->>> +
->>> +       hba->i_cmd.query.request = NULL;
->>> +       hba->i_cmd.query.response = NULL;
->>> +       hba->i_cmd.query.descriptor = NULL;
->>> +       mutex_unlock(&hba->i_cmd.dev_cmd_lock);
->>> +
->>> +       return ret;
->>> +}
->>> +
->>> +/**
->>
->>
->>
->
-> --
-> Regards,
-> Sujit
-
-
-
--- 
-~Santosh
+Your email has won 1,000.000.00 Great Britain Pounds Sterling.
+For claims, send BB101 and your telephone number to our email
+oxfam-gb-donation@admin.in.th and wait for our quick reply
+and more information.
