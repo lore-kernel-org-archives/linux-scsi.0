@@ -1,92 +1,99 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH 1/2] scsi: ufs: Add support for sending NOP OUT UPIU
-Date: Fri, 14 Jun 2013 19:17:42 +0530
-Message-ID: <CALMYJDvL3pfnzPLPK-B9ULQABB0WZiGKYLMfS=OJEtYaKmurKA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: Set fDeviceInit flag to initiate device initialization
+Date: Fri, 14 Jun 2013 19:25:44 +0530
+Message-ID: <CALMYJDtqCHN5UYTwi+DrUrQw+6iNZMcu4q_X+5DO_OaiaCKT0A@mail.gmail.com>
 References: <1370873118-18468-1-git-send-email-draviv@codeaurora.org>
- <1370873118-18468-2-git-send-email-draviv@codeaurora.org> <CALMYJDsJ3OGwmcEjgpLWv2SYYXiGQpk0GCmG6rEVD0KKCjj+ng@mail.gmail.com>
- <51B94BAF.2070203@codeaurora.org> <51BAC8F6.5010601@codeaurora.org>
+ <1370873118-18468-3-git-send-email-draviv@codeaurora.org> <CALMYJDvXi7M8AgdJNpoL4H2-b3WBNZ3LLc2d8wkUMRJi5OQJQQ@mail.gmail.com>
+ <51B94C54.8070209@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <51BAC8F6.5010601@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:47363 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751362Ab3FNN4H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jun 2013 09:56:07 -0400
+In-Reply-To: <51B94C54.8070209@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Cc: Dolev Raviv <draviv@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 14, 2013 at 1:10 PM, Sujit Reddy Thumma
+On Thu, Jun 13, 2013 at 10:06 AM, Sujit Reddy Thumma
 <sthumma@codeaurora.org> wrote:
-> On 6/13/2013 10:03 AM, Sujit Reddy Thumma wrote:
+> On 6/12/2013 11:04 AM, Santosh Y wrote:
 >>>
->>>   static struct scsi_host_template ufshcd_driver_template = {
->>> @@ -1771,8 +2064,8 @@ int ufshcd_init(struct device *dev, struct
->>> ufs_hba **hba_handle,
->>>          /* Configure LRB */
->>>          ufshcd_host_memory_configure(hba);
 >>>
->>> -       host->can_queue = hba->nutrs;
->>> -       host->cmd_per_lun = hba->nutrs;
->>> +       host->can_queue = SCSI_CMD_QUEUE_SIZE;
+>>>   /**
+>>> + *  ufshcd_query_request() - API for issuing query request to the
+>>> device.
+>>> + *  @hba: ufs driver context
+>>> + *  @query: params for query request
+>>> + *  @descriptor: buffer for sending/receiving descriptor
+>>> + *  @retries: number of times to try executing the command
+>>> + *
+>>> + *   All necessary fields for issuing a query and receiving its response
+>>> + *   are stored in the UFS hba struct. We can use this method since we
+>>> know
+>>> + *   there is only one active query request or any internal command at
+>>> all
+>>> + *   times.
+>>> + */
+>>> +static int ufshcd_send_query_request(struct ufs_hba *hba,
+>>> +                                       struct ufs_query_req *query,
+>>> +                                       u8 *descriptor,
+>>> +                                       struct ufs_query_res *response)
+>>> +{
+>>> +       int ret;
+>>> +
+>>> +       BUG_ON(!hba);
+>>> +       if (!query || !response) {
+>>> +               dev_err(hba->dev,
+>>> +                       "%s: NULL pointer query = %p, response = %p\n",
+>>> +                       __func__, query, response);
+>>> +               return -EINVAL;
+>>> +       }
+>>> +
+>>> +       mutex_lock(&hba->i_cmd.dev_cmd_lock);
+>>> +       hba->i_cmd.query.request = query;
+>>> +       hba->i_cmd.query.response = response;
+>>> +       hba->i_cmd.query.descriptor = descriptor;
+>>> +
+>>> +       ret = ufshcd_exec_internal_cmd(hba, DEV_CMD_TYPE_QUERY,
+>>> +                                       QUERY_REQ_TIMEOUT);
+>>
+>>
+>> Can this be generic, as external query commands might also use it?
+>
+>
+> External query commands can call ufshcd_send_query_request() directly,
+> without going into hassle of taking mutex lock and filling internal cmd
+> structure.
+>
+
+I was not clear.
+It might be confusing that user issued query commands also use methods
+with name *internal_cmd*.
+
+>
+>>
+>>> +
+>>> +       hba->i_cmd.query.request = NULL;
+>>> +       hba->i_cmd.query.response = NULL;
+>>> +       hba->i_cmd.query.descriptor = NULL;
+>>> +       mutex_unlock(&hba->i_cmd.dev_cmd_lock);
+>>> +
+>>> +       return ret;
+>>> +}
+>>> +
+>>> +/**
 >>
 >>
 >>
->> I don't think this is appropriate. Reserving a slot exclusively for
->> query/DM requests is not optimal.  can_queue should be changed
->> dynamically, scsi_adjust_queue_depth() maybe?
 >
->
-> The motivation to change the design for this patch  is that routing
-> query command through SCSI layer raised problems when we are trying to
-> improve the fatal error handling as we need to block the SCSI layer and
-> recover the link. Hence, the need to have the query/DM command send as
-> internal commands. Which probably makes sense.
->
+> --
+> Regards,
+> Sujit
 
-If fatal error handling is the only concern then the only required
-query/DM commands, I guess you are talking about fDeviceInit and NOP,
-for the recovery can be sent internally. Moreover, it doesn't matter
-on which available slot the query/DM commands are sent during the
-fatal error handling since the SCSI layer is blocked. Once the
-recovery completes,  query commands can go on without reserving an
-exclusive slot.
-
-> One possible option was to look for a free command slot whenever we
-> try to send an internal command, but getting a free slot is not always
-> guaranteed.
->
-> Even if we get hold of a tag, there is no way we can explain this to
-> SCSI/block layer that particular tag is in use internally (case where
-> normal query requests are sent in tandem with SCSI requests). In which
-> case, other option is to use tag[31] as you have said on need basis
-> and change the queue depth to 31. This again has problems - one
-> changing queue depth doesn't take effect immediately but for the next
-> command. Second, if the command in tag[31] is the root cause of the
-> fatal error and is stuck, then the internal command has to wait forever
-> (until scsi timesout) to plan recovery. Considering, all these factors
-> it is better to reserve a tag and use it for internal commands instead of
-> playing around with the tags internally without/partially informing
-> SCSI/block layers.
->
-> I am open for discussion, if there are any suggestions to handle such LLD
-> requirements in the SCSI layer optimally.
->
-> Coming to how optimal is to work with 31 slots instead of h/w defined 32 is
-> something which we can answer when we have true multi queueing. AFAIK, there
-> may not exist real-world applications which utilize full 32 tags at
-> particular instant. SATA AHCI controller driver which is ubiquitous in
-> modern systems also reserves a slot for internal commands which is used only
-> in case of error handling and AFAIK, no one has ever reported performance
-> problems with this (its about 7 years the commit to reserve a slot is merged
-> into Linux tree).
->
-> I hope this explains the intent. Please let me know what do you think.
->
-
-Always nutrs=32 is the assumption you are making. Spec mentions that
-(1 <= nutrs <=32) and (1 <= nutmrs <= 8), and unfortunately I did come
-across a host controller with nutrs=4, nutmrs=2 sometime back.
-Reserving an exclusive slot for query in such cases would make a
-difference. Hope this helps.
 
 
 -- 
