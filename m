@@ -1,48 +1,185 @@
-From: Isaku Yamahata <yamahata@valinux.co.jp>
-Subject: [PATCH net-next 2/5] net, scsi/csgb4i: convert skb->transport_header into skb_transport_header(skb)
-Date: Fri, 14 Jun 2013 17:58:32 +0900
-Message-ID: <7ae8c4225b5d19a2ad7d621bc7e08a74b1b4583e.1371200138.git.yamahata@valinux.co.jp>
-References: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 07/14] scsi_transport_srp: Add transport layer error handling
+Date: Fri, 14 Jun 2013 15:19:19 +0200
+Message-ID: <51BB1857.7040802@acm.org>
+References: <51B87501.4070005@acm.org> <51B8777B.5050201@acm.org> <51BA20ED.6040200@mellanox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.valinux.co.jp ([210.128.90.3]:39005 "EHLO
-	mail.valinux.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751225Ab3FNI6g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jun 2013 04:58:36 -0400
-In-Reply-To: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
-In-Reply-To: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
-References: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:42801 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752660Ab3FNNTY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jun 2013 09:19:24 -0400
+In-Reply-To: <51BA20ED.6040200@mellanox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org
-Cc: yamahata@valinux.co.jp, Simon Horman <horms@verge.net.au>, Li RongQing <roy.qing.li@gmail.com>, linux-scsi@vger.kernel.org
+To: Vu Pham <vuhuong@mellanox.com>
+Cc: Roland Dreier <roland@kernel.org>, David Dillow <dillowda@ornl.gov>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
 
-The change set of 1a37e412, "net: Use 16bits for *_headers fields
-of struct skbuff" converted from sk_buff_data_t into 16bit integer.
-So skb->tail needs to be converted to skb_tail_pointer(skb).
+On 06/13/13 21:43, Vu Pham wrote:
+> Hello Bart,
+> 
+>>
+>> +What:        /sys/class/srp_remote_ports/port-<h>:<n>/dev_loss_tmo
+>> +Date:        September 1, 2013
+>> +KernelVersion:    3.11
+>> +Contact:    linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
+>> +Description:    Number of seconds the SCSI layer will wait after a 
+>> transport
+>> +        layer error has been observed before removing a target port.
+>> +        Zero means immediate removal.
+> A negative value will disable the target port removal.
+>
+> <snip>
+>> +
+>> +/**
+>> + * srp_tmo_valid() - check timeout combination validity
+>> + *
+>> + * If no fast I/O fail timeout has been configured then the device 
+>> loss timeout
+>> + * must be below SCSI_DEVICE_BLOCK_MAX_TIMEOUT. If a fast I/O fail 
+>> timeout has
+>> + * been configured then it must be below the device loss timeout.
+>> + */
+>> +int srp_tmo_valid(int fast_io_fail_tmo, int dev_loss_tmo)
+>> +{
+>> +    return (fast_io_fail_tmo < 0 && 1 <= dev_loss_tmo &&
+>> +        dev_loss_tmo <= SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
+>> +        || (0 <= fast_io_fail_tmo &&
+>> +            (dev_loss_tmo < 0 ||
+>> +             (fast_io_fail_tmo < dev_loss_tmo &&
+>> +              dev_loss_tmo < LONG_MAX / HZ))) ? 0 : -EINVAL;
+>> +}
+>> +EXPORT_SYMBOL_GPL(srp_tmo_valid);
+> fast_io_fail_tmo is off, one cannot turn off dev_loss_tmo with negative 
+> value
+> dev_loss_tmo is off, one cannot turn off fast_io_fail_tmo with negative 
+> value
 
-Found by inspection. Compile tested only.
+OK, will update the documentation such that it correctly refers to "off" instead of a negative value and I will also mention that dev_loss_tmo can now be disabled.
 
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Li RongQing <roy.qing.li@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Isaku Yamahata <yamahata@valinux.co.jp>
----
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> <snip>
+>>
+>> + * srp_reconnect_rport - reconnect by invoking 
+>> srp_function_template.reconnect()
+>> + *
+>> + * Blocks SCSI command queueing before invoking reconnect() such that 
+>> the
+>> + * scsi_host_template.queuecommand() won't be invoked concurrently with
+>> + * reconnect(). This is important since a reconnect() implementation may
+>> + * reallocate resources needed by queuecommand(). Please note that this
+>> + * function neither waits until outstanding requests have finished 
+>> nor tries
+>> + * to abort these. It is the responsibility of the reconnect() 
+>> function to
+>> + * finish outstanding commands before reconnecting to the target port.
+>> + */
+>> +int srp_reconnect_rport(struct srp_rport *rport)
+>> +{
+>> +    struct Scsi_Host *shost = rport_to_shost(rport);
+>> +    struct srp_internal *i = to_srp_internal(shost->transportt);
+>> +    struct scsi_device *sdev;
+>> +    int res;
+>> +
+>> +    pr_debug("SCSI host %s\n", dev_name(&shost->shost_gendev));
+>> +
+>> +    res = mutex_lock_interruptible(&rport->mutex);
+>> +    if (res) {
+>> +        pr_debug("%s: mutex_lock_interruptible() returned %d\n",
+>> +             dev_name(&shost->shost_gendev), res);
+>> +        goto out;
+>> +    }
+>> +
+>> +    spin_lock_irq(shost->host_lock);
+>> +    scsi_block_requests(shost);
+>> +    spin_unlock_irq(shost->host_lock);
+>> +
+> In scsi_block_requests() definition, no locks are assumed held.
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 3fecf35..9138d4e 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -358,7 +358,7 @@ static inline unsigned int calc_tx_flits_ofld(const struct sk_buff *skb)
- 		return DIV_ROUND_UP(skb->len, 8);
- 	flits = skb_transport_offset(skb) / 8;
- 	cnt = skb_shinfo(skb)->nr_frags;
--	if (skb->tail != skb->transport_header)
-+	if (skb_tail_pointer(skb) != skb_transport_header(skb))
- 		cnt++;
- 	return flits + sgl_len(cnt);
- }
--- 
-1.7.10.4
+Good catch :-) However, if you look around in drivers/scsi you will see that several SCSI LLD drivers invoke scsi_block_requests() with the host lock held. I'm not sure whether these LLDs or the scsi_block_requests() documentation is incorrect. Anyway, I'll leave the locking statements out since these are not necessary around this call of scsi_block_requests().
 
+> If rport's state is already SRP_RPORT_BLOCKED, I don't think we need to 
+> do extra block with scsi_block_requests()
+
+Please keep in mind that srp_reconnect_rport() can be called from two different contexts: that function can not only be called from inside the SRP transport layer but also from inside the SCSI error handler (see also the srp_reset_device() modifications in a later patch in this series). If this function is invoked from the context of the SCSI error handler the chance is high that the SCSI device will have another state than SDEV_BLOCK. Hence the scsi_block_requests() call in this function.
+
+> Shouldn't we avoid using both scsi_block/unblock_requests() and 
+> scsi_target_block/unblock()?
+> ie. in srp_start_tl_fail_timers()  call scsi_block_requests(), in 
+> __rport_fast_io_fail_timedout() and rport_dev_loss_timedout() call 
+> scsi_unblock_requests()
+> and using scsi_block/unblock_requests in this function.
+
+I agree that using only one of these two mechanisms would be more elegant. However, the advantage of using scsi_target_block() as long as fast_io_fail_tmo has not expired is that this functions set the SDEV_BLOCK state which is recognized by multipathd. The reason scsi_block_requests() is used in the above function is to prevent that a user can reenable requests via sysfs while a new InfiniBand RC connection is being established. A call of srp_queuecommand() concurrently with srp_create_target_ib() can namely result in a kernel crash.
+
+>> +    while (scsi_request_fn_active(shost))
+>> +        msleep(20);
+>> +
+>> +    res = i->f->reconnect(rport);
+>> +    scsi_unblock_requests(shost);
+>> +    pr_debug("%s (state %d): transport.reconnect() returned %d\n",
+>> +         dev_name(&shost->shost_gendev), rport->state, res);
+>> +    if (res == 0) {
+>> +        cancel_delayed_work(&rport->fast_io_fail_work);
+>> +        cancel_delayed_work(&rport->dev_loss_work);
+>> +        rport->failed_reconnects = 0;
+>> +        scsi_target_unblock(&shost->shost_gendev, SDEV_RUNNING);
+>> +        srp_rport_set_state(rport, SRP_RPORT_RUNNING);
+>> +        /*
+>> +         * It can occur that after fast_io_fail_tmo expired and before
+>> +         * dev_loss_tmo expired that the SCSI error handler has
+>> +         * offlined one or more devices. scsi_target_unblock() doesn't
+>> +         * change the state of these devices into running, so do that
+>> +         * explicitly.
+>> +         */
+>> +        spin_lock_irq(shost->host_lock);
+>> +        __shost_for_each_device(sdev, shost)
+>> +            if (sdev->sdev_state == SDEV_OFFLINE)
+>> +                sdev->sdev_state = SDEV_RUNNING;
+>> +        spin_unlock_irq(shost->host_lock);
+>> +    } else if (rport->state == SRP_RPORT_RUNNING) {
+>> +        srp_rport_set_state(rport, SRP_RPORT_FAIL_FAST);
+>> +        scsi_target_unblock(&shost->shost_gendev,
+>> +                    SDEV_TRANSPORT_OFFLINE);
+> Would this unblock override the fast_io_fail_tmo functionality?
+
+Sorry but I don't think so. If something goes wrong with the transport layer then the function srp_start_tl_fail_timers() gets invoked. That function starts with changing the state from SRP_RPORT_RUNNING into SRP_RPORT_BLOCKED. In other words, the code below "if (rport->state == SRP_RPORT_RUNNING)" can only be reached if srp_reconnect_rport() is invoked from the context of the SCSI error handler and not if it is called from inside one of the new SRP transport layer times. In other words, whether or not that code will be reached depends on whether fast_io_fail_tmo is below or above the SCSI command timeout.
+
+>> +static enum blk_eh_timer_return srp_timed_out(struct scsi_cmnd *scmd)
+>> +{
+>> +    struct scsi_device *sdev = scmd->device;
+>> +
+>> +    pr_debug("timeout for sdev %s\n", dev_name(&sdev->sdev_gendev));
+>> +    return scsi_device_blocked(sdev) ? BLK_EH_RESET_TIMER :
+>> +        BLK_EH_NOT_HANDLED;
+> if one turn off fast_io_fail_tmo, rport_fast_io_fail_timedout() won't be 
+> called, and reconnect is failed, scsi_device_blocked remains true, error 
+> recovery cannot happen
+> I think it should be
+> return (scsi_device_blocked(sdev) && rport->fast_io_fail_tmo > 0) ? 
+> BLK_EH_RESET_TIMER : BLK_EH_NOT_HANDLED;
+
+How about the following alternative ?
+
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index 53b34b3..84574fb 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -550,11 +550,12 @@ void srp_start_tl_fail_timers(struct srp_rport *rport)
+                goto out_unlock;
+        pr_debug("%s new state: %d\n", dev_name(&shost->shost_gendev),
+                 rport->state);
+-       scsi_target_block(&shost->shost_gendev);
+ 
+-       if (rport->fast_io_fail_tmo >= 0)
++       if (rport->fast_io_fail_tmo >= 0) {
++               scsi_target_block(&shost->shost_gendev);
+                queue_delayed_work(system_long_wq, &rport->fast_io_fail_work,
+                                   1UL * rport->fast_io_fail_tmo * HZ);
++       }
+        if (rport->dev_loss_tmo >= 0)
+                queue_delayed_work(system_long_wq, &rport->dev_loss_work,
+                                   1UL * rport->dev_loss_tmo * HZ);
+
+Bart.
