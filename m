@@ -1,76 +1,71 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] tcm_qla2xxx: Fix residual for underrun commands that
- fail
-Date: Fri, 14 Jun 2013 14:10:07 -0700
-Message-ID: <1371244207.15314.110.camel@haakon3.risingtidesystems.com>
-References: <1370451257-20892-1-git-send-email-roland@kernel.org>
+From: Andy Grover <andy@groveronline.com>
+Subject: Re: TPG_Authentication style not supported by kernel?
+Date: Fri, 14 Jun 2013 17:04:54 -0700
+Message-ID: <51BBAFA6.9090708@groveronline.com>
+References: <CAFDa5Q1AfZuuDZoACZZGDqkZa9Ln73y576bTfNiV_vfLsajv7A@mail.gmail.com> <1371245691.15314.120.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:36075 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752372Ab3FNVGM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jun 2013 17:06:12 -0400
-In-Reply-To: <1370451257-20892-1-git-send-email-roland@kernel.org>
+Received: from pigeon.buunabet.com ([198.145.19.6]:41476 "EHLO
+	pigeon.buunabet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752380Ab3FOAOo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jun 2013 20:14:44 -0400
+In-Reply-To: <1371245691.15314.120.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-driver@qlogic.com, Roland Dreier <roland@purestorage.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Dax Kelson <dkelson@gurulabs.com>, target-devel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Jerome Martin <jxm@risingtidesystems.com>
 
-Hi Roland,
+On 06/14/2013 02:34 PM, Nicholas A. Bellinger wrote:
+> Hi Dax,
+>
+> On Tue, 2013-06-11 at 16:21 -0600, Dax Kelson wrote:
+>> I have a fully updated Fedora 18 box with kernel 3.9.4-200.
+>>
+>> I'd like to use the technique listed here:
+>>
+>> http://linux-iscsi.org/wiki/ISCSI#TPG_Authentication
+>>
+>> Specifically, "Setting up authentication information for every single
+>> initiator separately can be cumbersome, so targetcli provides the
+>> capability to define common login information for all Endpoints in a
+>> TPG. As a result, all initiators connecting to that TPG can use the
+>> same login credentials."
+>>
+>> The only problem is that the kernel doesn't appear to support this?? I
+>> don't see an "auth" directory under the tpgt directory.
+>>
+>> Help?
+>>
+>
+> So TPG authentication has not been included into mainline + targetcli as
+> of yet, so it actually should not be on the wiki..
+>
+> That said, it's an TODO item on my list to add proper support for v3.11
+> -> v3.12 mainline kernel code.
+>
+> --nab
 
-On Wed, 2013-06-05 at 09:54 -0700, Roland Dreier wrote:
-> From: Roland Dreier <roland@purestorage.com>
-> 
-> Suppose an initiator sends a DATA IN command with an allocation length
-> shorter than the FC transfer length -- we get a target message like
-> 
->     TARGET_CORE[qla2xxx]: Expected Transfer Length: 256 does not match SCSI CDB Length: 0 for SAM Opcode: 0x12
-> 
-> In that case, the target core adjusts the data_length and sets
-> se_cmd->residual_count for the underrun.  But now suppose that command
-> fails and we end up in tcm_qla2xxx_queue_status() -- that function
-> unconditionally overwrites residual_count with the already adjusted
-> data_length, and the initiator will burp with a message like
-> 
->     qla2xxx [0000:00:06.0]-301d:0: Dropped frame(s) detected (0x100 of 0x100 bytes).
-> 
-> Fix this by adding on to the existing underflow residual count instead.
-> 
-> Signed-off-by: Roland Dreier <roland@purestorage.com>
-> ---
+git://linux-iscsi.org/targetcli.git
+commit ab442938d5516e8748b4a323f991b6a8aa5bab5a
+Author: Jerome Martin <jxm@risingtidesystems.com>
+Date:   Thu Dec 15 13:33:20 2011 +0100
 
-Apologies for the delay, finally catching up on the backlog..
+     Added generic auth support in ui_node
 
-Applied to target-pending/master, with a CC' to stable.
+     * Replaces Node ACL ad-hoc auth support
+     * Allows auth support in TPGT (recently added in iSCSI)
 
-Also including QLogic folks on the CC'.
 
-Thanks!
+Actually support was added to targetcli in Dec 2011.
 
---nab
+Obviously this is another feature that has been in your proprietary 
+product for *years*. Can you at least be upfront with us on what the 
+features you have implemented but not yet shared publicly are, and what 
+your schedule for open-sourcing them is? Or at least highlight the 
+differences on the linux-iscsi.org website? Because people look at that 
+website and assume those features are in the mainline Linux kernel.
 
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> index 7a3870f..66b0b26 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -688,8 +688,12 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
->  		 * For FCP_READ with CHECK_CONDITION status, clear cmd->bufflen
->  		 * for qla_tgt_xmit_response LLD code
->  		 */
-> +		if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) {
-> +			se_cmd->se_cmd_flags &= ~SCF_OVERFLOW_BIT;
-> +			se_cmd->residual_count = 0;
-> +		}
->  		se_cmd->se_cmd_flags |= SCF_UNDERFLOW_BIT;
-> -		se_cmd->residual_count = se_cmd->data_length;
-> +		se_cmd->residual_count += se_cmd->data_length;
->  
->  		cmd->bufflen = 0;
->  	}
-
+-- Andy
 
