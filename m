@@ -1,28 +1,60 @@
-From: "Kang Teobeng" <p.t.vos@xmsnet.nl>
-Subject: Contact me
-Date: Sat, 15 Jun 2013 20:45:53 +0200
-Message-ID: <6bbfa9dcf658f313456f2a99b5faad8b.squirrel__42563.8882247314$1371322577$gmane$org@webmail.xmsnet.nl>
-Reply-To: mrskbeng@gmail.com
+From: Simon Horman <horms@verge.net.au>
+Subject: Re: [PATCH net-next 2/5] net, scsi/csgb4i: convert
+ skb->transport_header into skb_transport_header(skb)
+Date: Mon, 17 Jun 2013 11:04:11 +0900
+Message-ID: <20130617020411.GF15043@verge.net.au>
+References: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
+ <7ae8c4225b5d19a2ad7d621bc7e08a74b1b4583e.1371200138.git.yamahata@valinux.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.ispfabriek.nl ([37.251.0.168]:40682 "EHLO
-	smtp1.ispfabriek.nl" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754213Ab3FOSzt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Jun 2013 14:55:49 -0400
+Received: from kirsty.vergenet.net ([202.4.237.240]:42475 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754882Ab3FQCDJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Jun 2013 22:03:09 -0400
+Content-Disposition: inline
+In-Reply-To: <7ae8c4225b5d19a2ad7d621bc7e08a74b1b4583e.1371200138.git.yamahata@valinux.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Isaku Yamahata <yamahata@valinux.co.jp>
+Cc: netdev@vger.kernel.org, Li RongQing <roy.qing.li@gmail.com>, linux-scsi@vger.kernel.org
 
+On Fri, Jun 14, 2013 at 05:58:32PM +0900, Isaku Yamahata wrote:
+> The change set of 1a37e412, "net: Use 16bits for *_headers fields
+> of struct skbuff" converted from sk_buff_data_t into 16bit integer.
+> So skb->tail needs to be converted to skb_tail_pointer(skb).
+> 
+> Found by inspection. Compile tested only.
+> 
+> Cc: Simon Horman <horms@verge.net.au>
+> Cc: Li RongQing <roy.qing.li@gmail.com>
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Isaku Yamahata <yamahata@valinux.co.jp>
 
+Acked-by: Simon Horman <horms@verge.net.au>
 
-
-Good day friend
-
-I have a secured business proposal for you. If you are interested please
-contact me  for more details of my Business Proposal.
-
-  Your earliest response to this letter will be appreciated.
-Yours Sincerely,
-Mrs.Kang.
-
+> ---
+>  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+> index 3fecf35..9138d4e 100644
+> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+> @@ -358,7 +358,7 @@ static inline unsigned int calc_tx_flits_ofld(const struct sk_buff *skb)
+>  		return DIV_ROUND_UP(skb->len, 8);
+>  	flits = skb_transport_offset(skb) / 8;
+>  	cnt = skb_shinfo(skb)->nr_frags;
+> -	if (skb->tail != skb->transport_header)
+> +	if (skb_tail_pointer(skb) != skb_transport_header(skb))
+>  		cnt++;
+>  	return flits + sgl_len(cnt);
+>  }
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
