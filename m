@@ -1,60 +1,39 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH V3 0/5] Drivers: scsi: storvsc
-Date: Mon, 17 Jun 2013 13:32:05 +0000
-Message-ID: <f418fbf7122a489395ffb05dd0e1f792@SN2PR03MB061.namprd03.prod.outlook.com>
-References: <1370372674-10046-1-git-send-email-kys@microsoft.com>
- <ba5d1c4a36a441f09e6a1c5aa4e6d6a3@SN2PR03MB061.namprd03.prod.outlook.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 59601] commit 97dec564fd4948e0e560869c80b76e166ca2a83e breaks
+ communication with XYRATEX disk shelves
+Date: Mon, 17 Jun 2013 14:04:52 +0000 (UTC)
+Message-ID: <20130617140452.B94CB11FB51@bugzilla.kernel.org>
+References: <bug-59601-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ba5d1c4a36a441f09e6a1c5aa4e6d6a3@SN2PR03MB061.namprd03.prod.outlook.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:37062 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750986Ab3FQOEz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Jun 2013 10:04:55 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 35DB020352
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2013 14:04:54 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 264AC20333
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2013 14:04:53 +0000 (UTC)
+In-Reply-To: <bug-59601-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=59601
 
 
 
-> -----Original Message-----
-> From: KY Srinivasan
-> Sent: Tuesday, June 11, 2013 9:02 AM
-> To: KY Srinivasan; gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com; jbottomley@parallels.com;
-> hch@infradead.org; linux-scsi@vger.kernel.org
-> Subject: RE: [PATCH V3 0/5] Drivers: scsi: storvsc
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: K. Y. Srinivasan [mailto:kys@microsoft.com]
-> > Sent: Tuesday, June 04, 2013 3:05 PM
-> > To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> > devel@linuxdriverproject.org; ohering@suse.com; jbottomley@parallels.com;
-> > hch@infradead.org; linux-scsi@vger.kernel.org
-> > Cc: KY Srinivasan
-> > Subject: [PATCH V3 0/5] Drivers: scsi: storvsc
-> >
-> > This set adds multi-channel support as well synthetic Fibre Channel support
-> > to storvsc. The multi-channel support depends on infrastructure in the VMBUS
-> > driver. Greg has already checked in the relevant patches to VMBUS.
-> >
-> > I had posted an earlier version of this patch-set that included the VMBUS
-> > related changes. I have since separated the VMBUS chages and these have
-> > already been
-> > checked in.
-> >
-> > In this version, based on comments from James, the timeout is no longer a
-> > module
-> > parameter.
-> 
-> James,
-> 
-> I think I have addressed all the comments that you had; if not, please let me
-> know.
 
-Ping.
 
-Regards,
+--- Comment #2 from Jack Hill <jackhill@jackhill.us>  2013-06-17 14:04:52 ---
+Created an attachment (id=104971)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=104971)
+dmesg output for good kernel with extended error reporting
 
-K. Y
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
