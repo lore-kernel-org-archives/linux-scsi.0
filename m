@@ -1,48 +1,102 @@
-From: Baruch Even <baruch@ev-en.org>
-Subject: Re: interrupt coalescing in LSI HBA controller
-Date: Mon, 17 Jun 2013 21:44:01 +0300
-Message-ID: <CAC9+an+3P29pZ-hXAF31mgCeRT5iypLeWfi_Qf5cFTJrJ_cWHw@mail.gmail.com>
-References: <CAFLer81+p=-4NH5b6+VLSU6TcF-Vm_-FXKWhuUgzRgSOn3WCGA@mail.gmail.com>
+From: Myron Stowe <myron.stowe@gmail.com>
+Subject: Re: [PATCH 0/3] [SCSI] megaraid: Remove local (struct pci_dev) pdev's
+Date: Mon, 17 Jun 2013 13:46:23 -0600
+Message-ID: <CAL-B5D0e6+HoQOa7zfM4kSZACtj7ajPmCsW6kbDcNUZ5kLASyw@mail.gmail.com>
+References: <20130607162329.11205.95093.stgit@amt.stowe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ea0-f172.google.com ([209.85.215.172]:50883 "EHLO
-	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903Ab3FQSoX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jun 2013 14:44:23 -0400
-Received: by mail-ea0-f172.google.com with SMTP id q10so2065178eaj.31
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2013 11:44:22 -0700 (PDT)
-In-Reply-To: <CAFLer81+p=-4NH5b6+VLSU6TcF-Vm_-FXKWhuUgzRgSOn3WCGA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130607162329.11205.95093.stgit@amt.stowe>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: megaraidlinux@lsi.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Zheng Da <zhengda1936@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Jun 14, 2013 at 7:44 PM, Zheng Da <zhengda1936@gmail.com> wrote:
-> Hello,
->
-> First, I'm not very sure if this mailing list allows to ask technical
-> questions. I apologize if it's not a right place to ask questions.
->
-> I use one LSI SAS 9207-8e controllers to attach 8 SSDs to my server.
-> They together can deliver over 300,000 IO per second. I use mpt2sas
-> driver and MPI-X is enabled. In order to handle so many IOs, I assign
-> different IRQs to different CPU cores.
->
-> I see very high CPU consumption, so I hope to enable interrupt
-> coalescing to reduce CPU consumption. I monitored interrupts by using
-> systemtap to count the number of invocations of handle_irq, and found
-> the number of interrupts delivered by the LSI HBA is more or less the
-> same as the number of IOs performed on the SSDs. I assume interrupt
-> coalescing doesn't work in my case.
->
-> If so, how do I enable interrupt coalescing in the LSI HBA. I checked
-> all mpt2sas parameters and none of them are used to control it. The
-> tool lsiutil doesn't work for this controller. I'm pretty sure the LSI
-> HBA supports interrupt coalescing. Do I have to use some special
-> configuration (the Linux kernel or hardware) in order to make it work?
+Bump.  Any comments?
 
-lsiutil will enable you to read and control the interrupt coalescing on the hba.
-It should be possible to find it on lsi's website.
+I think there is a real issue here so I'd like some confirmation on
+that at least.
 
-Baruch
+On Fri, Jun 7, 2013 at 10:23 AM, Myron Stowe <myron.stowe@redhat.com> wrote:
+> While the megaraid device itself may be 64-bit DMA capable, 32-bit address
+> restricted DMA buffers are apparently required for "internal commands" as
+> is denoted by a couple of comments - "For all internal commands, the
+> buffer must be allocated in <4GB address range" - within the driver.
+>
+> If the device is 64-bit DMA capable then, once it is setup, any subsequent
+> DMA allocations for "internal commands" would not be properly restricted
+> due to megaraid_probe_one() having called pci_set_dma_mask() on pdev with
+> DMA_BIT_MASK(64).  The driver attempts to solve this by using
+> make_local_pdev() to dynamically create local pci_dev structures which are
+> then set and used for allocating 32-bit address space restricted DMA
+> buffers[1] but I don't believe that the implementation works as intended.
+>
+>
+> Assume that the megaraid device is 64-bit DMA capable.  While probing the
+> device and attaching the megaraid driver, pci_set_dma_mask() is called
+> with the "originating pdev" and a DMA_BIT_MASK of 64.  As a result, any
+> subsequent dynamic DMA related allocations associated with the
+> "originating pdev" will acquire 64-bit based buffers, which do not meet
+> the addressing restrictions for internal commands.
+>
+>   megaraid_probe_one(struct pci_dev *pdev, ...)
+>       ...
+>       pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+>
+> As mentioned, the driver attempts to solve this by using make_local_pdev()
+> to dynamically create local pci_dev structures - "local pdev's" - which
+> are set with a DMA_BIT_MASK of 32.
+>
+>   make_local_pdev
+>       alloc_pci_dev
+>       memcpy
+>       pci_set_dma_mask
+>           dma_set_mask
+>               *dev->dma_mask = mask;
+>
+> The "local pdev" is then used in allocating a DMA buffer in an attempt to
+> meet the < 4 GB restriction.
+>
+> For a 64-bit DMA capable device, the "originating pdev" will have its
+> 'dma_mask' set to 0xffffffffffffffff after the driver attaches.
+> Subsequently, when an internal command is initiated, make_local_pdev() is
+> called.  make_local_pdev() uses the PCI's core to allocate a "local pdev"
+> and then copies the "originating pdev" content into the newly allocated
+> "local pdev".  As a result of copying the "originating pdev" content into
+> the "local pdev", pdev->dev.dma_mask will be pointing back to the
+> "originating pdev's" 'dma_mask' member, not the "local pdev's" as
+> intended.  Thus, when make_local_pdev() calls pci_set_dma_mask() in an
+> attempt to set the "local pdev's" DMA mask to 32 it will instead overwrite
+> the "originating pdev's" DMA mask.  Thus, after any user initiated
+> commands are issued, all subsequent DMA allocations will be 32-bit
+> restricted from that point onward regardless of whether they are internal
+> commands or otherwise.
+>
+>
+> This patch fixes the issue by removing the setup of DMA_BIT_MASK to 64 in
+> megaraid_probe_one(), leaving the driver with default 32-bit DMA
+> capabilities, as it currently ends up in such a state anyway after any
+> internal commands are initiated.
+>
+>
+> [1] It seems strange that both mega_buffer/buf_dma_handle and
+>     make_local_pdev() both exist for internal commands but this has been
+>     the case for a long time - at least since 2.6.12-rc2.  Perhaps there
+>     is some coalescing that could be done.
+> ---
+>
+> Myron Stowe (3):
+>       [SCSI] megaraid: Remove 64-bit DMA related dead code
+>       [SCSI] megaraid: Remove local (struct pci_dev) pdev's
+>       [SCSI] megaraid: Remove 64-bit DMA_BIT_MASK capability
+>
+>
+>  drivers/scsi/megaraid.c |  152 ++++++++---------------------------------------
+>  drivers/scsi/megaraid.h |    1
+>  2 files changed, 27 insertions(+), 126 deletions(-)
+>
+> --
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
