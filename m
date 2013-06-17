@@ -1,60 +1,22 @@
-From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH net-next 2/5] net, scsi/csgb4i: convert
- skb->transport_header into skb_transport_header(skb)
-Date: Mon, 17 Jun 2013 11:04:11 +0900
-Message-ID: <20130617020411.GF15043@verge.net.au>
-References: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
- <7ae8c4225b5d19a2ad7d621bc7e08a74b1b4583e.1371200138.git.yamahata@valinux.co.jp>
+From: Sec Capital Loan <jose_carlos@mp.ro.gov.br>
+Subject: Quick Loans
+Date: Mon, 17 Jun 2013 09:24:20 +0530
+Message-ID: <a5556f07-e2b1-49d7-b68d-dc22268d4df2__25895.45566957$1371443319$gmane$org@DTI-APL-036.mpro.gov>
+Reply-To: seccapittals@mit.tc
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:42475 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754882Ab3FQCDJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Jun 2013 22:03:09 -0400
-Content-Disposition: inline
-In-Reply-To: <7ae8c4225b5d19a2ad7d621bc7e08a74b1b4583e.1371200138.git.yamahata@valinux.co.jp>
+Received: from ns2.mp.ro.gov.br ([200.101.66.131]:60908 "EHLO
+	mail.mp.ro.gov.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986Ab3FQE2M convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jun 2013 00:28:12 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Isaku Yamahata <yamahata@valinux.co.jp>
-Cc: netdev@vger.kernel.org, Li RongQing <roy.qing.li@gmail.com>, linux-scsi@vger.kernel.org
+To: Recipients <jose_carlos@mp.ro.gov.br>
 
-On Fri, Jun 14, 2013 at 05:58:32PM +0900, Isaku Yamahata wrote:
-> The change set of 1a37e412, "net: Use 16bits for *_headers fields
-> of struct skbuff" converted from sk_buff_data_t into 16bit integer.
-> So skb->tail needs to be converted to skb_tail_pointer(skb).
-> 
-> Found by inspection. Compile tested only.
-> 
-> Cc: Simon Horman <horms@verge.net.au>
-> Cc: Li RongQing <roy.qing.li@gmail.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Isaku Yamahata <yamahata@valinux.co.jp>
+Do you need a personal or business loan without stress and quick approval? If yes, contact us today as we are currently offering loans at superb interest rate. Our loan is secured and safe,For more information and Application, Please reply to this Email.
 
-Acked-by: Simon Horman <horms@verge.net.au>
-
-> ---
->  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> index 3fecf35..9138d4e 100644
-> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> @@ -358,7 +358,7 @@ static inline unsigned int calc_tx_flits_ofld(const struct sk_buff *skb)
->  		return DIV_ROUND_UP(skb->len, 8);
->  	flits = skb_transport_offset(skb) / 8;
->  	cnt = skb_shinfo(skb)->nr_frags;
-> -	if (skb->tail != skb->transport_header)
-> +	if (skb_tail_pointer(skb) != skb_transport_header(skb))
->  		cnt++;
->  	return flits + sgl_len(cnt);
->  }
-> -- 
-> 1.7.10.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Sincerely,
+Vijay Nath
