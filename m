@@ -1,71 +1,50 @@
 From: Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 6/9] hpsa: rework pci pm related code for simplification
-Date: Tue, 18 Jun 2013 16:21:13 +0800
-Message-ID: <1371543673-9692-1-git-send-email-wangyijing@huawei.com>
+Subject: [PATCH 8/9] scsi/pm8001: use pdev->pm_cap instead of pci_find_capability(..,PCI_CAP_ID_PM)
+Date: Tue, 18 Jun 2013 16:23:36 +0800
+Message-ID: <1371543816-15192-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: linux-kernel@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com, Yijing Wang <wangyijing@huawei.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-kernel@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com, Yijing Wang <wangyijing@huawei.com>, xjtuwjp@gmail.com, lindar_liu@usish.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use pci core pm interface to simplify code.
+Pci core has been saved pm cap register offset by pdev->pm_cap in pci_pm_init()
+in init path. So we can use pdev->pm_cap instead of using
+pci_find_capability(pdev, PCI_CAP_ID_PM) for better performance and simplified code.
 
 Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: xjtuwjp@gmail.com
+Cc: lindar_liu@usish.com
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: iss_storagedev@hp.com
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 ---
- drivers/scsi/hpsa.c |   16 +++-------------
- 1 files changed, 3 insertions(+), 13 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 7f4f790..f5ba6d4 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3753,9 +3753,6 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
- static int hpsa_controller_hard_reset(struct pci_dev *pdev,
- 	void * __iomem vaddr, u32 use_doorbell)
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index e4b9bc7..3861aa1 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -912,14 +912,13 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
  {
--	u16 pmcsr;
--	int pos;
--
- 	if (use_doorbell) {
- 		/* For everything after the P600, the PCI power state method
- 		 * of resetting the controller doesn't work, so we have this
-@@ -3773,8 +3770,7 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
- 		 * this causes a secondary PCI reset which will reset the
- 		 * controller." */
- 
--		pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
--		if (pos == 0) {
-+		if (!pdev->pm_cap) {
- 			dev_err(&pdev->dev,
- 				"hpsa_reset_controller: "
- 				"PCI PM not supported\n");
-@@ -3782,18 +3778,12 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
- 		}
- 		dev_info(&pdev->dev, "using PCI PM to reset controller\n");
- 		/* enter the D3hot power management state */
--		pci_read_config_word(pdev, pos + PCI_PM_CTRL, &pmcsr);
--		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
--		pmcsr |= PCI_D3hot;
--		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
-+		pci_set_power_state(pdev, PCI_D3hot);
- 
- 		msleep(500);
- 
- 		/* enter the D0 power management state */
--		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
--		pmcsr |= PCI_D0;
--		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
--
-+		pci_set_power_state(pdev, PCI_D0);
- 		/*
- 		 * The P600 requires a small delay when changing states.
- 		 * Otherwise we may think the board did not reset and we bail.
+ 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+ 	struct pm8001_hba_info *pm8001_ha;
+-	int i , pos;
++	int i;
+ 	u32 device_state;
+ 	pm8001_ha = sha->lldd_ha;
+ 	flush_workqueue(pm8001_wq);
+ 	scsi_block_requests(pm8001_ha->shost);
+-	pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
+-	if (pos == 0) {
+-		printk(KERN_ERR " PCI PM not supported\n");
++	if (!pdev->pm_cap) {
++		dev_err(&pdev->dev, " PCI PM not supported\n");
+ 		return -ENODEV;
+ 	}
+ 	PM8001_CHIP_DISP->interrupt_disable(pm8001_ha, 0xFF);
 -- 
 1.7.1
