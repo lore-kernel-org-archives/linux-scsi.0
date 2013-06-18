@@ -1,45 +1,53 @@
-From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: [PATCH 1/1] aacraid: Fix for arrays are going offline in the system. System hangs
-Date: Tue, 18 Jun 2013 17:02:07 +0530
-Message-ID: <1371555127-1504-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:46708 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754374Ab3FRMPm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jun 2013 08:15:42 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v2 0/4] introduce sg_pcopy_from_buffer() and sg_pcopy_to_buffer()
+Date: Tue, 18 Jun 2013 22:31:30 +0900
+Message-ID: <1371562294-13642-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Tejun Heo <tj@kernel.org>, Imre Deak <imre.deak@intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com, Achim.Leubner@pmcs.com, Tony.Ruiz@pmcs.com, Mahesh.Rajashekhara@pmcs.com
 
-Hi James,
+This patch set introduces sg_pcopy_from_buffer() and sg_pcopy_to_buffer(),
+which copy data between a linear buffer and an SG list.
 
-One of the customer had reported that the set of raid logical arrays will become unavailable (I/O offline) after a long hours of IO stress test.  The OS wouldn`t be accessible afterwards and require a hard reset.
+The only difference between sg_pcopy_{from,to}_buffer() and
+sg_copy_{from,to}_buffer() is an additional argument that specifies
+the number of bytes to skip the SG list before copying.
 
-This driver patch has a fix for race condition between the doorbell and the circular buffer. The driver is modified to do an extra read after clearing the doorbell in case there had been a completion posted during the small timing window.
+The main reason for introducing these functions is to fix a problem
+in scsi_debug module.  And there is a local function in crypto/talitos
+module, which can be replaced by sg_pcopy_to_buffer().
 
-With this fix, we ran IO stress for ~13 days. There were no IO failures.
+* Changes from v1
+- Separate the change that factors out sg_miter_get_next_page() from
+  the patch "introduce sg_pcopy_from_buffer() and sg_pcopy_to_buffer()"
+- Add function comment for internal function sg_miter_seek()
+- Simplify the assignment of sdb->resid in fill_from_dev_buffer() in
+  scsi_debug
 
-Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
----
- drivers/scsi/aacraid/src.c | 3 +++
- 1 file changed, 3 insertions(+)
+Akinobu Mita (4):
+  lib/scatterlist: factor out sg_miter_get_next_page() from
+    sg_miter_next()
+  lib/scatterlist: introduce sg_pcopy_from_buffer() and
+    sg_pcopy_to_buffer()
+  crypto: talitos: use sg_pcopy_to_buffer()
+  scsi_debug: fix do_device_access() with wrap around range
 
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 0f56d8d..7e17107 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -93,6 +93,9 @@ static irqreturn_t aac_src_intr_message(int irq, void *dev_id)
- 			int send_it = 0;
- 			extern int aac_sync_mode;
- 
-+			src_writel(dev, MUnit.ODR_C, bellbits);
-+			src_readl(dev, MUnit.ODR_C);
-+
- 			if (!aac_sync_mode) {
- 				src_writel(dev, MUnit.ODR_C, bellbits);
- 				src_readl(dev, MUnit.ODR_C);
+ drivers/crypto/talitos.c    |  60 +--------------------
+ drivers/scsi/scsi_debug.c   |  48 +++++++++++++----
+ include/linux/scatterlist.h |   5 ++
+ lib/scatterlist.c           | 127 +++++++++++++++++++++++++++++++++++++-------
+ 4 files changed, 150 insertions(+), 90 deletions(-)
+
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Imre Deak <imre.deak@intel.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-crypto@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi@vger.kernel.org
+
 -- 
-1.7.11.7
-
+1.8.1.4
