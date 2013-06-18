@@ -1,136 +1,184 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 4/4] scsi_debug: fix do_device_access() with wrap around range
-Date: Tue, 18 Jun 2013 22:31:34 +0900
-Message-ID: <1371562294-13642-5-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v2 2/4] lib/scatterlist: introduce sg_pcopy_from_buffer() and sg_pcopy_to_buffer()
+Date: Tue, 18 Jun 2013 22:31:32 +0900
+Message-ID: <1371562294-13642-3-git-send-email-akinobu.mita@gmail.com>
 References: <1371562294-13642-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:34141 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932677Ab3FRNcU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jun 2013 09:32:20 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1371562294-13642-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Tejun Heo <tj@kernel.org>, Imre Deak <imre.deak@intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-do_device_access() is a function that abstracts copying SG list from/to
-ramdisk storage (fake_storep).
-
-It must deal with the ranges exceeding actual fake_storep size, because
-such ranges are valid if virtual_gb is set greater than zero, and they
-should be treated as fake_storep is repeatedly mirrored up to virtual size.
-
-Unfortunately, it can't deal with the range which wraps around the end of
-fake_storep. A wrap around range is copied by two sg_copy_{from,to}_buffer()
-calls, but sg_copy_{from,to}_buffer() can't copy from/to in the middle of
-SG list, therefore the second call can't copy correctly.
-
-This fixes it by using sg_pcopy_{from,to}_buffer() that can copy from/to
-the middle of SG list.
-
-This also simplifies the assignment of sdb->resid in fill_from_dev_buffer().
-Because fill_from_dev_buffer() is now only called once per command
-execution cycle.  So it is not necessary to take care to decrease
-sdb->resid if fill_from_dev_buffer() is called more than once.
+The only difference between sg_pcopy_{from,to}_buffer() and
+sg_copy_{from,to}_buffer() is an additional argument that specifies
+the number of bytes to skip the SG list before copying.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Imre Deak <imre.deak@intel.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-crypto@vger.kernel.org
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Douglas Gilbert <dgilbert@interlog.com>
 Cc: linux-scsi@vger.kernel.org
 ---
 
 * Change from v2
-- Simplify the assignment of sdb->resid in fill_from_dev_buffer()
+- Separate the change that factors out sg_miter_get_next_page()
+- Add function comment for internal function sg_miter_seek()
 
- drivers/scsi/scsi_debug.c | 48 ++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 37 insertions(+), 11 deletions(-)
+ include/linux/scatterlist.h |  5 +++
+ lib/scatterlist.c           | 88 ++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 88 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 21239b3..1b15f98 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -417,10 +417,7 @@ static int fill_from_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
+diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+index 2680677..adae88f 100644
+--- a/include/linux/scatterlist.h
++++ b/include/linux/scatterlist.h
+@@ -244,6 +244,11 @@ size_t sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+ size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			 void *buf, size_t buflen);
  
- 	act_len = sg_copy_from_buffer(sdb->table.sgl, sdb->table.nents,
- 				      arr, arr_len);
--	if (sdb->resid)
--		sdb->resid -= act_len;
--	else
--		sdb->resid = scsi_bufflen(scp) - act_len;
-+	sdb->resid = scsi_bufflen(scp) - act_len;
- 
- 	return 0;
++size_t sg_pcopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
++			    void *buf, size_t buflen, off_t skip);
++size_t sg_pcopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
++			  void *buf, size_t buflen, off_t skip);
++
+ /*
+  * Maximum number of entries that will be allocated in one piece, if
+  * a list larger than this is required then chaining will be utilized.
+diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+index c35b929..f167392 100644
+--- a/lib/scatterlist.c
++++ b/lib/scatterlist.c
+@@ -476,6 +476,43 @@ static bool sg_miter_get_next_page(struct sg_mapping_iter *miter)
  }
-@@ -1614,24 +1611,48 @@ static int check_device_access_params(struct sdebug_dev_info *devi,
- 	return 0;
- }
  
-+/* Returns number of bytes copied or -1 if error. */
- static int do_device_access(struct scsi_cmnd *scmd,
- 			    struct sdebug_dev_info *devi,
- 			    unsigned long long lba, unsigned int num, int write)
+ /**
++ * sg_miter_seek - reposition mapping iterator
++ * @miter: sg mapping iter to be seeked
++ * @offset: number of bytes to plus the current location
++ *
++ * Description:
++ *   Sets the offset of @miter to its current location plus @offset bytes.
++ *
++ * Notes:
++ *   This function must be called just after sg_miter_start() or sg_miter_stop()
++ *
++ * Context:
++ *   Don't care.
++ *
++ * Returns:
++ *   true if @miter contains the valid mapping.  false if end of sg
++ *   list is reached.
++ */
++static bool sg_miter_seek(struct sg_mapping_iter *miter, off_t offset)
++{
++	WARN_ON(miter->addr);
++
++	while (offset) {
++		off_t consumed;
++
++		if (!sg_miter_get_next_page(miter))
++			return false;
++
++		consumed = min_t(off_t, offset, miter->__remaining);
++		miter->__offset += consumed;
++		miter->__remaining -= consumed;
++		offset -= consumed;
++	}
++
++	return true;
++}
++
++/**
+  * sg_miter_next - proceed mapping iterator to the next mapping
+  * @miter: sg mapping iter to proceed
+  *
+@@ -561,14 +598,16 @@ EXPORT_SYMBOL(sg_miter_stop);
+  * @nents:		 Number of SG entries
+  * @buf:		 Where to copy from
+  * @buflen:		 The number of bytes to copy
+- * @to_buffer: 		 transfer direction (non zero == from an sg list to a
+- * 			 buffer, 0 == from a buffer to an sg list
++ * @skip:		 Number of bytes to skip before copying
++ * @to_buffer:		 transfer direction (true == from an sg list to a
++ *			 buffer, false == from a buffer to an sg list
+  *
+  * Returns the number of copied bytes.
+  *
+  **/
+ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
+-			     void *buf, size_t buflen, int to_buffer)
++			     void *buf, size_t buflen, off_t skip,
++			     bool to_buffer)
  {
- 	int ret;
- 	unsigned long long block, rest = 0;
--	int (*func)(struct scsi_cmnd *, unsigned char *, int);
-+	struct scsi_data_buffer *sdb;
-+	enum dma_data_direction dir;
-+	size_t (*func)(struct scatterlist *, unsigned int, void *, size_t,
-+		       off_t);
+ 	unsigned int offset = 0;
+ 	struct sg_mapping_iter miter;
+@@ -582,6 +621,9 @@ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
+ 
+ 	sg_miter_start(&miter, sgl, nents, sg_flags);
+ 
++	if (!sg_miter_seek(&miter, skip))
++		return false;
 +
-+	if (write) {
-+		sdb = scsi_out(scmd);
-+		dir = DMA_TO_DEVICE;
-+		func = sg_pcopy_to_buffer;
-+	} else {
-+		sdb = scsi_in(scmd);
-+		dir = DMA_FROM_DEVICE;
-+		func = sg_pcopy_from_buffer;
-+	}
+ 	local_irq_save(flags);
  
--	func = write ? fetch_to_dev_buffer : fill_from_dev_buffer;
-+	if (!sdb->length)
-+		return 0;
-+	if (!(scsi_bidi_cmnd(scmd) || scmd->sc_data_direction == dir))
-+		return -1;
- 
- 	block = do_div(lba, sdebug_store_sectors);
- 	if (block + num > sdebug_store_sectors)
- 		rest = block + num - sdebug_store_sectors;
- 
--	ret = func(scmd, fake_storep + (block * scsi_debug_sector_size),
--		   (num - rest) * scsi_debug_sector_size);
--	if (!ret && rest)
--		ret = func(scmd, fake_storep, rest * scsi_debug_sector_size);
-+	ret = func(sdb->table.sgl, sdb->table.nents,
-+		   fake_storep + (block * scsi_debug_sector_size),
-+		   (num - rest) * scsi_debug_sector_size, 0);
-+	if (ret != (num - rest) * scsi_debug_sector_size)
-+		return ret;
-+
-+	if (rest) {
-+		ret += func(sdb->table.sgl, sdb->table.nents,
-+			    fake_storep, rest * scsi_debug_sector_size,
-+			    (num - rest) * scsi_debug_sector_size);
-+	}
- 
- 	return ret;
+ 	while (sg_miter_next(&miter) && offset < buflen) {
+@@ -616,7 +658,7 @@ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
+ size_t sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			   void *buf, size_t buflen)
+ {
+-	return sg_copy_buffer(sgl, nents, buf, buflen, 0);
++	return sg_copy_buffer(sgl, nents, buf, buflen, 0, false);
  }
-@@ -1888,7 +1909,12 @@ static int resp_read(struct scsi_cmnd *SCpnt, unsigned long long lba,
- 	read_lock_irqsave(&atomic_rw, iflags);
- 	ret = do_device_access(SCpnt, devip, lba, num, 0);
- 	read_unlock_irqrestore(&atomic_rw, iflags);
--	return ret;
-+	if (ret == -1)
-+		return DID_ERROR << 16;
-+
-+	scsi_in(SCpnt)->resid = scsi_bufflen(SCpnt) - ret;
-+
-+	return 0;
- }
+ EXPORT_SYMBOL(sg_copy_from_buffer);
  
- static void dump_sector(unsigned char *buf, int len)
+@@ -633,6 +675,42 @@ EXPORT_SYMBOL(sg_copy_from_buffer);
+ size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			 void *buf, size_t buflen)
+ {
+-	return sg_copy_buffer(sgl, nents, buf, buflen, 1);
++	return sg_copy_buffer(sgl, nents, buf, buflen, 0, true);
+ }
+ EXPORT_SYMBOL(sg_copy_to_buffer);
++
++/**
++ * sg_pcopy_from_buffer - Copy from a linear buffer to an SG list
++ * @sgl:		 The SG list
++ * @nents:		 Number of SG entries
++ * @buf:		 Where to copy from
++ * @skip:		 Number of bytes to skip before copying
++ * @buflen:		 The number of bytes to copy
++ *
++ * Returns the number of copied bytes.
++ *
++ **/
++size_t sg_pcopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
++			    void *buf, size_t buflen, off_t skip)
++{
++	return sg_copy_buffer(sgl, nents, buf, buflen, skip, false);
++}
++EXPORT_SYMBOL(sg_pcopy_from_buffer);
++
++/**
++ * sg_pcopy_to_buffer - Copy from an SG list to a linear buffer
++ * @sgl:		 The SG list
++ * @nents:		 Number of SG entries
++ * @buf:		 Where to copy to
++ * @skip:		 Number of bytes to skip before copying
++ * @buflen:		 The number of bytes to copy
++ *
++ * Returns the number of copied bytes.
++ *
++ **/
++size_t sg_pcopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
++			  void *buf, size_t buflen, off_t skip)
++{
++	return sg_copy_buffer(sgl, nents, buf, buflen, skip, true);
++}
++EXPORT_SYMBOL(sg_pcopy_to_buffer);
 -- 
 1.8.1.4
-
