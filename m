@@ -1,39 +1,40 @@
-From: Baruch Even <baruch@ev-en.org>
-Subject: Re: interrupt coalescing in LSI HBA controller
-Date: Mon, 17 Jun 2013 23:53:02 +0300
-Message-ID: <CAC9+anLXbPDN_Bg_CHOO0hB6_whoxy9XKv46sqihFLbvbduP=Q@mail.gmail.com>
-References: <CAFLer81+p=-4NH5b6+VLSU6TcF-Vm_-FXKWhuUgzRgSOn3WCGA@mail.gmail.com>
- <CAC9+an+3P29pZ-hXAF31mgCeRT5iypLeWfi_Qf5cFTJrJ_cWHw@mail.gmail.com> <CAFLer81rKuzvKGqA-7kktMdRzsJ-08T8e9qZTNoQQ7w=kAJVdw@mail.gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH net-next 2/5] net, scsi/csgb4i: convert
+ skb->transport_header into skb_transport_header(skb)
+Date: Mon, 17 Jun 2013 17:13:14 -0700 (PDT)
+Message-ID: <20130617.171314.1432482611027368309.davem@davemloft.net>
+References: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
+	<7ae8c4225b5d19a2ad7d621bc7e08a74b1b4583e.1371200138.git.yamahata@valinux.co.jp>
+	<20130617020411.GF15043@verge.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:47512 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753420Ab3FQUxY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jun 2013 16:53:24 -0400
-Received: by mail-ee0-f44.google.com with SMTP id c13so2098080eek.3
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2013 13:53:22 -0700 (PDT)
-In-Reply-To: <CAFLer81rKuzvKGqA-7kktMdRzsJ-08T8e9qZTNoQQ7w=kAJVdw@mail.gmail.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:40845 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751856Ab3FRANP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jun 2013 20:13:15 -0400
+In-Reply-To: <20130617020411.GF15043@verge.net.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zheng Da <zhengda1936@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: horms@verge.net.au
+Cc: yamahata@valinux.co.jp, netdev@vger.kernel.org, roy.qing.li@gmail.com, linux-scsi@vger.kernel.org
 
-On Mon, Jun 17, 2013 at 11:34 PM, Zheng Da <zhengda1936@gmail.com> wrote:
-> Hello,
->
-> I have tried lsiutil and it cannot recognize the LSI controllers. I
-> have talked to the LSI tech support and they told me that lsiutil
-> doesn't support this type of HBA controllers.
-> I found lsiutil in some other place. I couldn't find it in on LSI's
-> website. Do you know where I can download it from LSI's website?
+From: Simon Horman <horms@verge.net.au>
+Date: Mon, 17 Jun 2013 11:04:11 +0900
 
-I didn't try to find it at lsi, there are other places but if it
-didn't work it wouldn't help much to find it in another place.
+> On Fri, Jun 14, 2013 at 05:58:32PM +0900, Isaku Yamahata wrote:
+>> The change set of 1a37e412, "net: Use 16bits for *_headers fields
+>> of struct skbuff" converted from sk_buff_data_t into 16bit integer.
+>> So skb->tail needs to be converted to skb_tail_pointer(skb).
+>> 
+>> Found by inspection. Compile tested only.
+>> 
+>> Cc: Simon Horman <horms@verge.net.au>
+>> Cc: Li RongQing <roy.qing.li@gmail.com>
+>> Cc: linux-scsi@vger.kernel.org
+>> Signed-off-by: Isaku Yamahata <yamahata@valinux.co.jp>
+> 
+> Acked-by: Simon Horman <horms@verge.net.au>
 
-At work I wrote a utility based on the LSI documentation that works on
-similar HBAs but I don't think I'd be able to release that. The
-relevant headers are in the Linux kernel and you can try to ask LSI
-support for the documentation directly, I obviously can't provide it.
-
-Baruch
+Applied.
