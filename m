@@ -1,37 +1,25 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/4] lib/scatterlist: introduce sg_pcopy_from_buffer()
- and sg_pcopy_to_buffer()
-Date: Tue, 18 Jun 2013 07:37:28 -0700
-Message-ID: <20130618143728.GE2767@htj.dyndns.org>
-References: <1371562294-13642-1-git-send-email-akinobu.mita@gmail.com>
- <1371562294-13642-3-git-send-email-akinobu.mita@gmail.com>
+From: Library <library@sjeh.org>
+Subject: GUARANTEED LOAN OFFER
+Date: Tue, 18 Jun 2013 15:16:40 +0000
+Message-ID: <907CA885CF22B6438AD910BC50E93CADCE620042@Mail.sjeh-jer.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1371562294-13642-3-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, Imre Deak <imre.deak@intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtaout23.012.net.il ([80.179.55.175]:41271 "EHLO
+	mtaout23.012.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755058Ab3FRP0W convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jun 2013 11:26:22 -0400
+Received: from conversion-daemon.a-mtaout23.012.net.il by a-mtaout23.012.net.il (HyperSendmail v2007.08) id <0MOL00F00H92WC00@a-mtaout23.012.net.il> for linux-scsi@vger.kernel.org; Tue, 18 Jun 2013 18:21:16 +0300 (IDT)
+Content-language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "williamsmark685@gmail.com" <williamsmark685@gmail.com>
 
-On Tue, Jun 18, 2013 at 10:31:32PM +0900, Akinobu Mita wrote:
->  /**
-> + * sg_miter_seek - reposition mapping iterator
-> + * @miter: sg mapping iter to be seeked
-> + * @offset: number of bytes to plus the current location
-> + *
-> + * Description:
-> + *   Sets the offset of @miter to its current location plus @offset bytes.
-> + *
-> + * Notes:
-> + *   This function must be called just after sg_miter_start() or sg_miter_stop()
 
-It's not gonna be hard to make this function to handle any state,
-right?  Wouldn't it be better to do that?  It's a pretty generic
-feature after all.  Also, maybe a better name is sg_miter_skip()?
 
-Thanks.
+Do You Need Personal/Business Loan At 3%? If Yes Send Reply To This
+Email: williamsmark685@gmail.com   1. Name___2. Amount____3.
+Country___4. Phone No___5. Duration_____
 
--- 
-tejun
+All Repply Should Be Forwarded to This Email: williamsmark685@gmail.com
