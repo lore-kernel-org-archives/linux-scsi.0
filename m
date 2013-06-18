@@ -1,40 +1,71 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net-next 2/5] net, scsi/csgb4i: convert
- skb->transport_header into skb_transport_header(skb)
-Date: Mon, 17 Jun 2013 17:13:14 -0700 (PDT)
-Message-ID: <20130617.171314.1432482611027368309.davem@davemloft.net>
-References: <bb5cc0b762102c6a6a56bbd2067c7e539abfb2a6.1371200138.git.yamahata@valinux.co.jp>
-	<7ae8c4225b5d19a2ad7d621bc7e08a74b1b4583e.1371200138.git.yamahata@valinux.co.jp>
-	<20130617020411.GF15043@verge.net.au>
+From: Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 6/9] hpsa: rework pci pm related code for simplification
+Date: Tue, 18 Jun 2013 16:21:13 +0800
+Message-ID: <1371543673-9692-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:40845 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856Ab3FRANP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jun 2013 20:13:15 -0400
-In-Reply-To: <20130617020411.GF15043@verge.net.au>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: linux-kernel@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com, Yijing Wang <wangyijing@huawei.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: horms@verge.net.au
-Cc: yamahata@valinux.co.jp, netdev@vger.kernel.org, roy.qing.li@gmail.com, linux-scsi@vger.kernel.org
 
-From: Simon Horman <horms@verge.net.au>
-Date: Mon, 17 Jun 2013 11:04:11 +0900
+Use pci core pm interface to simplify code.
 
-> On Fri, Jun 14, 2013 at 05:58:32PM +0900, Isaku Yamahata wrote:
->> The change set of 1a37e412, "net: Use 16bits for *_headers fields
->> of struct skbuff" converted from sk_buff_data_t into 16bit integer.
->> So skb->tail needs to be converted to skb_tail_pointer(skb).
->> 
->> Found by inspection. Compile tested only.
->> 
->> Cc: Simon Horman <horms@verge.net.au>
->> Cc: Li RongQing <roy.qing.li@gmail.com>
->> Cc: linux-scsi@vger.kernel.org
->> Signed-off-by: Isaku Yamahata <yamahata@valinux.co.jp>
-> 
-> Acked-by: Simon Horman <horms@verge.net.au>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: iss_storagedev@hp.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/hpsa.c |   16 +++-------------
+ 1 files changed, 3 insertions(+), 13 deletions(-)
 
-Applied.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 7f4f790..f5ba6d4 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3753,9 +3753,6 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
+ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+ 	void * __iomem vaddr, u32 use_doorbell)
+ {
+-	u16 pmcsr;
+-	int pos;
+-
+ 	if (use_doorbell) {
+ 		/* For everything after the P600, the PCI power state method
+ 		 * of resetting the controller doesn't work, so we have this
+@@ -3773,8 +3770,7 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+ 		 * this causes a secondary PCI reset which will reset the
+ 		 * controller." */
+ 
+-		pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
+-		if (pos == 0) {
++		if (!pdev->pm_cap) {
+ 			dev_err(&pdev->dev,
+ 				"hpsa_reset_controller: "
+ 				"PCI PM not supported\n");
+@@ -3782,18 +3778,12 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+ 		}
+ 		dev_info(&pdev->dev, "using PCI PM to reset controller\n");
+ 		/* enter the D3hot power management state */
+-		pci_read_config_word(pdev, pos + PCI_PM_CTRL, &pmcsr);
+-		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
+-		pmcsr |= PCI_D3hot;
+-		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
++		pci_set_power_state(pdev, PCI_D3hot);
+ 
+ 		msleep(500);
+ 
+ 		/* enter the D0 power management state */
+-		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
+-		pmcsr |= PCI_D0;
+-		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
+-
++		pci_set_power_state(pdev, PCI_D0);
+ 		/*
+ 		 * The P600 requires a small delay when changing states.
+ 		 * Otherwise we may think the board did not reset and we bail.
+-- 
+1.7.1
