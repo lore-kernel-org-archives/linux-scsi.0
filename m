@@ -1,37 +1,39 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v2 2/4] lib/scatterlist: introduce sg_pcopy_from_buffer()
- and sg_pcopy_to_buffer()
-Date: Wed, 19 Jun 2013 22:12:29 +0900
-Message-ID: <CAC5umyivGS88R8SXoeqmgGkZFHDfN3GkaojDkfnbdX+NODwRyQ@mail.gmail.com>
-References: <1371562294-13642-1-git-send-email-akinobu.mita@gmail.com>
-	<1371562294-13642-3-git-send-email-akinobu.mita@gmail.com>
-	<20130618143728.GE2767@htj.dyndns.org>
+From: Matthias Prager <linux@matthiasprager.de>
+Subject: JMicron JMB363 PCI SATA/IDE Card Support
+Date: Wed, 19 Jun 2013 15:12:51 +0200
+Message-ID: <51C1AE53.4030206@matthiasprager.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <20130618143728.GE2767@htj.dyndns.org>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Imre Deak <imre.deak@intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dd15408.kasserver.com ([85.13.136.168]:48545 "EHLO
+	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933873Ab3FSNWj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jun 2013 09:22:39 -0400
+Received: from [192.168.0.13] (p5DE449B4.dip0.t-ipconnect.de [93.228.73.180])
+	by dd15408.kasserver.com (Postfix) with ESMTPSA id 0295394B060
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2013 15:12:55 +0200 (CEST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-2013/6/18 Tejun Heo <tj@kernel.org>:
-> On Tue, Jun 18, 2013 at 10:31:32PM +0900, Akinobu Mita wrote:
->>  /**
->> + * sg_miter_seek - reposition mapping iterator
->> + * @miter: sg mapping iter to be seeked
->> + * @offset: number of bytes to plus the current location
->> + *
->> + * Description:
->> + *   Sets the offset of @miter to its current location plus @offset bytes.
->> + *
->> + * Notes:
->> + *   This function must be called just after sg_miter_start() or sg_miter_stop()
->
-> It's not gonna be hard to make this function to handle any state,
-> right?  Wouldn't it be better to do that?  It's a pretty generic
-> feature after all.  Also, maybe a better name is sg_miter_skip()?
+Hello everyone,
 
-Yes.  This limitation can be removed by calling sg_miter_stop() at
-the front of sg_miter_seek().  Also, renaming it to sg_miter_skip()
-sounds good.
+I'm having a hard time getting my JMicron JMB363 PCI SATA/IDE Card
+to work under linux.
+The 'lspci -nn' output reads as follows:
+> RAID bus controller [0104]: JMicron Technology Corp. JMB363 SATA/IDE
+> Controller [197b:2363] (rev 03)
+
+I tried my own kernel (3.9.6) under gentoo with CONFIG_PATA_JMICRON and
+CONFIG_SATA_AHCI enabled. And I tried using
+the latest SystemrescueCD (with kernel 3.4.47) which has pretty much
+everything compiled into it.
+
+FreeBSD is recognizing the devices just fine. How do I get them
+to run on linux?
+
+- Matthias
+
+P.S. a side note: this is in an virtualized environment (VMWare ESXi)
+with pass-through.
