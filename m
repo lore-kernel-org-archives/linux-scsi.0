@@ -1,12 +1,14 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH v3 0/6] [SCSI] Enhanced sense and Unit Attention handling
-Date: Wed, 19 Jun 2013 13:42:35 -0400
-Message-ID: <1371663761-22481-1-git-send-email-emilne@redhat.com>
+Subject: [PATCH v3 3/6] [SCSI] Add support for scsi_target events
+Date: Wed, 19 Jun 2013 13:42:38 -0400
+Message-ID: <1371663761-22481-4-git-send-email-emilne@redhat.com>
+References: <1371663761-22481-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52298 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:32862 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756776Ab3FSRmo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jun 2013 13:42:44 -0400
+	id S1756776Ab3FSRmp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Jun 2013 13:42:45 -0400
+In-Reply-To: <1371663761-22481-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -14,78 +16,271 @@ Cc: jbottomley@parallels.com, rwheeler@redhat.com
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-This patch set adds changes to the SCSI mid-layer, sysfs and scsi_debug
-to provide enhanced support for Unit Attention conditions, as well as
-detection of a unit attention queue overflow condition and the ability
-for drivers to report sense data outside of normal command completion.
+Added capability to generate uevents on scsi_target objects.
 
-There was some discussion about this a couple of years ago on the linux-scsi
-mailing list:  http://marc.info/?l=linux-scsi&m=129702506514742&w=2
-Although one approach is to send all SCSI sense data to a userspace daemon
-for processing, this patch set does not take that approach due to the
-difficulty in reliably delivering all of the data.  An interesting UA
-condition might not be delivered due to a flood of media errors, for example.
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/scsi_lib.c    | 135 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_priv.h   |   3 +
+ drivers/scsi/scsi_scan.c   |  17 ++++++
+ include/scsi/scsi_device.h |  34 ++++++++++++
+ 4 files changed, 189 insertions(+)
 
-The mechanism used is to flag when certain UA ASC/ASCQ codes are received
-that report asynchronous changes to the storage device configuration.
-An appropriate uevent is then generated for the scsi_device or scsi_target
-object.  An aggregation mechanism is used to avoid generating uevents at
-too high a rate, and to coalesce multiple UAs reported by LUNs on the
-same target for a REPORTED LUNS DATA HAS CHANGED sense code.
-
-The changes are enabled by a new kernel config option CONFIG_SCSI_ENHANCED_UA.
-If this config option is not used, no new uevents are generated.  There are
-some changes to kernel logging messages if CONFIG_SCSI_ENHANCED_UA is enabled,
-because the existing messages explicitly stated that the kernel did not do
-anything with the information.
-
-Note that checkpatch is reporting errors on patch 5/6 relating to macros
-in scsi_sysfs.c -- I believe these errors are incorrect and have sent a
-message to the checkpatch maintainer.  The macros were derived from
-existing ones already in the file.
-
-Changes made since earlier v2 version:
-
-   - Remove patch 1/8 "Generate uevent on sd capacity change"
-   - Remove patch 8/8 "Streamline detection of FM/EOM/ILI status"
-   - Changed scsi_debug to not generate UA on INQUIRY or REPORT_LUNS
-   - Changed scsi_debug to only report UA queue overflow condition
-     if dsense=1, as descriptor format sense data is needed
-
-Changes made since earlier RFC version:
-
-   - Remove patch 1/9 "Detect overflow of sense data buffer"
-     Some scsi_debug changes in this patch were moved to patch 7/8
-   - Corrected Kconfig help text
-   - Change name of "sdev_evt_thread" to "sdev_evt_work"
-   - Change name of "starget_evt_thread" to "starget_evt_work"
-   - Pull code out of scsi_check_sense() that handles UAs into
-     an exported function so that drivers can report conditions
-     received asynchronously
-
-Thanks to everyone for the comments on this patch series.
-
-Ewan D. Milne (6):
-  [SCSI] Add a kernel config option for enhanced Unit Attention support
-  [SCSI] Rename scsi_evt_xxx to sdev_evt_xxx and scsi_event to
-    sdev_event
-  [SCSI] Add support for scsi_target events
-  [SCSI] Generate uevents for certain Unit Attention codes
-  [SCSI] Add sysfs support for enhanced Unit Attention handling
-  [SCSI] Add sense and Unit Attention generation to scsi_debug
-
- drivers/scsi/Kconfig       |  12 +++
- drivers/scsi/scsi_debug.c  | 138 +++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_error.c  | 187 ++++++++++++++++++++++++++++++++++++++++-----
- drivers/scsi/scsi_lib.c    | 176 ++++++++++++++++++++++++++++++++++++++----
- drivers/scsi/scsi_priv.h   |  10 ++-
- drivers/scsi/scsi_scan.c   |  54 +++++++------
- drivers/scsi/scsi_sysfs.c  | 146 ++++++++++++++++++++++++++++++++---
- include/scsi/scsi_cmnd.h   |   4 +
- include/scsi/scsi_device.h |  62 ++++++++++++++-
- include/scsi/scsi_eh.h     |   5 ++
- 10 files changed, 716 insertions(+), 78 deletions(-)
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 53f074d..c55eea1 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2390,6 +2390,141 @@ scsi_target_resume(struct scsi_target *starget)
+ }
+ EXPORT_SYMBOL(scsi_target_resume);
+ 
++#ifdef CONFIG_SCSI_ENHANCED_UA
++/**
++ *	starget_evt_emit - emit a single SCSI target uevent
++ *	@starget: associated SCSI target
++ *	@evt: event to emit
++ *
++ *	Send a single uevent (starget_event) to the associated scsi_target.
++ */
++static void starget_evt_emit(struct scsi_target *starget,
++			     struct starget_event *evt)
++{
++	int idx = 0;
++	char *envp[3];
++
++	switch (evt->evt_type) {
++	case STARGET_EVT_LUN_CHANGE_REPORTED:
++		envp[idx++] = "STARGET_LUN_CHANGE_REPORTED=1";
++		break;
++	default:
++		/* do nothing */
++		break;
++	}
++
++	envp[idx++] = NULL;
++
++	kobject_uevent_env(&starget->dev.kobj, KOBJ_CHANGE, envp);
++}
++
++/**
++ *	starget_evt_work - send a uevent for each scsi event
++ *	@work: work struct for scsi_target
++ *
++ *	Dispatch queued events to their associated scsi_target kobjects
++ *	as uevents.
++ */
++void starget_evt_work(struct work_struct *work)
++{
++	struct scsi_target *starget;
++	LIST_HEAD(event_list);
++
++	starget = container_of(work, struct scsi_target, event_work);
++
++	while (1) {
++		struct starget_event *evt;
++		struct list_head *this, *tmp;
++		unsigned long flags;
++
++		spin_lock_irqsave(&starget->list_lock, flags);
++		list_splice_init(&starget->event_list, &event_list);
++		spin_unlock_irqrestore(&starget->list_lock, flags);
++
++		if (list_empty(&event_list))
++			break;
++
++		list_for_each_safe(this, tmp, &event_list) {
++			evt = list_entry(this, struct starget_event, node);
++			list_del(&evt->node);
++			starget_evt_emit(starget, evt);
++			kfree(evt);
++		}
++	}
++}
++
++/**
++ *	starget_evt_send - send asserted event to uevent thread
++ *	@starget: scsi_target event occurred on
++ *	@evt: event to send
++ *
++ *	Assert scsi target event asynchronously.
++ */
++void starget_evt_send(struct scsi_target *starget, struct starget_event *evt)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&starget->list_lock, flags);
++	list_add_tail(&evt->node, &starget->event_list);
++	schedule_work(&starget->event_work);
++	spin_unlock_irqrestore(&starget->list_lock, flags);
++}
++EXPORT_SYMBOL_GPL(starget_evt_send);
++
++/**
++ *	starget_evt_alloc - allocate a new scsi_target event
++ *	@evt_type: type of event to allocate
++ *	@gfpflags: GFP flags for allocation
++ *
++ *	Allocates and returns a new starget_event.
++ */
++struct starget_event *starget_evt_alloc(enum scsi_target_event evt_type,
++					gfp_t gfpflags)
++{
++	struct starget_event *evt = kzalloc(sizeof(struct starget_event),
++					    gfpflags);
++	if (!evt)
++		return NULL;
++
++	evt->evt_type = evt_type;
++	INIT_LIST_HEAD(&evt->node);
++
++	/* evt_type-specific initialization, if any */
++	switch (evt_type) {
++	case STARGET_EVT_LUN_CHANGE_REPORTED:
++	default:
++		/* do nothing */
++		break;
++	}
++
++	return evt;
++}
++EXPORT_SYMBOL_GPL(starget_evt_alloc);
++
++/**
++ *	starget_evt_send_simple - send asserted event to uevent thread
++ *	@starget: scsi_target event occurred on
++ *	@evt_type: type of event to send
++ *	@gfpflags: GFP flags for allocation
++ *
++ *	Assert scsi target event asynchronously, given an event type.
++ */
++void starget_evt_send_simple(struct scsi_target *starget,
++			     enum scsi_target_event evt_type, gfp_t gfpflags)
++{
++	struct starget_event *evt = starget_evt_alloc(evt_type, gfpflags);
++	if (!evt) {
++		starget_printk(KERN_ERR, starget, "event %d eaten due to OOM\n",
++			       evt_type);
++		return;
++	}
++
++	starget_evt_send(starget, evt);
++}
++EXPORT_SYMBOL_GPL(starget_evt_send_simple);
++
++#endif
++
+ /**
+  * scsi_internal_device_block - internal function to put a device temporarily into the SDEV_BLOCK state
+  * @sdev:	device to block
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 7f00813..5da5466 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -91,6 +91,9 @@ struct request_queue;
+ struct request;
+ extern struct kmem_cache *scsi_sdb_cache;
+ extern void sdev_evt_work(struct work_struct *work);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++extern void starget_evt_work(struct work_struct *work);
++#endif
+ 
+ /* scsi_proc.c */
+ #ifdef CONFIG_SCSI_PROC_FS
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 47348ed..2d21597 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -425,6 +425,11 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	starget->can_queue = 0;
+ 	INIT_LIST_HEAD(&starget->siblings);
+ 	INIT_LIST_HEAD(&starget->devices);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	INIT_LIST_HEAD(&starget->event_list);
++	spin_lock_init(&starget->list_lock);
++	INIT_WORK(&starget->event_work, starget_evt_work);
++#endif
+ 	starget->state = STARGET_CREATED;
+ 	starget->scsi_level = SCSI_2;
+ 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
+@@ -472,7 +477,19 @@ static void scsi_target_reap_usercontext(struct work_struct *work)
+ {
+ 	struct scsi_target *starget =
+ 		container_of(work, struct scsi_target, ew.work);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	struct list_head *this, *tmp;
++
++	cancel_work_sync(&starget->event_work);
++
++	list_for_each_safe(this, tmp, &starget->event_list) {
++		struct starget_event *evt;
+ 
++		evt = list_entry(this, struct starget_event, node);
++		list_del(&evt->node);
++		kfree(evt);
++	}
++#endif
+ 	transport_remove_device(&starget->dev);
+ 	device_del(&starget->dev);
+ 	scsi_target_destroy(starget);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index ea16419..69cbd7e 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -229,6 +229,24 @@ enum scsi_target_state {
+ 	STARGET_DEL,
+ };
+ 
++#ifdef CONFIG_SCSI_ENHANCED_UA
++enum scsi_target_event {
++	STARGET_EVT_LUN_CHANGE_REPORTED	= 1,	/* UA reported */
++
++	STARGET_EVT_LAST	= STARGET_EVT_LUN_CHANGE_REPORTED,
++	STARGET_EVT_MAXBITS	= STARGET_EVT_LAST + 1
++};
++
++struct starget_event {
++	enum scsi_target_event	evt_type;
++	struct list_head	node;
++
++	/* put union of data structures, for non-simple event types,
++	 * here
++	 */
++};
++#endif
++
+ /*
+  * scsi_target: representation of a scsi target, for now, this is only
+  * used for single_lun devices. If no one has active IO to the target,
+@@ -251,6 +269,13 @@ struct scsi_target {
+ 						 * means no lun present. */
+ 	unsigned int		no_report_luns:1;	/* Don't use
+ 						 * REPORT LUNS for scanning. */
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	DECLARE_BITMAP(supported_events, STARGET_EVT_MAXBITS);
++	struct list_head	event_list;	/* asserted events */
++	struct work_struct	event_work;
++	spinlock_t list_lock;
++#endif
++
+ 	/* commands actually active on LLD. protected by host lock. */
+ 	unsigned int		target_busy;
+ 	/*
+@@ -368,6 +393,15 @@ extern int scsi_device_quiesce(struct scsi_device *sdev);
+ extern void scsi_device_resume(struct scsi_device *sdev);
+ extern void scsi_target_quiesce(struct scsi_target *);
+ extern void scsi_target_resume(struct scsi_target *);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++extern struct starget_event *starget_evt_alloc(enum scsi_target_event evt_type,
++					       gfp_t gfpflags);
++extern void starget_evt_send(struct scsi_target *starget,
++			     struct starget_event *evt);
++extern void starget_evt_send_simple(struct scsi_target *starget,
++				    enum scsi_target_event evt_type,
++				    gfp_t gfpflags);
++#endif
+ extern void scsi_scan_target(struct device *parent, unsigned int channel,
+ 			     unsigned int id, unsigned int lun, int rescan);
+ extern void scsi_target_reap(struct scsi_target *);
 -- 
 1.7.11.7
 
