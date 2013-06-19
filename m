@@ -1,57 +1,37 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH 07/14] scsi_transport_srp: Add transport layer error handling
-Date: Wed, 19 Jun 2013 15:00:38 +0200
-Message-ID: <51C1AB76.2020200@acm.org>
-References: <51B87501.4070005@acm.org> <51B8777B.5050201@acm.org> <51BA20ED.6040200@mellanox.com> <51BB1857.7040802@acm.org> <51BB5A04.3080901@mellanox.com> <51BC3945.9030900@acm.org> <51C09202.2040503@mellanox.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v2 2/4] lib/scatterlist: introduce sg_pcopy_from_buffer()
+ and sg_pcopy_to_buffer()
+Date: Wed, 19 Jun 2013 22:12:29 +0900
+Message-ID: <CAC5umyivGS88R8SXoeqmgGkZFHDfN3GkaojDkfnbdX+NODwRyQ@mail.gmail.com>
+References: <1371562294-13642-1-git-send-email-akinobu.mita@gmail.com>
+	<1371562294-13642-3-git-send-email-akinobu.mita@gmail.com>
+	<20130618143728.GE2767@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51C09202.2040503-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <20130618143728.GE2767@htj.dyndns.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Imre Deak <imre.deak@intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/18/13 18:59, Vu Pham wrote:
-> Bart Van Assche wrote:
->> On 06/14/13 19:59, Vu Pham wrote:
->>>> On 06/13/13 21:43, Vu Pham wrote:
->>>>> If rport's state is already SRP_RPORT_BLOCKED, I don't think we need
->>>>> to do extra block with scsi_block_requests()
->>>>
->>>> Please keep in mind that srp_reconnect_rport() can be called from two
->>>> different contexts: that function can not only be called from inside
->>>> the SRP transport layer but also from inside the SCSI error handler
->>>> (see also the srp_reset_device() modifications in a later patch in
->>>> this series). If this function is invoked from the context of the SCSI
->>>> error handler the chance is high that the SCSI device will have
->>>> another state than SDEV_BLOCK. Hence the scsi_block_requests() call in
->>>> this function.
->>> Yes, srp_reconnect_rport() can be called from two contexts; however, it
->>> deals with same rport & rport's state.
->>> I'm thinking something like this:
->>>
->>>     if (rport->state != SRP_RPORT_BLOCKED) {
->>>      scsi_block_requests(shost);
->>
->> Sorry but I'm afraid that that approach would still allow the user to
->> unblock one or more SCSI devices via sysfs during the
->> i->f->reconnect(rport) call, something we do not want.
->>
-> I don't think that user can unblock scsi device(s) via sysfs if you use
-> scsi_block_requests(shost) in srp_start_tl_fail_timers().
+2013/6/18 Tejun Heo <tj@kernel.org>:
+> On Tue, Jun 18, 2013 at 10:31:32PM +0900, Akinobu Mita wrote:
+>>  /**
+>> + * sg_miter_seek - reposition mapping iterator
+>> + * @miter: sg mapping iter to be seeked
+>> + * @offset: number of bytes to plus the current location
+>> + *
+>> + * Description:
+>> + *   Sets the offset of @miter to its current location plus @offset bytes.
+>> + *
+>> + * Notes:
+>> + *   This function must be called just after sg_miter_start() or sg_miter_stop()
+>
+> It's not gonna be hard to make this function to handle any state,
+> right?  Wouldn't it be better to do that?  It's a pretty generic
+> feature after all.  Also, maybe a better name is sg_miter_skip()?
 
-Hello Vu,
-
-If scsi_block_requests() would be used in srp_start_tl_fail_timers() 
-instead of scsi_target_block() then multipathd would no longer be able 
-to notice that a path is blocked after the fast_io_fail and dev_loss 
-timers started and hence wouldn't be able to use the optimization where 
-blocked paths are skipped when queueing a new I/O request.
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes.  This limitation can be removed by calling sg_miter_stop() at
+the front of sg_miter_seek().  Also, renaming it to sg_miter_skip()
+sounds good.
