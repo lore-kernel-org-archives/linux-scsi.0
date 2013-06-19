@@ -1,68 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 10/10] idr: Rework idr_preload()
-Date: Wed, 19 Jun 2013 01:18:32 -0700
-Message-ID: <20130619081832.GC30681@mtj.dyndns.org>
-References: <1371600150-23557-1-git-send-email-koverstreet@google.com>
-	<1371600150-23557-11-git-send-email-koverstreet@google.com>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH 07/14] scsi_transport_srp: Add transport layer error handling
+Date: Wed, 19 Jun 2013 15:00:38 +0200
+Message-ID: <51C1AB76.2020200@acm.org>
+References: <51B87501.4070005@acm.org> <51B8777B.5050201@acm.org> <51BA20ED.6040200@mellanox.com> <51BB1857.7040802@acm.org> <51BB5A04.3080901@mellanox.com> <51BC3945.9030900@acm.org> <51C09202.2040503@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <cluster-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <1371600150-23557-11-git-send-email-koverstreet@google.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/cluster-devel>
-List-Post: <mailto:cluster-devel@redhat.com>
-List-Help: <mailto:cluster-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=subscribe>
-Sender: cluster-devel-bounces@redhat.com
-Errors-To: cluster-devel-bounces@redhat.com
-To: Kent Overstreet <koverstreet@google.com>
-Cc: Dmitry Torokhov <dtor@vmware.com>, David Airlie <airlied@linux.ie>, Davidlohr Bueso <davidlohr.bueso@hp.com>, Trond Myklebust <Trond.Myklebust@netapp.com>, nab@linux-iscsi.org, Sean Hefty <sean.hefty@intel.com>, Michel Lespinasse <walken@google.com>, John McCutchan <john@johnmccutchan.com>, Roland Dreier <roland@kernel.org>, Thomas Hellstrom <thellstrom@vmware.com>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Robert Love <rlove@rlove.org>, linux-rdma@vger.kernel.org, cluster-devel@redhat.com, Stefan Richter <stefanr@s5r6.in-berlin.de>, Brian Paul <brianp@vmware.com>, Doug Gilbert <dgilbert@interlog.com>, Dave Airlie <airlied@redhat.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Rik van Riel <riel@redhat.com>, Erez Shitrit <erezsh@mellanox.co.il>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51C09202.2040503-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello, Kent.
+On 06/18/13 18:59, Vu Pham wrote:
+> Bart Van Assche wrote:
+>> On 06/14/13 19:59, Vu Pham wrote:
+>>>> On 06/13/13 21:43, Vu Pham wrote:
+>>>>> If rport's state is already SRP_RPORT_BLOCKED, I don't think we need
+>>>>> to do extra block with scsi_block_requests()
+>>>>
+>>>> Please keep in mind that srp_reconnect_rport() can be called from two
+>>>> different contexts: that function can not only be called from inside
+>>>> the SRP transport layer but also from inside the SCSI error handler
+>>>> (see also the srp_reset_device() modifications in a later patch in
+>>>> this series). If this function is invoked from the context of the SCSI
+>>>> error handler the chance is high that the SCSI device will have
+>>>> another state than SDEV_BLOCK. Hence the scsi_block_requests() call in
+>>>> this function.
+>>> Yes, srp_reconnect_rport() can be called from two contexts; however, it
+>>> deals with same rport & rport's state.
+>>> I'm thinking something like this:
+>>>
+>>>     if (rport->state != SRP_RPORT_BLOCKED) {
+>>>      scsi_block_requests(shost);
+>>
+>> Sorry but I'm afraid that that approach would still allow the user to
+>> unblock one or more SCSI devices via sysfs during the
+>> i->f->reconnect(rport) call, something we do not want.
+>>
+> I don't think that user can unblock scsi device(s) via sysfs if you use
+> scsi_block_requests(shost) in srp_start_tl_fail_timers().
 
-On Tue, Jun 18, 2013 at 05:02:30PM -0700, Kent Overstreet wrote:
-> With the new ida implementation, that doesn't work anymore - the new ida
-> code grows its bitmap tree by reallocating the entire thing in power of
-> two increments. Doh.
+Hello Vu,
 
-So, I'm not sure about the single contiguous array implementation.  It
-introduces some nasty characteristics such as possibly too large
-contiguous allocation, bursty CPU usages, and loss of the ability to
-handle ID allocations clustered in high areas - sure, the old ida
-wasn't great on that part either but this can be much worse.
+If scsi_block_requests() would be used in srp_start_tl_fail_timers() 
+instead of scsi_target_block() then multipathd would no longer be able 
+to notice that a path is blocked after the fast_io_fail and dev_loss 
+timers started and hence wouldn't be able to use the optimization where 
+blocked paths are skipped when queueing a new I/O request.
 
-In addition, I'm not sure what this single contiguous allocation buys
-us.  Let's say each leaf node size is 4k.  Even with in-array tree
-implementation, it should be able to serve 2k IDs per-page, which
-would be enough for most use cases and with a bit of caching it can
-easily achieve both the performance benefits of array implementation
-and the flexibility of allocating each leaf separately.  Even without
-caching, the tree depth would normally be much lower than the current
-implementation and the performance should be better.  If you're
-bothered by having to implement another radix tree for it, it should
-be possible to just implement the leaf node logic and use the existing
-radix tree for internal nodes, right?
-
-> So we need a slightly different trick. Note that if all allocations from
-> an idr start by calling idr_prealloc() and disabling premption, at
-> most nr_cpus() allocations can happen before someone calls
-> idr_prealloc() again.
-
-But we allow mixing preloaded and normal allocations and users are
-allowed to allocate as many IDs they want after preloading.  It should
-guarantee that the first allocation after preloading follows the
-stronger allocation flag, and the above approach can't guarantee that.
-You can declare that if preload is to work, all allocators of the ida
-should preload and enforce it but that restriction arises only because
-you're using this single array implementation.  It's another drawback
-of this particular approach.  There seem to be a lot of cons and I
-can't really see what the pros are.
-
-Thanks.
-
--- 
-tejun
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
