@@ -1,13 +1,13 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH v3 2/6] [SCSI] Rename scsi_evt_xxx to sdev_evt_xxx and scsi_event to sdev_event
-Date: Wed, 19 Jun 2013 13:42:37 -0400
-Message-ID: <1371663761-22481-3-git-send-email-emilne@redhat.com>
+Subject: [PATCH v3 6/6] [SCSI] Add sense and Unit Attention generation to scsi_debug
+Date: Wed, 19 Jun 2013 13:42:41 -0400
+Message-ID: <1371663761-22481-7-git-send-email-emilne@redhat.com>
 References: <1371663761-22481-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13806 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:8031 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756847Ab3FSRmp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jun 2013 13:42:45 -0400
+	id S1757279Ab3FSRmr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Jun 2013 13:42:47 -0400
 In-Reply-To: <1371663761-22481-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,182 +16,213 @@ Cc: jbottomley@parallels.com, rwheeler@redhat.com
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-The names of the struct and some of the functions for scsi_device
-events are too generic and do not match the comments in the source.
-Changed all of the names to begin with sdev_ in order to avoid
-naming issues and confusion with scsi_target events to be added.
-Also changed name of sdev_evt_thread() to sdev_evt_work().
+Added capability to scsi_debug to generate sense and Unit Attention
+conditions to exercise the enhanced sense and Unit Attention handling.
 
 Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/scsi_lib.c    | 24 ++++++++++++------------
- drivers/scsi/scsi_priv.h   |  1 +
- drivers/scsi/scsi_scan.c   |  3 +--
- drivers/scsi/scsi_sysfs.c  |  4 ++--
- include/scsi/scsi_device.h |  6 +++---
- 5 files changed, 19 insertions(+), 19 deletions(-)
+ drivers/scsi/scsi_debug.c | 138 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 138 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6dfb978..53f074d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2175,9 +2175,9 @@ EXPORT_SYMBOL(scsi_device_set_state);
-  *	@sdev: associated SCSI device
-  *	@evt: event to emit
-  *
-- *	Send a single uevent (scsi_event) to the associated scsi_device.
-+ *	Send a single uevent (sdev_event) to the associated scsi_device.
-  */
--static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
-+static void sdev_evt_emit(struct scsi_device *sdev, struct sdev_event *evt)
- {
- 	int idx = 0;
- 	char *envp[3];
-@@ -2198,13 +2198,13 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
- }
- 
- /**
-- * 	sdev_evt_thread - send a uevent for each scsi event
-+ *	sdev_evt_work - send a uevent for each scsi event
-  *	@work: work struct for scsi_device
-  *
-  *	Dispatch queued events to their associated scsi_device kobjects
-  *	as uevents.
-  */
--void scsi_evt_thread(struct work_struct *work)
-+void sdev_evt_work(struct work_struct *work)
- {
- 	struct scsi_device *sdev;
- 	LIST_HEAD(event_list);
-@@ -2212,7 +2212,7 @@ void scsi_evt_thread(struct work_struct *work)
- 	sdev = container_of(work, struct scsi_device, event_work);
- 
- 	while (1) {
--		struct scsi_event *evt;
-+		struct sdev_event *evt;
- 		struct list_head *this, *tmp;
- 		unsigned long flags;
- 
-@@ -2224,9 +2224,9 @@ void scsi_evt_thread(struct work_struct *work)
- 			break;
- 
- 		list_for_each_safe(this, tmp, &event_list) {
--			evt = list_entry(this, struct scsi_event, node);
-+			evt = list_entry(this, struct sdev_event, node);
- 			list_del(&evt->node);
--			scsi_evt_emit(sdev, evt);
-+			sdev_evt_emit(sdev, evt);
- 			kfree(evt);
- 		}
- 	}
-@@ -2239,7 +2239,7 @@ void scsi_evt_thread(struct work_struct *work)
-  *
-  *	Assert scsi device event asynchronously.
-  */
--void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt)
-+void sdev_evt_send(struct scsi_device *sdev, struct sdev_event *evt)
- {
- 	unsigned long flags;
- 
-@@ -2265,12 +2265,12 @@ EXPORT_SYMBOL_GPL(sdev_evt_send);
-  *	@evt_type: type of event to allocate
-  *	@gfpflags: GFP flags for allocation
-  *
-- *	Allocates and returns a new scsi_event.
-+ *	Allocates and returns a new sdev_event.
-  */
--struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-+struct sdev_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- 				  gfp_t gfpflags)
- {
--	struct scsi_event *evt = kzalloc(sizeof(struct scsi_event), gfpflags);
-+	struct sdev_event *evt = kzalloc(sizeof(struct sdev_event), gfpflags);
- 	if (!evt)
- 		return NULL;
- 
-@@ -2300,7 +2300,7 @@ EXPORT_SYMBOL_GPL(sdev_evt_alloc);
- void sdev_evt_send_simple(struct scsi_device *sdev,
- 			  enum scsi_device_event evt_type, gfp_t gfpflags)
- {
--	struct scsi_event *evt = sdev_evt_alloc(evt_type, gfpflags);
-+	struct sdev_event *evt = sdev_evt_alloc(evt_type, gfpflags);
- 	if (!evt) {
- 		sdev_printk(KERN_ERR, sdev, "event %d eaten due to OOM\n",
- 			    evt_type);
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 07ce3f5..7f00813 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -90,6 +90,7 @@ extern void scsi_exit_queue(void);
- struct request_queue;
- struct request;
- extern struct kmem_cache *scsi_sdb_cache;
-+extern void sdev_evt_work(struct work_struct *work);
- 
- /* scsi_proc.c */
- #ifdef CONFIG_SCSI_PROC_FS
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 2e5fe58..47348ed 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -244,7 +244,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	struct scsi_device *sdev;
- 	int display_failure_msg = 1, ret;
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
--	extern void scsi_evt_thread(struct work_struct *work);
- 	extern void scsi_requeue_run_queue(struct work_struct *work);
- 
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
-@@ -267,7 +266,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	INIT_LIST_HEAD(&sdev->starved_entry);
- 	INIT_LIST_HEAD(&sdev->event_list);
- 	spin_lock_init(&sdev->list_lock);
--	INIT_WORK(&sdev->event_work, scsi_evt_thread);
-+	INIT_WORK(&sdev->event_work, sdev_evt_work);
- 	INIT_WORK(&sdev->requeue_work, scsi_requeue_run_queue);
- 
- 	sdev->sdev_gendev.parent = get_device(&starget->dev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 04c2a27..686211e 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -353,9 +353,9 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	cancel_work_sync(&sdev->event_work);
- 
- 	list_for_each_safe(this, tmp, &sdev->event_list) {
--		struct scsi_event *evt;
-+		struct sdev_event *evt;
- 
--		evt = list_entry(this, struct scsi_event, node);
-+		evt = list_entry(this, struct sdev_event, node);
- 		list_del(&evt->node);
- 		kfree(evt);
- 	}
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 6efb2e1..ea16419 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -56,7 +56,7 @@ enum scsi_device_event {
- 	SDEV_EVT_MAXBITS	= SDEV_EVT_LAST + 1
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 182d5a5..1d8c2bb 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -230,6 +230,7 @@ struct sdebug_dev_info {
+ 	char reset;
+ 	char stopped;
+ 	char used;
++	char sense_pending;
  };
  
--struct scsi_event {
-+struct sdev_event {
- 	enum scsi_device_event	evt_type;
- 	struct list_head	node;
+ struct sdebug_host_info {
+@@ -3050,10 +3051,27 @@ static ssize_t sdebug_max_luns_store(struct device_driver * ddp,
+ 				     const char * buf, size_t count)
+ {
+         int n;
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++#endif
  
-@@ -359,9 +359,9 @@ extern int scsi_get_vpd_page(struct scsi_device *, u8 page, unsigned char *buf,
- 			     int buf_len);
- extern int scsi_device_set_state(struct scsi_device *sdev,
- 				 enum scsi_device_state state);
--extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-+extern struct sdev_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- 					  gfp_t gfpflags);
--extern void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt);
-+extern void sdev_evt_send(struct scsi_device *sdev, struct sdev_event *evt);
- extern void sdev_evt_send_simple(struct scsi_device *sdev,
- 			  enum scsi_device_event evt_type, gfp_t gfpflags);
- extern int scsi_device_quiesce(struct scsi_device *sdev);
+ 	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
+ 		scsi_debug_max_luns = n;
+ 		sdebug_max_tgts_luns();
++
++#ifdef CONFIG_SCSI_ENHANCED_UA
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				mk_sense_buffer(devip, UNIT_ATTENTION,
++						0x3f, 0x0e);
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++#endif
+ 		return count;
+ 	}
+ 	return -EINVAL;
+@@ -3100,12 +3118,28 @@ static ssize_t sdebug_virtual_gb_store(struct device_driver * ddp,
+ 				       const char * buf, size_t count)
+ {
+         int n;
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++#endif
+ 
+ 	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
+ 		scsi_debug_virtual_gb = n;
+ 
+ 		sdebug_capacity = get_sdebug_capacity();
+ 
++#ifdef CONFIG_SCSI_ENHANCED_UA
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				mk_sense_buffer(devip, UNIT_ATTENTION,
++						0x2a, 0x09);
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++#endif
+ 		return count;
+ 	}
+ 	return -EINVAL;
+@@ -3206,6 +3240,89 @@ static ssize_t sdebug_map_show(struct device_driver *ddp, char *buf)
+ DRIVER_ATTR(map, S_IRUGO, sdebug_map_show, NULL);
+ 
+ 
++#ifdef CONFIG_SCSI_ENHANCED_UA
++static ssize_t sdebug_ua_overflow_store(struct device_driver *ddp,
++					const char *buf, size_t count)
++{
++	int n;
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++
++	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0) &&
++            scsi_debug_dsense) {
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				mk_sense_buffer(devip, UNIT_ATTENTION,
++						0, 0);
++				devip->sense_buff[7] = 8;
++				devip->sense_buff[8] = 0x02;
++				devip->sense_buff[9] = 0x06;
++				devip->sense_buff[12] = 0x01;
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++		return count;
++	}
++	return -EINVAL;
++}
++DRIVER_ATTR(ua_overflow, S_IWUSR, NULL, sdebug_ua_overflow_store);
++
++static ssize_t sdebug_soft_threshold_reached_store(struct device_driver *ddp,
++						   const char *buf,
++						   size_t count)
++{
++	int n;
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++
++	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				mk_sense_buffer(devip, UNIT_ATTENTION,
++						0x38, 0x07);
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++		return count;
++	}
++	return -EINVAL;
++}
++DRIVER_ATTR(soft_threshold_reached, S_IWUSR, NULL,
++	    sdebug_soft_threshold_reached_store);
++
++static ssize_t sdebug_mode_parameters_changed_store(struct device_driver *ddp,
++						    const char *buf,
++						    size_t count)
++{
++	int n;
++	struct sdebug_host_info *sdbg_host;
++	struct sdebug_dev_info *devip;
++
++	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
++		spin_lock(&sdebug_host_list_lock);
++		list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
++			list_for_each_entry(devip, &sdbg_host->dev_info_list,
++					    dev_list) {
++				mk_sense_buffer(devip, UNIT_ATTENTION,
++						0x2a, 0x01);
++				devip->sense_pending = 1;
++			}
++		}
++		spin_unlock(&sdebug_host_list_lock);
++		return count;
++	}
++	return -EINVAL;
++}
++DRIVER_ATTR(mode_parameters_changed, S_IWUSR, NULL,
++	    sdebug_mode_parameters_changed_store);
++#endif
++
+ /* Note: The following function creates attribute files in the
+    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
+    files (over those found in the /sys/module/scsi_debug/parameters
+@@ -3239,11 +3356,27 @@ static int do_create_driverfs_files(void)
+ 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_guard);
+ 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_ato);
+ 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_map);
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	ret |= driver_create_file(&sdebug_driverfs_driver,
++				  &driver_attr_ua_overflow);
++	ret |= driver_create_file(&sdebug_driverfs_driver,
++				  &driver_attr_soft_threshold_reached);
++	ret |= driver_create_file(&sdebug_driverfs_driver,
++				  &driver_attr_mode_parameters_changed);
++#endif
+ 	return ret;
+ }
+ 
+ static void do_remove_driverfs_files(void)
+ {
++#ifdef CONFIG_SCSI_ENHANCED_UA
++	driver_remove_file(&sdebug_driverfs_driver,
++			   &driver_attr_mode_parameters_changed);
++	driver_remove_file(&sdebug_driverfs_driver,
++			   &driver_attr_soft_threshold_reached);
++	driver_remove_file(&sdebug_driverfs_driver,
++			   &driver_attr_ua_overflow);
++#endif
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_map);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_ato);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_guard);
+@@ -3926,6 +4059,11 @@ write:
+ 		errsts = check_condition_result;
+ 		break;
+ 	}
++	if (!errsts && devip->sense_pending && (*cmd != INQUIRY) &&
++	    (*cmd != REPORT_LUNS)) {
++		devip->sense_pending = 0;
++		errsts = check_condition_result;
++	}
+ 	return schedule_resp(SCpnt, devip, done, errsts,
+ 			     (delay_override ? 0 : scsi_debug_delay));
+ }
 -- 
 1.7.11.7
 
