@@ -1,39 +1,37 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: JMicron JMB363 PCI SATA/IDE Card Support
-Date: Wed, 19 Jun 2013 15:12:51 +0200
-Message-ID: <51C1AE53.4030206@matthiasprager.de>
+From: Jack Wang <jinpu.wang@profitbricks.com>
+Subject: RE: [PATCH 07/14] scsi_transport_srp: Add transport layer error handling
+Date: Wed, 19 Jun 2013 15:44:42 +0200
+Message-ID: <51C1B5CA.2030302@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dd15408.kasserver.com ([85.13.136.168]:48545 "EHLO
-	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933873Ab3FSNWj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jun 2013 09:22:39 -0400
-Received: from [192.168.0.13] (p5DE449B4.dip0.t-ipconnect.de [93.228.73.180])
-	by dd15408.kasserver.com (Postfix) with ESMTPSA id 0295394B060
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2013 15:12:55 +0200 (CEST)
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:44866 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756796Ab3FSNoe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jun 2013 09:44:34 -0400
+Received: by mail-bk0-f53.google.com with SMTP id e11so2350884bkh.12
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2013 06:44:33 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: David Dillow <dillowda@ornl.gov>, Vu Pham <vuhuong@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Roland Dreier <roland@kernel.org>
 
-Hello everyone,
+> +		/*
+> +		 * It can occur that after fast_io_fail_tmo expired and before
+> +		 * dev_loss_tmo expired that the SCSI error handler has
+> +		 * offlined one or more devices. scsi_target_unblock() doesn't
+> +		 * change the state of these devices into running, so do that
+> +		 * explicitly.
+> +		 */
+> +		spin_lock_irq(shost->host_lock);
+> +		__shost_for_each_device(sdev, shost)
+> +			if (sdev->sdev_state == SDEV_OFFLINE)
+> +				sdev->sdev_state = SDEV_RUNNING;
+> +		spin_unlock_irq(shost->host_lock);
+Hello Bart,
 
-I'm having a hard time getting my JMicron JMB363 PCI SATA/IDE Card
-to work under linux.
-The 'lspci -nn' output reads as follows:
-> RAID bus controller [0104]: JMicron Technology Corp. JMB363 SATA/IDE
-> Controller [197b:2363] (rev 03)
+Do you have test case to verify this behaviour?
 
-I tried my own kernel (3.9.6) under gentoo with CONFIG_PATA_JMICRON and
-CONFIG_SATA_AHCI enabled. And I tried using
-the latest SystemrescueCD (with kernel 3.4.47) which has pretty much
-everything compiled into it.
-
-FreeBSD is recognizing the devices just fine. How do I get them
-to run on linux?
-
-- Matthias
-
-P.S. a side note: this is in an virtualized environment (VMWare ESXi)
-with pass-through.
+Regards,
+Jack
