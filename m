@@ -1,84 +1,44 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH v3 3/6] [SCSI] Add support for scsi_target events
-Date: Wed, 19 Jun 2013 19:54:57 +0200
-Message-ID: <51C1F071.8070105@acm.org>
-References: <1371663761-22481-1-git-send-email-emilne@redhat.com> <1371663761-22481-4-git-send-email-emilne@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 59601] commit 97dec564fd4948e0e560869c80b76e166ca2a83e breaks
+ communication with XYRATEX disk shelves
+Date: Wed, 19 Jun 2013 18:29:46 +0000 (UTC)
+Message-ID: <20130619182946.A287E11FB0C@bugzilla.kernel.org>
+References: <bug-59601-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from juliette.telenet-ops.be ([195.130.137.74]:50051 "EHLO
-	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933869Ab3FSRzB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jun 2013 13:55:01 -0400
-In-Reply-To: <1371663761-22481-4-git-send-email-emilne@redhat.com>
+Received: from mail.kernel.org ([198.145.19.201]:53217 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756776Ab3FSS3x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Jun 2013 14:29:53 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 3461520425
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2013 18:29:48 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 3EC8E2040D
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2013 18:29:47 +0000 (UTC)
+In-Reply-To: <bug-59601-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, rwheeler@redhat.com
+To: linux-scsi@vger.kernel.org
 
-On 06/19/13 19:42, Ewan D. Milne wrote:
-> +static void starget_evt_emit(struct scsi_target *starget,
-> +			     struct starget_event *evt)
-> +{
-> +	int idx = 0;
-> +	char *envp[3];
-> +
-> +	switch (evt->evt_type) {
-> +	case STARGET_EVT_LUN_CHANGE_REPORTED:
-> +		envp[idx++] = "STARGET_LUN_CHANGE_REPORTED=1";
-> +		break;
-> +	default:
-> +		/* do nothing */
-> +		break;
-> +	}
-> +
-> +	envp[idx++] = NULL;
-> +
-> +	kobject_uevent_env(&starget->dev.kobj, KOBJ_CHANGE, envp);
-> +}
+https://bugzilla.kernel.org/show_bug.cgi?id=59601
 
-Sorry but it's not clear to me why the envp[] array has size three while 
-at most two entries are used ? And shouldn't that array be declared as 
-const char*[] instead of char *[] since string constants have type const 
-char[] ?
 
-> +		list_for_each_safe(this, tmp, &event_list) {
-> +			evt = list_entry(this, struct starget_event, node);
 
-Any reason why list_for_each_entry_safe() has not been used here ?
 
-> +void starget_evt_send(struct scsi_target *starget, struct starget_event *evt)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&starget->list_lock, flags);
-> +	list_add_tail(&evt->node, &starget->event_list);
-> +	schedule_work(&starget->event_work);
-> +	spin_unlock_irqrestore(&starget->list_lock, flags);
-> +}
 
-Is it necessary here to invoke schedule_work() under protection of 
-list_lock, or would it be safe to invoke schedule_work() after the 
-spin_unlock_irqrestore() ?
+--- Comment #5 from Saurav Kashyap <saurav.kashyap@qlogic.com>  2013-06-19 18:29:46 ---
+Hi Jack,
+I am seeing "FCP I/O protocol failure (0x8/0x2)" messages in the failed logs.
+We need more data on what is coming back to the driver. I am attaching a patch
+that will dump that packet. Apply that patch, enable ql2xextended_error_logging
+and share the logs.
 
-> +#ifdef CONFIG_SCSI_ENHANCED_UA
-> +	struct list_head *this, *tmp;
-> +
-> +	cancel_work_sync(&starget->event_work);
-> +
-> +	list_for_each_safe(this, tmp, &starget->event_list) {
-> +		struct starget_event *evt;
->
-> +		evt = list_entry(this, struct starget_event, node);
-> +		list_del(&evt->node);
-> +		kfree(evt);
-> +	}
-> +#endif
+thanks,
+~Saurav
 
-Same question here: any reason why list_for_each_entry_safe() has not 
-been used ?
-
-Thanks,
-
-Bart.
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
