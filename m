@@ -1,89 +1,115 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH v3 4/6] [SCSI] Generate uevents for certain Unit
- Attention codes
-Date: Wed, 19 Jun 2013 18:48:20 +0000
-Message-ID: <1371667700.2409.82.camel@dabdike>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH v3 3/6] [SCSI] Add support for scsi_target events
+Date: Wed, 19 Jun 2013 14:49:52 -0400
+Message-ID: <1371667792.17420.140.camel@localhost.localdomain>
 References: <1371663761-22481-1-git-send-email-emilne@redhat.com>
-	 <1371663761-22481-5-git-send-email-emilne@redhat.com>
+	 <1371663761-22481-4-git-send-email-emilne@redhat.com>
+	 <51C1F071.8070105@acm.org>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:35456 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965011Ab3FSSsV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jun 2013 14:48:21 -0400
-In-Reply-To: <1371663761-22481-5-git-send-email-emilne@redhat.com>
-Content-Language: en-US
-Content-ID: <4D36B3BA9BD8364E8FFABAA05424F86B@sw.swsoft.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48847 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964929Ab3FSStz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Jun 2013 14:49:55 -0400
+In-Reply-To: <51C1F071.8070105@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, rwheeler@redhat.com
 
-On Wed, 2013-06-19 at 13:42 -0400, Ewan D. Milne wrote:
-> From: "Ewan D. Milne" <emilne@redhat.com>
+On Wed, 2013-06-19 at 19:54 +0200, Bart Van Assche wrote:
+> On 06/19/13 19:42, Ewan D. Milne wrote:
+> > +static void starget_evt_emit(struct scsi_target *starget,
+> > +			     struct starget_event *evt)
+> > +{
+> > +	int idx = 0;
+> > +	char *envp[3];
+> > +
+> > +	switch (evt->evt_type) {
+> > +	case STARGET_EVT_LUN_CHANGE_REPORTED:
+> > +		envp[idx++] = "STARGET_LUN_CHANGE_REPORTED=1";
+> > +		break;
+> > +	default:
+> > +		/* do nothing */
+> > +		break;
+> > +	}
+> > +
+> > +	envp[idx++] = NULL;
+> > +
+> > +	kobject_uevent_env(&starget->dev.kobj, KOBJ_CHANGE, envp);
+> > +}
 > 
-> Generate a uevent on the scsi_target object when the following
-> Unit Attention ASC/ASCQ code is received:
-> 
->     3F/0E  REPORTED LUNS DATA HAS CHANGED
-> 
-> Generate a uevent on the scsi_device object when the following
-> Unit Attention ASC/ASCQ codes are received:
-> 
->     2A/01  MODE PARAMETERS CHANGED
->     2A/09  CAPACITY DATA HAS CHANGED
->     38/07  THIN PROVISIONING SOFT THRESHOLD REACHED
-> 
-> All uevent generation is aggregated and rate-limited so that any
-> individual event is delivered no more than once every 2 seconds.
+> Sorry but it's not clear to me why the envp[] array has size three while 
+> at most two entries are used ? And shouldn't that array be declared as 
+> const char*[] instead of char *[] since string constants have type const 
+> char[] ?
 
-Why?  What causes you to think these events would be repeated on a
-massive scale.  Mode and Capacity changes are signalled only once per
-actual change, which doesn't occur very often.  SBC-3 says that the TP
-thresholds are only signalled once but may be signalled again after a
-reset.  In general, T10 treats UA as exceptional conditions ... there's
-no reason to think they keep repeating.
+Hmm.  I copied the code from the (renamed) scsi_evt_emit() which had
+char *envp[3], but you are right, only 2 entries are needed.  As far
+as the const attribute goes, the signature of kobject_uevent_env() in
+include/linux/kobject.h doesn't have the const attribute on the envp
+parameter, and other callers don't use const.
 
-Dumping all the hand rolled rate limit code would simplify the patch
-quite a lot.
-
-> Log kernel messages when the following Unit Attention ASC/ASCQ
-> codes are received:
 > 
->     2A/xx  PARAMETERS CHANGED
->     3F/03  INQUIRY DATA HAS CHANGED
->     3F/xx  TARGET OPERATING CONDITIONS HAVE CHANGED
+> > +		list_for_each_safe(this, tmp, &event_list) {
+> > +			evt = list_entry(this, struct starget_event, node);
 > 
-> Also changed the kernel log messages on existing Unit Attention
-> codes, to remove text that indicates that the conditions were not
-> handled in any way (since they are now handled in some way) and
-> reflect the wording used in SPC-4.
+> Any reason why list_for_each_entry_safe() has not been used here ?
 
-This isn't a good idea because
+No particular reason, again the code was copied from the (renamed)
+sdev_evt_thread(). 
 
-     1. They might not be acted on if there's no actual listener for the
-        uevent
-     2. Anyone currently using a log message reaper to process the event
-        (which is currently the only way of doing it) would now miss it
-        because the log message has changed.
-
-> Also log a kernel message when the a scsi device reports a Unit
-> Attention queue overflow, indicating that status has been lost.
 > 
-> These changes are only enabled when the kernel config option
-> CONFIG_SCSI_ENHANCED_UA is set.  Otherwise, the behavior is the
-> same as before, including the existing kernel log messages.
-> However, the detection of these conditions was moved to be earlier
-> in scsi_check_sense(), because the code was not always reached.
+> > +void starget_evt_send(struct scsi_target *starget, struct starget_event *evt)
+> > +{
+> > +	unsigned long flags;
+> > +
+> > +	spin_lock_irqsave(&starget->list_lock, flags);
+> > +	list_add_tail(&evt->node, &starget->event_list);
+> > +	schedule_work(&starget->event_work);
+> > +	spin_unlock_irqrestore(&starget->list_lock, flags);
+> > +}
 > 
-> Added a new exported function scsi_report_sense() to allow drivers
-> to report sense data that is not associated with a SCSI command.
+> Is it necessary here to invoke schedule_work() under protection of 
+> list_lock, or would it be safe to invoke schedule_work() after the 
+> spin_unlock_irqrestore() ?
 
-No: we don't add APIs until there are consumers.  The refactor into
-scsi_report_sense is fine, just don't add the export or prototype until
-someone comes along with a use case.
+I think the call to schedule_work() can be moved outside, the lock, I'll
+have to verify that.
 
-James
+> 
+> > +#ifdef CONFIG_SCSI_ENHANCED_UA
+> > +	struct list_head *this, *tmp;
+> > +
+> > +	cancel_work_sync(&starget->event_work);
+> > +
+> > +	list_for_each_safe(this, tmp, &starget->event_list) {
+> > +		struct starget_event *evt;
+> >
+> > +		evt = list_entry(this, struct starget_event, node);
+> > +		list_del(&evt->node);
+> > +		kfree(evt);
+> > +	}
+> > +#endif
+> 
+> Same question here: any reason why list_for_each_entry_safe() has not 
+> been used ?
+
+Same answer:  the code came from scsi_device_dev_release_usercontext().
+
+I see that James would prefer that the events be unified rather than
+specific to scsi_device or scsi_target, so I'll remove the duplication.
+
+Thanks for the comments.
+
+-Ewan
+
+> 
+> Thanks,
+> 
+> Bart.
+
 
