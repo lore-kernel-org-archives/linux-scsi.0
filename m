@@ -1,45 +1,66 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: PING^7 (was Re: [PATCH v2 00/14] Corrections and customization
- of the SG_IO command whitelist (CVE-2012-4542))
-Date: Fri, 21 Jun 2013 04:57:46 -0700
-Message-ID: <20130621115746.GA5142@infradead.org>
-References: <20130522221737.GA12339@mtj.dyndns.org>
- <519DC926.4000106@redhat.com>
- <20130523090222.GA26592@mtj.dyndns.org>
- <519DE5AD.7080303@redhat.com>
- <20130524014405.GB16882@mtj.dyndns.org>
- <519F12FF.6090809@redhat.com>
- <CAOS58YODjkSF=V7wADqbn_z8c6bmj=r03hWxEs5B1O+1cd0n6g@mail.gmail.com>
- <1369456502.5008.5.camel@dabdike>
- <20130525052744.GA25186@infradead.org>
- <51A062B5.8040601@redhat.com>
+From: Jack Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [PATCH 07/14] scsi_transport_srp: Add transport layer error handling
+Date: Fri, 21 Jun 2013 14:17:41 +0200
+Message-ID: <51C44465.3030506@profitbricks.com>
+References: <51C1B5CA.2030302@profitbricks.com> <51C1CDC8.4070103@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <51A062B5.8040601@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, asias.hejun@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:34317 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161045Ab3FUMRp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jun 2013 08:17:45 -0400
+Received: by mail-bk0-f42.google.com with SMTP id jk13so3406946bkc.29
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Jun 2013 05:17:44 -0700 (PDT)
+In-Reply-To: <51C1CDC8.4070103@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: David Dillow <dillowda@ornl.gov>, Vu Pham <vuhuong@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Roland Dreier <roland@kernel.org>
 
-On Sat, May 25, 2013 at 09:05:25AM +0200, Paolo Bonzini wrote:
-> Linus wanted to keep that for CAP_SYS_RAWIO.  We found two uses of SG_IO
-> on partitions: zfs-fuse used SYNCHRONIZE CACHE; some proprietary driver
-> used TEST UNIT READY.
+On 06/19/2013 05:27 PM, Bart Van Assche wrote:
+> On 06/19/13 15:44, Jack Wang wrote:
+>>> +        /*
+>>> +         * It can occur that after fast_io_fail_tmo expired and before
+>>> +         * dev_loss_tmo expired that the SCSI error handler has
+>>> +         * offlined one or more devices.  doesn't
+>>> +         * change the state of these devices into running, so do that
+>>> +         * explicitly.
+>>> +         */
+>>> +        spin_lock_irq(shost->host_lock);
+>>> +        __shost_for_each_device(sdev, shost)
+>>> +            if (sdev->sdev_state == SDEV_OFFLINE)
+>>> +                sdev->sdev_state = SDEV_RUNNING;
+>>> +        spin_unlock_irq(shost->host_lock);
+>>
+>> Do you have test case to verify this behaviour?
+> 
+> Hello Jack,
+> 
+> This is what I came up with after analyzing why a so-called "port
+> flapping" test failed. The concept of that test is simple: use
+> ibportstate to disable and reenable the proper IB port on the switch
+> with random intervals and check whether I/O starts running again if the
+> path remains operational long enough. When running such a test for a few
+> days with random intervals between a few seconds and a few minutes
+> sooner or later it will occur that scsi_try_host_reset() succeeds and
+> that scsi_eh_test_devices() fails. That will cause the SCSI error
+> handler to offline devices. Hence the above code to change the offline
+> state into running after a reconnect succeeds. I'm not proud of that
+> code but I couldn't find a better solution. Maybe the above code won't
+> be necessary anymore once we switch to Hannes' new SCSI error handler.
+> 
+> Bart.
 
-FYI I looked at the zfs code and the way it uses it is part of a huge
-braindamage.
+Thanks Bart for reply, in fact we saw same problem you describe here.
+It's reasonable to set the device back to RUNNING after reconnect
+succeeds. I'm curious why the scsi_target_unblock() doesn't handle this
+case.
 
-Given that the upstream appears dead I've Cc'd Asias He as he appears
-to somehow maintain it as part of the Debian package.
+I'm not sure new SCSI eh from Hannes will avoid scsi eh set device to
+offline in such situation, but at least it will avoid one bad lun block
+whole host.
 
-Asias,
+Jack
 
-the flushwc() routine in zfs-fuse is overly complicated and will not do
-the right thing for many cases like using device mapper, many modern SSD
-device, or much simple file backed filesystems.
-
-Fortunately fixing this is trivial - the call to flushwc can be replaced
-with a call to fdatasync() and the the kernel will do the right thing
-for any backing device or file.
