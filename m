@@ -1,72 +1,51 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: Re: JMicron JMB363 PCI SATA/IDE Card Support
-Date: Sun, 23 Jun 2013 18:29:51 +0200
-Message-ID: <51C7227F.9070500@matthiasprager.de>
-References: <51C1AE53.4030206@matthiasprager.de> <51C70622.9070303@matthiasprager.de>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: RFC: Allow block drivers to poll for I/O instead of sleeping
+Date: Sun, 23 Jun 2013 08:29:53 -1000
+Message-ID: <CA+55aFy+COdk5+ucwxtc1At=PAYTJxeUaUV6rP9XstHdNV0hbQ@mail.gmail.com>
+References: <20130620201713.GV8211@linux.intel.com>
+	<20130623100920.GA19021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dd15408.kasserver.com ([85.13.136.168]:53319 "EHLO
-	dd15408.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764Ab3FWQ3z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jun 2013 12:29:55 -0400
-In-Reply-To: <51C70622.9070303@matthiasprager.de>
+Received: from mail-ve0-f181.google.com ([209.85.128.181]:61163 "EHLO
+	mail-ve0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841Ab3FWS3z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jun 2013 14:29:55 -0400
+In-Reply-To: <20130623100920.GA19021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Matthias Prager <linux@matthiasprager.de>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, Linux SCSI List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Thomas Gleixner <tglx@linutronix.de>
 
-Looks like the RAID Mode is the default one and
-quirk_jmicron_ata() in drivers/pci/quirks.c is supposed
-to deal with it by changing the PCI device configuration ...
-this does not happen or does not have the desired
-result (maybe this is caused by working in a pass-trough
-environment?).
+On Sun, Jun 23, 2013 at 12:09 AM, Ingo Molnar <mingo@kernel.org> wrote:
+>
+> The spinning approach you add has the disadvantage of actively wasting CPU
+> time, which could be used to run other tasks. In general it's much better
+> to make sure the completion IRQs are rate-limited and just schedule. This
+> (combined with a metric ton of fine details) is what the networking code
+> does in essence, and they have no trouble reaching very high throughput.
 
-- Matthias
+It's not about throughput - it's about latency. Don't ever confuse the
+two, they have almost nothing in common. Networking very very seldom
+has the kind of "submit and wait for immediate result" issues that
+disk reads do.
 
-Am 23.06.2013 16:28, schrieb Matthias Prager:
-> I did some more digging and came up with a partial
-> workaround:
-> After adding the line:
->> 	{ PCI_VDEVICE(JMICRON, 0x236f), board_ahci_ign_iferr },
-> (at line 301 of drivers/ata/ahci.c)
-> The the sata ports of my two cards get detected and lspci -k shows
-> they are using the ahci driver.
-> 
-> My guess is the 'RAID bus controller [0104]' mode/class is keeping
-> my cards from beeing detected (they probably would be if they were
-> in PCI_CLASS_STORAGE_SATA_AHCI mode). Which would mean line 297
-> is just plain buggy.
-> 
-> This still leaves the problem of the missing IDE Ports (one master+slave
-> port per card are still not detected). I'm trying to
-> understand how the pata_jmicron driver is supposed to work
-> but haven't wrapped my head around it yet.
-> 
-> - Matthias
-> 
-> Am 19.06.2013 15:12, schrieb Matthias Prager:
->> Hello everyone,
->>
->> I'm having a hard time getting my JMicron JMB363 PCI SATA/IDE Card
->> to work under linux.
->> The 'lspci -nn' output reads as follows:
->>> RAID bus controller [0104]: JMicron Technology Corp. JMB363 SATA/IDE
->>> Controller [197b:2363] (rev 03)
->>
->> I tried my own kernel (3.9.6) under gentoo with CONFIG_PATA_JMICRON and
->> CONFIG_SATA_AHCI enabled. And I tried using
->> the latest SystemrescueCD (with kernel 3.4.47) which has pretty much
->> everything compiled into it.
->>
->> FreeBSD is recognizing the devices just fine. How do I get them
->> to run on linux?
->>
->> - Matthias
->>
->> P.S. a side note: this is in an virtualized environment (VMWare ESXi)
->> with pass-through.
->>
+That said, I dislike the patch intensely. I do not think it's at all a
+good idea to look at "need_resched" to say "I can spin now". You're
+still wasting CPU cycles.
 
+So Willy, please do *not* mix this up with the scheduler, or at least
+not "need_resched". Instead, maybe we should introduce a notion of "if
+we are switching to the idle thread, let's see if we can try to do
+some IO synchronously".
+
+You could try to do that either *in* the idle thread (which would take
+the context switch overhead - maybe negating some of the advantages),
+or alternatively hook into the scheduler idle logic before actually
+doing the switch.
+
+But anything that starts polling when there are other runnable
+processes to be done sounds really debatable. Even if it's "only" 5us
+or so. There's a lot of real work that could be done in 5us.
+
+                       Linus
