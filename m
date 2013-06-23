@@ -1,130 +1,73 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v3 4/4] scsi_debug: fix do_device_access() with wrap around range
-Date: Sun, 23 Jun 2013 21:37:41 +0900
-Message-ID: <1371991061-19437-5-git-send-email-akinobu.mita@gmail.com>
-References: <1371991061-19437-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1371991061-19437-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Subject: [PATCH 24/45] [SCSI] fcoe: Use get/put_online_cpus_atomic() to
+ prevent CPU offline
+Date: Sun, 23 Jun 2013 19:13:24 +0530
+Message-ID: <20130623134321.19094.54195.stgit@srivatsabhat.in.ibm.com>
+References: <20130623133642.19094.16038.stgit@srivatsabhat.in.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <20130623133642.19094.16038.stgit@srivatsabhat.in.ibm.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: tglx@linutronix.de, peterz@infradead.org, tj@kernel.org, oleg@redhat.com, paulmck@linux.vnet.ibm.com, rusty@rustcorp.com.au, mingo@kernel.org, akpm@linux-foundation.org, namhyung@kernel.org, walken@google.com, vincent.guittot@linaro.org, laijs@cn.fujitsu.com
+Cc: rostedt@goodmis.org, wangyun@linux.vnet.ibm.com, xiaoguangrong@linux.vnet.ibm.com, sbw@mit.edu, fweisbec@gmail.com, zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com, srivatsa.bhat@linux.vnet.ibm.com, linux-pm@vger.kernel.org, linux-arch@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Robert Love <robert.w.love@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, devel@open-fcoe.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-do_device_access() is a function that abstracts copying SG list from/to
-ramdisk storage (fake_storep).
+Once stop_machine() is gone from the CPU offline path, we won't be able
+to depend on disabling preemption to prevent CPUs from going offline
+from under us.
 
-It must deal with the ranges exceeding actual fake_storep size, because
-such ranges are valid if virtual_gb is set greater than zero, and they
-should be treated as fake_storep is repeatedly mirrored up to virtual size.
+Use the get/put_online_cpus_atomic() APIs to prevent CPUs from going
+offline, while invoking from atomic context.
 
-Unfortunately, it can't deal with the range which wraps around the end of
-fake_storep. A wrap around range is copied by two sg_copy_{from,to}_buffer()
-calls, but sg_copy_{from,to}_buffer() can't copy from/to in the middle of
-SG list, therefore the second call can't copy correctly.
-
-This fixes it by using sg_pcopy_{from,to}_buffer() that can copy from/to
-the middle of SG list.
-
-This also simplifies the assignment of sdb->resid in fill_from_dev_buffer().
-Because fill_from_dev_buffer() is now only called once per command
-execution cycle.  So it is not necessary to take care to decrease
-sdb->resid if fill_from_dev_buffer() is called more than once.
-
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Robert Love <robert.w.love@intel.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: devel@open-fcoe.org
 Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
 ---
 
-* No change from v2
+ drivers/scsi/fcoe/fcoe.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
- drivers/scsi/scsi_debug.c | 48 ++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 37 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 21239b3..1b15f98 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -417,10 +417,7 @@ static int fill_from_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 292b24f..a107d3c 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1484,6 +1484,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 	 * was originated, otherwise select cpu using rx exchange id
+ 	 * or fcoe_select_cpu().
+ 	 */
++	get_online_cpus_atomic();
+ 	if (ntoh24(fh->fh_f_ctl) & FC_FC_EX_CTX)
+ 		cpu = ntohs(fh->fh_ox_id) & fc_cpu_mask;
+ 	else {
+@@ -1493,8 +1494,10 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 			cpu = ntohs(fh->fh_rx_id) & fc_cpu_mask;
+ 	}
  
- 	act_len = sg_copy_from_buffer(sdb->table.sgl, sdb->table.nents,
- 				      arr, arr_len);
--	if (sdb->resid)
--		sdb->resid -= act_len;
--	else
--		sdb->resid = scsi_bufflen(scp) - act_len;
-+	sdb->resid = scsi_bufflen(scp) - act_len;
- 
- 	return 0;
- }
-@@ -1614,24 +1611,48 @@ static int check_device_access_params(struct sdebug_dev_info *devi,
- 	return 0;
- }
- 
-+/* Returns number of bytes copied or -1 if error. */
- static int do_device_access(struct scsi_cmnd *scmd,
- 			    struct sdebug_dev_info *devi,
- 			    unsigned long long lba, unsigned int num, int write)
- {
- 	int ret;
- 	unsigned long long block, rest = 0;
--	int (*func)(struct scsi_cmnd *, unsigned char *, int);
-+	struct scsi_data_buffer *sdb;
-+	enum dma_data_direction dir;
-+	size_t (*func)(struct scatterlist *, unsigned int, void *, size_t,
-+		       off_t);
-+
-+	if (write) {
-+		sdb = scsi_out(scmd);
-+		dir = DMA_TO_DEVICE;
-+		func = sg_pcopy_to_buffer;
-+	} else {
-+		sdb = scsi_in(scmd);
-+		dir = DMA_FROM_DEVICE;
-+		func = sg_pcopy_from_buffer;
+-	if (cpu >= nr_cpu_ids)
++	if (cpu >= nr_cpu_ids) {
++		put_online_cpus_atomic();
+ 		goto err;
 +	}
  
--	func = write ? fetch_to_dev_buffer : fill_from_dev_buffer;
-+	if (!sdb->length)
-+		return 0;
-+	if (!(scsi_bidi_cmnd(scmd) || scmd->sc_data_direction == dir))
-+		return -1;
+ 	fps = &per_cpu(fcoe_percpu, cpu);
+ 	spin_lock(&fps->fcoe_rx_list.lock);
+@@ -1514,6 +1517,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 		spin_lock(&fps->fcoe_rx_list.lock);
+ 		if (!fps->thread) {
+ 			spin_unlock(&fps->fcoe_rx_list.lock);
++			put_online_cpus_atomic();
+ 			goto err;
+ 		}
+ 	}
+@@ -1535,6 +1539,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 	if (fps->thread->state == TASK_INTERRUPTIBLE)
+ 		wake_up_process(fps->thread);
+ 	spin_unlock(&fps->fcoe_rx_list.lock);
++	put_online_cpus_atomic();
  
- 	block = do_div(lba, sdebug_store_sectors);
- 	if (block + num > sdebug_store_sectors)
- 		rest = block + num - sdebug_store_sectors;
- 
--	ret = func(scmd, fake_storep + (block * scsi_debug_sector_size),
--		   (num - rest) * scsi_debug_sector_size);
--	if (!ret && rest)
--		ret = func(scmd, fake_storep, rest * scsi_debug_sector_size);
-+	ret = func(sdb->table.sgl, sdb->table.nents,
-+		   fake_storep + (block * scsi_debug_sector_size),
-+		   (num - rest) * scsi_debug_sector_size, 0);
-+	if (ret != (num - rest) * scsi_debug_sector_size)
-+		return ret;
-+
-+	if (rest) {
-+		ret += func(sdb->table.sgl, sdb->table.nents,
-+			    fake_storep, rest * scsi_debug_sector_size,
-+			    (num - rest) * scsi_debug_sector_size);
-+	}
- 
- 	return ret;
- }
-@@ -1888,7 +1909,12 @@ static int resp_read(struct scsi_cmnd *SCpnt, unsigned long long lba,
- 	read_lock_irqsave(&atomic_rw, iflags);
- 	ret = do_device_access(SCpnt, devip, lba, num, 0);
- 	read_unlock_irqrestore(&atomic_rw, iflags);
--	return ret;
-+	if (ret == -1)
-+		return DID_ERROR << 16;
-+
-+	scsi_in(SCpnt)->resid = scsi_bufflen(SCpnt) - ret;
-+
-+	return 0;
- }
- 
- static void dump_sector(unsigned char *buf, int len)
--- 
-1.8.1.4
+ 	return 0;
+ err:
