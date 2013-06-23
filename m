@@ -1,84 +1,46 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v11 3/9] Avoid calling __scsi_remove_device() twice
-Date: Sun, 23 Jun 2013 16:35:37 -0500
-Message-ID: <51C76A29.30309@cs.wisc.edu>
-References: <51B86E26.6030108@acm.org> <51B86EF9.7080406@acm.org>
+From: David Ahern <dsahern@gmail.com>
+Subject: Re: RFC: Allow block drivers to poll for I/O instead of sleeping
+Date: Sun, 23 Jun 2013 15:14:28 -0700
+Message-ID: <51C77344.2040907@gmail.com>
+References: <20130620201713.GV8211@linux.intel.com> <20130623100920.GA19021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:56784 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751357Ab3FWVmU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Jun 2013 17:42:20 -0400
-In-Reply-To: <51B86EF9.7080406@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130623100920.GA19021@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>
 
-On 06/12/2013 07:52 AM, Bart Van Assche wrote:
-> SCSI devices are added to the shost->__devices list from inside
-> scsi_alloc_sdev(). If something goes wrong during LUN scanning,
-> e.g. a transport layer failure occurs, then __scsi_remove_device()
-> can get invoked by the LUN scanning code for a SCSI device in
-> state SDEV_CREATED_BLOCK or SDEV_BLOCKED. If this happens then
-> the SCSI device has not yet been added to sysfs (is_visible == 0).
-> Make sure that if this happens these devices are transitioned
-> into state SDEV_DEL. This avoids that __scsi_remove_device()
-> gets invoked a second time by scsi_forget_host().
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Cc: James Bottomley <JBottomley@Parallels.com>
-> Cc: Mike Christie <michaelc@cs.wisc.edu>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Tejun Heo <tj@kernel.org>
-> ---
->  drivers/scsi/scsi_lib.c   |    2 ++
->  drivers/scsi/scsi_sysfs.c |    7 ++++---
->  2 files changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 03d4165..d57b5e1 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2175,6 +2175,8 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
->  		case SDEV_OFFLINE:
->  		case SDEV_TRANSPORT_OFFLINE:
->  		case SDEV_CANCEL:
-> +		case SDEV_BLOCK:
-> +		case SDEV_CREATED_BLOCK:
->  			break;
->  		default:
->  			goto illegal;
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 34f1b39..f869ef85 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -956,8 +956,9 @@ void __scsi_remove_device(struct scsi_device *sdev)
->  	unsigned long flags;
->  
->  	if (sdev->is_visible) {
-> -		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
-> -			return;
-> +		WARN(scsi_device_set_state(sdev, SDEV_CANCEL) != 0,
-> +		     "%s: unexpected state %d\n", dev_name(&sdev->sdev_gendev),
-> +		     sdev->sdev_state);
->  
->  		bsg_unregister_queue(sdev->request_queue);
->  		device_unregister(&sdev->sdev_dev);
-> @@ -971,7 +972,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
->  	 * scsi_run_queue() invocations have finished before tearing down the
->  	 * device.
->  	 */
-> -	scsi_device_set_state(sdev, SDEV_DEL);
-> +	WARN_ON_ONCE(scsi_device_set_state(sdev, SDEV_DEL) != 0);
->  	blk_cleanup_queue(sdev->request_queue);
->  	cancel_work_sync(&sdev->requeue_work);
->  
-> 
+On 6/23/13 3:09 AM, Ingo Molnar wrote:
+> If an IO driver is implemented properly then it will batch up requests for
+> the controller, and gets IRQ-notified on a (sub-)batch of buffers
+> completed.
+>
+> If there's any spinning done then it should be NAPI-alike polling: a
+> single "is stuff completed" polling pass per new block of work submitted,
+> to opportunistically interleave completion with submission work.
+>
+> I don't see where active spinning brings would improve performance
+> compared to a NAPI-alike technique. Your numbers obviously show a speedup
+> we'd like to have, I'm just wondering whether the same speedup (or even
+> more) could be implemented via:
+>
+>   - smart batching that rate-limits completion IRQs in essence
+>   + NAPI-alike polling
+>
+> ... which would almost never result in IRQ driven completion when we are
+> close to CPU-bound and while not yet saturating the IO controller's
+> capacity.
+>
+> The spinning approach you add has the disadvantage of actively wasting CPU
+> time, which could be used to run other tasks. In general it's much better
+> to make sure the completion IRQs are rate-limited and just schedule. This
+> (combined with a metric ton of fine details) is what the networking code
+> does in essence, and they have no trouble reaching very high throughput.
 
+Networking code has a similar proposal for low latency sockets using 
+polling: https://lwn.net/Articles/540281/
 
-
-The Addition to scsi_device_set_state looks ok. I was not sure why we
-need the new WARNs though. Do we still think there are other cases?
+David
