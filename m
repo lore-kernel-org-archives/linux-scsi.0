@@ -1,40 +1,84 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 07/14] scsi_transport_srp: Add transport layer error handling
-Date: Sun, 23 Jun 2013 16:13:31 -0500
-Message-ID: <51C764FB.6070207@cs.wisc.edu>
-References: <51B87501.4070005@acm.org> <51B8777B.5050201@acm.org>
+Subject: Re: [PATCH v11 3/9] Avoid calling __scsi_remove_device() twice
+Date: Sun, 23 Jun 2013 16:35:37 -0500
+Message-ID: <51C76A29.30309@cs.wisc.edu>
+References: <51B86E26.6030108@acm.org> <51B86EF9.7080406@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:56740 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:56784 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750883Ab3FWVRH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Jun 2013 17:17:07 -0400
-In-Reply-To: <51B8777B.5050201@acm.org>
+	id S1751357Ab3FWVmU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Jun 2013 17:42:20 -0400
+In-Reply-To: <51B86EF9.7080406@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
-Cc: Roland Dreier <roland@kernel.org>, David Dillow <dillowda@ornl.gov>, Vu Pham <vuhuong@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>
 
-On 06/12/2013 08:28 AM, Bart Van Assche wrote:
-> +		/*
-> +		 * It can occur that after fast_io_fail_tmo expired and before
-> +		 * dev_loss_tmo expired that the SCSI error handler has
-> +		 * offlined one or more devices. scsi_target_unblock() doesn't
-> +		 * change the state of these devices into running, so do that
-> +		 * explicitly.
-> +		 */
-> +		spin_lock_irq(shost->host_lock);
-> +		__shost_for_each_device(sdev, shost)
-> +			if (sdev->sdev_state == SDEV_OFFLINE)
-> +				sdev->sdev_state = SDEV_RUNNING;
-> +		spin_unlock_irq(shost->host_lock);
+On 06/12/2013 07:52 AM, Bart Van Assche wrote:
+> SCSI devices are added to the shost->__devices list from inside
+> scsi_alloc_sdev(). If something goes wrong during LUN scanning,
+> e.g. a transport layer failure occurs, then __scsi_remove_device()
+> can get invoked by the LUN scanning code for a SCSI device in
+> state SDEV_CREATED_BLOCK or SDEV_BLOCKED. If this happens then
+> the SCSI device has not yet been added to sysfs (is_visible == 0).
+> Make sure that if this happens these devices are transitioned
+> into state SDEV_DEL. This avoids that __scsi_remove_device()
+> gets invoked a second time by scsi_forget_host().
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Cc: James Bottomley <JBottomley@Parallels.com>
+> Cc: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Tejun Heo <tj@kernel.org>
+> ---
+>  drivers/scsi/scsi_lib.c   |    2 ++
+>  drivers/scsi/scsi_sysfs.c |    7 ++++---
+>  2 files changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 03d4165..d57b5e1 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2175,6 +2175,8 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+>  		case SDEV_OFFLINE:
+>  		case SDEV_TRANSPORT_OFFLINE:
+>  		case SDEV_CANCEL:
+> +		case SDEV_BLOCK:
+> +		case SDEV_CREATED_BLOCK:
+>  			break;
+>  		default:
+>  			goto illegal;
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 34f1b39..f869ef85 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -956,8 +956,9 @@ void __scsi_remove_device(struct scsi_device *sdev)
+>  	unsigned long flags;
+>  
+>  	if (sdev->is_visible) {
+> -		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+> -			return;
+> +		WARN(scsi_device_set_state(sdev, SDEV_CANCEL) != 0,
+> +		     "%s: unexpected state %d\n", dev_name(&sdev->sdev_gendev),
+> +		     sdev->sdev_state);
+>  
+>  		bsg_unregister_queue(sdev->request_queue);
+>  		device_unregister(&sdev->sdev_dev);
+> @@ -971,7 +972,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
+>  	 * scsi_run_queue() invocations have finished before tearing down the
+>  	 * device.
+>  	 */
+> -	scsi_device_set_state(sdev, SDEV_DEL);
+> +	WARN_ON_ONCE(scsi_device_set_state(sdev, SDEV_DEL) != 0);
+>  	blk_cleanup_queue(sdev->request_queue);
+>  	cancel_work_sync(&sdev->requeue_work);
+>  
+> 
 
-Is it possible for this to race with scsi_eh_offline_sdevs? Can it be
-looping over cmds offlining devices while this is looping over devices
-onlining them?
 
-It seems this can also happen for all transports/drivers. Maybe a a scsi
-eh/lib helper function that syncrhonizes with the scsi eh completion
-would be better.
+
+The Addition to scsi_device_set_state looks ok. I was not sure why we
+need the new WARNs though. Do we still think there are other cases?
