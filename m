@@ -1,99 +1,86 @@
-From: Jack Wang <jinpu.wang@profitbricks.com>
-Subject: RE: [PATCH 07/14] scsi_transport_srp: Add transport layer error handling
-Date: Mon, 24 Jun 2013 15:48:41 +0200
-Message-ID: <51C84E39.80806@profitbricks.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH v3 2/6] [SCSI] Rename scsi_evt_xxx to
+ sdev_evt_xxx and scsi_event to sdev_event
+Date: Mon, 24 Jun 2013 09:49:14 -0400
+Message-ID: <1372081754.3871.9.camel@localhost.localdomain>
+References: <1371663761-22481-1-git-send-email-emilne@redhat.com>
+	<1371663761-22481-3-git-send-email-emilne@redhat.com>
+	<1371666971.2409.74.camel@dabdike>
+Reply-To: emilne@redhat.com, device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:44634 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999Ab3FXNss (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jun 2013 09:48:48 -0400
-Received: by mail-bk0-f46.google.com with SMTP id na10so4190887bkb.33
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jun 2013 06:48:47 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1371666971.2409.74.camel@dabdike>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "rwheeler@redhat.com" <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Roland Dreier <roland@kernel.org>, David Dillow <dillowda@ornl.gov>, Vu Pham <vuhuong@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-> I'm not sure it's possible to avoid such a race without introducing
-> a new mutex. How about something like the (untested) SCSI core patch
-> below, and invoking scsi_block_eh() and scsi_unblock_eh() around any
-> reconnect activity not initiated from the SCSI EH thread ?
+On Wed, 2013-06-19 at 18:36 +0000, James Bottomley wrote:
+> On Wed, 2013-06-19 at 13:42 -0400, Ewan D. Milne wrote:
+> > From: "Ewan D. Milne" <emilne@redhat.com>
+> > 
+> > The names of the struct and some of the functions for scsi_device
+> > events are too generic and do not match the comments in the source.
+> > Changed all of the names to begin with sdev_ in order to avoid
+> > naming issues and confusion with scsi_target events to be added.
+> > Also changed name of sdev_evt_thread() to sdev_evt_work().
 > 
-> [PATCH] Add scsi_block_eh() and scsi_unblock_eh()
+> I don't really understand the rationale here.  Our usual namespace
+> prefix is scsi_ although we don't obey it universally, of course.  sdev_
+> isn't one of our namespace prefixes.  we might use scsi_device_ instead,
+> but I really don't see the need.  Plus all the name changes makes code
+> really difficult to review.
 > 
-Hi Bart,
+> The two different event structures you introduce are actually identical
+> except for the values of the enums, so I don't see a need to have them
+> as separate.  Since the event hangs off a list in the scsi_device, it
+> can do the same for a scsi_target.  Events actually fire on generic
+> devices, so that's probably where we should start: change scsi_evt_emit
+> to take a generic device.  Then you can actually do a static translation
+> array between the enumerated event and the environment string.  I think
+> this unification will drastically reduce the number of lines in this
+> patch, since most of the infrastructure is now reused instead of being
+> duplicated.
 
-The description doesn't match the code at all, do you mean try to
-serialize the reconnect activity with this new block_eh_mutex?
+OK.
 
-Cheers,
-Jack
-> ---
->  drivers/scsi/hosts.c      |    1 +
->  drivers/scsi/scsi_error.c |   10 ++++++++++
->  include/scsi/scsi_host.h  |    1 +
->  3 files changed, 12 insertions(+)
 > 
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 17e2ccb..0df3ec8 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -360,6 +360,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->         init_waitqueue_head(&shost->host_wait);
-> 
->         mutex_init(&shost->scan_mutex);
-> +       mutex_init(&shost->block_eh_mutex);
-> 
->         /*
->          * subtract one because we increment first then return, but we need to
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index ab16930..566daaa 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -551,6 +551,10 @@ static int scsi_begin_eh(struct Scsi_Host *host)
->  {
->         int res;
-> 
-> +       res = mutex_lock_interruptible(&host->block_eh_mutex);
-> +       if (res)
-> +               goto out;
-> +
->         spin_lock_irq(host->host_lock);
->         switch (host->shost_state) {
->         case SHOST_DEL:
-> @@ -565,6 +569,10 @@ static int scsi_begin_eh(struct Scsi_Host *host)
->         }
->         spin_unlock_irq(host->host_lock);
-> 
-> +       if (res)
-> +               mutex_unlock(&host->block_eh_mutex);
-> +
-> +out:
->         return res;
->  }
-> 
-> @@ -579,6 +587,8 @@ static void scsi_end_eh(struct Scsi_Host *host)
->         if (host->eh_active == 0)
->                 wake_up(&host->host_wait);
->         spin_unlock_irq(host->host_lock);
-> +
-> +       mutex_unlock(&host->block_eh_mutex);
->  }
-> 
->  /**
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 9785e51..d7ce065 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -573,6 +573,7 @@ struct Scsi_Host {
->         spinlock_t              *host_lock;
-> 
->         struct mutex            scan_mutex;/* serialize scanning activity */
-> +       struct mutex            block_eh_mutex; /* block ML LLD EH calls */
-> 
->         struct list_head        eh_cmd_q;
->         struct task_struct    * ehandler;  /* Error recovery thread. */
+> The only other design point I'd add is that we probably need an internal
+> way to listen for events (I can see dm wanting this), so probably the
+> scsi_evt_emit should also send the event down a notifier chain, since
+> kernel internal stuff can't listen for a kobject uevent.  I cc'd the
+> dm-devel list to see what their opinion is of this.
 
+Sure.  I thought of doing this, but didn't because I wasn't planning
+to change anything else to listen for it.  The other thing is that the
+UA typically indicates that something has changed, but another command
+is needed to find out exactly *what*, e.g. with the WCE bit that is used
+to control flush behavior, a MODE SENSE command is needed.  A rescan of
+the device in response to the UA would do that.
+
+> 
+> For them, you should probably also summarise what events we're actually
+> proposing to send
+> 
+> scsi_target: 
+> 
+> REPORTED LUNS DATA HAS CHANGED
+> 
+> scsi_device:
+> 
+> MODE PARAMETERS CHANGED
+> CAPACITY DATA HAS CHANGED
+> THIN PROVISIONING SOFT THRESHOLD REACHED
+> 
+> James
+> 
