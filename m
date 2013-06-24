@@ -1,57 +1,62 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v11 6/9] Make scsi_remove_host() wait until error handling
- finished
-Date: Mon, 24 Jun 2013 15:04:56 -0500
-Message-ID: <51C8A668.3060700@cs.wisc.edu>
-References: <51B86E26.6030108@acm.org> <51B86FC1.6000103@acm.org> <1372101557.2013.76.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Subject: [PATCH RESEND v2 0/2] scsi: Port buslogic driver to 64 bits
+Date: Mon, 24 Jun 2013 14:25:58 -0600
+Message-ID: <cover.1368754558.git.khalid.aziz@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:58461 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092Ab3FXUFl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Jun 2013 16:05:41 -0400
-In-Reply-To: <1372101557.2013.76.camel@dabdike.int.hansenpartnership.com>
+Received: from qmta11.emeryville.ca.mail.comcast.net ([76.96.27.211]:36828
+	"EHLO qmta11.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750845Ab3FXUd0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Jun 2013 16:33:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>
+To: James.Bottomley@HansenPartnership.com
+Cc: Khalid Aziz <khalid.aziz@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 06/24/2013 02:19 PM, James Bottomley wrote:
-> On Wed, 2013-06-12 at 14:55 +0200, Bart Van Assche wrote:
->> A SCSI LLD may start cleaning up host resources as soon as
->> scsi_remove_host() returns. These host resources may be needed by
->> the LLD in an implementation of one of the eh_* functions. So if
->> one of the eh_* functions is in progress when scsi_remove_host()
->> is invoked, wait until the eh_* function has finished. Also, do
->> not invoke any of the eh_* functions after scsi_remove_host() has
->> started.
-> 
-> We already have state guards for this, don't we?  That's the
-> SHOST_*_RECOVERY ones.  When eh functions are active, the host
-> transitions to a recovery state, so the wait could just wait on that
-> state rather than implement an open coded counting semaphore.
-> 
+This patchset ports buslogic driver to 64-bit.
 
-That seems better. For the sg_reset_provider case we just would have to
-also wait on the tmf_in_progress bit.
+Current buslogic driver is composed of two components - SCCB manager
+which communicates with adapter to execute SCSI commands (contained in
+FlashPoint.c), and Linux driver part that interfaces with rest of the
+kernel (contained in BusLogic.c). SCCB manager code came from the
+Mylex SDK. SCCB manager code is used by flashpoint adapters only.
+Multimaster adapters do not need SCCB manager since the SCSI state
+machine is implemented in firmware on these adapters. If the filenames
+alone did not give it away already, buslogic driver code is full of
+CamelCase, besides being full of very ling lines, and is just very
+difficult to read and understand. So the first step was to clean up
+the existing code. First patch in the set does just that. Second patch
+includes necessary code modifications to allow the driver to build and
+run on 64-bit kernel. Since SCCB manager code came from Mylex SDK, I
+have tried to touch it only when necessary which includes not fixing
+all CamelCase issues in FlashPoint.c. Many lines over 80 characters
+remain in BusLogic.c. These fall into two categories generally -
+(1) it prints a message and I didn't want to touch driver messages
+in case there are scripts out there that parse driver messages,
+(2) code is indented deeply and is hard to keep it under 80 characters.
+Such code could use refactoring at some point.
 
-I think I used all my credits messing up reviewing this patchset.
+I have tested this patch with a flashpoint adapter on 64-bit and 
+32-bit kernels with fio running random read/write test while verifying
+data. I also measured performance for current buslogic driver and 
+buslogic driver with these patches with 32-bit and 64-bit kernel and
+ensured there was no degradation in performance.
 
-> However, what's the reasoning behind wanting to do this?  In theory all
-> necessary resources for the eh thread should only be freed in the
-> release callback.  That means they aren't freed until all error recovery
-> completes.
-> 
+Changelog:
+v2:
+	- Updated to apply on top of current Linus' tree as of May 16, 2013. 
+	  No functional changes.
 
-I think it makes it easier to handle cleanup of driver resources needed
-for aborts/resets for some drivers. If after host removal, the scsi eh
-can call into the driver after scsi_remove_host is called then we have
-to set some internal bits to fail future eh callback calls and handle
-waiting on or flushing running eh operations. If we know that after
-scsi_host_remove is called the eh callbacks will not be running and will
-not be called we can just free the driver resources.
+Khalid Aziz (2):
+  Fix CamelCase and extra long lines in the buslogic driver.
+  Port buslogic driver to 64-bit.
 
-For iscsi and I think drivers that do scsi_remove_target it would be
-helpful to have something similar at the target level.
+ drivers/scsi/BusLogic.c   | 4452 ++++++++++++++++++++++++---------------------
+ drivers/scsi/BusLogic.h   | 1487 ++++++++-------
+ drivers/scsi/FlashPoint.c |  626 +++----
+ drivers/scsi/Kconfig      |    2 +-
+ 4 files changed, 3377 insertions(+), 3190 deletions(-)
+
+-- 
+1.7.10.4
+
