@@ -1,108 +1,165 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH v3 4/6] [SCSI] Generate uevents for certain Unit
- Attention codes
-Date: Mon, 24 Jun 2013 14:58:40 +0000
-Message-ID: <1372085919.2013.25.camel@dabdike.int.hansenpartnership.com>
-References: <1371663761-22481-1-git-send-email-emilne@redhat.com>
-	 <1371663761-22481-5-git-send-email-emilne@redhat.com>
-	 <1371667700.2409.82.camel@dabdike>
-	 <1372083075.3871.31.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v11 1/9] Fix race between starved list and device removal
+Date: Mon, 24 Jun 2013 08:38:40 -0700
+Message-ID: <1372088320.2013.33.camel@dabdike.int.hansenpartnership.com>
+References: <51B86E26.6030108@acm.org> <51B86E74.60909@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:51363 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484Ab3FXO6l convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jun 2013 10:58:41 -0400
-In-Reply-To: <1372083075.3871.31.camel@localhost.localdomain>
-Content-Language: en-US
-Content-ID: <39B4A3A48705224C91DE9A4B989B2D54@sw.swsoft.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34338 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750872Ab3FXPin (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Jun 2013 11:38:43 -0400
+In-Reply-To: <51B86E74.60909@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "emilne@redhat.com" <emilne@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>
 
-On Mon, 2013-06-24 at 10:11 -0400, Ewan Milne wrote:
-> On Wed, 2013-06-19 at 18:48 +0000, James Bottomley wrote:
-> > On Wed, 2013-06-19 at 13:42 -0400, Ewan D. Milne wrote:
-> > > From: "Ewan D. Milne" <emilne@redhat.com>
-> > > 
-> > > Generate a uevent on the scsi_target object when the following
-> > > Unit Attention ASC/ASCQ code is received:
-> > > 
-> > >     3F/0E  REPORTED LUNS DATA HAS CHANGED
-> > > 
-> > > Generate a uevent on the scsi_device object when the following
-> > > Unit Attention ASC/ASCQ codes are received:
-> > > 
-> > >     2A/01  MODE PARAMETERS CHANGED
-> > >     2A/09  CAPACITY DATA HAS CHANGED
-> > >     38/07  THIN PROVISIONING SOFT THRESHOLD REACHED
-> > > 
-> > > All uevent generation is aggregated and rate-limited so that any
-> > > individual event is delivered no more than once every 2 seconds.
-> > 
-> > Why?  What causes you to think these events would be repeated on a
-> > massive scale.  Mode and Capacity changes are signalled only once per
-> > actual change, which doesn't occur very often.  SBC-3 says that the TP
-> > thresholds are only signalled once but may be signalled again after a
-> > reset.  In general, T10 treats UA as exceptional conditions ... there's
-> > no reason to think they keep repeating.
+On Wed, 2013-06-12 at 14:49 +0200, Bart Van Assche wrote:
+> scsi_run_queue() examines all SCSI devices that are present on
+> the starved list. Since scsi_run_queue() unlocks the SCSI host
+> lock before running a queue a SCSI device can get removed after
+> it has been removed from the starved list and before its queue
+> is run. Protect against that race condition by increasing the
+> sdev refcount before running the sdev queue. Also, remove a
+> SCSI device from the starved list before __scsi_remove_device()
+> decreases the sdev refcount such that the get_device() call
+> added in scsi_run_queue() is guaranteed to succeed.
 > 
-> Well, the concern I had is that since a UA can theoretically be reported
-> on every command, a malfunctioning device could quickly overload udevd.
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Reported-and-tested-by: Chanho Min <chanho.min@lge.com>
+> Reference: http://lkml.org/lkml/2012/8/2/96
+> Acked-by: Tejun Heo <tj@kernel.org>
+> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  drivers/scsi/scsi_lib.c   |   16 +++++++++++-----
+>  drivers/scsi/scsi_sysfs.c |   14 +++++++++++++-
+>  2 files changed, 24 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 86d5220..d6ca072 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -456,11 +456,17 @@ static void scsi_run_queue(struct request_queue *q)
+>  			continue;
+>  		}
+>  
+> -		spin_unlock(shost->host_lock);
+> -		spin_lock(sdev->request_queue->queue_lock);
+> -		__blk_run_queue(sdev->request_queue);
+> -		spin_unlock(sdev->request_queue->queue_lock);
+> -		spin_lock(shost->host_lock);
+> +		/*
+> +		 * Obtain a reference before unlocking the host_lock such that
+> +		 * the sdev can't disappear before blk_run_queue() is invoked.
+> +		 */
+> +		get_device(&sdev->sdev_gendev);
+> +		spin_unlock_irqrestore(shost->host_lock, flags);
+> +
+> +		blk_run_queue(sdev->request_queue);
+> +		put_device(&sdev->sdev_gendev);
+> +
+> +		spin_lock_irqsave(shost->host_lock, flags);
+>  	}
+>  	/* put any unprocessed entries back */
+>  	list_splice(&starved_list, &shost->starved_list);
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 931a7d9..34f1b39 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -345,7 +345,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>  	starget->reap_ref++;
+>  	list_del(&sdev->siblings);
+>  	list_del(&sdev->same_target_siblings);
+> -	list_del(&sdev->starved_entry);
+>  	spin_unlock_irqrestore(sdev->host->host_lock, flags);
+>  
+>  	cancel_work_sync(&sdev->event_work);
+> @@ -953,6 +952,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+>  void __scsi_remove_device(struct scsi_device *sdev)
+>  {
+>  	struct device *dev = &sdev->sdev_gendev;
+> +	struct Scsi_Host *shost = sdev->host;
+> +	unsigned long flags;
+>  
+>  	if (sdev->is_visible) {
+>  		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+> @@ -974,6 +975,17 @@ void __scsi_remove_device(struct scsi_device *sdev)
+>  	blk_cleanup_queue(sdev->request_queue);
+>  	cancel_work_sync(&sdev->requeue_work);
+>  
+> +	/*
+> +	 * Remove a SCSI device from the starved list after blk_cleanup_queue()
+> +	 * finished such that scsi_request_fn() can't add it back to that list.
+> +	 * Also remove an sdev from the starved list before invoking
+> +	 * put_device() such that get_device() is guaranteed to succeed for an
+> +	 * sdev present on the starved list.
+> +	 */
+> +	spin_lock_irqsave(shost->host_lock, flags);
+> +	list_del(&sdev->starved_entry);
+> +	spin_unlock_irqrestore(shost->host_lock, flags);
+> +
+>  	if (sdev->host->hostt->slave_destroy)
+>  		sdev->host->hostt->slave_destroy(sdev);
+>  	transport_destroy_device(dev);
 
-We had devices in the 1990s that did this ... I haven't seen any for
-years.  I take it the qualifier "theoretical" means you haven't actually
-seen this behaviour from a current device in the field?
+I really don't like this because it's shuffling potentially fragile
+lifetime rules since you now have to have the sdev deleted from the
+starved list before final put.  That becomes an unstated assumption
+within the code.
 
-> I have seen cases where udevd gets significantly behind when processing
-> a flood of events, and didn't want to make that worse.  Kay had concerns
-> about that when Hannes was working on this a while back, I believe.
-> I also didn't want other events to get lost if UA events filled up the
-> NL queue to udevd in userspace.
-
-The events you're reporting are infrequent in normal operation.  If the
-device goes rogue and floods them, udev issues are likely to be the
-least of our concerns.
-
-The fact that we may generate a flood because we have a massive number
-of LUNs which each report the infrequent event is a concern, but it
-should be fixed without rate limiting, see below:
-
-> The other thing that aggregation helps with is when every LUN on a
-> target says REPORTED LUNS DATA HAS CHANGED.  Some storage arrays allow
-> hundreds of LUNS on a target, and I think they will all report the UA
-> if the LUN provisioning to the host is changed.  There is a mode that
-> can be used to suppress this, and only report one UA, but I don't know
-> if all storage arrays support it.  Now, granted, the UAs will only be
-> reported by each LUN when they receive a command, so this could happen
-> at any time in the future, but unfortunately that is the way SCSI works.
-
-So fixing this problem is what's needed rather than a generic rate limit
-mechanism.  We already have a rudimentary mechanism for suppressing the
-flood of UAs we get on target reset ... reuse the same thing to make
-sure we only get one REPORTED LUNS DATA HAS CHANGED per target.
-
-Note there are some fixes required to the current mechanism:  Firstly it
-should clear expecting_cc_ua on the first successful command that
-doesn't return a UA to prevent spurious memory (just in case arrays try
-to be clever) with an
-
-if (unlikely(scmd->device->expecting_cc_ua))
-        scmd->device->expecting_cc_ua = 0;
-
-just so we don't dirty a cache line if it's unnecessary
-
-> Of course, perhaps it would be better to provide a rate limit or
-> aggregation mechanism in the uevent code, rather than in its callers.
-> I'm not sure what it would take to get that to happen, I'll look at it.
-
-My point is that once we get to rate limiting, we've lost ... we're
-already dropping stuff that may be important, so lets begin without the
-ratelimit code and instead fix the problems that may cause data floods
-instead.
+The theory is that the starved list processing may be racing with a
+scsi_remove_device, so when we unlock the host lock, the device (and the
+queue) may be destroyed.  OK, so I agree with this, remote a possibility
+though it may be.  The easy way of fixing it without making assumptions
+is this, isn't it?  All it requires is that the queue be destroyed after
+the starved list entry is deleted in the sdev release code.
 
 James
+
+---
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 86d5220..f294cc6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -434,6 +434,7 @@ static void scsi_run_queue(struct request_queue *q)
+ 	list_splice_init(&shost->starved_list, &starved_list);
+ 
+ 	while (!list_empty(&starved_list)) {
++		struct request_queue *slq;
+ 		/*
+ 		 * As long as shost is accepting commands and we have
+ 		 * starved queues, call blk_run_queue. scsi_request_fn
+@@ -456,10 +457,21 @@ static void scsi_run_queue(struct request_queue *q)
+ 			continue;
+ 		}
+ 
++		/*
++		 * once we drop the host lock, a racing scsi_remove_device may
++		 * remove the sdev from the starved list and destroy it and
++		 * the queue.  Mitigate by taking a reference to the queue and
++		 * never touching the sdev again after we drop the host lock.
++		 */
++		slq = sdev->request_queue;
++		if (!blk_get_queue(slq))
++			continue;
++
+ 		spin_unlock(shost->host_lock);
+-		spin_lock(sdev->request_queue->queue_lock);
+-		__blk_run_queue(sdev->request_queue);
+-		spin_unlock(sdev->request_queue->queue_lock);
++
++		blk_run_queue(slq);
++		blk_put_queue(slq);
++
+ 		spin_lock(shost->host_lock);
+ 	}
+ 	/* put any unprocessed entries back */
+
 
