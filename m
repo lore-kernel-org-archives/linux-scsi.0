@@ -1,25 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND v2 0/2] scsi: Port buslogic driver to 64 bits
-Date: Mon, 24 Jun 2013 13:55:13 -0700
-Message-ID: <1372107313.2013.81.camel@dabdike.int.hansenpartnership.com>
+From: Dave Jones <davej@redhat.com>
+Subject: Re: [PATCH RESEND v2 2/2] scsi: 64-bit port of buslogic driver
+Date: Mon, 24 Jun 2013 17:07:47 -0400
+Message-ID: <20130624210747.GA19721@redhat.com>
 References: <cover.1368754558.git.khalid.aziz@oracle.com>
+ <97daf2d29ceb78bdef3ddf6358dc634de35d0345.1368754556.git.khalid.aziz@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1368754558.git.khalid.aziz@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <97daf2d29ceb78bdef3ddf6358dc634de35d0345.1368754556.git.khalid.aziz@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Khalid Aziz <khalid@gonehiking.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2013-06-24 at 14:25 -0600, Khalid Aziz wrote:
-> This patchset ports buslogic driver to 64-bit.
+On Mon, Jun 24, 2013 at 02:26:00PM -0600, Khalid Aziz wrote:
 
-OK, thought long and hard about this., I'll take it on the proviso that
-you're the new buslogic maintainer.  The reason being that without
-someone to sort through any bug reports, the only option I have on a bug
-which is in the rework but not the original would be to revert to the
-original.
+ > @@ -821,7 +821,7 @@ struct blogic_ccb {
+ >  	unsigned char cdblen;				/* Byte 2 */
+ >  	unsigned char sense_datalen;			/* Byte 3 */
+ >  	u32 datalen;					/* Bytes 4-7 */
+ > -	u32 data;					/* Bytes 8-11 */
+ > +	void *data;					/* Bytes 8-11 */
 
-James
+The comment (and subsequent ones for this struct)  are now wrong on 64-bit.
+More of a concern though is that above this struct is this...
+
+/*
+  Define the 32 Bit Mode Command Control Block (CCB) structure.  The first 40
+  bytes are defined by and common to both the MultiMaster Firmware and the
+  FlashPoint SCCB Manager.
+
+
+Is it safe to change this if the firmware/3rd party sw is expecting it to be a u32 ?
+
+	Dave
