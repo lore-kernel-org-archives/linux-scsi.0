@@ -1,41 +1,29 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: potential buffer overrun in __iscsi_conn_send_pdu()
-Date: Mon, 24 Jun 2013 18:46:31 +0300
-Message-ID: <20130624154631.GA31984@elgon.mountain>
+Subject: [patch] iscsi-target: missing kfree() on error path
+Date: Mon, 24 Jun 2013 18:46:57 +0300
+Message-ID: <20130624154657.GB31984@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21717 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742Ab3FXPrU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jun 2013 11:47:20 -0400
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: kernel-janitors-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org
 
-My static checker complains about a possible array overflow in
-__iscsi_conn_send_pdu().
+We need to free "payload" before returning.
 
-drivers/scsi/libiscsi.c
-   743          if (data_size) {
-   744                  memcpy(task->data, data, data_size);
-   745                  task->data_count = data_size;
-   746          } else
-   747                  task->data_count = 0;
-   748  
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-"data_size" comes from skb->data and we haven't checked that it is less
-than ISCSI_DEF_MAX_RECV_SEG_LEN (8192).
-
-The call tree is:
-iscsi_if_recv_msg()
-iscsi_conn_send_pdu()
-__iscsi_conn_send_pdu()
-
-I'm a newbie to this code, so I'm not sure if this is a real bug or not.
-
-regards,
-dan carpenter
-
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index c1106bb..1e59630 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -3426,6 +3426,7 @@ static int iscsit_build_sendtargets_response(struct iscsi_cmd *cmd)
+ 		if (!text_ptr) {
+ 			pr_err("Unable to locate '=' string in text_in:"
+ 			       " %s\n", text_in);
++			kfree(payload);
+ 			return -EINVAL;
+ 		}
+ 		/*
