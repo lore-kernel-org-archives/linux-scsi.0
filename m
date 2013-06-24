@@ -1,62 +1,46 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: RFC: Allow block drivers to poll for I/O instead of sleeping
-Date: Mon, 24 Jun 2013 10:21:47 +0200
-Message-ID: <20130624082147.GC21768@gmail.com>
-References: <20130620201713.GV8211@linux.intel.com>
- <20130623100920.GA19021@gmail.com>
- <51C77344.2040907@gmail.com>
+From: Jack Wang <jinpu.wang@profitbricks.com>
+Subject: RE:[PATCH v11 6/9] Make scsi_remove_host() wait until error handling
+ finished
+Date: Mon, 24 Jun 2013 12:17:33 +0200
+Message-ID: <51C81CBD.5070709@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <51C77344.2040907@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Ahern <dsahern@gmail.com>
-Cc: Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Thomas Gleixner <tglx@linutronix.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:61104 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778Ab3FXKRj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jun 2013 06:17:39 -0400
+Received: by mail-bk0-f44.google.com with SMTP id r7so4099951bkg.3
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jun 2013 03:17:38 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>
 
-
-* David Ahern <dsahern@gmail.com> wrote:
-
-> On 6/23/13 3:09 AM, Ingo Molnar wrote:
-> >If an IO driver is implemented properly then it will batch up requests for
-> >the controller, and gets IRQ-notified on a (sub-)batch of buffers
-> >completed.
-> >
-> >If there's any spinning done then it should be NAPI-alike polling: a
-> >single "is stuff completed" polling pass per new block of work submitted,
-> >to opportunistically interleave completion with submission work.
-> >
-> >I don't see where active spinning brings would improve performance
-> >compared to a NAPI-alike technique. Your numbers obviously show a speedup
-> >we'd like to have, I'm just wondering whether the same speedup (or even
-> >more) could be implemented via:
-> >
-> >  - smart batching that rate-limits completion IRQs in essence
-> >  + NAPI-alike polling
-> >
-> >... which would almost never result in IRQ driven completion when we are
-> >close to CPU-bound and while not yet saturating the IO controller's
-> >capacity.
-> >
-> >The spinning approach you add has the disadvantage of actively wasting CPU
-> >time, which could be used to run other tasks. In general it's much better
-> >to make sure the completion IRQs are rate-limited and just schedule. This
-> >(combined with a metric ton of fine details) is what the networking code
-> >does in essence, and they have no trouble reaching very high throughput.
+> @@ -646,14 +703,20 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
+>  static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+>  {
+>         int rtn;
+> -       struct scsi_host_template *hostt = scmd->device->host->hostt;
+> +       struct Scsi_Host *host = scmd->device->host;
+> +       struct scsi_host_template *hostt = host->hostt;
 > 
-> Networking code has a similar proposal for low latency sockets using 
-> polling: https://lwn.net/Articles/540281/
+>         if (!hostt->eh_device_reset_handler)
+>                 return FAILED;
+> 
+> +       if (scsi_begin_eh(host))
+> +               return FAST_IO_FAIL;
+> +
+>         rtn = hostt->eh_device_reset_handler(scmd);
+>         if (rtn == SUCCESS)
+>                 __scsi_report_device_reset(scmd->device, NULL);
+> +       scsi_end_eh(host);
+> +
+>         return rtn;
+>  }
 
-In that case it might make sense to try the generic approach I suggested 
-in the previous mail, which would measure average sleep latencies of 
-tasks, and would do light idle-polling instead of the more expensive 
-switch-to-the-idle-task context switch plus associated RCU, nohz, etc. 
-busy-CPU-tear-down and the symmetric build-up work on idle wakeup.
+As the new eh from Hannes haven't make it into mainline, maybe we still
+need also check scsi_try_to_abort_cmd?
 
-The IO driver would still have to take an IRQ though, preferably on the 
-CPU that runs the IO task ...
-
-Thanks,
-
-	Ingo
+Jack
