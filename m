@@ -1,50 +1,79 @@
-From: Jack Wang <jinpu.wang-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
-Subject: Re: [PATCH 07/14] scsi_transport_srp: Add transport layer error handling
-Date: Mon, 24 Jun 2013 18:05:15 +0200
-Message-ID: <51C86E3B.7000308@profitbricks.com>
-References: <51C84E39.80806@profitbricks.com> <51C86AB4.1000906@acm.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v11 1/9] Fix race between starved list and device removal
+Date: Mon, 24 Jun 2013 18:16:14 +0200
+Message-ID: <51C870CE.4020900@acm.org>
+References: <51B86E26.6030108@acm.org> <51B86E74.60909@acm.org> <1372088320.2013.33.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51C86AB4.1000906-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gerard.telenet-ops.be ([195.130.132.48]:53723 "EHLO
+	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902Ab3FXQQU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jun 2013 12:16:20 -0400
+In-Reply-To: <1372088320.2013.33.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>
 
-On 06/24/2013 05:50 PM, Bart Van Assche wrote:
-> On 06/24/13 15:48, Jack Wang wrote:
->>> I'm not sure it's possible to avoid such a race without introducing
->>> a new mutex. How about something like the (untested) SCSI core patch
->>> below, and invoking scsi_block_eh() and scsi_unblock_eh() around any
->>> reconnect activity not initiated from the SCSI EH thread ?
->>>
->>> [PATCH] Add scsi_block_eh() and scsi_unblock_eh()
->>>
->> Hi Bart,
->>
->> The description doesn't match the code at all, do you mean try to
->> serialize the reconnect activity with this new block_eh_mutex?
-> 
-> In case it wasn't clear, the actual scsi_block_eh() and
-> scsi_unblock_eh() calls aren't present in the patch I posted, only their
-> implementation.
-As the patch title is "Add scsi_block_eh() and scsi_unblock_eh()", so I
-asked, thanks for explanation.
-> 
-> P.S.: please fix your e-mail client such that it does not break e-mail
-> threading. There are no "In-Reply-To:" tags in the header of your e-mails.
-> 
-Sorry for inconvenient, will fix it.
+On 06/24/13 17:38, James Bottomley wrote:
+> I really don't like this because it's shuffling potentially fragile
+> lifetime rules since you now have to have the sdev deleted from the
+> starved list before final put.  That becomes an unstated assumption
+> within the code.
+>
+> The theory is that the starved list processing may be racing with a
+> scsi_remove_device, so when we unlock the host lock, the device (and the
+> queue) may be destroyed.  OK, so I agree with this, remote a possibility
+> though it may be.  The easy way of fixing it without making assumptions
+> is this, isn't it?  All it requires is that the queue be destroyed after
+> the starved list entry is deleted in the sdev release code.
+>
+> James
+>
+> ---
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 86d5220..f294cc6 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -434,6 +434,7 @@ static void scsi_run_queue(struct request_queue *q)
+>   	list_splice_init(&shost->starved_list, &starved_list);
+>
+>   	while (!list_empty(&starved_list)) {
+> +		struct request_queue *slq;
+>   		/*
+>   		 * As long as shost is accepting commands and we have
+>   		 * starved queues, call blk_run_queue. scsi_request_fn
+> @@ -456,10 +457,21 @@ static void scsi_run_queue(struct request_queue *q)
+>   			continue;
+>   		}
+>
+> +		/*
+> +		 * once we drop the host lock, a racing scsi_remove_device may
+> +		 * remove the sdev from the starved list and destroy it and
+> +		 * the queue.  Mitigate by taking a reference to the queue and
+> +		 * never touching the sdev again after we drop the host lock.
+> +		 */
+> +		slq = sdev->request_queue;
+> +		if (!blk_get_queue(slq))
+> +			continue;
+> +
+>   		spin_unlock(shost->host_lock);
+> -		spin_lock(sdev->request_queue->queue_lock);
+> -		__blk_run_queue(sdev->request_queue);
+> -		spin_unlock(sdev->request_queue->queue_lock);
+> +
+> +		blk_run_queue(slq);
+> +		blk_put_queue(slq);
+> +
+>   		spin_lock(shost->host_lock);
+>   	}
+>   	/* put any unprocessed entries back */
 
-Thanks,
-Jack
-> Thanks,
-> 
-> Bart.
+Since the above patch invokes blk_put_queue() with interrupts disabled 
+it may cause blk_release_queue() to be invoked with interrupts disabled. 
+Sorry but I'm not sure whether that will work fine.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bart.
