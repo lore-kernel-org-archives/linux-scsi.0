@@ -1,67 +1,73 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH v11 3/9] Avoid calling __scsi_remove_device() twice
-Date: Tue, 25 Jun 2013 13:44:35 +0000
-Message-ID: <1372167875.2806.12.camel@dabdike>
-References: <51B86E26.6030108@acm.org> <51B86EF9.7080406@acm.org>
-	 <1372095492.2013.42.camel@dabdike.int.hansenpartnership.com>
-	 <51C956BE.7070303@acm.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v11 6/9] Make scsi_remove_host() wait until error
+ handling finished
+Date: Tue, 25 Jun 2013 06:45:23 -0700
+Message-ID: <1372167923.2806.13.camel@dabdike>
+References: <51B86E26.6030108@acm.org> <51B86FC1.6000103@acm.org>
+	  <1372101557.2013.76.camel@dabdike.int.hansenpartnership.com>
+	  <51C8A668.3060700@cs.wisc.edu>
+	 <1372112866.2013.104.camel@dabdike.int.hansenpartnership.com>
+	 <51C95C79.2080804@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:50949 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816Ab3FYNog convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jun 2013 09:44:36 -0400
-In-Reply-To: <51C956BE.7070303@acm.org>
-Content-Language: en-US
-Content-ID: <3CC2F7AFAC34224C98DC7548BCCE8AD8@sw.swsoft.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37034 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751275Ab3FYNp1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jun 2013 09:45:27 -0400
+In-Reply-To: <51C95C79.2080804@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-On Tue, 2013-06-25 at 10:37 +0200, Bart Van Assche wrote:
-> On 06/24/13 19:38, James Bottomley wrote:
-> > On Wed, 2013-06-12 at 14:52 +0200, Bart Van Assche wrote:
-> >> SCSI devices are added to the shost->__devices list from inside
-> >> scsi_alloc_sdev(). If something goes wrong during LUN scanning,
-> >> e.g. a transport layer failure occurs, then __scsi_remove_device()
-> >> can get invoked by the LUN scanning code for a SCSI device in
-> >> state SDEV_CREATED_BLOCK or SDEV_BLOCKED. If this happens then
-> >> the SCSI device has not yet been added to sysfs (is_visible == 0).
-> >> Make sure that if this happens these devices are transitioned
-> >> into state SDEV_DEL. This avoids that __scsi_remove_device()
-> >> gets invoked a second time by scsi_forget_host().
-> > 
-> > The current principle is that scsi_remove_device can fail, so the
-> > condition you're avoiding is expected.  If you want to make it always
-> > succeed, we have to worry about any device state racing with an
-> > asynchronous remove, which looks like a whole nasty can of worms.
-> > 
-> > The change log makes it sound like what you actually want to enable is
-> > the ability to remove devices which fail probing but which are in the
-> > blocked state, so why not just respin with only that, which is just
-> > adding the blocked states to the ->SDEV_DEL state transitions?
+On Tue, 2013-06-25 at 11:01 +0200, Bart Van Assche wrote:
+> On 06/25/13 00:27, James Bottomley wrote:
+> > On Mon, 2013-06-24 at 15:04 -0500, Mike Christie wrote:
+> >> On 06/24/2013 02:19 PM, James Bottomley wrote:
+> >>> On Wed, 2013-06-12 at 14:55 +0200, Bart Van Assche wrote:
+> >>>> A SCSI LLD may start cleaning up host resources as soon as
+> >>>> scsi_remove_host() returns. These host resources may be needed by
+> >>>> the LLD in an implementation of one of the eh_* functions. So if
+> >>>> one of the eh_* functions is in progress when scsi_remove_host()
+> >>>> is invoked, wait until the eh_* function has finished. Also, do
+> >>>> not invoke any of the eh_* functions after scsi_remove_host() has
+> >>>> started.
+> >>>
+> >>> We already have state guards for this, don't we?  That's the
+> >>> SHOST_*_RECOVERY ones.  When eh functions are active, the host
+> >>> transitions to a recovery state, so the wait could just wait on that
+> >>> state rather than implement an open coded counting semaphore.
+> >>
+> >> That seems better. For the sg_reset_provider case we just would have to
+> >> also wait on the tmf_in_progress bit.
+> >
+> > The simplest way is may just be to move the kthread_stop() from release
+> > to remove.  That synchronously waits for the outstanding error handling
+> > to complete and the eh thread to stop.  Perhaps the eh thread should
+> > also wait for tmf in progress before it dies?
 > 
-> If what you had in mind is the patch below, I think we agree:
+> Regarding TMF that are in progress: my preference is to leave it to the 
+> LLD to wait for any TMF in progress if necessary. At least with SRP over 
+> RDMA it is possible to prevent receiving further TMF completion 
+> notifications by closing the connection over which these TMF were sent.
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index e3d6276..eaea242 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2185,6 +2185,8 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
->  		case SDEV_OFFLINE:
->  		case SDEV_TRANSPORT_OFFLINE:
->  		case SDEV_CANCEL:
-> +		case SDEV_BLOCK:
-> +		case SDEV_CREATED_BLOCK:
+> There is a difference though between moving the EH kthread_stop() call 
+> and the patch at the start of this thread: moving the EH kthread_stop() 
+> call does not prevent that an ioctl like SG_SCSI_RESET triggers an eh_* 
+> callback after scsi_remove_host() has finished. However, the 
+> scsi_begin_eh() / scsi_end_eh() functions do prevent that an ioctl can 
+> cause an eh_* callback to be invoked after scsi_remove_device() finished.
 
-Something like this, yes.  For the probe lun case, we have to be in
-CREATED, so any block action transitions only to CREATED_BLOCK.  The
-BLOCK->DEL transition can only be a result of an async remove racing
-with bringup, can't it?  Which is something I think we still want to
-forbid.
+OK, but this doesn't tell me what you're trying to achieve.
+
+An eh function is allowable as long as the host hadn't had the release
+callback executed.  That means you must have to have a reference to the
+device/host to execute the eh function, which is currently guaranteed
+for all invocations.
 
 James
+
 
