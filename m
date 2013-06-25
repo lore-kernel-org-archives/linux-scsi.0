@@ -1,72 +1,79 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 04/16] qla2xxx: Do not query FC statistics during chip reset.
-Date: Tue, 25 Jun 2013 11:27:19 -0400
-Message-ID: <1372174051-4211-5-git-send-email-saurav.kashyap@qlogic.com>
-References: <1372174051-4211-1-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 00/16] qla2xxx: Patches for scsi "misc" branch.
+Date: Tue, 25 Jun 2013 11:27:15 -0400
+Message-ID: <1372174051-4211-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:19902 "EHLO
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:52287 "EHLO
 	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752118Ab3FYPx5 (ORCPT
+	by vger.kernel.org with ESMTP id S1752130Ab3FYPxw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jun 2013 11:53:57 -0400
-Received: from mail151-tx2 (localhost [127.0.0.1])	by
- mail151-tx2-R.bigfish.com (Postfix) with ESMTP id 70640340185	for
- <linux-scsi@vger.kernel.org>; Tue, 25 Jun 2013 15:53:56 +0000 (UTC)
-Received: from TX2EHSMHS027.bigfish.com (unknown [10.9.14.226])	by
- mail151-tx2.bigfish.com (Postfix) with ESMTP id 586124E005A	for
+	Tue, 25 Jun 2013 11:53:52 -0400
+Received: from mail227-tx2 (localhost [127.0.0.1])	by
+ mail227-tx2-R.bigfish.com (Postfix) with ESMTP id 9171FAC018F	for
+ <linux-scsi@vger.kernel.org>; Tue, 25 Jun 2013 15:53:51 +0000 (UTC)
+Received: from TX2EHSMHS027.bigfish.com (unknown [10.9.14.244])	by
+ mail227-tx2.bigfish.com (Postfix) with ESMTP id 263C1320069	for
  <linux-scsi@vger.kernel.org>; Tue, 25 Jun 2013 15:53:49 +0000 (UTC)
-In-Reply-To: <1372174051-4211-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+Hi James,
 
-During a chip reset, the mailbox call to get FC statistics from the ISP will
-not work resulting in needless mailbox accesses and errors printing out:
+Please apply the following patches to the scsi tree at your earliest
+convenience for inclusion in the next mainline merge window.
 
-qla2xxx [0000:05:00.0]-00af:11: Performing ISP error recovery - ha=ffff881fad044800.
-qla2xxx [0000:05:00.0]-1020:11: **** Failed mbx[0]=4001, mb[1]=4953, mb[2]=5020, mb[3]=b100, cmd=6d ****.
-qla2xxx [0000:05:00.0]-1020:11: **** Failed mbx[0]=4001, mb[1]=4953, mb[2]=5020, mb[3]=b100, cmd=6d ****.
-qla2xxx [0000:05:00.0]-1020:11: **** Failed mbx[0]=4001, mb[1]=4953, mb[2]=5020, mb[3]=b100, cmd=6d ****.
-qla2xxx [0000:05:00.0]-1020:11: **** Failed mbx[0]=4001, mb[1]=4953, mb[2]=5020, mb[3]=b100, cmd=6d ****.
-qla2xxx [0000:05:00.0]-1020:11: **** Failed mbx[0]=4001, mb[1]=4953, mb[2]=5020, mb[3]=b100, cmd=6d ****.
+Thanks,
+~Saurav
 
-To prevent this, check for a chip reset when an application queries for FC
-stats and return immediately if a chip reset is occurring.
 
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_attr.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Bart Van Assche (10):
+  qla2xxx: Clean up qla24xx_iidma()
+  qla2xxx: Clean up qla84xx_mgmt_cmd()
+  qla2xxx: Remove dead code in qla2x00_configure_hba()
+  qla2xxx: Remove two superfluous tests.
+  qla2xxx: Remove a dead assignment in
+    qla24xx_build_scsi_crc_2_iocbs().
+  qla2xxx: Remove redundant assignments.
+  qla2xxx: Help Coverity with analyzing ct_sns_pkt initialization.
+  qla2xxx: Fix qla2xxx_check_risc_status().
+  qla2xxx: Remove an unused variable from qla2x00_remove_one().
+  qla2xxx: Fix a memory leak in an error path of qla2x00_process_els()
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index bf60c63..d7a99ae 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1691,6 +1691,9 @@ qla2x00_get_fc_host_stats(struct Scsi_Host *shost)
- 	if (unlikely(pci_channel_offline(ha->pdev)))
- 		goto done;
- 
-+	if (qla2x00_reset_active(vha))
-+		goto done;
-+
- 	stats = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &stats_dma);
- 	if (stats == NULL) {
- 		ql_log(ql_log_warn, vha, 0x707d,
-@@ -1703,7 +1706,7 @@ qla2x00_get_fc_host_stats(struct Scsi_Host *shost)
- 	if (IS_FWI2_CAPABLE(ha)) {
- 		rval = qla24xx_get_isp_stats(base_vha, stats, stats_dma);
- 	} else if (atomic_read(&base_vha->loop_state) == LOOP_READY &&
--	    !qla2x00_reset_active(vha) && !ha->dpc_active) {
-+	    !ha->dpc_active) {
- 		/* Must be in a 'READY' state for statistics retrieval. */
- 		rval = qla2x00_get_link_status(base_vha, base_vha->loop_id,
- 						stats, stats_dma);
+Chad Dupuis (2):
+  qla2xxx: Do not query FC statistics during chip reset.
+  qla2xxx: Do not take a second firmware dump when intentionally
+    generating one.
+
+Giridhar Malavali (2):
+  qla2xxx: Clear the MBX_INTR_WAIT flag when the mailbox time-out
+    happens.
+  qla2xxx: Set the index in outstanding command array to NULL when cmd
+    is aborted when the request timeout.
+
+Saurav Kashyap (2):
+  qla2xxx: Move qla2x00_free_device to the correct location.
+  qla2xxx: Fix sparse warning from qla_mr.c and qla_iocb.c.
+
+ drivers/scsi/qla2xxx/qla_attr.c   |    5 +-
+ drivers/scsi/qla2xxx/qla_bsg.c    |   38 +++------
+ drivers/scsi/qla2xxx/qla_dbg.c    |   12 ++-
+ drivers/scsi/qla2xxx/qla_def.h    |   34 ++++----
+ drivers/scsi/qla2xxx/qla_gbl.h    |    2 +-
+ drivers/scsi/qla2xxx/qla_gs.c     |   86 +++++++++----------
+ drivers/scsi/qla2xxx/qla_init.c   |    8 --
+ drivers/scsi/qla2xxx/qla_inline.h |    2 +-
+ drivers/scsi/qla2xxx/qla_iocb.c   |    6 +-
+ drivers/scsi/qla2xxx/qla_isr.c    |    1 +
+ drivers/scsi/qla2xxx/qla_mbx.c    |   16 +++-
+ drivers/scsi/qla2xxx/qla_mr.c     |  167 +++++++++++++++++++------------------
+ drivers/scsi/qla2xxx/qla_mr.h     |   98 +++++++++++-----------
+ drivers/scsi/qla2xxx/qla_os.c     |   10 +--
+ 14 files changed, 235 insertions(+), 250 deletions(-)
+
 -- 
 1.7.7
 
