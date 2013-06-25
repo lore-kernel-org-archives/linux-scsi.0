@@ -1,73 +1,39 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v11 6/9] Make scsi_remove_host() wait until error
- handling finished
-Date: Tue, 25 Jun 2013 06:45:23 -0700
-Message-ID: <1372167923.2806.13.camel@dabdike>
-References: <51B86E26.6030108@acm.org> <51B86FC1.6000103@acm.org>
-	  <1372101557.2013.76.camel@dabdike.int.hansenpartnership.com>
-	  <51C8A668.3060700@cs.wisc.edu>
-	 <1372112866.2013.104.camel@dabdike.int.hansenpartnership.com>
-	 <51C95C79.2080804@acm.org>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: RFC: Allow block drivers to poll for I/O instead of sleeping
+Date: Tue, 25 Jun 2013 09:57:28 -0400
+Message-ID: <1372168648.18733.200.camel@gandalf.local.home>
+References: <20130620201713.GV8211@linux.intel.com>
+	 <20130623100920.GA19021@gmail.com>
+	 <CA+55aFy+COdk5+ucwxtc1At=PAYTJxeUaUV6rP9XstHdNV0hbQ@mail.gmail.com>
+	 <20130624071718.GS9422@kernel.dk> <20130625001102.GA6623@home.goodmis.org>
+	 <20130625030721.GA8211@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37034 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751275Ab3FYNp1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jun 2013 09:45:27 -0400
-In-Reply-To: <51C95C79.2080804@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130625030721.GA8211@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, Linux SCSI List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-On Tue, 2013-06-25 at 11:01 +0200, Bart Van Assche wrote:
-> On 06/25/13 00:27, James Bottomley wrote:
-> > On Mon, 2013-06-24 at 15:04 -0500, Mike Christie wrote:
-> >> On 06/24/2013 02:19 PM, James Bottomley wrote:
-> >>> On Wed, 2013-06-12 at 14:55 +0200, Bart Van Assche wrote:
-> >>>> A SCSI LLD may start cleaning up host resources as soon as
-> >>>> scsi_remove_host() returns. These host resources may be needed by
-> >>>> the LLD in an implementation of one of the eh_* functions. So if
-> >>>> one of the eh_* functions is in progress when scsi_remove_host()
-> >>>> is invoked, wait until the eh_* function has finished. Also, do
-> >>>> not invoke any of the eh_* functions after scsi_remove_host() has
-> >>>> started.
-> >>>
-> >>> We already have state guards for this, don't we?  That's the
-> >>> SHOST_*_RECOVERY ones.  When eh functions are active, the host
-> >>> transitions to a recovery state, so the wait could just wait on that
-> >>> state rather than implement an open coded counting semaphore.
-> >>
-> >> That seems better. For the sg_reset_provider case we just would have to
-> >> also wait on the tmf_in_progress bit.
-> >
-> > The simplest way is may just be to move the kthread_stop() from release
-> > to remove.  That synchronously waits for the outstanding error handling
-> > to complete and the eh thread to stop.  Perhaps the eh thread should
-> > also wait for tmf in progress before it dies?
+On Mon, 2013-06-24 at 23:07 -0400, Matthew Wilcox wrote:
+> On Mon, Jun 24, 2013 at 08:11:02PM -0400, Steven Rostedt wrote:
+> > What about hooking into the idle_balance code? That happens if we are
+> > about to go to idle but before the full schedule switch to the idle
+> > task.
+> > 
+> > 
+> > In __schedule(void):
+> > 
+> > 	if (unlikely(!rq->nr_running))
+> > 		idle_balance(cpu, rq);
 > 
-> Regarding TMF that are in progress: my preference is to leave it to the 
-> LLD to wait for any TMF in progress if necessary. At least with SRP over 
-> RDMA it is possible to prevent receiving further TMF completion 
-> notifications by closing the connection over which these TMF were sent.
-> 
-> There is a difference though between moving the EH kthread_stop() call 
-> and the patch at the start of this thread: moving the EH kthread_stop() 
-> call does not prevent that an ioctl like SG_SCSI_RESET triggers an eh_* 
-> callback after scsi_remove_host() has finished. However, the 
-> scsi_begin_eh() / scsi_end_eh() functions do prevent that an ioctl can 
-> cause an eh_* callback to be invoked after scsi_remove_device() finished.
+> That may be a great place to try it from the PoV of the scheduler, but are
+> you OK with me threading a struct backing_dev_info * all the way through
+> the scheduler to idle_balance()?  :-)
 
-OK, but this doesn't tell me what you're trying to achieve.
+Well, there's other ways to pass data down besides parameters. You could
+attach something to the task itself.
 
-An eh function is allowable as long as the host hadn't had the release
-callback executed.  That means you must have to have a reference to the
-device/host to execute the eh function, which is currently guaranteed
-for all invocations.
-
-James
-
-
+-- Steve
