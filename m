@@ -1,73 +1,69 @@
-From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Subject: [PATCH v2 24/45] [SCSI] fcoe: Use get/put_online_cpus_atomic() to
- prevent CPU offline
-Date: Wed, 26 Jun 2013 01:59:57 +0530
-Message-ID: <20130625202956.16593.29123.stgit@srivatsabhat.in.ibm.com>
-References: <20130625202452.16593.22810.stgit@srivatsabhat.in.ibm.com>
+From: "Love, Robert W" <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: fcoe pull request for 3.9-rc
+Date: Tue, 25 Jun 2013 20:55:30 +0000
+Message-ID: <51CA03C1.1040901@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130625202452.16593.22810.stgit@srivatsabhat.in.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tglx@linutronix.de, peterz@infradead.org, tj@kernel.org, oleg@redhat.com, paulmck@linux.vnet.ibm.com, rusty@rustcorp.com.au, mingo@kernel.org, akpm@linux-foundation.org, namhyung@kernel.org, walken@google.com, vincent.guittot@linaro.org, laijs@cn.fujitsu.com
-Cc: rostedt@goodmis.org, wangyun@linux.vnet.ibm.com, xiaoguangrong@linux.vnet.ibm.com, sbw@mit.edu, fweisbec@gmail.com, zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com, srivatsa.bhat@linux.vnet.ibm.com, linux-pm@vger.kernel.org, linux-arch@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Robert Love <robert.w.love@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, devel@open-fcoe.org, linux-scsi@vger.kernel.org"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Language: en-US
+Content-ID: <BD103AD665EDD848B3732F06C1EDA6D8-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: "torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: "fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, Neil Horman <nhorman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Once stop_machine() is gone from the CPU offline path, we won't be able
-to depend on disabling preemption to prevent CPUs from going offline
-from under us.
+The following changes since commit 1e876e3b1a9df25bb04682b0d48aaa7e8ae1fc82:
 
-Use the get/put_online_cpus_atomic() APIs to prevent CPUs from going
-offline, while invoking from atomic context.
+   Merge branch 'for-linus' of 
+git://git.kernel.org/pub/scm/linux/kernel/git/s390/linux (2013-06-25 
+09:08:07 -1000)
 
-Cc: Robert Love <robert.w.love@intel.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: devel@open-fcoe.org
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
----
+are available in the git repository at:
 
- drivers/scsi/fcoe/fcoe.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+   git://git.kernel.org/pub/scm/linux/kernel/git/rwlove/fcoe.git 
+tags/critical_fix_for_3.9
+
+for you to fetch changes up to 2884d4230867c8a46cf701214051e923301e7429:
+
+   fcoe: Use correct API to set vlan tag for FCoE Ethertype skbs 
+(2013-06-25 12:23:19 -0700)
+
+----------------------------------------------------------------
+This patch fixes a critical bug that was introduced in 3.9
+related to VLAN tagging FCoE frames.
+
+----------------------------------------------------------------
+Robert Love (1):
+       fcoe: Use correct API to set vlan tag for FCoE Ethertype skbs
+
+  drivers/scsi/fcoe/fcoe.c |    7 +++++--
+  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 292b24f..a107d3c 100644
+index 292b24f..32ae6c6 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1484,6 +1484,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 	 * was originated, otherwise select cpu using rx exchange id
- 	 * or fcoe_select_cpu().
- 	 */
-+	get_online_cpus_atomic();
- 	if (ntoh24(fh->fh_f_ctl) & FC_FC_EX_CTX)
- 		cpu = ntohs(fh->fh_ox_id) & fc_cpu_mask;
- 	else {
-@@ -1493,8 +1494,10 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 			cpu = ntohs(fh->fh_rx_id) & fc_cpu_mask;
- 	}
- 
--	if (cpu >= nr_cpu_ids)
-+	if (cpu >= nr_cpu_ids) {
-+		put_online_cpus_atomic();
- 		goto err;
-+	}
- 
- 	fps = &per_cpu(fcoe_percpu, cpu);
- 	spin_lock(&fps->fcoe_rx_list.lock);
-@@ -1514,6 +1517,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 		spin_lock(&fps->fcoe_rx_list.lock);
- 		if (!fps->thread) {
- 			spin_unlock(&fps->fcoe_rx_list.lock);
-+			put_online_cpus_atomic();
- 			goto err;
- 		}
- 	}
-@@ -1535,6 +1539,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 	if (fps->thread->state == TASK_INTERRUPTIBLE)
- 		wake_up_process(fps->thread);
- 	spin_unlock(&fps->fcoe_rx_list.lock);
-+	put_online_cpus_atomic();
- 
- 	return 0;
- err:
+@@ -1656,9 +1656,12 @@ static int fcoe_xmit(struct fc_lport *lport, 
+struct fc_frame *fp)
+
+      if (fcoe->netdev->priv_flags & IFF_802_1Q_VLAN &&
+          fcoe->realdev->features & NETIF_F_HW_VLAN_CTAG_TX) {
+-        skb->vlan_tci = VLAN_TAG_PRESENT |
+-                vlan_dev_vlan_id(fcoe->netdev);
++        /* must set skb->dev before calling vlan_put_tag */
+          skb->dev = fcoe->realdev;
++        skb = __vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q),
++                         vlan_dev_vlan_id(fcoe->netdev));
++        if (!skb)
++            return -ENOMEM;
+      } else
+          skb->dev = fcoe->netdev;
