@@ -1,49 +1,58 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: RFC: Allow block drivers to poll for I/O instead of sleeping
-Date: Tue, 25 Jun 2013 09:07:29 +0200
-Message-ID: <51C941B1.6000305@acm.org>
-References: <20130620201713.GV8211@linux.intel.com> <20130623100920.GA19021@gmail.com> <CA+55aFy+COdk5+ucwxtc1At=PAYTJxeUaUV6rP9XstHdNV0hbQ@mail.gmail.com> <20130624080750.GA21768@gmail.com> <20130625031809.GB8211@linux.intel.com>
+Subject: Re: [PATCH v11 3/9] Avoid calling __scsi_remove_device() twice
+Date: Tue, 25 Jun 2013 10:37:18 +0200
+Message-ID: <51C956BE.7070303@acm.org>
+References: <51B86E26.6030108@acm.org> <51B86EF9.7080406@acm.org> <1372095492.2013.42.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130625031809.GB8211@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
-Cc: Ingo Molnar <mingo@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, Linux SCSI List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Thomas Gleixner <tglx@linutronix.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from georges.telenet-ops.be ([195.130.137.68]:50150 "EHLO
+	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543Ab3FYIhd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jun 2013 04:37:33 -0400
+In-Reply-To: <1372095492.2013.42.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>
 
-On 06/25/13 05:18, Matthew Wilcox wrote:
-> On Mon, Jun 24, 2013 at 10:07:51AM +0200, Ingo Molnar wrote:
->> I'm wondering, how will this scheme work if the IO completion latency is a
->> lot more than the 5 usecs in the testcase? What if it takes 20 usecs or
->> 100 usecs or more?
->
-> There's clearly a threshold at which it stops making sense, and our
-> current NAND-based SSDs are almost certainly on the wrong side of that
-> threshold!  I can't wait for one of the "post-NAND" technologies to make
-> it to market in some form that makes it economical to use in an SSD.
->
-> The problem is that some of the people who are looking at those
-> technologies are crazy.  They want to "bypass the kernel" and "do user
-> space I/O" because "the kernel is too slow".  This patch is part of an
-> effort to show them how crazy they are.  And even if it doesn't convince
-> them, at least users who refuse to rewrite their applications to take
-> advantage of magical userspace I/O libraries will see real performance
-> benefits.
+On 06/24/13 19:38, James Bottomley wrote:
+> On Wed, 2013-06-12 at 14:52 +0200, Bart Van Assche wrote:
+>> SCSI devices are added to the shost->__devices list from inside
+>> scsi_alloc_sdev(). If something goes wrong during LUN scanning,
+>> e.g. a transport layer failure occurs, then __scsi_remove_device()
+>> can get invoked by the LUN scanning code for a SCSI device in
+>> state SDEV_CREATED_BLOCK or SDEV_BLOCKED. If this happens then
+>> the SCSI device has not yet been added to sysfs (is_visible == 0).
+>> Make sure that if this happens these devices are transitioned
+>> into state SDEV_DEL. This avoids that __scsi_remove_device()
+>> gets invoked a second time by scsi_forget_host().
+> 
+> The current principle is that scsi_remove_device can fail, so the
+> condition you're avoiding is expected.  If you want to make it always
+> succeed, we have to worry about any device state racing with an
+> asynchronous remove, which looks like a whole nasty can of worms.
+> 
+> The change log makes it sound like what you actually want to enable is
+> the ability to remove devices which fail probing but which are in the
+> blocked state, so why not just respin with only that, which is just
+> adding the blocked states to the ->SDEV_DEL state transitions?
 
-Recently I attended an interesting talk about this subject in which it 
-was proposed not only to bypass the kernel for access to high-IOPS 
-devices but also to allow byte-addressability for block devices. The 
-slides that accompanied that talk can be found here (includes a 
-performance comparison with the traditional block driver API):
+If what you had in mind is the patch below, I think we agree:
 
-Bernard Metzler, On Suitability of High-Performance Networking API for 
-Storage, OFA Int'l Developer Workshop, April 24, 2013 
-(http://www.openfabrics.org/ofa-documents/presentations/doc_download/559-on-suitability-of-high-performance-networking-api-for-storage.html).
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index e3d6276..eaea242 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2185,6 +2185,8 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		case SDEV_OFFLINE:
+ 		case SDEV_TRANSPORT_OFFLINE:
+ 		case SDEV_CANCEL:
++		case SDEV_BLOCK:
++		case SDEV_CREATED_BLOCK:
+ 			break;
+ 		default:
+ 			goto illegal;
 
-This approach leaves the choice of whether to use polling or an 
-interrupt-based completion notification to the user of the new API, 
-something the Linux InfiniBand RDMA verbs API already allows today.
 
-Bart.
