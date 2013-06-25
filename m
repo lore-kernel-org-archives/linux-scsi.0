@@ -1,61 +1,48 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 02/16] qla2xxx: Set the index in outstanding command array to NULL when cmd is aborted when the request timeout.
-Date: Tue, 25 Jun 2013 11:27:17 -0400
-Message-ID: <1372174051-4211-3-git-send-email-saurav.kashyap@qlogic.com>
-References: <1372174051-4211-1-git-send-email-saurav.kashyap@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Subject: MAINTAINERS: Add myself as the maintainer for BusLogic SCSI driver
+Date: Tue, 25 Jun 2013 09:57:27 -0600
+Message-ID: <1372175847-11222-1-git-send-email-khalid.aziz@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:53832 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752204Ab3FYPxy (ORCPT
+Received: from qmta13.emeryville.ca.mail.comcast.net ([76.96.27.243]:45822
+	"EHLO qmta13.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751505Ab3FYP5p (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jun 2013 11:53:54 -0400
-Received: from mail227-tx2 (localhost [127.0.0.1])	by
- mail227-tx2-R.bigfish.com (Postfix) with ESMTP id 9D95CAC01A6	for
- <linux-scsi@vger.kernel.org>; Tue, 25 Jun 2013 15:53:51 +0000 (UTC)
-Received: from TX2EHSMHS027.bigfish.com (unknown [10.9.14.244])	by
- mail227-tx2.bigfish.com (Postfix) with ESMTP id 3424332006C	for
- <linux-scsi@vger.kernel.org>; Tue, 25 Jun 2013 15:53:49 +0000 (UTC)
-In-Reply-To: <1372174051-4211-1-git-send-email-saurav.kashyap@qlogic.com>
+	Tue, 25 Jun 2013 11:57:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: Khalid Aziz <khalid.aziz@oracle.com>, linux-scsi@vger.kernel.org, Khalid Aziz <khalid@gonehiking.org>
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+MAINTAINERS: Add myself as the maintainer for BusLogic SCSI driver
 
-Call the generic BSG free routine to unmap the DMA buffers.
+I ported BusLogic driver to 64-bit. There is no current maintainer for
+this driver and since I made significant changes to the driver for
+64-bit porting work, I will continue to maintain it.
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Khalid Aziz <khalid@gonehiking.org>
+Cc: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ MAINTAINERS |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 39719f8..5ba0cc1 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -2153,6 +2153,7 @@ qla24xx_bsg_timeout(struct fc_bsg_job *bsg_job)
- 					(sp->type == SRB_ELS_CMD_HST) ||
- 					(sp->type == SRB_FXIOCB_BCMD))
- 					&& (sp->u.bsg_job == bsg_job)) {
-+					req->outstanding_cmds[cnt] = NULL;
- 					spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 					if (ha->isp_ops->abort_command(sp)) {
- 						ql_log(ql_log_warn, vha, 0x7089,
-@@ -2180,8 +2181,6 @@ qla24xx_bsg_timeout(struct fc_bsg_job *bsg_job)
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 5be702c..83cd4e4 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1858,6 +1858,13 @@ S:	Odd fixes
+ F:	Documentation/video4linux/bttv/
+ F:	drivers/media/pci/bt8xx/bttv*
  
- done:
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
--	if (bsg_job->request->msgcode == FC_BSG_HST_CT)
--		kfree(sp->fcport);
--	qla2x00_rel_sp(vha, sp);
-+	sp->free(vha, sp);
- 	return 0;
- }
++BUSLOGIC SCSI DRIVER
++M:	Khalid Aziz <khalid@gonehiking.org>
++L:	linux-scsi@vger.kernel.org
++S:	Maintained
++F:	drivers/scsi/BusLogic.*
++F:	drivers/scsi/FlashPoint.*
++
+ C-MEDIA CMI8788 DRIVER
+ M:	Clemens Ladisch <clemens@ladisch.de>
+ L:	alsa-devel@alsa-project.org (moderated for non-subscribers)
 -- 
-1.7.7
-
+1.7.10.4
 
