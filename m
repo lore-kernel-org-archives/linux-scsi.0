@@ -1,47 +1,41 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v3 4/4] scsi_debug: fix do_device_access() with wrap around
- range
-Date: Tue, 25 Jun 2013 01:34:46 +0200
-Message-ID: <51C8D796.8000005@interlog.com>
-References: <1371991061-19437-1-git-send-email-akinobu.mita@gmail.com> <1371991061-19437-5-git-send-email-akinobu.mita@gmail.com>
-Reply-To: dgilbert@interlog.com
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: RFC: Allow block drivers to poll for I/O instead of sleeping
+Date: Mon, 24 Jun 2013 20:11:02 -0400
+Message-ID: <20130625001102.GA6623@home.goodmis.org>
+References: <20130620201713.GV8211@linux.intel.com>
+ <20130623100920.GA19021@gmail.com>
+ <CA+55aFy+COdk5+ucwxtc1At=PAYTJxeUaUV6rP9XstHdNV0hbQ@mail.gmail.com>
+ <20130624071718.GS9422@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1371991061-19437-5-git-send-email-akinobu.mita@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20130624071718.GS9422@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, Linux SCSI List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 13-06-23 02:37 PM, Akinobu Mita wrote:
-> do_device_access() is a function that abstracts copying SG list from/to
-> ramdisk storage (fake_storep).
->
-> It must deal with the ranges exceeding actual fake_storep size, because
-> such ranges are valid if virtual_gb is set greater than zero, and they
-> should be treated as fake_storep is repeatedly mirrored up to virtual size.
->
-> Unfortunately, it can't deal with the range which wraps around the end of
-> fake_storep. A wrap around range is copied by two sg_copy_{from,to}_buffer()
-> calls, but sg_copy_{from,to}_buffer() can't copy from/to in the middle of
-> SG list, therefore the second call can't copy correctly.
->
-> This fixes it by using sg_pcopy_{from,to}_buffer() that can copy from/to
-> the middle of SG list.
->
-> This also simplifies the assignment of sdb->resid in fill_from_dev_buffer().
-> Because fill_from_dev_buffer() is now only called once per command
-> execution cycle.  So it is not necessary to take care to decrease
-> sdb->resid if fill_from_dev_buffer() is called more than once.
->
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: Douglas Gilbert <dgilbert@interlog.com>
-> Cc: linux-scsi@vger.kernel.org
-> ---
->
-> * No change from v2
+On Mon, Jun 24, 2013 at 09:17:18AM +0200, Jens Axboe wrote:
+> On Sun, Jun 23 2013, Linus Torvalds wrote:
+> > 
+> > You could try to do that either *in* the idle thread (which would take
+> > the context switch overhead - maybe negating some of the advantages),
+> > or alternatively hook into the scheduler idle logic before actually
+> > doing the switch.
+> 
+> It can't happen in the idle thread. If you need to take the context
+> switch, then you've negated pretty much all of the gain of the polled
+> approach.
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+What about hooking into the idle_balance code? That happens if we are
+about to go to idle but before the full schedule switch to the idle
+task.
+
+
+In __schedule(void):
+
+	if (unlikely(!rq->nr_running))
+		idle_balance(cpu, rq);
+
+-- Steve
