@@ -1,45 +1,61 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH v11 6/9] Make scsi_remove_host() wait until error handling
- finished
-Date: Tue, 25 Jun 2013 13:13:08 +0200
-Message-ID: <51C97B44.7050101@acm.org>
-References: <51B86E26.6030108@acm.org> <51B86FC1.6000103@acm.org>  <1372101557.2013.76.camel@dabdike.int.hansenpartnership.com>  <51C8A668.3060700@cs.wisc.edu> <1372112866.2013.104.camel@dabdike.int.hansenpartnership.com>
+From: Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [PATCH 8/9] scsi/pm8001: use pdev->pm_cap instead of pci_find_capability(..,PCI_CAP_ID_PM)
+Date: Tue, 25 Jun 2013 20:07:51 +0800
+Message-ID: <51C98817.4070002@huawei.com>
+References: <1371543816-15192-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from juliette.telenet-ops.be ([195.130.137.74]:41100 "EHLO
-	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540Ab3FYLNM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jun 2013 07:13:12 -0400
-In-Reply-To: <1372112866.2013.104.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1371543816-15192-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Yijing Wang <wangyijing@huawei.com>, linux-kernel@vger.kernel.org, xjtuwjp@gmail.com, lindar_liu@usish.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Joe Lawrence <jdl1291@gmail.com>, Tejun Heo <tj@kernel.org>, Chanho Min <chanho.min@lge.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-On 06/25/13 00:27, James Bottomley wrote:
-> For a variety of reasons this patch set is incredibly hard to review:
-> Almost every patch touches pieces in the mid layer where you have to be
-> sure in minute detail you know what's going on (and what should be going
-> on), so usually it's a couple of hours with the source code just making
-> sure you do know this.  Plus it's code where the underlying usage model
-> has evolved over the years meaning the original guarantees might have
-> been violated silently somewhere and the ramifications spread out like
-> tentacles everywhere.  Finally, it's not clear from the change logs why
-> the changes are actually being made: for instance sentence one of this
-> change log says "A SCSI LLD may start cleaning up host resources as soon
-> as scsi_remove_host() returns." which causes my sanity checker to go off
-> immediately because in a refcounted model, like we use for dev, target
-> and host, nothing essential is supposed to be freed until the last put
-> which may or may not happen in the remove function.
+Hi,
+  Any comments?
 
-If the invocations of the eh_* callback functions would be visible to 
-the block layer then blk_cleanup_queue() would wait until any such eh_* 
-invocations have finished. Such an approach could simplify device 
-removal in the SCSI mid-layer significantly. It also would avoid that an 
-eh_* callback can be invoked via an ioctl after scsi_remove_device() has 
-finished.
+On 2013/6/18 16:23, Yijing Wang wrote:
+> Pci core has been saved pm cap register offset by pdev->pm_cap in pci_pm_init()
+> in init path. So we can use pdev->pm_cap instead of using
+> pci_find_capability(pdev, PCI_CAP_ID_PM) for better performance and simplified code.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: xjtuwjp@gmail.com
+> Cc: lindar_liu@usish.com
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c |    7 +++----
+>  1 files changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index e4b9bc7..3861aa1 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -912,14 +912,13 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>  {
+>  	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+>  	struct pm8001_hba_info *pm8001_ha;
+> -	int i , pos;
+> +	int i;
+>  	u32 device_state;
+>  	pm8001_ha = sha->lldd_ha;
+>  	flush_workqueue(pm8001_wq);
+>  	scsi_block_requests(pm8001_ha->shost);
+> -	pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
+> -	if (pos == 0) {
+> -		printk(KERN_ERR " PCI PM not supported\n");
+> +	if (!pdev->pm_cap) {
+> +		dev_err(&pdev->dev, " PCI PM not supported\n");
+>  		return -ENODEV;
+>  	}
+>  	PM8001_CHIP_DISP->interrupt_disable(pm8001_ha, 0xFF);
+> 
 
-Bart.
 
+-- 
+Thanks!
+Yijing
