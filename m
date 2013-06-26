@@ -1,15 +1,15 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 08/10] ufs: fix register address in UIC error interrupt handling
-Date: Wed, 26 Jun 2013 22:39:33 +0530
-Message-ID: <1372266575-3468-9-git-send-email-santoshsy@gmail.com>
+Subject: [PATCH 07/10] ufshcd-pltfrm: add missing empty slot in ufs_of_match[]
+Date: Wed, 26 Jun 2013 22:39:32 +0530
+Message-ID: <1372266575-3468-8-git-send-email-santoshsy@gmail.com>
 References: <1372266575-3468-1-git-send-email-santoshsy@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:36436 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441Ab3FZRKV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jun 2013 13:10:21 -0400
-Received: by mail-pb0-f43.google.com with SMTP id md12so14516767pbc.30
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 10:10:21 -0700 (PDT)
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:51758 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752441Ab3FZRKS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jun 2013 13:10:18 -0400
+Received: by mail-pa0-f43.google.com with SMTP id hz11so14527693pad.30
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 10:10:17 -0700 (PDT)
 In-Reply-To: <1372266575-3468-1-git-send-email-santoshsy@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,13 +18,8 @@ Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Akinobu Mita <mita@fixst
 
 From: Akinobu Mita <mita@fixstars.com>
 
-In UIC error interrupt handling, it checks if UIC data link layer error
-code indicates PA_INIT_ERROR in order to determine whether a fatal error
-handling is needed or not.
-
-But the code tries to read UIC data link layer error code from wrong
-REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER, it should be
-REG_UIC_ERROR_CODE_DATA_LINK_LAYER.
+of_match_table member in struct device_driver must be terminated by
+empty slot as a sentinel.
 
 Signed-off-by: Akinobu Mita <mita@fixstars.com>
 Cc: Vinayak Holikatti <vinholikatti@gmail.com>
@@ -32,19 +27,18 @@ Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Santosh Y <santoshsy@gmail.com>
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 255f5be..19618c6 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1349,7 +1349,7 @@ static void ufshcd_err_handler(struct ufs_hba *hba)
- 		goto fatal_eh;
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 0e48827..6829a16 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -157,6 +157,7 @@ static int ufshcd_pltfrm_remove(struct platform_device *pdev)
  
- 	if (hba->errors & UIC_ERROR) {
--		reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
-+		reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
- 		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
- 			goto fatal_eh;
- 	}
+ static const struct of_device_id ufs_of_match[] = {
+ 	{ .compatible = "jedec,ufs-1.1"},
++	{},
+ };
+ 
+ static const struct dev_pm_ops ufshcd_dev_pm_ops = {
 -- 
 1.8.3.1
 
