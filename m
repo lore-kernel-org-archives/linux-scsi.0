@@ -1,67 +1,61 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi_prep_fn() check for empty queue
-Date: Wed, 26 Jun 2013 11:20:58 +0200
-Message-ID: <51CAB27A.3080805@acm.org>
-References: <1372237363-5156-1-git-send-email-maxim.uvarov@oracle.com>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH 8/9] scsi/pm8001: use pdev->pm_cap instead of pci_find_capability(..,PCI_CAP_ID_PM)
+Date: Wed, 26 Jun 2013 11:33:17 +0200
+Message-ID: <51CAB55D.5070508@gmail.com>
+References: <1371543816-15192-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1372237363-5156-1-git-send-email-maxim.uvarov@oracle.com>
+In-Reply-To: <1371543816-15192-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Maxim Uvarov <maxim.uvarov@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com, lindar_liu@usish.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/26/13 11:02, Maxim Uvarov wrote:
-> This fix:
-> end_request: I/O error, dev sdc, sector 976576
->   rport-0:0-3: blocked FC remote port time out: removing target and saving
-> binding
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000400
-> IP: [<ffffffff812f0cc2>] scsi_prep_state_check+0xe/0x99
->   [<ffffffff812f1f9d>] scsi_setup_blk_pc_cmnd+0x1b/0x115
->   [<ffffffff812f20c0>] scsi_prep_fn+0x29/0x3b
->   [<ffffffff8121cfb9>] blk_peek_request+0xe1/0x1b3
->   [<ffffffff812f1400>] scsi_request_fn+0x3a/0x4d2
->   [<ffffffff8121d916>] __generic_unplug_device+0x32/0x36
->   [<ffffffff81220f4b>] blk_execute_rq_nowait+0x77/0x9e
->   [<ffffffff81221018>] blk_execute_rq+0xa6/0xde
->   [<ffffffff8144f24b>] ? printk+0x41/0x46
->   [<ffffffffa00a21c5>] ? get_rdac_req+0x81/0xe8 [scsi_dh_rdac]
->   [<ffffffffa00a273a>] send_mode_select+0x29f/0x489 [scsi_dh_rdac]
->   [<ffffffff810c5d9b>] ? probe_workqueue_execution+0xb1/0xce
->   [<ffffffff81071e38>] worker_thread+0x1a9/0x237
->   [<ffffffffa00a249b>] ? send_mode_select+0x0/0x489 [scsi_dh_rdac]
->   [<ffffffff8107651b>] ? autoremove_wake_function+0x0/0x39
->   [<ffffffff81071c8f>] ? worker_thread+0x0/0x237
->   [<ffffffff81076222>] kthread+0x7f/0x87
->   [<ffffffff81012d2a>] child_rip+0xa/0x20
->   [<ffffffff810761a3>] ? kthread+0x0/0x87
->   [<ffffffff81012d20>] ? child_rip+0x0/0x20
-> Signed-off-by: Maxim Uvarov <maxim.uvarov@oracle.com>
+On 06/18/2013 10:23 AM, Yijing Wang wrote:
+> Pci core has been saved pm cap register offset by pdev->pm_cap in pci_pm_init()
+> in init path. So we can use pdev->pm_cap instead of using
+> pci_find_capability(pdev, PCI_CAP_ID_PM) for better performance and simplified code.
+> 
+I think Lindar already replied to you, and tested it on hardware.
+
+So you can add her:
+Acked-by or Tested-by
+
+
+Regards,
+Jack
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: xjtuwjp@gmail.com
+> Cc: lindar_liu@usish.com
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
 > ---
->   drivers/scsi/scsi_lib.c |    3 +++
->   1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 86d5220..8e89ed9 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1295,6 +1295,9 @@ int scsi_prep_fn(struct request_queue *q, struct request *req)
->   	struct scsi_device *sdev = q->queuedata;
->   	int ret = BLKPREP_KILL;
->
-> +	if (!sdev)
-> +		return ret;
-> +
->   	if (req->cmd_type == REQ_TYPE_BLOCK_PC)
->   		ret = scsi_setup_blk_pc_cmnd(sdev, req);
->   	return scsi_prep_return(q, req, ret);
-
-Sorry but this patch does not look like a proper fix to me. What you 
-probably need is a scsi_device_get() call in scsi_dh_rdac.c somewhere 
-before the queue_work(kmpath_rdacd, &ctlr->ms_work) call and a 
-scsi_device_put() call once send_mode_select() has finished using the sdev.
-
-Bart.
+>  drivers/scsi/pm8001/pm8001_init.c |    7 +++----
+>  1 files changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index e4b9bc7..3861aa1 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -912,14 +912,13 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>  {
+>  	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+>  	struct pm8001_hba_info *pm8001_ha;
+> -	int i , pos;
+> +	int i;
+>  	u32 device_state;
+>  	pm8001_ha = sha->lldd_ha;
+>  	flush_workqueue(pm8001_wq);
+>  	scsi_block_requests(pm8001_ha->shost);
+> -	pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
+> -	if (pos == 0) {
+> -		printk(KERN_ERR " PCI PM not supported\n");
+> +	if (!pdev->pm_cap) {
+> +		dev_err(&pdev->dev, " PCI PM not supported\n");
+>  		return -ENODEV;
+>  	}
+>  	PM8001_CHIP_DISP->interrupt_disable(pm8001_ha, 0xFF);
+> 
