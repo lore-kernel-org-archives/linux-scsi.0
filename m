@@ -1,134 +1,566 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 10/10] ufs: fix DMA mask setting
-Date: Wed, 26 Jun 2013 22:39:35 +0530
-Message-ID: <1372266575-3468-11-git-send-email-santoshsy@gmail.com>
-References: <1372266575-3468-1-git-send-email-santoshsy@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:61108 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441Ab3FZRK3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jun 2013 13:10:29 -0400
-Received: by mail-pb0-f41.google.com with SMTP id rp16so14501082pbb.14
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 10:10:29 -0700 (PDT)
-In-Reply-To: <1372266575-3468-1-git-send-email-santoshsy@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: Re: [PATCH 1/2] scsi: ufs: Add support for host assisted background operations
+Date: Wed, 26 Jun 2013 23:06:20 +0530
+Message-ID: <CALMYJDuzvMQxNa_715odFs-jg8q5aEtpKSE5Dyve6wrqD8TwFg@mail.gmail.com>
+References: <1371133205-17377-1-git-send-email-sthumma@codeaurora.org> <1371133205-17377-2-git-send-email-sthumma@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1371133205-17377-2-git-send-email-sthumma@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Akinobu Mita <mita@fixstars.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Santosh Y <santoshsy@gmail.com>
 
-From: Akinobu Mita <mita@fixstars.com>
+On Thu, Jun 13, 2013 at 7:50 PM, Sujit Reddy Thumma
+<sthumma@codeaurora.org> wrote:
+>
+> Background operations in the UFS device can be disabled by
+> the host to reduce the response latency of transfer requests.
+> Add support for enabling/disabling the background operations
+> during runtime suspend/resume of the device.
+>
+> If the device is in critical need of BKOPS it will raise an
+> URGENT_BKOPS exception which should be handled by the host to
+> make sure the device performs as expected.
+>
+> During bootup, the BKOPS is enabled in the device by default.
+> The disable of BKOPS is supported only when the driver supports
+> runtime suspend/resume operations as the runtime PM framework
+> provides a way to determine the device idleness and hence BKOPS
+> can be managed effectively. During runtime resume the BKOPS is
+> disabled to reduce latency and during runtime suspend the BKOPS
+> is enabled to allow device to carry out idle time BKOPS.
+>
+> In some cases where the BKOPS is disabled during runtime resume
+> and due to continuous data transfers the runtime suspend is not
+> triggered, the BKOPS is enabled when the device raises a level-2
+> exception (outstanding operations - performance impact).
+>
+> Change-Id: I8853c528af3bec2adaf49923d21cabca32b99142
+> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufs.h    |   25 +++-
+>  drivers/scsi/ufs/ufshcd.c |  343
+> +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.h |   10 ++
+>  3 files changed, 377 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index 5484c59..24e589c 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -107,7 +107,29 @@ enum {
+>
+>  /* Flag idn for Query Requests*/
+>  enum flag_idn {
+> -       QUERY_FLAG_IDN_FDEVICEINIT = 0x01,
+> +       QUERY_FLAG_IDN_FDEVICEINIT      = 0x01,
+> +       QUERY_FLAG_IDN_BKOPS_EN         = 0x04,
+> +};
+> +
+> +/* Attribute idn for Query requests */
+> +enum attr_idn {
+> +       QUERY_ATTR_IDN_BKOPS_STATUS     = 0x05,
+> +       QUERY_ATTR_IDN_EE_CONTROL       = 0x0D,
+> +       QUERY_ATTR_IDN_EE_STATUS        = 0x0E,
+> +};
+> +
+> +/* Exception event mask values */
+> +enum {
+> +       MASK_EE_STATUS          = 0xFFFF,
+> +       MASK_EE_URGENT_BKOPS    = (1 << 2),
+> +};
+> +
+> +/* Background operation status */
+> +enum {
+> +       BKOPS_STATUS_NO_OP               = 0x0,
+> +       BKOPS_STATUS_NON_CRITICAL        = 0x1,
+> +       BKOPS_STATUS_PERF_IMPACT         = 0x2,
+> +       BKOPS_STATUS_CRITICAL            = 0x3,
+>  };
+>
+>  /* UTP QUERY Transaction Specific Fields OpCode */
+> @@ -156,6 +178,7 @@ enum {
+>         MASK_TASK_RESPONSE      = 0xFF00,
+>         MASK_RSP_UPIU_RESULT    = 0xFFFF,
+>         MASK_QUERY_DATA_SEG_LEN = 0xFFFF,
+> +       MASK_RSP_EXCEPTION_EVENT = 0x10000,
+>  };
+>
+>  /* Task management service response */
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 6693ee9..aa1f11e 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -298,6 +298,21 @@ ufshcd_get_rsp_upiu_result(struct utp_upiu_rsp
+> *ucd_rsp_ptr)
+>  }
+>
+>  /**
+> + * ufshcd_is_exception_event - Check if the device raised an exception
+> event
+> + * @ucd_rsp_ptr: pointer to response UPIU
+> + *
+> + * The function checks if the device raised and exception event indicated
+> in
+> + * the Device Information field of response UPIU.
+> + *
+> + * Returns true if exception is raised, false otherwise.
+> + */
+> +static inline bool ufshcd_is_exception_event(struct utp_upiu_rsp
+> *ucd_rsp_ptr)
+> +{
+> +       return be32_to_cpu(ucd_rsp_ptr->header.dword_2) &
+> +                       MASK_RSP_EXCEPTION_EVENT ? true : false;
+> +}
+> +
+> +/**
+>   * ufshcd_config_int_aggr - Configure interrupt aggregation values.
+>   *             Currently there is no use case where we want to configure
+>   *             interrupt aggregation dynamically. So to configure
+> interrupt
+> @@ -1137,6 +1152,92 @@ out_no_mem:
+>  }
+>
+>  /**
+> + * ufshcd_query_attr - Helper function for composing attribute requests
+> + * hba: per-adapter instance
+> + * opcode: attribute opcode
+> + * idn: attribute idn to access
+> + * index: index field
+> + * selector: selector field
+> + * attr_val: the attribute value after the query request completes
+> + *
+> + * Returns 0 for success, non-zero in case of failure
+> +*/
+> +int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+> +                       enum attr_idn idn, u8 index, u8 selector, u32
+> *attr_val)
+> +{
+> +       struct ufs_query_req *query;
+> +       struct ufs_query_res *response;
+> +       int err = -ENOMEM;
+> +
+> +       query = kzalloc(sizeof(struct ufs_query_req), GFP_KERNEL);
+> +       if (!query) {
+> +               dev_err(hba->dev,
+> +                       "%s: Failed allocating ufs_query_req instance\n",
+> +                       __func__);
+> +               goto out_no_mem;
+> +       }
+> +
+> +       response = kzalloc(sizeof(struct ufs_query_res), GFP_KERNEL);
+> +       if (!response) {
+> +               dev_err(hba->dev,
+> +                       "%s: Failed allocating ufs_query_res instance\n",
+> +                       __func__);
+> +               goto out_free_query;
+> +       }
+> +
+> +       switch (opcode) {
+> +       case UPIU_QUERY_OPCODE_WRITE_ATTR:
+> +               query->query_func =
+> UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
+> +               if (attr_val) {
+> +                       query->upiu_req.value = *attr_val;
+> +               } else {
+> +                       dev_err(hba->dev, "%s: attribute value required
+> for write request\n",
+> +                                       __func__);
+> +                       err = -EINVAL;
+> +                       goto out;
+> +               }
+> +               break;
+> +       case UPIU_QUERY_OPCODE_READ_ATTR:
+> +               query->query_func = UPIU_QUERY_FUNC_STANDARD_READ_REQUEST;
+> +               if (!attr_val) {
+> +                       /* No dummy reads */
+> +                       err = 0;
+> +                       goto out;
+> +               }
+> +               break;
+> +       default:
+> +               dev_err(hba->dev, "%s: Expected query attr opcode but got
+> = %d\n",
+> +                               __func__, opcode);
+> +               err = -EINVAL;
+> +               goto out;
+> +       }
+> +
+> +       query->upiu_req.opcode = opcode;
+> +       query->upiu_req.idn = idn;
+> +       query->upiu_req.index = index;
+> +       query->upiu_req.selector = selector;
+> +
+> +       /* Send query request */
+> +       err = ufshcd_send_query_request(hba, query, NULL, response);
+> +
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: Sending query attr for idn %d
+> failed, err = %d\n",
+> +                               __func__, idn, err);
+> +               goto out;
+> +       }
+> +
+> +       if (attr_val)
+> +               *attr_val = response->upiu_res.value;
+> +
+> +out:
+> +       kfree(response);
+> +out_free_query:
+> +       kfree(query);
+> +out_no_mem:
+> +       return err;
+> +}
+> +
+> +/**
+>   * ufshcd_memory_alloc - allocate memory for host memory space data
+> structures
+>   * @hba: per adapter instance
+>   *
+> @@ -1803,6 +1904,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+> struct ufshcd_lrb *lrbp)
+>                          */
+>                         scsi_status = result & MASK_SCSI_STATUS;
+>                         result = ufshcd_scsi_cmd_status(lrbp,
+> scsi_status);
+> +
+> +                       if (ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
+                                ^^^^^
+This condition will not satisfy until a runtime suspend/resume cycle
+completes. Is there any specific reason it is only being enabled in
+runtime-resume routine?
+As the fBackgroundOpsEn = 1 by default, shouldn't the sequence be 1.
+ufshcd_disable_auto_bkops() 2. ufshcd_enable_ee() during the startup.
 
-If the controller doesn't support 64-bit addressing mode, it must not
-set the DMA mask to 64-bit.  But it's unconditionally trying to set to
-64-bit without checking 64-bit addressing support in the controller
-capabilities.
+> +                               schedule_work(&hba->eeh_work);
+>                         break;
+>                 case UPIU_TRANSACTION_REJECT_UPIU:
+>                         /* TODO: handle Reject UPIU Response */
+> @@ -1899,6 +2003,216 @@ static void ufshcd_transfer_req_compl(struct
+> ufs_hba *hba)
+>  }
+>
+>  /**
+> + * ufshcd_disable_ee - disable exception event
+> + * @hba: per-adapter instance
+> + * @mask: exception event to disable
+> + *
+> + * Disables exception event in the device so that the EVENT_ALERT
+> + * bit is not set.
+> + *
+> + * Returns zero on success, non-zero error value on failure.
+> + */
+> +static int ufshcd_disable_ee(struct ufs_hba *hba, int mask)
+> +{
+> +       int err = 0;
+> +       u32 val = 0;
+> +
+> +       if (!(hba->ee_ctrl_mask & mask))
+> +               goto out;
+> +
+> +       val = hba->ee_ctrl_mask & ~mask;
+> +       val &= 0xFFFF; /* 2 bytes */
+> +       err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +                       QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
+> +       if (!err)
+> +               hba->ee_ctrl_mask &= ~mask;
+> +out:
+> +       return err;
+> +}
+> +
+> +/**
+> + * ufshcd_enable_ee - enable exception event
+> + * @hba: per-adapter instance
+> + * @mask: exception event to enable
+> + *
+> + * Enable corresponding exception event in the device to allow
+> + * device to alert host in critical scenarios.
+> + *
+> + * Returns zero on success, non-zero error value on failure.
+> + */
+> +static int ufshcd_enable_ee(struct ufs_hba *hba, int mask)
+> +{
+> +       int err = 0;
+> +       u32 val = 0;
+> +
+> +       if (hba->ee_ctrl_mask & mask)
+> +               goto out;
+> +
+> +       val = hba->ee_ctrl_mask | mask;
+> +       val &= 0xFFFF; /* 2 bytes */
+> +       err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +                       QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
+> +       if (!err)
+> +               hba->ee_ctrl_mask |= mask;
+> +out:
+> +       return err;
+> +}
+> +
+> +/**
+> + * ufshcd_enable_auto_bkops - Allow device managed BKOPS
+> + * @hba: per-adapter instance
+> + *
+> + * Allow device to manage background operations on its own. Enabling
+> + * this might lead to inconsistent latencies during normal data transfers
+> + * as the device is allowed to manage its own way of handling background
+> + * operations.
+> + *
+> + * Returns zero on success, non-zero on failure.
+> + */
+> +static int ufshcd_enable_auto_bkops(struct ufs_hba *hba)
+> +{
+> +       int err = 0;
+> +
+> +       if (!hba->auto_bkops_disabled)
+> +               goto out;
+> +
+> +       err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+> +                       QUERY_FLAG_IDN_BKOPS_EN, NULL);
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: failed to enable bkops %d\n",
+> +                               __func__, err);
+> +               goto out;
+> +       }
+> +
+> +       hba->auto_bkops_disabled = false;
+> +
+> +       /* No need of URGENT_BKOPS exception from the device */
+> +       err = ufshcd_disable_ee(hba, MASK_EE_URGENT_BKOPS);
+> +       if (err)
+> +               dev_err(hba->dev, "%s: failed to disable exception event
+> %d\n",
+> +                               __func__, err);
+> +out:
+> +       return err;
+> +}
+> +
+> +/**
+> + * ufshcd_disable_auto_bkops - block device in doing background
+> operations
+> + * @hba: per-adapter instance
+> + *
+> + * Disabling background operations improves command response latency but
+> + * has drawback of device moving into critical state where the device is
+> + * not-operable. Make sure to call ufshcd_enable_auto_bkops() whenever
+> the
+> + * host is idle so that BKOPS are managed effectively without any
+> negative
+> + * impacts.
+> + *
+> + * Returns zero on success, non-zero on failure.
+> + */
+> +static int ufshcd_disable_auto_bkops(struct ufs_hba *hba)
+> +{
+> +       int err = 0;
+> +
+> +       if (hba->auto_bkops_disabled)
+> +               goto out;
+> +
+> +       /*
+> +        * If host assisted BKOPs is to be enabled, make sure
+> +        * urgent bkops exception is allowed.
+> +        */
+> +       err = ufshcd_enable_ee(hba, MASK_EE_URGENT_BKOPS);
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: failed to enable exception event
+> %d\n",
+> +                               __func__, err);
+> +               goto out;
+> +       }
+> +
+> +       err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
+> +                       QUERY_FLAG_IDN_BKOPS_EN, NULL);
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: failed to disable bkops %d\n",
+> +                               __func__, err);
+> +               ufshcd_disable_ee(hba, MASK_EE_URGENT_BKOPS);
+> +               goto out;
+> +       }
+> +
+> +       hba->auto_bkops_disabled = true;
+> +out:
+> +       return err;
+> +}
+> +
+> +static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32
+> *status)
+> +{
+> +       return ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +                       QUERY_ATTR_IDN_BKOPS_STATUS, 0, 0, status);
+> +}
+> +
+> +/**
+> + * ufshcd_urgent_bkops - handle urgent bkops exception event
+> + * @hba: per-adapter instance
+> + *
+> + * Enable fBackgroundOpsEn flag in the device to permit background
+> + * operations.
+> + */
+> +static int ufshcd_urgent_bkops(struct ufs_hba *hba)
+> +{
+> +       int err;
+> +       u32 status = 0;
+> +
+> +       err = ufshcd_get_bkops_status(hba, &status);
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: failed to get BKOPS status %d\n",
+> +                               __func__, err);
+> +               goto out;
+> +       }
+> +
+> +       status = status & 0xF;
+> +
+> +       /* handle only if status indicates performance impact or critical
+> */
+> +       if (status == BKOPS_STATUS_PERF_IMPACT ||
+> +                       status == BKOPS_STATUS_CRITICAL)
+> +               err = ufshcd_enable_auto_bkops(hba);
+> +out:
+> +       return err;
+> +}
+> +
+> +static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+> +{
+> +       return ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +                       QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
+> +}
+> +
+> +/**
+> + * ufshcd_exception_event_handler - handle exceptions raised by device
+> + * @work: pointer to work data
+> + *
+> + * Read bExceptionEventStatus attribute from the device and handle the
+> + * exception event accordingly.
+> + */
+> +static void ufshcd_exception_event_handler(struct work_struct *work)
+> +{
+> +       struct ufs_hba *hba;
+> +       int err;
+> +       u32 status = 0;
+> +       hba = container_of(work, struct ufs_hba, eeh_work);
+> +
+> +       err = ufshcd_get_ee_status(hba, &status);
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: failed to get exception status
+> %d\n",
+> +                               __func__, err);
+> +               goto out;
+> +       }
+> +
+> +       status = status & hba->ee_ctrl_mask;
+> +       if (status & MASK_EE_URGENT_BKOPS) {
+> +               err = ufshcd_urgent_bkops(hba);
+> +               if (err)
+> +                       dev_err(hba->dev, "%s: failed to handle urgent
+> bkops %d\n",
+> +                                       __func__, err);
+> +       }
+> +out:
+> +       return;
+> +}
+> +
+> +/**
+>   * ufshcd_fatal_err_handler - handle fatal errors
+>   * @hba: per adapter instance
+>   */
+> @@ -2273,6 +2587,34 @@ int ufshcd_resume(struct ufs_hba *hba)
+>  }
+>  EXPORT_SYMBOL_GPL(ufshcd_resume);
+>
+> +int ufshcd_runtime_suspend(struct ufs_hba *hba)
+> +{
+> +       if (!hba)
+> +               return 0;
+> +
+> +       /*
+> +        * The device is idle with no requests in the queue,
+> +        * allow background operations.
+> +        */
+> +       return ufshcd_enable_auto_bkops(hba);
+> +}
+> +EXPORT_SYMBOL(ufshcd_runtime_suspend);
+> +
+> +int ufshcd_runtime_resume(struct ufs_hba *hba)
+> +{
+> +       if (!hba)
+> +               return 0;
+> +
+> +       return ufshcd_disable_auto_bkops(hba);
+> +}
+> +EXPORT_SYMBOL(ufshcd_runtime_resume);
+> +
+> +int ufshcd_runtime_idle(struct ufs_hba *hba)
+> +{
+> +       return 0;
+> +}
+> +EXPORT_SYMBOL(ufshcd_runtime_idle);
+> +
+>  /**
+>   * ufshcd_hba_free - free allocated memory for
+>   *                     host memory space data structures
+> @@ -2376,6 +2718,7 @@ int ufshcd_init(struct device *dev, struct ufs_hba
+> **hba_handle,
+>
+>         /* Initialize work queues */
+>         INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
+> +       INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
+>
+>         /* Initialize UIC command mutex */
+>         mutex_init(&hba->uic_cmd_mutex);
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 4e4c56f..682c285 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -176,9 +176,12 @@ struct ufs_internal_cmd {
+>   * @tm_condition: condition variable for task management
+>   * @ufshcd_state: UFSHCD states
+>   * @intr_mask: Interrupt Mask Bits
+> + * @ee_ctrl_mask: Exception event control mask
+>   * @feh_workq: Work queue for fatal controller error handling
+> + * @eeh_work: Worker to handle exception events
+>   * @errors: HBA errors
+>   * @i_cmd: ufs internal command information
+> + * @auto_bkops_disabled: to track whether bkops is enabled in device
+>   */
+>  struct ufs_hba {
+>         void __iomem *mmio_base;
+> @@ -215,15 +218,19 @@ struct ufs_hba {
+>
+>         u32 ufshcd_state;
+>         u32 intr_mask;
+> +       u16 ee_ctrl_mask;
+>
+>         /* Work Queues */
+>         struct work_struct feh_workq;
+> +       struct work_struct eeh_work;
+>
+>         /* HBA Errors */
+>         u32 errors;
+>
+>         /* Internal Request data */
+>         struct ufs_internal_cmd i_cmd;
+> +
+> +       bool auto_bkops_disabled;
+>  };
+>
+>  #define ufshcd_writel(hba, val, reg)   \
+> @@ -244,4 +251,7 @@ static inline void ufshcd_hba_stop(struct ufs_hba
+> *hba)
+>         ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
+>  }
+>
+> +extern int ufshcd_runtime_suspend(struct ufs_hba *hba);
+> +extern int ufshcd_runtime_resume(struct ufs_hba *hba);
+> +extern int ufshcd_runtime_idle(struct ufs_hba *hba);
+>  #endif /* End of Header */
+> --
+> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+> of Code Aurora Forum, hosted by The Linux Foundation.
+>
 
-It was correctly checked before commit 3b1d05807a9a68c6d0580e9248247a774a4d3be6
-("[SCSI] ufs: Segregate PCI Specific Code"), this aims to restore
-the correct behaviour.
 
-To achieve this in a generic way, firstly we should push down the DMA
-mask setting routine ufshcd_set_dma_mask() from PCI glue driver to core
-driver in order to do it for both PCI glue driver and Platform glue
-driver.  Secondly, we should change pci_ DMA mapping API to dma_ DMA
-mapping API because core driver is independent of glue drivers.
 
-Lastly, we need to relax dma_set_mask(dev, DMA_BIT_MASK(32)) error check
-for platform devices on ARM, which do not have a valid dma_mask pointer.
-
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Santosh Y <santoshsy@gmail.com>
-
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index 48be39a..64d36eb 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -100,26 +100,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- }
- 
- /**
-- * ufshcd_set_dma_mask - Set dma mask based on the controller
-- *			 addressing capability
-- * @pdev: PCI device structure
-- *
-- * Returns 0 for success, non-zero for failure
-- */
--static int ufshcd_set_dma_mask(struct pci_dev *pdev)
--{
--	int err;
--
--	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
--		&& !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
--		return 0;
--	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
--	if (!err)
--		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
--	return err;
--}
--
--/**
-  * ufshcd_pci_probe - probe routine of the driver
-  * @pdev: pointer to PCI device handle
-  * @id: PCI device id
-@@ -155,12 +135,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out_release_regions;
- 	}
- 
--	err = ufshcd_set_dma_mask(pdev);
--	if (err) {
--		dev_err(&pdev->dev, "set dma mask failed\n");
--		goto out_iounmap;
--	}
--
- 	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
- 	if (err) {
- 		dev_err(&pdev->dev, "Initialization failed\n");
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 19618c6..431ddb2 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1711,6 +1711,25 @@ void ufshcd_remove(struct ufs_hba *hba)
- EXPORT_SYMBOL_GPL(ufshcd_remove);
- 
- /**
-+ * ufshcd_set_dma_mask - Set dma mask based on the controller
-+ *			 addressing capability
-+ * @hba: per adapter instance
-+ *
-+ * Returns 0 for success, non-zero for failure
-+ */
-+static int ufshcd_set_dma_mask(struct ufs_hba *hba)
-+{
-+	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
-+		if (!dma_set_mask(hba->dev, DMA_BIT_MASK(64)) &&
-+		    !dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(64)))
-+			return 0;
-+	}
-+	dma_set_mask(hba->dev, DMA_BIT_MASK(32));
-+
-+	return dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(32));
-+}
-+
-+/**
-  * ufshcd_init - Driver initialization routine
-  * @dev: pointer to device handle
-  * @hba_handle: driver private handle
-@@ -1761,6 +1780,12 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 	/* Get Interrupt bit mask per version */
- 	hba->intr_mask = ufshcd_get_intr_mask(hba);
- 
-+	err = ufshcd_set_dma_mask(hba);
-+	if (err) {
-+		dev_err(hba->dev, "set dma mask failed\n");
-+		goto out_disable;
-+	}
-+
- 	/* Allocate memory for host memory space */
- 	err = ufshcd_memory_alloc(hba);
- 	if (err) {
--- 
-1.8.3.1
-
+--
+~Santosh
