@@ -1,281 +1,173 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH V1 3/4] qla4xxx: Exporting new attrs for iscsi session and connection in sysfs
-Date: Wed, 26 Jun 2013 08:11:33 -0400
-Message-ID: <1372248694-3928-4-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1372248694-3928-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH 0/8] qla4xxx: Updates for scsi "misc" branch
+Date: Wed, 26 Jun 2013 12:46:48 +0000
+Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084@avmb3.qlogic.org>
+References: <1368093732-8524-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084avmb3qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from co9ehsobe003.messaging.microsoft.com ([207.46.163.26]:2410 "EHLO
-	co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751711Ab3FZMiE (ORCPT
+Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:54217
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751566Ab3FZMqx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Jun 2013 08:38:04 -0400
-In-Reply-To: <1372248694-3928-1-git-send-email-vikas.chaudhary@qlogic.com>
+	Wed, 26 Jun 2013 08:46:53 -0400
+Received: from mail74-va3 (localhost [127.0.0.1])	by mail74-va3-R.bigfish.com
+ (Postfix) with ESMTP id 870783C0320	for <linux-scsi@vger.kernel.org>; Wed, 26
+ Jun 2013 12:46:52 +0000 (UTC)
+Received: from VA3EHSMHS038.bigfish.com (unknown [10.7.14.239])	by
+ mail74-va3.bigfish.com (Postfix) with ESMTP id 85EF7180055	for
+ <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 12:46:50 +0000 (UTC)
+In-Reply-To: <1368093732-8524-1-git-send-email-vikas.chaudhary@qlogic.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
 
-From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
-
-Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_os.c | 203 ++++++++++++++++++++++++++++++------------
- 1 file changed, 146 insertions(+), 57 deletions(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 4d231c1..84d9361 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -378,6 +378,44 @@ static umode_t qla4_attr_is_visible(int param_type, int param)
- 		case ISCSI_PARAM_PASSWORD:
- 		case ISCSI_PARAM_USERNAME_IN:
- 		case ISCSI_PARAM_PASSWORD_IN:
-+		case ISCSI_PARAM_AUTO_SND_TGT_DISABLE:
-+		case ISCSI_PARAM_DISCOVERY_SESS:
-+		case ISCSI_PARAM_PORTAL_TYPE:
-+		case ISCSI_PARAM_CHAP_AUTH_EN:
-+		case ISCSI_PARAM_DISCOVERY_LOGOUT_EN:
-+		case ISCSI_PARAM_BIDI_CHAP_EN:
-+		case ISCSI_PARAM_DISCOVERY_AUTH_OPTIONAL:
-+		case ISCSI_PARAM_DEF_TIME2WAIT:
-+		case ISCSI_PARAM_DEF_TIME2RETAIN:
-+		case ISCSI_PARAM_HDRDGST_EN:
-+		case ISCSI_PARAM_DATADGST_EN:
-+		case ISCSI_PARAM_INITIAL_R2T_EN:
-+		case ISCSI_PARAM_IMM_DATA_EN:
-+		case ISCSI_PARAM_PDU_INORDER_EN:
-+		case ISCSI_PARAM_DATASEQ_INORDER_EN:
-+		case ISCSI_PARAM_MAX_SEGMENT_SIZE:
-+		case ISCSI_PARAM_TCP_TIMESTAMP_STAT:
-+		case ISCSI_PARAM_TCP_WSF_DISABLE:
-+		case ISCSI_PARAM_TCP_NAGLE_DISABLE:
-+		case ISCSI_PARAM_TCP_TIMER_SCALE:
-+		case ISCSI_PARAM_TCP_TIMESTAMP_EN:
-+		case ISCSI_PARAM_TCP_XMIT_WSF:
-+		case ISCSI_PARAM_TCP_RECV_WSF:
-+		case ISCSI_PARAM_IP_FRAGMENT_DISABLE:
-+		case ISCSI_PARAM_IPV4_TOS:
-+		case ISCSI_PARAM_IPV6_TC:
-+		case ISCSI_PARAM_IPV6_FLOW_LABEL:
-+		case ISCSI_PARAM_IS_FW_ASSIGNED_IPV6:
-+		case ISCSI_PARAM_KEEPALIVE_TMO:
-+		case ISCSI_PARAM_LOCAL_PORT:
-+		case ISCSI_PARAM_ISID:
-+		case ISCSI_PARAM_TSID:
-+		case ISCSI_PARAM_DEF_TASKMGMT_TMO:
-+		case ISCSI_PARAM_ERL:
-+		case ISCSI_PARAM_STATSN:
-+		case ISCSI_PARAM_EXP_STATSN:
-+		case ISCSI_PARAM_DISCOVERY_PARENT_IDX:
-+		case ISCSI_PARAM_DISCOVERY_PARENT_TYPE:
- 			return S_IRUGO;
- 		default:
- 			return 0;
-@@ -2257,6 +2295,101 @@ static int qla4xxx_copy_to_fwddb_param(struct iscsi_bus_flash_session *sess,
- 	return rc;
- }
- 
-+static void qla4xxx_copy_to_sess_conn_params(struct iscsi_conn *conn,
-+					     struct iscsi_session *sess,
-+					     struct dev_db_entry *fw_ddb_entry)
-+{
-+	unsigned long options = 0;
-+	uint16_t ddb_link;
-+	uint16_t disc_parent;
-+
-+	options = le16_to_cpu(fw_ddb_entry->options);
-+	conn->is_fw_assigned_ipv6 = test_bit(OPT_IS_FW_ASSIGNED_IPV6, &options);
-+	sess->auto_snd_tgt_disable = test_bit(OPT_AUTO_SENDTGTS_DISABLE,
-+					      &options);
-+	sess->discovery_sess = test_bit(OPT_DISC_SESSION, &options);
-+
-+	options = le16_to_cpu(fw_ddb_entry->iscsi_options);
-+	conn->hdrdgst_en = test_bit(ISCSIOPT_HEADER_DIGEST_EN, &options);
-+	conn->datadgst_en = test_bit(ISCSIOPT_DATA_DIGEST_EN, &options);
-+	sess->imm_data_en = test_bit(ISCSIOPT_IMMEDIATE_DATA_EN, &options);
-+	sess->initial_r2t_en = test_bit(ISCSIOPT_INITIAL_R2T_EN, &options);
-+	sess->dataseq_inorder_en = test_bit(ISCSIOPT_DATA_SEQ_IN_ORDER,
-+					    &options);
-+	sess->pdu_inorder_en = test_bit(ISCSIOPT_DATA_PDU_IN_ORDER, &options);
-+	sess->chap_auth_en = test_bit(ISCSIOPT_CHAP_AUTH_EN, &options);
-+	sess->discovery_logout_en = test_bit(ISCSIOPT_DISCOVERY_LOGOUT_EN,
-+					     &options);
-+	sess->bidi_chap_en = test_bit(ISCSIOPT_BIDI_CHAP_EN, &options);
-+	sess->discovery_auth_optional =
-+			test_bit(ISCSIOPT_DISCOVERY_AUTH_OPTIONAL, &options);
-+	if (test_bit(ISCSIOPT_ERL1, &options))
-+		sess->erl |= BIT_1;
-+	if (test_bit(ISCSIOPT_ERL0, &options))
-+		sess->erl |= BIT_0;
-+
-+	options = le16_to_cpu(fw_ddb_entry->tcp_options);
-+	conn->tcp_timestamp_stat = test_bit(TCPOPT_TIMESTAMP_STAT, &options);
-+	conn->tcp_nagle_disable = test_bit(TCPOPT_NAGLE_DISABLE, &options);
-+	conn->tcp_wsf_disable = test_bit(TCPOPT_WSF_DISABLE, &options);
-+	if (test_bit(TCPOPT_TIMER_SCALE3, &options))
-+		conn->tcp_timer_scale |= BIT_3;
-+	if (test_bit(TCPOPT_TIMER_SCALE2, &options))
-+		conn->tcp_timer_scale |= BIT_2;
-+	if (test_bit(TCPOPT_TIMER_SCALE1, &options))
-+		conn->tcp_timer_scale |= BIT_1;
-+
-+	conn->tcp_timer_scale >>= 1;
-+	conn->tcp_timestamp_en = test_bit(TCPOPT_TIMESTAMP_EN, &options);
-+
-+	options = le16_to_cpu(fw_ddb_entry->ip_options);
-+	conn->fragment_disable = test_bit(IPOPT_FRAGMENT_DISABLE, &options);
-+
-+	conn->max_recv_dlength = BYTE_UNITS *
-+			  le16_to_cpu(fw_ddb_entry->iscsi_max_rcv_data_seg_len);
-+	conn->max_xmit_dlength = BYTE_UNITS *
-+			  le16_to_cpu(fw_ddb_entry->iscsi_max_snd_data_seg_len);
-+	sess->max_r2t = le16_to_cpu(fw_ddb_entry->iscsi_max_outsnd_r2t);
-+	sess->first_burst = BYTE_UNITS *
-+			       le16_to_cpu(fw_ddb_entry->iscsi_first_burst_len);
-+	sess->max_burst = BYTE_UNITS *
-+				 le16_to_cpu(fw_ddb_entry->iscsi_max_burst_len);
-+	sess->time2wait = le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
-+	sess->time2retain = le16_to_cpu(fw_ddb_entry->iscsi_def_time2retain);
-+	sess->tpgt = le32_to_cpu(fw_ddb_entry->tgt_portal_grp);
-+	conn->max_segment_size = le16_to_cpu(fw_ddb_entry->mss);
-+	conn->tcp_xmit_wsf = fw_ddb_entry->tcp_xmt_wsf;
-+	conn->tcp_recv_wsf = fw_ddb_entry->tcp_rcv_wsf;
-+	conn->ipv4_tos = fw_ddb_entry->ipv4_tos;
-+	conn->keepalive_tmo = le16_to_cpu(fw_ddb_entry->ka_timeout);
-+	conn->local_port = le16_to_cpu(fw_ddb_entry->lcl_port);
-+	conn->statsn = le32_to_cpu(fw_ddb_entry->stat_sn);
-+	conn->exp_statsn = le32_to_cpu(fw_ddb_entry->exp_stat_sn);
-+	sess->tsid = le16_to_cpu(fw_ddb_entry->tsid);
-+	COPY_ISID(sess->isid, fw_ddb_entry->isid);
-+
-+	ddb_link = le16_to_cpu(fw_ddb_entry->ddb_link);
-+	if (ddb_link < MAX_DDB_ENTRIES)
-+		sess->discovery_parent_idx = ddb_link;
-+	else
-+		sess->discovery_parent_idx = DDB_NO_LINK;
-+
-+	if (ddb_link == DDB_ISNS)
-+		disc_parent = ISCSI_DISC_PARENT_ISNS;
-+	else if (ddb_link == DDB_NO_LINK)
-+		disc_parent = ISCSI_DISC_PARENT_UNKNOWN;
-+	else if (ddb_link < MAX_DDB_ENTRIES)
-+		disc_parent = ISCSI_DISC_PARENT_SENDTGT;
-+	else
-+		disc_parent = ISCSI_DISC_PARENT_UNKNOWN;
-+
-+	iscsi_set_param(conn->cls_conn, ISCSI_PARAM_DISCOVERY_PARENT_TYPE,
-+			iscsi_get_discovery_parent_name(disc_parent), 0);
-+
-+	iscsi_set_param(conn->cls_conn, ISCSI_PARAM_TARGET_ALIAS,
-+			(char *)fw_ddb_entry->iscsi_alias, 0);
-+}
-+
- static void qla4xxx_copy_fwddb_param(struct scsi_qla_host *ha,
- 				     struct dev_db_entry *fw_ddb_entry,
- 				     struct iscsi_cls_session *cls_sess,
-@@ -2275,47 +2408,29 @@ static void qla4xxx_copy_fwddb_param(struct scsi_qla_host *ha,
- 
- 	ddb_entry->chap_tbl_idx = le16_to_cpu(fw_ddb_entry->chap_tbl_idx);
- 
--	conn->max_recv_dlength = BYTE_UNITS *
--			  le16_to_cpu(fw_ddb_entry->iscsi_max_rcv_data_seg_len);
--
--	conn->max_xmit_dlength = BYTE_UNITS *
--			  le16_to_cpu(fw_ddb_entry->iscsi_max_snd_data_seg_len);
--
--	sess->initial_r2t_en =
--			    (BIT_10 & le16_to_cpu(fw_ddb_entry->iscsi_options));
--
--	sess->max_r2t = le16_to_cpu(fw_ddb_entry->iscsi_max_outsnd_r2t);
--
--	sess->imm_data_en = (BIT_11 & le16_to_cpu(fw_ddb_entry->iscsi_options));
--
--	sess->first_burst = BYTE_UNITS *
--			       le16_to_cpu(fw_ddb_entry->iscsi_first_burst_len);
--
--	sess->max_burst = BYTE_UNITS *
--				 le16_to_cpu(fw_ddb_entry->iscsi_max_burst_len);
--
--	sess->time2wait = le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
--
--	sess->time2retain = le16_to_cpu(fw_ddb_entry->iscsi_def_time2retain);
-+	qla4xxx_copy_to_sess_conn_params(conn, sess, fw_ddb_entry);
- 
-+	sess->def_taskmgmt_tmo = le16_to_cpu(fw_ddb_entry->def_timeout);
- 	conn->persistent_port = le16_to_cpu(fw_ddb_entry->port);
- 
--	sess->tpgt = le32_to_cpu(fw_ddb_entry->tgt_portal_grp);
--
-+	memset(ip_addr, 0, sizeof(ip_addr));
- 	options = le16_to_cpu(fw_ddb_entry->options);
--	if (options & DDB_OPT_IPV6_DEVICE)
-+	if (options & DDB_OPT_IPV6_DEVICE) {
-+		iscsi_set_param(cls_conn, ISCSI_PARAM_PORTAL_TYPE, "ipv6", 4);
-+
-+		memset(ip_addr, 0, sizeof(ip_addr));
- 		sprintf(ip_addr, "%pI6", fw_ddb_entry->ip_addr);
--	else
-+	} else {
-+		iscsi_set_param(cls_conn, ISCSI_PARAM_PORTAL_TYPE, "ipv4", 4);
- 		sprintf(ip_addr, "%pI4", fw_ddb_entry->ip_addr);
-+	}
- 
-+	iscsi_set_param(cls_conn, ISCSI_PARAM_PERSISTENT_ADDRESS,
-+			(char *)ip_addr, buflen);
- 	iscsi_set_param(cls_conn, ISCSI_PARAM_TARGET_NAME,
- 			(char *)fw_ddb_entry->iscsi_name, buflen);
- 	iscsi_set_param(cls_conn, ISCSI_PARAM_INITIATOR_NAME,
- 			(char *)ha->name_string, buflen);
--	iscsi_set_param(cls_conn, ISCSI_PARAM_PERSISTENT_ADDRESS,
--			(char *)ip_addr, buflen);
--	iscsi_set_param(cls_conn, ISCSI_PARAM_TARGET_ALIAS,
--			(char *)fw_ddb_entry->iscsi_alias, buflen);
- }
- 
- void qla4xxx_update_session_conn_fwddb_param(struct scsi_qla_host *ha,
-@@ -2403,37 +2518,11 @@ void qla4xxx_update_session_conn_param(struct scsi_qla_host *ha,
- 
- 	/* Update params */
- 	ddb_entry->chap_tbl_idx = le16_to_cpu(fw_ddb_entry->chap_tbl_idx);
--	conn->max_recv_dlength = BYTE_UNITS *
--			  le16_to_cpu(fw_ddb_entry->iscsi_max_rcv_data_seg_len);
--
--	conn->max_xmit_dlength = BYTE_UNITS *
--			  le16_to_cpu(fw_ddb_entry->iscsi_max_snd_data_seg_len);
--
--	sess->initial_r2t_en =
--			    (BIT_10 & le16_to_cpu(fw_ddb_entry->iscsi_options));
--
--	sess->max_r2t = le16_to_cpu(fw_ddb_entry->iscsi_max_outsnd_r2t);
--
--	sess->imm_data_en = (BIT_11 & le16_to_cpu(fw_ddb_entry->iscsi_options));
--
--	sess->first_burst = BYTE_UNITS *
--			       le16_to_cpu(fw_ddb_entry->iscsi_first_burst_len);
--
--	sess->max_burst = BYTE_UNITS *
--				 le16_to_cpu(fw_ddb_entry->iscsi_max_burst_len);
--
--	sess->time2wait = le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
--
--	sess->time2retain = le16_to_cpu(fw_ddb_entry->iscsi_def_time2retain);
--
--	sess->tpgt = le32_to_cpu(fw_ddb_entry->tgt_portal_grp);
-+	qla4xxx_copy_to_sess_conn_params(conn, sess, fw_ddb_entry);
- 
- 	memcpy(sess->initiatorname, ha->name_string,
- 	       min(sizeof(ha->name_string), sizeof(sess->initiatorname)));
- 
--	iscsi_set_param(cls_conn, ISCSI_PARAM_TARGET_ALIAS,
--			(char *)fw_ddb_entry->iscsi_alias, 0);
--
- exit_session_conn_param:
- 	if (fw_ddb_entry)
- 		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
--- 
-1.8.2.GIT
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084avmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <91A83CB600AD9B4EA3732598B38B6CDC@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
 
+
+-----Original Message-----
+From: Vikas <vikas.chaudhary@qlogic.com>
+Date: Thursday 9 May 2013 3:32 PM
+To: "jbottomley@parallels.com" <jbottomley@parallels.com>, Mike Christie
+<michaelc@cs.wisc.edu>
+Cc: scsi <linux-scsi@vger.kernel.org>, Admin <vikas.chaudhary@qlogic.com>,
+Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand
+<ravi.anand@qlogic.com>
+Subject: [PATCH 0/8] qla4xxx: Updates for scsi "misc" branch
+
+>From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+>
+>James,
+>
+>Following patches are to display additional iSCSI connection and session
+>parameters to sysfs as well allow setting and display of additional
+>Network
+>parameter for iSCSI interface.
+>
+>Please apply these patches to the scsi tree "misc" branch at your
+>earliest convenience.
+>
+>Adheer Chandravanshi (3):
+>      scsi_transport_iscsi: Exporting new attrs for iscsi session and
+>connection in sysfs
+>      libiscsi: Exporting new attrs for iscsi session and connection in
+>sysfs
+>      qla4xxx: Exporting new attrs for iscsi session and connection in
+>sysfs
+>
+>Harish Zunjarrao (3):
+>      iscsi_transport: Remove net param enum numbers
+>      iscsi_transport: Additional parameters for net settings
+>      qla4xxx: Additional parameters for net settings
+>
+>Manish Rangankar (1):
+>      qla4xxx: Add support to allow flashnode multi-session login.
+>
+>Vikas Chaudhary (1):
+>      qla4xxx: Update driver version to 5.03.00-k10
+
+
+We are holding on Network parameter configuration patches for now and have
+resubmitted
+session and connection additional parameters patches to the list in this
+patch set :-
+http://marc.info/?l=3Dlinux-scsi&m=3D137225028529586&w=3D2
+
+
+
+
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084avmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+dgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAC
+XQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAAAAfAOVfAQAAAD4AAABzAGkAcAA6AHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEA
+dQBkAGgAYQByAHkAAAAfAB8MAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAA
+eAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5
+AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAB8AAV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgA
+YQByAHkAAAAfACNAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAeAAAAAAA
+AACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAUwBN
+AFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAB8ACV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA
+8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAFCsBedymwNOgxXsDygBYQ8DABcAAQAA
+AEAAOQAArMc4a3LOAUAACDBI/dk4a3LOAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAA
+HwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAA
+AAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8A
+NwABAAAAcAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIAAwAC8AOABdACAAcQBsAGEANAB4AHgAeAA6
+ACAAVQBwAGQAYQB0AGUAcwAgAGYAbwByACAAcwBjAHMAaQAgACIAbQBpAHMAYwAiACAAYgByAGEA
+bgBjAGgAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAfAAAADwAMQAz
+ADYAOAAwADkAMwA3ADMAMgAtADgANQAyADQALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEA
+aQBsAC0AdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AD4AAAACAXEAAQAAABsAAAABAc5Mn7Il6vK5Fzi3SpqoJmF1ozphmUkOuoAAHwBwAAEAAABoAAAA
+WwBQAEEAVABDAEgAIAAwAC8AOABdACAAcQBsAGEANAB4AHgAeAA6ACAAVQBwAGQAYQB0AGUAcwAg
+AGYAbwByACAAcwBjAHMAaQAgACIAbQBpAHMAYwAiACAAYgByAGEAbgBjAGgAAAAfADUQAQAAAHgA
+AAA8ADMARgBDADQAQQBCADgAQgA0ADcARQBDAEQANQA0ADYAQgBDAEQANABCADMANgAxAEEANgA0
+AEIARQBBAEMARAAzADAARQBGADgAMAA4ADQAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8A
+cgBnAD4AAAADAN4/n04AAEAABzAl2dI4a3LOAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7
+cD1RTG9naWM7bD1BVk1CMy0xMzA2MjYxMjQ2NDhaLTU2ODQ5AAAAHwAVEAEAAABYAAAAOQAxAEEA
+OAAzAEMAQgA2ADAAMABBAEQAOQBCADQARQBBADMANwAzADIANQA5ADgAQgAzADgAQgA2AEMARABD
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIBFDABAAAADAAAAK0AAADpAESaLQAAAB8A+j8BAAAA
+IAAAAFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
+AAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQA
+LQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMgAuADQALgAxADIAMAA4ADIANAAAAAAAHwAA
+gB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUA
+eABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAE4BAABJAEkAPQAwADEAMAAxAEMARQA3ADIANgBC
+ADMAOAAwADUAOQAyADkAMgAwAEQANABCADYAMABFAEIANAAxADgAOAA5ADcANABDADgANgAyAEIA
+OQA0AEQAOABBAEIAOwBTAEIATQBJAEQAPQAxADAAOwBTADEAPQA8ADEAMwA2ADgAMAA5ADMANwAz
+ADIALQA4ADUAMgA0AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHYAaQBrAGEA
+cwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+ADsAVgBlAHIAcwBp
+AG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAA
+KQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAA
+ACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIA
+AAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAAB
+AAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAMCG
+
+--_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084avmb3qlogicorg_--
