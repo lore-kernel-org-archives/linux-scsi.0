@@ -1,34 +1,60 @@
-From: James Georgas <soulpa7ch@gmail.com>
-Subject: [PATCH 1/1] scsi/megaraid: minor cut and paste error fixed.
-Date: Wed, 26 Jun 2013 12:03:19 -0600
-Message-ID: <1372269799-9835-1-git-send-email-soulpa7ch@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: megaraidlinux@lsi.com, JBottomley@parallels.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Georgas <soulpa7ch@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60191] New: Bad flush cache
+Date: Wed, 26 Jun 2013 21:45:02 +0000 (UTC)
+Message-ID: <bug-60191-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:47847 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752952Ab3FZVpK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Jun 2013 17:45:10 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 7FB6C20398
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 21:45:09 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id B11D4203B5
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 21:45:04 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This looks like a cut and paste typo to me. Both of the
-megasas_read_fw_status_reg_* functions involved are identical though, so
-there was no bad behaviour. I changed it for consistency and clarity.
+https://bugzilla.kernel.org/show_bug.cgi?id=60191
 
-Signed-off-by: James Georgas <soulpa7ch@gmail.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+           Summary: Bad flush cache
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.8.13
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: mustelator@yahoo.es
+        Regression: No
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3a9ddae..87591cd 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -583,7 +583,7 @@ megasas_clear_intr_skinny(struct megasas_register_set __iomem *regs)
- 	/*
- 	 * Check if it is our interrupt
- 	 */
--	if ((megasas_read_fw_status_reg_gen2(regs) & MFI_STATE_MASK) ==
-+	if ((megasas_read_fw_status_reg_skinny(regs) & MFI_STATE_MASK) ==
- 	    MFI_STATE_FAULT) {
- 		mfiStatus = MFI_INTR_FLAG_FIRMWARE_STATE_CHANGE;
- 	} else
+
+Hello to all, I'm Toni and it's my first Kernel bug. I hope help to detect
+problems on kernels (I'm not developer but yes detector ;))
+
+Ok, and now start.
+
+When I dump image into SD card with IO operations apparently ok, and it
+continue past 100% (cache flushing) I can see that the writing is not 100% busy
+time on the output device. The IO monitor show this.
+
+For example, I can show: 100% 1 second, 0% 1 second, 100% 2 seconds, 0% 0,5
+seconds...
+
+AND, in some situations, the umount on FAT32 on USB drives sometimes not really
+umount well, but this is other war.
+
+Cheers!
+
 -- 
-1.8.1.5
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
