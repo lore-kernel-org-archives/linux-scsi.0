@@ -1,58 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] bfa: Fixes for 0-terminated strncpy and possible
- null pointer dereference
-Date: Wed, 26 Jun 2013 08:37:25 -0700
-Message-ID: <1372261045.2168.33.camel@dabdike>
-References: <1368646911-22620-1-git-send-email-jakobnormark@gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/4] qla4xxx: Updates for scsi "misc" branch
+Date: Wed, 26 Jun 2013 10:37:07 -0500
+Message-ID: <51CB0AA3.2030805@cs.wisc.edu>
+References: <1372248694-3928-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1368646911-22620-1-git-send-email-jakobnormark@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jakob Normark <jakobnormark@gmail.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:33074 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752453Ab3FZPhS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Jun 2013 11:37:18 -0400
+In-Reply-To: <1372248694-3928-1-git-send-email-vikas.chaudhary@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com
 
-On Wed, 2013-05-15 at 21:41 +0200, Jakob Normark wrote:
-> This patch fixes two cppcheck errors in drivers/scsi/bfa/bfad_im.c
+On 06/26/2013 07:11 AM, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 > 
-> Signed-off-by: Jakob Normark <jakobnormark@gmail.com>
-> ---
->  drivers/scsi/bfa/bfad_im.c |    9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
+> James,
 > 
-> diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-> index 5864f98..9489c56 100644
-> --- a/drivers/scsi/bfa/bfad_im.c
-> +++ b/drivers/scsi/bfa/bfad_im.c
-> @@ -944,13 +944,15 @@ static int
->  bfad_im_slave_alloc(struct scsi_device *sdev)
->  {
->  	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
-> -	struct bfad_itnim_data_s *itnim_data =
-> -				(struct bfad_itnim_data_s *) rport->dd_data;
-> -	struct bfa_s *bfa = itnim_data->itnim->bfa_itnim->bfa;
-> +	struct bfad_itnim_data_s *itnim_data;
-> +	struct bfa_s *bfa;
->  
->  	if (!rport || fc_remote_port_chkready(rport))
->  		return -ENXIO;
->  
-> +	itnim_data = (struct bfad_itnim_data_s *) rport->dd_data;
-> +	bfa = itnim_data->itnim->bfa_itnim->bfa;
-> +
->  	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_ENABLED) {
->  		/*
->  		 * We should not mask LUN 0 - since this will translate
-> @@ -1037,6 +1039,7 @@ bfad_fc_host_init(struct bfad_im_port_s *im_port)
->  
->  	strncpy(symname, bfad->bfa_fcs.fabric.bport.port_cfg.sym_name.symname,
->  		BFA_SYMNAME_MAXLEN);
-> +	symname[BFA_SYMNAME_MAXLEN - 1] = '\0';
+> Following patches are to display additional iSCSI connection and session
+> parameters in sysfs.
+> 
+> Please apply these patches to the scsi tree "misc" branch at your
+> earliest convenience.
+> 
+> Adheer Chandravanshi (3):
+>       scsi_transport_iscsi: Exporting new attrs for iscsi session and connection in sysfs
+>       libiscsi: Exporting new attrs for iscsi session and connection in sysfs
+>       qla4xxx: Exporting new attrs for iscsi session and connection in sysfs
+> 
+> Vikas Chaudhary (1):
+>       qla4xxx: Update driver version to 5.03.00-k10
+> 
 
-This isn't correct, it's effectively a handrolled version of strlcpy.
-The correct fix is to replace strncpy with strlcpy.  I fixed it up in
-the patch version.
+Looks ok.
 
-James
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+
