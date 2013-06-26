@@ -1,60 +1,58 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60191] New: Bad flush cache
-Date: Wed, 26 Jun 2013 21:45:02 +0000 (UTC)
-Message-ID: <bug-60191-11613@https.bugzilla.kernel.org/>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: NVMe: Add nvme-scsi.c (was Re: [PULL REQUEST] NVMe driver updates)
+Date: Thu, 27 Jun 2013 01:28:45 +0200
+Message-ID: <51CB792D.6030504@redhat.com>
+References: <20130509202015.GJ6057@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:47847 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752952Ab3FZVpK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Jun 2013 17:45:10 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 7FB6C20398
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 21:45:09 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id B11D4203B5
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 21:45:04 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130509202015.GJ6057@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Vishal Verma <vishal.l.verma@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60191
+Il 09/05/2013 22:20, Matthew Wilcox ha scritto:
+>       NVMe: Add nvme-scsi.c
 
-           Summary: Bad flush cache
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 3.8.13
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-        AssignedTo: linux-scsi@vger.kernel.org
-        ReportedBy: mustelator@yahoo.es
-        Regression: No
+I couldn't find the original patch on LKML, so I'll just quote the
+relevant piece of code.
 
+> +int nvme_sg_io(struct nvme_ns *ns, struct sg_io_hdr __user *u_hdr)
+> +{
+> +	struct sg_io_hdr hdr;
+> +	int retcode;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EACCES;
 
-Hello to all, I'm Toni and it's my first Kernel bug. I hope help to detect
-problems on kernels (I'm not developer but yes detector ;))
+This should be EPERM, and also it should use the same checks as other
+implementations of SG_IO, including:
 
-Ok, and now start.
+- checking if it's operating on a partition, and requiring CAP_SYS_RAWIO
+if so;
 
-When I dump image into SD card with IO operations apparently ok, and it
-continue past 100% (cache flushing) I can see that the writing is not 100% busy
-time on the output device. The IO monitor show this.
+- allowing a limited number of commands even for !capable(CAP_SYS_RAWIO).
 
-For example, I can show: 100% 1 second, 0% 1 second, 100% 2 seconds, 0% 0,5
-seconds...
+All this is done by scsi_cmd_blk_ioctl.
 
-AND, in some situations, the umount on FAT32 on USB drives sometimes not really
-umount well, but this is other war.
+Paolo
 
-Cheers!
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+> +	if (copy_from_user(&hdr, u_hdr, sizeof(hdr)))
+> +		return -EFAULT;
+> +	if (hdr.interface_id != 'S')
+> +		return -EINVAL;
+> +	if (hdr.cmd_len > BLK_MAX_CDB)
+> +		return -EINVAL;
+> +
+> +	retcode = nvme_scsi_translate(ns, &hdr);
+> +	if (retcode < 0)
+> +		return retcode;
+> +	if (retcode > 0)
+> +		retcode = SNTI_TRANSLATION_SUCCESS;
+> +	if (copy_to_user(__user u_hdr, &hdr, sizeof(sg_io_hdr_t)) > 0)
+> +		return -EFAULT;
+> +
+> +	return retcode;
+> +}
