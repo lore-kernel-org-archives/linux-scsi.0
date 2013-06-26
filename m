@@ -1,48 +1,42 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 03/10] scsi: ufs: remove version check before IS reg clear
-Date: Wed, 26 Jun 2013 22:33:59 +0530
-Message-ID: <1372266246-2725-4-git-send-email-santoshsy@gmail.com>
+Subject: [PATCH 05/10] scsi: ufs: Fix the response UPIU length setting
+Date: Wed, 26 Jun 2013 22:34:01 +0530
+Message-ID: <1372266246-2725-6-git-send-email-santoshsy@gmail.com>
 References: <1372266246-2725-1-git-send-email-santoshsy@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:64245 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557Ab3FZREt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jun 2013 13:04:49 -0400
-Received: by mail-pb0-f52.google.com with SMTP id xa12so14347495pbc.25
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 10:04:49 -0700 (PDT)
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:63127 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752091Ab3FZRE6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jun 2013 13:04:58 -0400
+Received: by mail-pb0-f47.google.com with SMTP id rr13so14464385pbb.20
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 10:04:58 -0700 (PDT)
 In-Reply-To: <1372266246-2725-1-git-send-email-santoshsy@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 00james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Seungwon Jeon <tgih.jun@samsung.com>, Santosh Y <santoshsy@gmail.com>
+Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, Maya Erez <merez@codeaurora.org>, Santosh Y <santoshsy@gmail.com>
 
-From: Seungwon Jeon <tgih.jun@samsung.com>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
 
-There is no need to check the version to clear
-the interrupt status. And the order is changed
-prior to actual handling.
+The response UPIU length should be in DWORD and not in bytes.
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-Tested-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Signed-off-by: Santosh Y <santoshsy@gmail.com>
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1f1e085..2e02483 100644
+index 48a7645..2230f14 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1324,11 +1324,8 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+@@ -802,7 +802,7 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 		utrdlp[i].prd_table_offset =
+ 				cpu_to_le16((prdt_offset >> 2));
+ 		utrdlp[i].response_upiu_length =
+-				cpu_to_le16(ALIGNED_UPIU_SIZE);
++				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
  
- 	if (intr_status) {
-+		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
- 		ufshcd_sl_intr(hba, intr_status);
--
--		/* If UFSHCI 1.0 then clear interrupt status register */
--		if (hba->ufs_version == UFSHCI_VERSION_10)
--			ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
- 		retval = IRQ_HANDLED;
- 	}
- 	spin_unlock(hba->host->host_lock);
+ 		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
+ 		hba->lrb[i].ucd_cmd_ptr =
 -- 
 1.8.3.1
 
