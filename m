@@ -1,173 +1,75 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [PATCH 0/8] qla4xxx: Updates for scsi "misc" branch
-Date: Wed, 26 Jun 2013 12:46:48 +0000
-Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084@avmb3.qlogic.org>
-References: <1368093732-8524-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH V3 0/5] Drivers: scsi: storvsc
+Date: Wed, 26 Jun 2013 12:58:27 +0000
+Message-ID: <868094fd01274f3c89ef2a27e9e42a3d@SN2PR03MB061.namprd03.prod.outlook.com>
+References: <1370372674-10046-1-git-send-email-kys@microsoft.com>
+ <ba5d1c4a36a441f09e6a1c5aa4e6d6a3@SN2PR03MB061.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084avmb3qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:54217
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751566Ab3FZMqx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Jun 2013 08:46:53 -0400
-Received: from mail74-va3 (localhost [127.0.0.1])	by mail74-va3-R.bigfish.com
- (Postfix) with ESMTP id 870783C0320	for <linux-scsi@vger.kernel.org>; Wed, 26
- Jun 2013 12:46:52 +0000 (UTC)
-Received: from VA3EHSMHS038.bigfish.com (unknown [10.7.14.239])	by
- mail74-va3.bigfish.com (Postfix) with ESMTP id 85EF7180055	for
- <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2013 12:46:50 +0000 (UTC)
-In-Reply-To: <1368093732-8524-1-git-send-email-vikas.chaudhary@qlogic.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084avmb3qlogicorg_
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <91A83CB600AD9B4EA3732598B38B6CDC@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 
 
------Original Message-----
-From: Vikas <vikas.chaudhary@qlogic.com>
-Date: Thursday 9 May 2013 3:32 PM
-To: "jbottomley@parallels.com" <jbottomley@parallels.com>, Mike Christie
-<michaelc@cs.wisc.edu>
-Cc: scsi <linux-scsi@vger.kernel.org>, Admin <vikas.chaudhary@qlogic.com>,
-Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand
-<ravi.anand@qlogic.com>
-Subject: [PATCH 0/8] qla4xxx: Updates for scsi "misc" branch
+> -----Original Message-----
+> From: KY Srinivasan
+> Sent: Monday, June 17, 2013 9:32 AM
+> To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; ohering@suse.com; jbottomley@parallels.com;
+> hch@infradead.org; linux-scsi@vger.kernel.org
+> Subject: RE: [PATCH V3 0/5] Drivers: scsi: storvsc
+> 
+> 
+> 
+> > -----Original Message-----
+> > From: KY Srinivasan
+> > Sent: Tuesday, June 11, 2013 9:02 AM
+> > To: KY Srinivasan; gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> > devel@linuxdriverproject.org; ohering@suse.com; jbottomley@parallels.com;
+> > hch@infradead.org; linux-scsi@vger.kernel.org
+> > Subject: RE: [PATCH V3 0/5] Drivers: scsi: storvsc
+> >
+> >
+> >
+> > > -----Original Message-----
+> > > From: K. Y. Srinivasan [mailto:kys@microsoft.com]
+> > > Sent: Tuesday, June 04, 2013 3:05 PM
+> > > To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> > > devel@linuxdriverproject.org; ohering@suse.com;
+> jbottomley@parallels.com;
+> > > hch@infradead.org; linux-scsi@vger.kernel.org
+> > > Cc: KY Srinivasan
+> > > Subject: [PATCH V3 0/5] Drivers: scsi: storvsc
+> > >
+> > > This set adds multi-channel support as well synthetic Fibre Channel support
+> > > to storvsc. The multi-channel support depends on infrastructure in the
+> VMBUS
+> > > driver. Greg has already checked in the relevant patches to VMBUS.
+> > >
+> > > I had posted an earlier version of this patch-set that included the VMBUS
+> > > related changes. I have since separated the VMBUS chages and these have
+> > > already been
+> > > checked in.
+> > >
+> > > In this version, based on comments from James, the timeout is no longer a
+> > > module
+> > > parameter.
+> >
+> > James,
+> >
+> > I think I have addressed all the comments that you had; if not, please let me
+> > know.
+> 
+> Ping.
 
->From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
->
->James,
->
->Following patches are to display additional iSCSI connection and session
->parameters to sysfs as well allow setting and display of additional
->Network
->parameter for iSCSI interface.
->
->Please apply these patches to the scsi tree "misc" branch at your
->earliest convenience.
->
->Adheer Chandravanshi (3):
->      scsi_transport_iscsi: Exporting new attrs for iscsi session and
->connection in sysfs
->      libiscsi: Exporting new attrs for iscsi session and connection in
->sysfs
->      qla4xxx: Exporting new attrs for iscsi session and connection in
->sysfs
->
->Harish Zunjarrao (3):
->      iscsi_transport: Remove net param enum numbers
->      iscsi_transport: Additional parameters for net settings
->      qla4xxx: Additional parameters for net settings
->
->Manish Rangankar (1):
->      qla4xxx: Add support to allow flashnode multi-session login.
->
->Vikas Chaudhary (1):
->      qla4xxx: Update driver version to 5.03.00-k10
+James,
 
+Let me know if I should re-send the patches.
 
-We are holding on Network parameter configuration patches for now and have
-resubmitted
-session and connection additional parameters patches to the list in this
-patch set :-
-http://marc.info/?l=3Dlinux-scsi&m=3D137225028529586&w=3D2
+Thanks,
 
-
-
-
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084avmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-dgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAC
-XQEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAAAAfAOVfAQAAAD4AAABzAGkAcAA6AHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEA
-dQBkAGgAYQByAHkAAAAfAB8MAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBA
-AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAA
-eAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5
-AAAAUwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMA
-LgBjAG8AbQAAAB8AAV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBkAGgA
-YQByAHkAAAAfACNAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABv
-AGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAeAAAAAAA
-AACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAUwBN
-AFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAB8ACV0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBp
-AGMALgBjAG8AbQAAAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA
-8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAFCsBedymwNOgxXsDygBYQ8DABcAAQAA
-AEAAOQAArMc4a3LOAUAACDBI/dk4a3LOAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAA
-HwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAA
-AAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8A
-NwABAAAAcAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIAAwAC8AOABdACAAcQBsAGEANAB4AHgAeAA6
-ACAAVQBwAGQAYQB0AGUAcwAgAGYAbwByACAAcwBjAHMAaQAgACIAbQBpAHMAYwAiACAAYgByAGEA
-bgBjAGgAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAfAAAADwAMQAz
-ADYAOAAwADkAMwA3ADMAMgAtADgANQAyADQALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEA
-aQBsAC0AdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AD4AAAACAXEAAQAAABsAAAABAc5Mn7Il6vK5Fzi3SpqoJmF1ozphmUkOuoAAHwBwAAEAAABoAAAA
-WwBQAEEAVABDAEgAIAAwAC8AOABdACAAcQBsAGEANAB4AHgAeAA6ACAAVQBwAGQAYQB0AGUAcwAg
-AGYAbwByACAAcwBjAHMAaQAgACIAbQBpAHMAYwAiACAAYgByAGEAbgBjAGgAAAAfADUQAQAAAHgA
-AAA8ADMARgBDADQAQQBCADgAQgA0ADcARQBDAEQANQA0ADYAQgBDAEQANABCADMANgAxAEEANgA0
-AEIARQBBAEMARAAzADAARQBGADgAMAA4ADQAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8A
-cgBnAD4AAAADAN4/n04AAEAABzAl2dI4a3LOAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7
-cD1RTG9naWM7bD1BVk1CMy0xMzA2MjYxMjQ2NDhaLTU2ODQ5AAAAHwAVEAEAAABYAAAAOQAxAEEA
-OAAzAEMAQgA2ADAAMABBAEQAOQBCADQARQBBADMANwAzADIANQA5ADgAQgAzADgAQgA2AEMARABD
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIBFDABAAAADAAAAK0AAADpAESaLQAAAB8A+j8BAAAA
-IAAAAFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
-AAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQA
-LQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMgAuADQALgAxADIAMAA4ADIANAAAAAAAHwAA
-gB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUA
-eABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAE4BAABJAEkAPQAwADEAMAAxAEMARQA3ADIANgBC
-ADMAOAAwADUAOQAyADkAMgAwAEQANABCADYAMABFAEIANAAxADgAOAA5ADcANABDADgANgAyAEIA
-OQA0AEQAOABBAEIAOwBTAEIATQBJAEQAPQAxADAAOwBTADEAPQA8ADEAMwA2ADgAMAA5ADMANwAz
-ADIALQA4ADUAMgA0AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHYAaQBrAGEA
-cwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+ADsAVgBlAHIAcwBp
-AG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADEAOAAuADAA
-KQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAA
-ACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIA
-AAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAAB
-AAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAMCG
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD30EF8084avmb3qlogicorg_--
+K. Y
