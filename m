@@ -1,75 +1,58 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH V3 0/5] Drivers: scsi: storvsc
-Date: Wed, 26 Jun 2013 12:58:27 +0000
-Message-ID: <868094fd01274f3c89ef2a27e9e42a3d@SN2PR03MB061.namprd03.prod.outlook.com>
-References: <1370372674-10046-1-git-send-email-kys@microsoft.com>
- <ba5d1c4a36a441f09e6a1c5aa4e6d6a3@SN2PR03MB061.namprd03.prod.outlook.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] bfa: Fixes for 0-terminated strncpy and possible
+ null pointer dereference
+Date: Wed, 26 Jun 2013 08:37:25 -0700
+Message-ID: <1372261045.2168.33.camel@dabdike>
+References: <1368646911-22620-1-git-send-email-jakobnormark@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <1368646911-22620-1-git-send-email-jakobnormark@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Jakob Normark <jakobnormark@gmail.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: KY Srinivasan
-> Sent: Monday, June 17, 2013 9:32 AM
-> To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com; jbottomley@parallels.com;
-> hch@infradead.org; linux-scsi@vger.kernel.org
-> Subject: RE: [PATCH V3 0/5] Drivers: scsi: storvsc
+On Wed, 2013-05-15 at 21:41 +0200, Jakob Normark wrote:
+> This patch fixes two cppcheck errors in drivers/scsi/bfa/bfad_im.c
 > 
+> Signed-off-by: Jakob Normark <jakobnormark@gmail.com>
+> ---
+>  drivers/scsi/bfa/bfad_im.c |    9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
 > 
-> 
-> > -----Original Message-----
-> > From: KY Srinivasan
-> > Sent: Tuesday, June 11, 2013 9:02 AM
-> > To: KY Srinivasan; gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> > devel@linuxdriverproject.org; ohering@suse.com; jbottomley@parallels.com;
-> > hch@infradead.org; linux-scsi@vger.kernel.org
-> > Subject: RE: [PATCH V3 0/5] Drivers: scsi: storvsc
-> >
-> >
-> >
-> > > -----Original Message-----
-> > > From: K. Y. Srinivasan [mailto:kys@microsoft.com]
-> > > Sent: Tuesday, June 04, 2013 3:05 PM
-> > > To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> > > devel@linuxdriverproject.org; ohering@suse.com;
-> jbottomley@parallels.com;
-> > > hch@infradead.org; linux-scsi@vger.kernel.org
-> > > Cc: KY Srinivasan
-> > > Subject: [PATCH V3 0/5] Drivers: scsi: storvsc
-> > >
-> > > This set adds multi-channel support as well synthetic Fibre Channel support
-> > > to storvsc. The multi-channel support depends on infrastructure in the
-> VMBUS
-> > > driver. Greg has already checked in the relevant patches to VMBUS.
-> > >
-> > > I had posted an earlier version of this patch-set that included the VMBUS
-> > > related changes. I have since separated the VMBUS chages and these have
-> > > already been
-> > > checked in.
-> > >
-> > > In this version, based on comments from James, the timeout is no longer a
-> > > module
-> > > parameter.
-> >
-> > James,
-> >
-> > I think I have addressed all the comments that you had; if not, please let me
-> > know.
-> 
-> Ping.
+> diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+> index 5864f98..9489c56 100644
+> --- a/drivers/scsi/bfa/bfad_im.c
+> +++ b/drivers/scsi/bfa/bfad_im.c
+> @@ -944,13 +944,15 @@ static int
+>  bfad_im_slave_alloc(struct scsi_device *sdev)
+>  {
+>  	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+> -	struct bfad_itnim_data_s *itnim_data =
+> -				(struct bfad_itnim_data_s *) rport->dd_data;
+> -	struct bfa_s *bfa = itnim_data->itnim->bfa_itnim->bfa;
+> +	struct bfad_itnim_data_s *itnim_data;
+> +	struct bfa_s *bfa;
+>  
+>  	if (!rport || fc_remote_port_chkready(rport))
+>  		return -ENXIO;
+>  
+> +	itnim_data = (struct bfad_itnim_data_s *) rport->dd_data;
+> +	bfa = itnim_data->itnim->bfa_itnim->bfa;
+> +
+>  	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_ENABLED) {
+>  		/*
+>  		 * We should not mask LUN 0 - since this will translate
+> @@ -1037,6 +1039,7 @@ bfad_fc_host_init(struct bfad_im_port_s *im_port)
+>  
+>  	strncpy(symname, bfad->bfa_fcs.fabric.bport.port_cfg.sym_name.symname,
+>  		BFA_SYMNAME_MAXLEN);
+> +	symname[BFA_SYMNAME_MAXLEN - 1] = '\0';
 
-James,
+This isn't correct, it's effectively a handrolled version of strlcpy.
+The correct fix is to replace strncpy with strlcpy.  I fixed it up in
+the patch version.
 
-Let me know if I should re-send the patches.
-
-Thanks,
-
-K. Y
+James
