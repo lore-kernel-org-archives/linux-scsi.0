@@ -1,118 +1,48 @@
-From: Asias He <asias@redhat.com>
-Subject: Re: [PATCH 9/9] vhost/scsi: Convert to se_cmd->cmd_kref
- TARGET_SCF_ACK_KREF usage
-Date: Thu, 27 Jun 2013 09:59:31 +0800
-Message-ID: <20130627015931.GB4133@hj.localdomain>
-References: <1370640864-15568-1-git-send-email-nab@linux-iscsi.org>
- <1370640864-15568-10-git-send-email-nab@linux-iscsi.org>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 3/5] Drivers: scsi: storvsc: Implement multi-channel
+ support
+Date: Thu, 27 Jun 2013 03:22:25 +0000
+Message-ID: <1372303344.557.6.camel@dabdike>
+References: <1370372674-10046-1-git-send-email-kys@microsoft.com>
+	 <1370372709-10098-1-git-send-email-kys@microsoft.com>
+	 <1370372709-10098-3-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25968 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751744Ab3F0B7n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Jun 2013 21:59:43 -0400
-Content-Disposition: inline
-In-Reply-To: <1370640864-15568-10-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1370372709-10098-3-git-send-email-kys@microsoft.com>
+Content-Language: en-US
+Content-ID: <CDDDE8B0D64E6F43980E82A027B77EE3@sw.swsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, Kent Overstreet <koverstreet@google.com>, "Michael S. Tsirkin" <mst@redhat.com>, Or Gerlitz <ogerlitz@mellanox.com>, Moussa Ba <moussaba@micron.com>
 
-On Fri, Jun 07, 2013 at 09:34:24PM +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch coverts vhost/scsi to se_cmd->cmd_kref TARGET_SCF_ACK_KREF
-> usage, instead of assuming that vhost_scsi_free_cmd() is always called
-> before TCM processing is completed in the response fast path.
-> 
-> This includes adding vhost_scsi_check_stop_free() -> target_put_sess_cmd()
-> to perform the second se_cmd->cmd_kref put, and moving vhost_scsi_free_cmd()
-> resource release into tcm_vhost_release_cmd() that is invoked once the last
-> se_cmd->cmd_kref put occurs.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Roland Dreier <roland@kernel.org>
-> Cc: Kent Overstreet <koverstreet@google.com>
-> Cc: Asias He <asias@redhat.com>
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Cc: Or Gerlitz <ogerlitz@mellanox.com>
-> Cc: Moussa Ba <moussaba@micron.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-
-Acked-by: Asias He <asias@redhat.com>
-
-> ---
->  drivers/vhost/scsi.c |   31 +++++++++++++++++++------------
->  1 files changed, 19 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index aacf71e..1e5e820 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -446,7 +446,19 @@ static u32 tcm_vhost_tpg_get_inst_index(struct se_portal_group *se_tpg)
->  
->  static void tcm_vhost_release_cmd(struct se_cmd *se_cmd)
->  {
-> -	return;
-> +	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
-> +				struct tcm_vhost_cmd, tvc_se_cmd);
-> +
-> +	if (tv_cmd->tvc_sgl_count) {
-> +		u32 i;
-> +		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
-> +			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
-> +
-> +		kfree(tv_cmd->tvc_sgl);
-> +        }
-> +
-> +	tcm_vhost_put_inflight(tv_cmd->inflight);
-> +	kfree(tv_cmd);
->  }
->  
->  static int tcm_vhost_shutdown_session(struct se_session *se_sess)
-> @@ -559,17 +571,11 @@ static void vhost_scsi_free_cmd(struct tcm_vhost_cmd *tv_cmd)
->  	/* TODO locking against target/backend threads? */
->  	transport_generic_free_cmd(se_cmd, 0);
->  
-> -	if (tv_cmd->tvc_sgl_count) {
-> -		u32 i;
-> -		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
-> -			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
-> -
-> -		kfree(tv_cmd->tvc_sgl);
-> -	}
-> -
-> -	tcm_vhost_put_inflight(tv_cmd->inflight);
-> +}
->  
-> -	kfree(tv_cmd);
-> +static int vhost_scsi_check_stop_free(struct se_cmd *se_cmd)
-> +{
-> +	return target_put_sess_cmd(se_cmd->se_sess, se_cmd);
->  }
->  
->  static void tcm_vhost_do_evt_work(struct vhost_scsi *vs,
-> @@ -847,7 +853,7 @@ static void tcm_vhost_submission_work(struct work_struct *work)
->  			tv_cmd->tvc_cdb, &tv_cmd->tvc_sense_buf[0],
->  			tv_cmd->tvc_lun, tv_cmd->tvc_exp_data_len,
->  			tv_cmd->tvc_task_attr, tv_cmd->tvc_data_direction,
-> -			0, sg_ptr, tv_cmd->tvc_sgl_count,
-> +			TARGET_SCF_ACK_KREF, sg_ptr, tv_cmd->tvc_sgl_count,
->  			sg_bidi_ptr, sg_no_bidi);
->  	if (rc < 0) {
->  		transport_send_check_condition_and_sense(se_cmd,
-> @@ -2008,6 +2014,7 @@ static struct target_core_fabric_ops tcm_vhost_ops = {
->  	.tpg_release_fabric_acl		= tcm_vhost_release_fabric_acl,
->  	.tpg_get_inst_index		= tcm_vhost_tpg_get_inst_index,
->  	.release_cmd			= tcm_vhost_release_cmd,
-> +	.check_stop_free		= vhost_scsi_check_stop_free,
->  	.shutdown_session		= tcm_vhost_shutdown_session,
->  	.close_session			= tcm_vhost_close_session,
->  	.sess_get_index			= tcm_vhost_sess_get_index,
-> -- 
-> 1.7.2.5
-> 
-
--- 
-Asias
+T24gVHVlLCAyMDEzLTA2LTA0IGF0IDEyOjA1IC0wNzAwLCBLLiBZLiBTcmluaXZhc2FuIHdyb3Rl
+Og0KPiBJbXBsZW1lbnQgbXVsdGktY2hhbm5lbCBzdXBwb3J0IGZvciB0aGUgc3RvcmFnZSBkZXZp
+Y2VzLg0KDQpUaGlzIGRvZXNuJ3QgY29tcGlsZToNCg0KICBDQyBbTV0gIGRyaXZlcnMvc2NzaS9z
+dG9ydnNjX2Rydi5vDQpkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYzogSW4gZnVuY3Rpb24g4oCY
+aGFuZGxlX3NjX2NyZWF0aW9u4oCZOg0KZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmM6NzYzOjM1
+OiBlcnJvcjog4oCYc3RydWN0IHZtYnVzX2NoYW5uZWzigJkgaGFzIG5vDQptZW1iZXIgbmFtZWQg
+4oCYcHJpbWFyeV9jaGFubmVs4oCZDQpkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYzogSW4gZnVu
+Y3Rpb24g4oCYaGFuZGxlX211bHRpY2hhbm5lbF9zdG9yYWdl4oCZOg0KZHJpdmVycy9zY3NpL3N0
+b3J2c2NfZHJ2LmM6ODA1OjI6IGVycm9yOiBpbXBsaWNpdCBkZWNsYXJhdGlvbiBvZg0KZnVuY3Rp
+b24NCuKAmHZtYnVzX3NldF9zY19jcmVhdGVfY2FsbGJhY2vigJkgWy1XZXJyb3I9aW1wbGljaXQt
+ZnVuY3Rpb24tZGVjbGFyYXRpb25dDQpkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYzo4MTI6Mjog
+ZXJyb3I6IGltcGxpY2l0IGRlY2xhcmF0aW9uIG9mDQpmdW5jdGlvbg0K4oCYdm1idXNfYXJlX3N1
+YmNoYW5uZWxzX3ByZXNlbnTigJkgWy1XZXJyb3I9aW1wbGljaXQtZnVuY3Rpb24tZGVjbGFyYXRp
+b25dDQpkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYzogSW4gZnVuY3Rpb24g4oCYc3RvcnZzY19v
+bl9jaGFubmVsX2NhbGxiYWNr4oCZOg0KZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmM6MTIyMzox
+MzogZXJyb3I6IOKAmHN0cnVjdCB2bWJ1c19jaGFubmVs4oCZIGhhcyBubw0KbWVtYmVyIG5hbWVk
+IOKAmHByaW1hcnlfY2hhbm5lbOKAmQ0KZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmM6MTIyNDox
+OTogZXJyb3I6IOKAmHN0cnVjdCB2bWJ1c19jaGFubmVs4oCZIGhhcyBubw0KbWVtYmVyIG5hbWVk
+IOKAmHByaW1hcnlfY2hhbm5lbOKAmQ0KZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmM6IEluIGZ1
+bmN0aW9uIOKAmHN0b3J2c2NfZG9faW/igJk6DQpkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYzox
+MzQxOjI6IGVycm9yOiBpbXBsaWNpdCBkZWNsYXJhdGlvbiBvZg0KZnVuY3Rpb24NCuKAmHZtYnVz
+X2dldF9vdXRnb2luZ19jaGFubmVs4oCZIFstV2Vycm9yPWltcGxpY2l0LWZ1bmN0aW9uLWRlY2xh
+cmF0aW9uXQ0KZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmM6MTM0MToxOTogd2FybmluZzogYXNz
+aWdubWVudCBtYWtlcyBwb2ludGVyDQpmcm9tIGludGVnZXIgd2l0aG91dCBhIGNhc3QgW2VuYWJs
+ZWQgYnkgZGVmYXVsdF0NCmNjMTogc29tZSB3YXJuaW5ncyBiZWluZyB0cmVhdGVkIGFzIGVycm9y
+cw0KbWFrZVsyXTogKioqIFtkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYub10gRXJyb3IgMQ0KDQpJ
+IGFzc3VtZSB0aGlzIGlzIGEgY3Jvc3MgdHJlZSBkZXBlbmRlbmN5PyAgV2hhdCdzIHRoZSByZWxl
+dmFudCBicmFuY2ggSQ0KbmVlZD8NCg0KSmFtZXMNCg0K
