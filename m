@@ -1,47 +1,70 @@
 From: Rik van Riel <riel@redhat.com>
 Subject: Re: RFC: Allow block drivers to poll for I/O instead of sleeping
-Date: Thu, 27 Jun 2013 14:10:36 -0400
-Message-ID: <51CC801C.5050600@redhat.com>
-References: <20130620201713.GV8211@linux.intel.com> <20130623100920.GA19021@gmail.com> <CA+55aFy+COdk5+ucwxtc1At=PAYTJxeUaUV6rP9XstHdNV0hbQ@mail.gmail.com>
+Date: Thu, 27 Jun 2013 14:42:33 -0400
+Message-ID: <51CC8799.9070909@redhat.com>
+References: <20130620201713.GV8211@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFy+COdk5+ucwxtc1At=PAYTJxeUaUV6rP9XstHdNV0hbQ@mail.gmail.com>
+In-Reply-To: <20130620201713.GV8211@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Ingo Molnar <mingo@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, Linux SCSI List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Thomas Gleixner <tglx@linutronix.de>
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/23/2013 02:29 PM, Linus Torvalds wrote:
+On 06/20/2013 04:17 PM, Matthew Wilcox wrote:
 
-> You could try to do that either *in* the idle thread (which would take
-> the context switch overhead - maybe negating some of the advantages),
-> or alternatively hook into the scheduler idle logic before actually
-> doing the switch.
+> --- a/kernel/sched/core.c
+> +++ b/kernel/sched/core.c
+> @@ -4527,6 +4527,36 @@ long __sched io_schedule_timeout(long timeout)
+>   	return ret;
+>   }
 >
-> But anything that starts polling when there are other runnable
-> processes to be done sounds really debatable. Even if it's "only" 5us
-> or so. There's a lot of real work that could be done in 5us.
+> +/*
+> + * Wait for an I/O to complete against this backing_dev_info.  If the
+> + * task exhausts its timeslice polling for completions, call io_schedule()
+> + * anyway.  If a signal comes pending, return so the task can handle it.
+> + * If the io_poll returns an error, give up and call io_schedule(), but
+> + * swallow the error.  We may miss an I/O completion (eg if the interrupt
+> + * handler gets to it first).  Guard against this possibility by returning
+> + * if we've been set back to TASK_RUNNING.
+> + */
+> +void io_wait(struct backing_dev_info *bdi)
+> +{
 
-Having a hook into the idle code could be useful for
-KVM, too.
+I would like something a little more generic in the
+scheduler code, that could also be used by other
+things in the kernel (say, KVM with message passing
+workloads).
 
-In certain message passing workloads, we have seen
-that the system throughput suffers greatly simply
-by having the KVM thread's preempt notifiers save
-CPU state when the guest goes idle, and re-load it
-when the guest VCPU is activated again.
+Maybe something looking a little like this?
 
-Avoiding the context switch overhead when nothing
-else wants to run, but being immediately preempted
-when something does, could be a big win.
+void idle_poll(struct idle_poll_info *ipi)
 
-Would it make sense to have some hook that says
-"I *am* an idle thread right now", as opposed to
-"context switch to the idle thread"?
+struct idle_poll_info {
+	int (*idle_poll_func)(void *data);
+	int (*idle_poll_preempt)(void *data);
+	void *data;
+}
 
-That hook could even run the cpuidle code, and
-switch to the real idle task (saving the current
-task state), and put the CPU into a C-state, when
-the expected sleep time is long...
+That way the kernel can:
+
+1) mark the current thread as having idle priority,
+    allowing the scheduler to preempt it if something
+    else wants to run
+
+2) switch to asynchronous mode if something else wants
+    to run, or if the average wait for the process is
+    so long that it is better to go asynchronous and
+    avoid polling
+
+3) poll for completion if nothing else wants to run
+
+Does that make sense?
+
+Did I forget something you need?
+
+Did I forget something KVM could need?
+
+Is this insane? If so, is it too insane? :)
