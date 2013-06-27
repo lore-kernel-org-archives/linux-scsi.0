@@ -1,51 +1,73 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v12 3/6] Restrict device state changes allowed via sysfs
-Date: Thu, 27 Jun 2013 16:54:34 +0200
-Message-ID: <51CC522A.4010805@acm.org>
+Subject: [PATCH v12 4/6] Avoid saving/restoring interrupt state inside scsi_remove_host()
+Date: Thu, 27 Jun 2013 16:55:27 +0200
+Message-ID: <51CC525F.20209@acm.org>
 References: <51CC5176.90609@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:55945 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752866Ab3F0Oyf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jun 2013 10:54:35 -0400
+Received: from juliette.telenet-ops.be ([195.130.137.74]:48656 "EHLO
+	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753691Ab3F0Oza (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jun 2013 10:55:30 -0400
 In-Reply-To: <51CC5176.90609@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Chanho Min <chanho.min@lge.com>, Joe Lawrence <jdl1291@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>, Tejun Heo <tj@kernel.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Chanho Min <chanho.min@lge.com>, Joe Lawrence <jdl1291@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>, Tejun Heo <tj@kernel.org>
 
-Restrict the SCSI device state changes allowd via sysfs to the
-OFFLINE<>RUNNING transitions. Other transitions may confuse
-the SCSI mid-layer. As an example, changing the state of a SCSI
-device via sysfs into "cancel" or "deleted" prevents removal of
-a SCSI device by scsi_remove_host().
+Since it is not allowed to invoke scsi_remove_host() with interrupts
+disabled, avoid saving and restoring the interrupt state inside
+scsi_remove_host(). This patch does not change the functionality of
+the function scsi_remove_host().
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Tejun Heo <tj@kernel.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+Acked-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: David Milburn <dmilburn@redhat.com>
 ---
- drivers/scsi/scsi_sysfs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hosts.c |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 931a7d9..013c6de 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -605,7 +605,7 @@ store_state_field(struct device *dev, struct device_attribute *attr,
- 			break;
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index df0c3c7..034a567 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -156,27 +156,25 @@ EXPORT_SYMBOL(scsi_host_set_state);
+  **/
+ void scsi_remove_host(struct Scsi_Host *shost)
+ {
+-	unsigned long flags;
+-
+ 	mutex_lock(&shost->scan_mutex);
+-	spin_lock_irqsave(shost->host_lock, flags);
++	spin_lock_irq(shost->host_lock);
+ 	if (scsi_host_set_state(shost, SHOST_CANCEL))
+ 		if (scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY)) {
+-			spin_unlock_irqrestore(shost->host_lock, flags);
++			spin_unlock_irq(shost->host_lock);
+ 			mutex_unlock(&shost->scan_mutex);
+ 			return;
  		}
- 	}
--	if (!state)
-+	if (state != SDEV_OFFLINE && state != SDEV_RUNNING)
- 		return -EINVAL;
+-	spin_unlock_irqrestore(shost->host_lock, flags);
++	spin_unlock_irq(shost->host_lock);
  
- 	if (scsi_device_set_state(sdev, state))
+ 	scsi_autopm_get_host(shost);
+ 	scsi_forget_host(shost);
+ 	mutex_unlock(&shost->scan_mutex);
+ 	scsi_proc_host_rm(shost);
+ 
+-	spin_lock_irqsave(shost->host_lock, flags);
++	spin_lock_irq(shost->host_lock);
+ 	if (scsi_host_set_state(shost, SHOST_DEL))
+ 		BUG_ON(scsi_host_set_state(shost, SHOST_DEL_RECOVERY));
+-	spin_unlock_irqrestore(shost->host_lock, flags);
++	spin_unlock_irq(shost->host_lock);
+ 
+ 	transport_unregister_device(&shost->shost_gendev);
+ 	device_unregister(&shost->shost_dev);
 -- 
 1.7.10.4
 
