@@ -1,52 +1,64 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND v2 2/2] scsi: 64-bit port of buslogic driver
-Date: Wed, 26 Jun 2013 18:34:39 -0700
-Message-ID: <1372296879.557.3.camel@dabdike>
-References: <cover.1368754558.git.khalid.aziz@oracle.com>
-	 <97daf2d29ceb78bdef3ddf6358dc634de35d0345.1368754556.git.khalid.aziz@oracle.com>
+From: Asias He <asias@redhat.com>
+Subject: Re: [PATCH 8/9] vhost/scsi: Drop unnecessary wait_for_tasks=true
+ usage with transport_generic_free_cmd
+Date: Thu, 27 Jun 2013 09:59:12 +0800
+Message-ID: <20130627015912.GA4133@hj.localdomain>
+References: <1370640864-15568-1-git-send-email-nab@linux-iscsi.org>
+ <1370640864-15568-9-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <97daf2d29ceb78bdef3ddf6358dc634de35d0345.1368754556.git.khalid.aziz@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Khalid Aziz <khalid@gonehiking.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1370640864-15568-9-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, Kent Overstreet <koverstreet@google.com>, "Michael S. Tsirkin" <mst@redhat.com>, Or Gerlitz <ogerlitz@mellanox.com>, Moussa Ba <moussaba@micron.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2013-06-24 at 14:26 -0600, Khalid Aziz wrote:=20
-> @@ -5072,17 +5039,15 @@ static void FPT_busMstrSGDataXferStart(unsign=
-ed long p_port,
->   * Description:=20
->   *
->   *------------------------------------------------------------------=
----*/
-> -static void FPT_busMstrDataXferStart(unsigned long p_port,
-> -				     struct sccb *pcurrSCCB)
-> +static void FPT_busMstrDataXferStart(u32 p_port, struct sccb *pcurrS=
-CCB)
->  {
-> -	unsigned long addr, count;
-> +	u32 addr, count;
-> =20
->  	if (!(pcurrSCCB->Sccb_XferState & F_AUTO_SENSE)) {
-> =20
->  		count =3D pcurrSCCB->Sccb_XferCnt;
-> =20
-> -		addr =3D
-> -		    (unsigned long)pcurrSCCB->DataPointer + pcurrSCCB->Sccb_ATC;
-> +		addr =3D (u32)pcurrSCCB->DataPointer + pcurrSCCB->Sccb_ATC;
+On Fri, Jun 07, 2013 at 09:34:23PM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch changes vhost_scsi_free_cmd() to call transport_generic_free_cmd()
+> with wait_for_tasks=false in order to avoid the extra se_cmd->t_state_lock
+> access for the wait_for_tasks=true case.
+> 
+> This is unnecessary because vhost_scsi_free_cmd() is only ever called by
+> vhost_scsi_complete_cmd_work() after TCM completion handoff, and by
+> vhost_scsi_handle_vq() exception code before TCM submission handoff, so
+> there is never a case where se_cmd is still active from TCM's perspective
+> when transport_generic_free_cmd() is called.
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Roland Dreier <roland@kernel.org>
+> Cc: Kent Overstreet <koverstreet@google.com>
+> Cc: Asias He <asias@redhat.com>
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Or Gerlitz <ogerlitz@mellanox.com>
+> Cc: Moussa Ba <moussaba@micron.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This is giving
+Acked-by: Asias He <asias@redhat.com>
 
-In file included from drivers/scsi/BusLogic.c:57:0:
-drivers/scsi/FlashPoint.c: In function =E2=80=98FPT_busMstrDataXferStar=
-t=E2=80=99:
-drivers/scsi/FlashPoint.c:5050:10: warning: cast from pointer to intege=
-r
-of different size [-Wpointer-to-int-cast]
+> ---
+>  drivers/vhost/scsi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index 7014202..aacf71e 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -557,7 +557,7 @@ static void vhost_scsi_free_cmd(struct tcm_vhost_cmd *tv_cmd)
+>  	struct se_cmd *se_cmd = &tv_cmd->tvc_se_cmd;
+>  
+>  	/* TODO locking against target/backend threads? */
+> -	transport_generic_free_cmd(se_cmd, 1);
+> +	transport_generic_free_cmd(se_cmd, 0);
+>  
+>  	if (tv_cmd->tvc_sgl_count) {
+>  		u32 i;
+> -- 
+> 1.7.2.5
+> 
 
-to do this cast, you need first to cast to unsigned long and then
-truncate the long with u32.  I fixed it up.
-
-James
+-- 
+Asias
