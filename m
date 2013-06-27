@@ -1,32 +1,35 @@
 From: Asias He <asias@redhat.com>
-Subject: Re: [PATCH 8/9] vhost/scsi: Drop unnecessary wait_for_tasks=true
- usage with transport_generic_free_cmd
-Date: Thu, 27 Jun 2013 09:59:12 +0800
-Message-ID: <20130627015912.GA4133@hj.localdomain>
+Subject: Re: [PATCH 9/9] vhost/scsi: Convert to se_cmd->cmd_kref
+ TARGET_SCF_ACK_KREF usage
+Date: Thu, 27 Jun 2013 09:59:31 +0800
+Message-ID: <20130627015931.GB4133@hj.localdomain>
 References: <1370640864-15568-1-git-send-email-nab@linux-iscsi.org>
- <1370640864-15568-9-git-send-email-nab@linux-iscsi.org>
+ <1370640864-15568-10-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:25968 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751744Ab3F0B7n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Jun 2013 21:59:43 -0400
 Content-Disposition: inline
-In-Reply-To: <1370640864-15568-9-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
+In-Reply-To: <1370640864-15568-10-git-send-email-nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, Kent Overstreet <koverstreet@google.com>, "Michael S. Tsirkin" <mst@redhat.com>, Or Gerlitz <ogerlitz@mellanox.com>, Moussa Ba <moussaba@micron.com>
-List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 07, 2013 at 09:34:23PM +0000, Nicholas A. Bellinger wrote:
+On Fri, Jun 07, 2013 at 09:34:24PM +0000, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> This patch changes vhost_scsi_free_cmd() to call transport_generic_free_cmd()
-> with wait_for_tasks=false in order to avoid the extra se_cmd->t_state_lock
-> access for the wait_for_tasks=true case.
+> This patch coverts vhost/scsi to se_cmd->cmd_kref TARGET_SCF_ACK_KREF
+> usage, instead of assuming that vhost_scsi_free_cmd() is always called
+> before TCM processing is completed in the response fast path.
 > 
-> This is unnecessary because vhost_scsi_free_cmd() is only ever called by
-> vhost_scsi_complete_cmd_work() after TCM completion handoff, and by
-> vhost_scsi_handle_vq() exception code before TCM submission handoff, so
-> there is never a case where se_cmd is still active from TCM's perspective
-> when transport_generic_free_cmd() is called.
+> This includes adding vhost_scsi_check_stop_free() -> target_put_sess_cmd()
+> to perform the second se_cmd->cmd_kref put, and moving vhost_scsi_free_cmd()
+> resource release into tcm_vhost_release_cmd() that is invoked once the last
+> se_cmd->cmd_kref put occurs.
 > 
 > Cc: Christoph Hellwig <hch@lst.de>
 > Cc: Roland Dreier <roland@kernel.org>
@@ -40,22 +43,73 @@ On Fri, Jun 07, 2013 at 09:34:23PM +0000, Nicholas A. Bellinger wrote:
 Acked-by: Asias He <asias@redhat.com>
 
 > ---
->  drivers/vhost/scsi.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  drivers/vhost/scsi.c |   31 +++++++++++++++++++------------
+>  1 files changed, 19 insertions(+), 12 deletions(-)
 > 
 > diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index 7014202..aacf71e 100644
+> index aacf71e..1e5e820 100644
 > --- a/drivers/vhost/scsi.c
 > +++ b/drivers/vhost/scsi.c
-> @@ -557,7 +557,7 @@ static void vhost_scsi_free_cmd(struct tcm_vhost_cmd *tv_cmd)
->  	struct se_cmd *se_cmd = &tv_cmd->tvc_se_cmd;
+> @@ -446,7 +446,19 @@ static u32 tcm_vhost_tpg_get_inst_index(struct se_portal_group *se_tpg)
 >  
+>  static void tcm_vhost_release_cmd(struct se_cmd *se_cmd)
+>  {
+> -	return;
+> +	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
+> +				struct tcm_vhost_cmd, tvc_se_cmd);
+> +
+> +	if (tv_cmd->tvc_sgl_count) {
+> +		u32 i;
+> +		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
+> +			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
+> +
+> +		kfree(tv_cmd->tvc_sgl);
+> +        }
+> +
+> +	tcm_vhost_put_inflight(tv_cmd->inflight);
+> +	kfree(tv_cmd);
+>  }
+>  
+>  static int tcm_vhost_shutdown_session(struct se_session *se_sess)
+> @@ -559,17 +571,11 @@ static void vhost_scsi_free_cmd(struct tcm_vhost_cmd *tv_cmd)
 >  	/* TODO locking against target/backend threads? */
-> -	transport_generic_free_cmd(se_cmd, 1);
-> +	transport_generic_free_cmd(se_cmd, 0);
+>  	transport_generic_free_cmd(se_cmd, 0);
 >  
->  	if (tv_cmd->tvc_sgl_count) {
->  		u32 i;
+> -	if (tv_cmd->tvc_sgl_count) {
+> -		u32 i;
+> -		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
+> -			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
+> -
+> -		kfree(tv_cmd->tvc_sgl);
+> -	}
+> -
+> -	tcm_vhost_put_inflight(tv_cmd->inflight);
+> +}
+>  
+> -	kfree(tv_cmd);
+> +static int vhost_scsi_check_stop_free(struct se_cmd *se_cmd)
+> +{
+> +	return target_put_sess_cmd(se_cmd->se_sess, se_cmd);
+>  }
+>  
+>  static void tcm_vhost_do_evt_work(struct vhost_scsi *vs,
+> @@ -847,7 +853,7 @@ static void tcm_vhost_submission_work(struct work_struct *work)
+>  			tv_cmd->tvc_cdb, &tv_cmd->tvc_sense_buf[0],
+>  			tv_cmd->tvc_lun, tv_cmd->tvc_exp_data_len,
+>  			tv_cmd->tvc_task_attr, tv_cmd->tvc_data_direction,
+> -			0, sg_ptr, tv_cmd->tvc_sgl_count,
+> +			TARGET_SCF_ACK_KREF, sg_ptr, tv_cmd->tvc_sgl_count,
+>  			sg_bidi_ptr, sg_no_bidi);
+>  	if (rc < 0) {
+>  		transport_send_check_condition_and_sense(se_cmd,
+> @@ -2008,6 +2014,7 @@ static struct target_core_fabric_ops tcm_vhost_ops = {
+>  	.tpg_release_fabric_acl		= tcm_vhost_release_fabric_acl,
+>  	.tpg_get_inst_index		= tcm_vhost_tpg_get_inst_index,
+>  	.release_cmd			= tcm_vhost_release_cmd,
+> +	.check_stop_free		= vhost_scsi_check_stop_free,
+>  	.shutdown_session		= tcm_vhost_shutdown_session,
+>  	.close_session			= tcm_vhost_close_session,
+>  	.sess_get_index			= tcm_vhost_sess_get_index,
 > -- 
 > 1.7.2.5
 > 
