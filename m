@@ -1,70 +1,73 @@
-From: Rik van Riel <riel@redhat.com>
-Subject: Re: RFC: Allow block drivers to poll for I/O instead of sleeping
-Date: Thu, 27 Jun 2013 14:42:33 -0400
-Message-ID: <51CC8799.9070909@redhat.com>
-References: <20130620201713.GV8211@linux.intel.com>
+From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Subject: [PATCH v3 25/45] [SCSI] fcoe: Use get/put_online_cpus_atomic() to
+ prevent CPU offline
+Date: Fri, 28 Jun 2013 01:26:55 +0530
+Message-ID: <20130627195655.29830.44202.stgit@srivatsabhat.in.ibm.com>
+References: <20130627195136.29830.10445.stgit@srivatsabhat.in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130620201713.GV8211@linux.intel.com>
+In-Reply-To: <20130627195136.29830.10445.stgit@srivatsabhat.in.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
+To: tglx@linutronix.de, peterz@infradead.org, tj@kernel.org, oleg@redhat.com, paulmck@linux.vnet.ibm.com, rusty@rustcorp.com.au, mingo@kernel.org, akpm@linux-foundation.org, namhyung@kernel.org, walken@google.com, vincent.guittot@linaro.org, laijs@cn.fujitsu.com, David.Laight@aculab.com
+Cc: rostedt@goodmis.org, wangyun@linux.vnet.ibm.com, xiaoguangrong@linux.vnet.ibm.com, sbw@mit.edu, fweisbec@gmail.com, zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com, srivatsa.bhat@linux.vnet.ibm.com, linux-pm@vger.kernel.org, linux-arch@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Robert Love <robert.w.love@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, devel@open-fcoe.org, linux-scsi@vger.kernel.org"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/20/2013 04:17 PM, Matthew Wilcox wrote:
+Once stop_machine() is gone from the CPU offline path, we won't be able
+to depend on disabling preemption to prevent CPUs from going offline
+from under us.
 
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -4527,6 +4527,36 @@ long __sched io_schedule_timeout(long timeout)
->   	return ret;
->   }
->
-> +/*
-> + * Wait for an I/O to complete against this backing_dev_info.  If the
-> + * task exhausts its timeslice polling for completions, call io_schedule()
-> + * anyway.  If a signal comes pending, return so the task can handle it.
-> + * If the io_poll returns an error, give up and call io_schedule(), but
-> + * swallow the error.  We may miss an I/O completion (eg if the interrupt
-> + * handler gets to it first).  Guard against this possibility by returning
-> + * if we've been set back to TASK_RUNNING.
-> + */
-> +void io_wait(struct backing_dev_info *bdi)
-> +{
+Use the get/put_online_cpus_atomic() APIs to prevent CPUs from going
+offline, while invoking from atomic context.
 
-I would like something a little more generic in the
-scheduler code, that could also be used by other
-things in the kernel (say, KVM with message passing
-workloads).
+Cc: Robert Love <robert.w.love@intel.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: devel@open-fcoe.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+---
 
-Maybe something looking a little like this?
+ drivers/scsi/fcoe/fcoe.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-void idle_poll(struct idle_poll_info *ipi)
-
-struct idle_poll_info {
-	int (*idle_poll_func)(void *data);
-	int (*idle_poll_preempt)(void *data);
-	void *data;
-}
-
-That way the kernel can:
-
-1) mark the current thread as having idle priority,
-    allowing the scheduler to preempt it if something
-    else wants to run
-
-2) switch to asynchronous mode if something else wants
-    to run, or if the average wait for the process is
-    so long that it is better to go asynchronous and
-    avoid polling
-
-3) poll for completion if nothing else wants to run
-
-Does that make sense?
-
-Did I forget something you need?
-
-Did I forget something KVM could need?
-
-Is this insane? If so, is it too insane? :)
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 32ae6c6..eaa390e 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1484,6 +1484,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 	 * was originated, otherwise select cpu using rx exchange id
+ 	 * or fcoe_select_cpu().
+ 	 */
++	get_online_cpus_atomic();
+ 	if (ntoh24(fh->fh_f_ctl) & FC_FC_EX_CTX)
+ 		cpu = ntohs(fh->fh_ox_id) & fc_cpu_mask;
+ 	else {
+@@ -1493,8 +1494,10 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 			cpu = ntohs(fh->fh_rx_id) & fc_cpu_mask;
+ 	}
+ 
+-	if (cpu >= nr_cpu_ids)
++	if (cpu >= nr_cpu_ids) {
++		put_online_cpus_atomic();
+ 		goto err;
++	}
+ 
+ 	fps = &per_cpu(fcoe_percpu, cpu);
+ 	spin_lock(&fps->fcoe_rx_list.lock);
+@@ -1514,6 +1517,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 		spin_lock(&fps->fcoe_rx_list.lock);
+ 		if (!fps->thread) {
+ 			spin_unlock(&fps->fcoe_rx_list.lock);
++			put_online_cpus_atomic();
+ 			goto err;
+ 		}
+ 	}
+@@ -1535,6 +1539,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 	if (fps->thread->state == TASK_INTERRUPTIBLE)
+ 		wake_up_process(fps->thread);
+ 	spin_unlock(&fps->fcoe_rx_list.lock);
++	put_online_cpus_atomic();
+ 
+ 	return 0;
+ err:
