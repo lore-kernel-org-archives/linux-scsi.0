@@ -1,73 +1,75 @@
-From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Subject: [PATCH v3 25/45] [SCSI] fcoe: Use get/put_online_cpus_atomic() to
- prevent CPU offline
-Date: Fri, 28 Jun 2013 01:26:55 +0530
-Message-ID: <20130627195655.29830.44202.stgit@srivatsabhat.in.ibm.com>
-References: <20130627195136.29830.10445.stgit@srivatsabhat.in.ibm.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] cxgb4i: add support for T5 adapter
+Date: Thu, 27 Jun 2013 23:47:02 +0300
+Message-ID: <20130627204627.GA13082@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130627195136.29830.10445.stgit@srivatsabhat.in.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tglx@linutronix.de, peterz@infradead.org, tj@kernel.org, oleg@redhat.com, paulmck@linux.vnet.ibm.com, rusty@rustcorp.com.au, mingo@kernel.org, akpm@linux-foundation.org, namhyung@kernel.org, walken@google.com, vincent.guittot@linaro.org, laijs@cn.fujitsu.com, David.Laight@aculab.com
-Cc: rostedt@goodmis.org, wangyun@linux.vnet.ibm.com, xiaoguangrong@linux.vnet.ibm.com, sbw@mit.edu, fweisbec@gmail.com, zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com, srivatsa.bhat@linux.vnet.ibm.com, linux-pm@vger.kernel.org, linux-arch@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Robert Love <robert.w.love@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, devel@open-fcoe.org, linux-scsi@vger.kernel.org"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:36364 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753712Ab3F0UrU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jun 2013 16:47:20 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Once stop_machine() is gone from the CPU offline path, we won't be able
-to depend on disabling preemption to prevent CPUs from going offline
-from under us.
-
-Use the get/put_online_cpus_atomic() APIs to prevent CPUs from going
-offline, while invoking from atomic context.
-
-Cc: Robert Love <robert.w.love@intel.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: devel@open-fcoe.org
+To: kxie@chelsio.com
 Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
----
 
- drivers/scsi/fcoe/fcoe.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+Hello Karen Xie,
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 32ae6c6..eaa390e 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1484,6 +1484,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 	 * was originated, otherwise select cpu using rx exchange id
- 	 * or fcoe_select_cpu().
- 	 */
-+	get_online_cpus_atomic();
- 	if (ntoh24(fh->fh_f_ctl) & FC_FC_EX_CTX)
- 		cpu = ntohs(fh->fh_ox_id) & fc_cpu_mask;
- 	else {
-@@ -1493,8 +1494,10 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 			cpu = ntohs(fh->fh_rx_id) & fc_cpu_mask;
- 	}
- 
--	if (cpu >= nr_cpu_ids)
-+	if (cpu >= nr_cpu_ids) {
-+		put_online_cpus_atomic();
- 		goto err;
-+	}
- 
- 	fps = &per_cpu(fcoe_percpu, cpu);
- 	spin_lock(&fps->fcoe_rx_list.lock);
-@@ -1514,6 +1517,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 		spin_lock(&fps->fcoe_rx_list.lock);
- 		if (!fps->thread) {
- 			spin_unlock(&fps->fcoe_rx_list.lock);
-+			put_online_cpus_atomic();
- 			goto err;
- 		}
- 	}
-@@ -1535,6 +1539,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 	if (fps->thread->state == TASK_INTERRUPTIBLE)
- 		wake_up_process(fps->thread);
- 	spin_unlock(&fps->fcoe_rx_list.lock);
-+	put_online_cpus_atomic();
- 
- 	return 0;
- err:
+The patch 3bd3e8bf6250: "[SCSI] cxgb4i: add support for T5 adapter"
+from May 29, 2013, leads to the following Sparse warning:
+
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:284:29: warning: incorrect type in assignment (different base types)
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:284:29:    expected restricted __be64 [usertype] params
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:284:29:    got restricted __be32 [usertype] <noident>
+
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+   271                  struct cpl_t5_act_open_req *req =
+   272                                  (struct cpl_t5_act_open_req *)skb->head;
+   273  
+   274                  req = (struct cpl_t5_act_open_req *)skb->head;
+   275  
+   276                  INIT_TP_WR(req, 0);
+   277                  OPCODE_TID(req) = cpu_to_be32(MK_OPCODE_TID(CPL_ACT_OPEN_REQ,
+   278                                          qid_atid));
+   279                  req->local_port = csk->saddr.sin_port;
+   280                  req->peer_port = csk->daddr.sin_port;
+   281                  req->local_ip = csk->saddr.sin_addr.s_addr;
+   282                  req->peer_ip = csk->daddr.sin_addr.s_addr;
+   283                  req->opt0 = cpu_to_be64(opt0);
+   284                  req->params = cpu_to_be32(select_ntuple(csk->cdev, csk->l2t));
+                        ^^^^^^^^^^^
+For cpl_t5_act_open_req ->params is a __be64.  For other types it is a
+__be32 so I suspect this is a copy and paste error.
+
+   285                  opt2 |= 1 << 31;
+   286                  req->opt2 = cpu_to_be32(opt2);
+
+Here is an article on how to use Sparse for endian bugs:
+http://lwn.net/Articles/205624/
+
+Also I'm on the topic, I had another concern later in the file:
+
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+  1629          rpl = (struct cpl_act_establish *)skb->data;
+  1630          opc = rpl->ot.opcode;
+  1631          log_debug(1 << CXGBI_DBG_TOE,
+  1632                  "cdev %p, opcode 0x%x(0x%x,0x%x), skb %p.\n",
+  1633                   cdev, opc, rpl->ot.opcode_tid, ntohl(rpl->ot.opcode_tid), skb);
+  1634          if (cxgb4i_cplhandlers[opc])
+  1635                  cxgb4i_cplhandlers[opc](cdev, skb);
+                                           ^^^
+Since "opc" comes from skb->data shouldn't we check that it is less than
+ARRAY_SIZE(cxgb4i_cplhandlers) (239 elements)?  Another solution that's
+used in drivers/net/ethernet/chelsio/cxgb/cpl5_cmd.h would be to define
+the array as having 256 elements.
+
+  1636          else {
+  1637                  pr_err("No handler for opcode 0x%x.\n", opc);
+  1638                  __kfree_skb(skb);
+  1639          }
+
+regards,
+dan carpenter
+
