@@ -1,40 +1,50 @@
 From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH 1/4] scsi: ufs: Fix broken task management command implementation
-Date: Fri, 28 Jun 2013 17:02:49 +0530
-Message-ID: <51CD7461.3000501@codeaurora.org>
-References: <1371133860-17574-1-git-send-email-sthumma@codeaurora.org> <1371133860-17574-2-git-send-email-sthumma@codeaurora.org> <CALMYJDuRyovi3X_jmb0-PjZgRYgJfSi_ryg0YO48Cr2bRHLd+g@mail.gmail.com>
+Subject: Re: [PATCH 1/2] scsi: ufs: Add support for host assisted background
+ operations
+Date: Fri, 28 Jun 2013 17:31:35 +0530
+Message-ID: <51CD7B1F.3020200@codeaurora.org>
+References: <1371133205-17377-1-git-send-email-sthumma@codeaurora.org> <1371133205-17377-2-git-send-email-sthumma@codeaurora.org> <CALMYJDuzvMQxNa_715odFs-jg8q5aEtpKSE5Dyve6wrqD8TwFg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:59110 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753139Ab3F1Lcz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jun 2013 07:32:55 -0400
-In-Reply-To: <CALMYJDuRyovi3X_jmb0-PjZgRYgJfSi_ryg0YO48Cr2bRHLd+g@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <CALMYJDuzvMQxNa_715odFs-jg8q5aEtpKSE5Dyve6wrqD8TwFg@mail.gmail.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: Santosh Y <santoshsy@gmail.com>
 Cc: Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-arm-msm@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On 6/27/2013 4:49 PM, Santosh Y wrote:
->> >+       spin_lock_irqsave(host->host_lock, flags);
->> >         task_req_descp = hba->utmrdl_base_addr;
->> >         task_req_descp += free_slot;
->> >
->> >@@ -2353,38 +2387,39 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
->> >                 (struct utp_upiu_task_req *) task_req_descp->task_req_upiu;
->> >         task_req_upiup->header.dword_0 =
->> >                 UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
->> >-                                             lrbp->lun, lrbp->task_tag);
->> >+                               lun_id, free_slot);
-> Actually it still doesn't fix the problem. The*task tag*  used here
-> should be unique across the SCSI/Query and Task Managment UPIUs.
+On 6/26/2013 11:06 PM, Santosh Y wrote:
+>> +/**
+>> >   * ufshcd_memory_alloc - allocate memory for host memory space data
+>> >structures
+>> >   * @hba: per adapter instance
+>> >   *
+>> >@@ -1803,6 +1904,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+>> >struct ufshcd_lrb *lrbp)
+>> >                          */
+>> >                         scsi_status = result & MASK_SCSI_STATUS;
+>> >                         result = ufshcd_scsi_cmd_status(lrbp,
+>> >scsi_status);
+>> >+
+>> >+                       if (ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
+>                                  ^^^^^
+> This condition will not satisfy until a runtime suspend/resume cycle
+> completes. Is there any specific reason it is only being enabled in
+> runtime-resume routine?
+> As the fBackgroundOpsEn = 1 by default, shouldn't the sequence be 1.
+> ufshcd_disable_auto_bkops() 2. ufshcd_enable_ee() during the startup.
+>
 
-I am sorry, I didn't get that. Why should it be unique across the 
-SCSI/Query? For example, if a machine supports 32 request slots and 8 
-task management slots, then the task management command tag can be 
-anything out of 8 slots.
+According to the specification, the host should put in all measures to 
+ensure that the device doesn't enter into URGENT_BKOPS need because the 
+device may not operate optimally in that case. If your sequence is used 
+then we expect a case where URGENT_BKOPS is needed if the runtime PM is 
+disabled or prohibited soon after startup.
+
+We wouldn't want to disable auto bkops by default without knowing that 
+the runtime PM is enabled, since the device/host/software idleness is 
+determined by runtime PM operation as explained in the commit text.
 
 -- 
 Regards,
