@@ -1,7 +1,7 @@
 From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: [PATCH v2 06/15] IB/srp: Maintain a single connection per I_T nexus
-Date: Fri, 28 Jun 2013 14:51:26 +0200
-Message-ID: <51CD86CE.8080804@acm.org>
+Subject: [PATCH v2 07/15] IB/srp: Keep rport as long as the IB transport layer
+Date: Fri, 28 Jun 2013 14:52:22 +0200
+Message-ID: <51CD8706.5010101@acm.org>
 References: <51CD856A.3010102@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -10,100 +10,111 @@ Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <51CD856A.3010102-HInyCGIudOg@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-An SRP target is required to maintain a single connection between
-initiator and target. This means that if the 'add_target' attribute
-is used to create a second connection to a target that the first
-connection will be logged out and that the SCSI error handler will
-kick in. The SCSI error handler will cause the SRP initiator to
-reconnect, which will cause I/O over the second connection to fail.
-Avoid such ping-pong behavior by disabling relogins. Note: if
-reconnecting manually is necessary, that is possible by deleting
-and recreating an rport via sysfs.
+Keep the rport data structure around after srp_remove_host() has
+finished until cleanup of the IB transport layer has finished
+completely. This is necessary because later patches use the rport
+pointer inside the queuecommand callback. Without this patch
+accessing the rport from inside a queuecommand callback is racy
+because srp_remove_host() must be invoked before scsi_remove_host()
+and because the queuecommand callback may get invoked after
+srp_remove_host() has finished.
 
 Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Signed-off-by: Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
-Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>
+Cc: James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>
 Cc: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
 Cc: Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |   44 +++++++++++++++++++++++++++++++++--
- 1 file changed, 42 insertions(+), 2 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c |    3 +++
+ drivers/infiniband/ulp/srp/ib_srp.h |    1 +
+ drivers/scsi/scsi_transport_srp.c   |   18 ++++++++++++++++++
+ include/scsi/scsi_transport_srp.h   |    2 ++
+ 4 files changed, 24 insertions(+)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 01212c9..4eba1f7 100644
+index 4eba1f7..cb86be5 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -542,11 +542,11 @@ static void srp_remove_work(struct work_struct *work)
- 
+@@ -526,11 +526,13 @@ static void srp_remove_target(struct srp_target_port *target)
  	WARN_ON_ONCE(target->state != SRP_TARGET_REMOVED);
  
-+	srp_remove_target(target);
-+
- 	spin_lock(&target->srp_host->target_lock);
- 	list_del(&target->list);
- 	spin_unlock(&target->srp_host->target_lock);
--
--	srp_remove_target(target);
+ 	srp_del_scsi_host_attr(target->scsi_host);
++	srp_rport_get(target->rport);
+ 	srp_remove_host(target->scsi_host);
+ 	scsi_remove_host(target->scsi_host);
+ 	srp_disconnect_target(target);
+ 	ib_destroy_cm_id(target->cm_id);
+ 	srp_free_target_ib(target);
++	srp_rport_put(target->rport);
+ 	srp_free_req_data(target);
+ 	scsi_host_put(target->scsi_host);
+ }
+@@ -1984,6 +1986,7 @@ static int srp_add_target(struct srp_host *host, struct srp_target_port *target)
+ 	}
+ 
+ 	rport->lld_data = target;
++	target->rport = rport;
+ 
+ 	spin_lock(&host->target_lock);
+ 	list_add_tail(&target->list, &host->target_list);
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
+index 66fbedd..1817ed5 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.h
++++ b/drivers/infiniband/ulp/srp/ib_srp.h
+@@ -153,6 +153,7 @@ struct srp_target_port {
+ 	u16			io_class;
+ 	struct srp_host	       *srp_host;
+ 	struct Scsi_Host       *scsi_host;
++	struct srp_rport       *rport;
+ 	char			target_name[32];
+ 	unsigned int		scsi_id;
+ 	unsigned int		sg_tablesize;
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index f379c7f..f7ba94a 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -185,6 +185,24 @@ static int srp_host_match(struct attribute_container *cont, struct device *dev)
  }
  
- static void srp_rport_delete(struct srp_rport *rport)
-@@ -2010,6 +2010,36 @@ static struct class srp_class = {
- 	.dev_release = srp_release_dev
- };
- 
-+/**
-+ * srp_conn_unique() - check whether the connection to a target is unique
+ /**
++ * srp_rport_get() - increment rport reference count
 + */
-+static bool srp_conn_unique(struct srp_host *host,
-+			    struct srp_target_port *target)
++void srp_rport_get(struct srp_rport *rport)
 +{
-+	struct srp_target_port *t;
-+	bool ret = false;
-+
-+	if (target->state == SRP_TARGET_REMOVED)
-+		goto out;
-+
-+	ret = true;
-+
-+	spin_lock(&host->target_lock);
-+	list_for_each_entry(t, &host->target_list, list) {
-+		if (t != target &&
-+		    target->id_ext == t->id_ext &&
-+		    target->ioc_guid == t->ioc_guid &&
-+		    target->initiator_ext == t->initiator_ext) {
-+			ret = false;
-+			break;
-+		}
-+	}
-+	spin_unlock(&host->target_lock);
-+
-+out:
-+	return ret;
++	get_device(&rport->dev);
 +}
++EXPORT_SYMBOL(srp_rport_get);
 +
- /*
-  * Target ports are added by writing
-  *
-@@ -2266,6 +2296,16 @@ static ssize_t srp_create_target(struct device *dev,
- 	if (ret)
- 		goto err;
++/**
++ * srp_rport_put() - decrement rport reference count
++ */
++void srp_rport_put(struct srp_rport *rport)
++{
++	put_device(&rport->dev);
++}
++EXPORT_SYMBOL(srp_rport_put);
++
++/**
+  * srp_rport_add - add a SRP remote port to the device hierarchy
+  * @shost:	scsi host the remote port is connected to.
+  * @ids:	The port id for the remote port.
+diff --git a/include/scsi/scsi_transport_srp.h b/include/scsi/scsi_transport_srp.h
+index ff0f04a..5a2d2d1 100644
+--- a/include/scsi/scsi_transport_srp.h
++++ b/include/scsi/scsi_transport_srp.h
+@@ -38,6 +38,8 @@ extern struct scsi_transport_template *
+ srp_attach_transport(struct srp_function_template *);
+ extern void srp_release_transport(struct scsi_transport_template *);
  
-+	if (!srp_conn_unique(target->srp_host, target)) {
-+		shost_printk(KERN_INFO, target->scsi_host,
-+			     PFX "Already connected to target port with id_ext=%016llx;ioc_guid=%016llx;initiator_ext=%016llx\n",
-+			     be64_to_cpu(target->id_ext),
-+			     be64_to_cpu(target->ioc_guid),
-+			     be64_to_cpu(target->initiator_ext));
-+		ret = -EEXIST;
-+		goto err;
-+	}
-+
- 	if (!host->srp_dev->fmr_pool && !target->allow_ext_sg &&
- 				target->cmd_sg_cnt < target->sg_tablesize) {
- 		pr_warn("No FMR pool and no external indirect descriptors, limiting sg_tablesize to cmd_sg_cnt\n");
++extern void srp_rport_get(struct srp_rport *rport);
++extern void srp_rport_put(struct srp_rport *rport);
+ extern struct srp_rport *srp_rport_add(struct Scsi_Host *,
+ 				       struct srp_rport_identifiers *);
+ extern void srp_rport_del(struct srp_rport *);
 -- 
 1.7.10.4
 
