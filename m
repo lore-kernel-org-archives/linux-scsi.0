@@ -1,75 +1,57 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] cxgb4i: add support for T5 adapter
-Date: Thu, 27 Jun 2013 23:47:02 +0300
-Message-ID: <20130627204627.GA13082@elgon.mountain>
+From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
+Subject: RE: [PATCH 1/1] scsi/megaraid: minor cut and paste error fixed.
+Date: Fri, 28 Jun 2013 11:22:26 +0530
+Message-ID: <088E451FE1854947BD9145EF8C016FF4139FF3C4BC@inbmail01.lsi.com>
+References: <1372269799-9835-1-git-send-email-soulpa7ch@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36364 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753712Ab3F0UrU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jun 2013 16:47:20 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1372269799-9835-1-git-send-email-soulpa7ch@gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Georgas <soulpa7ch@gmail.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: kxie@chelsio.com
-Cc: linux-scsi@vger.kernel.org
 
-Hello Karen Xie,
+Thanks James for pointing this out, there is no harm with this change.
 
-The patch 3bd3e8bf6250: "[SCSI] cxgb4i: add support for T5 adapter"
-from May 29, 2013, leads to the following Sparse warning:
+Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
 
-drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:284:29: warning: incorrect type in assignment (different base types)
-drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:284:29:    expected restricted __be64 [usertype] params
-drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:284:29:    got restricted __be32 [usertype] <noident>
+Sumit
 
-drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-   271                  struct cpl_t5_act_open_req *req =
-   272                                  (struct cpl_t5_act_open_req *)skb->head;
-   273  
-   274                  req = (struct cpl_t5_act_open_req *)skb->head;
-   275  
-   276                  INIT_TP_WR(req, 0);
-   277                  OPCODE_TID(req) = cpu_to_be32(MK_OPCODE_TID(CPL_ACT_OPEN_REQ,
-   278                                          qid_atid));
-   279                  req->local_port = csk->saddr.sin_port;
-   280                  req->peer_port = csk->daddr.sin_port;
-   281                  req->local_ip = csk->saddr.sin_addr.s_addr;
-   282                  req->peer_ip = csk->daddr.sin_addr.s_addr;
-   283                  req->opt0 = cpu_to_be64(opt0);
-   284                  req->params = cpu_to_be32(select_ntuple(csk->cdev, csk->l2t));
-                        ^^^^^^^^^^^
-For cpl_t5_act_open_req ->params is a __be64.  For other types it is a
-__be32 so I suspect this is a copy and paste error.
-
-   285                  opt2 |= 1 << 31;
-   286                  req->opt2 = cpu_to_be32(opt2);
-
-Here is an article on how to use Sparse for endian bugs:
-http://lwn.net/Articles/205624/
-
-Also I'm on the topic, I had another concern later in the file:
-
-drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-  1629          rpl = (struct cpl_act_establish *)skb->data;
-  1630          opc = rpl->ot.opcode;
-  1631          log_debug(1 << CXGBI_DBG_TOE,
-  1632                  "cdev %p, opcode 0x%x(0x%x,0x%x), skb %p.\n",
-  1633                   cdev, opc, rpl->ot.opcode_tid, ntohl(rpl->ot.opcode_tid), skb);
-  1634          if (cxgb4i_cplhandlers[opc])
-  1635                  cxgb4i_cplhandlers[opc](cdev, skb);
-                                           ^^^
-Since "opc" comes from skb->data shouldn't we check that it is less than
-ARRAY_SIZE(cxgb4i_cplhandlers) (239 elements)?  Another solution that's
-used in drivers/net/ethernet/chelsio/cxgb/cpl5_cmd.h would be to define
-the array as having 256 elements.
-
-  1636          else {
-  1637                  pr_err("No handler for opcode 0x%x.\n", opc);
-  1638                  __kfree_skb(skb);
-  1639          }
-
-regards,
-dan carpenter
-
+>-----Original Message-----
+>From: James Georgas [mailto:soulpa7ch@gmail.com]
+>Sent: Wednesday, June 26, 2013 11:33 PM
+>To: DL-MegaRAID Linux; JBottomley@parallels.com
+>Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; James
+>Georgas
+>Subject: [PATCH 1/1] scsi/megaraid: minor cut and paste error fixed.
+>
+>This looks like a cut and paste typo to me. Both of the
+>megasas_read_fw_status_reg_* functions involved are identical though, so
+>there was no bad behaviour. I changed it for consistency and clarity.
+>
+>Signed-off-by: James Georgas <soulpa7ch@gmail.com>
+>---
+> drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>b/drivers/scsi/megaraid/megaraid_sas_base.c
+>index 3a9ddae..87591cd 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>@@ -583,7 +583,7 @@ megasas_clear_intr_skinny(struct
+>megasas_register_set __iomem *regs)
+> 	/*
+> 	 * Check if it is our interrupt
+> 	 */
+>-	if ((megasas_read_fw_status_reg_gen2(regs) & MFI_STATE_MASK) ==
+>+	if ((megasas_read_fw_status_reg_skinny(regs) & MFI_STATE_MASK) ==
+> 	    MFI_STATE_FAULT) {
+> 		mfiStatus = MFI_INTR_FLAG_FIRMWARE_STATE_CHANGE;
+> 	} else
+>--
+>1.8.1.5
+>
