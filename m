@@ -1,8 +1,8 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 3/7][SCSI] mpt3sas: fix for kernel panic when driver loads
- with HBA conected to non LUN 0 configured expander
-Date: Sat, 29 Jun 2013 03:52:03 +0530
-Message-ID: <20130628222203.GA5050@lsi.com>
+Subject: [PATCH 4/7][SCSI] mpt3sas: Infinite loops can occur if
+ MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned
+Date: Sat, 29 Jun 2013 03:53:02 +0530
+Message-ID: <20130628222302.GA5055@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <stable-owner@vger.kernel.org>
@@ -13,56 +13,97 @@ Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@lsi.com, 
 List-Id: linux-scsi@vger.kernel.org
 
 
-With some enclosures when LUN 0 is not created but LUN 1 or LUN X is created
-then SCSI scan procedure calls target_alloc, slave_alloc call back functions
-for LUN 0 and slave_destory() for same LUN 0.
+Infinite loop can occur if IOCStatus is not equal to
+MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value in the while loops in functions 
+_scsih_search_responding_sas_devices,
+_scsih_search_responding_raid_devices and
+_scsih_search_responding_expanders
 
-In these kind of cases within slave_destroy, pointer to scsi_target in
-_sas_device structure is set to NULL, following which when slave_alloc for
-LUN 1 is called then starget would not be set properly for this LUN.
-So, scsi_target pointer pointing to NULL value would lead to a crash later
-in the discovery procedure.
-
-To solve this issue set the sas_device's scsi_target pointer to scsi_device's
-scsi_target if it is NULL earlier in slave_alloc callback function.
+So, Instead of checking for MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value,
+in this patch code is modified to check for IOCStatus not equals to 
+MPI2_IOCSTATUS_SUCCESS to break the while loop.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 Cc: stable@vger.kernel.org
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   16 ++++------------
+ 1 files changed, 4 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 73d3b81..9ebc9dc 100644
+index 9ebc9dc..632eba7 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1273,6 +1273,7 @@ _scsih_slave_alloc(struct scsi_device *sdev)
- 	struct MPT3SAS_DEVICE *sas_device_priv_data;
- 	struct scsi_target *starget;
- 	struct _raid_device *raid_device;
-+	struct _sas_device *sas_device;
- 	unsigned long flags;
+@@ -6406,7 +6406,7 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
+ 	    handle))) {
+ 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+ 		    MPI2_IOCSTATUS_MASK;
+-		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
+ 			break;
+ 		handle = le16_to_cpu(sas_device_pg0.DevHandle);
+ 		device_info = le32_to_cpu(sas_device_pg0.DeviceInfo);
+@@ -6508,7 +6508,7 @@ _scsih_search_responding_raid_devices(struct MPT3SAS_ADAPTER *ioc)
+ 	    &volume_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE, handle))) {
+ 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+ 		    MPI2_IOCSTATUS_MASK;
+-		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
+ 			break;
+ 		handle = le16_to_cpu(volume_pg1.DevHandle);
  
- 	sas_device_priv_data = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-@@ -1301,6 +1302,19 @@ _scsih_slave_alloc(struct scsi_device *sdev)
- 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
- 	}
+@@ -6532,7 +6532,7 @@ _scsih_search_responding_raid_devices(struct MPT3SAS_ADAPTER *ioc)
+ 		    phys_disk_num))) {
+ 			ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+ 			    MPI2_IOCSTATUS_MASK;
+-			if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
++			if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
+ 				break;
+ 			phys_disk_num = pd_pg0.PhysDiskNum;
+ 			handle = le16_to_cpu(pd_pg0.DevHandle);
+@@ -6611,7 +6611,7 @@ _scsih_search_responding_expanders(struct MPT3SAS_ADAPTER *ioc)
  
-+	if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
-+		spin_lock_irqsave(&ioc->sas_device_lock, flags);
-+		sas_device = mpt3sas_scsih_sas_device_find_by_sas_address(ioc,
-+					sas_target_priv_data->sas_address);
-+		if (sas_device && (sas_device->starget == NULL)) {
-+			sdev_printk(KERN_INFO, sdev,
-+			"%s : sas_device->starget set to starget @ %d\n",
-+				__func__, __LINE__);
-+			sas_device->starget = starget;
-+		}
-+		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-+	}
-+
- 	return 0;
- }
+ 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+ 		    MPI2_IOCSTATUS_MASK;
+-		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
++		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
+ 			break;
  
+ 		handle = le16_to_cpu(expander_pg0.DevHandle);
+@@ -6756,8 +6756,6 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
+ 	    MPI2_SAS_EXPAND_PGAD_FORM_GET_NEXT_HNDL, handle))) {
+ 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+ 		    MPI2_IOCSTATUS_MASK;
+-		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+-			break;
+ 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
+ 			pr_info(MPT3SAS_FMT "\tbreak from expander scan: " \
+ 			    "ioc_status(0x%04x), loginfo(0x%08x)\n",
+@@ -6801,8 +6799,6 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
+ 	    phys_disk_num))) {
+ 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+ 		    MPI2_IOCSTATUS_MASK;
+-		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+-			break;
+ 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
+ 			pr_info(MPT3SAS_FMT "\tbreak from phys disk scan: "\
+ 			    "ioc_status(0x%04x), loginfo(0x%08x)\n",
+@@ -6868,8 +6864,6 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
+ 	    &volume_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE, handle))) {
+ 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+ 		    MPI2_IOCSTATUS_MASK;
+-		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+-			break;
+ 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
+ 			pr_info(MPT3SAS_FMT "\tbreak from volume scan: " \
+ 			    "ioc_status(0x%04x), loginfo(0x%08x)\n",
+@@ -6928,8 +6922,6 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
+ 	    handle))) {
+ 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+ 		    MPI2_IOCSTATUS_MASK;
+-		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+-			break;
+ 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
+ 			pr_info(MPT3SAS_FMT "\tbreak from end device scan:"\
+ 			    " ioc_status(0x%04x), loginfo(0x%08x)\n",
 -- 
 1.7.3
