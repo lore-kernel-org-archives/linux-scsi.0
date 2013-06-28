@@ -1,67 +1,66 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v2 12/15] IB/srp: Fail SCSI commands silently
-Date: Fri, 28 Jun 2013 14:56:50 +0200
-Message-ID: <51CD8812.20107@acm.org>
-References: <51CD856A.3010102@acm.org>
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+Subject: Re: [PATCH 4/7][SCSI] mpt3sas: Infinite loops can occur if MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned
+Date: Fri, 28 Jun 2013 18:11:02 +0200
+Message-ID: <87sj02z04p.fsf@nemi.mork.no>
+References: <20130628222302.GA5055@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from juliette.telenet-ops.be ([195.130.137.74]:55782 "EHLO
-	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228Ab3F1M4w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jun 2013 08:56:52 -0400
-In-Reply-To: <51CD856A.3010102@acm.org>
+Received: from canardo.mork.no ([148.122.252.1]:43586 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755809Ab3F1QOa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jun 2013 12:14:30 -0400
+In-Reply-To: <20130628222302.GA5055@lsi.com> (Sreekanth Reddy's message of
+	"Sat, 29 Jun 2013 03:53:02 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: David Dillow <dave@thedillows.org>, Vu Pham <vuhuong@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: jejb@kernel.org, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com
 
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Sreekanth Reddy <Sreekanth.Reddy@lsi.com> writes:
 
-Avoid that path failover in a multipath setup causes the SCSI layer
-to generate kernel messages about SCSI command failures. This patch
-speeds up SRP initiator operation significantly when monitoring
-kernel messages over a serial port.
+> Infinite loop can occur if IOCStatus is not equal to
+> MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value in the while loops in functi=
+ons=20
+> _scsih_search_responding_sas_devices,
+> _scsih_search_responding_raid_devices and
+> _scsih_search_responding_expanders
+>
+> So, Instead of checking for MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value,
+> in this patch code is modified to check for IOCStatus not equals to=20
+> MPI2_IOCSTATUS_SUCCESS to break the while loop.
+>
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c |   16 ++++------------
+>  1 files changed, 4 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3=
+sas/mpt3sas_scsih.c
+> index 9ebc9dc..632eba7 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -6406,7 +6406,7 @@ _scsih_search_responding_sas_devices(struct MPT=
+3SAS_ADAPTER *ioc)
+>  	    handle))) {
+>  		ioc_status =3D le16_to_cpu(mpi_reply.IOCStatus) &
+>  		    MPI2_IOCSTATUS_MASK;
+> -		if (ioc_status =3D=3D MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+> +		if (ioc_status !=3D MPI2_IOCSTATUS_SUCCESS)
+>  			break;
+>  		handle =3D le16_to_cpu(sas_device_pg0.DevHandle);
+>  		device_info =3D le32_to_cpu(sas_device_pg0.DeviceInfo);
 
-[bvanassche: Changed patch description]
-Signed-off-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Roland Dreier <roland@purestorage.com>
-Cc: David Dillow <dillowda@ornl.gov>
-Cc: Vu Pham <vu@mellanox.com>
----
- drivers/infiniband/ulp/srp/ib_srp.c |    3 +++
- 1 file changed, 3 insertions(+)
+Doesn't the same apply to the code mpt2sas driver you copied this code
+from?
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index a8cc427..e77176e 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -757,6 +757,7 @@ static void srp_finish_req(struct srp_target_port *target,
- 
- 	if (scmnd) {
- 		srp_free_req(target, req, scmnd, 0);
-+		scmnd->request->cmd_flags |= REQ_QUIET;
- 		scmnd->result = result;
- 		scmnd->scsi_done(scmnd);
- 	}
-@@ -1438,6 +1439,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 
- 	result = srp_chkready(target->rport);
- 	if (unlikely(result)) {
-+		scmnd->request->cmd_flags |= REQ_QUIET;
- 		scmnd->result = result;
- 		scmnd->scsi_done(scmnd);
- 		return 0;
-@@ -1843,6 +1845,7 @@ static int srp_abort(struct scsi_cmnd *scmnd)
- 	else
- 		ret = FAILED;
- 	srp_free_req(target, req, scmnd, 0);
-+	scmnd->request->cmd_flags |= REQ_QUIET;
- 	scmnd->result = DID_ABORT << 16;
- 	scmnd->scsi_done(scmnd);
- 
--- 
-1.7.10.4
 
+
+Bj=C3=B8rn
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
