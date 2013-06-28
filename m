@@ -1,109 +1,335 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 4/7][SCSI] mpt3sas: Infinite loops can occur if
- MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned
-Date: Sat, 29 Jun 2013 03:53:02 +0530
-Message-ID: <20130628222302.GA5055@lsi.com>
+Subject: [PATCH 5/7][SCSI] mpt3sas: MPI2.5 Rev F v2.5.1.1 specification
+Date: Sat, 29 Jun 2013 03:54:07 +0530
+Message-ID: <20130628222407.GA5061@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from co9ehsobe001.messaging.microsoft.com ([207.46.163.24]:5059 "EHLO
+	co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753462Ab3F1L3v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jun 2013 07:29:51 -0400
 Content-Disposition: inline
-Sender: stable-owner@vger.kernel.org
-To: jejb@kernel.org, JBottomley@Parallels.com
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@kernel.org, JBottomley@Parallels.com
+Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com
 
 
-Infinite loop can occur if IOCStatus is not equal to
-MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value in the while loops in functions 
-_scsih_search_responding_sas_devices,
-_scsih_search_responding_raid_devices and
-_scsih_search_responding_expanders
+Change set in MPI v2.5 Rev F(v2.5.1.1) specification and 2.00.29 header files
 
-So, Instead of checking for MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value,
-in this patch code is modified to check for IOCStatus not equals to 
-MPI2_IOCSTATUS_SUCCESS to break the while loop.
+1. Added a bit to the IOCExceptions field of the IOCFacts Reply to indicate that the IOC detected a partial memory failure. 
+2. Added ElapsedSeconds field to RAID Volume Indicator Structure. Added Elapsed Seconds Valid flag to Flags field of this structure. 
+3. Added ElapsedSeconds field to Integrated RAID Operations Status Event Data. 
+4. Added two new AbortType values for TargetModeAbort Request, one to abort all I/Os from a single initiator, and the other to abort only Command IUs. 
+5. Added a new chapter covering DMA Flags and Multicast Modes. 
+6. In the IOCSettings field of BIOS Page 1, modified the Adapter Support bits description to specify X86 BIOS. 
+7. Marked bit 0 of the ControlFlags field of SAS IO Unit Page 1 as obsolete. This was the Clear SATA Affiliation flag. 
+8. Added additional requirements for certain IOCs that support more than eight MSI-x vectors.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: stable@vger.kernel.org
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |   16 ++++------------
- 1 files changed, 4 insertions(+), 12 deletions(-)
+ drivers/scsi/mpt3sas/mpi/mpi2.h      |   12 +++++++++---
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h |   15 +++++++++++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h |    2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h  |   10 +++++++---
+ drivers/scsi/mpt3sas/mpi/mpi2_raid.h |   10 +++++++---
+ drivers/scsi/mpt3sas/mpi/mpi2_sas.h  |    2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h |   10 ++++++----
+ drivers/scsi/mpt3sas/mpi/mpi2_type.h |    2 +-
+ 8 files changed, 45 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 9ebc9dc..632eba7 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -6406,7 +6406,7 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
- 	    handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 			break;
- 		handle = le16_to_cpu(sas_device_pg0.DevHandle);
- 		device_info = le32_to_cpu(sas_device_pg0.DeviceInfo);
-@@ -6508,7 +6508,7 @@ _scsih_search_responding_raid_devices(struct MPT3SAS_ADAPTER *ioc)
- 	    &volume_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE, handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 			break;
- 		handle = le16_to_cpu(volume_pg1.DevHandle);
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
+index 03317ff..cdb92a7 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2012 LSI Corporation.
++ * Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2.h
+@@ -8,7 +8,7 @@
+  *                 scatter/gather formats.
+  * Creation Date:  June 21, 2006
+  *
+- * mpi2.h Version:  02.00.26
++ * mpi2.h Version:  02.00.29
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -82,6 +82,10 @@
+  * 03-29-12  02.00.25  Bumped MPI2_HEADER_VERSION_UNIT.
+  *                     Added Hard Reset delay timings.
+  * 07-10-12  02.00.26  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 07-26-12  02.00.27  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 11-27-12  02.00.28  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 12-20-12  02.00.29  Bumped MPI2_HEADER_VERSION_UNIT.
++ *                     Added MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET.
+  * --------------------------------------------------------------------------
+  */
  
-@@ -6532,7 +6532,7 @@ _scsih_search_responding_raid_devices(struct MPT3SAS_ADAPTER *ioc)
- 		    phys_disk_num))) {
- 			ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 			    MPI2_IOCSTATUS_MASK;
--			if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+			if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 				break;
- 			phys_disk_num = pd_pg0.PhysDiskNum;
- 			handle = le16_to_cpu(pd_pg0.DevHandle);
-@@ -6611,7 +6611,7 @@ _scsih_search_responding_expanders(struct MPT3SAS_ADAPTER *ioc)
+@@ -115,7 +119,7 @@
+ #define MPI2_VERSION_02_05                  (0x0205)
  
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 			break;
+ /*Unit and Dev versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x1A)
++#define MPI2_HEADER_VERSION_UNIT            (0x1D)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+@@ -274,6 +278,8 @@ typedef volatile struct _MPI2_SYSTEM_INTERFACE_REGS {
+ #define MPI2_REPLY_POST_HOST_INDEX_MASK         (0x00FFFFFF)
+ #define MPI2_RPHI_MSIX_INDEX_MASK               (0xFF000000)
+ #define MPI2_RPHI_MSIX_INDEX_SHIFT              (24)
++#define MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET  (0x0000030C) /*MPI v2.5 only*/
++
  
- 		handle = le16_to_cpu(expander_pg0.DevHandle);
-@@ -6756,8 +6756,6 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	    MPI2_SAS_EXPAND_PGAD_FORM_GET_NEXT_HNDL, handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
--			break;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 			pr_info(MPT3SAS_FMT "\tbreak from expander scan: " \
- 			    "ioc_status(0x%04x), loginfo(0x%08x)\n",
-@@ -6801,8 +6799,6 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	    phys_disk_num))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
--			break;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 			pr_info(MPT3SAS_FMT "\tbreak from phys disk scan: "\
- 			    "ioc_status(0x%04x), loginfo(0x%08x)\n",
-@@ -6868,8 +6864,6 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	    &volume_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE, handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
--			break;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 			pr_info(MPT3SAS_FMT "\tbreak from volume scan: " \
- 			    "ioc_status(0x%04x), loginfo(0x%08x)\n",
-@@ -6928,8 +6922,6 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	    handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
--			break;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 			pr_info(MPT3SAS_FMT "\tbreak from end device scan:"\
- 			    " ioc_status(0x%04x), loginfo(0x%08x)\n",
+ /*
+  *Defines for the HCBSize and address
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index d8b2c3e..889aa70 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -1,12 +1,12 @@
+ /*
+- * Copyright (c) 2000-2011 LSI Corporation.
++ * Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2_cnfg.h
+  *         Title:  MPI Configuration messages and pages
+  * Creation Date:  November 10, 2006
+  *
+- *   mpi2_cnfg.h Version:  02.00.22
++ *   mpi2_cnfg.h Version:  02.00.24
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -155,6 +155,11 @@
+  *                     Added UEFIVersion field to BIOS Page 1 and defined new
+  *                     BiosOptions bits.
+  *                     Incorporating additions for MPI v2.5.
++ * 11-27-12  02.00.23  Added MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER.
++ *                     Added MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID.
++ * 12-20-12  02.00.24  Marked MPI2_SASIOUNIT1_CONTROL_CLEAR_AFFILIATION as
++ *                     obsolete for MPI v2.5 and later.
++ *                     Added some defines for 12G SAS speeds.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -714,6 +719,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7 {
+ #define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
+ 
+ /*defines for the Flags field */
++#define MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER       (0x00000002)
+ #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
+ 
+ 
+@@ -1310,6 +1316,9 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
+ #define MPI2_BIOSPAGE1_PAGEVERSION                      (0x05)
+ 
+ /*values for BIOS Page 1 BiosOptions field */
++#define MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID                  (0x000000F0)
++#define MPI2_BIOSPAGE1_OPTIONS_LSI_OEM_ID                   (0x00000000)
++
+ #define MPI2_BIOSPAGE1_OPTIONS_MASK_UEFI_HII_REGISTRATION   (0x00000006)
+ #define MPI2_BIOSPAGE1_OPTIONS_ENABLE_UEFI_HII              (0x00000000)
+ #define MPI2_BIOSPAGE1_OPTIONS_DISABLE_UEFI_HII             (0x00000002)
+@@ -1884,6 +1893,7 @@ typedef struct _MPI2_CONFIG_PAGE_RD_PDISK_1 {
+ #define MPI2_SAS_PRATE_MAX_RATE_1_5                     (0x80)
+ #define MPI2_SAS_PRATE_MAX_RATE_3_0                     (0x90)
+ #define MPI2_SAS_PRATE_MAX_RATE_6_0                     (0xA0)
++#define MPI25_SAS_PRATE_MAX_RATE_12_0                   (0xB0)
+ #define MPI2_SAS_PRATE_MIN_RATE_MASK                    (0x0F)
+ #define MPI2_SAS_PRATE_MIN_RATE_NOT_PROGRAMMABLE        (0x00)
+ #define MPI2_SAS_PRATE_MIN_RATE_1_5                     (0x08)
+@@ -1897,6 +1907,7 @@ typedef struct _MPI2_CONFIG_PAGE_RD_PDISK_1 {
+ #define MPI2_SAS_HWRATE_MAX_RATE_1_5                    (0x80)
+ #define MPI2_SAS_HWRATE_MAX_RATE_3_0                    (0x90)
+ #define MPI2_SAS_HWRATE_MAX_RATE_6_0                    (0xA0)
++#define MPI25_SAS_HWRATE_MAX_RATE_12_0                  (0xB0)
+ #define MPI2_SAS_HWRATE_MIN_RATE_MASK                   (0x0F)
+ #define MPI2_SAS_HWRATE_MIN_RATE_1_5                    (0x08)
+ #define MPI2_SAS_HWRATE_MIN_RATE_3_0                    (0x09)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+index a079e52..f7928bf 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_init.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2012 LSI Corporation.
++ * Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2_init.h
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+index 0de425d..e2bb821 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+@@ -1,12 +1,12 @@
+ /*
+- * Copyright (c) 2000-2012 LSI Corporation.
++ * Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2_ioc.h
+  *         Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  * Creation Date:  October 11, 2006
+  *
+- * mpi2_ioc.h Version:  02.00.21
++ * mpi2_ioc.h Version:  02.00.22
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -124,6 +124,9 @@
+  *                     Marked MPI2_PM_CONTROL_FEATURE_PCIE_LINK as obsolete.
+  * 11-18-11  02.00.20  Incorporating additions for MPI v2.5.
+  * 03-29-12  02.00.21  Added a product specific range to event values.
++ * 07-26-12  02.00.22  Added MPI2_IOCFACTS_EXCEPT_PARTIAL_MEMORY_FAILURE.
++ *                     Added ElapsedSeconds field to
++ *                     MPI2_EVENT_DATA_IR_OPERATION_STATUS.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -283,6 +286,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY {
+ #define MPI2_IOCFACTS_HDRVERSION_DEV_SHIFT              (0)
+ 
+ /*IOCExceptions */
++#define MPI2_IOCFACTS_EXCEPT_PARTIAL_MEMORY_FAILURE     (0x0200)
+ #define MPI2_IOCFACTS_EXCEPT_IR_FOREIGN_CONFIG_MAX      (0x0100)
+ 
+ #define MPI2_IOCFACTS_EXCEPT_BOOTSTAT_MASK              (0x00E0)
+@@ -634,7 +638,7 @@ typedef struct _MPI2_EVENT_DATA_IR_OPERATION_STATUS {
+ 	U8 RAIDOperation;	/*0x04 */
+ 	U8 PercentComplete;	/*0x05 */
+ 	U16 Reserved2;		/*0x06 */
+-	U32 Resereved3;		/*0x08 */
++	U32 ElapsedSeconds;	/*0x08 */
+ } MPI2_EVENT_DATA_IR_OPERATION_STATUS,
+ 	*PTR_MPI2_EVENT_DATA_IR_OPERATION_STATUS,
+ 	Mpi2EventDataIrOperationStatus_t,
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_raid.h b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
+index d1d9866..7176523 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
+@@ -1,12 +1,12 @@
+ /*
+- * Copyright (c) 2000-2012 LSI Corporation.
++ * Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2_raid.h
+  *         Title:  MPI Integrated RAID messages and structures
+  * Creation Date:  April 26, 2007
+  *
+- *   mpi2_raid.h Version:  02.00.08
++ *   mpi2_raid.h Version:  02.00.09
+  *
+  * Version History
+  * ---------------
+@@ -28,6 +28,8 @@
+  *                     Added product-specific range to RAID Action values.
+  * 11-18-11  02.00.07  Incorporating additions for MPI v2.5.
+  * 02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
++ * 07-26-12  02.00.09  Added ElapsedSeconds field to MPI2_RAID_VOL_INDICATOR.
++ *                     Added MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID define.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -269,10 +271,12 @@ typedef struct _MPI2_RAID_VOL_INDICATOR {
+ 	U64 TotalBlocks;	/*0x00 */
+ 	U64 BlocksRemaining;	/*0x08 */
+ 	U32 Flags;		/*0x10 */
++	U32 ElapsedSeconds;	/* 0x14 */
+ } MPI2_RAID_VOL_INDICATOR, *PTR_MPI2_RAID_VOL_INDICATOR,
+ 	Mpi2RaidVolIndicator_t, *pMpi2RaidVolIndicator_t;
+ 
+ /*defines for RAID Volume Indicator Flags field */
++#define MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID   (0x80000000)
+ #define MPI2_RAID_VOL_FLAGS_OP_MASK                 (0x0000000F)
+ #define MPI2_RAID_VOL_FLAGS_OP_BACKGROUND_INIT      (0x00000000)
+ #define MPI2_RAID_VOL_FLAGS_OP_ONLINE_CAP_EXPANSION (0x00000001)
+@@ -312,7 +316,7 @@ typedef struct _MPI2_RAID_COMPATIBILITY_RESULT_STRUCT {
+ 
+ /*RAID Action Reply ActionData union */
+ typedef union _MPI2_RAID_ACTION_REPLY_DATA {
+-	U32 Word[5];
++	U32 Word[6];
+ 	MPI2_RAID_VOL_INDICATOR RaidVolumeIndicator;
+ 	U16 VolDevHandle;
+ 	U8 VolumeState;
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_sas.h b/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
+index b4e7084..cba046f 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2012 LSI Corporation.
++ * Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2_sas.h
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+index 71453d1..34e9a7b 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+@@ -1,12 +1,12 @@
+ /*
+- * Copyright (c) 2000-2012 LSI Corporation.
++ * Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2_tool.h
+  *         Title:  MPI diagnostic tool structures and definitions
+  * Creation Date:  March 26, 2007
+  *
+- *   mpi2_tool.h Version:  02.00.09
++ *   mpi2_tool.h Version:  02.00.10
+  *
+  * Version History
+  * ---------------
+@@ -30,6 +30,8 @@
+  * 11-18-11  02.00.08  Incorporating additions for MPI v2.5.
+  * 07-10-12  02.00.09  Add MPI v2.5 Toolbox Diagnostic CLI Tool Request
+  *                     message.
++ * 07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
++ *                     it uses MPI Chain SGE as well as MPI Simple SGE.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -279,7 +281,7 @@ typedef struct _MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST {
+ 	U16 Reserved6;		/*0x0E */
+ 	U32 DataLength;		/*0x10 */
+ 	U8 DiagnosticCliCommand[MPI2_TOOLBOX_DIAG_CLI_CMD_LENGTH];/*0x14 */
+-	MPI2_SGE_SIMPLE_UNION SGL;	/*0x70 */
++	MPI2_MPI_SGE_IO_UNION SGL;	/*0x70 */
+ } MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
+ 	*PTR_MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
+ 	Mpi2ToolboxDiagnosticCliRequest_t,
+@@ -302,7 +304,7 @@ typedef struct _MPI25_TOOLBOX_DIAGNOSTIC_CLI_REQUEST {
+ 	U32 Reserved5;		/*0x0C */
+ 	U32 DataLength;		/*0x10 */
+ 	U8 DiagnosticCliCommand[MPI2_TOOLBOX_DIAG_CLI_CMD_LENGTH];/*0x14 */
+-	MPI25_SGE_IO_UNION SGL;	/*0x70 */
++	MPI25_SGE_IO_UNION      SGL;                        /* 0x70 */
+ } MPI25_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
+ 	*PTR_MPI25_TOOLBOX_DIAGNOSTIC_CLI_REQUEST,
+ 	Mpi25ToolboxDiagnosticCliRequest_t,
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_type.h b/drivers/scsi/mpt3sas/mpi/mpi2_type.h
+index 516f959..ba1fed5 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_type.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_type.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2007 LSI Corporation.
++ *  Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_type.h
 -- 
 1.7.3
+
+
