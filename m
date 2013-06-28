@@ -1,51 +1,24 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH 1/2] scsi: ufs: Add support for host assisted background
- operations
-Date: Fri, 28 Jun 2013 17:31:35 +0530
-Message-ID: <51CD7B1F.3020200@codeaurora.org>
-References: <1371133205-17377-1-git-send-email-sthumma@codeaurora.org> <1371133205-17377-2-git-send-email-sthumma@codeaurora.org> <CALMYJDuzvMQxNa_715odFs-jg8q5aEtpKSE5Dyve6wrqD8TwFg@mail.gmail.com>
+From: "Adeyemi Peters" <rogerbrine@rotundalaw.com>
+Subject: Compliments!
+Date: Fri, 28 Jun 2013 13:04:05 +0100
+Message-ID: <P3KSSG01SLsNhIIqgRX00001033__15349.1152836525$1372421983$gmane$org@P3KSSG01.ksos.ch>
+Reply-To: ade0peters@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CALMYJDuzvMQxNa_715odFs-jg8q5aEtpKSE5Dyve6wrqD8TwFg@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Santosh Y <santoshsy@gmail.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from adsl-142-243.init7.net ([213.144.142.243]:33906 "EHLO
+	P3KSSG01.ksos.ch" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751675Ab3F1MTb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jun 2013 08:19:31 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "adeopeters@gmail.com" <rogerbrine@rotundalaw.com>
 
-On 6/26/2013 11:06 PM, Santosh Y wrote:
->> +/**
->> >   * ufshcd_memory_alloc - allocate memory for host memory space data
->> >structures
->> >   * @hba: per adapter instance
->> >   *
->> >@@ -1803,6 +1904,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
->> >struct ufshcd_lrb *lrbp)
->> >                          */
->> >                         scsi_status = result & MASK_SCSI_STATUS;
->> >                         result = ufshcd_scsi_cmd_status(lrbp,
->> >scsi_status);
->> >+
->> >+                       if (ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
->                                  ^^^^^
-> This condition will not satisfy until a runtime suspend/resume cycle
-> completes. Is there any specific reason it is only being enabled in
-> runtime-resume routine?
-> As the fBackgroundOpsEn = 1 by default, shouldn't the sequence be 1.
-> ufshcd_disable_auto_bkops() 2. ufshcd_enable_ee() during the startup.
->
+Good day,
 
-According to the specification, the host should put in all measures to 
-ensure that the device doesn't enter into URGENT_BKOPS need because the 
-device may not operate optimally in that case. If your sequence is used 
-then we expect a case where URGENT_BKOPS is needed if the runtime PM is 
-disabled or prohibited soon after startup.
+I am Adeyemi Peters from the United Bank for Africa Plc, I have a business proposal worth $8,370,000.00 for you. I need you to help me receive the transfer of this money and invest in your country, We will share the estate in the ratio of 60 to 40 percent. I advise that you keep this email confidential. I shall await your swift response to enable me inform you in details about this business.
 
-We wouldn't want to disable auto bkops by default without knowing that 
-the runtime PM is enabled, since the device/host/software idleness is 
-determined by runtime PM operation as explained in the commit text.
-
--- 
 Regards,
-Sujit
+Dr. Adeyemi Peters
