@@ -1,66 +1,52 @@
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Subject: Re: [PATCH 4/7][SCSI] mpt3sas: Infinite loops can occur if MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned
-Date: Fri, 28 Jun 2013 18:11:02 +0200
-Message-ID: <87sj02z04p.fsf@nemi.mork.no>
-References: <20130628222302.GA5055@lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:43586 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755809Ab3F1QOa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jun 2013 12:14:30 -0400
-In-Reply-To: <20130628222302.GA5055@lsi.com> (Sreekanth Reddy's message of
-	"Sat, 29 Jun 2013 03:53:02 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
+From: David Howells <dhowells@redhat.com>
+Subject: SCSI vs MN10300: Can get_user() be given an array?
+Date: Fri, 28 Jun 2013 17:39:33 +0100
+Message-ID: <5885.1372437573@warthog.procyon.org.uk>
+Return-path: <linux-arch-owner@vger.kernel.org>
+Sender: linux-arch-owner@vger.kernel.org
+To: linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: dhowells@redhat.com, Akira Takeuchi <takeuchi.akr@jp.panasonic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: jejb@kernel.org, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com
-
-Sreekanth Reddy <Sreekanth.Reddy@lsi.com> writes:
-
-> Infinite loop can occur if IOCStatus is not equal to
-> MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value in the while loops in functi=
-ons=20
-> _scsih_search_responding_sas_devices,
-> _scsih_search_responding_raid_devices and
-> _scsih_search_responding_expanders
->
-> So, Instead of checking for MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value,
-> in this patch code is modified to check for IOCStatus not equals to=20
-> MPI2_IOCSTATUS_SUCCESS to break the while loop.
->
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c |   16 ++++------------
->  1 files changed, 4 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3=
-sas/mpt3sas_scsih.c
-> index 9ebc9dc..632eba7 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -6406,7 +6406,7 @@ _scsih_search_responding_sas_devices(struct MPT=
-3SAS_ADAPTER *ioc)
->  	    handle))) {
->  		ioc_status =3D le16_to_cpu(mpi_reply.IOCStatus) &
->  		    MPI2_IOCSTATUS_MASK;
-> -		if (ioc_status =3D=3D MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-> +		if (ioc_status !=3D MPI2_IOCSTATUS_SUCCESS)
->  			break;
->  		handle =3D le16_to_cpu(sas_device_pg0.DevHandle);
->  		device_info =3D le32_to_cpu(sas_device_pg0.DeviceInfo);
-
-Doesn't the same apply to the code mpt2sas driver you copied this code
-from?
 
 
+The MN10300 arch is throwing up an error in the SCSI driver and I'm not sure
+whether it needs fixing in the arch - in get_user() - or in the SCSI code.
 
-Bj=C3=B8rn
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The problem is this line in sg_scsi_ioctl():
+
+	if (get_user(opcode, sic->data))
+
+sic points to the following struct:
+
+	typedef struct scsi_ioctl_command {
+		unsigned int inlen;
+		unsigned int outlen;
+		unsigned char data[0];
+	} Scsi_Ioctl_Command;
+
+However, __get_user_check() on MN10300 does this:
+
+	const __typeof__(ptr) __guc_ptr = (ptr);
+
+which fails with:
+
+	block/scsi_ioctl.c:450: error: invalid initializer
+
+The question is what is SCSI actually asking get_user() to do?  As far as I
+can tell, gcc thinks that it's being askied to declare some sort of array
+here.
+
+Should the SCSI driver be changed to:
+
+	if (get_user(opcode, (unsigned char *)sic->data))
+
+or should the MN10300 arch be changed to morph the array into a pointer,
+perhaps with:
+
+	const __typeof__(ptr[0])* __guc_ptr = (ptr);
+
+or:
+
+	const __typeof__(*ptr)* __guc_ptr = (ptr);
+
+David
