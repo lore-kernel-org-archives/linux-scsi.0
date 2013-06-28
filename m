@@ -1,53 +1,69 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: [PATCH V2 0/2] scsi: ufs: Add support to control UFS device background operations
-Date: Fri, 28 Jun 2013 23:46:41 +0530
-Message-ID: <1372443403-21830-1-git-send-email-sthumma@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:47584 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276Ab3F1SQ4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jun 2013 14:16:56 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: SCSI vs MN10300: Can get_user() be given an array?
+Date: Fri, 28 Jun 2013 11:16:59 -0700
+Message-ID: <1372443419.1884.12.camel@dabdike>
+References: <5885.1372437573@warthog.procyon.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <5885.1372437573@warthog.procyon.org.uk>
+Sender: linux-arch-owner@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org, Akira Takeuchi <takeuchi.akr@jp.panasonic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 
-Add host assisted background operations for UFS device and runtime PM
-helpers for ufshcd platform and pci glue drivers. The background operations
-are disabled during runtime resume and enabled when the device is idle and
-runtime suspended.
+On Fri, 2013-06-28 at 17:39 +0100, David Howells wrote:
+> The MN10300 arch is throwing up an error in the SCSI driver and I'm not sure
+> whether it needs fixing in the arch - in get_user() - or in the SCSI code.
+> 
+> The problem is this line in sg_scsi_ioctl():
+> 
+> 	if (get_user(opcode, sic->data))
+> 
+> sic points to the following struct:
+> 
+> 	typedef struct scsi_ioctl_command {
+> 		unsigned int inlen;
+> 		unsigned int outlen;
+> 		unsigned char data[0];
+> 	} Scsi_Ioctl_Command;
+> 
+> However, __get_user_check() on MN10300 does this:
+> 
+> 	const __typeof__(ptr) __guc_ptr = (ptr);
+> 
+> which fails with:
+> 
+> 	block/scsi_ioctl.c:450: error: invalid initializer
+> 
+> The question is what is SCSI actually asking get_user() to do?  As far as I
+> can tell, gcc thinks that it's being askied to declare some sort of array
+> here.
 
-These patches depends on:
-[PATCH 01/10] scsi: ufs: wrap the i/o access operations
-[PATCH 02/10] scsi: ufs: amend interrupt configuration
-[PATCH 03/10] scsi: ufs: remove version check before IS reg clear
-[PATCH 04/10] scsi: ufs: rework link start-up process
-[PATCH 05/10] scsi: ufs: Fix the response UPIU length setting
-[PATCH 06/10] scsi: ufs: use devres functions for ufshcd
-[PATCH 07/10] ufshcd-pltfrm: add missing empty slot in ufs_of_match[]
-[PATCH 08/10] ufs: fix register address in UIC error interrupt handling
-[PATCH 09/10] ufshcd-pltfrm: remove unnecessary dma_set_coherent_mask() call
-[PATCH 10/10] ufs: fix DMA mask setting
-[PATCH V2 1/2] scsi: ufs: Add support for sending NOP OUT UPIU
-[PATCH V2 2/2] scsi: ufs: Set fDeviceInit flag to initiate device initialization
+I'm surprised you need to ask this.  by convention, an array of char is
+usable as a pointer to char *.  The compiler therefore thinks this is a
+legitimate conversion which doesn't need a cast:
 
-Changes from v1:
-	- Minor cleanup and rebase
-	- Forced enable of auto bkops during initialization to make sure device
-	  and driver state are matched.
+	unsigned char *d = sic->data;
 
-Sujit Reddy Thumma (2):
-  scsi: ufs: Add support for host assisted background operations
-  scsi: ufs: Add runtime PM helpers for UFS host driver
+Therefore, sic->data should be usable as a char * pointer everywhere.
 
- drivers/scsi/ufs/ufs.h           |   25 +++-
- drivers/scsi/ufs/ufshcd-pci.c    |   60 ++++++-
- drivers/scsi/ufs/ufshcd-pltfrm.c |   41 +++++
- drivers/scsi/ufs/ufshcd.c        |  337 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.h        |   10 +
- 5 files changed, 466 insertions(+), 7 deletions(-)
+> Should the SCSI driver be changed to:
+> 
+> 	if (get_user(opcode, (unsigned char *)sic->data))
 
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation.
+can we visit reality for a minute?  That proposal would require us to do
+an explicit (unsigned char *) conversion everywhere we use an array as a
+pointer value ... good grief, no!
 
+> or should the MN10300 arch be changed to morph the array into a pointer,
+> perhaps with:
+> 
+> 	const __typeof__(ptr[0])* __guc_ptr = (ptr);
+
+Neither.  It should do what every other architecture does, which is:
+
+	const __typeof__(*(ptr)) *__guc_ptr = (ptr);
+
+James
