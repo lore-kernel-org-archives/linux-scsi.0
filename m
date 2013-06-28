@@ -1,71 +1,68 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 2/7][SCSI] mpt3sas: Updated the Hardware timing requirements
-Date: Sat, 29 Jun 2013 03:51:19 +0530
-Message-ID: <20130628222119.GA5046@lsi.com>
+Subject: [PATCH 3/7][SCSI] mpt3sas: fix for kernel panic when driver loads
+ with HBA conected to non LUN 0 configured expander
+Date: Sat, 29 Jun 2013 03:52:03 +0530
+Message-ID: <20130628222203.GA5050@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from co9ehsobe001.messaging.microsoft.com ([207.46.163.24]:17526
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755423Ab3F1LZ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jun 2013 07:25:58 -0400
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: jejb@kernel.org, JBottomley@Parallels.com
-Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com
+List-Id: linux-scsi@vger.kernel.org
 
 
-Hardware timing requirements is updated in order to comply with firmware requirement.
+With some enclosures when LUN 0 is not created but LUN 1 or LUN X is created
+then SCSI scan procedure calls target_alloc, slave_alloc call back functions
+for LUN 0 and slave_destory() for same LUN 0.
+
+In these kind of cases within slave_destroy, pointer to scsi_target in
+_sas_device structure is set to NULL, following which when slave_alloc for
+LUN 1 is called then starget would not be set properly for this LUN.
+So, scsi_target pointer pointing to NULL value would lead to a crash later
+in the discovery procedure.
+
+To solve this issue set the sas_device's scsi_target pointer to scsi_device's
+scsi_target if it is NULL earlier in slave_alloc callback function.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c |   20 +++++++++++++-------
- 1 files changed, 13 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 673a1b5..5dc280c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4090,11 +4090,15 @@ _base_diag_reset(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	writel(host_diagnostic | MPI2_DIAG_RESET_ADAPTER,
- 	     &ioc->chip->HostDiagnostic);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 73d3b81..9ebc9dc 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1273,6 +1273,7 @@ _scsih_slave_alloc(struct scsi_device *sdev)
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data;
+ 	struct scsi_target *starget;
+ 	struct _raid_device *raid_device;
++	struct _sas_device *sas_device;
+ 	unsigned long flags;
  
--	/* don't access any registers for 50 milliseconds */
--	msleep(50);
-+	/*This delay allows the chip PCIe hardware time to finish reset tasks*/
-+	if (sleep_flag == CAN_SLEEP)
-+		msleep(MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC/1000);
-+	else
-+		mdelay(MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC/1000);
- 
--	/* 300 second max wait */
--	for (count = 0; count < 3000000 ; count++) {
-+	/* Approximately 300 second max wait */
-+	for (count = 0; count < (300000000 /
-+		MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC); count++) {
- 
- 		host_diagnostic = readl(&ioc->chip->HostDiagnostic);
- 
-@@ -4103,11 +4107,13 @@ _base_diag_reset(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 		if (!(host_diagnostic & MPI2_DIAG_RESET_ADAPTER))
- 			break;
- 
--		/* wait 1 msec */
-+		/* Wait to pass the second read delay window */
- 		if (sleep_flag == CAN_SLEEP)
--			usleep_range(1000, 1500);
-+			msleep(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC
-+								/ 1000);
- 		else
--			mdelay(1);
-+			mdelay(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC
-+								/ 1000);
+ 	sas_device_priv_data = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
+@@ -1301,6 +1302,19 @@ _scsih_slave_alloc(struct scsi_device *sdev)
+ 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
  	}
  
- 	if (host_diagnostic & MPI2_DIAG_HCB_MODE) {
++	if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
++		spin_lock_irqsave(&ioc->sas_device_lock, flags);
++		sas_device = mpt3sas_scsih_sas_device_find_by_sas_address(ioc,
++					sas_target_priv_data->sas_address);
++		if (sas_device && (sas_device->starget == NULL)) {
++			sdev_printk(KERN_INFO, sdev,
++			"%s : sas_device->starget set to starget @ %d\n",
++				__func__, __LINE__);
++			sas_device->starget = starget;
++		}
++		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
++	}
++
+ 	return 0;
+ }
+ 
 -- 
 1.7.3
-
-
