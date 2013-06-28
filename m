@@ -1,67 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 10/10] ufs: fix DMA mask setting
-Date: Fri, 28 Jun 2013 13:37:16 -0700
-Message-ID: <1372451836.1884.23.camel@dabdike>
-References: <1372266575-3468-1-git-send-email-santoshsy@gmail.com>
-	 <1372266575-3468-11-git-send-email-santoshsy@gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] megaraid_sas: fix a bug for 64 bit arches
+Date: Sat, 29 Jun 2013 00:21:04 +0300
+Message-ID: <20130628212104.GA16035@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47422 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751588Ab3F1UhT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jun 2013 16:37:19 -0400
-In-Reply-To: <1372266575-3468-11-git-send-email-santoshsy@gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21449 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589Ab3F1VVh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jun 2013 17:21:37 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Santosh Y <santoshsy@gmail.com>
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Akinobu Mita <mita@fixstars.com>
+To: Neela Syam Kolli <megaraidlinux@lsi.com>, "Sumit.Saxena@lsi.com" <Sumit.Saxena@lsi.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Wed, 2013-06-26 at 22:39 +0530, Santosh Y wrote:
-> index 19618c6..431ddb2 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1711,6 +1711,25 @@ void ufshcd_remove(struct ufs_hba *hba)
->  EXPORT_SYMBOL_GPL(ufshcd_remove);
->  
->  /**
-> + * ufshcd_set_dma_mask - Set dma mask based on the controller
-> + *			 addressing capability
-> + * @hba: per adapter instance
-> + *
-> + * Returns 0 for success, non-zero for failure
-> + */
-> +static int ufshcd_set_dma_mask(struct ufs_hba *hba)
-> +{
-> +	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
-> +		if (!dma_set_mask(hba->dev, DMA_BIT_MASK(64)) &&
-> +		    !dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(64)))
-> +			return 0;
-> +	}
-> +	dma_set_mask(hba->dev, DMA_BIT_MASK(32));
-> +
-> +	return dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(32));
-> +}
+On 64 bit then -1UL and -1U are not equal, so these conditions don't
+work as intended and it breaks error handling.
 
-This isn't right per the API spec.  The guarantee is that if
-dma_set_mask() succeeds then dma_set_coherent_mask of the same mask will
-succeed,  so this should read
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-	int err;
-
-	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
-		if (!dma_set_mask(hba->dev, DMA_BIT_MASK(64))) {
-			dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(64)))
-			return 0;
-		}
-	}
-	err = dma_set_mask(hba->dev, DMA_BIT_MASK(32));
-	if (!err)
-		dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(32));
-	return err;
-
-James
-
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index 8056eac..4f401f7 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -585,7 +585,7 @@ u8 get_arm(struct megasas_instance *instance, u32 ld, u8 span, u64 stripe,
+ 	case 1:
+ 		/* start with logical arm */
+ 		arm = get_arm_from_strip(instance, ld, stripe, map);
+-		if (arm != -1UL)
++		if (arm != -1U)
+ 			arm *= 2;
+ 		break;
+ 	}
+@@ -637,7 +637,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
+ 
+ 	if (raid->level == 6) {
+ 		logArm = get_arm_from_strip(instance, ld, stripRow, map);
+-		if (logArm == -1UL)
++		if (logArm == -1U)
+ 			return FALSE;
+ 		rowMod = mega_mod64(row, SPAN_ROW_SIZE(map, ld, span));
+ 		armQ = SPAN_ROW_SIZE(map, ld, span) - 1 - rowMod;
