@@ -1,97 +1,120 @@
-From: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>
-Subject: [PATCH 2/2] scsi: qla2xxx: change some variables to hexadecimal string via %*phN format
-Date: Sat, 29 Jun 2013 14:40:42 +0300
-Message-ID: <1372506042-1317-1-git-send-email-Oleksandr.Khoshaba@gmail.com>
+From: "M. Barkindo" <william_johnson896@outlook.com>
+Subject: Confidential: Reply Asap!
+Date: Sat, 29 Jun 2013 14:43:10 +0100
+Message-ID: <137861.62180.bm@smtp205.mail.gq1.yahoo.com>
+Reply-To: <mohammed_barkindo@aol.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0112_01C2A9A6.1569B284"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:43359 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752468Ab3F2Lkv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Jun 2013 07:40:51 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ey16so1631629wid.10
-        for <linux-scsi@vger.kernel.org>; Sat, 29 Jun 2013 04:40:49 -0700 (PDT)
+Received: from nm27-vm5.bullet.mail.gq1.yahoo.com ([98.136.216.148]:37439 "EHLO
+	nm27-vm5.bullet.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751956Ab3F2NsV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Jun 2013 09:48:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-driver@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>
 
-The patch modifies some variables using the format '%*phN' and prints them as a hexadecimal string with the separator ''.
+This is a multi-part message in MIME format.
 
-Signed-off-by: Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>
----
- drivers/scsi/qla2xxx/qla_gs.c  |   12 ++----------
- drivers/scsi/qla2xxx/qla_isr.c |    9 ++-------
- drivers/scsi/qla2xxx/qla_mr.c  |   10 ++--------
- 3 files changed, 6 insertions(+), 25 deletions(-)
+------=_NextPart_000_0112_01C2A9A6.1569B284
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 8b2f75a..4155e15 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -1394,16 +1394,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
- 	qla2x00_update_ms_fdmi_iocb(vha, size + 16);
- 
- 	ql_dbg(ql_dbg_disc, vha, 0x202e,
--	    "RHBA identifier = "
--	    "%02x%02x%02x%02x%02x%02x%02x%02x size=%d.\n",
--	    ct_req->req.rhba.hba_identifier[0],
--	    ct_req->req.rhba.hba_identifier[1],
--	    ct_req->req.rhba.hba_identifier[2],
--	    ct_req->req.rhba.hba_identifier[3],
--	    ct_req->req.rhba.hba_identifier[4],
--	    ct_req->req.rhba.hba_identifier[5],
--	    ct_req->req.rhba.hba_identifier[6],
--	    ct_req->req.rhba.hba_identifier[7], size);
-+	    "RHBA identifier = %8phN size=%d.\n",
-+	    ct_req->req.rhba.hba_identifier, size);
- 	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, vha, 0x2076,
- 	    entries, size);
- 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index d2a4c75..b269682 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2212,16 +2212,11 @@ check_scsi_status:
- out:
- 	if (logit)
- 		ql_dbg(ql_dbg_io, fcport->vha, 0x3022,
--		    "FCP command status: 0x%x-0x%x (0x%x) "
--		    "nexus=%ld:%d:%d portid=%02x%02x%02x oxid=0x%x "
--		    "cdb=%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x len=0x%x "
--		    "rsp_info=0x%x resid=0x%x fw_resid=0x%x.\n",
-+		    "FCP command status: 0x%x-0x%x (0x%x) nexus=%ld:%d:%d portid=%02x%02x%02x oxid=0x%x cdb=%10phN len=0x%x rsp_info=0x%x resid=0x%x fw_resid=0x%x.\n",
- 		    comp_status, scsi_status, res, vha->host_no,
- 		    cp->device->id, cp->device->lun, fcport->d_id.b.domain,
- 		    fcport->d_id.b.area, fcport->d_id.b.al_pa, ox_id,
--		    cp->cmnd[0], cp->cmnd[1], cp->cmnd[2], cp->cmnd[3],
--		    cp->cmnd[4], cp->cmnd[5], cp->cmnd[6], cp->cmnd[7],
--		    cp->cmnd[8], cp->cmnd[9], scsi_bufflen(cp), rsp_info_len,
-+		    cp->cmnd, scsi_bufflen(cp), rsp_info_len,
- 		    resid_len, fw_resid_len);
- 
- 	if (!res)
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index a6df558..8c3ffcc 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -2517,16 +2517,10 @@ check_scsi_status:
- 
- 	if (logit)
- 		ql_dbg(ql_dbg_io, fcport->vha, 0x3058,
--		    "FCP command status: 0x%x-0x%x (0x%x) "
--		    "nexus=%ld:%d:%d tgt_id: 0x%x lscsi_status: 0x%x"
--		    "cdb=%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x len=0x%x "
--		    "rsp_info=0x%x resid=0x%x fw_resid=0x%x "
--		    "sense_len=0x%x, par_sense_len=0x%x, rsp_info_len=0x%x\n",
-+		    "FCP command status: 0x%x-0x%x (0x%x) nexus=%ld:%d:%d tgt_id: 0x%x lscsi_status: 0x%x cdb=%10phN len=0x%x rsp_info=0x%x resid=0x%x fw_resid=0x%x sense_len=0x%x, par_sense_len=0x%x, rsp_info_len=0x%x\n",
- 		    comp_status, scsi_status, res, vha->host_no,
- 		    cp->device->id, cp->device->lun, fcport->tgt_id,
--		    lscsi_status, cp->cmnd[0], cp->cmnd[1], cp->cmnd[2],
--		    cp->cmnd[3], cp->cmnd[4], cp->cmnd[5], cp->cmnd[6],
--		    cp->cmnd[7], cp->cmnd[8], cp->cmnd[9], scsi_bufflen(cp),
-+		    lscsi_status, cp->cmnd, scsi_bufflen(cp),
- 		    rsp_info_len, resid_len, fw_resid_len, sense_len,
- 		    par_sense_len, rsp_info_len);
- 
--- 
-1.7.9.5
+For confidential reason, a letter has been attached. Review and respond
 
+------=_NextPart_000_0112_01C2A9A6.1569B284
+Content-Type: application/octet-stream;
+	name="Confidential Letter.rtf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="Confidential Letter.rtf"
+
+e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcZGVmZjBcZGVmbGFuZzIwNTd7XGZv
+bnR0Ymx7XGYwXGZuaWxcZmNoYXJzZXQwIENhbGlicmk7fX0NCntcKlxnZW5l
+cmF0b3IgTXNmdGVkaXQgNS40MS4yMS4yNTEwO31cdmlld2tpbmQ0XHVjMVxw
+YXJkXHNsMjc2XHNsbXVsdDFcbGFuZzlcZjBcZnMyMiBOSUdFUklBTiBOQVRJ
+T05BTCBQRVRST0xFVU0gQ09SUE9SQVRJT04gXHBhcg0KXHBhcg0KIEZFREVS
+QUwgTUlOSVNUUlkgT0YgUEVUUk9MVUVNIFJFU09VUkNFUyAoRi5NLlAuUiks
+IFxwYXINCk5FVyBGRURFUkFMIFNFQ1JFVEFSSUFULCBTSEVIVSBTSEFHQVJJ
+IFdBWSAsIEFCVUpBIC5ccGFyDQpMQUdPUyBBTk5FWCBPRkZJQ0UsIExBR09T
+LU5JR0VSSUEuXHBhcg0KIFRlbDogLSArMjM0LTgxMzMwNTA5OTFccGFyDQog
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBccGFyDQpPdXJSZWY6Tk5QQy9GUk4vMjAx
+MyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxwYXIN
+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIFxwYXINClxwYXINCkFUVE46IE1BTkFHSU5HIERJUkVDVE9SIFxwYXIN
+ClxwYXINCiAgXHBhcg0KXHBhcg0KREVBUiBTSVIvTUFEQU0sIFxwYXINClxw
+YXINCiAgICAgICAgICAgICAgIFJFUVVFU1RGT1IgQVNTSVNUQU5DRS0gU1RS
+SUNUTFkgQ09ORklERU5USUFMIFxwYXINClxwYXINCiAgXHBhcg0KXHBhcg0K
+IEkgYW0gTXIuIE1vaGFtbWVkIFNhbnVzaSBCYXJraW5kbywgQWNjb3VudGFu
+dCBHZW5lcmFsIE5pZ2VyaWEgTmF0aW9uYWwgUGV0cm9sZXVtIENvcnBvcmF0
+aW9uIGFuZCBhbHNvIGFuZCBhY2NvdW50YW50IHdpdGggRmVkZXJhbCBNaW5p
+c3RyeSBvZiBwZXRyb2xldW0gUmVzb3VyY2VzIChGTVBSKSBhbmQgYSBtZW1i
+ZXIgb2YgYSB0aHJlZS1tYW4gVGVuZGVyIEJvYXJkIGluIGNoYXJnZSBvZiBj
+b250cmFjdCByZXZpZXcgYW5kIHBheW1lbnQgYXBwcm92YWxzLiBJIGNhbWUg
+dG8ga25vdyBvZiB5b3UgaW4gbXkgc2VhcmNoIGZvciBhIHJlbGlhYmxlIHBl
+cnNvbiB0byBoYW5kbGUgYSB2ZXJ5IGNvbmZpZGVudGlhbCB0cmFuc2FjdGlv
+biB0aGF0IGludm9sdmVzIHRoZSB0cmFuc2ZlciBvZiBhIGh1Z2Ugc3VtIG9m
+IG1vbmV5IHRvIGEgZm9yZWlnbiBhY2NvdW50LiBJdCBtYXkgc291bmQgc3Ry
+YW5nZSBidXQgZXhlcmNpc2UgcGF0aWVuY2UgYW5kIHJlYWQgb24uIFRoZXJl
+IHdlcmUgc2VyaWVzIG9mIGNvbnRyYWN0cyBleGVjdXRlZCBieSBhIGNvbnNv
+cnRpdW0gTXVsdGluYXRpb25hbCBpbiB0aGUgT2lsIGluZHVzdHJ5IGluIGZh
+dm91ciBvZiBNaW5pc3RyeSBvZiBQZXRyb2xldW0gUmVzb3VyY2VzIGFtb25n
+IHdoaWNoIHdhczogXHBhcg0KXHBhcg0KICBccGFyDQpccGFyDQoxLiBUaGUg
+ZXh0ZW5zaW9uIG9mIHBpcGVsaW5lIG5ldHdvcmsgd2l0aGluIE5pZ2VyaWEg
+Zm9yIGNydWRlIG9pbCwgRG93biBzdHJlYW0gcHJvZHVjdHMgZGlzdHJpYnV0
+aW9uIGFuZCBzdWJzZXF1ZW50IGV2YWN1YXRpb24tIFVTJCAxOTUgTWlsbGlv
+bi4gXHBhcg0KXHBhcg0KMi4gQ29udHJhY3QgZm9yIHRoZSBUdXJuIGFyb3Vu
+ZCBNYWludGVuYW5jZSAoVEFNKSBvZiB0aGUgdmFyaW91cyByZWZpbmVyaWVz
+IGluIHRoZSBjb3VudHJ5fiBVUyQgMTUyTWlsbGlvbi4gXHBhcg0KXHBhcg0K
+My4gVGhlIGNvbnN0cnVjdGlvbiBvZiB0aGUgS2FkdW5hIFJlZmluZXJ5LCBz
+b21lIGNvbnRyYWN0b3JzIHdoZXJlIHBhaWQgdGhlaXIgY29udHJhY3Qgc3Vt
+IHdoaWxlIHNvbWUgaGFzIG5vdCBiZWVuIHBhaWQgYnkgdGhlIE5pZ2VyaWFu
+IEdvdmVybm1lbnQuIEZldyBkYXlzIGFnbywgdGhlIHByZXNpZGVudCBvZiB0
+aGUgZmVkZXJhbCByZXB1YmxpYyBvZiBOaWdlcmlhIGNhbGxlZCB0byB0aGUg
+QXNvLVJvY2sgVmlsbGEgQWJ1amEsIHdoZXJlIHdlIGhlYWQgbWVldGluZyBj
+b25jZXJuaW5nIGNvbnRyYWN0b3JzIHRoYXQgaGFzIG5vdCBiZWVuIHBhaWQg
+dGhlaXIgY29udHJhY3QgcGF5bWVudHMsIGFmdGVyIHRoZSBtZWV0aW5nLCBo
+ZSB0aGVuIGFza2VkIG1lIHRvIGJlIGluIGNoYXJnZSBieSBwcmVwYXJpbmcg
+dGhlIG5hbWUgb2YgdGhlIGNvbnRyYWN0b3IgdGhhdCBuZWVkZWQgdG8gYmUg
+cGFpZCB0aGVpciBjb250cmFjdCBwYXltZW50cyBhbmQgdGhlbiBzdWJtaXQg
+aXQgdG8gaGltIGZvciBhcHByb3ZhbC4gXHBhcg0KXHBhcg0KICBccGFyDQpc
+cGFyDQpXaHkgYW0gd3JpdGluZyB5b3UgdGhpcyBtYWlsLCBpcyBmb3IgdXMg
+dG8gZG8gdGhpcyBkZWFsLCBiZWNhdXNlIEkgd2lsbCBiZSBhcHByb3Zpbmcg
+dGhlIHN1bSBvZiBVU0QkMzguNU1pbGxpb24gaW4geW91ciBuYW1lIGFuZCBJ
+IHdhbnQgeW91IHRvIGFjdCBhcyBvbmUgb2YgdGhlIGNvbnRyYWN0b3JzIG93
+bmVkIGJ5IHRoZSBOaWdlcmlhbiBHb3Zlcm5tZW50LCBJIHdpbGwgaW5jbHVk
+ZSB5b3VyIG5hbWUgaW4gdGhlIGZpbGUgSSB3aWxsIHN1Ym1pdCB0byB0aGUg
+cHJlc2lkZW5jeSBmb3IgYXBwcm92YWwgYW5kIEkgYW0gcHJlcGFyZWQgdG8g
+Z2l2ZSB5b3UgMzAlIG9mIHRoZSB0b3RhbCBzdW0gYWZ0ZXIgdGhpcyBtb25l
+eSBpcyBiZWVuIHRyYW5zZmVycmVkIHRvIHlvdXIgYmFuayBhY2NvdW50LiBc
+cGFyDQpccGFyDQogIFxwYXINClxwYXINClNpci9NYWRhbSwgaWYgeW91IGFy
+ZSB3aWxsaW5nIHRvIGRvIHRoaXMgZGVhbCB3aXRoIG1lLCBraW5kbHkgY29u
+dGFjdCBtZSB2aWEgdGhlIHRlbGVwaG9uZSBudW1iZXJzIG9yIGVtYWlsIGFk
+ZHJlc3MgYWJvdmUgb3IgdmlhIHRoaXMgYWx0ZXJuYXRpdmUgZW1haWwgYWRk
+cmVzcyAobW9oYW1tZWRiYXJraW5kbzExMUBnbWFpbC5jb20gKSB0aGVuIEkg
+d2lsbCBub3cgdGVsbCB5b3UgdGhlIG5leHQgc3RlcCB0aGF0IHdlIGFyZSBn
+b2luZyB0byBmb2xsb3cgYW5kIHdoYXQgeW91IG5lZWQgdG8gc2VuZCB0byBt
+ZSBmb3IgbWUgdG8gc3RhcnQgcHJvY2Vzc2luZyBhbGwgdGhlIHBhcGVyIHdv
+cmtzIHRvIGJhY2sgdXAgdGhlIGNsYWltIG9mIHRoaXMgVVNEJDM4LjVNLiBQ
+bGVhc2UgZG9uXHJxdW90ZSB0IGZhaWwgdG8gaW5jbHVkZSB5b3VyIHByaXZh
+dGUgY29udGFjdHMgZGV0YWlscy4gUGxlYXNlIGRlc3Ryb3kgdGhpcyBsZXR0
+ZXIsIGlmIHlvdSBhcmUgbm90IHdpbGxpbmcgdG8gZG8gdGhpcyBkZWFsIHdp
+dGggbWUuIEkgd2lsbCBiZSBpbnZlc3RpbmcgbXkgb3duIHNoYXJlIG9mIHRo
+ZSBtb25leSB0aHJvdWdoIHlvdXIgZ3VpZGUgbGluZXMgaW4geW91ciBjb3Vu
+dHJ5IG9yIGlmIHlvdSBoYXZlIGEgY29tcGFueSwgSSBwcmVmZXIgdG8gZ28g
+aW50byBwYXJ0bmVyc2hpcCB3aXRoIHlvdS4gU28gcGxlYXNlIHRyZWF0IHRo
+aXMgZGVhbCB3aXRoIHV0bW9zdCBjb25maWRlbnRpYWxpdHkgaWYgeW91IGFy
+ZSB3aWxsaW5nIHRvIGRvIHRoaXMgZGVhbCB3aXRoIG1lLCBhbmQgYWZ0ZXIg
+YWxsIGRvY3VtZW50YXRpb25zLCBpdCB3aWxsIHRha2UganVzdCA3IGJhbmtp
+bmcgd29ya2luZyBkYXlzIHRvIGNvbmNsdWRlIGV2ZXJ5dGhpbmcuIFxwYXIN
+ClxwYXINCiAgXHBhcg0KXHBhcg0KVGhhbmtzIFxwYXINClxwYXINCiAgXHBh
+cg0KXHBhcg0KWW91cnMgRmFpdGhmdWxseSwgXHBhcg0KXHBhcg0KXHBhcg0K
+ICBccGFyDQpccGFyDQogTXIuIE1vaGFtbWVkIFNhbnVzaSBCYXJraW5kb1xw
+YXINClxwYXINCihGRURFUkFMIE1JTklTVFJZIE9GIFBFVFJPTEVVTSBSRVNP
+VVJDRVMsIE5OUEMpIFxwYXINCn0NCgA=
+
+------=_NextPart_000_0112_01C2A9A6.1569B284--
