@@ -1,28 +1,33 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v4 1/6] scsi_debug: fix invalid address passed to kunmap_atomic()
-Date: Sat, 29 Jun 2013 17:59:14 +0900
-Message-ID: <1372496359-21100-2-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v4 2/6] scsi_debug: fix incorrectly nested kmap_atomic()
+Date: Sat, 29 Jun 2013 17:59:15 +0900
+Message-ID: <1372496359-21100-3-git-send-email-akinobu.mita@gmail.com>
 References: <1372496359-21100-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:42906 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815Ab3F2JAJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Jun 2013 05:00:09 -0400
-Received: by mail-pb0-f54.google.com with SMTP id ro2so3122071pbb.41
-        for <linux-scsi@vger.kernel.org>; Sat, 29 Jun 2013 02:00:09 -0700 (PDT)
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:59068 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752144Ab3F2JAL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Jun 2013 05:00:11 -0400
+Received: by mail-pb0-f51.google.com with SMTP id um15so3113829pbc.24
+        for <linux-scsi@vger.kernel.org>; Sat, 29 Jun 2013 02:00:10 -0700 (PDT)
 In-Reply-To: <1372496359-21100-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
 Cc: Akinobu Mita <akinobu.mita@gmail.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-In the function prot_verify_write(), the kmap address 'daddr' is
-incremented in the loop for each data page.  Finally 'daddr' reaches
-the next page boundary in the end of the loop, and the invalid address
-is passed to kunmap_atomic().
+In the function prot_verify_write(), kmap_atomic()/kunmap_atomic() for
+data page and kmap_atomic()/kunmap_atomic() for protection information
+page are not nested each other.
 
-Fix the issue by not incrementing 'daddr' in the loop and offsetting it
-by the loop counter on demand.
+It worked perfectly before commit 3e4d3af501cccdc8a8cca41bdbe57d54ad7e7e73
+("mm: stack based kmap_atomic()").  Because the kmap_atomic slot KM_IRQ0
+was used for data page and the slot KM_IRQ1 was used for protection page.
+
+But KM_types are gone and kmap_atomic() is using stack based implementation.
+So two different kmap_atomic() usages must be strictly nested now.
+
+This change ensures kmap_atomic() usage is strictly nested.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
@@ -32,70 +37,48 @@ Cc: Douglas Gilbert <dgilbert@interlog.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/scsi_debug.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ drivers/scsi/scsi_debug.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 0a537a0..d51bddd 100644
+index d51bddd..bcf73e4 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -1899,7 +1899,7 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+@@ -1891,12 +1891,12 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 	BUG_ON(scsi_sg_count(SCpnt) == 0);
+ 	BUG_ON(scsi_prot_sg_count(SCpnt) == 0);
+ 
+-	paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
+ 	ppage_offset = 0;
+ 
+ 	/* For each data page */
+ 	scsi_for_each_sg(SCpnt, dsgl, scsi_sg_count(SCpnt), i) {
  		daddr = kmap_atomic(sg_page(dsgl)) + dsgl->offset;
++		paddr = kmap_atomic(sg_page(psgl)) + psgl->offset;
  
  		/* For each sector-sized chunk in data page */
--		for (j = 0 ; j < dsgl->length ; j += scsi_debug_sector_size) {
-+		for (j = 0; j < dsgl->length; j += scsi_debug_sector_size) {
- 
- 			/* If we're at the end of the current
- 			 * protection page advance to the next one
-@@ -1917,11 +1917,11 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 
- 			switch (scsi_debug_guard) {
- 			case 1:
--				csum = ip_compute_csum(daddr,
-+				csum = ip_compute_csum(daddr + j,
- 						       scsi_debug_sector_size);
- 				break;
- 			case 0:
--				csum = cpu_to_be16(crc_t10dif(daddr,
-+				csum = cpu_to_be16(crc_t10dif(daddr + j,
- 						      scsi_debug_sector_size));
- 				break;
- 			default:
-@@ -1938,7 +1938,7 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 				       be16_to_cpu(sdt->guard_tag),
- 				       be16_to_cpu(csum));
- 				ret = 0x01;
--				dump_sector(daddr, scsi_debug_sector_size);
-+				dump_sector(daddr + j, scsi_debug_sector_size);
- 				goto out;
- 			}
- 
-@@ -1949,7 +1949,7 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 				       "%s: REF check failed on sector %lu\n",
- 				       __func__, (unsigned long)sector);
- 				ret = 0x03;
--				dump_sector(daddr, scsi_debug_sector_size);
-+				dump_sector(daddr + j, scsi_debug_sector_size);
- 				goto out;
- 			}
- 
-@@ -1959,7 +1959,7 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 				       "%s: REF check failed on sector %lu\n",
- 				       __func__, (unsigned long)sector);
- 				ret = 0x03;
--				dump_sector(daddr, scsi_debug_sector_size);
-+				dump_sector(daddr + j, scsi_debug_sector_size);
- 				goto out;
- 			}
- 
-@@ -1977,7 +1977,6 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 
- 			start_sec++;
- 			ei_lba++;
--			daddr += scsi_debug_sector_size;
+ 		for (j = 0; j < dsgl->length; j += scsi_debug_sector_size) {
+@@ -1980,19 +1980,18 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
  			ppage_offset += sizeof(struct sd_dif_tuple);
  		}
+ 
++		kunmap_atomic(paddr);
+ 		kunmap_atomic(daddr);
+ 	}
+ 
+-	kunmap_atomic(paddr);
+-
+ 	dix_writes++;
+ 
+ 	return 0;
+ 
+ out:
+ 	dif_errors++;
+-	kunmap_atomic(daddr);
+ 	kunmap_atomic(paddr);
++	kunmap_atomic(daddr);
+ 	return ret;
+ }
  
 -- 
 1.8.1.4
