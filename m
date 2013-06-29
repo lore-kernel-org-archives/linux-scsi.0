@@ -1,120 +1,65 @@
-From: "M. Barkindo" <william_johnson896@outlook.com>
-Subject: Confidential: Reply Asap!
-Date: Sat, 29 Jun 2013 14:43:10 +0100
-Message-ID: <137861.62180.bm@smtp205.mail.gq1.yahoo.com>
-Reply-To: <mohammed_barkindo@aol.com>
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+Subject: Re: [PATCH] megaraid_sas: fix memory leak if SGL has zero length entries
+Date: Sat, 29 Jun 2013 16:15:22 +0200
+Message-ID: <87ppv5xath.fsf@nemi.mork.no>
+References: <1353488088-10684-1-git-send-email-bjorn@mork.no>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0112_01C2A9A6.1569B284"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm27-vm5.bullet.mail.gq1.yahoo.com ([98.136.216.148]:37439 "EHLO
-	nm27-vm5.bullet.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751956Ab3F2NsV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jun 2013 09:48:21 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1353488088-10684-1-git-send-email-bjorn@mork.no>
+ (=?utf-8?Q?=22Bj=C3=B8rn?= Mork"'s
+	message of "Wed, 21 Nov 2012 09:54:48 +0100")
+Sender: stable-owner@vger.kernel.org
+To: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Adam Radford <aradford@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Bj=C3=B8rn Mork <bjorn@mork.no> writes:
 
-------=_NextPart_000_0112_01C2A9A6.1569B284
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+> commit 98cb7e44 ([SCSI] megaraid_sas: Sanity check user
+> supplied length before passing it to dma_alloc_coherent())
+> introduced a memory leak.  Memory allocated for entries
+> following zero length SGL entries will not be freed.
+>
+> Reference: http://bugs.debian.org/688198
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Bj=C3=B8rn Mork <bjorn@mork.no>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c |   10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi=
+/megaraid/megaraid_sas_base.c
+> index d2c5366..12b6be4 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -4854,10 +4854,12 @@ megasas_mgmt_fw_ioctl(struct megasas_instance=
+ *instance,
+>  				    sense, sense_handle);
+>  	}
+> =20
+> -	for (i =3D 0; i < ioc->sge_count && kbuff_arr[i]; i++) {
+> -		dma_free_coherent(&instance->pdev->dev,
+> -				    kern_sge32[i].length,
+> -				    kbuff_arr[i], kern_sge32[i].phys_addr);
+> +	for (i =3D 0; i < ioc->sge_count; i++) {
+> +		if (kbuff_arr[i])
+> +			dma_free_coherent(&instance->pdev->dev,
+> +					  kern_sge32[i].length,
+> +					  kbuff_arr[i],
+> +					  kern_sge32[i].phys_addr);
+>  	}
+> =20
+>  	megasas_return_cmd(instance, cmd);
 
-For confidential reason, a letter has been attached. Review and respond
 
-------=_NextPart_000_0112_01C2A9A6.1569B284
-Content-Type: application/octet-stream;
-	name="Confidential Letter.rtf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="Confidential Letter.rtf"
+This patch was acked by Adam Radford 4 Dec 2012:
+http://permalink.gmane.org/gmane.linux.kernel.stable/36537
+but it looks like it got lost somewhere after that.
 
-e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcZGVmZjBcZGVmbGFuZzIwNTd7XGZv
-bnR0Ymx7XGYwXGZuaWxcZmNoYXJzZXQwIENhbGlicmk7fX0NCntcKlxnZW5l
-cmF0b3IgTXNmdGVkaXQgNS40MS4yMS4yNTEwO31cdmlld2tpbmQ0XHVjMVxw
-YXJkXHNsMjc2XHNsbXVsdDFcbGFuZzlcZjBcZnMyMiBOSUdFUklBTiBOQVRJ
-T05BTCBQRVRST0xFVU0gQ09SUE9SQVRJT04gXHBhcg0KXHBhcg0KIEZFREVS
-QUwgTUlOSVNUUlkgT0YgUEVUUk9MVUVNIFJFU09VUkNFUyAoRi5NLlAuUiks
-IFxwYXINCk5FVyBGRURFUkFMIFNFQ1JFVEFSSUFULCBTSEVIVSBTSEFHQVJJ
-IFdBWSAsIEFCVUpBIC5ccGFyDQpMQUdPUyBBTk5FWCBPRkZJQ0UsIExBR09T
-LU5JR0VSSUEuXHBhcg0KIFRlbDogLSArMjM0LTgxMzMwNTA5OTFccGFyDQog
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICBccGFyDQpPdXJSZWY6Tk5QQy9GUk4vMjAx
-MyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxwYXIN
-CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIFxwYXINClxwYXINCkFUVE46IE1BTkFHSU5HIERJUkVDVE9SIFxwYXIN
-ClxwYXINCiAgXHBhcg0KXHBhcg0KREVBUiBTSVIvTUFEQU0sIFxwYXINClxw
-YXINCiAgICAgICAgICAgICAgIFJFUVVFU1RGT1IgQVNTSVNUQU5DRS0gU1RS
-SUNUTFkgQ09ORklERU5USUFMIFxwYXINClxwYXINCiAgXHBhcg0KXHBhcg0K
-IEkgYW0gTXIuIE1vaGFtbWVkIFNhbnVzaSBCYXJraW5kbywgQWNjb3VudGFu
-dCBHZW5lcmFsIE5pZ2VyaWEgTmF0aW9uYWwgUGV0cm9sZXVtIENvcnBvcmF0
-aW9uIGFuZCBhbHNvIGFuZCBhY2NvdW50YW50IHdpdGggRmVkZXJhbCBNaW5p
-c3RyeSBvZiBwZXRyb2xldW0gUmVzb3VyY2VzIChGTVBSKSBhbmQgYSBtZW1i
-ZXIgb2YgYSB0aHJlZS1tYW4gVGVuZGVyIEJvYXJkIGluIGNoYXJnZSBvZiBj
-b250cmFjdCByZXZpZXcgYW5kIHBheW1lbnQgYXBwcm92YWxzLiBJIGNhbWUg
-dG8ga25vdyBvZiB5b3UgaW4gbXkgc2VhcmNoIGZvciBhIHJlbGlhYmxlIHBl
-cnNvbiB0byBoYW5kbGUgYSB2ZXJ5IGNvbmZpZGVudGlhbCB0cmFuc2FjdGlv
-biB0aGF0IGludm9sdmVzIHRoZSB0cmFuc2ZlciBvZiBhIGh1Z2Ugc3VtIG9m
-IG1vbmV5IHRvIGEgZm9yZWlnbiBhY2NvdW50LiBJdCBtYXkgc291bmQgc3Ry
-YW5nZSBidXQgZXhlcmNpc2UgcGF0aWVuY2UgYW5kIHJlYWQgb24uIFRoZXJl
-IHdlcmUgc2VyaWVzIG9mIGNvbnRyYWN0cyBleGVjdXRlZCBieSBhIGNvbnNv
-cnRpdW0gTXVsdGluYXRpb25hbCBpbiB0aGUgT2lsIGluZHVzdHJ5IGluIGZh
-dm91ciBvZiBNaW5pc3RyeSBvZiBQZXRyb2xldW0gUmVzb3VyY2VzIGFtb25n
-IHdoaWNoIHdhczogXHBhcg0KXHBhcg0KICBccGFyDQpccGFyDQoxLiBUaGUg
-ZXh0ZW5zaW9uIG9mIHBpcGVsaW5lIG5ldHdvcmsgd2l0aGluIE5pZ2VyaWEg
-Zm9yIGNydWRlIG9pbCwgRG93biBzdHJlYW0gcHJvZHVjdHMgZGlzdHJpYnV0
-aW9uIGFuZCBzdWJzZXF1ZW50IGV2YWN1YXRpb24tIFVTJCAxOTUgTWlsbGlv
-bi4gXHBhcg0KXHBhcg0KMi4gQ29udHJhY3QgZm9yIHRoZSBUdXJuIGFyb3Vu
-ZCBNYWludGVuYW5jZSAoVEFNKSBvZiB0aGUgdmFyaW91cyByZWZpbmVyaWVz
-IGluIHRoZSBjb3VudHJ5fiBVUyQgMTUyTWlsbGlvbi4gXHBhcg0KXHBhcg0K
-My4gVGhlIGNvbnN0cnVjdGlvbiBvZiB0aGUgS2FkdW5hIFJlZmluZXJ5LCBz
-b21lIGNvbnRyYWN0b3JzIHdoZXJlIHBhaWQgdGhlaXIgY29udHJhY3Qgc3Vt
-IHdoaWxlIHNvbWUgaGFzIG5vdCBiZWVuIHBhaWQgYnkgdGhlIE5pZ2VyaWFu
-IEdvdmVybm1lbnQuIEZldyBkYXlzIGFnbywgdGhlIHByZXNpZGVudCBvZiB0
-aGUgZmVkZXJhbCByZXB1YmxpYyBvZiBOaWdlcmlhIGNhbGxlZCB0byB0aGUg
-QXNvLVJvY2sgVmlsbGEgQWJ1amEsIHdoZXJlIHdlIGhlYWQgbWVldGluZyBj
-b25jZXJuaW5nIGNvbnRyYWN0b3JzIHRoYXQgaGFzIG5vdCBiZWVuIHBhaWQg
-dGhlaXIgY29udHJhY3QgcGF5bWVudHMsIGFmdGVyIHRoZSBtZWV0aW5nLCBo
-ZSB0aGVuIGFza2VkIG1lIHRvIGJlIGluIGNoYXJnZSBieSBwcmVwYXJpbmcg
-dGhlIG5hbWUgb2YgdGhlIGNvbnRyYWN0b3IgdGhhdCBuZWVkZWQgdG8gYmUg
-cGFpZCB0aGVpciBjb250cmFjdCBwYXltZW50cyBhbmQgdGhlbiBzdWJtaXQg
-aXQgdG8gaGltIGZvciBhcHByb3ZhbC4gXHBhcg0KXHBhcg0KICBccGFyDQpc
-cGFyDQpXaHkgYW0gd3JpdGluZyB5b3UgdGhpcyBtYWlsLCBpcyBmb3IgdXMg
-dG8gZG8gdGhpcyBkZWFsLCBiZWNhdXNlIEkgd2lsbCBiZSBhcHByb3Zpbmcg
-dGhlIHN1bSBvZiBVU0QkMzguNU1pbGxpb24gaW4geW91ciBuYW1lIGFuZCBJ
-IHdhbnQgeW91IHRvIGFjdCBhcyBvbmUgb2YgdGhlIGNvbnRyYWN0b3JzIG93
-bmVkIGJ5IHRoZSBOaWdlcmlhbiBHb3Zlcm5tZW50LCBJIHdpbGwgaW5jbHVk
-ZSB5b3VyIG5hbWUgaW4gdGhlIGZpbGUgSSB3aWxsIHN1Ym1pdCB0byB0aGUg
-cHJlc2lkZW5jeSBmb3IgYXBwcm92YWwgYW5kIEkgYW0gcHJlcGFyZWQgdG8g
-Z2l2ZSB5b3UgMzAlIG9mIHRoZSB0b3RhbCBzdW0gYWZ0ZXIgdGhpcyBtb25l
-eSBpcyBiZWVuIHRyYW5zZmVycmVkIHRvIHlvdXIgYmFuayBhY2NvdW50LiBc
-cGFyDQpccGFyDQogIFxwYXINClxwYXINClNpci9NYWRhbSwgaWYgeW91IGFy
-ZSB3aWxsaW5nIHRvIGRvIHRoaXMgZGVhbCB3aXRoIG1lLCBraW5kbHkgY29u
-dGFjdCBtZSB2aWEgdGhlIHRlbGVwaG9uZSBudW1iZXJzIG9yIGVtYWlsIGFk
-ZHJlc3MgYWJvdmUgb3IgdmlhIHRoaXMgYWx0ZXJuYXRpdmUgZW1haWwgYWRk
-cmVzcyAobW9oYW1tZWRiYXJraW5kbzExMUBnbWFpbC5jb20gKSB0aGVuIEkg
-d2lsbCBub3cgdGVsbCB5b3UgdGhlIG5leHQgc3RlcCB0aGF0IHdlIGFyZSBn
-b2luZyB0byBmb2xsb3cgYW5kIHdoYXQgeW91IG5lZWQgdG8gc2VuZCB0byBt
-ZSBmb3IgbWUgdG8gc3RhcnQgcHJvY2Vzc2luZyBhbGwgdGhlIHBhcGVyIHdv
-cmtzIHRvIGJhY2sgdXAgdGhlIGNsYWltIG9mIHRoaXMgVVNEJDM4LjVNLiBQ
-bGVhc2UgZG9uXHJxdW90ZSB0IGZhaWwgdG8gaW5jbHVkZSB5b3VyIHByaXZh
-dGUgY29udGFjdHMgZGV0YWlscy4gUGxlYXNlIGRlc3Ryb3kgdGhpcyBsZXR0
-ZXIsIGlmIHlvdSBhcmUgbm90IHdpbGxpbmcgdG8gZG8gdGhpcyBkZWFsIHdp
-dGggbWUuIEkgd2lsbCBiZSBpbnZlc3RpbmcgbXkgb3duIHNoYXJlIG9mIHRo
-ZSBtb25leSB0aHJvdWdoIHlvdXIgZ3VpZGUgbGluZXMgaW4geW91ciBjb3Vu
-dHJ5IG9yIGlmIHlvdSBoYXZlIGEgY29tcGFueSwgSSBwcmVmZXIgdG8gZ28g
-aW50byBwYXJ0bmVyc2hpcCB3aXRoIHlvdS4gU28gcGxlYXNlIHRyZWF0IHRo
-aXMgZGVhbCB3aXRoIHV0bW9zdCBjb25maWRlbnRpYWxpdHkgaWYgeW91IGFy
-ZSB3aWxsaW5nIHRvIGRvIHRoaXMgZGVhbCB3aXRoIG1lLCBhbmQgYWZ0ZXIg
-YWxsIGRvY3VtZW50YXRpb25zLCBpdCB3aWxsIHRha2UganVzdCA3IGJhbmtp
-bmcgd29ya2luZyBkYXlzIHRvIGNvbmNsdWRlIGV2ZXJ5dGhpbmcuIFxwYXIN
-ClxwYXINCiAgXHBhcg0KXHBhcg0KVGhhbmtzIFxwYXINClxwYXINCiAgXHBh
-cg0KXHBhcg0KWW91cnMgRmFpdGhmdWxseSwgXHBhcg0KXHBhcg0KXHBhcg0K
-ICBccGFyDQpccGFyDQogTXIuIE1vaGFtbWVkIFNhbnVzaSBCYXJraW5kb1xw
-YXINClxwYXINCihGRURFUkFMIE1JTklTVFJZIE9GIFBFVFJPTEVVTSBSRVNP
-VVJDRVMsIE5OUEMpIFxwYXINCn0NCgA=
+Please let me know asap if it should be resent.  I'm otherwise going to
+clean it out of my todo queue.
 
-------=_NextPart_000_0112_01C2A9A6.1569B284--
+
+Bj=C3=B8rn
