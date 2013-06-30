@@ -1,65 +1,33 @@
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Subject: Re: [PATCH] megaraid_sas: fix memory leak if SGL has zero length entries
-Date: Sat, 29 Jun 2013 16:15:22 +0200
-Message-ID: <87ppv5xath.fsf@nemi.mork.no>
-References: <1353488088-10684-1-git-send-email-bjorn@mork.no>
+From: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
+Subject: Re: [PATCH v2 06/15] IB/srp: Maintain a single connection per I_T
+ nexus
+Date: Sun, 30 Jun 2013 16:10:22 -0400
+Message-ID: <1372623022.12468.12.camel@haswell.thedillows.org>
+References: <51CD856A.3010102@acm.org> <51CD86CE.8080804@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1353488088-10684-1-git-send-email-bjorn@mork.no>
- (=?utf-8?Q?=22Bj=C3=B8rn?= Mork"'s
-	message of "Wed, 21 Nov 2012 09:54:48 +0100")
-Sender: stable-owner@vger.kernel.org
-To: Neela Syam Kolli <megaraidlinux@lsi.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Adam Radford <aradford@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51CD86CE.8080804-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Bj=C3=B8rn Mork <bjorn@mork.no> writes:
+On Fri, 2013-06-28 at 14:51 +0200, Bart Van Assche wrote:
+> An SRP target is required to maintain a single connection between
+> initiator and target. This means that if the 'add_target' attribute
+> is used to create a second connection to a target that the first
+> connection will be logged out and that the SCSI error handler will
+> kick in. The SCSI error handler will cause the SRP initiator to
+> reconnect, which will cause I/O over the second connection to fail.
+> Avoid such ping-pong behavior by disabling relogins. Note: if
+> reconnecting manually is necessary, that is possible by deleting
+> and recreating an rport via sysfs.
 
-> commit 98cb7e44 ([SCSI] megaraid_sas: Sanity check user
-> supplied length before passing it to dma_alloc_coherent())
-> introduced a memory leak.  Memory allocated for entries
-> following zero length SGL entries will not be freed.
->
-> Reference: http://bugs.debian.org/688198
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Bj=C3=B8rn Mork <bjorn@mork.no>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c |   10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi=
-/megaraid/megaraid_sas_base.c
-> index d2c5366..12b6be4 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4854,10 +4854,12 @@ megasas_mgmt_fw_ioctl(struct megasas_instance=
- *instance,
->  				    sense, sense_handle);
->  	}
-> =20
-> -	for (i =3D 0; i < ioc->sge_count && kbuff_arr[i]; i++) {
-> -		dma_free_coherent(&instance->pdev->dev,
-> -				    kern_sge32[i].length,
-> -				    kbuff_arr[i], kern_sge32[i].phys_addr);
-> +	for (i =3D 0; i < ioc->sge_count; i++) {
-> +		if (kbuff_arr[i])
-> +			dma_free_coherent(&instance->pdev->dev,
-> +					  kern_sge32[i].length,
-> +					  kbuff_arr[i],
-> +					  kern_sge32[i].phys_addr);
->  	}
-> =20
->  	megasas_return_cmd(instance, cmd);
+Acked-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
 
-
-This patch was acked by Adam Radford 4 Dec 2012:
-http://permalink.gmane.org/gmane.linux.kernel.stable/36537
-but it looks like it got lost somewhere after that.
-
-Please let me know asap if it should be resent.  I'm otherwise going to
-clean it out of my todo queue.
-
-
-Bj=C3=B8rn
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
