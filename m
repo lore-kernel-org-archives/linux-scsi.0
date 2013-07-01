@@ -1,16 +1,14 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH V2 3/4] qla4xxx: Exporting new attrs for iscsi session and connection in sysfs
-Date: Mon, 1 Jul 2013 05:54:13 -0400
-Message-ID: <1372672454-31817-3-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1372672454-31817-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH V2 1/4] scsi_transport_iscsi: Exporting new attrs for iscsi session and connection in sysfs
+Date: Mon, 1 Jul 2013 05:54:11 -0400
+Message-ID: <1372672454-31817-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from co1ehsobe001.messaging.microsoft.com ([216.32.180.184]:31915
+Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:59016
 	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753685Ab3GAKUu (ORCPT
+	by vger.kernel.org with ESMTP id S1753682Ab3GAKUu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jul 2013 06:20:50 -0400
-In-Reply-To: <1372672454-31817-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
@@ -18,262 +16,234 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
+Exporting new iSCSI Session and Connection parameters to sysfs
+
 Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_os.c |  203 +++++++++++++++++++++++++++++------------
- 1 files changed, 146 insertions(+), 57 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c |  123 ++++++++++++++++++++++++++++++++++-
+ include/scsi/iscsi_if.h             |   32 +++++++++
+ 2 files changed, 154 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 4d231c1..84d9361 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -378,6 +378,44 @@ static umode_t qla4_attr_is_visible(int param_type, int param)
- 		case ISCSI_PARAM_PASSWORD:
- 		case ISCSI_PARAM_USERNAME_IN:
- 		case ISCSI_PARAM_PASSWORD_IN:
-+		case ISCSI_PARAM_AUTO_SND_TGT_DISABLE:
-+		case ISCSI_PARAM_DISCOVERY_SESS:
-+		case ISCSI_PARAM_PORTAL_TYPE:
-+		case ISCSI_PARAM_CHAP_AUTH_EN:
-+		case ISCSI_PARAM_DISCOVERY_LOGOUT_EN:
-+		case ISCSI_PARAM_BIDI_CHAP_EN:
-+		case ISCSI_PARAM_DISCOVERY_AUTH_OPTIONAL:
-+		case ISCSI_PARAM_DEF_TIME2WAIT:
-+		case ISCSI_PARAM_DEF_TIME2RETAIN:
-+		case ISCSI_PARAM_HDRDGST_EN:
-+		case ISCSI_PARAM_DATADGST_EN:
-+		case ISCSI_PARAM_INITIAL_R2T_EN:
-+		case ISCSI_PARAM_IMM_DATA_EN:
-+		case ISCSI_PARAM_PDU_INORDER_EN:
-+		case ISCSI_PARAM_DATASEQ_INORDER_EN:
-+		case ISCSI_PARAM_MAX_SEGMENT_SIZE:
-+		case ISCSI_PARAM_TCP_TIMESTAMP_STAT:
-+		case ISCSI_PARAM_TCP_WSF_DISABLE:
-+		case ISCSI_PARAM_TCP_NAGLE_DISABLE:
-+		case ISCSI_PARAM_TCP_TIMER_SCALE:
-+		case ISCSI_PARAM_TCP_TIMESTAMP_EN:
-+		case ISCSI_PARAM_TCP_XMIT_WSF:
-+		case ISCSI_PARAM_TCP_RECV_WSF:
-+		case ISCSI_PARAM_IP_FRAGMENT_DISABLE:
-+		case ISCSI_PARAM_IPV4_TOS:
-+		case ISCSI_PARAM_IPV6_TC:
-+		case ISCSI_PARAM_IPV6_FLOW_LABEL:
-+		case ISCSI_PARAM_IS_FW_ASSIGNED_IPV6:
-+		case ISCSI_PARAM_KEEPALIVE_TMO:
-+		case ISCSI_PARAM_LOCAL_PORT:
-+		case ISCSI_PARAM_ISID:
-+		case ISCSI_PARAM_TSID:
-+		case ISCSI_PARAM_DEF_TASKMGMT_TMO:
-+		case ISCSI_PARAM_ERL:
-+		case ISCSI_PARAM_STATSN:
-+		case ISCSI_PARAM_EXP_STATSN:
-+		case ISCSI_PARAM_DISCOVERY_PARENT_IDX:
-+		case ISCSI_PARAM_DISCOVERY_PARENT_TYPE:
- 			return S_IRUGO;
- 		default:
- 			return 0;
-@@ -2257,6 +2295,101 @@ static int qla4xxx_copy_to_fwddb_param(struct iscsi_bus_flash_session *sess,
- 	return rc;
- }
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index abf7c40..e4a989f 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -25,7 +25,6 @@
+ #include <linux/slab.h>
+ #include <linux/bsg-lib.h>
+ #include <linux/idr.h>
+-#include <linux/list.h>
+ #include <net/tcp.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -3327,6 +3326,23 @@ iscsi_conn_attr(exp_statsn, ISCSI_PARAM_EXP_STATSN);
+ iscsi_conn_attr(persistent_address, ISCSI_PARAM_PERSISTENT_ADDRESS);
+ iscsi_conn_attr(ping_tmo, ISCSI_PARAM_PING_TMO);
+ iscsi_conn_attr(recv_tmo, ISCSI_PARAM_RECV_TMO);
++iscsi_conn_attr(local_port, ISCSI_PARAM_LOCAL_PORT);
++iscsi_conn_attr(statsn, ISCSI_PARAM_STATSN);
++iscsi_conn_attr(keepalive_tmo, ISCSI_PARAM_KEEPALIVE_TMO);
++iscsi_conn_attr(max_segment_size, ISCSI_PARAM_MAX_SEGMENT_SIZE);
++iscsi_conn_attr(tcp_timestamp_stat, ISCSI_PARAM_TCP_TIMESTAMP_STAT);
++iscsi_conn_attr(tcp_wsf_disable, ISCSI_PARAM_TCP_WSF_DISABLE);
++iscsi_conn_attr(tcp_nagle_disable, ISCSI_PARAM_TCP_NAGLE_DISABLE);
++iscsi_conn_attr(tcp_timer_scale, ISCSI_PARAM_TCP_TIMER_SCALE);
++iscsi_conn_attr(tcp_timestamp_enable, ISCSI_PARAM_TCP_TIMESTAMP_EN);
++iscsi_conn_attr(fragment_disable, ISCSI_PARAM_IP_FRAGMENT_DISABLE);
++iscsi_conn_attr(ipv4_tos, ISCSI_PARAM_IPV4_TOS);
++iscsi_conn_attr(ipv6_traffic_class, ISCSI_PARAM_IPV6_TC);
++iscsi_conn_attr(ipv6_flow_label, ISCSI_PARAM_IPV6_FLOW_LABEL);
++iscsi_conn_attr(is_fw_assigned_ipv6, ISCSI_PARAM_IS_FW_ASSIGNED_IPV6);
++iscsi_conn_attr(tcp_xmit_wsf, ISCSI_PARAM_TCP_XMIT_WSF);
++iscsi_conn_attr(tcp_recv_wsf, ISCSI_PARAM_TCP_RECV_WSF);
++
  
-+static void qla4xxx_copy_to_sess_conn_params(struct iscsi_conn *conn,
-+					     struct iscsi_session *sess,
-+					     struct dev_db_entry *fw_ddb_entry)
-+{
-+	unsigned long options = 0;
-+	uint16_t ddb_link;
-+	uint16_t disc_parent;
-+
-+	options = le16_to_cpu(fw_ddb_entry->options);
-+	conn->is_fw_assigned_ipv6 = test_bit(OPT_IS_FW_ASSIGNED_IPV6, &options);
-+	sess->auto_snd_tgt_disable = test_bit(OPT_AUTO_SENDTGTS_DISABLE,
-+					      &options);
-+	sess->discovery_sess = test_bit(OPT_DISC_SESSION, &options);
-+
-+	options = le16_to_cpu(fw_ddb_entry->iscsi_options);
-+	conn->hdrdgst_en = test_bit(ISCSIOPT_HEADER_DIGEST_EN, &options);
-+	conn->datadgst_en = test_bit(ISCSIOPT_DATA_DIGEST_EN, &options);
-+	sess->imm_data_en = test_bit(ISCSIOPT_IMMEDIATE_DATA_EN, &options);
-+	sess->initial_r2t_en = test_bit(ISCSIOPT_INITIAL_R2T_EN, &options);
-+	sess->dataseq_inorder_en = test_bit(ISCSIOPT_DATA_SEQ_IN_ORDER,
-+					    &options);
-+	sess->pdu_inorder_en = test_bit(ISCSIOPT_DATA_PDU_IN_ORDER, &options);
-+	sess->chap_auth_en = test_bit(ISCSIOPT_CHAP_AUTH_EN, &options);
-+	sess->discovery_logout_en = test_bit(ISCSIOPT_DISCOVERY_LOGOUT_EN,
-+					     &options);
-+	sess->bidi_chap_en = test_bit(ISCSIOPT_BIDI_CHAP_EN, &options);
-+	sess->discovery_auth_optional =
-+			test_bit(ISCSIOPT_DISCOVERY_AUTH_OPTIONAL, &options);
-+	if (test_bit(ISCSIOPT_ERL1, &options))
-+		sess->erl |= BIT_1;
-+	if (test_bit(ISCSIOPT_ERL0, &options))
-+		sess->erl |= BIT_0;
-+
-+	options = le16_to_cpu(fw_ddb_entry->tcp_options);
-+	conn->tcp_timestamp_stat = test_bit(TCPOPT_TIMESTAMP_STAT, &options);
-+	conn->tcp_nagle_disable = test_bit(TCPOPT_NAGLE_DISABLE, &options);
-+	conn->tcp_wsf_disable = test_bit(TCPOPT_WSF_DISABLE, &options);
-+	if (test_bit(TCPOPT_TIMER_SCALE3, &options))
-+		conn->tcp_timer_scale |= BIT_3;
-+	if (test_bit(TCPOPT_TIMER_SCALE2, &options))
-+		conn->tcp_timer_scale |= BIT_2;
-+	if (test_bit(TCPOPT_TIMER_SCALE1, &options))
-+		conn->tcp_timer_scale |= BIT_1;
-+
-+	conn->tcp_timer_scale >>= 1;
-+	conn->tcp_timestamp_en = test_bit(TCPOPT_TIMESTAMP_EN, &options);
-+
-+	options = le16_to_cpu(fw_ddb_entry->ip_options);
-+	conn->fragment_disable = test_bit(IPOPT_FRAGMENT_DISABLE, &options);
-+
-+	conn->max_recv_dlength = BYTE_UNITS *
-+			  le16_to_cpu(fw_ddb_entry->iscsi_max_rcv_data_seg_len);
-+	conn->max_xmit_dlength = BYTE_UNITS *
-+			  le16_to_cpu(fw_ddb_entry->iscsi_max_snd_data_seg_len);
-+	sess->max_r2t = le16_to_cpu(fw_ddb_entry->iscsi_max_outsnd_r2t);
-+	sess->first_burst = BYTE_UNITS *
-+			       le16_to_cpu(fw_ddb_entry->iscsi_first_burst_len);
-+	sess->max_burst = BYTE_UNITS *
-+				 le16_to_cpu(fw_ddb_entry->iscsi_max_burst_len);
-+	sess->time2wait = le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
-+	sess->time2retain = le16_to_cpu(fw_ddb_entry->iscsi_def_time2retain);
-+	sess->tpgt = le32_to_cpu(fw_ddb_entry->tgt_portal_grp);
-+	conn->max_segment_size = le16_to_cpu(fw_ddb_entry->mss);
-+	conn->tcp_xmit_wsf = fw_ddb_entry->tcp_xmt_wsf;
-+	conn->tcp_recv_wsf = fw_ddb_entry->tcp_rcv_wsf;
-+	conn->ipv4_tos = fw_ddb_entry->ipv4_tos;
-+	conn->keepalive_tmo = le16_to_cpu(fw_ddb_entry->ka_timeout);
-+	conn->local_port = le16_to_cpu(fw_ddb_entry->lcl_port);
-+	conn->statsn = le32_to_cpu(fw_ddb_entry->stat_sn);
-+	conn->exp_statsn = le32_to_cpu(fw_ddb_entry->exp_stat_sn);
-+	sess->tsid = le16_to_cpu(fw_ddb_entry->tsid);
-+	COPY_ISID(sess->isid, fw_ddb_entry->isid);
-+
-+	ddb_link = le16_to_cpu(fw_ddb_entry->ddb_link);
-+	if (ddb_link < MAX_DDB_ENTRIES)
-+		sess->discovery_parent_idx = ddb_link;
-+	else
-+		sess->discovery_parent_idx = DDB_NO_LINK;
-+
-+	if (ddb_link == DDB_ISNS)
-+		disc_parent = ISCSI_DISC_PARENT_ISNS;
-+	else if (ddb_link == DDB_NO_LINK)
-+		disc_parent = ISCSI_DISC_PARENT_UNKNOWN;
-+	else if (ddb_link < MAX_DDB_ENTRIES)
-+		disc_parent = ISCSI_DISC_PARENT_SENDTGT;
-+	else
-+		disc_parent = ISCSI_DISC_PARENT_UNKNOWN;
-+
-+	iscsi_set_param(conn->cls_conn, ISCSI_PARAM_DISCOVERY_PARENT_TYPE,
-+			iscsi_get_discovery_parent_name(disc_parent), 0);
-+
-+	iscsi_set_param(conn->cls_conn, ISCSI_PARAM_TARGET_ALIAS,
-+			(char *)fw_ddb_entry->iscsi_alias, 0);
-+}
-+
- static void qla4xxx_copy_fwddb_param(struct scsi_qla_host *ha,
- 				     struct dev_db_entry *fw_ddb_entry,
- 				     struct iscsi_cls_session *cls_sess,
-@@ -2275,47 +2408,29 @@ static void qla4xxx_copy_fwddb_param(struct scsi_qla_host *ha,
+ #define iscsi_conn_ep_attr_show(param)					\
+ static ssize_t show_conn_ep_param_##param(struct device *dev,		\
+@@ -3379,6 +3395,22 @@ static struct attribute *iscsi_conn_attrs[] = {
+ 	&dev_attr_conn_persistent_port.attr,
+ 	&dev_attr_conn_ping_tmo.attr,
+ 	&dev_attr_conn_recv_tmo.attr,
++	&dev_attr_conn_local_port.attr,
++	&dev_attr_conn_statsn.attr,
++	&dev_attr_conn_keepalive_tmo.attr,
++	&dev_attr_conn_max_segment_size.attr,
++	&dev_attr_conn_tcp_timestamp_stat.attr,
++	&dev_attr_conn_tcp_wsf_disable.attr,
++	&dev_attr_conn_tcp_nagle_disable.attr,
++	&dev_attr_conn_tcp_timer_scale.attr,
++	&dev_attr_conn_tcp_timestamp_enable.attr,
++	&dev_attr_conn_fragment_disable.attr,
++	&dev_attr_conn_ipv4_tos.attr,
++	&dev_attr_conn_ipv6_traffic_class.attr,
++	&dev_attr_conn_ipv6_flow_label.attr,
++	&dev_attr_conn_is_fw_assigned_ipv6.attr,
++	&dev_attr_conn_tcp_xmit_wsf.attr,
++	&dev_attr_conn_tcp_recv_wsf.attr,
+ 	NULL,
+ };
  
- 	ddb_entry->chap_tbl_idx = le16_to_cpu(fw_ddb_entry->chap_tbl_idx);
+@@ -3416,6 +3448,38 @@ static umode_t iscsi_conn_attr_is_visible(struct kobject *kobj,
+ 		param = ISCSI_PARAM_PING_TMO;
+ 	else if (attr == &dev_attr_conn_recv_tmo.attr)
+ 		param = ISCSI_PARAM_RECV_TMO;
++	else if (attr == &dev_attr_conn_local_port.attr)
++		param = ISCSI_PARAM_LOCAL_PORT;
++	else if (attr == &dev_attr_conn_statsn.attr)
++		param = ISCSI_PARAM_STATSN;
++	else if (attr == &dev_attr_conn_keepalive_tmo.attr)
++		param = ISCSI_PARAM_KEEPALIVE_TMO;
++	else if (attr == &dev_attr_conn_max_segment_size.attr)
++		param = ISCSI_PARAM_MAX_SEGMENT_SIZE;
++	else if (attr == &dev_attr_conn_tcp_timestamp_stat.attr)
++		param = ISCSI_PARAM_TCP_TIMESTAMP_STAT;
++	else if (attr == &dev_attr_conn_tcp_wsf_disable.attr)
++		param = ISCSI_PARAM_TCP_WSF_DISABLE;
++	else if (attr == &dev_attr_conn_tcp_nagle_disable.attr)
++		param = ISCSI_PARAM_TCP_NAGLE_DISABLE;
++	else if (attr == &dev_attr_conn_tcp_timer_scale.attr)
++		param = ISCSI_PARAM_TCP_TIMER_SCALE;
++	else if (attr == &dev_attr_conn_tcp_timestamp_enable.attr)
++		param = ISCSI_PARAM_TCP_TIMESTAMP_EN;
++	else if (attr == &dev_attr_conn_fragment_disable.attr)
++		param = ISCSI_PARAM_IP_FRAGMENT_DISABLE;
++	else if (attr == &dev_attr_conn_ipv4_tos.attr)
++		param = ISCSI_PARAM_IPV4_TOS;
++	else if (attr == &dev_attr_conn_ipv6_traffic_class.attr)
++		param = ISCSI_PARAM_IPV6_TC;
++	else if (attr == &dev_attr_conn_ipv6_flow_label.attr)
++		param = ISCSI_PARAM_IPV6_FLOW_LABEL;
++	else if (attr == &dev_attr_conn_is_fw_assigned_ipv6.attr)
++		param = ISCSI_PARAM_IS_FW_ASSIGNED_IPV6;
++	else if (attr == &dev_attr_conn_tcp_xmit_wsf.attr)
++		param = ISCSI_PARAM_TCP_XMIT_WSF;
++	else if (attr == &dev_attr_conn_tcp_recv_wsf.attr)
++		param = ISCSI_PARAM_TCP_RECV_WSF;
+ 	else {
+ 		WARN_ONCE(1, "Invalid conn attr");
+ 		return 0;
+@@ -3476,6 +3540,21 @@ iscsi_session_attr(targetalias, ISCSI_PARAM_TARGET_ALIAS, 0);
+ iscsi_session_attr(boot_root, ISCSI_PARAM_BOOT_ROOT, 0);
+ iscsi_session_attr(boot_nic, ISCSI_PARAM_BOOT_NIC, 0);
+ iscsi_session_attr(boot_target, ISCSI_PARAM_BOOT_TARGET, 0);
++iscsi_session_attr(auto_snd_tgt_disable, ISCSI_PARAM_AUTO_SND_TGT_DISABLE, 0);
++iscsi_session_attr(discovery_session, ISCSI_PARAM_DISCOVERY_SESS, 0);
++iscsi_session_attr(portal_type, ISCSI_PARAM_PORTAL_TYPE, 0);
++iscsi_session_attr(chap_auth, ISCSI_PARAM_CHAP_AUTH_EN, 0);
++iscsi_session_attr(discovery_logout, ISCSI_PARAM_DISCOVERY_LOGOUT_EN, 0);
++iscsi_session_attr(bidi_chap, ISCSI_PARAM_BIDI_CHAP_EN, 0);
++iscsi_session_attr(discovery_auth_optional,
++		   ISCSI_PARAM_DISCOVERY_AUTH_OPTIONAL, 0);
++iscsi_session_attr(def_time2wait, ISCSI_PARAM_DEF_TIME2WAIT, 0);
++iscsi_session_attr(def_time2retain, ISCSI_PARAM_DEF_TIME2RETAIN, 0);
++iscsi_session_attr(isid, ISCSI_PARAM_ISID, 0);
++iscsi_session_attr(tsid, ISCSI_PARAM_TSID, 0);
++iscsi_session_attr(def_taskmgmt_tmo, ISCSI_PARAM_DEF_TASKMGMT_TMO, 0);
++iscsi_session_attr(discovery_parent_idx, ISCSI_PARAM_DISCOVERY_PARENT_IDX, 0);
++iscsi_session_attr(discovery_parent_type, ISCSI_PARAM_DISCOVERY_PARENT_TYPE, 0);
  
--	conn->max_recv_dlength = BYTE_UNITS *
--			  le16_to_cpu(fw_ddb_entry->iscsi_max_rcv_data_seg_len);
--
--	conn->max_xmit_dlength = BYTE_UNITS *
--			  le16_to_cpu(fw_ddb_entry->iscsi_max_snd_data_seg_len);
--
--	sess->initial_r2t_en =
--			    (BIT_10 & le16_to_cpu(fw_ddb_entry->iscsi_options));
--
--	sess->max_r2t = le16_to_cpu(fw_ddb_entry->iscsi_max_outsnd_r2t);
--
--	sess->imm_data_en = (BIT_11 & le16_to_cpu(fw_ddb_entry->iscsi_options));
--
--	sess->first_burst = BYTE_UNITS *
--			       le16_to_cpu(fw_ddb_entry->iscsi_first_burst_len);
--
--	sess->max_burst = BYTE_UNITS *
--				 le16_to_cpu(fw_ddb_entry->iscsi_max_burst_len);
--
--	sess->time2wait = le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
--
--	sess->time2retain = le16_to_cpu(fw_ddb_entry->iscsi_def_time2retain);
-+	qla4xxx_copy_to_sess_conn_params(conn, sess, fw_ddb_entry);
+ static ssize_t
+ show_priv_session_state(struct device *dev, struct device_attribute *attr,
+@@ -3580,6 +3659,20 @@ static struct attribute *iscsi_session_attrs[] = {
+ 	&dev_attr_sess_chap_out_idx.attr,
+ 	&dev_attr_sess_chap_in_idx.attr,
+ 	&dev_attr_priv_sess_target_id.attr,
++	&dev_attr_sess_auto_snd_tgt_disable.attr,
++	&dev_attr_sess_discovery_session.attr,
++	&dev_attr_sess_portal_type.attr,
++	&dev_attr_sess_chap_auth.attr,
++	&dev_attr_sess_discovery_logout.attr,
++	&dev_attr_sess_bidi_chap.attr,
++	&dev_attr_sess_discovery_auth_optional.attr,
++	&dev_attr_sess_def_time2wait.attr,
++	&dev_attr_sess_def_time2retain.attr,
++	&dev_attr_sess_isid.attr,
++	&dev_attr_sess_tsid.attr,
++	&dev_attr_sess_def_taskmgmt_tmo.attr,
++	&dev_attr_sess_discovery_parent_idx.attr,
++	&dev_attr_sess_discovery_parent_type.attr,
+ 	NULL,
+ };
  
-+	sess->def_taskmgmt_tmo = le16_to_cpu(fw_ddb_entry->def_timeout);
- 	conn->persistent_port = le16_to_cpu(fw_ddb_entry->port);
+@@ -3643,6 +3736,34 @@ static umode_t iscsi_session_attr_is_visible(struct kobject *kobj,
+ 		param = ISCSI_PARAM_BOOT_NIC;
+ 	else if (attr == &dev_attr_sess_boot_target.attr)
+ 		param = ISCSI_PARAM_BOOT_TARGET;
++	else if (attr == &dev_attr_sess_auto_snd_tgt_disable.attr)
++		param = ISCSI_PARAM_AUTO_SND_TGT_DISABLE;
++	else if (attr == &dev_attr_sess_discovery_session.attr)
++		param = ISCSI_PARAM_DISCOVERY_SESS;
++	else if (attr == &dev_attr_sess_portal_type.attr)
++		param = ISCSI_PARAM_PORTAL_TYPE;
++	else if (attr == &dev_attr_sess_chap_auth.attr)
++		param = ISCSI_PARAM_CHAP_AUTH_EN;
++	else if (attr == &dev_attr_sess_discovery_logout.attr)
++		param = ISCSI_PARAM_DISCOVERY_LOGOUT_EN;
++	else if (attr == &dev_attr_sess_bidi_chap.attr)
++		param = ISCSI_PARAM_BIDI_CHAP_EN;
++	else if (attr == &dev_attr_sess_discovery_auth_optional.attr)
++		param = ISCSI_PARAM_DISCOVERY_AUTH_OPTIONAL;
++	else if (attr == &dev_attr_sess_def_time2wait.attr)
++		param = ISCSI_PARAM_DEF_TIME2WAIT;
++	else if (attr == &dev_attr_sess_def_time2retain.attr)
++		param = ISCSI_PARAM_DEF_TIME2RETAIN;
++	else if (attr == &dev_attr_sess_isid.attr)
++		param = ISCSI_PARAM_ISID;
++	else if (attr == &dev_attr_sess_tsid.attr)
++		param = ISCSI_PARAM_TSID;
++	else if (attr == &dev_attr_sess_def_taskmgmt_tmo.attr)
++		param = ISCSI_PARAM_DEF_TASKMGMT_TMO;
++	else if (attr == &dev_attr_sess_discovery_parent_idx.attr)
++		param = ISCSI_PARAM_DISCOVERY_PARENT_IDX;
++	else if (attr == &dev_attr_sess_discovery_parent_type.attr)
++		param = ISCSI_PARAM_DISCOVERY_PARENT_TYPE;
+ 	else if (attr == &dev_attr_priv_sess_recovery_tmo.attr)
+ 		return S_IRUGO | S_IWUSR;
+ 	else if (attr == &dev_attr_priv_sess_state.attr)
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index 9d28ded..13d81c5 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -494,6 +494,38 @@ enum iscsi_param {
+ 	ISCSI_PARAM_BOOT_NIC,
+ 	ISCSI_PARAM_BOOT_TARGET,
  
--	sess->tpgt = le32_to_cpu(fw_ddb_entry->tgt_portal_grp);
--
-+	memset(ip_addr, 0, sizeof(ip_addr));
- 	options = le16_to_cpu(fw_ddb_entry->options);
--	if (options & DDB_OPT_IPV6_DEVICE)
-+	if (options & DDB_OPT_IPV6_DEVICE) {
-+		iscsi_set_param(cls_conn, ISCSI_PARAM_PORTAL_TYPE, "ipv6", 4);
++	ISCSI_PARAM_AUTO_SND_TGT_DISABLE,
++	ISCSI_PARAM_DISCOVERY_SESS,
++	ISCSI_PARAM_PORTAL_TYPE,
++	ISCSI_PARAM_CHAP_AUTH_EN,
++	ISCSI_PARAM_DISCOVERY_LOGOUT_EN,
++	ISCSI_PARAM_BIDI_CHAP_EN,
++	ISCSI_PARAM_DISCOVERY_AUTH_OPTIONAL,
 +
-+		memset(ip_addr, 0, sizeof(ip_addr));
- 		sprintf(ip_addr, "%pI6", fw_ddb_entry->ip_addr);
--	else
-+	} else {
-+		iscsi_set_param(cls_conn, ISCSI_PARAM_PORTAL_TYPE, "ipv4", 4);
- 		sprintf(ip_addr, "%pI4", fw_ddb_entry->ip_addr);
-+	}
- 
-+	iscsi_set_param(cls_conn, ISCSI_PARAM_PERSISTENT_ADDRESS,
-+			(char *)ip_addr, buflen);
- 	iscsi_set_param(cls_conn, ISCSI_PARAM_TARGET_NAME,
- 			(char *)fw_ddb_entry->iscsi_name, buflen);
- 	iscsi_set_param(cls_conn, ISCSI_PARAM_INITIATOR_NAME,
- 			(char *)ha->name_string, buflen);
--	iscsi_set_param(cls_conn, ISCSI_PARAM_PERSISTENT_ADDRESS,
--			(char *)ip_addr, buflen);
--	iscsi_set_param(cls_conn, ISCSI_PARAM_TARGET_ALIAS,
--			(char *)fw_ddb_entry->iscsi_alias, buflen);
- }
- 
- void qla4xxx_update_session_conn_fwddb_param(struct scsi_qla_host *ha,
-@@ -2403,37 +2518,11 @@ void qla4xxx_update_session_conn_param(struct scsi_qla_host *ha,
- 
- 	/* Update params */
- 	ddb_entry->chap_tbl_idx = le16_to_cpu(fw_ddb_entry->chap_tbl_idx);
--	conn->max_recv_dlength = BYTE_UNITS *
--			  le16_to_cpu(fw_ddb_entry->iscsi_max_rcv_data_seg_len);
--
--	conn->max_xmit_dlength = BYTE_UNITS *
--			  le16_to_cpu(fw_ddb_entry->iscsi_max_snd_data_seg_len);
--
--	sess->initial_r2t_en =
--			    (BIT_10 & le16_to_cpu(fw_ddb_entry->iscsi_options));
--
--	sess->max_r2t = le16_to_cpu(fw_ddb_entry->iscsi_max_outsnd_r2t);
--
--	sess->imm_data_en = (BIT_11 & le16_to_cpu(fw_ddb_entry->iscsi_options));
--
--	sess->first_burst = BYTE_UNITS *
--			       le16_to_cpu(fw_ddb_entry->iscsi_first_burst_len);
--
--	sess->max_burst = BYTE_UNITS *
--				 le16_to_cpu(fw_ddb_entry->iscsi_max_burst_len);
--
--	sess->time2wait = le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
--
--	sess->time2retain = le16_to_cpu(fw_ddb_entry->iscsi_def_time2retain);
--
--	sess->tpgt = le32_to_cpu(fw_ddb_entry->tgt_portal_grp);
-+	qla4xxx_copy_to_sess_conn_params(conn, sess, fw_ddb_entry);
- 
- 	memcpy(sess->initiatorname, ha->name_string,
- 	       min(sizeof(ha->name_string), sizeof(sess->initiatorname)));
- 
--	iscsi_set_param(cls_conn, ISCSI_PARAM_TARGET_ALIAS,
--			(char *)fw_ddb_entry->iscsi_alias, 0);
--
- exit_session_conn_param:
- 	if (fw_ddb_entry)
- 		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
++	ISCSI_PARAM_DEF_TIME2WAIT,
++	ISCSI_PARAM_DEF_TIME2RETAIN,
++	ISCSI_PARAM_MAX_SEGMENT_SIZE,
++	ISCSI_PARAM_STATSN,
++	ISCSI_PARAM_KEEPALIVE_TMO,
++	ISCSI_PARAM_LOCAL_PORT,
++	ISCSI_PARAM_TSID,
++	ISCSI_PARAM_DEF_TASKMGMT_TMO,
++
++	ISCSI_PARAM_TCP_TIMESTAMP_STAT,
++	ISCSI_PARAM_TCP_WSF_DISABLE,
++	ISCSI_PARAM_TCP_NAGLE_DISABLE,
++	ISCSI_PARAM_TCP_TIMER_SCALE,
++	ISCSI_PARAM_TCP_TIMESTAMP_EN,
++	ISCSI_PARAM_TCP_XMIT_WSF,
++	ISCSI_PARAM_TCP_RECV_WSF,
++	ISCSI_PARAM_IP_FRAGMENT_DISABLE,
++	ISCSI_PARAM_IPV4_TOS,
++	ISCSI_PARAM_IPV6_TC,
++	ISCSI_PARAM_IPV6_FLOW_LABEL,
++	ISCSI_PARAM_IS_FW_ASSIGNED_IPV6,
++
++	ISCSI_PARAM_DISCOVERY_PARENT_IDX,
++	ISCSI_PARAM_DISCOVERY_PARENT_TYPE,
+ 	/* must always be last */
+ 	ISCSI_PARAM_MAX,
+ };
 -- 
 1.7.1
 
