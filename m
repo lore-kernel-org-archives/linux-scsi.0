@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 6/7] scsi: remove check for 'resetting'
-Date: Mon,  1 Jul 2013 08:50:54 +0200
-Message-ID: <1372661455-122384-7-git-send-email-hare@suse.de>
+Subject: [PATCH 5/7] dc395: Move 'last_reset' into internal host structure
+Date: Mon,  1 Jul 2013 08:50:53 +0200
+Message-ID: <1372661455-122384-6-git-send-email-hare@suse.de>
 References: <1372661455-122384-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42530 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42529 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752420Ab3GAGvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752624Ab3GAGvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 1 Jul 2013 02:51:04 -0400
 In-Reply-To: <1372661455-122384-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,66 +14,114 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>, Hannes Reinecke <hare@suse.de>
 
-Field is now unused, so this is dead code.
+'last_reset' is only used internally, so move it into the
+internal host structure.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi.c | 28 ----------------------------
- 1 file changed, 28 deletions(-)
+ drivers/scsi/dc395x.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 2c0d0ec..ebe3b0a 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -78,11 +78,6 @@ static void scsi_done(struct scsi_cmnd *cmd);
-  * Definitions and constants.
-  */
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 694e13c..42e8624 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -308,6 +308,8 @@ struct AdapterCtlBlk {
+ 	struct timer_list waiting_timer;
+ 	struct timer_list selto_timer;
  
--#define MIN_RESET_DELAY (2*HZ)
--
--/* Do not call reset on error if we just did a reset within 15 sec. */
--#define MIN_RESET_PERIOD (15*HZ)
--
- /*
-  * Note - the initial logging level can be set here to log events at boot time.
-  * After the system is up, you may enable logging via the /proc interface.
-@@ -658,7 +653,6 @@ EXPORT_SYMBOL(scsi_cmd_get_serial);
- int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- {
- 	struct Scsi_Host *host = cmd->device->host;
--	unsigned long timeout;
- 	int rtn = 0;
++	unsigned long last_reset;
++
+ 	u16 srb_count;
  
- 	atomic_inc(&cmd->device->iorequest_cnt);
-@@ -704,28 +698,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 			       (cmd->device->lun << 5 & 0xe0);
+ 	u8 sel_timeout;
+@@ -860,9 +862,9 @@ static void waiting_set_timer(struct AdapterCtlBlk *acb, unsigned long to)
+ 	init_timer(&acb->waiting_timer);
+ 	acb->waiting_timer.function = waiting_timeout;
+ 	acb->waiting_timer.data = (unsigned long) acb;
+-	if (time_before(jiffies + to, acb->scsi_host->last_reset - HZ / 2))
++	if (time_before(jiffies + to, acb->last_reset - HZ / 2))
+ 		acb->waiting_timer.expires =
+-		    acb->scsi_host->last_reset - HZ / 2 + 1;
++		    acb->last_reset - HZ / 2 + 1;
+ 	else
+ 		acb->waiting_timer.expires = jiffies + to + 1;
+ 	add_timer(&acb->waiting_timer);
+@@ -1319,7 +1321,7 @@ static int __dc395x_eh_bus_reset(struct scsi_cmnd *cmd)
+ 	udelay(500);
+ 
+ 	/* We may be in serious trouble. Wait some seconds */
+-	acb->scsi_host->last_reset =
++	acb->last_reset =
+ 	    jiffies + 3 * HZ / 2 +
+ 	    HZ * acb->eeprom.delay_time;
+ 
+@@ -1462,9 +1464,9 @@ static void selto_timer(struct AdapterCtlBlk *acb)
+ 	acb->selto_timer.function = selection_timeout_missed;
+ 	acb->selto_timer.data = (unsigned long) acb;
+ 	if (time_before
+-	    (jiffies + HZ, acb->scsi_host->last_reset + HZ / 2))
++	    (jiffies + HZ, acb->last_reset + HZ / 2))
+ 		acb->selto_timer.expires =
+-		    acb->scsi_host->last_reset + HZ / 2 + 1;
++		    acb->last_reset + HZ / 2 + 1;
+ 	else
+ 		acb->selto_timer.expires = jiffies + HZ + 1;
+ 	add_timer(&acb->selto_timer);
+@@ -1535,7 +1537,7 @@ static u8 start_scsi(struct AdapterCtlBlk* acb, struct DeviceCtlBlk* dcb,
  	}
+ 	/* Allow starting of SCSI commands half a second before we allow the mid-level
+ 	 * to queue them again after a reset */
+-	if (time_before(jiffies, acb->scsi_host->last_reset - HZ / 2)) {
++	if (time_before(jiffies, acb->last_reset - HZ / 2)) {
+ 		dprintkdbg(DBG_KG, "start_scsi: Refuse cmds (reset wait)\n");
+ 		return 1;
+ 	}
+@@ -3031,7 +3033,7 @@ static void disconnect(struct AdapterCtlBlk *acb)
+ 		dprintkl(KERN_ERR, "disconnect: No such device\n");
+ 		udelay(500);
+ 		/* Suspend queue for a while */
+-		acb->scsi_host->last_reset =
++		acb->last_reset =
+ 		    jiffies + HZ / 2 +
+ 		    HZ * acb->eeprom.delay_time;
+ 		clear_fifo(acb, "disconnectEx");
+@@ -3053,7 +3055,7 @@ static void disconnect(struct AdapterCtlBlk *acb)
+ 		waiting_process_next(acb);
+ 	} else if (srb->state & SRB_ABORT_SENT) {
+ 		dcb->flag &= ~ABORT_DEV_;
+-		acb->scsi_host->last_reset = jiffies + HZ / 2 + 1;
++		acb->last_reset = jiffies + HZ / 2 + 1;
+ 		dprintkl(KERN_ERR, "disconnect: SRB_ABORT_SENT\n");
+ 		doing_srb_done(acb, DID_ABORT, srb->cmd, 1);
+ 		waiting_process_next(acb);
+@@ -3649,7 +3651,7 @@ static void scsi_reset_detect(struct AdapterCtlBlk *acb)
+ 	/*DC395x_write8(acb, TRM_S1040_DMA_CONTROL,STOPDMAXFER); */
+ 	udelay(500);
+ 	/* Maybe we locked up the bus? Then lets wait even longer ... */
+-	acb->scsi_host->last_reset =
++	acb->last_reset =
+ 	    jiffies + 5 * HZ / 2 +
+ 	    HZ * acb->eeprom.delay_time;
  
--	/*
--	 * We will wait MIN_RESET_DELAY clock ticks after the last reset so
--	 * we can avoid the drive not being ready.
--	 */
--	timeout = host->last_reset + MIN_RESET_DELAY;
--
--	if (host->resetting && time_before(jiffies, timeout)) {
--		int ticks_remaining = timeout - jiffies;
--		/*
--		 * NOTE: This may be executed from within an interrupt
--		 * handler!  This is bad, but for now, it'll do.  The irq
--		 * level of the interrupt handler has been masked out by the
--		 * platform dependent interrupt handling code already, so the
--		 * sti() here will not cause another call to the SCSI host's
--		 * interrupt handler (assuming there is one irq-level per
--		 * host).
--		 */
--		while (--ticks_remaining >= 0)
--			mdelay(1 + 999 / HZ);
--		host->resetting = 0;
--	}
--
- 	scsi_log_send(cmd);
+@@ -4426,7 +4428,7 @@ static void adapter_init_scsi_host(struct Scsi_Host *host)
+ 	host->dma_channel = -1;
+ 	host->unique_id = acb->io_port_base;
+ 	host->irq = acb->irq_level;
+-	host->last_reset = jiffies;
++	acb->last_reset = jiffies;
  
- 	/*
+ 	host->max_id = 16;
+ 	if (host->max_id - 1 == eeprom->scsi_id)
+@@ -4484,7 +4486,7 @@ static void adapter_init_chip(struct AdapterCtlBlk *acb)
+ 		/*spin_unlock_irq (&io_request_lock); */
+ 		udelay(500);
+ 
+-		acb->scsi_host->last_reset =
++		acb->last_reset =
+ 		    jiffies + HZ / 2 +
+ 		    HZ * acb->eeprom.delay_time;
+ 
 -- 
 1.7.12.4
 
