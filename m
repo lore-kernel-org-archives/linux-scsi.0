@@ -1,44 +1,67 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH v12 5/6] Avoid that scsi_device_set_state() triggers a
- race
-Date: Mon, 01 Jul 2013 17:17:24 +0200
-Message-ID: <51D19D84.2070701@acm.org>
-References: <51CC5176.90609@acm.org> <51CC52A5.2010204@acm.org> <1372690195.2385.20.camel@dabdike>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gerard.telenet-ops.be ([195.130.132.48]:34665 "EHLO
-	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665Ab3GAPR3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jul 2013 11:17:29 -0400
-In-Reply-To: <1372690195.2385.20.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: [PATCH] block: Fix possible sleep in invalid context
+Date: Mon,  1 Jul 2013 20:58:35 +0530
+Message-ID: <1372692515-31969-1-git-send-email-sthumma@codeaurora.org>
+Return-path: <linux-pm-owner@vger.kernel.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Chanho Min <chanho.min@lge.com>, Joe Lawrence <jdl1291@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>, Tejun Heo <tj@kernel.org>
 
-On 07/01/13 16:49, James Bottomley wrote:
-> On Thu, 2013-06-27 at 16:56 +0200, Bart Van Assche wrote:
->> Make concurrent invocations of scsi_device_set_state() safe.
->
-> Firstly, I don't understand from this where you think the races are.
-> Secondly, shouldn't this be the device lock? and thirdly, if we accept
-> that locking is required, encapsulate it in the function: Having the
-> callers manage locking is asking for trouble.  The latter may require a
-> new lock for the state to avoid entanglement.
+When block runtime PM is enabled following warning is seen
+while resuming the device.
 
-Today there is no guarantee that scsi_device_set_state() calls are 
-serialized, so two scsi_device_set_state() invocations may be in 
-progress concurrently. It is e.g. possible that both calls report 
-"device state has been changed successfully" to their callers although 
-only one of these two state changes will be effective due to the race.
+BUG: sleeping function called from invalid context at
+.../drivers/base/power/runtime.c:923
+in_atomic(): 1, irqs_disabled(): 128, pid: 12, name: kworker/0:1
+[<c0014448>] (unwind_backtrace+0x0/0x120) from
+[<c03120e4>] (__pm_runtime_suspend+0x34/0xa0) from
+[<c021c33c>] (blk_post_runtime_resume+0x4c/0x5c) from
+[<c03297cc>] (scsi_runtime_resume+0x90/0xb4) from
+[<c0310940>] (__rpm_callback+0x30/0x58) from
+[<c0310980>] (rpm_callback+0x18/0x28) from
+[<c0311ab0>] (rpm_resume+0x3dc/0x540) from
+[<c03120a4>] (pm_runtime_work+0x8c/0x98) from
+[<c007767c>] (process_one_work+0x238/0x3e4) from
+[<c0077b90>] (worker_thread+0x1ac/0x2ac) from
+[<c007cfdc>] (kthread+0x88/0x94) from
+[<c000ece0>] (kernel_thread_exit+0x0/0x8)
 
-At the time I wrote this patch I think there was a caller that invoked 
-scsi_device_set_state() with the host lock held. Hence my choice for the 
-host lock. However, I can't find that caller anymore. So the suggestion 
-to use the device lock instead makes sense to me. I'll double check 
-whether there are no callers of that function that already hold the 
-device lock.
+Fix this by releasing spin_lock_irq() before calling
+pm_runtime_autosuspend() in blk_post_runtime_resume().
 
-Bart.
+Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: stable@vger.kernel.org
+---
+ block/blk-core.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 33c33bc..2456116 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -3159,16 +3159,18 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
+  */
+ void blk_post_runtime_resume(struct request_queue *q, int err)
+ {
+-	spin_lock_irq(q->queue_lock);
+ 	if (!err) {
++		spin_lock_irq(q->queue_lock);
+ 		q->rpm_status = RPM_ACTIVE;
+ 		__blk_run_queue(q);
+ 		pm_runtime_mark_last_busy(q->dev);
++		spin_unlock_irq(q->queue_lock);
+ 		pm_runtime_autosuspend(q->dev);
+ 	} else {
++		spin_lock_irq(q->queue_lock);
+ 		q->rpm_status = RPM_SUSPENDED;
++		spin_unlock_irq(q->queue_lock);
+ 	}
+-	spin_unlock_irq(q->queue_lock);
+ }
+ EXPORT_SYMBOL(blk_post_runtime_resume);
+ #endif
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation.
+
