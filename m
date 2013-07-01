@@ -1,78 +1,43 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v12 6/6] Avoid re-enabling I/O after the transport became
- offline
-Date: Mon, 01 Jul 2013 14:09:48 +0200
-Message-ID: <51D1718C.4090900@suse.de>
-References: <51CC5176.90609@acm.org> <51CC52EB.9040900@acm.org> <51D13D8C.9070407@suse.de> <51D170A6.7060005@acm.org>
+From: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
+Subject: Re: [PATCH v2 08/15] scsi_transport_srp: Add transport layer error
+ handling
+Date: Mon, 01 Jul 2013 07:19:14 -0400
+Message-ID: <1372677554.12468.53.camel@haswell.thedillows.org>
+References: <51CD856A.3010102@acm.org> <51CD873E.6040208@acm.org>
+	 <1372626334.12468.34.camel@haswell.thedillows.org>
+	 <51D12941.3050105@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54638 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752738Ab3GAMJx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Jul 2013 08:09:53 -0400
-In-Reply-To: <51D170A6.7060005@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51D12941.3050105-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Chanho Min <chanho.min@lge.com>, Joe Lawrence <jdl1291@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>, Tejun Heo <tj@kernel.org>
 
-On 07/01/2013 02:05 PM, Bart Van Assche wrote:
-> On 07/01/13 10:27, Hannes Reinecke wrote:
->> On 06/27/2013 04:57 PM, Bart Van Assche wrote:
->>> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->>> index dfbaa34..666b741 100644
->>> --- a/drivers/scsi/scsi_sysfs.c
->>> +++ b/drivers/scsi/scsi_sysfs.c
->>> @@ -959,14 +959,16 @@ void __scsi_remove_device(struct scsi_device =
-*sdev)
->>>   {
->>>   	struct Scsi_Host *shost =3D sdev->host;
->>>   	struct device *dev =3D &sdev->sdev_gendev;
->>> +	enum scsi_device_state sdev_state;
->>>   	int res;
->>>  =20
->>>   	if (sdev->is_visible) {
->>>   		spin_lock_irq(shost->host_lock);
->>> +		sdev_state =3D sdev->sdev_state;
->>>   		res =3D scsi_device_set_state(sdev, SDEV_CANCEL);
->>>   		spin_unlock_irq(shost->host_lock);
->>>  =20
->>> -		if (res !=3D 0)
->>> +		if (res !=3D 0 && sdev_state !=3D SDEV_TRANSPORT_OFFLINE)
->>>   			return;
->>>  =20
->>>   		bsg_unregister_queue(sdev->request_queue);
->>>
->> Hmm. This is really subtle. Do you mind adding inserting a comment
->> here on why this is required?
->=20
-> How about inserting the following comment just above the last if-stat=
-ement
-> in the code cited above ?
->=20
-> 		/*
-> 		 * The transition from SDEV_TRANSPORT_OFFLINE into SDEV_CANCEL
-> 		 * is not allowed since this transition would re-enable I/O. If
-> 		 * the device state was already SDEV_TRANSPORT_OFFLINE,
-> 		 * proceed with device removal.
-> 		 */
->=20
-> Bart.
->=20
-Perfect.
+On Mon, 2013-07-01 at 09:01 +0200, Bart Van Assche wrote:
+> On 06/30/13 23:05, David Dillow wrote:
+> > On Fri, 2013-06-28 at 14:53 +0200, Bart Van Assche wrote:
+> >> +int srp_tmo_valid(int fast_io_fail_tmo, int dev_loss_tmo)
+> >> +{
+> >> +	return (fast_io_fail_tmo < 0 || dev_loss_tmo < 0 ||
+> >> +		fast_io_fail_tmo < dev_loss_tmo) &&
+> >> +		fast_io_fail_tmo < LONG_MAX / HZ &&
+> >> +		dev_loss_tmo < LONG_MAX / HZ ? 0 : -EINVAL;
+> >> +}
+> >
+> > They should also be capped by SCSI_DEVICE_BLOCK_MAX_TIMEOUT instead of
+> > LONG_MAX / HZ, I think.
+> 
+> The fast_io_fail_tmo should indeed be capped by that value. However, I'm 
+> not sure about dev_loss_tmo. I think there are several use cases (e.g. 
+> initiator-side mirroring) where it's useful to set dev_loss_tmo to a 
+> larger value than ten minutes.
 
-Cheers,
+Ah, yes, very good point.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
