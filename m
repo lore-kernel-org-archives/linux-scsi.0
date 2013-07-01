@@ -1,108 +1,92 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/5] scsi: Set hostbyte status in scsi_check_sense()
-Date: Mon,  1 Jul 2013 10:12:08 +0200
-Message-ID: <1372666331-66996-3-git-send-email-hare@suse.de>
+Subject: [PATCH 4/5] scsi: Return ENODATA on medium error
+Date: Mon,  1 Jul 2013 10:12:10 +0200
+Message-ID: <1372666331-66996-5-git-send-email-hare@suse.de>
 References: <1372666331-66996-1-git-send-email-hare@suse.de>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:45462 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753069Ab3GAIMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Jul 2013 04:12:19 -0400
 In-Reply-To: <1372666331-66996-1-git-send-email-hare@suse.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Theodore Tso <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-List-Id: linux-scsi@vger.kernel.org
 
-We should be modifying the host_byte status in scsi_check_sense()
-directly; this saves us to introduce a special return code for
-each and every condition.
+When a medium error is detected the SCSI stack should return
+ENODATA to the upper layers.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 21 +++++++--------------
- include/scsi/scsi.h       |  1 -
- 2 files changed, 7 insertions(+), 15 deletions(-)
+ block/blk-core.c          | 3 +++
+ drivers/scsi/scsi_error.c | 2 +-
+ drivers/scsi/scsi_lib.c   | 5 +++++
+ include/scsi/scsi.h       | 1 +
+ 4 files changed, 10 insertions(+), 1 deletion(-)
 
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 170607c..1093ca1 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2318,6 +2318,9 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
+ 		case -ENOSPC:
+ 			error_type = "critical space allocation";
+ 			break;
++		case -ENODATA:
++			error_type = "critical medium";
++			break;
+ 		case -EIO:
+ 		default:
+ 			error_type = "I/O";
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 84369f2..e5cb162 100644
+index aeec0e7..7f794d4 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -248,7 +248,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
-  * @scmd:	Cmd to have sense checked.
-  *
-  * Return value:
-- *	SUCCESS or FAILED or NEEDS_RETRY or TARGET_ERROR
-+ *	SUCCESS or FAILED or NEEDS_RETRY or ADD_TO_MLQUEUE
-  *
-  * Notes:
-  *	When a deferred error is detected the current command has
-@@ -379,13 +379,15 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 	case MISCOMPARE:
- 	case BLANK_CHECK:
- 	case DATA_PROTECT:
--		return TARGET_ERROR;
-+		set_host_byte(scmd, DID_TARGET_FAILURE);
-+		return SUCCESS;
- 
- 	case MEDIUM_ERROR:
+@@ -391,7 +391,7 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
  		if (sshdr.asc == 0x11 || /* UNRECOVERED READ ERR */
  		    sshdr.asc == 0x13 || /* AMNF DATA FIELD */
  		    sshdr.asc == 0x14) { /* RECORD NOT FOUND */
--			return TARGET_ERROR;
-+			set_host_byte(scmd, DID_TARGET_FAILURE);
-+			return SUCCESS;
+-			set_host_byte(scmd, DID_TARGET_FAILURE);
++			set_host_byte(scmd, DID_MEDIUM_ERROR);
+ 			return SUCCESS;
  		}
  		return NEEDS_RETRY;
- 
-@@ -393,14 +395,14 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 		if (scmd->device->retry_hwerror)
- 			return ADD_TO_MLQUEUE;
- 		else
--			return TARGET_ERROR;
-+			set_host_byte(scmd, DID_TARGET_FAILURE);
- 
- 	case ILLEGAL_REQUEST:
- 		if (sshdr.asc == 0x20 || /* Invalid command operation code */
- 		    sshdr.asc == 0x21 || /* Logical block address out of range */
- 		    sshdr.asc == 0x24 || /* Invalid field in cdb */
- 		    sshdr.asc == 0x26) { /* Parameter value invalid */
--			return TARGET_ERROR;
-+			set_host_byte(scmd, DID_TARGET_FAILURE);
- 		}
- 		return SUCCESS;
- 
-@@ -863,7 +865,6 @@ retry:
- 		case SUCCESS:
- 		case NEEDS_RETRY:
- 		case FAILED:
--		case TARGET_ERROR:
- 			break;
- 		case ADD_TO_MLQUEUE:
- 			rtn = NEEDS_RETRY;
-@@ -1690,14 +1691,6 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		rtn = scsi_check_sense(scmd);
- 		if (rtn == NEEDS_RETRY)
- 			goto maybe_retry;
--		else if (rtn == TARGET_ERROR) {
--			/*
--			 * Need to modify host byte to signal a
--			 * permanent target failure
--			 */
--			set_host_byte(scmd, DID_TARGET_FAILURE);
--			rtn = SUCCESS;
--		}
- 		/* if rtn == FAILED, we have no sense information;
- 		 * returning FAILED will wake the error handler thread
- 		 * to collect the sense and redo the decide
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 8a2f92d..70ca1f6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -711,6 +711,7 @@ EXPORT_SYMBOL(scsi_release_buffers);
+  * -EREMOTEIO	permanent target failure, do not retry
+  * -EBADE	permanent nexus failure, retry on other path
+  * -ENOSPC	No write space available
++ * -ENODATA	Medium error
+  * -EIO		unspecified I/O error
+  */
+ static int __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
+@@ -733,6 +734,10 @@ static int __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
+ 		set_host_byte(cmd, DID_OK);
+ 		error = -ENOSPC;
+ 		break;
++	case DID_MEDIUM_ERROR:
++		set_host_byte(cmd, DID_OK);
++		error = -ENODATA;
++		break;
+ 	default:
+ 		error = -EIO;
+ 		break;
 diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 66216c1..07d4bd916 100644
+index 7d5b8e2..95ce204 100644
 --- a/include/scsi/scsi.h
 +++ b/include/scsi/scsi.h
-@@ -481,7 +481,6 @@ static inline int scsi_is_wlun(unsigned int lun)
- #define TIMEOUT_ERROR   0x2007
- #define SCSI_RETURN_NOT_HANDLED   0x2008
- #define FAST_IO_FAIL	0x2009
--#define TARGET_ERROR    0x200A
+@@ -453,6 +453,7 @@ static inline int scsi_is_wlun(unsigned int lun)
+ #define DID_NEXUS_FAILURE 0x11  /* Permanent nexus failure, retry on other
+ 				 * paths might yield different results */
+ #define DID_ALLOC_FAILURE 0x12  /* Space allocation on the device failed */
++#define DID_MEDIUM_ERROR  0x13  /* Medium error */
+ #define DRIVER_OK       0x00	/* Driver status                           */
  
  /*
-  * Midlevel queue return values.
 -- 
 1.7.12.4
 
