@@ -1,55 +1,58 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/9] blk-timeout: add BLK_EH_SCHEDULED return code
-Date: Mon,  1 Jul 2013 16:24:24 +0200
-Message-ID: <1372688671-85639-3-git-send-email-hare@suse.de>
+Subject: [PATCH 4/9] virtio_scsi: Enable new EH timeout handler
+Date: Mon,  1 Jul 2013 16:24:26 +0200
+Message-ID: <1372688671-85639-5-git-send-email-hare@suse.de>
 References: <1372688671-85639-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60689 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60678 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753619Ab3GAOYj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Jul 2013 10:24:39 -0400
+	id S1752388Ab3GAOYi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Jul 2013 10:24:38 -0400
 In-Reply-To: <1372688671-85639-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Roland Dreier <roland@purestorage.com>, Hannes Reinecke <hare@suse.de>
 
-Add a 'BLK_EH_SCHEDULED' return code for blk-timeout to indicate
-that a delayed error recovery has been initiated.
-
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- drivers/scsi/scsi_error.c | 4 ++++
- include/linux/blkdev.h    | 1 +
- 2 files changed, 5 insertions(+)
+ drivers/scsi/virtio_scsi.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index d708067..e76e895 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -163,6 +163,10 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- 	else if (host->hostt->eh_timed_out)
- 		rtn = host->hostt->eh_timed_out(scmd);
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 2168258..f23b9ef 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -630,6 +630,12 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+ 	return virtscsi_tmf(vscsi, cmd);
+ }
  
-+	/* Check for asynchronous command aborts */
-+	if (rtn == BLK_EH_SCHEDULED)
-+		return BLK_EH_NOT_HANDLED;
++static enum blk_eh_timer_return virtscsi_timedout(struct scsi_cmnd *scmd)
++{
++	scsi_abort_command(scmd);
++	return BLK_EH_SCHEDULED;
++}
 +
- 	scmd->result |= DID_TIME_OUT << 16;
+ static int virtscsi_abort(struct scsi_cmnd *sc)
+ {
+ 	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
+@@ -683,6 +689,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.queuecommand = virtscsi_queuecommand_single,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = virtscsi_timedout,
  
- 	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 2fdb4a4..d846e2b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -238,6 +238,7 @@ enum blk_eh_timer_return {
- 	BLK_EH_NOT_HANDLED,
- 	BLK_EH_HANDLED,
- 	BLK_EH_RESET_TIMER,
-+	BLK_EH_SCHEDULED,
- };
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
+@@ -699,6 +706,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.queuecommand = virtscsi_queuecommand_multi,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = virtscsi_timedout,
  
- typedef enum blk_eh_timer_return (rq_timed_out_fn)(struct request *);
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
 -- 
 1.7.12.4
 
