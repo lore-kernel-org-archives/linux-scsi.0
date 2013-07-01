@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/7] advansys: Remove 'last_reset' references
-Date: Mon,  1 Jul 2013 08:50:51 +0200
-Message-ID: <1372661455-122384-4-git-send-email-hare@suse.de>
+Subject: [PATCH 4/7] tmscsim: Move 'last_reset' into host structure
+Date: Mon,  1 Jul 2013 08:50:52 +0200
+Message-ID: <1372661455-122384-5-git-send-email-hare@suse.de>
 References: <1372661455-122384-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42508 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42510 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752420Ab3GAGvD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752506Ab3GAGvD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 1 Jul 2013 02:51:03 -0400
 In-Reply-To: <1372661455-122384-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,39 +14,81 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>, Hannes Reinecke <hare@suse.de>
 
-Serves no purpose whatsoever.
+The 'last_reset' value is only used internally, so move it into
+the internal host structure.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/advansys.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/tmscsim.c | 14 +++++++-------
+ drivers/scsi/tmscsim.h |  1 +
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index c67e401..d814588 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -2511,8 +2511,8 @@ static void asc_prt_scsi_host(struct Scsi_Host *s)
- 	struct asc_board *boardp = shost_priv(s);
+diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+index 9327f5f..1142361 100644
+--- a/drivers/scsi/tmscsim.c
++++ b/drivers/scsi/tmscsim.c
+@@ -521,7 +521,7 @@ dc390_StartSCSI( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_sr
+ 	pACB->SelConn++;
+ 	return 1;
+     }
+-    if (time_before (jiffies, pACB->pScsiHost->last_reset))
++    if (time_before (jiffies, pACB->last_reset))
+     {
+ 	DEBUG0(printk ("DC390: We were just reset and don't accept commands yet!\n"));
+ 	return 1;
+@@ -1863,7 +1863,7 @@ dc390_ScsiRstDetect( struct dc390_acb* pACB )
+     /* delay half a second */
+     udelay (1000);
+     DC390_write8 (ScsiCmd, CLEAR_FIFO_CMD);
+-    pACB->pScsiHost->last_reset = jiffies + 5*HZ/2
++    pACB->last_reset = jiffies + 5*HZ/2
+ 		    + HZ * dc390_eepromBuf[pACB->AdapterIndex][EE_DELAY];
+     pACB->Connected = 0;
  
- 	printk("Scsi_Host at addr 0x%p, device %s\n", s, dev_name(boardp->dev));
--	printk(" host_busy %u, host_no %d, last_reset %d,\n",
--	       s->host_busy, s->host_no, (unsigned)s->last_reset);
-+	printk(" host_busy %u, host_no %d,\n",
-+	       s->host_busy, s->host_no);
+@@ -2048,9 +2048,9 @@ static int DC390_bus_reset (struct scsi_cmnd *cmd)
  
- 	printk(" base 0x%lx, io_port 0x%lx, irq %d,\n",
- 	       (ulong)s->base, (ulong)s->io_port, boardp->irq);
-@@ -3345,8 +3345,8 @@ static void asc_prt_driver_conf(struct seq_file *m, struct Scsi_Host *shost)
- 		shost->host_no);
+ 	dc390_ResetDevParam(pACB);
+ 	mdelay(1);
+-	pACB->pScsiHost->last_reset = jiffies + 3*HZ/2 
++	pACB->last_reset = jiffies + 3*HZ/2
+ 		+ HZ * dc390_eepromBuf[pACB->AdapterIndex][EE_DELAY];
+-    
++
+ 	DC390_write8(ScsiCmd, CLEAR_FIFO_CMD);
+ 	DC390_read8(INT_Status);		/* Reset Pending INT */
  
- 	seq_printf(m,
--		   " host_busy %u, last_reset %lu, max_id %u, max_lun %u, max_channel %u\n",
--		   shost->host_busy, shost->last_reset, shost->max_id,
-+		   " host_busy %u, max_id %u, max_lun %u, max_channel %u\n",
-+		   shost->host_busy, shost->max_id,
- 		   shost->max_lun, shost->max_channel);
+@@ -2383,7 +2383,7 @@ static void dc390_init_hw(struct dc390_acb *pACB, u8 index)
+ 	if (pACB->Gmode2 & RST_SCSI_BUS) {
+ 		dc390_ResetSCSIBus(pACB);
+ 		udelay(1000);
+-		shost->last_reset = jiffies + HZ/2 +
++		pACB->last_reset = jiffies + HZ/2 +
+ 			HZ * dc390_eepromBuf[pACB->AdapterIndex][EE_DELAY];
+ 	}
  
- 	seq_printf(m,
+@@ -2455,8 +2455,8 @@ static int dc390_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->irq = pdev->irq;
+ 	shost->base = io_port;
+ 	shost->unique_id = io_port;
+-	shost->last_reset = jiffies;
+-	
++
++	pACB->last_reset = jiffies;
+ 	pACB->pScsiHost = shost;
+ 	pACB->IOPortBase = (u16) io_port;
+ 	pACB->IRQLevel = pdev->irq;
+diff --git a/drivers/scsi/tmscsim.h b/drivers/scsi/tmscsim.h
+index 77adc54..3d1bb4a 100644
+--- a/drivers/scsi/tmscsim.h
++++ b/drivers/scsi/tmscsim.h
+@@ -143,6 +143,7 @@ u8		Ignore_IRQ;	/* Not used */
+ 
+ struct pci_dev	*pdev;
+ 
++unsigned long   last_reset;
+ unsigned long	Cmds;
+ u32		SelLost;
+ u32		SelConn;
 -- 
 1.7.12.4
 
