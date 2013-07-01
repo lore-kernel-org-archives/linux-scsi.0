@@ -1,96 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block: Fix possible sleep in invalid context
-Date: Mon, 01 Jul 2013 15:24:11 -0700
-Message-ID: <1372717451.2385.58.camel@dabdike>
-References: <1372692515-31969-1-git-send-email-sthumma@codeaurora.org>
-	 <20130701151712.f453745bc0c587f449cc3214@linux-foundation.org>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
+Date: Mon, 1 Jul 2013 16:55:46 -0400
+Message-ID: <20130701205546.GB10645@logfs.org>
+References: <1372661455-122384-1-git-send-email-hare@suse.de>
+ <20130701174423.GA10645@logfs.org>
+ <1372706605.2385.37.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <20130701151712.f453745bc0c587f449cc3214@linux-foundation.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>, Aaron Lu <aaron.lu@intel.com>, Jens Axboe <axboe@kernel.dk>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from longford.logfs.org ([213.229.74.203]:59705 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754808Ab3GAW0Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jul 2013 18:26:24 -0400
+Content-Disposition: inline
+In-Reply-To: <1372706605.2385.37.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>
 
-On Mon, 2013-07-01 at 15:17 -0700, Andrew Morton wrote:
-> On Mon,  1 Jul 2013 20:58:35 +0530 Sujit Reddy Thumma <sthumma@codeaurora.org> wrote:
-> 
-> > When block runtime PM is enabled following warning is seen
-> > while resuming the device.
-> > 
-> > BUG: sleeping function called from invalid context at
-> > .../drivers/base/power/runtime.c:923
-> > in_atomic(): 1, irqs_disabled(): 128, pid: 12, name: kworker/0:1
-> > [<c0014448>] (unwind_backtrace+0x0/0x120) from
-> > [<c03120e4>] (__pm_runtime_suspend+0x34/0xa0) from
-> > [<c021c33c>] (blk_post_runtime_resume+0x4c/0x5c) from
-> > [<c03297cc>] (scsi_runtime_resume+0x90/0xb4) from
-> > [<c0310940>] (__rpm_callback+0x30/0x58) from
-> > [<c0310980>] (rpm_callback+0x18/0x28) from
-> > [<c0311ab0>] (rpm_resume+0x3dc/0x540) from
-> > [<c03120a4>] (pm_runtime_work+0x8c/0x98) from
-> > [<c007767c>] (process_one_work+0x238/0x3e4) from
-> > [<c0077b90>] (worker_thread+0x1ac/0x2ac) from
-> > [<c007cfdc>] (kthread+0x88/0x94) from
-> > [<c000ece0>] (kernel_thread_exit+0x0/0x8)
-> > 
-> > Fix this by releasing spin_lock_irq() before calling
-> > pm_runtime_autosuspend() in blk_post_runtime_resume().
-> > 
-> > --- a/block/blk-core.c
-> > +++ b/block/blk-core.c
-> > @@ -3159,16 +3159,18 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
-> >   */
-> >  void blk_post_runtime_resume(struct request_queue *q, int err)
-> >  {
-> > -	spin_lock_irq(q->queue_lock);
-> >  	if (!err) {
-> > +		spin_lock_irq(q->queue_lock);
-> >  		q->rpm_status = RPM_ACTIVE;
-> >  		__blk_run_queue(q);
-> >  		pm_runtime_mark_last_busy(q->dev);
-> > +		spin_unlock_irq(q->queue_lock);
-> >  		pm_runtime_autosuspend(q->dev);
-> >  	} else {
-> > +		spin_lock_irq(q->queue_lock);
-> >  		q->rpm_status = RPM_SUSPENDED;
-> > +		spin_unlock_irq(q->queue_lock);
-> >  	}
-> > -	spin_unlock_irq(q->queue_lock);
-> >  }
-> >  EXPORT_SYMBOL(blk_post_runtime_resume);
-> >  #endif
-> 
-> I suppose we can do this cleanly enough:
-> 
-> --- a/block/blk-core.c~block-fix-possible-sleep-in-invalid-context-fix
-> +++ a/block/blk-core.c
-> @@ -3159,15 +3159,14 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
->   */
->  void blk_post_runtime_resume(struct request_queue *q, int err)
->  {
-> +	spin_lock_irq(q->queue_lock);
->  	if (!err) {
-> -		spin_lock_irq(q->queue_lock);
->  		q->rpm_status = RPM_ACTIVE;
->  		__blk_run_queue(q);
->  		pm_runtime_mark_last_busy(q->dev);
->  		spin_unlock_irq(q->queue_lock);
->  		pm_request_autosuspend(q->dev);
->  	} else {
-> -		spin_lock_irq(q->queue_lock);
->  		q->rpm_status = RPM_SUSPENDED;
->  		spin_unlock_irq(q->queue_lock);
->  	}
-> _
-> 
-> 
-> I wonder if we actually need locking around that second write to
-> q->rpm_status.
+On Mon, 1 July 2013 19:23:25 +0000, James Bottomley wrote:
+> On Mon, 2013-07-01 at 13:44 -0400, J=C3=B6rn Engel wrote:
+> > If a single device is bad, don't ever do a host
+> > reset.
+>=20
+> This isn't a tenable position.  Sometimes a device looks bad because =
+the
+> host state for it has gone insane.  At that point, the only safe acti=
+on
+> is a reset of the host to sane state.
+>=20
+> I could be persuaded that you should never do the transport equivalen=
+t
+> of a bus reset (on non-SPI transports, at least), which is actually h=
+ard
+> to do on some of the modern transports, but I don't think you can get
+> away without having a host reset in the eh arsenal.
 
-Shouldn't: it's an int, which makes it a 32 bit quantity we believe to
-have atomic write properties on every platform.
+=46air enough.  Hardware being hardware and hardware bugs being hard to
+fix, I see your point.
 
-James
+However, we shouldn't screw the poor user who has paid a premium for a
+second HBA to get some redundancy and reset both of them at the same
+time.  That would, you know, defeat the redundancy. ;)
+
+J=C3=B6rn
+
+--
+A victorious army first wins and then seeks battle.
+-- Sun Tzu
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
