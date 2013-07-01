@@ -1,144 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Can not see/access devices on Marvell 88SE9485 + SiI 3726 PMP
-Date: Mon, 01 Jul 2013 07:38:02 -0700
-Message-ID: <1372689482.2385.15.camel@dabdike>
-References: <51D18DA6.8000502@gmail.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH v12 2/6] Avoid calling __scsi_remove_device() twice
+Date: Mon, 1 Jul 2013 14:38:45 +0000
+Message-ID: <1372689525.2385.16.camel@dabdike>
+References: <51CC5176.90609@acm.org> <51CC51FC.5050901@acm.org>
+	 <1372662351.2360.24.camel@dabdike> <51D12C5E.30801@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33363 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753768Ab3GAOiE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jul 2013 10:38:04 -0400
-In-Reply-To: <51D18DA6.8000502@gmail.com>
+Received: from mx2.parallels.com ([199.115.105.18]:35998 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754406Ab3GAOi5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jul 2013 10:38:57 -0400
+In-Reply-To: <51D12C5E.30801@acm.org>
+Content-Language: en-US
+Content-ID: <A9C8741082C9F44B87D46A5291F926CE@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hajo =?ISO-8859-1?Q?M=F6ller?= <dasjoe@gmail.com>
-Cc: linux-scsi@vger.kernel.org, yuxiangl@marvell.com
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Chanho Min <chanho.min@lge.com>, Joe Lawrence <jdl1291@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>, Tejun Heo <tj@kernel.org>
 
-On Mon, 2013-07-01 at 16:09 +0200, Hajo M=F6ller wrote:
-> Hi,
->=20
-> I've got a box which recently got a Marvell 88SE9485 PCIe card
-> (Supermicro AOC-SAS2LP-MV8), which is connected by a mSAS->4x SATA-ca=
-ble
-> to some 5 HDD backplanes (CFI-B53PM, chip is a SiI 3726).
->=20
-> The HBA's BIOS can see and access the HDDs through the backplanes, wh=
-ich
-> various Linux distributions could not.
-> I tried Ubuntu 12.04.2, Ubuntu 13.04, Debian 7.0 and a current Arch L=
-inux.
-> All logs in this mail are from a fresh Ubuntu 12.04.2 install.
->=20
-> lspci shows the controller as:
-> 01:00.0 RAID bus controller: Marvell Technology Group Ltd. Device 948=
-5
-> (rev 03)
->=20
-> lshw does not show the attached disks, nor are there device nodes in
-> /dev/ for those disks.
->=20
-> Unplugging a disk results in this (/var/log/kern.log):
-> kernel: [  276.995910]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2062:phy 4 ctrl sts=3D0x00000000.
-> kernel: [  276.995914]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2064:phy 4 irq sts =3D 0x01201001
-> kernel: [  278.950547]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2062:phy 4 ctrl sts=3D0x00111000.
-> kernel: [  278.950551]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2064:phy 4 irq sts =3D 0x00000081
-> kernel: [  279.502757]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_94xx.c
-> 838:get all reg link rate is 0x111000
-> kernel: [  279.502760]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_94xx.c
-> 843:get link rate is 9
-> kernel: [  279.582118] mvsas 0000:01:00.0: Phy0 : No sig fis
-> kernel: [  279.582121]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2006:phy0 Attached Device
-> kernel: [  283.953502]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2048:Get signature time out, reset phy 4
-> kernel: [  283.953517]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2062:phy 4 ctrl sts=3D0x00000000.
-> kernel: [  283.953519]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2064:phy 4 irq sts =3D 0x00001001
-> kernel: [  284.449485]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2062:phy 4 ctrl sts=3D0x00111000.
-> kernel: [  284.449488]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2064:phy 4 irq sts =3D 0x00000081
-> kernel: [  286.445635]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_94xx.c
-> 838:get all reg link rate is 0x111000
-> kernel: [  286.445638]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_94xx.c
-> 843:get link rate is 9
-> kernel: [  286.524997] mvsas 0000:01:00.0: Phy0 : No sig fis
-> kernel: [  286.525000]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2006:phy0 Attached Device
->=20
-> Replugging the disk:
-> kernel: [  310.738784]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2062:phy 4 ctrl sts=3D0x00111000.
-> kernel: [  310.738788]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2064:phy 4 irq sts =3D 0x00010000
-> kernel: [  310.738791]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 2113:notify plug in on phy[0]
-> kernel: [  310.758632]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_94xx.c
-> 838:get all reg link rate is 0x111000
-> kernel: [  310.758634]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_94xx.c
-> 843:get link rate is 9
-> kernel: [  310.877669]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 1175:phy 4 attach dev info is 20001
-> kernel: [  310.877671]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 1177:phy 4 attach sas addr is 4
-> kernel: [  310.877678]
-> /build/buildd/linux-lts-quantal-3.5.0/drivers/scsi/mvsas/mv_sas.c
-> 277:phy 4 byte dmaded.
-> kernel: [  310.877689] sas: sas_form_port: phy0 belongs to port0 alre=
-ady(1)!
->=20
-> According to Marvell's product brief the controller has "Built-in
-> support for SATA Port Multipliers with FIS-based switching", which it=
-s
-> BIOS seems to confirm.
->=20
-> The PMPs used to work when connected via a Syba SY-PEX40008 (SiI3124)
-> controller, which has bugs on its own when more than three drives per
-> PMP are concurrently active.
->=20
-> Any help is greatly appreciated,
+On Mon, 2013-07-01 at 09:14 +0200, Bart Van Assche wrote:
+> On 07/01/13 09:05, James Bottomley wrote:
+> >
+> > On Thu, 2013-06-27 at 16:53 +0200, Bart Van Assche wrote:
+> >> If something goes wrong during LUN scanning, e.g. a transport layer
+> >> failure occurs, then __scsi_remove_device() can get invoked by the
+> >> LUN scanning code for a SCSI device in state SDEV_CREATED_BLOCK. If
+> >> this happens then the SCSI device has not yet been added to sysfs
+> >> (is_visible == 0).  Make sure that in that case the transition into
+> >> state SDEV_DEL occurs. This avoids that __scsi_remove_device() gets
+> >> invoked a second time by scsi_forget_host().
+> >
+> > The patch summary of this one isn't true.  How about "enable destruction
+> > of blocked devices which fail LUN scanning"
+> 
+> Hello James,
+> 
+> Do you want me to repost the patch series or is this something you can 
+> fix up ?
 
-mv_sas is a libsas based driver.  libsas doesn't have any support for
-SATA PMPs.  When it was added they were left as a todo item but then in
-the field everyone deployed enterprise type SATA devices in SAS expande=
-r
-chassis, so PMP support just got forgotten.
+I can fix it up, but if you repost, please change it.
+
+Thanks,
 
 James
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
