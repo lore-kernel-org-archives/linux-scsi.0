@@ -1,43 +1,112 @@
-From: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
-Subject: Re: [PATCH v2 08/15] scsi_transport_srp: Add transport layer error
- handling
-Date: Mon, 01 Jul 2013 07:19:14 -0400
-Message-ID: <1372677554.12468.53.camel@haswell.thedillows.org>
-References: <51CD856A.3010102@acm.org> <51CD873E.6040208@acm.org>
-	 <1372626334.12468.34.camel@haswell.thedillows.org>
-	 <51D12941.3050105@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51D12941.3050105-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 2/4] scsi: Set hostbyte status in scsi_check_sense()
+Date: Mon,  1 Jul 2013 15:16:24 +0200
+Message-ID: <1372684586-41829-3-git-send-email-hare@suse.de>
+References: <1372684586-41829-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:57327 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753440Ab3GANQe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Jul 2013 09:16:34 -0400
+In-Reply-To: <1372684586-41829-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Theodore Tso <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Mon, 2013-07-01 at 09:01 +0200, Bart Van Assche wrote:
-> On 06/30/13 23:05, David Dillow wrote:
-> > On Fri, 2013-06-28 at 14:53 +0200, Bart Van Assche wrote:
-> >> +int srp_tmo_valid(int fast_io_fail_tmo, int dev_loss_tmo)
-> >> +{
-> >> +	return (fast_io_fail_tmo < 0 || dev_loss_tmo < 0 ||
-> >> +		fast_io_fail_tmo < dev_loss_tmo) &&
-> >> +		fast_io_fail_tmo < LONG_MAX / HZ &&
-> >> +		dev_loss_tmo < LONG_MAX / HZ ? 0 : -EINVAL;
-> >> +}
-> >
-> > They should also be capped by SCSI_DEVICE_BLOCK_MAX_TIMEOUT instead of
-> > LONG_MAX / HZ, I think.
-> 
-> The fast_io_fail_tmo should indeed be capped by that value. However, I'm 
-> not sure about dev_loss_tmo. I think there are several use cases (e.g. 
-> initiator-side mirroring) where it's useful to set dev_loss_tmo to a 
-> larger value than ten minutes.
+We should be modifying the host_byte status in scsi_check_sense()
+directly; this saves us to introduce a special return code for
+each and every condition.
 
-Ah, yes, very good point.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_error.c | 21 +++++++--------------
+ include/scsi/scsi.h       |  1 -
+ 2 files changed, 7 insertions(+), 15 deletions(-)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 84369f2..e5cb162 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -248,7 +248,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
+  * @scmd:	Cmd to have sense checked.
+  *
+  * Return value:
+- *	SUCCESS or FAILED or NEEDS_RETRY or TARGET_ERROR
++ *	SUCCESS or FAILED or NEEDS_RETRY or ADD_TO_MLQUEUE
+  *
+  * Notes:
+  *	When a deferred error is detected the current command has
+@@ -379,13 +379,15 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 	case MISCOMPARE:
+ 	case BLANK_CHECK:
+ 	case DATA_PROTECT:
+-		return TARGET_ERROR;
++		set_host_byte(scmd, DID_TARGET_FAILURE);
++		return SUCCESS;
+ 
+ 	case MEDIUM_ERROR:
+ 		if (sshdr.asc == 0x11 || /* UNRECOVERED READ ERR */
+ 		    sshdr.asc == 0x13 || /* AMNF DATA FIELD */
+ 		    sshdr.asc == 0x14) { /* RECORD NOT FOUND */
+-			return TARGET_ERROR;
++			set_host_byte(scmd, DID_TARGET_FAILURE);
++			return SUCCESS;
+ 		}
+ 		return NEEDS_RETRY;
+ 
+@@ -393,14 +395,14 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 		if (scmd->device->retry_hwerror)
+ 			return ADD_TO_MLQUEUE;
+ 		else
+-			return TARGET_ERROR;
++			set_host_byte(scmd, DID_TARGET_FAILURE);
+ 
+ 	case ILLEGAL_REQUEST:
+ 		if (sshdr.asc == 0x20 || /* Invalid command operation code */
+ 		    sshdr.asc == 0x21 || /* Logical block address out of range */
+ 		    sshdr.asc == 0x24 || /* Invalid field in cdb */
+ 		    sshdr.asc == 0x26) { /* Parameter value invalid */
+-			return TARGET_ERROR;
++			set_host_byte(scmd, DID_TARGET_FAILURE);
+ 		}
+ 		return SUCCESS;
+ 
+@@ -863,7 +865,6 @@ retry:
+ 		case SUCCESS:
+ 		case NEEDS_RETRY:
+ 		case FAILED:
+-		case TARGET_ERROR:
+ 			break;
+ 		case ADD_TO_MLQUEUE:
+ 			rtn = NEEDS_RETRY;
+@@ -1690,14 +1691,6 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 		rtn = scsi_check_sense(scmd);
+ 		if (rtn == NEEDS_RETRY)
+ 			goto maybe_retry;
+-		else if (rtn == TARGET_ERROR) {
+-			/*
+-			 * Need to modify host byte to signal a
+-			 * permanent target failure
+-			 */
+-			set_host_byte(scmd, DID_TARGET_FAILURE);
+-			rtn = SUCCESS;
+-		}
+ 		/* if rtn == FAILED, we have no sense information;
+ 		 * returning FAILED will wake the error handler thread
+ 		 * to collect the sense and redo the decide
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 66216c1..07d4bd916 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -481,7 +481,6 @@ static inline int scsi_is_wlun(unsigned int lun)
+ #define TIMEOUT_ERROR   0x2007
+ #define SCSI_RETURN_NOT_HANDLED   0x2008
+ #define FAST_IO_FAIL	0x2009
+-#define TARGET_ERROR    0x200A
+ 
+ /*
+  * Midlevel queue return values.
+-- 
+1.7.12.4
+
