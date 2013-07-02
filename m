@@ -1,61 +1,67 @@
-From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [patch] [SCSI] megaraid_sas: fix a bug for 64 bit arches
-Date: Tue, 2 Jul 2013 10:41:23 +0530
-Message-ID: <088E451FE1854947BD9145EF8C016FF4139FFCAF11@inbmail01.lsi.com>
-References: <20130628212104.GA16035@elgon.mountain>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
+Date: Tue, 02 Jul 2013 07:48:08 +0200
+Message-ID: <51D26998.2050506@suse.de>
+References: <1372661455-122384-1-git-send-email-hare@suse.de> <20130701174423.GA10645@logfs.org> <1372706605.2385.37.camel@dabdike> <20130701205546.GB10645@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20130628212104.GA16035@elgon.mountain>
-Content-Language: en-US
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:58938 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751514Ab3GBFsL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Jul 2013 01:48:11 -0400
+In-Reply-To: <20130701205546.GB10645@logfs.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
+Cc: James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>
 
->-----Original Message-----
->From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
->Sent: Saturday, June 29, 2013 2:51 AM
->To: DL-MegaRAID Linux; Saxena, Sumit
->Cc: James E.J. Bottomley; linux-scsi@vger.kernel.org; kernel-
->janitors@vger.kernel.org
->Subject: [patch] [SCSI] megaraid_sas: fix a bug for 64 bit arches
->
->On 64 bit then -1UL and -1U are not equal, so these conditions don't
->work as intended and it breaks error handling.
->
->Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c
->b/drivers/scsi/megaraid/megaraid_sas_fp.c
->index 8056eac..4f401f7 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
->@@ -585,7 +585,7 @@ u8 get_arm(struct megasas_instance *instance, u32
->ld, u8 span, u64 stripe,
-> 	case 1:
-> 		/* start with logical arm */
-> 		arm = get_arm_from_strip(instance, ld, stripe, map);
->-		if (arm != -1UL)
->+		if (arm != -1U)
-> 			arm *= 2;
-> 		break;
-> 	}
->@@ -637,7 +637,7 @@ static u8 mr_spanset_get_phy_params(struct
->megasas_instance *instance, u32 ld,
->
-> 	if (raid->level == 6) {
-> 		logArm = get_arm_from_strip(instance, ld, stripRow, map);
->-		if (logArm == -1UL)
->+		if (logArm == -1U)
-> 			return FALSE;
-> 		rowMod = mega_mod64(row, SPAN_ROW_SIZE(map, ld, span));
-> 		armQ = SPAN_ROW_SIZE(map, ld, span) - 1 - rowMod;
+On 07/01/2013 10:55 PM, J=C3=B6rn Engel wrote:
+> On Mon, 1 July 2013 19:23:25 +0000, James Bottomley wrote:
+>> On Mon, 2013-07-01 at 13:44 -0400, J=C3=B6rn Engel wrote:
+>>> If a single device is bad, don't ever do a host
+>>> reset.
+>>
+>> This isn't a tenable position.  Sometimes a device looks bad because=
+ the
+>> host state for it has gone insane.  At that point, the only safe act=
+ion
+>> is a reset of the host to sane state.
+>>
+>> I could be persuaded that you should never do the transport equivale=
+nt
+>> of a bus reset (on non-SPI transports, at least), which is actually =
+hard
+>> to do on some of the modern transports, but I don't think you can ge=
+t
+>> away without having a host reset in the eh arsenal.
+>=20
+> Fair enough.  Hardware being hardware and hardware bugs being hard to
+> fix, I see your point.
+>=20
+> However, we shouldn't screw the poor user who has paid a premium for =
+a
+> second HBA to get some redundancy and reset both of them at the same
+> time.  That would, you know, defeat the redundancy. ;)
+>=20
+Which would arguably a setup issue.
 
-Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
+We've had SAN issues where the HBA lost track of the remote port
+state (RSCNs being eaten by the switch firmware), so the only chance
+of recovery was indeed a host reset.
 
+Cheers,
 
-Sumit
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
