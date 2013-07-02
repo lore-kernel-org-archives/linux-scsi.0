@@ -1,52 +1,68 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH 1/4] scsi: ufs: Fix broken task management command implementation
-Date: Tue, 2 Jul 2013 21:21:58 +0530
-Message-ID: <CALMYJDv=QR8cMSoCfRgKDnyiJS6=gv7BXEPOq2vG7a1nCfvR0A@mail.gmail.com>
-References: <1371133860-17574-1-git-send-email-sthumma@codeaurora.org>
- <1371133860-17574-2-git-send-email-sthumma@codeaurora.org>
- <CALMYJDuRyovi3X_jmb0-PjZgRYgJfSi_ryg0YO48Cr2bRHLd+g@mail.gmail.com> <51CD7461.3000501@codeaurora.org>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
+Date: Tue, 2 Jul 2013 10:58:09 -0400
+Message-ID: <20130702145809.GA19005@logfs.org>
+References: <1372661455-122384-1-git-send-email-hare@suse.de>
+ <20130701174423.GA10645@logfs.org>
+ <1372706605.2385.37.camel@dabdike>
+ <20130701205546.GB10645@logfs.org>
+ <1372747024.2385.71.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <51CD7461.3000501@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from longford.logfs.org ([213.229.74.203]:59712 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222Ab3GBQ2t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jul 2013 12:28:49 -0400
+Content-Disposition: inline
+In-Reply-To: <1372747024.2385.71.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>
 
-On Fri, Jun 28, 2013 at 5:02 PM, Sujit Reddy Thumma
-<sthumma@codeaurora.org> wrote:
-> On 6/27/2013 4:49 PM, Santosh Y wrote:
->>>
->>> >+       spin_lock_irqsave(host->host_lock, flags);
->>> >         task_req_descp = hba->utmrdl_base_addr;
->>> >         task_req_descp += free_slot;
->>> >
->>> >@@ -2353,38 +2387,39 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
->>> >                 (struct utp_upiu_task_req *)
->>> > task_req_descp->task_req_upiu;
->>> >         task_req_upiup->header.dword_0 =
->>> >                 UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
->>> >-                                             lrbp->lun,
->>> > lrbp->task_tag);
->>> >+                               lun_id, free_slot);
->>
->> Actually it still doesn't fix the problem. The*task tag*  used here
->>
->> should be unique across the SCSI/Query and Task Managment UPIUs.
->
->
-> I am sorry, I didn't get that. Why should it be unique across the
-> SCSI/Query? For example, if a machine supports 32 request slots and 8 task
-> management slots, then the task management command tag can be anything out
-> of 8 slots.
->
+On Tue, 2 July 2013 06:37:05 +0000, James Bottomley wrote:
+>=20
+> I don't understand what you're getting at.  In a dual HBA situation,
+> whether the second HBA is implicated or not depends on configuration =
+and
+> what the first HBA is doing. If it's just passively lost device state=
+,
+> then the second HBA should continue just fine.  If the insane HBA is
 
-The spec(ufs 1.1) has the requirement under  '10.5.2 Basic Header
-Format'->'Task Tag'.
-Couple of devices I came across had similar behavior. The tracking of
-UPIUs --even belonging to a separate group-- seemed to be based on the
-'task tag' value rather than 'type of UPIU'->'task tag'.
+If the problem is an insane drive instead of an insane HBA, both HBAs
+will be in roughly the same state at roughly the same time - assuming
+they both send commands to the insane drive.  If they now go into
+error handling and effectively shut off all the sane drives at roughly
+the same time, the user is ****ed.
 
--- 
-~Santosh
+And we shouldn't require the user to buy better hardware.  The whole
+point of a redundant setup is that your plane doesn't crash to the
+ground when one of your two engines fails.  If regulations required
+perfect engines, you wouldn't be flying to conferences.  They require
+decent engines and enough redundancy that any one can fail at any
+moment.
+
+Computer systems are no different.  We can construct a robust system
+from individually less robust components.  Requiring perfect
+components would be ludicrous.  Having a system design where one
+faulty component will reliably bring the system down is equally
+ludicrous.  Sadly that is also the state of today's scsi stack.
+
+This is not a theoretical problem, btw.  We currently carry some
+patches to solve it for us.  They are not applicable for mainline in
+their current state - we support a lot less hardware diversity.  But
+trust me, we didn't create them on a whim. ;)
+
+J=C3=B6rn
+
+--
+If you're willing to restrict the flexibility of your approach,
+you can almost always do something better.
+-- John Carmack
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
