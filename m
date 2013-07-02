@@ -1,67 +1,41 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
-Date: Tue, 2 Jul 2013 11:50:58 -0400
-Message-ID: <20130702155058.GB19005@logfs.org>
-References: <1372661455-122384-1-git-send-email-hare@suse.de>
- <20130701174423.GA10645@logfs.org>
- <1372706605.2385.37.camel@dabdike>
- <20130701205546.GB10645@logfs.org>
- <1372747024.2385.71.camel@dabdike>
- <20130702145809.GA19005@logfs.org>
- <1372782820.2821.18.camel@dabdike>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 59601] commit 97dec564fd4948e0e560869c80b76e166ca2a83e breaks
+ communication with XYRATEX disk shelves
+Date: Tue,  2 Jul 2013 22:13:29 +0000 (UTC)
+Message-ID: <20130702221329.33FE911FA52@bugzilla.kernel.org>
+References: <bug-59601-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from longford.logfs.org ([213.229.74.203]:59718 "EHLO
-	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753487Ab3GBRVh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jul 2013 13:21:37 -0400
-Content-Disposition: inline
-In-Reply-To: <1372782820.2821.18.camel@dabdike>
+Received: from mail.kernel.org ([198.145.19.201]:47996 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752356Ab3GBWNc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Jul 2013 18:13:32 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 2202A20137
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2013 22:13:31 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 3D09020115
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2013 22:13:29 +0000 (UTC)
+In-Reply-To: <bug-59601-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2 July 2013 16:33:40 +0000, James Bottomley wrote:
-> On Tue, 2013-07-02 at 10:58 -0400, J=C3=B6rn Engel wrote:
-> > On Tue, 2 July 2013 06:37:05 +0000, James Bottomley wrote:
-> > >=20
-> > > I don't understand what you're getting at.  In a dual HBA situati=
-on,
-> > > whether the second HBA is implicated or not depends on configurat=
-ion and
-> > > what the first HBA is doing. If it's just passively lost device s=
-tate,
-> > > then the second HBA should continue just fine.  If the insane HBA=
- is
-> >=20
-> > If the problem is an insane drive instead of an insane HBA, both HB=
-As
-> > will be in roughly the same state at roughly the same time - assumi=
-ng
-> > they both send commands to the insane drive.  If they now go into
-> > error handling and effectively shut off all the sane drives at roug=
-hly
-> > the same time, the user is ****ed.
->=20
-> That's handled in device reset, so I don't understand your point.
+https://bugzilla.kernel.org/show_bug.cgi?id=59601
 
-Doesn't a device reset require all IO to the entire HBA to stop?
-Hannes patches fixed that for aborts, but not for device reset yet,
-afaics.
 
-J=C3=B6rn
 
---
-In America you can have either a flimsy box banged together out of two
-by fours and drywall, or a McMansion -- a flimsy box banged together
-out of two by fours and drywall, but larger, more dramatic-looking,
-and full of expensive fittings.
--- Paul Graham
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--- Comment #7 from Jack Hill <jackhill@jackhill.us>  2013-07-02 22:13:28 ---
+Created an attachment (id=106661)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=106661)
+dmesg output with packet dumps
+
+I have attached the dmesg output after applying the patch you provided.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
