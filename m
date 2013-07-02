@@ -1,69 +1,52 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
-Date: Tue, 2 Jul 2013 06:37:05 +0000
-Message-ID: <1372747024.2385.71.camel@dabdike>
-References: <1372661455-122384-1-git-send-email-hare@suse.de>
-	 <20130701174423.GA10645@logfs.org> <1372706605.2385.37.camel@dabdike>
-	 <20130701205546.GB10645@logfs.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v12 5/6] Avoid that scsi_device_set_state() triggers a
+ race
+Date: Tue, 02 Jul 2013 08:42:08 +0200
+Message-ID: <51D27640.2020607@acm.org>
+References: <51CC5176.90609@acm.org> <51CC52A5.2010204@acm.org>  <1372690195.2385.20.camel@dabdike> <51D19D84.2070701@acm.org> <1372697574.2385.34.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:36348 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932139Ab3GBGhI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jul 2013 02:37:08 -0400
-In-Reply-To: <20130701205546.GB10645@logfs.org>
-Content-Language: en-US
-Content-ID: <C0CD7C146770CC4A8917F3367F2E6EED@sw.swsoft.com>
+Received: from jacques.telenet-ops.be ([195.130.132.50]:44996 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442Ab3GBGmN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jul 2013 02:42:13 -0400
+In-Reply-To: <1372697574.2385.34.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?iso-8859-15?Q?J=F6rn_Engel?= <joern@logfs.org>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Chanho Min <chanho.min@lge.com>, Joe Lawrence <jdl1291@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>, Tejun Heo <tj@kernel.org>
 
-On Mon, 2013-07-01 at 16:55 -0400, J=F6rn Engel wrote:
-> On Mon, 1 July 2013 19:23:25 +0000, James Bottomley wrote:
-> > On Mon, 2013-07-01 at 13:44 -0400, J=F6rn Engel wrote:
-> > > If a single device is bad, don't ever do a host
-> > > reset.
-> >=20
-> > This isn't a tenable position.  Sometimes a device looks bad becaus=
-e the
-> > host state for it has gone insane.  At that point, the only safe ac=
-tion
-> > is a reset of the host to sane state.
-> >=20
-> > I could be persuaded that you should never do the transport equival=
-ent
-> > of a bus reset (on non-SPI transports, at least), which is actually=
- hard
-> > to do on some of the modern transports, but I don't think you can g=
-et
-> > away without having a host reset in the eh arsenal.
->=20
-> Fair enough.  Hardware being hardware and hardware bugs being hard to
-> fix, I see your point.
->=20
-> However, we shouldn't screw the poor user who has paid a premium for =
-a
-> second HBA to get some redundancy and reset both of them at the same
-> time.  That would, you know, defeat the redundancy. ;)
+On 07/01/13 18:52, James Bottomley wrote:
+> On Mon, 2013-07-01 at 17:17 +0200, Bart Van Assche wrote:
+>> On 07/01/13 16:49, James Bottomley wrote:
+>>> On Thu, 2013-06-27 at 16:56 +0200, Bart Van Assche wrote:
+>>>> Make concurrent invocations of scsi_device_set_state() safe.
+>>>
+>>> Firstly, I don't understand from this where you think the races are.
+>>> Secondly, shouldn't this be the device lock? and thirdly, if we accept
+>>> that locking is required, encapsulate it in the function: Having the
+>>> callers manage locking is asking for trouble.  The latter may require a
+>>> new lock for the state to avoid entanglement.
+>>
+>> Today there is no guarantee that scsi_device_set_state() calls are
+>> serialized, so two scsi_device_set_state() invocations may be in
+>> progress concurrently. It is e.g. possible that both calls report
+>> "device state has been changed successfully" to their callers although
+>> only one of these two state changes will be effective due to the race.
+>
+> We could say the above about a significant fraction of the functions in
+> the kernel; it's not a reason to add fine grained locking to them all.
+>
+> I want to know what the actual races you're trying to fix are; what
+> causes them and, in particular, is adding yet another fine grained lock
+> going to mitigate them effectively or should they be mediated in a
+> different way.
 
-I don't understand what you're getting at.  In a dual HBA situation,
-whether the second HBA is implicated or not depends on configuration an=
-d
-what the first HBA is doing. If it's just passively lost device state,
-then the second HBA should continue just fine.  If the insane HBA is
-injecting rogue data on the bus then, in a properly isolated
-configuration, it shouldn't be able to affect the second HBA, but if
-there's some leak and it does, chances are error handling will occur on
-both simultaneously.  I don't see any way to avoid this other than
-having the user buy better hardware and properly configure it.
+Since this patch is something I came up with as the result of source 
+reading maybe I should defer this patch to a later time such that it 
+doesn't slow down acceptance of this patch series.
 
-James
+Bart.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
