@@ -1,62 +1,94 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH v3 07/13] scsi_transport_srp: Add transport layer error
- handling
-Date: Wed, 03 Jul 2013 20:24:20 +0200
-Message-ID: <51D46C54.8060101@acm.org>
-References: <51D41C03.4020607@acm.org> <51D41F13.6060203@acm.org>  <1372864458.24238.32.camel@frustration.ornl.gov> <51D44A86.5050000@acm.org> <1372872474.24238.43.camel@frustration.ornl.gov>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: atomic write & T10 standards
+Date: Wed, 03 Jul 2013 14:31:59 -0400
+Message-ID: <51D46E1F.1090501@redhat.com>
+References: <51D4365C.1030008@redhat.com> <20130703143844.14981.69152@localhost.localdomain> <51D43B87.5090005@redhat.com> <1372863655.3601.19.camel@dabdike> <51D43D6C.6050505@redhat.com> <1372864959.3601.37.camel@dabdike> <51D442DD.8000001@redhat.com> <1372865829.3601.41.camel@dabdike> <51D4466E.8040408@redhat.com> <20130703155400.14981.4222@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1372872474.24238.43.camel-zHLflQxYYDO4Hhoo1DtQwJ9G+ZOsUmrO@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
-Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Jinpu Wang <jinpu.wang-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53451 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754184Ab3GCScJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Jul 2013 14:32:09 -0400
+In-Reply-To: <20130703155400.14981.4222@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Mason <clmason@fusionio.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <mkp@mkp.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/03/13 19:27, David Dillow wrote:
-> On Wed, 2013-07-03 at 18:00 +0200, Bart Van Assche wrote:
->> The combination of dev_loss_tmo off and reconnect_delay > 0 worked fine
->> in my tests. An I/O failure was detected shortly after the cable to the
->> target was pulled. I/O resumed shortly after the cable to the target was
->> reinserted.
+On 07/03/2013 11:54 AM, Chris Mason wrote:
+> Quoting Ric Wheeler (2013-07-03 11:42:38)
+>> On 07/03/2013 11:37 AM, James Bottomley wrote:
+>>> On Wed, 2013-07-03 at 11:27 -0400, Ric Wheeler wrote:
+>>>> On 07/03/2013 11:22 AM, James Bottomley wrote:
+>>>>> On Wed, 2013-07-03 at 11:04 -0400, Ric Wheeler wrote:
+>>>>>> Why not have the atomic write actually imply that it is atomic and durable for
+>>>>>> just that command?
+>>>>> I don't understand why you think you need guaranteed durability for
+>>>>> every journal transaction?  That's what causes us performance problems
+>>>>> because we have to pause on every transaction commit.
+>>>>>
+>>>>> We require durability for explicit flushes, obviously, but we could
+>>>>> achieve far better performance if we could just let the filesystem
+>>>>> updates stream to the disk and rely on atomic writes making sure the
+>>>>> journal entries were all correct.  The reason we require durability for
+>>>>> journal entries today is to ensure caching effects don't cause the
+>>>>> journal to lie or be corrupt.
+>>>> Why would we use atomic writes for things that don't need to be
+>>>> durable?
+>>>>
+>>>> Avoid a torn page write seems to be the only real difference here if
+>>>> you use the atomic operations and don't have durability...
+>>> It's not just about torn pages: Journal entries are big complex beasts.
+>>> They can be megabytes big (at least on xfs).  If we can guarantee all or
+>>> nothing atomicity in the entire journal entry write it permits a more
+>>> streaming design of the filesystem writeout path.
+>>>
+>>> James
+>>>    
+>>>
+>> Journals are normally big (128MB or so?) - I don't think that this is unique to xfs.
+> We're mixing a bunch of concepts here.  The filesystems have a lot of
+> different requirements, and atomics are just one small part.
 >
-> Perhaps I don't understand your answer -- I'm asking about dev_loss_tmo
-> < 0, and fast_io_fail_tmo >= 0. The other transports do not allow this
-> scenario, and I'm asking if it makes sense for SRP to allow it.
+> Creating a new file often uses resources freed by past files.  So
+> deleting the old must be ordered against allocating the new.  They are
+> really separate atomic units but you can't handle them completely
+> independently.
 >
-> But now that you mention reconnect_delay, what is the meaning of that
-> when it is negative? That's not in the documentation. And should it be
-> considered in srp_tmo_valid() -- are there values of reconnect_delay
-> that cause problems?
-
-None of the combinations that can be configured from user space can 
-bring the kernel in trouble. If reconnect_delay <= 0 that means that the 
-time-based reconnect mechanism is disabled.
-
-> I'm starting to get a bit concerned about this patch -- can you, Vu, and
-> Sebastian comment on the testing you have done?
-
-All combinations of reconnect_delay, fast_io_fail_tmo and dev_loss_tmo 
-that result in different behavior have been tested.
-
->>> Also, FC caps dev_loss_tmo at SCSI_DEVICE_BLOCK_MAX_TIMEOUT if
->>> fail_io_fast_tmo is off; I agree with your reasoning about leaving it
->>> unlimited if fast fail is on, but does that still hold if it is off?
+>> If our existing journal commit is:
 >>
->> I think setting dev_loss_tmo to a large value only makes sense if the
->> value of reconnect_delay is not too large. Setting both to a large value
->> would result in slow recovery after a transport layer failure has been
->> corrected.
+>> * write the data blocks for a transaction
+>> * flush
+>> * write the commit block for the transaction
+>> * flush
+>>
+>> Which part of this does and atomic write help?
+>>
+>> We would still need at least:
+>>
+>> * atomic write of data blocks & commit blocks
+>> * flush
+> Yes.  But just because we need the flush here doesn't mean we need the
+> flush for every single atomic write.
 >
-> So you agree it should be capped? I can't tell from your response.
+> -chris
+>
 
-Not all combinations of reconnect_delay / fail_io_fast_tmo / 
-dev_loss_tmo result in useful behavior. It is up to the user to choose a 
-meaningful combination.
+The catch is that our current flush mechanisms are still pretty brute force and 
+act across either the whole device or in a temporal (everything flushed before 
+this is acked) way.
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I still see it would be useful to have the atomic write really be atomic and 
+durable just for that IO - no flush needed.
+
+Can you give a sequence for the use case for the non-durable atomic write that 
+would not need a sync? Can we really trust all devices to make something atomic 
+that is not durable :) ?
+
+thanks!
+
+ric
+
+
