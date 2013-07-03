@@ -1,69 +1,70 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: atomic write & T10 standards
-Date: Wed, 03 Jul 2013 11:42:38 -0400
-Message-ID: <51D4466E.8040408@redhat.com>
-References: <51D4365C.1030008@redhat.com>    <20130703143844.14981.69152@localhost.localdomain>    <51D43B87.5090005@redhat.com> <1372863655.3601.19.camel@dabdike>   <51D43D6C.6050505@redhat.com> <1372864959.3601.37.camel@dabdike>  <51D442DD.8000001@redhat.com> <1372865829.3601.41.camel@dabdike>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: Re: [PATCH 1/4] scsi: ufs: Fix broken task management command implementation
+Date: Wed, 03 Jul 2013 21:22:03 +0530
+Message-ID: <51D448A3.1050509@codeaurora.org>
+References: <1371133860-17574-1-git-send-email-sthumma@codeaurora.org> <1371133860-17574-2-git-send-email-sthumma@codeaurora.org> <CALMYJDuRyovi3X_jmb0-PjZgRYgJfSi_ryg0YO48Cr2bRHLd+g@mail.gmail.com> <51CD7461.3000501@codeaurora.org> <CALMYJDv=QR8cMSoCfRgKDnyiJS6=gv7BXEPOq2vG7a1nCfvR0A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8014 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754478Ab3GCPmo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Jul 2013 11:42:44 -0400
-In-Reply-To: <1372865829.3601.41.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <CALMYJDv=QR8cMSoCfRgKDnyiJS6=gv7BXEPOq2vG7a1nCfvR0A@mail.gmail.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Santosh Y <santoshsy@gmail.com>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Chris Mason <clmason@fusionio.com>, "Martin K. Petersen" <mkp@mkp.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/03/2013 11:37 AM, James Bottomley wrote:
-> On Wed, 2013-07-03 at 11:27 -0400, Ric Wheeler wrote:
->> On 07/03/2013 11:22 AM, James Bottomley wrote:
->>> On Wed, 2013-07-03 at 11:04 -0400, Ric Wheeler wrote:
->>>> Why not have the atomic write actually imply that it is atomic and durable for
->>>> just that command?
->>> I don't understand why you think you need guaranteed durability for
->>> every journal transaction?  That's what causes us performance problems
->>> because we have to pause on every transaction commit.
+On 7/2/2013 9:21 PM, Santosh Y wrote:
+> On Fri, Jun 28, 2013 at 5:02 PM, Sujit Reddy Thumma
+> <sthumma@codeaurora.org> wrote:
+>> On 6/27/2013 4:49 PM, Santosh Y wrote:
+>>>>
+>>>>> +       spin_lock_irqsave(host->host_lock, flags);
+>>>>>          task_req_descp = hba->utmrdl_base_addr;
+>>>>>          task_req_descp += free_slot;
+>>>>>
+>>>>> @@ -2353,38 +2387,39 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+>>>>>                  (struct utp_upiu_task_req *)
+>>>>> task_req_descp->task_req_upiu;
+>>>>>          task_req_upiup->header.dword_0 =
+>>>>>                  UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
+>>>>> -                                             lrbp->lun,
+>>>>> lrbp->task_tag);
+>>>>> +                               lun_id, free_slot);
 >>>
->>> We require durability for explicit flushes, obviously, but we could
->>> achieve far better performance if we could just let the filesystem
->>> updates stream to the disk and rely on atomic writes making sure the
->>> journal entries were all correct.  The reason we require durability for
->>> journal entries today is to ensure caching effects don't cause the
->>> journal to lie or be corrupt.
->> Why would we use atomic writes for things that don't need to be
->> durable?
+>>> Actually it still doesn't fix the problem. The*task tag*  used here
+>>>
+>>> should be unique across the SCSI/Query and Task Managment UPIUs.
 >>
->> Avoid a torn page write seems to be the only real difference here if
->> you use the atomic operations and don't have durability...
-> It's not just about torn pages: Journal entries are big complex beasts.
-> They can be megabytes big (at least on xfs).  If we can guarantee all or
-> nothing atomicity in the entire journal entry write it permits a more
-> streaming design of the filesystem writeout path.
+>>
+>> I am sorry, I didn't get that. Why should it be unique across the
+>> SCSI/Query? For example, if a machine supports 32 request slots and 8 task
+>> management slots, then the task management command tag can be anything out
+>> of 8 slots.
+>>
 >
-> James
->   
->
+> The spec(ufs 1.1) has the requirement under  '10.5.2 Basic Header
+> Format'->'Task Tag'.
+> Couple of devices I came across had similar behavior. The tracking of
+> UPIUs --even belonging to a separate group-- seemed to be based on the
+> 'task tag' value rather than 'type of UPIU'->'task tag'.
 
-Journals are normally big (128MB or so?) - I don't think that this is unique to xfs.
+Thanks for the clarification. So to make the task tag unique we should 
+do something like below:
 
-If our existing journal commit is:
+@@ -2940,9 +2941,10 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba 
+*hba, int lun_id, int task_id,
+         /* Configure task request UPIU */
+         task_req_upiup =
+                 (struct utp_upiu_task_req *) task_req_descp->task_req_upiu;
++       task_tag = hba->nutrs + free_slot;
+         task_req_upiup->header.dword_0 =
+                 UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
+-                               lun_id, free_slot);
++                               lun_id, task_tag);
 
-* write the data blocks for a transaction
-* flush
-* write the commit block for the transaction
-* flush
+Will this work for the devices you came across?
 
-Which part of this does and atomic write help?
 
-We would still need at least:
-
-* atomic write of data blocks & commit blocks
-* flush
-
-Right?
-
-Ric
-
+-- 
+Regards,
+Sujit
