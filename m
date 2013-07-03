@@ -1,29 +1,26 @@
-From: Chris Mason <clmason@fusionio.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: atomic write & T10 standards
-Date: Wed, 3 Jul 2013 11:21:55 -0400
-Message-ID: <20130703152155.14981.50017@localhost.localdomain>
+Date: Wed, 03 Jul 2013 08:22:39 -0700
+Message-ID: <1372864959.3601.37.camel@dabdike>
 References: <51D4365C.1030008@redhat.com>
- <20130703143844.14981.69152@localhost.localdomain>
- <51D43B87.5090005@redhat.com> <1372863655.3601.19.camel@dabdike>
- <51D43D6C.6050505@redhat.com>
+	  <20130703143844.14981.69152@localhost.localdomain>
+	  <51D43B87.5090005@redhat.com> <1372863655.3601.19.camel@dabdike>
+	 <51D43D6C.6050505@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dkim2.fusionio.com ([66.114.96.54]:47167 "EHLO
-	dkim2.fusionio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083Ab3GCPV6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jul 2013 11:21:58 -0400
-Received: from mx2.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id 00AE79A06C4
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jul 2013 09:21:58 -0600 (MDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39122 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753083Ab3GCPWm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jul 2013 11:22:42 -0400
 In-Reply-To: <51D43D6C.6050505@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <mkp@mkp.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Chris Mason <clmason@fusionio.com>, "Martin K. Petersen" <mkp@mkp.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Quoting Ric Wheeler (2013-07-03 11:04:12)
+On Wed, 2013-07-03 at 11:04 -0400, Ric Wheeler wrote:
 > On 07/03/2013 11:00 AM, James Bottomley wrote:
 > > On Wed, 2013-07-03 at 10:56 -0400, Ric Wheeler wrote:
 > >> On 07/03/2013 10:38 AM, Chris Mason wrote:
@@ -75,27 +72,17 @@ Quoting Ric Wheeler (2013-07-03 11:04:12)
 > Why not have the atomic write actually imply that it is atomic and durable for 
 > just that command?
 
-Picture the atomic write as a building block, and something like an
-fsmark workload:
+I don't understand why you think you need guaranteed durability for
+every journal transaction?  That's what causes us performance problems
+because we have to pause on every transaction commit.
 
-Create N new files:
+We require durability for explicit flushes, obviously, but we could
+achieve far better performance if we could just let the filesystem
+updates stream to the disk and rely on atomic writes making sure the
+journal entries were all correct.  The reason we require durability for
+journal entries today is to ensure caching effects don't cause the
+journal to lie or be corrupt.
 
-for (i = 0 ; i < N ; i++) {
-	[ allocate inode, create directory entry, update bitmaps ]
-	[ fua/flush ]
-}
+James
 
-vs
-
-for (i = 0 ; i < N ; i++) {
-	[ allocate inode, create directory entry, update bitmaps ]
-}
-
-[ fua/flush ]
-
-The atomic user should be able to choose between FUA/cache flush and
-not.  In the specific O_DIRECT use case, I can't see how non-fua is a
-good idea, but that's different from the generic case.
-
--chris
 
