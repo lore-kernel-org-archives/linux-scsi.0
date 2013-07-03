@@ -1,78 +1,93 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH v3 07/13] scsi_transport_srp: Add transport layer error
- handling
-Date: Wed, 03 Jul 2013 18:00:06 +0200
-Message-ID: <51D44A86.5050000@acm.org>
-References: <51D41C03.4020607@acm.org> <51D41F13.6060203@acm.org> <1372864458.24238.32.camel@frustration.ornl.gov>
+From: Santosh Y <santoshsy@gmail.com>
+Subject: Re: [PATCH 1/4] scsi: ufs: Fix broken task management command implementation
+Date: Wed, 3 Jul 2013 21:53:23 +0530
+Message-ID: <CALMYJDvNAQApFoPOvf162kDNDC37Ub-=vpy5U8KM1skJFuyqMw@mail.gmail.com>
+References: <1371133860-17574-1-git-send-email-sthumma@codeaurora.org>
+ <1371133860-17574-2-git-send-email-sthumma@codeaurora.org>
+ <CALMYJDuRyovi3X_jmb0-PjZgRYgJfSi_ryg0YO48Cr2bRHLd+g@mail.gmail.com>
+ <51CD7461.3000501@codeaurora.org> <CALMYJDv=QR8cMSoCfRgKDnyiJS6=gv7BXEPOq2vG7a1nCfvR0A@mail.gmail.com>
+ <51D448A3.1050509@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:52428 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932081Ab3GCQAK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jul 2013 12:00:10 -0400
-In-Reply-To: <1372864458.24238.32.camel@frustration.ornl.gov>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <51D448A3.1050509@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Dillow <dave@thedillows.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@kernel.org>, Vu Pham <vuhuong@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, Jinpu Wang <jinpu.wang@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
 
-On 07/03/13 17:14, David Dillow wrote:
-> On Wed, 2013-07-03 at 14:54 +0200, Bart Van Assche wrote:
->> +int srp_tmo_valid(int fast_io_fail_tmo, int dev_loss_tmo)
->> +{
->> +	return (fast_io_fail_tmo < 0 || dev_loss_tmo < 0 ||
->> +		fast_io_fail_tmo < dev_loss_tmo) &&
->> +		fast_io_fail_tmo <= SCSI_DEVICE_BLOCK_MAX_TIMEOUT &&
->> +		dev_loss_tmo < LONG_MAX / HZ ? 0 : -EINVAL;
->> +}
->> +EXPORT_SYMBOL_GPL(srp_tmo_valid);
+On Wed, Jul 3, 2013 at 9:22 PM, Sujit Reddy Thumma
+<sthumma@codeaurora.org> wrote:
+> On 7/2/2013 9:21 PM, Santosh Y wrote:
+>>
+>> On Fri, Jun 28, 2013 at 5:02 PM, Sujit Reddy Thumma
+>> <sthumma@codeaurora.org> wrote:
+>>>
+>>> On 6/27/2013 4:49 PM, Santosh Y wrote:
+>>>>>
+>>>>>
+>>>>>> +       spin_lock_irqsave(host->host_lock, flags);
+>>>>>>          task_req_descp = hba->utmrdl_base_addr;
+>>>>>>          task_req_descp += free_slot;
+>>>>>>
+>>>>>> @@ -2353,38 +2387,39 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+>>>>>>                  (struct utp_upiu_task_req *)
+>>>>>> task_req_descp->task_req_upiu;
+>>>>>>          task_req_upiup->header.dword_0 =
+>>>>>>                  UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
+>>>>>> -                                             lrbp->lun,
+>>>>>> lrbp->task_tag);
+>>>>>> +                               lun_id, free_slot);
+>>>>
+>>>>
+>>>> Actually it still doesn't fix the problem. The*task tag*  used here
+>>>>
+>>>> should be unique across the SCSI/Query and Task Managment UPIUs.
+>>>
+>>>
+>>>
+>>> I am sorry, I didn't get that. Why should it be unique across the
+>>> SCSI/Query? For example, if a machine supports 32 request slots and 8
+>>> task
+>>> management slots, then the task management command tag can be anything
+>>> out
+>>> of 8 slots.
+>>>
+>>
+>> The spec(ufs 1.1) has the requirement under  '10.5.2 Basic Header
+>> Format'->'Task Tag'.
+>> Couple of devices I came across had similar behavior. The tracking of
+>> UPIUs --even belonging to a separate group-- seemed to be based on the
+>> 'task tag' value rather than 'type of UPIU'->'task tag'.
 >
-> This would have been more readable:
 >
-> int srp_tmo_valid(int fast_io_fail_tmp, int dev_loss_tmo)
-> {
-> 	/* Fast IO fail must be off, or no greater than the max timeout */
-> 	if (fast_io_fail_tmo > SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
-> 		return -EINVAL;
+> Thanks for the clarification. So to make the task tag unique we should do
+> something like below:
 >
-> 	/* Device timeout must be off, or fit into jiffies */
-> 	if (dev_loss_tmo >= LONG_MAX / HZ)
-> 		return -EINVAL;
+> @@ -2940,9 +2941,10 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+> int lun_id, int task_id,
+>         /* Configure task request UPIU */
+>         task_req_upiup =
 >
-> 	/* Fast IO must trigger before device loss, or one of the
-> 	 * timeouts must be disabled.
-> 	 */
-> 	if (fast_io_fail_tmo < 0 || dev_loss_tmo < 0)
-> 		return 0;
-> 	if (fast_io_fail < dev_loss_tmo)
-> 		return 0;
+>                 (struct utp_upiu_task_req *) task_req_descp->task_req_upiu;
+> +       task_tag = hba->nutrs + free_slot;
+
+Yes, this was exactly my internal fix at the time :-)
+
 >
-> 	return -EINVAL;	
-> }
+>         task_req_upiup->header.dword_0 =
+>                 UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
+> -                               lun_id, free_slot);
+> +                               lun_id, task_tag);
+>
+> Will this work for the devices you came across?
+>
+>
+> --
+> Regards,
+> Sujit
 
-Isn't that a matter of personal taste which of the above two is more 
-clear ? It might also depend on the number of mathematics courses in 
-someones educational background :-)
 
-> Though, now that I've unpacked it -- I don't think it is OK for
-> dev_loss_tmo to be off, but fast IO to be on? That drops another
-> conditional.
 
-The combination of dev_loss_tmo off and reconnect_delay > 0 worked fine 
-in my tests. An I/O failure was detected shortly after the cable to the 
-target was pulled. I/O resumed shortly after the cable to the target was 
-reinserted.
-
-> Also, FC caps dev_loss_tmo at SCSI_DEVICE_BLOCK_MAX_TIMEOUT if
-> fail_io_fast_tmo is off; I agree with your reasoning about leaving it
-> unlimited if fast fail is on, but does that still hold if it is off?
-
-I think setting dev_loss_tmo to a large value only makes sense if the 
-value of reconnect_delay is not too large. Setting both to a large value 
-would result in slow recovery after a transport layer failure has been 
-corrected.
-
-Bart.
-
+-- 
+~Santosh
