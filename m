@@ -1,111 +1,51 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: atomic write & T10 standards
-Date: Wed, 03 Jul 2013 14:55:28 -0400
-Message-ID: <51D473A0.9050703@redhat.com>
-References: <51D4365C.1030008@redhat.com> <51D43B87.5090005@redhat.com> <1372863655.3601.19.camel@dabdike> <51D43D6C.6050505@redhat.com> <1372864959.3601.37.camel@dabdike> <51D442DD.8000001@redhat.com> <1372865829.3601.41.camel@dabdike> <51D4466E.8040408@redhat.com> <20130703155400.14981.4222@localhost.localdomain> <51D46E1F.1090501@redhat.com> <20130703185417.14981.87700@localhost.localdomain>
+From: David Dillow <dave@thedillows.org>
+Subject: Re: [PATCH v3 07/13] scsi_transport_srp: Add transport layer error
+ handling
+Date: Wed, 03 Jul 2013 14:57:41 -0400
+Message-ID: <1372877861.24238.64.camel@frustration.ornl.gov>
+References: <51D41C03.4020607@acm.org> <51D41F13.6060203@acm.org>
+	  <1372864458.24238.32.camel@frustration.ornl.gov>
+	 <51D44A86.5050000@acm.org> <1372872474.24238.43.camel@frustration.ornl.gov>
+	 <51D46C54.8060101@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17074 "EHLO mx1.redhat.com"
+Received: from mta02.ornl.gov ([128.219.177.12]:28053 "EHLO mta02.ornl.gov"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964932Ab3GCSzd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Jul 2013 14:55:33 -0400
-In-Reply-To: <20130703185417.14981.87700@localhost.localdomain>
+	id S933219Ab3GCS5o convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jul 2013 14:57:44 -0400
+In-Reply-To: <51D46C54.8060101@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Mason <clmason@fusionio.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <mkp@mkp.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Roland Dreier <roland@kernel.org>, Vu Pham <vuhuong@mellanox.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, Jinpu Wang <jinpu.wang@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>
 
-On 07/03/2013 02:54 PM, Chris Mason wrote:
-> Quoting Ric Wheeler (2013-07-03 14:31:59)
->> On 07/03/2013 11:54 AM, Chris Mason wrote:
->>> Quoting Ric Wheeler (2013-07-03 11:42:38)
->>>> On 07/03/2013 11:37 AM, James Bottomley wrote:
->>>>> On Wed, 2013-07-03 at 11:27 -0400, Ric Wheeler wrote:
->>>>>> On 07/03/2013 11:22 AM, James Bottomley wrote:
->>>>>>> On Wed, 2013-07-03 at 11:04 -0400, Ric Wheeler wrote:
->>>>>>>> Why not have the atomic write actually imply that it is atomic and durable for
->>>>>>>> just that command?
->>>>>>> I don't understand why you think you need guaranteed durability for
->>>>>>> every journal transaction?  That's what causes us performance problems
->>>>>>> because we have to pause on every transaction commit.
->>>>>>>
->>>>>>> We require durability for explicit flushes, obviously, but we could
->>>>>>> achieve far better performance if we could just let the filesystem
->>>>>>> updates stream to the disk and rely on atomic writes making sure the
->>>>>>> journal entries were all correct.  The reason we require durability for
->>>>>>> journal entries today is to ensure caching effects don't cause the
->>>>>>> journal to lie or be corrupt.
->>>>>> Why would we use atomic writes for things that don't need to be
->>>>>> durable?
->>>>>>
->>>>>> Avoid a torn page write seems to be the only real difference here if
->>>>>> you use the atomic operations and don't have durability...
->>>>> It's not just about torn pages: Journal entries are big complex beasts.
->>>>> They can be megabytes big (at least on xfs).  If we can guarantee all or
->>>>> nothing atomicity in the entire journal entry write it permits a more
->>>>> streaming design of the filesystem writeout path.
->>>>>
->>>>> James
->>>>>     
->>>>>
->>>> Journals are normally big (128MB or so?) - I don't think that this is unique to xfs.
->>> We're mixing a bunch of concepts here.  The filesystems have a lot of
->>> different requirements, and atomics are just one small part.
->>>
->>> Creating a new file often uses resources freed by past files.  So
->>> deleting the old must be ordered against allocating the new.  They are
->>> really separate atomic units but you can't handle them completely
->>> independently.
->>>
->>>> If our existing journal commit is:
->>>>
->>>> * write the data blocks for a transaction
->>>> * flush
->>>> * write the commit block for the transaction
->>>> * flush
->>>>
->>>> Which part of this does and atomic write help?
->>>>
->>>> We would still need at least:
->>>>
->>>> * atomic write of data blocks & commit blocks
->>>> * flush
->>> Yes.  But just because we need the flush here doesn't mean we need the
->>> flush for every single atomic write.
->>>
->>> -chris
->>>
->> The catch is that our current flush mechanisms are still pretty brute force and
->> act across either the whole device or in a temporal (everything flushed before
->> this is acked) way.
-> This is only partially true, since you're extending the sata drive model
-> into atomics, and the devices implementing atomics are (so far anyway)
-> are not sata.
->
->> I still see it would be useful to have the atomic write really be atomic and
->> durable just for that IO - no flush needed.
-> In sata speak, it could go down as atomic + FUA + NCQ.  In practice this
-> is going to be in fusionio, nvme devices and big storage arrays, all of
-> which we can expect to have proper knobs for lies about IO that isn't
-> really done yet.
->
->> Can you give a sequence for the use case for the non-durable atomic write that
->> would not need a sync? Can we really trust all devices to make something atomic
->> that is not durable :) ?
-> Today's usage is mostly O_DIRECT, which really should be FUA.  Long term
-> we can hope people will find more interesting uses.
->
-> Either way the point is that an atomic write is a grouping mechanism,
-> and if the standards people want to control fuaness in a separate bit,
-> that's really fine.
->
-> -chris
->
+On Wed, 2013-07-03 at 20:24 +0200, Bart Van Assche wrote:
+> On 07/03/13 19:27, David Dillow wrote:
+> > On Wed, 2013-07-03 at 18:00 +0200, Bart Van Assche wrote:
+> >> The combination of dev_loss_tmo off and reconnect_delay > 0 worked fine
+> >> in my tests. An I/O failure was detected shortly after the cable to the
+> >> target was pulled. I/O resumed shortly after the cable to the target was
+> >> reinserted.
+> >
+> > Perhaps I don't understand your answer -- I'm asking about dev_loss_tmo
+> > < 0, and fast_io_fail_tmo >= 0. The other transports do not allow this
+> > scenario, and I'm asking if it makes sense for SRP to allow it.
+> >
+> > But now that you mention reconnect_delay, what is the meaning of that
+> > when it is negative? That's not in the documentation. And should it be
+> > considered in srp_tmo_valid() -- are there values of reconnect_delay
+> > that cause problems?
+> 
+> None of the combinations that can be configured from user space can 
+> bring the kernel in trouble. If reconnect_delay <= 0 that means that the 
+> time-based reconnect mechanism is disabled.
 
-That makes sense to me - happy to have that bit a bit to indicate durability in 
-the atomic operation...
+Then it should use the same semantics as the other attributes, and have
+the user store "off" to turn it off.
 
-Ric
-
+And I'm getting the strong sense that the answer to my question about
+fast_io_fail_tmo >= 0 when dev_loss_tmo is that we should not allow that
+combination, even if it doesn't break the kernel. If it doesn't make
+sense, there is no reason to create an opportunity for user confusion.
