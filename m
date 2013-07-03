@@ -1,40 +1,109 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 59301] mpt2sas0 fails after short time of work
-Date: Wed,  3 Jul 2013 00:36:39 +0000 (UTC)
-Message-ID: <20130703003639.EF6D311FA5F@bugzilla.kernel.org>
-References: <bug-59301-11613@https.bugzilla.kernel.org/>
+From: Santosh Y <santoshsy@gmail.com>
+Subject: Re: [PATCH V2 3/4] scsi: ufs: Fix device and host reset methods
+Date: Wed, 3 Jul 2013 11:19:56 +0530
+Message-ID: <CALMYJDuq17Q6WBSy6BkFnbXwSRc3no4wopK0eToQ2=y2DCqM-g@mail.gmail.com>
+References: <1372444531-24340-1-git-send-email-sthumma@codeaurora.org> <1372444531-24340-4-git-send-email-sthumma@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:57044 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752301Ab3GCAgm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Jul 2013 20:36:42 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 77DA320138
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jul 2013 00:36:41 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id F189D20134
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jul 2013 00:36:39 +0000 (UTC)
-In-Reply-To: <bug-59301-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1372444531-24340-4-git-send-email-sthumma@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=59301
+> +
+> +/**
+> + * ufshcd_eh_device_reset_handler - device reset handler registered to
+> + *                                    scsi layer.
+> + * @cmd - SCSI command pointer
+> + *
+> + * Returns SUCCESS/FAILED
+> + */
+> +static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
+> +{
+> +       struct ufs_hba *hba;
+> +       int err;
+> +       unsigned long flags;
+> +
+> +       hba = shost_priv(cmd->device->host);
+> +
+> +       spin_lock_irqsave(hba->host->host_lock, flags);
+> +       if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
+> +               dev_warn(hba->dev, "%s: reset in progress\n", __func__);
+> +               err = SUCCESS;
+> +               spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +               goto out;
 
+It is better to wait here until the state changes to 'operational' or
+'error' before returning success.
 
+> +       }
+> +
+> +       hba->ufshcd_state = UFSHCD_STATE_RESET;
+> +       ufshcd_set_device_reset_pending(hba);
+> +       spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +
+> +       err = ufshcd_reset_and_restore(hba);
+> +
+> +       spin_lock_irqsave(hba->host->host_lock, flags);
+> +       if (!err) {
+> +               err = SUCCESS;
+> +               hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+> +       } else {
+> +               err = FAILED;
+> +               hba->ufshcd_state = UFSHCD_STATE_ERROR;
+> +       }
+> +       spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +out:
+> +       return err;
+> +}
+> +
+> +/**
+> + * ufshcd_eh_host_reset_handler - host reset handler registered to scsi layer
+> + * @cmd - SCSI command pointer
+> + *
+> + * Returns SUCCESS/FAILED
+> + */
+> +static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
+> +{
+> +       struct ufs_hba *hba;
+> +       int err;
+> +       unsigned long flags;
+> +
+> +       hba = shost_priv(cmd->device->host);
+> +
+> +       spin_lock_irqsave(hba->host->host_lock, flags);
+> +       if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
+> +               dev_warn(hba->dev, "%s: reset in progress\n", __func__);
+> +               err = SUCCESS;
+> +               spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +               goto out;
 
+same in this case also.
 
-
---- Comment #3 from Marian Marinov <mm@yuhu.biz>  2013-07-03 00:36:39 ---
-[root@BlackPearl ~]# uname -a
-Linux BlackPearl.yuhu.biz 2.6.32-358.11.1.el6.i686 #1 SMP Wed Jun 12 01:01:27
-UTC 2013 i686 i686 i386 GNU/Linux
-[root@BlackPearl ~]# cat /etc/redhat-release 
-CentOS release 6.4 (Final)
+> +       }
+> +
+> +       hba->ufshcd_state = UFSHCD_STATE_RESET;
+> +       ufshcd_set_host_reset_pending(hba);
+> +       spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +
+> +       err = ufshcd_reset_and_restore(hba);
+> +
+> +       spin_lock_irqsave(hba->host->host_lock, flags);
+> +       if (!err) {
+> +               err = SUCCESS;
+> +               hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+> +       } else {
+> +               err = FAILED;
+> +               hba->ufshcd_state = UFSHCD_STATE_ERROR;
+> +       }
+> +       spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +out:
+> +       return err;
+> +}
+> +
+> +/**
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+~Santosh
