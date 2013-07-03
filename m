@@ -1,66 +1,110 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: sparc ESP SCSI error handling BUG+hang
-Date: Wed, 3 Jul 2013 14:05:40 +0300 (EEST)
-Message-ID: <alpine.SOC.1.00.1307031353170.24784@math.ut.ee>
-References: <alpine.SOC.1.00.1304211357540.2145@math.ut.ee>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: [PATCH v3 0/13] IB SRP initiator patches for kernel 3.11
+Date: Wed, 03 Jul 2013 14:41:39 +0200
+Message-ID: <51D41C03.4020607@acm.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <alpine.SOC.1.00.1304211357540.2145@math.ut.ee>
-Sender: sparclinux-owner@vger.kernel.org
-To: sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Jinpu Wang <jinpu.wang-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> I revived my Sun E3000 after its main disk died, reinstalled Debian and 
-> after long apuse I am testing linux kernels again on it. In general it 
-> works fine but I left the bad disk connected and sometimes it causes ESP 
-> SCSI BUG in esp_free_lun_tag. Sometimes it just works.
+The purpose of this InfiniBand SRP initiator patch series is as follows:
+- Make the SRP initiator driver better suited for use in a H.A. setup.
+   Add fast_io_fail_tmo and dev_loss_tmo parameters. These can be used
+   either to speed up failover or to avoid device removal when e.g. using
+   initiator side mirroring.
+- Make the SRP initiator better suited for use on NUMA systems by
+   making the HCA completion vector configurable.
 
-I instrumented the esp code in 3.10 with copious printks and got a better
-picture.
+Changes since the v2 of the "IB SRP initiator patches for kernel 3.11" 
+patch series:
+- Improved documentation of the newly added sysfs parameters.
+- Limit fast_io_fail_tmo to SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
+- Simplified the code for parsing values written into sysfs attributes.
+- Fixed a potential deadlock in the code added in scsi_transport_srp
+   (invoking cancel_delayed_work() with the rport mutex held for work
+    that needs the rport mutex itself).
+- Changed the default retry count back from 2 to 7 since there is not
+   yet agreement about this change.
+- Dropped the patch that silences failed SCSI commands and also the
+   patch that fixes a race between srp_queuecommand() and
+   srp_claim_req() since there is no agreement about these patches.
 
-Target 0 is sda and it works, target 1 is sdb (usually does not spin up),
-target 2 is sdc, probably broken. I specifically left sdb and sdc in the
-machine to debug esp.
+Changes since the v1 of the "IB SRP initiator patches for kernel 3.11" 
+patch series:
+- scsi_transport_srp: Allowed both fast_io_fail and dev_loss timeouts
+   to be disabled.
+- scsi_transport_srp, srp_reconnect_rport(): switched from
+   scsi_block_requests() to scsi_target_block() for blocking SCSI command
+   processing temporarily.
+- scsi_transport_srp, srp_start_tl_fail_timers(): only block SCSI device
+   command processing if the fast_io_fail timer is enabled.
+- Changed srp_abort() such that upon transport offline the value
+   FAST_IO_FAIL is returned instead of SUCCESS.
+- Fixed a race condition in the "maintain single connection" patch: a
+   new login after removal had started but before removal had finished
+   still could create a duplicate connection. Fixed this by deferring
+   removal from the target list until removal has finished.
+- Modified the error message in the same patch for reporting that a
+   duplicate connection has been rejected.
+- Modified patch 2/15 such that all possible race conditions with
+   srp_claim_req() are addressed.
+- Documented the comp_vector and tl_retry_count login string parameters.
+- Updated dev_loss_tmo and fast_io_fail_tmo documentation - mentioned
+   "off" is a valid choice.
 
-I have filtered out target 0 devug printk-s and added/left 1 and 2 there.
+Changes compared to v5 of the "Make ib_srp better suited for H.A. 
+purposes" patch series:
+- Left out patches that are already upstream.
+- Made it possible to set dev_loss_tmo to "off". This is useful in a
+   setup using initiator side mirroring to avoid that new /dev/sd* names
+   are reassigned after a failover or cable pull and reinsert.
+- Added kernel module parameters to ib_srp for configuring default
+   values of the fast_io_fail_tmo and dev_loss_tmo parameters.
+- Added a patch from Dotan Barak that fixes a kernel oops during rmmod
+   triggered by resource allocation failure at module load time.
+- Avoid duplicate connections by refusing relogins instead of dropping
+   duplicate connections, as proposed by Sebastian Riemer.
+- Added a patch from Sebastian Riemer for failing SCSI commands
+   silently.
+- Added a patch from Vu Pham to make the transport layer (IB RC) retry
+   count configurable.
+- Made HCA completion vector configurable.
 
-ESP alloc 1 means esp_alloc_lun_tag for target 1
-ESP free 2 means esp_free_lun_tag for target 2
+Changes since v4:
+- Added a patch for removing SCSI devices upon a port down event
 
-The pattern is that usually target 2 commands are tagged and are allocated and
-freed correctly. But on some condition, find_and_prep_issuable_command decides
-to clear tag in command entry because of AUTOSENSE flag, and after that,
-esp_free_lun_tag sees the entry as untagged, instead of tagged, but its
-non_tagged_cmd field is NULL and does not equal to the specified command entry,
-which causes BUG and hang because it happens in interrupt context.
+Changes since v3:
+- Restored the dev_loss_tmo and fast_io_fail_tmo sysfs attributes.
+- Included a patch to fix an ib_srp crash that could be triggered by
+   cable pulling.
 
-I got stuck in understanding autosense - why are there 2 invocations of
-esp0: Doing auto-sense for tgt[2] lun[0]
-line?
+Changes since v2:
+- Addressed the v2 review comments.
+- Dropped the patches that have already been merged.
+- Dropped the patches for integration with multipathd.
+- Dropped the micro-optimization of the IB completion handlers.
 
-[  216.087864] sd 0:0:1:0: [sdb] Write Protect is off
-[  216.087892] sd 0:0:1:0: [sdb] Mode Sense: 9f 00 10 08
-[  216.087962] ESP alloc 1: tagged, lp=fffff800fc780000, tag=32,0
-[  216.087968] ESP alloc 1: done
-[  216.088002] ESP: tgt[1] lun[0] scsi_cmd [ 1a 00 08 00 04 00 ]
-[  216.122992] ESP free 1: tag 32,0
-[  216.123193] ESP alloc 1: tagged, lp=fffff800fc780000, tag=32,0
-[  216.123200] ESP alloc 1: done
-[  216.123234] ESP: tgt[1] lun[0] scsi_cmd [ 1a 00 08 00 20 00 ]
-[  216.191894] ESP free 1: tag 32,0
-[  216.192011] sd 0:0:1:0: [sdb] Write cache: disabled, read cache: enabled, supports DPO and FUA
-[  216.192805] ESP alloc 2: tagged, lp=fffff800fc3d7000, tag=32,0
-[  216.192812] ESP alloc 2: done
-[  216.192842] ESP: tgt[2] lun[0] scsi_cmd [ 00 00 00 00 00 00 ]
-[  216.230179] esp0: Doing auto-sense for tgt[2] lun[0]
-[  216.230367] ESP: find_and_prep_issuable_command (AUTOSENSE) zeroing tag in 2 (fffff800fb193bc0), lp=fffff800fc3d7000
-[  216.230376] esp0: Doing auto-sense for tgt[2] lun[0]
-[  216.230812] ESP free 2: untagged, lp=fffff800fc3d7000
-[  216.230827] lp=fffff800fc3d7000, lp->non_tagged_cmd=          (null), ent=fffff800fb193bc0
-[  216.230837] kernel BUG at drivers/scsi/esp_scsi.c:620!
-
-(the line number is of course wrong, it's the second BUG inside esp_free_lun_tag)
-
--- 
-Meelis Roos (mroos@linux.ee)
+The individual patches in this series are as follows:
+0001-IB-srp-Fix-remove_one-crash-due-to-resource-exhausti.patch
+0002-IB-srp-Fix-race-between-srp_queuecommand-and-srp_cla.patch
+0003-IB-srp-Avoid-that-srp_reset_host-is-skipped-after-a-.patch
+0004-IB-srp-Fail-I-O-fast-if-target-offline.patch
+0005-IB-srp-Skip-host-settle-delay.patch
+0006-IB-srp-Maintain-a-single-connection-per-I_T-nexus.patch
+0007-IB-srp-Keep-rport-as-long-as-the-IB-transport-layer.patch
+0008-scsi_transport_srp-Add-transport-layer-error-handlin.patch
+0009-IB-srp-Add-srp_terminate_io.patch
+0010-IB-srp-Use-SRP-transport-layer-error-recovery.patch
+0011-IB-srp-Start-timers-if-a-transport-layer-error-occur.patch
+0012-IB-srp-Fail-SCSI-commands-silently.patch
+0013-IB-srp-Make-HCA-completion-vector-configurable.patch
+0014-IB-srp-Make-transport-layer-retry-count-configurable.patch
+0015-IB-srp-Bump-driver-version-and-release-date.patch
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
