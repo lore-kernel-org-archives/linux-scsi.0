@@ -1,58 +1,103 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH V2 4/4] scsi: ufs: Improve UFS fatal error handling
-Date: Wed, 3 Jul 2013 22:22:24 +0530
-Message-ID: <CALMYJDszHtT53BHDgepw5D2Sk_Zz+vWedY_Bucd4-FBCWcaYeA@mail.gmail.com>
-References: <1372444531-24340-1-git-send-email-sthumma@codeaurora.org> <1372444531-24340-5-git-send-email-sthumma@codeaurora.org>
+From: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
+Subject: Re: [PATCH v3 07/13] scsi_transport_srp: Add transport layer error
+ handling
+Date: Wed, 03 Jul 2013 13:27:54 -0400
+Message-ID: <1372872474.24238.43.camel@frustration.ornl.gov>
+References: <51D41C03.4020607@acm.org> <51D41F13.6060203@acm.org>
+	 <1372864458.24238.32.camel@frustration.ornl.gov> <51D44A86.5050000@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:50423 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964841Ab3GCQwq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jul 2013 12:52:46 -0400
-In-Reply-To: <1372444531-24340-5-git-send-email-sthumma@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51D44A86.5050000-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Jinpu Wang <jinpu.wang-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 
-> +
-> +/**
-> + * ufshcd_fatal_err_handler - handle fatal errors
-> + * @work: pointer to work structure
->   */
->  static void ufshcd_fatal_err_handler(struct work_struct *work)
->  {
->         struct ufs_hba *hba;
-> +       unsigned long flags;
-> +       u32 err_xfer = 0;
-> +       u32 err_tm = 0;
-> +       int err;
-> +
->         hba = container_of(work, struct ufs_hba, feh_workq);
->
-> -       /* check if reset is already in progress */
-> -       if (hba->ufshcd_state != UFSHCD_STATE_RESET)
-> -               ufshcd_do_reset(hba);
-> +       spin_lock_irqsave(hba->host->host_lock, flags);
-> +       if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
-> +               /* complete processed requests and exit */
-> +               ufshcd_transfer_req_compl(hba);
-> +               ufshcd_tmc_handler(hba);
-> +               spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +               return;
+On Wed, 2013-07-03 at 18:00 +0200, Bart Van Assche wrote:
+> On 07/03/13 17:14, David Dillow wrote:
+> > On Wed, 2013-07-03 at 14:54 +0200, Bart Van Assche wrote:
+> >> +int srp_tmo_valid(int fast_io_fail_tmo, int dev_loss_tmo)
+> >> +{
+> >> +	return (fast_io_fail_tmo < 0 || dev_loss_tmo < 0 ||
+> >> +		fast_io_fail_tmo < dev_loss_tmo) &&
+> >> +		fast_io_fail_tmo <= SCSI_DEVICE_BLOCK_MAX_TIMEOUT &&
+> >> +		dev_loss_tmo < LONG_MAX / HZ ? 0 : -EINVAL;
+> >> +}
+> >> +EXPORT_SYMBOL_GPL(srp_tmo_valid);
+> >
+> > This would have been more readable:
+> >
+> > int srp_tmo_valid(int fast_io_fail_tmp, int dev_loss_tmo)
+> > {
+> > 	/* Fast IO fail must be off, or no greater than the max timeout */
+> > 	if (fast_io_fail_tmo > SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
+> > 		return -EINVAL;
+> >
+> > 	/* Device timeout must be off, or fit into jiffies */
+> > 	if (dev_loss_tmo >= LONG_MAX / HZ)
+> > 		return -EINVAL;
+> >
+> > 	/* Fast IO must trigger before device loss, or one of the
+> > 	 * timeouts must be disabled.
+> > 	 */
+> > 	if (fast_io_fail_tmo < 0 || dev_loss_tmo < 0)
+> > 		return 0;
+> > 	if (fast_io_fail < dev_loss_tmo)
+> > 		return 0;
+> >
+> > 	return -EINVAL;	
+> > }
+> 
+> Isn't that a matter of personal taste which of the above two is more 
+> clear ?
 
-I could not go through this patch yet, please check if it needs to
-wait here until the state is 'operational' or 'error'.
-The 'reset' state might be due to the device reset also.
+No, it is quite common in Linux for complicated conditionals to be
+broken up into helper functions, and Vu found logic bugs in previous
+iterations. After unpacking it, I still found behavior that is
+questionable. All of this strongly points to that block being too dense
+for its own good.
 
-> +       }
-> +
-> +       hba->ufshcd_state = UFSHCD_STATE_RESET;
-> +       ufshcd_error_autopsy_transfer_req(hba, &err_xfer);
-> +       ufshcd_error_autopsy_task_req(hba, &err_tm);
-> +
+> It might also depend on the number of mathematics courses in 
+> someones educational background :-)
+
+Or the number of logic courses, or their experience with Lisp. :)
+
+> > Though, now that I've unpacked it -- I don't think it is OK for
+> > dev_loss_tmo to be off, but fast IO to be on? That drops another
+> > conditional.
+> 
+> The combination of dev_loss_tmo off and reconnect_delay > 0 worked fine 
+> in my tests. An I/O failure was detected shortly after the cable to the 
+> target was pulled. I/O resumed shortly after the cable to the target was 
+> reinserted.
+
+Perhaps I don't understand your answer -- I'm asking about dev_loss_tmo
+< 0, and fast_io_fail_tmo >= 0. The other transports do not allow this
+scenario, and I'm asking if it makes sense for SRP to allow it.
+
+But now that you mention reconnect_delay, what is the meaning of that
+when it is negative? That's not in the documentation. And should it be
+considered in srp_tmo_valid() -- are there values of reconnect_delay
+that cause problems?
+
+I'm starting to get a bit concerned about this patch -- can you, Vu, and
+Sebastian comment on the testing you have done?
+
+> > Also, FC caps dev_loss_tmo at SCSI_DEVICE_BLOCK_MAX_TIMEOUT if
+> > fail_io_fast_tmo is off; I agree with your reasoning about leaving it
+> > unlimited if fast fail is on, but does that still hold if it is off?
+> 
+> I think setting dev_loss_tmo to a large value only makes sense if the 
+> value of reconnect_delay is not too large. Setting both to a large value 
+> would result in slow recovery after a transport layer failure has been 
+> corrected.
+
+So you agree it should be capped? I can't tell from your response.
 
 
--- 
-~Santosh
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
