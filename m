@@ -1,63 +1,52 @@
-From: Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v3 07/13] scsi_transport_srp: Add transport layer error
- handling
-Date: Wed, 3 Jul 2013 16:41:07 -0700
-Message-ID: <51D4B693.7070200@mellanox.com>
-References: <51D41C03.4020607@acm.org> <51D41F13.6060203@acm.org>	  <1372864458.24238.32.camel@frustration.ornl.gov>	 <51D44A86.5050000@acm.org> <1372872474.24238.43.camel@frustration.ornl.gov>	 <51D46C54.8060101@acm.org> <1372877861.24238.64.camel@frustration.ornl.gov>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: RFC: Allow block drivers to poll for I/O instead of sleeping
+Date: Thu, 4 Jul 2013 09:13:01 +0800
+Message-ID: <20130704011301.GA16906@kernel.org>
+References: <20130620201713.GV8211@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1372877861.24238.64.camel-zHLflQxYYDO4Hhoo1DtQwJ9G+ZOsUmrO@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
-Cc: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Jinpu Wang <jinpu.wang-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130620201713.GV8211@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-David Dillow wrote:
-> On Wed, 2013-07-03 at 20:24 +0200, Bart Van Assche wrote:
->   
->> On 07/03/13 19:27, David Dillow wrote:
->>     
->>> On Wed, 2013-07-03 at 18:00 +0200, Bart Van Assche wrote:
->>>       
->>>> The combination of dev_loss_tmo off and reconnect_delay > 0 worked fine
->>>> in my tests. An I/O failure was detected shortly after the cable to the
->>>> target was pulled. I/O resumed shortly after the cable to the target was
->>>> reinserted.
->>>>         
->>> Perhaps I don't understand your answer -- I'm asking about dev_loss_tmo
->>> < 0, and fast_io_fail_tmo >= 0. The other transports do not allow this
->>> scenario, and I'm asking if it makes sense for SRP to allow it.
->>>
->>> But now that you mention reconnect_delay, what is the meaning of that
->>> when it is negative? That's not in the documentation. And should it be
->>> considered in srp_tmo_valid() -- are there values of reconnect_delay
->>> that cause problems?
->>>       
->> None of the combinations that can be configured from user space can 
->> bring the kernel in trouble. If reconnect_delay <= 0 that means that the 
->> time-based reconnect mechanism is disabled.
->>     
->
-> Then it should use the same semantics as the other attributes, and have
-> the user store "off" to turn it off.
->
-> And I'm getting the strong sense that the answer to my question about
-> fast_io_fail_tmo >= 0 when dev_loss_tmo is that we should not allow that
-> combination, even if it doesn't break the kernel. If it doesn't make
-> sense, there is no reason to create an opportunity for user confusion.
->   
-Hello Dave,
+On Thu, Jun 20, 2013 at 04:17:13PM -0400, Matthew Wilcox wrote:
+> 
+> A paper at FAST2012
+> (http://static.usenix.org/events/fast12/tech/full_papers/Yang.pdf) pointed
+> out the performance overhead of taking interrupts for low-latency block
+> I/Os.  The solution the author investigated was to spin waiting for each
+> I/O to complete.  This is inefficient as Linux submits many I/Os which
+> are not latency-sensitive, and even when we do submit latency-sensitive
+> I/Os (eg swap-in), we frequently submit several I/Os before waiting.
+> 
+> This RFC takes a different approach, only spinning when we would
+> otherwise sleep.  To implement this, I add an 'io_poll' function pointer
+> to backing_dev_info.  I include a sample implementation for the NVMe
+> driver.  Next, I add an io_wait() function which will call io_poll()
+> if it is set.  It falls back to calling io_schedule() if anything goes
+> wrong with io_poll() or the task exceeds its timeslice.  Finally, all
+> that is left is to judiciously replace calls to io_schedule() with
+> calls to io_wait().  I think I've covered the main contenders with
+> sleep_on_page(), sleep_on_buffer() and the DIO path.
+> 
+> I've measured the performance benefits of this with a Chatham NVMe
+> prototype device and a simple
+> # dd if=/dev/nvme0n1 of=/dev/null iflag=direct bs=512 count=1000000
+> The latency of each I/O reduces by about 2.5us (from around 8.0us to
+> around 5.5us).  This matches up quite well with the performance numbers
+> shown in the FAST2012 paper (which used a similar device).
 
-when dev_loss_tmo expired, srp not only removes the rport but also 
-removes the associated scsi_host.
-One may wish to set fast_io_fail_tmo >=0 for I/Os to fail-over fast to 
-other paths, and dev_loss_tmo off to keep the scsi_host around until the 
-target coming back.
+Hi Matthew,
+I'm wondering where the 2.5us latency cut comes from. I did a simple test. In
+my xeon 3.4G CPU, one cpu can do about 2M/s context switch of applications.
+Assuming switching to idle is faster, so switching to idle and back should take
+less than 1us. Does the 2.5us latency cut mostly come from deep idle state
+latency? if so, maybe set a lower pm_qos value or have a better idle governer
+to prevent cpu entering deep idle state can help too.
 
--vu
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Shaohua
