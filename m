@@ -1,76 +1,61 @@
-From: Akinobu Mita <mita@fixstars.com>
-Subject: [PATCH 2/2] ufs: don't stop controller before scsi_remove_host()
-Date: Mon,  8 Jul 2013 21:50:24 +0900
-Message-ID: <1373287824-4038-2-git-send-email-mita@fixstars.com>
-References: <1373287824-4038-1-git-send-email-mita@fixstars.com>
+From: <adheer.chandravanshi@qlogic.com>
+Subject: [PATCH 4/7] qla4xxx: discovery_parent_idx can be shown without any check.
+Date: Mon, 8 Jul 2013 08:33:08 -0400
+Message-ID: <1373286791-29659-5-git-send-email-adheer.chandravanshi@qlogic.com>
+References: <1373286791-29659-1-git-send-email-adheer.chandravanshi@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo.fixstars.hdemail.jp ([176.34.54.138]:57077 "EHLO
-	mo.fixstars.hdemail.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335Ab3GHMzF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jul 2013 08:55:05 -0400
-In-Reply-To: <1373287824-4038-1-git-send-email-mita@fixstars.com>
+Received: from co9ehsobe003.messaging.microsoft.com ([207.46.163.26]:11225
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752213Ab3GHNAr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jul 2013 09:00:47 -0400
+Received: from mail3-co9 (localhost [127.0.0.1])	by mail3-co9-R.bigfish.com
+ (Postfix) with ESMTP id 7673840175	for <linux-scsi@vger.kernel.org>; Mon,  8
+ Jul 2013 13:00:46 +0000 (UTC)
+Received: from CO9EHSMHS017.bigfish.com (unknown [10.236.132.248])	by
+ mail3-co9.bigfish.com (Postfix) with ESMTP id 7731DAC0076	for
+ <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2013 13:00:44 +0000 (UTC)
+In-Reply-To: <1373286791-29659-1-git-send-email-adheer.chandravanshi@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <mita@fixstars.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
-scsi_remove_host() sends SYNCHRONIZE CACHE commands for write cache
-enabled scsi disk devices.  So stopping controller working shouldn't
-be done before scsi_remove_host().
+From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/ufs/ufshcd-pci.c    | 1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
- drivers/scsi/ufs/ufshcd.c        | 3 ++-
- 3 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index c34efb9..91a2e79 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -91,7 +91,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- {
- 	struct ufs_hba *hba = pci_get_drvdata(pdev);
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 85762f7..a6e4d51 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -6235,7 +6235,7 @@ qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
+ 	struct iscsi_bus_flash_conn *fnode_conn;
+ 	struct ql4_chap_table chap_tbl;
+ 	struct device *dev;
+-	int parent_type, parent_index = 0xffff;
++	int parent_type;
+ 	int rc = 0;
  
--	disable_irq(pdev->irq);
- 	ufshcd_remove(hba);
- 	pci_set_drvdata(pdev, NULL);
- }
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index c42db40..94ba40c 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -144,7 +144,6 @@ static int ufshcd_pltfrm_remove(struct platform_device *pdev)
- {
- 	struct ufs_hba *hba =  platform_get_drvdata(pdev);
- 
--	disable_irq(hba->irq);
- 	ufshcd_remove(hba);
- 	return 0;
- }
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index cfa9633..f2832b8 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1657,11 +1657,12 @@ EXPORT_SYMBOL_GPL(ufshcd_resume);
-  */
- void ufshcd_remove(struct ufs_hba *hba)
- {
-+	scsi_remove_host(hba->host);
- 	/* disable interrupts */
-+	disable_irq(hba->irq);
- 	ufshcd_disable_intr(hba, hba->intr_mask);
- 	ufshcd_hba_stop(hba);
- 
--	scsi_remove_host(hba->host);
- 	scsi_host_put(hba->host);
- }
- EXPORT_SYMBOL_GPL(ufshcd_remove);
+ 	dev = iscsi_find_flashnode_conn(fnode_sess);
+@@ -6401,10 +6401,7 @@ qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
+ 			rc = sprintf(buf, "\n");
+ 		break;
+ 	case ISCSI_FLASHNODE_DISCOVERY_PARENT_IDX:
+-		if (fnode_sess->discovery_parent_idx < MAX_DDB_ENTRIES)
+-			parent_index = fnode_sess->discovery_parent_idx;
+-
+-		rc = sprintf(buf, "%u\n", parent_index);
++		rc = sprintf(buf, "%u\n", fnode_sess->discovery_parent_idx);
+ 		break;
+ 	case ISCSI_FLASHNODE_DISCOVERY_PARENT_TYPE:
+ 		if (fnode_sess->discovery_parent_type == DDB_ISNS)
 -- 
-1.8.1.4
+1.7.1
+
 
