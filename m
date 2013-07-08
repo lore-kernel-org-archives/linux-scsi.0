@@ -1,52 +1,150 @@
-From: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
-Subject: Re: [PATCH v3 07/13] scsi_transport_srp: Add transport layer error
- handling
-Date: Mon, 08 Jul 2013 16:37:00 -0400
-Message-ID: <1373315820.1057.6.camel@frustration.ornl.gov>
-References: <51D41C03.4020607@acm.org> <51D41F13.6060203@acm.org>
-	   <1372864458.24238.32.camel@frustration.ornl.gov>
-	  <51D44A86.5050000@acm.org>
-	 <1372872474.24238.43.camel@frustration.ornl.gov>
-	  <51D46C54.8060101@acm.org>
-	 <1372877861.24238.64.camel@frustration.ornl.gov> <51D52BD7.1090506@acm.org>
+From: peter grne <petergrne@gmail.com>
+Subject: Variety of small usb disks reporting media absent
+Date: Tue, 9 Jul 2013 09:30:33 +1000
+Message-ID: <CAEDzpXCA7iJz36_W-NPZWHmLRrhbT=1ce=Fy7bOwxEQtcdNCig@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51D52BD7.1090506-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Jinpu Wang <jinpu.wang-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vb0-f67.google.com ([209.85.212.67]:58559 "EHLO
+	mail-vb0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752969Ab3GHXae (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jul 2013 19:30:34 -0400
+Received: by mail-vb0-f67.google.com with SMTP id f12so1025489vbg.6
+        for <linux-scsi@vger.kernel.org>; Mon, 08 Jul 2013 16:30:33 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2013-07-04 at 10:01 +0200, Bart Van Assche wrote:
-> On 07/03/13 20:57, David Dillow wrote:
-> > And I'm getting the strong sense that the answer to my question about
-> > fast_io_fail_tmo >= 0 when dev_loss_tmo is that we should not allow that
-> > combination, even if it doesn't break the kernel. If it doesn't make
-> > sense, there is no reason to create an opportunity for user confusion.
-> 
-> Let's take a step back. I think we agree that the only combinations of 
-> timeout parameters that are useful are those combinations that guarantee 
-> that SCSI commands will be finished in a reasonable time and also that 
-> allow multipath to detect failed paths. The first requirement comes down 
-> to limiting the value fast_io_fail_tmo can be set to. The second 
-> requirement means that either reconnect_delay or fast_io_fail_tmo must 
-> be set (please note that a reconnect failure changes the state of all 
-> involved SCSI devices into SDEV_TRANSPORT_OFFLINE). So how about 
-> modifying srp_tmo_valid() as follows:
-> * Add an argument called "reconnect_delay".
-> * Add the following code in that function:
->      if (reconnect_delay < 0 && fast_io_fail_tmo < 0 && dev_loss_tmo < 0)
->          return -EINVAL;
+The linux OS is used in our product with a variety of small USB drives
+for storing scratch information.
 
-I think this sounds reasonable; I need to make sure I understand the new
-behaviors of the code to be sure.
+For a range of kernels, we have found that a number of drives from
+various manufacturers have failed in our field product, though working
+in our development environment, with identical equipment and kernel,
+but different user space and kernel configuration.
 
-I'm also concerned about Vu's bug report at this late stage; I'll be
-watching for its resolution -- hopefully in time for inclusion.
+Upon investigation, I found that although the device was present in
+/sys/block/sdN/device, it was not present in /proc/partitions. No
+error messages were found.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Using printk and comparing working and failing units, the problem
+appears to be in sd_spinup_disk in drivers/scsi/sd.c
+The failing scsi drives were initially reporting "media-not-present"
+and the whole disk registration procedure was failing.
+
+I fixed this by waiting up to 500 milliseconds before accepting a
+"media-not-present".
+
+I do not know if this is proper scsi behavior by the disks or what. As
+I am not sure this is a bug, I have not reported it to bugzilla. I
+would not advise commiting my code to the linux kernel, as a better
+solution is probable. Nevertheless, I enclose the patch below in order
+to demonstrate the modification made to address this issue.
+
+This problem did not result from any difference in configuration, but
+more probably different timing in the development environment as
+compared to our field product. Whether the development environment is
+quicker or slower, I do not know.
+
+I have plenty of samples and could easily post one or more failing
+units to any person.
+
+--- ../linux-3.9.2.orig/drivers/scsi/sd.c	2013-05-12 00:19:28.000000000 +1000
++++ linux-3.9.2/drivers/scsi/sd.c	2013-07-05 15:21:17.000000000 +1000
+@@ -1300,39 +1300,49 @@ static void set_media_not_present(struct
+ {
+ 	if (sdkp->media_present)
+ 		sdkp->device->changed = 1;
+
+ 	if (sdkp->device->removable) {
+ 		sdkp->media_present = 0;
+ 		sdkp->capacity = 0;
+ 	}
+ }
+
+-static int media_not_present(struct scsi_disk *sdkp,
++static int check_media_not_present(struct scsi_disk *sdkp,
+ 			     struct scsi_sense_hdr *sshdr)
+ {
+ 	if (!scsi_sense_valid(sshdr))
+ 		return 0;
+
+ 	/* not invoked for commands that could return deferred errors */
+ 	switch (sshdr->sense_key) {
+ 	case UNIT_ATTENTION:
+ 	case NOT_READY:
+ 		/* medium not present */
+ 		if (sshdr->asc == 0x3A) {
+-			set_media_not_present(sdkp);
+ 			return 1;
+ 		}
+ 	}
+ 	return 0;
+ }
+
++static int media_not_present(struct scsi_disk *sdkp,
++			     struct scsi_sense_hdr *sshdr)
++{
++	if(check_media_not_present(sdkp, sshdr))
++	{
++		set_media_not_present(sdkp);
++		return 1;
++	}
++	return 0;
++}
++
+ /**
+  *	sd_check_events - check media events
+  *	@disk: kernel device descriptor
+  *	@clearing: disk events currently being cleared
+  *
+  *	Returns mask of DISK_EVENT_*.
+  *
+  *	Note: this function is invoked from the block subsystem.
+  **/
+ static unsigned int sd_check_events(struct gendisk *disk, unsigned
+int clearing)
+@@ -1736,27 +1746,35 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ 	int sense_valid = 0;
+
+ 	spintime = 0;
+
+ 	/* Spin up drives, as required.  Only do this at boot time */
+ 	/* Spinup needs to be done for module loads too. */
+ 	do {
+ 		retries = 0;
+
+ 		do {
+-			cmd[0] = TEST_UNIT_READY;
+-			memset((void *) &cmd[1], 0, 9);
+-
+-			the_result = scsi_execute_req(sdkp->device, cmd,
+-						      DMA_NONE, NULL, 0,
+-						      &sshdr, SD_TIMEOUT,
+-						      SD_MAX_RETRIES, NULL);
++			/* Try for at least 500 milliseconds before reporting no media present. */
++			/* Logically, the_result would be expected to be true for media absent,
++			 * but try to minimally change the original logic, for consistency sake.
++			 */
++			unsigned long jlimit = msecs_to_jiffies(jiffies_to_msecs(jiffies) + 500);
++			do {
++				cmd[0] = TEST_UNIT_READY;
++				memset((void *) &cmd[1], 0, 9);
++
++				the_result = scsi_execute_req(sdkp->device, cmd,
++							      DMA_NONE, NULL, 0,
++							      &sshdr, SD_TIMEOUT,
++							      SD_MAX_RETRIES, NULL);
++			}
++			while(check_media_not_present(sdkp, &sshdr) &&
+time_is_after_jiffies(jlimit));
+
+ 			/*
+ 			 * If the drive has indicated to us that it
+ 			 * doesn't have any media in it, don't bother
+ 			 * with any more polling.
+ 			 */
+ 			if (media_not_present(sdkp, &sshdr))
+ 				return;
+
+ 			if (the_result)
