@@ -1,7 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 8/8] fcoe: Reduce number of sparse warnings
-Date: Tue, 09 Jul 2013 12:47:47 -0700
-Message-ID: <20130709194747.10724.77557.stgit@fritz>
+Subject: [PATCH 7/8] fcoe: Stop fc_rport_priv structure leak
+Date: Tue, 09 Jul 2013 12:47:42 -0700
+Message-ID: <20130709194742.10724.43159.stgit@fritz>
 References: <20130709194705.10724.64013.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,108 +9,62 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga14.intel.com ([143.182.124.37]:20501 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753090Ab3GITsG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Jul 2013 15:48:06 -0400
+	id S1753131Ab3GITsI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Jul 2013 15:48:08 -0400
 In-Reply-To: <20130709194705.10724.64013.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Jack Morgan <jack.morgan@intel.com>, Mark Rustad <mark.d.rustad@intel.com>
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Mark Rustad <mark.d.rustad@intel.com>
 
-Declare local variables and functions 'static'. This patch does not
-change any functionality.
+When repeatedly doing rmmod and modprobe on the ixgbe
+driver while FCoE is active in a VN2VN configuration,
+memory leaks would be discovered by kmemleak with the
+following backtrace:
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+unreferenced object 0xffff88003d076000 (size 1024):
+  comm "kworker/0:3", pid 2998, jiffies 4295436448 (age 1015.332s)
+  hex dump (first 32 bytes):
+    48 8a fe 6f 00 88 ff ff 00 00 00 00 00 00 00 00  H..o............
+    01 00 00 00 02 00 00 00 7b ac 87 21 1b 00 00 10  ........{..!....
+  backtrace:
+    [<ffffffff814b308b>] kmemleak_alloc+0x5b/0xc0
+    [<ffffffff8115c6e8>] __kmalloc+0xd8/0x1b0
+    [<ffffffffa0216638>] fc_rport_create+0x48/0x1f0 [libfc]
+    [<ffffffffa023cd86>] fcoe_ctlr_vn_add.isra.10+0x56/0x1a0 [libfcoe]
+    [<ffffffffa023f440>] fcoe_ctlr_vn_recv+0x8b0/0xab0 [libfcoe]
+    [<ffffffffa023fb06>] fcoe_ctlr_recv_work+0x4c6/0xf60 [libfcoe]
+    [<ffffffff81067404>] process_one_work+0x1e4/0x4d0
+    [<ffffffff81068def>] worker_thread+0x10f/0x380
+    [<ffffffff8107019a>] kthread+0xea/0xf0
+    [<ffffffff814d32ec>] ret_from_fork+0x7c/0xb0
+    [<ffffffffffffffff>] 0xffffffffffffffff
+
+This patch stops the leak of the fc_rport_priv structure.
+
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Tested-by: Jack Morgan <jack.morgan@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe_sysfs.c |   24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index 8c05ae01..c9382d6 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -507,7 +507,7 @@ static const struct attribute_group *fcoe_fcf_attr_groups[] = {
- 	NULL,
- };
- 
--struct bus_type fcoe_bus_type;
-+static struct bus_type fcoe_bus_type;
- 
- static int fcoe_bus_match(struct device *dev,
- 			  struct device_driver *drv)
-@@ -541,25 +541,25 @@ static void fcoe_fcf_device_release(struct device *dev)
- 	kfree(fcf);
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 795843d..203415e 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2090,7 +2090,11 @@ static struct fc_rport_operations fcoe_ctlr_vn_rport_ops = {
+  */
+ static void fcoe_ctlr_disc_stop_locked(struct fc_lport *lport)
+ {
++	struct fc_rport_priv *rdata;
++
+ 	mutex_lock(&lport->disc.disc_mutex);
++	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers)
++		lport->tt.rport_logoff(rdata);
+ 	lport->disc.disc_callback = NULL;
+ 	mutex_unlock(&lport->disc.disc_mutex);
  }
- 
--struct device_type fcoe_ctlr_device_type = {
-+static struct device_type fcoe_ctlr_device_type = {
- 	.name = "fcoe_ctlr",
- 	.groups = fcoe_ctlr_attr_groups,
- 	.release = fcoe_ctlr_device_release,
- };
- 
--struct device_type fcoe_fcf_device_type = {
-+static struct device_type fcoe_fcf_device_type = {
- 	.name = "fcoe_fcf",
- 	.groups = fcoe_fcf_attr_groups,
- 	.release = fcoe_fcf_device_release,
- };
- 
--struct bus_attribute fcoe_bus_attr_group[] = {
-+static struct bus_attribute fcoe_bus_attr_group[] = {
- 	__ATTR(ctlr_create, S_IWUSR, NULL, fcoe_ctlr_create_store),
- 	__ATTR(ctlr_destroy, S_IWUSR, NULL, fcoe_ctlr_destroy_store),
- 	__ATTR_NULL
- };
- 
--struct bus_type fcoe_bus_type = {
-+static struct bus_type fcoe_bus_type = {
- 	.name = "fcoe",
- 	.match = &fcoe_bus_match,
- 	.bus_attrs = fcoe_bus_attr_group,
-@@ -569,7 +569,7 @@ struct bus_type fcoe_bus_type = {
-  * fcoe_ctlr_device_flush_work() - Flush a FIP ctlr's workqueue
-  * @ctlr: Pointer to the FIP ctlr whose workqueue is to be flushed
-  */
--void fcoe_ctlr_device_flush_work(struct fcoe_ctlr_device *ctlr)
-+static void fcoe_ctlr_device_flush_work(struct fcoe_ctlr_device *ctlr)
- {
- 	if (!fcoe_ctlr_work_q(ctlr)) {
- 		printk(KERN_ERR
-@@ -590,8 +590,8 @@ void fcoe_ctlr_device_flush_work(struct fcoe_ctlr_device *ctlr)
-  * Return value:
-  *	1 on success / 0 already queued / < 0 for error
-  */
--int fcoe_ctlr_device_queue_work(struct fcoe_ctlr_device *ctlr,
--			       struct work_struct *work)
-+static int fcoe_ctlr_device_queue_work(struct fcoe_ctlr_device *ctlr,
-+				       struct work_struct *work)
- {
- 	if (unlikely(!fcoe_ctlr_work_q(ctlr))) {
- 		printk(KERN_ERR
-@@ -609,7 +609,7 @@ int fcoe_ctlr_device_queue_work(struct fcoe_ctlr_device *ctlr,
-  * fcoe_ctlr_device_flush_devloss() - Flush a FIP ctlr's devloss workqueue
-  * @ctlr: Pointer to FIP ctlr whose workqueue is to be flushed
-  */
--void fcoe_ctlr_device_flush_devloss(struct fcoe_ctlr_device *ctlr)
-+static void fcoe_ctlr_device_flush_devloss(struct fcoe_ctlr_device *ctlr)
- {
- 	if (!fcoe_ctlr_devloss_work_q(ctlr)) {
- 		printk(KERN_ERR
-@@ -631,9 +631,9 @@ void fcoe_ctlr_device_flush_devloss(struct fcoe_ctlr_device *ctlr)
-  * Return value:
-  *	1 on success / 0 already queued / < 0 for error
-  */
--int fcoe_ctlr_device_queue_devloss_work(struct fcoe_ctlr_device *ctlr,
--				       struct delayed_work *work,
--				       unsigned long delay)
-+static int fcoe_ctlr_device_queue_devloss_work(struct fcoe_ctlr_device *ctlr,
-+					       struct delayed_work *work,
-+					       unsigned long delay)
- {
- 	if (unlikely(!fcoe_ctlr_devloss_work_q(ctlr))) {
- 		printk(KERN_ERR
 
