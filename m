@@ -1,85 +1,69 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 1/8] libfc: Reject PLOGI from nodes with incompatible role
-Date: Tue, 09 Jul 2013 12:47:10 -0700
-Message-ID: <20130709194710.10724.48550.stgit@fritz>
+Subject: [PATCH 3/8] fcoe: fix the link error status block sparse warnings
+Date: Tue, 09 Jul 2013 12:47:21 -0700
+Message-ID: <20130709194721.10724.81339.stgit@fritz>
 References: <20130709194705.10724.64013.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:46894 "EHLO mga03.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:28408 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752557Ab3GITrN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Jul 2013 15:47:13 -0400
+	id S1752557Ab3GITrV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Jul 2013 15:47:21 -0400
 In-Reply-To: <20130709194705.10724.64013.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Jack Morgan <jack.morgan@intel.com>, Mark Rustad <mark.d.rustad@intel.com>, Yi Zou <yi.zou@intel.com>
+Cc: Jack Morgan <jack.morgan@intel.com>, Fengguang Wu <fengguang.wu@intel.com>, Yi Zou <yi.zou@intel.com>
 
-From: Mark Rustad <mark.d.rustad@intel.com>
+From: Yi Zou <yi.zou@intel.com>
 
-Reject a PLOGI from a node with an incompatible role,
-that is, initiator-to-initiator or target-to-target.
+Both fcoe_fc_els_lesb and fc_els_lesb are in __be32 already, and both are
+exactly the same size in bytes, with somewhat different member names to
+reflect the fact the former is for Ethernet media the latter is for Fiber
+Channel, so, remove conversion and use __be32 directly. This fixes the warning
+from sparse check.
 
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-Reviewed-by: Yi Zou <yi.zou@intel.com>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
 Tested-by: Jack Morgan <jack.morgan@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_rport.c |   27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ drivers/scsi/fcoe/fcoe_transport.c |   22 ++++------------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 6bbb944..c710d90 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -926,6 +926,20 @@ err:
- 	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index f3a5a53..bedd422 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -180,24 +180,10 @@ void fcoe_ctlr_get_lesb(struct fcoe_ctlr_device *ctlr_dev)
+ {
+ 	struct fcoe_ctlr *fip = fcoe_ctlr_device_priv(ctlr_dev);
+ 	struct net_device *netdev = fcoe_get_netdev(fip->lp);
+-	struct fcoe_fc_els_lesb *fcoe_lesb;
+-	struct fc_els_lesb fc_lesb;
+-
+-	__fcoe_get_lesb(fip->lp, &fc_lesb, netdev);
+-	fcoe_lesb = (struct fcoe_fc_els_lesb *)(&fc_lesb);
+-
+-	ctlr_dev->lesb.lesb_link_fail =
+-		ntohl(fcoe_lesb->lesb_link_fail);
+-	ctlr_dev->lesb.lesb_vlink_fail =
+-		ntohl(fcoe_lesb->lesb_vlink_fail);
+-	ctlr_dev->lesb.lesb_miss_fka =
+-		ntohl(fcoe_lesb->lesb_miss_fka);
+-	ctlr_dev->lesb.lesb_symb_err =
+-		ntohl(fcoe_lesb->lesb_symb_err);
+-	ctlr_dev->lesb.lesb_err_block =
+-		ntohl(fcoe_lesb->lesb_err_block);
+-	ctlr_dev->lesb.lesb_fcs_error =
+-		ntohl(fcoe_lesb->lesb_fcs_error);
++	struct fc_els_lesb *fc_lesb;
++
++	fc_lesb = (struct fc_els_lesb *)(&ctlr_dev->lesb);
++	__fcoe_get_lesb(fip->lp, fc_lesb, netdev);
  }
+ EXPORT_SYMBOL_GPL(fcoe_ctlr_get_lesb);
  
-+static bool
-+fc_rport_compatible_roles(struct fc_lport *lport, struct fc_rport_priv *rdata)
-+{
-+	if (rdata->ids.roles == FC_PORT_ROLE_UNKNOWN)
-+		return true;
-+	if ((rdata->ids.roles & FC_PORT_ROLE_FCP_TARGET) &&
-+	    (lport->service_params & FCP_SPPF_INIT_FCN))
-+		return true;
-+	if ((rdata->ids.roles & FC_PORT_ROLE_FCP_INITIATOR) &&
-+	    (lport->service_params & FCP_SPPF_TARG_FCN))
-+		return true;
-+	return false;
-+}
-+
- /**
-  * fc_rport_enter_plogi() - Send Port Login (PLOGI) request
-  * @rdata: The remote port to send a PLOGI to
-@@ -938,6 +952,12 @@ static void fc_rport_enter_plogi(struct fc_rport_priv *rdata)
- 	struct fc_lport *lport = rdata->local_port;
- 	struct fc_frame *fp;
- 
-+	if (!fc_rport_compatible_roles(lport, rdata)) {
-+		FC_RPORT_DBG(rdata, "PLOGI suppressed for incompatible role\n");
-+		fc_rport_state_enter(rdata, RPORT_ST_PLOGI_WAIT);
-+		return;
-+	}
-+
- 	FC_RPORT_DBG(rdata, "Port entered PLOGI state from %s state\n",
- 		     fc_rport_state(rdata));
- 
-@@ -1646,6 +1666,13 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
- 		rjt_data.explan = ELS_EXPL_NONE;
- 		goto reject;
- 	}
-+	if (!fc_rport_compatible_roles(lport, rdata)) {
-+		FC_RPORT_DBG(rdata, "Received PLOGI for incompatible role\n");
-+		mutex_unlock(&rdata->rp_mutex);
-+		rjt_data.reason = ELS_RJT_LOGIC;
-+		rjt_data.explan = ELS_EXPL_NONE;
-+		goto reject;
-+	}
- 
- 	/*
- 	 * Get session payload size from incoming PLOGI.
 
