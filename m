@@ -1,60 +1,85 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [scsi:misc 34/37] include/uapi/linux/swab.h:106:23: warning:
- 'csum' may be used uninitialized in this function
-Date: Tue, 9 Jul 2013 11:01:41 +0000
-Message-ID: <1373367700.18560.2.camel@dabdike>
-References: <51dbda2f.fifurtmyJFmeHzKZ%fengguang.wu@intel.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 1/8] libfc: Reject PLOGI from nodes with incompatible role
+Date: Tue, 09 Jul 2013 12:47:10 -0700
+Message-ID: <20130709194710.10724.48550.stgit@fritz>
+References: <20130709194705.10724.64013.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:39046 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665Ab3GILBp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jul 2013 07:01:45 -0400
-In-Reply-To: <51dbda2f.fifurtmyJFmeHzKZ%fengguang.wu@intel.com>
-Content-Language: en-US
-Content-ID: <5E19B25B8FCE5E44A1D690C87CAE61D5@sw.swsoft.com>
+Received: from mga03.intel.com ([143.182.124.21]:46894 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752557Ab3GITrN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Jul 2013 15:47:13 -0400
+In-Reply-To: <20130709194705.10724.64013.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, "kbuild-all@01.org" <kbuild-all@01.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Jack Morgan <jack.morgan@intel.com>, Mark Rustad <mark.d.rustad@intel.com>, Yi Zou <yi.zou@intel.com>
 
-On Tue, 2013-07-09 at 17:38 +0800, kbuild test robot wrote:
-> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
-> head:   06ba9fa7f8cec5b9c04e511bfe21c5aa7cc3044c
-> commit: eb7b211bac8e0aad45c2349a853be13cef20048a [34/37] [SCSI] scsi_debug: reduce duplication between prot_verify_read and prot_verify_write
-> config: x86_64-randconfig-x027-0707 (attached as .config)
-> 
-> Note: it may well be a FALSE warning. FWIW you are at least aware of it now.
-> http://gcc.gnu.org/wiki/Better_Uninitialized_Warnings
-> 
-> All warnings:
-> 
->    In file included from include/linux/swab.h:4:0,
->                     from include/uapi/linux/byteorder/little_endian.h:12,
->                     from include/linux/byteorder/little_endian.h:4,
->                     from arch/x86/include/uapi/asm/byteorder.h:4,
->                     from include/asm-generic/bitops/le.h:5,
->                     from arch/x86/include/asm/bitops.h:516,
->                     from include/linux/bitops.h:22,
->                     from include/linux/kernel.h:10,
->                     from include/linux/cache.h:4,
->                     from include/linux/time.h:4,
->                     from include/linux/stat.h:18,
->                     from include/linux/module.h:10,
->                     from drivers/scsi/scsi_debug.c:28:
->    drivers/scsi/scsi_debug.c: In function 'dif_verify':
-> >> include/uapi/linux/swab.h:106:23: warning: 'csum' may be used uninitialized in this function [-Wmaybe-uninitialized]
->      (__builtin_constant_p((__u16)(x)) ? \
->                           ^
->    drivers/scsi/scsi_debug.c:1715:6: note: 'csum' was declared here
->      u16 csum;
->          ^
+From: Mark Rustad <mark.d.rustad@intel.com>
 
-This is probably because the randconfig has CONFIG_BUG=n, so the default
-case is a nop.  The original had an initialiser in there, so the fix is
-either to drop the impossible default case or add the initialiser.
+Reject a PLOGI from a node with an incompatible role,
+that is, initiator-to-initiator or target-to-target.
 
-James
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Reviewed-by: Yi Zou <yi.zou@intel.com>
+Tested-by: Jack Morgan <jack.morgan@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
+---
+ drivers/scsi/libfc/fc_rport.c |   27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 6bbb944..c710d90 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -926,6 +926,20 @@ err:
+ 	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
+ }
+ 
++static bool
++fc_rport_compatible_roles(struct fc_lport *lport, struct fc_rport_priv *rdata)
++{
++	if (rdata->ids.roles == FC_PORT_ROLE_UNKNOWN)
++		return true;
++	if ((rdata->ids.roles & FC_PORT_ROLE_FCP_TARGET) &&
++	    (lport->service_params & FCP_SPPF_INIT_FCN))
++		return true;
++	if ((rdata->ids.roles & FC_PORT_ROLE_FCP_INITIATOR) &&
++	    (lport->service_params & FCP_SPPF_TARG_FCN))
++		return true;
++	return false;
++}
++
+ /**
+  * fc_rport_enter_plogi() - Send Port Login (PLOGI) request
+  * @rdata: The remote port to send a PLOGI to
+@@ -938,6 +952,12 @@ static void fc_rport_enter_plogi(struct fc_rport_priv *rdata)
+ 	struct fc_lport *lport = rdata->local_port;
+ 	struct fc_frame *fp;
+ 
++	if (!fc_rport_compatible_roles(lport, rdata)) {
++		FC_RPORT_DBG(rdata, "PLOGI suppressed for incompatible role\n");
++		fc_rport_state_enter(rdata, RPORT_ST_PLOGI_WAIT);
++		return;
++	}
++
+ 	FC_RPORT_DBG(rdata, "Port entered PLOGI state from %s state\n",
+ 		     fc_rport_state(rdata));
+ 
+@@ -1646,6 +1666,13 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
+ 		rjt_data.explan = ELS_EXPL_NONE;
+ 		goto reject;
+ 	}
++	if (!fc_rport_compatible_roles(lport, rdata)) {
++		FC_RPORT_DBG(rdata, "Received PLOGI for incompatible role\n");
++		mutex_unlock(&rdata->rp_mutex);
++		rjt_data.reason = ELS_RJT_LOGIC;
++		rjt_data.explan = ELS_EXPL_NONE;
++		goto reject;
++	}
+ 
+ 	/*
+ 	 * Get session payload size from incoming PLOGI.
 
