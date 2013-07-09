@@ -1,318 +1,171 @@
 From: merez@codeaurora.org
-Subject: Re: [PATCH V3 2/2] scsi: ufs: Add runtime PM support for UFS host
- controller driver
-Date: Tue, 9 Jul 2013 10:41:24 -0000
-Message-ID: <1aace10c46b439fab7952d8d107dd977.squirrel@www.codeaurora.org>
-References: <1373361336-30713-1-git-send-email-sthumma@codeaurora.org>
-    <1373361336-30713-3-git-send-email-sthumma@codeaurora.org>
+Subject: Re: [PATCH V3 2/4] scsi: ufs: Fix hardware race conditions while
+ aborting a command
+Date: Tue, 9 Jul 2013 10:42:29 -0000
+Message-ID: <e16268af5717b5d20280082fd088fc4f.squirrel@www.codeaurora.org>
+References: <1373361378-30749-1-git-send-email-sthumma@codeaurora.org>
+    <1373361378-30749-3-git-send-email-sthumma@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1373361336-30713-3-git-send-email-sthumma@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:54879 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651Ab3GIKma (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jul 2013 06:42:30 -0400
+In-Reply-To: <1373361378-30749-3-git-send-email-sthumma@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 
 Tested-by: Maya Erez <merez@codeaurora.org>
 
-> Add runtime PM helpers to suspend/resume UFS controller at runtime.
-> Enable runtime PM by default for pci and platform drivers as the
-> initialized hardware can suspend if it is not used after bootup.
+> There is a possible race condition in the hardware when the abort
+> command is issued to terminate the ongoing SCSI command as described
+> below:
+>
+> - A bit in the door-bell register is set in the controller for a
+>   new SCSI command.
+> - In some rare situations, before controller get a chance to issue
+>   the command to the device, the software issued an abort command.
+> - If the device recieves abort command first then it returns success
+>   because the command itself is not present.
+> - Now if the controller commits the command to device it will be
+>   processed.
+> - Software thinks that command is aborted and proceed while still
+>   the device is processing it.
+> - The software, controller and device may go out of sync because of
+>   this race condition.
+>
+> To avoid this, query task presence in the device before sending abort
+> task command so that after the abort operation, the command is guaranteed
+> to be non-existent in both controller and the device.
 >
 > Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 > ---
->  drivers/scsi/ufs/ufshcd-pci.c    |   65
-> ++++++++++++++++++++++++++++++++++---
->  drivers/scsi/ufs/ufshcd-pltfrm.c |   51 +++++++++++++++++++++++++++++-
->  drivers/scsi/ufs/ufshcd.c        |    8 +++++
->  3 files changed, 117 insertions(+), 7 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c |   70
+> +++++++++++++++++++++++++++++++++++---------
+>  1 files changed, 55 insertions(+), 15 deletions(-)
 >
-> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-> index 48be39a..7bd8faa 100644
-> --- a/drivers/scsi/ufs/ufshcd-pci.c
-> +++ b/drivers/scsi/ufs/ufshcd-pci.c
-> @@ -35,6 +35,7 @@
->
->  #include "ufshcd.h"
->  #include <linux/pci.h>
-> +#include <linux/pm_runtime.h>
->
->  #ifdef CONFIG_PM
->  /**
-> @@ -44,7 +45,7 @@
->   *
->   * Returns -ENOSYS
->   */
-> -static int ufshcd_pci_suspend(struct pci_dev *pdev, pm_message_t state)
-> +static int ufshcd_pci_suspend(struct device *dev)
->  {
->  	/*
->  	 * TODO:
-> @@ -61,7 +62,7 @@ static int ufshcd_pci_suspend(struct pci_dev *pdev,
-> pm_message_t state)
->   *
->   * Returns -ENOSYS
->   */
-> -static int ufshcd_pci_resume(struct pci_dev *pdev)
-> +static int ufshcd_pci_resume(struct device *dev)
->  {
->  	/*
->  	 * TODO:
-> @@ -71,8 +72,48 @@ static int ufshcd_pci_resume(struct pci_dev *pdev)
->
->  	return -ENOSYS;
->  }
-> +#else
-> +#define ufshcd_pci_suspend	NULL
-> +#define ufshcd_pci_resume	NULL
->  #endif /* CONFIG_PM */
->
-> +#ifdef CONFIG_PM_RUNTIME
-> +static int ufshcd_pci_runtime_suspend(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = container_of(dev, struct pci_dev, dev);
-> +	struct ufs_hba *hba = pci_get_drvdata(pdev);
-> +
-> +	if (!hba)
-> +		return 0;
-> +
-> +	return ufshcd_runtime_suspend(hba);
-> +}
-> +static int ufshcd_pci_runtime_resume(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = container_of(dev, struct pci_dev, dev);
-> +	struct ufs_hba *hba = pci_get_drvdata(pdev);
-> +
-> +	if (!hba)
-> +		return 0;
-> +
-> +	return ufshcd_runtime_resume(hba);
-> +}
-> +static int ufshcd_pci_runtime_idle(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = container_of(dev, struct pci_dev, dev);
-> +	struct ufs_hba *hba = pci_get_drvdata(pdev);
-> +
-> +	if (!hba)
-> +		return 0;
-> +
-> +	return ufshcd_runtime_idle(hba);
-> +}
-> +#else /* !CONFIG_PM_RUNTIME */
-> +#define ufshcd_pci_runtime_suspend	NULL
-> +#define ufshcd_pci_runtime_resume	NULL
-> +#define ufshcd_pci_runtime_idle	NULL
-> +#endif /* CONFIG_PM_RUNTIME */
-> +
->  /**
->   * ufshcd_pci_shutdown - main function to put the controller in reset
-> state
->   * @pdev: pointer to PCI device handle
-> @@ -91,6 +132,9 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
->  {
->  	struct ufs_hba *hba = pci_get_drvdata(pdev);
->
-> +	pm_runtime_forbid(&pdev->dev);
-> +	pm_runtime_get_noresume(&pdev->dev);
-> +
->  	disable_irq(pdev->irq);
->  	ufshcd_remove(hba);
->  	pci_release_regions(pdev);
-> @@ -168,6 +212,8 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct
-> pci_device_id *id)
->  	}
->
->  	pci_set_drvdata(pdev, hba);
-> +	pm_runtime_put_noidle(&pdev->dev);
-> +	pm_runtime_allow(&pdev->dev);
->
->  	return 0;
->
-> @@ -182,6 +228,14 @@ out_error:
->  	return err;
->  }
->
-> +static const struct dev_pm_ops ufshcd_pci_pm_ops = {
-> +	.suspend	= ufshcd_pci_suspend,
-> +	.resume		= ufshcd_pci_resume,
-> +	.runtime_suspend = ufshcd_pci_runtime_suspend,
-> +	.runtime_resume  = ufshcd_pci_runtime_resume,
-> +	.runtime_idle    = ufshcd_pci_runtime_idle,
-> +};
-> +
->  static DEFINE_PCI_DEVICE_TABLE(ufshcd_pci_tbl) = {
->  	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
->  	{ }	/* terminate list */
-> @@ -195,10 +249,9 @@ static struct pci_driver ufshcd_pci_driver = {
->  	.probe = ufshcd_pci_probe,
->  	.remove = ufshcd_pci_remove,
->  	.shutdown = ufshcd_pci_shutdown,
-> -#ifdef CONFIG_PM
-> -	.suspend = ufshcd_pci_suspend,
-> -	.resume = ufshcd_pci_resume,
-> -#endif
-> +	.driver = {
-> +		.pm = &ufshcd_pci_pm_ops
-> +	},
->  };
->
->  module_pci_driver(ufshcd_pci_driver);
-> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c
-> b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> index c42db40..b1f2605 100644
-> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> @@ -34,6 +34,7 @@
->   */
->
->  #include <linux/platform_device.h>
-> +#include <linux/pm_runtime.h>
->
->  #include "ufshcd.h"
->
-> @@ -87,6 +88,43 @@ static int ufshcd_pltfrm_resume(struct device *dev)
->  #define ufshcd_pltfrm_resume	NULL
->  #endif
->
-> +#ifdef CONFIG_PM_RUNTIME
-> +static int ufshcd_pltfrm_runtime_suspend(struct device *dev)
-> +{
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	struct ufs_hba *hba =  platform_get_drvdata(pdev);
-> +
-> +	if (!hba)
-> +		return 0;
-> +
-> +	return ufshcd_runtime_suspend(hba);
-> +}
-> +static int ufshcd_pltfrm_runtime_resume(struct device *dev)
-> +{
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	struct ufs_hba *hba =  platform_get_drvdata(pdev);
-> +
-> +	if (!hba)
-> +		return 0;
-> +
-> +	return ufshcd_runtime_resume(hba);
-> +}
-> +static int ufshcd_pltfrm_runtime_idle(struct device *dev)
-> +{
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	struct ufs_hba *hba =  platform_get_drvdata(pdev);
-> +
-> +	if (!hba)
-> +		return 0;
-> +
-> +	return ufshcd_runtime_idle(hba);
-> +}
-> +#else /* !CONFIG_PM_RUNTIME */
-> +#define ufshcd_pltfrm_runtime_suspend	NULL
-> +#define ufshcd_pltfrm_runtime_resume	NULL
-> +#define ufshcd_pltfrm_runtime_idle	NULL
-> +#endif /* CONFIG_PM_RUNTIME */
-> +
->  /**
->   * ufshcd_pltfrm_probe - probe routine of the driver
->   * @pdev: pointer to Platform device handle
-> @@ -122,14 +160,20 @@ static int ufshcd_pltfrm_probe(struct
-> platform_device *pdev)
->  		goto out;
->  	}
->
-> +	pm_runtime_set_active(&pdev->dev);
-> +	pm_runtime_enable(&pdev->dev);
-> +
->  	err = ufshcd_init(dev, &hba, mmio_base, irq);
->  	if (err) {
->  		dev_err(dev, "Intialization failed\n");
-> -		goto out;
-> +		goto out_disable_rpm;
->  	}
->
->  	platform_set_drvdata(pdev, hba);
->
-> +out_disable_rpm:
-> +	pm_runtime_disable(&pdev->dev);
-> +	pm_runtime_set_suspended(&pdev->dev);
->  out:
->  	return err;
->  }
-> @@ -144,6 +188,8 @@ static int ufshcd_pltfrm_remove(struct platform_device
-> *pdev)
->  {
->  	struct ufs_hba *hba =  platform_get_drvdata(pdev);
->
-> +	pm_runtime_get_sync(&(pdev)->dev);
-> +
->  	disable_irq(hba->irq);
->  	ufshcd_remove(hba);
->  	return 0;
-> @@ -157,6 +203,9 @@ static const struct of_device_id ufs_of_match[] = {
->  static const struct dev_pm_ops ufshcd_dev_pm_ops = {
->  	.suspend	= ufshcd_pltfrm_suspend,
->  	.resume		= ufshcd_pltfrm_resume,
-> +	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
-> +	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
-> +	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
->  };
->
->  static struct platform_driver ufshcd_pltfrm_driver = {
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index a25de66..af7d01d 100644
+> index a176421..51ce096 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2230,6 +2230,7 @@ static void ufshcd_exception_event_handler(struct
-> work_struct *work)
->  	u32 status = 0;
->  	hba = container_of(work, struct ufs_hba, eeh_work);
->
-> +	pm_runtime_get_sync(hba->dev);
->  	err = ufshcd_get_ee_status(hba, &status);
->  	if (err) {
->  		dev_err(hba->dev, "%s: failed to get exception status %d\n",
-> @@ -2245,6 +2246,7 @@ static void ufshcd_exception_event_handler(struct
-> work_struct *work)
->  					__func__, err);
->  	}
->  out:
-> +	pm_runtime_put_sync(hba->dev);
->  	return;
->  }
->
-> @@ -2257,9 +2259,11 @@ static void ufshcd_fatal_err_handler(struct
-> work_struct *work)
+> @@ -2550,6 +2550,12 @@ static int ufshcd_host_reset(struct scsi_cmnd *cmd)
+>   * ufshcd_abort - abort a specific command
+>   * @cmd: SCSI command pointer
+>   *
+> + * Abort the pending command in device by sending UFS_ABORT_TASK task
+> management
+> + * command, and in host controller by clearing the door-bell register.
+> There can
+> + * be race between controller sending the command to the device while
+> abort is
+> + * issued. To avoid that, first issue UFS_QUERY_TASK to check if the
+> command is
+> + * really issued and then try to abort it.
+> + *
+>   * Returns SUCCESS/FAILED
+>   */
+>  static int ufshcd_abort(struct scsi_cmnd *cmd)
+> @@ -2558,7 +2564,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
 >  	struct ufs_hba *hba;
->  	hba = container_of(work, struct ufs_hba, feh_workq);
+>  	unsigned long flags;
+>  	unsigned int tag;
+> -	int err;
+> +	int err = 0;
+> +	int poll_cnt;
+>  	u8 resp;
+>  	struct ufshcd_lrb *lrbp;
 >
-> +	pm_runtime_get_sync(hba->dev);
->  	/* check if reset is already in progress */
->  	if (hba->ufshcd_state != UFSHCD_STATE_RESET)
->  		ufshcd_do_reset(hba);
-> +	pm_runtime_put_sync(hba->dev);
->  }
+> @@ -2566,33 +2573,59 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>  	hba = shost_priv(host);
+>  	tag = cmd->request->tag;
 >
->  /**
-> @@ -2562,6 +2566,7 @@ static void ufshcd_async_scan(void *data,
-> async_cookie_t cookie)
->  	hba->auto_bkops_enabled = false;
->  	ufshcd_enable_auto_bkops(hba);
->  	scsi_scan_host(hba->host);
-> +	pm_runtime_put_sync(hba->dev);
->  out:
->  	return;
->  }
-> @@ -2783,6 +2788,9 @@ int ufshcd_init(struct device *dev, struct ufs_hba
-> **hba_handle,
+> -	spin_lock_irqsave(host->host_lock, flags);
+> +	/* If command is already aborted/completed, return SUCCESS */
+> +	if (!(test_bit(tag, &hba->outstanding_reqs)))
+> +		goto out;
 >
->  	*hba_handle = hba;
->
-> +	/* Hold auto suspend until async scan completes */
-> +	pm_runtime_get_sync(dev);
+> -	/* check if command is still pending */
+> -	if (!(test_bit(tag, &hba->outstanding_reqs))) {
+> -		err = FAILED;
+> -		spin_unlock_irqrestore(host->host_lock, flags);
+> +	lrbp = &hba->lrb[tag];
+> +	for (poll_cnt = 100; poll_cnt; poll_cnt--) {
+> +		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
+> +				UFS_QUERY_TASK, &resp);
+> +		if (!err && resp == UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED) {
+> +			/* cmd pending in the device */
+> +			break;
+> +		} else if (!err && resp == UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
+> +			u32 reg;
 > +
->  	async_schedule(ufshcd_async_scan, hba);
+> +			/*
+> +			 * cmd not pending in the device, check if it is
+> +			 * in transition.
+> +			 */
+> +			reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> +			if (reg & (1 << tag)) {
+> +				/* sleep for max. 2ms to stabilize */
+> +				usleep_range(1000, 2000);
+> +				continue;
+> +			}
+> +			/* command completed already */
+> +			goto out;
+> +		} else {
+> +			if (!err)
+> +				err = resp; /* service response error */
+> +			goto out;
+> +		}
+> +	}
+> +
+> +	if (!poll_cnt) {
+> +		err = -EBUSY;
+>  		goto out;
+>  	}
+> -	spin_unlock_irqrestore(host->host_lock, flags);
 >
->  	return 0;
+> -	lrbp = &hba->lrb[tag];
+>  	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
+>  			UFS_ABORT_TASK, &resp);
+>  	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
+> -		err = FAILED;
+> +		if (!err)
+> +			err = resp; /* service response error */
+>  		goto out;
+> -	} else {
+> -		err = SUCCESS;
+>  	}
+>
+> +	err = ufshcd_clear_cmd(hba, tag);
+> +	if (err)
+> +		goto out;
+> +
+>  	scsi_dma_unmap(cmd);
+>
+>  	spin_lock_irqsave(host->host_lock, flags);
+> -
+> -	/* clear the respective UTRLCLR register bit */
+> -	ufshcd_utrl_clear(hba, tag);
+> -
+>  	__clear_bit(tag, &hba->outstanding_reqs);
+>  	hba->lrb[tag].cmd = NULL;
+>  	spin_unlock_irqrestore(host->host_lock, flags);
+> @@ -2600,6 +2633,13 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>  	clear_bit_unlock(tag, &hba->lrb_in_use);
+>  	wake_up(&hba->dev_cmd.tag_wq);
+>  out:
+> +	if (!err) {
+> +		err = SUCCESS;
+> +	} else {
+> +		dev_err(hba->dev, "%s: failed with err %d\n", __func__, err);
+> +		err = FAILED;
+> +	}
+> +
+>  	return err;
+>  }
+>
 > --
 > QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
 > of Code Aurora Forum, hosted by The Linux Foundation.
@@ -328,3 +181,4 @@ Tested-by: Maya Erez <merez@codeaurora.org>
 Maya Erez
 QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
+
