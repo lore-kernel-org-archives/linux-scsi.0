@@ -1,46 +1,66 @@
 From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] [SCSI] sd: fix crash when UA received on DIF enabled
- device
-Date: Wed, 10 Jul 2013 15:52:09 -0400
-Message-ID: <1373485929.7420.50.camel@localhost.localdomain>
-References: <1351863514-12745-1-git-send-email-emilne@redhat.com>
-	 <yq1liee4aaw.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
+Date: Wed, 10 Jul 2013 16:35:28 -0400
+Message-ID: <1373488528.7420.55.camel@localhost.localdomain>
+References: <1372661455-122384-1-git-send-email-hare@suse.de>
 Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17398 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55939 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754670Ab3GJTwL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Jul 2013 15:52:11 -0400
-In-Reply-To: <yq1liee4aaw.fsf@sermon.lab.mkp.net>
+	id S1754774Ab3GJUfl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Jul 2013 16:35:41 -0400
+In-Reply-To: <1372661455-122384-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <jbottomley@parallels.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ren Mingxin <renmx@cn.fujitsu.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
 
-On Tue, 2012-11-06 at 17:48 -0500, Martin K. Petersen wrote:
-> >>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
+On Mon, 2013-07-01 at 08:50 +0200, Hannes Reinecke wrote:
+> This patchset implements a new 'eh_deadline' attribute to the
+> SCSI host. It will limit the overall SCSI EH runtime by a given
+> timeout. If the timeout is reached all intermediate EH steps
+> will be skipped and host reset will be scheduled immediately.
 > 
-> Ewan> sd_prep_fn will allocate a larger CDB for the command via
-> Ewan> mempool_alloc for devices using DIF type 2 protection.  This CDB
-> Ewan> was being freed in sd_done, which results in a kernel crash if the
-> Ewan> command is retried due to a UNIT ATTENTION.  This change moves the
-> Ewan> code to free the larger CDB into sd_unprep_fn instead, which is
-> Ewan> invoked after the request is complete.
+> For this patch I've re-used the existing 'last_reset' field
+> of the SCSI host to store the initial time SCSI EH started.
+> Also the field 'resetting' has been removed as it never has
+> been used as intended.
 > 
-> The 32-byte CDB support predates unprep. This fix is obviously the
-> correct approach.
+> As 'last_reset' might be in use by transport-specific EH
+> implementation I've disallowed eh_deadline setting there.
 > 
-> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Changes from the initial version:
+> - Add list_splice_init() calls to avoid stale commands
+> - Rename function to scsi_host_eh_past_deadline
+> 
+> Hannes Reinecke (7):
+>   dpt_i2o: Remove DPTI_STATE_IOCTL
+>   dpt_i2o: return SCSI_MLQUEUE_HOST_BUSY when in reset
+>   advansys: Remove 'last_reset' references
+>   tmscsim: Move 'last_reset' into host structure
+>   dc395: Move 'last_reset' into internal host structure
+>   scsi: remove check for 'resetting'
+>   scsi: Add 'eh_deadline' to limit SCSI EH runtime
+> 
+>  drivers/scsi/advansys.c   |   8 +--
+>  drivers/scsi/dc395x.c     |  24 +++++----
+>  drivers/scsi/dpt_i2o.c    |  35 +++++--------
+>  drivers/scsi/dpti.h       |   1 -
+>  drivers/scsi/hosts.c      |   7 +++
+>  drivers/scsi/scsi.c       |  28 ----------
+>  drivers/scsi/scsi_error.c | 130 +++++++++++++++++++++++++++++++++++++++++++---
+>  drivers/scsi/scsi_sysfs.c |  37 +++++++++++++
+>  drivers/scsi/tmscsim.c    |  14 ++---
+>  drivers/scsi/tmscsim.h    |   1 +
+>  include/scsi/scsi_host.h  |   4 +-
+>  11 files changed, 208 insertions(+), 81 deletions(-)
 > 
 
-I don't see that this change ever made it in.  Can this go in for
-the 3.12 merge window?
+Looks good.  We have been testing this extensively.
 
-http://marc.info/?l=linux-scsi&m=135186352200668&w=2
-
--Ewan
+Acked-by: Ewan D. Milne <emilne@redhat.com>
 
 
