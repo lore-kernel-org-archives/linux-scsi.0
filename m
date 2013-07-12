@@ -1,52 +1,73 @@
-From: Hans Verkuil <hansverk@cisco.com>
-Subject: The pm80xx driver hangs in 3.10 with the Adaptec 71605H HBA
-Date: Fri, 12 Jul 2013 13:02:06 +0200
-Message-ID: <201307121302.06856.hansverk@cisco.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
+Date: Fri, 12 Jul 2013 09:30:40 -0400
+Message-ID: <1373635840.7420.139.camel@localhost.localdomain>
+References: <1372661455-122384-1-git-send-email-hare@suse.de>
+	 <1373488528.7420.55.camel@localhost.localdomain>
+	 <51DF9A25.5030502@cn.fujitsu.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-vbr8.xs4all.nl ([194.109.24.28]:1705 "EHLO
-	smtp-vbr8.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932525Ab3GLLCi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jul 2013 07:02:38 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:62092 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964808Ab3GLNbA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Jul 2013 09:31:00 -0400
+In-Reply-To: <51DF9A25.5030502@cn.fujitsu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: xjtuwjp@gmail.com, lindar_liu@usish.com
-Cc: linux-scsi@vger.kernel.org
+To: Ren Mingxin <renmx@cn.fujitsu.com>, bmr@redhat.com
+Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
 
-Hi!
+On Fri, 2013-07-12 at 13:54 +0800, Ren Mingxin wrote:
+> Hi, Ewan:
+> 
+> I'm wondering how do you test, with a special hardware or self-made
+> module?Would you mind pasting your test method() and result?
 
-I am trying to get my Adaptec 71605H HBA to work with kernel 3.10.
-Unfortunately it hangs while waiting for a completion.
+Hi Rex-
 
-After registering all the interrupts the pm8001_pci_probe() function calls
-pm8001_init_sas_add(). That function calls PM8001_CHIP_DISP->get_nvmd_req()
-and waits for a completion that never happens.
+This was tested in a SAN environment with an EMC Symmetrix and
+Brocade FC switches.  The error was injected by the following
+commands:
 
-I tried to use the drivers available from the Adaptec website, and after
-hacking them so they compiled again with 3.10 I just copied those sources
-over to the kernel, recompiled and tested those. And lo and behold, that
-actually worked! So the Adaptec drivers do something that the current kernel
-drivers don't.
+portcfg rscnsupr <port> --enable
+portdisable <port>
 
-The patch I applied to the 3.10 kernel to effectively update the current
-drivers with those from Adaptec is here:
+Where <port> is the FC port of the Symmetrix target.
 
-http://hverkuil.home.xs4all.nl/0002-pm80xx-copy-over-adaptec-drivers.patch
+Multipath is used and the test records how long I/O from userspace
+takes to complete after the error handling stops and the I/O is
+retried on another path.
 
-The original drivers from Adaptec are here:
+What happens is that the target never responds to anything the
+HBA sends, so commands and TMFs just timeout.  The HBA doesn't
+see link down (since it is the target port) and doesn't get an
+RSCN.  When the HBA is finally reset, however, it can't login
+to the target port and so further I/O gets an immediate error.
 
-http://www.adaptec.com/en-us/downloads/rh/rhel_6/productid=asa-71605h&dn=adaptec+71605h.html
+Unfortunately, not all SAN environments will exhibit the failing
+behavior -- it appears as if in some cases the HBA detects the
+problem regardless of the switch portcfg setting.  But this has
+been verified to solve the problem of seemingly endless EH
+activity in testing at a large customer site.
 
-I tried to find relevant differences that might explain why the adaptec
-version works while the current 3.10 doesn't, but nothing jumped out to
-me.
+Also, to be clear, we tested with the "Limit overall SCSI EH
+runtime" patchset but not the "New EH command timeout handler".
+I think the changes to issue the abort in the timeout handler
+are a good idea, though, because there really is no need to
+wait for all activity on the host to cease before issuing the
+abort as far as I can see.
 
-It's no problem to test any patches you have, or to do some debugging if
-someone can point me in the right direction.
+-Ewan
 
-Regards,
+> 
+> Thanks,
+> Ren
+> 
+> >
+> > Acked-by: Ewan D. Milne<emilne@redhat.com>
+> 
 
-	Hans
+
