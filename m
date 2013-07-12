@@ -1,61 +1,53 @@
-From: "faibish, sorin" <faibish_sorin@emc.com>
-Subject: RE: Linux Plumbers IO & File System Micro-conference
-Date: Fri, 12 Jul 2013 13:42:21 -0400
-Message-ID: <F0897B83F4BC10458936F08DADF233160F65F99416@MX02A.corp.emc.com>
-References: <51E03AFB.1000000@gmail.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH 1/2] qla2xxx: Fix sparse warnings in qlafx00_fxdisc_iocb function.
+Date: Fri, 12 Jul 2013 14:47:50 -0400
+Message-ID: <1373654871-29081-2-git-send-email-saurav.kashyap@qlogic.com>
+References: <1373654871-29081-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <51E03AFB.1000000@gmail.com>
-Content-Language: en-US
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Ric Wheeler <ricwheeler@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, "anaconda-devel-list@redhat.com" <anaconda-devel-list@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:23788
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753009Ab3GLTOs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Jul 2013 15:14:48 -0400
+Received: from mail53-ch1 (localhost [127.0.0.1])	by mail53-ch1-R.bigfish.com
+ (Postfix) with ESMTP id 2157A4008BC	for <linux-scsi@vger.kernel.org>; Fri, 12
+ Jul 2013 19:14:47 +0000 (UTC)
+Received: from CH1EHSMHS036.bigfish.com (snatpool1.int.messaging.microsoft.com
+ [10.43.68.245])	by mail53-ch1.bigfish.com (Postfix) with ESMTP id 06612300049
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jul 2013 19:14:45 +0000 (UTC)
+In-Reply-To: <1373654871-29081-1-git-send-email-saurav.kashyap@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Can we have a discussion on Lustre client in the kernel? Thanks
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_mr.h |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-./Sorin
+diff --git a/drivers/scsi/qla2xxx/qla_mr.h b/drivers/scsi/qla2xxx/qla_mr.h
+index 1a092af..179f8e4 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.h
++++ b/drivers/scsi/qla2xxx/qla_mr.h
+@@ -434,9 +434,11 @@ struct qla_mt_iocb_rqst_fx00 {
+ 
+ 	__le32 dataword_extra;
+ 
+-	__le32 req_len;
++	__le16 req_len;
++	__le16 reserved_2;
+ 
+-	__le32 rsp_len;
++	__le16 rsp_len;
++	__le16 reserved_3;
+ };
+ 
+ struct qla_mt_iocb_rsp_fx00 {
+-- 
+1.7.7
 
------Original Message-----
-From: linux-fsdevel-owner@vger.kernel.org [mailto:linux-fsdevel-owner@vger.kernel.org] On Behalf Of Ric Wheeler
-Sent: Friday, July 12, 2013 1:21 PM
-To: linux-scsi@vger.kernel.org; Linux FS Devel; linux-nfs@vger.kernel.org; linux-btrfs; xfs-oss; linux-ext4@vger.kernel.org; device-mapper development; IDE/ATA development list; anaconda-devel-list@redhat.com
-Subject: Linux Plumbers IO & File System Micro-conference
 
-
-Linux Plumbers has approved a file and storage microconference. The overview page is here:
-
-http://wiki.linuxplumbersconf.org/2013:file_and_storage_systems
-
-I would like to started gathering in ideas for topics. I have been approached already with a request to cover the copy_range work Zach Brown kicked off at LSF which I think is a great topic since it has impact throughout the stack, all the way up to applications programmers.
-
-A similar request was made to give some time to non-volatile memory devices and the proposed "persistent memory" backed block device and persistent memory file system from Intel. That also seems to fall in nicely with the plumbers mission statement since it clearly will impact everything from the application on down through the kernel.
-
-Last year, we had a good discussion on management of storage (anaconda, yast, libstoragemgt, etc) - that also might be worth giving updates on.
-
-The instructions for submitting ideas will be updated later today at:
-
-http://www.linuxplumbersconf.org/2013/submitting-topic/
-
-If you have topics that you would like to add, wait until the instructions get posted at the link above. If you are impatient, feel free to email me directly (but probably best to drop the broad mailing lists from the reply).
-
-Thanks!
-
-Ric
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
