@@ -1,73 +1,131 @@
-From: Ren Mingxin <renmx@cn.fujitsu.com>
-Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
-Date: Fri, 12 Jul 2013 13:54:45 +0800
-Message-ID: <51DF9A25.5030502@cn.fujitsu.com>
-References: <1372661455-122384-1-git-send-email-hare@suse.de> <1373488528.7420.55.camel@localhost.localdomain>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv3 0/9] New EH command timeout handler
+Date: Fri, 12 Jul 2013 08:09:52 +0200
+Message-ID: <51DF9DB0.7080502@suse.de>
+References: <1372688671-85639-1-git-send-email-hare@suse.de> <51DF82B9.8030406@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:25169 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751616Ab3GLFuv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Jul 2013 01:50:51 -0400
-In-Reply-To: <1373488528.7420.55.camel@localhost.localdomain>
+Received: from cantor2.suse.de ([195.135.220.15]:45631 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751480Ab3GLGJ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Jul 2013 02:09:56 -0400
+In-Reply-To: <51DF82B9.8030406@cn.fujitsu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
+To: Ren Mingxin <renmx@cn.fujitsu.com>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Roland Dreier <roland@purestorage.com>
 
-Hi, Ewan:
+On 07/12/2013 06:14 AM, Ren Mingxin wrote:
+> Hi, Hannes:
+>=20
+> On 07/01/2013 10:24 PM, Hannes Reinecke wrote:
+>> With the original SCSI EH I got:
+>> # time dd if=3D/dev/zero of=3D/dev/dm-2 bs=3D4k count=3D4k oflag=3Dd=
+irect
+>> 4096+0 records in
+>> 4096+0 records out
+>> 16777216 bytes (17 MB) copied, 142.652 s, 118 kB/s
+>>
+>> real    2m22.657s
+>> user    0m0.013s
+>> sys    0m0.145s
+>>
+>> With this patchset I got:
+>> # time dd if=3D/dev/zero of=3D/dev/dm-2 bs=3D4k count=3D4k oflag=3Dd=
+irect
+>> 4096+0 records in
+>> 4096+0 records out
+>> 16777216 bytes (17 MB) copied, 52.1579 s, 322 kB/s
+>>
+>> real    0m52.163s
+>> user    0m0.012s
+>> sys    0m0.145s
+>>
+>> Test was to disable RSCN on the target port, disable the
+>> target port, and then start the 'dd' command as indicated.
+>=20
+> Do you mean disabling RSCN/port is enough? I'm afraid I couldn't
+> reproduce the problem by your steps. Both with and without your
+> patchset are the same 'dd' result: 27s. Please let me know where I
+> neglected or mistook:
+>=20
+> 1) I made a dm-multipath target 'dm-0' whose grouping policy was
+>    failover;
+> 2) Disable RSCN/port via brocade fc switch:
+>    SW300:root> portcfg rscnsupr 15 --enable; portDisable 15
+> 3) Start the 'dd' command:
+>    # time dd if=3D/dev/zero of=3D/dev/dm-0 bs=3D4k count=3D4k oflag=3D=
+direct
+>    dd: writing `/dev/sde': Input/output error
+>    1+0 records in
+>    0+0 records out
+>    0 bytes (0 B) copied, 27.8588 s, 0.0 kB/s
+>=20
+>    real    0m27.860s
+>    user    0m0.001s
+>    sys     0m0.000s
 
-On 07/11/2013 04:35 AM, Ewan Milne wrote:
-> On Mon, 2013-07-01 at 08:50 +0200, Hannes Reinecke wrote:
->> This patchset implements a new 'eh_deadline' attribute to the
->> SCSI host. It will limit the overall SCSI EH runtime by a given
->> timeout. If the timeout is reached all intermediate EH steps
->> will be skipped and host reset will be scheduled immediately.
->>
->> For this patch I've re-used the existing 'last_reset' field
->> of the SCSI host to store the initial time SCSI EH started.
->> Also the field 'resetting' has been removed as it never has
->> been used as intended.
->>
->> As 'last_reset' might be in use by transport-specific EH
->> implementation I've disallowed eh_deadline setting there.
->>
->> Changes from the initial version:
->> - Add list_splice_init() calls to avoid stale commands
->> - Rename function to scsi_host_eh_past_deadline
->>
->> Hannes Reinecke (7):
->>    dpt_i2o: Remove DPTI_STATE_IOCTL
->>    dpt_i2o: return SCSI_MLQUEUE_HOST_BUSY when in reset
->>    advansys: Remove 'last_reset' references
->>    tmscsim: Move 'last_reset' into host structure
->>    dc395: Move 'last_reset' into internal host structure
->>    scsi: remove check for 'resetting'
->>    scsi: Add 'eh_deadline' to limit SCSI EH runtime
->>
->>   drivers/scsi/advansys.c   |   8 +--
->>   drivers/scsi/dc395x.c     |  24 +++++----
->>   drivers/scsi/dpt_i2o.c    |  35 +++++--------
->>   drivers/scsi/dpti.h       |   1 -
->>   drivers/scsi/hosts.c      |   7 +++
->>   drivers/scsi/scsi.c       |  28 ----------
->>   drivers/scsi/scsi_error.c | 130 +++++++++++++++++++++++++++++++++++++++++++---
->>   drivers/scsi/scsi_sysfs.c |  37 +++++++++++++
->>   drivers/scsi/tmscsim.c    |  14 ++---
->>   drivers/scsi/tmscsim.h    |   1 +
->>   include/scsi/scsi_host.h  |   4 +-
->>   11 files changed, 208 insertions(+), 81 deletions(-)
->>
-> Looks good.  We have been testing this extensively.
+You are aware that you have to disable RSCNs on the _target_ port,
+right?
+Disabling RSCNs on the _initiator_ ports is a well-tested case, and
+the one which actually makes sense (and is even implemented in
+QLogic switches).
+Disabling RSCNs for the _target_ port, OTOH, has a very questionable
+nature (hence QLogic switches don't even allow you to do this).
 
-I'm wondering how do you test, with a special hardware or self-made
-module?Would you mind pasting your test method() and result?
+[ .. ]
 
-Thanks,
-Ren
+> Another question:
+>=20
+> I also tried to produce timeouts by modifying Yasui's module(please
+> see APPENDIX A):
+> http://www.spinics.net/lists/linux-scsi/msg35091.html
+>=20
+> But I got a bug with your this patchset by follwing steps(there was
+> not such bug without your patchset):
+>=20
+> # grep lpfc_template /proc/kallsyms
+> ffffffffa00f9240 d lpfc_template    [lpfc]
+> # multipath -ll
+> ...
+> mpathb (36000b5d0006a0000006a14e7000c0000) dm-1 FUJITSU,ETERNUS_DX400
+> size=3D50G features=3D'1 queue_if_no_path' hwhandler=3D'0' wp=3Drw
+> |-+- policy=3D'round-robin 0' prio=3D130 status=3Dactive
+> | `- 2:0:0:1 sdf 8:80  active ready running
+> `-+- policy=3D'round-robin 0' prio=3D130 status=3Denabled
+>   `- 3:0:0:1 sdh 8:112 active ready running
+> # insmod scsi_tmo_mod.ko param=3D0xffffffffa00f9240,2:0:0:1; time dd
+> if=3D/dev/zero of=3D/dev/dm-1 bs=3D4k count=3D4k oflag=3Ddirect
+> 4096+0 records in
+> 4096+0 records out
+> 16777216 bytes (17 MB) copied, 151.194 s, 111 kB/s
+>=20
+> real    2m31.195s
+> user    0m0.004s
+> sys    0m0.111s
+>=20
+> Please see logs in APPENDIX B. Do you think this bug is irrelevant to
+> your patchset?
+>=20
+Hmm. No, sadly not.
 
->
-> Acked-by: Ewan D. Milne<emilne@redhat.com>
+'cancel_work_sync' cannot be called from an interrupt context;
+guess I'll need to convert it to delayed work.
 
+Thanks for testing; will be updating the patchset.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
