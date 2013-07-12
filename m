@@ -1,51 +1,68 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: =?UTF-8?q?=5BPATCH=202/2=5D=20MAINTAINER=3A=20Added=20maintainer=20info=20for=20bnx2i?=
-Date: Thu, 11 Jul 2013 17:15:56 -0700
-Message-ID: <1373588156-14077-2-git-send-email-eddie.wai@broadcom.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
- <1373588156-14077-1-git-send-email-eddie.wai@broadcom.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [ATTEND] scsi-mq prototype discussion
+Date: Thu, 11 Jul 2013 17:23:32 -0700
+Message-ID: <1373588612.7397.447.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2420 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756422Ab3GLAQP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jul 2013 20:16:15 -0400
-In-Reply-To: <1373588156-14077-1-git-send-email-eddie.wai@broadcom.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:42240 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756422Ab3GLAS0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jul 2013 20:18:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
+To: ksummit-2013-discuss@lists.linuxfoundation.org
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, kmo@daterainc.com, scameron@beardog.cce.hp.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, James Smart <James.Smart@Emulex.Com>
 
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
----
- MAINTAINERS |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Hello,
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 50105f9..e297cb0 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1816,6 +1816,12 @@ L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/bnx2fc/
-=20
-+BROADCOM BNX2I 1/10 GIGABIT iSCSI DRIVER
-+M:	Eddie Wai <eddie.wai@broadcom.com>
-+L:	linux-scsi@vger.kernel.org
-+S:	Supported
-+F:	drivers/scsi/bnx2i/
-+
- BROADCOM SPECIFIC AMBA DRIVER (BCMA)
- M:	Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>
- L:	linux-wireless@vger.kernel.org
---=20
-1.7.7.4
+I would like to attend the 2013 Kernel Summit.
 
+At the summit, I would like to discuss scsi-mq, a high performance SCSI
+initiator prototype that utilizes the next-generation blk-mq effort by
+Jens Axboe.  The long-term goal is a path to move beyond the
+long-standing small block random I/O limitations vs. raw make_request
+based drivers of the existing Linux/SCSI client stack.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Along with using blk-mq's excellent native per-cpu primitive + NUMA
+local friendly queuing of pre-allocated struct request descriptor
+memory, the scsi-mq prototype currently avoids all I/O fast-path access
+of legacy scsi_host->host_lock, and bypasses existing scsi_request_fn()
+dispatch into scsi-mq enabled LLD code.
+
+It also allows scsi-core to eliminate all fast-path memory allocations
+using struct scsi_cmnd + $LLD_CMD pre-allocations based on a per struct
+blk_mq_hw_ctx -> scsi_device->sdev_mq_req context, along with per
+scsi_cmnd descriptor pre-allocation of SGL and sense buffer memory.
+
+So far the initial conversion of virtio-scsi + scsi-debug LLDs has been
+completed.  Also, the intention is to keep the conversion requirements
+for existing LLDs to scsi-mq as simple as possible.
+
+There are still many areas that have been conveniently left out of the
+initial prototype, including proper fast-path get_device() +
+put_device() reference counting, a functioning scsi-generic IOCTL,
+anything close to per struct scsi_device error handling, amongst other
+things..
+
+Drilling down the work items ahead of a real mainline push is high on
+priority list for discussion.
+
+The parties to be included in such a discussion are:
+
+  - Jens Axboe (blk-mq author)
+  - James Bottomley (scsi maintainer)
+  - Christoph Hellwig (scsi)
+  - Martin Petersen (scsi)
+  - Tejun Heo (block + libata)
+  - Hannes Reinecke (scsi error recovery)
+  - Kent Overstreet (block, per-cpu ida)
+  - Stephen Cameron (scsi-over-pcie driver)
+  - Andrew Vasquez (qla2xxx LLD)
+  - James Smart (lpfc LLD)
+
+Thank you,
+
+--nab
+
