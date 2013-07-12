@@ -1,60 +1,32 @@
-From: Camelia Groza <camelia.groza@gmail.com>
-Subject: [PATCH] fnic: use simple_open instead of fnic_trace_ctrl_open
-Date: Fri, 12 Jul 2013 09:50:08 +0300
-Message-ID: <1373611808-4959-1-git-send-email-camelia.groza@gmail.com>
+From: Vladimir Cernov <gg.kaspersky@gmail.com>
+Subject: [PATCH] [SCSI] lpfc 8.3.40: Remove useless cast
+Date: Fri, 12 Jul 2013 10:10:09 +0300
+Message-ID: <1373613009-8435-1-git-send-email-gg.kaspersky@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: hiralpat@cisco.com
-Cc: sramars@cisco.com, buchino@cisco.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Camelia Groza <camelia.groza@gmail.com>
+To: james.smart@emulex.com
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Vladimir Cernov <gg.kaspersky@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This removes the open coded fnic_trace_ctrl_open() function
-and replaces file operations references to the function
-with simple_open() instead.
-
-Found using coccinelle.
-
-Signed-off-by: Camelia Groza <camelia.groza@gmail.com>
+Found using coccinelle tool.
+Signed-off-by: Vladimir Cernov <gg.kaspersky@gmail.com>
 ---
- drivers/scsi/fnic/fnic_debugfs.c |   19 +------------------
- 1 file changed, 1 insertion(+), 18 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
-index cbcb012..ddc7e94 100644
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -25,23 +25,6 @@ static struct dentry *fnic_trace_debugfs_file;
- static struct dentry *fnic_trace_enable;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index e0b20fa..b7621f6 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4721,8 +4721,7 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+ 	}
  
- /*
-- * fnic_trace_ctrl_open - Open the trace_enable file
-- * @inode: The inode pointer.
-- * @file: The file pointer to attach the trace enable/disable flag.
-- *
-- * Description:
-- * This routine opens a debugsfs file trace_enable.
-- *
-- * Returns:
-- * This function returns zero if successful.
-- */
--static int fnic_trace_ctrl_open(struct inode *inode, struct file *filp)
--{
--	filp->private_data = inode->i_private;
--	return 0;
--}
--
--/*
-  * fnic_trace_ctrl_read - Read a trace_enable debugfs file
-  * @filp: The file pointer to read from.
-  * @ubuf: The buffer to copy the data to.
-@@ -222,7 +205,7 @@ static int fnic_trace_debugfs_release(struct inode *inode,
- 
- static const struct file_operations fnic_trace_ctrl_fops = {
- 	.owner = THIS_MODULE,
--	.open = fnic_trace_ctrl_open,
-+	.open = simple_open,
- 	.read = fnic_trace_ctrl_read,
- 	.write = fnic_trace_ctrl_write,
- };
+ 	if (!phba->sli.ring)
+-		phba->sli.ring = (struct lpfc_sli_ring *)
+-			kzalloc(LPFC_SLI3_MAX_RING *
++		phba->sli.ring = kzalloc(LPFC_SLI3_MAX_RING *
+ 			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
+ 	if (!phba->sli.ring)
+ 		return -ENOMEM;
 -- 
 1.7.10.4
