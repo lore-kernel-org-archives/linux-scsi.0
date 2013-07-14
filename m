@@ -1,67 +1,55 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [Ksummit-2013-discuss] [ATTEND] scsi-mq prototype discussion
-Date: Sat, 13 Jul 2013 06:53:32 +0000
-Message-ID: <1373698410.2922.10.camel@dabdike>
-References: <1373588612.7397.447.camel@haakon3.risingtidesystems.com>
-	 <20130712010223.GA15673@kroah.com>
-	 <1373592815.7397.477.camel@haakon3.risingtidesystems.com>
-	 <51DFDFF5.80702@suse.de>
+From: Hans Verkuil <hverkuil@xs4all.nl>
+Subject: [PATCH] pm80xx: fix Adaptec 71605H hang
+Date: Sun, 14 Jul 2013 10:25:01 +0200
+Message-ID: <51E2605D.3000301@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <51DFDFF5.80702@suse.de>
-Content-Language: en-US
-Content-ID: <E181B1EA86CD704B8CD424D82E41E669@sw.swsoft.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jens Axboe <axboe@kernel.dk>, "ksummit-2013-discuss@lists.linuxfoundation.org" <ksummit-2013-discuss@lists.linuxfoundation.org>, James Smart <James.Smart@Emulex.Com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "kmo@daterainc.com" <kmo@daterainc.com>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-vbr2.xs4all.nl ([194.109.24.22]:2928 "EHLO
+	smtp-vbr2.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751680Ab3GNIZZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Jul 2013 04:25:25 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: AnandKumar.Santhanam@pmcs.com, lindar_liu@usish.com, Sangeetha.Gnanasekaran@pmcs.com, xjtuwjp@gmail.com
 
-On Fri, 2013-07-12 at 12:52 +0200, Hannes Reinecke wrote:
-> On 07/12/2013 03:33 AM, Nicholas A. Bellinger wrote:
-> > On Thu, 2013-07-11 at 18:02 -0700, Greg KH wrote:
-> >> On Thu, Jul 11, 2013 at 05:23:32PM -0700, Nicholas A. Bellinger wrote:
-> >>> Drilling down the work items ahead of a real mainline push is high on
-> >>> priority list for discussion.
-> >>>
-> >>> The parties to be included in such a discussion are:
-> >>>
-> >>>   - Jens Axboe (blk-mq author)
-> >>>   - James Bottomley (scsi maintainer)
-> >>>   - Christoph Hellwig (scsi)
-> >>>   - Martin Petersen (scsi)
-> >>>   - Tejun Heo (block + libata)
-> >>>   - Hannes Reinecke (scsi error recovery)
-> >>>   - Kent Overstreet (block, per-cpu ida)
-> >>>   - Stephen Cameron (scsi-over-pcie driver)
-> >>>   - Andrew Vasquez (qla2xxx LLD)
-> >>>   - James Smart (lpfc LLD)
-> >>
-> >> Isn't this something that should have been discussed at the storage
-> >> mini-summit a few months ago?
-> > 
-> > The scsi-mq prototype, along with blk-mq (in it's current form) did not
-> > exist a few short months ago.  ;)
-> > 
-> >>  It seems very specific to one subsystem to be a kernel summit topic,
-> >> don't you think?
-> > 
-> > It's no more subsystem specific than half of the other proposals so far,
-> > and given it's reach across multiple subsystems (block, scsi, target),
-> > and the amount of off-list interest on the topic, I think it would make
-> > a good candidate for discussion.
-> > 
-> And it'll open up new approaches which previously were dismissed,
-> like re-implementing multipathing on top of scsi-mq, giving us the
-> single scsi device like other UNIX systems.
-> 
-> Also I do think there's quite some synergy to be had, as with blk-mq
-> we could nail each queue to a processor, which would eliminate the
-> need for locking.
-> Which could be useful for other subsystems, too.
+The IO command size is 128 bytes for these new controllers as opposed to 64
+for the old 8001 controller.
 
-Lets start with discussing this on the list, please, and then see where
-we go from there ...
+The Adaptec out-of-tree driver did this correctly. After comparing the two
+this turned out to be the crucial difference.
 
-James
+Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
+Acked-by: AnandKumar.Santhanam@pmcs.com
+Cc: stable@vger.kernel.org      # for v3.10 and up
+---
+ drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 302514d..e1db5ca 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -275,7 +275,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+ 
+ 	for (i = 0; i < PM8001_MAX_SPCV_INB_NUM; i++) {
+ 		pm8001_ha->inbnd_q_tbl[i].element_pri_size_cnt	=
+-			PM8001_MPI_QUEUE | (64 << 16) | (0x00<<30);
++			PM8001_MPI_QUEUE | (128 << 16) | (0x00<<30);
+ 		pm8001_ha->inbnd_q_tbl[i].upper_base_addr	=
+ 			pm8001_ha->memoryMap.region[IB + i].phys_addr_hi;
+ 		pm8001_ha->inbnd_q_tbl[i].lower_base_addr	=
+@@ -301,7 +301,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+ 	}
+ 	for (i = 0; i < PM8001_MAX_SPCV_OUTB_NUM; i++) {
+ 		pm8001_ha->outbnd_q_tbl[i].element_size_cnt	=
+-			PM8001_MPI_QUEUE | (64 << 16) | (0x01<<30);
++			PM8001_MPI_QUEUE | (128 << 16) | (0x01<<30);
+ 		pm8001_ha->outbnd_q_tbl[i].upper_base_addr	=
+ 			pm8001_ha->memoryMap.region[OB + i].phys_addr_hi;
+ 		pm8001_ha->outbnd_q_tbl[i].lower_base_addr	=
+-- 
+1.8.3.2
+
