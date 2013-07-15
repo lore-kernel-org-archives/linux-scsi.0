@@ -1,98 +1,66 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH] [SCSI] scsi_debug: silence GCC warning
-Date: Mon, 15 Jul 2013 11:18:40 +0200
-Message-ID: <1373879920.2591.13.camel@x61.thuisdomein>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH] pm80xx: fix Adaptec 71605H hang
+Date: Mon, 15 Jul 2013 11:44:14 +0200
+Message-ID: <51E3C46E.8030600@gmail.com>
+References: <51E2605D.3000301@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:54914 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754547Ab3GOJnm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jul 2013 05:43:42 -0400
+Received: by mail-bk0-f43.google.com with SMTP id jm2so4530536bkc.16
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jul 2013 02:43:41 -0700 (PDT)
+In-Reply-To: <51E2605D.3000301@xs4all.nl>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hans Verkuil <hverkuil@xs4all.nl>
+Cc: linux-scsi@vger.kernel.org, AnandKumar.Santhanam@pmcs.com, lindar_liu@usish.com, Sangeetha.Gnanasekaran@pmcs.com, jinpu.wang@profitbricks.com
 
-Building scsi_debug.o triggers a GCC warning:
-    drivers/scsi/scsi_debug.c: In function =E2=80=98dif_verify=E2=80=99=
-:
-    drivers/scsi/scsi_debug.c:1755:3: warning: =E2=80=98csum=E2=80=99 m=
-ay be used uninitialized in this function [-Wmaybe-uninitialized]
+On 07/14/2013 10:25 AM, Hans Verkuil wrote:
+> The IO command size is 128 bytes for these new controllers as opposed to 64
+> for the old 8001 controller.
+> 
+> The Adaptec out-of-tree driver did this correctly. After comparing the two
+> this turned out to be the crucial difference.
+Thanks Hans for this fix.
+We'd better use more meaningful Micro like:
 
-This is a false positive, but if we make scsi_debug_guard a bool, we
-supply GCC with enough information to determine that csum will not be
-used uninitialized. It also allows for a minor cleanup.
+#define MPI_IOMB_SIZE_SPCV 128 and replace current hard coded one.
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-0) Compile tested only.
+Thanks,
+Jack
+> 
+> Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
+> Acked-by: AnandKumar.Santhanam@pmcs.com
+> Cc: stable@vger.kernel.org      # for v3.10 and up
+> ---
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 302514d..e1db5ca 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -275,7 +275,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+>  
+>  	for (i = 0; i < PM8001_MAX_SPCV_INB_NUM; i++) {
+>  		pm8001_ha->inbnd_q_tbl[i].element_pri_size_cnt	=
+> -			PM8001_MPI_QUEUE | (64 << 16) | (0x00<<30);
+> +			PM8001_MPI_QUEUE | (128 << 16) | (0x00<<30);
+>  		pm8001_ha->inbnd_q_tbl[i].upper_base_addr	=
+>  			pm8001_ha->memoryMap.region[IB + i].phys_addr_hi;
+>  		pm8001_ha->inbnd_q_tbl[i].lower_base_addr	=
+> @@ -301,7 +301,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+>  	}
+>  	for (i = 0; i < PM8001_MAX_SPCV_OUTB_NUM; i++) {
+>  		pm8001_ha->outbnd_q_tbl[i].element_size_cnt	=
+> -			PM8001_MPI_QUEUE | (64 << 16) | (0x01<<30);
+> +			PM8001_MPI_QUEUE | (128 << 16) | (0x01<<30);
+>  		pm8001_ha->outbnd_q_tbl[i].upper_base_addr	=
+>  			pm8001_ha->memoryMap.region[OB + i].phys_addr_hi;
+>  		pm8001_ha->outbnd_q_tbl[i].lower_base_addr	=
+> 
 
-1) This warning is apparently introduced in v3.11-rc1 by commit beb40ea=
-42b
-("[SCSI] scsi_debug: reduce duplication between prot_verify_read and
-prot_verify_write")
-
- drivers/scsi/scsi_debug.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index cb4fefa..98e6436 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -169,7 +169,7 @@ static int scsi_debug_dix =3D DEF_DIX;
- static int scsi_debug_dsense =3D DEF_D_SENSE;
- static int scsi_debug_every_nth =3D DEF_EVERY_NTH;
- static int scsi_debug_fake_rw =3D DEF_FAKE_RW;
--static int scsi_debug_guard =3D DEF_GUARD;
-+static bool scsi_debug_guard =3D DEF_GUARD;
- static int scsi_debug_lowest_aligned =3D DEF_LOWEST_ALIGNED;
- static int scsi_debug_max_luns =3D DEF_MAX_LUNS;
- static int scsi_debug_max_queue =3D SCSI_DEBUG_CANQUEUE;
-@@ -1736,10 +1736,10 @@ static u16 dif_compute_csum(const void *buf, in=
-t len)
- 	u16 csum;
-=20
- 	switch (scsi_debug_guard) {
--	case 1:
-+	case true:
- 		csum =3D ip_compute_csum(buf, len);
- 		break;
--	case 0:
-+	case false:
- 		csum =3D cpu_to_be16(crc_t10dif(buf, len));
- 		break;
- 	}
-@@ -2736,7 +2736,7 @@ module_param_named(dix, scsi_debug_dix, int, S_IR=
-UGO);
- module_param_named(dsense, scsi_debug_dsense, int, S_IRUGO | S_IWUSR);
- module_param_named(every_nth, scsi_debug_every_nth, int, S_IRUGO | S_I=
-WUSR);
- module_param_named(fake_rw, scsi_debug_fake_rw, int, S_IRUGO | S_IWUSR=
-);
--module_param_named(guard, scsi_debug_guard, int, S_IRUGO);
-+module_param_named(guard, scsi_debug_guard, bool, S_IRUGO);
- module_param_named(lbpu, scsi_debug_lbpu, int, S_IRUGO);
- module_param_named(lbpws, scsi_debug_lbpws, int, S_IRUGO);
- module_param_named(lbpws10, scsi_debug_lbpws10, int, S_IRUGO);
-@@ -3312,11 +3312,6 @@ static int __init scsi_debug_init(void)
- 		return -EINVAL;
- 	}
-=20
--	if (scsi_debug_guard > 1) {
--		printk(KERN_ERR "scsi_debug_init: guard must be 0 or 1\n");
--		return -EINVAL;
--	}
--
- 	if (scsi_debug_ato > 1) {
- 		printk(KERN_ERR "scsi_debug_init: ato must be 0 or 1\n");
- 		return -EINVAL;
-@@ -4028,7 +4023,7 @@ static int sdebug_driver_probe(struct device * de=
-v)
- 	       (host_prot & SHOST_DIX_TYPE2_PROTECTION) ? " DIX2" : "",
- 	       (host_prot & SHOST_DIX_TYPE3_PROTECTION) ? " DIX3" : "");
-=20
--	if (scsi_debug_guard =3D=3D 1)
-+	if (scsi_debug_guard =3D=3D true)
- 		scsi_host_set_guard(hpnt, SHOST_DIX_GUARD_IP);
- 	else
- 		scsi_host_set_guard(hpnt, SHOST_DIX_GUARD_CRC);
---=20
-1.8.1.4
