@@ -1,74 +1,98 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: The pm80xx driver hangs in 3.10 with the Adaptec 71605H HBA
-Date: Mon, 15 Jul 2013 10:53:41 +0200
-Message-ID: <51E3B895.9010400@gmail.com>
-References: <201307121302.06856.hansverk@cisco.com> <CAD+HZHUc7wULDUpKq24rmcVC9MCcgaoO4i1LxGcW-q-y-c3tcQ@mail.gmail.com> <201307121419.50786.hansverk@cisco.com> <E5DEE6F468524847995699AD11E8088501B28CAA@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <51E2651F.1040905@xs4all.nl>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH] [SCSI] scsi_debug: silence GCC warning
+Date: Mon, 15 Jul 2013 11:18:40 +0200
+Message-ID: <1373879920.2591.13.camel@x61.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:40256 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444Ab3GOIxJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jul 2013 04:53:09 -0400
-Received: by mail-bk0-f45.google.com with SMTP id je9so4470511bkc.32
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jul 2013 01:53:08 -0700 (PDT)
-In-Reply-To: <51E2651F.1040905@xs4all.nl>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hans Verkuil <hverkuil@xs4all.nl>
-Cc: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, lindar_liu <lindar_liu@usish.com>, linux-scsi@vger.kernel.org, jinpu.wang@profitbricks.com
 
-Hi Hans,
-On 07/14/2013 10:45 AM, Hans Verkuil wrote:
-> Hi Anand,
-> 
-> On 07/12/2013 03:14 PM, Anand Kumar Santhanam wrote:
->> Hans,
->>
->> I reviewed the code changes and I did not see major differences except
->> for the fact that in adaptec driver we have 64 interrupt handlers to
->> handle 64 MSI-X.
->> This was optimized in open src driver to use only 1 interrupt handler.
->> Can you pls make this change to the open src driver (i.e have multiple
->> interrupt handlers for multiple MSI-X) and check?
-> 
-> I've looked at this more closely, and I wonder whether there isn't a race condition
-> here. When an interrupt arrives you put the interrupt vector in pm8001_ha->int_vector,
-> then schedule the tasklet. But what if two interrupts with different vectors arrive
-> in quick succession before the tasklet got a chance to run? In that case the tasklet
-> will only see the second vector, not the first. Rather scary.
-> 
-> I have not actually seen any issues with this, but by definition race conditions are
-> hard to reproduce and I haven't done any serious testing with this card. For now I
-> will run with the quick and dirty msi.diff (http://hverkuil.home.xs4all.nl/msi.diff).
-> 
-> I see two solutions: either use the 64 interrupt handlers as done in the adaptec
-> driver, or you can change int_vector into a u64 and use it as a bitmask to record
-> all interrupt vectors that have arrived.
-Thanks for looking into this, I think second one is what we want, set
-the bitmask when interrupt arrived and clear it when it's processed.
+Building scsi_debug.o triggers a GCC warning:
+    drivers/scsi/scsi_debug.c: In function =E2=80=98dif_verify=E2=80=99=
+:
+    drivers/scsi/scsi_debug.c:1755:3: warning: =E2=80=98csum=E2=80=99 m=
+ay be used uninitialized in this function [-Wmaybe-uninitialized]
 
-> 
-> BTW, another difference between the linux kernel driver and the adaptec version are
-> several of the defines in pm8001_defs.h: e.g. MPI_QUEUE is 256 in the adaptec driver,
-> while it is 1024 in the kernel driver. There are other differences as well.
-> 
-Different value may reflect different performance character, but both
-should works, there is no one for all setting.
+This is a false positive, but if we make scsi_debug_guard a bool, we
+supply GCC with enough information to determine that csum will not be
+used uninitialized. It also allows for a minor cleanup.
 
-> Are all the changes in the kernel correct? I would like to have a confirmation of
-> that before I am going to trust my data to this driver.
-> 
-> It clearly hasn't been tested with actual hardware :-(
-> 
-:_(
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+0) Compile tested only.
 
-Thanks,
-Jack
+1) This warning is apparently introduced in v3.11-rc1 by commit beb40ea=
+42b
+("[SCSI] scsi_debug: reduce duplication between prot_verify_read and
+prot_verify_write")
 
-> Regards,
-> 
-> 	Hans
-> 
+ drivers/scsi/scsi_debug.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index cb4fefa..98e6436 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -169,7 +169,7 @@ static int scsi_debug_dix =3D DEF_DIX;
+ static int scsi_debug_dsense =3D DEF_D_SENSE;
+ static int scsi_debug_every_nth =3D DEF_EVERY_NTH;
+ static int scsi_debug_fake_rw =3D DEF_FAKE_RW;
+-static int scsi_debug_guard =3D DEF_GUARD;
++static bool scsi_debug_guard =3D DEF_GUARD;
+ static int scsi_debug_lowest_aligned =3D DEF_LOWEST_ALIGNED;
+ static int scsi_debug_max_luns =3D DEF_MAX_LUNS;
+ static int scsi_debug_max_queue =3D SCSI_DEBUG_CANQUEUE;
+@@ -1736,10 +1736,10 @@ static u16 dif_compute_csum(const void *buf, in=
+t len)
+ 	u16 csum;
+=20
+ 	switch (scsi_debug_guard) {
+-	case 1:
++	case true:
+ 		csum =3D ip_compute_csum(buf, len);
+ 		break;
+-	case 0:
++	case false:
+ 		csum =3D cpu_to_be16(crc_t10dif(buf, len));
+ 		break;
+ 	}
+@@ -2736,7 +2736,7 @@ module_param_named(dix, scsi_debug_dix, int, S_IR=
+UGO);
+ module_param_named(dsense, scsi_debug_dsense, int, S_IRUGO | S_IWUSR);
+ module_param_named(every_nth, scsi_debug_every_nth, int, S_IRUGO | S_I=
+WUSR);
+ module_param_named(fake_rw, scsi_debug_fake_rw, int, S_IRUGO | S_IWUSR=
+);
+-module_param_named(guard, scsi_debug_guard, int, S_IRUGO);
++module_param_named(guard, scsi_debug_guard, bool, S_IRUGO);
+ module_param_named(lbpu, scsi_debug_lbpu, int, S_IRUGO);
+ module_param_named(lbpws, scsi_debug_lbpws, int, S_IRUGO);
+ module_param_named(lbpws10, scsi_debug_lbpws10, int, S_IRUGO);
+@@ -3312,11 +3312,6 @@ static int __init scsi_debug_init(void)
+ 		return -EINVAL;
+ 	}
+=20
+-	if (scsi_debug_guard > 1) {
+-		printk(KERN_ERR "scsi_debug_init: guard must be 0 or 1\n");
+-		return -EINVAL;
+-	}
+-
+ 	if (scsi_debug_ato > 1) {
+ 		printk(KERN_ERR "scsi_debug_init: ato must be 0 or 1\n");
+ 		return -EINVAL;
+@@ -4028,7 +4023,7 @@ static int sdebug_driver_probe(struct device * de=
+v)
+ 	       (host_prot & SHOST_DIX_TYPE2_PROTECTION) ? " DIX2" : "",
+ 	       (host_prot & SHOST_DIX_TYPE3_PROTECTION) ? " DIX3" : "");
+=20
+-	if (scsi_debug_guard =3D=3D 1)
++	if (scsi_debug_guard =3D=3D true)
+ 		scsi_host_set_guard(hpnt, SHOST_DIX_GUARD_IP);
+ 	else
+ 		scsi_host_set_guard(hpnt, SHOST_DIX_GUARD_CRC);
+--=20
+1.8.1.4
