@@ -1,49 +1,59 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 1/4] scsi_debug: fix endianness bug in sdebug_build_parts()
-Date: Mon, 15 Jul 2013 20:52:04 +0900
-Message-ID: <1373889127-17083-2-git-send-email-akinobu.mita@gmail.com>
-References: <1373889127-17083-1-git-send-email-akinobu.mita@gmail.com>
+From: <Sumit.Saxena@lsi.com>
+Subject: [PATCH][SCSI] megaraid_sas: megaraid_sas driver init fails in
+ kdump kernel
+Date: Tue, 16 Jul 2013 02:26:05 +0530
+Message-ID: <201307151253.r6FCrWTO011638@cosmhbs0.lsi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:63925 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755899Ab3GOLxB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jul 2013 07:53:01 -0400
-Received: by mail-pa0-f47.google.com with SMTP id kl14so11145184pab.34
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jul 2013 04:53:00 -0700 (PDT)
-In-Reply-To: <1373889127-17083-1-git-send-email-akinobu.mita@gmail.com>
+Received: from [213.199.154.253] ([213.199.154.253]:23086 "EHLO
+	db9outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755996Ab3GOMzB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Jul 2013 08:55:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
+To: linux-scsi@vger.kernel.org, jbottomley@parallels.com
+Cc: sumit.saxena@lsi.com, kashyap.desai@lsi.com, aradford@gmail.com, thenzl@redhat.com
 
-With module parameter num_parts > 0, partition table is built on the
-ramdisk storage when loading the driver.  Unfortunately, there is an
-endianness bug in sdebug_build_parts().  So the partition table is not
-correctly initialized on big-endian systems.
+Problem: When Hardware IOMMU is on, megaraid_sas driver initialization fails in kdump kernel with LSI MegaRAID controller(device id-0x73). This issue was reported to Redhat Bugzilla. Redhat bugzilla ID is 833299.
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: linux-scsi@vger.kernel.org
+Actually this issue needs fix in firmware, but for firmware running in field, this driver fix is proposed to resolve the issue.
+At firmware initialization time, if firmware does not come to ready state, driver will reset the adapter and retry for firmware transition to ready state unconditionally(not only executed for kdump kernel).
+
+Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
- drivers/scsi/scsi_debug.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index cb4fefa..2f39b13 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2659,8 +2659,8 @@ static void __init sdebug_build_parts(unsigned char *ramp,
- 			       / sdebug_sectors_per;
- 		pp->end_sector = (end_sec % sdebug_sectors_per) + 1;
- 
--		pp->start_sect = start_sec;
--		pp->nr_sects = end_sec - start_sec + 1;
-+		pp->start_sect = cpu_to_le32(start_sec);
-+		pp->nr_sects = cpu_to_le32(end_sec - start_sec + 1);
- 		pp->sys_ind = 0x83;	/* plain Linux partition */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 4c4abe1..e009a6b 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3547,11 +3547,21 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 		break;
  	}
- }
--- 
-1.8.3.1
+ 
+-	/*
+-	 * We expect the FW state to be READY
+-	 */
+-	if (megasas_transition_to_ready(instance, 0))
+-		goto fail_ready_state;
++	if (megasas_transition_to_ready(instance, 0)) {
++		atomic_set(&instance->fw_reset_no_pci_access, 1);
++		instance->instancet->adp_reset
++			(instance, instance->reg_set);
++		atomic_set(&instance->fw_reset_no_pci_access, 0);
++		dev_info(&instance->pdev->dev,
++			"megasas: FW restarted successfully from %s!\n",
++			__func__);
++
++		/*waitting for about 30 second before retry*/
++		ssleep(30);
++
++		if (megasas_transition_to_ready(instance, 0))
++			goto fail_ready_state;
++	}
+ 
+ 	/*
+ 	 * MSI-X host index 0 is common for all adapter.
 
