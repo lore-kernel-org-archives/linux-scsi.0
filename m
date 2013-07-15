@@ -1,25 +1,24 @@
-From: Jack Wang <jinpu.wang@profitbricks.com>
+From: Hans Verkuil <hverkuil@xs4all.nl>
 Subject: Re: The pm80xx driver hangs in 3.10 with the Adaptec 71605H HBA
-Date: Mon, 15 Jul 2013 15:08:32 +0200
-Message-ID: <51E3F450.1080805@profitbricks.com>
+Date: Mon, 15 Jul 2013 15:02:21 +0200
+Message-ID: <51E3F2DD.4020906@xs4all.nl>
 References: <201307121302.06856.hansverk@cisco.com> <CAD+HZHUc7wULDUpKq24rmcVC9MCcgaoO4i1LxGcW-q-y-c3tcQ@mail.gmail.com> <201307121419.50786.hansverk@cisco.com> <E5DEE6F468524847995699AD11E8088501B28CAA@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <51E2651F.1040905@xs4all.nl> <51E3B895.9010400@gmail.com> <E5DEE6F468524847995699AD11E8088501B28DCD@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:34995 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756253Ab3GONIC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jul 2013 09:08:02 -0400
-Received: by mail-bk0-f41.google.com with SMTP id jc3so4675410bkc.28
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jul 2013 06:08:00 -0700 (PDT)
+Received: from smtp-vbr10.xs4all.nl ([194.109.24.30]:3554 "EHLO
+	smtp-vbr10.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756914Ab3GONOy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jul 2013 09:14:54 -0400
 In-Reply-To: <E5DEE6F468524847995699AD11E8088501B28DCD@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-Cc: Jack Wang <xjtuwjp@gmail.com>, Hans Verkuil <hverkuil@xs4all.nl>, lindar_liu <lindar_liu@usish.com>, linux-scsi@vger.kernel.org
+Cc: Jack Wang <xjtuwjp@gmail.com>, lindar_liu <lindar_liu@usish.com>, linux-scsi@vger.kernel.org, jinpu.wang@profitbricks.com
 
-Hi Anand,
+Hi Anand!
+
 On 07/15/2013 02:37 PM, Anand Kumar Santhanam wrote:
 > Hi Hans,
 > 
@@ -74,9 +73,20 @@ On 07/15/2013 02:37 PM, Anand Kumar Santhanam wrote:
 > interrupt/tasklet handlers for MSI-X got rejected by the community and
 > hence
 > We went for the existing approach. I checked with a single controller
-> and I did not observe any issues. Also pls note that the open source
+> and I did not observe any issues.
+
+Well, you typically won't see any issues if there is a race condition :-)
+
+> Also pls note that the open source
 > driver
 > Supports only one MSI-X for now and this problem will not occur.
+
+Are you referring to the kernel driver or the adaptec driver? Both are
+open source...
+
+Anyway, I'm pretty sure I saw interrupts with different vectors arriving
+with the kernel driver.
+
 > 
 >>
 >> BTW, another difference between the linux kernel driver and the 
@@ -88,7 +98,9 @@ On 07/15/2013 02:37 PM, Anand Kumar Santhanam wrote:
 > should works, there is no one for all setting.
 > 
 > Anand >> I agree with Jack. I will check on the #defines and get back.
-> 
+
+Thanks!
+
 >> Are all the changes in the kernel correct? I would like to have a 
 >> confirmation of that before I am going to trust my data to this
 > driver.
@@ -102,12 +114,13 @@ On 07/15/2013 02:37 PM, Anand Kumar Santhanam wrote:
 > The patches. This was my first open source submission and request you to
 > bear the inconvenience.
 
-Never mind, people make mistake, quickly fix that should be fine.
-I suggest keep minimal difference between your in house driver and in
-tree driver, it will make us easy to maintain the driver and make it
-easy to use for user.
+No problem, such things happen. Luckily I'm a kernel developer so I know my
+way around a driver, even though scsi is not my area of expertise.
 
-Best Regards,
-Jack
+Note that I saw one other difference between the kernel and adaptec driver:
+the adaptec driver has support for SGPIO commands. I'm not sure what it does
+or whether it affects the pm80xx devices.
 
+Regards,
 
+	Hans
