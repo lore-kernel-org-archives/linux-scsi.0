@@ -1,62 +1,41 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH v2] [SCSI] scsi_debug: silence GCC warning
-Date: Mon, 15 Jul 2013 20:48:01 +0200
-Message-ID: <1373914081.2591.40.camel@x61.thuisdomein>
-References: <1373879920.2591.13.camel@x61.thuisdomein>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH v2 1/1] [SCSI] sg: fix race condition when do exclusive
+ open
+Date: Mon, 15 Jul 2013 13:25:46 -0400
+Message-ID: <20130715172545.GA20517@logfs.org>
+References: <51AF0269.9070900@oracle.com>
+ <20130605132746.GA1690@logfs.org>
+ <51AF646D.7030903@oracle.com>
+ <20130605154106.GA2737@logfs.org>
+ <51BF0ADD.1080604@oracle.com>
+ <20130705173953.GA15089@logfs.org>
+ <51D852DC.4070808@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1373879920.2591.13.camel@x61.thuisdomein>
+Content-Disposition: inline
+In-Reply-To: <51D852DC.4070808@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: vaughan <vaughan.cao@oracle.com>
+Cc: dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Building scsi_debug.o triggers a GCC warning:
-    drivers/scsi/scsi_debug.c: In function =E2=80=98dif_verify=E2=80=99=
-:
-    drivers/scsi/scsi_debug.c:1755:3: warning: =E2=80=98csum=E2=80=99 m=
-ay be used uninitialized in this function [-Wmaybe-uninitialized]
+On Sun, 7 July 2013 01:24:44 +0800, vaughan wrote:
+>=20
+> Do you agree that I use a per device spin_lock 'sfd_lock' to protect
+> sfds list and leave sg_index_lock
+> only protect the global sg device lookup? I think it's reasonable
+> for concurrency.
 
-This is a false positive. But if we transform the switch statement in
-dif_compute_csum() to a straightforward if/else statement we supply GCC
-with enough information to determine that csum will not be used
-uninitialized.
+That bit looks fine to me.  I don't think it matters much, but sure,
+why not!
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-0) v2 because I started to worry whether v1 would change an interface
-(ie, the way the "guard" module parameter behaves). This patch is much
-simpler, and doesn't change any behavior.
+J=C3=B6rn
 
-1) Still only compile tested.
-
- drivers/scsi/scsi_debug.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index cb4fefa..7565ec5 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1735,14 +1735,11 @@ static u16 dif_compute_csum(const void *buf, in=
-t len)
- {
- 	u16 csum;
-=20
--	switch (scsi_debug_guard) {
--	case 1:
-+	if (scsi_debug_guard =3D=3D 1)
- 		csum =3D ip_compute_csum(buf, len);
--		break;
--	case 0:
-+	else
- 		csum =3D cpu_to_be16(crc_t10dif(buf, len));
--		break;
--	}
-+
- 	return csum;
- }
-=20
---=20
-1.8.1.4
+--
+One of the painful things about our time is that those who feel certain=
+ty
+are stupid, and those with any imagination and understanding are filled
+with doubt and indecision.
+-- Bertrand Russell
