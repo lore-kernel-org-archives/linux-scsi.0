@@ -1,63 +1,194 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 5/13] lpfc 8.3.41: Ensure driver properly zeros unused
- fields in SLI4 mailbox commands
-Date: Mon, 15 Jul 2013 18:33:04 -0400
-Message-ID: <1373927584.15647.22.camel@myfc17>
+Subject: [PATCH 6/13] lpfc 8.3.41: Fixed support for 128 byte WQEs
+Date: Mon, 15 Jul 2013 18:33:23 -0400
+Message-ID: <1373927603.15647.23.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:4535 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758156Ab3GOWdH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jul 2013 18:33:07 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:19216 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758337Ab3GOWd1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jul 2013 18:33:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Ensure driver properly zeros unused fields in SLI4 mailbox commands
+Fixed support for 128 byte WQEs 
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_mbox.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ lpfc_hw4.h  |   13 +++++++++++++
+ lpfc_init.c |    1 +
+ lpfc_sli.c  |   48 +++++++++++++++++++++++++++++++++++++++++++++---
+ lpfc_sli4.h |    6 ++++++
+ 4 files changed, 65 insertions(+), 3 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
---- a/drivers/scsi/lpfc/lpfc_mbox.c	2013-07-15 06:56:23.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c	2013-07-15 07:15:19.437055870 -0400
-@@ -178,7 +178,8 @@ lpfc_dump_wakeup_param(struct lpfc_hba *
- 	mb->mbxOwner = OWN_HOST;
- 	mb->un.varDmp.cv = 1;
- 	mb->un.varDmp.type = DMP_NV_PARAMS;
--	mb->un.varDmp.entry_index = 0;
-+	if (phba->sli_rev < LPFC_SLI_REV4)
-+		mb->un.varDmp.entry_index = 0;
- 	mb->un.varDmp.region_id = WAKE_UP_PARMS_REGION_ID;
- 	mb->un.varDmp.word_cnt = WAKE_UP_PARMS_WORD_SIZE;
- 	mb->un.varDmp.co = 0;
-@@ -361,7 +362,7 @@ lpfc_config_link(struct lpfc_hba * phba,
- 	/* NEW_FEATURE
- 	 * SLI-2, Coalescing Response Feature.
- 	 */
--	if (phba->cfg_cr_delay) {
-+	if (phba->cfg_cr_delay && (phba->sli_rev < LPFC_SLI_REV4)) {
- 		mb->un.varCfgLnk.cr = 1;
- 		mb->un.varCfgLnk.ci = 1;
- 		mb->un.varCfgLnk.cr_delay = phba->cfg_cr_delay;
-@@ -377,7 +378,7 @@ lpfc_config_link(struct lpfc_hba * phba,
- 	mb->un.varCfgLnk.crtov = phba->fc_crtov;
- 	mb->un.varCfgLnk.citov = phba->fc_citov;
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2013-07-15 06:56:23.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2013-07-15 07:15:22.047055930 -0400
+@@ -234,6 +234,9 @@ struct ulp_bde64 {
+ 	uint32_t addrHigh;
+ };
  
--	if (phba->cfg_ack0)
-+	if (phba->cfg_ack0 && (phba->sli_rev < LPFC_SLI_REV4))
- 		mb->un.varCfgLnk.ack0_enable = 1;
++/* Maximun size of immediate data that can fit into a 128 byte WQE */
++#define LPFC_MAX_BDE_IMM_SIZE	64
++
+ struct lpfc_sli4_flags {
+ 	uint32_t word0;
+ #define lpfc_idx_rsrc_rdy_SHIFT		0
+@@ -2585,6 +2588,9 @@ struct lpfc_sli4_parameters {
+ #define cfg_mqv_WORD				word6
+ 	uint32_t word7;
+ 	uint32_t word8;
++#define cfg_wqsize_SHIFT			8
++#define cfg_wqsize_MASK				0x0000000f
++#define cfg_wqsize_WORD				word8
+ #define cfg_wqv_SHIFT				14
+ #define cfg_wqv_MASK				0x00000003
+ #define cfg_wqv_WORD				word8
+@@ -3622,6 +3628,13 @@ union lpfc_wqe {
+ 	struct gen_req64_wqe gen_req;
+ };
  
- 	mb->mbxCommand = MBX_CONFIG_LINK;
++union lpfc_wqe128 {
++	uint32_t words[32];
++	struct lpfc_wqe_generic generic;
++	struct xmit_seq64_wqe xmit_sequence;
++	struct gen_req64_wqe gen_req;
++};
++
+ #define LPFC_GROUP_OJECT_MAGIC_NUM		0xfeaa0001
+ #define LPFC_FILE_TYPE_GROUP			0xf7
+ #define LPFC_FILE_ID_GROUP			0xa2
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2013-07-15 07:15:17.580055828 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2013-07-15 07:15:22.052055930 -0400
+@@ -9168,6 +9168,7 @@ lpfc_get_sli4_parameters(struct lpfc_hba
+ 	sli4_params->mqv = bf_get(cfg_mqv, mbx_sli4_parameters);
+ 	sli4_params->wqv = bf_get(cfg_wqv, mbx_sli4_parameters);
+ 	sli4_params->rqv = bf_get(cfg_rqv, mbx_sli4_parameters);
++	sli4_params->wqsize = bf_get(cfg_wqsize, mbx_sli4_parameters);
+ 	sli4_params->sgl_pages_max = bf_get(cfg_sgl_page_cnt,
+ 					    mbx_sli4_parameters);
+ 	sli4_params->sgl_pp_align = bf_get(cfg_sgl_pp_align,
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2013-07-15 06:56:23.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2013-07-15 07:15:22.058055930 -0400
+@@ -117,6 +117,7 @@ union sli4_qe {
+ 	struct lpfc_rcqe_complete *rcqe_complete;
+ 	struct lpfc_mqe *mqe;
+ 	union  lpfc_wqe *wqe;
++	union  lpfc_wqe128 *wqe128;
+ 	struct lpfc_rqe *rqe;
+ };
+ 
+@@ -325,12 +326,14 @@ struct lpfc_bmbx {
+ #define LPFC_EQE_SIZE_16B	16
+ #define LPFC_CQE_SIZE		16
+ #define LPFC_WQE_SIZE		64
++#define LPFC_WQE128_SIZE	128
+ #define LPFC_MQE_SIZE		256
+ #define LPFC_RQE_SIZE		8
+ 
+ #define LPFC_EQE_DEF_COUNT	1024
+ #define LPFC_CQE_DEF_COUNT      1024
+ #define LPFC_WQE_DEF_COUNT      256
++#define LPFC_WQE128_DEF_COUNT   128
+ #define LPFC_MQE_DEF_COUNT      16
+ #define LPFC_RQE_DEF_COUNT	512
+ 
+@@ -416,6 +419,9 @@ struct lpfc_pc_sli4_params {
+ 	uint8_t mqv;
+ 	uint8_t wqv;
+ 	uint8_t rqv;
++	uint8_t wqsize;
++#define LPFC_WQ_SZ64_SUPPORT	1
++#define LPFC_WQ_SZ128_SUPPORT	2
+ };
+ 
+ struct lpfc_iov {
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2013-07-15 07:15:17.589055828 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-07-15 07:15:22.091055930 -0400
+@@ -12869,10 +12869,44 @@ lpfc_wq_create(struct lpfc_hba *phba, st
+ 		    wq->page_count);
+ 	bf_set(lpfc_mbx_wq_create_cq_id, &wq_create->u.request,
+ 		    cq->queue_id);
++
++	/* wqv is the earliest version supported, NOT the latest */
+ 	bf_set(lpfc_mbox_hdr_version, &shdr->request,
+ 	       phba->sli4_hba.pc_sli4_params.wqv);
+ 
+-	if (phba->sli4_hba.pc_sli4_params.wqv == LPFC_Q_CREATE_VERSION_1) {
++	switch (phba->sli4_hba.pc_sli4_params.wqv) {
++	case LPFC_Q_CREATE_VERSION_0:
++		switch (wq->entry_size) {
++		default:
++		case 64:
++			/* Nothing to do, version 0 ONLY supports 64 byte */
++			page = wq_create->u.request.page;
++			break;
++		case 128:
++			if (!(phba->sli4_hba.pc_sli4_params.wqsize &
++			    LPFC_WQ_SZ128_SUPPORT)) {
++				status = -ERANGE;
++				goto out;
++			}
++			/* If we get here the HBA MUST also support V1 and
++			 * we MUST use it
++			 */
++			bf_set(lpfc_mbox_hdr_version, &shdr->request,
++			       LPFC_Q_CREATE_VERSION_1);
++
++			bf_set(lpfc_mbx_wq_create_wqe_count,
++			       &wq_create->u.request_1, wq->entry_count);
++			bf_set(lpfc_mbx_wq_create_wqe_size,
++			       &wq_create->u.request_1,
++			       LPFC_WQ_WQE_SIZE_128);
++			bf_set(lpfc_mbx_wq_create_page_size,
++			       &wq_create->u.request_1,
++			       (PAGE_SIZE/SLI4_PAGE_SIZE));
++			page = wq_create->u.request_1.page;
++			break;
++		}
++		break;
++	case LPFC_Q_CREATE_VERSION_1:
+ 		bf_set(lpfc_mbx_wq_create_wqe_count, &wq_create->u.request_1,
+ 		       wq->entry_count);
+ 		switch (wq->entry_size) {
+@@ -12883,6 +12917,11 @@ lpfc_wq_create(struct lpfc_hba *phba, st
+ 			       LPFC_WQ_WQE_SIZE_64);
+ 			break;
+ 		case 128:
++			if (!(phba->sli4_hba.pc_sli4_params.wqsize &
++				LPFC_WQ_SZ128_SUPPORT)) {
++				status = -ERANGE;
++				goto out;
++			}
+ 			bf_set(lpfc_mbx_wq_create_wqe_size,
+ 			       &wq_create->u.request_1,
+ 			       LPFC_WQ_WQE_SIZE_128);
+@@ -12891,9 +12930,12 @@ lpfc_wq_create(struct lpfc_hba *phba, st
+ 		bf_set(lpfc_mbx_wq_create_page_size, &wq_create->u.request_1,
+ 		       (PAGE_SIZE/SLI4_PAGE_SIZE));
+ 		page = wq_create->u.request_1.page;
+-	} else {
+-		page = wq_create->u.request.page;
++		break;
++	default:
++		status = -ERANGE;
++		goto out;
+ 	}
++
+ 	list_for_each_entry(dmabuf, &wq->page_list, list) {
+ 		memset(dmabuf->virt, 0, hw_page_size);
+ 		page[dmabuf->buffer_tag].addr_lo = putPaddrLow(dmabuf->phys);
 
 
 
