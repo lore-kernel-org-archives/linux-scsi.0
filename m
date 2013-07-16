@@ -1,13 +1,13 @@
 From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH v2 04/10] [RFC] SCSI: esas2r: Add device discovery and logging functions
-Date: Tue, 16 Jul 2013 09:46:56 -0400
-Message-ID: <1373982422-3783-5-git-send-email-bgrove@attotech.com>
+Subject: [PATCH v2 05/10] [RFC] SCSI: esas2r: Add interrupt and IO functions
+Date: Tue, 16 Jul 2013 09:46:57 -0400
+Message-ID: <1373982422-3783-6-git-send-email-bgrove@attotech.com>
 References: <1373982422-3783-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:48256 "EHLO
+Received: from sw.attotech.com ([208.69.85.34]:32473 "EHLO
 	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754721Ab3GPNr5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jul 2013 09:47:57 -0400
+	with ESMTP id S1754423Ab3GPNr6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jul 2013 09:47:58 -0400
 In-Reply-To: <1373982422-3783-1-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,23 +17,21 @@ Cc: jseba@attotech.com, jbottomley@parallels.com, Bradley Grove <bgrove@attotech
 
 Signed-off-by: Bradley Grove <bgrove@attotech.com>
 ---
- drivers/scsi/esas2r/esas2r_disc.c | 1190 +++++++++++++++++++++++++++++++++++++
- drivers/scsi/esas2r/esas2r_log.c  |  255 ++++++++
- drivers/scsi/esas2r/esas2r_log.h  |  118 ++++
- 3 files changed, 1563 insertions(+)
- create mode 100644 drivers/scsi/esas2r/esas2r_disc.c
- create mode 100644 drivers/scsi/esas2r/esas2r_log.c
- create mode 100644 drivers/scsi/esas2r/esas2r_log.h
+ drivers/scsi/esas2r/esas2r_int.c | 940 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/esas2r/esas2r_io.c  | 883 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 1823 insertions(+)
+ create mode 100644 drivers/scsi/esas2r/esas2r_int.c
+ create mode 100644 drivers/scsi/esas2r/esas2r_io.c
 
-diff --git a/drivers/scsi/esas2r/esas2r_disc.c b/drivers/scsi/esas2r/esas2r_disc.c
+diff --git a/drivers/scsi/esas2r/esas2r_int.c b/drivers/scsi/esas2r/esas2r_int.c
 new file mode 100644
-index 0000000..319ba9a
+index 0000000..f2c2a46
 --- /dev/null
-+++ b/drivers/scsi/esas2r/esas2r_disc.c
-@@ -0,0 +1,1189 @@
++++ b/drivers/scsi/esas2r/esas2r_int.c
+@@ -0,0 +1,940 @@
 +/*
-+ *  linux/drivers/scsi/esas2r/esas2r_disc.c
-+ *      esas2r device discovery routines
++ *  linux/drivers/scsi/esas2r/esas2r_int.c
++ *      esas2r interrupt handling
 + *
 + *  Copyright (c) 2001-2013 ATTO Technology, Inc.
 + *  (mailto:linuxdrivers@attotech.com)
@@ -77,1161 +75,912 @@ index 0000000..319ba9a
 +
 +#include "esas2r.h"
 +
-+/* Miscellaneous internal discovery routines */
-+static void esas2r_disc_abort(struct esas2r_adapter *a,
-+			      struct esas2r_request *rq);
-+static bool esas2r_disc_continue(struct esas2r_adapter *a,
-+				 struct esas2r_request *rq);
-+static void esas2r_disc_fix_curr_requests(struct esas2r_adapter *a);
-+static u32 esas2r_disc_get_phys_addr(struct esas2r_sg_context *sgc, u64 *addr);
-+static bool esas2r_disc_start_request(struct esas2r_adapter *a,
-+				      struct esas2r_request *rq);
++/* Local function prototypes */
++static void esas2r_doorbell_interrupt(struct esas2r_adapter *a, u32 doorbell);
++static void esas2r_get_outbound_responses(struct esas2r_adapter *a);
++static void esas2r_process_bus_reset(struct esas2r_adapter *a);
 +
-+/* Internal discovery routines that process the states */
-+static bool esas2r_disc_block_dev_scan(struct esas2r_adapter *a,
-+				       struct esas2r_request *rq);
-+static void esas2r_disc_block_dev_scan_cb(struct esas2r_adapter *a,
-+					  struct esas2r_request *rq);
-+static bool esas2r_disc_dev_add(struct esas2r_adapter *a,
-+				struct esas2r_request *rq);
-+static bool esas2r_disc_dev_remove(struct esas2r_adapter *a,
-+				   struct esas2r_request *rq);
-+static bool esas2r_disc_part_info(struct esas2r_adapter *a,
-+				  struct esas2r_request *rq);
-+static void esas2r_disc_part_info_cb(struct esas2r_adapter *a,
-+				     struct esas2r_request *rq);
-+static bool esas2r_disc_passthru_dev_info(struct esas2r_adapter *a,
-+					  struct esas2r_request *rq);
-+static void esas2r_disc_passthru_dev_info_cb(struct esas2r_adapter *a,
-+					     struct esas2r_request *rq);
-+static bool esas2r_disc_passthru_dev_addr(struct esas2r_adapter *a,
-+					  struct esas2r_request *rq);
-+static void esas2r_disc_passthru_dev_addr_cb(struct esas2r_adapter *a,
-+					     struct esas2r_request *rq);
-+static bool esas2r_disc_raid_grp_info(struct esas2r_adapter *a,
-+				      struct esas2r_request *rq);
-+static void esas2r_disc_raid_grp_info_cb(struct esas2r_adapter *a,
-+					 struct esas2r_request *rq);
-+
-+void esas2r_disc_initialize(struct esas2r_adapter *a)
++/*
++ * Poll the adapter for interrupts and service them.
++ * This function handles both legacy interrupts and MSI.
++ */
++void esas2r_polled_interrupt(struct esas2r_adapter *a)
 +{
-+	struct esas2r_sas_nvram *nvr = a->nvram;
++	u32 intstat;
++	u32 doorbell;
++
++	esas2r_disable_chip_interrupts(a);
++
++	intstat = esas2r_read_register_dword(a, MU_INT_STATUS_OUT);
++
++	if (intstat & MU_INTSTAT_POST_OUT) {
++		/* clear the interrupt */
++
++		esas2r_write_register_dword(a, MU_OUT_LIST_INT_STAT,
++					    MU_OLIS_INT);
++		esas2r_flush_register_dword(a, MU_OUT_LIST_INT_STAT);
++
++		esas2r_get_outbound_responses(a);
++	}
++
++	if (intstat & MU_INTSTAT_DRBL) {
++		doorbell = esas2r_read_register_dword(a, MU_DOORBELL_OUT);
++		if (doorbell != 0)
++			esas2r_doorbell_interrupt(a, doorbell);
++	}
++
++	esas2r_enable_chip_interrupts(a);
++
++	if (atomic_read(&a->disable_cnt) == 0)
++		esas2r_do_deferred_processes(a);
++}
++
++/*
++ * Legacy and MSI interrupt handlers.  Note that the legacy interrupt handler
++ * schedules a TASKLET to process events, whereas the MSI handler just
++ * processes interrupt events directly.
++ */
++irqreturn_t esas2r_interrupt(int irq, void *dev_id)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)dev_id;
++
++	if (!esas2r_adapter_interrupt_pending(a))
++		return IRQ_NONE;
++
++	esas2r_lock_set_flags(&a->flags2, AF2_INT_PENDING);
++	esas2r_schedule_tasklet(a);
++
++	return IRQ_HANDLED;
++}
++
++void esas2r_adapter_interrupt(struct esas2r_adapter *a)
++{
++	u32 doorbell;
++
++	if (likely(a->int_stat & MU_INTSTAT_POST_OUT)) {
++		/* clear the interrupt */
++		esas2r_write_register_dword(a, MU_OUT_LIST_INT_STAT,
++					    MU_OLIS_INT);
++		esas2r_flush_register_dword(a, MU_OUT_LIST_INT_STAT);
++		esas2r_get_outbound_responses(a);
++	}
++
++	if (unlikely(a->int_stat & MU_INTSTAT_DRBL)) {
++		doorbell = esas2r_read_register_dword(a, MU_DOORBELL_OUT);
++		if (doorbell != 0)
++			esas2r_doorbell_interrupt(a, doorbell);
++	}
++
++	a->int_mask = ESAS2R_INT_STS_MASK;
++
++	esas2r_enable_chip_interrupts(a);
++
++	if (likely(atomic_read(&a->disable_cnt) == 0))
++		esas2r_do_deferred_processes(a);
++}
++
++irqreturn_t esas2r_msi_interrupt(int irq, void *dev_id)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)dev_id;
++	u32 intstat;
++	u32 doorbell;
++
++	intstat = esas2r_read_register_dword(a, MU_INT_STATUS_OUT);
++
++	if (likely(intstat & MU_INTSTAT_POST_OUT)) {
++		/* clear the interrupt */
++
++		esas2r_write_register_dword(a, MU_OUT_LIST_INT_STAT,
++					    MU_OLIS_INT);
++		esas2r_flush_register_dword(a, MU_OUT_LIST_INT_STAT);
++
++		esas2r_get_outbound_responses(a);
++	}
++
++	if (unlikely(intstat & MU_INTSTAT_DRBL)) {
++		doorbell = esas2r_read_register_dword(a, MU_DOORBELL_OUT);
++		if (doorbell != 0)
++			esas2r_doorbell_interrupt(a, doorbell);
++	}
++
++	/*
++	 * Work around a chip bug and force a new MSI to be sent if one is
++	 * still pending.
++	 */
++	esas2r_disable_chip_interrupts(a);
++	esas2r_enable_chip_interrupts(a);
++
++	if (likely(atomic_read(&a->disable_cnt) == 0))
++		esas2r_do_deferred_processes(a);
++
++	esas2r_do_tasklet_tasks(a);
++
++	return 1;
++}
++
++
++
++static void esas2r_handle_outbound_rsp_err(struct esas2r_adapter *a,
++					   struct esas2r_request *rq,
++					   struct atto_vda_ob_rsp *rsp)
++{
++
++	/*
++	 * For I/O requests, only copy the response if an error
++	 * occurred and setup a callback to do error processing.
++	 */
++	if (unlikely(rq->req_stat != RS_SUCCESS)) {
++		memcpy(&rq->func_rsp, &rsp->func_rsp, sizeof(rsp->func_rsp));
++
++		if (rq->req_stat == RS_ABORTED) {
++			if (rq->timeout > RQ_MAX_TIMEOUT)
++				rq->req_stat = RS_TIMEOUT;
++		} else if (rq->req_stat == RS_SCSI_ERROR) {
++			u8 scsistatus = rq->func_rsp.scsi_rsp.scsi_stat;
++
++			esas2r_trace("scsistatus: %x", scsistatus);
++
++			/* Any of these are a good result. */
++			if (scsistatus == SAM_STAT_GOOD || scsistatus ==
++			    SAM_STAT_CONDITION_MET || scsistatus ==
++			    SAM_STAT_INTERMEDIATE || scsistatus ==
++			    SAM_STAT_INTERMEDIATE_CONDITION_MET) {
++				rq->req_stat = RS_SUCCESS;
++				rq->func_rsp.scsi_rsp.scsi_stat =
++					SAM_STAT_GOOD;
++			}
++		}
++	}
++}
++
++static void esas2r_get_outbound_responses(struct esas2r_adapter *a)
++{
++	struct atto_vda_ob_rsp *rsp;
++	u32 rspput_ptr;
++	u32 rspget_ptr;
++	struct esas2r_request *rq;
++	u32 handle;
++	unsigned long flags;
++
++	LIST_HEAD(comp_list);
 +
 +	esas2r_trace_enter();
 +
-+	esas2r_lock_clear_flags(&a->flags, AF_DISC_IN_PROG);
-+	esas2r_lock_clear_flags(&a->flags2, AF2_DEV_SCAN);
-+	esas2r_lock_clear_flags(&a->flags2, AF2_DEV_CNT_OK);
++	spin_lock_irqsave(&a->queue_lock, flags);
 +
-+	a->disc_start_time = jiffies_to_msecs(jiffies);
-+	a->disc_wait_time = nvr->dev_wait_time * 1000;
-+	a->disc_wait_cnt = nvr->dev_wait_count;
++	/* Get the outbound limit and pointers */
++	rspput_ptr = le32_to_cpu(*a->outbound_copy) & MU_OLC_WRT_PTR;
++	rspget_ptr = a->last_read;
 +
-+	if (a->disc_wait_cnt > ESAS2R_MAX_TARGETS)
-+		a->disc_wait_cnt = ESAS2R_MAX_TARGETS;
++	esas2r_trace("rspput_ptr: %x, rspget_ptr: %x", rspput_ptr, rspget_ptr);
 +
-+	/*
-+	 * If we are doing chip reset or power management processing, always
-+	 * wait for devices.  use the NVRAM device count if it is greater than
-+	 * previously discovered devices.
-+	 */
-+
-+	esas2r_hdebug("starting discovery...");
-+
-+	a->general_req.interrupt_cx = NULL;
-+
-+	if (a->flags & (AF_CHPRST_DETECTED | AF_POWER_MGT)) {
-+		if (a->prev_dev_cnt == 0) {
-+			/* Don't bother waiting if there is nothing to wait
-+			 * for.
-+			 */
-+			a->disc_wait_time = 0;
-+		} else {
-+			/*
-+			 * Set the device wait count to what was previously
-+			 * found.  We don't care if the user only configured
-+			 * a time because we know the exact count to wait for.
-+			 * There is no need to honor the user's wishes to
-+			 * always wait the full time.
-+			 */
-+			a->disc_wait_cnt = a->prev_dev_cnt;
-+
-+			/*
-+			 * bump the minimum wait time to 15 seconds since the
-+			 * default is 3 (system boot or the boot driver usually
-+			 * buys us more time).
-+			 */
-+			if (a->disc_wait_time < 15000)
-+				a->disc_wait_time = 15000;
-+		}
++	/* If we don't have anything to process, get out */
++	if (unlikely(rspget_ptr == rspput_ptr)) {
++		spin_unlock_irqrestore(&a->queue_lock, flags);
++		esas2r_trace_exit();
++		return;
 +	}
 +
-+	esas2r_trace("disc wait count: %d", a->disc_wait_cnt);
-+	esas2r_trace("disc wait time: %d", a->disc_wait_time);
++	/* Make sure the firmware is healthy */
++	if (unlikely(rspput_ptr >= a->list_size)) {
++		spin_unlock_irqrestore(&a->queue_lock, flags);
++		esas2r_bugon();
++		esas2r_local_reset_adapter(a);
++		esas2r_trace_exit();
++		return;
++	}
 +
-+	if (a->disc_wait_time == 0)
-+		esas2r_disc_check_complete(a);
++	do {
++		rspget_ptr++;
++
++		if (rspget_ptr >= a->list_size)
++			rspget_ptr = 0;
++
++		rsp = (struct atto_vda_ob_rsp *)a->outbound_list_md.virt_addr
++		      + rspget_ptr;
++
++		handle = rsp->handle;
++
++		/* Verify the handle range */
++		if (unlikely(LOWORD(handle) == 0
++			     || LOWORD(handle) > num_requests +
++			     num_ae_requests + 1)) {
++			esas2r_bugon();
++			continue;
++		}
++
++		/* Get the request for this handle */
++		rq = a->req_table[LOWORD(handle)];
++
++		if (unlikely(rq == NULL || rq->vrq->scsi.handle != handle)) {
++			esas2r_bugon();
++			continue;
++		}
++
++		list_del(&rq->req_list);
++
++		/* Get the completion status */
++		rq->req_stat = rsp->req_stat;
++
++		esas2r_trace("handle: %x", handle);
++		esas2r_trace("rq: %p", rq);
++		esas2r_trace("req_status: %x", rq->req_stat);
++
++		if (likely(rq->vrq->scsi.function == VDA_FUNC_SCSI)) {
++			esas2r_handle_outbound_rsp_err(a, rq, rsp);
++		} else {
++			/*
++			 * Copy the outbound completion struct for non-I/O
++			 * requests.
++			 */
++			memcpy(&rq->func_rsp, &rsp->func_rsp,
++			       sizeof(rsp->func_rsp));
++		}
++
++		/* Queue the request for completion. */
++		list_add_tail(&rq->comp_list, &comp_list);
++
++	} while (rspget_ptr != rspput_ptr);
++
++	a->last_read = rspget_ptr;
++	spin_unlock_irqrestore(&a->queue_lock, flags);
++
++	esas2r_comp_list_drain(a, &comp_list);
++	esas2r_trace_exit();
++}
++
++/*
++ * Perform all deferred processes for the adapter.  Deferred
++ * processes can only be done while the current interrupt
++ * disable_cnt for the adapter is zero.
++ */
++void esas2r_do_deferred_processes(struct esas2r_adapter *a)
++{
++	int startreqs = 2;
++	struct esas2r_request *rq;
++	unsigned long flags;
++
++	/*
++	 * startreqs is used to control starting requests
++	 * that are on the deferred queue
++	 *  = 0 - do not start any requests
++	 *  = 1 - can start discovery requests
++	 *  = 2 - can start any request
++	 */
++
++	if (a->flags & (AF_CHPRST_PENDING | AF_FLASHING))
++		startreqs = 0;
++	else if (a->flags & AF_DISC_PENDING)
++		startreqs = 1;
++
++	atomic_inc(&a->disable_cnt);
++
++	/* Clear off the completed list to be processed later. */
++
++	if (esas2r_is_tasklet_pending(a)) {
++		esas2r_schedule_tasklet(a);
++
++		startreqs = 0;
++	}
++
++	/*
++	 * If we can start requests then traverse the defer queue
++	 * looking for requests to start or complete
++	 */
++	if (startreqs && !list_empty(&a->defer_list)) {
++		LIST_HEAD(comp_list);
++		struct list_head *element, *next;
++
++		spin_lock_irqsave(&a->queue_lock, flags);
++
++		list_for_each_safe(element, next, &a->defer_list) {
++			rq = list_entry(element, struct esas2r_request,
++					req_list);
++
++			if (rq->req_stat != RS_PENDING) {
++				list_del(element);
++				list_add_tail(&rq->comp_list, &comp_list);
++			}
++			/*
++			 * Process discovery and OS requests separately.  We
++			 * can't hold up discovery requests when discovery is
++			 * pending.  In general, there may be different sets of
++			 * conditions for starting different types of requests.
++			 */
++			else if (rq->req_type == RT_DISC_REQ) {
++				list_del(element);
++				esas2r_disc_local_start_request(a, rq);
++			} else if (startreqs == 2) {
++				list_del(element);
++				esas2r_local_start_request(a, rq);
++
++				/*
++				 * Flashing could have been set by last local
++				 * start
++				 */
++				if (a->flags & AF_FLASHING)
++					break;
++			}
++		}
++
++		spin_unlock_irqrestore(&a->queue_lock, flags);
++		esas2r_comp_list_drain(a, &comp_list);
++	}
++
++	atomic_dec(&a->disable_cnt);
++}
++
++/*
++ * Process an adapter reset (or one that is about to happen)
++ * by making sure all outstanding requests are completed that
++ * haven't been already.
++ */
++void esas2r_process_adapter_reset(struct esas2r_adapter *a)
++{
++	struct esas2r_request *rq = &a->general_req;
++	unsigned long flags;
++	struct esas2r_disc_context *dc;
++
++	LIST_HEAD(comp_list);
++	struct list_head *element;
++
++	esas2r_trace_enter();
++
++	spin_lock_irqsave(&a->queue_lock, flags);
++
++	/* abort the active discovery, if any.   */
++
++	if (rq->interrupt_cx) {
++		dc = (struct esas2r_disc_context *)rq->interrupt_cx;
++
++		dc->disc_evt = 0;
++
++		esas2r_lock_clear_flags(&a->flags, AF_DISC_IN_PROG);
++	}
++
++	/*
++	 * just clear the interrupt callback for now.  it will be dequeued if
++	 * and when we find it on the active queue and we don't want the
++	 * callback called.  also set the dummy completion callback in case we
++	 * were doing an I/O request.
++	 */
++
++	rq->interrupt_cx = NULL;
++	rq->interrupt_cb = NULL;
++
++	rq->comp_cb = esas2r_dummy_complete;
++
++	/* Reset the read and write pointers */
++
++	*a->outbound_copy =
++		a->last_write =
++			a->last_read = a->list_size - 1;
++
++	esas2r_lock_set_flags(&a->flags, AF_COMM_LIST_TOGGLE);
++
++	/* Kill all the requests on the active list */
++	list_for_each(element, &a->defer_list) {
++		rq = list_entry(element, struct esas2r_request, req_list);
++
++		if (rq->req_stat == RS_STARTED)
++			if (esas2r_ioreq_aborted(a, rq, RS_ABORTED))
++				list_add_tail(&rq->comp_list, &comp_list);
++	}
++
++	spin_unlock_irqrestore(&a->queue_lock, flags);
++	esas2r_comp_list_drain(a, &comp_list);
++	esas2r_process_bus_reset(a);
++	esas2r_trace_exit();
++}
++
++static void esas2r_process_bus_reset(struct esas2r_adapter *a)
++{
++	struct esas2r_request *rq;
++	struct list_head *element;
++	unsigned long flags;
++
++	LIST_HEAD(comp_list);
++
++	esas2r_trace_enter();
++
++	esas2r_hdebug("reset detected");
++
++	spin_lock_irqsave(&a->queue_lock, flags);
++
++	/* kill all the requests on the deferred queue */
++	list_for_each(element, &a->defer_list) {
++		rq = list_entry(element, struct esas2r_request, req_list);
++		if (esas2r_ioreq_aborted(a, rq, RS_ABORTED))
++			list_add_tail(&rq->comp_list, &comp_list);
++	}
++
++	spin_unlock_irqrestore(&a->queue_lock, flags);
++
++	esas2r_comp_list_drain(a, &comp_list);
++
++	if (atomic_read(&a->disable_cnt) == 0)
++		esas2r_do_deferred_processes(a);
++
++	esas2r_lock_clear_flags(&a->flags, AF_OS_RESET);
 +
 +	esas2r_trace_exit();
 +}
 +
-+void esas2r_disc_start_waiting(struct esas2r_adapter *a)
++static void esas2r_chip_rst_needed_during_tasklet(struct esas2r_adapter *a)
 +{
++
++	esas2r_lock_clear_flags(&a->flags, AF_CHPRST_NEEDED);
++	esas2r_lock_clear_flags(&a->flags, AF_BUSRST_NEEDED);
++	esas2r_lock_clear_flags(&a->flags, AF_BUSRST_DETECTED);
++	esas2r_lock_clear_flags(&a->flags, AF_BUSRST_PENDING);
++	/*
++	 * Make sure we don't get attempt more than 3 resets
++	 * when the uptime between resets does not exceed one
++	 * minute.  This will stop any situation where there is
++	 * really something wrong with the hardware.  The way
++	 * this works is that we start with uptime ticks at 0.
++	 * Each time we do a reset, we add 20 seconds worth to
++	 * the count.  Each time a timer tick occurs, as long
++	 * as a chip reset is not pending, we decrement the
++	 * tick count.  If the uptime ticks ever gets to 60
++	 * seconds worth, we disable the adapter from that
++	 * point forward.  Three strikes, you're out.
++	 */
++	if (!esas2r_is_adapter_present(a) || (a->chip_uptime >=
++					      ESAS2R_CHP_UPTIME_MAX)) {
++		esas2r_hdebug("*** adapter disabled ***");
++
++		/*
++		 * Ok, some kind of hard failure.  Make sure we
++		 * exit this loop with chip interrupts
++		 * permanently disabled so we don't lock up the
++		 * entire system.  Also flag degraded mode to
++		 * prevent the heartbeat from trying to recover.
++		 */
++
++		esas2r_lock_set_flags(&a->flags, AF_DEGRADED_MODE);
++		esas2r_lock_set_flags(&a->flags, AF_DISABLED);
++		esas2r_lock_clear_flags(&a->flags, AF_CHPRST_PENDING);
++		esas2r_lock_clear_flags(&a->flags, AF_DISC_PENDING);
++
++		esas2r_disable_chip_interrupts(a);
++		a->int_mask = 0;
++		esas2r_process_adapter_reset(a);
++
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "Adapter disabled because of hardware failure");
++	} else {
++		u32 flags =
++			esas2r_lock_set_flags(&a->flags, AF_CHPRST_STARTED);
++
++		if (!(flags & AF_CHPRST_STARTED))
++			/*
++			 * Only disable interrupts if this is
++			 * the first reset attempt.
++			 */
++			esas2r_disable_chip_interrupts(a);
++
++		if ((a->flags & AF_POWER_MGT) && !(a->flags & AF_FIRST_INIT) &&
++		    !(flags & AF_CHPRST_STARTED)) {
++			/*
++			 * Don't reset the chip on the first
++			 * deferred power up attempt.
++			 */
++		} else {
++			esas2r_hdebug("*** resetting chip ***");
++			esas2r_reset_chip(a);
++		}
++
++		/* Kick off the reinitialization */
++		a->chip_uptime += ESAS2R_CHP_UPTIME_CNT;
++		a->chip_init_time = jiffies_to_msecs(jiffies);
++		if (!(a->flags & AF_POWER_MGT)) {
++			esas2r_process_adapter_reset(a);
++
++			if (!(flags & AF_CHPRST_STARTED)) {
++				/* Remove devices now that I/O is cleaned up. */
++				a->prev_dev_cnt =
++					esas2r_targ_db_get_tgt_cnt(a);
++				esas2r_targ_db_remove_all(a, false);
++			}
++		}
++
++		a->int_mask = 0;
++	}
++}
++
++static void esas2r_handle_chip_rst_during_tasklet(struct esas2r_adapter *a)
++{
++	while (a->flags & AF_CHPRST_DETECTED) {
++		/*
++		 * Balance the enable in esas2r_initadapter_hw.
++		 * Esas2r_power_down already took care of it for power
++		 * management.
++		 */
++		if (!(a->flags & AF_DEGRADED_MODE) && !(a->flags &
++							AF_POWER_MGT))
++			esas2r_disable_chip_interrupts(a);
++
++		/* Reinitialize the chip. */
++		esas2r_check_adapter(a);
++		esas2r_init_adapter_hw(a, 0);
++
++		if (a->flags & AF_CHPRST_NEEDED)
++			break;
++
++		if (a->flags & AF_POWER_MGT) {
++			/* Recovery from power management. */
++			if (a->flags & AF_FIRST_INIT) {
++				/* Chip reset during normal power up */
++				esas2r_log(ESAS2R_LOG_CRIT,
++					   "The firmware was reset during a normal power-up sequence");
++			} else {
++				/* Deferred power up complete. */
++				esas2r_lock_clear_flags(&a->flags,
++							AF_POWER_MGT);
++				esas2r_send_reset_ae(a, true);
++			}
++		} else {
++			/* Recovery from online chip reset. */
++			if (a->flags & AF_FIRST_INIT) {
++				/* Chip reset during driver load */
++			} else {
++				/* Chip reset after driver load */
++				esas2r_send_reset_ae(a, false);
++			}
++
++			esas2r_log(ESAS2R_LOG_CRIT,
++				   "Recovering from a chip reset while the chip was online");
++		}
++
++		esas2r_lock_clear_flags(&a->flags, AF_CHPRST_STARTED);
++		esas2r_enable_chip_interrupts(a);
++
++		/*
++		 * Clear this flag last!  this indicates that the chip has been
++		 * reset already during initialization.
++		 */
++		esas2r_lock_clear_flags(&a->flags, AF_CHPRST_DETECTED);
++	}
++}
++
++
++/* Perform deferred tasks when chip interrupts are disabled */
++void esas2r_do_tasklet_tasks(struct esas2r_adapter *a)
++{
++	if (a->flags & (AF_CHPRST_NEEDED | AF_CHPRST_DETECTED)) {
++		if (a->flags & AF_CHPRST_NEEDED)
++			esas2r_chip_rst_needed_during_tasklet(a);
++
++		esas2r_handle_chip_rst_during_tasklet(a);
++	}
++
++	if (a->flags & AF_BUSRST_NEEDED) {
++		esas2r_hdebug("hard resetting bus");
++
++		esas2r_lock_clear_flags(&a->flags, AF_BUSRST_NEEDED);
++
++		if (a->flags & AF_FLASHING)
++			esas2r_lock_set_flags(&a->flags, AF_BUSRST_DETECTED);
++		else
++			esas2r_write_register_dword(a, MU_DOORBELL_IN,
++						    DRBL_RESET_BUS);
++	}
++
++	if (a->flags & AF_BUSRST_DETECTED) {
++		esas2r_process_bus_reset(a);
++
++		esas2r_log_dev(ESAS2R_LOG_WARN,
++			       &(a->host->shost_gendev),
++			       "scsi_report_bus_reset() called");
++
++		scsi_report_bus_reset(a->host, 0);
++
++		esas2r_lock_clear_flags(&a->flags, AF_BUSRST_DETECTED);
++		esas2r_lock_clear_flags(&a->flags, AF_BUSRST_PENDING);
++
++		esas2r_log(ESAS2R_LOG_WARN, "Bus reset complete");
++	}
++
++	if (a->flags & AF_PORT_CHANGE) {
++		esas2r_lock_clear_flags(&a->flags, AF_PORT_CHANGE);
++
++		esas2r_targ_db_report_changes(a);
++	}
++
++	if (atomic_read(&a->disable_cnt) == 0)
++		esas2r_do_deferred_processes(a);
++}
++
++static void esas2r_doorbell_interrupt(struct esas2r_adapter *a, u32 doorbell)
++{
++	if (!(doorbell & DRBL_FORCE_INT)) {
++		esas2r_trace_enter();
++		esas2r_trace("doorbell: %x", doorbell);
++	}
++
++	/* First clear the doorbell bits */
++	esas2r_write_register_dword(a, MU_DOORBELL_OUT, doorbell);
++
++	if (doorbell & DRBL_RESET_BUS)
++		esas2r_lock_set_flags(&a->flags, AF_BUSRST_DETECTED);
++
++	if (doorbell & DRBL_FORCE_INT)
++		esas2r_lock_clear_flags(&a->flags, AF_HEARTBEAT);
++
++	if (doorbell & DRBL_PANIC_REASON_MASK) {
++		esas2r_hdebug("*** Firmware Panic ***");
++		esas2r_log(ESAS2R_LOG_CRIT, "The firmware has panicked");
++	}
++
++	if (doorbell & DRBL_FW_RESET) {
++		esas2r_lock_set_flags(&a->flags2, AF2_COREDUMP_AVAIL);
++		esas2r_local_reset_adapter(a);
++	}
++
++	if (!(doorbell & DRBL_FORCE_INT))
++		esas2r_trace_exit();
++}
++
++void esas2r_force_interrupt(struct esas2r_adapter *a)
++{
++	esas2r_write_register_dword(a, MU_DOORBELL_IN, DRBL_FORCE_INT |
++				    DRBL_DRV_VER);
++}
++
++
++static void esas2r_lun_event(struct esas2r_adapter *a, union atto_vda_ae *ae,
++			     u16 target, u32 length)
++{
++	struct esas2r_target *t = a->targetdb + target;
++	u32 cplen = length;
 +	unsigned long flags;
++
++	if (cplen > sizeof(t->lu_event))
++		cplen = sizeof(t->lu_event);
++
++	esas2r_trace("ae->lu.dwevent: %x", ae->lu.dwevent);
++	esas2r_trace("ae->lu.bystate: %x", ae->lu.bystate);
 +
 +	spin_lock_irqsave(&a->mem_lock, flags);
 +
-+	if (a->disc_ctx.disc_evt)
-+		esas2r_disc_start_port(a);
++	t->new_target_state = TS_INVALID;
++
++	if (ae->lu.dwevent  & VDAAE_LU_LOST) {
++		t->new_target_state = TS_NOT_PRESENT;
++	} else {
++		switch (ae->lu.bystate) {
++		case VDAAE_LU_NOT_PRESENT:
++		case VDAAE_LU_OFFLINE:
++		case VDAAE_LU_DELETED:
++		case VDAAE_LU_FACTORY_DISABLED:
++			t->new_target_state = TS_NOT_PRESENT;
++			break;
++
++		case VDAAE_LU_ONLINE:
++		case VDAAE_LU_DEGRADED:
++			t->new_target_state = TS_PRESENT;
++			break;
++		}
++	}
++
++	if (t->new_target_state != TS_INVALID) {
++		memcpy(&t->lu_event, &ae->lu, cplen);
++
++		esas2r_disc_queue_event(a, DCDE_DEV_CHANGE);
++	}
 +
 +	spin_unlock_irqrestore(&a->mem_lock, flags);
 +}
 +
-+void esas2r_disc_check_for_work(struct esas2r_adapter *a)
++
++
++void esas2r_ae_complete(struct esas2r_adapter *a, struct esas2r_request *rq)
 +{
-+	struct esas2r_request *rq = &a->general_req;
-+
-+	/* service any pending interrupts first */
-+
-+	esas2r_polled_interrupt(a);
-+
-+	/*
-+	 * now, interrupt processing may have queued up a discovery event.  go
-+	 * see if we have one to start.  we couldn't start it in the ISR since
-+	 * polled discovery would cause a deadlock.
-+	 */
-+
-+	esas2r_disc_start_waiting(a);
-+
-+	if (rq->interrupt_cx == NULL)
-+		return;
-+
-+	if (rq->req_stat == RS_STARTED
-+	    && rq->timeout <= RQ_MAX_TIMEOUT) {
-+		/* wait for the current discovery request to complete. */
-+		esas2r_wait_request(a, rq);
-+
-+		if (rq->req_stat == RS_TIMEOUT) {
-+			esas2r_disc_abort(a, rq);
-+			esas2r_local_reset_adapter(a);
-+			return;
-+		}
-+	}
-+
-+	if (rq->req_stat == RS_PENDING
-+	    || rq->req_stat == RS_STARTED)
-+		return;
-+
-+	esas2r_disc_continue(a, rq);
-+}
-+
-+void esas2r_disc_check_complete(struct esas2r_adapter *a)
-+{
-+	unsigned long flags;
++	union atto_vda_ae *ae =
++		(union atto_vda_ae *)rq->vda_rsp_data->ae_data.event_data;
++	u32 length = le32_to_cpu(rq->func_rsp.ae_rsp.length);
++	union atto_vda_ae *last =
++		(union atto_vda_ae *)(rq->vda_rsp_data->ae_data.event_data
++				      + length);
 +
 +	esas2r_trace_enter();
++	esas2r_trace("length: %d", length);
 +
-+	/* check to see if we should be waiting for devices */
-+	if (a->disc_wait_time) {
-+		u32 currtime = jiffies_to_msecs(jiffies);
-+		u32 time = currtime - a->disc_start_time;
++	if (length > sizeof(struct atto_vda_ae_data)
++	    || (length & 3) != 0
++	    || length == 0) {
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "The AE request response length (%p) is too long: %d",
++			   rq, length);
 +
-+		/*
-+		 * Wait until the device wait time is exhausted or the device
-+		 * wait count is satisfied.
-+		 */
-+		if (time < a->disc_wait_time
-+		    && (esas2r_targ_db_get_tgt_cnt(a) < a->disc_wait_cnt
-+			|| a->disc_wait_cnt == 0)) {
-+			/* After three seconds of waiting, schedule a scan. */
-+			if (time >= 3000
-+			    && !(esas2r_lock_set_flags(&a->flags2,
-+						       AF2_DEV_SCAN) &
-+				 ilog2(AF2_DEV_SCAN))) {
-+				spin_lock_irqsave(&a->mem_lock, flags);
-+				esas2r_disc_queue_event(a, DCDE_DEV_SCAN);
-+				spin_unlock_irqrestore(&a->mem_lock, flags);
++		esas2r_hdebug("aereq->length (0x%x) too long", length);
++		esas2r_bugon();
++
++		last = ae;
++	}
++
++	while (ae < last) {
++		u16 target;
++
++		esas2r_trace("ae: %p", ae);
++		esas2r_trace("ae->hdr: %p", &(ae->hdr));
++
++		length = ae->hdr.bylength;
++
++		if (length > (u32)((u8 *)last - (u8 *)ae)
++		    || (length & 3) != 0
++		    || length == 0) {
++			esas2r_log(ESAS2R_LOG_CRIT,
++				   "the async event length is invalid (%p): %d",
++				   ae, length);
++
++			esas2r_hdebug("ae->hdr.length (0x%x) invalid", length);
++			esas2r_bugon();
++
++			break;
++		}
++
++		esas2r_nuxi_ae_data(ae);
++
++		esas2r_queue_fw_event(a, fw_event_vda_ae, ae,
++				      sizeof(union atto_vda_ae));
++
++		switch (ae->hdr.bytype) {
++		case VDAAE_HDR_TYPE_RAID:
++
++			if (ae->raid.dwflags & (VDAAE_GROUP_STATE
++						| VDAAE_RBLD_STATE
++						| VDAAE_MEMBER_CHG
++						| VDAAE_PART_CHG)) {
++				esas2r_log(ESAS2R_LOG_INFO,
++					   "RAID event received - name:%s rebuild_state:%d group_state:%d",
++					   ae->raid.acname,
++					   ae->raid.byrebuild_state,
++					   ae->raid.bygroup_state);
 +			}
 +
-+			esas2r_trace_exit();
-+			return;
-+		}
-+
-+		/*
-+		 * We are done waiting...we think.  Adjust the wait time to
-+		 * consume events after the count is met.
-+		 */
-+		if (!(esas2r_lock_set_flags(&a->flags2, AF2_DEV_CNT_OK)
-+		      & ilog2(AF2_DEV_CNT_OK)))
-+			a->disc_wait_time = time + 3000;
-+
-+		/* If we haven't done a full scan yet, do it now. */
-+		if (!(esas2r_lock_set_flags(&a->flags2,
-+					    AF2_DEV_SCAN) &
-+		      ilog2(AF2_DEV_SCAN))) {
-+			spin_lock_irqsave(&a->mem_lock, flags);
-+			esas2r_disc_queue_event(a, DCDE_DEV_SCAN);
-+			spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+			esas2r_trace_exit();
-+			return;
-+		}
-+
-+		/*
-+		 * Now, if there is still time left to consume events, continue
-+		 * waiting.
-+		 */
-+		if (time < a->disc_wait_time) {
-+			esas2r_trace_exit();
-+			return;
-+		}
-+	} else {
-+		if (!(esas2r_lock_set_flags(&a->flags2,
-+					    AF2_DEV_SCAN) &
-+		      ilog2(AF2_DEV_SCAN))) {
-+			spin_lock_irqsave(&a->mem_lock, flags);
-+			esas2r_disc_queue_event(a, DCDE_DEV_SCAN);
-+			spin_unlock_irqrestore(&a->mem_lock, flags);
-+		}
-+	}
-+
-+	/* We want to stop waiting for devices. */
-+	a->disc_wait_time = 0;
-+
-+	if ((a->flags & AF_DISC_POLLED)
-+	    && (a->flags & AF_DISC_IN_PROG)) {
-+		/*
-+		 * Polled discovery is still pending so continue the active
-+		 * discovery until it is done.  At that point, we will stop
-+		 * polled discovery and transition to interrupt driven
-+		 * discovery.
-+		 */
-+	} else {
-+		/*
-+		 * Done waiting for devices.  Note that we get here immediately
-+		 * after deferred waiting completes because that is interrupt
-+		 * driven; i.e. There is no transition.
-+		 */
-+		esas2r_disc_fix_curr_requests(a);
-+		esas2r_lock_clear_flags(&a->flags, AF_DISC_PENDING);
-+
-+		/*
-+		 * We have deferred target state changes until now because we
-+		 * don't want to report any removals (due to the first arrival)
-+		 * until the device wait time expires.
-+		 */
-+		esas2r_lock_set_flags(&a->flags, AF_PORT_CHANGE);
-+	}
-+
-+	esas2r_trace_exit();
-+}
-+
-+void esas2r_disc_queue_event(struct esas2r_adapter *a, u8 disc_evt)
-+{
-+	struct esas2r_disc_context *dc = &a->disc_ctx;
-+
-+	esas2r_trace_enter();
-+
-+	esas2r_trace("disc_event: %d", disc_evt);
-+
-+	/* Initialize the discovery context */
-+	dc->disc_evt |= disc_evt;
-+
-+	/*
-+	 * Don't start discovery before or during polled discovery.  if we did,
-+	 * we would have a deadlock if we are in the ISR already.
-+	 */
-+	if (!(a->flags & (AF_CHPRST_PENDING | AF_DISC_POLLED)))
-+		esas2r_disc_start_port(a);
-+
-+	esas2r_trace_exit();
-+}
-+
-+bool esas2r_disc_start_port(struct esas2r_adapter *a)
-+{
-+	struct esas2r_request *rq = &a->general_req;
-+	struct esas2r_disc_context *dc = &a->disc_ctx;
-+	bool ret;
-+
-+	esas2r_trace_enter();
-+
-+	if (a->flags & AF_DISC_IN_PROG) {
-+		esas2r_trace_exit();
-+
-+		return false;
-+	}
-+
-+	/* If there is a discovery waiting, process it. */
-+	if (dc->disc_evt) {
-+		if ((a->flags & AF_DISC_POLLED)
-+		    && a->disc_wait_time == 0) {
-+			/*
-+			 * We are doing polled discovery, but we no longer want
-+			 * to wait for devices.  Stop polled discovery and
-+			 * transition to interrupt driven discovery.
-+			 */
-+
-+			esas2r_trace_exit();
-+
-+			return false;
-+		}
-+	} else {
-+		/* Discovery is complete. */
-+
-+		esas2r_hdebug("disc done");
-+
-+		esas2r_lock_set_flags(&a->flags, AF_PORT_CHANGE);
-+
-+		esas2r_trace_exit();
-+
-+		return false;
-+	}
-+
-+	/* Handle the discovery context */
-+	esas2r_trace("disc_evt: %d", dc->disc_evt);
-+	esas2r_lock_set_flags(&a->flags, AF_DISC_IN_PROG);
-+	dc->flags = 0;
-+
-+	if (a->flags & AF_DISC_POLLED)
-+		dc->flags |= DCF_POLLED;
-+
-+	rq->interrupt_cx = dc;
-+	rq->req_stat = RS_SUCCESS;
-+
-+	/* Decode the event code */
-+	if (dc->disc_evt & DCDE_DEV_SCAN) {
-+		dc->disc_evt &= ~DCDE_DEV_SCAN;
-+
-+		dc->flags |= DCF_DEV_SCAN;
-+		dc->state = DCS_BLOCK_DEV_SCAN;
-+	} else if (dc->disc_evt & DCDE_DEV_CHANGE) {
-+		dc->disc_evt &= ~DCDE_DEV_CHANGE;
-+
-+		dc->flags |= DCF_DEV_CHANGE;
-+		dc->state = DCS_DEV_RMV;
-+	}
-+
-+	/* Continue interrupt driven discovery */
-+	if (!(a->flags & AF_DISC_POLLED))
-+		ret = esas2r_disc_continue(a, rq);
-+	else
-+		ret = true;
-+
-+	esas2r_trace_exit();
-+
-+	return ret;
-+}
-+
-+static bool esas2r_disc_continue(struct esas2r_adapter *a,
-+				 struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	bool rslt;
-+
-+	/* Device discovery/removal */
-+	while (dc->flags & (DCF_DEV_CHANGE | DCF_DEV_SCAN)) {
-+		rslt = false;
-+
-+		switch (dc->state) {
-+		case DCS_DEV_RMV:
-+
-+			rslt = esas2r_disc_dev_remove(a, rq);
 +			break;
 +
-+		case DCS_DEV_ADD:
++		case VDAAE_HDR_TYPE_LU:
++			esas2r_log(ESAS2R_LOG_INFO,
++				   "LUN event received: event:%d target_id:%d LUN:%d state:%d",
++				   ae->lu.dwevent,
++				   ae->lu.id.tgtlun.wtarget_id,
++				   ae->lu.id.tgtlun.bylun,
++				   ae->lu.bystate);
 +
-+			rslt = esas2r_disc_dev_add(a, rq);
++			target = ae->lu.id.tgtlun.wtarget_id;
++
++			if (target < ESAS2R_MAX_TARGETS)
++				esas2r_lun_event(a, ae, target, length);
++
 +			break;
 +
-+		case DCS_BLOCK_DEV_SCAN:
-+
-+			rslt = esas2r_disc_block_dev_scan(a, rq);
-+			break;
-+
-+		case DCS_RAID_GRP_INFO:
-+
-+			rslt = esas2r_disc_raid_grp_info(a, rq);
-+			break;
-+
-+		case DCS_PART_INFO:
-+
-+			rslt = esas2r_disc_part_info(a, rq);
-+			break;
-+
-+		case DCS_PT_DEV_INFO:
-+
-+			rslt = esas2r_disc_passthru_dev_info(a, rq);
-+			break;
-+		case DCS_PT_DEV_ADDR:
-+
-+			rslt = esas2r_disc_passthru_dev_addr(a, rq);
-+			break;
-+		case DCS_DISC_DONE:
-+
-+			dc->flags &= ~(DCF_DEV_CHANGE | DCF_DEV_SCAN);
++		case VDAAE_HDR_TYPE_DISK:
++			esas2r_log(ESAS2R_LOG_INFO, "Disk event received");
 +			break;
 +
 +		default:
 +
-+			esas2r_bugon();
-+			dc->state = DCS_DISC_DONE;
++			/* Silently ignore the rest and let the apps deal with
++			 * them.
++			 */
++
 +			break;
 +		}
 +
-+		if (rslt)
-+			return true;
++		ae = (union atto_vda_ae *)((u8 *)ae + length);
 +	}
 +
-+	/* Discovery is done...for now. */
-+	rq->interrupt_cx = NULL;
-+
-+	if (!(a->flags & AF_DISC_PENDING))
-+		esas2r_disc_fix_curr_requests(a);
-+
-+	esas2r_lock_clear_flags(&a->flags, AF_DISC_IN_PROG);
-+
-+	/* Start the next discovery. */
-+	return esas2r_disc_start_port(a);
++	/* Now requeue it. */
++	esas2r_start_ae_request(a, rq);
++	esas2r_trace_exit();
 +}
 +
-+static bool esas2r_disc_start_request(struct esas2r_adapter *a,
-+				      struct esas2r_request *rq)
++/* Send an asynchronous event for a chip reset or power management. */
++void esas2r_send_reset_ae(struct esas2r_adapter *a, bool pwr_mgt)
 +{
-+	unsigned long flags;
++	struct atto_vda_ae_hdr ae;
 +
-+	/* Set the timeout to a minimum value. */
-+	if (rq->timeout < ESAS2R_DEFAULT_TMO)
-+		rq->timeout = ESAS2R_DEFAULT_TMO;
-+
-+	/*
-+	 * Override the request type to distinguish discovery requests.  If we
-+	 * end up deferring the request, esas2r_disc_local_start_request()
-+	 * will be called to restart it.
-+	 */
-+	rq->req_type = RT_DISC_REQ;
-+
-+	spin_lock_irqsave(&a->queue_lock, flags);
-+
-+	if (!(a->flags & (AF_CHPRST_PENDING | AF_FLASHING)))
-+		esas2r_disc_local_start_request(a, rq);
++	if (pwr_mgt)
++		ae.bytype = VDAAE_HDR_TYPE_PWRMGT;
 +	else
-+		list_add_tail(&rq->req_list, &a->defer_list);
++		ae.bytype = VDAAE_HDR_TYPE_RESET;
 +
-+	spin_unlock_irqrestore(&a->queue_lock, flags);
++	ae.byversion = VDAAE_HDR_VER_0;
++	ae.byflags = 0;
++	ae.bylength = (u8)sizeof(struct atto_vda_ae_hdr);
 +
-+	return true;
++	if (pwr_mgt)
++		esas2r_hdebug("*** sending power management AE ***");
++	else
++		esas2r_hdebug("*** sending reset AE ***");
++
++	esas2r_queue_fw_event(a, fw_event_vda_ae, &ae,
++			      sizeof(union atto_vda_ae));
 +}
 +
-+void esas2r_disc_local_start_request(struct esas2r_adapter *a,
-+				     struct esas2r_request *rq)
-+{
-+	esas2r_trace_enter();
++void esas2r_dummy_complete(struct esas2r_adapter *a, struct esas2r_request *rq)
++{}
 +
-+	list_add_tail(&rq->req_list, &a->active_list);
-+
-+	esas2r_start_vda_request(a, rq);
-+
-+	esas2r_trace_exit();
-+
-+	return;
-+}
-+
-+static void esas2r_disc_abort(struct esas2r_adapter *a,
-+			      struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+
-+	esas2r_trace_enter();
-+
-+	/* abort the current discovery */
-+
-+	dc->state = DCS_DISC_DONE;
-+
-+	esas2r_trace_exit();
-+}
-+
-+static bool esas2r_disc_block_dev_scan(struct esas2r_adapter *a,
++static void esas2r_check_req_rsp_sense(struct esas2r_adapter *a,
 +				       struct esas2r_request *rq)
 +{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	bool rslt;
-+
-+	esas2r_trace_enter();
-+
-+	esas2r_rq_init_request(rq, a);
-+
-+	esas2r_build_mgt_req(a,
-+			     rq,
-+			     VDAMGT_DEV_SCAN,
-+			     0,
-+			     0,
-+			     0,
-+			     NULL);
-+
-+	rq->comp_cb = esas2r_disc_block_dev_scan_cb;
-+
-+	rq->timeout = 30000;
-+	rq->interrupt_cx = dc;
-+
-+	rslt = esas2r_disc_start_request(a, rq);
-+
-+	esas2r_trace_exit();
-+
-+	return rslt;
-+}
-+
-+static void esas2r_disc_block_dev_scan_cb(struct esas2r_adapter *a,
-+					  struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	unsigned long flags;
-+
-+	esas2r_trace_enter();
-+
-+	spin_lock_irqsave(&a->mem_lock, flags);
-+
-+	if (rq->req_stat == RS_SUCCESS)
-+		dc->scan_gen = rq->func_rsp.mgt_rsp.scan_generation;
-+
-+	dc->state = DCS_RAID_GRP_INFO;
-+	dc->raid_grp_ix = 0;
-+
-+	esas2r_rq_destroy_request(rq, a);
-+
-+	/* continue discovery if it's interrupt driven */
-+
-+	if (!(dc->flags & DCF_POLLED))
-+		esas2r_disc_continue(a, rq);
-+
-+	spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+	esas2r_trace_exit();
-+}
-+
-+static bool esas2r_disc_raid_grp_info(struct esas2r_adapter *a,
-+				      struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	bool rslt;
-+	struct atto_vda_grp_info *grpinfo;
-+
-+	esas2r_trace_enter();
-+
-+	esas2r_trace("raid_group_idx: %d", dc->raid_grp_ix);
-+
-+	if (dc->raid_grp_ix >= VDA_MAX_RAID_GROUPS) {
-+		dc->state = DCS_DISC_DONE;
-+
-+		esas2r_trace_exit();
-+
-+		return false;
-+	}
-+
-+	esas2r_rq_init_request(rq, a);
-+
-+	grpinfo = &rq->vda_rsp_data->mgt_data.data.grp_info;
-+
-+	memset(grpinfo, 0, sizeof(struct atto_vda_grp_info));
-+
-+	esas2r_build_mgt_req(a,
-+			     rq,
-+			     VDAMGT_GRP_INFO,
-+			     dc->scan_gen,
-+			     0,
-+			     sizeof(struct atto_vda_grp_info),
-+			     NULL);
-+
-+	grpinfo->grp_index = dc->raid_grp_ix;
-+
-+	rq->comp_cb = esas2r_disc_raid_grp_info_cb;
-+
-+	rq->interrupt_cx = dc;
-+
-+	rslt = esas2r_disc_start_request(a, rq);
-+
-+	esas2r_trace_exit();
-+
-+	return rslt;
-+}
-+
-+static void esas2r_disc_raid_grp_info_cb(struct esas2r_adapter *a,
-+					 struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	unsigned long flags;
-+	struct atto_vda_grp_info *grpinfo;
-+
-+	esas2r_trace_enter();
-+
-+	spin_lock_irqsave(&a->mem_lock, flags);
-+
-+	if (rq->req_stat == RS_SCAN_GEN) {
-+		dc->scan_gen = rq->func_rsp.mgt_rsp.scan_generation;
-+		dc->raid_grp_ix = 0;
-+		goto done;
-+	}
-+
-+	if (rq->req_stat == RS_SUCCESS) {
-+		grpinfo = &rq->vda_rsp_data->mgt_data.data.grp_info;
-+
-+		if (grpinfo->status != VDA_GRP_STAT_ONLINE
-+		    && grpinfo->status != VDA_GRP_STAT_DEGRADED) {
-+			/* go to the next group. */
-+
-+			dc->raid_grp_ix++;
-+		} else {
-+			memcpy(&dc->raid_grp_name[0],
-+			       &grpinfo->grp_name[0],
-+			       sizeof(grpinfo->grp_name));
-+
-+			dc->interleave = le32_to_cpu(grpinfo->interleave);
-+			dc->block_size = le32_to_cpu(grpinfo->block_size);
-+
-+			dc->state = DCS_PART_INFO;
-+			dc->part_num = 0;
-+		}
-+	} else {
-+		if (!(rq->req_stat == RS_GRP_INVALID)) {
-+			esas2r_log(ESAS2R_LOG_WARN,
-+				   "A request for RAID group info failed - "
-+				   "returned with %x",
-+				   rq->req_stat);
-+		}
-+
-+		dc->dev_ix = 0;
-+		dc->state = DCS_PT_DEV_INFO;
-+	}
-+
-+done:
-+
-+	esas2r_rq_destroy_request(rq, a);
-+
-+	/* continue discovery if it's interrupt driven */
-+
-+	if (!(dc->flags & DCF_POLLED))
-+		esas2r_disc_continue(a, rq);
-+
-+	spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+	esas2r_trace_exit();
-+}
-+
-+static bool esas2r_disc_part_info(struct esas2r_adapter *a,
-+				  struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	bool rslt;
-+	struct atto_vdapart_info *partinfo;
-+
-+	esas2r_trace_enter();
-+
-+	esas2r_trace("part_num: %d", dc->part_num);
-+
-+	if (dc->part_num >= VDA_MAX_PARTITIONS) {
-+		dc->state = DCS_RAID_GRP_INFO;
-+		dc->raid_grp_ix++;
-+
-+		esas2r_trace_exit();
-+
-+		return false;
-+	}
-+
-+	esas2r_rq_init_request(rq, a);
-+
-+	partinfo = &rq->vda_rsp_data->mgt_data.data.part_info;
-+
-+	memset(partinfo, 0, sizeof(struct atto_vdapart_info));
-+
-+	esas2r_build_mgt_req(a,
-+			     rq,
-+			     VDAMGT_PART_INFO,
-+			     dc->scan_gen,
-+			     0,
-+			     sizeof(struct atto_vdapart_info),
-+			     NULL);
-+
-+	partinfo->part_no = dc->part_num;
-+
-+	memcpy(&partinfo->grp_name[0],
-+	       &dc->raid_grp_name[0],
-+	       sizeof(partinfo->grp_name));
-+
-+	rq->comp_cb = esas2r_disc_part_info_cb;
-+
-+	rq->interrupt_cx = dc;
-+
-+	rslt = esas2r_disc_start_request(a, rq);
-+
-+	esas2r_trace_exit();
-+
-+	return rslt;
-+}
-+
-+static void esas2r_disc_part_info_cb(struct esas2r_adapter *a,
-+				     struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	unsigned long flags;
-+	struct atto_vdapart_info *partinfo;
-+
-+	esas2r_trace_enter();
-+
-+	spin_lock_irqsave(&a->mem_lock, flags);
-+
-+	if (rq->req_stat == RS_SCAN_GEN) {
-+		dc->scan_gen = rq->func_rsp.mgt_rsp.scan_generation;
-+		dc->raid_grp_ix = 0;
-+		dc->state = DCS_RAID_GRP_INFO;
-+	} else if (rq->req_stat == RS_SUCCESS) {
-+		partinfo = &rq->vda_rsp_data->mgt_data.data.part_info;
-+
-+		dc->part_num = partinfo->part_no;
-+
-+		dc->curr_virt_id = le16_to_cpu(partinfo->target_id);
-+
-+		esas2r_targ_db_add_raid(a, dc);
-+
-+		dc->part_num++;
-+	} else {
-+		if (!(rq->req_stat == RS_PART_LAST)) {
-+			esas2r_log(ESAS2R_LOG_WARN,
-+				   "A request for RAID group partition info "
-+				   "failed - status:%d", rq->req_stat);
-+		}
-+
-+		dc->state = DCS_RAID_GRP_INFO;
-+		dc->raid_grp_ix++;
-+	}
-+
-+	esas2r_rq_destroy_request(rq, a);
-+
-+	/* continue discovery if it's interrupt driven */
-+
-+	if (!(dc->flags & DCF_POLLED))
-+		esas2r_disc_continue(a, rq);
-+
-+	spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+	esas2r_trace_exit();
-+}
-+
-+static bool esas2r_disc_passthru_dev_info(struct esas2r_adapter *a,
-+					  struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	bool rslt;
-+	struct atto_vda_devinfo *devinfo;
-+
-+	esas2r_trace_enter();
-+
-+	esas2r_trace("dev_ix: %d", dc->dev_ix);
-+
-+	esas2r_rq_init_request(rq, a);
-+
-+	devinfo = &rq->vda_rsp_data->mgt_data.data.dev_info;
-+
-+	memset(devinfo, 0, sizeof(struct atto_vda_devinfo));
-+
-+	esas2r_build_mgt_req(a,
-+			     rq,
-+			     VDAMGT_DEV_PT_INFO,
-+			     dc->scan_gen,
-+			     dc->dev_ix,
-+			     sizeof(struct atto_vda_devinfo),
-+			     NULL);
-+
-+	rq->comp_cb = esas2r_disc_passthru_dev_info_cb;
-+
-+	rq->interrupt_cx = dc;
-+
-+	rslt = esas2r_disc_start_request(a, rq);
-+
-+	esas2r_trace_exit();
-+
-+	return rslt;
-+}
-+
-+static void esas2r_disc_passthru_dev_info_cb(struct esas2r_adapter *a,
-+					     struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	unsigned long flags;
-+	struct atto_vda_devinfo *devinfo;
-+
-+	esas2r_trace_enter();
-+
-+	spin_lock_irqsave(&a->mem_lock, flags);
-+
-+	if (rq->req_stat == RS_SCAN_GEN) {
-+		dc->scan_gen = rq->func_rsp.mgt_rsp.scan_generation;
-+		dc->dev_ix = 0;
-+		dc->state = DCS_PT_DEV_INFO;
-+	} else if (rq->req_stat == RS_SUCCESS) {
-+		devinfo = &rq->vda_rsp_data->mgt_data.data.dev_info;
-+
-+		dc->dev_ix = le16_to_cpu(rq->func_rsp.mgt_rsp.dev_index);
-+
-+		dc->curr_virt_id = le16_to_cpu(devinfo->target_id);
-+
-+		if (le16_to_cpu(devinfo->features) & VDADEVFEAT_PHYS_ID) {
-+			dc->curr_phys_id =
-+				le16_to_cpu(devinfo->phys_target_id);
-+			dc->dev_addr_type = ATTO_GDA_AT_PORT;
-+			dc->state = DCS_PT_DEV_ADDR;
-+
-+			esas2r_trace("curr_virt_id: %d", dc->curr_virt_id);
-+			esas2r_trace("curr_phys_id: %d", dc->curr_phys_id);
-+		} else {
-+			dc->dev_ix++;
-+		}
-+	} else {
-+		if (!(rq->req_stat == RS_DEV_INVALID)) {
-+			esas2r_log(ESAS2R_LOG_WARN,
-+				   "A request for device information failed - "
-+				   "status:%d", rq->req_stat);
-+		}
-+
-+		dc->state = DCS_DISC_DONE;
-+	}
-+
-+	esas2r_rq_destroy_request(rq, a);
-+
-+	/* continue discovery if it's interrupt driven */
-+
-+	if (!(dc->flags & DCF_POLLED))
-+		esas2r_disc_continue(a, rq);
-+
-+	spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+	esas2r_trace_exit();
-+}
-+
-+static bool esas2r_disc_passthru_dev_addr(struct esas2r_adapter *a,
-+					  struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	bool rslt;
-+	struct atto_ioctl *hi;
-+	struct esas2r_sg_context sgc;
-+
-+	esas2r_trace_enter();
-+
-+	esas2r_rq_init_request(rq, a);
-+
-+	/* format the request. */
-+
-+	sgc.cur_offset = NULL;
-+	sgc.get_phys_addr = (PGETPHYSADDR)esas2r_disc_get_phys_addr;
-+	sgc.length = offsetof(struct atto_ioctl, data)
-+		     + sizeof(struct atto_hba_get_device_address);
-+
-+	esas2r_sgc_init(&sgc, a, rq, rq->vrq->ioctl.sge);
-+
-+	esas2r_build_ioctl_req(a, rq, sgc.length, VDA_IOCTL_HBA);
-+
-+	if (!esas2r_build_sg_list(a, rq, &sgc)) {
-+		esas2r_rq_destroy_request(rq, a);
-+
-+		esas2r_trace_exit();
-+
-+		return false;
-+	}
-+
-+	rq->comp_cb = esas2r_disc_passthru_dev_addr_cb;
-+
-+	rq->interrupt_cx = dc;
-+
-+	/* format the IOCTL data. */
-+
-+	hi = (struct atto_ioctl *)a->disc_buffer;
-+
-+	memset(a->disc_buffer, 0, ESAS2R_DISC_BUF_LEN);
-+
-+	hi->version = ATTO_VER_GET_DEV_ADDR0;
-+	hi->function = ATTO_FUNC_GET_DEV_ADDR;
-+	hi->flags = HBAF_TUNNEL;
-+
-+	hi->data.get_dev_addr.target_id = le32_to_cpu(dc->curr_phys_id);
-+	hi->data.get_dev_addr.addr_type = dc->dev_addr_type;
-+
-+	/* start it up. */
-+
-+	rslt = esas2r_disc_start_request(a, rq);
-+
-+	esas2r_trace_exit();
-+
-+	return rslt;
-+}
-+
-+static void esas2r_disc_passthru_dev_addr_cb(struct esas2r_adapter *a,
-+					     struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	struct esas2r_target *t = NULL;
-+	unsigned long flags;
-+	struct atto_ioctl *hi;
-+	u16 addrlen;
-+
-+	esas2r_trace_enter();
-+
-+	spin_lock_irqsave(&a->mem_lock, flags);
-+
-+	hi = (struct atto_ioctl *)a->disc_buffer;
-+
-+	if (rq->req_stat == RS_SUCCESS
-+	    && hi->status == ATTO_STS_SUCCESS) {
-+		addrlen = le16_to_cpu(hi->data.get_dev_addr.addr_len);
-+
-+		if (dc->dev_addr_type == ATTO_GDA_AT_PORT) {
-+			if (addrlen == sizeof(u64))
-+				memcpy(&dc->sas_addr,
-+				       &hi->data.get_dev_addr.address[0],
-+				       addrlen);
-+			else
-+				memset(&dc->sas_addr, 0, sizeof(dc->sas_addr));
-+
-+			/* Get the unique identifier. */
-+			dc->dev_addr_type = ATTO_GDA_AT_UNIQUE;
-+
-+			goto next_dev_addr;
-+		} else {
-+			/* Add the pass through target. */
-+			if (HIBYTE(addrlen) == 0) {
-+				t = esas2r_targ_db_add_pthru(a,
-+							     dc,
-+							     &hi->data.
-+							     get_dev_addr.
-+							     address[0],
-+							     (u8)hi->data.
-+							     get_dev_addr.
-+							     addr_len);
-+
-+				if (t)
-+					memcpy(&t->sas_addr, &dc->sas_addr,
-+					       sizeof(t->sas_addr));
-+			} else {
-+				/* getting the back end data failed */
-+
-+				esas2r_log(ESAS2R_LOG_WARN,
-+					   "an error occurred retrieving the "
-+					   "back end data (%s:%d)",
-+					   __func__,
-+					   __LINE__);
++	u8 snslen, snslen2;
++
++	snslen = snslen2 = rq->func_rsp.scsi_rsp.sense_len;
++
++	if (snslen > rq->sense_len)
++		snslen = rq->sense_len;
++
++	if (snslen) {
++		if (rq->sense_buf)
++			memcpy(rq->sense_buf, rq->data_buf, snslen);
++		else
++			rq->sense_buf = (u8 *)rq->data_buf;
++
++		/* See about possible sense data */
++		if (snslen2 > 0x0c) {
++			u8 *s = (u8 *)rq->data_buf;
++
++			esas2r_trace_enter();
++
++			/* Report LUNS data has changed */
++			if (s[0x0c] == 0x3f && s[0x0d] == 0x0E) {
++				esas2r_trace("rq->target_id: %d",
++					     rq->target_id);
++				esas2r_target_state_changed(a, rq->target_id,
++							    TS_LUN_CHANGE);
 +			}
++
++			esas2r_trace("add_sense_key=%x", s[0x0c]);
++			esas2r_trace("add_sense_qual=%x", s[0x0d]);
++			esas2r_trace_exit();
 +		}
-+	} else {
-+		/* getting the back end data failed */
-+
-+		esas2r_log(ESAS2R_LOG_WARN,
-+			   "an error occurred retrieving the back end data - "
-+			   "rq->req_stat:%d hi->status:%d",
-+			   rq->req_stat, hi->status);
 +	}
 +
-+	/* proceed to the next device. */
-+
-+	if (dc->flags & DCF_DEV_SCAN) {
-+		dc->dev_ix++;
-+		dc->state = DCS_PT_DEV_INFO;
-+	} else if (dc->flags & DCF_DEV_CHANGE) {
-+		dc->curr_targ++;
-+		dc->state = DCS_DEV_ADD;
-+	} else {
-+		esas2r_bugon();
-+	}
-+
-+next_dev_addr:
-+	esas2r_rq_destroy_request(rq, a);
-+
-+	/* continue discovery if it's interrupt driven */
-+
-+	if (!(dc->flags & DCF_POLLED))
-+		esas2r_disc_continue(a, rq);
-+
-+	spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+	esas2r_trace_exit();
++	rq->sense_len = snslen;
 +}
 +
-+static u32 esas2r_disc_get_phys_addr(struct esas2r_sg_context *sgc, u64 *addr)
++
++void esas2r_complete_request(struct esas2r_adapter *a,
++			     struct esas2r_request *rq)
 +{
-+	struct esas2r_adapter *a = sgc->adapter;
++	if (rq->vrq->scsi.function == VDA_FUNC_FLASH
++	    && rq->vrq->flash.sub_func == VDA_FLASH_COMMIT)
++		esas2r_lock_clear_flags(&a->flags, AF_FLASHING);
 +
-+	if (sgc->length > ESAS2R_DISC_BUF_LEN)
-+		esas2r_bugon();
++	/* See if we setup a callback to do special processing */
 +
-+	*addr = a->uncached_phys
-+		+ (u64)((u8 *)a->disc_buffer - a->uncached);
++	if (rq->interrupt_cb) {
++		(*rq->interrupt_cb)(a, rq);
 +
-+	return sgc->length;
-+}
-+
-+static bool esas2r_disc_dev_remove(struct esas2r_adapter *a,
-+				   struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	struct esas2r_target *t;
-+	struct esas2r_target *t2;
-+
-+	esas2r_trace_enter();
-+
-+	/* process removals. */
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		if (t->new_target_state != TS_NOT_PRESENT)
-+			continue;
-+
-+		t->new_target_state = TS_INVALID;
-+
-+		/* remove the right target! */
-+
-+		t2 =
-+			esas2r_targ_db_find_by_virt_id(a,
-+						       esas2r_targ_get_id(t,
-+									  a));
-+
-+		if (t2)
-+			esas2r_targ_db_remove(a, t2);
-+	}
-+
-+	/* removals complete.  process arrivals. */
-+
-+	dc->state = DCS_DEV_ADD;
-+	dc->curr_targ = a->targetdb;
-+
-+	esas2r_trace_exit();
-+
-+	return false;
-+}
-+
-+static bool esas2r_disc_dev_add(struct esas2r_adapter *a,
-+				struct esas2r_request *rq)
-+{
-+	struct esas2r_disc_context *dc =
-+		(struct esas2r_disc_context *)rq->interrupt_cx;
-+	struct esas2r_target *t = dc->curr_targ;
-+
-+	if (t >= a->targetdb_end) {
-+		/* done processing state changes. */
-+
-+		dc->state = DCS_DISC_DONE;
-+	} else if (t->new_target_state == TS_PRESENT) {
-+		struct atto_vda_ae_lu *luevt = &t->lu_event;
-+
-+		esas2r_trace_enter();
-+
-+		/* clear this now in case more events come in. */
-+
-+		t->new_target_state = TS_INVALID;
-+
-+		/* setup the discovery context for adding this device. */
-+
-+		dc->curr_virt_id = esas2r_targ_get_id(t, a);
-+
-+		if ((luevt->hdr.bylength >= offsetof(struct atto_vda_ae_lu, id)
-+		     + sizeof(struct atto_vda_ae_lu_tgt_lun_raid))
-+		    && !(luevt->dwevent & VDAAE_LU_PASSTHROUGH)) {
-+			dc->block_size = luevt->id.tgtlun_raid.dwblock_size;
-+			dc->interleave = luevt->id.tgtlun_raid.dwinterleave;
-+		} else {
-+			dc->block_size = 0;
-+			dc->interleave = 0;
++		if (rq->req_stat == RS_PENDING) {
++			esas2r_start_request(a, rq);
++			return;
 +		}
-+
-+		/* determine the device type being added. */
-+
-+		if (luevt->dwevent & VDAAE_LU_PASSTHROUGH) {
-+			if (luevt->dwevent & VDAAE_LU_PHYS_ID) {
-+				dc->state = DCS_PT_DEV_ADDR;
-+				dc->dev_addr_type = ATTO_GDA_AT_PORT;
-+				dc->curr_phys_id = luevt->wphys_target_id;
-+			} else {
-+				esas2r_log(ESAS2R_LOG_WARN,
-+					   "luevt->dwevent does not have the "
-+					   "VDAAE_LU_PHYS_ID bit set (%s:%d)",
-+					   __func__, __LINE__);
-+			}
-+		} else {
-+			dc->raid_grp_name[0] = 0;
-+
-+			esas2r_targ_db_add_raid(a, dc);
-+		}
-+
-+		esas2r_trace("curr_virt_id: %d", dc->curr_virt_id);
-+		esas2r_trace("curr_phys_id: %d", dc->curr_phys_id);
-+		esas2r_trace("dwevent: %d", luevt->dwevent);
-+
-+		esas2r_trace_exit();
 +	}
 +
-+	if (dc->state == DCS_DEV_ADD) {
-+		/* go to the next device. */
-+
-+		dc->curr_targ++;
++	if (rq->req_stat != RS_SUCCESS) {
++		esas2r_check_req_rsp_sense(a, rq);
++		esas2r_log_request_failure(a, rq);
 +	}
 +
-+	return false;
++	(*rq->comp_cb)(a, rq);
 +}
-+
-+/*
-+ * When discovery is done, find all requests on defer queue and
-+ * test if they need to be modified. If a target is no longer present
-+ * then complete the request with RS_SEL. Otherwise, update the
-+ * target_id since after a hibernate it can be a different value.
-+ * VDA does not make passthrough target IDs persistent.
-+ */
-+static void esas2r_disc_fix_curr_requests(struct esas2r_adapter *a)
-+{
-+	unsigned long flags;
-+	struct esas2r_target *t;
-+	struct esas2r_request *rq;
-+	struct list_head *element;
-+
-+	/* update virt_targ_id in any outstanding esas2r_requests  */
-+
-+	spin_lock_irqsave(&a->queue_lock, flags);
-+
-+	list_for_each(element, &a->defer_list) {
-+		rq = list_entry(element, struct esas2r_request, req_list);
-+		if (rq->vrq->scsi.function == VDA_FUNC_SCSI) {
-+			t = a->targetdb + rq->target_id;
-+
-+			if (t->target_state == TS_PRESENT)
-+				rq->vrq->scsi.target_id = le16_to_cpu(
-+					t->virt_targ_id);
-+			else
-+				rq->req_stat = RS_SEL;
-+		}
-+
-+	}
-+
-+	spin_unlock_irqrestore(&a->queue_lock, flags);
-+}
-diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
+diff --git a/drivers/scsi/esas2r/esas2r_io.c b/drivers/scsi/esas2r/esas2r_io.c
 new file mode 100644
-index 0000000..651f52c
+index 0000000..02ec7aa
 --- /dev/null
-+++ b/drivers/scsi/esas2r/esas2r_log.c
-@@ -0,0 +1,254 @@
++++ b/drivers/scsi/esas2r/esas2r_io.c
+@@ -0,0 +1,880 @@
 +/*
-+ *  linux/drivers/scsi/esas2r/esas2r_log.c
++ *  linux/drivers/scsi/esas2r/esas2r_io.c
 + *      For use with ATTO ExpressSAS R6xx SAS/SATA RAID controllers
 + *
 + *  Copyright (c) 2001-2013 ATTO Technology, Inc.
-+ *  (mailto:linuxdrivers@attotech.com)
++ *  (mailto:linuxdrivers@attotech.com)mpt3sas/mpt3sas_trigger_diag.
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -1271,339 +1020,841 @@ index 0000000..651f52c
 +
 +#include "esas2r.h"
 +
-+/*
-+ * this module within the driver is tasked with providing logging functionality.
-+ * the event_log_level module parameter controls the level of messages that are
-+ * written to the system log.  the default level of messages that are written
-+ * are critical and warning messages.  if other types of messages are desired,
-+ * one simply needs to load the module with the correct value for the
-+ * event_log_level module parameter.  for example:
-+ *
-+ * insmod <module> event_log_level=1
-+ *
-+ * will load the module and only critical events will be written by this module
-+ * to the system log.  if critical, warning, and information-level messages are
-+ * desired, the correct value for the event_log_level module parameter
-+ * would be as follows:
-+ *
-+ * insmod <module> event_log_level=3
-+ */
-+
-+#define EVENT_LOG_BUFF_SIZE 1024
-+
-+static long event_log_level = ESAS2R_LOG_DFLT;
-+
-+module_param(event_log_level, long, S_IRUGO | S_IRUSR);
-+MODULE_PARM_DESC(event_log_level,
-+		 "Specifies the level of events to report to the system log.  Critical and warning level events are logged by default.");
-+
-+/* A shared buffer to use for formatting messages. */
-+static char event_buffer[EVENT_LOG_BUFF_SIZE];
-+
-+/* A lock to protect the shared buffer used for formatting messages. */
-+static DEFINE_SPINLOCK(event_buffer_lock);
-+
-+/**
-+ * translates an esas2r-defined logging event level to a kernel logging level.
-+ *
-+ * @param [in] level the esas2r-defined logging event level to translate
-+ *
-+ * @return the corresponding kernel logging level.
-+ */
-+static const char *translate_esas2r_event_level_to_kernel(const long level)
++void esas2r_start_request(struct esas2r_adapter *a, struct esas2r_request *rq)
 +{
-+	switch (level) {
-+	case ESAS2R_LOG_CRIT:
-+		return KERN_CRIT;
++	struct esas2r_target *t = NULL;
++	struct esas2r_request *startrq = rq;
++	unsigned long flags;
 +
-+	case ESAS2R_LOG_WARN:
-+		return KERN_WARNING;
++	if (unlikely(a->flags & (AF_DEGRADED_MODE | AF_POWER_DOWN))) {
++		if (rq->vrq->scsi.function == VDA_FUNC_SCSI)
++			rq->req_stat = RS_SEL2;
++		else
++			rq->req_stat = RS_DEGRADED;
++	} else if (likely(rq->vrq->scsi.function == VDA_FUNC_SCSI)) {
++		t = a->targetdb + rq->target_id;
 +
-+	case ESAS2R_LOG_INFO:
-+		return KERN_INFO;
-+
-+	case ESAS2R_LOG_DEBG:
-+	case ESAS2R_LOG_TRCE:
-+	default:
-+		return KERN_DEBUG;
-+	}
-+}
-+
-+/**
-+ * the master logging function.  this function will format the message as
-+ * outlined by the formatting string, the input device information and the
-+ * substitution arguments and output the resulting string to the system log.
-+ *
-+ * @param [in] level  the event log level of the message
-+ * @param [in] dev    the device information
-+ * @param [in] format the formatting string for the message
-+ * @param [in] args   the substition arguments to the formatting string
-+ *
-+ * @return 0 on success, or -1 if an error occurred.
-+ */
-+static int esas2r_log_master(const long level,
-+			     const struct device *dev,
-+			     const char *format,
-+			     va_list args)
-+{
-+	if (level <= event_log_level) {
-+		unsigned long flags = 0;
-+		int retval = 0;
-+		char *buffer = event_buffer;
-+		size_t buflen = EVENT_LOG_BUFF_SIZE;
-+		const char *fmt_nodev = "%s%s: ";
-+		const char *fmt_dev = "%s%s [%s, %s, %s]";
-+		const char *slevel =
-+			translate_esas2r_event_level_to_kernel(level);
-+
-+		spin_lock_irqsave(&event_buffer_lock, flags);
-+
-+		if (buffer == NULL) {
-+			spin_unlock_irqrestore(&event_buffer_lock, flags);
-+			return -1;
-+		}
-+
-+		memset(buffer, 0, buflen);
-+
-+		/*
-+		 * format the level onto the beginning of the string and do
-+		 * some pointer arithmetic to move the pointer to the point
-+		 * where the actual message can be inserted.
-+		 */
-+
-+		if (dev == NULL) {
-+			snprintf(buffer, buflen, fmt_nodev, slevel,
-+				 ESAS2R_DRVR_NAME);
++		if (unlikely(t >= a->targetdb_end
++			     || !(t->flags & TF_USED))) {
++			rq->req_stat = RS_SEL;
 +		} else {
-+			snprintf(buffer, buflen, fmt_dev, slevel,
-+				 ESAS2R_DRVR_NAME,
-+				 (dev->driver ? dev->driver->name : "unknown"),
-+				 (dev->bus ? dev->bus->name : "unknown"),
-+				 dev_name(dev));
++			/* copy in the target ID. */
++			rq->vrq->scsi.target_id = cpu_to_le16(t->virt_targ_id);
++
++			/*
++			 * Test if we want to report RS_SEL for missing target.
++			 * Note that if AF_DISC_PENDING is set than this will
++			 * go on the defer queue.
++			 */
++			if (unlikely(t->target_state != TS_PRESENT
++				     && !(a->flags & AF_DISC_PENDING)))
++				rq->req_stat = RS_SEL;
++		}
++	}
++
++	if (unlikely(rq->req_stat != RS_PENDING)) {
++		esas2r_complete_request(a, rq);
++		return;
++	}
++
++	esas2r_trace("rq=%p", rq);
++	esas2r_trace("rq->vrq->scsi.handle=%x", rq->vrq->scsi.handle);
++
++	if (rq->vrq->scsi.function == VDA_FUNC_SCSI) {
++		esas2r_trace("rq->target_id=%d", rq->target_id);
++		esas2r_trace("rq->vrq->scsi.flags=%x", rq->vrq->scsi.flags);
++	}
++
++	spin_lock_irqsave(&a->queue_lock, flags);
++
++	if (likely(list_empty(&a->defer_list) &&
++		   !(a->flags &
++		     (AF_CHPRST_PENDING | AF_FLASHING | AF_DISC_PENDING))))
++		esas2r_local_start_request(a, startrq);
++	else
++		list_add_tail(&startrq->req_list, &a->defer_list);
++
++	spin_unlock_irqrestore(&a->queue_lock, flags);
++}
++
++/*
++ * Starts the specified request.  all requests have RS_PENDING set when this
++ * routine is called.  The caller is usually esas2r_start_request, but
++ * esas2r_do_deferred_processes will start request that are deferred.
++ *
++ * The caller must ensure that requests can be started.
++ *
++ * esas2r_start_request will defer a request if there are already requests
++ * waiting or there is a chip reset pending.  once the reset condition clears,
++ * esas2r_do_deferred_processes will call this function to start the request.
++ *
++ * When a request is started, it is placed on the active list and queued to
++ * the controller.
++ */
++void esas2r_local_start_request(struct esas2r_adapter *a,
++				struct esas2r_request *rq)
++{
++	esas2r_trace_enter();
++	esas2r_trace("rq=%p", rq);
++	esas2r_trace("rq->vrq:%p", rq->vrq);
++	esas2r_trace("rq->vrq_md->phys_addr:%x", rq->vrq_md->phys_addr);
++
++	if (unlikely(rq->vrq->scsi.function == VDA_FUNC_FLASH
++		     && rq->vrq->flash.sub_func == VDA_FLASH_COMMIT))
++		esas2r_lock_set_flags(&a->flags, AF_FLASHING);
++
++	list_add_tail(&rq->req_list, &a->active_list);
++	esas2r_start_vda_request(a, rq);
++	esas2r_trace_exit();
++	return;
++}
++
++void esas2r_start_vda_request(struct esas2r_adapter *a,
++			      struct esas2r_request *rq)
++{
++	struct esas2r_inbound_list_source_entry *element;
++	u32 dw;
++
++	rq->req_stat = RS_STARTED;
++	/*
++	 * Calculate the inbound list entry location and the current state of
++	 * toggle bit.
++	 */
++	a->last_write++;
++	if (a->last_write >= a->list_size) {
++		a->last_write = 0;
++		/* update the toggle bit */
++		if (a->flags & AF_COMM_LIST_TOGGLE)
++			esas2r_lock_clear_flags(&a->flags,
++						AF_COMM_LIST_TOGGLE);
++		else
++			esas2r_lock_set_flags(&a->flags, AF_COMM_LIST_TOGGLE);
++	}
++
++	element =
++		(struct esas2r_inbound_list_source_entry *)a->inbound_list_md.
++		virt_addr
++		+ a->last_write;
++
++	/* Set the VDA request size if it was never modified */
++	if (rq->vda_req_sz == RQ_SIZE_DEFAULT)
++		rq->vda_req_sz = (u16)(a->max_vdareq_size / sizeof(u32));
++
++	element->address = cpu_to_le64(rq->vrq_md->phys_addr);
++	element->length = cpu_to_le32(rq->vda_req_sz);
++
++	/* Update the write pointer */
++	dw = a->last_write;
++
++	if (a->flags & AF_COMM_LIST_TOGGLE)
++		dw |= MU_ILW_TOGGLE;
++
++	esas2r_trace("rq->vrq->scsi.handle:%x", rq->vrq->scsi.handle);
++	esas2r_trace("dw:%x", dw);
++	esas2r_trace("rq->vda_req_sz:%x", rq->vda_req_sz);
++	esas2r_write_register_dword(a, MU_IN_LIST_WRITE, dw);
++}
++
++/*
++ * Build the scatter/gather list for an I/O request according to the
++ * specifications placed in the s/g context.  The caller must initialize
++ * context prior to the initial call by calling esas2r_sgc_init().
++ */
++bool esas2r_build_sg_list_sge(struct esas2r_adapter *a,
++			      struct esas2r_sg_context *sgc)
++{
++	struct esas2r_request *rq = sgc->first_req;
++	union atto_vda_req *vrq = rq->vrq;
++
++	while (sgc->length) {
++		u32 rem = 0;
++		u64 addr;
++		u32 len;
++
++		len = (*sgc->get_phys_addr)(sgc, &addr);
++
++		if (unlikely(len == 0))
++			return false;
++
++		/* if current length is more than what's left, stop there */
++		if (unlikely(len > sgc->length))
++			len = sgc->length;
++
++another_entry:
++		/* limit to a round number less than the maximum length */
++		if (len > SGE_LEN_MAX) {
++			/*
++			 * Save the remainder of the split.  Whenever we limit
++			 * an entry we come back around to build entries out
++			 * of the leftover.  We do this to prevent multiple
++			 * calls to the get_phys_addr() function for an SGE
++			 * that is too large.
++			 */
++			rem = len - SGE_LEN_MAX;
++			len = SGE_LEN_MAX;
 +		}
 +
-+		buffer += strlen(event_buffer);
-+		buflen -= strlen(event_buffer);
++		/* See if we need to allocate a new SGL */
++		if (unlikely(sgc->sge.a64.curr > sgc->sge.a64.limit)) {
++			u8 sgelen;
++			struct esas2r_mem_desc *sgl;
 +
-+		retval = vsnprintf(buffer, buflen, format, args);
-+		if (retval < 0) {
-+			spin_unlock_irqrestore(&event_buffer_lock, flags);
-+			return -1;
++			/*
++			 * If no SGls are available, return failure.  The
++			 * caller can call us later with the current context
++			 * to pick up here.
++			 */
++			sgl = esas2r_alloc_sgl(a);
++
++			if (unlikely(sgl == NULL))
++				return false;
++
++			/* Calculate the length of the last SGE filled in */
++			sgelen = (u8)((u8 *)sgc->sge.a64.curr
++				      - (u8 *)sgc->sge.a64.last);
++
++			/*
++			 * Copy the last SGE filled in to the first entry of
++			 * the new SGL to make room for the chain entry.
++			 */
++			memcpy(sgl->virt_addr, sgc->sge.a64.last, sgelen);
++
++			/* Figure out the new curr pointer in the new segment */
++			sgc->sge.a64.curr =
++				(struct atto_vda_sge *)((u8 *)sgl->virt_addr +
++							sgelen);
++
++			/* Set the limit pointer and build the chain entry */
++			sgc->sge.a64.limit =
++				(struct atto_vda_sge *)((u8 *)sgl->virt_addr
++							+ sgl_page_size
++							- sizeof(struct
++								 atto_vda_sge));
++			sgc->sge.a64.last->length = cpu_to_le32(
++				SGE_CHAIN | SGE_ADDR_64);
++			sgc->sge.a64.last->address =
++				cpu_to_le64(sgl->phys_addr);
++
++			/*
++			 * Now, if there was a previous chain entry, then
++			 * update it to contain the length of this segment
++			 * and size of this chain.  otherwise this is the
++			 * first SGL, so set the chain_offset in the request.
++			 */
++			if (sgc->sge.a64.chain) {
++				sgc->sge.a64.chain->length |=
++					cpu_to_le32(
++						((u8 *)(sgc->sge.a64.
++							last + 1)
++						 - (u8 *)rq->sg_table->
++						 virt_addr)
++						+ sizeof(struct atto_vda_sge) *
++						LOBIT(SGE_CHAIN_SZ));
++			} else {
++				vrq->scsi.chain_offset = (u8)
++							 ((u8 *)sgc->
++							  sge.a64.last -
++							  (u8 *)vrq);
++
++				/*
++				 * This is the first SGL, so set the
++				 * chain_offset and the VDA request size in
++				 * the request.
++				 */
++				rq->vda_req_sz =
++					(vrq->scsi.chain_offset +
++					 sizeof(struct atto_vda_sge) +
++					 3)
++					/ sizeof(u32);
++			}
++
++			/*
++			 * Remember this so when we get a new SGL filled in we
++			 * can update the length of this chain entry.
++			 */
++			sgc->sge.a64.chain = sgc->sge.a64.last;
++
++			/* Now link the new SGL onto the primary request. */
++			list_add(&sgl->next_desc, &rq->sg_table_head);
 +		}
++
++		/* Update last one filled in */
++		sgc->sge.a64.last = sgc->sge.a64.curr;
++
++		/* Build the new SGE and update the S/G context */
++		sgc->sge.a64.curr->length = cpu_to_le32(SGE_ADDR_64 | len);
++		sgc->sge.a64.curr->address = cpu_to_le32(addr);
++		sgc->sge.a64.curr++;
++		sgc->cur_offset += len;
++		sgc->length -= len;
 +
 +		/*
-+		 * Put a line break at the end of the formatted string so that
-+		 * we don't wind up with run-on messages.  only append if there
-+		 * is enough space in the buffer.
++		 * Check if we previously split an entry.  If so we have to
++		 * pick up where we left off.
 +		 */
-+		if (strlen(event_buffer) < buflen)
-+			strcat(buffer, "\n");
-+
-+		printk(event_buffer);
-+
-+		spin_unlock_irqrestore(&event_buffer_lock, flags);
++		if (rem) {
++			addr += len;
++			len = rem;
++			rem = 0;
++			goto another_entry;
++		}
 +	}
 +
-+	return 0;
++	/* Mark the end of the SGL */
++	sgc->sge.a64.last->length |= cpu_to_le32(SGE_LAST);
++
++	/*
++	 * If there was a previous chain entry, update the length to indicate
++	 * the length of this last segment.
++	 */
++	if (sgc->sge.a64.chain) {
++		sgc->sge.a64.chain->length |= cpu_to_le32(
++			((u8 *)(sgc->sge.a64.curr) -
++			 (u8 *)rq->sg_table->virt_addr));
++	} else {
++		u16 reqsize;
++
++		/*
++		 * The entire VDA request was not used so lets
++		 * set the size of the VDA request to be DMA'd
++		 */
++		reqsize =
++			((u16)((u8 *)sgc->sge.a64.last - (u8 *)vrq)
++			 + sizeof(struct atto_vda_sge) + 3) / sizeof(u32);
++
++		/*
++		 * Only update the request size if it is bigger than what is
++		 * already there.  We can come in here twice for some management
++		 * commands.
++		 */
++		if (reqsize > rq->vda_req_sz)
++			rq->vda_req_sz = reqsize;
++	}
++	return true;
 +}
 +
-+/**
-+ * formats and logs a message to the system log.
++
++/*
++ * Create PRD list for each I-block consumed by the command. This routine
++ * determines how much data is required from each I-block being consumed
++ * by the command. The first and last I-blocks can be partials and all of
++ * the I-blocks in between are for a full I-block of data.
 + *
-+ * @param [in] level  the event level of the message
-+ * @param [in] format the formating string for the message
-+ * @param [in] ...    the substitution arguments to the formatting string
-+ *
-+ * @return 0 on success, or -1 if an error occurred.
++ * The interleave size is used to determine the number of bytes in the 1st
++ * I-block and the remaining I-blocks are what remeains.
 + */
-+int esas2r_log(const long level, const char *format, ...)
++static bool esas2r_build_prd_iblk(struct esas2r_adapter *a,
++				  struct esas2r_sg_context *sgc)
 +{
-+	int retval = 0;
-+	va_list args;
++	struct esas2r_request *rq = sgc->first_req;
++	u64 addr;
++	u32 len;
++	struct esas2r_mem_desc *sgl;
++	u32 numchain = 1;
++	u32 rem = 0;
 +
-+	va_start(args, format);
++	while (sgc->length) {
++		/* Get the next address/length pair */
 +
-+	retval = esas2r_log_master(level, NULL, format, args);
++		len = (*sgc->get_phys_addr)(sgc, &addr);
 +
-+	va_end(args);
++		if (unlikely(len == 0))
++			return false;
 +
-+	return retval;
-+}
++		/* If current length is more than what's left, stop there */
 +
-+/**
-+ * formats and logs a message to the system log.  this message will include
-+ * device information.
-+ *
-+ * @param [in] level   the event level of the message
-+ * @param [in] dev     the device information
-+ * @param [in] format  the formatting string for the message
-+ * @param [in] ...     the substitution arguments to the formatting string
-+ *
-+ * @return 0 on success, or -1 if an error occurred.
-+ */
-+int esas2r_log_dev(const long level,
-+		   const struct device *dev,
-+		   const char *format,
-+		   ...)
-+{
-+	int retval = 0;
-+	va_list args;
++		if (unlikely(len > sgc->length))
++			len = sgc->length;
 +
-+	va_start(args, format);
++another_entry:
++		/* Limit to a round number less than the maximum length */
 +
-+	retval = esas2r_log_master(level, dev, format, args);
++		if (len > PRD_LEN_MAX) {
++			/*
++			 * Save the remainder of the split.  whenever we limit
++			 * an entry we come back around to build entries out
++			 * of the leftover.  We do this to prevent multiple
++			 * calls to the get_phys_addr() function for an SGE
++			 * that is too large.
++			 */
++			rem = len - PRD_LEN_MAX;
++			len = PRD_LEN_MAX;
++		}
 +
-+	va_end(args);
++		/* See if we need to allocate a new SGL */
++		if (sgc->sge.prd.sge_cnt == 0) {
++			if (len == sgc->length) {
++				/*
++				 * We only have 1 PRD entry left.
++				 * It can be placed where the chain
++				 * entry would have gone
++				 */
 +
-+	return retval;
-+}
++				/* Build the simple SGE */
++				sgc->sge.prd.curr->ctl_len = cpu_to_le32(
++					PRD_DATA | len);
++				sgc->sge.prd.curr->address = cpu_to_le64(addr);
 +
-+/**
-+ * formats and logs a message to the system log.  this message will include
-+ * device information.
-+ *
-+ * @param [in] level   the event level of the message
-+ * @param [in] buf
-+ * @param [in] len
-+ *
-+ * @return 0 on success, or -1 if an error occurred.
-+ */
-+int esas2r_log_hexdump(const long level,
-+		       const void *buf,
-+		       size_t len)
-+{
-+	if (level <= event_log_level) {
-+		print_hex_dump(translate_esas2r_event_level_to_kernel(level),
-+			       "", DUMP_PREFIX_OFFSET, 16, 1, buf,
-+			       len, true);
++				/* Adjust length related fields */
++				sgc->cur_offset += len;
++				sgc->length -= len;
++
++				/* We use the reserved chain entry for data */
++				numchain = 0;
++
++				break;
++			}
++
++			if (sgc->sge.prd.chain) {
++				/*
++				 * Fill # of entries of current SGL in previous
++				 * chain the length of this current SGL may not
++				 * full.
++				 */
++
++				sgc->sge.prd.chain->ctl_len |= cpu_to_le32(
++					sgc->sge.prd.sgl_max_cnt);
++			}
++
++			/*
++			 * If no SGls are available, return failure.  The
++			 * caller can call us later with the current context
++			 * to pick up here.
++			 */
++
++			sgl = esas2r_alloc_sgl(a);
++
++			if (unlikely(sgl == NULL))
++				return false;
++
++			/*
++			 * Link the new SGL onto the chain
++			 * They are in reverse order
++			 */
++			list_add(&sgl->next_desc, &rq->sg_table_head);
++
++			/*
++			 * An SGL was just filled in and we are starting
++			 * a new SGL. Prime the chain of the ending SGL with
++			 * info that points to the new SGL. The length gets
++			 * filled in when the new SGL is filled or ended
++			 */
++
++			sgc->sge.prd.chain = sgc->sge.prd.curr;
++
++			sgc->sge.prd.chain->ctl_len = cpu_to_le32(PRD_CHAIN);
++			sgc->sge.prd.chain->address =
++				cpu_to_le64(sgl->phys_addr);
++
++			/*
++			 * Start a new segment.
++			 * Take one away and save for chain SGE
++			 */
++
++			sgc->sge.prd.curr =
++				(struct atto_physical_region_description *)sgl
++				->
++				virt_addr;
++			sgc->sge.prd.sge_cnt = sgc->sge.prd.sgl_max_cnt - 1;
++		}
++
++		sgc->sge.prd.sge_cnt--;
++		/* Build the simple SGE */
++		sgc->sge.prd.curr->ctl_len = cpu_to_le32(PRD_DATA | len);
++		sgc->sge.prd.curr->address = cpu_to_le64(addr);
++
++		/* Used another element.  Point to the next one */
++
++		sgc->sge.prd.curr++;
++
++		/* Adjust length related fields */
++
++		sgc->cur_offset += len;
++		sgc->length -= len;
++
++		/*
++		 * Check if we previously split an entry.  If so we have to
++		 * pick up where we left off.
++		 */
++
++		if (rem) {
++			addr += len;
++			len = rem;
++			rem = 0;
++			goto another_entry;
++		}
 +	}
 +
-+	return 1;
++	if (!list_empty(&rq->sg_table_head)) {
++		if (sgc->sge.prd.chain) {
++			sgc->sge.prd.chain->ctl_len |=
++				cpu_to_le32(sgc->sge.prd.sgl_max_cnt
++					    - sgc->sge.prd.sge_cnt
++					    - numchain);
++		}
++	}
++
++	return true;
 +}
-diff --git a/drivers/scsi/esas2r/esas2r_log.h b/drivers/scsi/esas2r/esas2r_log.h
-new file mode 100644
-index 0000000..b65770b
---- /dev/null
-+++ b/drivers/scsi/esas2r/esas2r_log.h
-@@ -0,0 +1,118 @@
++
++bool esas2r_build_sg_list_prd(struct esas2r_adapter *a,
++			      struct esas2r_sg_context *sgc)
++{
++	struct esas2r_request *rq = sgc->first_req;
++	u32 len = sgc->length;
++	struct esas2r_target *t = a->targetdb + rq->target_id;
++	u8 is_i_o = 0;
++	u16 reqsize;
++	struct atto_physical_region_description *curr_iblk_chn;
++	u8 *cdb = (u8 *)&rq->vrq->scsi.cdb[0];
++
++	/*
++	 * extract LBA from command so we can determine
++	 * the I-Block boundary
++	 */
++
++	if (rq->vrq->scsi.function == VDA_FUNC_SCSI
++	    && t->target_state == TS_PRESENT
++	    && !(t->flags & TF_PASS_THRU)) {
++		u32 lbalo = 0;
++
++		switch (rq->vrq->scsi.cdb[0]) {
++		case    READ_16:
++		case    WRITE_16:
++		{
++			lbalo =
++				MAKEDWORD(MAKEWORD(cdb[9],
++						   cdb[8]),
++					  MAKEWORD(cdb[7],
++						   cdb[6]));
++			is_i_o = 1;
++			break;
++		}
++
++		case    READ_12:
++		case    WRITE_12:
++		case    READ_10:
++		case    WRITE_10:
++		{
++			lbalo =
++				MAKEDWORD(MAKEWORD(cdb[5],
++						   cdb[4]),
++					  MAKEWORD(cdb[3],
++						   cdb[2]));
++			is_i_o = 1;
++			break;
++		}
++
++		case    READ_6:
++		case    WRITE_6:
++		{
++			lbalo =
++				MAKEDWORD(MAKEWORD(cdb[3],
++						   cdb[2]),
++					  MAKEWORD(cdb[1] & 0x1F,
++						   0));
++			is_i_o = 1;
++			break;
++		}
++
++		default:
++			break;
++		}
++
++		if (is_i_o) {
++			u32 startlba;
++
++			rq->vrq->scsi.iblk_cnt_prd = 0;
++
++			/* Determine size of 1st I-block PRD list       */
++			startlba = t->inter_block - (lbalo & (t->inter_block -
++							      1));
++			sgc->length = startlba * t->block_size;
++
++			/* Chk if the 1st iblk chain starts at base of Iblock */
++			if ((lbalo & (t->inter_block - 1)) == 0)
++				rq->flags |= RF_1ST_IBLK_BASE;
++
++			if (sgc->length > len)
++				sgc->length = len;
++		} else {
++			sgc->length = len;
++		}
++	} else {
++		sgc->length = len;
++	}
++
++	/* get our starting chain address   */
++
++	curr_iblk_chn =
++		(struct atto_physical_region_description *)sgc->sge.a64.curr;
++
++	sgc->sge.prd.sgl_max_cnt = sgl_page_size /
++				   sizeof(struct
++					  atto_physical_region_description);
++
++	/* create all of the I-block PRD lists          */
++
++	while (len) {
++		sgc->sge.prd.sge_cnt = 0;
++		sgc->sge.prd.chain = NULL;
++		sgc->sge.prd.curr = curr_iblk_chn;
++
++		/* increment to next I-Block    */
++
++		len -= sgc->length;
++
++		/* go build the next I-Block PRD list   */
++
++		if (unlikely(!esas2r_build_prd_iblk(a, sgc)))
++			return false;
++
++		curr_iblk_chn++;
++
++		if (is_i_o) {
++			rq->vrq->scsi.iblk_cnt_prd++;
++
++			if (len > t->inter_byte)
++				sgc->length = t->inter_byte;
++			else
++				sgc->length = len;
++		}
++	}
++
++	/* figure out the size used of the VDA request */
++
++	reqsize = ((u16)((u8 *)curr_iblk_chn - (u8 *)rq->vrq))
++		  / sizeof(u32);
++
++	/*
++	 * only update the request size if it is bigger than what is
++	 * already there.  we can come in here twice for some management
++	 * commands.
++	 */
++
++	if (reqsize > rq->vda_req_sz)
++		rq->vda_req_sz = reqsize;
++
++	return true;
++}
++
++static void esas2r_handle_pending_reset(struct esas2r_adapter *a, u32 currtime)
++{
++	u32 delta = currtime - a->chip_init_time;
++
++	if (delta <= ESAS2R_CHPRST_WAIT_TIME) {
++		/* Wait before accessing registers */
++	} else if (delta >= ESAS2R_CHPRST_TIME) {
++		/*
++		 * The last reset failed so try again. Reset
++		 * processing will give up after three tries.
++		 */
++		esas2r_local_reset_adapter(a);
++	} else {
++		/* We can now see if the firmware is ready */
++		u32 doorbell;
++
++		doorbell = esas2r_read_register_dword(a, MU_DOORBELL_OUT);
++		if (doorbell == 0xFFFFFFFF || !(doorbell & DRBL_FORCE_INT)) {
++			esas2r_force_interrupt(a);
++		} else {
++			u32 ver = (doorbell & DRBL_FW_VER_MSK);
++
++			/* Driver supports API version 0 and 1 */
++			esas2r_write_register_dword(a, MU_DOORBELL_OUT,
++						    doorbell);
++			if (ver == DRBL_FW_VER_0) {
++				esas2r_lock_set_flags(&a->flags,
++						      AF_CHPRST_DETECTED);
++				esas2r_lock_set_flags(&a->flags,
++						      AF_LEGACY_SGE_MODE);
++
++				a->max_vdareq_size = 128;
++				a->build_sgl = esas2r_build_sg_list_sge;
++			} else if (ver == DRBL_FW_VER_1) {
++				esas2r_lock_set_flags(&a->flags,
++						      AF_CHPRST_DETECTED);
++				esas2r_lock_clear_flags(&a->flags,
++							AF_LEGACY_SGE_MODE);
++
++				a->max_vdareq_size = 1024;
++				a->build_sgl = esas2r_build_sg_list_prd;
++			} else {
++				esas2r_local_reset_adapter(a);
++			}
++		}
++	}
++}
++
++
++/* This function must be called once per timer tick */
++void esas2r_timer_tick(struct esas2r_adapter *a)
++{
++	u32 currtime = jiffies_to_msecs(jiffies);
++	u32 deltatime = currtime - a->last_tick_time;
++
++	a->last_tick_time = currtime;
++
++	/* count down the uptime */
++	if (a->chip_uptime
++	    && !(a->flags & (AF_CHPRST_PENDING | AF_DISC_PENDING))) {
++		if (deltatime >= a->chip_uptime)
++			a->chip_uptime = 0;
++		else
++			a->chip_uptime -= deltatime;
++	}
++
++	if (a->flags & AF_CHPRST_PENDING) {
++		if (!(a->flags & AF_CHPRST_NEEDED)
++		    && !(a->flags & AF_CHPRST_DETECTED))
++			esas2r_handle_pending_reset(a, currtime);
++	} else {
++		if (a->flags & AF_DISC_PENDING)
++			esas2r_disc_check_complete(a);
++
++		if (a->flags & AF_HEARTBEAT_ENB) {
++			if (a->flags & AF_HEARTBEAT) {
++				if ((currtime - a->heartbeat_time) >=
++				    ESAS2R_HEARTBEAT_TIME) {
++					esas2r_lock_clear_flags(&a->flags,
++								AF_HEARTBEAT);
++					esas2r_hdebug("heartbeat failed");
++					esas2r_log(ESAS2R_LOG_CRIT,
++						   "heartbeat failed");
++					esas2r_bugon();
++					esas2r_local_reset_adapter(a);
++				}
++			} else {
++				esas2r_lock_set_flags(&a->flags, AF_HEARTBEAT);
++				a->heartbeat_time = currtime;
++				esas2r_force_interrupt(a);
++			}
++		}
++	}
++
++	if (atomic_read(&a->disable_cnt) == 0)
++		esas2r_do_deferred_processes(a);
++}
++
 +/*
-+ *  linux/drivers/scsi/esas2r/esas2r_log.h
-+ *      For use with ATTO ExpressSAS R6xx SAS/SATA RAID controllers
-+ *
-+ *  Copyright (c) 2001-2013 ATTO Technology, Inc.
-+ *  (mailto:linuxdrivers@attotech.com)
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * NO WARRANTY
-+ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
-+ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
-+ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
-+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
-+ * solely responsible for determining the appropriateness of using and
-+ * distributing the Program and assumes all risks associated with its
-+ * exercise of rights under this Agreement, including but not limited to
-+ * the risks and costs of program errors, damage to or loss of data,
-+ * programs or equipment, and unavailability or interruption of operations.
-+ *
-+ * DISCLAIMER OF LIABILITY
-+ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
-+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
-+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-+ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
-+ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-+ * USA.
++ * Send the specified task management function to the target and LUN
++ * specified in rqaux.  in addition, immediately abort any commands that
++ * are queued but not sent to the device according to the rules specified
++ * by the task management function.
 + */
++bool esas2r_send_task_mgmt(struct esas2r_adapter *a,
++			   struct esas2r_request *rqaux, u8 task_mgt_func)
++{
++	u16 targetid = rqaux->target_id;
++	u8 lun = (u8)le32_to_cpu(rqaux->vrq->scsi.flags);
++	bool ret = false;
++	struct esas2r_request *rq;
++	struct list_head *next, *element;
++	unsigned long flags;
 +
-+#ifndef __esas2r_log_h__
-+#define __esas2r_log_h__
++	LIST_HEAD(comp_list);
 +
-+struct device;
++	esas2r_trace_enter();
++	esas2r_trace("rqaux:%p", rqaux);
++	esas2r_trace("task_mgt_func:%x", task_mgt_func);
++	spin_lock_irqsave(&a->queue_lock, flags);
 +
-+enum {
-+	ESAS2R_LOG_NONE = 0,    /* no events logged */
-+	ESAS2R_LOG_CRIT = 1,    /* critical events  */
-+	ESAS2R_LOG_WARN = 2,    /* warning events   */
-+	ESAS2R_LOG_INFO = 3,    /* info events      */
-+	ESAS2R_LOG_DEBG = 4,    /* debugging events */
-+	ESAS2R_LOG_TRCE = 5,    /* tracing events   */
++	/* search the defer queue looking for requests for the device */
++	list_for_each_safe(element, next, &a->defer_list) {
++		rq = list_entry(element, struct esas2r_request, req_list);
 +
-+#ifdef ESAS2R_TRACE
-+	ESAS2R_LOG_DFLT = ESAS2R_LOG_TRCE
-+#else
-+	ESAS2R_LOG_DFLT = ESAS2R_LOG_WARN
-+#endif
-+};
++		if (rq->vrq->scsi.function == VDA_FUNC_SCSI
++		    && rq->target_id == targetid
++		    && (((u8)le32_to_cpu(rq->vrq->scsi.flags)) == lun
++			|| task_mgt_func == 0x20)) { /* target reset */
++			/* Found a request affected by the task management */
++			if (rq->req_stat == RS_PENDING) {
++				/*
++				 * The request is pending or waiting.  We can
++				 * safelycomplete the request now.
++				 */
++				if (esas2r_ioreq_aborted(a, rq, RS_ABORTED))
++					list_add_tail(&rq->comp_list,
++						      &comp_list);
++			}
++		}
++	}
 +
-+int esas2r_log(const long level, const char *format, ...);
-+int esas2r_log_dev(const long level,
-+		   const struct device *dev,
-+		   const char *format,
-+		   ...);
-+int esas2r_log_hexdump(const long level,
-+		       const void *buf,
-+		       size_t len);
++	/* Send the task management request to the firmware */
++	rqaux->sense_len = 0;
++	rqaux->vrq->scsi.length = 0;
++	rqaux->target_id = targetid;
++	rqaux->vrq->scsi.flags |= cpu_to_le32(lun);
++	memset(rqaux->vrq->scsi.cdb, 0, sizeof(rqaux->vrq->scsi.cdb));
++	rqaux->vrq->scsi.flags |=
++		cpu_to_le16(task_mgt_func * LOBIT(FCP_CMND_TM_MASK));
 +
-+/*
-+ * the following macros are provided specifically for debugging and tracing
-+ * messages.  esas2r_debug() is provided for generic non-hardware layer
-+ * debugging and tracing events.  esas2r_hdebug is provided specifically for
-+ * hardware layer debugging and tracing events.
-+ */
++	if (a->flags & AF_FLASHING) {
++		/* Assume success.  if there are active requests, return busy */
++		rqaux->req_stat = RS_SUCCESS;
 +
-+#ifdef ESAS2R_DEBUG
-+#define esas2r_debug(f, args ...) esas2r_log(ESAS2R_LOG_DEBG, f, ## args)
-+#define esas2r_hdebug(f, args ...) esas2r_log(ESAS2R_LOG_DEBG, f, ## args)
-+#else
-+#define esas2r_debug(f, args ...)
-+#define esas2r_hdebug(f, args ...)
-+#endif  /* ESAS2R_DEBUG */
++		list_for_each_safe(element, next, &a->active_list) {
++			rq = list_entry(element, struct esas2r_request,
++					req_list);
++			if (rq->vrq->scsi.function == VDA_FUNC_SCSI
++			    && rq->target_id == targetid
++			    && (((u8)le32_to_cpu(rq->vrq->scsi.flags)) == lun
++				|| task_mgt_func == 0x20))  /* target reset */
++				rqaux->req_stat = RS_BUSY;
++		}
 +
-+/*
-+ * the following macros are provided in order to trace the driver and catch
-+ * some more serious bugs.  be warned, enabling these macros may *severely*
-+ * impact performance.
-+ */
++		ret = true;
++	}
 +
-+#ifdef ESAS2R_TRACE
-+#define esas2r_bugon() \
-+	do { \
-+		esas2r_log(ESAS2R_LOG_TRCE, "esas2r_bugon() called in %s:%d - " \
-+			   "dumping stack and stopping kernel", __func__, \
-+			   __LINE__); \
-+		dump_stack(); \
-+		BUG(); \
-+	} while (0)
++	spin_unlock_irqrestore(&a->queue_lock, flags);
 +
-+#define esas2r_trace_enter() esas2r_log(ESAS2R_LOG_TRCE, "entered %s (%s:%d)", \
-+					__func__, __FILE__, __LINE__)
-+#define esas2r_trace_exit() esas2r_log(ESAS2R_LOG_TRCE, "exited %s (%s:%d)", \
-+				       __func__, __FILE__, __LINE__)
-+#define esas2r_trace(f, args ...) esas2r_log(ESAS2R_LOG_TRCE, "(%s:%s:%d): " f, \
-+					     __func__, __FILE__, __LINE__, \
-+					     ## args)
-+#else
-+#define esas2r_bugon()
-+#define esas2r_trace_enter()
-+#define esas2r_trace_exit()
-+#define esas2r_trace(f, args ...)
-+#endif  /* ESAS2R_TRACE */
++	if (!(a->flags & AF_FLASHING))
++		esas2r_start_request(a, rqaux);
 +
-+#endif  /* __esas2r_log_h__ */
++	esas2r_comp_list_drain(a, &comp_list);
++
++	if (atomic_read(&a->disable_cnt) == 0)
++		esas2r_do_deferred_processes(a);
++
++	esas2r_trace_exit();
++
++	return ret;
++}
++
++void esas2r_reset_bus(struct esas2r_adapter *a)
++{
++	esas2r_log(ESAS2R_LOG_INFO, "performing a bus reset");
++
++	if (!(a->flags & AF_DEGRADED_MODE)
++	    && !(a->flags & (AF_CHPRST_PENDING | AF_DISC_PENDING))) {
++		esas2r_lock_set_flags(&a->flags, AF_BUSRST_NEEDED);
++		esas2r_lock_set_flags(&a->flags, AF_BUSRST_PENDING);
++		esas2r_lock_set_flags(&a->flags, AF_OS_RESET);
++
++		esas2r_schedule_tasklet(a);
++	}
++}
++
++bool esas2r_ioreq_aborted(struct esas2r_adapter *a, struct esas2r_request *rq,
++			  u8 status)
++{
++	esas2r_trace_enter();
++	esas2r_trace("rq:%p", rq);
++	list_del_init(&rq->req_list);
++	if (rq->timeout > RQ_MAX_TIMEOUT) {
++		/*
++		 * The request timed out, but we could not abort it because a
++		 * chip reset occurred.  Return busy status.
++		 */
++		rq->req_stat = RS_BUSY;
++		esas2r_trace_exit();
++		return true;
++	}
++
++	rq->req_stat = status;
++	esas2r_trace_exit();
++	return true;
++}
 -- 
 1.8.1.4
 
