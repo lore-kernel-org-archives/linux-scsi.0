@@ -1,42 +1,80 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: ATTO esas2r -  Scsi_Host_template max_lun setting
-Date: Tue, 16 Jul 2013 14:10:52 +0000
-Message-ID: <1373983851.2148.61.camel@dabdike>
-References: <51E5533F.1030409@attotech.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: mpt2sas,mpt3sas watchdog device removal
+Date: Tue, 16 Jul 2013 11:21:31 -0400
+Message-ID: <20130716112131.03d019ab@jlaw-desktop.mno.stratus.com>
+References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
+	<20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com>
+	<DCD177647606E9419ED923E0C8C4AA723006C4AFF2@inbmail02.lsi.com>
+	<1373976218.2148.49.camel@dabdike>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:34912 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932445Ab3GPOKy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jul 2013 10:10:54 -0400
-In-Reply-To: <51E5533F.1030409@attotech.com>
-Content-Language: en-US
-Content-ID: <273A3EBFC3088D498B2A33AD0A717AEE@sw.swsoft.com>
+Received: from mailhub4.stratus.com ([134.111.1.17]:37778 "EHLO
+	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932755Ab3GPPVf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jul 2013 11:21:35 -0400
+In-Reply-To: <1373976218.2148.49.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bradley Grove <bgrove@attotech.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-[please keep linux-scsi in the cc otherwise I'll lose the email]
-On Tue, 2013-07-16 at 10:05 -0400, Bradley Grove wrote:
-> James,
+On Tue, 16 Jul 2013 16:03:38 +0400
+James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
+
+> On Tue, 2013-07-16 at 17:30 +0530, Reddy, Sreekanth wrote:
+> > James,
+> > 
+> > This patch seem to be fine. Please consider this patch.
 > 
-> When we sent the first version of our driver code for comments, you 
-> suggested that we set max_lun in the host template and use that to 
-> enforce the lun limit.  However, the Scsi_Host_Template struct doesn't 
-> doesn't contain mux_lun.  Let me know if I misunderstood what you were 
-> asking for.
-
-You set it in the detection routine just after you've obtained struct
-scsi_host.  shost->max_lun.
-
-James
-
-> I think we addressed your remaining issues as well as some issues that 
-> we found.  That said, it's tough to be sure that we haven't 
-> reimplemented primitives that already exist in the kernel tree.
+> Where's the new version?  The one that has all of this fixed:
 > 
+> > Off list, Sreekanth from LSI tested and noticed a few issues with this
+> > patch:
+> > 
+> >  - mpt2sas_base_stop_watchdog is called twice: The call from
+> >    mpt2sas_base_detach is safe, but now unnecessary (as a call was
+> >    added earlier up in the PCI driver callbacks to ensure that the
+> >    watchdog was out of the way.) This second invocation can be
+> > removed.
+> > 
+> >  - If the watchdog detects a bad IOC, the watchdog remains running:
+> >    The watchdog workqueue isn't cleaned up until
+> >    mpt2sas_base_stop_watchdog is called, so in the case that the
+> >    watchdog removes the device from SCSI topo, the workqueue will
+> >    remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
+> >    single watchdog that iterates over all adapters would be simpler?
+> > 
+> > Finally, if SCSI topo detachment is all that is interesting here,
+> > would
+> > it make more sense to move the watchdog into the MPT "scsi" code?  I
+> > haven't looked at the code yet, but this might make an MPT fusion
+> > patch
+> > easier (due to dependencies between its "scsi" and "base" modules).
 
+This patch fizzled out in May as other work took priority.  If LSI is
+still interested in these changes, I can dust off my notes and
+test/rebase for the 3.11 series.
 
+A few of the issues quoted above are easily fixed, however I remember
+having an outstanding question of how to best clean up the driver's
+per device watchdog workqueue:
+
+The way the MPT drivers are working right now is that the watchdog
+workqueue function _base_fault_reset_work() initiates a PCI device
+removal via kthread.  The PCI callback kthread context then tears down
+the device and cancel/flush/destroys the watchdog workqueue.
+
+This patch eliminated the kthread and its call into PCI API, simply
+detaching from the SCSI midlayer.  In my opinion, the kthread
+complicated device removal and introduced potential races if the
+watchdog tried removing the device at the same time an ordinary device
+removal request occurred. 
+
+At the time, the best solution I had was to leave the unused workqueue
+around until its PCI device was removed.
+
+Regards,
+
+-- Joe
