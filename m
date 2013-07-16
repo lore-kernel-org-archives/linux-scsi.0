@@ -1,23 +1,82 @@
-From: Sean Thomson <psthomso@hotmail.com>
-Subject: if/when will the RC2 GIT pull occur?
-Date: Tue, 16 Jul 2013 14:29:39 -0700
-Message-ID: <BAY178-W36A86530BA0EBAD8226E2FCE600@phx.gbl>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [Ksummit-2013-discuss] [ATTEND] scsi-mq prototype discussion
+Date: Tue, 16 Jul 2013 17:19:12 -0500
+Message-ID: <20130716221912.GZ24437@beardog.cce.hp.com>
+References: <1373588612.7397.447.camel@haakon3.risingtidesystems.com> <20130712010223.GA15673@kroah.com> <1373592815.7397.477.camel@haakon3.risingtidesystems.com> <51DFDFF5.80702@suse.de> <1373698410.2922.10.camel@dabdike> <1374008849.7397.853.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay0-omc4-s19.bay0.hotmail.com ([65.54.190.221]:61607 "EHLO
-	bay0-omc4-s19.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933356Ab3GPVft convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Jul 2013 17:35:49 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1374008849.7397.853.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, "ksummit-2013-discuss@lists.linuxfoundation.org" <ksummit-2013-discuss@lists.linuxfoundation.org>, James Smart <James.Smart@Emulex.Com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "kmo@daterainc.com" <kmo@daterainc.com>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hey James,
+On Tue, Jul 16, 2013 at 02:07:29PM -0700, Nicholas A. Bellinger wrote:
+> On Sat, 2013-07-13 at 06:53 +0000, James Bottomley wrote:
+> > On Fri, 2013-07-12 at 12:52 +0200, Hannes Reinecke wrote:
+> > > On 07/12/2013 03:33 AM, Nicholas A. Bellinger wrote:
+> > > > On Thu, 2013-07-11 at 18:02 -0700, Greg KH wrote:
+> > > >> On Thu, Jul 11, 2013 at 05:23:32PM -0700, Nicholas A. Bellinger wrote:
+> > > >>> Drilling down the work items ahead of a real mainline push is high on
+> > > >>> priority list for discussion.
+> > > >>>
+> > > >>> The parties to be included in such a discussion are:
+> > > >>>
+> > > >>>   - Jens Axboe (blk-mq author)
+> > > >>>   - James Bottomley (scsi maintainer)
+> > > >>>   - Christoph Hellwig (scsi)
+> > > >>>   - Martin Petersen (scsi)
+> > > >>>   - Tejun Heo (block + libata)
+> > > >>>   - Hannes Reinecke (scsi error recovery)
+> > > >>>   - Kent Overstreet (block, per-cpu ida)
+> > > >>>   - Stephen Cameron (scsi-over-pcie driver)
+> > > >>>   - Andrew Vasquez (qla2xxx LLD)
+> > > >>>   - James Smart (lpfc LLD)
+> > > >>
+> > > >> Isn't this something that should have been discussed at the storage
+> > > >> mini-summit a few months ago?
+> > > > 
+> > > > The scsi-mq prototype, along with blk-mq (in it's current form) did not
+> > > > exist a few short months ago.  ;)
+> > > > 
+> > > >>  It seems very specific to one subsystem to be a kernel summit topic,
+> > > >> don't you think?
+> > > > 
+> > > > It's no more subsystem specific than half of the other proposals so far,
+> > > > and given it's reach across multiple subsystems (block, scsi, target),
+> > > > and the amount of off-list interest on the topic, I think it would make
+> > > > a good candidate for discussion.
+> > > > 
+> > > And it'll open up new approaches which previously were dismissed,
+> > > like re-implementing multipathing on top of scsi-mq, giving us the
+> > > single scsi device like other UNIX systems.
+> > > 
+> > > Also I do think there's quite some synergy to be had, as with blk-mq
+> > > we could nail each queue to a processor, which would eliminate the
+> > > need for locking.
+> > > Which could be useful for other subsystems, too.
+> > 
+> > Lets start with discussing this on the list, please, and then see where
+> > we go from there ...
+> > 
+> 
+> Yes, the discussion is beginning to make it's way to the list.  I've
+> mostly been waiting for blk-mq to get a wider review before taking the
+> early scsi-mq prototype driver to a larger public audience.
+> 
+> Primarily, I'm now reaching out to the people most effected by existing
+> scsi_request_fn() based performance limitations.  Most of them have
+> abandoned existing scsi_request_fn() based logic in favor of raw block
+> make_request() based drivers, and are now estimating the amount of
+> effort to move to an scsi-mq based approach.
+> 
+> Regardless, as the prototype progresses over the next months, having a
+> face-to-face discussion with the key parties in the room would be very
+> helpful given the large amount of effort involved to actually make this
+> type of generational shift in SCSI actually happen.
 
-Will there a git pull occur for 3.11 RC2, and if so when? Looking to get the latest patch for isci, it just happened to miss the RC1 pull
+I'd be very interested in attending this, if invited.
 
-thanks!
-Pat 		 	   		  
+-- steve
