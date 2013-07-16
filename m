@@ -1,80 +1,76 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: mpt2sas,mpt3sas watchdog device removal
-Date: Tue, 16 Jul 2013 11:21:31 -0400
-Message-ID: <20130716112131.03d019ab@jlaw-desktop.mno.stratus.com>
-References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
-	<20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com>
-	<DCD177647606E9419ED923E0C8C4AA723006C4AFF2@inbmail02.lsi.com>
-	<1373976218.2148.49.camel@dabdike>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v2] [SCSI] scsi_debug: silence GCC warning
+Date: Wed, 17 Jul 2013 00:21:38 +0900
+Message-ID: <CAC5umyj2bOyU_z0HVawXL7k4FmF9oHh1yZfHExbKn9ck85RsUQ@mail.gmail.com>
+References: <1373879920.2591.13.camel@x61.thuisdomein>
+	<1373914081.2591.40.camel@x61.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub4.stratus.com ([134.111.1.17]:37778 "EHLO
-	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932755Ab3GPPVf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jul 2013 11:21:35 -0400
-In-Reply-To: <1373976218.2148.49.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1373914081.2591.40.camel@x61.thuisdomein>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, 16 Jul 2013 16:03:38 +0400
-James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
+2013/7/16 Paul Bolle <pebolle@tiscali.nl>:
+> Building scsi_debug.o triggers a GCC warning:
+>     drivers/scsi/scsi_debug.c: In function =91dif_verify=92:
+>     drivers/scsi/scsi_debug.c:1755:3: warning: =91csum=92 may be used=
+ uninitialized in this function [-Wmaybe-uninitialized]
+>
+> This is a false positive. But if we transform the switch statement in
+> dif_compute_csum() to a straightforward if/else statement we supply G=
+CC
+> with enough information to determine that csum will not be used
+> uninitialized.
+>
+> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> ---
+> 0) v2 because I started to worry whether v1 would change an interface
+> (ie, the way the "guard" module parameter behaves). This patch is muc=
+h
+> simpler, and doesn't change any behavior.
+>
+> 1) Still only compile tested.
 
-> On Tue, 2013-07-16 at 17:30 +0530, Reddy, Sreekanth wrote:
-> > James,
-> > 
-> > This patch seem to be fine. Please consider this patch.
-> 
-> Where's the new version?  The one that has all of this fixed:
-> 
-> > Off list, Sreekanth from LSI tested and noticed a few issues with this
-> > patch:
-> > 
-> >  - mpt2sas_base_stop_watchdog is called twice: The call from
-> >    mpt2sas_base_detach is safe, but now unnecessary (as a call was
-> >    added earlier up in the PCI driver callbacks to ensure that the
-> >    watchdog was out of the way.) This second invocation can be
-> > removed.
-> > 
-> >  - If the watchdog detects a bad IOC, the watchdog remains running:
-> >    The watchdog workqueue isn't cleaned up until
-> >    mpt2sas_base_stop_watchdog is called, so in the case that the
-> >    watchdog removes the device from SCSI topo, the workqueue will
-> >    remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
-> >    single watchdog that iterates over all adapters would be simpler?
-> > 
-> > Finally, if SCSI topo detachment is all that is interesting here,
-> > would
-> > it make more sense to move the watchdog into the MPT "scsi" code?  I
-> > haven't looked at the code yet, but this might make an MPT fusion
-> > patch
-> > easier (due to dependencies between its "scsi" and "base" modules).
+This one looks good to me.  It would be much better if this commit
+log had a reference to the commit that introduced this warning as
+you described after '---' in v1 patch.
 
-This patch fizzled out in May as other work took priority.  If LSI is
-still interested in these changes, I can dust off my notes and
-test/rebase for the 3.11 series.
-
-A few of the issues quoted above are easily fixed, however I remember
-having an outstanding question of how to best clean up the driver's
-per device watchdog workqueue:
-
-The way the MPT drivers are working right now is that the watchdog
-workqueue function _base_fault_reset_work() initiates a PCI device
-removal via kthread.  The PCI callback kthread context then tears down
-the device and cancel/flush/destroys the watchdog workqueue.
-
-This patch eliminated the kthread and its call into PCI API, simply
-detaching from the SCSI midlayer.  In my opinion, the kthread
-complicated device removal and introduced potential races if the
-watchdog tried removing the device at the same time an ordinary device
-removal request occurred. 
-
-At the time, the best solution I had was to leave the unused workqueue
-around until its PCI device was removed.
-
-Regards,
-
--- Joe
+>  drivers/scsi/scsi_debug.c | 9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index cb4fefa..7565ec5 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -1735,14 +1735,11 @@ static u16 dif_compute_csum(const void *buf, =
+int len)
+>  {
+>         u16 csum;
+>
+> -       switch (scsi_debug_guard) {
+> -       case 1:
+> +       if (scsi_debug_guard =3D=3D 1)
+>                 csum =3D ip_compute_csum(buf, len);
+> -               break;
+> -       case 0:
+> +       else
+>                 csum =3D cpu_to_be16(crc_t10dif(buf, len));
+> -               break;
+> -       }
+> +
+>         return csum;
+>  }
+>
+> --
+> 1.8.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
+l" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
