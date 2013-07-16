@@ -1,90 +1,82 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Questions about your scsi-mq prototype
-Date: Tue, 16 Jul 2013 10:39:00 -0700
-Message-ID: <1373996340.7397.818.camel@haakon3.risingtidesystems.com>
-References: <20130715214143.GN24437@beardog.cce.hp.com>
+Subject: Re: [Ksummit-2013-discuss] [ATTEND] scsi-mq prototype discussion
+Date: Tue, 16 Jul 2013 14:07:29 -0700
+Message-ID: <1374008849.7397.853.camel@haakon3.risingtidesystems.com>
+References: <1373588612.7397.447.camel@haakon3.risingtidesystems.com>
+	 <20130712010223.GA15673@kroah.com>
+	 <1373592815.7397.477.camel@haakon3.risingtidesystems.com>
+	 <51DFDFF5.80702@suse.de> <1373698410.2922.10.camel@dabdike>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:36771 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932872Ab3GPRdt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jul 2013 13:33:49 -0400
-In-Reply-To: <20130715214143.GN24437@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1373698410.2922.10.camel@dabdike>
+Sender: target-devel-owner@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, "ksummit-2013-discuss@lists.linuxfoundation.org" <ksummit-2013-discuss@lists.linuxfoundation.org>, James Smart <James.Smart@Emulex.Com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "kmo@daterainc.com" <kmo@daterainc.com>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: chayan.biswas@sandisk.com, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On Mon, 2013-07-15 at 16:41 -0500, scameron@beardog.cce.hp.com wrote:
-> Hi,
+On Sat, 2013-07-13 at 06:53 +0000, James Bottomley wrote:
+> On Fri, 2013-07-12 at 12:52 +0200, Hannes Reinecke wrote:
+> > On 07/12/2013 03:33 AM, Nicholas A. Bellinger wrote:
+> > > On Thu, 2013-07-11 at 18:02 -0700, Greg KH wrote:
+> > >> On Thu, Jul 11, 2013 at 05:23:32PM -0700, Nicholas A. Bellinger wrote:
+> > >>> Drilling down the work items ahead of a real mainline push is high on
+> > >>> priority list for discussion.
+> > >>>
+> > >>> The parties to be included in such a discussion are:
+> > >>>
+> > >>>   - Jens Axboe (blk-mq author)
+> > >>>   - James Bottomley (scsi maintainer)
+> > >>>   - Christoph Hellwig (scsi)
+> > >>>   - Martin Petersen (scsi)
+> > >>>   - Tejun Heo (block + libata)
+> > >>>   - Hannes Reinecke (scsi error recovery)
+> > >>>   - Kent Overstreet (block, per-cpu ida)
+> > >>>   - Stephen Cameron (scsi-over-pcie driver)
+> > >>>   - Andrew Vasquez (qla2xxx LLD)
+> > >>>   - James Smart (lpfc LLD)
+> > >>
+> > >> Isn't this something that should have been discussed at the storage
+> > >> mini-summit a few months ago?
+> > > 
+> > > The scsi-mq prototype, along with blk-mq (in it's current form) did not
+> > > exist a few short months ago.  ;)
+> > > 
+> > >>  It seems very specific to one subsystem to be a kernel summit topic,
+> > >> don't you think?
+> > > 
+> > > It's no more subsystem specific than half of the other proposals so far,
+> > > and given it's reach across multiple subsystems (block, scsi, target),
+> > > and the amount of off-list interest on the topic, I think it would make
+> > > a good candidate for discussion.
+> > > 
+> > And it'll open up new approaches which previously were dismissed,
+> > like re-implementing multipathing on top of scsi-mq, giving us the
+> > single scsi device like other UNIX systems.
+> > 
+> > Also I do think there's quite some synergy to be had, as with blk-mq
+> > we could nail each queue to a processor, which would eliminate the
+> > need for locking.
+> > Which could be useful for other subsystems, too.
 > 
-> I have some questions about your scsi-mq prototype.  I have
-> CC'ed Chayan Biswas from Sandisk who is the other guy working
-> with me on the scsi-over-pcie driver.  BTW, if you would prefer
-> I CC linux-kernel or linux-scsi or other people with such
-> questions (or refrain from bothering you at all) just let me know.
-> 
-
-Thanks for asking.  Adding CC's to linux-scsi + Jens now..
-
-> I wonder if you can provide a summary of how you envision
-> a scsi LLD is expected to interact with the scsi-mq code.  I
-> gather that:
-> 
-> 1. scsi_mq in scsi_host_template should be set to true.
-
-Correct.
-
-> 2. scsi LLD should provide queuecommand_mq function
->    (in addition to normal queuecommand? or instead of?
->     virtio_scsi.c seems to provide both.)
-
-In addition to for the moment, correct.
-
-> 3. LLD should tell scsi mid layer size of its commands via
->    scsi_host_template cmd_size field.
->    I guess midlayer will pre-allocate per queue to avoid 
->    the midlayer threads contending to allocate commands maybe?
->    and hands this space to LLD to use via sc->SCp.ptr (sc is struct scsi_cmnd)
->    (right? or am I off in the weeds here?)
-
-This is all exactly correct.
-
-The one extra point here wrt ->queuecommand_mq() is that it's using the
-same parameters for the moment, but once nr_hw_queues > 1 is
-implemented, we will expect to pass down the associated blk_mq_hw_ctx in
-order for the LLD to determine which hardware context the struct
-scsi_cmnd is being dispatched upon.
-
-> 4. Wondering about how the multiple queue thing will work.
->    I see this:
-> 
->    #warning FIXME: Need to pass nr_hw_queues into scsi-mq
-> 
->    and I don't see any code setting sdev_mq_reg.nr_hw_queues to
->    anything other than 1.
-> 
->    So maybe I'm just looking too early and that part isn't done yet?
+> Lets start with discussing this on the list, please, and then see where
+> we go from there ...
 > 
 
-Correct, not done yet..
+Yes, the discussion is beginning to make it's way to the list.  I've
+mostly been waiting for blk-mq to get a wider review before taking the
+early scsi-mq prototype driver to a larger public audience.
 
-However, so far with a single SCSI LUN with nr_hw_queues=1, 4k blocksize
-randrw performance is on the order of 1M, vs. ~250K using legacy
-scsi_request_fn().
+Primarily, I'm now reaching out to the people most effected by existing
+scsi_request_fn() based performance limitations.  Most of them have
+abandoned existing scsi_request_fn() based logic in favor of raw block
+make_request() based drivers, and are now estimating the amount of
+effort to move to an scsi-mq based approach.
 
-> In any case, since we switched away from a scsi driver for the scsi-over-pcie
-> driver to a block driver, the original scsi version of the driver has lain
-> fallow, and the first thing we would need to do before we could begin to try
-> to use your code is to update that driver to work with our current hardware, and
-> take advantage of other code improvements made in the block driver.
-> 
-
-Understood.  I'm happy to help on the scsi-mq conversion side, but as
-you've noticed from the virtio-scsi conversion patch, enabling scsi-mq
-it it's current form for I/O benchmarking is straight forward.
+Regardless, as the prototype progresses over the next months, having a
+face-to-face discussion with the key parties in the room would be very
+helpful given the large amount of effort involved to actually make this
+type of generational shift in SCSI actually happen.
 
 --nab
-
