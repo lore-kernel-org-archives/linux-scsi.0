@@ -1,12 +1,12 @@
 From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH v2 01/10] [RFC] SCSI: esas2r: Add main header file
-Date: Tue, 16 Jul 2013 09:46:53 -0400
-Message-ID: <1373982422-3783-2-git-send-email-bgrove@attotech.com>
+Subject: [PATCH v2 03/10] [RFC] SCSI: esas2r: Add initialization functions
+Date: Tue, 16 Jul 2013 09:46:55 -0400
+Message-ID: <1373982422-3783-4-git-send-email-bgrove@attotech.com>
 References: <1373982422-3783-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:7670 "EHLO
+Received: from sw.attotech.com ([208.69.85.34]:44527 "EHLO
 	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754544Ab3GPNr5 (ORCPT
+	with ESMTP id S1754664Ab3GPNr5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jul 2013 09:47:57 -0400
 In-Reply-To: <1373982422-3783-1-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,22 +17,22 @@ Cc: jseba@attotech.com, jbottomley@parallels.com, Bradley Grove <bgrove@attotech
 
 Signed-off-by: Bradley Grove <bgrove@attotech.com>
 ---
- drivers/scsi/esas2r/esas2r.h | 1442 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 1442 insertions(+)
- create mode 100644 drivers/scsi/esas2r/esas2r.h
+ drivers/scsi/esas2r/esas2r_init.c | 1775 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 1775 insertions(+)
+ create mode 100644 drivers/scsi/esas2r/esas2r_init.c
 
-diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
 new file mode 100644
-index 0000000..b271822
+index 0000000..757d14d
 --- /dev/null
-+++ b/drivers/scsi/esas2r/esas2r.h
-@@ -0,0 +1,1442 @@
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -0,0 +1,1775 @@
 +/*
-+ *  linux/drivers/scsi/esas2r/esas2r.h
++ *  linux/drivers/scsi/esas2r/esas2r_init.c
 + *      For use with ATTO ExpressSAS R6xx SAS/SATA RAID controllers
 + *
 + *  Copyright (c) 2001-2013 ATTO Technology, Inc.
-+ *  (mailto:linuxdrivers@attotech.com)
++ *  (mailto:linuxdrivers@attotech.com)mpt3sas/mpt3sas_trigger_diag.
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -70,1405 +70,1738 @@ index 0000000..b271822
 + * USA.
 + */
 +
-+#include <linux/kernel.h>
-+#include <linux/delay.h>
-+#include <linux/pci.h>
-+#include <linux/proc_fs.h>
-+#include <linux/workqueue.h>
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/vmalloc.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_eh.h>
-+#include <scsi/scsi_tcq.h>
-+#include <net/sock.h>
-+
-+#include "esas2r_log.h"
-+#include "atioctl.h"
-+#include "atvda.h"
-+
-+#ifndef ESAS2R_H
-+#define ESAS2R_H
-+
-+/* Global Variables */
-+extern struct esas2r_adapter *esas2r_adapters[];
-+extern u8 *esas2r_buffered_ioctl;
-+extern dma_addr_t esas2r_buffered_ioctl_addr;
-+extern u32 esas2r_buffered_ioctl_size;
-+extern struct pci_dev *esas2r_buffered_ioctl_pcid;
-+#define SGL_PG_SZ_MIN   64
-+#define SGL_PG_SZ_MAX   1024
-+extern int sgl_page_size;
-+#define NUM_SGL_MIN     8
-+#define NUM_SGL_MAX     2048
-+extern int num_sg_lists;
-+#define NUM_REQ_MIN     4
-+#define NUM_REQ_MAX     256
-+extern int num_requests;
-+#define NUM_AE_MIN      2
-+#define NUM_AE_MAX      8
-+extern int num_ae_requests;
-+extern int cmd_per_lun;
-+extern int can_queue;
-+extern int esas2r_max_sectors;
-+extern int sg_tablesize;
-+extern int interrupt_mode;
-+extern int num_io_requests;
-+
-+/* Macro defintions */
-+#define ESAS2R_MAX_ID        255
-+#define MAX_ADAPTERS         32
-+#define ESAS2R_DRVR_NAME     "esas2r"
-+#define ESAS2R_LONGNAME      "ATTO ExpressSAS 6GB RAID Adapter"
-+#define ESAS2R_MAX_DEVICES     32
-+#define ATTONODE_NAME         "ATTONode"
-+#define ESAS2R_MAJOR_REV       1
-+#define ESAS2R_MINOR_REV       00
-+#define ESAS2R_VERSION_STR     DEFINED_NUM_TO_STR(ESAS2R_MAJOR_REV) "." \
-+	DEFINED_NUM_TO_STR(ESAS2R_MINOR_REV)
-+#define ESAS2R_COPYRIGHT_YEARS "2001-2013"
-+#define ESAS2R_DEFAULT_SGL_PAGE_SIZE 384
-+#define ESAS2R_DEFAULT_CMD_PER_LUN   64
-+#define ESAS2R_DEFAULT_NUM_SG_LISTS 1024
-+#define DEFINED_NUM_TO_STR(num) NUM_TO_STR(num)
-+#define NUM_TO_STR(num) #num
-+
-+#define ESAS2R_SGL_ALIGN    16
-+#define ESAS2R_LIST_ALIGN   16
-+#define ESAS2R_LIST_EXTRA   ESAS2R_NUM_EXTRA
-+#define ESAS2R_DATA_BUF_LEN         256
-+#define ESAS2R_DEFAULT_TMO          5000
-+#define ESAS2R_DISC_BUF_LEN         512
-+#define ESAS2R_FWCOREDUMP_SZ        0x80000
-+#define ESAS2R_NUM_PHYS             8
-+#define ESAS2R_TARG_ID_INV          0xFFFF
-+#define ESAS2R_INT_STS_MASK         MU_INTSTAT_MASK
-+#define ESAS2R_INT_ENB_MASK         MU_INTSTAT_MASK
-+#define ESAS2R_INT_DIS_MASK         0
-+#define ESAS2R_MAX_TARGETS          256
-+#define ESAS2R_KOBJ_NAME_LEN        20
-+
-+/* u16 (WORD) component macros */
-+#define LOBYTE(w) ((u8)(u16)(w))
-+#define HIBYTE(w) ((u8)(((u16)(w)) >> 8))
-+#define MAKEWORD(lo, hi) ((u16)((u8)(lo) | ((u16)(u8)(hi) << 8)))
-+
-+/* u32 (DWORD) component macros */
-+#define LOWORD(d) ((u16)(u32)(d))
-+#define HIWORD(d) ((u16)(((u32)(d)) >> 16))
-+#define MAKEDWORD(lo, hi) ((u32)((u16)(lo) | ((u32)(u16)(hi) << 16)))
-+
-+/* macro to get the lowest nonzero bit of a value */
-+#define LOBIT(x) ((x) & (0 - (x)))
-+
-+/* These functions are provided to access the chip's control registers.
-+ * The register is specified by its byte offset from the register base
-+ * for the adapter.
-+ */
-+#define esas2r_read_register_dword(a, reg)                             \
-+	readl((void __iomem *)a->regs + (reg) + MW_REG_OFFSET_HWREG)
-+
-+#define esas2r_write_register_dword(a, reg, data)                      \
-+	writel(data, (void __iomem *)(a->regs + (reg) + MW_REG_OFFSET_HWREG))
-+
-+#define esas2r_flush_register_dword(a, r) esas2r_read_register_dword(a, r)
-+
-+/* This function is provided to access the chip's data window.   The
-+ * register is specified by its byte offset from the window base
-+ * for the adapter.
-+ */
-+#define esas2r_read_data_byte(a, reg)                                  \
-+	readb((void __iomem *)a->data_window + (reg))
-+
-+/* ATTO vendor and device Ids */
-+#define ATTO_VENDOR_ID          0x117C
-+#define ATTO_DID_INTEL_IOP348   0x002C
-+#define ATTO_DID_MV_88RC9580    0x0049
-+#define ATTO_DID_MV_88RC9580TS  0x0066
-+#define ATTO_DID_MV_88RC9580TSE 0x0067
-+#define ATTO_DID_MV_88RC9580TL  0x0068
-+
-+/* ATTO subsystem device Ids */
-+#define ATTO_SSDID_TBT      0x4000
-+#define ATTO_TSSC_3808      0x4066
-+#define ATTO_TSSC_3808E     0x4067
-+#define ATTO_TLSH_1068      0x4068
-+#define ATTO_ESAS_R680      0x0049
-+#define ATTO_ESAS_R608      0x004A
-+#define ATTO_ESAS_R60F      0x004B
-+#define ATTO_ESAS_R6F0      0x004C
-+#define ATTO_ESAS_R644      0x004D
-+#define ATTO_ESAS_R648      0x004E
-+
-+/*
-+ * flash definitions & structures
-+ * define the code types
-+ */
-+#define FBT_CPYR        0xAA00
-+#define FBT_SETUP       0xAA02
-+#define FBT_FLASH_VER   0xAA04
-+
-+/* offsets to various locations in flash */
-+#define FLS_OFFSET_BOOT (u32)(0x00700000)
-+#define FLS_OFFSET_NVR  (u32)(0x007C0000)
-+#define FLS_OFFSET_CPYR FLS_OFFSET_NVR
-+#define FLS_LENGTH_BOOT (FLS_OFFSET_CPYR - FLS_OFFSET_BOOT)
-+#define FLS_BLOCK_SIZE  (u32)(0x00020000)
-+#define FI_NVR_2KB  0x0800
-+#define FI_NVR_8KB  0x2000
-+#define FM_BUF_SZ   0x800
-+
-+/*
-+ * marvell frey (88R9580) register definitions
-+ * chip revision identifiers
-+ */
-+#define MVR_FREY_B2     0xB2
-+
-+/*
-+ * memory window definitions.  window 0 is the data window with definitions
-+ * of MW_DATA_XXX.  window 1 is the register window with definitions of
-+ * MW_REG_XXX.
-+ */
-+#define MW_REG_WINDOW_SIZE      (u32)(0x00040000)
-+#define MW_REG_OFFSET_HWREG     (u32)(0x00000000)
-+#define MW_REG_OFFSET_PCI       (u32)(0x00008000)
-+#define MW_REG_PCI_HWREG_DELTA  (MW_REG_OFFSET_PCI - MW_REG_OFFSET_HWREG)
-+#define MW_DATA_WINDOW_SIZE     (u32)(0x00020000)
-+#define MW_DATA_ADDR_SER_FLASH  (u32)(0xEC000000)
-+#define MW_DATA_ADDR_SRAM       (u32)(0xF4000000)
-+#define MW_DATA_ADDR_PAR_FLASH  (u32)(0xFC000000)
-+
-+/*
-+ * the following registers are for the communication
-+ * list interface (AKA message unit (MU))
-+ */
-+#define MU_IN_LIST_ADDR_LO      (u32)(0x00004000)
-+#define MU_IN_LIST_ADDR_HI      (u32)(0x00004004)
-+
-+#define MU_IN_LIST_WRITE        (u32)(0x00004018)
-+    #define MU_ILW_TOGGLE       (u32)(0x00004000)
-+
-+#define MU_IN_LIST_READ         (u32)(0x0000401C)
-+    #define MU_ILR_TOGGLE       (u32)(0x00004000)
-+    #define MU_ILIC_LIST        (u32)(0x0000000F)
-+    #define MU_ILIC_LIST_F0     (u32)(0x00000000)
-+    #define MU_ILIC_DEST        (u32)(0x00000F00)
-+    #define MU_ILIC_DEST_DDR    (u32)(0x00000200)
-+#define MU_IN_LIST_IFC_CONFIG   (u32)(0x00004028)
-+
-+#define MU_IN_LIST_CONFIG       (u32)(0x0000402C)
-+    #define MU_ILC_ENABLE       (u32)(0x00000001)
-+    #define MU_ILC_ENTRY_MASK   (u32)(0x000000F0)
-+    #define MU_ILC_ENTRY_4_DW   (u32)(0x00000020)
-+    #define MU_ILC_DYNAMIC_SRC  (u32)(0x00008000)
-+    #define MU_ILC_NUMBER_MASK  (u32)(0x7FFF0000)
-+    #define MU_ILC_NUMBER_SHIFT            16
-+
-+#define MU_OUT_LIST_ADDR_LO     (u32)(0x00004050)
-+#define MU_OUT_LIST_ADDR_HI     (u32)(0x00004054)
-+
-+#define MU_OUT_LIST_COPY_PTR_LO (u32)(0x00004058)
-+#define MU_OUT_LIST_COPY_PTR_HI (u32)(0x0000405C)
-+
-+#define MU_OUT_LIST_WRITE       (u32)(0x00004068)
-+    #define MU_OLW_TOGGLE       (u32)(0x00004000)
-+
-+#define MU_OUT_LIST_COPY        (u32)(0x0000406C)
-+    #define MU_OLC_TOGGLE       (u32)(0x00004000)
-+    #define MU_OLC_WRT_PTR      (u32)(0x00003FFF)
-+
-+#define MU_OUT_LIST_IFC_CONFIG  (u32)(0x00004078)
-+    #define MU_OLIC_LIST        (u32)(0x0000000F)
-+    #define MU_OLIC_LIST_F0     (u32)(0x00000000)
-+    #define MU_OLIC_SOURCE      (u32)(0x00000F00)
-+    #define MU_OLIC_SOURCE_DDR  (u32)(0x00000200)
-+
-+#define MU_OUT_LIST_CONFIG      (u32)(0x0000407C)
-+    #define MU_OLC_ENABLE       (u32)(0x00000001)
-+    #define MU_OLC_ENTRY_MASK   (u32)(0x000000F0)
-+    #define MU_OLC_ENTRY_4_DW   (u32)(0x00000020)
-+    #define MU_OLC_NUMBER_MASK  (u32)(0x7FFF0000)
-+    #define MU_OLC_NUMBER_SHIFT            16
-+
-+#define MU_OUT_LIST_INT_STAT    (u32)(0x00004088)
-+    #define MU_OLIS_INT         (u32)(0x00000001)
-+
-+#define MU_OUT_LIST_INT_MASK    (u32)(0x0000408C)
-+    #define MU_OLIS_MASK        (u32)(0x00000001)
-+
-+/*
-+ * the maximum size of the communication lists is two greater than the
-+ * maximum amount of VDA requests.  the extra are to prevent queue overflow.
-+ */
-+#define ESAS2R_MAX_NUM_REQS         256
-+#define ESAS2R_NUM_EXTRA            2
-+#define ESAS2R_MAX_COMM_LIST_SIZE   (ESAS2R_MAX_NUM_REQS + ESAS2R_NUM_EXTRA)
-+
-+/*
-+ * the following registers are for the CPU interface
-+ */
-+#define MU_CTL_STATUS_IN        (u32)(0x00010108)
-+    #define MU_CTL_IN_FULL_RST  (u32)(0x00000020)
-+#define MU_CTL_STATUS_IN_B2     (u32)(0x00010130)
-+    #define MU_CTL_IN_FULL_RST2 (u32)(0x80000000)
-+#define MU_DOORBELL_IN          (u32)(0x00010460)
-+    #define DRBL_RESET_BUS      (u32)(0x00000002)
-+    #define DRBL_PAUSE_AE       (u32)(0x00000004)
-+    #define DRBL_RESUME_AE      (u32)(0x00000008)
-+    #define DRBL_MSG_IFC_DOWN   (u32)(0x00000010)
-+    #define DRBL_FLASH_REQ      (u32)(0x00000020)
-+    #define DRBL_FLASH_DONE     (u32)(0x00000040)
-+    #define DRBL_FORCE_INT      (u32)(0x00000080)
-+    #define DRBL_MSG_IFC_INIT   (u32)(0x00000100)
-+    #define DRBL_POWER_DOWN     (u32)(0x00000200)
-+    #define DRBL_DRV_VER_1      (u32)(0x00010000)
-+    #define DRBL_DRV_VER        DRBL_DRV_VER_1
-+#define MU_DOORBELL_IN_ENB      (u32)(0x00010464)
-+#define MU_DOORBELL_OUT         (u32)(0x00010480)
-+ #define DRBL_PANIC_REASON_MASK (u32)(0x00F00000)
-+    #define DRBL_UNUSED_HANDLER (u32)(0x00100000)
-+    #define DRBL_UNDEF_INSTR    (u32)(0x00200000)
-+    #define DRBL_PREFETCH_ABORT (u32)(0x00300000)
-+    #define DRBL_DATA_ABORT     (u32)(0x00400000)
-+    #define DRBL_JUMP_TO_ZERO   (u32)(0x00500000)
-+  #define DRBL_FW_RESET         (u32)(0x00080000)
-+  #define DRBL_FW_VER_MSK       (u32)(0x00070000)
-+  #define DRBL_FW_VER_0         (u32)(0x00000000)
-+  #define DRBL_FW_VER_1         (u32)(0x00010000)
-+  #define DRBL_FW_VER           DRBL_FW_VER_1
-+#define MU_DOORBELL_OUT_ENB     (u32)(0x00010484)
-+    #define DRBL_ENB_MASK       (u32)(0x00F803FF)
-+#define MU_INT_STATUS_OUT       (u32)(0x00010200)
-+    #define MU_INTSTAT_POST_OUT (u32)(0x00000010)
-+    #define MU_INTSTAT_DRBL_IN  (u32)(0x00000100)
-+    #define MU_INTSTAT_DRBL     (u32)(0x00001000)
-+    #define MU_INTSTAT_MASK     (u32)(0x00001010)
-+#define MU_INT_MASK_OUT         (u32)(0x0001020C)
-+
-+/* PCI express registers accessed via window 1 */
-+#define MVR_PCI_WIN1_REMAP      (u32)(0x00008438)
-+    #define MVRPW1R_ENABLE      (u32)(0x00000001)
-+
-+
-+/* structures */
-+
-+/* inbound list dynamic source entry */
-+struct esas2r_inbound_list_source_entry {
-+	u64 address;
-+	u32 length;
-+	#define HWILSE_INTERFACE_F0  0x00000000
-+	u32 reserved;
-+};
-+
-+/* PCI data structure in expansion ROM images */
-+struct __packed esas2r_boot_header {
-+	char signature[4];
-+	u16 vendor_id;
-+	u16 device_id;
-+	u16 VPD;
-+	u16 struct_length;
-+	u8 struct_revision;
-+	u8 class_code[3];
-+	u16 image_length;
-+	u16 code_revision;
-+	u8 code_type;
-+	#define CODE_TYPE_PC    0
-+	#define CODE_TYPE_OPEN  1
-+	#define CODE_TYPE_EFI   3
-+	u8 indicator;
-+	#define INDICATOR_LAST  0x80
-+	u8 reserved[2];
-+};
-+
-+struct __packed esas2r_boot_image {
-+	u16 signature;
-+	u8 reserved[22];
-+	u16 header_offset;
-+	u16 pnp_offset;
-+};
-+
-+struct __packed esas2r_pc_image {
-+	u16 signature;
-+	u8 length;
-+	u8 entry_point[3];
-+	u8 checksum;
-+	u16 image_end;
-+	u16 min_size;
-+	u8 rom_flags;
-+	u8 reserved[12];
-+	u16 header_offset;
-+	u16 pnp_offset;
-+	struct esas2r_boot_header boot_image;
-+};
-+
-+struct __packed esas2r_efi_image {
-+	u16 signature;
-+	u16 length;
-+	u32 efi_signature;
-+	#define EFI_ROM_SIG     0x00000EF1
-+	u16 image_type;
-+	#define EFI_IMAGE_APP   10
-+	#define EFI_IMAGE_BSD   11
-+	#define EFI_IMAGE_RTD   12
-+	u16 machine_type;
-+	#define EFI_MACHINE_IA32 0x014c
-+	#define EFI_MACHINE_IA64 0x0200
-+	#define EFI_MACHINE_X64  0x8664
-+	#define EFI_MACHINE_EBC  0x0EBC
-+	u16 compression;
-+	#define EFI_UNCOMPRESSED 0x0000
-+	#define EFI_COMPRESSED   0x0001
-+	u8 reserved[8];
-+	u16 efi_offset;
-+	u16 header_offset;
-+	u16 reserved2;
-+	struct esas2r_boot_header boot_image;
-+};
-+
-+struct esas2r_adapter;
-+struct esas2r_sg_context;
-+struct esas2r_request;
-+
-+typedef void (*RQCALLBK)     (struct esas2r_adapter *a,
-+			      struct esas2r_request *rq);
-+typedef bool (*RQBUILDSGL)   (struct esas2r_adapter *a,
-+			      struct esas2r_sg_context *sgc);
-+
-+struct esas2r_component_header {
-+	u8 img_type;
-+	#define CH_IT_FW    0x00
-+	#define CH_IT_NVR   0x01
-+	#define CH_IT_BIOS  0x02
-+	#define CH_IT_MAC   0x03
-+	#define CH_IT_CFG   0x04
-+	#define CH_IT_EFI   0x05
-+	u8 status;
-+	#define CH_STAT_PENDING 0xff
-+	#define CH_STAT_FAILED  0x00
-+	#define CH_STAT_SUCCESS 0x01
-+	#define CH_STAT_RETRY   0x02
-+	#define CH_STAT_INVALID 0x03
-+	u8 pad[2];
-+	u32 version;
-+	u32 length;
-+	u32 image_offset;
-+};
-+
-+#define FI_REL_VER_SZ   16
-+
-+struct esas2r_flash_img_v0 {
-+	u8 fi_version;
-+	#define FI_VERSION_0    00
-+	u8 status;
-+	u8 adap_typ;
-+	u8 action;
-+	u32 length;
-+	u16 checksum;
-+	u16 driver_error;
-+	u16 flags;
-+	u16 num_comps;
-+	#define FI_NUM_COMPS_V0 5
-+	u8 rel_version[FI_REL_VER_SZ];
-+	struct esas2r_component_header cmp_hdr[FI_NUM_COMPS_V0];
-+	u8 scratch_buf[FM_BUF_SZ];
-+};
-+
-+struct esas2r_flash_img {
-+	u8 fi_version;
-+	#define FI_VERSION_1    01
-+	u8 status;
-+	#define FI_STAT_SUCCESS  0x00
-+	#define FI_STAT_FAILED   0x01
-+	#define FI_STAT_REBOOT   0x02
-+	#define FI_STAT_ADAPTYP  0x03
-+	#define FI_STAT_INVALID  0x04
-+	#define FI_STAT_CHKSUM   0x05
-+	#define FI_STAT_LENGTH   0x06
-+	#define FI_STAT_UNKNOWN  0x07
-+	#define FI_STAT_IMG_VER  0x08
-+	#define FI_STAT_BUSY     0x09
-+	#define FI_STAT_DUAL     0x0A
-+	#define FI_STAT_MISSING  0x0B
-+	#define FI_STAT_UNSUPP   0x0C
-+	#define FI_STAT_ERASE    0x0D
-+	#define FI_STAT_FLASH    0x0E
-+	#define FI_STAT_DEGRADED 0x0F
-+	u8 adap_typ;
-+	#define FI_AT_UNKNWN    0xFF
-+	#define FI_AT_SUN_LAKE  0x0B
-+	#define FI_AT_MV_9580   0x0F
-+	u8 action;
-+	#define FI_ACT_DOWN     0x00
-+	#define FI_ACT_UP       0x01
-+	#define FI_ACT_UPSZ     0x02
-+	#define FI_ACT_MAX      0x02
-+	#define FI_ACT_DOWN1    0x80
-+	u32 length;
-+	u16 checksum;
-+	u16 driver_error;
-+	u16 flags;
-+	#define FI_FLG_NVR_DEF  0x0001
-+	u16 num_comps;
-+	#define FI_NUM_COMPS_V1 6
-+	u8 rel_version[FI_REL_VER_SZ];
-+	struct esas2r_component_header cmp_hdr[FI_NUM_COMPS_V1];
-+	u8 scratch_buf[FM_BUF_SZ];
-+};
-+
-+/* definitions for flash script (FS) commands */
-+struct esas2r_ioctlfs_command {
-+	u8 command;
-+	#define ESAS2R_FS_CMD_ERASE    0
-+	#define ESAS2R_FS_CMD_READ     1
-+	#define ESAS2R_FS_CMD_BEGINW   2
-+	#define ESAS2R_FS_CMD_WRITE    3
-+	#define ESAS2R_FS_CMD_COMMIT   4
-+	#define ESAS2R_FS_CMD_CANCEL   5
-+	u8 checksum;
-+	u8 reserved[2];
-+	u32 flash_addr;
-+	u32 length;
-+	u32 image_offset;
-+};
-+
-+struct esas2r_ioctl_fs {
-+	u8 version;
-+	#define ESAS2R_FS_VER      0
-+	u8 status;
-+	u8 driver_error;
-+	u8 adap_type;
-+	#define ESAS2R_FS_AT_ESASRAID2     3
-+	#define ESAS2R_FS_AT_TSSASRAID2    4
-+	#define ESAS2R_FS_AT_TSSASRAID2E   5
-+	#define ESAS2R_FS_AT_TLSASHBA      6
-+	u8 driver_ver;
-+	u8 reserved[11];
-+	struct esas2r_ioctlfs_command command;
-+	u8 data[1];
-+};
-+
-+struct esas2r_sas_nvram {
-+	u8 signature[4];
-+	u8 version;
-+	#define SASNVR_VERSION_0    0x00
-+	#define SASNVR_VERSION      SASNVR_VERSION_0
-+	u8 checksum;
-+	#define SASNVR_CKSUM_SEED   0x5A
-+	u8 max_lun_for_target;
-+	u8 pci_latency;
-+	#define SASNVR_PCILAT_DIS   0x00
-+	#define SASNVR_PCILAT_MIN   0x10
-+	#define SASNVR_PCILAT_MAX   0xF8
-+	u8 options1;
-+	#define SASNVR1_BOOT_DRVR   0x01
-+	#define SASNVR1_BOOT_SCAN   0x02
-+	#define SASNVR1_DIS_PCI_MWI 0x04
-+	#define SASNVR1_FORCE_ORD_Q 0x08
-+	#define SASNVR1_CACHELINE_0 0x10
-+	#define SASNVR1_DIS_DEVSORT 0x20
-+	#define SASNVR1_PWR_MGT_EN  0x40
-+	#define SASNVR1_WIDEPORT    0x80
-+	u8 options2;
-+	#define SASNVR2_SINGLE_BUS  0x01
-+	#define SASNVR2_SLOT_BIND   0x02
-+	#define SASNVR2_EXP_PROG    0x04
-+	#define SASNVR2_CMDTHR_LUN  0x08
-+	#define SASNVR2_HEARTBEAT   0x10
-+	#define SASNVR2_INT_CONNECT 0x20
-+	#define SASNVR2_SW_MUX_CTRL 0x40
-+	#define SASNVR2_DISABLE_NCQ 0x80
-+	u8 int_coalescing;
-+	#define SASNVR_COAL_DIS     0x00
-+	#define SASNVR_COAL_LOW     0x01
-+	#define SASNVR_COAL_MED     0x02
-+	#define SASNVR_COAL_HI      0x03
-+	u8 cmd_throttle;
-+	#define SASNVR_CMDTHR_NONE  0x00
-+	u8 dev_wait_time;
-+	u8 dev_wait_count;
-+	u8 spin_up_delay;
-+	#define SASNVR_SPINUP_MAX   0x14
-+	u8 ssp_align_rate;
-+	u8 sas_addr[8];
-+	u8 phy_speed[16];
-+	#define SASNVR_SPEED_AUTO   0x00
-+	#define SASNVR_SPEED_1_5GB  0x01
-+	#define SASNVR_SPEED_3GB    0x02
-+	#define SASNVR_SPEED_6GB    0x03
-+	#define SASNVR_SPEED_12GB   0x04
-+	u8 phy_mux[16];
-+	#define SASNVR_MUX_DISABLED 0x00
-+	#define SASNVR_MUX_1_5GB    0x01
-+	#define SASNVR_MUX_3GB      0x02
-+	#define SASNVR_MUX_6GB      0x03
-+	u8 phy_flags[16];
-+	#define SASNVR_PHF_DISABLED 0x01
-+	#define SASNVR_PHF_RD_ONLY  0x02
-+	u8 sort_type;
-+	#define SASNVR_SORT_SAS_ADDR    0x00
-+	#define SASNVR_SORT_H308_CONN   0x01
-+	#define SASNVR_SORT_PHY_ID      0x02
-+	#define SASNVR_SORT_SLOT_ID     0x03
-+	u8 dpm_reqcmd_lmt;
-+	u8 dpm_stndby_time;
-+	u8 dpm_active_time;
-+	u8 phy_target_id[16];
-+	#define SASNVR_PTI_DISABLED     0xFF
-+	u8 virt_ses_mode;
-+	#define SASNVR_VSMH_DISABLED    0x00
-+	u8 read_write_mode;
-+	#define SASNVR_RWM_DEFAULT      0x00
-+	u8 link_down_to;
-+	u8 reserved[0xA1];
-+};
-+
-+typedef u32 (*PGETPHYSADDR) (struct esas2r_sg_context *sgc, u64 *addr);
-+
-+struct esas2r_sg_context {
-+	struct esas2r_adapter *adapter;
-+	struct esas2r_request *first_req;
-+	u32 length;
-+	u8 *cur_offset;
-+	PGETPHYSADDR get_phys_addr;
-+	union {
-+		struct {
-+			struct atto_vda_sge *curr;
-+			struct atto_vda_sge *last;
-+			struct atto_vda_sge *limit;
-+			struct atto_vda_sge *chain;
-+		} a64;
-+		struct {
-+			struct atto_physical_region_description *curr;
-+			struct atto_physical_region_description *chain;
-+			u32 sgl_max_cnt;
-+			u32 sge_cnt;
-+		} prd;
-+	} sge;
-+	struct scatterlist *cur_sgel;
-+	u8 *exp_offset;
-+	int num_sgel;
-+	int sgel_count;
-+};
-+
-+struct esas2r_target {
-+	u8 flags;
-+	#define TF_PASS_THRU    0x01
-+	#define TF_USED         0x02
-+	u8 new_target_state;
-+	u8 target_state;
-+	u8 buffered_target_state;
-+#define TS_NOT_PRESENT      0x00
-+#define TS_PRESENT          0x05
-+#define TS_LUN_CHANGE       0x06
-+#define TS_INVALID          0xFF
-+	u32 block_size;
-+	u32 inter_block;
-+	u32 inter_byte;
-+	u16 virt_targ_id;
-+	u16 phys_targ_id;
-+	u8 identifier_len;
-+	u64 sas_addr;
-+	u8 identifier[60];
-+	struct atto_vda_ae_lu lu_event;
-+};
-+
-+struct esas2r_request {
-+	struct list_head comp_list;
-+	struct list_head req_list;
-+	union atto_vda_req *vrq;
-+	struct esas2r_mem_desc *vrq_md;
-+	union {
-+		void *data_buf;
-+		union atto_vda_rsp_data *vda_rsp_data;
-+	};
-+	u8 *sense_buf;
-+	struct list_head sg_table_head;
-+	struct esas2r_mem_desc *sg_table;
-+	u32 timeout;
-+	#define RQ_TIMEOUT_S1     0xFFFFFFFF
-+	#define RQ_TIMEOUT_S2     0xFFFFFFFE
-+	#define RQ_MAX_TIMEOUT    0xFFFFFFFD
-+	u16 target_id;
-+	u8 req_type;
-+	#define RT_INI_REQ          0x01
-+	#define RT_DISC_REQ         0x02
-+	u8 sense_len;
-+	union atto_vda_func_rsp func_rsp;
-+	RQCALLBK comp_cb;
-+	RQCALLBK interrupt_cb;
-+	void *interrupt_cx;
-+	u8 flags;
-+	#define RF_1ST_IBLK_BASE    0x04
-+	#define RF_FAILURE_OK       0x08
-+	u8 req_stat;
-+	u16 vda_req_sz;
-+	#define RQ_SIZE_DEFAULT   0
-+	u64 lba;
-+	RQCALLBK aux_req_cb;
-+	void *aux_req_cx;
-+	u32 blk_len;
-+	u32 max_blk_len;
-+	union {
-+		struct scsi_cmnd *cmd;
-+		u8 *task_management_status_ptr;
-+	};
-+};
-+
-+struct esas2r_flash_context {
-+	struct esas2r_flash_img *fi;
-+	RQCALLBK interrupt_cb;
-+	u8 *sgc_offset;
-+	u8 *scratch;
-+	u32 fi_hdr_len;
-+	u8 task;
-+	#define     FMTSK_ERASE_BOOT    0
-+	#define     FMTSK_WRTBIOS       1
-+	#define     FMTSK_READBIOS      2
-+	#define     FMTSK_WRTMAC        3
-+	#define     FMTSK_READMAC       4
-+	#define     FMTSK_WRTEFI        5
-+	#define     FMTSK_READEFI       6
-+	#define     FMTSK_WRTCFG        7
-+	#define     FMTSK_READCFG       8
-+	u8 func;
-+	u16 num_comps;
-+	u32 cmp_len;
-+	u32 flsh_addr;
-+	u32 curr_len;
-+	u8 comp_typ;
-+	struct esas2r_sg_context sgc;
-+};
-+
-+struct esas2r_disc_context {
-+	u8 disc_evt;
-+	#define DCDE_DEV_CHANGE     0x01
-+	#define DCDE_DEV_SCAN       0x02
-+	u8 state;
-+	#define DCS_DEV_RMV         0x00
-+	#define DCS_DEV_ADD         0x01
-+	#define DCS_BLOCK_DEV_SCAN  0x02
-+	#define DCS_RAID_GRP_INFO   0x03
-+	#define DCS_PART_INFO       0x04
-+	#define DCS_PT_DEV_INFO     0x05
-+	#define DCS_PT_DEV_ADDR     0x06
-+	#define DCS_DISC_DONE       0xFF
-+	u16 flags;
-+	#define DCF_DEV_CHANGE      0x0001
-+	#define DCF_DEV_SCAN        0x0002
-+	#define DCF_POLLED          0x8000
-+	u32 interleave;
-+	u32 block_size;
-+	u16 dev_ix;
-+	u8 part_num;
-+	u8 raid_grp_ix;
-+	char raid_grp_name[16];
-+	struct esas2r_target *curr_targ;
-+	u16 curr_virt_id;
-+	u16 curr_phys_id;
-+	u8 scan_gen;
-+	u8 dev_addr_type;
-+	u64 sas_addr;
-+};
-+
-+struct esas2r_mem_desc {
-+	struct list_head next_desc;
-+	void *virt_addr;
-+	u64 phys_addr;
-+	void *pad;
-+	void *esas2r_data;
-+	u32 esas2r_param;
-+	u32 size;
-+};
-+
-+enum fw_event_type {
-+	fw_event_null,
-+	fw_event_lun_change,
-+	fw_event_present,
-+	fw_event_not_present,
-+	fw_event_vda_ae
-+};
-+
-+struct esas2r_vda_ae {
-+	u32 signature;
-+#define ESAS2R_VDA_EVENT_SIG  0x4154544F
-+	u8 bus_number;
-+	u8 devfn;
-+	u8 pad[2];
-+	union atto_vda_ae vda_ae;
-+};
-+
-+struct esas2r_fw_event_work {
-+	struct list_head list;
-+	struct delayed_work work;
-+	struct esas2r_adapter *a;
-+	enum fw_event_type type;
-+	u8 data[sizeof(struct esas2r_vda_ae)];
-+};
-+
-+enum state {
-+	FW_INVALID_ST,
-+	FW_STATUS_ST,
-+	FW_COMMAND_ST
-+};
-+
-+struct esas2r_firmware {
-+	enum state state;
-+	struct esas2r_flash_img header;
-+	u8 *data;
-+	u64 phys;
-+	int orig_len;
-+	void *header_buff;
-+	u64 header_buff_phys;
-+};
-+
-+struct esas2r_adapter {
-+	struct esas2r_target targetdb[ESAS2R_MAX_TARGETS];
-+	struct esas2r_target *targetdb_end;
-+	unsigned char *regs;
-+	unsigned char *data_window;
-+	u32 volatile flags;
-+	#define AF_PORT_CHANGE      (u32)(0x00000001)
-+	#define AF_CHPRST_NEEDED    (u32)(0x00000004)
-+	#define AF_CHPRST_PENDING   (u32)(0x00000008)
-+	#define AF_CHPRST_DETECTED  (u32)(0x00000010)
-+	#define AF_BUSRST_NEEDED    (u32)(0x00000020)
-+	#define AF_BUSRST_PENDING   (u32)(0x00000040)
-+	#define AF_BUSRST_DETECTED  (u32)(0x00000080)
-+	#define AF_DISABLED         (u32)(0x00000100)
-+	#define AF_FLASH_LOCK       (u32)(0x00000200)
-+	#define AF_OS_RESET         (u32)(0x00002000)
-+	#define AF_FLASHING         (u32)(0x00004000)
-+	#define AF_POWER_MGT        (u32)(0x00008000)
-+	#define AF_NVR_VALID        (u32)(0x00010000)
-+	#define AF_DEGRADED_MODE    (u32)(0x00020000)
-+	#define AF_DISC_PENDING     (u32)(0x00040000)
-+	#define AF_TASKLET_SCHEDULED    (u32)(0x00080000)
-+	#define AF_HEARTBEAT        (u32)(0x00200000)
-+	#define AF_HEARTBEAT_ENB    (u32)(0x00400000)
-+	#define AF_NOT_PRESENT      (u32)(0x00800000)
-+	#define AF_CHPRST_STARTED   (u32)(0x01000000)
-+	#define AF_FIRST_INIT       (u32)(0x02000000)
-+	#define AF_POWER_DOWN       (u32)(0x04000000)
-+	#define AF_DISC_IN_PROG     (u32)(0x08000000)
-+	#define AF_COMM_LIST_TOGGLE (u32)(0x10000000)
-+	#define AF_LEGACY_SGE_MODE  (u32)(0x20000000)
-+	#define AF_DISC_POLLED      (u32)(0x40000000)
-+	u32 volatile flags2;
-+	#define AF2_SERIAL_FLASH    (u32)(0x00000001)
-+	#define AF2_DEV_SCAN        (u32)(0x00000002)
-+	#define AF2_DEV_CNT_OK      (u32)(0x00000004)
-+	#define AF2_COREDUMP_AVAIL  (u32)(0x00000008)
-+	#define AF2_COREDUMP_SAVED  (u32)(0x00000010)
-+	#define AF2_VDA_POWER_DOWN  (u32)(0x00000100)
-+	#define AF2_THUNDERLINK     (u32)(0x00000200)
-+	#define AF2_THUNDERBOLT     (u32)(0x00000400)
-+	#define AF2_INIT_DONE       (u32)(0x00000800)
-+	#define AF2_INT_PENDING     (u32)(0x00001000)
-+	#define AF2_TIMER_TICK      (u32)(0x00002000)
-+	#define AF2_IRQ_CLAIMED     (u32)(0x00004000)
-+	#define AF2_MSI_ENABLED     (u32)(0x00008000)
-+	atomic_t disable_cnt;
-+	atomic_t dis_ints_cnt;
-+	u32 int_stat;
-+	u32 int_mask;
-+	u32 volatile *outbound_copy;
-+	struct list_head avail_request;
-+	spinlock_t request_lock;
-+	spinlock_t sg_list_lock;
-+	spinlock_t queue_lock;
-+	spinlock_t mem_lock;
-+	struct list_head free_sg_list_head;
-+	struct esas2r_mem_desc *free_sg_list;
-+	struct list_head active_list;
-+	struct list_head defer_list;
-+	struct esas2r_request **req_table;
-+	union {
-+		u16 prev_dev_cnt;
-+		u32 heartbeat_time;
-+	#define ESAS2R_HEARTBEAT_TIME       (3000)
-+	};
-+	u32 chip_uptime;
-+	#define ESAS2R_CHP_UPTIME_MAX       (60000)
-+	#define ESAS2R_CHP_UPTIME_CNT       (20000)
-+	u64 uncached_phys;
-+	u8 *uncached;
-+	struct esas2r_sas_nvram *nvram;
-+	struct esas2r_request general_req;
-+	u8 init_msg;
-+	#define ESAS2R_INIT_MSG_START       1
-+	#define ESAS2R_INIT_MSG_INIT        2
-+	#define ESAS2R_INIT_MSG_GET_INIT    3
-+	#define ESAS2R_INIT_MSG_REINIT      4
-+	u16 cmd_ref_no;
-+	u32 fw_version;
-+	u32 fw_build;
-+	u32 chip_init_time;
-+	#define ESAS2R_CHPRST_TIME         (180000)
-+	#define ESAS2R_CHPRST_WAIT_TIME    (2000)
-+	u32 last_tick_time;
-+	u32 window_base;
-+	RQBUILDSGL build_sgl;
-+	struct esas2r_request *first_ae_req;
-+	u32 list_size;
-+	u32 last_write;
-+	u32 last_read;
-+	u16 max_vdareq_size;
-+	u16 disc_wait_cnt;
-+	struct esas2r_mem_desc inbound_list_md;
-+	struct esas2r_mem_desc outbound_list_md;
-+	struct esas2r_disc_context disc_ctx;
-+	u8 *disc_buffer;
-+	u32 disc_start_time;
-+	u32 disc_wait_time;
-+	u32 flash_ver;
-+	char flash_rev[16];
-+	char fw_rev[16];
-+	char image_type[16];
-+	struct esas2r_flash_context flash_context;
-+	u32 num_targets_backend;
-+	u32 ioctl_tunnel;
-+	struct tasklet_struct tasklet;
-+	struct pci_dev *pcid;
-+	struct Scsi_Host *host;
-+	unsigned int index;
-+	char name[32];
-+	struct timer_list timer;
-+	struct esas2r_firmware firmware;
-+	wait_queue_head_t nvram_waiter;
-+	int nvram_command_done;
-+	wait_queue_head_t fm_api_waiter;
-+	int fm_api_command_done;
-+	wait_queue_head_t vda_waiter;
-+	int vda_command_done;
-+	u8 *vda_buffer;
-+	u64 ppvda_buffer;
-+#define VDA_BUFFER_HEADER_SZ (offsetof(struct atto_ioctl_vda, data))
-+#define VDA_MAX_BUFFER_SIZE  (0x40000 + VDA_BUFFER_HEADER_SZ)
-+	wait_queue_head_t fs_api_waiter;
-+	int fs_api_command_done;
-+	u64 ppfs_api_buffer;
-+	u8 *fs_api_buffer;
-+	u32 fs_api_buffer_size;
-+	wait_queue_head_t buffered_ioctl_waiter;
-+	int buffered_ioctl_done;
-+	int uncached_size;
-+	struct workqueue_struct *fw_event_q;
-+	struct list_head fw_event_list;
-+	spinlock_t fw_event_lock;
-+	u8 fw_events_off;                       /* if '1', then ignore events */
-+	char fw_event_q_name[ESAS2R_KOBJ_NAME_LEN];
-+	/*
-+	 * intr_mode stores the interrupt mode currently being used by this
-+	 * adapter. it is based on the interrupt_mode module parameter, but
-+	 * can be changed based on the ability (or not) to utilize the
-+	 * mode requested by the parameter.
-+	 */
-+	int intr_mode;
-+#define INTR_MODE_LEGACY 0
-+#define INTR_MODE_MSI    1
-+#define INTR_MODE_MSIX   2
-+	struct esas2r_sg_context fm_api_sgc;
-+	u8 *save_offset;
-+	struct list_head vrq_mds_head;
-+	struct esas2r_mem_desc *vrq_mds;
-+	int num_vrqs;
-+	struct semaphore fm_api_semaphore;
-+	struct semaphore fs_api_semaphore;
-+	struct semaphore nvram_semaphore;
-+	struct atto_ioctl *local_atto_ioctl;
-+	u8 fw_coredump_buff[ESAS2R_FWCOREDUMP_SZ];
-+	unsigned int sysfs_fw_created:1;
-+	unsigned int sysfs_fs_created:1;
-+	unsigned int sysfs_vda_created:1;
-+	unsigned int sysfs_hw_created:1;
-+	unsigned int sysfs_live_nvram_created:1;
-+	unsigned int sysfs_default_nvram_created:1;
-+};
-+
-+/*
-+ * Function Declarations
-+ * SCSI functions
-+ */
-+int esas2r_release(struct Scsi_Host *);
-+const char *esas2r_info(struct Scsi_Host *);
-+int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
-+			struct esas2r_sas_nvram *data);
-+int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg);
-+int esas2r_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
-+u8 handle_hba_ioctl(struct esas2r_adapter *a,
-+		    struct atto_ioctl *ioctl_hba);
-+int esas2r_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd);
-+int esas2r_show_info(struct seq_file *m, struct Scsi_Host *sh);
-+int esas2r_slave_alloc(struct scsi_device *dev);
-+int esas2r_slave_configure(struct scsi_device *dev);
-+void esas2r_slave_destroy(struct scsi_device *dev);
-+int esas2r_change_queue_depth(struct scsi_device *dev, int depth, int reason);
-+int esas2r_change_queue_type(struct scsi_device *dev, int type);
-+long esas2r_proc_ioctl(struct file *fp, unsigned int cmd, unsigned long arg);
-+
-+/* SCSI error handler (eh) functions */
-+int esas2r_eh_abort(struct scsi_cmnd *cmd);
-+int esas2r_device_reset(struct scsi_cmnd *cmd);
-+int esas2r_host_reset(struct scsi_cmnd *cmd);
-+int esas2r_bus_reset(struct scsi_cmnd *cmd);
-+int esas2r_target_reset(struct scsi_cmnd *cmd);
-+
-+/* Internal functions */
-+int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
-+			int index);
-+int esas2r_cleanup(struct Scsi_Host *host);
-+int esas2r_read_fw(struct esas2r_adapter *a, char *buf, long off, int count);
-+int esas2r_write_fw(struct esas2r_adapter *a, const char *buf, long off,
-+		    int count);
-+int esas2r_read_vda(struct esas2r_adapter *a, char *buf, long off, int count);
-+int esas2r_write_vda(struct esas2r_adapter *a, const char *buf, long off,
-+		     int count);
-+int esas2r_read_fs(struct esas2r_adapter *a, char *buf, long off, int count);
-+int esas2r_write_fs(struct esas2r_adapter *a, const char *buf, long off,
-+		    int count);
-+void esas2r_adapter_tasklet(unsigned long context);
-+irqreturn_t esas2r_interrupt(int irq, void *dev_id);
-+irqreturn_t esas2r_msi_interrupt(int irq, void *dev_id);
-+void esas2r_kickoff_timer(struct esas2r_adapter *a);
-+int esas2r_suspend(struct pci_dev *pcid, pm_message_t state);
-+int esas2r_resume(struct pci_dev *pcid);
-+void esas2r_fw_event_off(struct esas2r_adapter *a);
-+void esas2r_fw_event_on(struct esas2r_adapter *a);
-+bool esas2r_nvram_write(struct esas2r_adapter *a, struct esas2r_request *rq,
-+			struct esas2r_sas_nvram *nvram);
-+void esas2r_nvram_get_defaults(struct esas2r_adapter *a,
-+			       struct esas2r_sas_nvram *nvram);
-+void esas2r_complete_request_cb(struct esas2r_adapter *a,
-+				struct esas2r_request *rq);
-+void esas2r_reset_detected(struct esas2r_adapter *a);
-+void esas2r_target_state_changed(struct esas2r_adapter *ha, u16 targ_id,
-+				 u8 state);
-+int esas2r_req_status_to_error(u8 req_stat);
-+void esas2r_kill_adapter(int i);
-+void esas2r_free_request(struct esas2r_adapter *a, struct esas2r_request *rq);
-+struct esas2r_request *esas2r_alloc_request(struct esas2r_adapter *a);
-+u32 esas2r_get_uncached_size(struct esas2r_adapter *a);
-+bool esas2r_init_adapter_struct(struct esas2r_adapter *a,
-+				void **uncached_area);
-+bool esas2r_check_adapter(struct esas2r_adapter *a);
-+bool esas2r_init_adapter_hw(struct esas2r_adapter *a, bool init_poll);
-+void esas2r_start_request(struct esas2r_adapter *a, struct esas2r_request *rq);
-+bool esas2r_send_task_mgmt(struct esas2r_adapter *a,
-+			   struct esas2r_request *rqaux, u8 task_mgt_func);
-+void esas2r_do_tasklet_tasks(struct esas2r_adapter *a);
-+void esas2r_adapter_interrupt(struct esas2r_adapter *a);
-+void esas2r_do_deferred_processes(struct esas2r_adapter *a);
-+void esas2r_reset_bus(struct esas2r_adapter *a);
-+void esas2r_reset_adapter(struct esas2r_adapter *a);
-+void esas2r_timer_tick(struct esas2r_adapter *a);
-+const char *esas2r_get_model_name(struct esas2r_adapter *a);
-+const char *esas2r_get_model_name_short(struct esas2r_adapter *a);
-+u32 esas2r_stall_execution(struct esas2r_adapter *a, u32 start_time,
-+			   u32 *delay);
-+void esas2r_build_flash_req(struct esas2r_adapter *a,
-+			    struct esas2r_request *rq,
-+			    u8 sub_func,
-+			    u8 cksum,
-+			    u32 addr,
-+			    u32 length);
-+void esas2r_build_mgt_req(struct esas2r_adapter *a,
-+			  struct esas2r_request *rq,
-+			  u8 sub_func,
-+			  u8 scan_gen,
-+			  u16 dev_index,
-+			  u32 length,
-+			  void *data);
-+void esas2r_build_ae_req(struct esas2r_adapter *a, struct esas2r_request *rq);
-+void esas2r_build_cli_req(struct esas2r_adapter *a,
-+			  struct esas2r_request *rq,
-+			  u32 length,
-+			  u32 cmd_rsp_len);
-+void esas2r_build_ioctl_req(struct esas2r_adapter *a,
-+			    struct esas2r_request *rq,
-+			    u32 length,
-+			    u8 sub_func);
-+void esas2r_build_cfg_req(struct esas2r_adapter *a,
-+			  struct esas2r_request *rq,
-+			  u8 sub_func,
-+			  u32 length,
-+			  void *data);
-+void esas2r_power_down(struct esas2r_adapter *a);
-+bool esas2r_power_up(struct esas2r_adapter *a, bool init_poll);
-+void esas2r_wait_request(struct esas2r_adapter *a, struct esas2r_request *rq);
-+u32 esas2r_map_data_window(struct esas2r_adapter *a, u32 addr_lo);
-+bool esas2r_process_fs_ioctl(struct esas2r_adapter *a,
-+			     struct esas2r_ioctl_fs *fs,
-+			     struct esas2r_request *rq,
-+			     struct esas2r_sg_context *sgc);
-+bool esas2r_read_flash_block(struct esas2r_adapter *a, void *to, u32 from,
-+			     u32 size);
-+bool esas2r_read_mem_block(struct esas2r_adapter *a, void *to, u32 from,
-+			   u32 size);
-+bool esas2r_fm_api(struct esas2r_adapter *a, struct esas2r_flash_img *fi,
-+		   struct esas2r_request *rq, struct esas2r_sg_context *sgc);
-+void esas2r_force_interrupt(struct esas2r_adapter *a);
-+void esas2r_local_start_request(struct esas2r_adapter *a,
-+				struct esas2r_request *rq);
-+void esas2r_process_adapter_reset(struct esas2r_adapter *a);
-+void esas2r_complete_request(struct esas2r_adapter *a,
-+			     struct esas2r_request *rq);
-+void esas2r_dummy_complete(struct esas2r_adapter *a,
-+			   struct esas2r_request *rq);
-+void esas2r_ae_complete(struct esas2r_adapter *a, struct esas2r_request *rq);
-+void esas2r_start_vda_request(struct esas2r_adapter *a,
-+			      struct esas2r_request *rq);
-+bool esas2r_read_flash_rev(struct esas2r_adapter *a);
-+bool esas2r_read_image_type(struct esas2r_adapter *a);
-+bool esas2r_nvram_read_direct(struct esas2r_adapter *a);
-+bool esas2r_nvram_validate(struct esas2r_adapter *a);
-+void esas2r_nvram_set_defaults(struct esas2r_adapter *a);
-+bool esas2r_print_flash_rev(struct esas2r_adapter *a);
-+void esas2r_send_reset_ae(struct esas2r_adapter *a, bool pwr_mgt);
-+bool esas2r_init_msgs(struct esas2r_adapter *a);
-+bool esas2r_is_adapter_present(struct esas2r_adapter *a);
-+void esas2r_nuxi_mgt_data(u8 function, void *data);
-+void esas2r_nuxi_cfg_data(u8 function, void *data);
-+void esas2r_nuxi_ae_data(union atto_vda_ae *ae);
-+void esas2r_reset_chip(struct esas2r_adapter *a);
-+void esas2r_log_request_failure(struct esas2r_adapter *a,
-+				struct esas2r_request *rq);
-+void esas2r_polled_interrupt(struct esas2r_adapter *a);
-+bool esas2r_ioreq_aborted(struct esas2r_adapter *a, struct esas2r_request *rq,
-+			  u8 status);
-+bool esas2r_build_sg_list_sge(struct esas2r_adapter *a,
-+			      struct esas2r_sg_context *sgc);
-+bool esas2r_build_sg_list_prd(struct esas2r_adapter *a,
-+			      struct esas2r_sg_context *sgc);
-+void esas2r_targ_db_initialize(struct esas2r_adapter *a);
-+void esas2r_targ_db_remove_all(struct esas2r_adapter *a, bool notify);
-+void esas2r_targ_db_report_changes(struct esas2r_adapter *a);
-+struct esas2r_target *esas2r_targ_db_add_raid(struct esas2r_adapter *a,
-+					      struct esas2r_disc_context *dc);
-+struct esas2r_target *esas2r_targ_db_add_pthru(struct esas2r_adapter *a,
-+					       struct esas2r_disc_context *dc,
-+					       u8 *ident,
-+					       u8 ident_len);
-+void esas2r_targ_db_remove(struct esas2r_adapter *a, struct esas2r_target *t);
-+struct esas2r_target *esas2r_targ_db_find_by_sas_addr(struct esas2r_adapter *a,
-+						      u64 *sas_addr);
-+struct esas2r_target *esas2r_targ_db_find_by_ident(struct esas2r_adapter *a,
-+						   void *identifier,
-+						   u8 ident_len);
-+u16 esas2r_targ_db_find_next_present(struct esas2r_adapter *a, u16 target_id);
-+struct esas2r_target *esas2r_targ_db_find_by_virt_id(struct esas2r_adapter *a,
-+						     u16 virt_id);
-+u16 esas2r_targ_db_get_tgt_cnt(struct esas2r_adapter *a);
-+void esas2r_disc_initialize(struct esas2r_adapter *a);
-+void esas2r_disc_start_waiting(struct esas2r_adapter *a);
-+void esas2r_disc_check_for_work(struct esas2r_adapter *a);
-+void esas2r_disc_check_complete(struct esas2r_adapter *a);
-+void esas2r_disc_queue_event(struct esas2r_adapter *a, u8 disc_evt);
-+bool esas2r_disc_start_port(struct esas2r_adapter *a);
-+void esas2r_disc_local_start_request(struct esas2r_adapter *a,
-+				     struct esas2r_request *rq);
-+bool esas2r_set_degraded_mode(struct esas2r_adapter *a, char *error_str);
-+bool esas2r_process_vda_ioctl(struct esas2r_adapter *a,
-+			      struct atto_ioctl_vda *vi,
-+			      struct esas2r_request *rq,
-+			      struct esas2r_sg_context *sgc);
-+void esas2r_queue_fw_event(struct esas2r_adapter *a,
-+			   enum fw_event_type type,
-+			   void *data,
-+			   int data_sz);
-+
-+/* Inline functions */
-+static inline u32 esas2r_lock_set_flags(volatile u32 *flags, u32 bits)
++#include "esas2r.h"
++
++static bool esas2r_initmem_alloc(struct esas2r_adapter *a,
++				 struct esas2r_mem_desc *mem_desc,
++				 u32 align)
 +{
-+	return test_and_set_bit(ilog2(bits), (volatile unsigned long *)flags);
-+}
++	mem_desc->esas2r_param = mem_desc->size + align;
++	mem_desc->virt_addr = NULL;
++	mem_desc->phys_addr = 0;
++	mem_desc->esas2r_data = dma_alloc_coherent(&a->pcid->dev,
++						   (size_t)mem_desc->
++						   esas2r_param,
++						   (dma_addr_t *)&mem_desc->
++						   phys_addr,
++						   GFP_KERNEL);
 +
-+static inline u32 esas2r_lock_clear_flags(volatile u32 *flags, u32 bits)
-+{
-+	return test_and_clear_bit(ilog2(bits),
-+				  (volatile unsigned long *)flags);
-+}
-+
-+/* Allocate a chip scatter/gather list entry */
-+static inline struct esas2r_mem_desc *esas2r_alloc_sgl(struct esas2r_adapter *a)
-+{
-+	unsigned long flags;
-+	struct list_head *sgl;
-+	struct esas2r_mem_desc *result = NULL;
-+
-+	spin_lock_irqsave(&a->sg_list_lock, flags);
-+	if (likely(!list_empty(&a->free_sg_list_head))) {
-+		sgl = a->free_sg_list_head.next;
-+		result = list_entry(sgl, struct esas2r_mem_desc, next_desc);
-+		list_del_init(sgl);
++	if (mem_desc->esas2r_data == NULL) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "failed to allocate %lu bytes of consistent memory!",
++			   (long
++			    unsigned
++			    int)mem_desc->esas2r_param);
++		return false;
 +	}
-+	spin_unlock_irqrestore(&a->sg_list_lock, flags);
 +
-+	return result;
++	mem_desc->virt_addr = PTR_ALIGN(mem_desc->esas2r_data, align);
++	mem_desc->phys_addr = ALIGN(mem_desc->phys_addr, align);
++	memset(mem_desc->virt_addr, 0, mem_desc->size);
++	return true;
 +}
 +
-+/* Initialize a scatter/gather context */
-+static inline void esas2r_sgc_init(struct esas2r_sg_context *sgc,
-+				   struct esas2r_adapter *a,
-+				   struct esas2r_request *rq,
-+				   struct atto_vda_sge *first)
++static void esas2r_initmem_free(struct esas2r_adapter *a,
++				struct esas2r_mem_desc *mem_desc)
 +{
-+	sgc->adapter = a;
-+	sgc->first_req = rq;
-+
-+	/*
-+	 * set the limit pointer such that an SGE pointer above this value
-+	 * would be the first one to overflow the SGL.
-+	 */
-+	sgc->sge.a64.limit = (struct atto_vda_sge *)((u8 *)rq->vrq
-+						     + (sizeof(union
-+							       atto_vda_req) /
-+							8)
-+						     - sizeof(struct
-+							      atto_vda_sge));
-+	if (first) {
-+		sgc->sge.a64.last =
-+			sgc->sge.a64.curr = first;
-+		rq->vrq->scsi.sg_list_offset = (u8)
-+					       ((u8 *)first -
-+						(u8 *)rq->vrq);
-+	} else {
-+		sgc->sge.a64.last =
-+			sgc->sge.a64.curr = &rq->vrq->scsi.u.sge[0];
-+		rq->vrq->scsi.sg_list_offset =
-+			(u8)offsetof(struct atto_vda_scsi_req, u.sge);
-+	}
-+	sgc->sge.a64.chain = NULL;
-+}
-+
-+static inline void esas2r_rq_init_request(struct esas2r_request *rq,
-+					  struct esas2r_adapter *a)
-+{
-+	union atto_vda_req *vrq = rq->vrq;
-+	u32 handle;
-+
-+	INIT_LIST_HEAD(&rq->sg_table_head);
-+	rq->data_buf = (void *)(vrq + 1);
-+	rq->interrupt_cb = NULL;
-+	rq->comp_cb = esas2r_complete_request_cb;
-+	rq->flags = 0;
-+	rq->timeout = 0;
-+	rq->req_stat = RS_PENDING;
-+	rq->req_type = RT_INI_REQ;
-+
-+	/* clear the outbound response */
-+	rq->func_rsp.dwords[0] = 0;
-+	rq->func_rsp.dwords[1] = 0;
-+
-+	/*
-+	 * clear the size of the VDA request.  esas2r_build_sg_list() will
-+	 * only allow the size of the request to grow.  there are some
-+	 * management requests that go through there twice and the second
-+	 * time through sets a smaller request size.  if this is not modified
-+	 * at all we'll set it to the size of the entire VDA request.
-+	 */
-+	rq->vda_req_sz = RQ_SIZE_DEFAULT;
-+
-+	/* req_table entry should be NULL at this point - if not, halt */
-+
-+	if (a->req_table[LOWORD(vrq->scsi.handle)])
-+		esas2r_bugon();
-+
-+	/* fill in the table for this handle so we can get back to the
-+	 * request.
-+	 */
-+	a->req_table[LOWORD(vrq->scsi.handle)] = rq;
-+
-+	/*
-+	 * add a reference number to the handle to make it unique (until it
-+	 * wraps of course) while preserving the upper word
-+	 */
-+
-+	handle = be32_to_cpu(vrq->scsi.handle) & 0xFFFF0000;
-+	vrq->scsi.handle = cpu_to_be32(handle + a->cmd_ref_no++);
-+
-+	/*
-+	 * the following formats a SCSI request.  the caller can override as
-+	 * necessary.  clear_vda_request can be called to clear the VDA
-+	 * request for another type of request.
-+	 */
-+	vrq->scsi.function = VDA_FUNC_SCSI;
-+	vrq->scsi.sense_len = SENSE_DATA_SZ;
-+
-+	/* clear out sg_list_offset and chain_offset */
-+	vrq->scsi.sg_list_offset = 0;
-+	vrq->scsi.chain_offset = 0;
-+	vrq->scsi.flags = 0;
-+	vrq->scsi.reserved = 0;
-+
-+	/* set the sense buffer to be the data payload buffer */
-+	vrq->scsi.ppsense_buf
-+		= cpu_to_le64(rq->vrq_md->phys_addr +
-+			      sizeof(union atto_vda_req));
-+}
-+
-+static inline void esas2r_rq_free_sg_lists(struct esas2r_request *rq,
-+					   struct esas2r_adapter *a)
-+{
-+	unsigned long flags;
-+
-+	if (list_empty(&rq->sg_table_head))
++	if (mem_desc->virt_addr == NULL)
 +		return;
 +
-+	spin_lock_irqsave(&a->sg_list_lock, flags);
-+	list_splice_tail_init(&rq->sg_table_head, &a->free_sg_list_head);
-+	spin_unlock_irqrestore(&a->sg_list_lock, flags);
++	/*
++	 * Careful!  phys_addr and virt_addr may have been adjusted from the
++	 * original allocation in order to return the desired alignment.  That
++	 * means we have to use the original address (in esas2r_data) and size
++	 * (esas2r_param) and calculate the original physical address based on
++	 * the difference between the requested and actual allocation size.
++	 */
++	if (mem_desc->phys_addr) {
++		int unalign = ((u8 *)mem_desc->virt_addr) -
++			      ((u8 *)mem_desc->esas2r_data);
++
++		dma_free_coherent(&a->pcid->dev,
++				  (size_t)mem_desc->esas2r_param,
++				  mem_desc->esas2r_data,
++				  (dma_addr_t)(mem_desc->phys_addr - unalign));
++	} else {
++		kfree(mem_desc->esas2r_data);
++	}
++
++	mem_desc->virt_addr = NULL;
 +}
 +
-+static inline void esas2r_rq_destroy_request(struct esas2r_request *rq,
-+					     struct esas2r_adapter *a)
-+
++static bool alloc_vda_req(struct esas2r_adapter *a,
++			  struct esas2r_request *rq)
 +{
-+	esas2r_rq_free_sg_lists(rq, a);
-+	a->req_table[LOWORD(rq->vrq->scsi.handle)] = NULL;
-+	rq->data_buf = NULL;
-+}
++	struct esas2r_mem_desc *memdesc = kzalloc(
++		sizeof(struct esas2r_mem_desc), GFP_KERNEL);
 +
-+static inline bool esas2r_is_tasklet_pending(struct esas2r_adapter *a)
-+{
-+	return (a->flags & (AF_BUSRST_NEEDED | AF_BUSRST_DETECTED
-+			    | AF_CHPRST_NEEDED | AF_CHPRST_DETECTED
-+			    | AF_PORT_CHANGE))
-+	       ? true : false;
-+}
-+
-+/*
-+ * Build the scatter/gather list for an I/O request according to the
-+ * specifications placed in the esas2r_sg_context.  The caller must initialize
-+ * struct esas2r_sg_context prior to the initial call by calling
-+ * esas2r_sgc_init()
-+ */
-+static inline bool esas2r_build_sg_list(struct esas2r_adapter *a,
-+					struct esas2r_request *rq,
-+					struct esas2r_sg_context *sgc)
-+{
-+	if (unlikely(le32_to_cpu(rq->vrq->scsi.length) == 0))
-+		return true;
-+
-+	return (*a->build_sgl)(a, sgc);
-+}
-+
-+static inline void esas2r_disable_chip_interrupts(struct esas2r_adapter *a)
-+{
-+	if (atomic_inc_return(&a->dis_ints_cnt) == 1)
-+		esas2r_write_register_dword(a, MU_INT_MASK_OUT,
-+					    ESAS2R_INT_DIS_MASK);
-+}
-+
-+static inline void esas2r_enable_chip_interrupts(struct esas2r_adapter *a)
-+{
-+	if (atomic_dec_return(&a->dis_ints_cnt) == 0)
-+		esas2r_write_register_dword(a, MU_INT_MASK_OUT,
-+					    ESAS2R_INT_ENB_MASK);
-+}
-+
-+/* Schedule a TASKLET to perform non-interrupt tasks that may require delays
-+ * or long completion times.
-+ */
-+static inline void esas2r_schedule_tasklet(struct esas2r_adapter *a)
-+{
-+	/* make sure we don't schedule twice */
-+	if (!(esas2r_lock_set_flags(&a->flags, AF_TASKLET_SCHEDULED) &
-+	      ilog2(AF_TASKLET_SCHEDULED)))
-+		tasklet_hi_schedule(&a->tasklet);
-+}
-+
-+static inline void esas2r_enable_heartbeat(struct esas2r_adapter *a)
-+{
-+	if (!(a->flags & (AF_DEGRADED_MODE | AF_CHPRST_PENDING))
-+	    && (a->nvram->options2 & SASNVR2_HEARTBEAT))
-+		esas2r_lock_set_flags(&a->flags, AF_HEARTBEAT_ENB);
-+	else
-+		esas2r_lock_clear_flags(&a->flags, AF_HEARTBEAT_ENB);
-+}
-+
-+static inline void esas2r_disable_heartbeat(struct esas2r_adapter *a)
-+{
-+	esas2r_lock_clear_flags(&a->flags, AF_HEARTBEAT_ENB);
-+	esas2r_lock_clear_flags(&a->flags, AF_HEARTBEAT);
-+}
-+
-+/* Set the initial state for resetting the adapter on the next pass through
-+ * esas2r_do_deferred.
-+ */
-+static inline void esas2r_local_reset_adapter(struct esas2r_adapter *a)
-+{
-+	esas2r_disable_heartbeat(a);
-+
-+	esas2r_lock_set_flags(&a->flags, AF_CHPRST_NEEDED);
-+	esas2r_lock_set_flags(&a->flags, AF_CHPRST_PENDING);
-+	esas2r_lock_set_flags(&a->flags, AF_DISC_PENDING);
-+}
-+
-+/* See if an interrupt is pending on the adapter. */
-+static inline bool esas2r_adapter_interrupt_pending(struct esas2r_adapter *a)
-+{
-+	u32 intstat;
-+
-+	if (a->int_mask == 0)
++	if (memdesc == NULL) {
++		esas2r_hdebug("could not alloc mem for vda request memdesc\n");
 +		return false;
++	}
 +
-+	intstat = esas2r_read_register_dword(a, MU_INT_STATUS_OUT);
++	memdesc->size = sizeof(union atto_vda_req) +
++			ESAS2R_DATA_BUF_LEN;
 +
-+	if ((intstat & a->int_mask) == 0)
++	if (!esas2r_initmem_alloc(a, memdesc, 256)) {
++		esas2r_hdebug("could not alloc mem for vda request\n");
++		kfree(memdesc);
 +		return false;
++	}
 +
-+	esas2r_disable_chip_interrupts(a);
++	a->num_vrqs++;
++	list_add(&memdesc->next_desc, &a->vrq_mds_head);
 +
-+	a->int_stat = intstat;
-+	a->int_mask = 0;
++	rq->vrq_md = memdesc;
++	rq->vrq = (union atto_vda_req *)memdesc->virt_addr;
++	rq->vrq->scsi.handle = a->num_vrqs;
 +
 +	return true;
 +}
 +
-+static inline u16 esas2r_targ_get_id(struct esas2r_target *t,
-+				     struct esas2r_adapter *a)
++static void esas2r_unmap_regions(struct esas2r_adapter *a)
 +{
-+	return (u16)(uintptr_t)(t - a->targetdb);
++	if (a->regs)
++		iounmap((void __iomem *)a->regs);
++
++	a->regs = NULL;
++
++	pci_release_region(a->pcid, 2);
++
++	if (a->data_window)
++		iounmap((void __iomem *)a->data_window);
++
++	a->data_window = NULL;
++
++	pci_release_region(a->pcid, 0);
 +}
 +
-+/*  Build and start an asynchronous event request */
-+static inline void esas2r_start_ae_request(struct esas2r_adapter *a,
-+					   struct esas2r_request *rq)
++static int esas2r_map_regions(struct esas2r_adapter *a)
 +{
-+	unsigned long flags;
++	int error;
 +
-+	esas2r_build_ae_req(a, rq);
++	a->regs = NULL;
++	a->data_window = NULL;
 +
-+	spin_lock_irqsave(&a->queue_lock, flags);
-+	esas2r_start_vda_request(a, rq);
-+	spin_unlock_irqrestore(&a->queue_lock, flags);
++	error = pci_request_region(a->pcid, 2, a->name);
++	if (error != 0) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "pci_request_region(2) failed, error %d",
++			   error);
++
++		return error;
++	}
++
++	a->regs = (void __force *)ioremap(pci_resource_start(a->pcid, 2),
++					  pci_resource_len(a->pcid, 2));
++	if (a->regs == NULL) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "ioremap failed for regs mem region\n");
++		pci_release_region(a->pcid, 2);
++		return -EFAULT;
++	}
++
++	error = pci_request_region(a->pcid, 0, a->name);
++	if (error != 0) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "pci_request_region(2) failed, error %d",
++			   error);
++		esas2r_unmap_regions(a);
++		return error;
++	}
++
++	a->data_window = (void __force *)ioremap(pci_resource_start(a->pcid,
++								    0),
++						 pci_resource_len(a->pcid, 0));
++	if (a->data_window == NULL) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "ioremap failed for data_window mem region\n");
++		esas2r_unmap_regions(a);
++		return -EFAULT;
++	}
++
++	return 0;
 +}
 +
-+static inline void esas2r_comp_list_drain(struct esas2r_adapter *a,
-+					  struct list_head *comp_list)
++static void esas2r_setup_interrupts(struct esas2r_adapter *a, int intr_mode)
 +{
-+	struct esas2r_request *rq;
-+	struct list_head *element, *next;
++	int i;
 +
-+	list_for_each_safe(element, next, comp_list) {
-+		rq = list_entry(element, struct esas2r_request, comp_list);
-+		list_del_init(element);
-+		esas2r_complete_request(a, rq);
++	/* Set up interrupt mode based on the requested value */
++	switch (intr_mode) {
++	case INTR_MODE_LEGACY:
++use_legacy_interrupts:
++		a->intr_mode = INTR_MODE_LEGACY;
++		break;
++
++	case INTR_MODE_MSI:
++		i = pci_enable_msi(a->pcid);
++		if (i != 0) {
++			esas2r_log(ESAS2R_LOG_WARN,
++				   "failed to enable MSI for adapter %d, "
++				   "falling back to legacy interrupts "
++				   "(err=%d)", a->index,
++				   i);
++			goto use_legacy_interrupts;
++		}
++		a->intr_mode = INTR_MODE_MSI;
++		esas2r_lock_set_flags(&a->flags2, AF2_MSI_ENABLED);
++		break;
++
++
++	default:
++		esas2r_log(ESAS2R_LOG_WARN,
++			   "unknown interrupt_mode %d requested, "
++			   "falling back to legacy interrupt",
++			   interrupt_mode);
++		goto use_legacy_interrupts;
 +	}
 +}
 +
-+/* sysfs handlers */
-+extern struct bin_attribute bin_attr_fw;
-+extern struct bin_attribute bin_attr_fs;
-+extern struct bin_attribute bin_attr_vda;
-+extern struct bin_attribute bin_attr_hw;
-+extern struct bin_attribute bin_attr_live_nvram;
-+extern struct bin_attribute bin_attr_default_nvram;
++static void esas2r_claim_interrupts(struct esas2r_adapter *a)
++{
++	unsigned long flags = IRQF_DISABLED;
 +
-+#endif /* ESAS2R_H */
++	if (a->intr_mode == INTR_MODE_LEGACY)
++		flags |= IRQF_SHARED;
++
++	esas2r_log(ESAS2R_LOG_INFO,
++		   "esas2r_claim_interrupts irq=%d (%p, %s, %x)",
++		   a->pcid->irq, a, a->name, flags);
++
++	if (request_irq(a->pcid->irq,
++			(a->intr_mode ==
++			 INTR_MODE_LEGACY) ? esas2r_interrupt :
++			esas2r_msi_interrupt,
++			flags,
++			a->name,
++			a)) {
++		esas2r_log(ESAS2R_LOG_CRIT, "unable to request IRQ %02X",
++			   a->pcid->irq);
++		return;
++	}
++
++	esas2r_lock_set_flags(&a->flags2, AF2_IRQ_CLAIMED);
++	esas2r_log(ESAS2R_LOG_INFO,
++		   "claimed IRQ %d flags: 0x%lx",
++		   a->pcid->irq, flags);
++}
++
++int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
++			int index)
++{
++	struct esas2r_adapter *a;
++	u64 bus_addr = 0;
++	int i;
++	void *next_uncached;
++	struct esas2r_request *first_request, *last_request;
++
++	if (index >= MAX_ADAPTERS) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "tried to init invalid adapter index %u!",
++			   index);
++		return 0;
++	}
++
++	if (esas2r_adapters[index]) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "tried to init existing adapter index %u!",
++			   index);
++		return 0;
++	}
++
++	a = (struct esas2r_adapter *)host->hostdata;
++	memset(a, 0, sizeof(struct esas2r_adapter));
++	a->pcid = pcid;
++	a->host = host;
++
++	if (sizeof(dma_addr_t) > 4) {
++		const uint64_t required_mask = dma_get_required_mask
++						       (&pcid->dev);
++		if (required_mask > DMA_BIT_MASK(32)
++		    && !pci_set_dma_mask(pcid, DMA_BIT_MASK(64))
++		    && !pci_set_consistent_dma_mask(pcid,
++						    DMA_BIT_MASK(64))) {
++			esas2r_log_dev(ESAS2R_LOG_INFO,
++				       &(a->pcid->dev),
++				       "64-bit PCI addressing enabled\n");
++		} else if (!pci_set_dma_mask(pcid, DMA_BIT_MASK(32))
++			   && !pci_set_consistent_dma_mask(pcid,
++							   DMA_BIT_MASK(32))) {
++			esas2r_log_dev(ESAS2R_LOG_INFO,
++				       &(a->pcid->dev),
++				       "32-bit PCI addressing enabled\n");
++		} else {
++			esas2r_log(ESAS2R_LOG_CRIT,
++				   "failed to set DMA mask");
++			esas2r_kill_adapter(index);
++			return 0;
++		}
++	} else {
++		if (!pci_set_dma_mask(pcid, DMA_BIT_MASK(32))
++		    && !pci_set_consistent_dma_mask(pcid,
++						    DMA_BIT_MASK(32))) {
++			esas2r_log_dev(ESAS2R_LOG_INFO,
++				       &(a->pcid->dev),
++				       "32-bit PCI addressing enabled\n");
++		} else {
++			esas2r_log(ESAS2R_LOG_CRIT,
++				   "failed to set DMA mask");
++			esas2r_kill_adapter(index);
++			return 0;
++		}
++	}
++	esas2r_adapters[index] = a;
++	sprintf(a->name, ESAS2R_DRVR_NAME "_%02d", index);
++	esas2r_debug("new adapter %p, name %s", a, a->name);
++	spin_lock_init(&a->request_lock);
++	spin_lock_init(&a->fw_event_lock);
++	sema_init(&a->fm_api_semaphore, 1);
++	sema_init(&a->fs_api_semaphore, 1);
++	sema_init(&a->nvram_semaphore, 1);
++
++	esas2r_fw_event_off(a);
++	snprintf(a->fw_event_q_name, ESAS2R_KOBJ_NAME_LEN, "esas2r/%d",
++		 a->index);
++	a->fw_event_q = create_singlethread_workqueue(a->fw_event_q_name);
++
++	init_waitqueue_head(&a->buffered_ioctl_waiter);
++	init_waitqueue_head(&a->nvram_waiter);
++	init_waitqueue_head(&a->fm_api_waiter);
++	init_waitqueue_head(&a->fs_api_waiter);
++	init_waitqueue_head(&a->vda_waiter);
++
++	INIT_LIST_HEAD(&a->general_req.req_list);
++	INIT_LIST_HEAD(&a->active_list);
++	INIT_LIST_HEAD(&a->defer_list);
++	INIT_LIST_HEAD(&a->free_sg_list_head);
++	INIT_LIST_HEAD(&a->avail_request);
++	INIT_LIST_HEAD(&a->vrq_mds_head);
++	INIT_LIST_HEAD(&a->fw_event_list);
++
++	first_request = (struct esas2r_request *)((u8 *)(a + 1));
++
++	for (last_request = first_request, i = 1; i < num_requests;
++	     last_request++, i++) {
++		INIT_LIST_HEAD(&last_request->req_list);
++		list_add_tail(&last_request->comp_list, &a->avail_request);
++		if (!alloc_vda_req(a, last_request)) {
++			esas2r_log(ESAS2R_LOG_CRIT,
++				   "failed to allocate a VDA request!");
++			esas2r_kill_adapter(index);
++			return 0;
++		}
++	}
++
++	esas2r_debug("requests: %p to %p (%d, %d)", first_request,
++		     last_request,
++		     sizeof(*first_request),
++		     num_requests);
++
++	if (esas2r_map_regions(a) != 0) {
++		esas2r_log(ESAS2R_LOG_CRIT, "could not map PCI regions!");
++		esas2r_kill_adapter(index);
++		return 0;
++	}
++
++	a->index = index;
++
++	/* interrupts will be disabled until we are done with init */
++	atomic_inc(&a->dis_ints_cnt);
++	atomic_inc(&a->disable_cnt);
++	a->flags |= AF_CHPRST_PENDING
++		    | AF_DISC_PENDING
++		    | AF_FIRST_INIT
++		    | AF_LEGACY_SGE_MODE;
++
++	a->init_msg = ESAS2R_INIT_MSG_START;
++	a->max_vdareq_size = 128;
++	a->build_sgl = esas2r_build_sg_list_sge;
++
++	esas2r_setup_interrupts(a, interrupt_mode);
++
++	a->uncached_size = esas2r_get_uncached_size(a);
++	a->uncached = dma_alloc_coherent(&pcid->dev,
++					 (size_t)a->uncached_size,
++					 (dma_addr_t *)&bus_addr,
++					 GFP_KERNEL);
++	if (a->uncached == NULL) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "failed to allocate %d bytes of consistent memory!",
++			   a->uncached_size);
++		esas2r_kill_adapter(index);
++		return 0;
++	}
++
++	a->uncached_phys = bus_addr;
++
++	esas2r_debug("%d bytes uncached memory allocated @ %p (%x:%x)",
++		     a->uncached_size,
++		     a->uncached,
++		     upper_32_bits(bus_addr),
++		     lower_32_bits(bus_addr));
++	memset(a->uncached, 0, a->uncached_size);
++	next_uncached = a->uncached;
++
++	if (!esas2r_init_adapter_struct(a,
++					&next_uncached)) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "failed to initialize adapter structure (2)!");
++		esas2r_kill_adapter(index);
++		return 0;
++	}
++
++	tasklet_init(&a->tasklet,
++		     esas2r_adapter_tasklet,
++		     (unsigned long)a);
++
++	/*
++	 * Disable chip interrupts to prevent spurious interrupts
++	 * until we claim the IRQ.
++	 */
++	esas2r_disable_chip_interrupts(a);
++	esas2r_check_adapter(a);
++
++	if (!esas2r_init_adapter_hw(a, true))
++		esas2r_log(ESAS2R_LOG_CRIT, "failed to initialize hardware!");
++	else
++		esas2r_debug("esas2r_init_adapter ok");
++
++	esas2r_claim_interrupts(a);
++
++	if (a->flags2 & AF2_IRQ_CLAIMED)
++		esas2r_enable_chip_interrupts(a);
++
++	esas2r_lock_set_flags(&a->flags2, AF2_INIT_DONE);
++	if (!(a->flags & AF_DEGRADED_MODE))
++		esas2r_kickoff_timer(a);
++	esas2r_debug("esas2r_init_adapter done for %p (%d)",
++		     a, a->disable_cnt);
++
++	return 1;
++}
++
++static void esas2r_adapter_power_down(struct esas2r_adapter *a,
++				      int power_management)
++{
++	struct esas2r_mem_desc *memdesc, *next;
++
++	if ((a->flags2 & AF2_INIT_DONE)
++	    &&  (!(a->flags & AF_DEGRADED_MODE))) {
++		if (!power_management) {
++			del_timer_sync(&a->timer);
++			tasklet_kill(&a->tasklet);
++		}
++		esas2r_power_down(a);
++
++		/*
++		 * There are versions of firmware that do not handle the sync
++		 * cache command correctly.  Stall here to ensure that the
++		 * cache is lazily flushed.
++		 */
++		mdelay(500);
++		esas2r_debug("chip halted");
++	}
++
++	/* Remove sysfs binary files */
++	if (a->sysfs_fw_created) {
++		sysfs_remove_bin_file(&a->host->shost_dev.kobj, &bin_attr_fw);
++		a->sysfs_fw_created = 0;
++	}
++
++	if (a->sysfs_fs_created) {
++		sysfs_remove_bin_file(&a->host->shost_dev.kobj, &bin_attr_fs);
++		a->sysfs_fs_created = 0;
++	}
++
++	if (a->sysfs_vda_created) {
++		sysfs_remove_bin_file(&a->host->shost_dev.kobj, &bin_attr_vda);
++		a->sysfs_vda_created = 0;
++	}
++
++	if (a->sysfs_hw_created) {
++		sysfs_remove_bin_file(&a->host->shost_dev.kobj, &bin_attr_hw);
++		a->sysfs_hw_created = 0;
++	}
++
++	if (a->sysfs_live_nvram_created) {
++		sysfs_remove_bin_file(&a->host->shost_dev.kobj,
++				      &bin_attr_live_nvram);
++		a->sysfs_live_nvram_created = 0;
++	}
++
++	if (a->sysfs_default_nvram_created) {
++		sysfs_remove_bin_file(&a->host->shost_dev.kobj,
++				      &bin_attr_default_nvram);
++		a->sysfs_default_nvram_created = 0;
++	}
++
++	/* Clean up interrupts */
++	if (a->flags2 & AF2_IRQ_CLAIMED) {
++		esas2r_log_dev(ESAS2R_LOG_INFO,
++			       &(a->pcid->dev),
++			       "free_irq(%d) called", a->pcid->irq);
++
++		free_irq(a->pcid->irq, a);
++		esas2r_debug("IRQ released");
++		esas2r_lock_clear_flags(&a->flags2, AF2_IRQ_CLAIMED);
++	}
++
++	if (a->flags2 & AF2_MSI_ENABLED) {
++		pci_disable_msi(a->pcid);
++		esas2r_lock_clear_flags(&a->flags2, AF2_MSI_ENABLED);
++		esas2r_debug("MSI disabled");
++	}
++
++	if (a->inbound_list_md.virt_addr)
++		esas2r_initmem_free(a, &a->inbound_list_md);
++
++	if (a->outbound_list_md.virt_addr)
++		esas2r_initmem_free(a, &a->outbound_list_md);
++
++	list_for_each_entry_safe(memdesc, next, &a->free_sg_list_head,
++				 next_desc) {
++		esas2r_initmem_free(a, memdesc);
++	}
++
++	list_for_each_entry_safe(memdesc, next, &a->vrq_mds_head, next_desc) {
++		esas2r_initmem_free(a, memdesc);
++		list_del(&memdesc->next_desc);
++		kfree(memdesc);
++	}
++
++	kfree(a->first_ae_req);
++	a->first_ae_req = NULL;
++
++	kfree(a->free_sg_list);
++	a->free_sg_list = NULL;
++
++	kfree(a->req_table);
++	a->req_table = NULL;
++
++	if (a->regs) {
++		esas2r_unmap_regions(a);
++		a->regs = NULL;
++		a->data_window = NULL;
++		esas2r_debug("regions unmapped");
++	}
++}
++
++/* Release/free allocated resources for specified adapters. */
++void esas2r_kill_adapter(int i)
++{
++	struct esas2r_adapter *a = esas2r_adapters[i];
++
++	if (a) {
++		unsigned long flags;
++		struct workqueue_struct *wq;
++		esas2r_debug("killing adapter %p [%d] ", a, i);
++		esas2r_fw_event_off(a);
++		esas2r_adapter_power_down(a, 0);
++		if (esas2r_buffered_ioctl &&
++		    (a->pcid == esas2r_buffered_ioctl_pcid)) {
++			dma_free_coherent(&a->pcid->dev,
++					  (size_t)esas2r_buffered_ioctl_size,
++					  esas2r_buffered_ioctl,
++					  esas2r_buffered_ioctl_addr);
++			esas2r_buffered_ioctl = NULL;
++		}
++
++		if (a->vda_buffer) {
++			dma_free_coherent(&a->pcid->dev,
++					  (size_t)VDA_MAX_BUFFER_SIZE,
++					  a->vda_buffer,
++					  (dma_addr_t)a->ppvda_buffer);
++			a->vda_buffer = NULL;
++		}
++		if (a->fs_api_buffer) {
++			dma_free_coherent(&a->pcid->dev,
++					  (size_t)a->fs_api_buffer_size,
++					  a->fs_api_buffer,
++					  (dma_addr_t)a->ppfs_api_buffer);
++			a->fs_api_buffer = NULL;
++		}
++
++		kfree(a->local_atto_ioctl);
++		a->local_atto_ioctl = NULL;
++
++		spin_lock_irqsave(&a->fw_event_lock, flags);
++		wq = a->fw_event_q;
++		a->fw_event_q = NULL;
++		spin_unlock_irqrestore(&a->fw_event_lock, flags);
++		if (wq)
++			destroy_workqueue(wq);
++
++		if (a->uncached) {
++			dma_free_coherent(&a->pcid->dev,
++					  (size_t)a->uncached_size,
++					  a->uncached,
++					  (dma_addr_t)a->uncached_phys);
++			a->uncached = NULL;
++			esas2r_debug("uncached area freed");
++		}
++
++		esas2r_log_dev(ESAS2R_LOG_INFO,
++			       &(a->pcid->dev),
++			       "pci_disable_device() called.  msix_enabled: %d "
++			       "msi_enabled: %d irq: %d pin: %d",
++			       a->pcid->msix_enabled,
++			       a->pcid->msi_enabled,
++			       a->pcid->irq,
++			       a->pcid->pin);
++
++		esas2r_log_dev(ESAS2R_LOG_INFO,
++			       &(a->pcid->dev),
++			       "before pci_disable_device() enable_cnt: %d",
++			       a->pcid->enable_cnt.counter);
++
++		pci_disable_device(a->pcid);
++		esas2r_log_dev(ESAS2R_LOG_INFO,
++			       &(a->pcid->dev),
++			       "after pci_disable_device() enable_cnt: %d",
++			       a->pcid->enable_cnt.counter);
++
++		esas2r_log_dev(ESAS2R_LOG_INFO,
++			       &(a->pcid->dev),
++			       "pci_set_drv_data(%p, NULL) called",
++			       a->pcid);
++
++		pci_set_drvdata(a->pcid, NULL);
++		esas2r_adapters[i] = NULL;
++
++		if (a->flags2 & AF2_INIT_DONE) {
++			esas2r_lock_clear_flags(&a->flags2,
++						AF2_INIT_DONE);
++
++			esas2r_lock_set_flags(&a->flags,
++					      AF_DEGRADED_MODE);
++
++			esas2r_log_dev(ESAS2R_LOG_INFO,
++				       &(a->host->shost_gendev),
++				       "scsi_remove_host() called");
++
++			scsi_remove_host(a->host);
++
++			esas2r_log_dev(ESAS2R_LOG_INFO,
++				       &(a->host->shost_gendev),
++				       "scsi_host_put() called");
++
++			scsi_host_put(a->host);
++		}
++	}
++}
++
++int esas2r_cleanup(struct Scsi_Host *host)
++{
++	struct esas2r_adapter *a = (struct esas2r_adapter *)host->hostdata;
++	int index;
++
++	if (host == NULL) {
++		int i;
++
++		esas2r_debug("esas2r_cleanup everything");
++		for (i = 0; i < MAX_ADAPTERS; i++)
++			esas2r_kill_adapter(i);
++		return -1;
++	}
++
++	esas2r_debug("esas2r_cleanup called for host %p", host);
++	index = a->index;
++	esas2r_kill_adapter(index);
++	return index;
++}
++
++int esas2r_suspend(struct pci_dev *pdev, pm_message_t state)
++{
++	struct Scsi_Host *host = pci_get_drvdata(pdev);
++	u32 device_state;
++	struct esas2r_adapter *a = (struct esas2r_adapter *)host->hostdata;
++
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev), "suspending adapter()");
++	if (!a)
++		return -ENODEV;
++
++	esas2r_adapter_power_down(a, 1);
++	device_state = pci_choose_state(pdev, state);
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
++		       "pci_save_state() called");
++	pci_save_state(pdev);
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
++		       "pci_disable_device() called");
++	pci_disable_device(pdev);
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
++		       "pci_set_power_state() called");
++	pci_set_power_state(pdev, device_state);
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev), "esas2r_suspend(): 0");
++	return 0;
++}
++
++int esas2r_resume(struct pci_dev *pdev)
++{
++	struct Scsi_Host *host = pci_get_drvdata(pdev);
++	struct esas2r_adapter *a = (struct esas2r_adapter *)host->hostdata;
++	int rez;
++
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev), "resuming adapter()");
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
++		       "pci_set_power_state(PCI_D0) "
++		       "called");
++	pci_set_power_state(pdev, PCI_D0);
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
++		       "pci_enable_wake(PCI_D0, 0) "
++		       "called");
++	pci_enable_wake(pdev, PCI_D0, 0);
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
++		       "pci_restore_state() called");
++	pci_restore_state(pdev);
++	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
++		       "pci_enable_device() called");
++	rez = pci_enable_device(pdev);
++	pci_set_master(pdev);
++
++	if (!a) {
++		rez = -ENODEV;
++		goto error_exit;
++	}
++
++	if (esas2r_map_regions(a) != 0) {
++		esas2r_log(ESAS2R_LOG_CRIT, "could not re-map PCI regions!");
++		rez = -ENOMEM;
++		goto error_exit;
++	}
++
++	/* Set up interupt mode */
++	esas2r_setup_interrupts(a, a->intr_mode);
++
++	/*
++	 * Disable chip interrupts to prevent spurious interrupts until we
++	 * claim the IRQ.
++	 */
++	esas2r_disable_chip_interrupts(a);
++	if (!esas2r_power_up(a, true)) {
++		esas2r_debug("yikes, esas2r_power_up failed");
++		rez = -ENOMEM;
++		goto error_exit;
++	}
++
++	esas2r_claim_interrupts(a);
++
++	if (a->flags2 & AF2_IRQ_CLAIMED) {
++		/*
++		 * Now that system interrupt(s) are claimed, we can enable
++		 * chip interrupts.
++		 */
++		esas2r_enable_chip_interrupts(a);
++		esas2r_kickoff_timer(a);
++	} else {
++		esas2r_debug("yikes, unable to claim IRQ");
++		esas2r_log(ESAS2R_LOG_CRIT, "could not re-claim IRQ!");
++		rez = -ENOMEM;
++		goto error_exit;
++	}
++
++error_exit:
++	esas2r_log_dev(ESAS2R_LOG_CRIT, &(pdev->dev), "esas2r_resume(): %d",
++		       rez);
++	return rez;
++}
++
++bool esas2r_set_degraded_mode(struct esas2r_adapter *a, char *error_str)
++{
++	esas2r_lock_set_flags(&a->flags, AF_DEGRADED_MODE);
++	esas2r_log(ESAS2R_LOG_CRIT,
++		   "setting adapter to degraded mode: %s\n", error_str);
++	return false;
++}
++
++u32 esas2r_get_uncached_size(struct esas2r_adapter *a)
++{
++	return sizeof(struct esas2r_sas_nvram)
++	       + ALIGN(ESAS2R_DISC_BUF_LEN, 8)
++	       + ALIGN(sizeof(u32), 8) /* outbound list copy pointer */
++	       + 8
++	       + (num_sg_lists * (u16)sgl_page_size)
++	       + ALIGN((num_requests + num_ae_requests + 1 +
++			ESAS2R_LIST_EXTRA) *
++		       sizeof(struct esas2r_inbound_list_source_entry),
++		       8)
++	       + ALIGN((num_requests + num_ae_requests + 1 +
++			ESAS2R_LIST_EXTRA) *
++		       sizeof(struct atto_vda_ob_rsp), 8)
++	       + 256; /* VDA request and buffer align */
++}
++
++static void esas2r_init_pci_cfg_space(struct esas2r_adapter *a)
++{
++	int pcie_cap_reg;
++
++	pcie_cap_reg = pci_find_capability(a->pcid, PCI_CAP_ID_EXP);
++	if (0xffff && pcie_cap_reg) {
++		u16 devcontrol;
++
++		pci_read_config_word(a->pcid, pcie_cap_reg + PCI_EXP_DEVCTL,
++				     &devcontrol);
++
++		if ((devcontrol & PCI_EXP_DEVCTL_READRQ) > 0x2000) {
++			esas2r_log(ESAS2R_LOG_INFO,
++				   "max read request size > 512B");
++
++			devcontrol &= ~PCI_EXP_DEVCTL_READRQ;
++			devcontrol |= 0x2000;
++			pci_write_config_word(a->pcid,
++					      pcie_cap_reg + PCI_EXP_DEVCTL,
++					      devcontrol);
++		}
++	}
++}
++
++/*
++ * Determine the organization of the uncached data area and
++ * finish initializing the adapter structure
++ */
++bool esas2r_init_adapter_struct(struct esas2r_adapter *a,
++				void **uncached_area)
++{
++	u32 i;
++	u8 *high;
++	struct esas2r_inbound_list_source_entry *element;
++	struct esas2r_request *rq;
++	struct esas2r_mem_desc *sgl;
++
++	spin_lock_init(&a->sg_list_lock);
++	spin_lock_init(&a->mem_lock);
++	spin_lock_init(&a->queue_lock);
++
++	a->targetdb_end = &a->targetdb[ESAS2R_MAX_TARGETS];
++
++	if (!alloc_vda_req(a, &a->general_req)) {
++		esas2r_hdebug(
++			"failed to allocate a VDA request for the general req!");
++		return false;
++	}
++
++	/* allocate requests for asynchronous events */
++	a->first_ae_req =
++		kzalloc(num_ae_requests * sizeof(struct esas2r_request),
++			GFP_KERNEL);
++
++	if (a->first_ae_req == NULL) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "failed to allocate memory for asynchronous events");
++		return false;
++	}
++
++	/* allocate the S/G list descriptors */
++	a->free_sg_list = kzalloc(
++		num_sg_lists * sizeof(struct esas2r_mem_desc), GFP_KERNEL);
++
++	if (a->free_sg_list == NULL) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "failed to allocate memory for s/g list descriptors");
++		return false;
++	}
++
++	/* allocate the request table */
++	a->req_table =
++		kzalloc((num_requests + num_ae_requests +
++			 1) * sizeof(struct esas2r_request *), GFP_KERNEL);
++
++	if (a->req_table == NULL) {
++		esas2r_log(ESAS2R_LOG_CRIT,
++			   "failed to allocate memory for the request table");
++		return false;
++	}
++
++	/* initialize PCI configuration space */
++	esas2r_init_pci_cfg_space(a);
++
++	/*
++	 * the thunder_stream boards all have a serial flash part that has a
++	 * different base address on the AHB bus.
++	 */
++	if ((a->pcid->subsystem_vendor == ATTO_VENDOR_ID)
++	    && (a->pcid->subsystem_device & ATTO_SSDID_TBT))
++		a->flags2 |= AF2_THUNDERBOLT;
++
++	if (a->flags2 & AF2_THUNDERBOLT)
++		a->flags2 |= AF2_SERIAL_FLASH;
++
++	if (a->pcid->subsystem_device == ATTO_TLSH_1068)
++		a->flags2 |= AF2_THUNDERLINK;
++
++	/* Uncached Area */
++	high = (u8 *)*uncached_area;
++
++	/* allocate and initialize the scatter/gather table pages */
++
++	for (i = 0, sgl = a->free_sg_list; i < num_sg_lists; i++, sgl++) {
++		sgl->size = sgl_page_size;
++
++		list_add_tail(&sgl->next_desc, &a->free_sg_list_head);
++
++		if (!esas2r_initmem_alloc(a, sgl, ESAS2R_SGL_ALIGN)) {
++			/* Allow the driver to load if the minimum count met. */
++			if (i < NUM_SGL_MIN)
++				return false;
++			break;
++		}
++	}
++
++	/* compute the size of the lists */
++	a->list_size = num_requests + ESAS2R_LIST_EXTRA;
++
++	/* allocate the inbound list */
++	a->inbound_list_md.size = a->list_size *
++				  sizeof(struct
++					 esas2r_inbound_list_source_entry);
++
++	if (!esas2r_initmem_alloc(a, &a->inbound_list_md, ESAS2R_LIST_ALIGN)) {
++		esas2r_hdebug("failed to allocate IB list");
++		return false;
++	}
++
++	/* allocate the outbound list */
++	a->outbound_list_md.size = a->list_size *
++				   sizeof(struct atto_vda_ob_rsp);
++
++	if (!esas2r_initmem_alloc(a, &a->outbound_list_md,
++				  ESAS2R_LIST_ALIGN)) {
++		esas2r_hdebug("failed to allocate IB list");
++		return false;
++	}
++
++	/* allocate the NVRAM structure */
++	a->nvram = (struct esas2r_sas_nvram *)high;
++	high += sizeof(struct esas2r_sas_nvram);
++
++	/* allocate the discovery buffer */
++	a->disc_buffer = high;
++	high += ESAS2R_DISC_BUF_LEN;
++	high = PTR_ALIGN(high, 8);
++
++	/* allocate the outbound list copy pointer */
++	a->outbound_copy = (u32 volatile *)high;
++	high += sizeof(u32);
++
++	if (!(a->flags & AF_NVR_VALID))
++		esas2r_nvram_set_defaults(a);
++
++	/* update the caller's uncached memory area pointer */
++	*uncached_area = (void *)high;
++
++	/* initialize the allocated memory */
++	if (a->flags & AF_FIRST_INIT) {
++		memset(a->req_table, 0,
++		       (num_requests + num_ae_requests +
++			1) * sizeof(struct esas2r_request *));
++
++		esas2r_targ_db_initialize(a);
++
++		/* prime parts of the inbound list */
++		element =
++			(struct esas2r_inbound_list_source_entry *)a->
++			inbound_list_md.
++			virt_addr;
++
++		for (i = 0; i < a->list_size; i++) {
++			element->address = 0;
++			element->reserved = 0;
++			element->length = cpu_to_le32(HWILSE_INTERFACE_F0
++						      | (sizeof(union
++								atto_vda_req)
++							 /
++							 sizeof(u32)));
++			element++;
++		}
++
++		/* init the AE requests */
++		for (rq = a->first_ae_req, i = 0; i < num_ae_requests; rq++,
++		     i++) {
++			INIT_LIST_HEAD(&rq->req_list);
++			if (!alloc_vda_req(a, rq)) {
++				esas2r_hdebug(
++					"failed to allocate a VDA request!");
++				return false;
++			}
++
++			esas2r_rq_init_request(rq, a);
++
++			/* override the completion function */
++			rq->comp_cb = esas2r_ae_complete;
++		}
++	}
++
++	return true;
++}
++
++/* This code will verify that the chip is operational. */
++bool esas2r_check_adapter(struct esas2r_adapter *a)
++{
++	u32 starttime;
++	u32 time;
++	u32 delay;
++	u32 doorbell;
++	u64 ppaddr;
++	u32 dw;
++
++	/*
++	 * if the chip reset detected flag is set, we can bypass a bunch of
++	 * stuff.
++	 */
++	if (a->flags & AF_CHPRST_DETECTED)
++		goto skip_chip_reset;
++
++	/*
++	 * BEFORE WE DO ANYTHING, disable the chip interrupts!  the boot driver
++	 * may have left them enabled or we may be recovering from a fault.
++	 */
++	esas2r_write_register_dword(a, MU_INT_MASK_OUT, ESAS2R_INT_DIS_MASK);
++	esas2r_flush_register_dword(a, MU_INT_MASK_OUT);
++
++	/*
++	 * wait for the firmware to become ready by forcing an interrupt and
++	 * waiting for a response.
++	 */
++	starttime = jiffies_to_msecs(jiffies);
++	time = starttime;
++	delay = 1000;
++
++	while (true) {
++		esas2r_force_interrupt(a);
++		doorbell = esas2r_read_register_dword(a, MU_DOORBELL_OUT);
++		if (doorbell == 0xFFFFFFFF) {
++			/*
++			 * Give the firmware up to two seconds to enable
++			 * register access after a reset.
++			 */
++			if ((time - starttime) > 2000)
++				return esas2r_set_degraded_mode(a,
++								"unable to access registers");
++		} else if (doorbell & DRBL_FORCE_INT) {
++			u32 ver = (doorbell & DRBL_FW_VER_MSK);
++
++			/*
++			 * This driver supports version 0 and version 1 of
++			 * the API
++			 */
++			esas2r_write_register_dword(a, MU_DOORBELL_OUT,
++						    doorbell);
++
++			if (ver == DRBL_FW_VER_0) {
++				esas2r_lock_set_flags(&a->flags,
++						      AF_LEGACY_SGE_MODE);
++
++				a->max_vdareq_size = 128;
++				a->build_sgl = esas2r_build_sg_list_sge;
++			} else if (ver == DRBL_FW_VER_1) {
++				esas2r_lock_clear_flags(&a->flags,
++							AF_LEGACY_SGE_MODE);
++
++				a->max_vdareq_size = 1024;
++				a->build_sgl = esas2r_build_sg_list_prd;
++			} else {
++				return esas2r_set_degraded_mode(a,
++								"unknown firmware version");
++			}
++			break;
++		}
++
++		time = esas2r_stall_execution(a, starttime, &delay);
++		if ((time - starttime) > 180000) {
++			esas2r_hdebug("FW ready TMO");
++			esas2r_bugon();
++
++			return esas2r_set_degraded_mode(a,
++							"firmware start has timed out");
++		}
++	}
++
++	/* purge any asynchronous events since we will repost them later */
++	esas2r_write_register_dword(a, MU_DOORBELL_IN, DRBL_MSG_IFC_DOWN);
++	starttime = jiffies_to_msecs(jiffies);
++	delay = 1000;
++
++	while (true) {
++		doorbell = esas2r_read_register_dword(a, MU_DOORBELL_OUT);
++		if (doorbell & DRBL_MSG_IFC_DOWN) {
++			esas2r_write_register_dword(a, MU_DOORBELL_OUT,
++						    doorbell);
++			break;
++		}
++
++		time = esas2r_stall_execution(a, starttime, &delay);
++		if ((time - starttime) > 3000) {
++			esas2r_hdebug("timeout waiting for interface down");
++			break;
++		}
++	}
++skip_chip_reset:
++	/*
++	 * first things first, before we go changing any of these registers
++	 * disable the communication lists.
++	 */
++	dw = esas2r_read_register_dword(a, MU_IN_LIST_CONFIG);
++	dw &= ~MU_ILC_ENABLE;
++	esas2r_write_register_dword(a, MU_IN_LIST_CONFIG, dw);
++	dw = esas2r_read_register_dword(a, MU_OUT_LIST_CONFIG);
++	dw &= ~MU_OLC_ENABLE;
++	esas2r_write_register_dword(a, MU_OUT_LIST_CONFIG, dw);
++
++	/* configure the communication list addresses */
++	ppaddr = a->inbound_list_md.phys_addr;
++	esas2r_write_register_dword(a, MU_IN_LIST_ADDR_LO,
++				    lower_32_bits(ppaddr));
++	esas2r_write_register_dword(a, MU_IN_LIST_ADDR_HI,
++				    upper_32_bits(ppaddr));
++	ppaddr = a->outbound_list_md.phys_addr;
++	esas2r_write_register_dword(a, MU_OUT_LIST_ADDR_LO,
++				    lower_32_bits(ppaddr));
++	esas2r_write_register_dword(a, MU_OUT_LIST_ADDR_HI,
++				    upper_32_bits(ppaddr));
++	ppaddr = a->uncached_phys +
++		 ((u8 *)a->outbound_copy - a->uncached);
++	esas2r_write_register_dword(a, MU_OUT_LIST_COPY_PTR_LO,
++				    lower_32_bits(ppaddr));
++	esas2r_write_register_dword(a, MU_OUT_LIST_COPY_PTR_HI,
++				    upper_32_bits(ppaddr));
++
++	/* reset the read and write pointers */
++	*a->outbound_copy =
++		a->last_write =
++			a->last_read = a->list_size - 1;
++	esas2r_lock_set_flags(&a->flags, AF_COMM_LIST_TOGGLE);
++	esas2r_write_register_dword(a, MU_IN_LIST_WRITE, MU_ILW_TOGGLE |
++				    a->last_write);
++	esas2r_write_register_dword(a, MU_OUT_LIST_COPY, MU_OLC_TOGGLE |
++				    a->last_write);
++	esas2r_write_register_dword(a, MU_IN_LIST_READ, MU_ILR_TOGGLE |
++				    a->last_write);
++	esas2r_write_register_dword(a, MU_OUT_LIST_WRITE,
++				    MU_OLW_TOGGLE | a->last_write);
++
++	/* configure the interface select fields */
++	dw = esas2r_read_register_dword(a, MU_IN_LIST_IFC_CONFIG);
++	dw &= ~(MU_ILIC_LIST | MU_ILIC_DEST);
++	esas2r_write_register_dword(a, MU_IN_LIST_IFC_CONFIG,
++				    (dw | MU_ILIC_LIST_F0 | MU_ILIC_DEST_DDR));
++	dw = esas2r_read_register_dword(a, MU_OUT_LIST_IFC_CONFIG);
++	dw &= ~(MU_OLIC_LIST | MU_OLIC_SOURCE);
++	esas2r_write_register_dword(a, MU_OUT_LIST_IFC_CONFIG,
++				    (dw | MU_OLIC_LIST_F0 |
++				     MU_OLIC_SOURCE_DDR));
++
++	/* finish configuring the communication lists */
++	dw = esas2r_read_register_dword(a, MU_IN_LIST_CONFIG);
++	dw &= ~(MU_ILC_ENTRY_MASK | MU_ILC_NUMBER_MASK);
++	dw |= MU_ILC_ENTRY_4_DW | MU_ILC_DYNAMIC_SRC
++	      | (a->list_size << MU_ILC_NUMBER_SHIFT);
++	esas2r_write_register_dword(a, MU_IN_LIST_CONFIG, dw);
++	dw = esas2r_read_register_dword(a, MU_OUT_LIST_CONFIG);
++	dw &= ~(MU_OLC_ENTRY_MASK | MU_OLC_NUMBER_MASK);
++	dw |= MU_OLC_ENTRY_4_DW | (a->list_size << MU_OLC_NUMBER_SHIFT);
++	esas2r_write_register_dword(a, MU_OUT_LIST_CONFIG, dw);
++
++	/*
++	 * notify the firmware that we're done setting up the communication
++	 * list registers.  wait here until the firmware is done configuring
++	 * its lists.  it will signal that it is done by enabling the lists.
++	 */
++	esas2r_write_register_dword(a, MU_DOORBELL_IN, DRBL_MSG_IFC_INIT);
++	starttime = jiffies_to_msecs(jiffies);
++	delay = 1000;
++	while (true) {
++		doorbell = esas2r_read_register_dword(a, MU_DOORBELL_OUT);
++		if (doorbell & DRBL_MSG_IFC_INIT) {
++			esas2r_write_register_dword(a, MU_DOORBELL_OUT,
++						    doorbell);
++			break;
++		}
++		time = esas2r_stall_execution(a, starttime, &delay);
++		if ((time - starttime) > 3000) {
++			esas2r_hdebug(
++				"timeout waiting for communication list init");
++			esas2r_bugon();
++			return esas2r_set_degraded_mode(a,
++							"timeout waiting for communication list init");
++		}
++	}
++
++	/*
++	 * flag whether the firmware supports the power down doorbell.  we
++	 * determine this by reading the inbound doorbell enable mask.
++	 */
++	doorbell = esas2r_read_register_dword(a, MU_DOORBELL_IN_ENB);
++	if (doorbell & DRBL_POWER_DOWN)
++		esas2r_lock_set_flags(&a->flags2, AF2_VDA_POWER_DOWN);
++	else
++		esas2r_lock_clear_flags(&a->flags2, AF2_VDA_POWER_DOWN);
++
++	/*
++	 * enable assertion of outbound queue and doorbell interrupts in the
++	 * main interrupt cause register.
++	 */
++	esas2r_write_register_dword(a, MU_OUT_LIST_INT_MASK, MU_OLIS_MASK);
++	esas2r_write_register_dword(a, MU_DOORBELL_OUT_ENB, DRBL_ENB_MASK);
++	return true;
++}
++
++/* Process the initialization message just completed and format the next one. */
++static bool esas2r_format_init_msg(struct esas2r_adapter *a,
++				   struct esas2r_request *rq)
++{
++	u32 msg = a->init_msg;
++	struct atto_vda_cfg_init *ci;
++
++	a->init_msg = 0;
++
++	switch (msg) {
++	case ESAS2R_INIT_MSG_START:
++	case ESAS2R_INIT_MSG_REINIT:
++	{
++		struct timeval now;
++		do_gettimeofday(&now);
++		esas2r_hdebug("CFG init");
++		esas2r_build_cfg_req(a,
++				     rq,
++				     VDA_CFG_INIT,
++				     0,
++				     NULL);
++		ci = (struct atto_vda_cfg_init *)&rq->vrq->cfg.data.init;
++		ci->sgl_page_size = sgl_page_size;
++		ci->epoch_time = now.tv_sec;
++		rq->flags |= RF_FAILURE_OK;
++		a->init_msg = ESAS2R_INIT_MSG_INIT;
++		break;
++	}
++
++	case ESAS2R_INIT_MSG_INIT:
++		if (rq->req_stat == RS_SUCCESS) {
++			u32 major;
++			u32 minor;
++
++			a->fw_version = le16_to_cpu(
++				rq->func_rsp.cfg_rsp.vda_version);
++			a->fw_build = rq->func_rsp.cfg_rsp.fw_build;
++			major = LOBYTE(rq->func_rsp.cfg_rsp.fw_release);
++			minor = HIBYTE(rq->func_rsp.cfg_rsp.fw_release);
++			a->fw_version += (major << 16) + (minor << 24);
++		} else {
++			esas2r_hdebug("FAILED");
++		}
++
++		/*
++		 * the 2.71 and earlier releases of R6xx firmware did not error
++		 * unsupported config requests correctly.
++		 */
++
++		if ((a->flags2 & AF2_THUNDERBOLT)
++		    || (be32_to_cpu(a->fw_version) >
++			be32_to_cpu(0x47020052))) {
++			esas2r_hdebug("CFG get init");
++			esas2r_build_cfg_req(a,
++					     rq,
++					     VDA_CFG_GET_INIT2,
++					     sizeof(struct atto_vda_cfg_init),
++					     NULL);
++
++			rq->vrq->cfg.sg_list_offset = offsetof(
++				struct atto_vda_cfg_req,
++				data.sge);
++			rq->vrq->cfg.data.prde.ctl_len =
++				cpu_to_le32(sizeof(struct atto_vda_cfg_init));
++			rq->vrq->cfg.data.prde.address = cpu_to_le64(
++				rq->vrq_md->phys_addr +
++				sizeof(union atto_vda_req));
++			rq->flags |= RF_FAILURE_OK;
++			a->init_msg = ESAS2R_INIT_MSG_GET_INIT;
++			break;
++		}
++
++	case ESAS2R_INIT_MSG_GET_INIT:
++		if (msg == ESAS2R_INIT_MSG_GET_INIT) {
++			ci = (struct atto_vda_cfg_init *)rq->data_buf;
++			if (rq->req_stat == RS_SUCCESS) {
++				a->num_targets_backend =
++					le32_to_cpu(ci->num_targets_backend);
++				a->ioctl_tunnel =
++					le32_to_cpu(ci->ioctl_tunnel);
++			} else {
++				esas2r_hdebug("FAILED");
++			}
++		}
++	/* fall through */
++
++	default:
++		rq->req_stat = RS_SUCCESS;
++		return false;
++	}
++	return true;
++}
++
++/*
++ * Perform initialization messages via the request queue.  Messages are
++ * performed with interrupts disabled.
++ */
++bool esas2r_init_msgs(struct esas2r_adapter *a)
++{
++	bool success = true;
++	struct esas2r_request *rq = &a->general_req;
++
++	esas2r_rq_init_request(rq, a);
++	rq->comp_cb = esas2r_dummy_complete;
++
++	if (a->init_msg == 0)
++		a->init_msg = ESAS2R_INIT_MSG_REINIT;
++
++	while (a->init_msg) {
++		if (esas2r_format_init_msg(a, rq)) {
++			unsigned long flags;
++			while (true) {
++				spin_lock_irqsave(&a->queue_lock, flags);
++				esas2r_start_vda_request(a, rq);
++				spin_unlock_irqrestore(&a->queue_lock, flags);
++				esas2r_wait_request(a, rq);
++				if (rq->req_stat != RS_PENDING)
++					break;
++			}
++		}
++
++		if (rq->req_stat == RS_SUCCESS
++		    || ((rq->flags & RF_FAILURE_OK)
++			&& rq->req_stat != RS_TIMEOUT))
++			continue;
++
++		esas2r_log(ESAS2R_LOG_CRIT, "init message %x failed (%x, %x)",
++			   a->init_msg, rq->req_stat, rq->flags);
++		a->init_msg = ESAS2R_INIT_MSG_START;
++		success = false;
++		break;
++	}
++
++	esas2r_rq_destroy_request(rq, a);
++	return success;
++}
++
++/* Initialize the adapter chip */
++bool esas2r_init_adapter_hw(struct esas2r_adapter *a, bool init_poll)
++{
++	bool rslt = false;
++	struct esas2r_request *rq;
++	u32 i;
++
++	if (a->flags & AF_DEGRADED_MODE)
++		goto exit;
++
++	if (!(a->flags & AF_NVR_VALID)) {
++		if (!esas2r_nvram_read_direct(a))
++			esas2r_log(ESAS2R_LOG_WARN,
++				   "invalid/missing NVRAM parameters");
++	}
++
++	if (!esas2r_init_msgs(a)) {
++		esas2r_set_degraded_mode(a, "init messages failed");
++		goto exit;
++	}
++
++	/* The firmware is ready. */
++	esas2r_lock_clear_flags(&a->flags, AF_DEGRADED_MODE);
++	esas2r_lock_clear_flags(&a->flags, AF_CHPRST_PENDING);
++
++	/* Post all the async event requests */
++	for (i = 0, rq = a->first_ae_req; i < num_ae_requests; i++, rq++)
++		esas2r_start_ae_request(a, rq);
++
++	if (!a->flash_rev[0])
++		esas2r_read_flash_rev(a);
++
++	if (!a->image_type[0])
++		esas2r_read_image_type(a);
++
++	if (a->fw_version == 0)
++		a->fw_rev[0] = 0;
++	else
++		sprintf(a->fw_rev, "%1d.%02d",
++			(int)LOBYTE(HIWORD(a->fw_version)),
++			(int)HIBYTE(HIWORD(a->fw_version)));
++
++	esas2r_hdebug("firmware revision: %s", a->fw_rev);
++
++	if ((a->flags & AF_CHPRST_DETECTED)
++	    && (a->flags & AF_FIRST_INIT)) {
++		esas2r_enable_chip_interrupts(a);
++		return true;
++	}
++
++	/* initialize discovery */
++	esas2r_disc_initialize(a);
++
++	/*
++	 * wait for the device wait time to expire here if requested.  this is
++	 * usually requested during initial driver load and possibly when
++	 * resuming from a low power state.  deferred device waiting will use
++	 * interrupts.  chip reset recovery always defers device waiting to
++	 * avoid being in a TASKLET too long.
++	 */
++	if (init_poll) {
++		u32 currtime = a->disc_start_time;
++		u32 nexttick = 100;
++		u32 deltatime;
++
++		/*
++		 * Block Tasklets from getting scheduled and indicate this is
++		 * polled discovery.
++		 */
++		esas2r_lock_set_flags(&a->flags, AF_TASKLET_SCHEDULED);
++		esas2r_lock_set_flags(&a->flags, AF_DISC_POLLED);
++
++		/*
++		 * Temporarily bring the disable count to zero to enable
++		 * deferred processing.  Note that the count is already zero
++		 * after the first initialization.
++		 */
++		if (a->flags & AF_FIRST_INIT)
++			atomic_dec(&a->disable_cnt);
++
++		while (a->flags & AF_DISC_PENDING) {
++			/*
++			 * Determine the need for a timer tick based on the
++			 * delta time between this and the last iteration of
++			 * this loop.  We don't use the absolute time because
++			 * then we would have to worry about when nexttick
++			 * wraps and currtime hasn't yet.
++			 */
++			deltatime = jiffies_to_msecs(jiffies) - currtime;
++			currtime += deltatime;
++
++			/*
++			 * Process any waiting discovery as long as the chip is
++			 * up.  If a chip reset happens during initial polling,
++			 * we have to make sure the timer tick processes the
++			 * doorbell indicating the firmware is ready.
++			 */
++			if (!(a->flags & AF_CHPRST_PENDING))
++				esas2r_disc_check_for_work(a);
++
++			/* Simulate a timer tick. */
++			if (nexttick <= deltatime) {
++
++				/* Time for a timer tick */
++				nexttick += 100;
++				esas2r_timer_tick(a);
++			}
++
++			if (nexttick > deltatime)
++				nexttick -= deltatime;
++
++			/* Do any deferred processing */
++			if (esas2r_is_tasklet_pending(a))
++				esas2r_do_tasklet_tasks(a);
++
++		}
++
++		if (a->flags & AF_FIRST_INIT)
++			atomic_inc(&a->disable_cnt);
++
++		esas2r_lock_clear_flags(&a->flags, AF_DISC_POLLED);
++		esas2r_lock_clear_flags(&a->flags, AF_TASKLET_SCHEDULED);
++	}
++
++
++	esas2r_targ_db_report_changes(a);
++
++	/*
++	 * For cases where (a) the initialization messages processing may
++	 * handle an interrupt for a port event and a discovery is waiting, but
++	 * we are not waiting for devices, or (b) the device wait time has been
++	 * exhausted but there is still discovery pending, start any leftover
++	 * discovery in interrupt driven mode.
++	 */
++	esas2r_disc_start_waiting(a);
++
++	/* Enable chip interrupts */
++	a->int_mask = ESAS2R_INT_STS_MASK;
++	esas2r_enable_chip_interrupts(a);
++	esas2r_enable_heartbeat(a);
++	rslt = true;
++
++exit:
++	/*
++	 * Regardless of whether initialization was successful, certain things
++	 * need to get done before we exit.
++	 */
++
++	if ((a->flags & AF_CHPRST_DETECTED)
++	    && (a->flags & AF_FIRST_INIT)) {
++		/*
++		 * Reinitialization was performed during the first
++		 * initialization.  Only clear the chip reset flag so the
++		 * original device polling is not cancelled.
++		 */
++		if (!rslt)
++			esas2r_lock_clear_flags(&a->flags, AF_CHPRST_PENDING);
++	} else {
++		/* First initialization or a subsequent re-init is complete. */
++		if (!rslt) {
++			esas2r_lock_clear_flags(&a->flags, AF_CHPRST_PENDING);
++			esas2r_lock_clear_flags(&a->flags, AF_DISC_PENDING);
++		}
++
++
++		/* Enable deferred processing after the first initialization. */
++		if (a->flags & AF_FIRST_INIT) {
++			esas2r_lock_clear_flags(&a->flags, AF_FIRST_INIT);
++
++			if (atomic_dec_return(&a->disable_cnt) == 0)
++				esas2r_do_deferred_processes(a);
++		}
++	}
++
++	return rslt;
++}
++
++void esas2r_reset_adapter(struct esas2r_adapter *a)
++{
++	esas2r_lock_set_flags(&a->flags, AF_OS_RESET);
++	esas2r_local_reset_adapter(a);
++	esas2r_schedule_tasklet(a);
++}
++
++void esas2r_reset_chip(struct esas2r_adapter *a)
++{
++	if (!esas2r_is_adapter_present(a))
++		return;
++
++	/*
++	 * Before we reset the chip, save off the VDA core dump.  The VDA core
++	 * dump is located in the upper 512KB of the onchip SRAM.  Make sure
++	 * to not overwrite a previous crash that was saved.
++	 */
++	if ((a->flags2 & AF2_COREDUMP_AVAIL)
++	    && !(a->flags2 & AF2_COREDUMP_SAVED)
++	    && a->fw_coredump_buff) {
++		esas2r_read_mem_block(a,
++				      a->fw_coredump_buff,
++				      MW_DATA_ADDR_SRAM + 0x80000,
++				      ESAS2R_FWCOREDUMP_SZ);
++
++		esas2r_lock_set_flags(&a->flags2, AF2_COREDUMP_SAVED);
++	}
++
++	esas2r_lock_clear_flags(&a->flags2, AF2_COREDUMP_AVAIL);
++
++	/* Reset the chip */
++	if (a->pcid->revision == MVR_FREY_B2)
++		esas2r_write_register_dword(a, MU_CTL_STATUS_IN_B2,
++					    MU_CTL_IN_FULL_RST2);
++	else
++		esas2r_write_register_dword(a, MU_CTL_STATUS_IN,
++					    MU_CTL_IN_FULL_RST);
++
++
++	/* Stall a little while to let the reset condition clear */
++	mdelay(10);
++}
++
++static void esas2r_power_down_notify_firmware(struct esas2r_adapter *a)
++{
++	u32 starttime;
++	u32 time;
++	u32 delay;
++	u32 doorbell;
++
++	esas2r_write_register_dword(a, MU_DOORBELL_IN, DRBL_POWER_DOWN);
++	starttime = jiffies_to_msecs(jiffies);
++	delay = 1000;
++
++	while (true) {
++		doorbell = esas2r_read_register_dword(a, MU_DOORBELL_OUT);
++		if (doorbell & DRBL_POWER_DOWN) {
++			esas2r_write_register_dword(a, MU_DOORBELL_OUT,
++						    doorbell);
++			break;
++		}
++		time = esas2r_stall_execution(a, starttime, &delay);
++
++		if ((time - starttime) > 30000) {
++			esas2r_hdebug("Timeout waiting for power down");
++			break;
++		}
++	}
++}
++
++/*
++ * Perform power management processing including managing device states, adapter
++ * states, interrupts, and I/O.
++ */
++void esas2r_power_down(struct esas2r_adapter *a)
++{
++	esas2r_lock_set_flags(&a->flags, AF_POWER_MGT);
++	esas2r_lock_set_flags(&a->flags, AF_POWER_DOWN);
++
++	if (!(a->flags & AF_DEGRADED_MODE)) {
++		u32 starttime;
++		u32 time;
++		u32 delay;
++		u32 doorbell;
++
++		/*
++		 * We are currently running OK and will be reinitializing later.
++		 * increment the disable count to coordinate with
++		 * esas2r_init_adapter.  We don't have to do this in degraded
++		 * mode since we never enabled interrupts in the first place.
++		 */
++		esas2r_disable_chip_interrupts(a);
++		esas2r_disable_heartbeat(a);
++
++		/* wait for any VDA activity to clear before continuing */
++		esas2r_write_register_dword(a, MU_DOORBELL_IN,
++					    DRBL_MSG_IFC_DOWN);
++		starttime = jiffies_to_msecs(jiffies);
++		delay = 1000;
++
++		while (true) {
++			doorbell =
++				esas2r_read_register_dword(a, MU_DOORBELL_OUT);
++			if (doorbell & DRBL_MSG_IFC_DOWN) {
++				esas2r_write_register_dword(a, MU_DOORBELL_OUT,
++							    doorbell);
++				break;
++			}
++
++			time = esas2r_stall_execution(a, starttime, &delay);
++			if ((time - starttime) > 3000) {
++				esas2r_hdebug(
++					"timeout waiting for interface down");
++				break;
++			}
++		}
++
++		/*
++		 * For versions of firmware that support it tell them the driver
++		 * is powering down.
++		 */
++		if (a->flags2 & AF2_VDA_POWER_DOWN)
++			esas2r_power_down_notify_firmware(a);
++	}
++
++	/* Suspend I/O processing. */
++	esas2r_lock_set_flags(&a->flags, AF_OS_RESET);
++	esas2r_lock_set_flags(&a->flags, AF_DISC_PENDING);
++	esas2r_lock_set_flags(&a->flags, AF_CHPRST_PENDING);
++
++	esas2r_process_adapter_reset(a);
++
++	/* Remove devices now that I/O is cleaned up. */
++	a->prev_dev_cnt = esas2r_targ_db_get_tgt_cnt(a);
++	esas2r_targ_db_remove_all(a, false);
++}
++
++/*
++ * Perform power management processing including managing device states, adapter
++ * states, interrupts, and I/O.
++ */
++bool esas2r_power_up(struct esas2r_adapter *a, bool init_poll)
++{
++	bool ret;
++
++	esas2r_lock_clear_flags(&a->flags, AF_POWER_DOWN);
++	esas2r_init_pci_cfg_space(a);
++	esas2r_lock_set_flags(&a->flags, AF_FIRST_INIT);
++	atomic_inc(&a->disable_cnt);
++
++	/* reinitialize the adapter */
++	ret = esas2r_check_adapter(a);
++	if (!esas2r_init_adapter_hw(a, init_poll))
++		ret = false;
++
++	/* send the reset asynchronous event */
++	esas2r_send_reset_ae(a, true);
++
++	/* clear this flag after initialization. */
++	esas2r_lock_clear_flags(&a->flags, AF_POWER_MGT);
++	return ret;
++}
++
++bool esas2r_is_adapter_present(struct esas2r_adapter *a)
++{
++	if (a->flags & AF_NOT_PRESENT)
++		return false;
++
++	if (esas2r_read_register_dword(a, MU_DOORBELL_OUT) == 0xFFFFFFFF) {
++		esas2r_lock_set_flags(&a->flags, AF_NOT_PRESENT);
++
++		return false;
++	}
++	return true;
++}
++
++const char *esas2r_get_model_name(struct esas2r_adapter *a)
++{
++	switch (a->pcid->subsystem_device) {
++	case ATTO_ESAS_R680:
++		return "ATTO ExpressSAS R680";
++
++	case ATTO_ESAS_R608:
++		return "ATTO ExpressSAS R608";
++
++	case ATTO_ESAS_R60F:
++		return "ATTO ExpressSAS R60F";
++
++	case ATTO_ESAS_R6F0:
++		return "ATTO ExpressSAS R6F0";
++
++	case ATTO_ESAS_R644:
++		return "ATTO ExpressSAS R644";
++
++	case ATTO_ESAS_R648:
++		return "ATTO ExpressSAS R648";
++
++	case ATTO_TSSC_3808:
++		return "ATTO ThunderStream SC 3808D";
++
++	case ATTO_TSSC_3808E:
++		return "ATTO ThunderStream SC 3808E";
++
++	case ATTO_TLSH_1068:
++		return "ATTO ThunderLink SH 1068";
++	}
++
++	return "ATTO SAS Controller";
++}
++
++const char *esas2r_get_model_name_short(struct esas2r_adapter *a)
++{
++	switch (a->pcid->subsystem_device) {
++	case ATTO_ESAS_R680:
++		return "R680";
++
++	case ATTO_ESAS_R608:
++		return "R608";
++
++	case ATTO_ESAS_R60F:
++		return "R60F";
++
++	case ATTO_ESAS_R6F0:
++		return "R6F0";
++
++	case ATTO_ESAS_R644:
++		return "R644";
++
++	case ATTO_ESAS_R648:
++		return "R648";
++
++	case ATTO_TSSC_3808:
++		return "SC 3808D";
++
++	case ATTO_TSSC_3808E:
++		return "SC 3808E";
++
++	case ATTO_TLSH_1068:
++		return "SH 1068";
++	}
++
++	return "unknown";
++}
 -- 
 1.8.1.4
 
