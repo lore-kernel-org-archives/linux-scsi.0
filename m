@@ -1,45 +1,63 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 13/13] lpfc 8.3.41: Update lpfc version to driver version
- 8.3.41
-Date: Mon, 15 Jul 2013 18:35:55 -0400
-Message-ID: <1373927755.15647.30.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Dragos Foianu <dragos.foianu@gmail.com>
+Subject: [PATCH] drivers/scsi/fnic: updated fileoperations structure to use simple_open
+Date: Tue, 16 Jul 2013 07:37:19 +0100
+Message-ID: <1373956639-6187-1-git-send-email-dragos.foianu@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:4573 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758281Ab3GOWf6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jul 2013 18:35:58 -0400
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:59912 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836Ab3GPEh1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jul 2013 00:37:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: hiralpat@cisco.com
+Cc: sramars@cisco.com, buchino@cisco.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Dragos Foianu <dragos.foianu@gmail.com>
 
-Update lpfc version to driver version 8.3.41 
+The function has the same implementation as simple_open. I removed it and replaced the reference in the fileoperations struct with simple_open.
 
+Found using Coccinelle.
 
-Signed-off-by: James Smart <james.smart@emulex.com>
+Signed-off-by: Dragos Foianu <dragos.foianu@gmail.com>
+---
+ drivers/scsi/fnic/fnic_debugfs.c |   19 +------------------
+ 1 file changed, 1 insertion(+), 18 deletions(-)
 
- ---
-
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2013-07-15 06:56:23.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2013-07-15 07:15:34.546056215 -0400
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
+index cbcb012..ddc7e94 100644
+--- a/drivers/scsi/fnic/fnic_debugfs.c
++++ b/drivers/scsi/fnic/fnic_debugfs.c
+@@ -25,23 +25,6 @@ static struct dentry *fnic_trace_debugfs_file;
+ static struct dentry *fnic_trace_enable;
  
--#define LPFC_DRIVER_VERSION "8.3.40"
-+#define LPFC_DRIVER_VERSION "8.3.41"
- #define LPFC_DRIVER_NAME		"lpfc"
+ /*
+- * fnic_trace_ctrl_open - Open the trace_enable file
+- * @inode: The inode pointer.
+- * @file: The file pointer to attach the trace enable/disable flag.
+- *
+- * Description:
+- * This routine opens a debugsfs file trace_enable.
+- *
+- * Returns:
+- * This function returns zero if successful.
+- */
+-static int fnic_trace_ctrl_open(struct inode *inode, struct file *filp)
+-{
+-	filp->private_data = inode->i_private;
+-	return 0;
+-}
+-
+-/*
+  * fnic_trace_ctrl_read - Read a trace_enable debugfs file
+  * @filp: The file pointer to read from.
+  * @ubuf: The buffer to copy the data to.
+@@ -222,7 +205,7 @@ static int fnic_trace_debugfs_release(struct inode *inode,
  
- /* Used for SLI 2/3 */
-
-
-
+ static const struct file_operations fnic_trace_ctrl_fops = {
+ 	.owner = THIS_MODULE,
+-	.open = fnic_trace_ctrl_open,
++	.open = simple_open,
+ 	.read = fnic_trace_ctrl_read,
+ 	.write = fnic_trace_ctrl_write,
+ };
+-- 
+1.7.10.4
 
