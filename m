@@ -1,33 +1,146 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v2] [SCSI] scsi_debug: silence GCC warning
-Date: Wed, 17 Jul 2013 00:42:26 +0900
-Message-ID: <CAC5umyioeYDxFVs5J8fvPmXWOB8k9dp_qCp8Ntcq_d8cKhkS9g@mail.gmail.com>
-References: <1373879920.2591.13.camel@x61.thuisdomein>
-	<1373914081.2591.40.camel@x61.thuisdomein>
-	<CAC5umyj2bOyU_z0HVawXL7k4FmF9oHh1yZfHExbKn9ck85RsUQ@mail.gmail.com>
-	<1373988586.17662.4.camel@x61.thuisdomein>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1373988586.17662.4.camel@x61.thuisdomein>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>
+From: Chris Leech <cleech@redhat.com>
+Subject: [PATCH] fnic: BUG: sleeping function called from invalid context during probe
+Date: Tue, 16 Jul 2013 09:55:05 -0700
+Message-ID: <1373993705-30767-1-git-send-email-cleech@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:25451 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932698Ab3GPQzf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Jul 2013 12:55:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>
 
-2013/7/17 Paul Bolle <pebolle@tiscali.nl>:
-> On Wed, 2013-07-17 at 00:21 +0900, Akinobu Mita wrote:
->> This one looks good to me.
->
-> Thanks.
->
->> It would be much better if this commit
->> log had a reference to the commit that introduced this warning as
->> you described after '---' in v1 patch.
->
-> Do you mean that I should submit a v3, with a commit explanation that
-> also has one or two lines that mention commit beb40ea42b ("[SCSI]
-> scsi_debug: reduce duplication between prot_verify_read and
-> prot_verify_write")?
+I hit this during driver probe with the latest fnic updates (this trace
+is from a backport into a distro kernel, but the issue is the same).
 
-Yes.  I think it will help someone to understand the background of this patch.
+> BUG: sleeping function called from invalid context at mm/slab.c:3113
+> in_atomic(): 0, irqs_disabled(): 1, pid: 610, name: work_for_cpu
+> INFO: lockdep is turned off.
+> irq event stamp: 0
+> hardirqs last  enabled at (0): [<(null)>] (null)
+> hardirqs last disabled at (0): [<ffffffff81070aa5>]
+> copy_process+0x5e5/0x1670
+> softirqs last  enabled at (0): [<ffffffff81070aa5>]
+> copy_process+0x5e5/0x1670
+> softirqs last disabled at (0): [<(null)>] (null)
+> Pid: 610, comm: work_for_cpu Not tainted
+> Call Trace:
+>  [<ffffffff810b2d10>] ? print_irqtrace_events+0xd0/0xe0
+>  [<ffffffff8105c1a7>] ? __might_sleep+0xf7/0x130
+>  [<ffffffff81184efb>] ? kmem_cache_alloc_trace+0x20b/0x2d0
+>  [<ffffffff8109709e>] ? __create_workqueue_key+0x3e/0x1d0
+>  [<ffffffff8109709e>] ? __create_workqueue_key+0x3e/0x1d0
+>  [<ffffffffa00c101c>] ? fnic_probe+0x977/0x11aa [fnic]
+>  [<ffffffffa00c1048>] ? fnic_probe+0x9a3/0x11aa [fnic]
+>  [<ffffffff81096f00>] ? do_work_for_cpu+0x0/0x30
+>  [<ffffffff812c6da7>] ? local_pci_probe+0x17/0x20
+>  [<ffffffff81096f18>] ? do_work_for_cpu+0x18/0x30
+>  [<ffffffff8109cdc6>] ? kthread+0x96/0xa0
+>  [<ffffffff8100c1ca>] ? child_rip+0xa/0x20
+>  [<ffffffff81550f80>] ? _spin_unlock_irq+0x30/0x40
+>  [<ffffffff8100bb10>] ? restore_args+0x0/0x30
+>  [<ffffffff8109cd30>] ? kthread+0x0/0xa0
+>  [<ffffffff8100c1c0>] ? child_rip+0x0/0x20
+
+The problem is in this hunk of "FIP VLAN Discovery Feature Support"
+(d3c995f1dcf938f1084388d92b8fb97bec366566)
+
+create_singlethreaded_workqueue cannot be called with irqs disabled
+
+@@ -620,7 +634,29 @@ static int __devinit fnic_probe(struct pci_dev
+*pdev,
+        vnic_dev_packet_filter(fnic->vdev, 1, 1, 0, 0, 0);
+        vnic_dev_add_addr(fnic->vdev, FIP_ALL_ENODE_MACS);
+        vnic_dev_add_addr(fnic->vdev, fnic->ctlr.ctl_src_addr);
++       fnic->set_vlan = fnic_set_vlan;
+        fcoe_ctlr_init(&fnic->ctlr, FIP_MODE_AUTO);
++       setup_timer(&fnic->fip_timer, fnic_fip_notify_timer,
++                           (unsigned long)fnic);
++       spin_lock_init(&fnic->vlans_lock);
++       INIT_WORK(&fnic->fip_frame_work, fnic_handle_fip_frame);
++       INIT_WORK(&fnic->event_work, fnic_handle_event);
++       skb_queue_head_init(&fnic->fip_frame_queue);
++       spin_lock_irqsave(&fnic_list_lock, flags);
++       if (!fnic_fip_queue) {
++           fnic_fip_queue =
++               create_singlethread_workqueue("fnic_fip_q");
++           if (!fnic_fip_queue) {
++               spin_unlock_irqrestore(&fnic_list_lock, flags);
++               printk(KERN_ERR PFX "fnic FIP work queue "
++                        "create failed\n");
++               err = -ENOMEM;
++               goto err_out_free_max_pool;
++           }
++       }
++       spin_unlock_irqrestore(&fnic_list_lock, flags);
++       INIT_LIST_HEAD(&fnic->evlist);
++       INIT_LIST_HEAD(&fnic->vlans);
+    } else {
+        shost_printk(KERN_INFO, fnic->lport->host,
+                 "firmware uses non-FIP mode\n");
+
+The attempts to make fnic_fip_queue a single instance for the driver
+while it's being created in probe look awkward anyway, why is this not
+created in fnic_init_module like the event workqueue?
+
+Built and loaded, tested all-right through probe without triggering the
+same issue.  Not tested by me for functionality, as the fnic hardware I
+had access to isn't actually attached to an FCoE SAN.
+
+Signed-off-by: Chris Leech <cleech@redhat.com>
+---
+ drivers/scsi/fnic/fnic_main.c | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 5f09d18..42e15ee 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -642,19 +642,6 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		INIT_WORK(&fnic->fip_frame_work, fnic_handle_fip_frame);
+ 		INIT_WORK(&fnic->event_work, fnic_handle_event);
+ 		skb_queue_head_init(&fnic->fip_frame_queue);
+-		spin_lock_irqsave(&fnic_list_lock, flags);
+-		if (!fnic_fip_queue) {
+-			fnic_fip_queue =
+-				create_singlethread_workqueue("fnic_fip_q");
+-			if (!fnic_fip_queue) {
+-				spin_unlock_irqrestore(&fnic_list_lock, flags);
+-				printk(KERN_ERR PFX "fnic FIP work queue "
+-						 "create failed\n");
+-				err = -ENOMEM;
+-				goto err_out_free_max_pool;
+-			}
+-		}
+-		spin_unlock_irqrestore(&fnic_list_lock, flags);
+ 		INIT_LIST_HEAD(&fnic->evlist);
+ 		INIT_LIST_HEAD(&fnic->vlans);
+ 	} else {
+@@ -960,6 +947,13 @@ static int __init fnic_init_module(void)
+ 	spin_lock_init(&fnic_list_lock);
+ 	INIT_LIST_HEAD(&fnic_list);
+ 
++	fnic_fip_queue = create_singlethread_workqueue("fnic_fip_q");
++	if (!fnic_fip_queue) {
++		printk(KERN_ERR PFX "fnic FIP work queue create failed\n");
++		err = -ENOMEM;
++		goto err_create_fip_workq;
++	}
++
+ 	fnic_fc_transport = fc_attach_transport(&fnic_fc_functions);
+ 	if (!fnic_fc_transport) {
+ 		printk(KERN_ERR PFX "fc_attach_transport error\n");
+@@ -978,6 +972,8 @@ static int __init fnic_init_module(void)
+ err_pci_register:
+ 	fc_release_transport(fnic_fc_transport);
+ err_fc_transport:
++	destroy_workqueue(fnic_fip_queue);
++err_create_fip_workq:
+ 	destroy_workqueue(fnic_event_queue);
+ err_create_fnic_workq:
+ 	kmem_cache_destroy(fnic_io_req_cache);
+-- 
+1.8.1.4
+
