@@ -1,175 +1,66 @@
-From: Vaughan Cao <vaughan.cao@oracle.com>
-Subject: [PATCH v4 1/4] [SCSI] sg: use rwsem to solve race during exclusive open
-Date: Wed, 17 Jul 2013 23:34:03 +0800
-Message-ID: <1374075246-22923-2-git-send-email-vaughan.cao@oracle.com>
-References: <20130715203730.GA21804@logfs.org>
- <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27629 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756164Ab3GQPce (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jul 2013 11:32:34 -0400
-In-Reply-To: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Wed, 17 Jul 2013 18:19:10 +0200
+Message-ID: <20130717161909.GB21468@dhcp-26-207.brq.redhat.com>
+References: <cover.1369155164.git.agordeev@redhat.com>
+ <20130521235003.GE6985@mtj.dyndns.org>
+ <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>
+ <20130522170305.GD9563@kernel.dk>
+ <20130711102630.GA11133@dhcp-26-207.brq.redhat.com>
+ <1373583637.7397.370.camel@haakon3.risingtidesystems.com>
+ <20130712074559.GA8727@dhcp-26-207.brq.redhat.com>
+ <1373692812.7397.625.camel@haakon3.risingtidesystems.com>
+ <20130716183207.GA6402@dhcp-26-207.brq.redhat.com>
+ <1374010683.7397.880.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1374010683.7397.880.camel@haakon3.risingtidesystems.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: joern@logfs.org
-Cc: dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, vaughan.cao@oracle.com
 
-A race condition may happen if two threads are both trying to open the same sg
-with O_EXCL simultaneously. It's possible that they both find fsds list is
-empty and get_exclude(sdp) returns 0, then they both call set_exclude() and
-break out from wait_event_interruptible and resume open.
+On Tue, Jul 16, 2013 at 02:38:03PM -0700, Nicholas A. Bellinger wrote:
+> [    7.927818] scsi_execute(): Calling blk_mq_free_request >>>
+> [    7.927826] scsi 0:0:0:0: Direct-Access     ATA      ST9500530NS      CC03 PQ: 0 ANSI: 5
+> 
+> OK, so INQUIRY response payload is looking as expected here.
 
-Now use rwsem to protect this process. Exclusive open gets write lock and
-others get read lock. The lock will be held until file descriptor is closed.
-This also leads 'exclude' only a status rather than a check mark.
+Yep. It is not on the top of my head, but I remember something like INQUIRYs
+are emulated and thus do not have payload.
 
-Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
----
- drivers/scsi/sg.c | 77 ++++++++++++++++++++++++++++++-------------------------
- 1 file changed, 42 insertions(+), 35 deletions(-)
+> [    7.927960] sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
+> [    7.927964] sd 0:0:0:0: [sda] 1 512-byte logical blocks: (512 B/512 B)
+> [    7.927965] sd 0:0:0:0: [sda] 0-byte physical blocks
+> 
+> Strange..  READ_CAPACITY appears to be returning a payload as zeros..?
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 25b5455..edc395a 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -168,11 +168,11 @@ typedef struct sg_fd {		/* holds the state of a file descriptor */
- 
- typedef struct sg_device { /* holds the state of each scsi generic device */
- 	struct scsi_device *device;
--	wait_queue_head_t o_excl_wait;	/* queue open() when O_EXCL in use */
- 	int sg_tablesize;	/* adapter's max scatter-gather table size */
- 	u32 index;		/* device index number */
- 	/* sfds is protected by sg_index_lock */
- 	struct list_head sfds;
-+	struct rw_semaphore o_sem;	/* exclude open should hold this rwsem */
- 	volatile char detached;	/* 0->attached, 1->detached pending removal */
- 	/* exclude protected by sg_open_exclusive_lock */
- 	char exclude;		/* opened for exclusive access */
-@@ -293,35 +293,35 @@ sg_open(struct inode *inode, struct file *filp)
- 		goto error_out;
- 	}
- 
--	if (flags & O_EXCL) {
--		if (O_RDONLY == (flags & O_ACCMODE)) {
--			retval = -EPERM; /* Can't lock it with read only access */
--			goto error_out;
--		}
--		if (!sfds_list_empty(sdp) && (flags & O_NONBLOCK)) {
--			retval = -EBUSY;
--			goto error_out;
--		}
--		res = wait_event_interruptible(sdp->o_excl_wait,
--					   ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 : set_exclude(sdp, 1)));
--		if (res) {
--			retval = res;	/* -ERESTARTSYS because signal hit process */
--			goto error_out;
--		}
--	} else if (get_exclude(sdp)) {	/* some other fd has an exclusive lock on dev */
--		if (flags & O_NONBLOCK) {
--			retval = -EBUSY;
--			goto error_out;
--		}
--		res = wait_event_interruptible(sdp->o_excl_wait, !get_exclude(sdp));
--		if (res) {
--			retval = res;	/* -ERESTARTSYS because signal hit process */
--			goto error_out;
-+	if ((flags & O_EXCL) && (O_RDONLY == (flags & O_ACCMODE))) {
-+		retval = -EPERM; /* Can't lock it with read only access */
-+		goto error_out;
-+	}
-+	if (flags & O_NONBLOCK) {
-+		if (flags & O_EXCL) {
-+			if (!down_write_trylock(&sdp->o_sem)) {
-+				retval = -EBUSY;
-+				goto error_out;
-+			}
-+		} else {
-+			if (!down_read_trylock(&sdp->o_sem)) {
-+				retval = -EBUSY;
-+				goto error_out;
-+			}
- 		}
-+	} else {
-+		if (flags & O_EXCL)
-+			down_write(&sdp->o_sem);
-+		else
-+			down_read(&sdp->o_sem);
- 	}
-+	/* Since write lock is held, no need to check sfd_list */
-+	if (flags & O_EXCL)
-+		set_exclude(sdp, 1);
-+
- 	if (sdp->detached) {
- 		retval = -ENODEV;
--		goto error_out;
-+		goto sem_out;
- 	}
- 	if (sfds_list_empty(sdp)) {	/* no existing opens on this device */
- 		sdp->sgdebug = 0;
-@@ -331,16 +331,19 @@ sg_open(struct inode *inode, struct file *filp)
- 	if ((sfp = sg_add_sfp(sdp, dev)))
- 		filp->private_data = sfp;
- 	else {
--		if (flags & O_EXCL) {
--			set_exclude(sdp, 0);	/* undo if error */
--			wake_up_interruptible(&sdp->o_excl_wait);
--		}
- 		retval = -ENOMEM;
--		goto error_out;
-+		goto sem_out;
- 	}
- 	retval = 0;
--error_out:
-+
- 	if (retval) {
-+sem_out:
-+		if (flags & O_EXCL) {
-+			set_exclude(sdp, 0);	/* undo if error */
-+			up_write(&sdp->o_sem);
-+		} else
-+			up_read(&sdp->o_sem);
-+error_out:
- 		scsi_autopm_put_device(sdp->device);
- sdp_put:
- 		scsi_device_put(sdp->device);
-@@ -357,13 +360,18 @@ sg_release(struct inode *inode, struct file *filp)
- {
- 	Sg_device *sdp;
- 	Sg_fd *sfp;
-+	int excl;
- 
- 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
- 		return -ENXIO;
- 	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
- 
-+	excl = get_exclude(sdp);
- 	set_exclude(sdp, 0);
--	wake_up_interruptible(&sdp->o_excl_wait);
-+	if (excl)
-+		up_write(&sdp->o_sem);
-+	else
-+		up_read(&sdp->o_sem);
- 
- 	scsi_autopm_put_device(sdp->device);
- 	kref_put(&sfp->f_ref, sg_remove_sfp);
-@@ -1415,7 +1423,7 @@ static Sg_device *sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
- 	sdp->disk = disk;
- 	sdp->device = scsidp;
- 	INIT_LIST_HEAD(&sdp->sfds);
--	init_waitqueue_head(&sdp->o_excl_wait);
-+	init_rwsem(&sdp->o_sem);
- 	sdp->sg_tablesize = queue_max_segments(q);
- 	sdp->index = k;
- 	kref_init(&sdp->d_ref);
-@@ -2140,7 +2148,6 @@ static void sg_remove_sfp(struct kref *kref)
- 	write_lock_irqsave(&sg_index_lock, iflags);
- 	list_del(&sfp->sfd_siblings);
- 	write_unlock_irqrestore(&sg_index_lock, iflags);
--	wake_up_interruptible(&sdp->o_excl_wait);
- 
- 	INIT_WORK(&sfp->ew.work, sg_remove_sfp_usercontext);
- 	schedule_work(&sfp->ew.work);
+Yep. Because blk_execute_rq() does not put the proper callback and data do
+not get copied from sg's to bounce buffer. That is why I tried to use
+blk_mq_execute_rq() instead. Once I do that, data start getting read and
+booting stops elsewhere.
+
+Of course, I was suspecting that change alone is not valid and wondered
+about the status of scsi-mq in the first place, and if more changes are
+coming.
+
+So I it turns out "req->errors + req->resid_len" issue (you described
+earlier) needs to be addressed before going forward with libata (only?).
+
+> Not sure why yet some control CDBs are getting back the expected
+> payload, while others are returning zeros..
+
+Bio buffers do not get updated from callback.
+
+> Also, looking at the included stack back-trace:
+
+[...]
+
+Thanks a lot for these and other your comments, Nicholas!
+
 -- 
-1.7.11.7
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
