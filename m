@@ -1,66 +1,34 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Wed, 17 Jul 2013 18:19:10 +0200
-Message-ID: <20130717161909.GB21468@dhcp-26-207.brq.redhat.com>
-References: <cover.1369155164.git.agordeev@redhat.com>
- <20130521235003.GE6985@mtj.dyndns.org>
- <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>
- <20130522170305.GD9563@kernel.dk>
- <20130711102630.GA11133@dhcp-26-207.brq.redhat.com>
- <1373583637.7397.370.camel@haakon3.risingtidesystems.com>
- <20130712074559.GA8727@dhcp-26-207.brq.redhat.com>
- <1373692812.7397.625.camel@haakon3.risingtidesystems.com>
- <20130716183207.GA6402@dhcp-26-207.brq.redhat.com>
- <1374010683.7397.880.camel@haakon3.risingtidesystems.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 6/7] qla4xxx: Export more firmware info in sysfs
+Date: Wed, 17 Jul 2013 11:44:54 -0600
+Message-ID: <51E6D816.4000102@cs.wisc.edu>
+References: <1373286791-29659-1-git-send-email-adheer.chandravanshi@qlogic.com> <1373286791-29659-7-git-send-email-adheer.chandravanshi@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1374010683.7397.880.camel@haakon3.risingtidesystems.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:35104 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932858Ab3GQRpQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Jul 2013 13:45:16 -0400
+In-Reply-To: <1373286791-29659-7-git-send-email-adheer.chandravanshi@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: adheer.chandravanshi@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com
 
-On Tue, Jul 16, 2013 at 02:38:03PM -0700, Nicholas A. Bellinger wrote:
-> [    7.927818] scsi_execute(): Calling blk_mq_free_request >>>
-> [    7.927826] scsi 0:0:0:0: Direct-Access     ATA      ST9500530NS      CC03 PQ: 0 ANSI: 5
-> 
-> OK, so INQUIRY response payload is looking as expected here.
+On 07/08/2013 06:33 AM, adheer.chandravanshi@qlogic.com wrote:
+>  static ssize_t
+> @@ -181,8 +179,8 @@ qla4xxx_iscsi_version_show(struct device *dev, struct device_attribute *attr,
+>  			   char *buf)
+>  {
+>  	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
+> -	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->iscsi_major,
+> -			ha->iscsi_minor);
+> +	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->fw_info.iscsi_major,
+> +			ha->fw_info.iscsi_minor);
+>  }
 
-Yep. It is not on the top of my head, but I remember something like INQUIRYs
-are emulated and thus do not have payload.
+Is this the same as the iscsi max and min from the iscsi spec? If so, it
+should be a iscsi host setting.
 
-> [    7.927960] sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
-> [    7.927964] sd 0:0:0:0: [sda] 1 512-byte logical blocks: (512 B/512 B)
-> [    7.927965] sd 0:0:0:0: [sda] 0-byte physical blocks
-> 
-> Strange..  READ_CAPACITY appears to be returning a payload as zeros..?
-
-Yep. Because blk_execute_rq() does not put the proper callback and data do
-not get copied from sg's to bounce buffer. That is why I tried to use
-blk_mq_execute_rq() instead. Once I do that, data start getting read and
-booting stops elsewhere.
-
-Of course, I was suspecting that change alone is not valid and wondered
-about the status of scsi-mq in the first place, and if more changes are
-coming.
-
-So I it turns out "req->errors + req->resid_len" issue (you described
-earlier) needs to be addressed before going forward with libata (only?).
-
-> Not sure why yet some control CDBs are getting back the expected
-> payload, while others are returning zeros..
-
-Bio buffers do not get updated from callback.
-
-> Also, looking at the included stack back-trace:
-
-[...]
-
-Thanks a lot for these and other your comments, Nicholas!
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
