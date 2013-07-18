@@ -1,562 +1,600 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH V3 1/2] scsi: ufs: Add support for sending NOP OUT UPIU
-Date: Thu, 18 Jul 2013 09:18:38 +0530
-Message-ID: <51E76596.5090509@codeaurora.org>
-References: <1373361310-30674-1-git-send-email-sthumma@codeaurora.org> <1373361310-30674-2-git-send-email-sthumma@codeaurora.org> <002501ce7d71$4c7a8f40$e56fadc0$%jun@samsung.com> <51DE7D08.9000306@codeaurora.org> <001a01ce82c5$8bd47d50$a37d77f0$%jun@samsung.com>
+From: "Dolev Raviv" <draviv@codeaurora.org>
+Subject: RE: [PATCH V3 2/2] scsi: ufs: Set fDeviceInit flag to initiate
+ device initialization
+Date: Thu, 18 Jul 2013 08:54:25 -0000
+Message-ID: <887153b8906d53199a00d5aa1ff3a683.squirrel@www.codeaurora.org>
+References: <090bbcfc1097fcc0025ad3a4f79ec67c.squirrel@www.codeaurora.org>
+    <001901ce82c5$83cc3710$8b64a530$%jun@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:33080 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757994Ab3GRDsp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jul 2013 23:48:45 -0400
-In-Reply-To: <001a01ce82c5$8bd47d50$a37d77f0$%jun@samsung.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <001901ce82c5$83cc3710$8b64a530$%jun@samsung.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, 'Dolev Raviv' <draviv@codeaurora.org>
+Cc: 'Dolev Raviv' <draviv@codeaurora.org>, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 
-
->>>> + * ufshcd_wait_for_register - wait for register value to change
->>>> + * @hba - per-adapter interface
->>>> + * @reg - mmio register offset
->>>> + * @mask - mask to apply to read register value
->>>> + * @val - wait condition
->>>> + * @interval_us - polling interval in microsecs
->>>> + * @timeout_ms - timeout in millisecs
->>>> + *
->>>> + * Returns final register value after iteration
->>>> + */
->>>> +static u32 ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
->>>> +		u32 val, unsigned long interval_us, unsigned long timeout_ms)
->>> I feel like this function's role is to wait for clearing register (specially, doorbells).
->>> If you really don't intend to apply other all register, I think it would better to change the
->> function name.
->>> ex> ufshcd_wait_for_clear_doorbell or ufshcd_wait_for_clear_reg?
->>
->> Although, this API is introduced in this patch and used only for
->> clearing the doorbell, I have intentionally made it generic to avoid
->> duplication of wait condition code in future (not just clearing but
->> also for setting a bit). For example, when we write to HCE.ENABLE we
->> wait for it turn to 1.
->>
->>
->>> And if you like it, it could be more simple like below
->>>
->>> static bool ufshcd_wait_for_clear_reg(struct ufs_hba *hba, u32 reg, u32 mask,
->>>                                            unsigned long interval_us,
->>>                                            unsigned int timeout_ms)
->>> {
->>>           unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
->>
->> Jiffies on 100Hz systems have minimum granularity of 10ms. So we really
->> wait for more 10ms even though the timeout_ms < 10ms.
-> Yes. Real timeout depends on system.
-> But normally actual wait will be maintained until 'ufshcd_readl' is done.
-> Timeout is valid for failure case.  If we don't need to apply a strict timeout value, it's not bad.
-
-Hmm.. make sense. Will take care in the next patchset.
-
+> Hi,
 >
->>
->>>           /* wakeup within 50us of expiry */
->>>           const unsigned int expiry = 50;
->>>
->>>           while (ufshcd_readl(hba, reg) & mask) {
->>>                   usleep_range(interval_us, interval_us + expiry);
->>>                   if (time_after(jiffies, timeout)) {
->>>                           if (ufshcd_readl(hba, reg) & mask)
->>>                                   return false;
->>
->> I really want the caller to decide on what to do after the timeout.
->> This helps in error handling cases where we try to clear off the entire
->> door-bell register but only a few of the bits are cleared after timeout.
-> I don't know what we can do with the report of the partial success on clearing bit.
-> It's just failure case. Isn't enough with false/true?
-
-The point is, if a bit can't be cleared it can be regarded as a
-permanent failure (only for that request), otherwise, it can be
-retried with the same tag value.
-
+> Sorry for the late response. I had a few days off.
 >
->>
->>>                           else
->>>                                   return true;
->>>                   }
->>>           }
->>>
->>>           return true;
->>> }
->>>> +{
->>>> +	u32 tmp;
->>>> +	ktime_t start;
->>>> +	unsigned long diff;
->>>> +
->>>> +	tmp = ufshcd_readl(hba, reg);
->>>> +
->>>> +	if ((val & mask) != val) {
->>>> +		dev_err(hba->dev, "%s: Invalid wait condition 0x%x\n",
->>>> +				__func__, val);
->>>> +		goto out;
->>>> +	}
->>>> +
->>>> +	start = ktime_get();
->>>> +	while ((tmp & mask) != val) {
->>>> +		/* wakeup within 50us of expiry */
->>>> +		usleep_range(interval_us, interval_us + 50);
->>>> +		tmp = ufshcd_readl(hba, reg);
->>>> +		diff = ktime_to_ms(ktime_sub(ktime_get(), start));
->>>> +		if (diff > timeout_ms) {
->>>> +			tmp = ufshcd_readl(hba, reg);
->>>> +			break;
->>>> +		}
->>>> +	}
->>>> +out:
->>>> +	return tmp;
->>>> +}
->>>> +
-..
->>>> +static int
->>>> +ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
->>>> +{
->>>> +	int err = 0;
->>>> +	unsigned long flags;
->>>> +	u32 reg;
->>>> +	u32 mask = 1 << tag;
->>>> +
->>>> +	/* clear outstanding transaction before retry */
->>>> +	spin_lock_irqsave(hba->host->host_lock, flags);
->>>> +	ufshcd_utrl_clear(hba, tag);
->>>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
->>>> +
->>>> +	/*
->>>> +	 * wait for for h/w to clear corresponding bit in door-bell.
->>>> +	 * max. wait is 1 sec.
->>>> +	 */
->>>> +	reg = ufshcd_wait_for_register(hba,
->>>> +			REG_UTP_TRANSFER_REQ_DOOR_BELL,
->>>> +			mask, 0, 1000, 1000);
->>> 4th argument should be (~mask) instead of '0', right?
->>
->> True, but not really for this implementation. It breaks the check in
->> in wait_for_register -
->> if ((val & mask) != val)
->>              dev_err(...);
-> Hmm, it seems complicated to use.
-> Ok. Is right the following about val as 4th argument?
-> - clear: val  should be '0' regardless corresponding bit.
-> - set: val should be same with mask.
-> If the related comment is added, it will be helpful.
-
-Thinking again it looks like it is complicated. How about changing
-the check to -
-
-val = val & mask; /* ignore the bits we don't intend to wait on */
-while (ufshcd_readl() & mask != val) {
-  sleep
-}
-
-Usage will be ~mask for clearing the bits, mask for setting the bits
-in the fourth argument.
-
+> On Thu, July 11, 2013, Dolev Raviv wrote:
+>> > On Tuesday, July 09, 2013, Sujit Reddy Thumma wrote:
+>> >> From: Dolev Raviv <draviv@codeaurora.org>
+>> >> Allow UFS device to complete its initialization and accept
+>> >> SCSI commands by setting fDeviceInit flag. The device may take
+>> >> time for this operation and hence the host should poll until
+>> >> fDeviceInit flag is toggled to zero. This step is mandated by
+>> >> UFS device specification for device initialization completion.
+>> >> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+>> >> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+>> >> ---
+>> >>  drivers/scsi/ufs/ufs.h    |   88 +++++++++++++-
+>> >>  drivers/scsi/ufs/ufshcd.c |  292
+>> >> ++++++++++++++++++++++++++++++++++++++++++++-
+>> >>  drivers/scsi/ufs/ufshcd.h |   14 ++
+>> >>  drivers/scsi/ufs/ufshci.h |    2 +-
+>> >>  4 files changed, 390 insertions(+), 6 deletions(-)
+>> >> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+>> >> index 14c0a4e..db5bde4 100644
+>> >> --- a/drivers/scsi/ufs/ufs.h
+>> >> +++ b/drivers/scsi/ufs/ufs.h
+>> >> @@ -43,6 +43,8 @@
+>> >>  #define GENERAL_UPIU_REQUEST_SIZE 32
+>> >>  #define UPIU_HEADER_DATA_SEGMENT_MAX_SIZE	((ALIGNED_UPIU_SIZE) - \
+>> >>  					(GENERAL_UPIU_REQUEST_SIZE))
+>> >> +#define QUERY_OSF_SIZE			((GENERAL_UPIU_REQUEST_SIZE) - \
+>> >> +					(sizeof(struct utp_upiu_header)))
+>> >>  #define UPIU_HEADER_DWORD(byte3, byte2, byte1, byte0)\
+>> >>  			cpu_to_be32((byte3 << 24) | (byte2 << 16) |\
+>> >> @@ -68,7 +70,7 @@ enum {
+>> >>  	UPIU_TRANSACTION_COMMAND	= 0x01,
+>> >>  	UPIU_TRANSACTION_DATA_OUT	= 0x02,
+>> >>  	UPIU_TRANSACTION_TASK_REQ	= 0x04,
+>> >> -	UPIU_TRANSACTION_QUERY_REQ	= 0x26,
+>> >> +	UPIU_TRANSACTION_QUERY_REQ	= 0x16,
+>> >>  };
+>> >>  /* UTP UPIU Transaction Codes Target to Initiator */
+>> >> @@ -97,8 +99,19 @@ enum {
+>> >>  	UPIU_TASK_ATTR_ACA	= 0x03,
+>> >>  };
+>> >> -/* UTP QUERY Transaction Specific Fields OpCode */
+>> >> +/* UPIU Query request function */
+>> >>  enum {
+>> >> +	UPIU_QUERY_FUNC_STANDARD_READ_REQUEST = 0x01,
+>> >> +	UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST = 0x81,
+>> >> +};
+>> >> +
+>> >> +/* Flag idn for Query Requests*/
+>> >> +enum flag_idn {
+>> >> +	QUERY_FLAG_IDN_FDEVICEINIT = 0x01,
+>> >> +};
+>> >> +
+>> >> +/* UTP QUERY Transaction Specific Fields OpCode */
+>> >> +enum query_opcode {
+>> >>  	UPIU_QUERY_OPCODE_NOP		= 0x0,
+>> >>  	UPIU_QUERY_OPCODE_READ_DESC	= 0x1,
+>> >>  	UPIU_QUERY_OPCODE_WRITE_DESC	= 0x2,
+>> >> @@ -110,6 +123,21 @@ enum {
+>> >>  	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
+>> >>  };
+>> >> +/* Query response result code */
+>> >> +enum {
+>> >> +	QUERY_RESULT_SUCCESS			= 0x00,
+>> >> +	QUERY_RESULT_NOT_READABLE		= 0xF6,
+>> >> +	QUERY_RESULT_NOT_WRITEABLE		= 0xF7,
+>> >> +	QUERY_RESULT_ALREADY_WRITTEN		= 0xF8,
+>> >> +	QUERY_RESULT_INVALID_LENGTH		= 0xF9,
+>> >> +	QUERY_RESULT_INVALID_VALUE		= 0xFA,
+>> >> +	QUERY_RESULT_INVALID_SELECTOR		= 0xFB,
+>> >> +	QUERY_RESULT_INVALID_INDEX		= 0xFC,
+>> >> +	QUERY_RESULT_INVALID_IDN		= 0xFD,
+>> >> +	QUERY_RESULT_INVALID_OPCODE		= 0xFE,
+>> >> +	QUERY_RESULT_GENERAL_FAILURE		= 0xFF,
+>> >> +};
+>> >> +
+>> >>  /* UTP Transfer Request Command Type (CT) */
+>> >>  enum {
+>> >>  	UPIU_COMMAND_SET_TYPE_SCSI	= 0x0,
+>> >> @@ -127,6 +155,7 @@ enum {
+>> >>  	MASK_SCSI_STATUS	= 0xFF,
+>> >>  	MASK_TASK_RESPONSE	= 0xFF00,
+>> >>  	MASK_RSP_UPIU_RESULT	= 0xFFFF,
+>> >> +	MASK_QUERY_DATA_SEG_LEN	= 0xFFFF,
+>> >>  };
+>> >>  /* Task management service response */
+>> >> @@ -160,13 +189,40 @@ struct utp_upiu_cmd {
+>> >>  };
+>> >>  /**
+>> >> + * struct utp_upiu_query - upiu request buffer structure for
+>> >> + * query request.
+>> >> + * @opcode: command to perform B-0
+>> >> + * @idn: a value that indicates the particular type of data B-1 + *
+>> @index: Index to further identify data B-2
+>> >> + * @selector: Index to further identify data B-3
+>> >> + * @reserved_osf: spec reserved field B-4,5
+>> >> + * @length: number of descriptor bytes to read/write B-6,7
+>> >> + * @value: Attribute value to be written DW-5
+>> >> + * @reserved: spec reserved DW-6,7
+>> >> + */
+>> >> +struct utp_upiu_query {
+>> >> +	u8 opcode;
+>> >> +	u8 idn;
+>> >> +	u8 index;
+>> >> +	u8 selector;
+>> >> +	u16 reserved_osf;
+>> >> +	u16 length;
+>> >> +	u32 value;
+>> >> +	u32 reserved[2];
+>> >> +};
+>> >> +
+>> >> +/**
+>> >>   * struct utp_upiu_req - general upiu request structure
+>> >>   * @header:UPIU header structure DW-0 to DW-2
+>> >>   * @sc: fields structure for scsi command DW-3 to DW-7
+>> >> + * @qr: fields structure for query request DW-3 to DW-7
+>> >>   */
+>> >>  struct utp_upiu_req {
+>> >>  	struct utp_upiu_header header;
+>> >> -	struct utp_upiu_cmd sc;
+>> >> +	union {
+>> >> +		struct utp_upiu_cmd sc;
+>> >> +		struct utp_upiu_query qr;
+>> >> +	};
+>> >>  };
+>> >>  /**
+>> >> @@ -187,10 +243,14 @@ struct utp_cmd_rsp {
+>> >>   * struct utp_upiu_rsp - general upiu response structure
+>> >>   * @header: UPIU header structure DW-0 to DW-2
+>> >>   * @sr: fields structure for scsi command DW-3 to DW-12
+>> >> + * @qr: fields structure for query request DW-3 to DW-7
+>> >>   */
+>> >>  struct utp_upiu_rsp {
+>> >>  	struct utp_upiu_header header;
+>> >> -	struct utp_cmd_rsp sr;
+>> >> +	union {
+>> >> +		struct utp_cmd_rsp sr;
+>> >> +		struct utp_upiu_query qr;
+>> >> +	};
+>> >>  };
+>> >>  /**
+>> >> @@ -223,4 +283,24 @@ struct utp_upiu_task_rsp {
+>> >>  	u32 reserved[3];
+>> >>  };
+>> >> +/**
+>> >> + * struct ufs_query_req - parameters for building a query request +
+>> *
+>> @query_func: UPIU header query function
+>> >> + * @upiu_req: the query request data
+>> >> + */
+>> >> +struct ufs_query_req {
+>> >> +	u8 query_func;
+>> >> +	struct utp_upiu_query upiu_req;
+>> >> +};
+>> >> +
+>> >> +/**
+>> >> + * struct ufs_query_resp - UPIU QUERY
+>> >> + * @response: device response code
+>> >> + * @upiu_res: query response data
+>> >> + */
+>> >> +struct ufs_query_res {
+>> >> +	u8 response;
+>> >> +	struct utp_upiu_query upiu_res;
+>> >> +};
+>> >> +
+>> >>  #endif /* End of Header */
+>> >> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 3f482b6..96ccb28 100644
+>> >> --- a/drivers/scsi/ufs/ufshcd.c
+>> >> +++ b/drivers/scsi/ufs/ufshcd.c
+>> >> @@ -48,6 +48,14 @@
+>> >>  /* Timeout after 30 msecs if NOP OUT hangs without response */
+>> #define
+>> NOP_OUT_TIMEOUT    30 /* msecs */
+>> >> +/* Query request retries */
+>> >> +#define QUERY_REQ_RETRIES 10
+>> >> +/* Query request timeout */
+>> >> +#define QUERY_REQ_TIMEOUT 30 /* msec */
+>> >> +
+>> >> +/* Expose the flag value from utp_upiu_query.value */
+>> >> +#define MASK_QUERY_UPIU_FLAG_LOC 0xFF
+>> >> +
+>> >>  enum {
+>> >>  	UFSHCD_MAX_CHANNEL	= 0,
+>> >>  	UFSHCD_MAX_ID		= 1,
+>> >> @@ -348,6 +356,63 @@ static inline void ufshcd_copy_sense_data(struct
+>> ufshcd_lrb *lrbp)
+>> >>  }
+>> >>  /**
+>> >> + * ufshcd_query_to_cpu() - formats the buffer to native cpu endian +
+>> *
+>> @response: upiu query response to convert
+>> >> + */
+>> >> +static inline void ufshcd_query_to_cpu(struct utp_upiu_query
+>> *response)
+>> >> +{
+>> >> +	response->length = be16_to_cpu(response->length);
+>> >> +	response->value = be32_to_cpu(response->value);
+>> >> +}
+>> >> +
+>> >> +/**
+>> >> + * ufshcd_query_to_be() - formats the buffer to big endian
+>> >> + * @request: upiu query request to convert
+>> >> + */
+>> >> +static inline void ufshcd_query_to_be(struct utp_upiu_query
+>> *request) +{
+>> >> +	request->length = cpu_to_be16(request->length);
+>> >> +	request->value = cpu_to_be32(request->value);
+>> >> +}
+>> >> +
+>> >> +/**
+>> >> + * ufshcd_copy_query_response() - Copy the Query Response and the
+>> data
+>> + * descriptor
+>> >> + * @hba: per adapter instance
+>> >> + * @lrb - pointer to local reference block
+>> >> + */
+>> >> +static
+>> >> +void ufshcd_copy_query_response(struct ufs_hba *hba, struct
+>> ufshcd_lrb
+>> *lrbp)
+>> >> +{
+>> >> +	struct ufs_query_res *query_res = hba->dev_cmd.query.response; +
+>> >> +	/* Get the UPIU response */
+>> >> +	if (query_res) {
+>> >> +		query_res->response = ufshcd_get_rsp_upiu_result(
+>> >> +			lrbp->ucd_rsp_ptr) >> UPIU_RSP_CODE_OFFSET;
+>> >> +
+>> >> +		memcpy(&query_res->upiu_res, &lrbp->ucd_rsp_ptr->qr,
+>> >> +			QUERY_OSF_SIZE);
+>> >> +		ufshcd_query_to_cpu(&query_res->upiu_res);
+>> >> +	}
+>> >> +
+>> >> +	/* Get the descriptor */
+>> >> +	if (hba->dev_cmd.query.descriptor && lrbp->ucd_rsp_ptr->qr.opcode
+>> ==
+>> +			UPIU_QUERY_OPCODE_READ_DESC) {
+>> >> +		u8 *descp = (u8 *)&lrbp->ucd_rsp_ptr +
+>> >> +				GENERAL_UPIU_REQUEST_SIZE;
+>> >> +		u16 len;
+>> >> +
+>> >> +		/* data segment length */
+>> >> +		len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2) &
+>> >> +						MASK_QUERY_DATA_SEG_LEN;
+>> >> +
+>> >> +		memcpy(hba->dev_cmd.query.descriptor, descp,
+>> >> +			min_t(u16, len, UPIU_HEADER_DATA_SEGMENT_MAX_SIZE));
+>> >> +	}
+>> >> +}
+>> >> +
+>> >> +/**
+>> >>   * ufshcd_hba_capabilities - Read controller capabilities
+>> >>   * @hba: per adapter instance
+>> >>   */
+>> >> @@ -629,6 +694,46 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct
+>> ufshcd_lrb *lrbp, u32 upiu_flags)
+>> >>  		(min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE)));
+>> >>  }
+>> >> +/**
+>> >> + * ufshcd_prepare_utp_query_req_upiu() - fills the
+>> >> utp_transfer_req_desc,
+>> >> + * for query requsts
+>> >> + * @hba: UFS hba
+>> >> + * @lrbp: local reference block pointer
+>> >> + * @upiu_flags: flags
+>> >> + */
+>> >> +static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
+>> +					struct ufshcd_lrb *lrbp,
+>> >> +					u32 upiu_flags)
+>> >> +{
+>> >> +	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
+>> >> +	u16 len = hba->dev_cmd.query.request->upiu_req.length;
+>> >> +	u8 *descp = (u8 *)lrbp->ucd_req_ptr + GENERAL_UPIU_REQUEST_SIZE; +
+>> >> +	/* Query request header */
+>> >> +	ucd_req_ptr->header.dword_0 = UPIU_HEADER_DWORD(
+>> >> +			UPIU_TRANSACTION_QUERY_REQ, upiu_flags,
+>> >> +			lrbp->lun, lrbp->task_tag);
+>> >> +	ucd_req_ptr->header.dword_1 = UPIU_HEADER_DWORD(
+>> >> +			0, hba->dev_cmd.query.request->query_func, 0, 0);
+>> >> +
+>> >> +	/* Data segment length */
+>> >> +	ucd_req_ptr->header.dword_2 = UPIU_HEADER_DWORD(
+>> >> +			0, 0, len >> 8, (u8)len);
+>> >> +
+>> >> +	/* Copy the Query Request buffer as is */
+>> >> +	memcpy(&lrbp->ucd_req_ptr->qr,
+>> &hba->dev_cmd.query.request->upiu_req,
+>> +			QUERY_OSF_SIZE);
+>> >> +	ufshcd_query_to_be(&lrbp->ucd_req_ptr->qr);
+>> >> +
+>> >> +	/* Copy the Descriptor */
+>> >> +	if ((hba->dev_cmd.query.descriptor != NULL) && (len > 0) &&
+>> >> +		(hba->dev_cmd.query.request->upiu_req.opcode ==
+>> >> +					UPIU_QUERY_OPCODE_WRITE_DESC)) {
+>> >> +		memcpy(descp, hba->dev_cmd.query.descriptor,
+>> >> +			min_t(u16, len, UPIU_HEADER_DATA_SEGMENT_MAX_SIZE));
+>> >> +	}
+>> >> +}
+>> >> +
+>> >>  static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb
+>> *lrbp)
+>> >>  {
+>> >>  	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
+>> >> @@ -663,7 +768,10 @@ static int ufshcd_compose_upiu(struct ufs_hba
+>> *hba,
+>> >> struct ufshcd_lrb *lrbp)
+>> >>  		break;
+>> >>  	case UTP_CMD_TYPE_DEV_MANAGE:
+>> >>  		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE);
+>> >> -		if (hba->dev_cmd.type == DEV_CMD_TYPE_NOP)
+>> >> +		if (hba->dev_cmd.type == DEV_CMD_TYPE_QUERY)
+>> >> +			ufshcd_prepare_utp_query_req_upiu(
+>> >> +					hba, lrbp, upiu_flags);
+>> >> +		else if (hba->dev_cmd.type == DEV_CMD_TYPE_NOP)
+>> >>  			ufshcd_prepare_utp_nop_upiu(lrbp);
+>> >>  		else
+>> >>  			ret = -EINVAL;
+>> >> @@ -831,6 +939,9 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba,
+>> struct ufshcd_lrb *lrbp)
+>> >>  					__func__, resp);
+>> >>  		}
+>> >>  		break;
+>> >> +	case UPIU_TRANSACTION_QUERY_RSP:
+>> >> +		ufshcd_copy_query_response(hba, lrbp);
+>> >> +		break;
+>> >>  	case UPIU_TRANSACTION_REJECT_UPIU:
+>> >>  		/* TODO: handle Reject UPIU Response */
+>> >>  		err = -EPERM;
+>> >> @@ -941,6 +1052,128 @@ out_put_tag:
+>> >>  }
+>> >>  /**
+>> >> + * ufshcd_query_request() - API for issuing query request to the
+>> device.
+>> >> + * @hba: ufs driver context
+>> >> + * @query: params for query request
+>> >> + * @descriptor: buffer for sending/receiving descriptor
+>> >> + * @retries: number of times to try executing the command
+>> >> + *
+>> >> + * All necessary fields for issuing a query and receiving its
+>> response
+>> + * are stored in the UFS hba struct. We can use this method since we
+>> know
+>> >> + * there is only one active query request or any device management
+>> command
+>> >> + * at all times.
+>> >> + */
+>> >> +static int ufshcd_send_query_request(struct ufs_hba *hba,
+>> >> +					struct ufs_query_req *query,
+>> >> +					u8 *descriptor,
+>> >> +					struct ufs_query_res *response)
+>> >> +{
+>> >> +	int ret;
+>> >> +
+>> >> +	BUG_ON(!hba);
+>> >> +	if (!query || !response) {
+>> >> +		dev_err(hba->dev,
+>> >> +			"%s: NULL pointer query = %p, response = %p\n",
+>> >> +			__func__, query, response);
+>> >> +		return -EINVAL;
+>> >> +	}
+>> >> +
+>> >> +	mutex_lock(&hba->dev_cmd.lock);
+>> >> +	hba->dev_cmd.query.request = query;
+>> >> +	hba->dev_cmd.query.response = response;
+>> >> +	hba->dev_cmd.query.descriptor = descriptor;
+>> >> +
+>> >> +	ret = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY,
+>> >> +					QUERY_REQ_TIMEOUT);
+>> >> +
+>> >> +	hba->dev_cmd.query.request = NULL;
+>> >> +	hba->dev_cmd.query.response = NULL;
+>> >> +	hba->dev_cmd.query.descriptor = NULL;
+>> >> +	mutex_unlock(&hba->dev_cmd.lock);
+>> >> +
+>> >> +	return ret;
+>> >> +}
+>> >> +
+>> >> +/**
+>> >> + * ufshcd_query_flag() - Helper function for composing flag query
+>> requests
+>> >> + * hba: per-adapter instance
+>> >> + * query_opcode: flag query to perform
+>> >> + * idn: flag idn to access
+>> >> + * flag_res: the flag value after the query request completes
+>> >> + *
+>> >> + * Returns 0 for success, non-zero in case of failure
+>> >> + */
+>> >> +static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode
+>> opcode,
+>> >> +			enum flag_idn idn, bool *flag_res)
+>> >> +{
+>> >> +	struct ufs_query_req *query;
+>> >> +	struct ufs_query_res *response;
+>> >> +	int err = -ENOMEM;
+>> >> +
+>> >> +	query = kzalloc(sizeof(struct ufs_query_req), GFP_KERNEL);
+>> >> +	if (!query) {
+>> >> +		dev_err(hba->dev,
+>> >> +			"%s: Failed allocating ufs_query_req instance\n",
+>> >> +			__func__);
+>> >> +		goto out_no_mem;
+>> >> +	}
+>> >> +	response = kzalloc(sizeof(struct ufs_query_res), GFP_KERNEL); +	if
+>> (!response) {
+>> >> +		dev_err(hba->dev,
+>> >> +			"%s: Failed allocating ufs_query_res instance\n",
+>> >> +			__func__);
+>> >> +		goto out_free_query;
+>> >> +	}
+>> > Can't stack local variable be permitted for query and response instead
+>> of
+>> > dynamic allocation?
+>> It can, though I think it is safer this way. In addition, this code is
+>> not
+>> a bottle neck.
+> Yes, once may not be a problem. But I am seeing this function is called
+> from some loop routine.
+> Could you explain the reason dynamic allocation is needed?
+I don't like the idea of allocating it on stack, I suggest to statically
+allocate it on the query struct. What do you think?
 >
->>
->>> Actually, mask value involves the corresponding bit to be cleared.
->>> So, 4th argument may be unnecessary.
->>
->> As I described above, the wait_for_register can also be used to
->> check if the value is set or not. In which case, we need 4th argument.
->>
->>>
->>>> +	if ((reg & mask) == mask)
->>>> +		err = -ETIMEDOUT;
->>> Also, checking the result can be involved in ufshcd_wait_for_register.
-> Any comment?
-
-Sorry I missed this. But the point was the same. To make
-wait_for_register() just to wait a definite time and not return any
-error condition when the bits don't turn as expected.
-
+>> >> +
+>> >> +	switch (opcode) {
+>> >> +	case UPIU_QUERY_OPCODE_SET_FLAG:
+>> >> +	case UPIU_QUERY_OPCODE_CLEAR_FLAG:
+>> >> +	case UPIU_QUERY_OPCODE_TOGGLE_FLAG:
+>> >> +		query->query_func = UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
+>> >> +		break;
+>> >> +	case UPIU_QUERY_OPCODE_READ_FLAG:
+>> >> +		query->query_func = UPIU_QUERY_FUNC_STANDARD_READ_REQUEST;
+>> >> +		if (!flag_res) {
+>> >> +			/* No dummy reads */
+>> >> +			dev_err(hba->dev, "%s: Invalid argument for read request\n",
+>> +					__func__);
+>> >> +			err = -EINVAL;
+>> >> +			goto out;
+>> >> +		}
+>> >> +		break;
+>> >> +	default:
+>> >> +		dev_err(hba->dev,
+>> >> +			"%s: Expected query flag opcode but got = %d\n",
+>> >> +			__func__, opcode);
+>> >> +		err = -EINVAL;
+>> >> +		goto out;
+>> >> +	}
+>> >> +	query->upiu_req.opcode = opcode;
+>> >> +	query->upiu_req.idn = idn;
+>> >> +
+>> >> +	/* Send query request */
+>> >> +	err = ufshcd_send_query_request(hba, query, NULL, response);
+>> >> +
+>> >> +	if (err) {
+>> >> +		dev_err(hba->dev,
+>> >> +			"%s: Sending flag query for idn %d failed, err = %d\n",
+>> >> +			__func__, idn, err);
+>> >> +		goto out;
+>> >> +	}
+>> >> +
+>> >> +	if (flag_res)
+>> >> +		*flag_res = (response->upiu_res.value &
+>> >> +				MASK_QUERY_UPIU_FLAG_LOC) & 0x1;
+>> >> +
+>> >> +out:
+>> >> +	kfree(response);
+>> >> +out_free_query:
+>> >> +	kfree(query);
+>> >> +out_no_mem:
+>> >> +	return err;
+>> >> +}
+>> >> +
+>> >> +/**
+>> >>   * ufshcd_memory_alloc - allocate memory for host memory space data
+>> >> structures
+>> >>   * @hba: per adapter instance
+>> >>   *
+>> >> @@ -1110,6 +1343,59 @@ static int ufshcd_dme_link_startup(struct
+>> ufs_hba
+>> >> *hba)
+>> >>  }
+>> >>  /**
+>> >> + * ufshcd_validate_device_init() - checks device readiness
+>> >> + * hba: per-adapter instance
+>> >> + *
+>> >> + * Set fDeviceInit flag, than, query the flag until the device
+>> clears the
+>> >> + * flag.
+>> >> + */
+>> >> +static int ufshcd_validate_device_init(struct ufs_hba *hba)
+>> > As standard description, this function is for initialization
+>> completion.
+>> How  about ufshcd_complete_dev_init for function name?
+>> You have a point.
+>> >> +{
+>> >> +	int i, retries, err = 0;
+>> >> +	bool flag_res = 0;
+>> >> +
+>> >> +	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
+>> >> +		/* Set the fDeviceIntit flag */
+>> >> +		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+>> >> +					QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
+>> > There is no need to get  flag_res in case set flag.
+>> > Just passing NULL is good.
+>> Consider the following scenario: a device is already fully initialized
+>> when we init the driver, in this case setting the flag will return 0
+>> since
+>> no further initialization is required. This means we don't have to query
+>> again or to poll for the fDeviceInit because we already now the
+>> initialization is completed.
+> It's not clear.
+> I think it may be a broad interpretation.
+> What's the meaning of returned flag_res?
+> 1. original value
+> 2. value which is applied by setting the fDeviceInit flag
+> 3. value which is applied by setting the fDeviceInit flag and reset
 >
->>>
->>>> +
->>>> +	return err;
->>>> +}
->>>> +
->>>> +/**
->>>> + * ufshcd_dev_cmd_completion() - handles device management command responses
->>>> + * @hba: per adapter instance
->>>> + * @lrbp: pointer to local reference block
->>>> + */
->>>> +static int
->>>> +ufshcd_dev_cmd_completion(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
->>>> +{
->>>> +	int resp;
->>>> +	int err = 0;
->>>> +
->>>> +	resp = ufshcd_get_req_rsp(lrbp->ucd_rsp_ptr);
->>>> +
->>>> +	switch (resp) {
->>>> +	case UPIU_TRANSACTION_NOP_IN:
->>>> +		if (hba->dev_cmd.type != DEV_CMD_TYPE_NOP) {
->>>> +			err = -EINVAL;
->>>> +			dev_err(hba->dev, "%s: unexpected response %x\n",
->>>> +					__func__, resp);
->>>> +		}
->>>> +		break;
->>>> +	case UPIU_TRANSACTION_REJECT_UPIU:
->>>> +		/* TODO: handle Reject UPIU Response */
->>>> +		err = -EPERM;
->>>> +		dev_err(hba->dev, "%s: Reject UPIU not fully implemented\n",
->>>> +				__func__);
->>>> +		break;
->>>> +	default:
->>>> +		err = -EINVAL;
->>>> +		dev_err(hba->dev, "%s: Invalid device management cmd response: %x\n",
->>>> +				__func__, resp);
->>>> +		break;
->>>> +	}
->>>> +
->>>> +	return err;
->>>> +}
->>>> +
->>>> +/**
->>>> + * ufshcd_get_dev_cmd_tag - Get device management command tag
->>>> + * @hba: per-adapter instance
->>>> + * @tag: pointer to variable with available slot value
->>>> + *
->>>> + * Get a free slot and lock it until device management command
->>>> + * completes.
->>>> + *
->>>> + * Returns false if free slot is unavailable for locking, else
->>>> + * return true with tag value in @tag.
->>>> + */
->>>> +static bool ufshcd_get_dev_cmd_tag(struct ufs_hba *hba, int *tag_out)
->>>> +{
->>>> +	int tag;
->>>> +	bool ret = false;
->>>> +	unsigned long tmp;
->>>> +
->>>> +	if (!tag_out)
->>>> +		goto out;
->>>> +
->>>> +	do {
->>>> +		tmp = ~hba->lrb_in_use;
->>>> +		tag = find_last_bit(&tmp, hba->nutrs);
->>>> +		if (tag >= hba->nutrs)
->>>> +			goto out;
->>>> +	} while (test_and_set_bit_lock(tag, &hba->lrb_in_use));
->>>> +
->>>> +	*tag_out = tag;
->>>> +	ret = true;
->>>> +out:
->>>> +	return ret;
->>>> +}
->>>> +
->>>> +static inline void ufshcd_put_dev_cmd_tag(struct ufs_hba *hba, int tag)
->>>> +{
->>>> +	clear_bit_unlock(tag, &hba->lrb_in_use);
->>>> +}
->>>> +
->>>> +/**
->>>> + * ufshcd_exec_dev_cmd - API for sending device management requests
->>>> + * @hba - UFS hba
->>>> + * @cmd_type - specifies the type (NOP, Query...)
->>>> + * @timeout - time in seconds
->>>> + *
->>>> + * NOTE: There is only one available tag for device management commands. Thus
->>>> + * synchronisation is the responsibilty of the user.
->>>> + */
->>>> +static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
->>>> +		enum dev_cmd_type cmd_type, int timeout)
->>>> +{
->>>> +	struct ufshcd_lrb *lrbp;
->>>> +	int err;
->>>> +	int tag;
->>>> +	struct completion wait;
->>>> +	unsigned long flags;
->>>> +
->>>> +	/*
->>>> +	 * Get free slot, sleep if slots are unavailable.
->>>> +	 * Even though we use wait_event() which sleeps indefinitely,
->>>> +	 * the maximum wait time is bounded by SCSI request timeout.
->>>> +	 */
->>>> +	wait_event(hba->dev_cmd.tag_wq, ufshcd_get_dev_cmd_tag(hba, &tag));
->>>> +
->>>> +	init_completion(&wait);
->>>> +	lrbp = &hba->lrb[tag];
->>>> +	WARN_ON(lrbp->cmd);
->>>> +	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
->>>> +	if (unlikely(err))
->>>> +		goto out_put_tag;
->>>> +
->>>> +	hba->dev_cmd.complete = &wait;
->>>> +
->>>> +	spin_lock_irqsave(hba->host->host_lock, flags);
->>>> +	ufshcd_send_command(hba, tag);
->>>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
->>>> +
->>>> +	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
->>>> +
->>> <snip>
->>>> +	if (err == -ETIMEDOUT) {
->>>> +		if (!ufshcd_clear_cmd(hba, tag))
->>>> +			err = -EAGAIN;
->>>> +	} else if (!err) {
->>>> +		spin_lock_irqsave(hba->host->host_lock, flags);
->>>> +		err = ufshcd_dev_cmd_completion(hba, lrbp);
->>>> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
->>>> +	}
->>> </snip>
->>> I think sniped part can be involved in ufshcd_wait_for_dev_cmd.
->>> How do you think about that?
+> In this step, query is not for read-flag but for set-flag.
+> Above all, spec. mentions polling the fDeviceInit using read-flag
+> definitively.
+After reading the spec, I agree, the statement is a little fuzzy. I will
+change it to null and fix the code according.
+>
+>> >> +		if (!err || err == -ETIMEDOUT)
+>> >> +			break;
+>> >> +		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err); +	}
+>> >> +	if (err) {
+>> >> +		dev_err(hba->dev,
+>> >> +			"%s setting fDeviceInit flag failed with error %d\n",
+>> >> +			__func__, err);
+>> >> +		goto out;
+>> >> +	}
+>> >> +
+>> >> +	/* poll for max. 100 iterations for fDeviceInit flag to clear */
+>> +	for (i = 0; i < 100 && !err && flag_res; i++) {
+>> > In first ufshcd_query_flag, if flag_res is updated with '0', this loop
+>> can't be executed.
+>> > Of course, we expect that flag_res has '1'.
+>> In the described case above, this condition allows us to skip the
+>> polling
+>> process.
 >>
->> Yes, it can be moved.
->>
->>>
->>>> +
->>>> +out_put_tag:
->>>> +	ufshcd_put_dev_cmd_tag(hba, tag);
->>>> +	wake_up(&hba->dev_cmd.tag_wq);
->>>> +	return err;
->>>> +}
->>>> +
->>>>    /**
->>>>     * ufshcd_memory_alloc - allocate memory for host memory space data structures
->>>>     * @hba: per adapter instance
->>>> @@ -774,8 +1075,8 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
->>>>    				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
->>>>
->>>>    		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
->>>> -		hba->lrb[i].ucd_cmd_ptr =
->>>> -			(struct utp_upiu_cmd *)(cmd_descp + i);
->>>> +		hba->lrb[i].ucd_req_ptr =
->>>> +			(struct utp_upiu_req *)(cmd_descp + i);
->>>>    		hba->lrb[i].ucd_rsp_ptr =
->>>>    			(struct utp_upiu_rsp *)cmd_descp[i].response_upiu;
->>>>    		hba->lrb[i].ucd_prdt_ptr =
->>>> @@ -961,6 +1262,38 @@ out:
->>>>    }
->>>>
->>>>    /**
->>>> + * ufshcd_validate_dev_connection() - Check device connection status
->>>> + * @hba: per-adapter instance
->>>> + *
->>>> + * Send NOP OUT UPIU and wait for NOP IN response to check whether the
->>>> + * device Transport Protocol (UTP) layer is ready after a reset.
->>>> + * If the UTP layer at the device side is not initialized, it may
->>>> + * not respond with NOP IN UPIU within timeout of %NOP_OUT_TIMEOUT
->>>> + * and we retry sending NOP OUT for %NOP_OUT_RETRIES iterations.
->>>> + */
->>>> +static int ufshcd_validate_dev_connection(struct ufs_hba *hba)
->>> I think ufshcd_verify_dev_init is close to standard description.
->>>
->>
->> Okay.
->>
->>>> +{
->>>> +	int err = 0;
->>>> +	int retries;
->>>> +
->>>> +	mutex_lock(&hba->dev_cmd.lock);
->>>> +	for (retries = NOP_OUT_RETRIES; retries > 0; retries--) {
->>>> +		err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_NOP,
->>>> +					       NOP_OUT_TIMEOUT);
->>>> +
->>>> +		if (!err || err == -ETIMEDOUT)
->>>> +			break;
->>>> +
->>>> +		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err);
->>>> +	}
->>>> +	mutex_unlock(&hba->dev_cmd.lock);
->>>> +
->>>> +	if (err)
->>>> +		dev_err(hba->dev, "%s: NOP OUT failed %d\n", __func__, err);
->>>> +	return err;
->>>> +}
->>>> +
->>>> +/**
->>>>     * ufshcd_do_reset - reset the host controller
->>>>     * @hba: per adapter instance
->>>>     *
->>>> @@ -986,13 +1319,20 @@ static int ufshcd_do_reset(struct ufs_hba *hba)
->>>>    	for (tag = 0; tag < hba->nutrs; tag++) {
->>>>    		if (test_bit(tag, &hba->outstanding_reqs)) {
->>>>    			lrbp = &hba->lrb[tag];
->>>> -			scsi_dma_unmap(lrbp->cmd);
->>>> -			lrbp->cmd->result = DID_RESET << 16;
->>>> -			lrbp->cmd->scsi_done(lrbp->cmd);
->>>> -			lrbp->cmd = NULL;
->>>> +			if (lrbp->cmd) {
->>>> +				scsi_dma_unmap(lrbp->cmd);
->>>> +				lrbp->cmd->result = DID_RESET << 16;
->>>> +				lrbp->cmd->scsi_done(lrbp->cmd);
->>>> +				lrbp->cmd = NULL;
->>>> +				clear_bit_unlock(tag, &hba->lrb_in_use);
->>>> +			}
->>> I know above.
->>> But there is no relation to this patch.
->>> Can be it moved to scsi: ufs: Fix device and host reset methods?
->>
->> Yes, but it is basically to avoid NULL pointer derefernce in case
->> someone picks this patch but not the other one.
->>
->>>
->>>>    		}
->>>>    	}
->>>>
->>>> +	/* complete device management command */
->>>> +	if (hba->dev_cmd.complete)
->>>> +		complete(hba->dev_cmd.complete);
->>>> +
->>>>    	/* clear outstanding request/task bit maps */
->>>>    	hba->outstanding_reqs = 0;
->>>>    	hba->outstanding_tasks = 0;
->>>> @@ -1199,27 +1539,37 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
->>>>
->>>>    	switch (ocs) {
->>>>    	case OCS_SUCCESS:
->>>> -
->>>>    		/* check if the returned transfer response is valid */
->>> As replaced with new function, comment isn't valid.
->>> Remove or "get the TR response transaction type" seems proper.
->>
->> Okay.
->>
->>>
->>>> -		result = ufshcd_is_valid_req_rsp(lrbp->ucd_rsp_ptr);
->>>> -		if (result) {
->>>> +		result = ufshcd_get_req_rsp(lrbp->ucd_rsp_ptr);
->>>> +
->>>> +		switch (result) {
->>>> +		case UPIU_TRANSACTION_RESPONSE:
->>>> +			/*
->>>> +			 * get the response UPIU result to extract
->>>> +			 * the SCSI command status
->>>> +			 */
->>>> +			result = ufshcd_get_rsp_upiu_result(lrbp->ucd_rsp_ptr);
->>>> +
->>>> +			/*
->>>> +			 * get the result based on SCSI status response
->>>> +			 * to notify the SCSI midlayer of the command status
->>>> +			 */
->>>> +			scsi_status = result & MASK_SCSI_STATUS;
->>>> +			result = ufshcd_scsi_cmd_status(lrbp, scsi_status);
->>>> +			break;
->>>> +		case UPIU_TRANSACTION_REJECT_UPIU:
->>>> +			/* TODO: handle Reject UPIU Response */
->>>> +			result = DID_ERROR << 16;
->>>> +			dev_err(hba->dev,
->>>> +				"Reject UPIU not fully implemented\n");
->>>> +			break;
->>>> +		default:
->>>> +			result = DID_ERROR << 16;
->>>>    			dev_err(hba->dev,
->>>> -				"Invalid response = %x\n", result);
->>>> +				"Unexpected request response code = %x\n",
->>>> +				result);
->>>>    			break;
->>>>    		}
->>>> -
->>>> -		/*
->>>> -		 * get the response UPIU result to extract
->>>> -		 * the SCSI command status
->>>> -		 */
->>>> -		result = ufshcd_get_rsp_upiu_result(lrbp->ucd_rsp_ptr);
->>>> -
->>>> -		/*
->>>> -		 * get the result based on SCSI status response
->>>> -		 * to notify the SCSI midlayer of the command status
->>>> -		 */
->>>> -		scsi_status = result & MASK_SCSI_STATUS;
->>>> -		result = ufshcd_scsi_cmd_status(lrbp, scsi_status);
->>>>    		break;
->>>>    	case OCS_ABORTED:
->>>>    		result |= DID_ABORT << 16;
->>>> @@ -1259,28 +1609,37 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
->>>>     */
->>>>    static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
->>>>    {
->>>> -	struct ufshcd_lrb *lrb;
->>>> +	struct ufshcd_lrb *lrbp;
->>>> +	struct scsi_cmnd *cmd;
->>>>    	unsigned long completed_reqs;
->>>>    	u32 tr_doorbell;
->>>>    	int result;
->>>>    	int index;
->>>> +	bool int_aggr_reset = false;
->>>>
->>>> -	lrb = hba->lrb;
->>>>    	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
->>>>    	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
->>>>
->>>>    	for (index = 0; index < hba->nutrs; index++) {
->>>>    		if (test_bit(index, &completed_reqs)) {
->>>> -
->>>> -			result = ufshcd_transfer_rsp_status(hba, &lrb[index]);
->>>> -
->>>> -			if (lrb[index].cmd) {
->>>> -				scsi_dma_unmap(lrb[index].cmd);
->>>> -				lrb[index].cmd->result = result;
->>>> -				lrb[index].cmd->scsi_done(lrb[index].cmd);
->>>> -
->>>> +			lrbp = &hba->lrb[index];
->>>> +			cmd = lrbp->cmd;
->>>> +			/* Don't reset counters for interrupt cmd */
->>>> +			int_aggr_reset |= !lrbp->intr_cmd;
->>>> +
->>>> +			if (cmd) {
->>>> +				result = ufshcd_transfer_rsp_status(hba, lrbp);
->>>> +				scsi_dma_unmap(cmd);
->>>> +				cmd->result = result;
->>>>    				/* Mark completed command as NULL in LRB */
->>>> -				lrb[index].cmd = NULL;
->>>> +				lrbp->cmd = NULL;
->>>> +				clear_bit_unlock(index, &hba->lrb_in_use);
->>>> +				/* Do not touch lrbp after scsi done */
->>>> +				cmd->scsi_done(cmd);
->>>> +			} else if (lrbp->command_type ==
->>>> +					UTP_CMD_TYPE_DEV_MANAGE) {
->>>> +				if (hba->dev_cmd.complete)
->>>> +					complete(hba->dev_cmd.complete);
->>>>    			}
->>>>    		} /* end of if */
->>>>    	} /* end of for */
->>>> @@ -1288,8 +1647,12 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
->>>>    	/* clear corresponding bits of completed commands */
->>>>    	hba->outstanding_reqs ^= completed_reqs;
->>>>
->>>> +	/* we might have free'd some tags above */
->>>> +	wake_up(&hba->dev_cmd.tag_wq);
->>>> +
->>>>    	/* Reset interrupt aggregation counters */
->>>> -	ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
->>>> +	if (int_aggr_reset)
->>>> +		ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
->>> Do you assume that interrupt command(device management command) is completed alone?
->>> Of course, interrupt command is not counted in aggregation unlike regular command.
->>> We need to consider that interrupt command comes along with regular command?
->>> If right, ufshcd_config_int_aggr should not be skipped.
->>
->> True. We are not skipping it. int_aggr_reset will be false only when
->> there is single interrupt command completed.
->>
->> Check the above part which reads -
->> for_all_completed_commands() {
->>    int_aggr_reset |= !lrbp->intr_cmd;
->> }
->>
->> Even if one of the command in the iteration is not interrupt command
->> (lrbp->intr_cmd is false) then int_aggr_reset is always true.
-> Clear!
-> But I confused it with your comment line. (/* Don't reset counters for interrupt cmd */)
-> How about changing like below?
-> 'Don't skip to reset counters if a regular command is present'
+>> >> +		retries = QUERY_REQ_RETRIES;
+>> >> +		for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
+>> >> +			err = ufshcd_query_flag(hba,
+>> >> +					UPIU_QUERY_OPCODE_READ_FLAG,
+>> >> +					QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
+>> >> +			if (!err || err == -ETIMEDOUT)
+>> >> +				break;
+>> > Normally, ufshcd_query_flag returns '0' to err while flag is not being
+>> cleared.
+>> > If these routine is repeated, inner for-loop is just executed and go
+>> to
+>> outer loop.
+>> > What is difference between two for-loop?
+>> Your analysis was correct, each loop has a different responsibility. The
+>> outer loop counts the poling retries, while the inner loop is
+>> responsible
+>> for passing the query request to the device without errors. So the inner
+>> loop will execute more then once iff there was an error and the request
+>> was not executed properly.
+> I wonder that valid result comes after error is happened and retry is
+> taken.
+> Should we allow the retry in case errors?
+Well, currently all other components, SCSI included, are retrying in case
+of errors. I don't see a reason why this case should be different.
+>
+> Thanks,
+> Seungwon Jeon
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Makes sense.
-
+Thanks,
+Dolev
 -- 
-Regards,
-Sujit
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
