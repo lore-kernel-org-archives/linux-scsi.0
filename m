@@ -1,82 +1,194 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: RE: [PATCH 2/2] qla2xxx: Properly set the tagging for commands.
-Date: Fri, 19 Jul 2013 09:16:51 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D353A79E5@AVMB1.qlogic.org>
-References: <1373654871-29081-1-git-send-email-saurav.kashyap@qlogic.com>
- <1373654871-29081-3-git-send-email-saurav.kashyap@qlogic.com>
+From: Seungwon Jeon <tgih.jun@samsung.com>
+Subject: RE: [PATCH V3 1/2] scsi: ufs: Add support for sending NOP OUT UPIU
+Date: Fri, 19 Jul 2013 22:47:57 +0900
+Message-ID: <001c01ce8486$9357c510$ba074f30$%jun@samsung.com>
+References: <1373361310-30674-1-git-send-email-sthumma@codeaurora.org>
+ <1373361310-30674-2-git-send-email-sthumma@codeaurora.org>
+ <002501ce7d71$4c7a8f40$e56fadc0$%jun@samsung.com>
+ <51DE7D08.9000306@codeaurora.org>
+ <001a01ce82c5$8bd47d50$a37d77f0$%jun@samsung.com>
+ <51E76596.5090509@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1373654871-29081-3-git-send-email-saurav.kashyap@qlogic.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: "jbottomley@parallels.com" <jbottomley@parallels.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:51071 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755360Ab3GSNr7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jul 2013 09:47:59 -0400
+In-reply-to: <51E76596.5090509@codeaurora.org>
+Content-language: ko
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Sujit Reddy Thumma' <sthumma@codeaurora.org>
+Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, 'Dolev Raviv' <draviv@codeaurora.org>
 
-This should go to stable also, added in to list. This fixes a BZ https://bugzilla.kernel.org/show_bug.cgi?id=59601
+On Thu, July 18, 2013, Sujit Reddy Thumma wrote:
+> >>>> + * ufshcd_wait_for_register - wait for register value to change
+> >>>> + * @hba - per-adapter interface
+> >>>> + * @reg - mmio register offset
+> >>>> + * @mask - mask to apply to read register value
+> >>>> + * @val - wait condition
+> >>>> + * @interval_us - polling interval in microsecs
+> >>>> + * @timeout_ms - timeout in millisecs
+> >>>> + *
+> >>>> + * Returns final register value after iteration
+> >>>> + */
+> >>>> +static u32 ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+> >>>> +		u32 val, unsigned long interval_us, unsigned long timeout_ms)
+> >>> I feel like this function's role is to wait for clearing register (specially, doorbells).
+> >>> If you really don't intend to apply other all register, I think it would better to change the
+> >> function name.
+> >>> ex> ufshcd_wait_for_clear_doorbell or ufshcd_wait_for_clear_reg?
+> >>
+> >> Although, this API is introduced in this patch and used only for
+> >> clearing the doorbell, I have intentionally made it generic to avoid
+> >> duplication of wait condition code in future (not just clearing but
+> >> also for setting a bit). For example, when we write to HCE.ENABLE we
+> >> wait for it turn to 1.
+> >>
+> >>
+> >>> And if you like it, it could be more simple like below
+> >>>
+> >>> static bool ufshcd_wait_for_clear_reg(struct ufs_hba *hba, u32 reg, u32 mask,
+> >>>                                            unsigned long interval_us,
+> >>>                                            unsigned int timeout_ms)
+> >>> {
+> >>>           unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+> >>
+> >> Jiffies on 100Hz systems have minimum granularity of 10ms. So we really
+> >> wait for more 10ms even though the timeout_ms < 10ms.
+> > Yes. Real timeout depends on system.
+> > But normally actual wait will be maintained until 'ufshcd_readl' is done.
+> > Timeout is valid for failure case.  If we don't need to apply a strict timeout value, it's not bad.
+> 
+> Hmm.. make sense. Will take care in the next patchset.
+> 
+> >
+> >>
+> >>>           /* wakeup within 50us of expiry */
+> >>>           const unsigned int expiry = 50;
+> >>>
+> >>>           while (ufshcd_readl(hba, reg) & mask) {
+> >>>                   usleep_range(interval_us, interval_us + expiry);
+> >>>                   if (time_after(jiffies, timeout)) {
+> >>>                           if (ufshcd_readl(hba, reg) & mask)
+> >>>                                   return false;
+> >>
+> >> I really want the caller to decide on what to do after the timeout.
+> >> This helps in error handling cases where we try to clear off the entire
+> >> door-bell register but only a few of the bits are cleared after timeout.
+> > I don't know what we can do with the report of the partial success on clearing bit.
+> > It's just failure case. Isn't enough with false/true?
+> 
+> The point is, if a bit can't be cleared it can be regarded as a
+> permanent failure (only for that request), otherwise, it can be
+> retried with the same tag value.
+> 
+> >
+> >>
+> >>>                           else
+> >>>                                   return true;
+> >>>                   }
+> >>>           }
+> >>>
+> >>>           return true;
+> >>> }
+> >>>> +{
+> >>>> +	u32 tmp;
+> >>>> +	ktime_t start;
+> >>>> +	unsigned long diff;
+> >>>> +
+> >>>> +	tmp = ufshcd_readl(hba, reg);
+> >>>> +
+> >>>> +	if ((val & mask) != val) {
+> >>>> +		dev_err(hba->dev, "%s: Invalid wait condition 0x%x\n",
+> >>>> +				__func__, val);
+> >>>> +		goto out;
+> >>>> +	}
+> >>>> +
+> >>>> +	start = ktime_get();
+> >>>> +	while ((tmp & mask) != val) {
+> >>>> +		/* wakeup within 50us of expiry */
+> >>>> +		usleep_range(interval_us, interval_us + 50);
+> >>>> +		tmp = ufshcd_readl(hba, reg);
+> >>>> +		diff = ktime_to_ms(ktime_sub(ktime_get(), start));
+> >>>> +		if (diff > timeout_ms) {
+> >>>> +			tmp = ufshcd_readl(hba, reg);
+> >>>> +			break;
+> >>>> +		}
+> >>>> +	}
+> >>>> +out:
+> >>>> +	return tmp;
+> >>>> +}
+> >>>> +
+> ..
+> >>>> +static int
+> >>>> +ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
+> >>>> +{
+> >>>> +	int err = 0;
+> >>>> +	unsigned long flags;
+> >>>> +	u32 reg;
+> >>>> +	u32 mask = 1 << tag;
+> >>>> +
+> >>>> +	/* clear outstanding transaction before retry */
+> >>>> +	spin_lock_irqsave(hba->host->host_lock, flags);
+> >>>> +	ufshcd_utrl_clear(hba, tag);
+> >>>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> >>>> +
+> >>>> +	/*
+> >>>> +	 * wait for for h/w to clear corresponding bit in door-bell.
+> >>>> +	 * max. wait is 1 sec.
+> >>>> +	 */
+> >>>> +	reg = ufshcd_wait_for_register(hba,
+> >>>> +			REG_UTP_TRANSFER_REQ_DOOR_BELL,
+> >>>> +			mask, 0, 1000, 1000);
+> >>> 4th argument should be (~mask) instead of '0', right?
+> >>
+> >> True, but not really for this implementation. It breaks the check in
+> >> in wait_for_register -
+> >> if ((val & mask) != val)
+> >>              dev_err(...);
+> > Hmm, it seems complicated to use.
+> > Ok. Is right the following about val as 4th argument?
+> > - clear: val  should be '0' regardless corresponding bit.
+> > - set: val should be same with mask.
+> > If the related comment is added, it will be helpful.
+> 
+> Thinking again it looks like it is complicated. How about changing
+> the check to -
+> 
+> val = val & mask; /* ignore the bits we don't intend to wait on */
+> while (ufshcd_readl() & mask != val) {
+>   sleep
+> }
+> 
+> Usage will be ~mask for clearing the bits, mask for setting the bits
+> in the fourth argument.
+Ok.
+It's better for the caller.
+
+> 
+> >
+> >>
+> >>> Actually, mask value involves the corresponding bit to be cleared.
+> >>> So, 4th argument may be unnecessary.
+> >>
+> >> As I described above, the wait_for_register can also be used to
+> >> check if the value is set or not. In which case, we need 4th argument.
+> >>
+> >>>
+> >>>> +	if ((reg & mask) == mask)
+> >>>> +		err = -ETIMEDOUT;
+> >>> Also, checking the result can be involved in ufshcd_wait_for_register.
+> > Any comment?
+> 
+> Sorry I missed this. But the point was the same. To make
+> wait_for_register() just to wait a definite time and not return any
+> error condition when the bits don't turn as expected.
+Comparing reg with mask can be done in 'ufshcd_wait_for_register' commonly.
+Currently the caller do the same.
 
 Thanks,
-~Saurav
+Seungwon Jeon
 
-
------Original Message-----
-From: Saurav Kashyap [mailto:saurav.kashyap@qlogic.com]
-Sent: Saturday, July 13, 2013 12:18 AM
-To: jbottomley@parallels.com
-Cc: Giridhar Malavali; Saurav Kashyap; Andrew Vasquez; linux-scsi
-Subject: [PATCH 2/2] qla2xxx: Properly set the tagging for commands.
-
-Reported-by: Jack Hill <jackhill@jackhill.us>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_iocb.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c index 42ef481..ef0a548 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -419,6 +419,8 @@ qla2x00_start_scsi(srb_t *sp)
-                            __constant_cpu_to_le16(CF_SIMPLE_TAG);
-                        break;
-                }
-+       } else {
-+               cmd_pkt->control_flags = __constant_cpu_to_le16(CF_SIMPLE_TAG);
-        }
-
-        /* Load SCSI command packet. */
-@@ -1307,11 +1309,11 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
-                    fcp_cmnd->task_attribute = TSK_ORDERED;
-                    break;
-                default:
--                   fcp_cmnd->task_attribute = 0;
-+                   fcp_cmnd->task_attribute = TSK_SIMPLE;
-                    break;
-                }
-        } else {
--               fcp_cmnd->task_attribute = 0;
-+               fcp_cmnd->task_attribute = TSK_SIMPLE;
-        }
-
-        cmd_pkt->fcp_rsp_dseg_len = 0; /* Let response come in status iocb */ @@ -1525,7 +1527,12 @@ qla24xx_start_scsi(srb_t *sp)
-                case ORDERED_QUEUE_TAG:
-                        cmd_pkt->task = TSK_ORDERED;
-                        break;
-+               default:
-+                   cmd_pkt->task = TSK_SIMPLE;
-+                   break;
-                }
-+       } else {
-+               cmd_pkt->task = TSK_SIMPLE;
-        }
-
-        /* Load SCSI command packet. */
---
-1.7.7
-
-
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
