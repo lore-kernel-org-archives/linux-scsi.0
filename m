@@ -1,79 +1,202 @@
 From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH V3 1/2] scsi: ufs: Add support for host assisted background
- operations
-Date: Fri, 19 Jul 2013 23:56:22 +0530
-Message-ID: <51E984CE.3010207@codeaurora.org>
-References: <1373361336-30713-1-git-send-email-sthumma@codeaurora.org> <1373361336-30713-2-git-send-email-sthumma@codeaurora.org> <002701ce7d71$c76a4510$563ecf30$%jun@samsung.com> <51DE81A2.7010700@codeaurora.org> <001b01ce82c5$95332bd0$bf998370$%jun@samsung.com> <51E7659C.8050400@codeaurora.org> <001e01ce8487$c246e300$46d4a900$%jun@samsung.com>
+Subject: Re: [PATCH V3 1/2] scsi: ufs: Add support for sending NOP OUT UPIU
+Date: Fri, 19 Jul 2013 23:56:27 +0530
+Message-ID: <51E984D3.80502@codeaurora.org>
+References: <1373361310-30674-1-git-send-email-sthumma@codeaurora.org> <1373361310-30674-2-git-send-email-sthumma@codeaurora.org> <002501ce7d71$4c7a8f40$e56fadc0$%jun@samsung.com> <51DE7D08.9000306@codeaurora.org> <001a01ce82c5$8bd47d50$a37d77f0$%jun@samsung.com> <51E76596.5090509@codeaurora.org> <001c01ce8486$9357c510$ba074f30$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <001e01ce8487$c246e300$46d4a900$%jun@samsung.com>
+In-Reply-To: <001c01ce8486$9357c510$ba074f30$%jun@samsung.com>
 Sender: linux-arm-msm-owner@vger.kernel.org
 To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, 'Dolev Raviv' <draviv@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
->>>>>>> I'm not sure that BKOPS with runtime-pm associates.
->>>>>>> Do you think it's helpful for power management?
->>>>>>> How about hibernation scheme for runtime-pm?
->>>>>>> I'm testing and I can introduce soon.
+On 7/19/2013 7:17 PM, Seungwon Jeon wrote:
+> On Thu, July 18, 2013, Sujit Reddy Thumma wrote:
+>>>>>> + * ufshcd_wait_for_register - wait for register value to change
+>>>>>> + * @hba - per-adapter interface
+>>>>>> + * @reg - mmio register offset
+>>>>>> + * @mask - mask to apply to read register value
+>>>>>> + * @val - wait condition
+>>>>>> + * @interval_us - polling interval in microsecs
+>>>>>> + * @timeout_ms - timeout in millisecs
+>>>>>> + *
+>>>>>> + * Returns final register value after iteration
+>>>>>> + */
+>>>>>> +static u32 ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+>>>>>> +		u32 val, unsigned long interval_us, unsigned long timeout_ms)
+>>>>> I feel like this function's role is to wait for clearing register (specially, doorbells).
+>>>>> If you really don't intend to apply other all register, I think it would better to change the
+>>>> function name.
+>>>>> ex> ufshcd_wait_for_clear_doorbell or ufshcd_wait_for_clear_reg?
+>>>>
+>>>> Although, this API is introduced in this patch and used only for
+>>>> clearing the doorbell, I have intentionally made it generic to avoid
+>>>> duplication of wait condition code in future (not just clearing but
+>>>> also for setting a bit). For example, when we write to HCE.ENABLE we
+>>>> wait for it turn to 1.
+>>>>
+>>>>
+>>>>> And if you like it, it could be more simple like below
 >>>>>
->>>>> Well, I am thinking on following approach when we introduce
->>>>> power management.
+>>>>> static bool ufshcd_wait_for_clear_reg(struct ufs_hba *hba, u32 reg, u32 mask,
+>>>>>                                             unsigned long interval_us,
+>>>>>                                             unsigned int timeout_ms)
+>>>>> {
+>>>>>            unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+>>>>
+>>>> Jiffies on 100Hz systems have minimum granularity of 10ms. So we really
+>>>> wait for more 10ms even though the timeout_ms < 10ms.
+>>> Yes. Real timeout depends on system.
+>>> But normally actual wait will be maintained until 'ufshcd_readl' is done.
+>>> Timeout is valid for failure case.  If we don't need to apply a strict timeout value, it's not bad.
+>>
+>> Hmm.. make sense. Will take care in the next patchset.
+>>
+>>>
+>>>>
+>>>>>            /* wakeup within 50us of expiry */
+>>>>>            const unsigned int expiry = 50;
 >>>>>
->>>>> ufshcd_runtime_suspend() {
->>>>> 	if (bkops_status >= NON_CRITICAL) { /* 0x1 */
->>>>> 		ufshcd_enable_auto_bkops();
->>>>> 		hibernate(); /* only the link and the device
->>>>> 			should be able to cary out bkops */
->>>>> 	} else {
->>>>> 		hibernate(); /* Link and the device for more savings */
->>>>> 	}
+>>>>>            while (ufshcd_readl(hba, reg) & mask) {
+>>>>>                    usleep_range(interval_us, interval_us + expiry);
+>>>>>                    if (time_after(jiffies, timeout)) {
+>>>>>                            if (ufshcd_readl(hba, reg) & mask)
+>>>>>                                    return false;
+>>>>
+>>>> I really want the caller to decide on what to do after the timeout.
+>>>> This helps in error handling cases where we try to clear off the entire
+>>>> door-bell register but only a few of the bits are cleared after timeout.
+>>> I don't know what we can do with the report of the partial success on clearing bit.
+>>> It's just failure case. Isn't enough with false/true?
+>>
+>> The point is, if a bit can't be cleared it can be regarded as a
+>> permanent failure (only for that request), otherwise, it can be
+>> retried with the same tag value.
+>>
+>>>
+>>>>
+>>>>>                            else
+>>>>>                                    return true;
+>>>>>                    }
+>>>>>            }
+>>>>>
+>>>>>            return true;
 >>>>> }
+>>>>>> +{
+>>>>>> +	u32 tmp;
+>>>>>> +	ktime_t start;
+>>>>>> +	unsigned long diff;
+>>>>>> +
+>>>>>> +	tmp = ufshcd_readl(hba, reg);
+>>>>>> +
+>>>>>> +	if ((val & mask) != val) {
+>>>>>> +		dev_err(hba->dev, "%s: Invalid wait condition 0x%x\n",
+>>>>>> +				__func__, val);
+>>>>>> +		goto out;
+>>>>>> +	}
+>>>>>> +
+>>>>>> +	start = ktime_get();
+>>>>>> +	while ((tmp & mask) != val) {
+>>>>>> +		/* wakeup within 50us of expiry */
+>>>>>> +		usleep_range(interval_us, interval_us + 50);
+>>>>>> +		tmp = ufshcd_readl(hba, reg);
+>>>>>> +		diff = ktime_to_ms(ktime_sub(ktime_get(), start));
+>>>>>> +		if (diff > timeout_ms) {
+>>>>>> +			tmp = ufshcd_readl(hba, reg);
+>>>>>> +			break;
+>>>>>> +		}
+>>>>>> +	}
+>>>>>> +out:
+>>>>>> +	return tmp;
+>>>>>> +}
+>>>>>> +
+>> ..
+>>>>>> +static int
+>>>>>> +ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
+>>>>>> +{
+>>>>>> +	int err = 0;
+>>>>>> +	unsigned long flags;
+>>>>>> +	u32 reg;
+>>>>>> +	u32 mask = 1 << tag;
+>>>>>> +
+>>>>>> +	/* clear outstanding transaction before retry */
+>>>>>> +	spin_lock_irqsave(hba->host->host_lock, flags);
+>>>>>> +	ufshcd_utrl_clear(hba, tag);
+>>>>>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>>>>> +
+>>>>>> +	/*
+>>>>>> +	 * wait for for h/w to clear corresponding bit in door-bell.
+>>>>>> +	 * max. wait is 1 sec.
+>>>>>> +	 */
+>>>>>> +	reg = ufshcd_wait_for_register(hba,
+>>>>>> +			REG_UTP_TRANSFER_REQ_DOOR_BELL,
+>>>>>> +			mask, 0, 1000, 1000);
+>>>>> 4th argument should be (~mask) instead of '0', right?
+>>>>
+>>>> True, but not really for this implementation. It breaks the check in
+>>>> in wait_for_register -
+>>>> if ((val & mask) != val)
+>>>>               dev_err(...);
+>>> Hmm, it seems complicated to use.
+>>> Ok. Is right the following about val as 4th argument?
+>>> - clear: val  should be '0' regardless corresponding bit.
+>>> - set: val should be same with mask.
+>>> If the related comment is added, it will be helpful.
+>>
+>> Thinking again it looks like it is complicated. How about changing
+>> the check to -
+>>
+>> val = val & mask; /* ignore the bits we don't intend to wait on */
+>> while (ufshcd_readl() & mask != val) {
+>>    sleep
+>> }
+>>
+>> Usage will be ~mask for clearing the bits, mask for setting the bits
+>> in the fourth argument.
+> Ok.
+> It's better for the caller.
+>
+>>
+>>>
+>>>>
+>>>>> Actually, mask value involves the corresponding bit to be cleared.
+>>>>> So, 4th argument may be unnecessary.
+>>>>
+>>>> As I described above, the wait_for_register can also be used to
+>>>> check if the value is set or not. In which case, we need 4th argument.
+>>>>
 >>>>>
->>>>> Let me know if this is okay.
->>> I still consider whether BKOPS is proper behavior with runtime-pm or not.
+>>>>>> +	if ((reg & mask) == mask)
+>>>>>> +		err = -ETIMEDOUT;
+>>>>> Also, checking the result can be involved in ufshcd_wait_for_register.
+>>> Any comment?
 >>
->> The BKOPS is something that host allows the card to carry out
->> when the host knows it is idle and not expecting back to back requests.
->> Runtime PM idle is the only way to know whether the device is
->> idle (unless we want to reinvent the wheel to detect the idleness of
->> host and trigger bkops). There was a discussion on this in MMC mailing
->> list as well, and folks have agreed to move idle time bkops to runtime
->> PM (http://thread.gmane.org/gmane.linux.kernel.mmc/19444/)
-> It looks like different.
-> eMMC cannot execute BKOPS itself unlike UFS.
-> That's the way eMMC's host should trigger the BKOPS manually.
->
+>> Sorry I missed this. But the point was the same. To make
+>> wait_for_register() just to wait a definite time and not return any
+>> error condition when the bits don't turn as expected.
+> Comparing reg with mask can be done in 'ufshcd_wait_for_register' commonly.
+> Currently the caller do the same.
 
-I guess it is not much of a difference for UFS as far as we concern
-only about idle time bkops. In UFS one can still disallow the device to
-not carry out BKOPS and hence the case where UFS device also cannot
-execute BKOPS itself and a idle timer is needed to allow BKOPS
-sporadically so that device doesn't go into URGENT_BKOPS state.
+Hmm.. you don't seem to agree to my point earlier mentioned
 
->>
->>> How about this scenario? It seems more simple.
-> 	> > If we concern a response latency of transfer requests, BKOPS can be disabled by default.
->>> And then BKOPS can be enabled whenever device requests in some exception.
->>> If you have any idea, let me know.
->>
->> Exceptions are raised only when the device is in critical need for
->> bkops. Also the spec. recommends, host should ensure that the device
->> doesn't go into such states.
->>
->> With your suggestion, when we disable bkops, the exception is raised and
->> we enable bkops after which there is no way to disable it again?
-> Yes, it's difficult to find proper time.
-> Maybe, BKOPS can be disabled when request comes up.
->
-In cases where there are back-to-back heavy data write requests then it
-is not proper to enable/disable BKOPS as soon as the new request comes
-up. It may happen that the card will then move from PERFORMANCE_IMPACT
-state to CRITICAL and ultimately start failing the requests. The point
-is that we should never get into state where we need URGENT_BKOPS.
+">>>> I really want the caller to decide on what to do after the timeout.
+ >>>> This helps in error handling cases where we try to clear off the 
+entire
+ >>>> door-bell register but only a few of the bits are cleared after 
+timeout.
+ >>> I don't know what we can do with the report of the partial success 
+on clearing bit.
+ >>> It's just failure case. Isn't enough with false/true?
+ >>
+ >> The point is, if a bit can't be cleared it can be regarded as a
+ >> permanent failure (only for that request), otherwise, it can be
+ >> retried with the same tag value."
+
+Since there is no real use case as of now. I will move the error check
+to the wait_for_register.
 
 -- 
 Regards,
