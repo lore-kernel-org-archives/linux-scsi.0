@@ -1,40 +1,88 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Sat, 20 Jul 2013 17:57:59 -0600
-Message-ID: <20130720235759.GB28005@kernel.dk>
-References: <1374173515.7397.948.camel@haakon3.risingtidesystems.com>
- <51E83E32.9050306@cs.wisc.edu>
- <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
- <20130719003034.GG28005@kernel.dk>
- <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <51EAA33C.9010405@fusionio.com>
+From: "MICROSOFT IBERICA SL" <ibericaslmic@outlook.es>
+Subject: Yon've won a Prize
+Date: Sat, 20 Jul 2013 00:44:20 +0300 (EEST)
+Message-ID: <59773.83.46.143.199.1374270260.squirrel@mail1.centrum-group.com>
+Reply-To: payingroll446@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <51EAA33C.9010405@fusionio.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mike Christie <mchristie@fusionio.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain;charset=WINDOWS-1251
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail1.centrum-group.com ([194.12.254.133]:47085 "EHLO
+	mail1.centrum-group.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755410Ab3GUD1H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Jul 2013 23:27:07 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jul 20 2013, Mike Christie wrote:
-> blk-mq: blk-mq should free bios in pass through case
-> 
-> For non mq calls, the block layer will free the bios when
-> blk_finish_request is called.
-> 
-> For mq calls, the blk mq code wants the caller to do this.
-> 
-> This patch has the blk mq code work like the non mq code
-> and has the block layer free the bios.
+Yon've won a Prize
+MICROSOFT IBERICA SL"
+YOU 'VE WON.
+ATTN:MICROSOFT IBERICA SL
+Your email has won (EUR244,000,00)
+(TWO HUNDRED AND FOURTY FOUR THOUSAND EURO)
+Batch number:XL73276498AM
+Ref number:QR352899526KC
+This is a millennium scientific computer game in which
+email addresses were used.It is a promotional program aimed at
+encouraging internet users,therefore you do not need to buy ticket to enter
+for it.
+For further development,clarification and procedure please
+Contact:Dr Eduardo Sanchez,
+Email contact:payingroll446@yahoo.com.hk
 
-Thanks Mike, looks good, applied.
 
--- 
-Jens Axboe
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
