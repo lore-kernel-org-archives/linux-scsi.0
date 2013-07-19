@@ -1,27 +1,80 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Fri, 19 Jul 2013 09:58:49 -0600
-Message-ID: <51E96239.8080409@cs.wisc.edu>
-References: <cover.1369155164.git.agordeev@redhat.com>  <20130521235003.GE6985@mtj.dyndns.org>  <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>  <20130522170305.GD9563@kernel.dk>  <20130711102630.GA11133@dhcp-26-207.brq.redhat.com>  <1373583637.7397.370.camel@haakon3.risingtidesystems.com>  <20130712074559.GA8727@dhcp-26-207.brq.redhat.com>  <1373692812.7397.625.camel@haakon3.risingtidesystems.com>  <20130716183207.GA6402@dhcp-26-207.brq.redhat.com>  <1374010683.7397.880.camel@haakon3.risingtidesystems.com>  <20130717161909.GB21468@dhcp-26-207.brq.redhat.com>  <1374173515.7397.948.camel@haakon3.risingtidesystems.com>  <51E83E32.9050306@cs.wisc.edu> <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: Re: [PATCH V3 1/2] scsi: ufs: Add support for host assisted background
+ operations
+Date: Fri, 19 Jul 2013 23:56:22 +0530
+Message-ID: <51E984CE.3010207@codeaurora.org>
+References: <1373361336-30713-1-git-send-email-sthumma@codeaurora.org> <1373361336-30713-2-git-send-email-sthumma@codeaurora.org> <002701ce7d71$c76a4510$563ecf30$%jun@samsung.com> <51DE81A2.7010700@codeaurora.org> <001b01ce82c5$95332bd0$bf998370$%jun@samsung.com> <51E7659C.8050400@codeaurora.org> <001e01ce8487$c246e300$46d4a900$%jun@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38364 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752615Ab3GSP7R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jul 2013 11:59:17 -0400
-In-Reply-To: <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <001e01ce8487$c246e300$46d4a900$%jun@samsung.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Seungwon Jeon <tgih.jun@samsung.com>
+Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 07/18/2013 06:23 PM, Nicholas A. Bellinger wrote:
->> Just saw this while trying out iscsi with the scsi-mq stuff :)
->> > 
-> Took at stab at this a while back, but ended getting distracted on other
-> items.  Do you have an initial conversion running yet..?
 
-Not running well :) Have a patch but I am debugging it now. I messed up
-something with the cmd_size stuff.
+>>>>>>> I'm not sure that BKOPS with runtime-pm associates.
+>>>>>>> Do you think it's helpful for power management?
+>>>>>>> How about hibernation scheme for runtime-pm?
+>>>>>>> I'm testing and I can introduce soon.
+>>>>>
+>>>>> Well, I am thinking on following approach when we introduce
+>>>>> power management.
+>>>>>
+>>>>> ufshcd_runtime_suspend() {
+>>>>> 	if (bkops_status >= NON_CRITICAL) { /* 0x1 */
+>>>>> 		ufshcd_enable_auto_bkops();
+>>>>> 		hibernate(); /* only the link and the device
+>>>>> 			should be able to cary out bkops */
+>>>>> 	} else {
+>>>>> 		hibernate(); /* Link and the device for more savings */
+>>>>> 	}
+>>>>> }
+>>>>>
+>>>>> Let me know if this is okay.
+>>> I still consider whether BKOPS is proper behavior with runtime-pm or not.
+>>
+>> The BKOPS is something that host allows the card to carry out
+>> when the host knows it is idle and not expecting back to back requests.
+>> Runtime PM idle is the only way to know whether the device is
+>> idle (unless we want to reinvent the wheel to detect the idleness of
+>> host and trigger bkops). There was a discussion on this in MMC mailing
+>> list as well, and folks have agreed to move idle time bkops to runtime
+>> PM (http://thread.gmane.org/gmane.linux.kernel.mmc/19444/)
+> It looks like different.
+> eMMC cannot execute BKOPS itself unlike UFS.
+> That's the way eMMC's host should trigger the BKOPS manually.
+>
+
+I guess it is not much of a difference for UFS as far as we concern
+only about idle time bkops. In UFS one can still disallow the device to
+not carry out BKOPS and hence the case where UFS device also cannot
+execute BKOPS itself and a idle timer is needed to allow BKOPS
+sporadically so that device doesn't go into URGENT_BKOPS state.
+
+>>
+>>> How about this scenario? It seems more simple.
+> 	> > If we concern a response latency of transfer requests, BKOPS can be disabled by default.
+>>> And then BKOPS can be enabled whenever device requests in some exception.
+>>> If you have any idea, let me know.
+>>
+>> Exceptions are raised only when the device is in critical need for
+>> bkops. Also the spec. recommends, host should ensure that the device
+>> doesn't go into such states.
+>>
+>> With your suggestion, when we disable bkops, the exception is raised and
+>> we enable bkops after which there is no way to disable it again?
+> Yes, it's difficult to find proper time.
+> Maybe, BKOPS can be disabled when request comes up.
+>
+In cases where there are back-to-back heavy data write requests then it
+is not proper to enable/disable BKOPS as soon as the new request comes
+up. It may happen that the card will then move from PERFORMANCE_IMPACT
+state to CRITICAL and ultimately start failing the requests. The point
+is that we should never get into state where we need URGENT_BKOPS.
+
+-- 
+Regards,
+Sujit
