@@ -1,98 +1,62 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Ksummit-2013-discuss] [ATTEND] scsi-mq prototype discussion
-Date: Fri, 19 Jul 2013 15:06:01 -0700
-Message-ID: <1374271561.7397.1089.camel@haakon3.risingtidesystems.com>
-References: <1373588612.7397.447.camel@haakon3.risingtidesystems.com>
-	 <20130712010223.GA15673@kroah.com>
-	 <1373592815.7397.477.camel@haakon3.risingtidesystems.com>
-	 <51DFDFF5.80702@suse.de> <1373698410.2922.10.camel@dabdike>
-	 <1374008849.7397.853.camel@haakon3.risingtidesystems.com>
-	 <20130716211529.GQ22392@kernel.dk> <1374036751.2045.20.camel@dabdike>
-	 <1374268967.7397.1075.camel@haakon3.risingtidesystems.com>
-	 <1374270366.2266.70.camel@dabdike>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH v4 1/4] [SCSI] sg: use rwsem to solve race during
+ exclusive open
+Date: Fri, 19 Jul 2013 17:19:01 -0400
+Message-ID: <20130719211901.GA29404@logfs.org>
+References: <20130715203730.GA21804@logfs.org>
+ <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com>
+ <1374075246-22923-2-git-send-email-vaughan.cao@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1374270366.2266.70.camel@dabdike>
-Sender: target-devel-owner@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, "ksummit-2013-discuss@lists.linuxfoundation.org" <ksummit-2013-discuss@lists.linuxfoundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Smart <James.Smart@Emulex.Com>, LKML <linux-kernel@vger.kernel.org>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>, "kmo@daterainc.com" <kmo@daterainc.com>, target-devel <target-devel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from longford.logfs.org ([213.229.74.203]:59822 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752157Ab3GSWul (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jul 2013 18:50:41 -0400
+Content-Disposition: inline
+In-Reply-To: <1374075246-22923-2-git-send-email-vaughan.cao@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vaughan Cao <vaughan.cao@oracle.com>
+Cc: dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2013-07-19 at 21:46 +0000, James Bottomley wrote:
-> On Fri, 2013-07-19 at 14:22 -0700, Nicholas A. Bellinger wrote:
-> > On Wed, 2013-07-17 at 04:52 +0000, James Bottomley wrote:
-> > > On Tue, 2013-07-16 at 15:15 -0600, Jens Axboe wrote:
-> > > > On Tue, Jul 16 2013, Nicholas A. Bellinger wrote:
-> > > > > On Sat, 2013-07-13 at 06:53 +0000, James Bottomley wrote:
-> > 
-> > <SNIP>
-> > 
-> > > > > > Lets start with discussing this on the list, please, and then see where
-> > > > > > we go from there ...
-> > > > > > 
-> > > > > 
-> > > > > Yes, the discussion is beginning to make it's way to the list.  I've
-> > > > > mostly been waiting for blk-mq to get a wider review before taking the
-> > > > > early scsi-mq prototype driver to a larger public audience.
-> > > > > 
-> > > > > Primarily, I'm now reaching out to the people most effected by existing
-> > > > > scsi_request_fn() based performance limitations.  Most of them have
-> > > > > abandoned existing scsi_request_fn() based logic in favor of raw block
-> > > > > make_request() based drivers, and are now estimating the amount of
-> > > > > effort to move to an scsi-mq based approach.
-> > > > > 
-> > > > > Regardless, as the prototype progresses over the next months, having a
-> > > > > face-to-face discussion with the key parties in the room would be very
-> > > > > helpful given the large amount of effort involved to actually make this
-> > > > > type of generational shift in SCSI actually happen.
-> > > > 
-> > > > There's a certain amount of overlap with the aio/O_DIRECT work as well.
-> > > > But if it's not a general session, could always be a BOF or something.
-> > > > 
-> > > > I'll second the argument that most technical topics probably DO belong
-> > > > in a topic related workshop. But that leaves us with basically only
-> > > > process related topics at KS, I don't think it hurts to have a bit of
-> > > > tech meat on the bone too. At least I personally miss that part of KS
-> > > > from years gone by.
-> > > 
-> > > Heh well, given that most of the block mq discussions at LSF have been
-> > > you saying you really should get around to cleaning up and posting the
-> > > code, you'll understand my wanting to see that happen first ...
-> > > 
-> > > I suppose we could try to run a storage workshop within KS, but I think
-> > > most of the mini summit slots have already gone.
-> > 
-> > That would be great, given there is a reasonable level of interest from
-> > various parities, and the pain threshold for existing scsi small block
-> > random I/O performance is high..
-> > 
-> > When will we know if there is a workshop / mini summit slot available..?
-> > 
-> > (CC'ing Mike Christie as well for open-iscsi/scsi-mq bits)
-> > 
-> > > There's also plumbers
-> > > if all slots are gone (I would say that, being biased and on the
-> > > programme committee) Ric is running the storage and Filesystems MC
-> > > 
-> > > http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/tracks/159
-> > 
-> > FYI, I'm not trying to 'sell' scsi-mq to the larger community yet, but
-> > rather interested in getting the right scsi/block/LLD people in the same
-> > room at KS for an hour or two to discuss implementation details, given
-> > the scope of the effort involved.
-> 
-> Well, so that's why I think plumbers might be a better venue: we'll have
-> more of the actual storage people there.  Usually we get at most 2-3
-> storage people to KS compared to the 25 or so we usually have at LSF ...
-> that makes KS not a very good venue for storage centric discussions.
-> 
+On Wed, 17 July 2013 23:34:03 +0800, Vaughan Cao wrote:
+> Date: Wed, 17 Jul 2013 23:34:03 +0800
+> From: Vaughan Cao <vaughan.cao@oracle.com>
+> To: joern@logfs.org
+> Cc: dgilbert@interlog.com, JBottomley@parallels.com,
+> 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+> 	vaughan.cao@oracle.com
+> Subject: [PATCH v4 1/4] [SCSI] sg: use rwsem to solve race during
+>  exclusive open
+> X-Mailer: git-send-email 1.7.11.7
+>=20
+> A race condition may happen if two threads are both trying to open th=
+e same sg
+> with O_EXCL simultaneously. It's possible that they both find fsds li=
+st is
+> empty and get_exclude(sdp) returns 0, then they both call set_exclude=
+() and
+> break out from wait_event_interruptible and resume open.
+>=20
+> Now use rwsem to protect this process. Exclusive open gets write lock=
+ and
+> others get read lock. The lock will be held until file descriptor is =
+closed.
+> This also leads 'exclude' only a status rather than a check mark.
+>=20
+> Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
+Reviewed-by: Joern Engel <joern@logfs.org>
 
-The most relevant people for the discussion are Jens, Hannes, Christoph,
-Tejun, Martin, Mike, and you.
+J=C3=B6rn
 
-I know these folks are regular attendees for KS, but typically not for
-plumbers, which is why I made this KS topic proposal in the first place.
-
---nab
+--
+When you close your hand, you own nothing. When you open it up, you
+own the whole world.
+-- Li Mu Bai in Tiger & Dragon
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
