@@ -1,40 +1,42 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 59601] commit 97dec564fd4948e0e560869c80b76e166ca2a83e breaks
- communication with XYRATEX disk shelves
-Date: Fri, 19 Jul 2013 15:54:26 +0000
-Message-ID: <bug-59601-11613-WYQ5RXuRrQ@https.bugzilla.kernel.org/>
-References: <bug-59601-11613@https.bugzilla.kernel.org/>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/7] qla4xxx: Updates for scsi "misc" branch
+Date: Fri, 19 Jul 2013 09:56:09 -0600
+Message-ID: <51E96199.2040903@cs.wisc.edu>
+References: <1373286791-29659-1-git-send-email-adheer.chandravanshi@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43593 "EHLO mail.kernel.org"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:38349 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760545Ab3GSPy3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jul 2013 11:54:29 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 329A320333
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Jul 2013 15:54:28 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 5AB602035E
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Jul 2013 15:54:26 +0000 (UTC)
-In-Reply-To: <bug-59601-11613@https.bugzilla.kernel.org/>
+	id S1760643Ab3GSP4T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Jul 2013 11:56:19 -0400
+In-Reply-To: <1373286791-29659-1-git-send-email-adheer.chandravanshi@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: adheer.chandravanshi@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=59601
+On 07/08/2013 06:33 AM, adheer.chandravanshi@qlogic.com wrote:
+> From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+> 
+> James,
+> 
+> Please apply the following patches to the scsi tree at your earliest
+> convenience.
+> 
+> Adheer Chandravanshi (7):
+> 	qla4xxx: Allow removal of failed session using logout.
+> 	qla4xxx: Use discovery_parent_idx instead of discovery_parent_type
+> 	qla4xxx: Set IPv6 traffic class if device type is IPv6.
+> 	qla4xxx: discovery_parent_idx can be shown without any check.
+> 	qla4xxx: Only BIOS boot target entries should be at index 0 and 1.
+> 	qla4xxx: Export more firmware info in sysfs
+> 	qla4xxx: Update driver version to 5.03.00-k11
+> 
 
-Jack Hill <jackhill@jackhill.us> changed:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |CODE_FIX
+Ignore my comment on that one patch. Patches look ok.
 
---- Comment #12 from Jack Hill <jackhill@jackhill.us> ---
-Closing this bug since Saurav has submitted the patch upstream.
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
