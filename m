@@ -1,62 +1,50 @@
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
-Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
-Date: Mon, 22 Jul 2013 13:03:38 -0400
-Message-ID: <20130722170338.GA15824@logfs.org>
-References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com>
- <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Mon, 22 Jul 2013 14:10:36 -0700
+Message-ID: <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+References: <20130717161909.GB21468@dhcp-26-207.brq.redhat.com>
+	 <1374173515.7397.948.camel@haakon3.risingtidesystems.com>
+	 <51E83E32.9050306@cs.wisc.edu>
+	 <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+	 <20130719003034.GG28005@kernel.dk>
+	 <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+	 <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+	 <1374248000.2266.20.camel@dabdike>
+	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+	 <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from longford.logfs.org ([213.229.74.203]:59878 "EHLO
-	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932629Ab3GVSf2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jul 2013 14:35:28 -0400
-Content-Disposition: inline
-In-Reply-To: <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vaughan Cao <vaughan.cao@oracle.com>
-Cc: dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
->=20
-> There is a race when open sg with O_EXCL flag. Also a race may happen=
- between
-> sg_open and sg_remove.
->=20
-> Changes from v4:
->  * [3/4] use ERR_PTR series instead of adding another parameter in sg=
-_add_sfp
->  * [4/4] fix conflict for cherry-pick from v3.
->=20
-> Changes from v3:
->  * release o_sem in sg_release(), not in sg_remove_sfp().
->  * not set exclude with sfd_lock held.
->=20
-> Vaughan Cao (4):
->   [SCSI] sg: use rwsem to solve race during exclusive open
->   [SCSI] sg: no need sg_open_exclusive_lock
->   [SCSI] sg: checking sdp->detached isn't protected when open
->   [SCSI] sg: push file descriptor list locking down to per-device
->     locking
->=20
->  drivers/scsi/sg.c | 178 +++++++++++++++++++++++++-------------------=
-----------
->  1 file changed, 83 insertions(+), 95 deletions(-)
+On Mon, 2013-07-22 at 17:03 +0200, Alexander Gordeev wrote:
+> On Fri, Jul 19, 2013 at 09:56:02PM -0700, Nicholas A. Bellinger wrote:
+> > On Fri, 2013-07-19 at 14:01 -0700, Nicholas A. Bellinger wrote:
+> > OK, after further investigation the root cause is a actually a missing
+> > bio->bio_end_io() -> bio_copy_kern_endio() -> bio_put() from the
+> > blk_end_sync_rq() callback path that scsi-mq REQ_TYPE_BLOCK_PC is
+> > currently using.
+> 
+> Yes, missing bio_copy_kern_endio() callback is exactly the reason I
+> turned to blk_mq_execute_rq() initially. I should have been more
+> specific on this :|
+> 
+> I will try Mike's and your other change, hopefully soon (sorry,
+> constantly getting distracted).
+> 
 
-Patchset looks good to me, although I didn't test it on hardware yet.
-Signed-off-by: Joern Engel <joern@logfs.org>
+Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
+target-pending/scsi-mq, which now has functioning scsi-generic support.
 
-James, care to pick this up?
+Also, your scsi_times_out patch from earlier has not been included just
+yet, but that should be the only extra patch you need to apply in order
+to get scsi-mq enabled libata/ata_piix running.
 
-J=C3=B6rn
+--nab
 
---
-Good warriors cause others to come to them and do not go to others.
--- Sun Tzu
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
