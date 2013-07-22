@@ -1,55 +1,49 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: SAS Management Protocol (SMP) on Windows
-Date: Mon, 22 Jul 2013 15:57:15 +0200
-Message-ID: <51ED3A3B.7070708@gmail.com>
-References: <loom.20130722T100620-437@post.gmane.org> <51ED370D.2060900@interlog.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Mon, 22 Jul 2013 17:03:59 +0200
+Message-ID: <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+References: <20130717161909.GB21468@dhcp-26-207.brq.redhat.com>
+ <1374173515.7397.948.camel@haakon3.risingtidesystems.com>
+ <51E83E32.9050306@cs.wisc.edu>
+ <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+ <20130719003034.GG28005@kernel.dk>
+ <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+ <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:59414 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754132Ab3GVN4a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jul 2013 09:56:30 -0400
-Received: by mail-bk0-f41.google.com with SMTP id jc3so2538972bkc.14
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Jul 2013 06:56:29 -0700 (PDT)
-In-Reply-To: <51ED370D.2060900@interlog.com>
+Received: from mx1.redhat.com ([209.132.183.28]:4323 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755702Ab3GVPET (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Jul 2013 11:04:19 -0400
+Content-Disposition: inline
+In-Reply-To: <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hugh Chin <hung36987@gmail.com>
-Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 07/22/2013 03:43 PM, Douglas Gilbert wrote:
-> On 13-07-22 04:26 AM, Hugh Chin wrote:
->> I'm developing SMP application by Python. I've ran it on Linux, it works
->> fine. But now I have to run it on Windows. Of course, it didn't work.
->>
->> So far I know that Windows seems doesn't have bsg driver. But I'm not
->> sure.
->> I want to know is there any way can run SMP application on Windows?
->>
->> My English is poor, so if you had something misunderstanding. Please
->> let me
->> know.
-> 
-> My smp_utils package is written for Linux and ported to
-> FreeBSD using the latter's CAM interface recently expanded
-> to pass-through SMP commands. I'm not aware of any such
-> generic SMP pass-through for Windows but I'd be happy
-> to be corrected.
+On Fri, Jul 19, 2013 at 09:56:02PM -0700, Nicholas A. Bellinger wrote:
+> On Fri, 2013-07-19 at 14:01 -0700, Nicholas A. Bellinger wrote:
+> OK, after further investigation the root cause is a actually a missing
+> bio->bio_end_io() -> bio_copy_kern_endio() -> bio_put() from the
+> blk_end_sync_rq() callback path that scsi-mq REQ_TYPE_BLOCK_PC is
+> currently using.
 
-Agree, there is no such generic SMP pass-through interface for Windows,
-Different Vendor offer their SMP IOCTL interface there own. You can
-checkout from your hardware vendor.
-> 
-> Apart from that, this is probably the wrong list to be
-> discussing this subject.
-Agree.
+Yes, missing bio_copy_kern_endio() callback is exactly the reason I
+turned to blk_mq_execute_rq() initially. I should have been more
+specific on this :|
 
-Jack
-> 
-> Doug Gilbert
-> 
-> 
+I will try Mike's and your other change, hopefully soon (sorry,
+constantly getting distracted).
 
+> Including the following patch into the scsi-mq working branch now, and
+> reverting the libata dma_alignment=0x03 hack.
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
