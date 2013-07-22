@@ -1,100 +1,114 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH v3 0/6] [SCSI] Enhanced sense and Unit Attention handling
-Date: Mon, 22 Jul 2013 15:31:34 +0000
-Message-ID: <1374507094.2335.21.camel@dabdike>
-References: <1371663761-22481-1-git-send-email-emilne@redhat.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [Ksummit-2013-discuss] [ATTEND] scsi-mq prototype discussion
+Date: Mon, 22 Jul 2013 10:34:15 -0600
+Message-ID: <20130722163415.GV32755@kernel.dk>
+References: <1373588612.7397.447.camel@haakon3.risingtidesystems.com>
+ <20130712010223.GA15673@kroah.com>
+ <1373592815.7397.477.camel@haakon3.risingtidesystems.com>
+ <51DFDFF5.80702@suse.de>
+ <1373698410.2922.10.camel@dabdike>
+ <1374008849.7397.853.camel@haakon3.risingtidesystems.com>
+ <20130716211529.GQ22392@kernel.dk>
+ <1374036751.2045.20.camel@dabdike>
+ <51E946C7.3020502@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:35047 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755908Ab3GVPbg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jul 2013 11:31:36 -0400
-In-Reply-To: <1371663761-22481-1-git-send-email-emilne@redhat.com>
-Content-Language: en-US
-Content-ID: <3DBAA963FDF2104C82BF3484B1ED9B7F@sw.swsoft.com>
+Received: from merlin.infradead.org ([205.233.59.134]:47914 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755194Ab3GVQew (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jul 2013 12:34:52 -0400
+Content-Disposition: inline
+In-Reply-To: <51E946C7.3020502@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>, Kirill Korotaev <dev@parallels.com>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: James Bottomley <jbottomley@parallels.com>, "ksummit-2013-discuss@lists.linuxfoundation.org" <ksummit-2013-discuss@lists.linuxfoundation.org>, James Smart <James.Smart@Emulex.Com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>, "kmo@daterainc.com" <kmo@daterainc.com>, target-devel <target-devel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Wed, 2013-06-19 at 13:42 -0400, Ewan D. Milne wrote:
-> From: "Ewan D. Milne" <emilne@redhat.com>
+On Fri, Jul 19 2013, Ric Wheeler wrote:
+> down the work items ahead of a real mainline push is high on
+> >>>>>>>>priority list for discussion.
+> >>>>>>>>
+> >>>>>>>>The parties to be included in such a discussion are:
+> >>>>>>>>
+> >>>>>>>>   - Jens Axboe (blk-mq author)
+> >>>>>>>>   - James Bottomley (scsi maintainer)
+> >>>>>>>>   - Christoph Hellwig (scsi)
+> >>>>>>>>   - Martin Petersen (scsi)
+> >>>>>>>>   - Tejun Heo (block + libata)
+> >>>>>>>>   - Hannes Reinecke (scsi error recovery)
+> >>>>>>>>   - Kent Overstreet (block, per-cpu ida)
+> >>>>>>>>   - Stephen Cameron (scsi-over-pcie driver)
+> >>>>>>>>   - Andrew Vasquez (qla2xxx LLD)
+> >>>>>>>>   - James Smart (lpfc LLD)
+> >>>>>>>Isn't this something that should have been discussed at the storage
+> >>>>>>>mini-summit a few months ago?
+> >>>>>>The scsi-mq prototype, along with blk-mq (in it's current form) did not
+> >>>>>>exist a few short months ago.  ;)
+> >>>>>>
+> >>>>>>>  It seems very specific to one subsystem to be a kernel summit topic,
+> >>>>>>>don't you think?
+> >>>>>>It's no more subsystem specific than half of the other proposals so far,
+> >>>>>>and given it's reach across multiple subsystems (block, scsi, target),
+> >>>>>>and the amount of off-list interest on the topic, I think it would make
+> >>>>>>a good candidate for discussion.
+> >>>>>>
+> >>>>>And it'll open up new approaches which previously were dismissed,
+> >>>>>like re-implementing multipathing on top of scsi-mq, giving us the
+> >>>>>single scsi device like other UNIX systems.
+> >>>>>
+> >>>>>Also I do think there's quite some synergy to be had, as with blk-mq
+> >>>>>we could nail each queue to a processor, which would eliminate the
+> >>>>>need for locking.
+> >>>>>Which could be useful for other subsystems, too.
+> >>>>Lets start with discussing this on the list, please, and then see where
+> >>>>we go from there ...
+> >>>>
+> >>>Yes, the discussion is beginning to make it's way to the list.  I've
+> >>>mostly been waiting for blk-mq to get a wider review before taking the
+> >>>early scsi-mq prototype driver to a larger public audience.
+> >>>
+> >>>Primarily, I'm now reaching out to the people most effected by existing
+> >>>scsi_request_fn() based performance limitations.  Most of them have
+> >>>abandoned existing scsi_request_fn() based logic in favor of raw block
+> >>>make_request() based drivers, and are now estimating the amount of
+> >>>effort to move to an scsi-mq based approach.
+> >>>
+> >>>Regardless, as the prototype progresses over the next months, having a
+> >>>face-to-face discussion with the key parties in the room would be very
+> >>>helpful given the large amount of effort involved to actually make this
+> >>>type of generational shift in SCSI actually happen.
+> >>There's a certain amount of overlap with the aio/O_DIRECT work as well.
+> >>But if it's not a general session, could always be a BOF or something.
+> >>
+> >>I'll second the argument that most technical topics probably DO belong
+> >>in a topic related workshop. But that leaves us with basically only
+> >>process related topics at KS, I don't think it hurts to have a bit of
+> >>tech meat on the bone too. At least I personally miss that part of KS
+> >>from years gone by.
+> >Heh well, given that most of the block mq discussions at LSF have been
+> >you saying you really should get around to cleaning up and posting the
+> >code, you'll understand my wanting to see that happen first ...
+> >
+> >I suppose we could try to run a storage workshop within KS, but I think
+> >most of the mini summit slots have already gone.  There's also plumbers
+> >if all slots are gone (I would say that, being biased and on the
+> >programme committee) Ric is running the storage and Filesystems MC
+> >
+> >http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/tracks/159
+> >
+> >James
+> >
 > 
-> This patch set adds changes to the SCSI mid-layer, sysfs and scsi_debug
-> to provide enhanced support for Unit Attention conditions, as well as
-> detection of a unit attention queue overflow condition and the ability
-> for drivers to report sense data outside of normal command completion.
+> And we still are looking for suggested topics - it would be great to have
+> the multi-queue work at plumbers.
 > 
-> There was some discussion about this a couple of years ago on the linux-scsi
-> mailing list:  http://marc.info/?l=linux-scsi&m=129702506514742&w=2
-> Although one approach is to send all SCSI sense data to a userspace daemon
-> for processing, this patch set does not take that approach due to the
-> difficulty in reliably delivering all of the data.  An interesting UA
-> condition might not be delivered due to a flood of media errors, for example.
+> You can post a proposal for it (or other topics) here:
 > 
-> The mechanism used is to flag when certain UA ASC/ASCQ codes are received
-> that report asynchronous changes to the storage device configuration.
-> An appropriate uevent is then generated for the scsi_device or scsi_target
-> object.  An aggregation mechanism is used to avoid generating uevents at
-> too high a rate, and to coalesce multiple UAs reported by LUNs on the
-> same target for a REPORTED LUNS DATA HAS CHANGED sense code.
-> 
-> The changes are enabled by a new kernel config option CONFIG_SCSI_ENHANCED_UA.
-> If this config option is not used, no new uevents are generated.  There are
-> some changes to kernel logging messages if CONFIG_SCSI_ENHANCED_UA is enabled,
-> because the existing messages explicitly stated that the kernel did not do
-> anything with the information.
-> 
-> Note that checkpatch is reporting errors on patch 5/6 relating to macros
-> in scsi_sysfs.c -- I believe these errors are incorrect and have sent a
-> message to the checkpatch maintainer.  The macros were derived from
-> existing ones already in the file.
-> 
-> Changes made since earlier v2 version:
-> 
->    - Remove patch 1/8 "Generate uevent on sd capacity change"
->    - Remove patch 8/8 "Streamline detection of FM/EOM/ILI status"
->    - Changed scsi_debug to not generate UA on INQUIRY or REPORT_LUNS
->    - Changed scsi_debug to only report UA queue overflow condition
->      if dsense=1, as descriptor format sense data is needed
-> 
-> Changes made since earlier RFC version:
-> 
->    - Remove patch 1/9 "Detect overflow of sense data buffer"
->      Some scsi_debug changes in this patch were moved to patch 7/8
->    - Corrected Kconfig help text
->    - Change name of "sdev_evt_thread" to "sdev_evt_work"
->    - Change name of "starget_evt_thread" to "starget_evt_work"
->    - Pull code out of scsi_check_sense() that handles UAs into
->      an exported function so that drivers can report conditions
->      received asynchronously
-> 
-> Thanks to everyone for the comments on this patch series.
-> 
-> Ewan D. Milne (6):
->   [SCSI] Add a kernel config option for enhanced Unit Attention support
->   [SCSI] Rename scsi_evt_xxx to sdev_evt_xxx and scsi_event to
->     sdev_event
->   [SCSI] Add support for scsi_target events
->   [SCSI] Generate uevents for certain Unit Attention codes
->   [SCSI] Add sysfs support for enhanced Unit Attention handling
->   [SCSI] Add sense and Unit Attention generation to scsi_debug
+> http://www.linuxplumbersconf.org/2013/ocw/events/LPC2013/proposals
 
-Ping on this, please.
+FWIW, I can't make Plumbers this year, unfortunately.
 
-I have another possible consumer of this infrastructure, when it's
-ready, which is the SCSI RAID drivers.  We've been getting complaints
-that there's no event we get from them when a RAID system goes from
-online -> degraded which should be the sysadmin's cue to go in and
-replace the disk (well, this isn't quite true, a lot come with
-proprietary monitoring daemons which do this, but they're pretty unique
-per controller).
-
-I was thinking we might resurrect the orphaned raid_class.c to do this
-and give a universally displayable but rudimentary view of the topology
-and health of the device and add an easy hook for RAID events.
-
-James
+-- 
+Jens Axboe
 
