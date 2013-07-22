@@ -1,142 +1,65 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: RE: [PATCH 1/2] qla2xxx: Fix sparse warnings in qlafx00_fxdisc_iocb
- function.
-Date: Mon, 22 Jul 2013 05:43:09 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D353A84EB@AVMB1.qlogic.org>
+Subject: RE: [PATCH 2/2] qla2xxx: Properly set the tagging for commands.
+Date: Mon, 22 Jul 2013 05:43:58 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D353A84FE@AVMB1.qlogic.org>
 References: <1373654871-29081-1-git-send-email-saurav.kashyap@qlogic.com>
-	 <1373654871-29081-2-git-send-email-saurav.kashyap@qlogic.com>
- <1374245042.2266.5.camel@dabdike>
+ <1373654871-29081-3-git-send-email-saurav.kashyap@qlogic.com>
+ <F5D084D6342F9B479C34599BB0A03E4D353A79E5@AVMB1.qlogic.org>
+ <20130719154100.GB22704@kroah.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D353A84EBAVMB1qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from co1ehsobe006.messaging.microsoft.com ([216.32.180.189]:40108
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752984Ab3GVFnN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Jul 2013 01:43:13 -0400
-Received: from mail197-co1 (localhost [127.0.0.1])	by
- mail197-co1-R.bigfish.com (Postfix) with ESMTP id C2102D80136	for
- <linux-scsi@vger.kernel.org>; Mon, 22 Jul 2013 05:43:12 +0000 (UTC)
-Received: from CO1EHSMHS013.bigfish.com (unknown [10.243.78.245])	by
- mail197-co1.bigfish.com (Postfix) with ESMTP id 49BEA80048	for
- <linux-scsi@vger.kernel.org>; Mon, 22 Jul 2013 05:43:11 +0000 (UTC)
-In-Reply-To: <1374245042.2266.5.camel@dabdike>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
-
---_000_F5D084D6342F9B479C34599BB0A03E4D353A84EBAVMB1qlogicorg_
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8BIT
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20130719154100.GB22704@kroah.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-HI James,
-Yes, agreed. I will resend the relevant patch set.
+HI Greg,
+Thanks, I will resend the relevant patch in proper way.
 
 Thanks,
 ~Saurav
 
 -----Original Message-----
-From: James Bottomley [mailto:jbottomley@parallels.com]=20
-Sent: Friday, July 19, 2013 8:14 PM
+From: Greg KH [mailto:gregkh@linuxfoundation.org]
+Sent: Friday, July 19, 2013 9:11 PM
 To: Saurav Kashyap
-Cc: Giridhar Malavali; Andrew Vasquez; linux-scsi
-Subject: Re: [PATCH 1/2] qla2xxx: Fix sparse warnings in qlafx00_fxdisc_ioc=
-b function.
+Cc: jbottomley@parallels.com; stable@vger.kernel.org; Giridhar Malavali; Andrew Vasquez; linux-scsi
+Subject: Re: [PATCH 2/2] qla2xxx: Properly set the tagging for commands.
 
-On Fri, 2013-07-12 at 14:47 -0400, Saurav Kashyap wrote:
+On Fri, Jul 19, 2013 at 09:16:51AM +0000, Saurav Kashyap wrote:
+> This should go to stable also, added in to list. This fixes a BZ
+> https://bugzilla.kernel.org/show_bug.cgi?id=59601
+>
+> Thanks,
+> ~Saurav
+>
+>
+> -----Original Message-----
+> From: Saurav Kashyap [mailto:saurav.kashyap@qlogic.com]
+> Sent: Saturday, July 13, 2013 12:18 AM
+> To: jbottomley@parallels.com
+> Cc: Giridhar Malavali; Saurav Kashyap; Andrew Vasquez; linux-scsi
+> Subject: [PATCH 2/2] qla2xxx: Properly set the tagging for commands.
+>
+> Reported-by: Jack Hill <jackhill@jackhill.us>
 > Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 > Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_iocb.c |   11 +++++++++--
+>  1 files changed, 9 insertions(+), 2 deletions(-)
 
-This does not fix a bug ... therefore it's not really -rc fixes material.  =
-In early -rc this rule can be relaxed a bit ... but what's the reason to ge=
-t this through the -rc tree?
+<formletter>
 
-James
+This is not the correct way to submit patches for inclusion in the stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+for how to do this properly.
+
+</formletter>
 
 
+________________________________
 
---_000_F5D084D6342F9B479C34599BB0A03E4D353A84EBAVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IrtdAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEMxMjMwQTcy
-NzkyOEFFNDY4QUNGNTJFNzBGRTREN0U0AEUHAQ2ABAACAAAAAgACAAEFgAMADgAAAN0HBwAWAAUA
-KwAJAAEAOwEBIIADAA4AAADdBwcAFgAFACsACQABADsBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAE4AAABSRTogW1BBVENIIDEvMl0gcWxhMnh4eDogRml4IHNwYXJzZSB3
-YXJuaW5ncyBpbiBxbGFmeDAwX2Z4ZGlzY19pb2NiIGZ1bmN0aW9uLgCeGgEDkAYAaA8AAD4AAAAC
-AX8AAQAAADwAAAA8RjVEMDg0RDYzNDJGOUI0NzlDMzQ1OTlCQjBBMDNFNEQzNTNBODRFQkBBVk1C
-MS5xbG9naWMub3JnPgALAB8OAQAAAAIBCRABAAAAUAMAAEwDAACrBAAATFpGdcK0HgdhAApmYmlk
-BAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqABrQCgJZ9
-CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFuGDBdBlJ2
-BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdADRdwMApx
-F/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/FAIEhJIEphB4EsVFxsC4BlCoBZIgEgYmEJwmQu
-ICGwA/Bs3wMgCXASAB3AHMBoGeAJcF0ecHYAcAVACrB0EcAg7RIBLiI1IjVUGaEfUCImpn4GEAhw
-YXYlzC0o0npPBRBnC4AHQAXQB5BzrSLwZSjTIjVGA2E6IcQdH7BvAkADcB5weSBbZwDAAxAYkDpq
-BuArxUBHCrEHQB5wbHMuBaBt/l0DMCJEBmACMCsgKuAN0MRheSLQSnVsLCAWcAMi0AHQMTMgODox
-8DQgUE0mNiygBgEnsgAgS2FzaHlhcMkiNUNjKyBHaS9BEdEPBdAHQCfQB0BpOyBBVx3ACXAH4FYy
-MHEKUHrjNFAiQXV4LQTwAJEudZh1YmoFkC8BUmUrIEBbUEFUQ0gv8C/KMi5AcQtgMng4UC8R/Gl4
-JXAKsRIAI4AKwAMATxnABCALgDgCZngeoF8DOkAN4WNfaW9jYlkccHVuNtA7AG4lvU+HA6AvMTAk
-LTA3LQ6QhyLgBUAwsDo0NyA9gH40HqAi0DG8I4ADYBAgOp0iNT4GAClAGFBkLRkwkGYtYnkxniA8
-KeCpJ7IuazI0QDgQbylQ+mMuAj5AT0FVM09CoClQfTNkLgDAM/RDryYZBAAgdGRvB5FuK7AccDix
-YcAgYnVnIC5LQCRCxwlwGuEZ4Gl0J0pECXDjLaEsIC1yY0qSB5EbEb8GcQdAI1AjYAOgTMByTPV7
-JFBJ4XIvwBngHlADoGL9JHNhTYAcYErhTCBLM0sA/QVAdxHQTDIkVDIwAiAcwPxvIBgwBUBPQyRQ
-A2BLEO8lYCRSTwMJ0T8lzCHTJcwHIjUVQlegHwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEA
-cwBoAHkAYQBwAAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAA
-AAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBN
-AFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAAfAAJdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAA
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBo
-AHkAYQBwAAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAA
-AIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQA
-UAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AAFdAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAA
-ADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-HwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIA
-AACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4A
-awBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQBy
-AGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoA
-AQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzAB
-AAAAEAAAAMEjCnJ5KK5Gis9S5w/k1+QDABcAAQAAAEAAOQCAlJ1YnobOAUAACDAxNLNYnobOAQsA
-KQAAAAAACwAjAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABh
-AG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABG
-AAAAAAaFAAAAAAAAHwA3AAEAAACcAAAAUgBFADoAIABbAFAAQQBUAEMASAAgADEALwAyAF0AIABx
-AGwAYQAyAHgAeAB4ADoAIABGAGkAeAAgAHMAcABhAHIAcwBlACAAdwBhAHIAbgBpAG4AZwBzACAA
-aQBuACAAcQBsAGEAZgB4ADAAMABfAGYAeABkAGkAcwBjAF8AaQBvAGMAYgAgAGYAdQBuAGMAdABp
-AG8AbgAuAAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAAAwA2AAAAAAADAC4AAAAAAB8AQhABAAAA
-RAAAADwAMQAzADcANAAyADQANQAwADQAMgAuADIAMgA2ADYALgA1AC4AYwBhAG0AZQBsAEAAZABh
-AGIAZABpAGsAZQA+AAAAAgFxAAEAAAAgAAAAAQHOfzQRNMucelp3ZkyFN1EUAIBefJlsk8OAgAOq
-PqAfAHAAAQAAAJQAAABbAFAAQQBUAEMASAAgADEALwAyAF0AIABxAGwAYQAyAHgAeAB4ADoAIABG
-AGkAeAAgAHMAcABhAHIAcwBlACAAdwBhAHIAbgBpAG4AZwBzACAAaQBuACAAcQBsAGEAZgB4ADAA
-MABfAGYAeABkAGkAcwBjAF8AaQBvAGMAYgAgAGYAdQBuAGMAdABpAG8AbgAuAAAAHwA1EAEAAAB4
-AAAAPABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAA
-QQAwADMARQA0AEQAMwA1ADMAQQA4ADQARQBCAEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBv
-AHIAZwA+AAAAHwA5EAEAAAA+AQAAPAAxADMANwAzADYANQA0ADgANwAxAC0AMgA5ADAAOAAxAC0A
-MQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5
-AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAJACAAPAAxADMANwAzADYANQA0ADgANwAxAC0A
-MgA5ADAAOAAxAC0AMgAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHMAYQB1AHIAYQB2
-AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwAMQAzADcANAAyADQA
-NQAwADQAMgAuADIAMgA2ADYALgA1AC4AYwBhAG0AZQBsAEAAZABhAGIAZABpAGsAZQA+AAAAAAAD
-AN4/n04AAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAOFAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAA
-AEYAAAAAAYUAAAAAAAADAIAQ/////0AABzARYHtXnobOAQsAAgABAAAAAwAmAAAAAAALACsAAAAA
-AAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTMwNzIyMDU0MzA5Wi01OTc3
-MwAAAAIBEDABAAAARgAAAAAAAACVsbInRPsxQpVsLVFFyahcBwAft9xeNNrbSZRjtuqJ30CkAGWr
-YRL/AAAebvFKWeS4QJMuam9fnrxzADoJAAqxAAAAAB8A+j8BAAAAHgAAAFMAYQB1AHIAYQB2ACAA
-SwBhAHMAaAB5AGEAcAAAAAAAAwAJWQEAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAQhQAAAAAA
-AAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA
-GIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAAAACChQAAAAAAAB8AAIAIIAYAAAAAAMAAAAAA
-AABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwANNP0/AAAfAACAhgMCAAAA
-AADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAA
-AAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4A
-ZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAfAACAhgMCAAAAAADA
-AAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMA
-cwAAAAAAT+c=
-
---_000_F5D084D6342F9B479C34599BB0A03E4D353A84EBAVMB1qlogicorg_--
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
