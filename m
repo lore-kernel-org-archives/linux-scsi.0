@@ -1,37 +1,42 @@
-From: <adheer.chandravanshi@qlogic.com>
-Subject: [PATCH 0/2] libiscsi: Updates for scsi "misc" branch
-Date: Mon, 22 Jul 2013 07:46:08 -0400
-Message-ID: <1374493570-17390-1-git-send-email-adheer.chandravanshi@qlogic.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: SAS Management Protocol (SMP) on Windows
+Date: Mon, 22 Jul 2013 09:43:41 -0400
+Message-ID: <51ED370D.2060900@interlog.com>
+References: <loom.20130722T100620-437@post.gmane.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from co1ehsobe001.messaging.microsoft.com ([216.32.180.184]:27791
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751395Ab3GVMNf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Jul 2013 08:13:35 -0400
-Received: from mail54-co1 (localhost [127.0.0.1])	by mail54-co1-R.bigfish.com
- (Postfix) with ESMTP id 9A7A0B80327	for <linux-scsi@vger.kernel.org>; Mon, 22
- Jul 2013 12:13:34 +0000 (UTC)
-Received: from CO1EHSMHS025.bigfish.com (unknown [10.243.78.227])	by
- mail54-co1.bigfish.com (Postfix) with ESMTP id B486A840048	for
- <linux-scsi@vger.kernel.org>; Mon, 22 Jul 2013 12:13:31 +0000 (UTC)
+Received: from smtp.infotech.no ([82.134.31.41]:56087 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752558Ab3GVNoI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Jul 2013 09:44:08 -0400
+In-Reply-To: <loom.20130722T100620-437@post.gmane.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+To: Hugh Chin <hung36987@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+On 13-07-22 04:26 AM, Hugh Chin wrote:
+> I'm developing SMP application by Python. I've ran it on Linux, it works
+> fine. But now I have to run it on Windows. Of course, it didn't work.
+>
+> So far I know that Windows seems doesn't have bsg driver. But I'm not sure.
+> I want to know is there any way can run SMP application on Windows?
+>
+> My English is poor, so if you had something misunderstanding. Please let me
+> know.
 
-James,
- 
-Please apply the following patches to the scsi tree at your earliest
-convenience.
+My smp_utils package is written for Linux and ported to
+FreeBSD using the latter's CAM interface recently expanded
+to pass-through SMP commands. I'm not aware of any such
+generic SMP pass-through for Windows but I'd be happy
+to be corrected.
 
-Adheer Chandravanshi (2):
-  libiscsi: Add a missing break statement
-  libiscsi: Add missing prints for session and connection sysfs attrs
+Apart from that, this is probably the wrong list to be
+discussing this subject.
 
-Thanks,
-Adheer
+Doug Gilbert
+
 
