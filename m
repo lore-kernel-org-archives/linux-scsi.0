@@ -1,532 +1,346 @@
-From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: RE: [PATCH V3 4/4] scsi: ufs: Improve UFS fatal error handling
-Date: Tue, 23 Jul 2013 17:34:18 +0900
-Message-ID: <001901ce877f$6c412c90$44c385b0$%jun@samsung.com>
-References: <1373361378-30749-1-git-send-email-sthumma@codeaurora.org>
- <1373361378-30749-5-git-send-email-sthumma@codeaurora.org>
- <002201ce8488$0a9ec8c0$1fdc5a40$%jun@samsung.com>
- <51E984F1.9020408@codeaurora.org>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: Re: [PATCH V3 1/4] scsi: ufs: Fix broken task management command
+ implementation
+Date: Tue, 23 Jul 2013 21:10:38 +0530
+Message-ID: <51EEA3F6.9040305@codeaurora.org>
+References: <1373361378-30749-1-git-send-email-sthumma@codeaurora.org> <1373361378-30749-2-git-send-email-sthumma@codeaurora.org> <001f01ce8487$c8b7c060$5a274120$%jun@samsung.com> <51E984DC.4040503@codeaurora.org> <001701ce877e$17c50520$474f0f60$%jun@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ks_c_5601-1987
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-reply-to: <51E984F1.9020408@codeaurora.org>
-Content-language: ko
+In-Reply-To: <001701ce877e$17c50520$474f0f60$%jun@samsung.com>
 Sender: linux-arm-msm-owner@vger.kernel.org
-To: 'Sujit Reddy Thumma' <sthumma@codeaurora.org>
+To: Seungwon Jeon <tgih.jun@samsung.com>
 Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, July 20, 2013, Sujit Reddy Thumma wrote:
-> On 7/19/2013 7:28 PM, Seungwon Jeon wrote:
-> > On Tue, July 09, 2013, Sujit Reddy Thumma wrote:
-> >> Error handling in UFS driver is broken and resets the host controller
-> >> for fatal errors without re-initialization. Correct the fatal error
-> >> handling sequence according to UFS Host Controller Interface (HCI)
-> >> v1.1 specification.
-> >>
-> >> o Upon determining fatal error condition the host controller may hang
-> >>    forever until a reset is applied, so just retrying the command doesn't
-> >>    work without a reset. So, the reset is applied in the driver context
-> >>    in a separate work and SCSI mid-layer isn't informed until reset is
-> >>    applied.
-> >>
-> >> o Processed requests which are completed without error are reported to
-> >>    SCSI layer as successful and any pending commands that are not started
-> >>    yet or are not cause of the error are re-queued into scsi midlayer queue.
-> >>    For the command that caused error, host controller or device is reset
-> >>    and DID_ERROR is returned for command retry after applying reset.
-> >>
-> >> o SCSI is informed about the expected Unit-Attentioni exception from the
-> > Attention'i',  typo.
-> Okay.
+On 7/23/2013 1:54 PM, Seungwon Jeon wrote:
+> On Sat, July 20, 2013, Sujit Reddy Thumma wrote:
+>> On 7/19/2013 7:26 PM, Seungwon Jeon wrote:
+>>> On Tue, July 09, 2013 Sujit Reddy Thumma wrote:
+>>>> Currently, sending Task Management (TM) command to the card might
+>>>> be broken in some scenarios as listed below:
+>>>>
+>>>> Problem: If there are more than 8 TM commands the implementation
+>>>>            returns error to the caller.
+>>>> Fix:     Wait for one of the slots to be emptied and send the command.
+>>>>
+>>>> Problem: Sometimes it is necessary for the caller to know the TM service
+>>>>            response code to determine the task status.
+>>>> Fix:     Propogate the service response to the caller.
+>>>>
+>>>> Problem: If the TM command times out no proper error recovery is
+>>>>            implemented.
+>>>> Fix:     Clear the command in the controller door-bell register, so that
+>>>>            further commands for the same slot don't fail.
+>>>>
+>>>> Problem: While preparing the TM command descriptor, the task tag used
+>>>>            should be unique across SCSI/NOP/QUERY/TM commands and not the
+>>>> 	 task tag of the command which the TM command is trying to manage.
+>>>> Fix:     Use a unique task tag instead of task tag of SCSI command.
+>>>>
+>>>> Problem: Since the TM command involves H/W communication, abruptly ending
+>>>>            the request on kill interrupt signal might cause h/w malfunction.
+>>>> Fix:     Wait for hardware completion interrupt with TASK_UNINTERRUPTIBLE
+>>>>            set.
+>>>>
+>>>> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+>>>> ---
+>>>>    drivers/scsi/ufs/ufshcd.c |  177 ++++++++++++++++++++++++++++++---------------
+>>>>    drivers/scsi/ufs/ufshcd.h |    8 ++-
+>>>>    2 files changed, 126 insertions(+), 59 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>>> index af7d01d..a176421 100644
+>>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>>> @@ -53,6 +53,9 @@
+>>>>    /* Query request timeout */
+>>>>    #define QUERY_REQ_TIMEOUT 30 /* msec */
+>>>>
+>>>> +/* Task management command timeout */
+>>>> +#define TM_CMD_TIMEOUT	100 /* msecs */
+>>>> +
+>>>>    /* Expose the flag value from utp_upiu_query.value */
+>>>>    #define MASK_QUERY_UPIU_FLAG_LOC 0xFF
+>>>>
+>>>> @@ -190,13 +193,35 @@ ufshcd_get_tmr_ocs(struct utp_task_req_desc *task_req_descp)
+>>>>    /**
+>>>>     * ufshcd_get_tm_free_slot - get a free slot for task management request
+>>>>     * @hba: per adapter instance
+>>>> + * @free_slot: pointer to variable with available slot value
+>>>>     *
+>>>> - * Returns maximum number of task management request slots in case of
+>>>> - * task management queue full or returns the free slot number
+>>>> + * Get a free tag and lock it until ufshcd_put_tm_slot() is called.
+>>>> + * Returns 0 if free slot is not available, else return 1 with tag value
+>>>> + * in @free_slot.
+>>>>     */
+>>>> -static inline int ufshcd_get_tm_free_slot(struct ufs_hba *hba)
+>>>> +static bool ufshcd_get_tm_free_slot(struct ufs_hba *hba, int *free_slot)
+>>>> +{
+>>>> +	int tag;
+>>>> +	bool ret = false;
+>>>> +
+>>>> +	if (!free_slot)
+>>>> +		goto out;
+>>>> +
+>>>> +	do {
+>>>> +		tag = find_first_zero_bit(&hba->tm_slots_in_use, hba->nutmrs);
+>>>> +		if (tag >= hba->nutmrs)
+>>>> +			goto out;
+>>>> +	} while (test_and_set_bit_lock(tag, &hba->tm_slots_in_use));
+>>>> +
+>>>> +	*free_slot = tag;
+>>>> +	ret = true;
+>>>> +out:
+>>>> +	return ret;
+>>>> +}
+>>>> +
+>>>> +static inline void ufshcd_put_tm_slot(struct ufs_hba *hba, int slot)
+>>>>    {
+>>>> -	return find_first_zero_bit(&hba->outstanding_tasks, hba->nutmrs);
+>>>> +	clear_bit_unlock(slot, &hba->tm_slots_in_use);
+>>>>    }
+>>>>
+>>>>    /**
+>>>> @@ -1778,10 +1803,11 @@ static void ufshcd_slave_destroy(struct scsi_device *sdev)
+>>>>     * ufshcd_task_req_compl - handle task management request completion
+>>>>     * @hba: per adapter instance
+>>>>     * @index: index of the completed request
+>>>> + * @resp: task management service response
+>>>>     *
+>>>> - * Returns SUCCESS/FAILED
+>>>> + * Returns non-zero value on error, zero on success
+>>>>     */
+>>>> -static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
+>>>> +static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index, u8 *resp)
+>>>>    {
+>>>>    	struct utp_task_req_desc *task_req_descp;
+>>>>    	struct utp_upiu_task_rsp *task_rsp_upiup;
+>>>> @@ -1802,19 +1828,15 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
+>>>>    				task_req_descp[index].task_rsp_upiu;
+>>>>    		task_result = be32_to_cpu(task_rsp_upiup->header.dword_1);
+>>>>    		task_result = ((task_result & MASK_TASK_RESPONSE) >> 8);
+>>>> -
+>>>> -		if (task_result != UPIU_TASK_MANAGEMENT_FUNC_COMPL &&
+>>>> -		    task_result != UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED)
+>>>> -			task_result = FAILED;
+>>>> -		else
+>>>> -			task_result = SUCCESS;
+>>>> +		if (resp)
+>>>> +			*resp = (u8)task_result;
+>>>>    	} else {
+>>>> -		task_result = FAILED;
+>>>> -		dev_err(hba->dev,
+>>>> -			"trc: Invalid ocs = %x\n", ocs_value);
+>>>> +		dev_err(hba->dev, "%s: failed, ocs = 0x%x\n",
+>>>> +				__func__, ocs_value);
+>>>>    	}
+>>>>    	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>>> -	return task_result;
+>>>> +
+>>>> +	return ocs_value;
+>>>>    }
+>>>>
+>>>>    /**
+>>>> @@ -2298,7 +2320,7 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba)
+>>>>
+>>>>    	tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+>>>>    	hba->tm_condition = tm_doorbell ^ hba->outstanding_tasks;
+>>>> -	wake_up_interruptible(&hba->ufshcd_tm_wait_queue);
+>>>> +	wake_up(&hba->tm_wq);
+>>>>    }
+>>>>
+>>>>    /**
+>>>> @@ -2348,38 +2370,61 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>>>>    	return retval;
+>>>>    }
+>>>>
+>>>> +static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+>>>> +{
+>>>> +	int err = 0;
+>>>> +	u32 reg;
+>>>> +	u32 mask = 1 << tag;
+>>>> +	unsigned long flags;
+>>>> +
+>>>> +	if (!test_bit(tag, &hba->outstanding_reqs))
+>>>> +		goto out;
+>>>> +
+>>>> +	spin_lock_irqsave(hba->host->host_lock, flags);
+>>>> +	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
+>>>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>>> +
+>>>> +	/* poll for max. 1 sec to clear door bell register by h/w */
+>>>> +	reg = ufshcd_wait_for_register(hba,
+>>>> +			REG_UTP_TASK_REQ_DOOR_BELL,
+>>>> +			mask, 0, 1000, 1000);
+>>>> +	if ((reg & mask) == mask)
+>>>> +		err = -ETIMEDOUT;
+>>>> +out:
+>>>> +	return err;
+>>>> +}
+>>>> +
+>>>>    /**
+>>>>     * ufshcd_issue_tm_cmd - issues task management commands to controller
+>>>>     * @hba: per adapter instance
+>>>> - * @lrbp: pointer to local reference block
+>>>> + * @lun_id: LUN ID to which TM command is sent
+>>>> + * @task_id: task ID to which the TM command is applicable
+>>>> + * @tm_function: task management function opcode
+>>>> + * @tm_response: task management service response return value
+>>>>     *
+>>>> - * Returns SUCCESS/FAILED
+>>>> + * Returns non-zero value on error, zero on success.
+>>>>     */
+>>>> -static int
+>>>> -ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+>>>> -		    struct ufshcd_lrb *lrbp,
+>>>> -		    u8 tm_function)
+>>>> +static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+>>>> +		u8 tm_function, u8 *tm_response)
+>>>>    {
+>>>>    	struct utp_task_req_desc *task_req_descp;
+>>>>    	struct utp_upiu_task_req *task_req_upiup;
+>>>>    	struct Scsi_Host *host;
+>>>>    	unsigned long flags;
+>>>> -	int free_slot = 0;
+>>>> +	int free_slot;
+>>>>    	int err;
+>>>> +	int task_tag;
+>>>>
+>>>>    	host = hba->host;
+>>>>
+>>>> -	spin_lock_irqsave(host->host_lock, flags);
+>>>> -
+>>>> -	/* If task management queue is full */
+>>>> -	free_slot = ufshcd_get_tm_free_slot(hba);
+>>>> -	if (free_slot >= hba->nutmrs) {
+>>>> -		spin_unlock_irqrestore(host->host_lock, flags);
+>>>> -		dev_err(hba->dev, "Task management queue full\n");
+>>>> -		err = FAILED;
+>>>> -		goto out;
+>>>> -	}
+>>>> +	/*
+>>>> +	 * Get free slot, sleep if slots are unavailable.
+>>>> +	 * Even though we use wait_event() which sleeps indefinitely,
+>>>> +	 * the maximum wait time is bounded by %TM_CMD_TIMEOUT.
+>>>> +	 */
+>>>> +	wait_event(hba->tm_tag_wq, ufshcd_get_tm_free_slot(hba, &free_slot));
+>>>>
+>>>> +	spin_lock_irqsave(host->host_lock, flags);
+>>>>    	task_req_descp = hba->utmrdl_base_addr;
+>>>>    	task_req_descp += free_slot;
+>>>>
+>>>> @@ -2391,18 +2436,15 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+>>>>    	/* Configure task request UPIU */
+>>>>    	task_req_upiup =
+>>>>    		(struct utp_upiu_task_req *) task_req_descp->task_req_upiu;
+>>>> +	task_tag = hba->nutrs + free_slot;
+>>> Possible, did you intend 'hba->nutmrs', not 'hba->nutrs'?
+>>> I think it's safer with hba->nutmrs if we can't sure that NUTRS is larger than NUTMRS.
+>>
+>> It should be hba->nutrs and not hba->nutmrs.
+>>
+>> The equation is -
+>> 0 <= free_slot < hba->nutmrs
+>> 0 <= transfer_req_task_id < hba->nutrs
+>> hba->nutrs <= tm_req_task_id < hba->nutmrs + hba_nutrs
+>>
+>> Whatever be the values of NUTRS/NUTMRS the above gives a unique
+>> task_id.
+> Yes.
 > 
-> >
-> >>    device for the immediate command after a reset so that the SCSI layer
-> >>    take necessary steps to establish communication with the device.
-> >>
-> >> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> >> ---
-> >>   drivers/scsi/ufs/ufshcd.c |  349 +++++++++++++++++++++++++++++++++++---------
-> >>   drivers/scsi/ufs/ufshcd.h |    2 +
-> >>   drivers/scsi/ufs/ufshci.h |   19 ++-
-> >>   3 files changed, 295 insertions(+), 75 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> >> index b4c9910..2a3874f 100644
-> >> --- a/drivers/scsi/ufs/ufshcd.c
-> >> +++ b/drivers/scsi/ufs/ufshcd.c
-> >> @@ -80,6 +80,14 @@ enum {
-> >>   	UFSHCD_EH_DEVICE_RESET_PENDING = (1 << 1),
-> >>   };
-> >>
-> >> +/* UFSHCD UIC layer error flags */
-> >> +enum {
-> >> +	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer error */
-> >> +	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
-> >> +	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
-> >> +	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */
-> >> +};
-> >> +
-> >>   /* Interrupt configuration options */
-> >>   enum {
-> >>   	UFSHCD_INT_DISABLE,
-> >> @@ -108,6 +116,7 @@ enum {
-> >>
-> >>   static void ufshcd_tmc_handler(struct ufs_hba *hba);
-> >>   static void ufshcd_async_scan(void *data, async_cookie_t cookie);
-> >> +static int ufshcd_reset_and_restore(struct ufs_hba *hba);
-> >>
-> >>   /*
-> >>    * ufshcd_wait_for_register - wait for register value to change
-> >> @@ -1605,9 +1614,6 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
-> >>   		goto out;
-> >>   	}
-> >>
-> >> -	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
-> >> -		scsi_unblock_requests(hba->host);
-> >> -
-> >>   out:
-> >>   	return err;
-> >>   }
-> >> @@ -1733,66 +1739,6 @@ static int ufshcd_validate_dev_connection(struct ufs_hba *hba)
-> >>   }
-> >>
-> >>   /**
-> >> - * ufshcd_do_reset - reset the host controller
-> >> - * @hba: per adapter instance
-> >> - *
-> >> - * Returns SUCCESS/FAILED
-> >> - */
-> >> -static int ufshcd_do_reset(struct ufs_hba *hba)
-> >> -{
-> >> -	struct ufshcd_lrb *lrbp;
-> >> -	unsigned long flags;
-> >> -	int tag;
-> >> -
-> >> -	/* block commands from midlayer */
-> >> -	scsi_block_requests(hba->host);
-> >> -
-> >> -	spin_lock_irqsave(hba->host->host_lock, flags);
-> >> -	hba->ufshcd_state = UFSHCD_STATE_RESET;
-> >> -
-> >> -	/* send controller to reset state */
-> >> -	ufshcd_hba_stop(hba);
-> >> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >> -
-> >> -	/* abort outstanding commands */
-> >> -	for (tag = 0; tag < hba->nutrs; tag++) {
-> >> -		if (test_bit(tag, &hba->outstanding_reqs)) {
-> >> -			lrbp = &hba->lrb[tag];
-> >> -			if (lrbp->cmd) {
-> >> -				scsi_dma_unmap(lrbp->cmd);
-> >> -				lrbp->cmd->result = DID_RESET << 16;
-> >> -				lrbp->cmd->scsi_done(lrbp->cmd);
-> >> -				lrbp->cmd = NULL;
-> >> -				clear_bit_unlock(tag, &hba->lrb_in_use);
-> >> -			}
-> >> -		}
-> >> -	}
-> >> -
-> >> -	/* complete device management command */
-> >> -	if (hba->dev_cmd.complete)
-> >> -		complete(hba->dev_cmd.complete);
-> >> -
-> >> -	/* clear outstanding request/task bit maps */
-> >> -	hba->outstanding_reqs = 0;
-> >> -	hba->outstanding_tasks = 0;
-> >> -
-> >> -	/* Host controller enable */
-> >> -	if (ufshcd_hba_enable(hba)) {
-> >> -		dev_err(hba->dev,
-> >> -			"Reset: Controller initialization failed\n");
-> >> -		return FAILED;
-> >> -	}
-> >> -
-> >> -	if (ufshcd_link_startup(hba)) {
-> >> -		dev_err(hba->dev,
-> >> -			"Reset: Link start-up failed\n");
-> >> -		return FAILED;
-> >> -	}
-> >> -
-> >> -	return SUCCESS;
-> >> -}
-> >> -
-> >> -/**
-> >>    * ufshcd_slave_alloc - handle initial SCSI device configurations
-> >>    * @sdev: pointer to SCSI device
-> >>    *
-> >> @@ -1809,6 +1755,9 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
-> >>   	sdev->use_10_for_ms = 1;
-> >>   	scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
-> >>
-> >> +	/* allow SCSI layer to restart the device in case of errors */
-> >> +	sdev->allow_restart = 1;
-> >> +
-> >>   	/*
-> >>   	 * Inform SCSI Midlayer that the LUN queue depth is same as the
-> >>   	 * controller queue depth. If a LUN queue depth is less than the
-> >> @@ -2013,6 +1962,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> >>   	case OCS_ABORTED:
-> >>   		result |= DID_ABORT << 16;
-> >>   		break;
-> >> +	case OCS_INVALID_COMMAND_STATUS:
-> >> +		result |= DID_REQUEUE << 16;
-> >> +		break;
-> >>   	case OCS_INVALID_CMD_TABLE_ATTR:
-> >>   	case OCS_INVALID_PRDT_ATTR:
-> >>   	case OCS_MISMATCH_DATA_BUF_SIZE:
-> >> @@ -2405,42 +2357,295 @@ out:
-> >>   	return err;
-> >>   }
-> >>
-> >> +static void ufshcd_decide_eh_xfer_req(struct ufs_hba *hba, u32 ocs)
-> >> +{
-> >> +	switch (ocs) {
-> >> +	case OCS_SUCCESS:
-> >> +	case OCS_INVALID_COMMAND_STATUS:
-> >> +		break;
-> >> +	case OCS_MISMATCH_DATA_BUF_SIZE:
-> >> +	case OCS_MISMATCH_RESP_UPIU_SIZE:
-> >> +	case OCS_PEER_COMM_FAILURE:
-> >> +	case OCS_FATAL_ERROR:
-> >> +	case OCS_ABORTED:
-> >> +	case OCS_INVALID_CMD_TABLE_ATTR:
-> >> +	case OCS_INVALID_PRDT_ATTR:
-> >> +		ufshcd_set_host_reset_pending(hba);
-> > Should host be reset on ocs error, including below ufshcd_decide_eh_task_req?
-> > It's just overall command status.
+>>
+>>
+>>>
+>>>>    	task_req_upiup->header.dword_0 =
+>>>>    		UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ, 0,
+>>>> -					      lrbp->lun, lrbp->task_tag);
+>>>> +				lun_id, task_tag);
+>>>>    	task_req_upiup->header.dword_1 =
+>>>>    		UPIU_HEADER_DWORD(0, tm_function, 0, 0);
+>>>>
+>>>> -	task_req_upiup->input_param1 = lrbp->lun;
+>>>> -	task_req_upiup->input_param1 =
+>>>> -		cpu_to_be32(task_req_upiup->input_param1);
+>>>> -	task_req_upiup->input_param2 = lrbp->task_tag;
+>>>> -	task_req_upiup->input_param2 =
+>>>> -		cpu_to_be32(task_req_upiup->input_param2);
+>>>> +	task_req_upiup->input_param1 = cpu_to_be32(lun_id);
+>>>> +	task_req_upiup->input_param2 = cpu_to_be32(task_id);
+>>>>
+>>>>    	/* send command to the controller */
+>>>>    	__set_bit(free_slot, &hba->outstanding_tasks);
+>>>> @@ -2411,20 +2453,24 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+>>>>    	spin_unlock_irqrestore(host->host_lock, flags);
+>>>>
+>>>>    	/* wait until the task management command is completed */
+>>>> -	err =
+>>>> -	wait_event_interruptible_timeout(hba->ufshcd_tm_wait_queue,
+>>>> -					 (test_bit(free_slot,
+>>>> -					 &hba->tm_condition) != 0),
+>>>> -					 60 * HZ);
+>>>> +	err = wait_event_timeout(hba->tm_wq,
+>>>> +			test_bit(free_slot, &hba->tm_condition),
+>>>> +			msecs_to_jiffies(TM_CMD_TIMEOUT));
+>>>>    	if (!err) {
+>>>> -		dev_err(hba->dev,
+>>>> -			"Task management command timed-out\n");
+>>>> -		err = FAILED;
+>>>> -		goto out;
+>>>> +		dev_err(hba->dev, "%s: task management cmd 0x%.2x timed-out\n",
+>>>> +				__func__, tm_function);
+>>>> +		if (ufshcd_clear_tm_cmd(hba, free_slot))
+>>>> +			dev_WARN(hba->dev, "%s: unable clear tm cmd (slot %d) after timeout\n",
+>>>> +					__func__, free_slot);
+>>>> +		err = -ETIMEDOUT;
+>>>> +	} else {
+>>>> +		err = ufshcd_task_req_compl(hba, free_slot, tm_response);
+>>>>    	}
+>>>> +
+>>>>    	clear_bit(free_slot, &hba->tm_condition);
+>>>> -	err = ufshcd_task_req_compl(hba, free_slot);
+>>>> -out:
+>>>> +	ufshcd_put_tm_slot(hba, free_slot);
+>>>> +	wake_up(&hba->tm_tag_wq);
+>>>> +
+>>>>    	return err;
+>>>>    }
+>>>>
+>>>> @@ -2441,14 +2487,22 @@ static int ufshcd_device_reset(struct scsi_cmnd *cmd)
+>>>>    	unsigned int tag;
+>>>>    	u32 pos;
+>>>>    	int err;
+>>>> +	u8 resp;
+>>>> +	struct ufshcd_lrb *lrbp;
+>>>>
+>>>>    	host = cmd->device->host;
+>>>>    	hba = shost_priv(host);
+>>>>    	tag = cmd->request->tag;
+>>>>
+>>>> -	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag], UFS_LOGICAL_RESET);
+>>>> -	if (err == FAILED)
+>>>> +	lrbp = &hba->lrb[tag];
+>>>> +	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
+>>> Argument 2nd, 3rd can be replaced by lrbp.
+>>> Then, we can reduce the number of argument.
+>>>
+>>
+>> TM issue command doesn't need to know about lrbp, It just need
+>> LUN ID and task ID. This helps when we are not dealing with lrbp's
+>> and just want to issue some other TM command.
+>> I believe an extra argument is not so costly on the systems which
+>> demand high performance UFS devices.
+> Yes, you're right. only need LUN ID and task ID.
+> It might be trivial. But 'lrbp' should be referred for getting these.
 > 
-> Yes, the error handling section in the UFS 1.1 spec. mentions so.
-If host's reset is required, it should be allowed in fatal situation.
-Deciding with OCS field seems not proper. There is no mentions for that in spec.
-If I have a wrong information, please let it clear.
 
-> 
-> >
-> >> +		break;
-> >> +	default:
-> >> +		dev_err(hba->dev, "%s: unknown OCS 0x%x\n",
-> >> +				__func__, ocs);
-> >> +		BUG();
-> >> +	}
-> >> +}
-> >> +
-> >> +static void ufshcd_decide_eh_task_req(struct ufs_hba *hba, u32 ocs)
-> >> +{
-> >> +	switch (ocs) {
-> >> +	case OCS_TMR_SUCCESS:
-> >> +	case OCS_TMR_INVALID_COMMAND_STATUS:
-> >> +		break;
-> >> +	case OCS_TMR_MISMATCH_REQ_SIZE:
-> >> +	case OCS_TMR_MISMATCH_RESP_SIZE:
-> >> +	case OCS_TMR_PEER_COMM_FAILURE:
-> >> +	case OCS_TMR_INVALID_ATTR:
-> >> +	case OCS_TMR_ABORTED:
-> >> +	case OCS_TMR_FATAL_ERROR:
-> >> +		ufshcd_set_host_reset_pending(hba);
-> >> +		break;
-> >> +	default:
-> >> +		dev_err(hba->dev, "%s: uknown TMR OCS 0x%x\n",
-> >> +				__func__, ocs);
-> >> +		BUG();
-> >> +	}
-> >> +}
-> >> +
-> >>   /**
-> >> - * ufshcd_fatal_err_handler - handle fatal errors
-> >> + * ufshcd_error_autopsy_transfer_req() - reads OCS field of failed command and
-> >> + *                          decide error handling
-> >>    * @hba: per adapter instance
-> >> + * @err_xfer: bit mask for transfer request errors
-> >> + *
-> >> + * Iterate over completed transfer requests and
-> >> + * set error handling flags.
-> >> + */
-> >> +static void
-> >> +ufshcd_error_autopsy_transfer_req(struct ufs_hba *hba, u32 *err_xfer)
-> >> +{
-> >> +	unsigned long completed;
-> >> +	u32 doorbell;
-> >> +	int index;
-> >> +	int ocs;
-> >> +
-> >> +	if (!err_xfer)
-> >> +		goto out;
-> >> +
-> >> +	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> >> +	completed = doorbell ^ (u32)hba->outstanding_reqs;
-> >> +
-> >> +	for (index = 0; index < hba->nutrs; index++) {
-> >> +		if (test_bit(index, &completed)) {
-> >> +			ocs = ufshcd_get_tr_ocs(&hba->lrb[index]);
-> >> +			if ((ocs == OCS_SUCCESS) ||
-> >> +					(ocs == OCS_INVALID_COMMAND_STATUS))
-> >> +				continue;
-> >> +
-> >> +			*err_xfer |= (1 << index);
-> >> +			ufshcd_decide_eh_xfer_req(hba, ocs);
-> >> +		}
-> >> +	}
-> >> +out:
-> >> +	return;
-> >> +}
-> >> +
-> >> +/**
-> >> + * ufshcd_error_autopsy_task_req() - reads OCS field of failed command and
-> >> + *                          decide error handling
-> >> + * @hba: per adapter instance
-> >> + * @err_tm: bit mask for task management errors
-> >> + *
-> >> + * Iterate over completed task management requests and
-> >> + * set error handling flags.
-> >> + */
-> >> +static void
-> >> +ufshcd_error_autopsy_task_req(struct ufs_hba *hba, u32 *err_tm)
-> >> +{
-> >> +	unsigned long completed;
-> >> +	u32 doorbell;
-> >> +	int index;
-> >> +	int ocs;
-> >> +
-> >> +	if (!err_tm)
-> >> +		goto out;
-> >> +
-> >> +	doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
-> >> +	completed = doorbell ^ (u32)hba->outstanding_tasks;
-> >> +
-> >> +	for (index = 0; index < hba->nutmrs; index++) {
-> >> +		if (test_bit(index, &completed)) {
-> >> +			struct utp_task_req_desc *tm_descp;
-> >> +
-> >> +			tm_descp = hba->utmrdl_base_addr;
-> >> +			ocs = ufshcd_get_tmr_ocs(&tm_descp[index]);
-> >> +			if ((ocs == OCS_TMR_SUCCESS) ||
-> >> +					(ocs == OCS_TMR_INVALID_COMMAND_STATUS))
-> >> +				continue;
-> >> +
-> >> +			*err_tm |= (1 << index);
-> >> +			ufshcd_decide_eh_task_req(hba, ocs);
-> >> +		}
-> >> +	}
-> >> +
-> >> +out:
-> >> +	return;
-> >> +}
-> >> +
-> >> +/**
-> >> + * ufshcd_fatal_err_handler - handle fatal errors
-> >> + * @work: pointer to work structure
-> >>    */
-> >>   static void ufshcd_fatal_err_handler(struct work_struct *work)
-> >>   {
-> >>   	struct ufs_hba *hba;
-> >> +	unsigned long flags;
-> >> +	u32 err_xfer = 0;
-> >> +	u32 err_tm = 0;
-> >> +	int err;
-> >> +
-> >>   	hba = container_of(work, struct ufs_hba, feh_workq);
-> >>
-> >>   	pm_runtime_get_sync(hba->dev);
-> >> -	/* check if reset is already in progress */
-> >> -	if (hba->ufshcd_state != UFSHCD_STATE_RESET)
-> >> -		ufshcd_do_reset(hba);
-> >> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> >> +	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
-> >> +		/* complete processed requests and exit */
-> >> +		ufshcd_transfer_req_compl(hba);
-> >> +		ufshcd_tmc_handler(hba);
-> >> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >> +		pm_runtime_put_sync(hba->dev);
-> >> +		return;
-> > Host driver is here with finishing 'scsi_block_requests'.
-> > 'scsi_unblock_requests' can be called somewhere?
-> 
-> No, but it can be possible that SCSI command timeout which triggers
-> device/host reset and fatal error handler race each other.
-Sorry, I didn't get your meaning exactly.
-I saw that scsi_block_requests is done before ufshcd_fatal_err_handler is scheduled.
-If device or host was requested from scsi mid-layer just before ufshcd_fatal_err_handler,
-ufshcd_fatal_err_handler will be out through if statement. Then, there is nowhere to call scsi_unblock_requests
-though device/host reset is done successfully.
-> 
-> >
-> >> +	}
-> >> +
-> >> +	hba->ufshcd_state = UFSHCD_STATE_RESET;
-> >> +	ufshcd_error_autopsy_transfer_req(hba, &err_xfer);
-> >> +	ufshcd_error_autopsy_task_req(hba, &err_tm);
-> >> +
-> >> +	/*
-> >> +	 * Complete successful and pending transfer requests.
-> >> +	 * DID_REQUEUE is returned for pending requests as they have
-> >> +	 * nothing to do with error'ed request and SCSI layer should
-> >> +	 * not treat them as errors and decrement retry count.
-> >> +	 */
-> >> +	hba->outstanding_reqs &= ~err_xfer;
-> >> +	ufshcd_transfer_req_compl(hba);
-> >> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >> +	ufshcd_complete_pending_reqs(hba);
-> >> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> >> +	hba->outstanding_reqs |= err_xfer;
-> > Hmm... error handling seems so complicated.
-> > To simplify it, how about below?
-> >
-> > 1. If requests(transfer or task management) are completed, finish them with success/failure.
-> This is what we are trying to do above.
-> 
-> > 2. If there are pending requests, abort them.
-> No, if a fatal error is occurred it is possible that host controller is
-> freez'ed we are not sure if it can take task management commands and
-> execute them.
-I meant that aborting the request by clearing corresponding UTMRLCLR/UTMRLCLR.
+Whatever way the caller gets lun_id/task_id is not of a concern for
+ufshcd_issue_tm_cmd().
 
-> 
-> > 3. If fatal error, reset.
-> >
-> 
-> 
-> >> +
-> >> +	/* Complete successful and pending task requests */
-> >> +	hba->outstanding_tasks &= ~err_tm;
-> >> +	ufshcd_tmc_handler(hba);
-> >> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >> +	ufshcd_complete_pending_tasks(hba);
-> >> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> >> +
-> >> +	hba->outstanding_tasks |= err_tm;
-> >> +
-> >> +	/*
-> >> +	 * Controller may generate multiple fatal errors, handle
-> >> +	 * errors based on severity.
-> >> +	 * 1) DEVICE_FATAL_ERROR
-> >> +	 * 2) SYSTEM_BUS/CONTROLLER_FATAL_ERROR
-> >> +	 * 3) UIC_ERROR
-> >> +	 */
-> >> +	if (hba->errors & DEVICE_FATAL_ERROR) {
-> >> +		/*
-> >> +		 * Some HBAs may not clear UTRLDBR/UTMRLDBR or update
-> >> +		 * OCS field on device fatal error.
-> >> +		 */
-> >> +		ufshcd_set_host_reset_pending(hba);
-> > In DEVICE_FATAL_ERROR, ufshcd_device_reset_pending is right?
-> 
-> It looks so, but the spec. mentions to reset the host as well (8.3.6).
-Do you pointing below?
-[8.3.6. Device Errors are fatal errors. ...the host software shall reset the device too.]
+I prefer this way even though lrbp is anyway needed to determine IDs.
 
-> 
-> >
-> >> +	} else if (hba->errors & (SYSTEM_BUS_FATAL_ERROR |
-> >> +			CONTROLLER_FATAL_ERROR)) {
-> >> +		/* eh flags should be set in err autopsy based on OCS values */
-> >> +		if (!hba->eh_flags)
-> >> +			WARN(1, "%s: fatal error without error handling\n",
-> >> +				dev_name(hba->dev));
-> >> +	} else if (hba->errors & UIC_ERROR) {
-> >> +		if (hba->uic_error & UFSHCD_UIC_DL_PA_INIT_ERROR) {
-> >> +			/* fatal error - reset controller */
-> >> +			ufshcd_set_host_reset_pending(hba);
-> >> +		} else if (hba->uic_error & (UFSHCD_UIC_NL_ERROR |
-> >> +					UFSHCD_UIC_TL_ERROR |
-> >> +					UFSHCD_UIC_DME_ERROR)) {
-> >> +			/* non-fatal, report error to SCSI layer */
-> >> +			if (!hba->eh_flags) {
-> >> +				spin_unlock_irqrestore(
-> >> +						hba->host->host_lock, flags);
-> >> +				ufshcd_complete_pending_reqs(hba);
-> >> +				ufshcd_complete_pending_tasks(hba);
-> >> +				spin_lock_irqsave(hba->host->host_lock, flags);
-> >> +			}
-> >> +		}
-> >> +	}
-> >> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >> +
-> >> +	if (hba->eh_flags) {
-> >> +		err = ufshcd_reset_and_restore(hba);
-> >> +		if (err) {
-> >> +			ufshcd_clear_host_reset_pending(hba);
-> >> +			ufshcd_clear_device_reset_pending(hba);
-> >> +			dev_err(hba->dev, "%s: reset and restore failed\n",
-> >> +					__func__);
-> >> +			hba->ufshcd_state = UFSHCD_STATE_ERROR;
-> >> +		}
-> >> +		/*
-> >> +		 * Inform scsi mid-layer that we did reset and allow to handle
-> >> +		 * Unit Attention properly.
-> >> +		 */
-> >> +		scsi_report_bus_reset(hba->host, 0);
-> >> +		hba->errors = 0;
-> >> +		hba->uic_error = 0;
-> >> +	}
-> >> +	scsi_unblock_requests(hba->host);
-> >>   	pm_runtime_put_sync(hba->dev);
-> >>   }
-> >>
-> >>   /**
-> >> - * ufshcd_err_handler - Check for fatal errors
-> >> - * @work: pointer to a work queue structure
-> >> + * ufshcd_update_uic_error - check and set fatal UIC error flags.
-> >> + * @hba: per-adapter instance
-> >>    */
-> >> -static void ufshcd_err_handler(struct ufs_hba *hba)
-> >> +static void ufshcd_update_uic_error(struct ufs_hba *hba)
-> >>   {
-> >>   	u32 reg;
-> >>
-> >> +	/* PA_INIT_ERROR is fatal and needs UIC reset */
-> >> +	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
-> >> +	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
-> >> +		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
-> >> +
-> >> +	/* UIC NL/TL/DME errors needs software retry */
-> >> +	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
-> >> +	if (reg)
-> >> +		hba->uic_error |= UFSHCD_UIC_NL_ERROR;
-> >> +
-> >> +	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_TRANSPORT_LAYER);
-> >> +	if (reg)
-> >> +		hba->uic_error |= UFSHCD_UIC_TL_ERROR;
-> >> +
-> >> +	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DME);
-> >> +	if (reg)
-> >> +		hba->uic_error |= UFSHCD_UIC_DME_ERROR;
-> > REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER is not handled.
-> 
-> UFS spec. mentions that it is non-fatal error and UIC recovers
-> by itself and doesn't need software intervention.
-Ok.
-
-> 
-> >
-> >> +
-> >> +	dev_dbg(hba->dev, "%s: UIC error flags = 0x%08x\n",
-> >> +			__func__, hba->uic_error);
-> >> +}
-> >> +
-> >> +/**
-> >> + * ufshcd_err_handler - Check for fatal errors
-> >> + * @hba: per-adapter instance
-> >> + */
-> >> +static void ufshcd_err_handler(struct ufs_hba *hba)
-> >> +{
-> >>   	if (hba->errors & INT_FATAL_ERRORS)
-> >>   		goto fatal_eh;
-> >>
-> >>   	if (hba->errors & UIC_ERROR) {
-> >> -		reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
-> >> -		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
-> >> +		hba->uic_error = 0;
-> >> +		ufshcd_update_uic_error(hba);
-> >> +		if (hba->uic_error)
-> > Except UFSHCD_UIC_DL_PA_INIT_ERROR, it's not fatal. Should it go to fatal_eh?
-> 
-> Please see the UIC error handling in ufshcd_fatal_err_handler(), others
-> need software intervention so I combined it with fatal_eh to complete
-> the requests and report to SCSI.
-As gathering all error(fatal, non-fatal)handling into origin one, it makes confused.
-Then, I would be better to rename ufshcd_fatal_err_handler.
-
-Thanks,
-Seungwon Jeon
+--
+Regards,
+Sujit
