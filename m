@@ -1,30 +1,47 @@
-From: Chris Metcalf <cmetcalf@tilera.com>
-Subject: Re: [PATCH] mvsas: fix unaligned-access kernel panic under heavy
- disk testing
-Date: Tue, 23 Jul 2013 17:17:14 -0400
-Message-ID: <51EEF2DA.3070903@tilera.com>
-References: <201307232053.r6NKrkOh032171@farm-0012.internal.tilera.com> <1374613204.2290.49.camel@dabdike>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1374613204.2290.49.camel@dabdike>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jianpeng Ma <majianpeng@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Xi Wang <xi.wang@gmail.com>, Xiangliang Yu <yuxiangl@marvell.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Chris Leech <cleech@redhat.com>
+Subject: [PATCH] iscsi_tcp: consider session state in iscsi_sw_sk_state_check
+Date: Tue, 23 Jul 2013 14:42:08 -0700
+Message-ID: <1374615728-11056-1-git-send-email-cleech@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52520 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754713Ab3GWVm3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Jul 2013 17:42:29 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 
-On 7/23/2013 5:00 PM, James Bottomley wrote:
-> On Tue, 2013-07-23 at 16:50 -0400, Chris Metcalf wrote:
->> > The slot->response value may not be aligned, so should be read
->> > using the appropriate kernel "unaligned" accessor.
-> Hm, institutional memory re-presenting the wrong patch?  However, I am
-> reminded to push the right one in spite of no ack from marvell.
+It seems some iSCSI targets (including the Linux kernel target) close
+the TCP connection from the target side immediately after processing a
+session logout.
 
-You may be right; the original author of that patch is not me, but someone else here at Tilera.
+When a TCP FIN comes in right after the iSCSI logout response,
+iscsi_sw_sk_state_check sees the local socket as not yet being in
+CLOSE_WAIT or CLOSE and logs an error.  But the initiator would close
+the connection right after processing the logout response anyway, and
+the error is confusing to admins who just requested that the session be
+shut down.
 
-That said, the version I pushed is effectively the version we have in the tip of our tree, so if we've ended up carrying the wrong patch, that's bad!  Let me know what the right patch is that you have - thanks.
+This adds a check of the session state, and suppresses the error if we
+are in the process of logging out.
 
+Signed-off-by: Chris Leech <cleech@redhat.com>
+---
+ drivers/scsi/iscsi_tcp.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 9e2588a..add6d15 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -116,6 +116,7 @@ static inline int iscsi_sw_sk_state_check(struct sock *sk)
+ 	struct iscsi_conn *conn = sk->sk_user_data;
+ 
+ 	if ((sk->sk_state == TCP_CLOSE_WAIT || sk->sk_state == TCP_CLOSE) &&
++	    (conn->session->state != ISCSI_STATE_LOGGING_OUT) &&
+ 	    !atomic_read(&sk->sk_rmem_alloc)) {
+ 		ISCSI_SW_TCP_DBG(conn, "TCP_CLOSE|TCP_CLOSE_WAIT\n");
+ 		iscsi_conn_failure(conn, ISCSI_ERR_TCP_CONN_CLOSE);
 -- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
+1.8.1.4
+
