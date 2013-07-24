@@ -1,59 +1,41 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [SCSI] Fix incorrect memset in bnx2fc_parse_fcp_rsp
-Date: Wed, 24 Jul 2013 04:42:42 +0100
-Message-ID: <1374637362.18653.13.camel@deadeye.wl.decadent.org.uk>
+From: TC@zimbra.relato.net.br, idthida.choun@gmail.com
+Subject: Letter Of Intent
+Date: Wed, 24 Jul 2013 12:00:19 +0700
+Message-ID: <20130724050105.3A41B56D9D4@zimbra.relato.net.br>
+Reply-To: thida.choun@yahoo.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-RWRc7j8fb+T15ITQIyD8"
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>, James Bottomley <JBottomley@Parallels.com>
-Cc: stable@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from host53-147.brs.com.br ([177.11.53.147]:59678 "EHLO
+	zimbra.relato.net.br" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751395Ab3GXFBa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jul 2013 01:01:30 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by zimbra.relato.net.br (Postfix) with ESMTP id D2A6256DA2E
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Jul 2013 02:01:06 -0300 (BRT)
+Received: from zimbra.relato.net.br ([127.0.0.1])
+	by localhost (zimbra.relato.net.br [127.0.0.1]) (amavisd-new, port 10032)
+	with ESMTP id rmNC0Zz5Tzgz for <linux-scsi@vger.kernel.org>;
+	Wed, 24 Jul 2013 02:01:06 -0300 (BRT)
+Received: from localhost (localhost [127.0.0.1])
+	by zimbra.relato.net.br (Postfix) with ESMTP id 6727756DA19
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Jul 2013 02:01:06 -0300 (BRT)
+Received: from zimbra.relato.net.br ([127.0.0.1])
+	by localhost (zimbra.relato.net.br [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id vm0rjURiFwLB for <linux-scsi@vger.kernel.org>;
+	Wed, 24 Jul 2013 02:01:06 -0300 (BRT)
+Received: from [10.9.87.214] (unknown [192.168.6.2])
+	by zimbra.relato.net.br (Postfix) with ESMTP id 3A41B56D9D4
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Jul 2013 02:01:04 -0300 (BRT)
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Dear Friend
 
---=-RWRc7j8fb+T15ITQIyD8
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+It is my interest to contact you in respect of our client from your country who died 3 years ago leaving some huge amount of money in our bank without any next of kin or link to his family. I shall explain in details when I read your reply.You are my first contact, I shall wait for days and if I do not hear from you. I shall continue with my search,
 
-This looks like a candidate for stable:
-
-commit 16da05b1158d1bcb31656e636a8736a663b1cf1f
-Author: Andi Kleen <andi@firstfloor.org>
-Date:   Mon Sep 3 20:50:30 2012 +0200
-
-    [SCSI] Fix incorrect memset in bnx2fc_parse_fcp_rsp
-
-Typically this sort of bug can result in leaking kernel memory to
-userland, which is a security issue, but I don't know whether that's
-true in this case.
-
-Ben.
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-RWRc7j8fb+T15ITQIyD8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUe9NMue/yOyVhhEJAQpLgg//T09y7Gqru/LQ0EDBUQH1aM1uhT6BFjhV
-tnw+AazGvDRR9M6qitMZHwKLdbOXN4xQyVMoCaICw8DlCZWw2WNxBaewtbQ7WDtv
-w1GzgGJQqP7WvzxcIGZ549Nc+ALUA+nDZT9FT7gSdiN8Ax4DiZqMzNH3k5U2R6XR
-nBJksmHXBS4OmTeWj1WvSBA3D5arV9qIpNMhxd9b5TtdVJ6+G5oOxijq/0JNjAKx
-gHCUAYgj+ORlQvZDDKRn9T0aQ4E06IiiAlzfTPqAdAhOWwAq5jWCemoLLCj3eE/f
-c9YCWLtesX+MWTHyXHRf/SDnRtpi3NVqLo24hJODwen5cde7Cto92zUdqETeBms8
-G1+/zI985LQ8fuGURIAj4fs8aBed0l9gnHYGXY4Xw1fFIuXvWGXwKzc0VY4SZCVv
-ob0y9cnUS+WyzbCX8TowR7nb47gCd/dSNX7MrKYrdrNuIFzNaA4iH9Fd6GFHv6Fs
-SNdeO7QHyFJEDLZnKH/uu+MXrdFR8uoU3xjGwXDoJrVutoY1pXm1UvjDTKy6kUtB
-SKS0R61pebQaicx0FotBGlIXw5p7875ut3gaH5UwkFwvhsHFuc6Bh/9KOmQhf2tg
-0IwtC+XnmkK6GhXQZ5Db9J8h8kXsAadnQFpKQ8LJEqTMPzxhWwA6IMosgglxhizD
-WXzP+aFk98E=
-=xToc
------END PGP SIGNATURE-----
-
---=-RWRc7j8fb+T15ITQIyD8--
+Thanks.
+Thida Choun
