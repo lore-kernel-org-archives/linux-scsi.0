@@ -1,64 +1,64 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: targetcli -fb now also Apache 2.0 licensed
-Date: Wed, 24 Jul 2013 13:54:49 -0700
-Message-ID: <1374699289.7397.1309.camel@haakon3.risingtidesystems.com>
-References: <51EF73EF.1040305@redhat.com>
-	 <1374696565.7397.1292.camel@haakon3.risingtidesystems.com>
-	 <1374697264.7382.39.camel@dabdike>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [PATCH] mpt2sas: don't handle broadcast primitives
+Date: Wed, 24 Jul 2013 15:23:57 -0400
+Message-ID: <20130724192357.GC3641@logfs.org>
+References: <20130719220659.GF29404@logfs.org>
+ <20130719221143.GG29404@logfs.org>
+ <CAC9+anJ47nx+KyKvp7MT1Hanh-8YNDmSQwtM542dpeOdCVVoUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1374697264.7382.39.camel@dabdike>
-Sender: target-devel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andy Grover <agrover@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ritesh Raj Sarraf <rrs@debian.org>, targetcli-fb-devel@lists.fedorahosted.org, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAC9+anJ47nx+KyKvp7MT1Hanh-8YNDmSQwtM542dpeOdCVVoUw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Baruch Even <baruch@ev-en.org>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Support <support@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, mit@purestorage.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2013-07-24 at 13:21 -0700, James Bottomley wrote:
-> On Wed, 2013-07-24 at 13:09 -0700, Nicholas A. Bellinger wrote:
-> > On Tue, 2013-07-23 at 23:27 -0700, Andy Grover wrote:
-> > > Hi Nick,
-> > > 
-> > > I just wanted to let you know that I finally received permission from 
-> > > all contributors, and have matched RisingTide's relicensing of targetcli 
-> > > and its dependencies to Apache 2.0, by relicensing the additional 
-> > > contributions in the targetcli-fb branch under the same license.
-> > > 
-> > > I'm not quite sure the next steps are, except enjoying all our newly 
-> > > non-viral source code, but much thanks for getting the ball rolling.
-> > > 
-> > 
-> > Making this type of announcement without coordinating with us on a plan
-> > for moving forward is pretty lame.  Especially considering that we've
-> > kept asking you privately about how to work together to reconcile -fb
-> > with upstream, and your response essentially boiled down to "What's in
-> > it for me..?".
-> 
-> Oh good grief, children, how about you both play nicely in the sand box
-> or I'll fetch your parents to make you see sense.
-> 
-> > So if you really, really need an incentive to "do the right thing", how
-> > about I start not accept kernel patches from you until you're ready to
-> > drop -fb and start working with upstream for real..?
-> 
-> Well, the thing is, being a maintainer in Linux is a position of trust.
-> The fastest way to lose that trust is to hold your tree to ransom or
-> indeed refuse to accept patches for anything other than technical or
-> licensing reasons.
+On Wed, 24 July 2013 23:42:22 +0300, Baruch Even wrote:
+> On Sat, Jul 20, 2013 at 1:11 AM, J=C3=B6rn Engel <joern@logfs.org> wr=
+ote:
+> > On Fri, 19 July 2013 18:06:59 -0400, J=C3=B6rn Engel wrote:
+> >>
+> >> The handling of broadcast primitives involves
+> >> _scsih_block_io_all_device(), which does what the name implies.  I=
+ have
+> >> observed cases with >60s of blocking io on all devices, caused by =
+a
+> >> single bad device.  The downsides of this code are obvious, while =
+the
+> >> upsides are more elusive.
+> >
+> > And since this patch looks more like an April fools joke: I have
+> > gathered a few machine-months of testing, including tortures that
+> > specifically stress the removed codepaths.  This is a serious
+> > submission and unless someone can show me a _very_ good reason for
+> > keeping the deleted code, I would like to get it merged.
+>=20
+> This would seem to cause an IO pause through the host whenever there
+> is a disk removal/insertion or SES (SAS expander) change which seems
+> like a bad proposition indeed. The part of the work that this code
+> seems to handle is that when such a change happens something needs to
+> detect the dead IOs (f.ex. surprise disk removal) but I believe that
+> the SAS HBA firmware will do that internally already so I do think
+> this code is needless.
+>=20
+> The only thing I'd like not to lose is the actual notification and
+> ability to log the fact that there was a broadcast notification on th=
+e
+> SAS network.
 
-Yes, which is why I've been accepting his kernel patches the entire time
-that user-space has been forked into -fb.  Now that the user-space code
-has been relicensed as promised, there is no longer any reason for a
-separate -fb fork to exist.
+I agree logging would be nice.  However my attempts to keep logging and
+remove the IO pause were unsuccessful.  Apparently something inside
+_scsih_sas_broadcast_primitive_event() is required to get future
+events.  If someone from LSI with data sheets and understanding of the
+firmware can do a better patch, I would be happy.
 
-That said, it's time to start moving forward toward a single set of
-source trees for upstream userspace, so that all distributions can
-mutually benefit from the effort.  As mentioned above, this has so far
-not been enough to get -fb reconciled with upstream.
+J=C3=B6rn
 
-So I don't consider the above 'holding for ransom' or any nonsense like
-that, considering the end goal is for everyone (not just Fedora) to
-benefit from -fb.
-
---nab
+--
+The story so far:
+In the beginning the Universe was created.  This has made a lot
+of people very angry and been widely regarded as a bad move.
+-- Douglas Adams
