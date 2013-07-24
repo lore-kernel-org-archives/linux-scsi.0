@@ -1,47 +1,52 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [stable] [SCSI] Fix incorrect memset in bnx2fc_parse_fcp_rsp
-Date: Wed, 24 Jul 2013 16:20:48 +0200
-Message-ID: <20130724142048.GV6123@two.firstfloor.org>
-References: <1374637362.18653.13.camel@deadeye.wl.decadent.org.uk>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: [PATCH v5 0/2] block,scsi: fixup blk_get_request dead queue
+ scenarios
+Date: Wed, 24 Jul 2013 10:29:02 -0400
+Message-ID: <20130724102902.42970d66@jlaw-desktop.mno.stratus.com>
+References: <alpine.DEB.2.02.1303171328250.1736@jlaw-desktop.mno.stratus.com>
+	<20130524141531.737073a8@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([193.170.194.197]:55459 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753675Ab3GXOUu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jul 2013 10:20:50 -0400
-Content-Disposition: inline
-In-Reply-To: <1374637362.18653.13.camel@deadeye.wl.decadent.org.uk>
+Received: from mailhub5.stratus.com ([134.111.1.18]:51918 "EHLO
+	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752214Ab3GXO3H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jul 2013 10:29:07 -0400
+In-Reply-To: <20130524141531.737073a8@jlaw-desktop.mno.stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Andi Kleen <andi@firstfloor.org>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>, James Bottomley <JBottomley@Parallels.com>, stable@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>
 
-On Wed, Jul 24, 2013 at 04:42:42AM +0100, Ben Hutchings wrote:
-> This looks like a candidate for stable:
+On Fri, 24 May 2013 14:15:31 -0400
+Joe Lawrence <joe.lawrence@stratus.com> wrote:
 
-Don't know if it's a security issue, but should be fine for stable.
-
--Andi
-
+> [PATCH v5 0/2] block,scsi: fixup blk_get_request dead queue scenarios
 > 
-> commit 16da05b1158d1bcb31656e636a8736a663b1cf1f
-> Author: Andi Kleen <andi@firstfloor.org>
-> Date:   Mon Sep 3 20:50:30 2012 +0200
+> Changes from v4:
 > 
->     [SCSI] Fix incorrect memset in bnx2fc_parse_fcp_rsp
+>  - As per James' suggestion, split into two patches: the first adds
+>    blk_get_request return value checking to avoid potential oops, the
+>    second converts callers and friends to handle ERR_PTR differentiation
+>    of -ENOMEM and -ENODEV.
 > 
-> Typically this sort of bug can result in leaking kernel memory to
-> userland, which is a security issue, but I don't know whether that's
-> true in this case.
+> Regards,
 > 
-> Ben.
-> 
-> -- 
-> Ben Hutchings
-> Once a job is fouled up, anything done to improve it makes it worse.
+> -- Joe
 
+Hello Jens,
 
+I'm clearing out some of my old patches and was wondering about the
+status of these two.
 
--- 
-ak@linux.intel.com -- Speaking for myself only.
+They apply cleanly to the tip of Linus's branch and it appears
+that no new callers of blk_get_request have been introduced since v5 of
+the patches.
+
+link to thread:
+http://thread.gmane.org/gmane.linux.scsi/80934/focus=82216
+
+Regards,
+
+-- Joe
