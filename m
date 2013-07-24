@@ -1,38 +1,37 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: targetcli -fb now also Apache 2.0 licensed
-Date: Wed, 24 Jul 2013 13:09:25 -0700
-Message-ID: <1374696565.7397.1292.camel@haakon3.risingtidesystems.com>
-References: <51EF73EF.1040305@redhat.com>
+From: Tony Luck <tony.luck@gmail.com>
+Subject: Re: scsi scan: INQUIRY result too short (5), using 36
+Date: Wed, 24 Jul 2013 13:14:31 -0700
+Message-ID: <CA+8MBbL+GqQQ8-_=D=qOVj9qa1RebtmaF9spHR6NcHMTPrQpFw@mail.gmail.com>
+References: <CA+8MBb+pSmRPqV-5xsEwBM_23sGaci5T6vka1LgTD5aiEoHCbg@mail.gmail.com>
+	<1374694998.7382.33.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <51EF73EF.1040305@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ritesh Raj Sarraf <rrs@debian.org>, targetcli-fb-devel@lists.fedorahosted.org, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1374694998.7382.33.camel@dabdike>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2013-07-23 at 23:27 -0700, Andy Grover wrote:
-> Hi Nick,
-> 
-> I just wanted to let you know that I finally received permission from 
-> all contributors, and have matched RisingTide's relicensing of targetcli 
-> and its dependencies to Apache 2.0, by relicensing the additional 
-> contributions in the targetcli-fb branch under the same license.
-> 
-> I'm not quite sure the next steps are, except enjoying all our newly 
-> non-viral source code, but much thanks for getting the ball rolling.
-> 
+On Wed, Jul 24, 2013 at 12:43 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> Oops, apparently no-one I cc'd at intel actually bothered to check the
+> patch for the isci driver.  The looks to be that sci_swab32_cpy needs
+> multiples of four, so for commands that aren't that, it's rounding the
+> wrong way.  Does this fix it?
 
-Making this type of announcement without coordinating with us on a plan
-for moving forward is pretty lame.  Especially considering that we've
-kept asking you privately about how to work together to reconcile -fb
-with upstream, and your response essentially boiled down to "What's in
-it for me..?".
+Yes. That fixes it.
 
-So if you really, really need an incentive to "do the right thing", how
-about I start not accept kernel patches from you until you're ready to
-drop -fb and start working with upstream for real..?
+Wrap whichever of:
 
---nab
+Reported-by: Tony Luck <tony.luck@intel.com>
+
+and/or
+
+Tested-by: Tony Luck <tony.luck@intel.com>
+
+around that patch and ship it!
+
+Thanks for the fast fix.
+
+-Tony
