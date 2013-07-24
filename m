@@ -1,53 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi scan: INQUIRY result too short (5), using 36
-Date: Wed, 24 Jul 2013 12:43:18 -0700
-Message-ID: <1374694998.7382.33.camel@dabdike>
-References: <CA+8MBb+pSmRPqV-5xsEwBM_23sGaci5T6vka1LgTD5aiEoHCbg@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: targetcli -fb now also Apache 2.0 licensed
+Date: Wed, 24 Jul 2013 13:09:25 -0700
+Message-ID: <1374696565.7397.1292.camel@haakon3.risingtidesystems.com>
+References: <51EF73EF.1040305@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+8MBb+pSmRPqV-5xsEwBM_23sGaci5T6vka1LgTD5aiEoHCbg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tony Luck <tony.luck@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <51EF73EF.1040305@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ritesh Raj Sarraf <rrs@debian.org>, targetcli-fb-devel@lists.fedorahosted.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2013-07-24 at 11:53 -0700, Tony Luck wrote:
-> v3.10 used to boot on this machine, linus latest doesn't.  git bisect
-> points to this commit.
+On Tue, 2013-07-23 at 23:27 -0700, Andy Grover wrote:
+> Hi Nick,
 > 
-> commit e73823f7a2c921dcf068d34ea03bd682498d9e42
-> Author: James Bottomley <JBottomley@Parallels.com>
-> Date:   Tue May 7 15:38:18 2013 -0700
+> I just wanted to let you know that I finally received permission from 
+> all contributors, and have matched RisingTide's relicensing of targetcli 
+> and its dependencies to Apache 2.0, by relicensing the additional 
+> contributions in the targetcli-fb branch under the same license.
 > 
->     [SCSI] libsas: implement > 16 byte CDB support
+> I'm not quite sure the next steps are, except enjoying all our newly 
+> non-viral source code, but much thanks for getting the ball rolling.
 > 
-> See attached console log for all the gory details.
-> 
-> Let me know if you need any other information about
-> this machine or its config that isn't easily deducible
-> from the console log.
 
-Oops, apparently no-one I cc'd at intel actually bothered to check the
-patch for the isci driver.  The looks to be that sci_swab32_cpy needs
-multiples of four, so for commands that aren't that, it's rounding the
-wrong way.  Does this fix it?
+Making this type of announcement without coordinating with us on a plan
+for moving forward is pretty lame.  Especially considering that we've
+kept asking you privately about how to work together to reconcile -fb
+with upstream, and your response essentially boiled down to "What's in
+it for me..?".
 
-James
+So if you really, really need an incentive to "do the right thing", how
+about I start not accept kernel patches from you until you're ready to
+drop -fb and start working with upstream for real..?
 
----
-
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 7b08215..99d2930 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -185,7 +185,7 @@ static void sci_io_request_build_ssp_command_iu(struct isci_request *ireq)
- 	cmd_iu->_r_c = 0;
- 
- 	sci_swab32_cpy(&cmd_iu->cdb, task->ssp_task.cmd->cmnd,
--		       task->ssp_task.cmd->cmd_len / sizeof(u32));
-+		       (task->ssp_task.cmd->cmd_len+3) / sizeof(u32));
- }
- 
- static void sci_task_request_build_ssp_task_iu(struct isci_request *ireq)
+--nab
