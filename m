@@ -1,79 +1,90 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: targetcli -fb now also Apache 2.0 licensed
-Date: Wed, 24 Jul 2013 18:19:00 -0700
-Message-ID: <1374715140.7397.1390.camel@haakon3.risingtidesystems.com>
-References: <51EF73EF.1040305@redhat.com>
-	 <1374696565.7397.1292.camel@haakon3.risingtidesystems.com>
-	 <1374697264.7382.39.camel@dabdike>
-	 <1374699289.7397.1309.camel@haakon3.risingtidesystems.com>
-	 <51F06C17.50306@redhat.com>
+From: "Anand Kumar Santhanam" <AnandKumar.Santhanam@pmcs.com>
+Subject: RE: [PATCH] pm80xx: fix Adaptec 71605H hang
+Date: Wed, 24 Jul 2013 21:44:20 -0700
+Message-ID: <E5DEE6F468524847995699AD11E8088501BED4A5@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <51E2605D.3000301@xs4all.nl> <51E3C46E.8030600@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <51F06C17.50306@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ritesh Raj Sarraf <rrs@debian.org>, targetcli-fb-devel@lists.fedorahosted.org, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:59090 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751106Ab3GYEoM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Jul 2013 00:44:12 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <51E3C46E.8030600@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jack Wang <xjtuwjp@gmail.com>, Hans Verkuil <hverkuil@xs4all.nl>
+Cc: linux-scsi@vger.kernel.org, lindar_liu@usish.com, Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>, jinpu.wang@profitbricks.com
 
-On Wed, 2013-07-24 at 17:06 -0700, Andy Grover wrote:
-> On 07/24/2013 01:54 PM, Nicholas A. Bellinger wrote:
-> > Yes, which is why I've been accepting his kernel patches the entire time
-> > that user-space has been forked into -fb.  Now that the user-space code
-> > has been relicensed as promised, there is no longer any reason for a
-> > separate -fb fork to exist.
-> >
-> > That said, it's time to start moving forward toward a single set of
-> > source trees for upstream userspace, so that all distributions can
-> > mutually benefit from the effort.  As mentioned above, this has so far
-> > not been enough to get -fb reconciled with upstream.
-> >
-> > So I don't consider the above 'holding for ransom' or any nonsense like
-> > that, considering the end goal is for everyone (not just Fedora) to
-> > benefit from -fb.
+Hi Hans,
+
+Are you planning to address the below comment and submit an updated
+patch?
+
+Regards
+Anand
+
+-----Original Message-----
+From: Jack Wang [mailto:xjtuwjp@gmail.com] 
+Sent: Monday, July 15, 2013 3:14 PM
+To: Hans Verkuil
+Cc: linux-scsi@vger.kernel.org; Anand Kumar Santhanam;
+lindar_liu@usish.com; Sangeetha Gnanasekaran;
+jinpu.wang@profitbricks.com
+Subject: Re: [PATCH] pm80xx: fix Adaptec 71605H hang
+
+On 07/14/2013 10:25 AM, Hans Verkuil wrote:
+> The IO command size is 128 bytes for these new controllers as opposed 
+> to 64 for the old 8001 controller.
 > 
-> There's nothing stopping any other distro (or commercial entity) from 
-> adopting targetcli-fb. I don't know why they haven't, except that 
-> there's a default attitude that the originator of the project is the 
-> "upstream" forever.
+> The Adaptec out-of-tree driver did this correctly. After comparing the
 
-Please stop trying to drive the split wider, and attempting to make
-yourself upstream for something that you did not create.
+> two this turned out to be the crucial difference.
+Thanks Hans for this fix.
+We'd better use more meaningful Micro like:
 
-You are responsible for this fork (and associated headaches) to begin
-with.  Now that we have, as promised, relicensed this code, the time has
-come to do the right thing for the wider community and push your changes
-upstream.
+#define MPI_IOMB_SIZE_SPCV 128 and replace current hard coded one.
 
-Please read the following:
-
-https://fedoraproject.org/wiki/Staying_close_to_upstream_projects
-
-"The Fedora Project focuses, as much as possible, on not deviating from
-upstream in the software it includes in the repository."
-
-Don't you think this applies to you, too?
-
+Thanks,
+Jack
 > 
-> I think I've done a pretty good job maintaining -fb over the past two 
-> years -- -fb has bug tracking, a list, tarballs, and is actively 
-> maintained and improved, all things that are not true of upstream.
+> Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
+> Acked-by: AnandKumar.Santhanam@pmcs.com
+> Cc: stable@vger.kernel.org      # for v3.10 and up
+> ---
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> My question to you (Nick) is, why don't we all just unify on -fb?
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c 
+> b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 302514d..e1db5ca 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -275,7 +275,7 @@ static void init_default_table_values(struct 
+> pm8001_hba_info *pm8001_ha)
+>  
+>  	for (i = 0; i < PM8001_MAX_SPCV_INB_NUM; i++) {
+>  		pm8001_ha->inbnd_q_tbl[i].element_pri_size_cnt	=
+> -			PM8001_MPI_QUEUE | (64 << 16) | (0x00<<30);
+> +			PM8001_MPI_QUEUE | (128 << 16) | (0x00<<30);
+>  		pm8001_ha->inbnd_q_tbl[i].upper_base_addr	=
+>  			pm8001_ha->memoryMap.region[IB +
+i].phys_addr_hi;
+>  		pm8001_ha->inbnd_q_tbl[i].lower_base_addr	=
+> @@ -301,7 +301,7 @@ static void init_default_table_values(struct
+pm8001_hba_info *pm8001_ha)
+>  	}
+>  	for (i = 0; i < PM8001_MAX_SPCV_OUTB_NUM; i++) {
+>  		pm8001_ha->outbnd_q_tbl[i].element_size_cnt	=
+> -			PM8001_MPI_QUEUE | (64 << 16) | (0x01<<30);
+> +			PM8001_MPI_QUEUE | (128 << 16) | (0x01<<30);
+>  		pm8001_ha->outbnd_q_tbl[i].upper_base_addr	=
+>  			pm8001_ha->memoryMap.region[OB +
+i].phys_addr_hi;
+>  		pm8001_ha->outbnd_q_tbl[i].lower_base_addr	=
 > 
 
-Because -fb has had close to zero peer review, and you've not solicited
-much input (none from us) before making significant changes to
-rtslib/targetcli over the past 1 1/2 years.
-
-For your own private tree this wouldn't matter.  However, for a single
-upstream tree moving forward, it seems irresponsible to just ask us to
-sign off on every decision that you've made in -fb with little external
-review or input.
-
-So, to help us get back to a community development model, please cut a
--fb branch against upstream rtslib/configshell/targetcli, and start
-sending the series out for public review.
-
---nab
