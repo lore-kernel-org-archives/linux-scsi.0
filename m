@@ -1,192 +1,140 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 3/8][SCSI] mpt2sas: MPI2 Rev X (2.00.16) specifications
-Date: Thu, 25 Jul 2013 11:26:56 +0530
-Message-ID: <20130725055656.GA29888@lsi.com>
+Subject: [PATCH 4/8][SCSI] mpt2sas: The copyright in driver sources is
+ updated for the year 2013
+Date: Thu, 25 Jul 2013 11:28:01 +0530
+Message-ID: <20130725055801.GA29892@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db8lp0185.outbound.messaging.microsoft.com ([213.199.154.185]:22744
+Received: from mail-db8lp0186.outbound.messaging.microsoft.com ([213.199.154.186]:5350
 	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754179Ab3GYF5j (ORCPT
+	by vger.kernel.org with ESMTP id S1753344Ab3GYF5l (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jul 2013 01:57:39 -0400
+	Thu, 25 Jul 2013 01:57:41 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, JBottomley@Parallels.com
 Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com
 
-Change set in MPI2 Rev x specification and 2.00.26 header files
-
-1. Added two new AbortType values for TargetModeAbort Request:
-   one to abort all IOs from a single initiator and other to abort only Command IUs.
-
-2. Added Use Slot Information during Port Enable Event Reply flag to the Flags field
-   of Manufacturing Page 7.
-
-3. Added OEM Identifier to BiosOptions bits of BIOS Page 1.
+The copyright in driver sources is updated for the year 2013.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 ---
- drivers/scsi/mpt2sas/mpi/mpi2.h      |    7 ++++---
- drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h |   10 ++++++++--
- drivers/scsi/mpt2sas/mpi/mpi2_init.h |    2 +-
- drivers/scsi/mpt2sas/mpi/mpi2_ioc.h  |    2 +-
- drivers/scsi/mpt2sas/mpi/mpi2_raid.h |    2 +-
- drivers/scsi/mpt2sas/mpi/mpi2_sas.h  |    2 +-
- drivers/scsi/mpt2sas/mpi/mpi2_tool.h |    2 +-
- drivers/scsi/mpt2sas/mpi/mpi2_type.h |    2 +-
- 8 files changed, 18 insertions(+), 11 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c      |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_base.h      |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_config.c    |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c       |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_ctl.h       |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_debug.h     |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c     |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_transport.c |    2 +-
+ 8 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
-index 31b5b15..7b14a01 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2012 LSI Corporation.
-+ *  Copyright (c) 2000-2013 LSI Corporation.
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 4b378ee..026c13d 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -3,7 +3,7 @@
+  * for access to MPT (Message Passing Technology) firmware.
   *
+  * This code is based on drivers/scsi/mpt2sas/mpt2_base.c
+- * Copyright (C) 2007-2012  LSI Corporation
++ * Copyright (C) 2007-2013  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
   *
-  *           Name:  mpi2.h
-@@ -8,7 +8,7 @@
-  *                  scatter/gather formats.
-  *  Creation Date:  June 21, 2006
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 589380f..15d90ac 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -3,7 +3,7 @@
+  * for access to MPT (Message Passing Technology) firmware.
   *
-- *  mpi2.h Version:  02.00.27
-+ *  mpi2.h Version:  02.00.28
+  * This code is based on drivers/scsi/mpt2sas/mpt2_base.h
+- * Copyright (C) 2007-2012  LSI Corporation
++ * Copyright (C) 2007-2013  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
   *
-  *  Version History
-  *  ---------------
-@@ -77,6 +77,7 @@
-  *                      Added Hard Reset delay timings.
-  *  07-10-12  02.00.26  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  07-26-12  02.00.27  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  11-27-12  02.00.28  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -102,7 +103,7 @@
- #define MPI2_VERSION_02_00                  (0x0200)
- 
- /* versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x1B)
-+#define MPI2_HEADER_VERSION_UNIT            (0x1C)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-index 737fa8c..bda674f 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2011 LSI Corporation.
-+ *  Copyright (c) 2000-2013 LSI Corporation.
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
+index 8637780..0c47425 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_config.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
+@@ -2,7 +2,7 @@
+  * This module provides common API for accessing firmware configuration pages
   *
+  * This code is based on drivers/scsi/mpt2sas/mpt2_base.c
+- * Copyright (C) 2007-2012  LSI Corporation
++ * Copyright (C) 2007-2013  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
   *
-  *           Name:  mpi2_cnfg.h
-  *          Title:  MPI Configuration messages and pages
-  *  Creation Date:  November 10, 2006
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 2878bd4..b7f887c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -3,7 +3,7 @@
+  * controllers
   *
-- *    mpi2_cnfg.h Version:  02.00.22
-+ *    mpi2_cnfg.h Version:  02.00.23
+  * This code is based on drivers/scsi/mpt2sas/mpt2_ctl.c
+- * Copyright (C) 2007-2012  LSI Corporation
++ * Copyright (C) 2007-2013  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
   *
-  *  Version History
-  *  ---------------
-@@ -149,6 +149,8 @@
-  *  11-18-11  02.00.22  Added define MPI2_IOCPAGE6_CAP_FLAGS_4K_SECTORS_SUPPORT.
-  *                      Added UEFIVersion field to BIOS Page 1 and defined new
-  *                      BiosOptions bits.
-+ *  11-27-12  02.00.23  Added MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER.
-+ *			 Added MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -698,6 +700,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7
- #define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
- 
- /* defines for the Flags field */
-+#define MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER       (0x00000002)
- #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
- 
- 
-@@ -1224,6 +1227,9 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1
- #define MPI2_BIOSPAGE1_PAGEVERSION                      (0x05)
- 
- /* values for BIOS Page 1 BiosOptions field */
-+#define MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID                  (0x000000F0)
-+#define MPI2_BIOSPAGE1_OPTIONS_LSI_OEM_ID                   (0x00000000)
-+
- #define MPI2_BIOSPAGE1_OPTIONS_MASK_UEFI_HII_REGISTRATION   (0x00000006)
- #define MPI2_BIOSPAGE1_OPTIONS_ENABLE_UEFI_HII              (0x00000000)
- #define MPI2_BIOSPAGE1_OPTIONS_DISABLE_UEFI_HII             (0x00000002)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-index 963761f..9d284da 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2012 LSI Corporation.
-+ *  Copyright (c) 2000-2013 LSI Corporation.
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.h b/drivers/scsi/mpt2sas/mpt2sas_ctl.h
+index b5eb0d1..8b2ac18 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.h
+@@ -3,7 +3,7 @@
+  * controllers
   *
+  * This code is based on drivers/scsi/mpt2sas/mpt2_ctl.h
+- * Copyright (C) 2007-2012  LSI Corporation
++ * Copyright (C) 2007-2013  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
   *
-  *           Name:  mpi2_init.h
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-index e93f8f5..d159c5f 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2012 LSI Corporation.
-+ *  Copyright (c) 2000-2013 LSI Corporation.
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_debug.h b/drivers/scsi/mpt2sas/mpt2sas_debug.h
+index 69cc7d0..a9021cb 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_debug.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_debug.h
+@@ -2,7 +2,7 @@
+  * Logging Support for MPT (Message Passing Technology) based controllers
   *
+  * This code is based on drivers/scsi/mpt2sas/mpt2_debug.c
+- * Copyright (C) 2007-2012  LSI Corporation
++ * Copyright (C) 2007-2013  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
   *
-  *           Name:  mpi2_ioc.h
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-index 255b0ca..0d202a2 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2012 LSI Corporation.
-+ *  Copyright (c) 2000-2013 LSI Corporation.
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 75e6812..6c86355 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -2,7 +2,7 @@
+  * Scsi Host Layer for MPT (Message Passing Technology) based controllers
   *
+  * This code is based on drivers/scsi/mpt2sas/mpt2_scsih.c
+- * Copyright (C) 2007-2012  LSI Corporation
++ * Copyright (C) 2007-2013  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
   *
-  *           Name:  mpi2_raid.h
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_sas.h b/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
-index fdffde1..50b39cc 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2010 LSI Corporation.
-+ *  Copyright (c) 2000-2013 LSI Corporation.
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+index 193e7ae..396d78e 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -2,7 +2,7 @@
+  * SAS Transport Layer for MPT (Message Passing Technology) based controllers
   *
+  * This code is based on drivers/scsi/mpt2sas/mpt2_transport.c
+- * Copyright (C) 2007-2012  LSI Corporation
++ * Copyright (C) 2007-2013  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
   *
-  *           Name:  mpi2_sas.h
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-index 67c387f..11b2ac4 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2012 LSI Corporation.
-+ *  Copyright (c) 2000-2013 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_tool.h
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_type.h b/drivers/scsi/mpt2sas/mpi/mpi2_type.h
-index cfde017..0b128b6 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_type.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_type.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2007 LSI Corporation.
-+ *  Copyright (c) 2000-2013 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_type.h
+  * This program is free software; you can redistribute it and/or
 -- 
 1.7.3
 
