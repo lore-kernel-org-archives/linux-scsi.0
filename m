@@ -1,108 +1,94 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 5/8][SCSI] mpt2sas: Infinite loop can occur if
- MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned
-Date: Thu, 25 Jul 2013 11:29:45 +0530
-Message-ID: <20130725055945.GA29898@lsi.com>
+Subject: [PATCH 6/8][SCSI] mpt2sas: when Async scanning is enabled then while
+ scanning, devices are removed but their transport layer entries are not
+ removed
+Date: Thu, 25 Jul 2013 11:31:12 +0530
+Message-ID: <20130725060112.GA29907@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-db9lp0249.outbound.messaging.microsoft.com ([213.199.154.249]:11026
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751691Ab3GYGAv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Jul 2013 02:00:51 -0400
 Content-Disposition: inline
-Sender: stable-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, JBottomley@Parallels.com
 Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com
-List-Id: linux-scsi@vger.kernel.org
 
-Infinite loop can occur if IOCStatus is not equal to
-MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value in the while loops in functions
-_scsih_search_responding_sas_devices,
-_scsih_search_responding_raid_devices and
-_scsih_search_responding_expanders
+When Async scanning mode is enabled and device scanning is in progress then
+devices should not be removed. But in actuality, devices are removed but
+their transport layer entries are not removed. This causes error to add
+the same device to the transport layer after host reset or diagnostic
+reset.
 
-So, Instead of checking for MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value,
-in this patch code is modified to check for IOCStatus not equals to
-MPI2_IOCSTATUS_SUCCESS to break the while loop.
+So, in this patch, modified the code in such a way that device is not removed
+when Async scanning mode is enabled and device scanning is in progress.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 Cc: stable@vger.kernel.org
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |   16 ++++------------
- 1 files changed, 4 insertions(+), 12 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |   23 +++++++++++++----------
+ 1 files changed, 13 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 6c86355..b7f8229 100644
+index b7f8229..5bd5d05 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -6753,7 +6753,7 @@ _scsih_search_responding_sas_devices(struct MPT2SAS_ADAPTER *ioc)
- 	    handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 			break;
- 		handle = le16_to_cpu(sas_device_pg0.DevHandle);
- 		device_info = le32_to_cpu(sas_device_pg0.DeviceInfo);
-@@ -6862,7 +6862,7 @@ _scsih_search_responding_raid_devices(struct MPT2SAS_ADAPTER *ioc)
- 	    &volume_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE, handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 			break;
- 		handle = le16_to_cpu(volume_pg1.DevHandle);
+@@ -628,11 +628,12 @@ _scsih_sas_device_add(struct MPT2SAS_ADAPTER *ioc,
+ 		 * devices while scanning is turned on due to an oops in
+ 		 * scsi_sysfs_add_sdev()->add_device()->sysfs_addrm_start()
+ 		 */
+-		if (!ioc->is_driver_loading)
++		if (!ioc->is_driver_loading) {
+ 			mpt2sas_transport_port_remove(ioc,
+ 			sas_device->sas_address,
+ 			sas_device->sas_address_parent);
+-		_scsih_sas_device_remove(ioc, sas_device);
++			_scsih_sas_device_remove(ioc, sas_device);
++		}
+ 	}
+ }
  
-@@ -6887,7 +6887,7 @@ _scsih_search_responding_raid_devices(struct MPT2SAS_ADAPTER *ioc)
- 		    phys_disk_num))) {
- 			ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 			    MPI2_IOCSTATUS_MASK;
--			if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+			if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 				break;
- 			phys_disk_num = pd_pg0.PhysDiskNum;
- 			handle = le16_to_cpu(pd_pg0.DevHandle);
-@@ -6967,7 +6967,7 @@ _scsih_search_responding_expanders(struct MPT2SAS_ADAPTER *ioc)
- 
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 			break;
- 
- 		handle = le16_to_cpu(expander_pg0.DevHandle);
-@@ -7109,8 +7109,6 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
- 	    MPI2_SAS_EXPAND_PGAD_FORM_GET_NEXT_HNDL, handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
--			break;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 			printk(MPT2SAS_INFO_FMT "\tbreak from expander scan: "
- 				"ioc_status(0x%04x), loginfo(0x%08x)\n",
-@@ -7153,8 +7151,6 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
- 	    phys_disk_num))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
--			break;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 			printk(MPT2SAS_INFO_FMT "\tbreak from phys disk scan:"
- 				"ioc_status(0x%04x), loginfo(0x%08x)\n",
-@@ -7219,8 +7215,6 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
- 	    &volume_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE, handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
--			break;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 			printk(MPT2SAS_INFO_FMT "\tbreak from volume scan: "
- 				"ioc_status(0x%04x), loginfo(0x%08x)\n",
-@@ -7278,8 +7272,6 @@ _scsih_scan_for_devices_after_reset(struct MPT2SAS_ADAPTER *ioc)
- 	    handle))) {
- 		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
- 		    MPI2_IOCSTATUS_MASK;
--		if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
--			break;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 			printk(MPT2SAS_INFO_FMT "\tbreak from end device scan:"
- 				" ioc_status(0x%04x), loginfo(0x%08x)\n",
+@@ -7916,10 +7917,12 @@ _scsih_probe_boot_devices(struct MPT2SAS_ADAPTER *ioc)
+ 		    sas_device->sas_address_parent)) {
+ 			_scsih_sas_device_remove(ioc, sas_device);
+ 		} else if (!sas_device->starget) {
+-			if (!ioc->is_driver_loading)
+-				mpt2sas_transport_port_remove(ioc, sas_address,
++			if (!ioc->is_driver_loading) {
++				mpt2sas_transport_port_remove(ioc,
++					sas_address,
+ 					sas_address_parent);
+-			_scsih_sas_device_remove(ioc, sas_device);
++				_scsih_sas_device_remove(ioc, sas_device);
++			}
+ 		}
+ 	}
+ }
+@@ -7972,14 +7975,14 @@ _scsih_probe_sas(struct MPT2SAS_ADAPTER *ioc)
+ 			kfree(sas_device);
+ 			continue;
+ 		} else if (!sas_device->starget) {
+-			if (!ioc->is_driver_loading)
++			if (!ioc->is_driver_loading) {
+ 				mpt2sas_transport_port_remove(ioc,
+ 					sas_device->sas_address,
+ 					sas_device->sas_address_parent);
+-			list_del(&sas_device->list);
+-			kfree(sas_device);
+-			continue;
+-
++				list_del(&sas_device->list);
++				kfree(sas_device);
++				continue;
++			}
+ 		}
+ 		spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 		list_move_tail(&sas_device->list, &ioc->sas_device_list);
 -- 
 1.7.3
+
+
