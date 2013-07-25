@@ -1,59 +1,85 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 1/4] scsi_debug: fix endianness bug in sdebug_build_parts()
-Date: Thu, 25 Jul 2013 16:16:42 -0400
-Message-ID: <51F187AA.1090001@interlog.com>
-References: <1373889127-17083-1-git-send-email-akinobu.mita@gmail.com>  <1373889127-17083-2-git-send-email-akinobu.mita@gmail.com> <1374772228.15813.3.camel@br9vgx5g.de.ibm.com>
+Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
+Date: Thu, 25 Jul 2013 16:33:47 -0400
+Message-ID: <51F18BAB.8060600@interlog.com>
+References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com> <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com> <20130722170338.GA15824@logfs.org> <51F144F4.4090509@oracle.com>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:38850 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:38946 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756758Ab3GYURO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jul 2013 16:17:14 -0400
-In-Reply-To: <1374772228.15813.3.camel@br9vgx5g.de.ibm.com>
+	id S1752715Ab3GYUeR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Jul 2013 16:34:17 -0400
+In-Reply-To: <51F144F4.4090509@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: vaughan <vaughan.cao@oracle.com>
+Cc: JBottomley@parallels.com, =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 13-07-25 01:10 PM, Martin Peschke wrote:
-> On Mon, 2013-07-15 at 20:52 +0900, Akinobu Mita wrote:
->> With module parameter num_parts > 0, partition table is built on the
->> ramdisk storage when loading the driver.  Unfortunately, there is an
->> endianness bug in sdebug_build_parts().  So the partition table is not
->> correctly initialized on big-endian systems.
+On 13-07-25 11:32 AM, vaughan wrote:
+> On 07/23/2013 01:03 AM, J=C3=B6rn Engel wrote:
+>> On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
+>>> There is a race when open sg with O_EXCL flag. Also a race may happ=
+en between
+>>> sg_open and sg_remove.
+>>>
+>>> Changes from v4:
+>>>   * [3/4] use ERR_PTR series instead of adding another parameter in=
+ sg_add_sfp
+>>>   * [4/4] fix conflict for cherry-pick from v3.
+>>>
+>>> Changes from v3:
+>>>   * release o_sem in sg_release(), not in sg_remove_sfp().
+>>>   * not set exclude with sfd_lock held.
+>>>
+>>> Vaughan Cao (4):
+>>>    [SCSI] sg: use rwsem to solve race during exclusive open
+>>>    [SCSI] sg: no need sg_open_exclusive_lock
+>>>    [SCSI] sg: checking sdp->detached isn't protected when open
+>>>    [SCSI] sg: push file descriptor list locking down to per-device
+>>>      locking
+>>>
+>>>   drivers/scsi/sg.c | 178 +++++++++++++++++++++++++----------------=
+-------------
+>>>   1 file changed, 83 insertions(+), 95 deletions(-)
+>> Patchset looks good to me, although I didn't test it on hardware yet=
+=2E
+>> Signed-off-by: Joern Engel <joern@logfs.org>
 >>
->> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
->> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
->> Cc: Douglas Gilbert <dgilbert@interlog.com>
->> Cc: linux-scsi@vger.kernel.org
->> ---
->>   drivers/scsi/scsi_debug.c | 4 ++--
->>   1 file changed, 2 insertions(+), 2 deletions(-)
+>> James, care to pick this up?
 >>
->> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
->> index cb4fefa..2f39b13 100644
->> --- a/drivers/scsi/scsi_debug.c
->> +++ b/drivers/scsi/scsi_debug.c
->> @@ -2659,8 +2659,8 @@ static void __init sdebug_build_parts(unsigned char *ramp,
->>   			       / sdebug_sectors_per;
->>   		pp->end_sector = (end_sec % sdebug_sectors_per) + 1;
->>
->> -		pp->start_sect = start_sec;
->> -		pp->nr_sects = end_sec - start_sec + 1;
->> +		pp->start_sect = cpu_to_le32(start_sec);
->> +		pp->nr_sects = cpu_to_le32(end_sec - start_sec + 1);
->>   		pp->sys_ind = 0x83;	/* plain Linux partition */
->>   	}
->>   }
+>> J=C3=B6rn
+> Hi James,
 >
->
-> I have posted the same fix several times, e.g.
-> http://marc.info/?l=linux-scsi&m=137051617907423&w=2
-> Good luck!
->
-> Acked-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+> sg driver has two races happen in
+>   a) exclusive open and non-exclusive open
+>   b) sg removal and sg open
+> I explained the scenario detail in the separate patches. I did test
+> those patches and
+> J=C3=B6rn has reviewed them.  I got no response from Doug Gilbert for=
+ a long
+> time.
+> Would you care to pick these up?
 
-(Re-)Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Hi,
+Your patches applied with a little noise to lk 3.10.2 and
+gave this warning from the build.
+
+   CC [M]  drivers/scsi/sg.o
+drivers/scsi/sg.c: In function =E2=80=98sg_open=E2=80=99:
+drivers/scsi/sg.c:242:6: warning: unused variable =E2=80=98res=E2=80=99=
+ [-Wunused-variable]
+
+I'll keep testing ...
+
+Doug Gilbert
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
