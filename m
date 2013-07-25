@@ -1,38 +1,39 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Thu, 25 Jul 2013 12:16:42 +0200
-Message-ID: <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
-References: <51E83E32.9050306@cs.wisc.edu>
- <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
- <20130719003034.GG28005@kernel.dk>
- <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
- <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 5/8][SCSI] mpt2sas: Infinite loop can occur if
+ MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned
+Date: Thu, 25 Jul 2013 07:00:24 -0700
+Message-ID: <1374760824.1952.1.camel@dabdike>
+References: <20130725055945.GA29898@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36496 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753394Ab3GYKPX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jul 2013 06:15:23 -0400
-Content-Disposition: inline
-In-Reply-To: <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20130725055945.GA29898@lsi.com>
+Sender: stable-owner@vger.kernel.org
+To: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: jejb@kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
-> Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
-> target-pending/scsi-mq, which now has functioning scsi-generic support.
+On Thu, 2013-07-25 at 11:29 +0530, Sreekanth Reddy wrote:
+> Infinite loop can occur if IOCStatus is not equal to
+> MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value in the while loops in functions
+> _scsih_search_responding_sas_devices,
+> _scsih_search_responding_raid_devices and
+> _scsih_search_responding_expanders
+> 
+> So, Instead of checking for MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value,
+> in this patch code is modified to check for IOCStatus not equals to
+> MPI2_IOCSTATUS_SUCCESS to break the while loop.
+> 
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+> Cc: stable@vger.kernel.org
 
-Survives a boot, a kernel build and the build's result :)
+Patches like this aren't acceptable any more: Greg will find this and
+reject it from Stable.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+If there's a bug in the driver, it needs to be in a separate patch set
+for the fixes branch of SCSI to go upstream now rather than waiting for
+the merge window.  Only patches for the fixes branch can be tagged for
+stable.
+
+James
