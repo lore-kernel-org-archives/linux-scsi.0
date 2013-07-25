@@ -1,72 +1,85 @@
-From: vaughan <vaughan.cao@oracle.com>
-Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
-Date: Thu, 25 Jul 2013 23:32:04 +0800
-Message-ID: <51F144F4.4090509@oracle.com>
-References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com> <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com> <20130722170338.GA15824@logfs.org>
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/4] scsi_debug: fix endianness bug in
+ sdebug_build_parts()
+Date: Thu, 25 Jul 2013 19:10:28 +0200
+Message-ID: <1374772228.15813.3.camel@br9vgx5g.de.ibm.com>
+References: <1373889127-17083-1-git-send-email-akinobu.mita@gmail.com>
+	 <1373889127-17083-2-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50116 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756134Ab3GYP3l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jul 2013 11:29:41 -0400
-In-Reply-To: <20130722170338.GA15824@logfs.org>
+Received: from e06smtp17.uk.ibm.com ([195.75.94.113]:38561 "EHLO
+	e06smtp17.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755983Ab3GYRKf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jul 2013 13:10:35 -0400
+Received: from /spool/local
+	by e06smtp17.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mpeschke@linux.vnet.ibm.com>;
+	Thu, 25 Jul 2013 18:06:03 +0100
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+	by d06dlp02.portsmouth.uk.ibm.com (Postfix) with ESMTP id 22EF82190069
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Jul 2013 18:14:40 +0100 (BST)
+Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
+	by b06cxnps3075.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r6PHAImC38076534
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Jul 2013 17:10:18 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (localhost [127.0.0.1])
+	by d06av03.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r6PHASr0004628
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Jul 2013 11:10:29 -0600
+In-Reply-To: <1373889127-17083-2-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, dgilbert@interlog.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, vaughan <vaughan.cao@oracle.com>
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-On 07/23/2013 01:03 AM, J=C3=B6rn Engel wrote:
-> On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
->> There is a race when open sg with O_EXCL flag. Also a race may happe=
-n between
->> sg_open and sg_remove.
->>
->> Changes from v4:
->>  * [3/4] use ERR_PTR series instead of adding another parameter in s=
-g_add_sfp
->>  * [4/4] fix conflict for cherry-pick from v3.
->>
->> Changes from v3:
->>  * release o_sem in sg_release(), not in sg_remove_sfp().
->>  * not set exclude with sfd_lock held.
->>
->> Vaughan Cao (4):
->>   [SCSI] sg: use rwsem to solve race during exclusive open
->>   [SCSI] sg: no need sg_open_exclusive_lock
->>   [SCSI] sg: checking sdp->detached isn't protected when open
->>   [SCSI] sg: push file descriptor list locking down to per-device
->>     locking
->>
->>  drivers/scsi/sg.c | 178 +++++++++++++++++++++++++------------------=
------------
->>  1 file changed, 83 insertions(+), 95 deletions(-)
-> Patchset looks good to me, although I didn't test it on hardware yet.
-> Signed-off-by: Joern Engel <joern@logfs.org>
->
-> James, care to pick this up?
->
-> J=C3=B6rn
-Hi James,
+On Mon, 2013-07-15 at 20:52 +0900, Akinobu Mita wrote:
+> With module parameter num_parts > 0, partition table is built on the
+> ramdisk storage when loading the driver.  Unfortunately, there is an
+> endianness bug in sdebug_build_parts().  So the partition table is no=
+t
+> correctly initialized on big-endian systems.
+>=20
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/scsi/scsi_debug.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index cb4fefa..2f39b13 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -2659,8 +2659,8 @@ static void __init sdebug_build_parts(unsigned =
+char *ramp,
+>  			       / sdebug_sectors_per;
+>  		pp->end_sector =3D (end_sec % sdebug_sectors_per) + 1;
+>=20
+> -		pp->start_sect =3D start_sec;
+> -		pp->nr_sects =3D end_sec - start_sec + 1;
+> +		pp->start_sect =3D cpu_to_le32(start_sec);
+> +		pp->nr_sects =3D cpu_to_le32(end_sec - start_sec + 1);
+>  		pp->sys_ind =3D 0x83;	/* plain Linux partition */
+>  	}
+>  }
 
-sg driver has two races happen in
- a) exclusive open and non-exclusive open
- b) sg removal and sg open
-I explained the scenario detail in the separate patches. I did test
-those patches and
-J=C3=B6rn has reviewed them.  I got no response from Doug Gilbert for a=
- long
-time.
-Would you care to pick these up?
 
-Thanks,
-Vaughan
+I have posted the same fix several times, e.g.
+http://marc.info/?l=3Dlinux-scsi&m=3D137051617907423&w=3D2
+Good luck!
 
->
-> --
-> Good warriors cause others to come to them and do not go to others.
-> -- Sun Tzu
+Acked-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+
+
+--=20
+Linux on System z Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Gesch=C3=A4ftsf=C3=BChrung: Dirk Wittkopp
+Sitz der Gesellschaft: B=C3=B6blingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
