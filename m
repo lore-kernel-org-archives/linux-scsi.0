@@ -1,61 +1,192 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH 2/8][SCSI] mpt2sas: Change in
- MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED notification methodology
-Date: Thu, 25 Jul 2013 11:25:57 +0530
-Message-ID: <20130725055557.GA29883@lsi.com>
+Subject: [PATCH 3/8][SCSI] mpt2sas: MPI2 Rev X (2.00.16) specifications
+Date: Thu, 25 Jul 2013 11:26:56 +0530
+Message-ID: <20130725055656.GA29888@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db8lp0187.outbound.messaging.microsoft.com ([213.199.154.187]:7278
+Received: from mail-db8lp0185.outbound.messaging.microsoft.com ([213.199.154.185]:22744
 	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753202Ab3GYF4o (ORCPT
+	by vger.kernel.org with ESMTP id S1754179Ab3GYF5j (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jul 2013 01:56:44 -0400
+	Thu, 25 Jul 2013 01:57:39 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, JBottomley@Parallels.com
 Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com
 
-The intent of this patch is to perform a graceful shutdown of target drives even if
-volume doesn't exits. Changes done in this patch
+Change set in MPI2 Rev x specification and 2.00.26 header files
 
-1. Removed the check for the presence of volumes before sending down
-   MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED. Therefore, this RAID action
-   would be sent if the card is IR Firmware.
+1. Added two new AbortType values for TargetModeAbort Request:
+   one to abort all IOs from a single initiator and other to abort only Command IUs.
 
-2. The MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED is sent even when the
-   system undergoes suspend (in addition to remove/shutdown which was already
-   present)
+2. Added Use Slot Information during Port Enable Event Reply flag to the Flags field
+   of Manufacturing Page 7.
+
+3. Added OEM Identifier to BiosOptions bits of BIOS Page 1.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+ drivers/scsi/mpt2sas/mpi/mpi2.h      |    7 ++++---
+ drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h |   10 ++++++++--
+ drivers/scsi/mpt2sas/mpi/mpi2_init.h |    2 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_ioc.h  |    2 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_raid.h |    2 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_sas.h  |    2 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_tool.h |    2 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_type.h |    2 +-
+ 8 files changed, 18 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 344db2e..75e6812 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -7710,10 +7710,6 @@ _scsih_ir_shutdown(struct MPT2SAS_ADAPTER *ioc)
- 	if (!ioc->ir_firmware)
- 		return;
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
+index 31b5b15..7b14a01 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2012 LSI Corporation.
++ *  Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2.h
+@@ -8,7 +8,7 @@
+  *                  scatter/gather formats.
+  *  Creation Date:  June 21, 2006
+  *
+- *  mpi2.h Version:  02.00.27
++ *  mpi2.h Version:  02.00.28
+  *
+  *  Version History
+  *  ---------------
+@@ -77,6 +77,7 @@
+  *                      Added Hard Reset delay timings.
+  *  07-10-12  02.00.26  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  07-26-12  02.00.27  Bumped MPI2_HEADER_VERSION_UNIT.
++ *  11-27-12  02.00.28  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  --------------------------------------------------------------------------
+  */
  
--	/* are there any volumes ? */
--	if (list_empty(&ioc->raid_device_list))
--		return;
--
- 	mutex_lock(&ioc->scsih_cmds.mutex);
+@@ -102,7 +103,7 @@
+ #define MPI2_VERSION_02_00                  (0x0200)
  
- 	if (ioc->scsih_cmds.status != MPT2_CMD_NOT_USED) {
-@@ -8279,6 +8275,7 @@ _scsih_suspend(struct pci_dev *pdev, pm_message_t state)
+ /* versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x1B)
++#define MPI2_HEADER_VERSION_UNIT            (0x1C)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+index 737fa8c..bda674f 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+@@ -1,12 +1,12 @@
+ /*
+- *  Copyright (c) 2000-2011 LSI Corporation.
++ *  Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_cnfg.h
+  *          Title:  MPI Configuration messages and pages
+  *  Creation Date:  November 10, 2006
+  *
+- *    mpi2_cnfg.h Version:  02.00.22
++ *    mpi2_cnfg.h Version:  02.00.23
+  *
+  *  Version History
+  *  ---------------
+@@ -149,6 +149,8 @@
+  *  11-18-11  02.00.22  Added define MPI2_IOCPAGE6_CAP_FLAGS_4K_SECTORS_SUPPORT.
+  *                      Added UEFIVersion field to BIOS Page 1 and defined new
+  *                      BiosOptions bits.
++ *  11-27-12  02.00.23  Added MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER.
++ *			 Added MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID.
+  *  --------------------------------------------------------------------------
+  */
  
- 	mpt2sas_base_stop_watchdog(ioc);
- 	scsi_block_requests(shost);
-+	_scsih_ir_shutdown(ioc);
- 	device_state = pci_choose_state(pdev, state);
- 	printk(MPT2SAS_INFO_FMT "pdev=0x%p, slot=%s, entering "
- 	    "operating state [D%d]\n", ioc->name, pdev,
+@@ -698,6 +700,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7
+ #define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
+ 
+ /* defines for the Flags field */
++#define MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER       (0x00000002)
+ #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
+ 
+ 
+@@ -1224,6 +1227,9 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1
+ #define MPI2_BIOSPAGE1_PAGEVERSION                      (0x05)
+ 
+ /* values for BIOS Page 1 BiosOptions field */
++#define MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID                  (0x000000F0)
++#define MPI2_BIOSPAGE1_OPTIONS_LSI_OEM_ID                   (0x00000000)
++
+ #define MPI2_BIOSPAGE1_OPTIONS_MASK_UEFI_HII_REGISTRATION   (0x00000006)
+ #define MPI2_BIOSPAGE1_OPTIONS_ENABLE_UEFI_HII              (0x00000000)
+ #define MPI2_BIOSPAGE1_OPTIONS_DISABLE_UEFI_HII             (0x00000002)
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
+index 963761f..9d284da 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2012 LSI Corporation.
++ *  Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_init.h
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+index e93f8f5..d159c5f 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2012 LSI Corporation.
++ *  Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_ioc.h
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
+index 255b0ca..0d202a2 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2012 LSI Corporation.
++ *  Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_raid.h
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_sas.h b/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
+index fdffde1..50b39cc 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2010 LSI Corporation.
++ *  Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_sas.h
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
+index 67c387f..11b2ac4 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2012 LSI Corporation.
++ *  Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_tool.h
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_type.h b/drivers/scsi/mpt2sas/mpi/mpi2_type.h
+index cfde017..0b128b6 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_type.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_type.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2007 LSI Corporation.
++ *  Copyright (c) 2000-2013 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_type.h
 -- 
 1.7.3
 
