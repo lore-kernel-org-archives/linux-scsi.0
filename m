@@ -1,33 +1,214 @@
 From: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Subject: [PATCH][SCSI] mpt2sas: Description patch
-Date: Thu, 25 Jul 2013 11:22:39 +0530
-Message-ID: <20130725055239.GA29867@lsi.com>
+Subject: [PATCH 1/8][SCSI] mpt2sas: Null pointer deference possibility in
+ mpt2sas_ctl_event_callback function
+Date: Thu, 25 Jul 2013 11:24:35 +0530
+Message-ID: <20130725055435.GA29876@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db8lp0187.outbound.messaging.microsoft.com ([213.199.154.187]:39986
+Received: from mail-db8lp0184.outbound.messaging.microsoft.com ([213.199.154.184]:21877
 	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751504Ab3GYFwQ (ORCPT
+	by vger.kernel.org with ESMTP id S1751691Ab3GYFyM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jul 2013 01:52:16 -0400
+	Thu, 25 Jul 2013 01:54:12 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, JBottomley@Parallels.com
 Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sreekanth.Reddy@lsi.com
 
+Added a check to identify if mpi_reply is NULL in mpt2sas_ctl_event_callback()
+and return without proceeding if it is the case.
 
-Please consider this patch set for next kernel release.
+Also modified the following functions to return void instead of 0 or 1
+as returning those values from events perspective doesn't make sense.
+* _base_async_event()
+* mpt2sas_ctl_event_callback()
+* mpt2sas_scsih_event_callback()
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 ---
+ drivers/scsi/mpt2sas/mpt2sas_base.c  |   11 +++++------
+ drivers/scsi/mpt2sas/mpt2sas_base.h  |    4 ++--
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c   |   12 ++++++++----
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |   21 ++++++++++-----------
+ 4 files changed, 25 insertions(+), 23 deletions(-)
 
-[PATCH 1/8][SCSI] mpt2sas: Null pointer deference possibility in mpt2sas_ctl_event_callback function.
-[PATCH 2/8][SCSI] mpt2sas: Change in MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED notification methodology.
-[PATCH 3/8][SCSI] mpt2sas: MPI2 Rev X (2.00.16) specifications.
-[PATCH 4/8][SCSI] mpt2sas: The copyright in driver sources is updated for the year 2013.
-[PATCH 5/8][SCSI] mpt2sas: Infinite loop can occur if MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned.
-[PATCH 6/8][SCSI] mpt2sas: when Async scanning is enabled then while scanning, devices are removed but their transport layer entries are not removed.
-[PATCH 7/8][SCSI] mpt2sas: Fix for kernel panic when driver loads with HBA connected to non LUN 0 configured expander.
-[PATCH 8/8][SCSI] mpt2sas: Bump driver version to v16.100.00.00.
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index ccd6d5a..4b378ee 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -768,10 +768,9 @@ mpt2sas_base_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+  * @msix_index: MSIX table index supplied by the OS
+  * @reply: reply message frame(lower 32bit addr)
+  *
+- * Return 1 meaning mf should be freed from _base_interrupt
+- *        0 means the mf is freed from this function.
++ * Returns void.
+  */
+-static u8
++static void
+ _base_async_event(struct MPT2SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
+ {
+ 	Mpi2EventNotificationReply_t *mpi_reply;
+@@ -780,9 +779,9 @@ _base_async_event(struct MPT2SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
+ 
+ 	mpi_reply = mpt2sas_base_get_reply_virt_addr(ioc, reply);
+ 	if (!mpi_reply)
+-		return 1;
++		return;
+ 	if (mpi_reply->Function != MPI2_FUNCTION_EVENT_NOTIFICATION)
+-		return 1;
++		return;
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	_base_display_event_data(ioc, mpi_reply);
+ #endif
+@@ -812,7 +811,7 @@ _base_async_event(struct MPT2SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
+ 	/* ctl callback handler */
+ 	mpt2sas_ctl_event_callback(ioc, msix_index, reply);
+ 
+-	return 1;
++	return;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 6fbd084..589380f 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -1061,7 +1061,7 @@ void mpt2sas_base_update_missing_delay(struct MPT2SAS_ADAPTER *ioc,
+ int mpt2sas_port_enable(struct MPT2SAS_ADAPTER *ioc);
+ 
+ /* scsih shared API */
+-u8 mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
++void mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+     u32 reply);
+ int mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle,
+ 	uint channel, uint id, uint lun, u8 type, u16 smid_task,
+@@ -1144,7 +1144,7 @@ void mpt2sas_ctl_exit(void);
+ u8 mpt2sas_ctl_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+     u32 reply);
+ void mpt2sas_ctl_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase);
+-u8 mpt2sas_ctl_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
++void mpt2sas_ctl_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+     u32 reply);
+ void mpt2sas_ctl_add_to_event_log(struct MPT2SAS_ADAPTER *ioc,
+     Mpi2EventNotificationReply_t *mpi_reply);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index eec052c..2878bd4 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -397,18 +397,22 @@ mpt2sas_ctl_add_to_event_log(struct MPT2SAS_ADAPTER *ioc,
+  * This function merely adds a new work task into ioc->firmware_event_thread.
+  * The tasks are worked from _firmware_event_work in user context.
+  *
+- * Return 1 meaning mf should be freed from _base_interrupt
+- *        0 means the mf is freed from this function.
++ * Returns void.
+  */
+-u8
++void
+ mpt2sas_ctl_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 	u32 reply)
+ {
+ 	Mpi2EventNotificationReply_t *mpi_reply;
+ 
+ 	mpi_reply = mpt2sas_base_get_reply_virt_addr(ioc, reply);
++	if (unlikely(!mpi_reply)) {
++		printk(MPT2SAS_ERR_FMT "mpi_reply not valid at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		return;
++	}
+ 	mpt2sas_ctl_add_to_event_log(ioc, mpi_reply);
+-	return 1;
++	return;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 5100476..344db2e 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -7471,10 +7471,9 @@ _firmware_event_work(struct work_struct *work)
+  * This function merely adds a new work task into ioc->firmware_event_thread.
+  * The tasks are worked from _firmware_event_work in user context.
+  *
+- * Return 1 meaning mf should be freed from _base_interrupt
+- *        0 means the mf is freed from this function.
++ * Returns void.
+  */
+-u8
++void
+ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 	u32 reply)
+ {
+@@ -7485,14 +7484,14 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 
+ 	/* events turned off due to host reset or driver unloading */
+ 	if (ioc->remove_host || ioc->pci_error_recovery)
+-		return 1;
++		return;
+ 
+ 	mpi_reply = mpt2sas_base_get_reply_virt_addr(ioc, reply);
+ 
+ 	if (unlikely(!mpi_reply)) {
+ 		printk(MPT2SAS_ERR_FMT "mpi_reply not valid at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+-		return 1;
++		return;
+ 	}
+ 
+ 	event = le16_to_cpu(mpi_reply->Event);
+@@ -7507,11 +7506,11 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 
+ 		if (baen_data->Primitive !=
+ 		    MPI2_EVENT_PRIMITIVE_ASYNCHRONOUS_EVENT)
+-			return 1;
++			return;
+ 
+ 		if (ioc->broadcast_aen_busy) {
+ 			ioc->broadcast_aen_pending++;
+-			return 1;
++			return;
+ 		} else
+ 			ioc->broadcast_aen_busy = 1;
+ 		break;
+@@ -7587,14 +7586,14 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 		break;
+ 
+ 	default: /* ignore the rest */
+-		return 1;
++		return;
+ 	}
+ 
+ 	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
+ 	if (!fw_event) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+-		return 1;
++		return;
+ 	}
+ 	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
+ 	fw_event->event_data = kzalloc(sz, GFP_ATOMIC);
+@@ -7602,7 +7601,7 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+ 		kfree(fw_event);
+-		return 1;
++		return;
+ 	}
+ 
+ 	memcpy(fw_event->event_data, mpi_reply->EventData,
+@@ -7612,7 +7611,7 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 	fw_event->VP_ID = mpi_reply->VP_ID;
+ 	fw_event->event = event;
+ 	_scsih_fw_event_add(ioc, fw_event);
+-	return 1;
++	return;
+ }
+ 
+ /* shost template */
+-- 
+1.7.3
+
 
