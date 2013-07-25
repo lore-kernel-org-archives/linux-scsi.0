@@ -1,70 +1,79 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH] iscsi_tcp: consider session state in iscsi_sw_sk_state_check
-Date: Wed, 24 Jul 2013 20:02:52 -0500
-Message-ID: <51F0793C.1090401@cs.wisc.edu>
-References: <1374615728-11056-1-git-send-email-cleech@redhat.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: targetcli -fb now also Apache 2.0 licensed
+Date: Wed, 24 Jul 2013 18:19:00 -0700
+Message-ID: <1374715140.7397.1390.camel@haakon3.risingtidesystems.com>
+References: <51EF73EF.1040305@redhat.com>
+	 <1374696565.7397.1292.camel@haakon3.risingtidesystems.com>
+	 <1374697264.7382.39.camel@dabdike>
+	 <1374699289.7397.1309.camel@haakon3.risingtidesystems.com>
+	 <51F06C17.50306@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncBCZ4TFNN2YMRBRHSYGHQKGQE34SAF5Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1374615728-11056-1-git-send-email-cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <51F06C17.50306@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ritesh Raj Sarraf <rrs@debian.org>, targetcli-fb-devel@lists.fedorahosted.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/23/2013 04:42 PM, Chris Leech wrote:
-> It seems some iSCSI targets (including the Linux kernel target) close
-> the TCP connection from the target side immediately after processing a
-> session logout.
+On Wed, 2013-07-24 at 17:06 -0700, Andy Grover wrote:
+> On 07/24/2013 01:54 PM, Nicholas A. Bellinger wrote:
+> > Yes, which is why I've been accepting his kernel patches the entire time
+> > that user-space has been forked into -fb.  Now that the user-space code
+> > has been relicensed as promised, there is no longer any reason for a
+> > separate -fb fork to exist.
+> >
+> > That said, it's time to start moving forward toward a single set of
+> > source trees for upstream userspace, so that all distributions can
+> > mutually benefit from the effort.  As mentioned above, this has so far
+> > not been enough to get -fb reconciled with upstream.
+> >
+> > So I don't consider the above 'holding for ransom' or any nonsense like
+> > that, considering the end goal is for everyone (not just Fedora) to
+> > benefit from -fb.
 > 
-> When a TCP FIN comes in right after the iSCSI logout response,
-> iscsi_sw_sk_state_check sees the local socket as not yet being in
-> CLOSE_WAIT or CLOSE and logs an error.  But the initiator would close
-> the connection right after processing the logout response anyway, and
-> the error is confusing to admins who just requested that the session be
-> shut down.
+> There's nothing stopping any other distro (or commercial entity) from 
+> adopting targetcli-fb. I don't know why they haven't, except that 
+> there's a default attitude that the originator of the project is the 
+> "upstream" forever.
+
+Please stop trying to drive the split wider, and attempting to make
+yourself upstream for something that you did not create.
+
+You are responsible for this fork (and associated headaches) to begin
+with.  Now that we have, as promised, relicensed this code, the time has
+come to do the right thing for the wider community and push your changes
+upstream.
+
+Please read the following:
+
+https://fedoraproject.org/wiki/Staying_close_to_upstream_projects
+
+"The Fedora Project focuses, as much as possible, on not deviating from
+upstream in the software it includes in the repository."
+
+Don't you think this applies to you, too?
+
 > 
-> This adds a check of the session state, and suppresses the error if we
-> are in the process of logging out.
+> I think I've done a pretty good job maintaining -fb over the past two 
+> years -- -fb has bug tracking, a list, tarballs, and is actively 
+> maintained and improved, all things that are not true of upstream.
 > 
-> Signed-off-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  drivers/scsi/iscsi_tcp.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> index 9e2588a..add6d15 100644
-> --- a/drivers/scsi/iscsi_tcp.c
-> +++ b/drivers/scsi/iscsi_tcp.c
-> @@ -116,6 +116,7 @@ static inline int iscsi_sw_sk_state_check(struct sock *sk)
->  	struct iscsi_conn *conn = sk->sk_user_data;
->  
->  	if ((sk->sk_state == TCP_CLOSE_WAIT || sk->sk_state == TCP_CLOSE) &&
-> +	    (conn->session->state != ISCSI_STATE_LOGGING_OUT) &&
->  	    !atomic_read(&sk->sk_rmem_alloc)) {
->  		ISCSI_SW_TCP_DBG(conn, "TCP_CLOSE|TCP_CLOSE_WAIT\n");
->  		iscsi_conn_failure(conn, ISCSI_ERR_TCP_CONN_CLOSE);
+> My question to you (Nick) is, why don't we all just unify on -fb?
 > 
 
-My only concern with the patch is what happens if the target closes
-connection due to a logout processing error. The logout timeout will
-kick in so we do not hang, but the patch makes it harder to debug those
-type of problems. I think the annoyance that this error message causes
-is higher than those concerns though since that happens so rarely now.
-So patch is ok with me.
+Because -fb has had close to zero peer review, and you've not solicited
+much input (none from us) before making significant changes to
+rtslib/targetcli over the past 1 1/2 years.
 
+For your own private tree this wouldn't matter.  However, for a single
+upstream tree moving forward, it seems irresponsible to just ask us to
+sign off on every decision that you've made in -fb with little external
+review or input.
 
-Reviewed-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+So, to help us get back to a community development model, please cut a
+-fb branch against upstream rtslib/configshell/targetcli, and start
+sending the series out for public review.
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/groups/opt_out.
+--nab
