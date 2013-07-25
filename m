@@ -1,41 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
-Date: Thu, 25 Jul 2013 10:52:29 -0400
-Message-ID: <20130725145229.GB26107@mtj.dyndns.org>
-References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com>
- <1374731223-28685-3-git-send-email-aaron.lu@intel.com>
+From: vaughan <vaughan.cao@oracle.com>
+Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
+Date: Thu, 25 Jul 2013 23:32:04 +0800
+Message-ID: <51F144F4.4090509@oracle.com>
+References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com> <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com> <20130722170338.GA15824@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1374731223-28685-3-git-send-email-aaron.lu@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Wu <jeff.wu@amd.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50116 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756134Ab3GYP3l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jul 2013 11:29:41 -0400
+In-Reply-To: <20130722170338.GA15824@logfs.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, dgilbert@interlog.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, vaughan <vaughan.cao@oracle.com>
 
-On Thu, Jul 25, 2013 at 01:47:03PM +0800, Aaron Lu wrote:
-> Binding ACPI handle to SCSI device has several drawbacks, namely:
-> 1 During ATA device initialization time, ACPI handle will be needed
->   while SCSI devices are not created yet. So each time ACPI handle is
->   needed, instead of retrieving the handle by ACPI_HANDLE macro,
->   a namespace scan is performed to find the handle for the corresponding
->   ATA device. This is inefficient, and also expose a restriction on
->   calling path not holding any lock.
-> 2 The binding to SCSI device tree makes code complex, while at the same
->   time doesn't bring us any benefit. All ACPI handlings are still done
->   in ATA module, not in SCSI.
-> 
-> Rework the ATA ACPI binding code to bind ACPI handle to ATA transport
-> devices(ATA port and ATA device). The binding needs to be done only once,
-> since the ATA transport devices do not go away with hotplug. And due to
-> this, the flush_work call in hotplug handler for ATA bay is no longer
-> needed.
+On 07/23/2013 01:03 AM, J=C3=B6rn Engel wrote:
+> On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
+>> There is a race when open sg with O_EXCL flag. Also a race may happe=
+n between
+>> sg_open and sg_remove.
+>>
+>> Changes from v4:
+>>  * [3/4] use ERR_PTR series instead of adding another parameter in s=
+g_add_sfp
+>>  * [4/4] fix conflict for cherry-pick from v3.
+>>
+>> Changes from v3:
+>>  * release o_sem in sg_release(), not in sg_remove_sfp().
+>>  * not set exclude with sfd_lock held.
+>>
+>> Vaughan Cao (4):
+>>   [SCSI] sg: use rwsem to solve race during exclusive open
+>>   [SCSI] sg: no need sg_open_exclusive_lock
+>>   [SCSI] sg: checking sdp->detached isn't protected when open
+>>   [SCSI] sg: push file descriptor list locking down to per-device
+>>     locking
+>>
+>>  drivers/scsi/sg.c | 178 +++++++++++++++++++++++++------------------=
+-----------
+>>  1 file changed, 83 insertions(+), 95 deletions(-)
+> Patchset looks good to me, although I didn't test it on hardware yet.
+> Signed-off-by: Joern Engel <joern@logfs.org>
+>
+> James, care to pick this up?
+>
+> J=C3=B6rn
+Hi James,
 
-I like it but am wondering why we weren't doing this before.  Was the
-acpi support added before we made ata objects proper devices?
+sg driver has two races happen in
+ a) exclusive open and non-exclusive open
+ b) sg removal and sg open
+I explained the scenario detail in the separate patches. I did test
+those patches and
+J=C3=B6rn has reviewed them.  I got no response from Doug Gilbert for a=
+ long
+time.
+Would you care to pick these up?
 
-Thanks.
+Thanks,
+Vaughan
 
--- 
-tejun
+>
+> --
+> Good warriors cause others to come to them and do not go to others.
+> -- Sun Tzu
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
