@@ -1,85 +1,47 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
-Date: Thu, 25 Jul 2013 16:33:47 -0400
-Message-ID: <51F18BAB.8060600@interlog.com>
-References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com> <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com> <20130722170338.GA15824@logfs.org> <51F144F4.4090509@oracle.com>
-Reply-To: dgilbert@interlog.com
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Thu, 25 Jul 2013 15:08:02 -0700
+Message-ID: <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+References: <51E83E32.9050306@cs.wisc.edu>
+	 <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+	 <20130719003034.GG28005@kernel.dk>
+	 <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+	 <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+	 <1374248000.2266.20.camel@dabdike>
+	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+	 <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+	 <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+	 <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:38946 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752715Ab3GYUeR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jul 2013 16:34:17 -0400
-In-Reply-To: <51F144F4.4090509@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: vaughan <vaughan.cao@oracle.com>
-Cc: JBottomley@parallels.com, =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 13-07-25 11:32 AM, vaughan wrote:
-> On 07/23/2013 01:03 AM, J=C3=B6rn Engel wrote:
->> On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
->>> There is a race when open sg with O_EXCL flag. Also a race may happ=
-en between
->>> sg_open and sg_remove.
->>>
->>> Changes from v4:
->>>   * [3/4] use ERR_PTR series instead of adding another parameter in=
- sg_add_sfp
->>>   * [4/4] fix conflict for cherry-pick from v3.
->>>
->>> Changes from v3:
->>>   * release o_sem in sg_release(), not in sg_remove_sfp().
->>>   * not set exclude with sfd_lock held.
->>>
->>> Vaughan Cao (4):
->>>    [SCSI] sg: use rwsem to solve race during exclusive open
->>>    [SCSI] sg: no need sg_open_exclusive_lock
->>>    [SCSI] sg: checking sdp->detached isn't protected when open
->>>    [SCSI] sg: push file descriptor list locking down to per-device
->>>      locking
->>>
->>>   drivers/scsi/sg.c | 178 +++++++++++++++++++++++++----------------=
--------------
->>>   1 file changed, 83 insertions(+), 95 deletions(-)
->> Patchset looks good to me, although I didn't test it on hardware yet=
-=2E
->> Signed-off-by: Joern Engel <joern@logfs.org>
->>
->> James, care to pick this up?
->>
->> J=C3=B6rn
-> Hi James,
->
-> sg driver has two races happen in
->   a) exclusive open and non-exclusive open
->   b) sg removal and sg open
-> I explained the scenario detail in the separate patches. I did test
-> those patches and
-> J=C3=B6rn has reviewed them.  I got no response from Doug Gilbert for=
- a long
-> time.
-> Would you care to pick these up?
+On Thu, 2013-07-25 at 12:16 +0200, Alexander Gordeev wrote:
+> On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
+> > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
+> > target-pending/scsi-mq, which now has functioning scsi-generic support.
+> 
+> Survives a boot, a kernel build and the build's result :)
 
-Hi,
-Your patches applied with a little noise to lk 3.10.2 and
-gave this warning from the build.
+Great.  Thanks for the feedback Alexander!
 
-   CC [M]  drivers/scsi/sg.o
-drivers/scsi/sg.c: In function =E2=80=98sg_open=E2=80=99:
-drivers/scsi/sg.c:242:6: warning: unused variable =E2=80=98res=E2=80=99=
- [-Wunused-variable]
+So the next step on my end is to enable -mq for ahci, and verify initial
+correctness using QEMU/KVM hardware emulation.
 
-I'll keep testing ...
+Btw, I've been looking at enabling the SHT->cmd_size for struct
+ata_queued_cmd descriptor pre-allocation, but AFAICT these descriptors
+are already all pre-allocated by libata and obtained via ata_qc_new() ->
+__ata_qc_from_tag() during ata_scsi_queuecmd().
 
-Doug Gilbert
+So that said, with the struct request + struct scsi_cmnd pre-allocations
+already provided by blk-mq -> scsi-mq code, all memory allocations
+should have already been eliminated from I/O fast path.
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--nab
