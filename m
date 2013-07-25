@@ -1,39 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 5/8][SCSI] mpt2sas: Infinite loop can occur if
- MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned
-Date: Thu, 25 Jul 2013 07:00:24 -0700
-Message-ID: <1374760824.1952.1.camel@dabdike>
-References: <20130725055945.GA29898@lsi.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH 1/2] ata: acpi: remove dead code for ata_acpi_(un)bind
+Date: Thu, 25 Jul 2013 10:50:14 -0400
+Message-ID: <20130725145014.GA26107@mtj.dyndns.org>
+References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com>
+ <1374731223-28685-2-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20130725055945.GA29898@lsi.com>
-Sender: stable-owner@vger.kernel.org
-To: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: jejb@kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1374731223-28685-2-git-send-email-aaron.lu@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Wu <jeff.wu@amd.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2013-07-25 at 11:29 +0530, Sreekanth Reddy wrote:
-> Infinite loop can occur if IOCStatus is not equal to
-> MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value in the while loops in functions
-> _scsih_search_responding_sas_devices,
-> _scsih_search_responding_raid_devices and
-> _scsih_search_responding_expanders
+On Thu, Jul 25, 2013 at 01:47:02PM +0800, Aaron Lu wrote:
+> Commit 7381fe737 "libata-acpi: remove redundent code for power resource
+> handling" removed ata_acpi_(un)bind but left their prototypes in libata.h,
+> so remove them.
 > 
-> So, Instead of checking for MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value,
-> in this patch code is modified to check for IOCStatus not equals to
-> MPI2_IOCSTATUS_SUCCESS to break the while loop.
-> 
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> Cc: stable@vger.kernel.org
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 
-Patches like this aren't acceptable any more: Greg will find this and
-reject it from Stable.
+Applied to libata/for-3.12.
 
-If there's a bug in the driver, it needs to be in a separate patch set
-for the fixes branch of SCSI to go upstream now rather than waiting for
-the merge window.  Only patches for the fixes branch can be tagged for
-stable.
+Thanks.
 
-James
+-- 
+tejun
