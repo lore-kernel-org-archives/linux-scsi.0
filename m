@@ -1,81 +1,54 @@
-From: Hans Verkuil <hverkuil@xs4all.nl>
-Subject: [PATCHv2] pm80xx: fix Adaptec 71605H hang
-Date: Fri, 26 Jul 2013 18:43:45 +0200
-Message-ID: <51F2A741.1020702@xs4all.nl>
+From: Andy Lutomirski <luto@amacapital.net>
+Subject: Ejected Nook (usb mass storage) prevents suspend
+Date: Fri, 26 Jul 2013 09:54:02 -0700
+Message-ID: <CALCETrVoMc+aCNgwthdwYzx9rXh=Zqzwb5e2djwbFB8FTo4kRg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-vbr4.xs4all.nl ([194.109.24.24]:4638 "EHLO
-	smtp-vbr4.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756961Ab3GZQoB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jul 2013 12:44:01 -0400
+Received: from mail-ve0-f171.google.com ([209.85.128.171]:42364 "EHLO
+	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756901Ab3GZQyX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jul 2013 12:54:23 -0400
+Received: by mail-ve0-f171.google.com with SMTP id b10so1442531vea.30
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Jul 2013 09:54:22 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: AnandKumar.Santhanam@pmcs.com, lindar_liu@usish.com, Sangeetha.Gnanasekaran@pmcs.com, xjtuwjp@gmail.com
+To: linux-usb@vger.kernel.org, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-The IO command size is 128 bytes for these new controllers as opposed to 64
-for the old 8001 controller.
+This is kernel 3.9.9-302.fc19.x86_64.
 
-The Adaptec out-of-tree driver did this correctly. After comparing the two
-this turned out to be the crucial difference.
+I plugged in a BN Nook (a usb mass storage device), used it, and
+ejected it.  This makes suspend fail:
 
-So don't hardcode the IO command size, instead use pm8001_ha->iomb_size as
-that is the correct value for both old and new controllers.
+[50135.265514] PM: Entering freeze sleep
+[50135.265517] Suspending console(s) (use no_console_suspend to debug)
+[50135.287724] sd 7:0:0:0: [sdb] Synchronizing SCSI cache
+[50135.290413] sd 7:0:0:0: [sdb]
+[50135.290415] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[50135.290418] sd 7:0:0:0: [sdb]
+[50135.290422] Sense Key : Not Ready [current]
+[50135.290424] sd 7:0:0:0: [sdb]
+[50135.290429] Add. Sense: Medium not present
+[50135.290448] dpm_run_callback(): scsi_bus_suspend+0x0/0x40 returns -5
+[50135.290454] PM: Device 7:0:0:0 failed to suspend async: error -5
+[50138.486917] PM: Some devices failed to suspend
+[50138.525007] PM: resume of devices complete after 38.132 msecs
+[50138.525315] pci_pm_runtime_suspend():
+hcd_pci_runtime_suspend+0x0/0x50 returns -16
+[50138.536357] PM: Finishing wakeup.
 
-Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
-Cc: stable@vger.kernel.org      # for v3.10 and up
----
- drivers/scsi/pm8001/pm8001_hwi.c | 4 ++--
- drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Experimenting a bit, here's what happens.
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 69dd49c..ce3f129d 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -221,7 +221,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_ha->main_cfg_tbl.pm8001_tbl.fatal_err_interrupt		= 0x01;
- 	for (i = 0; i < PM8001_MAX_INB_NUM; i++) {
- 		pm8001_ha->inbnd_q_tbl[i].element_pri_size_cnt	=
--			PM8001_MPI_QUEUE | (64 << 16) | (0x00<<30);
-+			PM8001_MPI_QUEUE | (pm8001_ha->iomb_size << 16) | (0x00<<30);
- 		pm8001_ha->inbnd_q_tbl[i].upper_base_addr	=
- 			pm8001_ha->memoryMap.region[IB + i].phys_addr_hi;
- 		pm8001_ha->inbnd_q_tbl[i].lower_base_addr	=
-@@ -247,7 +247,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
- 	}
- 	for (i = 0; i < PM8001_MAX_OUTB_NUM; i++) {
- 		pm8001_ha->outbnd_q_tbl[i].element_size_cnt	=
--			PM8001_MPI_QUEUE | (64 << 16) | (0x01<<30);
-+			PM8001_MPI_QUEUE | (pm8001_ha->iomb_size << 16) | (0x01<<30);
- 		pm8001_ha->outbnd_q_tbl[i].upper_base_addr	=
- 			pm8001_ha->memoryMap.region[OB + i].phys_addr_hi;
- 		pm8001_ha->outbnd_q_tbl[i].lower_base_addr	=
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 302514d..e1c4896 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -275,7 +275,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
- 
- 	for (i = 0; i < PM8001_MAX_SPCV_INB_NUM; i++) {
- 		pm8001_ha->inbnd_q_tbl[i].element_pri_size_cnt	=
--			PM8001_MPI_QUEUE | (64 << 16) | (0x00<<30);
-+			PM8001_MPI_QUEUE | (pm8001_ha->iomb_size << 16) | (0x00<<30);
- 		pm8001_ha->inbnd_q_tbl[i].upper_base_addr	=
- 			pm8001_ha->memoryMap.region[IB + i].phys_addr_hi;
- 		pm8001_ha->inbnd_q_tbl[i].lower_base_addr	=
-@@ -301,7 +301,7 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
- 	}
- 	for (i = 0; i < PM8001_MAX_SPCV_OUTB_NUM; i++) {
- 		pm8001_ha->outbnd_q_tbl[i].element_size_cnt	=
--			PM8001_MPI_QUEUE | (64 << 16) | (0x01<<30);
-+			PM8001_MPI_QUEUE | (pm8001_ha->iomb_size << 16) | (0x01<<30);
- 		pm8001_ha->outbnd_q_tbl[i].upper_base_addr	=
- 			pm8001_ha->memoryMap.region[OB + i].phys_addr_hi;
- 		pm8001_ha->outbnd_q_tbl[i].lower_base_addr	=
--- 
-1.8.3.2
+ - Plug in device (so it's working).  Suspend works.
+ - eject /dev/sdb.  Suspend fails.
+ - Physically unplug the device.  Suspend works again.
 
+This is actually a real issue -- my laptop can continue to power its
+usb port while suspended, and the Nook is functional (and charges)
+while plugged in but ejected, but I can't suspend my laptop so it can
+charge my Nook.
 
+Curiously, this issue seems to be Nook-specific.  I can't reproduce it
+with a Corsair Flash Voyager.
+
+--Andy
