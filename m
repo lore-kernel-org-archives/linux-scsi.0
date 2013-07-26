@@ -1,55 +1,58 @@
-From: Jan Vesely <jvesely@redhat.com>
-Subject: Re: [PATCH v4 0/2] block: Fix regression since 46081b166415acb66d4b3150ecefcd9460bb48a1
- (was: Allow merging of tail pages into the last segment)
-Date: Fri, 26 Jul 2013 12:41:59 +0200
-Message-ID: <51F25277.6070704@redhat.com>
-References: <1373644343-6671-1-git-send-email-jvesely@redhat.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
+Date: Fri, 26 Jul 2013 14:48:24 +0200
+Message-ID: <3280105.XAGTl9YUDR@vostro.rjw.lan>
+References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com> <20130725145229.GB26107@mtj.dyndns.org> <51F1D2C5.1050809@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14483 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754686Ab3GZKmR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Jul 2013 06:42:17 -0400
-In-Reply-To: <1373644343-6671-1-git-send-email-jvesely@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <51F1D2C5.1050809@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Wu <jeff.wu@amd.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org
-Cc: Kent Overstreet <koverstreet@google.com>, Rob Evers <revers@redhat.com>, Tomas Henzl <thenzl@redhat.com>, Nikola Pajkovsky <npajkovs@redhat.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Don Howard <dhoward@redhat.com>, jano.vesely@gmail.com
 
-On 12/07/13 17:52, Jan Vesely wrote:
-> Hi
+On Friday, July 26, 2013 09:37:09 AM Aaron Lu wrote:
+> On 07/25/2013 10:52 PM, Tejun Heo wrote:
+> > On Thu, Jul 25, 2013 at 01:47:03PM +0800, Aaron Lu wrote:
+> >> Binding ACPI handle to SCSI device has several drawbacks, namely:
+> >> 1 During ATA device initialization time, ACPI handle will be needed
+> >>   while SCSI devices are not created yet. So each time ACPI handle is
+> >>   needed, instead of retrieving the handle by ACPI_HANDLE macro,
+> >>   a namespace scan is performed to find the handle for the corresponding
+> >>   ATA device. This is inefficient, and also expose a restriction on
+> >>   calling path not holding any lock.
+> >> 2 The binding to SCSI device tree makes code complex, while at the same
+> >>   time doesn't bring us any benefit. All ACPI handlings are still done
+> >>   in ATA module, not in SCSI.
+> >>
+> >> Rework the ATA ACPI binding code to bind ACPI handle to ATA transport
+> >> devices(ATA port and ATA device). The binding needs to be done only once,
+> >> since the ATA transport devices do not go away with hotplug. And due to
+> >> this, the flush_work call in hotplug handler for ATA bay is no longer
+> >> needed.
+> > 
+> > I like it but am wondering why we weren't doing this before.  Was the
+> > acpi support added before we made ata objects proper devices?
 > 
-> These patches modify __bio_add_page to accept pages that extent the last bio
-> segment. some drivers craft their buffers and rely on this behavior (see
-> message in patch 2 for details)
+> I think so. But since I didn't do the original binding, I can only guess
+> :-)
 > 
+> At the time of the original binding, ACPI binding logic requires the
+> binding device has a bus type, which these ATA transport devices don't
+> have.
 > 
-> jan
-> 
-> v4: whitespace fixes to make checkpatch happy
-> 
-> v3: Use code from __blk_recalc_rq_segments to decide whether the page is
->     mergeable, 
-> 
-> v2: modify a comment
+> Later, the ACPI binding code evolves and no such limitation exists
+> anymore. As you can see, we can simply set the ACPI handle before this
+> device is added in driver core, and the binding will be done.
 
-ping
-and a bit more info from patch 2/2:
+Yeah, we made that change in the ACPI core around 3.8 IIRC.
 
-The original behavior was to refuse all pages after the maximum number of
-segments has been reached. However, some drivers (like st) craft their buffers
-to potentially require exactly max segments and multiple pages in the last
-segment. This patch modifies the check to allow pages that can be merged into
-the last segment.
+Thanks,
+Rafael
 
-Fixes EBUSY failures when using large tape block size in high
-memory fragmentation condition. This regression was introduced by commit
-46081b166415acb66d4b3150ecefcd9460bb48a1
-st: Increase success probability in driver buffer allocation
-
-Jan
 
 -- 
-Jan Vesely <jvesely@redhat.com>
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
