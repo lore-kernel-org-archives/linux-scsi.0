@@ -1,54 +1,66 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Ejected Nook (usb mass storage) prevents suspend
-Date: Fri, 26 Jul 2013 16:31:04 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1307261629290.1028-100000@iolanthe.rowland.org>
-References: <CALCETrVoMc+aCNgwthdwYzx9rXh=Zqzwb5e2djwbFB8FTo4kRg@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Fri, 26 Jul 2013 14:14:36 -0700
+Message-ID: <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+References: <20130719003034.GG28005@kernel.dk>
+	 <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+	 <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+	 <1374248000.2266.20.camel@dabdike>
+	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+	 <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+	 <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+	 <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+	 <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+	 <20130726020928.GL29296@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CALCETrVoMc+aCNgwthdwYzx9rXh=Zqzwb5e2djwbFB8FTo4kRg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130726020928.GL29296@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Alexander Gordeev <agordeev@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 26 Jul 2013, Andy Lutomirski wrote:
-
-> This is kernel 3.9.9-302.fc19.x86_64.
+On Thu, 2013-07-25 at 20:09 -0600, Jens Axboe wrote:
+> On Thu, Jul 25 2013, Nicholas A. Bellinger wrote:
+> > On Thu, 2013-07-25 at 12:16 +0200, Alexander Gordeev wrote:
+> > > On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
+> > > > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
+> > > > target-pending/scsi-mq, which now has functioning scsi-generic support.
+> > > 
+> > > Survives a boot, a kernel build and the build's result :)
+> > 
+> > Great.  Thanks for the feedback Alexander!
+> > 
+> > So the next step on my end is to enable -mq for ahci, and verify initial
+> > correctness using QEMU/KVM hardware emulation.
+> > 
+> > Btw, I've been looking at enabling the SHT->cmd_size for struct
+> > ata_queued_cmd descriptor pre-allocation, but AFAICT these descriptors
+> > are already all pre-allocated by libata and obtained via ata_qc_new() ->
+> > __ata_qc_from_tag() during ata_scsi_queuecmd().
 > 
-> I plugged in a BN Nook (a usb mass storage device), used it, and
-> ejected it.  This makes suspend fail:
+> Might still not be a bad idea to do it:
 > 
-> [50135.265514] PM: Entering freeze sleep
-> [50135.265517] Suspending console(s) (use no_console_suspend to debug)
-> [50135.287724] sd 7:0:0:0: [sdb] Synchronizing SCSI cache
-> [50135.290413] sd 7:0:0:0: [sdb]
-> [50135.290415] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> [50135.290418] sd 7:0:0:0: [sdb]
-> [50135.290422] Sense Key : Not Ready [current]
-> [50135.290424] sd 7:0:0:0: [sdb]
-> [50135.290429] Add. Sense: Medium not present
-> [50135.290448] dpm_run_callback(): scsi_bus_suspend+0x0/0x40 returns -5
-> [50135.290454] PM: Device 7:0:0:0 failed to suspend async: error -5
-> [50138.486917] PM: Some devices failed to suspend
-> [50138.525007] PM: resume of devices complete after 38.132 msecs
-> [50138.525315] pci_pm_runtime_suspend():
-> hcd_pci_runtime_suspend+0x0/0x50 returns -16
-> [50138.536357] PM: Finishing wakeup.
+> - Cleans up a driver, getting rid of the need to alloc, maintain, and
+>   free those structures.
+> 
+> - Should be some cache locality benefits to having it all sequential.
+> 
 
-In addition to my earlier comment, the patch below should be applied.  
-It will fix your immediate problem, although not in the best way.
+Looking at this some more, there are a number of locations outside of
+the main blk_mq_ops->queue_rq() -> SHT->queuecommand_mq() dispatch that
+use *ata_qc_from_tag() to obtain *ata_queued_cmd, and a few without a
+associated struct scsi_cmnd like libata-core.c:ata_exec_internal_sg()
+for example..
 
-Alan Stern
+So I don't think (completely) getting rid of ata_port->qcmds[] will be
+possible, and just converting the ata_scsi_queuecmd() path to use the
+extra SHT->cmd_size pre-allocation for *ata_queued_cmd might end up
+being more trouble that it's worth.  Still undecided on that part..
 
+Tejun, do you have any thoughts + input here..?
 
-
-Index: usb-3.10/drivers/scsi/scsi_pm.c
-===================================================================
---- usb-3.10.orig/drivers/scsi/scsi_pm.c
-+++ usb-3.10/drivers/scsi/scsi_pm.c
-@@ -48,8 +48,6 @@ static int scsi_dev_type_resume(struct d
- static int
- scsi_bus_suspend_common(struct device *dev, int (*cb)(struct device *))
- {
--	int err = 0;
+--nab
