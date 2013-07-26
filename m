@@ -1,97 +1,112 @@
-From: Marc Fleischmann <mwf@daterainc.com>
-Subject: RE: targetcli -fb now also Apache 2.0 licensed
-Date: Fri, 26 Jul 2013 08:18:22 -0700
-Message-ID: <214513e90ef73562cf875225c3bd60ed@mail.gmail.com>
-References: <51EF73EF.1040305@redhat.com>  <1374696565.7397.1292.camel@haakon3.risingtidesystems.com>
-  <1374697264.7382.39.camel@dabdike>  <1374699289.7397.1309.camel@haakon3.risingtidesystems.com>
-  <51F06C17.50306@redhat.com> <1374715140.7397.1390.camel@haakon3.risingtidesystems.com>
- <51F1ED9D.50300@redhat.com> <51F22425.6000801@debian.org>
+From: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Subject: Re: [RFC/RFT PATCH 0/5] mm: ARM nobootmem and few dma_mask fixes
+Date: Fri, 26 Jul 2013 12:28:26 -0400
+Message-ID: <51F2A3AA.4060801@ti.com>
+References: <1373665694-7580-1-git-send-email-santosh.shilimkar@ti.com>
+ <20130726151021.GU24642@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:51387 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932366Ab3GZPSa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jul 2013 11:18:30 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so2933190wgg.0
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jul 2013 08:18:29 -0700 (PDT)
-In-Reply-To: <51F22425.6000801@debian.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20130726151021.GU24642@n2100.arm.linux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-mmc@vger.kernel.org, Chris Ball <cjb@laptop.org>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: rrs@debian.org, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, targetcli-fb-devel@lists.fedorahosted.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-Ritesh,
+On Friday 26 July 2013 11:10 AM, Russell King - ARM Linux wrote:
+> On Fri, Jul 12, 2013 at 05:48:09PM -0400, Santosh Shilimkar wrote:
+>> The series is an attempt to move ARM port to NO_BOOTMEM. As discussed
+>> on list NO_BOOTMEM move needed updates to max*pfn meaning to be maximum
+>> PFNs but that breaks the dma_mask for few block layer drivers since
+>> ARM start of physical memory is not PFN0 unlike most of the architectures.
+>> Some more read on it is here:
+>> 	http://lwn.net/Articles/543408/
+>> 	http://lwn.net/Articles/543424/
+>>
+>> To address this issue, we introduce generic dma_max_pfn() helper which
+>> can be overridden from the architectures.
+>> 	
+>> Another intention behind move to nobootmem is also to convert ARM to
+>> switch to memblock and getting rid of bootmem allocator dependency which
+>> don't work for LPAE machines which has physical memory starting beyond
+>> 4 GB boundary. It needs changes to core kernel and also a new memblock
+>> API. More on this can be found here:
+>> 	https://lkml.org/lkml/2013/6/29/77
+>>
+>> I have been trying to cook up these patches with kind help from Russell
+>> and we know series don't solve all the dma_mask bad assumptions. But at
+>> least I am hoping that it can get the ball rolling.	
+>>
+>> Comments/testing help is welcome !!
+> 
+> As this is related to some of the cleanup of dma_mask which I've been
+> doing, I think it may make sense to roll this into one tree.  Any
+> objection to that?
+> 
+> Can we get any acks on this stuff from Jens and Jejb etc - especially
+> for the bits which touch block/ and for the scsi bits as these are
+> touching other subsystems.  (oddly, linux-scsi wasn't on the original
+> mail for this series summary.)
+> 
+Sorry I missed the scsi lists on the summary patch.
 
-We have put immense labor and love in creating LIO and targetcli. Please
-just take a look at the code, the wiki, the manual, target-devel - we have
-poured years of our lives into this project, and we look forward to
-implementing many more exciting ideas. Asking us to just abandon this is -
-simply absurd. Of course, we'll continue to maintain one coherent software
-stack with extensive documentation (we'd love contributions here, too!)
-and provide support for all of it through a well-known forum
-(target-devel).
+While browsing the code I found another spot in mmc layer which
+needs fixing. The patch is at the end of the email with Chris
+and linux-mmc cc'ed here.
 
-If Andy prefers not helping us to pull his few changes upstream, we'll
-gladly just do it ourselves.
+Regards,
+Santosh
 
-Best regards,
+>From 06a27a784a1fd86bf22adf1b247ac82a7c21d46b Mon Sep 17 00:00:00 2001
+From: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Date: Fri, 19 Jul 2013 21:36:46 -0400
+Subject: [PATCH] mmc: Use dma_max_pfn(dev) helper for bounce_limit
+ calculations
 
-Marc Fleischmann
-DATERA | 650.384.6366 | @dateranews
+DMA bounce limit is the maximum direct DMA'able memory beyond which
+bounce buffers has to be used to perform dma operations. MMC queue layer
+relies on dma_mask but its calculation is based on max_*pfn which
+don't have uniform meaning across architectures. So make use of
+dma_max_pfn() which is expected to return the DMAable maximum pfn
+value across architectures.
 
------Original Message-----
-From: target-devel-owner@vger.kernel.org
-[mailto:target-devel-owner@vger.kernel.org] On Behalf Of Ritesh Raj Sarraf
-Sent: Friday, July 26, 2013 12:24 AM
-To: target-devel; linux-scsi
-Cc: Andy Grover; Nicholas A. Bellinger; James Bottomley;
-targetcli-fb-devel@lists.fedorahosted.org; linux-kernel
-Subject: Re: targetcli -fb now also Apache 2.0 licensed
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Chris Ball <cjb@laptop.org>
 
-On Friday 26 July 2013 09:01 AM, Andy Grover wrote:
->
-> It's one thing to claim a prerogative of "upstream", but for this to
-> make sense, there needs to be an actual community around the upstream.
-> And if there's going to be submissions for review, then there needs to
-> be someone in charge of the community with a high degree of skill in
-> the code base. Nick you have a great deal of technical expertise
-> around the C code in drivers/target, but Jerome was the one who wrote
-> rtslib, targetcli, and configshell. I believe you can assess the
-> technical aspects of how the user library interacts with the kernel
-> code, but the maintainer should also be extremely conversant in the
-> language the library is written in. In this case, Python. So it's not
-> clear to me if submitting the code would actually result in meaningful
-> code improvements.
->
-> Also, there has been no effort to sustain a community around this
-> code. There is no bug tracking, no separate mailing list, no regular
-> releases. Debian is running ancient, broken code because nothing's
-> been tagged in over two years.
->
-> I would love to have you maintain and improve this code, but if you
-> aren't then you can't just say "I'm the upstream bow to me!". We're
-> shipping this code in Fedora and it needs active maintenance. Now that
-> we're all on an even licensing footing, code can flow both ways, and
-> even into your commercial version.
+Signed-off-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
+---
+ drivers/mmc/card/queue.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Yes. Apart from reaching out the developers directly, I am not aware of
-other communication channels. There is a git and wiki though.
-
-Nick, if you guys have the same license now, nothing should stop you to
-pull the changes from the targetcli-fb repo. You can start afresh now and
-comply with what the community guidelines are. Licensing is just one part
-of it.
-
-And regarding this whole licensing dispute in the open, the kernel
-maintainers should have resolved this long ago, when it was decided to
-have LIO as the in-kernel target for Linux.
-You might say that the target component complied by the kernel's licensing
-requirements. But for a subsystem inclusion, you don't look just at the
-code, but also the maintainer. Their support tools. And their long term
-plans. These rules have been applied, in the past, for other features in
-the kernel.
-
---
-Ritesh Raj Sarraf | http://people.debian.org/~rrs Debian - The Universal
-Operating System
+diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
+index fa9632e..357bbc5 100644
+--- a/drivers/mmc/card/queue.c
++++ b/drivers/mmc/card/queue.c
+@@ -15,6 +15,7 @@
+ #include <linux/freezer.h>
+ #include <linux/kthread.h>
+ #include <linux/scatterlist.h>
++#include <linux/dma-mapping.h>
+ 
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/host.h>
+@@ -196,7 +197,7 @@ int mmc_init_queue(struct mmc_queue *mq, struct mmc_card *card,
+ 	struct mmc_queue_req *mqrq_prev = &mq->mqrq[1];
+ 
+ 	if (mmc_dev(host)->dma_mask && *mmc_dev(host)->dma_mask)
+-		limit = *mmc_dev(host)->dma_mask;
++		limit = dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
+ 
+ 	mq->card = card;
+ 	mq->queue = blk_init_queue(mmc_request_fn, lock);
+-- 
+1.7.9.5
