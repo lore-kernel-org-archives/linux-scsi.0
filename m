@@ -1,58 +1,103 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Thu, 25 Jul 2013 20:09:28 -0600
-Message-ID: <20130726020928.GL29296@kernel.dk>
-References: <20130719003034.GG28005@kernel.dk>
- <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
- <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
- <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
- <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: Questions about your scsi-mq prototype
+Date: Thu, 25 Jul 2013 19:16:39 -0700
+Message-ID: <1374804999.7397.1476.camel@haakon3.risingtidesystems.com>
+References: <20130715214143.GN24437@beardog.cce.hp.com>
+	 <1373996340.7397.818.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38725 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756932Ab3GZCLA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jul 2013 22:11:00 -0400
+In-Reply-To: <1373996340.7397.818.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scameron@beardog.cce.hp.com
+Cc: chayan.biswas@sandisk.com, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Robert Elliot <Elliott@hp.com>
 
-On Thu, Jul 25 2013, Nicholas A. Bellinger wrote:
-> On Thu, 2013-07-25 at 12:16 +0200, Alexander Gordeev wrote:
-> > On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
-> > > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
-> > > target-pending/scsi-mq, which now has functioning scsi-generic support.
+On Tue, 2013-07-16 at 10:39 -0700, Nicholas A. Bellinger wrote:
+> On Mon, 2013-07-15 at 16:41 -0500, scameron@beardog.cce.hp.com wrote:
+> > Hi,
 > > 
-> > Survives a boot, a kernel build and the build's result :)
+> > I have some questions about your scsi-mq prototype.  I have
+> > CC'ed Chayan Biswas from Sandisk who is the other guy working
+> > with me on the scsi-over-pcie driver.  BTW, if you would prefer
+> > I CC linux-kernel or linux-scsi or other people with such
+> > questions (or refrain from bothering you at all) just let me know.
+> > 
 > 
-> Great.  Thanks for the feedback Alexander!
+> Thanks for asking.  Adding CC's to linux-scsi + Jens now..
 > 
-> So the next step on my end is to enable -mq for ahci, and verify initial
-> correctness using QEMU/KVM hardware emulation.
+> > I wonder if you can provide a summary of how you envision
+> > a scsi LLD is expected to interact with the scsi-mq code.  I
+> > gather that:
+> > 
+> > 1. scsi_mq in scsi_host_template should be set to true.
 > 
-> Btw, I've been looking at enabling the SHT->cmd_size for struct
-> ata_queued_cmd descriptor pre-allocation, but AFAICT these descriptors
-> are already all pre-allocated by libata and obtained via ata_qc_new() ->
-> __ata_qc_from_tag() during ata_scsi_queuecmd().
+> Correct.
+> 
+> > 2. scsi LLD should provide queuecommand_mq function
+> >    (in addition to normal queuecommand? or instead of?
+> >     virtio_scsi.c seems to provide both.)
+> 
+> In addition to for the moment, correct.
+> 
+> > 3. LLD should tell scsi mid layer size of its commands via
+> >    scsi_host_template cmd_size field.
+> >    I guess midlayer will pre-allocate per queue to avoid 
+> >    the midlayer threads contending to allocate commands maybe?
+> >    and hands this space to LLD to use via sc->SCp.ptr (sc is struct scsi_cmnd)
+> >    (right? or am I off in the weeds here?)
+> 
+> This is all exactly correct.
+> 
+> The one extra point here wrt ->queuecommand_mq() is that it's using the
+> same parameters for the moment, but once nr_hw_queues > 1 is
+> implemented, we will expect to pass down the associated blk_mq_hw_ctx in
+> order for the LLD to determine which hardware context the struct
+> scsi_cmnd is being dispatched upon.
+> 
+> > 4. Wondering about how the multiple queue thing will work.
+> >    I see this:
+> > 
+> >    #warning FIXME: Need to pass nr_hw_queues into scsi-mq
+> > 
+> >    and I don't see any code setting sdev_mq_reg.nr_hw_queues to
+> >    anything other than 1.
+> > 
+> >    So maybe I'm just looking too early and that part isn't done yet?
+> > 
+> 
+> Correct, not done yet..
+> 
+> However, so far with a single SCSI LUN with nr_hw_queues=1, 4k blocksize
+> randrw performance is on the order of 1M, vs. ~250K using legacy
+> scsi_request_fn().
+> 
+> > In any case, since we switched away from a scsi driver for the scsi-over-pcie
+> > driver to a block driver, the original scsi version of the driver has lain
+> > fallow, and the first thing we would need to do before we could begin to try
+> > to use your code is to update that driver to work with our current hardware, and
+> > take advantage of other code improvements made in the block driver.
+> > 
+> 
 
-Might still not be a bad idea to do it:
+Hi Stephen & Robert,
 
-- Cleans up a driver, getting rid of the need to alloc, maintain, and
-  free those structures.
+Just curious if you've been able to make any progress here..?
 
-- Should be some cache locality benefits to having it all sequential.
+Also as per our earlier off-list discussion, you should be able to
+safely run existing scsi_request_fn() based LLDs along side new
+SHT->scsi_mq=true enabled code for prototyping purposes. 
 
-> So that said, with the struct request + struct scsi_cmnd pre-allocations
-> already provided by blk-mq -> scsi-mq code, all memory allocations
-> should have already been eliminated from I/O fast path.
+Btw, any chance to get an SOP sample to hack on..?  I'd like to connect
+one of these to IvyBridge-EP silicon for various scsi-mq and target mode
+performance testing.  ;)
 
-Nice!
+Thank you,
 
--- 
-Jens Axboe
+--nab
 
