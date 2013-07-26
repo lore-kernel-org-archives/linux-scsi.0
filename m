@@ -1,68 +1,54 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Questions about your scsi-mq prototype
-Date: Fri, 26 Jul 2013 11:03:55 -0700
-Message-ID: <1374861835.7397.1494.camel@haakon3.risingtidesystems.com>
-References: <20130715214143.GN24437@beardog.cce.hp.com>
-	 <1373996340.7397.818.camel@haakon3.risingtidesystems.com>
-	 <1374804999.7397.1476.camel@haakon3.risingtidesystems.com>
-	 <20130726132940.GL24664@beardog.cce.hp.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: Ejected Nook (usb mass storage) prevents suspend
+Date: Fri, 26 Jul 2013 16:31:04 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1307261629290.1028-100000@iolanthe.rowland.org>
+References: <CALCETrVoMc+aCNgwthdwYzx9rXh=Zqzwb5e2djwbFB8FTo4kRg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:59393 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998Ab3GZR6P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jul 2013 13:58:15 -0400
-In-Reply-To: <20130726132940.GL24664@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CALCETrVoMc+aCNgwthdwYzx9rXh=Zqzwb5e2djwbFB8FTo4kRg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: chayan.biswas@sandisk.com, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Robert Elliot <Elliott@hp.com>
 
-On Fri, 2013-07-26 at 08:29 -0500, scameron@beardog.cce.hp.com wrote:
-> On Thu, Jul 25, 2013 at 07:16:39PM -0700, Nicholas A. Bellinger wrote:
-> > On Tue, 2013-07-16 at 10:39 -0700, Nicholas A. Bellinger wrote:
+On Fri, 26 Jul 2013, Andy Lutomirski wrote:
 
-<SNIP>
-
-> > Hi Stephen & Robert,
-> > 
-> > Just curious if you've been able to make any progress here..?
+> This is kernel 3.9.9-302.fc19.x86_64.
 > 
-> Only just started to try to make the scsi variant of the sop driver
-> work again yesterday and start bringing it up to date since it was
-> last touched in December, and so I haven't done anything with the
-> scsi-mq code yet.  Too many other things demanding my attention at
-> work lately, but at least I was able to spend nearly all day yesterday
-> working on the scsi SOP driver.
+> I plugged in a BN Nook (a usb mass storage device), used it, and
+> ejected it.  This makes suspend fail:
 > 
+> [50135.265514] PM: Entering freeze sleep
+> [50135.265517] Suspending console(s) (use no_console_suspend to debug)
+> [50135.287724] sd 7:0:0:0: [sdb] Synchronizing SCSI cache
+> [50135.290413] sd 7:0:0:0: [sdb]
+> [50135.290415] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> [50135.290418] sd 7:0:0:0: [sdb]
+> [50135.290422] Sense Key : Not Ready [current]
+> [50135.290424] sd 7:0:0:0: [sdb]
+> [50135.290429] Add. Sense: Medium not present
+> [50135.290448] dpm_run_callback(): scsi_bus_suspend+0x0/0x40 returns -5
+> [50135.290454] PM: Device 7:0:0:0 failed to suspend async: error -5
+> [50138.486917] PM: Some devices failed to suspend
+> [50138.525007] PM: resume of devices complete after 38.132 msecs
+> [50138.525315] pci_pm_runtime_suspend():
+> hcd_pci_runtime_suspend+0x0/0x50 returns -16
+> [50138.536357] PM: Finishing wakeup.
 
-Great, thanks for the update.  Looking forward to seeing the drivers
-synced.
+In addition to my earlier comment, the patch below should be applied.  
+It will fix your immediate problem, although not in the best way.
 
-> > 
-> > Also as per our earlier off-list discussion, you should be able to
-> > safely run existing scsi_request_fn() based LLDs along side new
-> > SHT->scsi_mq=true enabled code for prototyping purposes.
-> 
-> Thanks, good to know.
-> 
-> > 
-> > Btw, any chance to get an SOP sample to hack on..?  I'd like to connect
-> > one of these to IvyBridge-EP silicon for various scsi-mq and target mode
-> > performance testing.  ;)
-> 
-> You mean hardware?
+Alan Stern
 
-Yes!
 
->  Not for me to answer, but I'd say it's not very likely at the moment.
 
-If you can point me to a person off-list to chat with about such an
-arrangement, it would be appreciated.  I'm happy to sign an NDA and
-whatever legal bits are necessary to make a scsi-mq enabled SOP driver a
-reality.
-
---nab
-
+Index: usb-3.10/drivers/scsi/scsi_pm.c
+===================================================================
+--- usb-3.10.orig/drivers/scsi/scsi_pm.c
++++ usb-3.10/drivers/scsi/scsi_pm.c
+@@ -48,8 +48,6 @@ static int scsi_dev_type_resume(struct d
+ static int
+ scsi_bus_suspend_common(struct device *dev, int (*cb)(struct device *))
+ {
+-	int err = 0;
