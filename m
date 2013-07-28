@@ -1,121 +1,60 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 5/9] ufshcd-pci: release ioremapped region during removing driver
-Date: Sun, 28 Jul 2013 22:40:33 +0530
-Message-ID: <1375031437-10206-6-git-send-email-santoshsy@gmail.com>
+Subject: [PATCH 6/9] ufs: don't disable_irq() if the IRQ can be shared among devices
+Date: Sun, 28 Jul 2013 22:40:34 +0530
+Message-ID: <1375031437-10206-7-git-send-email-santoshsy@gmail.com>
 References: <1375031437-10206-1-git-send-email-santoshsy@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:59567 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753855Ab3G1RM0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jul 2013 13:12:26 -0400
-Received: by mail-pd0-f171.google.com with SMTP id y14so4581157pdi.30
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Jul 2013 10:12:25 -0700 (PDT)
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:35361 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753855Ab3G1RMk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jul 2013 13:12:40 -0400
+Received: by mail-pb0-f41.google.com with SMTP id rp16so3825545pbb.28
+        for <linux-scsi@vger.kernel.org>; Sun, 28 Jul 2013 10:12:40 -0700 (PDT)
 In-Reply-To: <1375031437-10206-1-git-send-email-santoshsy@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Akinobu Mita <mita@fixstars.com>, Seungwon Jeon <tgih.jun@samsung.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Santosh Y <santoshsy@gmail.com>
+Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Akinobu Mita <mita@fixstars.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Santosh Y <santoshsy@gmail.com>
 
 From: Akinobu Mita <mita@fixstars.com>
 
-Before commit 2953f850c3b80bdca004967c83733365d8aa0aa2 ("[SCSI] ufs:
-use devres functions for ufshcd"), UFSHCI register was ioremapped by
-each glue-driver (ufshcd-pltfrm and ufshcd-pci) during probing and it
-was iounmapped by core-driver during removing driver.  The commit
-converted ufshcd-pltfrm to use devres functions, but it didn't convert
-ufshcd-pci.
-
-Therefore, the change causes ufshcd-pci driver not to iounmap UFSHCI
-register region during removing driver.  This fixes it by converting
-ufshcd-pci to use devres functions.
+When removing the UFS driver, disable_irq() is called and the IRQ is
+not enabled again.  Unfortunately, the IRQ is requested with IRQF_SHARED
+and it can be shared among several devices.  So disabling the IRQ in
+this way is just breaking other devices which are sharing the IRQ.
 
 Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Seungwon Jeon <tgih.jun@samsung.com>
 Cc: Vinayak Holikatti <vinholikatti@gmail.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Santosh Y <santoshsy@gmail.com>
 
 diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index 57ea9dd..24d6ba7 100644
+index 24d6ba7..a823cf4 100644
 --- a/drivers/scsi/ufs/ufshcd-pci.c
 +++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -134,10 +134,7 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+@@ -131,8 +131,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
  
- 	disable_irq(pdev->irq);
+ 	pm_runtime_forbid(&pdev->dev);
+ 	pm_runtime_get_noresume(&pdev->dev);
+-
+-	disable_irq(pdev->irq);
  	ufshcd_remove(hba);
--	pci_release_regions(pdev);
  	pci_set_drvdata(pdev, NULL);
--	pci_clear_master(pdev);
--	pci_disable_device(pdev);
  }
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index cc957fc..13b8c5a 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -186,8 +186,6 @@ static int ufshcd_pltfrm_remove(struct platform_device *pdev)
+ 	struct ufs_hba *hba =  platform_get_drvdata(pdev);
  
- /**
-@@ -174,38 +171,32 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	void __iomem *mmio_base;
- 	int err;
- 
--	err = pci_enable_device(pdev);
-+	err = pcim_enable_device(pdev);
- 	if (err) {
--		dev_err(&pdev->dev, "pci_enable_device failed\n");
--		goto out_error;
-+		dev_err(&pdev->dev, "pcim_enable_device failed\n");
-+		return err;
- 	}
- 
- 	pci_set_master(pdev);
- 
+ 	pm_runtime_get_sync(&(pdev)->dev);
 -
--	err = pci_request_regions(pdev, UFSHCD);
-+	err = pcim_iomap_regions(pdev, 1 << 0, UFSHCD);
- 	if (err < 0) {
--		dev_err(&pdev->dev, "request regions failed\n");
--		goto out_disable;
-+		dev_err(&pdev->dev, "request and iomap failed\n");
-+		return err;
- 	}
- 
--	mmio_base = pci_ioremap_bar(pdev, 0);
--	if (!mmio_base) {
--		dev_err(&pdev->dev, "memory map failed\n");
--		err = -ENOMEM;
--		goto out_release_regions;
--	}
-+	mmio_base = pcim_iomap_table(pdev)[0];
- 
- 	err = ufshcd_set_dma_mask(pdev);
- 	if (err) {
- 		dev_err(&pdev->dev, "set dma mask failed\n");
--		goto out_iounmap;
-+		return err;
- 	}
- 
- 	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
- 	if (err) {
- 		dev_err(&pdev->dev, "Initialization failed\n");
--		goto out_iounmap;
-+		return err;
- 	}
- 
- 	pci_set_drvdata(pdev, hba);
-@@ -213,16 +204,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	pm_runtime_allow(&pdev->dev);
- 
+-	disable_irq(hba->irq);
+ 	ufshcd_remove(hba);
  	return 0;
--
--out_iounmap:
--	iounmap(mmio_base);
--out_release_regions:
--	pci_release_regions(pdev);
--out_disable:
--	pci_clear_master(pdev);
--	pci_disable_device(pdev);
--out_error:
--	return err;
  }
- 
- static const struct dev_pm_ops ufshcd_pci_pm_ops = {
 -- 
 1.8.3.1
 
