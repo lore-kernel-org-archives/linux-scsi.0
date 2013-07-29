@@ -1,62 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Mon, 29 Jul 2013 11:27:46 +0000
-Message-ID: <bug-60644-11613-lN9OWyze9h@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Mon, 29 Jul 2013 07:46:53 -0400
+Message-ID: <20130729114653.GB20951@mtj.dyndns.org>
+References: <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+ <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+ <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+ <20130726020928.GL29296@kernel.dk>
+ <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43798 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751787Ab3G2L1t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Jul 2013 07:27:49 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 7A84220243
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 11:27:48 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 6AAEF2021F
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 11:27:46 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Alexander Gordeev <agordeev@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+Hello,
 
-Sreekanth Reddy <sreekanth.reddy@lsi.com> changed:
+On Fri, Jul 26, 2013 at 02:14:36PM -0700, Nicholas A. Bellinger wrote:
+> So I don't think (completely) getting rid of ata_port->qcmds[] will be
+> possible, and just converting the ata_scsi_queuecmd() path to use the
+> extra SHT->cmd_size pre-allocation for *ata_queued_cmd might end up
+> being more trouble that it's worth.  Still undecided on that part..
+> 
+> Tejun, do you have any thoughts + input here..?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |sreekanth.reddy@lsi.com
+libata exception handling which includes probing doesn't go through
+SCSI at all.  It all works inside libata proper using ata_queuecmds
+and only the result is exposed to SCSI.  Most of those SCSI semantics
+need to be emulated anyway, so this makes things a lot easier than
+going through SCSI for each command.  As it currently stands, it'd be
+a lot of effort to try to embed ata_qc's into higher layer construct.
+Given how it's used, I don't think it's a high priority task.
 
---- Comment #3 from Sreekanth Reddy <sreekanth.reddy@lsi.com> ---
-Hi, 
+One thing which would probably be worthwhile tho is getting rid of the
+bitmap based qc tag allocator in libata.  That one is just borderline
+stupid to keep around on any setup which is supposed to be scalable.
 
-Can you please provide the driver logs my setting the driver logging level to
-0x3f8.
-
-Here are the steps to set the mpt2sas driver logging level
-
-a.While loading the driver 
-        modprobe mpt2sas logging_level=0x3f8
-
-b. If driver is in ramdisk, then in RHEL5/SLES/OEL5 OS, following line has to
-be added in /etc/modprobe.conf and reboot the system
-    options mpt2sas logging_level=0x3f8
-                (Or)
-Add below word at the end of kernel module parameters line in
-/boot/grub/menu.lst or /boot/grub/grub.conf file and reboot the system
-    mpt2sas.logging_level=0x3f8
-
-c. During driver run time
-         echo 0x3f8 > /sys/module/mpt2sas/parameters/logging_level
-
-Also please provide us the IO rate at which you are faceing this problem.
-
-Regards,
-Sreekanth
+Thanks.
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+tejun
