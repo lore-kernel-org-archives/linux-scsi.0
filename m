@@ -1,95 +1,65 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Kernel 3.10.3 "reset SuperSpeed USB device number 2 using
- xhci_hcd"
-Date: Sun, 28 Jul 2013 15:28:52 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1307281505410.18237-100000@netrider.rowland.org>
-References: <51F44125.2040803@ntlworld.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60644] New: MPT2SAS drops all HDDs when under high I/O
+Date: Mon, 29 Jul 2013 03:20:11 +0000
+Message-ID: <bug-60644-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:33555 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753529Ab3G1T2y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jul 2013 15:28:54 -0400
-In-Reply-To: <51F44125.2040803@ntlworld.com>
+Received: from mail.kernel.org ([198.145.19.201]:58443 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752633Ab3G2DUO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Jul 2013 23:20:14 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 5D24820122
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 03:20:13 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id C55C52012F
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 03:20:11 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stuart Foster <smf.linux@ntlworld.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Ed Tomlinson <edt@aei.ca>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, stable@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, 27 Jul 2013, Stuart Foster wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
-> On 07/27/13 20:34, Alan Stern wrote:
-> > On Sat, 27 Jul 2013, Stuart Foster wrote:
-> >
-> >> On 07/27/13 15:58, Alan Stern wrote:
-> >>> On Sat, 27 Jul 2013, Stuart Foster wrote:
-> >>>
-> >>>> Hi,
-> >>>>
-> >>>> I have started having problems with an external USB 3 diskdrive, the
-> >>>> problems started when I moved from the 3.10.2 kernel to 3.10.3.
-> >>>> The machine is a ASUS M5A97 PRO, BIOS 1604.
-> >>>
-> >>> On Sat, 27 Jul 2013, Ed Tomlinson wrote:
-> >>>
-> >>>> Hi
-> >>>>
-> >>>> Same problem here with 3.10.3.  Dmesg filtered with 'hci'.
-> >>>
-> >>> Each of you, please post a usbmon trace showing what happens when the
-> >>> drive is plugged in.
-> >>>
-> >>> Alan Stern
-> >>>
-> >>>
-> >> Hi Alan
-> >>
-> >> Herewith the log you requested.
-> >
-> > The trace shows that something is sending an invalid INQUIRY command
-> > (one with a 512-byte transfer length) to the drive.  Normally such
-> > things are done by user programs, but in this case it looks more like
-> > the command came from somewhere in the kernel.  I have no idea where.
-> >
-> > Did you change anything besides the kernel when going from 3.10.2 to
-> > 3.10.3?
-> >
-> > If you boot now into a 3.10.2 kernel, does the drive work?
-> >
-> > What happens if you plug the drive into a USB-2 port?  (I expect it
-> > will make no difference at all.)
-> >
-> > Alan Stern
-> >
-> >
-> Hi Alan,
-> 
-> The config between 3.10.2 and 3.10.3 did not change.
-> 
-> The drive works correctly on 3.10.2 (I usually keep the previous kernel 
-> available just in case).
-> 
-> On 3.10.3 the drive fails in a similar manner when plugged into a USB-2 
-> port.
-> 
-> For interest I have tried the USB-3 drive in the USB-2 ports on an IBM 
-> thinkpad R51 laptop that is also running 3.10.3 and that fails also.
-> 
-> Conversely I have tried a USB-2 drive on both the IBM and my ASUS 
-> machine and that works fine on 3.10.3 in all available USB ports.
+            Bug ID: 60644
+           Summary: MPT2SAS drops all HDDs when under high I/O
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.11
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: blocking
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: liveaxle@live.com
+        Regression: No
 
-Thank you.  I was able to duplicate the problem on my own machine and 
-track down the bug.
+I have this issue that refused to be solved no matter what I do . My ASRock
+comes with onboard SAS controller (LSI 2308) , since I recieved it always does
+this one thing : Drops all HDDs connected to it .
 
-It was introduced by commit 98dcc2946adb (SCSI: sd: Update WRITE SAME
-heuristics).  This commit adds a call to scsi_get_vpd_page() in
-sd_read_write_same() without first checking sd_try_extended_inquiry().  
-As noted in the latter routine, VPD inquiries will crash some devices.
+It happens only under heavy IO operations after a few minutes . I can recreate
+it easily by running either dd , md5deep or even btrfs scrub .
 
-Martin, this bug needs to be fixed in 3.11.  As far as the stable
-kernels are concerned, the best thing for now may simply be to revert
-it.
+Kernel locks , can't even shut it down from console and a quick ls
+/dev/disk/by-id shows that all the HDDs connected to the SAS controller have
+disappeared .
 
-Alan Stern
+It happens with the stable kernel (3.9 and 3.10.3) and the mainline (3.11-rc2)
+as of this day .
 
+It's not a hardware issue , because I installed a Windows Server 2012 on the
+same machine with a few HDDs I have laying around and beat the controller to
+the ground and it never hanged . So I know it's a Linux-specific issue .
+
+Dmesg logs before and after the issue are attached .
+
+Thank you .
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
