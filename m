@@ -1,248 +1,170 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 4/7] scsi: ufs: add dme configuration primitives
-Date: Mon, 29 Jul 2013 14:54:41 +0530
-Message-ID: <51F634D9.8080503@codeaurora.org>
-References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <001f01ce8a06$b30af640$1920e2c0$%jun@samsung.com>
+Subject: Re: [PATCH 5/7] scsi: ufs: add unipro attribute IDs
+Date: Mon, 29 Jul 2013 14:56:27 +0530
+Message-ID: <51F63543.6040309@codeaurora.org>
+References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <002001ce8a06$c36f4810$4a4dd830$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:33696 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:33834 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753448Ab3G2JYt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jul 2013 05:24:49 -0400
-In-Reply-To: <001f01ce8a06$b30af640$1920e2c0$%jun@samsung.com>
+	with ESMTP id S1753030Ab3G2J0c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jul 2013 05:26:32 -0400
+In-Reply-To: <002001ce8a06$c36f4810$4a4dd830$%jun@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Seungwon Jeon <tgih.jun@samsung.com>
 Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-On 7/26/2013 7:17 PM, Seungwon Jeon wrote:
-> Implements to support GET and SET operations of the DME.
-> These operations are used to configure the behavior of
-> the UNIPRO. Along with basic operation, {Peer/AttrSetType}
-> can be mixed.
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+
+On 7/26/2013 7:18 PM, Seungwon Jeon wrote:
+> 'drivers/scsi/ufs/unipro.h' is added.
+> Attributes in the layers of the UNIPRO stack can be
+> read and written via the DME.
 >
 > Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 > ---
->   drivers/scsi/ufs/ufshcd.c |   88 +++++++++++++++++++++++++++++++++++++++++++++
->   drivers/scsi/ufs/ufshcd.h |   51 ++++++++++++++++++++++++++
->   drivers/scsi/ufs/ufshci.h |    6 +++
->   3 files changed, 145 insertions(+), 0 deletions(-)
+>   drivers/scsi/ufs/unipro.h |  130 +++++++++++++++++++++++++++++++++++++++++++++
+>   1 files changed, 130 insertions(+), 0 deletions(-)
+>   create mode 100644 drivers/scsi/ufs/unipro.h
 >
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 7152ec4..8277c40 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -188,6 +188,18 @@ static inline int ufshcd_get_uic_cmd_result(struct ufs_hba *hba)
->   }
->   
->   /**
-> + * ufshcd_get_dme_attr_val - Get the value of attribute returned by UIC command
-> + * @hba: Pointer to adapter instance
+> diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+> new file mode 100644
+> index 0000000..3a710eb
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/unipro.h
+> @@ -0,0 +1,130 @@
+> +/*
+> + * drivers/scsi/ufs/unipro.h
 > + *
-> + * This function gets UIC command argument3
-> + * Returns 0 on success, non zero value on error
-> + */
-> +static inline u32 ufshcd_get_dme_attr_val(struct ufs_hba *hba)
-> +{
-> +	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3);
-> +}
-> +
-> +/**
->    * ufshcd_is_valid_req_rsp - checks if controller TR response is valid
->    * @ucd_rsp_ptr: pointer to response UPIU
->    *
-> @@ -821,6 +833,80 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
->   }
->   
->   /**
-> + * ufshcd_dme_set_attr - UIC command for DME_SET, DME_PEER_SET
-> + * @hba: per adapter instance
-> + * @attr_sel: uic command argument1
-> + * @attr_set: attribute set type as uic command argument2
-> + * @mib_val: setting value as uic command argument3
-> + * @peer: indicate wherter peer or non-peer
-
-typo: s/wtherter/whether
-This would sound better: s/non-peer/local
-
-Do above for ufshcd_dme_get_attr() function as well.
+> + * Copyright (C) 2013 Samsung Electronics Co., Ltd.
 > + *
-> + * Returns 0 on success, non-zero value on failure
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation; either version 2 of the License, or
+> + * (at your option) any later version.
 > + */
-> +int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
-> +			u8 attr_set, u32 mib_val, u8 peer)
-> +{
-> +	struct uic_command uic_cmd = {0};
-> +	static const char *const action[] = {
-> +		"dme-set",
-> +		"dme-peer-set"
-> +	};
-> +	const char *set = action[!!peer];
-> +	int ret;
 > +
-> +	uic_cmd.command = peer ?
-> +		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
-> +	uic_cmd.argument1 = attr_sel;
-> +	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
-> +	uic_cmd.argument3 = mib_val;
+> +#ifndef _UNIPRO_H_
+> +#define _UNIPRO_H_
 > +
-> +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-> +	if (ret)
-> +		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
-> +			set, UIC_GET_ATTR_ID(attr_sel), ret);
-
-Its also good to print the "mib_val" which we were trying to set. It 
-might be possible that DME_SET failed because we are trying to set out 
-of range value to MIB attribute.
-
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_dme_set_attr);
-> +
-> +/**
-> + * ufshcd_dme_get_attr - UIC command for DME_GET, DME_PEER_GET
-> + * @hba: per adapter instance
-> + * @attr_sel: uic command argument1
-> + * @mib_val: the value of the attribute as returned by the UIC command
-> + * @peer: indicate wherter peer or non-peer
-> + *
-> + * Returns 0 on success, non-zero value on failure
+> +/*
+> + * PHY Adpater attributes
 > + */
-> +int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
-> +			u32 *mib_val, u8 peer)
-> +{
-> +	struct uic_command uic_cmd = {0};
-> +	static const char *const action[] = {
-> +		"dme-get",
-> +		"dme-peer-get"
-> +	};
-> +	const char *get = action[!!peer];
-> +	int ret;
+> +#define PA_ACTIVETXDATALANES	0x1560
+> +#define PA_ACTIVERXDATALANES	0x1580
+> +#define PA_TXTRAILINGCLOCKS	0x1564
+> +#define PA_PHY_TYPE		0x1500
+> +#define PA_AVAILTXDATALANES	0x1520
+> +#define PA_AVAILRXDATALANES	0x1540
+> +#define PA_MINRXTRAILINGCLOCKS	0x1543
+> +#define PA_TXPWRSTATUS		0x1567
+> +#define PA_RXPWRSTATUS		0x1582
+> +#define PA_TXFORCECLOCK		0x1562
+> +#define PA_TXPWRMODE		0x1563
+> +#define PA_LEGACYDPHYESCDL	0x1570
+> +#define PA_MAXTXSPEEDFAST	0x1521
+> +#define PA_MAXTXSPEEDSLOW	0x1522
+> +#define PA_MAXRXSPEEDFAST	0x1541
+> +#define PA_MAXRXSPEEDSLOW	0x1542
+> +#define PA_TXLINKSTARTUPHS	0x1544
+> +#define PA_TXSPEEDFAST		0x1565
+> +#define PA_TXSPEEDSLOW		0x1566
+> +#define PA_REMOTEVERINFO	0x15A0
+> +#define PA_TXGEAR		0x1568
+> +#define PA_TXTERMINATION	0x1569
+> +#define PA_HSSERIES		0x156A
+> +#define PA_PWRMODE		0x1571
+> +#define PA_RXGEAR		0x1583
+> +#define PA_RXTERMINATION	0x1584
+> +#define PA_MAXRXPWMGEAR		0x1586
+> +#define PA_MAXRXHSGEAR		0x1587
+> +#define PA_RXHSUNTERMCAP	0x15A5
+> +#define PA_RXLSTERMCAP		0x15A6
+> +#define PA_PACPREQTIMEOUT	0x1590
+> +#define PA_PACPREQEOBTIMEOUT	0x1591
+> +#define PA_HIBERN8TIME		0x15A7
+> +#define PA_LOCALVERINFO		0x15A9
+> +#define PA_TACTIVATE		0x15A8
+> +#define PA_PACPFRAMECOUNT	0x15C0
+> +#define PA_PACPERRORCOUNT	0x15C1
+> +#define PA_PHYTESTCONTROL	0x15C2
+> +#define PA_PWRMODEUSERDATA0	0x15B0
+> +#define PA_PWRMODEUSERDATA1	0x15B1
+> +#define PA_PWRMODEUSERDATA2	0x15B2
+> +#define PA_PWRMODEUSERDATA3	0x15B3
+> +#define PA_PWRMODEUSERDATA4	0x15B4
+> +#define PA_PWRMODEUSERDATA5	0x15B5
+> +#define PA_PWRMODEUSERDATA6	0x15B6
+> +#define PA_PWRMODEUSERDATA7	0x15B7
+> +#define PA_PWRMODEUSERDATA8	0x15B8
+> +#define PA_PWRMODEUSERDATA9	0x15B9
+> +#define PA_PWRMODEUSERDATA10	0x15BA
+> +#define PA_PWRMODEUSERDATA11	0x15BB
+> +#define PA_CONNECTEDTXDATALANES	0x1561
+> +#define PA_CONNECTEDRXDATALANES	0x1581
+> +#define PA_LOGICALLANEMAP	0x15A1
+> +#define PA_SLEEPNOCONFIGTIME	0x15A2
+> +#define PA_STALLNOCONFIGTIME	0x15A3
+> +#define PA_SAVECONFIGTIME	0x15A4
 > +
-> +	uic_cmd.command = peer ?
-> +		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
-> +	uic_cmd.argument1 = attr_sel;
+> +/*
+> + * Data Link Layer Attributes
+> + */
+> +#define DL_TC0TXFCTHRESHOLD	0x2040
+> +#define DL_FC0PROTTIMEOUTVAL	0x2041
+> +#define DL_TC0REPLAYTIMEOUTVAL	0x2042
+> +#define DL_AFC0REQTIMEOUTVAL	0x2043
+> +#define DL_AFC0CREDITTHRESHOLD	0x2044
+> +#define DL_TC0OUTACKTHRESHOLD	0x2045
+> +#define DL_TC1TXFCTHRESHOLD	0x2060
+> +#define DL_FC1PROTTIMEOUTVAL	0x2061
+> +#define DL_TC1REPLAYTIMEOUTVAL	0x2062
+> +#define DL_AFC1REQTIMEOUTVAL	0x2063
+> +#define DL_AFC1CREDITTHRESHOLD	0x2064
+> +#define DL_TC1OUTACKTHRESHOLD	0x2065
+> +#define DL_TXPREEMPTIONCAP	0x2000
+> +#define DL_TC0TXMAXSDUSIZE	0x2001
+> +#define DL_TC0RXINITCREDITVAL	0x2002
+> +#define DL_TC0TXBUFFERSIZE	0x2005
+> +#define DL_PEERTC0PRESENT	0x2046
+> +#define DL_PEERTC0RXINITCREVAL	0x2047
+> +#define DL_TC1TXMAXSDUSIZE	0x2003
+> +#define DL_TC1RXINITCREDITVAL	0x2004
+> +#define DL_TC1TXBUFFERSIZE	0x2006
+> +#define DL_PEERTC1PRESENT	0x2066
+> +#define DL_PEERTC1RXINITCREVAL	0x2067
 > +
-> +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-> +	if (ret) {
-> +		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
-> +			get, UIC_GET_ATTR_ID(attr_sel), ret);
-> +		goto out;
-> +	}
+> +/*
+> + * Network Layer Attributes
+> + */
+> +#define N_DEVICEID		0x3000
+> +#define N_DEVICEID_VALID	0x3001
+> +#define N_TC0TXMAXSDUSIZE	0x3020
+> +#define N_TC1TXMAXSDUSIZE	0x3021
 > +
-> +	if (mib_val)
-> +		*mib_val = uic_cmd.argument3;
-> +out:
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
+> +/*
+> + * Transport Layer Attributes
+> + */
+> +#define T_NUMCPORTS		0x4000
+> +#define T_NUMTESTFEATURES	0x4001
+> +#define T_CONNECTIONSTATE	0x4020
+> +#define T_PEERDEVICEID		0x4021
+> +#define T_PEERCPORTID		0x4022
+> +#define T_TRAFFICCLASS		0x4023
+> +#define T_PROTOCOLID		0x4024
+> +#define T_CPORTFLAGS		0x4025
+> +#define T_TXTOKENVALUE		0x4026
+> +#define T_RXTOKENVALUE		0x4027
+> +#define T_LOCALBUFFERSPACE	0x4028
+> +#define T_PEERBUFFERSPACE	0x4029
+> +#define T_CREDITSTOSEND		0x402A
+> +#define T_CPORTMODE		0x402B
+> +#define T_TC0TXMAXSDUSIZE	0x4060
+> +#define T_TC1TXMAXSDUSIZE	0x4061
 > +
-> +/**
->    * ufshcd_make_hba_operational - Make UFS controller operational
->    * @hba: per adapter instance
->    *
-> @@ -1256,6 +1342,8 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
->   	if (hba->active_uic_cmd) {
->   		hba->active_uic_cmd->argument2 |=
->   			ufshcd_get_uic_cmd_result(hba);
-> +		hba->active_uic_cmd->argument3 =
-> +			ufshcd_get_dme_attr_val(hba);
-
-We can optimize here by reading the dme_attribute value only if 
-active_uic_cmd->command is set to DME_GET or DME_PEER_GET. For all other 
-DME commands, meaning of this is "reserved" for read.
-Also, i guess reading of the argument2 and argument3 registers can be 
-moved to ufshcd_wait_for_uic_cmd() function (process context) intead of 
-interrupt context.
-
->   		complete(&hba->active_uic_cmd->done);
->   	}
->   }
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 49590ee..50bcd29 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -199,6 +199,11 @@ int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
->   			unsigned int);
->   void ufshcd_remove(struct ufs_hba *);
->   
-> +extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
-> +			       u8 attr_set, u32 mib_val, u8 peer);
-> +extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
-> +			       u32 *mib_val, u8 peer);
-> +
->   /**
->    * ufshcd_hba_stop - Send controller to reset state
->    * @hba: per adapter instance
-> @@ -208,4 +213,50 @@ static inline void ufshcd_hba_stop(struct ufs_hba *hba)
->   	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
->   }
->   
-> +/* UIC command interfaces for DME primitives */
-> +#define DME_LOCAL	0
-> +#define DME_PEER	1
-> +#define ATTR_SET_NOR	0	/* NORMAL */
-> +#define ATTR_SET_ST	1	/* STATIC */
-> +
-> +static inline int ufshcd_dme_set(struct ufs_hba *hba, u32 attr_sel,
-> +				 u32 mib_val)
-> +{
-> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
-> +				   mib_val, DME_LOCAL);
-> +}
-> +
-> +static inline int ufshcd_dme_st_set(struct ufs_hba *hba, u32 attr_sel,
-> +				    u32 mib_val)
-> +{
-> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
-> +				   mib_val, DME_LOCAL);
-> +}
-> +
-> +static inline int ufshcd_dme_peer_set(struct ufs_hba *hba, u32 attr_sel,
-> +				      u32 mib_val)
-> +{
-> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
-> +				   mib_val, DME_PEER);
-> +}
-> +
-> +static inline int ufshcd_dme_peer_st_set(struct ufs_hba *hba, u32 attr_sel,
-> +					 u32 mib_val)
-> +{
-> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
-> +				   mib_val, DME_PEER);
-> +}
-> +
-> +static inline int ufshcd_dme_get(struct ufs_hba *hba,
-> +				 u32 attr_sel, u32 *mib_val)
-> +{
-> +	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_LOCAL);
-> +}
-> +
-> +static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
-> +				      u32 attr_sel, u32 *mib_val)
-> +{
-> +	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
-> +}
-> +
->   #endif /* End of Header */
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> index a8f69cc..df4901e 100644
-> --- a/drivers/scsi/ufs/ufshci.h
-> +++ b/drivers/scsi/ufs/ufshci.h
-> @@ -191,6 +191,12 @@ enum {
->   #define CONFIG_RESULT_CODE_MASK		0xFF
->   #define GENERIC_ERROR_CODE_MASK		0xFF
->   
-> +#define UIC_ARG_MIB_SEL(attr, sel)	((((attr) & 0xFFFF) << 16) |\
-> +					 ((sel) & 0xFFFF))
-> +#define UIC_ARG_MIB(attr)		UIC_ARG_MIB_SEL(attr, 0)
-> +#define UIC_ARG_ATTR_TYPE(t)		(((t) & 0xFF) << 16)
-> +#define UIC_GET_ATTR_ID(v)		(((v) >> 16) & 0xFFFF)
-> +
->   /* UIC Commands */
->   enum {
->   	UIC_CMD_DME_GET			= 0x01,
+> +#endif /* _UNIPRO_H_ */
 
