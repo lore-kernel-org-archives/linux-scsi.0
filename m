@@ -1,151 +1,104 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 3/7] scsi: ufs: fix the setting interrupt aggregation
- counter
-Date: Mon, 29 Jul 2013 12:33:48 +0530
-Message-ID: <51F613D4.7080509@codeaurora.org>
-References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <001e01ce8a06$884df3d0$98e9db70$%jun@samsung.com>
+From: Stuart Foster <smf.linux-XZoyATsUNX5Wk0Htik3J/w@public.gmane.org>
+Subject: Re: Kernel 3.10.3 "reset SuperSpeed USB device number 2 using xhci_hcd"
+Date: Mon, 29 Jul 2013 08:21:38 +0100
+Message-ID: <51F61802.3020907@ntlworld.com>
+References: <Pine.LNX.4.44L0.1307281505410.18237-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:54949 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754608Ab3G2HDy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jul 2013 03:03:54 -0400
-In-Reply-To: <001e01ce8a06$884df3d0$98e9db70$%jun@samsung.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1307281505410.18237-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Ed Tomlinson <edt-Yad3+ZauZac@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-On 7/26/2013 7:16 PM, Seungwon Jeon wrote:
-> LACTH(Interrupt aggregation counter threshold) value is allowed
-
-I guess you mean "IACTH" not "LACTH". Other than this, change looks good 
-to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-> up to 0x1F and current setting value is the maximum.
-> This value is related with NUTRS(max:0x20) of HCI's capability.
-> Considering HCI controller doesn't support the maximum, LATCH
-> setting should be adjusted with possible value.
-> For that, existing 'ufshcd_config_int_aggr' is split into two part
-> [reset, configure].
+On 07/28/13 20:28, Alan Stern wrote:
+> On Sat, 27 Jul 2013, Stuart Foster wrote:
 >
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> ---
->   drivers/scsi/ufs/ufshcd.c |   53 +++++++++++++++++++++-----------------------
->   drivers/scsi/ufs/ufshci.h |    4 +-
->   2 files changed, 27 insertions(+), 30 deletions(-)
+>> On 07/27/13 20:34, Alan Stern wrote:
+>>> On Sat, 27 Jul 2013, Stuart Foster wrote:
+>>>
+>>>> On 07/27/13 15:58, Alan Stern wrote:
+>>>>> On Sat, 27 Jul 2013, Stuart Foster wrote:
+>>>>>
+>>>>>> Hi,
+>>>>>>
+>>>>>> I have started having problems with an external USB 3 diskdrive, the
+>>>>>> problems started when I moved from the 3.10.2 kernel to 3.10.3.
+>>>>>> The machine is a ASUS M5A97 PRO, BIOS 1604.
+>>>>>
+>>>>> On Sat, 27 Jul 2013, Ed Tomlinson wrote:
+>>>>>
+>>>>>> Hi
+>>>>>>
+>>>>>> Same problem here with 3.10.3.  Dmesg filtered with 'hci'.
+>>>>>
+>>>>> Each of you, please post a usbmon trace showing what happens when the
+>>>>> drive is plugged in.
+>>>>>
+>>>>> Alan Stern
+>>>>>
+>>>>>
+>>>> Hi Alan
+>>>>
+>>>> Herewith the log you requested.
+>>>
+>>> The trace shows that something is sending an invalid INQUIRY command
+>>> (one with a 512-byte transfer length) to the drive.  Normally such
+>>> things are done by user programs, but in this case it looks more like
+>>> the command came from somewhere in the kernel.  I have no idea where.
+>>>
+>>> Did you change anything besides the kernel when going from 3.10.2 to
+>>> 3.10.3?
+>>>
+>>> If you boot now into a 3.10.2 kernel, does the drive work?
+>>>
+>>> What happens if you plug the drive into a USB-2 port?  (I expect it
+>>> will make no difference at all.)
+>>>
+>>> Alan Stern
+>>>
+>>>
+>> Hi Alan,
+>>
+>> The config between 3.10.2 and 3.10.3 did not change.
+>>
+>> The drive works correctly on 3.10.2 (I usually keep the previous kernel
+>> available just in case).
+>>
+>> On 3.10.3 the drive fails in a similar manner when plugged into a USB-2
+>> port.
+>>
+>> For interest I have tried the USB-3 drive in the USB-2 ports on an IBM
+>> thinkpad R51 laptop that is also running 3.10.3 and that fails also.
+>>
+>> Conversely I have tried a USB-2 drive on both the IBM and my ASUS
+>> machine and that works fine on 3.10.3 in all available USB ports.
 >
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 688ae0e..7152ec4 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -43,6 +43,9 @@
->   /* UIC command timeout, unit: ms */
->   #define UIC_CMD_TIMEOUT	500
->   
-> +/* Interrupt aggregation default timeout, unit: 40us */
-> +#define INT_AGGR_DEF_TO	0x02
-> +
->   enum {
->   	UFSHCD_MAX_CHANNEL	= 0,
->   	UFSHCD_MAX_ID		= 1,
-> @@ -65,12 +68,6 @@ enum {
->   	UFSHCD_INT_CLEAR,
->   };
->   
-> -/* Interrupt aggregation options */
-> -enum {
-> -	INT_AGGR_RESET,
-> -	INT_AGGR_CONFIG,
-> -};
-> -
->   /**
->    * ufshcd_get_intr_mask - Get the interrupt bit mask
->    * @hba - Pointer to adapter instance
-> @@ -233,30 +230,30 @@ ufshcd_get_rsp_upiu_data_seg_len(struct utp_upiu_rsp *ucd_rsp_ptr)
->   }
->   
->   /**
-> - * ufshcd_config_int_aggr - Configure interrupt aggregation values.
-> - *		Currently there is no use case where we want to configure
-> - *		interrupt aggregation dynamically. So to configure interrupt
-> - *		aggregation, #define INT_AGGR_COUNTER_THRESHOLD_VALUE and
-> - *		INT_AGGR_TIMEOUT_VALUE are used.
-> + * ufshcd_reset_intr_aggr - Reset interrupt aggregation values.
->    * @hba: per adapter instance
-> - * @option: Interrupt aggregation option
->    */
->   static inline void
-> -ufshcd_config_int_aggr(struct ufs_hba *hba, int option)
-> +ufshcd_reset_intr_aggr(struct ufs_hba *hba)
->   {
-> -	switch (option) {
-> -	case INT_AGGR_RESET:
-> -		ufshcd_writel(hba, INT_AGGR_ENABLE |
-> -			      INT_AGGR_COUNTER_AND_TIMER_RESET,
-> -			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
-> -		break;
-> -	case INT_AGGR_CONFIG:
-> -		ufshcd_writel(hba, INT_AGGR_ENABLE | INT_AGGR_PARAM_WRITE |
-> -			      INT_AGGR_COUNTER_THRESHOLD_VALUE |
-> -			      INT_AGGR_TIMEOUT_VALUE,
-> -			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
-> -		break;
-> -	}
-> +	ufshcd_writel(hba, INT_AGGR_ENABLE |
-> +		      INT_AGGR_COUNTER_AND_TIMER_RESET,
-> +		      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
-> +}
-> +
-> +/**
-> + * ufshcd_config_intr_aggr - Configure interrupt aggregation values.
-> + * @hba: per adapter instance
-> + * @cntr_thld: Interrupt aggregation counter threshold
-> + * @timeout: Interrupt aggregation timeout value
-> + */
-> +static inline void
-> +ufshcd_config_intr_aggr(struct ufs_hba *hba, u8 cnt, u8 timeout)
-> +{
-> +	ufshcd_writel(hba, INT_AGGR_ENABLE | INT_AGGR_PARAM_WRITE |
-> +		      INT_AGGR_COUNTER_THLD_VAL(cnt) |
-> +		      INT_AGGR_TIMEOUT_VAL(timeout),
-> +		      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
->   }
->   
->   /**
-> @@ -853,7 +850,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
->   	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
->   
->   	/* Configure interrupt aggregation */
-> -	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
-> +	ufshcd_config_intr_aggr(hba, hba->nutrs - 1, INT_AGGR_DEF_TO);
->   
->   	/* Configure UTRL and UTMRL base address registers */
->   	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
-> @@ -1299,7 +1296,7 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
->   	hba->outstanding_reqs ^= completed_reqs;
->   
->   	/* Reset interrupt aggregation counters */
-> -	ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
-> +	ufshcd_reset_intr_aggr(hba);
->   }
->   
->   /**
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> index d5c5f14..a8f69cc 100644
-> --- a/drivers/scsi/ufs/ufshci.h
-> +++ b/drivers/scsi/ufs/ufshci.h
-> @@ -226,8 +226,8 @@ enum {
->   
->   #define MASK_UIC_COMMAND_RESULT			0xFF
->   
-> -#define INT_AGGR_COUNTER_THRESHOLD_VALUE	(0x1F << 8)
-> -#define INT_AGGR_TIMEOUT_VALUE			(0x02)
-> +#define INT_AGGR_COUNTER_THLD_VAL(c)	(((c) & 0x1F) << 8)
-> +#define INT_AGGR_TIMEOUT_VAL(t)		(((t) & 0xFF) << 0)
->   
->   /* Interrupt disable masks */
->   enum {
+> Thank you.  I was able to duplicate the problem on my own machine and
+> track down the bug.
+>
+> It was introduced by commit 98dcc2946adb (SCSI: sd: Update WRITE SAME
+> heuristics).  This commit adds a call to scsi_get_vpd_page() in
+> sd_read_write_same() without first checking sd_try_extended_inquiry().
+> As noted in the latter routine, VPD inquiries will crash some devices.
+>
+> Martin, this bug needs to be fixed in 3.11.  As far as the stable
+> kernels are concerned, the best thing for now may simply be to revert
+> it.
+>
+> Alan Stern
+>
+>
+Hi Alan,
 
+Thanks for the update I will look forward to a solution.
+
+regards
+
+Stuart Foster
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
