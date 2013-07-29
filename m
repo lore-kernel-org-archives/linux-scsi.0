@@ -1,91 +1,107 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: Re: [PATCH 1/7] scsi: ufs: amend the ocs handling with fatal error
-Date: Mon, 29 Jul 2013 16:21:40 +0530
-Message-ID: <51F6493C.3020105@codeaurora.org>
-References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <1374280885-11526-2-git-send-email-mita@fixstars.com> <001c01ce8a06$5bcbc1c0$13634540$%jun@samsung.com> <51F608F4.9020107@codeaurora.org>
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/4] scsi_debug: fix endianness bug in
+ sdebug_build_parts()
+Date: Mon, 29 Jul 2013 12:53:36 +0200
+Message-ID: <1375095216.27146.3.camel@br9vgx5g.de.ibm.com>
+References: <1373889127-17083-1-git-send-email-akinobu.mita@gmail.com>
+	 <1373889127-17083-2-git-send-email-akinobu.mita@gmail.com>
+	 <1374772228.15813.3.camel@br9vgx5g.de.ibm.com>
+	 <CAC5umyi8LkZ1kETSpbDNSu2YaAJRXf6Ag0VYCPdFs4zD2hqeKQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:38404 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898Ab3G2Kvp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jul 2013 06:51:45 -0400
-In-Reply-To: <51F608F4.9020107@codeaurora.org>
+Received: from e06smtp18.uk.ibm.com ([195.75.94.114]:44060 "EHLO
+	e06smtp18.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208Ab3G2Kxm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jul 2013 06:53:42 -0400
+Received: from /spool/local
+	by e06smtp18.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mpeschke@linux.vnet.ibm.com>;
+	Mon, 29 Jul 2013 11:47:26 +0100
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+	by d06dlp01.portsmouth.uk.ibm.com (Postfix) with ESMTP id 3317917D8058
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 11:55:22 +0100 (BST)
+Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
+	by b06cxnps3074.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r6TArRxS62652512
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 10:53:27 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (localhost [127.0.0.1])
+	by d06av03.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id r6TArbcP022160
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 04:53:38 -0600
+In-Reply-To: <CAC5umyi8LkZ1kETSpbDNSu2YaAJRXf6Ag0VYCPdFs4zD2hqeKQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Seungwon Jeon <tgih.jun@samsung.com>, linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-On 7/29/2013 11:47 AM, Subhash Jadavani wrote:
-> On 7/26/2013 7:15 PM, Seungwon Jeon wrote:
->> Fatal error in OCS(overall command status) field indicates
->> error conditions which is not covered by UFSHCI.
->> It means that host cannot define the result of command status
->> and therefore host may need to check transfer response UPIU's
->> response and status field.
->> It was actually found that 'CHECK CONDITION' is stored in status
->> field of UPIU where OCS is 'FATAL ERROR'.
+On Sat, 2013-07-27 at 02:07 +0900, Akinobu Mita wrote:
+> 2013/7/26 Martin Peschke <mpeschke@linux.vnet.ibm.com>:
+> > On Mon, 2013-07-15 at 20:52 +0900, Akinobu Mita wrote:
+> >> With module parameter num_parts > 0, partition table is built on t=
+he
+> >> ramdisk storage when loading the driver.  Unfortunately, there is =
+an
+> >> endianness bug in sdebug_build_parts().  So the partition table is=
+ not
+> >> correctly initialized on big-endian systems.
+> >>
+> >> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> >> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> >> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> >> Cc: linux-scsi@vger.kernel.org
+> >> ---
+> >>  drivers/scsi/scsi_debug.c | 4 ++--
+> >>  1 file changed, 2 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> >> index cb4fefa..2f39b13 100644
+> >> --- a/drivers/scsi/scsi_debug.c
+> >> +++ b/drivers/scsi/scsi_debug.c
+> >> @@ -2659,8 +2659,8 @@ static void __init sdebug_build_parts(unsign=
+ed char *ramp,
+> >>                              / sdebug_sectors_per;
+> >>               pp->end_sector =3D (end_sec % sdebug_sectors_per) + =
+1;
+> >>
+> >> -             pp->start_sect =3D start_sec;
+> >> -             pp->nr_sects =3D end_sec - start_sec + 1;
+> >> +             pp->start_sect =3D cpu_to_le32(start_sec);
+> >> +             pp->nr_sects =3D cpu_to_le32(end_sec - start_sec + 1=
+);
+> >>               pp->sys_ind =3D 0x83;     /* plain Linux partition *=
+/
+> >>       }
+> >>  }
+> >
+> >
+> > I have posted the same fix several times, e.g.
+> > http://marc.info/?l=3Dlinux-scsi&m=3D137051617907423&w=3D2
+> > Good luck!
+> >
+> > Acked-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+>=20
+> Thanks.  I found this problem from sparse warning noticed by 0-DAY ke=
+rnel
+> build testing.
 
-It looks like you are assuming that there will be some kind of response
-from the device. But the spec. mentions - "OCS_FATAL ERROR: within host
-controller that is not covered by the error conditions described above
-in this table."
+It surfaced as a real problem on System z (big endian).
+That is why I can confirm that the above patch works.
 
-So spec. left everything to implementers on how to trigger this error.
-Also, it says "within host controller" so ufshcd_is_valid_req_rsp()
-might fail as well.
-
-I couldn't understand why there is a need for a host controller to
-interpret the SCSI command status and raise an OCS_FATAL_ERROR?
-
-If it is clarified by the spec. then we can have generic implementation
-otherwise I would prefer to make this specific to those host controllers
-that raise OCS_FATAL_ERROR for CHECK_CONDITION.
-
->>
->> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
->> ---
->>   drivers/scsi/ufs/ufshcd.c |    3 +--
->>   1 files changed, 1 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index b743bd6..4cf3a2d 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -1199,7 +1199,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
->> struct ufshcd_lrb *lrbp)
->>       switch (ocs) {
->>       case OCS_SUCCESS:
->> -
->> +    case OCS_FATAL_ERROR:
->>           /* check if the returned transfer response is valid */
->>           result = ufshcd_is_valid_req_rsp(lrbp->ucd_rsp_ptr);
->
-> I don't see the response UPIU data of the last command response is
-> cleared anywhere in the driver. This means its quite possible that if
-> the current command failed (and if it is using the same tag as the last
-> succeeded command) with the OCS_FATAL_ERROR then response UPIU (pointed
-> by lrbp->ucd_rsp_ptr) content may be still the same as the last one. If
-> we ensure to clear the response UPIU data after every command completion
-> then only we can rely on the response  UPIU content in case of fatal
-> errors.
->
-> Regards,
-> Subhash
->>           if (result) {
->> @@ -1229,7 +1229,6 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
->> struct ufshcd_lrb *lrbp)
->>       case OCS_MISMATCH_DATA_BUF_SIZE:
->>       case OCS_MISMATCH_RESP_UPIU_SIZE:
->>       case OCS_PEER_COMM_FAILURE:
->> -    case OCS_FATAL_ERROR:
->>       default:
->>           result |= DID_ERROR << 16;
->>           dev_err(hba->dev,
->
+Thanks,
+Martin
 
 
--- 
-Regards,
-Sujit
+--=20
+Linux on System z Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Gesch=C3=A4ftsf=C3=BChrung: Dirk Wittkopp
+Sitz der Gesellschaft: B=C3=B6blingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
