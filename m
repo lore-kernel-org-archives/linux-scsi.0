@@ -1,94 +1,38 @@
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup
- / early userspace transition
-Date: Mon, 29 Jul 2013 16:16:57 +0200
-Message-ID: <51F67959.2060803@fastmail.fm>
-References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm> <87mwp5frdl.fsf@spindle.srvr.nix>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Ejected Nook (usb mass storage) prevents suspend
+Date: Mon, 29 Jul 2013 10:21:13 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1307291016220.1479-100000@iolanthe.rowland.org>
+References: <1375077981.25230.5.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87mwp5frdl.fsf@spindle.srvr.nix>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, nick.cheng@areca.com.tw
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:37239 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752499Ab3G2OVO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jul 2013 10:21:14 -0400
+In-Reply-To: <1375077981.25230.5.camel@linux-fkkt.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Andy Lutomirski <luto@amacapital.net>, linux-usb@vger.kernel.org, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, hare@suse.de
 
-On 07/29/2013 03:05 PM, Nix wrote:
-> On 29 Jul 2013, Bernd Schubert said:
->
->> Hi Nick,
->>
->> On 07/29/2013 12:10 PM, Nick Alcock wrote:
->>> arcmsr0: abort device command of scsi id = 0 lun = 1
->>> arcmsr0: abort device command of scsi id = 0 lun = 0
->>> arcmsr: executing bus reset eh.....num_resets=0, num_[...]
->>>
->>> arcmsr0: wait 'abort all outstanding command' timeout
->>> arcmsr0: executing hw bus reset ....
->>> arcmsr0: waiting for hw bus reset return, retry=0
->>> arcmsr0: waiting for hw bus reset return, retry=1
->>> Areca RAID Controller0: F/W V1.46 2009-01-06 & Model ARC-1210
->>> arcmsr: scsi  bus reset eh returns with success
->>> [and back to the top of the error messages again, apparently forever,
->>>    not that the machine would be much use without its RAID array even
->>>    if this loop terminated at some point, so I only gave it a couple
->>>    of minutes]
->>>
->>> The failure happens precisely at the moment we transition to early
->>> userspace, so presumably userspace I/O is failing (or something related
->>> to raw device access, perhaps, since the first thing it does is a
->>> vgscan).
->>>
->>> I haven't bisected yet (sorry, I have work to do which means this
->>> machine must be running right now), but nothing has changed in the
->>> arcmsr controller, nor in SCSI-land excepting
->>>
->>> commit 98dcc2946adbe4349ef1ef9b99873b912831edd4
->>> Author: Martin K. Petersen <martin.petersen@oracle.com>
->>> Date:   Thu Jun 6 22:15:55 2013 -0400
-> [...]
->>> Obviously, at this point, this machine has no modules loaded (it has
->>> almost none loaded even when fully operational)
->>
->> I tested this patch with ARC-1260 and F/W V1.49, no issues. Also, this
->> patch is only in 3.10.3, but not yet in 3.10.1.
->
-> ... and I see this problem with 3.10.3 but not 3.10.1. (Haven't tried
-> 3.10.2.)
+On Mon, 29 Jul 2013, Oliver Neukum wrote:
 
-Hmm, indeed that points to this commit. I just don't see what could fail 
-there.
+> On Fri, 2013-07-26 at 16:31 -0400, Alan Stern wrote:
+> 
+> > In addition to my earlier comment, the patch below should be applied.  
+> > It will fix your immediate problem, although not in the best way.
+> 
+> Alan,
+> 
+> I think your diagnosis is correct, but not the fix.
+> This is run even in the runtime case. We might lose
+> data if the flush is not done.
 
-Could you try to run these commands with 3.10.1?
+Actually no, the scsi_bus_suspend_common() routine does not run during 
+runtime PM.  It gets called only from scsi_bus_suspend(), 
+scsi_bus_freeze(), and scsi_bus_poweroff(), which are all part of 
+system sleep.
 
-# # check if reporting opcodes works
-# sg_opcodes -v  -n /dev/sdX
+Alan Stern
 
-# check ata information page
-# sg_vpd --page=0x89 /dev/sdX
-
->
->>                                                  And I don't think this
->> commit can cause your issue at all, a failing heuristics would enable
->> WRITE SAME and would cause issues with linux-md, but there shouldn't
->> happen anything directly in the scsi-layer. Which was your last
->> working kernel version?
->
-> 3.10.1. :)
-
-Whoops, sorry, I missed that in your first sentence.
-
->
-> No changes to arcmsr between those versions... I suspect I'll have to
-> bisect, which will be a complete pig because every failure means a hard
-> powerdown of this box. Always-on servers rarely appreciate hard
-> powerdowns :(
->
-
-Maybe just revert this commit? Helpful would be some scsi logging to see 
-which command actually fails. I guess you don't have a serial console?
-
-
-Thanks,
-Bernd
