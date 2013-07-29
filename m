@@ -1,56 +1,71 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup / early userspace transition
-Date: Mon, 29 Jul 2013 16:01:49 +0100
-Message-ID: <8738qxfm02.fsf@spindle.srvr.nix>
-References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm>
-	<87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Kernel 3.10.3 "reset SuperSpeed USB device number 2 using xhci_hcd"
+Date: Mon, 29 Jul 2013 11:06:22 -0400
+Message-ID: <yq1ob9ljtht.fsf@sermon.lab.mkp.net>
+References: <Pine.LNX.4.44L0.1307281505410.18237-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <51F67959.2060803@fastmail.fm> (Bernd Schubert's message of "Mon,
-	29 Jul 2013 16:16:57 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@fastmail.fm>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, nick.cheng@areca.com.tw
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:24161 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073Ab3G2PGm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jul 2013 11:06:42 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1307281505410.18237-100000@netrider.rowland.org>
+	(Alan Stern's message of "Sun, 28 Jul 2013 15:28:52 -0400 (EDT)")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Stuart Foster <smf.linux@ntlworld.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ed Tomlinson <edt@aei.ca>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, stable@vger.kernel.org
 
-On 29 Jul 2013, Bernd Schubert spake thusly:
+>>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
 
-> On 07/29/2013 03:05 PM, Nix wrote:
->> On 29 Jul 2013, Bernd Schubert said:
->>> I tested this patch with ARC-1260 and F/W V1.49, no issues. Also, this
->>> patch is only in 3.10.3, but not yet in 3.10.1.
->>
->> ... and I see this problem with 3.10.3 but not 3.10.1. (Haven't tried
->> 3.10.2.)
->
-> Hmm, indeed that points to this commit. I just don't see what could fail there.
->
-> Could you try to run these commands with 3.10.1?
->
-> # # check if reporting opcodes works
-> # sg_opcodes -v  -n /dev/sdX
->
-> # check ata information page
-> # sg_vpd --page=0x89 /dev/sdX
+Alan,
 
-If this might cause the same problem I think I'd better wait until work
-is done for the day and the machine is no longer loaded, and can be
-rebooted without harm...
+Alan> It was introduced by commit 98dcc2946adb (SCSI: sd: Update WRITE
+Alan> SAME heuristics).  This commit adds a call to scsi_get_vpd_page()
+Alan> in sd_read_write_same() without first checking
+Alan> sd_try_extended_inquiry().  As noted in the latter routine, VPD
+Alan> inquiries will crash some devices.
 
->> No changes to arcmsr between those versions... I suspect I'll have to
->> bisect, which will be a complete pig because every failure means a hard
->> powerdown of this box. Always-on servers rarely appreciate hard
->> powerdowns :(
->>
->
-> Maybe just revert this commit? Helpful would be some scsi logging to
-> see which command actually fails. I guess you don't have a serial
-> console?
+Is REPORT SUPPORTED OPERATION CODES generally safe on USB devices?
 
-Not at that stage, no! And, yes, a test revert of this one commit will
-be the first thing I try this evening / tomorrow morning (depending on
-system load).
+The reason I didn't wrap the WRITE SAME heuristics in
+sd_try_extended_inquiry() like I have done with most of the other VPDs
+is that there are a ton of older SPI/SAS/FC devices that support WRITE
+SAME just fine.
+
+
+Alan> As far as the stable kernels are concerned, the best thing for now
+Alan> may simply be to revert it.
+
+No go. The above commit fixes issues for somebody else.
+
+I could add an explicit check to the sd_read_write_same() function. But
+how about we do the following instead?
 
 -- 
-NULL && (void)
+Martin K. Petersen	Oracle Linux Engineering
+
+
+SCSI: Don't attempt to send extended INQUIRY command if skip_vpd_pages is set
+
+If a device has the skip_vpd_pages flag set we should simply fail the
+scsi_get_vpd_page() call.
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: stable@vger.kernel.org
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 3b1ea34..eaa808e 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -1031,6 +1031,9 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+ {
+ 	int i, result;
+ 
++	if (sdev->skip_vpd_pages)
++		goto fail;
++
+ 	/* Ask for all the pages supported by this device */
+ 	result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
+ 	if (result)
