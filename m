@@ -1,72 +1,74 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup / early userspace transition
-Date: Mon, 29 Jul 2013 14:05:42 +0100
-Message-ID: <87mwp5frdl.fsf@spindle.srvr.nix>
-References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm>
+From: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Subject: Re: [RFC/RFT PATCH 0/5] mm: ARM nobootmem and few dma_mask fixes
+Date: Mon, 29 Jul 2013 09:26:44 -0400
+Message-ID: <51F66D94.9060706@ti.com>
+References: <1373665694-7580-1-git-send-email-santosh.shilimkar@ti.com> <20130726151021.GU24642@n2100.arm.linux.org.uk> <51F2A3AA.4060801@ti.com> <20130729111503.GG24642@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <51F667C2.4020801@fastmail.fm> (Bernd Schubert's message of "Mon,
-	29 Jul 2013 15:01:54 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@fastmail.fm>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, nick.cheng@areca.com.tw
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <20130729111503.GG24642@n2100.arm.linux.org.uk>
+Sender: linux-mmc-owner@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Nicolas Pitre <nicolas.pitre@linaro.org>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chris Ball <cjb@laptop.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 29 Jul 2013, Bernd Schubert said:
-
-> Hi Nick,
->
-> On 07/29/2013 12:10 PM, Nick Alcock wrote:
->> arcmsr0: abort device command of scsi id = 0 lun = 1
->> arcmsr0: abort device command of scsi id = 0 lun = 0
->> arcmsr: executing bus reset eh.....num_resets=0, num_[...]
+On Monday 29 July 2013 07:15 AM, Russell King - ARM Linux wrote:
+> On Fri, Jul 26, 2013 at 12:28:26PM -0400, Santosh Shilimkar wrote:
+>> On Friday 26 July 2013 11:10 AM, Russell King - ARM Linux wrote:
+>>> On Fri, Jul 12, 2013 at 05:48:09PM -0400, Santosh Shilimkar wrote:
+>>>> The series is an attempt to move ARM port to NO_BOOTMEM. As discussed
+>>>> on list NO_BOOTMEM move needed updates to max*pfn meaning to be maximum
+>>>> PFNs but that breaks the dma_mask for few block layer drivers since
+>>>> ARM start of physical memory is not PFN0 unlike most of the architectures.
+>>>> Some more read on it is here:
+>>>> 	http://lwn.net/Articles/543408/
+>>>> 	http://lwn.net/Articles/543424/
+>>>>
+>>>> To address this issue, we introduce generic dma_max_pfn() helper which
+>>>> can be overridden from the architectures.
+>>>> 	
+>>>> Another intention behind move to nobootmem is also to convert ARM to
+>>>> switch to memblock and getting rid of bootmem allocator dependency which
+>>>> don't work for LPAE machines which has physical memory starting beyond
+>>>> 4 GB boundary. It needs changes to core kernel and also a new memblock
+>>>> API. More on this can be found here:
+>>>> 	https://lkml.org/lkml/2013/6/29/77
+>>>>
+>>>> I have been trying to cook up these patches with kind help from Russell
+>>>> and we know series don't solve all the dma_mask bad assumptions. But at
+>>>> least I am hoping that it can get the ball rolling.	
+>>>>
+>>>> Comments/testing help is welcome !!
+>>>
+>>> As this is related to some of the cleanup of dma_mask which I've been
+>>> doing, I think it may make sense to roll this into one tree.  Any
+>>> objection to that?
+>>>
+>>> Can we get any acks on this stuff from Jens and Jejb etc - especially
+>>> for the bits which touch block/ and for the scsi bits as these are
+>>> touching other subsystems.  (oddly, linux-scsi wasn't on the original
+>>> mail for this series summary.)
+>>>
+>> Sorry I missed the scsi lists on the summary patch.
 >>
->> arcmsr0: wait 'abort all outstanding command' timeout
->> arcmsr0: executing hw bus reset ....
->> arcmsr0: waiting for hw bus reset return, retry=0
->> arcmsr0: waiting for hw bus reset return, retry=1
->> Areca RAID Controller0: F/W V1.46 2009-01-06 & Model ARC-1210
->> arcmsr: scsi  bus reset eh returns with success
->> [and back to the top of the error messages again, apparently forever,
->>   not that the machine would be much use without its RAID array even
->>   if this loop terminated at some point, so I only gave it a couple
->>   of minutes]
->>
->> The failure happens precisely at the moment we transition to early
->> userspace, so presumably userspace I/O is failing (or something related
->> to raw device access, perhaps, since the first thing it does is a
->> vgscan).
->>
->> I haven't bisected yet (sorry, I have work to do which means this
->> machine must be running right now), but nothing has changed in the
->> arcmsr controller, nor in SCSI-land excepting
->>
->> commit 98dcc2946adbe4349ef1ef9b99873b912831edd4
->> Author: Martin K. Petersen <martin.petersen@oracle.com>
->> Date:   Thu Jun 6 22:15:55 2013 -0400
-[...]
->> Obviously, at this point, this machine has no modules loaded (it has
->> almost none loaded even when fully operational)
->
-> I tested this patch with ARC-1260 and F/W V1.49, no issues. Also, this
-> patch is only in 3.10.3, but not yet in 3.10.1.
+>> While browsing the code I found another spot in mmc layer which
+>> needs fixing. The patch is at the end of the email with Chris
+>> and linux-mmc cc'ed here.
+> 
+> Would you mind putting them all in the patch system, I can add the acks
+> should anyone supply them later, and I'll repost them along with my set
+> of dma-mask patches.  Thanks.
+> 
+Done.
+7794/1, 7795/1, 7796/1, 7797/1, 7798/1, 7799/1
 
-... and I see this problem with 3.10.3 but not 3.10.1. (Haven't tried
-3.10.2.)
+Didn't know how to get XXXX/1,2,3,4... pushed into the tracker.
+BTW, I have also pushed the patched on my git tree branch [1] just
+in case you or some one needs it.
 
->                                                 And I don't think this
-> commit can cause your issue at all, a failing heuristics would enable
-> WRITE SAME and would cause issues with linux-md, but there shouldn't
-> happen anything directly in the scsi-layer. Which was your last
-> working kernel version?
+Regards,
+Santosh
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/ssantosh/linux-keystone.git
+3.12/nobootmem_n_dma-mask
 
-3.10.1. :)
-
-No changes to arcmsr between those versions... I suspect I'll have to
-bisect, which will be a complete pig because every failure means a hard
-powerdown of this box. Always-on servers rarely appreciate hard
-powerdowns :(
-
--- 
-NULL && (void)
