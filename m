@@ -1,53 +1,66 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Mon, 29 Jul 2013 12:11:06 -0700
-Message-ID: <1375125066.5171.10.camel@haakon3.risingtidesystems.com>
-References: <1374248000.2266.20.camel@dabdike>
-	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
-	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
-	 <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
-	 <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
-	 <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
-	 <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
-	 <20130726020928.GL29296@kernel.dk>
-	 <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
-	 <1374885793.7397.1537.camel@haakon3.risingtidesystems.com>
-	 <20130729115011.GC20951@mtj.dyndns.org>
+From: Santosh Y <santoshsy@gmail.com>
+Subject: Re: [PATCH 0/9] scsi:ufs: query, bkops support and other fixes
+Date: Tue, 30 Jul 2013 00:35:05 +0530
+Message-ID: <CALMYJDsLgt=AOKyuj5GP284HWiawsG3PgZ5iXq7o2991CV_4QA@mail.gmail.com>
+References: <1375031437-10206-1-git-send-email-santoshsy@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20130729115011.GC20951@mtj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Alexander Gordeev <agordeev@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:41444 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060Ab3G2TF0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jul 2013 15:05:26 -0400
+Received: by mail-bk0-f42.google.com with SMTP id jk14so523022bkc.1
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 12:05:25 -0700 (PDT)
+In-Reply-To: <1375031437-10206-1-git-send-email-santoshsy@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Santosh Y <santoshsy@gmail.com>
 
-On Mon, 2013-07-29 at 07:50 -0400, Tejun Heo wrote:
-> Yo,
-> 
-> On Fri, Jul 26, 2013 at 05:43:13PM -0700, Nicholas A. Bellinger wrote:
-> > Considering there can be more than a single ata_device hanging off each
-> > ata_port, the '*sdev = ap->link.device[0].sdev' in __ata_qc_from_tag()
-> > is definitely bogus, but I'm not sure how else to correlate
-> > blk-mq/scsi-mq per device descriptors to existing code expecting
-> > ata_port->qcmd[] descriptors to be shared across multiple devices..
-> > 
-> > Tejun..?
-> 
-> I have no idea.  Let's please just do simpler conversion and worry
-> about embedding qc's into scsi_cmnds later.  libata isn't a normal
-> SCSI driver and has a rather its own thick midlayer doing the
-> impedance matching inbetween && I really don't think there is too much
-> benefit to be reaped from embedding qc's into scsi_cmnds.
-> 
+On Sun, Jul 28, 2013 at 10:40 PM, Santosh Y <santoshsy@gmail.com> wrote:
+> Hi James,
+>
+> Please apply the following patches to 'misc' branch.
+>
+> Thanks,
+> Santosh
+>
+> Akinobu Mita (3):
+>   ufshcd-pci: release ioremapped region during removing driver
+>   ufs: don't disable_irq() if the IRQ can be shared among devices
+>   ufs: don't stop controller before scsi_remove_host()
+>
+> Dolev Raviv (1):
+>   scsi: ufs: Set fDeviceInit flag to initiate device initialization
+>
+> Sujit Reddy Thumma (3):
+>   scsi: ufs: Add support for sending NOP OUT UPIU
+>   scsi: ufs: Add support for host assisted background operations
+>   scsi: ufs: Add runtime PM support for UFS host controller driver
+>
+> Wei Yongjun (1):
+>   ufshcd-pltfrm: remove redundant dev_err call in ufshcd_pltfrm_probe()
+>
+> Wolfram Sang (1):
+>   drivers/scsi/ufs: don't check resource with devm_ioremap_resource
+>
+>  drivers/scsi/ufs/ufs.h           |  155 ++++-
+>  drivers/scsi/ufs/ufshcd-pci.c    |   99 ++--
+>  drivers/scsi/ufs/ufshcd-pltfrm.c |   55 +-
+>  drivers/scsi/ufs/ufshcd.c        | 1170 ++++++++++++++++++++++++++++++++++----
+>  drivers/scsi/ufs/ufshcd.h        |   59 +-
+>  drivers/scsi/ufs/ufshci.h        |    2 +-
+>  6 files changed, 1374 insertions(+), 166 deletions(-)
+>
+> --
+> 1.8.3.1
+>
 
-That is essentially the same conclusion that I came to, but wanted to at
-least give you a chance to comment here.  ;)
+Hi James,
 
-So that said, I'll include a simple conversion for libata into the
-scsi-mq WIP branch, and folks who are interested in more detailed
-conversions can pursue them as separate items.
+Please ignore the above patch-sets, I'll resend the series with a
+minor correction.
 
---nab 
-
+Thanks,
+Santosh
