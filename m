@@ -1,34 +1,32 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Mon, 29 Jul 2013 23:30:28 +0000
-Message-ID: <bug-60644-11613-WlZzRVS4T4@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup / early userspace transition
+Date: Mon, 29 Jul 2013 19:34:33 -0400
+Message-ID: <yq1txjdhree.fsf@sermon.lab.mkp.net>
+References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm>
+	<87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm>
+	<87fvuxdqes.fsf@spindle.srvr.nix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:46680 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751288Ab3G2Xab (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Jul 2013 19:30:31 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id F284D20254
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 23:30:30 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 4E12B20206
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2013 23:30:29 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87fvuxdqes.fsf@spindle.srvr.nix> (nix@esperi.org.uk's message of
+	"Mon, 29 Jul 2013 22:09:31 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nix <nix@esperi.org.uk>
+Cc: Bernd Schubert <bernd.schubert@fastmail.fm>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, nick.cheng@areca.com.tw, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+>>>>> "Nix" == Nix  <nix@esperi.org.uk> writes:
 
---- Comment #7 from liveaxle@live.com ---
-Created attachment 107038
-  --> https://bugzilla.kernel.org/attachment.cgi?id=107038&action=edit
-iostat log
+Bernd,
+
+Nix> I can now confirm that reverting this commit causes this problem to
+Nix> go away, and my machine boots fine again.
+
+Can you please send me the output of sq_inq with your 1.49 firmware?
+
+I made a tweak that allowed Nix to boot but we're trying to find a good
+blacklist trigger. And that's tricky given that Areca allows you
+manually specify the SCSI model string for each volume...
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Martin K. Petersen	Oracle Linux Engineering
