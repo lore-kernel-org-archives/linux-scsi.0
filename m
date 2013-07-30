@@ -1,35 +1,48 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Kernel 3.10.3 "reset SuperSpeed USB device number 2 using
- xhci_hcd"
-Date: Tue, 30 Jul 2013 14:44:23 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1307301441510.893-100000@iolanthe.rowland.org>
-References: <51F69959.8070409@ntlworld.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 25/36] SCSI: sd: convert class code to use dev_groups
+Date: Tue, 30 Jul 2013 12:01:29 -0700
+Message-ID: <20130730190129.GC25353@kroah.com>
+References: <1374703539-9705-1-git-send-email-gregkh@linuxfoundation.org>
+ <1374703539-9705-26-git-send-email-gregkh@linuxfoundation.org>
+ <1375200711.2065.10.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <51F69959.8070409@ntlworld.com>
-Sender: stable-owner@vger.kernel.org
-To: Stuart Foster <smf.linux@ntlworld.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ed Tomlinson <edt@aei.ca>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1375200711.2065.10.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 29 Jul 2013, Stuart Foster wrote:
-
-> > Stuart and Ed, does Martin's patch fix your problem?
-> >
-> > Alan Stern
-> >
-> >
-> Hi Alan,
+On Tue, Jul 30, 2013 at 04:11:52PM +0000, James Bottomley wrote:
+> On Wed, 2013-07-24 at 15:05 -0700, Greg Kroah-Hartman wrote:
+> > The dev_attrs field of struct class is going away soon, dev_groups
+> > should be used instead.  This converts the scsi disk class code to use
+> > the correct field.
+> > 
+> > It required some functions to be moved around to place the show and
+> > store functions next to each other, the old order seemed to make no
+> > sense at all.
+> > 
+> > Cc: James E.J. Bottomley <JBottomley@parallels.com>
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > ---
+> > 
+> > James, feel free to take this through your tree, or ACK it and I can
+> > take it through mine.
 > 
-> The patch is good for me.
-> 
-> thanks
+> Just found this ... I have the stable folder rule be git-send-email and
+> from you, so it picks up your patches as well.
 
-There also have been positive reports from Marc Meledandri and Philipp 
-Dreimann.
+It seems you aren't the only one who has procmail rules for my emails :)
 
-Martin, please submit your patch for inclusion in the stable kernels as 
-soon as possible.  Or I can submit it for you.
+I wonder if I need to start sending my stable stuff out from a different
+email address...
 
-Alan Stern
+> I'll take it through my tree, just in case we're mucking about with
+> attributes this cycle around.
+
+That's fine with me, thanks.
+
+greg k-h
