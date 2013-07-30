@@ -1,117 +1,145 @@
 From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: RE: [PATCH 1/7] scsi: ufs: amend the ocs handling with fatal error
-Date: Tue, 30 Jul 2013 22:02:54 +0900
-Message-ID: <002a01ce8d25$1b0e4730$512ad590$%jun@samsung.com>
+Subject: RE: [PATCH 2/7] scsi: ufs: find out sense data over scsi status values
+Date: Tue, 30 Jul 2013 22:03:06 +0900
+Message-ID: <002b01ce8d25$223de0b0$66b9a210$%jun@samsung.com>
 References: <1374280885-11526-1-git-send-email-mita@fixstars.com>
- <1374280885-11526-2-git-send-email-mita@fixstars.com>
- <001c01ce8a06$5bcbc1c0$13634540$%jun@samsung.com>
- <51F608F4.9020107@codeaurora.org> <51F6493C.3020105@codeaurora.org>
+ <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
+ <51F64939.3010206@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:42608 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753628Ab3G3NC4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jul 2013 09:02:56 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+Received: from mailout3.samsung.com ([203.254.224.33]:32090 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab3G3NDI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jul 2013 09:03:08 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MQR001FW2WVO430@mailout4.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 30 Jul 2013 22:02:55 +0900 (KST)
-In-reply-to: <51F6493C.3020105@codeaurora.org>
+ with ESMTP id <0MQR00J3B2WVHP10@mailout3.samsung.com> for
+ linux-scsi@vger.kernel.org; Tue, 30 Jul 2013 22:03:07 +0900 (KST)
+In-reply-to: <51F64939.3010206@codeaurora.org>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, 'Subhash Jadavani' <subhashj@codeaurora.org>
+To: 'Sujit Reddy Thumma' <sthumma@codeaurora.org>
 Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
 On Mon, July 29, 2013, Sujit Reddy Thumma wrote:
-> On 7/29/2013 11:47 AM, Subhash Jadavani wrote:
-> > On 7/26/2013 7:15 PM, Seungwon Jeon wrote:
-> >> Fatal error in OCS(overall command status) field indicates
-> >> error conditions which is not covered by UFSHCI.
-> >> It means that host cannot define the result of command status
-> >> and therefore host may need to check transfer response UPIU's
-> >> response and status field.
-> >> It was actually found that 'CHECK CONDITION' is stored in status
-> >> field of UPIU where OCS is 'FATAL ERROR'.
+> On 7/26/2013 7:16 PM, Seungwon Jeon wrote:
+> > Except for 'GOOD' and 'CHECK CONDITION', other status value
+> > in Response UPIU may or may contain sense data. If a non-zero
+> > value is in the Data Segment Length field, it means that UPIU
+> > has Sense Data in the Data Segment area.
+> >
+> > Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> > ---
+> >   drivers/scsi/ufs/ufs.h    |    1 +
+> >   drivers/scsi/ufs/ufshcd.c |   27 +++++++++++++++++++--------
+> >   2 files changed, 20 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> > index 139bc06..737c31b 100644
+> > --- a/drivers/scsi/ufs/ufs.h
+> > +++ b/drivers/scsi/ufs/ufs.h
+> > @@ -114,6 +114,7 @@ enum {
+> >   	MASK_SCSI_STATUS	= 0xFF,
+> >   	MASK_TASK_RESPONSE	= 0xFF00,
+> >   	MASK_RSP_UPIU_RESULT	= 0xFFFF,
+> > +	MASK_RSP_UPIU_DATA_SEG_LEN	= 0xFFFF,
+> >   };
+> >
+> >   /* Task management service response */
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index 4cf3a2d..688ae0e 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -218,6 +218,20 @@ ufshcd_get_rsp_upiu_result(struct utp_upiu_rsp *ucd_rsp_ptr)
+> >   	return be32_to_cpu(ucd_rsp_ptr->header.dword_1) & MASK_RSP_UPIU_RESULT;
+> >   }
+> >
+> > +/*
+> > + * ufshcd_get_rsp_upiu_data_seg_len - Get the data segment length
+> > + *				from response UPIU
+> > + * @ucd_rsp_ptr: pointer to response UPIU
+> > + *
+> > + * Return the data segment length.
+> > + */
+> > +static inline int
+> > +ufshcd_get_rsp_upiu_data_seg_len(struct utp_upiu_rsp *ucd_rsp_ptr)
+> > +{
+> > +	return be32_to_cpu(ucd_rsp_ptr->header.dword_2) &
+> > +		MASK_RSP_UPIU_DATA_SEG_LEN;
+> > +}
+> > +
+> >   /**
+> >    * ufshcd_config_int_aggr - Configure interrupt aggregation values.
+> >    *		Currently there is no use case where we want to configure
+> > @@ -298,7 +312,8 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+> >   static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
+> >   {
+> >   	int len;
+> > -	if (lrbp->sense_buffer) {
+> > +	if (lrbp->sense_buffer &&
+> > +	    !ufshcd_get_rsp_upiu_data_seg_len(lrbp->ucd_rsp_ptr)) {
+> >   		len = be16_to_cpu(lrbp->ucd_rsp_ptr->sense_data_len);
+> >   		memcpy(lrbp->sense_buffer,
+> >   			lrbp->ucd_rsp_ptr->sense_data,
+> > @@ -1156,21 +1171,17 @@ ufshcd_scsi_cmd_status(struct ufshcd_lrb *lrbp, int scsi_status)
+> >   			  SAM_STAT_CHECK_CONDITION;
 > 
-> It looks like you are assuming that there will be some kind of response
-> from the device. But the spec. mentions - "OCS_FATAL ERROR: within host
-> controller that is not covered by the error conditions described above
-> in this table."
-Yes, error interrupt doesn't happen actually.
+> The whole function is doing things wrong. It is redundant to interpret
+> the scsi_status at the LLD layer and make decisions while otherwise the
+> SCSI layer anyway knows how handle them properly.
+Yes, scsi status can be set simply here.
 
 > 
-> So spec. left everything to implementers on how to trigger this error.
-> Also, it says "within host controller" so ufshcd_is_valid_req_rsp()
-> might fail as well.
+> Please see scsi_decide_disposition().
 > 
-> I couldn't understand why there is a need for a host controller to
-> interpret the SCSI command status and raise an OCS_FATAL_ERROR?
-I feel like OCS values are related to syntax problem except OCS_FATAL_ERROR.
-Basically, host controller may need to refer the Response field[Target Success/Target Failure] of response UPIU.
-It's a overall result from response UPIU. 
-When Response field is 'Target Failure', if host controller updates the OCS field with 'SUCCESS', it's not proper behavior.
-In this case host may refer the Status field of response UPIU to decide the OCS result.
-Of course, it's not clear thing and could depends on host's implementation,
-because there is no obvious description for that.
-But if we consider the way to report UTP error from UFSHCI 8.2.4,
-we can check the Response UPIU for more detailed error condition regardless OCS value.
-Could you check your host side?
+> Ideally, this is what we should do -
+> if (response_upiu_sense_data_len > 0 && lrbp->sense_buffer) {
+>   ufshcd_copy_sense_data();
+> }
+> result = set_host_byte(DID_OK) |
+How can we determine DID_OK in ufshcd_scsi_cmd_status?
+I think we can add this only in case of OCS_SUCCESS in ufshcd_transfer_rsp_status.
+
+> 		set_msg_byte(COMMAND_COMPLETE) |
+I'm not sure that we need to set COMMAND_COMPLETE?
+Message is related to SCSI-2.
+I didn't get this information on SAM, SBC and SPC.
+Do you have any idea?
 
 Thanks,
 Seungwon Jeon
 
+> 		(scsi_status & 0xff);
 > 
-> If it is clarified by the spec. then we can have generic implementation
-> otherwise I would prefer to make this specific to those host controllers
-> that raise OCS_FATAL_ERROR for CHECK_CONDITION.
-> 
-> >>
-> >> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> >> ---
-> >>   drivers/scsi/ufs/ufshcd.c |    3 +--
-> >>   1 files changed, 1 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> >> index b743bd6..4cf3a2d 100644
-> >> --- a/drivers/scsi/ufs/ufshcd.c
-> >> +++ b/drivers/scsi/ufs/ufshcd.c
-> >> @@ -1199,7 +1199,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
-> >> struct ufshcd_lrb *lrbp)
-> >>       switch (ocs) {
-> >>       case OCS_SUCCESS:
-> >> -
-> >> +    case OCS_FATAL_ERROR:
-> >>           /* check if the returned transfer response is valid */
-> >>           result = ufshcd_is_valid_req_rsp(lrbp->ucd_rsp_ptr);
+> >   		ufshcd_copy_sense_data(lrbp);
+> >   		break;
+> > -	case SAM_STAT_BUSY:
+> > -		result |= SAM_STAT_BUSY;
+> > -		break;
+> >   	case SAM_STAT_TASK_SET_FULL:
+> > -
+> >   		/*
+> >   		 * If a LUN reports SAM_STAT_TASK_SET_FULL, then the LUN queue
+> >   		 * depth needs to be adjusted to the exact number of
+> >   		 * outstanding commands the LUN can handle at any given time.
+> >   		 */
+> >   		ufshcd_adjust_lun_qdepth(lrbp->cmd);
+> > -		result |= SAM_STAT_TASK_SET_FULL;
+> > -		break;
+> > +	case SAM_STAT_BUSY:
+> >   	case SAM_STAT_TASK_ABORTED:
+> > -		result |= SAM_STAT_TASK_ABORTED;
+> > +		result |= scsi_status;
+> > +		ufshcd_copy_sense_data(lrbp);
+> >   		break;
+> >   	default:
+> >   		result |= DID_ERROR << 16;
 > >
-> > I don't see the response UPIU data of the last command response is
-> > cleared anywhere in the driver. This means its quite possible that if
-> > the current command failed (and if it is using the same tag as the last
-> > succeeded command) with the OCS_FATAL_ERROR then response UPIU (pointed
-> > by lrbp->ucd_rsp_ptr) content may be still the same as the last one. If
-> > we ensure to clear the response UPIU data after every command completion
-> > then only we can rely on the response  UPIU content in case of fatal
-> > errors.
-> >
-> > Regards,
-> > Subhash
-> >>           if (result) {
-> >> @@ -1229,7 +1229,6 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
-> >> struct ufshcd_lrb *lrbp)
-> >>       case OCS_MISMATCH_DATA_BUF_SIZE:
-> >>       case OCS_MISMATCH_RESP_UPIU_SIZE:
-> >>       case OCS_PEER_COMM_FAILURE:
-> >> -    case OCS_FATAL_ERROR:
-> >>       default:
-> >>           result |= DID_ERROR << 16;
-> >>           dev_err(hba->dev,
-> >
-> 
 > 
 > --
 > Regards,
