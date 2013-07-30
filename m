@@ -1,34 +1,52 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Tue, 30 Jul 2013 05:33:11 +0000
-Message-ID: <bug-60644-11613-cgQ41M4nXA@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:55612 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754285Ab3G3FdN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Jul 2013 01:33:13 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 9C414201B2
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jul 2013 05:33:12 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id B50522017C
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jul 2013 05:33:11 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: [PATCH V5 0/4] scsi: ufs: Improve UFS error handling
+Date: Tue, 30 Jul 2013 11:15:51 +0530
+Message-ID: <1375163155-1473-1-git-send-email-sthumma@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+The first patch fixes many issues with current task management handling
+in UFSHCD driver. Others improve error handling in various scenarios.
 
---- Comment #10 from liveaxle@live.com ---
-Created attachment 107041
-  --> https://bugzilla.kernel.org/attachment.cgi?id=107041&action=edit
-Journal 1
+These patches are rebased on:
+[PATCH 9/9] drivers/scsi/ufs: don't check resource with devm_ioremap_resource
+
+Changes from v4:
+	- Addressed comments from Seungwon Jeon on V3
+	- Updated with proper locking while ufshcd state changes
+	- Retained LUN reset instead of device reset with DME_END_POINT_RESET
+	- Removed error handling decisions dependent on OCS value
+	- Simplified fatal error handling to abort the requests first
+	  and then carry out reset.
+Changes from v3:
+	- Rebased.
+Changes from v2:
+	- [PATCH V3 1/4]: Make the task management command task tag unique
+	  across SCSI/NOP/QUERY request tags.
+	- [PATCH V3 3/4]: While handling device/host reset, wait for
+	  pending fatal handler to return if running.
+Changes from v1:
+	- [PATCH V2 1/4]: Fix a race condition because of overloading
+	  outstanding_tasks variable to lock the slots. A new variable
+	  tm_slots_in_use will track which slots are in use by the driver.
+	- [PATCH V2 2/4]: Commit text update to clarify the hardware race
+	  with more details.
+	- [PATCH V2 3/4]: Minor cleanup and rebase
+	- [PATCH V2 4/4]: Fix a bug - sleeping in atomic context
+
+Sujit Reddy Thumma (4):
+  scsi: ufs: Fix broken task management command implementation
+  scsi: ufs: Fix hardware race conditions while aborting a command
+  scsi: ufs: Fix device and host reset methods
+  scsi: ufs: Improve UFS fatal error handling
+
+ drivers/scsi/ufs/ufshcd.c |  684 ++++++++++++++++++++++++++++++++-------------
+ drivers/scsi/ufs/ufshcd.h |   20 +-
+ 2 files changed, 501 insertions(+), 203 deletions(-)
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation.
