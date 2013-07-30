@@ -1,246 +1,121 @@
 From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: RE: [PATCH 6/7] scsi: ufs: add operation for the uic power mode change
-Date: Tue, 30 Jul 2013 22:02:19 +0900
-Message-ID: <002901ce8d25$065f2c50$131d84f0$%jun@samsung.com>
+Subject: RE: [PATCH 1/7] scsi: ufs: amend the ocs handling with fatal error
+Date: Tue, 30 Jul 2013 22:02:54 +0900
+Message-ID: <002a01ce8d25$1b0e4730$512ad590$%jun@samsung.com>
 References: <1374280885-11526-1-git-send-email-mita@fixstars.com>
- <002101ce8a06$dac280e0$904782a0$%jun@samsung.com>
- <51F63BAE.4080709@codeaurora.org>
+ <1374280885-11526-2-git-send-email-mita@fixstars.com>
+ <001c01ce8a06$5bcbc1c0$13634540$%jun@samsung.com>
+ <51F608F4.9020107@codeaurora.org> <51F6493C.3020105@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:31905 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753105Ab3G3NCW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jul 2013 09:02:22 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+Received: from mailout4.samsung.com ([203.254.224.34]:42608 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753628Ab3G3NC4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jul 2013 09:02:56 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MQR00FXU2VWHP20@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 30 Jul 2013 22:02:21 +0900 (KST)
-In-reply-to: <51F63BAE.4080709@codeaurora.org>
+ with ESMTP id <0MQR001FW2WVO430@mailout4.samsung.com> for
+ linux-scsi@vger.kernel.org; Tue, 30 Jul 2013 22:02:55 +0900 (KST)
+In-reply-to: <51F6493C.3020105@codeaurora.org>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Subhash Jadavani' <subhashj@codeaurora.org>
+To: 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, 'Subhash Jadavani' <subhashj@codeaurora.org>
 Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-On Mon, July 29, 2013, Subhash Jadavani wrote:
-> Change looks good except few minor comments.
-Thank you for comments.
+On Mon, July 29, 2013, Sujit Reddy Thumma wrote:
+> On 7/29/2013 11:47 AM, Subhash Jadavani wrote:
+> > On 7/26/2013 7:15 PM, Seungwon Jeon wrote:
+> >> Fatal error in OCS(overall command status) field indicates
+> >> error conditions which is not covered by UFSHCI.
+> >> It means that host cannot define the result of command status
+> >> and therefore host may need to check transfer response UPIU's
+> >> response and status field.
+> >> It was actually found that 'CHECK CONDITION' is stored in status
+> >> field of UPIU where OCS is 'FATAL ERROR'.
+> 
+> It looks like you are assuming that there will be some kind of response
+> from the device. But the spec. mentions - "OCS_FATAL ERROR: within host
+> controller that is not covered by the error conditions described above
+> in this table."
+Yes, error interrupt doesn't happen actually.
 
 > 
-> On 7/26/2013 7:18 PM, Seungwon Jeon wrote:
-> > Setting PA_PWRMode using DME_SET triggers the power mode
-> > change. And then the result will be given by the HCS.UPMCRS.
-> > This operation should be done atomically.
-> >
-> > Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> > ---
-> >   drivers/scsi/ufs/ufshcd.c |   80 ++++++++++++++++++++++++++++++++++++++++++--
-> >   drivers/scsi/ufs/ufshcd.h |    3 ++
-> >   drivers/scsi/ufs/ufshci.h |   12 +++++++
-> >   3 files changed, 91 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 8277c40..ffda72d 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -36,9 +36,11 @@
-> >   #include <linux/async.h>
-> >
-> >   #include "ufshcd.h"
-> > +#include "unipro.h"
-> >
-> >   #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
-> >   				 UTP_TASK_REQ_COMPL |\
-> > +				 UIC_POWER_MODE |\
-> >   				 UFSHCD_ERROR_MASK)
-> >   /* UIC command timeout, unit: ms */
-> >   #define UIC_CMD_TIMEOUT	500
-> > @@ -359,6 +361,18 @@ static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
-> >   }
-> >
-> >   /**
-> > + * ufshcd_get_upmcrs - Get the power mode change request status
-> > + * @hba: Pointer to adapter instance
-> > + *
-> > + * This function gets the UPMCRS field of HCS register
-> > + * Returns value of UPMCRS field
-> > + */
-> > +static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
-> > +{
-> > +	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) >> 8) & 0x7;
-> > +}
-> > +
-> > +/**
-> >    * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
-> >    * @hba: per adapter instance
-> >    * @uic_cmd: UIC command
-> > @@ -907,6 +921,60 @@ out:
-> >   EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
-> >
-> >   /**
-> > + * ufshcd_uic_change_pwr_mode - Perform the UIC power mode chage
-> > + *				using DME_SET primitives.
-> > + * @hba: per adapter instance
-> > + * @mode: powr mode value
-> > + *
-> > + * Returns 0 on success, non-zero value on failure
-> > + */
-> > +int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
-> > +{
-> > +	struct uic_command uic_cmd = {0};
-> > +	struct completion pwr_done;
-> > +	unsigned long flags;
-> > +	u8 status;
-> > +	int ret;
-> > +
-> > +	uic_cmd.command = UIC_CMD_DME_SET;
-> > +	uic_cmd.argument1 = UIC_ARG_MIB(PA_PWRMODE);
-> > +	uic_cmd.argument3 = mode;
-> > +	init_completion(&pwr_done);
-> > +
-> > +	mutex_lock(&hba->uic_cmd_mutex);
-> > +
-> > +	spin_lock_irqsave(hba->host->host_lock, flags);
-> > +	hba->pwr_done = &pwr_done;
-> > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> > +	ret = __ufshcd_send_uic_cmd(hba, &uic_cmd);
-> > +	if (ret) {
-> > +		dev_err(hba->dev, "pwr mode change uic error %d\n", ret);
+> So spec. left everything to implementers on how to trigger this error.
+> Also, it says "within host controller" so ufshcd_is_valid_req_rsp()
+> might fail as well.
 > 
-> we should also print the power "mode" which we were trying to set here.
-> 
-> > +		goto out;
-> > +	}
-> > +
-> > +	if (!wait_for_completion_timeout(hba->pwr_done,
-> > +					 msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
-> > +		dev_err(hba->dev, "pwr mode change completion timeout\n");
-> 
-> we should also print the power "mode" which we were trying to set here.
-Ok with above.
-
-> 
-> > +		ret = -ETIMEDOUT;
-> > +		goto out;
-> > +	}
-> > +
-> > +	status = ufshcd_get_upmcrs(hba);
-> > +	if (status != PWR_LOCAL) {
-> > +		dev_err(hba->dev,
-> > +			"pwr mode change failed, host umpcrs:0x%x\n",
-> > +			status);
-> > +		ret = (status != PWR_OK) ? status : -1;
-> > +	}
-> > +out:
-> > +	spin_lock_irqsave(hba->host->host_lock, flags);
-> > +	hba->pwr_done = NULL;
-> > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> > +	mutex_unlock(&hba->uic_cmd_mutex);
-> > +	return ret;
-> > +}
-> > +
-> > +/**
-> >    * ufshcd_make_hba_operational - Make UFS controller operational
-> >    * @hba: per adapter instance
-> >    *
-> > @@ -1336,16 +1404,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> >   /**
-> >    * ufshcd_uic_cmd_compl - handle completion of uic command
-> >    * @hba: per adapter instance
-> > + * @intr_status: interrupt status generated by the controller
-> >    */
-> > -static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
-> > +static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
-> >   {
-> > -	if (hba->active_uic_cmd) {
-> > +	if ((intr_status & UIC_COMMAND_COMPL) && hba->active_uic_cmd) {
-> >   		hba->active_uic_cmd->argument2 |=
-> >   			ufshcd_get_uic_cmd_result(hba);
-> >   		hba->active_uic_cmd->argument3 =
-> >   			ufshcd_get_dme_attr_val(hba);
-> >   		complete(&hba->active_uic_cmd->done);
-> >   	}
-> > +
-> > +	if ((intr_status & UIC_POWER_MODE) && hba->pwr_done)
-> > +		complete(hba->pwr_done);
-> >   }
-> >
-> >   /**
-> > @@ -1447,8 +1519,8 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
-> >   	if (hba->errors)
-> >   		ufshcd_err_handler(hba);
-> >
-> > -	if (intr_status & UIC_COMMAND_COMPL)
-> > -		ufshcd_uic_cmd_compl(hba);
-> > +	if (intr_status & UFSHCD_UIC_MASK)
-> > +		ufshcd_uic_cmd_compl(hba, intr_status);
-> >
-> >   	if (intr_status & UTP_TASK_REQ_COMPL)
-> >   		ufshcd_tmc_handler(hba);
-> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> > index 50bcd29..246c0e1 100644
-> > --- a/drivers/scsi/ufs/ufshcd.h
-> > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -142,6 +142,7 @@ struct ufshcd_lrb {
-> >    * @uic_cmd_mutex: mutex for uic command
-> >    * @ufshcd_tm_wait_queue: wait queue for task management
-> >    * @tm_condition: condition variable for task management
-> > + * @pwr_done: completion for powr mode change
-> 
-> typo: s/powr/power
-Ok.
+> I couldn't understand why there is a need for a host controller to
+> interpret the SCSI command status and raise an OCS_FATAL_ERROR?
+I feel like OCS values are related to syntax problem except OCS_FATAL_ERROR.
+Basically, host controller may need to refer the Response field[Target Success/Target Failure] of response UPIU.
+It's a overall result from response UPIU. 
+When Response field is 'Target Failure', if host controller updates the OCS field with 'SUCCESS', it's not proper behavior.
+In this case host may refer the Status field of response UPIU to decide the OCS result.
+Of course, it's not clear thing and could depends on host's implementation,
+because there is no obvious description for that.
+But if we consider the way to report UTP error from UFSHCI 8.2.4,
+we can check the Response UPIU for more detailed error condition regardless OCS value.
+Could you check your host side?
 
 Thanks,
 Seungwon Jeon
 
 > 
-> >    * @ufshcd_state: UFSHCD states
-> >    * @intr_mask: Interrupt Mask Bits
-> >    * @feh_workq: Work queue for fatal controller error handling
-> > @@ -180,6 +181,8 @@ struct ufs_hba {
-> >   	wait_queue_head_t ufshcd_tm_wait_queue;
-> >   	unsigned long tm_condition;
-> >
-> > +	struct completion *pwr_done;
-> > +
-> >   	u32 ufshcd_state;
-> >   	u32 intr_mask;
-> >
-> > diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> > index df4901e..d92fd9c 100644
-> > --- a/drivers/scsi/ufs/ufshci.h
-> > +++ b/drivers/scsi/ufs/ufshci.h
-> > @@ -124,6 +124,9 @@ enum {
-> >   #define CONTROLLER_FATAL_ERROR			UFS_BIT(16)
-> >   #define SYSTEM_BUS_FATAL_ERROR			UFS_BIT(17)
-> >
-> > +#define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL |\
-> > +				 UIC_POWER_MODE)
-> > +
-> >   #define UFSHCD_ERROR_MASK	(UIC_ERROR |\
-> >   				DEVICE_FATAL_ERROR |\
-> >   				CONTROLLER_FATAL_ERROR |\
-> > @@ -142,6 +145,15 @@ enum {
-> >   #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
-> >   #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
-> >
-> > +enum {
-> > +	PWR_OK		= 0x0,
-> > +	PWR_LOCAL	= 0x01,
-> > +	PWR_REMOTE	= 0x02,
-> > +	PWR_BUSY	= 0x03,
-> > +	PWR_ERROR_CAP	= 0x04,
-> > +	PWR_FATAL_ERROR	= 0x05,
-> > +};
-> > +
-> >   /* HCE - Host Controller Enable 34h */
-> >   #define CONTROLLER_ENABLE	UFS_BIT(0)
-> >   #define CONTROLLER_DISABLE	0x0
+> If it is clarified by the spec. then we can have generic implementation
+> otherwise I would prefer to make this specific to those host controllers
+> that raise OCS_FATAL_ERROR for CHECK_CONDITION.
 > 
+> >>
+> >> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> >> ---
+> >>   drivers/scsi/ufs/ufshcd.c |    3 +--
+> >>   1 files changed, 1 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> >> index b743bd6..4cf3a2d 100644
+> >> --- a/drivers/scsi/ufs/ufshcd.c
+> >> +++ b/drivers/scsi/ufs/ufshcd.c
+> >> @@ -1199,7 +1199,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+> >> struct ufshcd_lrb *lrbp)
+> >>       switch (ocs) {
+> >>       case OCS_SUCCESS:
+> >> -
+> >> +    case OCS_FATAL_ERROR:
+> >>           /* check if the returned transfer response is valid */
+> >>           result = ufshcd_is_valid_req_rsp(lrbp->ucd_rsp_ptr);
+> >
+> > I don't see the response UPIU data of the last command response is
+> > cleared anywhere in the driver. This means its quite possible that if
+> > the current command failed (and if it is using the same tag as the last
+> > succeeded command) with the OCS_FATAL_ERROR then response UPIU (pointed
+> > by lrbp->ucd_rsp_ptr) content may be still the same as the last one. If
+> > we ensure to clear the response UPIU data after every command completion
+> > then only we can rely on the response  UPIU content in case of fatal
+> > errors.
+> >
+> > Regards,
+> > Subhash
+> >>           if (result) {
+> >> @@ -1229,7 +1229,6 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+> >> struct ufshcd_lrb *lrbp)
+> >>       case OCS_MISMATCH_DATA_BUF_SIZE:
+> >>       case OCS_MISMATCH_RESP_UPIU_SIZE:
+> >>       case OCS_PEER_COMM_FAILURE:
+> >> -    case OCS_FATAL_ERROR:
+> >>       default:
+> >>           result |= DID_ERROR << 16;
+> >>           dev_err(hba->dev,
+> >
+> 
+> 
+> --
+> Regards,
+> Sujit
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
