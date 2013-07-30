@@ -1,51 +1,61 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Ejected Nook (usb mass storage) prevents suspend
-Date: Tue, 30 Jul 2013 13:00:10 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1307301252590.1105-100000@iolanthe.rowland.org>
-References: <1375197142.14458.4.camel@linux-fkkt.site>
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
+Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup
+ / early userspace transition
+Date: Tue, 30 Jul 2013 20:09:43 +0200
+Message-ID: <51F80167.1080004@fastmail.fm>
+References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm> <87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm> <87fvuxdqes.fsf@spindle.srvr.nix> <yq1txjdhree.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1375197142.14458.4.camel-B2T3B9s34ElbnMAlSieJcQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>
-Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, hare-l3A5Bk7waGM@public.gmane.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <yq1txjdhree.fsf@sermon.lab.mkp.net>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Nix <nix@esperi.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 30 Jul 2013, Oliver Neukum wrote:
+On 07/30/2013 01:34 AM, Martin K. Petersen wrote:
+>>>>>> "Nix" == Nix  <nix@esperi.org.uk> writes:
+>
+> Bernd,
+>
+> Nix> I can now confirm that reverting this commit causes this problem to
+> Nix> go away, and my machine boots fine again.
+>
+> Can you please send me the output of sq_inq with your 1.49 firmware?
+>
+> I made a tweak that allowed Nix to boot but we're trying to find a good
+> blacklist trigger. And that's tricky given that Areca allows you
+> manually specify the SCSI model string for each volume...
+>
 
-> On Mon, 2013-07-29 at 10:21 -0400, Alan Stern wrote:
-> > On Mon, 29 Jul 2013, Oliver Neukum wrote:
-> > 
-> > > On Fri, 2013-07-26 at 16:31 -0400, Alan Stern wrote:
-> > > 
-> > > > In addition to my earlier comment, the patch below should be applied.  
-> > > > It will fix your immediate problem, although not in the best way.
-> > > 
-> > > Alan,
-> > > 
-> > > I think your diagnosis is correct, but not the fix.
-> > > This is run even in the runtime case. We might lose
-> > > data if the flush is not done.
-> > 
-> > Actually no, the scsi_bus_suspend_common() routine does not run during 
-> > runtime PM.  It gets called only from scsi_bus_suspend(), 
-> > scsi_bus_freeze(), and scsi_bus_poweroff(), which are all part of 
-> > system sleep.
-> 
-> Well yes, but you handled only the system case that way. The runtime
-> case is still affected.
+Sorry it got a bit late today.
 
-That's why I said the patch would fix the immediate problem but it
-wasn't the best solution.  You do agree that the patch is correct, as
-far as it goes?
+Here it is.
 
-If you would like to handle the problems in sd.c concerning the
-sync-cache and spin-down stuff, that will be fine with me.
+> (wheezy)fslab1:~# sg_inq -v /dev/sdc
+>     inquiry cdb: 12 00 00 00 24 00
+> standard INQUIRY:
+>     inquiry cdb: 12 00 00 00 60 00
+>   PQual=0  Device_type=0  RMB=0  version=0x05  [SPC-3]
+>   [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
+>   SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  BQue=0
+>   EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=1
+>   [RelAdr=0]  WBus16=1  Sync=0  Linked=0  [TranDis=0]  CmdQue=1
+>   [SPI: Clocking=0x3  QAS=0  IUS=0]
+>     length=96 (0x60)   Peripheral device type: disk
+>  Vendor identification: Hitachi
+>  Product identification: HDS724040KLSA80
+>  Product revision level: R001
+>     inquiry cdb: 12 01 00 00 fc 00
+>     inquiry cdb: 12 01 80 00 fc 00
+>  Unit serial number: KRFS2CRAHXJZVD
 
-Alan Stern
+Besides the firmware, the difference might be that I'm exporting single 
+disks without any areca-raidset in between.
+I can try to confirm that tomorrow, I just need the system as it is till 
+tomorrow noon.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Cheers,
+Bernd
