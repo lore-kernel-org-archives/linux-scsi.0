@@ -1,40 +1,42 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: Ejected Nook (usb mass storage) prevents suspend
-Date: Tue, 30 Jul 2013 21:26:38 +0200
-Message-ID: <1375212398.17175.2.camel@linux-fkkt.site>
-References: <Pine.LNX.4.44L0.1307301252590.1105-100000@iolanthe.rowland.org>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup / early userspace transition
+Date: Tue, 30 Jul 2013 22:20:55 +0100
+Message-ID: <877gg7n3rc.fsf@spindle.srvr.nix>
+References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm>
+	<87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm>
+	<87fvuxdqes.fsf@spindle.srvr.nix> <51F708A4.9090207@interlog.com>
+	<87ob9koogb.fsf@spindle.srvr.nix> <51F80294.50804@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52424 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751040Ab3G3T0k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Jul 2013 15:26:40 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1307301252590.1105-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <51F80294.50804@fastmail.fm> (Bernd Schubert's message of "Tue,
+	30 Jul 2013 20:14:44 +0200")
+Sender: stable-owner@vger.kernel.org
+To: Bernd Schubert <bernd.schubert@fastmail.fm>
+Cc: Douglas Gilbert <dgilbert@interlog.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, nick.cheng@areca.com.tw, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Andy Lutomirski <luto@amacapital.net>, linux-usb@vger.kernel.org, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, hare@suse.de
 
-On Tue, 2013-07-30 at 13:00 -0400, Alan Stern wrote:
+On 30 Jul 2013, Bernd Schubert told this:
 
-> That's why I said the patch would fix the immediate problem but it
-> wasn't the best solution.  You do agree that the patch is correct, as
-> far as it goes?
+> On 07/30/2013 02:56 AM, Nix wrote:
+>> On 30 Jul 2013, Douglas Gilbert outgrape:
+>>
+>>> Please supply the information that Martin Petersen asked
+>>> for.
+>>
+>> Did it in private IRC (the advantage of working for the same division of
+>> the same company!)
+>>
+>> I didn't realise the original fix was actually implemented to allow
+>> Bernd, with a different Areca controller, to boot... obviously, in that
+>> situation, reversion is wrong, since that would just replace one won't-
+>> boot situation with another.
+>
+> Unless there is very simple fix the commit should reverted, imho. It
+> would better then to remove write-same support from the md-layer.
 
-It will allow the system to sleep. But it seems to me that
-a genuine error while flushing a drive's cache is one of the
-few things actual worth aborting a system suspend for.
+I'm not using md on that machine, just LVM. Our suspicion is that ext4
+is doing a WRITE SAME for some reason.
 
-> If you would like to handle the problems in sd.c concerning the
-> sync-cache and spin-down stuff, that will be fine with me.
-
-Yes. The problem is not limited to USB.
-
-	Regards
-		Oliver
-
-
-
-
+-- 
+NULL && (void)
