@@ -1,30 +1,51 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: sparc ESP SCSI error handling BUG+hang
-Date: Tue, 30 Jul 2013 12:58:44 +0300 (EEST)
-Message-ID: <alpine.SOC.1.00.1307301257120.260@math.ut.ee>
-References: <alpine.SOC.1.00.1304211357540.2145@math.ut.ee> <20130729.153223.2291945302397524459.davem@davemloft.net> <20130729.161532.1928549790091477295.davem@davemloft.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
+Date: Tue, 30 Jul 2013 10:03:46 +0000
+Message-ID: <bug-60644-11613-SY3kBt9fQW@https.bugzilla.kernel.org/>
+References: <bug-60644-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:40887 "EHLO smtp2.it.da.ut.ee"
+Received: from mail.kernel.org ([198.145.19.201]:39743 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758729Ab3G3J6t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Jul 2013 05:58:49 -0400
-In-Reply-To: <20130729.161532.1928549790091477295.davem@davemloft.net>
+	id S932164Ab3G3KDu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jul 2013 06:03:50 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 0F1142043C
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jul 2013 10:03:49 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 9EC122045A
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jul 2013 10:03:46 +0000 (UTC)
+In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-> > Therefore I think the fix is going to involve adding a member to
-> > "struct esp_cmd_entry" called "->orig_tag[]" so that we can see what
-> > the original tag[] values were at esp_alloc_lun_tag() time.
-> 
-> Please try this patch:
+https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
-It works on 3 consecutive boots, thank you!
+--- Comment #11 from Sreekanth Reddy <sreekanth.reddy@lsi.com> ---
+Hi,
 
-Tested-by: Meelis Roos <mroos@linux.ee>
+Thanks for providing the logs.
+
+>From the logs what I observed is that controller is going in to the non
+operational state and so we are seeing the messages "mpt2sas0:
+_base_fault_reset_work : SAS host is non-operational !!!!". 
+
+So once the controller stays in this state then driver will remove this
+controller's host entry from the scsi mid layer ( i.e. HBA's host is removed
+from the /sys/class/scsi_host/hostX). And hence your are observing that all the
+drivers attached to this controller are dropped.
+
+But still I am not sure why controller enters in to the non-operational state. 
+So,  I thought to reproduce this locally, So can you please help me in
+reproducing this issue i.e. can you please tell me the steps and which utils
+with cmds your are used to reproduce this issue.
+
+Regards,
+Sreekanth
 
 -- 
-Meelis Roos (mroos@linux.ee)
+You are receiving this mail because:
+You are watching the assignee of the bug.
