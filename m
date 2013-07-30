@@ -1,22 +1,22 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Tue, 30 Jul 2013 05:26:10 +0000
-Message-ID: <bug-60644-11613-3CCEFjIVjf@https.bugzilla.kernel.org/>
+Date: Tue, 30 Jul 2013 05:33:11 +0000
+Message-ID: <bug-60644-11613-cgQ41M4nXA@https.bugzilla.kernel.org/>
 References: <bug-60644-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:55491 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.19.201]:55612 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752002Ab3G3F0O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Jul 2013 01:26:14 -0400
+	id S1754285Ab3G3FdN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jul 2013 01:33:13 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 6134820169
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jul 2013 05:26:13 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 2401420176
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jul 2013 05:26:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C414201B2
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jul 2013 05:33:12 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id B50522017C
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jul 2013 05:33:11 +0000 (UTC)
 In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,14 +24,10 @@ To: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
---- Comment #9 from liveaxle@live.com ---
-Hi .
-
-Ok . Journal for this entire day will be attached . It starts at 12:00 AM 
-
-To save your time , mpt2sas errors start at (03:19:26) mark .
-
-Thank you .
+--- Comment #10 from liveaxle@live.com ---
+Created attachment 107041
+  --> https://bugzilla.kernel.org/attachment.cgi?id=107041&action=edit
+Journal 1
 
 -- 
 You are receiving this mail because:
