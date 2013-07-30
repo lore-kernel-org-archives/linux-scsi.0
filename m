@@ -1,25 +1,25 @@
 From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: RE: [PATCH 4/7] scsi: ufs: add dme configuration primitives
-Date: Tue, 30 Jul 2013 22:02:01 +0900
-Message-ID: <002801ce8d24$fb743880$f25ca980$%jun@samsung.com>
+Subject: RE: [PATCH 6/7] scsi: ufs: add operation for the uic power mode change
+Date: Tue, 30 Jul 2013 22:02:19 +0900
+Message-ID: <002901ce8d25$065f2c50$131d84f0$%jun@samsung.com>
 References: <1374280885-11526-1-git-send-email-mita@fixstars.com>
- <001f01ce8a06$b30af640$1920e2c0$%jun@samsung.com>
- <51F634D9.8080503@codeaurora.org>
+ <002101ce8a06$dac280e0$904782a0$%jun@samsung.com>
+ <51F63BAE.4080709@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:42258 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084Ab3G3NCD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jul 2013 09:02:03 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+Received: from mailout3.samsung.com ([203.254.224.33]:31905 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753105Ab3G3NCW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jul 2013 09:02:22 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MQR00G2J2V55G80@mailout4.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 30 Jul 2013 22:02:02 +0900 (KST)
-In-reply-to: <51F634D9.8080503@codeaurora.org>
+ with ESMTP id <0MQR00FXU2VWHP20@mailout3.samsung.com> for
+ linux-scsi@vger.kernel.org; Tue, 30 Jul 2013 22:02:21 +0900 (KST)
+In-reply-to: <51F63BAE.4080709@codeaurora.org>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -27,249 +27,219 @@ To: 'Subhash Jadavani' <subhashj@codeaurora.org>
 Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
 On Mon, July 29, 2013, Subhash Jadavani wrote:
-> On 7/26/2013 7:17 PM, Seungwon Jeon wrote:
-> > Implements to support GET and SET operations of the DME.
-> > These operations are used to configure the behavior of
-> > the UNIPRO. Along with basic operation, {Peer/AttrSetType}
-> > can be mixed.
+> Change looks good except few minor comments.
+Thank you for comments.
+
+> 
+> On 7/26/2013 7:18 PM, Seungwon Jeon wrote:
+> > Setting PA_PWRMode using DME_SET triggers the power mode
+> > change. And then the result will be given by the HCS.UPMCRS.
+> > This operation should be done atomically.
 > >
 > > Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 > > ---
-> >   drivers/scsi/ufs/ufshcd.c |   88 +++++++++++++++++++++++++++++++++++++++++++++
-> >   drivers/scsi/ufs/ufshcd.h |   51 ++++++++++++++++++++++++++
-> >   drivers/scsi/ufs/ufshci.h |    6 +++
-> >   3 files changed, 145 insertions(+), 0 deletions(-)
+> >   drivers/scsi/ufs/ufshcd.c |   80 ++++++++++++++++++++++++++++++++++++++++++--
+> >   drivers/scsi/ufs/ufshcd.h |    3 ++
+> >   drivers/scsi/ufs/ufshci.h |   12 +++++++
+> >   3 files changed, 91 insertions(+), 4 deletions(-)
 > >
 > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 7152ec4..8277c40 100644
+> > index 8277c40..ffda72d 100644
 > > --- a/drivers/scsi/ufs/ufshcd.c
 > > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -188,6 +188,18 @@ static inline int ufshcd_get_uic_cmd_result(struct ufs_hba *hba)
+> > @@ -36,9 +36,11 @@
+> >   #include <linux/async.h>
+> >
+> >   #include "ufshcd.h"
+> > +#include "unipro.h"
+> >
+> >   #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
+> >   				 UTP_TASK_REQ_COMPL |\
+> > +				 UIC_POWER_MODE |\
+> >   				 UFSHCD_ERROR_MASK)
+> >   /* UIC command timeout, unit: ms */
+> >   #define UIC_CMD_TIMEOUT	500
+> > @@ -359,6 +361,18 @@ static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
 > >   }
 > >
 > >   /**
-> > + * ufshcd_get_dme_attr_val - Get the value of attribute returned by UIC command
+> > + * ufshcd_get_upmcrs - Get the power mode change request status
 > > + * @hba: Pointer to adapter instance
 > > + *
-> > + * This function gets UIC command argument3
-> > + * Returns 0 on success, non zero value on error
+> > + * This function gets the UPMCRS field of HCS register
+> > + * Returns value of UPMCRS field
 > > + */
-> > +static inline u32 ufshcd_get_dme_attr_val(struct ufs_hba *hba)
+> > +static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
 > > +{
-> > +	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3);
+> > +	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) >> 8) & 0x7;
 > > +}
 > > +
 > > +/**
-> >    * ufshcd_is_valid_req_rsp - checks if controller TR response is valid
-> >    * @ucd_rsp_ptr: pointer to response UPIU
-> >    *
-> > @@ -821,6 +833,80 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
-> >   }
+> >    * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
+> >    * @hba: per adapter instance
+> >    * @uic_cmd: UIC command
+> > @@ -907,6 +921,60 @@ out:
+> >   EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
 > >
 > >   /**
-> > + * ufshcd_dme_set_attr - UIC command for DME_SET, DME_PEER_SET
+> > + * ufshcd_uic_change_pwr_mode - Perform the UIC power mode chage
+> > + *				using DME_SET primitives.
 > > + * @hba: per adapter instance
-> > + * @attr_sel: uic command argument1
-> > + * @attr_set: attribute set type as uic command argument2
-> > + * @mib_val: setting value as uic command argument3
-> > + * @peer: indicate wherter peer or non-peer
-> 
-> typo: s/wtherter/whether
-> This would sound better: s/non-peer/local
-Ok.
-
-> 
-> Do above for ufshcd_dme_get_attr() function as well.
+> > + * @mode: powr mode value
 > > + *
 > > + * Returns 0 on success, non-zero value on failure
 > > + */
-> > +int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
-> > +			u8 attr_set, u32 mib_val, u8 peer)
+> > +int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
 > > +{
 > > +	struct uic_command uic_cmd = {0};
-> > +	static const char *const action[] = {
-> > +		"dme-set",
-> > +		"dme-peer-set"
-> > +	};
-> > +	const char *set = action[!!peer];
+> > +	struct completion pwr_done;
+> > +	unsigned long flags;
+> > +	u8 status;
 > > +	int ret;
 > > +
-> > +	uic_cmd.command = peer ?
-> > +		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
-> > +	uic_cmd.argument1 = attr_sel;
-> > +	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
-> > +	uic_cmd.argument3 = mib_val;
+> > +	uic_cmd.command = UIC_CMD_DME_SET;
+> > +	uic_cmd.argument1 = UIC_ARG_MIB(PA_PWRMODE);
+> > +	uic_cmd.argument3 = mode;
+> > +	init_completion(&pwr_done);
 > > +
-> > +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-> > +	if (ret)
-> > +		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
-> > +			set, UIC_GET_ATTR_ID(attr_sel), ret);
-> 
-> Its also good to print the "mib_val" which we were trying to set. It
-> might be possible that DME_SET failed because we are trying to set out
-> of range value to MIB attribute.
-I'll add it.
-
-> 
+> > +	mutex_lock(&hba->uic_cmd_mutex);
 > > +
-> > +	return ret;
-> > +}
-> > +EXPORT_SYMBOL_GPL(ufshcd_dme_set_attr);
-> > +
-> > +/**
-> > + * ufshcd_dme_get_attr - UIC command for DME_GET, DME_PEER_GET
-> > + * @hba: per adapter instance
-> > + * @attr_sel: uic command argument1
-> > + * @mib_val: the value of the attribute as returned by the UIC command
-> > + * @peer: indicate wherter peer or non-peer
-> > + *
-> > + * Returns 0 on success, non-zero value on failure
-> > + */
-> > +int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
-> > +			u32 *mib_val, u8 peer)
-> > +{
-> > +	struct uic_command uic_cmd = {0};
-> > +	static const char *const action[] = {
-> > +		"dme-get",
-> > +		"dme-peer-get"
-> > +	};
-> > +	const char *get = action[!!peer];
-> > +	int ret;
-> > +
-> > +	uic_cmd.command = peer ?
-> > +		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
-> > +	uic_cmd.argument1 = attr_sel;
-> > +
-> > +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+> > +	spin_lock_irqsave(hba->host->host_lock, flags);
+> > +	hba->pwr_done = &pwr_done;
+> > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> > +	ret = __ufshcd_send_uic_cmd(hba, &uic_cmd);
 > > +	if (ret) {
-> > +		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
-> > +			get, UIC_GET_ATTR_ID(attr_sel), ret);
+> > +		dev_err(hba->dev, "pwr mode change uic error %d\n", ret);
+> 
+> we should also print the power "mode" which we were trying to set here.
+> 
 > > +		goto out;
 > > +	}
 > > +
-> > +	if (mib_val)
-> > +		*mib_val = uic_cmd.argument3;
+> > +	if (!wait_for_completion_timeout(hba->pwr_done,
+> > +					 msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
+> > +		dev_err(hba->dev, "pwr mode change completion timeout\n");
+> 
+> we should also print the power "mode" which we were trying to set here.
+Ok with above.
+
+> 
+> > +		ret = -ETIMEDOUT;
+> > +		goto out;
+> > +	}
+> > +
+> > +	status = ufshcd_get_upmcrs(hba);
+> > +	if (status != PWR_LOCAL) {
+> > +		dev_err(hba->dev,
+> > +			"pwr mode change failed, host umpcrs:0x%x\n",
+> > +			status);
+> > +		ret = (status != PWR_OK) ? status : -1;
+> > +	}
 > > +out:
+> > +	spin_lock_irqsave(hba->host->host_lock, flags);
+> > +	hba->pwr_done = NULL;
+> > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> > +	mutex_unlock(&hba->uic_cmd_mutex);
 > > +	return ret;
 > > +}
-> > +EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
 > > +
 > > +/**
 > >    * ufshcd_make_hba_operational - Make UFS controller operational
 > >    * @hba: per adapter instance
 > >    *
-> > @@ -1256,6 +1342,8 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
-> >   	if (hba->active_uic_cmd) {
+> > @@ -1336,16 +1404,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+> >   /**
+> >    * ufshcd_uic_cmd_compl - handle completion of uic command
+> >    * @hba: per adapter instance
+> > + * @intr_status: interrupt status generated by the controller
+> >    */
+> > -static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
+> > +static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
+> >   {
+> > -	if (hba->active_uic_cmd) {
+> > +	if ((intr_status & UIC_COMMAND_COMPL) && hba->active_uic_cmd) {
 > >   		hba->active_uic_cmd->argument2 |=
 > >   			ufshcd_get_uic_cmd_result(hba);
-> > +		hba->active_uic_cmd->argument3 =
-> > +			ufshcd_get_dme_attr_val(hba);
+> >   		hba->active_uic_cmd->argument3 =
+> >   			ufshcd_get_dme_attr_val(hba);
+> >   		complete(&hba->active_uic_cmd->done);
+> >   	}
+> > +
+> > +	if ((intr_status & UIC_POWER_MODE) && hba->pwr_done)
+> > +		complete(hba->pwr_done);
+> >   }
+> >
+> >   /**
+> > @@ -1447,8 +1519,8 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+> >   	if (hba->errors)
+> >   		ufshcd_err_handler(hba);
+> >
+> > -	if (intr_status & UIC_COMMAND_COMPL)
+> > -		ufshcd_uic_cmd_compl(hba);
+> > +	if (intr_status & UFSHCD_UIC_MASK)
+> > +		ufshcd_uic_cmd_compl(hba, intr_status);
+> >
+> >   	if (intr_status & UTP_TASK_REQ_COMPL)
+> >   		ufshcd_tmc_handler(hba);
+> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> > index 50bcd29..246c0e1 100644
+> > --- a/drivers/scsi/ufs/ufshcd.h
+> > +++ b/drivers/scsi/ufs/ufshcd.h
+> > @@ -142,6 +142,7 @@ struct ufshcd_lrb {
+> >    * @uic_cmd_mutex: mutex for uic command
+> >    * @ufshcd_tm_wait_queue: wait queue for task management
+> >    * @tm_condition: condition variable for task management
+> > + * @pwr_done: completion for powr mode change
 > 
-> We can optimize here by reading the dme_attribute value only if
-> active_uic_cmd->command is set to DME_GET or DME_PEER_GET. For all other
-> DME commands, meaning of this is "reserved" for read.
-Right, you have a point.
-But when considering the access of 'hba->active_uic_cmd->command" every time and additional 'branch statement',
-it looks like no difference in terms of the optimization.
-Reading the dme_attribute value could be trivial thing.
-
-> Also, i guess reading of the argument2 and argument3 registers can be
-> moved to ufshcd_wait_for_uic_cmd() function (process context) intead of
-> interrupt context.
-Yes, it may be possible.
-But I wanted to update the result of uic command as soon as IS.UCCS occurs and simplify error handling.
+> typo: s/powr/power
+Ok.
 
 Thanks,
 Seungwon Jeon
 
 > 
-> >   		complete(&hba->active_uic_cmd->done);
-> >   	}
-> >   }
-> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> > index 49590ee..50bcd29 100644
-> > --- a/drivers/scsi/ufs/ufshcd.h
-> > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -199,6 +199,11 @@ int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
-> >   			unsigned int);
-> >   void ufshcd_remove(struct ufs_hba *);
+> >    * @ufshcd_state: UFSHCD states
+> >    * @intr_mask: Interrupt Mask Bits
+> >    * @feh_workq: Work queue for fatal controller error handling
+> > @@ -180,6 +181,8 @@ struct ufs_hba {
+> >   	wait_queue_head_t ufshcd_tm_wait_queue;
+> >   	unsigned long tm_condition;
 > >
-> > +extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
-> > +			       u8 attr_set, u32 mib_val, u8 peer);
-> > +extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
-> > +			       u32 *mib_val, u8 peer);
+> > +	struct completion *pwr_done;
 > > +
-> >   /**
-> >    * ufshcd_hba_stop - Send controller to reset state
-> >    * @hba: per adapter instance
-> > @@ -208,4 +213,50 @@ static inline void ufshcd_hba_stop(struct ufs_hba *hba)
-> >   	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
-> >   }
+> >   	u32 ufshcd_state;
+> >   	u32 intr_mask;
 > >
-> > +/* UIC command interfaces for DME primitives */
-> > +#define DME_LOCAL	0
-> > +#define DME_PEER	1
-> > +#define ATTR_SET_NOR	0	/* NORMAL */
-> > +#define ATTR_SET_ST	1	/* STATIC */
-> > +
-> > +static inline int ufshcd_dme_set(struct ufs_hba *hba, u32 attr_sel,
-> > +				 u32 mib_val)
-> > +{
-> > +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
-> > +				   mib_val, DME_LOCAL);
-> > +}
-> > +
-> > +static inline int ufshcd_dme_st_set(struct ufs_hba *hba, u32 attr_sel,
-> > +				    u32 mib_val)
-> > +{
-> > +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
-> > +				   mib_val, DME_LOCAL);
-> > +}
-> > +
-> > +static inline int ufshcd_dme_peer_set(struct ufs_hba *hba, u32 attr_sel,
-> > +				      u32 mib_val)
-> > +{
-> > +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
-> > +				   mib_val, DME_PEER);
-> > +}
-> > +
-> > +static inline int ufshcd_dme_peer_st_set(struct ufs_hba *hba, u32 attr_sel,
-> > +					 u32 mib_val)
-> > +{
-> > +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
-> > +				   mib_val, DME_PEER);
-> > +}
-> > +
-> > +static inline int ufshcd_dme_get(struct ufs_hba *hba,
-> > +				 u32 attr_sel, u32 *mib_val)
-> > +{
-> > +	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_LOCAL);
-> > +}
-> > +
-> > +static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
-> > +				      u32 attr_sel, u32 *mib_val)
-> > +{
-> > +	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
-> > +}
-> > +
-> >   #endif /* End of Header */
 > > diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> > index a8f69cc..df4901e 100644
+> > index df4901e..d92fd9c 100644
 > > --- a/drivers/scsi/ufs/ufshci.h
 > > +++ b/drivers/scsi/ufs/ufshci.h
-> > @@ -191,6 +191,12 @@ enum {
-> >   #define CONFIG_RESULT_CODE_MASK		0xFF
-> >   #define GENERIC_ERROR_CODE_MASK		0xFF
+> > @@ -124,6 +124,9 @@ enum {
+> >   #define CONTROLLER_FATAL_ERROR			UFS_BIT(16)
+> >   #define SYSTEM_BUS_FATAL_ERROR			UFS_BIT(17)
 > >
-> > +#define UIC_ARG_MIB_SEL(attr, sel)	((((attr) & 0xFFFF) << 16) |\
-> > +					 ((sel) & 0xFFFF))
-> > +#define UIC_ARG_MIB(attr)		UIC_ARG_MIB_SEL(attr, 0)
-> > +#define UIC_ARG_ATTR_TYPE(t)		(((t) & 0xFF) << 16)
-> > +#define UIC_GET_ATTR_ID(v)		(((v) >> 16) & 0xFFFF)
+> > +#define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL |\
+> > +				 UIC_POWER_MODE)
 > > +
-> >   /* UIC Commands */
-> >   enum {
-> >   	UIC_CMD_DME_GET			= 0x01,
+> >   #define UFSHCD_ERROR_MASK	(UIC_ERROR |\
+> >   				DEVICE_FATAL_ERROR |\
+> >   				CONTROLLER_FATAL_ERROR |\
+> > @@ -142,6 +145,15 @@ enum {
+> >   #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
+> >   #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
+> >
+> > +enum {
+> > +	PWR_OK		= 0x0,
+> > +	PWR_LOCAL	= 0x01,
+> > +	PWR_REMOTE	= 0x02,
+> > +	PWR_BUSY	= 0x03,
+> > +	PWR_ERROR_CAP	= 0x04,
+> > +	PWR_FATAL_ERROR	= 0x05,
+> > +};
+> > +
+> >   /* HCE - Host Controller Enable 34h */
+> >   #define CONTROLLER_ENABLE	UFS_BIT(0)
+> >   #define CONTROLLER_DISABLE	0x0
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
