@@ -1,81 +1,52 @@
-From: vaughan <vaughan.cao@oracle.com>
-Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
-Date: Wed, 31 Jul 2013 12:40:16 +0800
-Message-ID: <51F89530.8050908@oracle.com>
-References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com> <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com> <20130722170338.GA15824@logfs.org> <51F144F4.4090509@oracle.com> <51F18BAB.8060600@interlog.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] scsi/isci/port_config: Fix a infinite loop.
+Date: Wed, 31 Jul 2013 09:35:50 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A534640@IRSMSX105.ger.corp.intel.com>
+References: <1374029641-12649-1-git-send-email-yuxinghai@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <51F18BAB.8060600@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: JBottomley@parallels.com, =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:26977 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758064Ab3GaJgd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jul 2013 05:36:33 -0400
+In-Reply-To: <1374029641-12649-1-git-send-email-yuxinghai@cn.fujitsu.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Xinghai Yu <yuxinghai@cn.fujitsu.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/26/2013 04:33 AM, Douglas Gilbert wrote:
-> On 13-07-25 11:32 AM, vaughan wrote:
->> On 07/23/2013 01:03 AM, J=C3=B6rn Engel wrote:
->>> On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
->>>> There is a race when open sg with O_EXCL flag. Also a race may
->>>> happen between
->>>> sg_open and sg_remove.
->>>>
->>>> Changes from v4:
->>>>   * [3/4] use ERR_PTR series instead of adding another parameter i=
-n
->>>> sg_add_sfp
->>>>   * [4/4] fix conflict for cherry-pick from v3.
->>>>
->>>> Changes from v3:
->>>>   * release o_sem in sg_release(), not in sg_remove_sfp().
->>>>   * not set exclude with sfd_lock held.
->>>>
->>>> Vaughan Cao (4):
->>>>    [SCSI] sg: use rwsem to solve race during exclusive open
->>>>    [SCSI] sg: no need sg_open_exclusive_lock
->>>>    [SCSI] sg: checking sdp->detached isn't protected when open
->>>>    [SCSI] sg: push file descriptor list locking down to per-device
->>>>      locking
->>>>
->>>>   drivers/scsi/sg.c | 178
->>>> +++++++++++++++++++++++++-----------------------------
->>>>   1 file changed, 83 insertions(+), 95 deletions(-)
->>> Patchset looks good to me, although I didn't test it on hardware ye=
-t.
->>> Signed-off-by: Joern Engel <joern@logfs.org>
->>>
->>> James, care to pick this up?
->>>
->>> J=C3=B6rn
->> Hi James,
->>
->> sg driver has two races happen in
->>   a) exclusive open and non-exclusive open
->>   b) sg removal and sg open
->> I explained the scenario detail in the separate patches. I did test
->> those patches and
->> J=C3=B6rn has reviewed them.  I got no response from Doug Gilbert fo=
-r a long
->> time.
->> Would you care to pick these up?
->
-> Hi,
-> Your patches applied with a little noise to lk 3.10.2 and
-> gave this warning from the build.
->
->   CC [M]  drivers/scsi/sg.o
-> drivers/scsi/sg.c: In function =E2=80=98sg_open=E2=80=99:
-> drivers/scsi/sg.c:242:6: warning: unused variable =E2=80=98res=E2=80=99
-> [-Wunused-variable]
->
-> I'll keep testing ...
-Hi Doug,
+On Wednesday, July 17, 2013 4:54 AM Xinghai Yu <yuxinghai@cn.fujitsu.com> wrote:
+> 
+> It seems the "phy_index++;" have been placed in wrong place, without it
+> the while circle up will do a infinite loop.
+> 
+> Signed-off-by: Xinghai Yu <yuxinghai@cn.fujitsu.com>
 
-Can I ask how about the test result?
+Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
 
-Thanks,
-Vaughan
->
-> Doug Gilbert
->
+> ---
+>  drivers/scsi/isci/port_config.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/isci/port_config.c b/drivers/scsi/isci/port_config.c
+> index cd962da..85c77f6 100644
+> --- a/drivers/scsi/isci/port_config.c
+> +++ b/drivers/scsi/isci/port_config.c
+> @@ -311,9 +311,9 @@ sci_mpc_agent_validate_phy_configuration(struct
+> isci_host *ihost,
+>  					      &ihost->phys[phy_index]);
+> 
+>  			assigned_phy_mask |= (1 << phy_index);
+> +			phy_index++;
+>  		}
+> 
+> -		phy_index++;
+>  	}
+> 
+>  	return sci_port_configuration_agent_validate_ports(ihost, port_agent);
+> --
+> 1.7.1
+
