@@ -1,169 +1,110 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 7/7] scsi: ufs: configure the attribute for power mode
-Date: Wed, 31 Jul 2013 18:58:26 +0530
-Message-ID: <51F910FA.30804@codeaurora.org>
-References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <002201ce8a06$fad20db0$f0762910$%jun@samsung.com>
+From: Asias He <asias@redhat.com>
+Subject: [PATCH] virtio-scsi: Fix virtqueue affinity setup
+Date: Wed, 31 Jul 2013 22:17:59 +0800
+Message-ID: <1375280279-7595-1-git-send-email-asias@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:45385 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755268Ab3GaN2d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jul 2013 09:28:33 -0400
-In-Reply-To: <002201ce8a06$fad20db0$f0762910$%jun@samsung.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, stable@vger.kernel.org, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-Change looks good (except one minor question).
+vscsi->num_queues counts the number of request virtqueue which does not
+include the control and event virtqueue. It is wrong to subtract
+VIRTIO_SCSI_VQ_BASE from vscsi->num_queues.
 
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+This patch fixes the following panic.
 
-On 7/26/2013 7:19 PM, Seungwon Jeon wrote:
-> UIC attributes can be set with using DME_SET command for
-> power mode change. For configuration the link capability
-> attributes are used, which is updated after successful
-> link startup.
->
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> ---
->   drivers/scsi/ufs/ufshcd.c |   74 +++++++++++++++++++++++++++++++++++++++++++-
->   drivers/scsi/ufs/unipro.h |   21 +++++++++++++
->   2 files changed, 93 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index ffda72d..ebdb9ff 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -975,6 +975,70 @@ out:
->   }
->   
->   /**
-> + * ufshcd_config_max_pwr_mode - Set & Change power mode with
-> + *	maximum capability attribute information.
-> + * @hba: per adapter instance
-> + *
-> + * Returns 0 on success, non-zero value on failure
-> + */
-> +static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
-> +{
-> +	enum {RX = 0, TX = 1};
-> +	u32 lanes[] = {1, 1};
-> +	u32 gear[] = {1, 1};
-> +	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
-> +	int i, ret;
-> +
-> +	/* Get the connected lane count */
-> +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
-> +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
-> +
-> +	/*
-> +	 * First, get the maximum gears of HS speed.
-> +	 * If a zero value, it means there is no HSGEAR capability.
-> +	 * Then, get the maximum gears of PWM speed.
-> +	 */
-> +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
-> +	if (!gear[RX]) {
-> +		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
-> +		pwr[RX] = SLOWAUTO_MODE;
-> +	}
-> +
-> +	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
-> +	if (!gear[TX]) {
-> +		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
-> +				    &gear[TX]);
-> +		pwr[TX] = SLOWAUTO_MODE;
-> +	}
-> +
-> +	/*
-> +	 * Configure attributes for power mode change with below.
-> +	 * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
-> +	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
-> +	 * - PA_HSSERIES
-> +	 */
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
-> +	if (pwr[RX] == FASTAUTO_MODE)
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
-> +
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
-> +	if (pwr[TX] == FASTAUTO_MODE)
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
+(qemu) device_del scsi0
 
-Does this mean TX-RX Termination can be enabled only in HS gear mode? 
-Somehow i couldn't find this
+ BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+ IP: [<ffffffff8179b29f>] __virtscsi_set_affinity+0x6f/0x120
+ PGD 0
+ Oops: 0000 [#1] SMP
+ Modules linked in:
+ CPU: 0 PID: 659 Comm: kworker/0:1 Not tainted 3.11.0-rc2+ #1172
+ Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+ Workqueue: kacpi_hotplug _handle_hotplug_event_func
+ task: ffff88007bee1cc0 ti: ffff88007bfe4000 task.ti: ffff88007bfe4000
+ RIP: 0010:[<ffffffff8179b29f>]  [<ffffffff8179b29f>] __virtscsi_set_affinity+0x6f/0x120
+ RSP: 0018:ffff88007bfe5a38  EFLAGS: 00010202
+ RAX: 0000000000000010 RBX: ffff880077fd0d28 RCX: 0000000000000050
+ RDX: 0000000000000000 RSI: 0000000000000246 RDI: 0000000000000000
+ RBP: ffff88007bfe5a58 R08: ffff880077f6ff00 R09: 0000000000000001
+ R10: ffffffff8143e673 R11: 0000000000000001 R12: 0000000000000001
+ R13: ffff880077fd0800 R14: 0000000000000000 R15: ffff88007bf489b0
+ FS:  0000000000000000(0000) GS:ffff88007ea00000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+ CR2: 0000000000000020 CR3: 0000000079f8b000 CR4: 00000000000006f0
+ Stack:
+  ffff880077fd0d28 0000000000000000 ffff880077fd0800 0000000000000008
+  ffff88007bfe5a78 ffffffff8179b37d ffff88007bccc800 ffff88007bccc800
+  ffff88007bfe5a98 ffffffff8179b3b6 ffff88007bccc800 ffff880077fd0d28
+ Call Trace:
+  [<ffffffff8179b37d>] virtscsi_set_affinity+0x2d/0x40
+  [<ffffffff8179b3b6>] virtscsi_remove_vqs+0x26/0x50
+  [<ffffffff8179c7d2>] virtscsi_remove+0x82/0xa0
+  [<ffffffff814cb6b2>] virtio_dev_remove+0x22/0x70
+  [<ffffffff8167ca49>] __device_release_driver+0x69/0xd0
+  [<ffffffff8167cb9d>] device_release_driver+0x2d/0x40
+  [<ffffffff8167bb96>] bus_remove_device+0x116/0x150
+  [<ffffffff81679936>] device_del+0x126/0x1e0
+  [<ffffffff81679a06>] device_unregister+0x16/0x30
+  [<ffffffff814cb889>] unregister_virtio_device+0x19/0x30
+  [<ffffffff814cdad6>] virtio_pci_remove+0x36/0x80
+  [<ffffffff81464ae7>] pci_device_remove+0x37/0x70
+  [<ffffffff8167ca49>] __device_release_driver+0x69/0xd0
+  [<ffffffff8167cb9d>] device_release_driver+0x2d/0x40
+  [<ffffffff8167bb96>] bus_remove_device+0x116/0x150
+  [<ffffffff81679936>] device_del+0x126/0x1e0
+  [<ffffffff8145edfc>] pci_stop_bus_device+0x9c/0xb0
+  [<ffffffff8145f036>] pci_stop_and_remove_bus_device+0x16/0x30
+  [<ffffffff81474a9e>] acpiphp_disable_slot+0x8e/0x150
+  [<ffffffff81474f6a>] hotplug_event_func+0xba/0x1a0
+  [<ffffffff814906c8>] ? acpi_os_release_object+0xe/0x12
+  [<ffffffff81475911>] _handle_hotplug_event_func+0x31/0x70
+  [<ffffffff810b5333>] process_one_work+0x183/0x500
+  [<ffffffff810b66e2>] worker_thread+0x122/0x400
+  [<ffffffff810b65c0>] ? manage_workers+0x2d0/0x2d0
+  [<ffffffff810bc5de>] kthread+0xce/0xe0
+  [<ffffffff810bc510>] ? kthread_freezable_should_stop+0x70/0x70
+  [<ffffffff81ca045c>] ret_from_fork+0x7c/0xb0
+  [<ffffffff810bc510>] ? kthread_freezable_should_stop+0x70/0x70
+ Code: 01 00 00 00 74 59 45 31 e4 83 bb c8 01 00 00 02 74 46 66 2e 0f 1f 84 00 00 00 00 00 49 63 c4 48 c1 e0 04 48 8b bc 0
+3 10 02 00 00 <48> 8b 47 20 48 8b 80 d0 01 00 00 48 8b 40 50 48 85 c0 74 07 be
+ RIP  [<ffffffff8179b29f>] __virtscsi_set_affinity+0x6f/0x120
+  RSP <ffff88007bfe5a38>
+ CR2: 0000000000000020
+ ---[ end trace 99679331a3775f48 ]---
 
-> +
-> +	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
-> +
-> +	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
-> +	if (ret)
-> +		dev_err(hba->dev,
-> +			"pwr_mode: power mode change failed %d\n", ret);
-> +
-> +	return ret;
-> +}
-> +
-> +/**
->    * ufshcd_make_hba_operational - Make UFS controller operational
->    * @hba: per adapter instance
->    *
-> @@ -1754,8 +1818,14 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
->   	int ret;
->   
->   	ret = ufshcd_link_startup(hba);
-> -	if (!ret)
-> -		scsi_scan_host(hba->host);
-> +	if (ret)
-> +		goto out;
-> +
-> +	ufshcd_config_max_pwr_mode(hba);
-> +
-> +	scsi_scan_host(hba->host);
-> +out:
-> +	return;
->   }
->   
->   static struct scsi_host_template ufshcd_driver_template = {
-> diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-> index 3a710eb..0bb8041 100644
-> --- a/drivers/scsi/ufs/unipro.h
-> +++ b/drivers/scsi/ufs/unipro.h
-> @@ -72,6 +72,21 @@
->   #define PA_STALLNOCONFIGTIME	0x15A3
->   #define PA_SAVECONFIGTIME	0x15A4
->   
-> +/* PA power modes */
-> +enum {
-> +	FAST_MODE	= 1,
-> +	SLOW_MODE	= 2,
-> +	FASTAUTO_MODE	= 4,
-> +	SLOWAUTO_MODE	= 5,
-> +	UNCHANGED	= 7,
-> +};
-> +
-> +/* PA TX/RX Frequency Series */
-> +enum {
-> +	PA_HS_MODE_A	= 1,
-> +	PA_HS_MODE_B	= 2,
-> +};
-> +
->   /*
->    * Data Link Layer Attributes
->    */
-> @@ -127,4 +142,10 @@
->   #define T_TC0TXMAXSDUSIZE	0x4060
->   #define T_TC1TXMAXSDUSIZE	0x4061
->   
-> +/* Boolean attribute values */
-> +enum {
-> +	FALSE = 0,
-> +	TRUE,
-> +};
-> +
->   #endif /* _UNIPRO_H_ */
+CC: stable@vger.kernel.org
+Signed-off-by: Asias He <asias@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 2168258..74b88ef 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -751,7 +751,7 @@ static void __virtscsi_set_affinity(struct virtio_scsi *vscsi, bool affinity)
+ 
+ 		vscsi->affinity_hint_set = true;
+ 	} else {
+-		for (i = 0; i < vscsi->num_queues - VIRTIO_SCSI_VQ_BASE; i++)
++		for (i = 0; i < vscsi->num_queues; i++)
+ 			virtqueue_set_affinity(vscsi->req_vqs[i].vq, -1);
+ 
+ 		vscsi->affinity_hint_set = false;
+-- 
+1.8.3.1
