@@ -1,110 +1,52 @@
-From: Asias He <asias@redhat.com>
-Subject: [PATCH] virtio-scsi: Fix virtqueue affinity setup
-Date: Wed, 31 Jul 2013 22:17:59 +0800
-Message-ID: <1375280279-7595-1-git-send-email-asias@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Kernel 3.10.3 "reset SuperSpeed USB device number 2 using
+ xhci_hcd"
+Date: Wed, 31 Jul 2013 10:50:19 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1307311049300.1546-100000@iolanthe.rowland.org>
+References: <yq1d2pzigf9.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, stable@vger.kernel.org, pbonzini@redhat.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:36678 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1760250Ab3GaOuU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jul 2013 10:50:20 -0400
+In-Reply-To: <yq1d2pzigf9.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James.Bottomley@hansenpartnership.com, Stuart Foster <smf.linux@ntlworld.com>, Ed Tomlinson <edt@aei.ca>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, stable@vger.kernel.org
 
-vscsi->num_queues counts the number of request virtqueue which does not
-include the control and event virtqueue. It is wrong to subtract
-VIRTIO_SCSI_VQ_BASE from vscsi->num_queues.
+On Tue, 30 Jul 2013, Martin K. Petersen wrote:
 
-This patch fixes the following panic.
+> James?
+> 
+> [PATCH] SCSI: Don't attempt to send extended INQUIRY command if skip_vpd_pages is set
+> 
+> If a device has the skip_vpd_pages flag set we should simply fail the
+> scsi_get_vpd_page() call.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Acked-by: Alan Stern <stern@rowland.harvard.edu>
+> Tested-by: Stuart Foster <smf.linux@ntlworld.com>
+> Cc: stable@vger.kernel.org
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 3b1ea34..eaa808e 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -1031,6 +1031,9 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+>  {
+>  	int i, result;
+>  
+> +	if (sdev->skip_vpd_pages)
+> +		goto fail;
+> +
+>  	/* Ask for all the pages supported by this device */
+>  	result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
+>  	if (result)
 
-(qemu) device_del scsi0
+Thanks, Martin.
 
- BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
- IP: [<ffffffff8179b29f>] __virtscsi_set_affinity+0x6f/0x120
- PGD 0
- Oops: 0000 [#1] SMP
- Modules linked in:
- CPU: 0 PID: 659 Comm: kworker/0:1 Not tainted 3.11.0-rc2+ #1172
- Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
- Workqueue: kacpi_hotplug _handle_hotplug_event_func
- task: ffff88007bee1cc0 ti: ffff88007bfe4000 task.ti: ffff88007bfe4000
- RIP: 0010:[<ffffffff8179b29f>]  [<ffffffff8179b29f>] __virtscsi_set_affinity+0x6f/0x120
- RSP: 0018:ffff88007bfe5a38  EFLAGS: 00010202
- RAX: 0000000000000010 RBX: ffff880077fd0d28 RCX: 0000000000000050
- RDX: 0000000000000000 RSI: 0000000000000246 RDI: 0000000000000000
- RBP: ffff88007bfe5a58 R08: ffff880077f6ff00 R09: 0000000000000001
- R10: ffffffff8143e673 R11: 0000000000000001 R12: 0000000000000001
- R13: ffff880077fd0800 R14: 0000000000000000 R15: ffff88007bf489b0
- FS:  0000000000000000(0000) GS:ffff88007ea00000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
- CR2: 0000000000000020 CR3: 0000000079f8b000 CR4: 00000000000006f0
- Stack:
-  ffff880077fd0d28 0000000000000000 ffff880077fd0800 0000000000000008
-  ffff88007bfe5a78 ffffffff8179b37d ffff88007bccc800 ffff88007bccc800
-  ffff88007bfe5a98 ffffffff8179b3b6 ffff88007bccc800 ffff880077fd0d28
- Call Trace:
-  [<ffffffff8179b37d>] virtscsi_set_affinity+0x2d/0x40
-  [<ffffffff8179b3b6>] virtscsi_remove_vqs+0x26/0x50
-  [<ffffffff8179c7d2>] virtscsi_remove+0x82/0xa0
-  [<ffffffff814cb6b2>] virtio_dev_remove+0x22/0x70
-  [<ffffffff8167ca49>] __device_release_driver+0x69/0xd0
-  [<ffffffff8167cb9d>] device_release_driver+0x2d/0x40
-  [<ffffffff8167bb96>] bus_remove_device+0x116/0x150
-  [<ffffffff81679936>] device_del+0x126/0x1e0
-  [<ffffffff81679a06>] device_unregister+0x16/0x30
-  [<ffffffff814cb889>] unregister_virtio_device+0x19/0x30
-  [<ffffffff814cdad6>] virtio_pci_remove+0x36/0x80
-  [<ffffffff81464ae7>] pci_device_remove+0x37/0x70
-  [<ffffffff8167ca49>] __device_release_driver+0x69/0xd0
-  [<ffffffff8167cb9d>] device_release_driver+0x2d/0x40
-  [<ffffffff8167bb96>] bus_remove_device+0x116/0x150
-  [<ffffffff81679936>] device_del+0x126/0x1e0
-  [<ffffffff8145edfc>] pci_stop_bus_device+0x9c/0xb0
-  [<ffffffff8145f036>] pci_stop_and_remove_bus_device+0x16/0x30
-  [<ffffffff81474a9e>] acpiphp_disable_slot+0x8e/0x150
-  [<ffffffff81474f6a>] hotplug_event_func+0xba/0x1a0
-  [<ffffffff814906c8>] ? acpi_os_release_object+0xe/0x12
-  [<ffffffff81475911>] _handle_hotplug_event_func+0x31/0x70
-  [<ffffffff810b5333>] process_one_work+0x183/0x500
-  [<ffffffff810b66e2>] worker_thread+0x122/0x400
-  [<ffffffff810b65c0>] ? manage_workers+0x2d0/0x2d0
-  [<ffffffff810bc5de>] kthread+0xce/0xe0
-  [<ffffffff810bc510>] ? kthread_freezable_should_stop+0x70/0x70
-  [<ffffffff81ca045c>] ret_from_fork+0x7c/0xb0
-  [<ffffffff810bc510>] ? kthread_freezable_should_stop+0x70/0x70
- Code: 01 00 00 00 74 59 45 31 e4 83 bb c8 01 00 00 02 74 46 66 2e 0f 1f 84 00 00 00 00 00 49 63 c4 48 c1 e0 04 48 8b bc 0
-3 10 02 00 00 <48> 8b 47 20 48 8b 80 d0 01 00 00 48 8b 40 50 48 85 c0 74 07 be
- RIP  [<ffffffff8179b29f>] __virtscsi_set_affinity+0x6f/0x120
-  RSP <ffff88007bfe5a38>
- CR2: 0000000000000020
- ---[ end trace 99679331a3775f48 ]---
+Alan Stern
 
-CC: stable@vger.kernel.org
-Signed-off-by: Asias He <asias@redhat.com>
----
- drivers/scsi/virtio_scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 2168258..74b88ef 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -751,7 +751,7 @@ static void __virtscsi_set_affinity(struct virtio_scsi *vscsi, bool affinity)
- 
- 		vscsi->affinity_hint_set = true;
- 	} else {
--		for (i = 0; i < vscsi->num_queues - VIRTIO_SCSI_VQ_BASE; i++)
-+		for (i = 0; i < vscsi->num_queues; i++)
- 			virtqueue_set_affinity(vscsi->req_vqs[i].vq, -1);
- 
- 		vscsi->affinity_hint_set = false;
--- 
-1.8.3.1
