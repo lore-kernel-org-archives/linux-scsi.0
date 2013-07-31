@@ -1,47 +1,52 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCHv2] pm80xx: fix Adaptec 71605H hang
-Date: Wed, 31 Jul 2013 17:19:40 +0200
-Message-ID: <51F92B0C.70804@gmail.com>
-References: <51F2A741.1020702@xs4all.nl>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Wed, 31 Jul 2013 19:11:07 +0200
+Message-ID: <20130731171106.GA12489@dhcp-26-207.brq.redhat.com>
+References: <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+ <20130719003034.GG28005@kernel.dk>
+ <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+ <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+ <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:49189 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751803Ab3GaPTx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jul 2013 11:19:53 -0400
-Received: by mail-bk0-f51.google.com with SMTP id ji2so294287bkc.38
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Jul 2013 08:19:52 -0700 (PDT)
-In-Reply-To: <51F2A741.1020702@xs4all.nl>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hans Verkuil <hverkuil@xs4all.nl>, James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, AnandKumar.Santhanam@pmcs.com, lindar_liu@usish.com, Sangeetha.Gnanasekaran@pmcs.com
 
-On 07/26/2013 06:43 PM, Hans Verkuil wrote:
-> The IO command size is 128 bytes for these new controllers as opposed to 64
-> for the old 8001 controller.
+On Thu, Jul 25, 2013 at 12:16:41PM +0200, Alexander Gordeev wrote:
+> On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
+> > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
+> > target-pending/scsi-mq, which now has functioning scsi-generic support.
 > 
-> The Adaptec out-of-tree driver did this correctly. After comparing the two
-> this turned out to be the crucial difference.
-> 
-> So don't hardcode the IO command size, instead use pm8001_ha->iomb_size as
-> that is the correct value for both old and new controllers.
-> 
-> Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
-> Cc: stable@vger.kernel.org      # for v3.10 and up
-snip
+> Survives a boot, a kernel build and the build's result :)
 
-Thanks Hans.
-Looks good now.
+Not that rosy. Turned out the old code is called. Hangs with this hunk..
 
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
-
-James,
-
-Could you consider to include this fix into your fixes tree, without
-this fix new Adaptec controller support is broken, sorry for that.
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index ac05cd6..a75fd41 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1103,6 +1103,8 @@ static struct device_attribute *piix_sidpr_shost_attrs[] = {
+ static struct scsi_host_template piix_sidpr_sht = {
+ 	ATA_BMDMA_SHT(DRV_NAME),
+ 	.shost_attrs		= piix_sidpr_shost_attrs,
++	.scsi_mq		= true,
++	.queuecommand_mq	= ata_scsi_queuecmd,
+ };
+ 
+ static struct ata_port_operations piix_sidpr_sata_ops = {
 
 
-Jack
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
