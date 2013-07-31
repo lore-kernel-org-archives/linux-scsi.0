@@ -1,44 +1,47 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Ejected Nook (usb mass storage) prevents suspend
-Date: Wed, 31 Jul 2013 11:13:44 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1307311105250.1546-100000@iolanthe.rowland.org>
-References: <1375270790.17175.10.camel@linux-fkkt.site>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCHv2] pm80xx: fix Adaptec 71605H hang
+Date: Wed, 31 Jul 2013 17:19:40 +0200
+Message-ID: <51F92B0C.70804@gmail.com>
+References: <51F2A741.1020702@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:36696 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1760236Ab3GaPNp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jul 2013 11:13:45 -0400
-In-Reply-To: <1375270790.17175.10.camel@linux-fkkt.site>
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:49189 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751803Ab3GaPTx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jul 2013 11:19:53 -0400
+Received: by mail-bk0-f51.google.com with SMTP id ji2so294287bkc.38
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Jul 2013 08:19:52 -0700 (PDT)
+In-Reply-To: <51F2A741.1020702@xs4all.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: Andy Lutomirski <luto@amacapital.net>, linux-usb@vger.kernel.org, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, hare@suse.de
+To: Hans Verkuil <hverkuil@xs4all.nl>, James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, AnandKumar.Santhanam@pmcs.com, lindar_liu@usish.com, Sangeetha.Gnanasekaran@pmcs.com
 
-On Wed, 31 Jul 2013, Oliver Neukum wrote:
-
-> These errors should be handled cleanly. How about this patch?
-
-> From 76a377d9894dc8945e9afecc7f9864e6dc3156b1 Mon Sep 17 00:00:00 2001
-> From: Oliver Neukum <oneukum@suse.de>
-> Date: Wed, 31 Jul 2013 13:32:51 +0200
-> Subject: [PATCH] sd: handle errors during suspend
+On 07/26/2013 06:43 PM, Hans Verkuil wrote:
+> The IO command size is 128 bytes for these new controllers as opposed to 64
+> for the old 8001 controller.
 > 
-> Errors during suspend must be handled according to reasons
+> The Adaptec out-of-tree driver did this correctly. After comparing the two
+> this turned out to be the crucial difference.
+> 
+> So don't hardcode the IO command size, instead use pm8001_ha->iomb_size as
+> that is the correct value for both old and new controllers.
+> 
+> Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
+> Cc: stable@vger.kernel.org      # for v3.10 and up
+snip
 
-You forgot to complete this sentence.
+Thanks Hans.
+Looks good now.
 
-> Errors due to missing media or unplugged devices must be ignored.
-> The error returns must be modified so that the generic layer
-> understands them.
+Acked-by: Jack Wang <xjtuwjp@gmail.com>
 
-The patch contains a couple of trivial whitespace errors (space added
-to the end of a line, or spaces used instead of a tab).
+James,
 
-More importantly, if we already know that the medium is not present or
-has been changed since it was last used, then there's no reason to call
-sd_sync_cache() at all.
+Could you consider to include this fix into your fixes tree, without
+this fix new Adaptec controller support is broken, sorry for that.
 
-Alan Stern
 
+Jack
