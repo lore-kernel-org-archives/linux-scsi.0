@@ -1,56 +1,39 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Kernel 3.10.3 "reset SuperSpeed USB device number 2 using xhci_hcd"
-Date: Tue, 30 Jul 2013 22:58:34 -0400
-Message-ID: <yq1d2pzigf9.fsf@sermon.lab.mkp.net>
-References: <Pine.LNX.4.44L0.1307301441510.893-100000@iolanthe.rowland.org>
+Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup / early userspace transition
+Date: Tue, 30 Jul 2013 23:10:36 -0400
+Message-ID: <yq14nbbifv7.fsf@sermon.lab.mkp.net>
+References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm>
+	<87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm>
+	<87fvuxdqes.fsf@spindle.srvr.nix> <51F708A4.9090207@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1307301441510.893-100000@iolanthe.rowland.org>
-	(Alan Stern's message of "Tue, 30 Jul 2013 14:44:23 -0400 (EDT)")
-Sender: stable-owner@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: Stuart Foster <smf.linux@ntlworld.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ed Tomlinson <edt@aei.ca>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, stable@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:50143 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753665Ab3GaDLA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jul 2013 23:11:00 -0400
+In-Reply-To: <51F708A4.9090207@interlog.com> (Douglas Gilbert's message of
+	"Mon, 29 Jul 2013 20:28:20 -0400")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: Nix <nix@esperi.org.uk>, Bernd Schubert <bernd.schubert@fastmail.fm>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, nick.cheng@areca.com.tw, stable@vger.kernel.org
 
->>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
+>>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
 
-Alan> On Mon, 29 Jul 2013, Stuart Foster wrote:
->> Hi Alan,
->> 
->> The patch is good for me.
->> 
->> thanks
+Doug> I just examined a more recent Areca SAS RAID controller and would
+Doug> describe it as the SCSI device from hell. One solution to this
+Doug> problem is to modify the arcmsr driver so it returns a more
+Doug> consistent set of lies to the management SCSI commands that Martin
+Doug> is asking about.
 
-Alan> There also have been positive reports from Marc Meledandri and
-Alan> Philipp Dreimann.
+Yeah. This is quite the challenge given that the product id is
+user-specified and product revision hardcoded. I can match on "Areca" in
+the vendor id and that's about it :(
 
-Alan> Martin, please submit your patch for inclusion in the stable
-Alan> kernels as soon as possible.
+My current approach is to tweak the driver so that I can set
+skip_vpd_pages for the ATA models. Under the assumption that the SAS
+controllers actually feature the ATA Information VPD...
 
-James?
-
-[PATCH] SCSI: Don't attempt to send extended INQUIRY command if skip_vpd_pages is set
-
-If a device has the skip_vpd_pages flag set we should simply fail the
-scsi_get_vpd_page() call.
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-Tested-by: Stuart Foster <smf.linux@ntlworld.com>
-Cc: stable@vger.kernel.org
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 3b1ea34..eaa808e 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -1031,6 +1031,9 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
- {
- 	int i, result;
- 
-+	if (sdev->skip_vpd_pages)
-+		goto fail;
-+
- 	/* Ask for all the pages supported by this device */
- 	result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
- 	if (result)
+-- 
+Martin K. Petersen	Oracle Linux Engineering
