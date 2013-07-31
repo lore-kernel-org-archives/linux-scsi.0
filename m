@@ -1,52 +1,42 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Wed, 31 Jul 2013 19:11:07 +0200
-Message-ID: <20130731171106.GA12489@dhcp-26-207.brq.redhat.com>
-References: <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
- <20130719003034.GG28005@kernel.dk>
- <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
- <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
- <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
+Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup
+ / early userspace transition
+Date: Wed, 31 Jul 2013 19:51:09 +0200
+Message-ID: <51F94E8D.5040908@fastmail.fm>
+References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm> <87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm> <87fvuxdqes.fsf@spindle.srvr.nix> <yq1txjdhree.fsf@sermon.lab.mkp.net> <51F80167.1080004@fastmail.fm> <yq1zjt3h11y.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1zjt3h11y.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Nix <nix@esperi.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 25, 2013 at 12:16:41PM +0200, Alexander Gordeev wrote:
-> On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
-> > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
-> > target-pending/scsi-mq, which now has functioning scsi-generic support.
+On 07/31/2013 05:15 AM, Martin K. Petersen wrote:
+>>>>>> "Bernd" == Bernd Schubert <bernd.schubert@fastmail.fm> writes:
 > 
-> Survives a boot, a kernel build and the build's result :)
+> Bernd,
+> 
+>>> Product revision level: R001 
+> 
+> It's clearly not verbatim passthrough...
+> 
+> Bernd> Besides the firmware, the difference might be that I'm exporting
+> Bernd> single disks without any areca-raidset in between.  I can try to
+> Bernd> confirm that tomorrow, I just need the system as it is till
+> Bernd> tomorrow noon.
+> 
+> That would be a great data point. I don't have any Areca boards.
+> 
 
-Not that rosy. Turned out the old code is called. Hangs with this hunk..
+Just tested it, areca-raidset does not make a difference, but the
+firmware version does. After downgrading to 1.46 I have the same issue.
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index ac05cd6..a75fd41 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1103,6 +1103,8 @@ static struct device_attribute *piix_sidpr_shost_attrs[] = {
- static struct scsi_host_template piix_sidpr_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- 	.shost_attrs		= piix_sidpr_shost_attrs,
-+	.scsi_mq		= true,
-+	.queuecommand_mq	= ata_scsi_queuecmd,
- };
- 
- static struct ata_port_operations piix_sidpr_sata_ops = {
+It is getting a bit late for me, but as this a pure development system,
+which is also booted over nfs, I can investigate it tomorrow.
 
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Cheers,
+Bernd
