@@ -1,52 +1,52 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH] scsi/isci/port_config: Fix a infinite loop.
-Date: Wed, 31 Jul 2013 09:35:50 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A534640@IRSMSX105.ger.corp.intel.com>
-References: <1374029641-12649-1-git-send-email-yuxinghai@cn.fujitsu.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Wed, 31 Jul 2013 06:23:03 -0400
+Message-ID: <20130731102303.GC2810@htj.dyndns.org>
+References: <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+ <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+ <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+ <20130726020928.GL29296@kernel.dk>
+ <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+ <1374885793.7397.1537.camel@haakon3.risingtidesystems.com>
+ <20130729111827.GA14283@dhcp-26-207.brq.redhat.com>
+ <1375125571.5171.16.camel@haakon3.risingtidesystems.com>
+ <CAO1A-8AW-aQJ0hjX38U_q8Ovcpb58fP9Skfyi59xihXTQHECNQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26977 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758064Ab3GaJgd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jul 2013 05:36:33 -0400
-In-Reply-To: <1374029641-12649-1-git-send-email-yuxinghai@cn.fujitsu.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAO1A-8AW-aQJ0hjX38U_q8Ovcpb58fP9Skfyi59xihXTQHECNQ@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Marc C <marc.ceeeee@gmail.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Alexander Gordeev <agordeev@redhat.com>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Xinghai Yu <yuxinghai@cn.fujitsu.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wednesday, July 17, 2013 4:54 AM Xinghai Yu <yuxinghai@cn.fujitsu.com> wrote:
-> 
-> It seems the "phy_index++;" have been placed in wrong place, without it
-> the while circle up will do a infinite loop.
-> 
-> Signed-off-by: Xinghai Yu <yuxinghai@cn.fujitsu.com>
+Hello,
 
-Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
+On Tue, Jul 30, 2013 at 09:16:02PM -0700, Marc C wrote:
+> >> One thing which would probably be worthwhile tho is getting rid of the
+> >> bitmap based qc tag allocator in libata.  That one is just borderline
+> >> stupid to keep around on any setup which is supposed to be scalable.
+> > Your border might be wider than mine :-). Yes, the bitmap should
+> > definitely go.
+>
+> A naive implementation is obviously less-than-efficient. However, what
+> other problems exist with the libata QC tag allocator? I highly doubt
+> SATA will change to beyond 32 queue tags, primarily because it would
+> be a pain to change SDB FIS (it's likely to break the dozens of AHCI
+> controller implementations out there). Further, it seems like the
+> industry stopped caring about SATA and is pushing NVMe for future
+> offerings.
+> 
+> In any event, most modern systems should have instructions to count
+> leading zeroes and modify bits atomically.
 
-> ---
->  drivers/scsi/isci/port_config.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/isci/port_config.c b/drivers/scsi/isci/port_config.c
-> index cd962da..85c77f6 100644
-> --- a/drivers/scsi/isci/port_config.c
-> +++ b/drivers/scsi/isci/port_config.c
-> @@ -311,9 +311,9 @@ sci_mpc_agent_validate_phy_configuration(struct
-> isci_host *ihost,
->  					      &ihost->phys[phy_index]);
-> 
->  			assigned_phy_mask |= (1 << phy_index);
-> +			phy_index++;
->  		}
-> 
-> -		phy_index++;
->  	}
-> 
->  	return sci_port_configuration_agent_validate_ports(ihost, port_agent);
-> --
-> 1.7.1
+It's inefficient not because scanning is expensive but because it
+makes all CPUs in the system to hit on the exact same cacheline over
+and over and over again.
 
+Thanks.
+
+-- 
+tejun
