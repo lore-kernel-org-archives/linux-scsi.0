@@ -1,30 +1,58 @@
-From: Jan Vesely <jvesely@redhat.com>
-Subject: [PATCH 0/2] mpt{2,3}sas remove disconnected phys on topology change
-Date: Thu,  1 Aug 2013 12:01:29 +0200
-Message-ID: <1375351291-27107-1-git-send-email-jvesely@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Jan Vesely <jvesely@redhat.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Tomas Henzl <thenzl@redhat.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH 1/3] hpsa: remove unneeded loop
+Date: Thu, 01 Aug 2013 15:11:22 +0200
+Message-ID: <51FA5E7A.9050000@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38173 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750834Ab3HANMd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Aug 2013 09:12:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, stephenmcameron@gmail.com, mikem@beardog.cce.hp.com
 
-From: Jan Vesely <jvesely@redhat.com>
+From: Tomas Henzl <thenzl@redhat.com>
 
-These two patches add phy removal on link loss. This change keeps sysfs
-up-to-date with actually connected phys. Without these patches,
- disconnected phys remain listed under their former ports.
+The cmd_pool_bits is protected everywhere with a spinlock, 
+we don't need the test_and_set_bit, set_bit is enough and the loop
+can be removed too.
 
-tested on both mpt2sas and mpt3sas hw.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/hpsa.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-CC: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-CC: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-CC: Tomas Henzl <thenzl@redhat.com>
-Signed-off-by: Jan Vesely <jvesely@redhat.com>
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 796482b..d7df01e 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2662,15 +2662,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&h->lock, flags);
+-	do {
+-		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+-		if (i == h->nr_cmds) {
+-			spin_unlock_irqrestore(&h->lock, flags);
+-			return NULL;
+-		}
+-	} while (test_and_set_bit
+-		 (i & (BITS_PER_LONG - 1),
+-		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
++	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
++	if (i == h->nr_cmds) {
++		spin_unlock_irqrestore(&h->lock, flags);
++		return NULL;
++	}
++	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
+ 	h->nr_allocs++;
+ 	spin_unlock_irqrestore(&h->lock, flags);
+ 
+-- 
+1.8.3.1
 
-Jan Vesely (2):
-  mpt2sas: Remove phys on topology change.
-  mpt3sas: Remove phys on topology change
 
- drivers/scsi/mpt2sas/mpt2sas_transport.c |    5 ++++-
- drivers/scsi/mpt3sas/mpt3sas_transport.c |    5 ++++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
