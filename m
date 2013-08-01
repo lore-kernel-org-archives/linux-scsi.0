@@ -1,142 +1,37 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1/3] hpsa: remove unneeded loop
-Date: Thu, 01 Aug 2013 17:39:36 +0200
-Message-ID: <51FA8138.1070306@redhat.com>
-References: <51FA5E7A.9050000@redhat.com> <20130801133951.GX24664@beardog.cce.hp.com> <51FA6B20.2090005@redhat.com> <20130801142123.GA24664@beardog.cce.hp.com> <51FA77E1.5010200@redhat.com> <20130801151917.GB24664@beardog.cce.hp.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Ejected Nook (usb mass storage) prevents suspend
+Date: Thu, 1 Aug 2013 11:53:11 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1308011149320.1534-100000@iolanthe.rowland.org>
+References: <1375366368.1518.18.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21624 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754862Ab3HAPkL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Aug 2013 11:40:11 -0400
-In-Reply-To: <20130801151917.GB24664@beardog.cce.hp.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:57746 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756022Ab3HAPxM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Aug 2013 11:53:12 -0400
+In-Reply-To: <1375366368.1518.18.camel@linux-fkkt.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, stephenmcameron@gmail.com, mikem@beardog.cce.hp.com
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Andy Lutomirski <luto@amacapital.net>, linux-usb@vger.kernel.org, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, hare@suse.de
 
-On 08/01/2013 05:19 PM, scameron@beardog.cce.hp.com wrote:
-> On Thu, Aug 01, 2013 at 04:59:45PM +0200, Tomas Henzl wrote:
->> On 08/01/2013 04:21 PM, scameron@beardog.cce.hp.com wrote:
->>> On Thu, Aug 01, 2013 at 04:05:20PM +0200, Tomas Henzl wrote:
->>>> On 08/01/2013 03:39 PM, scameron@beardog.cce.hp.com wrote:
->>>>> On Thu, Aug 01, 2013 at 03:11:22PM +0200, Tomas Henzl wrote:
->>>>>> From: Tomas Henzl <thenzl@redhat.com>
->>>>>>
->>>>>> The cmd_pool_bits is protected everywhere with a spinlock, 
->>>>>> we don't need the test_and_set_bit, set_bit is enough and the loop
->>>>>> can be removed too.
->>>>>>
->>>>>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
->>>>>> ---
->>>>>>  drivers/scsi/hpsa.c | 15 ++++++---------
->>>>>>  1 file changed, 6 insertions(+), 9 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
->>>>>> index 796482b..d7df01e 100644
->>>>>> --- a/drivers/scsi/hpsa.c
->>>>>> +++ b/drivers/scsi/hpsa.c
->>>>>> @@ -2662,15 +2662,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
->>>>>>  	unsigned long flags;
->>>>>>  
->>>>>>  	spin_lock_irqsave(&h->lock, flags);
->>>>>> -	do {
->>>>>> -		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
->>>>>> -		if (i == h->nr_cmds) {
->>>>>> -			spin_unlock_irqrestore(&h->lock, flags);
->>>>>> -			return NULL;
->>>>>> -		}
->>>>>> -	} while (test_and_set_bit
->>>>>> -		 (i & (BITS_PER_LONG - 1),
->>>>>> -		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
->>>>>> +	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
->>>>>> +	if (i == h->nr_cmds) {
->>>>>> +		spin_unlock_irqrestore(&h->lock, flags);
->>>>>> +		return NULL;
->>>>>> +	}
->>>>>> +	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
->>>>>>  	h->nr_allocs++;
->>>>>>  	spin_unlock_irqrestore(&h->lock, flags);
->>>>>>  
->>>>>> -- 
->>>>>> 1.8.3.1
->>>>>>
->>>>> Would it be better instead to just not use the spinlock for protecting
->>>>> cmd_pool_bits?  I have thought about doing this for awhile, but haven't
->>>>> gotten around to it.
->>>>>
->>>>> I think the while loop is safe without the spin lock.  And then it is
->>>>> not needed in cmd_free either.
->>>> I was evaluating the same idea for a while too, a loop and inside just the test_and_set_bit,
->>>> maybe even a stored value to start with a likely empty bit from last time to tune it a bit.
->>>> But I know almost nothing about the use pattern, so I decided for the least invasive change
->>>> to the existing code, to not make it worse.
->>> Only reason I haven't done it is I'm loathe to make such a change to the main i/o
->>> path without testing it like crazy before unleashing it, and it's never been a 
->>> convenient time to slide such a change in around here and get proper testing
->>> done (and there are other rather large changes brewing).
->>>
->>> However, we have been using a similar scheme with the SCSI over PCIe driver,
->>> here: https://github.com/HPSmartStorage/scsi-over-pcie/blob/master/block/sop.c
->>> in alloc_request() around line 1476 without problems, and nvme-core.c contains
->>> similar code in alloc_cmdid(), so I am confident it's sound in principle.
->>> I would want to beat on it though, in case it ends up exposing a firmware bug
->>> or something (not that I think it will, but you never know.)
->> I think the code is sound, maybe it could hypothetically return -EBUSY, because
->> the find_first_zero_bit is not atomic, but this possibility is so low that it doesn't matter.
->> Btw. on line 1284 - isn't it similar to patch 2/3 ?
-> find_first_zero_bit is not atomic, but the test_and_set_bit, which is what
-> counts, is atomic.   That find_first_zero_bit is not atomic confused me about
-> this code for a long time, and is why the spin lock was there in the first
-> place.  But if there's a race on the find_first_zero_bit and it returns the
-> same bit to multiple concurrent threads, only one thread will win the
-> test_and_set_bit, and the other threads will go back around the loop to try
-> again, and get a different bit.
+On Thu, 1 Aug 2013, Oliver Neukum wrote:
 
-Yes.
-But, let's expect just one zero bit at the end of the list. The find_first_zero_bit(ffzb)
-starts now,  thread+1 zeroes a new bit at the beginning, ffzb continues,
-thread+2 takes the zero bit at the end. The result it that ffzb hasn't found a zero bit
-even though that at every moment that bit was there.Ffter that the function returns -EBUSY.
-rc = (u16) find_first_zero_bit(qinfo->request_bits, qinfo->qdepth);
-if (rc >= qinfo->qdepth-1)
-	return (u16) -EBUSY;
-Still, I think that this is almost impossible, and if it should happen
-a requeue is not so bad.
+> On Wed, 2013-07-31 at 11:13 -0400, Alan Stern wrote:
+> 
+> > More importantly, if we already know that the medium is not present or
+> > has been changed since it was last used, then there's no reason to call
+> > sd_sync_cache() at all.
+> 
+> Like this?
 
->
-> I don't think a thread can get stuck in there never winning until all the bits
-> are used up because there should always be enough bits for all the commands we
-> would ever try to send concurrently, so every thread that gets in there should
-> eventually get a bit.
->
-> Or, am I missing some subtlety?
->
->> Back to this patch - we can take it as it is, because of the spinlock it should be safe,
->> or omit it, you can then post a spinlock-less patch. I'll let the decision on you.
-> I think I like the spin-lock-less variant better.  But I want to test it out
-> here for awhile first.
+Yes, I like this a lot better, except I would put the test for 
+!sdkp->media_present in sd_suspend_common() -- no need to print the 
+"Synchronizing SCSI Cache" message if you're not going to go through 
+with it.
 
-OK, I'm fine with that. The spin-lock-less could be potentially faster, I like it too.
+What do the SCSI people think?
 
-tomash 
-
->
-> -- steve
->
->> tomash
->>
->>
->>> -- steve
->>>
->>>
->>>  
->>>>> -- steve
->>>>>
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan Stern
 
