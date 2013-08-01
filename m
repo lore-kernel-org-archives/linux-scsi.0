@@ -1,47 +1,108 @@
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup
- / early userspace transition
-Date: Thu, 01 Aug 2013 16:55:18 +0200
-Message-ID: <51FA76D6.2060905@fastmail.fm>
-References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm> <87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm> <87fvuxdqes.fsf@spindle.srvr.nix> <51F708A4.9090207@interlog.com> <87ob9koogb.fsf@spindle.srvr.nix> <51F80294.50804@fastmail.fm> <877gg7n3rc.fsf@spindle.srvr.nix>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 1/3] hpsa: remove unneeded loop
+Date: Thu, 01 Aug 2013 16:59:45 +0200
+Message-ID: <51FA77E1.5010200@redhat.com>
+References: <51FA5E7A.9050000@redhat.com> <20130801133951.GX24664@beardog.cce.hp.com> <51FA6B20.2090005@redhat.com> <20130801142123.GA24664@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <877gg7n3rc.fsf@spindle.srvr.nix>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, nick.cheng@areca.com.tw, stable@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:63917 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757129Ab3HAPAz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Aug 2013 11:00:55 -0400
+In-Reply-To: <20130801142123.GA24664@beardog.cce.hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scameron@beardog.cce.hp.com
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, stephenmcameron@gmail.com, mikem@beardog.cce.hp.com
 
-On 07/30/2013 11:20 PM, Nix wrote:
-> On 30 Jul 2013, Bernd Schubert told this:
+On 08/01/2013 04:21 PM, scameron@beardog.cce.hp.com wrote:
+> On Thu, Aug 01, 2013 at 04:05:20PM +0200, Tomas Henzl wrote:
+>> On 08/01/2013 03:39 PM, scameron@beardog.cce.hp.com wrote:
+>>> On Thu, Aug 01, 2013 at 03:11:22PM +0200, Tomas Henzl wrote:
+>>>> From: Tomas Henzl <thenzl@redhat.com>
+>>>>
+>>>> The cmd_pool_bits is protected everywhere with a spinlock, 
+>>>> we don't need the test_and_set_bit, set_bit is enough and the loop
+>>>> can be removed too.
+>>>>
+>>>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+>>>> ---
+>>>>  drivers/scsi/hpsa.c | 15 ++++++---------
+>>>>  1 file changed, 6 insertions(+), 9 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>>>> index 796482b..d7df01e 100644
+>>>> --- a/drivers/scsi/hpsa.c
+>>>> +++ b/drivers/scsi/hpsa.c
+>>>> @@ -2662,15 +2662,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+>>>>  	unsigned long flags;
+>>>>  
+>>>>  	spin_lock_irqsave(&h->lock, flags);
+>>>> -	do {
+>>>> -		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+>>>> -		if (i == h->nr_cmds) {
+>>>> -			spin_unlock_irqrestore(&h->lock, flags);
+>>>> -			return NULL;
+>>>> -		}
+>>>> -	} while (test_and_set_bit
+>>>> -		 (i & (BITS_PER_LONG - 1),
+>>>> -		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
+>>>> +	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+>>>> +	if (i == h->nr_cmds) {
+>>>> +		spin_unlock_irqrestore(&h->lock, flags);
+>>>> +		return NULL;
+>>>> +	}
+>>>> +	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
+>>>>  	h->nr_allocs++;
+>>>>  	spin_unlock_irqrestore(&h->lock, flags);
+>>>>  
+>>>> -- 
+>>>> 1.8.3.1
+>>>>
+>>> Would it be better instead to just not use the spinlock for protecting
+>>> cmd_pool_bits?  I have thought about doing this for awhile, but haven't
+>>> gotten around to it.
+>>>
+>>> I think the while loop is safe without the spin lock.  And then it is
+>>> not needed in cmd_free either.
+>> I was evaluating the same idea for a while too, a loop and inside just the test_and_set_bit,
+>> maybe even a stored value to start with a likely empty bit from last time to tune it a bit.
+>> But I know almost nothing about the use pattern, so I decided for the least invasive change
+>> to the existing code, to not make it worse.
+> Only reason I haven't done it is I'm loathe to make such a change to the main i/o
+> path without testing it like crazy before unleashing it, and it's never been a 
+> convenient time to slide such a change in around here and get proper testing
+> done (and there are other rather large changes brewing).
 >
->> On 07/30/2013 02:56 AM, Nix wrote:
->>> On 30 Jul 2013, Douglas Gilbert outgrape:
->>>
->>>> Please supply the information that Martin Petersen asked
->>>> for.
->>>
->>> Did it in private IRC (the advantage of working for the same division of
->>> the same company!)
->>>
->>> I didn't realise the original fix was actually implemented to allow
->>> Bernd, with a different Areca controller, to boot... obviously, in that
->>> situation, reversion is wrong, since that would just replace one won't-
->>> boot situation with another.
+> However, we have been using a similar scheme with the SCSI over PCIe driver,
+> here: https://github.com/HPSmartStorage/scsi-over-pcie/blob/master/block/sop.c
+> in alloc_request() around line 1476 without problems, and nvme-core.c contains
+> similar code in alloc_cmdid(), so I am confident it's sound in principle.
+> I would want to beat on it though, in case it ends up exposing a firmware bug
+> or something (not that I think it will, but you never know.)
+
+I think the code is sound, maybe it could hypothetically return -EBUSY, because
+the find_first_zero_bit is not atomic, but this possibility is so low that it doesn't matter.
+Btw. on line 1284 - isn't it similar to patch 2/3 ?
+
+Back to this patch - we can take it as it is, because of the spinlock it should be safe,
+or omit it, you can then post a spinlock-less patch. I'll let the decision on you.
+
+tomash
+
+
+>
+> -- steve
+>
+>
+>  
 >>
->> Unless there is very simple fix the commit should reverted, imho. It
->> would better then to remove write-same support from the md-layer.
->
-> I'm not using md on that machine, just LVM. Our suspicion is that ext4
-> is doing a WRITE SAME for some reason.
->
+>>> -- steve
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I didn't check yet for other cases, mkfs.ext4 does WRITE SAME and with 
-lazy init it also will happen after mounting the file system, while lazy 
-init is running (inode zeroing).
-
-
-Cheers,
-Bernd
