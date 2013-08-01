@@ -1,152 +1,42 @@
 From: Jan Vesely <jvesely@redhat.com>
-Subject: Re: [PATCH RESEND v2] block: modify __bio_add_page check to accept
- pages that don't start a new segment
-Date: Thu, 01 Aug 2013 11:38:09 +0200
-Message-ID: <51FA2C81.9040007@redhat.com>
-References: <51505AC1.60809@redhat.com> <20130325142457.GD5401@kernel.dk> <51506EBA.8060708@redhat.com> <20130325194009.GL5401@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 1/2] mpt2sas: Remove phys on topology change.
+Date: Thu,  1 Aug 2013 12:01:30 +0200
+Message-ID: <1375351291-27107-2-git-send-email-jvesely@redhat.com>
+References: <1375351291-27107-1-git-send-email-jvesely@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130325194009.GL5401@kernel.dk>
+In-Reply-To: <1375351291-27107-1-git-send-email-jvesely@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, fujita.tomonori@lab.ntt.co.jp, =?UTF-8?B?S2FpIE3DpGtpc2FyYQ==?= <kai.makisara@kolumbus.fi>, James Bottomley <james.bottomley@hansenpartnership.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jan Vesely <jvesely@redhat.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon 25 Mar 2013 20:40:09 CET, Jens Axboe wrote:
-> On Mon, Mar 25 2013, Jan Vesely wrote:
->>  51506edc5741209311913
->>
->> On Mon 25 Mar 2013 15:24:57 CET, Jens Axboe wrote:
->>> On Mon, Mar 25 2013, Jan Vesely wrote:
->>>> v2: changed a comment
->>>>
->>>> The original behavior was to refuse all pages after the maximum number of
->>>> segments has been reached. However, some drivers (like st) craft their buffers
->>>> to potentially require exactly max segments and multiple pages in the last
->>>> segment. This patch modifies the check to allow pages that can be merged into
->>>> the last segment.
->>>>
->>>> Fixes EBUSY failures when using large tape block size in high
->>>> memory fragmentation condition.
->>>> This regression was introduced by commit
->>>>  46081b166415acb66d4b3150ecefcd9460bb48a1
->>>>  st: Increase success probability in driver buffer allocation
->>>>
->>>> Signed-off-by: Jan Vesely <jvesely@redhat.com>
->>>>
->>>> CC: Alexander Viro <viro@zeniv.linux.org.uk>
->>>> CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->>>> CC: Kai Makisara <kai.makisara@kolumbus.fi>
->>>> CC: James Bottomley <james.bottomley@hansenpartnership.com>
->>>> CC: Jens Axboe <axboe@kernel.dk>
->>>> CC: stable@vger.kernel.org
->>>> ---
->>>>  fs/bio.c | 27 +++++++++++++++++----------
->>>>  1 file changed, 17 insertions(+), 10 deletions(-)
->>>>
->>>> diff --git a/fs/bio.c b/fs/bio.c
->>>> index bb5768f..bc6af71 100644
->>>> --- a/fs/bio.c
->>>> +++ b/fs/bio.c
->>>> @@ -500,7 +500,6 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
->>>>  			  *page, unsigned int len, unsigned int offset,
->>>>  			  unsigned short max_sectors)
->>>>  {
->>>> -	int retried_segments = 0;
->>>>  	struct bio_vec *bvec;
->>>>
->>>>  	/*
->>>> @@ -551,18 +550,13 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
->>>>  		return 0;
->>>>
->>>>  	/*
->>>> -	 * we might lose a segment or two here, but rather that than
->>>> -	 * make this too complex.
->>>> +	 * The first part of the segment count check,
->>>> +	 * reduce segment count if possible
->>>>  	 */
->>>>
->>>> -	while (bio->bi_phys_segments >= queue_max_segments(q)) {
->>>> -
->>>> -		if (retried_segments)
->>>> -			return 0;
->>>> -
->>>> -		retried_segments = 1;
->>>> +	if (bio->bi_phys_segments >= queue_max_segments(q))
->>>>  		blk_recount_segments(q, bio);
->>>> -	}
->>>> +
->>>>
->>>>  	/*
->>>>  	 * setup the new entry, we might clear it again later if we
->>>> @@ -572,6 +566,19 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
->>>>  	bvec->bv_page = page;
->>>>  	bvec->bv_len = len;
->>>>  	bvec->bv_offset = offset;
->>>> +	
->>>> +	/*
->>>> +	 * the other part of the segment count check, allow mergeable pages
->>>> +	 */
->>>> +	if ((bio->bi_phys_segments > queue_max_segments(q)) ||
->>>> +		( (bio->bi_phys_segments == queue_max_segments(q)) &&
->>>> +		!BIOVEC_PHYS_MERGEABLE(bvec - 1, bvec))) {
->>>> +			bvec->bv_page = NULL;
->>>> +			bvec->bv_len = 0;
->>>> +			bvec->bv_offset = 0;
->>>> +			return 0;
->>>> +	}
->>>> +
->>>
->>> This is a bit messy, I think. bi_phys_segments should never be allowed
->>> to go beyond queue_ma_segments(), so the > test does not look right.
->>> Maybe it's an artifact of when we fall through with this patch, we bump
->>> bi_phys_segments even if the segments are physicall contig and
->>> mergeable.
->>
->> yeah. it is messy, I tried to go for the least invasive changes.
->>
->> I took the '>' test from the original while loop '>='. The original
->> behavior guaranteed bio->bi_phys_segments <= max_segments, if the bio
->> satisfied this condition to begin with.  I did not find any guarantees
->> that the 'bio' parameter of this function has to satisfy this
->> condition in general.
->>
->> My understanding is that if a caller of this function (or one of the
->> two that call this one) provides an invalid (segment-count-wise) bio,
->> it will fail (return 0 added length), and let the caller handle the
->> situation.  I admit, I did not check all the call paths that use these
->> functions.
->
-> Yes, that is how it works. So that should be fine.
->
->>> What happens when the segment is physically mergeable, but the resulting
->>> merged segment is too large (bigger than q->limits.max_segment_size)?
->>>
->>
->> ah, yes. I guess I need a check that follows __blk_recalc_rq_segments
->> more closely.  We know that at this point all pages are merged into
->> segments, so a helper function that would be used by both
->> __blk_recalc_rq_segments and this check is possible.
->>
->>
->> I still assume that a temporary increase of bi_phys_segments above
->> max_segments is ok.  If we want to avoid this situation we would need
->> to merge tail pages right away. That's imo uglier.
->
-> Yes, it's OK if we just ensure that we clear the valid segment flag. At
-> least that would be the best sort of solution, to ensure that it's
-> recalculated properly when someone checks it.
->
+From: Jan Vesely <jvesely@redhat.com>
 
-Hi Jens,
+CC: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+CC: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+CC: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Jan Vesely <jvesely@redhat.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_transport.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-v3 has been around for few months and I posted v4(whitespace changes) 
-two weeks ago.
-Let me know if there's something more I can do to get these patches 
-merged.
-
-regards,
---
-Jan Vesely <jvesely@redhat.com>
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+index 193e7ae..e610a97 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -1006,9 +1006,12 @@ mpt2sas_transport_update_links(struct MPT2SAS_ADAPTER *ioc,
+ 		    &mpt2sas_phy->remote_identify);
+ 		_transport_add_phy_to_an_existing_port(ioc, sas_node,
+ 		    mpt2sas_phy, mpt2sas_phy->remote_identify.sas_address);
+-	} else
++	} else {
+ 		memset(&mpt2sas_phy->remote_identify, 0 , sizeof(struct
+ 		    sas_identify));
++		_transport_del_phy_from_an_existing_port(ioc, sas_node,
++		    mpt2sas_phy);
++	}
+ 
+ 	if (mpt2sas_phy->phy)
+ 		mpt2sas_phy->phy->negotiated_linkrate =
+-- 
+1.7.1
