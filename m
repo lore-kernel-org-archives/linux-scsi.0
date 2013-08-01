@@ -1,9 +1,8 @@
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+From: Rusty Russell <rusty@rustcorp.com.au>
 Subject: Re: [PATCH] virtio-scsi: Fix virtqueue affinity setup
-Date: Thu, 01 Aug 2013 08:50:40 +0800
-Message-ID: <51F9B0E0.7050808@cn.fujitsu.com>
+Date: Thu, 01 Aug 2013 11:07:49 +0930
+Message-ID: <878v0m42du.fsf@rustcorp.com.au>
 References: <1375280279-7595-1-git-send-email-asias@redhat.com>
-Reply-To: gaowanlong@cn.fujitsu.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -19,18 +18,24 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
 To: Asias He <asias@redhat.com>
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, virtualization@lists.linux-foundation.org, JBottomley@parallels.com, pbonzini@redhat.com
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, virtualization@lists.linux-foundation.org, stable@vger.kernel.org, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/31/2013 10:17 PM, Asias He wrote:
+Asias He <asias@redhat.com> writes:
 > vscsi->num_queues counts the number of request virtqueue which does not
 > include the control and event virtqueue. It is wrong to subtract
 > VIRTIO_SCSI_VQ_BASE from vscsi->num_queues.
-> 
+>
 > This patch fixes the following panic.
-> 
+
+Applied.
+
+Thanks,
+Rusty.
+
+>
 > (qemu) device_del scsi0
-> 
+>
 >  BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
 >  IP: [<ffffffff8179b29f>] __virtscsi_set_affinity+0x6f/0x120
 >  PGD 0
@@ -90,17 +95,13 @@ On 07/31/2013 10:17 PM, Asias He wrote:
 >   RSP <ffff88007bfe5a38>
 >  CR2: 0000000000000020
 >  ---[ end trace 99679331a3775f48 ]---
-> 
+>
 > CC: stable@vger.kernel.org
 > Signed-off-by: Asias He <asias@redhat.com>
-
-Reviewed-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-
-
 > ---
 >  drivers/scsi/virtio_scsi.c | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
+>
 > diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
 > index 2168258..74b88ef 100644
 > --- a/drivers/scsi/virtio_scsi.c
@@ -114,4 +115,5 @@ Reviewed-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
 >  			virtqueue_set_affinity(vscsi->req_vqs[i].vq, -1);
 >  
 >  		vscsi->affinity_hint_set = false;
-> 
+> -- 
+> 1.8.3.1
