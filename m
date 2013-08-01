@@ -1,22 +1,22 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Thu, 01 Aug 2013 14:24:57 +0000
-Message-ID: <bug-60644-11613-NquaKOIe2F@https.bugzilla.kernel.org/>
+Date: Thu, 01 Aug 2013 14:30:11 +0000
+Message-ID: <bug-60644-11613-Y8nW9bx76V@https.bugzilla.kernel.org/>
 References: <bug-60644-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:44372 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.19.201]:44631 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755656Ab3HAOZF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Aug 2013 10:25:05 -0400
+	id S1755719Ab3HAOaT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Aug 2013 10:30:19 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id C86072021F
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Aug 2013 14:25:03 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 0A1AB20240
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Aug 2013 14:24:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9319D201BE
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Aug 2013 14:30:14 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 1739520233
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Aug 2013 14:30:12 +0000 (UTC)
 In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,27 +24,23 @@ To: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
---- Comment #15 from Sreekanth Reddy <sreekanth.reddy@lsi.com> ---
-(In reply to liveaxle from comment #14)
-> Hi .
+--- Comment #16 from liveaxle@live.com ---
+Hello .
 
-> Any updates regarding this bug ?
+The thing is that I'm using SATA drives and not SAS drives . The motherboard
+exposes the LSI controller as 8 SATA ports .
 
-I tried to reproduce this issue locally, but for me this issue is not
-reproduced.
+This wasn't an issue under Windows 2012 , so I think that hardware issues are
+pretty much not the cause in here .
 
-Here are the steps which I followed to reproduce the issue
+Sorry if I'm demanding too much , but can you try to create a BTRFS RAID1 ,
+fill it with data and then run :
 
-1. I have created RAID0 vloume on two 500 GB SAS drives.
-2. Created the EXT4 file system.
-3. Mounted this FS to /mnt
-4. And run the IO's using cmd 'dd if=/dev/zero of=/mnt/dd.img bs=1G count=300'
+btrfs scrub start /MOUNTPOINT
 
-Result:
-IO's run successfully with out any issue.
+It always produces the issue in less than 2 minutes .
 
-Please let me know whether I have missed any steps while reproducing this
-issue.
+Thank you .
 
 -- 
 You are receiving this mail because:
