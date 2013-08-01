@@ -1,47 +1,62 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Thu, 01 Aug 2013 14:30:11 +0000
-Message-ID: <bug-60644-11613-Y8nW9bx76V@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
+Subject: [PATCH] scsi disk: Use its own buffer for the vpd request
+Date: Thu, 01 Aug 2013 16:34:10 +0200
+Message-ID: <51FA71E2.6010501@fastmail.fm>
+References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm> <87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm> <87fvuxdqes.fsf@spindle.srvr.nix> <yq1txjdhree.fsf@sermon.lab.mkp.net> <51F80167.1080004@fastmail.fm> <yq1zjt3h11y.fsf@sermon.lab.mkp.net> <51F94E8D.5040908@fastmail.fm> <51F95A2E.60805@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:44631 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755719Ab3HAOaT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Aug 2013 10:30:19 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 9319D201BE
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Aug 2013 14:30:14 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 1739520233
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Aug 2013 14:30:12 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <51F95A2E.60805@fastmail.fm>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Nix <nix@esperi.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw, stable@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+Once I noticed that scsi_get_vpd_page() works fine from other function
+calls and that it is not 0x89, but already 0x0 that fails fixing it became
+easy.
 
---- Comment #16 from liveaxle@live.com ---
-Hello .
+Nix, any chance you could verify it also works for you?
 
-The thing is that I'm using SATA drives and not SAS drives . The motherboard
-exposes the LSI controller as 8 SATA ports .
 
-This wasn't an issue under Windows 2012 , so I think that hardware issues are
-pretty much not the cause in here .
+From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
 
-Sorry if I'm demanding too much , but can you try to create a BTRFS RAID1 ,
-fill it with data and then run :
+Somehow older areca firmware versions have issues with
+scsi_get_vpd_page() and a large buffer.
+Even scsi_get_vpd_page(, page=0,)  failed in sd_read_write_same(),
+while a similar request from sd_read_block_limits() worked fine.
+Limiting the buf-size to 64-bytes fixes the issue with F/W V1.46.
 
-btrfs scrub start /MOUNTPOINT
+Fixes a regression with areca controllers and older firmware versions
+introduced by commit: 66c28f97120e8a621afd5aa7a31c4b85c547d33d
 
-It always produces the issue in less than 2 minutes .
+Reported-by: Nix <nix@esperi.org.uk>
+Signed-off-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+CC: stable@vger.kernel.org
+---
+ drivers/scsi/sd.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Thank you .
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 80f39b8..02e50ae 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2651,13 +2651,16 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	struct scsi_device *sdev = sdkp->device;
+ 
+ 	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, INQUIRY) < 0) {
++		/* too large values might cause issues with arcmsr */
++		int vpd_buf_len = 64;
++
+ 		sdev->no_report_opcodes = 1;
+ 
+ 		/* Disable WRITE SAME if REPORT SUPPORTED OPERATION
+ 		 * CODES is unsupported and the device has an ATA
+ 		 * Information VPD page (SAT).
+ 		 */
+-		if (!scsi_get_vpd_page(sdev, 0x89, buffer, SD_BUF_SIZE))
++		if (!scsi_get_vpd_page(sdev, 0x89, buffer, vpd_buf_len))
+ 			sdev->no_write_same = 1;
+ 	}
+ 
