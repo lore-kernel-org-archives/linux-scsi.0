@@ -1,37 +1,54 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Ejected Nook (usb mass storage) prevents suspend
-Date: Thu, 1 Aug 2013 11:53:11 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1308011149320.1534-100000@iolanthe.rowland.org>
-References: <1375366368.1518.18.camel@linux-fkkt.site>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: [SCSI REGRESSION] 3.10.2 or 3.10.3: arcmsr failure at bootup / early userspace transition
+Date: Thu, 01 Aug 2013 17:04:25 +0100
+Message-ID: <871u6dieie.fsf@spindle.srvr.nix>
+References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm>
+	<87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm>
+	<87fvuxdqes.fsf@spindle.srvr.nix> <51F708A4.9090207@interlog.com>
+	<87ob9koogb.fsf@spindle.srvr.nix> <51F80294.50804@fastmail.fm>
+	<877gg7n3rc.fsf@spindle.srvr.nix> <51FA76D6.2060905@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:57746 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756022Ab3HAPxM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Aug 2013 11:53:12 -0400
-In-Reply-To: <1375366368.1518.18.camel@linux-fkkt.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <51FA76D6.2060905@fastmail.fm> (Bernd Schubert's message of "Thu,
+	01 Aug 2013 16:55:18 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bernd Schubert <bernd.schubert@fastmail.fm>
+Cc: Douglas Gilbert <dgilbert@interlog.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, nick.cheng@areca.com.tw, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: Andy Lutomirski <luto@amacapital.net>, linux-usb@vger.kernel.org, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, hare@suse.de
 
-On Thu, 1 Aug 2013, Oliver Neukum wrote:
+On 1 Aug 2013, Bernd Schubert verbalised:
 
-> On Wed, 2013-07-31 at 11:13 -0400, Alan Stern wrote:
-> 
-> > More importantly, if we already know that the medium is not present or
-> > has been changed since it was last used, then there's no reason to call
-> > sd_sync_cache() at all.
-> 
-> Like this?
+> On 07/30/2013 11:20 PM, Nix wrote:
+>> On 30 Jul 2013, Bernd Schubert told this:
+>>
+>>> On 07/30/2013 02:56 AM, Nix wrote:
+>>>> On 30 Jul 2013, Douglas Gilbert outgrape:
+>>>>
+>>>>> Please supply the information that Martin Petersen asked
+>>>>> for.
+>>>>
+>>>> Did it in private IRC (the advantage of working for the same division of
+>>>> the same company!)
+>>>>
+>>>> I didn't realise the original fix was actually implemented to allow
+>>>> Bernd, with a different Areca controller, to boot... obviously, in that
+>>>> situation, reversion is wrong, since that would just replace one won't-
+>>>> boot situation with another.
+>>>
+>>> Unless there is very simple fix the commit should reverted, imho. It
+>>> would better then to remove write-same support from the md-layer.
+>>
+>> I'm not using md on that machine, just LVM. Our suspicion is that ext4
+>> is doing a WRITE SAME for some reason.
+>
+> I didn't check yet for other cases, mkfs.ext4 does WRITE SAME and with
+> lazy init it also will happen after mounting the file system, while
+> lazy init is running (inode zeroing).
 
-Yes, I like this a lot better, except I would put the test for 
-!sdkp->media_present in sd_suspend_common() -- no need to print the 
-"Synchronizing SCSI Cache" message if you're not going to go through 
-with it.
+Well, it'll happen the first few times you mount the fs. If your fs is
+years old (as mine are) the inode tables will probably have been
+initialized by now!
 
-What do the SCSI people think?
-
-Alan Stern
-
+-- 
+NULL && (void)
