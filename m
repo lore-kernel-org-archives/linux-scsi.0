@@ -1,15 +1,17 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 1/3] hpsa: remove unneeded loop
-Date: Thu, 01 Aug 2013 15:11:22 +0200
-Message-ID: <51FA5E7A.9050000@redhat.com>
+Subject: [PATCH 2/3] hpsa: fix a race in cmd_free/scsi_done
+Date: Thu, 01 Aug 2013 15:14:00 +0200
+Message-ID: <51FA5F18.4070300@redhat.com>
+References: <51FA5E7A.9050000@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38173 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:64741 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750834Ab3HANMd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Aug 2013 09:12:33 -0400
+	id S1752605Ab3HANPF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Aug 2013 09:15:05 -0400
+In-Reply-To: <51FA5E7A.9050000@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
@@ -17,42 +19,41 @@ Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, stephenmcameron@gmail.co
 
 From: Tomas Henzl <thenzl@redhat.com>
 
-The cmd_pool_bits is protected everywhere with a spinlock, 
-we don't need the test_and_set_bit, set_bit is enough and the loop
-can be removed too.
+When the driver calls scsi_done and after that frees it's internal
+preallocated memory it can happen that a new job is enqueud before
+the memory is freed. The allocation fails and the message
+"cmd_alloc returned NULL" is shown.
+Patch below fixes it by moving cmd->scsi_done after cmd_free.
 
 Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/hpsa.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ drivers/scsi/hpsa.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 796482b..d7df01e 100644
+index d7df01e..48fa81e 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2662,15 +2662,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
- 	unsigned long flags;
+@@ -1180,8 +1180,8 @@ static void complete_scsi_command(struct CommandList *cp)
+ 	scsi_set_resid(cmd, ei->ResidualCnt);
  
- 	spin_lock_irqsave(&h->lock, flags);
--	do {
--		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
--		if (i == h->nr_cmds) {
--			spin_unlock_irqrestore(&h->lock, flags);
--			return NULL;
--		}
--	} while (test_and_set_bit
--		 (i & (BITS_PER_LONG - 1),
--		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
-+	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
-+	if (i == h->nr_cmds) {
-+		spin_unlock_irqrestore(&h->lock, flags);
-+		return NULL;
-+	}
-+	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
- 	h->nr_allocs++;
- 	spin_unlock_irqrestore(&h->lock, flags);
+ 	if (ei->CommandStatus == 0) {
+-		cmd->scsi_done(cmd);
+ 		cmd_free(h, cp);
++		cmd->scsi_done(cmd);
+ 		return;
+ 	}
  
+@@ -1353,8 +1353,8 @@ static void complete_scsi_command(struct CommandList *cp)
+ 		dev_warn(&h->pdev->dev, "cp %p returned unknown status %x\n",
+ 				cp, ei->CommandStatus);
+ 	}
+-	cmd->scsi_done(cmd);
+ 	cmd_free(h, cp);
++	cmd->scsi_done(cmd);
+ }
+ 
+ static void hpsa_pci_unmap(struct pci_dev *pdev,
 -- 
 1.8.3.1
-
 
