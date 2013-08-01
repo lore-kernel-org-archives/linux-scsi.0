@@ -1,120 +1,152 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] virtio-scsi: Fix virtqueue affinity setup
-Date: Thu, 1 Aug 2013 04:14:20 -0400 (EDT)
-Message-ID: <2135673314.7996630.1375344860388.JavaMail.root@redhat.com>
-References: <1375280279-7595-1-git-send-email-asias@redhat.com>
+From: Jan Vesely <jvesely@redhat.com>
+Subject: Re: [PATCH RESEND v2] block: modify __bio_add_page check to accept
+ pages that don't start a new segment
+Date: Thu, 01 Aug 2013 11:38:09 +0200
+Message-ID: <51FA2C81.9040007@redhat.com>
+References: <51505AC1.60809@redhat.com> <20130325142457.GD5401@kernel.dk> <51506EBA.8060708@redhat.com> <20130325194009.GL5401@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1375280279-7595-1-git-send-email-asias@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Asias He <asias@redhat.com>
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, virtualization@lists.linux-foundation.org, JBottomley@parallels.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130325194009.GL5401@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, fujita.tomonori@lab.ntt.co.jp, =?UTF-8?B?S2FpIE3DpGtpc2FyYQ==?= <kai.makisara@kolumbus.fi>, James Bottomley <james.bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> vscsi->num_queues counts the number of request virtqueue which does not
-> include the control and event virtqueue. It is wrong to subtract
-> VIRTIO_SCSI_VQ_BASE from vscsi->num_queues.
+On Mon 25 Mar 2013 20:40:09 CET, Jens Axboe wrote:
+> On Mon, Mar 25 2013, Jan Vesely wrote:
+>>  51506edc5741209311913
+>>
+>> On Mon 25 Mar 2013 15:24:57 CET, Jens Axboe wrote:
+>>> On Mon, Mar 25 2013, Jan Vesely wrote:
+>>>> v2: changed a comment
+>>>>
+>>>> The original behavior was to refuse all pages after the maximum number of
+>>>> segments has been reached. However, some drivers (like st) craft their buffers
+>>>> to potentially require exactly max segments and multiple pages in the last
+>>>> segment. This patch modifies the check to allow pages that can be merged into
+>>>> the last segment.
+>>>>
+>>>> Fixes EBUSY failures when using large tape block size in high
+>>>> memory fragmentation condition.
+>>>> This regression was introduced by commit
+>>>>  46081b166415acb66d4b3150ecefcd9460bb48a1
+>>>>  st: Increase success probability in driver buffer allocation
+>>>>
+>>>> Signed-off-by: Jan Vesely <jvesely@redhat.com>
+>>>>
+>>>> CC: Alexander Viro <viro@zeniv.linux.org.uk>
+>>>> CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>>>> CC: Kai Makisara <kai.makisara@kolumbus.fi>
+>>>> CC: James Bottomley <james.bottomley@hansenpartnership.com>
+>>>> CC: Jens Axboe <axboe@kernel.dk>
+>>>> CC: stable@vger.kernel.org
+>>>> ---
+>>>>  fs/bio.c | 27 +++++++++++++++++----------
+>>>>  1 file changed, 17 insertions(+), 10 deletions(-)
+>>>>
+>>>> diff --git a/fs/bio.c b/fs/bio.c
+>>>> index bb5768f..bc6af71 100644
+>>>> --- a/fs/bio.c
+>>>> +++ b/fs/bio.c
+>>>> @@ -500,7 +500,6 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+>>>>  			  *page, unsigned int len, unsigned int offset,
+>>>>  			  unsigned short max_sectors)
+>>>>  {
+>>>> -	int retried_segments = 0;
+>>>>  	struct bio_vec *bvec;
+>>>>
+>>>>  	/*
+>>>> @@ -551,18 +550,13 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+>>>>  		return 0;
+>>>>
+>>>>  	/*
+>>>> -	 * we might lose a segment or two here, but rather that than
+>>>> -	 * make this too complex.
+>>>> +	 * The first part of the segment count check,
+>>>> +	 * reduce segment count if possible
+>>>>  	 */
+>>>>
+>>>> -	while (bio->bi_phys_segments >= queue_max_segments(q)) {
+>>>> -
+>>>> -		if (retried_segments)
+>>>> -			return 0;
+>>>> -
+>>>> -		retried_segments = 1;
+>>>> +	if (bio->bi_phys_segments >= queue_max_segments(q))
+>>>>  		blk_recount_segments(q, bio);
+>>>> -	}
+>>>> +
+>>>>
+>>>>  	/*
+>>>>  	 * setup the new entry, we might clear it again later if we
+>>>> @@ -572,6 +566,19 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+>>>>  	bvec->bv_page = page;
+>>>>  	bvec->bv_len = len;
+>>>>  	bvec->bv_offset = offset;
+>>>> +	
+>>>> +	/*
+>>>> +	 * the other part of the segment count check, allow mergeable pages
+>>>> +	 */
+>>>> +	if ((bio->bi_phys_segments > queue_max_segments(q)) ||
+>>>> +		( (bio->bi_phys_segments == queue_max_segments(q)) &&
+>>>> +		!BIOVEC_PHYS_MERGEABLE(bvec - 1, bvec))) {
+>>>> +			bvec->bv_page = NULL;
+>>>> +			bvec->bv_len = 0;
+>>>> +			bvec->bv_offset = 0;
+>>>> +			return 0;
+>>>> +	}
+>>>> +
+>>>
+>>> This is a bit messy, I think. bi_phys_segments should never be allowed
+>>> to go beyond queue_ma_segments(), so the > test does not look right.
+>>> Maybe it's an artifact of when we fall through with this patch, we bump
+>>> bi_phys_segments even if the segments are physicall contig and
+>>> mergeable.
+>>
+>> yeah. it is messy, I tried to go for the least invasive changes.
+>>
+>> I took the '>' test from the original while loop '>='. The original
+>> behavior guaranteed bio->bi_phys_segments <= max_segments, if the bio
+>> satisfied this condition to begin with.  I did not find any guarantees
+>> that the 'bio' parameter of this function has to satisfy this
+>> condition in general.
+>>
+>> My understanding is that if a caller of this function (or one of the
+>> two that call this one) provides an invalid (segment-count-wise) bio,
+>> it will fail (return 0 added length), and let the caller handle the
+>> situation.  I admit, I did not check all the call paths that use these
+>> functions.
+>
+> Yes, that is how it works. So that should be fine.
+>
+>>> What happens when the segment is physically mergeable, but the resulting
+>>> merged segment is too large (bigger than q->limits.max_segment_size)?
+>>>
+>>
+>> ah, yes. I guess I need a check that follows __blk_recalc_rq_segments
+>> more closely.  We know that at this point all pages are merged into
+>> segments, so a helper function that would be used by both
+>> __blk_recalc_rq_segments and this check is possible.
+>>
+>>
+>> I still assume that a temporary increase of bi_phys_segments above
+>> max_segments is ok.  If we want to avoid this situation we would need
+>> to merge tail pages right away. That's imo uglier.
+>
+> Yes, it's OK if we just ensure that we clear the valid segment flag. At
+> least that would be the best sort of solution, to ensure that it's
+> recalculated properly when someone checks it.
+>
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+Hi Jens,
 
-> This patch fixes the following panic.
-> 
-> (qemu) device_del scsi0
-> 
->  BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
->  IP: [<ffffffff8179b29f>] __virtscsi_set_affinity+0x6f/0x120
->  PGD 0
->  Oops: 0000 [#1] SMP
->  Modules linked in:
->  CPU: 0 PID: 659 Comm: kworker/0:1 Not tainted 3.11.0-rc2+ #1172
->  Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
->  Workqueue: kacpi_hotplug _handle_hotplug_event_func
->  task: ffff88007bee1cc0 ti: ffff88007bfe4000 task.ti: ffff88007bfe4000
->  RIP: 0010:[<ffffffff8179b29f>]  [<ffffffff8179b29f>]
->  __virtscsi_set_affinity+0x6f/0x120
->  RSP: 0018:ffff88007bfe5a38  EFLAGS: 00010202
->  RAX: 0000000000000010 RBX: ffff880077fd0d28 RCX: 0000000000000050
->  RDX: 0000000000000000 RSI: 0000000000000246 RDI: 0000000000000000
->  RBP: ffff88007bfe5a58 R08: ffff880077f6ff00 R09: 0000000000000001
->  R10: ffffffff8143e673 R11: 0000000000000001 R12: 0000000000000001
->  R13: ffff880077fd0800 R14: 0000000000000000 R15: ffff88007bf489b0
->  FS:  0000000000000000(0000) GS:ffff88007ea00000(0000) knlGS:0000000000000000
->  CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
->  CR2: 0000000000000020 CR3: 0000000079f8b000 CR4: 00000000000006f0
->  Stack:
->   ffff880077fd0d28 0000000000000000 ffff880077fd0800 0000000000000008
->   ffff88007bfe5a78 ffffffff8179b37d ffff88007bccc800 ffff88007bccc800
->   ffff88007bfe5a98 ffffffff8179b3b6 ffff88007bccc800 ffff880077fd0d28
->  Call Trace:
->   [<ffffffff8179b37d>] virtscsi_set_affinity+0x2d/0x40
->   [<ffffffff8179b3b6>] virtscsi_remove_vqs+0x26/0x50
->   [<ffffffff8179c7d2>] virtscsi_remove+0x82/0xa0
->   [<ffffffff814cb6b2>] virtio_dev_remove+0x22/0x70
->   [<ffffffff8167ca49>] __device_release_driver+0x69/0xd0
->   [<ffffffff8167cb9d>] device_release_driver+0x2d/0x40
->   [<ffffffff8167bb96>] bus_remove_device+0x116/0x150
->   [<ffffffff81679936>] device_del+0x126/0x1e0
->   [<ffffffff81679a06>] device_unregister+0x16/0x30
->   [<ffffffff814cb889>] unregister_virtio_device+0x19/0x30
->   [<ffffffff814cdad6>] virtio_pci_remove+0x36/0x80
->   [<ffffffff81464ae7>] pci_device_remove+0x37/0x70
->   [<ffffffff8167ca49>] __device_release_driver+0x69/0xd0
->   [<ffffffff8167cb9d>] device_release_driver+0x2d/0x40
->   [<ffffffff8167bb96>] bus_remove_device+0x116/0x150
->   [<ffffffff81679936>] device_del+0x126/0x1e0
->   [<ffffffff8145edfc>] pci_stop_bus_device+0x9c/0xb0
->   [<ffffffff8145f036>] pci_stop_and_remove_bus_device+0x16/0x30
->   [<ffffffff81474a9e>] acpiphp_disable_slot+0x8e/0x150
->   [<ffffffff81474f6a>] hotplug_event_func+0xba/0x1a0
->   [<ffffffff814906c8>] ? acpi_os_release_object+0xe/0x12
->   [<ffffffff81475911>] _handle_hotplug_event_func+0x31/0x70
->   [<ffffffff810b5333>] process_one_work+0x183/0x500
->   [<ffffffff810b66e2>] worker_thread+0x122/0x400
->   [<ffffffff810b65c0>] ? manage_workers+0x2d0/0x2d0
->   [<ffffffff810bc5de>] kthread+0xce/0xe0
->   [<ffffffff810bc510>] ? kthread_freezable_should_stop+0x70/0x70
->   [<ffffffff81ca045c>] ret_from_fork+0x7c/0xb0
->   [<ffffffff810bc510>] ? kthread_freezable_should_stop+0x70/0x70
->  Code: 01 00 00 00 74 59 45 31 e4 83 bb c8 01 00 00 02 74 46 66 2e 0f 1f 84
->  00 00 00 00 00 49 63 c4 48 c1 e0 04 48 8b bc 0
-> 3 10 02 00 00 <48> 8b 47 20 48 8b 80 d0 01 00 00 48 8b 40 50 48 85 c0 74 07
-> be
->  RIP  [<ffffffff8179b29f>] __virtscsi_set_affinity+0x6f/0x120
->   RSP <ffff88007bfe5a38>
->  CR2: 0000000000000020
->  ---[ end trace 99679331a3775f48 ]---
-> 
-> CC: stable@vger.kernel.org
-> Signed-off-by: Asias He <asias@redhat.com>
-> ---
->  drivers/scsi/virtio_scsi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 2168258..74b88ef 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -751,7 +751,7 @@ static void __virtscsi_set_affinity(struct virtio_scsi
-> *vscsi, bool affinity)
->  
->  		vscsi->affinity_hint_set = true;
->  	} else {
-> -		for (i = 0; i < vscsi->num_queues - VIRTIO_SCSI_VQ_BASE; i++)
-> +		for (i = 0; i < vscsi->num_queues; i++)
->  			virtqueue_set_affinity(vscsi->req_vqs[i].vq, -1);
->  
->  		vscsi->affinity_hint_set = false;
-> --
-> 1.8.3.1
-> 
-> 
+v3 has been around for few months and I posted v4(whitespace changes) 
+two weeks ago.
+Let me know if there's something more I can do to get these patches 
+merged.
+
+regards,
+--
+Jan Vesely <jvesely@redhat.com>
