@@ -1,52 +1,122 @@
-From: "Brandt, Todd E" <todd.e.brandt@intel.com>
-Subject: RE: [PATCH] Hard disk S3 resume time optimization
-Date: Fri, 2 Aug 2013 17:12:58 +0000
-Message-ID: <11E08D716F0541429B7042699DD5C1A170680503@FMSMSX103.amr.corp.intel.com>
-References: <11E08D716F0541429B7042699DD5C1A1706803A6@FMSMSX103.amr.corp.intel.com>
-	,<1375447356.2138.13.camel@linux-fkkt.site>
-	 <11E08D716F0541429B7042699DD5C1A1706804B6@FMSMSX103.amr.corp.intel.com>,<1375463105.13494.0.camel@linux-fkkt.site>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH] lpfc: Removed obsolete fcp_eq_count and fcp_wq_count driver
+ attributes
+Date: Fri, 2 Aug 2013 15:32:27 -0400
+Message-ID: <1375471947.6339.4.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1375463105.13494.0.camel@linux-fkkt.site>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:57674 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755285Ab3HBTcx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Aug 2013 15:32:53 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Errors are reported through printk. In the upstream kernel this is the spot where an error would be detected and reported for a bad sd_resume:
+Removed obsolete fcp_eq_count and fcp_wq_count driver attributes.
 
-drivers/scsi/sd.c:3061
+The patches were cut against scsi.git, branch "misc", plus the lpfc 8.3.41 patch set
+posted a couple of weeks ago.
 
-        if (res) {
-                sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
-                sd_print_result(sdkp, res);
-                if (driver_byte(res) & DRIVER_SENSE)
-                        sd_print_sense_hdr(sdkp, &sshdr);
-        }
-
-So it would print out the device id with a message that the start_stop failed, and then optionally print out the sense buffer if it was supplied.
+-- james
 
 
-Todd Brandt
-Linux Kernel Developer OTC, Hillsboro OR
-https://opensource.intel.com/linux-wiki/ToddBrandt
+Signed-off-by: James Smart <james.smart@emulex.com>
+
+ ---
+
+ lpfc.h      |    2 --
+ lpfc_attr.c |   23 -----------------------
+ lpfc_init.c |    7 -------
+ 3 files changed, 32 deletions(-)
 
 
-________________________________________
-From: Oliver Neukum [oneukum@suse.de]
-Sent: Friday, August 02, 2013 10:05 AM
-To: Brandt, Todd E
-Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] Hard disk S3 resume time optimization
-
-On Fri, 2013-08-02 at 16:41 +0000, Brandt, Todd E wrote:
-> Do you mean in terms of debug after a failure? I can resubmit the patch with the scsi_sense_hdr buffer still in place. I just wanted to keep the first draft simple to get the concept across.
-How are errors reported?
-
-        Regards
-                Oliver
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2013-08-02 14:14:38.269047324 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2013-08-02 15:08:03.112120297 -0400
+@@ -4121,25 +4121,6 @@ LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Messa
+ 	    "MSI-X (2), if possible");
+ 
+ /*
+-# lpfc_fcp_wq_count: Set the number of fast-path FCP work queues
+-# This parameter is ignored and will eventually be depricated
+-#
+-# Value range is [1,7]. Default value is 4.
+-*/
+-LPFC_ATTR_R(fcp_wq_count, LPFC_FCP_IO_CHAN_DEF, LPFC_FCP_IO_CHAN_MIN,
+-	    LPFC_FCP_IO_CHAN_MAX,
+-	    "Set the number of fast-path FCP work queues, if possible");
+-
+-/*
+-# lpfc_fcp_eq_count: Set the number of FCP EQ/CQ/WQ IO channels
+-#
+-# Value range is [1,7]. Default value is 4.
+-*/
+-LPFC_ATTR_R(fcp_eq_count, LPFC_FCP_IO_CHAN_DEF, LPFC_FCP_IO_CHAN_MIN,
+-	    LPFC_FCP_IO_CHAN_MAX,
+-	    "Set the number of fast-path FCP event queues, if possible");
+-
+-/*
+ # lpfc_fcp_io_channel: Set the number of FCP EQ/CQ/WQ IO channels
+ #
+ # Value range is [1,7]. Default value is 4.
+@@ -4317,8 +4298,6 @@ struct device_attribute *lpfc_hba_attrs[
+ 	&dev_attr_lpfc_use_msi,
+ 	&dev_attr_lpfc_fcp_imax,
+ 	&dev_attr_lpfc_fcp_cpu_map,
+-	&dev_attr_lpfc_fcp_wq_count,
+-	&dev_attr_lpfc_fcp_eq_count,
+ 	&dev_attr_lpfc_fcp_io_channel,
+ 	&dev_attr_lpfc_enable_bg,
+ 	&dev_attr_lpfc_soft_wwnn,
+@@ -5301,8 +5280,6 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	lpfc_use_msi_init(phba, lpfc_use_msi);
+ 	lpfc_fcp_imax_init(phba, lpfc_fcp_imax);
+ 	lpfc_fcp_cpu_map_init(phba, lpfc_fcp_cpu_map);
+-	lpfc_fcp_wq_count_init(phba, lpfc_fcp_wq_count);
+-	lpfc_fcp_eq_count_init(phba, lpfc_fcp_eq_count);
+ 	lpfc_fcp_io_channel_init(phba, lpfc_fcp_io_channel);
+ 	lpfc_enable_hba_reset_init(phba, lpfc_enable_hba_reset);
+ 	lpfc_enable_hba_heartbeat_init(phba, lpfc_enable_hba_heartbeat);
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2013-08-02 14:14:38.305047324 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2013-08-02 15:09:36.199122417 -0400
+@@ -711,8 +711,6 @@ struct lpfc_hba {
+ 	uint32_t cfg_use_msi;
+ 	uint32_t cfg_fcp_imax;
+ 	uint32_t cfg_fcp_cpu_map;
+-	uint32_t cfg_fcp_wq_count;
+-	uint32_t cfg_fcp_eq_count;
+ 	uint32_t cfg_fcp_io_channel;
+ 	uint32_t cfg_total_seg_cnt;
+ 	uint32_t cfg_sg_seg_cnt;
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2013-08-02 14:14:38.086047320 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2013-08-02 15:08:13.576120536 -0400
+@@ -4913,9 +4913,6 @@ lpfc_sli4_driver_resource_setup(struct l
+ 	lpfc_get_cfgparam(phba);
+ 	phba->max_vpi = LPFC_MAX_VPI;
+ 
+-	/* Eventually cfg_fcp_eq_count / cfg_fcp_wq_count will be depricated */
+-	phba->cfg_fcp_io_channel = phba->cfg_fcp_eq_count;
+-
+ 	/* This will be set to correct value after the read_config mbox */
+ 	phba->max_vports = 0;
+ 
+@@ -6873,11 +6870,7 @@ lpfc_sli4_queue_verify(struct lpfc_hba *
+ 		cfg_fcp_io_channel = phba->sli4_hba.max_cfg_param.max_eq;
+ 	}
+ 
+-	/* Eventually cfg_fcp_eq_count / cfg_fcp_wq_count will be depricated */
+-
+ 	/* The actual number of FCP event queues adopted */
+-	phba->cfg_fcp_eq_count = cfg_fcp_io_channel;
+-	phba->cfg_fcp_wq_count = cfg_fcp_io_channel;
+ 	phba->cfg_fcp_io_channel = cfg_fcp_io_channel;
+ 
+ 	/* Get EQ depth from module parameter, fake the default for now */
 
 
