@@ -1,47 +1,84 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH 0/2] mpt2sas/mpt3sas resource cleanup fixes
-Date: Fri,  2 Aug 2013 16:01:22 -0400
-Message-ID: <1375473684-12566-1-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH 1/2] mpt2sas: fix cleanup on controller resource mapping failure
+Date: Fri,  2 Aug 2013 16:01:23 -0400
+Message-ID: <1375473684-12566-2-git-send-email-joe.lawrence@stratus.com>
+References: <1375473684-12566-1-git-send-email-joe.lawrence@stratus.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub5.stratus.com ([134.111.1.18]:43729 "EHLO
+Received: from mailhub.stratus.com ([134.111.1.18]:43734 "EHLO
 	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400Ab3HBUCz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Aug 2013 16:02:55 -0400
+	with ESMTP id S1751870Ab3HBUDJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Aug 2013 16:03:09 -0400
+In-Reply-To: <1375473684-12566-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Sreekanth.Reddy@lsi.com, Joe Lawrence <joe.lawrence@stratus.com>
 
-Hi Sreekanth,
+If mpt2sas_base_map_resources takes an early error path then its
+counterpart, mpt2sas_base_free_resources needs to be careful about
+cleaning up:
 
-When testing unrelated PCI hotplug API, I hit a crash in mpt2sas when
-pci_enable_device_mem failed in mpt2sas_base_map_resources.
+  1 - _base_mask_interrupts and _base_make_ioc_ready require memory
+      mapped I/O registers, make sure that this is true.
 
-It looks like mpt2sas_base_free_resources is not careful enough about
-cleaning up only the resources that have been setup.  For example,
-ioc->chip may not have been mapped yet, but mpt2sas_base_free_resources
-calls functions that expect that it is.  Also, it seems that the
-ioc->reply_queue_list head is initialized too late, as _base_free_irq
-assumes that it is safe to iterate.
+  2 - _base_free_irq iterates over the adapter's reply_queue_list, so
+      move this list head initialization out of _base_enable_msix to
+      _scsih_probe so this will always be safe.
 
-I reproduced / tested this by inserting a "return -ENODEV" at the top of
-mpt2sas_base_map_resources.  I don't have access to mpt3sas HW, but that
-driver code looks exactly the same.
-
-Patches based off of 3.11.0-rc3.
-
-Regards,
-
-Joe Lawrence (2):
-  mpt2sas: fix cleanup on controller resource mapping failure
-  mpt3sas: fix cleanup on controller resource mapping failure
-
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+---
  drivers/scsi/mpt2sas/mpt2sas_base.c  | 16 +++++++++-------
  drivers/scsi/mpt2sas/mpt2sas_scsih.c |  1 +
- drivers/scsi/mpt3sas/mpt3sas_base.c  | 16 +++++++++-------
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  1 +
- 4 files changed, 20 insertions(+), 14 deletions(-)
+ 2 files changed, 10 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index ccd6d5a..dd03ab8 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1409,8 +1409,6 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	int i;
+ 	u8 try_msix = 0;
+ 
+-	INIT_LIST_HEAD(&ioc->reply_queue_list);
+-
+ 	if (msix_disable == -1 || msix_disable == 0)
+ 		try_msix = 1;
+ 
+@@ -4229,13 +4227,17 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	dexitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+ 	    __func__));
+ 
+-	_base_mask_interrupts(ioc);
+-	ioc->shost_recovery = 1;
+-	_base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
+-	ioc->shost_recovery = 0;
++	if (ioc->chip_phys && ioc->chip) {
++		_base_mask_interrupts(ioc);
++		ioc->shost_recovery = 1;
++		_base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
++		ioc->shost_recovery = 0;
++	}
++
+ 	_base_free_irq(ioc);
+ 	_base_disable_msix(ioc);
+-	if (ioc->chip_phys)
++
++	if (ioc->chip_phys && ioc->chip)
+ 		iounmap(ioc->chip);
+ 	ioc->chip_phys = 0;
+ 	pci_release_selected_regions(ioc->pdev, ioc->bars);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 5100476..389d792 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -8175,6 +8175,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	INIT_LIST_HEAD(&ioc->sas_hba.sas_port_list);
+ 	INIT_LIST_HEAD(&ioc->delayed_tr_list);
+ 	INIT_LIST_HEAD(&ioc->delayed_tr_volume_list);
++	INIT_LIST_HEAD(&ioc->reply_queue_list);
+ 
+ 	/* init shost parameters */
+ 	shost->max_cmd_len = 32;
 -- 
 1.8.3.1
 
