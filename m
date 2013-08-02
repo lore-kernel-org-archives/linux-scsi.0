@@ -1,54 +1,45 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Ejected Nook (usb mass storage) prevents suspend
-Date: Fri, 2 Aug 2013 10:18:44 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1308021015200.1176-100000@iolanthe.rowland.org>
-References: <1375452665.2138.17.camel@linux-fkkt.site>
+From: "Brandt, Todd E" <todd.e.brandt@intel.com>
+Subject: RE: [PATCH] Hard disk S3 resume time optimization
+Date: Fri, 2 Aug 2013 16:41:18 +0000
+Message-ID: <11E08D716F0541429B7042699DD5C1A1706804B6@FMSMSX103.amr.corp.intel.com>
+References: <11E08D716F0541429B7042699DD5C1A1706803A6@FMSMSX103.amr.corp.intel.com>,<1375447356.2138.13.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1375452665.2138.17.camel-B2T3B9s34ElbnMAlSieJcQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>
-Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, hare-l3A5Bk7waGM@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1375447356.2138.13.camel@linux-fkkt.site>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2 Aug 2013, Oliver Neukum wrote:
+Do you mean in terms of debug after a failure? I can resubmit the patch with the scsi_sense_hdr buffer still in place. I just wanted to keep the first draft simple to get the concept across. 
 
-> On Fri, 2013-08-02 at 09:54 -0400, Alan Stern wrote:
-> > On Fri, 2 Aug 2013, Oliver Neukum wrote:
-> > 
-> > > On Thu, 2013-08-01 at 11:53 -0400, Alan Stern wrote:
-> > > > On Thu, 1 Aug 2013, Oliver Neukum wrote:
-> > > > 
-> > > > > On Wed, 2013-07-31 at 11:13 -0400, Alan Stern wrote:
-> > > > > 
-> > > > > > More importantly, if we already know that the medium is not present or
-> > > > > > has been changed since it was last used, then there's no reason to call
-> > > > > > sd_sync_cache() at all.
-> > > > > 
-> > > > > Like this?
-> > > > 
-> > > > Yes, I like this a lot better, except I would put the test for 
-> > > > !sdkp->media_present in sd_suspend_common() -- no need to print the
-> > > 
-> > > But your observation that it makes no sense while no medium is present
-> > > is valid whatever be the reason for wanting to flush.
-> > 
-> > So do the test in both places.
-> 
-> Code duplication for what reasons?
+Todd Brandt
+Linux Kernel Developer OTC, Hillsboro OR
+https://opensource.intel.com/linux-wiki/ToddBrandt
 
-Like I said before, to avoid printing a misleading line in the kernel 
-log.
 
-If you prefer, just get rid of the log message.  Or make it KERN_DEBUG 
-instead of KERN_NOTICE, along with the "Stopping disk" message.  Those 
-two things might get pretty annoying when people start using 
-block-layer runtime PM.
+________________________________________
+From: linux-scsi-owner@vger.kernel.org [linux-scsi-owner@vger.kernel.org] on behalf of Oliver Neukum [oneukum@suse.de]
+Sent: Friday, August 02, 2013 5:42 AM
+To: Brandt, Todd E
+Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] Hard disk S3 resume time optimization
 
-Alan Stern
+On Thu, 2013-08-01 at 23:40 +0000, Brandt, Todd E wrote:
+> This patch is a potential way to reduce the S3 resume time for SATA drives. Essentially this patch removes the hard disk resume time from the total system resume time, with the disks still taking as long to come back online but in the background.
+>
+> The major bottleneck is in the ata port resume which sends out a wakeup command and then waits up to several seconds for the port to resume. This patch changes the ata_port_resume_common function to be non blocking. The other bottleneck is in the scsi disk resume code, which issues a a command to startup the disk with blk_execute_rq, which then waits for the command to finish (which also depends on the ata port being fully resumed). The patch switches the sd_resume function to use blk_execute_rq_nowait instead (the underlying code is identical to sd_resume, but is changed to non-blocking).
+
+But how do we know the command has succeeded?
+
+        Regards
+                Oliver
+
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
