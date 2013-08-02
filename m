@@ -1,30 +1,41 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH] Hard disk S3 resume time optimization
-Date: Fri, 02 Aug 2013 14:42:36 +0200
-Message-ID: <1375447356.2138.13.camel@linux-fkkt.site>
-References: <11E08D716F0541429B7042699DD5C1A1706803A6@FMSMSX103.amr.corp.intel.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Ejected Nook (usb mass storage) prevents suspend
+Date: Fri, 2 Aug 2013 09:54:55 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1308020954120.1176-100000@iolanthe.rowland.org>
+References: <1375428187.2138.4.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45658 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750848Ab3HBMmi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Aug 2013 08:42:38 -0400
-In-Reply-To: <11E08D716F0541429B7042699DD5C1A1706803A6@FMSMSX103.amr.corp.intel.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:37028 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753020Ab3HBNy4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Aug 2013 09:54:56 -0400
+In-Reply-To: <1375428187.2138.4.camel@linux-fkkt.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Brandt, Todd E" <todd.e.brandt@intel.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Andy Lutomirski <luto@amacapital.net>, linux-usb@vger.kernel.org, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, hare@suse.de
 
-On Thu, 2013-08-01 at 23:40 +0000, Brandt, Todd E wrote:
-> This patch is a potential way to reduce the S3 resume time for SATA drives. Essentially this patch removes the hard disk resume time from the total system resume time, with the disks still taking as long to come back online but in the background.
+On Fri, 2 Aug 2013, Oliver Neukum wrote:
+
+> On Thu, 2013-08-01 at 11:53 -0400, Alan Stern wrote:
+> > On Thu, 1 Aug 2013, Oliver Neukum wrote:
+> > 
+> > > On Wed, 2013-07-31 at 11:13 -0400, Alan Stern wrote:
+> > > 
+> > > > More importantly, if we already know that the medium is not present or
+> > > > has been changed since it was last used, then there's no reason to call
+> > > > sd_sync_cache() at all.
+> > > 
+> > > Like this?
+> > 
+> > Yes, I like this a lot better, except I would put the test for 
+> > !sdkp->media_present in sd_suspend_common() -- no need to print the
 > 
-> The major bottleneck is in the ata port resume which sends out a wakeup command and then waits up to several seconds for the port to resume. This patch changes the ata_port_resume_common function to be non blocking. The other bottleneck is in the scsi disk resume code, which issues a a command to startup the disk with blk_execute_rq, which then waits for the command to finish (which also depends on the ata port being fully resumed). The patch switches the sd_resume function to use blk_execute_rq_nowait instead (the underlying code is identical to sd_resume, but is changed to non-blocking).
+> But your observation that it makes no sense while no medium is present
+> is valid whatever be the reason for wanting to flush.
 
-But how do we know the command has succeeded?
+So do the test in both places.
 
-	Regards
-		Oliver
-
+Alan Stern
 
