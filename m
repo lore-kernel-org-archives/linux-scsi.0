@@ -1,39 +1,66 @@
-From: Nick Alcock <nick.alcock@esperi.org.uk>
-Subject: Re: [PATCH] scsi disk: Use its own buffer for the vpd request
-Date: Sat, 03 Aug 2013 12:17:31 +0100
-Message-ID: <87vc3nuipg.fsf@spindle.srvr.nix>
-References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm>
-	<87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm>
-	<87fvuxdqes.fsf@spindle.srvr.nix> <yq1txjdhree.fsf@sermon.lab.mkp.net>
-	<51F80167.1080004@fastmail.fm> <yq1zjt3h11y.fsf@sermon.lab.mkp.net>
-	<51F94E8D.5040908@fastmail.fm> <51F95A2E.60805@fastmail.fm>
-	<51FA71E2.6010501@fastmail.fm>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60686] New: USB 3.0 disks do not mount
+Date: Sun, 04 Aug 2013 07:57:03 +0000
+Message-ID: <bug-60686-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <51FA71E2.6010501@fastmail.fm> (Bernd Schubert's message of "Thu,
-	01 Aug 2013 16:34:10 +0200")
-Sender: stable-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@fastmail.fm>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw, stable@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:40656 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752009Ab3HDH5H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Aug 2013 03:57:07 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 1BE1F20161
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Aug 2013 07:57:05 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id D29712015E
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Aug 2013 07:57:03 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 1 Aug 2013, Bernd Schubert stated:
+https://bugzilla.kernel.org/show_bug.cgi?id=60686
 
-> Once I noticed that scsi_get_vpd_page() works fine from other function
-> calls and that it is not 0x89, but already 0x0 that fails fixing it became
-> easy.
->
-> Nix, any chance you could verify it also works for you?
+            Bug ID: 60686
+           Summary: USB 3.0 disks do not mount
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: v3.11-rc3-376-g72a67a9
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: ziegler@uni-freiburg.de
+        Regression: Yes
 
-Confirmed, thank you!
+My USB-disk
+             SCSI Disk
+             product: External USB 3.0
+             vendor: TOSHIBA
+             physical id: 0.0.0
+             bus info: scsi@6:0.0.0
+             logical name: /dev/sdb
+             version: 0201
+             serial: D010A553
+             size: 465GiB (500GB)
+             configuration: ansiversion=6 sectorsize=512
 
-> Somehow older areca firmware versions have issues with
-> scsi_get_vpd_page() and a large buffer.
+cannot be mounted. /dev/g2 exists, but udev does not generate /dev/sdb.
+This seems to be the bug discussed in
+http://www.spinics.net/lists/stable/msg15978.html. As described there, the bugs
+goes away if one reverts 
 
-I wonder if they're using math modulo SD_BUF_SIZE-1 by mistake, so they
-misinterpret this as zero? (Still, doing math modulo 511 seems very
-odd, even if this firmware *does* only support 512-byte sectors.)
+  commit 66c28f97120e8a621afd5aa7a31c4b85c547d33d
+  Author: Martin K. Petersen <martin.petersen@oracle.com>
+  Date:   Thu Jun 6 22:15:55 2013 -0400
+
+    [SCSI] sd: Update WRITE SAME heuristics
 
 -- 
-NULL && (void)
+You are receiving this mail because:
+You are watching the assignee of the bug.
