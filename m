@@ -1,184 +1,339 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
-Date: Mon, 05 Aug 2013 16:52:26 -0400
-Message-ID: <5200108A.9020008@interlog.com>
-References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com> <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com> <20130722170338.GA15824@logfs.org> <51F9EB97.7070305@interlog.com> <51FC9449.4060906@interlog.com> <51FF0BC0.5020702@oracle.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:50246 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753013Ab3HEUxN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Aug 2013 16:53:13 -0400
-In-Reply-To: <51FF0BC0.5020702@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] [SCSI] sg: Fix user memory corruption when SG_IO is interrupted by a signal
+Date: Mon,  5 Aug 2013 15:02:01 -0700
+Message-ID: <1375740121-23350-1-git-send-email-roland@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Doug Gilbert <dgilbert@interlog.com>, James Bottomley <JBottomley@Parallels.com>
+Cc: Costa Sapuntzakis <costa@purestorage.com>, =?UTF-8?q?J=C3=B6rn=20Engel?= <joern@purestorage.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vaughan <vaughan.cao@oracle.com>
-Cc: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 13-08-04 10:19 PM, vaughan wrote:
-> On 08/03/2013 01:25 PM, Douglas Gilbert wrote:
->> On 13-08-01 01:01 AM, Douglas Gilbert wrote:
->>> On 13-07-22 01:03 PM, J=C3=B6rn Engel wrote:
->>>> On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
->>>>>
->>>>> There is a race when open sg with O_EXCL flag. Also a race may
->>>>> happen between
->>>>> sg_open and sg_remove.
->>>>>
->>>>> Changes from v4:
->>>>>    * [3/4] use ERR_PTR series instead of adding another parameter=
- in
->>>>> sg_add_sfp
->>>>>    * [4/4] fix conflict for cherry-pick from v3.
->>>>>
->>>>> Changes from v3:
->>>>>    * release o_sem in sg_release(), not in sg_remove_sfp().
->>>>>    * not set exclude with sfd_lock held.
->>>>>
->>>>> Vaughan Cao (4):
->>>>>     [SCSI] sg: use rwsem to solve race during exclusive open
->>>>>     [SCSI] sg: no need sg_open_exclusive_lock
->>>>>     [SCSI] sg: checking sdp->detached isn't protected when open
->>>>>     [SCSI] sg: push file descriptor list locking down to per-devi=
-ce
->>>>>       locking
->>>>>
->>>>>    drivers/scsi/sg.c | 178
->>>>> +++++++++++++++++++++++++-----------------------------
->>>>>    1 file changed, 83 insertions(+), 95 deletions(-)
->>>>
->>>> Patchset looks good to me, although I didn't test it on hardware y=
-et.
->>>> Signed-off-by: Joern Engel <joern@logfs.org>
->>>>
->>>> James, care to pick this up?
->>>
->>> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
->>>
->>> Tested O_EXCL with multiple processes and threads; passed.
->>> sg driver prior to this patch had "leaky" O_EXCL logic
->>> according to the same test. Block device passed.
->>>
->>> James, could you clean this up:
->>>     drivers/scsi/sg.c:242:6: warning: unused variable =E2=80=98res=E2=
-=80=99
->>> [-Wunused-variable]
->>
->> Further testing suggests this patch on the sg driver is
->> broken, so I'll rescind my ack.
->>
->> The case it is broken for is when a device is opened
->> without O_EXCL. Now if, while it is open, a second
->> thread/process tries to open the same device O_EXCL
->> then IMO the second open should fail with EBUSY.
->>
->> My testing shows that O_EXCL opens properly deflect
->> other O_EXCL opens.
-> Hi  Doug,
->
-> My test don't have this issue. The routine is something as below:
->
-> I start three opens without O_EXCL, wait 30s each, and open with
-> O_EXCL|O_NONBLOCK, it failed with EBUSY.
-> And I also call myopen with/without O_EXCL many times in background a=
-t
-> the same time, and the test is passed. I don't know why it failed in
-> your test.
->
-> Usage: myopen [-e][-n][-d delay] -f file
->        -e: exclude
->        -n: nonblock
->        -d: delay N seconds and then close.
->
-> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
-> [1] 3417
-> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
-> [2] 3418
-> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
-> [3] 3419
-> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
-> max_active_device=3D6(origin 1)
->   def_reserved_size=3D32768
->   >>> device=3Dsg5 scsi5 chan=3D0 id=3D1 lun=3D0   em=3D0 sg_tablesiz=
-e=3D55 excl=3D0
->     FD(1): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
-0
->     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->       No requests active
->     FD(2): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
-0
->     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->       No requests active
->     FD(3): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
-0
->     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->       No requests active
->
-> [root@vacaowol5 16835013]# ./myopen -e -n  -f /dev/sg5 -d 30 &
-> [4] 3422
-> [3422:3351] /dev/sg5:exclude: Device or resource busy
->
-> [4]+  Exit 1                  ./myopen -e -n -f /dev/sg5 -d 30
->
-> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
-> max_active_device=3D6(origin 1)
->   def_reserved_size=3D32768
->   >>> device=3Dsg5 scsi5 chan=3D0 id=3D1 lun=3D0   em=3D0 sg_tablesiz=
-e=3D55 excl=3D0
->     FD(1): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
-0
->     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->       No requests active
->     FD(2): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
-0
->     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->       No requests active
->     FD(3): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
-0
->     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->       No requests active
-> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
-> [1]   Done                    ./myopen -f /dev/sg5 -d 30
-> [2]-  Done                    ./myopen -f /dev/sg5 -d 30
-> [3]+  Done                    ./myopen -f /dev/sg5 -d 30
->
+From: Roland Dreier <roland@purestorage.com>
 
-Hi,
-After the initial failures about 36 hours ago, retesting
-yesterday and today has not produced any unexpected
-failures. And I have been trying hard on lk 3.10.4 and
-lk 3.10.5 .
+There is a nasty bug in the SCSI SG_IO ioctl that in some circumstances
+leads to one process writing data into the address space of some other
+random unrelated process if the ioctl is interrupted by a signal.
+What happens is the following:
 
-My test program is a bit more intense than yours and can
-be found in the sg3_utils beta in the News section of this
-page:
-   http://sg.danny.cz/sg/
+ - A process issues an SG_IO ioctl with direction DXFER_FROM_DEV (ie the
+   underlying SCSI command will transfer data from the SCSI device to
+   the buffer provided in the ioctl)
 
-It is in the examples directory, two variants called
-sg_tst_excl and sg_tst_excl2 . You will need a recent gcc
-compiler, IOW something that can compile c++11 . gcc 4.7.3
-in Ubuntu 13.04 only just manages, fedora 19 should do
-better with gcc 4.8.1 . The threading is implemented using
-pthreads so it should be reliable.
+ - Before the command finishes, a signal is sent to the process waiting
+   in the ioctl.  This will end up waking up the sg_ioctl() code:
 
-Typically I run multiple instances (processes) and each has
-multiple threads. One instance can run '-x' which will cause
-its first thread not to use O_EXCL **. All my tests currently
-use O_NONBLOCK and that leads to lots of EBUSYs (sometimes
-in the billions).
+		result = wait_event_interruptible(sfp->read_wait,
+			(srp_done(sfp, srp) || sdp->detached));
 
-Doug Gilbert
+   but neither srp_done() nor sdp->detached is true, so we end up just
+   setting srp->orphan and returning to userspace:
 
+		srp->orphan = 1;
+		write_unlock_irq(&sfp->rq_list_lock);
+		return result;	/* -ERESTARTSYS because signal hit process */
 
-** Using '-x' on two instances will cause an expected failure
-    so can be used as a control.
+   At this point the original process is done with the ioctl and
+   blithely goes ahead handling the signal, reissuing the ioctl, etc.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ - Eventually, the SCSI command issued by the first ioctl finishes and
+   ends up in sg_rq_end_io().  At the end of that function, we run through:
+
+	write_lock_irqsave(&sfp->rq_list_lock, iflags);
+	if (unlikely(srp->orphan)) {
+		if (sfp->keep_orphan)
+			srp->sg_io_owned = 0;
+		else
+			done = 0;
+	}
+	srp->done = done;
+	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+
+	if (likely(done)) {
+		/* Now wake up any sg_read() that is waiting for this
+		 * packet.
+		 */
+		wake_up_interruptible(&sfp->read_wait);
+		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+		kref_put(&sfp->f_ref, sg_remove_sfp);
+	} else {
+		INIT_WORK(&srp->ew.work, sg_rq_end_io_usercontext);
+		schedule_work(&srp->ew.work);
+	}
+
+   Since srp->orphan *is* set, we set done to 0 (assuming the
+   userspace app has not set keep_orphan via an SG_SET_KEEP_ORPHAN
+   ioctl), and therefore we end up scheduling sg_rq_end_io_usercontext()
+   to run in a workqueue.
+
+ - In workqueue context we go through sg_rq_end_io_usercontext() ->
+   sg_finish_rem_req() -> blk_rq_unmap_user() -> ... ->
+   bio_uncopy_user() -> __bio_copy_iov() -> copy_to_user().
+
+   The key point here is that we are doing copy_to_user() on a
+   workqueue -- that is, we're on a kernel thread with current->mm
+   equal to whatever random previous user process was scheduled before
+   this kernel thread.  So we end up copying whatever data the SCSI
+   command returned to the virtual address of the buffer passed into
+   the original ioctl, but it's quite likely we do this copying into a
+   different address space!
+
+Fix this by telling sg_finish_rem_req() whether we're on a workqueue
+or not, and if we are, calling a new function blk_rq_unmap_user_nocopy()
+that does everything the original blk_rq_unmap_user() does except
+calling copy_{to,from}_user().  This requires a few levels of plumbing
+through a "copy" flag in the bio layer.
+
+I also considered fixing this by having the sg code just set
+BIO_NULL_MAPPED for bios that are unmapped from a workqueue, which
+happens to work because the __free_page() part of __bio_copy_iov()
+isn't needed for sg (because sg handles its own pages).  However, this
+seems coincidental and fragile, so I preferred making the fix
+explicit, at the cost of minor tweaks to the bio code.
+
+Huge thanks to Costa Sapuntzakis <costa@purestorage.com> for the
+original pointer to this bug in the sg code.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+Cc: <stable@vger.kernel.org>
+---
+ block/blk-map.c        | 15 ++++++++-------
+ drivers/scsi/sg.c      | 19 ++++++++++---------
+ fs/bio.c               | 22 +++++++++++++++-------
+ include/linux/bio.h    |  2 +-
+ include/linux/blkdev.h | 11 ++++++++++-
+ 5 files changed, 44 insertions(+), 25 deletions(-)
+
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 623e1cd..bd63201 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -25,7 +25,7 @@ int blk_rq_append_bio(struct request_queue *q, struct request *rq,
+ 	return 0;
+ }
+ 
+-static int __blk_rq_unmap_user(struct bio *bio)
++static int __blk_rq_unmap_user(struct bio *bio, bool copy)
+ {
+ 	int ret = 0;
+ 
+@@ -33,7 +33,7 @@ static int __blk_rq_unmap_user(struct bio *bio)
+ 		if (bio_flagged(bio, BIO_USER_MAPPED))
+ 			bio_unmap_user(bio);
+ 		else
+-			ret = bio_uncopy_user(bio);
++			ret = bio_uncopy_user(bio, copy);
+ 	}
+ 
+ 	return ret;
+@@ -80,7 +80,7 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 
+ 	/* if it was boucned we must call the end io function */
+ 	bio_endio(bio, 0);
+-	__blk_rq_unmap_user(orig_bio);
++	__blk_rq_unmap_user(orig_bio, true);
+ 	bio_put(bio);
+ 	return ret;
+ }
+@@ -228,7 +228,7 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 		 */
+ 		bio_get(bio);
+ 		bio_endio(bio, 0);
+-		__blk_rq_unmap_user(bio);
++		__blk_rq_unmap_user(bio, true);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -246,13 +246,14 @@ EXPORT_SYMBOL(blk_rq_map_user_iov);
+ /**
+  * blk_rq_unmap_user - unmap a request with user data
+  * @bio:	       start of bio list
++ * @copy:	       if false, just unmap without copying data
+  *
+  * Description:
+  *    Unmap a rq previously mapped by blk_rq_map_user(). The caller must
+  *    supply the original rq->bio from the blk_rq_map_user() return, since
+  *    the I/O completion may have changed rq->bio.
+  */
+-int blk_rq_unmap_user(struct bio *bio)
++int _blk_rq_unmap_user(struct bio *bio, bool copy)
+ {
+ 	struct bio *mapped_bio;
+ 	int ret = 0, ret2;
+@@ -262,7 +263,7 @@ int blk_rq_unmap_user(struct bio *bio)
+ 		if (unlikely(bio_flagged(bio, BIO_BOUNCED)))
+ 			mapped_bio = bio->bi_private;
+ 
+-		ret2 = __blk_rq_unmap_user(mapped_bio);
++		ret2 = __blk_rq_unmap_user(mapped_bio, copy);
+ 		if (ret2 && !ret)
+ 			ret = ret2;
+ 
+@@ -273,7 +274,7 @@ int blk_rq_unmap_user(struct bio *bio)
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL(blk_rq_unmap_user);
++EXPORT_SYMBOL(_blk_rq_unmap_user);
+ 
+ /**
+  * blk_rq_map_kern - map kernel data to a request, for REQ_TYPE_BLOCK_PC usage
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index df5e961..2eab50e 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -187,7 +187,7 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
+ /* tasklet or soft irq callback */
+ static void sg_rq_end_io(struct request *rq, int uptodate);
+ static int sg_start_req(Sg_request *srp, unsigned char *cmd);
+-static int sg_finish_rem_req(Sg_request * srp);
++static int sg_finish_rem_req(Sg_request * srp, bool on_workqueue);
+ static int sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size);
+ static ssize_t sg_new_read(Sg_fd * sfp, char __user *buf, size_t count,
+ 			   Sg_request * srp);
+@@ -511,7 +511,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ 		}
+ 	} else
+ 		count = (old_hdr->result == 0) ? 0 : -EIO;
+-	sg_finish_rem_req(srp);
++	sg_finish_rem_req(srp, false);
+ 	retval = count;
+ free_old_hdr:
+ 	kfree(old_hdr);
+@@ -551,7 +551,7 @@ sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
+ 		goto err_out;
+ 	}
+ err_out:
+-	err = sg_finish_rem_req(srp);
++	err = sg_finish_rem_req(srp, false);
+ 	return (0 == err) ? count : err;
+ }
+ 
+@@ -761,13 +761,13 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 	k = sg_start_req(srp, cmnd);
+ 	if (k) {
+ 		SCSI_LOG_TIMEOUT(1, printk("sg_common_write: start_req err=%d\n", k));
+-		sg_finish_rem_req(srp);
++		sg_finish_rem_req(srp, false);
+ 		return k;	/* probably out of space --> ENOMEM */
+ 	}
+ 	if (sdp->detached) {
+ 		if (srp->bio)
+ 			blk_end_request_all(srp->rq, -EIO);
+-		sg_finish_rem_req(srp);
++		sg_finish_rem_req(srp, false);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -1269,7 +1269,7 @@ static void sg_rq_end_io_usercontext(struct work_struct *work)
+ 	struct sg_request *srp = container_of(work, struct sg_request, ew.work);
+ 	struct sg_fd *sfp = srp->parentfp;
+ 
+-	sg_finish_rem_req(srp);
++	sg_finish_rem_req(srp, true);
+ 	kref_put(&sfp->f_ref, sg_remove_sfp);
+ }
+ 
+@@ -1727,7 +1727,7 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
+ 	return res;
+ }
+ 
+-static int sg_finish_rem_req(Sg_request * srp)
++static int sg_finish_rem_req(Sg_request * srp, bool on_workqueue)
+ {
+ 	int ret = 0;
+ 
+@@ -1737,7 +1737,8 @@ static int sg_finish_rem_req(Sg_request * srp)
+ 	SCSI_LOG_TIMEOUT(4, printk("sg_finish_rem_req: res_used=%d\n", (int) srp->res_used));
+ 	if (srp->rq) {
+ 		if (srp->bio)
+-			ret = blk_rq_unmap_user(srp->bio);
++			ret = on_workqueue ? blk_rq_unmap_user_nocopy(srp->bio) :
++				blk_rq_unmap_user(srp->bio);
+ 
+ 		blk_put_request(srp->rq);
+ 	}
+@@ -2103,7 +2104,7 @@ static void sg_remove_sfp_usercontext(struct work_struct *work)
+ 
+ 	/* Cleanup any responses which were never read(). */
+ 	while (sfp->headrp)
+-		sg_finish_rem_req(sfp->headrp);
++		sg_finish_rem_req(sfp->headrp, true);
+ 
+ 	if (sfp->reserve.bufflen > 0) {
+ 		SCSI_LOG_TIMEOUT(6,
+diff --git a/fs/bio.c b/fs/bio.c
+index 94bbc04..c312523 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -1038,19 +1038,27 @@ static int __bio_copy_iov(struct bio *bio, struct bio_vec *iovecs,
+ /**
+  *	bio_uncopy_user	-	finish previously mapped bio
+  *	@bio: bio being terminated
++ *	@copy: if false, just free pages without copying data
+  *
+  *	Free pages allocated from bio_copy_user() and write back data
+- *	to user space in case of a read.
++ *	to user space in case of a read.  Skip copying if no longer in
++ *	context of the original process/mm.
+  */
+-int bio_uncopy_user(struct bio *bio)
++int bio_uncopy_user(struct bio *bio, bool copy)
+ {
+ 	struct bio_map_data *bmd = bio->bi_private;
+-	int ret = 0;
++	struct bio_vec *bvec;
++	int ret = 0, i;
+ 
+-	if (!bio_flagged(bio, BIO_NULL_MAPPED))
+-		ret = __bio_copy_iov(bio, bmd->iovecs, bmd->sgvecs,
+-				     bmd->nr_sgvecs, bio_data_dir(bio) == READ,
+-				     0, bmd->is_our_pages);
++	if (!bio_flagged(bio, BIO_NULL_MAPPED)) {
++		if (copy)
++			ret = __bio_copy_iov(bio, bmd->iovecs, bmd->sgvecs,
++					     bmd->nr_sgvecs, bio_data_dir(bio) == READ,
++					     0, bmd->is_our_pages);
++		else if (bmd->is_our_pages)
++			bio_for_each_segment_all(bvec, bio, i)
++				__free_page(bvec->bv_page);
++	}
+ 	bio_free_map_data(bmd);
+ 	bio_put(bio);
+ 	return ret;
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index ec48bac..6fca2c8 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -301,7 +301,7 @@ extern struct bio *bio_copy_user(struct request_queue *, struct rq_map_data *,
+ extern struct bio *bio_copy_user_iov(struct request_queue *,
+ 				     struct rq_map_data *, struct sg_iovec *,
+ 				     int, int, gfp_t);
+-extern int bio_uncopy_user(struct bio *);
++extern int bio_uncopy_user(struct bio *, bool);
+ void zero_fill_bio(struct bio *bio);
+ extern struct bio_vec *bvec_alloc(gfp_t, int, unsigned long *, mempool_t *);
+ extern void bvec_free(mempool_t *, struct bio_vec *, unsigned int);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 2fdb4a4..934ce38 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -790,7 +790,16 @@ extern void blk_run_queue_async(struct request_queue *q);
+ extern int blk_rq_map_user(struct request_queue *, struct request *,
+ 			   struct rq_map_data *, void __user *, unsigned long,
+ 			   gfp_t);
+-extern int blk_rq_unmap_user(struct bio *);
++extern int _blk_rq_unmap_user(struct bio *bio, bool copy);
++static inline int blk_rq_unmap_user(struct bio *bio)
++{
++	return _blk_rq_unmap_user(bio, true);
++}
++static inline int blk_rq_unmap_user_nocopy(struct bio *bio)
++{
++	return _blk_rq_unmap_user(bio, false);
++}
++
+ extern int blk_rq_map_kern(struct request_queue *, struct request *, void *, unsigned int, gfp_t);
+ extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+ 			       struct rq_map_data *, struct sg_iovec *, int,
+-- 
+1.8.3.2
