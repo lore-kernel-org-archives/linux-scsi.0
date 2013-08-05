@@ -1,50 +1,184 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH] drivers/scsi/lpfc/lpfc_init.c: adjust code alignment
-Date: Mon,  5 Aug 2013 16:47:37 +0200
-Message-ID: <1375714059-29567-3-git-send-email-Julia.Lawall@lip6.fr>
-References: <1375714059-29567-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1375714059-29567-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
+Date: Mon, 05 Aug 2013 16:52:26 -0400
+Message-ID: <5200108A.9020008@interlog.com>
+References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com> <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com> <20130722170338.GA15824@logfs.org> <51F9EB97.7070305@interlog.com> <51FC9449.4060906@interlog.com> <51FF0BC0.5020702@oracle.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:50246 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753013Ab3HEUxN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Aug 2013 16:53:13 -0400
+In-Reply-To: <51FF0BC0.5020702@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vaughan <vaughan.cao@oracle.com>
+Cc: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On 13-08-04 10:19 PM, vaughan wrote:
+> On 08/03/2013 01:25 PM, Douglas Gilbert wrote:
+>> On 13-08-01 01:01 AM, Douglas Gilbert wrote:
+>>> On 13-07-22 01:03 PM, J=C3=B6rn Engel wrote:
+>>>> On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
+>>>>>
+>>>>> There is a race when open sg with O_EXCL flag. Also a race may
+>>>>> happen between
+>>>>> sg_open and sg_remove.
+>>>>>
+>>>>> Changes from v4:
+>>>>>    * [3/4] use ERR_PTR series instead of adding another parameter=
+ in
+>>>>> sg_add_sfp
+>>>>>    * [4/4] fix conflict for cherry-pick from v3.
+>>>>>
+>>>>> Changes from v3:
+>>>>>    * release o_sem in sg_release(), not in sg_remove_sfp().
+>>>>>    * not set exclude with sfd_lock held.
+>>>>>
+>>>>> Vaughan Cao (4):
+>>>>>     [SCSI] sg: use rwsem to solve race during exclusive open
+>>>>>     [SCSI] sg: no need sg_open_exclusive_lock
+>>>>>     [SCSI] sg: checking sdp->detached isn't protected when open
+>>>>>     [SCSI] sg: push file descriptor list locking down to per-devi=
+ce
+>>>>>       locking
+>>>>>
+>>>>>    drivers/scsi/sg.c | 178
+>>>>> +++++++++++++++++++++++++-----------------------------
+>>>>>    1 file changed, 83 insertions(+), 95 deletions(-)
+>>>>
+>>>> Patchset looks good to me, although I didn't test it on hardware y=
+et.
+>>>> Signed-off-by: Joern Engel <joern@logfs.org>
+>>>>
+>>>> James, care to pick this up?
+>>>
+>>> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+>>>
+>>> Tested O_EXCL with multiple processes and threads; passed.
+>>> sg driver prior to this patch had "leaky" O_EXCL logic
+>>> according to the same test. Block device passed.
+>>>
+>>> James, could you clean this up:
+>>>     drivers/scsi/sg.c:242:6: warning: unused variable =E2=80=98res=E2=
+=80=99
+>>> [-Wunused-variable]
+>>
+>> Further testing suggests this patch on the sg driver is
+>> broken, so I'll rescind my ack.
+>>
+>> The case it is broken for is when a device is opened
+>> without O_EXCL. Now if, while it is open, a second
+>> thread/process tries to open the same device O_EXCL
+>> then IMO the second open should fail with EBUSY.
+>>
+>> My testing shows that O_EXCL opens properly deflect
+>> other O_EXCL opens.
+> Hi  Doug,
+>
+> My test don't have this issue. The routine is something as below:
+>
+> I start three opens without O_EXCL, wait 30s each, and open with
+> O_EXCL|O_NONBLOCK, it failed with EBUSY.
+> And I also call myopen with/without O_EXCL many times in background a=
+t
+> the same time, and the test is passed. I don't know why it failed in
+> your test.
+>
+> Usage: myopen [-e][-n][-d delay] -f file
+>        -e: exclude
+>        -n: nonblock
+>        -d: delay N seconds and then close.
+>
+> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
+> [1] 3417
+> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
+> [2] 3418
+> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
+> [3] 3419
+> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
+> max_active_device=3D6(origin 1)
+>   def_reserved_size=3D32768
+>   >>> device=3Dsg5 scsi5 chan=3D0 id=3D1 lun=3D0   em=3D0 sg_tablesiz=
+e=3D55 excl=3D0
+>     FD(1): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
+0
+>     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
+>       No requests active
+>     FD(2): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
+0
+>     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
+>       No requests active
+>     FD(3): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
+0
+>     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
+>       No requests active
+>
+> [root@vacaowol5 16835013]# ./myopen -e -n  -f /dev/sg5 -d 30 &
+> [4] 3422
+> [3422:3351] /dev/sg5:exclude: Device or resource busy
+>
+> [4]+  Exit 1                  ./myopen -e -n -f /dev/sg5 -d 30
+>
+> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
+> max_active_device=3D6(origin 1)
+>   def_reserved_size=3D32768
+>   >>> device=3Dsg5 scsi5 chan=3D0 id=3D1 lun=3D0   em=3D0 sg_tablesiz=
+e=3D55 excl=3D0
+>     FD(1): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
+0
+>     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
+>       No requests active
+>     FD(2): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
+0
+>     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
+>       No requests active
+>     FD(3): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=3D=
+0
+>     cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
+>       No requests active
+> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
+> [1]   Done                    ./myopen -f /dev/sg5 -d 30
+> [2]-  Done                    ./myopen -f /dev/sg5 -d 30
+> [3]+  Done                    ./myopen -f /dev/sg5 -d 30
+>
 
-Adjust code alignment so that each statement is lined up with its neighbor.
+Hi,
+After the initial failures about 36 hours ago, retesting
+yesterday and today has not produced any unexpected
+failures. And I have been trying hard on lk 3.10.4 and
+lk 3.10.5 .
 
-In the second case, it could be desirable to put the call to
-lpfc_destroy_vport_work_array under the if.  The call, is, however, safe
-in case vports is NULL, so the patch just adjusts the indentation to
-reflect the current semantics.
+My test program is a bit more intense than yours and can
+be found in the sg3_utils beta in the News section of this
+page:
+   http://sg.danny.cz/sg/
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+It is in the examples directory, two variants called
+sg_tst_excl and sg_tst_excl2 . You will need a recent gcc
+compiler, IOW something that can compile c++11 . gcc 4.7.3
+in Ubuntu 13.04 only just manages, fedora 19 should do
+better with gcc 4.8.1 . The threading is implemented using
+pthreads so it should be reliable.
 
----
+Typically I run multiple instances (processes) and each has
+multiple threads. One instance can run '-x' which will cause
+its first thread not to use O_EXCL **. All my tests currently
+use O_NONBLOCK and that leads to lots of EBUSYs (sometimes
+in the billions).
 
- drivers/scsi/lpfc/lpfc_init.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Doug Gilbert
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index e0b20fa..f870421 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -692,7 +692,7 @@ lpfc_hba_init_link_fc_topology(struct lpfc_hba *phba, uint32_t fc_topology,
- 			"1302 Invalid speed for this board:%d "
- 			"Reset link speed to auto.\n",
- 			phba->cfg_link_speed);
--			phba->cfg_link_speed = LPFC_USER_LINK_SPEED_AUTO;
-+		phba->cfg_link_speed = LPFC_USER_LINK_SPEED_AUTO;
- 	}
- 	lpfc_init_link(phba, pmb, fc_topology, phba->cfg_link_speed);
- 	pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-@@ -2702,7 +2702,7 @@ lpfc_online(struct lpfc_hba *phba)
- 			}
- 			spin_unlock_irq(shost->host_lock);
- 		}
--		lpfc_destroy_vport_work_array(phba, vports);
-+	lpfc_destroy_vport_work_array(phba, vports);
- 
- 	lpfc_unblock_mgmt_io(phba);
- 	return 0;
+
+** Using '-x' on two instances will cause an expected failure
+    so can be used as a control.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
