@@ -1,110 +1,82 @@
-From: Bradley Grove <bgrove@attotech.com>
-Subject: Re: [PATCH v3 10/10] [RFC] SCSI: esas2r: Add Makefile, Kconfig, and
- MAINTAINERS files
-Date: Tue, 06 Aug 2013 11:35:43 -0400
-Message-ID: <520117CF.1090309@attotech.com>
-References: <1375462797-2128-1-git-send-email-bgrove@attotech.com> <1375462797-2128-11-git-send-email-bgrove@attotech.com>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH 1/3] hpsa: remove unneeded loop
+Date: Tue, 6 Aug 2013 10:46:15 -0500
+Message-ID: <20130806154615.GA1986@beardog.cce.hp.com>
+References: <51FA5E7A.9050000@redhat.com> <20130801133951.GX24664@beardog.cce.hp.com> <51FA6B20.2090005@redhat.com> <20130801142123.GA24664@beardog.cce.hp.com> <51FA77E1.5010200@redhat.com> <20130801151917.GB24664@beardog.cce.hp.com> <51FA8138.1070306@redhat.com> <20130801161853.GC24664@beardog.cce.hp.com> <51FB9477.2000608@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:56737 "EHLO
-	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755506Ab3HFPfs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Aug 2013 11:35:48 -0400
-In-Reply-To: <1375462797-2128-11-git-send-email-bgrove@attotech.com>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:34625 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755467Ab3HFPqQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Aug 2013 11:46:16 -0400
+Content-Disposition: inline
+In-Reply-To: <51FB9477.2000608@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, jbottomley@parallels.com
-Cc: Bradley Grove <bgrove@attotech.com>, jseba@attotech.com
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, scameron@beardog.cce.hp.com
 
+On Fri, Aug 02, 2013 at 01:13:59PM +0200, Tomas Henzl wrote:
+> On 08/01/2013 06:18 PM, scameron@beardog.cce.hp.com wrote:
+> > On Thu, Aug 01, 2013 at 05:39:36PM +0200, Tomas Henzl wrote:
+> >> On 08/01/2013 05:19 PM, scameron@beardog.cce.hp.com wrote:
+> > [...]
+> >
+> >>>> Btw. on line 1284 - isn't it similar to patch 2/3 ?
+> > ^^^ Oh, missed this the first time around, the sop driver uses the make_request_fn()
+> > interface, and it's not a stacked driver either, so there is no limit to the number
+> > of bios the block layer can stuff in -- make_request_fn must succeed.
+> > If we get full we just chain them together using pointers already in the struct
+> > bio for that purpose, so storing them in the driver requires no memory allocation
+> > on the driver's part.  So while it's somewhat similar, we already have to handle
+> > the case of the block layer stuffing infinite bios into the driver, so getting
+> > full is not terribly out of the ordinary in that driver.
+> 
+> OK.
+> 
+> >
+> > That being said, I'm poking around other bits of code lying around here
+> > looking for similar problems, so thanks again for that one.
+> >
+> >>> find_first_zero_bit is not atomic, but the test_and_set_bit, which is what
+> >>> counts, is atomic.   That find_first_zero_bit is not atomic confused me about
+> >>> this code for a long time, and is why the spin lock was there in the first
+> >>> place.  But if there's a race on the find_first_zero_bit and it returns the
+> >>> same bit to multiple concurrent threads, only one thread will win the
+> >>> test_and_set_bit, and the other threads will go back around the loop to try
+> >>> again, and get a different bit.
+> >> Yes.
+> >> But, let's expect just one zero bit at the end of the list. The find_first_zero_bit(ffzb)
+> >> starts now,  thread+1 zeroes a new bit at the beginning, ffzb continues,
+> >> thread+2 takes the zero bit at the end. The result it that ffzb hasn't found a zero bit
+> >> even though that at every moment that bit was there.Ffter that the function returns -EBUSY.
+> >> rc = (u16) find_first_zero_bit(qinfo->request_bits, qinfo->qdepth);
+> >> if (rc >= qinfo->qdepth-1)
+> >> 	return (u16) -EBUSY;
+> >> Still, I think that this is almost impossible, and if it should happen
+> >> a requeue is not so bad.
+> > Oh, wow.  Didn't think of that.  Hmm, technically no guarantee that
+> > any given thread would ever get a bit, if all the other threads keep
+> > snatching them away just ahead of an unlucky thread.
+> >
+> > Could we, instead of giving up, go back around and try again on the theory
+> > that some bits should be free in there someplace and the thread shouldn't
+> > be infinitely unlucky?
+> 
+> In theory that gives you also no guarantee, it's likely that for a guarantee some
+> kind of locking is needed, the spinlock, which already is there, gives you that. 
+> Otoh, a very high likelihood is probably enough and give better overall throughput,
+> maybe some statistics/testing is needed? I don't know how much faster is it
+> without the spinlock.
 
-James,
+On thinking about this a bit more, it would be a shame if we closed the
+hole allowing the "cmd_alloc returned NULL" message (the scsi_done() cmd_free()
+race) and then immediately opened up another different hole that permitted the
+same problem to occur. 
 
-Do you have any comments on this last patch post?
+So to be safe, I think we should go with your patch as is -- leave
+the spin lock, but get rid of the unnecessary loop.
 
-I probably shouldn't have posted it as an RFC.  We've completed our 
-internal testing of the driver, and I think it's probably ready to submit.
-
-Brad
-
-
-On 08/02/2013 12:59 PM, Bradley Grove wrote:
->
-> Signed-off-by: Bradley Grove <bgrove@attotech.com>
-> ---
->   MAINTAINERS                  | 7 +++++++
->   drivers/scsi/Kconfig         | 1 +
->   drivers/scsi/Makefile        | 1 +
->   drivers/scsi/esas2r/Kconfig  | 6 ++++++
->   drivers/scsi/esas2r/Makefile | 5 +++++
->   5 files changed, 20 insertions(+)
->   create mode 100644 drivers/scsi/esas2r/Kconfig
->   create mode 100644 drivers/scsi/esas2r/Makefile
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index a26b10e..024bc9a 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -1542,6 +1542,13 @@ W:	http://atmelwlandriver.sourceforge.net/
->   S:	Maintained
->   F:	drivers/net/wireless/atmel*
->
-> +ATTO EXPRESSSAS SAS/SATA RAID SCSI DRIVER
-> +M:      Bradley Grove <linuxdrivers@attotech.com>
-> +L:      linux-scsi@vger.kernel.org
-> +W:      http://www.attotech.com
-> +S:      Supported
-> +F:      drivers/scsi/esas2r
-> +
->   AUDIT SUBSYSTEM
->   M:	Al Viro <viro@zeniv.linux.org.uk>
->   M:	Eric Paris <eparis@redhat.com>
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 48b2918..c298b76 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -601,6 +601,7 @@ config SCSI_ARCMSR
->   	  To compile this driver as a module, choose M here: the
->   	  module will be called arcmsr (modprobe arcmsr).
->
-> +source "drivers/scsi/esas2r/Kconfig"
->   source "drivers/scsi/megaraid/Kconfig.megaraid"
->   source "drivers/scsi/mpt2sas/Kconfig"
->   source "drivers/scsi/mpt3sas/Kconfig"
-> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-> index b607ba4..149bb6b 100644
-> --- a/drivers/scsi/Makefile
-> +++ b/drivers/scsi/Makefile
-> @@ -141,6 +141,7 @@ obj-$(CONFIG_SCSI_CXGB3_ISCSI)	+= libiscsi.o libiscsi_tcp.o cxgbi/
->   obj-$(CONFIG_SCSI_CXGB4_ISCSI)	+= libiscsi.o libiscsi_tcp.o cxgbi/
->   obj-$(CONFIG_SCSI_BNX2_ISCSI)	+= libiscsi.o bnx2i/
->   obj-$(CONFIG_BE2ISCSI)		+= libiscsi.o be2iscsi/
-> +obj-$(CONFIG_SCSI_ESAS2R)	+= esas2r/
->   obj-$(CONFIG_SCSI_PMCRAID)	+= pmcraid.o
->   obj-$(CONFIG_SCSI_VIRTIO)	+= virtio_scsi.o
->   obj-$(CONFIG_VMWARE_PVSCSI)	+= vmw_pvscsi.o
-> diff --git a/drivers/scsi/esas2r/Kconfig b/drivers/scsi/esas2r/Kconfig
-> new file mode 100644
-> index 0000000..80824f0
-> --- /dev/null
-> +++ b/drivers/scsi/esas2r/Kconfig
-> @@ -0,0 +1,5 @@
-> +config SCSI_ESAS2R
-> +	tristate "ATTO Technology's ExpressSAS RAID adapter driver"
-> +	depends on PCI && SCSI
-> +	---help---
-> +	  This driver supports the ATTO ExpressSAS R6xx SAS/SATA RAID controllers.
-> diff --git a/drivers/scsi/esas2r/Makefile b/drivers/scsi/esas2r/Makefile
-> new file mode 100644
-> index 0000000..c77160b
-> --- /dev/null
-> +++ b/drivers/scsi/esas2r/Makefile
-> @@ -0,0 +1,5 @@
-> +obj-$(CONFIG_SCSI_ESAS2R)	+= esas2r.o
-> +
-> +esas2r-objs := esas2r_log.o esas2r_disc.o esas2r_flash.o esas2r_init.o \
-> +	 esas2r_int.o esas2r_io.o esas2r_ioctl.o esas2r_targdb.o   \
-> +	 esas2r_vda.o esas2r_main.o
->
+-- steve
 
