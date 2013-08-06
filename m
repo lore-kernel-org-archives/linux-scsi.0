@@ -1,206 +1,188 @@
 From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: RE: [PATCH 2/7] scsi: ufs: find out sense data over scsi status values
-Date: Tue, 06 Aug 2013 21:08:45 +0900
-Message-ID: <001801ce929d$b365d840$1a3188c0$%jun@samsung.com>
+Subject: RE: [PATCH 7/7] scsi: ufs: configure the attribute for power mode
+Date: Tue, 06 Aug 2013 21:08:59 +0900
+Message-ID: <001901ce929d$bb7411f0$325c35d0$%jun@samsung.com>
 References: <1374280885-11526-1-git-send-email-mita@fixstars.com>
- <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
- <CALMYJDu3T_hySfd+3K=Q06+-v08hRkojC=v+8XUu2LFZit75VQ@mail.gmail.com>
- <002c01ce8d25$2feadab0$8fc09010$%jun@samsung.com>
- <94D0CD8314A33A4D9D801C0FE68B402953E3E4C4@G9W0745.americas.hpqcorp.net>
+ <002201ce8a06$fad20db0$f0762910$%jun@samsung.com>
+ <51F910FA.30804@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:64089 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756083Ab3HFMIs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Aug 2013 08:08:48 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+Received: from mailout4.samsung.com ([203.254.224.34]:44299 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756158Ab3HFMJB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Aug 2013 08:09:01 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MR3009Q8Z2A17M0@mailout1.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 06 Aug 2013 21:08:46 +0900 (KST)
-In-reply-to: <94D0CD8314A33A4D9D801C0FE68B402953E3E4C4@G9W0745.americas.hpqcorp.net>
+ with ESMTP id <0MR30022JZ2ZUOR0@mailout4.samsung.com> for
+ linux-scsi@vger.kernel.org; Tue, 06 Aug 2013 21:08:59 +0900 (KST)
+In-reply-to: <51F910FA.30804@codeaurora.org>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'Elliott, Robert (Server Storage)'" <Elliott@hp.com>, 'Santosh Y' <santoshsy@gmail.com>
-Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
+To: 'Subhash Jadavani' <subhashj@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-Hi Elliott,
-
-Thank you for information.
-It might be considered, if UFS has the extension someday.
+On Wednesday, July 31, 2013, Subhash Jadavani wrote:
+> Change looks good (except one minor question).
+> 
+> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+> 
+> On 7/26/2013 7:19 PM, Seungwon Jeon wrote:
+> > UIC attributes can be set with using DME_SET command for
+> > power mode change. For configuration the link capability
+> > attributes are used, which is updated after successful
+> > link startup.
+> >
+> > Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> > ---
+> >   drivers/scsi/ufs/ufshcd.c |   74 +++++++++++++++++++++++++++++++++++++++++++-
+> >   drivers/scsi/ufs/unipro.h |   21 +++++++++++++
+> >   2 files changed, 93 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index ffda72d..ebdb9ff 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -975,6 +975,70 @@ out:
+> >   }
+> >
+> >   /**
+> > + * ufshcd_config_max_pwr_mode - Set & Change power mode with
+> > + *	maximum capability attribute information.
+> > + * @hba: per adapter instance
+> > + *
+> > + * Returns 0 on success, non-zero value on failure
+> > + */
+> > +static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
+> > +{
+> > +	enum {RX = 0, TX = 1};
+> > +	u32 lanes[] = {1, 1};
+> > +	u32 gear[] = {1, 1};
+> > +	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
+> > +	int i, ret;
+> > +
+> > +	/* Get the connected lane count */
+> > +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
+> > +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
+> > +
+> > +	/*
+> > +	 * First, get the maximum gears of HS speed.
+> > +	 * If a zero value, it means there is no HSGEAR capability.
+> > +	 * Then, get the maximum gears of PWM speed.
+> > +	 */
+> > +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
+> > +	if (!gear[RX]) {
+> > +		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
+> > +		pwr[RX] = SLOWAUTO_MODE;
+> > +	}
+> > +
+> > +	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
+> > +	if (!gear[TX]) {
+> > +		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
+> > +				    &gear[TX]);
+> > +		pwr[TX] = SLOWAUTO_MODE;
+> > +	}
+> > +
+> > +	/*
+> > +	 * Configure attributes for power mode change with below.
+> > +	 * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
+> > +	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
+> > +	 * - PA_HSSERIES
+> > +	 */
+> > +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
+> > +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
+> > +	if (pwr[RX] == FASTAUTO_MODE)
+> > +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
+> > +
+> > +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
+> > +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
+> > +	if (pwr[TX] == FASTAUTO_MODE)
+> > +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
+> 
+> Does this mean TX-RX Termination can be enabled only in HS gear mode?
+> Somehow i couldn't find this
+Basically, 'termination' in HS Mode and not termination in LS mode.
+Spec. doesn't say clearly, though.
+If you have any idea, please let me know.
 
 Thanks,
 Seungwon Jeon
-
-On Wed, July 31, 2013, Elliott, Robert wrote:
-> I don't know how well UFS keeps up with SCSI architecture, but SCSI
-> has expanded from the old 18-byte fixed format sense data to a
-> variable-length descriptor format sense data, in which an 8 byte
-> header precedes a variable number of descriptors.  This was devised
-> to support 8-byte LBAs in the INFORMATION field and
-> COMMAND-SPECIFIC INFORMATION field for >2 TiB drives.
 > 
-> A few other new features:
-> 
-> 1. Extended INQUIRY Data VPD page
->     MAXIMUM SUPPORTED SENSE DATA LENGTH field:
->     Report how much sense data the device server is capable of returning
-> 2. Control Extensions mode page
->     MAXIMUM SENSE DATA LENGTH field:
->     Specify how much sense data the device server is allowed to return
-> 3. Descriptor format sense data header
->     SDAT_OVFL bit:
->     Reports that the device server had to drop some descriptors
->     to fit in the specified length
-> 4.  "Direct-access block device sense data descriptor"
->     Devised for the use by Base feature set compliant designs.
->     Combined with the 8 byte header, results in 32 bytes of sense data.
->     Always carries an INFORMATION field, COMMAND-SPECIFIC
->     INFORMATION field, sense-key specific information, field
->     replaceable unit code, and ILI bit.
-> 
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> > owner@vger.kernel.org] On Behalf Of Seungwon Jeon
-> > Sent: Tuesday, 30 July, 2013 8:03 AM
-> > To: 'Santosh Y'
-> > Cc: linux-scsi@vger.kernel.org; 'Vinayak Holikatti'; 'James E.J. Bottomley'
-> > Subject: RE: [PATCH 2/7] scsi: ufs: find out sense data over scsi status values
+> > +
+> > +	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
+> > +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
+> > +
+> > +	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
+> > +	if (ret)
+> > +		dev_err(hba->dev,
+> > +			"pwr_mode: power mode change failed %d\n", ret);
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +/**
+> >    * ufshcd_make_hba_operational - Make UFS controller operational
+> >    * @hba: per adapter instance
+> >    *
+> > @@ -1754,8 +1818,14 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+> >   	int ret;
 > >
-> > On Tue, July 30, 2013, Santosh Y wrote:
-> > > On Fri, Jul 26, 2013 at 7:16 PM, Seungwon Jeon <tgih.jun@samsung.com>
-> > wrote:
-> > > > Except for 'GOOD' and 'CHECK CONDITION', other status value
-> > > > in Response UPIU may or may contain sense data. If a non-zero
-> > > > value is in the Data Segment Length field, it means that UPIU
-> > > > has Sense Data in the Data Segment area.
-> > > >
-> > > > Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> > > > ---
-> > > >  drivers/scsi/ufs/ufs.h    |    1 +
-> > > >  drivers/scsi/ufs/ufshcd.c |   27 +++++++++++++++++++--------
-> > > >  2 files changed, 20 insertions(+), 8 deletions(-)
-> > > >
-> > > > diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> > > > index 139bc06..737c31b 100644
-> > > > --- a/drivers/scsi/ufs/ufs.h
-> > > > +++ b/drivers/scsi/ufs/ufs.h
-> > > > @@ -114,6 +114,7 @@ enum {
-> > > >         MASK_SCSI_STATUS        = 0xFF,
-> > > >         MASK_TASK_RESPONSE      = 0xFF00,
-> > > >         MASK_RSP_UPIU_RESULT    = 0xFFFF,
-> > > > +       MASK_RSP_UPIU_DATA_SEG_LEN      = 0xFFFF,
-> > > >  };
-> > > >
-> > > >  /* Task management service response */
-> > > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > > > index 4cf3a2d..688ae0e 100644
-> > > > --- a/drivers/scsi/ufs/ufshcd.c
-> > > > +++ b/drivers/scsi/ufs/ufshcd.c
-> > > > @@ -218,6 +218,20 @@ ufshcd_get_rsp_upiu_result(struct utp_upiu_rsp
-> > *ucd_rsp_ptr)
-> > > >         return be32_to_cpu(ucd_rsp_ptr->header.dword_1) &
-> > MASK_RSP_UPIU_RESULT;
-> > > >  }
-> > > >
-> > > > +/*
-> > > > + * ufshcd_get_rsp_upiu_data_seg_len - Get the data segment length
-> > > > + *                             from response UPIU
-> > > > + * @ucd_rsp_ptr: pointer to response UPIU
-> > > > + *
-> > > > + * Return the data segment length.
-> > > > + */
-> > > > +static inline int
-> > > > +ufshcd_get_rsp_upiu_data_seg_len(struct utp_upiu_rsp *ucd_rsp_ptr)
-> > > > +{
-> > > > +       return be32_to_cpu(ucd_rsp_ptr->header.dword_2) &
-> > > > +               MASK_RSP_UPIU_DATA_SEG_LEN;
-> > > > +}
-> > > > +
-> > > >  /**
-> > > >   * ufshcd_config_int_aggr - Configure interrupt aggregation values.
-> > > >   *             Currently there is no use case where we want to configure
-> > > > @@ -298,7 +312,8 @@ void ufshcd_send_command(struct ufs_hba
-> > *hba, unsigned int task_tag)
-> > > >  static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
-> > > >  {
-> > > >         int len;
-> > > > -       if (lrbp->sense_buffer) {
-> > > > +       if (lrbp->sense_buffer &&
-> > > > +           !ufshcd_get_rsp_upiu_data_seg_len(lrbp->ucd_rsp_ptr)) {
-> > > >                 len = be16_to_cpu(lrbp->ucd_rsp_ptr->sense_data_len);
-> > > >                 memcpy(lrbp->sense_buffer,
-> > > >                         lrbp->ucd_rsp_ptr->sense_data,
-> > >
-> > > Also please change the SCSI_SENSE_BUFFERSIZE to 18-bytes as per the
-> > > spec, *in case* if wrong 'data segment length' is returned, there
-> > > won't be a need to memcpy extra bytes ;-).
-> > >
-> > > #define UFS_SENSE_BUFFERSIZE 18
-> > > memcpy(lrbp->sense_buffer,
-> > > 			lrbp->ucd_rsp_ptr->sense_data,
-> > > 			min_t(int, len, UFS_SENSE_BUFFERSIZE));
-> > Ok. I'll check.
-> > But considering the extension with spec. revision, it's not bad to be kept.
-> > Current: [#define SCSI_SENSE_BUFFERSIZE   96]
+> >   	ret = ufshcd_link_startup(hba);
+> > -	if (!ret)
+> > -		scsi_scan_host(hba->host);
+> > +	if (ret)
+> > +		goto out;
+> > +
+> > +	ufshcd_config_max_pwr_mode(hba);
+> > +
+> > +	scsi_scan_host(hba->host);
+> > +out:
+> > +	return;
+> >   }
 > >
-> > Thanks,
-> > Seungwon Jeon
+> >   static struct scsi_host_template ufshcd_driver_template = {
+> > diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+> > index 3a710eb..0bb8041 100644
+> > --- a/drivers/scsi/ufs/unipro.h
+> > +++ b/drivers/scsi/ufs/unipro.h
+> > @@ -72,6 +72,21 @@
+> >   #define PA_STALLNOCONFIGTIME	0x15A3
+> >   #define PA_SAVECONFIGTIME	0x15A4
 > >
-> > >
-> > >
-> > > > @@ -1156,21 +1171,17 @@ ufshcd_scsi_cmd_status(struct ufshcd_lrb
-> > *lrbp, int scsi_status)
-> > > >                           SAM_STAT_CHECK_CONDITION;
-> > > >                 ufshcd_copy_sense_data(lrbp);
-> > > >                 break;
-> > > > -       case SAM_STAT_BUSY:
-> > > > -               result |= SAM_STAT_BUSY;
-> > > > -               break;
-> > > >         case SAM_STAT_TASK_SET_FULL:
-> > > > -
-> > > >                 /*
-> > > >                  * If a LUN reports SAM_STAT_TASK_SET_FULL, then the LUN
-> > queue
-> > > >                  * depth needs to be adjusted to the exact number of
-> > > >                  * outstanding commands the LUN can handle at any given time.
-> > > >                  */
-> > > >                 ufshcd_adjust_lun_qdepth(lrbp->cmd);
-> > > > -               result |= SAM_STAT_TASK_SET_FULL;
-> > > > -               break;
-> > > > +       case SAM_STAT_BUSY:
-> > > >         case SAM_STAT_TASK_ABORTED:
-> > > > -               result |= SAM_STAT_TASK_ABORTED;
-> > > > +               result |= scsi_status;
-> > > > +               ufshcd_copy_sense_data(lrbp);
-> > > >                 break;
-> > > >         default:
-> > > >                 result |= DID_ERROR << 16;
-> > > > --
-> > > > 1.7.0.4
-> > > >
-> > > >
-> > >
-> > >
-> > >
-> > > --
-> > > ~Santosh
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > +/* PA power modes */
+> > +enum {
+> > +	FAST_MODE	= 1,
+> > +	SLOW_MODE	= 2,
+> > +	FASTAUTO_MODE	= 4,
+> > +	SLOWAUTO_MODE	= 5,
+> > +	UNCHANGED	= 7,
+> > +};
+> > +
+> > +/* PA TX/RX Frequency Series */
+> > +enum {
+> > +	PA_HS_MODE_A	= 1,
+> > +	PA_HS_MODE_B	= 2,
+> > +};
+> > +
+> >   /*
+> >    * Data Link Layer Attributes
+> >    */
+> > @@ -127,4 +142,10 @@
+> >   #define T_TC0TXMAXSDUSIZE	0x4060
+> >   #define T_TC1TXMAXSDUSIZE	0x4061
 > >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > +/* Boolean attribute values */
+> > +enum {
+> > +	FALSE = 0,
+> > +	TRUE,
+> > +};
+> > +
+> >   #endif /* _UNIPRO_H_ */
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
