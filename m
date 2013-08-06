@@ -1,52 +1,38 @@
-From: Peter Chang <dpf@google.com>
-Subject: Re: [PATCH] [SCSI] sg: Fix user memory corruption when SG_IO is
- interrupted by a signal
-Date: Mon, 5 Aug 2013 20:54:48 -0700
-Message-ID: <CAF2xp_Fwav3ZZCiuQ5738r4p-TMVRBZzHdYgoNg4EfO3_0C+tg@mail.gmail.com>
-References: <1375740121-23350-1-git-send-email-roland@kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60686] USB 3.0 disks do not mount
+Date: Tue, 06 Aug 2013 09:28:49 +0000
+Message-ID: <bug-60686-11613-8r1UlG9Zhv@https.bugzilla.kernel.org/>
+References: <bug-60686-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1375740121-23350-1-git-send-email-roland@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Doug Gilbert <dgilbert@interlog.com>, James Bottomley <JBottomley@parallels.com>, Costa Sapuntzakis <costa@purestorage.com>, =?ISO-8859-1?Q?J=F6rn_Engel?= <joern@purestorage.com>, linux-kernel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:45357 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755220Ab3HFJ2w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Aug 2013 05:28:52 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id A19E3201E4
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2013 09:28:51 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id E667C201E9
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2013 09:28:49 +0000 (UTC)
+In-Reply-To: <bug-60686-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-2013/8/5 Roland Dreier <roland@kernel.org>:
-> From: Roland Dreier <roland@purestorage.com>
->
-> There is a nasty bug in the SCSI SG_IO ioctl that in some circumstances
-> leads to one process writing data into the address space of some other
-> random unrelated process if the ioctl is interrupted by a signal.
-> What happens is the following:
->
->  - A process issues an SG_IO ioctl with direction DXFER_FROM_DEV (ie the
->    underlying SCSI command will transfer data from the SCSI device to
->    the buffer provided in the ioctl)
->
->  - Before the command finishes, a signal is sent to the process waiting
->    in the ioctl.  This will end up waking up the sg_ioctl() code:
->
->                 result = wait_event_interruptible(sfp->read_wait,
->                         (srp_done(sfp, srp) || sdp->detached));
->
->    but neither srp_done() nor sdp->detached is true, so we end up just
->    setting srp->orphan and returning to userspace:
->
->                 srp->orphan = 1;
->                 write_unlock_irq(&sfp->rq_list_lock);
->                 return result;  /* -ERESTARTSYS because signal hit process */
->
->    At this point the original process is done with the ioctl and
->    blithely goes ahead handling the signal, reissuing the ioctl, etc.
+https://bugzilla.kernel.org/show_bug.cgi?id=60686
 
-i think that an additional issue here is that part of reissuing the
-ioctl is re-queueing the command. since the re-queue is at the front
-of the block queue there are issues if the command is non-idempotent.
+Peter <lekensteyn@gmail.com> changed:
 
-we have a local fix that gets rid of most of the orphan stuff and
-re-waiting if a non-fatal signal was waiting. simpler than unmapping
-but maybe we're missing some other interesting case?
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |lekensteyn@gmail.com
 
-\p
+--- Comment #1 from Peter <lekensteyn@gmail.com> ---
+Duplicate of bug 60685
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
