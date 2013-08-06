@@ -1,91 +1,110 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] [SCSI] sg: Fix user memory corruption when SG_IO is interrupted
- by a signal
-Date: Tue, 06 Aug 2013 10:56:02 -0400
-Message-ID: <52010E82.9050801@interlog.com>
-References: <1375740121-23350-1-git-send-email-roland@kernel.org> <CAF2xp_Fwav3ZZCiuQ5738r4p-TMVRBZzHdYgoNg4EfO3_0C+tg@mail.gmail.com>
-Reply-To: dgilbert@interlog.com
+From: Bradley Grove <bgrove@attotech.com>
+Subject: Re: [PATCH v3 10/10] [RFC] SCSI: esas2r: Add Makefile, Kconfig, and
+ MAINTAINERS files
+Date: Tue, 06 Aug 2013 11:35:43 -0400
+Message-ID: <520117CF.1090309@attotech.com>
+References: <1375462797-2128-1-git-send-email-bgrove@attotech.com> <1375462797-2128-11-git-send-email-bgrove@attotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:36657 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753847Ab3HFO4t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Aug 2013 10:56:49 -0400
-In-Reply-To: <CAF2xp_Fwav3ZZCiuQ5738r4p-TMVRBZzHdYgoNg4EfO3_0C+tg@mail.gmail.com>
+Received: from sw.attotech.com ([208.69.85.34]:56737 "EHLO
+	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755506Ab3HFPfs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Aug 2013 11:35:48 -0400
+In-Reply-To: <1375462797-2128-11-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Peter Chang <dpf@google.com>
-Cc: Roland Dreier <roland@kernel.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Costa Sapuntzakis <costa@purestorage.com>, =?ISO-8859-1?Q?J=F6rn_Engel?= <joern@purestorage.com>, linux-kernel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, jbottomley@parallels.com
+Cc: Bradley Grove <bgrove@attotech.com>, jseba@attotech.com
 
-On 13-08-05 11:54 PM, Peter Chang wrote:
-> 2013/8/5 Roland Dreier <roland@kernel.org>:
->> From: Roland Dreier <roland@purestorage.com>
->>
->> There is a nasty bug in the SCSI SG_IO ioctl that in some circumstances
->> leads to one process writing data into the address space of some other
->> random unrelated process if the ioctl is interrupted by a signal.
->> What happens is the following:
->>
->>   - A process issues an SG_IO ioctl with direction DXFER_FROM_DEV (ie the
->>     underlying SCSI command will transfer data from the SCSI device to
->>     the buffer provided in the ioctl)
->>
->>   - Before the command finishes, a signal is sent to the process waiting
->>     in the ioctl.  This will end up waking up the sg_ioctl() code:
->>
->>                  result = wait_event_interruptible(sfp->read_wait,
->>                          (srp_done(sfp, srp) || sdp->detached));
->>
->>     but neither srp_done() nor sdp->detached is true, so we end up just
->>     setting srp->orphan and returning to userspace:
->>
->>                  srp->orphan = 1;
->>                  write_unlock_irq(&sfp->rq_list_lock);
->>                  return result;  /* -ERESTARTSYS because signal hit process */
->>
->>     At this point the original process is done with the ioctl and
->>     blithely goes ahead handling the signal, reissuing the ioctl, etc.
+
+James,
+
+Do you have any comments on this last patch post?
+
+I probably shouldn't have posted it as an RFC.  We've completed our 
+internal testing of the driver, and I think it's probably ready to submit.
+
+Brad
+
+
+On 08/02/2013 12:59 PM, Bradley Grove wrote:
 >
-> i think that an additional issue here is that part of reissuing the
-> ioctl is re-queueing the command. since the re-queue is at the front
-> of the block queue there are issues if the command is non-idempotent.
-
-Re-issuing a SG_IO ioctl is wrong. More and more SCSI commands (even
-in SBC-3) are non-idempotent (e.g. COMPARE AND WRITE). And the st
-driver gets to use the block layer as well and many of its important
-SCSI commands (SSC) are non-idempotent.
-
-> we have a local fix that gets rid of most of the orphan stuff and
-> re-waiting if a non-fatal signal was waiting. simpler than unmapping
-> but maybe we're missing some other interesting case?
-
-Like to share that fix with us?
-
-Also I'm interested in how you know from within a kernel driver
-whether a signal sent to the controlling process is fatal or
-not? For example SIGIO's default action is terminate but sg
-assumes if the controlling process requests SIGIO generation
-then it will at least override that default action and
-handle it sensibly. Is there a way to check that assumption?
-
-Looked at bsg in the situation where a signal interrupts a
-SG_IO ioctl. It seems broken; anyone like to comment on this
-snippet from bsg if a signal hits the first call:
-     blk_execute_rq(bd->queue, NULL, rq, at_head);
-     ret = blk_complete_sgv4_hdr_rq(rq, &hdr, bio, bidi_bio);
-     if (copy_to_user(uarg, &hdr, sizeof(hdr)))
-         return -EFAULT;
-
-
-As an aside, I got tired of handling signals during SCSI commands
-in the ddpt utility, especially after adding tape support. So
-it now masks all the usual suspects during the IO then checks
-for signals in a small window between IOs. Non maskable signals
-will still terminate but of course the user gets no guarantees,
-but it would be still reasonable in the termination case that
-the interrupted SCSI command was _not_ resubmitted.
-
-Doug Gilbert
+> Signed-off-by: Bradley Grove <bgrove@attotech.com>
+> ---
+>   MAINTAINERS                  | 7 +++++++
+>   drivers/scsi/Kconfig         | 1 +
+>   drivers/scsi/Makefile        | 1 +
+>   drivers/scsi/esas2r/Kconfig  | 6 ++++++
+>   drivers/scsi/esas2r/Makefile | 5 +++++
+>   5 files changed, 20 insertions(+)
+>   create mode 100644 drivers/scsi/esas2r/Kconfig
+>   create mode 100644 drivers/scsi/esas2r/Makefile
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index a26b10e..024bc9a 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -1542,6 +1542,13 @@ W:	http://atmelwlandriver.sourceforge.net/
+>   S:	Maintained
+>   F:	drivers/net/wireless/atmel*
+>
+> +ATTO EXPRESSSAS SAS/SATA RAID SCSI DRIVER
+> +M:      Bradley Grove <linuxdrivers@attotech.com>
+> +L:      linux-scsi@vger.kernel.org
+> +W:      http://www.attotech.com
+> +S:      Supported
+> +F:      drivers/scsi/esas2r
+> +
+>   AUDIT SUBSYSTEM
+>   M:	Al Viro <viro@zeniv.linux.org.uk>
+>   M:	Eric Paris <eparis@redhat.com>
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 48b2918..c298b76 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -601,6 +601,7 @@ config SCSI_ARCMSR
+>   	  To compile this driver as a module, choose M here: the
+>   	  module will be called arcmsr (modprobe arcmsr).
+>
+> +source "drivers/scsi/esas2r/Kconfig"
+>   source "drivers/scsi/megaraid/Kconfig.megaraid"
+>   source "drivers/scsi/mpt2sas/Kconfig"
+>   source "drivers/scsi/mpt3sas/Kconfig"
+> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+> index b607ba4..149bb6b 100644
+> --- a/drivers/scsi/Makefile
+> +++ b/drivers/scsi/Makefile
+> @@ -141,6 +141,7 @@ obj-$(CONFIG_SCSI_CXGB3_ISCSI)	+= libiscsi.o libiscsi_tcp.o cxgbi/
+>   obj-$(CONFIG_SCSI_CXGB4_ISCSI)	+= libiscsi.o libiscsi_tcp.o cxgbi/
+>   obj-$(CONFIG_SCSI_BNX2_ISCSI)	+= libiscsi.o bnx2i/
+>   obj-$(CONFIG_BE2ISCSI)		+= libiscsi.o be2iscsi/
+> +obj-$(CONFIG_SCSI_ESAS2R)	+= esas2r/
+>   obj-$(CONFIG_SCSI_PMCRAID)	+= pmcraid.o
+>   obj-$(CONFIG_SCSI_VIRTIO)	+= virtio_scsi.o
+>   obj-$(CONFIG_VMWARE_PVSCSI)	+= vmw_pvscsi.o
+> diff --git a/drivers/scsi/esas2r/Kconfig b/drivers/scsi/esas2r/Kconfig
+> new file mode 100644
+> index 0000000..80824f0
+> --- /dev/null
+> +++ b/drivers/scsi/esas2r/Kconfig
+> @@ -0,0 +1,5 @@
+> +config SCSI_ESAS2R
+> +	tristate "ATTO Technology's ExpressSAS RAID adapter driver"
+> +	depends on PCI && SCSI
+> +	---help---
+> +	  This driver supports the ATTO ExpressSAS R6xx SAS/SATA RAID controllers.
+> diff --git a/drivers/scsi/esas2r/Makefile b/drivers/scsi/esas2r/Makefile
+> new file mode 100644
+> index 0000000..c77160b
+> --- /dev/null
+> +++ b/drivers/scsi/esas2r/Makefile
+> @@ -0,0 +1,5 @@
+> +obj-$(CONFIG_SCSI_ESAS2R)	+= esas2r.o
+> +
+> +esas2r-objs := esas2r_log.o esas2r_disc.o esas2r_flash.o esas2r_init.o \
+> +	 esas2r_int.o esas2r_io.o esas2r_ioctl.o esas2r_targdb.o   \
+> +	 esas2r_vda.o esas2r_main.o
+>
 
