@@ -1,51 +1,63 @@
-From: Anand <anandkumar_santhanam@pmc-sierra.com>
-Subject: [PATCH] pm80xx: Fix for 32 bit compilation issue.
-Date: Wed, 07 Aug 2013 00:51:55 -0700
-Message-ID: <5201FC9B.5030701@pmc-sierra.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH 3/8] [SCSI] dc395x: use NULL instead of 0
+Date: Wed, 7 Aug 2013 18:20:56 +1000
+Message-ID: <CAGRGNgUy86ELDPKcxNsn1eczfHEdr5FW6VeBbxRsJBV5ugAztw@mail.gmail.com>
+References: <001301ce9321$f2157760$d6406620$@samsung.com> <1375858203.1359.1.camel@linux-fkkt.site>
+ <004901ce9342$27e2e970$77a8bc50$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:39878 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752722Ab3HGIP5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 04:15:57 -0400
+Received: from mail-qe0-f48.google.com ([209.85.128.48]:45155 "EHLO
+	mail-qe0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237Ab3HGIVQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 04:21:16 -0400
+Received: by mail-qe0-f48.google.com with SMTP id 9so809888qea.7
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Aug 2013 01:21:16 -0700 (PDT)
+In-Reply-To: <004901ce9342$27e2e970$77a8bc50$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Sangeetha.Gnanasekaran@pmcs.com, xjtuwjp@gmail.com, Rich.Bono@pmcs.com, Nikith.Ganigarakoppal@pmcs.com
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Oliver Neukum <oliver@neukum.org>, James Bottomley <JBottomley@parallels.com>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, dc395x@twibble.org, James Bottomley <jejb@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
->From cc606631fae60a38ab9532bab79fd93523f4c579 Mon Sep 17 00:00:00 2001
-From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-Date: Mon, 5 Aug 2013 14:16:52 +0530
-Subject: [PATCH] pm80xx: Fix for 32 bit compilation issue.
+Hi Jingoo,
 
-pm80xx driver does not compile under 32 bit linux. This patch
-fixes the same.
+On Wed, Aug 7, 2013 at 5:45 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> On Wednesday, August 07, 2013 3:50 PM, Oliver Neukum wrote:
+>> On Wed, 2013-08-07 at 12:55 +0900, Jingoo Han wrote:
+>>
+>> > @@ -4183,15 +4183,17 @@ static void check_eeprom(struct NvRamType *eeprom, unsigned long io_port)
+>> >              */
+>> >             dprintkl(KERN_WARNING,
+>> >                     "EEProm checksum error: using default values and options.\n");
+>> > -           eeprom->sub_vendor_id[0] = (u8)PCI_VENDOR_ID_TEKRAM;
+>> > +           eeprom->sub_vendor_id[0] = (u8)(PCI_VENDOR_ID_TEKRAM & 0xff);
+>>
+>> Hi,
+>>
+>> if you are fixing these issues please use the proper macros for
+>> conversion of endianness.
+>
+> Then, do you mean the following? :)
+>
+> -       prom->sub_vendor_id[0] = (u8)PCI_VENDOR_ID_TEKRAM;
+> +       eprom->sub_vendor_id[0] = (u8)(PCI_VENDOR_ID_TEKRAM & le16_to_cpu(0xff));
 
-Signed-off-by: Anandkumar.Santhanam@pmcs.com
+No.
 
----
- drivers/scsi/pm8001/pm8001_init.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+The issue is that the driver is doing things like this:
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index e4b9bc7..584d04e 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -422,9 +422,10 @@ static int pm8001_ioremap(struct pm8001_hba_info *pm8001_ha)
- 				pm8001_printk("PCI: bar %d, logicalBar %d ",
- 				bar, logicalBar));
- 			PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
--				"base addr %llx virt_addr=%llx len=%d\n",
-+				"base addr %llx virt_addr %p len=%d\n",
- 				(u64)pm8001_ha->io_mem[logicalBar].membase,
--				(u64)pm8001_ha->io_mem[logicalBar].memvirtaddr,
-+				(void __iomem *)
-+				pm8001_ha->io_mem[logicalBar].memvirtaddr,
- 				pm8001_ha->io_mem[logicalBar].memsize));
- 		} else {
- 			pm8001_ha->io_mem[logicalBar].membase	= 0;
+eeprom->member[0] = (u8)(CONSTANT & 0xff);
+eeprom->member[1] = (u8)(CONSTANT >> 8);
+
+Which is exactly the same as code along the lines of:
+
+eeprom->member = cpu_to_le16(CONSTANT);
+
+Thanks,
+
 -- 
-1.7.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
