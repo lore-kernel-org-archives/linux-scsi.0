@@ -1,100 +1,50 @@
 From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH 7/8] [SCSI] osst: Staticize local symbols
-Date: Wed, 07 Aug 2013 12:58:59 +0900
-Message-ID: <001701ce9322$72705a60$57510f20$@samsung.com>
+Subject: [PATCH 8/8] [SCSI] aic94xx: fix bit masking
+Date: Wed, 07 Aug 2013 13:00:31 +0900
+Message-ID: <001801ce9322$a91638a0$fb42a9e0$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:27101 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752691Ab3HGD7B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Aug 2013 23:59:01 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+Received: from mailout2.samsung.com ([203.254.224.25]:11963 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751493Ab3HGEAc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 00:00:32 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MR500IDX71Y5120@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Wed, 07 Aug 2013 12:59:00 +0900 (KST)
+ with ESMTP id <0MR500EPF74UR7K0@mailout2.samsung.com> for
+ linux-scsi@vger.kernel.org; Wed, 07 Aug 2013 13:00:31 +0900 (KST)
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 'James Bottomley' <JBottomley@Parallels.com>
-Cc: 'Willem Riede' <osst@riede.org>, osst-users@lists.sourceforge.net, 'James Bottomley' <jejb@kernel.org>, linux-scsi@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
+Cc: 'James Bottomley' <jejb@kernel.org>, linux-scsi@vger.kernel.org, 'Jesper Juhl' <jj@chaosbits.net>, Jingoo Han <jg1.han@samsung.com>
 
-These local symbols are used only in this file.
-Fix the following sparse warnings:
+Bit masking should happen before casting (u16), thus parentheses
+are necessary in order to fix the following sparse warning:
 
-drivers/scsi/osst.c:5698:1: warning: symbol 'dev_attr_ADR_rev' was not declared. Should it be static?
-drivers/scsi/osst.c:5712:1: warning: symbol 'dev_attr_media_version' was not declared. Should it be static?
-drivers/scsi/osst.c:5725:1: warning: symbol 'dev_attr_capacity' was not declared. Should it be static?
-drivers/scsi/osst.c:5739:1: warning: symbol 'dev_attr_BOT_frame' was not declared. Should it be static?
-drivers/scsi/osst.c:5753:1: warning: symbol 'dev_attr_EOD_frame' was not declared. Should it be static?
-drivers/scsi/osst.c:5766:1: warning: symbol 'dev_attr_file_count' was not declared. Should it be static?
+drivers/scsi/aic94xx/aic94xx_seq.c:748:35: warning: cast truncates bits from constant value (93ef7f becomes ef7f)
 
 Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/scsi/osst.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_seq.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index 21883a2..2ec7ccf 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -5695,7 +5695,7 @@ static ssize_t osst_adr_rev_show(struct device *dev,
- 	return l;
- }
- 
--DEVICE_ATTR(ADR_rev, S_IRUGO, osst_adr_rev_show, NULL);
-+static DEVICE_ATTR(ADR_rev, S_IRUGO, osst_adr_rev_show, NULL);
- 
- static ssize_t osst_linux_media_version_show(struct device *dev,
- 					     struct device_attribute *attr,
-@@ -5709,7 +5709,7 @@ static ssize_t osst_linux_media_version_show(struct device *dev,
- 	return l;
- }
- 
--DEVICE_ATTR(media_version, S_IRUGO, osst_linux_media_version_show, NULL);
-+static DEVICE_ATTR(media_version, S_IRUGO, osst_linux_media_version_show, NULL);
- 
- static ssize_t osst_capacity_show(struct device *dev,
- 				  struct device_attribute *attr, char *buf)
-@@ -5722,7 +5722,7 @@ static ssize_t osst_capacity_show(struct device *dev,
- 	return l;
- }
- 
--DEVICE_ATTR(capacity, S_IRUGO, osst_capacity_show, NULL);
-+static DEVICE_ATTR(capacity, S_IRUGO, osst_capacity_show, NULL);
- 
- static ssize_t osst_first_data_ppos_show(struct device *dev,
- 					 struct device_attribute *attr,
-@@ -5736,7 +5736,7 @@ static ssize_t osst_first_data_ppos_show(struct device *dev,
- 	return l;
- }
- 
--DEVICE_ATTR(BOT_frame, S_IRUGO, osst_first_data_ppos_show, NULL);
-+static DEVICE_ATTR(BOT_frame, S_IRUGO, osst_first_data_ppos_show, NULL);
- 
- static ssize_t osst_eod_frame_ppos_show(struct device *dev,
- 					struct device_attribute *attr,
-@@ -5750,7 +5750,7 @@ static ssize_t osst_eod_frame_ppos_show(struct device *dev,
- 	return l;
- }
- 
--DEVICE_ATTR(EOD_frame, S_IRUGO, osst_eod_frame_ppos_show, NULL);
-+static DEVICE_ATTR(EOD_frame, S_IRUGO, osst_eod_frame_ppos_show, NULL);
- 
- static ssize_t osst_filemark_cnt_show(struct device *dev,
- 				      struct device_attribute *attr, char *buf)
-@@ -5763,7 +5763,7 @@ static ssize_t osst_filemark_cnt_show(struct device *dev,
- 	return l;
- }
- 
--DEVICE_ATTR(file_count, S_IRUGO, osst_filemark_cnt_show, NULL);
-+static DEVICE_ATTR(file_count, S_IRUGO, osst_filemark_cnt_show, NULL);
- 
- static struct class *osst_sysfs_class;
- 
+diff --git a/drivers/scsi/aic94xx/aic94xx_seq.c b/drivers/scsi/aic94xx/aic94xx_seq.c
+index 5fdca93..6b0a881 100644
+--- a/drivers/scsi/aic94xx/aic94xx_seq.c
++++ b/drivers/scsi/aic94xx/aic94xx_seq.c
+@@ -745,7 +745,7 @@ static void asd_init_lseq_mdp(struct asd_ha_struct *asd_ha,  int lseq)
+ 	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq),
+ 			    (u16) ((LmM0INTEN_MASK & 0xFFFF0000) >> 16));
+ 	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq) + 2,
+-			    (u16) LmM0INTEN_MASK & 0xFFFF);
++			    (u16) (LmM0INTEN_MASK & 0xFFFF));
+ 	asd_write_reg_byte(asd_ha, LmSEQ_LINK_RST_FRM_LEN(lseq), 0);
+ 	asd_write_reg_byte(asd_ha, LmSEQ_LINK_RST_PROTOCOL(lseq), 0);
+ 	asd_write_reg_byte(asd_ha, LmSEQ_RESP_STATUS(lseq), 0);
 -- 
 1.7.10.4
 
