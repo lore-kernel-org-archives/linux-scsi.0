@@ -1,52 +1,66 @@
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 3/8] [SCSI] dc395x: use NULL instead of 0
-Date: Wed, 07 Aug 2013 16:45:58 +0900
-Message-ID: <004901ce9342$27e2e970$77a8bc50$@samsung.com>
-References: <001301ce9321$f2157760$d6406620$@samsung.com>
- <1375858203.1359.1.camel@linux-fkkt.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60711] New: USB drive no longer detected as removable storage
+ media
+Date: Wed, 07 Aug 2013 08:15:30 +0000
+Message-ID: <bug-60711-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:14555 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932188Ab3HGHqA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 03:46:00 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MR500I1CHJU51E0@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Wed, 07 Aug 2013 16:45:59 +0900 (KST)
-In-reply-to: <1375858203.1359.1.camel@linux-fkkt.site>
-Content-language: ko
+Received: from mail.kernel.org ([198.145.19.201]:40549 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751139Ab3HGIPf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Aug 2013 04:15:35 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id E6BD3201F7
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Aug 2013 08:15:33 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 80497201F0
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Aug 2013 08:15:31 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Oliver Neukum' <oliver@neukum.org>
-Cc: 'James Bottomley' <JBottomley@Parallels.com>, 'Ali Akcaagac' <aliakc@web.de>, 'Jamie Lenehan' <lenehan@twibble.org>, dc395x@twibble.org, 'James Bottomley' <jejb@kernel.org>, linux-scsi@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
+To: linux-scsi@vger.kernel.org
 
-On Wednesday, August 07, 2013 3:50 PM, Oliver Neukum wrote:
-> On Wed, 2013-08-07 at 12:55 +0900, Jingoo Han wrote:
-> 
-> > @@ -4183,15 +4183,17 @@ static void check_eeprom(struct NvRamType *eeprom, unsigned long io_port)
-> >  		 */
-> >  		dprintkl(KERN_WARNING,
-> >  			"EEProm checksum error: using default values and options.\n");
-> > -		eeprom->sub_vendor_id[0] = (u8)PCI_VENDOR_ID_TEKRAM;
-> > +		eeprom->sub_vendor_id[0] = (u8)(PCI_VENDOR_ID_TEKRAM & 0xff);
-> 
-> Hi,
-> 
-> if you are fixing these issues please use the proper macros for
-> conversion of endianness.
+https://bugzilla.kernel.org/show_bug.cgi?id=60711
 
-Then, do you mean the following? :)
+            Bug ID: 60711
+           Summary: USB drive no longer detected as removable storage
+                    media
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.10.3
+          Hardware: i386
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: low
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: trallala@onlinehome.de
+        Regression: No
 
--	prom->sub_vendor_id[0] = (u8)PCI_VENDOR_ID_TEKRAM;
-+	eprom->sub_vendor_id[0] = (u8)(PCI_VENDOR_ID_TEKRAM & le16_to_cpu(0xff));
+Created attachment 107132
+  --> https://bugzilla.kernel.org/attachment.cgi?id=107132&action=edit
+DMESG excerpt from success and failure
 
+This patch
 
-Best regards,
-Jingoo Han
+commit 98dcc2946adbe4349ef1ef9b99873b912831edd4
+Author: Martin K. Petersen <martin.petersen@oracle.com>
+Date:   Thu Jun 6 22:15:55 2013 -0400
+SCSI: sd: Update WRITE SAME heuristics
+commit 66c28f97120e8a621afd5aa7a31c4b85c547d33d upstream.
 
+introduced with kernel patch-3.10.3 effectively breaks detection of some USB
+drives as removable storage media. The concerned drives are recognized by the
+SCSI layer, but are no longer available as removable storage (see attachment).
 
+Commenting out the following if-clause from sd.c (function sd_read_write_same)
+        if (!scsi_get_vpd_page(sdev, 0x89, buffer, SD_BUF_SIZE))
+            sdev->no_write_same = 1;
+makes anything working as expected.
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
