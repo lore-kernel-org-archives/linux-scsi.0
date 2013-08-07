@@ -1,48 +1,57 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [PATCH 3/8] [SCSI] dc395x: use NULL instead of 0
-Date: Wed, 07 Aug 2013 12:14:58 +0200
-Message-ID: <1375870498.1747.3.camel@linux-fkkt.site>
-References: <001301ce9321$f2157760$d6406620$@samsung.com>
-	 <1375858203.1359.1.camel@linux-fkkt.site>
-	 <002f01ce933b$96ebc370$c4c34a50$@samsung.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] pm80xx: Fix for 32 bit compilation issue.
+Date: Wed, 07 Aug 2013 14:14:07 +0200
+Message-ID: <52023A0F.7030204@redhat.com>
+References: <5201FC9B.5030701@pmc-sierra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:35670 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932379Ab3HGKPC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 06:15:02 -0400
-In-Reply-To: <002f01ce933b$96ebc370$c4c34a50$@samsung.com>
+Received: from mx1.redhat.com ([209.132.183.28]:22235 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751546Ab3HGMOM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Aug 2013 08:14:12 -0400
+In-Reply-To: <5201FC9B.5030701@pmc-sierra.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'James Bottomley' <JBottomley@Parallels.com>, 'Ali Akcaagac' <aliakc@web.de>, 'Jamie Lenehan' <lenehan@twibble.org>, dc395x@twibble.org, 'James Bottomley' <jejb@kernel.org>, linux-scsi@vger.kernel.org
+To: Anand <anandkumar_santhanam@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org, Sangeetha.Gnanasekaran@pmcs.com, xjtuwjp@gmail.com, Rich.Bono@pmcs.com, Nikith.Ganigarakoppal@pmcs.com
 
-On Wed, 2013-08-07 at 15:58 +0900, Jingoo Han wrote:
-> On Wednesday, August 07, 2013 3:50 PM, Oliver Neukum wrote:
-> > On Wed, 2013-08-07 at 12:55 +0900, Jingoo Han wrote:
-> > 
-> > > @@ -4183,15 +4183,17 @@ static void check_eeprom(struct NvRamType *eeprom, unsigned long io_port)
-> > >  		 */
-> > >  		dprintkl(KERN_WARNING,
-> > >  			"EEProm checksum error: using default values and options.\n");
-> > > -		eeprom->sub_vendor_id[0] = (u8)PCI_VENDOR_ID_TEKRAM;
-> > > +		eeprom->sub_vendor_id[0] = (u8)(PCI_VENDOR_ID_TEKRAM & 0xff);
-> > 
-> > Hi,
-> > 
-> > if you are fixing these issues please use the proper macros for
-> > conversion of endianness.
-> 
-> Sorry, I cannot understand exactly what you mean. :(
-> Would you please let me know which macros can be used?
+On 08/07/2013 09:51 AM, Anand wrote:
+> From cc606631fae60a38ab9532bab79fd93523f4c579 Mon Sep 17 00:00:00 2001
+> From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
+> Date: Mon, 5 Aug 2013 14:16:52 +0530
+> Subject: [PATCH] pm80xx: Fix for 32 bit compilation issue.
+>
+> pm80xx driver does not compile under 32 bit linux. This patch
+> fixes the same.
+>
+> Signed-off-by: Anandkumar.Santhanam@pmcs.com
+>
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index e4b9bc7..584d04e 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -422,9 +422,10 @@ static int pm8001_ioremap(struct pm8001_hba_info *pm8001_ha)
+>  				pm8001_printk("PCI: bar %d, logicalBar %d ",
+>  				bar, logicalBar));
+>  			PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
+> -				"base addr %llx virt_addr=%llx len=%d\n",
+> +				"base addr %llx virt_addr %p len=%d\n",
+>  				(u64)pm8001_ha->io_mem[logicalBar].membase,
+> -				(u64)pm8001_ha->io_mem[logicalBar].memvirtaddr,
+> +				(void __iomem *)
 
-In this case constant_cpu_to_le16() would be the macro you want.
-Have a look at include/uapi/linux/byteorder/
+Hi Anand,
+the memvirtaddr is of type 'void __iomem*' - is the explicit cast needed?
+Tomas 
 
-	Regards
-		Oliver
-
-
+> +				pm8001_ha->io_mem[logicalBar].memvirtaddr,
+>  				pm8001_ha->io_mem[logicalBar].memsize));
+>  		} else {
+>  			pm8001_ha->io_mem[logicalBar].membase	= 0;
 
