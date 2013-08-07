@@ -1,38 +1,37 @@
-From: Ren Mingxin <renmx@cn.fujitsu.com>
-Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
-Date: Wed, 07 Aug 2013 14:43:57 +0800
-Message-ID: <5201ECAD.7000703@cn.fujitsu.com>
-References: <1372661455-122384-1-git-send-email-hare@suse.de> <1373488528.7420.55.camel@localhost.localdomain>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [PATCH 3/8] [SCSI] dc395x: use NULL instead of 0
+Date: Wed, 07 Aug 2013 08:50:03 +0200
+Message-ID: <1375858203.1359.1.camel@linux-fkkt.site>
+References: <001301ce9321$f2157760$d6406620$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:23064 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1754219Ab3HGGja (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Aug 2013 02:39:30 -0400
-In-Reply-To: <1373488528.7420.55.camel@localhost.localdomain>
+Received: from smtp-out002.kontent.com ([81.88.40.216]:43130 "EHLO
+	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757134Ab3HGGvP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 02:51:15 -0400
+In-Reply-To: <001301ce9321$f2157760$d6406620$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: emilne@redhat.com, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'James Bottomley' <JBottomley@Parallels.com>, 'Ali Akcaagac' <aliakc@web.de>, 'Jamie Lenehan' <lenehan@twibble.org>, dc395x@twibble.org, 'James Bottomley' <jejb@kernel.org>, linux-scsi@vger.kernel.org
 
-Hi, James:
+On Wed, 2013-08-07 at 12:55 +0900, Jingoo Han wrote:
 
-On 07/11/2013 04:35 AM, Ewan Milne wrote:
-> Looks good.  We have been testing this extensively.
->
-> Acked-by: Ewan D. Milne<emilne@redhat.com>
+> @@ -4183,15 +4183,17 @@ static void check_eeprom(struct NvRamType *eeprom, unsigned long io_port)
+>  		 */
+>  		dprintkl(KERN_WARNING,
+>  			"EEProm checksum error: using default values and options.\n");
+> -		eeprom->sub_vendor_id[0] = (u8)PCI_VENDOR_ID_TEKRAM;
+> +		eeprom->sub_vendor_id[0] = (u8)(PCI_VENDOR_ID_TEKRAM & 0xff);
 
-Do you think this patchset can be applied? If so, When? Perhaps you
-are waiting for someone's feedback?
+Hi,
 
-We've also tested and got the duration could be shortened from 6m26s
-to 44s when 'eh_deadline' was set as 1s(the minimum value of timeout)
-and 16M data were written(I/O processing time can be ignored - 0.7s).
+if you are fixing these issues please use the proper macros for
+conversion of endianness.
 
-As Ewan said, this is efficient to fast failover policy for redundant
-environments.
+	Regards
+		Oliver
 
-Thanks,
-Ren
+
