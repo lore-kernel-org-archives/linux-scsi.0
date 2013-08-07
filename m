@@ -1,23 +1,23 @@
 From: Jingoo Han <jg1.han@samsung.com>
 Subject: Re: [PATCH 3/8] [SCSI] dc395x: use NULL instead of 0
-Date: Wed, 07 Aug 2013 15:58:58 +0900
-Message-ID: <002f01ce933b$96ebc370$c4c34a50$@samsung.com>
+Date: Wed, 07 Aug 2013 16:45:58 +0900
+Message-ID: <004901ce9342$27e2e970$77a8bc50$@samsung.com>
 References: <001301ce9321$f2157760$d6406620$@samsung.com>
  <1375858203.1359.1.camel@linux-fkkt.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:17760 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757206Ab3HGG7A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 02:59:00 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+Received: from mailout3.samsung.com ([203.254.224.33]:14555 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932188Ab3HGHqA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 03:46:00 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MR500MQ6FEAEE40@mailout1.samsung.com> for
- linux-scsi@vger.kernel.org; Wed, 07 Aug 2013 15:58:58 +0900 (KST)
+ with ESMTP id <0MR500I1CHJU51E0@mailout3.samsung.com> for
+ linux-scsi@vger.kernel.org; Wed, 07 Aug 2013 16:45:59 +0900 (KST)
 In-reply-to: <1375858203.1359.1.camel@linux-fkkt.site>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
@@ -40,8 +40,11 @@ On Wednesday, August 07, 2013 3:50 PM, Oliver Neukum wrote:
 > if you are fixing these issues please use the proper macros for
 > conversion of endianness.
 
-Sorry, I cannot understand exactly what you mean. :(
-Would you please let me know which macros can be used?
+Then, do you mean the following? :)
+
+-	prom->sub_vendor_id[0] = (u8)PCI_VENDOR_ID_TEKRAM;
++	eprom->sub_vendor_id[0] = (u8)(PCI_VENDOR_ID_TEKRAM & le16_to_cpu(0xff));
+
 
 Best regards,
 Jingoo Han
