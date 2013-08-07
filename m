@@ -1,58 +1,59 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v2] [SCSI] sg: Fix user memory corruption when SG_IO is
- interrupted by a signal
-Date: Wed, 07 Aug 2013 12:31:30 -0400
-Message-ID: <52027662.6060103@interlog.com>
-References: <1375746189.18481.23.camel@dabdike.int.hansenpartnership.com> <1375750501-21902-1-git-send-email-roland@kernel.org> <52025BE3.5020002@redhat.com> <CAL1RGDW_nPZPBH=X-fOM4sddhVNkojEp4gUQseSJJaJAxfNqqQ@mail.gmail.com>
-Reply-To: dgilbert@interlog.com
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH] pm80xx: Fix for 32 bit compilation issue.
+Date: Wed, 07 Aug 2013 10:22:15 -0700
+Message-ID: <52028247.3020605@infradead.org>
+References: <5201FC9B.5030701@pmc-sierra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:54009 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932115Ab3HGQcS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Aug 2013 12:32:18 -0400
-In-Reply-To: <CAL1RGDW_nPZPBH=X-fOM4sddhVNkojEp4gUQseSJJaJAxfNqqQ@mail.gmail.com>
+Received: from merlin.infradead.org ([205.233.59.134]:41369 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757015Ab3HGRXT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 13:23:19 -0400
+In-Reply-To: <5201FC9B.5030701@pmc-sierra.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: David Milburn <dmilburn@redhat.com>, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Costa Sapuntzakis <costa@purestorage.com>, =?ISO-8859-1?Q?J=F6rn_Engel?= <joern@purestorage.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, David Jeffery <djeffery@redhat.com>
+To: Anand <anandkumar_santhanam@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org, Sangeetha.Gnanasekaran@pmcs.com, xjtuwjp@gmail.com, Rich.Bono@pmcs.com, Nikith.Ganigarakoppal@pmcs.com
 
-On 13-08-07 11:50 AM, Roland Dreier wrote:
-> On Wed, Aug 7, 2013 at 7:38 AM, David Milburn <dmilburn@redhat.com> wrote:
->> I was able to succesfully test this patch overnight, I had been experimenting with the
->> sg driver setting the BIO_NULL_MAPPED flag in sg_rq_end_io_usercontext for a orphan process
->> which prevented the corruption, but your solution seems much better.
->
-> Very cool, thanks for the testing.
->
-> I actually looked at using BIO_NULL_MAPPED as well, but it seemed a
-> bit too fragile to me -- it had the right effect of skipping
-> __bio_copy_iov(), and skipping the __free_pages() stuff in there is OK
-> because sg owns its pages rather than the bio layer, but all that
-> seemed vulnerable to being broken by an unrelated change.
->
-> Out of curiousity, were you already working on this bug?  Because if
-> you had fixed it a few weeks earlier we might not have spent so long
-> wondering WTF was stomping on the memory of one of our processes :)
+On 08/07/13 00:51, Anand wrote:
+> From cc606631fae60a38ab9532bab79fd93523f4c579 Mon Sep 17 00:00:00 2001
+> From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
+> Date: Mon, 5 Aug 2013 14:16:52 +0530
+> Subject: [PATCH] pm80xx: Fix for 32 bit compilation issue.
+> 
+> pm80xx driver does not compile under 32 bit linux. This patch
+> fixes the same.
+> 
+> Signed-off-by: Anandkumar.Santhanam@pmcs.com
+> 
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index e4b9bc7..584d04e 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -422,9 +422,10 @@ static int pm8001_ioremap(struct pm8001_hba_info *pm8001_ha)
+>  				pm8001_printk("PCI: bar %d, logicalBar %d ",
+>  				bar, logicalBar));
+>  			PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
+> -				"base addr %llx virt_addr=%llx len=%d\n",
+> +				"base addr %llx virt_addr %p len=%d\n",
 
-Roland,
-So what kind of signal was leading to your "stomping on the memory"?
-Was it user generated or something like SIGIO, SIGPIPE or a RT signal?
+Why are you dropping the '=' sign?
 
-To get around the SG_IO ioctl restart problem (for non idempotent
-SCSI commands) could we replace a -ERESTARTSYS return value
-with -EINTR ?
-
-As I noted in a previous post, for robust user space code using the
-SG_IO ioctl, masking signals during the IO may help.
-
-
-And what about bsg? Is it any better or worse than sg in the case
-of interrupted SG_IO ioctls? Apart from the interface (sg_io_hdr
-v3 versus v4) it should be a drop in replacement for sg.
-
-Doug Gilbert
+>  				(u64)pm8001_ha->io_mem[logicalBar].membase,
+> -				(u64)pm8001_ha->io_mem[logicalBar].memvirtaddr,
+> +				(void __iomem *)
+> +				pm8001_ha->io_mem[logicalBar].memvirtaddr,
+>  				pm8001_ha->io_mem[logicalBar].memsize));
+>  		} else {
+>  			pm8001_ha->io_mem[logicalBar].membase	= 0;
+> 
 
 
+-- 
+~Randy
