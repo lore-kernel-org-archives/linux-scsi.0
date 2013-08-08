@@ -1,43 +1,73 @@
-From: Sasikanth babu <sasikanth.v19@gmail.com>
-Subject: mvumi driver
-Date: Thu, 8 Aug 2013 12:46:28 +0530
-Message-ID: <CAOJFanVjjmZWVi1CEoszDBgfUujboFZuT1o1PT0YwTOYezoYWQ@mail.gmail.com>
+From: Anton Blanchard <anton@samba.org>
+Subject: [SCSI] lpfc: Don't force CONFIG_GENERIC_CSUM on
+Date: Thu, 8 Aug 2013 17:47:34 +1000
+Message-ID: <20130808174734.3c4fd0cd@kryten>
+References: <20130805202017.651b6cfd@kryten>
+	<5202C94F.5070701@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:37196 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756401Ab3HHHQ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2013 03:16:29 -0400
-Received: by mail-oa0-f49.google.com with SMTP id n10so2708985oag.36
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2013 00:16:29 -0700 (PDT)
+Received: from ozlabs.org ([203.10.76.45]:42357 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757680Ab3HHHrg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Aug 2013 03:47:36 -0400
+In-Reply-To: <5202C94F.5070701@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
- I have a two Marvel Sata Marvell 88NV9143 controller disks on the
-board. When I tried to load mvumi module
- I'm getting an invalid signature error. Further debugging I found any
-read on memory mapped IO returns 0xffffffff (-1).
- And also the PCI bar address is 64bit where as device is 32-bit
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-scsi@vger.kernel.org, james.smart@emulex.com, JBottomley@parallels.com, sfr@canb.auug.org.au
 
 
- [CPU] ->  [IDT PCI-E Interconnet Switch]  -> [MVUMI controller, SATA1 & SATA2]
+Hi Randy,
 
-mvumi 0000:03:00.1: invalid signature [0xffffffff].
-mvumi: probe of 0000:03:00.1 failed with error -22
+> I reported:
+> """
+> on i386:
+> # CONFIG_CRC_T10DIF is not set
+> 
+> 
+> drivers/built-in.o: In function `lpfc_bg_crc':
+> (.text+0x3cb3c9): undefined reference to `crc_t10dif'
+> """
+> 
+> and then James Bottomley provided the patch.
+> I don't know why he added GENERIC_CSUM to it.
 
- Kernel : 2.6.34.12 Longterm
-Arch   : mips/octeon
+Thanks for investigating this. How does this patch look?
 
-03:00.1 Mass storage controller: Device 1b4b:9143 (rev 11)
-        Subsystem: Device 1b4b:9143
-        Flags: bus master, fast devsel, latency 0, IRQ 129
-        Memory at 11c0112000000 (32-bit, prefetchable) [size=1M]
-        [virtual] Expansion ROM at 11c0112110000 [disabled] [size=64K]
-        Capabilities: [50] Power Management version 3
+Anton
+--
 
- cat /proc/iomem
-   11c0112000000-11c01120fffff : mvumi
+[SCSI] lpfc: Don't force CONFIG_GENERIC_CSUM on
 
-Thanks in advance
+We want ppc64 to be able to select between optimised assembly
+checksum routines in big endian and the generic lib/checksum.c
+routines in little endian.
+
+The lpfc driver is forcing CONFIG_GENERIC_CSUM on which means
+we are unable to make the decision to enable it in the arch
+Kconfig. If the option exists it is always forced on.
+
+This got introduced in 3.10 via commit 6a7252fdb0c3 ([SCSI] lpfc:
+fix up Kconfig dependencies). I spoke to Randy about it and
+the original issue was with CRC_T10DIF not being defined.
+
+As such, remove the select of CONFIG_GENERIC_CSUM.
+
+Signed-off-by: Anton Blanchard <anton@samba.org>
+Cc: <stable@vger.kernel.org> # 3.10
+---
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 48b2918..92ff027 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1353,7 +1353,6 @@ config SCSI_LPFC
+ 	tristate "Emulex LightPulse Fibre Channel Support"
+ 	depends on PCI && SCSI
+ 	select SCSI_FC_ATTRS
+-	select GENERIC_CSUM
+ 	select CRC_T10DIF
+ 	help
+           This lpfc driver supports the Emulex LightPulse
