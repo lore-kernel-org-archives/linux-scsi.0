@@ -1,12 +1,12 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH v3 1/2] mpt2sas: fix cleanup on controller resource mapping failure
-Date: Thu,  8 Aug 2013 16:45:38 -0400
-Message-ID: <1375994739-11146-2-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH v3 2/2] mpt3sas: fix cleanup on controller resource mapping failure
+Date: Thu,  8 Aug 2013 16:45:39 -0400
+Message-ID: <1375994739-11146-3-git-send-email-joe.lawrence@stratus.com>
 References: <1375994739-11146-1-git-send-email-joe.lawrence@stratus.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.stratus.com ([134.111.1.17]:52419 "EHLO
+Received: from mailhub.stratus.com ([134.111.1.17]:52423 "EHLO
 	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966459Ab3HHUpu (ORCPT
+	with ESMTP id S966479Ab3HHUpu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2013 16:45:50 -0400
 In-Reply-To: <1375994739-11146-1-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,8 +14,8 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Sreekanth.Reddy@lsi.com, Joe Lawrence <joe.lawrence@stratus.com>
 
-If mpt2sas_base_map_resources takes an early error path then its
-counterpart, mpt2sas_base_free_resources needs to be careful about
+If mpt3sas_base_map_resources takes an early error path then its
+counterpart, mpt3sas_base_free_resources needs to be careful about
 cleaning up:
 
   1 - _base_mask_interrupts and _base_make_ioc_ready require memory
@@ -30,15 +30,15 @@ cleaning up:
 
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c  | 27 +++++++++++++++++----------
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |  1 +
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 27 +++++++++++++++++----------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |  1 +
  2 files changed, 18 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 3ca757d..27ff0f63 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1409,8 +1409,6 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index b119610..f998c8d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1709,8 +1709,6 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
  	int i;
  	u8 try_msix = 0;
  
@@ -47,24 +47,24 @@ index 3ca757d..27ff0f63 100644
  	if (msix_disable == -1 || msix_disable == 0)
  		try_msix = 1;
  
-@@ -1489,6 +1487,7 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+@@ -1790,6 +1788,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
  	if (pci_enable_device_mem(pdev)) {
- 		printk(MPT2SAS_WARN_FMT "pci_enable_device_mem: "
- 		    "failed\n", ioc->name);
+ 		pr_warn(MPT3SAS_FMT "pci_enable_device_mem: failed\n",
+ 			ioc->name);
 +		ioc->bars = 0;
  		return -ENODEV;
  	}
  
-@@ -1497,6 +1496,7 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
- 	    MPT2SAS_DRIVER_NAME)) {
- 		printk(MPT2SAS_WARN_FMT "pci_request_selected_regions: "
- 		    "failed\n", ioc->name);
+@@ -1798,6 +1797,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	    MPT3SAS_DRIVER_NAME)) {
+ 		pr_warn(MPT3SAS_FMT "pci_request_selected_regions: failed\n",
+ 			ioc->name);
 +		ioc->bars = 0;
  		r = -ENODEV;
  		goto out_fail;
  	}
-@@ -4229,18 +4229,25 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
- 	dexitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+@@ -4393,18 +4393,25 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	dexitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
  	    __func__));
  
 -	_base_mask_interrupts(ioc);
@@ -97,11 +97,11 @@ index 3ca757d..27ff0f63 100644
  	return;
  }
  
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 5100476..389d792 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -8175,6 +8175,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 8cbe8fd..a961fe1 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -7779,6 +7779,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
  	INIT_LIST_HEAD(&ioc->sas_hba.sas_port_list);
  	INIT_LIST_HEAD(&ioc->delayed_tr_list);
  	INIT_LIST_HEAD(&ioc->delayed_tr_volume_list);
