@@ -1,84 +1,65 @@
-From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [PATCH V2 4/8] [SCSI] megaraid: add missing __iomem annotation
-Date: Thu, 8 Aug 2013 17:00:11 +0530
-Message-ID: <088E451FE1854947BD9145EF8C016FF413A00DBF90@inbmail01.lsi.com>
-References: <002701ce93d4$d234ab60$769e0220$@samsung.com>
+From: Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 05/16] megaraid: clean up unnecessary MSI/MSI-X capability find
+Date: Thu, 8 Aug 2013 21:07:44 +0800
+Message-ID: <1375967264-25644-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:28263 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965050Ab3HHLaX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Aug 2013 07:30:23 -0400
-In-Reply-To: <002701ce93d4$d234ab60$769e0220$@samsung.com>
-Content-Language: en-US
+Received: from szxga03-in.huawei.com ([119.145.14.66]:8887 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934211Ab3HHNIG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2013 09:08:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jingoo Han <jg1.han@samsung.com>, 'James Bottomley' <JBottomley@Parallels.com>
-Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>, 'James Bottomley' <jejb@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com, Yijing Wang <wangyijing@huawei.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org
 
+PCI core will initialize device MSI/MSI-X capability in
+pci_msi_init_pci_dev(). So device driver should use
+pci_dev->msi_cap/msix_cap to determine whether the device
+support MSI/MSI-X instead of using
+pci_find_capability(pci_dev, PCI_CAP_ID_MSI/MSIX).
+Access to PCIe device config space again will consume more time.
 
->-----Original Message-----
->From: Jingoo Han [mailto:jg1.han@samsung.com]
->Sent: Thursday, August 08, 2013 6:46 AM
->To: 'James Bottomley'
->Cc: DL-MegaRAID Linux; 'James Bottomley'; linux-scsi@vger.kernel.org;
->Jingoo Han
->Subject: [PATCH V2 4/8] [SCSI] megaraid: add missing __iomem annotation
->
->Added missing __iomem annotation in order to fix the following sparse
->warnings:
->
->drivers/scsi/megaraid.c:4595:26: warning: incorrect type in argument 1
->(different address spaces)
->drivers/scsi/megaraid.c:4595:26:    expected void volatile [noderef]
-><asn:2>*addr
->drivers/scsi/megaraid.c:4595:26:    got void *<noident>
->drivers/scsi/megaraid.c:4653:26: warning: incorrect type in argument 1
->(different address spaces)
->drivers/scsi/megaraid.c:4653:26:    expected void volatile [noderef]
-><asn:2>*addr
->drivers/scsi/megaraid.c:4653:26:    got void *<noident>
->
->Signed-off-by: Jingoo Han <jg1.han@samsung.com>
->---
->No changes since v1:
->
-> drivers/scsi/megaraid.c |    4 ++--
-> 1 file changed, 2 insertions(+), 2 deletions(-)
->
->diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c index
->90c95a3..a395207 100644
->--- a/drivers/scsi/megaraid.c
->+++ b/drivers/scsi/megaraid.c
->@@ -4592,7 +4592,7 @@ megaraid_probe_one(struct pci_dev *pdev, const
->struct pci_device_id *id)
-> 	scsi_host_put(host);
->  out_iounmap:
-> 	if (flag & BOARD_MEMMAP)
->-		iounmap((void *)mega_baseport);
->+		iounmap((void __iomem *)mega_baseport);
->  out_release_region:
-> 	if (flag & BOARD_MEMMAP)
-> 		release_mem_region(tbase, 128);
->@@ -4650,7 +4650,7 @@ megaraid_remove_one(struct pci_dev *pdev)
->
-> 	/* Free our resources */
-> 	if (adapter->flag & BOARD_MEMMAP) {
->-		iounmap((void *)adapter->base);
->+		iounmap((void __iomem *)adapter->base);
-> 		release_mem_region(adapter->host->base, 128);
-> 	} else
-> 		release_region(adapter->base, 16);
->--
->1.7.10.4
->
->
-Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
-
-Sumit
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 0177295..ad8fc44 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4072,21 +4072,20 @@ fail_set_dma_mask:
+ static int megasas_probe_one(struct pci_dev *pdev,
+ 			     const struct pci_device_id *id)
+ {
+-	int rval, pos, i, j;
++	int rval, i, j;
+ 	struct Scsi_Host *host;
+ 	struct megasas_instance *instance;
+ 	u16 control = 0;
+ 
+ 	/* Reset MSI-X in the kdump kernel */
+ 	if (reset_devices) {
+-		pos = pci_find_capability(pdev, PCI_CAP_ID_MSIX);
+-		if (pos) {
+-			pci_read_config_word(pdev, pos + PCI_MSIX_FLAGS,
++		if (pdev->msix_cap) {
++			pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS,
+ 					     &control);
+ 			if (control & PCI_MSIX_FLAGS_ENABLE) {
+ 				dev_info(&pdev->dev, "resetting MSI-X\n");
+ 				pci_write_config_word(pdev,
+-						      pos + PCI_MSIX_FLAGS,
++						      pdev->msix_cap + PCI_MSIX_FLAGS,
+ 						      control &
+ 						      ~PCI_MSIX_FLAGS_ENABLE);
+ 			}
+-- 
+1.7.1
 
 
