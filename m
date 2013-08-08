@@ -1,52 +1,63 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: Why does lpfc select GENERIC_CSUM?
-Date: Wed, 07 Aug 2013 15:25:19 -0700
-Message-ID: <5202C94F.5070701@infradead.org>
-References: <20130805202017.651b6cfd@kryten>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V2 1/8] [SCSI] scsi_sysfs: Staticize local symbols
+Date: Thu, 08 Aug 2013 10:13:32 +0900
+Message-ID: <002401ce93d4$7f9c90c0$7ed5b240$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:48664 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933252Ab3HGW0U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 18:26:20 -0400
-In-Reply-To: <20130805202017.651b6cfd@kryten>
+Received: from mailout3.samsung.com ([203.254.224.33]:63056 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757130Ab3HHBNe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 21:13:34 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MR60055PU2A8TE0@mailout3.samsung.com> for
+ linux-scsi@vger.kernel.org; Thu, 08 Aug 2013 10:13:33 +0900 (KST)
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: linux-scsi@vger.kernel.org, james.smart@emulex.com, JBottomley@parallels.com
+To: 'James Bottomley' <JBottomley@Parallels.com>
+Cc: 'James Bottomley' <jejb@kernel.org>, linux-scsi@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
 
-On 08/05/13 03:20, Anton Blanchard wrote:
-> 
-> Hi Randy,
-> 
-> commit 6a7252fd ([SCSI] lpfc: fix up Kconfig dependencies) added a
-> select of GENERIC_CSUM. This seems strange to me - it's an architecture
-> specific detail if the checksum routines are implemented in assembly or
-> if they pull in lib/checksum.c.
-> 
-> The networking code doesn't select GENERIC_CSUM, so I'm not sure why
-> the lpfc driver needs to. Was there a real issue we hit here?
-> 
-> Regards,
-> Anton
-> 
+These local symbols are used only in this file.
+Fix the following sparse warnings:
 
-Hi Anton,
+drivers/scsi/scsi_sysfs.c:201:25: warning: symbol 'dev_attr_hstate' was not declared. Should it be static?
+drivers/scsi/scsi_sysfs.c:314:24: warning: symbol 'scsi_shost_attr_group' was not declared. Should it be static?
 
-I reported:
-"""
-on i386:
-# CONFIG_CRC_T10DIF is not set
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+No changes since v1:
 
+ drivers/scsi/scsi_sysfs.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-drivers/built-in.o: In function `lpfc_bg_crc':
-(.text+0x3cb3c9): undefined reference to `crc_t10dif'
-"""
-
-and then James Bottomley provided the patch.
-I don't know why he added GENERIC_CSUM to it.
-
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 7e50061..043150e 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -198,7 +198,7 @@ show_shost_state(struct device *dev, struct device_attribute *attr, char *buf)
+ }
+ 
+ /* DEVICE_ATTR(state) clashes with dev_attr_state for sdev */
+-struct device_attribute dev_attr_hstate =
++static struct device_attribute dev_attr_hstate =
+ 	__ATTR(state, S_IRUGO | S_IWUSR, show_shost_state, store_shost_state);
+ 
+ static ssize_t
+@@ -311,7 +311,7 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
+ 	NULL
+ };
+ 
+-struct attribute_group scsi_shost_attr_group = {
++static struct attribute_group scsi_shost_attr_group = {
+ 	.attrs =	scsi_sysfs_shost_attrs,
+ };
+ 
 -- 
-~Randy
+1.7.10.4
+
+
