@@ -1,53 +1,43 @@
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH V2 8/8] [SCSI] aic94xx: fix bit masking
-Date: Thu, 08 Aug 2013 10:18:15 +0900
-Message-ID: <002b01ce93d5$28742320$795c6960$@samsung.com>
+From: Sasikanth babu <sasikanth.v19@gmail.com>
+Subject: mvumi driver
+Date: Thu, 8 Aug 2013 12:46:28 +0530
+Message-ID: <CAOJFanVjjmZWVi1CEoszDBgfUujboFZuT1o1PT0YwTOYezoYWQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:10916 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757562Ab3HHBSQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2013 21:18:16 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MR6004KXU9AISC0@mailout4.samsung.com> for
- linux-scsi@vger.kernel.org; Thu, 08 Aug 2013 10:18:15 +0900 (KST)
-Content-language: ko
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:37196 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756401Ab3HHHQ3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2013 03:16:29 -0400
+Received: by mail-oa0-f49.google.com with SMTP id n10so2708985oag.36
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2013 00:16:29 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <JBottomley@Parallels.com>
-Cc: 'James Bottomley' <jejb@kernel.org>, linux-scsi@vger.kernel.org, 'Jesper Juhl' <jj@chaosbits.net>, Jingoo Han <jg1.han@samsung.com>
+To: linux-scsi@vger.kernel.org
 
-Bit masking should happen before casting (u16), thus parentheses
-are necessary in order to fix the following sparse warning:
-
-drivers/scsi/aic94xx/aic94xx_seq.c:748:35: warning: cast truncates bits from constant value (93ef7f becomes ef7f)
-
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
-No changes since v1:
-
- drivers/scsi/aic94xx/aic94xx_seq.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_seq.c b/drivers/scsi/aic94xx/aic94xx_seq.c
-index 5fdca93..6b0a881 100644
---- a/drivers/scsi/aic94xx/aic94xx_seq.c
-+++ b/drivers/scsi/aic94xx/aic94xx_seq.c
-@@ -745,7 +745,7 @@ static void asd_init_lseq_mdp(struct asd_ha_struct *asd_ha,  int lseq)
- 	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq),
- 			    (u16) ((LmM0INTEN_MASK & 0xFFFF0000) >> 16));
- 	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq) + 2,
--			    (u16) LmM0INTEN_MASK & 0xFFFF);
-+			    (u16) (LmM0INTEN_MASK & 0xFFFF));
- 	asd_write_reg_byte(asd_ha, LmSEQ_LINK_RST_FRM_LEN(lseq), 0);
- 	asd_write_reg_byte(asd_ha, LmSEQ_LINK_RST_PROTOCOL(lseq), 0);
- 	asd_write_reg_byte(asd_ha, LmSEQ_RESP_STATUS(lseq), 0);
--- 
-1.7.10.4
+ I have a two Marvel Sata Marvell 88NV9143 controller disks on the
+board. When I tried to load mvumi module
+ I'm getting an invalid signature error. Further debugging I found any
+read on memory mapped IO returns 0xffffffff (-1).
+ And also the PCI bar address is 64bit where as device is 32-bit
 
 
+ [CPU] ->  [IDT PCI-E Interconnet Switch]  -> [MVUMI controller, SATA1 & SATA2]
+
+mvumi 0000:03:00.1: invalid signature [0xffffffff].
+mvumi: probe of 0000:03:00.1 failed with error -22
+
+ Kernel : 2.6.34.12 Longterm
+Arch   : mips/octeon
+
+03:00.1 Mass storage controller: Device 1b4b:9143 (rev 11)
+        Subsystem: Device 1b4b:9143
+        Flags: bus master, fast devsel, latency 0, IRQ 129
+        Memory at 11c0112000000 (32-bit, prefetchable) [size=1M]
+        [virtual] Expansion ROM at 11c0112110000 [disabled] [size=64K]
+        Capabilities: [50] Power Management version 3
+
+ cat /proc/iomem
+   11c0112000000-11c01120fffff : mvumi
+
+Thanks in advance
