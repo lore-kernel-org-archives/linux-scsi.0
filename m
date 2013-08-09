@@ -1,37 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v4 08/10] scsi: Generate uevents on certain unit
- attention codes
-Date: Fri, 09 Aug 2013 08:04:33 -0700
-Message-ID: <1376060673.2087.5.camel@dabdike.int.hansenpartnership.com>
-References: <1375390659-12495-1-git-send-email-emilne@redhat.com>
-	 <1375390659-12495-9-git-send-email-emilne@redhat.com>
-	 <1375463172.2062.28.camel@dabdike.int.hansenpartnership.com>
-	 <1375978138.3796.32.camel@localhost.localdomain>
-	 <1376010917.11375.17.camel@dabdike.int.hansenpartnership.com>
-	 <1376059813.3796.65.camel@localhost.localdomain>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Fri, 9 Aug 2013 17:07:45 +0200
+Message-ID: <20130809150744.GB25306@dhcp-26-207.brq.redhat.com>
+References: <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+ <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+ <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+ <20130726020928.GL29296@kernel.dk>
+ <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+ <20130729114653.GB20951@mtj.dyndns.org>
+ <20130809082335.GA25306@dhcp-26-207.brq.redhat.com>
+ <5204FBA6.6040001@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45155 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934064Ab3HIPEi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Aug 2013 11:04:38 -0400
-In-Reply-To: <1376059813.3796.65.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5204FBA6.6040001@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2013-08-09 at 10:50 -0400, Ewan Milne wrote:
-> On Thu, 2013-08-08 at 18:15 -0700, James Bottomley wrote: 
-> > OK, I'm fine either way, so I think we're good to go.
+On Fri, Aug 09, 2013 at 08:24:38AM -0600, Jens Axboe wrote:
+> On 08/09/2013 02:23 AM, Alexander Gordeev wrote:
+> > +	ap->qc_tags = blk_mq_init_tags(ATA_MAX_QUEUE, 1, NUMA_NO_NODE);
+> > +	if (!ap->qc_tags) {
+> > +		kfree(ap);
+> > +		return NULL;
+> > +	}
 > 
-> I sent v5 yesterday.  Let me know if you want a v6 with that SPC_3 test
-> removed. (I'll be out next week, if you want to just edit it, go ahead.)
+> This should be blk_mq_init_tags(ATA_MAX_QUEUE - 1, 1, ...) since the
+> total depth is normal_tags + reserved_tags.
 
-I'll just edit it.
+Aha.. If blk_mq_init_tags() should be like this then?
 
-James
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index dcbc2a4..b131a48 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -468,10 +468,9 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
+ 	 * Rest of the tags start at the queue list
+ 	 */
+ 	tags->nr_free = 0;
+-	while (nr_tags - tags->nr_reserved) {
++	while (nr_tags--) {
+ 		tags->freelist[tags->nr_free] = tags->nr_free +
+ 							tags->nr_reserved;
+-		nr_tags--;
+ 		tags->nr_free++;
+ 	}
 
+> -- 
+> Jens Axboe
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
