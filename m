@@ -1,63 +1,41 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH v2] Hard disk S3 resume time optimization
-Date: Fri, 09 Aug 2013 09:25:47 +0200
-Message-ID: <1376033147.1902.6.camel@linux-fkkt.site>
-References: <11E08D716F0541429B7042699DD5C1A170680F5C@FMSMSX103.amr.corp.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Fri, 9 Aug 2013 10:15:00 -0400
+Message-ID: <20130809141500.GF20515@mtj.dyndns.org>
+References: <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+ <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+ <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+ <20130726020928.GL29296@kernel.dk>
+ <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+ <20130729114653.GB20951@mtj.dyndns.org>
+ <20130809082335.GA25306@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49933 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030658Ab3HIIkj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Aug 2013 04:40:39 -0400
-In-Reply-To: <11E08D716F0541429B7042699DD5C1A170680F5C@FMSMSX103.amr.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130809082335.GA25306@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Brandt, Todd E" <todd.e.brandt@intel.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>
 
-On Fri, 2013-08-09 at 01:09 +0000, Brandt, Todd E wrote:
+On Fri, Aug 09, 2013 at 10:23:35AM +0200, Alexander Gordeev wrote:
+> On Mon, Jul 29, 2013 at 07:46:53AM -0400, Tejun Heo wrote:
+> > One thing which would probably be worthwhile tho is getting rid of the
+> > bitmap based qc tag allocator in libata.  That one is just borderline
+> > stupid to keep around on any setup which is supposed to be scalable.
+> 
+> Hi Tejun,
+> 
+> How about this approach?
 
->  static struct ata_force_ent *ata_force_tbl;
->  static int ata_force_tbl_size;
-> +int ata_resume_status;
+Haven't looked at it thoroughly and I still don't know anything about
+blk-mq but it looks good on the first glance.
 
-A single global variable for multiple ports?
- 
->  static char ata_force_param_buf[PAGE_SIZE] __initdata;
->  /* param_buf is thrown away after initialization, disallow read */
-> @@ -5415,6 +5416,22 @@ static int ata_port_resume(struct device *dev)
->  	return rc;
->  }
->  
-> +static int ata_port_resume_async(struct device *dev)
-> +{
-> +	struct ata_port *ap = to_ata_port(dev);
-> +
-> +	ata_resume_status = 0;
-> +	ata_port_request_pm(ap, PMSG_RESUME, ATA_EH_RESET,
-> +		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, &ata_resume_status);
+Thanks.
 
-If this ever runs in paralell it is extremely racy.
-
-> +	if (!ata_resume_status) {
-> +		pm_runtime_disable(dev);
-> +		pm_runtime_set_active(dev);
-> +		pm_runtime_enable(dev);
-> +	}
-> +
-> +	return ata_resume_status;
-> +}
-> +
-
-
-> +	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-
-What happens if commands go to the device before this has finished?
-Especially should it fail.
-
-	Regards
-		Oliver
-
-
+-- 
+tejun
