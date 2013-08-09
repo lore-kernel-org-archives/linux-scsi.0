@@ -1,182 +1,157 @@
-From: "Brandt, Todd E" <todd.e.brandt@intel.com>
-Subject: [PATCH v2] Hard disk S3 resume time optimization
-Date: Fri, 9 Aug 2013 01:09:03 +0000
-Message-ID: <11E08D716F0541429B7042699DD5C1A170680F5C@FMSMSX103.amr.corp.intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v4 08/10] scsi: Generate uevents on certain unit
+ attention codes
+Date: Thu, 08 Aug 2013 18:15:17 -0700
+Message-ID: <1376010917.11375.17.camel@dabdike.int.hansenpartnership.com>
+References: <1375390659-12495-1-git-send-email-emilne@redhat.com>
+	 <1375390659-12495-9-git-send-email-emilne@redhat.com>
+	 <1375463172.2062.28.camel@dabdike.int.hansenpartnership.com>
+	 <1375978138.3796.32.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Oliver Neukum <oneukum@suse.de>, Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43084 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966943Ab3HIBPY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2013 21:15:24 -0400
+In-Reply-To: <1375978138.3796.32.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: emilne@redhat.com
+Cc: linux-scsi@vger.kernel.org
 
-This patch essentially removes the disk spinup wait time from the system S3 resume delay. It can be a very significant improvement on systems with large SATA disks which can take several seconds to spin up. On the systems I've tested this patch reduces the resume time to around half a second (assuming no USB devices are consuming that time). Without the patch my systems require anywhere from 5 to 12 seconds to wakeup from S3 resume depending on the size of the disks attached.
+On Thu, 2013-08-08 at 12:08 -0400, Ewan Milne wrote:
+> On Fri, 2013-08-02 at 10:06 -0700, James Bottomley wrote:
+> > On Thu, 2013-08-01 at 16:57 -0400, Ewan D. Milne wrote:
+> > > From: "Ewan D. Milne" <emilne@redhat.com>
+> > > + * scsi_report_lun_change - Set flag on all *other* devices on the same target
+> > > + *                          to indicate that a UNIT ATTENTION is expected.
+> > > + *                          Only do this for SPC-3 devices, however.
+> > > + * @sdev:	Device reporting the UNIT ATTENTION
+> > > + */
+> > > +static void scsi_report_lun_change(struct scsi_device *sdev)
+> > > +{
+> > > +	struct Scsi_Host *shost = sdev->host;
+> > > +	struct scsi_device *tmp_sdev;
+> > > +
+> > > +	if (sdev->scsi_level == SCSI_SPC_3)
+> > 
+> > Why the SPC3 check?  We have SPC2 targets that use report luns and
+> > presumably work as well.
+> 
+> Really the check was for SPC-4 and above, which I believe only generates
+> a single REPORT LUNS DATA HAS CHANGED unit attention on the first LUN
+> accessed.  This was described in T10 06-411r2.  I think it is still
+> needed but should be changed to <= SCSI_SPC_3.
 
-This is a rewrite of my first attempt to optimize S3 disk resume time: http://marc.info/?l=linux-ide&m=136874337908364&w=2 . It's vastly simpler in that it doesn't make any alterations at all to the pm subsystem to allow non-blocking resume, it simply enables the ata_port and scsi_disk drivers to do their work in a non-blocking way.
+Perhaps the check needs to go then.  Just because SPC-4 says one event
+per target doesn't mean devices will obey it.  There's no harm if we
+guard against repeats even for SPC-4 and above (if they don't do it,
+it's just a few extra setting and unsetting of flags) and we'll just
+have to remove it again when the first broken device shows up.
 
-Made some alterations to the first draft of the patch, this is v2.
+> > 
+> > > +		shost_for_each_device(tmp_sdev, shost) {
+> > > +			if (tmp_sdev->channel == sdev->channel &&
+> > > +			    tmp_sdev->id == sdev->id &&
+> > > +			    tmp_sdev != sdev)
+> > 
+> > This should be starget_for_each_device calling a function rather than
+> > hand rolling.
+> > 
+> > > +				tmp_sdev->expecting_cc_ua = 1;
+> > 
+> > Even with a restricted target loop, this is a bit messy (I think it's my
+> > fault: I did ask you to reuse the existing mechanism, but now I see it,
+> > a separate mechanism that functions the same way on the target looks a
+> > lot cleaner) .  It looks like a struct scsi_target
+> > expecting_lun_change:1 flag would work better in this case?  You'd set
+> > it in the target at first sight, check it in scsi_report_sense() and
+> > clear it on successful REPORT_LUNS command.  There's no need to lock it
+> > because operations on a u32 are atomic and we're going to get slop
+> > around this and the possibility of extra events anyway.
+> 
+> I've tried this out, and it seems to work OK, but I'm a little concerned
+> about the possibility of losing a subsequent notification.  If a flag is
+> used on the target, then multiple 3F 0E UAs from the same device could
+> be suppressed, which isn't exactly the correct behavior.  Each LUN is
+> only supposed to report 3F 0E once in SPC-3, per change.  If we receive
+> another one, then there presumably has been *another* change.
+> 
+> Perhaps I'm being too picky about this, and I'm not at all sure that
+> every storage array has this implemented properly either, so maybe it
+> doesn't matter enough.
 
-1) Added scsi cmd error reporting in response to Oliver's comments. The sd_resume_async_end function now prints out the same error information that was printed in the sd_start_stop_device call; including the sense buffer contents. I didn't add any additional error messages for the ata port wakeup since, if the port wakeup fails, the error data is printed out by the error handler process itself, so it doesn't require the ata_port_resume call to check up on it after the failure. The only potential issue is that the ata_port_resume_async call sets the ata port device to RPM_ACTIVE even if the ata_eh_handle_port_resume call fails, but there doesn't appear to be any code which actually calls pm_runtime_set_suspended for ata_ports at the moment, so the ata_port appears to always be set to RPM_AC
- TIVE anyway (please correct me if I'm wrong). 
-2) I created a new ata_port_resume_async function just for the "resume" callback so that it wouldn't affect the thaw, restore, or runtime resume callback behaviour (just to be on the safe side). 
-3) I also moved the scsi_disk_put call up into the sd_resume_async_end callback since the reference counter shouldn't be decremented until the disk is actually finished starting.
+Well, you're not thinking about it the right way. Even on the per sdev
+flag, we don't clear until a successful GOOD status return, so it will
+suppress multiple genuine UAs anyway, assuming the lun data changes are
+done fast enough.
 
-Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
+>From a systems point of view, we receive a UA, trigger and event and
+then some user programme tries to work out what changed by issuing a
+REPORT LUNS and we suppress all UAs for LUN data changes until the
+REPORT LUNS comes down.  Even if we get multiple genuine LUN data
+changes in that interval, the user programme is going to read the latest
+up to date information anyway, so it doesn't matter in the slightest
+that we can lose genuine events.
 
- drivers/ata/libata-core.c | 19 +++++++++++++++++-
- drivers/scsi/sd.c         | 78 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 95 insertions(+), 2 deletions(-)
+The actual problem with the new scheme is the reverse: that it doesn't
+suppress all the spurious events: given a target with three luns, two of
+which are in constant use and one of which in sporadic, we'll suppress
+the UAs from the LUNs in constant use, but if the sporadic LUN receives
+no I/O until after the REPORT LUNS comes down, then it will trigger
+another UA for an event we've already processed.  I think that's a price
+worth paying for simplicity, though.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c24354d..842004c 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -118,6 +118,7 @@ struct ata_force_ent {
- 
- static struct ata_force_ent *ata_force_tbl;
- static int ata_force_tbl_size;
-+int ata_resume_status;
- 
- static char ata_force_param_buf[PAGE_SIZE] __initdata;
- /* param_buf is thrown away after initialization, disallow read */
-@@ -5415,6 +5416,22 @@ static int ata_port_resume(struct device *dev)
- 	return rc;
- }
- 
-+static int ata_port_resume_async(struct device *dev)
-+{
-+	struct ata_port *ap = to_ata_port(dev);
-+
-+	ata_resume_status = 0;
-+	ata_port_request_pm(ap, PMSG_RESUME, ATA_EH_RESET,
-+		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, &ata_resume_status);
-+	if (!ata_resume_status) {
-+		pm_runtime_disable(dev);
-+		pm_runtime_set_active(dev);
-+		pm_runtime_enable(dev);
-+	}
-+
-+	return ata_resume_status;
-+}
-+
- /*
-  * For ODDs, the upper layer will poll for media change every few seconds,
-  * which will make it enter and leave suspend state every few seconds. And
-@@ -5451,7 +5468,7 @@ static int ata_port_runtime_resume(struct device *dev)
- 
- static const struct dev_pm_ops ata_port_pm_ops = {
- 	.suspend = ata_port_suspend,
--	.resume = ata_port_resume,
-+	.resume = ata_port_resume_async,
- 	.freeze = ata_port_do_freeze,
- 	.thaw = ata_port_resume,
- 	.poweroff = ata_port_poweroff,
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 86fcf2c..f5a9800 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -107,6 +107,7 @@ static int  sd_remove(struct device *);
- static void sd_shutdown(struct device *);
- static int sd_suspend(struct device *);
- static int sd_resume(struct device *);
-+static int sd_resume_async(struct device *);
- static void sd_rescan(struct device *);
- static int sd_done(struct scsi_cmnd *);
- static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
-@@ -484,7 +485,7 @@ static struct class sd_disk_class = {
- 
- static const struct dev_pm_ops sd_pm_ops = {
- 	.suspend		= sd_suspend,
--	.resume			= sd_resume,
-+	.resume			= sd_resume_async,
- 	.poweroff		= sd_suspend,
- 	.restore		= sd_resume,
- 	.runtime_suspend	= sd_suspend,
-@@ -3137,6 +3138,81 @@ done:
- 	return ret;
- }
- 
-+static void sd_resume_async_end(struct request *rq, int error)
-+{
-+	struct scsi_sense_hdr sshdr;
-+	struct scsi_disk *sdkp = rq->end_io_data;
-+	char *sense = rq->sense;
-+
-+	if (error) {
-+		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-+		sd_print_result(sdkp, error);
-+		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-+			scsi_normalize_sense(sense,
-+				SCSI_SENSE_BUFFERSIZE, &sshdr);
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		}
-+	} else
-+		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-+
-+	kfree(sense);
-+	rq->sense = NULL;
-+	rq->end_io_data = NULL;
-+	__blk_put_request(rq->q, rq);
-+	scsi_disk_put(sdkp);
-+}
-+
-+static int sd_resume_async(struct device *dev)
-+{
-+	unsigned char cmd[6] = { START_STOP };
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct request *req;
-+	char *sense = NULL;
-+
-+	if (!sdkp->device->manage_start_stop) {
-+		scsi_disk_put(sdkp);
-+		return 0;
-+	}
-+
-+	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-+
-+	cmd[4] |= 1;
-+
-+	if (sdkp->device->start_stop_pwr_cond)
-+		cmd[4] |= 1 << 4;	/* Active or Standby */
-+
-+	if (!scsi_device_online(sdkp->device)) {
-+		scsi_disk_put(sdkp);
-+		return -ENODEV;
-+	}
-+
-+	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-+	if (!req) {
-+		scsi_disk_put(sdkp);
-+		return DRIVER_ERROR << 24;
-+	}
-+
-+	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sense) {
-+		__blk_put_request(req->q, req);
-+		scsi_disk_put(sdkp);
-+		return DRIVER_ERROR << 24;
-+	}
-+
-+	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memcpy(req->cmd, cmd, req->cmd_len);
-+	req->sense = sense;
-+	req->sense_len = 0;
-+	req->retries = SD_MAX_RETRIES;
-+	req->timeout = SD_TIMEOUT;
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
-+
-+	req->end_io_data = sdkp;
-+	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_async_end);
-+	return 0;
-+}
-+
- /**
-  *	init_sd - entry point for this driver (both when built in or when
-  *	a module).
+> > > --- a/drivers/scsi/scsi_sysfs.c
+> > > +++ b/drivers/scsi/scsi_sysfs.c
+> > > @@ -710,6 +710,11 @@ sdev_store_evt_##name(struct device *dev, struct device_attribute *attr,\
+> > >  #define REF_EVT(name) &dev_attr_evt_##name.attr
+> > >  
+> > >  DECLARE_EVT(media_change, MEDIA_CHANGE)
+> > > +DECLARE_EVT(inquiry_change_reported, INQUIRY_CHANGE_REPORTED)
+> > > +DECLARE_EVT(capacity_change_reported, CAPACITY_CHANGE_REPORTED)
+> > > +DECLARE_EVT(soft_threshold_reached, SOFT_THRESHOLD_REACHED_REPORTED)
+> > > +DECLARE_EVT(mode_parameter_change_reported, MODE_PARAMETER_CHANGE_REPORTED)
+> > > +DECLARE_EVT(lun_change_reported, LUN_CHANGE_REPORTED)
+> > >  
+> > >  /* Default template for device attributes.  May NOT be modified */
+> > >  static struct attribute *scsi_sdev_attrs[] = {
+> > > @@ -729,6 +734,11 @@ static struct attribute *scsi_sdev_attrs[] = {
+> > >  	&dev_attr_ioerr_cnt.attr,
+> > >  	&dev_attr_modalias.attr,
+> > >  	REF_EVT(media_change),
+> > > +	REF_EVT(inquiry_change_reported),
+> > > +	REF_EVT(capacity_change_reported),
+> > > +	REF_EVT(soft_threshold_reached),
+> > > +	REF_EVT(mode_parameter_change_reported),
+> > > +	REF_EVT(lun_change_reported),
+> > 
+> > This last one should be a property of the target attributes, shouldn't
+> > it?  Otherwise the listener receives and event on the target and has to
+> > go fishing around trying to find the one LUN we set the flag on.
+> > 
+> > Either we keep the flag on the sdev and send the event from the sdev or
+> > we move the flag to the target and send the event from the target.
+> 
+> I could go either way on this -- conceptually it seems like the event
+> should be reported on the scsi_target object, since the accessible LUNs
+> on the target is what has actually changed on the storage, the LUN is
+> just the messenger.  However, implementing this required adding a bunch
+> of infrastructure for the uevent on the scsi_target object, which made
+> the patch bigger, so I took that out in the v4 version.
+> 
+> Sending the event to the sdev would require a more complicated udev rule
+> to handle it, since the logical action to take would be to perform a
+> rescan of the target (that's what the last component of the v4 patch was
+> designed to handle).
+> 
+> I'll change it to report the event on the sdev and post a v5 with what
+> I have now, including the other things you mentioned.  Comments welcome.
+
+OK, I'm fine either way, so I think we're good to go.
+
+James
 
 
-Todd Brandt
-Linux Kernel Developer OTC, Hillsboro OR
