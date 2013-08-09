@@ -1,132 +1,98 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] IB/iser: Add Discovery support
-Date: Fri, 09 Aug 2013 12:46:20 -0500
-Message-ID: <52052AEC.6090005@cs.wisc.edu>
-References: <1375958669-28050-1-git-send-email-ogerlitz@mellanox.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v2] Hard disk S3 resume time optimization
+Date: Fri, 9 Aug 2013 14:06:21 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1308091350300.1405-100000@iolanthe.rowland.org>
+References: <11E08D716F0541429B7042699DD5C1A170680F5C@FMSMSX103.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:41566 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758486Ab3HIRuS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Aug 2013 13:50:18 -0400
-In-Reply-To: <1375958669-28050-1-git-send-email-ogerlitz@mellanox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <11E08D716F0541429B7042699DD5C1A170680F5C@FMSMSX103.amr.corp.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Brandt, Todd E" <todd.e.brandt@intel.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Oliver Neukum <oneukum@suse.de>, Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Or Gerlitz <ogerlitz@mellanox.com>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, roland@kernel.org, monis@mellanox.com, roid@mellanox.com
 
-On 08/08/2013 05:44 AM, Or Gerlitz wrote:
-> To run discovery over iSER we need to advertize the CAP_TEXT_NEGO capability
-> towards user space. Also need to make sure the login RX buffer is posted when
-> SendTargets TEXT PDUs are sent. For that end, we use a setting of the
-> ISCSI_PARAM_DISCOVERY_SESS iscsi param as an indication that this is
-> discovery session.
+Your email messages would be easier to work with if they were wrapped 
+after column 72 or so.
+
+On Fri, 9 Aug 2013, Brandt, Todd E wrote:
+
+> This patch essentially removes the disk spinup wait time from the system S3 resume delay. It can be a very significant improvement on systems with large SATA disks which can take several seconds to spin up. On the systems I've tested this patch reduces the resume time to around half a second (assuming no USB devices are consuming that time). Without the patch my systems require anywhere from 5 to 12 seconds to wakeup from S3 resume depending on the size of the disks attached.
 > 
-> Signed-off-by: Or Gerlitz <ogerlitz@mellanox.com>
-> ---
+> This is a rewrite of my first attempt to optimize S3 disk resume time: http://marc.info/?l=linux-ide&m=136874337908364&w=2 . It's vastly simpler in that it doesn't make any alterations at all to the pm subsystem to allow non-blocking resume, it simply enables the ata_port and scsi_disk drivers to do their work in a non-blocking way.
 > 
-> Hi James, 
+> Made some alterations to the first draft of the patch, this is v2.
 > 
-> I submit this patch through your tree since it depends on the below iscsi
-> patches (which are acknowledged by Mike) who are targted to 3.12
+> 1) Added scsi cmd error reporting in response to Oliver's comments. The sd_resume_async_end function now prints out the same error information that was printed in the sd_start_stop_device call; including the sense buffer contents. I didn't add any additional error messages for the ata port wakeup since, if the port wakeup fails, the error data is printed out by the error handler process itself, so it doesn't require the ata_port_resume call to check up on it after the failure. The only potential issue is that the ata_port_resume_async call sets the ata port device to RPM_ACTIVE even if the ata_eh_handle_port_resume call fails, but there doesn't appear to be any code which actually calls pm_runtime_set_suspended for ata_ports at the moment, so the ata_port appears to always be set to RPM_
+ ACTIVE anyway (please correct me if I'm wrong). 
+> 2) I created a new ata_port_resume_async function just for the "resume" callback so that it wouldn't affect the thaw, restore, or runtime resume callback behaviour (just to be on the safe side). 
+> 3) I also moved the scsi_disk_put call up into the sd_resume_async_end callback since the reference counter shouldn't be decremented until the disk is actually finished starting.
 > 
-> Or.
-> 
-> [PATCH V2 1/4] scsi_transport_iscsi: Exporting new attrs for iscsi session and connection in sysfs
-> http://marc.info/?l=linux-scsi&m=137267405429329&w=2
-> 
-> [PATCH V2 2/4] libiscsi: Exporting new attrs for iscsi session and connection in sysfs
-> http://marc.info/?l=linux-scsi&m=137267405529330&w=2
-> 
->  drivers/infiniband/ulp/iser/iscsi_iser.c     |    3 ++-
->  drivers/infiniband/ulp/iser/iser_initiator.c |   11 ++++++++++-
->  drivers/scsi/libiscsi.c                      |    5 +++++
->  3 files changed, 17 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> index 2e84ef8..1ec78bd 100644
-> --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> @@ -672,6 +672,7 @@ static umode_t iser_attr_is_visible(int param_type, int param)
->  		case ISCSI_PARAM_TGT_RESET_TMO:
->  		case ISCSI_PARAM_IFACE_NAME:
->  		case ISCSI_PARAM_INITIATOR_NAME:
-> +		case ISCSI_PARAM_DISCOVERY_SESS:
->  			return S_IRUGO;
->  		default:
->  			return 0;
-> @@ -701,7 +702,7 @@ static struct scsi_host_template iscsi_iser_sht = {
->  static struct iscsi_transport iscsi_iser_transport = {
->  	.owner                  = THIS_MODULE,
->  	.name                   = "iser",
-> -	.caps                   = CAP_RECOVERY_L0 | CAP_MULTI_R2T,
-> +	.caps                   = CAP_RECOVERY_L0 | CAP_MULTI_R2T | CAP_TEXT_NEGO,
->  	/* session management */
->  	.create_session         = iscsi_iser_session_create,
->  	.destroy_session        = iscsi_iser_session_destroy,
-> diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
-> index b6d81a8..b31fa1d 100644
-> --- a/drivers/infiniband/ulp/iser/iser_initiator.c
-> +++ b/drivers/infiniband/ulp/iser/iser_initiator.c
-> @@ -234,6 +234,7 @@ void iser_free_rx_descriptors(struct iser_conn *ib_conn)
->  static int iser_post_rx_bufs(struct iscsi_conn *conn, struct iscsi_hdr *req)
->  {
->  	struct iscsi_iser_conn *iser_conn = conn->dd_data;
-> +	struct iscsi_session *session = conn->session;
->  
->  	iser_dbg("req op %x flags %x\n", req->opcode, req->flags);
->  	/* check if this is the last login - going to full feature phase */
-> @@ -248,7 +249,13 @@ static int iser_post_rx_bufs(struct iscsi_conn *conn, struct iscsi_hdr *req)
->  	WARN_ON(iser_conn->ib_conn->post_recv_buf_count != 1);
->  	WARN_ON(atomic_read(&iser_conn->ib_conn->post_send_buf_count) != 0);
->  
-> -	iser_dbg("Initially post: %d\n", ISER_MIN_POSTED_RX);
-> +	if (session->discovery_sess) {
-> +		iser_info("Discovery session, re-using login RX buffer\n");
-> +		return 0;
-> +	} else
-> +		iser_info("Normal session, posting batch of RX %d buffers\n",
-> +			  ISER_MIN_POSTED_RX);
+> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
+
+I will comment only on the sd.c portion.
+
+> +static int sd_resume_async(struct device *dev)
+> +{
+> +	unsigned char cmd[6] = { START_STOP };
+> +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+> +	struct request *req;
+> +	char *sense = NULL;
 > +
->  	/* Initial post receive buffers */
->  	if (iser_post_recvm(iser_conn->ib_conn, ISER_MIN_POSTED_RX))
->  		return -ENOMEM;
-> @@ -425,6 +432,8 @@ int iser_send_control(struct iscsi_conn *conn,
->  	}
->  
->  	if (task == conn->login_task) {
-> +		iser_dbg("op %x dsl %lx, posting login rx buffer\n",
-> +			 task->hdr->opcode, data_seg_len);
->  		err = iser_post_recvl(iser_conn->ib_conn);
->  		if (err)
->  			goto send_control_error;
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 86153e0..f17a692 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -3170,6 +3170,7 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
->  {
->  	struct iscsi_conn *conn = cls_conn->dd_data;
->  	struct iscsi_session *session = conn->session;
-> +	int val;
->  
->  	switch(param) {
->  	case ISCSI_PARAM_FAST_ABORT:
-> @@ -3264,6 +3265,10 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
->  	case ISCSI_PARAM_DISCOVERY_PARENT_TYPE:
->  		return iscsi_switch_str_param(&session->discovery_parent_type,
->  					      buf);
-> +	case ISCSI_PARAM_DISCOVERY_SESS:
-> +		sscanf(buf, "%d", &val);
-> +		session->discovery_sess = !!val;
-> +		break;
->  	default:
->  		return -ENOSYS;
->  	}
-> 
+> +	if (!sdkp->device->manage_start_stop) {
+> +		scsi_disk_put(sdkp);
+> +		return 0;
+> +	}
+> +
+> +	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+> +
+> +	cmd[4] |= 1;
+> +
+> +	if (sdkp->device->start_stop_pwr_cond)
+> +		cmd[4] |= 1 << 4;	/* Active or Standby */
+> +
+> +	if (!scsi_device_online(sdkp->device)) {
+> +		scsi_disk_put(sdkp);
+> +		return -ENODEV;
+> +	}
+> +
+> +	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
+> +	if (!req) {
+> +		scsi_disk_put(sdkp);
+> +		return DRIVER_ERROR << 24;
+> +	}
+> +
+> +	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+> +	if (!sense) {
+> +		__blk_put_request(req->q, req);
+> +		scsi_disk_put(sdkp);
+> +		return DRIVER_ERROR << 24;
+> +	}
 
-Patch looks ok.
+The usual idiom for situations like this is:
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+	if (!scsi_device_online(...)) {
+		rc = -ENODEV;
+		goto err_online;
+	}
+
+	if (!req) {
+		retval = DRIVER_ERROR << 24;
+		goto err_get_request;
+	}
+
+	if (!sense) {
+		retval = DRIVER_ERROR << 24;
+		goto err_sense;
+	}
+...
+
+Also, the return values here don't really make sense.  This routine
+isn't invoked by part of the SCSI stack; it is called (indirectly) by
+the PM layer.  Hence the only sensible error codes are generic things
+like -ENOMEM or -EIO.
+
+Apart from these minor issues, this part seems okay.
+
+Alan Stern
+
