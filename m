@@ -1,98 +1,50 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2] Hard disk S3 resume time optimization
-Date: Fri, 9 Aug 2013 14:06:21 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1308091350300.1405-100000@iolanthe.rowland.org>
-References: <11E08D716F0541429B7042699DD5C1A170680F5C@FMSMSX103.amr.corp.intel.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Fri, 9 Aug 2013 21:15:42 +0200
+Message-ID: <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
+References: <1374173515.7397.948.camel@haakon3.risingtidesystems.com>
+ <51E83E32.9050306@cs.wisc.edu>
+ <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+ <20130719003034.GG28005@kernel.dk>
+ <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+ <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <51EAA33C.9010405@fusionio.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <11E08D716F0541429B7042699DD5C1A170680F5C@FMSMSX103.amr.corp.intel.com>
+Content-Disposition: inline
+In-Reply-To: <51EAA33C.9010405@fusionio.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: "Brandt, Todd E" <todd.e.brandt@intel.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Oliver Neukum <oneukum@suse.de>, Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Mike Christie <mchristie@fusionio.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Your email messages would be easier to work with if they were wrapped 
-after column 72 or so.
+On Sat, Jul 20, 2013 at 09:48:28AM -0500, Mike Christie wrote:
+> What about the attached only compile tested patch. The patch has the mq
+> block code work like the non mq code for bio cleanups.
 
-On Fri, 9 Aug 2013, Brandt, Todd E wrote:
+Not sure if it is related to the patch or not, but it never returns from
+wait_for_completion_io(&wait) in blkdev_issue_flush():
 
-> This patch essentially removes the disk spinup wait time from the system S3 resume delay. It can be a very significant improvement on systems with large SATA disks which can take several seconds to spin up. On the systems I've tested this patch reduces the resume time to around half a second (assuming no USB devices are consuming that time). Without the patch my systems require anywhere from 5 to 12 seconds to wakeup from S3 resume depending on the size of the disks attached.
-> 
-> This is a rewrite of my first attempt to optimize S3 disk resume time: http://marc.info/?l=linux-ide&m=136874337908364&w=2 . It's vastly simpler in that it doesn't make any alterations at all to the pm subsystem to allow non-blocking resume, it simply enables the ata_port and scsi_disk drivers to do their work in a non-blocking way.
-> 
-> Made some alterations to the first draft of the patch, this is v2.
-> 
-> 1) Added scsi cmd error reporting in response to Oliver's comments. The sd_resume_async_end function now prints out the same error information that was printed in the sd_start_stop_device call; including the sense buffer contents. I didn't add any additional error messages for the ata port wakeup since, if the port wakeup fails, the error data is printed out by the error handler process itself, so it doesn't require the ata_port_resume call to check up on it after the failure. The only potential issue is that the ata_port_resume_async call sets the ata port device to RPM_ACTIVE even if the ata_eh_handle_port_resume call fails, but there doesn't appear to be any code which actually calls pm_runtime_set_suspended for ata_ports at the moment, so the ata_port appears to always be set to RPM_
- ACTIVE anyway (please correct me if I'm wrong). 
-> 2) I created a new ata_port_resume_async function just for the "resume" callback so that it wouldn't affect the thaw, restore, or runtime resume callback behaviour (just to be on the safe side). 
-> 3) I also moved the scsi_disk_put call up into the sd_resume_async_end callback since the reference counter shouldn't be decremented until the disk is actually finished starting.
-> 
-> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
+# ps axl | awk '$10 ~ /D\+/'
+4     0   938   879  20   0 111216   656 blkdev D+   pts/1      0:00 fdisk/dev/sda
+#
+# cat /proc/938/stack
+[<ffffffff812a8a5c>] blkdev_issue_flush+0xfc/0x160
+[<ffffffff811ac606>] blkdev_fsync+0x96/0xc0
+[<ffffffff811a2f4d>] do_fsync+0x5d/0x90
+[<ffffffff811a3330>] SyS_fsync+0x10/0x20
+[<ffffffff81611582>] system_call_fastpath+0x16/0x1b
+[<ffffffffffffffff>] 0xffffffffffffffff
 
-I will comment only on the sd.c portion.
+Any ideas?
 
-> +static int sd_resume_async(struct device *dev)
-> +{
-> +	unsigned char cmd[6] = { START_STOP };
-> +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-> +	struct request *req;
-> +	char *sense = NULL;
-> +
-> +	if (!sdkp->device->manage_start_stop) {
-> +		scsi_disk_put(sdkp);
-> +		return 0;
-> +	}
-> +
-> +	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-> +
-> +	cmd[4] |= 1;
-> +
-> +	if (sdkp->device->start_stop_pwr_cond)
-> +		cmd[4] |= 1 << 4;	/* Active or Standby */
-> +
-> +	if (!scsi_device_online(sdkp->device)) {
-> +		scsi_disk_put(sdkp);
-> +		return -ENODEV;
-> +	}
-> +
-> +	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-> +	if (!req) {
-> +		scsi_disk_put(sdkp);
-> +		return DRIVER_ERROR << 24;
-> +	}
-> +
-> +	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-> +	if (!sense) {
-> +		__blk_put_request(req->q, req);
-> +		scsi_disk_put(sdkp);
-> +		return DRIVER_ERROR << 24;
-> +	}
+Thanks!
 
-The usual idiom for situations like this is:
-
-	if (!scsi_device_online(...)) {
-		rc = -ENODEV;
-		goto err_online;
-	}
-
-	if (!req) {
-		retval = DRIVER_ERROR << 24;
-		goto err_get_request;
-	}
-
-	if (!sense) {
-		retval = DRIVER_ERROR << 24;
-		goto err_sense;
-	}
-...
-
-Also, the return values here don't really make sense.  This routine
-isn't invoked by part of the SCSI stack; it is called (indirectly) by
-the PM layer.  Hence the only sensible error codes are generic things
-like -ENOMEM or -EIO.
-
-Apart from these minor issues, this part seems okay.
-
-Alan Stern
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
