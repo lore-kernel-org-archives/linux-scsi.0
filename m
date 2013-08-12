@@ -1,47 +1,40 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH] hpsa: fix warning with smp_processor_id() in preemptible
-Date: Mon, 12 Aug 2013 08:58:45 -0500
-Message-ID: <20130812135845.GA15147@beardog.cce.hp.com>
-References: <alpine.LFD.2.03.1307261640170.2642@tycho> <20130812131312.GF23040@linutronix.de> <1290115203.630841.1376314412366.JavaMail.root@redhat.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Mon, 12 Aug 2013 17:21:39 +0200
+Message-ID: <20130812152138.GA10739@dhcp-26-207.brq.redhat.com>
+References: <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+ <20130726020928.GL29296@kernel.dk>
+ <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+ <20130729114653.GB20951@mtj.dyndns.org>
+ <20130809082335.GA25306@dhcp-26-207.brq.redhat.com>
+ <5204FBA6.6040001@kernel.dk>
+ <20130809150744.GB25306@dhcp-26-207.brq.redhat.com>
+ <52051033.8050605@kernel.dk>
+ <20130809164632.GC25306@dhcp-26-207.brq.redhat.com>
+ <520521D9.3040104@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:29448 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756043Ab3HLN6r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2013 09:58:47 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1290115203.630841.1376314412366.JavaMail.root@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <520521D9.3040104@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: John Kacur <jkacur@redhat.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-kernel@vger.kernel.org, linux-rt-users@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, "Luis Claudio R. Goncalves" <lclaudio@uudg.org>, Clark Williams <williams@redhat.com>, scameron@beardog.cce.hp.com
 
-On Mon, Aug 12, 2013 at 09:33:32AM -0400, John Kacur wrote:
-> 
-> 
-> ----- Original Message -----
-> > * John Kacur | 2013-07-26 16:42:30 [+0200]:
-> > 
-> > >Signed-off-by: John Kacur <jkacur@redhat.com>
-> > >Acked-by: Stephen <scameron@beardog.cce.hp.com>
-> > 
-> > ping.
-> > 
-> > I checked the branches for-next, scsi-fixes, fixes and misc at [0] and I
-> > didn't see it. I'm going to take this for 3.10-rt but please don't lose
-> > it on its way to Linus :)
-> > 
-> > [0] git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
-> 
-> 
-> I hope it was clear to everyone that this patch was intended for upstream.
-> It was discovered by running the real-time kernel, but it exposes a (minor) problem
-> that should be fixed in the mainline kernel. Please apply it there Stephen, and
-> push it upstream appropriately.
+On Fri, Aug 09, 2013 at 11:07:37AM -0600, Jens Axboe wrote:
+> You don't have to resubmit, I'll get it reviewed and applied today.
 
-I don't have such pushing abilities.  Acking it as I've done is
-all I can do.  Bug James. :)
+Hi Jens,
 
--- steve
+I limited the minimal queue depth to 4, which is apparently wrong
+in case of libata. I will post a new series.
 
+> -- 
+> Jens Axboe
+> 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
