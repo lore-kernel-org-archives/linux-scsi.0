@@ -1,40 +1,70 @@
-From: Josh Cartwright <joshc@codeaurora.org>
-Subject: Re: [PATCH 1/3] scsi: ufs: Allow vendor specific initialization
-Date: Tue, 13 Aug 2013 08:53:52 -0500
-Message-ID: <20130813135352.GE31772@joshc.qualcomm.com>
-References: <1376391620-13840-1-git-send-email-sthumma@codeaurora.org>
- <1376391620-13840-2-git-send-email-sthumma@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1376391620-13840-2-git-send-email-sthumma@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: [ 3.5.y.z extended stable ] Patch "[SCSI] nsp32: use mdelay instead of large udelay constants" has been added to staging queue
+Date: Tue, 13 Aug 2013 14:59:58 +0100
+Message-ID: <1376402398-18845-1-git-send-email-luis.henriques@canonical.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:57373 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753818Ab3HMOAF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2013 10:00:05 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>, kernel-team@lists.ubuntu.com
 
-On Tue, Aug 13, 2013 at 04:30:18PM +0530, Sujit Reddy Thumma wrote:
-[..]
-> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-> index a823cf4..829f7a4 100644
-> --- a/drivers/scsi/ufs/ufshcd-pci.c
-> +++ b/drivers/scsi/ufs/ufshcd-pci.c
-> @@ -191,7 +191,13 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  		return err;
->  	}
->  
-> -	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
-> +	err = ufshcd_alloc_host(&pdev->dev, &hba);
-> +	if (err) {
-> +		dev_err(&pdev->dev, "Allocation failed\n");
-> +		goto out_iounmap
+This is a note to let you know that I have just added a patch titled
 
-You seem to be missing a semicolon here.
+    [SCSI] nsp32: use mdelay instead of large udelay constants
 
-Also, which tree were these patches generated against?  They fail to
-apply at least on the last few 3.11-rc's.
+to the linux-3.5.y-queue branch of the 3.5.y.z extended stable tree 
+which can be found at:
 
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-hosted by The Linux Foundation
+ http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.5.y-queue
+
+If you, or anyone else, feels it should not be added to this tree, please 
+reply to this email.
+
+For more information about the 3.5.y.z tree, see
+https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
+
+Thanks.
+-Luis
+
+------
+
+>From 48cf7e8bdb6559da3cd5801f0b79426c0db1e546 Mon Sep 17 00:00:00 2001
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 14 Mar 2013 15:21:36 +0100
+Subject: [PATCH] [SCSI] nsp32: use mdelay instead of large udelay constants
+
+commit b497ceb964a80ebada3b9b3cea4261409039e25a upstream.
+
+ARM cannot handle udelay for more than 2 miliseconds, so we
+should use mdelay instead for those.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: GOTO Masanori <gotom@debian.or.jp>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+---
+ drivers/scsi/nsp32.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 62b6168..e705ed3 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -2926,7 +2926,7 @@ static void nsp32_do_bus_reset(nsp32_hw_data *data)
+ 	 * reset SCSI bus
+ 	 */
+ 	nsp32_write1(base, SCSI_BUS_CONTROL, BUSCTL_RST);
+-	udelay(RESET_HOLD_TIME);
++	mdelay(RESET_HOLD_TIME / 1000);
+ 	nsp32_write1(base, SCSI_BUS_CONTROL, 0);
+ 	for(i = 0; i < 5; i++) {
+ 		intrdat = nsp32_read2(base, IRQ_STATUS); /* dummy read */
+--
+1.8.3.2
+
