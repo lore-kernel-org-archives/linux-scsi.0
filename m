@@ -1,447 +1,460 @@
 From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: [PATCH 1/3] scsi: ufs: Allow vendor specific initialization
-Date: Tue, 13 Aug 2013 16:30:18 +0530
-Message-ID: <1376391620-13840-2-git-send-email-sthumma@codeaurora.org>
+Subject: [PATCH 2/3] scsi: ufs: Add regulator enable support
+Date: Tue, 13 Aug 2013 16:30:19 +0530
+Message-ID: <1376391620-13840-3-git-send-email-sthumma@codeaurora.org>
 References: <1376391620-13840-1-git-send-email-sthumma@codeaurora.org>
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1376391620-13840-1-git-send-email-sthumma@codeaurora.org>
 Sender: linux-arm-msm-owner@vger.kernel.org
 To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Some vendor specific controller versions might need to configure
-vendor specific - registers, clocks, voltage regulators etc. to
-initialize the host controller UTP layer and Uni-Pro stack.
-Provide some common initialization operations that can be used
-to configure vendor specifics. The methods can be extended in
-future, for example, for power mode transitions.
+UFS devices are powered by at most three external power supplies -
+- VCC - The flash memory core power supply, 2.7V to 3.6V or 1.70V to 1.95V
+- VCCQ - The controller and I/O power supply, 1.1V to 1.3V
+- VCCQ2 - Secondary controller and/or I/O power supply, 1.65V to 1.95V
 
-The operations are vendor/board specific and hence determined with
-the help of compatible property in device tree.
+For some devices VCCQ or VCCQ2 are optional as they can be
+generated using internal LDO inside the UFS device.
+
+Add DT bindings for voltage regulators that can be controlled
+from host driver.
 
 Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd-pci.c    |    8 ++-
- drivers/scsi/ufs/ufshcd-pltfrm.c |   23 +++++-
- drivers/scsi/ufs/ufshcd.c        |  157 ++++++++++++++++++++++++++++++--------
- drivers/scsi/ufs/ufshcd.h        |   34 ++++++++-
- 4 files changed, 185 insertions(+), 37 deletions(-)
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   18 ++
+ drivers/scsi/ufs/ufs.h                             |   23 +++
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |   89 +++++++++
+ drivers/scsi/ufs/ufshcd.c                          |  194 +++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h                          |    3 +
+ 5 files changed, 325 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index a823cf4..829f7a4 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -191,7 +191,13 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		return err;
- 	}
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index 20468b2..39ee11f 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -8,9 +8,27 @@ Required properties:
+ - interrupts        : <interrupt mapping for UFS host controller IRQ>
+ - reg               : <registers mapping>
  
--	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
-+	err = ufshcd_alloc_host(&pdev->dev, &hba);
-+	if (err) {
-+		dev_err(&pdev->dev, "Allocation failed\n");
-+		goto out_iounmap
-+	}
++Optional properties:
++- vcc-supply            : phandle to VCC supply regulator node
++- vccq-supply           : phandle to VCCQ supply regulator node
++- vccq2-supply          : phandle to VCCQ2 supply regulator node
++- vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
++- vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
++- vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
 +
-+	err = ufshcd_init(hba, mmio_base, pdev->irq);
- 	if (err) {
- 		dev_err(&pdev->dev, "Initialization failed\n");
- 		return err;
++Note: If above properties are not defined it can be assumed that the supply
++regulators are always on.
++
+ Example:
+ 	ufshc@0xfc598000 {
+ 		compatible = "jedec,ufs-1.1";
+ 		reg = <0xfc598000 0x800>;
+ 		interrupts = <0 28 0>;
++
++		vcc-supply = <&xxx_reg1>;
++		vccq-supply = <&xxx_reg2>;
++		vccq2-supply = <&xxx_reg3>;
++		vcc-max-microamp = 500000;
++		vccq-max-microamp = 200000;
++		vccq2-max-microamp = 200000;
+ 	};
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index bce09a6..f8e37bf 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -325,4 +325,27 @@ struct ufs_query_res {
+ 	struct utp_upiu_query upiu_res;
+ };
+ 
++#define UFS_VREG_VCC_MIN	2700000 /* uV */
++#define UFS_VREG_VCC_MAX	3600000 /* uV */
++#define UFS_VREG_VCCQ_MIN	1150000 /* uV */
++#define UFS_VREG_VCCQ_MAX	1300000 /* uV */
++#define UFS_VREG_VCCQ2_MIN	1700000 /* uV */
++#define UFS_VREG_VCCQ2_MAX	1950000 /* uV */
++
++struct ufs_vreg {
++	struct regulator *reg;
++	const char *name;
++	bool enabled;
++	int min_uV;
++	int max_uV;
++	int min_uA;
++	int max_uA;
++};
++
++struct ufs_vreg_info {
++	struct ufs_vreg *vcc;
++	struct ufs_vreg *vccq;
++	struct ufs_vreg *vccq2;
++};
++
+ #endif /* End of Header */
 diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 5e46232..3e0a14f 100644
+index 3e0a14f..1c5290d 100644
 --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
 +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -35,9 +35,22 @@
+@@ -51,6 +51,88 @@ static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
+ 	return NULL;
+ }
  
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
-+#include <linux/of.h>
- 
- #include "ufshcd.h"
- 
-+static const struct of_device_id ufs_of_match[];
-+static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
++#define MAX_PROP_SIZE 32
++static int ufshcd_populate_vreg(struct device *dev, const char *name,
++		struct ufs_vreg **out_vreg)
 +{
-+	if (dev->of_node) {
-+		const struct of_device_id *match;
-+		match = of_match_node(ufs_of_match, dev->of_node);
-+		return (struct ufs_hba_variant_ops *)match->data;
++	int ret = 0;
++	u32 temp = 0;
++	char prop_name[MAX_PROP_SIZE];
++	struct ufs_vreg *vreg = NULL;
++	struct device_node *np = dev->of_node;
++
++	if (!np) {
++		dev_err(dev, "%s: non DT initialization\n", __func__);
++		goto out;
 +	}
 +
-+	return NULL;
++	snprintf(prop_name, MAX_PROP_SIZE, "%s-supply", name);
++	if (!of_parse_phandle(np, prop_name, 0)) {
++		dev_info(dev, "%s: Unable to find %s regulator, assuming enabled\n",
++				__func__, name);
++		goto out;
++	}
++
++	vreg = devm_kzalloc(dev, sizeof(*vreg), GFP_KERNEL);
++	if (!vreg) {
++		dev_err(dev, "No memory for %s regulator\n", name);
++		goto out;
++	}
++
++	vreg->name = kstrdup(name, GFP_KERNEL);
++
++	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
++	ret = of_property_read_u32_array(np, prop_name, &temp, 1);
++	if (!ret) {
++		vreg->max_uA = temp;
++	} else {
++		dev_err(dev, "%s: unable to find %s err %d\n",
++				__func__, prop_name, ret);
++		goto out_free;
++	}
++
++	vreg->min_uA = 0;
++	if (!strcmp(name, "vcc")) {
++		vreg->min_uV = UFS_VREG_VCC_MIN;
++		vreg->max_uV = UFS_VREG_VCC_MAX;
++	} else if (!strcmp(name, "vccq")) {
++		vreg->min_uV = UFS_VREG_VCCQ_MIN;
++		vreg->max_uV = UFS_VREG_VCCQ_MAX;
++	} else if (!strcmp(name, "vccq2")) {
++		vreg->min_uV = UFS_VREG_VCCQ2_MIN;
++		vreg->max_uV = UFS_VREG_VCCQ2_MAX;
++	}
++
++	goto out;
++
++out_free:
++	devm_kfree(dev, vreg);
++	vreg = NULL;
++out:
++	if (!ret)
++		*out_vreg = vreg;
++	return ret;
++}
++
++static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
++{
++	int err;
++	struct device *dev = hba->dev;
++	struct ufs_vreg_info *info = &hba->vreg_info;
++
++	err = ufshcd_populate_vreg(dev, "vcc", &info->vcc);
++	if (err)
++		goto out;
++
++	err = ufshcd_populate_vreg(dev, "vccq", &info->vccq);
++	if (err)
++		goto out;
++
++	err = ufshcd_populate_vreg(dev, "vccq2", &info->vccq2);
++out:
++	return err;
 +}
 +
  #ifdef CONFIG_PM
  /**
   * ufshcd_pltfrm_suspend - suspend power management function
-@@ -150,10 +163,18 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
- 		goto out;
- 	}
+@@ -171,6 +253,13 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
  
-+	err = ufshcd_alloc_host(dev, &hba);
+ 	hba->vops = get_variant_ops(&pdev->dev);
+ 
++	err = ufshcd_parse_regulator_info(hba);
 +	if (err) {
-+		dev_err(&pdev->dev, "Allocation failed\n");
++		dev_err(&pdev->dev, "%s: regulator init failed %d\n",
++				__func__, err);
 +		goto out;
 +	}
-+
-+	hba->vops = get_variant_ops(&pdev->dev);
 +
  	pm_runtime_set_active(&pdev->dev);
  	pm_runtime_enable(&pdev->dev);
  
--	err = ufshcd_init(dev, &hba, mmio_base, irq);
-+	err = ufshcd_init(hba, mmio_base, irq);
- 	if (err) {
- 		dev_err(dev, "Intialization failed\n");
- 		goto out_disable_rpm;
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 4dca9b4..c539347 100644
+index c539347..ab7b943 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -174,13 +174,14 @@ static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
- /**
-  * ufshcd_is_device_present - Check if any device connected to
-  *			      the host controller
-- * @reg_hcs - host controller status register value
-+ * @hba: pointer to adapter instance
-  *
-  * Returns 1 if device present, 0 if no device detected
-  */
--static inline int ufshcd_is_device_present(u32 reg_hcs)
-+static inline int ufshcd_is_device_present(struct ufs_hba *hba)
- {
--	return (DEVICE_PRESENT & reg_hcs) ? 1 : 0;
-+	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
-+						DEVICE_PRESENT) ? 1 : 0;
- }
- 
- /**
-@@ -1483,11 +1484,10 @@ out:
-  * @hba: per adapter instance
-  *
-  * To bring UFS host controller to operational state,
-- * 1. Check if device is present
-- * 2. Enable required interrupts
-- * 3. Configure interrupt aggregation
-- * 4. Program UTRL and UTMRL base addres
-- * 5. Configure run-stop-registers
-+ * 1. Enable required interrupts
-+ * 2. Configure interrupt aggregation
-+ * 3. Program UTRL and UTMRL base addres
-+ * 4. Configure run-stop-registers
-  *
-  * Returns 0 on success, non-zero value on failure
-  */
-@@ -1496,14 +1496,6 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 	int err = 0;
- 	u32 reg;
- 
--	/* check if device present */
--	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
--	if (!ufshcd_is_device_present(reg)) {
--		dev_err(hba->dev, "cc: Device not present\n");
--		err = -ENXIO;
--		goto out;
--	}
--
- 	/* Enable required interrupts */
- 	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
- 
-@@ -1524,6 +1516,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
- 	 * DEI, HEI bits must be 0
- 	 */
-+	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
- 	if (!(ufshcd_get_lists_status(reg))) {
- 		ufshcd_enable_run_stop_reg(hba);
- 	} else {
-@@ -1570,6 +1563,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 		msleep(5);
- 	}
- 
-+	if (hba->vops && hba->vops->hce_enable_notify)
-+		hba->vops->hce_enable_notify(hba, PRE_CHANGE);
-+
- 	/* start controller initialization sequence */
- 	ufshcd_hba_start(hba);
- 
-@@ -1597,6 +1593,10 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 		}
- 		msleep(5);
- 	}
-+
-+	if (hba->vops && hba->vops->hce_enable_notify)
-+		hba->vops->hce_enable_notify(hba, POST_CHANGE);
-+
- 	return 0;
- }
- 
-@@ -1613,12 +1613,28 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
- 	/* enable UIC related interrupts */
- 	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
- 
-+	if (hba->vops && hba->vops->link_startup_notify)
-+		hba->vops->link_startup_notify(hba, PRE_CHANGE);
-+
- 	ret = ufshcd_dme_link_startup(hba);
- 	if (ret)
- 		goto out;
- 
--	ret = ufshcd_make_hba_operational(hba);
-+	/* check if device is detected by inter-connect layer */
-+	if (!ufshcd_is_device_present(hba)) {
-+		dev_err(hba->dev, "%s: Device not present\n", __func__);
-+		ret = -ENXIO;
-+		goto out;
-+	}
-+
-+	/* Include any host controller configuration via UIC commands */
-+	if (hba->vops && hba->vops->link_startup_notify) {
-+		ret = hba->vops->link_startup_notify(hba, POST_CHANGE);
-+		if (ret)
-+			goto out;
-+	}
- 
-+	ret = ufshcd_make_hba_operational(hba);
- out:
- 	if (ret)
- 		dev_err(hba->dev, "link startup failed %d\n", ret);
-@@ -2810,6 +2826,61 @@ static struct scsi_host_template ufshcd_driver_template = {
+@@ -2826,6 +2826,166 @@ static struct scsi_host_template ufshcd_driver_template = {
  	.can_queue		= UFSHCD_CAN_QUEUE,
  };
  
-+static int ufshcd_variant_hba_init(struct ufs_hba *hba)
++static int ufshcd_config_vreg(struct device *dev,
++		struct ufs_vreg *vreg, bool on)
 +{
-+	int err = 0;
++	int ret = 0;
++	struct regulator *reg = vreg->reg;
++	const char *name = vreg->name;
++	int min_uV, max_uV, uA_load;
 +
-+	if (!hba->vops)
++	BUG_ON(!vreg);
++
++	min_uV = vreg->min_uV;
++	max_uV = vreg->max_uV;
++
++	if (on)
++		uA_load = vreg->max_uA;
++	else
++		uA_load = 0;
++
++	if (regulator_count_voltages(reg) > 0) {
++		ret = regulator_set_voltage(reg, min_uV, max_uV);
++		if (ret) {
++			dev_err(dev, "%s: %s set voltage failed, err=%d\n",
++					__func__, name, ret);
++			goto out;
++		}
++
++		ret = regulator_set_optimum_mode(reg, uA_load);
++		if (ret < 0) {
++			dev_err(dev, "%s: %s set optimum mode(uA_load=%d) failed, err=%d\n",
++					__func__, name, uA_load, ret);
++			goto out;
++		} else {
++			/*
++			 * regulator_set_optimum_mode() can return non zero
++			 * value even for success case.
++			 */
++			ret = 0;
++		}
++	}
++out:
++	return ret;
++}
++
++static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
++{
++	int ret = 0;
++
++	if (!vreg || vreg->enabled)
 +		goto out;
 +
-+	if (hba->vops->init) {
-+		err = hba->vops->init(hba);
-+		if (err)
++	ret = ufshcd_config_vreg(dev, vreg, true);
++	if (!ret)
++		ret = regulator_enable(vreg->reg);
++
++	if (!ret)
++		vreg->enabled = true;
++	else
++		dev_err(dev, "%s: %s enable failed, err=%d\n",
++				__func__, vreg->name, ret);
++out:
++	return ret;
++}
++
++static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
++{
++	int ret = 0;
++
++	if (!vreg || !vreg->enabled)
++		goto out;
++
++	ret = regulator_disable(vreg->reg);
++
++	if (!ret) {
++		/* ignore errors on applying disable config */
++		ufshcd_config_vreg(dev, vreg, false);
++		vreg->enabled = false;
++	} else {
++		dev_err(dev, "%s: %s disable failed, err=%d\n",
++				__func__, vreg->name, ret);
++	}
++out:
++	return ret;
++}
++
++static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on)
++{
++	int ret = 0;
++	struct device *dev = hba->dev;
++	struct ufs_vreg_info *info = &hba->vreg_info;
++
++	if (!info)
++		goto out;
++
++	if (on) {
++		ret = ufshcd_enable_vreg(dev, info->vcc);
++		if (ret)
 +			goto out;
-+	}
 +
-+	if (hba->vops->setup_clocks) {
-+		err = hba->vops->setup_clocks(hba, true);
-+		if (err)
-+			goto out_exit;
-+	}
++		ret = ufshcd_enable_vreg(dev, info->vccq);
++		if (ret)
++			goto out_disable_vcc;
 +
-+	if (hba->vops->setup_regulators) {
-+		err = hba->vops->setup_regulators(hba, true);
-+		if (err)
-+			goto out_clks;
++		ret = ufshcd_enable_vreg(dev, info->vccq2);
++		if (ret)
++			goto out_disable_vccq;
++	} else {
++		ufshcd_disable_vreg(dev, info->vcc);
++		ufshcd_disable_vreg(dev, info->vccq);
++		ufshcd_disable_vreg(dev, info->vccq2);
 +	}
 +
 +	goto out;
 +
-+out_clks:
-+	if (hba->vops->setup_clocks)
-+		hba->vops->setup_clocks(hba, false);
-+out_exit:
-+	if (hba->vops->exit)
-+		hba->vops->exit(hba);
++out_disable_vccq:
++	ufshcd_disable_vreg(dev, info->vccq);
++out_disable_vcc:
++	ufshcd_disable_vreg(dev, info->vcc);
 +out:
++	return ret;
++}
++
++static int ufshcd_get_vreg(struct device *dev, struct ufs_vreg *vreg)
++{
++	int ret = 0;
++
++	if (!vreg)
++		goto out;
++
++	vreg->reg = devm_regulator_get(dev, vreg->name);
++	if (IS_ERR(vreg->reg)) {
++		ret = PTR_ERR(vreg->reg);
++		dev_err(dev, "%s: %s get failed, err=%d\n",
++				__func__, vreg->name, ret);
++	}
++out:
++	return ret;
++}
++
++static int ufshcd_init_vreg(struct ufs_hba *hba)
++{
++	int ret = 0;
++	struct device *dev = hba->dev;
++	struct ufs_vreg_info *info = &hba->vreg_info;
++
++	if (!info)
++		goto out;
++
++	ret = ufshcd_get_vreg(dev, info->vcc);
++	if (ret)
++		goto out;
++
++	ret = ufshcd_get_vreg(dev, info->vccq);
++	if (ret)
++		goto out;
++
++	ret = ufshcd_get_vreg(dev, info->vccq2);
++out:
++	return ret;
++}
++
+ static int ufshcd_variant_hba_init(struct ufs_hba *hba)
+ {
+ 	int err = 0;
+@@ -2881,6 +3041,36 @@ static void ufshcd_variant_hba_exit(struct ufs_hba *hba)
+ 		hba->vops->exit(hba);
+ }
+ 
++static int ufs_hba_init(struct ufs_hba *hba)
++{
++	int err;
++
++	err = ufshcd_init_vreg(hba);
 +	if (err)
-+		dev_err(hba->dev, "%s: variant %s init failed err %d\n",
-+			__func__, hba->vops ? hba->vops->name : "", err);
++		goto out;
++
++	err = ufshcd_setup_vreg(hba, true);
++	if (err)
++		goto out;
++
++	err = ufshcd_variant_hba_init(hba);
++	if (err)
++		goto out_disable_vreg;
++
++	goto out;
++
++out_disable_vreg:
++	ufshcd_setup_vreg(hba, false);
++out:
 +	return err;
 +}
 +
-+static void ufshcd_variant_hba_exit(struct ufs_hba *hba)
++static void ufs_hba_exit(struct ufs_hba *hba)
 +{
-+	if (!hba->vops)
-+		return;
-+
-+	if (hba->vops->setup_clocks)
-+		hba->vops->setup_clocks(hba, false);
-+
-+	if (hba->vops->setup_regulators)
-+		hba->vops->setup_regulators(hba, false);
-+
-+	if (hba->vops->exit)
-+		hba->vops->exit(hba);
++	ufshcd_variant_hba_exit(hba);
++	ufshcd_setup_vreg(hba, false);
 +}
 +
  /**
   * ufshcd_suspend - suspend power management function
   * @hba: per adapter instance
-@@ -2894,23 +2965,22 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	ufshcd_hba_stop(hba);
+@@ -2966,7 +3156,7 @@ void ufshcd_remove(struct ufs_hba *hba)
  
  	scsi_host_put(hba->host);
-+
-+	ufshcd_variant_hba_exit(hba);
+ 
+-	ufshcd_variant_hba_exit(hba);
++	ufs_hba_exit(hba);
  }
  EXPORT_SYMBOL_GPL(ufshcd_remove);
  
- /**
-- * ufshcd_init - Driver initialization routine
-+ * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
-  * @dev: pointer to device handle
-  * @hba_handle: driver private handle
-- * @mmio_base: base register address
-- * @irq: Interrupt line of device
-  * Returns 0 on success, non-zero value on failure
-  */
--int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
--		 void __iomem *mmio_base, unsigned int irq)
-+int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
- {
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
--	int err;
-+	int err = 0;
- 
- 	if (!dev) {
- 		dev_err(dev,
-@@ -2919,13 +2989,6 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 		goto out_error;
- 	}
- 
--	if (!mmio_base) {
--		dev_err(dev,
--		"Invalid memory reference for mmio_base is NULL\n");
--		err = -ENODEV;
--		goto out_error;
--	}
--
- 	host = scsi_host_alloc(&ufshcd_driver_template,
- 				sizeof(struct ufs_hba));
- 	if (!host) {
-@@ -2936,9 +2999,40 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 	hba = shost_priv(host);
- 	hba->host = host;
- 	hba->dev = dev;
-+	*hba_handle = hba;
-+
-+out_error:
-+	return err;
-+}
-+EXPORT_SYMBOL(ufshcd_alloc_host);
-+
-+/**
-+ * ufshcd_init - Driver initialization routine
-+ * @hba: per-adapter instance
-+ * @mmio_base: base register address
-+ * @irq: Interrupt line of device
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
-+{
-+	int err;
-+	struct Scsi_Host *host = hba->host;
-+	struct device *dev = hba->dev;
-+
-+	if (!mmio_base) {
-+		dev_err(hba->dev,
-+		"Invalid memory reference for mmio_base is NULL\n");
-+		err = -ENODEV;
-+		goto out_disable;
-+	}
-+
+@@ -3029,7 +3219,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  	hba->mmio_base = mmio_base;
  	hba->irq = irq;
  
-+	err = ufshcd_variant_hba_init(hba);
-+	if (err)
-+		goto out_disable;
-+
- 	/* Read capabilities registers */
- 	ufshcd_hba_capabilities(hba);
+-	err = ufshcd_variant_hba_init(hba);
++	err = ufs_hba_init(hba);
+ 	if (err)
+ 		goto out_disable;
  
-@@ -3010,8 +3104,6 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 		goto out_remove_scsi_host;
- 	}
- 
--	*hba_handle = hba;
--
- 	/* Hold auto suspend until async scan completes */
- 	pm_runtime_get_sync(dev);
- 
-@@ -3023,7 +3115,6 @@ out_remove_scsi_host:
- 	scsi_remove_host(hba->host);
- out_disable:
- 	scsi_host_put(host);
--out_error:
- 	return err;
- }
- EXPORT_SYMBOL_GPL(ufshcd_init);
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 8f5624e..72acbc7 100644
+index 72acbc7..c137ca4 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -68,6 +68,8 @@
- #define UFSHCD "ufshcd"
- #define UFSHCD_DRIVER_VERSION "0.2"
+@@ -61,6 +61,7 @@
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi_eh.h>
++#include <linux/regulator/consumer.h>
  
-+struct ufs_hba;
-+
- enum dev_cmd_type {
- 	DEV_CMD_TYPE_NOP		= 0x0,
- 	DEV_CMD_TYPE_QUERY		= 0x1,
-@@ -152,6 +154,30 @@ struct ufs_dev_cmd {
- 	struct ufs_query query;
+ #include "ufs.h"
+ #include "ufshci.h"
+@@ -218,6 +219,7 @@ struct ufs_hba_variant_ops {
+  * @saved_uic_err: sticky UIC error mask
+  * @dev_cmd: ufs device management command information
+  * @auto_bkops_enabled: to track whether bkops is enabled in device
++ * @vreg_info: UFS device voltage regulator information
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -276,6 +278,7 @@ struct ufs_hba {
+ 	struct ufs_dev_cmd dev_cmd;
+ 
+ 	bool auto_bkops_enabled;
++	struct ufs_vreg_info vreg_info;
  };
  
-+#define PRE_CHANGE      0
-+#define POST_CHANGE     1
-+/**
-+ * struct ufs_hba_variant_ops - variant specific callbacks
-+ * @name: variant name
-+ * @init: called when the driver is initialized
-+ * @exit: called to cleanup everything done in init
-+ * @setup_clocks: called before touching any of the controller registers
-+ * @setup_regulators: called before accessing the host controller
-+ * @hce_enable_notify: called before and after HCE enable bit is set to allow
-+ *                     variant specific Uni-Pro initialization.
-+ * @link_startup_notify: called before and after Link startup is carried out
-+ *                       to allow variant specific Uni-Pro initialization.
-+ */
-+struct ufs_hba_variant_ops {
-+	const char *name;
-+	int	(*init)(struct ufs_hba *);
-+	void    (*exit)(struct ufs_hba *);
-+	int     (*setup_clocks)(struct ufs_hba *, bool);
-+	int     (*setup_regulators)(struct ufs_hba *, bool);
-+	int     (*hce_enable_notify)(struct ufs_hba *, bool);
-+	int     (*link_startup_notify)(struct ufs_hba *, bool);
-+};
-+
- /**
-  * struct ufs_hba - per adapter private structure
-  * @mmio_base: UFSHCI base register address
-@@ -171,6 +197,8 @@ struct ufs_dev_cmd {
-  * @nutrs: Transfer Request Queue depth supported by controller
-  * @nutmrs: Task Management Queue depth supported by controller
-  * @ufs_version: UFS Version to which controller complies
-+ * @vops: pointer to variant specific operations
-+ * @priv: pointer to variant specific private data
-  * @irq: Irq number of the controller
-  * @active_uic_cmd: handle of active UIC command
-  * @uic_cmd_mutex: mutex for uic command
-@@ -217,6 +245,8 @@ struct ufs_hba {
- 	int nutrs;
- 	int nutmrs;
- 	u32 ufs_version;
-+	struct ufs_hba_variant_ops *vops;
-+	void *priv;
- 	unsigned int irq;
- 
- 	struct uic_command *active_uic_cmd;
-@@ -253,8 +283,8 @@ struct ufs_hba {
- #define ufshcd_readl(hba, reg)	\
- 	readl((hba)->mmio_base + (reg))
- 
--int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
--			unsigned int);
-+int ufshcd_alloc_host(struct device *, struct ufs_hba **);
-+int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
- void ufshcd_remove(struct ufs_hba *);
- 
- /**
+ #define ufshcd_writel(hba, val, reg)	\
 -- 
 QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation.
