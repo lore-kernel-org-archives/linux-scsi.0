@@ -1,182 +1,36 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 7/7] scsi: ufs: configure the attribute for power mode
-Date: Tue, 13 Aug 2013 12:30:19 +0530
-Message-ID: <5209D983.3060505@codeaurora.org>
-References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <002201ce8a06$fad20db0$f0762910$%jun@samsung.com> <51F910FA.30804@codeaurora.org> <001901ce929d$bb7411f0$325c35d0$%jun@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:55416 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752489Ab3HMHA0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2013 03:00:26 -0400
-In-Reply-To: <001901ce929d$bb7411f0$325c35d0$%jun@samsung.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: [PATCH 0/3] scsi: ufs: Add support for clock and regulator initializaiton
+Date: Tue, 13 Aug 2013 16:30:17 +0530
+Message-ID: <1376391620-13840-1-git-send-email-sthumma@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-On 8/6/2013 5:38 PM, Seungwon Jeon wrote:
-> On Wednesday, July 31, 2013, Subhash Jadavani wrote:
->> Change looks good (except one minor question).
->>
->> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
->>
->> On 7/26/2013 7:19 PM, Seungwon Jeon wrote:
->>> UIC attributes can be set with using DME_SET command for
->>> power mode change. For configuration the link capability
->>> attributes are used, which is updated after successful
->>> link startup.
->>>
->>> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
->>> ---
->>>    drivers/scsi/ufs/ufshcd.c |   74 +++++++++++++++++++++++++++++++++++++++++++-
->>>    drivers/scsi/ufs/unipro.h |   21 +++++++++++++
->>>    2 files changed, 93 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index ffda72d..ebdb9ff 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -975,6 +975,70 @@ out:
->>>    }
->>>
->>>    /**
->>> + * ufshcd_config_max_pwr_mode - Set & Change power mode with
->>> + *	maximum capability attribute information.
->>> + * @hba: per adapter instance
->>> + *
->>> + * Returns 0 on success, non-zero value on failure
->>> + */
->>> +static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
->>> +{
->>> +	enum {RX = 0, TX = 1};
->>> +	u32 lanes[] = {1, 1};
->>> +	u32 gear[] = {1, 1};
->>> +	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
->>> +	int i, ret;
->>> +
->>> +	/* Get the connected lane count */
->>> +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
->>> +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
->>> +
->>> +	/*
->>> +	 * First, get the maximum gears of HS speed.
->>> +	 * If a zero value, it means there is no HSGEAR capability.
->>> +	 * Then, get the maximum gears of PWM speed.
->>> +	 */
->>> +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
->>> +	if (!gear[RX]) {
->>> +		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
->>> +		pwr[RX] = SLOWAUTO_MODE;
->>> +	}
->>> +
->>> +	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
->>> +	if (!gear[TX]) {
->>> +		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
->>> +				    &gear[TX]);
->>> +		pwr[TX] = SLOWAUTO_MODE;
->>> +	}
->>> +
->>> +	/*
->>> +	 * Configure attributes for power mode change with below.
->>> +	 * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
->>> +	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
->>> +	 * - PA_HSSERIES
->>> +	 */
->>> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
->>> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
->>> +	if (pwr[RX] == FASTAUTO_MODE)
->>> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
->>> +
->>> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
->>> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
->>> +	if (pwr[TX] == FASTAUTO_MODE)
->>> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
->> Does this mean TX-RX Termination can be enabled only in HS gear mode?
->> Somehow i couldn't find this
-> Basically, 'termination' in HS Mode and not termination in LS mode.
-> Spec. doesn't say clearly, though.
-> If you have any idea, please let me know.
-Thanks for the info. I don't have much idea as of now. BTW, this patch 
-looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
->
-> Thanks,
-> Seungwon Jeon
->>> +
->>> +	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
->>> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
->>> +
->>> +	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
->>> +	if (ret)
->>> +		dev_err(hba->dev,
->>> +			"pwr_mode: power mode change failed %d\n", ret);
->>> +
->>> +	return ret;
->>> +}
->>> +
->>> +/**
->>>     * ufshcd_make_hba_operational - Make UFS controller operational
->>>     * @hba: per adapter instance
->>>     *
->>> @@ -1754,8 +1818,14 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
->>>    	int ret;
->>>
->>>    	ret = ufshcd_link_startup(hba);
->>> -	if (!ret)
->>> -		scsi_scan_host(hba->host);
->>> +	if (ret)
->>> +		goto out;
->>> +
->>> +	ufshcd_config_max_pwr_mode(hba);
->>> +
->>> +	scsi_scan_host(hba->host);
->>> +out:
->>> +	return;
->>>    }
->>>
->>>    static struct scsi_host_template ufshcd_driver_template = {
->>> diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
->>> index 3a710eb..0bb8041 100644
->>> --- a/drivers/scsi/ufs/unipro.h
->>> +++ b/drivers/scsi/ufs/unipro.h
->>> @@ -72,6 +72,21 @@
->>>    #define PA_STALLNOCONFIGTIME	0x15A3
->>>    #define PA_SAVECONFIGTIME	0x15A4
->>>
->>> +/* PA power modes */
->>> +enum {
->>> +	FAST_MODE	= 1,
->>> +	SLOW_MODE	= 2,
->>> +	FASTAUTO_MODE	= 4,
->>> +	SLOWAUTO_MODE	= 5,
->>> +	UNCHANGED	= 7,
->>> +};
->>> +
->>> +/* PA TX/RX Frequency Series */
->>> +enum {
->>> +	PA_HS_MODE_A	= 1,
->>> +	PA_HS_MODE_B	= 2,
->>> +};
->>> +
->>>    /*
->>>     * Data Link Layer Attributes
->>>     */
->>> @@ -127,4 +142,10 @@
->>>    #define T_TC0TXMAXSDUSIZE	0x4060
->>>    #define T_TC1TXMAXSDUSIZE	0x4061
->>>
->>> +/* Boolean attribute values */
->>> +enum {
->>> +	FALSE = 0,
->>> +	TRUE,
->>> +};
->>> +
->>>    #endif /* _UNIPRO_H_ */
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+UFS HCI specificaiton allows the hardware vendors to have vendor specific
+configurations using a dedicated register space. Most of these register
+configurations are unique to each controller. The generic UFSHCD exports
+a set of useful vendor operations that can be used to configure the host
+controller. In addition, the vendor specific operations can also be used
+to control the power supply of controller and Uni-Pro h/w blocks.
 
+This patchset adds support for vendor specific initialization, regulator
+and clock initialization based on device-tree properties.
+
+Sujit Reddy Thumma (3):
+  scsi: ufs: Allow vendor specific initialization
+  scsi: ufs: Add regulator enable support
+  scsi: ufs: Add clock initialization support
+
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   31 ++
+ drivers/scsi/ufs/ufs.h                             |   23 +
+ drivers/scsi/ufs/ufshcd-pci.c                      |    8 +-
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |  176 ++++++++-
+ drivers/scsi/ufs/ufshcd.c                          |  433 ++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h                          |   55 +++-
+ 6 files changed, 689 insertions(+), 37 deletions(-)
+
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation.
