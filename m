@@ -1,461 +1,66 @@
-From: "Yaniv Gardi" <ygardi@codeaurora.org>
-Subject: RE: [PATCH V5 4/4] scsi: ufs: Improve UFS fatal error handling
-Date: Tue, 13 Aug 2013 17:58:34 +0300
-Message-ID: <007101ce9835$970c56e0$c52504a0$@codeaurora.org>
-References: <1375163155-1473-1-git-send-email-sthumma@codeaurora.org>    <1375163155-1473-5-git-send-email-sthumma@codeaurora.org> <2b85150705f84a61ff8e66c5dcd02cab.squirrel@www.codeaurora.org>
+From: "Kamaljit Singh" <Kamaljit.Singh@pmcs.com>
+Subject: RE: Incorrect LBA Returned from scsi_get_lba() and blk_rq_pos() (Possible DIF Impact)
+Date: Tue, 13 Aug 2013 14:43:36 -0700
+Message-ID: <405BE55790F03349A85344435F25B01C07A85C02@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <340C71CD25A7EB49BFA81AE8C83926671B2EFFD6@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca> <yq1halhmmjr.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:59491 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757984Ab3HMO6k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2013 10:58:40 -0400
-In-Reply-To: <2b85150705f84a61ff8e66c5dcd02cab.squirrel@www.codeaurora.org>
-Content-Language: en-us
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:41180 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759160Ab3HMVnj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Aug 2013 17:43:39 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <yq1halhmmjr.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dolev Raviv' <draviv@codeaurora.org>
-Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Sami Waheed <Sami.Waheed@pmcs.com>
+Cc: linux-scsi@vger.kernel.org
 
-Reviewed-by: Yaniv Gardi <ygardi@codeaurora.org>
+Hi Martin,
 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+Did you get a chance to merge your changes into mainline?  I'm using
+3.10.4 and am still seeing this issue.
+
+Thanks,
+
+Kamaljit
 
 
-= > -----Original Message-----
-= > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-= > owner@vger.kernel.org] On Behalf Of Dolev Raviv
-= > Sent: Monday, August 12, 2013 4:03 PM
-= > To: Sujit Reddy Thumma
-= > Cc: Vinayak Holikatti; Santosh Y; James E.J. Bottomley; linux-
-= > scsi@vger.kernel.org; Sujit Reddy Thumma; linux-arm-
-= > msm@vger.kernel.org
-= > Subject: Re: [PATCH V5 4/4] scsi: ufs: Improve UFS fatal error handling
-= > 
-= > Tested-by: Dolev Raviv <draviv@codeaurora.org>
-= > 
-= > > Error handling in UFS driver is broken and resets the host controller
-= > > for fatal errors without re-initialization. Correct the fatal error
-= > > handling sequence according to UFS Host Controller Interface (HCI)
-= > > v1.1 specification.
-= > >
-= > > o Processed requests which are completed w/wo error are reported to
-= > >   SCSI layer and any pending commands that are not started are aborted
-= > >   in the controller and re-queued into scsi mid-layer queue.
-= > >
-= > > o Upon determining fatal error condition the host controller may hang
-= > >   forever until a reset is applied. Block SCSI layer for sending new
-= > >   requests and apply reset in a separate error handling work.
-= > >
-= > > o SCSI is informed about the expected Unit-Attention exception from
-the
-= > >   device for the immediate command after a reset so that the SCSI
-layer
-= > >   take necessary steps to establish communication with the device.
-= > >
-= > > Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-= > > ---
-= > >  drivers/scsi/ufs/ufshcd.c |  229
-= > > ++++++++++++++++++++++++++++-----------------
-= > >  drivers/scsi/ufs/ufshcd.h |   10 ++-
-= > >  2 files changed, 149 insertions(+), 90 deletions(-)
-= > >
-= > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-= > > index c577e6e..4dca9b4 100644
-= > > --- a/drivers/scsi/ufs/ufshcd.c
-= > > +++ b/drivers/scsi/ufs/ufshcd.c
-= > > @@ -79,6 +79,14 @@ enum {
-= > >  	UFSHCD_EH_IN_PROGRESS = (1 << 0),
-= > >  };
-= > >
-= > > +/* UFSHCD UIC layer error flags */
-= > > +enum {
-= > > +	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer
-= > error */
-= > > +	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
-= > > +	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
-= > > +	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */ };
-= > > +
-= > >  /* Interrupt configuration options */  enum {
-= > >  	UFSHCD_INT_DISABLE,
-= > > @@ -101,6 +109,8 @@ enum {
-= > >
-= > >  static void ufshcd_tmc_handler(struct ufs_hba *hba);  static void
-= > > ufshcd_async_scan(void *data, async_cookie_t cookie);
-= > > +static int ufshcd_reset_and_restore(struct ufs_hba *hba); static int
-= > > +ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
-= > >
-= > >  /*
-= > >   * ufshcd_wait_for_register - wait for register value to change @@
-= > > -1523,9 +1533,6 @@ static int ufshcd_make_hba_operational(struct
-= > > ufs_hba *hba)
-= > >  		goto out;
-= > >  	}
-= > >
-= > > -	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
-= > > -		scsi_unblock_requests(hba->host);
-= > > -
-= > >  out:
-= > >  	return err;
-= > >  }
-= > > @@ -1651,66 +1658,6 @@ static int ufshcd_verify_dev_init(struct
-= > > ufs_hba
-= > > *hba)
-= > >  }
-= > >
-= > >  /**
-= > > - * ufshcd_do_reset - reset the host controller
-= > > - * @hba: per adapter instance
-= > > - *
-= > > - * Returns SUCCESS/FAILED
-= > > - */
-= > > -static int ufshcd_do_reset(struct ufs_hba *hba) -{
-= > > -	struct ufshcd_lrb *lrbp;
-= > > -	unsigned long flags;
-= > > -	int tag;
-= > > -
-= > > -	/* block commands from midlayer */
-= > > -	scsi_block_requests(hba->host);
-= > > -
-= > > -	spin_lock_irqsave(hba->host->host_lock, flags);
-= > > -	hba->ufshcd_state = UFSHCD_STATE_RESET;
-= > > -
-= > > -	/* send controller to reset state */
-= > > -	ufshcd_hba_stop(hba);
-= > > -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-= > > -
-= > > -	/* abort outstanding commands */
-= > > -	for (tag = 0; tag < hba->nutrs; tag++) {
-= > > -		if (test_bit(tag, &hba->outstanding_reqs)) {
-= > > -			lrbp = &hba->lrb[tag];
-= > > -			if (lrbp->cmd) {
-= > > -				scsi_dma_unmap(lrbp->cmd);
-= > > -				lrbp->cmd->result = DID_RESET << 16;
-= > > -				lrbp->cmd->scsi_done(lrbp->cmd);
-= > > -				lrbp->cmd = NULL;
-= > > -				clear_bit_unlock(tag, &hba->lrb_in_use);
-= > > -			}
-= > > -		}
-= > > -	}
-= > > -
-= > > -	/* complete device management command */
-= > > -	if (hba->dev_cmd.complete)
-= > > -		complete(hba->dev_cmd.complete);
-= > > -
-= > > -	/* clear outstanding request/task bit maps */
-= > > -	hba->outstanding_reqs = 0;
-= > > -	hba->outstanding_tasks = 0;
-= > > -
-= > > -	/* Host controller enable */
-= > > -	if (ufshcd_hba_enable(hba)) {
-= > > -		dev_err(hba->dev,
-= > > -			"Reset: Controller initialization failed\n");
-= > > -		return FAILED;
-= > > -	}
-= > > -
-= > > -	if (ufshcd_link_startup(hba)) {
-= > > -		dev_err(hba->dev,
-= > > -			"Reset: Link start-up failed\n");
-= > > -		return FAILED;
-= > > -	}
-= > > -
-= > > -	return SUCCESS;
-= > > -}
-= > > -
-= > > -/**
-= > >   * ufshcd_slave_alloc - handle initial SCSI device configurations
-= > >   * @sdev: pointer to SCSI device
-= > >   *
-= > > @@ -1727,6 +1674,9 @@ static int ufshcd_slave_alloc(struct scsi_device
-= > > *sdev)
-= > >  	sdev->use_10_for_ms = 1;
-= > >  	scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
-= > >
-= > > +	/* allow SCSI layer to restart the device in case of errors */
-= > > +	sdev->allow_restart = 1;
-= > > +
-= > >  	/*
-= > >  	 * Inform SCSI Midlayer that the LUN queue depth is same as the
-= > >  	 * controller queue depth. If a LUN queue depth is less than the
-= > @@
-= > > -1930,6 +1880,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
-= > > struct ufshcd_lrb *lrbp)
-= > >  	case OCS_ABORTED:
-= > >  		result |= DID_ABORT << 16;
-= > >  		break;
-= > > +	case OCS_INVALID_COMMAND_STATUS:
-= > > +		result |= DID_REQUEUE << 16;
-= > > +		break;
-= > >  	case OCS_INVALID_CMD_TABLE_ATTR:
-= > >  	case OCS_INVALID_PRDT_ATTR:
-= > >  	case OCS_MISMATCH_DATA_BUF_SIZE:
-= > > @@ -2241,45 +2194,145 @@ out:
-= > >  }
-= > >
-= > >  /**
-= > > - * ufshcd_fatal_err_handler - handle fatal errors
-= > > - * @hba: per adapter instance
-= > > + * ufshcd_err_handler - handle UFS errors that require s/w attention
-= > > + * @work: pointer to work structure
-= > >   */
-= > > -static void ufshcd_fatal_err_handler(struct work_struct *work)
-= > > +static void ufshcd_err_handler(struct work_struct *work)
-= > >  {
-= > >  	struct ufs_hba *hba;
-= > > -	hba = container_of(work, struct ufs_hba, feh_workq);
-= > > +	unsigned long flags;
-= > > +	u32 err_xfer = 0;
-= > > +	u32 err_tm = 0;
-= > > +	int err = 0;
-= > > +	int tag;
-= > > +
-= > > +	hba = container_of(work, struct ufs_hba, eh_work);
-= > >
-= > >  	pm_runtime_get_sync(hba->dev);
-= > > -	/* check if reset is already in progress */
-= > > -	if (hba->ufshcd_state != UFSHCD_STATE_RESET)
-= > > -		ufshcd_do_reset(hba);
-= > > +
-= > > +	spin_lock_irqsave(hba->host->host_lock, flags);
-= > > +	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
-= > > +		spin_unlock_irqrestore(hba->host->host_lock, flags);
-= > > +		goto out;
-= > > +	}
-= > > +
-= > > +	hba->ufshcd_state = UFSHCD_STATE_RESET;
-= > > +	ufshcd_set_eh_in_progress(hba);
-= > > +
-= > > +	/* Complete requests that have door-bell cleared by h/w */
-= > > +	ufshcd_transfer_req_compl(hba);
-= > > +	ufshcd_tmc_handler(hba);
-= > > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-= > > +
-= > > +	/* Clear pending transfer requests */
-= > > +	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
-= > > +		if (ufshcd_clear_cmd(hba, tag))
-= > > +			err_xfer |= 1 << tag;
-= > > +
-= > > +	/* Clear pending task management requests */
-= > > +	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
-= > > +		if (ufshcd_clear_tm_cmd(hba, tag))
-= > > +			err_tm |= 1 << tag;
-= > > +
-= > > +	/* Complete the requests that are cleared by s/w */
-= > > +	spin_lock_irqsave(hba->host->host_lock, flags);
-= > > +	ufshcd_transfer_req_compl(hba);
-= > > +	ufshcd_tmc_handler(hba);
-= > > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-= > > +
-= > > +	/* Fatal errors need reset */
-= > > +	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
-= > > +			((hba->saved_err & UIC_ERROR) &&
-= > > +			 (hba->saved_uic_err &
-= > UFSHCD_UIC_DL_PA_INIT_ERROR))) {
-= > > +		err = ufshcd_reset_and_restore(hba);
-= > > +		if (err) {
-= > > +			dev_err(hba->dev, "%s: reset and restore failed\n",
-= > > +					__func__);
-= > > +			hba->ufshcd_state = UFSHCD_STATE_ERROR;
-= > > +		}
-= > > +		/*
-= > > +		 * Inform scsi mid-layer that we did reset and allow to
-= > handle
-= > > +		 * Unit Attention properly.
-= > > +		 */
-= > > +		scsi_report_bus_reset(hba->host, 0);
-= > > +		hba->saved_err = 0;
-= > > +		hba->saved_uic_err = 0;
-= > > +	}
-= > > +	ufshcd_clear_eh_in_progress(hba);
-= > > +
-= > > +out:
-= > > +	scsi_unblock_requests(hba->host);
-= > >  	pm_runtime_put_sync(hba->dev);
-= > >  }
-= > >
-= > >  /**
-= > > - * ufshcd_err_handler - Check for fatal errors
-= > > - * @work: pointer to a work queue structure
-= > > + * ufshcd_update_uic_error - check and set fatal UIC error flags.
-= > > + * @hba: per-adapter instance
-= > >   */
-= > > -static void ufshcd_err_handler(struct ufs_hba *hba)
-= > > +static void ufshcd_update_uic_error(struct ufs_hba *hba)
-= > >  {
-= > >  	u32 reg;
-= > >
-= > > +	/* PA_INIT_ERROR is fatal and needs UIC reset */
-= > > +	reg = ufshcd_readl(hba,
-= > REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
-= > > +	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
-= > > +		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
-= > > +
-= > > +	/* UIC NL/TL/DME errors needs software retry */
-= > > +	reg = ufshcd_readl(hba,
-= > REG_UIC_ERROR_CODE_NETWORK_LAYER);
-= > > +	if (reg)
-= > > +		hba->uic_error |= UFSHCD_UIC_NL_ERROR;
-= > > +
-= > > +	reg = ufshcd_readl(hba,
-= > REG_UIC_ERROR_CODE_TRANSPORT_LAYER);
-= > > +	if (reg)
-= > > +		hba->uic_error |= UFSHCD_UIC_TL_ERROR;
-= > > +
-= > > +	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DME);
-= > > +	if (reg)
-= > > +		hba->uic_error |= UFSHCD_UIC_DME_ERROR;
-= > > +
-= > > +	dev_dbg(hba->dev, "%s: UIC error flags = 0x%08x\n",
-= > > +			__func__, hba->uic_error);
-= > > +}
-= > > +
-= > > +/**
-= > > + * ufshcd_check_errors - Check for errors that need s/w attention
-= > > + * @hba: per-adapter instance
-= > > + */
-= > > +static void ufshcd_check_errors(struct ufs_hba *hba) {
-= > > +	bool queue_eh_work = false;
-= > > +
-= > >  	if (hba->errors & INT_FATAL_ERRORS)
-= > > -		goto fatal_eh;
-= > > +		queue_eh_work = true;
-= > >
-= > >  	if (hba->errors & UIC_ERROR) {
-= > > -		reg = ufshcd_readl(hba,
-= > REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
-= > > -		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
-= > > -			goto fatal_eh;
-= > > +		hba->uic_error = 0;
-= > > +		ufshcd_update_uic_error(hba);
-= > > +		if (hba->uic_error)
-= > > +			queue_eh_work = true;
-= > >  	}
-= > > -	return;
-= > > -fatal_eh:
-= > > -	/* handle fatal errors only when link is functional */
-= > > -	if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
-= > > -		/* block commands at driver layer until error is handled */
-= > > -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-= > > -		schedule_work(&hba->feh_workq);
-= > > +
-= > > +	if (queue_eh_work) {
-= > > +		/* handle fatal errors only when link is functional */
-= > > +		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
-= > > +			/* block commands from scsi mid-layer */
-= > > +			scsi_block_requests(hba->host);
-= > > +
-= > > +			/* transfer error masks to sticky bits */
-= > > +			hba->saved_err |= hba->errors;
-= > > +			hba->saved_uic_err |= hba->uic_error;
-= > > +
-= > > +			hba->ufshcd_state = UFSHCD_STATE_ERROR;
-= > > +			schedule_work(&hba->eh_work);
-= > > +		}
-= > >  	}
-= > > +	/*
-= > > +	 * if (!queue_eh_work) -
-= > > +	 * Other errors are either non-fatal where host recovers
-= > > +	 * itself without s/w intervention or errors that will be
-= > > +	 * handled by the SCSI core layer.
-= > > +	 */
-= > >  }
-= > >
-= > >  /**
-= > > @@ -2304,7 +2357,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba,
-= > > u32
-= > > intr_status)
-= > >  {
-= > >  	hba->errors = UFSHCD_ERROR_MASK & intr_status;
-= > >  	if (hba->errors)
-= > > -		ufshcd_err_handler(hba);
-= > > +		ufshcd_check_errors(hba);
-= > >
-= > >  	if (intr_status & UIC_COMMAND_COMPL)
-= > >  		ufshcd_uic_cmd_compl(hba);
-= > > @@ -2679,12 +2732,12 @@ static int
-= > ufshcd_eh_host_reset_handler(struct
-= > > scsi_cmnd *cmd)
-= > >  	 */
-= > >  	do {
-= > >  		spin_lock_irqsave(hba->host->host_lock, flags);
-= > > -		if (!(work_pending(&hba->feh_workq) ||
-= > > +		if (!(work_pending(&hba->eh_work) ||
-= > >  				hba->ufshcd_state ==
-= > UFSHCD_STATE_RESET))
-= > >  			break;
-= > >  		spin_unlock_irqrestore(hba->host->host_lock, flags);
-= > >  		dev_dbg(hba->dev, "%s: reset in progress\n", __func__);
-= > > -		flush_work_sync(&hba->feh_workq);
-= > > +		flush_work_sync(&hba->eh_work);
-= > >  	} while (1);
-= > >
-= > >  	hba->ufshcd_state = UFSHCD_STATE_RESET; @@ -2918,7 +2971,7
-= > @@ int
-= > > ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
-= > >  	init_waitqueue_head(&hba->tm_tag_wq);
-= > >
-= > >  	/* Initialize work queues */
-= > > -	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
-= > > +	INIT_WORK(&hba->eh_work, ufshcd_err_handler);
-= > >  	INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
-= > >
-= > >  	/* Initialize UIC command mutex */
-= > > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-= > > index 1e0585c..8f5624e 100644
-= > > --- a/drivers/scsi/ufs/ufshcd.h
-= > > +++ b/drivers/scsi/ufs/ufshcd.h
-= > > @@ -182,9 +182,12 @@ struct ufs_dev_cmd {
-= > >   * @eh_flags: Error handling flags
-= > >   * @intr_mask: Interrupt Mask Bits
-= > >   * @ee_ctrl_mask: Exception event control mask
-= > > - * @feh_workq: Work queue for fatal controller error handling
-= > > + * @eh_work: Worker to handle UFS errors that require s/w attention
-= > >   * @eeh_work: Worker to handle exception events
-= > >   * @errors: HBA errors
-= > > + * @uic_error: UFS interconnect layer error status
-= > > + * @saved_err: sticky error mask
-= > > + * @saved_uic_err: sticky UIC error mask
-= > >   * @dev_cmd: ufs device management command information
-= > >   * @auto_bkops_enabled: to track whether bkops is enabled in device
-= > >   */
-= > > @@ -230,11 +233,14 @@ struct ufs_hba {
-= > >  	u16 ee_ctrl_mask;
-= > >
-= > >  	/* Work Queues */
-= > > -	struct work_struct feh_workq;
-= > > +	struct work_struct eh_work;
-= > >  	struct work_struct eeh_work;
-= > >
-= > >  	/* HBA Errors */
-= > >  	u32 errors;
-= > > +	u32 uic_error;
-= > > +	u32 saved_err;
-= > > +	u32 saved_uic_err;
-= > >
-= > >  	/* Device management request data */
-= > >  	struct ufs_dev_cmd dev_cmd;
-= > > --
-= > > QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a
-= > > member of Code Aurora Forum, hosted by The Linux Foundation.
-= > >
-= > > --
-= > > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-= > > in the body of a message to majordomo@vger.kernel.org More
-= > majordomo
-= > > info at  http://vger.kernel.org/majordomo-info.html
-= > >
-= > 
-= > 
-= > --
-= > QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a
-= > member of Code Aurora Forum, hosted by The Linux Foundation
-= > 
-= > --
-= > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the
-= > body of a message to majordomo@vger.kernel.org More majordomo info
-= > at  http://vger.kernel.org/majordomo-info.html
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Martin K.
+Petersen
+Sent: Tuesday, February 12, 2013 10:09 AM
+To: Sami Waheed
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: Incorrect LBA Returned from scsi_get_lba() and blk_rq_pos()
+(Possible DIF Impact)
 
+>>>>> "Sami" == Sami Waheed <Sami.Waheed@pmcs.com> writes:
+
+Sami> I am testing a SCSI/SAS target with a block size of 4K.  I noticed
+Sami> that scsi_get_lba which calls blk_rq_pos is returning an incorrect
+Sami> LBA.  The returned LBA value is 8x the actual LBA specified in the
+Sami> CDB:
+
+The block layer always uses 512-byte sectors internally, regardless of
+the logical block size of the actual disk.
+
+
+Sami> I, also, noticed that several drivers use the scsi_get_lba inline
+Sami> in scsi_cmnd.h to set/check ref tag for DIF.  On a 4K device, this
+Sami> is resulting in an incorrect ref tag.
+
+I have some patches in the pipeline that fixes this. They also add
+support for protection intervals different from the logical block size.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
