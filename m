@@ -1,193 +1,269 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
-Date: Mon, 12 Aug 2013 23:16:30 -0400
-Message-ID: <5209A50E.8090300@interlog.com>
-References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com> <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com> <20130722170338.GA15824@logfs.org> <51F9EB97.7070305@interlog.com> <51FC9449.4060906@interlog.com> <51FF0BC0.5020702@oracle.com> <5200108A.9020008@interlog.com> <52099E1B.5000203@oracle.com>
-Reply-To: dgilbert@interlog.com
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH 4/7] scsi: ufs: add dme configuration primitives
+Date: Tue, 13 Aug 2013 12:26:19 +0530
+Message-ID: <5209D893.3020100@codeaurora.org>
+References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <001f01ce8a06$b30af640$1920e2c0$%jun@samsung.com> <51F634D9.8080503@codeaurora.org> <002801ce8d24$fb743880$f25ca980$%jun@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <52099E1B.5000203@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vaughan <vaughan.cao@oracle.com>
-Cc: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:55112 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756379Ab3HMG40 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2013 02:56:26 -0400
+In-Reply-To: <002801ce8d24$fb743880$f25ca980$%jun@samsung.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Seungwon Jeon <tgih.jun@samsung.com>
+Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-On 13-08-12 10:46 PM, vaughan wrote:
-> On 08/06/2013 04:52 AM, Douglas Gilbert wrote:
->> On 13-08-04 10:19 PM, vaughan wrote:
->>> On 08/03/2013 01:25 PM, Douglas Gilbert wrote:
->>>> On 13-08-01 01:01 AM, Douglas Gilbert wrote:
->>>>> On 13-07-22 01:03 PM, J=C3=B6rn Engel wrote:
->>>>>> On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
->>>>>>>
->>>>>>> There is a race when open sg with O_EXCL flag. Also a race may
->>>>>>> happen between
->>>>>>> sg_open and sg_remove.
->>>>>>>
->>>>>>> Changes from v4:
->>>>>>>     * [3/4] use ERR_PTR series instead of adding another parame=
-ter in
->>>>>>> sg_add_sfp
->>>>>>>     * [4/4] fix conflict for cherry-pick from v3.
->>>>>>>
->>>>>>> Changes from v3:
->>>>>>>     * release o_sem in sg_release(), not in sg_remove_sfp().
->>>>>>>     * not set exclude with sfd_lock held.
->>>>>>>
->>>>>>> Vaughan Cao (4):
->>>>>>>      [SCSI] sg: use rwsem to solve race during exclusive open
->>>>>>>      [SCSI] sg: no need sg_open_exclusive_lock
->>>>>>>      [SCSI] sg: checking sdp->detached isn't protected when ope=
-n
->>>>>>>      [SCSI] sg: push file descriptor list locking down to per-d=
-evice
->>>>>>>        locking
->>>>>>>
->>>>>>>     drivers/scsi/sg.c | 178
->>>>>>> +++++++++++++++++++++++++-----------------------------
->>>>>>>     1 file changed, 83 insertions(+), 95 deletions(-)
->>>>>>
->>>>>> Patchset looks good to me, although I didn't test it on hardware=
- yet.
->>>>>> Signed-off-by: Joern Engel <joern@logfs.org>
->>>>>>
->>>>>> James, care to pick this up?
->>>>>
->>>>> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
->>>>>
->>>>> Tested O_EXCL with multiple processes and threads; passed.
->>>>> sg driver prior to this patch had "leaky" O_EXCL logic
->>>>> according to the same test. Block device passed.
->>>>>
->>>>> James, could you clean this up:
->>>>>      drivers/scsi/sg.c:242:6: warning: unused variable =E2=80=98r=
-es=E2=80=99
->>>>> [-Wunused-variable]
->>>>
->>>> Further testing suggests this patch on the sg driver is
->>>> broken, so I'll rescind my ack.
->>>>
->>>> The case it is broken for is when a device is opened
->>>> without O_EXCL. Now if, while it is open, a second
->>>> thread/process tries to open the same device O_EXCL
->>>> then IMO the second open should fail with EBUSY.
->>>>
->>>> My testing shows that O_EXCL opens properly deflect
->>>> other O_EXCL opens.
->>> Hi  Doug,
+On 7/30/2013 6:32 PM, Seungwon Jeon wrote:
+> On Mon, July 29, 2013, Subhash Jadavani wrote:
+>> On 7/26/2013 7:17 PM, Seungwon Jeon wrote:
+>>> Implements to support GET and SET operations of the DME.
+>>> These operations are used to configure the behavior of
+>>> the UNIPRO. Along with basic operation, {Peer/AttrSetType}
+>>> can be mixed.
 >>>
->>> My test don't have this issue. The routine is something as below:
+>>> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+>>> ---
+>>>    drivers/scsi/ufs/ufshcd.c |   88 +++++++++++++++++++++++++++++++++++++++++++++
+>>>    drivers/scsi/ufs/ufshcd.h |   51 ++++++++++++++++++++++++++
+>>>    drivers/scsi/ufs/ufshci.h |    6 +++
+>>>    3 files changed, 145 insertions(+), 0 deletions(-)
 >>>
->>> I start three opens without O_EXCL, wait 30s each, and open with
->>> O_EXCL|O_NONBLOCK, it failed with EBUSY.
->>> And I also call myopen with/without O_EXCL many times in background=
- at
->>> the same time, and the test is passed. I don't know why it failed i=
-n
->>> your test.
+>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>> index 7152ec4..8277c40 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>> @@ -188,6 +188,18 @@ static inline int ufshcd_get_uic_cmd_result(struct ufs_hba *hba)
+>>>    }
 >>>
->>> Usage: myopen [-e][-n][-d delay] -f file
->>>         -e: exclude
->>>         -n: nonblock
->>>         -d: delay N seconds and then close.
+>>>    /**
+>>> + * ufshcd_get_dme_attr_val - Get the value of attribute returned by UIC command
+>>> + * @hba: Pointer to adapter instance
+>>> + *
+>>> + * This function gets UIC command argument3
+>>> + * Returns 0 on success, non zero value on error
+>>> + */
+>>> +static inline u32 ufshcd_get_dme_attr_val(struct ufs_hba *hba)
+>>> +{
+>>> +	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3);
+>>> +}
+>>> +
+>>> +/**
+>>>     * ufshcd_is_valid_req_rsp - checks if controller TR response is valid
+>>>     * @ucd_rsp_ptr: pointer to response UPIU
+>>>     *
+>>> @@ -821,6 +833,80 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+>>>    }
 >>>
->>> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
->>> [1] 3417
->>> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
->>> [2] 3418
->>> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
->>> [3] 3419
->>> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
->>> max_active_device=3D6(origin 1)
->>>    def_reserved_size=3D32768
->>>    >>> device=3Dsg5 scsi5 chan=3D0 id=3D1 lun=3D0   em=3D0 sg_table=
-size=3D55 excl=3D0
->>>      FD(1): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=
-=3D0
->>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>        No requests active
->>>      FD(2): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=
-=3D0
->>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>        No requests active
->>>      FD(3): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=
-=3D0
->>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>        No requests active
->>>
->>> [root@vacaowol5 16835013]# ./myopen -e -n  -f /dev/sg5 -d 30 &
->>> [4] 3422
->>> [3422:3351] /dev/sg5:exclude: Device or resource busy
->>>
->>> [4]+  Exit 1                  ./myopen -e -n -f /dev/sg5 -d 30
->>>
->>> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
->>> max_active_device=3D6(origin 1)
->>>    def_reserved_size=3D32768
->>>    >>> device=3Dsg5 scsi5 chan=3D0 id=3D1 lun=3D0   em=3D0 sg_table=
-size=3D55 excl=3D0
->>>      FD(1): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=
-=3D0
->>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>        No requests active
->>>      FD(2): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=
-=3D0
->>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>        No requests active
->>>      FD(3): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dma=
-=3D0
->>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>        No requests active
->>> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
->>> [1]   Done                    ./myopen -f /dev/sg5 -d 30
->>> [2]-  Done                    ./myopen -f /dev/sg5 -d 30
->>> [3]+  Done                    ./myopen -f /dev/sg5 -d 30
->>>
->>
->> Hi,
->> After the initial failures about 36 hours ago, retesting
->> yesterday and today has not produced any unexpected
->> failures. And I have been trying hard on lk 3.10.4 and
->> lk 3.10.5 .
->>
->> My test program is a bit more intense than yours and can
->> be found in the sg3_utils beta in the News section of this
->> page:
->>    http://sg.danny.cz/sg/
->>
->> It is in the examples directory, two variants called
->> sg_tst_excl and sg_tst_excl2 . You will need a recent gcc
->> compiler, IOW something that can compile c++11 . gcc 4.7.3
->> in Ubuntu 13.04 only just manages, fedora 19 should do
->> better with gcc 4.8.1 . The threading is implemented using
->> pthreads so it should be reliable.
->>
->> Typically I run multiple instances (processes) and each has
->> multiple threads. One instance can run '-x' which will cause
->> its first thread not to use O_EXCL **. All my tests currently
->> use O_NONBLOCK and that leads to lots of EBUSYs (sometimes
->> in the billions).
->>
->> Doug Gilbert
->>
->>
->> ** Using '-x' on two instances will cause an expected failure
->>     so can be used as a control.
->>
-> Hi Doug,
+>>>    /**
+>>> + * ufshcd_dme_set_attr - UIC command for DME_SET, DME_PEER_SET
+>>> + * @hba: per adapter instance
+>>> + * @attr_sel: uic command argument1
+>>> + * @attr_set: attribute set type as uic command argument2
+>>> + * @mib_val: setting value as uic command argument3
+>>> + * @peer: indicate wherter peer or non-peer
+>> typo: s/wtherter/whether
+>> This would sound better: s/non-peer/local
+> Ok.
+thanks.
 >
-> Can I regard this as you ACK it again?
+>> Do above for ufshcd_dme_get_attr() function as well.
+>>> + *
+>>> + * Returns 0 on success, non-zero value on failure
+>>> + */
+>>> +int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+>>> +			u8 attr_set, u32 mib_val, u8 peer)
+>>> +{
+>>> +	struct uic_command uic_cmd = {0};
+>>> +	static const char *const action[] = {
+>>> +		"dme-set",
+>>> +		"dme-peer-set"
+>>> +	};
+>>> +	const char *set = action[!!peer];
+>>> +	int ret;
+>>> +
+>>> +	uic_cmd.command = peer ?
+>>> +		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
+>>> +	uic_cmd.argument1 = attr_sel;
+>>> +	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
+>>> +	uic_cmd.argument3 = mib_val;
+>>> +
+>>> +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+>>> +	if (ret)
+>>> +		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
+>>> +			set, UIC_GET_ATTR_ID(attr_sel), ret);
+>> Its also good to print the "mib_val" which we were trying to set. It
+>> might be possible that DME_SET failed because we are trying to set out
+>> of range value to MIB attribute.
+> I'll add it.
+thanks
+>
+>>> +
+>>> +	return ret;
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(ufshcd_dme_set_attr);
+>>> +
+>>> +/**
+>>> + * ufshcd_dme_get_attr - UIC command for DME_GET, DME_PEER_GET
+>>> + * @hba: per adapter instance
+>>> + * @attr_sel: uic command argument1
+>>> + * @mib_val: the value of the attribute as returned by the UIC command
+>>> + * @peer: indicate wherter peer or non-peer
+>>> + *
+>>> + * Returns 0 on success, non-zero value on failure
+>>> + */
+>>> +int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+>>> +			u32 *mib_val, u8 peer)
+>>> +{
+>>> +	struct uic_command uic_cmd = {0};
+>>> +	static const char *const action[] = {
+>>> +		"dme-get",
+>>> +		"dme-peer-get"
+>>> +	};
+>>> +	const char *get = action[!!peer];
+>>> +	int ret;
+>>> +
+>>> +	uic_cmd.command = peer ?
+>>> +		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
+>>> +	uic_cmd.argument1 = attr_sel;
+>>> +
+>>> +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+>>> +	if (ret) {
+>>> +		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
+>>> +			get, UIC_GET_ATTR_ID(attr_sel), ret);
+>>> +		goto out;
+>>> +	}
+>>> +
+>>> +	if (mib_val)
+>>> +		*mib_val = uic_cmd.argument3;
+>>> +out:
+>>> +	return ret;
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
+>>> +
+>>> +/**
+>>>     * ufshcd_make_hba_operational - Make UFS controller operational
+>>>     * @hba: per adapter instance
+>>>     *
+>>> @@ -1256,6 +1342,8 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
+>>>    	if (hba->active_uic_cmd) {
+>>>    		hba->active_uic_cmd->argument2 |=
+>>>    			ufshcd_get_uic_cmd_result(hba);
+>>> +		hba->active_uic_cmd->argument3 =
+>>> +			ufshcd_get_dme_attr_val(hba);
+>> We can optimize here by reading the dme_attribute value only if
+>> active_uic_cmd->command is set to DME_GET or DME_PEER_GET. For all other
+>> DME commands, meaning of this is "reserved" for read.
+> Right, you have a point.
+> But when considering the access of 'hba->active_uic_cmd->command" every time and additional 'branch statement',
+> it looks like no difference in terms of the optimization.
+> Reading the dme_attribute value could be trivial thing.
+I would consider the peripheral register to be time heavy (as it may run 
+on slower peripheral bus) compared to variable read (from cache/RAM) & 
+branch statement. But i leave it upto you and it would be fine anyway.
+>
+>> Also, i guess reading of the argument2 and argument3 registers can be
+>> moved to ufshcd_wait_for_uic_cmd() function (process context) intead of
+>> interrupt context.
+> Yes, it may be possible.
+> But I wanted to update the result of uic command as soon as IS.UCCS occurs and simplify error handling.
+Ok.
+>
+> Thanks,
+> Seungwon Jeon
+>
+>>>    		complete(&hba->active_uic_cmd->done);
+>>>    	}
+>>>    }
+>>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>>> index 49590ee..50bcd29 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.h
+>>> +++ b/drivers/scsi/ufs/ufshcd.h
+>>> @@ -199,6 +199,11 @@ int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
+>>>    			unsigned int);
+>>>    void ufshcd_remove(struct ufs_hba *);
+>>>
+>>> +extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+>>> +			       u8 attr_set, u32 mib_val, u8 peer);
+>>> +extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+>>> +			       u32 *mib_val, u8 peer);
+>>> +
+>>>    /**
+>>>     * ufshcd_hba_stop - Send controller to reset state
+>>>     * @hba: per adapter instance
+>>> @@ -208,4 +213,50 @@ static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+>>>    	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
+>>>    }
+>>>
+>>> +/* UIC command interfaces for DME primitives */
+>>> +#define DME_LOCAL	0
+>>> +#define DME_PEER	1
+>>> +#define ATTR_SET_NOR	0	/* NORMAL */
+>>> +#define ATTR_SET_ST	1	/* STATIC */
+>>> +
+>>> +static inline int ufshcd_dme_set(struct ufs_hba *hba, u32 attr_sel,
+>>> +				 u32 mib_val)
+>>> +{
+>>> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
+>>> +				   mib_val, DME_LOCAL);
+>>> +}
+>>> +
+>>> +static inline int ufshcd_dme_st_set(struct ufs_hba *hba, u32 attr_sel,
+>>> +				    u32 mib_val)
+>>> +{
+>>> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
+>>> +				   mib_val, DME_LOCAL);
+>>> +}
+>>> +
+>>> +static inline int ufshcd_dme_peer_set(struct ufs_hba *hba, u32 attr_sel,
+>>> +				      u32 mib_val)
+>>> +{
+>>> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
+>>> +				   mib_val, DME_PEER);
+>>> +}
+>>> +
+>>> +static inline int ufshcd_dme_peer_st_set(struct ufs_hba *hba, u32 attr_sel,
+>>> +					 u32 mib_val)
+>>> +{
+>>> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
+>>> +				   mib_val, DME_PEER);
+>>> +}
+>>> +
+>>> +static inline int ufshcd_dme_get(struct ufs_hba *hba,
+>>> +				 u32 attr_sel, u32 *mib_val)
+>>> +{
+>>> +	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_LOCAL);
+>>> +}
+>>> +
+>>> +static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+>>> +				      u32 attr_sel, u32 *mib_val)
+>>> +{
+>>> +	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
+>>> +}
+>>> +
+>>>    #endif /* End of Header */
+>>> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+>>> index a8f69cc..df4901e 100644
+>>> --- a/drivers/scsi/ufs/ufshci.h
+>>> +++ b/drivers/scsi/ufs/ufshci.h
+>>> @@ -191,6 +191,12 @@ enum {
+>>>    #define CONFIG_RESULT_CODE_MASK		0xFF
+>>>    #define GENERIC_ERROR_CODE_MASK		0xFF
+>>>
+>>> +#define UIC_ARG_MIB_SEL(attr, sel)	((((attr) & 0xFFFF) << 16) |\
+>>> +					 ((sel) & 0xFFFF))
+>>> +#define UIC_ARG_MIB(attr)		UIC_ARG_MIB_SEL(attr, 0)
+>>> +#define UIC_ARG_ATTR_TYPE(t)		(((t) & 0xFF) << 16)
+>>> +#define UIC_GET_ATTR_ID(v)		(((v) >> 16) & 0xFFFF)
+>>> +
+>>>    /* UIC Commands */
+>>>    enum {
+>>>    	UIC_CMD_DME_GET			= 0x01,
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Hi,
-I'd like you to test your setup with sg_tst_excl or sg_tst_excl2 .
-Since my last email, I have not seen any more failures with those
-tests on the patched sg driver but I did see a couple on
-/dev/sd* . With sg_tst_excl2, bsg devices can be used and since bsg
-accepts and ignores O_EXCL, it fails reliably.
-
-BTW I use scsi_debug with 'delay=3D0' for a pseudo device.
-
-Doug Gilbert
