@@ -1,267 +1,180 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 4/7] scsi: ufs: add dme configuration primitives
-Date: Tue, 13 Aug 2013 12:26:19 +0530
-Message-ID: <5209D893.3020100@codeaurora.org>
-References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <001f01ce8a06$b30af640$1920e2c0$%jun@samsung.com> <51F634D9.8080503@codeaurora.org> <002801ce8d24$fb743880$f25ca980$%jun@samsung.com>
+Subject: Re: [PATCH 7/7] scsi: ufs: configure the attribute for power mode
+Date: Tue, 13 Aug 2013 12:30:19 +0530
+Message-ID: <5209D983.3060505@codeaurora.org>
+References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <002201ce8a06$fad20db0$f0762910$%jun@samsung.com> <51F910FA.30804@codeaurora.org> <001901ce929d$bb7411f0$325c35d0$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:55112 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:55416 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756379Ab3HMG40 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2013 02:56:26 -0400
-In-Reply-To: <002801ce8d24$fb743880$f25ca980$%jun@samsung.com>
+	with ESMTP id S1752489Ab3HMHA0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2013 03:00:26 -0400
+In-Reply-To: <001901ce929d$bb7411f0$325c35d0$%jun@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Seungwon Jeon <tgih.jun@samsung.com>
 Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-On 7/30/2013 6:32 PM, Seungwon Jeon wrote:
-> On Mon, July 29, 2013, Subhash Jadavani wrote:
->> On 7/26/2013 7:17 PM, Seungwon Jeon wrote:
->>> Implements to support GET and SET operations of the DME.
->>> These operations are used to configure the behavior of
->>> the UNIPRO. Along with basic operation, {Peer/AttrSetType}
->>> can be mixed.
+On 8/6/2013 5:38 PM, Seungwon Jeon wrote:
+> On Wednesday, July 31, 2013, Subhash Jadavani wrote:
+>> Change looks good (except one minor question).
+>>
+>> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+>>
+>> On 7/26/2013 7:19 PM, Seungwon Jeon wrote:
+>>> UIC attributes can be set with using DME_SET command for
+>>> power mode change. For configuration the link capability
+>>> attributes are used, which is updated after successful
+>>> link startup.
 >>>
 >>> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 >>> ---
->>>    drivers/scsi/ufs/ufshcd.c |   88 +++++++++++++++++++++++++++++++++++++++++++++
->>>    drivers/scsi/ufs/ufshcd.h |   51 ++++++++++++++++++++++++++
->>>    drivers/scsi/ufs/ufshci.h |    6 +++
->>>    3 files changed, 145 insertions(+), 0 deletions(-)
+>>>    drivers/scsi/ufs/ufshcd.c |   74 +++++++++++++++++++++++++++++++++++++++++++-
+>>>    drivers/scsi/ufs/unipro.h |   21 +++++++++++++
+>>>    2 files changed, 93 insertions(+), 2 deletions(-)
 >>>
 >>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index 7152ec4..8277c40 100644
+>>> index ffda72d..ebdb9ff 100644
 >>> --- a/drivers/scsi/ufs/ufshcd.c
 >>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -188,6 +188,18 @@ static inline int ufshcd_get_uic_cmd_result(struct ufs_hba *hba)
+>>> @@ -975,6 +975,70 @@ out:
 >>>    }
 >>>
 >>>    /**
->>> + * ufshcd_get_dme_attr_val - Get the value of attribute returned by UIC command
->>> + * @hba: Pointer to adapter instance
->>> + *
->>> + * This function gets UIC command argument3
->>> + * Returns 0 on success, non zero value on error
->>> + */
->>> +static inline u32 ufshcd_get_dme_attr_val(struct ufs_hba *hba)
->>> +{
->>> +	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3);
->>> +}
->>> +
->>> +/**
->>>     * ufshcd_is_valid_req_rsp - checks if controller TR response is valid
->>>     * @ucd_rsp_ptr: pointer to response UPIU
->>>     *
->>> @@ -821,6 +833,80 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
->>>    }
->>>
->>>    /**
->>> + * ufshcd_dme_set_attr - UIC command for DME_SET, DME_PEER_SET
+>>> + * ufshcd_config_max_pwr_mode - Set & Change power mode with
+>>> + *	maximum capability attribute information.
 >>> + * @hba: per adapter instance
->>> + * @attr_sel: uic command argument1
->>> + * @attr_set: attribute set type as uic command argument2
->>> + * @mib_val: setting value as uic command argument3
->>> + * @peer: indicate wherter peer or non-peer
->> typo: s/wtherter/whether
->> This would sound better: s/non-peer/local
-> Ok.
-thanks.
->
->> Do above for ufshcd_dme_get_attr() function as well.
 >>> + *
 >>> + * Returns 0 on success, non-zero value on failure
 >>> + */
->>> +int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
->>> +			u8 attr_set, u32 mib_val, u8 peer)
+>>> +static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
 >>> +{
->>> +	struct uic_command uic_cmd = {0};
->>> +	static const char *const action[] = {
->>> +		"dme-set",
->>> +		"dme-peer-set"
->>> +	};
->>> +	const char *set = action[!!peer];
->>> +	int ret;
+>>> +	enum {RX = 0, TX = 1};
+>>> +	u32 lanes[] = {1, 1};
+>>> +	u32 gear[] = {1, 1};
+>>> +	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
+>>> +	int i, ret;
 >>> +
->>> +	uic_cmd.command = peer ?
->>> +		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
->>> +	uic_cmd.argument1 = attr_sel;
->>> +	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
->>> +	uic_cmd.argument3 = mib_val;
+>>> +	/* Get the connected lane count */
+>>> +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
+>>> +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
 >>> +
->>> +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
->>> +	if (ret)
->>> +		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
->>> +			set, UIC_GET_ATTR_ID(attr_sel), ret);
->> Its also good to print the "mib_val" which we were trying to set. It
->> might be possible that DME_SET failed because we are trying to set out
->> of range value to MIB attribute.
-> I'll add it.
-thanks
->
->>> +
->>> +	return ret;
->>> +}
->>> +EXPORT_SYMBOL_GPL(ufshcd_dme_set_attr);
->>> +
->>> +/**
->>> + * ufshcd_dme_get_attr - UIC command for DME_GET, DME_PEER_GET
->>> + * @hba: per adapter instance
->>> + * @attr_sel: uic command argument1
->>> + * @mib_val: the value of the attribute as returned by the UIC command
->>> + * @peer: indicate wherter peer or non-peer
->>> + *
->>> + * Returns 0 on success, non-zero value on failure
->>> + */
->>> +int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
->>> +			u32 *mib_val, u8 peer)
->>> +{
->>> +	struct uic_command uic_cmd = {0};
->>> +	static const char *const action[] = {
->>> +		"dme-get",
->>> +		"dme-peer-get"
->>> +	};
->>> +	const char *get = action[!!peer];
->>> +	int ret;
->>> +
->>> +	uic_cmd.command = peer ?
->>> +		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
->>> +	uic_cmd.argument1 = attr_sel;
->>> +
->>> +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
->>> +	if (ret) {
->>> +		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
->>> +			get, UIC_GET_ATTR_ID(attr_sel), ret);
->>> +		goto out;
+>>> +	/*
+>>> +	 * First, get the maximum gears of HS speed.
+>>> +	 * If a zero value, it means there is no HSGEAR capability.
+>>> +	 * Then, get the maximum gears of PWM speed.
+>>> +	 */
+>>> +	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
+>>> +	if (!gear[RX]) {
+>>> +		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
+>>> +		pwr[RX] = SLOWAUTO_MODE;
 >>> +	}
 >>> +
->>> +	if (mib_val)
->>> +		*mib_val = uic_cmd.argument3;
->>> +out:
+>>> +	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
+>>> +	if (!gear[TX]) {
+>>> +		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
+>>> +				    &gear[TX]);
+>>> +		pwr[TX] = SLOWAUTO_MODE;
+>>> +	}
+>>> +
+>>> +	/*
+>>> +	 * Configure attributes for power mode change with below.
+>>> +	 * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
+>>> +	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
+>>> +	 * - PA_HSSERIES
+>>> +	 */
+>>> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
+>>> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
+>>> +	if (pwr[RX] == FASTAUTO_MODE)
+>>> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
+>>> +
+>>> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
+>>> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
+>>> +	if (pwr[TX] == FASTAUTO_MODE)
+>>> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
+>> Does this mean TX-RX Termination can be enabled only in HS gear mode?
+>> Somehow i couldn't find this
+> Basically, 'termination' in HS Mode and not termination in LS mode.
+> Spec. doesn't say clearly, though.
+> If you have any idea, please let me know.
+Thanks for the info. I don't have much idea as of now. BTW, this patch 
+looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+>
+> Thanks,
+> Seungwon Jeon
+>>> +
+>>> +	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
+>>> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
+>>> +
+>>> +	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
+>>> +	if (ret)
+>>> +		dev_err(hba->dev,
+>>> +			"pwr_mode: power mode change failed %d\n", ret);
+>>> +
 >>> +	return ret;
 >>> +}
->>> +EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
 >>> +
 >>> +/**
 >>>     * ufshcd_make_hba_operational - Make UFS controller operational
 >>>     * @hba: per adapter instance
 >>>     *
->>> @@ -1256,6 +1342,8 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
->>>    	if (hba->active_uic_cmd) {
->>>    		hba->active_uic_cmd->argument2 |=
->>>    			ufshcd_get_uic_cmd_result(hba);
->>> +		hba->active_uic_cmd->argument3 =
->>> +			ufshcd_get_dme_attr_val(hba);
->> We can optimize here by reading the dme_attribute value only if
->> active_uic_cmd->command is set to DME_GET or DME_PEER_GET. For all other
->> DME commands, meaning of this is "reserved" for read.
-> Right, you have a point.
-> But when considering the access of 'hba->active_uic_cmd->command" every time and additional 'branch statement',
-> it looks like no difference in terms of the optimization.
-> Reading the dme_attribute value could be trivial thing.
-I would consider the peripheral register to be time heavy (as it may run 
-on slower peripheral bus) compared to variable read (from cache/RAM) & 
-branch statement. But i leave it upto you and it would be fine anyway.
->
->> Also, i guess reading of the argument2 and argument3 registers can be
->> moved to ufshcd_wait_for_uic_cmd() function (process context) intead of
->> interrupt context.
-> Yes, it may be possible.
-> But I wanted to update the result of uic command as soon as IS.UCCS occurs and simplify error handling.
-Ok.
->
-> Thanks,
-> Seungwon Jeon
->
->>>    		complete(&hba->active_uic_cmd->done);
->>>    	}
->>>    }
->>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->>> index 49590ee..50bcd29 100644
->>> --- a/drivers/scsi/ufs/ufshcd.h
->>> +++ b/drivers/scsi/ufs/ufshcd.h
->>> @@ -199,6 +199,11 @@ int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
->>>    			unsigned int);
->>>    void ufshcd_remove(struct ufs_hba *);
+>>> @@ -1754,8 +1818,14 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+>>>    	int ret;
 >>>
->>> +extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
->>> +			       u8 attr_set, u32 mib_val, u8 peer);
->>> +extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
->>> +			       u32 *mib_val, u8 peer);
+>>>    	ret = ufshcd_link_startup(hba);
+>>> -	if (!ret)
+>>> -		scsi_scan_host(hba->host);
+>>> +	if (ret)
+>>> +		goto out;
 >>> +
->>>    /**
->>>     * ufshcd_hba_stop - Send controller to reset state
->>>     * @hba: per adapter instance
->>> @@ -208,4 +213,50 @@ static inline void ufshcd_hba_stop(struct ufs_hba *hba)
->>>    	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
+>>> +	ufshcd_config_max_pwr_mode(hba);
+>>> +
+>>> +	scsi_scan_host(hba->host);
+>>> +out:
+>>> +	return;
 >>>    }
 >>>
->>> +/* UIC command interfaces for DME primitives */
->>> +#define DME_LOCAL	0
->>> +#define DME_PEER	1
->>> +#define ATTR_SET_NOR	0	/* NORMAL */
->>> +#define ATTR_SET_ST	1	/* STATIC */
->>> +
->>> +static inline int ufshcd_dme_set(struct ufs_hba *hba, u32 attr_sel,
->>> +				 u32 mib_val)
->>> +{
->>> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
->>> +				   mib_val, DME_LOCAL);
->>> +}
->>> +
->>> +static inline int ufshcd_dme_st_set(struct ufs_hba *hba, u32 attr_sel,
->>> +				    u32 mib_val)
->>> +{
->>> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
->>> +				   mib_val, DME_LOCAL);
->>> +}
->>> +
->>> +static inline int ufshcd_dme_peer_set(struct ufs_hba *hba, u32 attr_sel,
->>> +				      u32 mib_val)
->>> +{
->>> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
->>> +				   mib_val, DME_PEER);
->>> +}
->>> +
->>> +static inline int ufshcd_dme_peer_st_set(struct ufs_hba *hba, u32 attr_sel,
->>> +					 u32 mib_val)
->>> +{
->>> +	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
->>> +				   mib_val, DME_PEER);
->>> +}
->>> +
->>> +static inline int ufshcd_dme_get(struct ufs_hba *hba,
->>> +				 u32 attr_sel, u32 *mib_val)
->>> +{
->>> +	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_LOCAL);
->>> +}
->>> +
->>> +static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
->>> +				      u32 attr_sel, u32 *mib_val)
->>> +{
->>> +	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
->>> +}
->>> +
->>>    #endif /* End of Header */
->>> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
->>> index a8f69cc..df4901e 100644
->>> --- a/drivers/scsi/ufs/ufshci.h
->>> +++ b/drivers/scsi/ufs/ufshci.h
->>> @@ -191,6 +191,12 @@ enum {
->>>    #define CONFIG_RESULT_CODE_MASK		0xFF
->>>    #define GENERIC_ERROR_CODE_MASK		0xFF
+>>>    static struct scsi_host_template ufshcd_driver_template = {
+>>> diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+>>> index 3a710eb..0bb8041 100644
+>>> --- a/drivers/scsi/ufs/unipro.h
+>>> +++ b/drivers/scsi/ufs/unipro.h
+>>> @@ -72,6 +72,21 @@
+>>>    #define PA_STALLNOCONFIGTIME	0x15A3
+>>>    #define PA_SAVECONFIGTIME	0x15A4
 >>>
->>> +#define UIC_ARG_MIB_SEL(attr, sel)	((((attr) & 0xFFFF) << 16) |\
->>> +					 ((sel) & 0xFFFF))
->>> +#define UIC_ARG_MIB(attr)		UIC_ARG_MIB_SEL(attr, 0)
->>> +#define UIC_ARG_ATTR_TYPE(t)		(((t) & 0xFF) << 16)
->>> +#define UIC_GET_ATTR_ID(v)		(((v) >> 16) & 0xFFFF)
+>>> +/* PA power modes */
+>>> +enum {
+>>> +	FAST_MODE	= 1,
+>>> +	SLOW_MODE	= 2,
+>>> +	FASTAUTO_MODE	= 4,
+>>> +	SLOWAUTO_MODE	= 5,
+>>> +	UNCHANGED	= 7,
+>>> +};
 >>> +
->>>    /* UIC Commands */
->>>    enum {
->>>    	UIC_CMD_DME_GET			= 0x01,
+>>> +/* PA TX/RX Frequency Series */
+>>> +enum {
+>>> +	PA_HS_MODE_A	= 1,
+>>> +	PA_HS_MODE_B	= 2,
+>>> +};
+>>> +
+>>>    /*
+>>>     * Data Link Layer Attributes
+>>>     */
+>>> @@ -127,4 +142,10 @@
+>>>    #define T_TC0TXMAXSDUSIZE	0x4060
+>>>    #define T_TC1TXMAXSDUSIZE	0x4061
+>>>
+>>> +/* Boolean attribute values */
+>>> +enum {
+>>> +	FALSE = 0,
+>>> +	TRUE,
+>>> +};
+>>> +
+>>>    #endif /* _UNIPRO_H_ */
 >> --
 >> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 >> the body of a message to majordomo@vger.kernel.org
