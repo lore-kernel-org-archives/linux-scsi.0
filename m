@@ -1,18 +1,18 @@
 From: "Yaniv Gardi" <ygardi@codeaurora.org>
-Subject: RE: [PATCH V5 1/4] scsi: ufs: Fix broken task management command implementation
-Date: Tue, 13 Aug 2013 17:57:55 +0300
-Message-ID: <006f01ce9835$7fea8e50$7fbfaaf0$@codeaurora.org>
-References: <1375163155-1473-1-git-send-email-sthumma@codeaurora.org>    <1375163155-1473-2-git-send-email-sthumma@codeaurora.org> <15d1232c76204bd3d9e7131a3371a1bc.squirrel@www.codeaurora.org>
+Subject: RE: [PATCH V5 4/4] scsi: ufs: Improve UFS fatal error handling
+Date: Tue, 13 Aug 2013 17:58:34 +0300
+Message-ID: <007101ce9835$970c56e0$c52504a0$@codeaurora.org>
+References: <1375163155-1473-1-git-send-email-sthumma@codeaurora.org>    <1375163155-1473-5-git-send-email-sthumma@codeaurora.org> <2b85150705f84a61ff8e66c5dcd02cab.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:59452 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:59491 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757984Ab3HMO6B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2013 10:58:01 -0400
-In-Reply-To: <15d1232c76204bd3d9e7131a3371a1bc.squirrel@www.codeaurora.org>
+	with ESMTP id S1757984Ab3HMO6k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2013 10:58:40 -0400
+In-Reply-To: <2b85150705f84a61ff8e66c5dcd02cab.squirrel@www.codeaurora.org>
 Content-Language: en-us
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -28,419 +28,415 @@ of Code Aurora Forum, hosted by The Linux Foundation
 = > -----Original Message-----
 = > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
 = > owner@vger.kernel.org] On Behalf Of Dolev Raviv
-= > Sent: Monday, August 12, 2013 4:01 PM
+= > Sent: Monday, August 12, 2013 4:03 PM
 = > To: Sujit Reddy Thumma
 = > Cc: Vinayak Holikatti; Santosh Y; James E.J. Bottomley; linux-
 = > scsi@vger.kernel.org; Sujit Reddy Thumma; linux-arm-
 = > msm@vger.kernel.org
-= > Subject: Re: [PATCH V5 1/4] scsi: ufs: Fix broken task management
-= > command implementation
+= > Subject: Re: [PATCH V5 4/4] scsi: ufs: Improve UFS fatal error handling
 = > 
 = > Tested-by: Dolev Raviv <draviv@codeaurora.org>
 = > 
-= > > Currently, sending Task Management (TM) command to the card might
-= > be
-= > > broken in some scenarios as listed below:
+= > > Error handling in UFS driver is broken and resets the host controller
+= > > for fatal errors without re-initialization. Correct the fatal error
+= > > handling sequence according to UFS Host Controller Interface (HCI)
+= > > v1.1 specification.
 = > >
-= > > Problem: If there are more than 8 TM commands the implementation
-= > >          returns error to the caller.
-= > > Fix:     Wait for one of the slots to be emptied and send the command.
+= > > o Processed requests which are completed w/wo error are reported to
+= > >   SCSI layer and any pending commands that are not started are aborted
+= > >   in the controller and re-queued into scsi mid-layer queue.
 = > >
-= > > Problem: Sometimes it is necessary for the caller to know the TM
-service
-= > >          response code to determine the task status.
-= > > Fix:     Propogate the service response to the caller.
+= > > o Upon determining fatal error condition the host controller may hang
+= > >   forever until a reset is applied. Block SCSI layer for sending new
+= > >   requests and apply reset in a separate error handling work.
 = > >
-= > > Problem: If the TM command times out no proper error recovery is
-= > >          implemented.
-= > > Fix:     Clear the command in the controller door-bell register, so
-that
-= > >          further commands for the same slot don't fail.
-= > >
-= > > Problem: While preparing the TM command descriptor, the task tag used
-= > >          should be unique across SCSI/NOP/QUERY/TM commands and not
-= > the
-= > > 	 task tag of the command which the TM command is trying to
-= > manage.
-= > > Fix:     Use a unique task tag instead of task tag of SCSI command.
-= > >
-= > > Problem: Since the TM command involves H/W communication, abruptly
-= > ending
-= > >          the request on kill interrupt signal might cause h/w
-malfunction.
-= > > Fix:     Wait for hardware completion interrupt with
-= > TASK_UNINTERRUPTIBLE
-= > >          set.
+= > > o SCSI is informed about the expected Unit-Attention exception from
+the
+= > >   device for the immediate command after a reset so that the SCSI
+layer
+= > >   take necessary steps to establish communication with the device.
 = > >
 = > > Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 = > > ---
-= > >  drivers/scsi/ufs/ufshcd.c |  173
-= > > ++++++++++++++++++++++++++++++---------------
-= > >  drivers/scsi/ufs/ufshcd.h |    8 ++-
-= > >  2 files changed, 122 insertions(+), 59 deletions(-)
+= > >  drivers/scsi/ufs/ufshcd.c |  229
+= > > ++++++++++++++++++++++++++++-----------------
+= > >  drivers/scsi/ufs/ufshcd.h |   10 ++-
+= > >  2 files changed, 149 insertions(+), 90 deletions(-)
 = > >
 = > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-= > > index b36ca9a..d7f3746 100644
+= > > index c577e6e..4dca9b4 100644
 = > > --- a/drivers/scsi/ufs/ufshcd.c
 = > > +++ b/drivers/scsi/ufs/ufshcd.c
-= > > @@ -53,6 +53,9 @@
-= > >  /* Query request timeout */
-= > >  #define QUERY_REQ_TIMEOUT 30 /* msec */
+= > > @@ -79,6 +79,14 @@ enum {
+= > >  	UFSHCD_EH_IN_PROGRESS = (1 << 0),
+= > >  };
 = > >
-= > > +/* Task management command timeout */
-= > > +#define TM_CMD_TIMEOUT	100 /* msecs */
+= > > +/* UFSHCD UIC layer error flags */
+= > > +enum {
+= > > +	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer
+= > error */
+= > > +	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
+= > > +	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
+= > > +	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */ };
 = > > +
-= > >  /* Expose the flag value from utp_upiu_query.value */  #define
-= > > MASK_QUERY_UPIU_FLAG_LOC 0xFF
+= > >  /* Interrupt configuration options */  enum {
+= > >  	UFSHCD_INT_DISABLE,
+= > > @@ -101,6 +109,8 @@ enum {
 = > >
-= > > @@ -183,13 +186,35 @@ ufshcd_get_tmr_ocs(struct utp_task_req_desc
-= > > *task_req_descp)
-= > >  /**
-= > >   * ufshcd_get_tm_free_slot - get a free slot for task management
-= > request
-= > >   * @hba: per adapter instance
-= > > + * @free_slot: pointer to variable with available slot value
-= > >   *
-= > > - * Returns maximum number of task management request slots in case
-= > of
-= > > - * task management queue full or returns the free slot number
-= > > + * Get a free tag and lock it until ufshcd_put_tm_slot() is called.
-= > > + * Returns 0 if free slot is not available, else return 1 with tag
-= > > + value
-= > > + * in @free_slot.
-= > >   */
-= > > -static inline int ufshcd_get_tm_free_slot(struct ufs_hba *hba)
-= > > +static bool ufshcd_get_tm_free_slot(struct ufs_hba *hba, int
-= > > +*free_slot)
-= > >  {
-= > > -	return find_first_zero_bit(&hba->outstanding_tasks, hba->nutmrs);
-= > > +	int tag;
-= > > +	bool ret = false;
-= > > +
-= > > +	if (!free_slot)
-= > > +		goto out;
-= > > +
-= > > +	do {
-= > > +		tag = find_first_zero_bit(&hba->tm_slots_in_use, hba-
-= > >nutmrs);
-= > > +		if (tag >= hba->nutmrs)
-= > > +			goto out;
-= > > +	} while (test_and_set_bit_lock(tag, &hba->tm_slots_in_use));
-= > > +
-= > > +	*free_slot = tag;
-= > > +	ret = true;
-= > > +out:
-= > > +	return ret;
-= > > +}
-= > > +
-= > > +static inline void ufshcd_put_tm_slot(struct ufs_hba *hba, int slot)
-= > > +{
-= > > +	clear_bit_unlock(slot, &hba->tm_slots_in_use);
-= > >  }
+= > >  static void ufshcd_tmc_handler(struct ufs_hba *hba);  static void
+= > > ufshcd_async_scan(void *data, async_cookie_t cookie);
+= > > +static int ufshcd_reset_and_restore(struct ufs_hba *hba); static int
+= > > +ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
 = > >
-= > >  /**
-= > > @@ -1700,10 +1725,11 @@ static void ufshcd_slave_destroy(struct
-= > > scsi_device *sdev)
-= > >   * ufshcd_task_req_compl - handle task management request
-= > completion
-= > >   * @hba: per adapter instance
-= > >   * @index: index of the completed request
-= > > + * @resp: task management service response
-= > >   *
-= > > - * Returns SUCCESS/FAILED
-= > > + * Returns non-zero value on error, zero on success
-= > >   */
-= > > -static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
-= > > +static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index, u8
-= > > *resp)
-= > >  {
-= > >  	struct utp_task_req_desc *task_req_descp;
-= > >  	struct utp_upiu_task_rsp *task_rsp_upiup; @@ -1724,19 +1750,15
-= > @@
-= > > static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index)
-= > >  				task_req_descp[index].task_rsp_upiu;
-= > >  		task_result = be32_to_cpu(task_rsp_upiup-
-= > >header.dword_1);
-= > >  		task_result = ((task_result & MASK_TASK_RESPONSE) >> 8);
-= > > -
-= > > -		if (task_result !=
-= > UPIU_TASK_MANAGEMENT_FUNC_COMPL &&
-= > > -		    task_result !=
-= > UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED)
-= > > -			task_result = FAILED;
-= > > -		else
-= > > -			task_result = SUCCESS;
-= > > +		if (resp)
-= > > +			*resp = (u8)task_result;
-= > >  	} else {
-= > > -		task_result = FAILED;
-= > > -		dev_err(hba->dev,
-= > > -			"trc: Invalid ocs = %x\n", ocs_value);
-= > > +		dev_err(hba->dev, "%s: failed, ocs = 0x%x\n",
-= > > +				__func__, ocs_value);
+= > >  /*
+= > >   * ufshcd_wait_for_register - wait for register value to change @@
+= > > -1523,9 +1533,6 @@ static int ufshcd_make_hba_operational(struct
+= > > ufs_hba *hba)
+= > >  		goto out;
 = > >  	}
-= > >  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-= > > -	return task_result;
-= > > +
-= > > +	return ocs_value;
-= > >  }
 = > >
-= > >  /**
-= > > @@ -2237,7 +2259,7 @@ static void ufshcd_tmc_handler(struct ufs_hba
-= > > *hba)
-= > >
-= > >  	tm_doorbell = ufshcd_readl(hba,
-= > REG_UTP_TASK_REQ_DOOR_BELL);
-= > >  	hba->tm_condition = tm_doorbell ^ hba->outstanding_tasks;
-= > > -	wake_up_interruptible(&hba->ufshcd_tm_wait_queue);
-= > > +	wake_up(&hba->tm_wq);
-= > >  }
-= > >
-= > >  /**
-= > > @@ -2287,38 +2309,58 @@ static irqreturn_t ufshcd_intr(int irq, void
-= > > *__hba)
-= > >  	return retval;
-= > >  }
-= > >
-= > > +static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag) {
-= > > +	int err = 0;
-= > > +	u32 mask = 1 << tag;
-= > > +	unsigned long flags;
-= > > +
-= > > +	if (!test_bit(tag, &hba->outstanding_reqs))
-= > > +		goto out;
-= > > +
-= > > +	spin_lock_irqsave(hba->host->host_lock, flags);
-= > > +	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
-= > > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-= > > +
-= > > +	/* poll for max. 1 sec to clear door bell register by h/w */
-= > > +	err = ufshcd_wait_for_register(hba,
-= > > +			REG_UTP_TASK_REQ_DOOR_BELL,
-= > > +			mask, 0, 1000, 1000);
-= > > +out:
-= > > +	return err;
-= > > +}
-= > > +
-= > >  /**
-= > >   * ufshcd_issue_tm_cmd - issues task management commands to
-= > controller
-= > >   * @hba: per adapter instance
-= > > - * @lrbp: pointer to local reference block
-= > > + * @lun_id: LUN ID to which TM command is sent
-= > > + * @task_id: task ID to which the TM command is applicable
-= > > + * @tm_function: task management function opcode
-= > > + * @tm_response: task management service response return value
-= > >   *
-= > > - * Returns SUCCESS/FAILED
-= > > + * Returns non-zero value on error, zero on success.
-= > >   */
-= > > -static int
-= > > -ufshcd_issue_tm_cmd(struct ufs_hba *hba,
-= > > -		    struct ufshcd_lrb *lrbp,
-= > > -		    u8 tm_function)
-= > > +static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int
-= > > task_id,
-= > > +		u8 tm_function, u8 *tm_response)
-= > >  {
-= > >  	struct utp_task_req_desc *task_req_descp;
-= > >  	struct utp_upiu_task_req *task_req_upiup;
-= > >  	struct Scsi_Host *host;
-= > >  	unsigned long flags;
-= > > -	int free_slot = 0;
-= > > +	int free_slot;
-= > >  	int err;
-= > > +	int task_tag;
-= > >
-= > >  	host = hba->host;
-= > >
-= > > -	spin_lock_irqsave(host->host_lock, flags);
+= > > -	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+= > > -		scsi_unblock_requests(hba->host);
 = > > -
-= > > -	/* If task management queue is full */
-= > > -	free_slot = ufshcd_get_tm_free_slot(hba);
-= > > -	if (free_slot >= hba->nutmrs) {
-= > > -		spin_unlock_irqrestore(host->host_lock, flags);
-= > > -		dev_err(hba->dev, "Task management queue full\n");
-= > > -		err = FAILED;
-= > > -		goto out;
-= > > -	}
-= > > +	/*
-= > > +	 * Get free slot, sleep if slots are unavailable.
-= > > +	 * Even though we use wait_event() which sleeps indefinitely,
-= > > +	 * the maximum wait time is bounded by %TM_CMD_TIMEOUT.
-= > > +	 */
-= > > +	wait_event(hba->tm_tag_wq, ufshcd_get_tm_free_slot(hba,
-= > > +&free_slot));
-= > >
-= > > +	spin_lock_irqsave(host->host_lock, flags);
-= > >  	task_req_descp = hba->utmrdl_base_addr;
-= > >  	task_req_descp += free_slot;
-= > >
-= > > @@ -2330,18 +2372,15 @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
-= > >  	/* Configure task request UPIU */
-= > >  	task_req_upiup =
-= > >  		(struct utp_upiu_task_req *) task_req_descp-
-= > >task_req_upiu;
-= > > +	task_tag = hba->nutrs + free_slot;
-= > >  	task_req_upiup->header.dword_0 =
-= > >  		UPIU_HEADER_DWORD(UPIU_TRANSACTION_TASK_REQ,
-= > 0,
-= > > -					      lrbp->lun, lrbp->task_tag);
-= > > +				lun_id, task_tag);
-= > >  	task_req_upiup->header.dword_1 =
-= > >  		UPIU_HEADER_DWORD(0, tm_function, 0, 0);
-= > >
-= > > -	task_req_upiup->input_param1 = lrbp->lun;
-= > > -	task_req_upiup->input_param1 =
-= > > -		cpu_to_be32(task_req_upiup->input_param1);
-= > > -	task_req_upiup->input_param2 = lrbp->task_tag;
-= > > -	task_req_upiup->input_param2 =
-= > > -		cpu_to_be32(task_req_upiup->input_param2);
-= > > +	task_req_upiup->input_param1 = cpu_to_be32(lun_id);
-= > > +	task_req_upiup->input_param2 = cpu_to_be32(task_id);
-= > >
-= > >  	/* send command to the controller */
-= > >  	__set_bit(free_slot, &hba->outstanding_tasks); @@ -2350,20
-= > +2389,24
-= > > @@ ufshcd_issue_tm_cmd(struct ufs_hba *hba,
-= > >  	spin_unlock_irqrestore(host->host_lock, flags);
-= > >
-= > >  	/* wait until the task management command is completed */
-= > > -	err =
-= > > -	wait_event_interruptible_timeout(hba->ufshcd_tm_wait_queue,
-= > > -					 (test_bit(free_slot,
-= > > -					 &hba->tm_condition) != 0),
-= > > -					 60 * HZ);
-= > > +	err = wait_event_timeout(hba->tm_wq,
-= > > +			test_bit(free_slot, &hba->tm_condition),
-= > > +			msecs_to_jiffies(TM_CMD_TIMEOUT));
-= > >  	if (!err) {
-= > > -		dev_err(hba->dev,
-= > > -			"Task management command timed-out\n");
-= > > -		err = FAILED;
-= > > -		goto out;
-= > > +		dev_err(hba->dev, "%s: task management cmd 0x%.2x
-= > timed-out\n",
-= > > +				__func__, tm_function);
-= > > +		if (ufshcd_clear_tm_cmd(hba, free_slot))
-= > > +			dev_WARN(hba->dev, "%s: unable clear tm cmd
-= > (slot %d) after
-= > > timeout\n",
-= > > +					__func__, free_slot);
-= > > +		err = -ETIMEDOUT;
-= > > +	} else {
-= > > +		err = ufshcd_task_req_compl(hba, free_slot,
-= > tm_response);
-= > >  	}
-= > > +
-= > >  	clear_bit(free_slot, &hba->tm_condition);
-= > > -	err = ufshcd_task_req_compl(hba, free_slot);
-= > > -out:
-= > > +	ufshcd_put_tm_slot(hba, free_slot);
-= > > +	wake_up(&hba->tm_tag_wq);
-= > > +
+= > >  out:
 = > >  	return err;
 = > >  }
+= > > @@ -1651,66 +1658,6 @@ static int ufshcd_verify_dev_init(struct
+= > > ufs_hba
+= > > *hba)
+= > >  }
 = > >
-= > > @@ -2380,14 +2423,21 @@ static int ufshcd_device_reset(struct
-= > > scsi_cmnd
-= > > *cmd)
-= > >  	unsigned int tag;
-= > >  	u32 pos;
-= > >  	int err;
-= > > +	u8 resp = 0xF;
-= > > +	struct ufshcd_lrb *lrbp;
+= > >  /**
+= > > - * ufshcd_do_reset - reset the host controller
+= > > - * @hba: per adapter instance
+= > > - *
+= > > - * Returns SUCCESS/FAILED
+= > > - */
+= > > -static int ufshcd_do_reset(struct ufs_hba *hba) -{
+= > > -	struct ufshcd_lrb *lrbp;
+= > > -	unsigned long flags;
+= > > -	int tag;
+= > > -
+= > > -	/* block commands from midlayer */
+= > > -	scsi_block_requests(hba->host);
+= > > -
+= > > -	spin_lock_irqsave(hba->host->host_lock, flags);
+= > > -	hba->ufshcd_state = UFSHCD_STATE_RESET;
+= > > -
+= > > -	/* send controller to reset state */
+= > > -	ufshcd_hba_stop(hba);
+= > > -	spin_unlock_irqrestore(hba->host->host_lock, flags);
+= > > -
+= > > -	/* abort outstanding commands */
+= > > -	for (tag = 0; tag < hba->nutrs; tag++) {
+= > > -		if (test_bit(tag, &hba->outstanding_reqs)) {
+= > > -			lrbp = &hba->lrb[tag];
+= > > -			if (lrbp->cmd) {
+= > > -				scsi_dma_unmap(lrbp->cmd);
+= > > -				lrbp->cmd->result = DID_RESET << 16;
+= > > -				lrbp->cmd->scsi_done(lrbp->cmd);
+= > > -				lrbp->cmd = NULL;
+= > > -				clear_bit_unlock(tag, &hba->lrb_in_use);
+= > > -			}
+= > > -		}
+= > > -	}
+= > > -
+= > > -	/* complete device management command */
+= > > -	if (hba->dev_cmd.complete)
+= > > -		complete(hba->dev_cmd.complete);
+= > > -
+= > > -	/* clear outstanding request/task bit maps */
+= > > -	hba->outstanding_reqs = 0;
+= > > -	hba->outstanding_tasks = 0;
+= > > -
+= > > -	/* Host controller enable */
+= > > -	if (ufshcd_hba_enable(hba)) {
+= > > -		dev_err(hba->dev,
+= > > -			"Reset: Controller initialization failed\n");
+= > > -		return FAILED;
+= > > -	}
+= > > -
+= > > -	if (ufshcd_link_startup(hba)) {
+= > > -		dev_err(hba->dev,
+= > > -			"Reset: Link start-up failed\n");
+= > > -		return FAILED;
+= > > -	}
+= > > -
+= > > -	return SUCCESS;
+= > > -}
+= > > -
+= > > -/**
+= > >   * ufshcd_slave_alloc - handle initial SCSI device configurations
+= > >   * @sdev: pointer to SCSI device
+= > >   *
+= > > @@ -1727,6 +1674,9 @@ static int ufshcd_slave_alloc(struct scsi_device
+= > > *sdev)
+= > >  	sdev->use_10_for_ms = 1;
+= > >  	scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
 = > >
-= > >  	host = cmd->device->host;
-= > >  	hba = shost_priv(host);
-= > >  	tag = cmd->request->tag;
+= > > +	/* allow SCSI layer to restart the device in case of errors */
+= > > +	sdev->allow_restart = 1;
+= > > +
+= > >  	/*
+= > >  	 * Inform SCSI Midlayer that the LUN queue depth is same as the
+= > >  	 * controller queue depth. If a LUN queue depth is less than the
+= > @@
+= > > -1930,6 +1880,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+= > > struct ufshcd_lrb *lrbp)
+= > >  	case OCS_ABORTED:
+= > >  		result |= DID_ABORT << 16;
+= > >  		break;
+= > > +	case OCS_INVALID_COMMAND_STATUS:
+= > > +		result |= DID_REQUEUE << 16;
+= > > +		break;
+= > >  	case OCS_INVALID_CMD_TABLE_ATTR:
+= > >  	case OCS_INVALID_PRDT_ATTR:
+= > >  	case OCS_MISMATCH_DATA_BUF_SIZE:
+= > > @@ -2241,45 +2194,145 @@ out:
+= > >  }
 = > >
-= > > -	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag],
-= > UFS_LOGICAL_RESET);
-= > > -	if (err == FAILED)
-= > > +	lrbp = &hba->lrb[tag];
-= > > +	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, 0,
-= > UFS_LOGICAL_RESET, &resp);
-= > > +	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
-= > > +		err = FAILED;
-= > >  		goto out;
-= > > +	} else {
-= > > +		err = SUCCESS;
+= > >  /**
+= > > - * ufshcd_fatal_err_handler - handle fatal errors
+= > > - * @hba: per adapter instance
+= > > + * ufshcd_err_handler - handle UFS errors that require s/w attention
+= > > + * @work: pointer to work structure
+= > >   */
+= > > -static void ufshcd_fatal_err_handler(struct work_struct *work)
+= > > +static void ufshcd_err_handler(struct work_struct *work)
+= > >  {
+= > >  	struct ufs_hba *hba;
+= > > -	hba = container_of(work, struct ufs_hba, feh_workq);
+= > > +	unsigned long flags;
+= > > +	u32 err_xfer = 0;
+= > > +	u32 err_tm = 0;
+= > > +	int err = 0;
+= > > +	int tag;
+= > > +
+= > > +	hba = container_of(work, struct ufs_hba, eh_work);
+= > >
+= > >  	pm_runtime_get_sync(hba->dev);
+= > > -	/* check if reset is already in progress */
+= > > -	if (hba->ufshcd_state != UFSHCD_STATE_RESET)
+= > > -		ufshcd_do_reset(hba);
+= > > +
+= > > +	spin_lock_irqsave(hba->host->host_lock, flags);
+= > > +	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
+= > > +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+= > > +		goto out;
 = > > +	}
+= > > +
+= > > +	hba->ufshcd_state = UFSHCD_STATE_RESET;
+= > > +	ufshcd_set_eh_in_progress(hba);
+= > > +
+= > > +	/* Complete requests that have door-bell cleared by h/w */
+= > > +	ufshcd_transfer_req_compl(hba);
+= > > +	ufshcd_tmc_handler(hba);
+= > > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+= > > +
+= > > +	/* Clear pending transfer requests */
+= > > +	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
+= > > +		if (ufshcd_clear_cmd(hba, tag))
+= > > +			err_xfer |= 1 << tag;
+= > > +
+= > > +	/* Clear pending task management requests */
+= > > +	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
+= > > +		if (ufshcd_clear_tm_cmd(hba, tag))
+= > > +			err_tm |= 1 << tag;
+= > > +
+= > > +	/* Complete the requests that are cleared by s/w */
+= > > +	spin_lock_irqsave(hba->host->host_lock, flags);
+= > > +	ufshcd_transfer_req_compl(hba);
+= > > +	ufshcd_tmc_handler(hba);
+= > > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+= > > +
+= > > +	/* Fatal errors need reset */
+= > > +	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
+= > > +			((hba->saved_err & UIC_ERROR) &&
+= > > +			 (hba->saved_uic_err &
+= > UFSHCD_UIC_DL_PA_INIT_ERROR))) {
+= > > +		err = ufshcd_reset_and_restore(hba);
+= > > +		if (err) {
+= > > +			dev_err(hba->dev, "%s: reset and restore failed\n",
+= > > +					__func__);
+= > > +			hba->ufshcd_state = UFSHCD_STATE_ERROR;
+= > > +		}
+= > > +		/*
+= > > +		 * Inform scsi mid-layer that we did reset and allow to
+= > handle
+= > > +		 * Unit Attention properly.
+= > > +		 */
+= > > +		scsi_report_bus_reset(hba->host, 0);
+= > > +		hba->saved_err = 0;
+= > > +		hba->saved_uic_err = 0;
+= > > +	}
+= > > +	ufshcd_clear_eh_in_progress(hba);
+= > > +
+= > > +out:
+= > > +	scsi_unblock_requests(hba->host);
+= > >  	pm_runtime_put_sync(hba->dev);
+= > >  }
 = > >
-= > >  	for (pos = 0; pos < hba->nutrs; pos++) {
-= > >  		if (test_bit(pos, &hba->outstanding_reqs) && @@ -2444,6
-= > +2494,8 @@
-= > > static int ufshcd_abort(struct scsi_cmnd *cmd)
-= > >  	unsigned long flags;
-= > >  	unsigned int tag;
-= > >  	int err;
-= > > +	u8 resp = 0xF;
-= > > +	struct ufshcd_lrb *lrbp;
+= > >  /**
+= > > - * ufshcd_err_handler - Check for fatal errors
+= > > - * @work: pointer to a work queue structure
+= > > + * ufshcd_update_uic_error - check and set fatal UIC error flags.
+= > > + * @hba: per-adapter instance
+= > >   */
+= > > -static void ufshcd_err_handler(struct ufs_hba *hba)
+= > > +static void ufshcd_update_uic_error(struct ufs_hba *hba)
+= > >  {
+= > >  	u32 reg;
 = > >
-= > >  	host = cmd->device->host;
-= > >  	hba = shost_priv(host);
-= > > @@ -2459,9 +2511,15 @@ static int ufshcd_abort(struct scsi_cmnd
-= > *cmd)
+= > > +	/* PA_INIT_ERROR is fatal and needs UIC reset */
+= > > +	reg = ufshcd_readl(hba,
+= > REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
+= > > +	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
+= > > +		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
+= > > +
+= > > +	/* UIC NL/TL/DME errors needs software retry */
+= > > +	reg = ufshcd_readl(hba,
+= > REG_UIC_ERROR_CODE_NETWORK_LAYER);
+= > > +	if (reg)
+= > > +		hba->uic_error |= UFSHCD_UIC_NL_ERROR;
+= > > +
+= > > +	reg = ufshcd_readl(hba,
+= > REG_UIC_ERROR_CODE_TRANSPORT_LAYER);
+= > > +	if (reg)
+= > > +		hba->uic_error |= UFSHCD_UIC_TL_ERROR;
+= > > +
+= > > +	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DME);
+= > > +	if (reg)
+= > > +		hba->uic_error |= UFSHCD_UIC_DME_ERROR;
+= > > +
+= > > +	dev_dbg(hba->dev, "%s: UIC error flags = 0x%08x\n",
+= > > +			__func__, hba->uic_error);
+= > > +}
+= > > +
+= > > +/**
+= > > + * ufshcd_check_errors - Check for errors that need s/w attention
+= > > + * @hba: per-adapter instance
+= > > + */
+= > > +static void ufshcd_check_errors(struct ufs_hba *hba) {
+= > > +	bool queue_eh_work = false;
+= > > +
+= > >  	if (hba->errors & INT_FATAL_ERRORS)
+= > > -		goto fatal_eh;
+= > > +		queue_eh_work = true;
+= > >
+= > >  	if (hba->errors & UIC_ERROR) {
+= > > -		reg = ufshcd_readl(hba,
+= > REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
+= > > -		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
+= > > -			goto fatal_eh;
+= > > +		hba->uic_error = 0;
+= > > +		ufshcd_update_uic_error(hba);
+= > > +		if (hba->uic_error)
+= > > +			queue_eh_work = true;
 = > >  	}
-= > >  	spin_unlock_irqrestore(host->host_lock, flags);
+= > > -	return;
+= > > -fatal_eh:
+= > > -	/* handle fatal errors only when link is functional */
+= > > -	if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
+= > > -		/* block commands at driver layer until error is handled */
+= > > -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
+= > > -		schedule_work(&hba->feh_workq);
+= > > +
+= > > +	if (queue_eh_work) {
+= > > +		/* handle fatal errors only when link is functional */
+= > > +		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
+= > > +			/* block commands from scsi mid-layer */
+= > > +			scsi_block_requests(hba->host);
+= > > +
+= > > +			/* transfer error masks to sticky bits */
+= > > +			hba->saved_err |= hba->errors;
+= > > +			hba->saved_uic_err |= hba->uic_error;
+= > > +
+= > > +			hba->ufshcd_state = UFSHCD_STATE_ERROR;
+= > > +			schedule_work(&hba->eh_work);
+= > > +		}
+= > >  	}
+= > > +	/*
+= > > +	 * if (!queue_eh_work) -
+= > > +	 * Other errors are either non-fatal where host recovers
+= > > +	 * itself without s/w intervention or errors that will be
+= > > +	 * handled by the SCSI core layer.
+= > > +	 */
+= > >  }
 = > >
-= > > -	err = ufshcd_issue_tm_cmd(hba, &hba->lrb[tag],
-= > UFS_ABORT_TASK);
-= > > -	if (err == FAILED)
-= > > +	lrbp = &hba->lrb[tag];
-= > > +	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
-= > > +			UFS_ABORT_TASK, &resp);
-= > > +	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
-= > > +		err = FAILED;
-= > >  		goto out;
-= > > +	} else {
-= > > +		err = SUCCESS;
-= > > +	}
+= > >  /**
+= > > @@ -2304,7 +2357,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba,
+= > > u32
+= > > intr_status)
+= > >  {
+= > >  	hba->errors = UFSHCD_ERROR_MASK & intr_status;
+= > >  	if (hba->errors)
+= > > -		ufshcd_err_handler(hba);
+= > > +		ufshcd_check_errors(hba);
 = > >
-= > >  	scsi_dma_unmap(cmd);
+= > >  	if (intr_status & UIC_COMMAND_COMPL)
+= > >  		ufshcd_uic_cmd_compl(hba);
+= > > @@ -2679,12 +2732,12 @@ static int
+= > ufshcd_eh_host_reset_handler(struct
+= > > scsi_cmnd *cmd)
+= > >  	 */
+= > >  	do {
+= > >  		spin_lock_irqsave(hba->host->host_lock, flags);
+= > > -		if (!(work_pending(&hba->feh_workq) ||
+= > > +		if (!(work_pending(&hba->eh_work) ||
+= > >  				hba->ufshcd_state ==
+= > UFSHCD_STATE_RESET))
+= > >  			break;
+= > >  		spin_unlock_irqrestore(hba->host->host_lock, flags);
+= > >  		dev_dbg(hba->dev, "%s: reset in progress\n", __func__);
+= > > -		flush_work_sync(&hba->feh_workq);
+= > > +		flush_work_sync(&hba->eh_work);
+= > >  	} while (1);
 = > >
-= > > @@ -2682,7 +2740,8 @@ int ufshcd_init(struct device *dev, struct
-= > > ufs_hba **hba_handle,
-= > >  	host->max_cmd_len = MAX_CDB_SIZE;
-= > >
-= > >  	/* Initailize wait queue for task management */
-= > > -	init_waitqueue_head(&hba->ufshcd_tm_wait_queue);
-= > > +	init_waitqueue_head(&hba->tm_wq);
-= > > +	init_waitqueue_head(&hba->tm_tag_wq);
+= > >  	hba->ufshcd_state = UFSHCD_STATE_RESET; @@ -2918,7 +2971,7
+= > @@ int
+= > > ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+= > >  	init_waitqueue_head(&hba->tm_tag_wq);
 = > >
 = > >  	/* Initialize work queues */
-= > >  	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler); diff --
-= > git
-= > > a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
-= > > 59c9c48..fe7c947 100644
+= > > -	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
+= > > +	INIT_WORK(&hba->eh_work, ufshcd_err_handler);
+= > >  	INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
+= > >
+= > >  	/* Initialize UIC command mutex */
+= > > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+= > > index 1e0585c..8f5624e 100644
 = > > --- a/drivers/scsi/ufs/ufshcd.h
 = > > +++ b/drivers/scsi/ufs/ufshcd.h
-= > > @@ -174,8 +174,10 @@ struct ufs_dev_cmd {
-= > >   * @irq: Irq number of the controller
-= > >   * @active_uic_cmd: handle of active UIC command
-= > >   * @uic_cmd_mutex: mutex for uic command
-= > > - * @ufshcd_tm_wait_queue: wait queue for task management
-= > > + * @tm_wq: wait queue for task management
-= > > + * @tm_tag_wq: wait queue for free task management slots
-= > >   * @tm_condition: condition variable for task management
-= > > + * @tm_slots_in_use: bit map of task management request slots in use
-= > >   * @ufshcd_state: UFSHCD states
+= > > @@ -182,9 +182,12 @@ struct ufs_dev_cmd {
+= > >   * @eh_flags: Error handling flags
 = > >   * @intr_mask: Interrupt Mask Bits
-= > >   * @ee_ctrl_mask: Exception event control mask @@ -216,8 +218,10
-= > @@
-= > > struct ufs_hba {
-= > >  	struct uic_command *active_uic_cmd;
-= > >  	struct mutex uic_cmd_mutex;
+= > >   * @ee_ctrl_mask: Exception event control mask
+= > > - * @feh_workq: Work queue for fatal controller error handling
+= > > + * @eh_work: Worker to handle UFS errors that require s/w attention
+= > >   * @eeh_work: Worker to handle exception events
+= > >   * @errors: HBA errors
+= > > + * @uic_error: UFS interconnect layer error status
+= > > + * @saved_err: sticky error mask
+= > > + * @saved_uic_err: sticky UIC error mask
+= > >   * @dev_cmd: ufs device management command information
+= > >   * @auto_bkops_enabled: to track whether bkops is enabled in device
+= > >   */
+= > > @@ -230,11 +233,14 @@ struct ufs_hba {
+= > >  	u16 ee_ctrl_mask;
 = > >
-= > > -	wait_queue_head_t ufshcd_tm_wait_queue;
-= > > +	wait_queue_head_t tm_wq;
-= > > +	wait_queue_head_t tm_tag_wq;
-= > >  	unsigned long tm_condition;
-= > > +	unsigned long tm_slots_in_use;
+= > >  	/* Work Queues */
+= > > -	struct work_struct feh_workq;
+= > > +	struct work_struct eh_work;
+= > >  	struct work_struct eeh_work;
 = > >
-= > >  	u32 ufshcd_state;
-= > >  	u32 intr_mask;
+= > >  	/* HBA Errors */
+= > >  	u32 errors;
+= > > +	u32 uic_error;
+= > > +	u32 saved_err;
+= > > +	u32 saved_uic_err;
+= > >
+= > >  	/* Device management request data */
+= > >  	struct ufs_dev_cmd dev_cmd;
 = > > --
 = > > QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a
 = > > member of Code Aurora Forum, hosted by The Linux Foundation.
