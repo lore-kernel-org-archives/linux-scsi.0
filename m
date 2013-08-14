@@ -1,108 +1,54 @@
-From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [PATCH] [SCSI] mptfusion: fix compilation warning
-Date: Wed, 14 Aug 2013 23:15:29 +0100
-Message-ID: <1376518529-11411-1-git-send-email-luis.henriques@canonical.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 1/1] cciss: set max scatter gather entries to 32 on P600
+Date: Wed, 14 Aug 2013 21:41:14 +0000
+Message-ID: <48275AD710FCA34184C2B6186B4016B32735BD62@G6W2491.americas.hpqcorp.net>
+References: <20130814205236.GB23042@beardog.cce.hp.com>
+ <1376515627.2028.41.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1376515627.2028.41.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, support@lsi.com, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "mikem@thumper.usa.hp.com" <mikem@thumper.usa.hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, LKML-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "thenzl@redhat.com" <thenzl@redhat.com>, "bubrown@redhat.com" <bubrown@redhat.com>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Function seq_mpt_print_ioc_summary is invoked only from functions that
-depend on CONFIG_PROC_FS.  This commit makes this function also depend
-on this configuration.  Also removes function forward declaration.
 
-It fixes the following warning:
 
-drivers/message/fusion/mptbase.c:6884:13: warning: 'seq_mpt_print_ioc_summary' defined but not used [-Wunused-function]
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Wednesday, August 14, 2013 4:27 PM
+To: Miller, Mike (OS Dev); mikem@thumper.usa.hp.com
+Cc: Andrew Morton; Jens Axboe; LKML-scsi; LKML; thenzl@redhat.com; bubrown@redhat.com; scameron@beardog.cce.hp.com
+Subject: Re: [PATCH 1/1] cciss: set max scatter gather entries to 32 on P600
 
-Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
----
- drivers/message/fusion/mptbase.c | 65 ++++++++++++++++++++--------------------
- 1 file changed, 32 insertions(+), 33 deletions(-)
+On Wed, 2013-08-14 at 15:52 -0500, Mike Miller wrote:
+> Patch 1/1
+> 
+> From: Mike Miller <mike.miller@hp.com>
+> 
+> At one time we used to set the maximum number of scatter gather 
+> elements on all Smart Array controllers to 32. At some point in time 
+> the firmware began to write the "appropriate" value for each controller into the config table.
+> The cciss driver would then read that and set h->maxsgentries.
+> 
+>         h->maxsgentries = readl(&(h->cfgtable->MaxSGElements);
+> 
+> On the P600 that value is 544. Under some workloads a significant 
+> performance reduction may result. This patch forces the P600 to use 
+> only 32 scatter gather elements. Other controllers are not affected.
+> 
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> Signed-off-by: Dwight (Bud) Brown <bubrown@redhat.com>
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> Acked-by: Stephen M. Cameron <steve.cameron@hp.com>
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 767ff4d..5cbe611 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -6637,7 +6637,38 @@ procmpt_destroy(void)
- /*
-  *	Handles read request from /proc/mpt/summary or /proc/mpt/iocN/summary.
-  */
--static void seq_mpt_print_ioc_summary(MPT_ADAPTER *ioc, struct seq_file *m, int showlan);
-+
-+static void seq_mpt_print_ioc_summary(MPT_ADAPTER *ioc, struct seq_file *m, int showlan)
-+{
-+	char expVer[32];
-+
-+	mpt_get_fw_exp_ver(expVer, ioc);
-+
-+	/*
-+	 *  Shorter summary of attached ioc's...
-+	 */
-+	seq_printf(m, "%s: %s, %s%08xh%s, Ports=%d, MaxQ=%d",
-+			ioc->name,
-+			ioc->prod_name,
-+			MPT_FW_REV_MAGIC_ID_STRING,	/* "FwRev=" or somesuch */
-+			ioc->facts.FWVersion.Word,
-+			expVer,
-+			ioc->facts.NumberOfPorts,
-+			ioc->req_depth);
-+
-+	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
-+		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
-+		seq_printf(m, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
-+			a[5], a[4], a[3], a[2], a[1], a[0]);
-+	}
-+
-+	seq_printf(m, ", IRQ=%d", ioc->pci_irq);
-+
-+	if (!ioc->active)
-+		seq_printf(m, " (disabled)");
-+
-+	seq_putc(m, '\n');
-+}
- 
- static int mpt_summary_proc_show(struct seq_file *m, void *v)
- {
-@@ -6881,38 +6912,6 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
- 	*size = y;
- }
- 
--static void seq_mpt_print_ioc_summary(MPT_ADAPTER *ioc, struct seq_file *m, int showlan)
--{
--	char expVer[32];
--
--	mpt_get_fw_exp_ver(expVer, ioc);
--
--	/*
--	 *  Shorter summary of attached ioc's...
--	 */
--	seq_printf(m, "%s: %s, %s%08xh%s, Ports=%d, MaxQ=%d",
--			ioc->name,
--			ioc->prod_name,
--			MPT_FW_REV_MAGIC_ID_STRING,	/* "FwRev=" or somesuch */
--			ioc->facts.FWVersion.Word,
--			expVer,
--			ioc->facts.NumberOfPorts,
--			ioc->req_depth);
--
--	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
--		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
--		seq_printf(m, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
--			a[5], a[4], a[3], a[2], a[1], a[0]);
--	}
--
--	seq_printf(m, ", IRQ=%d", ioc->pci_irq);
--
--	if (!ioc->active)
--		seq_printf(m, " (disabled)");
--
--	seq_putc(m, '\n');
--}
--
- /**
-  *	mpt_set_taskmgmt_in_progress_flag - set flags associated with task management
-  *	@ioc: Pointer to MPT_ADAPTER structure
--- 
-1.8.3.2
+I don't quite understand the signoff chain on this patch.  For a one line patch, are you saying it has three authors?
+
+James
+
+The patch origin is unknown. I got it from Tomas and Bud who think it may have originated from HP. I cleaned it up, compile tested it, and sent it on. I'll review my procedures for future patches.
+
+-- mikem
