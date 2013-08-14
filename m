@@ -1,94 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: State of big-endian for MegaRAID SAS driver
-Date: Wed, 14 Aug 2013 15:44:31 -0400
-Message-ID: <yq1eh9wgiqo.fsf@sermon.lab.mkp.net>
-References: <658ABE5F-B2AA-4EC1-BC34-B4FD428C7A8E@servergy.com>
-	<yq1zjskgn1x.fsf@sermon.lab.mkp.net>
-	<D354E621-BEFA-4010-B5CF-4668939AAEB0@servergy.com>
+Subject: Re: Incorrect LBA Returned from scsi_get_lba() and blk_rq_pos() (Possible DIF Impact)
+Date: Wed, 14 Aug 2013 16:25:22 -0400
+Message-ID: <yq161v8ggul.fsf@sermon.lab.mkp.net>
+References: <340C71CD25A7EB49BFA81AE8C83926671B2EFFD6@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+	<yq1halhmmjr.fsf@sermon.lab.mkp.net>
+	<405BE55790F03349A85344435F25B01C07A85C02@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46466 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:29939 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760426Ab3HNTol (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2013 15:44:41 -0400
-In-Reply-To: <D354E621-BEFA-4010-B5CF-4668939AAEB0@servergy.com> (Ben
-	Collins's message of "Wed, 14 Aug 2013 15:30:44 -0400")
+	with ESMTP id S1758395Ab3HNUZc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2013 16:25:32 -0400
+In-Reply-To: <405BE55790F03349A85344435F25B01C07A85C02@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+	(Kamaljit Singh's message of "Tue, 13 Aug 2013 14:43:36 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Collins <ben.c@servergy.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi <linux-scsi@vger.kernel.org>, aradford@gmail.com
+To: Kamaljit Singh <Kamaljit.Singh@pmcs.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sami Waheed <Sami.Waheed@pmcs.com>, linux-scsi@vger.kernel.org
 
->>>>> "Ben" == Ben Collins <ben.c@servergy.com> writes:
+>>>>> "Kamaljit" == Kamaljit Singh <Kamaljit.Singh@pmcs.com> writes:
 
-Ben> You're the man. Forward ported this to 3.11-rc code base. Worked
-Ben> like a charm.
+Kamaljit> Did you get a chance to merge your changes into mainline?  I'm
+Kamaljit> using 3.10.4 and am still seeing this issue.
 
-Heh, you just beat me to it :)
-
-Formatting differences aside there were a few glitches, however. I
-outlined them below...
-
-Btw. the reason I did cpu_to_le16(0) etc. was mostly to annotate the
-endian-sensitive parameters in case somebody changes them in the future.
+Thanks for the reminder. No, I'm still sitting on some PI patches that
+need to be merged. Will fix!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 7bf9c5c..154e9e1 100644
-@@ -1170,7 +1170,7 @@ megasas_build_dcdb(struct megasas_instance *instance, struct scsi_cmnd *scp,
- 	 * Construct SGL
- 	 */
- 	if (instance->flag_ieee == 1) {
--		flags |= MFI_FRAME_SGL64;
-+		flags |= MFI_FRAME_SGL64 | MFI_FRAME_IEEE;
- 		pthru->sge_count = megasas_make_sgl_skinny(instance, scp,
- 						      &pthru->sgl);
- 	} else if (IS_DMA64) {
-@@ -1328,8 +1328,10 @@ megasas_build_ldio(struct megasas_instance *instance, struct scsi_cmnd *scp,
- 	 * Sense info specific
- 	 */
- 	ldio->sense_len = SCSI_SENSE_BUFFERSIZE;
--	ldio->sense_buf_phys_addr_hi = 0;
--	ldio->sense_buf_phys_addr_lo = cmd->sense_phys_addr;
-+	ldio->sense_buf_phys_addr_hi =
-+		cpu_to_le32(upper_32_bits(cmd->sense_phys_addr));
-+	ldio->sense_buf_phys_addr_lo =
-+		cpu_to_le32(lower_32_bits(cmd->sense_phys_addr));
- 
- 	/*
- 	 * Compute the total number of frames this command consumes. FW uses
-@@ -3944,14 +3945,15 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
- 	dcmd->sge_count = 1;
- 	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_READ);
- 	dcmd->timeout = cpu_to_le16(0);
--	dcmd->pad_0 = cpu_to_le16(0);
-+	dcmd->pad_0 = 0;
- 	instance->last_seq_num = seq_num;
- 	dcmd->data_xfer_len = cpu_to_le32(sizeof(struct megasas_evt_detail));
- 	dcmd->opcode = cpu_to_le32(MR_DCMD_CTRL_EVENT_WAIT);
--	dcmd->mbox.w[0] = seq_num;
--	dcmd->mbox.w[1] = curr_aen.word;
-+	dcmd->mbox.w[0] = cpu_to_le32(seq_num);
-+	dcmd->mbox.w[1] = cpu_to_le32(curr_aen.word);
- 	dcmd->sgl.sge32[0].phys_addr = cpu_to_le32(instance->evt_detail_h);
--	dcmd->sgl.sge32[0].length = cpu_to_le32(sizeof(struct megasas_evt_detail));
-+	dcmd->sgl.sge32[0].length =
-+		cpu_to_le32(sizeof(struct megasas_evt_detail));
- 
- 	if (instance->aen_cmd != NULL) {
- 		megasas_return_cmd(instance, cmd);
-@@ -5358,9 +5360,9 @@ megasas_aen_polling(struct work_struct *work)
- 	}
- 	instance->ev = NULL;
- 	host = instance->host;
--	if (le32_to_cpu(instance->evt_detail)) {
-+	if (instance->evt_detail) {
- 
--		switch (instance->evt_detail->code) {
-+		switch (le32_to_cpu(instance->evt_detail->code)) {
- 		case MR_EVT_PD_INSERTED:
- 			if (megasas_get_pd_list(instance) == 0) {
- 			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
-
