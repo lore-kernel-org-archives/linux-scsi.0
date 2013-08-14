@@ -1,81 +1,48 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH 14/29] drivers/scsi/ufs/ufshcd-pltfrm.c: simplify use of devm_ioremap_resource
-Date: Wed, 14 Aug 2013 15:22:34 +0530
-Message-ID: <CALMYJDvQdFcvoQVVVJL7cGa_zSv_m_vT=aeiNDji0fX7pFhcMQ@mail.gmail.com>
-References: <1376471493-22215-1-git-send-email-Julia.Lawall@lip6.fr> <1376471493-22215-15-git-send-email-Julia.Lawall@lip6.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: [PATCH 74/75] [SCSI] nsp32: use mdelay instead of large udelay constants
+Date: Wed, 14 Aug 2013 11:37:03 +0100
+Message-ID: <1376476624-10011-75-git-send-email-luis.henriques@canonical.com>
+References: <1376476624-10011-1-git-send-email-luis.henriques@canonical.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1376471493-22215-15-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1376476624-10011-1-git-send-email-luis.henriques@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
+Cc: Arnd Bergmann <arnd@arndb.de>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 14, 2013 at 2:41 PM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
->
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> Remove unneeded error handling on the result of a call to
-> platform_get_resource when the value is passed to devm_ioremap_resource.
->
-> A debugging statement in the error-handling code is removed as well, as it
-> doesn't seem to give any more information than devm_ioremap_resource
-> already gives.
->
-> A simplified version of the semantic patch that makes this change is as
-> follows: (http://coccinelle.lip6.fr/)
->
-> // <smpl>
-> @@
-> expression pdev,res,n,e,e1;
-> expression ret != 0;
-> identifier l;
-> @@
->
-> - res = platform_get_resource(pdev, IORESOURCE_MEM, n);
->   ... when != res
-> - if (res == NULL) { ... \(goto l;\|return ret;\) }
->   ... when != res
-> + res = platform_get_resource(pdev, IORESOURCE_MEM, n);
->   e = devm_ioremap_resource(e1, res);
-> // </smpl>
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> ---
->  drivers/scsi/ufs/ufshcd-pltfrm.c |    7 -------
->  1 file changed, 7 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> index c42db40..ea699b9 100644
-> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> @@ -102,15 +102,8 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
->         struct device *dev = &pdev->dev;
->
->         mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> -       if (!mem_res) {
-> -               dev_err(dev, "Memory resource not available\n");
-> -               err = -ENODEV;
-> -               goto out;
-> -       }
-> -
->         mmio_base = devm_ioremap_resource(dev, mem_res);
->         if (IS_ERR(mmio_base)) {
-> -               dev_err(dev, "memory map failed\n");
->                 err = PTR_ERR(mmio_base);
->                 goto out;
->         }
->
+3.5.7.19 -stable review patch.  If anyone has any objections, please let me know.
 
-Redundant error message and error handling have been removed in the
-patches submitted by 'Wei Yongjun' and 'Wolfram Sang'.
+------------------
 
-1. http://www.spinics.net/lists/linux-scsi/msg67557.html
-2. http://www.spinics.net/lists/linux-scsi/msg67558.html
+From: Arnd Bergmann <arnd@arndb.de>
 
-thanks anyway... :-)
+commit b497ceb964a80ebada3b9b3cea4261409039e25a upstream.
 
+ARM cannot handle udelay for more than 2 miliseconds, so we
+should use mdelay instead for those.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: GOTO Masanori <gotom@debian.or.jp>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+---
+ drivers/scsi/nsp32.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 62b6168..e705ed3 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -2926,7 +2926,7 @@ static void nsp32_do_bus_reset(nsp32_hw_data *data)
+ 	 * reset SCSI bus
+ 	 */
+ 	nsp32_write1(base, SCSI_BUS_CONTROL, BUSCTL_RST);
+-	udelay(RESET_HOLD_TIME);
++	mdelay(RESET_HOLD_TIME / 1000);
+ 	nsp32_write1(base, SCSI_BUS_CONTROL, 0);
+ 	for(i = 0; i < 5; i++) {
+ 		intrdat = nsp32_read2(base, IRQ_STATUS); /* dummy read */
 -- 
-~Santosh
+1.8.3.2
