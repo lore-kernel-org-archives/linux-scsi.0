@@ -1,31 +1,55 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Incorrect LBA Returned from scsi_get_lba() and blk_rq_pos() (Possible DIF Impact)
-Date: Wed, 14 Aug 2013 16:25:22 -0400
-Message-ID: <yq161v8ggul.fsf@sermon.lab.mkp.net>
-References: <340C71CD25A7EB49BFA81AE8C83926671B2EFFD6@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-	<yq1halhmmjr.fsf@sermon.lab.mkp.net>
-	<405BE55790F03349A85344435F25B01C07A85C02@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/1] cciss: set max scatter gather entries to 32 on P600
+Date: Wed, 14 Aug 2013 15:52:36 -0500
+Message-ID: <20130814205236.GB23042@beardog.cce.hp.com>
+Reply-To: mike.miller@hp.com, mikem@thumper.usa.hp.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29939 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758395Ab3HNUZc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2013 16:25:32 -0400
-In-Reply-To: <405BE55790F03349A85344435F25B01C07A85C02@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-	(Kamaljit Singh's message of "Tue, 13 Aug 2013 14:43:36 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>
+Cc: LKML-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, thenzl@redhat.com, bubrown@redhat.com, scameron@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: Kamaljit Singh <Kamaljit.Singh@pmcs.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sami Waheed <Sami.Waheed@pmcs.com>, linux-scsi@vger.kernel.org
 
->>>>> "Kamaljit" == Kamaljit Singh <Kamaljit.Singh@pmcs.com> writes:
+Patch 1/1
 
-Kamaljit> Did you get a chance to merge your changes into mainline?  I'm
-Kamaljit> using 3.10.4 and am still seeing this issue.
+From: Mike Miller <mike.miller@hp.com>
 
-Thanks for the reminder. No, I'm still sitting on some PI patches that
-need to be merged. Will fix!
+At one time we used to set the maximum number of scatter gather elements on 
+all Smart Array controllers to 32. At some point in time the firmware began 
+to write the "appropriate" value for each controller into the config table. 
+The cciss driver would then read that and set h->maxsgentries.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+        h->maxsgentries = readl(&(h->cfgtable->MaxSGElements);
+
+On the P600 that value is 544. Under some workloads a significant 
+performance reduction may result. This patch forces the P600 to use only 32 
+scatter gather elements. Other controllers are not affected.
+
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+Signed-off-by: Dwight (Bud) Brown <bubrown@redhat.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Acked-by: Stephen M. Cameron <steve.cameron@hp.com>
+---
+ drivers/block/cciss.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 62b6c2c..d2d95ff 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -4258,6 +4258,13 @@ static void cciss_find_board_params(ctlr_info_t *h)
+ 	h->nr_cmds = h->max_commands - 4 - cciss_tape_cmds;
+ 	h->maxsgentries = readl(&(h->cfgtable->MaxSGElements));
+ 	/*
++	 * The P600 may exhibit poor performnace under some workloads
++	 * if we use the value in the configuration table. Limit this
++	 * controller to MAXSGENTRIES (32) instead.
++	 */
++	if (h->board_id == 0x3225103C)
++		h->maxsgentries = MAXSGENTRIES;
++	/*
+ 	 * Limit in-command s/g elements to 32 save dma'able memory.
+ 	 * Howvever spec says if 0, use 31
+ 	 */
