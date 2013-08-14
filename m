@@ -1,48 +1,33 @@
-From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [PATCH 74/75] [SCSI] nsp32: use mdelay instead of large udelay constants
-Date: Wed, 14 Aug 2013 11:37:03 +0100
-Message-ID: <1376476624-10011-75-git-send-email-luis.henriques@canonical.com>
-References: <1376476624-10011-1-git-send-email-luis.henriques@canonical.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1376476624-10011-1-git-send-email-luis.henriques@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
-Cc: Arnd Bergmann <arnd@arndb.de>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH RFC 00/51] Preview of DMA mask changes
+Date: Wed, 14 Aug 2013 11:38:46 +0100
+Message-ID: <20130814103845.GO23006@n2100.arm.linux.org.uk>
+References: <20130801213420.GL23006@n2100.arm.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20130801213420.GL23006@n2100.arm.linux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jens Axboe <axboe@kernel.dk>, Nicolas Pitre <nicolas.pitre@linaro.org>, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org, Chris Ball <cjb@laptop.org>
 List-Id: linux-scsi@vger.kernel.org
 
-3.5.7.19 -stable review patch.  If anyone has any objections, please let me know.
+On Thu, Aug 01, 2013 at 10:34:20PM +0100, Russell King - ARM Linux wrote:
+> So, this patch set is a preview of the DMA mask changes which I currently
+> have in my tree.
 
-------------------
-
-From: Arnd Bergmann <arnd@arndb.de>
-
-commit b497ceb964a80ebada3b9b3cea4261409039e25a upstream.
-
-ARM cannot handle udelay for more than 2 miliseconds, so we
-should use mdelay instead for those.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Acked-by: GOTO Masanori <gotom@debian.or.jp>
-Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
----
- drivers/scsi/nsp32.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index 62b6168..e705ed3 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -2926,7 +2926,7 @@ static void nsp32_do_bus_reset(nsp32_hw_data *data)
- 	 * reset SCSI bus
- 	 */
- 	nsp32_write1(base, SCSI_BUS_CONTROL, BUSCTL_RST);
--	udelay(RESET_HOLD_TIME);
-+	mdelay(RESET_HOLD_TIME / 1000);
- 	nsp32_write1(base, SCSI_BUS_CONTROL, 0);
- 	for(i = 0; i < 5; i++) {
- 		intrdat = nsp32_read2(base, IRQ_STATUS); /* dummy read */
--- 
-1.8.3.2
+Looking at the comments which this patch set has received, I see very
+little in the way of feedback.  So I think it's time to move to the
+next stage.  I will be re-posting these with a [PATCH] tag, with the
+appropriate CC's, and putting them into linux-next a few days after
+assuming no objections to them are forthcoming.
