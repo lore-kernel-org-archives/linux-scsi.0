@@ -1,110 +1,80 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: RE: [PATCH] [SCSI] mpt3sas: Added a driver module parameter
- max_msix_vectors
-Date: Wed, 14 Aug 2013 21:08:05 +0530
-Message-ID: <DCD177647606E9419ED923E0C8C4AA723006D280C2@inbmail02.lsi.com>
-References: <20130814125320.GA3402@lsi.com> <520B9F99.1000003@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Ben Collins <ben.c@servergy.com>
+Subject: State of big-endian for MegaRAID SAS driver
+Date: Wed, 14 Aug 2013 12:57:35 -0400
+Message-ID: <658ABE5F-B2AA-4EC1-BC34-B4FD428C7A8E@servergy.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from co1ehsobe005.messaging.microsoft.com ([216.32.180.188]:55287
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758380Ab3HNPiO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Aug 2013 11:38:14 -0400
-In-Reply-To: <520B9F99.1000003@redhat.com>
-Content-Language: en-US
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:58969 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932867Ab3HNQ5i convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2013 12:57:38 -0400
+Received: by mail-pa0-f47.google.com with SMTP id kl13so2659853pab.20
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2013 09:57:37 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+To: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Tomas,
+Hi folks,
 
-The crash happens when the kernel couldn't allocate the DMA'able memory that the driver requests for Reply Descriptor post queue. The amount of memory allocated is directly proportional to the HBA queue depth and the number of MSI-X vectors. 
+Based on some searching, back when the megaraid_sas driver was first introduced in 2005, issues were raised with the lack of support for big-endian architectures[1]. In this conversation, it was said that LSI would revisit this later, and thus the driver was included without support for big-endian architectures. Here it is 8 years later, and I'm wondering if this will ever get resolved.
 
-The indirect fix for this issue is to add a module parameter max_msix_vectors to the driver. Using this module parameter the max number of MSI-X vectors could be set. The amount of memory that is allocated could be decreased by reducing the number of MSI-X vectors. Therefore if a crash is seen on a system due to the memory allocation failure, then max_queue_depth and the max_msix_vectors could be set to a lower value during driver load time so that the memory requested by the driver is less and thereby preventing the kernel crash.
+The platform in question is a 32-bit powerpc system. I've already fixed one issue with regard to inaccurate assumptions about pci resource sizes (attached). Basically, it is possible for 32-bit systems to support 64-bit PCI resources (as is the case on this system). I'll submit it properly at some point, or feel free to snip it off from here. I've already fixed the aacraid SRC support on this hardware (same resource size assumptions and big-endian fixes), and I'm hoping to do the same with megaraid_sas (at least as it pertains to the gen2 card).
 
-So, lower  the value of this variable 'max_msix_vectors' only if  kernel couldn't allocate the DMA'able memory that the driver requests for and crash is observed.
+I notice that LSI does support a Solaris/SPARCv9 driver for mr_sas, so I know that there is at least some base knowledge and working expertise on supporting big-endian. Any chance of the Solaris driver source being tossed out to get a look a what it will take to get the Linux driver in working order.
 
-Regards,
-Sreekanth
+[1]: http://lkml.indiana.edu/hypermail/linux/kernel/0506.0/1525.html
 
->-----Original Message-----
->From: Tomas Henzl [mailto:thenzl@redhat.com]
->Sent: Wednesday, August 14, 2013 8:48 PM
->To: Reddy, Sreekanth
->Cc: jejb@kernel.org; JBottomley@Parallels.com; linux-scsi@vger.kernel.org;
->Nandigama, Nagalakshmi
->Subject: Re: [PATCH] [SCSI] mpt3sas: Added a driver module parameter
->max_msix_vectors
->
->On 08/14/2013 02:53 PM, Sreekanth Reddy wrote:
->> Added a driver module parameter max_msix_vectors. Using this module
->> parameter the maximum number of MSI-X vectors could be set.
->>
->> The number of MSI-X vectors used would be the minimum of MSI-X vectors
->> supported by the HBA, the number of CPU cores and the value set to
->max_msix_vectors module parameter.
->>
->> The default value of this module parameter is set to 8. The default
->> value of this parameter is set to 8 inorder to reduce the amount of memory
->required for Reply Descriptor Post queue.
->> This is because with the higher MSI-X vectors, some times kernel is
->> not able to allocate the requested amount of memory and crash is
->> observed. To overcome this problem, the default value is set to 8.
->
->Hi Sreekanth,
->I don't know exactly which allocation fails, but wouldn't be for the user better
->to just try to allocate and only when it fails lower the msi-x vectors count?
->Tomas
->
->>
->> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
->> ---
->>
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
->> b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> index a32d63b..d40ba0b 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> @@ -82,6 +82,10 @@ static int msix_disable = -1;
->> module_param(msix_disable, int, 0);  MODULE_PARM_DESC(msix_disable,
->"
->> disable msix routed interrupts (default=0)");
->>
->> +static int max_msix_vectors = 8;
->> +module_param(max_msix_vectors, int, 0);
->> +MODULE_PARM_DESC(max_msix_vectors,
->> +	" max msix vectors - (default=8)");
->>
->>  static int mpt3sas_fwfault_debug;
->>  MODULE_PARM_DESC(mpt3sas_fwfault_debug,
->> @@ -1723,6 +1727,16 @@ _base_enable_msix(struct MPT3SAS_ADAPTER
->*ioc)
->>  	ioc->reply_queue_count = min_t(int, ioc->cpu_count,
->>  	    ioc->msix_vector_count);
->>
->> +	printk(MPT3SAS_FMT "MSI-X vectors supported: %d, no of cores"
->> +	  ": %d, max_msix_vectors: %d\n", ioc->name, ioc-
->>msix_vector_count,
->> +	  ioc->cpu_count, max_msix_vectors);
->> +
->> +	if (max_msix_vectors > 0) {
->> +		ioc->reply_queue_count = min_t(int, max_msix_vectors,
->> +			ioc->reply_queue_count);
->> +		ioc->msix_vector_count = ioc->reply_queue_count;
->> +	}
->> +
->>  	entries = kcalloc(ioc->reply_queue_count, sizeof(struct msix_entry),
->>  	    GFP_KERNEL);
->>  	if (!entries) {
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
->> in the body of a message to majordomo@vger.kernel.org More majordomo
->> info at  http://vger.kernel.org/majordomo-info.html
->
+megaraid_sas: Fix assumptions about PCI resource sizes
 
+Signed-off-by: Ben Collins <ben.c@servergy.com>
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 04a42a5..f509d14 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1460,7 +1460,6 @@ struct megasas_instance {
+ 	u32 *reply_queue;
+ 	dma_addr_t reply_queue_h;
+ 
+-	unsigned long base_addr;
+ 	struct megasas_register_set __iomem *reg_set;
+ 	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
+ 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 1f0ca68..5df5522 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3498,6 +3498,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	u32 max_sectors_1;
+ 	u32 max_sectors_2;
+ 	u32 tmp_sectors, msix_enable, scratch_pad_2;
++	resource_size_t base_addr;
+ 	struct megasas_register_set __iomem *reg_set;
+ 	struct megasas_ctrl_info *ctrl_info;
+ 	unsigned long bar_list;
+@@ -3506,14 +3507,14 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	/* Find first memory bar */
+ 	bar_list = pci_select_bars(instance->pdev, IORESOURCE_MEM);
+ 	instance->bar = find_first_bit(&bar_list, sizeof(unsigned long));
+-	instance->base_addr = pci_resource_start(instance->pdev, instance->bar);
+ 	if (pci_request_selected_regions(instance->pdev, instance->bar,
+ 					 "megasas: LSI")) {
+ 		printk(KERN_DEBUG "megasas: IO memory region busy!\n");
+ 		return -EBUSY;
+ 	}
+ 
+-	instance->reg_set = ioremap_nocache(instance->base_addr, 8192);
++	base_addr = pci_resource_start(instance->pdev, instance->bar);
++	instance->reg_set = ioremap_nocache(base_addr, 8192);
+ 
+ 	if (!instance->reg_set) {
+ 		printk(KERN_DEBUG "megasas: Failed to map IO mem\n");
+
+
+--
+Ben Collins - Principal Architect
+Servergy, Inc. - www.servergy.com
 
