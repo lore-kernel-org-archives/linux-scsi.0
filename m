@@ -1,54 +1,43 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 1/1] cciss: set max scatter gather entries to 32 on P600
-Date: Wed, 14 Aug 2013 21:41:14 +0000
-Message-ID: <48275AD710FCA34184C2B6186B4016B32735BD62@G6W2491.americas.hpqcorp.net>
-References: <20130814205236.GB23042@beardog.cce.hp.com>
- <1376515627.2028.41.camel@dabdike.int.hansenpartnership.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
+Date: Thu, 15 Aug 2013 09:33:28 +0800
+Message-ID: <520C2FE8.90009@intel.com>
+References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com> <1374731223-28685-3-git-send-email-aaron.lu@intel.com> <20130725145229.GB26107@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1376515627.2028.41.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "mikem@thumper.usa.hp.com" <mikem@thumper.usa.hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, LKML-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "thenzl@redhat.com" <thenzl@redhat.com>, "bubrown@redhat.com" <bubrown@redhat.com>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20130725145229.GB26107@mtj.dyndns.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Wu <jeff.wu@amd.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
-Sent: Wednesday, August 14, 2013 4:27 PM
-To: Miller, Mike (OS Dev); mikem@thumper.usa.hp.com
-Cc: Andrew Morton; Jens Axboe; LKML-scsi; LKML; thenzl@redhat.com; bubrown@redhat.com; scameron@beardog.cce.hp.com
-Subject: Re: [PATCH 1/1] cciss: set max scatter gather entries to 32 on P600
-
-On Wed, 2013-08-14 at 15:52 -0500, Mike Miller wrote:
-> Patch 1/1
+On 07/25/2013 10:52 PM, Tejun Heo wrote:
+> On Thu, Jul 25, 2013 at 01:47:03PM +0800, Aaron Lu wrote:
+>> Binding ACPI handle to SCSI device has several drawbacks, namely:
+>> 1 During ATA device initialization time, ACPI handle will be needed
+>>   while SCSI devices are not created yet. So each time ACPI handle is
+>>   needed, instead of retrieving the handle by ACPI_HANDLE macro,
+>>   a namespace scan is performed to find the handle for the corresponding
+>>   ATA device. This is inefficient, and also expose a restriction on
+>>   calling path not holding any lock.
+>> 2 The binding to SCSI device tree makes code complex, while at the same
+>>   time doesn't bring us any benefit. All ACPI handlings are still done
+>>   in ATA module, not in SCSI.
+>>
+>> Rework the ATA ACPI binding code to bind ACPI handle to ATA transport
+>> devices(ATA port and ATA device). The binding needs to be done only once,
+>> since the ATA transport devices do not go away with hotplug. And due to
+>> this, the flush_work call in hotplug handler for ATA bay is no longer
+>> needed.
 > 
-> From: Mike Miller <mike.miller@hp.com>
-> 
-> At one time we used to set the maximum number of scatter gather 
-> elements on all Smart Array controllers to 32. At some point in time 
-> the firmware began to write the "appropriate" value for each controller into the config table.
-> The cciss driver would then read that and set h->maxsgentries.
-> 
->         h->maxsgentries = readl(&(h->cfgtable->MaxSGElements);
-> 
-> On the P600 that value is 544. Under some workloads a significant 
-> performance reduction may result. This patch forces the P600 to use 
-> only 32 scatter gather elements. Other controllers are not affected.
-> 
-> Signed-off-by: Mike Miller <mike.miller@hp.com>
-> Signed-off-by: Dwight (Bud) Brown <bubrown@redhat.com>
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> Acked-by: Stephen M. Cameron <steve.cameron@hp.com>
+> I like it but am wondering why we weren't doing this before.  Was the
+> acpi support added before we made ata objects proper devices?
+ 
+Hi Tejun,
 
-I don't quite understand the signoff chain on this patch.  For a one line patch, are you saying it has three authors?
+This has been quiet for some time, may I know your opinion on this?
 
-James
-
-The patch origin is unknown. I got it from Tomas and Bud who think it may have originated from HP. I cleaned it up, compile tested it, and sent it on. I'll review my procedures for future patches.
-
--- mikem
+Thanks,
+Aaron
