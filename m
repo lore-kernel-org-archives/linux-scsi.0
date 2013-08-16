@@ -1,48 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Fri, 16 Aug 2013 10:46:20 -0700
-Message-ID: <1376675180.5171.238.camel@haakon3.risingtidesystems.com>
-References: <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
-	 <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
-	 <1374248000.2266.20.camel@dabdike>
-	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
-	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
-	 <51EAA33C.9010405@fusionio.com>
-	 <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
-	 <1376079457.5171.172.camel@haakon3.risingtidesystems.com>
-	 <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
-	 <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
-	 <20130816164156.GA14582@dhcp-26-207.brq.redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
+Date: Fri, 16 Aug 2013 19:18:12 +0000
+Message-ID: <bug-60758-11613-UAYEtAPARC@https.bugzilla.kernel.org/>
+References: <bug-60758-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20130816164156.GA14582@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Mike Christie <mchristie@fusionio.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:53439 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752758Ab3HQAFJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Aug 2013 20:05:09 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 0DFED2028D
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2013 19:18:14 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 7CFAC202E8
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2013 19:18:12 +0000 (UTC)
+In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2013-08-16 at 18:41 +0200, Alexander Gordeev wrote:
-> On Thu, Aug 15, 2013 at 07:19:29PM -0700, Nicholas A. Bellinger wrote:
-> > I'm playing with a patch to do this, but am currently getting hung-up on
-> > what appear to be some separate blk-mq reserved_tags > 0 bugs, the first
-> > of which is passing queue_depth=1 + reserved_tags=1 is broken, and
-> > results in tags->nr_free = 0.
-> 
-> That is not a bug - please look at Jens replies in this thread some week ago.
-> In short, queue_depth=1 means 1 tags in total and reserved_tags=1 results
-> in zero normal tags. You need to request the depth=2 and reserved_tags=1.
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=60758
 
-Ahhh, yes of course.  I'll re-work a proposed patch this afternoon with
-this in mind..
+--- Comment #1 from zakrzewskim@wp.pl ---
+My /etc/fstab:
 
-> But yes, this is a separate topic and I am looking forward to hear from Jens
-> wrt flushes.
-> 
+timeout 5
+default 0
 
-Indeed.  ;)
+title CentOS (3.10.6-1.el6.elrepo.x86_64)
+root (hd0,1)
+kernel /vmlinuz-3.10.6-1.el6.elrepo.x86_64 ro root=/dev/md2 rd_NO_LUKS rd_NO_DM
+nomodeset crashkernel=auto SYSFONT=latarcyrheb-sun16 LANG=en_US.UTF-8
+KEYTABLE=de
+initrd /initramfs-3.10.6-1.el6.elrepo.x86_64.img
 
---nab
+title CentOS (3.10.4-1.el6.elrepo.x86_64)
+root (hd0,1)
+kernel /vmlinuz-3.10.4-1.el6.elrepo.x86_64 ro root=/dev/md2 rd_NO_LUKS rd_NO_DM
+nomodeset crashkernel=auto SYSFONT=latarcyrheb-sun16 LANG=en_US.UTF-8
+KEYTABLE=de
+initrd /initramfs-3.10.4-1.el6.elrepo.x86_64.img
 
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
