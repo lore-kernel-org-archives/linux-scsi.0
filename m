@@ -1,87 +1,89 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Thu, 15 Aug 2013 19:19:29 -0700
-Message-ID: <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
-References: <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
-	 <20130719003034.GG28005@kernel.dk>
-	 <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
-	 <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
-	 <1374248000.2266.20.camel@dabdike>
-	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
-	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
-	 <51EAA33C.9010405@fusionio.com>
-	 <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
-	 <1376079457.5171.172.camel@haakon3.risingtidesystems.com>
-	 <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
+From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
+Subject: RE: [PATCH 05/16] megaraid: clean up unnecessary MSI/MSI-X
+ capability find
+Date: Fri, 16 Aug 2013 11:40:19 +0530
+Message-ID: <088E451FE1854947BD9145EF8C016FF413A00DC559@inbmail01.lsi.com>
+References: <1375967264-25644-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Mike Christie <mchristie@fusionio.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:5198
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751907Ab3HPGK2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Aug 2013 02:10:28 -0400
+In-Reply-To: <1375967264-25644-1-git-send-email-wangyijing@huawei.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>, "jiang.liu@huawei.com" <jiang.liu@huawei.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2013-08-15 at 18:23 +0200, Alexander Gordeev wrote:
-> On Fri, Aug 09, 2013 at 01:17:37PM -0700, Nicholas A. Bellinger wrote:
-> > On Fri, 2013-08-09 at 21:15 +0200, Alexander Gordeev wrote:
-> > Mmmm, I'm able to reproduce over here with ahci + scsi-mq, and it
-> > appears to be a bug related with using sdev->sdev_md_req.queue_depth=1,
-> > that ends up causing the blkdev_issue_flush() to wait forever because
-> > blk_mq_wait_for_tags() never ends up getting the single tag back for the
-> > WRITE_FLUSH bio -> SYNCHRONIZE_CACHE cdb.
-> 
-> It turns out this way - blkdev_issue_flush() claims the only tag, submits
-> the bio and waits for the completion. But because blk_mq_make_request()
-> does not mark any context in blk_mq_hw_ctx::ctx_map (nor enslists the request
-> into blk_mq_ctx::rq_list) it never gets processed from blk_mq_work_fn->
-> __blk_mq_run_hw_queue() and blkdev_issue_flush() waits endlessly. All other
-> requests are just waiting for the tag availability as result.
-> 
 
-Ok, here's a bit better idea of what is going on now..
 
-The problem is that blkdev_issue_flush() -> blk_mq_make_request() ->
-__blk_mq_alloc_request() allocates the first tag, which calls
-blk_insert_flush() -> blk_flush_complete_seq() -> blk_flush_kick() ->
-mq_flush_work() -> blk_mq_alloc_request() to allocate a second tag for
-the struct request that actually gets dispatched into scsi-mq as a
-SYCHRONIZE_CACHE command..
+>-----Original Message-----
+>From: Yijing Wang [mailto:wangyijing@huawei.com]
+>Sent: Thursday, August 08, 2013 6:38 PM
+>To: James E.J. Bottomley
+>Cc: Hanjun Guo; jiang.liu@huawei.com; Yijing Wang; DL-MegaRAID Linux;
+>linux-scsi@vger.kernel.org
+>Subject: [PATCH 05/16] megaraid: clean up unnecessary MSI/MSI-X
+>capability find
+>
+>PCI core will initialize device MSI/MSI-X capability in
+>pci_msi_init_pci_dev(). So device driver should use pci_dev-
+>>msi_cap/msix_cap to determine whether the device support MSI/MSI-X
+>instead of using pci_find_capability(pci_dev, PCI_CAP_ID_MSI/MSIX).
+>Access to PCIe device config space again will consume more time.
+>
+>Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+>Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+>Cc: linux-scsi@vger.kernel.org
+>---
+> drivers/scsi/megaraid/megaraid_sas_base.c |    9 ++++-----
+> 1 files changed, 4 insertions(+), 5 deletions(-)
+>
+>diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>b/drivers/scsi/megaraid/megaraid_sas_base.c
+>index 0177295..ad8fc44 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>@@ -4072,21 +4072,20 @@ fail_set_dma_mask:
+> static int megasas_probe_one(struct pci_dev *pdev,
+> 			     const struct pci_device_id *id)  {
+>-	int rval, pos, i, j;
+>+	int rval, i, j;
+> 	struct Scsi_Host *host;
+> 	struct megasas_instance *instance;
+> 	u16 control = 0;
+>
+> 	/* Reset MSI-X in the kdump kernel */
+> 	if (reset_devices) {
+>-		pos = pci_find_capability(pdev, PCI_CAP_ID_MSIX);
+>-		if (pos) {
+>-			pci_read_config_word(pdev, pos + PCI_MSIX_FLAGS,
+>+		if (pdev->msix_cap) {
+>+			pci_read_config_word(pdev, pdev->msix_cap +
+>PCI_MSIX_FLAGS,
+> 					     &control);
+> 			if (control & PCI_MSIX_FLAGS_ENABLE) {
+> 				dev_info(&pdev->dev, "resetting MSI-X\n");
+> 				pci_write_config_word(pdev,
+>-						      pos + PCI_MSIX_FLAGS,
+>+						      pdev->msix_cap +
+>PCI_MSIX_FLAGS,
+> 						      control &
+> 						      ~PCI_MSIX_FLAGS_ENABLE);
+> 			}
+>--
+>1.7.1
+>
+>
+Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
 
-I'm not exactly sure why this double tag usage of struct request is
-occurring, but AFAICT it does happen for every flush, and is not
-specific to the blkdev_issue_flush() codepath..  I'm sure that Jens can
-fill us in on that bit.  ;)
 
-So, assuming that this double tag usage is necessary and not a bug,
-perhaps using a reserved tag for the first tag (eg: the one that's not
-dispatched into scsi_mq_queue_rq) makes sense..?
+Sumit
 
-I'm playing with a patch to do this, but am currently getting hung-up on
-what appear to be some separate blk-mq reserved_tags > 0 bugs, the first
-of which is passing queue_depth=1 + reserved_tags=1 is broken, and
-results in tags->nr_free = 0.
-
-Here's the quick fix:
-
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index 6718007..ffdf686 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -470,7 +470,7 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
- 	 * Rest of the tags start at the queue list
- 	 */
- 	tags->nr_free = 0;
--	while (nr_tags - tags->nr_reserved) {
-+	while (nr_tags) {
- 		tags->freelist[tags->nr_free] = tags->nr_free +
- 							tags->nr_reserved;
- 		nr_tags--;
-
-Anyways, before digging further into reserved tags logic, Jens, what are
-your thoughts for addressing this special queue_depth=1 case for libata
-+ the like..?
-
---nab
 
