@@ -1,70 +1,58 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC PATCH] scsi: Add failfast mode to avoid infinite retry loop
-Date: Mon, 19 Aug 2013 07:30:16 -0700
-Message-ID: <1376922616.2069.9.camel@dabdike.int.hansenpartnership.com>
-References: <20130819093925.7867.19221.stgit@ltc223.sdl.hitachi.co.jp>
+Subject: Re: [PATCH 1/2] ufs-pltfrm: initialize DMA mask for device-tree
+ probed device
+Date: Mon, 19 Aug 2013 07:32:00 -0700
+Message-ID: <1376922720.2069.10.camel@dabdike.int.hansenpartnership.com>
+References: <1376920566-20325-1-git-send-email-mita@fixstars.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130819093925.7867.19221.stgit@ltc223.sdl.hitachi.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60525 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750876Ab3HSOcG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Aug 2013 10:32:06 -0400
+In-Reply-To: <1376920566-20325-1-git-send-email-mita@fixstars.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <mita@fixstars.com>
+Cc: linux-scsi@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>
 
-On Mon, 2013-08-19 at 18:39 +0900, Eiichi Tsukata wrote:
-> Hello,
+On Mon, 2013-08-19 at 22:56 +0900, Akinobu Mita wrote:
+> The device-tree probed device for ARM doesn't have dev->dma_mask.
+> So dma_set_mask() for the device doesn't succeed.  The popular trick
+> for this is - dev->dma_mask = &dev->coherent_dma_mask;
 > 
-> This patch adds scsi device failfast mode to avoid infinite retry loop.
+> Currently there is no dma_set_mask() call in ufs-pltfrm, but the
+> forthcoming fix needs proper DMA mask setting in ufs core driver.  So
+> initializing dev->dma_mask as described above is required.
 > 
-> Currently, scsi error handling in scsi_decide_disposition() and
-> scsi_io_completion() unconditionally retries on some errors. This is because
-> retryable errors are thought to be temporary and the scsi device will soon
-> recover from those errors. Normally, such retry policy is appropriate because
-> the device will soon recover from temporary error state.
-> But there is no guarantee that device is able to recover from error state
-> immediately. Some hardware error may prevent device from recovering.
-> Therefore hardware error can results in infinite command retry loop. In fact,
-> CHECK_CONDITION error with the sense-key = UNIT_ATTENTION caused infinite
-> retry loop in our environment. As the comments in kernel source code says,
-> UNIT_ATTENTION means the device must have been a power glitch and expected
-> to immediately recover from the state. But it seems that hardware error
-> caused permanent UNIT_ATTENTION error.
+> Signed-off-by: Akinobu Mita <mita@fixstars.com>
+> Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+> Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+> Cc: Santosh Y <santoshsy@gmail.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/scsi/ufs/ufshcd-pltfrm.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> To solve the above problem, this patch introduces scsi device "failfast mode".
-> If failfast mode is enabled, retry counts of all scsi commands are limited to
-> scsi->allowed(== SD_MAX_RETRIES == 5). All commands are prohibited to retry
-> infinitely, and immediately fails when the retry count exceeds upper limit.
-> Failfast mode is useful on mission critical systems which are required
-> to keep running flawlessly because they need to failover to the secondary
-> system once they detect failures.
-> On default, failfast mode is disabled because failfast policy is not suitable
-> for most use cases which can accept I/O latency due to device hardware error.
-> 
-> To enable failfast mode(default disabled):
->          # echo 1 > /sys/bus/scsi/devices/X:X:X:X/failfast
-> To disable:
->          # echo 0 > /sys/bus/scsi/devices/X:X:X:X/failfast
-> 
-> Furthermore, I'm planning to make the upper limit count configurable.
-> Currently, I have two plans to implement it:
-> (1) set same upper limit count on all errors.
-> (2) set upper limit count on each error.
-> The first implementation is simple and easy to implement but not flexible.
-> Someone wants to set different upper limit count on each errors depends on the
-> scsi device they use. The second implementation satisfies such requirement
-> but can be too fine-grained and annoying to configure because scsi error
-> codes are so much. The default 5 times retry may too much on some errors but
-> too few on other errors.
-> 
-> Which would be the appropriate implementation?
-> Any comments or suggestions are welcome as usual.
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> index 94ba40c..c780840 100644
+> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -122,6 +122,9 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
+>  		goto out;
+>  	}
+>  
+> +	if (!dev->dma_mask)
+> +		dev->dma_mask = &dev->coherent_dma_mask;
+> +
 
-I'm afraid you'll need to propose another solution.  We have a large
-selection of commands which, by design, retry until the command exceeds
-it's timeout.  UA is one of those (as are most of the others you're
-limiting).  How do you kick this device out of its UA return (because
-that's the recovery that needs to happen)?
+If the DMA mask is NULL, it means there's buggy platform code somewhere;
+I'm not sure we should be hacking a fix in a SCSI driver.
 
 James
+
+
