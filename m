@@ -1,145 +1,79 @@
-From: Akinobu Mita <mita@fixstars.com>
-Subject: [PATCH 2/2] ufs: fix DMA mask setting
-Date: Mon, 19 Aug 2013 22:56:06 +0900
-Message-ID: <1376920566-20325-2-git-send-email-mita@fixstars.com>
-References: <1376920566-20325-1-git-send-email-mita@fixstars.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH 2/4] scsi_debug: fix logical block provisioning support
+ when unmap_alignment != 0
+Date: Mon, 19 Aug 2013 23:16:18 +0900
+Message-ID: <CAC5umyh8+zBtKrpoFXdO+1D_5vOQS-P82LkocmaVY+FXb5YHRA@mail.gmail.com>
+References: <1373889127-17083-1-git-send-email-akinobu.mita@gmail.com>
+	<1373889127-17083-3-git-send-email-akinobu.mita@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo.fixstars.hdemail.jp ([176.34.54.138]:41702 "EHLO
-	mo.fixstars.hdemail.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070Ab3HSOBF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2013 10:01:05 -0400
-In-Reply-To: <1376920566-20325-1-git-send-email-mita@fixstars.com>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:38849 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745Ab3HSOQV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2013 10:16:21 -0400
+Received: by mail-oa0-f41.google.com with SMTP id j6so3636501oag.28
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Aug 2013 07:16:19 -0700 (PDT)
+In-Reply-To: <1373889127-17083-3-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <mita@fixstars.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-If the controller doesn't support 64-bit addressing mode, it must not
-set the DMA mask to 64-bit.  But it's unconditionally trying to set to
-64-bit without checking 64-bit addressing support in the controller
-capabilities.
+Hi Douglas, Martin,
 
-It was correctly checked before commit 3b1d05807a9a68c6d0580e9248247a774a4d3be6
-("[SCSI] ufs: Segregate PCI Specific Code"), this aims to restores
-the correct behaviour.
+Could you review this patch when you have a time?  I would like to
+submit at least this patch 2/4, and 1/4 which has already been acked
+by Douglas for the next merge window.
 
-To achieve this in a generic way, firstly we should push down the DMA
-mask setting routine ufshcd_set_dma_mask() from PCI glue driver to core
-driver in order to do it for both PCI glue driver and Platform glue
-driver.  Secondly, we should change pci_ DMA mapping API to dma_ DMA
-mapping API because core driver is independent of glue drivers.
+Although the patches 2/4 ~ 4/4 are all related to the logical block
+provisioning support, the problems that fixed by 3/4 and 4/4 only
+happen with virtual_gb option enabled, too.  On the other hand, the
+problem that fixed by 2/4 is easily reproduced by, for example,
+'modprobe scsi_debug lbpu=1 unmap_alignment=1 unmap_granularity=4'.
+So the patch 2/4 has rather higher severity than others.
 
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
-This patch was rejected because of the incorrect usage of dma_set_mask().
-Now it is fixed, but it also requires ufshcd-pltfrm change in the separate
-patch 1/2.
-
-In order to apply this patch cleanly, this patch depends on 
-'ufshcd-pci: release ioremapped region during removing driver' which
-has already acked by Santosh.
-
- drivers/scsi/ufs/ufshcd-pci.c | 26 --------------------------
- drivers/scsi/ufs/ufshcd.c     | 30 ++++++++++++++++++++++++++++++
- 2 files changed, 30 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index 2349c0e..91a2e79 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -96,26 +96,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- }
- 
- /**
-- * ufshcd_set_dma_mask - Set dma mask based on the controller
-- *			 addressing capability
-- * @pdev: PCI device structure
-- *
-- * Returns 0 for success, non-zero for failure
-- */
--static int ufshcd_set_dma_mask(struct pci_dev *pdev)
--{
--	int err;
--
--	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
--		&& !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
--		return 0;
--	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
--	if (!err)
--		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
--	return err;
--}
--
--/**
-  * ufshcd_pci_probe - probe routine of the driver
-  * @pdev: pointer to PCI device handle
-  * @id: PCI device id
-@@ -145,12 +125,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	mmio_base = pcim_iomap_table(pdev)[0];
- 
--	err = ufshcd_set_dma_mask(pdev);
--	if (err) {
--		dev_err(&pdev->dev, "set dma mask failed\n");
--		return err;
--	}
--
- 	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
- 	if (err) {
- 		dev_err(&pdev->dev, "Initialization failed\n");
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index bd4d418..1f37c36 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1667,6 +1667,30 @@ void ufshcd_remove(struct ufs_hba *hba)
- EXPORT_SYMBOL_GPL(ufshcd_remove);
- 
- /**
-+ * ufshcd_set_dma_mask - Set dma mask based on the controller
-+ *			 addressing capability
-+ * @hba: per adapter instance
-+ *
-+ * Returns 0 for success, non-zero for failure
-+ */
-+static int ufshcd_set_dma_mask(struct ufs_hba *hba)
-+{
-+	int err;
-+
-+	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
-+		if (!dma_set_mask(hba->dev, DMA_BIT_MASK(64))) {
-+			dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(64));
-+			return 0;
-+		}
-+	}
-+	err = dma_set_mask(hba->dev, DMA_BIT_MASK(32));
-+	if (!err)
-+		dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(32));
-+
-+	return err;
-+}
-+
-+/**
-  * ufshcd_init - Driver initialization routine
-  * @dev: pointer to device handle
-  * @hba_handle: driver private handle
-@@ -1717,6 +1741,12 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 	/* Get Interrupt bit mask per version */
- 	hba->intr_mask = ufshcd_get_intr_mask(hba);
- 
-+	err = ufshcd_set_dma_mask(hba);
-+	if (err) {
-+		dev_err(hba->dev, "set dma mask failed\n");
-+		goto out_disable;
-+	}
-+
- 	/* Allocate memory for host memory space */
- 	err = ufshcd_memory_alloc(hba);
- 	if (err) {
--- 
-1.8.3.1
-
+2013/7/15 Akinobu Mita <akinobu.mita@gmail.com>:
+> Commit b90ebc3d5c41c9164ae04efd2e4f8204c2a186f1 ("[SCSI] scsi_debug:
+> fix logical block provisioning support") fixed several issues with
+> logical block provisioning support, but it still doesn't properly fix
+> the cases when unmap_alignment > 0.  (for example, unmap_alignment=1
+> and unmap_granularity=3)
+>
+> The problem is in map_index_to_lba(), which should return the first
+> LBA which is corresponding to a given index of provisioning map
+> (map_storep).
+>
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/scsi/scsi_debug.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 2f39b13..01c0ffa 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -1997,8 +1997,14 @@ static unsigned long lba_to_map_index(sector_t lba)
+>
+>  static sector_t map_index_to_lba(unsigned long index)
+>  {
+> -       return index * scsi_debug_unmap_granularity -
+> -               scsi_debug_unmap_alignment;
+> +       sector_t lba = index * scsi_debug_unmap_granularity;
+> +
+> +       if (scsi_debug_unmap_alignment) {
+> +               lba -= scsi_debug_unmap_granularity -
+> +                       scsi_debug_unmap_alignment;
+> +       }
+> +
+> +       return lba;
+>  }
+>
+>  static unsigned int map_state(sector_t lba, unsigned int *num)
+> --
+> 1.8.3.1
+>
