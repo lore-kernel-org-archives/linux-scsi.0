@@ -1,114 +1,49 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: aic94xx and kernel panic
-Date: Mon, 19 Aug 2013 14:25:43 +0200
-Message-ID: <52120EC7.60800@gmail.com>
-References: <520DE220.8040207@inbox.ru> <5211D144.9010703@gmail.com> <521200DA.5020601@inbox.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Akinobu Mita <mita@fixstars.com>
+Subject: [PATCH 1/2] ufs-pltfrm: initialize DMA mask for device-tree probed device
+Date: Mon, 19 Aug 2013 22:56:05 +0900
+Message-ID: <1376920566-20325-1-git-send-email-mita@fixstars.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:44800 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583Ab3HSMZe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2013 08:25:34 -0400
-Received: by mail-bk0-f53.google.com with SMTP id d7so1370104bkh.26
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Aug 2013 05:25:33 -0700 (PDT)
-In-Reply-To: <521200DA.5020601@inbox.ru>
+Received: from mo.fixstars.hdemail.jp ([176.34.54.138]:41689 "EHLO
+	mo.fixstars.hdemail.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750837Ab3HSOBE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2013 10:01:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Evgeny <sys64@inbox.ru>
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <mita@fixstars.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+
+The device-tree probed device for ARM doesn't have dev->dma_mask.
+So dma_set_mask() for the device doesn't succeed.  The popular trick
+for this is - dev->dma_mask = &dev->coherent_dma_mask;
+
+Currently there is no dma_set_mask() call in ufs-pltfrm, but the
+forthcoming fix needs proper DMA mask setting in ufs core driver.  So
+initializing dev->dma_mask as described above is required.
+
+Signed-off-by: Akinobu Mita <mita@fixstars.com>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Santosh Y <santoshsy@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 94ba40c..c780840 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -122,6 +122,9 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
+ 		goto out;
+ 	}
+ 
++	if (!dev->dma_mask)
++		dev->dma_mask = &dev->coherent_dma_mask;
++
+ 	err = ufshcd_init(dev, &hba, mmio_base, irq);
+ 	if (err) {
+ 		dev_err(dev, "Intialization failed\n");
+-- 
+1.8.3.1
 
-
-On 08/19/2013 01:26 PM, Evgeny wrote:
-> I've tried 3.10.2 and it's also affected.
->=20
-> Could you recommend something else?
-
-Could you enable LIST_DEBUG in your kernel hacking and retry?
-
-It looks like it bug_on list not empty as expected, some ascb->list may
-need
-&asd_ha->seq.pend_q_lock protection, you need to figure out your self.
-
-PS: the aic94xx is out of maintain for some years as I see. You may nee=
-d
-to update to newer hardware.
-
-Jack
-
->=20
->=20
-> 19.08.2013 12:03, Jack Wang =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
->> On 08/16/2013 10:26 AM, Evgeny wrote:
->>> Hello.
->>>
->>> I've been testing vanilla 3.4.45 (config attached), 3.4.56 kernels =
-on
->>> centos 5.9 with Adaptec AIC-9410W SAS controller:
->> There's some fix in libsas about error handle ,  As I remember most =
-of
->> patch finally merged in 3.7, could you try newer kernel?
->>
->> KR
->> Jack
->>> ------------
->>> 09:02.0 RAID bus controller: Adaptec AIC-9410W SAS (Razor ASIC RAID=
-)
->>> (rev 09)
->>>      Subsystem: Super Micro Computer Inc Device 9280
->>>      Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- Pa=
-rErr+
->>> Stepping- SERR+ FastB2B- DisINTx-
->>>      Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=3Dslow >TAbor=
-t-
->>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>      Latency: 64 (32000ns min, 26750ns max), Cache Line Size: 32 by=
-tes
->>>      Interrupt: pin A routed to IRQ 18
->>>      Region 0: Memory at d8300000 (64-bit, non-prefetchable) [size=3D=
-256K]
->>>      Region 2: Memory at d8000000 (64-bit, prefetchable) [size=3D12=
-8K]
->>>      Region 4: I/O ports at 3000 [size=3D256]
->>>      [virtual] Expansion ROM at d8080000 [disabled] [size=3D512K]
->>>      Capabilities: [40] PCI-X non-bridge device
->>>          Command: DPERE- ERO- RBC=3D4096 OST=3D8
->>>          Status: Dev=3D09:02.0 64bit+ 133MHz+ SCD- USC- DC=3Dsimple
->>> DMMRBC=3D4096 DMOST=3D8 DMCRS=3D128 RSCEM- 266MHz- 533MHz-
->>>      Capabilities: [58] Power Management version 2
->>>          Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
->>> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->>>          Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
->>>      Capabilities: [e0] MSI: Enable- Count=3D1/4 Maskable- 64bit+
->>>          Address: 0000000000000000  Data: 0000
->>>      Kernel driver in use: aic94xx
->>>      Kernel modules: aic94xx
->>> ----------
->>>
->>> Under a heavy load made by bonnie:
->>>
->>> ----------
->>> bonnie++ -d /tmp/test -x 10000 -s 24g -u root
->>> ----------
->>>
->>> after 8-14 hours system gets kernel panic (log attached).
->>>
->>> Could anyone help with it?
->>>
->>>
->>> Thanks!
->>> Evgeny
->> --=20
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
