@@ -1,113 +1,187 @@
-From: Ben Collins <ben.c@servergy.com>
-Subject: Re: State of big-endian for MegaRAID SAS driver
-Date: Mon, 19 Aug 2013 13:25:16 -0400
-Message-ID: <3DA40821-A3AC-45CA-BD22-995EA256837A@servergy.com>
-References: <658ABE5F-B2AA-4EC1-BC34-B4FD428C7A8E@servergy.com> <yq1zjskgn1x.fsf@sermon.lab.mkp.net> <D354E621-BEFA-4010-B5CF-4668939AAEB0@servergy.com> <yq1eh9wgiqo.fsf@sermon.lab.mkp.net> <FE68512D-F375-456B-948A-492634A02F0F@servergy.com> <yq1haeqcuce.fsf@sermon.lab.mkp.net> <088E451FE1854947BD9145EF8C016FF413A017B456@inbmail01.lsi.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Yorke Spingel <yorkekie483@yahoo.com>
+Subject: Btw! So I am looking around for boyfriend!
+Date: Mon, 19 Aug 2013 11:00:16 -0700 (PDT)
+Message-ID: <1376935216.56756.YahooMailNeo@web164501.mail.gq1.yahoo.com>
+Reply-To: Yorke Spingel <kasaetyypyotr@photofile.ru>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="792791180-288396344-1376935216=:56756"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:42113 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750906Ab3HSRZS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2013 13:25:18 -0400
-Received: by mail-pb0-f45.google.com with SMTP id mc17so5191995pbc.4
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Aug 2013 10:25:17 -0700 (PDT)
-In-Reply-To: <088E451FE1854947BD9145EF8C016FF413A017B456@inbmail01.lsi.com>
+Received: from nm25-vm10.bullet.mail.gq1.yahoo.com ([98.136.217.121]:31492
+	"EHLO nm25-vm10.bullet.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751076Ab3HSSHI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Aug 2013 14:07:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, linux-scsi <linux-scsi@vger.kernel.org>, "aradford@gmail.com" <aradford@gmail.com>
+To: linux-scsi@vger.kernel.org
 
-On Aug 19, 2013, at 7:16 AM, "Saxena, Sumit" <Sumit.Saxena@lsi.com> wro=
-te:
-> This patch: Big endian support for megaraid_sas driver is not complet=
-e. In few areas, we need to do changes like this patch does not have ch=
-anges for Thunderbolt/invader/Fury controllers(file: megaraid_sas_fusio=
-n.c), and needs few changes in file: megaraid_sas_fp.c(while host reads=
- some member of raidmap, it needs endianness change there also)..
->=20
-> LSI has megaraid_sas driver with big endian support for driver versio=
-n "06.506.00.00". But to add big endian support for latest upstream meg=
-araid_sas driver (06.600.18.00), we need to make some more changes.
-> We will get back with big endian support patch on top of latest upstr=
-eam megaraid_sas driver.
->=20
+--792791180-288396344-1376935216=:56756
+Content-Type: text/plain; charset=us-ascii
 
-Is this work-in-progress available somewhere? What is the time frame yo=
-u expect to have this supported by LSI directly? Based on the fact that=
- big-endian support in megaraid_sas is 8 years in the making, forgive m=
-e if I'm a little skeptical of progress in the near term.
+svhvmgtk qokfkphyhx cgeervlpa
+nuuzsb qmtkl xhycb
+uab G O C N R A I Y O R W P J
+nvojk V A Q G C V A A T E E T L
+owqgo mwdgf vatnnhqlribpjs
+urwlvvxtwz cdicwumq yzcvurcw
+pxrup X O M F V K R D E D S P F G Q
+khefurakxiysphqoh B G R Y U I C Z T U I D S L C U K
+--792791180-288396344-1376935216=:56756
+Content-Type: image/jpeg; name="qroxx.jpg"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="qroxx.jpg"
 
-I realize that the big-endian patch from Martin isn't complete for fusi=
-on, but it is for other cards. Given that our company has a POWER based=
- product using MegaRAID LSI SAS due on the market in a matter of months=
-, I'd like to have stock kernels supporting it sooner rather than later=
-=2E
+/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsL
+DBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/
+2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy
+MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCADiASwDASIAAhEBAxEB/8QA
+HwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUF
+BAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkK
+FhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1
+dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXG
+x8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEB
+AQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAEC
+AxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRom
+JygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOE
+hYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU
+1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDss0ZqPNGa
+6Wc4uaM03NGakpDqKbRUlD6UGmg0uakodmjNNzRmkMeDTwahBp4NFwJM0uaj
+zSg0rgP4C8V57451chvsinpXdTSbIZW/ug/yrxvWJ31DXHOcgNSbNIIfpdo1
+wQ7CurtYhGgAqjYQLFbjA5rThHyc1i5HpUIWLES4apvvNiooqniXL81m5Hox
+2FNupGKyr7SVlycVu4GaHUEYxREmUOdHm13DJZ3RGDsB4qzG4lVf9sZb610m
+q6dHdRldvzLXMxQmKV4jxk7h+FbxZ51WlyshLtBKSf4Tir1wRNAkvqKrXah1
+UgffGT7UWcnmRvCT9zgUzmkVXfZIuOlXUn8ueOZexBqhJxKyntUlvJujZT2q
+jM9U0u+F3axSA84rROMkevNcP4PvS4e3Y8r0B+ldkzHard6q5kx5NMJoJphN
+FzNik0wmgmmE0CGMabmhqZmqAcaTNITRTAv0UUVRmLRTc0VLZSHUtNBpc1JQ
+CnU0U6pKHUUUUhgKcDTKXNADqAeabmjNIEQahL5VhdMe6N/KvItKi869kk7b
+q9K8SXfl6bMAeSp/lXnuhcWpkPUkUXOmmjo4kA6VajCnrWU14Iu4qa3vlf8A
+iH51g0elTkbMaCrCriqEM4J6j86vI4I61DR3Q1RKGzTt2KZ06UnXrQguokEy
+neT2NYGq2uyQSAdTzXQTyhflyKzr4iWFhx0NWmYzipI5ydcxuqd2B/Cs4P5V
+x9TxWhG+11Dc/KVrNvF2SA/3TitkeTUQ66IEhxUMEvlyfWll+YbqqmTmqMDe
+027+w6rFOOh+X869OhlEyb/WvIoz5kSN3Ug16Rod159hE2eq80EM2DTDTiaY
+aCGMptOppoIGsaZmnNTKoBopaSnU7jL1FNzRmqMh1FNzRmpZQ7NGabmjNSUP
+opuaWgokopuaM0gHUU3NGaChwJpCTigGmu2EY+1A0jj/ABVcMbeT5unFczpU
+bfZYyTxitTxJNut7k56SAVl2Uojs4/8AdqWdNNG0tpazD51H5US6bCi5jX9K
+yRrKQkbiK0YNahljA3L+dY3Z2KUegIZInxmtSCZio5rPkmicbgRVmyZZOKV2
+dEJGkJ2VeDVKe9kBIBq1LCEU81kzMoYjNFzWViCe7uicKx/OmAX0qnr0q5BE
+pYFyB9a0VuYIUxuQ/jVI55SRxVy01tPhwRUNy+9d1amvTxTPuQD8KxHb93Wq
+OKo7j85tMVRJO3FXI2BgxVFm+YiqOYu2c2ePQV3XhK53RPD75rzyF9hJ9667
+wtPsvQM9QaRLO/LE0hJpqtSsaDNjSaSikzTJA0w0pNNJoAaTzT+1RnrTuaq4
+FvNGabmjNWQh1FNoqSh9GabmipKJAaXNR5pc0FD80ZpuaM0gHZozTc0ZoKHb
+uKhupNtu5/2TSk81U1J9tpIf9k1I47nD6sfN02U/3pFNZrwS/Y0C9krSvBu0
+aMj+JlP61btIN0CAjtUnbTjdHFLb5/1wOafBaM0o8vpmu2bw/Ddvnbj8KcPD
+6W5+UdKG0VHDSTMW2ilV2iP3BW7pK7W2dgaa9vsVvWptMG0HPWockd1KFi5q
+UojjbHU1ghWMZlb61oX7l5CCeKZGolt9mKlIqpB2OZv765kUyxMwVPl/OsiT
+Urj7ils966y+0+QR+XFGNrfNxXPS2FxHlhCc/Q1qkcE4SuUxqDucMMGpNxKk
+k1DJY3HmbipApzqQoB6iqRzyv1H2rcsKin6n60ls2Lhhmln+8aoyY1GO4Gui
+0C48u9UHua5uFsgGtXTnK3sWP7w/nSEz1kHK0pb5RVWGXdH1qUHIoM2S5pCa
+bmkJpkgTTCaCaZnmgB/Q1Jnioc81KOlAEtHeijvVmY+iiipKAClopaQIQ0Cg
+0CgoKKKKRQlFFFACZ6H2rO1qbZp0g9eKvvwq/SsbxAf9A+pFIcdznbobdDtl
+91/nWhZ9VrN1FsaXbKPVf51ftW+ZfTFSz06DNyB8U6aTINVI5amLZU/Ssj0U
+9DMuiWbGakto2Rc1UmlVboAnjNbsUluLbPGcUEKdmYd2cS81PZsGOBVLUJld
+zt/SpdJbL4PWnJWGpXOjt7aMryKkmsbcpkqPypY8qvWiWXCVKZaic9f2EZU4
+WuM1C28uVsCu/uHyprj9VUmVquBy4mKscvnbPmrMp3KDUE67ZAanxmEGtzyJ
+aMhjUbmX0NbmgxCa+C+gJrEiGHY+9bfh1impg+uRQSzvLQlVq6rVXVQvSn7q
+kzZYBoJqNTT6YCGm0402gABOanB4quDzU2eKYixR3ooqzMfRRRUlDhSnpSCl
+7UgQ2iiigoKQ0U0mkAUU2igBX6L9KxvEfNiP94VsN91fpWPr3Nj+IpGiOT1N
+9trGP9ofzq/bNmFfqKxNTm3JGP8AaH861rV/3QFSzuos2ImyauDmMj2rMgbm
+rvmECsj0abujm9ShuBcZUnrSfbbiOLZznGK3wiSzfMM02TT43lGEPX0oIa1O
+SWe6S4O8Gt7RxJJPvwRV+4sYVbLqM1YtEjhHyDFNsqmXnk21XeXNJNJxVRpc
+d6lI2crCTyYU1zV63mStWzcSckZrAvG2SE1cDjrTujFu4v3mKZD3WtCdN8e8
+CqGNnzetbnmT3GEYlra0Mf6ev1rFc/va2dBP+mg+9Bmz0QGg01ad2qTNiocV
+Lmq4NTKeKYCk0hoJppNACrT6YKXNMRdpciod9Jvp3MixkUZqHfRvqblE2cnm
+p40yPvVT8zAy1Up9ajtjjBP0FO40aknyvjFR5Iasg+Ikc5YbfrxVuz1CO7yU
+ZWA6kHOKRReJphNJmkzSGOzRmo80ZoKQu7AIrK1kb7M/StM85rL1E5t2HtSK
+izgL08xD0x/Oti1cbVIPasjUFwufSrGmT+ZEMnpQdUJHQ22VbJOaj1HU/IXA
+Un8KLdlZuKW8hVhnANZ3O2LMIa3dSSfuvNH/AAE1ZTWtTQ48+QVq6ZLZLPi5
+jAH0rYdfC0rne7hu37v/AOvVFs41/ENxv/0hmb61sWGrRXKABtpqPUbHTHkI
+hUH8KowaYqTApkDPYVMkFzemdtvBqsWO3mpmRlXk1BIRtqUwuQycrmsO/ONx
+Na80u1MVz2sThIzyMkVpFHJWZXs74O3lsflp00QEhI6VgwSENweRWgl6Xwh7
+Vdjj5iV0O7JrQ0qUx3CD/aFVVYS+lSWzeVdR/wC8P50WJaPTI3LDrTuRVe0n
+Rlz2q2ZIxRYyeg3cT2p67qYbmMdBSfawOlMolKn0ppI9Kja8O2mRylzzQFid
+Sd1NYncaVW+akY8mggd9oX1o+0r61keY3rSGRvWsOcwNf7UtIbwVkCal356V
+LmUX5LxzxVVwsmSw5qISP3oLMRSjNjMnWlP2U81Y8A82d4vrID+lUrxnnuRA
+Twa6DQLNdLjfBHz1vGRSNvdRuqLfRuqiyTNGajzSFsUDuOZzjmsPWL0QIRnt
+WheXIhjJyBXC6/qJkJAOaYJkUsomifBrO0+5EExU9zUFrckllJqGbKNuHrRY
+1jI7m2l3KNp4q8PmXFcdpWqkPsc4+tdTbTg85BzWLid1KdyythHN1WnHQYuu
+2rVtKFq4bnIxU3aO+MU0Yw0/y+amVRGPpVmeQY6is+WXGeaG7mckkOluAapS
+3AFQz3Sr3FZs15k8VUYnPKdixc3SohbPNcfqN2bicg9K1LyVmB5rBfmQ1rFH
+FVncE6VNGcGolHFPQ81djnRowHPNSrJ+9Hsagtzg4pzfLID70h8x1Vtq0ixr
+GD0rQXVXJ57Cubsj8rMavI26HdQc1Sdjbg1BZhkjFW0YSHhq5+PIGBUyztF3
+NIlVTfbpToc+tYLalNnBq/ZXqsPnOD70GiqGwh+alY8moY3Bbgj86Vj83Wgu
+5lbzmkZqTIzSMa5jICwpyuahIpynFSBIzmnq3yn6VXeTNKjcUkNlGQ4ux9a3
+rV/3YrnLhsXQ+tbVox8sVvApOxqLIR0p/mgAlu1UzOqDqPzqnPe5yAetWhOo
+WLnWEjOErOuNYmOSD+tQSQqVLZrKuHYPtHSqRm5kt1qNzcKQ7k/jWHcAO2CM
+mtLy85wTWc4KzkVQ1Iz5FNvJTt3mAmrNzF5kW/FZySbRjtQbwYhLqd4PNaVj
+rNxHhSxwPesuQjPFOTBHFDNYzaO2tdbLpgtV5NVG371cLbMVfGa0FZj3NZtH
+ZTxDSOjn1Mno1Z0+oO3ANUVBYcmnJFk0iZVWxWeR+tCxZ5NWEiPensm0UzO7
+M24Tg1gzriU10k6fKa565XExq4mMhq9KQdaVelJVMzuXYGGamkYEj61Sgzip
+gSWFIUjatifLNaEBPkVn2h/cGr1s37g0HJMmjkxuo80lDVdX609DlaoglQ96
+fuLHFRbscU4GgZbW4mh6Pn8af/alx71WG0etO3D0osP2iLoNKTxTRSmuI2EB
+OKAxpM8U0NzUgOPFIGNBbNIKaQzPux/pKGtK3nKwECqdxF5kympkPloR71vB
+ESY6TdJ1NVZFZOhqZmBPWonYCrsY3GJcNjDVUuSN2RVh8MMiqzpuB5qgFgIO
+ao3EWJianjJRqWcdGoKTKTA+W6GsOQbGKH1rpZUG1WHesfUrfbJvHSg3hIon
+5qBwaaDil60G7kWojhhWxarvWsWE5rWspMUWKUzRS2AHSpVgwelOinU1aQqa
+zNoyQxYQBk1Xm5OBV8xkjAqpMojzQaOSSM26OFNc5c/6010U/wA5NYV5HtkP
+FXE4nK5WQUrcUsVEnWqYJEluSDU27Mo+tQRMAaerAyjnvSFI6O1VfJxmp4hj
+PNVbWNsYzU6qysc0HLPcZIfmqWM8VBIfmqSM8VRJY3c4HSnjgcdaiUgcGl3b
+aAtcnV/71O3pTIImm61b/s7jrU8xf1Vk4oNAoNctixOMVHxmnHpUfeiwC0ua
+SkJrSCM5MC1RF6UnNRkVrYyuIWBphBINB9hTCWFMY0Ejg1G4AORUjfPz0qI+
+lBQjAEE0FRJbY9KF+6wNJFlUYUAhtt88TKetVpbbzI2jParMY2spHQ1PNGN+
+R3FBSZyU0Gw1Hjitm9tuuBWU0e01R0Rlcjj4etS0fBrOC4arVscNQU1obSHg
+EVYErhRiqkBzHU67sVnY51UaLX26QdKgkmaU80gHtSiPdRYbrsr7PnzVG+gz
+k1rGOoLuLMZx6VSJjI5gL2prdcVZ24kINV3H7w1R0xY2lU/OPrTKcn31+tAm
+b9lPIjAGtfiRcmsy0iMg3GtFQQMUHNMrS8NmlhODmi4+7mo42+XNCElcsE5+
+tXLS2MnJqlCPMkB7Vt2+FQAVMjqp0yaKAR1KRTVyaeRWZ6CRWNJmlao81nY8
+oHOaZ0FONMNFhMUUhoFIa3ijnbbGEUlIzcUwsabBJjmaomahjULNQVZitUZO
+KC3FQO5zQMmB5p6DGTVZX6c1azhBQDBUwgp7n5F+tIW/dCm5yooJuRSj98/v
+WVcW23PvWxOPmU+tNmtxIfwqjSEjnDEakRCOa0mtc9BTRZMaDX2g60lHStJF
+DDNZaQFG6GtOEHbU2M5NEgApdtKFpSuOvH1osZDSKikX5T9KmFIw4oCLOWu4
+yt0TUckB+9WrqMGMPioUQSQjvVHTFmKy84qWGPLD61PPb7ZDxSW6/vKCmzod
+PX91Vp+BVWyO2KrLHK0HPPcqznMWKqwvjirEp+U1nq+2Q0IqJs2hArSjkHFY
+VvL71pRSdOalnZTZrq9P31RWb3p/m+9Sb85I1RHrUxBPQVEyt/dP5VKhJ7I8
+7nit2ISe9NLCgpJ/db8qaEbIzG35UckuwnKL6j1DSHirKW6gfPzSIMdBip1A
+/iIp8sux0QhT7oatrAf+Wa0ptYB/yzFSgoP4qUmM/wAdLln2Z0L2S6oqNaQ9
+l/Sq0lnHzgVpNtxwR+dV3U84xTUZdhtUu6MWa3KDiqTjrmt6SMkH5T+VZVza
+zEnbDIfopq0pdjkqRp90ZTOVkq4ku5RVeSzui2fss3/fs1NFbXQHNtN/3war
+kl2Odyj3LIbpThxLUe143VXRlPXDDFObiSptYzHy8rmhPu0rcx02PpQUKVzT
+lXFKOacKCWxjLmgHbUhphXNFybksWXkjB7kfnWlqtmYgJMfe5NZ9qpNzGv8A
+tA/rXZ3lsl1bsCOoyKLhc4gYPSlxuODTpITBOVOaP46LjTK91F5kZSsq1j8u
+cqema3COMnvVQ22JN4HWi5opEF3aqy8LWctrtf7vet5lJHSohGCelMfMQQLt
+arBPJqMrtk6UrdaCStO3GKpeX5kgHvVyUZY1Fbj99TNIE8tv5XK0RXHOGq0W
+yMHmqssHO4UHQi4k9SefWcrkdQaf5vvUl8x7h8JOmr/9sf8A2etIaxrc+s30
+NpPcTNBqCwrALZTEIv4tz7eCP97PtXNfDvxBpehDUv7SuhB53leX8jNnG7PQ
+H1FdTYeK/B+nXN7PDq7s95L50geF8A+2E6VrB2V7X0RwvVJc1tX1E0zxxBba
+NbvqsrzXbiSRtgRMIJCoOCVB6dBknB4rTj8ZWEsn7u2u2iNyLUTbUCGQjKjl
+s4Prj64rm7bU/Bdj5TWfiG7t5Y0eLzUjbcyMxYqcxkdScEAH3qU6x4IYSL/b
+U/z3wvz+7f8A1g7fc+7+vvWklTbvZkxlUSS5kbWk+LxdLCL+0ktjPJMscg2m
+P93kkE7ic4Hpz2p9xrs1+2iQ2Hm2o1Qu/myIpdI0XdwORk8Yzn6VyGr6r4ak
+sE0yx1G5aOW687zWjIW2BJ3gfKGOQxGOfqK6C88S+ELyG1QalJA9oQbeWGCQ
+NFgY4yhBGOMEEUpRgndL+v6/IqMptcrfb/g/15kOqeI9V01tR05XeeaC4gSO
+7CRhgknOCDhd3GAcY9QKv6pqV5b67ptiby+ggktGeTybdJZS4x1Cow+uBisu
+TVPBs1vJHJq1y8ss6XEs5hffIy9M/JjA6YAFXpfFHhSXWINUbVJfPhiaJVEE
+m0g9cjZnP40Xj/L+HkCjPX3vx8/8iWy8VwxXE1nLJdXty15NDGpjiiKhMcZL
+AHr16n0o0LxNJJIbfURM7zX01vDMEQJ8vReDnp3x+NY0974MnguIH1u68i4u
+XuZY/s5ILMQTgmLcBwOhB96kh1bwVbtbldYn/cXb3agxP99uoPydP85ptQts
+Je1vuXfiCk0qaZHFrMuljzXZ5QGCAKu4szL0xjjPXPtUtxqmva1awro+mTxW
+cg+a8uZVgkkX1VcFlz2JAPtTdT8X+C9W06aw1C+Sa1mXbJG0MoyM5HIXIOQD
+kVkWPirSNJAgtvG/nWijCR6hZPM6D03rsJ/HNZNycVHl2NHFKTlfc7FdY+xx
+qupWdzZoAB5zkSxj3Z1zj6tge9S6frun6rczQ2E/2gQnDyxjdGG/u7uhPI/y
+DjgrPxxo0k8lvr/iWwv7U527YnQEZ43IFwfocj3q9aeKfhzY6m+oWWpWtvNJ
+nzBFE6q5PfG3AP0xnvmlKD7BGp5/fuedfFM/8XCvh/sRf+gLXJqvGa6Dx/ql
+lrXje5vdPuFuLaRI9siggHCgHrz1FYxACUpbmD3fqxi/6ukFKv8Aq6RakZf0
+63FxdhG6BTUVzA1vdtGVO0cCptLlKXy/Wuk1C1gmglkwMrzQSckuAGGT1z0p
+pAZWKseualt7iO5coEGSDSSuLRV+UEt2quULBBuWaN1JxnvXbrPElvGHZckd
+zXD+dJJbS4QKyMOO9Rz3E0lnDL57ZXGQPrRyhY3NbtA1wrqyqX+brWcbYqQQ
+ysenWmak7T2NvcmY524OOcc1UdZIUtZUlJDjJ/OjlHYviIPlWCsy+pqFlJb5
+ty9gAKjO+XVAVkKqx7Vp3gktmVVVGxz8zY6UcoEdxZi2t492Q0i7sYrM24Lb
+gRz6VtHUP7SiUui+ZENtZ295ZJFkCFR0wc07CTKrDJqJ+KmqKXrQUVJu9RQD
+95U0tRwD5zSNYFyjNNooN7g6LJ0qA2rZq0uB0pxY0Cua7UyiiudmK2Gd6RP9
+ZRRQjaluXhUg6UUU2d0SUUvaiipNkRN0qvJ1oooQFWX7tZVx1NFFaIxmYk3+
+vanJ9yiitDz5mhZ/eFabfd/Ciig5pDI/uUwfeoopCL1h/wAfIrop/wDkHS/7
+p/lRRVAcdpP/AB/D/dNWL3/j7g/z3ooqxlj/AJe7r8f5VlJ/yDpf98UUUAWF
+/wCQPJ/vrSSf8eMf4UUUASQf8fFv+H86veIP+PyP6GiigCtpP+tuP91v5VW0
+z/Wy/j/KiigkkbrUM3aiikUirN901FB96iikawLXrSrRRQbEgp1FFAj/2Q==
 
-Since this patch has zero effect on currently supported platforms (litt=
-le-endian), I don't see the harm in letting it through, since it actual=
-ly does work, and more importantly, works right now.
 
->> -----Original Message-----
->> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
->> Sent: Friday, August 16, 2013 6:42 AM
->> To: Ben Collins
->> Cc: Martin K. Petersen; DL-MegaRAID Linux; linux-scsi;
->> aradford@gmail.com
->> Subject: Re: State of big-endian for MegaRAID SAS driver
->>=20
->>>>>>> "Ben" =3D=3D Ben Collins <ben.c@servergy.com> writes:
->>=20
->> Ben,
->>=20
->> Ben> Considering your patch has had two success stories (I suspect y=
-ours
->> Ben> was on SPARC, so that would even make two different platforms) =
-and
->> Ben> low likelihood of regression on little endian, I think it's pre=
-tty
->> Ben> safe.
->>=20
->> I ordered a MegaRAID card today so I can test on x86 just to be sure=
-=2E
->>=20
->>=20
->> Ben> The only thing I think that could make it better is to annotate=
- the
->> Ben> structures in megaraid_sas.h as __le32 where applicable.
->>=20
->> I have an older patch that does just that. And another one that gets=
- rid
->> of the 32-bit DMA limitations on large systems. But I didn't want to
->> clutter the initial submission.
->>=20
->> --
->> Martin K. Petersen	Oracle Linux Engineering
->=20
->=20
-
---
-Benjamin M. Collins | Principal Architect
-Servergy, Inc. | Save Energy. Work Smart. =AE
-m (757) 243-7557 | e ben.c@servergy.com
-L LinkedIn | T twitter.com/Servergy
-www.servergy.com
-
-CONFIDENTIALITY NOTICE: This communication contains privileged and/or c=
-onfidential information to be maintained with the strictest confidence.=
- It is intended solely for the use of the person or entity in which it =
-is addressed. If you are not the intended recipient, you are STRICTLY P=
-ROHIBITED from disclosing, copying, distributing or using any of this i=
-nformation. If you received this communication in error, please contact=
- the sender immediately and destroy the material in its entirety, wheth=
-er electronic or hard copy.  Email may contain forward looking comments=
- that are based on managements best-faith estimates which are subject t=
-o change. For information only. Not an offer, or solicitation of any of=
-fer to buy or sell any security, investment or other product.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--792791180-288396344-1376935216=:56756--
