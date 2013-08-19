@@ -1,24 +1,33 @@
 From: Akinobu Mita <mita@fixstars.com>
-Subject: [PATCH 1/2] ufs-pltfrm: initialize DMA mask for device-tree probed device
-Date: Mon, 19 Aug 2013 22:56:05 +0900
-Message-ID: <1376920566-20325-1-git-send-email-mita@fixstars.com>
+Subject: [PATCH 2/2] ufs: fix DMA mask setting
+Date: Mon, 19 Aug 2013 22:56:06 +0900
+Message-ID: <1376920566-20325-2-git-send-email-mita@fixstars.com>
+References: <1376920566-20325-1-git-send-email-mita@fixstars.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo.fixstars.hdemail.jp ([176.34.54.138]:41689 "EHLO
+Received: from mo.fixstars.hdemail.jp ([176.34.54.138]:41702 "EHLO
 	mo.fixstars.hdemail.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837Ab3HSOBE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2013 10:01:04 -0400
+	with ESMTP id S1751070Ab3HSOBF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2013 10:01:05 -0400
+In-Reply-To: <1376920566-20325-1-git-send-email-mita@fixstars.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Akinobu Mita <mita@fixstars.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-The device-tree probed device for ARM doesn't have dev->dma_mask.
-So dma_set_mask() for the device doesn't succeed.  The popular trick
-for this is - dev->dma_mask = &dev->coherent_dma_mask;
+If the controller doesn't support 64-bit addressing mode, it must not
+set the DMA mask to 64-bit.  But it's unconditionally trying to set to
+64-bit without checking 64-bit addressing support in the controller
+capabilities.
 
-Currently there is no dma_set_mask() call in ufs-pltfrm, but the
-forthcoming fix needs proper DMA mask setting in ufs core driver.  So
-initializing dev->dma_mask as described above is required.
+It was correctly checked before commit 3b1d05807a9a68c6d0580e9248247a774a4d3be6
+("[SCSI] ufs: Segregate PCI Specific Code"), this aims to restores
+the correct behaviour.
+
+To achieve this in a generic way, firstly we should push down the DMA
+mask setting routine ufshcd_set_dma_mask() from PCI glue driver to core
+driver in order to do it for both PCI glue driver and Platform glue
+driver.  Secondly, we should change pci_ DMA mapping API to dma_ DMA
+mapping API because core driver is independent of glue drivers.
 
 Signed-off-by: Akinobu Mita <mita@fixstars.com>
 Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
@@ -27,23 +36,110 @@ Cc: Santosh Y <santoshsy@gmail.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/ufs/ufshcd-pltfrm.c | 3 +++
- 1 file changed, 3 insertions(+)
+This patch was rejected because of the incorrect usage of dma_set_mask().
+Now it is fixed, but it also requires ufshcd-pltfrm change in the separate
+patch 1/2.
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 94ba40c..c780840 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -122,6 +122,9 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
- 		goto out;
- 	}
+In order to apply this patch cleanly, this patch depends on 
+'ufshcd-pci: release ioremapped region during removing driver' which
+has already acked by Santosh.
+
+ drivers/scsi/ufs/ufshcd-pci.c | 26 --------------------------
+ drivers/scsi/ufs/ufshcd.c     | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 30 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index 2349c0e..91a2e79 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -96,26 +96,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+ }
  
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+
- 	err = ufshcd_init(dev, &hba, mmio_base, irq);
+ /**
+- * ufshcd_set_dma_mask - Set dma mask based on the controller
+- *			 addressing capability
+- * @pdev: PCI device structure
+- *
+- * Returns 0 for success, non-zero for failure
+- */
+-static int ufshcd_set_dma_mask(struct pci_dev *pdev)
+-{
+-	int err;
+-
+-	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
+-		&& !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
+-		return 0;
+-	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+-	if (!err)
+-		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
+-	return err;
+-}
+-
+-/**
+  * ufshcd_pci_probe - probe routine of the driver
+  * @pdev: pointer to PCI device handle
+  * @id: PCI device id
+@@ -145,12 +125,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	mmio_base = pcim_iomap_table(pdev)[0];
+ 
+-	err = ufshcd_set_dma_mask(pdev);
+-	if (err) {
+-		dev_err(&pdev->dev, "set dma mask failed\n");
+-		return err;
+-	}
+-
+ 	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
  	if (err) {
- 		dev_err(dev, "Intialization failed\n");
+ 		dev_err(&pdev->dev, "Initialization failed\n");
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index bd4d418..1f37c36 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1667,6 +1667,30 @@ void ufshcd_remove(struct ufs_hba *hba)
+ EXPORT_SYMBOL_GPL(ufshcd_remove);
+ 
+ /**
++ * ufshcd_set_dma_mask - Set dma mask based on the controller
++ *			 addressing capability
++ * @hba: per adapter instance
++ *
++ * Returns 0 for success, non-zero for failure
++ */
++static int ufshcd_set_dma_mask(struct ufs_hba *hba)
++{
++	int err;
++
++	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
++		if (!dma_set_mask(hba->dev, DMA_BIT_MASK(64))) {
++			dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(64));
++			return 0;
++		}
++	}
++	err = dma_set_mask(hba->dev, DMA_BIT_MASK(32));
++	if (!err)
++		dma_set_coherent_mask(hba->dev, DMA_BIT_MASK(32));
++
++	return err;
++}
++
++/**
+  * ufshcd_init - Driver initialization routine
+  * @dev: pointer to device handle
+  * @hba_handle: driver private handle
+@@ -1717,6 +1741,12 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+ 	/* Get Interrupt bit mask per version */
+ 	hba->intr_mask = ufshcd_get_intr_mask(hba);
+ 
++	err = ufshcd_set_dma_mask(hba);
++	if (err) {
++		dev_err(hba->dev, "set dma mask failed\n");
++		goto out_disable;
++	}
++
+ 	/* Allocate memory for host memory space */
+ 	err = ufshcd_memory_alloc(hba);
+ 	if (err) {
 -- 
 1.8.3.1
 
