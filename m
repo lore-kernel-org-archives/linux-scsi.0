@@ -1,60 +1,57 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: SCSI core patches for kernel 3.12
-Date: Tue, 20 Aug 2013 13:38:04 -0700
-Message-ID: <1377031084.5302.54.camel@haakon3.risingtidesystems.com>
-References: <52135B99.2000102@acm.org>
-	 <1377015091.5302.47.camel@haakon3.risingtidesystems.com>
-	 <52139608.5040608@acm.org>
-	 <1377018283.5302.48.camel@haakon3.risingtidesystems.com>
-	 <5213AEBD.2020303@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:57488 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908Ab3HTUbQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Aug 2013 16:31:16 -0400
-In-Reply-To: <5213AEBD.2020303@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v2 0/2] iscsi/iser-target: Add per-cpu ida tag pre-allocation for v3.12
+Date: Tue, 20 Aug 2013 20:35:59 +0000
+Message-ID: <1377030961-19831-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Kent Overstreet <kmo@daterainc.com>, Or Gerlitz <ogerlitz@mellanox.com>, Tejun Heo <tj@kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2013-08-20 at 20:00 +0200, Bart Van Assche wrote:
-> On 08/20/13 19:04, Nicholas A. Bellinger wrote:
-> > On Tue, 2013-08-20 at 18:15 +0200, Bart Van Assche wrote:
-> >> On 08/20/13 18:11, Nicholas A. Bellinger wrote:
-> >>> On Tue, 2013-08-20 at 14:05 +0200, Bart Van Assche wrote:
-> >>>> This patch series consists of four patches that address device removal
-> >>>> issues and three patches that improve performance of the SCSI mid-layer.
-> >>>
-> >>> Perhaps it would be useful to know what the performance improvement
-> >>> actually is..?  Eg: fio numbers before and after.
-> >>
-> >> The optimizations in this patch series are micro-optimizations. Their
-> >> performance impact is small but measurable. Peak IOPS results are
-> >> improved by about 1% by each of these performance improvements for a
-> >> low-latency transport.
-> >
-> > So that is 250K to 252.5K per LUN, or what..?
-> 
-> The exact numbers depend on the number of CPU's in the initiator system, 
-> the number of CPU's in the target system, the transport type, HCA model, 
-> SCSI target stack configuration, target storage medium etc. If you want 
-> to verify yourself the impact of this patch without all these 
-> dependencies, that's possible by running a test against the scsi_debug 
-> driver.
-> 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-<yawn>, I only care about the performance against upstream code, so that
-would mean scsi_debug here.  Typically the onus of demonstrating a
-performance improvement is on the patch submitter (eg: not the
-reviewer).
+Hi folks,
 
-But it would be at least useful to know the actual benefit with results
-as an incremental step, short of avoiding this code entirely for
-scsi-mq.
+This updated series adds tag pre-allocation support for iscsi_cmd and
+isert_cmd descriptor memory within iscsi/iser-target fabric code,
+utilizing Kent's latest per-cpu ida bits posted earlier here:
 
---nab
+  [PATCH-v3 1/4] idr: Percpu ida
+  http://marc.info/?l=linux-virtualization&m=137669883717043&w=2
 
+The first patch converts to use a command priv_size allocation in order
+to inline isert_cmd into a single allocation, and drops left-over cruft
+for iscsit_transport->iscsit_alloc_cmd().  It also drops the now unused
+iscsi_cmd->iscsit_release_cmd() function pointer.
+
+The second patch is a conversion to use percpu_ida_alloc() pre-allocation
+in iscsit_allocate_cmd() that locates the memory offset into ->sess_cmd_map,
+and updates iscsit_release_cmd() to call percpu_ida_free() based on the
+available se_session pointer.
+
+Changes in v2:
+
+  - Bugfix that was triggering an OOPs during SessionType=Discovery
+    within iscsi_target_locate_portal().
+
+Please review as v3.12 material.
+
+Thanks!
+
+Nicholas Bellinger (2):
+  iscsi/iser-target: Convert to command priv_size usage
+  iscsi-target: Convert to per-cpu ida_alloc + ida_free command map
+
+ drivers/infiniband/ulp/isert/ib_isert.c      |  114 +++++++++-----------------
+ drivers/infiniband/ulp/isert/ib_isert.h      |    2 +-
+ drivers/target/iscsi/iscsi_target.c          |   16 +---
+ drivers/target/iscsi/iscsi_target.h          |    1 -
+ drivers/target/iscsi/iscsi_target_configfs.c |    2 +-
+ drivers/target/iscsi/iscsi_target_core.h     |    3 +-
+ drivers/target/iscsi/iscsi_target_nego.c     |   28 ++++++-
+ drivers/target/iscsi/iscsi_target_util.c     |   41 ++++-----
+ include/target/iscsi/iscsi_transport.h       |    8 +-
+ 9 files changed, 98 insertions(+), 117 deletions(-)
+
+-- 
+1.7.10.4
