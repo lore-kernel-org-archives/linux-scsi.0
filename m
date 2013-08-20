@@ -1,71 +1,49 @@
-From: "Akinobu Mita" <mita@fixstars.com>
-Subject: Re: [PATCH 1/2] ufs-pltfrm: initialize DMA mask for device-tree
- probed device
-Date: Wed, 21 Aug 2013 00:03:50 +0900
-Message-ID: <ed58bd5b910baee6aa4c53752a45ecbc.squirrel@webmail.fixstars.com>
-References: <1376920566-20325-1-git-send-email-mita@fixstars.com>
-    <1376922720.2069.10.camel@dabdike.int.hansenpartnership.com>
-    <52131A1D.2060907@codeaurora.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: SCSI core patches for kernel 3.12
+Date: Tue, 20 Aug 2013 09:11:31 -0700
+Message-ID: <1377015091.5302.47.camel@haakon3.risingtidesystems.com>
+References: <52135B99.2000102@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=iso-2022-jp
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo.fixstars.hdemail.jp ([176.34.54.138]:51095 "EHLO
-	mo.fixstars.hdemail.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246Ab3HTPHD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Aug 2013 11:07:03 -0400
-In-Reply-To: <52131A1D.2060907@codeaurora.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:59474 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329Ab3HTQEp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Aug 2013 12:04:45 -0400
+In-Reply-To: <52135B99.2000102@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Akinobu Mita <mita@fixstars.com>, linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, devicetree@vger.kernel.org, Russell King <rmk+kernel@arm.linux.org.uk>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-> On 8/19/2013 8:02 PM, James Bottomley wrote:
->> On Mon, 2013-08-19 at 22:56 +0900, Akinobu Mita wrote:
->>> The device-tree probed device for ARM doesn't have dev->dma_mask.
->>> So dma_set_mask() for the device doesn't succeed.  The popular trick
->>> for this is - dev->dma_mask = &dev->coherent_dma_mask;
->>>
->>> Currently there is no dma_set_mask() call in ufs-pltfrm, but the
->>> forthcoming fix needs proper DMA mask setting in ufs core driver.  So
->>> initializing dev->dma_mask as described above is required.
->>>
->>> Signed-off-by: Akinobu Mita <mita@fixstars.com>
->>> Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
->>> Cc: Vinayak Holikatti <vinholikatti@gmail.com>
->>> Cc: Santosh Y <santoshsy@gmail.com>
->>> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
->>> Cc: linux-scsi@vger.kernel.org
->>> ---
->>>   drivers/scsi/ufs/ufshcd-pltfrm.c | 3 +++
->>>   1 file changed, 3 insertions(+)
->>>
->>> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c
->>> b/drivers/scsi/ufs/ufshcd-pltfrm.c
->>> index 94ba40c..c780840 100644
->>> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
->>> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
->>> @@ -122,6 +122,9 @@ static int ufshcd_pltfrm_probe(struct
->>> platform_device *pdev)
->>>   goto out;
->>>   }
->>>
->>> +if (!dev->dma_mask)
->>> +dev->dma_mask = &dev->coherent_dma_mask;
->>> +
->>
->> If the DMA mask is NULL, it means there's buggy platform code somewhere;
->> I'm not sure we should be hacking a fix in a SCSI driver.
->
-> Yes, ideally DT core should do this, there are patches lying around but
-> are not converged. Adding devicetree@vger.kernel.org to see if someone
-> has better suggestions.
->
-> Recent additions to kernel with similar hacks -
-> https://patchwork.kernel.org/patch/2537021/
+On Tue, 2013-08-20 at 14:05 +0200, Bart Van Assche wrote:
+> This patch series consists of four patches that address device removal 
+> issues and three patches that improve performance of the SCSI mid-layer.
+> 
 
-The discussion in that thread is useful.  Also, I found that Russell King
-proposed replacing the boilerplate by using dma_coerce_mask_and_coherent()
-in his patch set "Preview of DMA mask changes".
-https://patchwork.kernel.org/patch/2837359/
+Perhaps it would be useful to know what the performance improvement
+actually is..?  Eg: fio numbers before and after.
+
+Other than that, patch #7 to drop the unnecessary get_device ->
+put_device is nice.  I've been intentionally leaving this overhead out
+of scsi-mq thus far, and it's useful to know that this extra case
+(according to this series) is not even required.
+
+--nab 
+
+> The individual patches are.
+> 0001-Introduce-scsi_device_being_removed.patch
+> 0002-Rework-scsi_internal_device_unblock.patch
+> 0003-Avoid-re-enabling-I-O-after-the-transport-became-off.patch
+> 0004-Disallow-changing-the-device-state-via-sysfs-into-de.patch
+> 0005-Micro-optimize-scsi_request_fn.patch
+> 0006-Rename-scsi_get_command-and-scsi_put_command.patch
+> 0007-Micro-optimize-scsi_next_command.patch
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
