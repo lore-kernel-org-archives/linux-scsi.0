@@ -1,65 +1,27 @@
-From: dl9pf@gmx.de
-Subject: [PATCH] [TRIVIAL] Remove braces in drivers/scsi/in2000.h to fix build for clang. No functional change otherwise.
-Date: Tue, 20 Aug 2013 23:19:06 +0200
-Message-ID: <1377033546-19475-1-git-send-email-dl9pf@gmx.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 0/9] target: Add support for COMPARE_AND_WRITE (VAAI)
+	emulation
+Date: Tue, 20 Aug 2013 23:29:12 +0200
+Message-ID: <20130820212912.GA9483@lst.de>
+References: <1377029280-19144-1-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dl9pf@gmx.de
-Cc: PaX Team <pageexec@freemail.hu>, Behan Webster <behanw@converseincode.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1377029280-19144-1-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-=46rom: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
+On Tue, Aug 20, 2013 at 08:07:51PM +0000, Nicholas A. Bellinger wrote:
+> 
+> It's also currently lacking the necessary sychronization between I/O
+> submission of COMPARE_AND_WRITE verify instance and write instance
+> user data, which is still being worked on in order to avoid additional
+> overhead in the main I/O fast path.
 
-Author:  PaX Team <pageexec at freemail.hu>
-ML-Post: http://lists.cs.uiuc.edu/pipermail/llvm-commits/Week-of-Mon-20=
-120507/142707.html
-URL:     http://llvm.linuxfoundation.org
+I don't think merging such a non-conforming implementation makes any sense.
 
-Merge:   Jan-Simon M=C3=B6ller <dl9pf at gmx.de>
-
-Description:
-  Clang chokes on the notation "insw (%%dx)" but works for "insw %%dx" =
-(outsw likewise);
-  GNU as accepts both forms.
-
-Signed-off-by: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
-
-CC: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
-CC: PaX Team <pageexec@freemail.hu>
-CC: Behan Webster <behanw@converseincode.com>
-CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-CC: linux-scsi@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
----
- drivers/scsi/in2000.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/in2000.h b/drivers/scsi/in2000.h
-index 5821e1f..cd8d852 100644
---- a/drivers/scsi/in2000.h
-+++ b/drivers/scsi/in2000.h
-@@ -72,7 +72,7 @@ int __dummy_1,__dummy_2; \
-    orl %%ecx, %%ecx       \n \
-    jz 1f                  \n \
-    rep                    \n \
--   insw (%%dx),%%es:(%%edi) \n \
-+   insw %%dx,%%es:(%%edi) \n \
- 1: "                       \
-    : "=3DD" (sp) ,"=3Dc" (__dummy_1) ,"=3Dd" (__dummy_2)  /* output */=
-   \
-    : "2" (f), "0" (sp), "1" (i)  /* input */    \
-@@ -87,7 +87,7 @@ int __dummy_1,__dummy_2; \
-    orl %%ecx, %%ecx       \n \
-    jz 1f                  \n \
-    rep                    \n \
--   outsw %%ds:(%%esi),(%%dx) \n \
-+   outsw %%ds:(%%esi),%%dx \n \
- 1: "                       \
-    : "=3DS" (sp) ,"=3Dc" (__dummy_1) ,"=3Dd" (__dummy_2)/* output */  =
- \
-    : "2" (f), "0" (sp), "1" (i)  /* input */    \
---=20
-1.8.1.4
+Also for a complex command like this with all it's race potential I would
+really like to see some test cases to go along with it.
