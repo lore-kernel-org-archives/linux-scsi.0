@@ -1,104 +1,60 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 3/9] target: Add memory allocation for bidirectional commands
-Date: Tue, 20 Aug 2013 20:07:54 +0000
-Message-ID: <1377029280-19144-4-git-send-email-nab@daterainc.com>
-References: <1377029280-19144-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1377029280-19144-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Nicholas Bellinger <nab@daterainc.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: SCSI core patches for kernel 3.12
+Date: Tue, 20 Aug 2013 13:38:04 -0700
+Message-ID: <1377031084.5302.54.camel@haakon3.risingtidesystems.com>
+References: <52135B99.2000102@acm.org>
+	 <1377015091.5302.47.camel@haakon3.risingtidesystems.com>
+	 <52139608.5040608@acm.org>
+	 <1377018283.5302.48.camel@haakon3.risingtidesystems.com>
+	 <5213AEBD.2020303@acm.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:57488 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908Ab3HTUbQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Aug 2013 16:31:16 -0400
+In-Reply-To: <5213AEBD.2020303@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Nicholas Bellinger <nab@daterainc.com>
+On Tue, 2013-08-20 at 20:00 +0200, Bart Van Assche wrote:
+> On 08/20/13 19:04, Nicholas A. Bellinger wrote:
+> > On Tue, 2013-08-20 at 18:15 +0200, Bart Van Assche wrote:
+> >> On 08/20/13 18:11, Nicholas A. Bellinger wrote:
+> >>> On Tue, 2013-08-20 at 14:05 +0200, Bart Van Assche wrote:
+> >>>> This patch series consists of four patches that address device removal
+> >>>> issues and three patches that improve performance of the SCSI mid-layer.
+> >>>
+> >>> Perhaps it would be useful to know what the performance improvement
+> >>> actually is..?  Eg: fio numbers before and after.
+> >>
+> >> The optimizations in this patch series are micro-optimizations. Their
+> >> performance impact is small but measurable. Peak IOPS results are
+> >> improved by about 1% by each of these performance improvements for a
+> >> low-latency transport.
+> >
+> > So that is 250K to 252.5K per LUN, or what..?
+> 
+> The exact numbers depend on the number of CPU's in the initiator system, 
+> the number of CPU's in the target system, the transport type, HCA model, 
+> SCSI target stack configuration, target storage medium etc. If you want 
+> to verify yourself the impact of this patch without all these 
+> dependencies, that's possible by running a test against the scsi_debug 
+> driver.
+> 
 
-This adds transport_generic_get_mem_bidi() to perform scatterlist
-allocation for bidirectional commands.
+<yawn>, I only care about the performance against upstream code, so that
+would mean scsi_debug here.  Typically the onus of demonstrating a
+performance improvement is on the patch submitter (eg: not the
+reviewer).
 
-Also, update transport_generic_new_cmd() to call this new function
-when SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC has not been set.
+But it would be at least useful to know the actual benefit with results
+as an incremental step, short of avoiding this code entirely for
+scsi-mq.
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Martin Petersen <martin.petersen@oracle.com>
-Cc: Chris Mason <chris.mason@fusionio.com>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
----
- drivers/target/target_core_transport.c |   53 ++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+--nab
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 53d1d75..5746d85 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2092,6 +2092,53 @@ void transport_kunmap_data_sg(struct se_cmd *cmd)
- EXPORT_SYMBOL(transport_kunmap_data_sg);
- 
- static int
-+transport_generic_get_mem_bidi(struct se_cmd *cmd)
-+{
-+	struct se_device *dev = cmd->se_dev;
-+	struct page *page;
-+	gfp_t zero_flag;
-+	u32 length;
-+	unsigned int nents;
-+	int i = 0;
-+
-+	if (cmd->t_task_cdb[0] == COMPARE_AND_WRITE)
-+		length = cmd->t_task_nolb * dev->dev_attrib.block_size;
-+	else
-+		length = cmd->data_length;
-+
-+	nents = DIV_ROUND_UP(length, PAGE_SIZE);
-+	cmd->t_bidi_data_sg = kmalloc(sizeof(struct scatterlist) * nents, GFP_KERNEL);
-+	if (!cmd->t_bidi_data_sg)
-+		return -ENOMEM;
-+
-+	cmd->t_bidi_data_nents = nents;
-+	sg_init_table(cmd->t_bidi_data_sg, nents);
-+
-+	zero_flag = cmd->se_cmd_flags & SCF_SCSI_DATA_CDB ? 0 : __GFP_ZERO;
-+
-+	while (length) {
-+		u32 page_len = min_t(u32, length, PAGE_SIZE);
-+		page = alloc_page(GFP_KERNEL | zero_flag);
-+		if (!page)
-+			goto out;
-+
-+		sg_set_page(&cmd->t_bidi_data_sg[i], page, page_len, 0);
-+		length -= page_len;
-+		i++;
-+	}
-+	return 0;
-+
-+out:
-+	while (i > 0) {
-+		i--;
-+		__free_page(sg_page(&cmd->t_bidi_data_sg[i]));
-+	}
-+	kfree(cmd->t_bidi_data_sg);
-+	cmd->t_bidi_data_sg = NULL;
-+	return -ENOMEM;
-+}
-+
-+static int
- transport_generic_get_mem(struct se_cmd *cmd)
- {
- 	u32 length = cmd->data_length;
-@@ -2149,6 +2196,12 @@ transport_generic_new_cmd(struct se_cmd *cmd)
- 	 */
- 	if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC) &&
- 	    cmd->data_length) {
-+		if (cmd->se_cmd_flags & SCF_BIDI) {
-+			ret = transport_generic_get_mem_bidi(cmd);
-+			if (ret < 0)
-+				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+		}
-+
- 		ret = transport_generic_get_mem(cmd);
- 		if (ret < 0)
- 			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
--- 
-1.7.10.4
