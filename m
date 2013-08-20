@@ -1,165 +1,65 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 2/2] iscsi-target: Convert to per-cpu ida_alloc + ida_free command map
-Date: Tue, 20 Aug 2013 20:36:01 +0000
-Message-ID: <1377030961-19831-3-git-send-email-nab@daterainc.com>
-References: <1377030961-19831-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1377030961-19831-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Kent Overstreet <kmo@daterainc.com>, Or Gerlitz <ogerlitz@mellanox.com>, Tejun Heo <tj@kernel.org>, Nicholas Bellinger <nab@daterainc.com>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH 1/2] ufs-pltfrm: initialize DMA mask for device-tree
+	probed device
+Date: Tue, 20 Aug 2013 21:54:26 +0100
+Message-ID: <20130820205426.GD17845@n2100.arm.linux.org.uk>
+References: <1376920566-20325-1-git-send-email-mita@fixstars.com> <1376922720.2069.10.camel@dabdike.int.hansenpartnership.com> <52131A1D.2060907@codeaurora.org> <ed58bd5b910baee6aa4c53752a45ecbc.squirrel@webmail.fixstars.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:42131 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751269Ab3HTUyo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Aug 2013 16:54:44 -0400
+Content-Disposition: inline
+In-Reply-To: <ed58bd5b910baee6aa4c53752a45ecbc.squirrel@webmail.fixstars.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <mita@fixstars.com>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, devicetree@vger.kernel.org
 
-From: Nicholas Bellinger <nab@daterainc.com>
+On Wed, Aug 21, 2013 at 12:03:50AM +0900, Akinobu Mita wrote:
+> The discussion in that thread is useful.  Also, I found that Russell King
+> proposed replacing the boilerplate by using dma_coerce_mask_and_coherent()
+> in his patch set "Preview of DMA mask changes".
+> https://patchwork.kernel.org/patch/2837359/
 
-This patch changes iscsi-target to use transport_alloc_session_tags()
-pre-allocation logic for per-cpu session tag pooling with internal
-ida_alloc() + ida_free() calls based upon the saved se_cmd->map_tag id.
+That is an attempt to pull all that stuff into one central place so we
+don't have loads of drivers dealing with it in their own way.
 
-This includes tag pool setup based upon per NodeACL queue_depth after
-locating se_node_acl in iscsi_target_locate_portal().
+As far as I can gather from those who deal with DT, such as Arnd, is that
+they believe it to be wrong that the DT code sets up the DMA masks, and
+they think that stuff will break if the DT code does set these pointers
+up.
 
-Also update iscsit_allocate_cmd() and iscsit_release_cmd() to use
-percpu_ida_alloc() and percpu_ida_free() respectively.
+The big problem which we have is we have a whole bunch of drivers which
+don't bother at all with the DMA set mask functions (because they've been
+fiddling with the mask directly) and sorting that mess out is going to be
+pretty damn difficult.
 
-v2 changes:
-  - Fix bug with SessionType=Discovery in iscsi_target_locate_portal()
+So, the above series is all about bringing stuff to a central place where
+we can then start thinking about changing the behaviour and not have to
+patch lots of drivers throughout the tree for every change that's made.
 
-Cc: Or Gerlitz <ogerlitz@mellanox.com>
-Cc: Kent Overstreet <kmo@daterainc.com>
-Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
----
- drivers/target/iscsi/iscsi_target_core.h |    2 ++
- drivers/target/iscsi/iscsi_target_nego.c |   28 ++++++++++++++++++++++++----
- drivers/target/iscsi/iscsi_target_util.c |   27 ++++++++++++++++++++-------
- 3 files changed, 46 insertions(+), 11 deletions(-)
+The way I envision the change happening is this:
 
-diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
-index 5e1a068..e37b3b0 100644
---- a/drivers/target/iscsi/iscsi_target_core.h
-+++ b/drivers/target/iscsi/iscsi_target_core.h
-@@ -17,6 +17,8 @@
- #define SECONDS_FOR_ASYNC_TEXT		10
- #define SECONDS_FOR_LOGOUT_COMP		15
- #define WHITE_SPACE			" \t\v\f\n\r"
-+#define ISCSIT_MIN_TAGS			16
-+#define ISCSIT_EXTRA_TAGS		8
- 
- /* struct iscsi_node_attrib sanity values */
- #define NA_DATAOUT_TIMEOUT		3
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index daebe32..582b2db 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -876,8 +876,9 @@ int iscsi_target_locate_portal(
- 	struct iscsi_tiqn *tiqn;
- 	struct iscsi_tpg_np *tpg_np = NULL;
- 	struct iscsi_login_req *login_req;
--	u32 payload_length;
--	int sessiontype = 0, ret = 0;
-+	struct se_node_acl *se_nacl;
-+	u32 payload_length, queue_depth = 0;
-+	int sessiontype = 0, ret = 0, tag_num, tag_size;
- 
- 	login->np = np;
- 
-@@ -973,7 +974,7 @@ int iscsi_target_locate_portal(
- 			goto out;
- 		}
- 		ret = 0;
--		goto out;
-+		goto alloc_tags;
- 	}
- 
- get_target:
-@@ -1070,8 +1071,27 @@ get_target:
- 		ret = -1;
- 		goto out;
- 	}
-+	se_nacl = sess->se_sess->se_node_acl;
-+	queue_depth = se_nacl->queue_depth;
-+	/*
-+	 * Setup pre-allocated tags based upon allowed per NodeACL CmdSN
-+	 * depth for non immediate commands, plus extra tags for immediate
-+	 * commands.
-+	 *
-+	 * Also enforce a ISCSIT_MIN_TAGS to prevent unnecessary contention
-+	 * in per-cpu-ida tag allocation logic + small queue_depth.
-+	 */
-+alloc_tags:
-+	tag_num = max_t(u32, ISCSIT_MIN_TAGS, queue_depth);
-+	tag_num += ISCSIT_EXTRA_TAGS;
-+	tag_size = sizeof(struct iscsi_cmd) + conn->conn_transport->priv_size;
- 
--	ret = 0;
-+	ret = transport_alloc_session_tags(sess->se_sess, tag_num, tag_size);
-+	if (ret < 0) {
-+		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
-+				    ISCSI_LOGIN_STATUS_NO_RESOURCES);
-+		ret = -1;
-+	}
- out:
- 	kfree(tmpbuf);
- 	return ret;
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index 5784cad..68f5644 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -19,6 +19,7 @@
-  ******************************************************************************/
- 
- #include <linux/list.h>
-+#include <linux/idr.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/iscsi_proto.h>
- #include <target/target_core_base.h>
-@@ -156,13 +157,15 @@ void iscsit_free_r2ts_from_list(struct iscsi_cmd *cmd)
- struct iscsi_cmd *iscsit_allocate_cmd(struct iscsi_conn *conn, gfp_t gfp_mask)
- {
- 	struct iscsi_cmd *cmd;
--	int priv_size = conn->conn_transport->priv_size;
-+	struct se_session *se_sess = conn->sess->se_sess;
-+	int size, tag;
- 
--	cmd = kzalloc(sizeof(struct iscsi_cmd) + priv_size, gfp_mask);
--	if (!cmd) {
--		pr_err("Unable to allocate memory for struct iscsi_cmd.\n");
--		return NULL;
--	}
-+	tag = percpu_ida_alloc(&se_sess->sess_tag_pool, gfp_mask);
-+	size = sizeof(struct iscsi_cmd) + conn->conn_transport->priv_size;
-+	cmd = (struct iscsi_cmd *)(se_sess->sess_cmd_map + (tag * size));
-+	memset(cmd, 0, size);
-+
-+	cmd->se_cmd.map_tag = tag;
- 	cmd->conn = conn;
- 	INIT_LIST_HEAD(&cmd->i_conn_node);
- 	INIT_LIST_HEAD(&cmd->datain_list);
-@@ -678,6 +681,16 @@ void iscsit_free_queue_reqs_for_conn(struct iscsi_conn *conn)
- 
- void iscsit_release_cmd(struct iscsi_cmd *cmd)
- {
-+	struct iscsi_session *sess;
-+	struct se_cmd *se_cmd = &cmd->se_cmd;
-+
-+	if (cmd->conn)
-+		sess = cmd->conn->sess;
-+	else
-+		sess = cmd->sess;
-+
-+	BUG_ON(!sess || !sess->se_sess);
-+
- 	kfree(cmd->buf_ptr);
- 	kfree(cmd->pdu_list);
- 	kfree(cmd->seq_list);
-@@ -685,7 +698,7 @@ void iscsit_release_cmd(struct iscsi_cmd *cmd)
- 	kfree(cmd->iov_data);
- 	kfree(cmd->text_in_ptr);
- 
--	kfree(cmd);
-+	percpu_ida_free(&sess->se_sess->sess_tag_pool, se_cmd->map_tag);
- }
- EXPORT_SYMBOL(iscsit_release_cmd);
- 
--- 
-1.7.10.4
+1. Introduce the notion of mask coercion (drivers forcing the mask to a
+   particular value.)
+
+2. Add dma_set_mask() and similar functions to these drivers incrementally.
+
+3. Move the initialization of the mask up to the device creation level
+   (iow, the DT code) and out of the drivers (this can be done by
+   adding it to the DT code, and removing it from the mask coercion code.)
+
+4. Remove dma_coerce_mask_and_coherent() from the kernel once complete.
+
+So, why bother with dma_coerce_mask_and_coherent()?  Not only does it
+centralise the "hack" but it also provides a means to identify drivers
+which need work and/or have been missed (you just have to grep for the
+direct assignments to the DMA masks.)  Not only that but once the hack
+is centralised, it removes some of the variability in the drivers, and
+provides a step where we can allow things to be tested hopefully without
+causing any regressions.
+
+At least that's the theory.
