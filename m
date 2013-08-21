@@ -1,46 +1,37 @@
-From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH 8/8] zfcp: enable FCP hardware data router by default
-Date: Wed, 21 Aug 2013 17:05:31 +0200
-Message-ID: <1377097531-4942-9-git-send-email-maier@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/8] zfcp features and bugfixes for 3.12 merge window
+Date: Wed, 21 Aug 2013 08:36:06 -0700
+Message-ID: <1377099366.2011.23.camel@dabdike.int.hansenpartnership.com>
 References: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e06smtp11.uk.ibm.com ([195.75.94.107]:45215 "EHLO
-	e06smtp11.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351Ab3HUPHY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2013 11:07:24 -0400
-Received: from /spool/local
-	by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-	Wed, 21 Aug 2013 16:00:42 +0100
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40288 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751810Ab3HUPgK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Aug 2013 11:36:10 -0400
 In-Reply-To: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>
+To: Steffen Maier <maier@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-Enabling the data router support by default
-can increase performance in certain situations.
-It is safe to do so and tolerated in LPAR and under z/VM
-in case there is no data router support in that environment.
+On Wed, 2013-08-21 at 17:05 +0200, Steffen Maier wrote:
+> James,
+> 
+> here is a series of zfcp features and bugfixes
+> for the upcoming merge window preparing kernel v3.12.
+> The patches apply on top of the current misc branch of your scsi.git.
 
-Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Reviewed-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
----
- drivers/s390/scsi/zfcp_qdio.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+OK, so this isn't going to work any more given Greg's recent statements.
+Patches for stable have to go through the -rc fixes process, so could
+you redo this as two patch sets: one for fixes with the cc stable tags
+and the rest for misc?
 
---- a/drivers/s390/scsi/zfcp_qdio.c
-+++ b/drivers/s390/scsi/zfcp_qdio.c
-@@ -16,9 +16,9 @@
- 
- #define QBUFF_PER_PAGE		(PAGE_SIZE / sizeof(struct qdio_buffer))
- 
--static bool enable_multibuffer;
-+static bool enable_multibuffer = 1;
- module_param_named(datarouter, enable_multibuffer, bool, 0400);
--MODULE_PARM_DESC(datarouter, "Enable hardware data router support");
-+MODULE_PARM_DESC(datarouter, "Enable hardware data router support (default on)");
- 
- static int zfcp_qdio_buffers_enqueue(struct qdio_buffer **sbal)
- {
+Thanks,
+
+James
+
 
