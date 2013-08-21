@@ -1,167 +1,68 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH 4/8] zfcp: fix lock imbalance by reworking request queue locking
-Date: Wed, 21 Aug 2013 17:05:27 +0200
-Message-ID: <1377097531-4942-5-git-send-email-maier@linux.vnet.ibm.com>
+Subject: [PATCH 6/8] zfcp: remove access control tables interface (keep sysfs files)
+Date: Wed, 21 Aug 2013 17:05:29 +0200
+Message-ID: <1377097531-4942-7-git-send-email-maier@linux.vnet.ibm.com>
 References: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Peschke <mpeschke@linux.vnet.ibm.com>, stable@vger.kernel.org.#2.6.35+, Andrew Morton <akpm@linux-foundation.org>, David Howells <dhowells@redhat.com>, Jens Axboe <axboe@kernel.dk>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Peschke <mpeschke@linux.vnet.ibm.com>, stable@vger.kernel.org.#3.11+
 List-Id: linux-scsi@vger.kernel.org
 
 From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
-This patch adds wait_event_interruptible_lock_irq_timeout(), which is a
-straight-forward descendant of wait_event_interruptible_timeout() and
-wait_event_interruptible_lock_irq().
+By popular demand, this patch brings back a couple of sysfs attributes
+removed by commit 663e0890e31cb85f0cca5ac1faaee0d2d52880b5
+"[SCSI] zfcp: remove access control tables interface".
+The content has been irrelevant for years, but the files must be
+there forever for whatever user space tools that may rely on them.
 
-The zfcp driver used to call wait_event_interruptible_timeout()
-in combination with some intricate and error-prone locking. Using
-wait_event_interruptible_lock_irq_timeout() as a replacement
-nicely cleans up that locking.
+Since these files always return a constant value, a new stripped
+down show-macro was required. Otherwise build warnings would have
+been introduced.
 
-This rework removes a situation that resulted in a locking imbalance
-in zfcp_qdio_sbal_get():
-
-BUG: workqueue leaked lock or atomic: events/1/0xffffff00/10
-    last function: zfcp_fc_wka_port_offline+0x0/0xa0 [zfcp]
-
-It was introduced by commit c2af7545aaff3495d9bf9a7608c52f0af86fb194
-"[SCSI] zfcp: Do not wait for SBALs on stopped queue", which had a new
-code path related to ZFCP_STATUS_ADAPTER_QDIOUP that took an early exit
-without a required lock being held. The problem occured when a
-special, non-SCSI I/O request was being submitted in process context,
-when the adapter's queues had been torn down. In this case the bug
-surfaced when the Fibre Channel port connection for a well-known address
-was closed during a concurrent adapter shut-down procedure, which is a
-rare constellation.
-
-This patch also fixes these warnings from the sparse tool (make C=1):
-
-drivers/s390/scsi/zfcp_qdio.c:224:12: warning: context imbalance in
- 'zfcp_qdio_sbal_check' - wrong count at exit
-drivers/s390/scsi/zfcp_qdio.c:244:5: warning: context imbalance in
- 'zfcp_qdio_sbal_get' - unexpected unlock
-
-Last but not least, we get rid of that crappy lock-unlock-lock
-sequence at the beginning of the critical section.
-
-It is okay to call zfcp_erp_adapter_reopen() with req_q_lock held.
-
-Reported-by: Mikulas Patocka <mpatocka@redhat.com>
-Reported-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Cc: stable@vger.kernel.org #2.6.35+
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org #3.11+
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_qdio.c |    8 +----
- include/linux/wait.h          |   57 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 59 insertions(+), 6 deletions(-)
+ drivers/s390/scsi/zfcp_sysfs.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
---- a/drivers/s390/scsi/zfcp_qdio.c
-+++ b/drivers/s390/scsi/zfcp_qdio.c
-@@ -224,11 +224,9 @@ int zfcp_qdio_sbals_from_sg(struct zfcp_
+--- a/drivers/s390/scsi/zfcp_sysfs.c
++++ b/drivers/s390/scsi/zfcp_sysfs.c
+@@ -27,6 +27,16 @@ static ssize_t zfcp_sysfs_##_feat##_##_n
+ static ZFCP_DEV_ATTR(_feat, _name, S_IRUGO,				       \
+ 		     zfcp_sysfs_##_feat##_##_name##_show, NULL);
  
- static int zfcp_qdio_sbal_check(struct zfcp_qdio *qdio)
- {
--	spin_lock_irq(&qdio->req_q_lock);
- 	if (atomic_read(&qdio->req_q_free) ||
- 	    !(atomic_read(&qdio->adapter->status) & ZFCP_STATUS_ADAPTER_QDIOUP))
- 		return 1;
--	spin_unlock_irq(&qdio->req_q_lock);
- 	return 0;
- }
- 
-@@ -246,9 +244,8 @@ int zfcp_qdio_sbal_get(struct zfcp_qdio
- {
- 	long ret;
- 
--	spin_unlock_irq(&qdio->req_q_lock);
--	ret = wait_event_interruptible_timeout(qdio->req_q_wq,
--			       zfcp_qdio_sbal_check(qdio), 5 * HZ);
-+	ret = wait_event_interruptible_lock_irq_timeout(qdio->req_q_wq,
-+		       zfcp_qdio_sbal_check(qdio), qdio->req_q_lock, 5 * HZ);
- 
- 	if (!(atomic_read(&qdio->adapter->status) & ZFCP_STATUS_ADAPTER_QDIOUP))
- 		return -EIO;
-@@ -262,7 +259,6 @@ int zfcp_qdio_sbal_get(struct zfcp_qdio
- 		zfcp_erp_adapter_reopen(qdio->adapter, 0, "qdsbg_1");
- 	}
- 
--	spin_lock_irq(&qdio->req_q_lock);
- 	return -EIO;
- }
- 
---- a/include/linux/wait.h
-+++ b/include/linux/wait.h
-@@ -811,6 +811,63 @@ do {									\
- 	__ret;								\
- })
- 
-+#define __wait_event_interruptible_lock_irq_timeout(wq, condition,	\
-+						    lock, ret)		\
-+do {									\
-+	DEFINE_WAIT(__wait);						\
-+									\
-+	for (;;) {							\
-+		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
-+		if (condition)						\
-+			break;						\
-+		if (signal_pending(current)) {				\
-+			ret = -ERESTARTSYS;				\
-+			break;						\
-+		}							\
-+		spin_unlock_irq(&lock);					\
-+		ret = schedule_timeout(ret);				\
-+		spin_lock_irq(&lock);					\
-+		if (!ret)						\
-+			break;						\
-+	}								\
-+	finish_wait(&wq, &__wait);					\
-+} while (0)
++#define ZFCP_DEFINE_ATTR_CONST(_feat, _name, _format, _value)		       \
++static ssize_t zfcp_sysfs_##_feat##_##_name##_show(struct device *dev,	       \
++						   struct device_attribute *at,\
++						   char *buf)		       \
++{									       \
++	return sprintf(buf, _format, _value);				       \
++}									       \
++static ZFCP_DEV_ATTR(_feat, _name, S_IRUGO,				       \
++		     zfcp_sysfs_##_feat##_##_name##_show, NULL);
 +
-+/**
-+ * wait_event_interruptible_lock_irq_timeout - sleep until a condition gets true or a timeout elapses.
-+ *		The condition is checked under the lock. This is expected
-+ *		to be called with the lock taken.
-+ * @wq: the waitqueue to wait on
-+ * @condition: a C expression for the event to wait for
-+ * @lock: a locked spinlock_t, which will be released before schedule()
-+ *	  and reacquired afterwards.
-+ * @timeout: timeout, in jiffies
-+ *
-+ * The process is put to sleep (TASK_INTERRUPTIBLE) until the
-+ * @condition evaluates to true or signal is received. The @condition is
-+ * checked each time the waitqueue @wq is woken up.
-+ *
-+ * wake_up() has to be called after changing any variable that could
-+ * change the result of the wait condition.
-+ *
-+ * This is supposed to be called while holding the lock. The lock is
-+ * dropped before going to sleep and is reacquired afterwards.
-+ *
-+ * The function returns 0 if the @timeout elapsed, -ERESTARTSYS if it
-+ * was interrupted by a signal, and the remaining jiffies otherwise
-+ * if the condition evaluated to true before the timeout elapsed.
-+ */
-+#define wait_event_interruptible_lock_irq_timeout(wq, condition, lock,	\
-+						  timeout)		\
-+({									\
-+	int __ret = timeout;						\
-+									\
-+	if (!(condition))						\
-+		__wait_event_interruptible_lock_irq_timeout(		\
-+					wq, condition, lock, __ret);	\
-+	__ret;								\
-+})
-+
+ #define ZFCP_DEFINE_A_ATTR(_name, _format, _value)			     \
+ static ssize_t zfcp_sysfs_adapter_##_name##_show(struct device *dev,	     \
+ 						 struct device_attribute *at,\
+@@ -75,6 +85,8 @@ ZFCP_DEFINE_ATTR(zfcp_unit, unit, in_rec
+ ZFCP_DEFINE_ATTR(zfcp_unit, unit, access_denied, "%d\n",
+ 		 (zfcp_unit_sdev_status(unit) &
+ 		  ZFCP_STATUS_COMMON_ACCESS_DENIED) != 0);
++ZFCP_DEFINE_ATTR_CONST(unit, access_shared, "%d\n", 0);
++ZFCP_DEFINE_ATTR_CONST(unit, access_readonly, "%d\n", 0);
  
- /*
-  * These are the old interfaces to sleep waiting for an event.
+ static ssize_t zfcp_sysfs_port_failed_show(struct device *dev,
+ 					   struct device_attribute *attr,
+@@ -347,6 +359,8 @@ static struct attribute *zfcp_unit_attrs
+ 	&dev_attr_unit_in_recovery.attr,
+ 	&dev_attr_unit_status.attr,
+ 	&dev_attr_unit_access_denied.attr,
++	&dev_attr_unit_access_shared.attr,
++	&dev_attr_unit_access_readonly.attr,
+ 	NULL
+ };
+ static struct attribute_group zfcp_unit_attr_group = {
