@@ -1,37 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/8] zfcp features and bugfixes for 3.12 merge window
-Date: Wed, 21 Aug 2013 08:36:06 -0700
-Message-ID: <1377099366.2011.23.camel@dabdike.int.hansenpartnership.com>
-References: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 9/9] tcm_qla2xxx: Add special case for COMPARE_AND_WRITE
+ data_direction
+Date: Wed, 21 Aug 2013 08:53:14 -0700
+Message-ID: <20130821155314.GA17850@infradead.org>
+References: <1377029280-19144-1-git-send-email-nab@daterainc.com>
+ <1377029280-19144-10-git-send-email-nab@daterainc.com>
+ <CAL1RGDVSrf6++PMdfnAZAUw=QX0VbQ9Wck+v=7ebfc-_FXJ_NA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40288 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751810Ab3HUPgK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Aug 2013 11:36:10 -0400
-In-Reply-To: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAL1RGDVSrf6++PMdfnAZAUw=QX0VbQ9Wck+v=7ebfc-_FXJ_NA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Roland Dreier <roland@purestorage.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, James Bottomley <JBottomley@parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-On Wed, 2013-08-21 at 17:05 +0200, Steffen Maier wrote:
-> James,
-> 
-> here is a series of zfcp features and bugfixes
-> for the upcoming merge window preparing kernel v3.12.
-> The patches apply on top of the current misc branch of your scsi.git.
+On Wed, Aug 21, 2013 at 07:38:21AM -0700, Roland Dreier wrote:
+> I don't understand this.  In fact the whole patch series looks quite
+> confused.  COMPARE AND WRITE is a normal Data-Out command, with no
+> requirement for special bidirectional handling or anything like that.
+> The only slightly unusual thing is that a CAW command with a NUMBER OF
+> LOGICAL BLOCKS equal to N will actually transfer 2*N worth of data --
+> one set of data for the compare operation and a second set to write if
+> the compare succeeds.  But just to be clear, the transfer of those 2*N
+> blocks happens as a single transfer during the Data-Out phase.
 
-OK, so this isn't going to work any more given Greg's recent statements.
-Patches for stable have to go through the -rc fixes process, so could
-you redo this as two patch sets: one for fixes with the cc stable tags
-and the rest for misc?
+I think the confusion is that the implementation of COMPARE AND WRITE
+obviously requires a read and a write phase, and the implementation
+tries to mix this up with an actual bidirectional scsi command.
 
-Thanks,
-
-James
-
-
+If the core stopped keying off t_bidi_data_sg and used better flag
+this could be easily solved.
