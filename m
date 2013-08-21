@@ -1,66 +1,55 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: SCSI core patches for kernel 3.12
-Date: Wed, 21 Aug 2013 00:35:59 -0700
-Message-ID: <1377070559.32763.31.camel@haakon3.risingtidesystems.com>
-References: <52135B99.2000102@acm.org>
-	 <1377015091.5302.47.camel@haakon3.risingtidesystems.com>
-	 <52139608.5040608@acm.org>
-	 <1377018283.5302.48.camel@haakon3.risingtidesystems.com>
-	 <5213AEBD.2020303@acm.org>
-	 <1377031084.5302.54.camel@haakon3.risingtidesystems.com>
-	 <20130821064847.GA9043@infradead.org>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCHv2] pm80xx: fix Adaptec 71605H hang
+Date: Wed, 21 Aug 2013 14:53:02 +0200
+Message-ID: <5214B82E.5090208@gmail.com>
+References: <51F2A741.1020702@xs4all.nl> <51F92B0C.70804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58661 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752192Ab3HUH3L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2013 03:29:11 -0400
-In-Reply-To: <20130821064847.GA9043@infradead.org>
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:57827 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544Ab3HUMwv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2013 08:52:51 -0400
+Received: by mail-bk0-f54.google.com with SMTP id mz12so149371bkb.41
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2013 05:52:50 -0700 (PDT)
+In-Reply-To: <51F92B0C.70804@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Hans Verkuil <hverkuil@xs4all.nl>, linux-scsi@vger.kernel.org, AnandKumar.Santhanam@pmcs.com, lindar_liu@usish.com, Sangeetha.Gnanasekaran@pmcs.com
 
-On Tue, 2013-08-20 at 23:48 -0700, Christoph Hellwig wrote:
-> On Tue, Aug 20, 2013 at 01:38:04PM -0700, Nicholas A. Bellinger wrote:
-> > <yawn>, I only care about the performance against upstream code, so that
-> > would mean scsi_debug here.  Typically the onus of demonstrating a
-> > performance improvement is on the patch submitter (eg: not the
-> > reviewer).
+On 07/31/2013 05:19 PM, Jack Wang wrote:
+> On 07/26/2013 06:43 PM, Hans Verkuil wrote:
+>> The IO command size is 128 bytes for these new controllers as opposed to 64
+>> for the old 8001 controller.
+>>
+>> The Adaptec out-of-tree driver did this correctly. After comparing the two
+>> this turned out to be the crucial difference.
+>>
+>> So don't hardcode the IO command size, instead use pm8001_ha->iomb_size as
+>> that is the correct value for both old and new controllers.
+>>
+>> Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
+>> Cc: stable@vger.kernel.org      # for v3.10 and up
+> snip
 > 
-> Do you really care?  If the patchset introduced a lot of code or
-> ugliness I might agreee to your above statement, but it actually
-> makes the code more obvious, simpler and also fixes some small issues
-> so I don't think we'll need an exact performance improvement to justify
-> it.
-
-Of course not.  I'm curious 1) how fast Bart has a SCSI client going
-using scsi_request_fn(), and if it's a measurable difference 2) what
-that difference is.
-
+> Thanks Hans.
+> Looks good now.
 > 
-> > But it would be at least useful to know the actual benefit with results
-> > as an incremental step, short of avoiding this code entirely for
-> > scsi-mq.
+> Acked-by: Jack Wang <xjtuwjp@gmail.com>
 > 
-> I don't think you can avoid the device put/get entirely for that case.
-> I've been looking over the mq code a bit more lately, and in a few
-> places it just seems to try to cut a few too many corners.
-
-Yes, it's a prototype!
-
-> To get it out of the prototype status we'll need to make sure all edge cases
-> are handled correctly.
+> James,
 > 
+> Could you consider to include this fix into your fixes tree, without
+> this fix new Adaptec controller support is broken, sorry for that.
+> 
+> 
+> Jack
+> 
+Hi, James,
 
-Ohhh, yes.  I'm not claiming that it's anything beyond a very early
-alpha at this stage, and have no plans for a mainline push anytime
-before 2014 arrives, before scsi_error.c supports per-device context
-recovery, or before hell freezes over.
+Could you include this patch, or you need we resend?
 
-Which ever comes first..  ;)
-
---nab
-
+KR
+Jack
