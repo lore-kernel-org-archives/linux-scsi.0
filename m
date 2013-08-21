@@ -1,188 +1,209 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 3/5] target/iscsi: Remove macros that contain typecasts
-Date: Tue, 20 Aug 2013 18:00:05 -0700
-Message-ID: <1377046807-15860-4-git-send-email-agrover@redhat.com>
+Subject: [PATCH 2/5] target/iscsi: Remove iscsi dereferencing macros
+Date: Tue, 20 Aug 2013 18:00:04 -0700
+Message-ID: <1377046807-15860-3-git-send-email-agrover@redhat.com>
 References: <1377046807-15860-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62817 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40426 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752092Ab3HUCKW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Aug 2013 22:10:22 -0400
+	id S1752089Ab3HUCKV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Aug 2013 22:10:21 -0400
 In-Reply-To: <1377046807-15860-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 
-These just want to return a pointer instead of a value, but are otherwise
-the same.
-
-ISCSI_TPG_LUN macro was unused.
+These are all straightforward.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/iscsi/iscsi_target.c       |    2 +-
- drivers/target/iscsi/iscsi_target_auth.c  |    2 +-
- drivers/target/iscsi/iscsi_target_core.h  |    4 ----
- drivers/target/iscsi/iscsi_target_erl0.c  |   10 +++++-----
- drivers/target/iscsi/iscsi_target_login.c |   16 ++++++++--------
- drivers/target/iscsi/iscsi_target_nego.c  |    6 +++---
- 6 files changed, 18 insertions(+), 22 deletions(-)
+ drivers/target/iscsi/iscsi_target_configfs.c |   42 +++++++++++++-------------
+ drivers/target/iscsi/iscsi_target_core.h     |    9 -----
+ drivers/target/iscsi/iscsi_target_nego.c     |    8 ++--
+ drivers/target/iscsi/iscsi_target_tpg.c      |    4 +-
+ 4 files changed, 27 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 92f2776..12c1349 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -4375,7 +4375,7 @@ int iscsit_close_connection(
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index 9eb7855..435efae 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -374,7 +374,7 @@ static ssize_t iscsi_nacl_attrib_show_##name(				\
+ 	struct iscsi_node_acl *nacl = container_of(se_nacl, struct iscsi_node_acl, \
+ 					se_node_acl);			\
+ 									\
+-	return sprintf(page, "%u\n", ISCSI_NODE_ATTRIB(nacl)->name);	\
++	return sprintf(page, "%u\n", nacl->node_attrib.name);		\
+ }									\
+ 									\
+ static ssize_t iscsi_nacl_attrib_store_##name(				\
+@@ -899,7 +899,7 @@ static struct se_node_acl *lio_target_make_nodeacl(
+ 	if (!se_nacl_new)
+ 		return ERR_PTR(-ENOMEM);
  
- int iscsit_close_session(struct iscsi_session *sess)
- {
--	struct iscsi_portal_group *tpg = ISCSI_TPG_S(sess);
-+	struct iscsi_portal_group *tpg = sess->tpg;
- 	struct se_portal_group *se_tpg = &tpg->tpg_se_tpg;
- 
- 	if (atomic_read(&sess->nconn)) {
-diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
-index cee1754..727c458 100644
---- a/drivers/target/iscsi/iscsi_target_auth.c
-+++ b/drivers/target/iscsi/iscsi_target_auth.c
-@@ -113,7 +113,7 @@ static struct iscsi_chap *chap_server_open(
+-	cmdsn_depth = ISCSI_TPG_ATTRIB(tpg)->default_cmdsn_depth;
++	cmdsn_depth = tpg->tpg_attrib.default_cmdsn_depth;
  	/*
- 	 * Set Identifier.
- 	 */
--	chap->id = ISCSI_TPG_C(conn)->tpg_chap_id++;
-+	chap->id = conn->tpg->tpg_chap_id++;
- 	*aic_len += sprintf(aic_str + *aic_len, "CHAP_I=%d", chap->id);
- 	*aic_len += 1;
- 	pr_debug("[server] Sending CHAP_I=%d\n", chap->id);
+ 	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()
+ 	 * when converting a NdoeACL from demo mode -> explict
+@@ -922,9 +922,9 @@ static struct se_node_acl *lio_target_make_nodeacl(
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+-	stats_cg->default_groups[0] = &NODE_STAT_GRPS(acl)->iscsi_sess_stats_group;
++	stats_cg->default_groups[0] = &acl->node_stat_grps.iscsi_sess_stats_group;
+ 	stats_cg->default_groups[1] = NULL;
+-	config_group_init_type_name(&NODE_STAT_GRPS(acl)->iscsi_sess_stats_group,
++	config_group_init_type_name(&acl->node_stat_grps.iscsi_sess_stats_group,
+ 			"iscsi_sess_stats", &iscsi_stat_sess_cit);
+ 
+ 	return se_nacl;
+@@ -969,7 +969,7 @@ static ssize_t iscsi_tpg_attrib_show_##name(				\
+ 	if (iscsit_get_tpg(tpg) < 0)					\
+ 		return -EINVAL;						\
+ 									\
+-	rb = sprintf(page, "%u\n", ISCSI_TPG_ATTRIB(tpg)->name);	\
++	rb = sprintf(page, "%u\n", tpg->tpg_attrib.name);		\
+ 	iscsit_put_tpg(tpg);						\
+ 	return rb;							\
+ }									\
+@@ -1516,21 +1516,21 @@ static struct se_wwn *lio_target_call_coreaddtiqn(
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+-	stats_cg->default_groups[0] = &WWN_STAT_GRPS(tiqn)->iscsi_instance_group;
+-	stats_cg->default_groups[1] = &WWN_STAT_GRPS(tiqn)->iscsi_sess_err_group;
+-	stats_cg->default_groups[2] = &WWN_STAT_GRPS(tiqn)->iscsi_tgt_attr_group;
+-	stats_cg->default_groups[3] = &WWN_STAT_GRPS(tiqn)->iscsi_login_stats_group;
+-	stats_cg->default_groups[4] = &WWN_STAT_GRPS(tiqn)->iscsi_logout_stats_group;
++	stats_cg->default_groups[0] = &tiqn->tiqn_stat_grps.iscsi_instance_group;
++	stats_cg->default_groups[1] = &tiqn->tiqn_stat_grps.iscsi_sess_err_group;
++	stats_cg->default_groups[2] = &tiqn->tiqn_stat_grps.iscsi_tgt_attr_group;
++	stats_cg->default_groups[3] = &tiqn->tiqn_stat_grps.iscsi_login_stats_group;
++	stats_cg->default_groups[4] = &tiqn->tiqn_stat_grps.iscsi_logout_stats_group;
+ 	stats_cg->default_groups[5] = NULL;
+-	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_instance_group,
++	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_instance_group,
+ 			"iscsi_instance", &iscsi_stat_instance_cit);
+-	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_sess_err_group,
++	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_sess_err_group,
+ 			"iscsi_sess_err", &iscsi_stat_sess_err_cit);
+-	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_tgt_attr_group,
++	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_tgt_attr_group,
+ 			"iscsi_tgt_attr", &iscsi_stat_tgt_attr_cit);
+-	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_login_stats_group,
++	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_login_stats_group,
+ 			"iscsi_login_stats", &iscsi_stat_login_cit);
+-	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_logout_stats_group,
++	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_logout_stats_group,
+ 			"iscsi_logout_stats", &iscsi_stat_logout_cit);
+ 
+ 	pr_debug("LIO_Target_ConfigFS: REGISTER -> %s\n", tiqn->tiqn);
+@@ -1817,21 +1817,21 @@ static u32 lio_tpg_get_default_depth(struct se_portal_group *se_tpg)
+ {
+ 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
+ 
+-	return ISCSI_TPG_ATTRIB(tpg)->default_cmdsn_depth;
++	return tpg->tpg_attrib.default_cmdsn_depth;
+ }
+ 
+ static int lio_tpg_check_demo_mode(struct se_portal_group *se_tpg)
+ {
+ 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
+ 
+-	return ISCSI_TPG_ATTRIB(tpg)->generate_node_acls;
++	return tpg->tpg_attrib.generate_node_acls;
+ }
+ 
+ static int lio_tpg_check_demo_mode_cache(struct se_portal_group *se_tpg)
+ {
+ 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
+ 
+-	return ISCSI_TPG_ATTRIB(tpg)->cache_dynamic_acls;
++	return tpg->tpg_attrib.cache_dynamic_acls;
+ }
+ 
+ static int lio_tpg_check_demo_mode_write_protect(
+@@ -1839,7 +1839,7 @@ static int lio_tpg_check_demo_mode_write_protect(
+ {
+ 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
+ 
+-	return ISCSI_TPG_ATTRIB(tpg)->demo_mode_write_protect;
++	return tpg->tpg_attrib.demo_mode_write_protect;
+ }
+ 
+ static int lio_tpg_check_prod_mode_write_protect(
+@@ -1847,7 +1847,7 @@ static int lio_tpg_check_prod_mode_write_protect(
+ {
+ 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
+ 
+-	return ISCSI_TPG_ATTRIB(tpg)->prod_mode_write_protect;
++	return tpg->tpg_attrib.prod_mode_write_protect;
+ }
+ 
+ static void lio_tpg_release_fabric_acl(
+@@ -1911,7 +1911,7 @@ static void lio_set_default_node_attributes(struct se_node_acl *se_acl)
+ 	struct iscsi_node_acl *acl = container_of(se_acl, struct iscsi_node_acl,
+ 				se_node_acl);
+ 
+-	ISCSI_NODE_ATTRIB(acl)->nacl = acl;
++	acl->node_attrib.nacl = acl;
+ 	iscsit_set_default_node_attribues(acl);
+ }
+ 
 diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
-index 59b5125..53f18e5 100644
+index e37b3b0..59b5125 100644
 --- a/drivers/target/iscsi/iscsi_target_core.h
 +++ b/drivers/target/iscsi/iscsi_target_core.h
-@@ -825,10 +825,6 @@ struct iscsi_portal_group {
- 	struct list_head	tpg_list;
- } ____cacheline_aligned;
+@@ -750,11 +750,6 @@ struct iscsi_node_acl {
+ 	struct se_node_acl	se_node_acl;
+ };
  
--#define ISCSI_TPG_C(c)		((struct iscsi_portal_group *)(c)->tpg)
--#define ISCSI_TPG_LUN(c, l)  ((iscsi_tpg_list_t *)(c)->tpg->tpg_lun_list_t[l])
--#define ISCSI_TPG_S(s)		((struct iscsi_portal_group *)(s)->tpg)
+-#define NODE_STAT_GRPS(nacl)	(&(nacl)->node_stat_grps)
 -
+-#define ISCSI_NODE_ATTRIB(t)	(&(t)->node_attrib)
+-#define ISCSI_NODE_AUTH(t)	(&(t)->node_auth)
+-
+ struct iscsi_tpg_attrib {
+ 	u32			authentication;
+ 	u32			login_timeout;
+@@ -833,8 +828,6 @@ struct iscsi_portal_group {
+ #define ISCSI_TPG_C(c)		((struct iscsi_portal_group *)(c)->tpg)
+ #define ISCSI_TPG_LUN(c, l)  ((iscsi_tpg_list_t *)(c)->tpg->tpg_lun_list_t[l])
+ #define ISCSI_TPG_S(s)		((struct iscsi_portal_group *)(s)->tpg)
+-#define ISCSI_TPG_ATTRIB(t)	(&(t)->tpg_attrib)
+-#define SE_TPG(tpg)		(&(tpg)->tpg_se_tpg)
+ 
  struct iscsi_wwn_stat_grps {
  	struct config_group	iscsi_stat_group;
- 	struct config_group	iscsi_instance_group;
-diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/iscsi/iscsi_target_erl0.c
-index 08bd878..5d0ef48 100644
---- a/drivers/target/iscsi/iscsi_target_erl0.c
-+++ b/drivers/target/iscsi/iscsi_target_erl0.c
-@@ -759,7 +759,7 @@ int iscsit_check_post_dataout(
- static void iscsit_handle_time2retain_timeout(unsigned long data)
- {
- 	struct iscsi_session *sess = (struct iscsi_session *) data;
--	struct iscsi_portal_group *tpg = ISCSI_TPG_S(sess);
-+	struct iscsi_portal_group *tpg = sess->tpg;
- 	struct se_portal_group *se_tpg = &tpg->tpg_se_tpg;
+@@ -866,8 +859,6 @@ struct iscsi_tiqn {
+ 	struct iscsi_logout_stats    logout_stats;
+ } ____cacheline_aligned;
  
- 	spin_lock_bh(&se_tpg->session_lock);
-@@ -803,9 +803,9 @@ void iscsit_start_time2retain_handler(struct iscsi_session *sess)
- 	 * Only start Time2Retain timer when the associated TPG is still in
- 	 * an ACTIVE (eg: not disabled or shutdown) state.
- 	 */
--	spin_lock(&ISCSI_TPG_S(sess)->tpg_state_lock);
--	tpg_active = (ISCSI_TPG_S(sess)->tpg_state == TPG_STATE_ACTIVE);
--	spin_unlock(&ISCSI_TPG_S(sess)->tpg_state_lock);
-+	spin_lock(&sess->tpg->tpg_state_lock);
-+	tpg_active = (sess->tpg->tpg_state == TPG_STATE_ACTIVE);
-+	spin_unlock(&sess->tpg->tpg_state_lock);
- 
- 	if (!tpg_active)
- 		return;
-@@ -831,7 +831,7 @@ void iscsit_start_time2retain_handler(struct iscsi_session *sess)
-  */
- int iscsit_stop_time2retain_timer(struct iscsi_session *sess)
- {
--	struct iscsi_portal_group *tpg = ISCSI_TPG_S(sess);
-+	struct iscsi_portal_group *tpg = sess->tpg;
- 	struct se_portal_group *se_tpg = &tpg->tpg_se_tpg;
- 
- 	if (sess->time2retain_timer_flags & ISCSI_TF_EXPIRED)
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index c29fffd..ca32470 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -349,15 +349,15 @@ static int iscsi_login_zero_tsih_s2(
- 	 * Assign a new TPG Session Handle.  Note this is protected with
- 	 * struct iscsi_portal_group->np_login_sem from iscsit_access_np().
- 	 */
--	sess->tsih = ++ISCSI_TPG_S(sess)->ntsih;
-+	sess->tsih = ++sess->tpg->ntsih;
- 	if (!sess->tsih)
--		sess->tsih = ++ISCSI_TPG_S(sess)->ntsih;
-+		sess->tsih = ++sess->tpg->ntsih;
- 
- 	/*
- 	 * Create the default params from user defined values..
- 	 */
- 	if (iscsi_copy_param_list(&conn->param_list,
--				ISCSI_TPG_C(conn)->param_list, 1) < 0) {
-+				conn->tpg->param_list, 1) < 0) {
- 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
- 				ISCSI_LOGIN_STATUS_NO_RESOURCES);
- 		return -1;
-@@ -382,7 +382,7 @@ static int iscsi_login_zero_tsih_s2(
- 	 * In our case, we have already located the struct iscsi_tiqn at this point.
- 	 */
- 	memset(buf, 0, 32);
--	sprintf(buf, "TargetPortalGroupTag=%hu", ISCSI_TPG_S(sess)->tpgt);
-+	sprintf(buf, "TargetPortalGroupTag=%hu", sess->tpg->tpgt);
- 	if (iscsi_change_param_value(buf, conn->param_list, 0) < 0) {
- 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
- 				ISCSI_LOGIN_STATUS_NO_RESOURCES);
-@@ -577,7 +577,7 @@ static int iscsi_login_non_zero_tsih_s2(
- 	iscsi_login_set_conn_values(sess, conn, pdu->cid);
- 
- 	if (iscsi_copy_param_list(&conn->param_list,
--			ISCSI_TPG_C(conn)->param_list, 0) < 0) {
-+			conn->tpg->param_list, 0) < 0) {
- 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
- 				ISCSI_LOGIN_STATUS_NO_RESOURCES);
- 		return -1;
-@@ -595,7 +595,7 @@ static int iscsi_login_non_zero_tsih_s2(
- 	 * In our case, we have already located the struct iscsi_tiqn at this point.
- 	 */
- 	memset(buf, 0, 32);
--	sprintf(buf, "TargetPortalGroupTag=%hu", ISCSI_TPG_S(sess)->tpgt);
-+	sprintf(buf, "TargetPortalGroupTag=%hu", sess->tpg->tpgt);
- 	if (iscsi_change_param_value(buf, conn->param_list, 0) < 0) {
- 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
- 				ISCSI_LOGIN_STATUS_NO_RESOURCES);
-@@ -693,7 +693,7 @@ int iscsi_post_login_handler(
- 	int stop_timer = 0;
- 	struct iscsi_session *sess = conn->sess;
- 	struct se_session *se_sess = sess->se_sess;
--	struct iscsi_portal_group *tpg = ISCSI_TPG_S(sess);
-+	struct iscsi_portal_group *tpg = sess->tpg;
- 	struct se_portal_group *se_tpg = &tpg->tpg_se_tpg;
- 	struct iscsi_thread_set *ts;
- 
-@@ -1156,7 +1156,7 @@ old_sess_out:
- 		spin_lock_bh(&conn->sess->conn_lock);
- 		if (conn->sess->session_state == TARG_SESS_STATE_FAILED) {
- 			struct se_portal_group *se_tpg =
--					&ISCSI_TPG_C(conn)->tpg_se_tpg;
-+					&conn->tpg->tpg_se_tpg;
- 
- 			atomic_set(&conn->sess->session_continuation, 0);
- 			spin_unlock_bh(&conn->sess->conn_lock);
+-#define WWN_STAT_GRPS(tiqn)	(&(tiqn)->tiqn_stat_grps)
+-
+ struct iscsit_global {
+ 	/* In core shutdown */
+ 	u32			in_shutdown;
 diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index 08ebbad..563eacf 100644
+index 582b2db..08ebbad 100644
 --- a/drivers/target/iscsi/iscsi_target_nego.c
 +++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -142,7 +142,7 @@ static u32 iscsi_handle_authentication(
+ 			iscsi_nacl = container_of(se_nacl, struct iscsi_node_acl,
+ 						  se_node_acl);
+ 
+-			auth = ISCSI_NODE_AUTH(iscsi_nacl);
++			auth = &iscsi_nacl->node_auth;
+ 		}
+ 	} else {
+ 		/*
 @@ -699,7 +699,7 @@ static int iscsi_target_handle_csg_zero(
  		return -1;
  
  	if (!iscsi_check_negotiated_keys(conn->param_list)) {
--		if (ISCSI_TPG_C(conn)->tpg_attrib.authentication &&
-+		if (conn->tpg->tpg_attrib.authentication &&
+-		if (ISCSI_TPG_ATTRIB(ISCSI_TPG_C(conn))->authentication &&
++		if (ISCSI_TPG_C(conn)->tpg_attrib.authentication &&
  		    !strncmp(param->value, NONE, 4)) {
  			pr_err("Initiator sent AuthMethod=None but"
  				" Target is enforcing iSCSI Authentication,"
@@ -190,8 +211,8 @@ index 08ebbad..563eacf 100644
  			return -1;
  		}
  
--		if (ISCSI_TPG_C(conn)->tpg_attrib.authentication &&
-+		if (conn->tpg->tpg_attrib.authentication &&
+-		if (ISCSI_TPG_ATTRIB(ISCSI_TPG_C(conn))->authentication &&
++		if (ISCSI_TPG_C(conn)->tpg_attrib.authentication &&
  		    !login->auth_complete)
  			return 0;
  
@@ -199,11 +220,33 @@ index 08ebbad..563eacf 100644
  	}
  
  	if (!login->auth_complete &&
--	     ISCSI_TPG_C(conn)->tpg_attrib.authentication) {
-+	     conn->tpg->tpg_attrib.authentication) {
+-	     ISCSI_TPG_ATTRIB(ISCSI_TPG_C(conn))->authentication) {
++	     ISCSI_TPG_C(conn)->tpg_attrib.authentication) {
  		pr_err("Initiator is requesting CSG: 1, has not been"
  			 " successfully authenticated, and the Target is"
  			" enforcing iSCSI Authentication, login failed.\n");
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+index 6beed70..ad419ca 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.c
++++ b/drivers/target/iscsi/iscsi_target_tpg.c
+@@ -239,7 +239,7 @@ int iscsit_tpg_add_portal_group(struct iscsi_tiqn *tiqn, struct iscsi_portal_gro
+ 	if (iscsi_create_default_params(&tpg->param_list) < 0)
+ 		goto err_out;
+ 
+-	ISCSI_TPG_ATTRIB(tpg)->tpg = tpg;
++	tpg->tpg_attrib.tpg = tpg;
+ 
+ 	spin_lock(&tpg->tpg_state_lock);
+ 	tpg->tpg_state	= TPG_STATE_INACTIVE;
+@@ -332,7 +332,7 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (ISCSI_TPG_ATTRIB(tpg)->authentication) {
++	if (tpg->tpg_attrib.authentication) {
+ 		if (!strcmp(param->value, NONE)) {
+ 			ret = iscsi_update_param_value(param, CHAP);
+ 			if (ret)
 -- 
 1.7.1
 
