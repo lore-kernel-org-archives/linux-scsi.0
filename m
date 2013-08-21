@@ -1,36 +1,57 @@
-From: Roland Dreier <roland@purestorage.com>
-Subject: Re: [PATCH 9/9] tcm_qla2xxx: Add special case for COMPARE_AND_WRITE data_direction
-Date: Wed, 21 Aug 2013 09:47:14 -0700
-Message-ID: <CAL1RGDViSg2GdSHU9GG0p0CeGN_dgkfBd9szNpFgF=GT7bFATA@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 8/9] target: Add support for COMPARE_AND_WRITE emulation
+Date: Wed, 21 Aug 2013 10:47:29 -0700
+Message-ID: <1377107249.32763.54.camel@haakon3.risingtidesystems.com>
 References: <1377029280-19144-1-git-send-email-nab@daterainc.com>
- <1377029280-19144-10-git-send-email-nab@daterainc.com> <CAL1RGDVSrf6++PMdfnAZAUw=QX0VbQ9Wck+v=7ebfc-_FXJ_NA@mail.gmail.com>
+	 <1377029280-19144-9-git-send-email-nab@daterainc.com>
+	 <20130821161408.GB30848@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAL1RGDVSrf6++PMdfnAZAUw=QX0VbQ9Wck+v=7ebfc-_FXJ_NA@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, James Bottomley <JBottomley@parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130821161408.GB30848@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, James Bottomley <JBottomley@Parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 21, 2013 at 7:38 AM, Roland Dreier <roland@purestorage.com> wrote:
-> I don't understand this.  In fact the whole patch series looks quite
-> confused.  COMPARE AND WRITE is a normal Data-Out command, with no
-> requirement for special bidirectional handling or anything like that.
-> The only slightly unusual thing is that a CAW command with a NUMBER OF
-> LOGICAL BLOCKS equal to N will actually transfer 2*N worth of data --
-> one set of data for the compare operation and a second set to write if
-> the compare succeeds.  But just to be clear, the transfer of those 2*N
-> blocks happens as a single transfer during the Data-Out phase.
+On Wed, 2013-08-21 at 09:14 -0700, Christoph Hellwig wrote:
+> I don't like the layering here.  The re-execution of the same command
+> for both reading and writing the data from/to the backend device already
+> looks sketchy here due to doubling work of task attribute handling, the
+> various state bits, etc.  And it will only get more complicated when
+> the required locking is added.  In addition we have all that confusion
+> about overloading the data direction.
+> 
+> I think the way this should be handled is:
+> 
+> 
+>  - cmd->execute_cmd gets set to a new sbc_emulate_compare_and_write
+>  - sbc_emulate_compare_and_write does all the setup for the locking,
+>    sets up the read buffer, then calls ops->execute_rw to do the
+>    read.  The complete callback does the comparism, then calls
+>    ops->execute_rw to do the write, and the second time we hit
+>    the complete callback we teard down the read buffer, stop the
+>    locking, etc.
+> 
 
-OK, I understand the patch set a bit better.  You're using the bidi
-infrastructure to have a place to stick the data that you internally
-read to implement the compare, but then you end up having places like
-this where you have to say, "oh it's not really a bidi command, it's
-just a compare and write."
+I do like this approach better, however calling ops->execute_rw() the
+second time around does require at least the TRANSPORT_PROCESSING and
+other transport_state bits from target_execute_cmd() to be set for
+things to work correctly.  Bypassing the aborted + CMD_*STOP checks
+should be OK for the write submission, and will kick (if necessary)
+during the final completion.
 
-Shouldn't there be a way to confine the COMPARE AND WRITE handling to
-the actual implementation of that command?  Or maybe make the bidi
-handling more generic so that this becomes clearer?
+Setting up the read buffer from sbc_emulate_compare_and_write() would
+require two extra COMPARE_AND_WRITE specific se_cmd elements, so I'm
+tempted to continue to use the bidi fields for this (because they
+already exist) with transport_generic_get_mem_bidi(), and use a
+SCF_COMPARE_AND_WRITE flag to avoid any CDB specific checks in
+transport_complete_ok(), and reverse dma direction mapping case.
 
- - R.
+> This also avoids bloating the command with another function pointer
+> or having to change all execute_cmd prototypes.
+
+Indeed.
+
+--nab
