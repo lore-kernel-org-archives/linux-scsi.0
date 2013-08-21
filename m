@@ -1,252 +1,108 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 2/5] target/iscsi: Remove iscsi dereferencing macros
-Date: Tue, 20 Aug 2013 18:00:04 -0700
-Message-ID: <1377046807-15860-3-git-send-email-agrover@redhat.com>
+Subject: [PATCH 5/5] target/qla2xxx: Remove QLA_TPG_ATTRIB macro
+Date: Tue, 20 Aug 2013 18:00:07 -0700
+Message-ID: <1377046807-15860-6-git-send-email-agrover@redhat.com>
 References: <1377046807-15860-1-git-send-email-agrover@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40426 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752089Ab3HUCKV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Aug 2013 22:10:21 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1377046807-15860-1-git-send-email-agrover@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-These are all straightforward.
+Just a dereference, don't need a macro.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/target/iscsi/iscsi_target_configfs.c |   42 +++++++++++++-------------
- drivers/target/iscsi/iscsi_target_core.h     |    9 -----
- drivers/target/iscsi/iscsi_target_nego.c     |    8 ++--
- drivers/target/iscsi/iscsi_target_tpg.c      |    4 +-
- 4 files changed, 27 insertions(+), 36 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |   20 ++++++++++----------
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h |    2 --
+ 2 files changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index 9eb7855..435efae 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -374,7 +374,7 @@ static ssize_t iscsi_nacl_attrib_show_##name(				\
- 	struct iscsi_node_acl *nacl = container_of(se_nacl, struct iscsi_node_acl, \
- 					se_node_acl);			\
- 									\
--	return sprintf(page, "%u\n", ISCSI_NODE_ATTRIB(nacl)->name);	\
-+	return sprintf(page, "%u\n", nacl->node_attrib.name);		\
- }									\
- 									\
- static ssize_t iscsi_nacl_attrib_store_##name(				\
-@@ -899,7 +899,7 @@ static struct se_node_acl *lio_target_make_nodeacl(
- 	if (!se_nacl_new)
- 		return ERR_PTR(-ENOMEM);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 070f3d6..beda613 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -333,7 +333,7 @@ static int tcm_qla2xxx_check_demo_mode(struct se_portal_group *se_tpg)
+ 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
+ 				struct tcm_qla2xxx_tpg, se_tpg);
  
--	cmdsn_depth = ISCSI_TPG_ATTRIB(tpg)->default_cmdsn_depth;
-+	cmdsn_depth = tpg->tpg_attrib.default_cmdsn_depth;
- 	/*
- 	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()
- 	 * when converting a NdoeACL from demo mode -> explict
-@@ -922,9 +922,9 @@ static struct se_node_acl *lio_target_make_nodeacl(
- 		return ERR_PTR(-ENOMEM);
- 	}
- 
--	stats_cg->default_groups[0] = &NODE_STAT_GRPS(acl)->iscsi_sess_stats_group;
-+	stats_cg->default_groups[0] = &acl->node_stat_grps.iscsi_sess_stats_group;
- 	stats_cg->default_groups[1] = NULL;
--	config_group_init_type_name(&NODE_STAT_GRPS(acl)->iscsi_sess_stats_group,
-+	config_group_init_type_name(&acl->node_stat_grps.iscsi_sess_stats_group,
- 			"iscsi_sess_stats", &iscsi_stat_sess_cit);
- 
- 	return se_nacl;
-@@ -969,7 +969,7 @@ static ssize_t iscsi_tpg_attrib_show_##name(				\
- 	if (iscsit_get_tpg(tpg) < 0)					\
- 		return -EINVAL;						\
- 									\
--	rb = sprintf(page, "%u\n", ISCSI_TPG_ATTRIB(tpg)->name);	\
-+	rb = sprintf(page, "%u\n", tpg->tpg_attrib.name);		\
- 	iscsit_put_tpg(tpg);						\
- 	return rb;							\
- }									\
-@@ -1516,21 +1516,21 @@ static struct se_wwn *lio_target_call_coreaddtiqn(
- 		return ERR_PTR(-ENOMEM);
- 	}
- 
--	stats_cg->default_groups[0] = &WWN_STAT_GRPS(tiqn)->iscsi_instance_group;
--	stats_cg->default_groups[1] = &WWN_STAT_GRPS(tiqn)->iscsi_sess_err_group;
--	stats_cg->default_groups[2] = &WWN_STAT_GRPS(tiqn)->iscsi_tgt_attr_group;
--	stats_cg->default_groups[3] = &WWN_STAT_GRPS(tiqn)->iscsi_login_stats_group;
--	stats_cg->default_groups[4] = &WWN_STAT_GRPS(tiqn)->iscsi_logout_stats_group;
-+	stats_cg->default_groups[0] = &tiqn->tiqn_stat_grps.iscsi_instance_group;
-+	stats_cg->default_groups[1] = &tiqn->tiqn_stat_grps.iscsi_sess_err_group;
-+	stats_cg->default_groups[2] = &tiqn->tiqn_stat_grps.iscsi_tgt_attr_group;
-+	stats_cg->default_groups[3] = &tiqn->tiqn_stat_grps.iscsi_login_stats_group;
-+	stats_cg->default_groups[4] = &tiqn->tiqn_stat_grps.iscsi_logout_stats_group;
- 	stats_cg->default_groups[5] = NULL;
--	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_instance_group,
-+	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_instance_group,
- 			"iscsi_instance", &iscsi_stat_instance_cit);
--	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_sess_err_group,
-+	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_sess_err_group,
- 			"iscsi_sess_err", &iscsi_stat_sess_err_cit);
--	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_tgt_attr_group,
-+	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_tgt_attr_group,
- 			"iscsi_tgt_attr", &iscsi_stat_tgt_attr_cit);
--	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_login_stats_group,
-+	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_login_stats_group,
- 			"iscsi_login_stats", &iscsi_stat_login_cit);
--	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_logout_stats_group,
-+	config_group_init_type_name(&tiqn->tiqn_stat_grps.iscsi_logout_stats_group,
- 			"iscsi_logout_stats", &iscsi_stat_logout_cit);
- 
- 	pr_debug("LIO_Target_ConfigFS: REGISTER -> %s\n", tiqn->tiqn);
-@@ -1817,21 +1817,21 @@ static u32 lio_tpg_get_default_depth(struct se_portal_group *se_tpg)
- {
- 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
- 
--	return ISCSI_TPG_ATTRIB(tpg)->default_cmdsn_depth;
-+	return tpg->tpg_attrib.default_cmdsn_depth;
- }
- 
- static int lio_tpg_check_demo_mode(struct se_portal_group *se_tpg)
- {
- 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
- 
--	return ISCSI_TPG_ATTRIB(tpg)->generate_node_acls;
+-	return QLA_TPG_ATTRIB(tpg)->generate_node_acls;
 +	return tpg->tpg_attrib.generate_node_acls;
  }
  
- static int lio_tpg_check_demo_mode_cache(struct se_portal_group *se_tpg)
- {
- 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
+ static int tcm_qla2xxx_check_demo_mode_cache(struct se_portal_group *se_tpg)
+@@ -341,7 +341,7 @@ static int tcm_qla2xxx_check_demo_mode_cache(struct se_portal_group *se_tpg)
+ 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
+ 				struct tcm_qla2xxx_tpg, se_tpg);
  
--	return ISCSI_TPG_ATTRIB(tpg)->cache_dynamic_acls;
+-	return QLA_TPG_ATTRIB(tpg)->cache_dynamic_acls;
 +	return tpg->tpg_attrib.cache_dynamic_acls;
  }
  
- static int lio_tpg_check_demo_mode_write_protect(
-@@ -1839,7 +1839,7 @@ static int lio_tpg_check_demo_mode_write_protect(
- {
- 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
+ static int tcm_qla2xxx_check_demo_write_protect(struct se_portal_group *se_tpg)
+@@ -349,7 +349,7 @@ static int tcm_qla2xxx_check_demo_write_protect(struct se_portal_group *se_tpg)
+ 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
+ 				struct tcm_qla2xxx_tpg, se_tpg);
  
--	return ISCSI_TPG_ATTRIB(tpg)->demo_mode_write_protect;
+-	return QLA_TPG_ATTRIB(tpg)->demo_mode_write_protect;
 +	return tpg->tpg_attrib.demo_mode_write_protect;
  }
  
- static int lio_tpg_check_prod_mode_write_protect(
-@@ -1847,7 +1847,7 @@ static int lio_tpg_check_prod_mode_write_protect(
- {
- 	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
+ static int tcm_qla2xxx_check_prod_write_protect(struct se_portal_group *se_tpg)
+@@ -357,7 +357,7 @@ static int tcm_qla2xxx_check_prod_write_protect(struct se_portal_group *se_tpg)
+ 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
+ 				struct tcm_qla2xxx_tpg, se_tpg);
  
--	return ISCSI_TPG_ATTRIB(tpg)->prod_mode_write_protect;
+-	return QLA_TPG_ATTRIB(tpg)->prod_mode_write_protect;
 +	return tpg->tpg_attrib.prod_mode_write_protect;
  }
  
- static void lio_tpg_release_fabric_acl(
-@@ -1911,7 +1911,7 @@ static void lio_set_default_node_attributes(struct se_node_acl *se_acl)
- 	struct iscsi_node_acl *acl = container_of(se_acl, struct iscsi_node_acl,
- 				se_node_acl);
+ static int tcm_qla2xxx_check_demo_mode_login_only(struct se_portal_group *se_tpg)
+@@ -365,7 +365,7 @@ static int tcm_qla2xxx_check_demo_mode_login_only(struct se_portal_group *se_tpg
+ 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
+ 				struct tcm_qla2xxx_tpg, se_tpg);
  
--	ISCSI_NODE_ATTRIB(acl)->nacl = acl;
-+	acl->node_attrib.nacl = acl;
- 	iscsit_set_default_node_attribues(acl);
+-	return QLA_TPG_ATTRIB(tpg)->demo_mode_login_only;
++	return tpg->tpg_attrib.demo_mode_login_only;
  }
  
-diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
-index e37b3b0..59b5125 100644
---- a/drivers/target/iscsi/iscsi_target_core.h
-+++ b/drivers/target/iscsi/iscsi_target_core.h
-@@ -750,11 +750,6 @@ struct iscsi_node_acl {
- 	struct se_node_acl	se_node_acl;
+ static struct se_node_acl *tcm_qla2xxx_alloc_fabric_acl(
+@@ -875,7 +875,7 @@ static ssize_t tcm_qla2xxx_tpg_attrib_show_##name(			\
+ 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,		\
+ 			struct tcm_qla2xxx_tpg, se_tpg);		\
+ 									\
+-	return sprintf(page, "%u\n", QLA_TPG_ATTRIB(tpg)->name);	\
++	return sprintf(page, "%u\n", tpg->tpg_attrib.name);	\
+ }									\
+ 									\
+ static ssize_t tcm_qla2xxx_tpg_attrib_store_##name(			\
+@@ -1055,10 +1055,10 @@ static struct se_portal_group *tcm_qla2xxx_make_tpg(
+ 	 * By default allow READ-ONLY TPG demo-mode access w/ cached dynamic
+ 	 * NodeACLs
+ 	 */
+-	QLA_TPG_ATTRIB(tpg)->generate_node_acls = 1;
+-	QLA_TPG_ATTRIB(tpg)->demo_mode_write_protect = 1;
+-	QLA_TPG_ATTRIB(tpg)->cache_dynamic_acls = 1;
+-	QLA_TPG_ATTRIB(tpg)->demo_mode_login_only = 1;
++	tpg->tpg_attrib.generate_node_acls = 1;
++	tpg->tpg_attrib.demo_mode_write_protect = 1;
++	tpg->tpg_attrib.cache_dynamic_acls = 1;
++	tpg->tpg_attrib.demo_mode_login_only = 1;
+ 
+ 	ret = core_tpg_register(&tcm_qla2xxx_fabric_configfs->tf_ops, wwn,
+ 				&tpg->se_tpg, tpg, TRANSPORT_TPG_TYPE_NORMAL);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+index 3293275..771f7b8 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+@@ -45,8 +45,6 @@ struct tcm_qla2xxx_tpg {
+ 	struct se_portal_group se_tpg;
  };
  
--#define NODE_STAT_GRPS(nacl)	(&(nacl)->node_stat_grps)
+-#define QLA_TPG_ATTRIB(tpg)	(&(tpg)->tpg_attrib)
 -
--#define ISCSI_NODE_ATTRIB(t)	(&(t)->node_attrib)
--#define ISCSI_NODE_AUTH(t)	(&(t)->node_auth)
--
- struct iscsi_tpg_attrib {
- 	u32			authentication;
- 	u32			login_timeout;
-@@ -833,8 +828,6 @@ struct iscsi_portal_group {
- #define ISCSI_TPG_C(c)		((struct iscsi_portal_group *)(c)->tpg)
- #define ISCSI_TPG_LUN(c, l)  ((iscsi_tpg_list_t *)(c)->tpg->tpg_lun_list_t[l])
- #define ISCSI_TPG_S(s)		((struct iscsi_portal_group *)(s)->tpg)
--#define ISCSI_TPG_ATTRIB(t)	(&(t)->tpg_attrib)
--#define SE_TPG(tpg)		(&(tpg)->tpg_se_tpg)
- 
- struct iscsi_wwn_stat_grps {
- 	struct config_group	iscsi_stat_group;
-@@ -866,8 +859,6 @@ struct iscsi_tiqn {
- 	struct iscsi_logout_stats    logout_stats;
- } ____cacheline_aligned;
- 
--#define WWN_STAT_GRPS(tiqn)	(&(tiqn)->tiqn_stat_grps)
--
- struct iscsit_global {
- 	/* In core shutdown */
- 	u32			in_shutdown;
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index 582b2db..08ebbad 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -142,7 +142,7 @@ static u32 iscsi_handle_authentication(
- 			iscsi_nacl = container_of(se_nacl, struct iscsi_node_acl,
- 						  se_node_acl);
- 
--			auth = ISCSI_NODE_AUTH(iscsi_nacl);
-+			auth = &iscsi_nacl->node_auth;
- 		}
- 	} else {
- 		/*
-@@ -699,7 +699,7 @@ static int iscsi_target_handle_csg_zero(
- 		return -1;
- 
- 	if (!iscsi_check_negotiated_keys(conn->param_list)) {
--		if (ISCSI_TPG_ATTRIB(ISCSI_TPG_C(conn))->authentication &&
-+		if (ISCSI_TPG_C(conn)->tpg_attrib.authentication &&
- 		    !strncmp(param->value, NONE, 4)) {
- 			pr_err("Initiator sent AuthMethod=None but"
- 				" Target is enforcing iSCSI Authentication,"
-@@ -709,7 +709,7 @@ static int iscsi_target_handle_csg_zero(
- 			return -1;
- 		}
- 
--		if (ISCSI_TPG_ATTRIB(ISCSI_TPG_C(conn))->authentication &&
-+		if (ISCSI_TPG_C(conn)->tpg_attrib.authentication &&
- 		    !login->auth_complete)
- 			return 0;
- 
-@@ -772,7 +772,7 @@ static int iscsi_target_handle_csg_one(struct iscsi_conn *conn, struct iscsi_log
- 	}
- 
- 	if (!login->auth_complete &&
--	     ISCSI_TPG_ATTRIB(ISCSI_TPG_C(conn))->authentication) {
-+	     ISCSI_TPG_C(conn)->tpg_attrib.authentication) {
- 		pr_err("Initiator is requesting CSG: 1, has not been"
- 			 " successfully authenticated, and the Target is"
- 			" enforcing iSCSI Authentication, login failed.\n");
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
-index 6beed70..ad419ca 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.c
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -239,7 +239,7 @@ int iscsit_tpg_add_portal_group(struct iscsi_tiqn *tiqn, struct iscsi_portal_gro
- 	if (iscsi_create_default_params(&tpg->param_list) < 0)
- 		goto err_out;
- 
--	ISCSI_TPG_ATTRIB(tpg)->tpg = tpg;
-+	tpg->tpg_attrib.tpg = tpg;
- 
- 	spin_lock(&tpg->tpg_state_lock);
- 	tpg->tpg_state	= TPG_STATE_INACTIVE;
-@@ -332,7 +332,7 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
- 		return -EINVAL;
- 	}
- 
--	if (ISCSI_TPG_ATTRIB(tpg)->authentication) {
-+	if (tpg->tpg_attrib.authentication) {
- 		if (!strcmp(param->value, NONE)) {
- 			ret = iscsi_update_param_value(param, CHAP);
- 			if (ret)
+ struct tcm_qla2xxx_fc_loopid {
+ 	struct se_node_acl *se_nacl;
+ };
 -- 
 1.7.1
-
