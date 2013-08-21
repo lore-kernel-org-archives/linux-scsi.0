@@ -1,29 +1,34 @@
-From: Roland Dreier <roland@purestorage.com>
-Subject: Re: [PATCH 9/9] tcm_qla2xxx: Add special case for COMPARE_AND_WRITE data_direction
-Date: Wed, 21 Aug 2013 07:38:21 -0700
-Message-ID: <CAL1RGDVSrf6++PMdfnAZAUw=QX0VbQ9Wck+v=7ebfc-_FXJ_NA@mail.gmail.com>
-References: <1377029280-19144-1-git-send-email-nab@daterainc.com> <1377029280-19144-10-git-send-email-nab@daterainc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1377029280-19144-10-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, James Bottomley <JBottomley@parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: [PATCH 0/8] zfcp features and bugfixes for 3.12 merge window
+Date: Wed, 21 Aug 2013 17:05:23 +0200
+Message-ID: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e06smtp12.uk.ibm.com ([195.75.94.108]:33296 "EHLO
+	e06smtp12.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820Ab3HUPFr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2013 11:05:47 -0400
+Received: from /spool/local
+	by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
+	Wed, 21 Aug 2013 15:59:32 +0100
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>
 
-On Tue, Aug 20, 2013 at 1:08 PM, Nicholas A. Bellinger
-<nab@daterainc.com> wrote:
-> Add a special case for COMPARE_AND_WRITE for the reverse data direction
-> mapping used for pci_map_sg() + friends.
+James,
 
-I don't understand this.  In fact the whole patch series looks quite
-confused.  COMPARE AND WRITE is a normal Data-Out command, with no
-requirement for special bidirectional handling or anything like that.
-The only slightly unusual thing is that a CAW command with a NUMBER OF
-LOGICAL BLOCKS equal to N will actually transfer 2*N worth of data --
-one set of data for the compare operation and a second set to write if
-the compare succeeds.  But just to be clear, the transfer of those 2*N
-blocks happens as a single transfer during the Data-Out phase.
+here is a series of zfcp features and bugfixes
+for the upcoming merge window preparing kernel v3.12.
+The patches apply on top of the current misc branch of your scsi.git.
 
- - R.
+Steffen
+
+Linux on System z Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzender des Aufsichtsrats: Martin Jetter
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
+
