@@ -1,173 +1,167 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH 5/8] zfcp: fix schedule-inside-lock in scsi_device list loops
-Date: Wed, 21 Aug 2013 17:05:28 +0200
-Message-ID: <1377097531-4942-6-git-send-email-maier@linux.vnet.ibm.com>
+Subject: [PATCH 4/8] zfcp: fix lock imbalance by reworking request queue locking
+Date: Wed, 21 Aug 2013 17:05:27 +0200
+Message-ID: <1377097531-4942-5-git-send-email-maier@linux.vnet.ibm.com>
 References: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Peschke <mpeschke@linux.vnet.ibm.com>, stable@vger.kernel.org.#2.6.37+
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Peschke <mpeschke@linux.vnet.ibm.com>, stable@vger.kernel.org.#2.6.35+, Andrew Morton <akpm@linux-foundation.org>, David Howells <dhowells@redhat.com>, Jens Axboe <axboe@kernel.dk>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
-BUG: sleeping function called from invalid context at kernel/workqueue.c:2752
-in_atomic(): 1, irqs_disabled(): 1, pid: 360, name: zfcperp0.0.1700
-CPU: 1 Not tainted 3.9.3+ #69
-Process zfcperp0.0.1700 (pid: 360, task: 0000000075b7e080, ksp: 000000007476bc30)
-<snip>
-Call Trace:
-([<00000000001165de>] show_trace+0x106/0x154)
- [<00000000001166a0>] show_stack+0x74/0xf4
- [<00000000006ff646>] dump_stack+0xc6/0xd4
- [<000000000017f3a0>] __might_sleep+0x128/0x148
- [<000000000015ece8>] flush_work+0x54/0x1f8
- [<00000000001630de>] __cancel_work_timer+0xc6/0x128
- [<00000000005067ac>] scsi_device_dev_release_usercontext+0x164/0x23c
- [<0000000000161816>] execute_in_process_context+0x96/0xa8
- [<00000000004d33d8>] device_release+0x60/0xc0
- [<000000000048af48>] kobject_release+0xa8/0x1c4
- [<00000000004f4bf2>] __scsi_iterate_devices+0xfa/0x130
- [<000003ff801b307a>] zfcp_erp_strategy+0x4da/0x1014 [zfcp]
- [<000003ff801b3caa>] zfcp_erp_thread+0xf6/0x2b0 [zfcp]
- [<000000000016b75a>] kthread+0xf2/0xfc
- [<000000000070c9de>] kernel_thread_starter+0x6/0xc
- [<000000000070c9d8>] kernel_thread_starter+0x0/0xc
+This patch adds wait_event_interruptible_lock_irq_timeout(), which is a
+straight-forward descendant of wait_event_interruptible_timeout() and
+wait_event_interruptible_lock_irq().
 
-Apparently, the ref_count for some scsi_device drops down to zero,
-triggering device removal through execute_in_process_context(), while
-the lldd error recovery thread iterates through a scsi device list.
-Unfortunately, execute_in_process_context() decides to immediately
-execute that device removal function, instead of scheduling asynchronous
-execution, since it detects process context and thinks it is safe to do
-so. But almost all calls to shost_for_each_device() in our lldd are
-inside spin_lock_irq, even in thread context. Obviously, schedule()
-inside spin_lock_irq sections is a bad idea.
+The zfcp driver used to call wait_event_interruptible_timeout()
+in combination with some intricate and error-prone locking. Using
+wait_event_interruptible_lock_irq_timeout() as a replacement
+nicely cleans up that locking.
 
-Change the lldd to use the proper iterator function,
-__shost_for_each_device(), in combination with required locking.
+This rework removes a situation that resulted in a locking imbalance
+in zfcp_qdio_sbal_get():
 
-Occurences that need to be changed include all calls in zfcp_erp.c,
-since those might be executed in zfcp error recovery thread context
-with a lock held.
+BUG: workqueue leaked lock or atomic: events/1/0xffffff00/10
+    last function: zfcp_fc_wka_port_offline+0x0/0xa0 [zfcp]
 
-Other occurences of shost_for_each_device() in zfcp_fsf.c do not
-need to be changed (no process context, no surrounding locking).
+It was introduced by commit c2af7545aaff3495d9bf9a7608c52f0af86fb194
+"[SCSI] zfcp: Do not wait for SBALs on stopped queue", which had a new
+code path related to ZFCP_STATUS_ADAPTER_QDIOUP that took an early exit
+without a required lock being held. The problem occured when a
+special, non-SCSI I/O request was being submitted in process context,
+when the adapter's queues had been torn down. In this case the bug
+surfaced when the Fibre Channel port connection for a well-known address
+was closed during a concurrent adapter shut-down procedure, which is a
+rare constellation.
 
-The problem was introduced in Linux 2.6.37 by commit
-b62a8d9b45b971a67a0f8413338c230e3117dff5
-"[SCSI] zfcp: Use SCSI device data zfcp_scsi_dev instead of zfcp_unit".
+This patch also fixes these warnings from the sparse tool (make C=1):
 
-Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
+drivers/s390/scsi/zfcp_qdio.c:224:12: warning: context imbalance in
+ 'zfcp_qdio_sbal_check' - wrong count at exit
+drivers/s390/scsi/zfcp_qdio.c:244:5: warning: context imbalance in
+ 'zfcp_qdio_sbal_get' - unexpected unlock
+
+Last but not least, we get rid of that crappy lock-unlock-lock
+sequence at the beginning of the critical section.
+
+It is okay to call zfcp_erp_adapter_reopen() with req_q_lock held.
+
+Reported-by: Mikulas Patocka <mpatocka@redhat.com>
+Reported-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Cc: stable@vger.kernel.org #2.6.37+
+Cc: stable@vger.kernel.org #2.6.35+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_erp.c |   29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
+ drivers/s390/scsi/zfcp_qdio.c |    8 +----
+ include/linux/wait.h          |   57 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 59 insertions(+), 6 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -102,10 +102,13 @@ static void zfcp_erp_action_dismiss_port
+--- a/drivers/s390/scsi/zfcp_qdio.c
++++ b/drivers/s390/scsi/zfcp_qdio.c
+@@ -224,11 +224,9 @@ int zfcp_qdio_sbals_from_sg(struct zfcp_
  
- 	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_ERP_INUSE)
- 		zfcp_erp_action_dismiss(&port->erp_action);
--	else
--		shost_for_each_device(sdev, port->adapter->scsi_host)
-+	else {
-+		spin_lock(port->adapter->scsi_host->host_lock);
-+		__shost_for_each_device(sdev, port->adapter->scsi_host)
- 			if (sdev_to_zfcp(sdev)->port == port)
- 				zfcp_erp_action_dismiss_lun(sdev);
-+		spin_unlock(port->adapter->scsi_host->host_lock);
-+	}
- }
- 
- static void zfcp_erp_action_dismiss_adapter(struct zfcp_adapter *adapter)
-@@ -592,9 +595,11 @@ static void _zfcp_erp_lun_reopen_all(str
+ static int zfcp_qdio_sbal_check(struct zfcp_qdio *qdio)
  {
- 	struct scsi_device *sdev;
- 
--	shost_for_each_device(sdev, port->adapter->scsi_host)
-+	spin_lock(port->adapter->scsi_host->host_lock);
-+	__shost_for_each_device(sdev, port->adapter->scsi_host)
- 		if (sdev_to_zfcp(sdev)->port == port)
- 			_zfcp_erp_lun_reopen(sdev, clear, id, 0);
-+	spin_unlock(port->adapter->scsi_host->host_lock);
+-	spin_lock_irq(&qdio->req_q_lock);
+ 	if (atomic_read(&qdio->req_q_free) ||
+ 	    !(atomic_read(&qdio->adapter->status) & ZFCP_STATUS_ADAPTER_QDIOUP))
+ 		return 1;
+-	spin_unlock_irq(&qdio->req_q_lock);
+ 	return 0;
  }
  
- static void zfcp_erp_strategy_followup_failed(struct zfcp_erp_action *act)
-@@ -1434,8 +1439,10 @@ void zfcp_erp_set_adapter_status(struct
- 		atomic_set_mask(common_mask, &port->status);
- 	read_unlock_irqrestore(&adapter->port_list_lock, flags);
- 
--	shost_for_each_device(sdev, adapter->scsi_host)
-+	spin_lock_irqsave(adapter->scsi_host->host_lock, flags);
-+	__shost_for_each_device(sdev, adapter->scsi_host)
- 		atomic_set_mask(common_mask, &sdev_to_zfcp(sdev)->status);
-+	spin_unlock_irqrestore(adapter->scsi_host->host_lock, flags);
- }
- 
- /**
-@@ -1469,11 +1476,13 @@ void zfcp_erp_clear_adapter_status(struc
- 	}
- 	read_unlock_irqrestore(&adapter->port_list_lock, flags);
- 
--	shost_for_each_device(sdev, adapter->scsi_host) {
-+	spin_lock_irqsave(adapter->scsi_host->host_lock, flags);
-+	__shost_for_each_device(sdev, adapter->scsi_host) {
- 		atomic_clear_mask(common_mask, &sdev_to_zfcp(sdev)->status);
- 		if (clear_counter)
- 			atomic_set(&sdev_to_zfcp(sdev)->erp_counter, 0);
- 	}
-+	spin_unlock_irqrestore(adapter->scsi_host->host_lock, flags);
- }
- 
- /**
-@@ -1487,16 +1496,19 @@ void zfcp_erp_set_port_status(struct zfc
+@@ -246,9 +244,8 @@ int zfcp_qdio_sbal_get(struct zfcp_qdio
  {
- 	struct scsi_device *sdev;
- 	u32 common_mask = mask & ZFCP_COMMON_FLAGS;
-+	unsigned long flags;
+ 	long ret;
  
- 	atomic_set_mask(mask, &port->status);
+-	spin_unlock_irq(&qdio->req_q_lock);
+-	ret = wait_event_interruptible_timeout(qdio->req_q_wq,
+-			       zfcp_qdio_sbal_check(qdio), 5 * HZ);
++	ret = wait_event_interruptible_lock_irq_timeout(qdio->req_q_wq,
++		       zfcp_qdio_sbal_check(qdio), qdio->req_q_lock, 5 * HZ);
  
- 	if (!common_mask)
- 		return;
+ 	if (!(atomic_read(&qdio->adapter->status) & ZFCP_STATUS_ADAPTER_QDIOUP))
+ 		return -EIO;
+@@ -262,7 +259,6 @@ int zfcp_qdio_sbal_get(struct zfcp_qdio
+ 		zfcp_erp_adapter_reopen(qdio->adapter, 0, "qdsbg_1");
+ 	}
  
--	shost_for_each_device(sdev, port->adapter->scsi_host)
-+	spin_lock_irqsave(port->adapter->scsi_host->host_lock, flags);
-+	__shost_for_each_device(sdev, port->adapter->scsi_host)
- 		if (sdev_to_zfcp(sdev)->port == port)
- 			atomic_set_mask(common_mask,
- 					&sdev_to_zfcp(sdev)->status);
-+	spin_unlock_irqrestore(port->adapter->scsi_host->host_lock, flags);
+-	spin_lock_irq(&qdio->req_q_lock);
+ 	return -EIO;
  }
  
- /**
-@@ -1511,6 +1523,7 @@ void zfcp_erp_clear_port_status(struct z
- 	struct scsi_device *sdev;
- 	u32 common_mask = mask & ZFCP_COMMON_FLAGS;
- 	u32 clear_counter = mask & ZFCP_STATUS_COMMON_ERP_FAILED;
-+	unsigned long flags;
+--- a/include/linux/wait.h
++++ b/include/linux/wait.h
+@@ -811,6 +811,63 @@ do {									\
+ 	__ret;								\
+ })
  
- 	atomic_clear_mask(mask, &port->status);
++#define __wait_event_interruptible_lock_irq_timeout(wq, condition,	\
++						    lock, ret)		\
++do {									\
++	DEFINE_WAIT(__wait);						\
++									\
++	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		if (signal_pending(current)) {				\
++			ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++		spin_unlock_irq(&lock);					\
++		ret = schedule_timeout(ret);				\
++		spin_lock_irq(&lock);					\
++		if (!ret)						\
++			break;						\
++	}								\
++	finish_wait(&wq, &__wait);					\
++} while (0)
++
++/**
++ * wait_event_interruptible_lock_irq_timeout - sleep until a condition gets true or a timeout elapses.
++ *		The condition is checked under the lock. This is expected
++ *		to be called with the lock taken.
++ * @wq: the waitqueue to wait on
++ * @condition: a C expression for the event to wait for
++ * @lock: a locked spinlock_t, which will be released before schedule()
++ *	  and reacquired afterwards.
++ * @timeout: timeout, in jiffies
++ *
++ * The process is put to sleep (TASK_INTERRUPTIBLE) until the
++ * @condition evaluates to true or signal is received. The @condition is
++ * checked each time the waitqueue @wq is woken up.
++ *
++ * wake_up() has to be called after changing any variable that could
++ * change the result of the wait condition.
++ *
++ * This is supposed to be called while holding the lock. The lock is
++ * dropped before going to sleep and is reacquired afterwards.
++ *
++ * The function returns 0 if the @timeout elapsed, -ERESTARTSYS if it
++ * was interrupted by a signal, and the remaining jiffies otherwise
++ * if the condition evaluated to true before the timeout elapsed.
++ */
++#define wait_event_interruptible_lock_irq_timeout(wq, condition, lock,	\
++						  timeout)		\
++({									\
++	int __ret = timeout;						\
++									\
++	if (!(condition))						\
++		__wait_event_interruptible_lock_irq_timeout(		\
++					wq, condition, lock, __ret);	\
++	__ret;								\
++})
++
  
-@@ -1520,13 +1533,15 @@ void zfcp_erp_clear_port_status(struct z
- 	if (clear_counter)
- 		atomic_set(&port->erp_counter, 0);
- 
--	shost_for_each_device(sdev, port->adapter->scsi_host)
-+	spin_lock_irqsave(port->adapter->scsi_host->host_lock, flags);
-+	__shost_for_each_device(sdev, port->adapter->scsi_host)
- 		if (sdev_to_zfcp(sdev)->port == port) {
- 			atomic_clear_mask(common_mask,
- 					  &sdev_to_zfcp(sdev)->status);
- 			if (clear_counter)
- 				atomic_set(&sdev_to_zfcp(sdev)->erp_counter, 0);
- 		}
-+	spin_unlock_irqrestore(port->adapter->scsi_host->host_lock, flags);
- }
- 
- /**
+ /*
+  * These are the old interfaces to sleep waiting for an event.
