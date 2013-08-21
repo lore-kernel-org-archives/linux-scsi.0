@@ -1,33 +1,66 @@
-From: Jan-Simon =?ISO-8859-1?Q?M=F6ller?= <dl9pf@gmx.de>
-Subject: Re: [PATCH] [TRIVIAL] Remove braces in drivers/scsi/in2000.h to fix build for clang. No functional change otherwise.
-Date: Wed, 21 Aug 2013 09:26:14 +0200
-Message-ID: <2050670.KsM0dPm3or@aragorn.auenland.lan>
-References: <1377033546-19475-1-git-send-email-dl9pf@gmx.de> <20130821065018.GB9043@infradead.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: SCSI core patches for kernel 3.12
+Date: Wed, 21 Aug 2013 00:35:59 -0700
+Message-ID: <1377070559.32763.31.camel@haakon3.risingtidesystems.com>
+References: <52135B99.2000102@acm.org>
+	 <1377015091.5302.47.camel@haakon3.risingtidesystems.com>
+	 <52139608.5040608@acm.org>
+	 <1377018283.5302.48.camel@haakon3.risingtidesystems.com>
+	 <5213AEBD.2020303@acm.org>
+	 <1377031084.5302.54.camel@haakon3.risingtidesystems.com>
+	 <20130821064847.GA9043@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:64246 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752232Ab3HUH13 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Aug 2013 03:27:29 -0400
-Received: from aragorn.auenland.lan ([95.90.185.134]) by mail.gmx.com
- (mrgmx003) with ESMTPSA (Nemesis) id 0LztHH-1W875w3PJD-0151Gn for
- <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2013 09:27:28 +0200
-In-Reply-To: <20130821065018.GB9043@infradead.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58661 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752192Ab3HUH3L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2013 03:29:11 -0400
+In-Reply-To: <20130821064847.GA9043@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: PaX Team <pageexec@freemail.hu>, Behan Webster <behanw@converseincode.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-> > 
-> > Description:
-> >   Clang chokes on the notation "insw (%%dx)" but works for "insw %%dx"
-> >   (outsw likewise); GNU as accepts both forms.
-> > 
-> > Signed-off-by: Jan-Simon M??ller <dl9pf@gmx.de>
+On Tue, 2013-08-20 at 23:48 -0700, Christoph Hellwig wrote:
+> On Tue, Aug 20, 2013 at 01:38:04PM -0700, Nicholas A. Bellinger wrote:
+> > <yawn>, I only care about the performance against upstream code, so that
+> > would mean scsi_debug here.  Typically the onus of demonstrating a
+> > performance improvement is on the patch submitter (eg: not the
+> > reviewer).
 > 
-> I think the right fix is to simply kill the FAST_READ_IO/FAST_WRITE_IO
-> defines and their associated inline assembly entirely.
+> Do you really care?  If the patchset introduced a lot of code or
+> ugliness I might agreee to your above statement, but it actually
+> makes the code more obvious, simpler and also fixes some small issues
+> so I don't think we'll need an exact performance improvement to justify
+> it.
 
-No objection ;) .
+Of course not.  I'm curious 1) how fast Bart has a SCSI client going
+using scsi_request_fn(), and if it's a measurable difference 2) what
+that difference is.
+
+> 
+> > But it would be at least useful to know the actual benefit with results
+> > as an incremental step, short of avoiding this code entirely for
+> > scsi-mq.
+> 
+> I don't think you can avoid the device put/get entirely for that case.
+> I've been looking over the mq code a bit more lately, and in a few
+> places it just seems to try to cut a few too many corners.
+
+Yes, it's a prototype!
+
+> To get it out of the prototype status we'll need to make sure all edge cases
+> are handled correctly.
+> 
+
+Ohhh, yes.  I'm not claiming that it's anything beyond a very early
+alpha at this stage, and have no plans for a mainline push anytime
+before 2014 arrives, before scsi_error.c supports per-device context
+recovery, or before hell freezes over.
+
+Which ever comes first..  ;)
+
+--nab
+
