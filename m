@@ -1,34 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 9/9] tcm_qla2xxx: Add special case for COMPARE_AND_WRITE
- data_direction
-Date: Wed, 21 Aug 2013 08:53:14 -0700
-Message-ID: <20130821155314.GA17850@infradead.org>
-References: <1377029280-19144-1-git-send-email-nab@daterainc.com>
- <1377029280-19144-10-git-send-email-nab@daterainc.com>
- <CAL1RGDVSrf6++PMdfnAZAUw=QX0VbQ9Wck+v=7ebfc-_FXJ_NA@mail.gmail.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCH 4/5] target/qla2xxx: Define NPIV ops in terms of normal
+ ops
+Date: Wed, 21 Aug 2013 09:02:32 -0700
+Message-ID: <5214E498.6020504@redhat.com>
+References: <1377046807-15860-1-git-send-email-agrover@redhat.com> <1377046807-15860-5-git-send-email-agrover@redhat.com> <20130821063008.GD25506@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAL1RGDVSrf6++PMdfnAZAUw=QX0VbQ9Wck+v=7ebfc-_FXJ_NA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Roland Dreier <roland@purestorage.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, James Bottomley <JBottomley@parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20130821063008.GD25506@infradead.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 21, 2013 at 07:38:21AM -0700, Roland Dreier wrote:
-> I don't understand this.  In fact the whole patch series looks quite
-> confused.  COMPARE AND WRITE is a normal Data-Out command, with no
-> requirement for special bidirectional handling or anything like that.
-> The only slightly unusual thing is that a CAW command with a NUMBER OF
-> LOGICAL BLOCKS equal to N will actually transfer 2*N worth of data --
-> one set of data for the compare operation and a second set to write if
-> the compare succeeds.  But just to be clear, the transfer of those 2*N
-> blocks happens as a single transfer during the Data-Out phase.
+On 08/20/2013 11:30 PM, Christoph Hellwig wrote:
+> On Tue, Aug 20, 2013 at 06:00:06PM -0700, Andy Grover wrote:
+>> Instead of defining a second target_core_fabric_ops struct, use the
+>> same one as normal (tcm_qla2xxx_ops) and then fixup the changed methods.
+>>
+>> This should make it a little easier to pick out the npiv differences, and
+>> also save a little space.
+>>
+>> Signed-off-by: Andy Grover <agrover@redhat.com>
+>
+> Can't say I'm a huge fan of either the old or new way, I'd rather have
+> the methods contain both the NPIV and non-NPIV code inline.  If that's
+> what you're preparing for I'm supportive of this, otherwise I don't
+> really care too much about it.  Looks correct at least..
 
-I think the confusion is that the implementation of COMPARE AND WRITE
-obviously requires a read and a write phase, and the implementation
-tries to mix this up with an actual bidirectional scsi command.
+It reduces the binary size and makes it easier to spot the differences 
+between the two cases, which was the goal. So I think it's a small 
+improvement but if others disagree then I'm fine with the code as-is.
 
-If the core stopped keying off t_bidi_data_sg and used better flag
-this could be easily solved.
+Regards -- Andy
