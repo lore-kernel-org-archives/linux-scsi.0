@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 08/12] target: Make __target_execute_cmd() available as extern
-Date: Thu, 22 Aug 2013 04:54:06 +0000
-Message-ID: <1377147250-10125-9-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 06/12] target: Add memory allocation for bidirectional commands
+Date: Thu, 22 Aug 2013 04:54:04 +0000
+Message-ID: <1377147250-10125-7-git-send-email-nab@daterainc.com>
 References: <1377147250-10125-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1377147250-10125-1-git-send-email-nab@daterainc.com>
@@ -12,42 +12,100 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@daterainc.com>
 
-Required by COMPARE_AND_WRITE for write instance user-data
-submission, in order to bypass target_execute_cmd() checks.
+This adds transport_generic_get_mem_bidi() to perform scatterlist
+allocation for bidirectional commands.
 
-Reported-by: Christoph Hellwig <hch@lst.de>
-Cc: Roland Dreier <roland@purestorage.com>
+Also, update transport_generic_new_cmd() to call this new function
+when SCF_BIDI has been set.
+
+v2 Changes:
+  - Use SCF_COMPARE_AND_WRITE instead of CDB based check for
+    calculating length in transport_generic_get_mem_bidi().
+  - Use SCF_COMPARE_AND_WRITE in transport_generic_new_cmd()
+    for determing when to call transport_generic_get_mem_bidi()
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Martin Petersen <martin.petersen@oracle.com>
+Cc: Chris Mason <chris.mason@fusionio.com>
+Cc: James Bottomley <JBottomley@Parallels.com>
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
 ---
- drivers/target/target_core_transport.c |    2 +-
- include/target/target_core_fabric.h    |    1 +
- 2 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/target/target_core_transport.c |   54 ++++++++++++++++++++++++++++++++
+ 1 files changed, 54 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 5236a80..dc39f1f 100644
+index 781859e..967dac7 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -1627,7 +1627,7 @@ queue_full:
- }
- EXPORT_SYMBOL(transport_generic_request_failure);
+@@ -2092,6 +2092,53 @@ void transport_kunmap_data_sg(struct se_cmd *cmd)
+ EXPORT_SYMBOL(transport_kunmap_data_sg);
  
--static void __target_execute_cmd(struct se_cmd *cmd)
-+void __target_execute_cmd(struct se_cmd *cmd)
+ static int
++transport_generic_get_mem_bidi(struct se_cmd *cmd)
++{
++	struct se_device *dev = cmd->se_dev;
++	struct page *page;
++	gfp_t zero_flag;
++	u32 length;
++	unsigned int nents;
++	int i = 0;
++
++	if (cmd->se_cmd_flags & SCF_COMPARE_AND_WRITE)
++		length = cmd->t_task_nolb * dev->dev_attrib.block_size;
++	else
++		length = cmd->data_length;
++
++	nents = DIV_ROUND_UP(length, PAGE_SIZE);
++	cmd->t_bidi_data_sg = kmalloc(sizeof(struct scatterlist) * nents, GFP_KERNEL);
++	if (!cmd->t_bidi_data_sg)
++		return -ENOMEM;
++
++	cmd->t_bidi_data_nents = nents;
++	sg_init_table(cmd->t_bidi_data_sg, nents);
++
++	zero_flag = cmd->se_cmd_flags & SCF_SCSI_DATA_CDB ? 0 : __GFP_ZERO;
++
++	while (length) {
++		u32 page_len = min_t(u32, length, PAGE_SIZE);
++		page = alloc_page(GFP_KERNEL | zero_flag);
++		if (!page)
++			goto out;
++
++		sg_set_page(&cmd->t_bidi_data_sg[i], page, page_len, 0);
++		length -= page_len;
++		i++;
++	}
++	return 0;
++
++out:
++	while (i > 0) {
++		i--;
++		__free_page(sg_page(&cmd->t_bidi_data_sg[i]));
++	}
++	kfree(cmd->t_bidi_data_sg);
++	cmd->t_bidi_data_sg = NULL;
++	return -ENOMEM;
++}
++
++static int
+ transport_generic_get_mem(struct se_cmd *cmd)
  {
- 	sense_reason_t ret;
- 
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index d559c36..192eb52 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -134,6 +134,7 @@ int	core_tmr_alloc_req(struct se_cmd *, void *, u8, gfp_t);
- void	core_tmr_release_req(struct se_tmr_req *);
- int	transport_generic_handle_tmr(struct se_cmd *);
- void	transport_generic_request_failure(struct se_cmd *, sense_reason_t);
-+void	__target_execute_cmd(struct se_cmd *);
- int	transport_lookup_tmr_lun(struct se_cmd *, u32);
- 
- struct se_node_acl *core_tpg_check_initiator_node_acl(struct se_portal_group *,
+ 	u32 length = cmd->data_length;
+@@ -2149,6 +2196,13 @@ transport_generic_new_cmd(struct se_cmd *cmd)
+ 	 */
+ 	if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC) &&
+ 	    cmd->data_length) {
++		if ((cmd->se_cmd_flags & SCF_BIDI) ||
++		    (cmd->se_cmd_flags & SCF_COMPARE_AND_WRITE)) {
++			ret = transport_generic_get_mem_bidi(cmd);
++			if (ret < 0)
++				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++		}
++
+ 		ret = transport_generic_get_mem(cmd);
+ 		if (ret < 0)
+ 			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
 -- 
 1.7.2.5
