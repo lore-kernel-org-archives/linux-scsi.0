@@ -1,19 +1,319 @@
-From: Wajeeha Ahmad <wajeeha@MIT.EDU>
-Subject: (unknown)
-Date: Thu, 22 Aug 2013 09:29:33 +0000
-Message-ID: <091F9F111E5FAE458C62C13351CBB59D14EBAA__48858.8913729929$1377164354$gmane$org@OC11expo28.exchange.mit.edu>
+From: Ren Mingxin <renmx@cn.fujitsu.com>
+Subject: Re: [PATCH 3/9] scsi: improved eh timeout handler
+Date: Thu, 22 Aug 2013 16:51:47 +0800
+Message-ID: <5215D123.7030908@cn.fujitsu.com>
+References: <1372688671-85639-1-git-send-email-hare@suse.de> <1372688671-85639-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dmz-mailsec-scanner-3.mit.edu ([18.9.25.14]:44344 "EHLO
-	dmz-mailsec-scanner-3.mit.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752211Ab3HVJi6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Aug 2013 05:38:58 -0400
-Subject: 
-Content-Language: en-US
+Received: from cn.fujitsu.com ([222.73.24.84]:49187 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752284Ab3HVKcB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Aug 2013 06:32:01 -0400
+In-Reply-To: <1372688671-85639-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Roland Dreier <roland@purestorage.com>
 
-Your Email ID has been picked by the British Telecom Promotions as a lucky Person of a lump sum of 1,000,000.00. To Claim send info To Email: (btcenter003@outlook.com)
+Hi, Hannes:
+
+On 07/01/2013 10:24 PM, Hannes Reinecke wrote:
+> When a command runs into a timeout we need to send an 'ABORT TASK'
+> TMF. This is typically done by the 'eh_abort_handler' LLDD callback.
+>
+> Conceptually, however, this function is a normal SCSI command, so
+> there is no need to enter the error handler.
+>
+> This patch implements a new scsi_abort_command() function which
+> invokes an asynchronous function scsi_eh_abort_handler() to
+> abort the commands via the usual 'eh_abort_handler'.
+>
+> If abort succeeds the command is either retried or terminated,
+> depending on the number of allowed retries. However, 'eh_eflags'
+> records the abort, so if the retry would fail again the
+> command is pushed onto the error handler without trying to
+> abort it (again); it'll be cleared up from SCSI EH.
+>
+> Signed-off-by: Hannes Reinecke<hare@suse.de>
+> ---
+>   drivers/scsi/scsi.c       |   1 +
+>   drivers/scsi/scsi_error.c | 139 ++++++++++++++++++++++++++++++++++++++++++----
+>   drivers/scsi/scsi_priv.h  |   2 +
+>   include/scsi/scsi_cmnd.h  |   2 +
+>   4 files changed, 132 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index ebe3b0a..06257cf 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -297,6 +297,7 @@ struct scsi_cmnd *scsi_get_command(struct scsi_device *dev, gfp_t gfp_mask)
+>
+>   		cmd->device = dev;
+>   		INIT_LIST_HEAD(&cmd->list);
+> +		INIT_WORK(&cmd->abort_work, scmd_eh_abort_handler);
+>   		spin_lock_irqsave(&dev->list_lock, flags);
+>   		list_add_tail(&cmd->list,&dev->cmd_list);
+>   		spin_unlock_irqrestore(&dev->list_lock, flags);
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index e76e895..835f7e4 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -55,6 +55,7 @@ static void scsi_eh_done(struct scsi_cmnd *scmd);
+>   #define HOST_RESET_SETTLE_TIME  (10)
+>
+>   static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
+> +static int scsi_try_to_abort_cmd(struct scsi_host_template *, struct scsi_cmnd *);
+>
+>   /* called with shost->host_lock held */
+>   void scsi_eh_wakeup(struct Scsi_Host *shost)
+> @@ -102,6 +103,111 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+>   }
+>
+>   /**
+> + * scmd_eh_abort_handler - Handle command aborts
+> + * @work:	command to be aborted.
+> + */
+> +void
+> +scmd_eh_abort_handler(struct work_struct *work)
+> +{
+> +	struct scsi_cmnd *scmd =
+> +		container_of(work, struct scsi_cmnd, abort_work);
+> +	struct scsi_device *sdev = scmd->device;
+> +	unsigned long flags;
+> +	int rtn;
+> +
+> +	spin_lock_irqsave(sdev->host->host_lock, flags);
+> +	if (scsi_host_eh_past_deadline(sdev->host)) {
+> +		spin_unlock_irqrestore(sdev->host->host_lock, flags);
+> +		SCSI_LOG_ERROR_RECOVERY(3,
+> +			scmd_printk(KERN_INFO, scmd,
+> +				    "eh timeout, not aborting\n"));
+
+Command address should be also printed for debugging conveniently:
++"eh timeout, not aborting command %p\n", scmd));
+
+>
+> +	} else {
+> +		spin_unlock_irqrestore(sdev->host->host_lock, flags);
+> +		SCSI_LOG_ERROR_RECOVERY(3,
+> +			scmd_printk(KERN_INFO, scmd,
+> +				    "aborting command %p\n", scmd));
+> +		rtn = scsi_try_to_abort_cmd(sdev->host->hostt, scmd);
+> +		if (rtn == SUCCESS) {
+> +			scmd->result |= DID_TIME_OUT<<  16;
+> +			if (!scsi_noretry_cmd(scmd)&&
+
+I think 'scsi_device_online(scmd->device)' is also necessary here.
+
+>
+> +			    (++scmd->retries<= scmd->allowed)) {
+> +				SCSI_LOG_ERROR_RECOVERY(3,
+> +					scmd_printk(KERN_WARNING, scmd,
+> +						    "retry aborted command\n"));
+
+Command address should be also printed here.
+
+>
+> +				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
+> +			} else {
+> +				SCSI_LOG_ERROR_RECOVERY(3,
+> +					scmd_printk(KERN_WARNING, scmd,
+> +						    "finish aborted command\n"));
+
+Command address should be also printed here.
+
+>
+> +				scsi_finish_command(scmd);
+> +			}
+> +			return;
+> +		}
+> +		SCSI_LOG_ERROR_RECOVERY(3,
+> +			scmd_printk(KERN_INFO, scmd,
+> +				    "abort command failed, rtn %d\n", rtn));
+
+Command address should be also printed here.
+
+>
+> +	}
+> +
+> +	if (scsi_eh_scmd_add(scmd, 0)) {
+> +		SCSI_LOG_ERROR_RECOVERY(3,
+> +			scmd_printk(KERN_WARNING, scmd,
+> +				    "terminate aborted command\n"));
+
+Command address should be also printed here.
+
+>
+> +		scmd->result |= DID_TIME_OUT<<  16;
+> +		scsi_finish_command(scmd);
+> +	}
+> +}
+> +
+> +/**
+> + * scsi_abort_command - schedule a command abort
+> + * @scmd:	scmd to abort.
+> + *
+> + * We only need to abort commands after a command timeout
+> + */
+> +enum blk_eh_timer_return
+> +scsi_abort_command(struct scsi_cmnd *scmd)
+> +{
+> +	struct scsi_device *sdev = scmd->device;
+> +	struct Scsi_Host *shost = sdev->host;
+> +	unsigned long flags;
+> +
+> +	if (scmd->eh_eflags&  SCSI_EH_ABORT_SCHEDULED) {
+> +		/*
+> +		 * command abort timed out.
+> +		 */
+> +		SCSI_LOG_ERROR_RECOVERY(3,
+> +			scmd_printk(KERN_INFO, scmd,
+> +				    "scmd %p abort timeout\n", scmd));
+> +		cancel_work_sync(&scmd->abort_work);
+> +		return BLK_EH_NOT_HANDLED;
+> +	}
+> +
+> +	/*
+> +	 * Do not try a command abort if
+> +	 * SCSI EH has already started.
+> +	 */
+> +	spin_lock_irqsave(shost->host_lock, flags);
+> +	if (scsi_host_in_recovery(shost)) {
+> +		spin_unlock_irqrestore(shost->host_lock, flags);
+> +		SCSI_LOG_ERROR_RECOVERY(3,
+> +			scmd_printk(KERN_INFO, scmd,
+> +				    "host in recovery, not aborting\n"));
+
+Command address should be also printed here.
+
+Thanks,
+Ren
+
+>
+> +		return BLK_EH_NOT_HANDLED;
+> +	}
+> +
+> +	if (shost->eh_deadline&&  !shost->last_reset)
+> +		shost->last_reset = jiffies;
+> +	spin_unlock_irqrestore(shost->host_lock, flags);
+> +
+> +	scmd->eh_eflags |= SCSI_EH_ABORT_SCHEDULED;
+> +	SCSI_LOG_ERROR_RECOVERY(3,
+> +		scmd_printk(KERN_INFO, scmd,
+> +			    "scmd %p abort scheduled\n", scmd));
+> +	schedule_work(&scmd->abort_work);
+> +	return BLK_EH_SCHEDULED;
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_abort_command);
+> +
+> +/**
+>    * scsi_eh_scmd_add - add scsi cmd to error handling.
+>    * @scmd:	scmd to run eh on.
+>    * @eh_flag:	optional SCSI_EH flag.
+> @@ -127,6 +233,8 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+>   		shost->last_reset = jiffies;
+>
+>   	ret = 1;
+> +	if (scmd->eh_eflags&  SCSI_EH_ABORT_SCHEDULED)
+> +		eh_flag&= ~SCSI_EH_CANCEL_CMD;
+>   	scmd->eh_eflags |= eh_flag;
+>   	list_add_tail(&scmd->eh_entry,&shost->eh_cmd_q);
+>   	shost->host_failed++;
+> @@ -1532,6 +1640,8 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
+>   	switch (host_byte(scmd->result)) {
+>   	case DID_OK:
+>   		break;
+> +	case DID_TIME_OUT:
+> +		goto check_type;
+>   	case DID_BUS_BUSY:
+>   		return (scmd->request->cmd_flags&  REQ_FAILFAST_TRANSPORT);
+>   	case DID_PARITY:
+> @@ -1545,18 +1655,19 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
+>   		return (scmd->request->cmd_flags&  REQ_FAILFAST_DRIVER);
+>   	}
+>
+> -	switch (status_byte(scmd->result)) {
+> -	case CHECK_CONDITION:
+> -		/*
+> -		 * assume caller has checked sense and determinted
+> -		 * the check condition was retryable.
+> -		 */
+> -		if (scmd->request->cmd_flags&  REQ_FAILFAST_DEV ||
+> -		    scmd->request->cmd_type == REQ_TYPE_BLOCK_PC)
+> -			return 1;
+> -	}
+> +	switch (status_byte(scmd->result) != CHECK_CONDITION)
+> +		return 0;
+>
+> -	return 0;
+> +check_type:
+> +	/*
+> +	 * assume caller has checked sense and determinted
+> +	 * the check condition was retryable.
+> +	 */
+> +	if (scmd->request->cmd_flags&  REQ_FAILFAST_DEV ||
+> +	    scmd->request->cmd_type == REQ_TYPE_BLOCK_PC)
+> +		return 1;
+> +	else
+> +		return 0;
+>   }
+>
+>   /**
+> @@ -1606,9 +1717,13 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+>   		 * looks good.  drop through, and check the next byte.
+>   		 */
+>   		break;
+> +	case DID_ABORT:
+> +		if (scmd->eh_eflags&  SCSI_EH_ABORT_SCHEDULED) {
+> +			scmd->result |= DID_TIME_OUT<<  16;
+> +			return SUCCESS;
+> +		}
+>   	case DID_NO_CONNECT:
+>   	case DID_BAD_TARGET:
+> -	case DID_ABORT:
+>   		/*
+>   		 * note - this means that we just report the status back
+>   		 * to the top level driver, not that we actually think
+> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> index 8f9a0ca..f079a59 100644
+> --- a/drivers/scsi/scsi_priv.h
+> +++ b/drivers/scsi/scsi_priv.h
+> @@ -19,6 +19,7 @@ struct scsi_nl_hdr;
+>    * Scsi Error Handler Flags
+>    */
+>   #define SCSI_EH_CANCEL_CMD	0x0001	/* Cancel this cmd */
+> +#define SCSI_EH_ABORT_SCHEDULED	0x0002	/* Abort has been scheduled */
+>
+>   #define SCSI_SENSE_VALID(scmd) \
+>   	(((scmd)->sense_buffer[0]&  0x70) == 0x70)
+> @@ -66,6 +67,7 @@ extern int __init scsi_init_devinfo(void);
+>   extern void scsi_exit_devinfo(void);
+>
+>   /* scsi_error.c */
+> +extern void scmd_eh_abort_handler(struct work_struct *work);
+>   extern enum blk_eh_timer_return scsi_times_out(struct request *req);
+>   extern int scsi_error_handler(void *host);
+>   extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
+> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+> index de5f5d8..a2f062e 100644
+> --- a/include/scsi/scsi_cmnd.h
+> +++ b/include/scsi/scsi_cmnd.h
+> @@ -55,6 +55,7 @@ struct scsi_cmnd {
+>   	struct scsi_device *device;
+>   	struct list_head list;  /* scsi_cmnd participates in queue lists */
+>   	struct list_head eh_entry; /* entry for the host eh_cmd_q */
+> +	struct work_struct abort_work;
+>   	int eh_eflags;		/* Used by error handlr */
+>
+>   	/*
+> @@ -144,6 +145,7 @@ extern void scsi_put_command(struct scsi_cmnd *);
+>   extern void __scsi_put_command(struct Scsi_Host *, struct scsi_cmnd *,
+>   			       struct device *);
+>   extern void scsi_finish_command(struct scsi_cmnd *cmd);
+> +extern enum blk_eh_timer_return scsi_abort_command(struct scsi_cmnd *cmd);
+>
+>   extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+>   				 size_t *offset, size_t *len);
+
