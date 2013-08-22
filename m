@@ -1,35 +1,42 @@
-From: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Subject: [PATCH] scsi_dh_rdac: Add new IBM 1813 product id to rdac devlist
-Date: Wed, 21 Aug 2013 20:34:30 +0000
-Message-ID: <8255ED565A0EAA4A960625E27D49DBF23DEAB649@SACEXCMBX04-PRD.hq.netapp.com>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH 2/8] zfcp: cleanup use of obsolete strict_strto* functions
+Date: Thu, 22 Aug 2013 09:08:32 +0900
+Message-ID: <000e01ce9ecb$bd2a51a0$377ef4e0$%han@samsung.com>
+References: <1377097531-4942-1-git-send-email-maier@linux.vnet.ibm.com>
+ <1377097531-4942-3-git-send-email-maier@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx11.netapp.com ([216.240.18.76]:33626 "EHLO mx11.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752235Ab3HUUec convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2013 16:34:32 -0400
-Content-Language: en-US
+Received: from mailout1.samsung.com ([203.254.224.24]:22382 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752740Ab3HVAIf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2013 20:08:35 -0400
+In-reply-to: <1377097531-4942-3-git-send-email-maier@linux.vnet.ibm.com>
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+To: 'Steffen Maier' <maier@linux.vnet.ibm.com>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, 'Martin Schwidefsky' <schwidefsky@de.ibm.com>, 'Heiko Carstens' <heiko.carstens@de.ibm.com>, 'Martin Peschke' <mpeschke@linux.vnet.ibm.com>, 'Jingoo Han' <jg1.han@samsung.com>
 
-Add new IBM product id to the RDAC devlist
+On Thursday, August 22, 2013 12:05 AM, Steffen Maier wrote:
+> 
+> From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+> 
+> strict_strtoul and friends are obsolete. Use kstrtoul functions
+> instead.
+> 
+> Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
 
-Signed-off-by: Sean Stewart <Sean.Stewart@netapp.com>
----
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index 69c915a..4b9cf93 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -786,6 +786,7 @@ static const struct scsi_dh_devlist rdac_dev_list[] = {
- 	{"IBM", "1742"},
- 	{"IBM", "1745"},
- 	{"IBM", "1746"},
-+	{"IBM", "1813"},
- 	{"IBM", "1814"},
- 	{"IBM", "1815"},
- 	{"IBM", "1818"},
---
+Reviewed-by: Jingoo Han <jg1.han@samsung.com>
+
+Best regards,
+Jingoo Han
+
+> Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+> ---
+>  drivers/s390/scsi/zfcp_aux.c   |    4 ++--
+>  drivers/s390/scsi/zfcp_sysfs.c |   12 ++++++------
+>  2 files changed, 8 insertions(+), 8 deletions(-)
+
