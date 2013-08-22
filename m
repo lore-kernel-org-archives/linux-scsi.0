@@ -1,31 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: fix the build warning
-Date: Wed, 21 Aug 2013 21:25:26 -0400
-Message-ID: <yq1ppt68qk9.fsf@sermon.lab.mkp.net>
-References: <1377132262-15744-1-git-send-email-zwu.kernel@gmail.com>
-	<1377133329.12003.9.camel@joe-AO722>
-	<CAEH94Lhh11+zFHsRNDXoyxQfndxDRMcVvLnZDXQLw5cyaavUJw@mail.gmail.com>
-	<1377134271.12003.15.camel@joe-AO722>
+Subject: Re: [PATCH 2/4] scsi_debug: fix logical block provisioning support when unmap_alignment != 0
+Date: Wed, 21 Aug 2013 21:29:39 -0400
+Message-ID: <yq1li3u8qd8.fsf@sermon.lab.mkp.net>
+References: <1373889127-17083-1-git-send-email-akinobu.mita@gmail.com>
+	<1373889127-17083-3-git-send-email-akinobu.mita@gmail.com>
+	<CAC5umyh8+zBtKrpoFXdO+1D_5vOQS-P82LkocmaVY+FXb5YHRA@mail.gmail.com>
+	<5213D808.1080806@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1377134271.12003.15.camel@joe-AO722> (Joe Perches's message of
-	"Wed, 21 Aug 2013 18:17:51 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Zhi Yong Wu <zwu.kernel@gmail.com>, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, akinobu.mita@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41679 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753174Ab3HVB3r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2013 21:29:47 -0400
+In-Reply-To: <5213D808.1080806@interlog.com> (Douglas Gilbert's message of
+	"Tue, 20 Aug 2013 16:56:40 -0400")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->>>>> "Joe" == Joe Perches <joe@perches.com> writes:
+>>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
 
-Joe> I don't get this build warning in the first place and I think the
-Joe> scsi_debug file is quite old and probably doesn't need to be
-Joe> changed at all.
+Doug> This is Martin's area of expertise so I hope he also acks it.
 
-guard isn't a boolean, it selects the checksum algorithm used.
+Doug> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
-Also, I believe Akinobu's recent reorganization of this code in question
-fixed the warning.
+I believe I already did, but:
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
