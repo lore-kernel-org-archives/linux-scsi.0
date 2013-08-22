@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 11/12] target: Add compare_and_write_post() completion callback fall through
-Date: Thu, 22 Aug 2013 04:54:09 +0000
-Message-ID: <1377147250-10125-12-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 12/12] target: Release COMPARE_AND_WRITE mutex in generic failure path
+Date: Thu, 22 Aug 2013 04:54:10 +0000
+Message-ID: <1377147250-10125-13-git-send-email-nab@daterainc.com>
 References: <1377147250-10125-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1377147250-10125-1-git-send-email-nab@daterainc.com>
@@ -12,14 +12,17 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@daterainc.com>
 
-This patch changes target_complete_ok_work() to fall through
-after calling the se_cmd->transport_complete_callback() ->
-compare_and_write_post() callback, by keying off the existance
-of SCF_COMPARE_AND_WRITE_POST.
+This patch adds a extra check for SCF_COMPARE_AND_WRITE within
+transport_generic_request_failure() to invoke the callback for
+compare_and_write_callback() or compare_and_write_done(), in
+order to release se_dev->caw_mutex from the generic failure
+path.
 
-This is necessary because once SCF_COMPARE_AND_WRITE_POST has
-been set by compare_and_write_post(), the SCSI response needs
-to be sent via TFO->queue_status().
+It also adds to checks within compare_and_write_callback() to
+avoid processing when transport_generic_request_failure() occurs
+early enough that cmd->t_data_sg or cmd->t_bidi_data_sg have not
+been setup yet, nor se_dev->caw_mutex obtained from within
+sbc_compare_and_write().
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
@@ -27,57 +30,46 @@ Cc: Martin Petersen <martin.petersen@oracle.com>
 Cc: Chris Mason <chris.mason@fusionio.com>
 Cc: James Bottomley <JBottomley@Parallels.com>
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_sbc.c       |    3 ++-
- drivers/target/target_core_transport.c |   21 +++++++++++----------
- 2 files changed, 13 insertions(+), 11 deletions(-)
+ drivers/target/target_core_sbc.c       |    7 +++++++
+ drivers/target/target_core_transport.c |    6 ++++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 4076828..bb1b42b 100644
+index bb1b42b..287e960 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -375,7 +375,8 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd)
+@@ -372,6 +372,13 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd)
+ 	sense_reason_t ret = TCM_NO_SENSE;
+ 	int rc, i;
+ 
++	/*
++	 * Handle early failure in transport_generic_request_failure(),
++	 * which will not have taken ->caw_mutex yet..
++	 */
++	if (!cmd->t_data_sg || !cmd->t_bidi_data_sg)
++		return TCM_NO_SENSE;
++
  	buf = kzalloc(cmd->data_length, GFP_KERNEL);
  	if (!buf) {
  		pr_err("Unable to allocate compare_and_write buf\n");
--		return TCM_OUT_OF_RESOURCES;
-+		ret = TCM_OUT_OF_RESOURCES;
-+		goto out;
- 	}
- 
- 	write_sg = kzalloc(sizeof(struct scatterlist) * cmd->t_data_nents,
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index dc39f1f..a95e799 100644
+index a95e799..3009cda 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -1910,17 +1910,18 @@ static void target_complete_ok_work(struct work_struct *work)
- 		sense_reason_t rc;
+@@ -1560,6 +1560,12 @@ void transport_generic_request_failure(struct se_cmd *cmd,
+ 	 * For SAM Task Attribute emulation for failed struct se_cmd
+ 	 */
+ 	transport_complete_task_attr(cmd);
++	/*
++	 * Handle special case for COMPARE_AND_WRITE failure, where the
++	 * callback is expected to drop the per device ->caw_mutex.
++	 */
++	if (cmd->se_cmd_flags & SCF_COMPARE_AND_WRITE)
++		cmd->transport_complete_callback(cmd);
  
- 		rc = cmd->transport_complete_callback(cmd);
--		if (!rc)
-+		if (!rc && !(cmd->se_cmd_flags & SCF_COMPARE_AND_WRITE_POST)) {
- 			return;
-+		} else if (rc) {
-+			ret = transport_send_check_condition_and_sense(cmd,
-+						rc, 0);
-+			if (ret == -EAGAIN || ret == -ENOMEM)
-+				goto queue_full;
- 
--		ret = transport_send_check_condition_and_sense(cmd,
--					rc, 0);
--		if (ret == -EAGAIN || ret == -ENOMEM)
--			goto queue_full;
--
--		transport_lun_remove_cmd(cmd);
--		transport_cmd_check_stop_to_fabric(cmd);
--		return;
-+			transport_lun_remove_cmd(cmd);
-+			transport_cmd_check_stop_to_fabric(cmd);
-+			return;
-+		}
- 	}
- 
- 	switch (cmd->data_direction) {
+ 	switch (sense_reason) {
+ 	case TCM_NON_EXISTENT_LUN:
 -- 
 1.7.2.5
