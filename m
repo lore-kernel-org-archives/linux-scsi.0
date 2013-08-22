@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 02/12] target: Add return for se_cmd->transport_complete_callback
-Date: Thu, 22 Aug 2013 04:54:00 +0000
-Message-ID: <1377147250-10125-3-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 04/12] target: Allow sbc_ops->execute_rw() to accept SGLs + data_direction
+Date: Thu, 22 Aug 2013 04:54:02 +0000
+Message-ID: <1377147250-10125-5-git-send-email-nab@daterainc.com>
 References: <1377147250-10125-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1377147250-10125-1-git-send-email-nab@daterainc.com>
@@ -12,11 +12,22 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@daterainc.com>
 
-This patch adds a sense_reason_t return to ->transport_complete_callback(),
-and updates target_complete_ok_work() to invoke the call if necessary to
-transport_send_check_condition_and_sense() during the failure case.
+COMPARE_AND_WRITE expects to be able to send down a DMA_FROM_DEVICE
+to obtain the necessary READ payload for comparision against the
+first half of the WRITE payload containing the verify user data.
 
-Also update xdreadwrite_callback() to use this return value.
+Currently virtual backends expect to internally reference SGLs,
+SGL nents, and data_direction, so change IBLOCK, FILEIO and RD
+sbc_ops->execute_rw() to accept this values as function parameters.
+
+Also add default sbc_execute_rw() handler for the typical case for
+cmd->execute_rw() submission using cmd->t_data_sg, cmd->t_data_nents,
+and cmd->data_direction).
+
+v2 Changes:
+  - Add SCF_COMPARE_AND_WRITE command flag
+  - Use sbc_execute_rw() for normal cmd->execute_rw() submission
+    with expected se_cmd members.
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
@@ -26,105 +37,219 @@ Cc: James Bottomley <JBottomley@Parallels.com>
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
 ---
- drivers/target/target_core_sbc.c       |   13 ++++++++-----
- drivers/target/target_core_transport.c |   20 +++++++++++++++++---
- include/target/target_core_base.h      |    2 +-
- 3 files changed, 26 insertions(+), 9 deletions(-)
+ drivers/target/target_core_file.c    |    6 +---
+ drivers/target/target_core_iblock.c  |    6 +---
+ drivers/target/target_core_rd.c      |    6 +---
+ drivers/target/target_core_sbc.c     |   37 ++++++++++++++++++++++++---------
+ include/target/target_core_backend.h |    3 +-
+ include/target/target_core_base.h    |    5 ++++
+ 6 files changed, 40 insertions(+), 23 deletions(-)
 
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index bc3245d..c5448a5 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -547,11 +547,9 @@ fd_execute_unmap(struct se_cmd *cmd)
+ }
+ 
+ static sense_reason_t
+-fd_execute_rw(struct se_cmd *cmd)
++fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
++	      enum dma_data_direction data_direction)
+ {
+-	struct scatterlist *sgl = cmd->t_data_sg;
+-	u32 sgl_nents = cmd->t_data_nents;
+-	enum dma_data_direction data_direction = cmd->data_direction;
+ 	struct se_device *dev = cmd->se_dev;
+ 	int ret = 0;
+ 
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 0a460f3..81464eb 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -587,11 +587,9 @@ static ssize_t iblock_show_configfs_dev_params(struct se_device *dev, char *b)
+ }
+ 
+ static sense_reason_t
+-iblock_execute_rw(struct se_cmd *cmd)
++iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
++		  enum dma_data_direction data_direction)
+ {
+-	struct scatterlist *sgl = cmd->t_data_sg;
+-	u32 sgl_nents = cmd->t_data_nents;
+-	enum dma_data_direction data_direction = cmd->data_direction;
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct iblock_req *ibr;
+ 	struct bio *bio;
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 51127d1..958d17ad 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -280,11 +280,9 @@ static struct rd_dev_sg_table *rd_get_sg_table(struct rd_dev *rd_dev, u32 page)
+ }
+ 
+ static sense_reason_t
+-rd_execute_rw(struct se_cmd *cmd)
++rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
++	      enum dma_data_direction data_direction)
+ {
+-	struct scatterlist *sgl = cmd->t_data_sg;
+-	u32 sgl_nents = cmd->t_data_nents;
+-	enum dma_data_direction data_direction = cmd->data_direction;
+ 	struct se_device *se_dev = cmd->se_dev;
+ 	struct rd_dev *dev = RD_DEV(se_dev);
+ 	struct rd_dev_sg_table *table;
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 8a46277..be5234a 100644
+index be5234a..5569b36 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -280,13 +280,13 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
- 	return 0;
+@@ -337,6 +337,13 @@ out:
+ 	return ret;
  }
  
--static void xdreadwrite_callback(struct se_cmd *cmd)
-+static sense_reason_t xdreadwrite_callback(struct se_cmd *cmd)
- {
- 	unsigned char *buf, *addr;
- 	struct scatterlist *sg;
- 	unsigned int offset;
--	int i;
--	int count;
-+	sense_reason_t ret = TCM_NO_SENSE;
-+	int i, count;
- 	/*
- 	 * From sbc3r22.pdf section 5.48 XDWRITEREAD (10) command
- 	 *
-@@ -301,7 +301,7 @@ static void xdreadwrite_callback(struct se_cmd *cmd)
- 	buf = kmalloc(cmd->data_length, GFP_KERNEL);
- 	if (!buf) {
- 		pr_err("Unable to allocate xor_callback buf\n");
--		return;
-+		return TCM_OUT_OF_RESOURCES;
- 	}
- 	/*
- 	 * Copy the scatterlist WRITE buffer located at cmd->t_data_sg
-@@ -320,8 +320,10 @@ static void xdreadwrite_callback(struct se_cmd *cmd)
- 	offset = 0;
- 	for_each_sg(cmd->t_bidi_data_sg, sg, cmd->t_bidi_data_nents, count) {
- 		addr = kmap_atomic(sg_page(sg));
--		if (!addr)
-+		if (!addr) {
-+			ret = TCM_OUT_OF_RESOURCES;
- 			goto out;
-+		}
- 
- 		for (i = 0; i < sg->length; i++)
- 			*(addr + sg->offset + i) ^= *(buf + offset + i);
-@@ -332,6 +334,7 @@ static void xdreadwrite_callback(struct se_cmd *cmd)
- 
- out:
- 	kfree(buf);
-+	return ret;
- }
- 
++static sense_reason_t
++sbc_execute_rw(struct se_cmd *cmd)
++{
++	return cmd->execute_rw(cmd, cmd->t_data_sg, cmd->t_data_nents,
++			       cmd->data_direction);
++}
++
  sense_reason_t
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 98ec711..53d1d75 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1904,10 +1904,24 @@ static void target_complete_ok_work(struct work_struct *work)
- 	}
- 	/*
- 	 * Check for a callback, used by amongst other things
--	 * XDWRITE_READ_10 emulation.
-+	 * XDWRITE_READ_10 and COMPARE_AND_WRITE emulation.
- 	 */
--	if (cmd->transport_complete_callback)
--		cmd->transport_complete_callback(cmd);
-+	if (cmd->transport_complete_callback) {
-+		sense_reason_t rc;
-+
-+		rc = cmd->transport_complete_callback(cmd);
-+		if (!rc)
-+			return;
-+
-+		ret = transport_send_check_condition_and_sense(cmd,
-+					rc, 0);
-+		if (ret == -EAGAIN || ret == -ENOMEM)
-+			goto queue_full;
-+
-+		transport_lun_remove_cmd(cmd);
-+		transport_cmd_check_stop_to_fabric(cmd);
-+		return;
-+	}
+ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ {
+@@ -351,31 +358,36 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		sectors = transport_get_sectors_6(cdb);
+ 		cmd->t_task_lba = transport_lba_21(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+-		cmd->execute_cmd = ops->execute_rw;
++		cmd->execute_rw = ops->execute_rw;
++		cmd->execute_cmd = sbc_execute_rw;
+ 		break;
+ 	case READ_10:
+ 		sectors = transport_get_sectors_10(cdb);
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+-		cmd->execute_cmd = ops->execute_rw;
++		cmd->execute_rw = ops->execute_rw;
++		cmd->execute_cmd = sbc_execute_rw;
+ 		break;
+ 	case READ_12:
+ 		sectors = transport_get_sectors_12(cdb);
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+-		cmd->execute_cmd = ops->execute_rw;
++		cmd->execute_rw = ops->execute_rw;
++		cmd->execute_cmd = sbc_execute_rw;
+ 		break;
+ 	case READ_16:
+ 		sectors = transport_get_sectors_16(cdb);
+ 		cmd->t_task_lba = transport_lba_64(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+-		cmd->execute_cmd = ops->execute_rw;
++		cmd->execute_rw = ops->execute_rw;
++		cmd->execute_cmd = sbc_execute_rw;
+ 		break;
+ 	case WRITE_6:
+ 		sectors = transport_get_sectors_6(cdb);
+ 		cmd->t_task_lba = transport_lba_21(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+-		cmd->execute_cmd = ops->execute_rw;
++		cmd->execute_rw = ops->execute_rw;
++		cmd->execute_cmd = sbc_execute_rw;
+ 		break;
+ 	case WRITE_10:
+ 	case WRITE_VERIFY:
+@@ -384,7 +396,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		if (cdb[1] & 0x8)
+ 			cmd->se_cmd_flags |= SCF_FUA;
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+-		cmd->execute_cmd = ops->execute_rw;
++		cmd->execute_rw = ops->execute_rw;
++		cmd->execute_cmd = sbc_execute_rw;
+ 		break;
+ 	case WRITE_12:
+ 		sectors = transport_get_sectors_12(cdb);
+@@ -392,7 +405,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		if (cdb[1] & 0x8)
+ 			cmd->se_cmd_flags |= SCF_FUA;
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+-		cmd->execute_cmd = ops->execute_rw;
++		cmd->execute_rw = ops->execute_rw;
++		cmd->execute_cmd = sbc_execute_rw;
+ 		break;
+ 	case WRITE_16:
+ 		sectors = transport_get_sectors_16(cdb);
+@@ -400,7 +414,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		if (cdb[1] & 0x8)
+ 			cmd->se_cmd_flags |= SCF_FUA;
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+-		cmd->execute_cmd = ops->execute_rw;
++		cmd->execute_rw = ops->execute_rw;
++		cmd->execute_cmd = sbc_execute_rw;
+ 		break;
+ 	case XDWRITEREAD_10:
+ 		if (cmd->data_direction != DMA_TO_DEVICE ||
+@@ -414,7 +429,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		/*
+ 		 * Setup BIDI XOR callback to be run after I/O completion.
+ 		 */
+-		cmd->execute_cmd = ops->execute_rw;
++		cmd->execute_rw = ops->execute_rw;
++		cmd->execute_cmd = sbc_execute_rw;
+ 		cmd->transport_complete_callback = &xdreadwrite_callback;
+ 		if (cdb[1] & 0x8)
+ 			cmd->se_cmd_flags |= SCF_FUA;
+@@ -437,7 +453,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 			 * Setup BIDI XOR callback to be run during after I/O
+ 			 * completion.
+ 			 */
+-			cmd->execute_cmd = ops->execute_rw;
++			cmd->execute_rw = ops->execute_rw;
++			cmd->execute_cmd = sbc_execute_rw;
+ 			cmd->transport_complete_callback = &xdreadwrite_callback;
+ 			if (cdb[1] & 0x8)
+ 				cmd->se_cmd_flags |= SCF_FUA;
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index ffa2696..77f25e0 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -39,7 +39,8 @@ struct se_subsystem_api {
+ };
  
- 	switch (cmd->data_direction) {
- 	case DMA_FROM_DEVICE:
+ struct sbc_ops {
+-	sense_reason_t (*execute_rw)(struct se_cmd *cmd);
++	sense_reason_t (*execute_rw)(struct se_cmd *cmd, struct scatterlist *,
++				     u32, enum dma_data_direction);
+ 	sense_reason_t (*execute_sync_cache)(struct se_cmd *cmd);
+ 	sense_reason_t (*execute_write_same)(struct se_cmd *cmd);
+ 	sense_reason_t (*execute_write_same_unmap)(struct se_cmd *cmd);
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 360e4a3..6e946f3 100644
+index fac25c5..0c3f47f 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -447,7 +447,7 @@ struct se_cmd {
+@@ -159,6 +159,8 @@ enum se_cmd_flags_table {
+ 	SCF_ALUA_NON_OPTIMIZED		= 0x00008000,
+ 	SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC = 0x00020000,
+ 	SCF_ACK_KREF			= 0x00040000,
++	SCF_COMPARE_AND_WRITE		= 0x00080000,
++	SCF_COMPARE_AND_WRITE_POST	= 0x00100000,
+ };
+ 
+ /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
+@@ -448,11 +450,14 @@ struct se_cmd {
  	struct kref		cmd_kref;
  	struct target_core_fabric_ops *se_tfo;
  	sense_reason_t		(*execute_cmd)(struct se_cmd *);
--	void (*transport_complete_callback)(struct se_cmd *);
-+	sense_reason_t (*transport_complete_callback)(struct se_cmd *);
++	sense_reason_t		(*execute_rw)(struct se_cmd *, struct scatterlist *,
++					      u32, enum dma_data_direction);
+ 	sense_reason_t (*transport_complete_callback)(struct se_cmd *);
  
  	unsigned char		*t_task_cdb;
  	unsigned char		__t_task_cdb[TCM_MAX_COMMAND_SIZE];
+ 	unsigned long long	t_task_lba;
++	unsigned int		t_task_nolb;
+ 	unsigned int		transport_state;
+ #define CMD_T_ABORTED		(1 << 0)
+ #define CMD_T_ACTIVE		(1 << 1)
 -- 
 1.7.2.5
