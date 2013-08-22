@@ -1,8 +1,10 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 00/12] target: Add support for COMPARE_AND_WRITE (VAAI) emulation
-Date: Thu, 22 Aug 2013 04:53:58 +0000
-Message-ID: <1377147250-10125-1-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 02/12] target: Add return for se_cmd->transport_complete_callback
+Date: Thu, 22 Aug 2013 04:54:00 +0000
+Message-ID: <1377147250-10125-3-git-send-email-nab@daterainc.com>
+References: <1377147250-10125-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1377147250-10125-1-git-send-email-nab@daterainc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, Roland Dreier <roland@purestorage.com>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Nicholas Bellinger <nab@daterainc.com>
@@ -10,96 +12,119 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@daterainc.com>
 
-Hi folks,
+This patch adds a sense_reason_t return to ->transport_complete_callback(),
+and updates target_complete_ok_work() to invoke the call if necessary to
+transport_send_check_condition_and_sense() during the failure case.
 
-This series -v2 adds support to target-core for generic COMPARE_AND_WRITE
-emulation as defined by SBC-3 using virtual (IBLOCK, FILEIO, RAMDISK)
-backends.
+Also update xdreadwrite_callback() to use this return value.
 
-COMPARE_AND_WRITE is a VMWare ESX VAAI primitive that is currently used
-by VMFS to perform array side locking of filesystem extents.  The logic
-is the functional equivilent of an atomic test and set, which allows a
-cluster filesystem to scale across multiple clients by locking individual
-regions, without having to obtain a traditional SCSI reservation for
-exclusive access to the entire logical unit.
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Martin Petersen <martin.petersen@oracle.com>
+Cc: Chris Mason <chris.mason@fusionio.com>
+Cc: James Bottomley <JBottomley@Parallels.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
+---
+ drivers/target/target_core_sbc.c       |   13 ++++++++-----
+ drivers/target/target_core_transport.c |   20 +++++++++++++++++---
+ include/target/target_core_base.h      |    2 +-
+ 3 files changed, 26 insertions(+), 9 deletions(-)
 
-Note this implemenation is currently limited to a single number of
-logical blocks (NoLB).
-
-As this point, a se_device->caw_mutex is in place to synchronize
-between sbc_compare_and_write() -> compare_and_write_callback() ->
-compare_and_write_post() callbacks and failure paths, and the code is
-fully functional.  The use of mutex_lock() -> mutex_unlock() across
-multiple functions looks a bit strange, so comments have been added
-to clarify the rather unusual looking usage.
-
-The one point that was not addressed in hch's comments was dropping
-se_cmd->execute_rw(), which ended up not being possible considering
-that sbc_ops is not accessable beyond setup in sbc_parse_cdb(), and
-saving this pointer in se_cmd would end up defeating the purpose of
-the abstraction between SPC/SBC code.
-
-The full changes for -v2 from hch's comments include:
-
-  - Add SCF_COMPARE_AND_WRITE command flag
-  - Use sbc_execute_rw() for normal cmd->execute_rw() submission
-    with expected se_cmd members.
-  - Use SCF_COMPARE_AND_WRITE instead of CDB based check for
-    calculating length in transport_generic_get_mem_bidi().
-  - Use SCF_COMPARE_AND_WRITE in transport_generic_new_cmd()
-    for determing when to call transport_generic_get_mem_bidi()
-  - Make __target_execute_cmd() available as extern for WRITE
-    I/O submission within compare_and_write_callback()
-  - Set SCF_COMPARE_AND_WRITE and cmd->execute_cmd() to
-    sbc_compare_and_write() during setup in sbc_parse_cdb()
-  - Use sbc_compare_and_write() for initial READ submission with
-    DMA_FROM_DEVICE
-  - Reset cmd->execute_cmd() to sbc_execute_rw() for write instance
-    user-data in compare_and_write_callback()
-  - Drop SCF_BIDI command flag usage
-  - Set TRANSPORT_PROCESSING + transport_state flags before write
-    instance submission, and convert to __target_execute_cmd()
-  - Prevent sbc_get_size() from being being called twice to
-    generate incorrect size in sbc_parse_cdb()
-  - Enforce se_device->caw_mutex synchronization between initial
-    READ I/O submission, and final WRITE I/O completion.
-  - Drop tcm_qla2xxx patch, and will include as seperate patch
-    for common target_reverse_dma_direction().
-
-Please review as v3.12 material.
-
-Thanks!
-
---nab
-
-Nicholas Bellinger (12):
-  scsi: Add CDB definition for COMPARE_AND_WRITE
-  target: Add return for se_cmd->transport_complete_callback
-  target: Add TCM_MISCOMPARE_VERIFY sense handling
-  target: Allow sbc_ops->execute_rw() to accept SGLs + data_direction
-  target: Convert se_cmd->t_bidi_data_sg checks to use SCF_BIDI
-  target: Add memory allocation for bidirectional commands
-  target: Add transport_reset_sgl_orig() for COMPARE_AND_WRITE
-  target: Make __target_execute_cmd() available as extern
-  target: Add MAXIMUM COMPARE AND WRITE LENGTH in Block Limits VPD
-  target: Add support for COMPARE_AND_WRITE emulation
-  target: Add compare_and_write_post() completion callback fall through
-  target: Release COMPARE_AND_WRITE mutex in generic failure path
-
- drivers/target/target_core_configfs.c  |    4 +
- drivers/target/target_core_device.c    |   15 ++
- drivers/target/target_core_file.c      |    6 +-
- drivers/target/target_core_iblock.c    |    6 +-
- drivers/target/target_core_internal.h  |    1 +
- drivers/target/target_core_rd.c        |    6 +-
- drivers/target/target_core_sbc.c       |  248 +++++++++++++++++++++++++++++--
- drivers/target/target_core_spc.c       |    5 +
- drivers/target/target_core_transport.c |  117 ++++++++++++++-
- include/scsi/scsi.h                    |    1 +
- include/target/target_core_backend.h   |    3 +-
- include/target/target_core_base.h      |   14 ++-
- include/target/target_core_fabric.h    |    1 +
- 13 files changed, 390 insertions(+), 37 deletions(-)
-
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 8a46277..be5234a 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -280,13 +280,13 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
+ 	return 0;
+ }
+ 
+-static void xdreadwrite_callback(struct se_cmd *cmd)
++static sense_reason_t xdreadwrite_callback(struct se_cmd *cmd)
+ {
+ 	unsigned char *buf, *addr;
+ 	struct scatterlist *sg;
+ 	unsigned int offset;
+-	int i;
+-	int count;
++	sense_reason_t ret = TCM_NO_SENSE;
++	int i, count;
+ 	/*
+ 	 * From sbc3r22.pdf section 5.48 XDWRITEREAD (10) command
+ 	 *
+@@ -301,7 +301,7 @@ static void xdreadwrite_callback(struct se_cmd *cmd)
+ 	buf = kmalloc(cmd->data_length, GFP_KERNEL);
+ 	if (!buf) {
+ 		pr_err("Unable to allocate xor_callback buf\n");
+-		return;
++		return TCM_OUT_OF_RESOURCES;
+ 	}
+ 	/*
+ 	 * Copy the scatterlist WRITE buffer located at cmd->t_data_sg
+@@ -320,8 +320,10 @@ static void xdreadwrite_callback(struct se_cmd *cmd)
+ 	offset = 0;
+ 	for_each_sg(cmd->t_bidi_data_sg, sg, cmd->t_bidi_data_nents, count) {
+ 		addr = kmap_atomic(sg_page(sg));
+-		if (!addr)
++		if (!addr) {
++			ret = TCM_OUT_OF_RESOURCES;
+ 			goto out;
++		}
+ 
+ 		for (i = 0; i < sg->length; i++)
+ 			*(addr + sg->offset + i) ^= *(buf + offset + i);
+@@ -332,6 +334,7 @@ static void xdreadwrite_callback(struct se_cmd *cmd)
+ 
+ out:
+ 	kfree(buf);
++	return ret;
+ }
+ 
+ sense_reason_t
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 98ec711..53d1d75 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1904,10 +1904,24 @@ static void target_complete_ok_work(struct work_struct *work)
+ 	}
+ 	/*
+ 	 * Check for a callback, used by amongst other things
+-	 * XDWRITE_READ_10 emulation.
++	 * XDWRITE_READ_10 and COMPARE_AND_WRITE emulation.
+ 	 */
+-	if (cmd->transport_complete_callback)
+-		cmd->transport_complete_callback(cmd);
++	if (cmd->transport_complete_callback) {
++		sense_reason_t rc;
++
++		rc = cmd->transport_complete_callback(cmd);
++		if (!rc)
++			return;
++
++		ret = transport_send_check_condition_and_sense(cmd,
++					rc, 0);
++		if (ret == -EAGAIN || ret == -ENOMEM)
++			goto queue_full;
++
++		transport_lun_remove_cmd(cmd);
++		transport_cmd_check_stop_to_fabric(cmd);
++		return;
++	}
+ 
+ 	switch (cmd->data_direction) {
+ 	case DMA_FROM_DEVICE:
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 360e4a3..6e946f3 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -447,7 +447,7 @@ struct se_cmd {
+ 	struct kref		cmd_kref;
+ 	struct target_core_fabric_ops *se_tfo;
+ 	sense_reason_t		(*execute_cmd)(struct se_cmd *);
+-	void (*transport_complete_callback)(struct se_cmd *);
++	sense_reason_t (*transport_complete_callback)(struct se_cmd *);
+ 
+ 	unsigned char		*t_task_cdb;
+ 	unsigned char		__t_task_cdb[TCM_MAX_COMMAND_SIZE];
 -- 
 1.7.2.5
