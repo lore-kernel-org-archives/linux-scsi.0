@@ -1,183 +1,69 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH RESEND 2/3] zfcp: fix schedule-inside-lock in scsi_device list loops
-Date: Thu, 22 Aug 2013 17:45:37 +0200
-Message-ID: <1377186338-35344-3-git-send-email-maier@linux.vnet.ibm.com>
+Subject: [PATCH RESEND 3/3] zfcp: remove access control tables interface (keep sysfs files)
+Date: Thu, 22 Aug 2013 17:45:38 +0200
+Message-ID: <1377186338-35344-4-git-send-email-maier@linux.vnet.ibm.com>
 References: <1377099366.2011.23.camel@dabdike.int.hansenpartnership.com>
  <1377186338-35344-1-git-send-email-maier@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e06smtp16.uk.ibm.com ([195.75.94.112]:56016 "EHLO
-	e06smtp16.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753534Ab3HVPrH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Aug 2013 11:47:07 -0400
-Received: from /spool/local
-	by e06smtp16.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-	Thu, 22 Aug 2013 16:40:26 +0100
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1377186338-35344-1-git-send-email-maier@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Peschke <mpeschke@linux.vnet.ibm.com>, stable@vger.kernel.org.#2.6.37+
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Peschke <mpeschke@linux.vnet.ibm.com>, stable@vger.kernel.org.#3.11+
+List-Id: linux-scsi@vger.kernel.org
 
 From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
 
-BUG: sleeping function called from invalid context at kernel/workqueue.c:2752
-in_atomic(): 1, irqs_disabled(): 1, pid: 360, name: zfcperp0.0.1700
-CPU: 1 Not tainted 3.9.3+ #69
-Process zfcperp0.0.1700 (pid: 360, task: 0000000075b7e080, ksp: 000000007476bc30)
-<snip>
-Call Trace:
-([<00000000001165de>] show_trace+0x106/0x154)
- [<00000000001166a0>] show_stack+0x74/0xf4
- [<00000000006ff646>] dump_stack+0xc6/0xd4
- [<000000000017f3a0>] __might_sleep+0x128/0x148
- [<000000000015ece8>] flush_work+0x54/0x1f8
- [<00000000001630de>] __cancel_work_timer+0xc6/0x128
- [<00000000005067ac>] scsi_device_dev_release_usercontext+0x164/0x23c
- [<0000000000161816>] execute_in_process_context+0x96/0xa8
- [<00000000004d33d8>] device_release+0x60/0xc0
- [<000000000048af48>] kobject_release+0xa8/0x1c4
- [<00000000004f4bf2>] __scsi_iterate_devices+0xfa/0x130
- [<000003ff801b307a>] zfcp_erp_strategy+0x4da/0x1014 [zfcp]
- [<000003ff801b3caa>] zfcp_erp_thread+0xf6/0x2b0 [zfcp]
- [<000000000016b75a>] kthread+0xf2/0xfc
- [<000000000070c9de>] kernel_thread_starter+0x6/0xc
- [<000000000070c9d8>] kernel_thread_starter+0x0/0xc
+By popular demand, this patch brings back a couple of sysfs attributes
+removed by commit 663e0890e31cb85f0cca5ac1faaee0d2d52880b5
+"[SCSI] zfcp: remove access control tables interface".
+The content has been irrelevant for years, but the files must be
+there forever for whatever user space tools that may rely on them.
 
-Apparently, the ref_count for some scsi_device drops down to zero,
-triggering device removal through execute_in_process_context(), while
-the lldd error recovery thread iterates through a scsi device list.
-Unfortunately, execute_in_process_context() decides to immediately
-execute that device removal function, instead of scheduling asynchronous
-execution, since it detects process context and thinks it is safe to do
-so. But almost all calls to shost_for_each_device() in our lldd are
-inside spin_lock_irq, even in thread context. Obviously, schedule()
-inside spin_lock_irq sections is a bad idea.
+Since these files always return a constant value, a new stripped
+down show-macro was required. Otherwise build warnings would have
+been introduced.
 
-Change the lldd to use the proper iterator function,
-__shost_for_each_device(), in combination with required locking.
-
-Occurences that need to be changed include all calls in zfcp_erp.c,
-since those might be executed in zfcp error recovery thread context
-with a lock held.
-
-Other occurences of shost_for_each_device() in zfcp_fsf.c do not
-need to be changed (no process context, no surrounding locking).
-
-The problem was introduced in Linux 2.6.37 by commit
-b62a8d9b45b971a67a0f8413338c230e3117dff5
-"[SCSI] zfcp: Use SCSI device data zfcp_scsi_dev instead of zfcp_unit".
-
-Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
 Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Cc: stable@vger.kernel.org #2.6.37+
+Cc: stable@vger.kernel.org #3.11+
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_erp.c |   29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
+ drivers/s390/scsi/zfcp_sysfs.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -102,10 +102,13 @@ static void zfcp_erp_action_dismiss_port
+--- a/drivers/s390/scsi/zfcp_sysfs.c
++++ b/drivers/s390/scsi/zfcp_sysfs.c
+@@ -27,6 +27,16 @@ static ssize_t zfcp_sysfs_##_feat##_##_n
+ static ZFCP_DEV_ATTR(_feat, _name, S_IRUGO,				       \
+ 		     zfcp_sysfs_##_feat##_##_name##_show, NULL);
  
- 	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_ERP_INUSE)
- 		zfcp_erp_action_dismiss(&port->erp_action);
--	else
--		shost_for_each_device(sdev, port->adapter->scsi_host)
-+	else {
-+		spin_lock(port->adapter->scsi_host->host_lock);
-+		__shost_for_each_device(sdev, port->adapter->scsi_host)
- 			if (sdev_to_zfcp(sdev)->port == port)
- 				zfcp_erp_action_dismiss_lun(sdev);
-+		spin_unlock(port->adapter->scsi_host->host_lock);
-+	}
- }
++#define ZFCP_DEFINE_ATTR_CONST(_feat, _name, _format, _value)		       \
++static ssize_t zfcp_sysfs_##_feat##_##_name##_show(struct device *dev,	       \
++						   struct device_attribute *at,\
++						   char *buf)		       \
++{									       \
++	return sprintf(buf, _format, _value);				       \
++}									       \
++static ZFCP_DEV_ATTR(_feat, _name, S_IRUGO,				       \
++		     zfcp_sysfs_##_feat##_##_name##_show, NULL);
++
+ #define ZFCP_DEFINE_A_ATTR(_name, _format, _value)			     \
+ static ssize_t zfcp_sysfs_adapter_##_name##_show(struct device *dev,	     \
+ 						 struct device_attribute *at,\
+@@ -75,6 +85,8 @@ ZFCP_DEFINE_ATTR(zfcp_unit, unit, in_rec
+ ZFCP_DEFINE_ATTR(zfcp_unit, unit, access_denied, "%d\n",
+ 		 (zfcp_unit_sdev_status(unit) &
+ 		  ZFCP_STATUS_COMMON_ACCESS_DENIED) != 0);
++ZFCP_DEFINE_ATTR_CONST(unit, access_shared, "%d\n", 0);
++ZFCP_DEFINE_ATTR_CONST(unit, access_readonly, "%d\n", 0);
  
- static void zfcp_erp_action_dismiss_adapter(struct zfcp_adapter *adapter)
-@@ -592,9 +595,11 @@ static void _zfcp_erp_lun_reopen_all(str
- {
- 	struct scsi_device *sdev;
- 
--	shost_for_each_device(sdev, port->adapter->scsi_host)
-+	spin_lock(port->adapter->scsi_host->host_lock);
-+	__shost_for_each_device(sdev, port->adapter->scsi_host)
- 		if (sdev_to_zfcp(sdev)->port == port)
- 			_zfcp_erp_lun_reopen(sdev, clear, id, 0);
-+	spin_unlock(port->adapter->scsi_host->host_lock);
- }
- 
- static void zfcp_erp_strategy_followup_failed(struct zfcp_erp_action *act)
-@@ -1434,8 +1439,10 @@ void zfcp_erp_set_adapter_status(struct
- 		atomic_set_mask(common_mask, &port->status);
- 	read_unlock_irqrestore(&adapter->port_list_lock, flags);
- 
--	shost_for_each_device(sdev, adapter->scsi_host)
-+	spin_lock_irqsave(adapter->scsi_host->host_lock, flags);
-+	__shost_for_each_device(sdev, adapter->scsi_host)
- 		atomic_set_mask(common_mask, &sdev_to_zfcp(sdev)->status);
-+	spin_unlock_irqrestore(adapter->scsi_host->host_lock, flags);
- }
- 
- /**
-@@ -1469,11 +1476,13 @@ void zfcp_erp_clear_adapter_status(struc
- 	}
- 	read_unlock_irqrestore(&adapter->port_list_lock, flags);
- 
--	shost_for_each_device(sdev, adapter->scsi_host) {
-+	spin_lock_irqsave(adapter->scsi_host->host_lock, flags);
-+	__shost_for_each_device(sdev, adapter->scsi_host) {
- 		atomic_clear_mask(common_mask, &sdev_to_zfcp(sdev)->status);
- 		if (clear_counter)
- 			atomic_set(&sdev_to_zfcp(sdev)->erp_counter, 0);
- 	}
-+	spin_unlock_irqrestore(adapter->scsi_host->host_lock, flags);
- }
- 
- /**
-@@ -1487,16 +1496,19 @@ void zfcp_erp_set_port_status(struct zfc
- {
- 	struct scsi_device *sdev;
- 	u32 common_mask = mask & ZFCP_COMMON_FLAGS;
-+	unsigned long flags;
- 
- 	atomic_set_mask(mask, &port->status);
- 
- 	if (!common_mask)
- 		return;
- 
--	shost_for_each_device(sdev, port->adapter->scsi_host)
-+	spin_lock_irqsave(port->adapter->scsi_host->host_lock, flags);
-+	__shost_for_each_device(sdev, port->adapter->scsi_host)
- 		if (sdev_to_zfcp(sdev)->port == port)
- 			atomic_set_mask(common_mask,
- 					&sdev_to_zfcp(sdev)->status);
-+	spin_unlock_irqrestore(port->adapter->scsi_host->host_lock, flags);
- }
- 
- /**
-@@ -1511,6 +1523,7 @@ void zfcp_erp_clear_port_status(struct z
- 	struct scsi_device *sdev;
- 	u32 common_mask = mask & ZFCP_COMMON_FLAGS;
- 	u32 clear_counter = mask & ZFCP_STATUS_COMMON_ERP_FAILED;
-+	unsigned long flags;
- 
- 	atomic_clear_mask(mask, &port->status);
- 
-@@ -1520,13 +1533,15 @@ void zfcp_erp_clear_port_status(struct z
- 	if (clear_counter)
- 		atomic_set(&port->erp_counter, 0);
- 
--	shost_for_each_device(sdev, port->adapter->scsi_host)
-+	spin_lock_irqsave(port->adapter->scsi_host->host_lock, flags);
-+	__shost_for_each_device(sdev, port->adapter->scsi_host)
- 		if (sdev_to_zfcp(sdev)->port == port) {
- 			atomic_clear_mask(common_mask,
- 					  &sdev_to_zfcp(sdev)->status);
- 			if (clear_counter)
- 				atomic_set(&sdev_to_zfcp(sdev)->erp_counter, 0);
- 		}
-+	spin_unlock_irqrestore(port->adapter->scsi_host->host_lock, flags);
- }
- 
- /**
-
+ static ssize_t zfcp_sysfs_port_failed_show(struct device *dev,
+ 					   struct device_attribute *attr,
+@@ -347,6 +359,8 @@ static struct attribute *zfcp_unit_attrs
+ 	&dev_attr_unit_in_recovery.attr,
+ 	&dev_attr_unit_status.attr,
+ 	&dev_attr_unit_access_denied.attr,
++	&dev_attr_unit_access_shared.attr,
++	&dev_attr_unit_access_readonly.attr,
+ 	NULL
+ };
+ static struct attribute_group zfcp_unit_attr_group = {
