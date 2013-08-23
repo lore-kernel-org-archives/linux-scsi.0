@@ -1,64 +1,118 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 0/9] target: Add support for EXTENDED_COPY (VAAI) offload
- emulation
-Date: Fri, 23 Aug 2013 13:04:23 +0200
-Message-ID: <521741B7.9020904@interlog.com>
-References: <1377224821-23422-1-git-send-email-nab@daterainc.com>
-Reply-To: dgilbert@interlog.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/9] scsi: improved eh timeout handler
+Date: Fri, 23 Aug 2013 14:27:54 +0200
+Message-ID: <5217554A.8070506@suse.de>
+References: <1372688671-85639-1-git-send-email-hare@suse.de> <1372688671-85639-4-git-send-email-hare@suse.de> <5215D123.7030908@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1377224821-23422-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, Roland Dreier <roland@purestorage.com>, Zach Brown <zab@redhat.com>, Kent Overstreet <kmo@daterainc.com>, Theodore Tso <tytso@mit.edu>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:40802 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755291Ab3HWL03 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Aug 2013 07:26:29 -0400
+In-Reply-To: <5215D123.7030908@cn.fujitsu.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ren Mingxin <renmx@cn.fujitsu.com>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Roland Dreier <roland@purestorage.com>
 
-On 13-08-23 04:26 AM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@daterainc.com>
+On 08/22/2013 10:51 AM, Ren Mingxin wrote:
+> Hi, Hannes:
 >
-> Hi folks!
+> On 07/01/2013 10:24 PM, Hannes Reinecke wrote:
+>> When a command runs into a timeout we need to send an 'ABORT TASK'
+>> TMF. This is typically done by the 'eh_abort_handler' LLDD callback.
+>>
+>> Conceptually, however, this function is a normal SCSI command, so
+>> there is no need to enter the error handler.
+>>
+>> This patch implements a new scsi_abort_command() function which
+>> invokes an asynchronous function scsi_eh_abort_handler() to
+>> abort the commands via the usual 'eh_abort_handler'.
+>>
+>> If abort succeeds the command is either retried or terminated,
+>> depending on the number of allowed retries. However, 'eh_eflags'
+>> records the abort, so if the retry would fail again the
+>> command is pushed onto the error handler without trying to
+>> abort it (again); it'll be cleared up from SCSI EH.
+>>
+>> Signed-off-by: Hannes Reinecke<hare@suse.de>
+>> ---
+>>   drivers/scsi/scsi.c       |   1 +
+>>   drivers/scsi/scsi_error.c | 139
+>> ++++++++++++++++++++++++++++++++++++++++++----
+>>   drivers/scsi/scsi_priv.h  |   2 +
+>>   include/scsi/scsi_cmnd.h  |   2 +
+>>   4 files changed, 132 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+>> index ebe3b0a..06257cf 100644
+>> --- a/drivers/scsi/scsi.c
+>> +++ b/drivers/scsi/scsi.c
+>> @@ -297,6 +297,7 @@ struct scsi_cmnd *scsi_get_command(struct
+>> scsi_device *dev, gfp_t gfp_mask)
+>>
+>>           cmd->device =3D dev;
+>>           INIT_LIST_HEAD(&cmd->list);
+>> +        INIT_WORK(&cmd->abort_work, scmd_eh_abort_handler);
+>>           spin_lock_irqsave(&dev->list_lock, flags);
+>>           list_add_tail(&cmd->list,&dev->cmd_list);
+>>           spin_unlock_irqrestore(&dev->list_lock, flags);
+>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+>> index e76e895..835f7e4 100644
+>> --- a/drivers/scsi/scsi_error.c
+>> +++ b/drivers/scsi/scsi_error.c
+>> @@ -55,6 +55,7 @@ static void scsi_eh_done(struct scsi_cmnd *scmd);
+>>   #define HOST_RESET_SETTLE_TIME  (10)
+>>
+>>   static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
+>> +static int scsi_try_to_abort_cmd(struct scsi_host_template *, struc=
+t
+>> scsi_cmnd *);
+>>
+>>   /* called with shost->host_lock held */
+>>   void scsi_eh_wakeup(struct Scsi_Host *shost)
+>> @@ -102,6 +103,111 @@ static int scsi_host_eh_past_deadline(struct
+>> Scsi_Host *shost)
+>>   }
+>>
+>>   /**
+>> + * scmd_eh_abort_handler - Handle command aborts
+>> + * @work:    command to be aborted.
+>> + */
+>> +void
+>> +scmd_eh_abort_handler(struct work_struct *work)
+>> +{
+>> +    struct scsi_cmnd *scmd =3D
+>> +        container_of(work, struct scsi_cmnd, abort_work);
+>> +    struct scsi_device *sdev =3D scmd->device;
+>> +    unsigned long flags;
+>> +    int rtn;
+>> +
+>> +    spin_lock_irqsave(sdev->host->host_lock, flags);
+>> +    if (scsi_host_eh_past_deadline(sdev->host)) {
+>> +        spin_unlock_irqrestore(sdev->host->host_lock, flags);
+>> +        SCSI_LOG_ERROR_RECOVERY(3,
+>> +            scmd_printk(KERN_INFO, scmd,
+>> +                    "eh timeout, not aborting\n"));
 >
-> This series adds support to target-core for generic EXTENDED_COPY offload
-> emulation as defined by SPC-4 using virtual (IBLOCK, FILEIO, RAMDISK)
-> backends.
+> Command address should be also printed for debugging conveniently:
+> +"eh timeout, not aborting command %p\n", scmd));
 >
-> EXTENDED_COPY is a VMWare ESX VAAI primative that is used to perform copy
-> offload, that allows a target to perform local READ + WRITE I/O requests
-> for bulk data transfers (cloning a virtual machine for example), instead
-> of requiring these I/Os to actually be sent to/from the requesting SCSI
-> initiator port.
+Hmm. Okay, I could. Will be preparing an updated patchset.
 
-Recently I have been looking at EXTENDED COPY since
-T10 has been working on it. The SCSI opcodes associated
-with it (0x83 and 0x84) have been renamed THIRD PARTY
-COPY OUT and IN, and each have several service actions.
-The Extended copy found in SPC-2 and SPC-3 is now
-termed as "LID1" (for List Identifier length of 1 byte)
-while the new stuff is termed "LID4" in SPC-4. The
-"LID4" variants are "ROD" token based. A ROD
-(Representation Of Data) token is 512 bytes long.
+Cheers,
 
-sg_xcopy (written by Hannes Reinecke and found in the
-sg3_utils package) only supports LID1 but that covers
-most of the existing hardware including kit that
-supports VMWare ESX VAAI.
-
-As defined by T10 both EXTENDED COPY (LID1) and (LID4)
-do copies between disks, tapes and memory (all
-combinations (e.g. disk->tape) (but maybe not memory
-to memory).
-
-There is a stripped down version of EXTENDED COPY(LID4)
-that was called XCOPY LITE at one stage that only does
-disk to disk copies (based on a ROD token). That is
-the basis of Microsoft's Offload Data Transfer (ODX).
-It uses commands defined in SBC-3 (e.g. POPULATE TOKEN
-and WRITE USING TOKEN).
-
-
-Confused? I certainly was. Feel free to correct and
-clarify the above.
-
-Doug Gilbert
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
