@@ -1,23 +1,23 @@
 From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: [PATCH v2 5/6] scsi: ufs: add operation for the uic power mode change
-Date: Fri, 23 Aug 2013 22:00:48 +0900
-Message-ID: <003001cea000$c9a94180$5cfbc480$%jun@samsung.com>
+Subject: [PATCH v2 4/6] scsi: ufs: add unipro attribute IDs
+Date: Fri, 23 Aug 2013 22:00:43 +0900
+Message-ID: <002f01cea000$c70a2ca0$551e85e0$%jun@samsung.com>
 References: <1374280885-11526-1-git-send-email-mita@fixstars.com>
  <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:46778 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753563Ab3HWNAt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Aug 2013 09:00:49 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:15544 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753563Ab3HWNAp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Aug 2013 09:00:45 -0400
 Received: from epcpsbgr3.samsung.com
  (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MRZ00IKTITC7VU0@mailout1.samsung.com> for
- linux-scsi@vger.kernel.org; Fri, 23 Aug 2013 22:00:48 +0900 (KST)
+ with ESMTP id <0MRZ00BC3IRYGBV0@mailout3.samsung.com> for
+ linux-scsi@vger.kernel.org; Fri, 23 Aug 2013 22:00:44 +0900 (KST)
 In-reply-to: <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
@@ -25,202 +25,153 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-Setting PA_PWRMode using DME_SET triggers the power mode
-change. And then the result will be given by the HCS.UPMCRS.
-This operation should be done atomically.
+'drivers/scsi/ufs/unipro.h' is added.
+Attributes in the layers of the UNIPRO stack can be
+read and written via the DME.
 
 Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c |   84 ++++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h |    3 ++
- drivers/scsi/ufs/ufshci.h |   12 ++++++
- 3 files changed, 95 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/unipro.h |  130 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 130 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/ufs/unipro.h
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7fc262e..8f25df4 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -36,9 +36,11 @@
- #include <linux/async.h>
- 
- #include "ufshcd.h"
-+#include "unipro.h"
- 
- #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
- 				 UTP_TASK_REQ_COMPL |\
-+				 UIC_POWER_MODE |\
- 				 UFSHCD_ERROR_MASK)
- /* UIC command timeout, unit: ms */
- #define UIC_CMD_TIMEOUT	500
-@@ -359,6 +361,18 @@ static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
- }
- 
- /**
-+ * ufshcd_get_upmcrs - Get the power mode change request status
-+ * @hba: Pointer to adapter instance
+diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+new file mode 100644
+index 0000000..3a710eb
+--- /dev/null
++++ b/drivers/scsi/ufs/unipro.h
+@@ -0,0 +1,130 @@
++/*
++ * drivers/scsi/ufs/unipro.h
 + *
-+ * This function gets the UPMCRS field of HCS register
-+ * Returns value of UPMCRS field
-+ */
-+static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
-+{
-+	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) >> 8) & 0x7;
-+}
-+
-+/**
-  * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
-  * @hba: per adapter instance
-  * @uic_cmd: UIC command
-@@ -907,6 +921,64 @@ out:
- EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
- 
- /**
-+ * ufshcd_uic_change_pwr_mode - Perform the UIC power mode chage
-+ *				using DME_SET primitives.
-+ * @hba: per adapter instance
-+ * @mode: powr mode value
++ * Copyright (C) 2013 Samsung Electronics Co., Ltd.
 + *
-+ * Returns 0 on success, non-zero value on failure
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
 + */
-+int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
-+{
-+	struct uic_command uic_cmd = {0};
-+	struct completion pwr_done;
-+	unsigned long flags;
-+	u8 status;
-+	int ret;
 +
-+	uic_cmd.command = UIC_CMD_DME_SET;
-+	uic_cmd.argument1 = UIC_ARG_MIB(PA_PWRMODE);
-+	uic_cmd.argument3 = mode;
-+	init_completion(&pwr_done);
++#ifndef _UNIPRO_H_
++#define _UNIPRO_H_
 +
-+	mutex_lock(&hba->uic_cmd_mutex);
++/*
++ * PHY Adpater attributes
++ */
++#define PA_ACTIVETXDATALANES	0x1560
++#define PA_ACTIVERXDATALANES	0x1580
++#define PA_TXTRAILINGCLOCKS	0x1564
++#define PA_PHY_TYPE		0x1500
++#define PA_AVAILTXDATALANES	0x1520
++#define PA_AVAILRXDATALANES	0x1540
++#define PA_MINRXTRAILINGCLOCKS	0x1543
++#define PA_TXPWRSTATUS		0x1567
++#define PA_RXPWRSTATUS		0x1582
++#define PA_TXFORCECLOCK		0x1562
++#define PA_TXPWRMODE		0x1563
++#define PA_LEGACYDPHYESCDL	0x1570
++#define PA_MAXTXSPEEDFAST	0x1521
++#define PA_MAXTXSPEEDSLOW	0x1522
++#define PA_MAXRXSPEEDFAST	0x1541
++#define PA_MAXRXSPEEDSLOW	0x1542
++#define PA_TXLINKSTARTUPHS	0x1544
++#define PA_TXSPEEDFAST		0x1565
++#define PA_TXSPEEDSLOW		0x1566
++#define PA_REMOTEVERINFO	0x15A0
++#define PA_TXGEAR		0x1568
++#define PA_TXTERMINATION	0x1569
++#define PA_HSSERIES		0x156A
++#define PA_PWRMODE		0x1571
++#define PA_RXGEAR		0x1583
++#define PA_RXTERMINATION	0x1584
++#define PA_MAXRXPWMGEAR		0x1586
++#define PA_MAXRXHSGEAR		0x1587
++#define PA_RXHSUNTERMCAP	0x15A5
++#define PA_RXLSTERMCAP		0x15A6
++#define PA_PACPREQTIMEOUT	0x1590
++#define PA_PACPREQEOBTIMEOUT	0x1591
++#define PA_HIBERN8TIME		0x15A7
++#define PA_LOCALVERINFO		0x15A9
++#define PA_TACTIVATE		0x15A8
++#define PA_PACPFRAMECOUNT	0x15C0
++#define PA_PACPERRORCOUNT	0x15C1
++#define PA_PHYTESTCONTROL	0x15C2
++#define PA_PWRMODEUSERDATA0	0x15B0
++#define PA_PWRMODEUSERDATA1	0x15B1
++#define PA_PWRMODEUSERDATA2	0x15B2
++#define PA_PWRMODEUSERDATA3	0x15B3
++#define PA_PWRMODEUSERDATA4	0x15B4
++#define PA_PWRMODEUSERDATA5	0x15B5
++#define PA_PWRMODEUSERDATA6	0x15B6
++#define PA_PWRMODEUSERDATA7	0x15B7
++#define PA_PWRMODEUSERDATA8	0x15B8
++#define PA_PWRMODEUSERDATA9	0x15B9
++#define PA_PWRMODEUSERDATA10	0x15BA
++#define PA_PWRMODEUSERDATA11	0x15BB
++#define PA_CONNECTEDTXDATALANES	0x1561
++#define PA_CONNECTEDRXDATALANES	0x1581
++#define PA_LOGICALLANEMAP	0x15A1
++#define PA_SLEEPNOCONFIGTIME	0x15A2
++#define PA_STALLNOCONFIGTIME	0x15A3
++#define PA_SAVECONFIGTIME	0x15A4
 +
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->pwr_done = &pwr_done;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	ret = __ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret) {
-+		dev_err(hba->dev,
-+			"pwr mode change with mode 0x%x uic error %d\n",
-+			mode, ret);
-+		goto out;
-+	}
++/*
++ * Data Link Layer Attributes
++ */
++#define DL_TC0TXFCTHRESHOLD	0x2040
++#define DL_FC0PROTTIMEOUTVAL	0x2041
++#define DL_TC0REPLAYTIMEOUTVAL	0x2042
++#define DL_AFC0REQTIMEOUTVAL	0x2043
++#define DL_AFC0CREDITTHRESHOLD	0x2044
++#define DL_TC0OUTACKTHRESHOLD	0x2045
++#define DL_TC1TXFCTHRESHOLD	0x2060
++#define DL_FC1PROTTIMEOUTVAL	0x2061
++#define DL_TC1REPLAYTIMEOUTVAL	0x2062
++#define DL_AFC1REQTIMEOUTVAL	0x2063
++#define DL_AFC1CREDITTHRESHOLD	0x2064
++#define DL_TC1OUTACKTHRESHOLD	0x2065
++#define DL_TXPREEMPTIONCAP	0x2000
++#define DL_TC0TXMAXSDUSIZE	0x2001
++#define DL_TC0RXINITCREDITVAL	0x2002
++#define DL_TC0TXBUFFERSIZE	0x2005
++#define DL_PEERTC0PRESENT	0x2046
++#define DL_PEERTC0RXINITCREVAL	0x2047
++#define DL_TC1TXMAXSDUSIZE	0x2003
++#define DL_TC1RXINITCREDITVAL	0x2004
++#define DL_TC1TXBUFFERSIZE	0x2006
++#define DL_PEERTC1PRESENT	0x2066
++#define DL_PEERTC1RXINITCREVAL	0x2067
 +
-+	if (!wait_for_completion_timeout(hba->pwr_done,
-+					 msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
-+		dev_err(hba->dev,
-+			"pwr mode change with mode 0x%x completion timeout\n",
-+			mode);
-+		ret = -ETIMEDOUT;
-+		goto out;
-+	}
++/*
++ * Network Layer Attributes
++ */
++#define N_DEVICEID		0x3000
++#define N_DEVICEID_VALID	0x3001
++#define N_TC0TXMAXSDUSIZE	0x3020
++#define N_TC1TXMAXSDUSIZE	0x3021
 +
-+	status = ufshcd_get_upmcrs(hba);
-+	if (status != PWR_LOCAL) {
-+		dev_err(hba->dev,
-+			"pwr mode change failed, host umpcrs:0x%x\n",
-+			status);
-+		ret = (status != PWR_OK) ? status : -1;
-+	}
-+out:
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->pwr_done = NULL;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	mutex_unlock(&hba->uic_cmd_mutex);
-+	return ret;
-+}
++/*
++ * Transport Layer Attributes
++ */
++#define T_NUMCPORTS		0x4000
++#define T_NUMTESTFEATURES	0x4001
++#define T_CONNECTIONSTATE	0x4020
++#define T_PEERDEVICEID		0x4021
++#define T_PEERCPORTID		0x4022
++#define T_TRAFFICCLASS		0x4023
++#define T_PROTOCOLID		0x4024
++#define T_CPORTFLAGS		0x4025
++#define T_TXTOKENVALUE		0x4026
++#define T_RXTOKENVALUE		0x4027
++#define T_LOCALBUFFERSPACE	0x4028
++#define T_PEERBUFFERSPACE	0x4029
++#define T_CREDITSTOSEND		0x402A
++#define T_CPORTMODE		0x402B
++#define T_TC0TXMAXSDUSIZE	0x4060
++#define T_TC1TXMAXSDUSIZE	0x4061
 +
-+/**
-  * ufshcd_make_hba_operational - Make UFS controller operational
-  * @hba: per adapter instance
-  *
-@@ -1333,16 +1405,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- /**
-  * ufshcd_uic_cmd_compl - handle completion of uic command
-  * @hba: per adapter instance
-+ * @intr_status: interrupt status generated by the controller
-  */
--static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
-+static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- {
--	if (hba->active_uic_cmd) {
-+	if ((intr_status & UIC_COMMAND_COMPL) && hba->active_uic_cmd) {
- 		hba->active_uic_cmd->argument2 |=
- 			ufshcd_get_uic_cmd_result(hba);
- 		hba->active_uic_cmd->argument3 =
- 			ufshcd_get_dme_attr_val(hba);
- 		complete(&hba->active_uic_cmd->done);
- 	}
-+
-+	if ((intr_status & UIC_POWER_MODE) && hba->pwr_done)
-+		complete(hba->pwr_done);
- }
- 
- /**
-@@ -1444,8 +1520,8 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- 	if (hba->errors)
- 		ufshcd_err_handler(hba);
- 
--	if (intr_status & UIC_COMMAND_COMPL)
--		ufshcd_uic_cmd_compl(hba);
-+	if (intr_status & UFSHCD_UIC_MASK)
-+		ufshcd_uic_cmd_compl(hba, intr_status);
- 
- 	if (intr_status & UTP_TASK_REQ_COMPL)
- 		ufshcd_tmc_handler(hba);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 50bcd29..3956579 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -142,6 +142,7 @@ struct ufshcd_lrb {
-  * @uic_cmd_mutex: mutex for uic command
-  * @ufshcd_tm_wait_queue: wait queue for task management
-  * @tm_condition: condition variable for task management
-+ * @pwr_done: completion for power mode change
-  * @ufshcd_state: UFSHCD states
-  * @intr_mask: Interrupt Mask Bits
-  * @feh_workq: Work queue for fatal controller error handling
-@@ -180,6 +181,8 @@ struct ufs_hba {
- 	wait_queue_head_t ufshcd_tm_wait_queue;
- 	unsigned long tm_condition;
- 
-+	struct completion *pwr_done;
-+
- 	u32 ufshcd_state;
- 	u32 intr_mask;
- 
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index df4901e..d92fd9c 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -124,6 +124,9 @@ enum {
- #define CONTROLLER_FATAL_ERROR			UFS_BIT(16)
- #define SYSTEM_BUS_FATAL_ERROR			UFS_BIT(17)
- 
-+#define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL |\
-+				 UIC_POWER_MODE)
-+
- #define UFSHCD_ERROR_MASK	(UIC_ERROR |\
- 				DEVICE_FATAL_ERROR |\
- 				CONTROLLER_FATAL_ERROR |\
-@@ -142,6 +145,15 @@ enum {
- #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
- #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
- 
-+enum {
-+	PWR_OK		= 0x0,
-+	PWR_LOCAL	= 0x01,
-+	PWR_REMOTE	= 0x02,
-+	PWR_BUSY	= 0x03,
-+	PWR_ERROR_CAP	= 0x04,
-+	PWR_FATAL_ERROR	= 0x05,
-+};
-+
- /* HCE - Host Controller Enable 34h */
- #define CONTROLLER_ENABLE	UFS_BIT(0)
- #define CONTROLLER_DISABLE	0x0
++#endif /* _UNIPRO_H_ */
 -- 
 1.7.0.4
 
