@@ -1,23 +1,23 @@
 From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: [PATCH v2 4/6] scsi: ufs: add unipro attribute IDs
-Date: Fri, 23 Aug 2013 22:00:43 +0900
-Message-ID: <002f01cea000$c70a2ca0$551e85e0$%jun@samsung.com>
+Subject: [PATCH v2 6/6] scsi: ufs: configure the attribute for power mode
+Date: Fri, 23 Aug 2013 22:00:52 +0900
+Message-ID: <003101cea000$cc11b600$64352200$%jun@samsung.com>
 References: <1374280885-11526-1-git-send-email-mita@fixstars.com>
  <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:15544 "EHLO
+Received: from mailout3.samsung.com ([203.254.224.33]:15560 "EHLO
 	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753563Ab3HWNAp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Aug 2013 09:00:45 -0400
+	with ESMTP id S1753563Ab3HWNAx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Aug 2013 09:00:53 -0400
 Received: from epcpsbgr3.samsung.com
  (u143.gpu120.samsung.co.kr [203.254.230.143])
  by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
  with ESMTP id <0MRZ00BC3IRYGBV0@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Fri, 23 Aug 2013 22:00:44 +0900 (KST)
+ linux-scsi@vger.kernel.org; Fri, 23 Aug 2013 22:00:52 +0900 (KST)
 In-reply-to: <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
@@ -25,153 +25,147 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-'drivers/scsi/ufs/unipro.h' is added.
-Attributes in the layers of the UNIPRO stack can be
-read and written via the DME.
+UIC attributes can be set with using DME_SET command for
+power mode change. For configuration the link capability
+attributes are used, which is updated after successful
+link startup.
 
 Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/unipro.h |  130 +++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 130 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/ufs/unipro.h
+ drivers/scsi/ufs/ufshcd.c |   74 +++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/unipro.h |   21 +++++++++++++
+ 2 files changed, 93 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 8f25df4..54fdbab 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -979,6 +979,70 @@ out:
+ }
+ 
+ /**
++ * ufshcd_config_max_pwr_mode - Set & Change power mode with
++ *	maximum capability attribute information.
++ * @hba: per adapter instance
++ *
++ * Returns 0 on success, non-zero value on failure
++ */
++static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
++{
++	enum {RX = 0, TX = 1};
++	u32 lanes[] = {1, 1};
++	u32 gear[] = {1, 1};
++	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
++	int i, ret;
++
++	/* Get the connected lane count */
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
++
++	/*
++	 * First, get the maximum gears of HS speed.
++	 * If a zero value, it means there is no HSGEAR capability.
++	 * Then, get the maximum gears of PWM speed.
++	 */
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
++	if (!gear[RX]) {
++		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
++		pwr[RX] = SLOWAUTO_MODE;
++	}
++
++	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
++	if (!gear[TX]) {
++		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
++				    &gear[TX]);
++		pwr[TX] = SLOWAUTO_MODE;
++	}
++
++	/*
++	 * Configure attributes for power mode change with below.
++	 * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
++	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
++	 * - PA_HSSERIES
++	 */
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
++	if (pwr[RX] == FASTAUTO_MODE)
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
++
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
++	if (pwr[TX] == FASTAUTO_MODE)
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
++
++	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
++
++	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
++	if (ret)
++		dev_err(hba->dev,
++			"pwr_mode: power mode change failed %d\n", ret);
++
++	return ret;
++}
++
++/**
+  * ufshcd_make_hba_operational - Make UFS controller operational
+  * @hba: per adapter instance
+  *
+@@ -1755,8 +1819,14 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	int ret;
+ 
+ 	ret = ufshcd_link_startup(hba);
+-	if (!ret)
+-		scsi_scan_host(hba->host);
++	if (ret)
++		goto out;
++
++	ufshcd_config_max_pwr_mode(hba);
++
++	scsi_scan_host(hba->host);
++out:
++	return;
+ }
+ 
+ static struct scsi_host_template ufshcd_driver_template = {
 diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-new file mode 100644
-index 0000000..3a710eb
---- /dev/null
+index 3a710eb..0bb8041 100644
+--- a/drivers/scsi/ufs/unipro.h
 +++ b/drivers/scsi/ufs/unipro.h
-@@ -0,0 +1,130 @@
-+/*
-+ * drivers/scsi/ufs/unipro.h
-+ *
-+ * Copyright (C) 2013 Samsung Electronics Co., Ltd.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ */
+@@ -72,6 +72,21 @@
+ #define PA_STALLNOCONFIGTIME	0x15A3
+ #define PA_SAVECONFIGTIME	0x15A4
+ 
++/* PA power modes */
++enum {
++	FAST_MODE	= 1,
++	SLOW_MODE	= 2,
++	FASTAUTO_MODE	= 4,
++	SLOWAUTO_MODE	= 5,
++	UNCHANGED	= 7,
++};
 +
-+#ifndef _UNIPRO_H_
-+#define _UNIPRO_H_
++/* PA TX/RX Frequency Series */
++enum {
++	PA_HS_MODE_A	= 1,
++	PA_HS_MODE_B	= 2,
++};
 +
-+/*
-+ * PHY Adpater attributes
-+ */
-+#define PA_ACTIVETXDATALANES	0x1560
-+#define PA_ACTIVERXDATALANES	0x1580
-+#define PA_TXTRAILINGCLOCKS	0x1564
-+#define PA_PHY_TYPE		0x1500
-+#define PA_AVAILTXDATALANES	0x1520
-+#define PA_AVAILRXDATALANES	0x1540
-+#define PA_MINRXTRAILINGCLOCKS	0x1543
-+#define PA_TXPWRSTATUS		0x1567
-+#define PA_RXPWRSTATUS		0x1582
-+#define PA_TXFORCECLOCK		0x1562
-+#define PA_TXPWRMODE		0x1563
-+#define PA_LEGACYDPHYESCDL	0x1570
-+#define PA_MAXTXSPEEDFAST	0x1521
-+#define PA_MAXTXSPEEDSLOW	0x1522
-+#define PA_MAXRXSPEEDFAST	0x1541
-+#define PA_MAXRXSPEEDSLOW	0x1542
-+#define PA_TXLINKSTARTUPHS	0x1544
-+#define PA_TXSPEEDFAST		0x1565
-+#define PA_TXSPEEDSLOW		0x1566
-+#define PA_REMOTEVERINFO	0x15A0
-+#define PA_TXGEAR		0x1568
-+#define PA_TXTERMINATION	0x1569
-+#define PA_HSSERIES		0x156A
-+#define PA_PWRMODE		0x1571
-+#define PA_RXGEAR		0x1583
-+#define PA_RXTERMINATION	0x1584
-+#define PA_MAXRXPWMGEAR		0x1586
-+#define PA_MAXRXHSGEAR		0x1587
-+#define PA_RXHSUNTERMCAP	0x15A5
-+#define PA_RXLSTERMCAP		0x15A6
-+#define PA_PACPREQTIMEOUT	0x1590
-+#define PA_PACPREQEOBTIMEOUT	0x1591
-+#define PA_HIBERN8TIME		0x15A7
-+#define PA_LOCALVERINFO		0x15A9
-+#define PA_TACTIVATE		0x15A8
-+#define PA_PACPFRAMECOUNT	0x15C0
-+#define PA_PACPERRORCOUNT	0x15C1
-+#define PA_PHYTESTCONTROL	0x15C2
-+#define PA_PWRMODEUSERDATA0	0x15B0
-+#define PA_PWRMODEUSERDATA1	0x15B1
-+#define PA_PWRMODEUSERDATA2	0x15B2
-+#define PA_PWRMODEUSERDATA3	0x15B3
-+#define PA_PWRMODEUSERDATA4	0x15B4
-+#define PA_PWRMODEUSERDATA5	0x15B5
-+#define PA_PWRMODEUSERDATA6	0x15B6
-+#define PA_PWRMODEUSERDATA7	0x15B7
-+#define PA_PWRMODEUSERDATA8	0x15B8
-+#define PA_PWRMODEUSERDATA9	0x15B9
-+#define PA_PWRMODEUSERDATA10	0x15BA
-+#define PA_PWRMODEUSERDATA11	0x15BB
-+#define PA_CONNECTEDTXDATALANES	0x1561
-+#define PA_CONNECTEDRXDATALANES	0x1581
-+#define PA_LOGICALLANEMAP	0x15A1
-+#define PA_SLEEPNOCONFIGTIME	0x15A2
-+#define PA_STALLNOCONFIGTIME	0x15A3
-+#define PA_SAVECONFIGTIME	0x15A4
+ /*
+  * Data Link Layer Attributes
+  */
+@@ -127,4 +142,10 @@
+ #define T_TC0TXMAXSDUSIZE	0x4060
+ #define T_TC1TXMAXSDUSIZE	0x4061
+ 
++/* Boolean attribute values */
++enum {
++	FALSE = 0,
++	TRUE,
++};
 +
-+/*
-+ * Data Link Layer Attributes
-+ */
-+#define DL_TC0TXFCTHRESHOLD	0x2040
-+#define DL_FC0PROTTIMEOUTVAL	0x2041
-+#define DL_TC0REPLAYTIMEOUTVAL	0x2042
-+#define DL_AFC0REQTIMEOUTVAL	0x2043
-+#define DL_AFC0CREDITTHRESHOLD	0x2044
-+#define DL_TC0OUTACKTHRESHOLD	0x2045
-+#define DL_TC1TXFCTHRESHOLD	0x2060
-+#define DL_FC1PROTTIMEOUTVAL	0x2061
-+#define DL_TC1REPLAYTIMEOUTVAL	0x2062
-+#define DL_AFC1REQTIMEOUTVAL	0x2063
-+#define DL_AFC1CREDITTHRESHOLD	0x2064
-+#define DL_TC1OUTACKTHRESHOLD	0x2065
-+#define DL_TXPREEMPTIONCAP	0x2000
-+#define DL_TC0TXMAXSDUSIZE	0x2001
-+#define DL_TC0RXINITCREDITVAL	0x2002
-+#define DL_TC0TXBUFFERSIZE	0x2005
-+#define DL_PEERTC0PRESENT	0x2046
-+#define DL_PEERTC0RXINITCREVAL	0x2047
-+#define DL_TC1TXMAXSDUSIZE	0x2003
-+#define DL_TC1RXINITCREDITVAL	0x2004
-+#define DL_TC1TXBUFFERSIZE	0x2006
-+#define DL_PEERTC1PRESENT	0x2066
-+#define DL_PEERTC1RXINITCREVAL	0x2067
-+
-+/*
-+ * Network Layer Attributes
-+ */
-+#define N_DEVICEID		0x3000
-+#define N_DEVICEID_VALID	0x3001
-+#define N_TC0TXMAXSDUSIZE	0x3020
-+#define N_TC1TXMAXSDUSIZE	0x3021
-+
-+/*
-+ * Transport Layer Attributes
-+ */
-+#define T_NUMCPORTS		0x4000
-+#define T_NUMTESTFEATURES	0x4001
-+#define T_CONNECTIONSTATE	0x4020
-+#define T_PEERDEVICEID		0x4021
-+#define T_PEERCPORTID		0x4022
-+#define T_TRAFFICCLASS		0x4023
-+#define T_PROTOCOLID		0x4024
-+#define T_CPORTFLAGS		0x4025
-+#define T_TXTOKENVALUE		0x4026
-+#define T_RXTOKENVALUE		0x4027
-+#define T_LOCALBUFFERSPACE	0x4028
-+#define T_PEERBUFFERSPACE	0x4029
-+#define T_CREDITSTOSEND		0x402A
-+#define T_CPORTMODE		0x402B
-+#define T_TC0TXMAXSDUSIZE	0x4060
-+#define T_TC1TXMAXSDUSIZE	0x4061
-+
-+#endif /* _UNIPRO_H_ */
+ #endif /* _UNIPRO_H_ */
 -- 
 1.7.0.4
 
