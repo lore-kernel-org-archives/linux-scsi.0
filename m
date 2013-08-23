@@ -1,49 +1,61 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 2/9] target: Make spc_parse_naa_6h_vendor_specific non static
-Date: Fri, 23 Aug 2013 02:26:54 +0000
-Message-ID: <1377224821-23422-3-git-send-email-nab@daterainc.com>
-References: <1377224821-23422-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1377224821-23422-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, Roland Dreier <roland@purestorage.com>, Zach Brown <zab@redhat.com>, Kent Overstreet <kmo@daterainc.com>, Theodore Tso <tytso@mit.edu>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Nicholas Bellinger <nab@daterainc.com>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH] [SCSI] 3w-xxxx: fix error return code in tw_probe()
+Date: Fri, 23 Aug 2013 11:10:32 +0800
+Message-ID: <CAPgLHd_eQf1wD9p+3bRMk_4N_+hOR7oLBgymFpjj56mDWViBgA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:55911 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312Ab3HWDKe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Aug 2013 23:10:34 -0400
+Received: by mail-bk0-f52.google.com with SMTP id e11so31666bkh.39
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2013 20:10:32 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linuxraid@lsi.com, JBottomley@parallels.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@daterainc.com>
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-This patch makes spc_parse_naa_6h_vendor_specific() available to
-other target code, which is required by EXTENDED_COPY when comparing
-the received NAA WWN device identifer for locating the associated
-se_device backend.
+Fix to return a negative error code from the error handling
+case instead of 0, as done elsewhere in this function.
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Martin Petersen <martin.petersen@oracle.com>
-Cc: Chris Mason <chris.mason@fusionio.com>
-Cc: Roland Dreier <roland@purestorage.com>
-Cc: Zach Brown <zab@redhat.com>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- drivers/target/target_core_spc.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/3w-xxxx.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index ed7077a..bd16a93 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -126,8 +126,8 @@ spc_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
- 	return 0;
- }
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index b9276d1..3b9c01e 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -2315,7 +2315,8 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	tw_dev->host = host;
+ 	tw_dev->tw_pci_dev = pdev;
  
--static void spc_parse_naa_6h_vendor_specific(struct se_device *dev,
--		unsigned char *buf)
-+void spc_parse_naa_6h_vendor_specific(struct se_device *dev,
-+				      unsigned char *buf)
- {
- 	unsigned char *p = &dev->t10_wwn.unit_serial[0];
- 	int cnt;
--- 
-1.7.2.5
+-	if (tw_initialize_device_extension(tw_dev)) {
++	retval = tw_initialize_device_extension(tw_dev);
++	if (retval) {
+ 		printk(KERN_WARNING "3w-xxxx: Failed to initialize device extension.");
+ 		goto out_free_device_extension;
+ 	}
+@@ -2331,6 +2332,7 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	tw_dev->base_addr = pci_resource_start(pdev, 0);
+ 	if (!tw_dev->base_addr) {
+ 		printk(KERN_WARNING "3w-xxxx: Failed to get io address.");
++		retval = -EIO;
+ 		goto out_release_mem_region;
+ 	}
+ 
+@@ -2338,7 +2340,8 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	TW_DISABLE_INTERRUPTS(tw_dev);
+ 
+ 	/* Initialize the card */
+-	if (tw_reset_sequence(tw_dev))
++	retval = tw_reset_sequence(tw_dev);
++	if (retval)
+ 		goto out_release_mem_region;
+ 
+ 	/* Set host specific parameters */
+
