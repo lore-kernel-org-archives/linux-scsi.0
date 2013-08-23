@@ -1,716 +1,116 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH 2/2] ata: acpi: rework the ata acpi bind support
-Date: Fri, 23 Aug 2013 10:17:54 +0800
-Message-ID: <5216C652.2070808@intel.com>
-References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com> <1374731223-28685-3-git-send-email-aaron.lu@intel.com> <20130725145229.GB26107@mtj.dyndns.org> <520C2FE8.90009@intel.com> <20130815031954.GB4439@htj.dyndns.org> <5215BA84.20000@intel.com> <20130822183618.GB3490@mtj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20130822183618.GB3490@mtj.dyndns.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Dirk Griesbach <spamthis@freenet.de>, Dimitris Damigos <damigos@freemail.gr>, Dan van der Ster <dan@vanderster.com>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 0/9] target: Add support for EXTENDED_COPY (VAAI) offload emulation
+Date: Fri, 23 Aug 2013 02:26:52 +0000
+Message-ID: <1377224821-23422-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, Roland Dreier <roland@purestorage.com>, Zach Brown <zab@redhat.com>, Kent Overstreet <kmo@daterainc.com>, Theodore Tso <tytso@mit.edu>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Nicholas Bellinger <nab@daterainc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/23/2013 02:36 AM, Tejun Heo wrote:
-> Hello, Aaron.
-> 
-> On Thu, Aug 22, 2013 at 03:15:16PM +0800, Aaron Lu wrote:
->> The patch series has two patches and the first has been taken, shall I
->> send the 2nd one again without the RFC tag in the patch subject? There
->> should be no other changes at the moment.
-> 
-> Yes, that was a request for you to send an updated patch.  I'm okay
-> with taking some risk with ACPI support for PMPs.  It most likely
-> won't matter as long as the code itself doesn't oops anyway, but can
-> you please describe what's tested and what's not but should be okay in
-> the patch description?
+From: Nicholas Bellinger <nab@daterainc.com>
 
-Sure, thanks for the hint.
-Updated patch below.
+Hi folks!
 
+This series adds support to target-core for generic EXTENDED_COPY offload
+emulation as defined by SPC-4 using virtual (IBLOCK, FILEIO, RAMDISK)
+backends.
 
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH 2/2] ata: acpi: rework the ata acpi bind support
+EXTENDED_COPY is a VMWare ESX VAAI primative that is used to perform copy
+offload, that allows a target to perform local READ + WRITE I/O requests
+for bulk data transfers (cloning a virtual machine for example), instead
+of requiring these I/Os to actually be sent to/from the requesting SCSI
+initiator port.
 
-Binding ACPI handle to SCSI device has several drawbacks, namely:
-1 During ATA device initialization time, ACPI handle will be needed
-  while SCSI devices are not created yet. So each time ACPI handle is
-  needed, instead of retrieving the handle by ACPI_HANDLE macro,
-  a namespace scan is performed to find the handle for the corresponding
-  ATA device. This is inefficient, and also expose a restriction on
-  calling path not holding any lock.
-2 The binding to SCSI device tree makes code complex, while at the same
-  time doesn't bring us any benefit. All ACPI handlings are still done
-  in ATA module, not in SCSI.
+This implemenation fully supports copy offload between the same device
+backend, and across multiple device backends.  It supports copy offload
+transparently across multiple target ports of different fabrics, eg:
+iSCSI -> FC, FC -> iSER, iSER -> FCoE and so on.
 
-Rework the ATA ACPI binding code to bind ACPI handle to ATA transport
-devices(ATA port and ATA device). The binding needs to be done only once,
-since the ATA transport devices do not go away with hotplug. And due to
-this, the flush_work call in hotplug handler for ATA bay is no longer
-needed.
+It also supports both PUSH and PULL models of operation, so the actual
+EXTENDED_COPY CDB may be received on either source or destination logical
+unit.
 
-Tested on an Intel test platform for binding and runtime power off for
-ODD(ZPODD) and hard disk; on an ASUS S400C for binding and normal boot
-and S3, where its SATA port node has _SDD and _GTF control methods when
-configured as an AHCI controller and its PATA device node has _GTF
-control method when configured as an IDE controller. SATA PMP binding
-and ATA hotplug is not tested.
+For Target Descriptors, it currently supports the NAA IEEE Registered
+Extended designator (type 0xe4), which allows the reference of target
+ports to occur independent of fabric type using EVPD 0x83 WWNs.  For
+Segment Descriptors, it currently supports copy from block to block
+(0x02) mode.
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/ata/libata-acpi.c      | 278 ++++++++++++-----------------------------
- drivers/ata/libata-core.c      |   5 -
- drivers/ata/libata-scsi.c      |  13 +-
- drivers/ata/libata-transport.c |   2 +
- drivers/ata/libata-zpodd.c     |  12 +-
- drivers/ata/libata.h           |  16 ++-
- drivers/ata/pata_acpi.c        |   4 +-
- drivers/scsi/scsi_lib.c        |  22 ----
- include/linux/libata.h         |   2 -
- 9 files changed, 106 insertions(+), 248 deletions(-)
+Here's a quick snippet of the code in action with sg_xcopy performing
+copy offload between two IBLOCK and FILEIO backends:
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index cf4e702..2377a32 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -34,14 +34,6 @@ struct ata_acpi_gtf {
- 	u8	tf[REGS_PER_GTF];	/* regs. 0x1f1 - 0x1f7 */
- } __packed;
- 
--/*
-- *	Helper - belongs in the PCI layer somewhere eventually
-- */
--static int is_pci_dev(struct device *dev)
--{
--	return (dev->bus == &pci_bus_type);
--}
--
- static void ata_acpi_clear_gtf(struct ata_device *dev)
- {
- 	kfree(dev->gtf_cache);
-@@ -49,47 +41,18 @@ static void ata_acpi_clear_gtf(struct ata_device *dev)
- }
- 
- /**
-- * ata_ap_acpi_handle - provide the acpi_handle for an ata_port
-- * @ap: the acpi_handle returned will correspond to this port
-- *
-- * Returns the acpi_handle for the ACPI namespace object corresponding to
-- * the ata_port passed into the function, or NULL if no such object exists
-- */
--acpi_handle ata_ap_acpi_handle(struct ata_port *ap)
--{
--	if (ap->flags & ATA_FLAG_ACPI_SATA)
--		return NULL;
--
--	return ap->scsi_host ?
--		DEVICE_ACPI_HANDLE(&ap->scsi_host->shost_gendev) : NULL;
--}
--EXPORT_SYMBOL(ata_ap_acpi_handle);
--
--/**
-  * ata_dev_acpi_handle - provide the acpi_handle for an ata_device
-- * @dev: the acpi_device returned will correspond to this port
-+ * @dev: the acpi_handle returned will correspond to this device
-  *
-  * Returns the acpi_handle for the ACPI namespace object corresponding to
-  * the ata_device passed into the function, or NULL if no such object exists
-+ * or ACPI is disabled for this device due to consecutive errors.
-  */
- acpi_handle ata_dev_acpi_handle(struct ata_device *dev)
- {
--	acpi_integer adr;
--	struct ata_port *ap = dev->link->ap;
--
--	if (libata_noacpi || dev->flags & ATA_DFLAG_ACPI_DISABLED)
--		return NULL;
--
--	if (ap->flags & ATA_FLAG_ACPI_SATA) {
--		if (!sata_pmp_attached(ap))
--			adr = SATA_ADR(ap->port_no, NO_PORT_MULT);
--		else
--			adr = SATA_ADR(ap->port_no, dev->link->pmp);
--		return acpi_get_child(DEVICE_ACPI_HANDLE(ap->host->dev), adr);
--	} else
--		return acpi_get_child(ata_ap_acpi_handle(ap), dev->devno);
-+	return dev->flags & ATA_DFLAG_ACPI_DISABLED ?
-+			NULL : ACPI_HANDLE(&dev->tdev);
- }
--EXPORT_SYMBOL(ata_dev_acpi_handle);
- 
- /* @ap and @dev are the same as ata_acpi_handle_hotplug() */
- static void ata_acpi_detach_device(struct ata_port *ap, struct ata_device *dev)
-@@ -156,10 +119,8 @@ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
--	if (wait) {
-+	if (wait)
- 		ata_port_wait_eh(ap);
--		flush_work(&ap->hotplug_task.work);
--	}
- }
- 
- static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
-@@ -216,37 +177,55 @@ static const struct acpi_dock_ops ata_acpi_ap_dock_ops = {
- 	.uevent = ata_acpi_ap_uevent,
- };
- 
--void ata_acpi_hotplug_init(struct ata_host *host)
-+/* bind acpi handle to pata port */
-+void ata_acpi_bind_port(struct ata_port *ap)
- {
--	int i;
-+	acpi_handle host_handle = ACPI_HANDLE(ap->host->dev);
- 
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
--		acpi_handle handle;
--		struct ata_device *dev;
-+	if (libata_noacpi || ap->flags & ATA_FLAG_ACPI_SATA || !host_handle)
-+		return;
- 
--		if (!ap)
--			continue;
-+	ACPI_HANDLE_SET(&ap->tdev, acpi_get_child(host_handle, ap->port_no));
- 
--		handle = ata_ap_acpi_handle(ap);
--		if (handle) {
--			/* we might be on a docking station */
--			register_hotplug_dock_device(handle,
--						     &ata_acpi_ap_dock_ops, ap,
--						     NULL, NULL);
--		}
-+	if (ata_acpi_gtm(ap, &ap->__acpi_init_gtm) == 0)
-+		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
- 
--		ata_for_each_dev(dev, &ap->link, ALL) {
--			handle = ata_dev_acpi_handle(dev);
--			if (!handle)
--				continue;
-+	/* we might be on a docking station */
-+	register_hotplug_dock_device(ACPI_HANDLE(&ap->tdev),
-+				     &ata_acpi_ap_dock_ops, ap, NULL, NULL);
-+}
- 
--			/* we might be on a docking station */
--			register_hotplug_dock_device(handle,
--						     &ata_acpi_dev_dock_ops,
--						     dev, NULL, NULL);
--		}
-+void ata_acpi_bind_dev(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->link->ap;
-+	acpi_handle port_handle = ACPI_HANDLE(&ap->tdev);
-+	acpi_handle host_handle = ACPI_HANDLE(ap->host->dev);
-+	acpi_handle parent_handle;
-+	u64 adr;
-+
-+	/*
-+	 * For both sata/pata devices, host handle is required.
-+	 * For pata device, port handle is also required.
-+	 */
-+	if (libata_noacpi || !host_handle ||
-+			(!(ap->flags & ATA_FLAG_ACPI_SATA) && !port_handle))
-+		return;
-+
-+	if (ap->flags & ATA_FLAG_ACPI_SATA) {
-+		if (!sata_pmp_attached(ap))
-+			adr = SATA_ADR(ap->port_no, NO_PORT_MULT);
-+		else
-+			adr = SATA_ADR(ap->port_no, dev->link->pmp);
-+		parent_handle = host_handle;
-+	} else {
-+		adr = dev->devno;
-+		parent_handle = port_handle;
- 	}
-+
-+	ACPI_HANDLE_SET(&dev->tdev, acpi_get_child(parent_handle, adr));
-+
-+	register_hotplug_dock_device(ata_dev_acpi_handle(dev),
-+				     &ata_acpi_dev_dock_ops, dev, NULL, NULL);
- }
- 
- /**
-@@ -270,18 +249,34 @@ void ata_acpi_dissociate(struct ata_host *host)
- 		struct ata_port *ap = host->ports[i];
- 		const struct ata_acpi_gtm *gtm = ata_acpi_init_gtm(ap);
- 
--		if (ata_ap_acpi_handle(ap) && gtm)
-+		if (ACPI_HANDLE(&ap->tdev) && gtm)
- 			ata_acpi_stm(ap, gtm);
- 	}
- }
- 
--static int __ata_acpi_gtm(struct ata_port *ap, acpi_handle handle,
--			  struct ata_acpi_gtm *gtm)
-+/**
-+ * ata_acpi_gtm - execute _GTM
-+ * @ap: target ATA port
-+ * @gtm: out parameter for _GTM result
-+ *
-+ * Evaluate _GTM and store the result in @gtm.
-+ *
-+ * LOCKING:
-+ * EH context.
-+ *
-+ * RETURNS:
-+ * 0 on success, -ENOENT if _GTM doesn't exist, -errno on failure.
-+ */
-+int ata_acpi_gtm(struct ata_port *ap, struct ata_acpi_gtm *gtm)
- {
- 	struct acpi_buffer output = { .length = ACPI_ALLOCATE_BUFFER };
- 	union acpi_object *out_obj;
- 	acpi_status status;
- 	int rc = 0;
-+	acpi_handle handle = ACPI_HANDLE(&ap->tdev);
-+
-+	if (!handle)
-+		return -EINVAL;
- 
- 	status = acpi_evaluate_object(handle, "_GTM", NULL, &output);
- 
-@@ -317,27 +312,6 @@ static int __ata_acpi_gtm(struct ata_port *ap, acpi_handle handle,
- 	return rc;
- }
- 
--/**
-- * ata_acpi_gtm - execute _GTM
-- * @ap: target ATA port
-- * @gtm: out parameter for _GTM result
-- *
-- * Evaluate _GTM and store the result in @gtm.
-- *
-- * LOCKING:
-- * EH context.
-- *
-- * RETURNS:
-- * 0 on success, -ENOENT if _GTM doesn't exist, -errno on failure.
-- */
--int ata_acpi_gtm(struct ata_port *ap, struct ata_acpi_gtm *gtm)
--{
--	if (ata_ap_acpi_handle(ap))
--		return __ata_acpi_gtm(ap, ata_ap_acpi_handle(ap), gtm);
--	else
--		return -EINVAL;
--}
--
- EXPORT_SYMBOL_GPL(ata_acpi_gtm);
- 
- /**
-@@ -374,8 +348,8 @@ int ata_acpi_stm(struct ata_port *ap, const struct ata_acpi_gtm *stm)
- 	input.count = 3;
- 	input.pointer = in_params;
- 
--	status = acpi_evaluate_object(ata_ap_acpi_handle(ap), "_STM", &input,
--				      NULL);
-+	status = acpi_evaluate_object(ACPI_HANDLE(&ap->tdev), "_STM",
-+				      &input, NULL);
- 
- 	if (status == AE_NOT_FOUND)
- 		return -ENOENT;
-@@ -850,7 +824,7 @@ void ata_acpi_on_resume(struct ata_port *ap)
- 	const struct ata_acpi_gtm *gtm = ata_acpi_init_gtm(ap);
- 	struct ata_device *dev;
- 
--	if (ata_ap_acpi_handle(ap) && gtm) {
-+	if (ACPI_HANDLE(&ap->tdev) && gtm) {
- 		/* _GTM valid */
- 
- 		/* restore timing parameters */
-@@ -894,8 +868,7 @@ static int ata_acpi_choose_suspend_state(struct ata_device *dev, bool runtime)
- 		d_max_in = ACPI_STATE_D3_HOT;
- 
- out:
--	return acpi_pm_device_sleep_state(&dev->sdev->sdev_gendev,
--					  NULL, d_max_in);
-+	return acpi_pm_device_sleep_state(&dev->tdev, NULL, d_max_in);
- }
- 
- static void sata_acpi_set_state(struct ata_port *ap, pm_message_t state)
-@@ -932,7 +905,7 @@ static void pata_acpi_set_state(struct ata_port *ap, pm_message_t state)
- 	struct ata_device *dev;
- 	acpi_handle port_handle;
- 
--	port_handle = ata_ap_acpi_handle(ap);
-+	port_handle = ACPI_HANDLE(&ap->tdev);
- 	if (!port_handle)
- 		return;
- 
-@@ -1063,109 +1036,16 @@ void ata_acpi_on_disable(struct ata_device *dev)
- 	ata_acpi_clear_gtf(dev);
- }
- 
--static int compat_pci_ata(struct ata_port *ap)
--{
--	struct device *dev = ap->tdev.parent;
--	struct pci_dev *pdev;
--
--	if (!is_pci_dev(dev))
--		return 0;
--
--	pdev = to_pci_dev(dev);
--
--	if ((pdev->class >> 8) != PCI_CLASS_STORAGE_SATA &&
--	    (pdev->class >> 8) != PCI_CLASS_STORAGE_IDE)
--		return 0;
--
--	return 1;
--}
--
--static int ata_acpi_bind_host(struct ata_port *ap, acpi_handle *handle)
--{
--	if (libata_noacpi || ap->flags & ATA_FLAG_ACPI_SATA)
--		return -ENODEV;
--
--	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(ap->tdev.parent),
--			ap->port_no);
--
--	if (!*handle)
--		return -ENODEV;
--
--	if (__ata_acpi_gtm(ap, *handle, &ap->__acpi_init_gtm) == 0)
--		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
--
--	return 0;
--}
--
--static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
--				acpi_handle *handle)
--{
--	struct ata_device *ata_dev;
--
--	if (ap->flags & ATA_FLAG_ACPI_SATA) {
--		if (!sata_pmp_attached(ap))
--			ata_dev = &ap->link.device[sdev->id];
--		else
--			ata_dev = &ap->pmp_link[sdev->channel].device[sdev->id];
--	}
--	else {
--		ata_dev = &ap->link.device[sdev->id];
--	}
--
--	*handle = ata_dev_acpi_handle(ata_dev);
--
--	if (!*handle)
--		return -ENODEV;
--
--	return 0;
--}
--
--static int is_ata_port(const struct device *dev)
--{
--	return dev->type == &ata_port_type;
--}
--
--static struct ata_port *dev_to_ata_port(struct device *dev)
--{
--	while (!is_ata_port(dev)) {
--		if (!dev->parent)
--			return NULL;
--		dev = dev->parent;
--	}
--	return to_ata_port(dev);
--}
--
--static int ata_acpi_find_device(struct device *dev, acpi_handle *handle)
--{
--	struct ata_port *ap = dev_to_ata_port(dev);
--
--	if (!ap)
--		return -ENODEV;
--
--	if (!compat_pci_ata(ap))
--		return -ENODEV;
--
--	if (scsi_is_host_device(dev))
--		return ata_acpi_bind_host(ap, handle);
--	else if (scsi_is_sdev_device(dev)) {
--		struct scsi_device *sdev = to_scsi_device(dev);
--
--		return ata_acpi_bind_device(ap, sdev, handle);
--	} else
--		return -ENODEV;
--}
--
--static struct acpi_bus_type ata_acpi_bus = {
--	.name = "ATA",
--	.find_device = ata_acpi_find_device,
--};
--
--int ata_acpi_register(void)
-+void ata_scsi_acpi_bind(struct ata_device *dev)
- {
--	return scsi_register_acpi_bus_type(&ata_acpi_bus);
-+	acpi_handle handle = ata_dev_acpi_handle(dev);
-+	if (handle)
-+		acpi_dev_pm_add_dependent(handle, &dev->sdev->sdev_gendev);
- }
- 
--void ata_acpi_unregister(void)
-+void ata_scsi_acpi_unbind(struct ata_device *dev)
- {
--	scsi_unregister_acpi_bus_type(&ata_acpi_bus);
-+	acpi_handle handle = ata_dev_acpi_handle(dev);
-+	if (handle)
-+		acpi_dev_pm_remove_dependent(handle, &dev->sdev->sdev_gendev);
- }
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c24354d..39e78e4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6150,8 +6150,6 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 	if (rc)
- 		goto err_tadd;
- 
--	ata_acpi_hotplug_init(host);
--
- 	/* set cable, sata_spd_limit and report */
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
-@@ -6632,8 +6630,6 @@ static int __init ata_init(void)
- 
- 	ata_parse_force_param();
- 
--	ata_acpi_register();
--
- 	rc = ata_sff_init();
- 	if (rc) {
- 		kfree(ata_force_tbl);
-@@ -6660,7 +6656,6 @@ static void __exit ata_exit(void)
- 	ata_release_transport(ata_scsi_transport_template);
- 	libata_transport_exit();
- 	ata_sff_exit();
--	ata_acpi_unregister();
- 	kfree(ata_force_tbl);
- }
- 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b1e880a..f097d66 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -49,7 +49,6 @@
- #include <linux/hdreg.h>
- #include <linux/uaccess.h>
- #include <linux/suspend.h>
--#include <linux/pm_qos.h>
- #include <asm/unaligned.h>
- 
- #include "libata.h"
-@@ -3667,9 +3666,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 			if (!IS_ERR(sdev)) {
- 				dev->sdev = sdev;
- 				scsi_device_put(sdev);
--				if (zpodd_dev_enabled(dev))
--					dev_pm_qos_expose_flags(
--							&sdev->sdev_gendev, 0);
-+				ata_scsi_acpi_bind(dev);
- 			} else {
- 				dev->sdev = NULL;
- 			}
-@@ -3757,6 +3754,8 @@ static void ata_scsi_remove_dev(struct ata_device *dev)
- 	struct scsi_device *sdev;
- 	unsigned long flags;
- 
-+	ata_scsi_acpi_unbind(dev);
-+
- 	/* Alas, we need to grab scan_mutex to ensure SCSI device
- 	 * state doesn't change underneath us and thus
- 	 * scsi_device_get() always succeeds.  The mutex locking can
-@@ -3766,9 +3765,6 @@ static void ata_scsi_remove_dev(struct ata_device *dev)
- 	mutex_lock(&ap->scsi_host->scan_mutex);
- 	spin_lock_irqsave(ap->lock, flags);
- 
--	if (zpodd_dev_enabled(dev))
--		zpodd_exit(dev);
--
- 	/* clearing dev->sdev is protected by host lock */
- 	sdev = dev->sdev;
- 	dev->sdev = NULL;
-@@ -3818,6 +3814,9 @@ static void ata_scsi_handle_link_detach(struct ata_link *link)
- 		dev->flags &= ~ATA_DFLAG_DETACHED;
- 		spin_unlock_irqrestore(ap->lock, flags);
- 
-+		if (zpodd_dev_enabled(dev))
-+			zpodd_exit(dev);
-+
- 		ata_scsi_remove_dev(dev);
- 	}
- }
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index 077a856..150a917 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -287,6 +287,7 @@ int ata_tport_add(struct device *parent,
- 	dev->release = ata_tport_release;
- 	dev_set_name(dev, "ata%d", ap->print_id);
- 	transport_setup_device(dev);
-+	ata_acpi_bind_port(ap);
- 	error = device_add(dev);
- 	if (error) {
- 		goto tport_err;
-@@ -644,6 +645,7 @@ static int ata_tdev_add(struct ata_device *ata_dev)
- 		dev_set_name(dev, "dev%d.%d.0", ap->print_id, link->pmp);
- 
- 	transport_setup_device(dev);
-+	ata_acpi_bind_dev(ata_dev);
- 	error = device_add(dev);
- 	if (error) {
- 		ata_tdev_free(ata_dev);
-diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index cd8daf4..68f9e32 100644
---- a/drivers/ata/libata-zpodd.c
-+++ b/drivers/ata/libata-zpodd.c
-@@ -2,6 +2,7 @@
- #include <linux/cdrom.h>
- #include <linux/pm_runtime.h>
- #include <linux/module.h>
-+#include <linux/pm_qos.h>
- #include <scsi/scsi_device.h>
- 
- #include "libata.h"
-@@ -190,8 +191,8 @@ void zpodd_enable_run_wake(struct ata_device *dev)
- 	sdev_disable_disk_events(dev->sdev);
- 
- 	zpodd->powered_off = true;
--	device_set_run_wake(&dev->sdev->sdev_gendev, true);
--	acpi_pm_device_run_wake(&dev->sdev->sdev_gendev, true);
-+	device_set_run_wake(&dev->tdev, true);
-+	acpi_pm_device_run_wake(&dev->tdev, true);
- }
- 
- /* Disable runtime wake capability if it is enabled */
-@@ -200,8 +201,8 @@ void zpodd_disable_run_wake(struct ata_device *dev)
- 	struct zpodd *zpodd = dev->zpodd;
- 
- 	if (zpodd->powered_off) {
--		acpi_pm_device_run_wake(&dev->sdev->sdev_gendev, false);
--		device_set_run_wake(&dev->sdev->sdev_gendev, false);
-+		acpi_pm_device_run_wake(&dev->tdev, false);
-+		device_set_run_wake(&dev->tdev, false);
- 	}
- }
- 
-@@ -262,7 +263,7 @@ static void ata_acpi_add_pm_notifier(struct ata_device *dev)
- 
- static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
- {
--	acpi_handle handle = DEVICE_ACPI_HANDLE(&dev->sdev->sdev_gendev);
-+	acpi_handle handle = ata_dev_acpi_handle(dev);
- 	acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY, zpodd_wake_dev);
- }
- 
-@@ -290,6 +291,7 @@ void zpodd_init(struct ata_device *dev)
- 	ata_acpi_add_pm_notifier(dev);
- 	zpodd->dev = dev;
- 	dev->zpodd = zpodd;
-+	dev_pm_qos_expose_flags(&dev->tdev, 0);
- }
- 
- void zpodd_exit(struct ata_device *dev)
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index cc8a6e8..3e9cc95 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -118,9 +118,11 @@ extern void ata_acpi_on_resume(struct ata_port *ap);
- extern int ata_acpi_on_devcfg(struct ata_device *dev);
- extern void ata_acpi_on_disable(struct ata_device *dev);
- extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
--extern int ata_acpi_register(void);
--extern void ata_acpi_unregister(void);
--extern void ata_acpi_hotplug_init(struct ata_host *host);
-+extern void ata_acpi_bind_port(struct ata_port *ap);
-+extern void ata_acpi_bind_dev(struct ata_device *dev);
-+extern acpi_handle ata_dev_acpi_handle(struct ata_device *dev);
-+extern void ata_scsi_acpi_bind(struct ata_device *dev);
-+extern void ata_scsi_acpi_unbind(struct ata_device *dev);
- #else
- static inline void ata_acpi_dissociate(struct ata_host *host) { }
- static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
-@@ -129,9 +131,11 @@ static inline int ata_acpi_on_devcfg(struct ata_device *dev) { return 0; }
- static inline void ata_acpi_on_disable(struct ata_device *dev) { }
- static inline void ata_acpi_set_state(struct ata_port *ap,
- 				      pm_message_t state) { }
--static inline int ata_acpi_register(void) { return 0; }
--static inline void ata_acpi_unregister(void) { }
--static inline void ata_acpi_hotplug_init(struct ata_host *host) {}
-+static inline void ata_acpi_bind_port(struct ata_port *ap) {}
-+static inline void ata_acpi_bind_dev(struct ata_device *dev) {}
-+static inline acpi_handle ata_dev_acpi_handle(struct ata_device *dev) { return NULL; }
-+static inline void ata_scsi_acpi_bind(struct ata_device *dev) {}
-+static inline void ata_scsi_acpi_unbind(struct ata_device *dev) {}
- #endif
- 
- /* libata-scsi.c */
-diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
-index 09723b7..73212c9 100644
---- a/drivers/ata/pata_acpi.c
-+++ b/drivers/ata/pata_acpi.c
-@@ -39,7 +39,7 @@ static int pacpi_pre_reset(struct ata_link *link, unsigned long deadline)
- {
- 	struct ata_port *ap = link->ap;
- 	struct pata_acpi *acpi = ap->private_data;
--	if (ata_ap_acpi_handle(ap) == NULL || ata_acpi_gtm(ap, &acpi->gtm) < 0)
-+	if (ACPI_HANDLE(&ap->tdev) == NULL || ata_acpi_gtm(ap, &acpi->gtm) < 0)
- 		return -ENODEV;
- 
- 	return ata_sff_prereset(link, deadline);
-@@ -195,7 +195,7 @@ static int pacpi_port_start(struct ata_port *ap)
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	struct pata_acpi *acpi;
- 
--	if (ata_ap_acpi_handle(ap) == NULL)
-+	if (ACPI_HANDLE(&ap->tdev) == NULL)
- 		return -ENODEV;
- 
- 	acpi = ap->private_data = devm_kzalloc(&pdev->dev, sizeof(struct pata_acpi), GFP_KERNEL);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 124392f..f0ddc7d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -68,28 +68,6 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
- 
- struct kmem_cache *scsi_sdb_cache;
- 
--#ifdef CONFIG_ACPI
--#include <acpi/acpi_bus.h>
--
--static bool acpi_scsi_bus_match(struct device *dev)
--{
--	return dev->bus == &scsi_bus_type;
--}
--
--int scsi_register_acpi_bus_type(struct acpi_bus_type *bus)
--{
--        bus->match = acpi_scsi_bus_match;
--        return register_acpi_bus_type(bus);
--}
--EXPORT_SYMBOL_GPL(scsi_register_acpi_bus_type);
--
--void scsi_unregister_acpi_bus_type(struct acpi_bus_type *bus)
--{
--	unregister_acpi_bus_type(bus);
--}
--EXPORT_SYMBOL_GPL(scsi_unregister_acpi_bus_type);
--#endif
--
- /*
-  * When to reinvoke queueing after a resource shortage. It's 3 msecs to
-  * not change behaviour from the previous unplug mechanism, experimentation
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 283d66b..3198617 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1244,8 +1244,6 @@ int ata_acpi_stm(struct ata_port *ap, const struct ata_acpi_gtm *stm);
- int ata_acpi_gtm(struct ata_port *ap, struct ata_acpi_gtm *stm);
- unsigned long ata_acpi_gtm_xfermask(struct ata_device *dev,
- 				    const struct ata_acpi_gtm *gtm);
--acpi_handle ata_ap_acpi_handle(struct ata_port *ap);
--acpi_handle ata_dev_acpi_handle(struct ata_device *dev);
- int ata_acpi_cbl_80wire(struct ata_port *ap, const struct ata_acpi_gtm *gtm);
- #else
- static inline const struct ata_acpi_gtm *ata_acpi_init_gtm(struct ata_port *ap)
---
-1.8.3.2.10.g43d11f4
+[  644.638215] Processing XCOPY with list_id: 0x00 list_id_usage: 0x10 tdll: 64 sdll: 28 inline_dl: 0
+[  644.648227] XCOPY 0xe4: RELATIVE INITIATOR PORT IDENTIFIER: 0
+[  644.654639] XCOPY 0xe4: desig_len: 16
+[  644.658722] XCOPY 0xe4: Set xop->src_dev ffff88045d770000 from source received xop
+[  644.667179] XCOPY 0xe4: RELATIVE INITIATOR PORT IDENTIFIER: 0
+[  644.673597] XCOPY 0xe4: desig_len: 16
+[  644.677699] XCOPY 0xe4: Setting xop->dst_dev: ffff88045d771048 from located se_dev
+[  644.686297] Called configfs_depend_item for subsys: ffffffffa00f2570 se_dev: ffff88045d771048 se_dev->se_dev_group: ffff88045d7714f8
+[  644.699607] XCOPY TGT desc: Source dev: ffff88045d770000 NAA IEEE WWN: 0x6001405d2e0745b08564acea3ca401e5
+[  644.710296] XCOPY TGT desc: Dest dev: ffff88045d771048 NAA IEEE WWN: 0x60014056da9d8672d4b437596ab764b3
+[  644.720782] XCOPY: Processed 2 target descriptors, length: 64
+[  644.727203] XCOPY seg desc 0x02: desc_len: 24 stdi: 0 dtdi: 1, DC: 2
+[  644.734304] XCOPY seg desc 0x02: nolb: 1 src_lba: 0 dst_lba: 0
+[  644.740819] XCOPY seg desc 0x02: DC=1 w/ dbl: 0
+[  644.745881] XCOPY: Processed 1 segment descriptors, length: 28
+[  644.752402] target_xcopy_do_work: nolb: 1, max_nolb: 1024 end_lba: 1
+[  644.759504] target_xcopy_do_work: Starting src_lba: 0, dst_lba: 0
+[  644.766303] target_xcopy_do_work: Calling read src_dev: ffff88045d770000 src_lba: 0, cur_nolb: 1
+[  644.776115] XCOPY: Built READ_16: LBA: 0 Sectors: 1 Length: 512
+[  644.782751] Honoring local SRC port from ec_cmd->se_dev: ffff88045d770000
+[  644.790335] Honoring local SRC port from ec_cmd->se_lun: ffff88085a1977e0
+[  644.797921] XCOPY-READ: Saved xop->xop_data_sg: ffff880459d3e3a8, num: 1 for READ memory
+[  644.807203] target_xcopy_issue_pt_cmd(): SCSI status: 0x00
+[  644.813333] target_xcopy_do_work: Incremented READ src_lba to 1
+[  644.819947] target_xcopy_do_work: Calling write dst_dev: ffff88045d771048 dst_lba: 0, cur_nolb: 1
+[  644.829854] XCOPY: Built WRITE_16: LBA: 0 Sectors: 1 Length: 512
+[  644.836568] Setup emulated se_dev: ffff88045d771048 from se_dev
+[  644.843185] Setup emulated se_dev: ffff88045d771048 to pt_cmd->se_lun->lun_se_dev
+[  644.851545] Setup emulated remote DEST xcopy_pt_port: ffffffffa00f7610 to cmd->se_lun->lun_sep for X-COPY data PUSH
+[  644.863198] Setup PASSTHROUGH_NOALLOC t_data_sg: ffff880459d3e3a8 t_data_nents: 1
+[  644.895203] target_xcopy_issue_pt_cmd(): SCSI status: 0x00
+[  644.901332] target_xcopy_do_work: Incremented WRITE dst_lba to 1
+[  644.908044] Calling configfs_undepend_item for subsys: ffffffffa00f2570 remote_dev: ffff88045d771048 remote_dev->dev_group: ffff88045d7714f8
+[  644.922129] target_xcopy_do_work: Final src_lba: 1, dst_lba: 1
+[  644.928646] target_xcopy_do_work: Blocks copied: 1, Bytes Copied: 512
+[  644.935840] target_xcopy_do_work: Setting X-COPY GOOD status -> sending response
+
+For all intensive purposes this code is completely standalone, and the amount
+of changes required to enable it's function within target-core code is small.
+
+Please review as v3.12 material.
+
+Thank you,
+
+--nab
+
+Nicholas Bellinger (9):
+  target: Make target_core_subsystem defined as non static
+  target: Make spc_parse_naa_6h_vendor_specific non static
+  target: Make helpers non static for EXTENDED_COPY command setup
+  target: Add global device list for EXTENDED_COPY
+  target: Avoid non-existent tg_pt_gp_mem in target_alua_state_check
+  target: Add support for EXTENDED_COPY copy offload emulation
+  target: Enable EXTENDED_COPY setup in spc_parse_cdb
+  target: Add Third Party Copy (3PC) bit in INQUIRY response
+  target: Enable global EXTENDED_COPY setup/release
+
+ drivers/target/Makefile                |    3 +-
+ drivers/target/target_core_alua.c      |    3 +
+ drivers/target/target_core_configfs.c  |   12 +-
+ drivers/target/target_core_device.c    |   27 +
+ drivers/target/target_core_internal.h  |    1 +
+ drivers/target/target_core_spc.c       |   20 +-
+ drivers/target/target_core_transport.c |    5 +-
+ drivers/target/target_core_xcopy.c     | 1122 ++++++++++++++++++++++++++++++++
+ drivers/target/target_core_xcopy.h     |   62 ++
+ include/target/target_core_backend.h   |    4 +
+ include/target/target_core_base.h      |    5 +
+ 11 files changed, 1255 insertions(+), 9 deletions(-)
+ create mode 100644 drivers/target/target_core_xcopy.c
+ create mode 100644 drivers/target/target_core_xcopy.h
+
+-- 
+1.7.2.5
