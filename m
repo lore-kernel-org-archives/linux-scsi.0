@@ -1,61 +1,32 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH] [SCSI] 3w-xxxx: fix error return code in tw_probe()
-Date: Fri, 23 Aug 2013 11:10:32 +0800
-Message-ID: <CAPgLHd_eQf1wD9p+3bRMk_4N_+hOR7oLBgymFpjj56mDWViBgA@mail.gmail.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
+Date: Fri, 23 Aug 2013 15:08:28 +0800
+Message-ID: <52170A6C.5000505@intel.com>
+References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com> <1374731223-28685-3-git-send-email-aaron.lu@intel.com> <20130725145229.GB26107@mtj.dyndns.org> <520C2FE8.90009@intel.com> <20130815031954.GB4439@htj.dyndns.org> <5215BA84.20000@intel.com> <20130823070211.GA4618@freenet.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:55911 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312Ab3HWDKe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Aug 2013 23:10:34 -0400
-Received: by mail-bk0-f52.google.com with SMTP id e11so31666bkh.39
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2013 20:10:32 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20130823070211.GA4618@freenet.de>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Dirk Griesbach <spamthis@freenet.de>, Tejun Heo <tj@kernel.org>, Dimitris Damigos <damigos@freemail.gr>, Dan van der Ster <dan@vanderster.com>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linuxraid@lsi.com, JBottomley@parallels.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-scsi@vger.kernel.org
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On 08/23/2013 03:02 PM, Dirk Griesbach wrote:
+> Hello Aaron,
+> 
+> On Do, Aug 22, 2013 at 03:15:16 +0800, Aaron Lu wrote:
+>> Hi Drik,
+>> Can you please test the two patches regarding your ATA bay? Thanks.
+> 
+> No problems with the bay. I applied the patches on top of 3.11-rc6.
 
-Fix to return a negative error code from the error handling
-case instead of 0, as done elsewhere in this function.
+Thanks a lot for the test!
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/scsi/3w-xxxx.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+-Aaron
 
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index b9276d1..3b9c01e 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -2315,7 +2315,8 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
- 	tw_dev->host = host;
- 	tw_dev->tw_pci_dev = pdev;
- 
--	if (tw_initialize_device_extension(tw_dev)) {
-+	retval = tw_initialize_device_extension(tw_dev);
-+	if (retval) {
- 		printk(KERN_WARNING "3w-xxxx: Failed to initialize device extension.");
- 		goto out_free_device_extension;
- 	}
-@@ -2331,6 +2332,7 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
- 	tw_dev->base_addr = pci_resource_start(pdev, 0);
- 	if (!tw_dev->base_addr) {
- 		printk(KERN_WARNING "3w-xxxx: Failed to get io address.");
-+		retval = -EIO;
- 		goto out_release_mem_region;
- 	}
- 
-@@ -2338,7 +2340,8 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
- 	TW_DISABLE_INTERRUPTS(tw_dev);
- 
- 	/* Initialize the card */
--	if (tw_reset_sequence(tw_dev))
-+	retval = tw_reset_sequence(tw_dev);
-+	if (retval)
- 		goto out_release_mem_region;
- 
- 	/* Set host specific parameters */
+> 
+> Regards,
+> Dirk
+> 
 
