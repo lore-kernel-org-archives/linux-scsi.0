@@ -1,172 +1,59 @@
-From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: [PATCH v2 6/6] scsi: ufs: configure the attribute for power mode
-Date: Fri, 23 Aug 2013 22:00:52 +0900
-Message-ID: <003101cea000$cc11b600$64352200$%jun@samsung.com>
-References: <1374280885-11526-1-git-send-email-mita@fixstars.com>
- <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 0/9] target: Add support for EXTENDED_COPY (VAAI) offload
+ emulation
+Date: Fri, 23 Aug 2013 15:13:10 +0200
+Message-ID: <52175FE6.4040309@interlog.com>
+References: <1377224821-23422-1-git-send-email-nab@daterainc.com> <521741B7.9020904@interlog.com> <yq17gfc60yd.fsf@sermon.lab.mkp.net>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:15560 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753563Ab3HWNAx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Aug 2013 09:00:53 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MRZ00BC3IRYGBV0@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Fri, 23 Aug 2013 22:00:52 +0900 (KST)
-In-reply-to: <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
-Content-language: ko
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq17gfc60yd.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Chris Mason <chris.mason@fusionio.com>, Roland Dreier <roland@purestorage.com>, Zach Brown <zab@redhat.com>, Kent Overstreet <kmo@daterainc.com>, Theodore Tso <tytso@mit.edu>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-UIC attributes can be set with using DME_SET command for
-power mode change. For configuration the link capability
-attributes are used, which is updated after successful
-link startup.
+On 13-08-23 02:33 PM, Martin K. Petersen wrote:
+>>>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+>
+> Doug> The SCSI opcodes associated with it (0x83 and 0x84) have been
+> Doug> renamed THIRD PARTY COPY OUT and IN, and
+>
+> Where did you see that? My SPC still has EXTENDED COPY.
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c |   74 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/ufs/unipro.h |   21 +++++++++++++
- 2 files changed, 93 insertions(+), 2 deletions(-)
+SCSI _opcodes_ == SCSI operation codes. In other words the
+name associated with all service actions (commands) that have
+as their first byte 0x83 and 0x84 .
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8f25df4..54fdbab 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -979,6 +979,70 @@ out:
- }
- 
- /**
-+ * ufshcd_config_max_pwr_mode - Set & Change power mode with
-+ *	maximum capability attribute information.
-+ * @hba: per adapter instance
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
-+{
-+	enum {RX = 0, TX = 1};
-+	u32 lanes[] = {1, 1};
-+	u32 gear[] = {1, 1};
-+	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
-+	int i, ret;
-+
-+	/* Get the connected lane count */
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
-+
-+	/*
-+	 * First, get the maximum gears of HS speed.
-+	 * If a zero value, it means there is no HSGEAR capability.
-+	 * Then, get the maximum gears of PWM speed.
-+	 */
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
-+	if (!gear[RX]) {
-+		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
-+		pwr[RX] = SLOWAUTO_MODE;
-+	}
-+
-+	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
-+	if (!gear[TX]) {
-+		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
-+				    &gear[TX]);
-+		pwr[TX] = SLOWAUTO_MODE;
-+	}
-+
-+	/*
-+	 * Configure attributes for power mode change with below.
-+	 * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
-+	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
-+	 * - PA_HSSERIES
-+	 */
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
-+	if (pwr[RX] == FASTAUTO_MODE)
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
-+
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
-+	if (pwr[TX] == FASTAUTO_MODE)
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
-+
-+	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
-+
-+	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
-+	if (ret)
-+		dev_err(hba->dev,
-+			"pwr_mode: power mode change failed %d\n", ret);
-+
-+	return ret;
-+}
-+
-+/**
-  * ufshcd_make_hba_operational - Make UFS controller operational
-  * @hba: per adapter instance
-  *
-@@ -1755,8 +1819,14 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	int ret;
- 
- 	ret = ufshcd_link_startup(hba);
--	if (!ret)
--		scsi_scan_host(hba->host);
-+	if (ret)
-+		goto out;
-+
-+	ufshcd_config_max_pwr_mode(hba);
-+
-+	scsi_scan_host(hba->host);
-+out:
-+	return;
- }
- 
- static struct scsi_host_template ufshcd_driver_template = {
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 3a710eb..0bb8041 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -72,6 +72,21 @@
- #define PA_STALLNOCONFIGTIME	0x15A3
- #define PA_SAVECONFIGTIME	0x15A4
- 
-+/* PA power modes */
-+enum {
-+	FAST_MODE	= 1,
-+	SLOW_MODE	= 2,
-+	FASTAUTO_MODE	= 4,
-+	SLOWAUTO_MODE	= 5,
-+	UNCHANGED	= 7,
-+};
-+
-+/* PA TX/RX Frequency Series */
-+enum {
-+	PA_HS_MODE_A	= 1,
-+	PA_HS_MODE_B	= 2,
-+};
-+
- /*
-  * Data Link Layer Attributes
-  */
-@@ -127,4 +142,10 @@
- #define T_TC0TXMAXSDUSIZE	0x4060
- #define T_TC1TXMAXSDUSIZE	0x4061
- 
-+/* Boolean attribute values */
-+enum {
-+	FALSE = 0,
-+	TRUE,
-+};
-+
- #endif /* _UNIPRO_H_ */
--- 
-1.7.0.4
+spc4r36h.pdf Annex F.3.1 and changed in spc4r34. Yes, well
+hidden but IMO useful. So now we can use the term "Third party
+copy" to cover:
+   - EXTENDED COPY(LID1) and associated commands
+     also found in SPC-2 and SPC-3 (with the "LID1" suffix)
+   - EXTENDED COPY(LID4) and associated commands
+   - the XCOPY LITE commands: POPULATE TOKEN and WRITE USING TOKEN
 
+> Doug> Confused? I certainly was.
+>
+> Yeah, this is UNMAP all over again, just 100 times worse :(
 
+Well what EXTENDED COPY (offload copy) is trying to do
+ain't simple but obviously there could be a substantial
+performance pay-off.
+
+There is a "Third-party copy implementation and usage" Annex
+(D) in spc4r36h.pdf . It could do with some more explanatory
+text.
+
+> Anyway. Excited to see nab posting the patches! My copy offload code
+> from the spring has been getting stale both in the T10 and the kernel
+> sense. But at least we know what I'll be working on next week :)
+
+BTW I have ported the sg_xcopy "LID1" xcopy logic into
+my ddpt utility. That gives two advantages:
+   - can cope with ibs!=obs
+   - runs on OSes other than Linux
+
+Doug Gilbert
