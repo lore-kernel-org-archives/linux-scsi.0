@@ -1,62 +1,62 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/9] scsi: ufs: Add support for sending NOP OUT UPIU
-Date: Fri, 23 Aug 2013 14:17:10 -0400
-Message-ID: <1377281830.4147.61.camel@dabdike>
-References: <1375124765-4110-1-git-send-email-santoshsy@gmail.com>
-	 <1375124765-4110-2-git-send-email-santoshsy@gmail.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [RFC PATCH] scsi: Add failfast mode to avoid infinite retry
+ loop
+Date: Fri, 23 Aug 2013 15:36:55 -0400
+Message-ID: <1377286615.3872.25.camel@localhost.localdomain>
+References: <20130819093925.7867.19221.stgit@ltc223.sdl.hitachi.co.jp>
+	 <1376922616.2069.9.camel@dabdike.int.hansenpartnership.com>
+	 <5213172E.1060905@hitachi.com>
+	 <1377022167.3872.13.camel@localhost.localdomain>
+	 <52172721.1040203@hitachi.com>  <1377263977.2095.1.camel@dabdike>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51224 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755794Ab3HWTcx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Aug 2013 15:32:53 -0400
-In-Reply-To: <1375124765-4110-2-git-send-email-santoshsy@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1377263977.2095.1.camel@dabdike>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Santosh Y <santoshsy@gmail.com>
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 
-
-On Tue, 2013-07-30 at 00:35 +0530, Santosh Y wrote:
-> From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+On Fri, 2013-08-23 at 06:19 -0700, James Bottomley wrote:
+> On Fri, 2013-08-23 at 18:10 +0900, Eiichi Tsukata wrote:
+> > Yes, basically the device should be offlined on error detection.
+> > Just offlining the disk is enough when an error occurs on "not" os-installed
+> > system disk. Panic is going too far on such case.
+> > 
+> > However, in a clustered environment where computers use each its own
+> > disk and
+> > do not share the same disk, calling panic() will be suitable when an
+> > error
+> > occurs in system disk.
 > 
-> As part of device initialization sequence, sending NOP OUT UPIU and
-> waiting for NOP IN UPIU response is mandatory. This confirms that the
-> device UFS Transport (UTP) layer is functional and the host can configure
-> the device with further commands. Add support for sending NOP OUT UPIU to
-> check the device connection path and test whether the UTP layer on the
-> device side is functional during initialization.
+> However, when not in a clustered environment, it won't be.  Decisions
+> about whether to panic the system or not are user space policy, and
+> should not be embedded into subsystems.  What we need to do is to come
+> up with a way of detecting the condition, reporting it and possibly
+> taking some action.
 > 
-> A tag is acquired from the SCSI tag map space in order to send the device
-> management command. When the tag is acquired by internal command the scsi
-> command is rejected with host busy flag in order to requeue the request.
-> To avoid frequent collisions between internal commands and scsi commands
-> the device management command tag is allocated in the opposite direction
-> w.r.t block layer tag allocation.
+> >  Because even on such disk error, cluster monitoring
+> > tool may not be able to detect the system failure while heartbeat can
+> > continue
+> > working.
+> > So, I think basically offlining is enough and also, panic is necessary
+> > on some cases.
+
+The way I have seen this done in such a clustered environment is to have
+the heartbeat agent on each system periodically attempt to access the
+disk.  If that I/O hangs, other systems will see loss of heartbeat.
+You really don't want to panic the kernel.  Among other things, it may
+make it difficult to get the system up again later for long enough to
+figure out what is wrong.
+
 > 
-> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> Signed-off-by: Santosh Y <santoshsy@gmail.com>
-
-This signoff chain looks wrong to me.  The patch has quite a long
-history.  Originally, it was sent in by Sujit, then later resent by
-Dolev with his signoff, then Sujit did a V2 which incorrectly seemed to
-include Dolev's signoff (that's not correct: signoffs should follow the
-chain of transmission, so a new patch wouldn't have a previous
-transmission signoff).  Then we got a V3 which was tested by Maya Erez,
-and finally a v4 which looks to have no testers.  In your last
-submission, you picked up this signoff, so I've changed it to a
-reviewed-by which seems to be the most appropriate (although I'm not
-entirely sure Dolev did review the v4 patch).
-
-If this is wrong and Dolev did rewrite the patch (so is one of the
-authors, which would explain the signoff chain) let me know and I'll
-edit it in the tree (rebasing is acceptable to get the correct history).
-
-James
-
-
-
+> Offline seems a bit drastic ... what happens if you send it a target
+> reset?
+> 
+> James
+> 
+> 
+> 
+> 
