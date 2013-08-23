@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 8/9] target: Add Third Party Copy (3PC) bit in INQUIRY response
-Date: Fri, 23 Aug 2013 02:27:00 +0000
-Message-ID: <1377224821-23422-9-git-send-email-nab@daterainc.com>
+Subject: [PATCH 4/9] target: Add global device list for EXTENDED_COPY
+Date: Fri, 23 Aug 2013 02:26:56 +0000
+Message-ID: <1377224821-23422-5-git-send-email-nab@daterainc.com>
 References: <1377224821-23422-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1377224821-23422-1-git-send-email-nab@daterainc.com>
@@ -12,11 +12,9 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@daterainc.com>
 
-This patch adds the Third Party Copy (3PC) bit to signal support
-for EXTENDED_COPY within standard inquiry response data.
-
-Also add emulate_3pc device attribute in configfs (enabled by default)
-to allow the exposure of this bit to be disabled, if necessary.
+EXTENDED_COPY needs to be able to search a global list of devices
+based on NAA WWN device identifiers, so add a simple g_device_list
+protected by g_device_mutex.
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
@@ -28,116 +26,66 @@ Cc: James Bottomley <JBottomley@Parallels.com>
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
 ---
- drivers/target/target_core_configfs.c |    4 ++++
- drivers/target/target_core_device.c   |   14 ++++++++++++++
- drivers/target/target_core_internal.h |    1 +
- drivers/target/target_core_spc.c      |    6 ++++++
- include/target/target_core_base.h     |    3 +++
- 5 files changed, 28 insertions(+), 0 deletions(-)
+ drivers/target/target_core_device.c |   13 +++++++++++++
+ include/target/target_core_base.h   |    1 +
+ 2 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 939ecc5..026e42b 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -639,6 +639,9 @@ SE_DEV_ATTR(emulate_tpws, S_IRUGO | S_IWUSR);
- DEF_DEV_ATTRIB(emulate_caw);
- SE_DEV_ATTR(emulate_caw, S_IRUGO | S_IWUSR);
- 
-+DEF_DEV_ATTRIB(emulate_3pc);
-+SE_DEV_ATTR(emulate_3pc, S_IRUGO | S_IWUSR);
-+
- DEF_DEV_ATTRIB(enforce_pr_isids);
- SE_DEV_ATTR(enforce_pr_isids, S_IRUGO | S_IWUSR);
- 
-@@ -697,6 +700,7 @@ static struct configfs_attribute *target_core_dev_attrib_attrs[] = {
- 	&target_core_dev_attrib_emulate_tpu.attr,
- 	&target_core_dev_attrib_emulate_tpws.attr,
- 	&target_core_dev_attrib_emulate_caw.attr,
-+	&target_core_dev_attrib_emulate_3pc.attr,
- 	&target_core_dev_attrib_enforce_pr_isids.attr,
- 	&target_core_dev_attrib_is_nonrot.attr,
- 	&target_core_dev_attrib_emulate_rest_reord.attr,
 diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 458944e..6f492c7 100644
+index de89046..458944e 100644
 --- a/drivers/target/target_core_device.c
 +++ b/drivers/target/target_core_device.c
-@@ -906,6 +906,19 @@ int se_dev_set_emulate_caw(struct se_device *dev, int flag)
+@@ -47,6 +47,9 @@
+ #include "target_core_pr.h"
+ #include "target_core_ua.h"
+ 
++DEFINE_MUTEX(g_device_mutex);
++LIST_HEAD(g_device_list);
++
+ static struct se_hba *lun0_hba;
+ /* not static, needed by tpg.c */
+ struct se_device *g_lun0_dev;
+@@ -1406,6 +1409,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+ 	INIT_LIST_HEAD(&dev->delayed_cmd_list);
+ 	INIT_LIST_HEAD(&dev->state_list);
+ 	INIT_LIST_HEAD(&dev->qf_cmd_list);
++	INIT_LIST_HEAD(&dev->g_dev_node);
+ 	spin_lock_init(&dev->stats_lock);
+ 	spin_lock_init(&dev->execute_task_lock);
+ 	spin_lock_init(&dev->delayed_cmd_lock);
+@@ -1525,6 +1529,11 @@ int target_configure_device(struct se_device *dev)
+ 	spin_lock(&hba->device_lock);
+ 	hba->dev_count++;
+ 	spin_unlock(&hba->device_lock);
++
++	mutex_lock(&g_device_mutex);
++	list_add_tail(&dev->g_dev_node, &g_device_list);
++	mutex_unlock(&g_device_mutex);
++
  	return 0;
- }
  
-+int se_dev_set_emulate_3pc(struct se_device *dev, int flag)
-+{
-+	if (flag != 0 && flag != 1) {
-+		pr_err("Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+	dev->dev_attrib.emulate_3pc = flag;
-+	pr_debug("dev[%p]: SE Device 3rd Party Copy (EXTENDED_COPY): %d\n",
-+		dev, flag);
-+
-+	return 0;
-+}
-+
- int se_dev_set_enforce_pr_isids(struct se_device *dev, int flag)
- {
- 	if ((flag != 0) && (flag != 1)) {
-@@ -1442,6 +1455,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
- 	dev->dev_attrib.emulate_tpu = DA_EMULATE_TPU;
- 	dev->dev_attrib.emulate_tpws = DA_EMULATE_TPWS;
- 	dev->dev_attrib.emulate_caw = DA_EMULATE_CAW;
-+	dev->dev_attrib.emulate_3pc = DA_EMULATE_3PC;
- 	dev->dev_attrib.enforce_pr_isids = DA_ENFORCE_PR_ISIDS;
- 	dev->dev_attrib.is_nonrot = DA_IS_NONROT;
- 	dev->dev_attrib.emulate_rest_reord = DA_EMULATE_REST_REORD;
-diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-index 805ceb4..579128a 100644
---- a/drivers/target/target_core_internal.h
-+++ b/drivers/target/target_core_internal.h
-@@ -34,6 +34,7 @@ int	se_dev_set_emulate_tas(struct se_device *, int);
- int	se_dev_set_emulate_tpu(struct se_device *, int);
- int	se_dev_set_emulate_tpws(struct se_device *, int);
- int	se_dev_set_emulate_caw(struct se_device *, int);
-+int	se_dev_set_emulate_3pc(struct se_device *, int);
- int	se_dev_set_enforce_pr_isids(struct se_device *, int);
- int	se_dev_set_is_nonrot(struct se_device *, int);
- int	se_dev_set_emulate_rest_reord(struct se_device *dev, int);
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 894e83b..566dd27 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -95,6 +95,12 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
- 	 */
- 	spc_fill_alua_data(lun->lun_sep, buf);
+ out_free_alua:
+@@ -1543,6 +1552,10 @@ void target_free_device(struct se_device *dev)
+ 	if (dev->dev_flags & DF_CONFIGURED) {
+ 		destroy_workqueue(dev->tmr_wq);
  
-+	/*
-+	 * Set Third-Party Copy (3PC) bit to indicate support for EXTENDED_COPY
-+	 */
-+	if (dev->dev_attrib.emulate_3pc)
-+		buf[5] |= 0x8;
++		mutex_lock(&g_device_mutex);
++		list_del(&dev->g_dev_node);
++		mutex_unlock(&g_device_mutex);
 +
- 	buf[7] = 0x2; /* CmdQue=1 */
- 
- 	snprintf(&buf[8], 8, "LIO-ORG");
+ 		spin_lock(&hba->device_lock);
+ 		hba->dev_count--;
+ 		spin_unlock(&hba->device_lock);
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index f54a015..ba9ca79 100644
+index 0783b2c..6b14f3c 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -99,6 +99,8 @@
- #define DA_EMULATE_TPWS				0
- /* Emulation for CompareAndWrite (AtomicTestandSet) by default */
- #define DA_EMULATE_CAW				1
-+/* Emulation for 3rd Party Copy (ExtendedCopy) by default */
-+#define DA_EMULATE_3PC				1
- /* No Emulation for PSCSI by default */
- #define DA_EMULATE_ALUA				0
- /* Enforce SCSI Initiator Port TransportID with 'ISID' for PR */
-@@ -606,6 +608,7 @@ struct se_dev_attrib {
- 	int		emulate_tpu;
- 	int		emulate_tpws;
- 	int		emulate_caw;
-+	int		emulate_3pc;
- 	int		enforce_pr_isids;
- 	int		is_nonrot;
- 	int		emulate_rest_reord;
+@@ -686,6 +686,7 @@ struct se_device {
+ 	struct list_head	delayed_cmd_list;
+ 	struct list_head	state_list;
+ 	struct list_head	qf_cmd_list;
++	struct list_head	g_dev_node;
+ 	/* Pointer to associated SE HBA */
+ 	struct se_hba		*se_hba;
+ 	/* T10 Inquiry and VPD WWN Information */
 -- 
 1.7.2.5
