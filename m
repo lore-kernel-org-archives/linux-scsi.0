@@ -1,13 +1,13 @@
 From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH v4 06/10] SCSI: esas2r: Add flash and target database functions
-Date: Fri, 23 Aug 2013 10:35:50 -0400
-Message-ID: <1377268554-25898-7-git-send-email-bgrove@attotech.com>
+Subject: [PATCH v4 07/10] SCSI: esas2r: Add IOCTL header file
+Date: Fri, 23 Aug 2013 10:35:51 -0400
+Message-ID: <1377268554-25898-8-git-send-email-bgrove@attotech.com>
 References: <1377268554-25898-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:40939 "EHLO
+Received: from sw.attotech.com ([208.69.85.34]:62554 "EHLO
 	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755170Ab3HWOgM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Aug 2013 10:36:12 -0400
+	with ESMTP id S1755464Ab3HWOgN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Aug 2013 10:36:13 -0400
 In-Reply-To: <1377268554-25898-1-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,1842 +17,1270 @@ Cc: jseba@attotech.com, Bradley Grove <bgrove@attotech.com>
 
 Signed-off-by: Bradley Grove <bgrove@attotech.com>
 ---
- drivers/scsi/esas2r/esas2r_flash.c  | 1514 +++++++++++++++++++++++++++++++++++
- drivers/scsi/esas2r/esas2r_targdb.c |  306 +++++++
- 2 files changed, 1820 insertions(+)
- create mode 100644 drivers/scsi/esas2r/esas2r_flash.c
- create mode 100644 drivers/scsi/esas2r/esas2r_targdb.c
+ drivers/scsi/esas2r/atioctl.h | 1254 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 1254 insertions(+)
+ create mode 100644 drivers/scsi/esas2r/atioctl.h
 
-diff --git a/drivers/scsi/esas2r/esas2r_flash.c b/drivers/scsi/esas2r/esas2r_flash.c
+diff --git a/drivers/scsi/esas2r/atioctl.h b/drivers/scsi/esas2r/atioctl.h
 new file mode 100644
-index 0000000..a02fb62
+index 0000000..4aca3d5
 --- /dev/null
-+++ b/drivers/scsi/esas2r/esas2r_flash.c
-@@ -0,0 +1,1512 @@
-+
-+/*
-+ *  linux/drivers/scsi/esas2r/esas2r_flash.c
-+ *      For use with ATTO ExpressSAS R6xx SAS/SATA RAID controllers
++++ b/drivers/scsi/esas2r/atioctl.h
+@@ -0,0 +1,1254 @@
++/*  linux/drivers/scsi/esas2r/atioctl.h
++ *      ATTO IOCTL Handling
 + *
 + *  Copyright (c) 2001-2013 ATTO Technology, Inc.
 + *  (mailto:linuxdrivers@attotech.com)
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * NO WARRANTY
-+ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
-+ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
-+ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
-+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
-+ * solely responsible for determining the appropriateness of using and
-+ * distributing the Program and assumes all risks associated with its
-+ * exercise of rights under this Agreement, including but not limited to
-+ * the risks and costs of program errors, damage to or loss of data,
-+ * programs or equipment, and unavailability or interruption of operations.
-+ *
-+ * DISCLAIMER OF LIABILITY
-+ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
-+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
-+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-+ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
-+ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-+ * USA.
 + */
++/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
++/*
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; version 2 of the License.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  NO WARRANTY
++ *  THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
++ *  CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
++ *  LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
++ *  MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
++ *  solely responsible for determining the appropriateness of using and
++ *  distributing the Program and assumes all risks associated with its
++ *  exercise of rights under this Agreement, including but not limited to
++ *  the risks and costs of program errors, damage to or loss of data,
++ *  programs or equipment, and unavailability or interruption of operations.
++ *
++ *  DISCLAIMER OF LIABILITY
++ *  NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
++ *  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ *  DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
++ *  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
++ *  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
++ *  USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
++ *  HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, write to the Free Software
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
 +
-+#include "esas2r.h"
++#include "atvda.h"
 +
-+/* local macro defs */
-+#define esas2r_nvramcalc_cksum(n)     \
-+	(esas2r_calc_byte_cksum((u8 *)(n), sizeof(struct esas2r_sas_nvram), \
-+				SASNVR_CKSUM_SEED))
-+#define esas2r_nvramcalc_xor_cksum(n)  \
-+	(esas2r_calc_byte_xor_cksum((u8 *)(n), \
-+				    sizeof(struct esas2r_sas_nvram), 0))
++#ifndef ATIOCTL_H
++#define ATIOCTL_H
 +
-+#define ESAS2R_FS_DRVR_VER 2
++#define EXPRESS_IOCTL_SIGNATURE        "Express"
++#define EXPRESS_IOCTL_SIGNATURE_SIZE   8
 +
-+static struct esas2r_sas_nvram default_sas_nvram = {
-+	{ 'E',	'S',  'A',  'S'			     }, /* signature          */
-+	SASNVR_VERSION,                                 /* version            */
-+	0,                                              /* checksum           */
-+	31,                                             /* max_lun_for_target */
-+	SASNVR_PCILAT_MAX,                              /* pci_latency        */
-+	SASNVR1_BOOT_DRVR,                              /* options1           */
-+	SASNVR2_HEARTBEAT   | SASNVR2_SINGLE_BUS        /* options2           */
-+	| SASNVR2_SW_MUX_CTRL,
-+	SASNVR_COAL_DIS,                                /* int_coalescing     */
-+	SASNVR_CMDTHR_NONE,                             /* cmd_throttle       */
-+	3,                                              /* dev_wait_time      */
-+	1,                                              /* dev_wait_count     */
-+	0,                                              /* spin_up_delay      */
-+	0,                                              /* ssp_align_rate     */
-+	{ 0x50, 0x01, 0x08, 0x60,                       /* sas_addr           */
-+	  0x00, 0x00, 0x00, 0x00 },
-+	{ SASNVR_SPEED_AUTO },                          /* phy_speed          */
-+	{ SASNVR_MUX_DISABLED },                        /* SAS multiplexing   */
-+	{ 0 },                                          /* phy_flags          */
-+	SASNVR_SORT_SAS_ADDR,                           /* sort_type          */
-+	3,                                              /* dpm_reqcmd_lmt     */
-+	3,                                              /* dpm_stndby_time    */
-+	0,                                              /* dpm_active_time    */
-+	{ 0 },                                          /* phy_target_id      */
-+	SASNVR_VSMH_DISABLED,                           /* virt_ses_mode      */
-+	SASNVR_RWM_DEFAULT,                             /* read_write_mode    */
-+	0,                                              /* link down timeout  */
-+	{ 0 }                                           /* reserved           */
++/* structure definitions for IOCTls */
++
++struct __packed atto_express_ioctl_header {
++	u8 signature[EXPRESS_IOCTL_SIGNATURE_SIZE];
++	u8 return_code;
++
++#define IOCTL_SUCCESS               0
++#define IOCTL_ERR_INVCMD          101
++#define IOCTL_INIT_FAILED         102
++#define IOCTL_NOT_IMPLEMENTED     103
++#define IOCTL_BAD_CHANNEL         104
++#define IOCTL_TARGET_OVERRUN      105
++#define IOCTL_TARGET_NOT_ENABLED  106
++#define IOCTL_BAD_FLASH_IMGTYPE   107
++#define IOCTL_OUT_OF_RESOURCES    108
++#define IOCTL_GENERAL_ERROR       109
++#define IOCTL_INVALID_PARAM       110
++
++	u8 channel;
++	u8 retries;
++	u8 pad[5];
 +};
 +
-+static u8 cmd_to_fls_func[] = {
-+	0xFF,
-+	VDA_FLASH_READ,
-+	VDA_FLASH_BEGINW,
-+	VDA_FLASH_WRITE,
-+	VDA_FLASH_COMMIT,
-+	VDA_FLASH_CANCEL
++/*
++ * NOTE - if channel == 0xFF, the request is
++ * handled on the adapter it came in on.
++ */
++#define MAX_NODE_NAMES  256
++
++struct __packed atto_firmware_rw_request {
++	u8 function;
++	#define FUNC_FW_DOWNLOAD        0x09
++	#define FUNC_FW_UPLOAD          0x12
++
++	u8 img_type;
++	#define FW_IMG_FW               0x01
++	#define FW_IMG_BIOS             0x02
++	#define FW_IMG_NVR              0x03
++	#define FW_IMG_RAW              0x04
++	#define FW_IMG_FM_API           0x05
++	#define FW_IMG_FS_API           0x06
++
++	u8 pad[2];
++	u32 img_offset;
++	u32 img_size;
++	u8 image[0x80000];
 +};
 +
-+static u8 esas2r_calc_byte_xor_cksum(u8 *addr, u32 len, u8 seed)
-+{
-+	u32 cksum = seed;
-+	u8 *p = (u8 *)&cksum;
++struct __packed atto_param_rw_request {
++	u16 code;
++	char data_buffer[512];
++};
 +
-+	while (len) {
-+		if (((uintptr_t)addr & 3) == 0)
-+			break;
++#define MAX_CHANNEL 256
 +
-+		cksum = cksum ^ *addr;
-+		addr++;
-+		len--;
-+	}
-+	while (len >= sizeof(u32)) {
-+		cksum = cksum ^ *(u32 *)addr;
-+		addr += 4;
-+		len -= 4;
-+	}
-+	while (len--) {
-+		cksum = cksum ^ *addr;
-+		addr++;
-+	}
-+	return p[0] ^ p[1] ^ p[2] ^ p[3];
-+}
++struct __packed atto_channel_list {
++	u32 num_channels;
++	u8 channel[MAX_CHANNEL];
++};
 +
-+static u8 esas2r_calc_byte_cksum(void *addr, u32 len, u8 seed)
-+{
-+	u8 *p = (u8 *)addr;
-+	u8 cksum = seed;
-+
-+	while (len--)
-+		cksum = cksum + p[len];
-+	return cksum;
-+}
-+
-+/* Interrupt callback to process FM API write requests. */
-+static void esas2r_fmapi_callback(struct esas2r_adapter *a,
-+				  struct esas2r_request *rq)
-+{
-+	struct atto_vda_flash_req *vrq = &rq->vrq->flash;
-+	struct esas2r_flash_context *fc =
-+		(struct esas2r_flash_context *)rq->interrupt_cx;
-+
-+	if (rq->req_stat == RS_SUCCESS) {
-+		/* Last request was successful.  See what to do now. */
-+		switch (vrq->sub_func) {
-+		case VDA_FLASH_BEGINW:
-+			if (fc->sgc.cur_offset == NULL)
-+				goto commit;
-+
-+			vrq->sub_func = VDA_FLASH_WRITE;
-+			rq->req_stat = RS_PENDING;
-+			break;
-+
-+		case VDA_FLASH_WRITE:
-+commit:
-+			vrq->sub_func = VDA_FLASH_COMMIT;
-+			rq->req_stat = RS_PENDING;
-+			rq->interrupt_cb = fc->interrupt_cb;
-+			break;
-+
-+		default:
-+			break;
-+		}
-+	}
-+
-+	if (rq->req_stat != RS_PENDING)
-+		/*
-+		 * All done. call the real callback to complete the FM API
-+		 * request.  We should only get here if a BEGINW or WRITE
-+		 * operation failed.
-+		 */
-+		(*fc->interrupt_cb)(a, rq);
-+}
++struct __packed atto_channel_info {
++	u8 major_rev;
++	u8 minor_rev;
++	u8 IRQ;
++	u8 revision_id;
++	u8 pci_bus;
++	u8 pci_dev_func;
++	u8 core_rev;
++	u8 host_no;
++	u16 device_id;
++	u16 vendor_id;
++	u16 ven_dev_id;
++	u8 pad[3];
++	u32 hbaapi_rev;
++};
 +
 +/*
-+ * Build a flash request based on the flash context.  The request status
-+ * is filled in on an error.
++ * CSMI control codes
++ * class independent
 + */
-+static void build_flash_msg(struct esas2r_adapter *a,
-+			    struct esas2r_request *rq)
-+{
-+	struct esas2r_flash_context *fc =
-+		(struct esas2r_flash_context *)rq->interrupt_cx;
-+	struct esas2r_sg_context *sgc = &fc->sgc;
-+	u8 cksum = 0;
-+
-+	/* calculate the checksum */
-+	if (fc->func == VDA_FLASH_BEGINW) {
-+		if (sgc->cur_offset)
-+			cksum = esas2r_calc_byte_xor_cksum(sgc->cur_offset,
-+							   sgc->length,
-+							   0);
-+		rq->interrupt_cb = esas2r_fmapi_callback;
-+	} else {
-+		rq->interrupt_cb = fc->interrupt_cb;
-+	}
-+	esas2r_build_flash_req(a,
-+			       rq,
-+			       fc->func,
-+			       cksum,
-+			       fc->flsh_addr,
-+			       sgc->length);
-+
-+	esas2r_rq_free_sg_lists(rq, a);
-+
-+	/*
-+	 * remember the length we asked for.  we have to keep track of
-+	 * the current amount done so we know how much to compare when
-+	 * doing the verification phase.
-+	 */
-+	fc->curr_len = fc->sgc.length;
-+
-+	if (sgc->cur_offset) {
-+		/* setup the S/G context to build the S/G table  */
-+		esas2r_sgc_init(sgc, a, rq, &rq->vrq->flash.data.sge[0]);
-+
-+		if (!esas2r_build_sg_list(a, rq, sgc)) {
-+			rq->req_stat = RS_BUSY;
-+			return;
-+		}
-+	} else {
-+		fc->sgc.length = 0;
-+	}
-+
-+	/* update the flsh_addr to the next one to write to  */
-+	fc->flsh_addr += fc->curr_len;
-+}
-+
-+/* determine the method to process the flash request */
-+static bool load_image(struct esas2r_adapter *a, struct esas2r_request *rq)
-+{
-+	/*
-+	 * assume we have more to do.  if we return with the status set to
-+	 * RS_PENDING, FM API tasks will continue.
-+	 */
-+	rq->req_stat = RS_PENDING;
-+	if (a->flags & AF_DEGRADED_MODE)
-+		/* not suppported for now */;
-+	else
-+		build_flash_msg(a, rq);
-+
-+	return rq->req_stat == RS_PENDING;
-+}
-+
-+/*  boot image fixer uppers called before downloading the image. */
-+static void fix_bios(struct esas2r_adapter *a, struct esas2r_flash_img *fi)
-+{
-+	struct esas2r_component_header *ch = &fi->cmp_hdr[CH_IT_BIOS];
-+	struct esas2r_pc_image *pi;
-+	struct esas2r_boot_header *bh;
-+
-+	pi = (struct esas2r_pc_image *)((u8 *)fi + ch->image_offset);
-+	bh =
-+		(struct esas2r_boot_header *)((u8 *)pi +
-+					      le16_to_cpu(pi->header_offset));
-+	bh->device_id = cpu_to_le16(a->pcid->device);
-+
-+	/* Recalculate the checksum in the PNP header if there  */
-+	if (pi->pnp_offset) {
-+		u8 *pnp_header_bytes =
-+			((u8 *)pi + le16_to_cpu(pi->pnp_offset));
-+
-+		/* Identifier - dword that starts at byte 10 */
-+		*((u32 *)&pnp_header_bytes[10]) =
-+			cpu_to_le32(MAKEDWORD(a->pcid->subsystem_vendor,
-+					      a->pcid->subsystem_device));
-+
-+		/* Checksum - byte 9 */
-+		pnp_header_bytes[9] -= esas2r_calc_byte_cksum(pnp_header_bytes,
-+							      32, 0);
-+	}
-+
-+	/* Recalculate the checksum needed by the PC */
-+	pi->checksum = pi->checksum -
-+		       esas2r_calc_byte_cksum((u8 *)pi, ch->length, 0);
-+}
-+
-+static void fix_efi(struct esas2r_adapter *a, struct esas2r_flash_img *fi)
-+{
-+	struct esas2r_component_header *ch = &fi->cmp_hdr[CH_IT_EFI];
-+	u32 len = ch->length;
-+	u32 offset = ch->image_offset;
-+	struct esas2r_efi_image *ei;
-+	struct esas2r_boot_header *bh;
-+
-+	while (len) {
-+		u32 thislen;
-+
-+		ei = (struct esas2r_efi_image *)((u8 *)fi + offset);
-+		bh = (struct esas2r_boot_header *)((u8 *)ei +
-+						   le16_to_cpu(
-+							   ei->header_offset));
-+		bh->device_id = cpu_to_le16(a->pcid->device);
-+		thislen = (u32)le16_to_cpu(bh->image_length) * 512;
-+
-+		if (thislen > len)
-+			break;
-+
-+		len -= thislen;
-+		offset += thislen;
-+	}
-+}
-+
-+/* Complete a FM API request with the specified status. */
-+static bool complete_fmapi_req(struct esas2r_adapter *a,
-+			       struct esas2r_request *rq, u8 fi_stat)
-+{
-+	struct esas2r_flash_context *fc =
-+		(struct esas2r_flash_context *)rq->interrupt_cx;
-+	struct esas2r_flash_img *fi = fc->fi;
-+
-+	fi->status = fi_stat;
-+	fi->driver_error = rq->req_stat;
-+	rq->interrupt_cb = NULL;
-+	rq->req_stat = RS_SUCCESS;
-+
-+	if (fi_stat != FI_STAT_IMG_VER)
-+		memset(fc->scratch, 0, FM_BUF_SZ);
-+
-+	esas2r_enable_heartbeat(a);
-+	esas2r_lock_clear_flags(&a->flags, AF_FLASH_LOCK);
-+	return false;
-+}
-+
-+/* Process each phase of the flash download process. */
-+static void fw_download_proc(struct esas2r_adapter *a,
-+			     struct esas2r_request *rq)
-+{
-+	struct esas2r_flash_context *fc =
-+		(struct esas2r_flash_context *)rq->interrupt_cx;
-+	struct esas2r_flash_img *fi = fc->fi;
-+	struct esas2r_component_header *ch;
-+	u32 len;
-+	u8 *p, *q;
-+
-+	/* If the previous operation failed, just return. */
-+	if (rq->req_stat != RS_SUCCESS)
-+		goto error;
-+
-+	/*
-+	 * If an upload just completed and the compare length is non-zero,
-+	 * then we just read back part of the image we just wrote.  verify the
-+	 * section and continue reading until the entire image is verified.
-+	 */
-+	if (fc->func == VDA_FLASH_READ
-+	    && fc->cmp_len) {
-+		ch = &fi->cmp_hdr[fc->comp_typ];
-+
-+		p = fc->scratch;
-+		q = (u8 *)fi                    /* start of the whole gob     */
-+		    + ch->image_offset          /* start of the current image */
-+		    + ch->length                /* end of the current image   */
-+		    - fc->cmp_len;              /* where we are now           */
-+
-+		/*
-+		 * NOTE - curr_len is the exact count of bytes for the read
-+		 *        even when the end is read and its not a full buffer
-+		 */
-+		for (len = fc->curr_len; len; len--)
-+			if (*p++ != *q++)
-+				goto error;
-+
-+		fc->cmp_len -= fc->curr_len; /* # left to compare    */
-+
-+		/* Update fc and determine the length for the next upload */
-+		if (fc->cmp_len > FM_BUF_SZ)
-+			fc->sgc.length = FM_BUF_SZ;
-+		else
-+			fc->sgc.length = fc->cmp_len;
-+
-+		fc->sgc.cur_offset = fc->sgc_offset +
-+				     ((u8 *)fc->scratch - (u8 *)fi);
-+	}
-+
-+	/*
-+	 * This code uses a 'while' statement since the next component may
-+	 * have a length = zero.  This can happen since some components are
-+	 * not required.  At the end of this 'while' we set up the length
-+	 * for the next request and therefore sgc.length can be = 0.
-+	 */
-+	while (fc->sgc.length == 0) {
-+		ch = &fi->cmp_hdr[fc->comp_typ];
-+
-+		switch (fc->task) {
-+		case FMTSK_ERASE_BOOT:
-+			/* the BIOS image is written next */
-+			ch = &fi->cmp_hdr[CH_IT_BIOS];
-+			if (ch->length == 0)
-+				goto no_bios;
-+
-+			fc->task = FMTSK_WRTBIOS;
-+			fc->func = VDA_FLASH_BEGINW;
-+			fc->comp_typ = CH_IT_BIOS;
-+			fc->flsh_addr = FLS_OFFSET_BOOT;
-+			fc->sgc.length = ch->length;
-+			fc->sgc.cur_offset = fc->sgc_offset +
-+					     ch->image_offset;
-+			break;
-+
-+		case FMTSK_WRTBIOS:
-+			/*
-+			 * The BIOS image has been written - read it and
-+			 * verify it
-+			 */
-+			fc->task = FMTSK_READBIOS;
-+			fc->func = VDA_FLASH_READ;
-+			fc->flsh_addr = FLS_OFFSET_BOOT;
-+			fc->cmp_len = ch->length;
-+			fc->sgc.length = FM_BUF_SZ;
-+			fc->sgc.cur_offset = fc->sgc_offset
-+					     + ((u8 *)fc->scratch -
-+						(u8 *)fi);
-+			break;
-+
-+		case FMTSK_READBIOS:
-+no_bios:
-+			/*
-+			 * Mark the component header status for the image
-+			 * completed
-+			 */
-+			ch->status = CH_STAT_SUCCESS;
-+
-+			/* The MAC image is written next */
-+			ch = &fi->cmp_hdr[CH_IT_MAC];
-+			if (ch->length == 0)
-+				goto no_mac;
-+
-+			fc->task = FMTSK_WRTMAC;
-+			fc->func = VDA_FLASH_BEGINW;
-+			fc->comp_typ = CH_IT_MAC;
-+			fc->flsh_addr = FLS_OFFSET_BOOT
-+					+ fi->cmp_hdr[CH_IT_BIOS].length;
-+			fc->sgc.length = ch->length;
-+			fc->sgc.cur_offset = fc->sgc_offset +
-+					     ch->image_offset;
-+			break;
-+
-+		case FMTSK_WRTMAC:
-+			/* The MAC image has been written - read and verify */
-+			fc->task = FMTSK_READMAC;
-+			fc->func = VDA_FLASH_READ;
-+			fc->flsh_addr -= ch->length;
-+			fc->cmp_len = ch->length;
-+			fc->sgc.length = FM_BUF_SZ;
-+			fc->sgc.cur_offset = fc->sgc_offset
-+					     + ((u8 *)fc->scratch -
-+						(u8 *)fi);
-+			break;
-+
-+		case FMTSK_READMAC:
-+no_mac:
-+			/*
-+			 * Mark the component header status for the image
-+			 * completed
-+			 */
-+			ch->status = CH_STAT_SUCCESS;
-+
-+			/* The EFI image is written next */
-+			ch = &fi->cmp_hdr[CH_IT_EFI];
-+			if (ch->length == 0)
-+				goto no_efi;
-+
-+			fc->task = FMTSK_WRTEFI;
-+			fc->func = VDA_FLASH_BEGINW;
-+			fc->comp_typ = CH_IT_EFI;
-+			fc->flsh_addr = FLS_OFFSET_BOOT
-+					+ fi->cmp_hdr[CH_IT_BIOS].length
-+					+ fi->cmp_hdr[CH_IT_MAC].length;
-+			fc->sgc.length = ch->length;
-+			fc->sgc.cur_offset = fc->sgc_offset +
-+					     ch->image_offset;
-+			break;
-+
-+		case FMTSK_WRTEFI:
-+			/* The EFI image has been written - read and verify */
-+			fc->task = FMTSK_READEFI;
-+			fc->func = VDA_FLASH_READ;
-+			fc->flsh_addr -= ch->length;
-+			fc->cmp_len = ch->length;
-+			fc->sgc.length = FM_BUF_SZ;
-+			fc->sgc.cur_offset = fc->sgc_offset
-+					     + ((u8 *)fc->scratch -
-+						(u8 *)fi);
-+			break;
-+
-+		case FMTSK_READEFI:
-+no_efi:
-+			/*
-+			 * Mark the component header status for the image
-+			 * completed
-+			 */
-+			ch->status = CH_STAT_SUCCESS;
-+
-+			/* The CFG image is written next */
-+			ch = &fi->cmp_hdr[CH_IT_CFG];
-+
-+			if (ch->length == 0)
-+				goto no_cfg;
-+			fc->task = FMTSK_WRTCFG;
-+			fc->func = VDA_FLASH_BEGINW;
-+			fc->comp_typ = CH_IT_CFG;
-+			fc->flsh_addr = FLS_OFFSET_CPYR - ch->length;
-+			fc->sgc.length = ch->length;
-+			fc->sgc.cur_offset = fc->sgc_offset +
-+					     ch->image_offset;
-+			break;
-+
-+		case FMTSK_WRTCFG:
-+			/* The CFG image has been written - read and verify */
-+			fc->task = FMTSK_READCFG;
-+			fc->func = VDA_FLASH_READ;
-+			fc->flsh_addr = FLS_OFFSET_CPYR - ch->length;
-+			fc->cmp_len = ch->length;
-+			fc->sgc.length = FM_BUF_SZ;
-+			fc->sgc.cur_offset = fc->sgc_offset
-+					     + ((u8 *)fc->scratch -
-+						(u8 *)fi);
-+			break;
-+
-+		case FMTSK_READCFG:
-+no_cfg:
-+			/*
-+			 * Mark the component header status for the image
-+			 * completed
-+			 */
-+			ch->status = CH_STAT_SUCCESS;
-+
-+			/*
-+			 * The download is complete.  If in degraded mode,
-+			 * attempt a chip reset.
-+			 */
-+			if (a->flags & AF_DEGRADED_MODE)
-+				esas2r_local_reset_adapter(a);
-+
-+			a->flash_ver = fi->cmp_hdr[CH_IT_BIOS].version;
-+			esas2r_print_flash_rev(a);
-+
-+			/* Update the type of boot image on the card */
-+			memcpy(a->image_type, fi->rel_version,
-+			       sizeof(fi->rel_version));
-+			complete_fmapi_req(a, rq, FI_STAT_SUCCESS);
-+			return;
-+		}
-+
-+		/* If verifying, don't try reading more than what's there */
-+		if (fc->func == VDA_FLASH_READ
-+		    && fc->sgc.length > fc->cmp_len)
-+			fc->sgc.length = fc->cmp_len;
-+	}
-+
-+	/* Build the request to perform the next action */
-+	if (!load_image(a, rq)) {
-+error:
-+		if (fc->comp_typ < fi->num_comps) {
-+			ch = &fi->cmp_hdr[fc->comp_typ];
-+			ch->status = CH_STAT_FAILED;
-+		}
-+
-+		complete_fmapi_req(a, rq, FI_STAT_FAILED);
-+	}
-+}
-+
-+/* Determine the flash image adaptyp for this adapter */
-+static u8 get_fi_adap_type(struct esas2r_adapter *a)
-+{
-+	u8 type;
-+
-+	/* use the device ID to get the correct adap_typ for this HBA */
-+	switch (a->pcid->device) {
-+	case ATTO_DID_INTEL_IOP348:
-+		type = FI_AT_SUN_LAKE;
-+		break;
-+
-+	case ATTO_DID_MV_88RC9580:
-+	case ATTO_DID_MV_88RC9580TS:
-+	case ATTO_DID_MV_88RC9580TSE:
-+	case ATTO_DID_MV_88RC9580TL:
-+		type = FI_AT_MV_9580;
-+		break;
-+
-+	default:
-+		type = FI_AT_UNKNWN;
-+		break;
-+	}
-+
-+	return type;
-+}
-+
-+/* Size of config + copyright + flash_ver images, 0 for failure. */
-+static u32 chk_cfg(u8 *cfg, u32 length, u32 *flash_ver)
-+{
-+	u16 *pw = (u16 *)cfg - 1;
-+	u32 sz = 0;
-+	u32 len = length;
-+
-+	if (len == 0)
-+		len = FM_BUF_SZ;
-+
-+	if (flash_ver)
-+		*flash_ver = 0;
-+
-+	while (true) {
-+		u16 type;
-+		u16 size;
-+
-+		type = le16_to_cpu(*pw--);
-+		size = le16_to_cpu(*pw--);
-+
-+		if (type != FBT_CPYR
-+		    && type != FBT_SETUP
-+		    && type != FBT_FLASH_VER)
-+			break;
-+
-+		if (type == FBT_FLASH_VER
-+		    && flash_ver)
-+			*flash_ver = le32_to_cpu(*(u32 *)(pw - 1));
-+
-+		sz += size + (2 * sizeof(u16));
-+		pw -= size / sizeof(u16);
-+
-+		if (sz > len - (2 * sizeof(u16)))
-+			break;
-+	}
-+
-+	/* See if we are comparing the size to the specified length */
-+	if (length && sz != length)
-+		return 0;
-+
-+	return sz;
-+}
-+
-+/* Verify that the boot image is valid */
-+static u8 chk_boot(u8 *boot_img, u32 length)
-+{
-+	struct esas2r_boot_image *bi = (struct esas2r_boot_image *)boot_img;
-+	u16 hdroffset = le16_to_cpu(bi->header_offset);
-+	struct esas2r_boot_header *bh;
-+
-+	if (bi->signature != le16_to_cpu(0xaa55)
-+	    || (long)hdroffset >
-+	    (long)(65536L - sizeof(struct esas2r_boot_header))
-+	    || (hdroffset & 3)
-+	    || (hdroffset < sizeof(struct esas2r_boot_image))
-+	    || ((u32)hdroffset + sizeof(struct esas2r_boot_header) > length))
-+		return 0xff;
-+
-+	bh = (struct esas2r_boot_header *)((char *)bi + hdroffset);
-+
-+	if (bh->signature[0] != 'P'
-+	    || bh->signature[1] != 'C'
-+	    || bh->signature[2] != 'I'
-+	    || bh->signature[3] != 'R'
-+	    || le16_to_cpu(bh->struct_length) <
-+	    (u16)sizeof(struct esas2r_boot_header)
-+	    || bh->class_code[2] != 0x01
-+	    || bh->class_code[1] != 0x04
-+	    || bh->class_code[0] != 0x00
-+	    || (bh->code_type != CODE_TYPE_PC
-+		&& bh->code_type != CODE_TYPE_OPEN
-+		&& bh->code_type != CODE_TYPE_EFI))
-+		return 0xff;
-+
-+	return bh->code_type;
-+}
-+
-+/* The sum of all the WORDS of the image */
-+static u16 calc_fi_checksum(struct esas2r_flash_context *fc)
-+{
-+	struct esas2r_flash_img *fi = fc->fi;
-+	u16 cksum;
-+	u32 len;
-+	u16 *pw;
-+
-+	for (len = (fi->length - fc->fi_hdr_len) / 2,
-+	     pw = (u16 *)((u8 *)fi + fc->fi_hdr_len),
-+	     cksum = 0;
-+	     len;
-+	     len--, pw++)
-+		cksum = cksum + le16_to_cpu(*pw);
-+
-+	return cksum;
-+}
++#define CSMI_CC_GET_DRVR_INFO        1
++#define CSMI_CC_GET_CNTLR_CFG        2
++#define CSMI_CC_GET_CNTLR_STS        3
++#define CSMI_CC_FW_DOWNLOAD          4
++
++/* RAID class */
++#define CSMI_CC_GET_RAID_INFO        10
++#define CSMI_CC_GET_RAID_CFG         11
++
++/* HBA class */
++#define CSMI_CC_GET_PHY_INFO         20
++#define CSMI_CC_SET_PHY_INFO         21
++#define CSMI_CC_GET_LINK_ERRORS      22
++#define CSMI_CC_SMP_PASSTHRU         23
++#define CSMI_CC_SSP_PASSTHRU         24
++#define CSMI_CC_STP_PASSTHRU         25
++#define CSMI_CC_GET_SATA_SIG         26
++#define CSMI_CC_GET_SCSI_ADDR        27
++#define CSMI_CC_GET_DEV_ADDR         28
++#define CSMI_CC_TASK_MGT             29
++#define CSMI_CC_GET_CONN_INFO        30
++
++/* PHY class */
++#define CSMI_CC_PHY_CTRL             60
 +
 +/*
-+ * Verify the flash image structure.  The following verifications will
-+ * be performed:
-+ *              1)  verify the fi_version is correct
-+ *              2)  verify the checksum of the entire image.
-+ *              3)  validate the adap_typ, action and length fields.
-+ *              4)  valdiate each component header. check the img_type and
-+ *                  length fields
-+ *              5)  valdiate each component image.  validate signatures and
-+ *                  local checksums
++ * CSMI status codes
++ * class independent
 + */
-+static bool verify_fi(struct esas2r_adapter *a,
-+		      struct esas2r_flash_context *fc)
-+{
-+	struct esas2r_flash_img *fi = fc->fi;
-+	u8 type;
-+	bool imgerr;
-+	u16 i;
-+	u32 len;
-+	struct esas2r_component_header *ch;
-+
-+	/* Verify the length - length must even since we do a word checksum */
-+	len = fi->length;
-+
-+	if ((len & 1)
-+	    || len < fc->fi_hdr_len) {
-+		fi->status = FI_STAT_LENGTH;
-+		return false;
-+	}
-+
-+	/* Get adapter type and verify type in flash image */
-+	type = get_fi_adap_type(a);
-+	if ((type == FI_AT_UNKNWN) || (fi->adap_typ != type)) {
-+		fi->status = FI_STAT_ADAPTYP;
-+		return false;
-+	}
-+
-+	/*
-+	 * Loop through each component and verify the img_type and length
-+	 * fields.  Keep a running count of the sizes sooze we can verify total
-+	 * size to additive size.
-+	 */
-+	imgerr = false;
-+
-+	for (i = 0, len = 0, ch = fi->cmp_hdr;
-+	     i < fi->num_comps;
-+	     i++, ch++) {
-+		bool cmperr = false;
-+
-+		/*
-+		 * Verify that the component header has the same index as the
-+		 * image type.  The headers must be ordered correctly
-+		 */
-+		if (i != ch->img_type) {
-+			imgerr = true;
-+			ch->status = CH_STAT_INVALID;
-+			continue;
-+		}
-+
-+		switch (ch->img_type) {
-+		case CH_IT_BIOS:
-+			type = CODE_TYPE_PC;
-+			break;
-+
-+		case CH_IT_MAC:
-+			type = CODE_TYPE_OPEN;
-+			break;
-+
-+		case CH_IT_EFI:
-+			type = CODE_TYPE_EFI;
-+			break;
-+		}
-+
-+		switch (ch->img_type) {
-+		case CH_IT_FW:
-+		case CH_IT_NVR:
-+			break;
-+
-+		case CH_IT_BIOS:
-+		case CH_IT_MAC:
-+		case CH_IT_EFI:
-+			if (ch->length & 0x1ff)
-+				cmperr = true;
-+
-+			/* Test if component image is present  */
-+			if (ch->length == 0)
-+				break;
-+
-+			/* Image is present - verify the image */
-+			if (chk_boot((u8 *)fi + ch->image_offset, ch->length)
-+			    != type)
-+				cmperr = true;
-+
-+			break;
-+
-+		case CH_IT_CFG:
-+
-+			/* Test if component image is present */
-+			if (ch->length == 0) {
-+				cmperr = true;
-+				break;
-+			}
-+
-+			/* Image is present - verify the image */
-+			if (!chk_cfg((u8 *)fi + ch->image_offset + ch->length,
-+				     ch->length, NULL))
-+				cmperr = true;
-+
-+			break;
-+
-+		default:
-+
-+			fi->status = FI_STAT_UNKNOWN;
-+			return false;
-+		}
-+
-+		if (cmperr) {
-+			imgerr = true;
-+			ch->status = CH_STAT_INVALID;
-+		} else {
-+			ch->status = CH_STAT_PENDING;
-+			len += ch->length;
-+		}
-+	}
-+
-+	if (imgerr) {
-+		fi->status = FI_STAT_MISSING;
-+		return false;
-+	}
-+
-+	/* Compare fi->length to the sum of ch->length fields */
-+	if (len != fi->length - fc->fi_hdr_len) {
-+		fi->status = FI_STAT_LENGTH;
-+		return false;
-+	}
-+
-+	/* Compute the checksum - it should come out zero */
-+	if (fi->checksum != calc_fi_checksum(fc)) {
-+		fi->status = FI_STAT_CHKSUM;
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
-+/* Fill in the FS IOCTL response data from a completed request. */
-+static void esas2r_complete_fs_ioctl(struct esas2r_adapter *a,
-+				     struct esas2r_request *rq)
-+{
-+	struct esas2r_ioctl_fs *fs =
-+		(struct esas2r_ioctl_fs *)rq->interrupt_cx;
-+
-+	if (rq->vrq->flash.sub_func == VDA_FLASH_COMMIT)
-+		esas2r_enable_heartbeat(a);
-+
-+	fs->driver_error = rq->req_stat;
-+
-+	if (fs->driver_error == RS_SUCCESS)
-+		fs->status = ATTO_STS_SUCCESS;
-+	else
-+		fs->status = ATTO_STS_FAILED;
-+}
-+
-+/* Prepare an FS IOCTL request to be sent to the firmware. */
-+bool esas2r_process_fs_ioctl(struct esas2r_adapter *a,
-+			     struct esas2r_ioctl_fs *fs,
-+			     struct esas2r_request *rq,
-+			     struct esas2r_sg_context *sgc)
-+{
-+	u8 cmdcnt = (u8)ARRAY_SIZE(cmd_to_fls_func);
-+	struct esas2r_ioctlfs_command *fsc = &fs->command;
-+	u8 func = 0;
-+	u32 datalen;
-+
-+	fs->status = ATTO_STS_FAILED;
-+	fs->driver_error = RS_PENDING;
-+
-+	if (fs->version > ESAS2R_FS_VER) {
-+		fs->status = ATTO_STS_INV_VERSION;
-+		return false;
-+	}
-+
-+	func = cmd_to_fls_func[fsc->command];
-+	if (fsc->command >= cmdcnt || func == 0xFF) {
-+		fs->status = ATTO_STS_INV_FUNC;
-+		return false;
-+	}
-+
-+	if (fsc->command != ESAS2R_FS_CMD_CANCEL) {
-+		if ((a->pcid->device != ATTO_DID_MV_88RC9580
-+		     || fs->adap_type != ESAS2R_FS_AT_ESASRAID2)
-+		    && (a->pcid->device != ATTO_DID_MV_88RC9580TS
-+			|| fs->adap_type != ESAS2R_FS_AT_TSSASRAID2)
-+		    && (a->pcid->device != ATTO_DID_MV_88RC9580TSE
-+			|| fs->adap_type != ESAS2R_FS_AT_TSSASRAID2E)
-+		    && (a->pcid->device != ATTO_DID_MV_88RC9580TL
-+			|| fs->adap_type != ESAS2R_FS_AT_TLSASHBA)) {
-+			fs->status = ATTO_STS_INV_ADAPTER;
-+			return false;
-+		}
-+
-+		if (fs->driver_ver > ESAS2R_FS_DRVR_VER) {
-+			fs->status = ATTO_STS_INV_DRVR_VER;
-+			return false;
-+		}
-+	}
-+
-+	if (a->flags & AF_DEGRADED_MODE) {
-+		fs->status = ATTO_STS_DEGRADED;
-+		return false;
-+	}
-+
-+	rq->interrupt_cb = esas2r_complete_fs_ioctl;
-+	rq->interrupt_cx = fs;
-+	datalen = le32_to_cpu(fsc->length);
-+	esas2r_build_flash_req(a,
-+			       rq,
-+			       func,
-+			       fsc->checksum,
-+			       le32_to_cpu(fsc->flash_addr),
-+			       datalen);
-+
-+	if (func == VDA_FLASH_WRITE
-+	    || func == VDA_FLASH_READ) {
-+		if (datalen == 0) {
-+			fs->status = ATTO_STS_INV_FUNC;
-+			return false;
-+		}
-+
-+		esas2r_sgc_init(sgc, a, rq, rq->vrq->flash.data.sge);
-+		sgc->length = datalen;
-+
-+		if (!esas2r_build_sg_list(a, rq, sgc)) {
-+			fs->status = ATTO_STS_OUT_OF_RSRC;
-+			return false;
-+		}
-+	}
-+
-+	if (func == VDA_FLASH_COMMIT)
-+		esas2r_disable_heartbeat(a);
-+
-+	esas2r_start_request(a, rq);
-+
-+	return true;
-+}
-+
-+static bool esas2r_flash_access(struct esas2r_adapter *a, u32 function)
-+{
-+	u32 starttime;
-+	u32 timeout;
-+	u32 intstat;
-+	u32 doorbell;
-+
-+	/* Disable chip interrupts awhile */
-+	if (function == DRBL_FLASH_REQ)
-+		esas2r_disable_chip_interrupts(a);
-+
-+	/* Issue the request to the firmware */
-+	esas2r_write_register_dword(a, MU_DOORBELL_IN, function);
-+
-+	/* Now wait for the firmware to process it */
-+	starttime = jiffies_to_msecs(jiffies);
-+	timeout = a->flags &
-+		  (AF_CHPRST_PENDING | AF_DISC_PENDING) ? 40000 : 5000;
-+
-+	while (true) {
-+		intstat = esas2r_read_register_dword(a, MU_INT_STATUS_OUT);
-+
-+		if (intstat & MU_INTSTAT_DRBL) {
-+			/* Got a doorbell interrupt.  Check for the function */
-+			doorbell =
-+				esas2r_read_register_dword(a, MU_DOORBELL_OUT);
-+			esas2r_write_register_dword(a, MU_DOORBELL_OUT,
-+						    doorbell);
-+			if (doorbell & function)
-+				break;
-+		}
-+
-+		schedule_timeout_interruptible(msecs_to_jiffies(100));
-+
-+		if ((jiffies_to_msecs(jiffies) - starttime) > timeout) {
-+			/*
-+			 * Iimeout.  If we were requesting flash access,
-+			 * indicate we are done so the firmware knows we gave
-+			 * up.  If this was a REQ, we also need to re-enable
-+			 * chip interrupts.
-+			 */
-+			if (function == DRBL_FLASH_REQ) {
-+				esas2r_hdebug("flash access timeout");
-+				esas2r_write_register_dword(a, MU_DOORBELL_IN,
-+							    DRBL_FLASH_DONE);
-+				esas2r_enable_chip_interrupts(a);
-+			} else {
-+				esas2r_hdebug("flash release timeout");
-+			}
-+
-+			return false;
-+		}
-+	}
-+
-+	/* if we're done, re-enable chip interrupts */
-+	if (function == DRBL_FLASH_DONE)
-+		esas2r_enable_chip_interrupts(a);
-+
-+	return true;
-+}
-+
-+#define WINDOW_SIZE ((signed int)MW_DATA_WINDOW_SIZE)
-+
-+bool esas2r_read_flash_block(struct esas2r_adapter *a,
-+			     void *to,
-+			     u32 from,
-+			     u32 size)
-+{
-+	u8 *end = (u8 *)to;
-+
-+	/* Try to acquire access to the flash */
-+	if (!esas2r_flash_access(a, DRBL_FLASH_REQ))
-+		return false;
-+
-+	while (size) {
-+		u32 len;
-+		u32 offset;
-+		u32 iatvr;
-+
-+		if (a->flags2 & AF2_SERIAL_FLASH)
-+			iatvr = MW_DATA_ADDR_SER_FLASH + (from & -WINDOW_SIZE);
-+		else
-+			iatvr = MW_DATA_ADDR_PAR_FLASH + (from & -WINDOW_SIZE);
-+
-+		esas2r_map_data_window(a, iatvr);
-+		offset = from & (WINDOW_SIZE - 1);
-+		len = size;
-+
-+		if (len > WINDOW_SIZE - offset)
-+			len = WINDOW_SIZE - offset;
-+
-+		from += len;
-+		size -= len;
-+
-+		while (len--) {
-+			*end++ = esas2r_read_data_byte(a, offset);
-+			offset++;
-+		}
-+	}
-+
-+	/* Release flash access */
-+	esas2r_flash_access(a, DRBL_FLASH_DONE);
-+	return true;
-+}
-+
-+bool esas2r_read_flash_rev(struct esas2r_adapter *a)
-+{
-+	u8 bytes[256];
-+	u16 *pw;
-+	u16 *pwstart;
-+	u16 type;
-+	u16 size;
-+	u32 sz;
-+
-+	sz = sizeof(bytes);
-+	pw = (u16 *)(bytes + sz);
-+	pwstart = (u16 *)bytes + 2;
-+
-+	if (!esas2r_read_flash_block(a, bytes, FLS_OFFSET_CPYR - sz, sz))
-+		goto invalid_rev;
-+
-+	while (pw >= pwstart) {
-+		pw--;
-+		type = le16_to_cpu(*pw);
-+		pw--;
-+		size = le16_to_cpu(*pw);
-+		pw -= size / 2;
-+
-+		if (type == FBT_CPYR
-+		    || type == FBT_SETUP
-+		    || pw < pwstart)
-+			continue;
-+
-+		if (type == FBT_FLASH_VER)
-+			a->flash_ver = le32_to_cpu(*(u32 *)pw);
-+
-+		break;
-+	}
-+
-+invalid_rev:
-+	return esas2r_print_flash_rev(a);
-+}
-+
-+bool esas2r_print_flash_rev(struct esas2r_adapter *a)
-+{
-+	u16 year = LOWORD(a->flash_ver);
-+	u8 day = LOBYTE(HIWORD(a->flash_ver));
-+	u8 month = HIBYTE(HIWORD(a->flash_ver));
-+
-+	if (day == 0
-+	    || month == 0
-+	    || day > 31
-+	    || month > 12
-+	    || year < 2006
-+	    || year > 9999) {
-+		strcpy(a->flash_rev, "not found");
-+		a->flash_ver = 0;
-+		return false;
-+	}
-+
-+	sprintf(a->flash_rev, "%02d/%02d/%04d", month, day, year);
-+	esas2r_hdebug("flash version: %s", a->flash_rev);
-+	return true;
-+}
-+
-+/*
-+ * Find the type of boot image type that is currently in the flash.
-+ * The chip only has a 64 KB PCI-e expansion ROM
-+ * size so only one image can be flashed at a time.
-+ */
-+bool esas2r_read_image_type(struct esas2r_adapter *a)
-+{
-+	u8 bytes[256];
-+	struct esas2r_boot_image *bi;
-+	struct esas2r_boot_header *bh;
-+	u32 sz;
-+	u32 len;
-+	u32 offset;
-+
-+	/* Start at the base of the boot images and look for a valid image */
-+	sz = sizeof(bytes);
-+	len = FLS_LENGTH_BOOT;
-+	offset = 0;
-+
-+	while (true) {
-+		if (!esas2r_read_flash_block(a, bytes, FLS_OFFSET_BOOT +
-+					     offset,
-+					     sz))
-+			goto invalid_rev;
-+
-+		bi = (struct esas2r_boot_image *)bytes;
-+		bh = (struct esas2r_boot_header *)((u8 *)bi +
-+						   le16_to_cpu(
-+							   bi->header_offset));
-+		if (bi->signature != cpu_to_le16(0xAA55))
-+			goto invalid_rev;
-+
-+		if (bh->code_type == CODE_TYPE_PC) {
-+			strcpy(a->image_type, "BIOS");
-+
-+			return true;
-+		} else if (bh->code_type == CODE_TYPE_EFI) {
-+			struct esas2r_efi_image *ei;
-+
-+			/*
-+			 * So we have an EFI image.  There are several types
-+			 * so see which architecture we have.
-+			 */
-+			ei = (struct esas2r_efi_image *)bytes;
-+
-+			switch (le16_to_cpu(ei->machine_type)) {
-+			case EFI_MACHINE_IA32:
-+				strcpy(a->image_type, "EFI 32-bit");
-+				return true;
-+
-+			case EFI_MACHINE_IA64:
-+				strcpy(a->image_type, "EFI itanium");
-+				return true;
-+
-+			case EFI_MACHINE_X64:
-+				strcpy(a->image_type, "EFI 64-bit");
-+				return true;
-+
-+			case EFI_MACHINE_EBC:
-+				strcpy(a->image_type, "EFI EBC");
-+				return true;
-+
-+			default:
-+				goto invalid_rev;
-+			}
-+		} else {
-+			u32 thislen;
-+
-+			/* jump to the next image */
-+			thislen = (u32)le16_to_cpu(bh->image_length) * 512;
-+			if (thislen == 0
-+			    || thislen + offset > len
-+			    || bh->indicator == INDICATOR_LAST)
-+				break;
-+
-+			offset += thislen;
-+		}
-+	}
-+
-+invalid_rev:
-+	strcpy(a->image_type, "no boot images");
-+	return false;
-+}
-+
-+/*
-+ *  Read and validate current NVRAM parameters by accessing
-+ *  physical NVRAM directly.  if currently stored parameters are
-+ *  invalid, use the defaults.
-+ */
-+bool esas2r_nvram_read_direct(struct esas2r_adapter *a)
-+{
-+	bool result;
-+
-+	if (down_interruptible(&a->nvram_semaphore))
-+		return false;
-+
-+	if (!esas2r_read_flash_block(a, a->nvram, FLS_OFFSET_NVR,
-+				     sizeof(struct esas2r_sas_nvram))) {
-+		esas2r_hdebug("NVRAM read failed, using defaults");
-+		return false;
-+	}
-+
-+	result = esas2r_nvram_validate(a);
-+
-+	up(&a->nvram_semaphore);
-+
-+	return result;
-+}
-+
-+/* Interrupt callback to process NVRAM completions. */
-+static void esas2r_nvram_callback(struct esas2r_adapter *a,
-+				  struct esas2r_request *rq)
-+{
-+	struct atto_vda_flash_req *vrq = &rq->vrq->flash;
-+
-+	if (rq->req_stat == RS_SUCCESS) {
-+		/* last request was successful.  see what to do now. */
-+
-+		switch (vrq->sub_func) {
-+		case VDA_FLASH_BEGINW:
-+			vrq->sub_func = VDA_FLASH_WRITE;
-+			rq->req_stat = RS_PENDING;
-+			break;
-+
-+		case VDA_FLASH_WRITE:
-+			vrq->sub_func = VDA_FLASH_COMMIT;
-+			rq->req_stat = RS_PENDING;
-+			break;
-+
-+		case VDA_FLASH_READ:
-+			esas2r_nvram_validate(a);
-+			break;
-+
-+		case VDA_FLASH_COMMIT:
-+		default:
-+			break;
-+		}
-+	}
-+
-+	if (rq->req_stat != RS_PENDING) {
-+		/* update the NVRAM state */
-+		if (rq->req_stat == RS_SUCCESS)
-+			esas2r_lock_set_flags(&a->flags, AF_NVR_VALID);
-+		else
-+			esas2r_lock_clear_flags(&a->flags, AF_NVR_VALID);
-+
-+		esas2r_enable_heartbeat(a);
-+
-+		up(&a->nvram_semaphore);
-+	}
-+}
-+
-+/*
-+ * Write the contents of nvram to the adapter's physical NVRAM.
-+ * The cached copy of the NVRAM is also updated.
-+ */
-+bool esas2r_nvram_write(struct esas2r_adapter *a, struct esas2r_request *rq,
-+			struct esas2r_sas_nvram *nvram)
-+{
-+	struct esas2r_sas_nvram *n = nvram;
-+	u8 sas_address_bytes[8];
-+	u32 *sas_address_dwords = (u32 *)&sas_address_bytes[0];
-+	struct atto_vda_flash_req *vrq = &rq->vrq->flash;
-+
-+	if (a->flags & AF_DEGRADED_MODE)
-+		return false;
-+
-+	if (down_interruptible(&a->nvram_semaphore))
-+		return false;
-+
-+	if (n == NULL)
-+		n = a->nvram;
-+
-+	/* check the validity of the settings */
-+	if (n->version > SASNVR_VERSION) {
-+		up(&a->nvram_semaphore);
-+		return false;
-+	}
-+
-+	memcpy(&sas_address_bytes[0], n->sas_addr, 8);
-+
-+	if (sas_address_bytes[0] != 0x50
-+	    || sas_address_bytes[1] != 0x01
-+	    || sas_address_bytes[2] != 0x08
-+	    || (sas_address_bytes[3] & 0xF0) != 0x60
-+	    || ((sas_address_bytes[3] & 0x0F) | sas_address_dwords[1]) == 0) {
-+		up(&a->nvram_semaphore);
-+		return false;
-+	}
-+
-+	if (n->spin_up_delay > SASNVR_SPINUP_MAX)
-+		n->spin_up_delay = SASNVR_SPINUP_MAX;
-+
-+	n->version = SASNVR_VERSION;
-+	n->checksum = n->checksum - esas2r_nvramcalc_cksum(n);
-+	memcpy(a->nvram, n, sizeof(struct esas2r_sas_nvram));
-+
-+	/* write the NVRAM */
-+	n = a->nvram;
-+	esas2r_disable_heartbeat(a);
-+
-+	esas2r_build_flash_req(a,
-+			       rq,
-+			       VDA_FLASH_BEGINW,
-+			       esas2r_nvramcalc_xor_cksum(n),
-+			       FLS_OFFSET_NVR,
-+			       sizeof(struct esas2r_sas_nvram));
-+
-+	if (a->flags & AF_LEGACY_SGE_MODE) {
-+
-+		vrq->data.sge[0].length =
-+			cpu_to_le32(SGE_LAST |
-+				    sizeof(struct esas2r_sas_nvram));
-+		vrq->data.sge[0].address = cpu_to_le64(
-+			a->uncached_phys + (u64)((u8 *)n - a->uncached));
-+	} else {
-+		vrq->data.prde[0].ctl_len =
-+			cpu_to_le32(sizeof(struct esas2r_sas_nvram));
-+		vrq->data.prde[0].address = cpu_to_le64(
-+			a->uncached_phys
-+			+ (u64)((u8 *)n - a->uncached));
-+	}
-+	rq->interrupt_cb = esas2r_nvram_callback;
-+	esas2r_start_request(a, rq);
-+	return true;
-+}
-+
-+/* Validate the cached NVRAM.  if the NVRAM is invalid, load the defaults. */
-+bool esas2r_nvram_validate(struct esas2r_adapter *a)
-+{
-+	struct esas2r_sas_nvram *n = a->nvram;
-+	bool rslt = false;
-+
-+	if (n->signature[0] != 'E'
-+	    || n->signature[1] != 'S'
-+	    || n->signature[2] != 'A'
-+	    || n->signature[3] != 'S') {
-+		esas2r_hdebug("invalid NVRAM signature");
-+	} else if (esas2r_nvramcalc_cksum(n)) {
-+		esas2r_hdebug("invalid NVRAM checksum");
-+	} else if (n->version > SASNVR_VERSION) {
-+		esas2r_hdebug("invalid NVRAM version");
-+	} else {
-+		esas2r_lock_set_flags(&a->flags, AF_NVR_VALID);
-+		rslt = true;
-+	}
-+
-+	if (rslt == false) {
-+		esas2r_hdebug("using defaults");
-+		esas2r_nvram_set_defaults(a);
-+	}
-+
-+	return rslt;
-+}
-+
-+/*
-+ * Set the cached NVRAM to defaults.  note that this function sets the default
-+ * NVRAM when it has been determined that the physical NVRAM is invalid.
-+ * In this case, the SAS address is fabricated.
-+ */
-+void esas2r_nvram_set_defaults(struct esas2r_adapter *a)
-+{
-+	struct esas2r_sas_nvram *n = a->nvram;
-+	u32 time = jiffies_to_msecs(jiffies);
-+
-+	esas2r_lock_clear_flags(&a->flags, AF_NVR_VALID);
-+	memcpy(n, &default_sas_nvram, sizeof(struct esas2r_sas_nvram));
-+	n->sas_addr[3] |= 0x0F;
-+	n->sas_addr[4] = HIBYTE(LOWORD(time));
-+	n->sas_addr[5] = LOBYTE(LOWORD(time));
-+	n->sas_addr[6] = a->pcid->bus->number;
-+	n->sas_addr[7] = a->pcid->devfn;
-+}
-+
-+void esas2r_nvram_get_defaults(struct esas2r_adapter *a,
-+			       struct esas2r_sas_nvram *nvram)
-+{
++#define CSMI_STS_SUCCESS             0
++#define CSMI_STS_FAILED              1
++#define CSMI_STS_BAD_CTRL_CODE       2
++#define CSMI_STS_INV_PARAM           3
++#define CSMI_STS_WRITE_ATTEMPTED     4
++
++/* RAID class */
++#define CSMI_STS_INV_RAID_SET        1000
++
++/* HBA class */
++#define CSMI_STS_PHY_CHANGED         CSMI_STS_SUCCESS
++#define CSMI_STS_PHY_UNCHANGEABLE    2000
++#define CSMI_STS_INV_LINK_RATE       2001
++#define CSMI_STS_INV_PHY             2002
++#define CSMI_STS_INV_PHY_FOR_PORT    2003
++#define CSMI_STS_PHY_UNSELECTABLE    2004
++#define CSMI_STS_SELECT_PHY_OR_PORT  2005
++#define CSMI_STS_INV_PORT            2006
++#define CSMI_STS_PORT_UNSELECTABLE   2007
++#define CSMI_STS_CONNECTION_FAILED   2008
++#define CSMI_STS_NO_SATA_DEV         2009
++#define CSMI_STS_NO_SATA_SIGNATURE   2010
++#define CSMI_STS_SCSI_EMULATION      2011
++#define CSMI_STS_NOT_AN_END_DEV      2012
++#define CSMI_STS_NO_SCSI_ADDR        2013
++#define CSMI_STS_NO_DEV_ADDR         2014
++
++/* CSMI class independent structures */
++struct atto_csmi_get_driver_info {
++	char name[81];
++	char description[81];
++	u16 major_rev;
++	u16 minor_rev;
++	u16 build_rev;
++	u16 release_rev;
++	u16 csmi_major_rev;
++	u16 csmi_minor_rev;
++	#define CSMI_MAJOR_REV_0_81      0
++	#define CSMI_MINOR_REV_0_81      81
++
++	#define CSMI_MAJOR_REV           CSMI_MAJOR_REV_0_81
++	#define CSMI_MINOR_REV           CSMI_MINOR_REV_0_81
++};
++
++struct atto_csmi_get_pci_bus_addr {
++	u8 bus_num;
++	u8 device_num;
++	u8 function_num;
++	u8 reserved;
++};
++
++struct atto_csmi_get_cntlr_cfg {
++	u32 base_io_addr;
++
++	struct {
++		u32 base_memaddr_lo;
++		u32 base_memaddr_hi;
++	};
++
++	u32 board_id;
++	u16 slot_num;
++	#define CSMI_SLOT_NUM_UNKNOWN    0xFFFF
++
++	u8 cntlr_class;
++	#define CSMI_CNTLR_CLASS_HBA     5
++
++	u8 io_bus_type;
++	#define CSMI_BUS_TYPE_PCI        3
++	#define CSMI_BUS_TYPE_PCMCIA     4
++
++	union {
++		struct atto_csmi_get_pci_bus_addr pci_addr;
++		u8 reserved[32];
++	};
++
++	char serial_num[81];
++	u16 major_rev;
++	u16 minor_rev;
++	u16 build_rev;
++	u16 release_rev;
++	u16 bios_major_rev;
++	u16 bios_minor_rev;
++	u16 bios_build_rev;
++	u16 bios_release_rev;
++	u32 cntlr_flags;
++	#define CSMI_CNTLRF_SAS_HBA      0x00000001
++	#define CSMI_CNTLRF_SAS_RAID     0x00000002
++	#define CSMI_CNTLRF_SATA_HBA     0x00000004
++	#define CSMI_CNTLRF_SATA_RAID    0x00000008
++	#define CSMI_CNTLRF_FWD_SUPPORT  0x00010000
++	#define CSMI_CNTLRF_FWD_ONLINE   0x00020000
++	#define CSMI_CNTLRF_FWD_SRESET   0x00040000
++	#define CSMI_CNTLRF_FWD_HRESET   0x00080000
++	#define CSMI_CNTLRF_FWD_RROM     0x00100000
++
++	u16 rrom_major_rev;
++	u16 rrom_minor_rev;
++	u16 rrom_build_rev;
++	u16 rrom_release_rev;
++	u16 rrom_biosmajor_rev;
++	u16 rrom_biosminor_rev;
++	u16 rrom_biosbuild_rev;
++	u16 rrom_biosrelease_rev;
++	u8 reserved2[7];
++};
++
++struct atto_csmi_get_cntlr_sts {
++	u32 status;
++	#define CSMI_CNTLR_STS_GOOD          1
++	#define CSMI_CNTLR_STS_FAILED        2
++	#define CSMI_CNTLR_STS_OFFLINE       3
++	#define CSMI_CNTLR_STS_POWEROFF      4
++
++	u32 offline_reason;
++	#define CSMI_OFFLINE_NO_REASON       0
++	#define CSMI_OFFLINE_INITIALIZING    1
++	#define CSMI_OFFLINE_BUS_DEGRADED    2
++	#define CSMI_OFFLINE_BUS_FAILURE     3
++
++	u8 reserved[28];
++};
++
++struct atto_csmi_fw_download {
++	u32 buffer_len;
++	u32 download_flags;
++	#define CSMI_FWDF_VALIDATE       0x00000001
++	#define CSMI_FWDF_SOFT_RESET     0x00000002
++	#define CSMI_FWDF_HARD_RESET     0x00000004
++
++	u8 reserved[32];
++	u16 status;
++	#define CSMI_FWD_STS_SUCCESS     0
++	#define CSMI_FWD_STS_FAILED      1
++	#define CSMI_FWD_STS_USING_RROM  2
++	#define CSMI_FWD_STS_REJECT      3
++	#define CSMI_FWD_STS_DOWNREV     4
++
++	u16 severity;
++	#define CSMI_FWD_SEV_INFO        0
++	#define CSMI_FWD_SEV_WARNING     1
++	#define CSMI_FWD_SEV_ERROR       2
++	#define CSMI_FWD_SEV_FATAL       3
++
++};
++
++/* CSMI RAID class structures */
++struct atto_csmi_get_raid_info {
++	u32 num_raid_sets;
++	u32 max_drivesper_set;
++	u8 reserved[92];
++};
++
++struct atto_csmi_raid_drives {
++	char model[40];
++	char firmware[8];
++	char serial_num[40];
 +	u8 sas_addr[8];
++	u8 lun[8];
++	u8 drive_sts;
++	#define CSMI_DRV_STS_OK          0
++	#define CSMI_DRV_STS_REBUILDING  1
++	#define CSMI_DRV_STS_FAILED      2
++	#define CSMI_DRV_STS_DEGRADED    3
++
++	u8 drive_usage;
++	#define CSMI_DRV_USE_NOT_USED    0
++	#define CSMI_DRV_USE_MEMBER      1
++	#define CSMI_DRV_USE_SPARE       2
++
++	u8 reserved[30]; /* spec says 22 */
++};
++
++struct atto_csmi_get_raid_cfg {
++	u32 raid_set_index;
++	u32 capacity;
++	u32 stripe_size;
++	u8 raid_type;
++	u8 status;
++	u8 information;
++	u8 drive_cnt;
++	u8 reserved[20];
++
++	struct atto_csmi_raid_drives drives[1];
++};
++
++/* CSMI HBA class structures */
++struct atto_csmi_phy_entity {
++	u8 ident_frame[0x1C];
++	u8 port_id;
++	u8 neg_link_rate;
++	u8 min_link_rate;
++	u8 max_link_rate;
++	u8 phy_change_cnt;
++	u8 auto_discover;
++	#define CSMI_DISC_NOT_SUPPORTED  0x00
++	#define CSMI_DISC_NOT_STARTED    0x01
++	#define CSMI_DISC_IN_PROGRESS    0x02
++	#define CSMI_DISC_COMPLETE       0x03
++	#define CSMI_DISC_ERROR          0x04
++
++	u8 reserved[2];
++	u8 attach_ident_frame[0x1C];
++};
++
++struct atto_csmi_get_phy_info {
++	u8 number_of_phys;
++	u8 reserved[3];
++	struct atto_csmi_phy_entity
++		phy[32];
++};
++
++struct atto_csmi_set_phy_info {
++	u8 phy_id;
++	u8 neg_link_rate;
++	#define CSMI_NEG_RATE_NEGOTIATE  0x00
++	#define CSMI_NEG_RATE_PHY_DIS    0x01
++
++	u8 prog_minlink_rate;
++	u8 prog_maxlink_rate;
++	u8 signal_class;
++	#define CSMI_SIG_CLASS_UNKNOWN   0x00
++	#define CSMI_SIG_CLASS_DIRECT    0x01
++	#define CSMI_SIG_CLASS_SERVER    0x02
++	#define CSMI_SIG_CLASS_ENCLOSURE 0x03
++
++	u8 reserved[3];
++};
++
++struct atto_csmi_get_link_errors {
++	u8 phy_id;
++	u8 reset_cnts;
++	#define CSMI_RESET_CNTS_NO       0x00
++	#define CSMI_RESET_CNTS_YES      0x01
++
++	u8 reserved[2];
++	u32 inv_dw_cnt;
++	u32 disp_err_cnt;
++	u32 loss_ofdw_sync_cnt;
++	u32 phy_reseterr_cnt;
 +
 +	/*
-+	 * in case we are copying the defaults into the adapter, copy the SAS
-+	 * address out first.
++	 * The following field has been added by ATTO for ease of
++	 * implementation of additional statistics.  Drivers must validate
++	 * the length of the IOCTL payload prior to filling them in so CSMI
++	 * complaint applications function correctly.
 +	 */
-+	memcpy(&sas_addr[0], a->nvram->sas_addr, 8);
-+	memcpy(nvram, &default_sas_nvram, sizeof(struct esas2r_sas_nvram));
-+	memcpy(&nvram->sas_addr[0], &sas_addr[0], 8);
-+}
 +
-+bool esas2r_fm_api(struct esas2r_adapter *a, struct esas2r_flash_img *fi,
-+		   struct esas2r_request *rq, struct esas2r_sg_context *sgc)
-+{
-+	struct esas2r_flash_context *fc = &a->flash_context;
-+	u8 j;
-+	struct esas2r_component_header *ch;
++	u32 crc_err_cnt;
++};
 +
-+	if (esas2r_lock_set_flags(&a->flags, AF_FLASH_LOCK) & AF_FLASH_LOCK) {
-+		/* flag was already set */
-+		fi->status = FI_STAT_BUSY;
-+		return false;
-+	}
++struct atto_csmi_smp_passthru {
++	u8 phy_id;
++	u8 port_id;
++	u8 conn_rate;
++	u8 reserved;
++	u8 dest_sas_addr[8];
++	u32 req_len;
++	u8 smp_req[1020];
++	u8 conn_sts;
++	u8 reserved2[3];
++	u32 rsp_len;
++	u8 smp_rsp[1020];
++};
 +
-+	memcpy(&fc->sgc, sgc, sizeof(struct esas2r_sg_context));
-+	sgc = &fc->sgc;
-+	fc->fi = fi;
-+	fc->sgc_offset = sgc->cur_offset;
-+	rq->req_stat = RS_SUCCESS;
-+	rq->interrupt_cx = fc;
++struct atto_csmi_ssp_passthru_sts {
++	u8 conn_sts;
++	u8 reserved[3];
++	u8 data_present;
++	u8 status;
++	u16 rsp_length;
++	u8 rsp[256];
++	u32 data_bytes;
++};
 +
-+	switch (fi->fi_version) {
-+	case FI_VERSION_1:
-+		fc->scratch = ((struct esas2r_flash_img *)fi)->scratch_buf;
-+		fc->num_comps = FI_NUM_COMPS_V1;
-+		fc->fi_hdr_len = sizeof(struct esas2r_flash_img);
-+		break;
++struct atto_csmi_ssp_passthru {
++	u8 phy_id;
++	u8 port_id;
++	u8 conn_rate;
++	u8 reserved;
++	u8 dest_sas_addr[8];
++	u8 lun[8];
++	u8 cdb_len;
++	u8 add_cdb_len;
++	u8 reserved2[2];
++	u8 cdb[16];
++	u32 flags;
++	#define CSMI_SSPF_DD_READ        0x00000001
++	#define CSMI_SSPF_DD_WRITE       0x00000002
++	#define CSMI_SSPF_DD_UNSPECIFIED 0x00000004
++	#define CSMI_SSPF_TA_SIMPLE      0x00000000
++	#define CSMI_SSPF_TA_HEAD_OF_Q   0x00000010
++	#define CSMI_SSPF_TA_ORDERED     0x00000020
++	#define CSMI_SSPF_TA_ACA         0x00000040
 +
-+	default:
-+		return complete_fmapi_req(a, rq, FI_STAT_IMG_VER);
-+	}
++	u8 add_cdb[24];
++	u32 data_len;
 +
-+	if (a->flags & AF_DEGRADED_MODE)
-+		return complete_fmapi_req(a, rq, FI_STAT_DEGRADED);
++	struct atto_csmi_ssp_passthru_sts sts;
++};
 +
-+	switch (fi->action) {
-+	case FI_ACT_DOWN: /* Download the components */
-+		/* Verify the format of the flash image */
-+		if (!verify_fi(a, fc))
-+			return complete_fmapi_req(a, rq, fi->status);
++struct atto_csmi_stp_passthru_sts {
++	u8 conn_sts;
++	u8 reserved[3];
++	u8 sts_fis[20];
++	u32 scr[16];
++	u32 data_bytes;
++};
 +
-+		/* Adjust the BIOS fields that are dependent on the HBA */
-+		ch = &fi->cmp_hdr[CH_IT_BIOS];
++struct atto_csmi_stp_passthru {
++	u8 phy_id;
++	u8 port_id;
++	u8 conn_rate;
++	u8 reserved;
++	u8 dest_sas_addr[8];
++	u8 reserved2[4];
++	u8 command_fis[20];
++	u32 flags;
++	#define CSMI_STPF_DD_READ        0x00000001
++	#define CSMI_STPF_DD_WRITE       0x00000002
++	#define CSMI_STPF_DD_UNSPECIFIED 0x00000004
++	#define CSMI_STPF_PIO            0x00000010
++	#define CSMI_STPF_DMA            0x00000020
++	#define CSMI_STPF_PACKET         0x00000040
++	#define CSMI_STPF_DMA_QUEUED     0x00000080
++	#define CSMI_STPF_EXECUTE_DIAG   0x00000100
++	#define CSMI_STPF_RESET_DEVICE   0x00000200
 +
-+		if (ch->length)
-+			fix_bios(a, fi);
++	u32 data_len;
 +
-+		/* Adjust the EFI fields that are dependent on the HBA */
-+		ch = &fi->cmp_hdr[CH_IT_EFI];
++	struct atto_csmi_stp_passthru_sts sts;
++};
 +
-+		if (ch->length)
-+			fix_efi(a, fi);
++struct atto_csmi_get_sata_sig {
++	u8 phy_id;
++	u8 reserved[3];
++	u8 reg_dth_fis[20];
++};
 +
-+		/*
-+		 * Since the image was just modified, compute the checksum on
-+		 * the modified image.  First update the CRC for the composite
-+		 * expansion ROM image.
-+		 */
-+		fi->checksum = calc_fi_checksum(fc);
++struct atto_csmi_get_scsi_addr {
++	u8 sas_addr[8];
++	u8 sas_lun[8];
++	u8 host_index;
++	u8 path_id;
++	u8 target_id;
++	u8 lun;
++};
 +
-+		/* Disable the heartbeat */
-+		esas2r_disable_heartbeat(a);
++struct atto_csmi_get_dev_addr {
++	u8 host_index;
++	u8 path_id;
++	u8 target_id;
++	u8 lun;
++	u8 sas_addr[8];
++	u8 sas_lun[8];
++};
 +
-+		/* Now start up the download sequence */
-+		fc->task = FMTSK_ERASE_BOOT;
-+		fc->func = VDA_FLASH_BEGINW;
-+		fc->comp_typ = CH_IT_CFG;
-+		fc->flsh_addr = FLS_OFFSET_BOOT;
-+		fc->sgc.length = FLS_LENGTH_BOOT;
-+		fc->sgc.cur_offset = NULL;
++struct atto_csmi_task_mgmt {
++	u8 host_index;
++	u8 path_id;
++	u8 target_id;
++	u8 lun;
++	u32 flags;
++	#define CSMI_TMF_TASK_IU         0x00000001
++	#define CSMI_TMF_HARD_RST        0x00000002
++	#define CSMI_TMF_SUPPRESS_RSLT   0x00000004
 +
-+		/* Setup the callback address */
-+		fc->interrupt_cb = fw_download_proc;
-+		break;
++	u32 queue_tag;
++	u32 reserved;
++	u8 task_mgt_func;
++	u8 reserved2[7];
++	u32 information;
++	#define CSMI_TM_INFO_TEST        1
++	#define CSMI_TM_INFO_EXCEEDED    2
++	#define CSMI_TM_INFO_DEMAND      3
++	#define CSMI_TM_INFO_TRIGGER     4
 +
-+	case FI_ACT_UPSZ: /* Get upload sizes */
-+		fi->adap_typ = get_fi_adap_type(a);
-+		fi->flags = 0;
-+		fi->num_comps = fc->num_comps;
-+		fi->length = fc->fi_hdr_len;
++	struct atto_csmi_ssp_passthru_sts sts;
 +
-+		/* Report the type of boot image in the rel_version string */
-+		memcpy(fi->rel_version, a->image_type,
-+		       sizeof(fi->rel_version));
++};
 +
-+		/* Build the component headers */
-+		for (j = 0, ch = fi->cmp_hdr;
-+		     j < fi->num_comps;
-+		     j++, ch++) {
-+			ch->img_type = j;
-+			ch->status = CH_STAT_PENDING;
-+			ch->length = 0;
-+			ch->version = 0xffffffff;
-+			ch->image_offset = 0;
-+			ch->pad[0] = 0;
-+			ch->pad[1] = 0;
-+		}
++struct atto_csmi_get_conn_info {
++	u32 pinout;
++	#define CSMI_CON_UNKNOWN         0x00000001
++	#define CSMI_CON_SFF_8482        0x00000002
++	#define CSMI_CON_SFF_8470_LANE_1 0x00000100
++	#define CSMI_CON_SFF_8470_LANE_2 0x00000200
++	#define CSMI_CON_SFF_8470_LANE_3 0x00000400
++	#define CSMI_CON_SFF_8470_LANE_4 0x00000800
++	#define CSMI_CON_SFF_8484_LANE_1 0x00010000
++	#define CSMI_CON_SFF_8484_LANE_2 0x00020000
++	#define CSMI_CON_SFF_8484_LANE_3 0x00040000
++	#define CSMI_CON_SFF_8484_LANE_4 0x00080000
 +
-+		if (a->flash_ver != 0) {
-+			fi->cmp_hdr[CH_IT_BIOS].version =
-+				fi->cmp_hdr[CH_IT_MAC].version =
-+					fi->cmp_hdr[CH_IT_EFI].version =
-+						fi->cmp_hdr[CH_IT_CFG].version
-+							= a->flash_ver;
++	u8 connector[16];
++	u8 location;
++	#define CSMI_CON_INTERNAL        0x02
++	#define CSMI_CON_EXTERNAL        0x04
++	#define CSMI_CON_SWITCHABLE      0x08
++	#define CSMI_CON_AUTO            0x10
 +
-+			fi->cmp_hdr[CH_IT_BIOS].status =
-+				fi->cmp_hdr[CH_IT_MAC].status =
-+					fi->cmp_hdr[CH_IT_EFI].status =
-+						fi->cmp_hdr[CH_IT_CFG].status =
-+							CH_STAT_SUCCESS;
++	u8 reserved[15];
++};
 +
-+			return complete_fmapi_req(a, rq, FI_STAT_SUCCESS);
-+		}
++/* CSMI PHY class structures */
++struct atto_csmi_character {
++	u8 type_flags;
++	#define CSMI_CTF_POS_DISP        0x01
++	#define CSMI_CTF_NEG_DISP        0x02
++	#define CSMI_CTF_CTRL_CHAR       0x04
 +
-+	/* fall through */
++	u8 value;
++};
 +
-+	case FI_ACT_UP: /* Upload the components */
-+	default:
-+		return complete_fmapi_req(a, rq, FI_STAT_INVALID);
-+	}
++struct atto_csmi_pc_ctrl {
++	u8 type;
++	#define CSMI_PC_TYPE_UNDEFINED   0x00
++	#define CSMI_PC_TYPE_SATA        0x01
++	#define CSMI_PC_TYPE_SAS         0x02
++	u8 rate;
++	u8 reserved[6];
++	u32 vendor_unique[8];
++	u32 tx_flags;
++	#define CSMI_PC_TXF_PREEMP_DIS   0x00000001
 +
-+	/*
-+	 * If we make it here, fc has been setup to do the first task.  Call
-+	 * load_image to format the request, start it, and get out.  The
-+	 * interrupt code will call the callback when the first message is
-+	 * complete.
-+	 */
-+	if (!load_image(a, rq))
-+		return complete_fmapi_req(a, rq, FI_STAT_FAILED);
++	signed char tx_amplitude;
++	signed char tx_preemphasis;
++	signed char tx_slew_rate;
++	signed char tx_reserved[13];
++	u8 tx_vendor_unique[64];
++	u32 rx_flags;
++	#define CSMI_PC_RXF_EQ_DIS       0x00000001
 +
-+	esas2r_start_request(a, rq);
++	signed char rx_threshold;
++	signed char rx_equalization_gain;
++	signed char rx_reserved[14];
++	u8 rx_vendor_unique[64];
++	u32 pattern_flags;
++	#define CSMI_PC_PATF_FIXED       0x00000001
++	#define CSMI_PC_PATF_DIS_SCR     0x00000002
++	#define CSMI_PC_PATF_DIS_ALIGN   0x00000004
++	#define CSMI_PC_PATF_DIS_SSC     0x00000008
 +
-+	return true;
-+}
-diff --git a/drivers/scsi/esas2r/esas2r_targdb.c b/drivers/scsi/esas2r/esas2r_targdb.c
-new file mode 100644
-index 0000000..e540a2f
---- /dev/null
-+++ b/drivers/scsi/esas2r/esas2r_targdb.c
-@@ -0,0 +1,306 @@
-+/*
-+ *  linux/drivers/scsi/esas2r/esas2r_targdb.c
-+ *      For use with ATTO ExpressSAS R6xx SAS/SATA RAID controllers
-+ *
-+ *  Copyright (c) 2001-2013 ATTO Technology, Inc.
-+ *  (mailto:linuxdrivers@attotech.com)
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * NO WARRANTY
-+ * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
-+ * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
-+ * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
-+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
-+ * solely responsible for determining the appropriateness of using and
-+ * distributing the Program and assumes all risks associated with its
-+ * exercise of rights under this Agreement, including but not limited to
-+ * the risks and costs of program errors, damage to or loss of data,
-+ * programs or equipment, and unavailability or interruption of operations.
-+ *
-+ * DISCLAIMER OF LIABILITY
-+ * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
-+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
-+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-+ * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
-+ * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-+ * USA.
++	u8 fixed_pattern;
++	#define CSMI_PC_FP_CJPAT         0x00000001
++	#define CSMI_PC_FP_ALIGN         0x00000002
++
++	u8 user_pattern_len;
++	u8 pattern_reserved[6];
++
++	struct atto_csmi_character user_pattern_buffer[16];
++};
++
++struct atto_csmi_phy_ctrl {
++	u32 function;
++	#define CSMI_PC_FUNC_GET_SETUP   0x00000100
++
++	u8 phy_id;
++	u16 len_of_cntl;
++	u8 num_of_cntls;
++	u8 reserved[4];
++	u32 link_flags;
++	#define CSMI_PHY_ACTIVATE_CTRL   0x00000001
++	#define CSMI_PHY_UPD_SPINUP_RATE 0x00000002
++	#define CSMI_PHY_AUTO_COMWAKE    0x00000004
++
++	u8 spinup_rate;
++	u8 link_reserved[7];
++	u32 vendor_unique[8];
++
++	struct atto_csmi_pc_ctrl control[1];
++};
++
++union atto_ioctl_csmi {
++	struct atto_csmi_get_driver_info drvr_info;
++	struct atto_csmi_get_cntlr_cfg cntlr_cfg;
++	struct atto_csmi_get_cntlr_sts cntlr_sts;
++	struct atto_csmi_fw_download fw_dwnld;
++	struct atto_csmi_get_raid_info raid_info;
++	struct atto_csmi_get_raid_cfg raid_cfg;
++	struct atto_csmi_get_phy_info get_phy_info;
++	struct atto_csmi_set_phy_info set_phy_info;
++	struct atto_csmi_get_link_errors link_errs;
++	struct atto_csmi_smp_passthru smp_pass_thru;
++	struct atto_csmi_ssp_passthru ssp_pass_thru;
++	struct atto_csmi_stp_passthru stp_pass_thru;
++	struct atto_csmi_task_mgmt tsk_mgt;
++	struct atto_csmi_get_sata_sig sata_sig;
++	struct atto_csmi_get_scsi_addr scsi_addr;
++	struct atto_csmi_get_dev_addr dev_addr;
++	struct atto_csmi_get_conn_info conn_info[32];
++	struct atto_csmi_phy_ctrl phy_ctrl;
++};
++
++struct atto_csmi {
++	u32 control_code;
++	u32 status;
++	union atto_ioctl_csmi data;
++};
++
++struct atto_module_info {
++	void *adapter;
++	void *pci_dev;
++	void *scsi_host;
++	unsigned short host_no;
++	union {
++		struct {
++			u64 node_name;
++			u64 port_name;
++		};
++		u64 sas_addr;
++	};
++};
++
++#define ATTO_FUNC_GET_ADAP_INFO      0x00
++#define ATTO_VER_GET_ADAP_INFO0      0
++#define ATTO_VER_GET_ADAP_INFO       ATTO_VER_GET_ADAP_INFO0
++
++struct __packed atto_hba_get_adapter_info {
++
++	struct {
++		u16 vendor_id;
++		u16 device_id;
++		u16 ss_vendor_id;
++		u16 ss_device_id;
++		u8 class_code[3];
++		u8 rev_id;
++		u8 bus_num;
++		u8 dev_num;
++		u8 func_num;
++		u8 link_width_max;
++		u8 link_width_curr;
++	    #define ATTO_GAI_PCILW_UNKNOWN   0x00
++
++		u8 link_speed_max;
++		u8 link_speed_curr;
++	    #define ATTO_GAI_PCILS_UNKNOWN   0x00
++	    #define ATTO_GAI_PCILS_GEN1      0x01
++	    #define ATTO_GAI_PCILS_GEN2      0x02
++	    #define ATTO_GAI_PCILS_GEN3      0x03
++
++		u8 interrupt_mode;
++	    #define ATTO_GAI_PCIIM_UNKNOWN   0x00
++	    #define ATTO_GAI_PCIIM_LEGACY    0x01
++	    #define ATTO_GAI_PCIIM_MSI       0x02
++	    #define ATTO_GAI_PCIIM_MSIX      0x03
++
++		u8 msi_vector_cnt;
++		u8 reserved[19];
++	} pci;
++
++	u8 adap_type;
++	#define ATTO_GAI_AT_EPCIU320     0x00
++	#define ATTO_GAI_AT_ESASRAID     0x01
++	#define ATTO_GAI_AT_ESASRAID2    0x02
++	#define ATTO_GAI_AT_ESASHBA      0x03
++	#define ATTO_GAI_AT_ESASHBA2     0x04
++	#define ATTO_GAI_AT_CELERITY     0x05
++	#define ATTO_GAI_AT_CELERITY8    0x06
++	#define ATTO_GAI_AT_FASTFRAME    0x07
++	#define ATTO_GAI_AT_ESASHBA3     0x08
++	#define ATTO_GAI_AT_CELERITY16   0x09
++	#define ATTO_GAI_AT_TLSASHBA     0x0A
++	#define ATTO_GAI_AT_ESASHBA4     0x0B
++
++	u8 adap_flags;
++	#define ATTO_GAI_AF_DEGRADED     0x01
++	#define ATTO_GAI_AF_SPT_SUPP     0x02
++	#define ATTO_GAI_AF_DEVADDR_SUPP 0x04
++	#define ATTO_GAI_AF_PHYCTRL_SUPP 0x08
++	#define ATTO_GAI_AF_TEST_SUPP    0x10
++	#define ATTO_GAI_AF_DIAG_SUPP    0x20
++	#define ATTO_GAI_AF_VIRT_SES     0x40
++	#define ATTO_GAI_AF_CONN_CTRL    0x80
++
++	u8 num_ports;
++	u8 num_phys;
++	u8 drvr_rev_major;
++	u8 drvr_rev_minor;
++	u8 drvr_revsub_minor;
++	u8 drvr_rev_build;
++	char drvr_rev_ascii[16];
++	char drvr_name[32];
++	char firmware_rev[16];
++	char flash_rev[16];
++	char model_name_short[16];
++	char model_name[32];
++	u32 num_targets;
++	u32 num_targsper_bus;
++	u32 num_lunsper_targ;
++	u8 num_busses;
++	u8 num_connectors;
++	u8 adap_flags2;
++	#define ATTO_GAI_AF2_FCOE_SUPP       0x01
++	#define ATTO_GAI_AF2_NIC_SUPP        0x02
++	#define ATTO_GAI_AF2_LOCATE_SUPP     0x04
++	#define ATTO_GAI_AF2_ADAP_CTRL_SUPP  0x08
++	#define ATTO_GAI_AF2_DEV_INFO_SUPP   0x10
++	#define ATTO_GAI_AF2_NPIV_SUPP       0x20
++	#define ATTO_GAI_AF2_MP_SUPP         0x40
++
++	u8 num_temp_sensors;
++	u32 num_targets_backend;
++	u32 tunnel_flags;
++	#define ATTO_GAI_TF_MEM_RW           0x00000001
++	#define ATTO_GAI_TF_TRACE            0x00000002
++	#define ATTO_GAI_TF_SCSI_PASS_THRU   0x00000004
++	#define ATTO_GAI_TF_GET_DEV_ADDR     0x00000008
++	#define ATTO_GAI_TF_PHY_CTRL         0x00000010
++	#define ATTO_GAI_TF_CONN_CTRL        0x00000020
++	#define ATTO_GAI_TF_GET_DEV_INFO     0x00000040
++
++	u8 reserved3[0x138];
++};
++
++#define ATTO_FUNC_GET_ADAP_ADDR      0x01
++#define ATTO_VER_GET_ADAP_ADDR0      0
++#define ATTO_VER_GET_ADAP_ADDR       ATTO_VER_GET_ADAP_ADDR0
++
++struct __packed atto_hba_get_adapter_address {
++
++	u8 addr_type;
++	#define ATTO_GAA_AT_PORT         0x00
++	#define ATTO_GAA_AT_NODE         0x01
++	#define ATTO_GAA_AT_CURR_MAC     0x02
++	#define ATTO_GAA_AT_PERM_MAC     0x03
++	#define ATTO_GAA_AT_VNIC         0x04
++
++	u8 port_id;
++	u16 addr_len;
++	u8 address[256];
++};
++
++#define ATTO_FUNC_MEM_RW             0x02
++#define ATTO_VER_MEM_RW0             0
++#define ATTO_VER_MEM_RW              ATTO_VER_MEM_RW0
++
++struct __packed atto_hba_memory_read_write {
++	u8 mem_func;
++	u8 mem_type;
++	union {
++		u8 pci_index;
++		u8 i2c_dev;
++	};
++	u8 i2c_status;
++	u32 length;
++	u64 address;
++	u8 reserved[48];
++
++};
++
++#define ATTO_FUNC_TRACE              0x03
++#define ATTO_VER_TRACE0              0
++#define ATTO_VER_TRACE1              1
++#define ATTO_VER_TRACE               ATTO_VER_TRACE1
++
++struct __packed atto_hba_trace {
++	u8 trace_func;
++	#define ATTO_TRC_TF_GET_INFO     0x00
++	#define ATTO_TRC_TF_ENABLE       0x01
++	#define ATTO_TRC_TF_DISABLE      0x02
++	#define ATTO_TRC_TF_SET_MASK     0x03
++	#define ATTO_TRC_TF_UPLOAD       0x04
++	#define ATTO_TRC_TF_RESET        0x05
++
++	u8 trace_type;
++	#define ATTO_TRC_TT_DRIVER       0x00
++	#define ATTO_TRC_TT_FWCOREDUMP   0x01
++
++	u8 reserved[2];
++	u32 current_offset;
++	u32 total_length;
++	u32 trace_mask;
++	u8 reserved2[48];
++};
++
++#define ATTO_FUNC_SCSI_PASS_THRU     0x04
++#define ATTO_VER_SCSI_PASS_THRU0     0
++#define ATTO_VER_SCSI_PASS_THRU      ATTO_VER_SCSI_PASS_THRU0
++
++struct __packed atto_hba_scsi_pass_thru {
++	u8 cdb[32];
++	u8 cdb_length;
++	u8 req_status;
++	#define ATTO_SPT_RS_SUCCESS      0x00
++	#define ATTO_SPT_RS_FAILED       0x01
++	#define ATTO_SPT_RS_OVERRUN      0x02
++	#define ATTO_SPT_RS_UNDERRUN     0x03
++	#define ATTO_SPT_RS_NO_DEVICE    0x04
++	#define ATTO_SPT_RS_NO_LUN       0x05
++	#define ATTO_SPT_RS_TIMEOUT      0x06
++	#define ATTO_SPT_RS_BUS_RESET    0x07
++	#define ATTO_SPT_RS_ABORTED      0x08
++	#define ATTO_SPT_RS_BUSY         0x09
++	#define ATTO_SPT_RS_DEGRADED     0x0A
++
++	u8 scsi_status;
++	u8 sense_length;
++	u32 flags;
++	#define ATTO_SPTF_DATA_IN    0x00000001
++	#define ATTO_SPTF_DATA_OUT   0x00000002
++	#define ATTO_SPTF_SIMPLE_Q   0x00000004
++	#define ATTO_SPTF_HEAD_OF_Q  0x00000008
++	#define ATTO_SPTF_ORDERED_Q  0x00000010
++
++	u32 timeout;
++	u32 target_id;
++	u8 lun[8];
++	u32 residual_length;
++	u8 sense_data[0xFC];
++	u8 reserved[0x28];
++};
++
++#define ATTO_FUNC_GET_DEV_ADDR       0x05
++#define ATTO_VER_GET_DEV_ADDR0       0
++#define ATTO_VER_GET_DEV_ADDR        ATTO_VER_GET_DEV_ADDR0
++
++struct __packed atto_hba_get_device_address {
++	u8 addr_type;
++	#define ATTO_GDA_AT_PORT         0x00
++	#define ATTO_GDA_AT_NODE         0x01
++	#define ATTO_GDA_AT_MAC          0x02
++	#define ATTO_GDA_AT_PORTID       0x03
++	#define ATTO_GDA_AT_UNIQUE       0x04
++
++	u8 reserved;
++	u16 addr_len;
++	u32 target_id;
++	u8 address[256];
++};
++
++/* The following functions are supported by firmware but do not have any
++ * associated driver structures
 + */
-+
-+#include "esas2r.h"
-+
-+void esas2r_targ_db_initialize(struct esas2r_adapter *a)
-+{
-+	struct esas2r_target *t;
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		memset(t, 0, sizeof(struct esas2r_target));
-+
-+		t->target_state = TS_NOT_PRESENT;
-+		t->buffered_target_state = TS_NOT_PRESENT;
-+		t->new_target_state = TS_INVALID;
-+	}
-+}
-+
-+void esas2r_targ_db_remove_all(struct esas2r_adapter *a, bool notify)
-+{
-+	struct esas2r_target *t;
-+	unsigned long flags;
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		if (t->target_state != TS_PRESENT)
-+			continue;
-+
-+		spin_lock_irqsave(&a->mem_lock, flags);
-+		esas2r_targ_db_remove(a, t);
-+		spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+		if (notify) {
-+			esas2r_trace("remove id:%d", esas2r_targ_get_id(t,
-+									a));
-+			esas2r_target_state_changed(a, esas2r_targ_get_id(t,
-+									  a),
-+						    TS_NOT_PRESENT);
-+		}
-+	}
-+}
-+
-+void esas2r_targ_db_report_changes(struct esas2r_adapter *a)
-+{
-+	struct esas2r_target *t;
-+	unsigned long flags;
-+
-+	esas2r_trace_enter();
-+
-+	if (a->flags & AF_DISC_PENDING) {
-+		esas2r_trace_exit();
-+		return;
-+	}
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		u8 state = TS_INVALID;
-+
-+		spin_lock_irqsave(&a->mem_lock, flags);
-+		if (t->buffered_target_state != t->target_state)
-+			state = t->buffered_target_state = t->target_state;
-+
-+		spin_unlock_irqrestore(&a->mem_lock, flags);
-+		if (state != TS_INVALID) {
-+			esas2r_trace("targ_db_report_changes:%d",
-+				     esas2r_targ_get_id(
-+					     t,
-+					     a));
-+			esas2r_trace("state:%d", state);
-+
-+			esas2r_target_state_changed(a,
-+						    esas2r_targ_get_id(t,
-+								       a),
-+						    state);
-+		}
-+	}
-+
-+	esas2r_trace_exit();
-+}
-+
-+struct esas2r_target *esas2r_targ_db_add_raid(struct esas2r_adapter *a,
-+					      struct esas2r_disc_context *
-+					      dc)
-+{
-+	struct esas2r_target *t;
-+
-+	esas2r_trace_enter();
-+
-+	if (dc->curr_virt_id >= ESAS2R_MAX_TARGETS) {
-+		esas2r_bugon();
-+		esas2r_trace_exit();
-+		return NULL;
-+	}
-+
-+	t = a->targetdb + dc->curr_virt_id;
-+
-+	if (t->target_state == TS_PRESENT) {
-+		esas2r_trace_exit();
-+		return NULL;
-+	}
-+
-+	esas2r_hdebug("add RAID %s, T:%d", dc->raid_grp_name,
-+		      esas2r_targ_get_id(
-+			      t,
-+			      a));
-+
-+	if (dc->interleave == 0
-+	    || dc->block_size  == 0) {
-+		/* these are invalid values, don't create the target entry. */
-+
-+		esas2r_hdebug("invalid RAID group dimensions");
-+
-+		esas2r_trace_exit();
-+
-+		return NULL;
-+	}
-+
-+	t->block_size = dc->block_size;
-+	t->inter_byte = dc->interleave;
-+	t->inter_block = dc->interleave / dc->block_size;
-+	t->virt_targ_id = dc->curr_virt_id;
-+	t->phys_targ_id = ESAS2R_TARG_ID_INV;
-+
-+	t->flags &= ~TF_PASS_THRU;
-+	t->flags |= TF_USED;
-+
-+	t->identifier_len = 0;
-+
-+	t->target_state = TS_PRESENT;
-+
-+	return t;
-+}
-+
-+struct esas2r_target *esas2r_targ_db_add_pthru(struct esas2r_adapter *a,
-+					       struct esas2r_disc_context *dc,
-+					       u8 *ident,
-+					       u8 ident_len)
-+{
-+	struct esas2r_target *t;
-+
-+	esas2r_trace_enter();
-+
-+	if (dc->curr_virt_id >= ESAS2R_MAX_TARGETS) {
-+		esas2r_bugon();
-+		esas2r_trace_exit();
-+		return NULL;
-+	}
-+
-+	/* see if we found this device before. */
-+
-+	t = esas2r_targ_db_find_by_ident(a, ident, ident_len);
-+
-+	if (t == NULL) {
-+		t = a->targetdb + dc->curr_virt_id;
-+
-+		if (ident_len > sizeof(t->identifier)
-+		    || t->target_state == TS_PRESENT) {
-+			esas2r_trace_exit();
-+			return NULL;
-+		}
-+	}
-+
-+	esas2r_hdebug("add PT; T:%d, V:%d, P:%d", esas2r_targ_get_id(t, a),
-+		      dc->curr_virt_id,
-+		      dc->curr_phys_id);
-+
-+	t->block_size = 0;
-+	t->inter_byte = 0;
-+	t->inter_block = 0;
-+	t->virt_targ_id = dc->curr_virt_id;
-+	t->phys_targ_id = dc->curr_phys_id;
-+	t->identifier_len = ident_len;
-+
-+	memcpy(t->identifier, ident, ident_len);
-+
-+	t->flags |= TF_PASS_THRU | TF_USED;
-+
-+	t->target_state = TS_PRESENT;
-+
-+	return t;
-+}
-+
-+void esas2r_targ_db_remove(struct esas2r_adapter *a, struct esas2r_target *t)
-+{
-+	esas2r_trace_enter();
-+
-+	t->target_state = TS_NOT_PRESENT;
-+
-+	esas2r_trace("remove id:%d", esas2r_targ_get_id(t, a));
-+
-+	esas2r_trace_exit();
-+}
-+
-+struct esas2r_target *esas2r_targ_db_find_by_sas_addr(struct esas2r_adapter *a,
-+						      u64 *sas_addr)
-+{
-+	struct esas2r_target *t;
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++)
-+		if (t->sas_addr == *sas_addr)
-+			return t;
-+
-+	return NULL;
-+}
-+
-+struct esas2r_target *esas2r_targ_db_find_by_ident(struct esas2r_adapter *a,
-+						   void *identifier,
-+						   u8 ident_len)
-+{
-+	struct esas2r_target *t;
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		if (ident_len == t->identifier_len
-+		    && memcmp(&t->identifier[0], identifier,
-+			      ident_len) == 0)
-+			return t;
-+	}
-+
-+	return NULL;
-+}
-+
-+u16 esas2r_targ_db_find_next_present(struct esas2r_adapter *a, u16 target_id)
-+{
-+	u16 id = target_id + 1;
-+
-+	while (id < ESAS2R_MAX_TARGETS) {
-+		struct esas2r_target *t = a->targetdb + id;
-+
-+		if (t->target_state == TS_PRESENT)
-+			break;
-+
-+		id++;
-+	}
-+
-+	return id;
-+}
-+
-+struct esas2r_target *esas2r_targ_db_find_by_virt_id(struct esas2r_adapter *a,
-+						     u16 virt_id)
-+{
-+	struct esas2r_target *t;
-+
-+	for (t = a->targetdb; t < a->targetdb_end; t++) {
-+		if (t->target_state != TS_PRESENT)
-+			continue;
-+
-+		if (t->virt_targ_id == virt_id)
-+			return t;
-+	}
-+
-+	return NULL;
-+}
-+
-+u16 esas2r_targ_db_get_tgt_cnt(struct esas2r_adapter *a)
-+{
-+	u16 devcnt = 0;
-+	struct esas2r_target *t;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&a->mem_lock, flags);
-+	for (t = a->targetdb; t < a->targetdb_end; t++)
-+		if (t->target_state == TS_PRESENT)
-+			devcnt++;
-+
-+	spin_unlock_irqrestore(&a->mem_lock, flags);
-+
-+	return devcnt;
-+}
++#define ATTO_FUNC_PHY_CTRL           0x06
++#define ATTO_FUNC_CONN_CTRL          0x0C
++#define ATTO_FUNC_ADAP_CTRL          0x0E
++#define ATTO_VER_ADAP_CTRL0          0
++#define ATTO_VER_ADAP_CTRL           ATTO_VER_ADAP_CTRL0
++
++struct __packed atto_hba_adap_ctrl {
++	u8 adap_func;
++	#define ATTO_AC_AF_HARD_RST      0x00
++	#define ATTO_AC_AF_GET_STATE     0x01
++	#define ATTO_AC_AF_GET_TEMP      0x02
++
++	u8 adap_state;
++	#define ATTO_AC_AS_UNKNOWN       0x00
++	#define ATTO_AC_AS_OK            0x01
++	#define ATTO_AC_AS_RST_SCHED     0x02
++	#define ATTO_AC_AS_RST_IN_PROG   0x03
++	#define ATTO_AC_AS_RST_DISC      0x04
++	#define ATTO_AC_AS_DEGRADED      0x05
++	#define ATTO_AC_AS_DISABLED      0x06
++	#define ATTO_AC_AS_TEMP          0x07
++
++	u8 reserved[2];
++
++	union {
++		struct {
++			u8 temp_sensor;
++			u8 temp_state;
++
++	#define ATTO_AC_TS_UNSUPP        0x00
++	#define ATTO_AC_TS_UNKNOWN       0x01
++	#define ATTO_AC_TS_INIT_FAILED   0x02
++	#define ATTO_AC_TS_NORMAL        0x03
++	#define ATTO_AC_TS_OUT_OF_RANGE  0x04
++	#define ATTO_AC_TS_FAULT         0x05
++
++			signed short temp_value;
++			signed short temp_lower_lim;
++			signed short temp_upper_lim;
++			char temp_desc[32];
++			u8 reserved2[20];
++		};
++	};
++};
++
++#define ATTO_FUNC_GET_DEV_INFO       0x0F
++#define ATTO_VER_GET_DEV_INFO0       0
++#define ATTO_VER_GET_DEV_INFO        ATTO_VER_GET_DEV_INFO0
++
++struct __packed atto_hba_sas_device_info {
++
++    #define ATTO_SDI_MAX_PHYS_WIDE_PORT  16
++
++	u8 phy_id[ATTO_SDI_MAX_PHYS_WIDE_PORT]; /* IDs of parent exp/adapt */
++	#define ATTO_SDI_PHY_ID_INV      ATTO_SAS_PHY_ID_INV
++	u32 exp_target_id;
++	u32 sas_port_mask;
++	u8 sas_level;
++	#define ATTO_SDI_SAS_LVL_INV     0xFF
++
++	u8 slot_num;
++	#define ATTO_SDI_SLOT_NUM_INV    ATTO_SLOT_NUM_INV
++
++	u8 dev_type;
++	#define ATTO_SDI_DT_END_DEVICE   0
++	#define ATTO_SDI_DT_EXPANDER     1
++	#define ATTO_SDI_DT_PORT_MULT    2
++
++	u8 ini_flags;
++	u8 tgt_flags;
++	u8 link_rate; /* SMP_RATE_XXX */
++	u8 loc_flags;
++	#define ATTO_SDI_LF_DIRECT       0x01
++	#define ATTO_SDI_LF_EXPANDER     0x02
++	#define ATTO_SDI_LF_PORT_MULT    0x04
++	u8 pm_port;
++	u8 reserved[0x60];
++};
++
++union atto_hba_device_info {
++	struct atto_hba_sas_device_info sas_dev_info;
++};
++
++struct __packed atto_hba_get_device_info {
++	u32 target_id;
++	u8 info_type;
++	#define ATTO_GDI_IT_UNKNOWN      0x00
++	#define ATTO_GDI_IT_SAS          0x01
++	#define ATTO_GDI_IT_FC           0x02
++	#define ATTO_GDI_IT_FCOE         0x03
++
++	u8 reserved[11];
++	union atto_hba_device_info dev_info;
++};
++
++struct atto_ioctl {
++	u8 version;
++	u8 function; /* ATTO_FUNC_XXX */
++	u8 status;
++#define ATTO_STS_SUCCESS         0x00
++#define ATTO_STS_FAILED          0x01
++#define ATTO_STS_INV_VERSION     0x02
++#define ATTO_STS_OUT_OF_RSRC     0x03
++#define ATTO_STS_INV_FUNC        0x04
++#define ATTO_STS_UNSUPPORTED     0x05
++#define ATTO_STS_INV_ADAPTER     0x06
++#define ATTO_STS_INV_DRVR_VER    0x07
++#define ATTO_STS_INV_PARAM       0x08
++#define ATTO_STS_TIMEOUT         0x09
++#define ATTO_STS_NOT_APPL        0x0A
++#define ATTO_STS_DEGRADED        0x0B
++
++	u8 flags;
++	#define HBAF_TUNNEL      0x01
++
++	u32 data_length;
++	u8 reserved2[56];
++
++	union {
++		u8 byte[1];
++		struct atto_hba_get_adapter_info get_adap_info;
++		struct atto_hba_get_adapter_address get_adap_addr;
++		struct atto_hba_scsi_pass_thru scsi_pass_thru;
++		struct atto_hba_get_device_address get_dev_addr;
++		struct atto_hba_adap_ctrl adap_ctrl;
++		struct atto_hba_get_device_info get_dev_info;
++		struct atto_hba_trace trace;
++	} data;
++
++};
++
++struct __packed atto_ioctl_vda_scsi_cmd {
++
++    #define ATTO_VDA_SCSI_VER0   0
++    #define ATTO_VDA_SCSI_VER    ATTO_VDA_SCSI_VER0
++
++	u8 cdb[16];
++	u32 flags;
++	u32 data_length;
++	u32 residual_length;
++	u16 target_id;
++	u8 sense_len;
++	u8 scsi_stat;
++	u8 reserved[8];
++	u8 sense_data[80];
++};
++
++struct __packed atto_ioctl_vda_flash_cmd {
++
++    #define ATTO_VDA_FLASH_VER0  0
++    #define ATTO_VDA_FLASH_VER   ATTO_VDA_FLASH_VER0
++
++	u32 flash_addr;
++	u32 data_length;
++	u8 sub_func;
++	u8 reserved[15];
++
++	union {
++		struct {
++			u32 flash_size;
++			u32 page_size;
++			u8 prod_info[32];
++		} info;
++
++		struct {
++			char file_name[16]; /* 8.3 fname, NULL term, wc=* */
++			u32 file_size;
++		} file;
++	} data;
++
++};
++
++struct __packed atto_ioctl_vda_diag_cmd {
++
++    #define ATTO_VDA_DIAG_VER0   0
++    #define ATTO_VDA_DIAG_VER    ATTO_VDA_DIAG_VER0
++
++	u64 local_addr;
++	u32 data_length;
++	u8 sub_func;
++	u8 flags;
++	u8 reserved[3];
++};
++
++struct __packed atto_ioctl_vda_cli_cmd {
++
++    #define ATTO_VDA_CLI_VER0    0
++    #define ATTO_VDA_CLI_VER     ATTO_VDA_CLI_VER0
++
++	u32 cmd_rsp_len;
++};
++
++struct __packed atto_ioctl_vda_smp_cmd {
++
++    #define ATTO_VDA_SMP_VER0    0
++    #define ATTO_VDA_SMP_VER     ATTO_VDA_SMP_VER0
++
++	u64 dest;
++	u32 cmd_rsp_len;
++};
++
++struct __packed atto_ioctl_vda_cfg_cmd {
++
++    #define ATTO_VDA_CFG_VER0    0
++    #define ATTO_VDA_CFG_VER     ATTO_VDA_CFG_VER0
++
++	u32 data_length;
++	u8 cfg_func;
++	u8 reserved[11];
++
++	union {
++		u8 bytes[112];
++		struct atto_vda_cfg_init init;
++	} data;
++
++};
++
++struct __packed atto_ioctl_vda_mgt_cmd {
++
++    #define ATTO_VDA_MGT_VER0    0
++    #define ATTO_VDA_MGT_VER     ATTO_VDA_MGT_VER0
++
++	u8 mgt_func;
++	u8 scan_generation;
++	u16 dev_index;
++	u32 data_length;
++	u8 reserved[8];
++	union {
++		u8 bytes[112];
++		struct atto_vda_devinfo dev_info;
++		struct atto_vda_grp_info grp_info;
++		struct atto_vdapart_info part_info;
++		struct atto_vda_dh_info dh_info;
++		struct atto_vda_metrics_info metrics_info;
++		struct atto_vda_schedule_info sched_info;
++		struct atto_vda_n_vcache_info nvcache_info;
++		struct atto_vda_buzzer_info buzzer_info;
++		struct atto_vda_adapter_info adapter_info;
++		struct atto_vda_temp_info temp_info;
++		struct atto_vda_fan_info fan_info;
++	} data;
++};
++
++struct __packed atto_ioctl_vda_gsv_cmd {
++
++    #define ATTO_VDA_GSV_VER0    0
++    #define ATTO_VDA_GSV_VER     ATTO_VDA_GSV_VER0
++
++	u8 rsp_len;
++	u8 reserved[7];
++	u8 version_info[1];
++	#define ATTO_VDA_VER_UNSUPPORTED 0xFF
++
++};
++
++struct __packed atto_ioctl_vda {
++	u8 version;
++	u8 function;    /* VDA_FUNC_XXXX */
++	u8 status;      /* ATTO_STS_XXX */
++	u8 vda_status;  /* RS_XXX (if status == ATTO_STS_SUCCESS) */
++	u32 data_length;
++	u8 reserved[8];
++
++	union {
++		struct atto_ioctl_vda_scsi_cmd scsi;
++		struct atto_ioctl_vda_flash_cmd flash;
++		struct atto_ioctl_vda_diag_cmd diag;
++		struct atto_ioctl_vda_cli_cmd cli;
++		struct atto_ioctl_vda_smp_cmd smp;
++		struct atto_ioctl_vda_cfg_cmd cfg;
++		struct atto_ioctl_vda_mgt_cmd mgt;
++		struct atto_ioctl_vda_gsv_cmd gsv;
++		u8 cmd_info[256];
++	} cmd;
++
++	union {
++		u8 data[1];
++		struct atto_vda_devinfo2 dev_info2;
++	} data;
++
++};
++
++struct __packed atto_ioctl_smp {
++	u8 version;
++	#define ATTO_SMP_VERSION0        0
++	#define ATTO_SMP_VERSION1        1
++	#define ATTO_SMP_VERSION2        2
++	#define ATTO_SMP_VERSION         ATTO_SMP_VERSION2
++
++	u8 function;
++#define ATTO_SMP_FUNC_DISC_SMP           0x00
++#define ATTO_SMP_FUNC_DISC_TARG          0x01
++#define ATTO_SMP_FUNC_SEND_CMD           0x02
++#define ATTO_SMP_FUNC_DISC_TARG_DIRECT   0x03
++#define ATTO_SMP_FUNC_SEND_CMD_DIRECT    0x04
++#define ATTO_SMP_FUNC_DISC_SMP_DIRECT    0x05
++
++	u8 status;      /* ATTO_STS_XXX */
++	u8 smp_status;  /* if status == ATTO_STS_SUCCESS */
++	#define ATTO_SMP_STS_SUCCESS     0x00
++	#define ATTO_SMP_STS_FAILURE     0x01
++	#define ATTO_SMP_STS_RESCAN      0x02
++	#define ATTO_SMP_STS_NOT_FOUND   0x03
++
++	u16 target_id;
++	u8 phy_id;
++	u8 dev_index;
++	u64 smp_sas_addr;
++	u64 targ_sas_addr;
++	u32 req_length;
++	u32 rsp_length;
++	u8 flags;
++	#define ATTO_SMPF_ROOT_EXP       0x01 /* expander direct attached */
++
++	u8 reserved[31];
++
++	union {
++		u8 byte[1];
++		u32 dword[1];
++	} data;
++
++};
++
++struct __packed atto_express_ioctl {
++	struct atto_express_ioctl_header header;
++
++	union {
++		struct atto_firmware_rw_request fwrw;
++		struct atto_param_rw_request prw;
++		struct atto_channel_list chanlist;
++		struct atto_channel_info chaninfo;
++		struct atto_ioctl ioctl_hba;
++		struct atto_module_info modinfo;
++		struct atto_ioctl_vda ioctl_vda;
++		struct atto_ioctl_smp ioctl_smp;
++		struct atto_csmi csmi;
++
++	} data;
++};
++
++/* The struct associated with the code is listed after the definition */
++#define EXPRESS_IOCTL_MIN             0x4500
++#define EXPRESS_IOCTL_RW_FIRMWARE     0x4500            /* FIRMWARERW    */
++#define EXPRESS_IOCTL_READ_PARAMS     0x4501            /* PARAMRW       */
++#define EXPRESS_IOCTL_WRITE_PARAMS    0x4502            /* PARAMRW       */
++#define EXPRESS_IOCTL_FC_API          0x4503            /* internal      */
++#define EXPRESS_IOCTL_GET_CHANNELS    0x4504            /* CHANNELLIST   */
++#define EXPRESS_IOCTL_CHAN_INFO       0x4505            /* CHANNELINFO   */
++#define EXPRESS_IOCTL_DEFAULT_PARAMS  0x4506            /* PARAMRW       */
++#define EXPRESS_ADDR_MEMORY           0x4507            /* MEMADDR       */
++#define EXPRESS_RW_MEMORY             0x4508            /* MEMRW         */
++#define EXPRESS_TSDK_DUMP             0x4509            /* TSDKDUMP      */
++#define EXPRESS_IOCTL_SMP             0x450A            /* IOCTL_SMP     */
++#define EXPRESS_CSMI                  0x450B            /* CSMI          */
++#define EXPRESS_IOCTL_HBA             0x450C            /* IOCTL_HBA     */
++#define EXPRESS_IOCTL_VDA             0x450D            /* IOCTL_VDA     */
++#define EXPRESS_IOCTL_GET_ID          0x450E            /* GET_ID        */
++#define EXPRESS_IOCTL_GET_MOD_INFO    0x450F            /* MODULE_INFO   */
++#define EXPRESS_IOCTL_MAX             0x450F
++
++#endif
 -- 
 1.8.1.4
 
