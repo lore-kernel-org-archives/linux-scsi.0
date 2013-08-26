@@ -1,75 +1,50 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 2/2] scsi_debug: fix logical block provisioning support when unmap_alignment != 0
-Date: Mon, 26 Aug 2013 22:08:41 +0900
-Message-ID: <1377522521-9371-3-git-send-email-akinobu.mita@gmail.com>
-References: <1377522521-9371-1-git-send-email-akinobu.mita@gmail.com>
+From: Seungwon Jeon <tgih.jun@samsung.com>
+Subject: [PATCH 1/2] scsi: fix warning with unused variable
+Date: Mon, 26 Aug 2013 23:19:27 +0900
+Message-ID: <003301cea267$45ea3070$d1be9150$%jun@samsung.com>
+References: <60A4377E7BEE4B2EA7855F9701B34BF0@chingDT>
+ <1377512423.20958.7.camel@dabdike>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:35904 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756372Ab3HZNKC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2013 09:10:02 -0400
-Received: by mail-pb0-f54.google.com with SMTP id ro12so3428570pbb.27
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 06:10:01 -0700 (PDT)
-In-Reply-To: <1377522521-9371-1-git-send-email-akinobu.mita@gmail.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:37910 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047Ab3HZOT3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2013 10:19:29 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MS500ITW6GD0S50@mailout2.samsung.com> for
+ linux-scsi@vger.kernel.org; Mon, 26 Aug 2013 23:19:28 +0900 (KST)
+In-reply-to: <1377512423.20958.7.camel@dabdike>
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: 'linux-scsi' <linux-scsi@vger.kernel.org>
+Cc: 'James Bottomley' <James.Bottomley@HansenPartnership.com>
 
-Commit b90ebc3d5c41c9164ae04efd2e4f8204c2a186f1 ("[SCSI] scsi_debug:
-fix logical block provisioning support") fixed several issues with
-logical block provisioning support, but it still doesn't properly fix
-the cases when unmap_alignment > 0.
+drivers/scsi/scsi_error.c:246:16: warning: unused variable 'flags' [-Wunused-variable]
 
-For example, load scsi_debug module with the following module parameters
-and make all blocks mapped by filling the storage with zero.
-
-        # modprobe scsi_debug lbpu=1 unmap_alignment=1 unmap_granularity=4
-        # dd if=/dev/zero of=$DEV
-
-Then, try to unmap the first unmappable blocks at lba=1, but GET LBA STATUS
-unexpectedly reports that the last UNMAP has done nothing.
-
-        # sg_unmap --lba=1 --num=4 $DEV
-        # sg_get_lba_status --lba=1 $DEV
-        descriptor LBA: 0x0000000000000001  blocks: 16383  mapped
-
-The problem is in map_index_to_lba(), which should return the first
-LBA which is corresponding to a given index of provisioning map
-(map_storep).
-
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-Acked-by: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 ---
- drivers/scsi/scsi_debug.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_error.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 2f39b13..01c0ffa 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1997,8 +1997,14 @@ static unsigned long lba_to_map_index(sector_t lba)
- 
- static sector_t map_index_to_lba(unsigned long index)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index f16d1a6..83e591b 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -243,7 +243,6 @@ static void scsi_report_sense(struct scsi_device *sdev,
+ 			      struct scsi_sense_hdr *sshdr)
  {
--	return index * scsi_debug_unmap_granularity -
--		scsi_debug_unmap_alignment;
-+	sector_t lba = index * scsi_debug_unmap_granularity;
-+
-+	if (scsi_debug_unmap_alignment) {
-+		lba -= scsi_debug_unmap_granularity -
-+			scsi_debug_unmap_alignment;
-+	}
-+
-+	return lba;
- }
+ 	enum scsi_device_event evt_type = SDEV_EVT_MAXBITS;	/* i.e. none */
+-	unsigned long flags;
  
- static unsigned int map_state(sector_t lba, unsigned int *num)
+ 	if (sshdr->sense_key == UNIT_ATTENTION) {
+ 		if (sshdr->asc == 0x3f && sshdr->ascq == 0x03) {
 -- 
-1.8.3.1
+1.7.0.4
+
 
