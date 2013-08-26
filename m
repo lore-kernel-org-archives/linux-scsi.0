@@ -1,72 +1,72 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/9] scsi: ufs: Add support for sending NOP OUT UPIU
-Date: Mon, 26 Aug 2013 12:55:57 +0400
-Message-ID: <1377507357.3469.6.camel@dabdike>
-References: <1375124765-4110-1-git-send-email-santoshsy@gmail.com>
-	  <1375124765-4110-2-git-send-email-santoshsy@gmail.com>
-	 <1377281830.4147.61.camel@dabdike> <521AC764.5030001@codeaurora.org>
+From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
+Subject: RE: [PATCH 5/8][SCSI] mpt2sas: Infinite loop can occur if
+ MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned
+Date: Mon, 26 Aug 2013 14:29:28 +0530
+Message-ID: <DCD177647606E9419ED923E0C8C4AA723006D9A508@inbmail02.lsi.com>
+References: <20130725055945.GA29898@lsi.com>
+	 <1374760824.1952.1.camel@dabdike> <1377506486.3469.3.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59910 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751686Ab3HZI4G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Aug 2013 04:56:06 -0400
-In-Reply-To: <521AC764.5030001@codeaurora.org>
+Received: from co1ehsobe006.messaging.microsoft.com ([216.32.180.189]:50383
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756607Ab3HZI7s convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Aug 2013 04:59:48 -0400
+In-Reply-To: <1377506486.3469.3.camel@dabdike>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Santosh Y <santoshsy@gmail.com>, linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Dolev Raviv <draviv@codeaurora.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
 
-On Mon, 2013-08-26 at 08:41 +0530, Sujit Reddy Thumma wrote:
-> On 8/23/2013 11:47 PM, James Bottomley wrote:
-> >
-> > On Tue, 2013-07-30 at 00:35 +0530, Santosh Y wrote:
-> >> From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> >>
-> >> As part of device initialization sequence, sending NOP OUT UPIU and
-> >> waiting for NOP IN UPIU response is mandatory. This confirms that the
-> >> device UFS Transport (UTP) layer is functional and the host can configure
-> >> the device with further commands. Add support for sending NOP OUT UPIU to
-> >> check the device connection path and test whether the UTP layer on the
-> >> device side is functional during initialization.
-> >>
-> >> A tag is acquired from the SCSI tag map space in order to send the device
-> >> management command. When the tag is acquired by internal command the scsi
-> >> command is rejected with host busy flag in order to requeue the request.
-> >> To avoid frequent collisions between internal commands and scsi commands
-> >> the device management command tag is allocated in the opposite direction
-> >> w.r.t block layer tag allocation.
-> >>
-> >> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> >> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> >> Signed-off-by: Santosh Y <santoshsy@gmail.com>
-> >
-> > This signoff chain looks wrong to me.  The patch has quite a long
-> > history.  Originally, it was sent in by Sujit, then later resent by
-> > Dolev with his signoff, then Sujit did a V2 which incorrectly seemed to
-> > include Dolev's signoff (that's not correct: signoffs should follow the
-> > chain of transmission, so a new patch wouldn't have a previous
-> > transmission signoff).
-> 
-> Initially we had two patches -
-> 
-> scsi: ufs: add support for query requests authored by Dolev and
-> scsi: ufs: Add support for sending NOP OUT UPIU authored by me.
-> 
-> Based on a possible design issue with the former patch, Dolev merged
-> the patch into the later (NOP OUT patch).
-> http://thread.gmane.org/gmane.linux.ports.arm.msm/4202/focus=1505731
-> 
-> Since some of the contents are picked from the original patch during
-> rework, I have asked Dolev include his Signed-off-by as a co-author.
+Hi James,
 
-OK thanks for the clarification, I redid the signoffs and rebased the
-misc tree.
+Sorry  for the delay. 
 
-James
+we support the first method i.e. "strip the cc: stable from this patch and send it to the misc branch".
 
+Thanks,
+Sreekanth.
+
+>-----Original Message-----
+>From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+>Sent: Monday, August 26, 2013 2:11 PM
+>To: Reddy, Sreekanth
+>Cc: linux-scsi; Prakash, Sathya; Nandigama, Nagalakshmi
+>Subject: Re: [PATCH 5/8][SCSI] mpt2sas: Infinite loop can occur if
+>MPI2_IOCSTATUS_CONFIG_INVALID_PAGE is not returned
+>
+>On Thu, 2013-07-25 at 07:00 -0700, James Bottomley wrote:
+>> On Thu, 2013-07-25 at 11:29 +0530, Sreekanth Reddy wrote:
+>> > Infinite loop can occur if IOCStatus is not equal to
+>> > MPI2_IOCSTATUS_CONFIG_INVALID_PAGE value in the while loops in
+>> > functions _scsih_search_responding_sas_devices,
+>> > _scsih_search_responding_raid_devices and
+>> > _scsih_search_responding_expanders
+>> >
+>> > So, Instead of checking for MPI2_IOCSTATUS_CONFIG_INVALID_PAGE
+>> > value, in this patch code is modified to check for IOCStatus not
+>> > equals to MPI2_IOCSTATUS_SUCCESS to break the while loop.
+>> >
+>> > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+>> > Cc: stable@vger.kernel.org
+>>
+>> Patches like this aren't acceptable any more: Greg will find this and
+>> reject it from Stable.
+>>
+>> If there's a bug in the driver, it needs to be in a separate patch set
+>> for the fixes branch of SCSI to go upstream now rather than waiting
+>> for the merge window.  Only patches for the fixes branch can be tagged
+>> for stable.
+>
+>Ping on this, please.  What do you want me to do?  I can strip the cc:
+>stable from the series and send it to the misc branch or you can resubmit as
+>two series: one for fixes with the stable tags and the rest for misc.
+>
+>James
+>
+>
 
 
