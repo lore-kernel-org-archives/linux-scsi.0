@@ -1,53 +1,68 @@
-From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
-Subject: RE: [PATCH 0/2] mpt{2,3}sas remove disconnected phys on topology
- change
-Date: Mon, 26 Aug 2013 15:52:21 +0530
-Message-ID: <DCD177647606E9419ED923E0C8C4AA723006D9A536@inbmail02.lsi.com>
-References: <1375351291-27107-1-git-send-email-jvesely@redhat.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 1/3] hpsa: remove unneeded loop
+Date: Mon, 26 Aug 2013 12:57:38 +0200
+Message-ID: <521B34A2.9020003@redhat.com>
+References: <51FA5E7A.9050000@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1375351291-27107-1-git-send-email-jvesely@redhat.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Vesely <jvesely@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>
-Cc: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, Tomas Henzl <thenzl@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:26135 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751740Ab3HZK6u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Aug 2013 06:58:50 -0400
+In-Reply-To: <51FA5E7A.9050000@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, James Bottomley <jejb@kernel.org>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, stephenmcameron@gmail.com, mikem@beardog.cce.hp.com
 
 Hi James,
 
-This patch set seem to be fine. Please consider this patch set.
+I've gotten mail that you have accepted patches 2/3 and 3/3 from this series.
+This one has been accepted by Steve also, so please consider taking also this 1/3.
 
-Regards,
-Sreekanth
+Thanks, Tomas
 
->-----Original Message-----
->From: Jan Vesely [mailto:jvesely@redhat.com]
->Sent: Thursday, August 01, 2013 3:31 PM
->To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
->Cc: Jan Vesely; Nandigama, Nagalakshmi; Reddy, Sreekanth; Tomas Henzl
->Subject: [PATCH 0/2] mpt{2,3}sas remove disconnected phys on topology
->change
+
+
+On 08/01/2013 03:11 PM, Tomas Henzl wrote:
+
+> From: Tomas Henzl <thenzl@redhat.com>
 >
->From: Jan Vesely <jvesely@redhat.com>
+> The cmd_pool_bits is protected everywhere with a spinlock, 
+> we don't need the test_and_set_bit, set_bit is enough and the loop
+> can be removed too.
 >
->These two patches add phy removal on link loss. This change keeps sysfs up-
->to-date with actually connected phys. Without these patches,  disconnected
->phys remain listed under their former ports.
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+>  drivers/scsi/hpsa.c | 15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
 >
->tested on both mpt2sas and mpt3sas hw.
->
->CC: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
->CC: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
->CC: Tomas Henzl <thenzl@redhat.com>
->Signed-off-by: Jan Vesely <jvesely@redhat.com>
->
->Jan Vesely (2):
->  mpt2sas: Remove phys on topology change.
->  mpt3sas: Remove phys on topology change
->
-> drivers/scsi/mpt2sas/mpt2sas_transport.c |    5 ++++-
-> drivers/scsi/mpt3sas/mpt3sas_transport.c |    5 ++++-
-> 2 files changed, 8 insertions(+), 2 deletions(-)
->
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 796482b..d7df01e 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -2662,15 +2662,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+>  	unsigned long flags;
+>  
+>  	spin_lock_irqsave(&h->lock, flags);
+> -	do {
+> -		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+> -		if (i == h->nr_cmds) {
+> -			spin_unlock_irqrestore(&h->lock, flags);
+> -			return NULL;
+> -		}
+> -	} while (test_and_set_bit
+> -		 (i & (BITS_PER_LONG - 1),
+> -		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
+> +	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+> +	if (i == h->nr_cmds) {
+> +		spin_unlock_irqrestore(&h->lock, flags);
+> +		return NULL;
+> +	}
+> +	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
+>  	h->nr_allocs++;
+>  	spin_unlock_irqrestore(&h->lock, flags);
+>  
+
