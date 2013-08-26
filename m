@@ -1,31 +1,45 @@
-From: "reaal@sns.nl" <reaal@sns.nl>
-Subject: =?utf-8?B?W1NQQU1d?= - let's discuss further
-Date: Sun, 25 Aug 2013 05:02:59 -0700
-Message-ID: <SERVER1O2Bw2DIalkKn00014207@ci.white-salmon.wa.us>
-Reply-To: boucherdavid01@gmail.com
+From: Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [PATCH 05/16] megaraid: clean up unnecessary MSI/MSI-X capability
+ find
+Date: Mon, 26 Aug 2013 09:40:11 +0800
+Message-ID: <521AB1FB.6070401@huawei.com>
+References: <1375967264-25644-1-git-send-email-wangyijing@huawei.com> <088E451FE1854947BD9145EF8C016FF413A00DC559@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from or-65-40-220-155.sta.embarqhsd.net ([65.40.220.155]:20998 "EHLO
-	ci.white-salmon.wa.us" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756546Ab3HYPyT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Aug 2013 11:54:19 -0400
+Received: from szxga03-in.huawei.com ([119.145.14.66]:47542 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754857Ab3HZBlR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Aug 2013 21:41:17 -0400
+In-Reply-To: <088E451FE1854947BD9145EF8C016FF413A00DC559@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: "Saxena, Sumit" <Sumit.Saxena@lsi.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hello,
+>> PCI_MSIX_FLAGS,
+>> 						      control &
+>> 						      ~PCI_MSIX_FLAGS_ENABLE);
+>> 			}
+>> --
+>> 1.7.1
+>>
+>>
+> Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
 
-How are you and i hope your day is going well.
+Hi James,
+   Can you merge this patch?
 
-Without taking much of your time, i want to bring you into a business
-venture which i think would be of interest and concern to you, since it has
-to do with a perceived family member of yours. However i need to
-be sure that you must have received this communication so i will not divulge
-much information about it until i get a response from you.
+Thanks!
+Yijing.
 
-Kindly respond back to me.
-Regards,
-David
+
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
 
