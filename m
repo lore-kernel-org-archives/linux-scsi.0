@@ -1,24 +1,23 @@
 From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: [PATCH v3 0/6] scsi: ufs: some fixes and updates
-Date: Mon, 26 Aug 2013 23:40:12 +0900
-Message-ID: <003501cea26a$2c056ff0$84104fd0$%jun@samsung.com>
+Subject: [PATCH v3 1/6] scsi: ufs: find out sense data over scsi status values
+Date: Mon, 26 Aug 2013 23:40:21 +0900
+Message-ID: <003601cea26a$31334600$9399d200$%jun@samsung.com>
 References: <1374280885-11526-1-git-send-email-mita@fixstars.com>
- <1374280885-11526-3-git-send-email-mita@fixstars.com>
- <001b01ce8a06$514953c0$f3dbfb40$%jun@samsung.com>
+ <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:39028 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab3HZOkN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2013 10:40:13 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:33152 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752105Ab3HZOkX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2013 10:40:23 -0400
 Received: from epcpsbgr2.samsung.com
  (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MS500I6K7F00S60@mailout2.samsung.com> for
- linux-scsi@vger.kernel.org; Mon, 26 Aug 2013 23:40:13 +0900 (KST)
+ with ESMTP id <0MS500BKB7F9I270@mailout3.samsung.com> for
+ linux-scsi@vger.kernel.org; Mon, 26 Aug 2013 23:40:21 +0900 (KST)
 In-reply-to: 
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
@@ -26,31 +25,106 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <James.Bottomley@HansenPartnership.com>
 
-This path series contain driver's fixes and updates.
+Unlike 'GOOD' and 'CHECK CONDITION', other status values in
+Response UPIU may or may not contain sense data. That is returning
+sense data isn't obvious. So, in this case the Data Segment Length
+field should be checked. If a non-zero value, it means that UPIU
+has Sense Data in the Data Segment area.
 
-Changes in v3:
- - Rebased with scsi-next
-
-Changes in v2:
-- [scsi: ufs: amend the ocs handling with fatal error] is excluded.
-   Host behavior needs to be defined clearly in UFSHCI specification.
-- Some minor changes are applied with comments from Subhash, Sujit and Santosh.
-
-Seungwon Jeon (6):
-      scsi: ufs: find out sense data over scsi status values
-      scsi: ufs: fix the setting interrupt aggregation counter
-      scsi: ufs: add dme configuration primitives
-      scsi: ufs: add unipro attribute IDs
-      scsi: ufs: add operation for the uic power mode change
-      scsi: ufs: configure the attribute for power mode
-
+Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+---
  drivers/scsi/ufs/ufs.h    |    1 +
- drivers/scsi/ufs/ufshcd.c |  328 ++++++++++++++++++++++++++++++++++++++-------
- drivers/scsi/ufs/ufshcd.h |   54 ++++++++
- drivers/scsi/ufs/ufshci.h |   22 +++-
- drivers/scsi/ufs/unipro.h |  151 +++++++++++++++++++++
- 5 files changed, 507 insertions(+), 49 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |   37 ++++++++++++++++++++++---------------
+ 2 files changed, 23 insertions(+), 15 deletions(-)
 
-Thanks,
-Seungwon Jeon
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index bce09a6..7210500 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -177,6 +177,7 @@ enum {
+ 	MASK_TASK_RESPONSE              = 0xFF00,
+ 	MASK_RSP_UPIU_RESULT            = 0xFFFF,
+ 	MASK_QUERY_DATA_SEG_LEN         = 0xFFFF,
++	MASK_RSP_UPIU_DATA_SEG_LEN	= 0xFFFF,
+ 	MASK_RSP_EXCEPTION_EVENT        = 0x10000,
+ };
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1b99c0a..6ff16c9 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -310,6 +310,20 @@ ufshcd_get_rsp_upiu_result(struct utp_upiu_rsp *ucd_rsp_ptr)
+ 	return be32_to_cpu(ucd_rsp_ptr->header.dword_1) & MASK_RSP_UPIU_RESULT;
+ }
+ 
++/*
++ * ufshcd_get_rsp_upiu_data_seg_len - Get the data segment length
++ *				from response UPIU
++ * @ucd_rsp_ptr: pointer to response UPIU
++ *
++ * Return the data segment length.
++ */
++static inline unsigned int
++ufshcd_get_rsp_upiu_data_seg_len(struct utp_upiu_rsp *ucd_rsp_ptr)
++{
++	return be32_to_cpu(ucd_rsp_ptr->header.dword_2) &
++		MASK_RSP_UPIU_DATA_SEG_LEN;
++}
++
+ /**
+  * ufshcd_is_exception_event - Check if the device raised an exception event
+  * @ucd_rsp_ptr: pointer to response UPIU
+@@ -405,7 +419,8 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
+ {
+ 	int len;
+-	if (lrbp->sense_buffer) {
++	if (lrbp->sense_buffer &&
++	    ufshcd_get_rsp_upiu_data_seg_len(lrbp->ucd_rsp_ptr)) {
+ 		len = be16_to_cpu(lrbp->ucd_rsp_ptr->sr.sense_data_len);
+ 		memcpy(lrbp->sense_buffer,
+ 			lrbp->ucd_rsp_ptr->sr.sense_data,
+@@ -1789,32 +1804,24 @@ ufshcd_scsi_cmd_status(struct ufshcd_lrb *lrbp, int scsi_status)
+ 	int result = 0;
+ 
+ 	switch (scsi_status) {
+-	case SAM_STAT_GOOD:
+-		result |= DID_OK << 16 |
+-			  COMMAND_COMPLETE << 8 |
+-			  SAM_STAT_GOOD;
+-		break;
+ 	case SAM_STAT_CHECK_CONDITION:
++		ufshcd_copy_sense_data(lrbp);
++	case SAM_STAT_GOOD:
+ 		result |= DID_OK << 16 |
+ 			  COMMAND_COMPLETE << 8 |
+-			  SAM_STAT_CHECK_CONDITION;
+-		ufshcd_copy_sense_data(lrbp);
+-		break;
+-	case SAM_STAT_BUSY:
+-		result |= SAM_STAT_BUSY;
++			  scsi_status;
+ 		break;
+ 	case SAM_STAT_TASK_SET_FULL:
+-
+ 		/*
+ 		 * If a LUN reports SAM_STAT_TASK_SET_FULL, then the LUN queue
+ 		 * depth needs to be adjusted to the exact number of
+ 		 * outstanding commands the LUN can handle at any given time.
+ 		 */
+ 		ufshcd_adjust_lun_qdepth(lrbp->cmd);
+-		result |= SAM_STAT_TASK_SET_FULL;
+-		break;
++	case SAM_STAT_BUSY:
+ 	case SAM_STAT_TASK_ABORTED:
+-		result |= SAM_STAT_TASK_ABORTED;
++		ufshcd_copy_sense_data(lrbp);
++		result |= scsi_status;
+ 		break;
+ 	default:
+ 		result |= DID_ERROR << 16;
+-- 
+1.7.0.4
+
 
