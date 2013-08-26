@@ -1,20 +1,27 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 3/9] target: Make helpers non static for EXTENDED_COPY command setup
-Date: Mon, 26 Aug 2013 22:03:02 +0000
-Message-ID: <1377554588-28394-4-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 1/9] target: Make target_core_subsystem defined as non static
+Date: Mon, 26 Aug 2013 22:03:00 +0000
+Message-ID: <1377554588-28394-2-git-send-email-nab@daterainc.com>
 References: <1377554588-28394-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:55481 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752406Ab3HZWTP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2013 18:19:15 -0400
+Received: by mail-oa0-f46.google.com with SMTP id j10so4379255oah.19
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 15:19:14 -0700 (PDT)
 In-Reply-To: <1377554588-28394-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, Roland Dreier <roland@purestorage.com>, Zach Brown <zab@redhat.com>, Kent Overstreet <kmo@daterainc.com>, Theodore Tso <tytso@mit.edu>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Nicholas Bellinger <nab@daterainc.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@daterainc.com>
 
-Both target_alloc_sgl() and transport_generic_map_mem_to_cmd() are
-required by EXTENDED_COPY logic when setting up internally dispatched
-command descriptors, so go ahead and make both of these non static.
+This patch makes the top-level target_core_subsystem array available
+to other target code, which is required by EXTENDED_COPY to pin the
+backend se_device using configfs_depend_item(), in order to ensure
+it can't be removed for the duration of a EXTENDED_COPY operation.
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
@@ -26,46 +33,22 @@ Cc: James Bottomley <JBottomley@Parallels.com>
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
 ---
- drivers/target/target_core_transport.c |    4 ++--
- include/target/target_core_backend.h   |    4 ++++
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/target/target_core_configfs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 526e5ba..6d0e523 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1253,7 +1253,7 @@ int transport_handle_cdb_direct(
- }
- EXPORT_SYMBOL(transport_handle_cdb_direct);
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 24517d4..939ecc5 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -268,7 +268,7 @@ static struct configfs_subsystem target_core_fabrics = {
+ 	},
+ };
  
--static sense_reason_t
-+sense_reason_t
- transport_generic_map_mem_to_cmd(struct se_cmd *cmd, struct scatterlist *sgl,
- 		u32 sgl_count, struct scatterlist *sgl_bidi, u32 sgl_bidi_count)
- {
-@@ -2116,7 +2116,7 @@ void transport_kunmap_data_sg(struct se_cmd *cmd)
- }
- EXPORT_SYMBOL(transport_kunmap_data_sg);
- 
--static int
-+int
- target_alloc_sgl(struct scatterlist **sgl, unsigned int *nents, u32 length,
- 		 bool zero_page)
- {
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 77f25e0..5ebe21c 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -74,6 +74,10 @@ int	transport_set_vpd_ident(struct t10_vpd *, unsigned char *);
- /* core helpers also used by command snooping in pscsi */
- void	*transport_kmap_data_sg(struct se_cmd *);
- void	transport_kunmap_data_sg(struct se_cmd *);
-+/* core helpers also used by xcopy during internal command setup */
-+int	target_alloc_sgl(struct scatterlist **, unsigned int *, u32, bool);
-+sense_reason_t	transport_generic_map_mem_to_cmd(struct se_cmd *,
-+		struct scatterlist *, u32, struct scatterlist *, u32);
- 
- void	array_free(void *array, int n);
- 
+-static struct configfs_subsystem *target_core_subsystem[] = {
++struct configfs_subsystem *target_core_subsystem[] = {
+ 	&target_core_fabrics,
+ 	NULL,
+ };
 -- 
 1.7.2.5
+
