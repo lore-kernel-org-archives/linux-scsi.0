@@ -1,59 +1,39 @@
-From: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
-Subject: Re: [RFC PATCH] scsi: Add failfast mode to avoid infinite retry loop
-Date: Mon, 26 Aug 2013 18:34:46 +0900
-Message-ID: <521B2136.3020409@hitachi.com>
-References: <20130819093925.7867.19221.stgit@ltc223.sdl.hitachi.co.jp>  <1376922616.2069.9.camel@dabdike.int.hansenpartnership.com>  <5213172E.1060905@hitachi.com>  <1377022167.3872.13.camel@localhost.localdomain>  <52172721.1040203@hitachi.com>  <1377263977.2095.1.camel@dabdike> <1377286615.3872.25.camel@localhost.localdomain>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH v4 00/10] SCSI: esas2r: ATTO Technology ExpressSAS 6G
+ SAS/SATA RAID Adapter Driver
+Date: Mon, 26 Aug 2013 09:59:28 +0000
+Message-ID: <1377511166.20958.2.camel@dabdike>
+References: <1377268554-25898-1-git-send-email-bgrove@attotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1377286615.3872.25.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: emilne@redhat.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:42698 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756039Ab3HZKBB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2013 06:01:01 -0400
+In-Reply-To: <1377268554-25898-1-git-send-email-bgrove@attotech.com>
+Content-Language: en-US
+Content-ID: <FD9110AB8414F6478CCD89773955D0D2@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bradley Grove <bgrove@attotech.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jseba@attotech.com" <jseba@attotech.com>
 
-(2013/08/24 4:36), Ewan Milne wrote:
-> On Fri, 2013-08-23 at 06:19 -0700, James Bottomley wrote:
->> On Fri, 2013-08-23 at 18:10 +0900, Eiichi Tsukata wrote:
->>> Yes, basically the device should be offlined on error detection.
->>> Just offlining the disk is enough when an error occurs on "not" os-installed
->>> system disk. Panic is going too far on such case.
->>>
->>> However, in a clustered environment where computers use each its own
->>> disk and
->>> do not share the same disk, calling panic() will be suitable when an
->>> error
->>> occurs in system disk.
->>
->> However, when not in a clustered environment, it won't be.  Decisions
->> about whether to panic the system or not are user space policy, and
->> should not be embedded into subsystems.  What we need to do is to come
->> up with a way of detecting the condition, reporting it and possibly
->> taking some action.
->>
->>>   Because even on such disk error, cluster monitoring
->>> tool may not be able to detect the system failure while heartbeat can
->>> continue
->>> working.
->>> So, I think basically offlining is enough and also, panic is necessary
->>> on some cases.
->
-> The way I have seen this done in such a clustered environment is to have
-> the heartbeat agent on each system periodically attempt to access the
-> disk.  If that I/O hangs, other systems will see loss of heartbeat.
-> You really don't want to panic the kernel.  Among other things, it may
-> make it difficult to get the system up again later for long enough to
-> figure out what is wrong.
->
+On Fri, 2013-08-23 at 10:35 -0400, Bradley Grove wrote:
+> This is a new driver for ATTO Technology's ExpressSAS series of
+> hardware RAID 
+> adapters.  It supports the following adapters:
+> 
+>     - ExpressSAS R60F
+>     - ExpressSAS R680
+>     - ExpressSAS R608
+>     - ExpressSAS R644
 
-Sounds good.
-Disk access on each hreartbeat is reasonable to detect I/O error.
+OK, I put this in misc.  I suspect I was the only person who actually
+reviewed it, so I want to see what the static checkers report on it, but
+if they don't spit back anything too bad, I think it can go into the
+next merge window.
 
-But by such a way, can you distinguish indefinite command retry?
-I'd like to tell indefinite retry from other disk errors.
+James
 
-I'm now considering printk error message on retry count excess.
-There should be some reporting mechanism in kernel.
-
-Eiichi
