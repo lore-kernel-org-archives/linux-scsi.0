@@ -1,19 +1,19 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH 1/5] scsi: Fix incorrect function name in comment
-Date: Mon, 26 Aug 2013 11:03:36 -0400
-Message-ID: <1377529420-31775-2-git-send-email-emilne@redhat.com>
+Subject: [PATCH 2/5] scsi: Correct size of envp[]
+Date: Mon, 26 Aug 2013 11:03:37 -0400
+Message-ID: <1377529420-31775-3-git-send-email-emilne@redhat.com>
 References: <1377529420-31775-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9787 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33994 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751808Ab3HZPDm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751738Ab3HZPDm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 26 Aug 2013 11:03:42 -0400
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7QF3fOX023541
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7QF3gRk005883
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 11:03:41 -0400
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 11:03:42 -0400
 Received: from emilne.csb ([10.18.25.104])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r7QF3eJX014378
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r7QF3eJY014378
 	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 11:03:41 -0400
 In-Reply-To: <1377529420-31775-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -22,7 +22,7 @@ To: linux-scsi@vger.kernel.org
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-The function name is "scsi_evt_emit", not "sdev_evt_emit".
+The envp[] array in scsi_evt_emit() only needs to have 2 entries.
 
 Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
@@ -30,18 +30,18 @@ Signed-off-by: Ewan D. Milne <emilne@redhat.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6dfb978..f6499db 100644
+index f6499db..6585049 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -2171,7 +2171,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- EXPORT_SYMBOL(scsi_device_set_state);
+@@ -2180,7 +2180,7 @@ EXPORT_SYMBOL(scsi_device_set_state);
+ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+ {
+ 	int idx = 0;
+-	char *envp[3];
++	char *envp[2];
  
- /**
-- * 	sdev_evt_emit - emit a single SCSI device uevent
-+ *	scsi_evt_emit - emit a single SCSI device uevent
-  *	@sdev: associated SCSI device
-  *	@evt: event to emit
-  *
+ 	switch (evt->evt_type) {
+ 	case SDEV_EVT_MEDIA_CHANGE:
 -- 
 1.7.11.7
 
