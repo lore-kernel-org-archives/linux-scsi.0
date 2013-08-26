@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 07/13] target: Do memory allocation for bidi commands using target_alloc_sgl
-Date: Mon, 26 Aug 2013 21:13:40 +0000
-Message-ID: <1377551626-27447-8-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v3 05/13] target: Convert se_cmd->t_bidi_data_sg checks to use SCF_BIDI
+Date: Mon, 26 Aug 2013 21:13:38 +0000
+Message-ID: <1377551626-27447-6-git-send-email-nab@daterainc.com>
 References: <1377551626-27447-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1377551626-27447-1-git-send-email-nab@daterainc.com>
@@ -12,13 +12,9 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@daterainc.com>
 
-This patch updates transport_generic_new_cmd() to call target_alloc_sgl()
-for SGL + page memory allocation for se_cmd->t_bidi_data_sg.
+Stop keying off se_cmd->t_bidi_data_sg within transport_complete_qf()
++ target_complete_ok_work(), and just use SCF_BIDI instead.
 
-It also adds the special case for SCF_COMPARE_AND_WRITE to calculate a
-different bidi_length based upon se_cmd->t_task_nolb.
-
-Reported-by: Christoph Hellwig <hch@lst.de>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Martin Petersen <martin.petersen@oracle.com>
@@ -27,36 +23,30 @@ Cc: James Bottomley <JBottomley@Parallels.com>
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
 ---
- drivers/target/target_core_transport.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+ drivers/target/target_core_transport.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 607bc3d..c974e13 100644
+index 3d3dc97..781859e 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -2149,6 +2149,23 @@ transport_generic_new_cmd(struct se_cmd *cmd)
- 	    cmd->data_length) {
- 		bool zero_flag = !(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB);
- 
-+		if ((cmd->se_cmd_flags & SCF_BIDI) ||
-+		    (cmd->se_cmd_flags & SCF_COMPARE_AND_WRITE)) {
-+			u32 bidi_length;
-+
-+			if (cmd->se_cmd_flags & SCF_COMPARE_AND_WRITE)
-+				bidi_length = cmd->t_task_nolb *
-+					      cmd->se_dev->dev_attrib.block_size;
-+			else
-+				bidi_length = cmd->data_length;
-+
-+			ret = target_alloc_sgl(&cmd->t_bidi_data_sg,
-+					       &cmd->t_bidi_data_nents,
-+					       bidi_length, zero_flag);
-+			if (ret < 0)
-+				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+		}
-+
- 		ret = target_alloc_sgl(&cmd->t_data_sg, &cmd->t_data_nents,
- 				       cmd->data_length, zero_flag);
- 		if (ret < 0)
+@@ -1832,7 +1832,7 @@ static void transport_complete_qf(struct se_cmd *cmd)
+ 		ret = cmd->se_tfo->queue_data_in(cmd);
+ 		break;
+ 	case DMA_TO_DEVICE:
+-		if (cmd->t_bidi_data_sg) {
++		if (cmd->se_cmd_flags & SCF_BIDI) {
+ 			ret = cmd->se_tfo->queue_data_in(cmd);
+ 			if (ret < 0)
+ 				break;
+@@ -1947,7 +1947,7 @@ static void target_complete_ok_work(struct work_struct *work)
+ 		/*
+ 		 * Check if we need to send READ payload for BIDI-COMMAND
+ 		 */
+-		if (cmd->t_bidi_data_sg) {
++		if (cmd->se_cmd_flags & SCF_BIDI) {
+ 			spin_lock(&cmd->se_lun->lun_sep_lock);
+ 			if (cmd->se_lun->lun_sep) {
+ 				cmd->se_lun->lun_sep->sep_stats.tx_data_octets +=
 -- 
 1.7.2.5
