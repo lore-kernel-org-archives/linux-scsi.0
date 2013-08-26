@@ -1,255 +1,131 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 04/13] target: Allow sbc_ops->execute_rw() to accept SGLs + data_direction
-Date: Mon, 26 Aug 2013 21:13:37 +0000
-Message-ID: <1377551626-27447-5-git-send-email-nab@daterainc.com>
-References: <1377551626-27447-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1377551626-27447-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, Roland Dreier <roland@purestorage.com>, Kent Overstreet <kmo@daterainc.com>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Nicholas Bellinger <nab@daterainc.com>
+Subject: [PATCH-v2 0/9] target: Add support for EXTENDED_COPY (VAAI) offload emulation
+Date: Mon, 26 Aug 2013 22:02:59 +0000
+Message-ID: <1377554588-28394-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:33405 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616Ab3HZWTN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2013 18:19:13 -0400
+Received: by mail-oa0-f43.google.com with SMTP id i10so4376705oag.2
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 15:19:12 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, Roland Dreier <roland@purestorage.com>, Zach Brown <zab@redhat.com>, Kent Overstreet <kmo@daterainc.com>, Theodore Tso <tytso@mit.edu>, James Bottomley <JBottomley@Parallels.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Nicholas Bellinger <nab@daterainc.com>
 
 From: Nicholas Bellinger <nab@daterainc.com>
 
-COMPARE_AND_WRITE expects to be able to send down a DMA_FROM_DEVICE
-to obtain the necessary READ payload for comparision against the
-first half of the WRITE payload containing the verify user data.
+Hi folks,
 
-Currently virtual backends expect to internally reference SGLs,
-SGL nents, and data_direction, so change IBLOCK, FILEIO and RD
-sbc_ops->execute_rw() to accept this values as function parameters.
+This -v2 series adds support to target-core for generic EXTENDED_COPY offload
+emulation as defined by SPC-4 using virtual (IBLOCK, FILEIO, RAMDISK)
+backends.
 
-Also add default sbc_execute_rw() handler for the typical case for
-cmd->execute_rw() submission using cmd->t_data_sg, cmd->t_data_nents,
-and cmd->data_direction).
+EXTENDED_COPY is a VMWare ESX VAAI primative that is used to perform copy
+offload, that allows a target to perform local READ + WRITE I/O requests
+for bulk data transfers (cloning a virtual machine for example), instead
+of requiring these I/Os to actually be sent to/from the requesting SCSI
+initiator port.
 
-v2 Changes:
-  - Add SCF_COMPARE_AND_WRITE command flag
-  - Use sbc_execute_rw() for normal cmd->execute_rw() submission
-    with expected se_cmd members.
+This implemenation fully supports copy offload between the same device
+backend, and across multiple device backends.  It supports copy offload
+transparently across multiple target ports of different fabrics, eg:
+iSCSI -> FC, FC -> iSER, iSER -> FCoE and so on.
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Martin Petersen <martin.petersen@oracle.com>
-Cc: Chris Mason <chris.mason@fusionio.com>
-Cc: James Bottomley <JBottomley@Parallels.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
----
- drivers/target/target_core_file.c    |    6 +---
- drivers/target/target_core_iblock.c  |    6 +---
- drivers/target/target_core_rd.c      |    6 +---
- drivers/target/target_core_sbc.c     |   37 ++++++++++++++++++++++++---------
- include/target/target_core_backend.h |    3 +-
- include/target/target_core_base.h    |    5 ++++
- 6 files changed, 40 insertions(+), 23 deletions(-)
+It also supports both PUSH and PULL models of operation, so the actual
+EXTENDED_COPY CDB may be received on either source or destination logical
+unit.
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index bc3245d..c5448a5 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -547,11 +547,9 @@ fd_execute_unmap(struct se_cmd *cmd)
- }
+For Target Descriptors, it currently supports the NAA IEEE Registered
+Extended designator (type 0xe4), which allows the reference of target
+ports to occur independent of fabric type using EVPD 0x83 WWNs.  For
+Segment Descriptors, it currently supports copy from block to block
+(0x02) mode.
+
+The v2 changes include:
+
+  - Use target_alloc_sgl() instead of transport_generic_get_mem()
+  - Convert debug output to use pr_debug()
+  - Convert target_xcopy_parse_target_descriptors() NAA IEE WWN
+    dump to use 0x%16phN format specification
+  - Drop unnecessary xcopy_pt_cmd->xpt_passthrough_wsem, and
+    associated usage in xcopy_pt_write_pending() and
+    target_xcopy_issue_pt_cmd()
+  - Add check for unsupported EXTENDED_COPY(LID4) service action
+    bits in target_do_xcopy()
  
- static sense_reason_t
--fd_execute_rw(struct se_cmd *cmd)
-+fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
-+	      enum dma_data_direction data_direction)
- {
--	struct scatterlist *sgl = cmd->t_data_sg;
--	u32 sgl_nents = cmd->t_data_nents;
--	enum dma_data_direction data_direction = cmd->data_direction;
- 	struct se_device *dev = cmd->se_dev;
- 	int ret = 0;
- 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 0a460f3..81464eb 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -587,11 +587,9 @@ static ssize_t iblock_show_configfs_dev_params(struct se_device *dev, char *b)
- }
- 
- static sense_reason_t
--iblock_execute_rw(struct se_cmd *cmd)
-+iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
-+		  enum dma_data_direction data_direction)
- {
--	struct scatterlist *sgl = cmd->t_data_sg;
--	u32 sgl_nents = cmd->t_data_nents;
--	enum dma_data_direction data_direction = cmd->data_direction;
- 	struct se_device *dev = cmd->se_dev;
- 	struct iblock_req *ibr;
- 	struct bio *bio;
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 51127d1..958d17ad 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -280,11 +280,9 @@ static struct rd_dev_sg_table *rd_get_sg_table(struct rd_dev *rd_dev, u32 page)
- }
- 
- static sense_reason_t
--rd_execute_rw(struct se_cmd *cmd)
-+rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
-+	      enum dma_data_direction data_direction)
- {
--	struct scatterlist *sgl = cmd->t_data_sg;
--	u32 sgl_nents = cmd->t_data_nents;
--	enum dma_data_direction data_direction = cmd->data_direction;
- 	struct se_device *se_dev = cmd->se_dev;
- 	struct rd_dev *dev = RD_DEV(se_dev);
- 	struct rd_dev_sg_table *table;
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index be5234a..5569b36 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -337,6 +337,13 @@ out:
- 	return ret;
- }
- 
-+static sense_reason_t
-+sbc_execute_rw(struct se_cmd *cmd)
-+{
-+	return cmd->execute_rw(cmd, cmd->t_data_sg, cmd->t_data_nents,
-+			       cmd->data_direction);
-+}
-+
- sense_reason_t
- sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- {
-@@ -351,31 +358,36 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		sectors = transport_get_sectors_6(cdb);
- 		cmd->t_task_lba = transport_lba_21(cdb);
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
--		cmd->execute_cmd = ops->execute_rw;
-+		cmd->execute_rw = ops->execute_rw;
-+		cmd->execute_cmd = sbc_execute_rw;
- 		break;
- 	case READ_10:
- 		sectors = transport_get_sectors_10(cdb);
- 		cmd->t_task_lba = transport_lba_32(cdb);
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
--		cmd->execute_cmd = ops->execute_rw;
-+		cmd->execute_rw = ops->execute_rw;
-+		cmd->execute_cmd = sbc_execute_rw;
- 		break;
- 	case READ_12:
- 		sectors = transport_get_sectors_12(cdb);
- 		cmd->t_task_lba = transport_lba_32(cdb);
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
--		cmd->execute_cmd = ops->execute_rw;
-+		cmd->execute_rw = ops->execute_rw;
-+		cmd->execute_cmd = sbc_execute_rw;
- 		break;
- 	case READ_16:
- 		sectors = transport_get_sectors_16(cdb);
- 		cmd->t_task_lba = transport_lba_64(cdb);
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
--		cmd->execute_cmd = ops->execute_rw;
-+		cmd->execute_rw = ops->execute_rw;
-+		cmd->execute_cmd = sbc_execute_rw;
- 		break;
- 	case WRITE_6:
- 		sectors = transport_get_sectors_6(cdb);
- 		cmd->t_task_lba = transport_lba_21(cdb);
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
--		cmd->execute_cmd = ops->execute_rw;
-+		cmd->execute_rw = ops->execute_rw;
-+		cmd->execute_cmd = sbc_execute_rw;
- 		break;
- 	case WRITE_10:
- 	case WRITE_VERIFY:
-@@ -384,7 +396,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		if (cdb[1] & 0x8)
- 			cmd->se_cmd_flags |= SCF_FUA;
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
--		cmd->execute_cmd = ops->execute_rw;
-+		cmd->execute_rw = ops->execute_rw;
-+		cmd->execute_cmd = sbc_execute_rw;
- 		break;
- 	case WRITE_12:
- 		sectors = transport_get_sectors_12(cdb);
-@@ -392,7 +405,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		if (cdb[1] & 0x8)
- 			cmd->se_cmd_flags |= SCF_FUA;
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
--		cmd->execute_cmd = ops->execute_rw;
-+		cmd->execute_rw = ops->execute_rw;
-+		cmd->execute_cmd = sbc_execute_rw;
- 		break;
- 	case WRITE_16:
- 		sectors = transport_get_sectors_16(cdb);
-@@ -400,7 +414,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		if (cdb[1] & 0x8)
- 			cmd->se_cmd_flags |= SCF_FUA;
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
--		cmd->execute_cmd = ops->execute_rw;
-+		cmd->execute_rw = ops->execute_rw;
-+		cmd->execute_cmd = sbc_execute_rw;
- 		break;
- 	case XDWRITEREAD_10:
- 		if (cmd->data_direction != DMA_TO_DEVICE ||
-@@ -414,7 +429,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		/*
- 		 * Setup BIDI XOR callback to be run after I/O completion.
- 		 */
--		cmd->execute_cmd = ops->execute_rw;
-+		cmd->execute_rw = ops->execute_rw;
-+		cmd->execute_cmd = sbc_execute_rw;
- 		cmd->transport_complete_callback = &xdreadwrite_callback;
- 		if (cdb[1] & 0x8)
- 			cmd->se_cmd_flags |= SCF_FUA;
-@@ -437,7 +453,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 			 * Setup BIDI XOR callback to be run during after I/O
- 			 * completion.
- 			 */
--			cmd->execute_cmd = ops->execute_rw;
-+			cmd->execute_rw = ops->execute_rw;
-+			cmd->execute_cmd = sbc_execute_rw;
- 			cmd->transport_complete_callback = &xdreadwrite_callback;
- 			if (cdb[1] & 0x8)
- 				cmd->se_cmd_flags |= SCF_FUA;
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index ffa2696..77f25e0 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -39,7 +39,8 @@ struct se_subsystem_api {
- };
- 
- struct sbc_ops {
--	sense_reason_t (*execute_rw)(struct se_cmd *cmd);
-+	sense_reason_t (*execute_rw)(struct se_cmd *cmd, struct scatterlist *,
-+				     u32, enum dma_data_direction);
- 	sense_reason_t (*execute_sync_cache)(struct se_cmd *cmd);
- 	sense_reason_t (*execute_write_same)(struct se_cmd *cmd);
- 	sense_reason_t (*execute_write_same_unmap)(struct se_cmd *cmd);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index fac25c5..0c3f47f 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -159,6 +159,8 @@ enum se_cmd_flags_table {
- 	SCF_ALUA_NON_OPTIMIZED		= 0x00008000,
- 	SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC = 0x00020000,
- 	SCF_ACK_KREF			= 0x00040000,
-+	SCF_COMPARE_AND_WRITE		= 0x00080000,
-+	SCF_COMPARE_AND_WRITE_POST	= 0x00100000,
- };
- 
- /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
-@@ -448,11 +450,14 @@ struct se_cmd {
- 	struct kref		cmd_kref;
- 	struct target_core_fabric_ops *se_tfo;
- 	sense_reason_t		(*execute_cmd)(struct se_cmd *);
-+	sense_reason_t		(*execute_rw)(struct se_cmd *, struct scatterlist *,
-+					      u32, enum dma_data_direction);
- 	sense_reason_t (*transport_complete_callback)(struct se_cmd *);
- 
- 	unsigned char		*t_task_cdb;
- 	unsigned char		__t_task_cdb[TCM_MAX_COMMAND_SIZE];
- 	unsigned long long	t_task_lba;
-+	unsigned int		t_task_nolb;
- 	unsigned int		transport_state;
- #define CMD_T_ABORTED		(1 << 0)
- #define CMD_T_ACTIVE		(1 << 1)
+Here's a quick snippet of the code in action with sg_xcopy performing
+copy offload between two IBLOCK and FILEIO backends:
+
+[  644.638215] Processing XCOPY with list_id: 0x00 list_id_usage: 0x10 tdll: 64 sdll: 28 inline_dl: 0
+[  644.648227] XCOPY 0xe4: RELATIVE INITIATOR PORT IDENTIFIER: 0
+[  644.654639] XCOPY 0xe4: desig_len: 16
+[  644.658722] XCOPY 0xe4: Set xop->src_dev ffff88045d770000 from source received xop
+[  644.667179] XCOPY 0xe4: RELATIVE INITIATOR PORT IDENTIFIER: 0
+[  644.673597] XCOPY 0xe4: desig_len: 16
+[  644.677699] XCOPY 0xe4: Setting xop->dst_dev: ffff88045d771048 from located se_dev
+[  644.686297] Called configfs_depend_item for subsys: ffffffffa00f2570 se_dev: ffff88045d771048 se_dev->se_dev_group: ffff88045d7714f8
+[  644.699607] XCOPY TGT desc: Source dev: ffff88045d770000 NAA IEEE WWN: 0x6001405d2e0745b08564acea3ca401e5
+[  644.710296] XCOPY TGT desc: Dest dev: ffff88045d771048 NAA IEEE WWN: 0x60014056da9d8672d4b437596ab764b3
+[  644.720782] XCOPY: Processed 2 target descriptors, length: 64
+[  644.727203] XCOPY seg desc 0x02: desc_len: 24 stdi: 0 dtdi: 1, DC: 2
+[  644.734304] XCOPY seg desc 0x02: nolb: 1 src_lba: 0 dst_lba: 0
+[  644.740819] XCOPY seg desc 0x02: DC=1 w/ dbl: 0
+[  644.745881] XCOPY: Processed 1 segment descriptors, length: 28
+[  644.752402] target_xcopy_do_work: nolb: 1, max_nolb: 1024 end_lba: 1
+[  644.759504] target_xcopy_do_work: Starting src_lba: 0, dst_lba: 0
+[  644.766303] target_xcopy_do_work: Calling read src_dev: ffff88045d770000 src_lba: 0, cur_nolb: 1
+[  644.776115] XCOPY: Built READ_16: LBA: 0 Sectors: 1 Length: 512
+[  644.782751] Honoring local SRC port from ec_cmd->se_dev: ffff88045d770000
+[  644.790335] Honoring local SRC port from ec_cmd->se_lun: ffff88085a1977e0
+[  644.797921] XCOPY-READ: Saved xop->xop_data_sg: ffff880459d3e3a8, num: 1 for READ memory
+[  644.807203] target_xcopy_issue_pt_cmd(): SCSI status: 0x00
+[  644.813333] target_xcopy_do_work: Incremented READ src_lba to 1
+[  644.819947] target_xcopy_do_work: Calling write dst_dev: ffff88045d771048 dst_lba: 0, cur_nolb: 1
+[  644.829854] XCOPY: Built WRITE_16: LBA: 0 Sectors: 1 Length: 512
+[  644.836568] Setup emulated se_dev: ffff88045d771048 from se_dev
+[  644.843185] Setup emulated se_dev: ffff88045d771048 to pt_cmd->se_lun->lun_se_dev
+[  644.851545] Setup emulated remote DEST xcopy_pt_port: ffffffffa00f7610 to cmd->se_lun->lun_sep for X-COPY data PUSH
+[  644.863198] Setup PASSTHROUGH_NOALLOC t_data_sg: ffff880459d3e3a8 t_data_nents: 1
+[  644.895203] target_xcopy_issue_pt_cmd(): SCSI status: 0x00
+[  644.901332] target_xcopy_do_work: Incremented WRITE dst_lba to 1
+[  644.908044] Calling configfs_undepend_item for subsys: ffffffffa00f2570 remote_dev: ffff88045d771048 remote_dev->dev_group: ffff88045d7714f8
+[  644.922129] target_xcopy_do_work: Final src_lba: 1, dst_lba: 1
+[  644.928646] target_xcopy_do_work: Blocks copied: 1, Bytes Copied: 512
+[  644.935840] target_xcopy_do_work: Setting X-COPY GOOD status -> sending response
+
+For all intensive purposes this code is completely standalone, and the amount
+of changes required to enable it's function within target-core code is small.
+
+Please review as v3.12 material.
+
+Nicholas Bellinger (9):
+  target: Make target_core_subsystem defined as non static
+  target: Make spc_parse_naa_6h_vendor_specific non static
+  target: Make helpers non static for EXTENDED_COPY command setup
+  target: Add global device list for EXTENDED_COPY
+  target: Avoid non-existent tg_pt_gp_mem in target_alua_state_check
+  target: Add support for EXTENDED_COPY copy offload emulation
+  target: Enable EXTENDED_COPY setup in spc_parse_cdb
+  target: Add Third Party Copy (3PC) bit in INQUIRY response
+  target: Enable global EXTENDED_COPY setup/release
+
+ drivers/target/Makefile                |    3 +-
+ drivers/target/target_core_alua.c      |    3 +
+ drivers/target/target_core_configfs.c  |   12 +-
+ drivers/target/target_core_device.c    |   27 +
+ drivers/target/target_core_internal.h  |    1 +
+ drivers/target/target_core_spc.c       |   20 +-
+ drivers/target/target_core_transport.c |    4 +-
+ drivers/target/target_core_xcopy.c     | 1082 ++++++++++++++++++++++++++++++++
+ drivers/target/target_core_xcopy.h     |   62 ++
+ include/target/target_core_backend.h   |    4 +
+ include/target/target_core_base.h      |    5 +
+ 11 files changed, 1215 insertions(+), 8 deletions(-)
+ create mode 100644 drivers/target/target_core_xcopy.c
+ create mode 100644 drivers/target/target_core_xcopy.h
+
 -- 
 1.7.2.5
+
