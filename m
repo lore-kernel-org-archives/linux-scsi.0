@@ -1,103 +1,87 @@
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: [PATCH] scsi disk: Use its own buffer for the vpd request
-Date: Mon, 26 Aug 2013 22:15:52 +0200
-Message-ID: <521BB778.5050701@fastmail.fm>
-References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm> <87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm> <87fvuxdqes.fsf@spindle.srvr.nix> <yq1txjdhree.fsf@sermon.lab.mkp.net> <51F80167.1080004@fastmail.fm> <yq1zjt3h11y.fsf@sermon.lab.mkp.net> <51F94E8D.5040908@fastmail.fm> <51F95A2E.60805@fastmail.fm> <51FA71E2.6010501@fastmail.fm> <yq1li4ker0k.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1li4ker0k.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Nix <nix@esperi.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw, stable@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+From: Ben Collins <bcollins@ubuntu.com>
+Subject: Re: State of big-endian for MegaRAID SAS driver
+Date: Mon, 26 Aug 2013 16:26:30 -0400
+Message-ID: <AA2AC8A7-DD06-4AC5-9E4D-E522F6AC1B09@ubuntu.com>
+References: <658ABE5F-B2AA-4EC1-BC34-B4FD428C7A8E@servergy.com> <yq1zjskgn1x.fsf@sermon.lab.mkp.net> <D354E621-BEFA-4010-B5CF-4668939AAEB0@servergy.com> <yq1eh9wgiqo.fsf@sermon.lab.mkp.net> <FE68512D-F375-456B-948A-492634A02F0F@servergy.com> <yq1haeqcuce.fsf@sermon.lab.mkp.net> <088E451FE1854947BD9145EF8C016FF413A017B456@inbmail01.lsi.com> <3DA40821-A3AC-45CA-BD22-995EA256837A@servergy.com> <088E451FE1854947BD9145EF8C016FF413A017BC30@inbmail01.lsi.com> <20130826090540.GA26892@infradead.org> <EB4C61A1A2501842A04B573FE42B14D6029EDD85EC@cosmail02.lsi.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+Content-Type: multipart/signed; boundary="Apple-Mail=_E17E65F2-B995-481A-812E-897FE98C5DBB"; protocol="application/pgp-signature"; micalg=pgp-sha1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:40492 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751570Ab3HZU0d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2013 16:26:33 -0400
+Received: by mail-pd0-f178.google.com with SMTP id w10so3905461pde.37
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 13:26:33 -0700 (PDT)
+In-Reply-To: <EB4C61A1A2501842A04B573FE42B14D6029EDD85EC@cosmail02.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Martin,
-
-sorry for my late reply, I entirely lost track of this (customer issues,
-vacation, lots of main work, ...).
-
-On 08/02/2013 05:00 AM, Martin K. Petersen wrote:
->>>>>> "Bernd" == Bernd Schubert <bernd.schubert@fastmail.fm> writes:
-> 
-> Bernd,
-> 
-> Bernd> Once I noticed that scsi_get_vpd_page() works fine from other
-> Bernd> function calls and that it is not 0x89, but already 0x0 that
-> Bernd> fails fixing it became easy.
-> 
-> Bernd> Nix, any chance you could verify it also works for you?
-> 
-> Do we get an appropriate error back when we try to issue WRITE SAME
-> 10/16? If so, I'm OK with this fix.
-> 
-> And thanks for looking into this!
-> 
+To: "Maloy, Joe" <Joe.Maloy@lsi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Saxena, Sumit" <Sumit.Saxena@lsi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, linux-scsi <linux-scsi@vger.kernel.org>, "aradford@gmail.com" <aradford@gmail.com>, "Maly, JoLyn" <JoLyn.Maly@lsi.com>
 
 
-Is testing with sg_write_same sufficient?
+--Apple-Mail=_E17E65F2-B995-481A-812E-897FE98C5DBB
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-With F/W V1.49:
+On Aug 26, 2013, at 4:15 PM, "Maloy, Joe" <Joe.Maloy@lsi.com> wrote:
+> Chris,
+>=20
+> I would appreciate you toning down your rhetoric.  Please keep it =
+professional.
+>=20
+> What Sumit reported is correct.  We are polling our Marketing and =
+Product management organizations to see if we want to productize this =
+type of support in our MR Linux drivers. We would not submit upstream =
+changes that have not been successfully tested by our PT test org based =
+on a GCA (general customer availability) or async release effort.
 
-> (squeeze)fslab2:~# lsscsi | grep sda
-> [2:0:0:0]    disk    ATA      HDS724040KLSA80  KFAO  /dev/sda
+Professionally speaking, however, having the megaraid_sas driver support =
+big-endian is inline with the requirements of the driver being in the =
+kernel tree to begin with. This support was promised 8 years back by =
+LSI. Quite frankly, I can't imagine that LSI has to approve of this =
+support before it can be included into the kernel proper. If LSI doesn't =
+want to support big-endian, that's fine with me. However, if the =
+community wants to support it in a public driver, I don't think LSIs =
+Product Management and Marketing teams have anything useful to say about =
+it.
 
-> (squeeze)fslab2:~# strace -f sg_write_same  --10 -v --num=0 --lba=0 /dev/sda
+a) This driver doesn't work on big-endian
+b) This patch supports more architectures
+c) This patch doesn't break existing architecture support (not even that =
+which LSI wants to support)
 
-> ioctl(3, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[10]=[41, 00, 00, 00, 00, 00, 00, 00, 00, 00], mx_sb_len=32, iovec_count=0, dxfer_len=512, timeout=60000, flags=0, data[512]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...], status=02, masked_status=01, sb[18]=[70, 00, 05, 00, 00, 00, 00, 0a, 00, 00, 00, 00, 20, 00, 00, 00, 00, 00], host_status=0, driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
-> write(2, "Write same:  Fixed format, curre"..., 114Write same:  Fixed format, current;  Sense key: Illegal Request
->  Additional sense: Invalid command operation code
-> ) = 114
-> write(2, "Write same(10) command not suppo"..., 37Write same(10) command not supported
-> ) = 37
+Not including this patch does nothing useful. Including it will put =
+megaraid_sas on the path to doing what every driver in the tree either =
+does or attempts to do, and more important, should do.
 
+Historically, waiting on commercial upstream to deliver what the =
+community has already done is wasted time. Likewise, historically, =
+allowing patches that partially implement things (in this respect, =
+support one generation of card for megaraid_sas) leads to further =
+support from the community, in a much faster timeframe.
 
-> (squeeze)fslab2:~# strace -f  sg_write_same  --16 -v --num=0 --lba=0 /dev/sda
-
-> ioctl(3, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[16]=[93, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00], mx_sb_len=32, iovec_count=0, dxfer_len=512, timeout=60000, flags=0, data[512]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...], status=02, masked_status=01, sb[18]=[70, 00, 05, 00, 00, 00, 00, 0a, 00, 00, 00, 00, 24, 00, 00, 00, 00, 00], host_status=0, driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
-> write(2, "Write same:  Fixed format, curre"..., 104Write same:  Fixed format, current;  Sense key: Illegal Request
->  Additional sense: Invalid field in cdb
-> ) = 104
-> write(2, "bad field in Write same(16) cdb,"..., 63bad field in Write same(16) cdb, option probably not supported
-> ) = 63
-
-
-
-Now with F/W V1.46
-
-> (squeeze)fslab2:~# lsscsi | grep sdk
-> [10:0:1:2]   disk    Hitachi  HDS724040KLSA80  R001  /dev/sdk
-
-> (squeeze)fslab2:~# cat /sys/class/scsi_host/host10/host_fw_model 
-> ARC-1260
-
-
-> (squeeze)fslab2:~# strace -f sg_write_same  --10 -v --num=0 --lba=0 /dev/sdk
-> execve("/usr/bin/sg_write_same", ["sg_write_same", "--10", "-v", "--num=0", "--lba=0", "/dev/sdk"], [/* 26 vars */]) = 0
-
-> ioctl(3, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[10]=[41, 00, 00, 00, 00, 00, 00, 00, 00, 00], mx_sb_len=32, iovec_count=0, dxfer_len=512, timeout=60000, flags=0, data[512]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...], status=00, masked_status=00, sb[19]=[f0, 00, 05, 00, 00, 00, 00, 0b, 00, 00, 00, 00, 20, 00, 00, 00, 02, 00, 00], host_status=0, driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
-> write(2, "Write same:  Fixed format, curre"..., 134Write same:  Fixed format, current;  Sense key: Illegal Request
->  Additional sense: Invalid command operation code
->   Info fld=0x0 [0] 
-> ) = 134
-> write(2, "Write same(10) command not suppo"..., 37Write same(10) command not supported
-> ) = 37
-
-> (squeeze)fslab2:~# strace -f  sg_write_same  --16 -v --num=0 --lba=0 /dev/sdk
-> execve("/usr/bin/sg_write_same", ["sg_write_same", "--16", "-v", "--num=0", "--lba=0", "/dev/sdk"], [/* 26 vars */]) = 0
-
-> ioctl(3, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[16]=[93, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00], mx_sb_len=32, iovec_count=0, dxfer_len=512, timeout=60000, flags=0, data[512]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...], status=00, masked_status=00, sb[19]=[f0, 00, 05, 00, 00, 00, 00, 0b, 00, 00, 00, 00, 20, 00, 00, 00, 02, 00, 00], host_status=0, driver_status=0x8, resid=0, duration=0, info=0x1}) = 0
-> write(2, "Write same:  Fixed format, curre"..., 134Write same:  Fixed format, current;  Sense key: Illegal Request
->  Additional sense: Invalid command operation code
->   Info fld=0x0 [0] 
-> ) = 134
-> write(2, "Write same(16) command not suppo"..., 37Write same(16) command not supported
-> ) = 37
+--
+Servergy  : http://www.servergy.com/
+SwissDisk : http://www.swissdisk.com/
+Ubuntu    : http://www.ubuntu.com/
+My Blog   : http://ben-collins.blogspot.com/
 
 
-Is this sufficient, or do you need something else?
+--Apple-Mail=_E17E65F2-B995-481A-812E-897FE98C5DBB
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP using GPGMail
 
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
 
-Thanks,
-Bernd
+iEYEARECAAYFAlIbufYACgkQbVJJsWDoC1tFHQCePLVa9FUSCSkctPMzV4PGa8oI
+/UYAnRlNzz+R2e/JfuvGXe6KIvJ4QMdG
+=A39M
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_E17E65F2-B995-481A-812E-897FE98C5DBB--
