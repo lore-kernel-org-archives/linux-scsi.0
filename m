@@ -1,68 +1,81 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1/3] hpsa: remove unneeded loop
-Date: Mon, 26 Aug 2013 12:57:38 +0200
-Message-ID: <521B34A2.9020003@redhat.com>
-References: <51FA5E7A.9050000@redhat.com>
+Subject: Re: [PATCH 1/3] arcmsr: Support Areca new SATA Raid Adapter ARC1214/1224/1264/1284
+Date: Mon, 26 Aug 2013 14:20:58 +0200
+Message-ID: <521B482A.80908@redhat.com>
+References: <7A2818CC441F4BCE96D3B1E70CC3D76B@chingDT>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26135 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751740Ab3HZK6u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Aug 2013 06:58:50 -0400
-In-Reply-To: <51FA5E7A.9050000@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=Big5
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <7A2818CC441F4BCE96D3B1E70CC3D76B@chingDT>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?Big5?B?tsCyTbap?= <ching2048@areca.com.tw>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, billion@areca.com.tw
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, James Bottomley <jejb@kernel.org>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, stephenmcameron@gmail.com, mikem@beardog.cce.hp.com
 
-Hi James,
-
-I've gotten mail that you have accepted patches 2/3 and 3/3 from this series.
-This one has been accepted by Steve also, so please consider taking also this 1/3.
-
-Thanks, Tomas
-
-
-
-On 08/01/2013 03:11 PM, Tomas Henzl wrote:
-
-> From: Tomas Henzl <thenzl@redhat.com>
+On 08/26/2013 06:14 AM, =B6=C0=B2M=B6=A9 wrote:
+>  From: Ching <ching2048@areca.com.tw>
 >
-> The cmd_pool_bits is protected everywhere with a spinlock, 
-> we don't need the test_and_set_bit, set_bit is enough and the loop
-> can be removed too.
->
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/scsi/hpsa.c | 15 ++++++---------
->  1 file changed, 6 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 796482b..d7df01e 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -2662,15 +2662,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
->  	unsigned long flags;
->  
->  	spin_lock_irqsave(&h->lock, flags);
-> -	do {
-> -		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
-> -		if (i == h->nr_cmds) {
-> -			spin_unlock_irqrestore(&h->lock, flags);
-> -			return NULL;
-> -		}
-> -	} while (test_and_set_bit
-> -		 (i & (BITS_PER_LONG - 1),
-> -		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
-> +	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
-> +	if (i == h->nr_cmds) {
-> +		spin_unlock_irqrestore(&h->lock, flags);
-> +		return NULL;
-> +	}
-> +	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
->  	h->nr_allocs++;
->  	spin_unlock_irqrestore(&h->lock, flags);
->  
+> Support Areca new SATA Raid adapter ARC1214/1224/1264/1284.
+> Modify maximum outstanding command number, notify command complete wi=
+th auto
+> request sense
+> Signed-off-by: Ching  <ching2048@areca.com.tw>
 
+Hi Ching,
++static bool
++arcmsr_hbaD_get_config(struct AdapterControlBlock *acb)
++{
+=2E..
++	dma_coherent =3D dma_alloc_coherent(&pdev->dev, acb->uncache_size,
++	&dma_coherent_handle, GFP_KERNEL);
++	if (!dma_coherent) {
++		pr_notice("DMA allocation failed...\n");
++		return -ENOMEM;
+You've declared the return value as a bool so the function should retur=
+n false or true.
+---------------------------------------
+In arcmsr_alloc_ccb_pool
+-	roundup_ccbsize =3D roundup(sizeof(struct CommandControlBlock) + (max=
+_sg_entrys - 1) * sizeof(struct SG64ENTRY), 32);
+-	acb->uncache_size =3D roundup_ccbsize * ARCMSR_MAX_FREECCB_NUM;
+-	dma_coherent =3D dma_alloc_coherent(&pdev->dev, acb->uncache_size, &d=
+ma_coherent_handle, GFP_KERNEL);
+-	if(!dma_coherent){
+-		printk(KERN_NOTICE "arcmsr%d: dma_alloc_coherent got error\n", acb->=
+host->host_no);
+-		return -ENOMEM;
++	switch (acb->adapter_type) {
++	case ACB_ADAPTER_TYPE_A: {
++		roundup_ccbsize =3D
++		roundup(sizeof(struct CommandControlBlock) +
++		max_sg_entrys * sizeof(struct SG64ENTRY), 32);
++		acb->uncache_size =3D roundup_ccbsize *
++			ARCMSR_MAX_FREECCB_NUM;
++		dma_coherent =3D dma_alloc_coherent(&pdev->dev,
++			acb->uncache_size, &dma_coherent_handle,
++			GFP_KERNEL);
+=2E..
++	case ACB_ADAPTER_TYPE_B: {
++		roundup_ccbsize =3D roundup(sizeof(struct CommandControlBlock) +
++			(max_sg_entrys - 1) * sizeof(struct SG64ENTRY), 32);
++		acb->uncache_size =3D roundup_ccbsize *
++			ARCMSR_MAX_FREECCB_NUM;
++		dma_coherent =3D dma_alloc_coherent(&pdev->dev,
++			acb->uncache_size, &dma_coherent_handle,
++			GFP_KERNEL);
+You've added a switch with  four almost identical
+cases, what is the point of splitting the code this way?
+-----------------------------------------
+ struct AdapterControlBlock
++	void *dma_coherent;
++	dma_addr_t dma_coherent_handle;
++	dma_addr_t dma_coherent_handle2;
++	void *dma_coherent2;
+why do you need these pairs? Is there an adapter which uses both
+for example dma_coherent and dma_coherent2 at the same time?
+
+Please include the patch into the message body next time, it makes the =
+review easier.
+Thanks, Tomas=20
+=20
