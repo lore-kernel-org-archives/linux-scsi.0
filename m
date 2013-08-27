@@ -1,72 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 0/9] target: Add support for EXTENDED_COPY (VAAI)
- offload emulation
-Date: Mon, 26 Aug 2013 17:02:21 -0700
-Message-ID: <1377561741.32763.205.camel@haakon3.risingtidesystems.com>
-References: <1377554588-28394-1-git-send-email-nab@daterainc.com>
-	 <20130826224628.GJ26818@lenny.home.zabbo.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20130826224628.GJ26818@lenny.home.zabbo.net>
-Sender: target-devel-owner@vger.kernel.org
-To: Zach Brown <zab@redhat.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Martin Petersen <martin.petersen@oracle.com>, Chris Mason <chris.mason@fusionio.com>, Roland Dreier <roland@purestorage.com>, Kent Overstreet <kmo@daterainc.com>, Theodore Tso <tytso@mit.edu>, James Bottomley <JBottomley@Parallels.com>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: [PATCH V2 0/3] scsi: ufs: Add support for clock and regulator initializaiton
+Date: Tue, 27 Aug 2013 09:48:10 +0530
+Message-ID: <1377577093-10068-1-git-send-email-sthumma@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2013-08-26 at 15:46 -0700, Zach Brown wrote:
-> On Mon, Aug 26, 2013 at 10:02:59PM +0000, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@daterainc.com>
-> > 
-> > Hi folks,
-> > 
-> > This -v2 series adds support to target-core for generic EXTENDED_COPY offload
-> > emulation as defined by SPC-4 using virtual (IBLOCK, FILEIO, RAMDISK)
-> > backends.
-> 
-> Cool, thanks for sending this out.  I'll just stare blankly but
-> supportively at the SCSI details.
-> 
-> I've been experimenting with the reasonable suggestion of using splice
-> as the entry point into the high level fs methods that'd be backed by
-> this stuff.  Let me get it cleaned up and sent out for review.
-> 
-> Hopefully with a few iterations of that we could test some block file
-> systems on top of this.
+UFS HCI specificaiton allows the hardware vendors to have vendor specific
+configurations using a dedicated register space. Most of these register
+configurations are unique to each controller. The generic UFSHCD exports
+a set of useful vendor operations that can be used to configure the host
+controller. In addition, the vendor specific operations can also be used
+to control the power supply of controller and Uni-Pro h/w blocks.
 
-Looking forward to seeing your copy offload work at the fs level, along
-with the block -> SCSI client copy offload pieces from MKP.
+This patchset adds support for vendor specific initialization, regulator
+and clock initialization based on device-tree properties.
 
-Along with having proper VAAI support in target-core for ESX clients,
-the larger intention behind getting this upstream is to seed the KVM
-ecosystem with storage primitives previously out of reach to most users.
+Changes from v1:
+ - Rebased on scsi-misc.
+ - Minor code fixes.
 
-> 
-> > This implemenation fully supports copy offload between the same device
-> > backend, and across multiple device backends.  It supports copy offload
-> > transparently across multiple target ports of different fabrics, eg:
-> > iSCSI -> FC, FC -> iSER, iSER -> FCoE and so on.
-> 
-> That's exciting!  I doubt that we want to be derailed by getting this
-> working in the first pass, but it'd be fun to enable cross-fs copying
-> once we got the fundamentals worked out
-> 
+Sujit Reddy Thumma (3):
+  scsi: ufs: Allow vendor specific initialization
+  scsi: ufs: Add regulator enable support
+  scsi: ufs: Add clock initialization support
 
-Indeed, a single filesystem -> single device case is a reasonable place
-to start.
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  37 ++
+ drivers/scsi/ufs/ufs.h                             |  25 ++
+ drivers/scsi/ufs/ufshcd-pci.c                      |   8 +-
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   | 195 +++++++++-
+ drivers/scsi/ufs/ufshcd.c                          | 429 +++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h                          |  55 ++-
+ 6 files changed, 713 insertions(+), 36 deletions(-)
 
-For the multiple filesystem -> multiple device case, a potential
-interface needs to plumb the block device and it's underlying NAA IEEE
-WWNs down to SCSI.  The target side EXTENDED_COPY logic uses this
-information in target descriptors of type 0xe4 to locate destination /
-source devices, depending on if the PUSH / PULL copy method is employed.
-
-For using physical SCSI devices below the filesystem, this would seem
-straight-forward enough.  For the stacking raw block device cases
-however, this poses alot more interesting set of problems..
-
-MKP, have you thought about how copy offload might work with stacking
-block devices..?
-
---nab
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation.
