@@ -1,23 +1,23 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 12/29] qla2xxx: Add critical temperature handling for ISPFX00.
-Date: Tue, 27 Aug 2013 01:37:38 -0400
-Message-ID: <1377581875-8574-13-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 11/29] qla2xxx: Notify ISPFX00 firmware when driver is unloaded or system is shut down.
+Date: Tue, 27 Aug 2013 01:37:37 -0400
+Message-ID: <1377581875-8574-12-git-send-email-saurav.kashyap@qlogic.com>
 References: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:51769 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:51771 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752847Ab3H0GGk (ORCPT
+	by vger.kernel.org with ESMTP id S1752852Ab3H0GGl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Aug 2013 02:06:40 -0400
+	Tue, 27 Aug 2013 02:06:41 -0400
 Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7R64Oi3012247
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:38 -0700
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7R64Oi4012247
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:40 -0700
 Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1e5gq13pa9-5
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1e5gq13pa9-6
 	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:38 -0700
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:40 -0700
 In-Reply-To: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -30,310 +30,61 @@ Signed-off-by: Armen Baloyan <armen.baloyan@qlogic.com>
 Acked-by: Srinivasa Rao <srinivasa.rao@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |    6 +-
- drivers/scsi/qla2xxx/qla_def.h |    1 +
- drivers/scsi/qla2xxx/qla_mr.c  |   86 ++++++++++++++++++++++++++++++++++------
- drivers/scsi/qla2xxx/qla_mr.h  |   27 ++++++++++++-
- drivers/scsi/qla2xxx/qla_os.c  |    1 +
- 5 files changed, 104 insertions(+), 17 deletions(-)
+ drivers/scsi/qla2xxx/qla_gbl.h |    1 +
+ drivers/scsi/qla2xxx/qla_mr.c  |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c  |    7 +++++++
+ 3 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index aa31f7a..b1b6bc1 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -11,7 +11,7 @@
-  * ----------------------------------------------------------------------
-  * |             Level            |   Last Value Used  |     Holes	|
-  * ----------------------------------------------------------------------
-- * | Module Init and Probe        |       0x0151       | 0x4b,0xba,0xfa |
-+ * | Module Init and Probe        |       0x0152       | 0x4b,0xba,0xfa |
-  * | Mailbox commands             |       0x1181       | 0x111a-0x111b  |
-  * |                              |                    | 0x1155-0x1158  |
-  * |                              |                    | 0x1018-0x1019  |
-@@ -26,11 +26,11 @@
-  * |                              |                    | 0x3036,0x3038  |
-  * |                              |                    | 0x303a		|
-  * | DPC Thread                   |       0x4022       | 0x4002,0x4013  |
-- * | Async Events                 |       0x5081       | 0x502b-0x502f  |
-+ * | Async Events                 |       0x5083       | 0x502b-0x502f  |
-  * |                              |                    | 0x5047,0x5052  |
-  * |                              |                    | 0x5040,0x5075  |
-  * |                              |                    | 0x503d,0x5044  |
-- * | Timer Routines               |       0x6011       |                |
-+ * | Timer Routines               |       0x6012       |                |
-  * | User Space Interactions      |       0x70dd       | 0x7018,0x702e, |
-  * |                              |                    | 0x7020,0x7024, |
-  * |                              |                    | 0x7039,0x7045, |
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index a494e2e..e5d3373 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3369,6 +3369,7 @@ typedef struct scsi_qla_host {
- #define PORT_UPDATE_NEEDED	24
- #define FX00_RESET_RECOVERY	25
- #define FX00_TARGET_SCAN	26
-+#define FX00_CRITEMP_RECOVERY	27
- 
- 	uint32_t	device_flags;
- #define SWITCH_FOUND		BIT_0
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index d03b15d..9a80c49 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -594,6 +594,7 @@ extern int qlafx00_start_scsi(srb_t *);
+ extern int qlafx00_abort_isp(scsi_qla_host_t *);
+ extern int qlafx00_iospace_config(struct qla_hw_data *);
+ extern int qlafx00_init_firmware(scsi_qla_host_t *, uint16_t);
++extern int qlafx00_driver_shutdown(scsi_qla_host_t *, int);
+ extern int qlafx00_fw_ready(scsi_qla_host_t *);
+ extern int qlafx00_configure_devices(scsi_qla_host_t *);
+ extern int qlafx00_reset_initialize(scsi_qla_host_t *);
 diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index ab2ae8e..27b8af8 100644
+index e087a49..ab2ae8e 100644
 --- a/drivers/scsi/qla2xxx/qla_mr.c
 +++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -1372,21 +1372,22 @@ qlafx00_configure_devices(scsi_qla_host_t *vha)
- }
- 
- static void
--qlafx00_abort_isp_cleanup(scsi_qla_host_t *vha)
-+qlafx00_abort_isp_cleanup(scsi_qla_host_t *vha, bool critemp)
+@@ -294,7 +294,7 @@ premature_exit:
+  * Context:
+  *	Kernel context.
+  */
+-static int
++int
+ qlafx00_driver_shutdown(scsi_qla_host_t *vha, int tmo)
  {
- 	struct qla_hw_data *ha = vha->hw;
- 	fc_port_t *fcport;
- 
- 	vha->flags.online = 0;
--	ha->flags.chip_reset_done = 0;
- 	ha->mr.fw_hbt_en = 0;
--	clear_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
--	vha->qla_stats.total_isp_aborts++;
--
--	ql_log(ql_log_info, vha, 0x013f,
--	    "Performing ISP error recovery - ha = %p.\n", ha);
- 
--	ha->isp_ops->reset_chip(vha);
-+	if (!critemp) {
-+		ha->flags.chip_reset_done = 0;
-+		clear_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
-+		vha->qla_stats.total_isp_aborts++;
-+		ql_log(ql_log_info, vha, 0x013f,
-+		    "Performing ISP error recovery - ha = %p.\n", ha);
-+		ha->isp_ops->reset_chip(vha);
-+	}
- 
- 	if (atomic_read(&vha->loop_state) != LOOP_DOWN) {
- 		atomic_set(&vha->loop_state, LOOP_DOWN);
-@@ -1406,12 +1407,19 @@ qlafx00_abort_isp_cleanup(scsi_qla_host_t *vha)
- 	}
- 
- 	if (!ha->flags.eeh_busy) {
--		/* Requeue all commands in outstanding command list. */
--		qla2x00_abort_all_cmds(vha, DID_RESET << 16);
-+		if (critemp) {
-+			qla2x00_abort_all_cmds(vha, DID_NO_CONNECT << 16);
-+		} else {
-+			/* Requeue all commands in outstanding command list. */
-+			qla2x00_abort_all_cmds(vha, DID_RESET << 16);
-+		}
- 	}
- 
- 	qla2x00_free_irqs(vha);
--	set_bit(FX00_RESET_RECOVERY, &vha->dpc_flags);
-+	if (critemp)
-+		set_bit(FX00_CRITEMP_RECOVERY, &vha->dpc_flags);
-+	else
-+		set_bit(FX00_RESET_RECOVERY, &vha->dpc_flags);
- 
- 	/* Clear the Interrupts */
- 	QLAFX00_CLR_INTR_REG(ha, QLAFX00_HST_INT_STS_BITS);
-@@ -1498,6 +1506,7 @@ qlafx00_timer_routine(scsi_qla_host_t *vha)
- 	uint32_t fw_heart_beat;
- 	uint32_t aenmbx0;
- 	struct device_reg_fx00 __iomem *reg = &ha->iobase->ispfx00;
-+	uint32_t tempc;
- 
- 	/* Check firmware health */
- 	if (ha->mr.fw_hbt_cnt)
-@@ -1569,6 +1578,29 @@ qlafx00_timer_routine(scsi_qla_host_t *vha)
- 		ha->mr.old_aenmbx0_state = aenmbx0;
- 		ha->mr.fw_reset_timer_tick--;
- 	}
-+	if (test_bit(FX00_CRITEMP_RECOVERY, &vha->dpc_flags)) {
-+		/*
-+		 * Critical temperature recovery to be
-+		 * performed in timer routine
-+		 */
-+		if (ha->mr.fw_critemp_timer_tick == 0) {
-+			tempc = QLAFX00_GET_TEMPERATURE(ha);
-+			ql_log(ql_dbg_timer, vha, 0x6012,
-+			    "ISPFx00(%s): Critical temp timer, "
-+			    "current SOC temperature: %d\n",
-+			    __func__, tempc);
-+			if (tempc < ha->mr.critical_temperature) {
-+				set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
-+				clear_bit(FX00_CRITEMP_RECOVERY,
-+				    &vha->dpc_flags);
-+				qla2xxx_wake_dpc(vha);
-+			}
-+			ha->mr.fw_critemp_timer_tick =
-+			    QLAFX00_CRITEMP_INTERVAL;
-+		} else {
-+			ha->mr.fw_critemp_timer_tick--;
-+		}
-+	}
- }
- 
- /*
-@@ -1596,7 +1628,7 @@ qlafx00_reset_initialize(scsi_qla_host_t *vha)
- 
- 	if (vha->flags.online) {
- 		scsi_block_requests(vha->host);
--		qlafx00_abort_isp_cleanup(vha);
-+		qlafx00_abort_isp_cleanup(vha, false);
- 	}
- 
- 	ql_log(ql_log_info, vha, 0x0143,
-@@ -1628,7 +1660,7 @@ qlafx00_abort_isp(scsi_qla_host_t *vha)
- 		}
- 
- 		scsi_block_requests(vha->host);
--		qlafx00_abort_isp_cleanup(vha);
-+		qlafx00_abort_isp_cleanup(vha, false);
- 	} else {
- 		scsi_block_requests(vha->host);
- 		clear_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
-@@ -1722,6 +1754,16 @@ qlafx00_process_aen(struct scsi_qla_host *vha, struct qla_work_evt *evt)
- 		aen_code = FCH_EVT_LINKDOWN;
- 		aen_data = 0;
- 		break;
-+	case QLAFX00_MBA_TEMP_OVER:
-+	case QLAFX00_MBA_TEMP_CRIT:	/* Critical temperature event */
-+		ql_log(ql_log_info, vha, 0x5082,
-+		    "Process critical temperature event "
-+		    "aenmb[0]: %x\n",
-+		    evt->u.aenfx.evtcode);
-+		scsi_block_requests(vha->host);
-+		qlafx00_abort_isp_cleanup(vha, true);
-+		scsi_unblock_requests(vha->host);
-+		break;
- 	}
- 
- 	fc_host_post_event(vha->host, fc_get_event_number(),
-@@ -1913,6 +1955,7 @@ qlafx00_fx_disc(scsi_qla_host_t *vha, fc_port_t *fcport, uint16_t fx_type)
- 		    sizeof(vha->hw->mr.uboot_version));
- 		memcpy(&vha->hw->mr.fru_serial_num, pinfo->fru_serial_num,
- 		    sizeof(vha->hw->mr.fru_serial_num));
-+		vha->hw->mr.critical_temperature = pinfo->nominal_temp_value;
- 	} else if (fx_type == FXDISC_GET_PORT_INFO) {
- 		struct port_info_data *pinfo =
- 		    (struct port_info_data *) fdisc->u.fxiocb.rsp_addr;
-@@ -2055,6 +2098,7 @@ qlafx00_initialize_adapter(scsi_qla_host_t *vha)
- {
- 	int	rval;
- 	struct qla_hw_data *ha = vha->hw;
-+	uint32_t tempc;
- 
- 	/* Clear adapter flags. */
- 	vha->flags.online = 0;
-@@ -2105,6 +2149,11 @@ qlafx00_initialize_adapter(scsi_qla_host_t *vha)
- 	rval = qla2x00_init_rings(vha);
- 	ha->flags.chip_reset_done = 1;
- 
-+	tempc = QLAFX00_GET_TEMPERATURE(ha);
-+	ql_dbg(ql_dbg_init, vha, 0x0152,
-+	    "ISPFx00(%s): Critical temp timer, current SOC temperature: 0x%x\n",
-+	    __func__, tempc);
-+
- 	return rval;
- }
- 
-@@ -2854,6 +2903,17 @@ qlafx00_async_event(scsi_qla_host_t *vha)
- 		    ha->aenmb[0], ha->aenmb[1], ha->aenmb[2], ha->aenmb[3]);
- 		data_size = 4;
- 		break;
-+
-+	case QLAFX00_MBA_TEMP_OVER:	/* Over temperature event */
-+	case QLAFX00_MBA_TEMP_CRIT:	/* Critical temperature event */
-+		ql_log(ql_log_info, vha, 0x5083,
-+		    "Asynchronous critical temperature event received "
-+		    "aenmb[0]: %x\n",
-+		ha->aenmb[0]);
-+		qlafx00_post_aenfx_work(vha, ha->aenmb[0],
-+		    (uint32_t *)ha->aenmb, 1);
-+		break;
-+
- 	default:
- 		ha->aenmb[1] = RD_REG_WORD(&reg->aenmailbox1);
- 		ha->aenmb[2] = RD_REG_WORD(&reg->aenmailbox2);
-diff --git a/drivers/scsi/qla2xxx/qla_mr.h b/drivers/scsi/qla2xxx/qla_mr.h
-index 179f8e4..982f7d3 100644
---- a/drivers/scsi/qla2xxx/qla_mr.h
-+++ b/drivers/scsi/qla2xxx/qla_mr.h
-@@ -329,11 +329,13 @@ struct config_info_data {
- 	uint64_t	adapter_id;
- 
- 	uint32_t	cluster_key_len;
--	uint8_t		cluster_key[10];
-+	uint8_t		cluster_key[16];
- 
- 	uint64_t	cluster_master_id;
- 	uint64_t	cluster_slave_id;
- 	uint8_t		cluster_flags;
-+	uint32_t	enabled_capabilities;
-+	uint32_t	nominal_temp_value;
- } __packed;
- 
- #define FXDISC_GET_CONFIG_INFO		0x01
-@@ -346,6 +348,7 @@ struct config_info_data {
- #define QLAFX00_ICR_ENB_MASK            0x80000000
- #define QLAFX00_ICR_DIS_MASK            0x7fffffff
- #define QLAFX00_HST_RST_REG		0x18264
-+#define QLAFX00_SOC_TEMP_REG		0x184C4
- #define QLAFX00_HST_TO_HBA_REG		0x20A04
- #define QLAFX00_HBA_TO_HOST_REG		0x21B70
- #define QLAFX00_HST_INT_STS_BITS	0x7
-@@ -361,6 +364,9 @@ struct config_info_data {
- #define QLAFX00_INTR_ALL_CMPLT		0x7
- 
- #define QLAFX00_MBA_SYSTEM_ERR		0x8002
-+#define QLAFX00_MBA_TEMP_OVER		0x8005
-+#define QLAFX00_MBA_TEMP_NORM		0x8006
-+#define	QLAFX00_MBA_TEMP_CRIT		0x8007
- #define QLAFX00_MBA_LINK_UP		0x8011
- #define QLAFX00_MBA_LINK_DOWN		0x8012
- #define QLAFX00_MBA_PORT_UPDATE		0x8014
-@@ -501,12 +507,31 @@ struct mr_data_fx00 {
- 	uint32_t old_fw_hbt_cnt;
- 	uint16_t fw_reset_timer_tick;
- 	uint8_t fw_reset_timer_exp;
-+	uint16_t fw_critemp_timer_tick;
- 	uint32_t old_aenmbx0_state;
-+	uint32_t critical_temperature;
- };
- 
-+/*
-+ * SoC Junction Temperature is stored in
-+ * bits 9:1 of SoC Junction Temperature Register
-+ * in a firmware specific format format.
-+ * To get the temperature in Celsius degrees
-+ * the value from this bitfiled should be converted
-+ * using this formula:
-+ * Temperature (degrees C) = ((3,153,000 - (10,000 * X)) / 13,825)
-+ * where X is the bit field value
-+ * this macro reads the register, extracts the bitfield value,
-+ * performs the calcualtions and returns temperature in Celsius
-+ */
-+#define QLAFX00_GET_TEMPERATURE(ha) ((3153000 - (10000 * \
-+	((QLAFX00_RD_REG(ha, QLAFX00_SOC_TEMP_REG) & 0x3FE) >> 1))) / 13825)
-+
-+
- #define QLAFX00_LOOP_DOWN_TIME		615     /* 600 */
- #define QLAFX00_HEARTBEAT_INTERVAL	6	/* number of seconds */
- #define QLAFX00_HEARTBEAT_MISS_CNT	3	/* number of miss */
- #define QLAFX00_RESET_INTERVAL		120	/* number of seconds */
- #define QLAFX00_MAX_RESET_INTERVAL	600	/* number of seconds */
-+#define QLAFX00_CRITEMP_INTERVAL	60	/* number of seconds */
- #endif
+ 	int rval;
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 17a86b6..7a81ede 100644
+index 3f53151..17a86b6 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2575,6 +2575,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->port_down_retry_count = 30; /* default value */
- 		ha->mr.fw_hbt_cnt = QLAFX00_HEARTBEAT_INTERVAL;
- 		ha->mr.fw_reset_timer_tick = QLAFX00_RESET_INTERVAL;
-+		ha->mr.fw_critemp_timer_tick = QLAFX00_CRITEMP_INTERVAL;
- 		ha->mr.fw_hbt_en = 1;
- 	}
+@@ -3006,6 +3006,10 @@ qla2x00_shutdown(struct pci_dev *pdev)
+ 	vha = pci_get_drvdata(pdev);
+ 	ha = vha->hw;
  
++	/* Notify ISPFX00 firmware */
++	if (IS_QLAFX00(ha))
++		qlafx00_driver_shutdown(vha, 20);
++
+ 	/* Turn-off FCE trace */
+ 	if (ha->flags.fce_enabled) {
+ 		qla2x00_disable_fce_trace(vha, NULL, NULL);
+@@ -3053,6 +3057,9 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	ha->flags.host_shutting_down = 1;
+ 
+ 	set_bit(UNLOADING, &base_vha->dpc_flags);
++	if (IS_QLAFX00(ha))
++		qlafx00_driver_shutdown(base_vha, 20);
++
+ 	mutex_lock(&ha->vport_lock);
+ 	while (ha->cur_vport_count) {
+ 		spin_lock_irqsave(&ha->vport_slock, flags);
 -- 
 1.7.7
 
