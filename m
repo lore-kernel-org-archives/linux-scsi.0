@@ -1,320 +1,172 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: [PATCH V2 3/3] scsi: ufs: Add clock initialization support
-Date: Tue, 27 Aug 2013 09:48:13 +0530
-Message-ID: <1377577093-10068-4-git-send-email-sthumma@codeaurora.org>
-References: <1377577093-10068-1-git-send-email-sthumma@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1377577093-10068-1-git-send-email-sthumma@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH 04/29] qla2xxx: Correct multiqueue offset calculations.
+Date: Tue, 27 Aug 2013 01:37:30 -0400
+Message-ID: <1377581875-8574-5-git-send-email-saurav.kashyap@qlogic.com>
+References: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:51749 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752691Ab3H0GGf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Aug 2013 02:06:35 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7R63vVk012060
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:34 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1e5gq13pa4-5
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:34 -0700
+In-Reply-To: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Add generic clock initialization support for UFSHCD platform
-driver. The clock info is read from device tree using standard
-clock bindings. A generic max-clock-frequency-hz property is
-defined to save information on maximum operating clock frequency
-the h/w supports.
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 15 +++-
- drivers/scsi/ufs/ufshcd-pltfrm.c                   | 71 +++++++++++++++++
- drivers/scsi/ufs/ufshcd.c                          | 89 +++++++++++++++++++++-
- drivers/scsi/ufs/ufshcd.h                          | 18 +++++
- 4 files changed, 190 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c |   17 ++++++++++-------
+ drivers/scsi/qla2xxx/qla_def.h |    5 ++---
+ drivers/scsi/qla2xxx/qla_mbx.c |   18 ++++--------------
+ drivers/scsi/qla2xxx/qla_mid.c |    2 ++
+ 4 files changed, 18 insertions(+), 24 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index 65e3117..b0f791a 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -21,8 +21,17 @@ Optional properties:
- - vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
- - vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 6ed98f9..aa10109 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -527,7 +527,7 @@ qla25xx_copy_mq(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
+ 	uint32_t cnt, que_idx;
+ 	uint8_t que_cnt;
+ 	struct qla2xxx_mq_chain *mq = ptr;
+-	struct device_reg_25xxmq __iomem *reg;
++	device_reg_t __iomem *reg;
  
-+- clocks                : List of phandle and clock specifier pairs
-+- clock-names           : List of clock input name strings sorted in the same
-+                          order as the clocks property.
-+- max-clock-frequency-hz : List of maximum operating frequency stored in the same
-+                           order as the clocks property. If this property is not
-+			   defined or a value in the array is "0" then it is assumed
-+			   that the frequency is set by the parent clock or a
-+			   fixed rate clock source.
-+
- Note: If above properties are not defined it can be assumed that the supply
--regulators are always on.
-+regulators or clocks are always on.
+ 	if (!ha->mqenable || IS_QLA83XX(ha))
+ 		return ptr;
+@@ -541,13 +541,16 @@ qla25xx_copy_mq(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
+ 		ha->max_req_queues : ha->max_rsp_queues;
+ 	mq->count = htonl(que_cnt);
+ 	for (cnt = 0; cnt < que_cnt; cnt++) {
+-		reg = (struct device_reg_25xxmq __iomem *)
+-			(ha->mqiobase + cnt * QLA_QUE_PAGE);
++		reg = ISP_QUE_REG(ha, cnt);
+ 		que_idx = cnt * 4;
+-		mq->qregs[que_idx] = htonl(RD_REG_DWORD(&reg->req_q_in));
+-		mq->qregs[que_idx+1] = htonl(RD_REG_DWORD(&reg->req_q_out));
+-		mq->qregs[que_idx+2] = htonl(RD_REG_DWORD(&reg->rsp_q_in));
+-		mq->qregs[que_idx+3] = htonl(RD_REG_DWORD(&reg->rsp_q_out));
++		mq->qregs[que_idx] =
++		    htonl(RD_REG_DWORD(&reg->isp25mq.req_q_in));
++		mq->qregs[que_idx+1] =
++		    htonl(RD_REG_DWORD(&reg->isp25mq.req_q_out));
++		mq->qregs[que_idx+2] =
++		    htonl(RD_REG_DWORD(&reg->isp25mq.rsp_q_in));
++		mq->qregs[que_idx+3] =
++		    htonl(RD_REG_DWORD(&reg->isp25mq.rsp_q_out));
+ 	}
  
- Example:
- 	ufshc@0xfc598000 {
-@@ -37,4 +46,8 @@ Example:
- 		vcc-max-microamp = 500000;
- 		vccq-max-microamp = 200000;
- 		vccq2-max-microamp = 200000;
-+
-+		clocks = <&core 0>, <&ref 0>, <&iface 0>;
-+		clock-names = "core_clk", "ref_clk", "iface_clk";
-+		max-clock-frequency-hz = <100000000 19200000 0>;
- 	};
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index cbdf5f3..15c8086 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -52,6 +52,71 @@ static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
- 	return NULL;
- }
+ 	return ptr + sizeof(struct qla2xxx_mq_chain);
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index c0a1a71..d675860 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2671,9 +2671,8 @@ struct bidi_statistics {
+ #define QLA_MAX_QUEUES 256
+ #define ISP_QUE_REG(ha, id) \
+ 	((ha->mqenable || IS_QLA83XX(ha)) ? \
+-	((device_reg_t __iomem *)(ha->mqiobase) +\
+-	(QLA_QUE_PAGE * id)) :\
+-	((device_reg_t __iomem *)(ha->iobase)))
++	 ((void __iomem *)ha->mqiobase + (QLA_QUE_PAGE * id)) :\
++	 ((void __iomem *)ha->iobase))
+ #define QLA_REQ_QUE_ID(tag) \
+ 	((tag < QLA_MAX_QUEUES && tag > 0) ? tag : 0)
+ #define QLA_DEFAULT_QUE_QOS 5
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 98e8a16..bce41f4 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3574,7 +3574,6 @@ qla25xx_init_req_que(struct scsi_qla_host *vha, struct req_que *req)
+ 	unsigned long flags;
+ 	mbx_cmd_t mc;
+ 	mbx_cmd_t *mcp = &mc;
+-	struct device_reg_25xxmq __iomem *reg;
+ 	struct qla_hw_data *ha = vha->hw;
  
-+static int ufshcd_parse_clock_info(struct ufs_hba *hba)
-+{
-+	int ret = 0;
-+	int cnt;
-+	int i;
-+	struct device *dev = hba->dev;
-+	struct device_node *np = dev->of_node;
-+	char *name;
-+	u32 *clkfreq = NULL;
-+	struct ufs_clk_info *clki;
-+
-+	if (!np)
-+		goto out;
-+
-+	INIT_LIST_HEAD(&hba->clk_list_head);
-+
-+	cnt = of_property_count_strings(np, "clock-names");
-+	if (!cnt || (cnt == -EINVAL)) {
-+		dev_info(dev, "%s: Unable to find clocks, assuming enabled\n",
-+				__func__);
-+	} else if (cnt < 0) {
-+		dev_err(dev, "%s: count clock strings failed, err %d\n",
-+				__func__, cnt);
-+		ret = cnt;
-+	}
-+
-+	if (cnt <= 0)
-+		goto out;
-+
-+	clkfreq = kzalloc(cnt * sizeof(*clkfreq), GFP_KERNEL);
-+	if (!clkfreq) {
-+		ret = -ENOMEM;
-+		dev_err(dev, "%s: memory alloc failed\n", __func__);
-+		goto out;
-+	}
-+
-+	ret = of_property_read_u32_array(np,
-+			"max-clock-frequency-hz", clkfreq, cnt);
-+	if (ret && (ret != -EINVAL)) {
-+		dev_err(dev, "%s: invalid max-clock-frequency-hz property, %d\n",
-+				__func__, ret);
-+		goto out;
-+	}
-+
-+	for (i = 0; i < cnt; i++) {
-+		ret = of_property_read_string_index(np,
-+				"clock-names", i, (const char **)&name);
-+		if (ret)
-+			goto out;
-+
-+		clki = devm_kzalloc(dev, sizeof(*clki), GFP_KERNEL);
-+		if (!clki) {
-+			ret = -ENOMEM;
-+			goto out;
-+		}
-+
-+		clki->max_freq = clkfreq[i];
-+		clki->name = kstrdup(name, GFP_KERNEL);
-+		list_add_tail(&clki->list, &hba->clk_list_head);
-+	}
-+out:
-+	kfree(clkfreq);
-+	return ret;
-+}
-+
- #define MAX_PROP_SIZE 32
- static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 		struct ufs_vreg **out_vreg)
-@@ -265,6 +330,12 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10d3,
+@@ -3595,9 +3594,6 @@ qla25xx_init_req_que(struct scsi_qla_host *vha, struct req_que *req)
+ 	if (IS_QLA83XX(ha))
+ 		mcp->mb[15] = 0;
  
- 	hba->vops = get_variant_ops(&pdev->dev);
+-	reg = (struct device_reg_25xxmq __iomem *)((ha->mqiobase) +
+-		QLA_QUE_PAGE * req->id);
+-
+ 	mcp->mb[4] = req->id;
+ 	/* que in ptr index */
+ 	mcp->mb[8] = 0;
+@@ -3619,12 +3615,10 @@ qla25xx_init_req_que(struct scsi_qla_host *vha, struct req_que *req)
  
-+	err = ufshcd_parse_clock_info(hba);
-+	if (err) {
-+		dev_err(&pdev->dev, "%s: clock parse failed %d\n",
-+				__func__, err);
-+		goto out;
-+	}
- 	err = ufshcd_parse_regulator_info(hba);
- 	if (err) {
- 		dev_err(&pdev->dev, "%s: regulator init failed %d\n",
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e520b15..61c6e54 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2983,6 +2983,80 @@ out:
- 	return ret;
- }
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	if (!(req->options & BIT_0)) {
+-		WRT_REG_DWORD(&reg->req_q_in, 0);
++		WRT_REG_DWORD(req->req_q_in, 0);
+ 		if (!IS_QLA83XX(ha))
+-			WRT_REG_DWORD(&reg->req_q_out, 0);
++			WRT_REG_DWORD(req->req_q_out, 0);
+ 	}
+-	req->req_q_in = &reg->req_q_in;
+-	req->req_q_out = &reg->req_q_out;
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
  
-+static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
-+{
-+	int ret = 0;
-+	struct ufs_clk_info *clki;
-+	struct list_head *head = &hba->clk_list_head;
-+
-+	if (!head || list_empty(head))
-+		goto out;
-+
-+	list_for_each_entry(clki, head, list) {
-+		if (!IS_ERR_OR_NULL(clki->clk)) {
-+			if (on && !clki->enabled) {
-+				ret = clk_prepare_enable(clki->clk);
-+				if (ret) {
-+					dev_err(hba->dev, "%s: %s prepare enable failed, %d\n",
-+						__func__, clki->name, ret);
-+					goto out;
-+				}
-+			} else if (!on && clki->enabled) {
-+				clk_disable_unprepare(clki->clk);
-+			}
-+			clki->enabled = on;
-+			dev_dbg(hba->dev, "%s: clk: %s %sabled\n", __func__,
-+					clki->name, on ? "en" : "dis");
-+		}
-+	}
-+out:
-+	if (ret) {
-+		list_for_each_entry(clki, head, list) {
-+			if (!IS_ERR_OR_NULL(clki->clk) && clki->enabled)
-+				clk_disable_unprepare(clki->clk);
-+		}
-+	}
-+	return ret;
-+}
-+
-+static int ufshcd_init_clocks(struct ufs_hba *hba)
-+{
-+	int ret = 0;
-+	struct ufs_clk_info *clki;
-+	struct device *dev = hba->dev;
-+	struct list_head *head = &hba->clk_list_head;
-+
-+	if (!head || list_empty(head))
-+		goto out;
-+
-+	list_for_each_entry(clki, head, list) {
-+		if (!clki->name)
-+			continue;
-+
-+		clki->clk = devm_clk_get(dev, clki->name);
-+		if (IS_ERR(clki->clk)) {
-+			ret = PTR_ERR(clki->clk);
-+			dev_err(dev, "%s: %s clk get failed, %d\n",
-+					__func__, clki->name, ret);
-+			goto out;
-+		}
-+
-+		if (clki->max_freq) {
-+			ret = clk_set_rate(clki->clk, clki->max_freq);
-+			if (ret) {
-+				dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
-+					__func__, clki->name,
-+					clki->max_freq, ret);
-+				goto out;
-+			}
-+		}
-+		dev_dbg(dev, "%s: clk: %s, rate: %lu\n", __func__,
-+				clki->name, clk_get_rate(clki->clk));
-+	}
-+out:
-+	return ret;
-+}
-+
- static int ufshcd_variant_hba_init(struct ufs_hba *hba)
- {
- 	int err = 0;
-@@ -3042,14 +3116,22 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
- {
- 	int err;
+ 	rval = qla2x00_mailbox_command(vha, mcp);
+@@ -3646,7 +3640,6 @@ qla25xx_init_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
+ 	unsigned long flags;
+ 	mbx_cmd_t mc;
+ 	mbx_cmd_t *mcp = &mc;
+-	struct device_reg_25xxmq __iomem *reg;
+ 	struct qla_hw_data *ha = vha->hw;
  
--	err = ufshcd_init_vreg(hba);
-+	err = ufshcd_init_clocks(hba);
- 	if (err)
- 		goto out;
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10d6,
+@@ -3664,9 +3657,6 @@ qla25xx_init_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
+ 	if (IS_QLA83XX(ha))
+ 		mcp->mb[15] = 0;
  
--	err = ufshcd_setup_vreg(hba, true);
-+	err = ufshcd_setup_clocks(hba, true);
- 	if (err)
- 		goto out;
+-	reg = (struct device_reg_25xxmq __iomem *)((ha->mqiobase) +
+-		QLA_QUE_PAGE * rsp->id);
+-
+ 	mcp->mb[4] = rsp->id;
+ 	/* que in ptr index */
+ 	mcp->mb[8] = 0;
+@@ -3690,9 +3680,9 @@ qla25xx_init_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
  
-+	err = ufshcd_init_vreg(hba);
-+	if (err)
-+		goto out_disable_clks;
-+
-+	err = ufshcd_setup_vreg(hba, true);
-+	if (err)
-+		goto out_disable_clks;
-+
- 	err = ufshcd_variant_hba_init(hba);
- 	if (err)
- 		goto out_disable_vreg;
-@@ -3058,6 +3140,8 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	if (!(rsp->options & BIT_0)) {
+-		WRT_REG_DWORD(&reg->rsp_q_out, 0);
++		WRT_REG_DWORD(rsp->rsp_q_out, 0);
+ 		if (!IS_QLA83XX(ha))
+-			WRT_REG_DWORD(&reg->rsp_q_in, 0);
++			WRT_REG_DWORD(rsp->rsp_q_in, 0);
+ 	}
  
- out_disable_vreg:
- 	ufshcd_setup_vreg(hba, false);
-+out_disable_clks:
-+	ufshcd_setup_clocks(hba, false);
- out:
- 	return err;
- }
-@@ -3066,6 +3150,7 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
- {
- 	ufshcd_variant_hba_exit(hba);
- 	ufshcd_setup_vreg(hba, false);
-+	ufshcd_setup_clocks(hba, false);
- }
- 
- /**
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index f66e58c..1e91687 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -155,6 +155,22 @@ struct ufs_dev_cmd {
- 	struct ufs_query query;
- };
- 
-+/**
-+ * struct ufs_clk_info - UFS clock related info
-+ * @list: list headed by hba->clk_list_head
-+ * @clk: clock node
-+ * @name: clock name
-+ * @max_freq: maximum frequency supported by the clock
-+ * @enabled: variable to check against multiple enable/disable
-+ */
-+struct ufs_clk_info {
-+	struct list_head list;
-+	struct clk *clk;
-+	const char *name;
-+	u32 max_freq;
-+	bool enabled;
-+};
-+
- #define PRE_CHANGE      0
- #define POST_CHANGE     1
- /**
-@@ -220,6 +236,7 @@ struct ufs_hba_variant_ops {
-  * @dev_cmd: ufs device management command information
-  * @auto_bkops_enabled: to track whether bkops is enabled in device
-  * @vreg_info: UFS device voltage regulator information
-+ * @clk_list_head: UFS host controller clocks list node head
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -279,6 +296,7 @@ struct ufs_hba {
- 
- 	bool auto_bkops_enabled;
- 	struct ufs_vreg_info vreg_info;
-+	struct list_head clk_list_head;
- };
- 
- #define ufshcd_writel(hba, val, reg)	\
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index f868a9f..a72df70 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -699,6 +699,8 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
+ 	req->cnt = req->length;
+ 	req->id = que_id;
+ 	reg = ISP_QUE_REG(ha, que_id);
++	req->req_q_in = &reg->isp25mq.req_q_in;
++	req->req_q_out = &reg->isp25mq.req_q_out;
+ 	req->max_q_depth = ha->req_q_map[0]->max_q_depth;
+ 	mutex_unlock(&ha->vport_lock);
+ 	ql_dbg(ql_dbg_multiq, base_vha, 0xc004,
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation.
+1.7.7
+
