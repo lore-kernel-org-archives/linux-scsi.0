@@ -1,120 +1,108 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
-Date: Wed, 28 Aug 2013 10:33:18 -0600
-Message-ID: <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
-References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
- <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH 26/29] qla2xxx: Correctly print out/in mailbox registers.
+Date: Tue, 27 Aug 2013 01:37:52 -0400
+Message-ID: <1377581875-8574-27-git-send-email-saurav.kashyap@qlogic.com>
+References: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Adam Radford <aradford@gmail.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:35922 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753209Ab3H1TZl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Aug 2013 15:25:41 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7SJKwVG007445
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 12:25:41 -0700
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1e5gq16nur-1
+	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 12:25:41 -0700
+Received: from pps.reinject (m0000643.ppops.net [127.0.0.1])
+	by pps.reinject (8.14.5/8.14.5) with SMTP id r7SJPeYJ013294
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 12:25:40 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1eg8v690x3-6
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:53 -0700
+In-Reply-To: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com
+Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-[+cc another email addr for Adam from git logs]
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-On Wed, Aug 28, 2013 at 9:46 AM, Jiri Kosina <jkosina@suse.cz> wrote:
-> On Tue, 27 Aug 2013, Jiri Kosina wrote:
->
->> On Tue, 27 Aug 2013, Jiri Kosina wrote:
->>
->> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
->> > pci device") makes MSIs be forcibly disabled at boot time.
->> >
->> > It turns out that this breaks 3ware controller -- if MSIs are disabled
->> > during PCI discovery of this controller, the device doesn't work properly
->> > (it doesn't respond to any commands that are being sent to it after
->> > initialization).
->> >
->> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
->> > makes the device work properly again.
->> >
->> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
->> >
->> > ---
->> >
->> > I am adding Adam Radford as a recepient as well, to see whether he is able
->> > to provide some more explanation why this device would expose this
->> > behavior.
->
-> OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't
-> expect any feedback from him.
->
-> Bjorn, Jesse, any word on this please?
+At mailbox/buffer debug level, print the correct values of the
+outgoing and incoming mailbox registers.
 
-It's on my list to look at.  It's too late to put it in for v3.11, and
-it's doubtful that it will even make the v3.12 merge window (though
-possibly it could go in post-merge window).  d5dea7d95 is several
-years old, so hopefully this issue isn't super-urgent.  Let me know if
-otherwise.
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_mbx.c |   28 +++++++++++++---------------
+ 1 files changed, 13 insertions(+), 15 deletions(-)
 
-Bjorn
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index c825d1d..a9aae50 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -117,33 +117,25 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	command = mcp->mb[0];
+ 	mboxes = mcp->out_mb;
+ 
++	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1111,
++	    "Mailbox registers (OUT):\n");
+ 	for (cnt = 0; cnt < ha->mbx_count; cnt++) {
+ 		if (IS_QLA2200(ha) && cnt == 8)
+ 			optr =
+ 			    (uint16_t __iomem *)MAILBOX_REG(ha, &reg->isp, 8);
+-		if (mboxes & BIT_0)
++		if (mboxes & BIT_0) {
++			ql_dbg(ql_dbg_mbx, vha, 0x1112,
++			    "mbox[%d]<-0x%04x\n", cnt, *iptr);
+ 			WRT_REG_WORD(optr, *iptr);
++		}
+ 
+ 		mboxes >>= 1;
+ 		optr++;
+ 		iptr++;
+ 	}
+ 
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1111,
+-	    "Loaded MBX registers (displayed in bytes) =.\n");
+-	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1112,
+-	    (uint8_t *)mcp->mb, 16);
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1113,
+-	    ".\n");
+-	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1114,
+-	    ((uint8_t *)mcp->mb + 0x10), 16);
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1115,
+-	    ".\n");
+-	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1116,
+-	    ((uint8_t *)mcp->mb + 0x20), 8);
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1117,
+ 	    "I/O Address = %p.\n", optr);
+-	ql_dump_regs(ql_dbg_mbx + ql_dbg_buffer, vha, 0x100e);
+ 
+ 	/* Issue set host interrupt command to send cmd out. */
+ 	ha->flags.mbox_int = 0;
+@@ -254,9 +246,15 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 		iptr2 = mcp->mb;
+ 		iptr = (uint16_t *)&ha->mailbox_out[0];
+ 		mboxes = mcp->in_mb;
++
++		ql_dbg(ql_dbg_mbx, vha, 0x1113,
++		    "Mailbox registers (IN):\n");
+ 		for (cnt = 0; cnt < ha->mbx_count; cnt++) {
+-			if (mboxes & BIT_0)
++			if (mboxes & BIT_0) {
+ 				*iptr2 = *iptr;
++				ql_dbg(ql_dbg_mbx, vha, 0x1114,
++				    "mbox[%d]->0x%04x\n", cnt, *iptr2);
++			}
+ 
+ 			mboxes >>= 1;
+ 			iptr2++;
+-- 
+1.7.7
 
->> >  drivers/pci/msi.c    |    3 +++
->> >  drivers/pci/quirks.c |   10 ++++++++++
->> >  include/linux/pci.h  |    1 +
->> >  3 files changed, 14 insertions(+), 0 deletions(-)
->> >
->> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> > index aca7578..4f36b8b 100644
->> > --- a/drivers/pci/msi.c
->> > +++ b/drivers/pci/msi.c
->> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
->> >  {
->> >     INIT_LIST_HEAD(&dev->msi_list);
->> >
->> > +   if (dev->broken_msi_disable)
->> > +           return;
->> > +
->> >     /* Disable the msi hardware to avoid screaming interrupts
->> >      * during boot.  This is the power on reset default so
->> >      * usually this should be a noop.
->> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> > index e85d230..4ba3400 100644
->> > --- a/drivers/pci/quirks.c
->> > +++ b/drivers/pci/quirks.c
->> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
->> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
->> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
->> >
->> > +/*
->> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
->> > + * disabled on it during PCI device discovery
->> > + */
->> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
->> > +{
->> > +   dev->broken_msi_disable = 1;
->> > +}
->> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
->> > +
->> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
->> >                              void (*fn)(struct pci_dev *dev))
->> >  {
->> > diff --git a/include/linux/pci.h b/include/linux/pci.h
->> > index 0fd1f15..c327d74 100644
->> > --- a/include/linux/pci.h
->> > +++ b/include/linux/pci.h
->> > @@ -341,6 +341,7 @@ struct pci_dev {
->> >  #ifdef CONFIG_PCI_MSI
->> >     struct list_head msi_list;
->> >     struct kset *msi_kset;
->> > +   unsigned int    broken_msi_disable:1;
->> >  #endif
->> >     struct pci_vpd *vpd;
->> >  #ifdef CONFIG_PCI_ATS
->> >
->> > --
->> > Jiri Kosina
->> > SUSE Labs
->> >
->>
->> --
->> Jiri Kosina
->> SUSE Labs
->>
->
-> --
-> Jiri Kosina
-> SUSE Labs
