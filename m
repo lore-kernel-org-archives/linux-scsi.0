@@ -1,18 +1,17 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v3 2/6] scsi: ufs: fix the setting interrupt aggregation
- counter
-Date: Tue, 27 Aug 2013 14:31:31 +0530
-Message-ID: <521C6AEB.3040700@codeaurora.org>
-References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com> <003701cea26a$347a33a0$9d6e9ae0$%jun@samsung.com>
+Subject: Re: [PATCH v3 4/6] scsi: ufs: add unipro attribute IDs
+Date: Tue, 27 Aug 2013 14:44:45 +0530
+Message-ID: <521C6E05.5060906@codeaurora.org>
+References: <1374280885-11526-1-git-send-email-mita@fixstars.com> <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com> <003901cea26a$4174cd90$c45e68b0$%jun@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:47774 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:48544 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752847Ab3H0JBg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2013 05:01:36 -0400
-In-Reply-To: <003701cea26a$347a33a0$9d6e9ae0$%jun@samsung.com>
+	with ESMTP id S1753031Ab3H0JOv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2013 05:14:51 -0400
+In-Reply-To: <003901cea26a$4174cd90$c45e68b0$%jun@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Seungwon Jeon <tgih.jun@samsung.com>
@@ -23,130 +22,151 @@ Looks good to me.
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
 On 8/26/2013 8:10 PM, Seungwon Jeon wrote:
-> IACTH(Interrupt aggregation counter threshold) value is allowed
-> up to 0x1F and current setting value is the maximum.
-> This value is related with NUTRS(max:0x20) of HCI's capability.
-> Considering HCI controller doesn't support the maximum, IACTH
-> setting should be adjusted with possible value.
-> For that, existing 'ufshcd_config_int_aggr' is split into two part
-> [reset, configure].
+> 'drivers/scsi/ufs/unipro.h' is added.
+> Attributes in the layers of the UNIPRO stack can be
+> read and written via the DME.
 >
 > Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 > Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 > ---
->   drivers/scsi/ufs/ufshcd.c |   53 +++++++++++++++++++++-----------------------
->   drivers/scsi/ufs/ufshci.h |    4 +-
->   2 files changed, 27 insertions(+), 30 deletions(-)
+>   drivers/scsi/ufs/unipro.h |  130 +++++++++++++++++++++++++++++++++++++++++++++
+>   1 files changed, 130 insertions(+), 0 deletions(-)
+>   create mode 100644 drivers/scsi/ufs/unipro.h
 >
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 6ff16c9..c90b88a 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -59,6 +59,9 @@
->   /* Expose the flag value from utp_upiu_query.value */
->   #define MASK_QUERY_UPIU_FLAG_LOC 0xFF
->   
-> +/* Interrupt aggregation default timeout, unit: 40us */
-> +#define INT_AGGR_DEF_TO	0x02
-> +
->   enum {
->   	UFSHCD_MAX_CHANNEL	= 0,
->   	UFSHCD_MAX_ID		= 1,
-> @@ -94,12 +97,6 @@ enum {
->   	UFSHCD_INT_CLEAR,
->   };
->   
-> -/* Interrupt aggregation options */
-> -enum {
-> -	INT_AGGR_RESET,
-> -	INT_AGGR_CONFIG,
-> -};
-> -
->   #define ufshcd_set_eh_in_progress(h) \
->   	(h->eh_flags |= UFSHCD_EH_IN_PROGRESS)
->   #define ufshcd_eh_in_progress(h) \
-> @@ -340,30 +337,30 @@ static inline bool ufshcd_is_exception_event(struct utp_upiu_rsp *ucd_rsp_ptr)
->   }
->   
->   /**
-> - * ufshcd_config_int_aggr - Configure interrupt aggregation values.
-> - *		Currently there is no use case where we want to configure
-> - *		interrupt aggregation dynamically. So to configure interrupt
-> - *		aggregation, #define INT_AGGR_COUNTER_THRESHOLD_VALUE and
-> - *		INT_AGGR_TIMEOUT_VALUE are used.
-> + * ufshcd_reset_intr_aggr - Reset interrupt aggregation values.
->    * @hba: per adapter instance
-> - * @option: Interrupt aggregation option
->    */
->   static inline void
-> -ufshcd_config_int_aggr(struct ufs_hba *hba, int option)
-> +ufshcd_reset_intr_aggr(struct ufs_hba *hba)
->   {
-> -	switch (option) {
-> -	case INT_AGGR_RESET:
-> -		ufshcd_writel(hba, INT_AGGR_ENABLE |
-> -			      INT_AGGR_COUNTER_AND_TIMER_RESET,
-> -			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
-> -		break;
-> -	case INT_AGGR_CONFIG:
-> -		ufshcd_writel(hba, INT_AGGR_ENABLE | INT_AGGR_PARAM_WRITE |
-> -			      INT_AGGR_COUNTER_THRESHOLD_VALUE |
-> -			      INT_AGGR_TIMEOUT_VALUE,
-> -			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
-> -		break;
-> -	}
-> +	ufshcd_writel(hba, INT_AGGR_ENABLE |
-> +		      INT_AGGR_COUNTER_AND_TIMER_RESET,
-> +		      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
-> +}
-> +
-> +/**
-> + * ufshcd_config_intr_aggr - Configure interrupt aggregation values.
-> + * @hba: per adapter instance
-> + * @cnt: Interrupt aggregation counter threshold
-> + * @tmout: Interrupt aggregation timeout value
+> diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+> new file mode 100644
+> index 0000000..3a710eb
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/unipro.h
+> @@ -0,0 +1,130 @@
+> +/*
+> + * drivers/scsi/ufs/unipro.h
+> + *
+> + * Copyright (C) 2013 Samsung Electronics Co., Ltd.
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation; either version 2 of the License, or
+> + * (at your option) any later version.
 > + */
-> +static inline void
-> +ufshcd_config_intr_aggr(struct ufs_hba *hba, u8 cnt, u8 tmout)
-> +{
-> +	ufshcd_writel(hba, INT_AGGR_ENABLE | INT_AGGR_PARAM_WRITE |
-> +		      INT_AGGR_COUNTER_THLD_VAL(cnt) |
-> +		      INT_AGGR_TIMEOUT_VAL(tmout),
-> +		      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
->   }
->   
->   /**
-> @@ -1523,7 +1520,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
->   	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
->   
->   	/* Configure interrupt aggregation */
-> -	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
-> +	ufshcd_config_intr_aggr(hba, hba->nutrs - 1, INT_AGGR_DEF_TO);
->   
->   	/* Configure UTRL and UTMRL base address registers */
->   	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
-> @@ -1971,7 +1968,7 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
->   
->   	/* Reset interrupt aggregation counters */
->   	if (int_aggr_reset)
-> -		ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
-> +		ufshcd_reset_intr_aggr(hba);
->   }
->   
->   /**
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> index f1e1b74..739ae3a 100644
-> --- a/drivers/scsi/ufs/ufshci.h
-> +++ b/drivers/scsi/ufs/ufshci.h
-> @@ -226,8 +226,8 @@ enum {
->   
->   #define MASK_UIC_COMMAND_RESULT			0xFF
->   
-> -#define INT_AGGR_COUNTER_THRESHOLD_VALUE	(0x1F << 8)
-> -#define INT_AGGR_TIMEOUT_VALUE			(0x02)
-> +#define INT_AGGR_COUNTER_THLD_VAL(c)	(((c) & 0x1F) << 8)
-> +#define INT_AGGR_TIMEOUT_VAL(t)		(((t) & 0xFF) << 0)
->   
->   /* Interrupt disable masks */
->   enum {
+> +
+> +#ifndef _UNIPRO_H_
+> +#define _UNIPRO_H_
+> +
+> +/*
+> + * PHY Adpater attributes
+> + */
+> +#define PA_ACTIVETXDATALANES	0x1560
+> +#define PA_ACTIVERXDATALANES	0x1580
+> +#define PA_TXTRAILINGCLOCKS	0x1564
+> +#define PA_PHY_TYPE		0x1500
+> +#define PA_AVAILTXDATALANES	0x1520
+> +#define PA_AVAILRXDATALANES	0x1540
+> +#define PA_MINRXTRAILINGCLOCKS	0x1543
+> +#define PA_TXPWRSTATUS		0x1567
+> +#define PA_RXPWRSTATUS		0x1582
+> +#define PA_TXFORCECLOCK		0x1562
+> +#define PA_TXPWRMODE		0x1563
+> +#define PA_LEGACYDPHYESCDL	0x1570
+> +#define PA_MAXTXSPEEDFAST	0x1521
+> +#define PA_MAXTXSPEEDSLOW	0x1522
+> +#define PA_MAXRXSPEEDFAST	0x1541
+> +#define PA_MAXRXSPEEDSLOW	0x1542
+> +#define PA_TXLINKSTARTUPHS	0x1544
+> +#define PA_TXSPEEDFAST		0x1565
+> +#define PA_TXSPEEDSLOW		0x1566
+> +#define PA_REMOTEVERINFO	0x15A0
+> +#define PA_TXGEAR		0x1568
+> +#define PA_TXTERMINATION	0x1569
+> +#define PA_HSSERIES		0x156A
+> +#define PA_PWRMODE		0x1571
+> +#define PA_RXGEAR		0x1583
+> +#define PA_RXTERMINATION	0x1584
+> +#define PA_MAXRXPWMGEAR		0x1586
+> +#define PA_MAXRXHSGEAR		0x1587
+> +#define PA_RXHSUNTERMCAP	0x15A5
+> +#define PA_RXLSTERMCAP		0x15A6
+> +#define PA_PACPREQTIMEOUT	0x1590
+> +#define PA_PACPREQEOBTIMEOUT	0x1591
+> +#define PA_HIBERN8TIME		0x15A7
+> +#define PA_LOCALVERINFO		0x15A9
+> +#define PA_TACTIVATE		0x15A8
+> +#define PA_PACPFRAMECOUNT	0x15C0
+> +#define PA_PACPERRORCOUNT	0x15C1
+> +#define PA_PHYTESTCONTROL	0x15C2
+> +#define PA_PWRMODEUSERDATA0	0x15B0
+> +#define PA_PWRMODEUSERDATA1	0x15B1
+> +#define PA_PWRMODEUSERDATA2	0x15B2
+> +#define PA_PWRMODEUSERDATA3	0x15B3
+> +#define PA_PWRMODEUSERDATA4	0x15B4
+> +#define PA_PWRMODEUSERDATA5	0x15B5
+> +#define PA_PWRMODEUSERDATA6	0x15B6
+> +#define PA_PWRMODEUSERDATA7	0x15B7
+> +#define PA_PWRMODEUSERDATA8	0x15B8
+> +#define PA_PWRMODEUSERDATA9	0x15B9
+> +#define PA_PWRMODEUSERDATA10	0x15BA
+> +#define PA_PWRMODEUSERDATA11	0x15BB
+> +#define PA_CONNECTEDTXDATALANES	0x1561
+> +#define PA_CONNECTEDRXDATALANES	0x1581
+> +#define PA_LOGICALLANEMAP	0x15A1
+> +#define PA_SLEEPNOCONFIGTIME	0x15A2
+> +#define PA_STALLNOCONFIGTIME	0x15A3
+> +#define PA_SAVECONFIGTIME	0x15A4
+> +
+> +/*
+> + * Data Link Layer Attributes
+> + */
+> +#define DL_TC0TXFCTHRESHOLD	0x2040
+> +#define DL_FC0PROTTIMEOUTVAL	0x2041
+> +#define DL_TC0REPLAYTIMEOUTVAL	0x2042
+> +#define DL_AFC0REQTIMEOUTVAL	0x2043
+> +#define DL_AFC0CREDITTHRESHOLD	0x2044
+> +#define DL_TC0OUTACKTHRESHOLD	0x2045
+> +#define DL_TC1TXFCTHRESHOLD	0x2060
+> +#define DL_FC1PROTTIMEOUTVAL	0x2061
+> +#define DL_TC1REPLAYTIMEOUTVAL	0x2062
+> +#define DL_AFC1REQTIMEOUTVAL	0x2063
+> +#define DL_AFC1CREDITTHRESHOLD	0x2064
+> +#define DL_TC1OUTACKTHRESHOLD	0x2065
+> +#define DL_TXPREEMPTIONCAP	0x2000
+> +#define DL_TC0TXMAXSDUSIZE	0x2001
+> +#define DL_TC0RXINITCREDITVAL	0x2002
+> +#define DL_TC0TXBUFFERSIZE	0x2005
+> +#define DL_PEERTC0PRESENT	0x2046
+> +#define DL_PEERTC0RXINITCREVAL	0x2047
+> +#define DL_TC1TXMAXSDUSIZE	0x2003
+> +#define DL_TC1RXINITCREDITVAL	0x2004
+> +#define DL_TC1TXBUFFERSIZE	0x2006
+> +#define DL_PEERTC1PRESENT	0x2066
+> +#define DL_PEERTC1RXINITCREVAL	0x2067
+> +
+> +/*
+> + * Network Layer Attributes
+> + */
+> +#define N_DEVICEID		0x3000
+> +#define N_DEVICEID_VALID	0x3001
+> +#define N_TC0TXMAXSDUSIZE	0x3020
+> +#define N_TC1TXMAXSDUSIZE	0x3021
+> +
+> +/*
+> + * Transport Layer Attributes
+> + */
+> +#define T_NUMCPORTS		0x4000
+> +#define T_NUMTESTFEATURES	0x4001
+> +#define T_CONNECTIONSTATE	0x4020
+> +#define T_PEERDEVICEID		0x4021
+> +#define T_PEERCPORTID		0x4022
+> +#define T_TRAFFICCLASS		0x4023
+> +#define T_PROTOCOLID		0x4024
+> +#define T_CPORTFLAGS		0x4025
+> +#define T_TXTOKENVALUE		0x4026
+> +#define T_RXTOKENVALUE		0x4027
+> +#define T_LOCALBUFFERSPACE	0x4028
+> +#define T_PEERBUFFERSPACE	0x4029
+> +#define T_CREDITSTOSEND		0x402A
+> +#define T_CPORTMODE		0x402B
+> +#define T_TC0TXMAXSDUSIZE	0x4060
+> +#define T_TC1TXMAXSDUSIZE	0x4061
+> +
+> +#endif /* _UNIPRO_H_ */
 
