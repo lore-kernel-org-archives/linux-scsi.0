@@ -1,302 +1,160 @@
-From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: RE: [PATCH v3 5/6] scsi: ufs: add operation for the uic power mode
- change
-Date: Tue, 27 Aug 2013 20:58:20 +0900
-Message-ID: <001101cea31c$b958a810$2c09f830$%jun@samsung.com>
-References: <1374280885-11526-1-git-send-email-mita@fixstars.com>
- <001d01ce8a06$76bb3420$64319c60$%jun@samsung.com>
- <003a01cea26a$46905420$d3b0fc60$%jun@samsung.com>
- <521C770F.4020300@codeaurora.org>
- <000f01cea318$7d901420$78b03c60$%jun@samsung.com>
- <521C91ED.5000702@codeaurora.org>
+From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
+Subject: RE: [PATCH 1/7] qla4xxx: Allow removal of failed session using
+ logout.
+Date: Tue, 27 Aug 2013 12:28:22 +0000
+Message-ID: <A746FC0878026447A9CA0A93DA81256D46BA55BD@avmb2.qlogic.org>
+References: <1373286791-29659-1-git-send-email-adheer.chandravanshi@qlogic.com>
+	 <1373286791-29659-2-git-send-email-adheer.chandravanshi@qlogic.com>
+ <1377279317.4147.53.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_A746FC0878026447A9CA0A93DA81256D46BA55BDavmb2qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:39605 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752922Ab3H0L6W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2013 07:58:22 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MS600HCZUKVFJ21@mailout2.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 27 Aug 2013 20:58:21 +0900 (KST)
-In-reply-to: <521C91ED.5000702@codeaurora.org>
-Content-language: ko
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:37467 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751763Ab3H0M21 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Aug 2013 08:28:27 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7RCH8D4004790
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2013 05:28:26 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1e5gq145h9-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2013 05:28:26 -0700
+In-Reply-To: <1377279317.4147.53.camel@dabdike>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Subhash Jadavani' <subhashj@codeaurora.org>
-Cc: linux-scsi@vger.kernel.org, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>, "'James E.J. Bottomley'" <James.Bottomley@HansenPartnership.com>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-On Tue, August 27, 2013, Subhash Jadavani wrote:
-> On 8/27/2013 4:58 PM, Seungwon Jeon wrote:
-> > On Tue, August 27, 2013, Subhash Jadavani wrote:
-> >> On 8/26/2013 8:10 PM, Seungwon Jeon wrote:
-> >>> Setting PA_PWRMode using DME_SET triggers the power mode
-> >>> change. And then the result will be given by the HCS.UPMCRS.
-> >>> This operation should be done atomically.
-> >>>
-> >>> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> >>> ---
-> >>>    drivers/scsi/ufs/ufshcd.c |   84 ++++++++++++++++++++++++++++++++++++++++++--
-> >>>    drivers/scsi/ufs/ufshcd.h |    3 ++
-> >>>    drivers/scsi/ufs/ufshci.h |   12 ++++++
-> >>>    3 files changed, 95 insertions(+), 4 deletions(-)
-> >>>
-> >>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> >>> index 00bfc1a..c67118d 100644
-> >>> --- a/drivers/scsi/ufs/ufshcd.c
-> >>> +++ b/drivers/scsi/ufs/ufshcd.c
-> >>> @@ -36,9 +36,11 @@
-> >>>    #include <linux/async.h>
-> >>>
-> >>>    #include "ufshcd.h"
-> >>> +#include "unipro.h"
-> >>>
-> >>>    #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
-> >>>    				 UTP_TASK_REQ_COMPL |\
-> >>> +				 UIC_POWER_MODE |\
-> >>>    				 UFSHCD_ERROR_MASK)
-> >>>    /* UIC command timeout, unit: ms */
-> >>>    #define UIC_CMD_TIMEOUT	500
-> >>> @@ -520,6 +522,18 @@ static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
-> >>>    }
-> >>>
-> >>>    /**
-> >>> + * ufshcd_get_upmcrs - Get the power mode change request status
-> >>> + * @hba: Pointer to adapter instance
-> >>> + *
-> >>> + * This function gets the UPMCRS field of HCS register
-> >>> + * Returns value of UPMCRS field
-> >>> + */
-> >>> +static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
-> >>> +{
-> >>> +	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) >> 8) & 0x7;
-> >>> +}
-> >>> +
-> >>> +/**
-> >>>     * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
-> >>>     * @hba: per adapter instance
-> >>>     * @uic_cmd: UIC command
-> >>> @@ -1526,6 +1540,64 @@ out:
-> >>>    EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
-> >>>
-> >>>    /**
-> >>> + * ufshcd_uic_change_pwr_mode - Perform the UIC power mode chage
-> >>> + *				using DME_SET primitives.
-> >>> + * @hba: per adapter instance
-> >>> + * @mode: powr mode value
-> >>> + *
-> >>> + * Returns 0 on success, non-zero value on failure
-> >>> + */
-> >>> +int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
-> >>> +{
-> >>> +	struct uic_command uic_cmd = {0};
-> >>> +	struct completion pwr_done;
-> >>> +	unsigned long flags;
-> >>> +	u8 status;
-> >>> +	int ret;
-> >>> +
-> >>> +	uic_cmd.command = UIC_CMD_DME_SET;
-> >>> +	uic_cmd.argument1 = UIC_ARG_MIB(PA_PWRMODE);
-> >>> +	uic_cmd.argument3 = mode;
-> >>> +	init_completion(&pwr_done);
-> >>> +
-> >>> +	mutex_lock(&hba->uic_cmd_mutex);
-> >>> +
-> >>> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> >>> +	hba->pwr_done = &pwr_done;
-> >>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >>> +	ret = __ufshcd_send_uic_cmd(hba, &uic_cmd);
-> >>> +	if (ret) {
-> >>> +		dev_err(hba->dev,
-> >>> +			"pwr mode change with mode 0x%x uic error %d\n",
-> >>> +			mode, ret);
-> >>> +		goto out;
-> >>> +	}
-> >>> +
-> >>> +	if (!wait_for_completion_timeout(hba->pwr_done,
-> >>> +					 msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
-> >>> +		dev_err(hba->dev,
-> >>> +			"pwr mode change with mode 0x%x completion timeout\n",
-> >>> +			mode);
-> >>> +		ret = -ETIMEDOUT;
-> >>> +		goto out;
-> >>> +	}
-> >>> +
-> >>> +	status = ufshcd_get_upmcrs(hba);
-> >> I have a doubt on the relation between UIC Power Mode Status (UPMS) bit
-> >> & UIC Power Mode Change Request Status (UPMCRS) field.
-> >>
-> >> Once we send the DME_SET(PA_PWRMODE) command, we will get the UIC
-> >> command completion interrupt (with IS.UCCS bit set) which just indicate
-> >> that the attribute is written but power mode change procedure will
-> >> complete only after some delay which is indicated via IS.UPMS status bit
-> >> and then we would read the HCS.UPMCRS field to know the status of power
-> >> mode change.
-> >>
-> >> This is my exact doubt: Currently UFSHCD driver first clears the IS.UPMS
-> >> bit (ufshcd_intr() first clears the current interrupts in
-> >> REG_INTERRUPT_STATUS and then calls the ufshcd_sl_intr() handler, and in
-> >> your current patch we are anyway not reading the UPMCRS field from
-> >> interrupt contex ) and then read the HCS.UPMCRS field. Will HCS.UPMCRS
-> >> field retain its status value even after IS.UPMS bit is cleared? UFSHCI
-> >> specification doesn't clearly mention this so either we have to get the
-> >> clarity from JEDEC or from your ufs host controller vendor on the
-> >> behaviour. I am checking with our ufs host controller vendor as well and
-> >> will let you know what is the expected behaviour. BTW, i guess you might
-> >> have already tested this patch to be working on your UFS host controller?
-> > Hi Subhash,
-> >
-> > Yes, It's already tested and works fine.
-> > IS.UPMS is a indication to inform the result of 'power mode change'(UPMCRS).
-> > So clearing the interrupt would not affect this result.
-> Thanks for clarifying.
-> 
-> > Generally it seems not common idea.
-> 
-> Infact on SDHCi controller, there is a case where "auto-cmd error
-> status" register fields are only valid when the "auto-cmd error"
-> interrupt bit is set in interrupt status register. Clearing status bit
-> also clears the "auto-cmd error status" register fields automatically.
-> So i was in doubt whether similar could be the case here or not.
+--_000_A746FC0878026447A9CA0A93DA81256D46BA55BDavmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-It's interesting thing to me.
+James,
 
-> 
-> > Anyway, if your host has different behavior, please let me know.
-> 
-> Sure, checking on this. Would let you know soon. BTW, UFSHCI
-> specification doesn't mention it clearly so it could be implementation
-> dependent as well and if it is the case, we might have to change it
-> later to accomodate the different implementation. So for now, you have
-> my Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+Thanks for pointing this out. We will send the fix for this in the next pat=
+ch-set.
 
-Thank you for review.
+--
+Adheer
 
-Seungwon Jeon
+> -----Original Message-----
+> From: James Bottomley [mailto:jbottomley@parallels.com]
+> Sent: Saturday, August 24, 2013 1:03 AM
+> To: Adheer Chandravanshi
+> Cc: michaelc@cs.wisc.edu; linux-scsi; Vikas Chaudhary; Lalit Chandivade
+> Subject: Re: [PATCH 1/7] qla4xxx: Allow removal of failed session using
+> logout.
+>=20
+> On Mon, 2013-07-08 at 08:33 -0400, adheer.chandravanshi@qlogic.com
+> wrote:
+> > +       /* wait until next relogin is triggered using DF_RELOGIN and
+> > +        * clear DF_RELOGIN to avoid invocation of further relogin
+> > +        */
+> > +       wtime =3D jiffies + (HZ * RELOGIN_TOV);
+> > +       do {
+> > +               if (test_and_clear_bit(DF_RELOGIN, &ddb_entry->flags))
+> > +                       goto ddb_logout_init;
+> > +
+> > +               schedule_timeout_uninterruptible(HZ);
+> > +       } while ((time_after(wtime, jiffies)));
+>=20
+> This looks a bit like a hand rolled wait_event_timeout() couldn't you use=
+ the
+> linux primitives?
+>=20
+> James
 
-> 
-> >
-> > Thanks,
-> > Seungwon Jeon
-> >
-> >>> +	if (status != PWR_LOCAL) {
-> >>> +		dev_err(hba->dev,
-> >>> +			"pwr mode change failed, host umpcrs:0x%x\n",
-> >>> +			status);
-> >>> +		ret = (status != PWR_OK) ? status : -1;
-> >>> +	}
-> >>> +out:
-> >>> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> >>> +	hba->pwr_done = NULL;
-> >>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >>> +	mutex_unlock(&hba->uic_cmd_mutex);
-> >>> +	return ret;
-> >>> +}
-> >>> +
-> >>> +/**
-> >>>     * ufshcd_complete_dev_init() - checks device readiness
-> >>>     * hba: per-adapter instance
-> >>>     *
-> >>> @@ -1992,16 +2064,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-> >>>    /**
-> >>>     * ufshcd_uic_cmd_compl - handle completion of uic command
-> >>>     * @hba: per adapter instance
-> >>> + * @intr_status: interrupt status generated by the controller
-> >>>     */
-> >>> -static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
-> >>> +static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
-> >>>    {
-> >>> -	if (hba->active_uic_cmd) {
-> >>> +	if ((intr_status & UIC_COMMAND_COMPL) && hba->active_uic_cmd) {
-> >>>    		hba->active_uic_cmd->argument2 |=
-> >>>    			ufshcd_get_uic_cmd_result(hba);
-> >>>    		hba->active_uic_cmd->argument3 =
-> >>>    			ufshcd_get_dme_attr_val(hba);
-> >>>    		complete(&hba->active_uic_cmd->done);
-> >>>    	}
-> >>> +
-> >>> +	if ((intr_status & UIC_POWER_MODE) && hba->pwr_done)
-> >>> +		complete(hba->pwr_done);
-> >>>    }
-> >>>
-> >>>    /**
-> >>> @@ -2451,8 +2527,8 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
-> >>>    	if (hba->errors)
-> >>>    		ufshcd_check_errors(hba);
-> >>>
-> >>> -	if (intr_status & UIC_COMMAND_COMPL)
-> >>> -		ufshcd_uic_cmd_compl(hba);
-> >>> +	if (intr_status & UFSHCD_UIC_MASK)
-> >>> +		ufshcd_uic_cmd_compl(hba, intr_status);
-> >>>
-> >>>    	if (intr_status & UTP_TASK_REQ_COMPL)
-> >>>    		ufshcd_tmc_handler(hba);
-> >>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> >>> index ab1518d..ecff83d 100644
-> >>> --- a/drivers/scsi/ufs/ufshcd.h
-> >>> +++ b/drivers/scsi/ufs/ufshcd.h
-> >>> @@ -178,6 +178,7 @@ struct ufs_dev_cmd {
-> >>>     * @tm_tag_wq: wait queue for free task management slots
-> >>>     * @tm_condition: condition variable for task management
-> >>>     * @tm_slots_in_use: bit map of task management request slots in use
-> >>> + * @pwr_done: completion for power mode change
-> >>>     * @ufshcd_state: UFSHCD states
-> >>>     * @eh_flags: Error handling flags
-> >>>     * @intr_mask: Interrupt Mask Bits
-> >>> @@ -227,6 +228,8 @@ struct ufs_hba {
-> >>>    	unsigned long tm_condition;
-> >>>    	unsigned long tm_slots_in_use;
-> >>>
-> >>> +	struct completion *pwr_done;
-> >>> +
-> >>>    	u32 ufshcd_state;
-> >>>    	u32 eh_flags;
-> >>>    	u32 intr_mask;
-> >>> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> >>> index 1e1fe26..0475c66 100644
-> >>> --- a/drivers/scsi/ufs/ufshci.h
-> >>> +++ b/drivers/scsi/ufs/ufshci.h
-> >>> @@ -124,6 +124,9 @@ enum {
-> >>>    #define CONTROLLER_FATAL_ERROR			UFS_BIT(16)
-> >>>    #define SYSTEM_BUS_FATAL_ERROR			UFS_BIT(17)
-> >>>
-> >>> +#define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL |\
-> >>> +				 UIC_POWER_MODE)
-> >>> +
-> >>>    #define UFSHCD_ERROR_MASK	(UIC_ERROR |\
-> >>>    				DEVICE_FATAL_ERROR |\
-> >>>    				CONTROLLER_FATAL_ERROR |\
-> >>> @@ -142,6 +145,15 @@ enum {
-> >>>    #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
-> >>>    #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
-> >>>
-> >>> +enum {
-> >>> +	PWR_OK		= 0x0,
-> >>> +	PWR_LOCAL	= 0x01,
-> >>> +	PWR_REMOTE	= 0x02,
-> >>> +	PWR_BUSY	= 0x03,
-> >>> +	PWR_ERROR_CAP	= 0x04,
-> >>> +	PWR_FATAL_ERROR	= 0x05,
-> >>> +};
-> >>> +
-> >>>    /* HCE - Host Controller Enable 34h */
-> >>>    #define CONTROLLER_ENABLE	UFS_BIT(0)
-> >>>    #define CONTROLLER_DISABLE	0x0
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+--_000_A746FC0878026447A9CA0A93DA81256D46BA55BDavmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IuhGAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADEyNjVBRDRF
+MkFGREQzNDFCNzlFMUFFNThEMTlBQzU3AF4HAQ2ABAACAAAAAgACAAEFgAMADgAAAN0HCAAbAAwA
+HAAWAAIARwEBIIADAA4AAADdBwgAGwAMABwAFgACAEcBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAEcAAABSRTogW1BBVENIIDEvN10gcWxhNHh4eDogQWxsb3cgcmVtb3Zh
+bCBvZiBmYWlsZWQgc2Vzc2lvbiB1c2luZyBsb2dvdXQuAAUYAQOQBgAgEQAAPgAAAAIBfwABAAAA
+PAAAADxBNzQ2RkMwODc4MDI2NDQ3QTlDQTBBOTNEQTgxMjU2RDQ2QkE1NUJEQGF2bWIyLnFsb2dp
+Yy5vcmc+AAsAHw4BAAAAAgEJEAEAAAA3BAAAMwQAAFAGAABMWkZ1GRhSEmEACmZiaWQEAABjY8Bw
+ZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwli
+MTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhBy
+AMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsG
+cwGQACAgQk1fQuBFR0lOfQr8AfEL8YggSmEHgSxcbAuA9mUKgSIUVBmhH1AccAWxVHBvC4B0C4Bn
+HMBohQQAIAhgdC4gVxngfQPwbAMgEgAdwCQRGeBm/Gl4I0MkIwuAJYMYUBBAVyOAGIARwC0SAS4i
+DC1yLSIFQWQloASQIgw+1iAo4CrRTwUQZwuAB0BzBdAHkHNhGDAq0ypHRu0DYTohlB+wbwJAA3Ae
+cDh5IFsAwAMQGJA6ajsG4C3lQAqxB0AecGxz8i4FoG1dKkcGYAIwLUAFBhB0CHBkYXksIBBBdWd1
+H2AgMjQDMeAB0DEzIDE6MOky4EFNKkdULsAx8CmD1CBDGaFkGHB2AHEkMOkqR0NjLUBtDlAR0C/w
+mGNAYzAQA/FjLgmAyHU7ICIRdXgnsDbgwmk3kFZpa2EEIDSxVnUpgArAeTeQTAdAaTsFQDSzaTUg
+AQAweHViJmoFkDExUmUtQFtQEEFUQ0gy8C83XeQgcQtgNHg84DQhJRD+bwfgCXAEYDUgAyAZMBxw
+ry6BHFESAAQQaQIgIDIwdyPhKkcJAGckcipHKkdPjQOgTQIgMpQtMDdCYJQ4IBiAIEKgOjMy4P1C
+YDQeoDHgOlApkjAgNMq+QDygQCAOUDAiKkd3A2BNECA6KkcqsCsgR3Qv7iok4AtwBUB1I8EDICcT
+7wlwRTIDoCRBdCsxGDAJcQE/JCBERl9SRUx+TyARQsAdwEa/R3FH8GPfHnAKwUrJGJBCwHYjoBxg
+/wuATlAeUCPQPwE+EghwJZFvBcBJFUuvTLIvUH9HcHfDI9AHgCA9IGoGkCXQYweRR2AoSFpM0Ur1
+XzBUT1YpFiBR7yBk/U4gXAAAVW9XlwaQVBAQIFUfYF800V9NA18NwHQGKErIMeAmZGRiXyMxETlA
+LT5mC2Bnc+wpKVbfXO8gQDBOEVrC/UAUXwuAObBVS1vvV5gE8PcloDdwHnBfUxJe0khgI7GpBJBy
+dQUwaQJgZVQh81U/R3JcfSTgJDAecFQQ31iwB3FZAAGABJAoUwMx4L9ThVvAZAkzeCQyCQBvIyHs
+YSBZsTehaxngaaA0wv89gAbwPnJIElrwGjACMGJWjCgpG9FiIGRuJwVA/nkIYD8hGeAlkT+IN8Ij
+gM8FEDZQI9AaMHM/Z98hlAciDBVCcfAAHwBCAAEAAAAqAAAAQQBkAGgAZQBlAHIAIABDAGgAYQBu
+AGQAcgBhAHYAYQBuAHMAaABpAAAAAAAfAGUAAQAAAEAAAABhAGQAaABlAGUAcgAuAGMAaABhAG4A
+ZAByAGEAdgBhAG4AcwBoAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBN
+AFQAUAAAAAAAAgFBAAEAAACMAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBkAGgAZQBlAHIA
+IABDAGgAYQBuAGQAcgBhAHYAYQBuAHMAaABpAAAAUwBNAFQAUAAAAGEAZABoAGUAZQByAC4AYwBo
+AGEAbgBkAHIAYQB2AGEAbgBzAGgAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAAEAA
+AABhAGQAaABlAGUAcgAuAGMAaABhAG4AZAByAGEAdgBhAG4AcwBoAGkAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwDlXwEAAABIAAAAcwBpAHAAOgBhAGQAaABlAGUAcgAuAGMAaABhAG4AZAByAGEA
+dgBhAG4AcwBoAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAqAAAAQQBkAGgAZQBl
+AHIAIABDAGgAYQBuAGQAcgBhAHYAYQBuAHMAaABpAAAAAAAfAB8MAQAAAEAAAABhAGQAaABlAGUA
+cgAuAGMAaABhAG4AZAByAGEAdgBhAG4AcwBoAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAe
+DAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAACMAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACA
+QQBkAGgAZQBlAHIAIABDAGgAYQBuAGQAcgBhAHYAYQBuAHMAaABpAAAAUwBNAFQAUAAAAGEAZABo
+AGUAZQByAC4AYwBoAGEAbgBkAHIAYQB2AGEAbgBzAGgAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAAfAAFdAQAAAEAAAABhAGQAaABlAGUAcgAuAGMAaABhAG4AZAByAGEAdgBhAG4AcwBoAGkAQABx
+AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAqAAAAQQBkAGgAZQBlAHIAIABDAGgAYQBuAGQA
+cgBhAHYAYQBuAHMAaABpAAAAAAAfACNAAQAAAEAAAABhAGQAaABlAGUAcgAuAGMAaABhAG4AZABy
+AGEAdgBhAG4AcwBoAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQA
+UAAAAAAAAgH5PwEAAACMAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBkAGgAZQBlAHIAIABD
+AGgAYQBuAGQAcgBhAHYAYQBuAHMAaABpAAAAUwBNAFQAUAAAAGEAZABoAGUAZQByAC4AYwBoAGEA
+bgBkAHIAYQB2AGEAbgBzAGgAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAAEAAAABh
+AGQAaABlAGUAcgAuAGMAaABhAG4AZAByAGEAdgBhAG4AcwBoAGkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBA
+OgEAAAADAP0/5AQAAAIBCzABAAAAEAAAABJlrU4q/dNBt54a5Y0ZrFcDABcAAQAAAEAAOQAA9ynr
+IKPOAUAACDAssLrrIKPOAQsAKQAAAAAACwAjAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAe
+AAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsA
+AIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAACOAAAAUgBFADoAIABbAFAAQQBU
+AEMASAAgADEALwA3AF0AIABxAGwAYQA0AHgAeAB4ADoAIABBAGwAbABvAHcAIAByAGUAbQBvAHYA
+YQBsACAAbwBmACAAZgBhAGkAbABlAGQAIABzAGUAcwBzAGkAbwBuACAAdQBzAGkAbgBnACAAbABv
+AGcAbwB1AHQALgAAAAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAAAwA2AAAAAAADAC4AAAAAAB8A
+QhABAAAARgAAADwAMQAzADcANwAyADcAOQAzADEANwAuADQAMQA0ADcALgA1ADMALgBjAGEAbQBl
+AGwAQABkAGEAYgBkAGkAawBlAD4AAAAAAAIBcQABAAAAIAAAAAEBznvbGz01O2JWv0NOjVrcMYLN
+pyuZo+y8gIAFXJxgHwBwAAEAAACGAAAAWwBQAEEAVABDAEgAIAAxAC8ANwBdACAAcQBsAGEANAB4
+AHgAeAA6ACAAQQBsAGwAbwB3ACAAcgBlAG0AbwB2AGEAbAAgAG8AZgAgAGYAYQBpAGwAZQBkACAA
+cwBlAHMAcwBpAG8AbgAgAHUAcwBpAG4AZwAgAGwAbwBnAG8AdQB0AC4AAAAAAB8ANRABAAAAeAAA
+ADwAQQA3ADQANgBGAEMAMAA4ADcAOAAwADIANgA0ADQANwBBADkAQwBBADAAQQA5ADMARABBADgA
+MQAyADUANgBEADQANgBCAEEANQA1AEIARABAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBjAC4AbwBy
+AGcAPgAAAB8AORABAAAAWAEAADwAMQAzADcAMwAyADgANgA3ADkAMQAtADIAOQA2ADUAOQAtADEA
+LQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBhAGQAaABlAGUAcgAuAGMAaABhAG4AZABy
+AGEAdgBhAG4AcwBoAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4ACQAgADwAMQAzADcAMwAyADgA
+NgA3ADkAMQAtADIAOQA2ADUAOQAtADIALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBh
+AGQAaABlAGUAcgAuAGMAaABhAG4AZAByAGEAdgBhAG4AcwBoAGkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAD4AIAA8ADEAMwA3ADcAMgA3ADkAMwAxADcALgA0ADEANAA3AC4ANQAzAC4AYwBhAG0AZQBs
+AEAAZABhAGIAZABpAGsAZQA+AAAAAwDeP59OAAALAACACCAGAAAAAADAAAAAAAAARgAAAAADhQAA
+AAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAAAAAAAwCAEP////9AAAcwoQFr6iCjzgEL
+AAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcAAQAAAC0AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFW
+TUIyLTEzMDgyNzEyMjgyMlotNjcxMAAAAAACARAwAQAAAEYAAAAAAAAAPTovjQ6mQUax4NeHXVmK
+CgcAH7fcXjTa20mUY7bqid9ApAB76hMdbQAA5gFJ/jU9wkeLKmbxLqnmgwB8vLoNSgAAAAAfAPo/
+AQAAACoAAABBAGQAaABlAGUAcgAgAEMAaABhAG4AZAByAGEAdgBhAG4AcwBoAGkAAAAAAAMACVkB
+AAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAEIUAAAAAAAAfAACACCAGAAAAAADAAAAAAAAARgAA
+AADYhQAAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAA
+AA6FAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAA
+AAAARgAAAACChQAAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBt
+AHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAA
+AEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAx
+ADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMA
+bABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAIhg
+
+--_000_A746FC0878026447A9CA0A93DA81256D46BA55BDavmb2qlogicorg_--
