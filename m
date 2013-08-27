@@ -1,149 +1,503 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] scsi: ufs: read door bell register after clearing interrupt
- aggregation
-Date: Tue, 27 Aug 2013 13:50:37 +0530
-Message-ID: <521C6155.9080207@codeaurora.org>
-References: <1377427016-28469-1-git-send-email-draviv@codeaurora.org>
+Subject: Re: [PATCH V2 2/3] scsi: ufs: Add regulator enable support
+Date: Tue, 27 Aug 2013 13:47:37 +0530
+Message-ID: <521C60A1.5090202@codeaurora.org>
+References: <1377577093-10068-1-git-send-email-sthumma@codeaurora.org> <1377577093-10068-3-git-send-email-sthumma@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1377427016-28469-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:44687 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909Ab3H0IRo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2013 04:17:44 -0400
+In-Reply-To: <1377577093-10068-3-git-send-email-sthumma@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org
 
 
 
 Looks good to me.
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
-On 8/25/2013 4:06 PM, Dolev Raviv wrote:
-> In interrupt context, after reading and comparing the UTRLDBR to
-> hba->outstanding_request and before resetting the interrupt aggregation,
-> there might be completion of another transfer request (TR). Such TRs might
-> get stuck, pending, until the next interrupt is generated.
+On 8/27/2013 9:48 AM, Sujit Reddy Thumma wrote:
+> UFS devices are powered by at most three external power supplies -
+> - VCC - The flash memory core power supply, 2.7V to 3.6V or 1.70V to 1.95V
+> - VCCQ - The controller and I/O power supply, 1.1V to 1.3V
+> - VCCQ2 - Secondary controller and/or I/O power supply, 1.65V to 1.95V
 >
-> The fix reads the UTRLDBR after resetting the interrupt aggregation and
-> handles completed TRs.
+> For some devices VCCQ or VCCQ2 are optional as they can be
+> generated using internal LDO inside the UFS device.
 >
-> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+> Add DT bindings for voltage regulators that can be controlled
+> from host driver.
 >
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 4dca9b4..30c84d8 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1915,6 +1915,13 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
->   /**
->    * ufshcd_transfer_req_compl - handle SCSI and query command completion
->    * @hba: per adapter instance
-> + *
-> + * Resetting interrupt aggregation counters first and reading the DOOR_BELL
-> + * afterward , allows us to handle all the completed requests.
-> + * In order to prevent other interrupts starvation the DB is read once
-> + * after reset. The down side of this solution is the possibility of false
-> + * interrupt if device completes another request after resetting aggregation
-> + * and before reading the DB.
->    */
->   static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
->   {
-> @@ -1924,47 +1931,36 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
->   	u32 tr_doorbell;
->   	int result;
->   	int index;
-> -	bool int_aggr_reset = false;
+> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+> ---
+>   .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  24 +++
+>   drivers/scsi/ufs/ufs.h                             |  25 +++
+>   drivers/scsi/ufs/ufshcd-pltfrm.c                   | 100 +++++++++++
+>   drivers/scsi/ufs/ufshcd.c                          | 193 ++++++++++++++++++++-
+>   drivers/scsi/ufs/ufshcd.h                          |   3 +
+>   5 files changed, 342 insertions(+), 3 deletions(-)
+>
+> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> index 20468b2..65e3117 100644
+> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> @@ -8,9 +8,33 @@ Required properties:
+>   - interrupts        : <interrupt mapping for UFS host controller IRQ>
+>   - reg               : <registers mapping>
+>   
+> +Optional properties:
+> +- vcc-supply            : phandle to VCC supply regulator node
+> +- vccq-supply           : phandle to VCCQ supply regulator node
+> +- vccq2-supply          : phandle to VCCQ2 supply regulator node
+> +- vcc-supply-1p8        : For embedded UFS devices, valid VCC range is 1.7-1.95V
+> +                          or 2.7-3.6V. This boolean property when set, specifies
+> +			  to use low voltage range of 1.7-1.95V. Note for external
+> +			  UFS cards this property is invalid and valid VCC range is
+> +			  always 2.7-3.6V.
+> +- vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
+> +- vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
+> +- vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
 > +
-> +	/* Reset interrupt aggregation counters */
-> +	ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
+> +Note: If above properties are not defined it can be assumed that the supply
+> +regulators are always on.
+> +
+>   Example:
+>   	ufshc@0xfc598000 {
+>   		compatible = "jedec,ufs-1.1";
+>   		reg = <0xfc598000 0x800>;
+>   		interrupts = <0 28 0>;
+> +
+> +		vcc-supply = <&xxx_reg1>;
+> +		vcc-supply-1p8;
+> +		vccq-supply = <&xxx_reg2>;
+> +		vccq2-supply = <&xxx_reg3>;
+> +		vcc-max-microamp = 500000;
+> +		vccq-max-microamp = 200000;
+> +		vccq2-max-microamp = 200000;
+>   	};
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index bce09a6..7db080e 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -325,4 +325,29 @@ struct ufs_query_res {
+>   	struct utp_upiu_query upiu_res;
+>   };
 >   
->   	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
->   	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
->   
-> -	for (index = 0; index < hba->nutrs; index++) {
-> -		if (test_bit(index, &completed_reqs)) {
-> -			lrbp = &hba->lrb[index];
-> -			cmd = lrbp->cmd;
-> -			/*
-> -			 * Don't skip resetting interrupt aggregation counters
-> -			 * if a regular command is present.
-> -			 */
-> -			int_aggr_reset |= !lrbp->intr_cmd;
-> -
-> -			if (cmd) {
-> -				result = ufshcd_transfer_rsp_status(hba, lrbp);
-> -				scsi_dma_unmap(cmd);
-> -				cmd->result = result;
-> -				/* Mark completed command as NULL in LRB */
-> -				lrbp->cmd = NULL;
-> -				clear_bit_unlock(index, &hba->lrb_in_use);
-> -				/* Do not touch lrbp after scsi done */
-> -				cmd->scsi_done(cmd);
-> -			} else if (lrbp->command_type ==
-> -					UTP_CMD_TYPE_DEV_MANAGE) {
-> -				if (hba->dev_cmd.complete)
-> -					complete(hba->dev_cmd.complete);
-> -			}
-> -		} /* end of if */
-> -	} /* end of for */
-> +	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
-> +		lrbp = &hba->lrb[index];
-> +		cmd = lrbp->cmd;
-> +		if (cmd) {
-> +			result = ufshcd_transfer_rsp_status(hba, lrbp);
-> +			scsi_dma_unmap(cmd);
-> +			cmd->result = result;
-> +			/* Mark completed command as NULL in LRB */
-> +			lrbp->cmd = NULL;
-> +			clear_bit_unlock(index, &hba->lrb_in_use);
-> +			/* Do not touch lrbp after scsi done */
-> +			cmd->scsi_done(cmd);
-> +		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE) {
-> +			if (hba->dev_cmd.complete)
-> +				complete(hba->dev_cmd.complete);
-> +		}
-> +	} /* end of for_each_set_bit */
->   
->   	/* clear corresponding bits of completed commands */
->   	hba->outstanding_reqs ^= completed_reqs;
->   
->   	/* we might have free'd some tags above */
->   	wake_up(&hba->dev_cmd.tag_wq);
-> -
-> -	/* Reset interrupt aggregation counters */
-> -	if (int_aggr_reset)
-> -		ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
+> +#define UFS_VREG_VCC_MIN_UV	   2700000 /* uV */
+> +#define UFS_VREG_VCC_MAX_UV	   3600000 /* uV */
+> +#define UFS_VREG_VCC_1P8_MIN_UV    1700000 /* uV */
+> +#define UFS_VREG_VCC_1P8_MAX_UV    1950000 /* uV */
+> +#define UFS_VREG_VCCQ_MIN_UV	   1100000 /* uV */
+> +#define UFS_VREG_VCCQ_MAX_UV	   1300000 /* uV */
+> +#define UFS_VREG_VCCQ2_MIN_UV	   1650000 /* uV */
+> +#define UFS_VREG_VCCQ2_MAX_UV	   1950000 /* uV */
+> +
+> +struct ufs_vreg {
+> +	struct regulator *reg;
+> +	const char *name;
+> +	bool enabled;
+> +	int min_uV;
+> +	int max_uV;
+> +	int min_uA;
+> +	int max_uA;
+> +};
+> +
+> +struct ufs_vreg_info {
+> +	struct ufs_vreg *vcc;
+> +	struct ufs_vreg *vccq;
+> +	struct ufs_vreg *vccq2;
+> +};
+> +
+>   #endif /* End of Header */
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> index 9c94052..cbdf5f3 100644
+> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -52,6 +52,99 @@ static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
+>   	return NULL;
 >   }
 >   
->   /**
-> @@ -2569,6 +2565,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->   	int poll_cnt;
->   	u8 resp = 0xF;
->   	struct ufshcd_lrb *lrbp;
-> +	u32 reg;
->   
->   	host = cmd->device->host;
->   	hba = shost_priv(host);
-> @@ -2578,6 +2575,13 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->   	if (!(test_bit(tag, &hba->outstanding_reqs)))
->   		goto out;
->   
-> +	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> +	if (!(reg & (1 << tag))) {
-> +		dev_err(hba->dev,
-> +		"%s: cmd was completed, but without a notifying intr, tag = %d",
-> +		__func__, tag);
+> +#define MAX_PROP_SIZE 32
+> +static int ufshcd_populate_vreg(struct device *dev, const char *name,
+> +		struct ufs_vreg **out_vreg)
+> +{
+> +	int ret = 0;
+> +	char prop_name[MAX_PROP_SIZE];
+> +	struct ufs_vreg *vreg = NULL;
+> +	struct device_node *np = dev->of_node;
+> +
+> +	if (!np) {
+> +		dev_err(dev, "%s: non DT initialization\n", __func__);
+> +		goto out;
 > +	}
 > +
->   	lrbp = &hba->lrb[tag];
->   	for (poll_cnt = 100; poll_cnt; poll_cnt--) {
->   		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
-> @@ -2586,8 +2590,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->   			/* cmd pending in the device */
->   			break;
->   		} else if (!err && resp == UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
-> -			u32 reg;
-> -
->   			/*
->   			 * cmd not pending in the device, check if it is
->   			 * in transition.
+> +	snprintf(prop_name, MAX_PROP_SIZE, "%s-supply", name);
+> +	if (!of_parse_phandle(np, prop_name, 0)) {
+> +		dev_info(dev, "%s: Unable to find %s regulator, assuming enabled\n",
+> +				__func__, prop_name);
+> +		goto out;
+> +	}
+> +
+> +	vreg = devm_kzalloc(dev, sizeof(*vreg), GFP_KERNEL);
+> +	if (!vreg) {
+> +		dev_err(dev, "No memory for %s regulator\n", name);
+> +		goto out;
+> +	}
+> +
+> +	vreg->name = kstrdup(name, GFP_KERNEL);
+> +
+> +	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
+> +	ret = of_property_read_u32(np, prop_name, &vreg->max_uA);
+> +	if (ret) {
+> +		dev_err(dev, "%s: unable to find %s err %d\n",
+> +				__func__, prop_name, ret);
+> +		goto out_free;
+> +	}
+> +
+> +	vreg->min_uA = 0;
+> +	if (!strcmp(name, "vcc")) {
+> +		if (of_property_read_bool(np, "vcc-supply-1p8")) {
+> +			vreg->min_uV = UFS_VREG_VCC_1P8_MIN_UV;
+> +			vreg->max_uV = UFS_VREG_VCC_1P8_MAX_UV;
+> +		} else {
+> +			vreg->min_uV = UFS_VREG_VCC_MIN_UV;
+> +			vreg->max_uV = UFS_VREG_VCC_MAX_UV;
+> +		}
+> +	} else if (!strcmp(name, "vccq")) {
+> +		vreg->min_uV = UFS_VREG_VCCQ_MIN_UV;
+> +		vreg->max_uV = UFS_VREG_VCCQ_MAX_UV;
+> +	} else if (!strcmp(name, "vccq2")) {
+> +		vreg->min_uV = UFS_VREG_VCCQ2_MIN_UV;
+> +		vreg->max_uV = UFS_VREG_VCCQ2_MAX_UV;
+> +	}
+> +
+> +	goto out;
+> +
+> +out_free:
+> +	devm_kfree(dev, vreg);
+> +	vreg = NULL;
+> +out:
+> +	if (!ret)
+> +		*out_vreg = vreg;
+> +	return ret;
+> +}
+> +
+> +/**
+> + * ufshcd_parse_regulator_info - get regulator info from device tree
+> + * @hba: per adapter instance
+> + *
+> + * Get regulator info from device tree for vcc, vccq, vccq2 power supplies.
+> + * If any of the supplies are not defined it is assumed that they are always-on
+> + * and hence return zero. If the property is defined but parsing is failed
+> + * then return corresponding error.
+> + */
+> +static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
+> +{
+> +	int err;
+> +	struct device *dev = hba->dev;
+> +	struct ufs_vreg_info *info = &hba->vreg_info;
+> +
+> +	err = ufshcd_populate_vreg(dev, "vcc", &info->vcc);
+> +	if (err)
+> +		goto out;
+> +
+> +	err = ufshcd_populate_vreg(dev, "vccq", &info->vccq);
+> +	if (err)
+> +		goto out;
+> +
+> +	err = ufshcd_populate_vreg(dev, "vccq2", &info->vccq2);
+> +out:
+> +	return err;
+> +}
+> +
+>   #ifdef CONFIG_PM
+>   /**
+>    * ufshcd_pltfrm_suspend - suspend power management function
+> @@ -172,6 +265,13 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
+>   
+>   	hba->vops = get_variant_ops(&pdev->dev);
+>   
+> +	err = ufshcd_parse_regulator_info(hba);
+> +	if (err) {
+> +		dev_err(&pdev->dev, "%s: regulator init failed %d\n",
+> +				__func__, err);
+> +		goto out;
+> +	}
+> +
+>   	pm_runtime_set_active(&pdev->dev);
+>   	pm_runtime_enable(&pdev->dev);
+>   
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 743696a..e520b15 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -59,6 +59,16 @@
+>   /* Expose the flag value from utp_upiu_query.value */
+>   #define MASK_QUERY_UPIU_FLAG_LOC 0xFF
+>   
+> +#define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+> +	({                                                              \
+> +		int _ret;                                               \
+> +		if (_on)                                                \
+> +			_ret = ufshcd_enable_vreg(_dev, _vreg);         \
+> +		else                                                    \
+> +			_ret = ufshcd_disable_vreg(_dev, _vreg);        \
+> +		_ret;                                                   \
+> +	})
+> +
+>   enum {
+>   	UFSHCD_MAX_CHANNEL	= 0,
+>   	UFSHCD_MAX_ID		= 1,
+> @@ -2826,6 +2836,153 @@ static struct scsi_host_template ufshcd_driver_template = {
+>   	.can_queue		= UFSHCD_CAN_QUEUE,
+>   };
+>   
+> +static int ufshcd_config_vreg(struct device *dev,
+> +		struct ufs_vreg *vreg, bool on)
+> +{
+> +	int ret = 0;
+> +	struct regulator *reg = vreg->reg;
+> +	const char *name = vreg->name;
+> +	int min_uV, uA_load;
+> +
+> +	BUG_ON(!vreg);
+> +
+> +	if (regulator_count_voltages(reg) > 0) {
+> +		min_uV = on ? vreg->min_uV : 0;
+> +		ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
+> +		if (ret) {
+> +			dev_err(dev, "%s: %s set voltage failed, err=%d\n",
+> +					__func__, name, ret);
+> +			goto out;
+> +		}
+> +
+> +		uA_load = on ? vreg->max_uA : 0;
+> +		ret = regulator_set_optimum_mode(reg, uA_load);
+> +		if (ret >= 0) {
+> +			/*
+> +			 * regulator_set_optimum_mode() returns new regulator
+> +			 * mode upon success.
+> +			 */
+> +			ret = 0;
+> +		} else {
+> +			dev_err(dev, "%s: %s set optimum mode(uA_load=%d) failed, err=%d\n",
+> +					__func__, name, uA_load, ret);
+> +			goto out;
+> +		}
+> +	}
+> +out:
+> +	return ret;
+> +}
+> +
+> +static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
+> +{
+> +	int ret = 0;
+> +
+> +	if (!vreg || vreg->enabled)
+> +		goto out;
+> +
+> +	ret = ufshcd_config_vreg(dev, vreg, true);
+> +	if (!ret)
+> +		ret = regulator_enable(vreg->reg);
+> +
+> +	if (!ret)
+> +		vreg->enabled = true;
+> +	else
+> +		dev_err(dev, "%s: %s enable failed, err=%d\n",
+> +				__func__, vreg->name, ret);
+> +out:
+> +	return ret;
+> +}
+> +
+> +static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
+> +{
+> +	int ret = 0;
+> +
+> +	if (!vreg || !vreg->enabled)
+> +		goto out;
+> +
+> +	ret = regulator_disable(vreg->reg);
+> +
+> +	if (!ret) {
+> +		/* ignore errors on applying disable config */
+> +		ufshcd_config_vreg(dev, vreg, false);
+> +		vreg->enabled = false;
+> +	} else {
+> +		dev_err(dev, "%s: %s disable failed, err=%d\n",
+> +				__func__, vreg->name, ret);
+> +	}
+> +out:
+> +	return ret;
+> +}
+> +
+> +static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on)
+> +{
+> +	int ret = 0;
+> +	struct device *dev = hba->dev;
+> +	struct ufs_vreg_info *info = &hba->vreg_info;
+> +
+> +	if (!info)
+> +		goto out;
+> +
+> +	ret = ufshcd_toggle_vreg(dev, info->vcc, on);
+> +	if (ret)
+> +		goto out;
+> +
+> +	ret = ufshcd_toggle_vreg(dev, info->vccq, on);
+> +	if (ret)
+> +		goto out;
+> +
+> +	ret = ufshcd_toggle_vreg(dev, info->vccq2, on);
+> +	if (ret)
+> +		goto out;
+> +
+> +out:
+> +	if (ret) {
+> +		ufshcd_toggle_vreg(dev, info->vccq2, false);
+> +		ufshcd_toggle_vreg(dev, info->vccq, false);
+> +		ufshcd_toggle_vreg(dev, info->vcc, false);
+> +	}
+> +	return ret;
+> +}
+> +
+> +static int ufshcd_get_vreg(struct device *dev, struct ufs_vreg *vreg)
+> +{
+> +	int ret = 0;
+> +
+> +	if (!vreg)
+> +		goto out;
+> +
+> +	vreg->reg = devm_regulator_get(dev, vreg->name);
+> +	if (IS_ERR(vreg->reg)) {
+> +		ret = PTR_ERR(vreg->reg);
+> +		dev_err(dev, "%s: %s get failed, err=%d\n",
+> +				__func__, vreg->name, ret);
+> +	}
+> +out:
+> +	return ret;
+> +}
+> +
+> +static int ufshcd_init_vreg(struct ufs_hba *hba)
+> +{
+> +	int ret = 0;
+> +	struct device *dev = hba->dev;
+> +	struct ufs_vreg_info *info = &hba->vreg_info;
+> +
+> +	if (!info)
+> +		goto out;
+> +
+> +	ret = ufshcd_get_vreg(dev, info->vcc);
+> +	if (ret)
+> +		goto out;
+> +
+> +	ret = ufshcd_get_vreg(dev, info->vccq);
+> +	if (ret)
+> +		goto out;
+> +
+> +	ret = ufshcd_get_vreg(dev, info->vccq2);
+> +out:
+> +	return ret;
+> +}
+> +
+>   static int ufshcd_variant_hba_init(struct ufs_hba *hba)
+>   {
+>   	int err = 0;
+> @@ -2881,6 +3038,36 @@ static void ufshcd_variant_hba_exit(struct ufs_hba *hba)
+>   		hba->vops->exit(hba);
+>   }
+>   
+> +static int ufshcd_hba_init(struct ufs_hba *hba)
+> +{
+> +	int err;
+> +
+> +	err = ufshcd_init_vreg(hba);
+> +	if (err)
+> +		goto out;
+> +
+> +	err = ufshcd_setup_vreg(hba, true);
+> +	if (err)
+> +		goto out;
+> +
+> +	err = ufshcd_variant_hba_init(hba);
+> +	if (err)
+> +		goto out_disable_vreg;
+> +
+> +	goto out;
+> +
+> +out_disable_vreg:
+> +	ufshcd_setup_vreg(hba, false);
+> +out:
+> +	return err;
+> +}
+> +
+> +static void ufshcd_hba_exit(struct ufs_hba *hba)
+> +{
+> +	ufshcd_variant_hba_exit(hba);
+> +	ufshcd_setup_vreg(hba, false);
+> +}
+> +
+>   /**
+>    * ufshcd_suspend - suspend power management function
+>    * @hba: per adapter instance
+> @@ -2966,7 +3153,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+>   
+>   	scsi_host_put(hba->host);
+>   
+> -	ufshcd_variant_hba_exit(hba);
+> +	ufshcd_hba_exit(hba);
+>   }
+>   EXPORT_SYMBOL_GPL(ufshcd_remove);
+>   
+> @@ -3029,7 +3216,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>   	hba->mmio_base = mmio_base;
+>   	hba->irq = irq;
+>   
+> -	err = ufshcd_variant_hba_init(hba);
+> +	err = ufshcd_hba_init(hba);
+>   	if (err)
+>   		goto out_error;
+>   
+> @@ -3115,7 +3302,7 @@ out_remove_scsi_host:
+>   	scsi_remove_host(hba->host);
+>   out_disable:
+>   	scsi_host_put(host);
+> -	ufshcd_variant_hba_exit(hba);
+> +	ufshcd_hba_exit(hba);
+>   out_error:
+>   	return err;
+>   }
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 72acbc7..f66e58c 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -52,6 +52,7 @@
+>   #include <linux/pm_runtime.h>
+>   #include <linux/clk.h>
+>   #include <linux/completion.h>
+> +#include <linux/regulator/consumer.h>
+>   
+>   #include <asm/irq.h>
+>   #include <asm/byteorder.h>
+> @@ -218,6 +219,7 @@ struct ufs_hba_variant_ops {
+>    * @saved_uic_err: sticky UIC error mask
+>    * @dev_cmd: ufs device management command information
+>    * @auto_bkops_enabled: to track whether bkops is enabled in device
+> + * @vreg_info: UFS device voltage regulator information
+>    */
+>   struct ufs_hba {
+>   	void __iomem *mmio_base;
+> @@ -276,6 +278,7 @@ struct ufs_hba {
+>   	struct ufs_dev_cmd dev_cmd;
+>   
+>   	bool auto_bkops_enabled;
+> +	struct ufs_vreg_info vreg_info;
+>   };
+>   
+>   #define ufshcd_writel(hba, val, reg)	\
+
