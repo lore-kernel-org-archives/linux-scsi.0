@@ -1,261 +1,61 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 14/29] qla2xxx: Add missing FCP statistics to sysfs interface.
-Date: Tue, 27 Aug 2013 01:37:40 -0400
-Message-ID: <1377581875-8574-15-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 17/29] qla2xxx: Send all AENs for ISPFx00 to above layers.
+Date: Tue, 27 Aug 2013 01:37:43 -0400
+Message-ID: <1377581875-8574-18-git-send-email-saurav.kashyap@qlogic.com>
 References: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:51782 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:51790 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752720Ab3H0GGo (ORCPT
+	by vger.kernel.org with ESMTP id S1752847Ab3H0GGp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Aug 2013 02:06:44 -0400
+	Tue, 27 Aug 2013 02:06:45 -0400
 Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7R64Oi9012247
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:43 -0700
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7R64OiB012247
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:44 -0700
 Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1e5gq13pa9-11
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1e5gq13pa9-13
 	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:43 -0700
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2013 23:06:44 -0700
 In-Reply-To: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Armen Baloyan <armen.baloyan@qlogic.com>
 
-Add the missing FCP statistics to sysfs.
-Add reset FCP statistics functionality via sysfs.
-
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Armen Baloyan <armen.baloyan@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |   25 ++++++++++++++++++++++++-
- drivers/scsi/qla2xxx/qla_def.h  |   10 ++++++++--
- drivers/scsi/qla2xxx/qla_gs.c   |    6 ++++++
- drivers/scsi/qla2xxx/qla_init.c |    1 +
- drivers/scsi/qla2xxx/qla_iocb.c |   13 +++++++++++++
- drivers/scsi/qla2xxx/qla_isr.c  |    3 +++
- 6 files changed, 55 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_mr.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 93f3783..85aad4a 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1732,11 +1732,21 @@ qla2x00_get_fc_host_stats(struct Scsi_Host *shost)
- 		pfc_host_stat->lip_count = stats->lip_cnt;
- 		pfc_host_stat->tx_frames = stats->tx_frames;
- 		pfc_host_stat->rx_frames = stats->rx_frames;
--		pfc_host_stat->dumped_frames = stats->dumped_frames;
-+		pfc_host_stat->dumped_frames = stats->discarded_frames;
- 		pfc_host_stat->nos_count = stats->nos_rcvd;
-+		pfc_host_stat->error_frames =
-+			stats->dropped_frames + stats->discarded_frames;
-+		pfc_host_stat->rx_words = vha->qla_stats.input_bytes;
-+		pfc_host_stat->tx_words = vha->qla_stats.output_bytes;
- 	}
-+	pfc_host_stat->fcp_control_requests = vha->qla_stats.control_requests;
-+	pfc_host_stat->fcp_input_requests = vha->qla_stats.input_requests;
-+	pfc_host_stat->fcp_output_requests = vha->qla_stats.output_requests;
- 	pfc_host_stat->fcp_input_megabytes = vha->qla_stats.input_bytes >> 20;
- 	pfc_host_stat->fcp_output_megabytes = vha->qla_stats.output_bytes >> 20;
-+	pfc_host_stat->seconds_since_last_reset =
-+		get_jiffies_64() - vha->qla_stats.jiffies_at_last_reset;
-+	do_div(pfc_host_stat->seconds_since_last_reset, HZ);
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index 85587de..ae1d00c6 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -1734,6 +1734,10 @@ qlafx00_process_aen(struct scsi_qla_host *vha, struct qla_work_evt *evt)
+ 	aen_data = evt->u.aenfx.evtcode;
  
- done_free:
-         dma_pool_free(ha->s_dma_pool, stats, stats_dma);
-@@ -1745,6 +1755,16 @@ done:
- }
+ 	switch (evt->u.aenfx.evtcode) {
++	case QLAFX00_MBA_SHUTDOWN_RQSTD: /* FW shutdown pending */
++		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
++		rval = qlafx00_driver_shutdown(vha, 10);
++		break;
+ 	case QLAFX00_MBA_PORT_UPDATE:		/* Port database update */
+ 		if (evt->u.aenfx.mbx[1] == 0) {
+ 			if (evt->u.aenfx.mbx[2] == 1) {
+@@ -2920,8 +2924,6 @@ qlafx00_async_event(scsi_qla_host_t *vha)
+ 		    "Asynchronous critical temperature event received "
+ 		    "aenmb[0]: %x\n",
+ 		ha->aenmb[0]);
+-		qlafx00_post_aenfx_work(vha, ha->aenmb[0],
+-		    (uint32_t *)ha->aenmb, 1);
+ 		break;
  
- static void
-+qla2x00_reset_host_stats(struct Scsi_Host *shost)
-+{
-+	scsi_qla_host_t *vha = shost_priv(shost);
-+
-+	memset(&vha->fc_host_stat, 0, sizeof(vha->fc_host_stat));
-+
-+	vha->qla_stats.jiffies_at_last_reset = get_jiffies_64();
-+}
-+
-+static void
- qla2x00_get_host_symbolic_name(struct Scsi_Host *shost)
- {
- 	scsi_qla_host_t *vha = shost_priv(shost);
-@@ -2050,6 +2070,7 @@ struct fc_function_template qla2xxx_transport_functions = {
- 	.dev_loss_tmo_callbk = qla2x00_dev_loss_tmo_callbk,
- 	.terminate_rport_io = qla2x00_terminate_rport_io,
- 	.get_fc_host_stats = qla2x00_get_fc_host_stats,
-+	.reset_fc_host_stats = qla2x00_reset_host_stats,
- 
- 	.vport_create = qla24xx_vport_create,
- 	.vport_disable = qla24xx_vport_disable,
-@@ -2096,6 +2117,8 @@ struct fc_function_template qla2xxx_transport_vport_functions = {
- 	.dev_loss_tmo_callbk = qla2x00_dev_loss_tmo_callbk,
- 	.terminate_rport_io = qla2x00_terminate_rport_io,
- 	.get_fc_host_stats = qla2x00_get_fc_host_stats,
-+	.reset_fc_host_stats = qla2x00_reset_host_stats,
-+
- 	.bsg_request = qla24xx_bsg_request,
- 	.bsg_timeout = qla24xx_bsg_timeout,
- };
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index e5d3373..0aa1bea 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1236,8 +1236,9 @@ struct link_statistics {
- 	uint32_t unused1[0x1a];
- 	uint32_t tx_frames;
- 	uint32_t rx_frames;
--	uint32_t dumped_frames;
--	uint32_t unused2[2];
-+	uint32_t discarded_frames;
-+	uint32_t dropped_frames;
-+	uint32_t unused2[1];
- 	uint32_t nos_rcvd;
- };
- 
-@@ -2659,6 +2660,11 @@ struct qla_statistics {
- 	uint32_t total_isp_aborts;
- 	uint64_t input_bytes;
- 	uint64_t output_bytes;
-+	uint64_t input_requests;
-+	uint64_t output_requests;
-+	uint32_t control_requests;
-+
-+	uint64_t jiffies_at_last_reset;
- };
- 
- struct bidi_statistics {
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 84cce36..cd47f1b 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -49,6 +49,8 @@ qla2x00_prep_ms_iocb(scsi_qla_host_t *vha, uint32_t req_size, uint32_t rsp_size)
- 	ms_pkt->dseg_rsp_address[1] = cpu_to_le32(MSD(ha->ct_sns_dma));
- 	ms_pkt->dseg_rsp_length = ms_pkt->rsp_bytecount;
- 
-+	vha->qla_stats.control_requests++;
-+
- 	return (ms_pkt);
- }
- 
-@@ -87,6 +89,8 @@ qla24xx_prep_ms_iocb(scsi_qla_host_t *vha, uint32_t req_size, uint32_t rsp_size)
- 	ct_pkt->dseg_1_len = ct_pkt->rsp_byte_count;
- 	ct_pkt->vp_index = vha->vp_idx;
- 
-+	vha->qla_stats.control_requests++;
-+
- 	return (ct_pkt);
- }
- 
-@@ -723,6 +727,8 @@ qla2x00_prep_sns_cmd(scsi_qla_host_t *vha, uint16_t cmd, uint16_t scmd_len,
- 	wc = (data_size - 16) / 4;		/* Size in 32bit words. */
- 	sns_cmd->p.cmd.size = cpu_to_le16(wc);
- 
-+	vha->qla_stats.control_requests++;
-+
- 	return (sns_cmd);
- }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 91df7a5..03f715e 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -524,6 +524,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
- 	vha->flags.reset_active = 0;
- 	ha->flags.pci_channel_io_perm_failure = 0;
- 	ha->flags.eeh_busy = 0;
-+	vha->qla_stats.jiffies_at_last_reset = get_jiffies_64();
- 	atomic_set(&vha->loop_down_timer, LOOP_DOWN_TIME);
- 	atomic_set(&vha->loop_state, LOOP_DOWN);
- 	vha->device_flags = DFLG_NO_CABLE;
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index e2a7d2d..46b9307 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -32,9 +32,11 @@ qla2x00_get_cmd_direction(srb_t *sp)
- 	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
- 		cflags = CF_WRITE;
- 		vha->qla_stats.output_bytes += scsi_bufflen(cmd);
-+		vha->qla_stats.output_requests++;
- 	} else if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
- 		cflags = CF_READ;
- 		vha->qla_stats.input_bytes += scsi_bufflen(cmd);
-+		vha->qla_stats.input_requests++;
- 	}
- 	return (cflags);
- }
-@@ -642,10 +644,12 @@ qla24xx_build_scsi_type_6_iocbs(srb_t *sp, struct cmd_type_6 *cmd_pkt,
- 		cmd_pkt->control_flags =
- 		    __constant_cpu_to_le16(CF_WRITE_DATA);
- 		vha->qla_stats.output_bytes += scsi_bufflen(cmd);
-+		vha->qla_stats.output_requests++;
- 	} else if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
- 		cmd_pkt->control_flags =
- 		    __constant_cpu_to_le16(CF_READ_DATA);
- 		vha->qla_stats.input_bytes += scsi_bufflen(cmd);
-+		vha->qla_stats.input_requests++;
- 	}
- 
- 	cur_seg = scsi_sglist(cmd);
-@@ -758,10 +762,12 @@ qla24xx_build_scsi_iocbs(srb_t *sp, struct cmd_type_7 *cmd_pkt,
- 		cmd_pkt->task_mgmt_flags =
- 		    __constant_cpu_to_le16(TMF_WRITE_DATA);
- 		vha->qla_stats.output_bytes += scsi_bufflen(cmd);
-+		vha->qla_stats.output_requests++;
- 	} else if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
- 		cmd_pkt->task_mgmt_flags =
- 		    __constant_cpu_to_le16(TMF_READ_DATA);
- 		vha->qla_stats.input_bytes += scsi_bufflen(cmd);
-+		vha->qla_stats.input_requests++;
- 	}
- 
- 	/* One DSD is available in the Command Type 3 IOCB */
-@@ -2056,6 +2062,8 @@ qla24xx_els_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
-             (bsg_job->reply_payload.sg_list)));
-         els_iocb->rx_len = cpu_to_le32(sg_dma_len
-             (bsg_job->reply_payload.sg_list));
-+
-+	sp->fcport->vha->qla_stats.control_requests++;
- }
- 
- static void
-@@ -2133,6 +2141,8 @@ qla2x00_ct_iocb(srb_t *sp, ms_iocb_entry_t *ct_iocb)
- 		avail_dsds--;
- 	}
- 	ct_iocb->entry_count = entry_count;
-+
-+	sp->fcport->vha->qla_stats.control_requests++;
- }
- 
- static void
-@@ -2685,6 +2695,9 @@ qla25xx_build_bidir_iocb(srb_t *sp, struct scsi_qla_host *vha,
- 	vha->bidi_stats.transfer_bytes += req_data_len;
- 	vha->bidi_stats.io_count++;
- 
-+	vha->qla_stats.output_bytes += req_data_len;
-+	vha->qla_stats.output_requests++;
-+
- 	/* Only one dsd is available for bidirectional IOCB, remaining dsds
- 	 * are bundled in continuation iocb
- 	 */
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 4a9782c..bbc24d3 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1807,6 +1807,9 @@ qla25xx_process_bidir_status_iocb(scsi_qla_host_t *vha, void *pkt,
- 		if (scsi_status == 0) {
- 			bsg_job->reply->reply_payload_rcv_len =
- 					bsg_job->reply_payload.payload_len;
-+			vha->qla_stats.input_bytes +=
-+				bsg_job->reply->reply_payload_rcv_len;
-+			vha->qla_stats.input_requests++;
- 			rval = EXT_STATUS_OK;
- 		}
- 		goto done;
+ 	default:
 -- 
 1.7.7
 
