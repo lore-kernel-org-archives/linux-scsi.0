@@ -1,216 +1,453 @@
-From: vaughan <vaughan.cao@oracle.com>
-Subject: Re: [PATCH v5 0/4] [SCSI] sg: fix race condition in sg_open
-Date: Tue, 27 Aug 2013 16:16:44 +0800
-Message-ID: <521C606C.3000109@oracle.com>
-References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com> <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com> <20130722170338.GA15824@logfs.org> <51F9EB97.7070305@interlog.com> <51FC9449.4060906@interlog.com> <51FF0BC0.5020702@oracle.com> <5200108A.9020008@interlog.com> <52099E1B.5000203@oracle.com> <5209A50E.8090300@interlog.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH V2 1/3] scsi: ufs: Allow vendor specific initialization
+Date: Tue, 27 Aug 2013 13:47:24 +0530
+Message-ID: <521C6094.1000607@codeaurora.org>
+References: <1377577093-10068-1-git-send-email-sthumma@codeaurora.org> <1377577093-10068-2-git-send-email-sthumma@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5209A50E.8090300@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1377577093-10068-2-git-send-email-sthumma@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/13/2013 11:16 AM, Douglas Gilbert wrote:
-> On 13-08-12 10:46 PM, vaughan wrote:
->> On 08/06/2013 04:52 AM, Douglas Gilbert wrote:
->>> On 13-08-04 10:19 PM, vaughan wrote:
->>>> On 08/03/2013 01:25 PM, Douglas Gilbert wrote:
->>>>> On 13-08-01 01:01 AM, Douglas Gilbert wrote:
->>>>>> On 13-07-22 01:03 PM, J=C3=B6rn Engel wrote:
->>>>>>> On Mon, 22 July 2013 12:40:29 +0800, Vaughan Cao wrote:
->>>>>>>>
->>>>>>>> There is a race when open sg with O_EXCL flag. Also a race may
->>>>>>>> happen between
->>>>>>>> sg_open and sg_remove.
->>>>>>>>
->>>>>>>> Changes from v4:
->>>>>>>>     * [3/4] use ERR_PTR series instead of adding another
->>>>>>>> parameter in
->>>>>>>> sg_add_sfp
->>>>>>>>     * [4/4] fix conflict for cherry-pick from v3.
->>>>>>>>
->>>>>>>> Changes from v3:
->>>>>>>>     * release o_sem in sg_release(), not in sg_remove_sfp().
->>>>>>>>     * not set exclude with sfd_lock held.
->>>>>>>>
->>>>>>>> Vaughan Cao (4):
->>>>>>>>      [SCSI] sg: use rwsem to solve race during exclusive open
->>>>>>>>      [SCSI] sg: no need sg_open_exclusive_lock
->>>>>>>>      [SCSI] sg: checking sdp->detached isn't protected when op=
-en
->>>>>>>>      [SCSI] sg: push file descriptor list locking down to
->>>>>>>> per-device
->>>>>>>>        locking
->>>>>>>>
->>>>>>>>     drivers/scsi/sg.c | 178
->>>>>>>> +++++++++++++++++++++++++-----------------------------
->>>>>>>>     1 file changed, 83 insertions(+), 95 deletions(-)
->>>>>>>
->>>>>>> Patchset looks good to me, although I didn't test it on hardwar=
-e
->>>>>>> yet.
->>>>>>> Signed-off-by: Joern Engel <joern@logfs.org>
->>>>>>>
->>>>>>> James, care to pick this up?
->>>>>>
->>>>>> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
->>>>>>
->>>>>> Tested O_EXCL with multiple processes and threads; passed.
->>>>>> sg driver prior to this patch had "leaky" O_EXCL logic
->>>>>> according to the same test. Block device passed.
->>>>>>
->>>>>> James, could you clean this up:
->>>>>>      drivers/scsi/sg.c:242:6: warning: unused variable =E2=80=98=
-res=E2=80=99
->>>>>> [-Wunused-variable]
->>>>>
->>>>> Further testing suggests this patch on the sg driver is
->>>>> broken, so I'll rescind my ack.
->>>>>
->>>>> The case it is broken for is when a device is opened
->>>>> without O_EXCL. Now if, while it is open, a second
->>>>> thread/process tries to open the same device O_EXCL
->>>>> then IMO the second open should fail with EBUSY.
->>>>>
->>>>> My testing shows that O_EXCL opens properly deflect
->>>>> other O_EXCL opens.
->>>> Hi  Doug,
->>>>
->>>> My test don't have this issue. The routine is something as below:
->>>>
->>>> I start three opens without O_EXCL, wait 30s each, and open with
->>>> O_EXCL|O_NONBLOCK, it failed with EBUSY.
->>>> And I also call myopen with/without O_EXCL many times in backgroun=
-d at
->>>> the same time, and the test is passed. I don't know why it failed =
-in
->>>> your test.
->>>>
->>>> Usage: myopen [-e][-n][-d delay] -f file
->>>>         -e: exclude
->>>>         -n: nonblock
->>>>         -d: delay N seconds and then close.
->>>>
->>>> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
->>>> [1] 3417
->>>> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
->>>> [2] 3418
->>>> [root@vacaowol5 16835013]# ./myopen  -f /dev/sg5 -d 30 &
->>>> [3] 3419
->>>> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
->>>> max_active_device=3D6(origin 1)
->>>>    def_reserved_size=3D32768
->>>>    >>> device=3Dsg5 scsi5 chan=3D0 id=3D1 lun=3D0   em=3D0 sg_tabl=
-esize=3D55
->>>> excl=3D0
->>>>      FD(1): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dm=
-a=3D0
->>>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>>        No requests active
->>>>      FD(2): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dm=
-a=3D0
->>>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>>        No requests active
->>>>      FD(3): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dm=
-a=3D0
->>>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>>        No requests active
->>>>
->>>> [root@vacaowol5 16835013]# ./myopen -e -n  -f /dev/sg5 -d 30 &
->>>> [4] 3422
->>>> [3422:3351] /dev/sg5:exclude: Device or resource busy
->>>>
->>>> [4]+  Exit 1                  ./myopen -e -n -f /dev/sg5 -d 30
->>>>
->>>> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
->>>> max_active_device=3D6(origin 1)
->>>>    def_reserved_size=3D32768
->>>>    >>> device=3Dsg5 scsi5 chan=3D0 id=3D1 lun=3D0   em=3D0 sg_tabl=
-esize=3D55
->>>> excl=3D0
->>>>      FD(1): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dm=
-a=3D0
->>>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>>        No requests active
->>>>      FD(2): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dm=
-a=3D0
->>>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>>        No requests active
->>>>      FD(3): timeout=3D60000ms bufflen=3D32768 (res)sgat=3D1 low_dm=
-a=3D0
->>>>      cmd_q=3D0 f_packid=3D0 k_orphan=3D0 closed=3D0
->>>>        No requests active
->>>> [root@vacaowol5 16835013]# cat /proc/scsi/sg/debug
->>>> [1]   Done                    ./myopen -f /dev/sg5 -d 30
->>>> [2]-  Done                    ./myopen -f /dev/sg5 -d 30
->>>> [3]+  Done                    ./myopen -f /dev/sg5 -d 30
->>>>
->>>
->>> Hi,
->>> After the initial failures about 36 hours ago, retesting
->>> yesterday and today has not produced any unexpected
->>> failures. And I have been trying hard on lk 3.10.4 and
->>> lk 3.10.5 .
->>>
->>> My test program is a bit more intense than yours and can
->>> be found in the sg3_utils beta in the News section of this
->>> page:
->>>    http://sg.danny.cz/sg/
->>>
->>> It is in the examples directory, two variants called
->>> sg_tst_excl and sg_tst_excl2 . You will need a recent gcc
->>> compiler, IOW something that can compile c++11 . gcc 4.7.3
->>> in Ubuntu 13.04 only just manages, fedora 19 should do
->>> better with gcc 4.8.1 . The threading is implemented using
->>> pthreads so it should be reliable.
->>>
->>> Typically I run multiple instances (processes) and each has
->>> multiple threads. One instance can run '-x' which will cause
->>> its first thread not to use O_EXCL **. All my tests currently
->>> use O_NONBLOCK and that leads to lots of EBUSYs (sometimes
->>> in the billions).
->>>
->>> Doug Gilbert
->>>
->>>
->>> ** Using '-x' on two instances will cause an expected failure
->>>     so can be used as a control.
->>>
->> Hi Doug,
->>
->> Can I regard this as you ACK it again?
->
-> Hi,
-> I'd like you to test your setup with sg_tst_excl or sg_tst_excl2 .
-> Since my last email, I have not seen any more failures with those
-> tests on the patched sg driver but I did see a couple on
-> /dev/sd* . With sg_tst_excl2, bsg devices can be used and since bsg
-> accepts and ignores O_EXCL, it fails reliably.
->
-> BTW I use scsi_debug with 'delay=3D0' for a pseudo device.
->
-> Doug Gilbert
-Hi Doug,
 
-I run test for sg and sd drivers with both sg_tst_excl and sg_tst_excl2
-on kernel vanilla 3.10.9 with mypatches included on Fedora19 x86_64
-baremachine.
-* I've tried several times with different -w and -n setting, no failure
-for sg driver found.
-* It's easy to find failure on both patched and non-patched kernel for
-sd driver with the following test command:
-    ./sg_tst_excl -w 3 -n 2000 -t 16 -x $1 &
-    ./sg_tst_excl -w 3 -n 2000 -t 16 $1 &
-    ./sg_tst_excl -w 0 -n 2000 -t 16 $1 &
-    ./sg_tst_excl -w -1 -n 2000 -t 16 $1 &
-    ./sg_tst_excl -w -2 -n 2000 -t 16 $1 &
-I think option '-w 0/-1/-2' is significant to trigger the failure, sinc=
-e
-when I only use '-w >0', test usually passed.
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
-
-Thanks,
-Vaughan
+On 8/27/2013 9:48 AM, Sujit Reddy Thumma wrote:
+> Some vendor specific controller versions might need to configure
+> vendor specific - registers, clocks, voltage regulators etc. to
+> initialize the host controller UTP layer and Uni-Pro stack.
+> Provide some common initialization operations that can be used
+> to configure vendor specifics. The methods can be extended in
+> future, for example, for power mode transitions.
+>
+> The operations are vendor/board specific and hence determined with
+> the help of compatible property in device tree.
+>
+> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+> ---
+>   drivers/scsi/ufs/ufshcd-pci.c    |   8 +-
+>   drivers/scsi/ufs/ufshcd-pltfrm.c |  24 +++++-
+>   drivers/scsi/ufs/ufshcd.c        | 157 +++++++++++++++++++++++++++++++--------
+>   drivers/scsi/ufs/ufshcd.h        |  34 ++++++++-
+>   4 files changed, 187 insertions(+), 36 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+> index a823cf4..6b0d299 100644
+> --- a/drivers/scsi/ufs/ufshcd-pci.c
+> +++ b/drivers/scsi/ufs/ufshcd-pci.c
+> @@ -191,7 +191,13 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>   		return err;
+>   	}
+>   
+> -	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
+> +	err = ufshcd_alloc_host(&pdev->dev, &hba);
+> +	if (err) {
+> +		dev_err(&pdev->dev, "Allocation failed\n");
+> +		return err;
+> +	}
+> +
+> +	err = ufshcd_init(hba, mmio_base, pdev->irq);
+>   	if (err) {
+>   		dev_err(&pdev->dev, "Initialization failed\n");
+>   		return err;
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> index 5e46232..9c94052 100644
+> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -35,9 +35,23 @@
+>   
+>   #include <linux/platform_device.h>
+>   #include <linux/pm_runtime.h>
+> +#include <linux/of.h>
+>   
+>   #include "ufshcd.h"
+>   
+> +static const struct of_device_id ufs_of_match[];
+> +static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
+> +{
+> +	if (dev->of_node) {
+> +		const struct of_device_id *match;
+> +		match = of_match_node(ufs_of_match, dev->of_node);
+> +		if (match)
+> +			return (struct ufs_hba_variant_ops *)match->data;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+>   #ifdef CONFIG_PM
+>   /**
+>    * ufshcd_pltfrm_suspend - suspend power management function
+> @@ -150,10 +164,18 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
+>   		goto out;
+>   	}
+>   
+> +	err = ufshcd_alloc_host(dev, &hba);
+> +	if (err) {
+> +		dev_err(&pdev->dev, "Allocation failed\n");
+> +		goto out;
+> +	}
+> +
+> +	hba->vops = get_variant_ops(&pdev->dev);
+> +
+>   	pm_runtime_set_active(&pdev->dev);
+>   	pm_runtime_enable(&pdev->dev);
+>   
+> -	err = ufshcd_init(dev, &hba, mmio_base, irq);
+> +	err = ufshcd_init(hba, mmio_base, irq);
+>   	if (err) {
+>   		dev_err(dev, "Intialization failed\n");
+>   		goto out_disable_rpm;
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index a0f5ac2..743696a 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -174,13 +174,14 @@ static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
+>   /**
+>    * ufshcd_is_device_present - Check if any device connected to
+>    *			      the host controller
+> - * @reg_hcs - host controller status register value
+> + * @hba: pointer to adapter instance
+>    *
+>    * Returns 1 if device present, 0 if no device detected
+>    */
+> -static inline int ufshcd_is_device_present(u32 reg_hcs)
+> +static inline int ufshcd_is_device_present(struct ufs_hba *hba)
+>   {
+> -	return (DEVICE_PRESENT & reg_hcs) ? 1 : 0;
+> +	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
+> +						DEVICE_PRESENT) ? 1 : 0;
+>   }
+>   
+>   /**
+> @@ -1483,11 +1484,10 @@ out:
+>    * @hba: per adapter instance
+>    *
+>    * To bring UFS host controller to operational state,
+> - * 1. Check if device is present
+> - * 2. Enable required interrupts
+> - * 3. Configure interrupt aggregation
+> - * 4. Program UTRL and UTMRL base addres
+> - * 5. Configure run-stop-registers
+> + * 1. Enable required interrupts
+> + * 2. Configure interrupt aggregation
+> + * 3. Program UTRL and UTMRL base addres
+> + * 4. Configure run-stop-registers
+>    *
+>    * Returns 0 on success, non-zero value on failure
+>    */
+> @@ -1496,14 +1496,6 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+>   	int err = 0;
+>   	u32 reg;
+>   
+> -	/* check if device present */
+> -	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
+> -	if (!ufshcd_is_device_present(reg)) {
+> -		dev_err(hba->dev, "cc: Device not present\n");
+> -		err = -ENXIO;
+> -		goto out;
+> -	}
+> -
+>   	/* Enable required interrupts */
+>   	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
+>   
+> @@ -1524,6 +1516,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+>   	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
+>   	 * DEI, HEI bits must be 0
+>   	 */
+> +	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
+>   	if (!(ufshcd_get_lists_status(reg))) {
+>   		ufshcd_enable_run_stop_reg(hba);
+>   	} else {
+> @@ -1570,6 +1563,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+>   		msleep(5);
+>   	}
+>   
+> +	if (hba->vops && hba->vops->hce_enable_notify)
+> +		hba->vops->hce_enable_notify(hba, PRE_CHANGE);
+> +
+>   	/* start controller initialization sequence */
+>   	ufshcd_hba_start(hba);
+>   
+> @@ -1597,6 +1593,10 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+>   		}
+>   		msleep(5);
+>   	}
+> +
+> +	if (hba->vops && hba->vops->hce_enable_notify)
+> +		hba->vops->hce_enable_notify(hba, POST_CHANGE);
+> +
+>   	return 0;
+>   }
+>   
+> @@ -1613,12 +1613,28 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
+>   	/* enable UIC related interrupts */
+>   	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+>   
+> +	if (hba->vops && hba->vops->link_startup_notify)
+> +		hba->vops->link_startup_notify(hba, PRE_CHANGE);
+> +
+>   	ret = ufshcd_dme_link_startup(hba);
+>   	if (ret)
+>   		goto out;
+>   
+> -	ret = ufshcd_make_hba_operational(hba);
+> +	/* check if device is detected by inter-connect layer */
+> +	if (!ufshcd_is_device_present(hba)) {
+> +		dev_err(hba->dev, "%s: Device not present\n", __func__);
+> +		ret = -ENXIO;
+> +		goto out;
+> +	}
+>   
+> +	/* Include any host controller configuration via UIC commands */
+> +	if (hba->vops && hba->vops->link_startup_notify) {
+> +		ret = hba->vops->link_startup_notify(hba, POST_CHANGE);
+> +		if (ret)
+> +			goto out;
+> +	}
+> +
+> +	ret = ufshcd_make_hba_operational(hba);
+>   out:
+>   	if (ret)
+>   		dev_err(hba->dev, "link startup failed %d\n", ret);
+> @@ -2810,6 +2826,61 @@ static struct scsi_host_template ufshcd_driver_template = {
+>   	.can_queue		= UFSHCD_CAN_QUEUE,
+>   };
+>   
+> +static int ufshcd_variant_hba_init(struct ufs_hba *hba)
+> +{
+> +	int err = 0;
+> +
+> +	if (!hba->vops)
+> +		goto out;
+> +
+> +	if (hba->vops->init) {
+> +		err = hba->vops->init(hba);
+> +		if (err)
+> +			goto out;
+> +	}
+> +
+> +	if (hba->vops->setup_clocks) {
+> +		err = hba->vops->setup_clocks(hba, true);
+> +		if (err)
+> +			goto out_exit;
+> +	}
+> +
+> +	if (hba->vops->setup_regulators) {
+> +		err = hba->vops->setup_regulators(hba, true);
+> +		if (err)
+> +			goto out_clks;
+> +	}
+> +
+> +	goto out;
+> +
+> +out_clks:
+> +	if (hba->vops->setup_clocks)
+> +		hba->vops->setup_clocks(hba, false);
+> +out_exit:
+> +	if (hba->vops->exit)
+> +		hba->vops->exit(hba);
+> +out:
+> +	if (err)
+> +		dev_err(hba->dev, "%s: variant %s init failed err %d\n",
+> +			__func__, hba->vops ? hba->vops->name : "", err);
+> +	return err;
+> +}
+> +
+> +static void ufshcd_variant_hba_exit(struct ufs_hba *hba)
+> +{
+> +	if (!hba->vops)
+> +		return;
+> +
+> +	if (hba->vops->setup_clocks)
+> +		hba->vops->setup_clocks(hba, false);
+> +
+> +	if (hba->vops->setup_regulators)
+> +		hba->vops->setup_regulators(hba, false);
+> +
+> +	if (hba->vops->exit)
+> +		hba->vops->exit(hba);
+> +}
+> +
+>   /**
+>    * ufshcd_suspend - suspend power management function
+>    * @hba: per adapter instance
+> @@ -2894,23 +2965,22 @@ void ufshcd_remove(struct ufs_hba *hba)
+>   	ufshcd_hba_stop(hba);
+>   
+>   	scsi_host_put(hba->host);
+> +
+> +	ufshcd_variant_hba_exit(hba);
+>   }
+>   EXPORT_SYMBOL_GPL(ufshcd_remove);
+>   
+>   /**
+> - * ufshcd_init - Driver initialization routine
+> + * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
+>    * @dev: pointer to device handle
+>    * @hba_handle: driver private handle
+> - * @mmio_base: base register address
+> - * @irq: Interrupt line of device
+>    * Returns 0 on success, non-zero value on failure
+>    */
+> -int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+> -		 void __iomem *mmio_base, unsigned int irq)
+> +int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+>   {
+>   	struct Scsi_Host *host;
+>   	struct ufs_hba *hba;
+> -	int err;
+> +	int err = 0;
+>   
+>   	if (!dev) {
+>   		dev_err(dev,
+> @@ -2919,13 +2989,6 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+>   		goto out_error;
+>   	}
+>   
+> -	if (!mmio_base) {
+> -		dev_err(dev,
+> -		"Invalid memory reference for mmio_base is NULL\n");
+> -		err = -ENODEV;
+> -		goto out_error;
+> -	}
+> -
+>   	host = scsi_host_alloc(&ufshcd_driver_template,
+>   				sizeof(struct ufs_hba));
+>   	if (!host) {
+> @@ -2936,9 +2999,40 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+>   	hba = shost_priv(host);
+>   	hba->host = host;
+>   	hba->dev = dev;
+> +	*hba_handle = hba;
+> +
+> +out_error:
+> +	return err;
+> +}
+> +EXPORT_SYMBOL(ufshcd_alloc_host);
+> +
+> +/**
+> + * ufshcd_init - Driver initialization routine
+> + * @hba: per-adapter instance
+> + * @mmio_base: base register address
+> + * @irq: Interrupt line of device
+> + * Returns 0 on success, non-zero value on failure
+> + */
+> +int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+> +{
+> +	int err;
+> +	struct Scsi_Host *host = hba->host;
+> +	struct device *dev = hba->dev;
+> +
+> +	if (!mmio_base) {
+> +		dev_err(hba->dev,
+> +		"Invalid memory reference for mmio_base is NULL\n");
+> +		err = -ENODEV;
+> +		goto out_error;
+> +	}
+> +
+>   	hba->mmio_base = mmio_base;
+>   	hba->irq = irq;
+>   
+> +	err = ufshcd_variant_hba_init(hba);
+> +	if (err)
+> +		goto out_error;
+> +
+>   	/* Read capabilities registers */
+>   	ufshcd_hba_capabilities(hba);
+>   
+> @@ -3010,8 +3104,6 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+>   		goto out_remove_scsi_host;
+>   	}
+>   
+> -	*hba_handle = hba;
+> -
+>   	/* Hold auto suspend until async scan completes */
+>   	pm_runtime_get_sync(dev);
+>   
+> @@ -3023,6 +3115,7 @@ out_remove_scsi_host:
+>   	scsi_remove_host(hba->host);
+>   out_disable:
+>   	scsi_host_put(host);
+> +	ufshcd_variant_hba_exit(hba);
+>   out_error:
+>   	return err;
+>   }
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 8f5624e..72acbc7 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -68,6 +68,8 @@
+>   #define UFSHCD "ufshcd"
+>   #define UFSHCD_DRIVER_VERSION "0.2"
+>   
+> +struct ufs_hba;
+> +
+>   enum dev_cmd_type {
+>   	DEV_CMD_TYPE_NOP		= 0x0,
+>   	DEV_CMD_TYPE_QUERY		= 0x1,
+> @@ -152,6 +154,30 @@ struct ufs_dev_cmd {
+>   	struct ufs_query query;
+>   };
+>   
+> +#define PRE_CHANGE      0
+> +#define POST_CHANGE     1
+> +/**
+> + * struct ufs_hba_variant_ops - variant specific callbacks
+> + * @name: variant name
+> + * @init: called when the driver is initialized
+> + * @exit: called to cleanup everything done in init
+> + * @setup_clocks: called before touching any of the controller registers
+> + * @setup_regulators: called before accessing the host controller
+> + * @hce_enable_notify: called before and after HCE enable bit is set to allow
+> + *                     variant specific Uni-Pro initialization.
+> + * @link_startup_notify: called before and after Link startup is carried out
+> + *                       to allow variant specific Uni-Pro initialization.
+> + */
+> +struct ufs_hba_variant_ops {
+> +	const char *name;
+> +	int	(*init)(struct ufs_hba *);
+> +	void    (*exit)(struct ufs_hba *);
+> +	int     (*setup_clocks)(struct ufs_hba *, bool);
+> +	int     (*setup_regulators)(struct ufs_hba *, bool);
+> +	int     (*hce_enable_notify)(struct ufs_hba *, bool);
+> +	int     (*link_startup_notify)(struct ufs_hba *, bool);
+> +};
+> +
+>   /**
+>    * struct ufs_hba - per adapter private structure
+>    * @mmio_base: UFSHCI base register address
+> @@ -171,6 +197,8 @@ struct ufs_dev_cmd {
+>    * @nutrs: Transfer Request Queue depth supported by controller
+>    * @nutmrs: Task Management Queue depth supported by controller
+>    * @ufs_version: UFS Version to which controller complies
+> + * @vops: pointer to variant specific operations
+> + * @priv: pointer to variant specific private data
+>    * @irq: Irq number of the controller
+>    * @active_uic_cmd: handle of active UIC command
+>    * @uic_cmd_mutex: mutex for uic command
+> @@ -217,6 +245,8 @@ struct ufs_hba {
+>   	int nutrs;
+>   	int nutmrs;
+>   	u32 ufs_version;
+> +	struct ufs_hba_variant_ops *vops;
+> +	void *priv;
+>   	unsigned int irq;
+>   
+>   	struct uic_command *active_uic_cmd;
+> @@ -253,8 +283,8 @@ struct ufs_hba {
+>   #define ufshcd_readl(hba, reg)	\
+>   	readl((hba)->mmio_base + (reg))
+>   
+> -int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
+> -			unsigned int);
+> +int ufshcd_alloc_host(struct device *, struct ufs_hba **);
+> +int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
+>   void ufshcd_remove(struct ufs_hba *);
+>   
+>   /**
