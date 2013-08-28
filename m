@@ -1,11 +1,11 @@
 From: =?big5?B?tsCyTbap?= <ching2048@areca.com.tw>
-Subject: [PATCH 1/1] arcmsr: Support Areca new SATA Raid Adapter ARC1214/1224/1264/1284 (Renew)
-Date: Wed, 28 Aug 2013 19:21:18 +0800
-Message-ID: <9DF3F0EBD8A34F61A8895350C23B0734@chingDT>
+Subject: Re:  [PATCH 1/1] arcmsr: Support Areca new SATA Raid Adapter ARC1214/1224/1264/1284 (Resend renew)
+Date: Wed, 28 Aug 2013 19:36:28 +0800
+Message-ID: <39FBE6085369426B994B65101ECDE152@chingDT>
 Reply-To: =?big5?B?tsCyTbap?= <ching2048@areca.com.tw>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0015_01CEA423.C55E5F30"
+	boundary="----=_NextPart_000_002C_01CEA425.E40A7980"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, thenzl@redhat.com, fengguang.wu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
@@ -14,27 +14,30 @@ List-Id: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0015_01CEA423.C55E5F30
+------=_NextPart_000_002C_01CEA425.E40A7980
 Content-Type: text/plain;
 	format=flowed;
 	charset="big5";
 	reply-type=original
 Content-Transfer-Encoding: 7bit
 
-From: Ching<ching2048@areca.com.tw>
+Resend the patch code.
 
-Support Areca new SATA Raid Adapter ARC1214/1224/1264/1284.
-Modify maximum outstanding command number.
-Notify command complete with auto request sense.
-Fix bug of updating adapter firmware through ioctl(ARCHTTP) interface.
-Fix coding style warning.
-Fix compiling warning.
-
-This patch is for arcmsr source code in kernel tree.
-The following patch code also in attached file patch.
-
-Signed-off-by:  Ching <ching2048@areca.com.tw>
----
+> From: Ching<ching2048@areca.com.tw>
+>
+> Support Areca new SATA Raid Adapter ARC1214/1224/1264/1284.
+> Modify maximum outstanding command number.
+> Notify command complete with auto request sense.
+> Fix bug of updating adapter firmware through ioctl(ARCHTTP) interface.
+> Fix coding style warning.
+> Fix compiling warning.
+>
+> This patch is for arcmsr source code in kernel tree.
+> The following patch code also in attached file patch.
+>
+> Signed-off-by:  Ching <ching2048@areca.com.tw>
+> ---
+>
 
 diff -uprN a/drivers/scsi/arcmsr/arcmsr_attr.c 
 b/drivers/scsi/arcmsr/arcmsr_attr.c
@@ -816,7 +819,7 @@ diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
  atic int arcmsr_abort(struct scsi_cmnd  for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {   struct CommandControlBlock *ccb = acb->pccb_pool[i];-  if (ccb->startdone == ARCMSR_CCB_START && ccb->pcmd == cmd) {+  if (ccb->startdone == ARCMSR_CCB_START &&+   ccb->pcmd == cmd) {    ccb->startdone = ARCMSR_CCB_ABORTED;    rtn = arcmsr_abort_one_cmd(acb, ccb);    break;@@ -3083,10 +4567,11 @@ static int arcmsr_abort(struct scsi_cmnd  return rtn; }-static const char *arcmsr_info(struct Scsi_Host *host)+static const char+*arcmsr_info(struct Scsi_Host *host) {  struct AdapterControlBlock *acb =-  (struct AdapterControlBlock *) host->hostdata;+ (struct AdapterControlBlock *)host->hostdata;  static char buf[256];  char *type;  int raid6 = 1;@@ -3102,6 +4587,7 @@ static const char *arcmsr_info(struct S
  c  case PCI_DEVICE_ID_ARECA_1160:  case PCI_DEVICE_ID_ARECA_1170:  case PCI_DEVICE_ID_ARECA_1201:+ case PCI_DEVICE_ID_ARECA_1214:  case PCI_DEVICE_ID_ARECA_1220:  case PCI_DEVICE_ID_ARECA_1230:  case PCI_DEVICE_ID_ARECA_1260:@@ -3109,19 +4595,19 @@ static const char *arcmsr_info(struct Sc  case PCI_DEVICE_ID_ARECA_1280:   type = "SATA";   break;- case PCI_DEVICE_ID_ARECA_1380:- case PCI_DEVICE_ID_ARECA_1381:  case PCI_DEVICE_ID_ARECA_1680:  case PCI_DEVICE_ID_ARECA_1681:  case PCI_DEVICE_ID_ARECA_1880:   type = "SAS";   break;  default:-  type = "X-TYPE";+  type = "unknown";+  raid6 = 0;   break;  }- sprintf(buf, "Areca %s Host Adapter RAID Controller%s\n %s",-   type, raid6 ? "( RAID6 capable)" : "",-   ARCMSR_DRIVER_VERSION);+ sprintf(buf, "Areca %s Host Adapter RAID Controller%s\narcm
  sr version%s\n",+  type, raid6 ? "( RAID6 capable)" : "", ARCMSR_DRIVER_VERSION);+  return buf; }+
-------=_NextPart_000_0015_01CEA423.C55E5F30
+------=_NextPart_000_002C_01CEA425.E40A7980
 Content-Type: application/octet-stream;
 	name="patch"
 Content-Transfer-Encoding: quoted-printable
@@ -8261,4 +8264,4 @@ interrupt */=0A=
  }=0A=
 +=0A=
 
-------=_NextPart_000_0015_01CEA423.C55E5F30--
+------=_NextPart_000_002C_01CEA425.E40A7980--
