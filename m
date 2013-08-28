@@ -1,110 +1,79 @@
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
-Date: Wed, 28 Aug 2013 17:46:31 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
-References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz> <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] arcmsr: Support Areca new SATA Raid Adapter
+ ARC1214/1224/1264/1284
+Date: Wed, 28 Aug 2013 18:48:48 +0300
+Message-ID: <20130828154848.GA571@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>, Adam Radford <linuxraid@lsi.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:41548 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754585Ab3H1Ps7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2013 11:48:59 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ching2048@areca.com.tw
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 27 Aug 2013, Jiri Kosina wrote:
+Hello =E9=BB=83=E6=B8=85=E9=9A=86,
 
-> On Tue, 27 Aug 2013, Jiri Kosina wrote:
-> 
-> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a 
-> > pci device") makes MSIs be forcibly disabled at boot time.
-> > 
-> > It turns out that this breaks 3ware controller -- if MSIs are disabled 
-> > during PCI discovery of this controller, the device doesn't work properly 
-> > (it doesn't respond to any commands that are being sent to it after 
-> > initialization).
-> > 
-> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
-> > makes the device work properly again.
-> > 
-> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
-> >
-> > ---
-> > 
-> > I am adding Adam Radford as a recepient as well, to see whether he is able 
-> > to provide some more explanation why this device would expose this 
-> > behavior.
+The patch 17628f3a062b: "[SCSI] arcmsr: Support Areca new SATA Raid
+Adapter ARC1214/1224/1264/1284" from Aug 26, 2013, leads to the
+following Smatch warning:
+"drivers/scsi/arcmsr/arcmsr_hba.c:3580 arcmsr_hbaD_get_config()
+	 warn: signedness bug returning '(-12)'"
 
-OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't 
-expect any feedback from him.
+drivers/scsi/arcmsr/arcmsr_hba.c
+  3576          dma_coherent =3D dma_alloc_coherent(&pdev->dev, acb->un=
+cache_size,
+  3577          &dma_coherent_handle, GFP_KERNEL);
+  3578          if (!dma_coherent) {
+  3579                  pr_notice("DMA allocation failed...\n");
+  3580                  return -ENOMEM;
+                        ^^^^^^^^^^^^^^
+This should be returning false.
 
-Bjorn, Jesse, any word on this please?
+  3581          }
 
-> > Thanks.
-> > 
-> >  drivers/pci/msi.c    |    3 +++
-> >  drivers/pci/quirks.c |   10 ++++++++++
-> >  include/linux/pci.h  |    1 +
-> >  3 files changed, 14 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > index aca7578..4f36b8b 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
-> >  {
-> >  	INIT_LIST_HEAD(&dev->msi_list);
-> >  
-> > +	if (dev->broken_msi_disable)
-> > +		return;
-> > +
-> >  	/* Disable the msi hardware to avoid screaming interrupts
-> >  	 * during boot.  This is the power on reset default so
-> >  	 * usually this should be a noop.
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index e85d230..4ba3400 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
-> >  
-> > +/*
-> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
-> > + * disabled on it during PCI device discovery
-> > + */
-> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
-> > +{
-> > +	dev->broken_msi_disable = 1;
-> > +}
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
-> > +
-> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
-> >  				 void (*fn)(struct pci_dev *dev))
-> >  {
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 0fd1f15..c327d74 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -341,6 +341,7 @@ struct pci_dev {
-> >  #ifdef CONFIG_PCI_MSI
-> >  	struct list_head msi_list;
-> >  	struct kset *msi_kset;
-> > +	unsigned int	broken_msi_disable:1;
-> >  #endif
-> >  	struct pci_vpd *vpd;
-> >  #ifdef CONFIG_PCI_ATS
-> > 
-> > -- 
-> > Jiri Kosina
-> > SUSE Labs
-> > 
-> 
-> -- 
-> Jiri Kosina
-> SUSE Labs
-> 
+Line 3577 has messed up indenting.
 
--- 
-Jiri Kosina
-SUSE Labs
+Also this patch says it adds support for new hardware but almost 900
+lines out of this 3605 line patch are white space changes.  Do the
+unrelated white space changes in a separate patch.
+
+This patch also re-introduces a bug which I fixed in the mainline kerne=
+l
+a year ago.
+
+drivers/scsi/arcmsr/arcmsr_hba.c
+  4525                          writel(0xD, &pmuC->write_sequence);
+  4526                  } while ((((temp =3D readl(&pmuC->host_diagnost=
+ic)) |
+                                                                       =
+   ^
+This should be a '&' not a '|'.  Please fix this again back to the way
+it was.
+
+  4527                  ARCMSR_ARC1880_DiagWrite_ENABLE) =3D=3D 0) &&
+  4528                  (count < 5));
+
+The indenting here is messed up as well.  This is a very low quality
+patch.
+
+I think you are not using git internally in your company and that is wh=
+y
+you are messing up so badly.  Please learn to use it.  Keep track of th=
+e
+fixes which go into the mainline kernel.  Separate the white space
+cleanups from the new features.
+
+regards,
+dan carpenter
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
