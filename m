@@ -1,77 +1,92 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] arcmsr: Support Areca new SATA Raid Adapter
- ARC1214/1224/1264/1284
-Date: Wed, 28 Aug 2013 18:48:48 +0300
-Message-ID: <20130828154848.GA571@elgon.mountain>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: Re: [RFC][PATCH] Add a flight data recorder for scsi commands
+Date: Wed, 28 Aug 2013 10:19:38 -0400
+Message-ID: <20130828141937.GB15917@logfs.org>
+References: <20130827220325.GB7293@logfs.org>
+ <20130827195422.0c23e47d@gandalf.local.home>
+ <20130827224147.GD7293@logfs.org>
+ <20130827203443.52cfee8c@gandalf.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41548 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754585Ab3H1Ps7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2013 11:48:59 -0400
+Received: from longford.logfs.org ([213.229.74.203]:60126 "EHLO
+	longford.logfs.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752737Ab3H1Px1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2013 11:53:27 -0400
 Content-Disposition: inline
+In-Reply-To: <20130827203443.52cfee8c@gandalf.local.home>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ching2048@areca.com.tw
+To: Steven Rostedt <rostedt@goodmis.org>
 Cc: linux-scsi@vger.kernel.org
 
-Hello =E9=BB=83=E6=B8=85=E9=9A=86,
+On Tue, 27 August 2013 20:34:43 -0400, Steven Rostedt wrote:
+> On Tue, 27 Aug 2013 18:41:47 -0400
+> J=C3=B6rn Engel <joern@logfs.org> wrote:
+> >=20
+> > "without knowing in advance which device it will be"
+> >=20
+> > I have to trace all devices, because I don't know the interesting o=
+ne
+> > ahead of time.  And after the fact, I only care about one device.  =
+So
+> > having per-device trace buffers seems to be The Right Approach(tm).
+> >=20
+> > And having multiple trace buffers is where I cannot easily make my
+> > problem fit your infrastructure. =20
+>=20
+> Are you sure about that?
 
-The patch 17628f3a062b: "[SCSI] arcmsr: Support Areca new SATA Raid
-Adapter ARC1214/1224/1264/1284" from Aug 26, 2013, leads to the
-following Smatch warning:
-"drivers/scsi/arcmsr/arcmsr_hba.c:3580 arcmsr_hbaD_get_config()
-	 warn: signedness bug returning '(-12)'"
+When it comes to my mental shortcomings, I am quite sure about their
+existence. ;)
 
-drivers/scsi/arcmsr/arcmsr_hba.c
-  3576          dma_coherent =3D dma_alloc_coherent(&pdev->dev, acb->un=
-cache_size,
-  3577          &dma_coherent_handle, GFP_KERNEL);
-  3578          if (!dma_coherent) {
-  3579                  pr_notice("DMA allocation failed...\n");
-  3580                  return -ENOMEM;
-                        ^^^^^^^^^^^^^^
-This should be returning false.
+> Note, I'm not sure you want this as something
+> in production systems to always have on boot, for that, we can modify
+> things a little to help you there. But other than that you can do:
+>=20
+> for each device d
+>   mkdir /sys/kernel/debug/tracing/instances/scsi-$d
+>   cd /sys/kernel/debug/tracing/instances/scsi-$d
+>   echo $filter > events/scsi/*/filter
+>   echo 1 > events/scsi/*/enable
+> done
+>=20
+> The above is a script like pseudo code, just to convey the idea, not
+> something to put in verbatim.
 
-  3581          }
+That does look fairly neat and doable.  I am not sure about the
+performance overhead, though.  Would this translate into one big
+switch or, for large systems, hundreds of "if (some_filter)" lines.
+The latter would likely be noticeable overhead.
 
-Line 3577 has messed up indenting.
+> Now, this may still not be what you want, but at a minimum, I would n=
+ot
+> add another hook like you did with the fdr_scsi_cmd(cmd). You know yo=
+u
+> can hook to the tracepoint directly.
+>=20
+>=20
+> 	register_trace_scsi_dispatch_cmd_start(fdr_scsi_cmd, NULL);
+>=20
+> static void fdr_scsi_cmd(void *data, struct scsi_cmnd *cmd)
+> {
+> 	[...]
+> }
+>=20
+> Once you call that register function, the tracepoint will call the
+> function you registered when the tracepoint is hit.
 
-Also this patch says it adds support for new hardware but almost 900
-lines out of this 3605 line patch are white space changes.  Do the
-unrelated white space changes in a separate patch.
+Hmm.  I will ponder that idea for a bit.  If we can come up with
+something merge-worthy, that would be great.  If not, I will simply
+carry my existing patch and not make anyone else pay the cost for it.
 
-This patch also re-introduces a bug which I fixed in the mainline kerne=
-l
-a year ago.
+J=C3=B6rn
 
-drivers/scsi/arcmsr/arcmsr_hba.c
-  4525                          writel(0xD, &pmuC->write_sequence);
-  4526                  } while ((((temp =3D readl(&pmuC->host_diagnost=
-ic)) |
-                                                                       =
-   ^
-This should be a '&' not a '|'.  Please fix this again back to the way
-it was.
-
-  4527                  ARCMSR_ARC1880_DiagWrite_ENABLE) =3D=3D 0) &&
-  4528                  (count < 5));
-
-The indenting here is messed up as well.  This is a very low quality
-patch.
-
-I think you are not using git internally in your company and that is wh=
-y
-you are messing up so badly.  Please learn to use it.  Keep track of th=
-e
-fixes which go into the mainline kernel.  Separate the white space
-cleanups from the new features.
-
-regards,
-dan carpenter
-
+--
+The wise man seeks everything in himself; the ignorant man tries to get
+everything from somebody else.
+-- unknown
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
