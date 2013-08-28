@@ -1,83 +1,289 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v5 1/4] [SCSI] sg: use rwsem to solve race during
- exclusive open
-Date: Wed, 28 Aug 2013 08:00:19 +0400
-Message-ID: <1377662419.2005.12.camel@dabdike>
-References: <1374075246-22923-1-git-send-email-vaughan.cao@oracle.com>
-	 <1374468033-8947-1-git-send-email-vaughan.cao@oracle.com>
-	 <1374468033-8947-2-git-send-email-vaughan.cao@oracle.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: RE: [PATCH 00/29] Update driver to 8.06.00.08-k
+Date: Wed, 28 Aug 2013 04:31:59 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D353B33AA@AVMB1.qlogic.org>
+References: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>,<1377660264.2005.1.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1374468033-8947-2-git-send-email-vaughan.cao@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vaughan Cao <vaughan.cao@oracle.com>
-Cc: joern@logfs.org, dgilbert@interlog.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D353B33AAAVMB1qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:60723 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752633Ab3H1EcD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Aug 2013 00:32:03 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7S4W1P6003496
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2013 21:32:01 -0700
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1eg8v6asc9-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2013 21:32:01 -0700
+In-Reply-To: <1377660264.2005.1.camel@dabdike>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2013-07-22 at 12:40 +0800, Vaughan Cao wrote:
-> A race condition may happen if two threads are both trying to open th=
-e same sg
-> with O_EXCL simultaneously. It's possible that they both find fsds li=
-st is
-> empty and get_exclude(sdp) returns 0, then they both call set_exclude=
-() and
-> break out from wait_event_interruptible and resume open.
->=20
-> Now use rwsem to protect this process. Exclusive open gets write lock=
- and
-> others get read lock. The lock will be held until file descriptor is =
-closed.
-> This also leads 'exclude' only a status rather than a check mark.
->=20
-> Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
+--_000_F5D084D6342F9B479C34599BB0A03E4D353B33AAAVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-This produces a couple of unused variable warnings which will excite th=
-e
-static checkers, so I've removed them:
+HI James,=0A=
+=0A=
+There is some issue with an exchange server and this particular patch is no=
+t going out. Please find the patch inline and attached with this email.=0A=
+=0A=
+Thanks,=0A=
+~Saurav=0A=
+=0A=
+=0A=
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>=0A=
+Date: Fri, 23 Aug 2013 07:25:37 -0700=0A=
+Subject: [PATCH 26/29] qla2xxx: Correctly print out/in mailbox registers.=
+=0A=
+=0A=
+At mailbox/buffer debug level, print the correct values of the=0A=
+outgoing and incoming mailbox registers.=0A=
+=0A=
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>=0A=
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>=0A=
+---=0A=
+ drivers/scsi/qla2xxx/qla_mbx.c |   28 +++++++++++++---------------=0A=
+ 1 files changed, 13 insertions(+), 15 deletions(-)=0A=
+=0A=
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.=
+c=0A=
+index c825d1d..a9aae50 100644=0A=
+--- a/drivers/scsi/qla2xxx/qla_mbx.c=0A=
++++ b/drivers/scsi/qla2xxx/qla_mbx.c=0A=
+@@ -117,33 +117,25 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd=
+_t *mcp)=0A=
+ 	command =3D mcp->mb[0];=0A=
+ 	mboxes =3D mcp->out_mb;=0A=
+ =0A=
++	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1111,=0A=
++	    "Mailbox registers (OUT):\n");=0A=
+ 	for (cnt =3D 0; cnt < ha->mbx_count; cnt++) {=0A=
+ 		if (IS_QLA2200(ha) && cnt =3D=3D 8)=0A=
+ 			optr =3D=0A=
+ 			    (uint16_t __iomem *)MAILBOX_REG(ha, &reg->isp, 8);=0A=
+-		if (mboxes & BIT_0)=0A=
++		if (mboxes & BIT_0) {=0A=
++			ql_dbg(ql_dbg_mbx, vha, 0x1112,=0A=
++			    "mbox[%d]<-0x%04x\n", cnt, *iptr);=0A=
+ 			WRT_REG_WORD(optr, *iptr);=0A=
++		}=0A=
+ =0A=
+ 		mboxes >>=3D 1;=0A=
+ 		optr++;=0A=
+ 		iptr++;=0A=
+ 	}=0A=
+ =0A=
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1111,=0A=
+-	    "Loaded MBX registers (displayed in bytes) =3D.\n");=0A=
+-	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1112,=0A=
+-	    (uint8_t *)mcp->mb, 16);=0A=
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1113,=0A=
+-	    ".\n");=0A=
+-	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1114,=0A=
+-	    ((uint8_t *)mcp->mb + 0x10), 16);=0A=
+-	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1115,=0A=
+-	    ".\n");=0A=
+-	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1116,=0A=
+-	    ((uint8_t *)mcp->mb + 0x20), 8);=0A=
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1117,=0A=
+ 	    "I/O Address =3D %p.\n", optr);=0A=
+-	ql_dump_regs(ql_dbg_mbx + ql_dbg_buffer, vha, 0x100e);=0A=
+ =0A=
+ 	/* Issue set host interrupt command to send cmd out. */=0A=
+ 	ha->flags.mbox_int =3D 0;=0A=
+@@ -254,9 +246,15 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_=
+t *mcp)=0A=
+ 		iptr2 =3D mcp->mb;=0A=
+ 		iptr =3D (uint16_t *)&ha->mailbox_out[0];=0A=
+ 		mboxes =3D mcp->in_mb;=0A=
++=0A=
++		ql_dbg(ql_dbg_mbx, vha, 0x1113,=0A=
++		    "Mailbox registers (IN):\n");=0A=
+ 		for (cnt =3D 0; cnt < ha->mbx_count; cnt++) {=0A=
+-			if (mboxes & BIT_0)=0A=
++			if (mboxes & BIT_0) {=0A=
+ 				*iptr2 =3D *iptr;=0A=
++				ql_dbg(ql_dbg_mbx, vha, 0x1114,=0A=
++				    "mbox[%d]->0x%04x\n", cnt, *iptr2);=0A=
++			}=0A=
+ =0A=
+ 			mboxes >>=3D 1;=0A=
+ 			iptr2++;=0A=
+-- =0A=
+1.7.7=0A=
+________________________________________=0A=
+From: James Bottomley [jbottomley@parallels.com]=0A=
+Sent: Wednesday, August 28, 2013 8:54 AM=0A=
+To: Saurav Kashyap=0A=
+Cc: Giridhar Malavali; Andrew Vasquez; linux-scsi=0A=
+Subject: Re: [PATCH 00/29] Update driver to 8.06.00.08-k=0A=
+=0A=
+On Tue, 2013-08-27 at 01:37 -0400, Saurav Kashyap wrote:=0A=
+> Hi James,=0A=
+>=0A=
+> Please apply the following patches to the scsi tree, misc branch at your=
+=0A=
+> earliest convenience.=0A=
+=0A=
+Patch 26/29 is missing.=0A=
+=0A=
+James=0A=
+=0A=
 
-drivers/scsi/sg.c: In function =E2=80=98sg_open=E2=80=99:
-drivers/scsi/sg.c:268:6: warning: unused variable =E2=80=98res=E2=80=99=
- [-Wunused-variable]
-drivers/scsi/sg.c: In function =E2=80=98sg_remove_sfp=E2=80=99:
-drivers/scsi/sg.c:2138:20: warning: unused variable =E2=80=98sdp=E2=80=99=
- [-Wunused-variable]
+--_000_F5D084D6342F9B479C34599BB0A03E4D353B33AAAVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-Plus this:
+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
+AXOQZGHzKeEboXJ1BTFm5hiQJVFnJeFlYSg0Ki9mG3OiZvsLYMVgLmkCfBByxWB5DqDlrWA5TcAy
+NLoQUkFiH+9jL2Q/ZU+SfzJnWJIvkzP3Z1F7aHyAJnOj0XUoQWf++2i/feFuahlrQIDevh+m3/+A
+/G9vcHUgIHEfdbZyb3N//3SPfveBj4Bf57+CP4pPdcX/icPWAonDjR/dn96vrSvvP/+HvGewiL/t
+1I0Pjd/sX4+/H/hf1ZaSCFuRIjUxLjf//VAiNXwA/h//L/9yL0wh4jcfsCewGJBtHnA4QFtquwbg
+AdVACrEHQB5wbDow3TJRXTVWCfA2IVcJgBhQ3HNkm7AzkDPhdcphTaCzM5E0Mjg6z+Az0E0ipiZv
+R54iNUNjQ7BHaX1eoGQR0RjAHmAuQB5gaV3lEEEdwBZAEtBWKMBxjRdgeuUQIkF1eC1fEj01XlIz
+MTZVHqA241VwzwUgECBLZcuiOC5a0A8wojAPMDgtayI8T5wQ3lQXYAYENQAPsDI04BiAdTRgMTTE
+NB6gM5BHvXfXGQAzISI1PiGQaSHMMob/FLAolUhwILACMClS5FADUP5vJFAoEScTUGHLsSlSXxL/
+HMB9sBERQJBfEF5gR+BAYGskgdjAecxwchRHKLBy1yJAUGDLEm5ewG4eEEBg+0TgIjxQKaM2wyNi
+GcHSgM8lICwtIdMiPH19/eAhcAAAHwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
+YQBwAAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAAAIEr
+H6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAA
+AHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJd
+AQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBw
+AAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+
+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMA
+YQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAA
+ADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+HwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABz
+AGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEA
+AAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBh
+AHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMA
+aAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAu
+AGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIA
+AABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAA
+ALZG6AqvkYxPgMjssaYkOuYDABcAAQAAAEAAOQCACciIp6POAUAACDDC+AKJp6POAQsAKQAAAAAA
+CwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAAAAAALACMAAAAAAB8AAICGAwIAAAAAAMAAAAAA
+AABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0A
+VQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAGAAAABSAEUAOgAg
+AFsAUABBAFQAQwBIACAAMAAwAC8AMgA5AF0AIABVAHAAZABhAHQAZQAgAGQAcgBpAHYAZQByACAA
+dABvACAAOAAuADAANgAuADAAMAAuADAAOAAtAGsAAAAfAD0AAQAAAAoAAABSAEUAOgAgAAAAAAAD
+ADYAAAAAAAMALgAAAAAAHwBCEAEAAABEAAAAPAAxADMANwA3ADYANgAwADIANgA0AC4AMgAwADAA
+NQAuADEALgBjAGEAbQBlAGwAQABkAGEAYgBkAGkAawBlAD4AAAACAXEAAQAAACAAAAABAc6i65M4
+AoQRaXOmT6s6E5ehb1BumaprswD//51CIR8AcAABAAAAWAAAAFsAUABBAFQAQwBIACAAMAAwAC8A
+MgA5AF0AIABVAHAAZABhAHQAZQAgAGQAcgBpAHYAZQByACAAdABvACAAOAAuADAANgAuADAAMAAu
+ADAAOAAtAGsAAAAfADUQAQAAAHgAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcA
+OQBDADMANAA1ADkAOQBCAEIAMABBADAAMwBFADQARAAzADUAMwBCADMAMwBBAEEAQABBAFYATQBC
+ADEALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAL4AAAA8ADEAMwA3ADcANQA4ADEA
+OAA3ADUALQA4ADUANwA0AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHMAYQB1
+AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAsADwAMQAzADcA
+NwA2ADYAMAAyADYANAAuADIAMAAwADUALgAxAC4AYwBhAG0AZQBsAEAAZABhAGIAZABpAGsAZQA+
+AAAAAAADAN4/n04AAEAABzCCqkpmp6POAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1R
+TG9naWM7bD1BVk1CMS0xMzA4MjgwNDMxNTlaLTg0MDc5AAAAAgEUMAEAAAAMAAAAQgEAAFMyvuVI
+AAAAHwD6PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAALAACABCAGAAAA
+AADAAAAAAAAARgAAAAAVgAAAAQAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAA
+AHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAgAAAB5AGUAcwAAAB8AAICGAwIA
+AAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAAB
+AAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYA
+AABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAAA3YQICkAYA
+DgAAAAEA/////yAAIAAAAAAAPQQCEIABADwAAAAwMDI2LXFsYTJ4eHgtQ29ycmVjdGx5LXByaW50
+LW91dC1pbi1tYWlsYm94LXJlZ2lzdGVycy5wYXRjaADwFQISgAMADgAAAN0HCAAcAAQAHwA4AAMA
+ZgECE4ADAA4AAADdBwgAHAAEAB8AOAADAGYBAg+ABgAUCgAARnJvbSAzYTA1ZjY1NjZhYmJlM2Yz
+YjQ5Mzg5MDlhMTZjNDQyY2MxODFhODAzIE1vbiBTZXAgMTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBK
+b2UgQ2FybnVjY2lvIDxqb2UuY2FybnVjY2lvQHFsb2dpYy5jb20+CkRhdGU6IEZyaSwgMjMgQXVn
+IDIwMTMgMDc6MjU6MzcgLTA3MDAKU3ViamVjdDogW1BBVENIIDI2LzI5XSBxbGEyeHh4OiBDb3Jy
+ZWN0bHkgcHJpbnQgb3V0L2luIG1haWxib3ggcmVnaXN0ZXJzLgoKQXQgbWFpbGJveC9idWZmZXIg
+ZGVidWcgbGV2ZWwsIHByaW50IHRoZSBjb3JyZWN0IHZhbHVlcyBvZiB0aGUKb3V0Z29pbmcgYW5k
+IGluY29taW5nIG1haWxib3ggcmVnaXN0ZXJzLgoKU2lnbmVkLW9mZi1ieTogSm9lIENhcm51Y2Np
+byA8am9lLmNhcm51Y2Npb0BxbG9naWMuY29tPgpTaWduZWQtb2ZmLWJ5OiBTYXVyYXYgS2FzaHlh
+cCA8c2F1cmF2Lmthc2h5YXBAcWxvZ2ljLmNvbT4KLS0tCiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9x
+bGFfbWJ4LmMgfCAgIDI4ICsrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0KIDEgZmlsZXMgY2hh
+bmdlZCwgMTMgaW5zZXJ0aW9ucygrKSwgMTUgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9zY3NpL3FsYTJ4eHgvcWxhX21ieC5jIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX21i
+eC5jCmluZGV4IGM4MjVkMWQuLmE5YWFlNTAgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9xbGEy
+eHh4L3FsYV9tYnguYworKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMKQEAgLTEx
+NywzMyArMTE3LDI1IEBAIHFsYTJ4MDBfbWFpbGJveF9jb21tYW5kKHNjc2lfcWxhX2hvc3RfdCAq
+dmhhLCBtYnhfY21kX3QgKm1jcCkKIAljb21tYW5kID0gbWNwLT5tYlswXTsKIAltYm94ZXMgPSBt
+Y3AtPm91dF9tYjsKIAorCXFsX2RiZyhxbF9kYmdfbWJ4ICsgcWxfZGJnX2J1ZmZlciwgdmhhLCAw
+eDExMTEsCisJICAgICJNYWlsYm94IHJlZ2lzdGVycyAoT1VUKTpcbiIpOwogCWZvciAoY250ID0g
+MDsgY250IDwgaGEtPm1ieF9jb3VudDsgY250KyspIHsKIAkJaWYgKElTX1FMQTIyMDAoaGEpICYm
+IGNudCA9PSA4KQogCQkJb3B0ciA9CiAJCQkgICAgKHVpbnQxNl90IF9faW9tZW0gKilNQUlMQk9Y
+X1JFRyhoYSwgJnJlZy0+aXNwLCA4KTsKLQkJaWYgKG1ib3hlcyAmIEJJVF8wKQorCQlpZiAobWJv
+eGVzICYgQklUXzApIHsKKwkJCXFsX2RiZyhxbF9kYmdfbWJ4LCB2aGEsIDB4MTExMiwKKwkJCSAg
+ICAibWJveFslZF08LTB4JTA0eFxuIiwgY250LCAqaXB0cik7CiAJCQlXUlRfUkVHX1dPUkQob3B0
+ciwgKmlwdHIpOworCQl9CiAKIAkJbWJveGVzID4+PSAxOwogCQlvcHRyKys7CiAJCWlwdHIrKzsK
+IAl9CiAKLQlxbF9kYmcocWxfZGJnX21ieCArIHFsX2RiZ19idWZmZXIsIHZoYSwgMHgxMTExLAot
+CSAgICAiTG9hZGVkIE1CWCByZWdpc3RlcnMgKGRpc3BsYXllZCBpbiBieXRlcykgPS5cbiIpOwot
+CXFsX2R1bXBfYnVmZmVyKHFsX2RiZ19tYnggKyBxbF9kYmdfYnVmZmVyLCB2aGEsIDB4MTExMiwK
+LQkgICAgKHVpbnQ4X3QgKiltY3AtPm1iLCAxNik7Ci0JcWxfZGJnKHFsX2RiZ19tYnggKyBxbF9k
+YmdfYnVmZmVyLCB2aGEsIDB4MTExMywKLQkgICAgIi5cbiIpOwotCXFsX2R1bXBfYnVmZmVyKHFs
+X2RiZ19tYnggKyBxbF9kYmdfYnVmZmVyLCB2aGEsIDB4MTExNCwKLQkgICAgKCh1aW50OF90ICop
+bWNwLT5tYiArIDB4MTApLCAxNik7Ci0JcWxfZGJnKHFsX2RiZ19tYnggKyBxbF9kYmdfYnVmZmVy
+LCB2aGEsIDB4MTExNSwKLQkgICAgIi5cbiIpOwotCXFsX2R1bXBfYnVmZmVyKHFsX2RiZ19tYngg
+KyBxbF9kYmdfYnVmZmVyLCB2aGEsIDB4MTExNiwKLQkgICAgKCh1aW50OF90ICopbWNwLT5tYiAr
+IDB4MjApLCA4KTsKIAlxbF9kYmcocWxfZGJnX21ieCArIHFsX2RiZ19idWZmZXIsIHZoYSwgMHgx
+MTE3LAogCSAgICAiSS9PIEFkZHJlc3MgPSAlcC5cbiIsIG9wdHIpOwotCXFsX2R1bXBfcmVncyhx
+bF9kYmdfbWJ4ICsgcWxfZGJnX2J1ZmZlciwgdmhhLCAweDEwMGUpOwogCiAJLyogSXNzdWUgc2V0
+IGhvc3QgaW50ZXJydXB0IGNvbW1hbmQgdG8gc2VuZCBjbWQgb3V0LiAqLwogCWhhLT5mbGFncy5t
+Ym94X2ludCA9IDA7CkBAIC0yNTQsOSArMjQ2LDE1IEBAIHFsYTJ4MDBfbWFpbGJveF9jb21tYW5k
+KHNjc2lfcWxhX2hvc3RfdCAqdmhhLCBtYnhfY21kX3QgKm1jcCkKIAkJaXB0cjIgPSBtY3AtPm1i
+OwogCQlpcHRyID0gKHVpbnQxNl90ICopJmhhLT5tYWlsYm94X291dFswXTsKIAkJbWJveGVzID0g
+bWNwLT5pbl9tYjsKKworCQlxbF9kYmcocWxfZGJnX21ieCwgdmhhLCAweDExMTMsCisJCSAgICAi
+TWFpbGJveCByZWdpc3RlcnMgKElOKTpcbiIpOwogCQlmb3IgKGNudCA9IDA7IGNudCA8IGhhLT5t
+YnhfY291bnQ7IGNudCsrKSB7Ci0JCQlpZiAobWJveGVzICYgQklUXzApCisJCQlpZiAobWJveGVz
+ICYgQklUXzApIHsKIAkJCQkqaXB0cjIgPSAqaXB0cjsKKwkJCQlxbF9kYmcocWxfZGJnX21ieCwg
+dmhhLCAweDExMTQsCisJCQkJICAgICJtYm94WyVkXS0+MHglMDR4XG4iLCBjbnQsICppcHRyMik7
+CisJCQl9CiAKIAkJCW1ib3hlcyA+Pj0gMTsKIAkJCWlwdHIyKys7Ci0tIAoxLjcuNwoKrv8CBZAG
+AOgBAAAMAAAAAwAUNwAAAAADAAU3AQAAAAsA/n8AAAAAHwADNwEAAAAOAAAALgBwAGEAdABjAGgA
+AAAAAB8ABDcBAAAAGgAAADAAMAAyADYALQBxAH4AMQAuAHAAYQB0AAAAAAAfAAc3AQAAAHgAAAAw
+ADAAMgA2AC0AcQBsAGEAMgB4AHgAeAAtAEMAbwByAHIAZQBjAHQAbAB5AC0AcAByAGkAbgB0AC0A
+bwB1AHQALQBpAG4ALQBtAGEAaQBsAGIAbwB4AC0AcgBlAGcAaQBzAHQAZQByAHMALgBwAGEAdABj
+AGgAAAALAP9/AAAAAEAABzBCdkOHp6POAR8AATABAAAAeAAAADAAMAAyADYALQBxAGwAYQAyAHgA
+eAB4AC0AQwBvAHIAcgBlAGMAdABsAHkALQBwAHIAaQBuAHQALQBvAHUAdAAtAGkAbgAtAG0AYQBp
+AGwAYgBvAHgALQByAGUAZwBpAHMAdABlAHIAcwAuAHAAYQB0AGMAaAAAAEAACDBCdkOHp6POAR8A
+EjcBAAAASgAAAGIAYQAxADAANQA3ADgAMwAtADYAZAA4ADYALQBkAGQAYgA2AC0ANAA2AGQAMQAt
+ADQAZgBmAGUAOQBhADcAYwAzADEAOAAxAAAAAAADAAs3/////2JO
 
-> @@ -331,16 +331,19 @@ sg_open(struct inode *inode, struct file *filp)
->         if ((sfp =3D sg_add_sfp(sdp, dev)))
->                 filp->private_data =3D sfp;
->         else {
-> -               if (flags & O_EXCL) {
-> -                       set_exclude(sdp, 0);    /* undo if error */
-> -                       wake_up_interruptible(&sdp->o_excl_wait);
-> -               }
->                 retval =3D -ENOMEM;
-> -               goto error_out;
-> +               goto sem_out;
->         }
->         retval =3D 0;
-> -error_out:
-> +
->         if (retval) {
-> +sem_out:
-> +               if (flags & O_EXCL) {
-
-Is insane code. You're adding a label to jump around setting retval=3D0
-(which is completely superfluous: retval is already provably zero at
-this point because of the check after retval =3D
-scsi_autopm_get_device(sdp->device))
-
-The sane way to write this is
-
-	if ((sfp =3D sg_add_sfp(sdp, dev)))
-		filp->private_data =3D sfp;
-	else {
-		retval =3D -ENOMEM;
-
-		if (flags & O_EXCL) {
-=2E..
-
-James
+--_000_F5D084D6342F9B479C34599BB0A03E4D353B33AAAVMB1qlogicorg_--
