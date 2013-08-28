@@ -1,56 +1,47 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [patch|rfc] block: fix race between request completion and timeout handling
-Date: Wed, 28 Aug 2013 08:58:41 -0400
-Message-ID: <x49sixuynsu.fsf@segfault.boston.devel.redhat.com>
-References: <x49ppszqkbg.fsf@segfault.boston.devel.redhat.com>
-	<521DA0F0.7060501@suse.de> <521DA913.1010505@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
+Date: Wed, 28 Aug 2013 13:33:30 +0000
+Message-ID: <bug-60644-11613-Wt3kiaxyYZ@https.bugzilla.kernel.org/>
+References: <bug-60644-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <521DA913.1010505@suse.de> (Hannes Reinecke's message of "Wed, 28
-	Aug 2013 09:38:59 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: axboe@kernel.dk, JBottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:54096 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752630Ab3H1Nde (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Aug 2013 09:33:34 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 58CA82041C
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 13:33:33 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 4402420516
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 13:33:32 +0000 (UTC)
+In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hannes Reinecke <hare@suse.de> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
->> So, looked into things a bit more.
->> It looks as if you're on the right track, although I doubt your
->> patch will fix the issue for me :-(
->> 
->> Thing is, you're right there is a race window between requeuing
->> and softirq triggering, which could well be fixed by your patch.
->> So for that reason alone I would like to take it.
->> 
->> However, including your patch will end up opening another can of
->> worms: the softirq might now be triggering _while the request is
->> queued on the request queue_.
->> blk_requeue_request will be putting the request back on the request
->> queue, where it'll be stuck until being pulled off from
->> scsi_request_fn().
->> So if the softirq triggers during that condition we'll end up
->> calling the BUG_ON((!list_empty(&req->queuelist)) in
->> __blk_put_request().
->> 
->> Guess we'd need to fix that one, too ...
->> 
-> Ah. Now I see it.
->
-> We're requeuing from the softirq context, ie after the completion
-> has triggered. So the above scenario can't actually happen and the
-> patch is valid.
+--- Comment #26 from liveaxle@live.com ---
+Hi .
 
-Do you still think it won't solve the issue you're seeing?  What issue
-is that, btw?
+Thanks for your kind help , Bernd .
 
->
-> So:
->
-> Acked-by: Hannes Reinecke <hare@suse.de>
+setting /sys/block/sdX(c~j)/device/queue_depth to 1 unfortuantely didn't solve
+the issue .
 
-Thanks, I guess I'll have to send a properly signed-off patch, now.  ;-)
+I put the following in the end of the boot line :
 
-Cheers,
-Jeff
+mpt2sas.disable_watchdog=1 mpt2sas.max_queue_depth=1 mpt2sas.max_sgl_entries=64
+mpt2sas.max_sectors=64
+
+However , the OS doesn't see the controllers anymore . So I had to remove these
+entries from the boot line .
+
+Thank you .
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
