@@ -1,289 +1,241 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: RE: [PATCH 00/29] Update driver to 8.06.00.08-k
-Date: Wed, 28 Aug 2013 04:31:59 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D353B33AA@AVMB1.qlogic.org>
-References: <1377581875-8574-1-git-send-email-saurav.kashyap@qlogic.com>,<1377660264.2005.1.camel@dabdike>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC][PATCH] Add a flight data recorder for scsi commands
+Date: Tue, 27 Aug 2013 22:09:19 -0700
+Message-ID: <1377666559.32763.249.camel@haakon3.risingtidesystems.com>
+References: <20130827220325.GB7293@logfs.org>
+	 <20130827221714.GC7293@logfs.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D353B33AAAVMB1qlogicorg_"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:60723 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752633Ab3H1EcD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Aug 2013 00:32:03 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7S4W1P6003496
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2013 21:32:01 -0700
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1eg8v6asc9-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2013 21:32:01 -0700
-In-Reply-To: <1377660264.2005.1.camel@dabdike>
-Content-Language: en-US
+Received: from mail.linux-iscsi.org ([67.23.28.174]:44735 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752669Ab3H1FCS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2013 01:02:18 -0400
+In-Reply-To: <20130827221714.GC7293@logfs.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: =?ISO-8859-1?Q?J=F6rn?= Engel <joern@logfs.org>
+Cc: Steven Rostedt <rostedt@goodmis.org>, linux-scsi@vger.kernel.org
 
---_000_F5D084D6342F9B479C34599BB0A03E4D353B33AAAVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Tue, 2013-08-27 at 18:17 -0400, J=C3=B6rn Engel wrote:
+> Here is a fun patch in an early state.  Essentially I want to trace
+> scsi commands, which has already been done long ago.  The problem I
+> have is that I care about all the scsi commands for one particular
+> device - without knowing in advance which device it will be.  Once I
+> know the device in question, I want to dump the last X commands.
+>=20
+> The existing tracing is covering all commands to all devices.  So
+> either I have to oversize my trace buffer and dump way too much, or I
+> will miss the stuff I am interested in most of the time.  Hence my
+> per-device trace buffer (called fdr to avoid namespace collisions).
+>=20
 
-HI James,=0A=
-=0A=
-There is some issue with an exchange server and this particular patch is no=
-t going out. Please find the patch inline and attached with this email.=0A=
-=0A=
-Thanks,=0A=
-~Saurav=0A=
-=0A=
-=0A=
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>=0A=
-Date: Fri, 23 Aug 2013 07:25:37 -0700=0A=
-Subject: [PATCH 26/29] qla2xxx: Correctly print out/in mailbox registers.=
-=0A=
-=0A=
-At mailbox/buffer debug level, print the correct values of the=0A=
-outgoing and incoming mailbox registers.=0A=
-=0A=
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>=0A=
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>=0A=
----=0A=
- drivers/scsi/qla2xxx/qla_mbx.c |   28 +++++++++++++---------------=0A=
- 1 files changed, 13 insertions(+), 15 deletions(-)=0A=
-=0A=
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.=
-c=0A=
-index c825d1d..a9aae50 100644=0A=
---- a/drivers/scsi/qla2xxx/qla_mbx.c=0A=
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c=0A=
-@@ -117,33 +117,25 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd=
-_t *mcp)=0A=
- 	command =3D mcp->mb[0];=0A=
- 	mboxes =3D mcp->out_mb;=0A=
- =0A=
-+	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1111,=0A=
-+	    "Mailbox registers (OUT):\n");=0A=
- 	for (cnt =3D 0; cnt < ha->mbx_count; cnt++) {=0A=
- 		if (IS_QLA2200(ha) && cnt =3D=3D 8)=0A=
- 			optr =3D=0A=
- 			    (uint16_t __iomem *)MAILBOX_REG(ha, &reg->isp, 8);=0A=
--		if (mboxes & BIT_0)=0A=
-+		if (mboxes & BIT_0) {=0A=
-+			ql_dbg(ql_dbg_mbx, vha, 0x1112,=0A=
-+			    "mbox[%d]<-0x%04x\n", cnt, *iptr);=0A=
- 			WRT_REG_WORD(optr, *iptr);=0A=
-+		}=0A=
- =0A=
- 		mboxes >>=3D 1;=0A=
- 		optr++;=0A=
- 		iptr++;=0A=
- 	}=0A=
- =0A=
--	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1111,=0A=
--	    "Loaded MBX registers (displayed in bytes) =3D.\n");=0A=
--	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1112,=0A=
--	    (uint8_t *)mcp->mb, 16);=0A=
--	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1113,=0A=
--	    ".\n");=0A=
--	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1114,=0A=
--	    ((uint8_t *)mcp->mb + 0x10), 16);=0A=
--	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1115,=0A=
--	    ".\n");=0A=
--	ql_dump_buffer(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1116,=0A=
--	    ((uint8_t *)mcp->mb + 0x20), 8);=0A=
- 	ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1117,=0A=
- 	    "I/O Address =3D %p.\n", optr);=0A=
--	ql_dump_regs(ql_dbg_mbx + ql_dbg_buffer, vha, 0x100e);=0A=
- =0A=
- 	/* Issue set host interrupt command to send cmd out. */=0A=
- 	ha->flags.mbox_int =3D 0;=0A=
-@@ -254,9 +246,15 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_=
-t *mcp)=0A=
- 		iptr2 =3D mcp->mb;=0A=
- 		iptr =3D (uint16_t *)&ha->mailbox_out[0];=0A=
- 		mboxes =3D mcp->in_mb;=0A=
-+=0A=
-+		ql_dbg(ql_dbg_mbx, vha, 0x1113,=0A=
-+		    "Mailbox registers (IN):\n");=0A=
- 		for (cnt =3D 0; cnt < ha->mbx_count; cnt++) {=0A=
--			if (mboxes & BIT_0)=0A=
-+			if (mboxes & BIT_0) {=0A=
- 				*iptr2 =3D *iptr;=0A=
-+				ql_dbg(ql_dbg_mbx, vha, 0x1114,=0A=
-+				    "mbox[%d]->0x%04x\n", cnt, *iptr2);=0A=
-+			}=0A=
- =0A=
- 			mboxes >>=3D 1;=0A=
- 			iptr2++;=0A=
--- =0A=
-1.7.7=0A=
-________________________________________=0A=
-From: James Bottomley [jbottomley@parallels.com]=0A=
-Sent: Wednesday, August 28, 2013 8:54 AM=0A=
-To: Saurav Kashyap=0A=
-Cc: Giridhar Malavali; Andrew Vasquez; linux-scsi=0A=
-Subject: Re: [PATCH 00/29] Update driver to 8.06.00.08-k=0A=
-=0A=
-On Tue, 2013-08-27 at 01:37 -0400, Saurav Kashyap wrote:=0A=
-> Hi James,=0A=
->=0A=
-> Please apply the following patches to the scsi tree, misc branch at your=
-=0A=
-> earliest convenience.=0A=
-=0A=
-Patch 26/29 is missing.=0A=
-=0A=
-James=0A=
-=0A=
+Sounds like a useful idea..
 
---_000_F5D084D6342F9B479C34599BB0A03E4D353B33AAAVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+However, it adds another kmalloc + spin_lock -> spin_unlock in the fast
+path for each struct scsi_cmnd I/O dispatch, which is exactly what the
+scsi-mq prototype code is trying to avoid at all costs.
 
-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
-AXOQZGHzKeEboXJ1BTFm5hiQJVFnJeFlYSg0Ki9mG3OiZvsLYMVgLmkCfBByxWB5DqDlrWA5TcAy
-NLoQUkFiH+9jL2Q/ZU+SfzJnWJIvkzP3Z1F7aHyAJnOj0XUoQWf++2i/feFuahlrQIDevh+m3/+A
-/G9vcHUgIHEfdbZyb3N//3SPfveBj4Bf57+CP4pPdcX/icPWAonDjR/dn96vrSvvP/+HvGewiL/t
-1I0Pjd/sX4+/H/hf1ZaSCFuRIjUxLjf//VAiNXwA/h//L/9yL0wh4jcfsCewGJBtHnA4QFtquwbg
-AdVACrEHQB5wbDow3TJRXTVWCfA2IVcJgBhQ3HNkm7AzkDPhdcphTaCzM5E0Mjg6z+Az0E0ipiZv
-R54iNUNjQ7BHaX1eoGQR0RjAHmAuQB5gaV3lEEEdwBZAEtBWKMBxjRdgeuUQIkF1eC1fEj01XlIz
-MTZVHqA241VwzwUgECBLZcuiOC5a0A8wojAPMDgtayI8T5wQ3lQXYAYENQAPsDI04BiAdTRgMTTE
-NB6gM5BHvXfXGQAzISI1PiGQaSHMMob/FLAolUhwILACMClS5FADUP5vJFAoEScTUGHLsSlSXxL/
-HMB9sBERQJBfEF5gR+BAYGskgdjAecxwchRHKLBy1yJAUGDLEm5ewG4eEEBg+0TgIjxQKaM2wyNi
-GcHSgM8lICwtIdMiPH19/eAhcAAAHwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
-YQBwAAAAAAAfAGUAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAAAIEr
-H6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAA
-AHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJd
-AQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAHwDlXwEAAAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBw
-AAAAAAAfAB8MAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+
-oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMA
-YQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAA
-ADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-HwD4PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABz
-AGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEA
-AAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBh
-AHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMA
-aAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAu
-AGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIA
-AABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAA
-ALZG6AqvkYxPgMjssaYkOuYDABcAAQAAAEAAOQCACciIp6POAUAACDDC+AKJp6POAQsAKQAAAAAA
-CwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAAAAAALACMAAAAAAB8AAICGAwIAAAAAAMAAAAAA
-AABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0A
-VQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAGAAAABSAEUAOgAg
-AFsAUABBAFQAQwBIACAAMAAwAC8AMgA5AF0AIABVAHAAZABhAHQAZQAgAGQAcgBpAHYAZQByACAA
-dABvACAAOAAuADAANgAuADAAMAAuADAAOAAtAGsAAAAfAD0AAQAAAAoAAABSAEUAOgAgAAAAAAAD
-ADYAAAAAAAMALgAAAAAAHwBCEAEAAABEAAAAPAAxADMANwA3ADYANgAwADIANgA0AC4AMgAwADAA
-NQAuADEALgBjAGEAbQBlAGwAQABkAGEAYgBkAGkAawBlAD4AAAACAXEAAQAAACAAAAABAc6i65M4
-AoQRaXOmT6s6E5ehb1BumaprswD//51CIR8AcAABAAAAWAAAAFsAUABBAFQAQwBIACAAMAAwAC8A
-MgA5AF0AIABVAHAAZABhAHQAZQAgAGQAcgBpAHYAZQByACAAdABvACAAOAAuADAANgAuADAAMAAu
-ADAAOAAtAGsAAAAfADUQAQAAAHgAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcA
-OQBDADMANAA1ADkAOQBCAEIAMABBADAAMwBFADQARAAzADUAMwBCADMAMwBBAEEAQABBAFYATQBC
-ADEALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAL4AAAA8ADEAMwA3ADcANQA4ADEA
-OAA3ADUALQA4ADUANwA0AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHMAYQB1
-AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAsADwAMQAzADcA
-NwA2ADYAMAAyADYANAAuADIAMAAwADUALgAxAC4AYwBhAG0AZQBsAEAAZABhAGIAZABpAGsAZQA+
-AAAAAAADAN4/n04AAEAABzCCqkpmp6POAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1R
-TG9naWM7bD1BVk1CMS0xMzA4MjgwNDMxNTlaLTg0MDc5AAAAAgEUMAEAAAAMAAAAQgEAAFMyvuVI
-AAAAHwD6PwEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAALAACABCAGAAAA
-AADAAAAAAAAARgAAAAAVgAAAAQAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAA
-AHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAgAAAB5AGUAcwAAAB8AAICGAwIA
-AAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAAB
-AAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYA
-AABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAAA3YQICkAYA
-DgAAAAEA/////yAAIAAAAAAAPQQCEIABADwAAAAwMDI2LXFsYTJ4eHgtQ29ycmVjdGx5LXByaW50
-LW91dC1pbi1tYWlsYm94LXJlZ2lzdGVycy5wYXRjaADwFQISgAMADgAAAN0HCAAcAAQAHwA4AAMA
-ZgECE4ADAA4AAADdBwgAHAAEAB8AOAADAGYBAg+ABgAUCgAARnJvbSAzYTA1ZjY1NjZhYmJlM2Yz
-YjQ5Mzg5MDlhMTZjNDQyY2MxODFhODAzIE1vbiBTZXAgMTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBK
-b2UgQ2FybnVjY2lvIDxqb2UuY2FybnVjY2lvQHFsb2dpYy5jb20+CkRhdGU6IEZyaSwgMjMgQXVn
-IDIwMTMgMDc6MjU6MzcgLTA3MDAKU3ViamVjdDogW1BBVENIIDI2LzI5XSBxbGEyeHh4OiBDb3Jy
-ZWN0bHkgcHJpbnQgb3V0L2luIG1haWxib3ggcmVnaXN0ZXJzLgoKQXQgbWFpbGJveC9idWZmZXIg
-ZGVidWcgbGV2ZWwsIHByaW50IHRoZSBjb3JyZWN0IHZhbHVlcyBvZiB0aGUKb3V0Z29pbmcgYW5k
-IGluY29taW5nIG1haWxib3ggcmVnaXN0ZXJzLgoKU2lnbmVkLW9mZi1ieTogSm9lIENhcm51Y2Np
-byA8am9lLmNhcm51Y2Npb0BxbG9naWMuY29tPgpTaWduZWQtb2ZmLWJ5OiBTYXVyYXYgS2FzaHlh
-cCA8c2F1cmF2Lmthc2h5YXBAcWxvZ2ljLmNvbT4KLS0tCiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9x
-bGFfbWJ4LmMgfCAgIDI4ICsrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0KIDEgZmlsZXMgY2hh
-bmdlZCwgMTMgaW5zZXJ0aW9ucygrKSwgMTUgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9zY3NpL3FsYTJ4eHgvcWxhX21ieC5jIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX21i
-eC5jCmluZGV4IGM4MjVkMWQuLmE5YWFlNTAgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9xbGEy
-eHh4L3FsYV9tYnguYworKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMKQEAgLTEx
-NywzMyArMTE3LDI1IEBAIHFsYTJ4MDBfbWFpbGJveF9jb21tYW5kKHNjc2lfcWxhX2hvc3RfdCAq
-dmhhLCBtYnhfY21kX3QgKm1jcCkKIAljb21tYW5kID0gbWNwLT5tYlswXTsKIAltYm94ZXMgPSBt
-Y3AtPm91dF9tYjsKIAorCXFsX2RiZyhxbF9kYmdfbWJ4ICsgcWxfZGJnX2J1ZmZlciwgdmhhLCAw
-eDExMTEsCisJICAgICJNYWlsYm94IHJlZ2lzdGVycyAoT1VUKTpcbiIpOwogCWZvciAoY250ID0g
-MDsgY250IDwgaGEtPm1ieF9jb3VudDsgY250KyspIHsKIAkJaWYgKElTX1FMQTIyMDAoaGEpICYm
-IGNudCA9PSA4KQogCQkJb3B0ciA9CiAJCQkgICAgKHVpbnQxNl90IF9faW9tZW0gKilNQUlMQk9Y
-X1JFRyhoYSwgJnJlZy0+aXNwLCA4KTsKLQkJaWYgKG1ib3hlcyAmIEJJVF8wKQorCQlpZiAobWJv
-eGVzICYgQklUXzApIHsKKwkJCXFsX2RiZyhxbF9kYmdfbWJ4LCB2aGEsIDB4MTExMiwKKwkJCSAg
-ICAibWJveFslZF08LTB4JTA0eFxuIiwgY250LCAqaXB0cik7CiAJCQlXUlRfUkVHX1dPUkQob3B0
-ciwgKmlwdHIpOworCQl9CiAKIAkJbWJveGVzID4+PSAxOwogCQlvcHRyKys7CiAJCWlwdHIrKzsK
-IAl9CiAKLQlxbF9kYmcocWxfZGJnX21ieCArIHFsX2RiZ19idWZmZXIsIHZoYSwgMHgxMTExLAot
-CSAgICAiTG9hZGVkIE1CWCByZWdpc3RlcnMgKGRpc3BsYXllZCBpbiBieXRlcykgPS5cbiIpOwot
-CXFsX2R1bXBfYnVmZmVyKHFsX2RiZ19tYnggKyBxbF9kYmdfYnVmZmVyLCB2aGEsIDB4MTExMiwK
-LQkgICAgKHVpbnQ4X3QgKiltY3AtPm1iLCAxNik7Ci0JcWxfZGJnKHFsX2RiZ19tYnggKyBxbF9k
-YmdfYnVmZmVyLCB2aGEsIDB4MTExMywKLQkgICAgIi5cbiIpOwotCXFsX2R1bXBfYnVmZmVyKHFs
-X2RiZ19tYnggKyBxbF9kYmdfYnVmZmVyLCB2aGEsIDB4MTExNCwKLQkgICAgKCh1aW50OF90ICop
-bWNwLT5tYiArIDB4MTApLCAxNik7Ci0JcWxfZGJnKHFsX2RiZ19tYnggKyBxbF9kYmdfYnVmZmVy
-LCB2aGEsIDB4MTExNSwKLQkgICAgIi5cbiIpOwotCXFsX2R1bXBfYnVmZmVyKHFsX2RiZ19tYngg
-KyBxbF9kYmdfYnVmZmVyLCB2aGEsIDB4MTExNiwKLQkgICAgKCh1aW50OF90ICopbWNwLT5tYiAr
-IDB4MjApLCA4KTsKIAlxbF9kYmcocWxfZGJnX21ieCArIHFsX2RiZ19idWZmZXIsIHZoYSwgMHgx
-MTE3LAogCSAgICAiSS9PIEFkZHJlc3MgPSAlcC5cbiIsIG9wdHIpOwotCXFsX2R1bXBfcmVncyhx
-bF9kYmdfbWJ4ICsgcWxfZGJnX2J1ZmZlciwgdmhhLCAweDEwMGUpOwogCiAJLyogSXNzdWUgc2V0
-IGhvc3QgaW50ZXJydXB0IGNvbW1hbmQgdG8gc2VuZCBjbWQgb3V0LiAqLwogCWhhLT5mbGFncy5t
-Ym94X2ludCA9IDA7CkBAIC0yNTQsOSArMjQ2LDE1IEBAIHFsYTJ4MDBfbWFpbGJveF9jb21tYW5k
-KHNjc2lfcWxhX2hvc3RfdCAqdmhhLCBtYnhfY21kX3QgKm1jcCkKIAkJaXB0cjIgPSBtY3AtPm1i
-OwogCQlpcHRyID0gKHVpbnQxNl90ICopJmhhLT5tYWlsYm94X291dFswXTsKIAkJbWJveGVzID0g
-bWNwLT5pbl9tYjsKKworCQlxbF9kYmcocWxfZGJnX21ieCwgdmhhLCAweDExMTMsCisJCSAgICAi
-TWFpbGJveCByZWdpc3RlcnMgKElOKTpcbiIpOwogCQlmb3IgKGNudCA9IDA7IGNudCA8IGhhLT5t
-YnhfY291bnQ7IGNudCsrKSB7Ci0JCQlpZiAobWJveGVzICYgQklUXzApCisJCQlpZiAobWJveGVz
-ICYgQklUXzApIHsKIAkJCQkqaXB0cjIgPSAqaXB0cjsKKwkJCQlxbF9kYmcocWxfZGJnX21ieCwg
-dmhhLCAweDExMTQsCisJCQkJICAgICJtYm94WyVkXS0+MHglMDR4XG4iLCBjbnQsICppcHRyMik7
-CisJCQl9CiAKIAkJCW1ib3hlcyA+Pj0gMTsKIAkJCWlwdHIyKys7Ci0tIAoxLjcuNwoKrv8CBZAG
-AOgBAAAMAAAAAwAUNwAAAAADAAU3AQAAAAsA/n8AAAAAHwADNwEAAAAOAAAALgBwAGEAdABjAGgA
-AAAAAB8ABDcBAAAAGgAAADAAMAAyADYALQBxAH4AMQAuAHAAYQB0AAAAAAAfAAc3AQAAAHgAAAAw
-ADAAMgA2AC0AcQBsAGEAMgB4AHgAeAAtAEMAbwByAHIAZQBjAHQAbAB5AC0AcAByAGkAbgB0AC0A
-bwB1AHQALQBpAG4ALQBtAGEAaQBsAGIAbwB4AC0AcgBlAGcAaQBzAHQAZQByAHMALgBwAGEAdABj
-AGgAAAALAP9/AAAAAEAABzBCdkOHp6POAR8AATABAAAAeAAAADAAMAAyADYALQBxAGwAYQAyAHgA
-eAB4AC0AQwBvAHIAcgBlAGMAdABsAHkALQBwAHIAaQBuAHQALQBvAHUAdAAtAGkAbgAtAG0AYQBp
-AGwAYgBvAHgALQByAGUAZwBpAHMAdABlAHIAcwAuAHAAYQB0AGMAaAAAAEAACDBCdkOHp6POAR8A
-EjcBAAAASgAAAGIAYQAxADAANQA3ADgAMwAtADYAZAA4ADYALQBkAGQAYgA2AC0ANAA2AGQAMQAt
-ADQAZgBmAGUAOQBhADcAYwAzADEAOAAxAAAAAAADAAs3/////2JO
+So that said, this logic should be disabled (by default) with some
+manner of sysfs attribute in /sys/class/scsi_device (or some other
+mechanism) that allows it to be enabled/disabled on a per struct
+scsi_device basis.
 
---_000_F5D084D6342F9B479C34599BB0A03E4D353B33AAAVMB1qlogicorg_--
+I imagine that is already on your TODO, but given the gaping hole in
+SCSI performance vs. raw block that scsi-mq is attempting to address, I
+just wanted to make sure.  ;)
+
+Thanks,
+
+--nab
+
+> Steven, is there some magic 2-line patch that would also give me what
+> I want without having to reinvent all your infrastructure and doing
+> such a bad job?
+>=20
+> J=C3=B6rn
+>=20
+> --
+> It is better to die of hunger having lived without grief and fear,
+> than to live with a troubled spirit amid abundance.
+> -- Epictetus
+>=20
+>=20
+> And dump the fdr whenever we run into a timeout.  If the timeout is
+> caused by a crashed target and the target crash is triggered by a wei=
+rd
+> command sent by us, we might want to know which commands we send out.
+>=20
+> Signed-off-by: Joern Engel <joern@logfs.org>
+> ---
+>  drivers/scsi/scsi.c        |   31 +++++++++++++++++++++++++++++++
+>  drivers/scsi/scsi_error.c  |   38 ++++++++++++++++++++++++++++++++++=
+++++
+>  drivers/scsi/scsi_scan.c   |    1 +
+>  include/scsi/scsi_device.h |   13 +++++++++++++
+>  4 files changed, 83 insertions(+)
+>=20
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index a884f13..54168bb 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -647,6 +647,36 @@ void scsi_cmd_get_serial(struct Scsi_Host *host,=
+ struct scsi_cmnd *cmd)
+>  }
+>  EXPORT_SYMBOL(scsi_cmd_get_serial);
+> =20
+> +static void fdr_add(struct fdr_ring *ring, struct fdr_entry *entry)
+> +{
+> +	struct fdr_entry *old;
+> +	unsigned long flags;
+> +	int index;
+> +
+> +	spin_lock_irqsave(&ring->fdr_lock, flags);
+> +	index =3D ring->last_entry + 1;
+> +	if (index >=3D ARRAY_SIZE(ring->entry))
+> +		index =3D 0;
+> +	old =3D ring->entry[index];
+> +	ring->entry[index] =3D entry;
+> +	ring->last_entry =3D index;
+> +	spin_unlock_irqrestore(&ring->fdr_lock, flags);
+> +	kfree(old);
+> +}
+> +
+> +static void fdr_scsi_cmd(struct scsi_cmnd *cmd)
+> +{
+> +	struct fdr_entry *new;
+> +
+> +	new =3D kmalloc(sizeof(*new) + cmd->cmd_len, GFP_KERNEL);
+> +	if (!new)
+> +		return;
+> +	new->ts_nsec =3D local_clock();
+> +	new->size =3D cmd->cmd_len;
+> +	memcpy(new->data, cmd->cmnd, new->size);
+> +	fdr_add(&cmd->device->fdr, new);
+> +}
+> +
+>  /**
+>   * scsi_dispatch_command - Dispatch a command to the low-level drive=
+r.
+>   * @cmd: command block we are dispatching.
+> @@ -747,6 +777,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+>  		scsi_done(cmd);
+>  	} else {
+>  		trace_scsi_dispatch_cmd_start(cmd);
+> +		fdr_scsi_cmd(cmd);
+>  		cmd->scsi_done =3D scsi_done;
+>  		rtn =3D host->hostt->queuecommand(host, cmd);
+>  	}
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 0dfae50..829cb74 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -132,6 +132,41 @@ static void queue_for_eh(struct Scsi_Host *shost=
+, struct scsi_cmnd *scmd)
+>  	schedule_work(&scmd->abort_work);
+>  }
+> =20
+> +static void scsi_fdr_dump(struct fdr_entry *entry)
+> +{
+> +	char buf[64 + 8 + 2];
+> +	unsigned long ts =3D entry->ts_nsec;
+> +	unsigned long rem_nsec;
+> +
+> +	rem_nsec =3D do_div(ts, 1000000000);
+> +	hex_dump_to_buffer(entry->data, entry->size, 32, 8, buf, sizeof(buf=
+), 0);
+> +	pr_info("%6lu.%06lu: %s\n", ts, rem_nsec, buf);
+> +}
+> +
+> +static void fdr_dump(struct fdr_ring *ring, void (*dump) (struct fdr=
+_entry * entry))
+> +{
+> +	struct fdr_entry *entry;
+> +	unsigned long flags;
+> +	int i;
+> +
+> +	spin_lock_irqsave(&ring->fdr_lock, flags);
+> +	for (i =3D ring->last_entry + 1; i < ARRAY_SIZE(ring->entry); i++) =
+{
+> +		entry =3D ring->entry[i];
+> +		ring->entry[i] =3D NULL;
+> +		if (entry)
+> +			dump(entry);
+> +		kfree(entry);
+> +	}
+> +	for (i =3D 0; i < ring->last_entry; i++) {
+> +		entry =3D ring->entry[i];
+> +		ring->entry[i] =3D NULL;
+> +		if (entry)
+> +			dump(entry);
+> +		kfree(entry);
+> +	}
+> +	spin_unlock_irqrestore(&ring->fdr_lock, flags);
+> +}
+> +
+>  /**
+>   * scsi_times_out - Timeout function for normal scsi commands.
+>   * @req:	request that is timing out.
+> @@ -148,6 +183,9 @@ enum blk_eh_timer_return scsi_times_out(struct re=
+quest *req)
+>  	enum blk_eh_timer_return rtn =3D BLK_EH_NOT_HANDLED;
+>  	struct Scsi_Host *host =3D scmd->device->host;
+> =20
+> +	sdev_printk(KERN_INFO, scmd->device, "dumping cdb recorder\n");
+> +	fdr_dump(&scmd->device->fdr, scsi_fdr_dump);
+> +
+>  	trace_scsi_dispatch_cmd_timeout(scmd);
+>  	scsi_log_completion(scmd, TIMEOUT_ERROR);
+> =20
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index db89445..85dbae4 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -252,6 +252,7 @@ static struct scsi_device *scsi_alloc_sdev(struct=
+ scsi_target *starget,
+>  	INIT_LIST_HEAD(&sdev->starved_entry);
+>  	INIT_LIST_HEAD(&sdev->event_list);
+>  	spin_lock_init(&sdev->list_lock);
+> +	spin_lock_init(&sdev->fdr.fdr_lock);
+>  	INIT_WORK(&sdev->event_work, scsi_evt_thread);
+>  	INIT_WORK(&sdev->requeue_work, scsi_requeue_run_queue);
+>  	/* Limit scsi messages per device */
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index bafc41c..00b7e9b 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -97,6 +97,18 @@ enum scsi_err_inj_duration {
+>  };
+>  #endif /* CONFIG_SCSI_ERROR_INJECTOR */
+> =20
+> +struct fdr_entry {
+> +	unsigned long ts_nsec;
+> +	u32 size;
+> +	u8 data[0];
+> +};
+> +
+> +struct fdr_ring {
+> +	spinlock_t fdr_lock;
+> +	int last_entry;
+> +	struct fdr_entry *entry[1000];
+> +};
+> +
+>  struct scsi_device {
+>  	struct Scsi_Host *host;
+>  	struct request_queue *request_queue;
+> @@ -222,6 +234,7 @@ struct scsi_device {
+>  	struct scsi_dh_data	*scsi_dh_data;
+>  	enum scsi_device_state sdev_state;
+>  	struct ratelimit_state	sdev_ratelimit;
+> +	struct fdr_ring		fdr;
+>  	unsigned long		sdev_data[0];
+>  } __attribute__((aligned(sizeof(unsigned long))));
+> =20
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
