@@ -1,47 +1,183 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Wed, 28 Aug 2013 13:33:30 +0000
-Message-ID: <bug-60644-11613-Wt3kiaxyYZ@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH 02/29] qla2xxx: Add support for ISP8044.
+Date: Wed, 28 Aug 2013 13:33:58 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D353B386D@AVMB1.qlogic.org>
+References: <1377674108.2005.32.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D353B386DAVMB1qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:54096 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752630Ab3H1Nde (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Aug 2013 09:33:34 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 58CA82041C
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 13:33:33 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 4402420516
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 13:33:32 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:34193 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752630Ab3H1Nd7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Aug 2013 09:33:59 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r7SDQuqY007143
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 06:33:59 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1eg8v6bedd-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 06:33:59 -0700
+In-Reply-To: <1377674108.2005.32.camel@dabdike>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+--_000_F5D084D6342F9B479C34599BB0A03E4D353B386DAVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <6082570A56CF34428B5C7ABE4E8F8DE3@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
---- Comment #26 from liveaxle@live.com ---
-Hi .
+Hi James,
+Comments inline..
 
-Thanks for your kind help , Bernd .
+>On Tue, 2013-08-27 at 01:37 -0400, Saurav Kashyap wrote:
+>> From: Atul Deshmukh <atul.deshmukh@qlogic.com>
+>
+>You seem to have stopped running your stuff through checkpatch:
 
-setting /sys/block/sdX(c~j)/device/queue_depth to 1 unfortuantely didn't solve
-the issue .
+<SK> We did run all the patches through checkpatch before submission, did
+see the warnings and was trying to keep with the formatting in the rest of
+the file(s).
+We will take care of this in future.
 
-I put the following in the end of the boot line :
+Thanks,
+~Saurav
 
-mpt2sas.disable_watchdog=1 mpt2sas.max_queue_depth=1 mpt2sas.max_sgl_entries=64
-mpt2sas.max_sectors=64
 
-However , the OS doesn't see the controllers anymore . So I had to remove these
-entries from the boot line .
+>
+>WARNING: please, no spaces at the start of a line
+>#317: FILE: drivers/scsi/qla2xxx/qla_gbl.h:479:
+>+    uint8_t *, uint32_t, uint32_t);$
+>
+>WARNING: please, no spaces at the start of a line
+>#341: FILE: drivers/scsi/qla2xxx/qla_gbl.h:713:
+>+    const uint32_t crb_reg, const uint32_t value);$
+>
+>WARNING: please, no spaces at the start of a line
+>#351: FILE: drivers/scsi/qla2xxx/qla_gbl.h:723:
+>+    uint32_t, uint32_t);$
+>
+>WARNING: please, no spaces at the start of a line
+>#3175: FILE: drivers/scsi/qla2xxx/qla_nx2.c:2084:
+>+    struct qla8044_minidump_entry_hdr *entry_hdr)$
+>
+>WARNING: please, no spaces at the start of a line
+>#4258: FILE: drivers/scsi/qla2xxx/qla_nx2.c:3167:
+>+    uint32_t data)$
+>
+>WARNING: please, no spaces at the start of a line
+>#4334: FILE: drivers/scsi/qla2xxx/qla_nx2.c:3243:
+>+    uint32_t sector_start_addr)$
+>
+>WARNING: please, no spaces at the start of a line
+>#4390: FILE: drivers/scsi/qla2xxx/qla_nx2.c:3299:
+>+    uint32_t *p_data)$
+>
+>WARNING: please, no spaces at the start of a line
+>#4425: FILE: drivers/scsi/qla2xxx/qla_nx2.c:3334:
+>+    uint32_t faddr, uint32_t dwords)$
+>
+>WARNING: please, no spaces at the start of a line
+>#4508: FILE: drivers/scsi/qla2xxx/qla_nx2.c:3417:
+>+    uint32_t faddr, uint32_t dwords)$
+>
+>WARNING: please, no spaces at the start of a line
+>#4528: FILE: drivers/scsi/qla2xxx/qla_nx2.c:3437:
+>+    uint32_t offset, uint32_t length)$
+>
+>total: 0 errors, 10 warnings, 5781 lines checked
+>
+>Please don't; those are all legitimate problems.
+>
+>James
+>
 
-Thank you .
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+--_000_F5D084D6342F9B479C34599BB0A03E4D353B386DAVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+cwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAPAAAAHMAaQBwADoAcwBh
+AHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAA
+HgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAfDAEAAAA0AAAAcwBhAHUAcgBh
+AHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMA
+TQBUAFAAAAAAAAIBGQwBAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2
+ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBo
+AHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAHgAAAFMAYQB1AHIAYQB2ACAA
+SwBhAHMAaAB5AGEAcAAAAAAAHwAjQAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBw
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAA
+dAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAA
+AFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAHwAJXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/
+CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAAD+ggRxvdWBTZWaCu/gcZzjAwAXAAEAAABA
+ADkAAKedP/OjzgFAAAgwC3CxP/OjzgELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8A
+AICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAA
+AAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcA
+AQAAAGgAAABSAGUAOgAgAFsAUABBAFQAQwBIACAAMAAyAC8AMgA5AF0AIABxAGwAYQAyAHgAeAB4
+ADoAIABBAGQAZAAgAHMAdQBwAHAAbwByAHQAIABmAG8AcgAgAEkAUwBQADgAMAA0ADQALgAAAB8A
+PQABAAAACgAAAFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAABGAAAAPAAxADMANwA3ADYANwA0
+ADEAMAA4AC4AMgAwADAANQAuADMAMgAuAGMAYQBtAGUAbABAAGQAYQBiAGQAaQBrAGUAPgAAAAAA
+AgFxAAEAAAAgAAAAAQHOouuVFZ/v/C5ovEuxKzbvLaMArpmqrCmAgADGB4AfAHAAAQAAAGAAAABb
+AFAAQQBUAEMASAAgADAAMgAvADIAOQBdACAAcQBsAGEAMgB4AHgAeAA6ACAAQQBkAGQAIABzAHUA
+cABwAG8AcgB0ACAAZgBvAHIAIABJAFMAUAA4ADAANAA0AC4AAAAfADUQAQAAAHgAAAA8AEYANQBE
+ADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcAOQBDADMANAA1ADkAOQBCAEIAMABBADAAMwBFADQA
+RAAzADUAMwBCADMAOAA2AEQAQABBAFYATQBCADEALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAD
+AN4/n04AAEAABzDLJ6M/86POAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7
+bD1BVk1CMS0xMzA4MjgxMzMzNThaLTg0MjMxAAAAHwAVEAEAAABYAAAANgAwADgAMgA1ADcAMABB
+ADUANgBDAEYAMwA0ADQAMgA4AEIANQBDADcAQQBCAEUANABFADgARgA4AEQARQAzAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAAIBFDABAAAADAAAANwAAAADR7eESAAAAB8A+j8BAAAAHgAAAFMAYQB1
+AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUA
+cwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABIAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBP
+AHUAdABsAG8AbwBrAC8AMQA0AC4AMQAwAC4AMAAuADEAMQAwADMAMQAwAAAAHwAAgB+k6zOoei5C
+vnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBj
+AGsAaQBuAGcARQB4AAAAAQAAABYBAABJAEkAPQAwADEAMAAxAEMARQBBADMARgAzADMARgAzADQA
+QgA3AEQAMABGAEQAQgBEADEANABFADYANAA3ADkAQwAyADcAMgA2ADIAMAAxADAANAAwADYARgBC
+ADEAOwBTAEIATQBJAEQAPQA0ADsAUwAxAD0APAAxADMANwA3ADYANwA0ADEAMAA4AC4AMgAwADAA
+NQAuADMAMgAuAGMAYQBtAGUAbABAAGQAYQBiAGQAaQBrAGUAPgA7AFYAZQByAHMAaQBvAG4APQBW
+AGUAcgBzAGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwAxADgALgAwACkALAAgAFMA
+dABhAGcAZQA9AEgAMgAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAt
+AG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAA
+AAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABoAAABb
+ADEAMAAuADMANQAuADcALgA0ADAAXQAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQA
+aQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAG9M
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D353B386DAVMB1qlogicorg_--
