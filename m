@@ -1,42 +1,110 @@
 From: Vaughan Cao <vaughan.cao@oracle.com>
-Subject: [PATCH v6 0/4][SCSI] sg: fix race condition in sg_open
-Date: Wed, 28 Aug 2013 18:07:48 +0800
-Message-ID: <1377684472-7815-1-git-send-email-vaughan.cao@oracle.com>
+Subject: [PATCH v6 2/4] sg: no need sg_open_exclusive_lock
+Date: Wed, 28 Aug 2013 18:07:50 +0800
+Message-ID: <1377684472-7815-3-git-send-email-vaughan.cao@oracle.com>
 References: <1377662419.2005.12.camel@dabdike>
+ <1377684472-7815-1-git-send-email-vaughan.cao@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1377662419.2005.12.camel@dabdike>
+In-Reply-To: <1377684472-7815-1-git-send-email-vaughan.cao@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: joern@logfs.org, vaughan.cao@oracle.com, dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-There is a race when open sg with O_EXCL flag. Also a race may happen between
-sg_open and sg_remove.
+Open exclusive check is protected by o_sem, no need sg_open_exclusive_lock.
+@exclude is used to record which type of rwsem we are holding.
 
-Changes from v5:
- Patches based on v3.11-rc7 and passed sg_tst_excl test.
- * [1/4] * remove unused variables - res,sdp.
-	 * fix insane code dealing with sg_add_sfp.
- * [2/4] resolve conflict with v3.11-rc7. 
- * [3/4] remove sem_out label.
- * [4/4] add sdp definition.
+Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
+---
+ drivers/scsi/sg.c | 34 +++++-----------------------------
+ 1 file changed, 5 insertions(+), 29 deletions(-)
 
-Changes from v4:
- * [3/4] use ERR_PTR series instead of adding another parameter in sg_add_sfp
- * [4/4] fix conflict for cherry-pick from v3.
-
-Changes from v3:
- * release o_sem in sg_release(), not in sg_remove_sfp().
- * not set exclude with sfd_lock held.
-
-Vaughan Cao (4):
-  sg: use rwsem to solve race during exclusive open
-  sg: no need sg_open_exclusive_lock
-  sg: checking sdp->detached isn't protected when open
-  sg: push file descriptor list locking down to per-device locking
-
- drivers/scsi/sg.c | 173 +++++++++++++++++++++++++-----------------------------
- 1 file changed, 80 insertions(+), 93 deletions(-)
-
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 7a54c92..dcbd95f 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -105,8 +105,6 @@ static int scatter_elem_sz_prev = SG_SCATTER_SZ;
+ static int sg_add(struct device *, struct class_interface *);
+ static void sg_remove(struct device *, struct class_interface *);
+ 
+-static DEFINE_SPINLOCK(sg_open_exclusive_lock);
+-
+ static DEFINE_IDR(sg_index_idr);
+ static DEFINE_RWLOCK(sg_index_lock);	/* Also used to lock
+ 							   file descriptor list for device */
+@@ -176,7 +174,6 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
+ 	struct list_head sfds;
+ 	struct rw_semaphore o_sem;	/* exclude open should hold this rwsem */
+ 	volatile char detached;	/* 0->attached, 1->detached pending removal */
+-	/* exclude protected by sg_open_exclusive_lock */
+ 	char exclude;		/* opened for exclusive access */
+ 	char sgdebug;		/* 0->off, 1->sense, 9->dump dev, 10-> all devs */
+ 	struct gendisk *disk;
+@@ -225,27 +222,6 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+ 	return blk_verify_command(cmd, filp->f_mode & FMODE_WRITE);
+ }
+ 
+-static int get_exclude(Sg_device *sdp)
+-{
+-	unsigned long flags;
+-	int ret;
+-
+-	spin_lock_irqsave(&sg_open_exclusive_lock, flags);
+-	ret = sdp->exclude;
+-	spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
+-	return ret;
+-}
+-
+-static int set_exclude(Sg_device *sdp, char val)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&sg_open_exclusive_lock, flags);
+-	sdp->exclude = val;
+-	spin_unlock_irqrestore(&sg_open_exclusive_lock, flags);
+-	return val;
+-}
+-
+ static int sfds_list_empty(Sg_device *sdp)
+ {
+ 	unsigned long flags;
+@@ -317,7 +293,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 	}
+ 	/* Since write lock is held, no need to check sfd_list */
+ 	if (flags & O_EXCL)
+-		set_exclude(sdp, 1);
++		sdp->exclude = 1;	/* used by release lock */
+ 
+ 	if (sdp->detached) {
+ 		retval = -ENODEV;
+@@ -339,7 +315,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 	if (retval) {
+ sem_out:
+ 		if (flags & O_EXCL) {
+-			set_exclude(sdp, 0);	/* undo if error */
++			sdp->exclude = 0;	/* undo if error */
+ 			up_write(&sdp->o_sem);
+ 		} else
+ 			up_read(&sdp->o_sem);
+@@ -366,8 +342,8 @@ sg_release(struct inode *inode, struct file *filp)
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
+ 
+-	excl = get_exclude(sdp);
+-	set_exclude(sdp, 0);
++	excl = sdp->exclude;
++	sdp->exclude = 0;
+ 	if (excl)
+ 		up_write(&sdp->o_sem);
+ 	else
+@@ -2624,7 +2600,7 @@ static int sg_proc_seq_show_debug(struct seq_file *s, void *v)
+ 			     scsidp->lun,
+ 			     scsidp->host->hostt->emulated);
+ 		seq_printf(s, " sg_tablesize=%d excl=%d\n",
+-			   sdp->sg_tablesize, get_exclude(sdp));
++			   sdp->sg_tablesize, sdp->exclude);
+ 		sg_proc_debug_helper(s, sdp);
+ 	}
+ 	read_unlock_irqrestore(&sg_index_lock, iflags);
 -- 
 1.8.3.1
