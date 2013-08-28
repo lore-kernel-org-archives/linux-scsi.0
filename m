@@ -1,42 +1,196 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Wed, 28 Aug 2013 08:44:31 +0000
-Message-ID: <bug-60644-11613-8tStwJxFSa@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Vaughan Cao <vaughan.cao@oracle.com>
+Subject: [PATCH v6 1/4] sg: use rwsem to solve race during exclusive open
+Date: Wed, 28 Aug 2013 18:07:49 +0800
+Message-ID: <1377684472-7815-2-git-send-email-vaughan.cao@oracle.com>
+References: <1377662419.2005.12.camel@dabdike>
+ <1377684472-7815-1-git-send-email-vaughan.cao@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:42422 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752505Ab3H1Iou (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Aug 2013 04:44:50 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A4DE62041D
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 08:44:44 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id A047620430
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2013 08:44:38 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42024 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423Ab3H1KGU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2013 06:06:20 -0400
+In-Reply-To: <1377684472-7815-1-git-send-email-vaughan.cao@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: joern@logfs.org, vaughan.cao@oracle.com, dgilbert@interlog.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+A race condition may happen if two threads are both trying to open the same sg
+with O_EXCL simultaneously. It's possible that they both find fsds list is
+empty and get_exclude(sdp) returns 0, then they both call set_exclude() and
+break out from wait_event_interruptible and resume open.
 
-Bernd Schubert <bernd.schubert@fastmail.fm> changed:
+Now use rwsem to protect this process. Exclusive open gets write lock and
+others get read lock. The lock will be held until file descriptor is closed.
+This also leads 'exclude' only a status rather than a check mark.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bernd.schubert@fastmail.fm
+Changes from v5:
+ * remove unused variables
+ * fix insane code dealing with sg_add_sfp.
 
---- Comment #25 from Bernd Schubert <bernd.schubert@fastmail.fm> ---
-Have you already tried to give the controller less work, i.e. by setting
-/sys/block/sdX/device/queue_depth to 1? If you can't set it, use the mpt2sas
-option max_queue_depth=1. A low value of max_sgl_entries and max_sectors also
-might help. Lowering all of that is not good for performance, but might
-increase stability.
+Signed-off-by: Vaughan Cao <vaughan.cao@oracle.com>
+---
+ drivers/scsi/sg.c | 83 +++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 44 insertions(+), 39 deletions(-)
 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index df5e961..7a54c92 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -170,11 +170,11 @@ typedef struct sg_fd {		/* holds the state of a file descriptor */
+ 
+ typedef struct sg_device { /* holds the state of each scsi generic device */
+ 	struct scsi_device *device;
+-	wait_queue_head_t o_excl_wait;	/* queue open() when O_EXCL in use */
+ 	int sg_tablesize;	/* adapter's max scatter-gather table size */
+ 	u32 index;		/* device index number */
+ 	/* sfds is protected by sg_index_lock */
+ 	struct list_head sfds;
++	struct rw_semaphore o_sem;	/* exclude open should hold this rwsem */
+ 	volatile char detached;	/* 0->attached, 1->detached pending removal */
+ 	/* exclude protected by sg_open_exclusive_lock */
+ 	char exclude;		/* opened for exclusive access */
+@@ -265,7 +265,6 @@ sg_open(struct inode *inode, struct file *filp)
+ 	struct request_queue *q;
+ 	Sg_device *sdp;
+ 	Sg_fd *sfp;
+-	int res;
+ 	int retval;
+ 
+ 	nonseekable_open(inode, filp);
+@@ -294,35 +293,35 @@ sg_open(struct inode *inode, struct file *filp)
+ 		goto error_out;
+ 	}
+ 
+-	if (flags & O_EXCL) {
+-		if (O_RDONLY == (flags & O_ACCMODE)) {
+-			retval = -EPERM; /* Can't lock it with read only access */
+-			goto error_out;
+-		}
+-		if (!sfds_list_empty(sdp) && (flags & O_NONBLOCK)) {
+-			retval = -EBUSY;
+-			goto error_out;
+-		}
+-		res = wait_event_interruptible(sdp->o_excl_wait,
+-					   ((!sfds_list_empty(sdp) || get_exclude(sdp)) ? 0 : set_exclude(sdp, 1)));
+-		if (res) {
+-			retval = res;	/* -ERESTARTSYS because signal hit process */
+-			goto error_out;
+-		}
+-	} else if (get_exclude(sdp)) {	/* some other fd has an exclusive lock on dev */
+-		if (flags & O_NONBLOCK) {
+-			retval = -EBUSY;
+-			goto error_out;
+-		}
+-		res = wait_event_interruptible(sdp->o_excl_wait, !get_exclude(sdp));
+-		if (res) {
+-			retval = res;	/* -ERESTARTSYS because signal hit process */
+-			goto error_out;
++	if ((flags & O_EXCL) && (O_RDONLY == (flags & O_ACCMODE))) {
++		retval = -EPERM; /* Can't lock it with read only access */
++		goto error_out;
++	}
++	if (flags & O_NONBLOCK) {
++		if (flags & O_EXCL) {
++			if (!down_write_trylock(&sdp->o_sem)) {
++				retval = -EBUSY;
++				goto error_out;
++			}
++		} else {
++			if (!down_read_trylock(&sdp->o_sem)) {
++				retval = -EBUSY;
++				goto error_out;
++			}
+ 		}
++	} else {
++		if (flags & O_EXCL)
++			down_write(&sdp->o_sem);
++		else
++			down_read(&sdp->o_sem);
+ 	}
++	/* Since write lock is held, no need to check sfd_list */
++	if (flags & O_EXCL)
++		set_exclude(sdp, 1);
++
+ 	if (sdp->detached) {
+ 		retval = -ENODEV;
+-		goto error_out;
++		goto sem_out;
+ 	}
+ 	if (sfds_list_empty(sdp)) {	/* no existing opens on this device */
+ 		sdp->sgdebug = 0;
+@@ -331,17 +330,20 @@ sg_open(struct inode *inode, struct file *filp)
+ 	}
+ 	if ((sfp = sg_add_sfp(sdp, dev)))
+ 		filp->private_data = sfp;
+-	else {
++		/* retval is already provably zero at this point because of the
++		 * check after retval = scsi_autopm_get_device(sdp->device))
++		 */
++	else
++		retval = -ENOMEM;
++
++	if (retval) {
++sem_out:
+ 		if (flags & O_EXCL) {
+ 			set_exclude(sdp, 0);	/* undo if error */
+-			wake_up_interruptible(&sdp->o_excl_wait);
+-		}
+-		retval = -ENOMEM;
+-		goto error_out;
+-	}
+-	retval = 0;
++			up_write(&sdp->o_sem);
++		} else
++			up_read(&sdp->o_sem);
+ error_out:
+-	if (retval) {
+ 		scsi_autopm_put_device(sdp->device);
+ sdp_put:
+ 		scsi_device_put(sdp->device);
+@@ -358,13 +360,18 @@ sg_release(struct inode *inode, struct file *filp)
+ {
+ 	Sg_device *sdp;
+ 	Sg_fd *sfp;
++	int excl;
+ 
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
+ 
++	excl = get_exclude(sdp);
+ 	set_exclude(sdp, 0);
+-	wake_up_interruptible(&sdp->o_excl_wait);
++	if (excl)
++		up_write(&sdp->o_sem);
++	else
++		up_read(&sdp->o_sem);
+ 
+ 	scsi_autopm_put_device(sdp->device);
+ 	kref_put(&sfp->f_ref, sg_remove_sfp);
+@@ -1416,7 +1423,7 @@ static Sg_device *sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
+ 	sdp->disk = disk;
+ 	sdp->device = scsidp;
+ 	INIT_LIST_HEAD(&sdp->sfds);
+-	init_waitqueue_head(&sdp->o_excl_wait);
++	init_rwsem(&sdp->o_sem);
+ 	sdp->sg_tablesize = queue_max_segments(q);
+ 	sdp->index = k;
+ 	kref_init(&sdp->d_ref);
+@@ -2127,13 +2134,11 @@ static void sg_remove_sfp_usercontext(struct work_struct *work)
+ static void sg_remove_sfp(struct kref *kref)
+ {
+ 	struct sg_fd *sfp = container_of(kref, struct sg_fd, f_ref);
+-	struct sg_device *sdp = sfp->parentdp;
+ 	unsigned long iflags;
+ 
+ 	write_lock_irqsave(&sg_index_lock, iflags);
+ 	list_del(&sfp->sfd_siblings);
+ 	write_unlock_irqrestore(&sg_index_lock, iflags);
+-	wake_up_interruptible(&sdp->o_excl_wait);
+ 
+ 	INIT_WORK(&sfp->ew.work, sg_remove_sfp_usercontext);
+ 	schedule_work(&sfp->ew.work);
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+1.8.3.1
+
