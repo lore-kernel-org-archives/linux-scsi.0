@@ -1,61 +1,47 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 1/1 v1.1] arcmsr: Support Areca new SATA Raid Adapter
- ARC1214/1224/1264/1284 (Resend renew)
-Date: Thu, 29 Aug 2013 11:59:43 +0000
-Message-ID: <1377777581.2223.93.camel@dabdike>
-References: <CAKiknE_FJN7gRLMFHCfNOtjg73fLLCQ45yacHb+w1B46C5dJQA@mail.gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [SCSI] arcmsr: Support Areca new SATA Raid Adapter
+ ARC1214/1224/1264/1284
+Date: Thu, 29 Aug 2013 15:01:41 +0300
+Message-ID: <20130829120141.GI19256@mwanda>
+References: <20130828154848.GA571@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKiknE_FJN7gRLMFHCfNOtjg73fLLCQ45yacHb+w1B46C5dJQA@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <5B0720BB82FD9A478C89833A5BB1B6F8@sw.swsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?utf-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
-Cc: Tomas Henzl <thenzl@redhat.com>, "fengguang.wu@intel.com" <fengguang.wu@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:41572 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752784Ab3H2MBy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2013 08:01:54 -0400
+Content-Disposition: inline
+In-Reply-To: <20130828154848.GA571@elgon.mountain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ching2048@areca.com.tw
+Cc: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDEzLTA4LTI5IGF0IDEyOjU1ICswODAwLCDpu4PmuIXpmoYgd3JvdGU6DQo+IFVw
-ZGF0ZSB0aGUgcGF0Y2ggY29kZS4NCj4gDQo+IEZyb206IENoaW5nPGNoaW5nMjA0OEBhcmVjYS5j
-b20udHc+DQo+IA0KPiBTdXBwb3J0IEFyZWNhIG5ldyBTQVRBIFJhaWQgQWRhcHRlciBBUkMxMjE0
-LzEyMjQvMTI2NC8xMjg0Lg0KPiBNb2RpZnkgbWF4aW11bSBvdXRzdGFuZGluZyBjb21tYW5kIG51
-bWJlci4NCj4gTm90aWZ5IGNvbW1hbmQgY29tcGxldGUgd2l0aCBhdXRvIHJlcXVlc3Qgc2Vuc2Uu
-DQo+IEZpeCBidWcgb2YgdXBkYXRpbmcgYWRhcHRlciBmaXJtd2FyZSB0aHJvdWdoIGlvY3RsKEFS
-Q0hUVFApIGludGVyZmFjZS4NCj4gRml4IGNvZGluZyBzdHlsZSB3YXJuaW5nLg0KPiBGaXggY29t
-cGlsaW5nIHdhcm5pbmcuDQo+IEZpeCBBUkMxODgwIGhhcmR3YXJlIHJlc2V0Lg0KPiBGaXggY29k
-aW5nIHN0eWxlIC0gaW5kZW50DQoNClRoaXMgcGF0Y2ggaXMgdG9vIGJpZyBmb3IgdGhlIFNDU0kg
-bWFpbGluZyBsaXN0LiAgV2UgaGF2ZSBhIDQwMGsgbGltaXQuDQpZb3VyIHBhdGNoIGlzIDI5Mmss
-IHdoaWNoIHdvdWxkIG9yZGluYXJpbHkgYmUgT0ssIGJ1dCB5b3UgYXR0YWNoZWQgaXQNCnR3aWNl
-IChvbmNlIGlubGluZSBhbmQgb25jZSBhcyBhbiBhdHRhY2htZW50KSwgd2hpY2ggaXMgd2h5IGl0
-J3Mgbm90DQpnb2luZyB0aHJvdWdoLg0KDQo+IC0Je1BDSV9ERVZJQ0UoUENJX1ZFTkRPUl9JRF9B
-UkVDQSwgUENJX0RFVklDRV9JRF9BUkVDQV8xMzgwKX0sDQo+IC0Je1BDSV9ERVZJQ0UoUENJX1ZF
-TkRPUl9JRF9BUkVDQSwgUENJX0RFVklDRV9JRF9BUkVDQV8xMzgxKX0sDQoNCldoeSBhcmUgeW91
-IHJlbW92aW5nIHRoZXNlIGFkYXB0ZXJzIGZyb20gdGhlIGRyaXZlcj8NCg0KSSBhZ3JlZSB3aXRo
-IERhbiwgYWxsIHRoZXNlIHdoaXRlc3BhY2UgY2hhbmdlcyBtYWtlIHRoZSBwYXRjaCB2ZXJ5IGhh
-cmQNCnRvIHJlYWQgZm9yIHRoZSBzaWduaWZpY2FudCBwaWVjZXM7IGNhbid0IHRoZXkgYmUgZG9u
-ZSBzZXBhcmF0ZWx5Pw0KDQpTb21lIG9mIHRoZW0sIGxpa2UgdGhpcw0KDQoNCj4gLXN0YXRpYyB2
-b2lkIGFyY21zcl9oYmFfZG9vcmJlbGxfaXNyKHN0cnVjdCBBZGFwdGVyQ29udHJvbEJsb2NrICph
-Y2IpDQo+ICtzdGF0aWMgdm9pZA0KPiArYXJjbXNyX2hiYUFfZG9vcmJlbGxfaXNyKHN0cnVjdCBB
-ZGFwdGVyQ29udHJvbEJsb2NrICphY2IpDQo+ICB7DQo+ICAJdWludDMyX3Qgb3V0Ym91bmRfZG9v
-cmJlbGw7DQo+IC0Jc3RydWN0IE1lc3NhZ2VVbml0X0EgX19pb21lbSAqcmVnID0gYWNiLT5wbXVB
-Ow0KPiArCXN0cnVjdCBNZXNzYWdlVW5pdF9BIF9faW9tZW0gKnJlZyAgPSBhY2ItPnBtdUE7DQoN
-CkFyZW4ndCBldmVuIGNvcnJlY3QgKGxhc3Qgb25lIGludHJvZHVjZXMgYW4gZXh0cmEgc3B1cmlv
-dXMgc3BhY2UpLg0KDQpPdGhlcnMsIGxpa2UgdGhpczoNCg0KPiArCQlrZnJlZSgoY29uc3Qgdm9p
-ZCAqKXZlcl9hZGRyKTsNClsuLi5dDQo+IC0JCWtmcmVlKHZlcl9hZGRyKTsNCg0KQXJlIHN0eWxp
-c3RpY2FsbHkgd3Jvbmc6IHZlcl9hZGRyIGlzIGFuIHVuc2lnbmVkIGNoYXIgKjsgdGhlcmUncyBu
-bw0KcmVhc29uIHRvIGNhc3QgaXQgdG8gYW55dGhpbmcgYmVmb3JlIGNhbGxpbmcga2ZyZWUgKGFu
-eSBwb2ludGVyIGNhbiBiZQ0KcGFzc2VkIHdpdGhvdXQgY2FzdCB0byBhIGZ1bmN0aW9uIHRha2lu
-ZyBhIHZvaWQgKikNCg0KPiAtCQltZW1jcHkocHRtcHVzZXJidWZmZXIsIHBjbWRtZXNzYWdlZmxk
-LT5tZXNzYWdlZGF0YWJ1ZmZlciwgdXNlcl9sZW4pOw0KPiArCQltZW1jcHkoKHZvaWQgKilwdG1w
-dXNlcmJ1ZmZlciwNCj4gKwkJCShjb25zdCB2b2lkICopcGNtZG1lc3NhZ2VmbGQtPm1lc3NhZ2Vk
-YXRhYnVmZmVyLCB1c2VyX2xlbik7DQoNCllvdSBkbyBhIGxvdCBvZiB0aGlzIHNwdXJpb3VzIGNh
-c3RpbmcgdG8gdm9pZCAqOyBwbGVhc2UgZG9uJ3Q6DQoNCj4gLQkJfSB3aGlsZSAoKChyZWFkbCgm
-cG11Qy0+aG9zdF9kaWFnbm9zdGljKSAmIEFSQ01TUl9BUkMxODgwX0RpYWdXcml0ZV9FTkFCTEUp
-ID09IDApICYmIChjb3VudCA8IDUpKTsNCj4gLQkJd3JpdGVsKEFSQ01TUl9BUkMxODgwX1JFU0VU
-X0FEQVBURVIsICZwbXVDLT5ob3N0X2RpYWdub3N0aWMpOw0KPiArCQl9IHdoaWxlICgoKCh0ZW1w
-ID0gcmVhZGwoJnBtdUMtPmhvc3RfZGlhZ25vc3RpYykpICYNCj4gKwkJCUFSQ01TUl9BUkMxODgw
-X0RpYWdXcml0ZV9FTkFCTEUpID09IDApICYmDQo+ICsJCQkoY291bnQgPCA1KSk7DQoNCldoeSBh
-c3NpZ24gdG8gdGVtcD8gIFlvdSBuZXZlciByZWZlciB0byBpdCBhZ2Fpbi4NCg0KSSdtIHN1cmUg
-dGhlcmUgYXJlIG90aGVyIGlzc3VlcywgYnV0IHRoZSBtYXNzaXZlIGNvZGUgcmVmb3JtYXQgY2hh
-bmdlcw0KbWVhbiBJIHByb2JhYmx5IG1pc3NlZCB0aGVtLg0KDQpKYW1lcw0KDQo=
+One tool for breaking patches up is "git citool" highlight what you want
+to add to the patch and then right click and select "stage lines for
+commit".
+
+So for example let's go through the changes to
+drivers/scsi/arcmsr/arcmsr.h.  These should be broken up into multiple
+patches with the easiest whitespace patches first.
+
+The original patch adds 520 lines of code (I'm looking at the plus marks
+in git show 17628f3a062b | diffstat).  Out of those 392 line are pure
+white space changes such as tabs or indents.  9 lines are adding
+parenthesis around macros.  4 lines are changing int32_t to uint32_t.
+It's not clear if there was a signedness bug in the original code or if
+this is purely cosmetic.  That should be mentioned in the changelog.
+The remaining 115 lines are related to the new feature.  So this should
+be a series of patches.
+
+[patch 1/4] whitespace (this is the largest patch in the series).
+[patch 2/4] add parenthesis
+[patch 3/4] change signed to unsigned
+[patch 4/4] add feature (this would touch other the other files as well)
+
+The first 3 patches are trivial to review and then the last one is much
+smaller and easier to review than when everything was mixed together.
+
+regards,
+dan carpenter
