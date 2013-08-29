@@ -1,59 +1,61 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH -next] ufs: fix source address of the read descriptor
-Date: Thu, 29 Aug 2013 23:11:32 +0530
-Message-ID: <CALMYJDsHEf2+ebZog__2Z3Cht4aoqpdtdqrwbCao7OW2EWL9_Q@mail.gmail.com>
-References: <1377702030-12901-1-git-send-email-mita@fixstars.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Hiral Patel <hiralpat@cisco.com>
+Subject: [PATCH 3/9] fnic: On system with >1.1TB RAM, VIC fails multipath after boot up
+Date: Thu, 29 Aug 2013 10:57:21 -0700
+Message-ID: <1377799047-12644-3-git-send-email-hiralpat@cisco.com>
+References: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:62503 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754517Ab3H2RmG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2013 13:42:06 -0400
-Received: by mail-bk0-f54.google.com with SMTP id mz12so302170bkb.41
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2013 10:42:02 -0700 (PDT)
-In-Reply-To: <1377702030-12901-1-git-send-email-mita@fixstars.com>
+Received: from mtv-iport-4.cisco.com ([173.36.130.15]:28432 "EHLO
+	mtv-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756184Ab3H2SCA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2013 14:02:00 -0400
+In-Reply-To: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <mita@fixstars.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, James Bottomley <JBottomley@parallels.com>
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, Hiral Patel <hiralpat@cisco.com>, Brian Uchino <buchino@cisco.com>
 
-On Wed, Aug 28, 2013 at 8:30 PM, Akinobu Mita <mita@fixstars.com> wrote:
-> When the query request with read descriptor opcode is completed, the
-> descriptor is copied from response UPIU to the buffer that the caller
-> has specified.  Unfortunately the source address of the descriptor is
-> broken due to the unnecessary address-of operator.
->
-> Signed-off-by: Akinobu Mita <mita@fixstars.com>
-> Cc: Dolev Raviv <draviv@codeaurora.org>
-> Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-> Cc: Santosh Y <santoshsy@gmail.com>
-> Cc: James Bottomley <JBottomley@Parallels.com>
-> Cc: linux-scsi@vger.kernel.org
-> ---
->  drivers/scsi/ufs/ufshcd.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index a0f5ac2..7a319c6 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -454,8 +454,7 @@ void ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
->
->         /* Get the descriptor */
->         if (lrbp->ucd_rsp_ptr->qr.opcode == UPIU_QUERY_OPCODE_READ_DESC) {
-> -               u8 *descp = (u8 *)&lrbp->ucd_rsp_ptr +
-> -                               GENERAL_UPIU_REQUEST_SIZE;
-> +               u8 *descp = (u8 *)lrbp->ucd_rsp_ptr + GENERAL_UPIU_REQUEST_SIZE;
->                 u16 len;
->
->                 /* data segment length */
-> --
-> 1.8.3.1
->
+Issue was seen when SCSI buffer address is more than 40 bits in system
+with more than 1.1TB RAM. When SCSI buffer is passed to VIC, it is failing
+to map to correct buffer address, as DMA mask is set to 40 bits in driver
+initialization. Corrected DMA_MASK from 40-bits to 64-bits to avoid masking
+41-64 bits addresses.
 
-Acked-by: Santosh Y <santoshsy@gmail.com>
+Signed-off-by: Brian Uchino <buchino@cisco.com>
+Signed-off-by: Hiral Patel <hiralpat@cisco.com>
+---
+ drivers/scsi/fnic/fnic_main.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index b619dab..835a9cd 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -581,10 +581,10 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	pci_set_master(pdev);
+ 
+ 	/* Query PCI controller on system for DMA addressing
+-	 * limitation for the device.  Try 40-bit first, and
++	 * limitation for the device.  Try 64-bit first, and
+ 	 * fail to 32-bit.
+ 	 */
+-	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(40));
++	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+ 	if (err) {
+ 		err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+ 		if (err) {
+@@ -601,10 +601,10 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			goto err_out_release_regions;
+ 		}
+ 	} else {
+-		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(40));
++		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
+ 		if (err) {
+ 			shost_printk(KERN_ERR, fnic->lport->host,
+-				     "Unable to obtain 40-bit DMA "
++				     "Unable to obtain 64-bit DMA "
+ 				     "for consistent allocations, aborting.\n");
+ 			goto err_out_release_regions;
+ 		}
 -- 
-~Santosh
+1.7.10.4
+
