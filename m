@@ -1,37 +1,44 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 5/9] libsas: Enable new EH timeout handler
-Date: Thu, 29 Aug 2013 15:32:16 +0200
-Message-ID: <1377783140-57191-6-git-send-email-hare@suse.de>
-References: <1377783140-57191-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57523 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754729Ab3H2NcZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Aug 2013 09:32:25 -0400
-In-Reply-To: <1377783140-57191-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jan-Simon =?ISO-8859-1?Q?M=F6ller?= <dl9pf@gmx.de>
+Subject: Re: [PATCH] [TRIVIAL] Remove braces in drivers/scsi/in2000.h to fix build for clang. No functional change otherwise.
+Date: Thu, 29 Aug 2013 16:13:05 +0200
+Message-ID: <4228569.UTsusHNv0I@aragorn.auenland.lan>
+References: <1377033546-19475-1-git-send-email-dl9pf@gmx.de> <2050670.KsM0dPm3or@aragorn.auenland.lan> <4059776.Z90q7kXsSC@aragorn.auenland.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4059776.Z90q7kXsSC@aragorn.auenland.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: PaX Team <pageexec@freemail.hu>, Behan Webster <behanw@converseincode.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/libsas/sas_scsi_host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Ping.
+@Christoph  do you take care of removing then ?=20
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index da3aee1..6eb2f0c 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -864,7 +864,7 @@ enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
- {
- 	scmd_printk(KERN_DEBUG, cmd, "command %p timed out\n", cmd);
- 
--	return BLK_EH_NOT_HANDLED;
-+	return scsi_abort_command(cmd);
- }
- 
- int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
--- 
-1.7.12.4
+Or can we merge this patch as-is now.
 
+Best,
+JS
+
+
+On Wednesday 21 August 2013 15:11:33 Jan-Simon M=F6ller wrote:
+> On Wednesday 21 August 2013 09:26:14 Jan-Simon M=F6ller wrote:
+> > > > Description:
+> > > >   Clang chokes on the notation "insw (%%dx)" but works for "ins=
+w %%dx"
+> > > >   (outsw likewise); GNU as accepts both forms.
+> > > >=20
+> > > > Signed-off-by: Jan-Simon M??ller <dl9pf@gmx.de>
+> > >=20
+> > > I think the right fix is to simply kill the FAST_READ_IO/FAST_WRI=
+TE_IO
+> > > defines and their associated inline assembly entirely.
+> >=20
+> > No objection ;) .
+>=20
+> @Christoph Hellwig:
+> Do you take care of removing it then ?
+>=20
+> BR,
+> JS
