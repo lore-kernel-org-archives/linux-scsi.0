@@ -1,111 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC/PATCH 2/2] scsi: ufs: requests completion handling
-Date: Thu, 29 Aug 2013 22:36:56 +0400
-Message-ID: <1377801416.13031.30.camel@dabdike>
-References: <1377766493-5269-1-git-send-email-rshvili@codeaurora.org>
-	 <1377768462.2223.70.camel@dabdike>
-	 <06be01cea4de$77b79ce0$6726d6a0$@codeaurora.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [GIT PULL] target fixes for v3.11-rc7
+Date: Thu, 29 Aug 2013 12:01:51 -0700
+Message-ID: <1377802911.32763.281.camel@haakon3.risingtidesystems.com>
+References: <1377379570.32763.122.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <06be01cea4de$77b79ce0$6726d6a0$@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: 'Raviv Shvili' <rshvili@codeaurora.org>, scsi-misc@vger.kernel.org, linux-arm-msm@vger.kernel.org, "'open list:SCSI SUBSYSTEM'" <linux-scsi@vger.kernel.org>, 'open list' <linux-kernel@vger.kernel.org>, merez@codeaurora.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1377379570.32763.122.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2013-08-29 at 20:37 +0300, Yaniv Gardi wrote:
-> Hi James,
-> 
-> See reply inline
-> 
-> Thanks,
-> Yaniv
-> 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
-> Sent: Thursday, August 29, 2013 12:28 PM
-> To: Raviv Shvili
-> Cc: scsi-misc@vger.kernel.org; linux-arm-msm@vger.kernel.org; open list:SCSI
-> SUBSYSTEM; open list
-> Subject: Re: [RFC/PATCH 2/2] scsi: ufs: requests completion handling
-> 
-> On Thu, 2013-08-29 at 11:54 +0300, Raviv Shvili wrote:
-> > The patch solves the request completion report order. At the current 
-> > implementation, when multiple requests end at the same interrupt call, 
-> > the requests reported as completed according to a bitmap scan from the 
-> > lowest tags to the highest, regardless the requests priority. That 
-> > cause to a priority unfairness and starvation of requests with a high
-> tags.
-> 
-> It does?  Why?  What seems to happen is that you loop over all the pending
-> requests and call done for them.  The way SCSI handles done commands is that
-> it queues them to the softirq, so there doesn't look to be any real
-> unfairness problem here.
-> 
-> <yaniv> The unfairness is that currently the loop goes over the tags
-> from 0
-> to NUTRS(i.e 31), and calls done() at this order, regardless of the
-> task_attribute they hold.
-> Also, the benefit in performance is that instead of going over NUTRS
-> (32)
-> iteration, we simple call done() only for the exact of completed
-> request
-> (and according to their task_attribute priority). 
+Hi again Linus,
 
-Yes, I know that.  But all done does is queue the completion to the
-softirq.  All you get with this is a reordering of that queue.  If you
-can actually measure the performance impact of that, I'd be very
-surprised.  We're talking under a microsecond in a round trip activity
-that takes tens to hundreds of miliseconds to issue and complete.
+Ping ^2 on this PULL request for v3.11-rc7 -> v3.11
 
-> Scenario: a new HEAD_OF_QUEUE request that is completed during the
-> current
-> loop, will be served only in the next interrupt (since the DOORBELL
-> will be
-> read again only in the next interrupt), and saying it is a high tag,
-> it will
-> be completed lastly. This patch will fix it, as I see that.
+Also just got another confirmation on INQUIRY vendor + model response
+data fix included below, this time specifically with a MSFT multipath
+client setup.
 
-It fixes something that isn't a problem.  The softirq won't even be
-activated until all pending interrupts are serviced, so a command
-arriving in the middle of processing gets immediately serviced on the
-next interrupt before the softirq activates.
+It's not CC'ed to stable here, but given the amount of people it effects
+I'll be sending to greg-kh separately.
 
-James
+Please PULL.
 
-> > SCSI Architecture Model 5 defines 3 task-attributes that are part of 
-> > each SCSI command, and integrated into each Command UPIU. The 
-> > task-attribute is for the device usage, it determines the order in 
-> > which the device prioritizes the requests.
-> > The task-attributes according to their priority are (from high to low):
-> > HEAD OF QUEUE, ORDERED and SIMPLE. There is a queue per task-attribute.
-> > Each request is assigned to one of the above sw queues according to 
-> > its task attribute field.
-> > Requests which are not SCSI commands (native UFS) will be assigned to 
-> > the lowest priority queue, since there is no much difference between 
-> > completing it first or last..
-> > 
-> > When request is completed, we go over the queues (from the queue's 
-> > highest priority to the lowest) and report the completion.
-> > 
-> > Requests are removed from the queue in case of command completion or 
-> > when aborting pending command.
+Thank you,
+
+--nab
+
+On Sat, 2013-08-24 at 14:26 -0700, Nicholas A. Bellinger wrote:
+> Hi Linus,
 > 
-> Since we never use anything other than SIMPLE attributes, this rather looks
-> like a solution in search of a problem.
+> Here is the current set of target-pending fixes for v3.11-rc7.
 > 
-> James
+> Please go ahead and pull from:
 > 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+> 
+> The first patch is to address a long standing issue where INQUIRY vendor
+> + model response data was not correctly padded with ASCII spaces,
+> causing one particular multipath stack to not function with our LUNs.
+> 
+> The remaining patches are additional iscsi-target regression fixes for
+> the post >= v3.10 iser-target changes.  The second and third are failure
+> cases that have appeared during further testing, and the forth is only
+> reproducible with malformed packets.
+> 
+> Thank you,
+> 
+> --nab
+> 
+> Nicholas Bellinger (4):
+>   target: Fix trailing ASCII space usage in INQUIRY vendor+model
+>   iscsi-target: Fix ImmediateData=Yes failure regression in >= v3.10
+>   iscsi-target: Fix iscsit_transport reference leak during NP thread
+>     reset
+>   iscsi-target: Fix potential NULL pointer in solicited NOPOUT reject
+> 
+>  drivers/target/iscsi/iscsi_target.c       |   17 ++++++++++-------
+>  drivers/target/iscsi/iscsi_target_login.c |    9 ++++-----
+>  drivers/target/target_core_spc.c          |    9 ++++++---
+>  3 files changed, 20 insertions(+), 15 deletions(-)
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
