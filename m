@@ -1,218 +1,202 @@
 From: Hiral Patel <hiralpat@cisco.com>
-Subject: [PATCH 5/9] fnic: Hitting BUG_ON(io_req->abts_done) in fnic_rport_exch_reset
-Date: Thu, 29 Aug 2013 10:57:23 -0700
-Message-ID: <1377799047-12644-5-git-send-email-hiralpat@cisco.com>
-References: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
+Subject: [PATCH 1/9] fnic: FC stat param seconds_since_last_reset not getting updated
+Date: Thu, 29 Aug 2013 10:57:19 -0700
+Message-ID: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtv-iport-2.cisco.com ([173.36.130.13]:47604 "EHLO
-	mtv-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756378Ab3H2SLk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2013 14:11:40 -0400
-In-Reply-To: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
+Received: from mtv-iport-1.cisco.com ([173.36.130.12]:8936 "EHLO
+	mtv-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756350Ab3H2SLd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2013 14:11:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, Hiral Patel <hiralpat@cisco.com>, Sesidhar Beddel <sebaddel@cisco.com>
+Cc: JBottomley@parallels.com, Hiral Patel <hiralpat@cisco.com>, Narsimhulu Musini <nmusini@cisco.com>
 
-Hitting BUG_ON(io_req->abts_done) in fnic_rport_exch_reset in case of
-timing issue and also to some extent locking issue where abts and terminate
-is happening around same timing.
+Code to reset fc_host statistics.
+echo 1 > /sys/class/fc_host/hostX/statistics/reset_statistics clears fc_host stats,
+the code also issues command to fnic firmware to clear vnic stats.
 
-The code changes are intended to update CMD_STATE(sc) and
-io_req->abts_done together.
-
-Signed-off-by: Sesidhar Beddel <sebaddel@cisco.com>
+Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 Signed-off-by: Hiral Patel <hiralpat@cisco.com>
 ---
- drivers/scsi/fnic/fnic_scsi.c |   70 ++++++++++++++++++++++++-----------------
- 1 file changed, 42 insertions(+), 28 deletions(-)
+ drivers/scsi/fnic/fnic.h      |    5 ++
+ drivers/scsi/fnic/fnic_main.c |  108 ++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 112 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index a09dd8d..100cdba 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -111,6 +111,12 @@ static inline spinlock_t *fnic_io_lock_hash(struct fnic *fnic,
- 	return &fnic->io_req_lock[hash];
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index c18c681..d276aaf 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -154,6 +154,9 @@ do {								\
+ 	FNIC_CHECK_LOGGING(FNIC_ISR_LOGGING,			\
+ 			 shost_printk(kern_level, host, fmt, ##args);)
+ 
++#define FNIC_MAIN_NOTE(kern_level, host, fmt, args...)          \
++	shost_printk(kern_level, host, fmt, ##args)
++
+ extern const char *fnic_state_str[];
+ 
+ enum fnic_intx_intr_index {
+@@ -215,6 +218,7 @@ struct fnic {
+ 
+ 	struct vnic_stats *stats;
+ 	unsigned long stats_time;	/* time of stats update */
++	unsigned long stats_reset_time; /* time of stats reset */
+ 	struct vnic_nic_cfg *nic_cfg;
+ 	char name[IFNAMSIZ];
+ 	struct timer_list notify_timer; /* used for MSI interrupts */
+@@ -359,4 +363,5 @@ fnic_chk_state_flags_locked(struct fnic *fnic, unsigned long st_flags)
+ 	return ((fnic->state_flags & st_flags) == st_flags);
+ }
+ void __fnic_set_state_flags(struct fnic *, unsigned long, unsigned long);
++void fnic_dump_fchost_stats(struct Scsi_Host *, struct fc_host_statistics *);
+ #endif /* _FNIC_H_ */
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 42e15ee..b619dab 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -126,6 +126,7 @@ fnic_set_rport_dev_loss_tmo(struct fc_rport *rport, u32 timeout)
+ static void fnic_get_host_speed(struct Scsi_Host *shost);
+ static struct scsi_transport_template *fnic_fc_transport;
+ static struct fc_host_statistics *fnic_get_stats(struct Scsi_Host *);
++static void fnic_reset_host_stats(struct Scsi_Host *);
+ 
+ static struct fc_function_template fnic_fc_functions = {
+ 
+@@ -153,6 +154,7 @@ static struct fc_function_template fnic_fc_functions = {
+ 	.set_rport_dev_loss_tmo = fnic_set_rport_dev_loss_tmo,
+ 	.issue_fc_host_lip = fnic_reset,
+ 	.get_fc_host_stats = fnic_get_stats,
++	.reset_fc_host_stats = fnic_reset_host_stats,
+ 	.dd_fcrport_size = sizeof(struct fc_rport_libfc_priv),
+ 	.terminate_rport_io = fnic_terminate_rport_io,
+ 	.bsg_request = fc_lport_bsg_request,
+@@ -206,13 +208,116 @@ static struct fc_host_statistics *fnic_get_stats(struct Scsi_Host *host)
+ 	stats->error_frames = vs->tx.tx_errors + vs->rx.rx_errors;
+ 	stats->dumped_frames = vs->tx.tx_drops + vs->rx.rx_drop;
+ 	stats->invalid_crc_count = vs->rx.rx_crc_errors;
+-	stats->seconds_since_last_reset = (jiffies - lp->boot_time) / HZ;
++	stats->seconds_since_last_reset =
++			(jiffies - fnic->stats_reset_time) / HZ;
+ 	stats->fcp_input_megabytes = div_u64(fnic->fcp_input_bytes, 1000000);
+ 	stats->fcp_output_megabytes = div_u64(fnic->fcp_output_bytes, 1000000);
+ 
+ 	return stats;
  }
  
-+static inline spinlock_t *fnic_io_lock_tag(struct fnic *fnic,
-+					    int tag)
++/*
++ * fnic_dump_fchost_stats
++ * note : dumps fc_statistics into system logs
++ */
++void fnic_dump_fchost_stats(struct Scsi_Host *host,
++				struct fc_host_statistics *stats)
 +{
-+	return &fnic->io_req_lock[tag & (FNIC_IO_LOCKS - 1)];
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: seconds since last reset = %llu\n",
++			stats->seconds_since_last_reset);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: tx frames		= %llu\n",
++			stats->tx_frames);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: tx words		= %llu\n",
++			stats->tx_words);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: rx frames		= %llu\n",
++			stats->rx_frames);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: rx words		= %llu\n",
++			stats->rx_words);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: lip count		= %llu\n",
++			stats->lip_count);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: nos count		= %llu\n",
++			stats->nos_count);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: error frames		= %llu\n",
++			stats->error_frames);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: dumped frames	= %llu\n",
++			stats->dumped_frames);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: link failure count	= %llu\n",
++			stats->link_failure_count);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: loss of sync count	= %llu\n",
++			stats->loss_of_sync_count);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: loss of signal count	= %llu\n",
++			stats->loss_of_signal_count);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: prim seq protocol err count = %llu\n",
++			stats->prim_seq_protocol_err_count);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: invalid tx word count= %llu\n",
++			stats->invalid_tx_word_count);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: invalid crc count	= %llu\n",
++			stats->invalid_crc_count);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: fcp input requests	= %llu\n",
++			stats->fcp_input_requests);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: fcp output requests	= %llu\n",
++			stats->fcp_output_requests);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: fcp control requests	= %llu\n",
++			stats->fcp_control_requests);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: fcp input megabytes	= %llu\n",
++			stats->fcp_input_megabytes);
++	FNIC_MAIN_NOTE(KERN_NOTICE, host,
++			"fnic: fcp output megabytes	= %llu\n",
++			stats->fcp_output_megabytes);
++	return;
 +}
 +
- /*
-  * Unmap the data buffer and sense buffer for an io_req,
-  * also unmap and free the device-private scatter/gather list.
-@@ -956,9 +962,7 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 			spin_unlock_irqrestore(io_lock, flags);
- 			return;
- 		}
--		CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
- 		CMD_ABTS_STATUS(sc) = hdr_status;
--
- 		CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_DONE;
- 		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 			      "abts cmpl recd. id %d status %s\n",
-@@ -1116,7 +1120,7 @@ int fnic_wq_copy_cmpl_handler(struct fnic *fnic, int copy_work_to_do)
- 
- static void fnic_cleanup_io(struct fnic *fnic, int exclude_id)
++/*
++ * fnic_reset_host_stats : clears host stats
++ * note : called when reset_statistics set under sysfs dir
++ */
++static void fnic_reset_host_stats(struct Scsi_Host *host)
++{
++	int ret;
++	struct fc_lport *lp = shost_priv(host);
++	struct fnic *fnic = lport_priv(lp);
++	struct fc_host_statistics *stats;
++	unsigned long flags;
++
++	/* dump current stats, before clearing them */
++	stats = fnic_get_stats(host);
++	fnic_dump_fchost_stats(host, stats);
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	ret = vnic_dev_stats_clear(fnic->vdev);
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++
++	if (ret) {
++		FNIC_MAIN_DBG(KERN_DEBUG, fnic->lport->host,
++				"fnic: Reset vnic stats failed"
++				" 0x%x", ret);
++		return;
++	}
++	fnic->stats_reset_time = jiffies;
++	memset(stats, 0, sizeof(*stats));
++
++	return;
++}
++
+ void fnic_log_q_error(struct fnic *fnic)
  {
--	unsigned int i;
-+	int i;
- 	struct fnic_io_req *io_req;
- 	unsigned long flags = 0;
- 	struct scsi_cmnd *sc;
-@@ -1127,12 +1131,14 @@ static void fnic_cleanup_io(struct fnic *fnic, int exclude_id)
- 		if (i == exclude_id)
- 			continue;
- 
-+		io_lock = fnic_io_lock_tag(fnic, i);
-+		spin_lock_irqsave(io_lock, flags);
- 		sc = scsi_host_find_tag(fnic->lport->host, i);
--		if (!sc)
-+		if (!sc) {
-+			spin_unlock_irqrestore(io_lock, flags);
- 			continue;
-+		}
- 
--		io_lock = fnic_io_lock_hash(fnic, sc);
--		spin_lock_irqsave(io_lock, flags);
- 		io_req = (struct fnic_io_req *)CMD_SP(sc);
- 		if ((CMD_FLAGS(sc) & FNIC_DEVICE_RESET) &&
- 			!(CMD_FLAGS(sc) & FNIC_DEV_RST_DONE)) {
-@@ -1310,12 +1316,13 @@ static void fnic_rport_exch_reset(struct fnic *fnic, u32 port_id)
- 
- 	for (tag = 0; tag < FNIC_MAX_IO_REQ; tag++) {
- 		abt_tag = tag;
-+		io_lock = fnic_io_lock_tag(fnic, tag);
-+		spin_lock_irqsave(io_lock, flags);
- 		sc = scsi_host_find_tag(fnic->lport->host, tag);
--		if (!sc)
-+		if (!sc) {
-+			spin_unlock_irqrestore(io_lock, flags);
- 			continue;
--
--		io_lock = fnic_io_lock_hash(fnic, sc);
--		spin_lock_irqsave(io_lock, flags);
-+		}
- 
- 		io_req = (struct fnic_io_req *)CMD_SP(sc);
- 
-@@ -1426,16 +1433,19 @@ void fnic_terminate_rport_io(struct fc_rport *rport)
- 
- 	for (tag = 0; tag < FNIC_MAX_IO_REQ; tag++) {
- 		abt_tag = tag;
-+		io_lock = fnic_io_lock_tag(fnic, tag);
-+		spin_lock_irqsave(io_lock, flags);
- 		sc = scsi_host_find_tag(fnic->lport->host, tag);
--		if (!sc)
-+		if (!sc) {
-+			spin_unlock_irqrestore(io_lock, flags);
- 			continue;
-+		}
- 
- 		cmd_rport = starget_to_rport(scsi_target(sc->device));
--		if (rport != cmd_rport)
-+		if (rport != cmd_rport) {
-+			spin_unlock_irqrestore(io_lock, flags);
- 			continue;
--
--		io_lock = fnic_io_lock_hash(fnic, sc);
--		spin_lock_irqsave(io_lock, flags);
-+		}
- 
- 		io_req = (struct fnic_io_req *)CMD_SP(sc);
- 
-@@ -1648,13 +1658,15 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	io_req->abts_done = NULL;
- 
- 	/* fw did not complete abort, timed out */
--	if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING) {
-+	if (CMD_ABTS_STATUS(sc) == FCPIO_INVALID_CODE) {
- 		spin_unlock_irqrestore(io_lock, flags);
- 		CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_TIMED_OUT;
- 		ret = FAILED;
- 		goto fnic_abort_cmd_end;
+ 	unsigned int i;
+@@ -719,6 +824,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	}
  
-+	CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
-+
- 	/*
- 	 * firmware completed the abort, check the status,
- 	 * free the io_req irrespective of failure or success
-@@ -1753,16 +1765,17 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 	enum fnic_ioreq_state old_ioreq_state;
+ 	fc_lport_init_stats(lp);
++	fnic->stats_reset_time = jiffies;
  
- 	for (tag = 0; tag < FNIC_MAX_IO_REQ; tag++) {
-+		io_lock = fnic_io_lock_tag(fnic, tag);
-+		spin_lock_irqsave(io_lock, flags);
- 		sc = scsi_host_find_tag(fnic->lport->host, tag);
- 		/*
- 		 * ignore this lun reset cmd or cmds that do not belong to
- 		 * this lun
- 		 */
--		if (!sc || sc == lr_sc || sc->device != lun_dev)
-+		if (!sc || sc == lr_sc || sc->device != lun_dev) {
-+			spin_unlock_irqrestore(io_lock, flags);
- 			continue;
--
--		io_lock = fnic_io_lock_hash(fnic, sc);
--		spin_lock_irqsave(io_lock, flags);
-+		}
+ 	fc_lport_config(lp);
  
- 		io_req = (struct fnic_io_req *)CMD_SP(sc);
- 
-@@ -1791,6 +1804,11 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 			spin_unlock_irqrestore(io_lock, flags);
- 			continue;
- 		}
-+
-+		if (io_req->abts_done)
-+			shost_printk(KERN_ERR, fnic->lport->host,
-+			  "%s: io_req->abts_done is set state is %s\n",
-+			  __func__, fnic_ioreq_state_to_str(CMD_STATE(sc)));
- 		old_ioreq_state = CMD_STATE(sc);
- 		/*
- 		 * Any pending IO issued prior to reset is expected to be
-@@ -1801,11 +1819,6 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 		 */
- 		CMD_STATE(sc) = FNIC_IOREQ_ABTS_PENDING;
- 
--		if (io_req->abts_done)
--			shost_printk(KERN_ERR, fnic->lport->host,
--			  "%s: io_req->abts_done is set state is %s\n",
--			  __func__, fnic_ioreq_state_to_str(CMD_STATE(sc)));
--
- 		BUG_ON(io_req->abts_done);
- 
- 		abt_tag = tag;
-@@ -1858,12 +1871,13 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 		io_req->abts_done = NULL;
- 
- 		/* if abort is still pending with fw, fail */
--		if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING) {
-+		if (CMD_ABTS_STATUS(sc) == FCPIO_INVALID_CODE) {
- 			spin_unlock_irqrestore(io_lock, flags);
- 			CMD_FLAGS(sc) |= FNIC_IO_ABT_TERM_DONE;
- 			ret = 1;
- 			goto clean_pending_aborts_end;
- 		}
-+		CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
- 		CMD_SP(sc) = NULL;
- 		spin_unlock_irqrestore(io_lock, flags);
- 
-@@ -2061,8 +2075,8 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 		spin_unlock_irqrestore(io_lock, flags);
- 		int_to_scsilun(sc->device->lun, &fc_lun);
- 		/*
--		 * Issue abort and terminate on the device reset request.
--		 * If q'ing of the abort fails, retry issue it after a delay.
-+		 * Issue abort and terminate on device reset request.
-+		 * If q'ing of terminate fails, retry it after a delay.
- 		 */
- 		while (1) {
- 			spin_lock_irqsave(io_lock, flags);
 -- 
 1.7.10.4
 
