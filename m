@@ -1,44 +1,39 @@
-From: Jan-Simon =?ISO-8859-1?Q?M=F6ller?= <dl9pf@gmx.de>
-Subject: Re: [PATCH] [TRIVIAL] Remove braces in drivers/scsi/in2000.h to fix build for clang. No functional change otherwise.
-Date: Thu, 29 Aug 2013 16:13:05 +0200
-Message-ID: <4228569.UTsusHNv0I@aragorn.auenland.lan>
-References: <1377033546-19475-1-git-send-email-dl9pf@gmx.de> <2050670.KsM0dPm3or@aragorn.auenland.lan> <4059776.Z90q7kXsSC@aragorn.auenland.lan>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v1.2 1/1] arcmsr: Support Areca new SATA Raid Adapter
+ ARC1214/1224/1264/1284
+Date: Thu, 29 Aug 2013 07:18:56 -0700
+Message-ID: <1377785936.1928.97.camel@joe-AO722>
+References: <1377748071.4571.40.camel@CentOS6.4-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4059776.Z90q7kXsSC@aragorn.auenland.lan>
+In-Reply-To: <1377748071.4571.40.camel@CentOS6.4-64>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: PaX Team <pageexec@freemail.hu>, Behan Webster <behanw@converseincode.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ching <ching2048@areca.com.tw>
+Cc: jejb@kernel.com, thenzl@redhat.com, fengguang.wu@intel.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jbottomley@parallels.com
 List-Id: linux-scsi@vger.kernel.org
 
-Ping.
-@Christoph  do you take care of removing then ?=20
+On Thu, 2013-08-29 at 11:47 +0800, Ching wrote:
+> From: Ching <ching2048@areca.com.tw>
+> 
+> Support Areca new SATA Raid Adapter ARC1214/1224/1264/1284
+> Modify maximum outstanding command number.
+> Notify command complete with auto request sense data.
+> Fix bug of updating adapter firmware through ioctl(ARCHTTP) interface.
+> Fix coding style warning.
+> Fix compiling warning.
+> Fix ARC188x hardware reset.
+> Fix indent coding.
 
-Or can we merge this patch as-is now.
+Hi again Ching.
 
-Best,
-JS
+I think it would be better to separate the coding style
+warning and indent coding patches from the fixes and
+send each line entry above as an individual patch.
 
+> Singed-off-by: Ching <ching2048@areca.com.tw>
 
-On Wednesday 21 August 2013 15:11:33 Jan-Simon M=F6ller wrote:
-> On Wednesday 21 August 2013 09:26:14 Jan-Simon M=F6ller wrote:
-> > > > Description:
-> > > >   Clang chokes on the notation "insw (%%dx)" but works for "ins=
-w %%dx"
-> > > >   (outsw likewise); GNU as accepts both forms.
-> > > >=20
-> > > > Signed-off-by: Jan-Simon M??ller <dl9pf@gmx.de>
-> > >=20
-> > > I think the right fix is to simply kill the FAST_READ_IO/FAST_WRI=
-TE_IO
-> > > defines and their associated inline assembly entirely.
-> >=20
-> > No objection ;) .
->=20
-> @Christoph Hellwig:
-> Do you take care of removing it then ?
->=20
-> BR,
-> JS
+Typo here
+
+Signed-off-by:
