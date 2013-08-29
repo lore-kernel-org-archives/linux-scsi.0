@@ -1,202 +1,71 @@
 From: Hiral Patel <hiralpat@cisco.com>
-Subject: [PATCH 1/9] fnic: FC stat param seconds_since_last_reset not getting updated
-Date: Thu, 29 Aug 2013 10:57:19 -0700
-Message-ID: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
+Subject: [PATCH 4/9] fnic: Remove QUEUE_FULL handling code
+Date: Thu, 29 Aug 2013 10:57:22 -0700
+Message-ID: <1377799047-12644-4-git-send-email-hiralpat@cisco.com>
+References: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtv-iport-1.cisco.com ([173.36.130.12]:8936 "EHLO
-	mtv-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756350Ab3H2SLd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2013 14:11:33 -0400
+Received: from mtv-iport-2.cisco.com ([173.36.130.13]:47604 "EHLO
+	mtv-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756386Ab3H2SLm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2013 14:11:42 -0400
+In-Reply-To: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, Hiral Patel <hiralpat@cisco.com>, Narsimhulu Musini <nmusini@cisco.com>
+Cc: JBottomley@parallels.com, Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>
 
-Code to reset fc_host statistics.
-echo 1 > /sys/class/fc_host/hostX/statistics/reset_statistics clears fc_host stats,
-the code also issues command to fnic firmware to clear vnic stats.
+Remove fnic driver QUEUE_FULL handling code instead let SCSI mid layer
+handle queue full and use its algorithm to ramp down/up queue
 
-Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
+Signed-off-by: Suma Ramars <sramars@cisco.com>
 Signed-off-by: Hiral Patel <hiralpat@cisco.com>
 ---
- drivers/scsi/fnic/fnic.h      |    5 ++
- drivers/scsi/fnic/fnic_main.c |  108 ++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 112 insertions(+), 1 deletion(-)
+ drivers/scsi/fnic/fnic_scsi.c |   32 --------------------------------
+ 1 file changed, 32 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index c18c681..d276aaf 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -154,6 +154,9 @@ do {								\
- 	FNIC_CHECK_LOGGING(FNIC_ISR_LOGGING,			\
- 			 shost_printk(kern_level, host, fmt, ##args);)
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index ef3c463..a09dd8d 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -818,38 +818,6 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 		if (icmnd_cmpl->flags & FCPIO_ICMND_CMPL_RESID_UNDER)
+ 			xfer_len -= icmnd_cmpl->residual;
  
-+#define FNIC_MAIN_NOTE(kern_level, host, fmt, args...)          \
-+	shost_printk(kern_level, host, fmt, ##args)
-+
- extern const char *fnic_state_str[];
+-		/*
+-		 * If queue_full, then try to reduce queue depth for all
+-		 * LUNS on the target. Todo: this should be accompanied
+-		 * by a periodic queue_depth rampup based on successful
+-		 * IO completion.
+-		 */
+-		if (icmnd_cmpl->scsi_status == QUEUE_FULL) {
+-			struct scsi_device *t_sdev;
+-			int qd = 0;
+-
+-			shost_for_each_device(t_sdev, sc->device->host) {
+-				if (t_sdev->id != sc->device->id)
+-					continue;
+-
+-				if (t_sdev->queue_depth > 1) {
+-					qd = scsi_track_queue_full
+-						(t_sdev,
+-						 t_sdev->queue_depth - 1);
+-					if (qd == -1)
+-						qd = t_sdev->host->cmd_per_lun;
+-					shost_printk(KERN_INFO,
+-						     fnic->lport->host,
+-						     "scsi[%d:%d:%d:%d"
+-						     "] queue full detected,"
+-						     "new depth = %d\n",
+-						     t_sdev->host->host_no,
+-						     t_sdev->channel,
+-						     t_sdev->id, t_sdev->lun,
+-						     t_sdev->queue_depth);
+-				}
+-			}
+-		}
+ 		break;
  
- enum fnic_intx_intr_index {
-@@ -215,6 +218,7 @@ struct fnic {
- 
- 	struct vnic_stats *stats;
- 	unsigned long stats_time;	/* time of stats update */
-+	unsigned long stats_reset_time; /* time of stats reset */
- 	struct vnic_nic_cfg *nic_cfg;
- 	char name[IFNAMSIZ];
- 	struct timer_list notify_timer; /* used for MSI interrupts */
-@@ -359,4 +363,5 @@ fnic_chk_state_flags_locked(struct fnic *fnic, unsigned long st_flags)
- 	return ((fnic->state_flags & st_flags) == st_flags);
- }
- void __fnic_set_state_flags(struct fnic *, unsigned long, unsigned long);
-+void fnic_dump_fchost_stats(struct Scsi_Host *, struct fc_host_statistics *);
- #endif /* _FNIC_H_ */
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 42e15ee..b619dab 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -126,6 +126,7 @@ fnic_set_rport_dev_loss_tmo(struct fc_rport *rport, u32 timeout)
- static void fnic_get_host_speed(struct Scsi_Host *shost);
- static struct scsi_transport_template *fnic_fc_transport;
- static struct fc_host_statistics *fnic_get_stats(struct Scsi_Host *);
-+static void fnic_reset_host_stats(struct Scsi_Host *);
- 
- static struct fc_function_template fnic_fc_functions = {
- 
-@@ -153,6 +154,7 @@ static struct fc_function_template fnic_fc_functions = {
- 	.set_rport_dev_loss_tmo = fnic_set_rport_dev_loss_tmo,
- 	.issue_fc_host_lip = fnic_reset,
- 	.get_fc_host_stats = fnic_get_stats,
-+	.reset_fc_host_stats = fnic_reset_host_stats,
- 	.dd_fcrport_size = sizeof(struct fc_rport_libfc_priv),
- 	.terminate_rport_io = fnic_terminate_rport_io,
- 	.bsg_request = fc_lport_bsg_request,
-@@ -206,13 +208,116 @@ static struct fc_host_statistics *fnic_get_stats(struct Scsi_Host *host)
- 	stats->error_frames = vs->tx.tx_errors + vs->rx.rx_errors;
- 	stats->dumped_frames = vs->tx.tx_drops + vs->rx.rx_drop;
- 	stats->invalid_crc_count = vs->rx.rx_crc_errors;
--	stats->seconds_since_last_reset = (jiffies - lp->boot_time) / HZ;
-+	stats->seconds_since_last_reset =
-+			(jiffies - fnic->stats_reset_time) / HZ;
- 	stats->fcp_input_megabytes = div_u64(fnic->fcp_input_bytes, 1000000);
- 	stats->fcp_output_megabytes = div_u64(fnic->fcp_output_bytes, 1000000);
- 
- 	return stats;
- }
- 
-+/*
-+ * fnic_dump_fchost_stats
-+ * note : dumps fc_statistics into system logs
-+ */
-+void fnic_dump_fchost_stats(struct Scsi_Host *host,
-+				struct fc_host_statistics *stats)
-+{
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: seconds since last reset = %llu\n",
-+			stats->seconds_since_last_reset);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: tx frames		= %llu\n",
-+			stats->tx_frames);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: tx words		= %llu\n",
-+			stats->tx_words);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: rx frames		= %llu\n",
-+			stats->rx_frames);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: rx words		= %llu\n",
-+			stats->rx_words);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: lip count		= %llu\n",
-+			stats->lip_count);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: nos count		= %llu\n",
-+			stats->nos_count);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: error frames		= %llu\n",
-+			stats->error_frames);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: dumped frames	= %llu\n",
-+			stats->dumped_frames);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: link failure count	= %llu\n",
-+			stats->link_failure_count);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: loss of sync count	= %llu\n",
-+			stats->loss_of_sync_count);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: loss of signal count	= %llu\n",
-+			stats->loss_of_signal_count);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: prim seq protocol err count = %llu\n",
-+			stats->prim_seq_protocol_err_count);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: invalid tx word count= %llu\n",
-+			stats->invalid_tx_word_count);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: invalid crc count	= %llu\n",
-+			stats->invalid_crc_count);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: fcp input requests	= %llu\n",
-+			stats->fcp_input_requests);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: fcp output requests	= %llu\n",
-+			stats->fcp_output_requests);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: fcp control requests	= %llu\n",
-+			stats->fcp_control_requests);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: fcp input megabytes	= %llu\n",
-+			stats->fcp_input_megabytes);
-+	FNIC_MAIN_NOTE(KERN_NOTICE, host,
-+			"fnic: fcp output megabytes	= %llu\n",
-+			stats->fcp_output_megabytes);
-+	return;
-+}
-+
-+/*
-+ * fnic_reset_host_stats : clears host stats
-+ * note : called when reset_statistics set under sysfs dir
-+ */
-+static void fnic_reset_host_stats(struct Scsi_Host *host)
-+{
-+	int ret;
-+	struct fc_lport *lp = shost_priv(host);
-+	struct fnic *fnic = lport_priv(lp);
-+	struct fc_host_statistics *stats;
-+	unsigned long flags;
-+
-+	/* dump current stats, before clearing them */
-+	stats = fnic_get_stats(host);
-+	fnic_dump_fchost_stats(host, stats);
-+
-+	spin_lock_irqsave(&fnic->fnic_lock, flags);
-+	ret = vnic_dev_stats_clear(fnic->vdev);
-+	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+
-+	if (ret) {
-+		FNIC_MAIN_DBG(KERN_DEBUG, fnic->lport->host,
-+				"fnic: Reset vnic stats failed"
-+				" 0x%x", ret);
-+		return;
-+	}
-+	fnic->stats_reset_time = jiffies;
-+	memset(stats, 0, sizeof(*stats));
-+
-+	return;
-+}
-+
- void fnic_log_q_error(struct fnic *fnic)
- {
- 	unsigned int i;
-@@ -719,6 +824,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	}
- 
- 	fc_lport_init_stats(lp);
-+	fnic->stats_reset_time = jiffies;
- 
- 	fc_lport_config(lp);
- 
+ 	case FCPIO_TIMEOUT:          /* request was timed out */
 -- 
 1.7.10.4
 
