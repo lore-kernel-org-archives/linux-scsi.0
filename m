@@ -1,50 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC/PATCH 2/2] scsi: ufs: requests completion handling
-Date: Thu, 29 Aug 2013 13:27:42 +0400
-Message-ID: <1377768462.2223.70.camel@dabdike>
-References: <1377766493-5269-1-git-send-email-rshvili@codeaurora.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
+Date: Thu, 29 Aug 2013 10:09:58 +0000
+Message-ID: <bug-60644-11613-XXJYyLl9xh@https.bugzilla.kernel.org/>
+References: <bug-60644-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1377766493-5269-1-git-send-email-rshvili@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Raviv Shvili <rshvili@codeaurora.org>
-Cc: scsi-misc@vger.kernel.org, linux-arm-msm@vger.kernel.org, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:35416 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756182Ab3H2KKC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Aug 2013 06:10:02 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 132CA2042A
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2013 10:10:01 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id F28D220420
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2013 10:09:59 +0000 (UTC)
+In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2013-08-29 at 11:54 +0300, Raviv Shvili wrote:
-> The patch solves the request completion report order. At the current
-> implementation, when multiple requests end at the same interrupt call,
-> the requests reported as completed according to a bitmap scan from the
-> lowest tags to the highest, regardless the requests priority. That cause
-> to a priority unfairness and starvation of requests with a high tags.
+https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
-It does?  Why?  What seems to happen is that you loop over all the
-pending requests and call done for them.  The way SCSI handles done
-commands is that it queues them to the softirq, so there doesn't look to
-be any real unfairness problem here.
+--- Comment #28 from liveaxle@live.com ---
+PS . :
 
-> SCSI Architecture Model 5 defines 3 task-attributes that are part of each
-> SCSI command, and integrated into each Command UPIU. The task-attribute is
-> for the device usage, it determines the order in which the device
-> prioritizes the requests.
-> The task-attributes according to their priority are (from high to low):
-> HEAD OF QUEUE, ORDERED and SIMPLE. There is a queue per task-attribute.
-> Each request is assigned to one of the above sw queues
-> according to its task attribute field.
-> Requests which are not SCSI commands (native UFS) will be assigned to
-> the lowest priority queue, since there is no much difference between
-> completing it first or last..
-> 
-> When request is completed, we go over the queues (from
-> the queue's highest priority to the lowest) and report
-> the completion.
-> 
-> Requests are removed from the queue in case of command completion
-> or when aborting pending command.
+To summerize what I have in my server :
 
-Since we never use anything other than SIMPLE attributes, this rather
-looks like a solution in search of a problem.
+1 - BTRFS RAID1 (5 disks) : FAILS
 
-James
+2 - BTRFS Single Data Profile (2 disks) : FAILS 
+
+3 - BTRFS Single disk FS (No RAID) : FAILS (But recovers without rebooting -
+Doesn't drop or Unmount)
+
+4 - BTRFS Single disk FS (No RAID) : WORKS .
+
+
+I'll run one test , this time I'll use a leafsize of 64k , I have a doubt that
+it helps .
+
+THank you .
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
