@@ -1,53 +1,92 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 8/9] mpt3sas: Enable new EH timeout handler
-Date: Thu, 29 Aug 2013 15:32:19 +0200
-Message-ID: <1377783140-57191-9-git-send-email-hare@suse.de>
-References: <1377783140-57191-1-git-send-email-hare@suse.de>
+Subject: [PATCHv4 0/9] New EH command timeout handler
+Date: Thu, 29 Aug 2013 15:32:11 +0200
+Message-ID: <1377783140-57191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57533 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:57488 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754584Ab3H2Nc0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Aug 2013 09:32:26 -0400
-In-Reply-To: <1377783140-57191-1-git-send-email-hare@suse.de>
+	id S1754689Ab3H2NcY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Aug 2013 09:32:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+his patchset implements a new SCSI EH command timeout handler
+which will be sending command aborts inline without actually
+engaging SCSI EH.
+SCSI EH will only be invoked if command abort fails.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index a961fe1..c407d8b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2243,6 +2243,16 @@ _scsih_tm_display_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd)
- }
- 
- /**
-+ * _scsih_timed_out - eh timeout handler
-+ * @scmd: pointer to scsi command object
-+ */
-+static enum blk_eh_timer_return
-+_scsih_timed_out(struct scsi_cmnd *scmd)
-+{
-+	return scsi_abort_command(scmd);
-+}
-+
-+/**
-  * _scsih_abort - eh threads main abort routine
-  * @scmd: pointer to scsi command object
-  *
-@@ -7237,6 +7247,7 @@ static struct scsi_host_template scsih_driver_template = {
- 	.scan_start			= _scsih_scan_start,
- 	.change_queue_depth		= _scsih_change_queue_depth,
- 	.change_queue_type		= _scsih_change_queue_type,
-+	.eh_timed_out			= _scsih_timed_out,
- 	.eh_abort_handler		= _scsih_abort,
- 	.eh_device_reset_handler	= _scsih_dev_reset,
- 	.eh_target_reset_handler	= _scsih_target_reset,
+In addition the commands will be returned directly
+if the command abort succeeded, cutting down recovery
+times dramatically.
+
+With the original SCSI EH I got:
+# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+4096+0 records in
+4096+0 records out
+16777216 bytes (17 MB) copied, 142.652 s, 118 kB/s
+
+real	2m22.657s
+user	0m0.013s
+sys	0m0.145s
+
+With this patchset I got:
+# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+4096+0 records in
+4096+0 records out
+16777216 bytes (17 MB) copied, 52.1579 s, 322 kB/s
+
+real	0m52.163s
+user	0m0.012s
+sys	0m0.145s
+
+Test was to disable RSCN on the target port, disable the
+target port, and then start the 'dd' command as indicated.
+
+Changes to the original version:
+- Use a private list in scsi_eh_abort_handler to avoid
+  list starvation (pointed out by Joern Engel)
+- Terminate command aborts when the first abort fails
+- Do not attempt command aborts if the host is already in recovery
+  or if the device is removed.
+- Flush abort workqueue if the device is removed.
+
+Changes to v2:
+- Removed eh_entry initialisation
+- Convert to per-command workqueue
+
+Changes to v3:
+- Use delayed_work
+- Enable new eh timeout handler for virtio, SAS, and FC
+- Modify logging messages to include scmd pointer
+
+Hannes Reinecke (9):
+  scsi: Fix erratic device offline during EH
+  blk-timeout: add BLK_EH_SCHEDULED return code
+  scsi: improved eh timeout handler
+  virtio_scsi: Enable new EH timeout handler
+  libsas: Enable new EH timeout handler
+  mptsas: Enable new EH timeout handler
+  mpt2sas: Enable new EH timeout handler
+  mpt3sas: Enable new EH timeout handler
+  scsi_transport_fc: Enable new EH timeout handler
+
+ drivers/message/fusion/mptsas.c      |   3 +-
+ drivers/message/fusion/mptscsih.c    |   7 ++
+ drivers/message/fusion/mptscsih.h    |   1 +
+ drivers/scsi/libsas/sas_scsi_host.c  |   2 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |  13 ++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |  11 +++
+ drivers/scsi/scsi.c                  |   3 +
+ drivers/scsi/scsi_error.c            | 178 ++++++++++++++++++++++++++++++-----
+ drivers/scsi/scsi_priv.h             |   2 +
+ drivers/scsi/scsi_transport_fc.c     |   2 +-
+ drivers/scsi/virtio_scsi.c           |   8 ++
+ include/linux/blkdev.h               |   1 +
+ include/scsi/scsi_cmnd.h             |   2 +
+ 13 files changed, 207 insertions(+), 26 deletions(-)
+
 -- 
 1.7.12.4
 
