@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 7/9] mpt2sas: Enable new EH timeout handler
-Date: Thu, 29 Aug 2013 15:32:18 +0200
-Message-ID: <1377783140-57191-8-git-send-email-hare@suse.de>
+Subject: [PATCH 4/9] virtio_scsi: Enable new EH timeout handler
+Date: Thu, 29 Aug 2013 15:32:15 +0200
+Message-ID: <1377783140-57191-5-git-send-email-hare@suse.de>
 References: <1377783140-57191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57486 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:57487 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754661Ab3H2NcY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754584Ab3H2NcY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 29 Aug 2013 09:32:24 -0400
 In-Reply-To: <1377783140-57191-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,41 +16,42 @@ Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <ren
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ drivers/scsi/virtio_scsi.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 389d792..066e36c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2569,6 +2569,16 @@ _scsih_tm_display_info(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd)
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 74b88ef..d34b195 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -630,6 +630,12 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+ 	return virtscsi_tmf(vscsi, cmd);
  }
  
- /**
-+ * _scsih_timed_out - eh timeout handler
-+ * @scmd: pointer to scsi command object
-+ */
-+static enum blk_eh_timer_return
-+_scsih_timed_out(struct scsi_cmnd *scmd)
++static enum blk_eh_timer_return virtscsi_timedout(struct scsi_cmnd *scmd)
 +{
-+	return scsi_abort_command(scmd);
++	scsi_abort_command(scmd);
++	return BLK_EH_SCHEDULED;
 +}
 +
-+/**
-  * _scsih_abort - eh threads main abort routine
-  * @scmd: pointer to scsi command object
-  *
-@@ -7628,8 +7638,9 @@ static struct scsi_host_template scsih_driver_template = {
- 	.slave_destroy			= _scsih_slave_destroy,
- 	.scan_finished			= _scsih_scan_finished,
- 	.scan_start			= _scsih_scan_start,
--	.change_queue_depth 		= _scsih_change_queue_depth,
-+	.change_queue_depth		= _scsih_change_queue_depth,
- 	.change_queue_type		= _scsih_change_queue_type,
-+	.eh_timed_out			= _scsih_timed_out,
- 	.eh_abort_handler		= _scsih_abort,
- 	.eh_device_reset_handler	= _scsih_dev_reset,
- 	.eh_target_reset_handler	= _scsih_target_reset,
+ static int virtscsi_abort(struct scsi_cmnd *sc)
+ {
+ 	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
+@@ -683,6 +689,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.queuecommand = virtscsi_queuecommand_single,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = virtscsi_timedout,
+ 
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
+@@ -699,6 +706,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.queuecommand = virtscsi_queuecommand_multi,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = virtscsi_timedout,
+ 
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
 -- 
 1.7.12.4
 
