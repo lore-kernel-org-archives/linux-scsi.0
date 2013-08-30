@@ -1,33 +1,49 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
-Date: Fri, 30 Aug 2013 07:35:25 +0000
-Message-ID: <bug-60758-11613-fHsaUjg8M9@https.bugzilla.kernel.org/>
-References: <bug-60758-11613@https.bugzilla.kernel.org/>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: [PATCH] scsi disk: Use its own buffer for the vpd request
+Date: Fri, 30 Aug 2013 11:01:56 +0100
+Message-ID: <871u5b7azv.fsf@spindle.srvr.nix>
+References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm>
+	<87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm>
+	<87fvuxdqes.fsf@spindle.srvr.nix> <yq1txjdhree.fsf@sermon.lab.mkp.net>
+	<51F80167.1080004@fastmail.fm> <yq1zjt3h11y.fsf@sermon.lab.mkp.net>
+	<51F94E8D.5040908@fastmail.fm> <51F95A2E.60805@fastmail.fm>
+	<51FA71E2.6010501@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:49865 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752329Ab3H3Hf3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Aug 2013 03:35:29 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id C010320163
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Aug 2013 07:35:27 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 94F8220292
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Aug 2013 07:35:26 +0000 (UTC)
-In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <51FA71E2.6010501@fastmail.fm> (Bernd Schubert's message of "Thu,
+	01 Aug 2013 16:34:10 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bernd Schubert <bernd.schubert@fastmail.fm>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw, stable@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60758
+On 1 Aug 2013, Bernd Schubert said:
 
---- Comment #4 from zakrzewskim@wp.pl ---
-Here you are:
-http://www.upemax.user.icpnet.pl/config-3.10.9-1.el6.elrepo.x86_64
+> Once I noticed that scsi_get_vpd_page() works fine from other function
+> calls and that it is not 0x89, but already 0x0 that fails fixing it became
+> easy.
+>
+> Nix, any chance you could verify it also works for you?
+
+As an aside, this commit does indeed fix the bug I reported, but it
+doesn't seem to have gone anywhere, not even into -stable.
+
+Is it held up somehow?
+
+(stable has
+
+commit 0ac10bd036f0f3b8ce7ac2390446eab9531c72eb
+Author: Martin K. Petersen <martin.petersen@oracle.com>
+Date:   Tue Jul 30 22:58:34 2013 -0400
+
+    SCSI: Don't attempt to send extended INQUIRY command if skip_vpd_pages is set
+
+which IIRC was eventually found not to be necessary, because this fix
+works fine instead?)
+
+Possibly I'm misremembering the order of month-old events and Martin's
+fix was eventually considered better... in which case, sorry for the noise.
 
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+NULL && (void)
