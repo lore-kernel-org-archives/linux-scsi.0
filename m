@@ -1,92 +1,47 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: PATCH: scsi: make scsi reset permissions more relaxed (RFC)
-Date: Fri, 30 Aug 2013 14:47:22 +0200
-Message-ID: <5220945A.2090906@interlog.com>
-References: <20130830120450.GB31120@suse.de>
-Reply-To: dgilbert@interlog.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 4/9] virtio_scsi: Enable new EH timeout handler
+Date: Fri, 30 Aug 2013 14:47:43 +0200
+Message-ID: <5220946F.2050001@suse.de>
+References: <1377783140-57191-1-git-send-email-hare@suse.de> <1377783140-57191-5-git-send-email-hare@suse.de> <20130830124541.GA4107@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130830120450.GB31120@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Marcus Meissner <meissner@suse.de>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:40093 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753278Ab3H3Mrq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Aug 2013 08:47:46 -0400
+In-Reply-To: <20130830124541.GA4107@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>
 
-On 13-08-30 02:04 PM, Marcus Meissner wrote:
-> Hi folks,
->
-> cdrecord wants to whack the CD drive with a SCSI RESET ...
->
-> So far SCSI RESET can be done at 4 levels (target, device, bus, host)
-> and all 4 are checked for CAP_SYS_ADMIN / CAP_SYS_RAWIO.
->
->
-> As the cdrecord author wants special permissions for cdrecord, readcd ,
-> cdda2wav to allow it to send SCSI RESET commands I was wondering if
-> relaxing the permission is a potential idea?
->
-> This would allow SCSI reset on target/device if a local user
-> gets regular access to a SCSI device (via udev acls etc.)
->
->
-> (I know that the actual reset code will fall back into the chain
->   target -> device -> bus -> host resetting if one fails.)
+On 08/30/2013 02:45 PM, Christoph Hellwig wrote:
+>> =20
+>> +static enum blk_eh_timer_return virtscsi_timedout(struct scsi_cmnd =
+*scmd)
+>> +{
+>> +	scsi_abort_command(scmd);
+>> +	return BLK_EH_SCHEDULED;
+>> +}
+>=20
+> just set the method vector to scsi_abort_command here and in all the
+> other trivial conversions instead of having all those pointless
+> wrappers.
+>=20
+Ok.
 
-Hi,
-That escalation sequence probably should be:
-    device(LU) -> target -> bus -> host
+Cheers,
 
-I proposed the following patch some time back to give the
-user space finer resolution on resets with the option of
-stopping the escalation but it has gone nowhere:
-   http://marc.info/?l=linux-scsi&m=136104139102048&w=2
-
-With that patch you might only allow an unprivileged user
-the non-escalating LU and target reset variants.
-
-If changes are made in that area, we might like to think
-about adding a new RESET variant mapping through to the I_T
-Nexus Reset TMF.
-
-Doug Gilbert
-
-> ---
->   drivers/scsi/scsi_ioctl.c | 8 ++++++--
->   1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-> index d9564fb..770720e 100644
-> --- a/drivers/scsi/scsi_ioctl.c
-> +++ b/drivers/scsi/scsi_ioctl.c
-> @@ -306,22 +306,26 @@ int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
->   			return 0;
->   		switch (val) {
->   		case SG_SCSI_RESET_DEVICE:
-> +			/* allowed if you can send scsi commands to the device */
->   			val = SCSI_TRY_RESET_DEVICE;
->   			break;
->   		case SG_SCSI_RESET_TARGET:
-> +			/* allowed if you can send scsi commands to the device */
->   			val = SCSI_TRY_RESET_TARGET;
->   			break;
->   		case SG_SCSI_RESET_BUS:
-> +			if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-> +				return -EACCES;
->   			val = SCSI_TRY_RESET_BUS;
->   			break;
->   		case SG_SCSI_RESET_HOST:
-> +			if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-> +				return -EACCES;
->   			val = SCSI_TRY_RESET_HOST;
->   			break;
->   		default:
->   			return -EINVAL;
->   		}
-> -		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-> -			return -EACCES;
->   		return (scsi_reset_provider(sdev, val) ==
->   			SUCCESS) ? 0 : -EIO;
->   	}
->
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
