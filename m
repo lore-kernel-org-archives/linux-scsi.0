@@ -1,49 +1,73 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: [PATCH] scsi disk: Use its own buffer for the vpd request
-Date: Fri, 30 Aug 2013 11:01:56 +0100
-Message-ID: <871u5b7azv.fsf@spindle.srvr.nix>
-References: <87r4ehfzhf.fsf@spindle.srvr.nix> <51F667C2.4020801@fastmail.fm>
-	<87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm>
-	<87fvuxdqes.fsf@spindle.srvr.nix> <yq1txjdhree.fsf@sermon.lab.mkp.net>
-	<51F80167.1080004@fastmail.fm> <yq1zjt3h11y.fsf@sermon.lab.mkp.net>
-	<51F94E8D.5040908@fastmail.fm> <51F95A2E.60805@fastmail.fm>
-	<51FA71E2.6010501@fastmail.fm>
+From: Marcus Meissner <meissner@suse.de>
+Subject: PATCH: scsi: make scsi reset permissions more relaxed (RFC)
+Date: Fri, 30 Aug 2013 14:04:50 +0200
+Message-ID: <20130830120450.GB31120@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <51FA71E2.6010501@fastmail.fm> (Bernd Schubert's message of "Thu,
-	01 Aug 2013 16:34:10 +0200")
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@fastmail.fm>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw, stable@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 1 Aug 2013, Bernd Schubert said:
+Hi folks,
 
-> Once I noticed that scsi_get_vpd_page() works fine from other function
-> calls and that it is not 0x89, but already 0x0 that fails fixing it became
-> easy.
->
-> Nix, any chance you could verify it also works for you?
+cdrecord wants to whack the CD drive with a SCSI RESET ...
 
-As an aside, this commit does indeed fix the bug I reported, but it
-doesn't seem to have gone anywhere, not even into -stable.
+So far SCSI RESET can be done at 4 levels (target, device, bus, host)
+and all 4 are checked for CAP_SYS_ADMIN / CAP_SYS_RAWIO.
 
-Is it held up somehow?
 
-(stable has
+As the cdrecord author wants special permissions for cdrecord, readcd ,
+cdda2wav to allow it to send SCSI RESET commands I was wondering if
+relaxing the permission is a potential idea?
 
-commit 0ac10bd036f0f3b8ce7ac2390446eab9531c72eb
-Author: Martin K. Petersen <martin.petersen@oracle.com>
-Date:   Tue Jul 30 22:58:34 2013 -0400
+This would allow SCSI reset on target/device if a local user
+gets regular access to a SCSI device (via udev acls etc.)
 
-    SCSI: Don't attempt to send extended INQUIRY command if skip_vpd_pages is set
 
-which IIRC was eventually found not to be necessary, because this fix
-works fine instead?)
+(I know that the actual reset code will fall back into the chain
+ target -> device -> bus -> host resetting if one fails.)
 
-Possibly I'm misremembering the order of month-old events and Martin's
-fix was eventually considered better... in which case, sorry for the noise.
+Signed-off-by: Marcus Meissner <meissner@suse.de>
 
+Ciao, Marcus
+---
+ drivers/scsi/scsi_ioctl.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index d9564fb..770720e 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -306,22 +306,26 @@ int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
+ 			return 0;
+ 		switch (val) {
+ 		case SG_SCSI_RESET_DEVICE:
++			/* allowed if you can send scsi commands to the device */
+ 			val = SCSI_TRY_RESET_DEVICE;
+ 			break;
+ 		case SG_SCSI_RESET_TARGET:
++			/* allowed if you can send scsi commands to the device */
+ 			val = SCSI_TRY_RESET_TARGET;
+ 			break;
+ 		case SG_SCSI_RESET_BUS:
++			if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
++				return -EACCES;
+ 			val = SCSI_TRY_RESET_BUS;
+ 			break;
+ 		case SG_SCSI_RESET_HOST:
++			if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
++				return -EACCES;
+ 			val = SCSI_TRY_RESET_HOST;
+ 			break;
+ 		default:
+ 			return -EINVAL;
+ 		}
+-		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+-			return -EACCES;
+ 		return (scsi_reset_provider(sdev, val) ==
+ 			SUCCESS) ? 0 : -EIO;
+ 	}
 -- 
-NULL && (void)
+1.8.1.4
