@@ -1,153 +1,32 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 6/6] scsi: ufs: configure the attribute for power mode
-Date: Sat, 31 Aug 2013 21:40:24 +0530
-Message-ID: <1377965424-30991-7-git-send-email-santoshsy@gmail.com>
-References: <1377965424-30991-1-git-send-email-santoshsy@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
+Date: Sat, 31 Aug 2013 16:49:42 +0000
+Message-ID: <bug-60758-11613-7BZS94G26T@https.bugzilla.kernel.org/>
+References: <bug-60758-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:44486 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754424Ab3HaQMC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Aug 2013 12:12:02 -0400
-Received: by mail-pd0-f180.google.com with SMTP id y10so3036473pdj.39
-        for <linux-scsi@vger.kernel.org>; Sat, 31 Aug 2013 09:12:01 -0700 (PDT)
-In-Reply-To: <1377965424-30991-1-git-send-email-santoshsy@gmail.com>
+Received: from mail.kernel.org ([198.145.19.201]:40896 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753901Ab3HaQtq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 31 Aug 2013 12:49:46 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id C8C8A202BC
+	for <linux-scsi@vger.kernel.org>; Sat, 31 Aug 2013 16:49:45 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id E79AB202B8
+	for <linux-scsi@vger.kernel.org>; Sat, 31 Aug 2013 16:49:42 +0000 (UTC)
+In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Seungwon Jeon <tgih.jun@samsung.com>, Santosh Y <santoshsy@gmail.com>
+To: linux-scsi@vger.kernel.org
 
-From: Seungwon Jeon <tgih.jun@samsung.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=60758
 
-UIC attributes can be set with using DME_SET command for
-power mode change. For configuration the link capability
-attributes are used, which is updated after successful
-link startup.
+--- Comment #8 from zakrzewskim@wp.pl ---
+Yes, I can test ;)
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Santosh Y <santoshsy@gmail.com>
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 4c6d891..d7a373f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1598,6 +1598,70 @@ out:
- }
- 
- /**
-+ * ufshcd_config_max_pwr_mode - Set & Change power mode with
-+ *	maximum capability attribute information.
-+ * @hba: per adapter instance
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
-+{
-+	enum {RX = 0, TX = 1};
-+	u32 lanes[] = {1, 1};
-+	u32 gear[] = {1, 1};
-+	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
-+	int ret;
-+
-+	/* Get the connected lane count */
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
-+
-+	/*
-+	 * First, get the maximum gears of HS speed.
-+	 * If a zero value, it means there is no HSGEAR capability.
-+	 * Then, get the maximum gears of PWM speed.
-+	 */
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
-+	if (!gear[RX]) {
-+		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
-+		pwr[RX] = SLOWAUTO_MODE;
-+	}
-+
-+	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
-+	if (!gear[TX]) {
-+		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
-+				    &gear[TX]);
-+		pwr[TX] = SLOWAUTO_MODE;
-+	}
-+
-+	/*
-+	 * Configure attributes for power mode change with below.
-+	 * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
-+	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
-+	 * - PA_HSSERIES
-+	 */
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
-+	if (pwr[RX] == FASTAUTO_MODE)
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
-+
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
-+	if (pwr[TX] == FASTAUTO_MODE)
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
-+
-+	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
-+
-+	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
-+	if (ret)
-+		dev_err(hba->dev,
-+			"pwr_mode: power mode change failed %d\n", ret);
-+
-+	return ret;
-+}
-+
-+/**
-  * ufshcd_complete_dev_init() - checks device readiness
-  * hba: per-adapter instance
-  *
-@@ -2942,6 +3006,8 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	if (ret)
- 		goto out;
- 
-+	ufshcd_config_max_pwr_mode(hba);
-+
- 	ret = ufshcd_verify_dev_init(hba);
- 	if (ret)
- 		goto out;
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 3a710eb..0bb8041 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -72,6 +72,21 @@
- #define PA_STALLNOCONFIGTIME	0x15A3
- #define PA_SAVECONFIGTIME	0x15A4
- 
-+/* PA power modes */
-+enum {
-+	FAST_MODE	= 1,
-+	SLOW_MODE	= 2,
-+	FASTAUTO_MODE	= 4,
-+	SLOWAUTO_MODE	= 5,
-+	UNCHANGED	= 7,
-+};
-+
-+/* PA TX/RX Frequency Series */
-+enum {
-+	PA_HS_MODE_A	= 1,
-+	PA_HS_MODE_B	= 2,
-+};
-+
- /*
-  * Data Link Layer Attributes
-  */
-@@ -127,4 +142,10 @@
- #define T_TC0TXMAXSDUSIZE	0x4060
- #define T_TC1TXMAXSDUSIZE	0x4061
- 
-+/* Boolean attribute values */
-+enum {
-+	FALSE = 0,
-+	TRUE,
-+};
-+
- #endif /* _UNIPRO_H_ */
 -- 
-1.8.4
-
+You are receiving this mail because:
+You are the assignee for the bug.
