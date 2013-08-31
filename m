@@ -1,15 +1,15 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 5/6] scsi: ufs: add operation for the uic power mode change
-Date: Sat, 31 Aug 2013 21:40:23 +0530
-Message-ID: <1377965424-30991-6-git-send-email-santoshsy@gmail.com>
+Subject: [PATCH 6/6] scsi: ufs: configure the attribute for power mode
+Date: Sat, 31 Aug 2013 21:40:24 +0530
+Message-ID: <1377965424-30991-7-git-send-email-santoshsy@gmail.com>
 References: <1377965424-30991-1-git-send-email-santoshsy@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:63228 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754424Ab3HaQLu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Aug 2013 12:11:50 -0400
-Received: by mail-pd0-f179.google.com with SMTP id v10so3050674pde.38
-        for <linux-scsi@vger.kernel.org>; Sat, 31 Aug 2013 09:11:49 -0700 (PDT)
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:44486 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754424Ab3HaQMC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Aug 2013 12:12:02 -0400
+Received: by mail-pd0-f180.google.com with SMTP id y10so3036473pdj.39
+        for <linux-scsi@vger.kernel.org>; Sat, 31 Aug 2013 09:12:01 -0700 (PDT)
 In-Reply-To: <1377965424-30991-1-git-send-email-santoshsy@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,108 +18,83 @@ Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Seungwon Jeon <tgih.jun@
 
 From: Seungwon Jeon <tgih.jun@samsung.com>
 
-Setting PA_PWRMode using DME_SET triggers the power mode
-change. And then the result will be given by the HCS.UPMCRS.
-This operation should be done atomically.
+UIC attributes can be set with using DME_SET command for
+power mode change. For configuration the link capability
+attributes are used, which is updated after successful
+link startup.
 
 Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-Tested-by: Yaniv Gardi <ygardi@codeaurora.org>
 Signed-off-by: Santosh Y <santoshsy@gmail.com>
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 03ff4da..4c6d891 100644
+index 4c6d891..d7a373f 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -36,9 +36,11 @@
- #include <linux/async.h>
- 
- #include "ufshcd.h"
-+#include "unipro.h"
- 
- #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
- 				 UTP_TASK_REQ_COMPL |\
-+				 UIC_POWER_MODE |\
- 				 UFSHCD_ERROR_MASK)
- /* UIC command timeout, unit: ms */
- #define UIC_CMD_TIMEOUT	500
-@@ -520,6 +522,18 @@ static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
+@@ -1598,6 +1598,70 @@ out:
  }
  
  /**
-+ * ufshcd_get_upmcrs - Get the power mode change request status
-+ * @hba: Pointer to adapter instance
-+ *
-+ * This function gets the UPMCRS field of HCS register
-+ * Returns value of UPMCRS field
-+ */
-+static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
-+{
-+	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) >> 8) & 0x7;
-+}
-+
-+/**
-  * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
-  * @hba: per adapter instance
-  * @uic_cmd: UIC command
-@@ -1526,6 +1540,64 @@ out:
- EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
- 
- /**
-+ * ufshcd_uic_change_pwr_mode - Perform the UIC power mode chage
-+ *				using DME_SET primitives.
++ * ufshcd_config_max_pwr_mode - Set & Change power mode with
++ *	maximum capability attribute information.
 + * @hba: per adapter instance
-+ * @mode: powr mode value
 + *
 + * Returns 0 on success, non-zero value on failure
 + */
-+int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
++static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
 +{
-+	struct uic_command uic_cmd = {0};
-+	struct completion pwr_done;
-+	unsigned long flags;
-+	u8 status;
++	enum {RX = 0, TX = 1};
++	u32 lanes[] = {1, 1};
++	u32 gear[] = {1, 1};
++	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
 +	int ret;
 +
-+	uic_cmd.command = UIC_CMD_DME_SET;
-+	uic_cmd.argument1 = UIC_ARG_MIB(PA_PWRMODE);
-+	uic_cmd.argument3 = mode;
-+	init_completion(&pwr_done);
++	/* Get the connected lane count */
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
 +
-+	mutex_lock(&hba->uic_cmd_mutex);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->pwr_done = &pwr_done;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	ret = __ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret) {
-+		dev_err(hba->dev,
-+			"pwr mode change with mode 0x%x uic error %d\n",
-+			mode, ret);
-+		goto out;
++	/*
++	 * First, get the maximum gears of HS speed.
++	 * If a zero value, it means there is no HSGEAR capability.
++	 * Then, get the maximum gears of PWM speed.
++	 */
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
++	if (!gear[RX]) {
++		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
++		pwr[RX] = SLOWAUTO_MODE;
 +	}
 +
-+	if (!wait_for_completion_timeout(hba->pwr_done,
-+					 msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
-+		dev_err(hba->dev,
-+			"pwr mode change with mode 0x%x completion timeout\n",
-+			mode);
-+		ret = -ETIMEDOUT;
-+		goto out;
++	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
++	if (!gear[TX]) {
++		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
++				    &gear[TX]);
++		pwr[TX] = SLOWAUTO_MODE;
 +	}
 +
-+	status = ufshcd_get_upmcrs(hba);
-+	if (status != PWR_LOCAL) {
++	/*
++	 * Configure attributes for power mode change with below.
++	 * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
++	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
++	 * - PA_HSSERIES
++	 */
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
++	if (pwr[RX] == FASTAUTO_MODE)
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
++
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
++	if (pwr[TX] == FASTAUTO_MODE)
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
++
++	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
++
++	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
++	if (ret)
 +		dev_err(hba->dev,
-+			"pwr mode change failed, host umpcrs:0x%x\n",
-+			status);
-+		ret = (status != PWR_OK) ? status : -1;
-+	}
-+out:
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->pwr_done = NULL;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	mutex_unlock(&hba->uic_cmd_mutex);
++			"pwr_mode: power mode change failed %d\n", ret);
++
 +	return ret;
 +}
 +
@@ -127,91 +102,52 @@ index 03ff4da..4c6d891 100644
   * ufshcd_complete_dev_init() - checks device readiness
   * hba: per-adapter instance
   *
-@@ -1992,16 +2064,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- /**
-  * ufshcd_uic_cmd_compl - handle completion of uic command
-  * @hba: per adapter instance
-+ * @intr_status: interrupt status generated by the controller
-  */
--static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
-+static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- {
--	if (hba->active_uic_cmd) {
-+	if ((intr_status & UIC_COMMAND_COMPL) && hba->active_uic_cmd) {
- 		hba->active_uic_cmd->argument2 |=
- 			ufshcd_get_uic_cmd_result(hba);
- 		hba->active_uic_cmd->argument3 =
- 			ufshcd_get_dme_attr_val(hba);
- 		complete(&hba->active_uic_cmd->done);
- 	}
+@@ -2942,6 +3006,8 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	if (ret)
+ 		goto out;
+ 
++	ufshcd_config_max_pwr_mode(hba);
 +
-+	if ((intr_status & UIC_POWER_MODE) && hba->pwr_done)
-+		complete(hba->pwr_done);
- }
+ 	ret = ufshcd_verify_dev_init(hba);
+ 	if (ret)
+ 		goto out;
+diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+index 3a710eb..0bb8041 100644
+--- a/drivers/scsi/ufs/unipro.h
++++ b/drivers/scsi/ufs/unipro.h
+@@ -72,6 +72,21 @@
+ #define PA_STALLNOCONFIGTIME	0x15A3
+ #define PA_SAVECONFIGTIME	0x15A4
  
- /**
-@@ -2451,8 +2527,8 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- 	if (hba->errors)
- 		ufshcd_check_errors(hba);
- 
--	if (intr_status & UIC_COMMAND_COMPL)
--		ufshcd_uic_cmd_compl(hba);
-+	if (intr_status & UFSHCD_UIC_MASK)
-+		ufshcd_uic_cmd_compl(hba, intr_status);
- 
- 	if (intr_status & UTP_TASK_REQ_COMPL)
- 		ufshcd_tmc_handler(hba);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index ab1518d..ecff83d 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -178,6 +178,7 @@ struct ufs_dev_cmd {
-  * @tm_tag_wq: wait queue for free task management slots
-  * @tm_condition: condition variable for task management
-  * @tm_slots_in_use: bit map of task management request slots in use
-+ * @pwr_done: completion for power mode change
-  * @ufshcd_state: UFSHCD states
-  * @eh_flags: Error handling flags
-  * @intr_mask: Interrupt Mask Bits
-@@ -227,6 +228,8 @@ struct ufs_hba {
- 	unsigned long tm_condition;
- 	unsigned long tm_slots_in_use;
- 
-+	struct completion *pwr_done;
-+
- 	u32 ufshcd_state;
- 	u32 eh_flags;
- 	u32 intr_mask;
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 1e1fe26..0475c66 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -124,6 +124,9 @@ enum {
- #define CONTROLLER_FATAL_ERROR			UFS_BIT(16)
- #define SYSTEM_BUS_FATAL_ERROR			UFS_BIT(17)
- 
-+#define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL |\
-+				 UIC_POWER_MODE)
-+
- #define UFSHCD_ERROR_MASK	(UIC_ERROR |\
- 				DEVICE_FATAL_ERROR |\
- 				CONTROLLER_FATAL_ERROR |\
-@@ -142,6 +145,15 @@ enum {
- #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
- #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
- 
++/* PA power modes */
 +enum {
-+	PWR_OK		= 0x0,
-+	PWR_LOCAL	= 0x01,
-+	PWR_REMOTE	= 0x02,
-+	PWR_BUSY	= 0x03,
-+	PWR_ERROR_CAP	= 0x04,
-+	PWR_FATAL_ERROR	= 0x05,
++	FAST_MODE	= 1,
++	SLOW_MODE	= 2,
++	FASTAUTO_MODE	= 4,
++	SLOWAUTO_MODE	= 5,
++	UNCHANGED	= 7,
 +};
 +
- /* HCE - Host Controller Enable 34h */
- #define CONTROLLER_ENABLE	UFS_BIT(0)
- #define CONTROLLER_DISABLE	0x0
++/* PA TX/RX Frequency Series */
++enum {
++	PA_HS_MODE_A	= 1,
++	PA_HS_MODE_B	= 2,
++};
++
+ /*
+  * Data Link Layer Attributes
+  */
+@@ -127,4 +142,10 @@
+ #define T_TC0TXMAXSDUSIZE	0x4060
+ #define T_TC1TXMAXSDUSIZE	0x4061
+ 
++/* Boolean attribute values */
++enum {
++	FALSE = 0,
++	TRUE,
++};
++
+ #endif /* _UNIPRO_H_ */
 -- 
 1.8.4
 
