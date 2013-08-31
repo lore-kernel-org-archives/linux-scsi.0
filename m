@@ -1,15 +1,15 @@
 From: Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH 2/6] scsi: ufs: fix the setting interrupt aggregation counter
-Date: Sat, 31 Aug 2013 21:40:20 +0530
-Message-ID: <1377965424-30991-3-git-send-email-santoshsy@gmail.com>
+Subject: [PATCH 3/6] scsi: ufs: add dme configuration primitives
+Date: Sat, 31 Aug 2013 21:40:21 +0530
+Message-ID: <1377965424-30991-4-git-send-email-santoshsy@gmail.com>
 References: <1377965424-30991-1-git-send-email-santoshsy@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:58297 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753901Ab3HaQLM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Aug 2013 12:11:12 -0400
-Received: by mail-pa0-f42.google.com with SMTP id lj1so3539922pab.1
-        for <linux-scsi@vger.kernel.org>; Sat, 31 Aug 2013 09:11:11 -0700 (PDT)
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:47959 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754424Ab3HaQL2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Aug 2013 12:11:28 -0400
+Received: by mail-pa0-f45.google.com with SMTP id bg4so3509211pad.18
+        for <linux-scsi@vger.kernel.org>; Sat, 31 Aug 2013 09:11:27 -0700 (PDT)
 In-Reply-To: <1377965424-30991-1-git-send-email-santoshsy@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,13 +18,10 @@ Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, Seungwon Jeon <tgih.jun@
 
 From: Seungwon Jeon <tgih.jun@samsung.com>
 
-IACTH(Interrupt aggregation counter threshold) value is allowed
-up to 0x1F and current setting value is the maximum.
-This value is related with NUTRS(max:0x20) of HCI's capability.
-Considering HCI controller doesn't support the maximum, IACTH
-setting should be adjusted with possible value.
-For that, existing 'ufshcd_config_int_aggr' is split into two part
-[reset, configure].
+Implements to support GET and SET operations of the DME.
+These operations are used to configure the behavior of
+the UNIPRO. Along with basic operation, {Peer/AttrSetType}
+can be mixed.
 
 Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
@@ -32,116 +29,195 @@ Tested-by: Yaniv Gardi <ygardi@codeaurora.org>
 Signed-off-by: Santosh Y <santoshsy@gmail.com>
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ac3d56b..86d7286 100644
+index 86d7286..03ff4da 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -59,6 +59,9 @@
- /* Expose the flag value from utp_upiu_query.value */
- #define MASK_QUERY_UPIU_FLAG_LOC 0xFF
- 
-+/* Interrupt aggregation default timeout, unit: 40us */
-+#define INT_AGGR_DEF_TO	0x02
-+
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
- 	UFSHCD_MAX_ID		= 1,
-@@ -94,12 +97,6 @@ enum {
- 	UFSHCD_INT_CLEAR,
- };
- 
--/* Interrupt aggregation options */
--enum {
--	INT_AGGR_RESET,
--	INT_AGGR_CONFIG,
--};
--
- #define ufshcd_set_eh_in_progress(h) \
- 	(h->eh_flags |= UFSHCD_EH_IN_PROGRESS)
- #define ufshcd_eh_in_progress(h) \
-@@ -340,30 +337,30 @@ static inline bool ufshcd_is_exception_event(struct utp_upiu_rsp *ucd_rsp_ptr)
+@@ -285,6 +285,18 @@ static inline int ufshcd_get_uic_cmd_result(struct ufs_hba *hba)
  }
  
  /**
-- * ufshcd_config_int_aggr - Configure interrupt aggregation values.
-- *		Currently there is no use case where we want to configure
-- *		interrupt aggregation dynamically. So to configure interrupt
-- *		aggregation, #define INT_AGGR_COUNTER_THRESHOLD_VALUE and
-- *		INT_AGGR_TIMEOUT_VALUE are used.
-+ * ufshcd_reset_intr_aggr - Reset interrupt aggregation values.
-  * @hba: per adapter instance
-- * @option: Interrupt aggregation option
-  */
- static inline void
--ufshcd_config_int_aggr(struct ufs_hba *hba, int option)
-+ufshcd_reset_intr_aggr(struct ufs_hba *hba)
- {
--	switch (option) {
--	case INT_AGGR_RESET:
--		ufshcd_writel(hba, INT_AGGR_ENABLE |
--			      INT_AGGR_COUNTER_AND_TIMER_RESET,
--			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
--		break;
--	case INT_AGGR_CONFIG:
--		ufshcd_writel(hba, INT_AGGR_ENABLE | INT_AGGR_PARAM_WRITE |
--			      INT_AGGR_COUNTER_THRESHOLD_VALUE |
--			      INT_AGGR_TIMEOUT_VALUE,
--			      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
--		break;
--	}
-+	ufshcd_writel(hba, INT_AGGR_ENABLE |
-+		      INT_AGGR_COUNTER_AND_TIMER_RESET,
-+		      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
++ * ufshcd_get_dme_attr_val - Get the value of attribute returned by UIC command
++ * @hba: Pointer to adapter instance
++ *
++ * This function gets UIC command argument3
++ * Returns 0 on success, non zero value on error
++ */
++static inline u32 ufshcd_get_dme_attr_val(struct ufs_hba *hba)
++{
++	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3);
 +}
 +
 +/**
-+ * ufshcd_config_intr_aggr - Configure interrupt aggregation values.
+  * ufshcd_get_req_rsp - returns the TR response transaction type
+  * @ucd_rsp_ptr: pointer to response UPIU
+  */
+@@ -1440,6 +1452,80 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+ }
+ 
+ /**
++ * ufshcd_dme_set_attr - UIC command for DME_SET, DME_PEER_SET
 + * @hba: per adapter instance
-+ * @cnt: Interrupt aggregation counter threshold
-+ * @tmout: Interrupt aggregation timeout value
++ * @attr_sel: uic command argument1
++ * @attr_set: attribute set type as uic command argument2
++ * @mib_val: setting value as uic command argument3
++ * @peer: indicate whether peer or local
++ *
++ * Returns 0 on success, non-zero value on failure
 + */
-+static inline void
-+ufshcd_config_intr_aggr(struct ufs_hba *hba, u8 cnt, u8 tmout)
++int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
++			u8 attr_set, u32 mib_val, u8 peer)
 +{
-+	ufshcd_writel(hba, INT_AGGR_ENABLE | INT_AGGR_PARAM_WRITE |
-+		      INT_AGGR_COUNTER_THLD_VAL(cnt) |
-+		      INT_AGGR_TIMEOUT_VAL(tmout),
-+		      REG_UTP_TRANSFER_REQ_INT_AGG_CONTROL);
++	struct uic_command uic_cmd = {0};
++	static const char *const action[] = {
++		"dme-set",
++		"dme-peer-set"
++	};
++	const char *set = action[!!peer];
++	int ret;
++
++	uic_cmd.command = peer ?
++		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
++	uic_cmd.argument1 = attr_sel;
++	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
++	uic_cmd.argument3 = mib_val;
++
++	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
++	if (ret)
++		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
++			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(ufshcd_dme_set_attr);
++
++/**
++ * ufshcd_dme_get_attr - UIC command for DME_GET, DME_PEER_GET
++ * @hba: per adapter instance
++ * @attr_sel: uic command argument1
++ * @mib_val: the value of the attribute as returned by the UIC command
++ * @peer: indicate whether peer or local
++ *
++ * Returns 0 on success, non-zero value on failure
++ */
++int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
++			u32 *mib_val, u8 peer)
++{
++	struct uic_command uic_cmd = {0};
++	static const char *const action[] = {
++		"dme-get",
++		"dme-peer-get"
++	};
++	const char *get = action[!!peer];
++	int ret;
++
++	uic_cmd.command = peer ?
++		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
++	uic_cmd.argument1 = attr_sel;
++
++	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
++	if (ret) {
++		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
++			get, UIC_GET_ATTR_ID(attr_sel), ret);
++		goto out;
++	}
++
++	if (mib_val)
++		*mib_val = uic_cmd.argument3;
++out:
++	return ret;
++}
++EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
++
++/**
+  * ufshcd_complete_dev_init() - checks device readiness
+  * hba: per-adapter instance
+  *
+@@ -1912,6 +1998,8 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba)
+ 	if (hba->active_uic_cmd) {
+ 		hba->active_uic_cmd->argument2 |=
+ 			ufshcd_get_uic_cmd_result(hba);
++		hba->active_uic_cmd->argument3 =
++			ufshcd_get_dme_attr_val(hba);
+ 		complete(&hba->active_uic_cmd->done);
+ 	}
  }
- 
- /**
-@@ -1523,7 +1520,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
- 
- 	/* Configure interrupt aggregation */
--	ufshcd_config_int_aggr(hba, INT_AGGR_CONFIG);
-+	ufshcd_config_intr_aggr(hba, hba->nutrs - 1, INT_AGGR_DEF_TO);
- 
- 	/* Configure UTRL and UTMRL base address registers */
- 	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
-@@ -1971,7 +1968,7 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 
- 	/* Reset interrupt aggregation counters */
- 	if (int_aggr_reset)
--		ufshcd_config_int_aggr(hba, INT_AGGR_RESET);
-+		ufshcd_reset_intr_aggr(hba);
- }
- 
- /**
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 8f5624e..ab1518d 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -275,4 +275,55 @@ static inline void check_upiu_size(void)
+ extern int ufshcd_runtime_suspend(struct ufs_hba *hba);
+ extern int ufshcd_runtime_resume(struct ufs_hba *hba);
+ extern int ufshcd_runtime_idle(struct ufs_hba *hba);
++extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
++			       u8 attr_set, u32 mib_val, u8 peer);
++extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
++			       u32 *mib_val, u8 peer);
++
++/* UIC command interfaces for DME primitives */
++#define DME_LOCAL	0
++#define DME_PEER	1
++#define ATTR_SET_NOR	0	/* NORMAL */
++#define ATTR_SET_ST	1	/* STATIC */
++
++static inline int ufshcd_dme_set(struct ufs_hba *hba, u32 attr_sel,
++				 u32 mib_val)
++{
++	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
++				   mib_val, DME_LOCAL);
++}
++
++static inline int ufshcd_dme_st_set(struct ufs_hba *hba, u32 attr_sel,
++				    u32 mib_val)
++{
++	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
++				   mib_val, DME_LOCAL);
++}
++
++static inline int ufshcd_dme_peer_set(struct ufs_hba *hba, u32 attr_sel,
++				      u32 mib_val)
++{
++	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_NOR,
++				   mib_val, DME_PEER);
++}
++
++static inline int ufshcd_dme_peer_st_set(struct ufs_hba *hba, u32 attr_sel,
++					 u32 mib_val)
++{
++	return ufshcd_dme_set_attr(hba, attr_sel, ATTR_SET_ST,
++				   mib_val, DME_PEER);
++}
++
++static inline int ufshcd_dme_get(struct ufs_hba *hba,
++				 u32 attr_sel, u32 *mib_val)
++{
++	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_LOCAL);
++}
++
++static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
++				      u32 attr_sel, u32 *mib_val)
++{
++	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
++}
++
+ #endif /* End of Header */
 diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index f1e1b74..739ae3a 100644
+index 739ae3a..1e1fe26 100644
 --- a/drivers/scsi/ufs/ufshci.h
 +++ b/drivers/scsi/ufs/ufshci.h
-@@ -226,8 +226,8 @@ enum {
+@@ -191,6 +191,12 @@ enum {
+ #define CONFIG_RESULT_CODE_MASK		0xFF
+ #define GENERIC_ERROR_CODE_MASK		0xFF
  
- #define MASK_UIC_COMMAND_RESULT			0xFF
- 
--#define INT_AGGR_COUNTER_THRESHOLD_VALUE	(0x1F << 8)
--#define INT_AGGR_TIMEOUT_VALUE			(0x02)
-+#define INT_AGGR_COUNTER_THLD_VAL(c)	(((c) & 0x1F) << 8)
-+#define INT_AGGR_TIMEOUT_VAL(t)		(((t) & 0xFF) << 0)
- 
- /* Interrupt disable masks */
++#define UIC_ARG_MIB_SEL(attr, sel)	((((attr) & 0xFFFF) << 16) |\
++					 ((sel) & 0xFFFF))
++#define UIC_ARG_MIB(attr)		UIC_ARG_MIB_SEL(attr, 0)
++#define UIC_ARG_ATTR_TYPE(t)		(((t) & 0xFF) << 16)
++#define UIC_GET_ATTR_ID(v)		(((v) >> 16) & 0xFFFF)
++
+ /* UIC Commands */
  enum {
+ 	UIC_CMD_DME_GET			= 0x01,
 -- 
 1.8.4
 
