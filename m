@@ -1,64 +1,206 @@
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: [PATCH] scsi disk: Use its own buffer for the vpd request
-Date: Sun, 01 Sep 2013 20:40:51 +0200
-Message-ID: <52238A33.7020703@fastmail.fm>
-References: <87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm> <87fvuxdqes.fsf@spindle.srvr.nix> <yq1txjdhree.fsf@sermon.lab.mkp.net> <51F80167.1080004@fastmail.fm> <yq1zjt3h11y.fsf@sermon.lab.mkp.net> <51F94E8D.5040908@fastmail.fm> <51F95A2E.60805@fastmail.fm> <51FA71E2.6010501@fastmail.fm> <871u5b7azv.fsf@spindle.srvr.nix> <20130831015337.GA8164@kroah.com> <87d2ot1w27.fsf@spindle.srvr.nix>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] scsi: Convert uses of compare_ether_addr to ether_addr_equal
+Date: Sun, 01 Sep 2013 12:32:33 -0700
+Message-ID: <1378063953.1953.14.camel@joe-AO722>
+References: <1378061483.1953.3.camel@joe-AO722>
+	 <1378062947.1953.9.camel@joe-AO722>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87d2ot1w27.fsf@spindle.srvr.nix>
+In-Reply-To: <1378062947.1953.9.camel@joe-AO722>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: Greg KH <greg@kroah.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw, stable@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fcoe-devel@open-fcoe.org
+Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Robert Love <robert.w.love@intel.com>, Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/31/2013 09:48 PM, Nix wrote:
-> On 31 Aug 2013, Greg KH said:
->> On Fri, Aug 30, 2013 at 11:01:56AM +0100, Nix wrote:
->>> On 1 Aug 2013, Bernd Schubert said:
->>>
->>>> Once I noticed that scsi_get_vpd_page() works fine from other function
->>>> calls and that it is not 0x89, but already 0x0 that fails fixing it became
->>>> easy.
->>>>
->>>> Nix, any chance you could verify it also works for you?
->>>
->>> As an aside, this commit does indeed fix the bug I reported, but it
->>> doesn't seem to have gone anywhere, not even into -stable.
->>>
->>> Is it held up somehow?
->>>
->>> (stable has
->>>
->>> commit 0ac10bd036f0f3b8ce7ac2390446eab9531c72eb
->>> Author: Martin K. Petersen <martin.petersen@oracle.com>
->>> Date:   Tue Jul 30 22:58:34 2013 -0400
->>>
->>>     SCSI: Don't attempt to send extended INQUIRY command if skip_vpd_pages is set
->>>
->>> which IIRC was eventually found not to be necessary, because this fix
->>> works fine instead?)
->>>
->>> Possibly I'm misremembering the order of month-old events and Martin's
->>> fix was eventually considered better... in which case, sorry for the noise.
->>
->> Is that other patch even needed anymore, now that Martin's patch is in
->> the tree?
-> 
-> My understanding is that this patch is rather better, since Martin's
-> patch prevents sending of the extended INQUIRY command at all: this one
-> just uses a reduced buffer size, but can still issue the command. (But I
-> may be misunderstanding everything.)
+Preliminary to removing compare_ether_addr altogether:
 
-Hmm, I wonder if 7562523e84ddc742fe1f9db8bd76b01acca89f6b (linus tree) /
-0ac10bd036f0f3b8ce7ac2390446eab9531c72eb (stable-tree) always works . It
-tests if sdev->skip_vpd_pages is set, but
-as far as I can see this only gets set for Seagate drives via
-BLIST_SKIP_VPD_PAGES.
-So if anything else than a Seagate drive is connected to an Areca
-controller with older firmware it will still fail.
+Use the new bool function ether_addr_equal to add
+some clarity and reduce the likelihood for misuse
+of compare_ether_addr for sorting.
 
+Done via cocci script:
 
-Cheers,
-Bernd
+$ cat compare_ether_addr.cocci
+@@
+expression a,b;
+@@
+-	!compare_ether_addr(a, b)
++	ether_addr_equal(a, b)
+
+@@
+expression a,b;
+@@
+-	compare_ether_addr(a, b)
++	!ether_addr_equal(a, b)
+
+@@
+expression a,b;
+@@
+-	!ether_addr_equal(a, b) == 0
++	ether_addr_equal(a, b)
+
+@@
+expression a,b;
+@@
+-	!ether_addr_equal(a, b) != 0
++	!ether_addr_equal(a, b)
+
+@@
+expression a,b;
+@@
+-	ether_addr_equal(a, b) == 0
++	!ether_addr_equal(a, b)
+
+@@
+expression a,b;
+@@
+-	ether_addr_equal(a, b) != 0
++	ether_addr_equal(a, b)
+
+@@
+expression a,b;
+@@
+-	!!ether_addr_equal(a, b)
++	ether_addr_equal(a, b)
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  3 +--
+ drivers/scsi/fcoe/fcoe.c          |  2 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c     | 22 +++++++++++-----------
+ drivers/scsi/fcoe/fcoe_sysfs.c    |  2 +-
+ drivers/scsi/fnic/fnic_fcs.c      |  6 +++---
+ 5 files changed, 17 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 69ac554..1c83670 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -542,8 +542,7 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 	vn_port = fc_vport_id_lookup(lport, ntoh24(fh->fh_d_id));
+ 	if (vn_port) {
+ 		port = lport_priv(vn_port);
+-		if (compare_ether_addr(port->data_src_addr, dest_mac)
+-		    != 0) {
++		if (!ether_addr_equal(port->data_src_addr, dest_mac)) {
+ 			BNX2FC_HBA_DBG(lport, "fpma mismatch\n");
+ 			put_cpu();
+ 			kfree_skb(skb);
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 07453bb..7dd26cc 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1455,7 +1455,7 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 	eh = eth_hdr(skb);
+ 
+ 	if (is_fip_mode(ctlr) &&
+-	    compare_ether_addr(eh->h_source, ctlr->dest_addr)) {
++	    !ether_addr_equal(eh->h_source, ctlr->dest_addr)) {
+ 		FCOE_NETDEV_DBG(netdev, "wrong source mac address:%pM\n",
+ 				eh->h_source);
+ 		goto err;
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 203415e..9a08f5d 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -300,7 +300,7 @@ static void fcoe_ctlr_announce(struct fcoe_ctlr *fip)
+ 	spin_unlock_bh(&fip->ctlr_lock);
+ 	sel = fip->sel_fcf;
+ 
+-	if (sel && !compare_ether_addr(sel->fcf_mac, fip->dest_addr))
++	if (sel && ether_addr_equal(sel->fcf_mac, fip->dest_addr))
+ 		goto unlock;
+ 	if (!is_zero_ether_addr(fip->dest_addr)) {
+ 		printk(KERN_NOTICE "libfcoe: host%d: "
+@@ -1000,7 +1000,7 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 		if (fcf->switch_name == new.switch_name &&
+ 		    fcf->fabric_name == new.fabric_name &&
+ 		    fcf->fc_map == new.fc_map &&
+-		    compare_ether_addr(fcf->fcf_mac, new.fcf_mac) == 0) {
++		    ether_addr_equal(fcf->fcf_mac, new.fcf_mac)) {
+ 			found = 1;
+ 			break;
+ 		}
+@@ -1340,7 +1340,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 			mp = (struct fip_mac_desc *)desc;
+ 			if (dlen < sizeof(*mp))
+ 				goto err;
+-			if (compare_ether_addr(mp->fd_mac, fcf->fcf_mac))
++			if (!ether_addr_equal(mp->fd_mac, fcf->fcf_mac))
+ 				goto err;
+ 			desc_mask &= ~BIT(FIP_DT_MAC);
+ 			break;
+@@ -1418,8 +1418,8 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 			 * 'port_id' is already validated, check MAC address and
+ 			 * wwpn
+ 			 */
+-			if (compare_ether_addr(fip->get_src_addr(vn_port),
+-						vp->fd_mac) != 0 ||
++			if (!ether_addr_equal(fip->get_src_addr(vn_port),
++					      vp->fd_mac) ||
+ 				get_unaligned_be64(&vp->fd_wwpn) !=
+ 							vn_port->wwpn)
+ 				continue;
+@@ -1479,12 +1479,12 @@ static int fcoe_ctlr_recv_handler(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 		goto drop;
+ 	eh = eth_hdr(skb);
+ 	if (fip->mode == FIP_MODE_VN2VN) {
+-		if (compare_ether_addr(eh->h_dest, fip->ctl_src_addr) &&
+-		    compare_ether_addr(eh->h_dest, fcoe_all_vn2vn) &&
+-		    compare_ether_addr(eh->h_dest, fcoe_all_p2p))
++		if (!ether_addr_equal(eh->h_dest, fip->ctl_src_addr) &&
++		    !ether_addr_equal(eh->h_dest, fcoe_all_vn2vn) &&
++		    !ether_addr_equal(eh->h_dest, fcoe_all_p2p))
+ 			goto drop;
+-	} else if (compare_ether_addr(eh->h_dest, fip->ctl_src_addr) &&
+-		   compare_ether_addr(eh->h_dest, fcoe_all_enode))
++	} else if (!ether_addr_equal(eh->h_dest, fip->ctl_src_addr) &&
++		   !ether_addr_equal(eh->h_dest, fcoe_all_enode))
+ 		goto drop;
+ 	fiph = (struct fip_header *)skb->data;
+ 	op = ntohs(fiph->fip_op);
+@@ -1856,7 +1856,7 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 		 * address_mode flag to use FC_OUI-based Ethernet DA.
+ 		 * Otherwise we use the FCoE gateway addr
+ 		 */
+-		if (!compare_ether_addr(sa, (u8[6])FC_FCOE_FLOGI_MAC)) {
++		if (ether_addr_equal(sa, (u8[6])FC_FCOE_FLOGI_MAC)) {
+ 			fcoe_ctlr_map_dest(fip);
+ 		} else {
+ 			memcpy(fip->dest_addr, sa, ETH_ALEN);
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index c9382d6..eb42c0a 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -653,7 +653,7 @@ static int fcoe_fcf_device_match(struct fcoe_fcf_device *new,
+ 	if (new->switch_name == old->switch_name &&
+ 	    new->fabric_name == old->fabric_name &&
+ 	    new->fc_map == old->fc_map &&
+-	    compare_ether_addr(new->mac, old->mac) == 0)
++	    ether_addr_equal(new->mac, old->mac))
+ 		return 1;
+ 	return 0;
+ }
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 006fa92..902520c 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -651,13 +651,13 @@ void fnic_update_mac_locked(struct fnic *fnic, u8 *new)
+ 
+ 	if (is_zero_ether_addr(new))
+ 		new = ctl;
+-	if (!compare_ether_addr(data, new))
++	if (ether_addr_equal(data, new))
+ 		return;
+ 	FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, "update_mac %pM\n", new);
+-	if (!is_zero_ether_addr(data) && compare_ether_addr(data, ctl))
++	if (!is_zero_ether_addr(data) && !ether_addr_equal(data, ctl))
+ 		vnic_dev_del_addr(fnic->vdev, data);
+ 	memcpy(data, new, ETH_ALEN);
+-	if (compare_ether_addr(new, ctl))
++	if (!ether_addr_equal(new, ctl))
+ 		vnic_dev_add_addr(fnic->vdev, new);
+ }
+ 
