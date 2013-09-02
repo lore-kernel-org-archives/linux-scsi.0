@@ -1,33 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/7] Disallow changing the device state via sysfs into
- "deleted"
-Date: Mon, 2 Sep 2013 12:17:31 -0700
-Message-ID: <20130902191731.GA31438@infradead.org>
-References: <52135B99.2000102@acm.org>
- <52135C47.4090106@acm.org>
- <20130901164929.GD4344@infradead.org>
- <5224E012.6030907@acm.org>
- <20130902190645.GA18957@infradead.org>
- <5224E30F.9090605@acm.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
+Date: Mon, 02 Sep 2013 19:45:13 +0000
+Message-ID: <bug-60758-11613-6ptxWZBw4r@https.bugzilla.kernel.org/>
+References: <bug-60758-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:34971 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755949Ab3IBTRv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Sep 2013 15:17:51 -0400
-Content-Disposition: inline
-In-Reply-To: <5224E30F.9090605@acm.org>
+Received: from mail.kernel.org ([198.145.19.201]:47924 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757074Ab3IBTpR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Sep 2013 15:45:17 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id B0DF820176
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Sep 2013 19:45:16 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id E13482018A
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Sep 2013 19:45:13 +0000 (UTC)
+In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, Sep 02, 2013 at 09:12:15PM +0200, Bart Van Assche wrote:
-> Hmm ... I think the second option would require to add an additional
-> case in sdev_set_state() to avoid a compiler warning. This is
-> something James objected against (on June 24, see also
-> http://thread.gmane.org/gmane.linux.scsi/82572/focus=82576).
+https://bugzilla.kernel.org/show_bug.cgi?id=60758
 
-In that case the cast version seems fine to me.
+--- Comment #20 from Jeff Zhou <jz.researcher@yahoo.com> ---
+Yes, there could be extra bugs.
 
+Since this bug is about "scsi_wait_scan not found" in v3.10.5 and above, we can
+try to work on this one first.
+
+As suggested by Alan, the lsinitrd is available, it can be used to list out the
+modules of a initramfs file.
+Would you like to run lsinitrd for a working version (v.3.10.4-1) and the first
+version with issue (v.3.10.5-1) to show the modules in the initramfs file?
+
+lsinitrd initrd_v.xxx.img > v.xxx.lst
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
