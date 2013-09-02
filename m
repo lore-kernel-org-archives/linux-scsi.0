@@ -1,96 +1,44 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv5 0/9] New EH command timeout handler
-Date: Mon,  2 Sep 2013 09:12:56 +0200
-Message-ID: <1378105985-79686-1-git-send-email-hare@suse.de>
+Subject: [PATCH 4/9] virtio_scsi: Enable new EH timeout handler
+Date: Mon,  2 Sep 2013 09:13:00 +0200
+Message-ID: <1378105985-79686-5-git-send-email-hare@suse.de>
+References: <1378105985-79686-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38422 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:38449 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758087Ab3IBHNN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Sep 2013 03:13:13 -0400
+	id S1758098Ab3IBHNO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Sep 2013 03:13:14 -0400
+In-Reply-To: <1378105985-79686-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, Hannes Reinecke <hare@suse.de>
 
-Hi all,
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/virtio_scsi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-this patchset implements a new SCSI EH command timeout handler
-which will be sending command aborts inline without actually
-engaging SCSI EH.
-SCSI EH will only be invoked if command abort fails.
-
-In addition the commands will be returned directly
-if the command abort succeeded, cutting down recovery
-times dramatically.
-
-With the original SCSI EH I got:
-# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
-4096+0 records in
-4096+0 records out
-16777216 bytes (17 MB) copied, 142.652 s, 118 kB/s
-
-real	2m22.657s
-user	0m0.013s
-sys	0m0.145s
-
-With this patchset I got:
-# time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
-4096+0 records in
-4096+0 records out
-16777216 bytes (17 MB) copied, 52.1579 s, 322 kB/s
-
-real	0m52.163s
-user	0m0.012s
-sys	0m0.145s
-
-Test was to disable RSCN on the target port, disable the
-target port, and then start the 'dd' command as indicated.
-
-Changes to the original version:
-- Use a private list in scsi_eh_abort_handler to avoid
-  list starvation (pointed out by Joern Engel)
-- Terminate command aborts when the first abort fails
-- Do not attempt command aborts if the host is already in recovery
-  or if the device is removed.
-- Flush abort workqueue if the device is removed.
-
-Changes to v2:
-- Removed eh_entry initialisation
-- Convert to per-command workqueue
-
-Changes to v3:
-- Use delayed_work
-- Enable new eh timeout handler for virtio, SAS, and FC
-- Modify logging messages to include scmd pointer
-
-Changes to v4:
-- Remove stubs when enabling new eh timeout handler
-  for other drivers
-
-Hannes Reinecke (9):
-  scsi: Fix erratic device offline during EH
-  blk-timeout: add BLK_EH_SCHEDULED return code
-  scsi: improved eh timeout handler
-  virtio_scsi: Enable new EH timeout handler
-  libsas: Enable new EH timeout handler
-  mptsas: Enable new EH timeout handler
-  mpt2sas: Enable new EH timeout handler
-  mpt3sas: Enable new EH timeout handler
-  scsi_transport_fc: Enable new EH timeout handler
-
- drivers/message/fusion/mptsas.c      |   3 +-
- drivers/scsi/libsas/sas_scsi_host.c  |   2 +-
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |   3 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |   1 +
- drivers/scsi/scsi.c                  |   3 +
- drivers/scsi/scsi_error.c            | 178 ++++++++++++++++++++++++++++++-----
- drivers/scsi/scsi_priv.h             |   2 +
- drivers/scsi/scsi_transport_fc.c     |   2 +-
- drivers/scsi/virtio_scsi.c           |   2 +
- include/linux/blkdev.h               |   1 +
- include/scsi/scsi_cmnd.h             |   2 +
- 11 files changed, 173 insertions(+), 26 deletions(-)
-
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 74b88ef..5fca1ca 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -683,6 +683,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.queuecommand = virtscsi_queuecommand_single,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = scsi_abort_command,
+ 
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
+@@ -699,6 +700,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.queuecommand = virtscsi_queuecommand_multi,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = scsi_abort_command,
+ 
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
 -- 
 1.7.12.4
 
