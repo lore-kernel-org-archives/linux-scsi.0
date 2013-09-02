@@ -1,195 +1,111 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/3] scsi_error: Update documentation
-Date: Mon,  2 Sep 2013 13:58:38 +0200
-Message-ID: <1378123118-111972-4-git-send-email-hare@suse.de>
+Subject: [PATCH 1/3] scsi: Fix erratic device offline during EH
+Date: Mon,  2 Sep 2013 13:58:36 +0200
+Message-ID: <1378123118-111972-2-git-send-email-hare@suse.de>
 References: <1378123118-111972-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48751 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:48752 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758410Ab3IBL6n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1758423Ab3IBL6n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 2 Sep 2013 07:58:43 -0400
 In-Reply-To: <1378123118-111972-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Update the documentation to cover asynchronous command aborts
-and clarify sections referring to SCSI timeout handling.
+Commit 18a4d0a22ed6c54b67af7718c305cd010f09ddf8
+(Handle disk devices which can not process medium access commands)
+was introduced to offline any device which cannot process medium
+access commands.
+However, commit 3eef6257de48ff84a5d98ca533685df8a3beaeb8
+(Reduce error recovery time by reducing use of TURs) reduced
+the number of TURs by sending it only on the first failing
+command, which might or might not be a medium access command.
+So in combination this results in an erratic device offlining
+during EH; if the command where the TUR was sent upon happens
+to be a medium access command the device will be set offline,
+if not everything proceeds as normal.
 
+So instead of checking the EH command in the ->eh_action
+callback we should rather call ->eh_action when we're
+about to finish the command _and_ have sent a TUR previously.
+This should then set the device offline as advertised.
+
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Ewan Milne <emilne@redhat.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- Documentation/scsi/scsi_eh.txt          | 69 +++++++++++++++++++--------------
- Documentation/scsi/scsi_mid_low_api.txt |  9 ++++-
- drivers/scsi/scsi.c                     |  6 +--
- 3 files changed, 48 insertions(+), 36 deletions(-)
+ drivers/scsi/scsi_error.c | 28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
 
-diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
-index 6ff16b6..a0c8511 100644
---- a/Documentation/scsi/scsi_eh.txt
-+++ b/Documentation/scsi/scsi_eh.txt
-@@ -42,20 +42,14 @@ discussion.
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index abf0916..c88cb7e 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -941,12 +941,6 @@ retry:
  
-  Once LLDD gets hold of a scmd, either the LLDD will complete the
- command by calling scsi_done callback passed from midlayer when
--invoking hostt->queuecommand() or SCSI midlayer will time it out.
-+invoking hostt->queuecommand() or the block layer will time it out.
+ 	scsi_eh_restore_cmnd(scmd, &ses);
  
- 
- [1-2-1] Completing a scmd w/ scsi_done
- 
-  For all non-EH commands, scsi_done() is the completion callback.  It
--does the following.
+-	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+-		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+-		if (sdrv->eh_action)
+-			rtn = sdrv->eh_action(scmd, cmnd, cmnd_size, rtn);
+-	}
 -
-- 1. Delete timeout timer.  If it fails, it means that timeout timer
--    has expired and is going to finish the command.  Just return.
--
-- 2. Link scmd to per-cpu scsi_done_q using scmd->en_entry
--
-- 3. Raise SCSI_SOFTIRQ
-+just calls blk_complete_request() to delete the block layer timer and
-+raise SCSI_SOFTIRQ
- 
-  SCSI_SOFTIRQ handler scsi_softirq calls scsi_decide_disposition() to
- determine what to do with the command.  scsi_decide_disposition()
-@@ -64,10 +58,12 @@ with the command.
- 
-  - SUCCESS
- 	scsi_finish_command() is invoked for the command.  The
--	function does some maintenance choirs and notify completion by
--	calling scmd->done() callback, which, for fs requests, would
--	be HLD completion callback - sd:sd_rw_intr, sr:rw_intr,
--	st:st_intr.
-+	function does some maintenance chores and then calls
-+	scsi_io_completion() to finish the I/O.
-+	scsi_io_completion() then notifies the block layer on
-+	the completed request by calling blk_end_request and
-+	friends or figures out what to do with the remainder
-+	of the data in case of an error.
- 
-  - NEEDS_RETRY
-  - ADD_TO_MLQUEUE
-@@ -86,33 +82,45 @@ function
-  1. invokes optional hostt->eh_timed_out() callback.  Return value can
-     be one of
- 
--    - EH_HANDLED
--	This indicates that eh_timed_out() dealt with the timeout.  The
--	scmd is passed to __scsi_done() and thus linked into per-cpu
--	scsi_done_q.  Normal command completion described in [1-2-1]
--	follows.
-+    - BLK_EH_HANDLED
-+	This indicates that eh_timed_out() dealt with the timeout.
-+	The command is passed back to the block layer and completed
-+	via __blk_complete_requests().
-+
-+	*NOTE* After returning BLK_EH_HANDLED the SCSI layer is
-+	assumed to be finished with the command, and no other
-+	functions from the SCSI layer will be called. So this
-+	should typically only be returned if the eh_timed_out()
-+	handler raced with normal completion.
- 
--    - EH_RESET_TIMER
-+    - BLK_EH_RESET_TIMER
- 	This indicates that more time is required to finish the
- 	command.  Timer is restarted.  This action is counted as a
- 	retry and only allowed scmd->allowed + 1(!) times.  Once the
--	limit is reached, action for EH_NOT_HANDLED is taken instead.
-+	limit is reached, action for BLK_EH_NOT_HANDLED is taken instead.
- 
--	*NOTE* This action is racy as the LLDD could finish the scmd
--	after the timeout has expired but before it's added back.  In
--	such cases, scsi_done() would think that timeout has occurred
--	and return without doing anything.  We lose completion and the
--	command will time out again.
--
--    - EH_NOT_HANDLED
--	This is the same as when eh_timed_out() callback doesn't exist.
-+    - BLK_EH_NOT_HANDLED
-+        eh_timed_out() callback did not handle the command.
- 	Step #2 is taken.
- 
-+ 2. If the host supports asynchronous completion (as indicated by the
-+    no_async_abort setting in the host template) scsi_abort_command()
-+    is invoked to schedule an asynchrous abort. If that fails
-+    Step #3 is taken.
-+
-  2. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
-     command.  See [1-3] for more information.
- 
-+[1-3] Asynchronous command aborts
-+
-+ After a timeout occurs a command abort is scheduled from
-+ scsi_abort_command(). If the abort is successful the command
-+ will either be retried (if the number of retries is not exhausted)
-+ or terminated with DID_TIME_OUT.
-+ Otherwise scsi_eh_scmd_add() is invoked for the command.
-+ See [1-4] for more information.
- 
--[1-3] How EH takes over
-+[1-4] How EH takes over
- 
-  scmds enter EH via scsi_eh_scmd_add(), which does the following.
- 
-@@ -320,7 +328,8 @@ scmd->allowed.
- 
-     <<scsi_eh_abort_cmds>>
- 
--	This action is taken for each timed out command.
-+	This action is taken for each timed out command when
-+	no_async_abort is enabled in the host template.
- 	hostt->eh_abort_handler() is invoked for each scmd.  The
- 	handler returns SUCCESS if it has succeeded to make LLDD and
- 	all related hardware forget about the scmd.
-diff --git a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
-index 2b06aba..78f419e 100644
---- a/Documentation/scsi/scsi_mid_low_api.txt
-+++ b/Documentation/scsi/scsi_mid_low_api.txt
-@@ -882,8 +882,11 @@ Details:
-  *
-  *      Calling context: kernel thread
-  *
-- *      Notes: Invoked from scsi_eh thread. No other commands will be
-- *      queued on current host during eh.
-+ *      Notes: If 'no_async_abort' is defined this callback
-+ *  	will be invoked from scsi_eh thread. No other commands
-+ *	will then be queued on current host during eh.
-+ *	Otherwise it will be called whenever scsi_times_out()
-+ *      is called due to a command timeout.
-  *
-  *      Optionally defined in: LLD
-  **/
-@@ -1257,6 +1260,8 @@ of interest:
-                    address space
-     use_clustering - 1=>SCSI commands in mid level's queue can be merged,
-                      0=>disallow SCSI command merging
-+    no_async_abort - 1=>Asynchronous aborts are not supported
-+    		     0=>Timed-out commands will be aborted asynchronously
-     hostt        - pointer to driver's struct scsi_host_template from which
-                    this struct Scsi_Host instance was spawned
-     hostt->proc_name  - name of LLD. This is the driver name that sysfs uses
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 2b04a57..d8afec8 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -745,15 +745,13 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	return rtn;
  }
  
+@@ -964,6 +958,18 @@ static int scsi_request_sense(struct scsi_cmnd *scmd)
+ 	return scsi_send_eh_cmnd(scmd, NULL, 0, scmd->device->eh_timeout, ~0);
+ }
+ 
++static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
++{
++	static unsigned char tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0};
++
++	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
++		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
++		if (sdrv->eh_action)
++			rtn = sdrv->eh_action(scmd, tur_command, 6, rtn);
++	}
++	return rtn;
++}
++
  /**
-- * scsi_done - Enqueue the finished SCSI command into the done queue.
-+ * scsi_done - Invoke completion on finished SCSI command.
-  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
-  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
-  *
-  * Description: This function is the mid-level's (SCSI Core) interrupt routine,
-  * which regains ownership of the SCSI command (de facto) from a LLDD, and
-- * enqueues the command to the done queue for further processing.
-- *
-- * This is the producer of the done queue who enqueues at the tail.
-+ * calls blk_complete_request() for further processing.
-  *
-  * This function is interrupt context safe.
-  */
+  * scsi_eh_finish_cmd - Handle a cmd that eh is finished with.
+  * @scmd:	Original SCSI cmd that eh has finished.
+@@ -1142,7 +1148,9 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
+ 
+ 		list_for_each_entry_safe(scmd, next, cmd_list, eh_entry)
+ 			if (scmd->device == sdev) {
+-				if (finish_cmds)
++				if (finish_cmds &&
++				    (try_stu ||
++				     scsi_eh_action(scmd, SUCCESS) == SUCCESS))
+ 					scsi_eh_finish_cmd(scmd, done_q);
+ 				else
+ 					list_move_tail(&scmd->eh_entry, work_q);
+@@ -1281,7 +1289,8 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 			    !scsi_eh_tur(stu_scmd)) {
+ 				list_for_each_entry_safe(scmd, next,
+ 							  work_q, eh_entry) {
+-					if (scmd->device == sdev)
++					if (scmd->device == sdev &&
++					    scsi_eh_action(scmd, SUCCESS) == SUCCESS)
+ 						scsi_eh_finish_cmd(scmd, done_q);
+ 				}
+ 			}
+@@ -1348,7 +1357,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ 			    !scsi_eh_tur(bdr_scmd)) {
+ 				list_for_each_entry_safe(scmd, next,
+ 							 work_q, eh_entry) {
+-					if (scmd->device == sdev)
++					if (scmd->device == sdev &&
++					    scsi_eh_action(scmd, rtn) != FAILED)
+ 						scsi_eh_finish_cmd(scmd,
+ 								   done_q);
+ 				}
 -- 
 1.7.12.4
 
