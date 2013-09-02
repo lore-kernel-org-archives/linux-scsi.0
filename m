@@ -1,59 +1,51 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] qla2xxx: Add support for ISP8044.
-Date: Mon, 2 Sep 2013 12:20:30 +0300
-Message-ID: <20130902092030.GC30037@elgon.mountain>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCHv5 0/9] New EH command timeout handler
+Date: Mon, 2 Sep 2013 02:31:29 -0700
+Message-ID: <20130902093129.GA17201@infradead.org>
+References: <1378105985-79686-1-git-send-email-hare@suse.de>
+ <20130902082728.GA15554@infradead.org>
+ <52245235.9020408@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28669 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757897Ab3IBJUe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Sep 2013 05:20:34 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:33273 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932150Ab3IBJbh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Sep 2013 05:31:37 -0400
 Content-Disposition: inline
+In-Reply-To: <52245235.9020408@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: atul.deshmukh@qlogic.com
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>
 
-Hello Atul Deshmukh,
+On Mon, Sep 02, 2013 at 10:54:13AM +0200, Hannes Reinecke wrote:
+> I don't mind. Having talked to the various SCSI folks everyone
+> agreed that calling abort asynchronously shouldn't do any harm.
+> At least as far as the SCSI spec goes.
+> 
+> As for documentation: I didn't document it it currently as with my
+> implementation it's pretty much an optional thing.
+> But if we were to enable it globally it surely should be documented.
+> 
+> So if there is a consensus I surely can enable it globally and
+> update the documentation.
 
-This is a semi-automatic email about new static checker warnings.
+I would defintively love enabling it globally.  As a fallback we should
+probably keep the old code for a while and prepare a way to disable
+the async code by a flag in the host template.  If no reason to enable
+it shows up after a year ore two we can remove the old code entirely.
 
-The patch ef4647420025: "[SCSI] qla2xxx: Add support for ISP8044." 
-from Aug 27, 2013, leads to the following Smatch complaint:
+I.e change the tail of scsi_times_out into something like:
 
-drivers/scsi/qla2xxx/qla_os.c:2962 qla2x00_probe_one()
-	 error: we previously assumed 'base_vha' could be null (see line 2632)
 
-drivers/scsi/qla2xxx/qla_os.c
-  2631		base_vha = qla2x00_create_host(sht, ha);
-  2632		if (!base_vha) {
-                     ^^^^^^^^
-Existing check.
+	if (rtn == BLK_EH_NOT_HANDLED && !shost->hostt->no_async_abort) {
+		if (scsi_abort_command(scmd))
+			return BLK_EH_NOT_HANDLED;
+	}
 
-  2633			ret = -ENOMEM;
-  2634			qla2x00_mem_free(ha);
-  2635			qla2x00_free_req_que(ha, req);
-  2636			qla2x00_free_rsp_que(ha, rsp);
-  2637			goto probe_hw_failed;
-  2638		}
+	scmd->result |= DID_TIME_OUT << 16;
+	...
 
-[ snip ]
-
-  2954	probe_hw_failed:
-  2955		if (IS_QLA82XX(ha)) {
-  2956			qla82xx_idc_lock(ha);
-  2957			qla82xx_clear_drv_active(ha);
-  2958			qla82xx_idc_unlock(ha);
-  2959		}
-  2960		if (IS_QLA8044(ha)) {
-  2961			qla8044_idc_lock(ha);
-  2962			qla8044_clear_drv_active(base_vha);
-                                                 ^^^^^^^^
-Patch adds dereference.
-
-  2963			qla8044_idc_unlock(ha);
-  2964		}
-
-regards,
-dan carpenter
+That way we don't even need the new BLK_EH_SCHEDULED return value and
+have all the handling in scsi_error.c
