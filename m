@@ -1,47 +1,199 @@
-From: Bradley Grove <bgrove@attotech.com>
-Subject: ATTO 6G SAS/SATA HBA Driver
-Date: Tue, 03 Sep 2013 13:11:49 -0400
-Message-ID: <52261855.7050503@attotech.com>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: [PATCH 4/5] uas: add dead request list
+Date: Tue, 3 Sep 2013 10:39:08 -0700
+Message-ID: <20130903173908.GA4965@xanatos>
+References: <1378121129-32594-1-git-send-email-kraxel@redhat.com>
+ <1378121129-32594-5-git-send-email-kraxel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:8014 "EHLO
-	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753389Ab3ICRLz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Sep 2013 13:11:55 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1378121129-32594-5-git-send-email-kraxel@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gerd Hoffmann <kraxel@redhat.com>
+Cc: linux-usb@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "open list:USB ATTACHED SCSI" <linux-scsi@vger.kernel.org>, "open list:USB MASS STORAGE..." <usb-storage@lists.one-eyed-alien.net>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Jason Seba <jseba@attotech.com>
 
+Don't you need to send an ABORT TASK message to the device to cancel the
+outstanding request for that stream ID?  I don't see that in this code.
+I see lots of URB cancellation code, but nothing to remove the request
+from the device-side queue.
 
-James,
+Does this code currently handle the case where a device refuses to
+respond to a SCSI request, and the upper layers attempt to cancel that
+request?  Or does it simply ensure that SCSI bus reset works?
 
-Now that we are finishing up development for our esas2r driver, we are 
-planning to start work on a kernel driver for our PM8001 based 6G 
-SAS/SATA HBA product.  We have some questions about the best way to proceed.
+I'm not comfortable with removing CONFIG_BROKEN until the upper layers
+can cancel one outstanding request.
 
-While we haven't done thorough testing, our hardware appears to work 
-with the existing PM8001 kernel driver.   The problem is that the 
-existing kernel driver doesn't support all the features of the hardware 
-or match the feature set of the current closed source driver.   For 
-example, our closed source driver supports SES emulation over I2C and 
-SGPIO.  Our closed source driver also has custom PHY settings to support 
-longer cable lengths.   We also have a set of propriety management tools 
-we'd like to work with the open source driver, though it looks like the 
-PM8001's sysfs interface provides most of the functionality we need.
+Plus, as Joe mentioned, this code is full of BUG_ON(), which is not
+friendly to users, and doesn't increase my confidence that the driver is
+ready to have CONFIG_BROKEN removed.
 
-What are our options for supporting these features?  I see that Adaptec 
-had an out-of-tree driver for their PM8001 card that supports additional 
-features.   We'd prefer to have a kernel driver that fully supports our 
-hardware, either based on the existing PM8001 driver or our closed 
-source code base.   Is that possible?
+Sarah Sharp
 
--- 
-Bradley Grove
-System Software Engineer
-ATTO Technology, Inc.
-Phone:  +1.716.691.1999 ext. 144
-Fax +1.716.691.9353
-"Powering the World's Networks & Storage"
+On Mon, Sep 02, 2013 at 01:25:28PM +0200, Gerd Hoffmann wrote:
+> This patch adds a new list where all requests which are canceled are
+> added to, so we don't loose them.  Then, after killing all inflight
+> urbs on bus reset (and disconnect) we'll walk over the list and clean
+> them up.
+> 
+> Without this we can end up with aborted requests lingering around in
+> case of status pipe transfer errors.
+> 
+> Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+> ---
+>  drivers/usb/storage/uas.c | 69 +++++++++++++++++++++++++++++++++++++++++------
+>  1 file changed, 61 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index a63972a..9dfb8f9 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -78,6 +78,7 @@ struct uas_cmd_info {
+>  	struct urb *data_in_urb;
+>  	struct urb *data_out_urb;
+>  	struct list_head work;
+> +	struct list_head dead;
+>  };
+>  
+>  /* I hate forward declarations, but I actually have a loop */
+> @@ -87,10 +88,12 @@ static void uas_do_work(struct work_struct *work);
+>  static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller);
+>  static void uas_configure_endpoints(struct uas_dev_info *devinfo);
+>  static void uas_free_streams(struct uas_dev_info *devinfo);
+> +static void uas_log_cmd_state(struct scsi_cmnd *cmnd, const char *caller);
+>  
+>  static DECLARE_WORK(uas_work, uas_do_work);
+>  static DEFINE_SPINLOCK(uas_lists_lock);
+>  static LIST_HEAD(uas_work_list);
+> +static LIST_HEAD(uas_dead_list);
+>  
+>  static void uas_unlink_data_urbs(struct uas_dev_info *devinfo,
+>  				 struct uas_cmd_info *cmdinfo)
+> @@ -167,15 +170,13 @@ static void uas_abort_work(struct uas_dev_info *devinfo)
+>  		struct uas_dev_info *di = (void *)cmnd->device->hostdata;
+>  
+>  		if (di == devinfo) {
+> +			uas_log_cmd_state(cmnd, __func__);
+> +			BUG_ON(cmdinfo->state & COMMAND_ABORTED);
+>  			cmdinfo->state |= COMMAND_ABORTED;
+> +			spin_lock_irq(&uas_lists_lock);
+> +			list_add_tail(&cmdinfo->dead, &uas_dead_list);
+> +			spin_unlock_irq(&uas_lists_lock);
+>  			cmdinfo->state &= ~IS_IN_WORK_LIST;
+> -			if (devinfo->resetting) {
+> -				/* uas_stat_cmplt() will not do that
+> -				 * when a device reset is in
+> -				 * progress */
+> -				cmdinfo->state &= ~COMMAND_INFLIGHT;
+> -			}
+> -			uas_try_complete(cmnd, __func__);
+>  		} else {
+>  			/* not our uas device, relink into list */
+>  			list_del(&cmdinfo->work);
+> @@ -187,6 +188,43 @@ static void uas_abort_work(struct uas_dev_info *devinfo)
+>  	spin_unlock_irqrestore(&devinfo->lock, flags);
+>  }
+>  
+> +static void uas_zap_dead(struct uas_dev_info *devinfo)
+> +{
+> +	struct uas_cmd_info *cmdinfo;
+> +	struct uas_cmd_info *temp;
+> +	struct list_head list;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irq(&uas_lists_lock);
+> +	list_replace_init(&uas_dead_list, &list);
+> +	spin_unlock_irq(&uas_lists_lock);
+> +
+> +	spin_lock_irqsave(&devinfo->lock, flags);
+> +	list_for_each_entry_safe(cmdinfo, temp, &list, dead) {
+> +		struct scsi_pointer *scp = (void *)cmdinfo;
+> +		struct scsi_cmnd *cmnd = container_of(scp,
+> +							struct scsi_cmnd, SCp);
+> +		struct uas_dev_info *di = (void *)cmnd->device->hostdata;
+> +
+> +		if (di == devinfo) {
+> +			uas_log_cmd_state(cmnd, __func__);
+> +			BUG_ON(!(cmdinfo->state & COMMAND_ABORTED));
+> +			/* all urbs are killed, clear inflight bits */
+> +			cmdinfo->state &= ~(COMMAND_INFLIGHT |
+> +					    DATA_IN_URB_INFLIGHT |
+> +					    DATA_OUT_URB_INFLIGHT);
+> +			uas_try_complete(cmnd, __func__);
+> +		} else {
+> +			/* not our uas device, relink into list */
+> +			list_del(&cmdinfo->dead);
+> +			spin_lock_irq(&uas_lists_lock);
+> +			list_add_tail(&cmdinfo->dead, &uas_dead_list);
+> +			spin_unlock_irq(&uas_lists_lock);
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&devinfo->lock, flags);
+> +}
+> +
+>  static void uas_sense(struct urb *urb, struct scsi_cmnd *cmnd)
+>  {
+>  	struct sense_iu *sense_iu = urb->transfer_buffer;
+> @@ -274,6 +312,9 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
+>  	if (cmdinfo->state & COMMAND_ABORTED) {
+>  		scmd_printk(KERN_INFO, cmnd, "abort completed\n");
+>  		cmnd->result = DID_ABORT << 16;
+> +		spin_lock_irq(&uas_lists_lock);
+> +		list_del(&cmdinfo->dead);
+> +		spin_unlock_irq(&uas_lists_lock);
+>  	}
+>  	cmnd->scsi_done(cmnd);
+>  	return 0;
+> @@ -307,7 +348,12 @@ static void uas_stat_cmplt(struct urb *urb)
+>  	u16 tag;
+>  
+>  	if (urb->status) {
+> -		dev_err(&urb->dev->dev, "URB BAD STATUS %d\n", urb->status);
+> +		if (urb->status == -ENOENT) {
+> +			dev_err(&urb->dev->dev, "stat urb: killed (stream %d\n",
+> +				urb->stream_id);
+> +		} else {
+> +			dev_err(&urb->dev->dev, "stat urb: status %d\n", urb->status);
+> +		}
+>  		usb_free_urb(urb);
+>  		return;
+>  	}
+> @@ -762,7 +808,11 @@ static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
+>  
+>  	uas_log_cmd_state(cmnd, __func__);
+>  	spin_lock_irqsave(&devinfo->lock, flags);
+> +	BUG_ON(cmdinfo->state & COMMAND_ABORTED);
+>  	cmdinfo->state |= COMMAND_ABORTED;
+> +	spin_lock_irq(&uas_lists_lock);
+> +	list_add_tail(&cmdinfo->dead, &uas_dead_list);
+> +	spin_unlock_irq(&uas_lists_lock);
+>  	if (cmdinfo->state & IS_IN_WORK_LIST) {
+>  		spin_lock(&uas_lists_lock);
+>  		list_del(&cmdinfo->work);
+> @@ -797,11 +847,13 @@ static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
+>  	struct usb_device *udev = devinfo->udev;
+>  	int err;
+>  
+> +	shost_printk(KERN_INFO, sdev->host, "%s start\n", __func__);
+>  	devinfo->resetting = 1;
+>  	uas_abort_work(devinfo);
+>  	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
+>  	usb_kill_anchored_urbs(&devinfo->sense_urbs);
+>  	usb_kill_anchored_urbs(&devinfo->data_urbs);
+> +	uas_zap_dead(devinfo);
+>  	uas_free_streams(devinfo);
+>  	err = usb_reset_device(udev);
+>  	if (!err) {
+> @@ -1055,6 +1107,7 @@ static void uas_disconnect(struct usb_interface *intf)
+>  	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
+>  	usb_kill_anchored_urbs(&devinfo->sense_urbs);
+>  	usb_kill_anchored_urbs(&devinfo->data_urbs);
+> +	uas_zap_dead(devinfo);
+>  	scsi_remove_host(shost);
+>  	uas_free_streams(devinfo);
+>  	kfree(devinfo);
+> -- 
+> 1.8.3.1
+> 
