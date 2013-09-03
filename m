@@ -1,52 +1,47 @@
-From: Santosh Y <santoshsy@gmail.com>
-Subject: Re: [PATCH] scsi: ufs: replace the deprecated flush_work_sync
-Date: Tue, 3 Sep 2013 09:41:00 -0700
-Message-ID: <CALMYJDuCkDcf1+OrVh4XL-=dSHc_u2R3Y6Ad_POTWXbnirdQjA@mail.gmail.com>
-References: <60A4377E7BEE4B2EA7855F9701B34BF0@chingDT> <1377512423.20958.7.camel@dabdike>
- <005501cea87b$8cc5a550$a650eff0$%jun@samsung.com>
+From: Bradley Grove <bgrove@attotech.com>
+Subject: ATTO 6G SAS/SATA HBA Driver
+Date: Tue, 03 Sep 2013 13:11:49 -0400
+Message-ID: <52261855.7050503@attotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:36159 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756708Ab3ICQld (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Sep 2013 12:41:33 -0400
-Received: by mail-bk0-f41.google.com with SMTP id na10so2333419bkb.0
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Sep 2013 09:41:30 -0700 (PDT)
-In-Reply-To: <005501cea87b$8cc5a550$a650eff0$%jun@samsung.com>
+Received: from sw.attotech.com ([208.69.85.34]:8014 "EHLO
+	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753389Ab3ICRLz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Sep 2013 13:11:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seungwon Jeon <tgih.jun@samsung.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, Jason Seba <jseba@attotech.com>
 
-On Tue, Sep 3, 2013 at 12:59 AM, Seungwon Jeon <tgih.jun@samsung.com> wrote:
-> flush_work_sync is replaced by flush_work with commit
-> 4382973(workqueue: deprecate flush[_delayed]_work_sync()).
->
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index a0f5ac2..1b99c0a 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2737,7 +2737,7 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
->                         break;
->                 spin_unlock_irqrestore(hba->host->host_lock, flags);
->                 dev_dbg(hba->dev, "%s: reset in progress\n", __func__);
-> -               flush_work_sync(&hba->eh_work);
-> +               flush_work(&hba->eh_work);
->         } while (1);
->
->         hba->ufshcd_state = UFSHCD_STATE_RESET;
-> --
-> 1.7.0.4
->
->
 
-Acked-by: Santosh Y <santoshsy@gmail.com>
+James,
+
+Now that we are finishing up development for our esas2r driver, we are 
+planning to start work on a kernel driver for our PM8001 based 6G 
+SAS/SATA HBA product.  We have some questions about the best way to proceed.
+
+While we haven't done thorough testing, our hardware appears to work 
+with the existing PM8001 kernel driver.   The problem is that the 
+existing kernel driver doesn't support all the features of the hardware 
+or match the feature set of the current closed source driver.   For 
+example, our closed source driver supports SES emulation over I2C and 
+SGPIO.  Our closed source driver also has custom PHY settings to support 
+longer cable lengths.   We also have a set of propriety management tools 
+we'd like to work with the open source driver, though it looks like the 
+PM8001's sysfs interface provides most of the functionality we need.
+
+What are our options for supporting these features?  I see that Adaptec 
+had an out-of-tree driver for their PM8001 card that supports additional 
+features.   We'd prefer to have a kernel driver that fully supports our 
+hardware, either based on the existing PM8001 driver or our closed 
+source code base.   Is that possible?
 
 -- 
-~Santosh
+Bradley Grove
+System Software Engineer
+ATTO Technology, Inc.
+Phone:  +1.716.691.1999 ext. 144
+Fax +1.716.691.9353
+"Powering the World's Networks & Storage"
