@@ -1,34 +1,43 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
-Date: Tue, 03 Sep 2013 10:33:36 +0000
-Message-ID: <bug-60758-11613-KsO6RknvRa@https.bugzilla.kernel.org/>
-References: <bug-60758-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:38638 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759820Ab3ICKdm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Sep 2013 06:33:42 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id E122F203AE
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Sep 2013 10:33:40 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 201F52037B
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Sep 2013 10:33:37 +0000 (UTC)
-In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Gerd Hoffmann <kraxel@redhat.com>
+Subject: [PATCH 2/5] uas: properly reinitialize in uas_eh_bus_reset_handler
+Date: Tue,  3 Sep 2013 15:46:42 +0200
+Message-ID: <1378216005-10326-3-git-send-email-kraxel@redhat.com>
+References: <1378216005-10326-1-git-send-email-kraxel@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1378216005-10326-1-git-send-email-kraxel@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-usb@vger.kernel.org
+Cc: Gerd Hoffmann <kraxel@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "open list:USB ATTACHED SCSI" <linux-scsi@vger.kernel.org>, "open list:USB MASS STORAGE..." <usb-storage@lists.one-eyed-alien.net>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60758
+Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+---
+ drivers/usb/storage/uas.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
---- Comment #23 from zakrzewskim@wp.pl ---
-Ok. Thank you.
-
-Maybe you need to get such board - H87-G43 to test it ?
-
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index d966b59..fc08ee9 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -85,6 +85,8 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 				struct uas_dev_info *devinfo, gfp_t gfp);
+ static void uas_do_work(struct work_struct *work);
+ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller);
++static void uas_configure_endpoints(struct uas_dev_info *devinfo);
++static void uas_free_streams(struct uas_dev_info *devinfo);
+ 
+ static DECLARE_WORK(uas_work, uas_do_work);
+ static DEFINE_SPINLOCK(uas_work_lock);
+@@ -800,7 +802,10 @@ static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
+ 	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
+ 	usb_kill_anchored_urbs(&devinfo->sense_urbs);
+ 	usb_kill_anchored_urbs(&devinfo->data_urbs);
++	uas_free_streams(devinfo);
+ 	err = usb_reset_device(udev);
++	if (!err)
++		uas_configure_endpoints(devinfo);
+ 	devinfo->resetting = 0;
+ 
+ 	if (err) {
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+1.8.3.1
