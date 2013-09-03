@@ -1,58 +1,57 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL -v3] target fixes for v3.12-rc0 (was v3.11)
-Date: Mon, 02 Sep 2013 23:15:08 -0700
-Message-ID: <1378188908.32763.404.camel@haakon3.risingtidesystems.com>
+From: Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 2/7] scsi/csiostor: use pcie_capability_xxx to simplify code
+Date: Tue, 3 Sep 2013 15:35:10 +0800
+Message-ID: <1378193715-25328-2-git-send-email-wangyijing@huawei.com>
+References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, nab@daterainc.com, Ted Ts'o <tytso@thunk.org>
+Content-Type: text/plain
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <1378193715-25328-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Gavin Shan <shangw@linux.vnet.ibm.com>, Bjorn Helgaas <bhelgaas@google.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "David S. Miller" <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>, Hanjun Guo <guohanjun@huawei.com>, Jiang Liu <jiang.liu@huawei.com>, Naresh Kumar Inna <naresh@chelsio.com>, Jesper Juhl <jj@chaosbits.net>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+Pcie_capability_xxx() interfaces were introudced to
+simplify code to access PCIe Cap config space. And
+because PCI core saves the PCIe Cap offset in
+set_pcie_port_type() when device is enumerated.
+So we can use pci_is_pcie() instead.
 
-Now with DKIM + SPF in place on linux-iscsi.org (thanks for the help Ted
-& Co), here is another attempt at the target fixes PULL request for
-v3.11 that was missed.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jesper Juhl <jj@chaosbits.net>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/csiostor/csio_hw.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-Given that the last PULL emails hit your spam folder, if/when you get
-this please give me a quick response to confirm.
-
-Please go ahead and pull from:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
-
-The first patch is to address a long standing issue where INQUIRY vendor
-+ model response data was not correctly padded with ASCII spaces,
-causing MSFT and Falconstor multipath stacks to not function with our
-LUNs.
-
-The second -> forth patches are additional iscsi-target regression fixes
-for the post >= v3.10 iser-target changes.  The second and third are
-failure cases that have appeared during further testing, and the forth
-is only reproducible with malformed NOP packets.
-
-The fifth patch is a v3.11 specific regression caused by a recent
-optimization that showed up during WRITE I/O failure testing.
-
-I'll be sending Patch #1 and Patch #5 to Greg-KH separately for stable.
-
-Thank you,
-
---nab
-
-Nicholas Bellinger (5):
-  target: Fix trailing ASCII space usage in INQUIRY vendor+model
-  iscsi-target: Fix ImmediateData=Yes failure regression in >= v3.10
-  iscsi-target: Fix iscsit_transport reference leak during NP thread
-    reset
-  iscsi-target: Fix potential NULL pointer in solicited NOPOUT reject
-  target: Fix se_cmd->state_list leak regression during WRITE failure
-
- drivers/target/iscsi/iscsi_target.c       |   17 ++++++++++-------
- drivers/target/iscsi/iscsi_target_login.c |    9 ++++-----
- drivers/target/target_core_spc.c          |    9 ++++++---
- drivers/target/target_core_transport.c    |   11 +++++++++++
- 4 files changed, 31 insertions(+), 15 deletions(-)
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 0eb35b9..be9a6ef 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -856,15 +856,12 @@ static void
+ csio_set_pcie_completion_timeout(struct csio_hw *hw, u8 range)
+ {
+ 	uint16_t val;
+-	int pcie_cap;
+ 
+-	if (!csio_pci_capability(hw->pdev, PCI_CAP_ID_EXP, &pcie_cap)) {
+-		pci_read_config_word(hw->pdev,
+-				     pcie_cap + PCI_EXP_DEVCTL2, &val);
++	if (pci_is_pcie(hw->pdev)) {
++		pcie_capability_read_word(hw->pdev, PCI_EXP_DEVCTL2, &val);
+ 		val &= 0xfff0;
+ 		val |= range ;
+-		pci_write_config_word(hw->pdev,
+-				      pcie_cap + PCI_EXP_DEVCTL2, val);
++		pcie_capability_write_word(hw->pdev, PCI_EXP_DEVCTL2, val);
+ 	}
+ }
+ 
+-- 
+1.7.1
