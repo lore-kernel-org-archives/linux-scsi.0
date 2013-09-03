@@ -1,52 +1,56 @@
-From: Seungwon Jeon <tgih.jun@samsung.com>
-Subject: [PATCH] scsi: ufs: replace the deprecated flush_work_sync
-Date: Tue, 03 Sep 2013 16:59:43 +0900
-Message-ID: <005501cea87b$8cc5a550$a650eff0$%jun@samsung.com>
-References: <60A4377E7BEE4B2EA7855F9701B34BF0@chingDT>
- <1377512423.20958.7.camel@dabdike>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 3/9] scsi: improved eh timeout handler
+Date: Tue, 03 Sep 2013 11:13:30 +0200
+Message-ID: <5225A83A.7090700@acm.org>
+References: <1378105985-79686-1-git-send-email-hare@suse.de> <1378105985-79686-4-git-send-email-hare@suse.de> <52248882.7060109@acm.org> <52248E6C.2060105@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:45158 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932313Ab3ICH7p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Sep 2013 03:59:45 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSJ00HP0I7J07H0@mailout2.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 03 Sep 2013 16:59:43 +0900 (KST)
-In-reply-to: 
-Content-language: ko
+Received: from jacques.telenet-ops.be ([195.130.132.50]:33874 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753201Ab3ICJNe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Sep 2013 05:13:34 -0400
+In-Reply-To: <52248E6C.2060105@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'linux-scsi' <linux-scsi@vger.kernel.org>
-Cc: 'James Bottomley' <James.Bottomley@HansenPartnership.com>, 'Tejun Heo' <tj@kernel.org>, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Roland Dreier <roland@purestorage.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-flush_work_sync is replaced by flush_work with commit
-4382973(workqueue: deprecate flush[_delayed]_work_sync()).
+On 09/02/13 15:11, Hannes Reinecke wrote:
+> On 09/02/2013 02:45 PM, Bart Van Assche wrote:
+>> This patch adds several new calls to LLD EH handlers. Is it
+>> guaranteed that these will only be invoked before scsi_remove_host()
+>> has finished ? For more background information, see also "[PATCH]
+>> Make scsi_remove_host() wait until error handling finished"
+>> (http://thread.gmane.org/gmane.linux.scsi/82572/focus=82779).
+>>
+> Well, that depends how scsi_remove_host() handles outstanding
+> commands. What happens if you call scsi_remove_host() and there is
+> still I/O in flight? I would assume that any HBA would have to kill
+> any outstanding I/O prior to calling scsi_remove_host() (FC most
+> certainly does this).
+> Which would mean that it'll have to wait for scsi_put_command() to
+> be called for all outstanding commands. And as scsi_put_command()
+> will be called only _after_ our routine runs (see the reasoning
+> above) we should be safe.
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hello Hannes,
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a0f5ac2..1b99c0a 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2737,7 +2737,7 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
- 			break;
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		dev_dbg(hba->dev, "%s: reset in progress\n", __func__);
--		flush_work_sync(&hba->eh_work);
-+		flush_work(&hba->eh_work);
- 	} while (1);
- 
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
--- 
-1.7.0.4
+Since fc_remove_host() has to be invoked before scsi_remove_host() and 
+since fc_remove_host() changes the port state into FC_PORTSTATE_DELETED 
+this means that fc_remote_port_chkready() will return DID_NO_CONNECT 
+while scsi_remove_host() is in progress. I think this prevents that the 
+SYNCHRONIZE CACHE command submitted by sd_remove() reaches SCSI disks 
+over FC since sd_remove() is invoked from inside scsi_remove_host(). The 
+SRP transport patch I had posted recently makes sure that the 
+SYNCHRONIZE CACHE command submitted by sd_remove() reaches the target 
+SCSI disk. This makes me wonder what the correct behavior is for SCSI 
+transport drivers - disabling I/O before scsi_remove_host() starts or 
+ensuring that I/O is still possible while scsi_remove_host() is in 
+progress ? I think the call chain is as follows: scsi_remove_host() -> 
+device_del() -> bus_remove_device() -> device_release_driver() -> 
+__device_release_driver() -> sd_remove() -> sd_shutdown() -> 
+sd_sync_cache().
 
-
+Bart.
