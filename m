@@ -1,50 +1,58 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
-Date: Tue, 03 Sep 2013 05:09:51 +0000
-Message-ID: <bug-60758-11613-2VFQJdVTo8@https.bugzilla.kernel.org/>
-References: <bug-60758-11613@https.bugzilla.kernel.org/>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL -v3] target fixes for v3.12-rc0 (was v3.11)
+Date: Mon, 02 Sep 2013 23:15:08 -0700
+Message-ID: <1378188908.32763.404.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:57613 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753246Ab3ICFJz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Sep 2013 01:09:55 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 47B4B20218
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Sep 2013 05:09:54 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 6E9F52021E
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Sep 2013 05:09:51 +0000 (UTC)
-In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, nab@daterainc.com, Ted Ts'o <tytso@thunk.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60758
+Hi Linus,
 
---- Comment #22 from Jeff Zhou <jz.researcher@yahoo.com> ---
-(In reply to zakrzewskim from comment #21)
-> Here you are: http://www.upemax.user.icpnet.pl/3.10.4-1.el6.lst
+Now with DKIM + SPF in place on linux-iscsi.org (thanks for the help Ted
+& Co), here is another attempt at the target fixes PULL request for
+v3.11 that was missed.
 
-Yes then we see the scsi_scan_wait is not in 3.10.4 either, otherwise there
-will be a line :"drivers/scsi/scsi_wait_scan.ko".
+Given that the last PULL emails hit your spam folder, if/when you get
+this please give me a quick response to confirm.
 
-The rc.sysinit file in your system might need adjustment to remove the
-reference to scsi_wait_scan module.
+Please go ahead and pull from:
 
-But that might not be the root cause, since 3.10.4 without scsi_wait_scan works
-fine under this script.
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
-There could be a regression between 3.10.4 to 3.10.5 cause your system hang,
-might be or might not be scsi problem.
+The first patch is to address a long standing issue where INQUIRY vendor
++ model response data was not correctly padded with ASCII spaces,
+causing MSFT and Falconstor multipath stacks to not function with our
+LUNs.
 
-To find the root cause and fix it, probably need to roll back between 3.10.5 to
-3.10.4, build and test the kernel for booting, git bisect could be helpful.
-Then we can check the details to see why the commit crashing the specific
-machine.
+The second -> forth patches are additional iscsi-target regression fixes
+for the post >= v3.10 iser-target changes.  The second and third are
+failure cases that have appeared during further testing, and the forth
+is only reproducible with malformed NOP packets.
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+The fifth patch is a v3.11 specific regression caused by a recent
+optimization that showed up during WRITE I/O failure testing.
+
+I'll be sending Patch #1 and Patch #5 to Greg-KH separately for stable.
+
+Thank you,
+
+--nab
+
+Nicholas Bellinger (5):
+  target: Fix trailing ASCII space usage in INQUIRY vendor+model
+  iscsi-target: Fix ImmediateData=Yes failure regression in >= v3.10
+  iscsi-target: Fix iscsit_transport reference leak during NP thread
+    reset
+  iscsi-target: Fix potential NULL pointer in solicited NOPOUT reject
+  target: Fix se_cmd->state_list leak regression during WRITE failure
+
+ drivers/target/iscsi/iscsi_target.c       |   17 ++++++++++-------
+ drivers/target/iscsi/iscsi_target_login.c |    9 ++++-----
+ drivers/target/target_core_spc.c          |    9 ++++++---
+ drivers/target/target_core_transport.c    |   11 +++++++++++
+ 4 files changed, 31 insertions(+), 15 deletions(-)
