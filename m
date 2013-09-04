@@ -1,86 +1,63 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/7] scsi/bfa: use pcie_capability_xxx to simplify code
-Date: Tue, 3 Sep 2013 20:37:54 -0600
-Message-ID: <CAErSpo4d2s06Lb8U9TaBR+Niq0EaT8zK5dRaj=WSV3PpMpM0pQ@mail.gmail.com>
-References: <1378193715-25328-1-git-send-email-wangyijing@huawei.com> <20130903233438.GB24733@google.com>
+From: "Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>
+Subject: RE: [PATCH] Allow MPT Fusion SAS 3.0 driver to be built into the
+ kernel
+Date: Wed, 4 Sep 2013 09:26:41 +0530
+Message-ID: <DCD177647606E9419ED923E0C8C4AA723006D9AFCA@inbmail02.lsi.com>
+References: <20130903220011.GA20840@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130903233438.GB24733@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Gavin Shan <shangw@linux.vnet.ibm.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "David S. Miller" <davem@davemloft.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>, Jiang Liu <jiang.liu@huawei.com>, Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-db9lp0249.outbound.messaging.microsoft.com ([213.199.154.249]:26958
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760947Ab3IDD4x convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Sep 2013 23:56:53 -0400
+In-Reply-To: <20130903220011.GA20840@kroah.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, Support <support@lsi.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 
-On Tue, Sep 3, 2013 at 5:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Sep 03, 2013 at 03:35:09PM +0800, Yijing Wang wrote:
->> Pcie_capability_xxx() interfaces were introudced to
->> simplify code to access PCIe Cap config space. And
->> because PCI core saves the PCIe Cap offset in
->> set_pcie_port_type() when device is enumerated.
->> So we can use pci_is_pcie() instead.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Cc: Jiang Liu <jiang.liu@huawei.com>
->> Cc: Anil Gurumurthy <agurumur@brocade.com>
->> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
->> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
->> Cc: linux-scsi@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> ---
->>  drivers/scsi/bfa/bfad.c |    9 +++------
->>  1 files changed, 3 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
->> index 9611195..d726b81 100644
->> --- a/drivers/scsi/bfa/bfad.c
->> +++ b/drivers/scsi/bfa/bfad.c
->> @@ -767,7 +767,6 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
->>
->>       /* Adjust PCIe Maximum Read Request Size */
->>       if (pcie_max_read_reqsz > 0) {
->> -             int pcie_cap_reg;
->>               u16 pcie_dev_ctl;
->>               u16 mask = 0xffff;
->>
->> @@ -794,10 +793,8 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
->>                       break;
->>               }
->>
->> -             pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
->> -             if (mask != 0xffff && pcie_cap_reg) {
->> -                     pcie_cap_reg += 0x08;
->> -                     pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
->> +             if (mask != 0xffff && pci_is_pcie(pdev)) {
->
-> Please move the pci_is_pcie() test up to the
-> "if (pcie_mas_read_reqsz ..." statement.  There's no point in doing
-> the switch statement if this isn't a PCIe device.
->
->> +                     pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &pcie_dev_ctl);
->>                       if ((pcie_dev_ctl & 0x7000) != mask) {
+Hi James,
 
-I forgot to mention that this 0x7000 constant should be
-PCI_EXP_DEVCTL_READRQ instead.
+This patch seem to be fine. Please consider this patch.
 
->>                               printk(KERN_WARNING "BFA[%s]: "
->>                               "pcie_max_read_request_size is %d, "
->> @@ -806,7 +803,7 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
->>                               pcie_max_read_reqsz);
->>
->>                               pcie_dev_ctl &= ~0x7000;
->> -                             pci_write_config_word(pdev, pcie_cap_reg,
->> +                             pcie_capability_write_word(pdev, PCI_EXP_DEVCTL,
->>                                               pcie_dev_ctl | mask);
+Regards,
+Sreekanth.
+
+>-----Original Message-----
+>From: Greg Kroah-Hartman [mailto:gregkh@linuxfoundation.org]
+>Sent: Wednesday, September 04, 2013 3:30 AM
+>To: Nandigama, Nagalakshmi; Reddy, Sreekanth; Support;
+>JBottomley@parallels.com
+>Cc: linux-scsi@vger.kernel.org; DL-MPT Fusion Linux
+>Subject: [PATCH] Allow MPT Fusion SAS 3.0 driver to be built into the kernel
 >
-> Please rework this to use pcie_set_readrq() instead of writing
-> the capability directly.  If we write the capability directly, we
-> risk writing a value that is incompatible with the MPS
-> configuration done by the PCI core.
+>From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 >
->>                       }
->>               }
->> --
->> 1.7.1
->>
->>
+>Right now the Makefile for the mpt3sas driver does not even allow the driver
+>to be built into the kernel.  So fix that up, as there doesn't seem to be any
+>obvious reason why this shouldn't be done.
+>
+>Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+>Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+>Cc: support@lsi.com
+>Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+>Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>
+>
+>diff --git a/drivers/scsi/mpt3sas/Makefile b/drivers/scsi/mpt3sas/Makefile
+>index 4c1d2e7a..efb0c4c2 100644
+>--- a/drivers/scsi/mpt3sas/Makefile
+>+++ b/drivers/scsi/mpt3sas/Makefile
+>@@ -1,5 +1,5 @@
+> # mpt3sas makefile
+>-obj-m += mpt3sas.o
+>+obj-$(CONFIG_SCSI_MPT3SAS) += mpt3sas.o
+> mpt3sas-y +=  mpt3sas_base.o     \
+> 		mpt3sas_config.o \
+> 		mpt3sas_scsih.o      \
+
+
