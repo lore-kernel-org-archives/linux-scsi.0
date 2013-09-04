@@ -1,77 +1,48 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: Potential out-of-bounds access in drivers/scsi/sd.c
-Date: Wed, 04 Sep 2013 16:45:45 +0200
-Message-ID: <52274799.4090605@redhat.com>
-References: <CACT4Y+bt9weet_0DxfX3s=_xnxBGZjMG0gF7vea+8psov+ky8w@mail.gmail.com> <Pine.LNX.4.44L0.1309041030420.1186-100000@iolanthe.rowland.org>
+From: "Oliver Ekmann." <oliver_ekmann@hotmail.com>
+Subject: Geschaftsvorschlag.
+Date: Wed, 4 Sep 2013 22:57:33 +0800
+Message-ID: <e319d95272c1c783817d386b16f67423@ceta.com.my>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:62171 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934860Ab3IDOps (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Sep 2013 10:45:48 -0400
-Received: by mail-qa0-f44.google.com with SMTP id w8so2044337qac.17
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Sep 2013 07:45:47 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.44L0.1309041030420.1186-100000@iolanthe.rowland.org>
+Received: from [110.4.46.162] ([110.4.46.162]:58883 "EHLO
+	MIMIRON.penang.mschosting.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1762833Ab3IDPiN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Sep 2013 11:38:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Dmitry Vyukov <dvyukov@google.com>, linux-scsi@vger.kernel.org, richard@r-senior.demon.co.uk, ltuikov@yahoo.com, jbottomley@parallels.com, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>
+To: linux-scsi@vger.kernel.org
 
-Il 04/09/2013 16:32, Alan Stern ha scritto:
-> On Wed, 4 Sep 2013, Dmitry Vyukov wrote:
-> 
->> Hi,
->>
->> We are working on a memory error detector AddressSanitizer for Linux
->> kernel (https://code.google.com/p/address-sanitizer/wiki/AddressSanitizerForKernel),
->> it can detect use-after-free and buffer-overflow errors.
-> 
-> ...
-> 
->> The code in sd_read_cache_type does the following:
->>
->> while (offset < len) {
->> ...
->> }
->> ...
->> if ((buffer[offset] & 0x3f) != modepage) {
->>     sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
->>     goto defaults;
->> }
->>
->> When control leaves the while loop, offset >= len, so buffer[offset]
->> reads random garbage out-of-bounds.
->> It the worst case it can lead to crash, or if (buffer[offset] & 0x3f)
->> happen to be == modepage, then it will read more garbage.
->>
->> Please help validate and triage this.
-> 
-> The tool's output is correct.  The patch below should fix it.
-> 
-> Alan Stern
-> 
-> 
-> 
-> Index: usb-3.11/drivers/scsi/sd.c
-> ===================================================================
-> --- usb-3.11.orig/drivers/scsi/sd.c
-> +++ usb-3.11/drivers/scsi/sd.c
-> @@ -2419,7 +2419,7 @@ sd_read_cache_type(struct scsi_disk *sdk
->  			}
->  		}
->  
-> -		if (modepage == 0x3F) {
-> +		if (modepage == 0x3F || offset + 2 >= len) {
->  			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
->  				  "present\n");
->  			goto defaults;
+Lieber Freund
 
-If you do this, the buggy "if" becomes dead code (the loop above doesn't
-have any "break", so you know that offset >= len and the new condition
-is always true).
+Ich vermute das diese E-Mail eine =DCberraschung f=FCr Sie sein wird, a=
+ber es ist wahr.Ich bin bei einer routinen =DCberpr=FCfung in meiner Ba=
+nk (StandardBank PLC von S=FCd Afrika) wo ich arbeite, auf einem Konto =
+gesto=DFen, was nicht in anspruch genommen worden ist, wo derzeit USD$1=
+8.5M (Achtzehn Million, F=FCnf Hundert Tausend, US Dollar)  gutgeschrie=
+ben sind.Dieses Konto geh=F6rte Herrn Peter Hartmann, der ein Kunde in =
+unsere Bank war, der leider verstorben ist. Herr Hartmann war ein geb=FC=
+rtiger Deutscher.
 
-So the patch does indeed prevent the bug, but the code can be simplified.
+Damit es mir m=F6glich ist dieses Geld $18,500,000 inanspruch zunehmen,=
+ben=F6tige ich die zusammenarbeit eines Ausl=E4ndischen Partners wie Si=
+e,den ich als Verwandter und Erbe des verstorbenen Herrn Hartmann
+vorstellen kann,damit wir das Geld inanspruch nehmen k=F6nnen. F=FCr di=
+ese Unterst=FCtzung erhalten Sie 30% der Erbschaftsumme und die restlic=
+hen 70% teile ich mirmit meinen zwei Arbeitskollegen, die mich bei dies=
+er Transaktion ebenfalls unterst=FCtzen.
 
-Paolo
+Wenn Sie interessiert sind, k=F6nnen Sie mir bitte eine E-Mail auf mein=
+en prtivat E-Mail zuschicken oliver_ekmann@live.com, damit ich Ihnen me=
+hr Details zukommen lassen kann.=20
+
+Mit freundlichen Gr=FC=DFen
+
+Oliver Ekmann.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
