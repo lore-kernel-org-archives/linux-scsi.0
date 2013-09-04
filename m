@@ -1,38 +1,44 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 4/4] hpsa: bump driver version to reflect changes
-Date: Wed, 4 Sep 2013 15:12:27 -0500
-Message-ID: <20130904201227.GD28147@beardog.cce.hp.com>
+From: Dave Jones <davej@redhat.com>
+Subject: Re: [SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID
+ Adapter Driver
+Date: Wed, 4 Sep 2013 19:27:25 -0400
+Message-ID: <20130904232725.GA5727@redhat.com>
+References: <20130903233716.5333B660D6B@gitolite.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20130903233716.5333B660D6B@gitolite.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, bgrove@attotech.com
 List-Id: linux-scsi@vger.kernel.org
 
-Patch 4 of 4
+ > +struct esas2r_adapter {
+ > +	struct esas2r_target targetdb[ESAS2R_MAX_TARGETS];
+ > +	struct esas2r_target *targetdb_end;
+ ... 
+ > +	u8 fw_coredump_buff[ESAS2R_FWCOREDUMP_SZ];
 
-From: Mike Miller <mike.miller@hp.com>
 
-Changes the version of hpsa so we know something has changed. Please consider
-this for inclusion.
+ > +void esas2r_reset_chip(struct esas2r_adapter *a)
+ > +{
+ > +	if (!esas2r_is_adapter_present(a))
+ > +		return;
+ > +
+ > +	/*
+ > +	 * Before we reset the chip, save off the VDA core dump.  The VDA core
+ > +	 * dump is located in the upper 512KB of the onchip SRAM.  Make sure
+ > +	 * to not overwrite a previous crash that was saved.
+ > +	 */
+ > +	if ((a->flags2 & AF2_COREDUMP_AVAIL)
+ > +	    && !(a->flags2 & AF2_COREDUMP_SAVED)
+ > +	    && a->fw_coredump_buff) {
+ > +		esas2r_read_mem_block(a,
+ > +				      a->fw_coredump_buff,
+ > +				      MW_DATA_ADDR_SRAM + 0x80000,
+ > +				      ESAS2R_FWCOREDUMP_SZ);
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
----
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Comparing an array (fw_coredump_buff) to null probably isn't what you intended here.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 5097e0c..9bf6304 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -54,7 +54,7 @@
- #include "hpsa.h"
- 
- /* HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.' */
--#define HPSA_DRIVER_VERSION "2.0.2-1"
-+#define HPSA_DRIVER_VERSION "3.4.0-1"
- #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
- #define HPSA "hpsa"
- 
+	Dave
