@@ -1,51 +1,34 @@
-From: Dave Jones <davej@redhat.com>
-Subject: fix swapped arguments in aic7xxx:ahc_find_pci_device
-Date: Wed, 4 Sep 2013 22:33:09 -0400
-Message-ID: <20130905023309.GA10315@redhat.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [ANNOUNCE]: Emulex SCST support for 16Gb/s FC and FCoE CNAs
+Date: Wed, 04 Sep 2013 22:21:21 -0700
+Message-ID: <522814D1.100@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21860 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755050Ab3IECdR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Sep 2013 22:33:17 -0400
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r852XGmG014009
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Sep 2013 22:33:16 -0400
-Received: from gelk.kernelslacker.org (ovpn-113-166.phx2.redhat.com [10.3.113.166])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r852XAZP008240
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Sep 2013 22:33:16 -0400
-Received: from gelk.kernelslacker.org (localhost [127.0.0.1])
-	by gelk.kernelslacker.org (8.14.7/8.14.7) with ESMTP id r852X9Ur010399
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Sep 2013 22:33:09 -0400
-Received: (from davej@localhost)
-	by gelk.kernelslacker.org (8.14.7/8.14.7/Submit) id r852X96F010398
-	for linux-scsi@vger.kernel.org; Wed, 4 Sep 2013 22:33:09 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-The prototype for ahc_9005_subdevinfo_valid shows that the caller has the
-arguments in the wrong order.
+I'm glad to announce that SCST support for 16Gb/s FC and FCoE Emulex CNAs is now
+available as part of the Emulex OneCore Storage SDK tool set based on the Emulex SLI-4
+API. Support for 16Gb/s Fibre Channel LPe16000 series and FCoE hardware using target
+mode versions of the OneConnect FCoE CNAs is included. Documented for use with
+RHEL/CentOS 6.x based distributions, ocs_fc_scst works with the stable SCST 2.2.1 as
+well as the development versions of 2.2.x and 3.0.x. The driver code and documentation
+are available on the Emulex web site at:
+http://www.emulex.com/products/onecore-storage-software-development-kit/overview.html
 
- 637 ahc_9005_subdevinfo_valid(uint16_t device, uint16_t vendor,
- 638                           uint16_t subdevice, uint16_t subvendor)
+Registration is required on the Developer Portal, but this is free.
 
-Signed-off-by: Dave Jones <davej@fedoraproject.org>
+Questions regarding this driver better to ask via the Developer Portal.
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_pci.c b/drivers/scsi/aic7xxx/aic7xxx_pci.c
-index 6917b4f..22d5a94 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_pci.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_pci.c
-@@ -692,7 +692,7 @@ ahc_find_pci_device(ahc_dev_softc_t pci)
- 	 * ID as valid.
- 	 */
- 	if (ahc_get_pci_function(pci) > 0
--	 && ahc_9005_subdevinfo_valid(vendor, device, subvendor, subdevice)
-+	 && ahc_9005_subdevinfo_valid(device, vendor, subdevice, subvendor)
- 	 && SUBID_9005_MFUNCENB(subdevice) == 0)
- 		return (NULL);
- 
+SCST is SCSI target mode stack for Linux. SCST allows creation of sophisticated storage
+devices, which provide advanced functionality, like replication, thin provisioning,
+deduplication, high availability, automatic backup, etc. Majority of recently developed
+SAN appliances, especially higher end ones, are SCST based. It might well be that your
+favorite storage appliance running SCST in the firmware.
+
+More info about SCST and its modules you can find on: http://scst.sourceforge.net
+
+Vlad
