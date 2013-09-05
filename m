@@ -1,13 +1,13 @@
 From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH V2 5/7] SCSI: esas2r: smatch - Remove test for impossible condition (uint8 > 255)
-Date: Thu, 5 Sep 2013 13:07:58 -0400
-Message-ID: <1378400880-14640-6-git-send-email-bgrove@attotech.com>
+Subject: [PATCH V2 6/7] SCSI: esas2r: coccinelle - Replace memcpy with struct assignment
+Date: Thu, 5 Sep 2013 13:07:59 -0400
+Message-ID: <1378400880-14640-7-git-send-email-bgrove@attotech.com>
 References: <1378400880-14640-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:8184 "EHLO
+Received: from sw.attotech.com ([208.69.85.34]:26215 "EHLO
 	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752250Ab3IERId (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2013 13:08:33 -0400
+	with ESMTP id S1752250Ab3IERIe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2013 13:08:34 -0400
 In-Reply-To: <1378400880-14640-1-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,22 +17,31 @@ Cc: jseba@attotech.com, davej@redhat.com, Bradley Grove <bgrove@attotech.com>
 
 Signed-off-by: Bradley Grove <bgrove@attotech.com>
 ---
- drivers/scsi/esas2r/esas2r_ioctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/esas2r/esas2r_flash.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-index f3d0cb8..e5b0902 100644
---- a/drivers/scsi/esas2r/esas2r_ioctl.c
-+++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-@@ -415,7 +415,7 @@ static int csmi_ioctl_callback(struct esas2r_adapter *a,
- 		lun = tm->lun;
- 	}
+diff --git a/drivers/scsi/esas2r/esas2r_flash.c b/drivers/scsi/esas2r/esas2r_flash.c
+index 45e353f..2ec3c23 100644
+--- a/drivers/scsi/esas2r/esas2r_flash.c
++++ b/drivers/scsi/esas2r/esas2r_flash.c
+@@ -1360,7 +1360,7 @@ void esas2r_nvram_set_defaults(struct esas2r_adapter *a)
+ 	u32 time = jiffies_to_msecs(jiffies);
  
--	if (path > 0 || tid > ESAS2R_MAX_ID) {
-+	if (path > 0) {
- 		rq->func_rsp.ioctl_rsp.csmi.csmi_status = cpu_to_le32(
- 			CSMI_STS_INV_PARAM);
- 		return false;
+ 	esas2r_lock_clear_flags(&a->flags, AF_NVR_VALID);
+-	memcpy(n, &default_sas_nvram, sizeof(struct esas2r_sas_nvram));
++	*n = default_sas_nvram;
+ 	n->sas_addr[3] |= 0x0F;
+ 	n->sas_addr[4] = HIBYTE(LOWORD(time));
+ 	n->sas_addr[5] = LOBYTE(LOWORD(time));
+@@ -1378,7 +1378,7 @@ void esas2r_nvram_get_defaults(struct esas2r_adapter *a,
+ 	 * address out first.
+ 	 */
+ 	memcpy(&sas_addr[0], a->nvram->sas_addr, 8);
+-	memcpy(nvram, &default_sas_nvram, sizeof(struct esas2r_sas_nvram));
++	*nvram = default_sas_nvram;
+ 	memcpy(&nvram->sas_addr[0], &sas_addr[0], 8);
+ }
+ 
 -- 
 1.8.1.4
 
