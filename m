@@ -1,60 +1,93 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 00/16] libfc, libfcoe, fcoe updates for 3.12(+)
-Date: Thu, 05 Sep 2013 12:12:18 -0700
-Message-ID: <20130905191218.15235.85917.stgit@fritz>
+Subject: [PATCH 01/16] fcoe: ensure that skb placed on the fip_recv_list are
+ unshared
+Date: Thu, 05 Sep 2013 12:12:24 -0700
+Message-ID: <20130905191224.15235.48296.stgit@fritz>
+References: <20130905191218.15235.85917.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:21033 "EHLO mga14.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:7694 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755541Ab3IETMU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Sep 2013 15:12:20 -0400
+	id S1755541Ab3IETMZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Sep 2013 15:12:25 -0400
+In-Reply-To: <20130905191218.15235.85917.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Neil Horman <nhorman@tuxdriver.com>
 
-The following series implements some fixes and enhancements.
+From: Neil Horman <nhorman@tuxdriver.com>
 
-I know this series may be a bit late for the merge window. They
-have been in my tree so they could see some testing. Now that that
-is done I don't want to hold them back anymore.
+Recently had this Oops reported to me on the 3.10 kernel:
 
-Please pull when appropriate.
+[  807.554955] BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
+[  807.562799] IP: [<ffffffff814e6fc7>] skb_dequeue+0x47/0x70
+[  807.568296] PGD 20c889067 PUD 20c8b8067 PMD 0
+[  807.572769] Oops: 0002 [#1] SMP
+[  807.655597] Hardware name: Dell Inc. PowerEdge R415/0DDT2D, BIOS 1.8.6 12/06/2011
+[  807.663079] Workqueue: events fcoe_ctlr_recv_work [libfcoe]
+[  807.668656] task: ffff88020b42a160 ti: ffff88020ae6c000 task.ti: ffff88020ae6c000
+[  807.676126] RIP: 0010:[<ffffffff814e6fc7>]  [<ffffffff814e6fc7>] skb_dequeue+0x47/0x70
+[  807.684046] RSP: 0000:ffff88020ae6dd70  EFLAGS: 00010097
+[  807.689349] RAX: 0000000000000246 RBX: ffff8801d04d6700 RCX: 0000000000000000
+[  807.696474] RDX: 0000000000000000 RSI: 0000000000000246 RDI: ffff88020df26434
+[  807.703598] RBP: ffff88020ae6dd88 R08: 00000000000173e0 R09: ffff880216e173e0
+[  807.710723] R10: ffffffff814e5897 R11: ffffea0007413580 R12: ffff88020df26420
+[  807.717847] R13: ffff88020df26434 R14: 0000000000000004 R15: ffff8801d04c42ce
+[  807.724972] FS:  00007fdaab6048c0(0000) GS:ffff880216e00000(0000) knlGS:0000000000000000
+[  807.733049] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  807.738785] CR2: 0000000000000008 CR3: 000000020cbc9000 CR4: 00000000000006f0
+[  807.745910] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  807.753033] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  807.760156] Stack:
+[  807.762162]  ffff8801d04d6700 0000000000000001 ffff88020df26400 ffff88020ae6de20
+[  807.769586]  ffffffffa0444409 ffff88020b046a00 ffff88020ae6dde8 ffffffff810105be
+[  807.777008]  ffff88020b42a868 0000000000000000 ffff88020df264a8 ffff88020df26348
+[  807.784431] Call Trace:
+[  807.786885]  [<ffffffffa0444409>] fcoe_ctlr_recv_work+0x59/0x9a0 [libfcoe]
+[  807.793755]  [<ffffffff810105be>] ? __switch_to+0x13e/0x4a0
+[  807.799324]  [<ffffffff8107d0e6>] process_one_work+0x176/0x420
+[  807.805151]  [<ffffffff8107dd0b>] worker_thread+0x11b/0x3a0
+[  807.810717]  [<ffffffff8107dbf0>] ? rescuer_thread+0x350/0x350
+[  807.816545]  [<ffffffff810842b0>] kthread+0xc0/0xd0
+[  807.821416]  [<ffffffff810841f0>] ? insert_kthread_work+0x40/0x40
+[  807.827503]  [<ffffffff8160ce2c>] ret_from_fork+0x7c/0xb0
+[  807.832897]  [<ffffffff810841f0>] ? insert_kthread_work+0x40/0x40
+[  807.858500] RIP  [<ffffffff814e6fc7>] skb_dequeue+0x47/0x70
+[  807.864076]  RSP <ffff88020ae6dd70>
+[  807.867558] CR2: 0000000000000008
 
+Looks like the root cause is the fact that the packet recieve function
+fcoe_ctlr_recv enqueues the skb to a sk_buff_head_list prior to ensuring that
+the skb is unshared.  This can happen when multiple packet listeners recieve an
+skb, as the deliver_skb function just increments skb->users for each handler.
+As a result, having multiple users of a single skb results in multiple
+manipulators of its methods, implying list corruption, and the oops recorded
+above.
+
+The fix is pretty easy, just make sure that we clone the skb if its got multiple
+users with the skb_share_check function, like other protocols do.
+
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
+ drivers/scsi/fcoe/fcoe_ctlr.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-Bart Van Assche (13):
-      libfc: Source code comment spelling fixes
-      libfc: Debug code fixes
-      libfc: Micro-optimize fc_setup_exch_mgr()
-      libfc: Clarify fc_exch_find()
-      libfc: Fix a race in fc_exch_timer_set_locked()
-      libfc: Protect ep->esb_stat changes via ex_lock
-      libfc: Avoid that sending after an abort triggers a kernel warning
-      libfc: Reduce exchange lock contention in fc_exch_recv_abts()
-      libfc: Do not invoke the response handler after fc_exch_done()
-      fcp: Do not interpret check condition as underrun
-      fcoe: Declare fcoe_ctlr_mode_set() static
-      fcoe: Add missing newlines in debug messages
-      fcoe: Reduce fcoe_sysfs_fcf_add() stack usage
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 203415e..35b1fb7 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -1453,6 +1453,9 @@ err:
+  */
+ void fcoe_ctlr_recv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ {
++	skb = skb_share_check(skb, GFP_ATOMIC);
++	if (!skb)
++		return;
+ 	skb_queue_tail(&fip->fip_recv_list, skb);
+ 	schedule_work(&fip->recv_work);
+ }
 
-Neil Horman (3):
-      fcoe: ensure that skb placed on the fip_recv_list are unshared
-      fcoe: make sure fcoe frames are unshared prior to manipulating them
-      fcoe: cleanup return codes from fcoe_rcv
-
-
- drivers/scsi/fcoe/fcoe.c       |   22 ++--
- drivers/scsi/fcoe/fcoe_ctlr.c  |   47 ++++---
- drivers/scsi/fcoe/fcoe_sysfs.c |   12 +-
- drivers/scsi/libfc/fc_exch.c   |  251 ++++++++++++++++++++++++++--------------
- drivers/scsi/libfc/fc_fcp.c    |   10 +-
- drivers/scsi/libfc/fc_lport.c  |    4 -
- drivers/scsi/libfc/fc_rport.c  |    6 -
- include/scsi/fc/fc_fc2.h       |    2 
- include/scsi/libfc.h           |    9 +
- 9 files changed, 229 insertions(+), 134 deletions(-)
-
--- 
-Thanks, //Rob
