@@ -1,66 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: fix swapped arguments in aic7xxx:ahc_find_pci_device
-Date: Thu, 05 Sep 2013 15:39:05 +0200
-Message-ID: <52288979.5050205@suse.de>
-References: <20130905023309.GA10315@redhat.com>
+From: Stefan Hajnoczi <stefanha@gmail.com>
+Subject: Re: [Qemu-devel] Testing NPIV Feature with Qemu-KVM
+Date: Thu, 5 Sep 2013 16:15:58 +0200
+Message-ID: <CAJSP0QUEPjqti5ZuJGZs-9o4yXSQWebVJ1O8HMAbf6iv+9FdGw@mail.gmail.com>
+References: <20130902123444.GA25765@oc2505588478.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43516 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752364Ab3IENjG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Sep 2013 09:39:06 -0400
-In-Reply-To: <20130905023309.GA10315@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20130902123444.GA25765@oc2505588478.ibm.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: chandrashekar shastri <cshastri@oc2505588478.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, linux-fsdevel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Jones <davej@redhat.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 09/05/2013 04:33 AM, Dave Jones wrote:
-> The prototype for ahc_9005_subdevinfo_valid shows that the caller has=
- the
-> arguments in the wrong order.
->=20
->  637 ahc_9005_subdevinfo_valid(uint16_t device, uint16_t vendor,
->  638                           uint16_t subdevice, uint16_t subvendor=
-)
->=20
-> Signed-off-by: Dave Jones <davej@fedoraproject.org>
-Acked-by: Hannes Reinecke <hare@suse.de>
+On Mon, Sep 2, 2013 at 2:34 PM, chandrashekar shastri
+<cshastri@oc2505588478.ibm.com> wrote:
+> I am testing NPIV feature on upstream Qemu, I have configured the zone
+> and able to see the created vport on the storage array.
+>
+> Since, I am learning on how to setup the NPIV, I haven't created the different zone for
+> the vport and the array, I just added in the existing zone.
+>
+> Now, how do pass the LUN to the qemu, from Dr. Hannes Reineckei mail thread I got to know that lspci command on the host doesn't show the virtual HBA.
+>
+> I didn't understand why there is limitation on that and if I specify
+> /usr/libexec/qemu-kvm -enable-kvm Fedora19 -m 3000 -smp 2 -net nic -net
+> \ user -vnc 127.0.0.1:0 -drive if=scsi,file=/dev/sdj
+>
+> How do I make sure that qemu is using the virtual HBA or (vport)?
 
->=20
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_pci.c b/drivers/scsi/aic7xx=
-x/aic7xxx_pci.c
-> index 6917b4f..22d5a94 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_pci.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_pci.c
-> @@ -692,7 +692,7 @@ ahc_find_pci_device(ahc_dev_softc_t pci)
->  	 * ID as valid.
->  	 */
->  	if (ahc_get_pci_function(pci) > 0
-> -	 && ahc_9005_subdevinfo_valid(vendor, device, subvendor, subdevice)
-> +	 && ahc_9005_subdevinfo_valid(device, vendor, subdevice, subvendor)
->  	 && SUBID_9005_MFUNCENB(subdevice) =3D=3D 0)
->  		return (NULL);
-> =20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+>From my limited knowledge of NPIV, after you create the vport on the
+host you'll have a new "SCSI host" which scans LUNs.  That means new
+SCSI devices appear on the host.
 
-Cheers,
+You can use "ls -al /sys/class/scsi_host" to see the SCSI hosts that are active.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You can use "virsh nodedev-list --tree" to see the details of the devices.
+
+This should help you find the NPIV LUNs which can be passed to QEMU.
+
+Stefan
