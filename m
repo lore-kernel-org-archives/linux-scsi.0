@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 13/16] fcp: Do not interpret check condition as underrun
-Date: Thu, 05 Sep 2013 12:13:27 -0700
-Message-ID: <20130905191327.15235.66327.stgit@fritz>
+Subject: [PATCH 15/16] fcoe: Add missing newlines in debug messages
+Date: Thu, 05 Sep 2013 12:13:38 -0700
+Message-ID: <20130905191338.15235.38225.stgit@fritz>
 References: <20130905191218.15235.85917.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:57068 "EHLO mga14.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:8603 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755085Ab3IETNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Sep 2013 15:13:37 -0400
+	id S1756929Ab3IETNj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Sep 2013 15:13:39 -0400
 In-Reply-To: <20130905191218.15235.85917.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,45 +19,93 @@ Cc: Bart Van Assche <bvanassche@acm.org>, Neil Horman <nhorman@tuxdriver.com>
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-This patch avoids that the FCoE initiator sends a REC message after
-having received a SCSI response with non-zero status and non-zero
-DATA IN buffer length.
+FCoE debug statements must end in a newline. Add one where it is missing.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Cc: Neil Horman <nhorman@tuxdriver.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_fcp.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/fcoe/fcoe.c       |   12 ++++++------
+ drivers/scsi/fcoe/fcoe_sysfs.c |   12 ++++++------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 5fd0f1f..1d7e76e 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -902,7 +902,8 @@ static void fc_fcp_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 	/*
- 	 * Check for missing or extra data frames.
- 	 */
--	if (unlikely(fsp->xfer_len != expected_len)) {
-+	if (unlikely(fsp->cdb_status == SAM_STAT_GOOD &&
-+		     fsp->xfer_len != expected_len)) {
- 		if (fsp->xfer_len < expected_len) {
- 			/*
- 			 * Some data may be queued locally,
-@@ -955,12 +956,11 @@ static void fc_fcp_complete_locked(struct fc_fcp_pkt *fsp)
- 		 * Test for transport underrun, independent of response
- 		 * underrun status.
- 		 */
--		if (fsp->xfer_len < fsp->data_len && !fsp->io_status &&
-+		if (fsp->cdb_status == SAM_STAT_GOOD &&
-+		    fsp->xfer_len < fsp->data_len && !fsp->io_status &&
- 		    (!(fsp->scsi_comp_flags & FCP_RESID_UNDER) ||
--		     fsp->xfer_len < fsp->data_len - fsp->scsi_resid)) {
-+		     fsp->xfer_len < fsp->data_len - fsp->scsi_resid))
- 			fsp->status_code = FC_DATA_UNDRUN;
--			fsp->io_status = 0;
--		}
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 134ca3b..dff40b2 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1440,14 +1440,14 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 	ctlr = fcoe_to_ctlr(fcoe);
+ 	lport = ctlr->lp;
+ 	if (unlikely(!lport)) {
+-		FCOE_NETDEV_DBG(netdev, "Cannot find hba structure");
++		FCOE_NETDEV_DBG(netdev, "Cannot find hba structure\n");
+ 		goto err2;
+ 	}
+ 	if (!lport->link_up)
+ 		goto err2;
+ 
+-	FCOE_NETDEV_DBG(netdev, "skb_info: len:%d data_len:%d head:%p "
+-			"data:%p tail:%p end:%p sum:%d dev:%s",
++	FCOE_NETDEV_DBG(netdev,
++			"skb_info: len:%d data_len:%d head:%p data:%p tail:%p end:%p sum:%d dev:%s\n",
+ 			skb->len, skb->data_len, skb->head, skb->data,
+ 			skb_tail_pointer(skb), skb_end_pointer(skb),
+ 			skb->csum, skb->dev ? skb->dev->name : "<NULL>");
+@@ -1794,13 +1794,13 @@ static void fcoe_recv_frame(struct sk_buff *skb)
+ 	lport = fr->fr_dev;
+ 	if (unlikely(!lport)) {
+ 		if (skb->destructor != fcoe_percpu_flush_done)
+-			FCOE_NETDEV_DBG(skb->dev, "NULL lport in skb");
++			FCOE_NETDEV_DBG(skb->dev, "NULL lport in skb\n");
+ 		kfree_skb(skb);
+ 		return;
  	}
  
- 	seq = fsp->seq_ptr;
+-	FCOE_NETDEV_DBG(skb->dev, "skb_info: len:%d data_len:%d "
+-			"head:%p data:%p tail:%p end:%p sum:%d dev:%s",
++	FCOE_NETDEV_DBG(skb->dev,
++			"skb_info: len:%d data_len:%d head:%p data:%p tail:%p end:%p sum:%d dev:%s\n",
+ 			skb->len, skb->data_len,
+ 			skb->head, skb->data, skb_tail_pointer(skb),
+ 			skb_end_pointer(skb), skb->csum,
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index c9382d6..922c9de 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -300,29 +300,29 @@ static ssize_t store_ctlr_mode(struct device *dev,
+ 
+ 	switch (ctlr->enabled) {
+ 	case FCOE_CTLR_ENABLED:
+-		LIBFCOE_SYSFS_DBG(ctlr, "Cannot change mode when enabled.");
++		LIBFCOE_SYSFS_DBG(ctlr, "Cannot change mode when enabled.\n");
+ 		return -EBUSY;
+ 	case FCOE_CTLR_DISABLED:
+ 		if (!ctlr->f->set_fcoe_ctlr_mode) {
+ 			LIBFCOE_SYSFS_DBG(ctlr,
+-					  "Mode change not supported by LLD.");
++					  "Mode change not supported by LLD.\n");
+ 			return -ENOTSUPP;
+ 		}
+ 
+ 		ctlr->mode = fcoe_parse_mode(mode);
+ 		if (ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
+-			LIBFCOE_SYSFS_DBG(ctlr,
+-					  "Unknown mode %s provided.", buf);
++			LIBFCOE_SYSFS_DBG(ctlr, "Unknown mode %s provided.\n",
++					  buf);
+ 			return -EINVAL;
+ 		}
+ 
+ 		ctlr->f->set_fcoe_ctlr_mode(ctlr);
+-		LIBFCOE_SYSFS_DBG(ctlr, "Mode changed to %s.", buf);
++		LIBFCOE_SYSFS_DBG(ctlr, "Mode changed to %s.\n", buf);
+ 
+ 		return count;
+ 	case FCOE_CTLR_UNUSED:
+ 	default:
+-		LIBFCOE_SYSFS_DBG(ctlr, "Mode change not supported.");
++		LIBFCOE_SYSFS_DBG(ctlr, "Mode change not supported.\n");
+ 		return -ENOTSUPP;
+ 	};
+ }
 
