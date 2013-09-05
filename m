@@ -1,41 +1,50 @@
-From: Stefan Hajnoczi <stefanha@gmail.com>
-Subject: Re: [Qemu-devel] Testing NPIV Feature with Qemu-KVM
-Date: Thu, 5 Sep 2013 16:15:58 +0200
-Message-ID: <CAJSP0QUEPjqti5ZuJGZs-9o4yXSQWebVJ1O8HMAbf6iv+9FdGw@mail.gmail.com>
-References: <20130902123444.GA25765@oc2505588478.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] scsi: sr: use block layer runtime PM
+Date: Thu, 5 Sep 2013 10:25:02 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1309051007220.1121-100000@iolanthe.rowland.org>
+References: <52281C16.5040108@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20130902123444.GA25765@oc2505588478.ibm.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: chandrashekar shastri <cshastri@oc2505588478.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, linux-fsdevel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:47483 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753581Ab3IEOZE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2013 10:25:04 -0400
+In-Reply-To: <52281C16.5040108@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: James Bottomley <JBottomley@parallels.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Sep 2, 2013 at 2:34 PM, chandrashekar shastri
-<cshastri@oc2505588478.ibm.com> wrote:
-> I am testing NPIV feature on upstream Qemu, I have configured the zone
-> and able to see the created vport on the storage array.
->
-> Since, I am learning on how to setup the NPIV, I haven't created the different zone for
-> the vport and the array, I just added in the existing zone.
->
-> Now, how do pass the LUN to the qemu, from Dr. Hannes Reineckei mail thread I got to know that lspci command on the host doesn't show the virtual HBA.
->
-> I didn't understand why there is limitation on that and if I specify
-> /usr/libexec/qemu-kvm -enable-kvm Fedora19 -m 3000 -smp 2 -net nic -net
-> \ user -vnc 127.0.0.1:0 -drive if=scsi,file=/dev/sdj
->
-> How do I make sure that qemu is using the virtual HBA or (vport)?
+On Thu, 5 Sep 2013, Aaron Lu wrote:
 
->From my limited knowledge of NPIV, after you create the vport on the
-host you'll have a new "SCSI host" which scans LUNs.  That means new
-SCSI devices appear on the host.
+> Migrate SCSI Optical Disk Drive(ODD) driver sr to make use of block
+> layer runtime PM. Accordingly, the SCSI bus layer runtime PM callback is
+> simplified as all SCSI devices that implement runtime PM are now request
+> based.
+> 
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+> Note that due to ODD will be polled every 2 seconds, for suspend to
+> actually happen, the autosuspend_delay can not be set to more than 2
+> seconds.
 
-You can use "ls -al /sys/class/scsi_host" to see the SCSI hosts that are active.
+Or the polling delay must be increased.
 
-You can use "virsh nodedev-list --tree" to see the details of the devices.
+> Also, make sure to use the util-linux utility of version 2.23.2 or later,
+> as there is a bug fix for eject command to correctly update the ODD's
+> locked state. If the fix is not applied, after the ODD is ejected with the
+> eject command, it will not be able to enter runtime suspend state any
+> more due to SCSI EH code will submit a lock door command for the ODD
+> right after its parent ATA port is runtime suspended.
+> https://git.kernel.org/cgit/utils/util-linux/util-linux.git/commit/?id=12272030e563201e0b06732d8a87d8cea7157a04
 
-This should help you find the NPIV LUNs which can be passed to QEMU.
+I think this patch will cause a compile warning if you have
+CONFIG_PM_RUNTIME set and CONFIG_PM_SLEEP disabled.  The
+scsi_dev_type_suspend and scsi_dev_type_resume routines will be defined
+but not used.
 
-Stefan
+Otherwise it seems okay.
+
+Alan Stern
+
