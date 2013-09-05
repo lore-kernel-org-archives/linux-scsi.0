@@ -1,65 +1,78 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: fcoe pull request for 3.12(+)
-Date: Thu, 5 Sep 2013 19:12:44 +0000
-Message-ID: <5228D7AC.9050904@intel.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 05/16] libfc: Debug code fixes
+Date: Thu, 05 Sep 2013 12:12:45 -0700
+Message-ID: <20130905191245.15235.55748.stgit@fritz>
+References: <20130905191218.15235.85917.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:12202 "EHLO mga14.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:10873 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756825Ab3IETMq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2013 15:12:46 -0400
-Content-Language: en-US
-Content-ID: <0BDDC19EE3FBE44C8823B42156D04FAE@intel.com>
+	id S1756398Ab3IETMq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Sep 2013 15:12:46 -0400
+In-Reply-To: <20130905191218.15235.85917.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, Neil Horman <nhorman@tuxdriver.com>
 
-The following changes since commit 6e4664525b1db28f8c4e1130957f70a94c19213e:
+From: Bart Van Assche <bvanassche@acm.org>
 
-   Linux 3.11 (2013-09-02 13:46:10 -0700)
+The second argument of fc_lport_error() may be a valid frame pointer.
+Hence only print it as an error code if it really is an error code.
 
-are available in the git repository at:
+Debug statements must end in a newline. Add one where it is missing.
 
-   git://git.kernel.org/pub/scm/linux/kernel/git/rwlove/fcoe.git tags/show
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: Neil Horman <nhorman@tuxdriver.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
+---
+ drivers/scsi/libfc/fc_exch.c  |    8 ++++----
+ drivers/scsi/libfc/fc_lport.c |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-for you to fetch changes up to 1c2c1b4fbd413fd814807768d2aba9023722ed76:
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index b233a2d..cb2b900 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -1659,7 +1659,7 @@ static void fc_exch_recv_bls(struct fc_exch_mgr *mp, struct fc_frame *fp)
+ 			break;
+ 		default:
+ 			if (ep)
+-				FC_EXCH_DBG(ep, "BLS rctl %x - %s received",
++				FC_EXCH_DBG(ep, "BLS rctl %x - %s received\n",
+ 					    fh->fh_r_ctl,
+ 					    fc_exch_rctl_name(fh->fh_r_ctl));
+ 			break;
+@@ -1953,13 +1953,13 @@ static void fc_exch_rrq_resp(struct fc_seq *sp, struct fc_frame *fp, void *arg)
+ 
+ 	switch (op) {
+ 	case ELS_LS_RJT:
+-		FC_EXCH_DBG(aborted_ep, "LS_RJT for RRQ");
++		FC_EXCH_DBG(aborted_ep, "LS_RJT for RRQ\n");
+ 		/* fall through */
+ 	case ELS_LS_ACC:
+ 		goto cleanup;
+ 	default:
+-		FC_EXCH_DBG(aborted_ep, "unexpected response op %x "
+-			    "for RRQ", op);
++		FC_EXCH_DBG(aborted_ep, "unexpected response op %x for RRQ\n",
++			    op);
+ 		return;
+ 	}
+ 
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index a32f314..e01a298 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1088,7 +1088,7 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
+ {
+ 	unsigned long delay = 0;
+ 	FC_LPORT_DBG(lport, "Error %ld in state %s, retries %d\n",
+-		     PTR_ERR(fp), fc_lport_state(lport),
++		     IS_ERR(fp) ? -PTR_ERR(fp) : 0, fc_lport_state(lport),
+ 		     lport->retry_count);
+ 
+ 	if (PTR_ERR(fp) == -FC_EX_CLOSED)
 
-   fcoe: Reduce fcoe_sysfs_fcf_add() stack usage (2013-09-04 14:14:21 -0700)
-
-----------------------------------------------------------------
-Pull request tag for 3.12 merge window.
-
-----------------------------------------------------------------
-Bart Van Assche (13):
-       libfc: Source code comment spelling fixes
-       libfc: Debug code fixes
-       libfc: Micro-optimize fc_setup_exch_mgr()
-       libfc: Clarify fc_exch_find()
-       libfc: Fix a race in fc_exch_timer_set_locked()
-       libfc: Protect ep->esb_stat changes via ex_lock
-       libfc: Avoid that sending after an abort triggers a kernel warning
-       libfc: Reduce exchange lock contention in fc_exch_recv_abts()
-       libfc: Do not invoke the response handler after fc_exch_done()
-       fcp: Do not interpret check condition as underrun
-       fcoe: Declare fcoe_ctlr_mode_set() static
-       fcoe: Add missing newlines in debug messages
-       fcoe: Reduce fcoe_sysfs_fcf_add() stack usage
-
-Neil Horman (3):
-       fcoe: ensure that skb placed on the fip_recv_list are unshared
-       fcoe: make sure fcoe frames are unshared prior to manipulating them
-       fcoe: cleanup return codes from fcoe_rcv
-
-  drivers/scsi/fcoe/fcoe.c       |   22 ++--
-  drivers/scsi/fcoe/fcoe_ctlr.c  |   47 +++++---
-  drivers/scsi/fcoe/fcoe_sysfs.c |   12 +-
-  drivers/scsi/libfc/fc_exch.c   |  251 
-++++++++++++++++++++++++++--------------
-  drivers/scsi/libfc/fc_fcp.c    |   10 +-
-  drivers/scsi/libfc/fc_lport.c  |    4 +-
-  drivers/scsi/libfc/fc_rport.c  |    6 +-
-  include/scsi/fc/fc_fc2.h       |    2 +-
-  include/scsi/libfc.h           |    9 ++
-  9 files changed, 229 insertions(+), 134 deletions(-)
