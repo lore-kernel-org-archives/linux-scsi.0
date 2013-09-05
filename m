@@ -1,40 +1,38 @@
 From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH V2 0/7] SCSI: esas2r: Static check fixes
-Date: Thu, 5 Sep 2013 13:07:53 -0400
-Message-ID: <1378400880-14640-1-git-send-email-bgrove@attotech.com>
+Subject: [PATCH V2 1/7] SCSI: esas2r: smatch - Use biwise rather than logical AND for checking if any bit set
+Date: Thu, 5 Sep 2013 13:07:54 -0400
+Message-ID: <1378400880-14640-2-git-send-email-bgrove@attotech.com>
+References: <1378400880-14640-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:35683 "EHLO
+Received: from sw.attotech.com ([208.69.85.34]:61897 "EHLO
 	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753121Ab3IERIS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2013 13:08:18 -0400
+	with ESMTP id S1753121Ab3IERIW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2013 13:08:22 -0400
+In-Reply-To: <1378400880-14640-1-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, jbottomley@parallels.com
 Cc: jseba@attotech.com, davej@redhat.com, Bradley Grove <bgrove@attotech.com>
 
-This series of patches fixes errors detected by smatch and coccinelle.
 
-V2 adds an additional fix, removing a null check on a stack allocated
-array.  The test was needed in older versions of the driver when the
-buffer was allocated on the heap.   
+Signed-off-by: Bradley Grove <bgrove@attotech.com>
+---
+ drivers/scsi/esas2r/esas2r_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bradley Grove (7):
-  SCSI: esas2r: smatch - Use biwise rather than logical AND for checking
-    if any bit set
-  SCSI: esas2r: smatch - Fix dereference that occurs prior to check
-  SCSI: esas2r: smatch - Fix dereference that occurs prior to check
-  SCSI: esas2r: smatch - Fix overrun due to sprintf appending NULL
-  SCSI: esas2r: smatch - Remove test for impossible condition (uint8 >
-    255)
-  SCSI: esas2r: coccinelle - Replace memcpy with struct assignment
-  SCSI: esas2r: Remove null test for stack allocated fw_coredump_buffer
-
- drivers/scsi/esas2r/esas2r_flash.c | 11 ++++++++---
- drivers/scsi/esas2r/esas2r_init.c  |  8 ++++----
- drivers/scsi/esas2r/esas2r_ioctl.c |  2 +-
- drivers/scsi/esas2r/esas2r_vda.c   |  7 +++++--
- 4 files changed, 18 insertions(+), 10 deletions(-)
-
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
+index 3a798e7..78b18c1 100644
+--- a/drivers/scsi/esas2r/esas2r_init.c
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -808,7 +808,7 @@ static void esas2r_init_pci_cfg_space(struct esas2r_adapter *a)
+ 	int pcie_cap_reg;
+ 
+ 	pcie_cap_reg = pci_find_capability(a->pcid, PCI_CAP_ID_EXP);
+-	if (0xffff && pcie_cap_reg) {
++	if (0xffff & pcie_cap_reg) {
+ 		u16 devcontrol;
+ 
+ 		pci_read_config_word(a->pcid, pcie_cap_reg + PCI_EXP_DEVCTL,
 -- 
 1.8.1.4
 
