@@ -1,50 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] scsi: sr: use block layer runtime PM
-Date: Thu, 5 Sep 2013 10:25:02 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1309051007220.1121-100000@iolanthe.rowland.org>
-References: <52281C16.5040108@intel.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: RE: [Qemu-devel] Testing NPIV Feature with Qemu-KVM
+Date: Thu, 5 Sep 2013 14:55:37 +0000
+Message-ID: <A4BC99A5F8245F4CBCD582D057D75DAF625B7952@ORSMSX106.amr.corp.intel.com>
+References: <20130902123444.GA25765@oc2505588478.ibm.com>
+ <CAJSP0QUEPjqti5ZuJGZs-9o4yXSQWebVJ1O8HMAbf6iv+9FdGw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:47483 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753581Ab3IEOZE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2013 10:25:04 -0400
-In-Reply-To: <52281C16.5040108@intel.com>
+Received: from mga09.intel.com ([134.134.136.24]:28837 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752221Ab3IEOzi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2013 10:55:38 -0400
+In-Reply-To: <CAJSP0QUEPjqti5ZuJGZs-9o4yXSQWebVJ1O8HMAbf6iv+9FdGw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: James Bottomley <JBottomley@parallels.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Stefan Hajnoczi <stefanha@gmail.com>, chandrashekar shastri <cshastri@oc2505588478.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-On Thu, 5 Sep 2013, Aaron Lu wrote:
+<snip>
 
-> Migrate SCSI Optical Disk Drive(ODD) driver sr to make use of block
-> layer runtime PM. Accordingly, the SCSI bus layer runtime PM callback is
-> simplified as all SCSI devices that implement runtime PM are now request
-> based.
+> > How do I make sure that qemu is using the virtual HBA or (vport)?
 > 
-> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-> ---
-> Note that due to ODD will be polled every 2 seconds, for suspend to
-> actually happen, the autosuspend_delay can not be set to more than 2
-> seconds.
+> From my limited knowledge of NPIV, after you create the vport on the host
+> you'll have a new "SCSI host" which scans LUNs.  That means new SCSI
+> devices appear on the host.
+> 
+> You can use "ls -al /sys/class/scsi_host" to see the SCSI hosts that are active.
+> 
 
-Or the polling delay must be increased.
+Also, there will be a /sys/class/fc_host, associated with the scsi_host. It will have a port_type, that when read, should show "NPIV VPORT".
 
-> Also, make sure to use the util-linux utility of version 2.23.2 or later,
-> as there is a bug fix for eject command to correctly update the ODD's
-> locked state. If the fix is not applied, after the ODD is ejected with the
-> eject command, it will not be able to enter runtime suspend state any
-> more due to SCSI EH code will submit a lock door command for the ODD
-> right after its parent ATA port is runtime suspended.
-> https://git.kernel.org/cgit/utils/util-linux/util-linux.git/commit/?id=12272030e563201e0b06732d8a87d8cea7157a04
-
-I think this patch will cause a compile warning if you have
-CONFIG_PM_RUNTIME set and CONFIG_PM_SLEEP disabled.  The
-scsi_dev_type_suspend and scsi_dev_type_resume routines will be defined
-but not used.
-
-Otherwise it seems okay.
-
-Alan Stern
-
+//Rob
