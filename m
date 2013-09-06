@@ -1,144 +1,136 @@
 From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: [PATCH/RESEND 1/2] Hard disk S3 resume time optimization
-Date: Thu, 5 Sep 2013 17:38:53 -0700
-Message-ID: <20130906003852.GC25263@linux.intel.com>
+Subject: [PATCH/RESEND 2/2] Hard disk S3 resume time optimization
+Date: Thu, 5 Sep 2013 17:44:25 -0700
+Message-ID: <20130906004425.GA31998@linux.intel.com>
 Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:39713 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753778Ab3IFAoX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Sep 2013 20:44:23 -0400
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: tj@kernel.org, JBottomley@parallels.com
-List-Id: linux-scsi@vger.kernel.org
 
-This is the final draft of the non-blocking hard disk resume patch. I've
-included some performance results to demonstrate the real benefits
-of this patch. Please note that this patch provides a MASSIVE performance
-improvement in hard disk resume. It's too valuable to ignore, so I really
-need the help of the maintainers to get this implemented. Even if this
-patch is deemed the wrong approach I hope you won't abandon the idea
-altogether. There is so much potential in this kind of optimization and
-I'm highly motivated to make this work.
+Part 2 of the hard disk resume optimization patch, this one applies
+to the scsi subsystem.
 
-To demonstrate the substantial performance improvement I've run the 
-AnalyzeSuspend tool on three different platforms patched with the new 
-behavior. Each is running Ubuntu Raring with a kernel built from the 
-upstream kernel source.
-
-The complete analysis and graphical outputs of the tool are available
-online at 01.org:
-https://01.org/suspendresume/blogs/tebrandt/2013/hard-disk-resume-optimization-simpler-approach
-
-Here's a synopsis of the results.
-
--------------------------------------------------------
-[Computer One]
-PLATFORM: Ubuntu Raring Ringtail (13.04)
-KERNEL: 3.11.0-rc7
-CPU: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
-SATA: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
-DISK CONFIG:
-    ATA1: 240 GB SSD
-    ATA2: 3 TB Hard Disk
-    ATA3: 500 GB Hard Disk
-    ATA4: DVD-ROM (with cd inserted)
-    ATA5: 2 TB Hard Disk
-    ATA6: 1 TB Hard Disk
-RESUME TIME WITHOUT PATCH: 11656 ms
-RESUME TIME WITH PATCH: 1110 ms
-
-IMPROVEMENT: 10.5X speedup
-
--------------------------------------------------------
-[Computer Two]
-PLATFORM: Ubuntu Raring Ringtail (13.04)
-KERNEL: 3.11.0-rc7
-CPU: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
-SATA: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
-DISK CONFIG:
-    ATA1: 320 GB Hard Disk
-    ATA2 - ATA6: Empty slots
-RESUME TIME WITHOUT PATCH: 5416 ms
-RESUME TIME WITH PATCH: 448 ms
-
-IMPROVEMENT: 12X speedup
-
--------------------------------------------------------
-[Computer Three]
-PLATFORM: Ubuntu Raring Ringtail (13.04)
-KERNEL: 3.11.0-rc7
-CPU: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
-SATA: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
-DISK CONFIG:
-    ATA1,3,4,6: Empty Slots
-    ATA2: DVD-ROM (empty)
-    ATA5: 500 GB Hard Disk
-RESUME TIME WITHOUT PATCH: 5385 ms
-RESUME TIME WITH PATCH: 688 ms
-
-IMPROVEMENT: 7.8X speedup
-
--------------------------------------------------------
 
 Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
 Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
 
- drivers/ata/libata-core.c | 36 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 35 insertions(+), 1 deletion(-)
+ drivers/scsi/sd.c | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 81 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c24354d..6cf0c15 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5415,6 +5415,40 @@ static int ata_port_resume(struct device *dev)
- 	return rc;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 86fcf2c..d4bf784 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -107,6 +107,7 @@ static int  sd_remove(struct device *);
+ static void sd_shutdown(struct device *);
+ static int sd_suspend(struct device *);
+ static int sd_resume(struct device *);
++static int sd_resume_async(struct device *);
+ static void sd_rescan(struct device *);
+ static int sd_done(struct scsi_cmnd *);
+ static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
+@@ -484,7 +485,7 @@ static struct class sd_disk_class = {
+ 
+ static const struct dev_pm_ops sd_pm_ops = {
+ 	.suspend		= sd_suspend,
+-	.resume			= sd_resume,
++	.resume			= sd_resume_async,
+ 	.poweroff		= sd_suspend,
+ 	.restore		= sd_resume,
+ 	.runtime_suspend	= sd_suspend,
+@@ -3137,6 +3138,85 @@ done:
+ 	return ret;
  }
  
-+static int ata_port_resume_async(struct device *dev)
++static void sd_resume_async_end(struct request *rq, int error)
 +{
-+	struct ata_port *ap = to_ata_port(dev);
-+	struct ata_link *link;
-+	unsigned long flags;
++	struct scsi_sense_hdr sshdr;
++	struct scsi_disk *sdkp = rq->end_io_data;
++	char *sense = rq->sense;
++
++	if (error) {
++		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
++		sd_print_result(sdkp, error);
++		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
++			scsi_normalize_sense(sense,
++				SCSI_SENSE_BUFFERSIZE, &sshdr);
++			sd_print_sense_hdr(sdkp, &sshdr);
++		}
++	} else
++		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
++
++	kfree(sense);
++	rq->sense = NULL;
++	rq->end_io_data = NULL;
++	__blk_put_request(rq->q, rq);
++	scsi_disk_put(sdkp);
++}
++
++static int sd_resume_async(struct device *dev)
++{
++	unsigned char cmd[6] = { START_STOP };
++	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
++	struct request *req;
++	char *sense = NULL;
 +	int ret = 0;
 +
-+	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
-+		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
-+		ret = -EAGAIN;
-+		goto out;
++	if (!sdkp->device->manage_start_stop)
++		goto error;
++
++	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
++
++	cmd[4] |= 1;
++
++	if (sdkp->device->start_stop_pwr_cond)
++		cmd[4] |= 1 << 4;	/* Active or Standby */
++
++	if (!scsi_device_online(sdkp->device)) {
++		ret = -ENODEV;
++		goto error;
 +	}
 +
-+	spin_lock_irqsave(ap->lock, flags);
-+
-+	ap->pm_mesg = PMSG_RESUME;
-+	ap->pm_result = NULL;
-+	ap->pflags |= ATA_PFLAG_PM_PENDING;
-+	ata_for_each_link(link, ap, HOST_FIRST) {
-+		link->eh_info.action |= ATA_EH_RESET;
-+		link->eh_info.flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
++	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
++	if (!req) {
++		ret = -ENOMEM;
++		goto error;
 +	}
 +
-+	ata_port_schedule_eh(ap);
++	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
++	if (!sense) {
++		ret = -ENOMEM;
++		goto error_sense;
++	}
 +
-+	spin_unlock_irqrestore(ap->lock, flags);
++	req->cmd_len = COMMAND_SIZE(cmd[0]);
++	memcpy(req->cmd, cmd, req->cmd_len);
++	req->sense = sense;
++	req->sense_len = 0;
++	req->retries = SD_MAX_RETRIES;
++	req->timeout = SD_TIMEOUT;
++	req->cmd_type = REQ_TYPE_BLOCK_PC;
++	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
 +
-+ out:
-+	pm_runtime_disable(dev);
-+	pm_runtime_set_active(dev);
-+	pm_runtime_enable(dev);
++	req->end_io_data = sdkp;
++	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_async_end);
++	return 0;
++
++ error_sense:
++	__blk_put_request(req->q, req);
++ error:
++	scsi_disk_put(sdkp);
 +	return ret;
 +}
 +
- /*
-  * For ODDs, the upper layer will poll for media change every few seconds,
-  * which will make it enter and leave suspend state every few seconds. And
-@@ -5451,7 +5485,7 @@ static int ata_port_runtime_resume(struct device *dev)
- 
- static const struct dev_pm_ops ata_port_pm_ops = {
- 	.suspend = ata_port_suspend,
--	.resume = ata_port_resume,
-+	.resume = ata_port_resume_async,
- 	.freeze = ata_port_do_freeze,
- 	.thaw = ata_port_resume,
- 	.poweroff = ata_port_poweroff,
+ /**
+  *	init_sd - entry point for this driver (both when built in or when
+  *	a module).
 
