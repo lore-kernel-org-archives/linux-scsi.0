@@ -1,125 +1,161 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 11/18] lpfc 8.3.42: Fixed driver iocbq structure's iocb_flag
- field running out of space
-Date: Fri, 6 Sep 2013 12:20:51 -0400
-Message-ID: <1378484451.14051.30.camel@myfc17>
+Subject: [PATCH 12/18] lpfc 8.3.42: Avoided making pci bar ioremap call
+ during dual-chute WQ/RQ pci bar selection
+Date: Fri, 6 Sep 2013 12:21:09 -0400
+Message-ID: <1378484469.14051.31.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:22348 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:22351 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757576Ab3IFQV2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 12:21:28 -0400
+	with ESMTP id S1756072Ab3IFQVr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 12:21:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed driver iocbq structure's iocb_flag field running out of space
+Avoided making pci bar ioremap call during dual-chute WQ/RQ pci bar selection
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_bsg.c |   14 +++++++-------
- lpfc_sli.h |    5 ++---
- 2 files changed, 9 insertions(+), 10 deletions(-)
+ lpfc_init.c |   34 ++++++++++++----------------------
+ lpfc_sli.c  |   16 ----------------
+ 2 files changed, 12 insertions(+), 38 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
---- a/drivers/scsi/lpfc/lpfc_bsg.c	2013-09-06 10:04:12.343058495 -0400
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c	2013-09-06 10:04:19.543058659 -0400
-@@ -319,7 +319,7 @@ lpfc_bsg_send_mgmt_cmd_cmp(struct lpfc_h
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2013-09-06 10:04:17.694058616 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2013-09-06 10:04:21.023058692 -0400
+@@ -7135,19 +7135,6 @@ lpfc_sli4_queue_destroy(struct lpfc_hba
+ 		phba->sli4_hba.fcp_wq = NULL;
+ 	}
  
- 	/* Close the timeout handler abort window */
- 	spin_lock_irqsave(&phba->hbalock, flags);
--	cmdiocbq->iocb_aux_flag &= ~LPFC_IO_CMD_OUTSTANDING;
-+	cmdiocbq->iocb_flag &= ~LPFC_IO_CMD_OUTSTANDING;
- 	spin_unlock_irqrestore(&phba->hbalock, flags);
+-	if (phba->pci_bar0_memmap_p) {
+-		iounmap(phba->pci_bar0_memmap_p);
+-		phba->pci_bar0_memmap_p = NULL;
+-	}
+-	if (phba->pci_bar2_memmap_p) {
+-		iounmap(phba->pci_bar2_memmap_p);
+-		phba->pci_bar2_memmap_p = NULL;
+-	}
+-	if (phba->pci_bar4_memmap_p) {
+-		iounmap(phba->pci_bar4_memmap_p);
+-		phba->pci_bar4_memmap_p = NULL;
+-	}
+-
+ 	/* Release FCP CQ mapping array */
+ 	if (phba->sli4_hba.fcp_cq_map != NULL) {
+ 		kfree(phba->sli4_hba.fcp_cq_map);
+@@ -7936,9 +7923,9 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba
+ 	 * particular PCI BARs regions is dependent on the type of
+ 	 * SLI4 device.
+ 	 */
+-	if (pci_resource_start(pdev, 0)) {
+-		phba->pci_bar0_map = pci_resource_start(pdev, 0);
+-		bar0map_len = pci_resource_len(pdev, 0);
++	if (pci_resource_start(pdev, PCI_64BIT_BAR0)) {
++		phba->pci_bar0_map = pci_resource_start(pdev, PCI_64BIT_BAR0);
++		bar0map_len = pci_resource_len(pdev, PCI_64BIT_BAR0);
  
- 	iocb = &dd_data->context_un.iocb;
-@@ -513,7 +513,7 @@ lpfc_bsg_send_mgmt_cmd(struct fc_bsg_job
- 		/* make sure the I/O had not been completed yet */
- 		if (cmdiocbq->iocb_flag & LPFC_IO_LIBDFC) {
- 			/* open up abort window to timeout handler */
--			cmdiocbq->iocb_aux_flag |= LPFC_IO_CMD_OUTSTANDING;
-+			cmdiocbq->iocb_flag |= LPFC_IO_CMD_OUTSTANDING;
+ 		/*
+ 		 * Map SLI4 PCI Config Space Register base to a kernel virtual
+@@ -7952,6 +7939,7 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba
+ 				   "registers.\n");
+ 			goto out;
  		}
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		return 0; /* done for now */
-@@ -595,7 +595,7 @@ lpfc_bsg_rport_els_cmp(struct lpfc_hba *
++		phba->pci_bar0_memmap_p = phba->sli4_hba.conf_regs_memmap_p;
+ 		/* Set up BAR0 PCI config space register memory map */
+ 		lpfc_sli4_bar0_register_memmap(phba, if_type);
+ 	} else {
+@@ -7974,13 +7962,13 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba
+ 	}
  
- 	/* Close the timeout handler abort window */
- 	spin_lock_irqsave(&phba->hbalock, flags);
--	cmdiocbq->iocb_aux_flag &= ~LPFC_IO_CMD_OUTSTANDING;
-+	cmdiocbq->iocb_flag &= ~LPFC_IO_CMD_OUTSTANDING;
- 	spin_unlock_irqrestore(&phba->hbalock, flags);
- 
- 	rsp = &rspiocbq->iocb;
-@@ -748,7 +748,7 @@ lpfc_bsg_rport_els(struct fc_bsg_job *jo
- 		/* make sure the I/O had not been completed/released */
- 		if (cmdiocbq->iocb_flag & LPFC_IO_LIBDFC) {
- 			/* open up abort window to timeout handler */
--			cmdiocbq->iocb_aux_flag |= LPFC_IO_CMD_OUTSTANDING;
-+			cmdiocbq->iocb_flag |= LPFC_IO_CMD_OUTSTANDING;
+ 	if ((if_type == LPFC_SLI_INTF_IF_TYPE_0) &&
+-	    (pci_resource_start(pdev, 2))) {
++	    (pci_resource_start(pdev, PCI_64BIT_BAR2))) {
+ 		/*
+ 		 * Map SLI4 if type 0 HBA Control Register base to a kernel
+ 		 * virtual address and setup the registers.
+ 		 */
+-		phba->pci_bar1_map = pci_resource_start(pdev, 2);
+-		bar1map_len = pci_resource_len(pdev, 2);
++		phba->pci_bar1_map = pci_resource_start(pdev, PCI_64BIT_BAR2);
++		bar1map_len = pci_resource_len(pdev, PCI_64BIT_BAR2);
+ 		phba->sli4_hba.ctrl_regs_memmap_p =
+ 				ioremap(phba->pci_bar1_map, bar1map_len);
+ 		if (!phba->sli4_hba.ctrl_regs_memmap_p) {
+@@ -7988,17 +7976,18 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba
+ 			   "ioremap failed for SLI4 HBA control registers.\n");
+ 			goto out_iounmap_conf;
  		}
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		return 0; /* done for now */
-@@ -1404,7 +1404,7 @@ lpfc_issue_ct_rsp_cmp(struct lpfc_hba *p
++		phba->pci_bar2_memmap_p = phba->sli4_hba.ctrl_regs_memmap_p;
+ 		lpfc_sli4_bar1_register_memmap(phba);
+ 	}
  
- 	/* Close the timeout handler abort window */
- 	spin_lock_irqsave(&phba->hbalock, flags);
--	cmdiocbq->iocb_aux_flag &= ~LPFC_IO_CMD_OUTSTANDING;
-+	cmdiocbq->iocb_flag &= ~LPFC_IO_CMD_OUTSTANDING;
- 	spin_unlock_irqrestore(&phba->hbalock, flags);
- 
- 	ndlp = dd_data->context_un.iocb.ndlp;
-@@ -1585,7 +1585,7 @@ lpfc_issue_ct_rsp(struct lpfc_hba *phba,
- 		/* make sure the I/O had not been completed/released */
- 		if (ctiocb->iocb_flag & LPFC_IO_LIBDFC) {
- 			/* open up abort window to timeout handler */
--			ctiocb->iocb_aux_flag |= LPFC_IO_CMD_OUTSTANDING;
-+			ctiocb->iocb_flag |= LPFC_IO_CMD_OUTSTANDING;
+ 	if ((if_type == LPFC_SLI_INTF_IF_TYPE_0) &&
+-	    (pci_resource_start(pdev, 4))) {
++	    (pci_resource_start(pdev, PCI_64BIT_BAR4))) {
+ 		/*
+ 		 * Map SLI4 if type 0 HBA Doorbell Register base to a kernel
+ 		 * virtual address and setup the registers.
+ 		 */
+-		phba->pci_bar2_map = pci_resource_start(pdev, 4);
+-		bar2map_len = pci_resource_len(pdev, 4);
++		phba->pci_bar2_map = pci_resource_start(pdev, PCI_64BIT_BAR4);
++		bar2map_len = pci_resource_len(pdev, PCI_64BIT_BAR4);
+ 		phba->sli4_hba.drbl_regs_memmap_p =
+ 				ioremap(phba->pci_bar2_map, bar2map_len);
+ 		if (!phba->sli4_hba.drbl_regs_memmap_p) {
+@@ -8006,6 +7995,7 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba
+ 			   "ioremap failed for SLI4 HBA doorbell registers.\n");
+ 			goto out_iounmap_ctrl;
  		}
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		return 0; /* done for now */
-@@ -5338,7 +5338,7 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
++		phba->pci_bar4_memmap_p = phba->sli4_hba.drbl_regs_memmap_p;
+ 		error = lpfc_sli4_bar2_register_memmap(phba, LPFC_VF0);
+ 		if (error)
+ 			goto out_iounmap_all;
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2013-09-06 10:03:53.500058066 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2013-09-06 10:04:21.042058693 -0400
+@@ -12233,7 +12233,6 @@ static void __iomem *
+ lpfc_dual_chute_pci_bar_map(struct lpfc_hba *phba, uint16_t pci_barset)
+ {
+ 	struct pci_dev *pdev;
+-	unsigned long bar_map, bar_map_len;
  
- 		spin_lock_irqsave(&phba->hbalock, flags);
- 		/* make sure the I/O abort window is still open */
--		if (!(cmdiocb->iocb_aux_flag & LPFC_IO_CMD_OUTSTANDING)) {
-+		if (!(cmdiocb->iocb_flag & LPFC_IO_CMD_OUTSTANDING)) {
- 			spin_unlock_irqrestore(&phba->hbalock, flags);
- 			return -EAGAIN;
- 		}
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2013-09-06 10:04:12.343058495 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2013-09-06 10:04:19.544058659 -0400
-@@ -58,7 +58,7 @@ struct lpfc_iocbq {
+ 	if (!phba->pcidev)
+ 		return NULL;
+@@ -12242,25 +12241,10 @@ lpfc_dual_chute_pci_bar_map(struct lpfc_
  
- 	IOCB_t iocb;		/* IOCB cmd */
- 	uint8_t retry;		/* retry counter for IOCB cmd - if needed */
--	uint16_t iocb_flag;
-+	uint32_t iocb_flag;
- #define LPFC_IO_LIBDFC		1	/* libdfc iocb */
- #define LPFC_IO_WAKE		2	/* Synchronous I/O completed */
- #define LPFC_IO_WAKE_TMO	LPFC_IO_WAKE /* Synchronous I/O timed out */
-@@ -73,12 +73,11 @@ struct lpfc_iocbq {
- #define LPFC_IO_DIF_PASS	0x400	/* T10 DIF IO pass-thru prot */
- #define LPFC_IO_DIF_STRIP	0x800	/* T10 DIF IO strip prot */
- #define LPFC_IO_DIF_INSERT	0x1000	/* T10 DIF IO insert prot */
-+#define LPFC_IO_CMD_OUTSTANDING	0x2000 /* timeout handler abort window */
- 
- #define LPFC_FIP_ELS_ID_MASK	0xc000	/* ELS_ID range 0-3, non-shifted mask */
- #define LPFC_FIP_ELS_ID_SHIFT	14
- 
--	uint8_t iocb_aux_flag;
--#define LPFC_IO_CMD_OUTSTANDING	0x01 /* timeout handler abort window */
- 	uint32_t drvrTimeout;	/* driver timeout in seconds */
- 	uint32_t fcp_wqidx;	/* index to FCP work queue */
- 	struct lpfc_vport *vport;/* virtual port pointer */
+ 	switch (pci_barset) {
+ 	case WQ_PCI_BAR_0_AND_1:
+-		if (!phba->pci_bar0_memmap_p) {
+-			bar_map = pci_resource_start(pdev, PCI_64BIT_BAR0);
+-			bar_map_len = pci_resource_len(pdev, PCI_64BIT_BAR0);
+-			phba->pci_bar0_memmap_p = ioremap(bar_map, bar_map_len);
+-		}
+ 		return phba->pci_bar0_memmap_p;
+ 	case WQ_PCI_BAR_2_AND_3:
+-		if (!phba->pci_bar2_memmap_p) {
+-			bar_map = pci_resource_start(pdev, PCI_64BIT_BAR2);
+-			bar_map_len = pci_resource_len(pdev, PCI_64BIT_BAR2);
+-			phba->pci_bar2_memmap_p = ioremap(bar_map, bar_map_len);
+-		}
+ 		return phba->pci_bar2_memmap_p;
+ 	case WQ_PCI_BAR_4_AND_5:
+-		if (!phba->pci_bar4_memmap_p) {
+-			bar_map = pci_resource_start(pdev, PCI_64BIT_BAR4);
+-			bar_map_len = pci_resource_len(pdev, PCI_64BIT_BAR4);
+-			phba->pci_bar4_memmap_p = ioremap(bar_map, bar_map_len);
+-		}
+ 		return phba->pci_bar4_memmap_p;
+ 	default:
+ 		break;
 
 
 
