@@ -1,239 +1,149 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: Re: [PATCH/RESEND 1/2] Hard disk S3 resume time optimization
-Date: Fri, 6 Sep 2013 15:45:35 -0700
-Message-ID: <20130906224534.GD7205@linux.intel.com>
-References: <20130906003852.GC25263@linux.intel.com>
- <2115560.nTPvnSceni@amdc1032>
-Reply-To: todd.e.brandt@linux.intel.com
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
+Date: Fri, 6 Sep 2013 16:47:49 -0600
+Message-ID: <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
+References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
+ <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
+ <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com> <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:38007 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751072Ab3IFWpd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Sep 2013 18:45:33 -0400
-Content-Disposition: inline
-In-Reply-To: <2115560.nTPvnSceni@amdc1032>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Adam Radford <aradford@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, Sep 06, 2013 at 06:54:48PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi,
-> 
-> On Thursday, September 05, 2013 05:38:53 PM Todd E Brandt wrote:
-> > This is the final draft of the non-blocking hard disk resume patch. I've
-> > included some performance results to demonstrate the real benefits
-> > of this patch. Please note that this patch provides a MASSIVE performance
-> > improvement in hard disk resume. It's too valuable to ignore, so I really
-> > need the help of the maintainers to get this implemented. Even if this
-> > patch is deemed the wrong approach I hope you won't abandon the idea
-> > altogether. There is so much potential in this kind of optimization and
-> > I'm highly motivated to make this work.
-> > 
-> > To demonstrate the substantial performance improvement I've run the 
-> > AnalyzeSuspend tool on three different platforms patched with the new 
-> > behavior. Each is running Ubuntu Raring with a kernel built from the 
-> > upstream kernel source.
-> > 
-> > The complete analysis and graphical outputs of the tool are available
-> > online at 01.org:
-> > https://01.org/suspendresume/blogs/tebrandt/2013/hard-disk-resume-optimization-simpler-approach
-> 
-> Please include changes descriptions from the link above in the actual patch
-> descriptions.
-> 
-> "The essential issue behind hard disks' lengthy resume time is the ata
-> port driver blocking until the ATA port hardware is finished coming online.
-> So the kernel isn't really doing anything during all those seconds that
-> the disks are resuming, it's just blocking until the hardware says it's
-> ready to accept commands. This patch changes the ATA port driver to issue
-> the wakeup command and then return immediately. Any commands issued to
-> the hardware will be queued up and will be executed once the port is
-> physically online. Thus no information is lost, and although the wait
-> time itself isn't removed, it doesn't hold up the rest of the system
-> which can function on what's left in RAM and cache."
-> 
+On Fri, Sep 6, 2013 at 3:51 AM, Jiri Kosina <jkosina@suse.cz> wrote:
+> On Wed, 28 Aug 2013, Bjorn Helgaas wrote:
+>
+>> [+cc another email addr for Adam from git logs]
+>
+> Thanks. Adam, would you happen to have any possible explanation /
+> background?
+>
+>> >> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
+>> >> > pci device") makes MSIs be forcibly disabled at boot time.
+>> >> >
+>> >> > It turns out that this breaks 3ware controller -- if MSIs are disabled
+>> >> > during PCI discovery of this controller, the device doesn't work properly
+>> >> > (it doesn't respond to any commands that are being sent to it after
+>> >> > initialization).
 
- What happens when somebody requests suspend while ATA port resume is still
- running?
+Is there a bug report for this issue?  It's nice to have a pointer to,
+e.g., a bugzilla.kernel.org bug report with info such as dmesg logs,
+lspci output, etc., for future reference.  Maybe somebody will figure
+out a more generic change that could make this quirk unnecessary, and
+details will help in figuring that out.
 
-The suspend request is queued until the resume has completed. I've tested
-that case very heavily. Basically if you do two suspends in a row (within
-seconds of each other) you lose any performance benefit, but that's a use
-case that should happen only very rarerly (and wouldn't be expected to
-be of any power benefit since too many sequential suspends actually
-takes more power than just letting the machine stay in run mode).
+I assume the actual PCI discovery done in the PCI core works fine;
+it's just that the driver doesn't work if MSIs are disabled on the
+device.  If that's the case, can this be fixed by some driver change?
+Maybe the driver needs to enable MSI before it sends commands to the
+device?
 
-> 
-> > Here's a synopsis of the results.
-> > 
-> > -------------------------------------------------------
-> > [Computer One]
-> > PLATFORM: Ubuntu Raring Ringtail (13.04)
-> > KERNEL: 3.11.0-rc7
-> > CPU: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
-> > SATA: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
-> > DISK CONFIG:
-> >     ATA1: 240 GB SSD
-> >     ATA2: 3 TB Hard Disk
-> >     ATA3: 500 GB Hard Disk
-> >     ATA4: DVD-ROM (with cd inserted)
-> >     ATA5: 2 TB Hard Disk
-> >     ATA6: 1 TB Hard Disk
-> > RESUME TIME WITHOUT PATCH: 11656 ms
-> > RESUME TIME WITH PATCH: 1110 ms
+Any description of what this failure looks like to a user?  How can a
+user or a distro connect a symptom (driver timeout, console message,
+or whatever) to this patch?
 
- These results are with both patches applied, could you tell what is
- the improvement from the patch #1 alone?
-
-With either patch alone there is no benefit. I've tested with each
-patch applied independently to verify that they function, but you 
-can't get the benefit without both. 
-
- Where is the 11s delay coming from? Are we doing the resume for all 
- ports sequentially instead of in parallel? In such case you should be
- fixing the power management layer instead.
-
-The ATA ports are all resumed in parallel. The long resume time
-comes from extremely large drives. The ATA port wakeup delay is
-the hardware running an internal subroutine to reinitialize the
-connection, which I guess takes longer for bigger disks. I'm not
-completely sure what it's doing, I just know that there's nothing
-software can do to speed it up.
-
-> > IMPROVEMENT: 10.5X speedup
-> > 
-> > -------------------------------------------------------
-> > [Computer Two]
-> > PLATFORM: Ubuntu Raring Ringtail (13.04)
-> > KERNEL: 3.11.0-rc7
-> > CPU: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
-> > SATA: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
-> > DISK CONFIG:
-> >     ATA1: 320 GB Hard Disk
-> >     ATA2 - ATA6: Empty slots
-> > RESUME TIME WITHOUT PATCH: 5416 ms
-> > RESUME TIME WITH PATCH: 448 ms
-> > 
-> > IMPROVEMENT: 12X speedup
-> > 
-> > -------------------------------------------------------
-> > [Computer Three]
-> > PLATFORM: Ubuntu Raring Ringtail (13.04)
-> > KERNEL: 3.11.0-rc7
-> > CPU: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
-> > SATA: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
-> > DISK CONFIG:
-> >     ATA1,3,4,6: Empty Slots
-> >     ATA2: DVD-ROM (empty)
-> >     ATA5: 500 GB Hard Disk
-> > RESUME TIME WITHOUT PATCH: 5385 ms
-> > RESUME TIME WITH PATCH: 688 ms
-> > 
-> > IMPROVEMENT: 7.8X speedup
-> > 
-> > -------------------------------------------------------
-> > 
-> > Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-> > Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-> > 
-> >  drivers/ata/libata-core.c | 36 +++++++++++++++++++++++++++++++++++-
-> >  1 file changed, 35 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> > index c24354d..6cf0c15 100644
-> > --- a/drivers/ata/libata-core.c
-> > +++ b/drivers/ata/libata-core.c
-> > @@ -5415,6 +5415,40 @@ static int ata_port_resume(struct device *dev)
-> >  	return rc;
-> >  }
-> >  
-> > +static int ata_port_resume_async(struct device *dev)
-> > +{
-> > +	struct ata_port *ap = to_ata_port(dev);
-> > +	struct ata_link *link;
-> > +	unsigned long flags;
-> > +	int ret = 0;
-> > +
-> > +	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
-> > +		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
-> > +		ret = -EAGAIN;
-> > +		goto out;
-> > +	}
-> > +
-> > +	spin_lock_irqsave(ap->lock, flags);
-> > +
-> > +	ap->pm_mesg = PMSG_RESUME;
-> > +	ap->pm_result = NULL;
-> > +	ap->pflags |= ATA_PFLAG_PM_PENDING;
-> > +	ata_for_each_link(link, ap, HOST_FIRST) {
-> > +		link->eh_info.action |= ATA_EH_RESET;
-> > +		link->eh_info.flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
-> > +	}
-> > +
-> > +	ata_port_schedule_eh(ap);
-> > +
-> > +	spin_unlock_irqrestore(ap->lock, flags);
-> 
-
- Why have you open-coded ata_port_request_pm() instead of just re-using it
- but with "async" parameter set?
-
-Because the async mode call requires a place to capture the value, and in
-this case I want to ignore it. The PM subsystem doesn't supply any method
-of checking on the status of a resume callback that's running asynchronously
-because it has no way of knowing. So without altering the pm code there's
-no point in collecting it.
-
-> 
-> > + out:
-> > +	pm_runtime_disable(dev);
-> > +	pm_runtime_set_active(dev);
-> > +	pm_runtime_enable(dev);
-> > +	return ret;
-> > 
-> > +}
-> > 
-> >  /*
-> >   * For ODDs, the upper layer will poll for media change every few seconds,
-> >   * which will make it enter and leave suspend state every few seconds. And
-> > @@ -5451,7 +5485,7 @@ static int ata_port_runtime_resume(struct device *dev)
-> >  
-> >  static const struct dev_pm_ops ata_port_pm_ops = {
-> >  	.suspend = ata_port_suspend,
-> > -	.resume = ata_port_resume,
-> > +	.resume = ata_port_resume_async,
-> 
-
- ->resume will now return success even though it can later fail during
- the async operation (error value will be lost), this is no-go, sorry.
-
-Yes, that's the nature of the asynchronous paradigm. The return value in this 
-case is the status of whether the resume was initiated, rather than if it was 
-completed. I'm letting the scsi and ata drivers assume control over their
-own error reporting in this case (which they already do). If you look at 
-the ata_port resume code you'll see that the ata_port_resume callback returns
-the status of the ahci_port_resume callback, which is always 0. So for SATA 
-disks the returned value for the resume callback is always 0. Error 
-handling and reporting is taken care of in the scsi error handler thread, 
-which runs separately from the pm core. I agree that in general it's a 
-"no-go" to ignore a return value, but in this specific case for this 
-specific driver, the return value is erronuous anyway, so there's no 
-harm in ignoring it.
-
-> 
-> Also it seems that ata_port_resume() becomes unused after this change.
-> 
-> >  	.freeze = ata_port_do_freeze,
-> >  	.thaw = ata_port_resume,
-> >  	.poweroff = ata_port_poweroff,
-> 
-> Best regards,
+>> >> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
+>> >> > makes the device work properly again.
+>> >> >
+>> >> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+>> >> >
+>> >> > ---
+>> >> >
+>> >> > I am adding Adam Radford as a recepient as well, to see whether he is able
+>> >> > to provide some more explanation why this device would expose this
+>> >> > behavior.
+>> >
+>> > OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't
+>> > expect any feedback from him.
+>> >
+>> > Bjorn, Jesse, any word on this please?
+>>
+>> It's on my list to look at.  It's too late to put it in for v3.11, and
+>> it's doubtful that it will even make the v3.12 merge window (though
+>> possibly it could go in post-merge window).  d5dea7d95 is several
+>> years old, so hopefully this issue isn't super-urgent.  Let me know if
+>> otherwise.
+>
+> I agree that this should be applicable to 3.12-rcX as well, as it's very
+> device-specific.
+>
+> Thanks.
+>
+>>
+>> Bjorn
+>>
+>> >> >  drivers/pci/msi.c    |    3 +++
+>> >> >  drivers/pci/quirks.c |   10 ++++++++++
+>> >> >  include/linux/pci.h  |    1 +
+>> >> >  3 files changed, 14 insertions(+), 0 deletions(-)
+>> >> >
+>> >> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> >> > index aca7578..4f36b8b 100644
+>> >> > --- a/drivers/pci/msi.c
+>> >> > +++ b/drivers/pci/msi.c
+>> >> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+>> >> >  {
+>> >> >     INIT_LIST_HEAD(&dev->msi_list);
+>> >> >
+>> >> > +   if (dev->broken_msi_disable)
+>> >> > +           return;
+>> >> > +
+>> >> >     /* Disable the msi hardware to avoid screaming interrupts
+>> >> >      * during boot.  This is the power on reset default so
+>> >> >      * usually this should be a noop.
+>> >> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> >> > index e85d230..4ba3400 100644
+>> >> > --- a/drivers/pci/quirks.c
+>> >> > +++ b/drivers/pci/quirks.c
+>> >> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+>> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+>> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+>> >> >
+>> >> > +/*
+>> >> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
+>> >> > + * disabled on it during PCI device discovery
+>> >> > + */
+>> >> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
+>> >> > +{
+>> >> > +   dev->broken_msi_disable = 1;
+>> >> > +}
+>> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
+>> >> > +
+>> >> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
+>> >> >                              void (*fn)(struct pci_dev *dev))
+>> >> >  {
+>> >> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> >> > index 0fd1f15..c327d74 100644
+>> >> > --- a/include/linux/pci.h
+>> >> > +++ b/include/linux/pci.h
+>> >> > @@ -341,6 +341,7 @@ struct pci_dev {
+>> >> >  #ifdef CONFIG_PCI_MSI
+>> >> >     struct list_head msi_list;
+>> >> >     struct kset *msi_kset;
+>> >> > +   unsigned int    broken_msi_disable:1;
+>> >> >  #endif
+>> >> >     struct pci_vpd *vpd;
+>> >> >  #ifdef CONFIG_PCI_ATS
+>> >> >
+>> >> > --
+>> >> > Jiri Kosina
+>> >> > SUSE Labs
+>> >> >
+>> >>
+>> >> --
+>> >> Jiri Kosina
+>> >> SUSE Labs
+>> >>
+>> >
+>> > --
+>> > Jiri Kosina
+>> > SUSE Labs
+>>
+>
 > --
-> Bartlomiej Zolnierkiewicz
-> Samsung R&D Institute Poland
-> Samsung Electronics
-> 
+> Jiri Kosina
+> SUSE Labs
