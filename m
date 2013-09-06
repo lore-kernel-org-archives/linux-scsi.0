@@ -1,136 +1,57 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: [PATCH/RESEND 2/2] Hard disk S3 resume time optimization
-Date: Thu, 5 Sep 2013 17:44:25 -0700
-Message-ID: <20130906004425.GA31998@linux.intel.com>
-Reply-To: todd.e.brandt@linux.intel.com
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH] scsi: sr: use block layer runtime PM
+Date: Fri, 06 Sep 2013 09:36:03 +0800
+Message-ID: <52293183.3050400@intel.com>
+References: <Pine.LNX.4.44L0.1309051007220.1121-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:39713 "EHLO mga03.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:64813 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753778Ab3IFAoX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Sep 2013 20:44:23 -0400
-Content-Disposition: inline
+	id S1753580Ab3IFBf0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Sep 2013 21:35:26 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1309051007220.1121-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: tj@kernel.org, JBottomley@parallels.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <JBottomley@parallels.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Part 2 of the hard disk resume optimization patch, this one applies
-to the scsi subsystem.
+On 09/05/2013 10:25 PM, Alan Stern wrote:
+> On Thu, 5 Sep 2013, Aaron Lu wrote:
+> 
+>> Migrate SCSI Optical Disk Drive(ODD) driver sr to make use of block
+>> layer runtime PM. Accordingly, the SCSI bus layer runtime PM callback is
+>> simplified as all SCSI devices that implement runtime PM are now request
+>> based.
+>>
+>> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+>> ---
+>> Note that due to ODD will be polled every 2 seconds, for suspend to
+>> actually happen, the autosuspend_delay can not be set to more than 2
+>> seconds.
+> 
+> Or the polling delay must be increased.
+> 
+>> Also, make sure to use the util-linux utility of version 2.23.2 or later,
+>> as there is a bug fix for eject command to correctly update the ODD's
+>> locked state. If the fix is not applied, after the ODD is ejected with the
+>> eject command, it will not be able to enter runtime suspend state any
+>> more due to SCSI EH code will submit a lock door command for the ODD
+>> right after its parent ATA port is runtime suspended.
+>> https://git.kernel.org/cgit/utils/util-linux/util-linux.git/commit/?id=12272030e563201e0b06732d8a87d8cea7157a04
+> 
+> I think this patch will cause a compile warning if you have
+> CONFIG_PM_RUNTIME set and CONFIG_PM_SLEEP disabled.  The
+> scsi_dev_type_suspend and scsi_dev_type_resume routines will be defined
+> but not used.
 
+Oh, right, thanks for the remind. I'll move CONFIG_PM_SLEEP up to cover
+scsi_dev_type_suspend/resume in v2.
 
-Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> 
+> Otherwise it seems okay.
+>
 
- drivers/scsi/sd.c | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 81 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 86fcf2c..d4bf784 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -107,6 +107,7 @@ static int  sd_remove(struct device *);
- static void sd_shutdown(struct device *);
- static int sd_suspend(struct device *);
- static int sd_resume(struct device *);
-+static int sd_resume_async(struct device *);
- static void sd_rescan(struct device *);
- static int sd_done(struct scsi_cmnd *);
- static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
-@@ -484,7 +485,7 @@ static struct class sd_disk_class = {
- 
- static const struct dev_pm_ops sd_pm_ops = {
- 	.suspend		= sd_suspend,
--	.resume			= sd_resume,
-+	.resume			= sd_resume_async,
- 	.poweroff		= sd_suspend,
- 	.restore		= sd_resume,
- 	.runtime_suspend	= sd_suspend,
-@@ -3137,6 +3138,85 @@ done:
- 	return ret;
- }
- 
-+static void sd_resume_async_end(struct request *rq, int error)
-+{
-+	struct scsi_sense_hdr sshdr;
-+	struct scsi_disk *sdkp = rq->end_io_data;
-+	char *sense = rq->sense;
-+
-+	if (error) {
-+		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-+		sd_print_result(sdkp, error);
-+		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-+			scsi_normalize_sense(sense,
-+				SCSI_SENSE_BUFFERSIZE, &sshdr);
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		}
-+	} else
-+		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-+
-+	kfree(sense);
-+	rq->sense = NULL;
-+	rq->end_io_data = NULL;
-+	__blk_put_request(rq->q, rq);
-+	scsi_disk_put(sdkp);
-+}
-+
-+static int sd_resume_async(struct device *dev)
-+{
-+	unsigned char cmd[6] = { START_STOP };
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct request *req;
-+	char *sense = NULL;
-+	int ret = 0;
-+
-+	if (!sdkp->device->manage_start_stop)
-+		goto error;
-+
-+	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-+
-+	cmd[4] |= 1;
-+
-+	if (sdkp->device->start_stop_pwr_cond)
-+		cmd[4] |= 1 << 4;	/* Active or Standby */
-+
-+	if (!scsi_device_online(sdkp->device)) {
-+		ret = -ENODEV;
-+		goto error;
-+	}
-+
-+	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-+	if (!req) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sense) {
-+		ret = -ENOMEM;
-+		goto error_sense;
-+	}
-+
-+	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memcpy(req->cmd, cmd, req->cmd_len);
-+	req->sense = sense;
-+	req->sense_len = 0;
-+	req->retries = SD_MAX_RETRIES;
-+	req->timeout = SD_TIMEOUT;
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
-+
-+	req->end_io_data = sdkp;
-+	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_async_end);
-+	return 0;
-+
-+ error_sense:
-+	__blk_put_request(req->q, req);
-+ error:
-+	scsi_disk_put(sdkp);
-+	return ret;
-+}
-+
- /**
-  *	init_sd - entry point for this driver (both when built in or when
-  *	a module).
-
+Thanks,
+Aaron
