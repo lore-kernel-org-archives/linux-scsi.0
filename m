@@ -1,60 +1,49 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] SCSI: Fix potential out-of-bounds access in drivers/scsi/sd.c
-Date: Fri, 6 Sep 2013 11:49:51 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1309061054390.1165-100000@iolanthe.rowland.org>
-References: <52288938.30102@suse.de>
+Subject: Re: [PATCH v2] scsi: sr: use block layer runtime PM
+Date: Fri, 6 Sep 2013 11:56:48 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1309061153010.1165-100000@iolanthe.rowland.org>
+References: <1378479604.2063.13.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:33161 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755652Ab3IFPtw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 11:49:52 -0400
-In-Reply-To: <52288938.30102@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1378479604.2063.13.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-pm-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Dmitry Vyukov <dvyukov@google.com>, richard@r-senior.demon.co.uk, ltuikov@yahoo.com, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-This patch fixes an out-of-bounds error in sd_read_cache_type(), found
-by Google's AddressSanitizer tool.  When the loop ends, we know that
-"offset" lies beyond the end of the data in the buffer, so no Caching
-mode page was found.  In theory it may be present, but the buffer size
-is limited to 512 bytes.
+On Fri, 6 Sep 2013, James Bottomley wrote:
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-Reported-by: Dmitry Vyukov <dvyukov@google.com>
-CC: <stable@vger.kernel.org>
+> > layer runtime PM. Accordingly, the SCSI bus layer runtime PM callback is
+> > simplified as all SCSI devices that implement runtime PM are now request
+> > based.
+> 
+> OK, let's now try for a descriptive changelog.  All SCSI devices
+> (including sr) are "request based".  I think what you mean is "all SCSI
+> devices which implement runtime PM have an exposed block device"?
 
----
+Actually Aaron means "All SCSI drivers implementing runtime PM now use
+the block layer's request-based mechanism."
 
+> > Note that due to ODD will be polled every 2 seconds,
+> 
+> Since the device will be polled every 2 seconds
+> 
+> >  for suspend to
+> > actually happen, the autosuspend_delay can not be set to more than 2
+> > seconds or the polling interval has to be increased.
+> 
+> Is this true?  What about event driven devices?  Supposing a distro has
+> a different interval.
+> 
+> How about
+> 
+> If your Distribution polls the device, the autosuspend interval cannot
+> be set to longer than the polling interval otherwise the device will
+> never suspend.
 
-[as1709]
+The default polling done by the kernel uses 2-second intervals.  Of 
+course, distributions and users can change this or disable it entirely.
 
-
- drivers/scsi/sd.c |   11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
-
-Index: usb-3.11/drivers/scsi/sd.c
-===================================================================
---- usb-3.11.orig/drivers/scsi/sd.c
-+++ usb-3.11/drivers/scsi/sd.c
-@@ -2419,14 +2419,9 @@ sd_read_cache_type(struct scsi_disk *sdk
- 			}
- 		}
- 
--		if (modepage == 0x3F) {
--			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
--				  "present\n");
--			goto defaults;
--		} else if ((buffer[offset] & 0x3f) != modepage) {
--			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
--			goto defaults;
--		}
-+		sd_printk(KERN_ERR, sdkp, "No Caching mode page found\n");
-+		goto defaults;
-+
- 	Page_found:
- 		if (modepage == 8) {
- 			sdkp->WCE = ((buffer[offset + 2] & 0x04) != 0);
+Alan Stern
 
