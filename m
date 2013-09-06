@@ -1,164 +1,166 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 1/6] scsi/bfa: use pcie_set/get_readrq to simplify code
-Date: Fri, 6 Sep 2013 16:14:25 -0600
-Message-ID: <20130906221425.GA10152@google.com>
-References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
+From: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Subject: Re: [PATCH/RESEND 2/2] Hard disk S3 resume time optimization
+Date: Fri, 6 Sep 2013 15:19:10 -0700
+Message-ID: <20130906221910.GC7205@linux.intel.com>
+References: <20130906004425.GA31998@linux.intel.com>
+ <8426004.FBs8WcKaAG@amdc1032>
+Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:50772 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751009Ab3IFWTH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Sep 2013 18:19:07 -0400
 Content-Disposition: inline
-In-Reply-To: <1378367730-25996-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Gavin Shan <shangw@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>, Jiang Liu <jiang.liu@huawei.com>, Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi@vger.kernel.org
+In-Reply-To: <8426004.FBs8WcKaAG@amdc1032>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Sep 05, 2013 at 03:55:25PM +0800, Yijing Wang wrote:
-> v1->v2: use pcie_get/set_readrq to simplify code
-> a lot suggestd by Bjorn.
+I'll resubmit with a better description. As for the return value, if you look
+at the mailing list history you'll see that I already tried that approach (and 
+was actually advised to do it this way):
+
+http://marc.info/?l=linux-scsi&m=136881989601276&w=2
+
+On Fri, Sep 06, 2013 at 07:03:26PM +0200, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Use pcie_get_readrq()/pcie_set_readrq() to simplify
-> code.
+> Hi,
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Anil Gurumurthy <agurumur@brocade.com>
-> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/scsi/bfa/bfad.c |   48 +++++-----------------------------------------
->  1 files changed, 6 insertions(+), 42 deletions(-)
-
-I applied all these with some tweaks to my pci/yijing-pci_is_pcie-v2
-branch [1].  This will be rebased after v3.12-rc1, and may be amended
-if any patches are picked up by others.
-
-Hints (not just for you; I hope other people pay attention, too,
-because I'm obsessive and I pay attention to these details):
-
-  - Include a "[PATCH v2 0/6]" email.  That's a good place for you to
-    put an overall description of the series, and a good place for
-    responses like this one that apply to the whole series.
-
-  - Pay attention to the order of your patches.  Yours seemed random,
-    and I reordered them so the core PCI ones are first and the arch
-    and driver ones are later.  That way I can easily drop the later
-    ones if they are picked up by other maintainers.
-
-  - Don't put "v1->v2" comments in your changelogs.  Those are fine
-    in the "[0/6]" email, but they're useless in the git changelog, and
-    I strip them out when I see them.  Or you can put them after the
-    "---" line, in which case they get stripped out automatically.
-
-  - Run "git log --oneline" on the files you touch.  You should follow
-    the existing convention, including spacing, brackets, capitalization,
-    etc.  I changed most of your subject lines for this reason.
-
-  - Write titles that are sentences, starting with a verb, as suggested
-    by Ingo [2].  You did this already; I just made changes for
-    consistency of capitalization and the like.
-
-  - Use real function names, not things like "pcie_capability_xxx".
-    That makes it easier to search logs.
-
-  - Be consistent about writing function names.  Some of your logs
-    included, e.g., both "pci_bus_set_ops" and "dev_info()".  I prefer
-    to always include the parentheses when writing a function name,
-    but at least be consistent.
-
-  - Don't put "Cc: <mailing-list>" in your changelog.  That tag is
-    useful to show that a *person* has had the opportunity to comment
-    on a patch but declined to do so.  I don't think it's meaningful
-    for mailing lists.  If it were, every single commit would have
-    that tag, since every single commit should appear on the relevant
-    list.  I suspect you probably do this so that something like
-    "git send-email --signed-off-by-cc" will automatically send mail
-    to the right lists.  But that's a one-time convenience at the
-    cost of useless info in the changelog that's there forever.
-
-  - Put Signed-off-by, Acked-by, etc., tags in this order as suggested
-    by Ingo [2]:
-
-      Reported-by:
-      Tested-by:
-      Signed-off-by:
-      Acked-by:
-      Reviewed-by:
-      Cc: stable@vger.kernel.org  # v3.11+
-      Cc: others
-
-[1] http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/yijing-pci_is_pcie-v2
-
-[2] http://lkml.kernel.org/r/20120711080446.GA17713@gmail.com
-
-> diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-> index f8ca7be..0a458db 100644
-> --- a/drivers/scsi/bfa/bfad.c
-> +++ b/drivers/scsi/bfa/bfad.c
-> @@ -766,50 +766,14 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
->  	bfad->pcidev = pdev;
->  
->  	/* Adjust PCIe Maximum Read Request Size */
-> -	if (pcie_max_read_reqsz > 0) {
-> -		int pcie_cap_reg;
-> -		u16 pcie_dev_ctl;
-> -		u16 mask = 0xffff;
-> -
-> -		switch (pcie_max_read_reqsz) {
-> -		case 128:
-> -			mask = 0x0;
-> -			break;
-> -		case 256:
-> -			mask = 0x1000;
-> -			break;
-> -		case 512:
-> -			mask = 0x2000;
-> -			break;
-> -		case 1024:
-> -			mask = 0x3000;
-> -			break;
-> -		case 2048:
-> -			mask = 0x4000;
-> -			break;
-> -		case 4096:
-> -			mask = 0x5000;
-> -			break;
-> -		default:
-> -			break;
-> -		}
-> -
-> -		pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
-> -		if (mask != 0xffff && pcie_cap_reg) {
-> -			pcie_cap_reg += 0x08;
-> -			pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
-> -			if ((pcie_dev_ctl & 0x7000) != mask) {
-> -				printk(KERN_WARNING "BFA[%s]: "
-> +	if (pcie_max_read_reqsz > 0 && pci_is_pcie(pdev)) {
-> +		int max_rq = pcie_get_readrq(pdev);
-> +		if (max_rq > 128 && max_rq < 4096 && is_power_of_2(max_rq))
-
-I think you meant to validate pcie_max_read_reqsz (the module parameter),
-not max_rq.  I made this change on my branch.
-
-> +			printk(KERN_WARNING "BFA[%s]: "
->  				"pcie_max_read_request_size is %d, "
-> -				"reset to %d\n", bfad->pci_name,
-> -				(1 << ((pcie_dev_ctl & 0x7000) >> 12)) << 7,
-> +				"reset to %d\n", bfad->pci_name, max_rq,
->  				pcie_max_read_reqsz);
-> -
-> -				pcie_dev_ctl &= ~0x7000;
-> -				pci_write_config_word(pdev, pcie_cap_reg,
-> -						pcie_dev_ctl | mask);
-> -			}
-> -		}
-> +		pcie_set_readrq(pdev, pcie_max_read_reqsz);
->  	}
->  
->  	pci_save_state(pdev);
-> -- 
-> 1.7.1
+> On Thursday, September 05, 2013 05:44:25 PM Todd E Brandt wrote:
+> > Part 2 of the hard disk resume optimization patch, this one applies
+> > to the scsi subsystem.
 > 
+> Please update the patch description to say what the patch does (and why).
+> 
+> > Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
+> > Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> > 
+> >  drivers/scsi/sd.c | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+> >  1 file changed, 81 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > index 86fcf2c..d4bf784 100644
+> > --- a/drivers/scsi/sd.c
+> > +++ b/drivers/scsi/sd.c
+> > @@ -107,6 +107,7 @@ static int  sd_remove(struct device *);
+> >  static void sd_shutdown(struct device *);
+> >  static int sd_suspend(struct device *);
+> >  static int sd_resume(struct device *);
+> > +static int sd_resume_async(struct device *);
+> >  static void sd_rescan(struct device *);
+> >  static int sd_done(struct scsi_cmnd *);
+> >  static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
+> > @@ -484,7 +485,7 @@ static struct class sd_disk_class = {
+> >  
+> >  static const struct dev_pm_ops sd_pm_ops = {
+> >  	.suspend		= sd_suspend,
+> > -	.resume			= sd_resume,
+> > +	.resume			= sd_resume_async,
+> 
+> Same comment as with patch #1.
+> 
+> When the command execution later fails the error will be now lost
+> (->resume returned 0 already and nothing can be done to fix it).
+> 
+> Sorry but this looks like a wrong approach and you should fix
+> the PM layer to do async ->resume when possible instead.
+> 
+> >  	.poweroff		= sd_suspend,
+> >  	.restore		= sd_resume,
+> >  	.runtime_suspend	= sd_suspend,
+> > @@ -3137,6 +3138,85 @@ done:
+> >  	return ret;
+> >  }
+> >  
+> > +static void sd_resume_async_end(struct request *rq, int error)
+> > +{
+> > +	struct scsi_sense_hdr sshdr;
+> > +	struct scsi_disk *sdkp = rq->end_io_data;
+> > +	char *sense = rq->sense;
+> > +
+> > +	if (error) {
+> > +		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
+> > +		sd_print_result(sdkp, error);
+> > +		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
+> > +			scsi_normalize_sense(sense,
+> > +				SCSI_SENSE_BUFFERSIZE, &sshdr);
+> > +			sd_print_sense_hdr(sdkp, &sshdr);
+> > +		}
+> > +	} else
+> > +		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
+> > +
+> > +	kfree(sense);
+> > +	rq->sense = NULL;
+> > +	rq->end_io_data = NULL;
+> > +	__blk_put_request(rq->q, rq);
+> > +	scsi_disk_put(sdkp);
+> > +}
+> > +
+> > +static int sd_resume_async(struct device *dev)
+> > +{
+> > +	unsigned char cmd[6] = { START_STOP };
+> > +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+> > +	struct request *req;
+> > +	char *sense = NULL;
+> > +	int ret = 0;
+> > +
+> > +	if (!sdkp->device->manage_start_stop)
+> > +		goto error;
+> > +
+> > +	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+> > +
+> > +	cmd[4] |= 1;
+> > +
+> > +	if (sdkp->device->start_stop_pwr_cond)
+> > +		cmd[4] |= 1 << 4;	/* Active or Standby */
+> > +
+> > +	if (!scsi_device_online(sdkp->device)) {
+> > +		ret = -ENODEV;
+> > +		goto error;
+> > +	}
+> > +
+> > +	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
+> > +	if (!req) {
+> > +		ret = -ENOMEM;
+> > +		goto error;
+> > +	}
+> > +
+> > +	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+> > +	if (!sense) {
+> > +		ret = -ENOMEM;
+> > +		goto error_sense;
+> > +	}
+> > +
+> > +	req->cmd_len = COMMAND_SIZE(cmd[0]);
+> > +	memcpy(req->cmd, cmd, req->cmd_len);
+> > +	req->sense = sense;
+> > +	req->sense_len = 0;
+> > +	req->retries = SD_MAX_RETRIES;
+> > +	req->timeout = SD_TIMEOUT;
+> > +	req->cmd_type = REQ_TYPE_BLOCK_PC;
+> > +	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
+> > +
+> > +	req->end_io_data = sdkp;
+> > +	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_async_end);
+> > +	return 0;
+> > +
+> > + error_sense:
+> > +	__blk_put_request(req->q, req);
+> > + error:
+> > +	scsi_disk_put(sdkp);
+> > +	return ret;
+> > +}
+> > +
+> >  /**
+> >   *	init_sd - entry point for this driver (both when built in or when
+> >   *	a module).
+> 
+> Best regards,
+> --
+> Bartlomiej Zolnierkiewicz
+> Samsung R&D Institute Poland
+> Samsung Electronics
 > 
