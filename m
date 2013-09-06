@@ -1,49 +1,52 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2] scsi: sr: use block layer runtime PM
-Date: Fri, 6 Sep 2013 11:56:48 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1309061153010.1165-100000@iolanthe.rowland.org>
-References: <1378479604.2063.13.camel@dabdike.int.hansenpartnership.com>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 0/18] lpfc 8.3.42: Update lpfc to revision 8.3.42
+Date: Fri, 6 Sep 2013 12:17:44 -0400
+Message-ID: <1378484264.14051.19.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1378479604.2063.13.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:51723 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753581Ab3IFQSW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 12:18:22 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 6 Sep 2013, James Bottomley wrote:
+This patch set updates the lpfc driver to revision 8.3.42
 
-> > layer runtime PM. Accordingly, the SCSI bus layer runtime PM callback is
-> > simplified as all SCSI devices that implement runtime PM are now request
-> > based.
-> 
-> OK, let's now try for a descriptive changelog.  All SCSI devices
-> (including sr) are "request based".  I think what you mean is "all SCSI
-> devices which implement runtime PM have an exposed block device"?
+The patches for 8.3.42 contain:
 
-Actually Aaron means "All SCSI drivers implementing runtime PM now use
-the block layer's request-based mechanism."
+- Fixed using unsafe linked list macro for walking and deleting linked list
+- Fixed not able to log informational messages at early stage of driver init time
+- Fix ramdom errors using first burst
+- Fixed mailbox memory leak.
+- Back out data count,(residual fcfi_parm) fix for bad target.
+- Fixed function mode field defined too small for not recognizing dual-chute mode
+- Fixed race condition between BSG I/O dispatch and timeout handling
+- Fixed back to back RSCNs discovery failure.
+- Fixed logging format of setting driver sysfs attributes hard to interpret
+- Fix crash on driver load due to cpu affinity logic
+- Fixed driver iocbq structure's iocb_flag field running out of space
+- Avoided making pci bar ioremap call during dual-chute WQ/RQ pci bar selection
+- Fix WARN_ON when driver unloads
+- Fixed failure to allocate SCSI buffer on PPC64 platform for SLI4 devices
+- Fix driver's abort loop functionality to skip IOs already getting aborted
+- Fixed inconsistent spin lock usage. 
+- Fixed issue of task management commands having a fixed timeout
+- Update lpfc version to driver version 8.3.42
 
-> > Note that due to ODD will be polled every 2 seconds,
-> 
-> Since the device will be polled every 2 seconds
-> 
-> >  for suspend to
-> > actually happen, the autosuspend_delay can not be set to more than 2
-> > seconds or the polling interval has to be increased.
-> 
-> Is this true?  What about event driven devices?  Supposing a distro has
-> a different interval.
-> 
-> How about
-> 
-> If your Distribution polls the device, the autosuspend interval cannot
-> be set to longer than the polling interval otherwise the device will
-> never suspend.
 
-The default polling done by the kernel uses 2-second intervals.  Of 
-course, distributions and users can change this or disable it entirely.
+The patches were cut against scsi.git, branch "misc".
 
-Alan Stern
+-- james s
+
+
+Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+
 
