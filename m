@@ -1,239 +1,52 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 7/18] lpfc 8.3.42: Fixed race condition between BSG I/O
- dispatch and timeout handling
-Date: Fri, 6 Sep 2013 12:19:45 -0400
-Message-ID: <1378484385.14051.26.camel@myfc17>
+Subject: [PATCH 8/18] lpfc 8.3.42: Fixed back to back RSCNs discovery
+ failure.
+Date: Fri, 6 Sep 2013 12:20:07 -0400
+Message-ID: <1378484407.14051.27.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:22781 "EHLO
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:22787 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753758Ab3IFQUW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 12:20:22 -0400
+	with ESMTP id S1756548Ab3IFQUo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 12:20:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fixed race condition between BSG I/O dispatch and timeout handling
+Fixed back to back RSCNs discovery failure.
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_bsg.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++------------
- lpfc_sli.h |    3 +-
- 2 files changed, 72 insertions(+), 17 deletions(-)
+ lpfc_hbadisc.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
---- a/drivers/scsi/lpfc/lpfc_bsg.c	2013-09-06 10:03:53.472058065 -0400
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c	2013-09-06 10:04:12.343058495 -0400
-@@ -317,6 +317,11 @@ lpfc_bsg_send_mgmt_cmd_cmp(struct lpfc_h
- 	}
- 	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-09-06 10:04:06.298058357 -0400
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2013-09-06 10:04:14.323058540 -0400
+@@ -4457,7 +4457,15 @@ lpfc_unreg_rpi(struct lpfc_vport *vport,
+ 	int rc;
+ 	uint16_t rpi;
  
-+	/* Close the timeout handler abort window */
-+	spin_lock_irqsave(&phba->hbalock, flags);
-+	cmdiocbq->iocb_aux_flag &= ~LPFC_IO_CMD_OUTSTANDING;
-+	spin_unlock_irqrestore(&phba->hbalock, flags);
-+
- 	iocb = &dd_data->context_un.iocb;
- 	ndlp = iocb->ndlp;
- 	rmp = iocb->rmp;
-@@ -387,6 +392,7 @@ lpfc_bsg_send_mgmt_cmd(struct fc_bsg_job
- 	int request_nseg;
- 	int reply_nseg;
- 	struct bsg_job_data *dd_data;
-+	unsigned long flags;
- 	uint32_t creg_val;
- 	int rc = 0;
- 	int iocb_stat;
-@@ -501,14 +507,24 @@ lpfc_bsg_send_mgmt_cmd(struct fc_bsg_job
- 	}
- 
- 	iocb_stat = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, cmdiocbq, 0);
--	if (iocb_stat == IOCB_SUCCESS)
-+
-+	if (iocb_stat == IOCB_SUCCESS) {
-+		spin_lock_irqsave(&phba->hbalock, flags);
-+		/* make sure the I/O had not been completed yet */
-+		if (cmdiocbq->iocb_flag & LPFC_IO_LIBDFC) {
-+			/* open up abort window to timeout handler */
-+			cmdiocbq->iocb_aux_flag |= LPFC_IO_CMD_OUTSTANDING;
-+		}
-+		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		return 0; /* done for now */
--	else if (iocb_stat == IOCB_BUSY)
-+	} else if (iocb_stat == IOCB_BUSY) {
- 		rc = -EAGAIN;
--	else
-+	} else {
- 		rc = -EIO;
-+	}
- 
- 	/* iocb failed so cleanup */
-+	job->dd_data = NULL;
- 
- free_rmp:
- 	lpfc_free_bsg_buffers(phba, rmp);
-@@ -577,6 +593,11 @@ lpfc_bsg_rport_els_cmp(struct lpfc_hba *
- 	}
- 	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
- 
-+	/* Close the timeout handler abort window */
-+	spin_lock_irqsave(&phba->hbalock, flags);
-+	cmdiocbq->iocb_aux_flag &= ~LPFC_IO_CMD_OUTSTANDING;
-+	spin_unlock_irqrestore(&phba->hbalock, flags);
-+
- 	rsp = &rspiocbq->iocb;
- 	pcmd = (struct lpfc_dmabuf *)cmdiocbq->context2;
- 	prsp = (struct lpfc_dmabuf *)pcmd->list.next;
-@@ -639,6 +660,7 @@ lpfc_bsg_rport_els(struct fc_bsg_job *jo
- 	struct lpfc_iocbq *cmdiocbq;
- 	uint16_t rpi = 0;
- 	struct bsg_job_data *dd_data;
-+	unsigned long flags;
- 	uint32_t creg_val;
- 	int rc = 0;
- 
-@@ -721,15 +743,25 @@ lpfc_bsg_rport_els(struct fc_bsg_job *jo
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, cmdiocbq, 0);
- 
--	if (rc == IOCB_SUCCESS)
-+	if (rc == IOCB_SUCCESS) {
-+		spin_lock_irqsave(&phba->hbalock, flags);
-+		/* make sure the I/O had not been completed/released */
-+		if (cmdiocbq->iocb_flag & LPFC_IO_LIBDFC) {
-+			/* open up abort window to timeout handler */
-+			cmdiocbq->iocb_aux_flag |= LPFC_IO_CMD_OUTSTANDING;
-+		}
-+		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		return 0; /* done for now */
--	else if (rc == IOCB_BUSY)
-+	} else if (rc == IOCB_BUSY) {
- 		rc = -EAGAIN;
--	else
-+	} else {
- 		rc = -EIO;
-+	}
- 
--linkdown_err:
-+	/* iocb failed so cleanup */
-+	job->dd_data = NULL;
- 
-+linkdown_err:
- 	cmdiocbq->context1 = ndlp;
- 	lpfc_els_free_iocb(phba, cmdiocbq);
- 
-@@ -1370,6 +1402,11 @@ lpfc_issue_ct_rsp_cmp(struct lpfc_hba *p
- 	}
- 	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
- 
-+	/* Close the timeout handler abort window */
-+	spin_lock_irqsave(&phba->hbalock, flags);
-+	cmdiocbq->iocb_aux_flag &= ~LPFC_IO_CMD_OUTSTANDING;
-+	spin_unlock_irqrestore(&phba->hbalock, flags);
-+
- 	ndlp = dd_data->context_un.iocb.ndlp;
- 	cmp = cmdiocbq->context2;
- 	bmp = cmdiocbq->context3;
-@@ -1433,6 +1470,7 @@ lpfc_issue_ct_rsp(struct lpfc_hba *phba,
- 	int rc = 0;
- 	struct lpfc_nodelist *ndlp = NULL;
- 	struct bsg_job_data *dd_data;
-+	unsigned long flags;
- 	uint32_t creg_val;
- 
- 	/* allocate our bsg tracking structure */
-@@ -1542,8 +1580,19 @@ lpfc_issue_ct_rsp(struct lpfc_hba *phba,
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, ctiocb, 0);
- 
--	if (rc == IOCB_SUCCESS)
-+	if (rc == IOCB_SUCCESS) {
-+		spin_lock_irqsave(&phba->hbalock, flags);
-+		/* make sure the I/O had not been completed/released */
-+		if (ctiocb->iocb_flag & LPFC_IO_LIBDFC) {
-+			/* open up abort window to timeout handler */
-+			ctiocb->iocb_aux_flag |= LPFC_IO_CMD_OUTSTANDING;
-+		}
-+		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		return 0; /* done for now */
-+	}
-+
-+	/* iocb failed so cleanup */
-+	job->dd_data = NULL;
- 
- issue_ct_rsp_exit:
- 	lpfc_sli_release_iocbq(phba, ctiocb);
-@@ -5284,9 +5333,15 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
- 		 * remove it from the txq queue and call cancel iocbs.
- 		 * Otherwise, call abort iotag
- 		 */
--
- 		cmdiocb = dd_data->context_un.iocb.cmdiocbq;
--		spin_lock_irq(&phba->hbalock);
-+		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
-+
-+		spin_lock_irqsave(&phba->hbalock, flags);
-+		/* make sure the I/O abort window is still open */
-+		if (!(cmdiocb->iocb_aux_flag & LPFC_IO_CMD_OUTSTANDING)) {
-+			spin_unlock_irqrestore(&phba->hbalock, flags);
-+			return -EAGAIN;
-+		}
- 		list_for_each_entry_safe(check_iocb, next_iocb, &pring->txq,
- 					 list) {
- 			if (check_iocb == cmdiocb) {
-@@ -5296,8 +5351,7 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
- 		}
- 		if (list_empty(&completions))
- 			lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb);
--		spin_unlock_irq(&phba->hbalock);
--		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
-+		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		if (!list_empty(&completions)) {
- 			lpfc_sli_cancel_iocbs(phba, &completions,
- 					      IOSTAT_LOCAL_REJECT,
-@@ -5321,9 +5375,10 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
- 		 * remove it from the txq queue and call cancel iocbs.
- 		 * Otherwise, call abort iotag.
- 		 */
--
- 		cmdiocb = dd_data->context_un.menlo.cmdiocbq;
--		spin_lock_irq(&phba->hbalock);
-+		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
-+
-+		spin_lock_irqsave(&phba->hbalock, flags);
- 		list_for_each_entry_safe(check_iocb, next_iocb, &pring->txq,
- 					 list) {
- 			if (check_iocb == cmdiocb) {
-@@ -5333,8 +5388,7 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
- 		}
- 		if (list_empty(&completions))
- 			lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb);
--		spin_unlock_irq(&phba->hbalock);
--		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
-+		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		if (!list_empty(&completions)) {
- 			lpfc_sli_cancel_iocbs(phba, &completions,
- 					      IOSTAT_LOCAL_REJECT,
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2013-09-04 13:18:04.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2013-09-06 10:04:12.343058495 -0400
-@@ -77,7 +77,8 @@ struct lpfc_iocbq {
- #define LPFC_FIP_ELS_ID_MASK	0xc000	/* ELS_ID range 0-3, non-shifted mask */
- #define LPFC_FIP_ELS_ID_SHIFT	14
- 
--	uint8_t rsvd2;
-+	uint8_t iocb_aux_flag;
-+#define LPFC_IO_CMD_OUTSTANDING	0x01 /* timeout handler abort window */
- 	uint32_t drvrTimeout;	/* driver timeout in seconds */
- 	uint32_t fcp_wqidx;	/* index to FCP work queue */
- 	struct lpfc_vport *vport;/* virtual port pointer */
+-	if (ndlp->nlp_flag & NLP_RPI_REGISTERED) {
++	if (ndlp->nlp_flag & NLP_RPI_REGISTERED ||
++	    ndlp->nlp_flag & NLP_REG_LOGIN_SEND) {
++		if (ndlp->nlp_flag & NLP_REG_LOGIN_SEND)
++			lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
++					 "3366 RPI x%x needs to be "
++					 "unregistered nlp_flag x%x "
++					 "did x%x\n",
++					 ndlp->nlp_rpi, ndlp->nlp_flag,
++					 ndlp->nlp_DID);
+ 		mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 		if (mbox) {
+ 			/* SLI4 ports require the physical rpi value. */
 
 
 
