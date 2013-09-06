@@ -1,34 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH/RESEND 2/2] Hard disk S3 resume time optimization
-Date: Fri, 06 Sep 2013 08:10:34 -0700
-Message-ID: <1378480234.2063.16.camel@dabdike.int.hansenpartnership.com>
-References: <20130906004425.GA31998@linux.intel.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH] SCSI: Fix potential out-of-bounds access in drivers/scsi/sd.c
+Date: Fri, 6 Sep 2013 11:49:51 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1309061054390.1165-100000@iolanthe.rowland.org>
+References: <52288938.30102@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59770 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753943Ab3IFPKg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 11:10:36 -0400
-In-Reply-To: <20130906004425.GA31998@linux.intel.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:33161 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755652Ab3IFPtw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 11:49:52 -0400
+In-Reply-To: <52288938.30102@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: todd.e.brandt@linux.intel.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Dmitry Vyukov <dvyukov@google.com>, richard@r-senior.demon.co.uk, ltuikov@yahoo.com, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>
 
-On Thu, 2013-09-05 at 17:44 -0700, Todd E Brandt wrote:
-> Part 2 of the hard disk resume optimization patch, this one applies
-> to the scsi subsystem.
+This patch fixes an out-of-bounds error in sd_read_cache_type(), found
+by Google's AddressSanitizer tool.  When the loop ends, we know that
+"offset" lies beyond the end of the data in the buffer, so no Caching
+mode page was found.  In theory it may be present, but the buffer size
+is limited to 512 bytes.
 
-This is a horrible patch description, it won't tell the next reader
-anything about what is going on and why.  Give the patches two separate
-summaries and refer back by summary explaining what this one does.
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Reported-by: Dmitry Vyukov <dvyukov@google.com>
+CC: <stable@vger.kernel.org>
 
-Also, having two code paths do the same thing is always a bad idea:
-someone will update one and not the other.  sd_resume() should be come
-sd_resume_async(); wait for async event
+---
 
-James
 
+[as1709]
+
+
+ drivers/scsi/sd.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+Index: usb-3.11/drivers/scsi/sd.c
+===================================================================
+--- usb-3.11.orig/drivers/scsi/sd.c
++++ usb-3.11/drivers/scsi/sd.c
+@@ -2419,14 +2419,9 @@ sd_read_cache_type(struct scsi_disk *sdk
+ 			}
+ 		}
+ 
+-		if (modepage == 0x3F) {
+-			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
+-				  "present\n");
+-			goto defaults;
+-		} else if ((buffer[offset] & 0x3f) != modepage) {
+-			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
+-			goto defaults;
+-		}
++		sd_printk(KERN_ERR, sdkp, "No Caching mode page found\n");
++		goto defaults;
++
+ 	Page_found:
+ 		if (modepage == 8) {
+ 			sdkp->WCE = ((buffer[offset + 2] & 0x04) != 0);
 
