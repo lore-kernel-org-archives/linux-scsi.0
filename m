@@ -1,39 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] ibmvscsi: Fix little endian issues
-Date: Fri, 06 Sep 2013 11:38:52 -0700
-Message-ID: <1378492732.2063.30.camel@dabdike.int.hansenpartnership.com>
-References: <20130903100447.6ae7c7a2@kryten>
+From: "Hiral Patel (hiralpat)" <hiralpat@cisco.com>
+Subject: Re: [PATCH 1/9] fnic: FC stat param seconds_since_last_reset not
+ getting updated
+Date: Fri, 6 Sep 2013 20:51:42 +0000
+Message-ID: <DF334AB4E0858445841A5B5201E1C1B12AE6FF77@xmb-rcd-x08.cisco.com>
+References: <1378488921.2063.21.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52008 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750860Ab3IFSiz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 14:38:55 -0400
-In-Reply-To: <20130903100447.6ae7c7a2@kryten>
+Received: from rcdn-iport-5.cisco.com ([173.37.86.76]:51827 "EHLO
+	rcdn-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922Ab3IFVCT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 17:02:19 -0400
+In-Reply-To: <1378488921.2063.21.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
+Content-ID: <5215ED683455224BB751F222FA2EB19D@emea.cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: rcj@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
 
-On Tue, 2013-09-03 at 10:04 +1000, Anton Blanchard wrote:
-> The hypervisor is big endian, so little endian kernel builds need
-> to byteswap.
->     
-> Signed-off-by: Anton Blanchard <anton@samba.org>
+Hi James,
 
-You have two serious checkpatch errors in this:
+Yes for this patch Narsimhulu Musini is the author of this patch.
 
-ERROR: trailing whitespace
-#57: FILE: drivers/scsi/ibmvscsi/ibmvscsi.c:469:
-+^I^Ievt->crq.IU_data_ptr = cpu_to_be64(pool->iu_token + $
+Thanks,
+Hiral
 
-ERROR: do not use assignment in if condition
-#128: FILE: drivers/scsi/ibmvscsi/ibmvscsi.c:926:
-+       if ((rc = ibmvscsi_send_crq(hostdata,
-be64_to_cpu(crq_as_u64[0]),
+On 9/6/13 10:35 AM, "James Bottomley"
+<James.Bottomley@HansenPartnership.com> wrote:
 
-
-
+>On Thu, 2013-08-29 at 10:57 -0700, Hiral Patel wrote:
+>> Code to reset fc_host statistics.
+>> echo 1 > /sys/class/fc_host/hostX/statistics/reset_statistics clears
+>>fc_host stats,
+>> the code also issues command to fnic firmware to clear vnic stats.
+>> 
+>> Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
+>> Signed-off-by: Hiral Patel <hiralpat@cisco.com>
+>
+>Explain this signoff order, please?  It looks from this like Narsimhulu
+>Musini should be the author?
+>
+>James
+>
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
