@@ -1,153 +1,96 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH/RESEND 2/2] Hard disk S3 resume time optimization
-Date: Fri, 06 Sep 2013 19:03:26 +0200
-Message-ID: <8426004.FBs8WcKaAG@amdc1032>
-References: <20130906004425.GA31998@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
+ register field names
+Date: Fri, 6 Sep 2013 11:29:22 -0600
+Message-ID: <CAErSpo56eEdm2fn3CSjMvhcA+p+ZbhqGA67Vibyb7rTtOjRf9w@mail.gmail.com>
+References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org>
+ <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org> <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
+ <CAErSpo6-BFtr=HH_5zLUrVK6goiVsNTq5pwmn+_wj4_z9kY-3A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-reply-to: <20130906004425.GA31998@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: todd.e.brandt@linux.intel.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org, JBottomley@parallels.com
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <CAErSpo6-BFtr=HH_5zLUrVK6goiVsNTq5pwmn+_wj4_z9kY-3A@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Dept-Eng Linux Driver <Linux-Driver@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+Sorry, I said I was going to push this through my PCI tree, but I
+forgot all about it.  I put it (finally) in my pci/misc branch, and
+will merge it during the v3.13 merge window.
 
-Hi,
-
-On Thursday, September 05, 2013 05:44:25 PM Todd E Brandt wrote:
-> Part 2 of the hard disk resume optimization patch, this one applies
-> to the scsi subsystem.
-
-Please update the patch description to say what the patch does (and why).
-
-> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-> 
->  drivers/scsi/sd.c | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 81 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 86fcf2c..d4bf784 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -107,6 +107,7 @@ static int  sd_remove(struct device *);
->  static void sd_shutdown(struct device *);
->  static int sd_suspend(struct device *);
->  static int sd_resume(struct device *);
-> +static int sd_resume_async(struct device *);
->  static void sd_rescan(struct device *);
->  static int sd_done(struct scsi_cmnd *);
->  static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
-> @@ -484,7 +485,7 @@ static struct class sd_disk_class = {
->  
->  static const struct dev_pm_ops sd_pm_ops = {
->  	.suspend		= sd_suspend,
-> -	.resume			= sd_resume,
-> +	.resume			= sd_resume_async,
-
-Same comment as with patch #1.
-
-When the command execution later fails the error will be now lost
-(->resume returned 0 already and nothing can be done to fix it).
-
-Sorry but this looks like a wrong approach and you should fix
-the PM layer to do async ->resume when possible instead.
-
->  	.poweroff		= sd_suspend,
->  	.restore		= sd_resume,
->  	.runtime_suspend	= sd_suspend,
-> @@ -3137,6 +3138,85 @@ done:
->  	return ret;
->  }
->  
-> +static void sd_resume_async_end(struct request *rq, int error)
-> +{
-> +	struct scsi_sense_hdr sshdr;
-> +	struct scsi_disk *sdkp = rq->end_io_data;
-> +	char *sense = rq->sense;
-> +
-> +	if (error) {
-> +		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-> +		sd_print_result(sdkp, error);
-> +		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-> +			scsi_normalize_sense(sense,
-> +				SCSI_SENSE_BUFFERSIZE, &sshdr);
-> +			sd_print_sense_hdr(sdkp, &sshdr);
-> +		}
-> +	} else
-> +		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-> +
-> +	kfree(sense);
-> +	rq->sense = NULL;
-> +	rq->end_io_data = NULL;
-> +	__blk_put_request(rq->q, rq);
-> +	scsi_disk_put(sdkp);
-> +}
-> +
-> +static int sd_resume_async(struct device *dev)
-> +{
-> +	unsigned char cmd[6] = { START_STOP };
-> +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-> +	struct request *req;
-> +	char *sense = NULL;
-> +	int ret = 0;
-> +
-> +	if (!sdkp->device->manage_start_stop)
-> +		goto error;
-> +
-> +	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-> +
-> +	cmd[4] |= 1;
-> +
-> +	if (sdkp->device->start_stop_pwr_cond)
-> +		cmd[4] |= 1 << 4;	/* Active or Standby */
-> +
-> +	if (!scsi_device_online(sdkp->device)) {
-> +		ret = -ENODEV;
-> +		goto error;
-> +	}
-> +
-> +	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-> +	if (!req) {
-> +		ret = -ENOMEM;
-> +		goto error;
-> +	}
-> +
-> +	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-> +	if (!sense) {
-> +		ret = -ENOMEM;
-> +		goto error_sense;
-> +	}
-> +
-> +	req->cmd_len = COMMAND_SIZE(cmd[0]);
-> +	memcpy(req->cmd, cmd, req->cmd_len);
-> +	req->sense = sense;
-> +	req->sense_len = 0;
-> +	req->retries = SD_MAX_RETRIES;
-> +	req->timeout = SD_TIMEOUT;
-> +	req->cmd_type = REQ_TYPE_BLOCK_PC;
-> +	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
-> +
-> +	req->end_io_data = sdkp;
-> +	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_async_end);
-> +	return 0;
-> +
-> + error_sense:
-> +	__blk_put_request(req->q, req);
-> + error:
-> +	scsi_disk_put(sdkp);
-> +	return ret;
-> +}
-> +
->  /**
->   *	init_sd - entry point for this driver (both when built in or when
->   *	a module).
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
+On Fri, Jan 4, 2013 at 12:31 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> I haven't heard anything, so I'm going to push this through the PCI
+> tree.  Let me know if anybody objects or would like to handle it
+> differently.
+>
+> On Mon, Dec 17, 2012 at 12:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Ping.  I didn't push this through my tree because I didn't want to
+>> create conflicts with other changes to this file.  But I think this
+>> can be merged any time.
+>>
+>> On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
+>> <giridhar.malavali@qlogic.com> wrote:
+>>> Acked-by: Giridhar Malavali
+>>>
+>>> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
+>>>
+>>>>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>>>>
+>>>>Thanks,
+>>>>~Saurav
+>>>>
+>>>>
+>>>>
+>>>>>Use the standard #defines for PCIe Link Capability register fields
+>>>>>rather than bare numbers.  This also uses the new PCI Express Capability
+>>>>>accessor rather than reading the capability directly.
+>>>>>
+>>>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
+>>>>>CC: linux-driver@qlogic.com
+>>>>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+>>>>>CC: linux-scsi@vger.kernel.org
+>>>>>---
+>>>>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
+>>>>> 1 files changed, 5 insertions(+), 9 deletions(-)
+>>>>>
+>>>>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
+>>>>>b/drivers/scsi/qla2xxx/qla_os.c
+>>>>>index d501bf5..b5d070f 100644
+>>>>>--- a/drivers/scsi/qla2xxx/qla_os.c
+>>>>>+++ b/drivers/scsi/qla2xxx/qla_os.c
+>>>>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
+>>>>>char *str)
+>>>>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
+>>>>>      struct qla_hw_data *ha = vha->hw;
+>>>>>      uint32_t pci_bus;
+>>>>>-     int pcie_reg;
+>>>>>
+>>>>>-     pcie_reg = pci_pcie_cap(ha->pdev);
+>>>>>-     if (pcie_reg) {
+>>>>>+     if (pci_is_pcie(ha->pdev)) {
+>>>>>              char lwstr[6];
+>>>>>-             uint16_t pcie_lstat, lspeed, lwidth;
+>>>>>+             uint32_t lstat, lspeed, lwidth;
+>>>>>
+>>>>>-             pcie_reg += PCI_EXP_LNKCAP;
+>>>>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
+>>>>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
+>>>>>-             lwidth = (pcie_lstat &
+>>>>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
+>>>>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
+>>>>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
+>>>>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
+>>>>>
+>>>>>              strcpy(str, "PCIe (");
+>>>>>              if (lspeed == 1)
+>>>>>
+>>>>>--
+>>>>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>>>the body of a message to majordomo@vger.kernel.org
+>>>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>
+>>>>
+>>>
+>>>
