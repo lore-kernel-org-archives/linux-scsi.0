@@ -1,34 +1,39 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/9] fnic: FC stat param seconds_since_last_reset not
- getting updated
-Date: Fri, 06 Sep 2013 10:35:21 -0700
-Message-ID: <1378488921.2063.21.camel@dabdike.int.hansenpartnership.com>
-References: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 1/6] SCSI: esas2r: smatch - Use biwise rather than
+ logical AND for checking if any bit set
+Date: Fri, 6 Sep 2013 18:15:22 +0000
+Message-ID: <1378491321.2063.26.camel@dabdike.int.hansenpartnership.com>
+References: <1377806144-4902-1-git-send-email-bgrove@attotech.com>
+	 <1377806144-4902-2-git-send-email-bgrove@attotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45731 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750708Ab3IFRfW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 13:35:22 -0400
-In-Reply-To: <1377799047-12644-1-git-send-email-hiralpat@cisco.com>
+Received: from mx2.parallels.com ([199.115.105.18]:43223 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834Ab3IFSPX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 14:15:23 -0400
+In-Reply-To: <1377806144-4902-2-git-send-email-bgrove@attotech.com>
+Content-Language: en-US
+Content-ID: <17BE6DB006FF084E8708F806F71AB031@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hiral Patel <hiralpat@cisco.com>
-Cc: linux-scsi@vger.kernel.org, Narsimhulu Musini <nmusini@cisco.com>
+To: Bradley Grove <bgrove@attotech.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jseba@attotech.com" <jseba@attotech.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>, "fengguang.wu@intel.com" <fengguang.wu@intel.com>
 
-On Thu, 2013-08-29 at 10:57 -0700, Hiral Patel wrote:
-> Code to reset fc_host statistics.
-> echo 1 > /sys/class/fc_host/hostX/statistics/reset_statistics clears fc_host stats,
-> the code also issues command to fnic firmware to clear vnic stats.
-> 
-> Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
-> Signed-off-by: Hiral Patel <hiralpat@cisco.com>
+On Thu, 2013-08-29 at 15:55 -0400, Bradley Grove wrote:
+> Signed-off-by: Bradley Grove <bgrove@attotech.com>
 
-Explain this signoff order, please?  It looks from this like Narsimhulu
-Musini should be the author?
+This additional SCSI: in the subject is unnecessary and just causes me
+extra work to remove it.
+
+There should be a Reported-by: before the signoff indicating whoever you
+got the report from (it's about the only recognition we give to the
+static checker people, so it's polite to include it).
+
+I fixed up this current series.
 
 James
+
 
 
