@@ -1,141 +1,125 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 10/18] lpfc 8.3.42: Fix crash on driver load due to cpu
- affinity logic
-Date: Fri, 6 Sep 2013 12:20:36 -0400
-Message-ID: <1378484436.14051.29.camel@myfc17>
+Subject: [PATCH 11/18] lpfc 8.3.42: Fixed driver iocbq structure's iocb_flag
+ field running out of space
+Date: Fri, 6 Sep 2013 12:20:51 -0400
+Message-ID: <1378484451.14051.30.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:49797 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757489Ab3IFQVO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 12:21:14 -0400
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:22348 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757576Ab3IFQV2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2013 12:21:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix crash on driver load due to cpu affinity logic
+Fixed driver iocbq structure's iocb_flag field running out of space
 
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_attr.c |    5 ++++-
- lpfc_init.c |   28 +++++++++++++++++++++++-----
- 2 files changed, 27 insertions(+), 6 deletions(-)
+ lpfc_bsg.c |   14 +++++++-------
+ lpfc_sli.h |    5 ++---
+ 2 files changed, 9 insertions(+), 10 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2013-09-06 10:58:19.799132439 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2013-09-06 10:58:46.749133052 -0400
-@@ -4013,8 +4013,11 @@ LPFC_ATTR_R(ack0, 0, 0, 1, "Enable ACK0
- # For [0], FCP commands are issued to Work Queues ina round robin fashion.
- # For [1], FCP commands are issued to a Work Queue associated with the
- #          current CPU.
-+# It would be set to 1 by the driver if it's able to set up cpu affinity
-+# for FCP I/Os through Work Queue associated with the current CPU. Otherwise,
-+# roundrobin scheduling of FCP I/Os through WQs will be used.
- */
--LPFC_ATTR_RW(fcp_io_sched, 0, 0, 1, "Determine scheduling algrithmn for "
-+LPFC_ATTR_RW(fcp_io_sched, 0, 0, 1, "Determine scheduling algorithm for "
- 		"issuing commands [0] - Round Robin, [1] - Current CPU");
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+--- a/drivers/scsi/lpfc/lpfc_bsg.c	2013-09-06 10:04:12.343058495 -0400
++++ b/drivers/scsi/lpfc/lpfc_bsg.c	2013-09-06 10:04:19.543058659 -0400
+@@ -319,7 +319,7 @@ lpfc_bsg_send_mgmt_cmd_cmp(struct lpfc_h
  
- /*
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2013-09-06 10:58:19.639132435 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2013-09-06 10:58:46.769133053 -0400
-@@ -8399,7 +8399,8 @@ static int
- lpfc_sli4_set_affinity(struct lpfc_hba *phba, int vectors)
- {
- 	int i, idx, saved_chann, used_chann, cpu, phys_id;
--	int max_phys_id, num_io_channel, first_cpu;
-+	int max_phys_id, min_phys_id;
-+	int num_io_channel, first_cpu, chan;
- 	struct lpfc_vector_map_info *cpup;
- #ifdef CONFIG_X86
- 	struct cpuinfo_x86 *cpuinfo;
-@@ -8417,6 +8418,7 @@ lpfc_sli4_set_affinity(struct lpfc_hba *
- 		phba->sli4_hba.num_present_cpu));
+ 	/* Close the timeout handler abort window */
+ 	spin_lock_irqsave(&phba->hbalock, flags);
+-	cmdiocbq->iocb_aux_flag &= ~LPFC_IO_CMD_OUTSTANDING;
++	cmdiocbq->iocb_flag &= ~LPFC_IO_CMD_OUTSTANDING;
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
  
- 	max_phys_id = 0;
-+	min_phys_id = 0xff;
- 	phys_id = 0;
- 	num_io_channel = 0;
- 	first_cpu = LPFC_VECTOR_MAP_EMPTY;
-@@ -8440,9 +8442,12 @@ lpfc_sli4_set_affinity(struct lpfc_hba *
+ 	iocb = &dd_data->context_un.iocb;
+@@ -513,7 +513,7 @@ lpfc_bsg_send_mgmt_cmd(struct fc_bsg_job
+ 		/* make sure the I/O had not been completed yet */
+ 		if (cmdiocbq->iocb_flag & LPFC_IO_LIBDFC) {
+ 			/* open up abort window to timeout handler */
+-			cmdiocbq->iocb_aux_flag |= LPFC_IO_CMD_OUTSTANDING;
++			cmdiocbq->iocb_flag |= LPFC_IO_CMD_OUTSTANDING;
+ 		}
+ 		spin_unlock_irqrestore(&phba->hbalock, flags);
+ 		return 0; /* done for now */
+@@ -595,7 +595,7 @@ lpfc_bsg_rport_els_cmp(struct lpfc_hba *
  
- 		if (cpup->phys_id > max_phys_id)
- 			max_phys_id = cpup->phys_id;
-+		if (cpup->phys_id < min_phys_id)
-+			min_phys_id = cpup->phys_id;
- 		cpup++;
- 	}
+ 	/* Close the timeout handler abort window */
+ 	spin_lock_irqsave(&phba->hbalock, flags);
+-	cmdiocbq->iocb_aux_flag &= ~LPFC_IO_CMD_OUTSTANDING;
++	cmdiocbq->iocb_flag &= ~LPFC_IO_CMD_OUTSTANDING;
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
  
-+	phys_id = min_phys_id;
- 	/* Now associate the HBA vectors with specific CPUs */
- 	for (idx = 0; idx < vectors; idx++) {
- 		cpup = phba->sli4_hba.cpu_map;
-@@ -8453,13 +8458,25 @@ lpfc_sli4_set_affinity(struct lpfc_hba *
- 			for (i = 1; i < max_phys_id; i++) {
- 				phys_id++;
- 				if (phys_id > max_phys_id)
--					phys_id = 0;
-+					phys_id = min_phys_id;
- 				cpu = lpfc_find_next_cpu(phba, phys_id);
- 				if (cpu == LPFC_VECTOR_MAP_EMPTY)
- 					continue;
- 				goto found;
- 			}
+ 	rsp = &rspiocbq->iocb;
+@@ -748,7 +748,7 @@ lpfc_bsg_rport_els(struct fc_bsg_job *jo
+ 		/* make sure the I/O had not been completed/released */
+ 		if (cmdiocbq->iocb_flag & LPFC_IO_LIBDFC) {
+ 			/* open up abort window to timeout handler */
+-			cmdiocbq->iocb_aux_flag |= LPFC_IO_CMD_OUTSTANDING;
++			cmdiocbq->iocb_flag |= LPFC_IO_CMD_OUTSTANDING;
+ 		}
+ 		spin_unlock_irqrestore(&phba->hbalock, flags);
+ 		return 0; /* done for now */
+@@ -1404,7 +1404,7 @@ lpfc_issue_ct_rsp_cmp(struct lpfc_hba *p
  
-+			/* Use round robin for scheduling */
-+			phba->cfg_fcp_io_sched = LPFC_FCP_SCHED_ROUND_ROBIN;
-+			chan = 0;
-+			cpup = phba->sli4_hba.cpu_map;
-+			for (i = 0; i < phba->sli4_hba.num_present_cpu; i++) {
-+				cpup->channel_id = chan;
-+				cpup++;
-+				chan++;
-+				if (chan >= phba->cfg_fcp_io_channel)
-+					chan = 0;
-+			}
-+
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 					"3329 Cannot set affinity:"
- 					"Error mapping vector %d (%d)\n",
-@@ -8497,7 +8514,7 @@ found:
- 		/* Spread vector mapping across multple physical CPU nodes */
- 		phys_id++;
- 		if (phys_id > max_phys_id)
--			phys_id = 0;
-+			phys_id = min_phys_id;
- 	}
+ 	/* Close the timeout handler abort window */
+ 	spin_lock_irqsave(&phba->hbalock, flags);
+-	cmdiocbq->iocb_aux_flag &= ~LPFC_IO_CMD_OUTSTANDING;
++	cmdiocbq->iocb_flag &= ~LPFC_IO_CMD_OUTSTANDING;
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
  
- 	/*
-@@ -8507,7 +8524,7 @@ found:
- 	 * Base the remaining IO channel assigned, to IO channels already
- 	 * assigned to other CPUs on the same phys_id.
- 	 */
--	for (i = 0; i <= max_phys_id; i++) {
-+	for (i = min_phys_id; i <= max_phys_id; i++) {
- 		/*
- 		 * If there are no io channels already mapped to
- 		 * this phys_id, just round robin thru the io_channels.
-@@ -8589,10 +8606,11 @@ out:
- 	if (num_io_channel != phba->sli4_hba.num_present_cpu)
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"3333 Set affinity mismatch:"
--				"%d chann != %d cpus: %d vactors\n",
-+				"%d chann != %d cpus: %d vectors\n",
- 				num_io_channel, phba->sli4_hba.num_present_cpu,
- 				vectors);
+ 	ndlp = dd_data->context_un.iocb.ndlp;
+@@ -1585,7 +1585,7 @@ lpfc_issue_ct_rsp(struct lpfc_hba *phba,
+ 		/* make sure the I/O had not been completed/released */
+ 		if (ctiocb->iocb_flag & LPFC_IO_LIBDFC) {
+ 			/* open up abort window to timeout handler */
+-			ctiocb->iocb_aux_flag |= LPFC_IO_CMD_OUTSTANDING;
++			ctiocb->iocb_flag |= LPFC_IO_CMD_OUTSTANDING;
+ 		}
+ 		spin_unlock_irqrestore(&phba->hbalock, flags);
+ 		return 0; /* done for now */
+@@ -5338,7 +5338,7 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
  
-+	/* Enable using cpu affinity for scheduling */
- 	phba->cfg_fcp_io_sched = LPFC_FCP_SCHED_BY_CPU;
- 	return 1;
- }
+ 		spin_lock_irqsave(&phba->hbalock, flags);
+ 		/* make sure the I/O abort window is still open */
+-		if (!(cmdiocb->iocb_aux_flag & LPFC_IO_CMD_OUTSTANDING)) {
++		if (!(cmdiocb->iocb_flag & LPFC_IO_CMD_OUTSTANDING)) {
+ 			spin_unlock_irqrestore(&phba->hbalock, flags);
+ 			return -EAGAIN;
+ 		}
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
+--- a/drivers/scsi/lpfc/lpfc_sli.h	2013-09-06 10:04:12.343058495 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.h	2013-09-06 10:04:19.544058659 -0400
+@@ -58,7 +58,7 @@ struct lpfc_iocbq {
+ 
+ 	IOCB_t iocb;		/* IOCB cmd */
+ 	uint8_t retry;		/* retry counter for IOCB cmd - if needed */
+-	uint16_t iocb_flag;
++	uint32_t iocb_flag;
+ #define LPFC_IO_LIBDFC		1	/* libdfc iocb */
+ #define LPFC_IO_WAKE		2	/* Synchronous I/O completed */
+ #define LPFC_IO_WAKE_TMO	LPFC_IO_WAKE /* Synchronous I/O timed out */
+@@ -73,12 +73,11 @@ struct lpfc_iocbq {
+ #define LPFC_IO_DIF_PASS	0x400	/* T10 DIF IO pass-thru prot */
+ #define LPFC_IO_DIF_STRIP	0x800	/* T10 DIF IO strip prot */
+ #define LPFC_IO_DIF_INSERT	0x1000	/* T10 DIF IO insert prot */
++#define LPFC_IO_CMD_OUTSTANDING	0x2000 /* timeout handler abort window */
+ 
+ #define LPFC_FIP_ELS_ID_MASK	0xc000	/* ELS_ID range 0-3, non-shifted mask */
+ #define LPFC_FIP_ELS_ID_SHIFT	14
+ 
+-	uint8_t iocb_aux_flag;
+-#define LPFC_IO_CMD_OUTSTANDING	0x01 /* timeout handler abort window */
+ 	uint32_t drvrTimeout;	/* driver timeout in seconds */
+ 	uint32_t fcp_wqidx;	/* index to FCP work queue */
+ 	struct lpfc_vport *vport;/* virtual port pointer */
 
 
 
