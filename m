@@ -1,51 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] SCSI: Fix potential out-of-bounds access in drivers/scsi/sd.c
-Date: Mon, 09 Sep 2013 08:25:30 +0200
-Message-ID: <522D69DA.2070103@suse.de>
-References: <Pine.LNX.4.44L0.1309061054390.1165-100000@iolanthe.rowland.org> <522A01AB.4010508@redhat.com>
+From: "Morris Thompson" <dir.agroindustrial@unipaz.edu.co>
+Subject: Greetings From Morris Thompson.
+Date: Sun, 8 Sep 2013 08:51:25 -0700
+Message-ID: <1378713587_774229__4179.52383072606$1378713791$gmane$org@6a77u4sisda98nt>
+Reply-To: <morris_thompson1@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53970 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750902Ab3IIGZc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Sep 2013 02:25:32 -0400
-In-Reply-To: <522A01AB.4010508@redhat.com>
+Received: from 19012114372.ip56.static.mediacommerce.com.co ([190.121.143.72]:51098
+	"EHLO unipaz.edu.co" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750879Ab3IIICg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Sep 2013 04:02:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, Dmitry Vyukov <dvyukov@google.com>, richard@r-senior.demon.co.uk, ltuikov@yahoo.com, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>
 
-On 09/06/2013 06:24 PM, Paolo Bonzini wrote:
-> Il 06/09/2013 17:49, Alan Stern ha scritto:
->> This patch fixes an out-of-bounds error in sd_read_cache_type(), fou=
-nd
->> by Google's AddressSanitizer tool.  When the loop ends, we know that
->> "offset" lies beyond the end of the data in the buffer, so no Cachin=
-g
->> mode page was found.  In theory it may be present, but the buffer si=
-ze
->> is limited to 512 bytes.
->>
->> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
->> Reported-by: Dmitry Vyukov <dvyukov@google.com>
->> CC: <stable@vger.kernel.org>
->=20
-> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
->=20
-Acked-by: Hannes Reinecke <hare@suse.de>
+Dear Friend,
 
-Cheers,
+I am Morris Thompson, a Banker and credit system programmer. I saw your
+email address while browsing through the bank D.T.C Screen in
+my office yesterday so I decided to use this very chance to know you.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I am contacting as to front you as the beneficiary and receive A
+Diplomatic Package which I used by office and dispatched through Our
+Central Bank Diplomatic Accredited Courier Agent to Europe and now
+confirmed in their Vault. In the Package A Trunk was con-sealed with
+United States 100 Dollar Bills Cash amounted to a total sum of U.S$10
+Million belonging to one of the serving state Governor and please he do
+not want his identity disclose.
+
+He approached me to use my office and have the concealed package
+containing the cash funds move out from the country and recommend a
+reliable person in your country who will receives the consignments and
+have the funds invest in good profitable investments which necessitated
+my contacting you. He agreed to let you have 30% of the total funds, 10%
+for me while you will invest the rest for him. If you are interested in
+this transaction,
+
+kindly revert back to me immediately and let me have your direct contacts
+(Telephone numbers) and your receiving address where the Vault company
+will arrange for A Diplomatic Delivery of the Packages to you.
+
+Please like I requested earlier treat this with utmost secret. Forward your respond 
+to my private email address : morris_thompson1@yahoo.com
+
+Thanks and remain bless,
+
+Regards,
+
+Morris Thompson.
