@@ -1,56 +1,66 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2] scsi: sr: use block layer runtime PM
-Date: Sat, 7 Sep 2013 11:22:49 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1309071117110.31321-100000@netrider.rowland.org>
-References: <522B40C3.2080605@intel.com>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH 17/18] lpfc 8.3.42: Fixed issue of task management commands
+ having a fixed timeout
+Date: Sun, 8 Sep 2013 09:59:59 -0400
+Message-ID: <522C82DF.2000305@emulex.com>
+References: <1378484566.14051.36.camel@myfc17> <522A2125.9040406@tributary.com>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:52205 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751385Ab3IGPWu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Sep 2013 11:22:50 -0400
-In-Reply-To: <522B40C3.2080605@intel.com>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:42790 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751279Ab3IHOAC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Sep 2013 10:00:02 -0400
+In-Reply-To: <522A2125.9040406@tributary.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Jeremy Linton <jlinton@tributary.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sat, 7 Sep 2013, Aaron Lu wrote:
+Jeremy,
 
-> >>> Note that due to ODD will be polled every 2 seconds,
-> >>
-> >> Since the device will be polled every 2 seconds
-> >>
-> >>>  for suspend to
-> >>> actually happen, the autosuspend_delay can not be set to more than 2
-> >>> seconds or the polling interval has to be increased.
-> >>
-> >> Is this true?  What about event driven devices?  Supposing a distro has
-> >> a different interval.
-> >>
-> >> How about
-> >>
-> >> If your Distribution polls the device, the autosuspend interval cannot
-> >> be set to longer than the polling interval otherwise the device will
-> >> never suspend.
-> > 
-> > The default polling done by the kernel uses 2-second intervals.  Of 
-> > course, distributions and users can change this or disable it entirely.
-> 
-> What about:
-> Note that due to the device will be polled by kernel at a constant
-> interval specified at /sys/module/block/parameters/events_dfl_poll_msecs,
-> the default value is 2 seconds, the autosuspend delay cannot be set to
-> longer than the polling interval otherwise the device will never suspend.
+Different issues....
 
-Well, I wouldn't say "cannot" -- people can set the delay to whatever
-they want.  Just: If the autosuspend delay is set longer than the
-polling interval then the device will never suspend.
+The patch addresses only 1 topic - making an attribute to change the 
+timeout for the TMF.  This was a request by the distros to post a hack 
+that was used on older releases to work around all the serialization and 
+delay problems in the midlayer error recovery path - which allowed 
+shortening delays from 10-12 minutes to 1-2 minutes. These are the same 
+issues we discussed at the last storage forum and which Hannes has been 
+working to correct upstream.  The desire is to continue with a like 
+tuning option in the driver for those customers that have used it in the 
+past.
 
-Also, the actual polling interval is controlled by
-/sys/block/sdX/events_poll_msec.  The file you mentioned merely
-contains the default polling interval used for new devices.
+The other issue - we seem to have missed your prior post. I'll look into 
+it shortly.
 
-Alan Stern
+The two patches work on the same code, but are independent topics.
+
+-- james
+
+
+On 9/6/2013 2:38 PM, Jeremy Linton wrote:
+> On 9/6/2013 11:22 AM, James Smart wrote:
+>> Fixed issue of task management commands having a fixed timeout
+> 	I'm surprised about this change, since it appears a number of issues in the
+> send_taskmgmt() still exist that keep it from handling task management
+> failures correctly. It also continues to have a number of smaller issues like
+> for example dead code of the form
+>
+> if (status != IOCB_STATUS)
+> else if (status == IOCB_BUSY)
+> else
+>
+>
+> 	See patch:
+>
+> "lpfc should check return status for task mgmt IOCB"
+>
+> http://marc.info/?l=linux-scsi&m=136242124409687
+>
+>
+>
+>
 
