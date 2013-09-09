@@ -1,101 +1,96 @@
-From: Yijing Wang <wangyijing@huawei.com>
-Subject: Re: [PATCH v2 1/6] scsi/bfa: use pcie_set/get_readrq to simplify
- code
-Date: Mon, 9 Sep 2013 10:41:03 +0800
-Message-ID: <522D353F.8090209@huawei.com>
-References: <1378367730-25996-1-git-send-email-wangyijing@huawei.com> <20130906221425.GA10152@google.com>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH 1/3] [SCSI] osst: Remove casting the return value which is a
+ void pointer
+Date: Mon, 09 Sep 2013 14:44:36 +0900
+Message-ID: <005901cead1f$ab029e30$0107da90$%han@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <20130906221425.GA10152@google.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Gavin Shan <shangw@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>, Jiang Liu <jiang.liu@huawei.com>, Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:44558 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257Ab3IIFon (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Sep 2013 01:44:43 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MSU00JP3FWCD5N0@mailout4.samsung.com> for
+ linux-scsi@vger.kernel.org; Mon, 09 Sep 2013 14:44:36 +0900 (KST)
+Content-language: ko
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <JBottomley@Parallels.com>
+Cc: linux-scsi@vger.kernel.org, 'James Bottomley' <jejb@kernel.org>, 'Willem Riede' <osst@riede.org>, 'Jingoo Han' <jg1.han@samsung.com>
 
-On 2013/9/7 6:14, Bjorn Helgaas wrote:
-> On Thu, Sep 05, 2013 at 03:55:25PM +0800, Yijing Wang wrote:
->> v1->v2: use pcie_get/set_readrq to simplify code
->> a lot suggestd by Bjorn.
->>
->> Use pcie_get_readrq()/pcie_set_readrq() to simplify
->> code.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Cc: Jiang Liu <jiang.liu@huawei.com>
->> Cc: Anil Gurumurthy <agurumur@brocade.com>
->> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
->> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
->> Cc: linux-scsi@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> ---
->>  drivers/scsi/bfa/bfad.c |   48 +++++-----------------------------------------
->>  1 files changed, 6 insertions(+), 42 deletions(-)
+Casting the return value which is a void pointer is redundant.
+The conversion from void pointer to any other pointer type is
+guaranteed by the C programming language.
 
-Hi Bjorn,
-   Thanks for your patience guidance! Now I know more about how to write
-a patch or patchset. I will check my patch follow the advices below before
-I send out every time. Make it easier for you and other maintainers to
-review and apply.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/scsi/osst.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-> 
-> I applied all these with some tweaks to my pci/yijing-pci_is_pcie-v2
-> branch [1].  This will be rebased after v3.12-rc1, and may be amended
-> if any patches are picked up by others.
-> 
-> Hints (not just for you; I hope other people pay attention, too,
-> because I'm obsessive and I pay attention to these details):
-> 
->   - Include a "[PATCH v2 0/6]" email.  That's a good place for you to
->     put an overall description of the series, and a good place for
->     responses like this one that apply to the whole series.
-> 
->> -
->> -		pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
->> -		if (mask != 0xffff && pcie_cap_reg) {
->> -			pcie_cap_reg += 0x08;
->> -			pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
->> -			if ((pcie_dev_ctl & 0x7000) != mask) {
->> -				printk(KERN_WARNING "BFA[%s]: "
->> +	if (pcie_max_read_reqsz > 0 && pci_is_pcie(pdev)) {
->> +		int max_rq = pcie_get_readrq(pdev);
->> +		if (max_rq > 128 && max_rq < 4096 && is_power_of_2(max_rq))
-> 
-> I think you meant to validate pcie_max_read_reqsz (the module parameter),
-> not max_rq.  I made this change on my branch.
-
-Yes, thanks for your fix.
-
-Thanks!
-Yijing.
-
-> 
->> +			printk(KERN_WARNING "BFA[%s]: "
->>  				"pcie_max_read_request_size is %d, "
->> -				"reset to %d\n", bfad->pci_name,
->> -				(1 << ((pcie_dev_ctl & 0x7000) >> 12)) << 7,
->> +				"reset to %d\n", bfad->pci_name, max_rq,
->>  				pcie_max_read_reqsz);
->> -
->> -				pcie_dev_ctl &= ~0x7000;
->> -				pci_write_config_word(pdev, pcie_cap_reg,
->> -						pcie_dev_ctl | mask);
->> -			}
->> -		}
->> +		pcie_set_readrq(pdev, pcie_max_read_reqsz);
->>  	}
->>  
->>  	pci_save_state(pdev);
->> -- 
->> 1.7.1
->>
->>
-> 
-> .
-> 
-
-
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 21883a2..a2641bf 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -5687,7 +5687,7 @@ static void osst_remove_sysfs_files(struct device_driver *sysfs)
+ static ssize_t osst_adr_rev_show(struct device *dev,
+ 				 struct device_attribute *attr, char *buf)
+ {
+-	struct osst_tape * STp = (struct osst_tape *) dev_get_drvdata (dev);
++	struct osst_tape *STp = dev_get_drvdata(dev);
+ 	ssize_t l = 0;
+ 
+ 	if (STp && STp->header_ok && STp->linux_media)
+@@ -5701,7 +5701,7 @@ static ssize_t osst_linux_media_version_show(struct device *dev,
+ 					     struct device_attribute *attr,
+ 					     char *buf)
+ {
+-	struct osst_tape * STp = (struct osst_tape *) dev_get_drvdata (dev);
++	struct osst_tape *STp = dev_get_drvdata(dev);
+ 	ssize_t l = 0;
+ 
+ 	if (STp && STp->header_ok && STp->linux_media)
+@@ -5714,7 +5714,7 @@ DEVICE_ATTR(media_version, S_IRUGO, osst_linux_media_version_show, NULL);
+ static ssize_t osst_capacity_show(struct device *dev,
+ 				  struct device_attribute *attr, char *buf)
+ {
+-	struct osst_tape * STp = (struct osst_tape *) dev_get_drvdata (dev);
++	struct osst_tape *STp = dev_get_drvdata(dev);
+ 	ssize_t l = 0;
+ 
+ 	if (STp && STp->header_ok && STp->linux_media)
+@@ -5728,7 +5728,7 @@ static ssize_t osst_first_data_ppos_show(struct device *dev,
+ 					 struct device_attribute *attr,
+ 					 char *buf)
+ {
+-	struct osst_tape * STp = (struct osst_tape *) dev_get_drvdata (dev);
++	struct osst_tape *STp = dev_get_drvdata(dev);
+ 	ssize_t l = 0;
+ 
+ 	if (STp && STp->header_ok && STp->linux_media)
+@@ -5742,7 +5742,7 @@ static ssize_t osst_eod_frame_ppos_show(struct device *dev,
+ 					struct device_attribute *attr,
+ 					char *buf)
+ {
+-	struct osst_tape * STp = (struct osst_tape *) dev_get_drvdata (dev);
++	struct osst_tape *STp = dev_get_drvdata(dev);
+ 	ssize_t l = 0;
+ 
+ 	if (STp && STp->header_ok && STp->linux_media)
+@@ -5755,7 +5755,7 @@ DEVICE_ATTR(EOD_frame, S_IRUGO, osst_eod_frame_ppos_show, NULL);
+ static ssize_t osst_filemark_cnt_show(struct device *dev,
+ 				      struct device_attribute *attr, char *buf)
+ {
+-	struct osst_tape * STp = (struct osst_tape *) dev_get_drvdata (dev);
++	struct osst_tape *STp = dev_get_drvdata(dev);
+ 	ssize_t l = 0;
+ 
+ 	if (STp && STp->header_ok && STp->linux_media)
 -- 
-Thanks!
-Yijing
+1.7.10.4
+
+
