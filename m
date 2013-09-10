@@ -1,71 +1,44 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH][SCSI] megaraid_sas: addded support for big endian
- architecture
-Date: Tue, 10 Sep 2013 22:11:52 +0000
-Message-ID: <1378851112.23501.53.camel@dabdike.int.hansenpartnership.com>
-References: <201309061020.r86AKpAY015172@cosmhbs0.lsi.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 1/4] hpsa: add HP Smart Array Gen9 PCI ID's
+Date: Tue, 10 Sep 2013 22:17:33 +0000
+Message-ID: <48275AD710FCA34184C2B6186B4016B32D0FCEED@G6W2491.americas.hpqcorp.net>
+References: <20130904200555.GA28147@beardog.cce.hp.com>
+ <1378850521.23501.47.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:54132 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076Ab3IJWLy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Sep 2013 18:11:54 -0400
-In-Reply-To: <201309061020.r86AKpAY015172@cosmhbs0.lsi.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1378850521.23501.47.camel@dabdike.int.hansenpartnership.com>
 Content-Language: en-US
-Content-ID: <C93535F0E141214EA2648D9EC7179B3C@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Sumit.Saxena@lsi.com" <Sumit.Saxena@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kashyap.desai@lsi.com" <kashyap.desai@lsi.com>, "aradford@gmail.com" <aradford@gmail.com>
-
-On Fri, 2013-09-06 at 15:50 +0530, Sumit.Saxena@lsi.com wrote:
-> This patch will add big endian architecture support to megaraid_sas d=
-river. The support added is for LSI MegaRAID all generation controllers=
--=20
-> (3Gb/s, 6Gb/s and 12 Gb/s controllers).
->=20
-> This patch will be applied on top of recently submitted patch for Hig=
-h Avaibility support- http://marc.info/?l=3Dlinux-scsi&m=3D137799326426=
-659&w=3D2
-> We have done basic sanity test @ppc64 arch and @x86_64. Additional te=
-sting/observations are welcome.
-
-Well, no it won't actually; it gives a rejection here:
 
 
-> --- drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -5097,8 +5142,9 @@
-> =20
->  	for (i =3D 0; i < ioc->sge_count && kbuff_arr[i]; i++) {
->  		dma_free_coherent(&instance->pdev->dev,
-> -				    kern_sge32[i].length,
-> -				    kbuff_arr[i], kern_sge32[i].phys_addr);
-> +				  le32_to_cpu(kern_sge32[i].length),
-> +				  kbuff_arr[i],
-> +				  le32_to_cpu(kern_sge32[i].phys_addr));
->  	}
-> =20
->  	megasas_return_cmd(instance, cmd);
 
-Because you didn't take into account this patch:
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com] 
+Sent: Tuesday, September 10, 2013 5:02 PM
+To: Miller, Mike (OS Dev)
+Cc: Andrew Morton; LKML; LKML-scsi
+Subject: Re: [PATCH 1/4] hpsa: add HP Smart Array Gen9 PCI ID's
 
-Author: Bj=F8rn Mork <bjorn@mork.no>
-Date:   Wed Nov 21 09:54:48 2012 +0100
+On Wed, 2013-09-04 at 15:05 -0500, Mike Miller wrote:
+> Patch 1 of 4
+> 
+> From: Mike Miller <mike.miller@hp.com>
 
-    [SCSI] megaraid_sas: fix memory leak if SGL has zero length entries
-
-I fixed it up this time, but could you please work against the misc
-branch of the scsi git repo to prevent this type of problem in future?
-
-Thanks,
+Just for future reference, doing it this way means I have to edit the patch.  The way git am works when applying patches is that if the first body line is a keyword it recognises (like From: or Subject: or Date:) it will fold that into the commit metadata, otherwise everything becomes the commit message.  So by putting the redundant "patch 1 of 4" first, git thinks the entire body is the commit message.
 
 James
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sorry about that. I didn't realize git worked that way. So let me ask a dumb question, just having [PATCH x/y] in the subject line is enough? Would you like me to resubmit the patchset?
+
+-- mikem
+
+> This patch adds the PCI ID's for HP Smart Array Gen9 controllers. 
+> Please consider this patch for inclusion.
+> 
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> ---
