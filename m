@@ -1,25 +1,38 @@
-From: Joe Jin <joe.jin@oracle.com>
-Subject: Re: [PATCH] [scsi] enclosure: remove all possible sysfs entries before
- add device
-Date: Tue, 10 Sep 2013 09:50:44 +0800
-Message-ID: <522E7AF4.9060504@oracle.com>
-References: <522D685D.5060201@oracle.com> <20130909134131.GB24738@infradead.org>
+From: David Dillow <dad-1Heg1YXhbW8@public.gmane.org>
+Subject: Re: [PATCH 0/8] IB SRP initiator patches for kernel 3.12
+Date: Mon, 09 Sep 2013 22:53:18 -0400
+Message-ID: <1378781598.3794.1.camel@feather.ornl.gov>
+References: <521363EA.8080906@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130909134131.GB24738@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <521363EA.8080906-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Riemer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/09/13 21:41, Christoph Hellwig wrote:
->> Modules linked in: oracleacfs(P)(U) oracleadvm(P)(U) oracleoks(P)(U)
-> 
-> Please reproduce without this weird crap loaded.
-> 
-These modules is filesystem and will not impact enclosure.
+On Tue, 2013-08-20 at 14:41 +0200, Bart Van Assche wrote:
+> Changes since the previous patch series are:
+> - Rewrote the srp_tmo_valid() to improve readability (requested by Dave
+>    Dillow).
+> - The combination (reconnect_delay < 0 && fast_io_fail_tmo < 0 &&
+>    dev_loss_tmo < 0) is now rejected as requested by Dave Dillow.
+> - Fixed a race between transport layer failure handling and device
+>    removal. This issue was reported by Vu Pham.
 
-Thanks,
-Joe
+For patches 1-6,
+
+Acked-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+-- 
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
