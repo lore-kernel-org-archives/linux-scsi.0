@@ -1,51 +1,34 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: READ_CAPACITY_16 vs. READ_CAPACITY_10
-Date: Tue, 10 Sep 2013 22:44:18 +0200
-Message-ID: <1378845858.24378.1.camel@linux-fkkt.site>
-References: <Pine.LNX.4.44L0.1309101322390.1075-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/4] hpsa: add HP Smart Array Gen9 PCI ID's
+Date: Tue, 10 Sep 2013 15:02:01 -0700
+Message-ID: <1378850521.23501.47.camel@dabdike.int.hansenpartnership.com>
+References: <20130904200555.GA28147@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34825 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750879Ab3IJUoU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Sep 2013 16:44:20 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1309101322390.1075-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130904200555.GA28147@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Miller <mike.miller@hp.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: hare@suse.de, linux-scsi@vger.kernel.org
 
-On Tue, 2013-09-10 at 13:25 -0400, Alan Stern wrote:
-> On Tue, 10 Sep 2013, Oliver Neukum wrote:
+On Wed, 2013-09-04 at 15:05 -0500, Mike Miller wrote:
+> Patch 1 of 4
 > 
-> > Hi Hannes,
-> > 
-> > you objected to this patch saying there's a possibilty that
-> > HS devices may also need this feature, which would require
-> > a quirk. Does this mean that the patch is acceptable only
-> > with an additional predefined quirk, or do you insist that all
-> > devices be handled with quirks?
+> From: Mike Miller <mike.miller@hp.com>
+
+Just for future reference, doing it this way means I have to edit the
+patch.  The way git am works when applying patches is that if the first
+body line is a keyword it recognises (like From: or Subject: or Date:)
+it will fold that into the commit metadata, otherwise everything becomes
+the commit message.  So by putting the redundant "patch 1 of 4" first,
+git thinks the entire body is the commit message.
+
+James
+
+> This patch adds the PCI ID's for HP Smart Array Gen9 controllers. Please
+> consider this patch for inclusion.
 > 
-> Indeed, we already know of one or two high-speed devices that suffer
-> from this bug:
-> 
-> 	http://marc.info/?l=linux-usb&m=133586313307042&w=2
-> 
-> This may influence your decision.  I'm not certain whether it is 
-> important enough to merit a new quirk flag, but people experiencing the 
-> problem may have some strong opinions.
-
-What is the alternative?
-
-I think we can be sure that no drive enclosure will crash
-with READ_CAPACITY_16. I am not sure about card readers.
-Does anybody know what Windows does?
-
-	Regards
-		Oliver
-
-
-
-
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> ---
