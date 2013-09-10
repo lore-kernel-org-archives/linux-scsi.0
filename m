@@ -1,37 +1,25 @@
-From: Hiral Patel <hiralpat@cisco.com>
-Subject: [PATCH 9/9] fnic: Incremented driver version
-Date: Mon,  9 Sep 2013 13:31:53 -0700
-Message-ID: <1378758713-22443-9-git-send-email-hiralpat@cisco.com>
-References: <1378758713-22443-1-git-send-email-hiralpat@cisco.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-7.cisco.com ([173.37.86.78]:4271 "EHLO
-	rcdn-iport-7.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265Ab3IIUgm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Sep 2013 16:36:42 -0400
-In-Reply-To: <1378758713-22443-1-git-send-email-hiralpat@cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Jin <joe.jin@oracle.com>
+Subject: Re: [PATCH] [scsi] enclosure: remove all possible sysfs entries before
+ add device
+Date: Tue, 10 Sep 2013 09:50:44 +0800
+Message-ID: <522E7AF4.9060504@oracle.com>
+References: <522D685D.5060201@oracle.com> <20130909134131.GB24738@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130909134131.GB24738@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, Hiral Patel <hiralpat@cisco.com>
 
-Signed-off-by: Hiral Patel <hiralpat@cisco.com>
----
- drivers/scsi/fnic/fnic.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 09/09/13 21:41, Christoph Hellwig wrote:
+>> Modules linked in: oracleacfs(P)(U) oracleadvm(P)(U) oracleoks(P)(U)
+> 
+> Please reproduce without this weird crap loaded.
+> 
+These modules is filesystem and will not impact enclosure.
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index db7a950..528d43b 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -39,7 +39,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.5.0.23"
-+#define DRV_VERSION		"1.5.0.45"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
--- 
-1.7.10.4
-
+Thanks,
+Joe
