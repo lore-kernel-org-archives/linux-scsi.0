@@ -1,36 +1,60 @@
-From: Ren Mingxin <renmx@cn.fujitsu.com>
-Subject: Re: [PATCH 2/3] scsi: improved eh timeout handler
-Date: Wed, 11 Sep 2013 17:16:25 +0800
-Message-ID: <523034E9.7030508@cn.fujitsu.com>
-References: <1378123118-111972-1-git-send-email-hare@suse.de> <1378123118-111972-3-git-send-email-hare@suse.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: READ_CAPACITY_16 vs. READ_CAPACITY_10
+Date: Wed, 11 Sep 2013 10:14:48 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1309111010500.1352-100000@iolanthe.rowland.org>
+References: <1378845858.24378.1.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:39773 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753198Ab3IKJLN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Sep 2013 05:11:13 -0400
-In-Reply-To: <1378123118-111972-3-git-send-email-hare@suse.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:58535 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752656Ab3IKOOt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2013 10:14:49 -0400
+In-Reply-To: <1378845858.24378.1.camel@linux-fkkt.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>
+To: Oliver Neukum <oneukum@suse.de>
+Cc: hare@suse.de, linux-scsi@vger.kernel.org
 
-Hi, Hannes:
+On Tue, 10 Sep 2013, Oliver Neukum wrote:
 
-On 09/02/2013 07:58 PM, Hannes Reinecke wrote:
-> If abort succeeds the command is either retried or terminated,
-> depending on the number of allowed retries. However, 'eh_eflags'
-> records the abort, so if the retry would fail again the
-> command is pushed onto the error handler without trying to
-> abort it (again); it'll be cleared up from SCSI EH.
+> On Tue, 2013-09-10 at 13:25 -0400, Alan Stern wrote:
+> > On Tue, 10 Sep 2013, Oliver Neukum wrote:
+> > 
+> > > Hi Hannes,
+> > > 
+> > > you objected to this patch saying there's a possibilty that
+> > > HS devices may also need this feature, which would require
+> > > a quirk. Does this mean that the patch is acceptable only
+> > > with an additional predefined quirk, or do you insist that all
+> > > devices be handled with quirks?
+> > 
+> > Indeed, we already know of one or two high-speed devices that suffer
+> > from this bug:
+> > 
+> > 	http://marc.info/?l=linux-usb&m=133586313307042&w=2
+> > 
+> > This may influence your decision.  I'm not certain whether it is 
+> > important enough to merit a new quirk flag, but people experiencing the 
+> > problem may have some strong opinions.
+> 
+> What is the alternative?
 
-I'm still thinking about the aborting 'scsi_eh_abort_cmds()' in SCSI
-EH - does it make sense to abort in SCSI EH since we've tried to
-abort via your scsi_abort_command()? Though the aborting in SCSI EH
-will handle commands which havn't been aborted in scsi_abort_command
-since EH has been engaged.
+There are three possibilities: nothing, your proposed patch, and a new 
+quirk flag.  The flag is safest, but also the hardest to maintain.
 
-Thanks,
-Ren
+> I think we can be sure that no drive enclosure will crash
+> with READ_CAPACITY_16.
+
+I wouldn't count on it, but I don't know of any examples.
+
+> I am not sure about card readers.
+
+Or flash drives.
+
+> Does anybody know what Windows does?
+
+Not me.  It probably varies with different versions of Windows.
+
+Alan Stern
+
