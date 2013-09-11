@@ -1,31 +1,56 @@
-From: Bradley Grove <bgrove@attotech.com>
-Subject: Re: [PATCH] scsi: esas2r: fix potential format string flaw
-Date: Wed, 11 Sep 2013 11:38:43 -0400
-Message-ID: <52308E83.3090905@attotech.com>
-References: <20130911043848.GA17221@www.outflux.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: READ_CAPACITY_16 vs. READ_CAPACITY_10
+Date: Wed, 11 Sep 2013 11:42:35 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1309111140240.1352-100000@iolanthe.rowland.org>
+References: <1378911947.28160.18.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:42736 "EHLO
-	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755028Ab3IKPit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2013 11:38:49 -0400
-In-Reply-To: <20130911043848.GA17221@www.outflux.net>
+Received: from iolanthe.rowland.org ([192.131.102.54]:58714 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754495Ab3IKPmg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2013 11:42:36 -0400
+In-Reply-To: <1378911947.28160.18.camel@linux-fkkt.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Bradley Grove <linuxdrivers@attotech.com>
+To: Oliver Neukum <oneukum@suse.de>
+Cc: hare@suse.de, linux-scsi@vger.kernel.org
 
-On 09/11/2013 12:38 AM, Kees Cook wrote:
-> This makes sure format strings cannot leak into the printk call via the
-> constructed buffer.
->
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
+On Wed, 11 Sep 2013, Oliver Neukum wrote:
 
-Acked-by: Bradley Grove <bgrove@attotech.com>
+> On Wed, 2013-09-11 at 10:14 -0400, Alan Stern wrote:
+> 
+> > There are three possibilities: nothing, your proposed patch, and a new
+> 
+> Nothing is feasible only if Windows uses READ_CAPACITY_10.
 
-Brad
+It seems clear that your patch isn't feasible either, as it doesn't 
+help high-speed devices.
 
+> > quirk flag.  The flag is safest, but also the hardest to maintain.
+> 
+> Again the same answer.
+> 
+> > > I think we can be sure that no drive enclosure will crash
+> > > with READ_CAPACITY_16.
+> > 
+> > I wouldn't count on it, but I don't know of any examples.
+> > 
+> > > I am not sure about card readers.
+> > 
+> > Or flash drives.
+> > 
+> > > Does anybody know what Windows does?
+> > 
+> > Not me.  It probably varies with different versions of Windows.
+> 
+> I'll try to get a Windows machine for a trace.
+> Can you suggest a tracer for Win7?
+
+I don't know of any, offhand.  Maybe Google can help.
+
+Alternatively, you could install Windows 7 in a virtual machine under 
+Linux and use usbmon.
+
+Alan Stern
 
