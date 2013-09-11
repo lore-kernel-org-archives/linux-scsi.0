@@ -1,56 +1,52 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Steve Magnani <steve.magnani@digidescorp.com>
 Subject: Re: READ_CAPACITY_16 vs. READ_CAPACITY_10
-Date: Wed, 11 Sep 2013 11:42:35 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1309111140240.1352-100000@iolanthe.rowland.org>
-References: <1378911947.28160.18.camel@linux-fkkt.site>
+Date: Wed, 11 Sep 2013 10:56:36 -0500
+Message-ID: <1378914996.1888.38.camel@iscandar.digidescorp.com>
+References: <Pine.LNX.4.44L0.1309111140240.1352-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58714 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754495Ab3IKPmg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2013 11:42:36 -0400
-In-Reply-To: <1378911947.28160.18.camel@linux-fkkt.site>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:40287 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754045Ab3IKP4j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2013 11:56:39 -0400
+Received: by mail-ob0-f179.google.com with SMTP id fb19so8497371obc.38
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Sep 2013 08:56:38 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.44L0.1309111140240.1352-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: hare@suse.de, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Oliver Neukum <oneukum@suse.de>, hare@suse.de, linux-scsi@vger.kernel.org
 
-On Wed, 11 Sep 2013, Oliver Neukum wrote:
-
-> On Wed, 2013-09-11 at 10:14 -0400, Alan Stern wrote:
-> 
-> > There are three possibilities: nothing, your proposed patch, and a new
-> 
-> Nothing is feasible only if Windows uses READ_CAPACITY_10.
-
-It seems clear that your patch isn't feasible either, as it doesn't 
-help high-speed devices.
-
-> > quirk flag.  The flag is safest, but also the hardest to maintain.
-> 
-> Again the same answer.
-> 
-> > > I think we can be sure that no drive enclosure will crash
-> > > with READ_CAPACITY_16.
+On Wed, 2013-09-11 at 11:42 -0400, Alan Stern wrote: 
+> On Wed, 11 Sep 2013, Oliver Neukum wrote:
 > > 
-> > I wouldn't count on it, but I don't know of any examples.
-> > 
-> > > I am not sure about card readers.
-> > 
-> > Or flash drives.
-> > 
-> > > Does anybody know what Windows does?
-> > 
-> > Not me.  It probably varies with different versions of Windows.
+> > I'll try to get a Windows machine for a trace.
+> > Can you suggest a tracer for Win7?
 > 
-> I'll try to get a Windows machine for a trace.
-> Can you suggest a tracer for Win7?
+> I don't know of any, offhand.  Maybe Google can help.
+> 
+> Alternatively, you could install Windows 7 in a virtual machine under 
+> Linux and use usbmon.
 
-I don't know of any, offhand.  Maybe Google can help.
+USBPcap can capture Windows USB transactions which Wireshark 1.10 or
+later can interpret:
+http://desowin.org/usbpcap/ 
+Note, if you're used to WinPCap or usbmon capture integration with
+Wireshark this will be an adjustment. You have to run USBPcap from the
+command line to do the capture to a file, quit the capture, then open
+the file in Wireshark.
 
-Alternatively, you could install Windows 7 in a virtual machine under 
-Linux and use usbmon.
+I think depending on the options you pass to USBPcap you could end up
+with .pcap frames that are larger than Wireshark can handle (i.e., for a
+READ(x) transfer of 128 blocks).
 
-Alan Stern
+Regards,
+------------------------------------------------------------------------
+Steven J. Magnani               "I claim this network for MARS!
+www.digidescorp.com              Earthling, return my space modulator!"
+
+#include <standard.disclaimer>
+
 
