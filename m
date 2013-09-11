@@ -1,50 +1,31 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: READ_CAPACITY_16 vs. READ_CAPACITY_10
-Date: Wed, 11 Sep 2013 17:05:47 +0200
-Message-ID: <1378911947.28160.18.camel@linux-fkkt.site>
-References: <Pine.LNX.4.44L0.1309111010500.1352-100000@iolanthe.rowland.org>
+From: Bradley Grove <bgrove@attotech.com>
+Subject: Re: [PATCH] scsi: esas2r: fix potential format string flaw
+Date: Wed, 11 Sep 2013 11:38:43 -0400
+Message-ID: <52308E83.3090905@attotech.com>
+References: <20130911043848.GA17221@www.outflux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46435 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754093Ab3IKPFs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Sep 2013 11:05:48 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1309111010500.1352-100000@iolanthe.rowland.org>
+Received: from sw.attotech.com ([208.69.85.34]:42736 "EHLO
+	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755028Ab3IKPit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2013 11:38:49 -0400
+In-Reply-To: <20130911043848.GA17221@www.outflux.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: hare@suse.de, linux-scsi@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Bradley Grove <linuxdrivers@attotech.com>
 
-On Wed, 2013-09-11 at 10:14 -0400, Alan Stern wrote:
+On 09/11/2013 12:38 AM, Kees Cook wrote:
+> This makes sure format strings cannot leak into the printk call via the
+> constructed buffer.
+>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
 
-> There are three possibilities: nothing, your proposed patch, and a new
+Acked-by: Bradley Grove <bgrove@attotech.com>
 
-Nothing is feasible only if Windows uses READ_CAPACITY_10.
-
-> quirk flag.  The flag is safest, but also the hardest to maintain.
-
-Again the same answer.
-
-> > I think we can be sure that no drive enclosure will crash
-> > with READ_CAPACITY_16.
-> 
-> I wouldn't count on it, but I don't know of any examples.
-> 
-> > I am not sure about card readers.
-> 
-> Or flash drives.
-> 
-> > Does anybody know what Windows does?
-> 
-> Not me.  It probably varies with different versions of Windows.
-
-I'll try to get a Windows machine for a trace.
-Can you suggest a tracer for Win7?
-
-	Regards
-		Oliver
-
+Brad
 
 
