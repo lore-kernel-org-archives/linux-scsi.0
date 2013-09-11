@@ -1,62 +1,50 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH v2] hpsa: remove unneeded loop
-Date: Wed, 11 Sep 2013 16:42:56 +0200
-Message-ID: <52308170.3030500@redhat.com>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: Re: READ_CAPACITY_16 vs. READ_CAPACITY_10
+Date: Wed, 11 Sep 2013 17:05:47 +0200
+Message-ID: <1378911947.28160.18.camel@linux-fkkt.site>
+References: <Pine.LNX.4.44L0.1309111010500.1352-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56418 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:46435 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754504Ab3IKOoK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Sep 2013 10:44:10 -0400
+	id S1754093Ab3IKPFs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Sep 2013 11:05:48 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1309111010500.1352-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, James Bottomley <jejb@kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: hare@suse.de, linux-scsi@vger.kernel.org
 
-From: Tomas Henzl <thenzl@redhat.com>
+On Wed, 2013-09-11 at 10:14 -0400, Alan Stern wrote:
 
-Originally this was first patch in a series, but while the  other patches
-were taken into 'for-next', this one was forgotten.
-The code below is adapted for the 'for=next' branch.
+> There are three possibilities: nothing, your proposed patch, and a new
 
-The cmd_pool_bits is protected everywhere with a spinlock,
-we don't need the test_and_set_bit, set_bit is enough and the loop
-can be removed too.
+Nothing is feasible only if Windows uses READ_CAPACITY_10.
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/hpsa.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+> quirk flag.  The flag is safest, but also the hardest to maintain.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 31489b5..6069c45 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2736,15 +2736,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&h->lock, flags);
--	do {
--		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
--		if (i == h->nr_cmds) {
--			spin_unlock_irqrestore(&h->lock, flags);
--			return NULL;
--		}
--	} while (test_and_set_bit
--		 (i & (BITS_PER_LONG - 1),
--		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
-+	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
-+	if (i == h->nr_cmds) {
-+		spin_unlock_irqrestore(&h->lock, flags);
-+		return NULL;
-+	}
-+	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
- 	spin_unlock_irqrestore(&h->lock, flags);
- 
- 	c = h->cmd_pool + i;
--- 
-1.8.3.1
+Again the same answer.
+
+> > I think we can be sure that no drive enclosure will crash
+> > with READ_CAPACITY_16.
+> 
+> I wouldn't count on it, but I don't know of any examples.
+> 
+> > I am not sure about card readers.
+> 
+> Or flash drives.
+> 
+> > Does anybody know what Windows does?
+> 
+> Not me.  It probably varies with different versions of Windows.
+
+I'll try to get a Windows machine for a trace.
+Can you suggest a tracer for Win7?
+
+	Regards
+		Oliver
+
 
 
