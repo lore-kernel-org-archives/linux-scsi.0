@@ -1,41 +1,49 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: esas2r: fix potential format string flaw
-Date: Tue, 10 Sep 2013 21:38:48 -0700
-Message-ID: <20130911043848.GA17221@www.outflux.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: [188/251] nsp32: use mdelay instead of large udelay constants
+Date: Wed, 11 Sep 2013 00:30:15 -0400
+Message-ID: <20130911042923.452640978@goodmis.org>
+References: <20130911042707.738353451@goodmis.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+Content-Disposition: inline; filename=0188-nsp32-use-mdelay-instead-of-large-udelay-constants.patch
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This makes sure format strings cannot leak into the printk call via the
-constructed buffer.
+3.6.11.9-rc1 stable review patch.
+If anyone has any objections, please let me know.
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
+------------------
+
+From: Arnd Bergmann <arnd@arndb.de>
+
+[ Upstream commit b497ceb964a80ebada3b9b3cea4261409039e25a ]
+
+ARM cannot handle udelay for more than 2 miliseconds, so we
+should use mdelay instead for those.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: GOTO Masanori <gotom@debian.or.jp>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
 ---
- drivers/scsi/esas2r/esas2r_log.c |    2 +-
+ drivers/scsi/nsp32.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
-index 9bf285d..61fc19d 100644
---- a/drivers/scsi/esas2r/esas2r_log.c
-+++ b/drivers/scsi/esas2r/esas2r_log.c
-@@ -171,7 +171,7 @@ static int esas2r_log_master(const long level,
- 		if (strlen(event_buffer) < buflen)
- 			strcat(buffer, "\n");
- 
--		printk(event_buffer);
-+		printk("%s", event_buffer);
- 
- 		spin_unlock_irqrestore(&event_buffer_lock, flags);
- 	}
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 62b6168..e705ed3 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -2926,7 +2926,7 @@ static void nsp32_do_bus_reset(nsp32_hw_data *data)
+ 	 * reset SCSI bus
+ 	 */
+ 	nsp32_write1(base, SCSI_BUS_CONTROL, BUSCTL_RST);
+-	udelay(RESET_HOLD_TIME);
++	mdelay(RESET_HOLD_TIME / 1000);
+ 	nsp32_write1(base, SCSI_BUS_CONTROL, 0);
+ 	for(i = 0; i < 5; i++) {
+ 		intrdat = nsp32_read2(base, IRQ_STATUS); /* dummy read */
 -- 
-1.7.9.5
-
-
--- 
-Kees Cook
-Chrome OS Security
+1.7.10.4
