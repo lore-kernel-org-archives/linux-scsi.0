@@ -1,36 +1,62 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH 1/3] scsi: Fix erratic device offline during EH
-Date: Wed, 11 Sep 2013 09:36:01 -0500
-Message-ID: <52307FD1.70903@tributary.com>
-References: <1378123118-111972-1-git-send-email-hare@suse.de> <1378123118-111972-2-git-send-email-hare@suse.de>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH v2] hpsa: remove unneeded loop
+Date: Wed, 11 Sep 2013 16:42:56 +0200
+Message-ID: <52308170.3030500@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.ihostexchange.net ([66.46.182.51]:20491 "EHLO
-	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753803Ab3IKOgI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2013 10:36:08 -0400
-In-Reply-To: <1378123118-111972-2-git-send-email-hare@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:56418 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754504Ab3IKOoK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Sep 2013 10:44:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, James Bottomley <jejb@kernel.org>
 
-On 9/2/2013 6:58 AM, Hannes Reinecke wrote:
+From: Tomas Henzl <thenzl@redhat.com>
 
-> +static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn) +{ +	static
-> unsigned char tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0}; + +	if
-> (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) { +		struct scsi_driver
-> *sdrv = scsi_cmd_to_driver(scmd); +		if (sdrv->eh_action) +			rtn =
-> sdrv->eh_action(scmd, tur_command, 6, rtn); +	} +	return rtn; +} +
+Originally this was first patch in a series, but while the  other patches
+were taken into 'for-next', this one was forgotten.
+The code below is adapted for the 'for=next' branch.
 
-	Is there are reason for using TUR here instead of STD inquiry? STD inquiry has
-the advantage that it can act like a "ping" but doesn't return unit
-attentions.
+The cmd_pool_bits is protected everywhere with a spinlock,
+we don't need the test_and_set_bit, set_bit is enough and the loop
+can be removed too.
 
-	Per my previous comments, trapping unit attentions in the error handler has
-caused UA's like luns changed, or power loss to get lost without being
-processed. For tape devices loosing UA's like this often means that the higher
-level driver won't be notified that the tape is rewound, resulting in serious
-issues.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/hpsa.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 31489b5..6069c45 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2736,15 +2736,12 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&h->lock, flags);
+-	do {
+-		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+-		if (i == h->nr_cmds) {
+-			spin_unlock_irqrestore(&h->lock, flags);
+-			return NULL;
+-		}
+-	} while (test_and_set_bit
+-		 (i & (BITS_PER_LONG - 1),
+-		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
++	i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
++	if (i == h->nr_cmds) {
++		spin_unlock_irqrestore(&h->lock, flags);
++		return NULL;
++	}
++	set_bit(i & (BITS_PER_LONG - 1), h->cmd_pool_bits + (i / BITS_PER_LONG));
+ 	spin_unlock_irqrestore(&h->lock, flags);
+ 
+ 	c = h->cmd_pool + i;
+-- 
+1.8.3.1
+
+
