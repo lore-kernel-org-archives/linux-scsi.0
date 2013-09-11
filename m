@@ -1,60 +1,36 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: READ_CAPACITY_16 vs. READ_CAPACITY_10
-Date: Wed, 11 Sep 2013 10:14:48 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1309111010500.1352-100000@iolanthe.rowland.org>
-References: <1378845858.24378.1.camel@linux-fkkt.site>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH 1/3] scsi: Fix erratic device offline during EH
+Date: Wed, 11 Sep 2013 09:36:01 -0500
+Message-ID: <52307FD1.70903@tributary.com>
+References: <1378123118-111972-1-git-send-email-hare@suse.de> <1378123118-111972-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58535 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752656Ab3IKOOt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2013 10:14:49 -0400
-In-Reply-To: <1378845858.24378.1.camel@linux-fkkt.site>
+Received: from relay.ihostexchange.net ([66.46.182.51]:20491 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753803Ab3IKOgI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2013 10:36:08 -0400
+In-Reply-To: <1378123118-111972-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: hare@suse.de, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Tue, 10 Sep 2013, Oliver Neukum wrote:
+On 9/2/2013 6:58 AM, Hannes Reinecke wrote:
 
-> On Tue, 2013-09-10 at 13:25 -0400, Alan Stern wrote:
-> > On Tue, 10 Sep 2013, Oliver Neukum wrote:
-> > 
-> > > Hi Hannes,
-> > > 
-> > > you objected to this patch saying there's a possibilty that
-> > > HS devices may also need this feature, which would require
-> > > a quirk. Does this mean that the patch is acceptable only
-> > > with an additional predefined quirk, or do you insist that all
-> > > devices be handled with quirks?
-> > 
-> > Indeed, we already know of one or two high-speed devices that suffer
-> > from this bug:
-> > 
-> > 	http://marc.info/?l=linux-usb&m=133586313307042&w=2
-> > 
-> > This may influence your decision.  I'm not certain whether it is 
-> > important enough to merit a new quirk flag, but people experiencing the 
-> > problem may have some strong opinions.
-> 
-> What is the alternative?
+> +static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn) +{ +	static
+> unsigned char tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0}; + +	if
+> (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) { +		struct scsi_driver
+> *sdrv = scsi_cmd_to_driver(scmd); +		if (sdrv->eh_action) +			rtn =
+> sdrv->eh_action(scmd, tur_command, 6, rtn); +	} +	return rtn; +} +
 
-There are three possibilities: nothing, your proposed patch, and a new 
-quirk flag.  The flag is safest, but also the hardest to maintain.
+	Is there are reason for using TUR here instead of STD inquiry? STD inquiry has
+the advantage that it can act like a "ping" but doesn't return unit
+attentions.
 
-> I think we can be sure that no drive enclosure will crash
-> with READ_CAPACITY_16.
-
-I wouldn't count on it, but I don't know of any examples.
-
-> I am not sure about card readers.
-
-Or flash drives.
-
-> Does anybody know what Windows does?
-
-Not me.  It probably varies with different versions of Windows.
-
-Alan Stern
-
+	Per my previous comments, trapping unit attentions in the error handler has
+caused UA's like luns changed, or power loss to get lost without being
+processed. For tape devices loosing UA's like this often means that the higher
+level driver won't be notified that the tape is rewound, resulting in serious
+issues.
