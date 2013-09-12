@@ -1,45 +1,135 @@
-From: Tuomas Vainikka <tuomas.vainikka@aalto.fi>
-Subject: esp_scsi QTAG in FAS216 (was Re: [PATCH 0/2] Experimental Amiga Zorro
- ESP driver)
-Date: Thu, 12 Sep 2013 18:36:09 +0300
-Message-ID: <5231DF69.6070807@aalto.fi>
-References: <1370552199-15048-1-git-send-email-schmitz@debian.org> <520D4AE3.6040801@aalto.fi> <520E76FC.9040803@aalto.fi> <11425cb5ec432e2fbb7b675052e8b33d@gmail.com> <520F5F81.7090409@aalto.fi> <52102BEC.7000006@gmail.com> <CAMuHMdV9vP-Qg2my5fyT+pa_WcDfZAPx5T1-4kXP8eD1oL8Kog@mail.gmail.com> <52108CAF.1010700@gmail.com> <CAMuHMdWqNBjHKiDojPdjzuOV65QXzjeMX5VbtUvgU7VTP4iYFg@mail.gmail.com> <5211DBD8.5090801@gmail.com> <5212840A.4080300@aalto.fi> <1ef2d87e4efecb2d8c8c2eaf8ac5fd51@gmail.com> <52133E48.50501@aalto.fi> <CAOmrzkKtB4OpnFNFh9PR4V8bc3ExfFXpwtkhGj0veQ4w-d=cqA@mail.gmail.com> <522F8B67.2080603@aalto.fi> <CAOmrzkKP4YcvnHcrtucMvS9WSaeg+6-qnobOWN6hBK=wkUHemg@mail.gmail.com> <CAMuHMdUH=9sv-Vb3ZTAGyfvEQOO0x0x1cUYhfd7040k8d+bSYg@mail.gmail.com>
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Subject: [PATCH] SCSI: buslogic: Added check for DMA mapping errors (was Re:
+ [BusLogic] DMA-API: device driver failed to check map error)
+Date: Thu, 12 Sep 2013 10:53:27 -0600
+Message-ID: <1379004807.10738.3.camel@concerto>
+References: <201309101503.ECC18788.SOOVOJLFtQHMFF@I-love.SAKURA.ne.jp>
+	 <1378816604.6973.53.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CAMuHMdUH=9sv-Vb3ZTAGyfvEQOO0x0x1cUYhfd7040k8d+bSYg@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Linux/m68k <linux-m68k@vger.kernel.org>, linux-scsi@vger.kernel.org, David Miller <davem@davemloft.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1378816604.6973.53.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/11/2013 05:48 PM, Geert Uytterhoeven wrote:
-> On Wed, Sep 11, 2013 at 12:12 PM, Michael Schmitz <schmitzmic@gmail.com> wrote:
->>> problem. Using PIO, only the first byte of the tag message comes through. It
->>> might not be esp_scsi's fault, but there seems to be an assumption that all
->>> devices support TCQ. Also, no SCSI-2 features seem to be enabled in the chip
->>> by esp_scsi.
->> I'd have to check with DaveM, but such an assumption might in fact exist.
-> BTW, it would be nice to start CCing linux-scsi@vger.kernel.org and
-> David S. Miller <davem@davemloft.net> on future discussions.
->
-> Gr{oetje,eeting}s,
->
->                          Geert
->
->
-Hello,
+Added check for DMA mapping errors for request sense data
+buffer. Checking for mapping error can avoid potential wild
+writes. This patch was prompted by the warning from
+dma_unmap when kernel is compiled with CONFIG_DMA_API_DEBUG.
 
-Does anyone have the register descriptions for the FAS216 chip? It would 
-seem that receiving only one byte during reconnect is perfectly normal 
-[1] unless SCSI-2 features are explicitly enabled (which esp_scsi 
-doesn't seem to be doing).
 
-Also, looking at the timeout formulae in the old NCR53C9x.c driver, the 
-values would be different for FAS216. Why was this dropped from the 
-modern esp_scsi?
+Signed-off-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ drivers/scsi/BusLogic.c |   32 +++++++++++++++++++++-----------
+ 1 file changed, 21 insertions(+), 11 deletions(-)
 
-1. Page 2 in http://www.datasheetarchive.com/dl/Scans-030/ScansU9X12569.pdf
-
--Tuomas
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index feab3a5..90cf1aa 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -26,8 +26,8 @@
+ 
+ */
+ 
+-#define blogic_drvr_version		"2.1.16"
+-#define blogic_drvr_date		"18 July 2002"
++#define blogic_drvr_version		"2.1.17"
++#define blogic_drvr_date		"12 September 2013"
+ 
+ #include <linux/module.h>
+ #include <linux/init.h>
+@@ -311,12 +311,13 @@ static struct blogic_ccb *blogic_alloc_ccb(struct blogic_adapter *adapter)
+   caller.
+ */
+ 
+-static void blogic_dealloc_ccb(struct blogic_ccb *ccb)
++static void blogic_dealloc_ccb(struct blogic_ccb *ccb, int dma_unmap)
+ {
+ 	struct blogic_adapter *adapter = ccb->adapter;
+ 
+ 	scsi_dma_unmap(ccb->command);
+-	pci_unmap_single(adapter->pci_device, ccb->sensedata,
++	if (dma_unmap)
++		pci_unmap_single(adapter->pci_device, ccb->sensedata,
+ 			 ccb->sense_datalen, PCI_DMA_FROMDEVICE);
+ 
+ 	ccb->command = NULL;
+@@ -2762,8 +2763,8 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 			/*
+ 			   Place CCB back on the Host Adapter's free list.
+ 			 */
+-			blogic_dealloc_ccb(ccb);
+-#if 0				/* this needs to be redone different for new EH */
++			blogic_dealloc_ccb(ccb, 1);
++#if 0			/* this needs to be redone different for new EH */
+ 			/*
+ 			   Bus Device Reset CCBs have the command field
+ 			   non-NULL only when a Bus Device Reset was requested
+@@ -2791,7 +2792,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 				if (ccb->status == BLOGIC_CCB_RESET &&
+ 						ccb->tgt_id == tgt_id) {
+ 					command = ccb->command;
+-					blogic_dealloc_ccb(ccb);
++					blogic_dealloc_ccb(ccb, 1);
+ 					adapter->active_cmds[tgt_id]--;
+ 					command->result = DID_RESET << 16;
+ 					command->scsi_done(command);
+@@ -2862,7 +2863,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 			/*
+ 			   Place CCB back on the Host Adapter's free list.
+ 			 */
+-			blogic_dealloc_ccb(ccb);
++			blogic_dealloc_ccb(ccb, 1);
+ 			/*
+ 			   Call the SCSI Command Completion Routine.
+ 			 */
+@@ -3034,6 +3035,7 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 	int buflen = scsi_bufflen(command);
+ 	int count;
+ 	struct blogic_ccb *ccb;
++	dma_addr_t sense_buf;
+ 
+ 	/*
+ 	   SCSI REQUEST_SENSE commands will be executed automatically by the
+@@ -3179,9 +3181,17 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 	}
+ 	memcpy(ccb->cdb, cdb, cdblen);
+ 	ccb->sense_datalen = SCSI_SENSE_BUFFERSIZE;
+-	ccb->sensedata = pci_map_single(adapter->pci_device,
++	sense_buf = pci_map_single(adapter->pci_device,
+ 				command->sense_buffer, ccb->sense_datalen,
+ 				PCI_DMA_FROMDEVICE);
++	if (dma_mapping_error(&adapter->pci_device->dev, sense_buf)) {
++		blogic_err("DMA mapping for sense data buffer failed\n",
++				adapter);
++		scsi_dma_map(command);
++		blogic_dealloc_ccb(ccb, 0);
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++	ccb->sensedata = sense_buf;
+ 	ccb->command = command;
+ 	command->scsi_done = comp_cb;
+ 	if (blogic_multimaster_type(adapter)) {
+@@ -3203,7 +3213,7 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 			if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START,
+ 						ccb)) {
+ 				blogic_warn("Still unable to write Outgoing Mailbox - " "Host Adapter Dead?\n", adapter);
+-				blogic_dealloc_ccb(ccb);
++				blogic_dealloc_ccb(ccb, 1);
+ 				command->result = DID_ERROR << 16;
+ 				command->scsi_done(command);
+ 			}
+@@ -3337,7 +3347,7 @@ static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
+ 
+ 	for (ccb = adapter->all_ccbs; ccb != NULL; ccb = ccb->next_all)
+ 		if (ccb->status == BLOGIC_CCB_ACTIVE)
+-			blogic_dealloc_ccb(ccb);
++			blogic_dealloc_ccb(ccb, 1);
+ 	/*
+ 	 * Wait a few seconds between the Host Adapter Hard Reset which
+ 	 * initiates a SCSI Bus Reset and issuing any SCSI Commands.  Some
+-- 
+1.7.10.4
