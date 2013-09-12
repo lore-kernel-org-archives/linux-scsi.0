@@ -1,72 +1,60 @@
 From: Hannes Reinecke <hare@suse.de>
 Subject: Re: READ_CAPACITY_16 vs. READ_CAPACITY_10
-Date: Thu, 12 Sep 2013 07:47:05 +0200
-Message-ID: <52315559.3080708@suse.de>
-References: <Pine.LNX.4.44L0.1309111010500.1352-100000@iolanthe.rowland.org>
+Date: Thu, 12 Sep 2013 07:56:02 +0200
+Message-ID: <52315772.8040402@suse.de>
+References: <1378821408.13541.26.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44990 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:45169 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752979Ab3ILFrH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Sep 2013 01:47:07 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1309111010500.1352-100000@iolanthe.rowland.org>
+	id S1753315Ab3ILF4D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Sep 2013 01:56:03 -0400
+In-Reply-To: <1378821408.13541.26.camel@linux-fkkt.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oneukum@suse.de>, linux-scsi@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org
 
-On 09/11/2013 04:14 PM, Alan Stern wrote:
-> On Tue, 10 Sep 2013, Oliver Neukum wrote:
+On 09/10/2013 03:56 PM, Oliver Neukum wrote:
+> Hi Hannes,
 >=20
->> On Tue, 2013-09-10 at 13:25 -0400, Alan Stern wrote:
->>> On Tue, 10 Sep 2013, Oliver Neukum wrote:
->>>
->>>> Hi Hannes,
->>>>
->>>> you objected to this patch saying there's a possibilty that
->>>> HS devices may also need this feature, which would require
->>>> a quirk. Does this mean that the patch is acceptable only
->>>> with an additional predefined quirk, or do you insist that all
->>>> devices be handled with quirks?
->>>
->>> Indeed, we already know of one or two high-speed devices that suffe=
-r
->>> from this bug:
->>>
->>> 	http://marc.info/?l=3Dlinux-usb&m=3D133586313307042&w=3D2
->>>
->>> This may influence your decision.  I'm not certain whether it is=20
->>> important enough to merit a new quirk flag, but people experiencing=
- the=20
->>> problem may have some strong opinions.
->>
->> What is the alternative?
+> you objected to this patch saying there's a possibilty that
+> HS devices may also need this feature, which would require
+> a quirk. Does this mean that the patch is acceptable only
+> with an additional predefined quirk, or do you insist that all
+> devices be handled with quirks?
 >=20
-> There are three possibilities: nothing, your proposed patch, and a ne=
-w=20
-> quirk flag.  The flag is safest, but also the hardest to maintain.
+> 	Regards
+> 		Oliver
 >=20
->> I think we can be sure that no drive enclosure will crash
->> with READ_CAPACITY_16.
+> +++ b/drivers/usb/storage/scsiglue.c
+> @@ -211,8 +211,11 @@ static int slave_configure(struct
+> scsi_device0*sdev)
+>  		/*
+>  		 * Many devices do not respond properly to READ_CAPACITY_16.
+>  		 * Tell the SCSI layer to try READ_CAPACITY_10 first.
+> +		 * However some USB 3.0 drive enclosures return capacity
+> +		 * modulo 2TB
+>  		 */
+> -		sdev->try_rc_10_first =3D 1;
+> +		if (us->pusb_dev->speed < USB_SPEED_SUPER)
+> +			sdev->try_rc_10_first =3D 1;
+> =20
+>  		/* assume SPC3 or latter devices support sense size > 18 */
+>  		if (sdev->scsi_level > SCSI_SPC_2)
 >=20
-> I wouldn't count on it, but I don't know of any examples.
->=20
-Me neither. The whole issue just smells of some firmware coders
-messing up their stuff. So I would think that other firmwares
-might not have this problem.
-(But as HS enclosures aren't that common chances are we've hit
- the same firmware by chance on every test machine we've had.)
-
-I think it would warrant a quirk approach. Yes, it might be slightly
-more coding, but at the same time it's more selective on where it
-should trigger.
-Also looking at scsiglue.c it would make things quite tricky if
-you'd want to _disable_ this feature for HS devices; other firmware
-from other vendors might not exhibit this issue after all.
-And scsiglue.c already has tons of quirks set, adding one more
-doesn't do any harm.
+Predefined quirks is okay.
+My main objection here is that the original issue most likely is a
+buggy firmware, so there is a _very_ good chance that it'll be
+resolved in firmware in the near future.
+At the same time, other firmwares might continue to not support
+READ_CAPACITY_16 while enabling HS.
+So both issues really should be kept separate, which'll warrant a
+new flag.
+Which of course could be set to on per default on HS devices.
+As long as we can switch is off again ...
 
 Cheers,
 
@@ -74,8 +62,9 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
