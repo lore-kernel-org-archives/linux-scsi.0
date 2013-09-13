@@ -1,89 +1,371 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 05/22] be2iscsi: Fix locking mechanism in Unsol Path
-Date: Thu, 12 Sep 2013 22:09:55 -0700
-Message-ID: <1379049014-32716-5-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 07/22] be2iscsi: Config parameters update for Dual Chute Support
+Date: Thu, 12 Sep 2013 22:09:57 -0700
+Message-ID: <1379049014-32716-7-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:59529 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300Ab3IMFgZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:25 -0400
-Received: by mail-pb0-f44.google.com with SMTP id xa7so771178pbc.31
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:24 -0700 (PDT)
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:41328 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429Ab3IMFg2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:28 -0400
+Received: by mail-pa0-f51.google.com with SMTP id lf1so2089702pab.10
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:27 -0700 (PDT)
 In-Reply-To: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-	The default pdu is a common resource and needs to be protected 
-while manipulating it.
+ On the adapter iSCSI protocol can be loaded on either one or both
+ the CHUTE.Check on which CHUTE iSCSI Protocol is loaded and get
+ configuration parameters based on which driver initization is done.
 
-Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
+ For BE-X family iSCSI protocol is loaded only on Chute - 1.
+
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |    7 +++++++
- drivers/scsi/be2iscsi/be_main.h |    1 +
- 2 files changed, 8 insertions(+)
+ drivers/scsi/be2iscsi/be_cmds.h |   14 +++++++
+ drivers/scsi/be2iscsi/be_main.c |   64 +++++++++++++++++++-------------
+ drivers/scsi/be2iscsi/be_main.h |   27 ++++++++------
+ drivers/scsi/be2iscsi/be_mgmt.c |   78 ++++++++++++++++++++++++++++++---------
+ 4 files changed, 130 insertions(+), 53 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 89c4073..b812e38 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -40,6 +40,7 @@ struct be_mcc_wrb {
+ 	u32 tag1;		/* dword 3 */
+ 	u32 rsvd;		/* dword 4 */
+ 	union {
++#define EMBED_MBX_MAX_PAYLOAD_SIZE  220
+ 		u8 embedded_payload[236];	/* used by embedded cmds */
+ 		struct be_sge sgl[19];	/* used by non-embedded cmds */
+ 	} payload;
+@@ -1030,6 +1031,7 @@ union tcp_upload_params {
+ } __packed;
+ 
+ struct be_ulp_fw_cfg {
++#define BEISCSI_ULP_ISCSI_INI_MODE	0x10
+ 	u32 ulp_mode;
+ 	u32 etx_base;
+ 	u32 etx_count;
+@@ -1045,14 +1047,26 @@ struct be_ulp_fw_cfg {
+ 	u32 icd_count;
+ };
+ 
++struct be_ulp_chain_icd {
++	u32 chain_base;
++	u32 chain_count;
++};
++
+ struct be_fw_cfg {
+ 	struct be_cmd_req_hdr hdr;
+ 	u32 be_config_number;
+ 	u32 asic_revision;
+ 	u32 phys_port;
++#define BEISCSI_FUNC_ISCSI_INI_MODE	0x10
++#define BEISCSI_FUNC_DUA_MODE	0x800
+ 	u32 function_mode;
+ 	struct be_ulp_fw_cfg ulp[2];
+ 	u32 function_caps;
++	u32 cqid_base;
++	u32 cqid_count;
++	u32 eqid_base;
++	u32 eqid_count;
++	struct be_ulp_chain_icd chain_icd[2];
+ } __packed;
+ 
+ struct be_cmd_get_all_if_id_req {
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 5ba575f..9918582 100644
+index 6ad36af..8995507 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2072,8 +2072,10 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- 				    "BM_%d : Received %s[%d] on CID : %d\n",
- 				    cqe_desc[code], code, cid);
+@@ -699,30 +699,39 @@ static int be_ctrl_init(struct beiscsi_hba *phba, struct pci_dev *pdev)
+ 	return status;
+ }
  
-+			spin_lock_bh(&phba->async_pdu_lock);
- 			hwi_process_default_pdu_ring(beiscsi_conn, phba,
- 					     (struct i_t_dpdu_cqe *)sol);
-+			spin_unlock_bh(&phba->async_pdu_lock);
- 			break;
- 		case UNSOL_DATA_NOTIFY:
- 			beiscsi_log(phba, KERN_INFO,
-@@ -2081,8 +2083,10 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- 				    "BM_%d : Received %s[%d] on CID : %d\n",
- 				    cqe_desc[code], code, cid);
++/**
++ * beiscsi_get_params()- Set the config paramters
++ * @phba: ptr  device priv structure
++ **/
+ static void beiscsi_get_params(struct beiscsi_hba *phba)
+ {
+-	phba->params.ios_per_ctrl = (phba->fw_config.iscsi_icd_count
+-				    - (phba->fw_config.iscsi_cid_count
+-				    + BE2_TMFS
+-				    + BE2_NOPOUT_REQ));
+-	phba->params.cxns_per_ctrl = phba->fw_config.iscsi_cid_count;
+-	phba->params.asyncpdus_per_ctrl = phba->fw_config.iscsi_cid_count;
+-	phba->params.icds_per_ctrl = phba->fw_config.iscsi_icd_count;
++	uint32_t total_cid_count = 0;
++	uint32_t total_icd_count = 0;
++	uint8_t ulp_num = 0;
++
++	total_cid_count = BEISCSI_GET_CID_COUNT(phba, BEISCSI_ULP0) +
++			  BEISCSI_GET_CID_COUNT(phba, BEISCSI_ULP1);
++
++	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++)
++		if (test_bit(ulp_num, &phba->fw_config.ulp_supported)) {
++			total_icd_count =
++					   phba->fw_config.
++					   iscsi_icd_count[ulp_num];
++			break;
++		}
++
++	phba->params.ios_per_ctrl = (total_icd_count -
++			(total_cid_count + BE2_TMFS +
++			 BE2_NOPOUT_REQ));
++	phba->params.cxns_per_ctrl = total_cid_count;
++	phba->params.asyncpdus_per_ctrl = total_cid_count;
++	phba->params.icds_per_ctrl = total_icd_count;
+ 	phba->params.num_sge_per_io = BE2_SGE;
+ 	phba->params.defpdu_hdr_sz = BE2_DEFPDU_HDR_SZ;
+ 	phba->params.defpdu_data_sz = BE2_DEFPDU_DATA_SZ;
+ 	phba->params.eq_timer = 64;
+-	phba->params.num_eq_entries =
+-	    (((BE2_CMDS_PER_CXN * 2 + phba->fw_config.iscsi_cid_count * 2
+-				    + BE2_TMFS) / 512) + 1) * 512;
+-	phba->params.num_eq_entries = (phba->params.num_eq_entries < 1024)
+-				? 1024 : phba->params.num_eq_entries;
+-	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+-		    "BM_%d : phba->params.num_eq_entries=%d\n",
+-		    phba->params.num_eq_entries);
+-	phba->params.num_cq_entries =
+-	    (((BE2_CMDS_PER_CXN * 2 +  phba->fw_config.iscsi_cid_count * 2
+-				    + BE2_TMFS) / 512) + 1) * 512;
++	phba->params.num_eq_entries = 1024;
++	phba->params.num_cq_entries = 1024;
+ 	phba->params.wrbs_per_cxn = 256;
+ }
  
-+			spin_lock_bh(&phba->async_pdu_lock);
- 			hwi_process_default_pdu_ring(beiscsi_conn, phba,
- 					     (struct i_t_dpdu_cqe *)sol);
-+			spin_unlock_bh(&phba->async_pdu_lock);
- 			break;
- 		case CXN_INVALIDATE_INDEX_NOTIFY:
- 		case CMD_INVALIDATED_NOTIFY:
-@@ -2110,8 +2114,10 @@ static unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
- 				    "BM_%d :  Dropping %s[%d] on DPDU ring on CID : %d\n",
- 				    cqe_desc[code], code, cid);
-+			spin_lock_bh(&phba->async_pdu_lock);
- 			hwi_flush_default_pdu_buffer(phba, beiscsi_conn,
- 					     (struct i_t_dpdu_cqe *) sol);
-+			spin_unlock_bh(&phba->async_pdu_lock);
- 			break;
- 		case CXN_KILLED_PDU_SIZE_EXCEEDS_DSL:
- 		case CXN_KILLED_BURST_LEN_MISMATCH:
-@@ -5010,6 +5016,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	spin_lock_init(&phba->io_sgl_lock);
- 	spin_lock_init(&phba->mgmt_sgl_lock);
- 	spin_lock_init(&phba->isr_lock);
-+	spin_lock_init(&phba->async_pdu_lock);
- 	ret = mgmt_get_fw_config(&phba->ctrl, phba);
- 	if (ret != 0) {
+@@ -2482,6 +2491,10 @@ static void hwi_write_buffer(struct iscsi_wrb *pwrb, struct iscsi_task *task)
+ 	AMAP_SET_BITS(struct amap_iscsi_sge, last_sge, psgl, 1);
+ }
+ 
++/**
++ * beiscsi_find_mem_req()- Find mem needed
++ * @phba: ptr to HBA struct
++ **/
+ static void beiscsi_find_mem_req(struct beiscsi_hba *phba)
+ {
+ 	unsigned int num_cq_pages, num_async_pdu_buf_pages;
+@@ -2705,7 +2718,7 @@ static int beiscsi_init_wrb_handle(struct beiscsi_hba *phba)
+ 	/* Allocate memory for WRBQ */
+ 	phwi_ctxt = phwi_ctrlr->phwi_ctxt;
+ 	phwi_ctxt->be_wrbq = kzalloc(sizeof(struct be_queue_info) *
+-				     phba->fw_config.iscsi_cid_count,
++				     phba->params.cxns_per_ctrl,
+ 				     GFP_KERNEL);
+ 	if (!phwi_ctxt->be_wrbq) {
  		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+@@ -2804,7 +2817,7 @@ static int hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
+ 	memset(pasync_ctx, 0, sizeof(*pasync_ctx));
+ 
+ 	pasync_ctx->async_entry = kzalloc(sizeof(struct hwi_async_entry) *
+-					  phba->fw_config.iscsi_cid_count,
++					  phba->params.cxns_per_ctrl,
+ 					  GFP_KERNEL);
+ 	if (!pasync_ctx->async_entry) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+@@ -3303,14 +3316,14 @@ beiscsi_post_pages(struct beiscsi_hba *phba)
+ 	struct mem_array *pm_arr;
+ 	unsigned int page_offset, i;
+ 	struct be_dma_mem sgl;
+-	int status;
++	int status, ulp_num = 0;
+ 
+ 	mem_descr = phba->init_mem;
+ 	mem_descr += HWI_MEM_SGE;
+ 	pm_arr = mem_descr->mem_array;
+ 
+ 	page_offset = (sizeof(struct iscsi_sge) * phba->params.num_sge_per_io *
+-			phba->fw_config.iscsi_icd_start) / PAGE_SIZE;
++			phba->fw_config.iscsi_icd_start[ulp_num]) / PAGE_SIZE;
+ 	for (i = 0; i < mem_descr->num_elements; i++) {
+ 		hwi_build_be_sgl_arr(phba, pm_arr, &sgl);
+ 		status = be_cmd_iscsi_post_sgl_pages(&phba->ctrl, &sgl,
+@@ -3767,7 +3780,7 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
+ 	struct be_mem_descriptor *mem_descr_sglh, *mem_descr_sg;
+ 	struct sgl_handle *psgl_handle;
+ 	struct iscsi_sge *pfrag;
+-	unsigned int arr_index, i, idx;
++	unsigned int arr_index, i, idx, ulp_num = 0;
+ 
+ 	phba->io_sgl_hndl_avbl = 0;
+ 	phba->eh_sgl_hndl_avbl = 0;
+@@ -3853,7 +3866,8 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
+ 			AMAP_SET_BITS(struct amap_iscsi_sge, addr_lo, pfrag, 0);
+ 			pfrag += phba->params.num_sge_per_io;
+ 			psgl_handle->sgl_index =
+-				phba->fw_config.iscsi_icd_start + arr_index++;
++				phba->fw_config.iscsi_icd_start[ulp_num] +
++				arr_index++;
+ 		}
+ 		idx++;
+ 	}
+@@ -5022,7 +5036,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 			    "BM_%d : Error getting fw config\n");
+ 		goto free_port;
+ 	}
+-	phba->shost->max_id = phba->fw_config.iscsi_cid_count;
++	phba->shost->max_id = phba->params.cxns_per_ctrl;
+ 	beiscsi_get_params(phba);
+ 	phba->shost->can_queue = phba->params.ios_per_ctrl;
+ 	ret = beiscsi_init_port(phba);
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index ec75c53..6ac4f2f 100644
+index 6ac4f2f..39bc185 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -305,6 +305,7 @@ struct beiscsi_hba {
- 	spinlock_t io_sgl_lock;
- 	spinlock_t mgmt_sgl_lock;
- 	spinlock_t isr_lock;
-+	spinlock_t async_pdu_lock;
- 	unsigned int age;
- 	unsigned short avlbl_cids;
- 	unsigned short cid_alloc;
+@@ -271,6 +271,12 @@ struct invalidate_command_table {
+ #define chip_be2(phba)      (phba->generation == BE_GEN2)
+ #define chip_be3_r(phba)    (phba->generation == BE_GEN3)
+ #define is_chip_be2_be3r(phba) (chip_be3_r(phba) || (chip_be2(phba)))
++
++#define BEISCSI_ULP0    0
++#define BEISCSI_ULP1    1
++#define BEISCSI_ULP_COUNT   2
++#define BEISCSI_ULP0_LOADED 0x01
++#define BEISCSI_ULP1_LOADED 0x02
+ struct beiscsi_hba {
+ 	struct hba_parameters params;
+ 	struct hwi_controller *phwi_ctrlr;
+@@ -328,20 +334,19 @@ struct beiscsi_hba {
+ 		 * group together since they are used most frequently
+ 		 * for cid to cri conversion
+ 		 */
+-		unsigned int iscsi_cid_start;
+ 		unsigned int phys_port;
++		unsigned int iscsi_cid_start[BEISCSI_ULP_COUNT];
++#define BEISCSI_GET_CID_COUNT(phba, ulp_num) \
++			      (phba->fw_config.iscsi_cid_count[ulp_num])
++		unsigned int iscsi_cid_count[BEISCSI_ULP_COUNT];
++		unsigned int iscsi_icd_count[BEISCSI_ULP_COUNT];
++		unsigned int iscsi_icd_start[BEISCSI_ULP_COUNT];
++		unsigned int iscsi_chain_start[BEISCSI_ULP_COUNT];
++		unsigned int iscsi_chain_count[BEISCSI_ULP_COUNT];
+ 
+-		unsigned int isr_offset;
+-		unsigned int iscsi_icd_start;
+-		unsigned int iscsi_cid_count;
+-		unsigned int iscsi_icd_count;
+-		unsigned int pci_function;
+-
+-		unsigned short cid_alloc;
+-		unsigned short cid_free;
+-		unsigned short avlbl_cids;
+ 		unsigned short iscsi_features;
+-		spinlock_t cid_lock;
++		uint16_t dual_ulp_aware;
++		unsigned long ulp_supported;
+ 	} fw_config;
+ 
+ 	unsigned int state;
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 2efad04..ee0b4c7 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -278,6 +278,18 @@ unsigned int mgmt_get_session_info(struct beiscsi_hba *phba,
+ 	return tag;
+ }
+ 
++/**
++ * mgmt_get_fw_config()- Get the FW config for the function
++ * @ctrl: ptr to Ctrl Info
++ * @phba: ptr to the dev priv structure
++ *
++ * Get the FW config and resources available for the function.
++ * The resources are created based on the count received here.
++ *
++ * return
++ *	Success: 0
++ *	Failure: Non-Zero Value
++ **/
+ int mgmt_get_fw_config(struct be_ctrl_info *ctrl,
+ 				struct beiscsi_hba *phba)
+ {
+@@ -291,31 +303,63 @@ int mgmt_get_fw_config(struct be_ctrl_info *ctrl,
+ 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
+-			   OPCODE_COMMON_QUERY_FIRMWARE_CONFIG, sizeof(*req));
++			   OPCODE_COMMON_QUERY_FIRMWARE_CONFIG,
++			   EMBED_MBX_MAX_PAYLOAD_SIZE);
+ 	status = be_mbox_notify(ctrl);
+ 	if (!status) {
++		uint8_t ulp_num = 0;
+ 		struct be_fw_cfg *pfw_cfg;
+ 		pfw_cfg = req;
++
++		for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++)
++			if (pfw_cfg->ulp[ulp_num].ulp_mode &
++			    BEISCSI_ULP_ISCSI_INI_MODE)
++				set_bit(ulp_num,
++					&phba->fw_config.ulp_supported);
++
+ 		phba->fw_config.phys_port = pfw_cfg->phys_port;
+-		phba->fw_config.iscsi_icd_start =
+-					pfw_cfg->ulp[0].icd_base;
+-		phba->fw_config.iscsi_icd_count =
+-					pfw_cfg->ulp[0].icd_count;
+-		phba->fw_config.iscsi_cid_start =
+-					pfw_cfg->ulp[0].sq_base;
+-		phba->fw_config.iscsi_cid_count =
+-					pfw_cfg->ulp[0].sq_count;
+-		if (phba->fw_config.iscsi_cid_count > (BE2_MAX_SESSIONS / 2)) {
+-			beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+-				    "BG_%d : FW reported MAX CXNS as %d\t"
+-				    "Max Supported = %d.\n",
+-				    phba->fw_config.iscsi_cid_count,
+-				    BE2_MAX_SESSIONS);
+-			phba->fw_config.iscsi_cid_count = BE2_MAX_SESSIONS / 2;
++		for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
++			if (test_bit(ulp_num, &phba->fw_config.ulp_supported)) {
++
++				phba->fw_config.iscsi_cid_start[ulp_num] =
++					pfw_cfg->ulp[ulp_num].sq_base;
++				phba->fw_config.iscsi_cid_count[ulp_num] =
++				pfw_cfg->ulp[ulp_num].sq_count;
++
++				phba->fw_config.iscsi_icd_start[ulp_num] =
++					pfw_cfg->ulp[ulp_num].icd_base;
++				phba->fw_config.iscsi_icd_count[ulp_num] =
++					pfw_cfg->ulp[ulp_num].icd_count;
++
++				phba->fw_config.iscsi_chain_start[ulp_num] =
++					pfw_cfg->chain_icd[ulp_num].chain_base;
++				phba->fw_config.iscsi_chain_count[ulp_num] =
++					pfw_cfg->chain_icd[ulp_num].chain_count;
++
++				beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
++					    "BG_%d : Function loaded on ULP : %d\n"
++					    "\tiscsi_cid_count : %d\n"
++					    "\t iscsi_icd_count : %d\n",
++					    ulp_num,
++					    phba->fw_config.
++					    iscsi_cid_count[ulp_num],
++					    phba->fw_config.
++					    iscsi_icd_count[ulp_num]);
++			}
+ 		}
++
++		phba->fw_config.dual_ulp_aware =
++						 (pfw_cfg->function_mode &
++						  BEISCSI_FUNC_DUA_MODE);
++
++		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
++				"BG_%d : DUA Mode : 0x%x\n",
++				phba->fw_config.dual_ulp_aware);
++
+ 	} else {
+-		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_INIT,
++		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+ 			    "BG_%d : Failed in mgmt_get_fw_config\n");
++		status = -EINVAL;
+ 	}
+ 
+ 	spin_unlock(&ctrl->mbox_lock);
 -- 
 1.7.10.4
 
