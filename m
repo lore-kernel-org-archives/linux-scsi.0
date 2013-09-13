@@ -1,112 +1,111 @@
-From: Khalid Aziz <khalid.aziz@oracle.com>
-Subject: Re: [PATCH] SCSI: buslogic: Added check for DMA mapping errors (was
- Re:[BusLogic] DMA-API: device driver failed to check map error)
-Date: Fri, 13 Sep 2013 09:55:12 -0600
-Message-ID: <52333560.50209@oracle.com>
-References: <201309101503.ECC18788.SOOVOJLFtQHMFF@I-love.SAKURA.ne.jp> <1378816604.6973.53.camel@dabdike.int.hansenpartnership.com> <1379004807.10738.3.camel@concerto> <201309140042.GEI73439.QHSJtOFFVFOLOM@I-love.SAKURA.ne.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201309140042.GEI73439.QHSJtOFFVFOLOM@I-love.SAKURA.ne.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: jbottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Ben Collins <ben.c@servergy.com>
+Subject: [PATCH] megaraid: Use resource_size_t for PCI resources, not long
+Date: Fri, 13 Sep 2013 12:46:44 -0400
+Message-ID: <D74A8430-BF73-488F-8CD1-0E00B5FE75A6@servergy.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+Content-Type: multipart/signed; boundary="Apple-Mail=_8C661A14-D25D-4675-991C-07E8BED7466D"; protocol="application/pgp-signature"; micalg=pgp-sha1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:43930 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693Ab3IMQqp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 12:46:45 -0400
+Received: by mail-pa0-f41.google.com with SMTP id bj1so2779194pad.28
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Sep 2013 09:46:45 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Sumit Saxena <Sumit.Saxena@lsi.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>
 
-On 09/13/2013 09:42 AM, Tetsuo Handa wrote:
-> Khalid Aziz wrote:
->> Added check for DMA mapping errors for request sense data
->> buffer. Checking for mapping error can avoid potential wild
->> writes. This patch was prompted by the warning from
->> dma_unmap when kernel is compiled with CONFIG_DMA_API_DEBUG.
->
-> This patch fixes CONFIG_DMA_API_DEBUG warning.
-> But excuse me, is this error path correct?
->
->> @@ -309,16 +309,17 @@ static struct blogic_ccb *blogic_alloc_ccb(struct blogic_adapter *adapter)
->>     blogic_dealloc_ccb deallocates a CCB, returning it to the Host Adapter's
->>     free list.  The Host Adapter's Lock should already have been acquired by the
->>     caller.
->>   */
->>
->> -static void blogic_dealloc_ccb(struct blogic_ccb *ccb)
->> +static void blogic_dealloc_ccb(struct blogic_ccb *ccb, int dma_unmap)
->>   {
->>          struct blogic_adapter *adapter = ccb->adapter;
->>
->>          scsi_dma_unmap(ccb->command);
->
-> blogic_dealloc_ccb() uses "ccb->command". But
->
->> -       pci_unmap_single(adapter->pci_device, ccb->sensedata,
->> +       if (dma_unmap)
->> +               pci_unmap_single(adapter->pci_device, ccb->sensedata,
->>                           ccb->sense_datalen, PCI_DMA_FROMDEVICE);
->>
->>          ccb->command = NULL;
->>          ccb->status = BLOGIC_CCB_FREE;
->>          ccb->next = adapter->free_ccbs;
->> @@ -3177,13 +3179,21 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
->>                          ccb->legacy_tag = queuetag;
->>                  }
->>          }
->>          memcpy(ccb->cdb, cdb, cdblen);
->>          ccb->sense_datalen = SCSI_SENSE_BUFFERSIZE;
->> -       ccb->sensedata = pci_map_single(adapter->pci_device,
->> +       sense_buf = pci_map_single(adapter->pci_device,
->>                                  command->sense_buffer, ccb->sense_datalen,
->>                                  PCI_DMA_FROMDEVICE);
->> +       if (dma_mapping_error(&adapter->pci_device->dev, sense_buf)) {
->> +               blogic_err("DMA mapping for sense data buffer failed\n",
->> +                               adapter);
->> +               scsi_dma_map(command);
->> +               blogic_dealloc_ccb(ccb, 0);
->
-> when was "ccb->command = command;" called before calling blogic_dealloc_ccb()?
->
->> +               return SCSI_MLQUEUE_HOST_BUSY;
->> +       }
->> +       ccb->sensedata = sense_buf;
->>          ccb->command = command;
->>          command->scsi_done = comp_cb;
->>          if (blogic_multimaster_type(adapter)) {
->>                  /*
->>                     Place the CCB in an Outgoing Mailbox. The higher levels
->
-> Also, what happens if "scsi_dma_map(command);" returned -ENOMEM ?
-> If you are calling scsi_dma_map() because blogic_dealloc_ccb() calls
-> scsi_dma_unmap(), why can't we do like
->
->    {
->            struct blogic_adapter *adapter = ccb->adapter;
->            ccb->command = NULL;
->            ccb->status = BLOGIC_CCB_FREE;
->            ccb->next = adapter->free_ccbs;
->            adapter->free_ccbs = ccb;
->    }
->
-> instead of
->
->    scsi_dma_map(command);
->    blogic_dealloc_ccb(ccb);
->
-> ?
->
 
-That is a typo. I was going to call just scsi_dma_unmap(), had copied 
-down the previous down the previous scsi_dma_map() line, read the code 
-further and decided I needed to call blogic_dealloc_ccb() instead so we 
-don't leak CCBs, added the call to blogic_dealloc_ccb() and forgot to 
-delete the previously added and unfinished line. scsi_dma_map() had 
-already been called earlier which is why scsi_dma_unmap() needs to be 
-called which is taken care of by blogic_dealloc_ccb().
+--Apple-Mail=_8C661A14-D25D-4675-991C-07E8BED7466D
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-I need to delete the call to scsi_dma_map() which was not supposed to be 
-there and move "ccb->command = command;" up before the call to 
-dma_mapping_error(). I will send out an updated patch.
+The assumption that sizeof(long) >=3D sizeof(resource_size_t) can lead =
+to
+truncation of the PCI resource address, meaning this driver didn't work
+on 32-bit systems with 64-bit PCI adressing ranges.
 
-Good catch. Thanks!
+Signed-off-by: Ben Collins <ben.c@servergy.com>
+Cc: Sumit Saxena <Sumit.Saxena@lsi.com>
+Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>
+---
+ drivers/scsi/megaraid/megaraid_sas.h      | 1 -
+ drivers/scsi/megaraid/megaraid_sas_base.c | 5 +++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h =
+b/drivers/scsi/megaraid/megaraid_sas.h
+index 04a42a5..2f58758 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1460,7 +1460,6 @@ struct megasas_instance {
+ 	u32 *reply_queue;
+ 	dma_addr_t reply_queue_h;
+=20
+-	unsigned long base_addr;
+ 	struct megasas_register_set __iomem *reg_set;
+ 	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
+ 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c =
+b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 1f0ca68..5df5522 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3498,6 +3498,7 @@ static int megasas_init_fw(struct megasas_instance =
+*instance)
+ 	u32 max_sectors_1;
+ 	u32 max_sectors_2;
+ 	u32 tmp_sectors, msix_enable, scratch_pad_2;
++	resource_size_t base_addr;
+ 	struct megasas_register_set __iomem *reg_set;
+ 	struct megasas_ctrl_info *ctrl_info;
+ 	unsigned long bar_list;
+@@ -3506,14 +3507,14 @@ static int megasas_init_fw(struct =
+megasas_instance *instance)
+ 	/* Find first memory bar */
+ 	bar_list =3D pci_select_bars(instance->pdev, IORESOURCE_MEM);
+ 	instance->bar =3D find_first_bit(&bar_list, sizeof(unsigned =
+long));
+-	instance->base_addr =3D pci_resource_start(instance->pdev, =
+instance->bar);
+ 	if (pci_request_selected_regions(instance->pdev, instance->bar,
+ 					 "megasas: LSI")) {
+ 		printk(KERN_DEBUG "megasas: IO memory region busy!\n");
+ 		return -EBUSY;
+ 	}
+=20
+-	instance->reg_set =3D ioremap_nocache(instance->base_addr, =
+8192);
++	base_addr =3D pci_resource_start(instance->pdev, instance->bar);
++	instance->reg_set =3D ioremap_nocache(base_addr, 8192);
+=20
+ 	if (!instance->reg_set) {
+ 		printk(KERN_DEBUG "megasas: Failed to map IO mem\n");
+--=20
+1.8.3.2
+
 
 --
-Khalid
+Ben Collins - Principal Architect
+Servergy, Inc. - www.servergy.com
+
+
+--Apple-Mail=_8C661A14-D25D-4675-991C-07E8BED7466D
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iEYEARECAAYFAlIzQXQACgkQbVJJsWDoC1tUswCfRJlKhH65Zf4F70z9v9q/exO/
+S4QAoKYpdUE6QgVHQvfpeTe6dVwfhKO5
+=Sa2U
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_8C661A14-D25D-4675-991C-07E8BED7466D--
