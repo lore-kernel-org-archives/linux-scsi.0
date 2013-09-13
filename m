@@ -1,40 +1,57 @@
-From: Antonio Alecrim Jr <antonio.alecrim@gmail.com>
-Subject: [PATCH 1/1] scsi:aic7xxx_old: fix: add missing enum ahc_chip entries
-Date: Fri, 13 Sep 2013 14:27:29 -0300
-Message-ID: <1379093249-5493-1-git-send-email-antonio.alecrim@gmail.com>
+From: akpm@linux-foundation.org
+Subject: [patch 1/5] drivers/scsi/a100u2w.c: convert to module_pci_driver
+Date: Fri, 13 Sep 2013 14:52:26 -0700
+Message-ID: <20130913215226.831285A427E@corp2gmr1-2.hot.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Antonio Alecrim Jr <antonio.alecrim@gmail.com>
+Content-Type: text/plain; charset=ASCII
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vc0-f202.google.com ([209.85.220.202]:53395 "EHLO
+	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755360Ab3IMVw1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 17:52:27 -0400
+Received: by mail-vc0-f202.google.com with SMTP id gd11so227973vcb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Sep 2013 14:52:27 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, clbchenlibo.chen@huawei.com
 
-Due to this missing enum entries some switch cases have
-unreached conditions:
-drivers/scsi/aic7xxx_old.c: In function =E2=80=98aic7xxx_register=E2=80=
-=99:
-drivers/scsi/aic7xxx_old.c:7901:5: warning: case value =E2=80=98257=E2=80=
-=99 not in enumerated type =E2=80=98ahc_chip=E2=80=99 [-Wswitch]
+From: Libo Chen <clbchenlibo.chen@huawei.com>
+Subject: drivers/scsi/a100u2w.c: convert to module_pci_driver
 
-Signed-off-by: Antonio Alecrim Jr <antonio.alecrim@gmail.com>
+Use module_pci_driver instead of init/exit, make code clean.
+
+Signed-off-by: Libo Chen <libo.chen@huawei.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/scsi/aic7xxx_old.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/aic7xxx_old.c b/drivers/scsi/aic7xxx_old.c
-index 33ec9c6..643e214 100644
---- a/drivers/scsi/aic7xxx_old.c
-+++ b/drivers/scsi/aic7xxx_old.c
-@@ -728,6 +728,8 @@ typedef enum {
-   AHC_VL               =3D 0x0100,
-   AHC_EISA             =3D 0x0200,
-   AHC_PCI              =3D 0x0400,
-+  AHC_AIC7770_EISA     =3D AHC_AIC7770|AHC_EISA,
-+  AHC_AIC7770_VL       =3D AHC_AIC7770|AHC_VL,
- } ahc_chip;
-=20
- typedef enum {
---=20
-1.8.3.1
+ drivers/scsi/a100u2w.c |   12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+diff -puN drivers/scsi/a100u2w.c~drivers-scsi-a100u2w-convert-to-module_pci_driver drivers/scsi/a100u2w.c
+--- a/drivers/scsi/a100u2w.c~drivers-scsi-a100u2w-convert-to-module_pci_driver
++++ a/drivers/scsi/a100u2w.c
+@@ -1227,19 +1227,9 @@ static struct pci_driver inia100_pci_dri
+ 	.remove		= inia100_remove_one,
+ };
+ 
+-static int __init inia100_init(void)
+-{
+-	return pci_register_driver(&inia100_pci_driver);
+-}
+-
+-static void __exit inia100_exit(void)
+-{
+-	pci_unregister_driver(&inia100_pci_driver);
+-}
++module_pci_driver(inia100_pci_driver);
+ 
+ MODULE_DESCRIPTION("Initio A100U2W SCSI driver");
+ MODULE_AUTHOR("Initio Corporation");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
+-module_init(inia100_init);
+-module_exit(inia100_exit);
+_
