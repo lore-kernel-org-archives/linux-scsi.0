@@ -1,65 +1,37 @@
-From: akpm@linux-foundation.org
-Subject: [patch 2/5] drivers/scsi/dc395x.c: convert to module_pci_driver
-Date: Fri, 13 Sep 2013 14:52:27 -0700
-Message-ID: <20130913215227.71B325A41B2@corp2gmr1-2.hot.corp.google.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch 1/5] drivers/scsi/a100u2w.c: convert to module_pci_driver
+Date: Fri, 13 Sep 2013 15:14:35 -0700
+Message-ID: <1379110475.2198.52.camel@dabdike.int.hansenpartnership.com>
+References: <20130913215226.831285A427E@corp2gmr1-2.hot.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yh0-f74.google.com ([209.85.213.74]:47864 "EHLO
-	mail-yh0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754852Ab3IMWAR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 18:00:17 -0400
-Received: by mail-yh0-f74.google.com with SMTP id c41so228657yho.5
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Sep 2013 15:00:17 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55996 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754860Ab3IMWOh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Sep 2013 18:14:37 -0400
+In-Reply-To: <20130913215226.831285A427E@corp2gmr1-2.hot.corp.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, clbchenlibo.chen@huawei.com
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, clbchenlibo.chen@huawei.com
 
-From: Libo Chen <clbchenlibo.chen@huawei.com>
-Subject: drivers/scsi/dc395x.c: convert to module_pci_driver
+On Fri, 2013-09-13 at 14:52 -0700, akpm@linux-foundation.org wrote:
+> From: Libo Chen <clbchenlibo.chen@huawei.com>
+> Subject: drivers/scsi/a100u2w.c: convert to module_pci_driver
+> 
+> Use module_pci_driver instead of init/exit, make code clean.
 
-Signed-off-by: Libo Chen <libo.chen@huawei.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+To be honest, I don't really agree that any of these patches add value.
+Sure, for new drivers we should be using module_pci_driver, but for
+existing ones it's just pointless churn.
 
- drivers/scsi/dc395x.c |   24 +-----------------------
- 1 file changed, 1 insertion(+), 23 deletions(-)
+That said, if the maintainers want this, I'll take it.  That means we
+don't do this for the unmaintained drivers (dmx3191d, a100u2w) but we
+might for the others.
 
-diff -puN drivers/scsi/dc395x.c~drivers-scsi-dc395x-convert-to-module_pci_driver drivers/scsi/dc395x.c
---- a/drivers/scsi/dc395x.c~drivers-scsi-dc395x-convert-to-module_pci_driver
-+++ a/drivers/scsi/dc395x.c
-@@ -4882,29 +4882,7 @@ static struct pci_driver dc395x_driver =
- 	.remove         = dc395x_remove_one,
- };
- 
--
--/**
-- * dc395x_module_init - Module initialization function
-- *
-- * Used by both module and built-in driver to initialise this driver.
-- **/
--static int __init dc395x_module_init(void)
--{
--	return pci_register_driver(&dc395x_driver);
--}
--
--
--/**
-- * dc395x_module_exit - Module cleanup function.
-- **/
--static void __exit dc395x_module_exit(void)
--{
--	pci_unregister_driver(&dc395x_driver);
--}
--
--
--module_init(dc395x_module_init);
--module_exit(dc395x_module_exit);
-+module_pci_driver(dc395x_driver);
- 
- MODULE_AUTHOR("C.L. Huang / Erich Chen / Kurt Garloff");
- MODULE_DESCRIPTION("SCSI host adapter driver for Tekram TRM-S1040 based adapters: Tekram DC395 and DC315 series");
-_
+James
+
+
