@@ -1,11 +1,14 @@
 From: Andy Whitcroft <apw@canonical.com>
-Subject: [PATCH 0/4] Hyper-V TRIM support
-Date: Fri, 13 Sep 2013 13:58:25 +0100
-Message-ID: <1379077109-29606-1-git-send-email-apw@canonical.com>
+Subject: [PATCH 2/4] scsi: add scsi device flag to request READ CAPACITY (16)
+ be preferred
+Date: Fri, 13 Sep 2013 13:58:27 +0100
+Message-ID: <1379077109-29606-3-git-send-email-apw@canonical.com>
+References: <1379077109-29606-1-git-send-email-apw@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1379077109-29606-1-git-send-email-apw@canonical.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
@@ -19,51 +22,37 @@ To: "James E.J. Bottomley" <JBottomley@parallels.com>, "K. Y. Srinivasan" <kys@m
 Cc: Andy Whitcroft <apw@canonical.com>, devel@linuxdriverproject.org, Ben Howard <ben.howard@canonical.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-tl;dr -- enable TRIM support for Hyper-V emulated disks.
+BugLink: http://bugs.launchpad.net/bugs/1223499
+Signed-off-by: Andy Whitcroft <apw@canonical.com>
+---
+ drivers/scsi/sd.c          | 2 ++
+ include/scsi/scsi_device.h | 1 +
+ 2 files changed, 3 insertions(+)
 
-The Hyper-V hypervisor can support TRIM for its devices, advertising this
-via the appropriate VPD pages.  However the emulated disks only claim
-to be SPC-2 devices.  According to the specs VPD pages (in general) did
-exist at SPC-2 but the specific pages we interogate for the TRIM support
-did not until SPC-3 therefore the kernel avoids reading the relevant pages
-for SPC-2 devices and prevents TRIM from being offered for these devices.
-Additionally at SPC-2 we prefer ReadCapacity10 over ReadCapacity16 and
-unless we use RC16 we will not identify the device as TRIM capable also
-preventing TRIM being offered.
-
-As the VPD page zero does list which pages are valid for each device, it
-could be argued that we could simply attempt to use these pages for all
-devices which claim to be SPC-2 and above.  While this seems valid the
-code documents a number of devices which take badly to having even VPD
-page 0 interogated even when supposedly supported.  Therefore it seems
-appropriate to add a scsi device flag to allow a device to request SPC-3
-VPD pages be used when only at SPC-2.
-
-Similarly for the ReadCapacity selection it seems dangerous to invert
-the order for all SPC-2 devices.  So it seems appropriate to add a scsi
-device flag to request we try RC16 before RC10 (mirroring the existing
-flag for the opposite).
-
-The following four patches add the two scsi device flags and select those
-flags for the Hyper-V emulated disks.
-
-Patches against v3.11.
-
-Comments?
-
--apw
-
-Andy Whitcroft (4):
-  scsi: add scsi device flag to request VPD pages be used at SPC-2
-  scsi: add scsi device flag to request READ CAPACITY (16) be preferred
-  scsi: hyper-v storage -- mark as VPD capable at SPC-2
-  scsi: hyper-v storage -- mark as preferring READ CAPACITY (16) at
-    SPC-2
-
- drivers/scsi/sd.c          | 8 +++++++-
- drivers/scsi/storvsc_drv.c | 2 ++
- include/scsi/scsi_device.h | 2 ++
- 3 files changed, 11 insertions(+), 1 deletion(-)
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5a8a04d..eba4d6c 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2104,6 +2104,8 @@ static int sd_try_rc16_first(struct scsi_device *sdp)
+ 		return 1;
+ 	if (scsi_device_protection(sdp))
+ 		return 1;
++	if (sdp->try_rc_16_first)
++		return 1;
+ 	return 0;
+ }
+ 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 9b7fdb6..df3ed43 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -165,6 +165,7 @@ struct scsi_device {
+ 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
+ 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+ 	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
++	unsigned try_rc_16_first:1;	/* Try READ_CAPACACITY_16 first */
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
+ 	unsigned wce_default_on:1;	/* Cache is ON by default */
+ 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
 -- 
 1.8.1.2
