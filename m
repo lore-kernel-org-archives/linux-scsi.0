@@ -1,60 +1,69 @@
-From: Prarit Bhargava <prarit@redhat.com>
-Subject: [PATCH] scsi, aic94xx Fix uninitialized warning
-Date: Fri, 13 Sep 2013 08:31:36 -0400
-Message-ID: <1379075496-20381-1-git-send-email-prarit@redhat.com>
+From: Andy Whitcroft <apw@canonical.com>
+Subject: [PATCH 0/4] Hyper-V TRIM support
+Date: Fri, 13 Sep 2013 13:58:25 +0100
+Message-ID: <1379077109-29606-1-git-send-email-apw@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13770 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752046Ab3IMMbr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Sep 2013 08:31:47 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Andy Whitcroft <apw@canonical.com>, devel@linuxdriverproject.org, Ben Howard <ben.howard@canonical.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>, dmilburn@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-=46ix uninitialized warning.
+tl;dr -- enable TRIM support for Hyper-V emulated disks.
 
-drivers/scsi/aic94xx/aic94xx_sds.c: In function =E2=80=98asd_process_ct=
-rl_a_user=E2=80=99:
-drivers/scsi/aic94xx/aic94xx_sds.c:597:21: error: =E2=80=98offs=E2=80=99=
- may be used uninitialized in this function [-Werror=3Dmaybe-uninitiali=
-zed]
-  asd_read_reg_string(asd_ha, buffer, asd_ha->hw_prof.flash.bar+offs,
-                     ^
-drivers/scsi/aic94xx/aic94xx_sds.c:985:6: note: =E2=80=98offs=E2=80=99 =
-was declared here
-  u32 offs, size;
-      ^
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-Cc: dmilburn@redhat.com
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
----
- drivers/scsi/aic94xx/aic94xx_sds.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The Hyper-V hypervisor can support TRIM for its devices, advertising this
+via the appropriate VPD pages.  However the emulated disks only claim
+to be SPC-2 devices.  According to the specs VPD pages (in general) did
+exist at SPC-2 but the specific pages we interogate for the TRIM support
+did not until SPC-3 therefore the kernel avoids reading the relevant pages
+for SPC-2 devices and prevents TRIM from being offered for these devices.
+Additionally at SPC-2 we prefer ReadCapacity10 over ReadCapacity16 and
+unless we use RC16 we will not identify the device as TRIM capable also
+preventing TRIM being offered.
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/=
-aic94xx_sds.c
-index edb43fd..2f1751a 100644
---- a/drivers/scsi/aic94xx/aic94xx_sds.c
-+++ b/drivers/scsi/aic94xx/aic94xx_sds.c
-@@ -982,7 +982,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_st=
-ruct *asd_ha,
- 				   struct asd_flash_dir *flash_dir)
- {
- 	int err, i;
--	u32 offs, size;
-+	u32 uninitialized_var(offs), size;
- 	struct asd_ll_el *el;
- 	struct asd_ctrla_phy_settings *ps;
- 	struct asd_ctrla_phy_settings dflt_ps;
---=20
-1.7.9.3
+As the VPD page zero does list which pages are valid for each device, it
+could be argued that we could simply attempt to use these pages for all
+devices which claim to be SPC-2 and above.  While this seems valid the
+code documents a number of devices which take badly to having even VPD
+page 0 interogated even when supposedly supported.  Therefore it seems
+appropriate to add a scsi device flag to allow a device to request SPC-3
+VPD pages be used when only at SPC-2.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Similarly for the ReadCapacity selection it seems dangerous to invert
+the order for all SPC-2 devices.  So it seems appropriate to add a scsi
+device flag to request we try RC16 before RC10 (mirroring the existing
+flag for the opposite).
+
+The following four patches add the two scsi device flags and select those
+flags for the Hyper-V emulated disks.
+
+Patches against v3.11.
+
+Comments?
+
+-apw
+
+Andy Whitcroft (4):
+  scsi: add scsi device flag to request VPD pages be used at SPC-2
+  scsi: add scsi device flag to request READ CAPACITY (16) be preferred
+  scsi: hyper-v storage -- mark as VPD capable at SPC-2
+  scsi: hyper-v storage -- mark as preferring READ CAPACITY (16) at
+    SPC-2
+
+ drivers/scsi/sd.c          | 8 +++++++-
+ drivers/scsi/storvsc_drv.c | 2 ++
+ include/scsi/scsi_device.h | 2 ++
+ 3 files changed, 11 insertions(+), 1 deletion(-)
+
+-- 
+1.8.1.2
