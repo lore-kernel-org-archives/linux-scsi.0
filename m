@@ -1,43 +1,60 @@
-From: Gerd Hoffmann <kraxel@redhat.com>
-Subject: [PATCH v3 2/6] uas: properly reinitialize in uas_eh_bus_reset_handler
-Date: Fri, 13 Sep 2013 13:27:11 +0200
-Message-ID: <1379071635-30701-3-git-send-email-kraxel@redhat.com>
-References: <1379071635-30701-1-git-send-email-kraxel@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1379071635-30701-1-git-send-email-kraxel@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-usb@vger.kernel.org
-Cc: Gerd Hoffmann <kraxel@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "open list:USB ATTACHED SCSI" <linux-scsi@vger.kernel.org>, "open list:USB MASS STORAGE..." <usb-storage@lists.one-eyed-alien.net>, open list <linux-kernel@vger.kernel.org>
+From: Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH] scsi, aic94xx Fix uninitialized warning
+Date: Fri, 13 Sep 2013 08:31:36 -0400
+Message-ID: <1379075496-20381-1-git-send-email-prarit@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:13770 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752046Ab3IMMbr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Sep 2013 08:31:47 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>, dmilburn@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+=46ix uninitialized warning.
+
+drivers/scsi/aic94xx/aic94xx_sds.c: In function =E2=80=98asd_process_ct=
+rl_a_user=E2=80=99:
+drivers/scsi/aic94xx/aic94xx_sds.c:597:21: error: =E2=80=98offs=E2=80=99=
+ may be used uninitialized in this function [-Werror=3Dmaybe-uninitiali=
+zed]
+  asd_read_reg_string(asd_ha, buffer, asd_ha->hw_prof.flash.bar+offs,
+                     ^
+drivers/scsi/aic94xx/aic94xx_sds.c:985:6: note: =E2=80=98offs=E2=80=99 =
+was declared here
+  u32 offs, size;
+      ^
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+Cc: dmilburn@redhat.com
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 ---
- drivers/usb/storage/uas.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/aic94xx/aic94xx_sds.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index d966b59..fc08ee9 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -85,6 +85,8 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
- 				struct uas_dev_info *devinfo, gfp_t gfp);
- static void uas_do_work(struct work_struct *work);
- static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller);
-+static void uas_configure_endpoints(struct uas_dev_info *devinfo);
-+static void uas_free_streams(struct uas_dev_info *devinfo);
- 
- static DECLARE_WORK(uas_work, uas_do_work);
- static DEFINE_SPINLOCK(uas_work_lock);
-@@ -800,7 +802,10 @@ static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
- 	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
- 	usb_kill_anchored_urbs(&devinfo->sense_urbs);
- 	usb_kill_anchored_urbs(&devinfo->data_urbs);
-+	uas_free_streams(devinfo);
- 	err = usb_reset_device(udev);
-+	if (!err)
-+		uas_configure_endpoints(devinfo);
- 	devinfo->resetting = 0;
- 
- 	if (err) {
--- 
-1.8.3.1
+diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/=
+aic94xx_sds.c
+index edb43fd..2f1751a 100644
+--- a/drivers/scsi/aic94xx/aic94xx_sds.c
++++ b/drivers/scsi/aic94xx/aic94xx_sds.c
+@@ -982,7 +982,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_st=
+ruct *asd_ha,
+ 				   struct asd_flash_dir *flash_dir)
+ {
+ 	int err, i;
+-	u32 offs, size;
++	u32 uninitialized_var(offs), size;
+ 	struct asd_ll_el *el;
+ 	struct asd_ctrla_phy_settings *ps;
+ 	struct asd_ctrla_phy_settings dflt_ps;
+--=20
+1.7.9.3
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
