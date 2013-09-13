@@ -1,55 +1,242 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 02/22] be2iscsi: Fix the MCCQ count leakage
-Date: Thu, 12 Sep 2013 22:09:52 -0700
-Message-ID: <1379049014-32716-2-git-send-email-jayamohan.kallickal@emulex.com>
-References: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 01/22] be2iscsi: Fix Template HDR IOCTL
+Date: Thu, 12 Sep 2013 22:09:51 -0700
+Message-ID: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:39600 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668Ab3IMFgT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:19 -0400
-Received: by mail-pd0-f174.google.com with SMTP id y13so784062pdi.5
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:18 -0700 (PDT)
-In-Reply-To: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:50990 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751668Ab3IMFgR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:17 -0400
+Received: by mail-pd0-f175.google.com with SMTP id q10so782718pdj.34
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:17 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- When MBX CMD is posted in MCCQ and if command times out,during
- mccq resource cleanup for the timed out command  mccq->count
- was not decremented. The led to BUG_ON being hit.
+ Allocating memory in the Host which will be used by the
+ TOE functionality during Session Offload. This fix will
+ allow performance improvement as adapter memory contention
+ will be reduced.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/be2iscsi/be_cmds.c |   45 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_cmds.h |   28 ++++++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_main.c |   41 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/be2iscsi/be_main.h |    2 ++
+ 4 files changed, 116 insertions(+)
 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index bb70dcb..f7788e5 100644
+index e66aa7c..bb70dcb 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -174,6 +174,10 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 			    BEISCSI_LOG_CONFIG,
- 			    "BC_%d : MBX Cmd Completion timed out\n");
- 		rc = -EAGAIN;
-+
-+		/* decrement the mccq used count */
-+		atomic_dec(&phba->ctrl.mcc_obj.q.used);
-+
- 		goto release_mcc_tag;
- 	} else
- 		rc = 0;
-@@ -699,7 +703,7 @@ struct be_mcc_wrb *wrb_from_mccq(struct beiscsi_hba *phba)
- 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
- 	struct be_mcc_wrb *wrb;
+@@ -1104,6 +1104,51 @@ int be_cmd_wrbq_create(struct be_ctrl_info *ctrl, struct be_dma_mem *q_mem,
+ 	return status;
+ }
  
--	BUG_ON(atomic_read(&mccq->used) >= mccq->len);
-+	WARN_ON(atomic_read(&mccq->used) >= mccq->len);
- 	wrb = queue_head_node(mccq);
- 	memset(wrb, 0, sizeof(*wrb));
- 	wrb->tag0 = (mccq->head & 0x000000FF) << 16;
++int be_cmd_iscsi_post_template_hdr(struct be_ctrl_info *ctrl,
++				    struct be_dma_mem *q_mem)
++{
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct be_post_template_pages_req *req = embedded_payload(wrb);
++	int status;
++
++	spin_lock(&ctrl->mbox_lock);
++
++	memset(wrb, 0, sizeof(*wrb));
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
++			   OPCODE_COMMON_ADD_TEMPLATE_HEADER_BUFFERS,
++			   sizeof(*req));
++
++	req->num_pages = PAGES_4K_SPANNED(q_mem->va, q_mem->size);
++	req->type = BEISCSI_TEMPLATE_HDR_TYPE_ISCSI;
++	be_cmd_page_addrs_prepare(req->pages, ARRAY_SIZE(req->pages), q_mem);
++
++	status = be_mbox_notify(ctrl);
++	spin_unlock(&ctrl->mbox_lock);
++	return status;
++}
++
++int be_cmd_iscsi_remove_template_hdr(struct be_ctrl_info *ctrl)
++{
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct be_remove_template_pages_req *req = embedded_payload(wrb);
++	int status;
++
++	spin_lock(&ctrl->mbox_lock);
++
++	memset(wrb, 0, sizeof(*wrb));
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
++			   OPCODE_COMMON_REMOVE_TEMPLATE_HEADER_BUFFERS,
++			   sizeof(*req));
++
++	req->type = BEISCSI_TEMPLATE_HDR_TYPE_ISCSI;
++
++	status = be_mbox_notify(ctrl);
++	spin_unlock(&ctrl->mbox_lock);
++	return status;
++}
++
+ int be_cmd_iscsi_post_sgl_pages(struct be_ctrl_info *ctrl,
+ 				struct be_dma_mem *q_mem,
+ 				u32 page_offset, u32 num_pages)
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 9907308..89c4073 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -162,6 +162,8 @@ struct be_mcc_mailbox {
+ #define OPCODE_COMMON_CQ_CREATE				12
+ #define OPCODE_COMMON_EQ_CREATE				13
+ #define OPCODE_COMMON_MCC_CREATE			21
++#define OPCODE_COMMON_ADD_TEMPLATE_HEADER_BUFFERS	24
++#define OPCODE_COMMON_REMOVE_TEMPLATE_HEADER_BUFFERS	25
+ #define OPCODE_COMMON_GET_CNTL_ATTRIBUTES		32
+ #define OPCODE_COMMON_GET_FW_VERSION			35
+ #define OPCODE_COMMON_MODIFY_EQ_DELAY			41
+@@ -217,6 +219,10 @@ struct phys_addr {
+ 	u32 hi;
+ };
+ 
++struct virt_addr {
++	u32 lo;
++	u32 hi;
++};
+ /**************************
+  * BE Command definitions *
+  **************************/
+@@ -724,6 +730,11 @@ int be_cmd_create_default_pdu_queue(struct be_ctrl_info *ctrl,
+ 				    struct be_queue_info *dq, int length,
+ 				    int entry_size);
+ 
++int be_cmd_iscsi_post_template_hdr(struct be_ctrl_info *ctrl,
++				    struct be_dma_mem *q_mem);
++
++int be_cmd_iscsi_remove_template_hdr(struct be_ctrl_info *ctrl);
++
+ int be_cmd_iscsi_post_sgl_pages(struct be_ctrl_info *ctrl,
+ 				struct be_dma_mem *q_mem, u32 page_offset,
+ 				u32 num_pages);
+@@ -787,6 +798,23 @@ struct be_defq_create_resp {
+ 	u16 rsvd0;
+ } __packed;
+ 
++struct be_post_template_pages_req {
++	struct be_cmd_req_hdr hdr;
++	u16 num_pages;
++#define BEISCSI_TEMPLATE_HDR_TYPE_ISCSI	0x1
++	u16 type;
++	struct phys_addr scratch_pa;
++	struct virt_addr scratch_va;
++	struct virt_addr pages_va;
++	struct phys_addr pages[16];
++} __packed;
++
++struct be_remove_template_pages_req {
++	struct be_cmd_req_hdr hdr;
++	u16 type;
++	u16 rsvd0;
++} __packed;
++
+ struct be_post_sgl_pages_req {
+ 	struct be_cmd_req_hdr hdr;
+ 	u16 num_pages;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index a1f5ac7..0abed0a 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -2517,6 +2517,8 @@ static void beiscsi_find_mem_req(struct beiscsi_hba *phba)
+ 		phba->params.icds_per_ctrl;
+ 	phba->mem_req[HWI_MEM_SGE] = sizeof(struct iscsi_sge) *
+ 		phba->params.num_sge_per_io * phba->params.icds_per_ctrl;
++	phba->mem_req[HWI_MEM_TEMPLATE_HDR] = phba->params.cxns_per_ctrl *
++					      BEISCSI_TEMPLATE_HDR_PER_CXN_SIZE;
+ 
+ 	phba->mem_req[HWI_MEM_ASYNC_HEADER_BUF] =
+ 		num_async_pdu_buf_pages * PAGE_SIZE;
+@@ -3258,6 +3260,36 @@ beiscsi_create_def_data(struct beiscsi_hba *phba,
+ 	return 0;
+ }
+ 
++
++static int
++beiscsi_post_template_hdr(struct beiscsi_hba *phba)
++{
++	struct be_mem_descriptor *mem_descr;
++	struct mem_array *pm_arr;
++	struct be_dma_mem sgl;
++	int status, i;
++
++	mem_descr = phba->init_mem;
++	mem_descr += HWI_MEM_TEMPLATE_HDR;
++	pm_arr = mem_descr->mem_array;
++
++	for (i = 0; i < mem_descr->num_elements; i++) {
++		hwi_build_be_sgl_arr(phba, pm_arr, &sgl);
++		status = be_cmd_iscsi_post_template_hdr(&phba->ctrl, &sgl);
++
++		if (status != 0) {
++			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
++				    "BM_%d : Post Template HDR Failed\n");
++			return status;
++		}
++	}
++
++	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
++		    "BM_%d : Template HDR Pages Posted\n");
++
++	return 0;
++}
++
+ static int
+ beiscsi_post_pages(struct beiscsi_hba *phba)
+ {
+@@ -3437,6 +3469,9 @@ static void hwi_cleanup(struct beiscsi_hba *phba)
+ 
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 	phwi_context = phwi_ctrlr->phwi_ctxt;
++
++	be_cmd_iscsi_remove_template_hdr(ctrl);
++
+ 	for (i = 0; i < phba->params.cxns_per_ctrl; i++) {
+ 		q = &phwi_context->be_wrbq[i];
+ 		if (q->created)
+@@ -3611,6 +3646,12 @@ static int hwi_init_port(struct beiscsi_hba *phba)
+ 		goto error;
+ 	}
+ 
++	status = beiscsi_post_template_hdr(phba);
++	if (status != 0) {
++		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
++			    "BM_%d : Template HDR Posting for CXN Failed\n");
++	}
++
+ 	status = beiscsi_create_wrb_rings(phba,	phwi_context, phwi_ctrlr);
+ 	if (status != 0) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 2c06ef3..3e45257 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -74,6 +74,7 @@
+ 
+ #define BEISCSI_CMD_PER_LUN	128	/* scsi_host->cmd_per_lun */
+ #define BEISCSI_MAX_SECTORS	2048	/* scsi_host->max_sectors */
++#define BEISCSI_TEMPLATE_HDR_PER_CXN_SIZE 128 /* Template size per cxn */
+ 
+ #define BEISCSI_MAX_CMD_LEN	16	/* scsi_host->max_cmd_len */
+ #define BEISCSI_NUM_MAX_LUN	256	/* scsi_host->max_lun */
+@@ -165,6 +166,7 @@ enum be_mem_enum {
+ 	HWI_MEM_WRBH,
+ 	HWI_MEM_SGLH,
+ 	HWI_MEM_SGE,
++	HWI_MEM_TEMPLATE_HDR,
+ 	HWI_MEM_ASYNC_HEADER_BUF,	/* 5 */
+ 	HWI_MEM_ASYNC_DATA_BUF,
+ 	HWI_MEM_ASYNC_HEADER_RING,
 -- 
 1.7.10.4
 
