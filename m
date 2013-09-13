@@ -1,350 +1,69 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 19/22] be2iscsi: Fix Insufficient Buffer Error returned in MBX Completion
-Date: Thu, 12 Sep 2013 22:10:09 -0700
-Message-ID: <1379049014-32716-19-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 18/22] be2iscsi: Fix log level for protocol specific logs
+Date: Thu, 12 Sep 2013 22:10:08 -0700
+Message-ID: <1379049014-32716-18-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:54556 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754554Ab3IMFgu (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:39798 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754468Ab3IMFgu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:50 -0400
-Received: by mail-pd0-f178.google.com with SMTP id w10so783855pde.37
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:49 -0700 (PDT)
+Received: by mail-pa0-f44.google.com with SMTP id fz6so2060306pac.17
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:48 -0700 (PDT)
 In-Reply-To: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- When MBX_Cmd completion happens with error code Insufficient Buffer,
- the MBX_Cmd is posted again with the new buffer size posted by FW.
-
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c  |   20 ++++++---
- drivers/scsi/be2iscsi/be_iscsi.c |   37 +++++++++--------
- drivers/scsi/be2iscsi/be_mgmt.c  |   83 ++++++++++++++++++++++++++++----------
- drivers/scsi/be2iscsi/be_mgmt.h  |    2 +-
- 4 files changed, 99 insertions(+), 43 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   11 ++++++++---
+ drivers/scsi/be2iscsi/be_main.h |    1 +
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 912a7e1..2f7ea95 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -158,8 +158,10 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 	struct be_cmd_resp_hdr *ioctl_resp_hdr;
- 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index af3ec3a..9e9d9c4 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -149,7 +149,8 @@ BEISCSI_RW_ATTR(log_enable, 0x00,
+ 		"\t\t\t\tMiscellaneous Events	: 0x04\n"
+ 		"\t\t\t\tError Handling		: 0x08\n"
+ 		"\t\t\t\tIO Path Events		: 0x10\n"
+-		"\t\t\t\tConfiguration Path	: 0x20\n");
++		"\t\t\t\tConfiguration Path	: 0x20\n"
++		"\t\t\t\tiSCSI Protocol		: 0x40\n");
  
--	if (beiscsi_error(phba))
-+	if (beiscsi_error(phba)) {
-+		free_mcc_tag(&phba->ctrl, tag);
- 		return -EIO;
-+	}
+ DEVICE_ATTR(beiscsi_drvr_ver, S_IRUGO, beiscsi_drvr_ver_disp, NULL);
+ DEVICE_ATTR(beiscsi_adapter_family, S_IRUGO, beiscsi_adap_family_disp, NULL);
+@@ -5029,8 +5030,12 @@ static int beiscsi_task_xmit(struct iscsi_task *task)
+ 		struct beiscsi_hba *phba = NULL;
  
- 	/* wait for the mccq completion */
- 	rc = wait_event_interruptible_timeout(
-@@ -173,7 +175,7 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 			    BEISCSI_LOG_INIT | BEISCSI_LOG_EH |
- 			    BEISCSI_LOG_CONFIG,
- 			    "BC_%d : MBX Cmd Completion timed out\n");
--		rc = -EAGAIN;
-+		rc = -EBUSY;
+ 		phba = ((struct beiscsi_conn *)conn->dd_data)->phba;
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_IO,
+-			    "BM_%d : scsi_dma_map Failed\n");
++		beiscsi_log(phba, KERN_ERR,
++			    BEISCSI_LOG_IO | BEISCSI_LOG_ISCSI,
++			    "BM_%d : scsi_dma_map Failed "
++			    "Driver_ITT : 0x%x ITT : 0x%x Xferlen : 0x%x\n",
++			    be32_to_cpu(io_task->cmd_bhs->iscsi_hdr.itt),
++			    io_task->libiscsi_itt, scsi_bufflen(sc));
  
- 		/* decrement the mccq used count */
- 		atomic_dec(&phba->ctrl.mcc_obj.q.used);
-@@ -212,10 +214,18 @@ int beiscsi_mccq_compl(struct beiscsi_hba *phba,
- 
- 		if (status == MCC_STATUS_INSUFFICIENT_BUFFER) {
- 			ioctl_resp_hdr = (struct be_cmd_resp_hdr *) ioctl_hdr;
--			if (ioctl_resp_hdr->response_length)
--				goto release_mcc_tag;
-+			beiscsi_log(phba, KERN_WARNING,
-+				    BEISCSI_LOG_INIT | BEISCSI_LOG_EH |
-+				    BEISCSI_LOG_CONFIG,
-+				    "BC_%d : Insufficent Buffer Error "
-+				    "Resp_Len : %d Actual_Resp_Len : %d\n",
-+				    ioctl_resp_hdr->response_length,
-+				    ioctl_resp_hdr->actual_resp_len);
-+
-+			rc = -EAGAIN;
-+			goto release_mcc_tag;
- 		}
--		rc = -EAGAIN;
-+		rc = -EIO;
+ 		return num_sg;
  	}
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 88291b0..a8ae6b8 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -1040,6 +1040,7 @@ struct hwi_context_memory {
+ #define BEISCSI_LOG_EH		0x0008	/* Error Handler */
+ #define BEISCSI_LOG_IO		0x0010	/* IO Code Path */
+ #define BEISCSI_LOG_CONFIG	0x0020	/* CONFIG Code Path */
++#define BEISCSI_LOG_ISCSI	0x0040	/* SCSI/iSCSI Protocol related Logs */
  
- release_mcc_tag:
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 66c44c6..bcbcb72 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -271,13 +271,17 @@ static int beiscsi_create_ipv6_iface(struct beiscsi_hba *phba)
- 
- void beiscsi_create_def_ifaces(struct beiscsi_hba *phba)
- {
--	struct be_cmd_get_if_info_resp if_info;
-+	struct be_cmd_get_if_info_resp *if_info;
- 
--	if (!mgmt_get_if_info(phba, BE2_IPV4, &if_info))
-+	if (!mgmt_get_if_info(phba, BE2_IPV4, &if_info)) {
- 		beiscsi_create_ipv4_iface(phba);
-+		kfree(if_info);
-+	}
- 
--	if (!mgmt_get_if_info(phba, BE2_IPV6, &if_info))
-+	if (!mgmt_get_if_info(phba, BE2_IPV6, &if_info)) {
- 		beiscsi_create_ipv6_iface(phba);
-+		kfree(if_info);
-+	}
- }
- 
- void beiscsi_destroy_def_ifaces(struct beiscsi_hba *phba)
-@@ -518,59 +522,60 @@ static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
- 		struct iscsi_iface *iface, int param,
- 		char *buf)
- {
--	struct be_cmd_get_if_info_resp if_info;
-+	struct be_cmd_get_if_info_resp *if_info;
- 	int len, ip_type = BE2_IPV4;
- 
--	memset(&if_info, 0, sizeof(if_info));
--
- 	if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
- 		ip_type = BE2_IPV6;
- 
- 	len = mgmt_get_if_info(phba, ip_type, &if_info);
--	if (len)
-+	if (len) {
-+		kfree(if_info);
- 		return len;
-+	}
- 
- 	switch (param) {
- 	case ISCSI_NET_PARAM_IPV4_ADDR:
--		len = sprintf(buf, "%pI4\n", &if_info.ip_addr.addr);
-+		len = sprintf(buf, "%pI4\n", if_info->ip_addr.addr);
- 		break;
- 	case ISCSI_NET_PARAM_IPV6_ADDR:
--		len = sprintf(buf, "%pI6\n", &if_info.ip_addr.addr);
-+		len = sprintf(buf, "%pI6\n", if_info->ip_addr.addr);
- 		break;
- 	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
--		if (!if_info.dhcp_state)
-+		if (!if_info->dhcp_state)
- 			len = sprintf(buf, "static\n");
- 		else
- 			len = sprintf(buf, "dhcp\n");
- 		break;
- 	case ISCSI_NET_PARAM_IPV4_SUBNET:
--		len = sprintf(buf, "%pI4\n", &if_info.ip_addr.subnet_mask);
-+		len = sprintf(buf, "%pI4\n", if_info->ip_addr.subnet_mask);
- 		break;
- 	case ISCSI_NET_PARAM_VLAN_ENABLED:
- 		len = sprintf(buf, "%s\n",
--			     (if_info.vlan_priority == BEISCSI_VLAN_DISABLE)
-+			     (if_info->vlan_priority == BEISCSI_VLAN_DISABLE)
- 			     ? "Disabled\n" : "Enabled\n");
- 		break;
- 	case ISCSI_NET_PARAM_VLAN_ID:
--		if (if_info.vlan_priority == BEISCSI_VLAN_DISABLE)
-+		if (if_info->vlan_priority == BEISCSI_VLAN_DISABLE)
- 			return -EINVAL;
- 		else
- 			len = sprintf(buf, "%d\n",
--				     (if_info.vlan_priority &
-+				     (if_info->vlan_priority &
- 				     ISCSI_MAX_VLAN_ID));
- 		break;
- 	case ISCSI_NET_PARAM_VLAN_PRIORITY:
--		if (if_info.vlan_priority == BEISCSI_VLAN_DISABLE)
-+		if (if_info->vlan_priority == BEISCSI_VLAN_DISABLE)
- 			return -EINVAL;
- 		else
- 			len = sprintf(buf, "%d\n",
--				     ((if_info.vlan_priority >> 13) &
-+				     ((if_info->vlan_priority >> 13) &
- 				     ISCSI_MAX_VLAN_PRIORITY));
- 		break;
- 	default:
- 		WARN_ON(1);
- 	}
- 
-+	kfree(if_info);
- 	return len;
- }
- 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index fb61b58..aafeaf0 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -825,11 +825,14 @@ static int mgmt_exec_nonemb_cmd(struct beiscsi_hba *phba,
- 
- 	rc = beiscsi_mccq_compl(phba, tag, NULL, nonemb_cmd->va);
- 	if (rc) {
-+		/* Check if the IOCTL needs to be re-issued */
-+		if (rc == -EAGAIN)
-+			return rc;
-+
- 		beiscsi_log(phba, KERN_ERR,
- 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
- 			    "BG_%d : mgmt_exec_nonemb_cmd Failed status\n");
- 
--		rc = -EIO;
- 		goto free_cmd;
- 	}
- 
-@@ -938,7 +941,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
- 		uint32_t boot_proto)
- {
- 	struct be_cmd_get_def_gateway_resp gtway_addr_set;
--	struct be_cmd_get_if_info_resp if_info;
-+	struct be_cmd_get_if_info_resp *if_info;
- 	struct be_cmd_set_dhcp_req *dhcpreq;
- 	struct be_cmd_rel_dhcp_req *reldhcp;
- 	struct be_dma_mem nonemb_cmd;
-@@ -949,16 +952,17 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
- 	if (mgmt_get_all_if_id(phba))
- 		return -EIO;
- 
--	memset(&if_info, 0, sizeof(if_info));
- 	ip_type = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
- 		BE2_IPV6 : BE2_IPV4 ;
- 
- 	rc = mgmt_get_if_info(phba, ip_type, &if_info);
--	if (rc)
-+	if (rc) {
-+		kfree(if_info);
- 		return rc;
-+	}
- 
- 	if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
--		if (if_info.dhcp_state) {
-+		if (if_info->dhcp_state) {
- 			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
- 				    "BG_%d : DHCP Already Enabled\n");
- 			return 0;
-@@ -971,9 +975,9 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
- 				IP_V6_LEN : IP_V4_LEN;
- 
- 	} else {
--		if (if_info.dhcp_state) {
-+		if (if_info->dhcp_state) {
- 
--			memset(&if_info, 0, sizeof(if_info));
-+			memset(if_info, 0, sizeof(*if_info));
- 			rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
- 				OPCODE_COMMON_ISCSI_NTWK_REL_STATELESS_IP_ADDR,
- 				sizeof(*reldhcp));
-@@ -996,8 +1000,8 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
- 	}
- 
- 	/* Delete the Static IP Set */
--	if (if_info.ip_addr.addr[0]) {
--		rc = mgmt_static_ip_modify(phba, &if_info, ip_param, NULL,
-+	if (if_info->ip_addr.addr[0]) {
-+		rc = mgmt_static_ip_modify(phba, if_info, ip_param, NULL,
- 					   IP_ACTION_DEL);
- 		if (rc)
- 			return rc;
-@@ -1043,7 +1047,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
- 
- 		return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
- 	} else {
--		return mgmt_static_ip_modify(phba, &if_info, ip_param,
-+		return mgmt_static_ip_modify(phba, if_info, ip_param,
- 					     subnet_param, IP_ACTION_ADD);
- 	}
- 
-@@ -1108,27 +1112,64 @@ int mgmt_get_gateway(struct beiscsi_hba *phba, int ip_type,
- }
- 
- int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
--		     struct be_cmd_get_if_info_resp *if_info)
-+		     struct be_cmd_get_if_info_resp **if_info)
- {
- 	struct be_cmd_get_if_info_req *req;
- 	struct be_dma_mem nonemb_cmd;
-+	uint32_t ioctl_size = sizeof(struct be_cmd_get_if_info_resp);
- 	int rc;
- 
- 	if (mgmt_get_all_if_id(phba))
- 		return -EIO;
- 
--	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
--				 OPCODE_COMMON_ISCSI_NTWK_GET_IF_INFO,
--				 sizeof(*if_info));
--	if (rc)
--		return rc;
-+	do {
-+		rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
-+					 OPCODE_COMMON_ISCSI_NTWK_GET_IF_INFO,
-+					 ioctl_size);
-+		if (rc)
-+			return rc;
- 
--	req = nonemb_cmd.va;
--	req->interface_hndl = phba->interface_handle;
--	req->ip_type = ip_type;
-+		req = nonemb_cmd.va;
-+		req->interface_hndl = phba->interface_handle;
-+		req->ip_type = ip_type;
-+
-+		/* Allocate memory for if_info */
-+		*if_info = kzalloc(ioctl_size, GFP_KERNEL);
-+		if (!*if_info) {
-+			beiscsi_log(phba, KERN_ERR,
-+				    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
-+				    "BG_%d : Memory Allocation Failure\n");
-+
-+				/* Free the DMA memory for the IOCTL issuing */
-+				pci_free_consistent(phba->ctrl.pdev,
-+						    nonemb_cmd.size,
-+						    nonemb_cmd.va,
-+						    nonemb_cmd.dma);
-+				return -ENOMEM;
-+		}
- 
--	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, if_info,
--				    sizeof(*if_info));
-+		rc =  mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, *if_info,
-+					   ioctl_size);
-+
-+		/* Check if the error is because of Insufficent_Buffer */
-+		if (rc == -EAGAIN) {
-+
-+			/* Get the new memory size */
-+			ioctl_size = ((struct be_cmd_resp_hdr *)
-+				      nonemb_cmd.va)->actual_resp_len;
-+			ioctl_size += sizeof(struct be_cmd_req_hdr);
-+
-+			/* Free the previous allocated DMA memory */
-+			pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
-+					    nonemb_cmd.va,
-+					    nonemb_cmd.dma);
-+
-+			/* Free the virtual memory */
-+			kfree(*if_info);
-+		} else
-+			break;
-+	} while (true);
-+	return rc;
- }
- 
- int mgmt_get_nic_conf(struct beiscsi_hba *phba,
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 645e144..01b8c97 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -294,7 +294,7 @@ int mgmt_get_nic_conf(struct beiscsi_hba *phba,
- 		      struct be_cmd_get_nic_conf_resp *mac);
- 
- int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
--		     struct be_cmd_get_if_info_resp *if_info);
-+		     struct be_cmd_get_if_info_resp **if_info);
- 
- int mgmt_get_gateway(struct beiscsi_hba *phba, int ip_type,
- 		     struct be_cmd_get_def_gateway_resp *gateway);
+ #define beiscsi_log(phba, level, mask, fmt, arg...) \
+ do { \
 -- 
 1.7.10.4
 
