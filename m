@@ -1,34 +1,53 @@
-From: Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: Ejected Nook (usb mass storage) prevents suspend
-Date: Fri, 13 Sep 2013 17:19:11 +0200
-Message-ID: <1379085551.2310.44.camel@linux-fkkt.site>
-References: <1375452665.2138.17.camel@linux-fkkt.site>
-	 <Pine.LNX.4.44L0.1308021015200.1176-100000@iolanthe.rowland.org>
-	 <CALCETrWQuJs_7-VoOVaZQMCdZhj2VjQCaH5NWie=h4NSAM9VSg@mail.gmail.com>
+From: Andy Whitcroft <apw@canonical.com>
+Subject: Re: [PATCH 0/4] Hyper-V TRIM support
+Date: Fri, 13 Sep 2013 16:40:53 +0100
+Message-ID: <20130913154053.GS5382@dm>
+References: <1379077109-29606-1-git-send-email-apw@canonical.com>
+ <1379084278.2181.3.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CALCETrWQuJs_7-VoOVaZQMCdZhj2VjQCaH5NWie=h4NSAM9VSg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:52470 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756586Ab3IMPk5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 11:40:57 -0400
+Received: by mail-wi0-f171.google.com with SMTP id hm2so976137wib.10
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Sep 2013 08:40:56 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1379084278.2181.3.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Ben Howard <ben.howard@canonical.com>, linux-scsi@vger.kernel.org, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org
 
-On Fri, 2013-09-13 at 06:37 -0700, Andy Lutomirski wrote:
-> What's the status of this?  Do I still need to test it?
+On Fri, Sep 13, 2013 at 07:57:58AM -0700, James Bottomley wrote:
+
+> This is an awful lot of contortions (which don't seem to have any other
+> users on the horizon) to support a device that's not standards
+> compliant.  What about this, it's simple, it does the right thing and
+> it's contained in the driver of the problem device.
 > 
-> I won't have access to the Nook that triggered it the first time for a
-> couple weeks, but I could try to find another device like that.
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 83ec1aa..bd86a4b 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1438,6 +1438,12 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+>  
+>  	sdevice->no_write_same = 1;
+>  
+> +	/*
+> +	 * hyper-v is stupid and lies about its capabilities
+> +	 * If we pretend to be SPC-3, we send RC16 which activates trim
+> +	 */
+> +	sdevice->scsi_level = SCSI_SPC_3;
+> +
+>  	return 0;
+>  }
 
-It works for me.
-I'll push upstream in a form that Alan likes.
+I will get that tested and see if there are any other negative side effects.
 
-	Regards
-		Oliver
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-apw
