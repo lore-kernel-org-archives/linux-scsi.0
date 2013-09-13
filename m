@@ -1,101 +1,146 @@
-From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
-Subject: RE: [PATCH] megaraid: Use resource_size_t for PCI resources, not
- long
-Date: Fri, 13 Sep 2013 22:40:08 +0530
-Message-ID: <088E451FE1854947BD9145EF8C016FF413A01F373F@inbmail01.lsi.com>
-References: <D74A8430-BF73-488F-8CD1-0E00B5FE75A6@servergy.com>
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Subject: [PATCH v2] SCSI: buslogic: Added check for DMA mapping errors (was
+ Re:[BusLogic] DMA-API: device driver failed to check map error)
+Date: Fri, 13 Sep 2013 13:44:06 -0600
+Message-ID: <1379101446.8358.4.camel@concerto>
+References: <201309101503.ECC18788.SOOVOJLFtQHMFF@I-love.SAKURA.ne.jp>
+	 <1378816604.6973.53.camel@dabdike.int.hansenpartnership.com>
+	 <1379004807.10738.3.camel@concerto>
+	 <201309140042.GEI73439.QHSJtOFFVFOLOM@I-love.SAKURA.ne.jp>
+	 <52333560.50209@oracle.com>
+Reply-To: khalid.aziz@oracle.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:25971
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751316Ab3IMRKT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Sep 2013 13:10:19 -0400
-In-Reply-To: <D74A8430-BF73-488F-8CD1-0E00B5FE75A6@servergy.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <52333560.50209@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: jbottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Collins <ben.c@servergy.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>
+
+Added check for DMA mapping errors for request sense data
+buffer. Checking for mapping error can avoid potential wild
+writes. This patch was prompted by the warning from
+dma_unmap when kernel is compiled with CONFIG_DMA_API_DEBUG.
 
 
+Signed-off-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+Changelog:
+ v1 - Fixed a typo and addressed a potential NULL pointer 
+	dereference issue
 
->-----Original Message-----
->From: Ben Collins [mailto:ben.c@servergy.com]
->Sent: Friday, September 13, 2013 10:17 PM
->To: linux-scsi
->Cc: Saxena, Sumit; DL-MegaRAID Linux
->Subject: [PATCH] megaraid: Use resource_size_t for PCI resources, not
->long
->
->The assumption that sizeof(long) >= sizeof(resource_size_t) can lead to
->truncation of the PCI resource address, meaning this driver didn't work
->on 32-bit systems with 64-bit PCI adressing ranges.
->
->Signed-off-by: Ben Collins <ben.c@servergy.com>
->Cc: Sumit Saxena <Sumit.Saxena@lsi.com>
->Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>
->---
-> drivers/scsi/megaraid/megaraid_sas.h      | 1 -
-> drivers/scsi/megaraid/megaraid_sas_base.c | 5 +++--
-> 2 files changed, 3 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas.h
->b/drivers/scsi/megaraid/megaraid_sas.h
->index 04a42a5..2f58758 100644
->--- a/drivers/scsi/megaraid/megaraid_sas.h
->+++ b/drivers/scsi/megaraid/megaraid_sas.h
->@@ -1460,7 +1460,6 @@ struct megasas_instance {
-> 	u32 *reply_queue;
-> 	dma_addr_t reply_queue_h;
->
->-	unsigned long base_addr;
-> 	struct megasas_register_set __iomem *reg_set;
-> 	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
-> 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index 1f0ca68..5df5522 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -3498,6 +3498,7 @@ static int megasas_init_fw(struct megasas_instance
->*instance)
-> 	u32 max_sectors_1;
-> 	u32 max_sectors_2;
-> 	u32 tmp_sectors, msix_enable, scratch_pad_2;
->+	resource_size_t base_addr;
-> 	struct megasas_register_set __iomem *reg_set;
-> 	struct megasas_ctrl_info *ctrl_info;
-> 	unsigned long bar_list;
->@@ -3506,14 +3507,14 @@ static int megasas_init_fw(struct
->megasas_instance *instance)
-> 	/* Find first memory bar */
-> 	bar_list = pci_select_bars(instance->pdev, IORESOURCE_MEM);
-> 	instance->bar = find_first_bit(&bar_list, sizeof(unsigned long));
->-	instance->base_addr = pci_resource_start(instance->pdev, instance-
->>bar);
-> 	if (pci_request_selected_regions(instance->pdev, instance->bar,
-> 					 "megasas: LSI")) {
-> 		printk(KERN_DEBUG "megasas: IO memory region busy!\n");
-> 		return -EBUSY;
-> 	}
->
->-	instance->reg_set = ioremap_nocache(instance->base_addr, 8192);
->+	base_addr = pci_resource_start(instance->pdev, instance->bar);
->+	instance->reg_set = ioremap_nocache(base_addr, 8192);
->
-> 	if (!instance->reg_set) {
-> 		printk(KERN_DEBUG "megasas: Failed to map IO mem\n");
->--
->1.8.3.2
->
->
->--
->Ben Collins - Principal Architect
->Servergy, Inc. - www.servergy.com
+ drivers/scsi/BusLogic.c |   36 +++++++++++++++++++++++-------------
+ 1 file changed, 23 insertions(+), 13 deletions(-)
 
-Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
-
-
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index feab3a5..e63b788 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -26,8 +26,8 @@
+ 
+ */
+ 
+-#define blogic_drvr_version		"2.1.16"
+-#define blogic_drvr_date		"18 July 2002"
++#define blogic_drvr_version		"2.1.17"
++#define blogic_drvr_date		"12 September 2013"
+ 
+ #include <linux/module.h>
+ #include <linux/init.h>
+@@ -311,12 +311,14 @@ static struct blogic_ccb *blogic_alloc_ccb(struct blogic_adapter *adapter)
+   caller.
+ */
+ 
+-static void blogic_dealloc_ccb(struct blogic_ccb *ccb)
++static void blogic_dealloc_ccb(struct blogic_ccb *ccb, int dma_unmap)
+ {
+ 	struct blogic_adapter *adapter = ccb->adapter;
+ 
+-	scsi_dma_unmap(ccb->command);
+-	pci_unmap_single(adapter->pci_device, ccb->sensedata,
++	if (ccb->command != NULL)
++		scsi_dma_unmap(ccb->command);
++	if (dma_unmap)
++		pci_unmap_single(adapter->pci_device, ccb->sensedata,
+ 			 ccb->sense_datalen, PCI_DMA_FROMDEVICE);
+ 
+ 	ccb->command = NULL;
+@@ -2762,8 +2764,8 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 			/*
+ 			   Place CCB back on the Host Adapter's free list.
+ 			 */
+-			blogic_dealloc_ccb(ccb);
+-#if 0				/* this needs to be redone different for new EH */
++			blogic_dealloc_ccb(ccb, 1);
++#if 0			/* this needs to be redone different for new EH */
+ 			/*
+ 			   Bus Device Reset CCBs have the command field
+ 			   non-NULL only when a Bus Device Reset was requested
+@@ -2791,7 +2793,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 				if (ccb->status == BLOGIC_CCB_RESET &&
+ 						ccb->tgt_id == tgt_id) {
+ 					command = ccb->command;
+-					blogic_dealloc_ccb(ccb);
++					blogic_dealloc_ccb(ccb, 1);
+ 					adapter->active_cmds[tgt_id]--;
+ 					command->result = DID_RESET << 16;
+ 					command->scsi_done(command);
+@@ -2862,7 +2864,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 			/*
+ 			   Place CCB back on the Host Adapter's free list.
+ 			 */
+-			blogic_dealloc_ccb(ccb);
++			blogic_dealloc_ccb(ccb, 1);
+ 			/*
+ 			   Call the SCSI Command Completion Routine.
+ 			 */
+@@ -3034,6 +3036,7 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 	int buflen = scsi_bufflen(command);
+ 	int count;
+ 	struct blogic_ccb *ccb;
++	dma_addr_t sense_buf;
+ 
+ 	/*
+ 	   SCSI REQUEST_SENSE commands will be executed automatically by the
+@@ -3179,10 +3182,17 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 	}
+ 	memcpy(ccb->cdb, cdb, cdblen);
+ 	ccb->sense_datalen = SCSI_SENSE_BUFFERSIZE;
+-	ccb->sensedata = pci_map_single(adapter->pci_device,
++	ccb->command = command;
++	sense_buf = pci_map_single(adapter->pci_device,
+ 				command->sense_buffer, ccb->sense_datalen,
+ 				PCI_DMA_FROMDEVICE);
+-	ccb->command = command;
++	if (dma_mapping_error(&adapter->pci_device->dev, sense_buf)) {
++		blogic_err("DMA mapping for sense data buffer failed\n",
++				adapter);
++		blogic_dealloc_ccb(ccb, 0);
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++	ccb->sensedata = sense_buf;
+ 	command->scsi_done = comp_cb;
+ 	if (blogic_multimaster_type(adapter)) {
+ 		/*
+@@ -3203,7 +3213,7 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 			if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START,
+ 						ccb)) {
+ 				blogic_warn("Still unable to write Outgoing Mailbox - " "Host Adapter Dead?\n", adapter);
+-				blogic_dealloc_ccb(ccb);
++				blogic_dealloc_ccb(ccb, 1);
+ 				command->result = DID_ERROR << 16;
+ 				command->scsi_done(command);
+ 			}
+@@ -3337,7 +3347,7 @@ static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
+ 
+ 	for (ccb = adapter->all_ccbs; ccb != NULL; ccb = ccb->next_all)
+ 		if (ccb->status == BLOGIC_CCB_ACTIVE)
+-			blogic_dealloc_ccb(ccb);
++			blogic_dealloc_ccb(ccb, 1);
+ 	/*
+ 	 * Wait a few seconds between the Host Adapter Hard Reset which
+ 	 * initiates a SCSI Bus Reset and issuing any SCSI Commands.  Some
+-- 
+1.7.10.4
