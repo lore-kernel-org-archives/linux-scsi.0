@@ -1,138 +1,82 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 06/22] be2iscsi: Fix soft lock up issue during UE or if FW taking time to respond
-Date: Thu, 12 Sep 2013 22:09:56 -0700
-Message-ID: <1379049014-32716-6-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 10/22] be2iscsi: Fix SGL Initilization and posting Pages for Dual Chute
+Date: Thu, 12 Sep 2013 22:10:00 -0700
+Message-ID: <1379049014-32716-10-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:33633 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429Ab3IMFgb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:31 -0400
-Received: by mail-pd0-f178.google.com with SMTP id w10so775793pde.23
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:26 -0700 (PDT)
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:59447 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752492Ab3IMFgf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:35 -0400
+Received: by mail-pa0-f52.google.com with SMTP id kq13so2067177pab.11
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:34 -0700 (PDT)
 In-Reply-To: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- The timeout set in MBX_CMD is 100sec and the ready bit checking in BMBX
- mode is done for 4sec. After 4sec the task is scheduled out for 5 secs
- to avoid kernel soft lockup stack trace. The loop of 4sec ready bit check
- and then schedule out is done until the following conditon occur
-  - The Ready Bit is Set
-  - The timeout set in MBX_CMD expires
+ Initialization of SGL and related PAGE posting is to be done for the chute.
+ Based on configuration value of each Chute,SGL initialization and page posting
+ is done.
+
+ For BE-X family iSCSI protocol is loaded only on Chute - 1.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be.h      |    2 +-
- drivers/scsi/be2iscsi/be_cmds.c |   47 +++++++++++++++++++++++++--------------
- drivers/scsi/be2iscsi/be_main.c |    5 ++---
- 3 files changed, 33 insertions(+), 21 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
-index 777e7c0..2e28f6c 100644
---- a/drivers/scsi/be2iscsi/be.h
-+++ b/drivers/scsi/be2iscsi/be.h
-@@ -128,7 +128,7 @@ struct be_ctrl_info {
- 
- #define PAGE_SHIFT_4K 12
- #define PAGE_SIZE_4K (1 << PAGE_SHIFT_4K)
--#define mcc_timeout		120000 /* 5s timeout */
-+#define mcc_timeout		120000 /* 12s timeout */
- 
- /* Returns number of pages spanned by the data starting at the given addr */
- #define PAGES_4K_SPANNED(_address, size)				\
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index f7788e5..01e1915 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -490,33 +490,46 @@ int be_mcc_notify_wait(struct beiscsi_hba *phba)
-  **/
- static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
- {
-+#define BEISCSI_MBX_RDY_BIT_TIMEOUT	4000	/* 4sec */
- 	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
- 	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
--	uint32_t wait = 0;
-+	unsigned long timeout;
-+	bool read_flag = false;
-+	int ret = 0, i;
- 	u32 ready;
- 
--	do {
-+	if (beiscsi_error(phba))
-+		return -EIO;
- 
--		if (beiscsi_error(phba))
--			return -EIO;
-+	timeout = jiffies + (HZ * 110);
- 
--		ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
--		if (ready)
--			break;
-+	do {
-+		for (i = 0; i < BEISCSI_MBX_RDY_BIT_TIMEOUT; i++) {
-+			ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
-+			if (ready) {
-+				read_flag = true;
-+				break;
-+			}
-+			mdelay(1);
-+		}
- 
--		if (wait > BEISCSI_HOST_MBX_TIMEOUT) {
--			beiscsi_log(phba, KERN_ERR,
--				    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
--				    "BC_%d : FW Timed Out\n");
-+		if (!read_flag) {
-+			set_current_state(TASK_INTERRUPTIBLE);
-+			schedule_timeout(HZ * 5);
-+			set_current_state(TASK_RUNNING);
-+		}
-+	} while ((time_before(jiffies, timeout)) && !read_flag);
-+
-+	if (!read_flag) {
-+		beiscsi_log(phba, KERN_ERR,
-+			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
-+			    "BC_%d : FW Timed Out\n");
- 			phba->fw_timeout = true;
- 			beiscsi_ue_detect(phba);
--			return -EBUSY;
--		}
-+			ret = -EBUSY;
-+	}
- 
--		mdelay(1);
--		wait++;
--	} while (true);
--	return 0;
-+	return ret;
- }
- 
- /*
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 9918582..6ad36af 100644
+index 1d4fcda..f061a2f 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5002,14 +5002,13 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	ret = beiscsi_cmd_reset_function(phba);
- 	if (ret) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : Reset Failed. Aborting Crashdump\n");
-+			    "BM_%d : Reset Failed\n");
- 		goto hba_free;
- 	}
- 	ret = be_chk_reset_complete(phba);
- 	if (ret) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : Failed to get out of reset."
--			    "Aborting Crashdump\n");
-+			    "BM_%d : Failed to get out of reset.\n");
- 		goto hba_free;
- 	}
+@@ -3460,6 +3460,10 @@ beiscsi_post_pages(struct beiscsi_hba *phba)
+ 	mem_descr += HWI_MEM_SGE;
+ 	pm_arr = mem_descr->mem_array;
  
++	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++)
++		if (test_bit(ulp_num, &phba->fw_config.ulp_supported))
++			break;
++
+ 	page_offset = (sizeof(struct iscsi_sge) * phba->params.num_sge_per_io *
+ 			phba->fw_config.iscsi_icd_start[ulp_num]) / PAGE_SIZE;
+ 	for (i = 0; i < mem_descr->num_elements; i++) {
+@@ -3956,7 +3960,8 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
+ 	struct be_mem_descriptor *mem_descr_sglh, *mem_descr_sg;
+ 	struct sgl_handle *psgl_handle;
+ 	struct iscsi_sge *pfrag;
+-	unsigned int arr_index, i, idx, ulp_num = 0;
++	unsigned int arr_index, i, idx;
++	unsigned int ulp_icd_start, ulp_num = 0;
+ 
+ 	phba->io_sgl_hndl_avbl = 0;
+ 	phba->eh_sgl_hndl_avbl = 0;
+@@ -4023,6 +4028,12 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
+ 		    "\n BM_%d : mem_descr_sg->num_elements=%d\n",
+ 		    mem_descr_sg->num_elements);
+ 
++	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++)
++		if (test_bit(ulp_num, &phba->fw_config.ulp_supported))
++			break;
++
++	ulp_icd_start = phba->fw_config.iscsi_icd_start[ulp_num];
++
+ 	arr_index = 0;
+ 	idx = 0;
+ 	while (idx < mem_descr_sg->num_elements) {
+@@ -4041,9 +4052,7 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
+ 			AMAP_SET_BITS(struct amap_iscsi_sge, addr_hi, pfrag, 0);
+ 			AMAP_SET_BITS(struct amap_iscsi_sge, addr_lo, pfrag, 0);
+ 			pfrag += phba->params.num_sge_per_io;
+-			psgl_handle->sgl_index =
+-				phba->fw_config.iscsi_icd_start[ulp_num] +
+-				arr_index++;
++			psgl_handle->sgl_index = ulp_icd_start + arr_index++;
+ 		}
+ 		idx++;
+ 	}
 -- 
 1.7.10.4
 
