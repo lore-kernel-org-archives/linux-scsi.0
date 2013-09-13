@@ -1,75 +1,33 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] dm mpath: do not fail path on -ENOSPC
-Date: Fri, 13 Sep 2013 07:58:35 +0200
-Message-ID: <5232A98B.2080301@suse.de>
-References: <5232A896.80803@ce.jp.nec.com>
+From: joel billy <jbilly2002@gmail.com>
+Subject: Re: [GIT PULL] target updates for v3.12-rc1
+Date: Fri, 13 Sep 2013 15:10:49 +0530
+Message-ID: <CAF1KAsEkNEHncUgf3+ZSWECFapKz8k51riAFyMS3R5Op=pxKxg@mail.gmail.com>
+References: <1379021794.32763.555.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39255 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752540Ab3IMF6g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Sep 2013 01:58:36 -0400
-In-Reply-To: <5232A896.80803@ce.jp.nec.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:54480 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753803Ab3IMJkx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 05:40:53 -0400
+In-Reply-To: <1379021794.32763.555.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 09/13/2013 07:54 AM, Jun'ichi Nomura wrote:
-> Since ENOSPC is a target-side error, dm-mpath should just pass the er=
-ror
-> information to upper layer instead of retrying itself with path failo=
-ver.
-> Otherwise it will end up failing all paths down while path checkers f=
-ind
-> all paths ok.
->=20
-> ENOSPC can now be returned from SCSI device after commit a9d6ceb8
-> ("[SCSI] return ENOSPC on thin provisioning failure").
->=20
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/md/dm-mpath.c | 1 +
->  1 file changed, 1 insertion(+)
->=20
-> The patch is not actually tested as I don't have such a storage at my=
- hand.
-> Hannes, please let me know if you didn't change noretry_error() inten=
-tionally.
->=20
-No, you are correct. I've missed this bit when sending out the
-enhanced I/O errors patch.
+On 9/13/13, Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
+<..>, Removed individual CCs
 
-Acked-by: Hannes Reinecke <hare@suse.de>
+> The patches to add COMPARE_AND_WRITE and EXTENDED_COPY support are of
+> particular significance, which make us the first and only open source
+> target to support the full set of VAAI primitives.
 
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index b759a12..075747e 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -1268,6 +1268,7 @@ static int noretry_error(int error)
->  	case -EREMOTEIO:
->  	case -EILSEQ:
->  	case -ENODATA:
-> +	case -ENOSPC:
->  		return 1;
->  	}
-> =20
->=20
+Probably not the first and only open source target. quadstor
+(http://www.quadstor.com) also has full VAAI support. Thought you
+should know and my apologies if this reply is inappropriate for the
+devel lists.
 
-Cheers,
+Many thanks for the VAAI support !
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- jb
