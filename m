@@ -1,145 +1,90 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 17/22] be2iscsi: Fix MSIx creation for SKH-R adapter
-Date: Thu, 12 Sep 2013 22:10:07 -0700
-Message-ID: <1379049014-32716-17-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 14/22] be2iscsi: Fix chute cleanup during drivers unload.
+Date: Thu, 12 Sep 2013 22:10:04 -0700
+Message-ID: <1379049014-32716-14-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:58097 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754468Ab3IMFgr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:47 -0400
-Received: by mail-pb0-f47.google.com with SMTP id rr4so768793pbb.34
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:46 -0700 (PDT)
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:42234 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754105Ab3IMFgl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:41 -0400
+Received: by mail-pa0-f48.google.com with SMTP id kp13so2060419pab.7
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:41 -0700 (PDT)
 In-Reply-To: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- The MSIx to be created for SKH-R adapter should be based on
- eq_count returned by get_fw_config.
+	This patch cleans up both chutes on unload
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   45 +++++++++++++++++++++++++--------------
- drivers/scsi/be2iscsi/be_main.h |    3 ++-
- drivers/scsi/be2iscsi/be_mgmt.c |   11 ++++++++++
- 3 files changed, 42 insertions(+), 17 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   14 ++++++++++----
+ drivers/scsi/be2iscsi/be_mgmt.c |   17 +++++++++++++----
+ 2 files changed, 23 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 4bec9e2..af3ec3a 100644
+index 02a7bf7..ce2cc08 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3768,8 +3768,19 @@ static void find_num_cpus(struct beiscsi_hba *phba)
- 				  BEISCSI_MAX_NUM_CPUS : num_cpus;
- 		break;
- 	case BE_GEN4:
--		phba->num_cpus = (num_cpus > OC_SKH_MAX_NUM_CPUS) ?
--				  OC_SKH_MAX_NUM_CPUS : num_cpus;
-+		/*
-+		 * If eqid_count == 1 fall back to
-+		 * INTX mechanism
-+		 **/
-+		if (phba->fw_config.eqid_count == 1) {
-+			enable_msix = 0;
-+			phba->num_cpus = 1;
-+			return;
+@@ -4443,10 +4443,16 @@ static void beiscsi_clean_port(struct beiscsi_hba *phba)
+ 	int mgmt_status, ulp_num;
+ 	struct ulp_cid_info *ptr_cid_info = NULL;
+ 
+-	mgmt_status = mgmt_epfw_cleanup(phba, CMD_CONNECTION_CHUTE_0);
+-	if (mgmt_status)
+-		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_INIT,
+-			    "BM_%d : mgmt_epfw_cleanup FAILED\n");
++	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
++		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
++			mgmt_status = mgmt_epfw_cleanup(phba, ulp_num);
++			if (mgmt_status)
++				beiscsi_log(phba, KERN_WARNING,
++					    BEISCSI_LOG_INIT,
++					    "BM_%d : mgmt_epfw_cleanup FAILED"
++					    " for ULP_%d\n", ulp_num);
 +		}
-+
-+		phba->num_cpus =
-+			(num_cpus > (phba->fw_config.eqid_count - 1)) ?
-+			(phba->fw_config.eqid_count - 1) : num_cpus;
- 		break;
- 	default:
- 		phba->num_cpus = 1;
-@@ -5285,20 +5296,6 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 		phba->generation = 0;
- 	}
- 
--	if (enable_msix)
--		find_num_cpus(phba);
--	else
--		phba->num_cpus = 1;
--
--	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
--		    "BM_%d : num_cpus = %d\n",
--		    phba->num_cpus);
--
--	if (enable_msix) {
--		beiscsi_msix_enable(phba);
--		if (!phba->msix_enabled)
--			phba->num_cpus = 1;
--	}
- 	ret = be_ctrl_init(phba, pcidev);
- 	if (ret) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-@@ -5330,6 +5327,22 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 			    "BM_%d : Error getting fw config\n");
- 		goto free_port;
- 	}
-+
-+	if (enable_msix)
-+		find_num_cpus(phba);
-+	else
-+		phba->num_cpus = 1;
-+
-+	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
-+		    "BM_%d : num_cpus = %d\n",
-+		    phba->num_cpus);
-+
-+	if (enable_msix) {
-+		beiscsi_msix_enable(phba);
-+		if (!phba->msix_enabled)
-+			phba->num_cpus = 1;
 +	}
-+
- 	phba->shost->max_id = phba->params.cxns_per_ctrl;
- 	beiscsi_get_params(phba);
- 	phba->shost->can_queue = phba->params.ios_per_ctrl;
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 3fa1e81..88291b0 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -65,7 +65,6 @@
  
- #define MAX_CPUS		64
- #define BEISCSI_MAX_NUM_CPUS	7
--#define OC_SKH_MAX_NUM_CPUS	31
- 
- #define BEISCSI_VER_STRLEN 32
- 
-@@ -377,6 +376,8 @@ struct beiscsi_hba {
- 		 * for cid to cri conversion
- 		 */
- 		unsigned int phys_port;
-+		unsigned int eqid_count;
-+		unsigned int cqid_count;
- 		unsigned int iscsi_cid_start[BEISCSI_ULP_COUNT];
- #define BEISCSI_GET_CID_COUNT(phba, ulp_num) \
- 		(phba->fw_config.iscsi_cid_count[ulp_num])
+ 	hwi_purge_eq(phba);
+ 	hwi_cleanup(phba);
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index d3deb3f..fb61b58 100644
+index 1622bb5..97ea4f31 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.c
 +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -311,6 +311,17 @@ int mgmt_get_fw_config(struct be_ctrl_info *ctrl,
- 		struct be_fw_cfg *pfw_cfg;
- 		pfw_cfg = req;
+@@ -492,7 +492,16 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 	return tag;
+ }
  
-+		if (!is_chip_be2_be3r(phba)) {
-+			phba->fw_config.eqid_count = pfw_cfg->eqid_count;
-+			phba->fw_config.cqid_count = pfw_cfg->cqid_count;
-+
-+			beiscsi_log(phba, KERN_INFO,
-+					BEISCSI_LOG_INIT,
-+					"BG_%d : EQ_Count : %d CQ_Count : %d\n",
-+					phba->fw_config.eqid_count,
-+					phba->fw_config.cqid_count);
-+		}
-+
- 		for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++)
- 			if (pfw_cfg->ulp[ulp_num].ulp_mode &
- 			    BEISCSI_ULP_ISCSI_INI_MODE)
+-int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute)
++/**
++ * mgmt_epfw_cleanup()- Inform FW to cleanup data structures.
++ * @phba: pointer to dev priv structure
++ * @ulp_num: ULP number.
++ *
++ * return
++ *	Success: 0
++ *	Failure: Non-Zero Value
++ **/
++int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
+@@ -506,9 +515,9 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute)
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+ 			   OPCODE_COMMON_ISCSI_CLEANUP, sizeof(*req));
+ 
+-	req->chute = chute;
+-	req->hdr_ring_id = cpu_to_le16(HWI_GET_DEF_HDRQ_ID(phba, 0));
+-	req->data_ring_id = cpu_to_le16(HWI_GET_DEF_BUFQ_ID(phba, 0));
++	req->chute = (1 << ulp_num);
++	req->hdr_ring_id = cpu_to_le16(HWI_GET_DEF_HDRQ_ID(phba, ulp_num));
++	req->data_ring_id = cpu_to_le16(HWI_GET_DEF_BUFQ_ID(phba, ulp_num));
+ 
+ 	status =  be_mcc_notify_wait(phba);
+ 	if (status)
 -- 
 1.7.10.4
 
