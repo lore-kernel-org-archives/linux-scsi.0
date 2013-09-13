@@ -1,139 +1,145 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 15/22] be2iscsi: Dispaly CID available for connection offload.
-Date: Thu, 12 Sep 2013 22:10:05 -0700
-Message-ID: <1379049014-32716-15-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 17/22] be2iscsi: Fix MSIx creation for SKH-R adapter
+Date: Thu, 12 Sep 2013 22:10:07 -0700
+Message-ID: <1379049014-32716-17-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:58621 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754059Ab3IMFgn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:43 -0400
-Received: by mail-pd0-f181.google.com with SMTP id g10so778688pdj.26
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:42 -0700 (PDT)
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:58097 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754468Ab3IMFgr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:47 -0400
+Received: by mail-pb0-f47.google.com with SMTP id rr4so768793pbb.34
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:46 -0700 (PDT)
 In-Reply-To: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- Display CID available on each iSCSI Fn which can be used to
- offload a connection. The display is split across available CID
- on each chute.
+ The MSIx to be created for SKH-R adapter should be based on
+ eq_count returned by get_fw_config.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |    8 ++++++--
- drivers/scsi/be2iscsi/be_mgmt.c |   34 ++++++++++++++++++++++++++++++++--
- drivers/scsi/be2iscsi/be_mgmt.h |    8 ++++++--
- 3 files changed, 44 insertions(+), 6 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   45 +++++++++++++++++++++++++--------------
+ drivers/scsi/be2iscsi/be_main.h |    3 ++-
+ drivers/scsi/be2iscsi/be_mgmt.c |   11 ++++++++++
+ 3 files changed, 42 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index ce2cc08..beebf7f 100644
+index 4bec9e2..af3ec3a 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -154,13 +154,17 @@ BEISCSI_RW_ATTR(log_enable, 0x00,
- DEVICE_ATTR(beiscsi_drvr_ver, S_IRUGO, beiscsi_drvr_ver_disp, NULL);
- DEVICE_ATTR(beiscsi_adapter_family, S_IRUGO, beiscsi_adap_family_disp, NULL);
- DEVICE_ATTR(beiscsi_fw_ver, S_IRUGO, beiscsi_fw_ver_disp, NULL);
--DEVICE_ATTR(beiscsi_active_cid_count, S_IRUGO, beiscsi_active_cid_disp, NULL);
-+DEVICE_ATTR(beiscsi_active_session_count, S_IRUGO,
-+	     beiscsi_active_session_disp, NULL);
-+DEVICE_ATTR(beiscsi_free_session_count, S_IRUGO,
-+	     beiscsi_free_session_disp, NULL);
- struct device_attribute *beiscsi_attrs[] = {
- 	&dev_attr_beiscsi_log_enable,
- 	&dev_attr_beiscsi_drvr_ver,
- 	&dev_attr_beiscsi_adapter_family,
- 	&dev_attr_beiscsi_fw_ver,
--	&dev_attr_beiscsi_active_cid_count,
-+	&dev_attr_beiscsi_active_session_count,
-+	&dev_attr_beiscsi_free_session_count,
- 	NULL,
- };
- 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 97ea4f31..c97140f 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1347,7 +1347,7 @@ beiscsi_fw_ver_disp(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-- * beiscsi_active_cid_disp()- Display Sessions Active
-+ * beiscsi_active_session_disp()- Display Sessions Active
-  * @dev: ptr to device not used.
-  * @attr: device attribute, not used.
-  * @buf: contains formatted text Session Count
-@@ -1356,7 +1356,7 @@ beiscsi_fw_ver_disp(struct device *dev, struct device_attribute *attr,
-  * size of the formatted string
-  **/
- ssize_t
--beiscsi_active_cid_disp(struct device *dev, struct device_attribute *attr,
-+beiscsi_active_session_disp(struct device *dev, struct device_attribute *attr,
- 			 char *buf)
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
-@@ -1379,6 +1379,36 @@ beiscsi_active_cid_disp(struct device *dev, struct device_attribute *attr,
- }
- 
- /**
-+ * beiscsi_free_session_disp()- Display Avaliable Session
-+ * @dev: ptr to device not used.
-+ * @attr: device attribute, not used.
-+ * @buf: contains formatted text Session Count
-+ *
-+ * return
-+ * size of the formatted string
-+ **/
-+ssize_t
-+beiscsi_free_session_disp(struct device *dev, struct device_attribute *attr,
-+		       char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+	uint16_t ulp_num, len = 0;
+@@ -3768,8 +3768,19 @@ static void find_num_cpus(struct beiscsi_hba *phba)
+ 				  BEISCSI_MAX_NUM_CPUS : num_cpus;
+ 		break;
+ 	case BE_GEN4:
+-		phba->num_cpus = (num_cpus > OC_SKH_MAX_NUM_CPUS) ?
+-				  OC_SKH_MAX_NUM_CPUS : num_cpus;
++		/*
++		 * If eqid_count == 1 fall back to
++		 * INTX mechanism
++		 **/
++		if (phba->fw_config.eqid_count == 1) {
++			enable_msix = 0;
++			phba->num_cpus = 1;
++			return;
++		}
 +
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported))
-+			len += snprintf(buf+len, PAGE_SIZE - len,
-+					"ULP%d : %d\n", ulp_num,
-+					BEISCSI_ULP_AVLBL_CID(phba, ulp_num));
-+		else
-+			len += snprintf(buf+len, PAGE_SIZE - len,
-+					"ULP%d : %d\n", ulp_num, 0);
++		phba->num_cpus =
++			(num_cpus > (phba->fw_config.eqid_count - 1)) ?
++			(phba->fw_config.eqid_count - 1) : num_cpus;
+ 		break;
+ 	default:
+ 		phba->num_cpus = 1;
+@@ -5285,20 +5296,6 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 		phba->generation = 0;
+ 	}
+ 
+-	if (enable_msix)
+-		find_num_cpus(phba);
+-	else
+-		phba->num_cpus = 1;
+-
+-	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+-		    "BM_%d : num_cpus = %d\n",
+-		    phba->num_cpus);
+-
+-	if (enable_msix) {
+-		beiscsi_msix_enable(phba);
+-		if (!phba->msix_enabled)
+-			phba->num_cpus = 1;
+-	}
+ 	ret = be_ctrl_init(phba, pcidev);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+@@ -5330,6 +5327,22 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 			    "BM_%d : Error getting fw config\n");
+ 		goto free_port;
+ 	}
++
++	if (enable_msix)
++		find_num_cpus(phba);
++	else
++		phba->num_cpus = 1;
++
++	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
++		    "BM_%d : num_cpus = %d\n",
++		    phba->num_cpus);
++
++	if (enable_msix) {
++		beiscsi_msix_enable(phba);
++		if (!phba->msix_enabled)
++			phba->num_cpus = 1;
 +	}
 +
-+	return len;
-+}
-+
-+/**
-  * beiscsi_adap_family_disp()- Display adapter family.
-  * @dev: ptr to device to get priv structure
-  * @attr: device attribute, not used.
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 04af7e7..9107ecf 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -315,12 +315,16 @@ ssize_t beiscsi_drvr_ver_disp(struct device *dev,
- ssize_t beiscsi_fw_ver_disp(struct device *dev,
- 			     struct device_attribute *attr, char *buf);
+ 	phba->shost->max_id = phba->params.cxns_per_ctrl;
+ 	beiscsi_get_params(phba);
+ 	phba->shost->can_queue = phba->params.ios_per_ctrl;
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 3fa1e81..88291b0 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -65,7 +65,6 @@
  
--ssize_t beiscsi_active_cid_disp(struct device *dev,
--				 struct device_attribute *attr, char *buf);
-+ssize_t beiscsi_active_session_disp(struct device *dev,
-+				     struct device_attribute *attr, char *buf);
+ #define MAX_CPUS		64
+ #define BEISCSI_MAX_NUM_CPUS	7
+-#define OC_SKH_MAX_NUM_CPUS	31
  
- ssize_t beiscsi_adap_family_disp(struct device *dev,
- 				  struct device_attribute *attr, char *buf);
+ #define BEISCSI_VER_STRLEN 32
  
+@@ -377,6 +376,8 @@ struct beiscsi_hba {
+ 		 * for cid to cri conversion
+ 		 */
+ 		unsigned int phys_port;
++		unsigned int eqid_count;
++		unsigned int cqid_count;
+ 		unsigned int iscsi_cid_start[BEISCSI_ULP_COUNT];
+ #define BEISCSI_GET_CID_COUNT(phba, ulp_num) \
+ 		(phba->fw_config.iscsi_cid_count[ulp_num])
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index d3deb3f..fb61b58 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -311,6 +311,17 @@ int mgmt_get_fw_config(struct be_ctrl_info *ctrl,
+ 		struct be_fw_cfg *pfw_cfg;
+ 		pfw_cfg = req;
+ 
++		if (!is_chip_be2_be3r(phba)) {
++			phba->fw_config.eqid_count = pfw_cfg->eqid_count;
++			phba->fw_config.cqid_count = pfw_cfg->cqid_count;
 +
-+ssize_t beiscsi_free_session_disp(struct device *dev,
-+				   struct device_attribute *attr, char *buf);
++			beiscsi_log(phba, KERN_INFO,
++					BEISCSI_LOG_INIT,
++					"BG_%d : EQ_Count : %d CQ_Count : %d\n",
++					phba->fw_config.eqid_count,
++					phba->fw_config.cqid_count);
++		}
 +
- void beiscsi_offload_cxn_v0(struct beiscsi_offload_params *params,
- 			     struct wrb_handle *pwrb_handle,
- 			     struct be_mem_descriptor *mem_descr);
+ 		for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++)
+ 			if (pfw_cfg->ulp[ulp_num].ulp_mode &
+ 			    BEISCSI_ULP_ISCSI_INI_MODE)
 -- 
 1.7.10.4
 
