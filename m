@@ -1,96 +1,230 @@
-From: Gerd Hoffmann <kraxel@redhat.com>
-Subject: [PATCH v3 5/6] uas: replace BUG_ON() + WARN_ON() with WARN_ON_ONCE()
-Date: Fri, 13 Sep 2013 13:27:14 +0200
-Message-ID: <1379071635-30701-6-git-send-email-kraxel@redhat.com>
+From: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v3 3/6] uas: make work list per-device
+Date: Fri, 13 Sep 2013 13:27:12 +0200
+Message-ID: <1379071635-30701-4-git-send-email-kraxel@redhat.com>
 References: <1379071635-30701-1-git-send-email-kraxel@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1379071635-30701-1-git-send-email-kraxel@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-usb@vger.kernel.org
-Cc: Gerd Hoffmann <kraxel@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "open list:USB ATTACHED SCSI" <linux-scsi@vger.kernel.org>, "open list:USB MASS STORAGE..." <usb-storage@lists.one-eyed-alien.net>, open list <linux-kernel@vger.kernel.org>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1379071635-30701-1-git-send-email-kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "open list:USB ATTACHED SCSI" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:USB MASS STORAGE..." <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+Simplifies locking, we'll protect the list with the device spin lock.
+Also plugs races which can happen when two devices operate on the
+global list.
+
+While being at it rename the list head from "list" to "work", preparing
+for the addition of a second list.
+
+Signed-off-by: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/usb/storage/uas.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ drivers/usb/storage/uas.c | 106 +++++++++++++++++++---------------------------
+ 1 file changed, 44 insertions(+), 62 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index f049038..046eedf 100644
+index fc08ee9..3cf5a5f 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -154,7 +154,7 @@ static void uas_abort_work(struct uas_dev_info *devinfo)
- 		struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
- 						      SCp);
- 		uas_log_cmd_state(cmnd, __func__);
--		WARN_ON(cmdinfo->state & COMMAND_ABORTED);
-+		WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
- 		cmdinfo->state |= COMMAND_ABORTED;
- 		cmdinfo->state &= ~IS_IN_WORK_LIST;
- 		list_del(&cmdinfo->work);
-@@ -169,7 +169,7 @@ static void uas_add_work(struct uas_cmd_info *cmdinfo)
- 	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
- 	struct uas_dev_info *devinfo = cmnd->device->hostdata;
+@@ -51,6 +51,8 @@ struct uas_dev_info {
+ 	unsigned uas_sense_old:1;
+ 	struct scsi_cmnd *cmnd;
+ 	spinlock_t lock;
++	struct work_struct work;
++	struct list_head work_list;
+ };
  
--	WARN_ON(!spin_is_locked(&devinfo->lock));
-+	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
- 	list_add_tail(&cmdinfo->work, &devinfo->work_list);
- 	cmdinfo->state |= IS_IN_WORK_LIST;
- 	schedule_work(&devinfo->work);
-@@ -187,7 +187,7 @@ static void uas_zap_dead(struct uas_dev_info *devinfo)
- 		struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
- 						      SCp);
- 		uas_log_cmd_state(cmnd, __func__);
--		WARN_ON(!(cmdinfo->state & COMMAND_ABORTED));
-+		WARN_ON_ONCE(!(cmdinfo->state & COMMAND_ABORTED));
- 		/* all urbs are killed, clear inflight bits */
- 		cmdinfo->state &= ~(COMMAND_INFLIGHT |
- 				    DATA_IN_URB_INFLIGHT |
-@@ -271,13 +271,13 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
+ enum {
+@@ -77,7 +79,7 @@ struct uas_cmd_info {
+ 	struct urb *cmd_urb;
+ 	struct urb *data_in_urb;
+ 	struct urb *data_out_urb;
+-	struct list_head list;
++	struct list_head work;
+ };
  
--	WARN_ON(!spin_is_locked(&devinfo->lock));
-+	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
- 	if (cmdinfo->state & (COMMAND_INFLIGHT |
- 			      DATA_IN_URB_INFLIGHT |
- 			      DATA_OUT_URB_INFLIGHT |
- 			      UNLINK_DATA_URBS))
- 		return -EBUSY;
--	BUG_ON(cmdinfo->state & COMMAND_COMPLETED);
-+	WARN_ON_ONCE(cmdinfo->state & COMMAND_COMPLETED);
- 	cmdinfo->state |= COMMAND_COMPLETED;
- 	usb_free_urb(cmdinfo->data_in_urb);
- 	usb_free_urb(cmdinfo->data_out_urb);
-@@ -398,8 +398,9 @@ static void uas_data_cmplt(struct urb *urb)
- 		sdb = scsi_out(cmnd);
- 		cmdinfo->state &= ~DATA_OUT_URB_INFLIGHT;
- 	}
--	BUG_ON(sdb == NULL);
--	if (urb->status) {
-+	if (sdb == NULL) {
-+		WARN_ON_ONCE(1);
-+	} else if (urb->status) {
- 		/* error: no data transfered */
- 		sdb->resid = sdb->length;
- 	} else {
-@@ -573,7 +574,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
- 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ /* I hate forward declarations, but I actually have a loop */
+@@ -88,10 +90,6 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller);
+ static void uas_configure_endpoints(struct uas_dev_info *devinfo);
+ static void uas_free_streams(struct uas_dev_info *devinfo);
+ 
+-static DECLARE_WORK(uas_work, uas_do_work);
+-static DEFINE_SPINLOCK(uas_work_lock);
+-static LIST_HEAD(uas_work_list);
+-
+ static void uas_unlink_data_urbs(struct uas_dev_info *devinfo,
+ 				 struct uas_cmd_info *cmdinfo)
+ {
+@@ -118,75 +116,66 @@ static void uas_unlink_data_urbs(struct uas_dev_info *devinfo,
+ 
+ static void uas_do_work(struct work_struct *work)
+ {
++	struct uas_dev_info *devinfo =
++		container_of(work, struct uas_dev_info, work);
+ 	struct uas_cmd_info *cmdinfo;
+ 	struct uas_cmd_info *temp;
+-	struct list_head list;
+ 	unsigned long flags;
  	int err;
  
--	WARN_ON(!spin_is_locked(&devinfo->lock));
-+	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
- 	if (cmdinfo->state & SUBMIT_STATUS_URB) {
- 		err = uas_submit_sense_urb(cmnd->device->host, gfp,
- 					   cmdinfo->stream);
-@@ -771,7 +772,7 @@ static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
+-	spin_lock_irq(&uas_work_lock);
+-	list_replace_init(&uas_work_list, &list);
+-	spin_unlock_irq(&uas_work_lock);
+-
+-	list_for_each_entry_safe(cmdinfo, temp, &list, list) {
++	spin_lock_irqsave(&devinfo->lock, flags);
++	list_for_each_entry_safe(cmdinfo, temp, &devinfo->work_list, work) {
+ 		struct scsi_pointer *scp = (void *)cmdinfo;
+-		struct scsi_cmnd *cmnd = container_of(scp,
+-							struct scsi_cmnd, SCp);
+-		struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
+-		spin_lock_irqsave(&devinfo->lock, flags);
++		struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
++						      SCp);
+ 		err = uas_submit_urbs(cmnd, cmnd->device->hostdata, GFP_ATOMIC);
+-		if (!err)
++		if (!err) {
+ 			cmdinfo->state &= ~IS_IN_WORK_LIST;
+-		spin_unlock_irqrestore(&devinfo->lock, flags);
+-		if (err) {
+-			list_del(&cmdinfo->list);
+-			spin_lock_irq(&uas_work_lock);
+-			list_add_tail(&cmdinfo->list, &uas_work_list);
+-			spin_unlock_irq(&uas_work_lock);
+-			schedule_work(&uas_work);
++			list_del(&cmdinfo->work);
++		} else {
++			schedule_work(&devinfo->work);
+ 		}
+ 	}
++	spin_unlock_irqrestore(&devinfo->lock, flags);
+ }
  
- 	uas_log_cmd_state(cmnd, __func__);
+ static void uas_abort_work(struct uas_dev_info *devinfo)
+ {
+ 	struct uas_cmd_info *cmdinfo;
+ 	struct uas_cmd_info *temp;
+-	struct list_head list;
+ 	unsigned long flags;
+ 
+-	spin_lock_irq(&uas_work_lock);
+-	list_replace_init(&uas_work_list, &list);
+-	spin_unlock_irq(&uas_work_lock);
+-
  	spin_lock_irqsave(&devinfo->lock, flags);
--	WARN_ON(cmdinfo->state & COMMAND_ABORTED);
-+	WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
+-	list_for_each_entry_safe(cmdinfo, temp, &list, list) {
++	list_for_each_entry_safe(cmdinfo, temp, &devinfo->work_list, work) {
+ 		struct scsi_pointer *scp = (void *)cmdinfo;
+-		struct scsi_cmnd *cmnd = container_of(scp,
+-							struct scsi_cmnd, SCp);
+-		struct uas_dev_info *di = (void *)cmnd->device->hostdata;
+-
+-		if (di == devinfo) {
+-			cmdinfo->state |= COMMAND_ABORTED;
+-			cmdinfo->state &= ~IS_IN_WORK_LIST;
+-			if (devinfo->resetting) {
+-				/* uas_stat_cmplt() will not do that
+-				 * when a device reset is in
+-				 * progress */
+-				cmdinfo->state &= ~COMMAND_INFLIGHT;
+-			}
+-			uas_try_complete(cmnd, __func__);
+-		} else {
+-			/* not our uas device, relink into list */
+-			list_del(&cmdinfo->list);
+-			spin_lock_irq(&uas_work_lock);
+-			list_add_tail(&cmdinfo->list, &uas_work_list);
+-			spin_unlock_irq(&uas_work_lock);
++		struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
++						      SCp);
++		cmdinfo->state |= COMMAND_ABORTED;
++		cmdinfo->state &= ~IS_IN_WORK_LIST;
++		if (devinfo->resetting) {
++			/* uas_stat_cmplt() will not do that
++			 * when a device reset is in
++			 * progress */
++			cmdinfo->state &= ~COMMAND_INFLIGHT;
+ 		}
++		uas_try_complete(cmnd, __func__);
++		list_del(&cmdinfo->work);
+ 	}
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
+ }
+ 
++static void uas_add_work(struct uas_cmd_info *cmdinfo)
++{
++	struct scsi_pointer *scp = (void *)cmdinfo;
++	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
++	struct uas_dev_info *devinfo = cmnd->device->hostdata;
++
++	WARN_ON(!spin_is_locked(&devinfo->lock));
++	list_add_tail(&cmdinfo->work, &devinfo->work_list);
++	cmdinfo->state |= IS_IN_WORK_LIST;
++	schedule_work(&devinfo->work);
++}
++
+ static void uas_sense(struct urb *urb, struct scsi_cmnd *cmnd)
+ {
+ 	struct sense_iu *sense_iu = urb->transfer_buffer;
+@@ -288,11 +277,7 @@ static void uas_xfer_data(struct urb *urb, struct scsi_cmnd *cmnd,
+ 	cmdinfo->state |= direction | SUBMIT_STATUS_URB;
+ 	err = uas_submit_urbs(cmnd, cmnd->device->hostdata, GFP_ATOMIC);
+ 	if (err) {
+-		spin_lock(&uas_work_lock);
+-		list_add_tail(&cmdinfo->list, &uas_work_list);
+-		cmdinfo->state |= IS_IN_WORK_LIST;
+-		spin_unlock(&uas_work_lock);
+-		schedule_work(&uas_work);
++		uas_add_work(cmdinfo);
+ 	}
+ }
+ 
+@@ -694,11 +679,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
+ 			spin_unlock_irqrestore(&devinfo->lock, flags);
+ 			return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		}
+-		spin_lock(&uas_work_lock);
+-		list_add_tail(&cmdinfo->list, &uas_work_list);
+-		cmdinfo->state |= IS_IN_WORK_LIST;
+-		spin_unlock(&uas_work_lock);
+-		schedule_work(&uas_work);
++		uas_add_work(cmdinfo);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
+@@ -764,10 +745,8 @@ static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
+ 	spin_lock_irqsave(&devinfo->lock, flags);
  	cmdinfo->state |= COMMAND_ABORTED;
- 	list_add_tail(&cmdinfo->dead, &devinfo->dead_list);
  	if (cmdinfo->state & IS_IN_WORK_LIST) {
+-		spin_lock(&uas_work_lock);
+-		list_del(&cmdinfo->list);
++		list_del(&cmdinfo->work);
+ 		cmdinfo->state &= ~IS_IN_WORK_LIST;
+-		spin_unlock(&uas_work_lock);
+ 	}
+ 	if (cmdinfo->state & COMMAND_INFLIGHT) {
+ 		spin_unlock_irqrestore(&devinfo->lock, flags);
+@@ -1007,6 +986,8 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	init_usb_anchor(&devinfo->sense_urbs);
+ 	init_usb_anchor(&devinfo->data_urbs);
+ 	spin_lock_init(&devinfo->lock);
++	INIT_WORK(&devinfo->work, uas_do_work);
++	INIT_LIST_HEAD(&devinfo->work_list);
+ 	uas_configure_endpoints(devinfo);
+ 
+ 	result = scsi_init_shared_tag_map(shost, devinfo->qdepth - 3);
+@@ -1050,6 +1031,7 @@ static void uas_disconnect(struct usb_interface *intf)
+ 	struct uas_dev_info *devinfo = (void *)shost->hostdata[0];
+ 
+ 	devinfo->resetting = 1;
++	cancel_work_sync(&devinfo->work);
+ 	uas_abort_work(devinfo);
+ 	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
+ 	usb_kill_anchored_urbs(&devinfo->sense_urbs);
 -- 
 1.8.3.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
