@@ -1,340 +1,93 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH 12/22] be2iscsi: Fix CID allocation/freeing to support Dual Chute Mode
-Date: Thu, 12 Sep 2013 22:10:02 -0700
-Message-ID: <1379049014-32716-12-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH 16/22] be2iscsi: Display Port Identifier for each iSCSI function.
+Date: Thu, 12 Sep 2013 22:10:06 -0700
+Message-ID: <1379049014-32716-16-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:44553 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754105Ab3IMFgi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:38 -0400
-Received: by mail-pd0-f179.google.com with SMTP id v10so776050pde.38
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:38 -0700 (PDT)
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:56907 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754445Ab3IMFgq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Sep 2013 01:36:46 -0400
+Received: by mail-pa0-f44.google.com with SMTP id fz6so2060240pac.17
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2013 22:36:44 -0700 (PDT)
 In-Reply-To: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- Configuration parameters returns the number of connection that
- can be offloaded one each chute.
-
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c |   54 ++++++++++++++-----
- drivers/scsi/be2iscsi/be_main.c  |  108 +++++++++++++++++++++++++++++++-------
- drivers/scsi/be2iscsi/be_main.h  |   20 +++++--
- drivers/scsi/be2iscsi/be_mgmt.c  |   16 +++++-
- 4 files changed, 160 insertions(+), 38 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |    2 ++
+ drivers/scsi/be2iscsi/be_mgmt.c |   19 +++++++++++++++++++
+ drivers/scsi/be2iscsi/be_mgmt.h |    3 +++
+ 3 files changed, 24 insertions(+)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 60c1dff..09a09be 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -966,15 +966,31 @@ int beiscsi_conn_start(struct iscsi_cls_conn *cls_conn)
-  */
- static int beiscsi_get_cid(struct beiscsi_hba *phba)
- {
--	unsigned short cid = 0xFFFF;
--
--	if (!phba->avlbl_cids)
--		return cid;
--
--	cid = phba->cid_array[phba->cid_alloc++];
--	if (phba->cid_alloc == phba->params.cxns_per_ctrl)
--		phba->cid_alloc = 0;
--	phba->avlbl_cids--;
-+	unsigned short cid = 0xFFFF, cid_from_ulp;
-+	struct ulp_cid_info *cid_info = NULL;
-+	uint16_t cid_avlbl_ulp0, cid_avlbl_ulp1;
-+
-+	/* Find the ULP which has more CID available */
-+	cid_avlbl_ulp0 = (phba->cid_array_info[BEISCSI_ULP0]) ?
-+			  BEISCSI_ULP0_AVLBL_CID(phba) : 0;
-+	cid_avlbl_ulp1 = (phba->cid_array_info[BEISCSI_ULP1]) ?
-+			  BEISCSI_ULP1_AVLBL_CID(phba) : 0;
-+	cid_from_ulp = (cid_avlbl_ulp0 > cid_avlbl_ulp1) ?
-+			BEISCSI_ULP0 : BEISCSI_ULP1;
-+
-+	if (test_bit(cid_from_ulp, (void *)&phba->fw_config.ulp_supported)) {
-+		cid_info = phba->cid_array_info[cid_from_ulp];
-+		if (!cid_info->avlbl_cids)
-+			return cid;
-+
-+		cid = cid_info->cid_array[cid_info->cid_alloc++];
-+
-+		if (cid_info->cid_alloc == BEISCSI_GET_CID_COUNT(
-+					   phba, cid_from_ulp))
-+			cid_info->cid_alloc = 0;
-+
-+		cid_info->avlbl_cids--;
-+	}
- 	return cid;
- }
- 
-@@ -985,10 +1001,22 @@ static int beiscsi_get_cid(struct beiscsi_hba *phba)
-  */
- static void beiscsi_put_cid(struct beiscsi_hba *phba, unsigned short cid)
- {
--	phba->avlbl_cids++;
--	phba->cid_array[phba->cid_free++] = cid;
--	if (phba->cid_free == phba->params.cxns_per_ctrl)
--		phba->cid_free = 0;
-+	uint16_t cid_post_ulp;
-+	struct hwi_controller *phwi_ctrlr;
-+	struct hwi_wrb_context *pwrb_context;
-+	struct ulp_cid_info *cid_info = NULL;
-+	uint16_t cri_index = BE_GET_CRI_FROM_CID(cid);
-+
-+	phwi_ctrlr = phba->phwi_ctrlr;
-+	pwrb_context = &phwi_ctrlr->wrb_context[cri_index];
-+	cid_post_ulp = pwrb_context->ulp_num;
-+
-+	cid_info = phba->cid_array_info[cid_post_ulp];
-+	cid_info->avlbl_cids++;
-+
-+	cid_info->cid_array[cid_info->cid_free++] = cid;
-+	if (cid_info->cid_free == BEISCSI_GET_CID_COUNT(phba, cid_post_ulp))
-+		cid_info->cid_free = 0;
- }
- 
- /**
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index f817331..1e0a8a2 100644
+index beebf7f..4bec9e2 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4089,15 +4089,46 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
- 
- static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- {
--	int i;
-+	int ret;
-+	uint16_t i, ulp_num;
-+	struct ulp_cid_info *ptr_cid_info = NULL;
- 
--	phba->cid_array = kzalloc(sizeof(void *) * phba->params.cxns_per_ctrl,
--				  GFP_KERNEL);
--	if (!phba->cid_array) {
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : Failed to allocate memory in "
--			    "hba_setup_cid_tbls\n");
--		return -ENOMEM;
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			ptr_cid_info = kzalloc(sizeof(struct ulp_cid_info),
-+					       GFP_KERNEL);
-+
-+			if (!ptr_cid_info) {
-+				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-+					    "BM_%d : Failed to allocate memory"
-+					    "for ULP_CID_INFO for ULP : %d\n",
-+					    ulp_num);
-+				ret = -ENOMEM;
-+				goto free_memory;
-+
-+			}
-+
-+			/* Allocate memory for CID array */
-+			ptr_cid_info->cid_array = kzalloc(sizeof(void *) *
-+						  BEISCSI_GET_CID_COUNT(phba,
-+						  ulp_num), GFP_KERNEL);
-+			if (!ptr_cid_info->cid_array) {
-+				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-+					    "BM_%d : Failed to allocate memory"
-+					    "for CID_ARRAY for ULP : %d\n",
-+					    ulp_num);
-+				kfree(ptr_cid_info);
-+				ptr_cid_info = NULL;
-+				ret = -ENOMEM;
-+
-+				goto free_memory;
-+			}
-+			ptr_cid_info->avlbl_cids = BEISCSI_GET_CID_COUNT(
-+						   phba, ulp_num);
-+
-+			/* Save the cid_info_array ptr */
-+			phba->cid_array_info[ulp_num] = ptr_cid_info;
-+		}
- 	}
- 	phba->ep_array = kzalloc(sizeof(struct iscsi_endpoint *) *
- 				 phba->params.cxns_per_ctrl, GFP_KERNEL);
-@@ -4105,9 +4136,9 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 			    "BM_%d : Failed to allocate memory in "
- 			    "hba_setup_cid_tbls\n");
--		kfree(phba->cid_array);
--		phba->cid_array = NULL;
--		return -ENOMEM;
-+		ret = -ENOMEM;
-+
-+		goto free_memory;
- 	}
- 
- 	phba->conn_table = kzalloc(sizeof(struct beiscsi_conn *) *
-@@ -4117,18 +4148,44 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- 			    "BM_%d : Failed to allocate memory in"
- 			    "hba_setup_cid_tbls\n");
- 
--		kfree(phba->cid_array);
- 		kfree(phba->ep_array);
--		phba->cid_array = NULL;
- 		phba->ep_array = NULL;
--		return -ENOMEM;
-+		ret = -ENOMEM;
- 	}
- 
--	for (i = 0; i < phba->params.cxns_per_ctrl; i++)
--		phba->cid_array[i] = phba->phwi_ctrlr->wrb_context[i].cid;
-+	for (i = 0; i < phba->params.cxns_per_ctrl; i++) {
-+		ulp_num = phba->phwi_ctrlr->wrb_context[i].ulp_num;
-+
-+		ptr_cid_info = phba->cid_array_info[ulp_num];
-+		ptr_cid_info->cid_array[ptr_cid_info->cid_alloc++] =
-+			phba->phwi_ctrlr->wrb_context[i].cid;
-+
-+	}
-+
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			ptr_cid_info = phba->cid_array_info[ulp_num];
- 
--	phba->avlbl_cids = phba->params.cxns_per_ctrl;
-+			ptr_cid_info->cid_alloc = 0;
-+			ptr_cid_info->cid_free = 0;
-+		}
-+	}
- 	return 0;
-+
-+free_memory:
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			ptr_cid_info = phba->cid_array_info[ulp_num];
-+
-+			if (ptr_cid_info) {
-+				kfree(ptr_cid_info->cid_array);
-+				kfree(ptr_cid_info);
-+				phba->cid_array_info[ulp_num] = NULL;
-+			}
-+		}
-+	}
-+
-+	return ret;
- }
- 
- static void hwi_enable_intr(struct beiscsi_hba *phba)
-@@ -4383,7 +4440,8 @@ static void hwi_purge_eq(struct beiscsi_hba *phba)
- 
- static void beiscsi_clean_port(struct beiscsi_hba *phba)
- {
--	int mgmt_status;
-+	int mgmt_status, ulp_num;
-+	struct ulp_cid_info *ptr_cid_info = NULL;
- 
- 	mgmt_status = mgmt_epfw_cleanup(phba, CMD_CONNECTION_CHUTE_0);
- 	if (mgmt_status)
-@@ -4394,9 +4452,21 @@ static void beiscsi_clean_port(struct beiscsi_hba *phba)
- 	hwi_cleanup(phba);
- 	kfree(phba->io_sgl_hndl_base);
- 	kfree(phba->eh_sgl_hndl_base);
--	kfree(phba->cid_array);
- 	kfree(phba->ep_array);
- 	kfree(phba->conn_table);
-+
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			ptr_cid_info = phba->cid_array_info[ulp_num];
-+
-+			if (ptr_cid_info) {
-+				kfree(ptr_cid_info->cid_array);
-+				kfree(ptr_cid_info);
-+				phba->cid_array_info[ulp_num] = NULL;
-+			}
-+		}
-+	}
-+
- }
- 
- /**
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 410efc7..e5e0d7e 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -297,6 +297,13 @@ struct hwi_wrb_context {
- 	uint32_t doorbell_offset;
+@@ -154,6 +154,7 @@ BEISCSI_RW_ATTR(log_enable, 0x00,
+ DEVICE_ATTR(beiscsi_drvr_ver, S_IRUGO, beiscsi_drvr_ver_disp, NULL);
+ DEVICE_ATTR(beiscsi_adapter_family, S_IRUGO, beiscsi_adap_family_disp, NULL);
+ DEVICE_ATTR(beiscsi_fw_ver, S_IRUGO, beiscsi_fw_ver_disp, NULL);
++DEVICE_ATTR(beiscsi_phys_port, S_IRUGO, beiscsi_phys_port_disp, NULL);
+ DEVICE_ATTR(beiscsi_active_session_count, S_IRUGO,
+ 	     beiscsi_active_session_disp, NULL);
+ DEVICE_ATTR(beiscsi_free_session_count, S_IRUGO,
+@@ -165,6 +166,7 @@ struct device_attribute *beiscsi_attrs[] = {
+ 	&dev_attr_beiscsi_fw_ver,
+ 	&dev_attr_beiscsi_active_session_count,
+ 	&dev_attr_beiscsi_free_session_count,
++	&dev_attr_beiscsi_phys_port,
+ 	NULL,
  };
  
-+struct ulp_cid_info {
-+	unsigned short *cid_array;
-+	unsigned short avlbl_cids;
-+	unsigned short cid_alloc;
-+	unsigned short cid_free;
-+};
-+
- #include "be.h"
- #define chip_be2(phba)      (phba->generation == BE_GEN2)
- #define chip_be3_r(phba)    (phba->generation == BE_GEN3)
-@@ -307,6 +314,14 @@ struct hwi_wrb_context {
- #define BEISCSI_ULP_COUNT   2
- #define BEISCSI_ULP0_LOADED 0x01
- #define BEISCSI_ULP1_LOADED 0x02
-+
-+#define BEISCSI_ULP_AVLBL_CID(phba, ulp_num) \
-+	(((struct ulp_cid_info *)phba->cid_array_info[ulp_num])->avlbl_cids)
-+#define BEISCSI_ULP0_AVLBL_CID(phba) \
-+	BEISCSI_ULP_AVLBL_CID(phba, BEISCSI_ULP0)
-+#define BEISCSI_ULP1_AVLBL_CID(phba) \
-+	BEISCSI_ULP_AVLBL_CID(phba, BEISCSI_ULP1)
-+
- struct beiscsi_hba {
- 	struct hba_parameters params;
- 	struct hwi_controller *phwi_ctrlr;
-@@ -343,16 +358,13 @@ struct beiscsi_hba {
- 	spinlock_t isr_lock;
- 	spinlock_t async_pdu_lock;
- 	unsigned int age;
--	unsigned short avlbl_cids;
--	unsigned short cid_alloc;
--	unsigned short cid_free;
- 	struct list_head hba_queue;
- #define BE_MAX_SESSION 2048
- #define BE_SET_CID_TO_CRI(cri_index, cid) \
- 			  (phba->cid_to_cri_map[cid] = cri_index)
- #define BE_GET_CRI_FROM_CID(cid) (phba->cid_to_cri_map[cid])
- 	unsigned short cid_to_cri_map[BE_MAX_SESSION];
--	unsigned short *cid_array;
-+	struct ulp_cid_info *cid_array_info[BEISCSI_ULP_COUNT];
- 	struct iscsi_endpoint **ep_array;
- 	struct beiscsi_conn **conn_table;
- 	struct iscsi_boot_kset *boot_kset;
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 0bebe3c..4bb1464 100644
+index c97140f..d3deb3f 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.c
 +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1339,9 +1339,21 @@ beiscsi_active_cid_disp(struct device *dev, struct device_attribute *attr,
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+	uint16_t avlbl_cids = 0, ulp_num, len = 0, total_cids = 0;
-+
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			avlbl_cids = BEISCSI_ULP_AVLBL_CID(phba, ulp_num);
-+			total_cids = BEISCSI_GET_CID_COUNT(phba, ulp_num);
-+			len += snprintf(buf+len, PAGE_SIZE - len,
-+					"ULP%d : %d\n", ulp_num,
-+					(total_cids - avlbl_cids));
-+		} else
-+			len += snprintf(buf+len, PAGE_SIZE - len,
-+					"ULP%d : %d\n", ulp_num, 0);
-+	}
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n",
--		       (phba->params.cxns_per_ctrl - phba->avlbl_cids));
-+	return len;
+@@ -1446,6 +1446,25 @@ beiscsi_adap_family_disp(struct device *dev, struct device_attribute *attr,
+ 	}
  }
  
- /**
++/**
++ * beiscsi_phys_port()- Display Physical Port Identifier
++ * @dev: ptr to device not used.
++ * @attr: device attribute, not used.
++ * @buf: contains formatted text port identifier
++ *
++ * return
++ * size of the formatted string
++ **/
++ssize_t
++beiscsi_phys_port_disp(struct device *dev, struct device_attribute *attr,
++			 char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "Port Identifier : %d\n",
++			phba->fw_config.phys_port);
++}
+ 
+ void beiscsi_offload_cxn_v0(struct beiscsi_offload_params *params,
+ 			     struct wrb_handle *pwrb_handle,
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index 9107ecf..645e144 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -325,6 +325,9 @@ ssize_t beiscsi_adap_family_disp(struct device *dev,
+ ssize_t beiscsi_free_session_disp(struct device *dev,
+ 				   struct device_attribute *attr, char *buf);
+ 
++ssize_t beiscsi_phys_port_disp(struct device *dev,
++				struct device_attribute *attr, char *buf);
++
+ void beiscsi_offload_cxn_v0(struct beiscsi_offload_params *params,
+ 			     struct wrb_handle *pwrb_handle,
+ 			     struct be_mem_descriptor *mem_descr);
 -- 
 1.7.10.4
 
