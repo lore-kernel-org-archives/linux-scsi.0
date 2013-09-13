@@ -1,8 +1,7 @@
 From: Andy Whitcroft <apw@canonical.com>
-Subject: [PATCH 2/4] scsi: add scsi device flag to request READ CAPACITY (16)
- be preferred
-Date: Fri, 13 Sep 2013 13:58:27 +0100
-Message-ID: <1379077109-29606-3-git-send-email-apw@canonical.com>
+Subject: [PATCH 3/4] scsi: hyper-v storage -- mark as VPD capable at SPC-2
+Date: Fri, 13 Sep 2013 13:58:28 +0100
+Message-ID: <1379077109-29606-4-git-send-email-apw@canonical.com>
 References: <1379077109-29606-1-git-send-email-apw@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -25,34 +24,20 @@ List-Id: linux-scsi@vger.kernel.org
 BugLink: http://bugs.launchpad.net/bugs/1223499
 Signed-off-by: Andy Whitcroft <apw@canonical.com>
 ---
- drivers/scsi/sd.c          | 2 ++
- include/scsi/scsi_device.h | 1 +
- 2 files changed, 3 insertions(+)
+ drivers/scsi/storvsc_drv.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5a8a04d..eba4d6c 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2104,6 +2104,8 @@ static int sd_try_rc16_first(struct scsi_device *sdp)
- 		return 1;
- 	if (scsi_device_protection(sdp))
- 		return 1;
-+	if (sdp->try_rc_16_first)
-+		return 1;
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 1a28f56..14ba8fd 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1437,6 +1437,7 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ 	blk_queue_rq_timeout(sdevice->request_queue, (storvsc_timeout * HZ));
+ 
+ 	sdevice->no_write_same = 1;
++	sdevice->use_vpd_spc2 = 1;
+ 
  	return 0;
  }
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 9b7fdb6..df3ed43 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -165,6 +165,7 @@ struct scsi_device {
- 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
- 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
- 	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
-+	unsigned try_rc_16_first:1;	/* Try READ_CAPACACITY_16 first */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
 -- 
 1.8.1.2
