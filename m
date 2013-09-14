@@ -1,37 +1,27 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch 1/5] drivers/scsi/a100u2w.c: convert to module_pci_driver
-Date: Fri, 13 Sep 2013 15:14:35 -0700
-Message-ID: <1379110475.2198.52.camel@dabdike.int.hansenpartnership.com>
-References: <20130913215226.831285A427E@corp2gmr1-2.hot.corp.google.com>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: Re: [PATCH v2] SCSI: buslogic: Added check for DMA mapping errors (wasRe:[BusLogic] DMA-API: device driver failed to check map error)
+Date: Sat, 14 Sep 2013 12:34:13 +0900
+Message-ID: <201309141234.AGC35960.tVOMOOLJFQHFSF@I-love.SAKURA.ne.jp>
+References: <1378816604.6973.53.camel@dabdike.int.hansenpartnership.com>
+	<1379004807.10738.3.camel@concerto>
+	<201309140042.GEI73439.QHSJtOFFVFOLOM@I-love.SAKURA.ne.jp>
+	<52333560.50209@oracle.com>
+	<1379101446.8358.4.camel@concerto>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55996 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754860Ab3IMWOh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Sep 2013 18:14:37 -0400
-In-Reply-To: <20130913215226.831285A427E@corp2gmr1-2.hot.corp.google.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1379101446.8358.4.camel@concerto>
+Sender: linux-kernel-owner@vger.kernel.org
+To: khalid.aziz@oracle.com
+Cc: jbottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, clbchenlibo.chen@huawei.com
 
-On Fri, 2013-09-13 at 14:52 -0700, akpm@linux-foundation.org wrote:
-> From: Libo Chen <clbchenlibo.chen@huawei.com>
-> Subject: drivers/scsi/a100u2w.c: convert to module_pci_driver
-> 
-> Use module_pci_driver instead of init/exit, make code clean.
+Khalid Aziz wrote:
+> Added check for DMA mapping errors for request sense data
+> buffer. Checking for mapping error can avoid potential wild
+> writes. This patch was prompted by the warning from
+> dma_unmap when kernel is compiled with CONFIG_DMA_API_DEBUG.
 
-To be honest, I don't really agree that any of these patches add value.
-Sure, for new drivers we should be using module_pci_driver, but for
-existing ones it's just pointless churn.
+This patch looks OK and works OK to me.
 
-That said, if the maintainers want this, I'll take it.  That means we
-don't do this for the unmaintained drivers (dmx3191d, a100u2w) but we
-might for the others.
-
-James
-
-
+Thank you.
