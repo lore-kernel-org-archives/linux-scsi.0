@@ -1,89 +1,72 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [PATCH] mvsas: Recognise device/subsystem 9485/9485 as 88SE9485
-Date: Mon, 16 Sep 2013 03:35:57 +0100
-Message-ID: <1379298957.23881.10.camel@deadeye.wl.decadent.org.uk>
+From: <Sumit.Saxena@lsi.com>
+Subject: [PATCH][SCSI] megaraid_sas: fixes for few endianess issues
+Date: Mon, 16 Sep 2013 15:18:06 +0530
+Message-ID: <201309160947.r8G9lwog002042@cosmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-KLL0rNBGSVSA1xbbbnXr"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:56206 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755568Ab3IPCgN (ORCPT
+Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:45512
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756658Ab3IPKDM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Sep 2013 22:36:13 -0400
+	Mon, 16 Sep 2013 06:03:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Matt Taggart <taggart@debian.org>, Debian kernel maintainers <debian-kernel@lists.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: jbottomley@parallels.com, kashyap.desai@lsi.com, aradford@gmail.com
+
+Fixed two issues in this patch-
+1) In function megasas_get_pd_list(), data read(pd_addr->deviceId) from DMAed memory is converted to CPU's endianess.
+2) While register AEN, removed some endianness conversion on some fields, since their endianess is already converted.
 
 
---=-KLL0rNBGSVSA1xbbbnXr
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-Matt Taggart reported that mvsas didn't bind to the Marvell
-SAS controller on a Supermicro AOC-SAS2LP-MV8 board.
-
-lspci reports it as:
-
-01:00.0 RAID bus controller [0104]: Marvell Technology Group Ltd. Device [1=
-b4b:9485] (rev 03)
-        Subsystem: Marvell Technology Group Ltd. Device [1b4b:9485]
-[...]
-
-Add it to the device table as chip_9485.
-
-Reported-by: Matt Taggart <taggart@debian.org>
-Tested-by: Matt Taggart <taggart@debian.org>
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Sumit Saxena <sumit.saxena@lsi.com>
 ---
- drivers/scsi/mvsas/mv_init.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 3020921..e62ff02 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3199,11 +3199,11 @@ megasas_get_pd_list(struct megasas_instance *instance)
+ 
+ 		for (pd_index = 0; pd_index < le32_to_cpu(ci->count); pd_index++) {
+ 
+-			instance->pd_list[pd_addr->deviceId].tid	=
++			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].tid	=
+ 				le16_to_cpu(pd_addr->deviceId);
+-			instance->pd_list[pd_addr->deviceId].driveType	=
++			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveType	=
+ 							pd_addr->scsiDevType;
+-			instance->pd_list[pd_addr->deviceId].driveState	=
++			instance->pd_list[le16_to_cpu(pd_addr->deviceId)].driveState	=
+ 							MR_PD_STATE_SYSTEM;
+ 			pd_addr++;
+ 		}
+@@ -3998,7 +3998,7 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
+ 		 * values
+ 		 */
+ 		if ((prev_aen.members.class <= curr_aen.members.class) &&
+-		    !((le16_to_cpu(prev_aen.members.locale) & curr_aen.members.locale) ^
++		    !((prev_aen.members.locale & curr_aen.members.locale) ^
+ 		      curr_aen.members.locale)) {
+ 			/*
+ 			 * Previously issued event registration includes
+@@ -4006,7 +4006,7 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
+ 			 */
+ 			return 0;
+ 		} else {
+-			curr_aen.members.locale |= le16_to_cpu(prev_aen.members.locale);
++			curr_aen.members.locale |= prev_aen.members.locale;
+ 
+ 			if (prev_aen.members.class < curr_aen.members.class)
+ 				curr_aen.members.class = prev_aen.members.class;
+@@ -4097,7 +4097,7 @@ static int megasas_start_aen(struct megasas_instance *instance)
+ 	class_locale.members.class = MR_EVT_CLASS_DEBUG;
+ 
+ 	return megasas_register_aen(instance,
+-			le32_to_cpu(eli.newest_seq_num) + 1,
++			eli.newest_seq_num + 1,
+ 			class_locale.word);
+ }
+ 
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 7b7381d..83fa5f8 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -729,6 +729,15 @@ static struct pci_device_id mvs_pci_table[] =3D {
- 		.class_mask	=3D 0,
- 		.driver_data	=3D chip_9485,
- 	},
-+	{
-+		.vendor		=3D PCI_VENDOR_ID_MARVELL_EXT,
-+		.device		=3D 0x9485,
-+		.subvendor	=3D PCI_ANY_ID,
-+		.subdevice	=3D 0x9485,
-+		.class		=3D 0,
-+		.class_mask	=3D 0,
-+		.driver_data	=3D chip_9485,
-+	},
- 	{ PCI_VDEVICE(OCZ, 0x1021), chip_9485}, /* OCZ RevoDrive3 */
- 	{ PCI_VDEVICE(OCZ, 0x1022), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
- model unknown) */
- 	{ PCI_VDEVICE(OCZ, 0x1040), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
- model unknown) */
-
-
---=-KLL0rNBGSVSA1xbbbnXr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIVAwUAUjZujee/yOyVhhEJAQptdw/+MOxAEKN7RcyGh5MmdQVHk6mTM6J15Zey
-4ZosW8flwCtLjw8mYY0z+Le0armZR+3DmIqOJ8jAFvHuIsyRokNk1YQ3UUnEw2Xv
-WT/flz+Lz9Eax/0NuK9GDMEg+DcjNaQScinS0Q0tFGQL3HT1cq59slRtUTKFOX1i
-aOWtl/ylPeE3FkhH55rSElqZkPt8Sa64NcI0fKjOmkhE90vz92pwFh0ZaPiP7KhF
-jJYWGMdpxO7ihGMu7UYTLNJKcbIyFDYfinyKmuzWla8b8go/t18mRdBWDWKBFXqw
-lr/8pItyww6OD0XT0v2I/DlteqqQbS2kyf35xnQ2leq2LNJmtslaXPocR7q/PS0R
-qhXSpsjxiu/7o95kzLMWP/3sVBQzIu2uuSpsG5abrDi6VNhDbyP6QtpydjtAozT+
-g7ISlFrT+uUTQD7dLGLaB1d/3MpTEOTSDIk4nPMetZUdETMZHp42/fo6+YCvLwKB
-ND/qyR22NfWKkPyJMtE3bfKT8Wbgk8hYyfmxecEj8cfEmRtxCFIQ1gQQXIvvJKqK
-4wk7meiArJeKmL4LEr9scDw3tqE62rlXd1YjjoYsKDiTiY1+yJw9ugKgezQRk38s
-/BIfuw+P+yl/fEAKCxAnpI66Ihsfk6eaeCKV8hJzFEPwTXQjl35HO+1taK4Nwjy1
-JZL1H/2ULzo=
-=1XcI
------END PGP SIGNATURE-----
-
---=-KLL0rNBGSVSA1xbbbnXr--
