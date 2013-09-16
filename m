@@ -1,525 +1,717 @@
 From: Anand <anandkumar_santhanam@pmc-sierra.com>
-Subject: [PATCH 4/5] pm80xx: Print SAS address of IO failed device, 4G boundary
- fix.
-Date: Mon, 16 Sep 2013 08:58:19 -0700
-Message-ID: <52372A9B.2000900@pmc-sierra.com>
+Subject: [PATCH 5/5] pm80xx: Firmware logging support.
+Date: Mon, 16 Sep 2013 08:59:54 -0700
+Message-ID: <52372AFA.4090809@pmc-sierra.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51427 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750935Ab3IPPzh (ORCPT
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:41646 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750948Ab3IPP5M (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Sep 2013 11:55:37 -0400
+	Mon, 16 Sep 2013 11:57:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Viswas.G@pmcs.com, Sangeetha.Gnanasekaran@pmcs.com, xjtuwjp@gmail.com, Nikith.Ganigarakoppal@pmcs.com
+Cc: Sangeetha.Gnanasekaran@pmcs.com, xjtuwjp@gmail.com, Nikith.Ganigarakoppal@pmcs.com, Viswas.G@pmcs.com
 
->From 3574b24db1a5472df9cef88010fabad7742351e5 Mon Sep 17 00:00:00 2001
+>From f2b2b73a75725d0419a3771c15b323966c018b9e Mon Sep 17 00:00:00 2001
 From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-Date: Tue, 3 Sep 2013 16:55:54 +0530
-Subject: [PATCH 4/5] pm80xx: Print SAS address of IO failed device, 4G boundary fix.
+Date: Wed, 4 Sep 2013 12:57:00 +0530
+Subject: [PATCH 5/5] pm80xx: Firmware logging support.
 
-Added queue rotation logic to improve IO performance.
-Print sas address of failed IO device.
-Fix for single SG crossing 4G boundary.
+Supports below logging facilities,
+Inbound outbound queues dump.
+Non fatal dump in case of IO failures.
+Fatal dump in case of firmware failure.
 
 Signed-off-by: Anandkumar.Santhanam@pmcs.com
 
 ---
- drivers/scsi/pm8001/pm8001_hwi.c  |   71 +++++++++++++-
+ drivers/scsi/pm8001/pm8001_ctl.c  |  129 +++++++++++++++++++++
+ drivers/scsi/pm8001/pm8001_ctl.h  |    4 +
+ drivers/scsi/pm8001/pm8001_defs.h |    3 +-
+ drivers/scsi/pm8001/pm8001_hwi.c  |   83 ++++++++++++++
+ drivers/scsi/pm8001/pm8001_hwi.h  |    3 +
  drivers/scsi/pm8001/pm8001_init.c |    4 +
- drivers/scsi/pm8001/pm8001_sas.c  |    9 ++-
- drivers/scsi/pm8001/pm80xx_hwi.c  |  199 +++++++++++++++++++++++++++++++++----
- 4 files changed, 260 insertions(+), 23 deletions(-)
+ drivers/scsi/pm8001/pm8001_sas.h  |   68 +++++++++++
+ drivers/scsi/pm8001/pm80xx_hwi.c  |  225 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/pm8001/pm80xx_hwi.h  |    2 +
+ 9 files changed, 520 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+index 5a19e19..2ca79a5 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.c
++++ b/drivers/scsi/pm8001/pm8001_ctl.c
+@@ -309,6 +309,94 @@ static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
+ }
+ static DEVICE_ATTR(aap_log, S_IRUGO, pm8001_ctl_aap_log_show, NULL);
+ /**
++ * pm8001_ctl_ib_queue_log_show - Out bound Queue log
++ * @cdev:pointer to embedded class device
++ * @buf: the buffer returned
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t pm8001_ctl_ib_queue_log_show(struct device *cdev,
++	struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
++	int offset;
++	char *str = buf;
++	int start = 0;
++#define IB_MEMMAP(c)		\
++		(*(u32 *)((u8 *)pm8001_ha->		\
++		memoryMap.region[IB].virt_ptr +		\
++		pm8001_ha->evtlog_ib_offset + (c)))
++
++#define IB_MEMMAP_SPC(c)		\
++		(*(u32 *)((u8 *)pm8001_ha->		\
++		memoryMap.region[IB].virt_ptr +		\
++		pm8001_ha->evtlog_ib_offset + (c)))
++
++	for (offset = 0; offset < IB_OB_READ_TIMES; offset++) {
++		if (pm8001_ha->chip_id != chip_8001)
++			str += sprintf(str, "0x%08x\n", IB_MEMMAP(start));
++		else
++			str += sprintf(str, "0x%08x\n", IB_MEMMAP_SPC(start));
++		start = start + 4;
++	}
++	pm8001_ha->evtlog_ib_offset += SYSFS_OFFSET;
++	if ((((pm8001_ha->evtlog_ib_offset) % (PM80XX_IB_OB_QUEUE_SIZE)) == 0)
++		&& (pm8001_ha->chip_id != chip_8001))
++		pm8001_ha->evtlog_ib_offset = 0;
++	if ((((pm8001_ha->evtlog_ib_offset) % (PM8001_IB_OB_QUEUE_SIZE)) == 0)
++		&& (pm8001_ha->chip_id == chip_8001))
++		pm8001_ha->evtlog_ib_offset = 0;
++
++	return str - buf;
++}
++
++static DEVICE_ATTR(ib_log, S_IRUGO, pm8001_ctl_ib_queue_log_show, NULL);
++/**
++ * pm8001_ctl_ob_queue_log_show - Out bound Queue log
++ * @cdev:pointer to embedded class device
++ * @buf: the buffer returned
++ * A sysfs 'read-only' shost attribute.
++ */
++
++static ssize_t pm8001_ctl_ob_queue_log_show(struct device *cdev,
++	struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
++	int offset;
++	char *str = buf;
++	int start = 0;
++#define OB_MEMMAP(c)		\
++		(*(u32 *)((u8 *)pm8001_ha->		\
++		memoryMap.region[OB].virt_ptr +		\
++		pm8001_ha->evtlog_ob_offset + (c)))
++
++#define OB_MEMMAP_SPC(c)		\
++		(*(u32 *)((u8 *)pm8001_ha->		\
++		memoryMap.region[OB].virt_ptr +		\
++		pm8001_ha->evtlog_ob_offset + (c)))
++
++	for (offset = 0; offset < IB_OB_READ_TIMES; offset++) {
++		if (pm8001_ha->chip_id != chip_8001)
++			str += sprintf(str, "0x%08x\n", OB_MEMMAP(start));
++		else
++			str += sprintf(str, "0x%08x\n", OB_MEMMAP_SPC(start));
++		start = start + 4;
++	}
++	pm8001_ha->evtlog_ob_offset += SYSFS_OFFSET;
++	if ((((pm8001_ha->evtlog_ob_offset) % (PM80XX_IB_OB_QUEUE_SIZE)) == 0)
++			&& (pm8001_ha->chip_id != chip_8001))
++		pm8001_ha->evtlog_ob_offset = 0;
++	if ((((pm8001_ha->evtlog_ob_offset) % (PM8001_IB_OB_QUEUE_SIZE)) == 0)
++			&& (pm8001_ha->chip_id == chip_8001))
++		pm8001_ha->evtlog_ob_offset = 0;
++
++	return str - buf;
++}
++static DEVICE_ATTR(ob_log, S_IRUGO, pm8001_ctl_ob_queue_log_show, NULL);
++/**
+  * pm8001_ctl_bios_version_show - Bios version Display
+  * @cdev:pointer to embedded class device
+  * @buf:the buffer returned
+@@ -377,6 +465,43 @@ static ssize_t pm8001_ctl_iop_log_show(struct device *cdev,
+ }
+ static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
+ 
++/**
++ ** pm8001_ctl_fatal_log_show - fatal error logging
++ ** @cdev:pointer to embedded class device
++ ** @buf: the buffer returned
++ **
++ ** A sysfs 'read-only' shost attribute.
++ **/
++
++static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
++	struct device_attribute *attr, char *buf)
++{
++	u32 count;
++
++	count = pm80xx_get_fatal_dump(cdev, attr, buf);
++	return count;
++}
++
++static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
++
++
++/**
++ ** pm8001_ctl_gsm_log_show - gsm dump collection
++ ** @cdev:pointer to embedded class device
++ ** @buf: the buffer returned
++ **A sysfs 'read-only' shost attribute.
++ **/
++static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
++	struct device_attribute *attr, char *buf)
++{
++	u32 count;
++
++	count = pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
++	return count;
++}
++
++static DEVICE_ATTR(gsm_log, S_IRUGO, pm8001_ctl_gsm_log_show, NULL);
++
+ #define FLASH_CMD_NONE      0x00
+ #define FLASH_CMD_UPDATE    0x01
+ #define FLASH_CMD_SET_NVMD    0x02
+@@ -636,6 +761,8 @@ struct device_attribute *pm8001_host_attrs[] = {
+ 	&dev_attr_update_fw,
+ 	&dev_attr_aap_log,
+ 	&dev_attr_iop_log,
++	&dev_attr_fatal_log,
++	&dev_attr_gsm_log,
+ 	&dev_attr_max_out_io,
+ 	&dev_attr_max_devices,
+ 	&dev_attr_max_sg_list,
+@@ -643,6 +770,8 @@ struct device_attribute *pm8001_host_attrs[] = {
+ 	&dev_attr_logging_level,
+ 	&dev_attr_host_sas_address,
+ 	&dev_attr_bios_version,
++	&dev_attr_ib_log,
++	&dev_attr_ob_log,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.h b/drivers/scsi/pm8001/pm8001_ctl.h
+index c6d8fdd..d0d43a2 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.h
++++ b/drivers/scsi/pm8001/pm8001_ctl.h
+@@ -55,5 +55,9 @@
+ #define FAIL_OUT_MEMORY                 0x000c00
+ #define FLASH_IN_PROGRESS               0x001000
+ 
++#define IB_OB_READ_TIMES                256
++#define SYSFS_OFFSET                    1024
++#define PM80XX_IB_OB_QUEUE_SIZE         (32 * 1024)
++#define PM8001_IB_OB_QUEUE_SIZE         (16 * 1024)
+ #endif /* PM8001_CTL_H_INCLUDED */
+ 
+diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
+index 4bb304d..74a4bb9 100644
+--- a/drivers/scsi/pm8001/pm8001_defs.h
++++ b/drivers/scsi/pm8001/pm8001_defs.h
+@@ -102,7 +102,8 @@ enum memory_region_num {
+ 	NVMD,	    /* NVM device */
+ 	DEV_MEM,    /* memory for devices */
+ 	CCB_MEM,    /* memory for command control block */
+-	FW_FLASH    /* memory for fw flash update */
++	FW_FLASH,    /* memory for fw flash update */
++	FORENSIC_MEM  /* memory for fw forensic data */
+ };
+ #define	PM8001_EVENT_LOG_SIZE	 (128 * 1024)
+ 
 diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 2fd8c38..502c7d6 100644
+index 502c7d6..75a8b46 100644
 --- a/drivers/scsi/pm8001/pm8001_hwi.c
 +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1868,6 +1868,13 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
- 	if (unlikely(!t || !t->lldd_task || !t->dev))
- 		return;
- 	ts = &t->task_status;
-+	/* Print sas address of IO failed device */
-+	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
-+		(status != IO_UNDERFLOW))
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("SAS Address of IO Failure Drive:"
-+			"%016llx", SAS_ADDR(t->dev->sas_addr)-1));
-+
- 	switch (status) {
- 	case IO_SUCCESS:
- 		PM8001_IO_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS"
-@@ -2276,6 +2283,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	u32 param;
- 	u32 status;
- 	u32 tag;
-+	int i, j;
-+	u8 sata_addr_low[4];
-+	u32 temp_sata_addr_low;
-+	u8 sata_addr_hi[4];
-+	u32 temp_sata_addr_hi;
- 	struct sata_completion_resp *psataPayload;
- 	struct task_status_struct *ts;
- 	struct ata_task_resp *resp ;
-@@ -2325,7 +2337,60 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 			pm8001_printk("ts null\n"));
- 		return;
- 	}
-+	/* Print sas address of IO failed device */
-+	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
-+		(status != IO_UNDERFLOW)) {
-+		if (!((t->dev->parent) &&
-+			(DEV_IS_EXPANDER(t->dev->parent->dev_type)))) {
-+			for (i = 0 , j = 4 ; j <= 7 && i <= 3 ; i++ , j++)
-+				sata_addr_low[i] = pm8001_ha->sas_addr[j];
-+			for (i = 0 , j = 0; j <= 3 && i <= 3; i++ , j++)
-+				sata_addr_hi[i] = pm8001_ha->sas_addr[j];
-+			memcpy(&temp_sata_addr_low, sata_addr_low,
-+				sizeof(sata_addr_low));
-+			memcpy(&temp_sata_addr_hi, sata_addr_hi,
-+				sizeof(sata_addr_hi));
-+			temp_sata_addr_hi = (((temp_sata_addr_hi >> 24) & 0xff)
-+						|((temp_sata_addr_hi << 8) &
-+						0xff0000) |
-+						((temp_sata_addr_hi >> 8)
-+						& 0xff00) |
-+						((temp_sata_addr_hi << 24) &
-+						0xff000000));
-+			temp_sata_addr_low = ((((temp_sata_addr_low >> 24)
-+						& 0xff) |
-+						((temp_sata_addr_low << 8)
-+						& 0xff0000) |
-+						((temp_sata_addr_low >> 8)
-+						& 0xff00) |
-+						((temp_sata_addr_low << 24)
-+						& 0xff000000)) +
-+						pm8001_dev->attached_phy +
-+						0x10);
-+			PM8001_FAIL_DBG(pm8001_ha,
-+				pm8001_printk("SAS Address of IO Failure Drive:"
-+				"%08x%08x", temp_sata_addr_hi,
-+					temp_sata_addr_low));
-+		} else {
-+			for (i = 0 , j = 4 ; j <= 7 && i <= 3; i++ , j++)
-+				sata_addr_low[i] = t->dev->sas_addr[j];
-+			for (i = 0 , j = 0 ; j <= 3 && i <= 3 ; i++ , j++)
-+				sata_addr_hi[i] = t->dev->sas_addr[j];
-+			temp_sata_addr_low = (sata_addr_low[0] << 24) |
-+						(sata_addr_low[1] << 16) |
-+						(sata_addr_low[2] << 8) |
-+						(sata_addr_low[3]);
-+			temp_sata_addr_hi =  (sata_addr_hi[0] << 24)|
-+						(sata_addr_hi[1] << 16)|
-+						(sata_addr_hi[2] << 8)|
-+						(sata_addr_hi[3]);
+@@ -5015,6 +5015,89 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
+ 	return rc;
+ }
  
-+			PM8001_FAIL_DBG(pm8001_ha,
-+				pm8001_printk("SAS Address of IO Failure Drive:"
-+				"%08x%08x", temp_sata_addr_hi,
-+					temp_sata_addr_low));
++ssize_t
++pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
++{
++	u32 value, rem, offset = 0, bar = 0;
++	u32 index, work_offset, dw_length;
++	u32 shift_value, gsm_base, gsm_dump_offset;
++	char *direct_data;
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
++
++	direct_data = buf;
++	gsm_dump_offset = pm8001_ha->fatal_forensic_shift_offset;
++
++	/* check max is 1 Mbytes */
++	if ((length > 0x100000) || (gsm_dump_offset & 3) ||
++		((gsm_dump_offset + length) > 0x1000000))
++			return 1;
++
++	if (pm8001_ha->chip_id == chip_8001)
++		bar = 2;
++	else
++		bar = 1;
++
++	work_offset = gsm_dump_offset & 0xFFFF0000;
++	offset = gsm_dump_offset & 0x0000FFFF;
++	gsm_dump_offset = work_offset;
++	/* adjust length to dword boundary */
++	rem = length & 3;
++	dw_length = length >> 2;
++
++	for (index = 0; index < dw_length; index++) {
++		if ((work_offset + offset) & 0xFFFF0000) {
++			if (pm8001_ha->chip_id == chip_8001)
++				shift_value = ((gsm_dump_offset + offset) &
++						SHIFT_REG_64K_MASK);
++			else
++				shift_value = (((gsm_dump_offset + offset) &
++						SHIFT_REG_64K_MASK) >>
++						SHIFT_REG_BIT_SHIFT);
++
++			if (pm8001_ha->chip_id == chip_8001) {
++				gsm_base = GSM_BASE;
++				if (-1 == pm8001_bar4_shift(pm8001_ha,
++						(gsm_base + shift_value)))
++					return 1;
++			} else {
++				gsm_base = 0;
++				if (-1 == pm80xx_bar4_shift(pm8001_ha,
++						(gsm_base + shift_value)))
++					return 1;
++			}
++			gsm_dump_offset = (gsm_dump_offset + offset) &
++						0xFFFF0000;
++			work_offset = 0;
++			offset = offset & 0x0000FFFF;
 +		}
++		value = pm8001_cr32(pm8001_ha, bar, (work_offset + offset) &
++						0x0000FFFF);
++		direct_data += sprintf(direct_data, "%08x ", value);
++		offset += 4;
 +	}
- 	switch (status) {
- 	case IO_SUCCESS:
- 		PM8001_IO_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS\n"));
-@@ -3087,8 +3152,8 @@ void pm8001_mpi_set_dev_state_resp(struct pm8001_hba_info *pm8001_ha,
- 	struct pm8001_device *pm8001_dev = ccb->device;
- 	u32 status = le32_to_cpu(pPayload->status);
- 	u32 device_id = le32_to_cpu(pPayload->device_id);
--	u8 pds = le32_to_cpu(pPayload->pds_nds) | PDS_BITS;
--	u8 nds = le32_to_cpu(pPayload->pds_nds) | NDS_BITS;
-+	u8 pds = le32_to_cpu(pPayload->pds_nds) & PDS_BITS;
-+	u8 nds = le32_to_cpu(pPayload->pds_nds) & NDS_BITS;
- 	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("Set device id = 0x%x state "
- 		"from 0x%x to 0x%x status = 0x%x!\n",
- 		device_id, pds, nds, status));
-@@ -4700,6 +4765,8 @@ int pm8001_chip_ssp_tm_req(struct pm8001_hba_info *pm8001_ha,
- 	sspTMCmd.tmf = cpu_to_le32(tmf->tmf);
- 	memcpy(sspTMCmd.lun, task->ssp_task.LUN, 8);
- 	sspTMCmd.tag = cpu_to_le32(ccb->ccb_tag);
-+	if (pm8001_ha->chip_id != chip_8001)
-+		sspTMCmd.ds_ads_m = 0x08;
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &sspTMCmd, 0);
- 	return ret;
++	if (rem != 0) {
++		value = pm8001_cr32(pm8001_ha, bar, (work_offset + offset) &
++						0x0000FFFF);
++		/* xfr for non_dw */
++		direct_data += sprintf(direct_data, "%08x ", value);
++	}
++	/* Shift back to BAR4 original address */
++	if (pm8001_ha->chip_id == chip_8001) {
++		if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
++			return 1;
++	} else {
++		if (-1 == pm80xx_bar4_shift(pm8001_ha, 0))
++			return 1;
++	}
++	pm8001_ha->fatal_forensic_shift_offset += 1024;
++
++	if (pm8001_ha->fatal_forensic_shift_offset >= 0x100000)
++		pm8001_ha->fatal_forensic_shift_offset = 0;
++	return direct_data - buf;
++}
++
+ int
+ pm8001_chip_set_dev_state_req(struct pm8001_hba_info *pm8001_ha,
+ 	struct pm8001_device *pm8001_dev, u32 state)
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
+index d7c1e20..6d91e24 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.h
++++ b/drivers/scsi/pm8001/pm8001_hwi.h
+@@ -1027,5 +1027,8 @@ struct set_dev_state_resp {
+ #define DEVREG_FAILURE_PORT_NOT_VALID_STATE		0x06
+ #define DEVREG_FAILURE_DEVICE_TYPE_NOT_VALID		0x07
+ 
++#define GSM_BASE					0x4F0000
++#define SHIFT_REG_64K_MASK				0xffff0000
++#define SHIFT_REG_BIT_SHIFT				8
+ #endif
+ 
 diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index e697cee..5ed33d0 100644
+index 5ed33d0..a4adba5 100644
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -865,8 +865,10 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+@@ -347,6 +347,10 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+ 	/* Memory region for fw flash */
+ 	pm8001_ha->memoryMap.region[FW_FLASH].total_len = 4096;
  
- 	PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, 0);
- 	if (pm8001_ha->chip_id != chip_8001) {
-+#ifdef PM8001_USE_MSIX
- 		for (i = 1; i < pm8001_ha->number_of_intr; i++)
- 			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
-+#endif
- 		/* setup thermal configuration. */
- 		pm80xx_set_thermal_config(pm8001_ha);
- 	}
-@@ -1035,10 +1037,12 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
- 			(unsigned long)pm8001_ha);
- #endif
- 	PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, 0);
-+#ifdef PM8001_USE_MSIX
- 	if (pm8001_ha->chip_id != chip_8001) {
- 		for (i = 1; i < pm8001_ha->number_of_intr; i++)
- 			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
- 	}
-+#endif
- 	scsi_unblock_requests(pm8001_ha->shost);
- 	return 0;
++	pm8001_ha->memoryMap.region[FORENSIC_MEM].num_elements = 1;
++	pm8001_ha->memoryMap.region[FORENSIC_MEM].total_len = 0x10000;
++	pm8001_ha->memoryMap.region[FORENSIC_MEM].element_size = 0x10000;
++	pm8001_ha->memoryMap.region[FORENSIC_MEM].alignment = 0x10000;
+ 	for (i = 0; i < USI_MAX_MEMCNT; i++) {
+ 		if (pm8001_mem_alloc(pm8001_ha->pdev,
+ 			&pm8001_ha->memoryMap.region[i].virt_ptr,
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index fcdc4d4..4ab6e14 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -133,6 +133,61 @@ struct pm8001_ioctl_payload {
+ 	u8	*func_specific;
+ };
  
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index a85d73d..f4eb18e 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -447,7 +447,6 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
- 			break;
- 		case SAS_PROTOCOL_SATA:
- 		case SAS_PROTOCOL_STP:
--		case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
- 			rc = pm8001_task_prep_ata(pm8001_ha, ccb);
- 			break;
- 		default:
-@@ -704,6 +703,8 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
- 	int res, retry;
- 	struct sas_task *task = NULL;
- 	struct pm8001_hba_info *pm8001_ha = pm8001_find_ha_by_dev(dev);
-+	struct pm8001_device *pm8001_dev = dev->lldd_dev;
-+	DECLARE_COMPLETION_ONSTACK(completion_setstate);
++#define MPI_FATAL_ERROR_TABLE_OFFSET_MASK 0xFFFFFF
++#define MPI_FATAL_ERROR_TABLE_SIZE(value) ((0xFF000000 & value) >> SHIFT24)
++#define MPI_FATAL_EDUMP_TABLE_LO_OFFSET            0x00     /* HNFBUFL */
++#define MPI_FATAL_EDUMP_TABLE_HI_OFFSET            0x04     /* HNFBUFH */
++#define MPI_FATAL_EDUMP_TABLE_LENGTH               0x08     /* HNFBLEN */
++#define MPI_FATAL_EDUMP_TABLE_HANDSHAKE            0x0C     /* FDDHSHK */
++#define MPI_FATAL_EDUMP_TABLE_STATUS               0x10     /* FDDTSTAT */
++#define MPI_FATAL_EDUMP_TABLE_ACCUM_LEN            0x14     /* ACCDDLEN */
++#define MPI_FATAL_EDUMP_HANDSHAKE_RDY              0x1
++#define MPI_FATAL_EDUMP_HANDSHAKE_BUSY             0x0
++#define MPI_FATAL_EDUMP_TABLE_STAT_RSVD                 0x0
++#define MPI_FATAL_EDUMP_TABLE_STAT_DMA_FAILED           0x1
++#define MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_MORE_DATA 0x2
++#define MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_DONE      0x3
++#define TYPE_GSM_SPACE        1
++#define TYPE_QUEUE            2
++#define TYPE_FATAL            3
++#define TYPE_NON_FATAL        4
++#define TYPE_INBOUND          1
++#define TYPE_OUTBOUND         2
++struct forensic_data {
++  u32  data_type;
++  union {
++    struct {
++      u32  direct_len;
++      u32  direct_offset;
++      void  *direct_data;
++    } gsm_buf;
++    struct {
++      u16  queue_type;
++      u16  queue_index;
++      u32  direct_len;
++      void  *direct_data;
++    } queue_buf;
++    struct {
++      u32  direct_len;
++      u32  direct_offset;
++      u32  read_len;
++      void  *direct_data;
++    } data_buf;
++  };
++};
++
++/* bit31-26 - mask bar */
++#define SCRATCH_PAD0_BAR_MASK                    0xFC000000
++/* bit25-0  - offset mask */
++#define SCRATCH_PAD0_OFFSET_MASK                 0x03FFFFFF
++/* if AAP error state */
++#define SCRATCH_PAD0_AAPERR_MASK                 0xFFFFFFFF
++/* Inbound doorbell bit7 */
++#define SPCv_MSGU_CFG_TABLE_NONFATAL_DUMP	 0x80
++/* Inbound doorbell bit7 SPCV */
++#define SPCV_MSGU_CFG_TABLE_TRANSFER_DEBUG_INFO  0x80
++#define MAIN_MERRDCTO_MERRDCES		         0xA0/* DWORD 0x28) */
++
+ struct pm8001_dispatch {
+ 	char *name;
+ 	int (*chip_init)(struct pm8001_hba_info *pm8001_ha);
+@@ -347,6 +402,7 @@ union main_cfg_table {
+ 	u32			phy_attr_table_offset;
+ 	u32			port_recovery_timer;
+ 	u32			interrupt_reassertion_delay;
++	u32			fatal_n_non_fatal_dump;	        /* 0x28 */
+ 	} pm80xx_tbl;
+ };
  
- 	for (retry = 0; retry < 3; retry++) {
- 		task = sas_alloc_slow_task(GFP_KERNEL);
-@@ -729,6 +730,12 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
- 			goto ex_err;
- 		}
- 		wait_for_completion(&task->slow_task->completion);
-+		if (pm8001_ha->chip_id != chip_8001) {
-+			pm8001_dev->setds_completion = &completion_setstate;
-+				PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
-+					pm8001_dev, 0x01);
-+			wait_for_completion(&completion_setstate);
-+		}
- 		res = -TMF_RESP_FUNC_FAILED;
- 		/* Even TMF timed out, return direct. */
- 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+@@ -421,6 +477,13 @@ struct pm8001_hba_info {
+ 	struct pm8001_hba_memspace io_mem[6];
+ 	struct mpi_mem_req	memoryMap;
+ 	struct encrypt		encrypt_info; /* support encryption */
++	struct forensic_data	forensic_info;
++	u32			fatal_bar_loc;
++	u32			forensic_last_offset;
++	u32			fatal_forensic_shift_offset;
++	u32			forensic_fatal_step;
++	u32			evtlog_ib_offset;
++	u32			evtlog_ob_offset;
+ 	void __iomem	*msg_unit_tbl_addr;/*Message Unit Table Addr*/
+ 	void __iomem	*main_cfg_tbl_addr;/*Main Config Table Addr*/
+ 	void __iomem	*general_stat_tbl_addr;/*General Status Table Addr*/
+@@ -429,6 +492,7 @@ struct pm8001_hba_info {
+ 	void __iomem	*pspa_q_tbl_addr;
+ 			/*MPI SAS PHY attributes Queue Config Table Addr*/
+ 	void __iomem	*ivt_tbl_addr; /*MPI IVT Table Addr */
++	void __iomem	*fatal_tbl_addr; /*MPI IVT Table Addr */
+ 	union main_cfg_table	main_cfg_tbl;
+ 	union general_status_table	gs_tbl;
+ 	struct inbound_queue_table	inbnd_q_tbl[PM8001_MAX_SPCV_INB_NUM];
+@@ -635,6 +699,10 @@ int pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha);
+ int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
+ void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
+ 	u32 length, u8 *buf);
++int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
++ssize_t pm80xx_get_fatal_dump(struct device *cdev,
++		struct device_attribute *attr, char *buf);
++ssize_t pm8001_get_gsm_dump(struct device *cdev, u32, char *buf);
+ /* ctl shared API */
+ extern struct device_attribute *pm8001_host_attrs[];
+ 
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 70fa7d9..187b9f0 100644
+index 187b9f0..555a267 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -1296,6 +1296,13 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
- 	if (unlikely(!t || !t->lldd_task || !t->dev))
- 		return;
- 	ts = &t->task_status;
-+	/* Print sas address of IO failed device */
-+	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
-+		(status != IO_UNDERFLOW))
-+		PM8001_FAIL_DBG(pm8001_ha,
-+			pm8001_printk("SAS Address of IO Failure Drive"
-+			":%016llx", SAS_ADDR(t->dev->sas_addr)-1));
-+
- 	switch (status) {
- 	case IO_SUCCESS:
- 		PM8001_IO_DBG(pm8001_ha,
-@@ -1719,6 +1726,10 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	u32 param;
- 	u32 status;
- 	u32 tag;
-+	int i, j;
-+	u8 sata_addr_low[4];
-+	u32 temp_sata_addr_low, temp_sata_addr_hi;
-+	u8 sata_addr_hi[4];
- 	struct sata_completion_resp *psataPayload;
- 	struct task_status_struct *ts;
- 	struct ata_task_resp *resp ;
-@@ -1768,7 +1779,61 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 			pm8001_printk("ts null\n"));
- 		return;
- 	}
-+	/* Print sas address of IO failed device */
-+	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
-+		(status != IO_UNDERFLOW)) {
-+		if (!((t->dev->parent) &&
-+			(DEV_IS_EXPANDER(t->dev->parent->dev_type)))) {
-+			for (i = 0 , j = 4 ; i <= 3 && j <= 7 ; i++ , j++)
-+				sata_addr_low[i] = pm8001_ha->sas_addr[j];
-+			for (i = 0 , j = 0; i <= 3 && j <= 3; i++ , j++)
-+				sata_addr_hi[i] = pm8001_ha->sas_addr[j];
-+			memcpy(&temp_sata_addr_low, sata_addr_low,
-+				sizeof(sata_addr_low));
-+			memcpy(&temp_sata_addr_hi, sata_addr_hi,
-+				sizeof(sata_addr_hi));
-+			temp_sata_addr_hi = (((temp_sata_addr_hi >> 24) & 0xff)
-+						|((temp_sata_addr_hi << 8) &
-+						0xff0000) |
-+						((temp_sata_addr_hi >> 8)
-+						& 0xff00) |
-+						((temp_sata_addr_hi << 24) &
-+						0xff000000));
-+			temp_sata_addr_low = ((((temp_sata_addr_low >> 24)
-+						& 0xff) |
-+						((temp_sata_addr_low << 8)
-+						& 0xff0000) |
-+						((temp_sata_addr_low >> 8)
-+						& 0xff00) |
-+						((temp_sata_addr_low << 24)
-+						& 0xff000000)) +
-+						pm8001_dev->attached_phy +
-+						0x10);
-+			PM8001_FAIL_DBG(pm8001_ha,
-+				pm8001_printk("SAS Address of IO Failure Drive:"
-+				"%08x%08x", temp_sata_addr_hi,
-+					temp_sata_addr_low));
+@@ -45,6 +45,228 @@
  
-+		} else {
-+			for (i = 0 , j = 4 ; i <= 3 && j <= 7; i++ , j++)
-+				sata_addr_low[i] = t->dev->sas_addr[j];
-+			for (i = 0 , j = 0 ; i <= 3 && j <= 3 ; i++ , j++)
-+				sata_addr_hi[i] = t->dev->sas_addr[j];
-+			temp_sata_addr_low = (sata_addr_low[0] << 24) |
-+						(sata_addr_low[1] << 16) |
-+						(sata_addr_low[2] << 8) |
-+						(sata_addr_low[3]);
-+			temp_sata_addr_hi =  (sata_addr_hi[0] << 24)|
-+						(sata_addr_hi[1] << 16)|
-+						(sata_addr_hi[2] << 8)|
-+						(sata_addr_hi[3]);
+ #define SMP_DIRECT 1
+ #define SMP_INDIRECT 2
 +
-+			PM8001_FAIL_DBG(pm8001_ha,
-+				pm8001_printk("SAS Address of IO Failure Drive:"
-+				"%08x%08x", temp_sata_addr_hi,
-+					temp_sata_addr_low));
++
++int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shift_value)
++{
++	u32 reg_val;
++	unsigned long start;
++	pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER, shift_value);
++	/* confirm the setting is written */
++	start = jiffies + HZ; /* 1 sec */
++	do {
++		reg_val = pm8001_cr32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER);
++	} while ((reg_val != shift_value) && time_before(jiffies, start));
++	if (reg_val != shift_value) {
++		PM8001_FAIL_DBG(pm8001_ha,
++			pm8001_printk("TIMEOUT:MEMBASE_II_SHIFT_REGISTER"
++			" = 0x%x\n", reg_val));
++		return -1;
++	}
++	return 0;
++}
++
++void pm80xx_pci_mem_copy(struct pm8001_hba_info  *pm8001_ha, u32 soffset,
++				const void *destination,
++				u32 dw_count, u32 bus_base_number)
++{
++	u32 index, value, offset;
++	u32 *destination1;
++	destination1 = (u32 *)destination;
++
++	for (index = 0; index < dw_count; index += 4, destination1++) {
++		offset = (soffset + index / 4);
++		if (offset < (64 * 1024)) {
++			value = pm8001_cr32(pm8001_ha, bus_base_number, offset);
++			*destination1 =  cpu_to_le32(value);
 +		}
 +	}
- 	switch (status) {
- 	case IO_SUCCESS:
- 		PM8001_IO_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS\n"));
-@@ -3648,10 +3713,10 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 	struct ssp_ini_io_start_req ssp_cmd;
- 	u32 tag = ccb->ccb_tag;
- 	int ret;
--	u64 phys_addr;
-+	u64 phys_addr, start_addr, end_addr;
-+	u32 end_addr_high, end_addr_low;
- 	struct inbound_queue_table *circularQ;
--	static u32 inb;
--	static u32 outb;
-+	u32 q_index;
- 	u32 opc = OPC_INB_SSPINIIOSTART;
- 	memset(&ssp_cmd, 0, sizeof(ssp_cmd));
- 	memcpy(ssp_cmd.ssp_iu.lun, task->ssp_task.LUN, 8);
-@@ -3670,7 +3735,8 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 	ssp_cmd.ssp_iu.efb_prio_attr |= (task->ssp_task.task_attr & 7);
- 	memcpy(ssp_cmd.ssp_iu.cdb, task->ssp_task.cmd->cmnd,
- 		       task->ssp_task.cmd->cmd_len);
--	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-+	q_index = (u32) (pm8001_dev->id & 0x00ffffff) % PM8001_MAX_INB_NUM;
-+	circularQ = &pm8001_ha->inbnd_q_tbl[q_index];
- 
- 	/* Check if encryption is set */
- 	if (pm8001_ha->chip->encrypt &&
-@@ -3702,6 +3768,30 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 				cpu_to_le32(upper_32_bits(dma_addr));
- 			ssp_cmd.enc_len = cpu_to_le32(task->total_xfer_len);
- 			ssp_cmd.enc_esgl = 0;
-+			/* Check 4G Boundary */
-+			start_addr = cpu_to_le64(dma_addr);
-+			end_addr = (start_addr + ssp_cmd.enc_len) - 1;
-+			end_addr_low = cpu_to_le32(lower_32_bits(end_addr));
-+			end_addr_high = cpu_to_le32(upper_32_bits(end_addr));
-+			if (end_addr_high != ssp_cmd.enc_addr_high) {
-+				PM8001_FAIL_DBG(pm8001_ha,
-+					pm8001_printk("The sg list address "
-+					"start_addr=0x%016llx data_len=0x%x "
-+					"end_addr_high=0x%08x end_addr_low="
-+					"0x%08x has crossed 4G boundary\n",
-+						start_addr, ssp_cmd.enc_len,
-+						end_addr_high, end_addr_low));
-+				pm8001_chip_make_sg(task->scatter, 1,
-+					ccb->buf_prd);
-+				phys_addr = ccb->ccb_dma_handle +
-+					offsetof(struct pm8001_ccb_info,
-+						buf_prd[0]);
-+				ssp_cmd.enc_addr_low =
-+					cpu_to_le32(lower_32_bits(phys_addr));
-+				ssp_cmd.enc_addr_high =
-+					cpu_to_le32(upper_32_bits(phys_addr));
-+				ssp_cmd.enc_esgl = cpu_to_le32(1<<31);
++	return;
++}
++
++ssize_t pm80xx_get_fatal_dump(struct device *cdev,
++	struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
++	void __iomem *fatal_table_address = pm8001_ha->fatal_tbl_addr;
++	u32 status = 1;
++	u32 accum_len , reg_val, index, *temp;
++	unsigned long start;
++	u8 *direct_data;
++	char *fatal_error_data = buf;
++
++	pm8001_ha->forensic_info.data_buf.direct_data = buf;
++	if (pm8001_ha->chip_id == chip_8001) {
++		pm8001_ha->forensic_info.data_buf.direct_data +=
++			sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
++			"Not supported for SPC controller");
++		return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
++			(char *)buf;
++	}
++	if (pm8001_ha->forensic_info.data_buf.direct_offset == 0) {
++		PM8001_IO_DBG(pm8001_ha,
++		pm8001_printk("forensic_info TYPE_NON_FATAL..............\n"));
++		direct_data = (u8 *)fatal_error_data;
++		pm8001_ha->forensic_info.data_type = TYPE_NON_FATAL;
++		pm8001_ha->forensic_info.data_buf.direct_len = SYSFS_OFFSET;
++		pm8001_ha->forensic_info.data_buf.direct_offset = 0;
++		pm8001_ha->forensic_info.data_buf.read_len = 0;
++
++		pm8001_ha->forensic_info.data_buf.direct_data = direct_data;
++	}
++
++	if (pm8001_ha->forensic_info.data_buf.direct_offset == 0) {
++		/* start to get data */
++		/* Program the MEMBASE II Shifting Register with 0x00.*/
++		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
++				pm8001_ha->fatal_forensic_shift_offset);
++		pm8001_ha->forensic_last_offset = 0;
++		pm8001_ha->forensic_fatal_step = 0;
++		pm8001_ha->fatal_bar_loc = 0;
++	}
++	/* Read until accum_len is retrived */
++	accum_len = pm8001_mr32(fatal_table_address,
++				MPI_FATAL_EDUMP_TABLE_ACCUM_LEN);
++	PM8001_IO_DBG(pm8001_ha, pm8001_printk("accum_len 0x%x\n",
++						accum_len));
++	if (accum_len == 0xFFFFFFFF) {
++		PM8001_IO_DBG(pm8001_ha,
++			pm8001_printk("Possible PCI issue 0x%x not expected\n",
++				accum_len));
++		return status;
++	}
++	if (accum_len == 0 || accum_len >= 0x100000) {
++		pm8001_ha->forensic_info.data_buf.direct_data +=
++			sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
++				"%08x ", 0xFFFFFFFF);
++		return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
++			(char *)buf;
++	}
++	temp = (u32 *)pm8001_ha->memoryMap.region[FORENSIC_MEM].virt_ptr;
++	if (pm8001_ha->forensic_fatal_step == 0) {
++moreData:
++		if (pm8001_ha->forensic_info.data_buf.direct_data) {
++			/* Data is in bar, copy to host memory */
++			pm80xx_pci_mem_copy(pm8001_ha, pm8001_ha->fatal_bar_loc,
++			 pm8001_ha->memoryMap.region[FORENSIC_MEM].virt_ptr,
++				pm8001_ha->forensic_info.data_buf.direct_len ,
++					1);
++		}
++		pm8001_ha->fatal_bar_loc +=
++			pm8001_ha->forensic_info.data_buf.direct_len;
++		pm8001_ha->forensic_info.data_buf.direct_offset +=
++			pm8001_ha->forensic_info.data_buf.direct_len;
++		pm8001_ha->forensic_last_offset	+=
++			pm8001_ha->forensic_info.data_buf.direct_len;
++		pm8001_ha->forensic_info.data_buf.read_len =
++			pm8001_ha->forensic_info.data_buf.direct_len;
++
++		if (pm8001_ha->forensic_last_offset  >= accum_len) {
++			pm8001_ha->forensic_info.data_buf.direct_data +=
++			sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
++				"%08x ", 3);
++			for (index = 0; index < (SYSFS_OFFSET / 4); index++) {
++				pm8001_ha->forensic_info.data_buf.direct_data +=
++					sprintf(pm8001_ha->
++					 forensic_info.data_buf.direct_data,
++						"%08x ", *(temp + index));
 +			}
- 		} else if (task->num_scatter == 0) {
- 			ssp_cmd.enc_addr_low = 0;
- 			ssp_cmd.enc_addr_high = 0;
-@@ -3718,7 +3808,7 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 	} else {
- 		PM8001_IO_DBG(pm8001_ha, pm8001_printk(
- 			"Sending Normal SAS command 0x%x inb q %x\n",
--			task->ssp_task.cmd->cmnd[0], inb));
-+			task->ssp_task.cmd->cmnd[0], q_index));
- 		/* fill in PRD (scatter/gather) table, if any */
- 		if (task->num_scatter > 1) {
- 			pm8001_chip_make_sg(task->scatter, ccb->n_elem,
-@@ -3737,6 +3827,30 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 				cpu_to_le32(upper_32_bits(dma_addr));
- 			ssp_cmd.len = cpu_to_le32(task->total_xfer_len);
- 			ssp_cmd.esgl = 0;
-+			/* Check 4G Boundary */
-+			start_addr = cpu_to_le64(dma_addr);
-+			end_addr = (start_addr + ssp_cmd.len) - 1;
-+			end_addr_low = cpu_to_le32(lower_32_bits(end_addr));
-+			end_addr_high = cpu_to_le32(upper_32_bits(end_addr));
-+			if (end_addr_high != ssp_cmd.addr_high) {
-+				PM8001_FAIL_DBG(pm8001_ha,
-+					pm8001_printk("The sg list address "
-+					"start_addr=0x%016llx data_len=0x%x "
-+					"end_addr_high=0x%08x end_addr_low="
-+					"0x%08x has crossed 4G boundary\n",
-+						 start_addr, ssp_cmd.len,
-+						 end_addr_high, end_addr_low));
-+				pm8001_chip_make_sg(task->scatter, 1,
-+					ccb->buf_prd);
-+				phys_addr = ccb->ccb_dma_handle +
-+					offsetof(struct pm8001_ccb_info,
-+						 buf_prd[0]);
-+				ssp_cmd.addr_low =
-+					cpu_to_le32(lower_32_bits(phys_addr));
-+				ssp_cmd.addr_high =
-+					cpu_to_le32(upper_32_bits(phys_addr));
-+				ssp_cmd.esgl = cpu_to_le32(1<<31);
++
++			pm8001_ha->fatal_bar_loc = 0;
++			pm8001_ha->forensic_fatal_step = 1;
++			pm8001_ha->fatal_forensic_shift_offset = 0;
++			pm8001_ha->forensic_last_offset	= 0;
++			status = 0;
++			return (char *)pm8001_ha->
++				forensic_info.data_buf.direct_data -
++				(char *)buf;
++		}
++		if (pm8001_ha->fatal_bar_loc < (64 * 1024)) {
++			pm8001_ha->forensic_info.data_buf.direct_data +=
++				sprintf(pm8001_ha->
++					forensic_info.data_buf.direct_data,
++					"%08x ", 2);
++			for (index = 0; index < (SYSFS_OFFSET / 4); index++) {
++				pm8001_ha->forensic_info.data_buf.direct_data +=
++					sprintf(pm8001_ha->
++					forensic_info.data_buf.direct_data,
++					"%08x ", *(temp + index));
 +			}
- 		} else if (task->num_scatter == 0) {
- 			ssp_cmd.addr_low = 0;
- 			ssp_cmd.addr_high = 0;
-@@ -3744,11 +3858,9 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 			ssp_cmd.esgl = 0;
- 		}
- 	}
--	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &ssp_cmd, outb++);
--
--	/* rotate the outb queue */
--	outb = outb%PM8001_MAX_SPCV_OUTB_NUM;
--
-+	q_index = (u32) (pm8001_dev->id & 0x00ffffff) % PM8001_MAX_OUTB_NUM;
-+	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
-+						&ssp_cmd, q_index);
- 	return ret;
- }
++			status = 0;
++			return (char *)pm8001_ha->
++				forensic_info.data_buf.direct_data -
++				(char *)buf;
++		}
++
++		/* Increment the MEMBASE II Shifting Register value by 0x100.*/
++		pm8001_ha->forensic_info.data_buf.direct_data +=
++			sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
++				"%08x ", 2);
++		for (index = 0; index < 256; index++) {
++			pm8001_ha->forensic_info.data_buf.direct_data +=
++				sprintf(pm8001_ha->
++					forensic_info.data_buf.direct_data,
++						"%08x ", *(temp + index));
++		}
++		pm8001_ha->fatal_forensic_shift_offset += 0x100;
++		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
++			pm8001_ha->fatal_forensic_shift_offset);
++		pm8001_ha->fatal_bar_loc = 0;
++		status = 0;
++		return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
++			(char *)buf;
++	}
++	if (pm8001_ha->forensic_fatal_step == 1) {
++		pm8001_ha->fatal_forensic_shift_offset = 0;
++		/* Read 64K of the debug data. */
++		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
++			pm8001_ha->fatal_forensic_shift_offset);
++		pm8001_mw32(fatal_table_address,
++			MPI_FATAL_EDUMP_TABLE_HANDSHAKE,
++				MPI_FATAL_EDUMP_HANDSHAKE_RDY);
++
++		/* Poll FDDHSHK  until clear  */
++		start = jiffies + (2 * HZ); /* 2 sec */
++
++		do {
++			reg_val = pm8001_mr32(fatal_table_address,
++					MPI_FATAL_EDUMP_TABLE_HANDSHAKE);
++		} while ((reg_val) && time_before(jiffies, start));
++
++		if (reg_val != 0) {
++			PM8001_FAIL_DBG(pm8001_ha,
++			pm8001_printk("TIMEOUT:MEMBASE_II_SHIFT_REGISTER"
++			" = 0x%x\n", reg_val));
++			return -1;
++		}
++
++		/* Read the next 64K of the debug data. */
++		pm8001_ha->forensic_fatal_step = 0;
++		if (pm8001_mr32(fatal_table_address,
++			MPI_FATAL_EDUMP_TABLE_STATUS) !=
++				MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_DONE) {
++			pm8001_mw32(fatal_table_address,
++				MPI_FATAL_EDUMP_TABLE_HANDSHAKE, 0);
++			goto moreData;
++		} else {
++			pm8001_ha->forensic_info.data_buf.direct_data +=
++				sprintf(pm8001_ha->
++					forensic_info.data_buf.direct_data,
++						"%08x ", 4);
++			pm8001_ha->forensic_info.data_buf.read_len = 0xFFFFFFFF;
++			pm8001_ha->forensic_info.data_buf.direct_len =  0;
++			pm8001_ha->forensic_info.data_buf.direct_offset = 0;
++			pm8001_ha->forensic_info.data_buf.read_len = 0;
++			status = 0;
++		}
++	}
++
++	return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
++		(char *)buf;
++}
++
+ /**
+  * read_main_config_table - read the configure table and save it.
+  * @pm8001_ha: our hba card information
+@@ -583,6 +805,9 @@ static void init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
+ 	pm8001_ha->pspa_q_tbl_addr =
+ 		base_addr + (pm8001_cr32(pm8001_ha, pcibar, offset + 0x90) &
+ 					0xFFFFFF);
++	pm8001_ha->fatal_tbl_addr =
++		base_addr + (pm8001_cr32(pm8001_ha, pcibar, offset + 0xA0) &
++					0xFFFFFF);
  
-@@ -3760,18 +3872,19 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	struct pm8001_device *pm8001_ha_dev = dev->lldd_dev;
- 	u32 tag = ccb->ccb_tag;
- 	int ret;
--	static u32 inb;
--	static u32 outb;
-+	u32 q_index;
- 	struct sata_start_req sata_cmd;
- 	u32 hdr_tag, ncg_tag = 0;
--	u64 phys_addr;
-+	u64 phys_addr, start_addr, end_addr;
-+	u32 end_addr_high, end_addr_low;
- 	u32 ATAP = 0x0;
- 	u32 dir;
- 	struct inbound_queue_table *circularQ;
- 	unsigned long flags;
- 	u32 opc = OPC_INB_SATA_HOST_OPSTART;
- 	memset(&sata_cmd, 0, sizeof(sata_cmd));
--	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-+	q_index = (u32) (pm8001_ha_dev->id & 0x00ffffff) % PM8001_MAX_INB_NUM;
-+	circularQ = &pm8001_ha->inbnd_q_tbl[q_index];
+ 	PM8001_INIT_DBG(pm8001_ha,
+ 			pm8001_printk("GST OFFSET 0x%x\n",
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index 872d5cf..c86816b 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -1525,4 +1525,6 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
+ #define DEVREG_FAILURE_PORT_NOT_VALID_STATE		0x06
+ #define DEVREG_FAILURE_DEVICE_TYPE_NOT_VALID		0x07
  
- 	if (task->data_dir == PCI_DMA_NONE) {
- 		ATAP = 0x04; /* no data*/
-@@ -3832,6 +3945,31 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			sata_cmd.enc_addr_high = upper_32_bits(dma_addr);
- 			sata_cmd.enc_len = cpu_to_le32(task->total_xfer_len);
- 			sata_cmd.enc_esgl = 0;
-+			/* Check 4G Boundary */
-+			start_addr = cpu_to_le64(dma_addr);
-+			end_addr = (start_addr + sata_cmd.enc_len) - 1;
-+			end_addr_low = cpu_to_le32(lower_32_bits(end_addr));
-+			end_addr_high = cpu_to_le32(upper_32_bits(end_addr));
-+			if (end_addr_high != sata_cmd.enc_addr_high) {
-+				PM8001_FAIL_DBG(pm8001_ha,
-+					pm8001_printk("The sg list address "
-+					"start_addr=0x%016llx data_len=0x%x "
-+					"end_addr_high=0x%08x end_addr_low"
-+					"=0x%08x has crossed 4G boundary\n",
-+						start_addr, sata_cmd.enc_len,
-+						end_addr_high, end_addr_low));
-+				pm8001_chip_make_sg(task->scatter, 1,
-+					ccb->buf_prd);
-+				phys_addr = ccb->ccb_dma_handle +
-+						offsetof(struct pm8001_ccb_info,
-+						buf_prd[0]);
-+				sata_cmd.enc_addr_low =
-+					lower_32_bits(phys_addr);
-+				sata_cmd.enc_addr_high =
-+					upper_32_bits(phys_addr);
-+				sata_cmd.enc_esgl =
-+					cpu_to_le32(1 << 31);
-+			}
- 		} else if (task->num_scatter == 0) {
- 			sata_cmd.enc_addr_low = 0;
- 			sata_cmd.enc_addr_high = 0;
-@@ -3852,7 +3990,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	} else {
- 		PM8001_IO_DBG(pm8001_ha, pm8001_printk(
- 			"Sending Normal SATA command 0x%x inb %x\n",
--			sata_cmd.sata_fis.command, inb));
-+			sata_cmd.sata_fis.command, q_index));
- 		/* dad (bit 0-1) is 0 */
- 		sata_cmd.ncqtag_atap_dir_m_dad =
- 			cpu_to_le32(((ncg_tag & 0xff)<<16) |
-@@ -3873,6 +4011,30 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			sata_cmd.addr_high = upper_32_bits(dma_addr);
- 			sata_cmd.len = cpu_to_le32(task->total_xfer_len);
- 			sata_cmd.esgl = 0;
-+			/* Check 4G Boundary */
-+			start_addr = cpu_to_le64(dma_addr);
-+			end_addr = (start_addr + sata_cmd.len) - 1;
-+			end_addr_low = cpu_to_le32(lower_32_bits(end_addr));
-+			end_addr_high = cpu_to_le32(upper_32_bits(end_addr));
-+			if (end_addr_high != sata_cmd.addr_high) {
-+				PM8001_FAIL_DBG(pm8001_ha,
-+					pm8001_printk("The sg list address "
-+					"start_addr=0x%016llx data_len=0x%x"
-+					"end_addr_high=0x%08x end_addr_low="
-+					"0x%08x has crossed 4G boundary\n",
-+						start_addr, sata_cmd.len,
-+						end_addr_high, end_addr_low));
-+				pm8001_chip_make_sg(task->scatter, 1,
-+					ccb->buf_prd);
-+				phys_addr = ccb->ccb_dma_handle +
-+					offsetof(struct pm8001_ccb_info,
-+					buf_prd[0]);
-+				sata_cmd.addr_low =
-+					lower_32_bits(phys_addr);
-+				sata_cmd.addr_high =
-+					upper_32_bits(phys_addr);
-+				sata_cmd.esgl = cpu_to_le32(1 << 31);
-+			}
- 		} else if (task->num_scatter == 0) {
- 			sata_cmd.addr_low = 0;
- 			sata_cmd.addr_high = 0;
-@@ -3949,12 +4111,9 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			}
- 		}
- 	}
--
-+	q_index = (u32) (pm8001_ha_dev->id & 0x00ffffff) % PM8001_MAX_OUTB_NUM;
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
--						&sata_cmd, outb++);
--
--	/* rotate the outb queue */
--	outb = outb%PM8001_MAX_SPCV_OUTB_NUM;
-+						&sata_cmd, q_index);
- 	return ret;
- }
- 
++
++#define MEMBASE_II_SHIFT_REGISTER       0x1010
+ #endif
 -- 
 1.7.1
 
