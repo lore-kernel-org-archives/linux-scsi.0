@@ -1,199 +1,66 @@
-From: oliver@neukum.org
-Subject: [PATCH] sd: error handling during flushing caches
-Date: Mon, 16 Sep 2013 13:28:15 +0200
-Message-ID: <1379330895-20505-1-git-send-email-oliver@neukum.org>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: Re: READ_CAPACITY_16 vs. READ_CAPACITY_10
+Date: Mon, 16 Sep 2013 14:41:21 +0200
+Message-ID: <1379335281.15916.38.camel@linux-fkkt.site>
+References: <Pine.LNX.4.44L0.1309111010500.1352-100000@iolanthe.rowland.org>
+	 <52315559.3080708@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:40272 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757396Ab3IPL2Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Sep 2013 07:28:25 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:38025 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753047Ab3IPMlX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Sep 2013 08:41:23 -0400
+In-Reply-To: <52315559.3080708@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, hare@suse.de, luto@amacapital.net, stern@rowland.harvard.edu
-Cc: Oliver Neukum <oneukum@suse.de>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org
 
-From: Oliver Neukum <oneukum@suse.de>
+On Thu, 2013-09-12 at 07:47 +0200, Hannes Reinecke wrote:
+> On 09/11/2013 04:14 PM, Alan Stern wrote:
+> > On Tue, 10 Sep 2013, Oliver Neukum wrote:
 
-It makes no sense to flush the cache of a device without medium.
-Errors during suspend must be handled according to their causes.
-Errors due to missing media or unplugged devices must be ignored.
-Errors due to devices being offlined must also be ignored.
-The error returns must be modified so that the generic layer
-understands them.
+> >> I think we can be sure that no drive enclosure will crash
+> >> with READ_CAPACITY_16.
+> > 
+> > I wouldn't count on it, but I don't know of any examples.
+> > 
+> Me neither. The whole issue just smells of some firmware coders
+> messing up their stuff. So I would think that other firmwares
+> might not have this problem.
 
-Signed-off-by: Oliver Neukum <oneukum@suse.de>
----
- drivers/scsi/scsi_pm.c |  3 ++-
- drivers/scsi/sd.c      | 72 ++++++++++++++++++++++++++++++++++++++++----------
- 2 files changed, 60 insertions(+), 15 deletions(-)
+Certainly. But does it matter? We would be happy to always use
+READ_CAPACITY_16 first, if it weren't for other buggy firmware.
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 4c5aabe..af4c050 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -54,7 +54,8 @@ scsi_bus_suspend_common(struct device *dev, int (*cb)(struct device *))
- 		/*
- 		 * All the high-level SCSI drivers that implement runtime
- 		 * PM treat runtime suspend, system suspend, and system
--		 * hibernate identically.
-+		 * hibernate nearly identically. In all cases the requirements
-+		 * for runtime suspension are stricter.
- 		 */
- 		if (pm_runtime_suspended(dev))
- 			return 0;
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 80f39b8..cf6eaa4 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -105,7 +105,8 @@ static void sd_unlock_native_capacity(struct gendisk *disk);
- static int  sd_probe(struct device *);
- static int  sd_remove(struct device *);
- static void sd_shutdown(struct device *);
--static int sd_suspend(struct device *);
-+static int sd_suspend_system(struct device *);
-+static int sd_suspend_runtime(struct device *);
- static int sd_resume(struct device *);
- static void sd_rescan(struct device *);
- static int sd_done(struct scsi_cmnd *);
-@@ -483,11 +484,11 @@ static struct class sd_disk_class = {
- };
- 
- static const struct dev_pm_ops sd_pm_ops = {
--	.suspend		= sd_suspend,
-+	.suspend		= sd_suspend_system,
- 	.resume			= sd_resume,
--	.poweroff		= sd_suspend,
-+	.poweroff		= sd_suspend_system,
- 	.restore		= sd_resume,
--	.runtime_suspend	= sd_suspend,
-+	.runtime_suspend	= sd_suspend_runtime,
- 	.runtime_resume		= sd_resume,
- };
- 
-@@ -1430,7 +1431,6 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 	if (!scsi_device_online(sdp))
- 		return -ENODEV;
- 
--
- 	for (retries = 3; retries > 0; --retries) {
- 		unsigned char cmd[10] = { 0 };
- 
-@@ -1448,12 +1448,31 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 
- 	if (res) {
- 		sd_print_result(sdkp, res);
--		if (driver_byte(res) & DRIVER_SENSE)
-+
-+		if (driver_byte(res) & DRIVER_SENSE) 
- 			sd_print_sense_hdr(sdkp, &sshdr);
-+		/* we need to evaluate the error return  */
-+		if ((scsi_sense_valid(&sshdr) &&
-+			/* 0x3a is medium not present */
-+			sshdr.asc == 0x3a))
-+				/* this is no error here */
-+				return 0;
-+
-+		switch (host_byte(res)) {
-+		/* ignore errors due to racing a disconnection */
-+		case DID_BAD_TARGET:
-+		case DID_NO_CONNECT:
-+			return 0;
-+		/* signal the upper layer it might try again */
-+		case DID_BUS_BUSY:
-+		case DID_IMM_RETRY:
-+		case DID_REQUEUE:
-+		case DID_SOFT_ERROR:
-+			return -EBUSY;
-+		default:
-+			return -EIO;
-+		}
- 	}
--
--	if (res)
--		return -EIO;
- 	return 0;
- }
- 
-@@ -3070,9 +3089,17 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 		sd_print_result(sdkp, res);
- 		if (driver_byte(res) & DRIVER_SENSE)
- 			sd_print_sense_hdr(sdkp, &sshdr);
-+		if ((scsi_sense_valid(&sshdr) &&
-+			/* 0x3a is medium not present */
-+			sshdr.asc == 0x3a))
-+			res = 0;
- 	}
- 
--	return res;
-+	/* SCSI error codes must not go to the generic layer */
-+	if (res)
-+		return -EIO;
-+
-+	return 0;
- }
- 
- /*
-@@ -3090,7 +3117,7 @@ static void sd_shutdown(struct device *dev)
- 	if (pm_runtime_suspended(dev))
- 		goto exit;
- 
--	if (sdkp->WCE) {
-+	if (sdkp->WCE && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
- 		sd_sync_cache(sdkp);
- 	}
-@@ -3104,7 +3131,7 @@ exit:
- 	scsi_disk_put(sdkp);
- }
- 
--static int sd_suspend(struct device *dev)
-+static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- {
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 	int ret = 0;
-@@ -3112,16 +3139,23 @@ static int sd_suspend(struct device *dev)
- 	if (!sdkp)
- 		return 0;	/* this can happen */
- 
--	if (sdkp->WCE) {
-+	if (sdkp->WCE && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
- 		ret = sd_sync_cache(sdkp);
--		if (ret)
-+		if (ret) {
-+			/* ignore OFFLINE device */
-+			if (ret == -ENODEV)
-+				ret = 0;
- 			goto done;
-+		}
- 	}
- 
- 	if (sdkp->device->manage_start_stop) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
-+		/* an error is not worth aborting a system sleep */
- 		ret = sd_start_stop_device(sdkp, 0);
-+		if (ignore_stop_errors)
-+			ret = 0;
- 	}
- 
- done:
-@@ -3129,6 +3163,16 @@ done:
- 	return ret;
- }
- 
-+static int sd_suspend_system(struct device *dev)
-+{
-+	return sd_suspend_common(dev, true);
-+}
-+
-+static int sd_suspend_runtime(struct device *dev)
-+{
-+	return sd_suspend_common(dev, false);
-+}
-+
- static int sd_resume(struct device *dev)
- {
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
--- 
-1.8.3.1
+> (But as HS enclosures aren't that common chances are we've hit
+>  the same firmware by chance on every test machine we've had.)
+> 
+> I think it would warrant a quirk approach. Yes, it might be slightly
+> more coding, but at the same time it's more selective on where it
+> should trigger.
+
+Yes and we would for sure miss many cases.
+
+> Also looking at scsiglue.c it would make things quite tricky if
+> you'd want to _disable_ this feature for HS devices; other firmware
+
+Just another quirk.
+
+> from other vendors might not exhibit this issue after all.
+> And scsiglue.c already has tons of quirks set, adding one more
+> doesn't do any harm.
+
+It doesn't do harm if the number of devices to be added is small.
+The enclosure works under Windows. So we know that it uses
+READ_CAPACITY_16 under some circumstances.
+Unfortunately I haven't dug up a Windows box as yet.
+However we can realistically hope that the firmwares become
+fixed only if Windows _fails_ to use READ_CAPACITY_16 under
+some circumstances.
+
+	Regards
+		Oliver
+
 
