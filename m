@@ -1,232 +1,173 @@
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: [PATCH] scsi: delete decade+ obsolete aic7xxx_old driver
-Date: Mon, 16 Sep 2013 21:51:23 -0400
-Message-ID: <1379382683-27862-1-git-send-email-paul.gortmaker@windriver.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH] scsi: delete decade+ obsolete aic7xxx_old driver
+Date: Mon, 16 Sep 2013 22:13:56 -0400
+Message-ID: <y687fpks4kdsmfuadq4cykip.1379384036544@email.android.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:38285 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751793Ab3IQBwl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Sep 2013 21:52:41 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:43220 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751489Ab3IQCOC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Sep 2013 22:14:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Paul Gortmaker <paul.gortmaker@windriver.com>, Hannes Reinecke <hare@suse.de>, Doug Ledford <dledford@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: linux-scsi list <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-After getting warnings in an allyesconfig build[1] from this
-driver, I decided to remind myself just how old it was, and
-whether it warranted fixing.  In the Kconfig help text, I found:
+WWVzLCB0aGlzIGRyaXZlciBpcyB3ZWxsIHBhc3QgcmVhZHkgdG8gYmUgcmVtb3ZlZC4KCkFja2Vk
+LWJ5OiBEb3VnIExlZGZvcmQgPGRsZWRmb3JkQHJlZGhhdC5jb20+CgpTZW50IGZyb20gbXkgQVNV
+UyBQYWQKClBhdWwgR29ydG1ha2VyIDxwYXVsLmdvcnRtYWtlckB3aW5kcml2ZXIuY29tPiB3cm90
+ZToKCj5BZnRlciBnZXR0aW5nIHdhcm5pbmdzIGluIGFuIGFsbHllc2NvbmZpZyBidWlsZFsxXSBm
+cm9tIHRoaXMKPmRyaXZlciwgSSBkZWNpZGVkIHRvIHJlbWluZCBteXNlbGYganVzdCBob3cgb2xk
+IGl0IHdhcywgYW5kCj53aGV0aGVyIGl0IHdhcnJhbnRlZCBmaXhpbmcuICBJbiB0aGUgS2NvbmZp
+ZyBoZWxwIHRleHQsIEkgZm91bmQ6Cj4KPiAgIlRoaXMgZHJpdmVyIHdpbGwgZXZlbnR1YWxseSBi
+ZSBwaGFzZWQgb3V0IGVudGlyZWx5Igo+Cj5Hb2luZyBiYWNrIHRvIHRoZSBoaXN0b3J5IGFyY2hp
+dmUsIEkgc2VlIHRoZSBsaW5lIHdhcyBhZGRlZFsyXQo+aW4gRmViIDIwMDIsIHdoZW4gd2UgbW92
+ZWQgZnJvbSB2Mi40LjIuMSAtLS0+IHYyLjQuMi4yCj4KPlNvLCB3aXRoIG92ZXIgYSBkZWNhZGUg
+b2Ygbm90aWZpY2F0aW9uLCBhbmQgbXVsdGlwbGUgbWFqb3IgcmVsZWFzZXMKPnNpbmNlIHRoZW4s
+IEkgdGhpbmsgd2UgY2FuIGp1c3RpZnkgcmVtb3ZpbmcgdGhpcy4gIEN1cnJlbnRseSB3ZSBoYXZl
+Cj5wZW9wbGUgd2FzdGluZyB0aW1lIGJ1aWxkaW5nIGl0IGR1cmluZyByb3V0aW5lIHRlc3Rpbmcs
+IGFuZCB0aGVuCj53YXN0aW5nIG1vcmUgdGltZSByZS1yZXNlYXJjaGluZyB0aGUga25vd24gcmVw
+b3J0ZWQgd2FybmluZ3MsIG9ubHkgdG8KPmZpbmQgdGhhdCBub2JvZHkgcmVhbGx5IGlzIHdpbGxp
+bmcgdG8gaW50ZWdyYXRlIHRoZSBmaXhlc1szXSBmb3IgaXQuCj4KPkEgcXVpY2sgc2VhcmNoIGRp
+ZG4ndCBzZWVtIHRvIGluZGljYXRlIGFueSBhY3RpdmUgdXNlciBiYXNlIGZvciBpdC4KPklmIHNv
+bWVvbmUgaGFwcGVucyB0byBoYXZlIGEgcXVpcmt5IF9vbGRfIGNhcmQgdGhhdCB0aGUgZWxldmVu
+IHllYXIKPm9sZCAibmV3IiBkcml2ZXIgZG9lc24ndCB3b3JrIHdpdGgsIHRoZW4gaXQgaXMgZW50
+aXJlbHkgcmVhc29uYWJsZQo+dGhhdCB0aGV5IHN0aWNrIHdpdGggYSBrZXJuZWwgdmVyc2lvbiB0
+aGF0IHByZWRhdGVzIHRoaXMgcmVtb3ZhbC4KPgo+WzFdIGRyaXZlcnMvc2NzaS9haWM3eHh4X29s
+ZC5jOiBJbiBmdW5jdGlvbiDigJhhaWM3eHh4X3JlZ2lzdGVy4oCZOgo+ICAgIGRyaXZlcnMvc2Nz
+aS9haWM3eHh4X29sZC5jOjc5MDE6NTogd2FybmluZzogY2FzZSB2YWx1ZSDigJgyNTfigJkgbm90
+IGluIGVudW1lcmF0ZWQgdHlwZSDigJhhaGNfY2hpcOKAmSBbLVdzd2l0Y2hdCj4gICAgZHJpdmVy
+cy9zY3NpL2FpYzd4eHhfb2xkLmM6Nzg5ODo1OiB3YXJuaW5nOiBjYXNlIHZhbHVlIOKAmDUxM+KA
+mSBub3QgaW4gZW51bWVyYXRlZCB0eXBlIOKAmGFoY19jaGlw4oCZIFstV3N3aXRjaF0KPiAgICBk
+cml2ZXJzL3Njc2kvYWljN3h4eF9vbGQuYzogSW4gZnVuY3Rpb24g4oCYYWljN3h4eF9sb2FkX3Nl
+ZXByb23igJk6Cj4gICAgZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkLmM6ODUxNzo1OiB3YXJuaW5n
+OiBjYXNlIHZhbHVlIOKAmDI1N+KAmSBub3QgaW4gZW51bWVyYXRlZCB0eXBlIOKAmGFoY19jaGlw
+4oCZIFstV3N3aXRjaF0KPiAgICBkcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQuYzo4NTEwOjU6IHdh
+cm5pbmc6IGNhc2UgdmFsdWUg4oCYNTEz4oCZIG5vdCBpbiBlbnVtZXJhdGVkIHR5cGUg4oCYYWhj
+X2NoaXDigJkgWy1Xc3dpdGNoXQo+Cj5bMl0gaHR0cDovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGlu
+dXgva2VybmVsL2dpdC90Z2x4L2hpc3RvcnkuZ2l0IGNvbW1pdCA0NGU4Nzc4Ywo+Cj5bM10gaHR0
+cHM6Ly9sa21sLm9yZy9sa21sLzIwMTIvMTAvMjkvMjE1Cj4KPkNjOiBIYW5uZXMgUmVpbmVja2Ug
+PGhhcmVAc3VzZS5kZT4KPkNjOiBEb3VnIExlZGZvcmQgPGRsZWRmb3JkQHJlZGhhdC5jb20+Cj5D
+YzogIkphbWVzIEUuSi4gQm90dG9tbGV5IiA8SkJvdHRvbWxleUBwYXJhbGxlbHMuY29tPgo+U2ln
+bmVkLW9mZi1ieTogUGF1bCBHb3J0bWFrZXIgPHBhdWwuZ29ydG1ha2VyQHdpbmRyaXZlci5jb20+
+Cj4tLS0KPgo+W1RoaXMgaXMgYW4gIi0taXJyZXZlcnNpYmxlLWRlbGV0ZSIgcHNldWRvLXBhdGNo
+IHdoaWNoIGRvZXNuJ3Qgc2hvdyBhbGwKPnRoZSBmaWxlIGNvbnRlbnQgdGhhdCB3YXMgZGVsZXRl
+ZCB3aG9sZXNhbGUuICBUaGUgZnVsbCBjb21taXQgaXMgYXQ6Cj5naXQ6Ly9naXQua2VybmVsLm9y
+Zy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvcGF1bGcvbGludXguZ2l0IGFpYzd4eHgtZGVsZXRl
+IF0KPgo+IERvY3VtZW50YXRpb24vc2NzaS8wMC1JTkRFWCAgICAgICAgICAgICB8ICAgICAyIC0K
+PiBEb2N1bWVudGF0aW9uL3Njc2kvYWljN3h4eF9vbGQudHh0ICAgICAgfCAgIDUxMSAtLQo+IE1B
+SU5UQUlORVJTICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgICAxIC0KPiBkcml2ZXJz
+L3Njc2kvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgfCAgICA0MSAtCj4gZHJpdmVycy9zY3Np
+L01ha2VmaWxlICAgICAgICAgICAgICAgICAgIHwgICAgIDEgLQo+IGRyaXZlcnMvc2NzaS9haWM3
+eHh4X29sZC5jICAgICAgICAgICAgICB8IDExMTQ5IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLQo+IGRyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4LmggICAgICB8ICAgIDI4IC0K
+PiBkcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eC5yZWcgICAgfCAgMTQwMSAtLS0tCj4g
+ZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkL2FpYzd4eHguc2VxICAgIHwgIDE1MzkgLS0tLS0KPiBk
+cml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eF9wcm9jLmMgfCAgIDI3MCAtCj4gZHJpdmVy
+cy9zY3NpL2FpYzd4eHhfb2xkL2FpYzd4eHhfcmVnLmggIHwgICA2MjkgLS0KPiBkcml2ZXJzL3Nj
+c2kvYWljN3h4eF9vbGQvYWljN3h4eF9zZXEuYyAgfCAgIDgxNyAtLS0KPiBkcml2ZXJzL3Njc2kv
+YWljN3h4eF9vbGQvc2NzaV9tZXNzYWdlLmggfCAgICA0OSAtCj4gZHJpdmVycy9zY3NpL2FpYzd4
+eHhfb2xkL3NlcXVlbmNlci5oICAgIHwgICAxMzUgLQo+IDE0IGZpbGVzIGNoYW5nZWQsIDE2NTcz
+IGRlbGV0aW9ucygtKQo+IGRlbGV0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL3Njc2kvYWlj
+N3h4eF9vbGQudHh0Cj4gZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9haWM3eHh4X29s
+ZC5jCj4gZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4
+LmgKPiBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkL2FpYzd4eHgu
+cmVnCj4gZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4
+LnNlcQo+IGRlbGV0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4
+eF9wcm9jLmMKPiBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkL2Fp
+Yzd4eHhfcmVnLmgKPiBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xk
+L2FpYzd4eHhfc2VxLmMKPiBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL2FpYzd4eHhf
+b2xkL3Njc2lfbWVzc2FnZS5oCj4gZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9haWM3
+eHh4X29sZC9zZXF1ZW5jZXIuaAo+Cj5kaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9zY3NpLzAw
+LUlOREVYIGIvRG9jdW1lbnRhdGlvbi9zY3NpLzAwLUlOREVYCj5pbmRleCA5YjA3ODdmLi4yMDQ0
+YmU1IDEwMDY0NAo+LS0tIGEvRG9jdW1lbnRhdGlvbi9zY3NpLzAwLUlOREVYCj4rKysgYi9Eb2N1
+bWVudGF0aW9uL3Njc2kvMDAtSU5ERVgKPkBAIC00Miw4ICs0Miw2IEBAIGFpYzc5eHgudHh0Cj4g
+CS0gQWRhcHRlYyBVbHRyYTMyMCBTQ1NJIGhvc3QgYWRhcHRlcnMKPiBhaWM3eHh4LnR4dAo+IAkt
+IGluZm8gb24gZHJpdmVyIGZvciBBZGFwdGVjIGNvbnRyb2xsZXJzCj4tYWljN3h4eF9vbGQudHh0
+Cj4tCS0gaW5mbyBvbiBkcml2ZXIgZm9yIEFkYXB0ZWMgY29udHJvbGxlcnMsIG9sZCBnZW5lcmF0
+aW9uCj4gYXJjbXNyX3NwZWMudHh0Cj4gCS0gQVJFQ0EgRklSTVdBUkUgU1BFQyAoZm9yIElPUDMz
+MSBhZGFwdGVyKQo+IGRjMzk1eC50eHQKPmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL3Njc2kv
+YWljN3h4eF9vbGQudHh0IGIvRG9jdW1lbnRhdGlvbi9zY3NpL2FpYzd4eHhfb2xkLnR4dAo+ZGVs
+ZXRlZCBmaWxlIG1vZGUgMTAwNjQ0Cj5pbmRleCBlY2ZjNDc0Li4wMDAwMDAwCj5kaWZmIC0tZ2l0
+IGEvTUFJTlRBSU5FUlMgYi9NQUlOVEFJTkVSUwo+aW5kZXggZTYxYzJlOC4uYzc5YmU0MiAxMDA2
+NDQKPi0tLSBhL01BSU5UQUlORVJTCj4rKysgYi9NQUlOVEFJTkVSUwo+QEAgLTQ3MCw3ICs0NzAs
+NiBAQCBNOglIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4KPiBMOglsaW51eC1zY3NpQHZn
+ZXIua2VybmVsLm9yZwo+IFM6CU1haW50YWluZWQKPiBGOglkcml2ZXJzL3Njc2kvYWljN3h4eC8K
+Pi1GOglkcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvCj4gCj4gQUlNU0xBQiBGTSBSQURJTyBSRUNF
+SVZFUiBEUklWRVIKPiBNOglIYW5zIFZlcmt1aWwgPGh2ZXJrdWlsQHhzNGFsbC5ubD4KPmRpZmYg
+LS1naXQgYS9kcml2ZXJzL3Njc2kvS2NvbmZpZyBiL2RyaXZlcnMvc2NzaS9LY29uZmlnCj5pbmRl
+eCBmZTI1Njc3Li4xZjAyMDAzIDEwMDY0NAo+LS0tIGEvZHJpdmVycy9zY3NpL0tjb25maWcKPisr
+KyBiL2RyaXZlcnMvc2NzaS9LY29uZmlnCj5AQCAtNDk5LDQ3ICs0OTksNiBAQCBjb25maWcgU0NT
+SV9BQUNSQUlECj4gCj4gCj4gc291cmNlICJkcml2ZXJzL3Njc2kvYWljN3h4eC9LY29uZmlnLmFp
+Yzd4eHgiCj4tCj4tY29uZmlnIFNDU0lfQUlDN1hYWF9PTEQKPi0JdHJpc3RhdGUgIkFkYXB0ZWMg
+QUlDN3h4eCBzdXBwb3J0IChvbGQgZHJpdmVyKSIKPi0JZGVwZW5kcyBvbiAoSVNBIHx8IEVJU0Eg
+fHwgUENJICkgJiYgU0NTSQo+LQloZWxwCj4tCSAgV0FSTklORyBUaGlzIGRyaXZlciBpcyBhbiBv
+bGRlciBhaWM3eHh4IGRyaXZlciBhbmQgaXMgbm8gbG9uZ2VyCj4tCSAgdW5kZXIgYWN0aXZlIGRl
+dmVsb3BtZW50LiAgQWRhcHRlYywgSW5jLiBpcyB3cml0aW5nIGEgbmV3IGRyaXZlciB0bwo+LQkg
+IHRha2UgdGhlIHBsYWNlIG9mIHRoaXMgb25lLCBhbmQgaXQgaXMgcmVjb21tZW5kZWQgdGhhdCB3
+aGVuZXZlcgo+LQkgIHBvc3NpYmxlLCBwZW9wbGUgc2hvdWxkIHVzZSB0aGUgbmV3IEFkYXB0ZWMg
+d3JpdHRlbiBkcml2ZXIgaW5zdGVhZAo+LQkgIG9mIHRoaXMgb25lLiAgVGhpcyBkcml2ZXIgd2ls
+bCBldmVudHVhbGx5IGJlIHBoYXNlZCBvdXQgZW50aXJlbHkuCj4tCj4tCSAgVGhpcyBpcyBzdXBw
+b3J0IGZvciB0aGUgdmFyaW91cyBhaWM3eHh4IGJhc2VkIEFkYXB0ZWMgU0NTSQo+LQkgIGNvbnRy
+b2xsZXJzLiBUaGVzZSBpbmNsdWRlIHRoZSAyNzR4IEVJU0EgY2FyZHM7IDI4NHggVkxCIGNhcmRz
+Owo+LQkgIDI5MDIsIDI5MTAsIDI5M3gsIDI5NHgsIDM5NHgsIDM5ODUgYW5kIHNldmVyYWwgb3Ro
+ZXIgUENJIGFuZAo+LQkgIG1vdGhlcmJvYXJkIGJhc2VkIFNDU0kgY29udHJvbGxlcnMgZnJvbSBB
+ZGFwdGVjLiBJdCBkb2VzIG5vdCBzdXBwb3J0Cj4tCSAgdGhlIEFBQS0xM3ggUkFJRCBjb250cm9s
+bGVycyBmcm9tIEFkYXB0ZWMsIG5vciB3aWxsIGl0IGxpa2VseSBldmVyCj4tCSAgc3VwcG9ydCB0
+aGVtLiBJdCBkb2VzIG5vdCBzdXBwb3J0IHRoZSAyOTIwIGNhcmRzIGZyb20gQWRhcHRlYyB0aGF0
+Cj4tCSAgdXNlIHRoZSBGdXR1cmUgRG9tYWluIFNDU0kgY29udHJvbGxlciBjaGlwLiBGb3IgdGhv
+c2UgY2FyZHMsIHlvdQo+LQkgIG5lZWQgdGhlICJGdXR1cmUgRG9tYWluIDE2eHggU0NTSSBzdXBw
+b3J0IiBkcml2ZXIuCj4tCj4tCSAgSW4gZ2VuZXJhbCwgaWYgdGhlIGNvbnRyb2xsZXIgaXMgYmFz
+ZWQgb24gYW4gQWRhcHRlYyBTQ1NJIGNvbnRyb2xsZXIKPi0JICBjaGlwIGZyb20gdGhlIGFpYzc3
+N3ggc2VyaWVzIG9yIHRoZSBhaWM3OHh4IHNlcmllcywgdGhpcyBkcml2ZXIKPi0JICBzaG91bGQg
+d29yay4gVGhlIG9ubHkgZXhjZXB0aW9uIGlzIHRoZSA3ODEwIHdoaWNoIGlzIHNwZWNpZmljYWxs
+eQo+LQkgIG5vdCBzdXBwb3J0ZWQgKHRoYXQncyB0aGUgUkFJRCBjb250cm9sbGVyIGNoaXAgb24g
+dGhlIEFBQS0xM3gKPi0JICBjYXJkcykuCj4tCj4tCSAgTm90ZSB0aGF0IHRoZSBBSEEyOTIwIFND
+U0kgaG9zdCBhZGFwdGVyIGlzICpub3QqIHN1cHBvcnRlZCBieSB0aGlzCj4tCSAgZHJpdmVyOyBj
+aG9vc2UgIkZ1dHVyZSBEb21haW4gMTZ4eCBTQ1NJIHN1cHBvcnQiIGluc3RlYWQgaWYgeW91IGhh
+dmUKPi0JICBvbmUgb2YgdGhvc2UuCj4tCj4tCSAgSW5mb3JtYXRpb24gb24gdGhlIGNvbmZpZ3Vy
+YXRpb24gb3B0aW9ucyBmb3IgdGhpcyBjb250cm9sbGVyIGNhbiBiZQo+LQkgIGZvdW5kIGJ5IGNo
+ZWNraW5nIHRoZSBoZWxwIGZpbGUgZm9yIGVhY2ggb2YgdGhlIGF2YWlsYWJsZQo+LQkgIGNvbmZp
+Z3VyYXRpb24gb3B0aW9ucy4gWW91IHNob3VsZCByZWFkCj4tCSAgPGZpbGU6RG9jdW1lbnRhdGlv
+bi9zY3NpL2FpYzd4eHhfb2xkLnR4dD4gYXQgYSBtaW5pbXVtIGJlZm9yZQo+LQkgIGNvbnRhY3Rp
+bmcgdGhlIG1haW50YWluZXIgd2l0aCBhbnkgcXVlc3Rpb25zLiAgVGhlIFNDU0ktSE9XVE8sCj4t
+CSAgYXZhaWxhYmxlIGZyb20gPGh0dHA6Ly93d3cudGxkcC5vcmcvZG9jcy5odG1sI2hvd3RvPiwg
+Y2FuIGFsc28KPi0JICBiZSBvZiBncmVhdCBoZWxwLgo+LQo+LQkgIFRvIGNvbXBpbGUgdGhpcyBk
+cml2ZXIgYXMgYSBtb2R1bGUsIGNob29zZSBNIGhlcmU6IHRoZQo+LQkgIG1vZHVsZSB3aWxsIGJl
+IGNhbGxlZCBhaWM3eHh4X29sZC4KPi0KPiBzb3VyY2UgImRyaXZlcnMvc2NzaS9haWM3eHh4L0tj
+b25maWcuYWljNzl4eCIKPiBzb3VyY2UgImRyaXZlcnMvc2NzaS9haWM5NHh4L0tjb25maWciCj4g
+c291cmNlICJkcml2ZXJzL3Njc2kvbXZzYXMvS2NvbmZpZyIKPmRpZmYgLS1naXQgYS9kcml2ZXJz
+L3Njc2kvTWFrZWZpbGUgYi9kcml2ZXJzL3Njc2kvTWFrZWZpbGUKPmluZGV4IDE0OWJiNmIuLmUx
+NzJkNGYgMTAwNjQ0Cj4tLS0gYS9kcml2ZXJzL3Njc2kvTWFrZWZpbGUKPisrKyBiL2RyaXZlcnMv
+c2NzaS9NYWtlZmlsZQo+QEAgLTcwLDcgKzcwLDYgQEAgb2JqLSQoQ09ORklHX1NDU0lfQUhBMTc0
+MCkJKz0gYWhhMTc0MC5vCj4gb2JqLSQoQ09ORklHX1NDU0lfQUlDN1hYWCkJKz0gYWljN3h4eC8K
+PiBvYmotJChDT05GSUdfU0NTSV9BSUM3OVhYKQkrPSBhaWM3eHh4Lwo+IG9iai0kKENPTkZJR19T
+Q1NJX0FBQ1JBSUQpCSs9IGFhY3JhaWQvCj4tb2JqLSQoQ09ORklHX1NDU0lfQUlDN1hYWF9PTEQp
+CSs9IGFpYzd4eHhfb2xkLm8KPiBvYmotJChDT05GSUdfU0NTSV9BSUM5NFhYKQkrPSBhaWM5NHh4
+Lwo+IG9iai0kKENPTkZJR19TQ1NJX1BNODAwMSkJKz0gcG04MDAxLwo+IG9iai0kKENPTkZJR19T
+Q1NJX0lTQ0kpCQkrPSBpc2NpLwo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9haWM3eHh4X29s
+ZC5jIGIvZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkLmMKPmRlbGV0ZWQgZmlsZSBtb2RlIDEwMDY0
+NAo+aW5kZXggMzNlYzljNi4uMDAwMDAwMAo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9haWM3
+eHh4X29sZC9haWM3eHh4LmggYi9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eC5oCj5k
+ZWxldGVkIGZpbGUgbW9kZSAxMDA2NDQKPmluZGV4IDAxMTZjODEuLjAwMDAwMDAKPmRpZmYgLS1n
+aXQgYS9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eC5yZWcgYi9kcml2ZXJzL3Njc2kv
+YWljN3h4eF9vbGQvYWljN3h4eC5yZWcKPmRlbGV0ZWQgZmlsZSBtb2RlIDEwMDY0NAo+aW5kZXgg
+ZjY3YjRiYy4uMDAwMDAwMAo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9h
+aWM3eHh4LnNlcSBiL2RyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4LnNlcQo+ZGVsZXRl
+ZCBmaWxlIG1vZGUgMTAwNjQ0Cj5pbmRleCBkYzNiYjgxLi4wMDAwMDAwCj5kaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkL2FpYzd4eHhfcHJvYy5jIGIvZHJpdmVycy9zY3NpL2Fp
+Yzd4eHhfb2xkL2FpYzd4eHhfcHJvYy5jCj5kZWxldGVkIGZpbGUgbW9kZSAxMDA2NDQKPmluZGV4
+IDk3NmY0NWMuLjAwMDAwMDAKPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQv
+YWljN3h4eF9yZWcuaCBiL2RyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4X3JlZy5oCj5k
+ZWxldGVkIGZpbGUgbW9kZSAxMDA2NDQKPmluZGV4IDI3ZjIzMzQuLjAwMDAwMDAKPmRpZmYgLS1n
+aXQgYS9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eF9zZXEuYyBiL2RyaXZlcnMvc2Nz
+aS9haWM3eHh4X29sZC9haWM3eHh4X3NlcS5jCj5kZWxldGVkIGZpbGUgbW9kZSAxMDA2NDQKPmlu
+ZGV4IGUxYmMxNDAuLjAwMDAwMDAKPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYWljN3h4eF9v
+bGQvc2NzaV9tZXNzYWdlLmggYi9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvc2NzaV9tZXNzYWdl
+LmgKPmRlbGV0ZWQgZmlsZSBtb2RlIDEwMDY0NAo+aW5kZXggYTc5Zjg5Yy4uMDAwMDAwMAo+ZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9zZXF1ZW5jZXIuaCBiL2RyaXZlcnMv
+c2NzaS9haWM3eHh4X29sZC9zZXF1ZW5jZXIuaAo+ZGVsZXRlZCBmaWxlIG1vZGUgMTAwNjQ0Cj5p
+bmRleCBlZTY2ODU1Li4wMDAwMDAwCj4tLSAKPjEuOC4xLjIKPgo=
 
-  "This driver will eventually be phased out entirely"
-
-Going back to the history archive, I see the line was added[2]
-in Feb 2002, when we moved from v2.4.2.1 ---> v2.4.2.2
-
-So, with over a decade of notification, and multiple major releases
-since then, I think we can justify removing this.  Currently we have
-people wasting time building it during routine testing, and then
-wasting more time re-researching the known reported warnings, only to
-find that nobody really is willing to integrate the fixes[3] for it.
-
-A quick search didn't seem to indicate any active user base for it.
-If someone happens to have a quirky _old_ card that the eleven year
-old "new" driver doesn't work with, then it is entirely reasonable
-that they stick with a kernel version that predates this removal.
-
-[1] drivers/scsi/aic7xxx_old.c: In function =E2=80=98aic7xxx_register=E2=
-=80=99:
-    drivers/scsi/aic7xxx_old.c:7901:5: warning: case value =E2=80=98257=
-=E2=80=99 not in enumerated type =E2=80=98ahc_chip=E2=80=99 [-Wswitch]
-    drivers/scsi/aic7xxx_old.c:7898:5: warning: case value =E2=80=98513=
-=E2=80=99 not in enumerated type =E2=80=98ahc_chip=E2=80=99 [-Wswitch]
-    drivers/scsi/aic7xxx_old.c: In function =E2=80=98aic7xxx_load_seepr=
-om=E2=80=99:
-    drivers/scsi/aic7xxx_old.c:8517:5: warning: case value =E2=80=98257=
-=E2=80=99 not in enumerated type =E2=80=98ahc_chip=E2=80=99 [-Wswitch]
-    drivers/scsi/aic7xxx_old.c:8510:5: warning: case value =E2=80=98513=
-=E2=80=99 not in enumerated type =E2=80=98ahc_chip=E2=80=99 [-Wswitch]
-
-[2] http://git.kernel.org/cgit/linux/kernel/git/tglx/history.git commit=
- 44e8778c
-
-[3] https://lkml.org/lkml/2012/10/29/215
-
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Doug Ledford <dledford@redhat.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
-
-[This is an "--irreversible-delete" pseudo-patch which doesn't show all
-the file content that was deleted wholesale.  The full commit is at:
-git://git.kernel.org/pub/scm/linux/kernel/git/paulg/linux.git aic7xxx-d=
-elete ]
-
- Documentation/scsi/00-INDEX             |     2 -
- Documentation/scsi/aic7xxx_old.txt      |   511 --
- MAINTAINERS                             |     1 -
- drivers/scsi/Kconfig                    |    41 -
- drivers/scsi/Makefile                   |     1 -
- drivers/scsi/aic7xxx_old.c              | 11149 ----------------------=
---------
- drivers/scsi/aic7xxx_old/aic7xxx.h      |    28 -
- drivers/scsi/aic7xxx_old/aic7xxx.reg    |  1401 ----
- drivers/scsi/aic7xxx_old/aic7xxx.seq    |  1539 -----
- drivers/scsi/aic7xxx_old/aic7xxx_proc.c |   270 -
- drivers/scsi/aic7xxx_old/aic7xxx_reg.h  |   629 --
- drivers/scsi/aic7xxx_old/aic7xxx_seq.c  |   817 ---
- drivers/scsi/aic7xxx_old/scsi_message.h |    49 -
- drivers/scsi/aic7xxx_old/sequencer.h    |   135 -
- 14 files changed, 16573 deletions(-)
- delete mode 100644 Documentation/scsi/aic7xxx_old.txt
- delete mode 100644 drivers/scsi/aic7xxx_old.c
- delete mode 100644 drivers/scsi/aic7xxx_old/aic7xxx.h
- delete mode 100644 drivers/scsi/aic7xxx_old/aic7xxx.reg
- delete mode 100644 drivers/scsi/aic7xxx_old/aic7xxx.seq
- delete mode 100644 drivers/scsi/aic7xxx_old/aic7xxx_proc.c
- delete mode 100644 drivers/scsi/aic7xxx_old/aic7xxx_reg.h
- delete mode 100644 drivers/scsi/aic7xxx_old/aic7xxx_seq.c
- delete mode 100644 drivers/scsi/aic7xxx_old/scsi_message.h
- delete mode 100644 drivers/scsi/aic7xxx_old/sequencer.h
-
-diff --git a/Documentation/scsi/00-INDEX b/Documentation/scsi/00-INDEX
-index 9b0787f..2044be5 100644
---- a/Documentation/scsi/00-INDEX
-+++ b/Documentation/scsi/00-INDEX
-@@ -42,8 +42,6 @@ aic79xx.txt
- 	- Adaptec Ultra320 SCSI host adapters
- aic7xxx.txt
- 	- info on driver for Adaptec controllers
--aic7xxx_old.txt
--	- info on driver for Adaptec controllers, old generation
- arcmsr_spec.txt
- 	- ARECA FIRMWARE SPEC (for IOP331 adapter)
- dc395x.txt
-diff --git a/Documentation/scsi/aic7xxx_old.txt b/Documentation/scsi/ai=
-c7xxx_old.txt
-deleted file mode 100644
-index ecfc474..0000000
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e61c2e8..c79be42 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -470,7 +470,6 @@ M:	Hannes Reinecke <hare@suse.de>
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
- F:	drivers/scsi/aic7xxx/
--F:	drivers/scsi/aic7xxx_old/
-=20
- AIMSLAB FM RADIO RECEIVER DRIVER
- M:	Hans Verkuil <hverkuil@xs4all.nl>
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index fe25677..1f02003 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -499,47 +499,6 @@ config SCSI_AACRAID
-=20
-=20
- source "drivers/scsi/aic7xxx/Kconfig.aic7xxx"
--
--config SCSI_AIC7XXX_OLD
--	tristate "Adaptec AIC7xxx support (old driver)"
--	depends on (ISA || EISA || PCI ) && SCSI
--	help
--	  WARNING This driver is an older aic7xxx driver and is no longer
--	  under active development.  Adaptec, Inc. is writing a new driver to
--	  take the place of this one, and it is recommended that whenever
--	  possible, people should use the new Adaptec written driver instead
--	  of this one.  This driver will eventually be phased out entirely.
--
--	  This is support for the various aic7xxx based Adaptec SCSI
--	  controllers. These include the 274x EISA cards; 284x VLB cards;
--	  2902, 2910, 293x, 294x, 394x, 3985 and several other PCI and
--	  motherboard based SCSI controllers from Adaptec. It does not suppor=
-t
--	  the AAA-13x RAID controllers from Adaptec, nor will it likely ever
--	  support them. It does not support the 2920 cards from Adaptec that
--	  use the Future Domain SCSI controller chip. For those cards, you
--	  need the "Future Domain 16xx SCSI support" driver.
--
--	  In general, if the controller is based on an Adaptec SCSI controlle=
-r
--	  chip from the aic777x series or the aic78xx series, this driver
--	  should work. The only exception is the 7810 which is specifically
--	  not supported (that's the RAID controller chip on the AAA-13x
--	  cards).
--
--	  Note that the AHA2920 SCSI host adapter is *not* supported by this
--	  driver; choose "Future Domain 16xx SCSI support" instead if you hav=
-e
--	  one of those.
--
--	  Information on the configuration options for this controller can be
--	  found by checking the help file for each of the available
--	  configuration options. You should read
--	  <file:Documentation/scsi/aic7xxx_old.txt> at a minimum before
--	  contacting the maintainer with any questions.  The SCSI-HOWTO,
--	  available from <http://www.tldp.org/docs.html#howto>, can also
--	  be of great help.
--
--	  To compile this driver as a module, choose M here: the
--	  module will be called aic7xxx_old.
--
- source "drivers/scsi/aic7xxx/Kconfig.aic79xx"
- source "drivers/scsi/aic94xx/Kconfig"
- source "drivers/scsi/mvsas/Kconfig"
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 149bb6b..e172d4f 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -70,7 +70,6 @@ obj-$(CONFIG_SCSI_AHA1740)	+=3D aha1740.o
- obj-$(CONFIG_SCSI_AIC7XXX)	+=3D aic7xxx/
- obj-$(CONFIG_SCSI_AIC79XX)	+=3D aic7xxx/
- obj-$(CONFIG_SCSI_AACRAID)	+=3D aacraid/
--obj-$(CONFIG_SCSI_AIC7XXX_OLD)	+=3D aic7xxx_old.o
- obj-$(CONFIG_SCSI_AIC94XX)	+=3D aic94xx/
- obj-$(CONFIG_SCSI_PM8001)	+=3D pm8001/
- obj-$(CONFIG_SCSI_ISCI)		+=3D isci/
-diff --git a/drivers/scsi/aic7xxx_old.c b/drivers/scsi/aic7xxx_old.c
-deleted file mode 100644
-index 33ec9c6..0000000
-diff --git a/drivers/scsi/aic7xxx_old/aic7xxx.h b/drivers/scsi/aic7xxx_=
-old/aic7xxx.h
-deleted file mode 100644
-index 0116c81..0000000
-diff --git a/drivers/scsi/aic7xxx_old/aic7xxx.reg b/drivers/scsi/aic7xx=
-x_old/aic7xxx.reg
-deleted file mode 100644
-index f67b4bc..0000000
-diff --git a/drivers/scsi/aic7xxx_old/aic7xxx.seq b/drivers/scsi/aic7xx=
-x_old/aic7xxx.seq
-deleted file mode 100644
-index dc3bb81..0000000
-diff --git a/drivers/scsi/aic7xxx_old/aic7xxx_proc.c b/drivers/scsi/aic=
-7xxx_old/aic7xxx_proc.c
-deleted file mode 100644
-index 976f45c..0000000
-diff --git a/drivers/scsi/aic7xxx_old/aic7xxx_reg.h b/drivers/scsi/aic7=
-xxx_old/aic7xxx_reg.h
-deleted file mode 100644
-index 27f2334..0000000
-diff --git a/drivers/scsi/aic7xxx_old/aic7xxx_seq.c b/drivers/scsi/aic7=
-xxx_old/aic7xxx_seq.c
-deleted file mode 100644
-index e1bc140..0000000
-diff --git a/drivers/scsi/aic7xxx_old/scsi_message.h b/drivers/scsi/aic=
-7xxx_old/scsi_message.h
-deleted file mode 100644
-index a79f89c..0000000
-diff --git a/drivers/scsi/aic7xxx_old/sequencer.h b/drivers/scsi/aic7xx=
-x_old/sequencer.h
-deleted file mode 100644
-index ee66855..0000000
---=20
-1.8.1.2
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
