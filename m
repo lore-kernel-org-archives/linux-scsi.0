@@ -1,16 +1,16 @@
 From: <adheer.chandravanshi@qlogic.com>
-Subject: [PATCH 7/7] qla4xxx: Add support to get CHAP details for flash target session
-Date: Tue, 17 Sep 2013 07:54:50 -0400
-Message-ID: <1379418890-1141-8-git-send-email-adheer.chandravanshi@qlogic.com>
+Subject: [PATCH 6/7] qla4xxx: Add support to set CHAP entries
+Date: Tue, 17 Sep 2013 07:54:49 -0400
+Message-ID: <1379418890-1141-7-git-send-email-adheer.chandravanshi@qlogic.com>
 References: <1379418890-1141-1-git-send-email-adheer.chandravanshi@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:50137 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752393Ab3IQMZS (ORCPT
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:3344 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752765Ab3IQMZv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Sep 2013 08:25:18 -0400
+	Tue, 17 Sep 2013 08:25:51 -0400
 In-Reply-To: <1379418890-1141-1-git-send-email-adheer.chandravanshi@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,82 +19,307 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
-Add support to get local CHAP - index, username and password,
-sysfs params of iscsi session corresponding to flash target entry.
+Provide support to add/update the CHAP entries in adapter's flash
+using iscsi tools, like Open-iSCSI.
 
 Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_os.c |   41 ++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 38 insertions(+), 3 deletions(-)
+ drivers/scsi/qla4xxx/ql4_glbl.h   |    2 +
+ drivers/scsi/qla4xxx/ql4_inline.h |   12 +++
+ drivers/scsi/qla4xxx/ql4_mbx.c    |   16 +++-
+ drivers/scsi/qla4xxx/ql4_os.c     |  197 +++++++++++++++++++++++++++++++++++++
+ 4 files changed, 225 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index e6f2a26..5cef252 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -83,6 +83,8 @@ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+ 		uint8_t outCount, uint32_t *mbx_cmd, uint32_t *mbx_sts);
+ int qla4xxx_get_chap_index(struct scsi_qla_host *ha, char *username,
+ 			   char *password, int bidi, uint16_t *chap_index);
++int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
++		     uint16_t idx, int bidi);
+ 
+ void qla4xxx_queue_iocb(struct scsi_qla_host *ha);
+ void qla4xxx_complete_iocb(struct scsi_qla_host *ha);
+diff --git a/drivers/scsi/qla4xxx/ql4_inline.h b/drivers/scsi/qla4xxx/ql4_inline.h
+index 8503ad6..655b7bb 100644
+--- a/drivers/scsi/qla4xxx/ql4_inline.h
++++ b/drivers/scsi/qla4xxx/ql4_inline.h
+@@ -82,3 +82,15 @@ qla4xxx_disable_intrs(struct scsi_qla_host *ha)
+ 	__qla4xxx_disable_intrs(ha);
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ }
++
++static inline int qla4xxx_get_chap_type(struct ql4_chap_table *chap_entry)
++{
++	int type;
++
++	if (chap_entry->flags & BIT_7)
++		type = LOCAL_CHAP;
++	else
++		type = BIDI_CHAP;
++
++	return type;
++}
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 121be42..22cbd00 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -1530,8 +1530,20 @@ exit_get_chap:
+ 	return ret;
+ }
+ 
+-static int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username,
+-			    char *password, uint16_t idx, int bidi)
++/**
++ * qla4xxx_set_chap - Make a chap entry at the given index
++ * @ha: pointer to adapter structure
++ * @username: CHAP username to set
++ * @password: CHAP password to set
++ * @idx: CHAP index at which to make the entry
++ * @bidi: type of chap entry (chap_in or chap_out)
++ *
++ * Create chap entry at the given index with the information provided.
++ *
++ * Note: Caller should acquire the chap lock before getting here.
++ **/
++int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
++		     uint16_t idx, int bidi)
+ {
+ 	int ret = 0;
+ 	int rval = QLA_ERROR;
 diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 933c766..6dc3e99 100644
+index 4547880..933c766 100644
 --- a/drivers/scsi/qla4xxx/ql4_os.c
 +++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -1652,9 +1652,12 @@ static int qla4xxx_session_get_param(struct iscsi_cls_session *cls_sess,
- 	struct iscsi_session *sess = cls_sess->dd_data;
- 	struct ddb_entry *ddb_entry = sess->dd_data;
- 	struct scsi_qla_host *ha = ddb_entry->ha;
-+	struct iscsi_cls_conn *cls_conn = ddb_entry->conn;
-+	struct ql4_chap_table chap_tbl;
- 	int rval, len;
- 	uint16_t idx;
+@@ -149,6 +149,8 @@ static int qla4xxx_send_ping(struct Scsi_Host *shost, uint32_t iface_num,
+ static int qla4xxx_get_chap_list(struct Scsi_Host *shost, uint16_t chap_tbl_idx,
+ 				 uint32_t *num_entries, char *buf);
+ static int qla4xxx_delete_chap(struct Scsi_Host *shost, uint16_t chap_tbl_idx);
++static int qla4xxx_set_chap_entry(struct Scsi_Host *shost, void  *data,
++				  int len);
  
-+	memset(&chap_tbl, 0, sizeof(chap_tbl));
- 	switch (param) {
- 	case ISCSI_PARAM_CHAP_IN_IDX:
- 		rval = qla4xxx_get_chap_index(ha, sess->username_in,
-@@ -1666,14 +1669,46 @@ static int qla4xxx_session_get_param(struct iscsi_cls_session *cls_sess,
- 			len = sprintf(buf, "%hu\n", idx);
- 		break;
- 	case ISCSI_PARAM_CHAP_OUT_IDX:
--		rval = qla4xxx_get_chap_index(ha, sess->username,
--					      sess->password, LOCAL_CHAP,
--					      &idx);
-+		if (ddb_entry->ddb_type == FLASH_DDB) {
-+			if (ddb_entry->chap_tbl_idx != INVALID_ENTRY) {
-+				idx = ddb_entry->chap_tbl_idx;
-+				rval = QLA_SUCCESS;
-+			} else {
-+				rval = QLA_ERROR;
-+			}
-+		} else {
-+			rval = qla4xxx_get_chap_index(ha, sess->username,
-+						      sess->password,
-+						      LOCAL_CHAP, &idx);
+ /*
+  * SCSI host template entry points
+@@ -252,6 +254,7 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
+ 	.send_ping		= qla4xxx_send_ping,
+ 	.get_chap		= qla4xxx_get_chap_list,
+ 	.delete_chap		= qla4xxx_delete_chap,
++	.set_chap		= qla4xxx_set_chap_entry,
+ 	.get_flashnode_param	= qla4xxx_sysfs_ddb_get_param,
+ 	.set_flashnode_param	= qla4xxx_sysfs_ddb_set_param,
+ 	.new_flashnode		= qla4xxx_sysfs_ddb_add,
+@@ -508,6 +511,95 @@ static umode_t qla4_attr_is_visible(int param_type, int param)
+ 	return 0;
+ }
+ 
++static int qla4xxx_get_chap_by_index(struct scsi_qla_host *ha,
++				     int16_t chap_index,
++				     struct ql4_chap_table **chap_entry)
++{
++	int rval = QLA_ERROR;
++	int max_chap_entries;
++
++	if (!ha->chap_list) {
++		ql4_printk(KERN_ERR, ha, "CHAP table cache is empty!\n");
++		rval = QLA_ERROR;
++		goto exit_get_chap;
++	}
++
++	if (is_qla80XX(ha))
++		max_chap_entries = (ha->hw.flt_chap_size / 2) /
++				   sizeof(struct ql4_chap_table);
++	else
++		max_chap_entries = MAX_CHAP_ENTRIES_40XX;
++
++	if (chap_index > max_chap_entries) {
++		ql4_printk(KERN_ERR, ha, "Invalid Chap index\n");
++		rval = QLA_ERROR;
++		goto exit_get_chap;
++	}
++
++	*chap_entry = (struct ql4_chap_table *)ha->chap_list + chap_index;
++	if ((*chap_entry)->cookie !=
++	     __constant_cpu_to_le16(CHAP_VALID_COOKIE)) {
++		rval = QLA_ERROR;
++		*chap_entry = NULL;
++	} else {
++		rval = QLA_SUCCESS;
++	}
++
++exit_get_chap:
++	return rval;
++}
++
++/**
++ * qla4xxx_find_free_chap_index - Find the first free chap index
++ * @ha: pointer to adapter structure
++ * @chap_index: CHAP index to be returned
++ *
++ * Find the first free chap index available in the chap table
++ *
++ * Note: Caller should acquire the chap lock before getting here.
++ **/
++static int qla4xxx_find_free_chap_index(struct scsi_qla_host *ha,
++					uint16_t *chap_index)
++{
++	int i, rval;
++	int free_index = -1;
++	int max_chap_entries = 0;
++	struct ql4_chap_table *chap_table;
++
++	if (is_qla80XX(ha))
++		max_chap_entries = (ha->hw.flt_chap_size / 2) /
++						sizeof(struct ql4_chap_table);
++	else
++		max_chap_entries = MAX_CHAP_ENTRIES_40XX;
++
++	if (!ha->chap_list) {
++		ql4_printk(KERN_ERR, ha, "CHAP table cache is empty!\n");
++		rval = QLA_ERROR;
++		goto exit_find_chap;
++	}
++
++	for (i = 0; i < max_chap_entries; i++) {
++		chap_table = (struct ql4_chap_table *)ha->chap_list + i;
++
++		if ((chap_table->cookie !=
++		    __constant_cpu_to_le16(CHAP_VALID_COOKIE)) &&
++		   (i > MAX_RESRV_CHAP_IDX)) {
++				free_index = i;
++				break;
 +		}
- 		if (rval)
- 			len = sprintf(buf, "\n");
- 		else
- 			len = sprintf(buf, "%hu\n", idx);
- 		break;
-+	case ISCSI_PARAM_USERNAME:
-+	case ISCSI_PARAM_PASSWORD:
-+		/* First, populate session username and password for FLASH DDB,
-+		 * if not already done. This happens when session login fails
-+		 * for a FLASH DDB.
-+		 */
-+		if (ddb_entry->ddb_type == FLASH_DDB &&
-+		    ddb_entry->chap_tbl_idx != INVALID_ENTRY &&
-+		    !sess->username && !sess->password) {
-+			idx = ddb_entry->chap_tbl_idx;
-+			rval = qla4xxx_get_uni_chap_at_index(ha, chap_tbl.name,
-+							    chap_tbl.secret,
-+							    idx);
-+			if (!rval) {
-+				iscsi_set_param(cls_conn, ISCSI_PARAM_USERNAME,
-+						(char *)chap_tbl.name,
-+						strlen((char *)chap_tbl.name));
-+				iscsi_set_param(cls_conn, ISCSI_PARAM_PASSWORD,
-+						(char *)chap_tbl.secret,
-+						chap_tbl.secret_len);
++	}
++
++	if (free_index != -1) {
++		*chap_index = free_index;
++		rval = QLA_SUCCESS;
++	} else {
++		rval = QLA_ERROR;
++	}
++
++exit_find_chap:
++	return rval;
++}
++
+ static int qla4xxx_get_chap_list(struct Scsi_Host *shost, uint16_t chap_tbl_idx,
+ 				  uint32_t *num_entries, char *buf)
+ {
+@@ -691,6 +783,111 @@ exit_delete_chap:
+ 	return ret;
+ }
+ 
++/**
++ * qla4xxx_set_chap_entry - Make chap entry with given information
++ * @shost: pointer to host
++ * @data: chap info - credentials, index and type to make chap entry
++ * @len: length of data
++ *
++ * Add or update chap entry with the given information
++ **/
++static int qla4xxx_set_chap_entry(struct Scsi_Host *shost, void *data, int len)
++{
++	struct scsi_qla_host *ha = to_qla_host(shost);
++	struct iscsi_chap_rec chap_rec;
++	struct ql4_chap_table *chap_entry = NULL;
++	struct iscsi_param_info *param_info;
++	struct nlattr *attr;
++	int max_chap_entries = 0;
++	int type;
++	int rem = len;
++	int rc = 0;
++
++	memset(&chap_rec, 0, sizeof(chap_rec));
++
++	nla_for_each_attr(attr, data, len, rem) {
++		param_info = nla_data(attr);
++
++		switch (param_info->param) {
++		case ISCSI_CHAP_PARAM_INDEX:
++			chap_rec.chap_tbl_idx = *(uint16_t *)param_info->value;
++			break;
++		case ISCSI_CHAP_PARAM_CHAP_TYPE:
++			chap_rec.chap_type = param_info->value[0];
++			break;
++		case ISCSI_CHAP_PARAM_USERNAME:
++			memcpy(chap_rec.username, param_info->value,
++			       param_info->len);
++			break;
++		case ISCSI_CHAP_PARAM_PASSWORD:
++			memcpy(chap_rec.password, param_info->value,
++			       param_info->len);
++			break;
++		case ISCSI_CHAP_PARAM_PASSWORD_LEN:
++			chap_rec.password_length = param_info->value[0];
++			break;
++		default:
++			ql4_printk(KERN_ERR, ha,
++				   "%s: No such sysfs attribute\n", __func__);
++			rc = -ENOSYS;
++			goto exit_set_chap;
++		};
++	}
++
++	if (chap_rec.chap_type == CHAP_TYPE_IN)
++		type = BIDI_CHAP;
++	else
++		type = LOCAL_CHAP;
++
++	if (is_qla80XX(ha))
++		max_chap_entries = (ha->hw.flt_chap_size / 2) /
++				   sizeof(struct ql4_chap_table);
++	else
++		max_chap_entries = MAX_CHAP_ENTRIES_40XX;
++
++	mutex_lock(&ha->chap_sem);
++	if (chap_rec.chap_tbl_idx < max_chap_entries) {
++		rc = qla4xxx_get_chap_by_index(ha, chap_rec.chap_tbl_idx,
++					       &chap_entry);
++		if (!rc) {
++			if (!(type == qla4xxx_get_chap_type(chap_entry))) {
++				ql4_printk(KERN_INFO, ha,
++					   "Type mismatch for CHAP entry %d\n",
++					   chap_rec.chap_tbl_idx);
++				rc = -EINVAL;
++				goto exit_unlock_chap;
++			}
++
++			/* If chap index is in use then don't modify it */
++			rc = qla4xxx_is_chap_active(shost,
++						    chap_rec.chap_tbl_idx);
++			if (rc) {
++				ql4_printk(KERN_INFO, ha,
++					   "CHAP entry %d is in use\n",
++					   chap_rec.chap_tbl_idx);
++				rc = -EBUSY;
++				goto exit_unlock_chap;
 +			}
 +		}
-+		/* allow fall-through */
- 	default:
- 		return iscsi_session_get_param(cls_sess, param, buf);
- 	}
++	} else {
++		rc = qla4xxx_find_free_chap_index(ha, &chap_rec.chap_tbl_idx);
++		if (rc) {
++			ql4_printk(KERN_INFO, ha, "CHAP entry not available\n");
++			rc = -EBUSY;
++			goto exit_unlock_chap;
++		}
++	}
++
++	rc = qla4xxx_set_chap(ha, chap_rec.username, chap_rec.password,
++			      chap_rec.chap_tbl_idx, type);
++
++exit_unlock_chap:
++	mutex_unlock(&ha->chap_sem);
++
++exit_set_chap:
++	return rc;
++}
++
+ static int qla4xxx_get_iface_param(struct iscsi_iface *iface,
+ 				   enum iscsi_param_type param_type,
+ 				   int param, char *buf)
 -- 
 1.7.1
 
