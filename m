@@ -1,7 +1,7 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] scsi: delete decade+ obsolete aic7xxx_old driver
-Date: Tue, 17 Sep 2013 15:10:07 -0500
-Message-ID: <1379448607.2213.16.camel@dabdike>
+Date: Tue, 17 Sep 2013 15:10:41 -0500
+Message-ID: <1379448641.2213.18.camel@dabdike>
 References: <y687fpks4kdsmfuadq4cykip.1379384036544@email.android.com>
 	 <52386730.4060508@suse.de>
 Mime-Version: 1.0
