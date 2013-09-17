@@ -1,14 +1,14 @@
 From: <adheer.chandravanshi@qlogic.com>
-Subject: [PATCH 4/7] qla4xxx: Use offset based on adapter type to set CHAP entry in flash
-Date: Tue, 17 Sep 2013 07:54:47 -0400
-Message-ID: <1379418890-1141-5-git-send-email-adheer.chandravanshi@qlogic.com>
+Subject: [PATCH 3/7] qla4xxx: Populate local CHAP credentials for flash target sessions
+Date: Tue, 17 Sep 2013 07:54:46 -0400
+Message-ID: <1379418890-1141-4-git-send-email-adheer.chandravanshi@qlogic.com>
 References: <1379418890-1141-1-git-send-email-adheer.chandravanshi@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:6860 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752418Ab3IQMZS (ORCPT
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:50136 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752340Ab3IQMZS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 17 Sep 2013 08:25:18 -0400
 In-Reply-To: <1379418890-1141-1-git-send-email-adheer.chandravanshi@qlogic.com>
@@ -19,49 +19,64 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 
-To write a CHAP entry in adapter's flash calculate the offset based
-on the type of adapter.
+If any flash target entry is using CHAP authentication then set
+CHAP username and password sysfs params for the corresponding
+iscsi sessions.
 
 Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_mbx.c |   16 +++++++++++++++-
- 1 files changed, 15 insertions(+), 1 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 5eef7d1..121be42 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1537,6 +1537,7 @@ static int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username,
- 	int rval = QLA_ERROR;
- 	uint32_t offset = 0;
- 	struct ql4_chap_table *chap_table;
-+	uint32_t chap_size = 0;
- 	dma_addr_t chap_dma;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 057d068..4547880 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -2397,6 +2397,7 @@ static void qla4xxx_copy_fwddb_param(struct scsi_qla_host *ha,
+ 	int buflen = 0;
+ 	struct iscsi_session *sess;
+ 	struct ddb_entry *ddb_entry;
++	struct ql4_chap_table chap_tbl;
+ 	struct iscsi_conn *conn;
+ 	char ip_addr[DDB_IPADDR_LEN];
+ 	uint16_t options = 0;
+@@ -2404,6 +2405,7 @@ static void qla4xxx_copy_fwddb_param(struct scsi_qla_host *ha,
+ 	sess = cls_sess->dd_data;
+ 	ddb_entry = sess->dd_data;
+ 	conn = cls_conn->dd_data;
++	memset(&chap_tbl, 0, sizeof(chap_tbl));
  
- 	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
-@@ -1554,7 +1555,20 @@ static int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username,
- 	strncpy(chap_table->secret, password, MAX_CHAP_SECRET_LEN);
- 	strncpy(chap_table->name, username, MAX_CHAP_NAME_LEN);
- 	chap_table->cookie = __constant_cpu_to_le16(CHAP_VALID_COOKIE);
--	offset = FLASH_CHAP_OFFSET | (idx * sizeof(struct ql4_chap_table));
+ 	ddb_entry->chap_tbl_idx = le16_to_cpu(fw_ddb_entry->chap_tbl_idx);
+ 
+@@ -2430,6 +2432,19 @@ static void qla4xxx_copy_fwddb_param(struct scsi_qla_host *ha,
+ 			(char *)fw_ddb_entry->iscsi_name, buflen);
+ 	iscsi_set_param(cls_conn, ISCSI_PARAM_INITIATOR_NAME,
+ 			(char *)ha->name_string, buflen);
 +
-+	if (is_qla40XX(ha)) {
-+		chap_size = MAX_CHAP_ENTRIES_40XX * sizeof(*chap_table);
-+		offset = FLASH_CHAP_OFFSET;
-+	} else { /* Single region contains CHAP info for both ports which is
-+		  * divided into half for each port.
-+		  */
-+		chap_size = ha->hw.flt_chap_size / 2;
-+		offset = FLASH_RAW_ACCESS_ADDR + (ha->hw.flt_region_chap << 2);
-+		if (ha->port_num == 1)
-+			offset += chap_size;
++	if (ddb_entry->chap_tbl_idx != INVALID_ENTRY) {
++		if (!qla4xxx_get_uni_chap_at_index(ha, chap_tbl.name,
++						   chap_tbl.secret,
++						   ddb_entry->chap_tbl_idx)) {
++			iscsi_set_param(cls_conn, ISCSI_PARAM_USERNAME,
++					(char *)chap_tbl.name,
++					strlen((char *)chap_tbl.name));
++			iscsi_set_param(cls_conn, ISCSI_PARAM_PASSWORD,
++					(char *)chap_tbl.secret,
++					chap_tbl.secret_len);
++		}
 +	}
-+
-+	offset += (idx * sizeof(struct ql4_chap_table));
- 	rval = qla4xxx_set_flash(ha, chap_dma, offset,
- 				sizeof(struct ql4_chap_table),
- 				FLASH_OPT_RMW_COMMIT);
+ }
+ 
+ void qla4xxx_update_session_conn_fwddb_param(struct scsi_qla_host *ha,
+@@ -5204,6 +5219,7 @@ static void qla4xxx_setup_flash_ddb_entry(struct scsi_qla_host *ha,
+ 	ddb_entry->ha = ha;
+ 	ddb_entry->unblock_sess = qla4xxx_unblock_flash_ddb;
+ 	ddb_entry->ddb_change = qla4xxx_flash_ddb_change;
++	ddb_entry->chap_tbl_idx = INVALID_ENTRY;
+ 
+ 	atomic_set(&ddb_entry->retry_relogin_timer, INVALID_ENTRY);
+ 	atomic_set(&ddb_entry->relogin_timer, 0);
 -- 
 1.7.1
 
