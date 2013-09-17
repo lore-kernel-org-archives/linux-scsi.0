@@ -1,52 +1,93 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Does Linux support 32-byte CDBs
-Date: Tue, 17 Sep 2013 12:19:51 -0700
-Message-ID: <1379445591.32763.593.camel@haakon3.risingtidesystems.com>
-References: <37a98d3f-3931-44c1-a76d-1fbdcfb4207f@googlegroups.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: delete decade+ obsolete aic7xxx_old driver
+Date: Tue, 17 Sep 2013 15:10:07 -0500
+Message-ID: <1379448607.2213.16.camel@dabdike>
+References: <y687fpks4kdsmfuadq4cykip.1379384036544@email.android.com>
+	 <52386730.4060508@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:38920 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753216Ab3IQTMK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Sep 2013 15:12:10 -0400
-In-Reply-To: <37a98d3f-3931-44c1-a76d-1fbdcfb4207f@googlegroups.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <52386730.4060508@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Doug Ledford <dledford@redhat.com>, Paul Gortmaker <paul.gortmaker@windriver.com>, linux-scsi list <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Andrew Falanga <af300wsm@gmail.com>
 
-Hi Andrew,
+On Tue, 2013-09-17 at 16:29 +0200, Hannes Reinecke wrote:
+> On 09/17/2013 04:13 AM, Doug Ledford wrote:
+> > Yes, this driver is well past ready to be removed.
+> >=20
+> > Acked-by: Doug Ledford <dledford@redhat.com>
+> >=20
+> > Sent from my ASUS Pad
+> >=20
+> > Paul Gortmaker <paul.gortmaker@windriver.com> wrote:
+> >=20
+> >> After getting warnings in an allyesconfig build[1] from this
+> >> driver, I decided to remind myself just how old it was, and
+> >> whether it warranted fixing.  In the Kconfig help text, I found:
+> >>
+> >>  "This driver will eventually be phased out entirely"
+> >>
+> >> Going back to the history archive, I see the line was added[2]
+> >> in Feb 2002, when we moved from v2.4.2.1 ---> v2.4.2.2
+> >>
+> >> So, with over a decade of notification, and multiple major release=
+s
+> >> since then, I think we can justify removing this.  Currently we ha=
+ve
+> >> people wasting time building it during routine testing, and then
+> >> wasting more time re-researching the known reported warnings, only=
+ to
+> >> find that nobody really is willing to integrate the fixes[3] for i=
+t.
+> >>
+> >> A quick search didn't seem to indicate any active user base for it=
+=2E
+> >> If someone happens to have a quirky _old_ card that the eleven yea=
+r
+> >> old "new" driver doesn't work with, then it is entirely reasonable
+> >> that they stick with a kernel version that predates this removal.
+> >>
+> >> [1] drivers/scsi/aic7xxx_old.c: In function =E2=80=98aic7xxx_regis=
+ter=E2=80=99:
+> >>    drivers/scsi/aic7xxx_old.c:7901:5: warning: case value =E2=80=98=
+257=E2=80=99 not in enumerated type =E2=80=98ahc_chip=E2=80=99 [-Wswitc=
+h]
+> >>    drivers/scsi/aic7xxx_old.c:7898:5: warning: case value =E2=80=98=
+513=E2=80=99 not in enumerated type =E2=80=98ahc_chip=E2=80=99 [-Wswitc=
+h]
+> >>    drivers/scsi/aic7xxx_old.c: In function =E2=80=98aic7xxx_load_s=
+eeprom=E2=80=99:
+> >>    drivers/scsi/aic7xxx_old.c:8517:5: warning: case value =E2=80=98=
+257=E2=80=99 not in enumerated type =E2=80=98ahc_chip=E2=80=99 [-Wswitc=
+h]
+> >>    drivers/scsi/aic7xxx_old.c:8510:5: warning: case value =E2=80=98=
+513=E2=80=99 not in enumerated type =E2=80=98ahc_chip=E2=80=99 [-Wswitc=
+h]
+> >>
+> >> [2] http://git.kernel.org/cgit/linux/kernel/git/tglx/history.git c=
+ommit 44e8778c
+> >>
+> >> [3] https://lkml.org/lkml/2012/10/29/215
+> >>
+> >> Cc: Hannes Reinecke <hare@suse.de>
+> >> Cc: Doug Ledford <dledford@redhat.com>
+> >> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+> >> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+>=20
+> However, if we do this we're removing support for any non-PCI based
+> adapters. I personally doubt that there are any installations left
+> running on (E)ISA or VLB. But we should be clear on this.
 
-(Adding CC' to linux-scsi, as it's a more appropriate venue than the
-target list)
+Actually, that's not true: the aic7xxx driver has support for EISA (I
+know because I've got one) but not the VLB and some of the really old
+cards.
 
-On Mon, 2013-09-16 at 13:27 -0700, Andrew Falanga wrote:
-> Hello,
-> 
-> I truly hope that this is the correct forum for this question.  If
-> not, forgive me and if possible, please direct me to the correct
-> forum.  My question is quite simple (I hope the answer is equally
-> simple).  Does Linux support 32-byte CDBs in SCSI?  I've done enough
-> research that I think the answer may depend on the kernel version in
-> use, and the particular upper layer driver in use (i.e. sd, sg, bsg,
-> etc.).  If so, the relevant information from my linux system is:
-> 
-> * CentOS 6.2  -- 2.6.32-71 kernel  32-bit
-> 
-> I'd be using the SG driver.
-> 
+> In general I'm in favour removing obsolete drivers, so
 
-My understanding is that you need to use BSG in order to submit > 16
-byte CDBs from userspace.
+OK, so do we have any real evidence that no-one uses this driver?  Does
+any distro actually compile it, for instance?
 
-Also, sd.c will generate > 16 byte CDBs (eg: WRITE_32 + READ_32) when
-DIF protection is enabled.
-
-I believe that both are supported on v2.6.32.x, but you might want to
-double check to be sure.
-
---nab
-
-
+James
