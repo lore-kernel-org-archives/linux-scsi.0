@@ -1,173 +1,101 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH] scsi: delete decade+ obsolete aic7xxx_old driver
-Date: Mon, 16 Sep 2013 22:13:56 -0400
-Message-ID: <y687fpks4kdsmfuadq4cykip.1379384036544@email.android.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 06/22] be2iscsi: Fix soft lock up issue during UE or if
+ FW taking time to respond
+Date: Mon, 16 Sep 2013 22:18:51 -0500
+Message-ID: <5237CA1B.2090907@cs.wisc.edu>
+References: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com> <1379049014-32716-6-git-send-email-jayamohan.kallickal@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43220 "EHLO mx1.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:45428 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751489Ab3IQCOC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Sep 2013 22:14:02 -0400
+	id S1751602Ab3IQDT1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Sep 2013 23:19:27 -0400
+In-Reply-To: <1379049014-32716-6-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-scsi list <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Jayamohan Kallickal <jayamohank@gmail.com>
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
-WWVzLCB0aGlzIGRyaXZlciBpcyB3ZWxsIHBhc3QgcmVhZHkgdG8gYmUgcmVtb3ZlZC4KCkFja2Vk
-LWJ5OiBEb3VnIExlZGZvcmQgPGRsZWRmb3JkQHJlZGhhdC5jb20+CgpTZW50IGZyb20gbXkgQVNV
-UyBQYWQKClBhdWwgR29ydG1ha2VyIDxwYXVsLmdvcnRtYWtlckB3aW5kcml2ZXIuY29tPiB3cm90
-ZToKCj5BZnRlciBnZXR0aW5nIHdhcm5pbmdzIGluIGFuIGFsbHllc2NvbmZpZyBidWlsZFsxXSBm
-cm9tIHRoaXMKPmRyaXZlciwgSSBkZWNpZGVkIHRvIHJlbWluZCBteXNlbGYganVzdCBob3cgb2xk
-IGl0IHdhcywgYW5kCj53aGV0aGVyIGl0IHdhcnJhbnRlZCBmaXhpbmcuICBJbiB0aGUgS2NvbmZp
-ZyBoZWxwIHRleHQsIEkgZm91bmQ6Cj4KPiAgIlRoaXMgZHJpdmVyIHdpbGwgZXZlbnR1YWxseSBi
-ZSBwaGFzZWQgb3V0IGVudGlyZWx5Igo+Cj5Hb2luZyBiYWNrIHRvIHRoZSBoaXN0b3J5IGFyY2hp
-dmUsIEkgc2VlIHRoZSBsaW5lIHdhcyBhZGRlZFsyXQo+aW4gRmViIDIwMDIsIHdoZW4gd2UgbW92
-ZWQgZnJvbSB2Mi40LjIuMSAtLS0+IHYyLjQuMi4yCj4KPlNvLCB3aXRoIG92ZXIgYSBkZWNhZGUg
-b2Ygbm90aWZpY2F0aW9uLCBhbmQgbXVsdGlwbGUgbWFqb3IgcmVsZWFzZXMKPnNpbmNlIHRoZW4s
-IEkgdGhpbmsgd2UgY2FuIGp1c3RpZnkgcmVtb3ZpbmcgdGhpcy4gIEN1cnJlbnRseSB3ZSBoYXZl
-Cj5wZW9wbGUgd2FzdGluZyB0aW1lIGJ1aWxkaW5nIGl0IGR1cmluZyByb3V0aW5lIHRlc3Rpbmcs
-IGFuZCB0aGVuCj53YXN0aW5nIG1vcmUgdGltZSByZS1yZXNlYXJjaGluZyB0aGUga25vd24gcmVw
-b3J0ZWQgd2FybmluZ3MsIG9ubHkgdG8KPmZpbmQgdGhhdCBub2JvZHkgcmVhbGx5IGlzIHdpbGxp
-bmcgdG8gaW50ZWdyYXRlIHRoZSBmaXhlc1szXSBmb3IgaXQuCj4KPkEgcXVpY2sgc2VhcmNoIGRp
-ZG4ndCBzZWVtIHRvIGluZGljYXRlIGFueSBhY3RpdmUgdXNlciBiYXNlIGZvciBpdC4KPklmIHNv
-bWVvbmUgaGFwcGVucyB0byBoYXZlIGEgcXVpcmt5IF9vbGRfIGNhcmQgdGhhdCB0aGUgZWxldmVu
-IHllYXIKPm9sZCAibmV3IiBkcml2ZXIgZG9lc24ndCB3b3JrIHdpdGgsIHRoZW4gaXQgaXMgZW50
-aXJlbHkgcmVhc29uYWJsZQo+dGhhdCB0aGV5IHN0aWNrIHdpdGggYSBrZXJuZWwgdmVyc2lvbiB0
-aGF0IHByZWRhdGVzIHRoaXMgcmVtb3ZhbC4KPgo+WzFdIGRyaXZlcnMvc2NzaS9haWM3eHh4X29s
-ZC5jOiBJbiBmdW5jdGlvbiDigJhhaWM3eHh4X3JlZ2lzdGVy4oCZOgo+ICAgIGRyaXZlcnMvc2Nz
-aS9haWM3eHh4X29sZC5jOjc5MDE6NTogd2FybmluZzogY2FzZSB2YWx1ZSDigJgyNTfigJkgbm90
-IGluIGVudW1lcmF0ZWQgdHlwZSDigJhhaGNfY2hpcOKAmSBbLVdzd2l0Y2hdCj4gICAgZHJpdmVy
-cy9zY3NpL2FpYzd4eHhfb2xkLmM6Nzg5ODo1OiB3YXJuaW5nOiBjYXNlIHZhbHVlIOKAmDUxM+KA
-mSBub3QgaW4gZW51bWVyYXRlZCB0eXBlIOKAmGFoY19jaGlw4oCZIFstV3N3aXRjaF0KPiAgICBk
-cml2ZXJzL3Njc2kvYWljN3h4eF9vbGQuYzogSW4gZnVuY3Rpb24g4oCYYWljN3h4eF9sb2FkX3Nl
-ZXByb23igJk6Cj4gICAgZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkLmM6ODUxNzo1OiB3YXJuaW5n
-OiBjYXNlIHZhbHVlIOKAmDI1N+KAmSBub3QgaW4gZW51bWVyYXRlZCB0eXBlIOKAmGFoY19jaGlw
-4oCZIFstV3N3aXRjaF0KPiAgICBkcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQuYzo4NTEwOjU6IHdh
-cm5pbmc6IGNhc2UgdmFsdWUg4oCYNTEz4oCZIG5vdCBpbiBlbnVtZXJhdGVkIHR5cGUg4oCYYWhj
-X2NoaXDigJkgWy1Xc3dpdGNoXQo+Cj5bMl0gaHR0cDovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGlu
-dXgva2VybmVsL2dpdC90Z2x4L2hpc3RvcnkuZ2l0IGNvbW1pdCA0NGU4Nzc4Ywo+Cj5bM10gaHR0
-cHM6Ly9sa21sLm9yZy9sa21sLzIwMTIvMTAvMjkvMjE1Cj4KPkNjOiBIYW5uZXMgUmVpbmVja2Ug
-PGhhcmVAc3VzZS5kZT4KPkNjOiBEb3VnIExlZGZvcmQgPGRsZWRmb3JkQHJlZGhhdC5jb20+Cj5D
-YzogIkphbWVzIEUuSi4gQm90dG9tbGV5IiA8SkJvdHRvbWxleUBwYXJhbGxlbHMuY29tPgo+U2ln
-bmVkLW9mZi1ieTogUGF1bCBHb3J0bWFrZXIgPHBhdWwuZ29ydG1ha2VyQHdpbmRyaXZlci5jb20+
-Cj4tLS0KPgo+W1RoaXMgaXMgYW4gIi0taXJyZXZlcnNpYmxlLWRlbGV0ZSIgcHNldWRvLXBhdGNo
-IHdoaWNoIGRvZXNuJ3Qgc2hvdyBhbGwKPnRoZSBmaWxlIGNvbnRlbnQgdGhhdCB3YXMgZGVsZXRl
-ZCB3aG9sZXNhbGUuICBUaGUgZnVsbCBjb21taXQgaXMgYXQ6Cj5naXQ6Ly9naXQua2VybmVsLm9y
-Zy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvcGF1bGcvbGludXguZ2l0IGFpYzd4eHgtZGVsZXRl
-IF0KPgo+IERvY3VtZW50YXRpb24vc2NzaS8wMC1JTkRFWCAgICAgICAgICAgICB8ICAgICAyIC0K
-PiBEb2N1bWVudGF0aW9uL3Njc2kvYWljN3h4eF9vbGQudHh0ICAgICAgfCAgIDUxMSAtLQo+IE1B
-SU5UQUlORVJTICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgICAxIC0KPiBkcml2ZXJz
-L3Njc2kvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgfCAgICA0MSAtCj4gZHJpdmVycy9zY3Np
-L01ha2VmaWxlICAgICAgICAgICAgICAgICAgIHwgICAgIDEgLQo+IGRyaXZlcnMvc2NzaS9haWM3
-eHh4X29sZC5jICAgICAgICAgICAgICB8IDExMTQ5IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLQo+IGRyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4LmggICAgICB8ICAgIDI4IC0K
-PiBkcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eC5yZWcgICAgfCAgMTQwMSAtLS0tCj4g
-ZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkL2FpYzd4eHguc2VxICAgIHwgIDE1MzkgLS0tLS0KPiBk
-cml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eF9wcm9jLmMgfCAgIDI3MCAtCj4gZHJpdmVy
-cy9zY3NpL2FpYzd4eHhfb2xkL2FpYzd4eHhfcmVnLmggIHwgICA2MjkgLS0KPiBkcml2ZXJzL3Nj
-c2kvYWljN3h4eF9vbGQvYWljN3h4eF9zZXEuYyAgfCAgIDgxNyAtLS0KPiBkcml2ZXJzL3Njc2kv
-YWljN3h4eF9vbGQvc2NzaV9tZXNzYWdlLmggfCAgICA0OSAtCj4gZHJpdmVycy9zY3NpL2FpYzd4
-eHhfb2xkL3NlcXVlbmNlci5oICAgIHwgICAxMzUgLQo+IDE0IGZpbGVzIGNoYW5nZWQsIDE2NTcz
-IGRlbGV0aW9ucygtKQo+IGRlbGV0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL3Njc2kvYWlj
-N3h4eF9vbGQudHh0Cj4gZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9haWM3eHh4X29s
-ZC5jCj4gZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4
-LmgKPiBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkL2FpYzd4eHgu
-cmVnCj4gZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4
-LnNlcQo+IGRlbGV0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4
-eF9wcm9jLmMKPiBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkL2Fp
-Yzd4eHhfcmVnLmgKPiBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xk
-L2FpYzd4eHhfc2VxLmMKPiBkZWxldGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL2FpYzd4eHhf
-b2xkL3Njc2lfbWVzc2FnZS5oCj4gZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9haWM3
-eHh4X29sZC9zZXF1ZW5jZXIuaAo+Cj5kaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9zY3NpLzAw
-LUlOREVYIGIvRG9jdW1lbnRhdGlvbi9zY3NpLzAwLUlOREVYCj5pbmRleCA5YjA3ODdmLi4yMDQ0
-YmU1IDEwMDY0NAo+LS0tIGEvRG9jdW1lbnRhdGlvbi9zY3NpLzAwLUlOREVYCj4rKysgYi9Eb2N1
-bWVudGF0aW9uL3Njc2kvMDAtSU5ERVgKPkBAIC00Miw4ICs0Miw2IEBAIGFpYzc5eHgudHh0Cj4g
-CS0gQWRhcHRlYyBVbHRyYTMyMCBTQ1NJIGhvc3QgYWRhcHRlcnMKPiBhaWM3eHh4LnR4dAo+IAkt
-IGluZm8gb24gZHJpdmVyIGZvciBBZGFwdGVjIGNvbnRyb2xsZXJzCj4tYWljN3h4eF9vbGQudHh0
-Cj4tCS0gaW5mbyBvbiBkcml2ZXIgZm9yIEFkYXB0ZWMgY29udHJvbGxlcnMsIG9sZCBnZW5lcmF0
-aW9uCj4gYXJjbXNyX3NwZWMudHh0Cj4gCS0gQVJFQ0EgRklSTVdBUkUgU1BFQyAoZm9yIElPUDMz
-MSBhZGFwdGVyKQo+IGRjMzk1eC50eHQKPmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL3Njc2kv
-YWljN3h4eF9vbGQudHh0IGIvRG9jdW1lbnRhdGlvbi9zY3NpL2FpYzd4eHhfb2xkLnR4dAo+ZGVs
-ZXRlZCBmaWxlIG1vZGUgMTAwNjQ0Cj5pbmRleCBlY2ZjNDc0Li4wMDAwMDAwCj5kaWZmIC0tZ2l0
-IGEvTUFJTlRBSU5FUlMgYi9NQUlOVEFJTkVSUwo+aW5kZXggZTYxYzJlOC4uYzc5YmU0MiAxMDA2
-NDQKPi0tLSBhL01BSU5UQUlORVJTCj4rKysgYi9NQUlOVEFJTkVSUwo+QEAgLTQ3MCw3ICs0NzAs
-NiBAQCBNOglIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4KPiBMOglsaW51eC1zY3NpQHZn
-ZXIua2VybmVsLm9yZwo+IFM6CU1haW50YWluZWQKPiBGOglkcml2ZXJzL3Njc2kvYWljN3h4eC8K
-Pi1GOglkcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvCj4gCj4gQUlNU0xBQiBGTSBSQURJTyBSRUNF
-SVZFUiBEUklWRVIKPiBNOglIYW5zIFZlcmt1aWwgPGh2ZXJrdWlsQHhzNGFsbC5ubD4KPmRpZmYg
-LS1naXQgYS9kcml2ZXJzL3Njc2kvS2NvbmZpZyBiL2RyaXZlcnMvc2NzaS9LY29uZmlnCj5pbmRl
-eCBmZTI1Njc3Li4xZjAyMDAzIDEwMDY0NAo+LS0tIGEvZHJpdmVycy9zY3NpL0tjb25maWcKPisr
-KyBiL2RyaXZlcnMvc2NzaS9LY29uZmlnCj5AQCAtNDk5LDQ3ICs0OTksNiBAQCBjb25maWcgU0NT
-SV9BQUNSQUlECj4gCj4gCj4gc291cmNlICJkcml2ZXJzL3Njc2kvYWljN3h4eC9LY29uZmlnLmFp
-Yzd4eHgiCj4tCj4tY29uZmlnIFNDU0lfQUlDN1hYWF9PTEQKPi0JdHJpc3RhdGUgIkFkYXB0ZWMg
-QUlDN3h4eCBzdXBwb3J0IChvbGQgZHJpdmVyKSIKPi0JZGVwZW5kcyBvbiAoSVNBIHx8IEVJU0Eg
-fHwgUENJICkgJiYgU0NTSQo+LQloZWxwCj4tCSAgV0FSTklORyBUaGlzIGRyaXZlciBpcyBhbiBv
-bGRlciBhaWM3eHh4IGRyaXZlciBhbmQgaXMgbm8gbG9uZ2VyCj4tCSAgdW5kZXIgYWN0aXZlIGRl
-dmVsb3BtZW50LiAgQWRhcHRlYywgSW5jLiBpcyB3cml0aW5nIGEgbmV3IGRyaXZlciB0bwo+LQkg
-IHRha2UgdGhlIHBsYWNlIG9mIHRoaXMgb25lLCBhbmQgaXQgaXMgcmVjb21tZW5kZWQgdGhhdCB3
-aGVuZXZlcgo+LQkgIHBvc3NpYmxlLCBwZW9wbGUgc2hvdWxkIHVzZSB0aGUgbmV3IEFkYXB0ZWMg
-d3JpdHRlbiBkcml2ZXIgaW5zdGVhZAo+LQkgIG9mIHRoaXMgb25lLiAgVGhpcyBkcml2ZXIgd2ls
-bCBldmVudHVhbGx5IGJlIHBoYXNlZCBvdXQgZW50aXJlbHkuCj4tCj4tCSAgVGhpcyBpcyBzdXBw
-b3J0IGZvciB0aGUgdmFyaW91cyBhaWM3eHh4IGJhc2VkIEFkYXB0ZWMgU0NTSQo+LQkgIGNvbnRy
-b2xsZXJzLiBUaGVzZSBpbmNsdWRlIHRoZSAyNzR4IEVJU0EgY2FyZHM7IDI4NHggVkxCIGNhcmRz
-Owo+LQkgIDI5MDIsIDI5MTAsIDI5M3gsIDI5NHgsIDM5NHgsIDM5ODUgYW5kIHNldmVyYWwgb3Ro
-ZXIgUENJIGFuZAo+LQkgIG1vdGhlcmJvYXJkIGJhc2VkIFNDU0kgY29udHJvbGxlcnMgZnJvbSBB
-ZGFwdGVjLiBJdCBkb2VzIG5vdCBzdXBwb3J0Cj4tCSAgdGhlIEFBQS0xM3ggUkFJRCBjb250cm9s
-bGVycyBmcm9tIEFkYXB0ZWMsIG5vciB3aWxsIGl0IGxpa2VseSBldmVyCj4tCSAgc3VwcG9ydCB0
-aGVtLiBJdCBkb2VzIG5vdCBzdXBwb3J0IHRoZSAyOTIwIGNhcmRzIGZyb20gQWRhcHRlYyB0aGF0
-Cj4tCSAgdXNlIHRoZSBGdXR1cmUgRG9tYWluIFNDU0kgY29udHJvbGxlciBjaGlwLiBGb3IgdGhv
-c2UgY2FyZHMsIHlvdQo+LQkgIG5lZWQgdGhlICJGdXR1cmUgRG9tYWluIDE2eHggU0NTSSBzdXBw
-b3J0IiBkcml2ZXIuCj4tCj4tCSAgSW4gZ2VuZXJhbCwgaWYgdGhlIGNvbnRyb2xsZXIgaXMgYmFz
-ZWQgb24gYW4gQWRhcHRlYyBTQ1NJIGNvbnRyb2xsZXIKPi0JICBjaGlwIGZyb20gdGhlIGFpYzc3
-N3ggc2VyaWVzIG9yIHRoZSBhaWM3OHh4IHNlcmllcywgdGhpcyBkcml2ZXIKPi0JICBzaG91bGQg
-d29yay4gVGhlIG9ubHkgZXhjZXB0aW9uIGlzIHRoZSA3ODEwIHdoaWNoIGlzIHNwZWNpZmljYWxs
-eQo+LQkgIG5vdCBzdXBwb3J0ZWQgKHRoYXQncyB0aGUgUkFJRCBjb250cm9sbGVyIGNoaXAgb24g
-dGhlIEFBQS0xM3gKPi0JICBjYXJkcykuCj4tCj4tCSAgTm90ZSB0aGF0IHRoZSBBSEEyOTIwIFND
-U0kgaG9zdCBhZGFwdGVyIGlzICpub3QqIHN1cHBvcnRlZCBieSB0aGlzCj4tCSAgZHJpdmVyOyBj
-aG9vc2UgIkZ1dHVyZSBEb21haW4gMTZ4eCBTQ1NJIHN1cHBvcnQiIGluc3RlYWQgaWYgeW91IGhh
-dmUKPi0JICBvbmUgb2YgdGhvc2UuCj4tCj4tCSAgSW5mb3JtYXRpb24gb24gdGhlIGNvbmZpZ3Vy
-YXRpb24gb3B0aW9ucyBmb3IgdGhpcyBjb250cm9sbGVyIGNhbiBiZQo+LQkgIGZvdW5kIGJ5IGNo
-ZWNraW5nIHRoZSBoZWxwIGZpbGUgZm9yIGVhY2ggb2YgdGhlIGF2YWlsYWJsZQo+LQkgIGNvbmZp
-Z3VyYXRpb24gb3B0aW9ucy4gWW91IHNob3VsZCByZWFkCj4tCSAgPGZpbGU6RG9jdW1lbnRhdGlv
-bi9zY3NpL2FpYzd4eHhfb2xkLnR4dD4gYXQgYSBtaW5pbXVtIGJlZm9yZQo+LQkgIGNvbnRhY3Rp
-bmcgdGhlIG1haW50YWluZXIgd2l0aCBhbnkgcXVlc3Rpb25zLiAgVGhlIFNDU0ktSE9XVE8sCj4t
-CSAgYXZhaWxhYmxlIGZyb20gPGh0dHA6Ly93d3cudGxkcC5vcmcvZG9jcy5odG1sI2hvd3RvPiwg
-Y2FuIGFsc28KPi0JICBiZSBvZiBncmVhdCBoZWxwLgo+LQo+LQkgIFRvIGNvbXBpbGUgdGhpcyBk
-cml2ZXIgYXMgYSBtb2R1bGUsIGNob29zZSBNIGhlcmU6IHRoZQo+LQkgIG1vZHVsZSB3aWxsIGJl
-IGNhbGxlZCBhaWM3eHh4X29sZC4KPi0KPiBzb3VyY2UgImRyaXZlcnMvc2NzaS9haWM3eHh4L0tj
-b25maWcuYWljNzl4eCIKPiBzb3VyY2UgImRyaXZlcnMvc2NzaS9haWM5NHh4L0tjb25maWciCj4g
-c291cmNlICJkcml2ZXJzL3Njc2kvbXZzYXMvS2NvbmZpZyIKPmRpZmYgLS1naXQgYS9kcml2ZXJz
-L3Njc2kvTWFrZWZpbGUgYi9kcml2ZXJzL3Njc2kvTWFrZWZpbGUKPmluZGV4IDE0OWJiNmIuLmUx
-NzJkNGYgMTAwNjQ0Cj4tLS0gYS9kcml2ZXJzL3Njc2kvTWFrZWZpbGUKPisrKyBiL2RyaXZlcnMv
-c2NzaS9NYWtlZmlsZQo+QEAgLTcwLDcgKzcwLDYgQEAgb2JqLSQoQ09ORklHX1NDU0lfQUhBMTc0
-MCkJKz0gYWhhMTc0MC5vCj4gb2JqLSQoQ09ORklHX1NDU0lfQUlDN1hYWCkJKz0gYWljN3h4eC8K
-PiBvYmotJChDT05GSUdfU0NTSV9BSUM3OVhYKQkrPSBhaWM3eHh4Lwo+IG9iai0kKENPTkZJR19T
-Q1NJX0FBQ1JBSUQpCSs9IGFhY3JhaWQvCj4tb2JqLSQoQ09ORklHX1NDU0lfQUlDN1hYWF9PTEQp
-CSs9IGFpYzd4eHhfb2xkLm8KPiBvYmotJChDT05GSUdfU0NTSV9BSUM5NFhYKQkrPSBhaWM5NHh4
-Lwo+IG9iai0kKENPTkZJR19TQ1NJX1BNODAwMSkJKz0gcG04MDAxLwo+IG9iai0kKENPTkZJR19T
-Q1NJX0lTQ0kpCQkrPSBpc2NpLwo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9haWM3eHh4X29s
-ZC5jIGIvZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkLmMKPmRlbGV0ZWQgZmlsZSBtb2RlIDEwMDY0
-NAo+aW5kZXggMzNlYzljNi4uMDAwMDAwMAo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9haWM3
-eHh4X29sZC9haWM3eHh4LmggYi9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eC5oCj5k
-ZWxldGVkIGZpbGUgbW9kZSAxMDA2NDQKPmluZGV4IDAxMTZjODEuLjAwMDAwMDAKPmRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eC5yZWcgYi9kcml2ZXJzL3Njc2kv
-YWljN3h4eF9vbGQvYWljN3h4eC5yZWcKPmRlbGV0ZWQgZmlsZSBtb2RlIDEwMDY0NAo+aW5kZXgg
-ZjY3YjRiYy4uMDAwMDAwMAo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9h
-aWM3eHh4LnNlcSBiL2RyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4LnNlcQo+ZGVsZXRl
-ZCBmaWxlIG1vZGUgMTAwNjQ0Cj5pbmRleCBkYzNiYjgxLi4wMDAwMDAwCj5kaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9zY3NpL2FpYzd4eHhfb2xkL2FpYzd4eHhfcHJvYy5jIGIvZHJpdmVycy9zY3NpL2Fp
-Yzd4eHhfb2xkL2FpYzd4eHhfcHJvYy5jCj5kZWxldGVkIGZpbGUgbW9kZSAxMDA2NDQKPmluZGV4
-IDk3NmY0NWMuLjAwMDAwMDAKPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQv
-YWljN3h4eF9yZWcuaCBiL2RyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9haWM3eHh4X3JlZy5oCj5k
-ZWxldGVkIGZpbGUgbW9kZSAxMDA2NDQKPmluZGV4IDI3ZjIzMzQuLjAwMDAwMDAKPmRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvYWljN3h4eF9zZXEuYyBiL2RyaXZlcnMvc2Nz
-aS9haWM3eHh4X29sZC9haWM3eHh4X3NlcS5jCj5kZWxldGVkIGZpbGUgbW9kZSAxMDA2NDQKPmlu
-ZGV4IGUxYmMxNDAuLjAwMDAwMDAKPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYWljN3h4eF9v
-bGQvc2NzaV9tZXNzYWdlLmggYi9kcml2ZXJzL3Njc2kvYWljN3h4eF9vbGQvc2NzaV9tZXNzYWdl
-LmgKPmRlbGV0ZWQgZmlsZSBtb2RlIDEwMDY0NAo+aW5kZXggYTc5Zjg5Yy4uMDAwMDAwMAo+ZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9haWM3eHh4X29sZC9zZXF1ZW5jZXIuaCBiL2RyaXZlcnMv
-c2NzaS9haWM3eHh4X29sZC9zZXF1ZW5jZXIuaAo+ZGVsZXRlZCBmaWxlIG1vZGUgMTAwNjQ0Cj5p
-bmRleCBlZTY2ODU1Li4wMDAwMDAwCj4tLSAKPjEuOC4xLjIKPgo=
+On 09/13/2013 12:09 AM, Jayamohan Kallickal wrote:
+>  The timeout set in MBX_CMD is 100sec and the ready bit checking in BMBX
+>  mode is done for 4sec. After 4sec the task is scheduled out for 5 secs
+>  to avoid kernel soft lockup stack trace. The loop of 4sec ready bit check
+>  and then schedule out is done until the following conditon occur
+>   - The Ready Bit is Set
+>   - The timeout set in MBX_CMD expires
+> 
+> Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> ---
+>  drivers/scsi/be2iscsi/be.h      |    2 +-
+>  drivers/scsi/be2iscsi/be_cmds.c |   47 +++++++++++++++++++++++++--------------
+>  drivers/scsi/be2iscsi/be_main.c |    5 ++---
+>  3 files changed, 33 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+> index 777e7c0..2e28f6c 100644
+> --- a/drivers/scsi/be2iscsi/be.h
+> +++ b/drivers/scsi/be2iscsi/be.h
+> @@ -128,7 +128,7 @@ struct be_ctrl_info {
+>  
+>  #define PAGE_SHIFT_4K 12
+>  #define PAGE_SIZE_4K (1 << PAGE_SHIFT_4K)
+> -#define mcc_timeout		120000 /* 5s timeout */
+> +#define mcc_timeout		120000 /* 12s timeout */
+>  
+>  /* Returns number of pages spanned by the data starting at the given addr */
+>  #define PAGES_4K_SPANNED(_address, size)				\
+> diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+> index f7788e5..01e1915 100644
+> --- a/drivers/scsi/be2iscsi/be_cmds.c
+> +++ b/drivers/scsi/be2iscsi/be_cmds.c
+> @@ -490,33 +490,46 @@ int be_mcc_notify_wait(struct beiscsi_hba *phba)
+>   **/
+>  static int be_mbox_db_ready_wait(struct be_ctrl_info *ctrl)
+>  {
+> +#define BEISCSI_MBX_RDY_BIT_TIMEOUT	4000	/* 4sec */
+>  	void __iomem *db = ctrl->db + MPU_MAILBOX_DB_OFFSET;
+>  	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+> -	uint32_t wait = 0;
+> +	unsigned long timeout;
+> +	bool read_flag = false;
+> +	int ret = 0, i;
+>  	u32 ready;
+>  
+> -	do {
+> +	if (beiscsi_error(phba))
+> +		return -EIO;
+>  
+> -		if (beiscsi_error(phba))
+> -			return -EIO;
+> +	timeout = jiffies + (HZ * 110);
+>  
+> -		ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
+> -		if (ready)
+> -			break;
+> +	do {
+> +		for (i = 0; i < BEISCSI_MBX_RDY_BIT_TIMEOUT; i++) {
+> +			ready = ioread32(db) & MPU_MAILBOX_DB_RDY_MASK;
+> +			if (ready) {
+> +				read_flag = true;
+> +				break;
+> +			}
+> +			mdelay(1);
+> +		}
+>  
+> -		if (wait > BEISCSI_HOST_MBX_TIMEOUT) {
+> -			beiscsi_log(phba, KERN_ERR,
+> -				    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+> -				    "BC_%d : FW Timed Out\n");
+> +		if (!read_flag) {
+> +			set_current_state(TASK_INTERRUPTIBLE);
+> +			schedule_timeout(HZ * 5);
+> +			set_current_state(TASK_RUNNING);
+> +		}
+> +	} while ((time_before(jiffies, timeout)) && !read_flag);
+> +
+
+I think you can use wait_event_timeout instead of all this.
 
