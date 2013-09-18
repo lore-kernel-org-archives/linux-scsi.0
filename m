@@ -1,61 +1,40 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: scsi: delete decade+ obsolete aic7xxx_old driver
-Date: Wed, 18 Sep 2013 07:49:35 +0200
-Message-ID: <52393EEF.10705@suse.de>
-References: <1379382683-27862-1-git-send-email-paul.gortmaker@windriver.com> <1379442463.31104.11.camel@x220.thuisdomein>
+From: Alireza Haghdoost <alireza@cs.umn.edu>
+Subject: Bypass block layer and Fill SCSI lower layer driver queue
+Date: Wed, 18 Sep 2013 01:41:55 -0500
+Message-ID: <CAB-428mCM-4c1hWaEJicB8Uz_4DCo7MsH-ZcXHrDkN=Wc5AhVA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55451 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751351Ab3IRFti (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Sep 2013 01:49:38 -0400
-In-Reply-To: <1379442463.31104.11.camel@x220.thuisdomein>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Jerry Fredin <jerry.fredin@netapp.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Doug Ledford <dledford@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Josh Boyer <jwboyer@redhat.com>
 
-On 09/17/2013 08:27 PM, Paul Bolle wrote:
-> On Mon, 2013-09-16 at 21:51 -0400, Paul Gortmaker wrote:
->> Currently we have people wasting time building it during routine tes=
-ting,
->> and then wasting more time re-researching the known reported warning=
-s,
->> only to find that nobody really is willing to integrate the fixes[3]=
- for
->> it.
->>
->> [...]
->>
->> [3] https://lkml.org/lkml/2012/10/29/215
->=20
-> Well, this didn't end up as an entire waste of my time. After that
-> message I sent a patch to Fedora's kernel list, and a reminder a few
-> months later[1]. That prompted Josh Boyer to remove this old driver f=
-rom
-> the Fedora build[2].
->=20
-> And now that driver is disabled in all kernels that Fedora currently
-> ships. I'm not familiar with any complaints about this decision.
->=20
-Ok, good to know.
-So this patch appears to be good, then.
+Hi
 
-Acked-by: Hannes Reinecke <hare@suse.de>
+I am working on a high throughput and low latency application which
+does not tolerate block layer overhead to send IO request directly to
+fiber channel lower layer SCSI driver. I used to work with libaio but
+currently I am looking for a way to by pass the block layer and send
+SCSI commands from the application layer directly to the SCSI driver
+using /dev/sgX device and ioctl() system call.
 
-Cheers,
+I have noticed that sending IO request through sg device even with
+nonblocking and direct IO flags is quite slow and does not fill up
+lower layer SCSI driver TCQ queue. i.e IO depth or
+/sys/block/sdX/in_flight is always ZERO. Therefore the application
+throughput is even lower that sending IO request through block layer
+with libaio and io_submit() system call. In both cases I used only one
+IO context (or fd) and single threaded.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I have noticed that some well known benchmarking tools like fio does
+not support IO depth for sg devices as well. Therefore, I was
+wondering if it is feasible to bypass block layer and achieve higher
+throughput and lower latency (for sending IO request only).
+
+
+Any comment on my issue is highly appreciated.
+
+
+Thanks
+Alireza
