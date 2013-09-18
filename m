@@ -1,55 +1,122 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 3/4] BNX2FC: Bump version from 1.0.14 to 2.4.1
-Date: Tue, 17 Sep 2013 22:33:12 -0700
-Message-ID: <1379482393-30515-3-git-send-email-eddie.wai@broadcom.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
+From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH 04/22] be2iscsi: Fix negotiated parameters upload to FW
+Date: Wed, 18 Sep 2013 05:37:22 +0000
+Message-ID: <c04fb960-4c3d-448a-8902-e5a89ed424d5@CMEXHTCAS2.ad.emulex.com>
+References: <1379049014-32716-1-git-send-email-jayamohan.kallickal@emulex.com>
+ <1379049014-32716-4-git-send-email-jayamohan.kallickal@emulex.com>
+ <5237C56C.1060605@cs.wisc.edu>
+ <00c19394-64ee-4326-8e7f-e58318974d70@CMEXHTCAS1.ad.emulex.com>
+ <5238C686.8010204@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1602 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751645Ab3IRFg2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Sep 2013 01:36:28 -0400
-In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:31378 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751804Ab3IRFhZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2013 01:37:25 -0400
+In-Reply-To: <5238C686.8010204@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Robert Love <robert.w.love@intel.com>, fcoe-devel <fcoe-devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jayamohan Kallickal <jayamohank@gmail.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sony John-N <Sony.John-N@Emulex.Com>
 
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Tuesday, September 17, 2013 2:16 PM
+To: Jayamohan Kallickal
+Cc: Jayamohan Kallickal; jbottomley@parallels.com; linux-scsi@vger.kernel.org; Sony John-N
+Subject: Re: [PATCH 04/22] be2iscsi: Fix negotiated parameters upload to FW
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 08b22a9..6991027 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -64,7 +64,7 @@
- #include "bnx2fc_constants.h"
- 
- #define BNX2FC_NAME		"bnx2fc"
--#define BNX2FC_VERSION		"1.0.14"
-+#define BNX2FC_VERSION		"2.4.1"
- 
- #define PFX			"bnx2fc: "
- 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 5d059cb..ae5220e 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -22,7 +22,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
- 
- #define DRV_MODULE_NAME		"bnx2fc"
- #define DRV_MODULE_VERSION	BNX2FC_VERSION
--#define DRV_MODULE_RELDATE	"Mar 08, 2013"
-+#define DRV_MODULE_RELDATE	"Sep 17, 2013"
- 
- 
- static char version[] =
--- 
-1.7.1
+On 09/16/2013 11:28 PM, Jayamohan Kallickal wrote:
+> 
+> 
+> -----Original Message-----
+> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+> Sent: Monday, September 16, 2013 7:59 PM
+> To: Jayamohan Kallickal
+> Cc: jbottomley@parallels.com; linux-scsi@vger.kernel.org; Jayamohan 
+> Kallickal; Sony John-N
+> Subject: Re: [PATCH 04/22] be2iscsi: Fix negotiated parameters upload 
+> to FW
+> 
+> On 09/13/2013 12:09 AM, Jayamohan Kallickal wrote:
+>>  - If target does not send MaxRecvDSL in login repsonse, then
+>>    initiator should consider the MaxRecvDSL for target is 8K.
+>>    In this scenario driver was setting the value to 64K and this
+>>    caused target to close cxn as data xfer was more than the
+>>    MaxRecvDSL
+>>  - Update connection offload data structure for SKH-R adapters.
+>>
+>> Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+>> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+>> ---
+>>  drivers/scsi/be2iscsi/be_iscsi.c |    9 +++++++--
+>>  drivers/scsi/be2iscsi/be_main.h  |   29 ++++++++++++++++-------------
+>>  drivers/scsi/be2iscsi/be_mgmt.c  |    8 +++-----
+>>  3 files changed, 26 insertions(+), 20 deletions(-)
+>>
+>> diff --git a/drivers/scsi/be2iscsi/be_iscsi.c
+>> b/drivers/scsi/be2iscsi/be_iscsi.c
+>> index 2496ea7..60c1dff 100644
+>> --- a/drivers/scsi/be2iscsi/be_iscsi.c
+>> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
+>> @@ -672,9 +672,10 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
+>>  			session->max_burst = 262144;
+>>  		break;
+>>  	case ISCSI_PARAM_MAX_XMIT_DLENGTH:
+>> -		if ((conn->max_xmit_dlength > 65536) ||
+>> -		    (conn->max_xmit_dlength == 0))
+>> +		if (conn->max_xmit_dlength > 65536)
+>>  			conn->max_xmit_dlength = 65536;
+>> +		else if (conn->max_xmit_dlength == 0)
+>> +			conn->max_xmit_dlength = 8192;
+> 
+>> Was the target sending 0 or not sending anything at all? Userspace should not be sending 0 if the target did not send >MaxRecvDSL. It looks like it should be sending 8k for that case. It looks like there is a bug in the tools where it will pass 0 >if the target sent 0.
+> 
+>> It seems other drivers would be hitting this bug too and we should fix everyone.
+> 
+> This was an IET target that  did not send any value and we were 
+> defaulting to 64K
+> 
+> Here is a small  userspace fix  that should  go along
+> 
+> diff --git a/usr/be2iscsi.c b/usr/be2iscsi.c index ce8b719..ba4c29f 
+> 100644
+> --- a/usr/be2iscsi.c
+> +++ b/usr/be2iscsi.c
+> @@ -33,10 +33,6 @@ void be2iscsi_create_conn(struct iscsi_conn *conn)
+>  	if (conn->max_xmit_dlength > 65536)
+>  		conn->max_xmit_dlength = 65536;
+>  
+> -	if (!conn_rec->iscsi.MaxXmitDataSegmentLength ||
+> -	    conn_rec->iscsi.MaxXmitDataSegmentLength > 65536)
+> -		conn_rec->iscsi.MaxXmitDataSegmentLength = 65536;
+> -
+>  	session->erl = 0;
+>  	session->initial_r2t_en = 1;
+>  }
 
+>For the case you are trying to fix are you getting 0 or 64K from userspace?  In the kernel code you changed to set the <value to 8K it looks like you got 0 from userspace. Is that right?
+
+Before this fix, in the usespace we will  hit (!conn_rec->iscsi.MaxXmitDataSegmentLength)   and will set conn_rec->iscsi.MaxXmitDataSegmentLength = 65536.  The userspace patch would prevent that from happening.
+
+So, in the Kernel space we would get 0 and which  would be set to 8K.
+
+>Are you setting node.conn[0].iscsi.MaxXmitDataSegmentLength in iscsif.conf to 64K or did you leave it as the default? >Just to make sure we are on the same page I really mean did you set it in iscsid.conf or with iscsiadm. I am not talking >about setting above in the be2iscsi create_conn callout.
+
+No changes were made. It was default values.
+
+>If it is the default of 0, then I think when the code above is called iscsi_copy_operational_params will have set conn->>max_xmit_dlength to ISCSI_DEF_MAX_RECV_SEG_LEN (8k). The conn->max_xmit_dlength value is the one we use for >final negotiated value so that is what gets passed to the kernel.
+
+>If the target does not negotiate for MRDSL then it should stay 8k.
+>iscsi_session_set_params will then pass down conn->max_xmit_dlength when login is done.
+
+>If I am looking at the code right, the only way we can get 0 in the kernel is if the target sends 0 for MRDSL. iscsid was not >expecting that and will just set conn->max_xmit_dlength to 0 and that will get passed down to all drivers incorrectly. If I >am right then we need to do a fix for all drivers.
+
+As an experiment, we tried applying just the userspace patch I sent earlier and we got the max_xmit_dlength as 8K.
+ So, the basic issue was that the user space code in usr/be2iscsi was setting the conn->max_xmit_dlength to 64K when we hit (!conn_rec->iscsi.MaxXmitDataSegmentLength)   
+
+I will send out a separate patch for the userspace code, but feel we can still keep the driver changes since the current code in Kernel sets conn->max_xmit_dlength=64K if it cam down to driver as zero. I would like to keep the check in driver as the user may apply different version of the userspace code (Distro version, Top of your Tree).
 
