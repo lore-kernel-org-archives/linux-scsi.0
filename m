@@ -1,77 +1,68 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 4/5] scsi_debug: fix invalid value check for guard module parameter
-Date: Wed, 18 Sep 2013 21:27:27 +0900
-Message-ID: <1379507248-15929-5-git-send-email-akinobu.mita@gmail.com>
-References: <1379507248-15929-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:61912 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752111Ab3IRM2k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2013 08:28:40 -0400
-Received: by mail-pa0-f48.google.com with SMTP id kp13so8197577pab.35
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2013 05:28:39 -0700 (PDT)
-In-Reply-To: <1379507248-15929-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Bypass block layer and Fill SCSI lower layer driver queue
+Date: Wed, 18 Sep 2013 10:07:53 -0400
+Message-ID: <5239B3B9.8050209@interlog.com>
+References: <CAB-428mCM-4c1hWaEJicB8Uz_4DCo7MsH-ZcXHrDkN=Wc5AhVA@mail.gmail.com> <52395D14.6010103@gmail.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <52395D14.6010103@gmail.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jack Wang <xjtuwjp@gmail.com>
+Cc: Alireza Haghdoost <alireza@cs.umn.edu>, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, Jerry Fredin <jerry.fredin@netapp.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Joe Perches <joe@perches.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-In the module initialization, invalid value for guard module parameter
-is detected by the following check:
+On 13-09-18 03:58 AM, Jack Wang wrote:
+> On 09/18/2013 08:41 AM, Alireza Haghdoost wrote:
+>> Hi
+>>
+>> I am working on a high throughput and low latency application which
+>> does not tolerate block layer overhead to send IO request directly to
+>> fiber channel lower layer SCSI driver. I used to work with libaio but
+>> currently I am looking for a way to by pass the block layer and send
+>> SCSI commands from the application layer directly to the SCSI driver
+>> using /dev/sgX device and ioctl() system call.
+>>
+>> I have noticed that sending IO request through sg device even with
+>> nonblocking and direct IO flags is quite slow and does not fill up
+>> lower layer SCSI driver TCQ queue. i.e IO depth or
+>> /sys/block/sdX/in_flight is always ZERO. Therefore the application
+>> throughput is even lower that sending IO request through block layer
+>> with libaio and io_submit() system call. In both cases I used only one
+>> IO context (or fd) and single threaded.
+>>
+> Hi Alireza,
+>
+> I think what you want is in_flight command scsi dispatch to low level
+> device.
+> I submit a simple patch to export device_busy
+>
+> http://www.spinics.net/lists/linux-scsi/msg68697.html
+>
+> I also notice fio sg engine will not fill queue properly, but haven't
+> look into deeper.
+>
+> Cheers
+> Jack
+>
+>> I have noticed that some well known benchmarking tools like fio does
+>> not support IO depth for sg devices as well. Therefore, I was
+>> wondering if it is feasible to bypass block layer and achieve higher
+>> throughput and lower latency (for sending IO request only).
+>>
+>>
+>> Any comment on my issue is highly appreciated.
 
-        if (scsi_debug_guard > 1) {
-                printk(KERN_ERR "scsi_debug_init: guard must be 0 or 1\n");
-                return -EINVAL;
-        }
+I'm not sure if this is relevant to your problem but by
+default both the bsg and sg drivers "queue at head"
+when they inject SCSI commands into the block layer.
 
-But this check isn't enough, because the type of scsi_debug_guard is
-'int' and scsi_debug_guard could be a negative value.
+The bsg driver has a BSG_FLAG_Q_AT_TAIL flag to change
+that queueing to what may be preferable for your purposes.
+The sg driver could, but does not, support that flag.
 
-This fixes it by changing the type of scsi_debug_guard to 'unsigned int'
-instead of adding extra check for a negative value.
+Doug Gilbert
 
-Reported-by: Joe Perches <joe@perches.com>
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Joe Perches <joe@perches.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/scsi_debug.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 43369e9..a21322d 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -169,7 +169,7 @@ static int scsi_debug_dix = DEF_DIX;
- static int scsi_debug_dsense = DEF_D_SENSE;
- static int scsi_debug_every_nth = DEF_EVERY_NTH;
- static int scsi_debug_fake_rw = DEF_FAKE_RW;
--static int scsi_debug_guard = DEF_GUARD;
-+static unsigned int scsi_debug_guard = DEF_GUARD;
- static int scsi_debug_lowest_aligned = DEF_LOWEST_ALIGNED;
- static int scsi_debug_max_luns = DEF_MAX_LUNS;
- static int scsi_debug_max_queue = SCSI_DEBUG_CANQUEUE;
-@@ -2754,7 +2754,7 @@ module_param_named(dix, scsi_debug_dix, int, S_IRUGO);
- module_param_named(dsense, scsi_debug_dsense, int, S_IRUGO | S_IWUSR);
- module_param_named(every_nth, scsi_debug_every_nth, int, S_IRUGO | S_IWUSR);
- module_param_named(fake_rw, scsi_debug_fake_rw, int, S_IRUGO | S_IWUSR);
--module_param_named(guard, scsi_debug_guard, int, S_IRUGO);
-+module_param_named(guard, scsi_debug_guard, uint, S_IRUGO);
- module_param_named(lbpu, scsi_debug_lbpu, int, S_IRUGO);
- module_param_named(lbpws, scsi_debug_lbpws, int, S_IRUGO);
- module_param_named(lbpws10, scsi_debug_lbpws10, int, S_IRUGO);
-@@ -3184,7 +3184,7 @@ DRIVER_ATTR(dif, S_IRUGO, sdebug_dif_show, NULL);
- 
- static ssize_t sdebug_guard_show(struct device_driver *ddp, char *buf)
- {
--	return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_guard);
-+	return scnprintf(buf, PAGE_SIZE, "%u\n", scsi_debug_guard);
- }
- DRIVER_ATTR(guard, S_IRUGO, sdebug_guard_show, NULL);
- 
--- 
-1.8.3.1
 
