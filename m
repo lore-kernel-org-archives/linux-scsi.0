@@ -1,64 +1,40 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: Bypass block layer and Fill SCSI lower layer driver queue
-Date: Wed, 18 Sep 2013 09:58:12 +0200
-Message-ID: <52395D14.6010103@gmail.com>
-References: <CAB-428mCM-4c1hWaEJicB8Uz_4DCo7MsH-ZcXHrDkN=Wc5AhVA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <CAB-428mCM-4c1hWaEJicB8Uz_4DCo7MsH-ZcXHrDkN=Wc5AhVA@mail.gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Alireza Haghdoost <alireza@cs.umn.edu>
-Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, Jerry Fredin <jerry.fredin@netapp.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH 0/5] scsi_debug: several fixes related to data integrity support
+Date: Wed, 18 Sep 2013 21:27:23 +0900
+Message-ID: <1379507248-15929-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:34292 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751967Ab3IRM2c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2013 08:28:32 -0400
+Received: by mail-pd0-f170.google.com with SMTP id x10so7027567pdj.1
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2013 05:28:31 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Joe Perches <joe@perches.com>, Fengguang Wu <fengguang.wu@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 09/18/2013 08:41 AM, Alireza Haghdoost wrote:
-> Hi
-> 
-> I am working on a high throughput and low latency application which
-> does not tolerate block layer overhead to send IO request directly to
-> fiber channel lower layer SCSI driver. I used to work with libaio but
-> currently I am looking for a way to by pass the block layer and send
-> SCSI commands from the application layer directly to the SCSI driver
-> using /dev/sgX device and ioctl() system call.
-> 
-> I have noticed that sending IO request through sg device even with
-> nonblocking and direct IO flags is quite slow and does not fill up
-> lower layer SCSI driver TCQ queue. i.e IO depth or
-> /sys/block/sdX/in_flight is always ZERO. Therefore the application
-> throughput is even lower that sending IO request through block layer
-> with libaio and io_submit() system call. In both cases I used only one
-> IO context (or fd) and single threaded.
-> 
-Hi Alireza,
+This patch set includes bug fixes and a warning fix which are related
+to the data integrity support for scsi_debug.
 
-I think what you want is in_flight command scsi dispatch to low level
-device.
-I submit a simple patch to export device_busy
+Akinobu Mita (5):
+  scsi_debug: fix buffer overrun when DIF/DIX is enabled and virtual_gb
+    > 0
+  scsi_debug: factor out copying PI from dif_storep to prot_sglist
+  scsi_debug: avoid partial copying PI from prot_sglist to dif_storep
+  scsi_debug: fix invalid value check for guard module parameter
+  scsi_debug: fix sparse warnings related to data integrity field
 
-http://www.spinics.net/lists/linux-scsi/msg68697.html
+ drivers/scsi/scsi_debug.c | 137 ++++++++++++++++++++++++----------------------
+ 1 file changed, 73 insertions(+), 64 deletions(-)
 
-I also notice fio sg engine will not fill queue properly, but haven't
-look into deeper.
+Cc: Joe Perches <joe@perches.com>
+Cc: Fengguang Wu <fengguang.wu@intel.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-Cheers
-Jack
-
-> I have noticed that some well known benchmarking tools like fio does
-> not support IO depth for sg devices as well. Therefore, I was
-> wondering if it is feasible to bypass block layer and achieve higher
-> throughput and lower latency (for sending IO request only).
-> 
-> 
-> Any comment on my issue is highly appreciated.
-> 
-> 
-> Thanks
-> Alireza
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- 
+1.8.3.1
 
