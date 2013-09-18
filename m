@@ -1,30 +1,45 @@
-From: <RonaldzBruns@angelwill.onmicrosoft.com>
-Subject: Low prices and discounts
-Date: Tue, 17 Sep 2013 21:37:01 +0000
-Message-ID: <a3cf9486-333e-4558-9c82-150000b205af@AMXPR01MB072.eurprd01.prod.exchangelabs.com>
-Mime-Version: 1.1
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: Re: [PATCH] scsi: delete decade+ obsolete aic7xxx_old driver
+Date: Tue, 17 Sep 2013 20:11:30 -0400
+Message-ID: <20130918001130.GA16331@windriver.com>
+References: <y687fpks4kdsmfuadq4cykip.1379384036544@email.android.com>
+ <52386730.4060508@suse.de>
+ <1379448641.2213.18.camel@dabdike>
+ <5238BB4A.8000309@redhat.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emea01-db3-ndr.ptr.protection.outlook.com ([157.56.120.102]:1750
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753930Ab3IQVhK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Sep 2013 17:37:10 -0400
+Received: from mail1.windriver.com ([147.11.146.13]:35513 "EHLO
+	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752890Ab3IRALF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Sep 2013 20:11:05 -0400
+Content-Disposition: inline
+In-Reply-To: <5238BB4A.8000309@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, linux-scsi list <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 
+[Re: [PATCH] scsi: delete decade+ obsolete aic7xxx_old driver] On 17/09/2013 (Tue 16:27) Doug Ledford wrote:
 
-		Dear Customer,
+> On 09/17/13 16:10, James Bottomley wrote:
+> 
+> > OK, so do we have any real evidence that no-one uses this driver?  Does
+> > any distro actually compile it, for instance?
+> 
+> Red Hat doesn't use it in any of their products (and it hasn't been the
+> preferred driver since about the old Red Hat Linux 7.0 days).
 
-There is a lot of people in this world who spend so much time 
-watching their health that they have not the time to enjoy it.
+The oldest ubuntu machine I could find was running a 2.6.32 kernel and
+even back then, they weren't building/enabling this driver either.
 
-No doctor visits
-Lowest price World Wide 
-Discreet Packaging
+Paul.
+--
 
-http://onlineshop14.webnode.com/store
-
-Best Regards,
-		
+> 
+> 
+> -- 
+> Doug Ledford <dledford@redhat.com>
+>               GPG KeyID: 0E572FDD
+> 	      http://people.redhat.com/dledford
+> 
