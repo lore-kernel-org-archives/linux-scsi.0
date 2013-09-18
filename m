@@ -1,82 +1,118 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 5/5] scsi_debug: fix sparse warnings related to data integrity field
-Date: Wed, 18 Sep 2013 21:27:28 +0900
-Message-ID: <1379507248-15929-6-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH 2/5] scsi_debug: factor out copying PI from dif_storep to prot_sglist
+Date: Wed, 18 Sep 2013 21:27:25 +0900
+Message-ID: <1379507248-15929-3-git-send-email-akinobu.mita@gmail.com>
 References: <1379507248-15929-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:36570 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751967Ab3IRM2l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2013 08:28:41 -0400
-Received: by mail-pa0-f46.google.com with SMTP id fa1so8176587pad.19
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2013 05:28:41 -0700 (PDT)
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:49707 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751967Ab3IRM2f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2013 08:28:35 -0400
+Received: by mail-pb0-f52.google.com with SMTP id wz12so6899190pbc.25
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2013 05:28:35 -0700 (PDT)
 In-Reply-To: <1379507248-15929-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Fengguang Wu <fengguang.wu@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Each member in data integrity field tuple is big-endian.  But the
-endianness of the values being compared with these members are not
-annotated.  So this fixes these sparse warnings.
+If data integrity support is enabled, prot_verify_read() is called in
+response to READ commands and it verifies protection info from dif_storep
+by comparing against fake_storep, and copies protection info to
+prot_sglist.
 
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
+This factors out the portion of copying protection info into a separate
+function.  It will also be reused in the next change after supporting
+the opposite direction (copying prot_sglist to dif_storep).
+
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Douglas Gilbert <dgilbert@interlog.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/scsi_debug.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_debug.c | 52 ++++++++++++++++++++++++++---------------------
+ 1 file changed, 29 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index a21322d..80b8b10 100644
+index f640b6b..99e74d7 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -1745,25 +1745,22 @@ static int do_device_access(struct scsi_cmnd *scmd,
- 	return ret;
+@@ -1789,37 +1789,16 @@ static int dif_verify(struct sd_dif_tuple *sdt, const void *data,
+ 	return 0;
  }
  
--static u16 dif_compute_csum(const void *buf, int len)
-+static __be16 dif_compute_csum(const void *buf, int len)
+-static int prot_verify_read(struct scsi_cmnd *SCpnt, sector_t start_sec,
+-			    unsigned int sectors, u32 ei_lba)
++static void dif_copy_prot(struct scsi_cmnd *SCpnt, sector_t sector,
++			  unsigned int sectors)
  {
--	u16 csum;
-+	__be16 csum;
+ 	unsigned int i, resid;
+ 	struct scatterlist *psgl;
+-	struct sd_dif_tuple *sdt;
+-	sector_t sector;
+ 	void *paddr;
+ 	const void *dif_store_end = dif_storep + sdebug_store_sectors;
  
--	switch (scsi_debug_guard) {
--	case 1:
--		csum = ip_compute_csum(buf, len);
--		break;
--	case 0:
-+	if (scsi_debug_guard)
-+		csum = (__force __be16)ip_compute_csum(buf, len);
-+	else
- 		csum = cpu_to_be16(crc_t10dif(buf, len));
--		break;
--	}
-+
- 	return csum;
- }
- 
- static int dif_verify(struct sd_dif_tuple *sdt, const void *data,
- 		      sector_t sector, u32 ei_lba)
- {
--	u16 csum = dif_compute_csum(data, scsi_debug_sector_size);
-+	__be16 csum = dif_compute_csum(data, scsi_debug_sector_size);
- 
- 	if (sdt->guard_tag != csum) {
- 		pr_err("%s: GUARD check failed on sector %lu rcvd 0x%04x, data 0x%04x\n",
-@@ -1841,7 +1838,7 @@ static int prot_verify_read(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 		sector = start_sec + i;
- 		sdt = dif_store(sector);
- 
+-	for (i = 0; i < sectors; i++) {
+-		int ret;
+-
+-		sector = start_sec + i;
+-		sdt = dif_store(sector);
+-
 -		if (sdt->app_tag == 0xffff)
-+		if (sdt->app_tag == cpu_to_be16(0xffff))
- 			continue;
+-			continue;
+-
+-		ret = dif_verify(sdt, fake_store(sector), sector, ei_lba);
+-		if (ret) {
+-			dif_errors++;
+-			return ret;
+-		}
+-
+-		ei_lba++;
+-	}
+-
+ 	/* Bytes of protection data to copy into sgl */
+ 	resid = sectors * sizeof(*dif_storep);
+-	sector = start_sec;
  
- 		ret = dif_verify(sdt, fake_store(sector), sector, ei_lba);
+ 	scsi_for_each_prot_sg(SCpnt, psgl, scsi_prot_sg_count(SCpnt), i) {
+ 		int len = min(psgl->length, resid);
+@@ -1839,7 +1818,34 @@ static int prot_verify_read(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 		resid -= len;
+ 		kunmap_atomic(paddr);
+ 	}
++}
++
++static int prot_verify_read(struct scsi_cmnd *SCpnt, sector_t start_sec,
++			    unsigned int sectors, u32 ei_lba)
++{
++	unsigned int i;
++	struct sd_dif_tuple *sdt;
++	sector_t sector;
++
++	for (i = 0; i < sectors; i++) {
++		int ret;
++
++		sector = start_sec + i;
++		sdt = dif_store(sector);
++
++		if (sdt->app_tag == 0xffff)
++			continue;
++
++		ret = dif_verify(sdt, fake_store(sector), sector, ei_lba);
++		if (ret) {
++			dif_errors++;
++			return ret;
++		}
++
++		ei_lba++;
++	}
+ 
++	dif_copy_prot(SCpnt, start_sec, sectors);
+ 	dix_reads++;
+ 
+ 	return 0;
 -- 
 1.8.3.1
 
