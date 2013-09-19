@@ -1,530 +1,166 @@
-From: Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Subject: Re: [PATCH V2 1/3] scsi: ufs: Allow vendor specific initialization
-Date: Thu, 19 Sep 2013 16:57:27 +0530
-Message-ID: <523ADF9F.8080201@codeaurora.org>
-References: <1377577093-10068-1-git-send-email-sthumma@codeaurora.org> <1377577093-10068-2-git-send-email-sthumma@codeaurora.org> <000901cead50$573ede90$05bc9bb0$%jun@samsung.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH] dm mpath: disable WRITE SAME if it fails
+Date: Thu, 19 Sep 2013 12:13:58 -0400
+Message-ID: <20130919161043.GA27081@redhat.com>
+Reply-To: yq1fvwuoeck.fsf@sermon.lab.mkp.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <000901cead50$573ede90$05bc9bb0$%jun-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Seungwon Jeon <tgih.jun-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: 'Vinayak Holikatti' <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, 'Santosh Y' <santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "'James E.J. Bottomley'" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:19054 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752072Ab3ISQOG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Sep 2013 12:14:06 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dm-devel@redhat.com
+Cc: martin.petersen@oracle.com, hare@suse.de, linux-scsi@vger.kernel.org
 
-On 9/9/2013 5:03 PM, Seungwon Jeon wrote:
-> Hi Sujit,
-> 
-> On Tue, August 27, 2013, Sujit Reddy Thumma wrote:
->> Some vendor specific controller versions might need to configure
->> vendor specific - registers, clocks, voltage regulators etc. to
->> initialize the host controller UTP layer and Uni-Pro stack.
->> Provide some common initialization operations that can be used
->> to configure vendor specifics. The methods can be extended in
->> future, for example, for power mode transitions.
->>
->> The operations are vendor/board specific and hence determined with
->> the help of compatible property in device tree.
->>
->> Signed-off-by: Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
->> ---
->>   drivers/scsi/ufs/ufshcd-pci.c    |   8 +-
->>   drivers/scsi/ufs/ufshcd-pltfrm.c |  24 +++++-
->>   drivers/scsi/ufs/ufshcd.c        | 157 +++++++++++++++++++++++++++++++--------
->>   drivers/scsi/ufs/ufshcd.h        |  34 ++++++++-
->>   4 files changed, 187 insertions(+), 36 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
->> index a823cf4..6b0d299 100644
->> --- a/drivers/scsi/ufs/ufshcd-pci.c
->> +++ b/drivers/scsi/ufs/ufshcd-pci.c
->> @@ -191,7 +191,13 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->>   		return err;
->>   	}
->>
->> -	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
->> +	err = ufshcd_alloc_host(&pdev->dev, &hba);
->> +	if (err) {
->> +		dev_err(&pdev->dev, "Allocation failed\n");
->> +		return err;
->> +	}
->> +
->> +	err = ufshcd_init(hba, mmio_base, pdev->irq);
->>   	if (err) {
->>   		dev_err(&pdev->dev, "Initialization failed\n");
->>   		return err;
->> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> index 5e46232..9c94052 100644
->> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
->> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> @@ -35,9 +35,23 @@
->>
->>   #include <linux/platform_device.h>
->>   #include <linux/pm_runtime.h>
->> +#include <linux/of.h>
->>
->>   #include "ufshcd.h"
->>
->> +static const struct of_device_id ufs_of_match[];
->> +static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
->> +{
->> +	if (dev->of_node) {
->> +		const struct of_device_id *match;
->> +		match = of_match_node(ufs_of_match, dev->of_node);
->> +		if (match)
->> +			return (struct ufs_hba_variant_ops *)match->data;
->> +	}
->> +
->> +	return NULL;
->> +}
->> +
->>   #ifdef CONFIG_PM
->>   /**
->>    * ufshcd_pltfrm_suspend - suspend power management function
->> @@ -150,10 +164,18 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
->>   		goto out;
->>   	}
->>
->> +	err = ufshcd_alloc_host(dev, &hba);
->> +	if (err) {
->> +		dev_err(&pdev->dev, "Allocation failed\n");
->> +		goto out;
->> +	}
->> +
->> +	hba->vops = get_variant_ops(&pdev->dev);
->> +
->>   	pm_runtime_set_active(&pdev->dev);
->>   	pm_runtime_enable(&pdev->dev);
->>
->> -	err = ufshcd_init(dev, &hba, mmio_base, irq);
->> +	err = ufshcd_init(hba, mmio_base, irq);
->>   	if (err) {
->>   		dev_err(dev, "Intialization failed\n");
->>   		goto out_disable_rpm;
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index a0f5ac2..743696a 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -174,13 +174,14 @@ static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
->>   /**
->>    * ufshcd_is_device_present - Check if any device connected to
->>    *			      the host controller
->> - * @reg_hcs - host controller status register value
->> + * @hba: pointer to adapter instance
->>    *
->>    * Returns 1 if device present, 0 if no device detected
->>    */
->> -static inline int ufshcd_is_device_present(u32 reg_hcs)
->> +static inline int ufshcd_is_device_present(struct ufs_hba *hba)
->>   {
->> -	return (DEVICE_PRESENT & reg_hcs) ? 1 : 0;
->> +	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
->> +						DEVICE_PRESENT) ? 1 : 0;
->>   }
->>
->>   /**
->> @@ -1483,11 +1484,10 @@ out:
->>    * @hba: per adapter instance
->>    *
->>    * To bring UFS host controller to operational state,
->> - * 1. Check if device is present
->> - * 2. Enable required interrupts
->> - * 3. Configure interrupt aggregation
->> - * 4. Program UTRL and UTMRL base addres
->> - * 5. Configure run-stop-registers
->> + * 1. Enable required interrupts
->> + * 2. Configure interrupt aggregation
->> + * 3. Program UTRL and UTMRL base addres
->> + * 4. Configure run-stop-registers
->>    *
->>    * Returns 0 on success, non-zero value on failure
->>    */
->> @@ -1496,14 +1496,6 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
->>   	int err = 0;
->>   	u32 reg;
->>
->> -	/* check if device present */
->> -	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
->> -	if (!ufshcd_is_device_present(reg)) {
->> -		dev_err(hba->dev, "cc: Device not present\n");
->> -		err = -ENXIO;
->> -		goto out;
->> -	}
->> -
->>   	/* Enable required interrupts */
->>   	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
->>
->> @@ -1524,6 +1516,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
->>   	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
->>   	 * DEI, HEI bits must be 0
->>   	 */
->> +	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
->>   	if (!(ufshcd_get_lists_status(reg))) {
->>   		ufshcd_enable_run_stop_reg(hba);
->>   	} else {
->> @@ -1570,6 +1563,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
->>   		msleep(5);
->>   	}
->>
->> +	if (hba->vops && hba->vops->hce_enable_notify)
->> +		hba->vops->hce_enable_notify(hba, PRE_CHANGE);
->> +
->>   	/* start controller initialization sequence */
->>   	ufshcd_hba_start(hba);
->>
->> @@ -1597,6 +1593,10 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
->>   		}
->>   		msleep(5);
->>   	}
->> +
->> +	if (hba->vops && hba->vops->hce_enable_notify)
->> +		hba->vops->hce_enable_notify(hba, POST_CHANGE);
->> +
->>   	return 0;
->>   }
->>
->> @@ -1613,12 +1613,28 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
->>   	/* enable UIC related interrupts */
->>   	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
->>
->> +	if (hba->vops && hba->vops->link_startup_notify)
->> +		hba->vops->link_startup_notify(hba, PRE_CHANGE);
->> +
->>   	ret = ufshcd_dme_link_startup(hba);
->>   	if (ret)
->>   		goto out;
->>
->> -	ret = ufshcd_make_hba_operational(hba);
->> +	/* check if device is detected by inter-connect layer */
->> +	if (!ufshcd_is_device_present(hba)) {
->> +		dev_err(hba->dev, "%s: Device not present\n", __func__);
->> +		ret = -ENXIO;
->> +		goto out;
->> +	}
->>
->> +	/* Include any host controller configuration via UIC commands */
->> +	if (hba->vops && hba->vops->link_startup_notify) {
->> +		ret = hba->vops->link_startup_notify(hba, POST_CHANGE);
->> +		if (ret)
->> +			goto out;
->> +	}
->> +
->> +	ret = ufshcd_make_hba_operational(hba);
->>   out:
->>   	if (ret)
->>   		dev_err(hba->dev, "link startup failed %d\n", ret);
->> @@ -2810,6 +2826,61 @@ static struct scsi_host_template ufshcd_driver_template = {
->>   	.can_queue		= UFSHCD_CAN_QUEUE,
->>   };
->>
->> +static int ufshcd_variant_hba_init(struct ufs_hba *hba)
->> +{
->> +	int err = 0;
->> +
->> +	if (!hba->vops)
->> +		goto out;
->> +
->> +	if (hba->vops->init) {
->> +		err = hba->vops->init(hba);
-> If init() is allowed to access host specific registers,
-> setup_clocks() and setup_regulators() may precede init() generally.
-> As seeing your description, it seems certain.
-> <Quot>
-> @init: called when the driver is initialized
-> @setup_clocks: called before touching any of the controller registers
-> @setup_regulators: called before accessing the host controller
-> </Quot>
-> 
-> Further, possibly init() implementation might substitute all?
+Workaround the SCSI layer's problematic WRITE SAME heuristics by
+disabling WRITE SAME in the DM multipath device's queue_limits if an
+underlying device disabled it.
 
-Yes, we can. The reason I would like to keep it different because it
-can be used during power management. For example, -
+The WRITE SAME heuristics, with both the original commit 5db44863b6eb
+("[SCSI] sd: Implement support for WRITE SAME") and the updated commit
+66c28f971 ("[SCSI] sd: Update WRITE SAME heuristics"), default to enabling
+WRITE SAME(10) even without successfully determining it is supported.
+After the first failed WRITE SAME the SCSI layer will disable WRITE SAME
+for the device (by setting sdkp->device->no_write_same which results in
+'max_write_same_sectors' in device's queue_limits to be set to 0).
 
-init -> clk_get();
-setup_clocks -> clk_prepare_enable();
+When a device is stacked ontop of such a SCSI device any changes to that
+SCSI device's queue_limits do not automatically propagate up the stack.
+As such, a DM multipath device will not have its WRITE SAME support
+disabled.  This causes the block layer to continue to issue WRITE SAME
+requests to the mpath device which causes paths to fail and (if mpath IO
+isn't configured to queue when no paths are available) it will result in
+actual IO errors to the upper layers.
 
-ufshcd_runtime_suspend()
-{
-	...
-	hba->vops->setup_clocks(false);
-}
+This fix doesn't help configurations that have additional devices
+stacked ontop of the mpath device (e.g. LVM created linear DM devices
+ontop).  A proper fix that restacks all the queue_limits from the bottom
+of the device stack up will need to be explored if SCSI will continue to
+use this model of optimistically allowing op codes and then disabling
+them after they fail for the first time.
 
-ufshcd_runtime_resume()
-{
-	hba->vops->setup_clocks(true);
-	...
-}
+Before this patch:
 
-> 
->> +		if (err)
->> +			goto out;
->> +	}
->> +
->> +	if (hba->vops->setup_clocks) {
->> +		err = hba->vops->setup_clocks(hba, true);
->> +		if (err)
->> +			goto out_exit;
->> +	}
->> +
->> +	if (hba->vops->setup_regulators) {
->> +		err = hba->vops->setup_regulators(hba, true);
->> +		if (err)
->> +			goto out_clks;
->> +	}
->> +
->> +	goto out;
->> +
->> +out_clks:
->> +	if (hba->vops->setup_clocks)
->> +		hba->vops->setup_clocks(hba, false);
->> +out_exit:
->> +	if (hba->vops->exit)
->> +		hba->vops->exit(hba);
->> +out:
->> +	if (err)
->> +		dev_err(hba->dev, "%s: variant %s init failed err %d\n",
->> +			__func__, hba->vops ? hba->vops->name : "", err);
->> +	return err;
->> +}
->> +
->> +static void ufshcd_variant_hba_exit(struct ufs_hba *hba)
->> +{
->> +	if (!hba->vops)
->> +		return;
->> +
->> +	if (hba->vops->setup_clocks)
->> +		hba->vops->setup_clocks(hba, false);
->> +
->> +	if (hba->vops->setup_regulators)
->> +		hba->vops->setup_regulators(hba, false);
->> +
->> +	if (hba->vops->exit)
->> +		hba->vops->exit(hba);
-> It's similar with init() case above.
+EXT4-fs (dm-6): mounted filesystem with ordered data mode. Opts: (null)
+device-mapper: multipath: XXX snitm debugging: got -EREMOTEIO (-121)
+device-mapper: multipath: XXX snitm debugging: failing WRITE SAME IO with error=-121
+end_request: critical target error, dev dm-6, sector 528
+dm-6: WRITE SAME failed. Manually zeroing.
+device-mapper: multipath: Failing path 8:112.
+end_request: I/O error, dev dm-6, sector 4616
+dm-6: WRITE SAME failed. Manually zeroing.
+end_request: I/O error, dev dm-6, sector 4616
+end_request: I/O error, dev dm-6, sector 5640
+end_request: I/O error, dev dm-6, sector 6664
+end_request: I/O error, dev dm-6, sector 7688
+end_request: I/O error, dev dm-6, sector 524288
+Buffer I/O error on device dm-6, logical block 65536
+lost page write due to I/O error on dm-6
+JBD2: Error -5 detected when updating journal superblock for dm-6-8.
+end_request: I/O error, dev dm-6, sector 524296
+Aborting journal on device dm-6-8.
+end_request: I/O error, dev dm-6, sector 524288
+Buffer I/O error on device dm-6, logical block 65536
+lost page write due to I/O error on dm-6
+JBD2: Error -5 detected when updating journal superblock for dm-6-8.
 
-Just to keep consistent with init() procedures.
+# cat /sys/block/sdh/queue/write_same_max_bytes
+0
+# cat /sys/block/dm-6/queue/write_same_max_bytes
+33553920
 
+After this patch:
 
-> 
->> +}
->> +
->>   /**
->>    * ufshcd_suspend - suspend power management function
->>    * @hba: per adapter instance
->> @@ -2894,23 +2965,22 @@ void ufshcd_remove(struct ufs_hba *hba)
->>   	ufshcd_hba_stop(hba);
->>
->>   	scsi_host_put(hba->host);
->> +
->> +	ufshcd_variant_hba_exit(hba);
->>   }
->>   EXPORT_SYMBOL_GPL(ufshcd_remove);
->>
->>   /**
->> - * ufshcd_init - Driver initialization routine
->> + * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
->>    * @dev: pointer to device handle
->>    * @hba_handle: driver private handle
->> - * @mmio_base: base register address
->> - * @irq: Interrupt line of device
->>    * Returns 0 on success, non-zero value on failure
->>    */
->> -int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
->> -		 void __iomem *mmio_base, unsigned int irq)
->> +int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
->>   {
->>   	struct Scsi_Host *host;
->>   	struct ufs_hba *hba;
->> -	int err;
->> +	int err = 0;
->>
->>   	if (!dev) {
->>   		dev_err(dev,
->> @@ -2919,13 +2989,6 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
->>   		goto out_error;
->>   	}
->>
->> -	if (!mmio_base) {
->> -		dev_err(dev,
->> -		"Invalid memory reference for mmio_base is NULL\n");
->> -		err = -ENODEV;
->> -		goto out_error;
->> -	}
->> -
->>   	host = scsi_host_alloc(&ufshcd_driver_template,
->>   				sizeof(struct ufs_hba));
->>   	if (!host) {
->> @@ -2936,9 +2999,40 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
->>   	hba = shost_priv(host);
->>   	hba->host = host;
->>   	hba->dev = dev;
->> +	*hba_handle = hba;
->> +
->> +out_error:
->> +	return err;
->> +}
->> +EXPORT_SYMBOL(ufshcd_alloc_host);
->> +
->> +/**
->> + * ufshcd_init - Driver initialization routine
->> + * @hba: per-adapter instance
->> + * @mmio_base: base register address
->> + * @irq: Interrupt line of device
->> + * Returns 0 on success, non-zero value on failure
->> + */
->> +int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->> +{
->> +	int err;
->> +	struct Scsi_Host *host = hba->host;
->> +	struct device *dev = hba->dev;
->> +
->> +	if (!mmio_base) {
->> +		dev_err(hba->dev,
->> +		"Invalid memory reference for mmio_base is NULL\n");
->> +		err = -ENODEV;
->> +		goto out_error;
->> +	}
->> +
->>   	hba->mmio_base = mmio_base;
->>   	hba->irq = irq;
->>
->> +	err = ufshcd_variant_hba_init(hba);
->> +	if (err)
->> +		goto out_error;
->> +
->>   	/* Read capabilities registers */
->>   	ufshcd_hba_capabilities(hba);
->>
->> @@ -3010,8 +3104,6 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
->>   		goto out_remove_scsi_host;
->>   	}
->>
->> -	*hba_handle = hba;
->> -
->>   	/* Hold auto suspend until async scan completes */
->>   	pm_runtime_get_sync(dev);
->>
->> @@ -3023,6 +3115,7 @@ out_remove_scsi_host:
->>   	scsi_remove_host(hba->host);
->>   out_disable:
->>   	scsi_host_put(host);
->> +	ufshcd_variant_hba_exit(hba);
->>   out_error:
->>   	return err;
->>   }
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index 8f5624e..72acbc7 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -68,6 +68,8 @@
->>   #define UFSHCD "ufshcd"
->>   #define UFSHCD_DRIVER_VERSION "0.2"
->>
->> +struct ufs_hba;
->> +
->>   enum dev_cmd_type {
->>   	DEV_CMD_TYPE_NOP		= 0x0,
->>   	DEV_CMD_TYPE_QUERY		= 0x1,
->> @@ -152,6 +154,30 @@ struct ufs_dev_cmd {
->>   	struct ufs_query query;
->>   };
->>
->> +#define PRE_CHANGE      0
->> +#define POST_CHANGE     1
->> +/**
->> + * struct ufs_hba_variant_ops - variant specific callbacks
->> + * @name: variant name
->> + * @init: called when the driver is initialized
->> + * @exit: called to cleanup everything done in init
->> + * @setup_clocks: called before touching any of the controller registers
->> + * @setup_regulators: called before accessing the host controller
->> + * @hce_enable_notify: called before and after HCE enable bit is set to allow
->> + *                     variant specific Uni-Pro initialization.
->> + * @link_startup_notify: called before and after Link startup is carried out
->> + *                       to allow variant specific Uni-Pro initialization.
->> + */
->> +struct ufs_hba_variant_ops {
->> +	const char *name;
->> +	int	(*init)(struct ufs_hba *);
->> +	void    (*exit)(struct ufs_hba *);
->> +	int     (*setup_clocks)(struct ufs_hba *, bool);
->> +	int     (*setup_regulators)(struct ufs_hba *, bool);
->> +	int     (*hce_enable_notify)(struct ufs_hba *, bool);
-> I agree on specific link_startup as HCI specification mentions.
-> Actually we also have implemented similar thing in our host driver.
-> But I'm not sure of a necessity of hce_enable_notify. Could you explain for that?
+EXT4-fs (dm-6): mounted filesystem with ordered data mode. Opts: (null)
+device-mapper: multipath: XXX snitm debugging: got -EREMOTEIO (-121)
+device-mapper: multipath: XXX snitm debugging: WRITE SAME I/O failed with error=-121
+end_request: critical target error, dev dm-6, sector 528
+dm-6: WRITE SAME failed. Manually zeroing.
 
-I am not sure about other M-PHY implementations but in our h/w there
-are certain M-PHY specific configurations that needs to be done before
-enabling the host controller and also some state machine check after
-resetting the controller.
+# cat /sys/block/sdh/queue/write_same_max_bytes
+0
+# cat /sys/block/dm-6/queue/write_same_max_bytes
+0
 
-> 
->> +	int     (*link_startup_notify)(struct ufs_hba *, bool);
-> If a host specific implementation doesn't have two fully,
-> one of them will be called with flag unnecessarily.
-> How about separating into two functions[pre_, post_] for link_startup?
+It should be noted that WRITE SAME support wasn't enabled in DM
+multipath until v3.10.
 
-Agree.
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: stable@vger.kernel.org # 3.10+
+---
+ drivers/md/dm-mpath.c         |   11 ++++++++++-
+ drivers/md/dm.c               |   11 +++++++++++
+ include/linux/device-mapper.h |    3 ++-
+ 3 files changed, 23 insertions(+), 2 deletions(-)
 
-> 
->> +};
->> +
->>   /**
->>    * struct ufs_hba - per adapter private structure
->>    * @mmio_base: UFSHCI base register address
->> @@ -171,6 +197,8 @@ struct ufs_dev_cmd {
->>    * @nutrs: Transfer Request Queue depth supported by controller
->>    * @nutmrs: Task Management Queue depth supported by controller
->>    * @ufs_version: UFS Version to which controller complies
->> + * @vops: pointer to variant specific operations
->> + * @priv: pointer to variant specific private data
->>    * @irq: Irq number of the controller
->>    * @active_uic_cmd: handle of active UIC command
->>    * @uic_cmd_mutex: mutex for uic command
->> @@ -217,6 +245,8 @@ struct ufs_hba {
->>   	int nutrs;
->>   	int nutmrs;
->>   	u32 ufs_version;
->> +	struct ufs_hba_variant_ops *vops;
-> 'const' declaration is expected.
-
-Agree.
-
-> 
-> Thanks,
-> Seungwon Jeon
-> 
->> +	void *priv;
->>   	unsigned int irq;
->>
->>   	struct uic_command *active_uic_cmd;
->> @@ -253,8 +283,8 @@ struct ufs_hba {
->>   #define ufshcd_readl(hba, reg)	\
->>   	readl((hba)->mmio_base + (reg))
->>
->> -int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
->> -			unsigned int);
->> +int ufshcd_alloc_host(struct device *, struct ufs_hba **);
->> +int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
->>   void ufshcd_remove(struct ufs_hba *);
->>
->>   /**
->> --
->> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
->> of Code Aurora Forum, hosted by The Linux Foundation.
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-Regards,
-Sujit
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 0b3955f..de570a5 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -1299,8 +1299,17 @@ static int do_end_io(struct multipath *m, struct request *clone,
+ 	if (!error && !clone->errors)
+ 		return 0;	/* I/O complete */
+ 
+-	if (noretry_error(error))
++	if (noretry_error(error)) {
++		if ((clone->cmd_flags & REQ_WRITE_SAME) &&
++		    !clone->q->limits.max_write_same_sectors) {
++			struct queue_limits *limits;
++
++			/* device doesn't really support WRITE SAME, disable it */
++			limits = dm_get_queue_limits(dm_table_get_md(m->ti->table));
++			limits->max_write_same_sectors = 0;
++		}
+ 		return error;
++	}
+ 
+ 	if (mpio->pgpath)
+ 		fail_path(mpio->pgpath);
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 033dc26..b3e26c7 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -2323,6 +2323,17 @@ struct target_type *dm_get_immutable_target_type(struct mapped_device *md)
+ }
+ 
+ /*
++ * The queue_limits are only valid as long as you have a reference
++ * count on 'md'.
++ */
++struct queue_limits *dm_get_queue_limits(struct mapped_device *md)
++{
++	BUG_ON(!atomic_read(&md->holders));
++	return &md->queue->limits;
++}
++EXPORT_SYMBOL_GPL(dm_get_queue_limits);
++
++/*
+  * Fully initialize a request-based queue (->elevator, ->request_fn, etc).
+  */
+ static int dm_init_request_based_queue(struct mapped_device *md)
+diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+index 653073d..ed419c6 100644
+--- a/include/linux/device-mapper.h
++++ b/include/linux/device-mapper.h
+@@ -406,13 +406,14 @@ int dm_noflush_suspending(struct dm_target *ti);
+ union map_info *dm_get_mapinfo(struct bio *bio);
+ union map_info *dm_get_rq_mapinfo(struct request *rq);
+ 
++struct queue_limits *dm_get_queue_limits(struct mapped_device *md);
++
+ /*
+  * Geometry functions.
+  */
+ int dm_get_geometry(struct mapped_device *md, struct hd_geometry *geo);
+ int dm_set_geometry(struct mapped_device *md, struct hd_geometry *geo);
+ 
+-
+ /*-----------------------------------------------------------------
+  * Functions for manipulating device-mapper tables.
+  *---------------------------------------------------------------*/
