@@ -1,404 +1,530 @@
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Subject: [PATCH V7 6/6] scsi: ufs: Improve UFS fatal error handling
-Date: Thu, 19 Sep 2013 16:44:08 +0530
-Message-ID: <1379589248-3317-7-git-send-email-sthumma@codeaurora.org>
-References: <1379589248-3317-1-git-send-email-sthumma@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:40660 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411Ab3ISLOu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Sep 2013 07:14:50 -0400
-In-Reply-To: <1379589248-3317-1-git-send-email-sthumma@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: Re: [PATCH V2 1/3] scsi: ufs: Allow vendor specific initialization
+Date: Thu, 19 Sep 2013 16:57:27 +0530
+Message-ID: <523ADF9F.8080201@codeaurora.org>
+References: <1377577093-10068-1-git-send-email-sthumma@codeaurora.org> <1377577093-10068-2-git-send-email-sthumma@codeaurora.org> <000901cead50$573ede90$05bc9bb0$%jun@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=EUC-KR
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <000901cead50$573ede90$05bc9bb0$%jun-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Seungwon Jeon <tgih.jun-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: 'Vinayak Holikatti' <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, 'Santosh Y' <santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "'James E.J. Bottomley'" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, linux-arm-msm@vger.kernel.org
 
-Error handling in UFS driver is broken and resets the host controller
-for fatal errors without re-initialization. Correct the fatal error
-handling sequence according to UFS Host Controller Interface (HCI)
-v1.1 specification.
+On 9/9/2013 5:03 PM, Seungwon Jeon wrote:
+> Hi Sujit,
+> 
+> On Tue, August 27, 2013, Sujit Reddy Thumma wrote:
+>> Some vendor specific controller versions might need to configure
+>> vendor specific - registers, clocks, voltage regulators etc. to
+>> initialize the host controller UTP layer and Uni-Pro stack.
+>> Provide some common initialization operations that can be used
+>> to configure vendor specifics. The methods can be extended in
+>> future, for example, for power mode transitions.
+>>
+>> The operations are vendor/board specific and hence determined with
+>> the help of compatible property in device tree.
+>>
+>> Signed-off-by: Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+>> ---
+>>   drivers/scsi/ufs/ufshcd-pci.c    |   8 +-
+>>   drivers/scsi/ufs/ufshcd-pltfrm.c |  24 +++++-
+>>   drivers/scsi/ufs/ufshcd.c        | 157 +++++++++++++++++++++++++++++++--------
+>>   drivers/scsi/ufs/ufshcd.h        |  34 ++++++++-
+>>   4 files changed, 187 insertions(+), 36 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+>> index a823cf4..6b0d299 100644
+>> --- a/drivers/scsi/ufs/ufshcd-pci.c
+>> +++ b/drivers/scsi/ufs/ufshcd-pci.c
+>> @@ -191,7 +191,13 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>>   		return err;
+>>   	}
+>>
+>> -	err = ufshcd_init(&pdev->dev, &hba, mmio_base, pdev->irq);
+>> +	err = ufshcd_alloc_host(&pdev->dev, &hba);
+>> +	if (err) {
+>> +		dev_err(&pdev->dev, "Allocation failed\n");
+>> +		return err;
+>> +	}
+>> +
+>> +	err = ufshcd_init(hba, mmio_base, pdev->irq);
+>>   	if (err) {
+>>   		dev_err(&pdev->dev, "Initialization failed\n");
+>>   		return err;
+>> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> index 5e46232..9c94052 100644
+>> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> @@ -35,9 +35,23 @@
+>>
+>>   #include <linux/platform_device.h>
+>>   #include <linux/pm_runtime.h>
+>> +#include <linux/of.h>
+>>
+>>   #include "ufshcd.h"
+>>
+>> +static const struct of_device_id ufs_of_match[];
+>> +static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
+>> +{
+>> +	if (dev->of_node) {
+>> +		const struct of_device_id *match;
+>> +		match = of_match_node(ufs_of_match, dev->of_node);
+>> +		if (match)
+>> +			return (struct ufs_hba_variant_ops *)match->data;
+>> +	}
+>> +
+>> +	return NULL;
+>> +}
+>> +
+>>   #ifdef CONFIG_PM
+>>   /**
+>>    * ufshcd_pltfrm_suspend - suspend power management function
+>> @@ -150,10 +164,18 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
+>>   		goto out;
+>>   	}
+>>
+>> +	err = ufshcd_alloc_host(dev, &hba);
+>> +	if (err) {
+>> +		dev_err(&pdev->dev, "Allocation failed\n");
+>> +		goto out;
+>> +	}
+>> +
+>> +	hba->vops = get_variant_ops(&pdev->dev);
+>> +
+>>   	pm_runtime_set_active(&pdev->dev);
+>>   	pm_runtime_enable(&pdev->dev);
+>>
+>> -	err = ufshcd_init(dev, &hba, mmio_base, irq);
+>> +	err = ufshcd_init(hba, mmio_base, irq);
+>>   	if (err) {
+>>   		dev_err(dev, "Intialization failed\n");
+>>   		goto out_disable_rpm;
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index a0f5ac2..743696a 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -174,13 +174,14 @@ static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
+>>   /**
+>>    * ufshcd_is_device_present - Check if any device connected to
+>>    *			      the host controller
+>> - * @reg_hcs - host controller status register value
+>> + * @hba: pointer to adapter instance
+>>    *
+>>    * Returns 1 if device present, 0 if no device detected
+>>    */
+>> -static inline int ufshcd_is_device_present(u32 reg_hcs)
+>> +static inline int ufshcd_is_device_present(struct ufs_hba *hba)
+>>   {
+>> -	return (DEVICE_PRESENT & reg_hcs) ? 1 : 0;
+>> +	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
+>> +						DEVICE_PRESENT) ? 1 : 0;
+>>   }
+>>
+>>   /**
+>> @@ -1483,11 +1484,10 @@ out:
+>>    * @hba: per adapter instance
+>>    *
+>>    * To bring UFS host controller to operational state,
+>> - * 1. Check if device is present
+>> - * 2. Enable required interrupts
+>> - * 3. Configure interrupt aggregation
+>> - * 4. Program UTRL and UTMRL base addres
+>> - * 5. Configure run-stop-registers
+>> + * 1. Enable required interrupts
+>> + * 2. Configure interrupt aggregation
+>> + * 3. Program UTRL and UTMRL base addres
+>> + * 4. Configure run-stop-registers
+>>    *
+>>    * Returns 0 on success, non-zero value on failure
+>>    */
+>> @@ -1496,14 +1496,6 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+>>   	int err = 0;
+>>   	u32 reg;
+>>
+>> -	/* check if device present */
+>> -	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
+>> -	if (!ufshcd_is_device_present(reg)) {
+>> -		dev_err(hba->dev, "cc: Device not present\n");
+>> -		err = -ENXIO;
+>> -		goto out;
+>> -	}
+>> -
+>>   	/* Enable required interrupts */
+>>   	ufshcd_enable_intr(hba, UFSHCD_ENABLE_INTRS);
+>>
+>> @@ -1524,6 +1516,7 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+>>   	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
+>>   	 * DEI, HEI bits must be 0
+>>   	 */
+>> +	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
+>>   	if (!(ufshcd_get_lists_status(reg))) {
+>>   		ufshcd_enable_run_stop_reg(hba);
+>>   	} else {
+>> @@ -1570,6 +1563,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+>>   		msleep(5);
+>>   	}
+>>
+>> +	if (hba->vops && hba->vops->hce_enable_notify)
+>> +		hba->vops->hce_enable_notify(hba, PRE_CHANGE);
+>> +
+>>   	/* start controller initialization sequence */
+>>   	ufshcd_hba_start(hba);
+>>
+>> @@ -1597,6 +1593,10 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+>>   		}
+>>   		msleep(5);
+>>   	}
+>> +
+>> +	if (hba->vops && hba->vops->hce_enable_notify)
+>> +		hba->vops->hce_enable_notify(hba, POST_CHANGE);
+>> +
+>>   	return 0;
+>>   }
+>>
+>> @@ -1613,12 +1613,28 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
+>>   	/* enable UIC related interrupts */
+>>   	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+>>
+>> +	if (hba->vops && hba->vops->link_startup_notify)
+>> +		hba->vops->link_startup_notify(hba, PRE_CHANGE);
+>> +
+>>   	ret = ufshcd_dme_link_startup(hba);
+>>   	if (ret)
+>>   		goto out;
+>>
+>> -	ret = ufshcd_make_hba_operational(hba);
+>> +	/* check if device is detected by inter-connect layer */
+>> +	if (!ufshcd_is_device_present(hba)) {
+>> +		dev_err(hba->dev, "%s: Device not present\n", __func__);
+>> +		ret = -ENXIO;
+>> +		goto out;
+>> +	}
+>>
+>> +	/* Include any host controller configuration via UIC commands */
+>> +	if (hba->vops && hba->vops->link_startup_notify) {
+>> +		ret = hba->vops->link_startup_notify(hba, POST_CHANGE);
+>> +		if (ret)
+>> +			goto out;
+>> +	}
+>> +
+>> +	ret = ufshcd_make_hba_operational(hba);
+>>   out:
+>>   	if (ret)
+>>   		dev_err(hba->dev, "link startup failed %d\n", ret);
+>> @@ -2810,6 +2826,61 @@ static struct scsi_host_template ufshcd_driver_template = {
+>>   	.can_queue		= UFSHCD_CAN_QUEUE,
+>>   };
+>>
+>> +static int ufshcd_variant_hba_init(struct ufs_hba *hba)
+>> +{
+>> +	int err = 0;
+>> +
+>> +	if (!hba->vops)
+>> +		goto out;
+>> +
+>> +	if (hba->vops->init) {
+>> +		err = hba->vops->init(hba);
+> If init() is allowed to access host specific registers,
+> setup_clocks() and setup_regulators() may precede init() generally.
+> As seeing your description, it seems certain.
+> <Quot>
+> @init: called when the driver is initialized
+> @setup_clocks: called before touching any of the controller registers
+> @setup_regulators: called before accessing the host controller
+> </Quot>
+> 
+> Further, possibly init() implementation might substitute all?
 
-o Processed requests which are completed w/wo error are reported to
-  SCSI layer and any pending commands that are not started are aborted
-  in the controller and re-queued into scsi mid-layer queue.
+Yes, we can. The reason I would like to keep it different because it
+can be used during power management. For example, -
 
-o Upon determining fatal error condition the host controller may hang
-  forever until a reset is applied. Block SCSI layer for sending new
-  requests and apply reset in a separate error handling work.
+init -> clk_get();
+setup_clocks -> clk_prepare_enable();
 
-o SCSI is informed about the expected Unit-Attention exception from the
-  device for the immediate command after a reset so that the SCSI layer
-  take necessary steps to establish communication with the device.
+ufshcd_runtime_suspend()
+{
+	...
+	hba->vops->setup_clocks(false);
+}
 
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Reviewed-by: Yaniv Gardi <ygardi@codeaurora.org>
-Tested-by: Dolev Raviv <draviv@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 229 ++++++++++++++++++++++++++++------------------
- drivers/scsi/ufs/ufshcd.h |  10 +-
- 2 files changed, 149 insertions(+), 90 deletions(-)
+ufshcd_runtime_resume()
+{
+	hba->vops->setup_clocks(true);
+	...
+}
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5462310..0c28772 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -84,6 +84,14 @@ enum {
- 	UFSHCD_EH_IN_PROGRESS = (1 << 0),
- };
- 
-+/* UFSHCD UIC layer error flags */
-+enum {
-+	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer error */
-+	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
-+	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
-+	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */
-+};
-+
- /* Interrupt configuration options */
- enum {
- 	UFSHCD_INT_DISABLE,
-@@ -100,6 +108,8 @@ enum {
- 
- static void ufshcd_tmc_handler(struct ufs_hba *hba);
- static void ufshcd_async_scan(void *data, async_cookie_t cookie);
-+static int ufshcd_reset_and_restore(struct ufs_hba *hba);
-+static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
- 
- /*
-  * ufshcd_wait_for_register - wait for register value to change
-@@ -1735,9 +1745,6 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
--	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
--		scsi_unblock_requests(hba->host);
--
- out:
- 	return err;
- }
-@@ -1863,66 +1870,6 @@ static int ufshcd_verify_dev_init(struct ufs_hba *hba)
- }
- 
- /**
-- * ufshcd_do_reset - reset the host controller
-- * @hba: per adapter instance
-- *
-- * Returns SUCCESS/FAILED
-- */
--static int ufshcd_do_reset(struct ufs_hba *hba)
--{
--	struct ufshcd_lrb *lrbp;
--	unsigned long flags;
--	int tag;
--
--	/* block commands from midlayer */
--	scsi_block_requests(hba->host);
--
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	hba->ufshcd_state = UFSHCD_STATE_RESET;
--
--	/* send controller to reset state */
--	ufshcd_hba_stop(hba);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--
--	/* abort outstanding commands */
--	for (tag = 0; tag < hba->nutrs; tag++) {
--		if (test_bit(tag, &hba->outstanding_reqs)) {
--			lrbp = &hba->lrb[tag];
--			if (lrbp->cmd) {
--				scsi_dma_unmap(lrbp->cmd);
--				lrbp->cmd->result = DID_RESET << 16;
--				lrbp->cmd->scsi_done(lrbp->cmd);
--				lrbp->cmd = NULL;
--				clear_bit_unlock(tag, &hba->lrb_in_use);
--			}
--		}
--	}
--
--	/* complete device management command */
--	if (hba->dev_cmd.complete)
--		complete(hba->dev_cmd.complete);
--
--	/* clear outstanding request/task bit maps */
--	hba->outstanding_reqs = 0;
--	hba->outstanding_tasks = 0;
--
--	/* Host controller enable */
--	if (ufshcd_hba_enable(hba)) {
--		dev_err(hba->dev,
--			"Reset: Controller initialization failed\n");
--		return FAILED;
--	}
--
--	if (ufshcd_link_startup(hba)) {
--		dev_err(hba->dev,
--			"Reset: Link start-up failed\n");
--		return FAILED;
--	}
--
--	return SUCCESS;
--}
--
--/**
-  * ufshcd_slave_alloc - handle initial SCSI device configurations
-  * @sdev: pointer to SCSI device
-  *
-@@ -1939,6 +1886,9 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
- 	sdev->use_10_for_ms = 1;
- 	scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
- 
-+	/* allow SCSI layer to restart the device in case of errors */
-+	sdev->allow_restart = 1;
-+
- 	/*
- 	 * Inform SCSI Midlayer that the LUN queue depth is same as the
- 	 * controller queue depth. If a LUN queue depth is less than the
-@@ -2134,6 +2084,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	case OCS_ABORTED:
- 		result |= DID_ABORT << 16;
- 		break;
-+	case OCS_INVALID_COMMAND_STATUS:
-+		result |= DID_REQUEUE << 16;
-+		break;
- 	case OCS_INVALID_CMD_TABLE_ATTR:
- 	case OCS_INVALID_PRDT_ATTR:
- 	case OCS_MISMATCH_DATA_BUF_SIZE:
-@@ -2451,45 +2404,145 @@ out:
- }
- 
- /**
-- * ufshcd_fatal_err_handler - handle fatal errors
-- * @hba: per adapter instance
-+ * ufshcd_err_handler - handle UFS errors that require s/w attention
-+ * @work: pointer to work structure
-  */
--static void ufshcd_fatal_err_handler(struct work_struct *work)
-+static void ufshcd_err_handler(struct work_struct *work)
- {
- 	struct ufs_hba *hba;
--	hba = container_of(work, struct ufs_hba, feh_workq);
-+	unsigned long flags;
-+	u32 err_xfer = 0;
-+	u32 err_tm = 0;
-+	int err = 0;
-+	int tag;
-+
-+	hba = container_of(work, struct ufs_hba, eh_work);
- 
- 	pm_runtime_get_sync(hba->dev);
--	/* check if reset is already in progress */
--	if (hba->ufshcd_state != UFSHCD_STATE_RESET)
--		ufshcd_do_reset(hba);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		goto out;
-+	}
-+
-+	hba->ufshcd_state = UFSHCD_STATE_RESET;
-+	ufshcd_set_eh_in_progress(hba);
-+
-+	/* Complete requests that have door-bell cleared by h/w */
-+	ufshcd_transfer_req_compl(hba);
-+	ufshcd_tmc_handler(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	/* Clear pending transfer requests */
-+	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
-+		if (ufshcd_clear_cmd(hba, tag))
-+			err_xfer |= 1 << tag;
-+
-+	/* Clear pending task management requests */
-+	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
-+		if (ufshcd_clear_tm_cmd(hba, tag))
-+			err_tm |= 1 << tag;
-+
-+	/* Complete the requests that are cleared by s/w */
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	ufshcd_transfer_req_compl(hba);
-+	ufshcd_tmc_handler(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	/* Fatal errors need reset */
-+	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
-+			((hba->saved_err & UIC_ERROR) &&
-+			 (hba->saved_uic_err & UFSHCD_UIC_DL_PA_INIT_ERROR))) {
-+		err = ufshcd_reset_and_restore(hba);
-+		if (err) {
-+			dev_err(hba->dev, "%s: reset and restore failed\n",
-+					__func__);
-+			hba->ufshcd_state = UFSHCD_STATE_ERROR;
-+		}
-+		/*
-+		 * Inform scsi mid-layer that we did reset and allow to handle
-+		 * Unit Attention properly.
-+		 */
-+		scsi_report_bus_reset(hba->host, 0);
-+		hba->saved_err = 0;
-+		hba->saved_uic_err = 0;
-+	}
-+	ufshcd_clear_eh_in_progress(hba);
-+
-+out:
-+	scsi_unblock_requests(hba->host);
- 	pm_runtime_put_sync(hba->dev);
- }
- 
- /**
-- * ufshcd_err_handler - Check for fatal errors
-- * @work: pointer to a work queue structure
-+ * ufshcd_update_uic_error - check and set fatal UIC error flags.
-+ * @hba: per-adapter instance
-  */
--static void ufshcd_err_handler(struct ufs_hba *hba)
-+static void ufshcd_update_uic_error(struct ufs_hba *hba)
- {
- 	u32 reg;
- 
-+	/* PA_INIT_ERROR is fatal and needs UIC reset */
-+	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
-+	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
-+		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
-+
-+	/* UIC NL/TL/DME errors needs software retry */
-+	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
-+	if (reg)
-+		hba->uic_error |= UFSHCD_UIC_NL_ERROR;
-+
-+	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_TRANSPORT_LAYER);
-+	if (reg)
-+		hba->uic_error |= UFSHCD_UIC_TL_ERROR;
-+
-+	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DME);
-+	if (reg)
-+		hba->uic_error |= UFSHCD_UIC_DME_ERROR;
-+
-+	dev_dbg(hba->dev, "%s: UIC error flags = 0x%08x\n",
-+			__func__, hba->uic_error);
-+}
-+
-+/**
-+ * ufshcd_check_errors - Check for errors that need s/w attention
-+ * @hba: per-adapter instance
-+ */
-+static void ufshcd_check_errors(struct ufs_hba *hba)
-+{
-+	bool queue_eh_work = false;
-+
- 	if (hba->errors & INT_FATAL_ERRORS)
--		goto fatal_eh;
-+		queue_eh_work = true;
- 
- 	if (hba->errors & UIC_ERROR) {
--		reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
--		if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
--			goto fatal_eh;
-+		hba->uic_error = 0;
-+		ufshcd_update_uic_error(hba);
-+		if (hba->uic_error)
-+			queue_eh_work = true;
- 	}
--	return;
--fatal_eh:
--	/* handle fatal errors only when link is functional */
--	if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
--		/* block commands at driver layer until error is handled */
--		hba->ufshcd_state = UFSHCD_STATE_ERROR;
--		schedule_work(&hba->feh_workq);
-+
-+	if (queue_eh_work) {
-+		/* handle fatal errors only when link is functional */
-+		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
-+			/* block commands from scsi mid-layer */
-+			scsi_block_requests(hba->host);
-+
-+			/* transfer error masks to sticky bits */
-+			hba->saved_err |= hba->errors;
-+			hba->saved_uic_err |= hba->uic_error;
-+
-+			hba->ufshcd_state = UFSHCD_STATE_ERROR;
-+			schedule_work(&hba->eh_work);
-+		}
- 	}
-+	/*
-+	 * if (!queue_eh_work) -
-+	 * Other errors are either non-fatal where host recovers
-+	 * itself without s/w intervention or errors that will be
-+	 * handled by the SCSI core layer.
-+	 */
- }
- 
- /**
-@@ -2514,7 +2567,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- {
- 	hba->errors = UFSHCD_ERROR_MASK & intr_status;
- 	if (hba->errors)
--		ufshcd_err_handler(hba);
-+		ufshcd_check_errors(hba);
- 
- 	if (intr_status & UFSHCD_UIC_MASK)
- 		ufshcd_uic_cmd_compl(hba, intr_status);
-@@ -2889,12 +2942,12 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
- 	 */
- 	do {
- 		spin_lock_irqsave(hba->host->host_lock, flags);
--		if (!(work_pending(&hba->feh_workq) ||
-+		if (!(work_pending(&hba->eh_work) ||
- 				hba->ufshcd_state == UFSHCD_STATE_RESET))
- 			break;
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		dev_dbg(hba->dev, "%s: reset in progress\n", __func__);
--		flush_work(&hba->feh_workq);
-+		flush_work(&hba->eh_work);
- 	} while (1);
- 
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
-@@ -3130,7 +3183,7 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
- 	init_waitqueue_head(&hba->tm_tag_wq);
- 
- 	/* Initialize work queues */
--	INIT_WORK(&hba->feh_workq, ufshcd_fatal_err_handler);
-+	INIT_WORK(&hba->eh_work, ufshcd_err_handler);
- 	INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
- 
- 	/* Initialize UIC command mutex */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 48c7d9b..acf318e 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -183,9 +183,12 @@ struct ufs_dev_cmd {
-  * @eh_flags: Error handling flags
-  * @intr_mask: Interrupt Mask Bits
-  * @ee_ctrl_mask: Exception event control mask
-- * @feh_workq: Work queue for fatal controller error handling
-+ * @eh_work: Worker to handle UFS errors that require s/w attention
-  * @eeh_work: Worker to handle exception events
-  * @errors: HBA errors
-+ * @uic_error: UFS interconnect layer error status
-+ * @saved_err: sticky error mask
-+ * @saved_uic_err: sticky UIC error mask
-  * @dev_cmd: ufs device management command information
-  * @auto_bkops_enabled: to track whether bkops is enabled in device
-  */
-@@ -233,11 +236,14 @@ struct ufs_hba {
- 	u16 ee_ctrl_mask;
- 
- 	/* Work Queues */
--	struct work_struct feh_workq;
-+	struct work_struct eh_work;
- 	struct work_struct eeh_work;
- 
- 	/* HBA Errors */
- 	u32 errors;
-+	u32 uic_error;
-+	u32 saved_err;
-+	u32 saved_uic_err;
- 
- 	/* Device management request data */
- 	struct ufs_dev_cmd dev_cmd;
+> 
+>> +		if (err)
+>> +			goto out;
+>> +	}
+>> +
+>> +	if (hba->vops->setup_clocks) {
+>> +		err = hba->vops->setup_clocks(hba, true);
+>> +		if (err)
+>> +			goto out_exit;
+>> +	}
+>> +
+>> +	if (hba->vops->setup_regulators) {
+>> +		err = hba->vops->setup_regulators(hba, true);
+>> +		if (err)
+>> +			goto out_clks;
+>> +	}
+>> +
+>> +	goto out;
+>> +
+>> +out_clks:
+>> +	if (hba->vops->setup_clocks)
+>> +		hba->vops->setup_clocks(hba, false);
+>> +out_exit:
+>> +	if (hba->vops->exit)
+>> +		hba->vops->exit(hba);
+>> +out:
+>> +	if (err)
+>> +		dev_err(hba->dev, "%s: variant %s init failed err %d\n",
+>> +			__func__, hba->vops ? hba->vops->name : "", err);
+>> +	return err;
+>> +}
+>> +
+>> +static void ufshcd_variant_hba_exit(struct ufs_hba *hba)
+>> +{
+>> +	if (!hba->vops)
+>> +		return;
+>> +
+>> +	if (hba->vops->setup_clocks)
+>> +		hba->vops->setup_clocks(hba, false);
+>> +
+>> +	if (hba->vops->setup_regulators)
+>> +		hba->vops->setup_regulators(hba, false);
+>> +
+>> +	if (hba->vops->exit)
+>> +		hba->vops->exit(hba);
+> It's similar with init() case above.
+
+Just to keep consistent with init() procedures.
+
+
+> 
+>> +}
+>> +
+>>   /**
+>>    * ufshcd_suspend - suspend power management function
+>>    * @hba: per adapter instance
+>> @@ -2894,23 +2965,22 @@ void ufshcd_remove(struct ufs_hba *hba)
+>>   	ufshcd_hba_stop(hba);
+>>
+>>   	scsi_host_put(hba->host);
+>> +
+>> +	ufshcd_variant_hba_exit(hba);
+>>   }
+>>   EXPORT_SYMBOL_GPL(ufshcd_remove);
+>>
+>>   /**
+>> - * ufshcd_init - Driver initialization routine
+>> + * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
+>>    * @dev: pointer to device handle
+>>    * @hba_handle: driver private handle
+>> - * @mmio_base: base register address
+>> - * @irq: Interrupt line of device
+>>    * Returns 0 on success, non-zero value on failure
+>>    */
+>> -int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+>> -		 void __iomem *mmio_base, unsigned int irq)
+>> +int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+>>   {
+>>   	struct Scsi_Host *host;
+>>   	struct ufs_hba *hba;
+>> -	int err;
+>> +	int err = 0;
+>>
+>>   	if (!dev) {
+>>   		dev_err(dev,
+>> @@ -2919,13 +2989,6 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+>>   		goto out_error;
+>>   	}
+>>
+>> -	if (!mmio_base) {
+>> -		dev_err(dev,
+>> -		"Invalid memory reference for mmio_base is NULL\n");
+>> -		err = -ENODEV;
+>> -		goto out_error;
+>> -	}
+>> -
+>>   	host = scsi_host_alloc(&ufshcd_driver_template,
+>>   				sizeof(struct ufs_hba));
+>>   	if (!host) {
+>> @@ -2936,9 +2999,40 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+>>   	hba = shost_priv(host);
+>>   	hba->host = host;
+>>   	hba->dev = dev;
+>> +	*hba_handle = hba;
+>> +
+>> +out_error:
+>> +	return err;
+>> +}
+>> +EXPORT_SYMBOL(ufshcd_alloc_host);
+>> +
+>> +/**
+>> + * ufshcd_init - Driver initialization routine
+>> + * @hba: per-adapter instance
+>> + * @mmio_base: base register address
+>> + * @irq: Interrupt line of device
+>> + * Returns 0 on success, non-zero value on failure
+>> + */
+>> +int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>> +{
+>> +	int err;
+>> +	struct Scsi_Host *host = hba->host;
+>> +	struct device *dev = hba->dev;
+>> +
+>> +	if (!mmio_base) {
+>> +		dev_err(hba->dev,
+>> +		"Invalid memory reference for mmio_base is NULL\n");
+>> +		err = -ENODEV;
+>> +		goto out_error;
+>> +	}
+>> +
+>>   	hba->mmio_base = mmio_base;
+>>   	hba->irq = irq;
+>>
+>> +	err = ufshcd_variant_hba_init(hba);
+>> +	if (err)
+>> +		goto out_error;
+>> +
+>>   	/* Read capabilities registers */
+>>   	ufshcd_hba_capabilities(hba);
+>>
+>> @@ -3010,8 +3104,6 @@ int ufshcd_init(struct device *dev, struct ufs_hba **hba_handle,
+>>   		goto out_remove_scsi_host;
+>>   	}
+>>
+>> -	*hba_handle = hba;
+>> -
+>>   	/* Hold auto suspend until async scan completes */
+>>   	pm_runtime_get_sync(dev);
+>>
+>> @@ -3023,6 +3115,7 @@ out_remove_scsi_host:
+>>   	scsi_remove_host(hba->host);
+>>   out_disable:
+>>   	scsi_host_put(host);
+>> +	ufshcd_variant_hba_exit(hba);
+>>   out_error:
+>>   	return err;
+>>   }
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index 8f5624e..72acbc7 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -68,6 +68,8 @@
+>>   #define UFSHCD "ufshcd"
+>>   #define UFSHCD_DRIVER_VERSION "0.2"
+>>
+>> +struct ufs_hba;
+>> +
+>>   enum dev_cmd_type {
+>>   	DEV_CMD_TYPE_NOP		= 0x0,
+>>   	DEV_CMD_TYPE_QUERY		= 0x1,
+>> @@ -152,6 +154,30 @@ struct ufs_dev_cmd {
+>>   	struct ufs_query query;
+>>   };
+>>
+>> +#define PRE_CHANGE      0
+>> +#define POST_CHANGE     1
+>> +/**
+>> + * struct ufs_hba_variant_ops - variant specific callbacks
+>> + * @name: variant name
+>> + * @init: called when the driver is initialized
+>> + * @exit: called to cleanup everything done in init
+>> + * @setup_clocks: called before touching any of the controller registers
+>> + * @setup_regulators: called before accessing the host controller
+>> + * @hce_enable_notify: called before and after HCE enable bit is set to allow
+>> + *                     variant specific Uni-Pro initialization.
+>> + * @link_startup_notify: called before and after Link startup is carried out
+>> + *                       to allow variant specific Uni-Pro initialization.
+>> + */
+>> +struct ufs_hba_variant_ops {
+>> +	const char *name;
+>> +	int	(*init)(struct ufs_hba *);
+>> +	void    (*exit)(struct ufs_hba *);
+>> +	int     (*setup_clocks)(struct ufs_hba *, bool);
+>> +	int     (*setup_regulators)(struct ufs_hba *, bool);
+>> +	int     (*hce_enable_notify)(struct ufs_hba *, bool);
+> I agree on specific link_startup as HCI specification mentions.
+> Actually we also have implemented similar thing in our host driver.
+> But I'm not sure of a necessity of hce_enable_notify. Could you explain for that?
+
+I am not sure about other M-PHY implementations but in our h/w there
+are certain M-PHY specific configurations that needs to be done before
+enabling the host controller and also some state machine check after
+resetting the controller.
+
+> 
+>> +	int     (*link_startup_notify)(struct ufs_hba *, bool);
+> If a host specific implementation doesn't have two fully,
+> one of them will be called with flag unnecessarily.
+> How about separating into two functions[pre_, post_] for link_startup?
+
+Agree.
+
+> 
+>> +};
+>> +
+>>   /**
+>>    * struct ufs_hba - per adapter private structure
+>>    * @mmio_base: UFSHCI base register address
+>> @@ -171,6 +197,8 @@ struct ufs_dev_cmd {
+>>    * @nutrs: Transfer Request Queue depth supported by controller
+>>    * @nutmrs: Task Management Queue depth supported by controller
+>>    * @ufs_version: UFS Version to which controller complies
+>> + * @vops: pointer to variant specific operations
+>> + * @priv: pointer to variant specific private data
+>>    * @irq: Irq number of the controller
+>>    * @active_uic_cmd: handle of active UIC command
+>>    * @uic_cmd_mutex: mutex for uic command
+>> @@ -217,6 +245,8 @@ struct ufs_hba {
+>>   	int nutrs;
+>>   	int nutmrs;
+>>   	u32 ufs_version;
+>> +	struct ufs_hba_variant_ops *vops;
+> 'const' declaration is expected.
+
+Agree.
+
+> 
+> Thanks,
+> Seungwon Jeon
+> 
+>> +	void *priv;
+>>   	unsigned int irq;
+>>
+>>   	struct uic_command *active_uic_cmd;
+>> @@ -253,8 +283,8 @@ struct ufs_hba {
+>>   #define ufshcd_readl(hba, reg)	\
+>>   	readl((hba)->mmio_base + (reg))
+>>
+>> -int ufshcd_init(struct device *, struct ufs_hba ** , void __iomem * ,
+>> -			unsigned int);
+>> +int ufshcd_alloc_host(struct device *, struct ufs_hba **);
+>> +int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
+>>   void ufshcd_remove(struct ufs_hba *);
+>>
+>>   /**
+>> --
+>> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+>> of Code Aurora Forum, hosted by The Linux Foundation.
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation.
-
+Regards,
+Sujit
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
