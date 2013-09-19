@@ -1,76 +1,79 @@
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-Subject: [PATCH 02/51] DMA-API: net: brocade/bna/bnad.c: fix
- 32-bit DMA mask handling
-Date: Thu, 19 Sep 2013 22:26:58 +0100
-Message-ID: <E1VMlkY-0007fG-LM@rmk-PC.arm.linux.org.uk>
+From: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
+Subject: [PATCH 04/51] DMA-API: net: intel/igb: fix 32-bit DMA mask handling
+Date: Thu, 19 Sep 2013 22:28:59 +0100
+Message-ID: <E1VMlmV-0007fU-75@rmk-PC.arm.linux.org.uk>
 References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org, devel@driverdev.osuosl.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net, linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, uclinux-dist-devel@blackfin.uclinux.org
-Cc: Rasesh Mody <rmody@brocade.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130919212235.GD12758-l+eeeJia6m9vn6HldHNs0ANdhmdF6hFW@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, e1000-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Solarflare linux maintainers <linux-net-drivers-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, uclinux-dist-devel-ZG0+EudsQA8dtHy/vicBwGD2FQJk+8+b@public.gmane.org
+Cc: Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jesse Brandeburg <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Bruce Allan <bruce.w.allan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Carolyn Wyborny <carolyn.wyborny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Don Skidmore <donald.c.skidmore-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Greg Rose <gregory.v.rose-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Peter P Waskiewicz Jr <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Duyck <alexander.h.duyck-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, John Ronciak <john.ronciak-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tushar Dave <tushar.n.dave-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
 The fallback to 32-bit DMA mask is rather odd:
-	if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(64)) &&
-	    !dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64))) {
-		*using_dac = true;
+	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
+	if (!err) {
+		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
+		if (!err)
+			pci_using_dac = 1;
 	} else {
 		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
 		if (err) {
 			err = dma_set_coherent_mask(&pdev->dev,
 						    DMA_BIT_MASK(32));
-			if (err)
-				goto release_regions;
+			if (err) {
+				dev_err(&pdev->dev,
+					"No usable DMA configuration, aborting\n");
+				goto err_dma;
+			}
 		}
+	}
+This means we only set the coherent DMA mask in the fallback path if
+the DMA mask set failed, which is silly.  This fixes it to set the
+coherent DMA mask only if dma_set_mask() succeeded, and to error out
+if either fails.
 
-This means we only try and set the coherent DMA mask if we failed to
-set a 32-bit DMA mask, and only if both fail do we fail the driver.
-Adjust this so that if either setting fails, we fail the driver - and
-thereby end up properly setting both the DMA mask and the coherent
-DMA mask in the fallback case.
-
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
 ---
- drivers/net/ethernet/brocade/bna/bnad.c |   13 ++++---------
- 1 files changed, 4 insertions(+), 9 deletions(-)
+ drivers/net/ethernet/intel/igb/igb_main.c |   18 ++++++------------
+ 1 files changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/ethernet/brocade/bna/bnad.c b/drivers/net/ethernet/brocade/bna/bnad.c
-index b78e69e..45ce6e2 100644
---- a/drivers/net/ethernet/brocade/bna/bnad.c
-+++ b/drivers/net/ethernet/brocade/bna/bnad.c
-@@ -3300,17 +3300,12 @@ bnad_pci_init(struct bnad *bnad,
- 	err = pci_request_regions(pdev, BNAD_NAME);
- 	if (err)
- 		goto disable_device;
--	if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(64)) &&
--	    !dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64))) {
-+	if (!dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64))) {
- 		*using_dac = true;
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index 8cf44f2..7579383 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -2034,21 +2034,15 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		return err;
+ 
+ 	pci_using_dac = 0;
+-	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
++	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+ 	if (!err) {
+-		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
+-		if (!err)
+-			pci_using_dac = 1;
++		pci_using_dac = 1;
  	} else {
 -		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
--		if (err) {
++		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 		if (err) {
 -			err = dma_set_coherent_mask(&pdev->dev,
 -						    DMA_BIT_MASK(32));
--			if (err)
--				goto release_regions;
--		}
-+		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-+		if (err)
-+			goto release_regions;
- 		*using_dac = false;
+-			if (err) {
+-				dev_err(&pdev->dev,
+-					"No usable DMA configuration, aborting\n");
+-				goto err_dma;
+-			}
++			dev_err(&pdev->dev,
++				"No usable DMA configuration, aborting\n");
++			goto err_dma;
+ 		}
  	}
- 	pci_set_master(pdev);
+ 
 -- 
 1.7.4.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
