@@ -1,8 +1,8 @@
 From: Russell King <rmk+kernel@arm.linux.org.uk>
-Subject: [PATCH 18/51] DMA-API: staging: et131x: replace
- dma_set_mask()+dma_set_coherent_mask() with new helper
-Date: Thu, 19 Sep 2013 22:43:01 +0100
-Message-ID: <E1VMm05-0007hG-5T@rmk-PC.arm.linux.org.uk>
+Subject: [PATCH 51/51] ARM: 7805/1: mm: change max*pfn to
+ include the physical offset of memory
+Date: Fri, 20 Sep 2013 00:44:07 +0100
+Message-ID: <E1VMntH-0002EF-7Z@rmk-PC.arm.linux.org.uk>
 References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -19,48 +19,83 @@ List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
 Errors-To: alsa-devel-bounces@alsa-project.org
 Sender: alsa-devel-bounces@alsa-project.org
 To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org, devel@driverdev.osuosl.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net, linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, uclinux-dist-devel@blackfin.uclinux.org
-Cc: Mark Einon <mark.einon@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Replace the following sequence:
+From: Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-	dma_set_mask(dev, mask);
-	dma_set_coherent_mask(dev, mask);
+Most of the kernel code assumes that max*pfn is maximum pfns because
+the physical start of memory is expected to be PFN0. Since this
+assumption is not true on ARM architectures, the meaning of max*pfn
+is number of memory pages. This is done to keep drivers happy which
+are making use of of these variable to calculate the dma bounce limit
+using dma_mask.
 
-with a call to the new helper dma_set_mask_and_coherent().
+Now since we have a architecture override possibility for DMAable
+maximum pfns, lets make meaning of max*pfns as maximum pnfs on ARM
+as well.
 
+Signed-off-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
 Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/staging/et131x/et131x.c |   17 ++---------------
- 1 files changed, 2 insertions(+), 15 deletions(-)
+ arch/arm/include/asm/dma-mapping.h |    8 ++++++++
+ arch/arm/mm/init.c                 |   10 ++++------
+ 2 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/et131x/et131x.c b/drivers/staging/et131x/et131x.c
-index f73e58f..98edfa8 100644
---- a/drivers/staging/et131x/et131x.c
-+++ b/drivers/staging/et131x/et131x.c
-@@ -4797,21 +4797,8 @@ static int et131x_pci_setup(struct pci_dev *pdev,
- 	pci_set_master(pdev);
+diff --git a/arch/arm/include/asm/dma-mapping.h b/arch/arm/include/asm/dma-mapping.h
+index 5b579b9..863cd84 100644
+--- a/arch/arm/include/asm/dma-mapping.h
++++ b/arch/arm/include/asm/dma-mapping.h
+@@ -64,6 +64,7 @@ static inline dma_addr_t virt_to_dma(struct device *dev, void *addr)
+ {
+ 	return (dma_addr_t)__virt_to_bus((unsigned long)(addr));
+ }
++
+ #else
+ static inline dma_addr_t pfn_to_dma(struct device *dev, unsigned long pfn)
+ {
+@@ -86,6 +87,13 @@ static inline dma_addr_t virt_to_dma(struct device *dev, void *addr)
+ }
+ #endif
  
- 	/* Check the DMA addressing support of this device */
--	if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(64))) {
--		rc = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
--		if (rc < 0) {
--			dev_err(&pdev->dev,
--			  "Unable to obtain 64 bit DMA for consistent allocations\n");
--			goto err_release_res;
--		}
--	} else if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(32))) {
--		rc = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
--		if (rc < 0) {
--			dev_err(&pdev->dev,
--			  "Unable to obtain 32 bit DMA for consistent allocations\n");
--			goto err_release_res;
--		}
--	} else {
-+	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) ||
-+	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32))) {
- 		dev_err(&pdev->dev, "No usable DMA addressing method\n");
- 		rc = -EIO;
- 		goto err_release_res;
++/* The ARM override for dma_max_pfn() */
++static inline unsigned long dma_max_pfn(struct device *dev)
++{
++	return PHYS_PFN_OFFSET + dma_to_pfn(dev, *dev->dma_mask);
++}
++#define dma_max_pfn(dev) dma_max_pfn(dev)
++
+ /*
+  * DMA errors are defined by all-bits-set in the DMA address.
+  */
+diff --git a/arch/arm/mm/init.c b/arch/arm/mm/init.c
+index 8aab24f..d50533c 100644
+--- a/arch/arm/mm/init.c
++++ b/arch/arm/mm/init.c
+@@ -426,12 +426,10 @@ void __init bootmem_init(void)
+ 	 * This doesn't seem to be used by the Linux memory manager any
+ 	 * more, but is used by ll_rw_block.  If we can get rid of it, we
+ 	 * also get rid of some of the stuff above as well.
+-	 *
+-	 * Note: max_low_pfn and max_pfn reflect the number of _pages_ in
+-	 * the system, not the maximum PFN.
+ 	 */
+-	max_low_pfn = max_low - PHYS_PFN_OFFSET;
+-	max_pfn = max_high - PHYS_PFN_OFFSET;
++	min_low_pfn = min;
++	max_low_pfn = max_low;
++	max_pfn = max_high;
+ }
+ 
+ /*
+@@ -537,7 +535,7 @@ static inline void free_area_high(unsigned long pfn, unsigned long end)
+ static void __init free_highpages(void)
+ {
+ #ifdef CONFIG_HIGHMEM
+-	unsigned long max_low = max_low_pfn + PHYS_PFN_OFFSET;
++	unsigned long max_low = max_low_pfn;
+ 	struct memblock_region *mem, *res;
+ 
+ 	/* set highmem page free */
 -- 
 1.7.4.4
