@@ -1,96 +1,111 @@
-From: Joe Jin <joe.jin@oracle.com>
-Subject: [PATCH V2] [scsi] enclosure: remove duplicate device before add new
-Date: Fri, 20 Sep 2013 08:16:34 +0800
-Message-ID: <523B93E2.80405@oracle.com>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+Subject: [PATCH 41/51] DMA-API: crypto: remove last references
+ to 'static struct device *dev'
+Date: Fri, 20 Sep 2013 00:13:38 +0100
+Message-ID: <E1VMnPm-0007sP-Px@rmk-PC.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41768 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752566Ab3ITAQo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Sep 2013 20:16:44 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <alsa-devel-bounces@alsa-project.org>
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org, devel@driverdev.osuosl.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net, linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, uclinux-dist-devel@blackfin.uclinux.org
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Guru Anbalagane <guru.anbalagane@oracle.com>
 
-When do disk pull/insert test we encountered below:
-
-WARNING: at fs/sysfs/dir.c:455 sysfs_add_one+0xbc/0xe0()
-Hardware name: SUN FIRE X4370 M2 SERVER
-sysfs: cannot create duplicate filename '/devices/pci0000:00/0000:00:03.0/0000:0d:00.0/host6/port-6:1/expander-6:1/port-6:1:14/end_device-6:1:14/target6:0:27/6:0:27:0/enclosure_device:HDD10'
-Modules linked in: mptctl mptbase autofs4 hidp bluetooth rfkill lockd sunrpc bonding be2iscsi iscsi_boot_sysfs ib_iser rdma_cm ib_cm iw_cm ib_sa ib_mad ib_core ib_addr iscsi_tcp bnx2i cnic uio ipv6 cxgb3i libcxgbi cxgb3 mdio libiscsi_tcp libiscsi scsi_transport_iscsi dm_round_robin dm_multipath video sbs sbshc acpi_pad acpi_memhotplug acpi_ipmi parport_pc lp parport ipmi_si ipmi_devintf ipmi_msghandler sg ses enclosure ixgbe e1000e hwmon igb snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss snd_pcm snd_timer snd soundcore snd_page_alloc iTCO_wdt pcspkr i2c_i801 ioatdma ghes iTCO_vendor_support hed dca i2c_core i7core_edac edac_core dm_snapshot dm_zero dm_mirror dm_region_hash dm_log dm_mod usb_storage shpchp mpt2sas scsi_transport_sas raid_class 
- ahci libahci sd_mod crc_t10dif raid1 ext3 jbd mbcache
-Pid: 23302, comm: kworker/u:2 Tainted: P            2.6.39-400.124.1.el5uek #1
-Call Trace:
- [<ffffffff811daf8c>] ? sysfs_add_one+0xbc/0xe0
- [<ffffffff8106f030>] warn_slowpath_common+0x90/0xc0
- [<ffffffff8106f15e>] warn_slowpath_fmt+0x6e/0x70
- [<ffffffff81258bd4>] ? strlcat+0x54/0x70
- [<ffffffff811daf8c>] sysfs_add_one+0xbc/0xe0
- [<ffffffff811dbec8>] sysfs_do_create_link+0x148/0x1d0
- [<ffffffff811dbf83>] sysfs_create_link+0x13/0x20
- [<ffffffffa00de307>] enclosure_add_links+0xe7/0x110 [enclosure]
- [<ffffffff8125325d>] ? kobject_release+0xd/0x10
- [<ffffffff812549e7>] ? kref_put+0x37/0x70
- [<ffffffffa00de3c3>] enclosure_add_device+0x93/0xa0 [enclosure]
- [<ffffffffa00c8666>] ses_enclosure_find_by_addr+0x76/0xc0 [ses]
- [<ffffffffa00c85f0>] ? ses_get_fault+0x40/0x40 [ses]
- [<ffffffffa00de433>] enclosure_for_each_device+0x63/0x90 [enclosure]
- [<ffffffffa00c8a8a>] ses_match_to_enclosure+0x11a/0x1d0 [ses]
- [<ffffffffa00c8e08>] ses_intf_add+0x2c8/0x5c0 [ses]
- [<ffffffff8125327a>] ? kobject_get+0x1a/0x30
- [<ffffffff814e8b56>] ? add_tail+0x36/0x50
- [<ffffffff81345ae4>] device_add+0x2d4/0x380
- [<ffffffff8136b096>] scsi_sysfs_add_sdev+0xe6/0x2a0
- [<ffffffff813682cc>] scsi_add_lun+0x41c/0x560
- [<ffffffff81368a80>] scsi_probe_and_add_lun+0x1e0/0x3e0
- [<ffffffff81041009>] ? default_spin_lock_flags+0x9/0x10
- [<ffffffff813696e7>] __scsi_scan_target+0xe7/0x120
- [<ffffffff81369b8d>] scsi_scan_target+0xcd/0xf0
- [<ffffffffa003faab>] sas_rphy_add+0x11b/0x170 [scsi_transport_sas]
- [<ffffffffa009a74f>] mpt2sas_transport_port_add+0x2cf/0x430 [mpt2sas]
- [<ffffffffa008d437>] _scsih_sas_device_add+0x87/0x110 [mpt2sas]
- [<ffffffffa0094eb8>] _scsih_add_device+0x248/0x340 [mpt2sas]
- [<ffffffffa0098cb1>] ? mpt2sas_transport_update_links+0xf1/0x190 [mpt2sas]
- [<ffffffffa00977b6>] _scsih_sas_topology_change_event+0x3c6/0x490 [mpt2sas]
- [<ffffffff81080698>] ? add_timer+0x18/0x20
- [<ffffffff8108a405>] ? queue_delayed_work_on+0xc5/0x170
- [<ffffffffa0097a85>] _mpt2sas_fw_work+0x205/0x240 [mpt2sas]
- [<ffffffffa0097ad9>] _firmware_event_work_delayed+0x19/0x20 [mpt2sas]
- [<ffffffff8108c0d9>] process_one_work+0xf9/0x370
- [<ffffffffa0097ac0>] ? _mpt2sas_fw_work+0x240/0x240 [mpt2sas]
- [<ffffffff8108ca1a>] worker_thread+0xca/0x240
- [<ffffffff8108c950>] ? manage_workers+0x90/0x90
- [<ffffffff81090ff7>] kthread+0x97/0xa0
- [<ffffffff8150fdc4>] kernel_thread_helper+0x4/0x10
- [<ffffffff81090f60>] ? kthread_bind+0x80/0x80
- [<ffffffff8150fdc0>] ? gs_change+0x13/0x13
----[ end trace 89a1351702ab360f ]---
-
-This caused by duplicate device in enclosure list, we need to remove the
-possible duplicate entry to avoid the conflict when we add new one.
-
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Joe Jin <joe.jin@oracle.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/misc/enclosure.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/crypto/ixp4xx_crypto.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-index 0e8df41..173974d 100644
---- a/drivers/misc/enclosure.c
-+++ b/drivers/misc/enclosure.c
-@@ -325,6 +325,8 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
- 	if (cdev->dev)
- 		enclosure_remove_links(cdev);
+diff --git a/drivers/crypto/ixp4xx_crypto.c b/drivers/crypto/ixp4xx_crypto.c
+index 8306185..214357e 100644
+--- a/drivers/crypto/ixp4xx_crypto.c
++++ b/drivers/crypto/ixp4xx_crypto.c
+@@ -221,7 +221,6 @@ static int support_aes = 1;
+ #define DRIVER_NAME "ixp4xx_crypto"
  
-+	enclosure_remove_device(edev, dev);
-+
- 	put_device(cdev->dev);
- 	cdev->dev = get_device(dev);
- 	return enclosure_add_links(cdev);
+ static struct platform_device *pdev;
+-static struct device *dev;
+ 
+ static inline dma_addr_t crypt_virt2phys(struct crypt_ctl *virt)
+ {
+@@ -250,6 +249,7 @@ static inline const struct ix_hash_algo *ix_hash(struct crypto_tfm *tfm)
+ 
+ static int setup_crypt_desc(void)
+ {
++	struct device *dev = &pdev->dev;
+ 	BUILD_BUG_ON(sizeof(struct crypt_ctl) != 64);
+ 	crypt_virt = dma_alloc_coherent(dev,
+ 			NPE_QLEN * sizeof(struct crypt_ctl),
+@@ -350,6 +350,7 @@ static void finish_scattered_hmac(struct crypt_ctl *crypt)
+ 
+ static void one_packet(dma_addr_t phys)
+ {
++	struct device *dev = &pdev->dev;
+ 	struct crypt_ctl *crypt;
+ 	struct ixp_ctx *ctx;
+ 	int failed;
+@@ -419,7 +420,7 @@ static void crypto_done_action(unsigned long arg)
+ 	tasklet_schedule(&crypto_done_tasklet);
+ }
+ 
+-static int init_ixp_crypto(void)
++static int init_ixp_crypto(struct device *dev)
+ {
+ 	int ret = -ENODEV;
+ 	u32 msg[2] = { 0, 0 };
+@@ -506,7 +507,7 @@ static int init_ixp_crypto(void)
+ 	return ret;
+ }
+ 
+-static void release_ixp_crypto(void)
++static void release_ixp_crypto(struct device *dev)
+ {
+ 	qmgr_disable_irq(RECV_QID);
+ 	tasklet_kill(&crypto_done_tasklet);
+@@ -873,6 +874,7 @@ static int ablk_perform(struct ablkcipher_request *req, int encrypt)
+ 	enum dma_data_direction src_direction = DMA_BIDIRECTIONAL;
+ 	struct ablk_ctx *req_ctx = ablkcipher_request_ctx(req);
+ 	struct buffer_desc src_hook;
++	struct device *dev = &pdev->dev;
+ 	gfp_t flags = req->base.flags & CRYPTO_TFM_REQ_MAY_SLEEP ?
+ 				GFP_KERNEL : GFP_ATOMIC;
+ 
+@@ -997,6 +999,7 @@ static int aead_perform(struct aead_request *req, int encrypt,
+ 	unsigned int cryptlen;
+ 	struct buffer_desc *buf, src_hook;
+ 	struct aead_ctx *req_ctx = aead_request_ctx(req);
++	struct device *dev = &pdev->dev;
+ 	gfp_t flags = req->base.flags & CRYPTO_TFM_REQ_MAY_SLEEP ?
+ 				GFP_KERNEL : GFP_ATOMIC;
+ 
+@@ -1426,7 +1429,7 @@ static int __init ixp_module_init(void)
+ 	spin_lock_init(&desc_lock);
+ 	spin_lock_init(&emerg_lock);
+ 
+-	err = init_ixp_crypto();
++	err = init_ixp_crypto(&pdev->dev);
+ 	if (err) {
+ 		platform_device_unregister(pdev);
+ 		return err;
+@@ -1492,7 +1495,7 @@ static void __exit ixp_module_exit(void)
+ 		if (ixp4xx_algos[i].registered)
+ 			crypto_unregister_alg(&ixp4xx_algos[i].crypto);
+ 	}
+-	release_ixp_crypto();
++	release_ixp_crypto(&pdev->dev);
+ 	platform_device_unregister(pdev);
+ }
+ 
 -- 
-1.8.3.1
-
+1.7.4.4
