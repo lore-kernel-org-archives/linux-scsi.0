@@ -1,36 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 39/51] DMA-API: others: use dma_set_coherent_mask()
-Date: Fri, 20 Sep 2013 17:20:50 -0500
-Message-ID: <20130920222050.GA8763@mtj.dyndns.org>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk>
- <20130920121652.GA7630@mtj.dyndns.org>
- <20130920140018.GP25647@n2100.arm.linux.org.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 2/5] scsi_debug: factor out copying PI from dif_storep to prot_sglist
+Date: Fri, 20 Sep 2013 18:20:56 -0400
+Message-ID: <yq161tvf83b.fsf@sermon.lab.mkp.net>
+References: <1379507248-15929-1-git-send-email-akinobu.mita@gmail.com>
+	<1379507248-15929-3-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-doc-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130920140018.GP25647@n2100.arm.linux.org.uk>
-Sender: linux-doc-owner@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org, devel@driverdev.osuosl.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net, linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, uclinux-dist-devel@blackfin.uclinux.org, Inki Dae <inki.dae@samsung.com>, Joonyoung Shim <jy0922.shim@samsung.com>, Seung-Woo Kim <sw0312.kim@samsung.com>, Kyun
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:28929 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754508Ab3ITWVF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 18:21:05 -0400
+In-Reply-To: <1379507248-15929-3-git-send-email-akinobu.mita@gmail.com>
+	(Akinobu Mita's message of "Wed, 18 Sep 2013 21:27:25 +0900")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Hey,
+>>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
 
-On Fri, Sep 20, 2013 at 03:00:18PM +0100, Russell King - ARM Linux wrote:
-> Another would be if subsystem maintainers are happy that I carry them,
-> I can add the acks, and then later on towards the end of the cycle,
-> provide a branch subsystem maintainers could pull.
-> 
-> Or... if you can think of something easier...
+Akinobu> If data integrity support is enabled, prot_verify_read() is
+Akinobu> called in response to READ commands and it verifies protection
+Akinobu> info from dif_storep by comparing against fake_storep, and
+Akinobu> copies protection info to prot_sglist.
 
-I'm happy with the latter method and it's likely that you'll end up
-carrying at least some of the patches through your tree anyway.
-Please feel free to add my acks to all libata related patches and
-carry them through your tree.
+Akinobu> This factors out the portion of copying protection info into a
+Akinobu> separate function.  It will also be reused in the next change
+Akinobu> after supporting the opposite direction (copying prot_sglist to
+Akinobu> dif_storep).
 
-Thanks and have fun routing.
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
-tejun
+Martin K. Petersen	Oracle Linux Engineering
