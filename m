@@ -1,29 +1,40 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sd: dif sector calculation
-Date: Fri, 20 Sep 2013 18:31:43 -0400
-Message-ID: <yq1ob7ndt0w.fsf@sermon.lab.mkp.net>
-References: <1379475143-2792-1-git-send-email-keith.busch@intel.com>
+Subject: Re: [PATCH] scsi disk: Use its own buffer for the vpd request
+Date: Fri, 20 Sep 2013 18:51:20 -0400
+Message-ID: <yq1fvszds47.fsf@sermon.lab.mkp.net>
+References: <87mwp5frdl.fsf@spindle.srvr.nix> <51F67959.2060803@fastmail.fm>
+	<87fvuxdqes.fsf@spindle.srvr.nix> <yq1txjdhree.fsf@sermon.lab.mkp.net>
+	<51F80167.1080004@fastmail.fm> <yq1zjt3h11y.fsf@sermon.lab.mkp.net>
+	<51F94E8D.5040908@fastmail.fm> <51F95A2E.60805@fastmail.fm>
+	<51FA71E2.6010501@fastmail.fm> <871u5b7azv.fsf@spindle.srvr.nix>
+	<20130831015337.GA8164@kroah.com> <87d2ot1w27.fsf@spindle.srvr.nix>
+	<52238A33.7020703@fastmail.fm>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48833 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754035Ab3ITWbu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 18:31:50 -0400
-In-Reply-To: <1379475143-2792-1-git-send-email-keith.busch@intel.com> (Keith
-	Busch's message of "Tue, 17 Sep 2013 21:32:23 -0600")
+Received: from aserp1040.oracle.com ([141.146.126.69]:39181 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751936Ab3ITWvq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 18:51:46 -0400
+In-Reply-To: <52238A33.7020703@fastmail.fm> (Bernd Schubert's message of "Sun,
+	01 Sep 2013 20:40:51 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ric Wheeler <rwheeler@redhat.com>
+To: Bernd Schubert <bernd.schubert@fastmail.fm>
+Cc: Nix <nix@esperi.org.uk>, Greg KH <greg@kroah.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, nick.cheng@areca.com.tw, stable@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 
->>>>> "Keith" == Keith Busch <keith.busch@intel.com> writes:
+>>>>> "Bernd" == Bernd Schubert <bernd.schubert@fastmail.fm> writes:
 
-Keith> The ref tag should be the device's physical LBA rather than the
-Keith> 512 byte bio sector.
+[Sorry about the delay. Catching up on a couple of weeks worth of email]
 
-The bip sector is just a seed value set by the application. It is not
-correct to scale it based on sector size or PI interval.
+Bernd> So if anything else than a Seagate drive is connected to an Areca
+Bernd> controller with older firmware it will still fail.
+
+It's just blacklisting a specific Seagate drive. However, skip_vpd_pages
+is also set by USB.
+
+I'm still completely in favor of your patch to reduce the VPD buffer
+size. Please resubmit and feel free to add my Acked-by:.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
