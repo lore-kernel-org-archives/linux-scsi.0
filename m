@@ -1,86 +1,31 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Fri, 20 Sep 2013 17:19:16 +0200
-Message-ID: <20130920151915.GC10507@dhcp-26-207.brq.redhat.com>
-References: <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <51EAA33C.9010405@fusionio.com>
- <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
- <1376079457.5171.172.camel@haakon3.risingtidesystems.com>
- <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
- <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH] scsi: fix the build warning
+Date: Fri, 20 Sep 2013 18:14:35 +0200
+Message-ID: <1379693675.8740.2.camel@x220.thuisdomein>
+References: <1377132262-15744-1-git-send-email-zwu.kernel@gmail.com>
+	 <1377133329.12003.9.camel@joe-AO722>
+	 <CAEH94Lhh11+zFHsRNDXoyxQfndxDRMcVvLnZDXQLw5cyaavUJw@mail.gmail.com>
+	 <1377134271.12003.15.camel@joe-AO722> <yq1ppt68qk9.fsf@sermon.lab.mkp.net>
+	 <CAC5umyjHqqNnS_LAP_bfU0zs52JbuAYr9jLwDhgaQ7TmrACUHA@mail.gmail.com>
+	 <1377181627.2009.2.camel@dabdike.int.hansenpartnership.com>
+	 <CAC5umyhVNcwu2k7wEND5DvxRGE+_tyWBNpWjVdQ9DRTyV2qCaw@mail.gmail.com>
+	 <1379670782.5938.14.camel@x220.thuisdomein>
+	 <CAC5umyhFe-Kb2r-by39S=C9FZmRS+OBqKeE+=hcGvntAKGFyfg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Mike Christie <mchristie@fusionio.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAC5umyhFe-Kb2r-by39S=C9FZmRS+OBqKeE+=hcGvntAKGFyfg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: James Bottomley <jbottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Joe Perches <joe@perches.com>, Zhi Yong Wu <zwu.kernel@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel mlist <linux-kernel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, Douglas Gilbert <dgilbert@interlog.com>, Antonio Alecrim Jr <antonio.alecrim@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 15, 2013 at 07:19:29PM -0700, Nicholas A. Bellinger wrote:
-> Ok, here's a bit better idea of what is going on now..
-> 
-> The problem is that blkdev_issue_flush() -> blk_mq_make_request() ->
-> __blk_mq_alloc_request() allocates the first tag, which calls
-> blk_insert_flush() -> blk_flush_complete_seq() -> blk_flush_kick() ->
-> mq_flush_work() -> blk_mq_alloc_request() to allocate a second tag for
-> the struct request that actually gets dispatched into scsi-mq as a
-> SYCHRONIZE_CACHE command..
-> 
-> I'm not exactly sure why this double tag usage of struct request is
-> occurring, but AFAICT it does happen for every flush, and is not
-> specific to the blkdev_issue_flush() codepath..  I'm sure that Jens can
-> fill us in on that bit.  ;)
+On Fri, 2013-09-20 at 23:32 +0900, Akinobu Mita wrote:
+> Yesterday, I sent a patch set which includes two fixes for this issue.
+> I wish this to be merged and I'll do my best.
 
-I also played with the double tag using a reserved tag (below).
-
-While it fixes 'fdisk /dev/sda' issue when trying to 'mount /dev/sda1 /mnt'
-what appears to be a call to bio->bi_end_io() from the free'd bio hits in.
-
-Not sure if I should pursue the root cause until the whole double-tag
-thingy is confirmed.
-
-Jens?
+I hadn't yet stumbled onto these patches. Thanks!
 
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 6fc1df3..81794dc 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -874,14 +874,14 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 
- 	trace_block_getrq(q, bio, rw);
--	rq = __blk_mq_alloc_request(hctx, GFP_ATOMIC, false);
-+	rq = __blk_mq_alloc_request(hctx, GFP_ATOMIC, is_flush_fua);
- 	if (likely(rq))
- 		blk_mq_rq_ctx_init(ctx, rq, rw);
- 	else {
- 		blk_mq_put_ctx(ctx);
- 		trace_block_sleeprq(q, bio, rw);
- 		rq = blk_mq_alloc_request_pinned(q, rw, __GFP_WAIT|GFP_ATOMIC,
--							false);
-+							is_flush_fua);
- 		ctx = rq->mq_ctx;
- 		hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 	}
-@@ -1317,6 +1317,9 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_reg *reg,
- 		reg->queue_depth = BLK_MQ_MAX_DEPTH;
- 	}
- 
-+	reg->queue_depth++;
-+	reg->reserved_tags++;
-+
- 	ctx = alloc_percpu(struct blk_mq_ctx);
- 	if (!ctx)
- 		return ERR_PTR(-ENOMEM);
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Paul Bolle
