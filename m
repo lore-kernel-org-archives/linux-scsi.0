@@ -1,71 +1,81 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: SCSI's heuristics for enabling WRITE SAME still need work [was: dm
- mpath: disable WRITE SAME if it fails]
-Date: Fri, 20 Sep 2013 17:21:42 -0400
-Message-ID: <20130920212142.GA17898@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work [was: dm mpath: disable WRITE SAME if it fails]
+Date: Fri, 20 Sep 2013 18:03:17 -0400
+Message-ID: <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
 References: <20130919161043.GA27081@redhat.com>
+	<20130920212142.GA17898@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45428 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753027Ab3ITVVp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Sep 2013 17:21:45 -0400
-Content-Disposition: inline
-In-Reply-To: <20130919161043.GA27081@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21782 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824Ab3ITWDW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 18:03:22 -0400
+In-Reply-To: <20130920212142.GA17898@redhat.com> (Mike Snitzer's message of
+	"Fri, 20 Sep 2013 17:21:42 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Thu, Sep 19 2013 at 12:13pm -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
+>>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
 
-> Workaround the SCSI layer's problematic WRITE SAME heuristics by
-> disabling WRITE SAME in the DM multipath device's queue_limits if an
-> underlying device disabled it.
+Mike,
 
-...
+Mike> AFAIK the reason for these heuristics is: devices that do support
+Mike> WRITE SAME cannot properly report as much because they don't
+Mike> support REPORT SUPPORTED OPERATION CODES -- this lack of RSOC
+Mike> support is apparently very common?
 
-> This fix doesn't help configurations that have additional devices
-> stacked ontop of the mpath device (e.g. LVM created linear DM devices
-> ontop).  A proper fix that restacks all the queue_limits from the bottom
-> of the device stack up will need to be explored if SCSI will continue to
-> use this model of optimistically allowing op codes and then disabling
-> them after they fail for the first time.
+Only a handful of the very latest and greatest devices support RSOC. The
+number of devices that support WRITE SAME is orders of magnitude larger.
 
-I really don't think we can afford to keep SCSI's current heuristics for
-enabling WRITE SAME, re-stating them for the benefit of others:
-1) check if WRITE SAME is supported by sending REPORT SUPPORTED
-   OPERATION CODES to the device
-2a) if REPORT SUPPORTED OPERATION CODES shows WRITE SAME is supported,
-    enable WRITE SAME
-2b) if REPORT SUPPORTED OPERATION CODES shows WRITE SAME is not
-    supported, disable WRITE SAME
-2c) if REPORT SUPPORTED OPERATION CODES isn't supported _and_ the device
-    doesn't have an ATA Information VPD page: enable WRITE SAME
-    - if/when WRITE SAME does fail, disable it on the failing device
+Last I checked I had exactly 1 out of about 100 devices in my lab that
+supported RSOC.
 
-AFAIK the reason for these heuristics is: devices that do support WRITE
-SAME cannot properly report as much because they don't support REPORT
-SUPPORTED OPERATION CODES -- this lack of RSOC support is apparently
-very common?
 
-I can appreciate the idea behind the current heuristics but I think the
-prevelence of the other side of the spectrum (SCSI devices that don't
-support RSOC or WRITE SAME) was underestimated.  As such we're seeing a
-fair amount of WRITE SAME error noise on these systems -- that noise is
-itself considered a bug to many.
+Mike> I can appreciate the idea behind the current heuristics but I
+Mike> think the prevelence of the other side of the spectrum (SCSI
+Mike> devices that don't support RSOC or WRITE SAME) was underestimated.
 
-Also, please see my comment in a related Fedora 19 BZ:
-https://bugzilla.redhat.com/show_bug.cgi?id=995271#c23
+If you by "devices" mean vintage PCI RAID controllers that don't pass
+things through correctly, then yes. I don't think I have a single SCSI
+drive that doesn't support WRITE SAME. And all the controllers I tested
+with here worked fine.
 
-As I say in that comment:
-"A proper fix could be to make SCSI's default be to disable WRITE SAME
-for devices that don't properly report they support it.  And possibly
-have a whitelist to opt-in to enabling WRITE SAME for select targets."
 
-I'm open to any ideas you might have.
+Mike> As I say in that comment: "A proper fix could be to make SCSI's
+Mike> default be to disable WRITE SAME for devices that don't properly
+Mike> report they support it.  And possibly have a whitelist to opt-in
+Mike> to enabling WRITE SAME for select targets."
 
-Thanks,
-Mike
+The problem with the opt-in approach is that there are orders of
+magnitude more devices that would need to get it enabled than there are
+broken ones that need it disabled.
+
+There are only a couple of handfuls of RAID controller drivers. We've
+been working through the issues on these on a case by case basis.
+
+Yes, I totally agree it sucks. And I hate that things broke for people
+with Areca and 3ware. But we got those fixed. And it's way easier to
+blacklist "all devices hanging off RAID driver xyz" than it is to
+whitelist every SCSI drive known to man. It sucks in the short term but
+is better long term.
+
+The major headache here of course is that WRITE SAME is inherently
+destructive. We can't just fire off one during discovery and see if it
+works. For WRITE you can issue a command with a transfer length of 0 to
+see if things work. But unfortunately for WRITE SAME a transfer length
+of zero means "wipe the entire device". Yikes!
+
+I guess we could read one sector and try to write it back using WRITE
+SAME and a block count of one. But it's really icky. And I don't like
+the notion of actually writing things during discovery.
+
+As far as being able to trigger a restacking of the queue limits I think
+it's inevitable. We see more and more devices that change properties
+after a firmware upgrade. I think we'll just have to bite the bullet and
+work on that...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
