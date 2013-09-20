@@ -1,48 +1,59 @@
-From: Russell King - ARM Linux <linux-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
-Subject: Re: [PATCH 01/51] DMA-API: provide a helper to set both DMA and
- coherent DMA masks
-Date: Fri, 20 Sep 2013 15:12:44 +0100
-Message-ID: <20130920141244.GQ25647@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMlja-0007fA-HU@rmk-PC.arm.linux.org.uk>
- <1379640097.2500.4.camel@bwh-desktop.uk.level5networks.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH] scsi: fix the build warning
+Date: Fri, 20 Sep 2013 23:32:29 +0900
+Message-ID: <CAC5umyhFe-Kb2r-by39S=C9FZmRS+OBqKeE+=hcGvntAKGFyfg@mail.gmail.com>
+References: <1377132262-15744-1-git-send-email-zwu.kernel@gmail.com>
+	<1377133329.12003.9.camel@joe-AO722>
+	<CAEH94Lhh11+zFHsRNDXoyxQfndxDRMcVvLnZDXQLw5cyaavUJw@mail.gmail.com>
+	<1377134271.12003.15.camel@joe-AO722>
+	<yq1ppt68qk9.fsf@sermon.lab.mkp.net>
+	<CAC5umyjHqqNnS_LAP_bfU0zs52JbuAYr9jLwDhgaQ7TmrACUHA@mail.gmail.com>
+	<1377181627.2009.2.camel@dabdike.int.hansenpartnership.com>
+	<CAC5umyhVNcwu2k7wEND5DvxRGE+_tyWBNpWjVdQ9DRTyV2qCaw@mail.gmail.com>
+	<1379670782.5938.14.camel@x220.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <b43-dev-bounces+gldbd-bcm43xx-dev=gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1379640097.2500.4.camel-/LGg1Z1CJKQ+9kgCwbf1HqK4ta4zdZpAajtMo4Cw6ucAvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/b43-dev>,
- <mailto:b43-dev-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/b43-dev/>
-List-Post: <mailto:b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:b43-dev-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/b43-dev>,
- <mailto:b43-dev-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "b43-dev" <b43-dev-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: b43-dev-bounces+gldbd-bcm43xx-dev=gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Ben Hutchings <bhutchings-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>
-Cc: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, e1000-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Solarflare linux maintainers <linux-net-drivers-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vinod Koul <vinod.koul-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rob Landley <rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org>, uclinux-dist-devel-ZG0+EudsQA8dtHy/vicBwGD2FQJk+8+b@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1379670782.5938.14.camel@x220.thuisdomein>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: James Bottomley <jbottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Joe Perches <joe@perches.com>, Zhi Yong Wu <zwu.kernel@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel mlist <linux-kernel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, Douglas Gilbert <dgilbert@interlog.com>, Antonio Alecrim Jr <antonio.alecrim@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Sep 20, 2013 at 02:21:37AM +0100, Ben Hutchings wrote:
-> On Thu, 2013-09-19 at 22:25 +0100, Russell King wrote:
-> [...]
-> > -dma_set_coherent_mask() will always be able to set the same or a
-> > -smaller mask as dma_set_mask(). However for the rare case that a
-> > +The coherent coherent mask will always be able to set the same or a
-> > +smaller mask as the streaming mask. However for the rare case that a
-> [...]
-> 
-> The new wording doesn't make sense; a mask doesn't set itself.  I would
-> suggest:
-> 
-> "The coherent mask can always be set to the same or a smaller mask than
-> the streaming mask."
+2013/9/20 Paul Bolle <pebolle@tiscali.nl>:
+> On Thu, 2013-08-22 at 23:49 +0900, Akinobu Mita wrote:
+>> 2013/8/22 James Bottomley <jbottomley@parallels.com>:
+>> > On Thu, 2013-08-22 at 21:42 +0900, Akinobu Mita wrote:
+>> >> Unfortunately, this warning isn't fixed in linux-next, either.
+>> >> Paul Bolle also sent a patch that fixes the same warning in a little
+>> >> bit different way.
+>> >
+>> > Well, it is and it isn't.  Whether you see the warning seems to depend
+>> > on how gcc was built.  My take is that an impossible default case just
+>> > to keep some versions of gcc quiet is a bit pointless.
+>>
+>> As Joe said in the other reply, scsi_debug_guard could be a negative
+>> value (scsi_debug_guard > 1 is only prohibited).  So this warning
+>> does not seem a false positive.
+>
+> I too think that GCC is correct here. Perhaps the people not seeing this
+> warning don't have CONFIG_SCSI_DEBUG set.
+>
+> A week ago Antonia also submitted a patch to silence this warning
+> ( https://lkml.org/lkml/2013/9/13/649 ). That's at least the third time
+> someone tried to silence it since it got introduced in the v3.11 cycle.
+>
+> Akinobu, could you please say how you'd like this warning to be
+> silenced? Or is an actual fix queued somewhere?
 
-Yes, the original sentence is not particularly good, but I think even
-your modified version can be interpreted as "a mask setting itself"
-for all the same reasons that the original can be (which mask does "same"
-refer to?)
+Yesterday, I sent a patch set which includes two fixes for this issue.
+I wish this to be merged and I'll do my best.
 
-Even so, I prefer your version.  Thanks. :)
+http://marc.info/?l=linux-scsi&m=137950732530325&w=2
+http://marc.info/?l=linux-scsi&m=137950732530326&w=2
+
+The first one prevents scsi_debug_guard from being a negative value by
+changing the type of scsi_debug_guard to 'unsigned int'.
+
+The second one is actually titled sparse warning fix, but it also silences
+this GCC warning by chaning from switch statement to if/else statements.
