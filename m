@@ -1,102 +1,86 @@
-From: Felipe Balbi <balbi@ti.com>
-Subject: Re: [PATCH 42/51] DMA-API: usb: musb: use
- platform_device_register_full() to avoid directly messing with dma masks
-Date: Fri, 20 Sep 2013 10:15:52 -0500
-Message-ID: <20130920151552.GQ26101@radagast>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMnQk-0007sX-Ty@rmk-PC.arm.linux.org.uk>
- <20130920131125.GO26101@radagast>
- <20130920134938.GO25647@n2100.arm.linux.org.uk>
-Reply-To: balbi@ti.com
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Fri, 20 Sep 2013 17:19:16 +0200
+Message-ID: <20130920151915.GC10507@dhcp-26-207.brq.redhat.com>
+References: <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+ <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <51EAA33C.9010405@fusionio.com>
+ <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
+ <1376079457.5171.172.camel@haakon3.risingtidesystems.com>
+ <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
+ <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============8713123321030954905=="
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-Reply-To: <20130920134938.GO25647@n2100.arm.linux.org.uk>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: alsa-devel@alsa-project.org, linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, devel@driverdev.osuosl.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, b43-dev@lists.infradead.org, linux-media@vger.kernel.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-tegra@vger.kernel.org, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, Felipe Balbi <balbi@ti.com>, linux-crypto@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, uclinux-dist-devel@blackfin.uclinux.org, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Mike Christie <mchristie@fusionio.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
---===============8713123321030954905==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rKoHqF+aPLVth8b2"
-Content-Disposition: inline
+On Thu, Aug 15, 2013 at 07:19:29PM -0700, Nicholas A. Bellinger wrote:
+> Ok, here's a bit better idea of what is going on now..
+> 
+> The problem is that blkdev_issue_flush() -> blk_mq_make_request() ->
+> __blk_mq_alloc_request() allocates the first tag, which calls
+> blk_insert_flush() -> blk_flush_complete_seq() -> blk_flush_kick() ->
+> mq_flush_work() -> blk_mq_alloc_request() to allocate a second tag for
+> the struct request that actually gets dispatched into scsi-mq as a
+> SYCHRONIZE_CACHE command..
+> 
+> I'm not exactly sure why this double tag usage of struct request is
+> occurring, but AFAICT it does happen for every flush, and is not
+> specific to the blkdev_issue_flush() codepath..  I'm sure that Jens can
+> fill us in on that bit.  ;)
 
---rKoHqF+aPLVth8b2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I also played with the double tag using a reserved tag (below).
 
-Hi,
+While it fixes 'fdisk /dev/sda' issue when trying to 'mount /dev/sda1 /mnt'
+what appears to be a call to bio->bi_end_io() from the free'd bio hits in.
 
-On Fri, Sep 20, 2013 at 02:49:38PM +0100, Russell King - ARM Linux wrote:
-> On Fri, Sep 20, 2013 at 08:11:25AM -0500, Felipe Balbi wrote:
-> > Hi,
-> >=20
-> > On Fri, Sep 20, 2013 at 12:14:38AM +0100, Russell King wrote:
-> > > Use platform_device_register_full() for those drivers which can, to
-> > > avoid messing directly with DMA masks.  This can only be done when
-> > > the driver does not need to access the allocated musb platform device
-> > > from within its callbacks, which may be called during the musb
-> > > device probing.
-> > >=20
-> > > Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-> >=20
-> > you want me to carry this one through my tree or you prefer getting my
-> > Acked-by ? Either way works for me:
-> >=20
-> > Acked-by: Felipe Balbi <balbi@ti.com>
-> >=20
-> > there's also the third option of me setting up a branch with only this
-> > patch and we both merge it, that'd also work.
->=20
-> I think this patch is sufficiently stand-alone that it should be fine
-> if you want to take it through your tree.  That may be better in the
-> long run to avoid conflicts with this patch and any future work in
-> this area during this cycle.
+Not sure if I should pursue the root cause until the whole double-tag
+thingy is confirmed.
 
-awesome, i'll take this one early next week.
-
---=20
-balbi
-
---rKoHqF+aPLVth8b2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSPGaoAAoJEIaOsuA1yqREE+MP/2yK4ec5lzVPs6fLeF9dUQHh
-yWwfvqZLfu9D9lFIzGOOgfPm03or8ubh7i/ryfKBHxyKiGysUyo2yen3AwOwFgq1
-2VbJzj55Zz5fejj7T9YE2hJPXU3ofUTdkNSJkbOGqnROvzNcCBYorIgcsAceohqP
-biXh7G8wuxJmJqe967o/LVi9M4GL9ny+GqXdqT7TzuPeFzIwnlDpRL2+vgQDD3Y8
-maW6NOBkrF8W7g2qM5qG4oT/LPNyIEAFpJqOYSQ14EgDp0VxviUl4kMDSqihMOM7
-iPMQJPMhNKRx8vSUilrRxGCY636T0bSXZd1x6L+AIQ0XsTzEtFT73v929byiFNso
-bzQpIOgJjrDgUfBi4MnOemhm98+/UhamcqoXq7v6FQ2FyhEMeIgArAIwwr3VxOf1
-E7iiKaT7jVMRMcNZ+7UJsb+09vie5hGleu4M7YBayoxDEEtlWI8t0aOcngW8oVO4
-DHD3uff/mpbTt9UYf7009WRToHXQwLMhbAimBcXbtya9Nxa79LNxT6aWEzfB2uVS
-Ju5j7FEQZUsAMHQdJIUu+kpcEjrc5IKWWsedQul4piraIFh2Jb+8ODrGLEQvMq9e
-8Jxl6hajoiw6zWfr+HMSqJa3MkDtaZ9GEOyvZqlnrBnpNS4dI3jZKDfresiz1fkq
-o5bj9gHe6QmYbP9tPOOz
-=V876
------END PGP SIGNATURE-----
-
---rKoHqF+aPLVth8b2--
-
---===============8713123321030954905==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Jens?
 
 
---===============8713123321030954905==--
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 6fc1df3..81794dc 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -874,14 +874,14 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
+ 
+ 	trace_block_getrq(q, bio, rw);
+-	rq = __blk_mq_alloc_request(hctx, GFP_ATOMIC, false);
++	rq = __blk_mq_alloc_request(hctx, GFP_ATOMIC, is_flush_fua);
+ 	if (likely(rq))
+ 		blk_mq_rq_ctx_init(ctx, rq, rw);
+ 	else {
+ 		blk_mq_put_ctx(ctx);
+ 		trace_block_sleeprq(q, bio, rw);
+ 		rq = blk_mq_alloc_request_pinned(q, rw, __GFP_WAIT|GFP_ATOMIC,
+-							false);
++							is_flush_fua);
+ 		ctx = rq->mq_ctx;
+ 		hctx = q->mq_ops->map_queue(q, ctx->cpu);
+ 	}
+@@ -1317,6 +1317,9 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_reg *reg,
+ 		reg->queue_depth = BLK_MQ_MAX_DEPTH;
+ 	}
+ 
++	reg->queue_depth++;
++	reg->reserved_tags++;
++
+ 	ctx = alloc_percpu(struct blk_mq_ctx);
+ 	if (!ctx)
+ 		return ERR_PTR(-ENOMEM);
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
