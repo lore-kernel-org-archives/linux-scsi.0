@@ -1,48 +1,34 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [PATCH] scsi: fix the build warning
-Date: Fri, 20 Sep 2013 11:53:02 +0200
-Message-ID: <1379670782.5938.14.camel@x220.thuisdomein>
-References: <1377132262-15744-1-git-send-email-zwu.kernel@gmail.com>
-	 <1377133329.12003.9.camel@joe-AO722>
-	 <CAEH94Lhh11+zFHsRNDXoyxQfndxDRMcVvLnZDXQLw5cyaavUJw@mail.gmail.com>
-	 <1377134271.12003.15.camel@joe-AO722> <yq1ppt68qk9.fsf@sermon.lab.mkp.net>
-	 <CAC5umyjHqqNnS_LAP_bfU0zs52JbuAYr9jLwDhgaQ7TmrACUHA@mail.gmail.com>
-	 <1377181627.2009.2.camel@dabdike.int.hansenpartnership.com>
-	 <CAC5umyhVNcwu2k7wEND5DvxRGE+_tyWBNpWjVdQ9DRTyV2qCaw@mail.gmail.com>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
+Date: Fri, 20 Sep 2013 13:13:30 +0300
+Message-ID: <20130920101330.GZ2924@reaktio.net>
+References: <bug-60644-11613@https.bugzilla.kernel.org/>
+ <bug-60644-11613-6lTrK8p8yG@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAC5umyhVNcwu2k7wEND5DvxRGE+_tyWBNpWjVdQ9DRTyV2qCaw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: James Bottomley <jbottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Joe Perches <joe@perches.com>, Zhi Yong Wu <zwu.kernel@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel mlist <linux-kernel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, Douglas Gilbert <dgilbert@interlog.com>, Antonio Alecrim Jr <antonio.alecrim@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:57944 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754221Ab3ITKNc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 06:13:32 -0400
+Content-Disposition: inline
+In-Reply-To: <bug-60644-11613-6lTrK8p8yG@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2013-08-22 at 23:49 +0900, Akinobu Mita wrote:
-> 2013/8/22 James Bottomley <jbottomley@parallels.com>:
-> > On Thu, 2013-08-22 at 21:42 +0900, Akinobu Mita wrote:
-> >> Unfortunately, this warning isn't fixed in linux-next, either.
-> >> Paul Bolle also sent a patch that fixes the same warning in a little
-> >> bit different way.
-> >
-> > Well, it is and it isn't.  Whether you see the warning seems to depend
-> > on how gcc was built.  My take is that an impossible default case just
-> > to keep some versions of gcc quiet is a bit pointless.
+On Tue, Sep 17, 2013 at 11:00:21AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=60644
 > 
-> As Joe said in the other reply, scsi_debug_guard could be a negative
-> value (scsi_debug_guard > 1 is only prohibited).  So this warning
-> does not seem a false positive.
+> --- Comment #32 from liveaxle@live.com ---
+> Hi .
+> 
+> This bug is still present in 3.12-rc1 as of today's tests .
+> 
 
-I too think that GCC is correct here. Perhaps the people not seeing this
-warning don't have CONFIG_SCSI_DEBUG set.
+You might want to try the latest P17 firmware aswell, it has been out for a couple of weeks now.
+There's not much in the changelogs, but it seems to fix some other SGPIO related issues at least.
 
-A week ago Antonia also submitted a patch to silence this warning
-( https://lkml.org/lkml/2013/9/13/649 ). That's at least the third time
-someone tried to silence it since it got introduced in the v3.11 cycle.
+-- Pasi
 
-Akinobu, could you please say how you'd like this warning to be
-silenced? Or is an actual fix queued somewhere?
-
-
-Paul Bolle
