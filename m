@@ -1,36 +1,36 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/5] scsi_debug: fix buffer overrun when DIF/DIX is enabled and virtual_gb > 0
-Date: Fri, 20 Sep 2013 18:13:57 -0400
-Message-ID: <yq1a9j7f8ey.fsf@sermon.lab.mkp.net>
-References: <1379507248-15929-1-git-send-email-akinobu.mita@gmail.com>
-	<1379507248-15929-2-git-send-email-akinobu.mita@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 39/51] DMA-API: others: use dma_set_coherent_mask()
+Date: Fri, 20 Sep 2013 17:20:50 -0500
+Message-ID: <20130920222050.GA8763@mtj.dyndns.org>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+ <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk>
+ <20130920121652.GA7630@mtj.dyndns.org>
+ <20130920140018.GP25647@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27025 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753027Ab3ITWOH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 18:14:07 -0400
-In-Reply-To: <1379507248-15929-2-git-send-email-akinobu.mita@gmail.com>
-	(Akinobu Mita's message of "Wed, 18 Sep 2013 21:27:24 +0900")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130920140018.GP25647@n2100.arm.linux.org.uk>
+Sender: linux-doc-owner@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org, devel@driverdev.osuosl.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net, linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, uclinux-dist-devel@blackfin.uclinux.org, Inki Dae <inki.dae@samsung.com>, Joonyoung Shim <jy0922.shim@samsung.com>, Seung-Woo Kim <sw0312.kim@samsung.com>, Kyun
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
+Hey,
 
-Akinobu> If the module parameter virtual_gb is greater than 0, the READ
-Akinobu> command may request the blocks which exceed actual ramdisk
-Akinobu> storage (fake_storep).  prot_verify_read() should treat those
-Akinobu> blocks as wrap around the end of fake_storep.  But it actually
-Akinobu> causes fake_storep and dif_storep buffer overruns.
+On Fri, Sep 20, 2013 at 03:00:18PM +0100, Russell King - ARM Linux wrote:
+> Another would be if subsystem maintainers are happy that I carry them,
+> I can add the acks, and then later on towards the end of the cycle,
+> provide a branch subsystem maintainers could pull.
+> 
+> Or... if you can think of something easier...
 
-Akinobu> This fixes these buffer overruns.  In order to simplify the
-Akinobu> fix, this also introduces fake_store() and dif_store() which
-Akinobu> return corresponding wrap around addresses.
+I'm happy with the latter method and it's likely that you'll end up
+carrying at least some of the patches through your tree anyway.
+Please feel free to add my acks to all libata related patches and
+carry them through your tree.
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Thanks and have fun routing.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+tejun
