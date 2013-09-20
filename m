@@ -1,30 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 5/5] scsi_debug: fix sparse warnings related to data integrity field
-Date: Fri, 20 Sep 2013 18:24:11 -0400
-Message-ID: <yq1siwzdtdg.fsf@sermon.lab.mkp.net>
-References: <1379507248-15929-1-git-send-email-akinobu.mita@gmail.com>
-	<1379507248-15929-6-git-send-email-akinobu.mita@gmail.com>
+Subject: Re: [PATCH] sd: dif sector calculation
+Date: Fri, 20 Sep 2013 18:31:43 -0400
+Message-ID: <yq1ob7ndt0w.fsf@sermon.lab.mkp.net>
+References: <1379475143-2792-1-git-send-email-keith.busch@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45034 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:48833 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753316Ab3ITWYT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 18:24:19 -0400
-In-Reply-To: <1379507248-15929-6-git-send-email-akinobu.mita@gmail.com>
-	(Akinobu Mita's message of "Wed, 18 Sep 2013 21:27:28 +0900")
+	with ESMTP id S1754035Ab3ITWbu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 18:31:50 -0400
+In-Reply-To: <1379475143-2792-1-git-send-email-keith.busch@intel.com> (Keith
+	Busch's message of "Tue, 17 Sep 2013 21:32:23 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ric Wheeler <rwheeler@redhat.com>
 
->>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
+>>>>> "Keith" == Keith Busch <keith.busch@intel.com> writes:
 
-Akinobu> Each member in data integrity field tuple is big-endian.  But
-Akinobu> the endianness of the values being compared with these members
-Akinobu> are not annotated.  So this fixes these sparse warnings.
+Keith> The ref tag should be the device's physical LBA rather than the
+Keith> 512 byte bio sector.
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+The bip sector is just a seed value set by the application. It is not
+correct to scale it based on sector size or PI interval.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
