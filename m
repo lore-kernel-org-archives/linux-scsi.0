@@ -1,25 +1,31 @@
-From: <KurtCarver@angelwill.onmicrosoft.com>
-Subject: Visit our online site
-Date: Fri, 20 Sep 2013 17:16:32 +0000
-Message-ID: <8b3fcb90-db71-413f-bf45-3a096daee9f5@AMXPR01MB023.eurprd01.prod.exchangelabs.com>
+From: <KennethEEGGLESTON@robertdanton.onmicrosoft.com>
+Subject: Exclusive offer, feel it for real
+Date: Fri, 20 Sep 2013 17:17:03 +0000
+Message-ID: <1144511c-508c-4bdb-a110-7ced3c7968da@AMSPR01MB067.eurprd01.prod.exchangelabs.com>
 Mime-Version: 1.1
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emea01-db3-ndr.ptr.protection.outlook.com ([157.56.120.104]:14087
+Received: from emea01-am1-ndr.ptr.protection.outlook.com ([157.56.116.106]:54371
 	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753062Ab3ITRQd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 13:16:33 -0400
+	id S1752973Ab3ITRRF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2013 13:17:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-		Dear Customer 
+		Dear Customer=20
 
-Bring back your happiness! Sometimes very little is needed to make a happy life.
+Make your first deposit and we will triple your bonus money up to =C2=A3=
+600.
 
-http://t.co/jpLaXvy4
+http://fb.me/W62qZEBP
 
-Best Regards, 
-		
+Best Regards,=20
+	=09
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
