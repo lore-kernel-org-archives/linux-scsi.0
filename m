@@ -1,59 +1,41 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH] scsi: fix the build warning
-Date: Fri, 20 Sep 2013 23:32:29 +0900
-Message-ID: <CAC5umyhFe-Kb2r-by39S=C9FZmRS+OBqKeE+=hcGvntAKGFyfg@mail.gmail.com>
-References: <1377132262-15744-1-git-send-email-zwu.kernel@gmail.com>
-	<1377133329.12003.9.camel@joe-AO722>
-	<CAEH94Lhh11+zFHsRNDXoyxQfndxDRMcVvLnZDXQLw5cyaavUJw@mail.gmail.com>
-	<1377134271.12003.15.camel@joe-AO722>
-	<yq1ppt68qk9.fsf@sermon.lab.mkp.net>
-	<CAC5umyjHqqNnS_LAP_bfU0zs52JbuAYr9jLwDhgaQ7TmrACUHA@mail.gmail.com>
-	<1377181627.2009.2.camel@dabdike.int.hansenpartnership.com>
-	<CAC5umyhVNcwu2k7wEND5DvxRGE+_tyWBNpWjVdQ9DRTyV2qCaw@mail.gmail.com>
-	<1379670782.5938.14.camel@x220.thuisdomein>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
+Date: Fri, 20 Sep 2013 14:38:32 +0000
+Message-ID: <bug-60644-11613-4G1TGdcDnc@https.bugzilla.kernel.org/>
+References: <bug-60644-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1379670782.5938.14.camel@x220.thuisdomein>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: James Bottomley <jbottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Joe Perches <joe@perches.com>, Zhi Yong Wu <zwu.kernel@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel mlist <linux-kernel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, Douglas Gilbert <dgilbert@interlog.com>, Antonio Alecrim Jr <antonio.alecrim@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:53702 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751435Ab3ITOii (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Sep 2013 10:38:38 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 8F1ED20324
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Sep 2013 14:38:36 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 4F2B820333
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Sep 2013 14:38:33 +0000 (UTC)
+In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-2013/9/20 Paul Bolle <pebolle@tiscali.nl>:
-> On Thu, 2013-08-22 at 23:49 +0900, Akinobu Mita wrote:
->> 2013/8/22 James Bottomley <jbottomley@parallels.com>:
->> > On Thu, 2013-08-22 at 21:42 +0900, Akinobu Mita wrote:
->> >> Unfortunately, this warning isn't fixed in linux-next, either.
->> >> Paul Bolle also sent a patch that fixes the same warning in a little
->> >> bit different way.
->> >
->> > Well, it is and it isn't.  Whether you see the warning seems to depend
->> > on how gcc was built.  My take is that an impossible default case just
->> > to keep some versions of gcc quiet is a bit pointless.
->>
->> As Joe said in the other reply, scsi_debug_guard could be a negative
->> value (scsi_debug_guard > 1 is only prohibited).  So this warning
->> does not seem a false positive.
->
-> I too think that GCC is correct here. Perhaps the people not seeing this
-> warning don't have CONFIG_SCSI_DEBUG set.
->
-> A week ago Antonia also submitted a patch to silence this warning
-> ( https://lkml.org/lkml/2013/9/13/649 ). That's at least the third time
-> someone tried to silence it since it got introduced in the v3.11 cycle.
->
-> Akinobu, could you please say how you'd like this warning to be
-> silenced? Or is an actual fix queued somewhere?
+https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
-Yesterday, I sent a patch set which includes two fixes for this issue.
-I wish this to be merged and I'll do my best.
+--- Comment #34 from liveaxle@live.com ---
+Hi .
 
-http://marc.info/?l=linux-scsi&m=137950732530325&w=2
-http://marc.info/?l=linux-scsi&m=137950732530326&w=2
+In fact I installed P17 on both controllers (2308 -as 9207- and M1015 -as
+9211-) , but nothing has changed at all .
 
-The first one prevents scsi_debug_guard from being a negative value by
-changing the type of scsi_debug_guard to 'unsigned int'.
+P16 worked just fine under Windows Server 2012 .
 
-The second one is actually titled sparse warning fix, but it also silences
-this GCC warning by chaning from switch statement to if/else statements.
+the problem lies in MPT2SAS as far as I see .
+
+Thank you .
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
