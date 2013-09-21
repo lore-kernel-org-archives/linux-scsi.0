@@ -1,32 +1,53 @@
-From: Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH] sd: dif sector calculation
-Date: Fri, 20 Sep 2013 16:52:06 -0600 (MDT)
-Message-ID: <alpine.LRH.2.03.1309201647220.31457@AMR>
-References: <1379475143-2792-1-git-send-email-keith.busch@intel.com> <yq1ob7ndt0w.fsf@sermon.lab.mkp.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 61771] New: Support for LSI Logic / Symbios Logic M1064E
+ MegaRAID SAS
+Date: Sat, 21 Sep 2013 00:19:28 +0000
+Message-ID: <bug-61771-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50160 "EHLO mga02.intel.com"
+Received: from mail.kernel.org ([198.145.19.201]:43579 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753481Ab3ITWwL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Sep 2013 18:52:11 -0400
-In-Reply-To: <yq1ob7ndt0w.fsf@sermon.lab.mkp.net>
+	id S1751529Ab3IUATo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Sep 2013 20:19:44 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 71138204BA
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2013 00:19:43 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id F3219204AF
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2013 00:19:41 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Keith Busch <keith.busch@intel.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Ric Wheeler <rwheeler@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 20 Sep 2013, Martin K. Petersen wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=61771
 
->>>>>> "Keith" == Keith Busch <keith.busch@intel.com> writes:
->
-> Keith> The ref tag should be the device's physical LBA rather than the
-> Keith> 512 byte bio sector.
->
-> The bip sector is just a seed value set by the application. It is not
-> correct to scale it based on sector size or PI interval.
+            Bug ID: 61771
+           Summary: Support for LSI Logic / Symbios Logic M1064E MegaRAID
+                    SAS
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.8.13-gentoo
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: contato@leonardoamaral.com.br
+        Regression: No
 
-If I follow the current implementation correctly and have a 4k physical
-block size, a two block write at LBA 0 will generate ref tags 0 and 1
-for that operation. If I read back one block at LBA 1, the current code
-will expect the ref tag to be 8, but come back as 1, failing the compare.
+Created attachment 109031
+  --> https://bugzilla.kernel.org/attachment.cgi?id=109031&action=edit
+Informations of hardware.
+
+Requesting support for M1064E MegaRAID SAS support. 
+
+Informations attached
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
