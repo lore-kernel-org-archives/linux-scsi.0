@@ -1,82 +1,109 @@
-From: Akinobu Mita <mita@fixstars.com>
-Subject: [PATCH] ufs: adjust queue settings to PRDT limitations
-Date: Sat, 21 Sep 2013 15:36:59 +0900
-Message-ID: <1379745419-7099-1-git-send-email-mita@fixstars.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work [was:
+ dm mpath: disable WRITE SAME if it fails]
+Date: Sat, 21 Sep 2013 11:28:25 -0400
+Message-ID: <523DBB19.7090404@interlog.com>
+References: <20130919161043.GA27081@redhat.com>	<20130920212142.GA17898@redhat.com> <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo.fixstars.hdemail.jp ([176.34.54.138]:36802 "EHLO
-	mo.fixstars.hdemail.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071Ab3IUGmE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Sep 2013 02:42:04 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:34276 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751737Ab3IUP2t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Sep 2013 11:28:49 -0400
+In-Reply-To: <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <mita@fixstars.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-The data byte count field of PRDT indicates the length of data block
-which is a segment of data transfer for SCSI commands.  The value of
-this field shall have Dword granularity and the the maximum of length
-is 256KB.
+On 13-09-20 06:03 PM, Martin K. Petersen wrote:
+>>>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
+>
+> Mike,
+>
+> Mike> AFAIK the reason for these heuristics is: devices that do support
+> Mike> WRITE SAME cannot properly report as much because they don't
+> Mike> support REPORT SUPPORTED OPERATION CODES -- this lack of RSOC
+> Mike> support is apparently very common?
+>
+> Only a handful of the very latest and greatest devices support RSOC. The
+> number of devices that support WRITE SAME is orders of magnitude larger.
+>
+> Last I checked I had exactly 1 out of about 100 devices in my lab that
+> supported RSOC.
+>
+>
+> Mike> I can appreciate the idea behind the current heuristics but I
+> Mike> think the prevelence of the other side of the spectrum (SCSI
+> Mike> devices that don't support RSOC or WRITE SAME) was underestimated.
+>
+> If you by "devices" mean vintage PCI RAID controllers that don't pass
+> things through correctly, then yes. I don't think I have a single SCSI
+> drive that doesn't support WRITE SAME. And all the controllers I tested
+> with here worked fine.
+>
+>
+> Mike> As I say in that comment: "A proper fix could be to make SCSI's
+> Mike> default be to disable WRITE SAME for devices that don't properly
+> Mike> report they support it.  And possibly have a whitelist to opt-in
+> Mike> to enabling WRITE SAME for select targets."
+>
+> The problem with the opt-in approach is that there are orders of
+> magnitude more devices that would need to get it enabled than there are
+> broken ones that need it disabled.
+>
+> There are only a couple of handfuls of RAID controller drivers. We've
+> been working through the issues on these on a case by case basis.
+>
+> Yes, I totally agree it sucks. And I hate that things broke for people
+> with Areca and 3ware. But we got those fixed. And it's way easier to
+> blacklist "all devices hanging off RAID driver xyz" than it is to
+> whitelist every SCSI drive known to man. It sucks in the short term but
+> is better long term.
+>
+> The major headache here of course is that WRITE SAME is inherently
+> destructive. We can't just fire off one during discovery and see if it
+> works. For WRITE you can issue a command with a transfer length of 0 to
+> see if things work. But unfortunately for WRITE SAME a transfer length
+> of zero means "wipe the entire device". Yikes!
+>
+> I guess we could read one sector and try to write it back using WRITE
+> SAME and a block count of one. But it's really icky. And I don't like
+> the notion of actually writing things during discovery.
+>
+> As far as being able to trigger a restacking of the queue limits I think
+> it's inevitable. We see more and more devices that change properties
+> after a firmware upgrade. I think we'll just have to bite the bullet and
+> work on that...
 
-This adjusts dma pad mask and max segment size to the above-mentioned
-PRDT limitations.
+Would a closer examination of the available VPD pages
+help? For example support for the Logical Block
+Provisioning and Block Limits VPD pages. Given either
+of those two pages, even if the WRITE SAME specific
+fields in those pages are not set, it is unlikely that
+sending a WRITE SAME (when actually required rather
+than at discovery) would wedge the disk/controller.
 
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/ufs/ufshcd.c | 15 +++++++++++++++
- drivers/scsi/ufs/ufshci.h |  3 +++
- 2 files changed, 18 insertions(+)
+If WSNZ is set in the Block Limits VPD pages then it
+should be "safe" ** to send a zero length WRITE SAME
+command to a LU. And that is another good reason to
+check the response of a VPD page request carefully
+(e.g. the echo-ed page_code in byte 1 and a sensible
+page_length in bytes 2 and 3) since crap devices often
+return a standard INQUIRY response to a VPD page request.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7ef9c17..c60537f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1919,6 +1919,20 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
- }
- 
- /**
-+ * ufshcd_slave_configure - adjust SCSI device configurations
-+ * @sdev: pointer to SCSI device
-+ */
-+static int ufshcd_slave_configure(struct scsi_device *sdev)
-+{
-+	struct request_queue *q = sdev->request_queue;
-+
-+	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
-+	blk_queue_max_segment_size(q, PRDT_DATA_BYTE_COUNT_MAX);
-+
-+	return 0;
-+}
-+
-+/**
-  * ufshcd_slave_destroy - remove SCSI device configurations
-  * @sdev: pointer to SCSI device
-  */
-@@ -2749,6 +2763,7 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.proc_name		= UFSHCD,
- 	.queuecommand		= ufshcd_queuecommand,
- 	.slave_alloc		= ufshcd_slave_alloc,
-+	.slave_configure	= ufshcd_slave_configure,
- 	.slave_destroy		= ufshcd_slave_destroy,
- 	.eh_abort_handler	= ufshcd_abort,
- 	.eh_device_reset_handler = ufshcd_device_reset,
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 0475c66..c8de354 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -296,6 +296,9 @@ enum {
- 	MASK_OCS			= 0x0F,
- };
- 
-+#define PRDT_DATA_BYTE_COUNT_MAX	(256 * 1024)
-+#define PRDT_DATA_BYTE_COUNT_PAD	4
-+
- /**
-  * struct ufshcd_sg_entry - UFSHCI PRD Entry
-  * @base_addr: Lower 32bit physical address DW-0
--- 
-1.8.3.1
+Doug Gilbert
+
+
+** there is departure from the normal "do nothing when
+    transfer_length or number_of_LB fields are zero":
+    In the case of the WS command with number_of_LBs=0
+    and WSNZ=1 in the BLOCK LIMITS VPD page, the response
+    should be ILLEGAL_REQUEST with INVALID FIELD IN CDB.
+    I guess if it yielded status=GOOD in that case and
+    you heard the disk clicking, you might get quite
+    worried :-)
 
