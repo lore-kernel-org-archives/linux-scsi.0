@@ -1,35 +1,37 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: Use-after-free in ata_qc_issue
-Date: Sun, 22 Sep 2013 14:51:51 -0700
-Message-ID: <CACT4Y+ZBZ8fbGWtQpvdievrZ2-ecxCN-=8V6-rRm_+86eEd+XA@mail.gmail.com>
-References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
- <20130922163913.GE28571@htj.dyndns.org> <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
- <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com> <20130922214733.GB27616@mtj.dyndns.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
+Date: Sun, 22 Sep 2013 22:23:14 +0000
+Message-ID: <bug-60758-11613-q2eOKQ2y10@https.bugzilla.kernel.org/>
+References: <bug-60758-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:36367 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752313Ab3IVVwN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Sep 2013 17:52:13 -0400
-Received: by mail-lb0-f182.google.com with SMTP id c11so2127765lbj.13
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Sep 2013 14:52:11 -0700 (PDT)
-In-Reply-To: <20130922214733.GB27616@mtj.dyndns.org>
+Received: from mail.kernel.org ([198.145.19.201]:51149 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753032Ab3IVWXS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Sep 2013 18:23:18 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D70702053E
+	for <linux-scsi@vger.kernel.org>; Sun, 22 Sep 2013 22:23:16 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 278AE20532
+	for <linux-scsi@vger.kernel.org>; Sun, 22 Sep 2013 22:23:15 +0000 (UTC)
+In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: linux-scsi@vger.kernel.org
 
-On Sun, Sep 22, 2013 at 2:47 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Sun, Sep 22, 2013 at 11:59:53AM -0700, Dmitry Vyukov wrote:
->> I've noticed that free happens in scsi_error_handler thread, so maybe
->> a timeout or some other error condition is involved here.
->> It is possible that timeout happens while the request is still being
->> in process of submitting (in ata_scsi_queuecmd)?
->
-> Yeah, could be.  IIRC, there's still race condition in block / scsi
-> timeout handling.  Hmmm...
+https://bugzilla.kernel.org/show_bug.cgi?id=60758
 
-Is there an open bug for this?
+--- Comment #34 from zakrzewskim@wp.pl ---
+Tested again. Here are the results:
+
+http://files.tinypic.pl/i/00449/clv7pa58vgxk.jpg
+http://files.tinypic.pl/i/00449/nawfo9bwhyn8.jpg
+
+Please help the current kernel is just unstable !
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
