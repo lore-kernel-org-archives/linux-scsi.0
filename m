@@ -1,86 +1,99 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: Use-after-free in ata_qc_issue
-Date: Sun, 22 Sep 2013 11:24:15 -0700
-Message-ID: <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
-References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
- <20130922163913.GE28571@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:65471 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330Ab3IVSYh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Sep 2013 14:24:37 -0400
-Received: by mail-la0-f43.google.com with SMTP id ep20so1896131lab.30
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Sep 2013 11:24:36 -0700 (PDT)
-In-Reply-To: <20130922163913.GE28571@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Peter Senna Tschudin <peter.senna@gmail.com>
+Subject: [PATCH 1/5] scsi: Fix assignment of 0/1 to bool variables
+Date: Sun, 22 Sep 2013 20:44:09 +0200
+Message-ID: <1379875453-20083-1-git-send-email-peter.senna@gmail.com>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: naresh@chelsio.com, davem@davemloft.net, jj@chaosbits.net, arvindb@chelsio.com, hare@suse.de, michaelc@cs.wisc.edu, vijay.chauhan@netapp.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Peter Senna Tschudin <peter.senna@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-On Sun, Sep 22, 2013 at 9:39 AM, Tejun Heo <tj@kernel.org> wrote:
->
-> (cc'ing SCSI people)
->
-> On Wed, Sep 18, 2013 at 11:45:22AM -0700, Dmitry Vyukov wrote:
-> > Hi!
-> >
-> > I am working on AddressSanitizer -- a tool that detects use-after-free
-> > and out-of-bounds bugs
-> > (https://code.google.com/p/address-sanitizer/wiki/AddressSanitizerForKernel).
-> > Below is one of the bug reports that I got while running trinity
-> > syscall fuzzer. Kernel is built on revision
-> > d8efd82eece89f8a5790b0febf17522affe9e1f1.
-> > The report was followed by a bunch of similar use-after-free reports,
-> > and later the kernel crashed somewhere in ata subsystem. I've attached
-> > the full log.
-> >
-> >
-> > ERROR: AddressSanitizer: heap-use-after-free on address ffff880034fce000
-> > ffff880034fce000 is located 0 bytes inside of 256-byte region
-> > [ffff880034fce000, ffff880034fce100)
-> > READ of size 8 at ffff880034fce000 by thread T3645:
-> >   #0      inlined     (asan_report_error+0x3e7/0x500)
-> > asan_describe_heap_address ./arch/x86/mm/asan/report.c:191
-> >   #0 ffffffff810d9af7 (asan_report_error+0x3e7/0x500)
-> > ./arch/x86/mm/asan/report.c:309
-> >   #1 ffffffff810d8c12 (asan_check_region.part.1+0x1b2/0x230)
-> > ./arch/x86/mm/asan/asan.c:263
-> >   #2      inlined     (__tsan_read8+0x28/0x30) asan_check_region
-> > ./arch/x86/mm/asan/asan.c:276
-> >   #2 ffffffff810d8d48 (__tsan_read8+0x28/0x30) ./arch/x86/mm/asan/asan.c:276
-> >   #3 ffffffff814cc0ef (sg_next+0xf/0x40) ??:0
-> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) dma_map_sg_attrs
-> > ./include/asm-generic/dma-mapping-common.h:50
-> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) ata_sg_setup
-> > ./drivers/ata/libata-core.c:4707
-> >   #4 ffffffff816574b4 (ata_qc_issue+0x2b4/0x740)
-> > ./drivers/ata/libata-core.c:5082
->
-> So, if I'm reading this right, it means that the sg list is used after
-> being freed?
+Convert 0 to false and 1 to true when assigning values to bool
+variables. Inspired by commit 3db1cd5c05f35fb43eb134df6f321de4e63141f2.
 
-Yes, that's correct.
-First thread 3645 allocated the list in scsi_setup_fs_cmnd().
-Then thread 1095 freed it in scsi_io_completion().
-Then thread 3645 accessed the list in ata_scsi_queuecmd().
+The simplified semantic patch that find this problem is as
+follows (http://coccinelle.lip6.fr/):
 
+@@
+bool b;
+@@
+(
+-b = 0
++b = false
+|
+-b = 1
++b = true
+)
 
->  The sglist is directly from scsi_cmnd and use-after-free
-> there is likely to be quite noticeable.
+Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
 
-Note that we've seen this only once during several weeks of running
-trinity syscall fuzzer. So it's not something that happens all that
-frequently. This may explain why it was not noticed before. Also a
-use-after-free bug has some chances to silently corrupt heap and/or
-read garbage, but still survive.
+---
+ drivers/scsi/csiostor/csio_hw.c            |    4 ++--
+ drivers/scsi/cxgbi/libcxgbi.c              |    4 ++--
+ drivers/scsi/device_handler/scsi_dh_alua.c |    4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
+diff -u -p a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -1603,7 +1603,7 @@ static int skb_read_pdu_data(struct iscs
+ 			     struct sk_buff *skb, unsigned int offset)
+ {
+ 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+-	bool offloaded = 0;
++	bool offloaded = false;
+ 	int opcode = tcp_conn->in.hdr->opcode & ISCSI_OPCODE_MASK;
+ 
+ 	log_debug(1 << CXGBI_DBG_PDU_RX,
+@@ -1626,7 +1626,7 @@ static int skb_read_pdu_data(struct iscs
+ 		offset += ISCSI_DIGEST_SIZE;
+ 
+ 	if (cxgbi_skcb_test_flag(lskb, SKCBF_RX_DATA_DDPD))
+-		offloaded = 1;
++		offloaded = true;
+ 
+ 	if (opcode == ISCSI_OP_SCSI_DATA_IN)
+ 		log_debug(1 << CXGBI_DBG_PDU_RX,
+diff -u -p a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -528,7 +528,7 @@ static int alua_rtpg(struct scsi_device
+ 	int len, k, off, valid_states = 0;
+ 	unsigned char *ucp;
+ 	unsigned err;
+-	bool rtpg_ext_hdr_req = 1;
++	bool rtpg_ext_hdr_req = true;
+ 	unsigned long expiry, interval = 0;
+ 	unsigned int tpg_desc_tbl_off;
+ 	unsigned char orig_transition_tmo;
+@@ -558,7 +558,7 @@ static int alua_rtpg(struct scsi_device
+ 		if (rtpg_ext_hdr_req == 1 &&
+ 		    sense_hdr.sense_key == ILLEGAL_REQUEST &&
+ 		    sense_hdr.asc == 0x24 && sense_hdr.ascq == 0) {
+-			rtpg_ext_hdr_req = 0;
++			rtpg_ext_hdr_req = false;
+ 			goto retry;
+ 		}
+ 
+diff -u -p a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -3476,7 +3476,7 @@ csio_process_fwevtq_entry(struct csio_hw
+ 	__u8 op;
+ 	void *msg = NULL;
+ 	uint32_t msg_len = 0;
+-	bool msg_sg = 0;
++	bool msg_sg = false;
+ 
+ 	op = ((struct rss_header *) wr)->opcode;
+ 	if (op == CPL_FW6_PLD) {
+@@ -3488,7 +3488,7 @@ csio_process_fwevtq_entry(struct csio_hw
+ 
+ 		msg = (void *) flb;
+ 		msg_len = flb->totlen;
+-		msg_sg = 1;
++		msg_sg = true;
+ 	} else if (op == CPL_FW6_MSG || op == CPL_FW4_MSG) {
+ 
+ 		CSIO_INC_STATS(hw, n_cpl_fw6_msg);
 
-> Any chance you guys aren't
-> following mempool based allocations correctly?
-
-This is quite unlikely, I've looked at mempool code and I do not think
-it can affect tool operation. We intercept kmalloc/kmem_cache_free,
-poison the memory block and put it into a delay reuse queue. Then
-watch for memory accesses that access poisoned memory ranges.
