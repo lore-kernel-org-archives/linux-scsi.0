@@ -1,93 +1,63 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: Use-after-free in ata_qc_issue
-Date: Sun, 22 Sep 2013 11:59:53 -0700
-Message-ID: <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
-References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
- <20130922163913.GE28571@htj.dyndns.org> <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
+Date: Sun, 22 Sep 2013 21:01:16 +0000
+Message-ID: <bug-60758-11613-URF2kPcL5Q@https.bugzilla.kernel.org/>
+References: <bug-60758-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:49356 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751647Ab3IVVBT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Sep 2013 17:01:19 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id AF9CD2052F
+	for <linux-scsi@vger.kernel.org>; Sun, 22 Sep 2013 21:01:18 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id F2279204C7
+	for <linux-scsi@vger.kernel.org>; Sun, 22 Sep 2013 21:01:16 +0000 (UTC)
+In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, Sep 22, 2013 at 11:24 AM, Dmitry Vyukov <dvyukov@google.com> wrote:
-> On Sun, Sep 22, 2013 at 9:39 AM, Tejun Heo <tj@kernel.org> wrote:
->>
->> (cc'ing SCSI people)
->>
->> On Wed, Sep 18, 2013 at 11:45:22AM -0700, Dmitry Vyukov wrote:
->> > Hi!
->> >
->> > I am working on AddressSanitizer -- a tool that detects use-after-free
->> > and out-of-bounds bugs
->> > (https://code.google.com/p/address-sanitizer/wiki/AddressSanitizerForKernel).
->> > Below is one of the bug reports that I got while running trinity
->> > syscall fuzzer. Kernel is built on revision
->> > d8efd82eece89f8a5790b0febf17522affe9e1f1.
->> > The report was followed by a bunch of similar use-after-free reports,
->> > and later the kernel crashed somewhere in ata subsystem. I've attached
->> > the full log.
->> >
->> >
->> > ERROR: AddressSanitizer: heap-use-after-free on address ffff880034fce000
->> > ffff880034fce000 is located 0 bytes inside of 256-byte region
->> > [ffff880034fce000, ffff880034fce100)
->> > READ of size 8 at ffff880034fce000 by thread T3645:
->> >   #0      inlined     (asan_report_error+0x3e7/0x500)
->> > asan_describe_heap_address ./arch/x86/mm/asan/report.c:191
->> >   #0 ffffffff810d9af7 (asan_report_error+0x3e7/0x500)
->> > ./arch/x86/mm/asan/report.c:309
->> >   #1 ffffffff810d8c12 (asan_check_region.part.1+0x1b2/0x230)
->> > ./arch/x86/mm/asan/asan.c:263
->> >   #2      inlined     (__tsan_read8+0x28/0x30) asan_check_region
->> > ./arch/x86/mm/asan/asan.c:276
->> >   #2 ffffffff810d8d48 (__tsan_read8+0x28/0x30) ./arch/x86/mm/asan/asan.c:276
->> >   #3 ffffffff814cc0ef (sg_next+0xf/0x40) ??:0
->> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) dma_map_sg_attrs
->> > ./include/asm-generic/dma-mapping-common.h:50
->> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) ata_sg_setup
->> > ./drivers/ata/libata-core.c:4707
->> >   #4 ffffffff816574b4 (ata_qc_issue+0x2b4/0x740)
->> > ./drivers/ata/libata-core.c:5082
->>
->> So, if I'm reading this right, it means that the sg list is used after
->> being freed?
->
-> Yes, that's correct.
-> First thread 3645 allocated the list in scsi_setup_fs_cmnd().
-> Then thread 1095 freed it in scsi_io_completion().
-> Then thread 3645 accessed the list in ata_scsi_queuecmd().
->
->
->>  The sglist is directly from scsi_cmnd and use-after-free
->> there is likely to be quite noticeable.
->
-> Note that we've seen this only once during several weeks of running
-> trinity syscall fuzzer. So it's not something that happens all that
-> frequently. This may explain why it was not noticed before. Also a
-> use-after-free bug has some chances to silently corrupt heap and/or
-> read garbage, but still survive.
->
->
->> Any chance you guys aren't
->> following mempool based allocations correctly?
->
-> This is quite unlikely, I've looked at mempool code and I do not think
-> it can affect tool operation. We intercept kmalloc/kmem_cache_free,
-> poison the memory block and put it into a delay reuse queue. Then
-> watch for memory accesses that access poisoned memory ranges.
+https://bugzilla.kernel.org/show_bug.cgi?id=60758
 
+--- Comment #33 from zakrzewskim@wp.pl ---
+Maybe this will help:
 
-I've noticed that free happens in scsi_error_handler thread, so maybe
-a timeout or some other error condition is involved here.
-It is possible that timeout happens while the request is still being
-in process of submitting (in ata_scsi_queuecmd)?
+lspci
+00:00.0 Host bridge: Intel Corporation 4th Gen Core Processor DRAM Controller
+(rev 06)
+00:02.0 VGA compatible controller: Intel Corporation Xeon E3-1200 v3/4th Gen
+Core Processor Integrated Graphics Controller (rev 06)
+00:03.0 Audio device: Intel Corporation Xeon E3-1200 v3/4th Gen Core Processor
+HD Audio Controller (rev 06)
+00:14.0 USB controller: Intel Corporation 8 Series/C220 Series Chipset Family
+USB xHCI (rev 04)
+00:16.0 Communication controller: Intel Corporation 8 Series/C220 Series
+Chipset Family MEI Controller #1 (rev 04)
+00:1a.0 USB controller: Intel Corporation 8 Series/C220 Series Chipset Family
+USB EHCI #2 (rev 04)
+00:1c.0 PCI bridge: Intel Corporation 8 Series/C220 Series Chipset Family PCI
+Express Root Port #1 (rev d4)
+00:1c.1 PCI bridge: Intel Corporation 8 Series/C220 Series Chipset Family PCI
+Express Root Port #2 (rev d4)
+00:1c.3 PCI bridge: Intel Corporation 82801 PCI Bridge (rev d4)
+00:1d.0 USB controller: Intel Corporation 8 Series/C220 Series Chipset Family
+USB EHCI #1 (rev 04)
+00:1f.0 ISA bridge: Intel Corporation H87 Express Chipset LPC Controller (rev
+04)
+00:1f.2 SATA controller: Intel Corporation 8 Series/C220 Series Chipset Family
+6-port SATA Controller 1 [AHCI mode] (rev 04)
+00:1f.3 SMBus: Intel Corporation 8 Series/C220 Series Chipset Family SMBus
+Controller (rev 04)
+02:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI
+Express Gigabit Ethernet controller (rev 06)
+03:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI Bridge
+(rev 03)
 
-Also the use-after-free access happens in:
-for_each_sg(sg, s, nents, i)
-  kmemcheck_mark_initialized(sg_virt(s), s->length);
-Is it possible that the special code added for  kmemcheck touches
-memory that it is not supposed to touch?
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
