@@ -1,28 +1,28 @@
 From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH 16/20] [SCSI] stex: remove unnecessary pci_set_drvdata()
-Date: Mon, 23 Sep 2013 10:12:06 +0900
-Message-ID: <001401ceb7f9$eba9b330$c2fd1990$%han@samsung.com>
+Subject: [PATCH 17/20] [SCSI] ufs: remove unnecessary pci_set_drvdata()
+Date: Mon, 23 Sep 2013 10:12:50 +0900
+Message-ID: <001501ceb7fa$05ef29f0$11cd7dd0$%han@samsung.com>
 References: <000401ceb7f7$6af17fe0$40d47fa0$%han@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:43810 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753020Ab3IWBMI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Sep 2013 21:12:08 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+Received: from mailout4.samsung.com ([203.254.224.34]:8799 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753051Ab3IWBMw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Sep 2013 21:12:52 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MTK006CO0MLHR40@mailout1.samsung.com> for
- linux-scsi@vger.kernel.org; Mon, 23 Sep 2013 10:12:07 +0900 (KST)
+ with ESMTP id <0MTK00H1M0P9CZE0@mailout4.samsung.com> for
+ linux-scsi@vger.kernel.org; Mon, 23 Sep 2013 10:12:51 +0900 (KST)
 In-reply-to: <000401ceb7f7$6af17fe0$40d47fa0$%han@samsung.com>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 'James Bottomley' <JBottomley@Parallels.com>
-Cc: linux-scsi@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+Cc: linux-scsi@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Santosh Y' <santoshsy@gmail.com>
 
 The driver core clears the driver data to NULL after device_release
 or on probe failure. Thus, it is not needed to manually clear the
@@ -30,22 +30,21 @@ device driver data to NULL.
 
 Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/scsi/stex.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/ufs/ufshcd-pci.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 325c31c..1aa4bef 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -1790,8 +1790,6 @@ static void stex_remove(struct pci_dev *pdev)
- 
- 	scsi_remove_host(hba->host);
- 
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index a823cf4..8b95312 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -132,7 +132,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+ 	pm_runtime_forbid(&pdev->dev);
+ 	pm_runtime_get_noresume(&pdev->dev);
+ 	ufshcd_remove(hba);
 -	pci_set_drvdata(pdev, NULL);
--
- 	stex_hba_stop(hba);
+ }
  
- 	stex_hba_free(hba);
+ /**
 -- 
 1.7.10.4
 
