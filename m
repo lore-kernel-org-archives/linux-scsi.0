@@ -1,44 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Use-after-free in ata_qc_issue
-Date: Mon, 23 Sep 2013 09:43:49 -0400
-Message-ID: <20130923134349.GJ30946@htj.dyndns.org>
-References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
- <20130922163913.GE28571@htj.dyndns.org>
- <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
- <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
- <20130922214733.GB27616@mtj.dyndns.org>
- <CACT4Y+ZBZ8fbGWtQpvdievrZ2-ecxCN-=8V6-rRm_+86eEd+XA@mail.gmail.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH 14/19] scsi: Change variable type to bool
+Date: Mon, 23 Sep 2013 14:11:04 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A5EF079@IRSMSX105.ger.corp.intel.com>
+References: <1379802471-30252-1-git-send-email-peter.senna@gmail.com>
+ <43e0f3a4fb62473e9bdd308a8dc4490f@fmsmsx104.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ye0-f174.google.com ([209.85.213.174]:62835 "EHLO
-	mail-ye0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753410Ab3IWNnx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Sep 2013 09:43:53 -0400
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+ZBZ8fbGWtQpvdievrZ2-ecxCN-=8V6-rRm_+86eEd+XA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <43e0f3a4fb62473e9bdd308a8dc4490f@fmsmsx104.amr.corp.intel.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Senna Tschudin <peter.senna@gmail.com>
+Cc: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, intel-linux-scu <intel-linux-scu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-Hello,
-
-On Sun, Sep 22, 2013 at 02:51:51PM -0700, Dmitry Vyukov wrote:
-> > Yeah, could be.  IIRC, there's still race condition in block / scsi
-> > timeout handling.  Hmmm...
+On Sunday, September 22, 2013 12:28 AM Peter Senna Tschudin <peter.senna@gmail.com> wrote:
 > 
-> Is there an open bug for this?
+> The variable success is only assigned the values true and false.
+> Change its type to bool.
+> 
+> The simplified semantic patch that find this problem is as
+> follows (http://coccinelle.lip6.fr/):
+> 
+> @exists@
+> type T;
+> identifier b;
+> @@
+> - T
+> + bool
+>   b = ...;
+>   ... when any
+>   b = \(true\|false\)
+> 
+> Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+> ---
+>  drivers/scsi/isci/port.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+> index 13098b0..26f8e5c 100644
+> --- a/drivers/scsi/isci/port.c
+> +++ b/drivers/scsi/isci/port.c
+> @@ -174,7 +174,7 @@ static void isci_port_link_up(struct isci_host *isci_host,
+>  {
+>  	unsigned long flags;
+>  	struct sci_port_properties properties;
+> -	unsigned long success = true;
+> +	bool success = true;
+> 
+>  	dev_dbg(&isci_host->pdev->dev,
+>  		"%s: isci_port = %p\n",
+> --
+> 1.8.3.1
 
-Not that I know of.  ISTR a couple threads about it.  My memory is
-quite hazy as usual but IIRC there's a race window between arming the
-timer and the command issue path actually becoming ready for timer
-going off and I wouldn't be suprised if there are other race
-conditions around timeout / exception handling path.  It kinda has
-grown over time and I don't think anybody audited how the whole thing
-fits and works together. :(
-
-Thanks.
-
--- 
-tejun
+Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
