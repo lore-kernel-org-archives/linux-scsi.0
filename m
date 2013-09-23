@@ -1,47 +1,53 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH] scsi/isci/phy.c: Code tidiness, delete the redundant
- function call "sci_change_state(&iphy->sm, SCI_PHY_STOPPED)"
-Date: Mon, 23 Sep 2013 14:56:01 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A5EF2B3@IRSMSX105.ger.corp.intel.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work
+ [was: dm mpath: disable WRITE SAME if it fails]
+Date: Mon, 23 Sep 2013 14:18:45 -0400
+Message-ID: <1379960325.4010.32.camel@localhost.localdomain>
+References: <20130919161043.GA27081@redhat.com>
+	 <20130920212142.GA17898@redhat.com>  <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54448 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:30848 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752288Ab3IWO4h convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Sep 2013 10:56:37 -0400
-Content-Language: en-US
+	id S1753962Ab3IWSSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Sep 2013 14:18:50 -0400
+In-Reply-To: <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xinghai Yu <yuxinghai@cn.fujitsu.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, dgilbert@interlog.com
+Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On 07/19/2013 Xinghai Yu <yuxinghai@cn.fujitsu.com> wrote:
-> The "sci_phy_link_layer_initialization()" was called only once in
-> "sci_phy_initialize()" and it is called before a call of "sci_change_state(&iphy-
-> >sm, SCI_PHY_STOPPED)". So the same call in the end of
-> "sci_phy_link_layer_initialization()" is redundant.
+On Fri, 2013-09-20 at 18:03 -0400, Martin K. Petersen wrote:
+...
+> Only a handful of the very latest and greatest devices support RSOC. The
+> number of devices that support WRITE SAME is orders of magnitude larger.
 > 
-> Signed-off-by: Xinghai Yu <yuxinghai@cn.fujitsu.com>
-> ---
->  drivers/scsi/isci/phy.c |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
+> Last I checked I had exactly 1 out of about 100 devices in my lab that
+> supported RSOC.
+...
+> The major headache here of course is that WRITE SAME is inherently
+> destructive. We can't just fire off one during discovery and see if it
+> works. For WRITE you can issue a command with a transfer length of 0 to
+> see if things work. But unfortunately for WRITE SAME a transfer length
+> of zero means "wipe the entire device". Yikes!
 > 
-> diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
-> index cb87b2e..82e8491 100644
-> --- a/drivers/scsi/isci/phy.c
-> +++ b/drivers/scsi/isci/phy.c
-> @@ -309,9 +309,6 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
->  	 */
->  	writel(0, &llr->link_layer_hang_detection_timeout);
-> 
-> -	/* We can exit the initial state to the stopped state */
-> -	sci_change_state(&iphy->sm, SCI_PHY_STOPPED);
-> -
->  	return SCI_SUCCESS;
->  }
-> 
+> I guess we could read one sector and try to write it back using WRITE
+> SAME and a block count of one. But it's really icky. And I don't like
+> the notion of actually writing things during discovery.
+...
 
-Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
+Just out of curiosity, what do the devices that support WRITE SAME
+report for the MAXIMUM WRITE SAME LENGTH field in VPD page B0?  The
+spec says that this can be zero if there is no restriction, but is
+there any chance that most/all of them report some nonzero value?
+
+Expanding on Doug's thinking, perhaps there is some combination of
+VPD page availability / field values that could be used to explicitly
+enable WRITE SAME?  Or, have you been through that already?
+
+-Ewan
+
 
