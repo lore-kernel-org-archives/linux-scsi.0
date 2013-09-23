@@ -1,46 +1,27 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60758] module scsi_wait_scan not found kernel panic on boot
-Date: Sun, 22 Sep 2013 23:16:14 +0000
-Message-ID: <bug-60758-11613-EdZqE5JcS2@https.bugzilla.kernel.org/>
-References: <bug-60758-11613@https.bugzilla.kernel.org/>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 1/5] scsi: Fix assignment of 0/1 to bool variables
+Date: Sun, 22 Sep 2013 17:29:29 -0700
+Message-ID: <1379896169.3575.1.camel@joe-AO722>
+References: <1379875453-20083-1-git-send-email-peter.senna@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:52410 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752261Ab3IVXQR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Sep 2013 19:16:17 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 6FD7620547
-	for <linux-scsi@vger.kernel.org>; Sun, 22 Sep 2013 23:16:16 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 9B14D2039F
-	for <linux-scsi@vger.kernel.org>; Sun, 22 Sep 2013 23:16:15 +0000 (UTC)
-In-Reply-To: <bug-60758-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1379875453-20083-1-git-send-email-peter.senna@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Senna Tschudin <peter.senna@gmail.com>
+Cc: JBottomley@parallels.com, naresh@chelsio.com, davem@davemloft.net, jj@chaosbits.net, arvindb@chelsio.com, hare@suse.de, michaelc@cs.wisc.edu, vijay.chauhan@netapp.com, bvanassche@acm.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60758
+On Sun, 2013-09-22 at 20:44 +0200, Peter Senna Tschudin wrote:
+> Convert 0 to false and 1 to true when assigning values to bool
+> variables. Inspired by commit 3db1cd5c05f35fb43eb134df6f321de4e63141f2.
+[]
+> @@
+> bool b;
+> @@
+> -b = 1
+> +b = true
 
---- Comment #36 from Alan Bartlett <ajb@elrepo.org> ---
-(In reply to zakrzewskim from comment #34)
-> Tested again. Here are the results:
-> 
-> http://files.tinypic.pl/i/00449/clv7pa58vgxk.jpg
-> http://files.tinypic.pl/i/00449/nawfo9bwhyn8.jpg
-> 
-> Please help the current kernel is just unstable !
-
-In the second of the images, above, there is a suggestion to add "rdshell" to
-the kernel command line. 
-
-Have you tried it? 
-
-Perhaps it will allow you to gather some more information about the problem,
-which might assist Jeff's investigations.
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+You might also look for non-zero values other than 1
+and convert those true too.
