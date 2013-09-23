@@ -1,53 +1,65 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work
- [was: dm mpath: disable WRITE SAME if it fails]
-Date: Mon, 23 Sep 2013 14:18:45 -0400
-Message-ID: <1379960325.4010.32.camel@localhost.localdomain>
-References: <20130919161043.GA27081@redhat.com>
-	 <20130920212142.GA17898@redhat.com>  <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
-Reply-To: emilne@redhat.com
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 36/51] DMA-API: usb: use dma_set_coherent_mask()
+Date: Mon, 23 Sep 2013 14:27:39 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1309231418030.1348-100000@iolanthe.rowland.org>
+References: <E1VMmHX-0007jq-Cj@rmk-PC.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30848 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753962Ab3IWSSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Sep 2013 14:18:50 -0400
-In-Reply-To: <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <E1VMmHX-0007jq-Cj@rmk-PC.arm.linux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: alsa-devel@alsa-project.org, linux-doc@vger.kernel.org, Alexander Shishkin <alexander.shishkin@linux.intel.com>, linux-mmc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, devel@driverdev.osuosl.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, b43-dev@lists.infradead.org, linux-media@vger.kernel.org, devicetree@vger.kernel.org, Stephen Warren <swarren@wwwdotorg.org>, Kukjin Kim <kgene.kim@samsung.com>, dri-devel@lists.freedesktop.org, linux-tegra@vger.kernel.org, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, Felipe Balbi <balbi@ti.com>, linux-crypto@vger.kernel.org, Greg Kroah-Hartman <gregkh@linu>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, dgilbert@interlog.com
-Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Fri, 2013-09-20 at 18:03 -0400, Martin K. Petersen wrote:
-...
-> Only a handful of the very latest and greatest devices support RSOC. The
-> number of devices that support WRITE SAME is orders of magnitude larger.
+On Thu, 19 Sep 2013, Russell King wrote:
+
+> The correct way for a driver to specify the coherent DMA mask is
+> not to directly access the field in the struct device, but to use
+> dma_set_coherent_mask().  Only arch and bus code should access this
+> member directly.
 > 
-> Last I checked I had exactly 1 out of about 100 devices in my lab that
-> supported RSOC.
-...
-> The major headache here of course is that WRITE SAME is inherently
-> destructive. We can't just fire off one during discovery and see if it
-> works. For WRITE you can issue a command with a transfer length of 0 to
-> see if things work. But unfortunately for WRITE SAME a transfer length
-> of zero means "wipe the entire device". Yikes!
+> Convert all direct write accesses to using the correct API.
 > 
-> I guess we could read one sector and try to write it back using WRITE
-> SAME and a block count of one. But it's really icky. And I don't like
-> the notion of actually writing things during discovery.
-...
+> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
-Just out of curiosity, what do the devices that support WRITE SAME
-report for the MAXIMUM WRITE SAME LENGTH field in VPD page B0?  The
-spec says that this can be zero if there is no restriction, but is
-there any chance that most/all of them report some nonzero value?
+> diff --git a/drivers/usb/host/ehci-platform.c b/drivers/usb/host/ehci-platform.c
+> index f6b790c..5b0cd2d 100644
+> --- a/drivers/usb/host/ehci-platform.c
+> +++ b/drivers/usb/host/ehci-platform.c
 
-Expanding on Doug's thinking, perhaps there is some combination of
-VPD page availability / field values that could be used to explicitly
-enable WRITE SAME?  Or, have you been through that already?
+> @@ -91,8 +91,9 @@ static int ehci_platform_probe(struct platform_device *dev)
+>  		dev->dev.platform_data = &ehci_platform_defaults;
+>  	if (!dev->dev.dma_mask)
+>  		dev->dev.dma_mask = &dev->dev.coherent_dma_mask;
+> -	if (!dev->dev.coherent_dma_mask)
+> -		dev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+> +	err = dma_set_coherent_mask(&dev->dev, DMA_BIT_MASK(32));
+> +	if (err)
+> +		return err;
+>  
+>  	pdata = dev_get_platdata(&dev->dev);
 
--Ewan
+ehci-platform.c is a generic file, intended for use by multiple
+platforms.  Is it not possible that on some platforms, the arch or bus
+code may already have initialized the DMA masks?  Isn't something like 
+this (i.e., DMA bindings) planned for Device Tree?
 
+By eliminating the tests above and calling dma_set_coherent_mask or
+dma_coerce_mask_and_coherent unconditionally, this patch (and the next)
+would overwrite those initial settings.
 
+I don't know to what extent the same may be true for the other,
+platform-specific, drivers changed by this patch.  But it's something 
+to be aware of.
+
+Alan Stern
