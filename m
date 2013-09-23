@@ -1,16 +1,17 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 10/10] hpsa: prevent stalled i/o
-Date: Mon, 23 Sep 2013 13:34:17 -0500
-Message-ID: <20130923183417.19995.34291.stgit@beardog.cce.hp.com>
+Subject: [PATCH 07/10] hpsa: hide logical drives with format in progress from
+	linux
+Date: Mon, 23 Sep 2013 13:34:01 -0500
+Message-ID: <20130923183401.19995.99662.stgit@beardog.cce.hp.com>
 References: <20130923183128.19995.7669.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0027.austin.hp.com ([15.216.28.34]:10753 "EHLO
-	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753678Ab3IWSeT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Sep 2013 14:34:19 -0400
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:30287 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753819Ab3IWSeD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Sep 2013 14:34:03 -0400
 In-Reply-To: <20130923183128.19995.7669.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,96 +20,106 @@ Cc: stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, thenzl@redhat.com, linu
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-If a fifo full condition is encountered, i/o requests will stack
-up in the h->reqQ queue.  The only thing which empties this queue
-is start_io, which only gets called when new i/o requests come in.
-If none are forthcoming, i/o in h->reqQ will be stalled.
-
-To fix this, whenever fifo full condition is encountered, this
-is recorded, and the interrupt handler examines this to see
-if a fifo full condition was recently encountered when a
-command completes and will call start_io to prevent i/o's in
-h->reqQ from getting stuck.
-
-I've only ever seen this problem occur when running specialized
-test programs that pound on the the CCISS_PASSTHRU ioctl.
+SCSI mid layer doesn't seem to handle logical drives undergoing format
+very well.  scsi_add_device on such devices seems to result in hitting
+those devices with a TUR at a rate of 3Hz for awhile, transitioning
+to hitting them with a READ(10) at a much higher rate indefinitely,
+and at boot time, this prevents the system from coming up.  If we
+do not expose such devices to the kernel, it isn't bothered by them.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   32 ++++++++++++++++++++++++++++++--
+ drivers/scsi/hpsa.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++--
  drivers/scsi/hpsa.h |    1 +
- 2 files changed, 31 insertions(+), 2 deletions(-)
+ 2 files changed, 49 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 1f6809b..682f431 100644
+index b7f405f..38e3af4 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3651,9 +3651,11 @@ static void start_io(struct ctlr_info *h)
- 		c = list_entry(h->reqQ.next, struct CommandList, list);
- 		/* can't do anything if fifo is full */
- 		if ((h->access.fifo_full(h))) {
-+			h->fifo_recently_full = 1;
- 			dev_warn(&h->pdev->dev, "fifo full\n");
- 			break;
- 		}
-+		h->fifo_recently_full = 0;
- 
- 		/* Get the first entry from the Request Q */
- 		removeQ(c);
-@@ -3707,15 +3709,41 @@ static inline int bad_tag(struct ctlr_info *h, u32 tag_index,
- static inline void finish_cmd(struct CommandList *c)
- {
- 	unsigned long flags;
-+	int io_may_be_stalled = 0;
-+	struct ctlr_info *h = c->h;
- 
--	spin_lock_irqsave(&c->h->lock, flags);
-+	spin_lock_irqsave(&h->lock, flags);
- 	removeQ(c);
--	spin_unlock_irqrestore(&c->h->lock, flags);
+@@ -1010,6 +1010,20 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+ 	for (i = 0; i < nsds; i++) {
+ 		if (!sd[i]) /* if already added above. */
+ 			continue;
 +
-+	/*
-+	 * Check for possibly stalled i/o.
-+	 *
-+	 * If a fifo_full condition is encountered, requests will back up
-+	 * in h->reqQ.  This queue is only emptied out by start_io which is
-+	 * only called when a new i/o request comes in.  If no i/o's are
-+	 * forthcoming, the i/o's in h->reqQ can get stuck.  So we call
-+	 * start_io from here if we detect such a danger.
-+	 *
-+	 * Normally, we shouldn't hit this case, but pounding on the
-+	 * CCISS_PASSTHRU ioctl can provoke it.  Only call start_io if
-+	 * commands_outstanding is low.  We want to avoid calling
-+	 * start_io from in here as much as possible, and esp. don't
-+	 * want to get in a cycle where we call start_io every time
-+	 * through here.
-+	 */
-+	if (unlikely(h->fifo_recently_full) &&
-+		h->commands_outstanding < 5)
-+		io_may_be_stalled = 1;
++		/* Don't add devices which are NOT READY, FORMAT IN PROGRESS
++		 * as the SCSI mid-layer does not handle such devices well.
++		 * It relentlessly loops sending TUR at 3Hz, then READ(10)
++		 * at 160Hz, and prevents the system from coming up.
++		 */
++		if (sd[i]->format_in_progress) {
++			dev_info(&h->pdev->dev,
++				"Logical drive format in progress, device c%db%dt%dl%d offline.\n",
++				h->scsi_host->host_no,
++				sd[i]->bus, sd[i]->target, sd[i]->lun);
++			continue;
++		}
 +
-+	spin_unlock_irqrestore(&h->lock, flags);
-+
- 	dial_up_lockup_detection_on_fw_flash_complete(c->h, c);
- 	if (likely(c->cmd_type == CMD_SCSI))
- 		complete_scsi_command(c);
- 	else if (c->cmd_type == CMD_IOCTL_PEND)
- 		complete(c->waiting);
-+	if (unlikely(io_may_be_stalled))
-+		start_io(h);
+ 		device_change = hpsa_scsi_find_entry(sd[i], h->dev,
+ 					h->ndevices, &entry);
+ 		if (device_change == DEVICE_NOT_FOUND) {
+@@ -1715,6 +1729,34 @@ static inline void hpsa_set_bus_target_lun(struct hpsa_scsi_dev_t *device,
+ 	device->lun = lun;
  }
  
- static inline u32 hpsa_tag_contains_index(u32 tag)
++static unsigned char hpsa_format_in_progress(struct ctlr_info *h,
++		unsigned char scsi3addr[])
++{
++	struct CommandList *c;
++	unsigned char *sense, sense_key, asc, ascq;
++#define ASC_LUN_NOT_READY 0x04
++#define ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS 0x04
++
++
++	c = cmd_special_alloc(h);
++	if (!c)
++		return 0;
++	fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, scsi3addr, TYPE_CMD);
++	hpsa_scsi_do_simple_cmd_core(h, c);
++	sense = c->err_info->SenseInfo;
++	sense_key = sense[2];
++	asc = sense[12];
++	ascq = sense[13];
++	if (c->err_info->CommandStatus == CMD_TARGET_STATUS &&
++		c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION &&
++		sense_key == NOT_READY &&
++		asc == ASC_LUN_NOT_READY &&
++		ascq == ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS)
++		return 1;
++	cmd_special_free(h, c);
++	return 0;
++}
++
+ static int hpsa_update_device_info(struct ctlr_info *h,
+ 	unsigned char scsi3addr[], struct hpsa_scsi_dev_t *this_device,
+ 	unsigned char *is_OBDR_device)
+@@ -1753,10 +1795,14 @@ static int hpsa_update_device_info(struct ctlr_info *h,
+ 		sizeof(this_device->device_id));
+ 
+ 	if (this_device->devtype == TYPE_DISK &&
+-		is_logical_dev_addr_mode(scsi3addr))
++		is_logical_dev_addr_mode(scsi3addr)) {
+ 		hpsa_get_raid_level(h, scsi3addr, &this_device->raid_level);
+-	else
++		this_device->format_in_progress =
++			hpsa_format_in_progress(h, scsi3addr);
++	} else {
+ 		this_device->raid_level = RAID_UNKNOWN;
++		this_device->format_in_progress = 0;
++	}
+ 
+ 	if (is_OBDR_device) {
+ 		/* See if this is a One-Button-Disaster-Recovery device
 diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 839c533..bea2365 100644
+index bc85e72..4fd0d45 100644
 --- a/drivers/scsi/hpsa.h
 +++ b/drivers/scsi/hpsa.h
-@@ -137,6 +137,7 @@ struct ctlr_info {
- 	atomic_t firmware_flash_in_progress;
- 	u32 lockup_detected;
- 	struct list_head lockup_list;
-+	u32 fifo_recently_full;
- 	/* Address of h->q[x] is passed to intr handler to know which queue */
- 	u8 q[MAX_REPLY_QUEUES];
- 	u32 TMFSupportFlags; /* cache what task mgmt funcs are supported. */
+@@ -46,6 +46,7 @@ struct hpsa_scsi_dev_t {
+ 	unsigned char vendor[8];        /* bytes 8-15 of inquiry data */
+ 	unsigned char model[16];        /* bytes 16-31 of inquiry data */
+ 	unsigned char raid_level;	/* from inquiry page 0xC1 */
++	unsigned char format_in_progress;
+ };
+ 
+ struct reply_pool {
 
