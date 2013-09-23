@@ -1,46 +1,124 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 00/20] [SCSI] remove unnecessary pci_set_drvdata()
-Date: Mon, 23 Sep 2013 11:55:28 -0700
-Message-ID: <1379962528.2109.6.camel@dabdike.int.hansenpartnership.com>
-References: <000401ceb7f7$6af17fe0$40d47fa0$%han@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH] tcm_fc: Convert to per-cpu command map pre-allocation of ft_cmd
+Date: Mon, 23 Sep 2013 19:34:32 +0000
+Message-ID: <1379964872-21114-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41475 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753179Ab3IWSzb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Sep 2013 14:55:31 -0400
-In-Reply-To: <000401ceb7f7$6af17fe0$40d47fa0$%han@samsung.com>
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:65509 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751555Ab3IWTv3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Sep 2013 15:51:29 -0400
+Received: by mail-oa0-f42.google.com with SMTP id g12so1076220oah.15
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Sep 2013 12:51:29 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: linux-scsi@vger.kernel.org, trivial@kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: Open-FCoE devel <devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@daterainc.com>, Mark Rustad <mark.d.rustad@intel.com>, Robert Love <robert.w.love@intel.com>, Kent Overstreet <kmo@daterainc.com>
 
-On Mon, 2013-09-23 at 09:54 +0900, Jingoo Han wrote:
-> Since commit 0998d0631001288a5974afc0b2a5f568bcdecb4d
-> (device-core: Ensure drvdata =3D NULL when no driver is bound),
-> the driver core clears the driver data to NULL after device_release
-> or on probe failure. Thus, it is not needed to manually clear the
-> device driver data to NULL.
+From: Nicholas Bellinger <nab@daterainc.com>
 
-Look, these are particularly pointless patches.  The null setting is
-only on teardown; the fact that we set something to NULL that should
-already be null doesn't matter at all the extra cycles simply won't be
-noticed.  Please roll them into a single patch and send them to Ji=C5=99=
-=C3=AD
-Kosina and the trivial tree (cc'd) he'll take care of checking and
-applying them (assuming they meet his criteria for worth bothering
-with).
+This patch converts tcm_fc to use transport_init_session_tags()
+pre-allocation logic of struct ft_cmd using per-cpu session tag
+pooling in order to effectively avoid memory allocation / release
+for each received I/O.
 
-Thanks,
+It adds percpu_ida_alloc() in ft_recv_cmd() to obtain an tag and
+locate ft_cmd from se_sess->sess_cmd_map[], and percpu_ida_free()
+in ft_free_cmd() to release the tag based upon se_cmd->map_tag id.
 
-James
+It also uses a TCM_FC_DEFAULT_TAGS value of 512, that puts the
+per se_sess->sess_cmd_map allocation at ~360K on 64-bit.
 
+Cc: Mark Rustad <mark.d.rustad@intel.com>
+Cc: Robert Love <robert.w.love@intel.com>
+Cc: Kent Overstreet <kmo@daterainc.com>
+Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
+---
+ drivers/target/tcm_fc/tcm_fc.h   |    1 +
+ drivers/target/tcm_fc/tfc_cmd.c  |   17 ++++++++++++-----
+ drivers/target/tcm_fc/tfc_sess.c |    3 ++-
+ 3 files changed, 15 insertions(+), 6 deletions(-)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
+index 0dd54a4..752863a 100644
+--- a/drivers/target/tcm_fc/tcm_fc.h
++++ b/drivers/target/tcm_fc/tcm_fc.h
+@@ -22,6 +22,7 @@
+ #define FT_NAMELEN 32		/* length of ASCII WWPNs including pad */
+ #define FT_TPG_NAMELEN 32	/* max length of TPG name */
+ #define FT_LUN_NAMELEN 32	/* max length of LUN name */
++#define TCM_FC_DEFAULT_TAGS 512	/* tags used for per-session preallocation */
+ 
+ struct ft_transport_id {
+ 	__u8	format;
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 0e5a1cae..2da9d45 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -28,6 +28,7 @@
+ #include <linux/configfs.h>
+ #include <linux/ctype.h>
+ #include <linux/hash.h>
++#include <linux/percpu_ida.h>
+ #include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -89,16 +90,18 @@ static void ft_free_cmd(struct ft_cmd *cmd)
+ {
+ 	struct fc_frame *fp;
+ 	struct fc_lport *lport;
++	struct se_session *se_sess;
+ 
+ 	if (!cmd)
+ 		return;
++	se_sess = cmd->sess->se_sess;
+ 	fp = cmd->req_frame;
+ 	lport = fr_dev(fp);
+ 	if (fr_seq(fp))
+ 		lport->tt.seq_release(fr_seq(fp));
+ 	fc_frame_free(fp);
++	percpu_ida_free(&se_sess->sess_tag_pool, cmd->se_cmd.map_tag);
+ 	ft_sess_put(cmd->sess);	/* undo get from lookup at recv */
+-	kfree(cmd);
+ }
+ 
+ void ft_release_cmd(struct se_cmd *se_cmd)
+@@ -432,14 +435,18 @@ static void ft_recv_cmd(struct ft_sess *sess, struct fc_frame *fp)
+ {
+ 	struct ft_cmd *cmd;
+ 	struct fc_lport *lport = sess->tport->lport;
++	struct se_session *se_sess = sess->se_sess;
++	int tag;
+ 
+-	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
+-	if (!cmd)
+-		goto busy;
++	tag = percpu_ida_alloc(&se_sess->sess_tag_pool, GFP_ATOMIC);
++	cmd = &((struct ft_cmd *)se_sess->sess_cmd_map)[tag];
++	memset(cmd, 0, sizeof(struct ft_cmd));
++
++	cmd->se_cmd.map_tag = tag;
+ 	cmd->sess = sess;
+ 	cmd->seq = lport->tt.seq_assign(lport, fp);
+ 	if (!cmd->seq) {
+-		kfree(cmd);
++		percpu_ida_free(&se_sess->sess_tag_pool, tag);
+ 		goto busy;
+ 	}
+ 	cmd->req_frame = fp;		/* hold frame during cmd */
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index 4859505..ae52c08 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -210,7 +210,8 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+ 	if (!sess)
+ 		return NULL;
+ 
+-	sess->se_sess = transport_init_session();
++	sess->se_sess = transport_init_session_tags(TCM_FC_DEFAULT_TAGS,
++						    sizeof(struct ft_cmd));
+ 	if (IS_ERR(sess->se_sess)) {
+ 		kfree(sess);
+ 		return NULL;
+-- 
+1.7.10.4
+
