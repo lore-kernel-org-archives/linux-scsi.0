@@ -1,130 +1,154 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2] tcm_fc: Convert to per-cpu command map pre-allocation of ft_cmd
-Date: Tue, 24 Sep 2013 20:33:25 +0000
-Message-ID: <1380054805-2729-1-git-send-email-nab@daterainc.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
+Date: Tue, 24 Sep 2013 14:50:10 -0600
+Message-ID: <CAErSpo6ULW459LBE=Wj4GEyCY63TbirSDLDivK7hrs92WzitLw@mail.gmail.com>
+References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz>
+ <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz>
+ <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
+ <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz> <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:54803 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753005Ab3IXUuX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2013 16:50:23 -0400
-Received: by mail-ob0-f180.google.com with SMTP id wm4so5529043obc.39
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2013 13:50:22 -0700 (PDT)
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:44459 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753916Ab3IXUub (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2013 16:50:31 -0400
+Received: by mail-ie0-f171.google.com with SMTP id at1so9743701iec.16
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2013 13:50:31 -0700 (PDT)
+In-Reply-To: <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: Open-FCoE devel <devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@daterainc.com>, Mark Rustad <mark.d.rustad@intel.com>, Robert Love <robert.w.love@intel.com>, Kent Overstreet <kmo@daterainc.com>
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Adam Radford <aradford@gmail.com>
 
-From: Nicholas Bellinger <nab@daterainc.com>
+On Fri, Sep 6, 2013 at 4:47 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Sep 6, 2013 at 3:51 AM, Jiri Kosina <jkosina@suse.cz> wrote:
 
-This patch converts tcm_fc to use transport_init_session_tags()
-pre-allocation logic for struct ft_cmd descriptors using per-cpu
-session tag pooling in order to effectively avoid memory allocation
-+ release for each received I/O.
+>>> >> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
+>>> >> > pci device") makes MSIs be forcibly disabled at boot time.
+>>> >> >
+>>> >> > It turns out that this breaks 3ware controller -- if MSIs are disabled
+>>> >> > during PCI discovery of this controller, the device doesn't work properly
+>>> >> > (it doesn't respond to any commands that are being sent to it after
+>>> >> > initialization).
+>
+> Is there a bug report for this issue?  It's nice to have a pointer to,
+> e.g., a bugzilla.kernel.org bug report with info such as dmesg logs,
+> lspci output, etc., for future reference.  Maybe somebody will figure
+> out a more generic change that could make this quirk unnecessary, and
+> details will help in figuring that out.
+>
+> I assume the actual PCI discovery done in the PCI core works fine;
+> it's just that the driver doesn't work if MSIs are disabled on the
+> device.  If that's the case, can this be fixed by some driver change?
+> Maybe the driver needs to enable MSI before it sends commands to the
+> device?
 
-It adds percpu_ida_alloc() in ft_recv_cmd() to obtain an tag and
-locate ft_cmd from se_sess->sess_cmd_map[], and percpu_ida_free()
-in ft_free_cmd() to release the tag based upon se_cmd->map_tag id.
+Ping?  Since the complaint is that the device doesn't work unless MSIs
+are enabled, can this be fixed in the driver instead of in a quirk?
 
-It also uses a TCM_FC_DEFAULT_TAGS value of 512, that puts the
-per se_sess->sess_cmd_map allocation at ~360K on 64-bit.
-
-v2 changes:
-
-  - Handle possible tag < 0 failure with GFP_ATOMIC
-
-Cc: Mark Rustad <mark.d.rustad@intel.com>
-Cc: Robert Love <robert.w.love@intel.com>
-Cc: Kent Overstreet <kmo@daterainc.com>
-Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
----
- drivers/target/tcm_fc/tcm_fc.h   |    1 +
- drivers/target/tcm_fc/tfc_cmd.c  |   18 ++++++++++++++----
- drivers/target/tcm_fc/tfc_sess.c |    3 ++-
- 3 files changed, 17 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
-index 0dd54a4..752863a 100644
---- a/drivers/target/tcm_fc/tcm_fc.h
-+++ b/drivers/target/tcm_fc/tcm_fc.h
-@@ -22,6 +22,7 @@
- #define FT_NAMELEN 32		/* length of ASCII WWPNs including pad */
- #define FT_TPG_NAMELEN 32	/* max length of TPG name */
- #define FT_LUN_NAMELEN 32	/* max length of LUN name */
-+#define TCM_FC_DEFAULT_TAGS 512	/* tags used for per-session preallocation */
- 
- struct ft_transport_id {
- 	__u8	format;
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 0e5a1cae..479ec56 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -28,6 +28,7 @@
- #include <linux/configfs.h>
- #include <linux/ctype.h>
- #include <linux/hash.h>
-+#include <linux/percpu_ida.h>
- #include <asm/unaligned.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
-@@ -89,16 +90,18 @@ static void ft_free_cmd(struct ft_cmd *cmd)
- {
- 	struct fc_frame *fp;
- 	struct fc_lport *lport;
-+	struct se_session *se_sess;
- 
- 	if (!cmd)
- 		return;
-+	se_sess = cmd->sess->se_sess;
- 	fp = cmd->req_frame;
- 	lport = fr_dev(fp);
- 	if (fr_seq(fp))
- 		lport->tt.seq_release(fr_seq(fp));
- 	fc_frame_free(fp);
-+	percpu_ida_free(&se_sess->sess_tag_pool, cmd->se_cmd.map_tag);
- 	ft_sess_put(cmd->sess);	/* undo get from lookup at recv */
--	kfree(cmd);
- }
- 
- void ft_release_cmd(struct se_cmd *se_cmd)
-@@ -432,14 +435,21 @@ static void ft_recv_cmd(struct ft_sess *sess, struct fc_frame *fp)
- {
- 	struct ft_cmd *cmd;
- 	struct fc_lport *lport = sess->tport->lport;
-+	struct se_session *se_sess = sess->se_sess;
-+	int tag;
- 
--	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
--	if (!cmd)
-+	tag = percpu_ida_alloc(&se_sess->sess_tag_pool, GFP_ATOMIC);
-+	if (tag < 0)
- 		goto busy;
-+
-+	cmd = &((struct ft_cmd *)se_sess->sess_cmd_map)[tag];
-+	memset(cmd, 0, sizeof(struct ft_cmd));
-+
-+	cmd->se_cmd.map_tag = tag;
- 	cmd->sess = sess;
- 	cmd->seq = lport->tt.seq_assign(lport, fp);
- 	if (!cmd->seq) {
--		kfree(cmd);
-+		percpu_ida_free(&se_sess->sess_tag_pool, tag);
- 		goto busy;
- 	}
- 	cmd->req_frame = fp;		/* hold frame during cmd */
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index 4859505..ae52c08 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -210,7 +210,8 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
- 	if (!sess)
- 		return NULL;
- 
--	sess->se_sess = transport_init_session();
-+	sess->se_sess = transport_init_session_tags(TCM_FC_DEFAULT_TAGS,
-+						    sizeof(struct ft_cmd));
- 	if (IS_ERR(sess->se_sess)) {
- 		kfree(sess);
- 		return NULL;
--- 
-1.7.10.4
-
+> Any description of what this failure looks like to a user?  How can a
+> user or a distro connect a symptom (driver timeout, console message,
+> or whatever) to this patch?
+>
+>>> >> > Reverting d5dea7d95 or not force-disabling MSIs in pci_msi_init_pci_dev()
+>>> >> > makes the device work properly again.
+>>> >> >
+>>> >> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+>>> >> >
+>>> >> > ---
+>>> >> >
+>>> >> > I am adding Adam Radford as a recepient as well, to see whether he is able
+>>> >> > to provide some more explanation why this device would expose this
+>>> >> > behavior.
+>>> >
+>>> > OK, so Adam Radford's lsi.com address is bouncing, hence I guess we can't
+>>> > expect any feedback from him.
+>>> >
+>>> > Bjorn, Jesse, any word on this please?
+>>>
+>>> It's on my list to look at.  It's too late to put it in for v3.11, and
+>>> it's doubtful that it will even make the v3.12 merge window (though
+>>> possibly it could go in post-merge window).  d5dea7d95 is several
+>>> years old, so hopefully this issue isn't super-urgent.  Let me know if
+>>> otherwise.
+>>
+>> I agree that this should be applicable to 3.12-rcX as well, as it's very
+>> device-specific.
+>>
+>> Thanks.
+>>
+>>>
+>>> Bjorn
+>>>
+>>> >> >  drivers/pci/msi.c    |    3 +++
+>>> >> >  drivers/pci/quirks.c |   10 ++++++++++
+>>> >> >  include/linux/pci.h  |    1 +
+>>> >> >  3 files changed, 14 insertions(+), 0 deletions(-)
+>>> >> >
+>>> >> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>>> >> > index aca7578..4f36b8b 100644
+>>> >> > --- a/drivers/pci/msi.c
+>>> >> > +++ b/drivers/pci/msi.c
+>>> >> > @@ -1040,6 +1040,9 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+>>> >> >  {
+>>> >> >     INIT_LIST_HEAD(&dev->msi_list);
+>>> >> >
+>>> >> > +   if (dev->broken_msi_disable)
+>>> >> > +           return;
+>>> >> > +
+>>> >> >     /* Disable the msi hardware to avoid screaming interrupts
+>>> >> >      * during boot.  This is the power on reset default so
+>>> >> >      * usually this should be a noop.
+>>> >> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> >> > index e85d230..4ba3400 100644
+>>> >> > --- a/drivers/pci/quirks.c
+>>> >> > +++ b/drivers/pci/quirks.c
+>>> >> > @@ -2890,6 +2890,16 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+>>> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+>>> >> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+>>> >> >
+>>> >> > +/*
+>>> >> > + * 3ware 9650SE controller doesn't properly initialize if MSI are
+>>> >> > + * disabled on it during PCI device discovery
+>>> >> > + */
+>>> >> > +static void quirk_broken_msi_disable(struct pci_dev *dev)
+>>> >> > +{
+>>> >> > +   dev->broken_msi_disable = 1;
+>>> >> > +}
+>>> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_3WARE, 0x1004, quirk_broken_msi_disable);
+>>> >> > +
+>>> >> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
+>>> >> >                              void (*fn)(struct pci_dev *dev))
+>>> >> >  {
+>>> >> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>> >> > index 0fd1f15..c327d74 100644
+>>> >> > --- a/include/linux/pci.h
+>>> >> > +++ b/include/linux/pci.h
+>>> >> > @@ -341,6 +341,7 @@ struct pci_dev {
+>>> >> >  #ifdef CONFIG_PCI_MSI
+>>> >> >     struct list_head msi_list;
+>>> >> >     struct kset *msi_kset;
+>>> >> > +   unsigned int    broken_msi_disable:1;
+>>> >> >  #endif
+>>> >> >     struct pci_vpd *vpd;
+>>> >> >  #ifdef CONFIG_PCI_ATS
+>>> >> >
+>>> >> > --
+>>> >> > Jiri Kosina
+>>> >> > SUSE Labs
+>>> >> >
+>>> >>
+>>> >> --
+>>> >> Jiri Kosina
+>>> >> SUSE Labs
+>>> >>
+>>> >
+>>> > --
+>>> > Jiri Kosina
+>>> > SUSE Labs
+>>>
+>>
+>> --
+>> Jiri Kosina
+>> SUSE Labs
