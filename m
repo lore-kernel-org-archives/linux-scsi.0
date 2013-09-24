@@ -1,58 +1,79 @@
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 00/20] [SCSI] remove unnecessary pci_set_drvdata()
-Date: Tue, 24 Sep 2013 10:19:41 +0900
-Message-ID: <001401ceb8c4$25214040$6f63c0c0$%han@samsung.com>
-References: <000401ceb7f7$6af17fe0$40d47fa0$%han@samsung.com>
- <1379962528.2109.6.camel@dabdike.int.hansenpartnership.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] SCSI's heuristics for enabling WRITE SAME still need
+ work [was: dm mpath: disable WRITE SAME if it fails]
+Date: Tue, 24 Sep 2013 07:39:13 +0200
+Message-ID: <52412581.2010909@suse.de>
+References: <20130919161043.GA27081@redhat.com> <20130920212142.GA17898@redhat.com> <yq1eh8jf8wq.fsf@sermon.lab.mkp.net> <1379960325.4010.32.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:38433 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007Ab3IXBTn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Sep 2013 21:19:43 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MTL0021AVO809D0@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 24 Sep 2013 10:19:42 +0900 (KST)
-In-reply-to: <1379962528.2109.6.camel@dabdike.int.hansenpartnership.com>
-Content-language: ko
+Received: from cantor2.suse.de ([195.135.220.15]:34561 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750742Ab3IXFjP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Sep 2013 01:39:15 -0400
+In-Reply-To: <1379960325.4010.32.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, trivial@kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+To: emilne@redhat.com, device-mapper development <dm-devel@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 
-On Tuesday, September 24, 2013 3:55 AM, James Bottomley wrote:
-> On Mon, 2013-09-23 at 09:54 +0900, Jingoo Han wrote:
-> > Since commit 0998d0631001288a5974afc0b2a5f568bcdecb4d
-> > (device-core: Ensure drvdata =3D NULL when no driver is bound),
-> > the driver core clears the driver data to NULL after device_release
-> > or on probe failure. Thus, it is not needed to manually clear the
-> > device driver data to NULL.
->=20
-> Look, these are particularly pointless patches.  The null setting is
-> only on teardown; the fact that we set something to NULL that should
-> already be null doesn't matter at all the extra cycles simply won't b=
+On 09/23/2013 08:18 PM, Ewan Milne wrote:
+> On Fri, 2013-09-20 at 18:03 -0400, Martin K. Petersen wrote:
+> ...
+>> Only a handful of the very latest and greatest devices support RSOC.=
+ The
+>> number of devices that support WRITE SAME is orders of magnitude lar=
+ger.
+>>
+>> Last I checked I had exactly 1 out of about 100 devices in my lab th=
+at
+>> supported RSOC.
+> ...
+>> The major headache here of course is that WRITE SAME is inherently
+>> destructive. We can't just fire off one during discovery and see if =
+it
+>> works. For WRITE you can issue a command with a transfer length of 0=
+ to
+>> see if things work. But unfortunately for WRITE SAME a transfer leng=
+th
+>> of zero means "wipe the entire device". Yikes!
+>>
+>> I guess we could read one sector and try to write it back using WRIT=
+E
+>> SAME and a block count of one. But it's really icky. And I don't lik=
 e
-> noticed.  Please roll them into a single patch and send them to Ji=C5=
-=99=C3=AD
-> Kosina and the trivial tree (cc'd) he'll take care of checking and
-> applying them (assuming they meet his criteria for worth bothering
-> with).
+>> the notion of actually writing things during discovery.
+> ...
 >=20
+> Just out of curiosity, what do the devices that support WRITE SAME
+> report for the MAXIMUM WRITE SAME LENGTH field in VPD page B0?  The
+> spec says that this can be zero if there is no restriction, but is
+> there any chance that most/all of them report some nonzero value?
+>=20
+> Expanding on Doug's thinking, perhaps there is some combination of
+> VPD page availability / field values that could be used to explicitly
+> enable WRITE SAME?  Or, have you been through that already?
+>=20
+Hehe. Won't do any good.
 
-OK, I see.
-I squashed all 20 patches into a single patch, and sent the single patc=
-h
-to Jiri Kosina and the trivial tree, as you mentioned.
-Thank you for your guidance.
+My drives support 'report opcodes', and report that write same is
+supported:
+=2E..
+ 93                 16    Write same(16)
+=2E..
 
-Best regards,
-Jingoo Han
+but no support for page 'b0'. And yes, these are real SAS drives.
 
+Cheers,
+
+Hannes
+
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
