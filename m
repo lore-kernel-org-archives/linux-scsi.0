@@ -1,79 +1,60 @@
-From: David Jeffery <djeffery@redhat.com>
-Subject: [PATCH RESEND] sd: disk offlined prematurely from media access
- timeout
-Date: Tue, 24 Sep 2013 15:42:44 -0400
-Message-ID: <20130924194244.GA26428@fury.redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [dm-devel] SCSI's heuristics for enabling WRITE SAME still need work [was: dm mpath: disable WRITE SAME if it fails]
+Date: Tue, 24 Sep 2013 16:44:37 -0400
+Message-ID: <yq14n9aar0q.fsf@sermon.lab.mkp.net>
+References: <20130919161043.GA27081@redhat.com>
+	<20130920212142.GA17898@redhat.com>
+	<alpine.LRH.2.02.1309241415380.31619@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6804 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754461Ab3IXToZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Sep 2013 15:44:25 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8OJiPfC009011
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2013 15:44:25 -0400
-Received: from fury.redhat.com (vpn-54-129.rdu2.redhat.com [10.10.54.129])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id r8OJiNS8030813
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2013 15:44:25 -0400
-Content-Disposition: inline
+Received: from userp1040.oracle.com ([156.151.31.81]:43406 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753916Ab3IXUom (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2013 16:44:42 -0400
+In-Reply-To: <alpine.LRH.2.02.1309241415380.31619@file01.intranet.prod.int.rdu2.redhat.com>
+	(Mikulas Patocka's message of "Tue, 24 Sep 2013 14:39:45 -0400 (EDT)")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: device-mapper development <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-There is an error with the medium access timeout feature of the sd driver. The
-sdkp->medium_access_timed_out value is set to zero in sd_done() in the wrong
-place.  It is set to zero only if a command returns sense data.  If an I/O
-command times out, error handling succeeds, and the I/O commands complete, the
-value won't be reset if nothing responds with a sense buffer.  Then, another
-timeout (no matter how far in the future) can increment it again, causing the
-device to be errantly set offline.
+>>>>> "Mikulas" == Mikulas Patocka <mpatocka@redhat.com> writes:
 
-The resetting of sdkp->medium_access_timed_out should occur before the check for
-sense data.
+Mikulas> Propagating the limits up the tree won't work anyway because of
+Mikulas> a race condition. Think of this case:
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
+Mikulas> 1. We test queue limits and find out that the device supports
+Mikulas>    WRITE_SAME
+Mikulas> 2. We build a WRITE_SAME bio to be submitted.
+Mikulas> 3. The user reconfigures a device so that it no longer supports
+Mikulas>    WRITE_SAME
+Mikulas> (for example, he adds a snapshot or converts linear volume to a
+Mikulas> mirror).
+Mikulas> 4. We submit the bio that we built in step 2.
+Mikulas> 5. The bio fails.
 
----
+The existing "fall back to writes if write same fails" mechanism isn't
+going away. We absolutely need that.
 
-It can be reproduced using scsi_debug and using SCSI_DEBUG_OPT_MAC_TIMEOUT to
-force some I/O to timeout once. This small script assumes /dev/sdb as
-scsi_debug's disk, causes a timeout, completes 2MB of I/O successfully including
-the timed out I/O command, then repeats.  Without the patch, the device is
-offlined on the second loop.  All loops will successfully complete I/O
-with the patch.
+The principal headache is caused by host adapters that perform SCSI-ATA
+or SCSI-<internal RAID implementation> translation and which do not
+correctly fail a WRITE SAME command that we send down to the disk.
 
-echo "-1" >/sys/bus/pseudo/drivers/scsi_debug/every_nth
-for i in `seq 1 4`; do
-        echo starting loop $i
-        echo "128" >/sys/bus/pseudo/drivers/scsi_debug/opts
-        dd if=/dev/sdb of=/dev/null bs=1M iflag=direct count=1 &
-        sleep 5
-        echo "0" >/sys/bus/pseudo/drivers/scsi_debug/opts
-        wait
-        dd if=/dev/sdb of=/dev/null bs=1M iflag=direct count=1
-        echo ending loop $i
-done
+Based on heuristics from querying the target we expect WRITE SAME to
+succeed so we enable it. But for whatever reason the controller is not
+able to handle the command. Most controllers/drivers will fail the
+command correctly and we'll disable WRITE SAME and fall back to manually
+zeroing. Some controllers, however, hang or fail the I/O in a way in
+which we do not pick up it's a WRITE SAME problem.
 
+The other headache is what happens if a stacking driver gets -EIO or
+-EREMOTEIO on a WRITE SAME request. That's what Mike was trying to fix
+with his patch. Maybe it would make sense for us to use -EINVAL or
+something similar to single out the ILLEGAL REQUEST case. While
+-EREMOTEIO specifically calls out for "no retry" it might be helpful to
+indicate that we're dealing with an unsupported command. That way DM or
+MD can reconfigure themselves accordingly.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 86fcf2c..2779e6b 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1669,12 +1669,12 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 						   sshdr.ascq));
- 	}
- #endif
-+	sdkp->medium_access_timed_out = 0;
-+
- 	if (driver_byte(result) != DRIVER_SENSE &&
- 	    (!sense_valid || sense_deferred))
- 		goto out;
- 
--	sdkp->medium_access_timed_out = 0;
--
- 	switch (sshdr.sense_key) {
- 	case HARDWARE_ERROR:
- 	case MEDIUM_ERROR:
+-- 
+Martin K. Petersen	Oracle Linux Engineering
