@@ -1,61 +1,93 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work [was:
- dm mpath: disable WRITE SAME if it fails]
-Date: Tue, 24 Sep 2013 11:15:13 -0400
-Message-ID: <20130924151513.GB16165@redhat.com>
-References: <20130919161043.GA27081@redhat.com>
- <20130920212142.GA17898@redhat.com>
- <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
- <1379960325.4010.32.camel@localhost.localdomain>
- <52412581.2010909@suse.de>
- <20130924123449.GA16083@redhat.com>
- <yq1hadaba87.fsf@sermon.lab.mkp.net>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Drivers: scsi: FLUSH timeout
+Date: Tue, 24 Sep 2013 12:20:39 -0500
+Message-ID: <5241C9E7.2000404@cs.wisc.edu>
+References: <1379705547-15028-1-git-send-email-kys@microsoft.com> <20130920203222.GA14306@kroah.com> <a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com> <524180B7.7090307@gmail.com> <3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64750 "EHLO mx1.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:58347 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751038Ab3IXPPR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Sep 2013 11:15:17 -0400
-Content-Disposition: inline
-In-Reply-To: <yq1hadaba87.fsf@sermon.lab.mkp.net>
+	id S1752829Ab3IXRdC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Sep 2013 13:33:02 -0400
+In-Reply-To: <3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, emilne@redhat.com, device-mapper development <dm-devel@redhat.com>, dgilbert@interlog.com
+To: KY Srinivasan <kys@microsoft.com>
+Cc: Jack Wang <xjtuwjp@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Sep 24 2013 at  9:49am -0400,
-Martin K. Petersen <martin.petersen@oracle.com> wrote:
+On 09/24/2013 07:35 AM, KY Srinivasan wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: Jack Wang [mailto:xjtuwjp@gmail.com]
+>> Sent: Tuesday, September 24, 2013 5:08 AM
+>> To: KY Srinivasan
+>> Cc: Greg KH; linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+>> ohering@suse.com; jbottomley@parallels.com; hch@infradead.org; linux-
+>> scsi@vger.kernel.org; Mike Christie
+>> Subject: Re: Drivers: scsi: FLUSH timeout
+>>
+>> On 09/21/2013 07:24 AM, KY Srinivasan wrote:
+>>>
+>>>
+>>>> -----Original Message-----
+>>>> From: Greg KH [mailto:gregkh@linuxfoundation.org]
+>>>> Sent: Friday, September 20, 2013 1:32 PM
+>>>> To: KY Srinivasan
+>>>> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+>>>> ohering@suse.com; jbottomley@parallels.com; hch@infradead.org; linux-
+>>>> scsi@vger.kernel.org
+>>>> Subject: Re: Drivers: scsi: FLUSH timeout
+>>>>
+>>>> On Fri, Sep 20, 2013 at 12:32:27PM -0700, K. Y. Srinivasan wrote:
+>>>>> The SD_FLUSH_TIMEOUT value is currently hardcoded.
+>>>>
+>>>> Hardcoded where?  Please, more context.
+>>>
+>>> This is defined in scsi/sd.h:
+>>>
+>>> #define SD_FLUSH_TIMEOUT        (60 * HZ)
+>>>>
+>>>>> On our cloud, we sometimes hit this timeout. I was wondering if we
+>>>>> could make this a module parameter. If this is acceptable, I can send
+>>>>> you a patch for this.
+>>>>
+>>>> A module parameter don't make sense for a per-device value, does it?
+>>> Currently, the 60 second timeout is applied across devices. Ideally, I want to be
+>>> able to control the FLUSH TIMEOUT as we currently do I/O timeout. If this is
+>>> acceptable, I can work on a patch for that as well.
+>>>
+>>> Regards,
+>>>
+>>> K. Y
+>>>>
+>>>> greg k-h
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>> Hi,
+>>
+>> Back to 2010, Mike(cc-ed) try to add a flush time out interface, similar
+>> to what you want here, no idea why it's just ignored?
+>> http://www.spinics.net/lists/linux-scsi/msg45017.html
+> 
+> Thanks Jack. Mike, do you know what the concerns were as to why this
+> patch was not accepted?
+> 
 
-> >>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
-> 
-> Mike> So are there drives like this?:
-> Mike> 1) don't support RSOC
-> Mike> 2) do support WRITE SAME
-> Mike> 3) do populate VPD page with either WRITE SAME w/ discard bit set
-> Mike>    or UNMAP?
-> 
-> Yes.
-> 
-> But again, the fundamental issue here is not the drives. It's the
-> controller firmware. I am not aware of a single SPI/SAS/FC drive that
-> does not support at least WRITE SAME(10).
-> 
-> For DIX and T10 PI I have a capabilities mask that each HBA driver fills
-> out that tells the sd driver what the controller can do. And this is
-> combined with whatever the drive reports to figure out whether integrity
-> protection can be enabled.
-> 
-> I have been contemplating doing something similar for "fancy" SCSI
-> commands. We could have a flag in the scsi host template that controls
-> whether the device supports WRITE SAME, EXTENDED COPY, etc. The
-> advantage being that we do the matching at discovery time instead of
-> once a WRITE SAME is issued.
-> 
-> This would also permit HBA drivers to toggle the feature on a per
-> instance basis. I.e. if "RAID controller firmware rev is lower than XYZ,
-> do not support WRITE SAME".
-> 
-> I'll do a PoC later today...
+I do not remember the exact concerns. We ended up just increasing the
+hard coded value in:
 
-Sounds promising, thanks!
+commit e3b3e6246726cd05950677ed843010b8e8c5884c
+Author: Mike Christie <mchristi@redhat.com>
+Date:   Wed Aug 11 11:06:25 2010 -0500
+
+    [SCSI] scsi/block: increase flush/sync timeout
+
+
+In the git commit message there is a comment about people thinking
+making it configurable for users was troublesome.
