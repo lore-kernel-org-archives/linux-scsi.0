@@ -1,60 +1,130 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [dm-devel] SCSI's heuristics for enabling WRITE SAME still need work [was: dm mpath: disable WRITE SAME if it fails]
-Date: Tue, 24 Sep 2013 16:44:37 -0400
-Message-ID: <yq14n9aar0q.fsf@sermon.lab.mkp.net>
-References: <20130919161043.GA27081@redhat.com>
-	<20130920212142.GA17898@redhat.com>
-	<alpine.LRH.2.02.1309241415380.31619@file01.intranet.prod.int.rdu2.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v2] tcm_fc: Convert to per-cpu command map pre-allocation of ft_cmd
+Date: Tue, 24 Sep 2013 20:33:25 +0000
+Message-ID: <1380054805-2729-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43406 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753916Ab3IXUom (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2013 16:44:42 -0400
-In-Reply-To: <alpine.LRH.2.02.1309241415380.31619@file01.intranet.prod.int.rdu2.redhat.com>
-	(Mikulas Patocka's message of "Tue, 24 Sep 2013 14:39:45 -0400 (EDT)")
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:54803 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753005Ab3IXUuX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2013 16:50:23 -0400
+Received: by mail-ob0-f180.google.com with SMTP id wm4so5529043obc.39
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2013 13:50:22 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: Open-FCoE devel <devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@daterainc.com>, Mark Rustad <mark.d.rustad@intel.com>, Robert Love <robert.w.love@intel.com>, Kent Overstreet <kmo@daterainc.com>
 
->>>>> "Mikulas" == Mikulas Patocka <mpatocka@redhat.com> writes:
+From: Nicholas Bellinger <nab@daterainc.com>
 
-Mikulas> Propagating the limits up the tree won't work anyway because of
-Mikulas> a race condition. Think of this case:
+This patch converts tcm_fc to use transport_init_session_tags()
+pre-allocation logic for struct ft_cmd descriptors using per-cpu
+session tag pooling in order to effectively avoid memory allocation
++ release for each received I/O.
 
-Mikulas> 1. We test queue limits and find out that the device supports
-Mikulas>    WRITE_SAME
-Mikulas> 2. We build a WRITE_SAME bio to be submitted.
-Mikulas> 3. The user reconfigures a device so that it no longer supports
-Mikulas>    WRITE_SAME
-Mikulas> (for example, he adds a snapshot or converts linear volume to a
-Mikulas> mirror).
-Mikulas> 4. We submit the bio that we built in step 2.
-Mikulas> 5. The bio fails.
+It adds percpu_ida_alloc() in ft_recv_cmd() to obtain an tag and
+locate ft_cmd from se_sess->sess_cmd_map[], and percpu_ida_free()
+in ft_free_cmd() to release the tag based upon se_cmd->map_tag id.
 
-The existing "fall back to writes if write same fails" mechanism isn't
-going away. We absolutely need that.
+It also uses a TCM_FC_DEFAULT_TAGS value of 512, that puts the
+per se_sess->sess_cmd_map allocation at ~360K on 64-bit.
 
-The principal headache is caused by host adapters that perform SCSI-ATA
-or SCSI-<internal RAID implementation> translation and which do not
-correctly fail a WRITE SAME command that we send down to the disk.
+v2 changes:
 
-Based on heuristics from querying the target we expect WRITE SAME to
-succeed so we enable it. But for whatever reason the controller is not
-able to handle the command. Most controllers/drivers will fail the
-command correctly and we'll disable WRITE SAME and fall back to manually
-zeroing. Some controllers, however, hang or fail the I/O in a way in
-which we do not pick up it's a WRITE SAME problem.
+  - Handle possible tag < 0 failure with GFP_ATOMIC
 
-The other headache is what happens if a stacking driver gets -EIO or
--EREMOTEIO on a WRITE SAME request. That's what Mike was trying to fix
-with his patch. Maybe it would make sense for us to use -EINVAL or
-something similar to single out the ILLEGAL REQUEST case. While
--EREMOTEIO specifically calls out for "no retry" it might be helpful to
-indicate that we're dealing with an unsupported command. That way DM or
-MD can reconfigure themselves accordingly.
+Cc: Mark Rustad <mark.d.rustad@intel.com>
+Cc: Robert Love <robert.w.love@intel.com>
+Cc: Kent Overstreet <kmo@daterainc.com>
+Signed-off-by: Nicholas Bellinger <nab@daterainc.com>
+---
+ drivers/target/tcm_fc/tcm_fc.h   |    1 +
+ drivers/target/tcm_fc/tfc_cmd.c  |   18 ++++++++++++++----
+ drivers/target/tcm_fc/tfc_sess.c |    3 ++-
+ 3 files changed, 17 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
+index 0dd54a4..752863a 100644
+--- a/drivers/target/tcm_fc/tcm_fc.h
++++ b/drivers/target/tcm_fc/tcm_fc.h
+@@ -22,6 +22,7 @@
+ #define FT_NAMELEN 32		/* length of ASCII WWPNs including pad */
+ #define FT_TPG_NAMELEN 32	/* max length of TPG name */
+ #define FT_LUN_NAMELEN 32	/* max length of LUN name */
++#define TCM_FC_DEFAULT_TAGS 512	/* tags used for per-session preallocation */
+ 
+ struct ft_transport_id {
+ 	__u8	format;
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 0e5a1cae..479ec56 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -28,6 +28,7 @@
+ #include <linux/configfs.h>
+ #include <linux/ctype.h>
+ #include <linux/hash.h>
++#include <linux/percpu_ida.h>
+ #include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -89,16 +90,18 @@ static void ft_free_cmd(struct ft_cmd *cmd)
+ {
+ 	struct fc_frame *fp;
+ 	struct fc_lport *lport;
++	struct se_session *se_sess;
+ 
+ 	if (!cmd)
+ 		return;
++	se_sess = cmd->sess->se_sess;
+ 	fp = cmd->req_frame;
+ 	lport = fr_dev(fp);
+ 	if (fr_seq(fp))
+ 		lport->tt.seq_release(fr_seq(fp));
+ 	fc_frame_free(fp);
++	percpu_ida_free(&se_sess->sess_tag_pool, cmd->se_cmd.map_tag);
+ 	ft_sess_put(cmd->sess);	/* undo get from lookup at recv */
+-	kfree(cmd);
+ }
+ 
+ void ft_release_cmd(struct se_cmd *se_cmd)
+@@ -432,14 +435,21 @@ static void ft_recv_cmd(struct ft_sess *sess, struct fc_frame *fp)
+ {
+ 	struct ft_cmd *cmd;
+ 	struct fc_lport *lport = sess->tport->lport;
++	struct se_session *se_sess = sess->se_sess;
++	int tag;
+ 
+-	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
+-	if (!cmd)
++	tag = percpu_ida_alloc(&se_sess->sess_tag_pool, GFP_ATOMIC);
++	if (tag < 0)
+ 		goto busy;
++
++	cmd = &((struct ft_cmd *)se_sess->sess_cmd_map)[tag];
++	memset(cmd, 0, sizeof(struct ft_cmd));
++
++	cmd->se_cmd.map_tag = tag;
+ 	cmd->sess = sess;
+ 	cmd->seq = lport->tt.seq_assign(lport, fp);
+ 	if (!cmd->seq) {
+-		kfree(cmd);
++		percpu_ida_free(&se_sess->sess_tag_pool, tag);
+ 		goto busy;
+ 	}
+ 	cmd->req_frame = fp;		/* hold frame during cmd */
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index 4859505..ae52c08 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -210,7 +210,8 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+ 	if (!sess)
+ 		return NULL;
+ 
+-	sess->se_sess = transport_init_session();
++	sess->se_sess = transport_init_session_tags(TCM_FC_DEFAULT_TAGS,
++						    sizeof(struct ft_cmd));
+ 	if (IS_ERR(sess->se_sess)) {
+ 		kfree(sess);
+ 		return NULL;
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.7.10.4
+
