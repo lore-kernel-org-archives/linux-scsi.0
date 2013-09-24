@@ -1,62 +1,60 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [dm-devel] SCSI's heuristics for enabling WRITE SAME still need
- work [was: dm mpath: disable WRITE SAME if it fails]
-Date: Tue, 24 Sep 2013 15:37:27 -0400
-Message-ID: <5241E9F7.1080303@interlog.com>
-References: <20130919161043.GA27081@redhat.com> <20130920212142.GA17898@redhat.com> <yq1eh8jf8wq.fsf@sermon.lab.mkp.net> <1379960325.4010.32.camel@localhost.localdomain> <52412581.2010909@suse.de> <5241E422.1010700@tributary.com>
-Reply-To: dgilbert@interlog.com
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] sd: error handling during flushing caches
+Date: Tue, 24 Sep 2013 15:41:20 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1309241537440.865-100000@iolanthe.rowland.org>
+References: <1379330895-20505-1-git-send-email-oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:56594 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752649Ab3IXThy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Sep 2013 15:37:54 -0400
-In-Reply-To: <5241E422.1010700@tributary.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:42576 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750774Ab3IXTlV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2013 15:41:21 -0400
+In-Reply-To: <1379330895-20505-1-git-send-email-oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jlinton@tributary.com>, Hannes Reinecke <hare@suse.de>
-Cc: "emilne@redhat.com" <emilne@redhat.com>, device-mapper development <dm-devel@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>
+To: oliver@neukum.org
+Cc: linux-scsi@vger.kernel.org, hare@suse.de, luto@amacapital.net, Oliver Neukum <oneukum@suse.de>
 
-On 13-09-24 03:12 PM, Jeremy Linton wrote:
-> On 9/24/2013 12:39 AM, Hannes Reinecke wrote:
->
->> My drives support 'report opcodes', and report that write same is
->> supported: ... 93                 16    Write same(16) ...
->>
->> but no support for page 'b0'. And yes, these are real SAS drives.
->
-> 	So the question is, how many devices get the protect bit in the std inquiry
-> incorrect?
+On Mon, 16 Sep 2013 oliver@neukum.org wrote:
 
-To that specific question: all of them get it right because
-if they don't the disk (LU) does not support PI (or at least
-that is the conclusion the application client should reach).
-What the sales blurb for the device may say is another thing.
+> From: Oliver Neukum <oneukum@suse.de>
+> 
+> It makes no sense to flush the cache of a device without medium.
+> Errors during suspend must be handled according to their causes.
+> Errors due to missing media or unplugged devices must be ignored.
+> Errors due to devices being offlined must also be ignored.
+> The error returns must be modified so that the generic layer
+> understands them.
+> 
+> Signed-off-by: Oliver Neukum <oneukum@suse.de>
 
-More generally why are we using WRITE SAME:
-   a) associated with LB provisioning?
-   b) associated with PI (DIF)?
-   c) as an optimized multi-block write of the same contents?
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
-I'm not aware there is any special relationship between WS
-and PI. That leaves a) and c) . I'm guessing it is more
-important for a) .
+You might want to change the formatting slightly...
 
-> 	If that is mostly correct, how about std inquiry (SPC>2), protect bit, and then
-> VPD page 0x86 (or alternatively then do the READ CAPACITY, P_TYPE instead of
-> page 0x86)?
->
-> 	After all, the set of valid read/write opcodes is limited by the protection
-> mode format, yes?
+> @@ -1448,12 +1448,31 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+>  
+>  	if (res) {
+>  		sd_print_result(sdkp, res);
+> -		if (driver_byte(res) & DRIVER_SENSE)
+> +
+> +		if (driver_byte(res) & DRIVER_SENSE) 
+>  			sd_print_sense_hdr(sdkp, &sshdr);
+> +		/* we need to evaluate the error return  */
+> +		if ((scsi_sense_valid(&sshdr) &&
+> +			/* 0x3a is medium not present */
+> +			sshdr.asc == 0x3a))
+> +				/* this is no error here */
+> +				return 0;
 
-Yes: READ(32), WRITE(32), WRITE SAME(32), VERIFY(32)
-and WRITE AND VERIFY(32) are only valid for protection
-type 2 (sbc3r35h 4.22.2.2). I'm sure T10 have a good
-reason for that but they are keeping that reason to
-themselves.
+There's a superfluous pair of parens in the "if" condition.  The same 
+is true for the statement added to sd_start_stop_device().
 
-Doug Gilbert
+Also, the indentation levels aren't quite right (the "return" statement
+should be indented by only one additional tab stop, not two).
 
+Of course, these are both extremely minor objections.
+
+Alan Stern
 
