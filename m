@@ -1,75 +1,82 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work [was:
- dm mpath: disable WRITE SAME if it fails]
-Date: Tue, 24 Sep 2013 08:34:50 -0400
-Message-ID: <20130924123449.GA16083@redhat.com>
-References: <20130919161043.GA27081@redhat.com>
- <20130920212142.GA17898@redhat.com>
- <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
- <1379960325.4010.32.camel@localhost.localdomain>
- <52412581.2010909@suse.de>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: Drivers: scsi: FLUSH timeout
+Date: Tue, 24 Sep 2013 12:35:53 +0000
+Message-ID: <3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
+References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
+ <20130920203222.GA14306@kroah.com>
+ <a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com>
+ <524180B7.7090307@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45424 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753270Ab3IXMe4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Sep 2013 08:34:56 -0400
-Content-Disposition: inline
-In-Reply-To: <52412581.2010909@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <524180B7.7090307@gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jack Wang <xjtuwjp@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: emilne@redhat.com, device-mapper development <dm-devel@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-On Tue, Sep 24 2013 at  1:39am -0400,
-Hannes Reinecke <hare@suse.de> wrote:
 
-> On 09/23/2013 08:18 PM, Ewan Milne wrote:
-> > On Fri, 2013-09-20 at 18:03 -0400, Martin K. Petersen wrote:
-> > ...
-> >> Only a handful of the very latest and greatest devices support RSOC. The
-> >> number of devices that support WRITE SAME is orders of magnitude larger.
-> >>
-> >> Last I checked I had exactly 1 out of about 100 devices in my lab that
-> >> supported RSOC.
-> > ...
-> >> The major headache here of course is that WRITE SAME is inherently
-> >> destructive. We can't just fire off one during discovery and see if it
-> >> works. For WRITE you can issue a command with a transfer length of 0 to
-> >> see if things work. But unfortunately for WRITE SAME a transfer length
-> >> of zero means "wipe the entire device". Yikes!
-> >>
-> >> I guess we could read one sector and try to write it back using WRITE
-> >> SAME and a block count of one. But it's really icky. And I don't like
-> >> the notion of actually writing things during discovery.
-> > ...
-> > 
-> > Just out of curiosity, what do the devices that support WRITE SAME
-> > report for the MAXIMUM WRITE SAME LENGTH field in VPD page B0?  The
-> > spec says that this can be zero if there is no restriction, but is
-> > there any chance that most/all of them report some nonzero value?
-> > 
-> > Expanding on Doug's thinking, perhaps there is some combination of
-> > VPD page availability / field values that could be used to explicitly
-> > enable WRITE SAME?  Or, have you been through that already?
-> > 
-> Hehe. Won't do any good.
+
+> -----Original Message-----
+> From: Jack Wang [mailto:xjtuwjp@gmail.com]
+> Sent: Tuesday, September 24, 2013 5:08 AM
+> To: KY Srinivasan
+> Cc: Greg KH; linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> ohering@suse.com; jbottomley@parallels.com; hch@infradead.org; linux-
+> scsi@vger.kernel.org; Mike Christie
+> Subject: Re: Drivers: scsi: FLUSH timeout
 > 
-> My drives support 'report opcodes', and report that write same is
-> supported:
-> ...
->  93                 16    Write same(16)
-> ...
+> On 09/21/2013 07:24 AM, KY Srinivasan wrote:
+> >
+> >
+> >> -----Original Message-----
+> >> From: Greg KH [mailto:gregkh@linuxfoundation.org]
+> >> Sent: Friday, September 20, 2013 1:32 PM
+> >> To: KY Srinivasan
+> >> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> >> ohering@suse.com; jbottomley@parallels.com; hch@infradead.org; linux-
+> >> scsi@vger.kernel.org
+> >> Subject: Re: Drivers: scsi: FLUSH timeout
+> >>
+> >> On Fri, Sep 20, 2013 at 12:32:27PM -0700, K. Y. Srinivasan wrote:
+> >>> The SD_FLUSH_TIMEOUT value is currently hardcoded.
+> >>
+> >> Hardcoded where?  Please, more context.
+> >
+> > This is defined in scsi/sd.h:
+> >
+> > #define SD_FLUSH_TIMEOUT        (60 * HZ)
+> >>
+> >>> On our cloud, we sometimes hit this timeout. I was wondering if we
+> >>> could make this a module parameter. If this is acceptable, I can send
+> >>> you a patch for this.
+> >>
+> >> A module parameter don't make sense for a per-device value, does it?
+> > Currently, the 60 second timeout is applied across devices. Ideally, I want to be
+> > able to control the FLUSH TIMEOUT as we currently do I/O timeout. If this is
+> > acceptable, I can work on a patch for that as well.
+> >
+> > Regards,
+> >
+> > K. Y
+> >>
+> >> greg k-h
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> Hi,
 > 
-> but no support for page 'b0'. And yes, these are real SAS drives.
+> Back to 2010, Mike(cc-ed) try to add a flush time out interface, similar
+> to what you want here, no idea why it's just ignored?
+> http://www.spinics.net/lists/linux-scsi/msg45017.html
 
-Your drive would be fine then since it does support RSOC and specifies
-WRITE SAME is supported.  Pretty sure Ewan was only suggesting to resort
-to looking at the VPD page if RSOC isn't supported.
+Thanks Jack. Mike, do you know what the concerns were as to why this
+patch was not accepted?
 
-So are there drives like this?:
-1) don't support RSOC
-2) do support WRITE SAME
-3) do populate VPD page with either WRITE SAME w/ discard bit set or
-UNMAP?
+Regards,
+
+K. Y 
