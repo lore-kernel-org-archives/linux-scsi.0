@@ -1,39 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 3/6] uas: make work list per-device
-Date: Tue, 24 Sep 2013 01:52:27 -0700
-Message-ID: <20130924085227.GF11858@infradead.org>
-References: <1379071635-30701-1-git-send-email-kraxel@redhat.com>
- <1379071635-30701-4-git-send-email-kraxel@redhat.com>
- <20130917203012.GA1752@infradead.org>
- <1379489584.12907.11.camel@nilsson.home.kraxel.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work [was:
+ dm mpath: disable WRITE SAME if it fails]
+Date: Tue, 24 Sep 2013 11:37:20 +0200
+Message-ID: <52415D50.508@redhat.com>
+References: <20130919161043.GA27081@redhat.com> <20130920212142.GA17898@redhat.com> <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1379489584.12907.11.camel@nilsson.home.kraxel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gerd Hoffmann <kraxel@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-usb@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "open list:USB ATTACHED SCSI" <linux-scsi@vger.kernel.org>, "open list:USB MASS STORAGE..." <usb-storage@lists.one-eyed-alien.net>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qe0-f51.google.com ([209.85.128.51]:52876 "EHLO
+	mail-qe0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778Ab3IXJhG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2013 05:37:06 -0400
+Received: by mail-qe0-f51.google.com with SMTP id ne12so2981312qeb.10
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2013 02:37:06 -0700 (PDT)
+In-Reply-To: <yq1eh8jf8wq.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Wed, Sep 18, 2013 at 09:33:04AM +0200, Gerd Hoffmann wrote:
-> > > While being at it rename the list head from "list" to "work", preparing
-> > > for the addition of a second list.
-> > 
-> > Why do you even the list?
+Il 21/09/2013 00:03, Martin K. Petersen ha scritto:
 > 
-> The list was already there when I took over maintainance ...
-> 
-> > What would a ordered per-device workqueue not
-> > provide?
-> 
-> Had no reason to look into replacing the list with something else so
-> far.  Why do you suggest using a workqueue instead?
-> 
-> Note that the list is not used in a typical request workflow.  Only in
-> case queuing an usb urb failed the request is linked into the list and
-> the worker will try to submit the usb urb again.
+> The major headache here of course is that WRITE SAME is inherently
+> destructive. We can't just fire off one during discovery and see if it
+> works. For WRITE you can issue a command with a transfer length of 0 to
+> see if things work. But unfortunately for WRITE SAME a transfer length
+> of zero means "wipe the entire device". Yikes!
 
-The driver is only using the list to queue up things into workqueue
-context as far as I can see.  Which means it's far easier to leave that
-to the workqueue.
+What about WRITE SAME with an out-of-range lba?  Or lba equal to the
+size of the disk and #blocks equal to zero.
+
+Paolo
