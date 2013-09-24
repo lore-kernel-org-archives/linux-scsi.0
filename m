@@ -1,121 +1,47 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: Drivers: scsi: FLUSH timeout
-Date: Tue, 24 Sep 2013 21:53:00 +0000
-Message-ID: <bf168ab724a140f989ab3dfe877b750f@SN2PR03MB061.namprd03.prod.outlook.com>
-References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
- <20130920203222.GA14306@kroah.com>
- <a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com>
- <524180B7.7090307@gmail.com>
- <3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
- <5241C9E7.2000404@cs.wisc.edu>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work [was:
+ dm mpath: disable WRITE SAME if it fails]
+Date: Tue, 24 Sep 2013 18:02:03 -0400
+Message-ID: <20130924220203.GA18700@redhat.com>
+References: <20130919161043.GA27081@redhat.com>
+ <20130920212142.GA17898@redhat.com>
+ <alpine.LRH.2.02.1309241415380.31619@file01.intranet.prod.int.rdu2.redhat.com>
+ <yq14n9aar0q.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1lp0155.outbound.protection.outlook.com ([207.46.163.155]:14772
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753517Ab3IXVxE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2013 17:53:04 -0400
-In-Reply-To: <5241C9E7.2000404@cs.wisc.edu>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:62221 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752912Ab3IXWCH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Sep 2013 18:02:07 -0400
+Content-Disposition: inline
+In-Reply-To: <yq14n9aar0q.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jack Wang <xjtuwjp@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mikulas Patocka <mpatocka@redhat.com>, device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 
+On Tue, Sep 24 2013 at  4:44pm -0400,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
+> The other headache is what happens if a stacking driver gets -EIO or
+> -EREMOTEIO on a WRITE SAME request. That's what Mike was trying to fix
+> with his patch. Maybe it would make sense for us to use -EINVAL or
+> something similar to single out the ILLEGAL REQUEST case. While
+> -EREMOTEIO specifically calls out for "no retry" it might be helpful to
+> indicate that we're dealing with an unsupported command. That way DM or
+> MD can reconfigure themselves accordingly.
 
-> -----Original Message-----
-> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
-> Sent: Tuesday, September 24, 2013 10:21 AM
-> To: KY Srinivasan
-> Cc: Jack Wang; Greg KH; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com; jbottomley@parallels.com;
-> hch@infradead.org; linux-scsi@vger.kernel.org
-> Subject: Re: Drivers: scsi: FLUSH timeout
-> 
-> On 09/24/2013 07:35 AM, KY Srinivasan wrote:
-> >
-> >
-> >> -----Original Message-----
-> >> From: Jack Wang [mailto:xjtuwjp@gmail.com]
-> >> Sent: Tuesday, September 24, 2013 5:08 AM
-> >> To: KY Srinivasan
-> >> Cc: Greg KH; linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
-> >> ohering@suse.com; jbottomley@parallels.com; hch@infradead.org; linux-
-> >> scsi@vger.kernel.org; Mike Christie
-> >> Subject: Re: Drivers: scsi: FLUSH timeout
-> >>
-> >> On 09/21/2013 07:24 AM, KY Srinivasan wrote:
-> >>>
-> >>>
-> >>>> -----Original Message-----
-> >>>> From: Greg KH [mailto:gregkh@linuxfoundation.org]
-> >>>> Sent: Friday, September 20, 2013 1:32 PM
-> >>>> To: KY Srinivasan
-> >>>> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
-> >>>> ohering@suse.com; jbottomley@parallels.com; hch@infradead.org; linux-
-> >>>> scsi@vger.kernel.org
-> >>>> Subject: Re: Drivers: scsi: FLUSH timeout
-> >>>>
-> >>>> On Fri, Sep 20, 2013 at 12:32:27PM -0700, K. Y. Srinivasan wrote:
-> >>>>> The SD_FLUSH_TIMEOUT value is currently hardcoded.
-> >>>>
-> >>>> Hardcoded where?  Please, more context.
-> >>>
-> >>> This is defined in scsi/sd.h:
-> >>>
-> >>> #define SD_FLUSH_TIMEOUT        (60 * HZ)
-> >>>>
-> >>>>> On our cloud, we sometimes hit this timeout. I was wondering if we
-> >>>>> could make this a module parameter. If this is acceptable, I can send
-> >>>>> you a patch for this.
-> >>>>
-> >>>> A module parameter don't make sense for a per-device value, does it?
-> >>> Currently, the 60 second timeout is applied across devices. Ideally, I want to
-> be
-> >>> able to control the FLUSH TIMEOUT as we currently do I/O timeout. If this is
-> >>> acceptable, I can work on a patch for that as well.
-> >>>
-> >>> Regards,
-> >>>
-> >>> K. Y
-> >>>>
-> >>>> greg k-h
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>
-> >> Hi,
-> >>
-> >> Back to 2010, Mike(cc-ed) try to add a flush time out interface, similar
-> >> to what you want here, no idea why it's just ignored?
-> >> http://www.spinics.net/lists/linux-scsi/msg45017.html
-> >
-> > Thanks Jack. Mike, do you know what the concerns were as to why this
-> > patch was not accepted?
-> >
-> 
-> I do not remember the exact concerns. We ended up just increasing the
-> hard coded value in:
-> 
-> commit e3b3e6246726cd05950677ed843010b8e8c5884c
-> Author: Mike Christie <mchristi@redhat.com>
-> Date:   Wed Aug 11 11:06:25 2010 -0500
-> 
->     [SCSI] scsi/block: increase flush/sync timeout
-> 
-> 
-> In the git commit message there is a comment about people thinking
-> making it configurable for users was troublesome.
+What I've committed as a v3.12 fix works, see:
+http://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=for-linus&id=f84cb8a46a771f36a04a02c61ea635c968ed5f6a
 
-I am not sure how that magic number was arrived at (the 60HZ number). We want this to be little higher -
-would there be any issues raising this to say  180 seconds. This is the value we currently have for I/O
-timeout.
+"Workaround the SCSI layer's problematic WRITE SAME heuristics by
+disabling WRITE SAME in the DM multipath device's queue_limits if an
+underlying device disabled it."
 
-Regards,
+So I'm trapping requests with REQ_WRITE_SAME whose underlying queue's
+queue_limits have disabled WRITE SAME.  And as the before and after
+detailed in the patch header shows, it works.
 
-K. Y
-
+I'm open to tweaking this later but will be leaving well enough alone
+for v3.12 by keeping this fix.
