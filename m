@@ -1,74 +1,40 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 0/7] Limit overall SCSI EH runtime
-Date: Wed, 25 Sep 2013 07:48:12 +0200
-Message-ID: <5242791C.2030208@suse.de>
-References: <1372661455-122384-1-git-send-email-hare@suse.de> <1373488528.7420.55.camel@localhost.localdomain> <5201ECAD.7000703@cn.fujitsu.com> <521F4768.5010807@suse.de> <5241FB6E.6010106@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: Drivers: scsi: FLUSH timeout
+Date: Wed, 25 Sep 2013 10:40:24 +0200
+Message-ID: <CAMuHMdV-BsKc-c1YhzqFrUGJhw+jMZEXXTcT2xyDLnw-JQuVaQ@mail.gmail.com>
+References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
+	<20130920203222.GA14306@kroah.com>
+	<a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com>
+	<524180B7.7090307@gmail.com>
+	<3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
+	<5241C9E7.2000404@cs.wisc.edu>
+	<bf168ab724a140f989ab3dfe877b750f@SN2PR03MB061.namprd03.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55035 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750888Ab3IYFsO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Sep 2013 01:48:14 -0400
-In-Reply-To: <5241FB6E.6010106@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <bf168ab724a140f989ab3dfe877b750f@SN2PR03MB061.namprd03.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Jack Wang <xjtuwjp@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: James Bottomley <jbottomley@parallels.com>, Ren Mingxin <renmx@cn.fujitsu.com>, emilne@redhat.com, linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>, Joern Engel <joern@logfs.org>
 
-On 09/24/2013 10:51 PM, Ric Wheeler wrote:
-> On 08/29/2013 09:06 AM, Hannes Reinecke wrote:
->> Hi James,
->>
->> On 08/07/2013 08:43 AM, Ren Mingxin wrote:
->>> Hi, James:
->>>
->>> On 07/11/2013 04:35 AM, Ewan Milne wrote:
->>>> Looks good.  We have been testing this extensively.
->>>>
->>>> Acked-by: Ewan D. Milne<emilne@redhat.com>
->>> Do you think this patchset can be applied? If so, When? Perhaps you
->>> are waiting for someone's feedback?
->>>
->>> We've also tested and got the duration could be shortened from 6m26=
-s
->>> to 44s when 'eh_deadline' was set as 1s(the minimum value of
->>> timeout)
->>> and 16M data were written(I/O processing time can be ignored -
->>> 0.7s).
->>>
->>> As Ewan said, this is efficient to fast failover policy for
->>> redundant
->>> environments.
->>>
->>> Thanks,
->>> Ren
->> Any objections to this patchset?
->> I have other patchsets pending (eg asynchronous command aborts)
->> which are based on this one.
->> So it would be good to have a status here.
->>
->> Cheers,
->>
->> Hannes
->=20
-> Any progress on this patchset? Seems to have gone dormant?
->=20
-Not for the lack of trying on my side ...
+On Tue, Sep 24, 2013 at 11:53 PM, KY Srinivasan <kys@microsoft.com> wrote:
+> I am not sure how that magic number was arrived at (the 60HZ number). We want this to be little higher -
 
-Cheers,
+"60 * HZ" means "60 seconds".
 
-Hannes
+> would there be any issues raising this to say  180 seconds. This is the value we currently have for I/O
+> timeout.
 
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+So you want to replace it by "180 * HZ", which is ... another magic number?
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
