@@ -1,40 +1,77 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: Drivers: scsi: FLUSH timeout
-Date: Wed, 25 Sep 2013 10:40:24 +0200
-Message-ID: <CAMuHMdV-BsKc-c1YhzqFrUGJhw+jMZEXXTcT2xyDLnw-JQuVaQ@mail.gmail.com>
-References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
-	<20130920203222.GA14306@kroah.com>
-	<a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com>
-	<524180B7.7090307@gmail.com>
-	<3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
-	<5241C9E7.2000404@cs.wisc.edu>
-	<bf168ab724a140f989ab3dfe877b750f@SN2PR03MB061.namprd03.prod.outlook.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: notify userspace of offline -> running transitions
+Date: Wed, 25 Sep 2013 10:54:21 +0200
+Message-ID: <5242A4BD.10107@suse.de>
+References: <1380050595.4010.121.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <bf168ab724a140f989ab3dfe877b750f@SN2PR03MB061.namprd03.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Jack Wang <xjtuwjp@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:33611 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751961Ab3IYIyX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Sep 2013 04:54:23 -0400
+In-Reply-To: <1380050595.4010.121.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: emilne@redhat.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Sep 24, 2013 at 11:53 PM, KY Srinivasan <kys@microsoft.com> wrote:
-> I am not sure how that magic number was arrived at (the 60HZ number). We want this to be little higher -
+On 09/24/2013 09:23 PM, Ewan Milne wrote:
+> http://marc.info/?l=3Dlinux-scsi&m=3D133901769900806&w=3D2
+>=20
+> Can we reconsider applying patch 4 in Mike's set?
+> The problem still exists, and there was never another
+> solution proposed as far as I can see.  (I posted a
+> question about this a while back...)
+>=20
+> It is a big issue for people who happen to get a
+> KOBJ_CHANGE uevent while their iSCSI session happens
+> to be disconnected for some reason, because udev
+> will end up removing the /dev/by-xxx links when it
+> can't access the device.  If there is no subsequent
+> uevent when the device is available again, the links
+> are never recreated.
+>=20
+Right. The original issue here is that we'll be getting a 'CHANGE'
+uevent for _EVERY_ device connected to that port / iscsi session.
 
-"60 * HZ" means "60 seconds".
+This has two potential issues:
+1) We'll be pushing quite some events through udev, increasing the
+load at times when already is quite some I/O going on.
+2) Currently SCSI devices only had to react to 'add' events for
+generating udev links, with 'change' events virtually non-existing.
+When we're not generating 'change' events for SCSI devices we
+absolutely have to audit / test the udev rules as they need to
+re-create _all_ device links etc on 'change', too.
+Otherwise we'll end up with the situation you've just described.
 
-> would there be any issues raising this to say  180 seconds. This is the value we currently have for I/O
-> timeout.
+Hence my original comment to send 'change' events for the session or
+rport, as this would result in only _one_ event thereby eliminating
+the event multiplication.
+It has the drawback that we won't get the automatic udev database
+update like we would be getting with the patch.
 
-So you want to replace it by "180 * HZ", which is ... another magic number?
+But then we could easily achieve that by auditing the udev rules to
+fetch the required information off the udev database in case the
+device is not accessible.
+And as we have to audit the udev rules _anyway_ it feels like a
+better solution to me.
+(It certainly is for me, as I've already done this on the SUSE side;
+we've had a similar issue already :-)
+But if others feel strongly about this patch I won't object to it.
 
-Gr{oetje,eeting}s,
+Cheers,
 
-                        Geert
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
 --
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
