@@ -1,88 +1,130 @@
-From: Akinobu Mita <mita@fixstars.com>
-Subject: [PATCH v2] ufs: adjust queue settings to PRDT limitations
-Date: Wed, 25 Sep 2013 22:47:32 +0900
-Message-ID: <1380116852-21240-1-git-send-email-mita@fixstars.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo.fixstars.hdemail.jp ([176.34.54.138]:32845 "EHLO
-	mo.fixstars.hdemail.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754563Ab3IYNwF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Sep 2013 09:52:05 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Khalid Aziz <khalid.aziz@oracle.com>
+Subject: [PATCH] scsi: BusLogic: Fix an oops when intializing multimaster adapter
+Date: Wed, 25 Sep 2013 11:45:11 -0600
+Message-ID: <1380131111-21708-1-git-send-email-khalid.aziz@oracle.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: Khalid Aziz <khalid.aziz@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Khalid Aziz <khalid@gonehiking.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <mita@fixstars.com>, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-The data byte count field of PRDT indicates the length of data block
-which is a segment of data transfer for SCSI commands.  The value of
-this field shall have Dword granularity and the the maximum of length
-is 256KB.
+This fixes an oops caused by buslogic driver when initializing a BusLogic
+MultiMaster adapter. Initialization code used scope of a variable
+incorrectly which created a NULL pointer. Oops message is below:
 
-This adjusts dma pad mask and max segment size to the above-mentioned
-PRDT limitations.
+BUG: unable to handle kernel NULL pointer dereference at 0000000c
+IP: [<c150c137>] blogic_init_mm_probeinfo.isra.17+0x20a/0x583
+*pde = 00000000
+Oops: 002 [#1] PREEMPT SMP
+Modules linked in:
+CPU: 1 PID: 1 Comm: swapper/0 Not tainted 3.11.1.puz1 #1
+Hardware name:    /Canterwood, BIOS 6.00 PG 05/16/2003
+task: f7050000 ti: f7054000 task.ti: f7054000
+EIP: 0060:[<c150c137>] EFLAGS: 00010246 CPU:1
+EIP is at blogic_init_mm_probeinfo.isra.17+0x20a/0x583
+EAX: 00000013 EBX: 00000000 ECX: 00000000 EDX: f8001000
+ESI: f71cb800 EDI: f7388000 EBP: 00007800 ESP: f7055c84
+ DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+CR0: 8005003b CR2: 0000000c CR3: 0154f000 CR4: 000007d0
+Stack:
+ 0000001c 00000000 c11a59f6 f7055c98 00008130 ffffffff ffffffff 00000000
+ 00000003 00000000 00000000 00000000 00000013 f8001000 00000001 000003d0
+ 00000000 00000000 00000000 c14e3f84 f78803c8 00000000 f738c000 000000e9
+Call Trace:
+ [<c11a59f6>] ? pci_get_subsys+0x33/0x38
+ [<c150c4fb>] ? blogic_init_probeinfo_list+0x4b/0x19e
+ [<c108d593>] ? __alloc_pages_nodemask+0xe3/0x623
+ [<c108d593>] ? __alloc_pages_nodemask+0xe3/0x623
+ [<c10fb99e>] ? sysfs_link_sibling+0x61/0x8d
+ [<c10b0519>] ? kmem_cache_alloc+0x8b/0xb5
+ [<c150cce5>] ? blogic_init+0xa1/0x10e8
+ [<c10fc0a8>] ? sysfs_add_one+0x10/0x9d
+ [<c10fc18a>] ? sysfs_addrm_finish+0x12/0x85
+ [<c10fca37>] ? sysfs_do_create_link_sd+0x9d/0x1b4
+ [<c117c272>] ? blk_register_queue+0x69/0xb3
+ [<c10fcb68>] ? sysfs_create_link+0x1a/0x2c
+ [<c1181a07>] ? add_disk+0x1a1/0x3c7
+ [<c138737b>] ? klist_next+0x60/0xc3
+ [<c122cc3a>] ? scsi_dh_detach+0x68/0x68
+ [<c1213e36>] ? bus_for_each_dev+0x51/0x61
+ [<c1000356>] ? do_one_initcall+0x22/0x12c
+ [<c10f3688>] ? __proc_create+0x8c/0xba
+ [<c150cc44>] ? blogic_setup+0x5f6/0x5f6
+ [<c14e94aa>] ? repair_env_string+0xf/0x4d
+ [<c14e949b>] ? do_early_param+0x71/0x71
+ [<c103efaa>] ? parse_args+0x21f/0x33d
+ [<c14e9a54>] ? kernel_init_freeable+0xdf/0x17d
+ [<c14e949b>] ? do_early_param+0x71/0x71
+ [<c1388b64>] ? kernel_init+0x8/0xc0
+ [<c1392222>] ? ret_from_kernel_thread+0x6/0x28
+ [<c1392227>] ? ret_from_kernel_thread+0x1b/0x28
+ [<c1388b5c>] ? rest_init+0x6c/0x6c
+Code: 89 44 24 10 0f b6 44 24 3d 89 44 24 0c c7 44 24 08 00 00 00 00 c7 44 24 04 38 62 46 c1 c7 04 24 02 00 00 00 e8 78 13 d2 ff 31 db <89> 6b 0c b0 20 89 ea ee
+ c7 44 24 08 04 00 00 00 8d 44 24 4c 89
+EIP: [<c150c137>] blogic_init_mm_probeinfo.isra.17+0x20a/0x583 SS:ESP 0068:f7055c84
+CR2: 000000000000000c
+---[ end trace 17f45f5196d40487 ]---
+Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009
 
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Santosh Y <santoshsy@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: <stable@vger.kernel.org> # 3.11.x
+Cc: Khalid Aziz <khalid@gonehiking.org>
+Reported-by: Pierre Uszynski <pierre@rahul.net>
+Tested-by: Pierre Uszynski <pierre@rahul.net>
 ---
-* Change from v1
-- Add comments for PRDT limitations as suggested by Subhash Jadavani
+ drivers/scsi/BusLogic.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
- drivers/scsi/ufs/ufshcd.c | 15 +++++++++++++++
- drivers/scsi/ufs/ufshci.h |  5 +++++
- 2 files changed, 20 insertions(+)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a2abe9a..660792e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1918,6 +1918,20 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
- }
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index feab3a5..757eb07 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -696,7 +696,7 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
+ 	while ((pci_device = pci_get_device(PCI_VENDOR_ID_BUSLOGIC,
+ 					PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER,
+ 					pci_device)) != NULL) {
+-		struct blogic_adapter *adapter = adapter;
++		struct blogic_adapter *host_adapter = adapter;
+ 		struct blogic_adapter_info adapter_info;
+ 		enum blogic_isa_ioport mod_ioaddr_req;
+ 		unsigned char bus;
+@@ -744,9 +744,9 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
+ 		   known and enabled, note that the particular Standard ISA I/O
+ 		   Address should not be probed.
+ 		 */
+-		adapter->io_addr = io_addr;
+-		blogic_intreset(adapter);
+-		if (blogic_cmd(adapter, BLOGIC_INQ_PCI_INFO, NULL, 0,
++		host_adapter->io_addr = io_addr;
++		blogic_intreset(host_adapter);
++		if (blogic_cmd(host_adapter, BLOGIC_INQ_PCI_INFO, NULL, 0,
+ 				&adapter_info, sizeof(adapter_info)) ==
+ 				sizeof(adapter_info)) {
+ 			if (adapter_info.isa_port < 6)
+@@ -762,7 +762,7 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
+ 		   I/O Address assigned at system initialization.
+ 		 */
+ 		mod_ioaddr_req = BLOGIC_IO_DISABLE;
+-		blogic_cmd(adapter, BLOGIC_MOD_IOADDR, &mod_ioaddr_req,
++		blogic_cmd(host_adapter, BLOGIC_MOD_IOADDR, &mod_ioaddr_req,
+ 				sizeof(mod_ioaddr_req), NULL, 0);
+ 		/*
+ 		   For the first MultiMaster Host Adapter enumerated,
+@@ -779,12 +779,12 @@ static int __init blogic_init_mm_probeinfo(struct blogic_adapter *adapter)
  
- /**
-+ * ufshcd_slave_configure - adjust SCSI device configurations
-+ * @sdev: pointer to SCSI device
-+ */
-+static int ufshcd_slave_configure(struct scsi_device *sdev)
-+{
-+	struct request_queue *q = sdev->request_queue;
-+
-+	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
-+	blk_queue_max_segment_size(q, PRDT_DATA_BYTE_COUNT_MAX);
-+
-+	return 0;
-+}
-+
-+/**
-  * ufshcd_slave_destroy - remove SCSI device configurations
-  * @sdev: pointer to SCSI device
-  */
-@@ -2748,6 +2762,7 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.proc_name		= UFSHCD,
- 	.queuecommand		= ufshcd_queuecommand,
- 	.slave_alloc		= ufshcd_slave_alloc,
-+	.slave_configure	= ufshcd_slave_configure,
- 	.slave_destroy		= ufshcd_slave_destroy,
- 	.eh_abort_handler	= ufshcd_abort,
- 	.eh_device_reset_handler = ufshcd_device_reset,
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 0475c66..b2b7004 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -296,6 +296,11 @@ enum {
- 	MASK_OCS			= 0x0F,
- };
- 
-+/* The maximum length of the data byte count field in the PRDT is 256KB */
-+#define PRDT_DATA_BYTE_COUNT_MAX	(256 * 1024)
-+/* The granularity of the data byte count field in the PRDT is 32-bit */
-+#define PRDT_DATA_BYTE_COUNT_PAD	4
-+
- /**
-  * struct ufshcd_sg_entry - UFSHCI PRD Entry
-  * @base_addr: Lower 32bit physical address DW-0
+ 			fetch_localram.offset = BLOGIC_AUTOSCSI_BASE + 45;
+ 			fetch_localram.count = sizeof(autoscsi_byte45);
+-			blogic_cmd(adapter, BLOGIC_FETCH_LOCALRAM,
++			blogic_cmd(host_adapter, BLOGIC_FETCH_LOCALRAM,
+ 					&fetch_localram, sizeof(fetch_localram),
+ 					&autoscsi_byte45,
+ 					sizeof(autoscsi_byte45));
+-			blogic_cmd(adapter, BLOGIC_GET_BOARD_ID, NULL, 0, &id,
+-					sizeof(id));
++			blogic_cmd(host_adapter, BLOGIC_GET_BOARD_ID, NULL, 0,
++					&id, sizeof(id));
+ 			if (id.fw_ver_digit1 == '5')
+ 				force_scan_order =
+ 					autoscsi_byte45.force_scan_order;
 -- 
-1.8.3.1
-
+1.7.10.4
