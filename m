@@ -1,91 +1,125 @@
 From: Anand <anandkumar_santhanam@pmc-sierra.com>
-Subject: [PATCH V2 07/10] pm80xx: Set device state response logic fix.
-Date: Wed, 25 Sep 2013 22:39:02 -0700
-Message-ID: <5243C876.5090008@pmc-sierra.com>
+Subject: [PATCH V2 08/10] pm80xx: Queue rotation logic for inbound and outbound
+ queues
+Date: Wed, 25 Sep 2013 22:40:40 -0700
+Message-ID: <5243C8D8.5090505@pmc-sierra.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:60202 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750969Ab3IZFgb (ORCPT
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:44581 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750969Ab3IZFiJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Sep 2013 01:36:31 -0400
+	Thu, 26 Sep 2013 01:38:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Sangeetha.Gnanasekaran@pmcs.com, Nikith.Ganigarakoppal@pmcs.com, Viswas.G@pmcs.com, xjtuwjp@gmail.com
 
->From edf018a942e0da4da12bad21e5bf0d48621a18de Mon Sep 17 00:00:00 2001
+>From 678d8085ace7c471dc140420c41dc4ad70300d60 Mon Sep 17 00:00:00 2001
 From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-Date: Tue, 17 Sep 2013 16:58:10 +0530
-Subject: [PATCH V2 07/10] pm80xx: Set device state response logic fix.
+Date: Wed, 18 Sep 2013 11:12:59 +0530
+Subject: [PATCH V2 08/10] pm80xx: Queue rotation logic for inbound and outbound queues.
 
 Signed-off-by: Anandkumar.Santhanam@pmcs.com
 
 ---
- drivers/scsi/pm8001/pm8001_hwi.c |    6 ++++--
- drivers/scsi/pm8001/pm8001_sas.c |    9 ++++++++-
- 2 files changed, 12 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c |   31 +++++++++++++------------------
+ 1 files changed, 13 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index c9cc744..502c7d6 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3152,8 +3152,8 @@ void pm8001_mpi_set_dev_state_resp(struct pm8001_hba_info *pm8001_ha,
- 	struct pm8001_device *pm8001_dev = ccb->device;
- 	u32 status = le32_to_cpu(pPayload->status);
- 	u32 device_id = le32_to_cpu(pPayload->device_id);
--	u8 pds = le32_to_cpu(pPayload->pds_nds) | PDS_BITS;
--	u8 nds = le32_to_cpu(pPayload->pds_nds) | NDS_BITS;
-+	u8 pds = le32_to_cpu(pPayload->pds_nds) & PDS_BITS;
-+	u8 nds = le32_to_cpu(pPayload->pds_nds) & NDS_BITS;
- 	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("Set device id = 0x%x state "
- 		"from 0x%x to 0x%x status = 0x%x!\n",
- 		device_id, pds, nds, status));
-@@ -4765,6 +4765,8 @@ int pm8001_chip_ssp_tm_req(struct pm8001_hba_info *pm8001_ha,
- 	sspTMCmd.tmf = cpu_to_le32(tmf->tmf);
- 	memcpy(sspTMCmd.lun, task->ssp_task.LUN, 8);
- 	sspTMCmd.tag = cpu_to_le32(ccb->ccb_tag);
-+	if (pm8001_ha->chip_id != chip_8001)
-+		sspTMCmd.ds_ads_m = 0x08;
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &sspTMCmd, 0);
- 	return ret;
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index a85d73d..f4eb18e 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -447,7 +447,6 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
- 			break;
- 		case SAS_PROTOCOL_SATA:
- 		case SAS_PROTOCOL_STP:
--		case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
- 			rc = pm8001_task_prep_ata(pm8001_ha, ccb);
- 			break;
- 		default:
-@@ -704,6 +703,8 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
- 	int res, retry;
- 	struct sas_task *task = NULL;
- 	struct pm8001_hba_info *pm8001_ha = pm8001_find_ha_by_dev(dev);
-+	struct pm8001_device *pm8001_dev = dev->lldd_dev;
-+	DECLARE_COMPLETION_ONSTACK(completion_setstate);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 80a10aa..ce59d0d 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -3715,8 +3715,7 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
+ 	int ret;
+ 	u64 phys_addr;
+ 	struct inbound_queue_table *circularQ;
+-	static u32 inb;
+-	static u32 outb;
++	u32 q_index;
+ 	u32 opc = OPC_INB_SSPINIIOSTART;
+ 	memset(&ssp_cmd, 0, sizeof(ssp_cmd));
+ 	memcpy(ssp_cmd.ssp_iu.lun, task->ssp_task.LUN, 8);
+@@ -3735,7 +3734,8 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
+ 	ssp_cmd.ssp_iu.efb_prio_attr |= (task->ssp_task.task_attr & 7);
+ 	memcpy(ssp_cmd.ssp_iu.cdb, task->ssp_task.cmd->cmnd,
+ 		       task->ssp_task.cmd->cmd_len);
+-	circularQ = &pm8001_ha->inbnd_q_tbl[0];
++	q_index = (u32) (pm8001_dev->id & 0x00ffffff) % PM8001_MAX_INB_NUM;
++	circularQ = &pm8001_ha->inbnd_q_tbl[q_index];
  
- 	for (retry = 0; retry < 3; retry++) {
- 		task = sas_alloc_slow_task(GFP_KERNEL);
-@@ -729,6 +730,12 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
- 			goto ex_err;
+ 	/* Check if encryption is set */
+ 	if (pm8001_ha->chip->encrypt &&
+@@ -3783,7 +3783,7 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
+ 	} else {
+ 		PM8001_IO_DBG(pm8001_ha, pm8001_printk(
+ 			"Sending Normal SAS command 0x%x inb q %x\n",
+-			task->ssp_task.cmd->cmnd[0], inb));
++			task->ssp_task.cmd->cmnd[0], q_index));
+ 		/* fill in PRD (scatter/gather) table, if any */
+ 		if (task->num_scatter > 1) {
+ 			pm8001_chip_make_sg(task->scatter, ccb->n_elem,
+@@ -3809,11 +3809,9 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
+ 			ssp_cmd.esgl = 0;
  		}
- 		wait_for_completion(&task->slow_task->completion);
-+		if (pm8001_ha->chip_id != chip_8001) {
-+			pm8001_dev->setds_completion = &completion_setstate;
-+				PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
-+					pm8001_dev, 0x01);
-+			wait_for_completion(&completion_setstate);
-+		}
- 		res = -TMF_RESP_FUNC_FAILED;
- 		/* Even TMF timed out, return direct. */
- 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+ 	}
+-	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &ssp_cmd, outb++);
+-
+-	/* rotate the outb queue */
+-	outb = outb%PM8001_MAX_SPCV_OUTB_NUM;
+-
++	q_index = (u32) (pm8001_dev->id & 0x00ffffff) % PM8001_MAX_OUTB_NUM;
++	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
++						&ssp_cmd, q_index);
+ 	return ret;
+ }
+ 
+@@ -3825,8 +3823,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+ 	struct pm8001_device *pm8001_ha_dev = dev->lldd_dev;
+ 	u32 tag = ccb->ccb_tag;
+ 	int ret;
+-	static u32 inb;
+-	static u32 outb;
++	u32 q_index;
+ 	struct sata_start_req sata_cmd;
+ 	u32 hdr_tag, ncg_tag = 0;
+ 	u64 phys_addr;
+@@ -3836,7 +3833,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+ 	unsigned long flags;
+ 	u32 opc = OPC_INB_SATA_HOST_OPSTART;
+ 	memset(&sata_cmd, 0, sizeof(sata_cmd));
+-	circularQ = &pm8001_ha->inbnd_q_tbl[0];
++	q_index = (u32) (pm8001_ha_dev->id & 0x00ffffff) % PM8001_MAX_INB_NUM;
++	circularQ = &pm8001_ha->inbnd_q_tbl[q_index];
+ 
+ 	if (task->data_dir == PCI_DMA_NONE) {
+ 		ATAP = 0x04; /* no data*/
+@@ -3917,7 +3915,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+ 	} else {
+ 		PM8001_IO_DBG(pm8001_ha, pm8001_printk(
+ 			"Sending Normal SATA command 0x%x inb %x\n",
+-			sata_cmd.sata_fis.command, inb));
++			sata_cmd.sata_fis.command, q_index));
+ 		/* dad (bit 0-1) is 0 */
+ 		sata_cmd.ncqtag_atap_dir_m_dad =
+ 			cpu_to_le32(((ncg_tag & 0xff)<<16) |
+@@ -4014,12 +4012,9 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+ 			}
+ 		}
+ 	}
+-
++	q_index = (u32) (pm8001_ha_dev->id & 0x00ffffff) % PM8001_MAX_OUTB_NUM;
+ 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
+-						&sata_cmd, outb++);
+-
+-	/* rotate the outb queue */
+-	outb = outb%PM8001_MAX_SPCV_OUTB_NUM;
++						&sata_cmd, q_index);
+ 	return ret;
+ }
+ 
 -- 
 1.7.1
 
