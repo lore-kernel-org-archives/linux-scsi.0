@@ -1,96 +1,222 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v2] ufs: adjust queue settings to PRDT limitations
-Date: Thu, 26 Sep 2013 12:29:27 +0530
-Message-ID: <5243DB4F.8070102@codeaurora.org>
-References: <1380116852-21240-1-git-send-email-mita@fixstars.com>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH V2 06/10] pm80xx: Print SAS address of IO failed device.
+Date: Thu, 26 Sep 2013 09:03:02 +0200
+Message-ID: <5243DC26.8090909@gmail.com>
+References: <5243C831.9090309@pmc-sierra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:43047 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754535Ab3IZG7d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Sep 2013 02:59:33 -0400
-In-Reply-To: <1380116852-21240-1-git-send-email-mita@fixstars.com>
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:57467 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751077Ab3IZHCx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Sep 2013 03:02:53 -0400
+Received: by mail-ee0-f52.google.com with SMTP id c41so304067eek.11
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2013 00:02:51 -0700 (PDT)
+In-Reply-To: <5243C831.9090309@pmc-sierra.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <mita@fixstars.com>
-Cc: linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Anand <anandkumar_santhanam@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org, Sangeetha.Gnanasekaran@pmcs.com, Nikith.Ganigarakoppal@pmcs.com, Viswas.G@pmcs.com
 
-Looks good to me.
-
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-
-On 9/25/2013 7:17 PM, Akinobu Mita wrote:
-> The data byte count field of PRDT indicates the length of data block
-> which is a segment of data transfer for SCSI commands.  The value of
-> this field shall have Dword granularity and the the maximum of length
-> is 256KB.
->
-> This adjusts dma pad mask and max segment size to the above-mentioned
-> PRDT limitations.
->
-> Signed-off-by: Akinobu Mita <mita@fixstars.com>
-> Cc: Subhash Jadavani <subhashj@codeaurora.org>
-> Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-> Cc: Santosh Y <santoshsy@gmail.com>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: linux-scsi@vger.kernel.org
+On 09/26/2013 07:37 AM, Anand wrote:
+> From 5ddec5ef3033b4fee08dcdc7ba8b434425453e9d Mon Sep 17 00:00:00 2001
+> From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
+> Date: Tue, 17 Sep 2013 16:47:21 +0530
+> Subject: [PATCH V2 06/10] pm80xx: Print SAS address of IO failed device.
+> 
+> Signed-off-by: Anandkumar.Santhanam@pmcs.com
+> 
 > ---
-> * Change from v1
-> - Add comments for PRDT limitations as suggested by Subhash Jadavani
->
->   drivers/scsi/ufs/ufshcd.c | 15 +++++++++++++++
->   drivers/scsi/ufs/ufshci.h |  5 +++++
->   2 files changed, 20 insertions(+)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index a2abe9a..660792e 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1918,6 +1918,20 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
->   }
->   
->   /**
-> + * ufshcd_slave_configure - adjust SCSI device configurations
-> + * @sdev: pointer to SCSI device
-> + */
-> +static int ufshcd_slave_configure(struct scsi_device *sdev)
-> +{
-> +	struct request_queue *q = sdev->request_queue;
+>  drivers/scsi/pm8001/pm8001_hwi.c |   65 ++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/pm8001/pm80xx_hwi.c |   65 ++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 130 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index 2fd8c38..c9cc744 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -1868,6 +1868,13 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
+>  	if (unlikely(!t || !t->lldd_task || !t->dev))
+>  		return;
+>  	ts = &t->task_status;
+> +	/* Print sas address of IO failed device */
+> +	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
+> +		(status != IO_UNDERFLOW))
+> +		PM8001_FAIL_DBG(pm8001_ha,
+> +			pm8001_printk("SAS Address of IO Failure Drive:"
+> +			"%016llx", SAS_ADDR(t->dev->sas_addr)-1));
 > +
-> +	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
-> +	blk_queue_max_segment_size(q, PRDT_DATA_BYTE_COUNT_MAX);
+>  	switch (status) {
+>  	case IO_SUCCESS:
+>  		PM8001_IO_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS"
+> @@ -2276,6 +2283,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  	u32 param;
+>  	u32 status;
+>  	u32 tag;
+> +	int i, j;
+> +	u8 sata_addr_low[4];
+> +	u32 temp_sata_addr_low;
+> +	u8 sata_addr_hi[4];
+> +	u32 temp_sata_addr_hi;
+>  	struct sata_completion_resp *psataPayload;
+>  	struct task_status_struct *ts;
+>  	struct ata_task_resp *resp ;
+> @@ -2325,7 +2337,60 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  			pm8001_printk("ts null\n"));
+>  		return;
+>  	}
+> +	/* Print sas address of IO failed device */
+> +	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
+> +		(status != IO_UNDERFLOW)) {
+> +		if (!((t->dev->parent) &&
+> +			(DEV_IS_EXPANDER(t->dev->parent->dev_type)))) {
+> +			for (i = 0 , j = 4 ; j <= 7 && i <= 3 ; i++ , j++)
+> +				sata_addr_low[i] = pm8001_ha->sas_addr[j];
+> +			for (i = 0 , j = 0; j <= 3 && i <= 3; i++ , j++)
+> +				sata_addr_hi[i] = pm8001_ha->sas_addr[j];
+> +			memcpy(&temp_sata_addr_low, sata_addr_low,
+> +				sizeof(sata_addr_low));
+> +			memcpy(&temp_sata_addr_hi, sata_addr_hi,
+> +				sizeof(sata_addr_hi));
+> +			temp_sata_addr_hi = (((temp_sata_addr_hi >> 24) & 0xff)
+> +						|((temp_sata_addr_hi << 8) &
+> +						0xff0000) |
+> +						((temp_sata_addr_hi >> 8)
+> +						& 0xff00) |
+> +						((temp_sata_addr_hi << 24) &
+> +						0xff000000));
+> +			temp_sata_addr_low = ((((temp_sata_addr_low >> 24)
+> +						& 0xff) |
+> +						((temp_sata_addr_low << 8)
+> +						& 0xff0000) |
+> +						((temp_sata_addr_low >> 8)
+> +						& 0xff00) |
+> +						((temp_sata_addr_low << 24)
+> +						& 0xff000000)) +
+> +						pm8001_dev->attached_phy +
+> +						0x10);
+> +			PM8001_FAIL_DBG(pm8001_ha,
+> +				pm8001_printk("SAS Address of IO Failure Drive:"
+> +				"%08x%08x", temp_sata_addr_hi,
+> +					temp_sata_addr_low));
+> +		} else {
+> +			for (i = 0 , j = 4 ; j <= 7 && i <= 3; i++ , j++)
+> +				sata_addr_low[i] = t->dev->sas_addr[j];
+> +			for (i = 0 , j = 0 ; j <= 3 && i <= 3 ; i++ , j++)
+> +				sata_addr_hi[i] = t->dev->sas_addr[j];
+> +			temp_sata_addr_low = (sata_addr_low[0] << 24) |
+> +						(sata_addr_low[1] << 16) |
+> +						(sata_addr_low[2] << 8) |
+> +						(sata_addr_low[3]);
+> +			temp_sata_addr_hi =  (sata_addr_hi[0] << 24)|
+> +						(sata_addr_hi[1] << 16)|
+> +						(sata_addr_hi[2] << 8)|
+> +						(sata_addr_hi[3]);
+>  
+> +			PM8001_FAIL_DBG(pm8001_ha,
+> +				pm8001_printk("SAS Address of IO Failure Drive:"
+> +				"%08x%08x", temp_sata_addr_hi,
+> +					temp_sata_addr_low));
+> +		}
+> +	}
+>  	switch (status) {
+>  	case IO_SUCCESS:
+>  		PM8001_IO_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS\n"));
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index e1ab320..80a10aa 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -1296,6 +1296,13 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha , void *piomb)
+>  	if (unlikely(!t || !t->lldd_task || !t->dev))
+>  		return;
+>  	ts = &t->task_status;
+> +	/* Print sas address of IO failed device */
+> +	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
+> +		(status != IO_UNDERFLOW))
+> +		PM8001_FAIL_DBG(pm8001_ha,
+> +			pm8001_printk("SAS Address of IO Failure Drive"
+> +			":%016llx", SAS_ADDR(t->dev->sas_addr)-1));
 > +
-> +	return 0;
-> +}
+>  	switch (status) {
+>  	case IO_SUCCESS:
+>  		PM8001_IO_DBG(pm8001_ha,
+> @@ -1719,6 +1726,10 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  	u32 param;
+>  	u32 status;
+>  	u32 tag;
+> +	int i, j;
+> +	u8 sata_addr_low[4];
+> +	u32 temp_sata_addr_low, temp_sata_addr_hi;
+> +	u8 sata_addr_hi[4];
+>  	struct sata_completion_resp *psataPayload;
+>  	struct task_status_struct *ts;
+>  	struct ata_task_resp *resp ;
+> @@ -1768,7 +1779,61 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  			pm8001_printk("ts null\n"));
+>  		return;
+>  	}
+> +	/* Print sas address of IO failed device */
+> +	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
+> +		(status != IO_UNDERFLOW)) {
+> +		if (!((t->dev->parent) &&
+> +			(DEV_IS_EXPANDER(t->dev->parent->dev_type)))) {
+> +			for (i = 0 , j = 4 ; i <= 3 && j <= 7 ; i++ , j++)
+> +				sata_addr_low[i] = pm8001_ha->sas_addr[j];
+> +			for (i = 0 , j = 0; i <= 3 && j <= 3; i++ , j++)
+> +				sata_addr_hi[i] = pm8001_ha->sas_addr[j];
+> +			memcpy(&temp_sata_addr_low, sata_addr_low,
+> +				sizeof(sata_addr_low));
+> +			memcpy(&temp_sata_addr_hi, sata_addr_hi,
+> +				sizeof(sata_addr_hi));
+> +			temp_sata_addr_hi = (((temp_sata_addr_hi >> 24) & 0xff)
+> +						|((temp_sata_addr_hi << 8) &
+> +						0xff0000) |
+> +						((temp_sata_addr_hi >> 8)
+> +						& 0xff00) |
+> +						((temp_sata_addr_hi << 24) &
+> +						0xff000000));
+> +			temp_sata_addr_low = ((((temp_sata_addr_low >> 24)
+> +						& 0xff) |
+> +						((temp_sata_addr_low << 8)
+> +						& 0xff0000) |
+> +						((temp_sata_addr_low >> 8)
+> +						& 0xff00) |
+> +						((temp_sata_addr_low << 24)
+> +						& 0xff000000)) +
+> +						pm8001_dev->attached_phy +
+> +						0x10);
+> +			PM8001_FAIL_DBG(pm8001_ha,
+> +				pm8001_printk("SAS Address of IO Failure Drive:"
+> +				"%08x%08x", temp_sata_addr_hi,
+> +					temp_sata_addr_low));
 > +
-> +/**
->    * ufshcd_slave_destroy - remove SCSI device configurations
->    * @sdev: pointer to SCSI device
->    */
-> @@ -2748,6 +2762,7 @@ static struct scsi_host_template ufshcd_driver_template = {
->   	.proc_name		= UFSHCD,
->   	.queuecommand		= ufshcd_queuecommand,
->   	.slave_alloc		= ufshcd_slave_alloc,
-> +	.slave_configure	= ufshcd_slave_configure,
->   	.slave_destroy		= ufshcd_slave_destroy,
->   	.eh_abort_handler	= ufshcd_abort,
->   	.eh_device_reset_handler = ufshcd_device_reset,
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> index 0475c66..b2b7004 100644
-> --- a/drivers/scsi/ufs/ufshci.h
-> +++ b/drivers/scsi/ufs/ufshci.h
-> @@ -296,6 +296,11 @@ enum {
->   	MASK_OCS			= 0x0F,
->   };
->   
-> +/* The maximum length of the data byte count field in the PRDT is 256KB */
-> +#define PRDT_DATA_BYTE_COUNT_MAX	(256 * 1024)
-> +/* The granularity of the data byte count field in the PRDT is 32-bit */
-> +#define PRDT_DATA_BYTE_COUNT_PAD	4
-> +
->   /**
->    * struct ufshcd_sg_entry - UFSHCI PRD Entry
->    * @base_addr: Lower 32bit physical address DW-0
+> +		} else {
+> +			for (i = 0 , j = 4 ; i <= 3 && j <= 7; i++ , j++)
+> +				sata_addr_low[i] = t->dev->sas_addr[j];
+> +			for (i = 0 , j = 0 ; i <= 3 && j <= 3 ; i++ , j++)
+> +				sata_addr_hi[i] = t->dev->sas_addr[j];
+> +			temp_sata_addr_low = (sata_addr_low[0] << 24) |
+> +						(sata_addr_low[1] << 16) |
+> +						(sata_addr_low[2] << 8) |
+> +						(sata_addr_low[3]);
+> +			temp_sata_addr_hi =  (sata_addr_hi[0] << 24)|
+> +						(sata_addr_hi[1] << 16)|
+> +						(sata_addr_hi[2] << 8)|
+> +						(sata_addr_hi[3]);
+>  
+> +			PM8001_FAIL_DBG(pm8001_ha,
+> +				pm8001_printk("SAS Address of IO Failure Drive:"
+> +				"%08x%08x", temp_sata_addr_hi,
+> +					temp_sata_addr_low));
+
+you don't need convert for second else case just use
+> +		":%016llx", SAS_ADDR(t->dev->sas_addr)-1)); should be fine?
+
+Jack
+> +	}
+>  	switch (status) {
+>  	case IO_SUCCESS:
+>  		PM8001_IO_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS\n"));
+> 
 
