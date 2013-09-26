@@ -1,30 +1,42 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH V2 05/10] pm80xx: Phy settings support for motherboard
- controller.
-Date: Thu, 26 Sep 2013 11:12:56 +0200
-Message-ID: <5243FA98.5070206@gmail.com>
-References: <5243C75D.3060606@pmc-sierra.com> <5243DAA9.8050304@gmail.com> <E5DEE6F468524847995699AD11E8088501EDC90F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+From: "Sangeetha Gnanasekaran" <Sangeetha.Gnanasekaran@pmcs.com>
+Subject: RE: [PATCH V2 05/10] pm80xx: Phy settings support for motherboard controller.
+Date: Thu, 26 Sep 2013 02:16:44 -0700
+Message-ID: <E5DEE6F468524847995699AD11E8088501EDC915@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <5243C75D.3060606@pmc-sierra.com> <5243DAA9.8050304@gmail.com> <E5DEE6F468524847995699AD11E8088501EDC90F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <5243FA98.5070206@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:42926 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091Ab3IZJMq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Sep 2013 05:12:46 -0400
-Received: by mail-ee0-f50.google.com with SMTP id d51so391156eek.9
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2013 02:12:45 -0700 (PDT)
-In-Reply-To: <E5DEE6F468524847995699AD11E8088501EDC90F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:42966 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750933Ab3IZJQr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Sep 2013 05:16:47 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <5243FA98.5070206@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>
+To: Jack Wang <xjtuwjp@gmail.com>
 Cc: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, linux-scsi@vger.kernel.org, Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>, Viswas G <Viswas.G@pmcs.com>
+
+Ok. We will add the device list and send updated patch.
+
+-----Original Message-----
+From: Jack Wang [mailto:xjtuwjp@gmail.com] 
+Sent: Thursday, September 26, 2013 2:43 PM
+To: Sangeetha Gnanasekaran
+Cc: Anand Kumar Santhanam; linux-scsi@vger.kernel.org; Nikith
+Ganigarakoppal; Viswas G
+Subject: Re: [PATCH V2 05/10] pm80xx: Phy settings support for
+motherboard controller.
 
 On 09/26/2013 11:04 AM, Sangeetha Gnanasekaran wrote:
 > Phy settings support is only for Motherboard controller. Firmware will
-> only initialize default values for all PHY in case of motherboard
-> controller. Hence, this is mandatory to add this support in all
-> motherboard controllers to configure their own settings. 
+
+> only initialize default values for all PHY in case of motherboard 
+> controller. Hence, this is mandatory to add this support in all 
+> motherboard controllers to configure their own settings.
 
 I still think you'd better add a list for devices know to support phy
 setting similar as IS_SPC12G, there are some devices in the driver
@@ -33,12 +45,12 @@ support list do not have default setting I suspect.
 Jack
 > 
 > -----Original Message-----
-> From: Jack Wang [mailto:xjtuwjp@gmail.com] 
+> From: Jack Wang [mailto:xjtuwjp@gmail.com]
 > Sent: Thursday, September 26, 2013 12:27 PM
 > To: Anand Kumar Santhanam
-> Cc: linux-scsi@vger.kernel.org; Sangeetha Gnanasekaran; Nikith
+> Cc: linux-scsi@vger.kernel.org; Sangeetha Gnanasekaran; Nikith 
 > Ganigarakoppal; Viswas G
-> Subject: Re: [PATCH V2 05/10] pm80xx: Phy settings support for
+> Subject: Re: [PATCH V2 05/10] pm80xx: Phy settings support for 
 > motherboard controller.
 > 
 > snip
@@ -54,14 +66,15 @@ Jack
 >> +		pm8001_get_phy_settings_info(pm8001_ha);
 > 
 > Are you sure about this, have you checked all controller except device
-> with subsystem_vendorid is PCI_VENDOR_ID_ADAPTEC2 all support this
+
+> with subsystem_vendorid is PCI_VENDOR_ID_ADAPTEC2 all support this 
 > get_phy_setting_info funcion?
 > 
 > Jack
 >>  	pm8001_post_sas_ha_init(shost, chip);
 >>  	rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
 >>  	if (rc)
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.h 
+>> diff --git a/drivers/scsi/pm8001/pm8001_sas.h
 >> b/drivers/scsi/pm8001/pm8001_sas.h
 >> index 68e1147..cbde11a 100644
 >> --- a/drivers/scsi/pm8001/pm8001_sas.h
@@ -78,7 +91,7 @@ Jack
 >>  /* ctl shared API */
 >>  extern struct device_attribute *pm8001_host_attrs[];
 >>  
->> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c 
+>> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c
 >> b/drivers/scsi/pm8001/pm80xx_hwi.c
 >> index 99cec5f..e1ab320 100644
 >> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
@@ -166,7 +179,7 @@ Jack
 >>  const struct pm8001_dispatch pm8001_80xx_dispatch = {
 >>  	.name			= "pmc80xx",
 >>  	.chip_init		= pm80xx_chip_init,
->> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h 
+>> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h
 >> b/drivers/scsi/pm8001/pm80xx_hwi.h
 >> index 9a9116d..872d5cf 100644
 >> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
