@@ -1,161 +1,187 @@
-From: "Sangeetha Gnanasekaran" <Sangeetha.Gnanasekaran@pmcs.com>
-Subject: RE: [PATCH V2 08/10] pm80xx: Queue rotation logic for inbound and outbound queues
-Date: Thu, 26 Sep 2013 02:09:08 -0700
-Message-ID: <E5DEE6F468524847995699AD11E8088501EDC913@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <5243C8D8.5090505@pmc-sierra.com> <5243DD52.7010304@gmail.com>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH V2 05/10] pm80xx: Phy settings support for motherboard
+ controller.
+Date: Thu, 26 Sep 2013 11:12:56 +0200
+Message-ID: <5243FA98.5070206@gmail.com>
+References: <5243C75D.3060606@pmc-sierra.com> <5243DAA9.8050304@gmail.com> <E5DEE6F468524847995699AD11E8088501EDC90F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:57042 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750933Ab3IZJJN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Sep 2013 05:09:13 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <5243DD52.7010304@gmail.com>
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:42926 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091Ab3IZJMq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Sep 2013 05:12:46 -0400
+Received: by mail-ee0-f50.google.com with SMTP id d51so391156eek.9
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2013 02:12:45 -0700 (PDT)
+In-Reply-To: <E5DEE6F468524847995699AD11E8088501EDC90F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>, Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-Cc: linux-scsi@vger.kernel.org, Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>, Viswas G <Viswas.G@pmcs.com>
+To: Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>
+Cc: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, linux-scsi@vger.kernel.org, Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>, Viswas G <Viswas.G@pmcs.com>
 
-We have increased performance by setting inbound to 16 and outbound to
-4. We will send patch for it.
+On 09/26/2013 11:04 AM, Sangeetha Gnanasekaran wrote:
+> Phy settings support is only for Motherboard controller. Firmware will
+> only initialize default values for all PHY in case of motherboard
+> controller. Hence, this is mandatory to add this support in all
+> motherboard controllers to configure their own settings. 
 
------Original Message-----
-From: Jack Wang [mailto:xjtuwjp@gmail.com] 
-Sent: Thursday, September 26, 2013 12:38 PM
-To: Anand Kumar Santhanam
-Cc: linux-scsi@vger.kernel.org; Sangeetha Gnanasekaran; Nikith
-Ganigarakoppal; Viswas G
-Subject: Re: [PATCH V2 08/10] pm80xx: Queue rotation logic for inbound
-and outbound queues
-
-On 09/26/2013 07:40 AM, Anand wrote:
-> From 678d8085ace7c471dc140420c41dc4ad70300d60 Mon Sep 17 00:00:00 2001
-> From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-> Date: Wed, 18 Sep 2013 11:12:59 +0530
-> Subject: [PATCH V2 08/10] pm80xx: Queue rotation logic for inbound and
-outbound queues.
-> 
-> Signed-off-by: Anandkumar.Santhanam@pmcs.com
-> 
-I'd like to know the number of this improved for performance?
+I still think you'd better add a list for devices know to support phy
+setting similar as IS_SPC12G, there are some devices in the driver
+support list do not have default setting I suspect.
 
 Jack
-
-> ---
->  drivers/scsi/pm8001/pm80xx_hwi.c |   31
-+++++++++++++------------------
->  1 files changed, 13 insertions(+), 18 deletions(-)
 > 
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c 
-> b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 80a10aa..ce59d0d 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -3715,8 +3715,7 @@ static int pm80xx_chip_ssp_io_req(struct
-pm8001_hba_info *pm8001_ha,
->  	int ret;
->  	u64 phys_addr;
->  	struct inbound_queue_table *circularQ;
-> -	static u32 inb;
-> -	static u32 outb;
-> +	u32 q_index;
->  	u32 opc = OPC_INB_SSPINIIOSTART;
->  	memset(&ssp_cmd, 0, sizeof(ssp_cmd));
->  	memcpy(ssp_cmd.ssp_iu.lun, task->ssp_task.LUN, 8); @@ -3735,7 
-> +3734,8 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info
-*pm8001_ha,
->  	ssp_cmd.ssp_iu.efb_prio_attr |= (task->ssp_task.task_attr & 7);
->  	memcpy(ssp_cmd.ssp_iu.cdb, task->ssp_task.cmd->cmnd,
->  		       task->ssp_task.cmd->cmd_len);
-> -	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-> +	q_index = (u32) (pm8001_dev->id & 0x00ffffff) %
-PM8001_MAX_INB_NUM;
-> +	circularQ = &pm8001_ha->inbnd_q_tbl[q_index];
->  
->  	/* Check if encryption is set */
->  	if (pm8001_ha->chip->encrypt &&
-> @@ -3783,7 +3783,7 @@ static int pm80xx_chip_ssp_io_req(struct
-pm8001_hba_info *pm8001_ha,
->  	} else {
->  		PM8001_IO_DBG(pm8001_ha, pm8001_printk(
->  			"Sending Normal SAS command 0x%x inb q %x\n",
-> -			task->ssp_task.cmd->cmnd[0], inb));
-> +			task->ssp_task.cmd->cmnd[0], q_index));
->  		/* fill in PRD (scatter/gather) table, if any */
->  		if (task->num_scatter > 1) {
->  			pm8001_chip_make_sg(task->scatter, ccb->n_elem,
-@@ -3809,11 
-> +3809,9 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info
-*pm8001_ha,
->  			ssp_cmd.esgl = 0;
->  		}
->  	}
-> -	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &ssp_cmd,
-outb++);
-> -
-> -	/* rotate the outb queue */
-> -	outb = outb%PM8001_MAX_SPCV_OUTB_NUM;
-> -
-> +	q_index = (u32) (pm8001_dev->id & 0x00ffffff) %
-PM8001_MAX_OUTB_NUM;
-> +	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
-> +						&ssp_cmd, q_index);
->  	return ret;
->  }
->  
-> @@ -3825,8 +3823,7 @@ static int pm80xx_chip_sata_req(struct
-pm8001_hba_info *pm8001_ha,
->  	struct pm8001_device *pm8001_ha_dev = dev->lldd_dev;
->  	u32 tag = ccb->ccb_tag;
->  	int ret;
-> -	static u32 inb;
-> -	static u32 outb;
-> +	u32 q_index;
->  	struct sata_start_req sata_cmd;
->  	u32 hdr_tag, ncg_tag = 0;
->  	u64 phys_addr;
-> @@ -3836,7 +3833,8 @@ static int pm80xx_chip_sata_req(struct
-pm8001_hba_info *pm8001_ha,
->  	unsigned long flags;
->  	u32 opc = OPC_INB_SATA_HOST_OPSTART;
->  	memset(&sata_cmd, 0, sizeof(sata_cmd));
-> -	circularQ = &pm8001_ha->inbnd_q_tbl[0];
-> +	q_index = (u32) (pm8001_ha_dev->id & 0x00ffffff) %
-PM8001_MAX_INB_NUM;
-> +	circularQ = &pm8001_ha->inbnd_q_tbl[q_index];
->  
->  	if (task->data_dir == PCI_DMA_NONE) {
->  		ATAP = 0x04; /* no data*/
-> @@ -3917,7 +3915,7 @@ static int pm80xx_chip_sata_req(struct
-pm8001_hba_info *pm8001_ha,
->  	} else {
->  		PM8001_IO_DBG(pm8001_ha, pm8001_printk(
->  			"Sending Normal SATA command 0x%x inb %x\n",
-> -			sata_cmd.sata_fis.command, inb));
-> +			sata_cmd.sata_fis.command, q_index));
->  		/* dad (bit 0-1) is 0 */
->  		sata_cmd.ncqtag_atap_dir_m_dad =
->  			cpu_to_le32(((ncg_tag & 0xff)<<16) | @@ -4014,12
-+4012,9 @@ static 
-> int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->  			}
->  		}
->  	}
-> -
-> +	q_index = (u32) (pm8001_ha_dev->id & 0x00ffffff) % 
-> +PM8001_MAX_OUTB_NUM;
->  	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
-> -						&sata_cmd, outb++);
-> -
-> -	/* rotate the outb queue */
-> -	outb = outb%PM8001_MAX_SPCV_OUTB_NUM;
-> +						&sata_cmd, q_index);
->  	return ret;
->  }
->  
+> -----Original Message-----
+> From: Jack Wang [mailto:xjtuwjp@gmail.com] 
+> Sent: Thursday, September 26, 2013 12:27 PM
+> To: Anand Kumar Santhanam
+> Cc: linux-scsi@vger.kernel.org; Sangeetha Gnanasekaran; Nikith
+> Ganigarakoppal; Viswas G
+> Subject: Re: [PATCH V2 05/10] pm80xx: Phy settings support for
+> motherboard controller.
+> 
+> snip
+>>  #ifdef PM8001_USE_MSIX
+>>  /**
+>>   * pm8001_setup_msix - enable MSI-X interrupt @@ -847,6 +872,9 @@ 
+>> static int pm8001_pci_probe(struct pci_dev *pdev,
+>>  	}
+>>  
+>>  	pm8001_init_sas_add(pm8001_ha);
+>> +	/* phy setting support for motherboard controller */
+>> +	if (pdev->subsystem_vendor != PCI_VENDOR_ID_ADAPTEC2)
+>> +		pm8001_get_phy_settings_info(pm8001_ha);
+> 
+> Are you sure about this, have you checked all controller except device
+> with subsystem_vendorid is PCI_VENDOR_ID_ADAPTEC2 all support this
+> get_phy_setting_info funcion?
+> 
+> Jack
+>>  	pm8001_post_sas_ha_init(shost, chip);
+>>  	rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
+>>  	if (rc)
+>> diff --git a/drivers/scsi/pm8001/pm8001_sas.h 
+>> b/drivers/scsi/pm8001/pm8001_sas.h
+>> index 68e1147..cbde11a 100644
+>> --- a/drivers/scsi/pm8001/pm8001_sas.h
+>> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+>> @@ -632,7 +632,8 @@ struct pm8001_device *pm8001_find_dev(struct 
+>> pm8001_hba_info *pm8001_ha,  int pm80xx_set_thermal_config(struct 
+>> pm8001_hba_info *pm8001_ha);
+>>  
+>>  int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 
+>> shiftValue);
+>> -
+>> +void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
+>> +	u32 length, u8 *buf);
+>>  /* ctl shared API */
+>>  extern struct device_attribute *pm8001_host_attrs[];
+>>  
+>> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c 
+>> b/drivers/scsi/pm8001/pm80xx_hwi.c
+>> index 99cec5f..e1ab320 100644
+>> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+>> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+>> @@ -3131,9 +3131,27 @@ static int mpi_flash_op_ext_resp(struct 
+>> pm8001_hba_info *pm8001_ha, void *piomb)  static int
+> mpi_set_phy_profile_resp(struct pm8001_hba_info *pm8001_ha,
+>>  			void *piomb)
+>>  {
+>> -	PM8001_MSG_DBG(pm8001_ha,
+>> -			pm8001_printk("
+> pm80xx_addition_functionality\n"));
+>> +	u8 page_code;
+>> +	struct set_phy_profile_resp *pPayload =
+>> +		(struct set_phy_profile_resp *)(piomb + 4);
+>> +	u32 ppc_phyid = le32_to_cpu(pPayload->ppc_phyid);
+>> +	u32 status = le32_to_cpu(pPayload->status);
+>>  
+>> +	page_code = (u8)((ppc_phyid & 0xFF00) >> 8);
+>> +	if (status) {
+>> +		/* status is FAILED */
+>> +		PM8001_FAIL_DBG(pm8001_ha,
+>> +			pm8001_printk("PhyProfile command failed  with
+> status "
+>> +			"0x%08X \n", status));
+>> +		return -1;
+>> +	} else {
+>> +		if (page_code != SAS_PHY_ANALOG_SETTINGS_PAGE) {
+>> +			PM8001_FAIL_DBG(pm8001_ha,
+>> +				pm8001_printk("Invalid page code
+> 0x%X\n",
+>> +					page_code));
+>> +			return -1;
+>> +		}
+>> +	}
+>>  	return 0;
+>>  }
+>>  
+>> @@ -4128,6 +4146,45 @@ pm80xx_chip_isr(struct pm8001_hba_info
+> *pm8001_ha, u8 vec)
+>>  	return IRQ_HANDLED;
+>>  }
+>>  
+>> +void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
+>> +	u32 operation, u32 phyid, u32 length, u32 *buf) {
+>> +	u32 tag , i, j = 0;
+>> +	int rc;
+>> +	struct set_phy_profile_req payload;
+>> +	struct inbound_queue_table *circularQ;
+>> +	u32 opc = OPC_INB_SET_PHY_PROFILE;
+>> +
+>> +	memset(&payload, 0, sizeof(payload));
+>> +	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+>> +	if (rc)
+>> +		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("Invalid
+> tag\n"));
+>> +	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>> +	payload.tag = cpu_to_le32(tag);
+>> +	payload.ppc_phyid = (((operation & 0xF) << 8) | (phyid  &
+> 0xFF));
+>> +	PM8001_INIT_DBG(pm8001_ha,
+>> +		pm8001_printk(" phy profile command for phy %x ,length
+> is %d\n",
+>> +			payload.ppc_phyid, length));
+>> +	for (i = length ; i < (length + PHY_DWORD_LENGTH - 1) ; i++) {
+>> +		payload.reserved[j] =  cpu_to_le32(*((u32 *)buf + i));
+>> +		j++;
+>> +	}
+>> +	pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0); }
+>> +
+>> +void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
+>> +	u32 length, u8 *buf)
+>> +{
+>> +	u32 page_code, i;
+>> +
+>> +	page_code = SAS_PHY_ANALOG_SETTINGS_PAGE;
+>> +	for (i = 0 ; i < pm8001_ha->chip->n_phy ; i++) {
+>> +		mpi_set_phy_profile_req(pm8001_ha,
+>> +			SAS_PHY_ANALOG_SETTINGS_PAGE, i, length, (u32
+> *)buf);
+>> +		length = length + PHY_DWORD_LENGTH;
+>> +	}
+>> +	PM8001_INIT_DBG(pm8001_ha, pm8001_printk("phy settings 
+>> +completed\n")); }
+>>  const struct pm8001_dispatch pm8001_80xx_dispatch = {
+>>  	.name			= "pmc80xx",
+>>  	.chip_init		= pm80xx_chip_init,
+>> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h 
+>> b/drivers/scsi/pm8001/pm80xx_hwi.h
+>> index 9a9116d..872d5cf 100644
+>> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
+>> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+>> @@ -170,6 +170,10 @@
+>>  #define LINKRATE_60			(0x06 << 8)
+>>  #define LINKRATE_120			(0x08 << 8)
+>>  
+>> +/* phy_profile */
+>> +#define SAS_PHY_ANALOG_SETTINGS_PAGE	0x04
+>> +#define PHY_DWORD_LENGTH		0xC
+>> +
+>>  /* Thermal related */
+>>  #define	THERMAL_ENABLE			0x1
+>>  #define	THERMAL_LOG_ENABLE		0x1
+>>
 > 
 
