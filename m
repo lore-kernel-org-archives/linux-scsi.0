@@ -1,103 +1,181 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work [was:
- dm mpath: disable WRITE SAME if it fails]
-Date: Thu, 26 Sep 2013 01:39:12 -0400
-Message-ID: <5243C880.6050609@interlog.com>
-References: <20130919161043.GA27081@redhat.com>	<20130920212142.GA17898@redhat.com>	<yq1eh8jf8wq.fsf@sermon.lab.mkp.net>	<1379960325.4010.32.camel@localhost.localdomain>	<52412581.2010909@suse.de> <20130924123449.GA16083@redhat.com>	<yq1hadaba87.fsf@sermon.lab.mkp.net> <52434D0C.1090008@fastmail.fm> <yq1vc1o9ztd.fsf@sermon.lab.mkp.net>
-Reply-To: dgilbert@interlog.com
+From: Anand <anandkumar_santhanam@pmc-sierra.com>
+Subject: [PATCH V2 09/10] pm80xx: 4G boundary fix
+Date: Wed, 25 Sep 2013 22:42:14 -0700
+Message-ID: <5243C936.5000704@pmc-sierra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:55206 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811Ab3IZFji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Sep 2013 01:39:38 -0400
-In-Reply-To: <yq1vc1o9ztd.fsf@sermon.lab.mkp.net>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:44794 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751143Ab3IZFjn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Sep 2013 01:39:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bernd Schubert <bernd.schubert@fastmail.fm>
-Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, emilne@redhat.com, device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Sangeetha.Gnanasekaran@pmcs.com, Nikith.Ganigarakoppal@pmcs.com, Viswas.G@pmcs.com, xjtuwjp@gmail.com
 
-On 13-09-25 08:44 PM, Martin K. Petersen wrote:
->>>>>> "Bernd" == Bernd Schubert <bernd.schubert@fastmail.fm> writes:
->
-> Hey Bernd,
->
-> Bernd> I'm afraid we have another problem. I'm currently working on to
-> Bernd> get discard working for our LSI2008 HBAs with attached sata-SSDs
-> Bernd> and the heuristics in sd_read_write_same with based on VPD page
-> Bernd> 0x89 is not correct for this HBA - its SATL supports write-same
->
-> This has nothing to do with the WRITE SAME heuristics.
->
-> It's true that depending on wind and whether we might issue WRITE
-> SAME(10) or (16) with the UNMAP bit set to perform discard operations on
-> the low level device. But we use a set of different (and somewhat more
-> reliable) heuristics to decide which command to send down for that
-> purpose.
->
-> For discards to a SATA device to work you need a recent phase LSI
-> firmware. And you need the target mode firmware (IT). There is no
-> UNMAP->DSM TRIM translation in the RAID (IR) firmware.
->
-> If your SATA SSDs reports DSM TRIM support, the LSI firmware will set
-> LBPME=1 in READ CAPACITY(16) and the LOGICAL BLOCK PROVISIONING VPD page
-> will indicate a preference for the UNMAP command (LBPU=1).
->
-> Also, LSI firmware is well-behaved in general and will report ILLEGAL
-> REQUEST when you send down a command that can't be handled.
+>From 4715339743d45a6ef862bc0f5d5ec404b4667f94 Mon Sep 17 00:00:00 2001
+From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
+Date: Wed, 18 Sep 2013 11:14:54 +0530
+Subject: [PATCH V2 09/10] pm80xx: 4G boundary fix.
 
-An example with a LSI 9212-4i4e running the latest firmware
-(P17) connected to a SATA SSD (via an expander):
+Signed-off-by: Anandkumar.Santhanam@pmcs.com
 
-# sg_vpd /dev/sg1 -p sinq
-standard INQUIRY:
-   PQual=0  Device_type=0  RMB=0  version=0x06  [SPC-4]
-   [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=1  Resp_data_format=2
-   SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  [BQue=0]
-   EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-   [RelAdr=0]  WBus16=0  Sync=0  Linked=0  [TranDis=0]  CmdQue=1
-   Vendor_identification: ATA
-   Product_identification: INTEL SSDSA2M080
-   Product_revision_level: 02M3
+---
+ drivers/scsi/pm8001/pm80xx_hwi.c |  103 +++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 101 insertions(+), 2 deletions(-)
 
-# sg_vpd /dev/sg1 -p bl
-Block limits VPD page (SBC):
-   Write same no zero (WSNZ): 0
-   Maximum compare and write length: 0 blocks
-   Optimal transfer length granularity: 0 blocks
-   Maximum transfer length: 0 blocks
-   Optimal transfer length: 0 blocks
-   Maximum prefetch length: 0 blocks
-   Maximum unmap LBA count: 4194303
-   Maximum unmap block descriptor count: 32
-   Optimal unmap granularity: 1
-   Unmap granularity alignment valid: 0
-   Unmap granularity alignment: 0
-   Maximum write same length: 0x0 blocks
-
-# sg_vpd /dev/sg1 -p lbpv
-Logical block provisioning VPD page (SBC):
-   Unmap command supported (LBPU): 1
-   Write same (16) with unmap bit supported (LBWS): 1
-   Write same (10) with unmap bit supported (LBWS10): 0
-   Logical block provisioning read zeros (LBPRZ): 0
-   Anchored LBAs supported (ANC_SUP): 1
-   Threshold exponent: 0
-   Descriptor present (DP): 0
-   Provisioning type: 0
-
-# sg_opcodes -n /dev/sg1
-Report supported operation codes: operation not supported
-
-
-Room for improvement there. It also supports a useful set
-of mode pages (including some chageable fields) and two
-log pages.
-
-Doug Gilbert
-
-
-
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index ce59d0d..94de2ed 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -3713,7 +3713,8 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
+ 	struct ssp_ini_io_start_req ssp_cmd;
+ 	u32 tag = ccb->ccb_tag;
+ 	int ret;
+-	u64 phys_addr;
++	u64 phys_addr, start_addr, end_addr;
++	u32 end_addr_high, end_addr_low;
+ 	struct inbound_queue_table *circularQ;
+ 	u32 q_index;
+ 	u32 opc = OPC_INB_SSPINIIOSTART;
+@@ -3767,6 +3768,30 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
+ 				cpu_to_le32(upper_32_bits(dma_addr));
+ 			ssp_cmd.enc_len = cpu_to_le32(task->total_xfer_len);
+ 			ssp_cmd.enc_esgl = 0;
++			/* Check 4G Boundary */
++			start_addr = cpu_to_le64(dma_addr);
++			end_addr = (start_addr + ssp_cmd.enc_len) - 1;
++			end_addr_low = cpu_to_le32(lower_32_bits(end_addr));
++			end_addr_high = cpu_to_le32(upper_32_bits(end_addr));
++			if (end_addr_high != ssp_cmd.enc_addr_high) {
++				PM8001_FAIL_DBG(pm8001_ha,
++					pm8001_printk("The sg list address "
++					"start_addr=0x%016llx data_len=0x%x "
++					"end_addr_high=0x%08x end_addr_low="
++					"0x%08x has crossed 4G boundary\n",
++						start_addr, ssp_cmd.enc_len,
++						end_addr_high, end_addr_low));
++				pm8001_chip_make_sg(task->scatter, 1,
++					ccb->buf_prd);
++				phys_addr = ccb->ccb_dma_handle +
++					offsetof(struct pm8001_ccb_info,
++						buf_prd[0]);
++				ssp_cmd.enc_addr_low =
++					cpu_to_le32(lower_32_bits(phys_addr));
++				ssp_cmd.enc_addr_high =
++					cpu_to_le32(upper_32_bits(phys_addr));
++				ssp_cmd.enc_esgl = cpu_to_le32(1<<31);
++			}
+ 		} else if (task->num_scatter == 0) {
+ 			ssp_cmd.enc_addr_low = 0;
+ 			ssp_cmd.enc_addr_high = 0;
+@@ -3802,6 +3827,30 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
+ 				cpu_to_le32(upper_32_bits(dma_addr));
+ 			ssp_cmd.len = cpu_to_le32(task->total_xfer_len);
+ 			ssp_cmd.esgl = 0;
++			/* Check 4G Boundary */
++			start_addr = cpu_to_le64(dma_addr);
++			end_addr = (start_addr + ssp_cmd.len) - 1;
++			end_addr_low = cpu_to_le32(lower_32_bits(end_addr));
++			end_addr_high = cpu_to_le32(upper_32_bits(end_addr));
++			if (end_addr_high != ssp_cmd.addr_high) {
++				PM8001_FAIL_DBG(pm8001_ha,
++					pm8001_printk("The sg list address "
++					"start_addr=0x%016llx data_len=0x%x "
++					"end_addr_high=0x%08x end_addr_low="
++					"0x%08x has crossed 4G boundary\n",
++						 start_addr, ssp_cmd.len,
++						 end_addr_high, end_addr_low));
++				pm8001_chip_make_sg(task->scatter, 1,
++					ccb->buf_prd);
++				phys_addr = ccb->ccb_dma_handle +
++					offsetof(struct pm8001_ccb_info,
++						 buf_prd[0]);
++				ssp_cmd.addr_low =
++					cpu_to_le32(lower_32_bits(phys_addr));
++				ssp_cmd.addr_high =
++					cpu_to_le32(upper_32_bits(phys_addr));
++				ssp_cmd.esgl = cpu_to_le32(1<<31);
++			}
+ 		} else if (task->num_scatter == 0) {
+ 			ssp_cmd.addr_low = 0;
+ 			ssp_cmd.addr_high = 0;
+@@ -3826,7 +3875,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+ 	u32 q_index;
+ 	struct sata_start_req sata_cmd;
+ 	u32 hdr_tag, ncg_tag = 0;
+-	u64 phys_addr;
++	u64 phys_addr, start_addr, end_addr;
++	u32 end_addr_high, end_addr_low;
+ 	u32 ATAP = 0x0;
+ 	u32 dir;
+ 	struct inbound_queue_table *circularQ;
+@@ -3895,6 +3945,31 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+ 			sata_cmd.enc_addr_high = upper_32_bits(dma_addr);
+ 			sata_cmd.enc_len = cpu_to_le32(task->total_xfer_len);
+ 			sata_cmd.enc_esgl = 0;
++			/* Check 4G Boundary */
++			start_addr = cpu_to_le64(dma_addr);
++			end_addr = (start_addr + sata_cmd.enc_len) - 1;
++			end_addr_low = cpu_to_le32(lower_32_bits(end_addr));
++			end_addr_high = cpu_to_le32(upper_32_bits(end_addr));
++			if (end_addr_high != sata_cmd.enc_addr_high) {
++				PM8001_FAIL_DBG(pm8001_ha,
++					pm8001_printk("The sg list address "
++					"start_addr=0x%016llx data_len=0x%x "
++					"end_addr_high=0x%08x end_addr_low"
++					"=0x%08x has crossed 4G boundary\n",
++						start_addr, sata_cmd.enc_len,
++						end_addr_high, end_addr_low));
++				pm8001_chip_make_sg(task->scatter, 1,
++					ccb->buf_prd);
++				phys_addr = ccb->ccb_dma_handle +
++						offsetof(struct pm8001_ccb_info,
++						buf_prd[0]);
++				sata_cmd.enc_addr_low =
++					lower_32_bits(phys_addr);
++				sata_cmd.enc_addr_high =
++					upper_32_bits(phys_addr);
++				sata_cmd.enc_esgl =
++					cpu_to_le32(1 << 31);
++			}
+ 		} else if (task->num_scatter == 0) {
+ 			sata_cmd.enc_addr_low = 0;
+ 			sata_cmd.enc_addr_high = 0;
+@@ -3936,6 +4011,30 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+ 			sata_cmd.addr_high = upper_32_bits(dma_addr);
+ 			sata_cmd.len = cpu_to_le32(task->total_xfer_len);
+ 			sata_cmd.esgl = 0;
++			/* Check 4G Boundary */
++			start_addr = cpu_to_le64(dma_addr);
++			end_addr = (start_addr + sata_cmd.len) - 1;
++			end_addr_low = cpu_to_le32(lower_32_bits(end_addr));
++			end_addr_high = cpu_to_le32(upper_32_bits(end_addr));
++			if (end_addr_high != sata_cmd.addr_high) {
++				PM8001_FAIL_DBG(pm8001_ha,
++					pm8001_printk("The sg list address "
++					"start_addr=0x%016llx data_len=0x%x"
++					"end_addr_high=0x%08x end_addr_low="
++					"0x%08x has crossed 4G boundary\n",
++						start_addr, sata_cmd.len,
++						end_addr_high, end_addr_low));
++				pm8001_chip_make_sg(task->scatter, 1,
++					ccb->buf_prd);
++				phys_addr = ccb->ccb_dma_handle +
++					offsetof(struct pm8001_ccb_info,
++					buf_prd[0]);
++				sata_cmd.addr_low =
++					lower_32_bits(phys_addr);
++				sata_cmd.addr_high =
++					upper_32_bits(phys_addr);
++				sata_cmd.esgl = cpu_to_le32(1 << 31);
++			}
+ 		} else if (task->num_scatter == 0) {
+ 			sata_cmd.addr_low = 0;
+ 			sata_cmd.addr_high = 0;
+-- 
+1.7.1
 
