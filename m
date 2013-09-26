@@ -1,200 +1,99 @@
-From: "Sangeetha Gnanasekaran" <Sangeetha.Gnanasekaran@pmcs.com>
-Subject: RE: [PATCH V2 05/10] pm80xx: Phy settings support for motherboard controller.
-Date: Thu, 26 Sep 2013 02:16:44 -0700
-Message-ID: <E5DEE6F468524847995699AD11E8088501EDC915@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <5243C75D.3060606@pmc-sierra.com> <5243DAA9.8050304@gmail.com> <E5DEE6F468524847995699AD11E8088501EDC90F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <5243FA98.5070206@gmail.com>
+From: Archit Taneja <archit@ti.com>
+Subject: Re: [PATCH 39/51] DMA-API: others: use dma_set_coherent_mask()
+Date: Thu, 26 Sep 2013 16:21:36 +0530
+Message-ID: <524411B8.4070000@ti.com>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+ <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:42966 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750933Ab3IZJQr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Sep 2013 05:16:47 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <5243FA98.5070206@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Russell King <rmk+kernel@arm.linux.org.uk>, alsa-devel@alsa-project.org, b43-dev@lists.infradead.org, devel@driverdev.osuosl.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net, linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, uclinux-dist-devel@blackfin.uclinux.org
+Cc: Kukjin Kim <kgene.kim@samsung.com>, Joonyoung Shim <jy0922.shim@samsung.com>, David Airlie <airlied@linux.ie>, Seung-Woo Kim <sw0312.kim@samsung.com>, Rob Clark <robdclark@gmail.com>, Inki Dae <inki.dae@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, "Valkeinen, Tomi" <tomi.valkeinen@ti.com>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>
-Cc: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>, linux-scsi@vger.kernel.org, Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>, Viswas G <Viswas.G@pmcs.com>
 
-Ok. We will add the device list and send updated patch.
+Hi,
 
------Original Message-----
-From: Jack Wang [mailto:xjtuwjp@gmail.com] 
-Sent: Thursday, September 26, 2013 2:43 PM
-To: Sangeetha Gnanasekaran
-Cc: Anand Kumar Santhanam; linux-scsi@vger.kernel.org; Nikith
-Ganigarakoppal; Viswas G
-Subject: Re: [PATCH V2 05/10] pm80xx: Phy settings support for
-motherboard controller.
+On Friday 20 September 2013 04:41 AM, Russell King wrote:
+> The correct way for a driver to specify the coherent DMA mask is
+> not to directly access the field in the struct device, but to use
+> dma_set_coherent_mask().  Only arch and bus code should access this
+> member directly.
+>
+> Convert all direct write accesses to using the correct API.
+>
+> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> ---
+>   drivers/ata/pata_ixp4xx_cf.c             |    5 ++++-
+>   drivers/gpu/drm/exynos/exynos_drm_drv.c  |    6 +++++-
+>   drivers/gpu/drm/omapdrm/omap_dmm_tiler.c |    5 +++--
+>   3 files changed, 12 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+> index 1ec53f8..ddf470c 100644
+> --- a/drivers/ata/pata_ixp4xx_cf.c
+> +++ b/drivers/ata/pata_ixp4xx_cf.c
+> @@ -144,6 +144,7 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
+>   	struct ata_host *host;
+>   	struct ata_port *ap;
+>   	struct ixp4xx_pata_data *data = dev_get_platdata(&pdev->dev);
+> +	int ret;
+>
+>   	cs0 = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>   	cs1 = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+> @@ -157,7 +158,9 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
+>   		return -ENOMEM;
+>
+>   	/* acquire resources and fill host */
+> -	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+> +	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
+> +	if (ret)
+> +		return ret;
+>
+>   	data->cs0 = devm_ioremap(&pdev->dev, cs0->start, 0x1000);
+>   	data->cs1 = devm_ioremap(&pdev->dev, cs1->start, 0x1000);
+> diff --git a/drivers/gpu/drm/exynos/exynos_drm_drv.c b/drivers/gpu/drm/exynos/exynos_drm_drv.c
+> index bb82ef7..81192d0 100644
+> --- a/drivers/gpu/drm/exynos/exynos_drm_drv.c
+> +++ b/drivers/gpu/drm/exynos/exynos_drm_drv.c
+> @@ -286,7 +286,11 @@ static struct drm_driver exynos_drm_driver = {
+>
+>   static int exynos_drm_platform_probe(struct platform_device *pdev)
+>   {
+> -	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+> +	int ret;
+> +
+> +	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
+> +	if (ret)
+> +		return ret;
+>
+>   	return drm_platform_init(&exynos_drm_driver, pdev);
+>   }
+> diff --git a/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c b/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c
+> index acf6678..701c4c1 100644
+> --- a/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c
+> +++ b/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c
+> @@ -664,8 +664,9 @@ static int omap_dmm_probe(struct platform_device *dev)
+>   	}
+>
+>   	/* set dma mask for device */
+> -	/* NOTE: this is a workaround for the hwmod not initializing properly */
+> -	dev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+> +	ret = dma_set_coherent_mask(&dev->dev, DMA_BIT_MASK(32));
+> +	if (ret)
+> +		goto fail;
 
-On 09/26/2013 11:04 AM, Sangeetha Gnanasekaran wrote:
-> Phy settings support is only for Motherboard controller. Firmware will
+Tested with omapdrm on omap4 panda es board.
 
-> only initialize default values for all PHY in case of motherboard 
-> controller. Hence, this is mandatory to add this support in all 
-> motherboard controllers to configure their own settings.
-
-I still think you'd better add a list for devices know to support phy
-setting similar as IS_SPC12G, there are some devices in the driver
-support list do not have default setting I suspect.
-
-Jack
-> 
-> -----Original Message-----
-> From: Jack Wang [mailto:xjtuwjp@gmail.com]
-> Sent: Thursday, September 26, 2013 12:27 PM
-> To: Anand Kumar Santhanam
-> Cc: linux-scsi@vger.kernel.org; Sangeetha Gnanasekaran; Nikith 
-> Ganigarakoppal; Viswas G
-> Subject: Re: [PATCH V2 05/10] pm80xx: Phy settings support for 
-> motherboard controller.
-> 
-> snip
->>  #ifdef PM8001_USE_MSIX
->>  /**
->>   * pm8001_setup_msix - enable MSI-X interrupt @@ -847,6 +872,9 @@ 
->> static int pm8001_pci_probe(struct pci_dev *pdev,
->>  	}
->>  
->>  	pm8001_init_sas_add(pm8001_ha);
->> +	/* phy setting support for motherboard controller */
->> +	if (pdev->subsystem_vendor != PCI_VENDOR_ID_ADAPTEC2)
->> +		pm8001_get_phy_settings_info(pm8001_ha);
-> 
-> Are you sure about this, have you checked all controller except device
-
-> with subsystem_vendorid is PCI_VENDOR_ID_ADAPTEC2 all support this 
-> get_phy_setting_info funcion?
-> 
-> Jack
->>  	pm8001_post_sas_ha_init(shost, chip);
->>  	rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
->>  	if (rc)
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.h
->> b/drivers/scsi/pm8001/pm8001_sas.h
->> index 68e1147..cbde11a 100644
->> --- a/drivers/scsi/pm8001/pm8001_sas.h
->> +++ b/drivers/scsi/pm8001/pm8001_sas.h
->> @@ -632,7 +632,8 @@ struct pm8001_device *pm8001_find_dev(struct 
->> pm8001_hba_info *pm8001_ha,  int pm80xx_set_thermal_config(struct 
->> pm8001_hba_info *pm8001_ha);
->>  
->>  int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 
->> shiftValue);
->> -
->> +void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
->> +	u32 length, u8 *buf);
->>  /* ctl shared API */
->>  extern struct device_attribute *pm8001_host_attrs[];
->>  
->> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c
->> b/drivers/scsi/pm8001/pm80xx_hwi.c
->> index 99cec5f..e1ab320 100644
->> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
->> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
->> @@ -3131,9 +3131,27 @@ static int mpi_flash_op_ext_resp(struct 
->> pm8001_hba_info *pm8001_ha, void *piomb)  static int
-> mpi_set_phy_profile_resp(struct pm8001_hba_info *pm8001_ha,
->>  			void *piomb)
->>  {
->> -	PM8001_MSG_DBG(pm8001_ha,
->> -			pm8001_printk("
-> pm80xx_addition_functionality\n"));
->> +	u8 page_code;
->> +	struct set_phy_profile_resp *pPayload =
->> +		(struct set_phy_profile_resp *)(piomb + 4);
->> +	u32 ppc_phyid = le32_to_cpu(pPayload->ppc_phyid);
->> +	u32 status = le32_to_cpu(pPayload->status);
->>  
->> +	page_code = (u8)((ppc_phyid & 0xFF00) >> 8);
->> +	if (status) {
->> +		/* status is FAILED */
->> +		PM8001_FAIL_DBG(pm8001_ha,
->> +			pm8001_printk("PhyProfile command failed  with
-> status "
->> +			"0x%08X \n", status));
->> +		return -1;
->> +	} else {
->> +		if (page_code != SAS_PHY_ANALOG_SETTINGS_PAGE) {
->> +			PM8001_FAIL_DBG(pm8001_ha,
->> +				pm8001_printk("Invalid page code
-> 0x%X\n",
->> +					page_code));
->> +			return -1;
->> +		}
->> +	}
->>  	return 0;
->>  }
->>  
->> @@ -4128,6 +4146,45 @@ pm80xx_chip_isr(struct pm8001_hba_info
-> *pm8001_ha, u8 vec)
->>  	return IRQ_HANDLED;
->>  }
->>  
->> +void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
->> +	u32 operation, u32 phyid, u32 length, u32 *buf) {
->> +	u32 tag , i, j = 0;
->> +	int rc;
->> +	struct set_phy_profile_req payload;
->> +	struct inbound_queue_table *circularQ;
->> +	u32 opc = OPC_INB_SET_PHY_PROFILE;
->> +
->> +	memset(&payload, 0, sizeof(payload));
->> +	rc = pm8001_tag_alloc(pm8001_ha, &tag);
->> +	if (rc)
->> +		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("Invalid
-> tag\n"));
->> +	circularQ = &pm8001_ha->inbnd_q_tbl[0];
->> +	payload.tag = cpu_to_le32(tag);
->> +	payload.ppc_phyid = (((operation & 0xF) << 8) | (phyid  &
-> 0xFF));
->> +	PM8001_INIT_DBG(pm8001_ha,
->> +		pm8001_printk(" phy profile command for phy %x ,length
-> is %d\n",
->> +			payload.ppc_phyid, length));
->> +	for (i = length ; i < (length + PHY_DWORD_LENGTH - 1) ; i++) {
->> +		payload.reserved[j] =  cpu_to_le32(*((u32 *)buf + i));
->> +		j++;
->> +	}
->> +	pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0); }
->> +
->> +void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
->> +	u32 length, u8 *buf)
->> +{
->> +	u32 page_code, i;
->> +
->> +	page_code = SAS_PHY_ANALOG_SETTINGS_PAGE;
->> +	for (i = 0 ; i < pm8001_ha->chip->n_phy ; i++) {
->> +		mpi_set_phy_profile_req(pm8001_ha,
->> +			SAS_PHY_ANALOG_SETTINGS_PAGE, i, length, (u32
-> *)buf);
->> +		length = length + PHY_DWORD_LENGTH;
->> +	}
->> +	PM8001_INIT_DBG(pm8001_ha, pm8001_printk("phy settings 
->> +completed\n")); }
->>  const struct pm8001_dispatch pm8001_80xx_dispatch = {
->>  	.name			= "pmc80xx",
->>  	.chip_init		= pm80xx_chip_init,
->> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h
->> b/drivers/scsi/pm8001/pm80xx_hwi.h
->> index 9a9116d..872d5cf 100644
->> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
->> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
->> @@ -170,6 +170,10 @@
->>  #define LINKRATE_60			(0x06 << 8)
->>  #define LINKRATE_120			(0x08 << 8)
->>  
->> +/* phy_profile */
->> +#define SAS_PHY_ANALOG_SETTINGS_PAGE	0x04
->> +#define PHY_DWORD_LENGTH		0xC
->> +
->>  /* Thermal related */
->>  #define	THERMAL_ENABLE			0x1
->>  #define	THERMAL_LOG_ENABLE		0x1
->>
-> 
-
+Thanks,
+Archit
