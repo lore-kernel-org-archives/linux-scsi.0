@@ -1,101 +1,55 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: SCSI's heuristics for enabling WRITE SAME still need work [was:
- dm mpath: disable WRITE SAME if it fails]
-Date: Thu, 26 Sep 2013 11:47:21 -0400
-Message-ID: <52445709.4080104@interlog.com>
-References: <20130919161043.GA27081@redhat.com>	<20130920212142.GA17898@redhat.com>	<yq1eh8jf8wq.fsf@sermon.lab.mkp.net>	<1379960325.4010.32.camel@localhost.localdomain>	<52412581.2010909@suse.de> <20130924123449.GA16083@redhat.com>	<yq1hadaba87.fsf@sermon.lab.mkp.net> <52434D0C.1090008@fastmail.fm>	<yq1vc1o9ztd.fsf@sermon.lab.mkp.net> <5243C880.6050609@interlog.com>	<52443992.4040806@fastmail.fm> <yq1r4cbablz.fsf@sermon.lab.mkp.net>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Chris Leech <cleech@redhat.com>
+Subject: [PATCH RESEND] iscsi_tcp: consider session state in iscsi_sw_sk_state_check
+Date: Thu, 26 Sep 2013 09:09:44 -0700
+Message-ID: <1380211784-17306-1-git-send-email-cleech@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:45000 "EHLO smtp.infotech.no"
+Received: from mx1.redhat.com ([209.132.183.28]:34974 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753338Ab3IZPrs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Sep 2013 11:47:48 -0400
-In-Reply-To: <yq1r4cbablz.fsf@sermon.lab.mkp.net>
+	id S1753033Ab3IZQKB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Sep 2013 12:10:01 -0400
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8QGA0CR030498
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2013 12:10:01 -0400
+Received: from straylight.hirudinean.org (ovpn-113-134.phx2.redhat.com [10.3.113.134])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r8QG9xco016541
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2013 12:10:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bernd Schubert <bernd.schubert@fastmail.fm>
-Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, emilne@redhat.com, device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org, Sumit.Saxena@lsi.com
+To: linux-scsi@vger.kernel.org
 
-On 13-09-26 10:42 AM, Martin K. Petersen wrote:
->>>>>> "Bernd" == Bernd Schubert <bernd.schubert@fastmail.fm> writes:
->
-> Bernd,
->
-> Bernd> Both types of systems we have in-house neither block limits vpd
-> Bernd> nor READ_CAP16 return anything that would indicate discard is
-> Bernd> supported. But UNMAP and WRITE SAME unmap(*) just work fine.
->
-> I have a collection of different SSDs in a tray connected to an LSI
-> SAS2008 ASIC. The 510 is the only drive that does not have LBPME=1.
-> Chances are it's because DRAT and RZAT are not set but it could also be
-> that the 510 is blacklisted.
->
->
-> Bernd> I certainly don't want to cause any more write-same trouble, but
-> Bernd> as all layers initially have to assume write same is supported
-> Bernd> anyway and need to dynamically disable it if it fails, can't we
-> Bernd> also enable discard by default with WRITE SAME16 unmap?
->
-> No thanks :)
->
-> But you can force discards on by doing a:
->
->   # echo -n unmap > /sys/class/scsi_disk/x:y:z:n/provisioning_mode
->
-> or
->
->   # echo -n writesame_16 > /sys/class/scsi_disk/x:y:z:n/provisioning_mode
->
-> Create a udev rule if you like.
->
-> In any case I wouldn't recommend using TRIM on that drive...
->
->
-> Bernd> PS: LSI SATL with FWv17 seems to have an unmap bug - I cannot
-> Bernd> unmap the last sector:
->
-> Yes, it appears there's an off-by-one bug in the UNMAP translation.
-> Sumit, is this something you guys can look into?
+It seems some iSCSI targets (including the Linux kernel target) close
+the TCP connection from the target side immediately after processing a
+session logout.
 
-Hi Sumit,
-While you are looking at the HBA firmware could you fix
-this minor annoyance:
+When a TCP FIN comes in right after the iSCSI logout response,
+iscsi_sw_sk_state_check sees the local socket as not yet being in
+CLOSE_WAIT or CLOSE and logs an error.  But the initiator would close
+the connection right after processing the logout response anyway, and
+the error is confusing to admins who just requested that the session be
+shut down.
 
-# lsscsi -H -t
-.....
-[6]    mpt3sas       sas:0x500605b006d3b510
+This adds a check of the session state, and suppresses the error if we
+are in the process of logging out.
 
-# smp_rep_general /dev/mpt3ctl -s 0x500605b006d3b510
-Report general response:
-   expander change count: 0
-   expander route indexes: 0
-   long response: 0
-   number of phys: 0
-   zone configuring: 0
-   self configuring: 0
-   externally configurable route table: 0
-   initiates SSP close: 0
-   enclosure logical identifier (hex): b005065010b5d306
+Signed-off-by: Chris Leech <cleech@redhat.com>
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/iscsi_tcp.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-So that is a SMP REPORT GENERAL (RG) directed at the HBA itself.
-So either my code is incorrectly decoding the "enclosure logical
-identifier" or ... . That field was defined in SAS 1.1 so no
-excuses on that front. 0x0 would be better than a shuffled
-version of the HBA's own SAS address.
-
-Same bug/feature in all versions of SAS-2 and now SAS-3 firmware
-that I have tried.
-
-Doug Gilbert
-
-
-BTW The bsg driver can send a RG to the HBA like this:
-          smp_rep_general /dev/bsg/sas_host6
-     So the intent is clearer and the response is the same.
-
-
-
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 9e2588a..add6d15 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -116,6 +116,7 @@ static inline int iscsi_sw_sk_state_check(struct sock *sk)
+ 	struct iscsi_conn *conn = sk->sk_user_data;
+ 
+ 	if ((sk->sk_state == TCP_CLOSE_WAIT || sk->sk_state == TCP_CLOSE) &&
++	    (conn->session->state != ISCSI_STATE_LOGGING_OUT) &&
+ 	    !atomic_read(&sk->sk_rmem_alloc)) {
+ 		ISCSI_SW_TCP_DBG(conn, "TCP_CLOSE|TCP_CLOSE_WAIT\n");
+ 		iscsi_conn_failure(conn, ISCSI_ERR_TCP_CONN_CLOSE);
+-- 
+1.8.3.1
 
