@@ -1,138 +1,94 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH v4 Repost 1/2] block: factor out vector mergeable decision
- to a, helper function
-Date: Fri, 27 Sep 2013 14:23:49 +0200
-Message-ID: <524578D5.1030808@redhat.com>
+Subject: [PATCH v4 Repost 2/2] block: modify __bio_add_page check to accept
+ pages, that don't start a new segment
+Date: Fri, 27 Sep 2013 14:31:35 +0200
+Message-ID: <52457AA7.1070609@redhat.com>
+References: <524578D5.1030808@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4799 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751031Ab3I0MYH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Sep 2013 08:24:07 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <524578D5.1030808@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
-Cc: viro@zeniv.linux.org.uk, james.bottomley@hansenpartnership.com, Jens Axboe <axboe@kernel.dk>, koverstreet@google.com, Kai.Makisara@kolumbus.fi, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: viro@zeniv.linux.org.uk, james.bottomley@hansenpartnership.com, Jens Axboe <axboe@kernel.dk>, Kai.Makisara@kolumbus.fi, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, kent.overstreet@gmail.com
+List-Id: linux-scsi@vger.kernel.org
 
 From: Jan Vesely <jvesely@redhat.com>
 
-Export the function so it can be used to predict segment counts
-without calling the recalc function. This will be used in the next
-patch.
+The original behavior was to refuse all pages after the maximum number of
+segments has been reached. However, some drivers (like st) craft their buffers
+to potentially require exactly max segments and multiple pages in the last
+segment. This patch modifies the check to allow pages that can be merged into
+the last segment.
+
+Fixes EBUSY failures when using large tape block size in high
+memory fragmentation condition. This regression was introduced by commit
+46081b166415acb66d4b3150ecefcd9460bb48a1
+st: Increase success probability in driver buffer allocation
 
 Signed-off-by: Jan Vesely <jvesely@redhat.com>
 Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 ---
- block/blk-merge.c   | 52 +++++++++++++++++++++++++++++++---------------------
- include/linux/bio.h |  3 +++
- 2 files changed, 34 insertions(+), 21 deletions(-)
+ fs/bio.c | 30 +++++++++++++++++++-----------
+ 1 file changed, 19 insertions(+), 11 deletions(-)
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 5f24482..f1ef657 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -9,11 +9,39 @@
- 
- #include "blk.h"
- 
-+bool bvec_mergeable(struct request_queue *q, struct bio_vec *lastbv,
-+		    struct bio_vec *newbv, unsigned int seg_size)
-+{
-+	unsigned long limit = queue_bounce_pfn(q);
-+
-+	if (!blk_queue_cluster(q))
-+		return false;
-+
-+	/*
-+	 * the trick here is to make sure that a high page is
-+	 * never considered part of another segment, since that
-+	 * might change with the bounce page.
-+	 */
-+	if ((page_to_pfn(lastbv->bv_page) > limit)
-+	    || (page_to_pfn(newbv->bv_page) > limit))
-+		return false;
-+
-+	if (seg_size + newbv->bv_len > queue_max_segment_size(q))
-+		return false;
-+
-+	if (!BIOVEC_PHYS_MERGEABLE(lastbv, newbv))
-+		return false;
-+	if (!BIOVEC_SEG_BOUNDARY(q, lastbv, newbv))
-+		return false;
-+	return true;
-+}
-+
-+
- static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 					     struct bio *bio)
+diff --git a/fs/bio.c b/fs/bio.c
+index ea5035d..419bdd6 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -603,7 +603,6 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+ 			  *page, unsigned int len, unsigned int offset,
+ 			  unsigned short max_sectors)
  {
- 	struct bio_vec *bv, *bvprv = NULL;
--	int cluster, i, high, highprv = 1;
-+	int i;
- 	unsigned int seg_size, nr_phys_segs;
- 	struct bio *fbio, *bbio;
+-	int retried_segments = 0;
+ 	struct bio_vec *bvec;
  
-@@ -21,33 +49,16 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+ 	/*
+@@ -654,18 +653,12 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
  		return 0;
  
- 	fbio = bio;
--	cluster = blk_queue_cluster(q);
- 	seg_size = 0;
- 	nr_phys_segs = 0;
- 	for_each_bio(bio) {
- 		bio_for_each_segment(bv, bio, i) {
--			/*
--			 * the trick here is making sure that a high page is
--			 * never considered part of another segment, since that
--			 * might change with the bounce page.
--			 */
--			high = page_to_pfn(bv->bv_page) > queue_bounce_pfn(q);
--			if (high || highprv)
--				goto new_segment;
--			if (cluster) {
--				if (seg_size + bv->bv_len
--				    > queue_max_segment_size(q))
--					goto new_segment;
--				if (!BIOVEC_PHYS_MERGEABLE(bvprv, bv))
--					goto new_segment;
--				if (!BIOVEC_SEG_BOUNDARY(q, bvprv, bv))
--					goto new_segment;
+ 	/*
+-	 * we might lose a segment or two here, but rather that than
+-	 * make this too complex.
++	 * The first part of the segment count check,
++	 * reduce segment count if possible
+ 	 */
 -
-+			if (bvprv && bvec_mergeable(q, bvprv, bv, seg_size)) {
- 				seg_size += bv->bv_len;
- 				bvprv = bv;
- 				continue;
- 			}
--new_segment:
-+			/* new segment */
- 			if (nr_phys_segs == 1 && seg_size >
- 			    fbio->bi_seg_front_size)
- 				fbio->bi_seg_front_size = seg_size;
-@@ -55,7 +66,6 @@ new_segment:
- 			nr_phys_segs++;
- 			bvprv = bv;
- 			seg_size = bv->bv_len;
--			highprv = high;
- 		}
- 		bbio = bio;
- 	}
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index ec48bac..929ac53 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -307,6 +307,9 @@ extern struct bio_vec *bvec_alloc(gfp_t, int, unsigned long *, mempool_t *);
- extern void bvec_free(mempool_t *, struct bio_vec *, unsigned int);
- extern unsigned int bvec_nr_vecs(unsigned short idx);
- 
-+extern bool bvec_mergeable(struct request_queue *q, struct bio_vec *lastbv,
-+			   struct bio_vec *newbv, unsigned int seg_size);
+-	while (bio->bi_phys_segments >= queue_max_segments(q)) {
+-
+-		if (retried_segments)
+-			return 0;
+-
+-		retried_segments = 1;
++	if (bio->bi_phys_segments >= queue_max_segments(q))
+ 		blk_recount_segments(q, bio);
+-	}
 +
- #ifdef CONFIG_BLK_CGROUP
- int bio_associate_current(struct bio *bio);
- void bio_disassociate_task(struct bio *bio);
+ 
+ 	/*
+ 	 * setup the new entry, we might clear it again later if we
+@@ -677,6 +670,21 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+ 	bvec->bv_offset = offset;
+ 
+ 	/*
++	 * the other part of the segment count check, allow mergeable pages.
++	 * BIO_SEG_VALID flag is cleared below
++	 */
++	if ((bio->bi_phys_segments > queue_max_segments(q)) ||
++	    ((bio->bi_phys_segments == queue_max_segments(q)) &&
++	     !bvec_mergeable(q, __BVEC_END(bio), bvec,
++			     bio->bi_seg_back_size))) {
++			bvec->bv_page = NULL;
++			bvec->bv_len = 0;
++			bvec->bv_offset = 0;
++			return 0;
++	}
++
++
++	/*
+ 	 * if queue has other restrictions (eg varying max sector size
+ 	 * depending on offset), it can specify a merge_bvec_fn in the
+ 	 * queue to get further control
 -- 
 1.8.3.1
-
-
