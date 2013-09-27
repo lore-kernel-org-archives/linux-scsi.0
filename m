@@ -1,723 +1,141 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH V2 10/10] pm80xx: Firmware logging support
-Date: Fri, 27 Sep 2013 15:02:29 +0200
-Message-ID: <524581E5.1030605@redhat.com>
-References: <5243C987.6030203@pmc-sierra.com>
+Subject: Re: [PATCH 07/10] hpsa: hide logical drives with format in progress
+ from linux
+Date: Fri, 27 Sep 2013 15:22:19 +0200
+Message-ID: <5245868B.4080900@redhat.com>
+References: <20130923183128.19995.7669.stgit@beardog.cce.hp.com> <20130923183401.19995.99662.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14581 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:29981 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752089Ab3I0NCg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Sep 2013 09:02:36 -0400
-In-Reply-To: <5243C987.6030203@pmc-sierra.com>
+	id S1751603Ab3I0NXk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Sep 2013 09:23:40 -0400
+In-Reply-To: <20130923183401.19995.99662.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anand <anandkumar_santhanam@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org, Sangeetha.Gnanasekaran@pmcs.com, Nikith.Ganigarakoppal@pmcs.com, Viswas.G@pmcs.com, xjtuwjp@gmail.com
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: james.bottomley@hansenpartnership.com, stephenmcameron@gmail.com, mikem@beardog.cce.hp.com, linux-scsi@vger.kernel.org, scott.teel@hp.com
 
-On 09/26/2013 07:43 AM, Anand wrote:
-> From ab1b030500a835eacda3d86e5570366099b21311 Mon Sep 17 00:00:00 2001
-> From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-> Date: Wed, 4 Sep 2013 12:57:00 +0530
-> Subject: [PATCH V2 10/10] pm80xx: Firmware logging support.
+On 09/23/2013 08:34 PM, Stephen M. Cameron wrote:
+> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 >
-> Supports below logging facilities,
-> Inbound outbound queues dump.
-> Non fatal dump in case of IO failures.
-> Fatal dump in case of firmware failure.
->
-> Signed-off-by: Anandkumar.Santhanam@pmcs.com
->
-> ---
->  drivers/scsi/pm8001/pm8001_ctl.c  |  129 +++++++++++++++++++++
->  drivers/scsi/pm8001/pm8001_ctl.h  |    4 +
->  drivers/scsi/pm8001/pm8001_defs.h |    3 +-
->  drivers/scsi/pm8001/pm8001_hwi.c  |   83 ++++++++++++++
->  drivers/scsi/pm8001/pm8001_hwi.h  |    3 +
->  drivers/scsi/pm8001/pm8001_init.c |    4 +
->  drivers/scsi/pm8001/pm8001_sas.h  |   68 +++++++++++
->  drivers/scsi/pm8001/pm80xx_hwi.c  |  225 +++++++++++++++++++++++++++++++++++++
->  drivers/scsi/pm8001/pm80xx_hwi.h  |    2 +
->  9 files changed, 520 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 5a19e19..2ca79a5 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -309,6 +309,94 @@ static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
->  }
->  static DEVICE_ATTR(aap_log, S_IRUGO, pm8001_ctl_aap_log_show, NULL);
->  /**
-> + * pm8001_ctl_ib_queue_log_show - Out bound Queue log
-> + * @cdev:pointer to embedded class device
-> + * @buf: the buffer returned
-> + * A sysfs 'read-only' shost attribute.
-> + */
-> +static ssize_t pm8001_ctl_ib_queue_log_show(struct device *cdev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	struct Scsi_Host *shost = class_to_shost(cdev);
-> +	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +	int offset;
-> +	char *str = buf;
-> +	int start = 0;
-> +#define IB_MEMMAP(c)		\
-> +		(*(u32 *)((u8 *)pm8001_ha->		\
-> +		memoryMap.region[IB].virt_ptr +		\
-> +		pm8001_ha->evtlog_ib_offset + (c)))
-> +
-> +#define IB_MEMMAP_SPC(c)		\
-> +		(*(u32 *)((u8 *)pm8001_ha->		\
-> +		memoryMap.region[IB].virt_ptr +		\
-> +		pm8001_ha->evtlog_ib_offset + (c)))
+> SCSI mid layer doesn't seem to handle logical drives undergoing format
+> very well.  scsi_add_device on such devices seems to result in hitting
+> those devices with a TUR at a rate of 3Hz for awhile, transitioning
+> to hitting them with a READ(10) at a much higher rate indefinitely,
+> and at boot time, this prevents the system from coming up.  If we
+> do not expose such devices to the kernel, it isn't bothered by them.
 
-The IB_MEMMAP and IB_MEMMAP_SPC seems to be exactly the same - is that intentional?
-and btw. why do you use macros, when they are used just once?
-(In the function below there is a similar pattern - again two identical macros)
-Cheers, Tomas 
+Is the result of this patch that the drive is no more visible for the user
+and he can't follow the formatting progress? 
+I think a better option is to fix the kernel to handle formatting devices better
+or harden the hpsa so it can cope with TURs or reads (ignore) from a formatting device.
 
-> +
-> +	for (offset = 0; offset < IB_OB_READ_TIMES; offset++) {
-> +		if (pm8001_ha->chip_id != chip_8001)
-> +			str += sprintf(str, "0x%08x\n", IB_MEMMAP(start));
-> +		else
-> +			str += sprintf(str, "0x%08x\n", IB_MEMMAP_SPC(start));
-> +		start = start + 4;
-> +	}
-> +	pm8001_ha->evtlog_ib_offset += SYSFS_OFFSET;
-> +	if ((((pm8001_ha->evtlog_ib_offset) % (PM80XX_IB_OB_QUEUE_SIZE)) == 0)
-> +		&& (pm8001_ha->chip_id != chip_8001))
-> +		pm8001_ha->evtlog_ib_offset = 0;
-> +	if ((((pm8001_ha->evtlog_ib_offset) % (PM8001_IB_OB_QUEUE_SIZE)) == 0)
-> +		&& (pm8001_ha->chip_id == chip_8001))
-> +		pm8001_ha->evtlog_ib_offset = 0;
-> +
-> +	return str - buf;
-> +}
-> +
-> +static DEVICE_ATTR(ib_log, S_IRUGO, pm8001_ctl_ib_queue_log_show, NULL);
-> +/**
-> + * pm8001_ctl_ob_queue_log_show - Out bound Queue log
-> + * @cdev:pointer to embedded class device
-> + * @buf: the buffer returned
-> + * A sysfs 'read-only' shost attribute.
-> + */
-> +
-> +static ssize_t pm8001_ctl_ob_queue_log_show(struct device *cdev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	struct Scsi_Host *shost = class_to_shost(cdev);
-> +	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +	int offset;
-> +	char *str = buf;
-> +	int start = 0;
-> +#define OB_MEMMAP(c)		\
-> +		(*(u32 *)((u8 *)pm8001_ha->		\
-> +		memoryMap.region[OB].virt_ptr +		\
-> +		pm8001_ha->evtlog_ob_offset + (c)))
-> +
-> +#define OB_MEMMAP_SPC(c)		\
-> +		(*(u32 *)((u8 *)pm8001_ha->		\
-> +		memoryMap.region[OB].virt_ptr +		\
-> +		pm8001_ha->evtlog_ob_offset + (c)))
-> +
-> +	for (offset = 0; offset < IB_OB_READ_TIMES; offset++) {
-> +		if (pm8001_ha->chip_id != chip_8001)
-> +			str += sprintf(str, "0x%08x\n", OB_MEMMAP(start));
-> +		else
-> +			str += sprintf(str, "0x%08x\n", OB_MEMMAP_SPC(start));
-> +		start = start + 4;
-> +	}
-> +	pm8001_ha->evtlog_ob_offset += SYSFS_OFFSET;
-> +	if ((((pm8001_ha->evtlog_ob_offset) % (PM80XX_IB_OB_QUEUE_SIZE)) == 0)
-> +			&& (pm8001_ha->chip_id != chip_8001))
-> +		pm8001_ha->evtlog_ob_offset = 0;
-> +	if ((((pm8001_ha->evtlog_ob_offset) % (PM8001_IB_OB_QUEUE_SIZE)) == 0)
-> +			&& (pm8001_ha->chip_id == chip_8001))
-> +		pm8001_ha->evtlog_ob_offset = 0;
-> +
-> +	return str - buf;
-> +}
-> +static DEVICE_ATTR(ob_log, S_IRUGO, pm8001_ctl_ob_queue_log_show, NULL);
-> +/**
->   * pm8001_ctl_bios_version_show - Bios version Display
->   * @cdev:pointer to embedded class device
->   * @buf:the buffer returned
-> @@ -377,6 +465,43 @@ static ssize_t pm8001_ctl_iop_log_show(struct device *cdev,
->  }
->  static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
->  
-> +/**
-> + ** pm8001_ctl_fatal_log_show - fatal error logging
-> + ** @cdev:pointer to embedded class device
-> + ** @buf: the buffer returned
-> + **
-> + ** A sysfs 'read-only' shost attribute.
-> + **/
-> +
-> +static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	u32 count;
-> +
-> +	count = pm80xx_get_fatal_dump(cdev, attr, buf);
-> +	return count;
-> +}
-> +
-> +static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
-> +
-> +
-> +/**
-> + ** pm8001_ctl_gsm_log_show - gsm dump collection
-> + ** @cdev:pointer to embedded class device
-> + ** @buf: the buffer returned
-> + **A sysfs 'read-only' shost attribute.
-> + **/
-> +static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	u32 count;
-> +
-> +	count = pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
-> +	return count;
-> +}
-> +
-> +static DEVICE_ATTR(gsm_log, S_IRUGO, pm8001_ctl_gsm_log_show, NULL);
-> +
->  #define FLASH_CMD_NONE      0x00
->  #define FLASH_CMD_UPDATE    0x01
->  #define FLASH_CMD_SET_NVMD    0x02
-> @@ -636,6 +761,8 @@ struct device_attribute *pm8001_host_attrs[] = {
->  	&dev_attr_update_fw,
->  	&dev_attr_aap_log,
->  	&dev_attr_iop_log,
-> +	&dev_attr_fatal_log,
-> +	&dev_attr_gsm_log,
->  	&dev_attr_max_out_io,
->  	&dev_attr_max_devices,
->  	&dev_attr_max_sg_list,
-> @@ -643,6 +770,8 @@ struct device_attribute *pm8001_host_attrs[] = {
->  	&dev_attr_logging_level,
->  	&dev_attr_host_sas_address,
->  	&dev_attr_bios_version,
-> +	&dev_attr_ib_log,
-> +	&dev_attr_ob_log,
->  	NULL,
->  };
->  
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.h b/drivers/scsi/pm8001/pm8001_ctl.h
-> index c6d8fdd..d0d43a2 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.h
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.h
-> @@ -55,5 +55,9 @@
->  #define FAIL_OUT_MEMORY                 0x000c00
->  #define FLASH_IN_PROGRESS               0x001000
->  
-> +#define IB_OB_READ_TIMES                256
-> +#define SYSFS_OFFSET                    1024
-> +#define PM80XX_IB_OB_QUEUE_SIZE         (32 * 1024)
-> +#define PM8001_IB_OB_QUEUE_SIZE         (16 * 1024)
->  #endif /* PM8001_CTL_H_INCLUDED */
->  
-> diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
-> index 4bb304d..74a4bb9 100644
-> --- a/drivers/scsi/pm8001/pm8001_defs.h
-> +++ b/drivers/scsi/pm8001/pm8001_defs.h
-> @@ -102,7 +102,8 @@ enum memory_region_num {
->  	NVMD,	    /* NVM device */
->  	DEV_MEM,    /* memory for devices */
->  	CCB_MEM,    /* memory for command control block */
-> -	FW_FLASH    /* memory for fw flash update */
-> +	FW_FLASH,    /* memory for fw flash update */
-> +	FORENSIC_MEM  /* memory for fw forensic data */
->  };
->  #define	PM8001_EVENT_LOG_SIZE	 (128 * 1024)
->  
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 502c7d6..75a8b46 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -5015,6 +5015,89 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
->  	return rc;
->  }
->  
-> +ssize_t
-> +pm8001_get_gsm_dump(struct device *cdev, u32 length, char* buf)
-> +{
-> +	u32 value, rem, offset = 0, bar = 0;
-> +	u32 index, work_offset, dw_length;
-> +	u32 shift_value, gsm_base, gsm_dump_offset;
-> +	char *direct_data;
-> +	struct Scsi_Host *shost = class_to_shost(cdev);
-> +	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +
-> +	direct_data = buf;
-> +	gsm_dump_offset = pm8001_ha->fatal_forensic_shift_offset;
-> +
-> +	/* check max is 1 Mbytes */
-> +	if ((length > 0x100000) || (gsm_dump_offset & 3) ||
-> +		((gsm_dump_offset + length) > 0x1000000))
-> +			return 1;
-> +
-> +	if (pm8001_ha->chip_id == chip_8001)
-> +		bar = 2;
-> +	else
-> +		bar = 1;
-> +
-> +	work_offset = gsm_dump_offset & 0xFFFF0000;
-> +	offset = gsm_dump_offset & 0x0000FFFF;
-> +	gsm_dump_offset = work_offset;
-> +	/* adjust length to dword boundary */
-> +	rem = length & 3;
-> +	dw_length = length >> 2;
-> +
-> +	for (index = 0; index < dw_length; index++) {
-> +		if ((work_offset + offset) & 0xFFFF0000) {
-> +			if (pm8001_ha->chip_id == chip_8001)
-> +				shift_value = ((gsm_dump_offset + offset) &
-> +						SHIFT_REG_64K_MASK);
-> +			else
-> +				shift_value = (((gsm_dump_offset + offset) &
-> +						SHIFT_REG_64K_MASK) >>
-> +						SHIFT_REG_BIT_SHIFT);
-> +
-> +			if (pm8001_ha->chip_id == chip_8001) {
-> +				gsm_base = GSM_BASE;
-> +				if (-1 == pm8001_bar4_shift(pm8001_ha,
-> +						(gsm_base + shift_value)))
-> +					return 1;
-> +			} else {
-> +				gsm_base = 0;
-> +				if (-1 == pm80xx_bar4_shift(pm8001_ha,
-> +						(gsm_base + shift_value)))
-> +					return 1;
-> +			}
-> +			gsm_dump_offset = (gsm_dump_offset + offset) &
-> +						0xFFFF0000;
-> +			work_offset = 0;
-> +			offset = offset & 0x0000FFFF;
-> +		}
-> +		value = pm8001_cr32(pm8001_ha, bar, (work_offset + offset) &
-> +						0x0000FFFF);
-> +		direct_data += sprintf(direct_data, "%08x ", value);
-> +		offset += 4;
-> +	}
-> +	if (rem != 0) {
-> +		value = pm8001_cr32(pm8001_ha, bar, (work_offset + offset) &
-> +						0x0000FFFF);
-> +		/* xfr for non_dw */
-> +		direct_data += sprintf(direct_data, "%08x ", value);
-> +	}
-> +	/* Shift back to BAR4 original address */
-> +	if (pm8001_ha->chip_id == chip_8001) {
-> +		if (-1 == pm8001_bar4_shift(pm8001_ha, 0))
-> +			return 1;
-> +	} else {
-> +		if (-1 == pm80xx_bar4_shift(pm8001_ha, 0))
-> +			return 1;
-> +	}
-> +	pm8001_ha->fatal_forensic_shift_offset += 1024;
-> +
-> +	if (pm8001_ha->fatal_forensic_shift_offset >= 0x100000)
-> +		pm8001_ha->fatal_forensic_shift_offset = 0;
-> +	return direct_data - buf;
-> +}
-> +
->  int
->  pm8001_chip_set_dev_state_req(struct pm8001_hba_info *pm8001_ha,
->  	struct pm8001_device *pm8001_dev, u32 state)
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
-> index d7c1e20..6d91e24 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.h
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.h
-> @@ -1027,5 +1027,8 @@ struct set_dev_state_resp {
->  #define DEVREG_FAILURE_PORT_NOT_VALID_STATE		0x06
->  #define DEVREG_FAILURE_DEVICE_TYPE_NOT_VALID		0x07
->  
-> +#define GSM_BASE					0x4F0000
-> +#define SHIFT_REG_64K_MASK				0xffff0000
-> +#define SHIFT_REG_BIT_SHIFT				8
->  #endif
->  
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index b31d25a..49cfe45 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -347,6 +347,10 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
->  	/* Memory region for fw flash */
->  	pm8001_ha->memoryMap.region[FW_FLASH].total_len = 4096;
->  
-> +	pm8001_ha->memoryMap.region[FORENSIC_MEM].num_elements = 1;
-> +	pm8001_ha->memoryMap.region[FORENSIC_MEM].total_len = 0x10000;
-> +	pm8001_ha->memoryMap.region[FORENSIC_MEM].element_size = 0x10000;
-> +	pm8001_ha->memoryMap.region[FORENSIC_MEM].alignment = 0x10000;
->  	for (i = 0; i < USI_MAX_MEMCNT; i++) {
->  		if (pm8001_mem_alloc(pm8001_ha->pdev,
->  			&pm8001_ha->memoryMap.region[i].virt_ptr,
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-> index cbde11a..9241c04 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -132,6 +132,61 @@ struct pm8001_ioctl_payload {
->  	u8	*func_specific;
->  };
->  
-> +#define MPI_FATAL_ERROR_TABLE_OFFSET_MASK 0xFFFFFF
-> +#define MPI_FATAL_ERROR_TABLE_SIZE(value) ((0xFF000000 & value) >> SHIFT24)
-> +#define MPI_FATAL_EDUMP_TABLE_LO_OFFSET            0x00     /* HNFBUFL */
-> +#define MPI_FATAL_EDUMP_TABLE_HI_OFFSET            0x04     /* HNFBUFH */
-> +#define MPI_FATAL_EDUMP_TABLE_LENGTH               0x08     /* HNFBLEN */
-> +#define MPI_FATAL_EDUMP_TABLE_HANDSHAKE            0x0C     /* FDDHSHK */
-> +#define MPI_FATAL_EDUMP_TABLE_STATUS               0x10     /* FDDTSTAT */
-> +#define MPI_FATAL_EDUMP_TABLE_ACCUM_LEN            0x14     /* ACCDDLEN */
-> +#define MPI_FATAL_EDUMP_HANDSHAKE_RDY              0x1
-> +#define MPI_FATAL_EDUMP_HANDSHAKE_BUSY             0x0
-> +#define MPI_FATAL_EDUMP_TABLE_STAT_RSVD                 0x0
-> +#define MPI_FATAL_EDUMP_TABLE_STAT_DMA_FAILED           0x1
-> +#define MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_MORE_DATA 0x2
-> +#define MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_DONE      0x3
-> +#define TYPE_GSM_SPACE        1
-> +#define TYPE_QUEUE            2
-> +#define TYPE_FATAL            3
-> +#define TYPE_NON_FATAL        4
-> +#define TYPE_INBOUND          1
-> +#define TYPE_OUTBOUND         2
-> +struct forensic_data {
-> +  u32  data_type;
-> +  union {
-> +    struct {
-> +      u32  direct_len;
-> +      u32  direct_offset;
-> +      void  *direct_data;
-> +    } gsm_buf;
-> +    struct {
-> +      u16  queue_type;
-> +      u16  queue_index;
-> +      u32  direct_len;
-> +      void  *direct_data;
-> +    } queue_buf;
-> +    struct {
-> +      u32  direct_len;
-> +      u32  direct_offset;
-> +      u32  read_len;
-> +      void  *direct_data;
-> +    } data_buf;
-> +  };
-> +};
-> +
-> +/* bit31-26 - mask bar */
-> +#define SCRATCH_PAD0_BAR_MASK                    0xFC000000
-> +/* bit25-0  - offset mask */
-> +#define SCRATCH_PAD0_OFFSET_MASK                 0x03FFFFFF
-> +/* if AAP error state */
-> +#define SCRATCH_PAD0_AAPERR_MASK                 0xFFFFFFFF
-> +/* Inbound doorbell bit7 */
-> +#define SPCv_MSGU_CFG_TABLE_NONFATAL_DUMP	 0x80
-> +/* Inbound doorbell bit7 SPCV */
-> +#define SPCV_MSGU_CFG_TABLE_TRANSFER_DEBUG_INFO  0x80
-> +#define MAIN_MERRDCTO_MERRDCES		         0xA0/* DWORD 0x28) */
-> +
->  struct pm8001_dispatch {
->  	char *name;
->  	int (*chip_init)(struct pm8001_hba_info *pm8001_ha);
-> @@ -346,6 +401,7 @@ union main_cfg_table {
->  	u32			phy_attr_table_offset;
->  	u32			port_recovery_timer;
->  	u32			interrupt_reassertion_delay;
-> +	u32			fatal_n_non_fatal_dump;	        /* 0x28 */
->  	} pm80xx_tbl;
->  };
->  
-> @@ -420,6 +476,13 @@ struct pm8001_hba_info {
->  	struct pm8001_hba_memspace io_mem[6];
->  	struct mpi_mem_req	memoryMap;
->  	struct encrypt		encrypt_info; /* support encryption */
-> +	struct forensic_data	forensic_info;
-> +	u32			fatal_bar_loc;
-> +	u32			forensic_last_offset;
-> +	u32			fatal_forensic_shift_offset;
-> +	u32			forensic_fatal_step;
-> +	u32			evtlog_ib_offset;
-> +	u32			evtlog_ob_offset;
->  	void __iomem	*msg_unit_tbl_addr;/*Message Unit Table Addr*/
->  	void __iomem	*main_cfg_tbl_addr;/*Main Config Table Addr*/
->  	void __iomem	*general_stat_tbl_addr;/*General Status Table Addr*/
-> @@ -428,6 +491,7 @@ struct pm8001_hba_info {
->  	void __iomem	*pspa_q_tbl_addr;
->  			/*MPI SAS PHY attributes Queue Config Table Addr*/
->  	void __iomem	*ivt_tbl_addr; /*MPI IVT Table Addr */
-> +	void __iomem	*fatal_tbl_addr; /*MPI IVT Table Addr */
->  	union main_cfg_table	main_cfg_tbl;
->  	union general_status_table	gs_tbl;
->  	struct inbound_queue_table	inbnd_q_tbl[PM8001_MAX_SPCV_INB_NUM];
-> @@ -634,6 +698,10 @@ int pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha);
->  int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
->  void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
->  	u32 length, u8 *buf);
-> +int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
-> +ssize_t pm80xx_get_fatal_dump(struct device *cdev,
-> +		struct device_attribute *attr, char *buf);
-> +ssize_t pm8001_get_gsm_dump(struct device *cdev, u32, char *buf);
->  /* ctl shared API */
->  extern struct device_attribute *pm8001_host_attrs[];
->  
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 94de2ed..7b87e96 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -45,6 +45,228 @@
->  
->  #define SMP_DIRECT 1
->  #define SMP_INDIRECT 2
-> +
-> +
-> +int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shift_value)
-> +{
-> +	u32 reg_val;
-> +	unsigned long start;
-> +	pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER, shift_value);
-> +	/* confirm the setting is written */
-> +	start = jiffies + HZ; /* 1 sec */
-> +	do {
-> +		reg_val = pm8001_cr32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER);
-> +	} while ((reg_val != shift_value) && time_before(jiffies, start));
-> +	if (reg_val != shift_value) {
-> +		PM8001_FAIL_DBG(pm8001_ha,
-> +			pm8001_printk("TIMEOUT:MEMBASE_II_SHIFT_REGISTER"
-> +			" = 0x%x\n", reg_val));
-> +		return -1;
-> +	}
-> +	return 0;
-> +}
-> +
-> +void pm80xx_pci_mem_copy(struct pm8001_hba_info  *pm8001_ha, u32 soffset,
-> +				const void *destination,
-> +				u32 dw_count, u32 bus_base_number)
-> +{
-> +	u32 index, value, offset;
-> +	u32 *destination1;
-> +	destination1 = (u32 *)destination;
-> +
-> +	for (index = 0; index < dw_count; index += 4, destination1++) {
-> +		offset = (soffset + index / 4);
-> +		if (offset < (64 * 1024)) {
-> +			value = pm8001_cr32(pm8001_ha, bus_base_number, offset);
-> +			*destination1 =  cpu_to_le32(value);
-> +		}
-> +	}
-> +	return;
-> +}
-> +
-> +ssize_t pm80xx_get_fatal_dump(struct device *cdev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	struct Scsi_Host *shost = class_to_shost(cdev);
-> +	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +	void __iomem *fatal_table_address = pm8001_ha->fatal_tbl_addr;
-> +	u32 status = 1;
-> +	u32 accum_len , reg_val, index, *temp;
-> +	unsigned long start;
-> +	u8 *direct_data;
-> +	char *fatal_error_data = buf;
-> +
-> +	pm8001_ha->forensic_info.data_buf.direct_data = buf;
-> +	if (pm8001_ha->chip_id == chip_8001) {
-> +		pm8001_ha->forensic_info.data_buf.direct_data +=
-> +			sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
-> +			"Not supported for SPC controller");
-> +		return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
-> +			(char *)buf;
-> +	}
-> +	if (pm8001_ha->forensic_info.data_buf.direct_offset == 0) {
-> +		PM8001_IO_DBG(pm8001_ha,
-> +		pm8001_printk("forensic_info TYPE_NON_FATAL..............\n"));
-> +		direct_data = (u8 *)fatal_error_data;
-> +		pm8001_ha->forensic_info.data_type = TYPE_NON_FATAL;
-> +		pm8001_ha->forensic_info.data_buf.direct_len = SYSFS_OFFSET;
-> +		pm8001_ha->forensic_info.data_buf.direct_offset = 0;
-> +		pm8001_ha->forensic_info.data_buf.read_len = 0;
-> +
-> +		pm8001_ha->forensic_info.data_buf.direct_data = direct_data;
-> +	}
-> +
-> +	if (pm8001_ha->forensic_info.data_buf.direct_offset == 0) {
-> +		/* start to get data */
-> +		/* Program the MEMBASE II Shifting Register with 0x00.*/
-> +		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
-> +				pm8001_ha->fatal_forensic_shift_offset);
-> +		pm8001_ha->forensic_last_offset = 0;
-> +		pm8001_ha->forensic_fatal_step = 0;
-> +		pm8001_ha->fatal_bar_loc = 0;
-> +	}
-> +	/* Read until accum_len is retrived */
-> +	accum_len = pm8001_mr32(fatal_table_address,
-> +				MPI_FATAL_EDUMP_TABLE_ACCUM_LEN);
-> +	PM8001_IO_DBG(pm8001_ha, pm8001_printk("accum_len 0x%x\n",
-> +						accum_len));
-> +	if (accum_len == 0xFFFFFFFF) {
-> +		PM8001_IO_DBG(pm8001_ha,
-> +			pm8001_printk("Possible PCI issue 0x%x not expected\n",
-> +				accum_len));
-> +		return status;
-> +	}
-> +	if (accum_len == 0 || accum_len >= 0x100000) {
-> +		pm8001_ha->forensic_info.data_buf.direct_data +=
-> +			sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
-> +				"%08x ", 0xFFFFFFFF);
-> +		return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
-> +			(char *)buf;
-> +	}
-> +	temp = (u32 *)pm8001_ha->memoryMap.region[FORENSIC_MEM].virt_ptr;
-> +	if (pm8001_ha->forensic_fatal_step == 0) {
-> +moreData:
-> +		if (pm8001_ha->forensic_info.data_buf.direct_data) {
-> +			/* Data is in bar, copy to host memory */
-> +			pm80xx_pci_mem_copy(pm8001_ha, pm8001_ha->fatal_bar_loc,
-> +			 pm8001_ha->memoryMap.region[FORENSIC_MEM].virt_ptr,
-> +				pm8001_ha->forensic_info.data_buf.direct_len ,
-> +					1);
-> +		}
-> +		pm8001_ha->fatal_bar_loc +=
-> +			pm8001_ha->forensic_info.data_buf.direct_len;
-> +		pm8001_ha->forensic_info.data_buf.direct_offset +=
-> +			pm8001_ha->forensic_info.data_buf.direct_len;
-> +		pm8001_ha->forensic_last_offset	+=
-> +			pm8001_ha->forensic_info.data_buf.direct_len;
-> +		pm8001_ha->forensic_info.data_buf.read_len =
-> +			pm8001_ha->forensic_info.data_buf.direct_len;
-> +
-> +		if (pm8001_ha->forensic_last_offset  >= accum_len) {
-> +			pm8001_ha->forensic_info.data_buf.direct_data +=
-> +			sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
-> +				"%08x ", 3);
-> +			for (index = 0; index < (SYSFS_OFFSET / 4); index++) {
-> +				pm8001_ha->forensic_info.data_buf.direct_data +=
-> +					sprintf(pm8001_ha->
-> +					 forensic_info.data_buf.direct_data,
-> +						"%08x ", *(temp + index));
-> +			}
-> +
-> +			pm8001_ha->fatal_bar_loc = 0;
-> +			pm8001_ha->forensic_fatal_step = 1;
-> +			pm8001_ha->fatal_forensic_shift_offset = 0;
-> +			pm8001_ha->forensic_last_offset	= 0;
-> +			status = 0;
-> +			return (char *)pm8001_ha->
-> +				forensic_info.data_buf.direct_data -
-> +				(char *)buf;
-> +		}
-> +		if (pm8001_ha->fatal_bar_loc < (64 * 1024)) {
-> +			pm8001_ha->forensic_info.data_buf.direct_data +=
-> +				sprintf(pm8001_ha->
-> +					forensic_info.data_buf.direct_data,
-> +					"%08x ", 2);
-> +			for (index = 0; index < (SYSFS_OFFSET / 4); index++) {
-> +				pm8001_ha->forensic_info.data_buf.direct_data +=
-> +					sprintf(pm8001_ha->
-> +					forensic_info.data_buf.direct_data,
-> +					"%08x ", *(temp + index));
-> +			}
-> +			status = 0;
-> +			return (char *)pm8001_ha->
-> +				forensic_info.data_buf.direct_data -
-> +				(char *)buf;
-> +		}
-> +
-> +		/* Increment the MEMBASE II Shifting Register value by 0x100.*/
-> +		pm8001_ha->forensic_info.data_buf.direct_data +=
-> +			sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
-> +				"%08x ", 2);
-> +		for (index = 0; index < 256; index++) {
-> +			pm8001_ha->forensic_info.data_buf.direct_data +=
-> +				sprintf(pm8001_ha->
-> +					forensic_info.data_buf.direct_data,
-> +						"%08x ", *(temp + index));
-> +		}
-> +		pm8001_ha->fatal_forensic_shift_offset += 0x100;
-> +		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
-> +			pm8001_ha->fatal_forensic_shift_offset);
-> +		pm8001_ha->fatal_bar_loc = 0;
-> +		status = 0;
-> +		return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
-> +			(char *)buf;
-> +	}
-> +	if (pm8001_ha->forensic_fatal_step == 1) {
-> +		pm8001_ha->fatal_forensic_shift_offset = 0;
-> +		/* Read 64K of the debug data. */
-> +		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
-> +			pm8001_ha->fatal_forensic_shift_offset);
-> +		pm8001_mw32(fatal_table_address,
-> +			MPI_FATAL_EDUMP_TABLE_HANDSHAKE,
-> +				MPI_FATAL_EDUMP_HANDSHAKE_RDY);
-> +
-> +		/* Poll FDDHSHK  until clear  */
-> +		start = jiffies + (2 * HZ); /* 2 sec */
-> +
-> +		do {
-> +			reg_val = pm8001_mr32(fatal_table_address,
-> +					MPI_FATAL_EDUMP_TABLE_HANDSHAKE);
-> +		} while ((reg_val) && time_before(jiffies, start));
-> +
-> +		if (reg_val != 0) {
-> +			PM8001_FAIL_DBG(pm8001_ha,
-> +			pm8001_printk("TIMEOUT:MEMBASE_II_SHIFT_REGISTER"
-> +			" = 0x%x\n", reg_val));
-> +			return -1;
-> +		}
-> +
-> +		/* Read the next 64K of the debug data. */
-> +		pm8001_ha->forensic_fatal_step = 0;
-> +		if (pm8001_mr32(fatal_table_address,
-> +			MPI_FATAL_EDUMP_TABLE_STATUS) !=
-> +				MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_DONE) {
-> +			pm8001_mw32(fatal_table_address,
-> +				MPI_FATAL_EDUMP_TABLE_HANDSHAKE, 0);
-> +			goto moreData;
-> +		} else {
-> +			pm8001_ha->forensic_info.data_buf.direct_data +=
-> +				sprintf(pm8001_ha->
-> +					forensic_info.data_buf.direct_data,
-> +						"%08x ", 4);
-> +			pm8001_ha->forensic_info.data_buf.read_len = 0xFFFFFFFF;
-> +			pm8001_ha->forensic_info.data_buf.direct_len =  0;
-> +			pm8001_ha->forensic_info.data_buf.direct_offset = 0;
-> +			pm8001_ha->forensic_info.data_buf.read_len = 0;
-> +			status = 0;
-> +		}
-> +	}
-> +
-> +	return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
-> +		(char *)buf;
-> +}
-> +
->  /**
->   * read_main_config_table - read the configure table and save it.
->   * @pm8001_ha: our hba card information
-> @@ -583,6 +805,9 @@ static void init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
->  	pm8001_ha->pspa_q_tbl_addr =
->  		base_addr + (pm8001_cr32(pm8001_ha, pcibar, offset + 0x90) &
->  					0xFFFFFF);
-> +	pm8001_ha->fatal_tbl_addr =
-> +		base_addr + (pm8001_cr32(pm8001_ha, pcibar, offset + 0xA0) &
-> +					0xFFFFFF);
->  
->  	PM8001_INIT_DBG(pm8001_ha,
->  			pm8001_printk("GST OFFSET 0x%x\n",
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-> index 872d5cf..c86816b 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-> @@ -1525,4 +1525,6 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
->  #define DEVREG_FAILURE_PORT_NOT_VALID_STATE		0x06
->  #define DEVREG_FAILURE_DEVICE_TYPE_NOT_VALID		0x07
->  
-> +
-> +#define MEMBASE_II_SHIFT_REGISTER       0x1010
->  #endif
+Also maybe a cmd_special_free is missing - see below
+
+Cheers, Tomas
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/hpsa.h |    1 +
+ 2 files changed, 49 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index b7f405f..38e3af4 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -1010,6 +1010,20 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+ 	for (i = 0; i < nsds; i++) {
+ 		if (!sd[i]) /* if already added above. */
+ 			continue;
++
++		/* Don't add devices which are NOT READY, FORMAT IN PROGRESS
++		 * as the SCSI mid-layer does not handle such devices well.
++		 * It relentlessly loops sending TUR at 3Hz, then READ(10)
++		 * at 160Hz, and prevents the system from coming up.
++		 */
++		if (sd[i]->format_in_progress) {
++			dev_info(&h->pdev->dev,
++				"Logical drive format in progress, device c%db%dt%dl%d offline.\n",
++				h->scsi_host->host_no,
++				sd[i]->bus, sd[i]->target, sd[i]->lun);
++			continue;
++		}
++
+ 		device_change = hpsa_scsi_find_entry(sd[i], h->dev,
+ 					h->ndevices, &entry);
+ 		if (device_change == DEVICE_NOT_FOUND) {
+@@ -1715,6 +1729,34 @@ static inline void hpsa_set_bus_target_lun(struct hpsa_scsi_dev_t *device,
+ 	device->lun = lun;
+ }
+ 
++static unsigned char hpsa_format_in_progress(struct ctlr_info *h,
++		unsigned char scsi3addr[])
++{
++	struct CommandList *c;
++	unsigned char *sense, sense_key, asc, ascq;
++#define ASC_LUN_NOT_READY 0x04
++#define ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS 0x04
++
++
++	c = cmd_special_alloc(h);
++	if (!c)
++		return 0;
++	fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, scsi3addr, TYPE_CMD);
++	hpsa_scsi_do_simple_cmd_core(h, c);
++	sense = c->err_info->SenseInfo;
++	sense_key = sense[2];
++	asc = sense[12];
++	ascq = sense[13];
++	if (c->err_info->CommandStatus == CMD_TARGET_STATUS &&
++		c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION &&
++		sense_key == NOT_READY &&
++		asc == ASC_LUN_NOT_READY &&
++		ascq == ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS)
++		return 1;
+return^ without cmd_special_free
+
++	cmd_special_free(h, c);
++	return 0;
++}
++
+ static int hpsa_update_device_info(struct ctlr_info *h,
+ 	unsigned char scsi3addr[], struct hpsa_scsi_dev_t *this_device,
+ 	unsigned char *is_OBDR_device)
+@@ -1753,10 +1795,14 @@ static int hpsa_update_device_info(struct ctlr_info *h,
+ 		sizeof(this_device->device_id));
+ 
+ 	if (this_device->devtype == TYPE_DISK &&
+-		is_logical_dev_addr_mode(scsi3addr))
++		is_logical_dev_addr_mode(scsi3addr)) {
+ 		hpsa_get_raid_level(h, scsi3addr, &this_device->raid_level);
+-	else
++		this_device->format_in_progress =
++			hpsa_format_in_progress(h, scsi3addr);
++	} else {
+ 		this_device->raid_level = RAID_UNKNOWN;
++		this_device->format_in_progress = 0;
++	}
+ 
+ 	if (is_OBDR_device) {
+ 		/* See if this is a One-Button-Disaster-Recovery device
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index bc85e72..4fd0d45 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -46,6 +46,7 @@ struct hpsa_scsi_dev_t {
+ 	unsigned char vendor[8];        /* bytes 8-15 of inquiry data */
+ 	unsigned char model[16];        /* bytes 16-31 of inquiry data */
+ 	unsigned char raid_level;	/* from inquiry page 0xC1 */
++	unsigned char format_in_progress;
+ };
+ 
+ struct reply_pool {
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
