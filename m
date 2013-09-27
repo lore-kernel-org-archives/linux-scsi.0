@@ -1,84 +1,112 @@
-From: Laurent Pinchart <laurent.pinchart-ryLnwIuWjnjg/C1BVhZhaw@public.gmane.org>
-Subject: Re: [PATCH 31/51] DMA-API: media: omap3isp: use dma_coerce_mask_and_coherent()
-Date: Fri, 27 Sep 2013 03:56:13 +0200
-Message-ID: <4110555.qb0XUyFHNE@avalon>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMmCg-0007j1-Pi@rmk-PC.arm.linux.org.uk>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: Race condition between "read CFQ stats" and "block device shutdown"
+Date: Fri, 27 Sep 2013 07:59:04 +0200
+Message-ID: <52451EA8.70606@suse.de>
+References: <CAOMFOmXJ5ZTYdOvdUt-oxsouhPGRmMshCRhn6AFgmFAGZw5WZA@mail.gmail.com> <5226D661.7070301@suse.de> <CAOMFOmUCqXN1uaqBEWH3PStuZXvnvLw=YrARgv7DvqO6Y4bFPQ@mail.gmail.com> <20130904160723.GC26609@mtj.dyndns.org> <CAOMFOmWWfxCZ7ND_Vso4UkSEOqGm=o-xsqrfrj5MKdf9_jr1gA@mail.gmail.com> <20130926135443.GC2480@htj.dyndns.org> <5244423A.2050107@suse.de> <CAOMFOmX2f35qWyTr7=1HNu=RMB_LMAmpMbYxSEsX1xgURhx_mg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <E1VMmCg-0007j1-Pi-eh5Bv4kxaXIANfyc6IWni62ZND6+EDdj@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
-Cc: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, e1000-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Solarflare linux maintainers <linux-net-drivers-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, uclinux-dist-devel-ZG0+EudsQA8dtHy/vicBwGD2FQJk+8+b@public.gmane.org, Mauro Carvalho Chehab <m.chehab-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAOMFOmX2f35qWyTr7=1HNu=RMB_LMAmpMbYxSEsX1xgURhx_mg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Russell,
+On 09/26/2013 06:23 PM, Anatol Pomozov wrote:
+> Hi
+>=20
+> On Thu, Sep 26, 2013 at 7:18 AM, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org> wrote=
+:
+>> On 09/26/2013 03:54 PM, Tejun Heo wrote:
+>>> Hello, (cc'ing linux-scsi)
+>>>
+>>> On Wed, Sep 25, 2013 at 01:37:51PM -0700, Anatol Pomozov wrote:
+>>>> Hi
+>>>>
+>>>> On Wed, Sep 4, 2013 at 9:07 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>>>>> Hello,
+>>>>>
+>>>>> On Wed, Sep 04, 2013 at 08:45:33AM -0700, Anatol Pomozov wrote:
+>>>>>> I am not an expect in block code, so I have a few questions here=
+:
+>>>>>>
+>>>>>> - are we sure that this operation is atomic? What if blkg->q bec=
+omes
+>>>>>> dead right after we checked it, and blkg->q->queue_lock got inva=
+lid so
+>>>>>> we have the same crash as before?
+>>>>>
+>>>>> request_queue lock switching is something inherently broken in bl=
+ock
+>>>>> layer.  It's unsalvageable.
+>>>>
+>>>> Fully agree. The problem that request_queue->queue_lock is a share=
+d
+>>>> resource that concurrently modified/accessed. In this case (when o=
+ne
+>>>> thread changes, another thread access it) we need synchronization =
+to
+>>>> prevent race conditions. So we need a spin_lock to access queue_lo=
+ck
+>>>> spin_lock, otherwise we have a crash like one above...
+>>>>
+>>>>>  Maybe we can drop lock switching once blk-mq is fully merged.
+>>>>
+>>>> Could you please provide more information about it? What is the ti=
+meline?
+>>>
+>>> I have no idea.  Hopefully, not too far out.  Jens would have bette=
+r
+>>> idea.
+>>>
+>>>> If there is an easy way to fix the race condition I would like to
+>>>> help. Please give me some pointer what direction I should move.
+>>>
+>>> The first step would be identifying who are actually making use of
+>>> lock switching, why and how much difference it would make for them =
+to
+>>> not do that.
+>>>
+>> Typically, the lock is being used by the block drivers to
+>> synchronize access between some internal data structures and the
+>> request queue itself. You don't actually _need_ to do it that way,
+>> but removing the lock switching would involve quite some redesign of
+>> these drivers.
+>> Give that most of the are rather oldish I really wouldn't want to
+>> touch them.
+>=20
+> Thanks for the info.
+>=20
+> We use modified version of "sbull" block device driver from GKH book.
+> We use it for testing block device startup/shutdown path + CFQ
+> manipulation.
+>=20
+> The sbull driver uses function
+> blk_init_queue(..., &dev->qlock);
+>=20
+> it passes lock as a second parameter and function makes the lock
+> swapping. According to your information passing lock to
+> blk_init_queue() considered as an "old non recommended way" so we
+> should modify our driver and avoid doing this. I'll take a look.
+>=20
+Yep. I would recommend to use the queue_lock directly whenever you
+need to pull requests off the request_queue, and use your own lock
+to protect any internal structures associated with handling the
+request internally.
 
-Thank you for the patch.
+Yes, this _might_ involve some lock dancing between the queue_lock
+and the internal lock, but has the advantage that the internal lock
+typically it used far more often than the queue_lock itself.
+So you might even get some speed advantage here as you reduce
+contention on the queue_lock.
 
-On Thursday 19 September 2013 22:56:02 Russell King wrote:
-> The code sequence:
-> 	isp->raw_dmamask = DMA_BIT_MASK(32);
-> 	isp->dev->dma_mask = &isp->raw_dmamask;
-> 	isp->dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> bypasses the architectures check on the DMA mask.  It can be replaced
-> with dma_coerce_mask_and_coherent(), avoiding the direct initialization
-> of this mask.
-> 
-> Signed-off-by: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
+Cheers,
 
-Acked-by: Laurent Pinchart <laurent.pinchart-ryLnwIuWjnjg/C1BVhZhaw@public.gmane.org>
-
-> ---
->  drivers/media/platform/omap3isp/isp.c |    6 +++---
->  drivers/media/platform/omap3isp/isp.h |    3 ---
->  2 files changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/media/platform/omap3isp/isp.c
-> b/drivers/media/platform/omap3isp/isp.c index df3a0ec..1c36080 100644
-> --- a/drivers/media/platform/omap3isp/isp.c
-> +++ b/drivers/media/platform/omap3isp/isp.c
-> @@ -2182,9 +2182,9 @@ static int isp_probe(struct platform_device *pdev)
->  	isp->pdata = pdata;
->  	isp->ref_count = 0;
-> 
-> -	isp->raw_dmamask = DMA_BIT_MASK(32);
-> -	isp->dev->dma_mask = &isp->raw_dmamask;
-> -	isp->dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> +	ret = dma_coerce_mask_and_coherent(isp->dev, DMA_BIT_MASK(32));
-> +	if (ret)
-> +		return ret;
-> 
->  	platform_set_drvdata(pdev, isp);
-> 
-> diff --git a/drivers/media/platform/omap3isp/isp.h
-> b/drivers/media/platform/omap3isp/isp.h index cd3eff4..ce65d3a 100644
-> --- a/drivers/media/platform/omap3isp/isp.h
-> +++ b/drivers/media/platform/omap3isp/isp.h
-> @@ -152,7 +152,6 @@ struct isp_xclk {
->   * @mmio_base_phys: Array with physical L4 bus addresses for ISP register
->   *                  regions.
->   * @mmio_size: Array with ISP register regions size in bytes.
-> - * @raw_dmamask: Raw DMA mask
->   * @stat_lock: Spinlock for handling statistics
->   * @isp_mutex: Mutex for serializing requests to ISP.
->   * @crashed: Bitmask of crashed entities (indexed by entity ID)
-> @@ -190,8 +189,6 @@ struct isp_device {
->  	unsigned long mmio_base_phys[OMAP3_ISP_IOMEM_LAST];
->  	resource_size_t mmio_size[OMAP3_ISP_IOMEM_LAST];
-> 
-> -	u64 raw_dmamask;
-> -
->  	/* ISP Obj */
->  	spinlock_t stat_lock;	/* common lock for statistic drivers */
->  	struct mutex isp_mutex;	/* For handling ref_count field */
--- 
-Regards,
-
-Laurent Pinchart
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
