@@ -1,62 +1,123 @@
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
-Date: Fri, 27 Sep 2013 11:08:51 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1309271106090.18703@pobox.suse.cz>
-References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz> <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz> <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
- <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz> <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
+From: Vishal Annapurve <vannapurve@nvidia.com>
+Subject: Fwd: [PATCH] usb-storage: scsiglue: Changing the command result
+Date: Fri, 27 Sep 2013 17:07:58 +0530
+Message-ID: <52456E16.7060007@nvidia.com>
+References: <52441C1F.8020200@nvidia.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Adam Radford <aradford@gmail.com>
+Content-Type: multipart/mixed;
+	boundary="------------080607040600090903030901"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:18692 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106Ab3I0LiB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Sep 2013 07:38:01 -0400
+In-Reply-To: <52441C1F.8020200@nvidia.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 6 Sep 2013, Bjorn Helgaas wrote:
+--------------080607040600090903030901
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> >> >> > Commit d5dea7d95 ("PCI: msi: Disable msi interrupts when we initialize a
-> >> >> > pci device") makes MSIs be forcibly disabled at boot time.
-> >> >> >
-> >> >> > It turns out that this breaks 3ware controller -- if MSIs are disabled
-> >> >> > during PCI discovery of this controller, the device doesn't work properly
-> >> >> > (it doesn't respond to any commands that are being sent to it after
-> >> >> > initialization).
-> 
-> Is there a bug report for this issue?  
+Hi,
 
-Yes, but unfortunately only in our internal bugzilla.
+There was a recent commit in mainline for the scsi devices which do not
+respond properly to medium access command:
 
-> It's nice to have a pointer to, e.g., a bugzilla.kernel.org bug report 
-> with info such as dmesg logs, lspci output, etc., for future reference.  
+commit    18a4d0a22ed6c54b67af7718c305cd010f09ddf8
 
-It's a customer-reported issue, so I am gathering permission to make this 
-information public (I don't think that'll be an issue).
+[SCSI] Handle disk devices which can not process medium access commands
+We have experienced several devices which fail in a fashion we do not
+currently handle gracefully in SCSI. After a failure these devices will
+respond to the SCSI primary command set (INQUIRY, TEST UNIT READY, etc.)
+but any command accessing the storage medium will time out.
 
-I'll send up a followup afterwards.
+I came across a USB drive which showed similar problem and what I see is
+usb storage is still not able to cope with such devices properly.
 
-> Maybe somebody will figure out a more generic change that could make 
-> this quirk unnecessary, and details will help in figuring that out.
-> 
-> I assume the actual PCI discovery done in the PCI core works fine;
-> it's just that the driver doesn't work if MSIs are disabled on the
-> device.  If that's the case, can this be fixed by some driver change?
-> Maybe the driver needs to enable MSI before it sends commands to the
-> device?
+The control flow downwards is like:
+scsi_times_out --> Setting cmd->result as DID_TIME_OUT
+scsi_error_handler
+scsi_unjam_host
+scsi_eh_abort_cmds
+command_abort    (sets US_FLIDX_TIMED_OUT for us->dflags
+                                    calls stop_transport,
+                                    and waits for)    usb_stor_control_thread (which is waiting for
+                                                                     transport call to return inside
+                                                                     usb_stor_invoke_transport)
+                                                                     both usb_stor_control_thread and
+                                                                     usb_stor_invoke_transport
+                                                      check for us->dflags timed_out bit and
+                                                       set the result as DID_ABORT
+                                                       and signal completion for command_abort
+                                                       to complete
+......
+sd_eh_action
+checks for cmd->result and finds out that it's DID_ABORT rather than
+DID_TIME_OUT.
 
-I have tried it, but it still doesn't work. It seems like the device 
-initialization is not finalized properly with MISs disabled; meaning the 
-device is there (discovery has completed), but it "just doesn't work".
+This patch updates the command result to be TIME_OUT explicitly before
+returning from command_abort in scsiglue.c.
 
-> Any description of what this failure looks like to a user?  How can a 
-> user or a distro connect a symptom (driver timeout, console message, or 
-> whatever) to this patch?
+I would like to know if this patch can work out for such USB Storage
+devices? What would be the better way to do the same?
 
-Will be hopefully part of the dmesg I will be providing later ... 
-basically any commands sent to it time out.
 
-Thanks,
+Regards,
+Vishal Annapurve
 
+
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
+
+--------------080607040600090903030901
+Content-Type: text/x-patch;
+	name="usb_storage_scsi_medium_access_timeout.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="usb_storage_scsi_medium_access_timeout.patch"
+
+From: Vishal Annapurve <vannapurve@nvidia.com>
+Subject: [PATCH] usb-storage: Changing the command result
+
+This change updates the returned result to scsi layer to use
+DID_TIMEOUT flag as a result status rather than DID_ABORT for
+commands aborted due to timeout.
+
+Signed-off-by: Vishal Annapurve <vannapurve@nvidia.com>
+---
+ drivers/usb/storage/scsiglue.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index a74e9d8..e7b532e 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -353,6 +353,15 @@ static int command_abort(struct scsi_cmnd *srb)
+ 
+ 	/* Wait for the aborted command to finish */
+ 	wait_for_completion(&us->notify);
++	/* Given that this bit would be only set in case of timedout
++	 * command, we can return with DID_TIME_OUT, as scsi layer needs
++	 * to use this result rather than DID_ABORT.
++	 * This is a WR to avoid removing DID_ABORT altogether
++	 * and before the final control goes to scsi layer change the
++	 * result to be timedout.
++	 */
++	us->srb->result = DID_TIME_OUT << 16;
++
+ 	return SUCCESS;
+ }
+ 
 -- 
-Jiri Kosina
-SUSE Labs
+1.8.4
+
+
+
+
+--------------080607040600090903030901--
