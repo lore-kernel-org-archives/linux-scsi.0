@@ -1,74 +1,47 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Bypass block layer and Fill SCSI lower layer driver queue
-Date: Thu, 26 Sep 2013 23:06:22 -0700
-Message-ID: <5245205E.5000905@vlnb.net>
-References: <CAB-428mCM-4c1hWaEJicB8Uz_4DCo7MsH-ZcXHrDkN=Wc5AhVA@mail.gmail.com> <52395D14.6010103@gmail.com> <5239B3B9.8050209@interlog.com>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH 00/51] DMA mask changes
+Date: Fri, 27 Sep 2013 09:27:04 +0100
+Message-ID: <20130927082703.GZ25647@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+ <CACna6rxkpYzdD8_Jfi22vA2suUa3k-JM65_gCySQpp4crVCoPg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:62614 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887Ab3I0GG3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Sep 2013 02:06:29 -0400
-In-Reply-To: <5239B3B9.8050209@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <alsa-devel-bounces@alsa-project.org>
+Content-Disposition: inline
+In-Reply-To: <CACna6rxkpYzdD8_Jfi22vA2suUa3k-JM65_gCySQpp4crVCoPg@mail.gmail.com>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: alsa-devel@alsa-project.org, linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, linux-samsung-soc@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, e1000-devel@lists.sourceforge.net, b43-dev <b43-dev@lists.infradead.org>, linux-media@vger.kernel.org, devicetree@vger.kernel.org, dri-devel <dri-devel@lists.freedesktop.org>, linux-tegra@vger.kernel.org, linux-omap@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, Network Development <netdev@vger.kernel.org>, linux-usb@vger.kernel.org, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, linux-crypto@vger.kernel.org, uclinux-dist-devel@black
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: dgilbert@interlog.com, Jack Wang <xjtuwjp@gmail.com>, Alireza Haghdoost <alireza@cs.umn.edu>, linux-fsdevel@vger.kernel.org, Jerry Fredin <jerry.fredin@netapp.com>
 
-Douglas Gilbert, on 09/18/2013 07:07 AM wrote:
-> On 13-09-18 03:58 AM, Jack Wang wrote:
->> On 09/18/2013 08:41 AM, Alireza Haghdoost wrote:
->>> Hi
->>>
->>> I am working on a high throughput and low latency application which
->>> does not tolerate block layer overhead to send IO request directly to
->>> fiber channel lower layer SCSI driver. I used to work with libaio but
->>> currently I am looking for a way to by pass the block layer and send
->>> SCSI commands from the application layer directly to the SCSI driver
->>> using /dev/sgX device and ioctl() system call.
->>>
->>> I have noticed that sending IO request through sg device even with
->>> nonblocking and direct IO flags is quite slow and does not fill up
->>> lower layer SCSI driver TCQ queue. i.e IO depth or
->>> /sys/block/sdX/in_flight is always ZERO. Therefore the application
->>> throughput is even lower that sending IO request through block layer
->>> with libaio and io_submit() system call. In both cases I used only one
->>> IO context (or fd) and single threaded.
->>>
->> Hi Alireza,
->>
->> I think what you want is in_flight command scsi dispatch to low level
->> device.
->> I submit a simple patch to export device_busy
->>
->> http://www.spinics.net/lists/linux-scsi/msg68697.html
->>
->> I also notice fio sg engine will not fill queue properly, but haven't
->> look into deeper.
->>
->> Cheers
->> Jack
->>
->>> I have noticed that some well known benchmarking tools like fio does
->>> not support IO depth for sg devices as well. Therefore, I was
->>> wondering if it is feasible to bypass block layer and achieve higher
->>> throughput and lower latency (for sending IO request only).
->>>
->>>
->>> Any comment on my issue is highly appreciated.
-> 
-> I'm not sure if this is relevant to your problem but by
-> default both the bsg and sg drivers "queue at head"
-> when they inject SCSI commands into the block layer.
-> 
-> The bsg driver has a BSG_FLAG_Q_AT_TAIL flag to change
-> that queueing to what may be preferable for your purposes.
-> The sg driver could, but does not, support that flag.
-
-Just curious, for how long this counterproductive insert in head is going to stay? I
-guess, now (almost) nobody can recall why it is so. This behavior makes sg interface,
-basically, unusable for anything bigger, than sg-utils.
-
-Vlad
+T24gVGh1LCBTZXAgMjYsIDIwMTMgYXQgMTA6MjM6MDhQTSArMDIwMCwgUmFmYcWCIE1pxYJlY2tp
+IHdyb3RlOgo+IDIwMTMvOS8xOSBSdXNzZWxsIEtpbmcgLSBBUk0gTGludXggPGxpbnV4QGFybS5s
+aW51eC5vcmcudWs+Ogo+ID4gVGhpcyBlbWFpbCBpcyBvbmx5IGJlaW5nIHNlbnQgdG8gdGhlIG1h
+aWxpbmcgbGlzdHMgaW4gcXVlc3Rpb24sIG5vdCB0bwo+ID4gYW55b25lIHBlcnNvbmFsbHkuICBU
+aGUgbGlzdCBvZiBpbmRpdmlkdWFscyBpcyBmYXIgdG8gZ3JlYXQgdG8gZG8gdGhhdC4KPiA+IEkn
+bSBob3Bpbmcgbm8gbWFpbGluZyBsaXN0cyByZWplY3QgdGhlIHBhdGNoZXMgYmFzZWQgb24gdGhl
+IG51bWJlciBvZgo+ID4gcmVjaXBpZW50cy4KPiAKPiBIdWgsIEkgdGhpbmsgaXQgd2FzIGVub3Vn
+aCB0byBzZW5kIG9ubHkgMyBwYXRjaGVzIHRvIHRoZSBiNDMtZGV2QC4gTGlrZToKPiBbUEFUQ0gg
+MDEvNTFdIERNQS1BUEk6IHByb3ZpZGUgYSBoZWxwZXIgdG8gc2V0IGJvdGggRE1BIGFuZCBjb2hl
+cmVudCBETUEgbWFza3MKPiBbUEFUQ0ggMTQvNTFdIERNQS1BUEk6IG5ldDogYjQzOiAoLi4uKQo+
+IFtQQVRDSCAxNS81MV0gRE1BLUFQSTogbmV0OiBiNDNsZWdhY3k6ICguLi4pCj4gOykKPiAKPiBJ
+IGJlbGlldmUgSm9lIGhhcyBzb21lIG5pY2Ugc2NyaXB0IGZvciBkb2luZyBpdCB0aGF0IHdheS4g
+V2hlbiBmaXhpbmcKPiBzb21lIGNvZGluZyBzdHlsZSAvIGZvcm1hdHRpbmcsIGhlIHNlbmRzIG9u
+bHkgcmVsYXRlZCBwYXRjaGVzIHRvIHRoZQo+IGdpdmVuIE1MLgoKSWYgSSBkaWQgdGhhdCwgdGhl
+biB0aGUgbWFpbGluZyBsaXN0cyB3b3VsZCBub3QgZ2V0IHRoZSBmaXJzdCBwYXRjaCwKYmVjYXVz
+ZSBhbG1vc3Qgbm9uZSBvZiB0aGUgbGlzdHMgd291bGQgYmUgcmVmZXJyZWQgdG8gYnkgcGF0Y2gg
+MS4KCk1vcmVvdmVyLCBwZW9wbGUgY29tcGxhaW4gd2hlbiB0aGV5IGRvbid0IGhhdmUgYWNjZXNz
+IHRvIHRoZSBmdWxsCnBhdGNoIHNlcmllcyAtIHRoZXkgYXNzdW1lIHBhdGNoZXMgYXJlIG1pc3Np
+bmcgZm9yIHNvbWUgcmVhc29uLCBhbmQKdGhleSBhc2sgZm9yIHRoZSByZXN0IG9mIHRoZSBzZXJp
+ZXMuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkFsc2Et
+ZGV2ZWwgbWFpbGluZyBsaXN0CkFsc2EtZGV2ZWxAYWxzYS1wcm9qZWN0Lm9yZwpodHRwOi8vbWFp
+bG1hbi5hbHNhLXByb2plY3Qub3JnL21haWxtYW4vbGlzdGluZm8vYWxzYS1kZXZlbAo=
