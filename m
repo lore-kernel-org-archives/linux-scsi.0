@@ -1,340 +1,159 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH V2 12/23] be2iscsi: Fix CID allocation/freeing to support Dual chute mode
-Date: Sat, 28 Sep 2013 15:35:49 -0700
-Message-ID: <1380407761-2949-12-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH V2 13/23] be2iscsi: Fix connection offload to support Dual Chute.
+Date: Sat, 28 Sep 2013 15:35:50 -0700
+Message-ID: <1380407761-2949-13-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1380407761-2949-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:53141 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755294Ab3I1Wgf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Sep 2013 18:36:35 -0400
-Received: by mail-pb0-f45.google.com with SMTP id mc17so3992116pbc.18
-        for <linux-scsi@vger.kernel.org>; Sat, 28 Sep 2013 15:36:35 -0700 (PDT)
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:39726 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755294Ab3I1Wgh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Sep 2013 18:36:37 -0400
+Received: by mail-pb0-f41.google.com with SMTP id rp2so4000826pbb.14
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Sep 2013 15:36:37 -0700 (PDT)
 In-Reply-To: <1380407761-2949-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- Configuration parameters returns the number of connection that
- can be offloaded one each chute.
+ The connection is offload to each chute in a round-robin manner
+ if both the chute is loaded with iSCSI protocol
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c |   54 ++++++++++++++-----
- drivers/scsi/be2iscsi/be_main.c  |  108 +++++++++++++++++++++++++++++++-------
- drivers/scsi/be2iscsi/be_main.h  |   20 +++++--
- drivers/scsi/be2iscsi/be_mgmt.c  |   16 +++++-
- 4 files changed, 160 insertions(+), 38 deletions(-)
+ drivers/scsi/be2iscsi/be_iscsi.c |    6 ++++++
+ drivers/scsi/be2iscsi/be_main.c  |   13 ++++++++-----
+ drivers/scsi/be2iscsi/be_main.h  |    1 +
+ drivers/scsi/be2iscsi/be_mgmt.c  |   19 ++++++++++++++++---
+ 4 files changed, 31 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index f698f7a..63b2be0 100644
+index 63b2be0..a7cd92c 100644
 --- a/drivers/scsi/be2iscsi/be_iscsi.c
 +++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -964,15 +964,31 @@ int beiscsi_conn_start(struct iscsi_cls_conn *cls_conn)
-  */
- static int beiscsi_get_cid(struct beiscsi_hba *phba)
- {
--	unsigned short cid = 0xFFFF;
--
--	if (!phba->avlbl_cids)
--		return cid;
--
--	cid = phba->cid_array[phba->cid_alloc++];
--	if (phba->cid_alloc == phba->params.cxns_per_ctrl)
--		phba->cid_alloc = 0;
--	phba->avlbl_cids--;
-+	unsigned short cid = 0xFFFF, cid_from_ulp;
-+	struct ulp_cid_info *cid_info = NULL;
-+	uint16_t cid_avlbl_ulp0, cid_avlbl_ulp1;
-+
-+	/* Find the ULP which has more CID available */
-+	cid_avlbl_ulp0 = (phba->cid_array_info[BEISCSI_ULP0]) ?
-+			  BEISCSI_ULP0_AVLBL_CID(phba) : 0;
-+	cid_avlbl_ulp1 = (phba->cid_array_info[BEISCSI_ULP1]) ?
-+			  BEISCSI_ULP1_AVLBL_CID(phba) : 0;
-+	cid_from_ulp = (cid_avlbl_ulp0 > cid_avlbl_ulp1) ?
-+			BEISCSI_ULP0 : BEISCSI_ULP1;
-+
-+	if (test_bit(cid_from_ulp, (void *)&phba->fw_config.ulp_supported)) {
-+		cid_info = phba->cid_array_info[cid_from_ulp];
-+		if (!cid_info->avlbl_cids)
-+			return cid;
-+
-+		cid = cid_info->cid_array[cid_info->cid_alloc++];
-+
-+		if (cid_info->cid_alloc == BEISCSI_GET_CID_COUNT(
-+					   phba, cid_from_ulp))
-+			cid_info->cid_alloc = 0;
-+
-+		cid_info->avlbl_cids--;
-+	}
- 	return cid;
- }
- 
-@@ -983,10 +999,22 @@ static int beiscsi_get_cid(struct beiscsi_hba *phba)
-  */
- static void beiscsi_put_cid(struct beiscsi_hba *phba, unsigned short cid)
- {
--	phba->avlbl_cids++;
--	phba->cid_array[phba->cid_free++] = cid;
--	if (phba->cid_free == phba->params.cxns_per_ctrl)
--		phba->cid_free = 0;
-+	uint16_t cid_post_ulp;
-+	struct hwi_controller *phwi_ctrlr;
+@@ -194,6 +194,8 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
+ 	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
+ 	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	struct hwi_controller *phwi_ctrlr = phba->phwi_ctrlr;
 +	struct hwi_wrb_context *pwrb_context;
-+	struct ulp_cid_info *cid_info = NULL;
-+	uint16_t cri_index = BE_GET_CRI_FROM_CID(cid);
-+
-+	phwi_ctrlr = phba->phwi_ctrlr;
-+	pwrb_context = &phwi_ctrlr->wrb_context[cri_index];
-+	cid_post_ulp = pwrb_context->ulp_num;
-+
-+	cid_info = phba->cid_array_info[cid_post_ulp];
-+	cid_info->avlbl_cids++;
-+
-+	cid_info->cid_array[cid_info->cid_free++] = cid;
-+	if (cid_info->cid_free == BEISCSI_GET_CID_COUNT(phba, cid_post_ulp))
-+		cid_info->cid_free = 0;
- }
+ 	struct beiscsi_endpoint *beiscsi_ep;
+ 	struct iscsi_endpoint *ep;
  
- /**
+@@ -214,9 +216,13 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
+ 		return -EEXIST;
+ 	}
+ 
++	pwrb_context = &phwi_ctrlr->wrb_context[BE_GET_CRI_FROM_CID(
++						beiscsi_ep->ep_cid)];
++
+ 	beiscsi_conn->beiscsi_conn_cid = beiscsi_ep->ep_cid;
+ 	beiscsi_conn->ep = beiscsi_ep;
+ 	beiscsi_ep->conn = beiscsi_conn;
++	beiscsi_conn->doorbell_offset = pwrb_context->doorbell_offset;
+ 
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
+ 		    "BS_%d : beiscsi_conn=%p conn=%p ep_cid=%d\n",
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 8595908..b57e5bd 100644
+index b57e5bd..d539b17 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4079,15 +4079,46 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
+@@ -4585,8 +4585,8 @@ beiscsi_offload_connection(struct beiscsi_conn *beiscsi_conn,
+ 	doorbell |= (pwrb_handle->wrb_index & DB_DEF_PDU_WRB_INDEX_MASK)
+ 			     << DB_DEF_PDU_WRB_INDEX_SHIFT;
+ 	doorbell |= 1 << DB_DEF_PDU_NUM_POSTED_SHIFT;
+-
+-	iowrite32(doorbell, phba->db_va + DB_TXULP0_OFFSET);
++	iowrite32(doorbell, phba->db_va +
++		  beiscsi_conn->doorbell_offset);
+ }
  
- static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- {
--	int i;
-+	int ret;
-+	uint16_t i, ulp_num;
-+	struct ulp_cid_info *ptr_cid_info = NULL;
- 
--	phba->cid_array = kzalloc(sizeof(void *) * phba->params.cxns_per_ctrl,
--				  GFP_KERNEL);
--	if (!phba->cid_array) {
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : Failed to allocate memory in "
--			    "hba_setup_cid_tbls\n");
--		return -ENOMEM;
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			ptr_cid_info = kzalloc(sizeof(struct ulp_cid_info),
-+					       GFP_KERNEL);
-+
-+			if (!ptr_cid_info) {
-+				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-+					    "BM_%d : Failed to allocate memory"
-+					    "for ULP_CID_INFO for ULP : %d\n",
-+					    ulp_num);
-+				ret = -ENOMEM;
-+				goto free_memory;
-+
-+			}
-+
-+			/* Allocate memory for CID array */
-+			ptr_cid_info->cid_array = kzalloc(sizeof(void *) *
-+						  BEISCSI_GET_CID_COUNT(phba,
-+						  ulp_num), GFP_KERNEL);
-+			if (!ptr_cid_info->cid_array) {
-+				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-+					    "BM_%d : Failed to allocate memory"
-+					    "for CID_ARRAY for ULP : %d\n",
-+					    ulp_num);
-+				kfree(ptr_cid_info);
-+				ptr_cid_info = NULL;
-+				ret = -ENOMEM;
-+
-+				goto free_memory;
-+			}
-+			ptr_cid_info->avlbl_cids = BEISCSI_GET_CID_COUNT(
-+						   phba, ulp_num);
-+
-+			/* Save the cid_info_array ptr */
-+			phba->cid_array_info[ulp_num] = ptr_cid_info;
-+		}
- 	}
- 	phba->ep_array = kzalloc(sizeof(struct iscsi_endpoint *) *
- 				 phba->params.cxns_per_ctrl, GFP_KERNEL);
-@@ -4095,9 +4126,9 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 			    "BM_%d : Failed to allocate memory in "
- 			    "hba_setup_cid_tbls\n");
--		kfree(phba->cid_array);
--		phba->cid_array = NULL;
--		return -ENOMEM;
-+		ret = -ENOMEM;
-+
-+		goto free_memory;
- 	}
- 
- 	phba->conn_table = kzalloc(sizeof(struct beiscsi_conn *) *
-@@ -4107,18 +4138,44 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- 			    "BM_%d : Failed to allocate memory in"
- 			    "hba_setup_cid_tbls\n");
- 
--		kfree(phba->cid_array);
- 		kfree(phba->ep_array);
--		phba->cid_array = NULL;
- 		phba->ep_array = NULL;
--		return -ENOMEM;
-+		ret = -ENOMEM;
- 	}
- 
--	for (i = 0; i < phba->params.cxns_per_ctrl; i++)
--		phba->cid_array[i] = phba->phwi_ctrlr->wrb_context[i].cid;
-+	for (i = 0; i < phba->params.cxns_per_ctrl; i++) {
-+		ulp_num = phba->phwi_ctrlr->wrb_context[i].ulp_num;
-+
-+		ptr_cid_info = phba->cid_array_info[ulp_num];
-+		ptr_cid_info->cid_array[ptr_cid_info->cid_alloc++] =
-+			phba->phwi_ctrlr->wrb_context[i].cid;
-+
-+	}
-+
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			ptr_cid_info = phba->cid_array_info[ulp_num];
- 
--	phba->avlbl_cids = phba->params.cxns_per_ctrl;
-+			ptr_cid_info->cid_alloc = 0;
-+			ptr_cid_info->cid_free = 0;
-+		}
-+	}
+ static void beiscsi_parse_pdu(struct iscsi_conn *conn, itt_t itt,
+@@ -4811,7 +4811,8 @@ int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterlist *sg,
+ 		     DB_DEF_PDU_WRB_INDEX_MASK) <<
+ 		     DB_DEF_PDU_WRB_INDEX_SHIFT;
+ 	doorbell |= 1 << DB_DEF_PDU_NUM_POSTED_SHIFT;
+-	iowrite32(doorbell, phba->db_va + DB_TXULP0_OFFSET);
++	iowrite32(doorbell, phba->db_va +
++		  beiscsi_conn->doorbell_offset);
  	return 0;
-+
-+free_memory:
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			ptr_cid_info = phba->cid_array_info[ulp_num];
-+
-+			if (ptr_cid_info) {
-+				kfree(ptr_cid_info->cid_array);
-+				kfree(ptr_cid_info);
-+				phba->cid_array_info[ulp_num] = NULL;
-+			}
-+		}
-+	}
-+
-+	return ret;
  }
  
- static void hwi_enable_intr(struct beiscsi_hba *phba)
-@@ -4373,7 +4430,8 @@ static void hwi_purge_eq(struct beiscsi_hba *phba)
+@@ -4866,7 +4867,8 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
+ 		     DB_DEF_PDU_WRB_INDEX_MASK) << DB_DEF_PDU_WRB_INDEX_SHIFT;
+ 	doorbell |= 1 << DB_DEF_PDU_NUM_POSTED_SHIFT;
  
- static void beiscsi_clean_port(struct beiscsi_hba *phba)
- {
--	int mgmt_status;
-+	int mgmt_status, ulp_num;
-+	struct ulp_cid_info *ptr_cid_info = NULL;
- 
- 	mgmt_status = mgmt_epfw_cleanup(phba, CMD_CONNECTION_CHUTE_0);
- 	if (mgmt_status)
-@@ -4384,9 +4442,21 @@ static void beiscsi_clean_port(struct beiscsi_hba *phba)
- 	hwi_cleanup(phba);
- 	kfree(phba->io_sgl_hndl_base);
- 	kfree(phba->eh_sgl_hndl_base);
--	kfree(phba->cid_array);
- 	kfree(phba->ep_array);
- 	kfree(phba->conn_table);
-+
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			ptr_cid_info = phba->cid_array_info[ulp_num];
-+
-+			if (ptr_cid_info) {
-+				kfree(ptr_cid_info->cid_array);
-+				kfree(ptr_cid_info);
-+				phba->cid_array_info[ulp_num] = NULL;
-+			}
-+		}
-+	}
-+
+-	iowrite32(doorbell, phba->db_va + DB_TXULP0_OFFSET);
++	iowrite32(doorbell, phba->db_va +
++		  beiscsi_conn->doorbell_offset);
+ 	return 0;
  }
  
- /**
+@@ -4968,7 +4970,8 @@ static int beiscsi_mtask(struct iscsi_task *task)
+ 	doorbell |= (io_task->pwrb_handle->wrb_index &
+ 		     DB_DEF_PDU_WRB_INDEX_MASK) << DB_DEF_PDU_WRB_INDEX_SHIFT;
+ 	doorbell |= 1 << DB_DEF_PDU_NUM_POSTED_SHIFT;
+-	iowrite32(doorbell, phba->db_va + DB_TXULP0_OFFSET);
++	iowrite32(doorbell, phba->db_va +
++		  beiscsi_conn->doorbell_offset);
+ 	return 0;
+ }
+ 
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 410efc7..e5e0d7e 100644
+index e5e0d7e..3fa1e81 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -297,6 +297,13 @@ struct hwi_wrb_context {
- 	uint32_t doorbell_offset;
- };
- 
-+struct ulp_cid_info {
-+	unsigned short *cid_array;
-+	unsigned short avlbl_cids;
-+	unsigned short cid_alloc;
-+	unsigned short cid_free;
-+};
-+
- #include "be.h"
- #define chip_be2(phba)      (phba->generation == BE_GEN2)
- #define chip_be3_r(phba)    (phba->generation == BE_GEN3)
-@@ -307,6 +314,14 @@ struct hwi_wrb_context {
- #define BEISCSI_ULP_COUNT   2
- #define BEISCSI_ULP0_LOADED 0x01
- #define BEISCSI_ULP1_LOADED 0x02
-+
-+#define BEISCSI_ULP_AVLBL_CID(phba, ulp_num) \
-+	(((struct ulp_cid_info *)phba->cid_array_info[ulp_num])->avlbl_cids)
-+#define BEISCSI_ULP0_AVLBL_CID(phba) \
-+	BEISCSI_ULP_AVLBL_CID(phba, BEISCSI_ULP0)
-+#define BEISCSI_ULP1_AVLBL_CID(phba) \
-+	BEISCSI_ULP_AVLBL_CID(phba, BEISCSI_ULP1)
-+
- struct beiscsi_hba {
- 	struct hba_parameters params;
- 	struct hwi_controller *phwi_ctrlr;
-@@ -343,16 +358,13 @@ struct beiscsi_hba {
- 	spinlock_t isr_lock;
- 	spinlock_t async_pdu_lock;
- 	unsigned int age;
--	unsigned short avlbl_cids;
--	unsigned short cid_alloc;
--	unsigned short cid_free;
- 	struct list_head hba_queue;
- #define BE_MAX_SESSION 2048
- #define BE_SET_CID_TO_CRI(cri_index, cid) \
- 			  (phba->cid_to_cri_map[cid] = cri_index)
- #define BE_GET_CRI_FROM_CID(cid) (phba->cid_to_cri_map[cid])
- 	unsigned short cid_to_cri_map[BE_MAX_SESSION];
--	unsigned short *cid_array;
-+	struct ulp_cid_info *cid_array_info[BEISCSI_ULP_COUNT];
- 	struct iscsi_endpoint **ep_array;
- 	struct beiscsi_conn **conn_table;
- 	struct iscsi_boot_kset *boot_kset;
+@@ -425,6 +425,7 @@ struct beiscsi_conn {
+ 	struct iscsi_conn *conn;
+ 	struct beiscsi_hba *phba;
+ 	u32 exp_statsn;
++	u32 doorbell_offset;
+ 	u32 beiscsi_conn_cid;
+ 	struct beiscsi_endpoint *ep;
+ 	unsigned short login_in_progress;
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 75756d7..fcb9976 100644
+index fcb9976..bcddc9f 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.c
 +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1338,9 +1338,21 @@ beiscsi_active_cid_disp(struct device *dev, struct device_attribute *attr,
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+	uint16_t avlbl_cids = 0, ulp_num, len = 0, total_cids = 0;
-+
-+	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
-+		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
-+			avlbl_cids = BEISCSI_ULP_AVLBL_CID(phba, ulp_num);
-+			total_cids = BEISCSI_GET_CID_COUNT(phba, ulp_num);
-+			len += snprintf(buf+len, PAGE_SIZE - len,
-+					"ULP%d : %d\n", ulp_num,
-+					(total_cids - avlbl_cids));
-+		} else
-+			len += snprintf(buf+len, PAGE_SIZE - len,
-+					"ULP%d : %d\n", ulp_num, 0);
-+	}
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n",
--		       (phba->params.cxns_per_ctrl - phba->avlbl_cids));
-+	return len;
+@@ -628,6 +628,16 @@ unsigned int mgmt_upload_connection(struct beiscsi_hba *phba,
+ 	return tag;
  }
  
- /**
++/**
++ * mgmt_open_connection()- Establish a TCP CXN
++ * @dst_addr: Destination Address
++ * @beiscsi_ep: ptr to device endpoint struct
++ * @nonemb_cmd: ptr to memory allocated for command
++ *
++ * return
++ *	Success: Tag number of the MBX Command issued
++ *	Failure: Error code
++ **/
+ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 			 struct sockaddr *dst_addr,
+ 			 struct beiscsi_endpoint *beiscsi_ep,
+@@ -645,14 +655,17 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	struct phys_addr template_address = { 0, 0 };
+ 	struct phys_addr *ptemplate_address;
+ 	unsigned int tag = 0;
+-	unsigned int i;
++	unsigned int i, ulp_num;
+ 	unsigned short cid = beiscsi_ep->ep_cid;
+ 	struct be_sge *sge;
+ 
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 	phwi_context = phwi_ctrlr->phwi_ctxt;
+-	def_hdr_id = (unsigned short)HWI_GET_DEF_HDRQ_ID(phba, 0);
+-	def_data_id = (unsigned short)HWI_GET_DEF_BUFQ_ID(phba, 0);
++
++	ulp_num = phwi_ctrlr->wrb_context[BE_GET_CRI_FROM_CID(cid)].ulp_num;
++
++	def_hdr_id = (unsigned short)HWI_GET_DEF_HDRQ_ID(phba, ulp_num);
++	def_data_id = (unsigned short)HWI_GET_DEF_BUFQ_ID(phba, ulp_num);
+ 
+ 	ptemplate_address = &template_address;
+ 	ISCSI_GET_PDU_TEMPLATE_ADDRESS(phba, ptemplate_address);
 -- 
 1.7.10.4
 
