@@ -1,31 +1,32 @@
-From: <BarryFolmar@MichaelStrelnik.onmicrosoft.com>
-Subject: Exclusive offer, feel it for real
-Date: Fri, 27 Sep 2013 23:34:17 +0000
-Message-ID: <9874cab7-cd7e-4507-8149-4435529e1135@DB3PR02MB011.eurprd02.prod.outlook.com>
-Mime-Version: 1.1
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Microsoft Iberica SL" <ibericaslmic@outlook.es>
+Subject: You've won a Prize
+Date: Sat, 28 Sep 2013 14:34:30 +0300 (EEST)
+Message-ID: <64481.79.157.33.64.1380368070.squirrel__24975.1601870686$1380377691$gmane$org@mail1.centrum-group.com>
+Reply-To: payingroll446@yahoo.com.hk
+Mime-Version: 1.0
+Content-Type: text/plain;charset=WINDOWS-1251
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emea01-db3-ndr.ptr.protection.outlook.com ([157.56.120.105]:43511
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753294Ab3I0XeU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Sep 2013 19:34:20 -0400
+Received: from mail1.centrum-group.com ([194.12.254.133]:57894 "EHLO
+	mail1.centrum-group.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754127Ab3I1OOd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Sep 2013 10:14:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+You've won a Prize
+MICROSOFT IBERICA SL"
+YOU 'VE WON.
+ATTN:MICROSOFT IBERICA SL
+Your email has won (EUR244,000,00)
+(TWO HUNDRED AND FOURTY FOUR THOUSAND EURO)
+Batch number:XL73276498AM
+Ref number:QR352899526KC
+This is a millennium scientific computer game in which
+email addresses were used.It is a promotional program aimed at
+encouraging internet users,therefore you do not need to buy ticket to enter
+for it.
+For further development,clarification and procedure please
+Contact:Dr Eduardo Sanchez,
+Email contact:payingroll446@yahoo.com.hk
 
-		Dear Customer=20
-
-Sign up today to receive a welcome bonus of up to =C2=A3200 to get you =
-started on your streak!
-
-http://fb.me/IojfxTNl
-
-Best Regards,=20
-	=09
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
