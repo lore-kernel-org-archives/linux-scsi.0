@@ -1,159 +1,90 @@
 From: Jayamohan Kallickal <jayamohank@gmail.com>
-Subject: [PATCH V2 13/23] be2iscsi: Fix connection offload to support Dual Chute.
-Date: Sat, 28 Sep 2013 15:35:50 -0700
-Message-ID: <1380407761-2949-13-git-send-email-jayamohan.kallickal@emulex.com>
+Subject: [PATCH V2 14/23] be2iscsi: Fix chute cleanup during drivers unload.
+Date: Sat, 28 Sep 2013 15:35:51 -0700
+Message-ID: <1380407761-2949-14-git-send-email-jayamohan.kallickal@emulex.com>
 References: <1380407761-2949-1-git-send-email-jayamohan.kallickal@emulex.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:39726 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755294Ab3I1Wgh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Sep 2013 18:36:37 -0400
-Received: by mail-pb0-f41.google.com with SMTP id rp2so4000826pbb.14
-        for <linux-scsi@vger.kernel.org>; Sat, 28 Sep 2013 15:36:37 -0700 (PDT)
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:41725 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755294Ab3I1Wgj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Sep 2013 18:36:39 -0400
+Received: by mail-pa0-f50.google.com with SMTP id fb1so4271508pad.9
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Sep 2013 15:36:39 -0700 (PDT)
 In-Reply-To: <1380407761-2949-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.john-n@emulex.com>
 
- The connection is offload to each chute in a round-robin manner
- if both the chute is loaded with iSCSI protocol
+ This patch cleans up both chutes on unload
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c |    6 ++++++
- drivers/scsi/be2iscsi/be_main.c  |   13 ++++++++-----
- drivers/scsi/be2iscsi/be_main.h  |    1 +
- drivers/scsi/be2iscsi/be_mgmt.c  |   19 ++++++++++++++++---
- 4 files changed, 31 insertions(+), 8 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   14 ++++++++++----
+ drivers/scsi/be2iscsi/be_mgmt.c |   17 +++++++++++++----
+ 2 files changed, 23 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 63b2be0..a7cd92c 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -194,6 +194,8 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
- 	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
- 	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+	struct hwi_controller *phwi_ctrlr = phba->phwi_ctrlr;
-+	struct hwi_wrb_context *pwrb_context;
- 	struct beiscsi_endpoint *beiscsi_ep;
- 	struct iscsi_endpoint *ep;
- 
-@@ -214,9 +216,13 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
- 		return -EEXIST;
- 	}
- 
-+	pwrb_context = &phwi_ctrlr->wrb_context[BE_GET_CRI_FROM_CID(
-+						beiscsi_ep->ep_cid)];
-+
- 	beiscsi_conn->beiscsi_conn_cid = beiscsi_ep->ep_cid;
- 	beiscsi_conn->ep = beiscsi_ep;
- 	beiscsi_ep->conn = beiscsi_conn;
-+	beiscsi_conn->doorbell_offset = pwrb_context->doorbell_offset;
- 
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
- 		    "BS_%d : beiscsi_conn=%p conn=%p ep_cid=%d\n",
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index b57e5bd..d539b17 100644
+index d539b17..b323569 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4585,8 +4585,8 @@ beiscsi_offload_connection(struct beiscsi_conn *beiscsi_conn,
- 	doorbell |= (pwrb_handle->wrb_index & DB_DEF_PDU_WRB_INDEX_MASK)
- 			     << DB_DEF_PDU_WRB_INDEX_SHIFT;
- 	doorbell |= 1 << DB_DEF_PDU_NUM_POSTED_SHIFT;
--
--	iowrite32(doorbell, phba->db_va + DB_TXULP0_OFFSET);
-+	iowrite32(doorbell, phba->db_va +
-+		  beiscsi_conn->doorbell_offset);
- }
+@@ -4433,10 +4433,16 @@ static void beiscsi_clean_port(struct beiscsi_hba *phba)
+ 	int mgmt_status, ulp_num;
+ 	struct ulp_cid_info *ptr_cid_info = NULL;
  
- static void beiscsi_parse_pdu(struct iscsi_conn *conn, itt_t itt,
-@@ -4811,7 +4811,8 @@ int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterlist *sg,
- 		     DB_DEF_PDU_WRB_INDEX_MASK) <<
- 		     DB_DEF_PDU_WRB_INDEX_SHIFT;
- 	doorbell |= 1 << DB_DEF_PDU_NUM_POSTED_SHIFT;
--	iowrite32(doorbell, phba->db_va + DB_TXULP0_OFFSET);
-+	iowrite32(doorbell, phba->db_va +
-+		  beiscsi_conn->doorbell_offset);
- 	return 0;
- }
+-	mgmt_status = mgmt_epfw_cleanup(phba, CMD_CONNECTION_CHUTE_0);
+-	if (mgmt_status)
+-		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_INIT,
+-			    "BM_%d : mgmt_epfw_cleanup FAILED\n");
++	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
++		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
++			mgmt_status = mgmt_epfw_cleanup(phba, ulp_num);
++			if (mgmt_status)
++				beiscsi_log(phba, KERN_WARNING,
++					    BEISCSI_LOG_INIT,
++					    "BM_%d : mgmt_epfw_cleanup FAILED"
++					    " for ULP_%d\n", ulp_num);
++		}
++	}
  
-@@ -4866,7 +4867,8 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
- 		     DB_DEF_PDU_WRB_INDEX_MASK) << DB_DEF_PDU_WRB_INDEX_SHIFT;
- 	doorbell |= 1 << DB_DEF_PDU_NUM_POSTED_SHIFT;
- 
--	iowrite32(doorbell, phba->db_va + DB_TXULP0_OFFSET);
-+	iowrite32(doorbell, phba->db_va +
-+		  beiscsi_conn->doorbell_offset);
- 	return 0;
- }
- 
-@@ -4968,7 +4970,8 @@ static int beiscsi_mtask(struct iscsi_task *task)
- 	doorbell |= (io_task->pwrb_handle->wrb_index &
- 		     DB_DEF_PDU_WRB_INDEX_MASK) << DB_DEF_PDU_WRB_INDEX_SHIFT;
- 	doorbell |= 1 << DB_DEF_PDU_NUM_POSTED_SHIFT;
--	iowrite32(doorbell, phba->db_va + DB_TXULP0_OFFSET);
-+	iowrite32(doorbell, phba->db_va +
-+		  beiscsi_conn->doorbell_offset);
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index e5e0d7e..3fa1e81 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -425,6 +425,7 @@ struct beiscsi_conn {
- 	struct iscsi_conn *conn;
- 	struct beiscsi_hba *phba;
- 	u32 exp_statsn;
-+	u32 doorbell_offset;
- 	u32 beiscsi_conn_cid;
- 	struct beiscsi_endpoint *ep;
- 	unsigned short login_in_progress;
+ 	hwi_purge_eq(phba);
+ 	hwi_cleanup(phba);
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index fcb9976..bcddc9f 100644
+index bcddc9f..a542bbb 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.c
 +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -628,6 +628,16 @@ unsigned int mgmt_upload_connection(struct beiscsi_hba *phba,
+@@ -491,7 +491,16 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
  	return tag;
  }
  
+-int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute)
 +/**
-+ * mgmt_open_connection()- Establish a TCP CXN
-+ * @dst_addr: Destination Address
-+ * @beiscsi_ep: ptr to device endpoint struct
-+ * @nonemb_cmd: ptr to memory allocated for command
++ * mgmt_epfw_cleanup()- Inform FW to cleanup data structures.
++ * @phba: pointer to dev priv structure
++ * @ulp_num: ULP number.
 + *
 + * return
-+ *	Success: Tag number of the MBX Command issued
-+ *	Failure: Error code
++ *	Success: 0
++ *	Failure: Non-Zero Value
 + **/
- int mgmt_open_connection(struct beiscsi_hba *phba,
- 			 struct sockaddr *dst_addr,
- 			 struct beiscsi_endpoint *beiscsi_ep,
-@@ -645,14 +655,17 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 	struct phys_addr template_address = { 0, 0 };
- 	struct phys_addr *ptemplate_address;
- 	unsigned int tag = 0;
--	unsigned int i;
-+	unsigned int i, ulp_num;
- 	unsigned short cid = beiscsi_ep->ep_cid;
- 	struct be_sge *sge;
++int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
+ {
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
+@@ -505,9 +514,9 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute)
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+ 			   OPCODE_COMMON_ISCSI_CLEANUP, sizeof(*req));
  
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
--	def_hdr_id = (unsigned short)HWI_GET_DEF_HDRQ_ID(phba, 0);
--	def_data_id = (unsigned short)HWI_GET_DEF_BUFQ_ID(phba, 0);
-+
-+	ulp_num = phwi_ctrlr->wrb_context[BE_GET_CRI_FROM_CID(cid)].ulp_num;
-+
-+	def_hdr_id = (unsigned short)HWI_GET_DEF_HDRQ_ID(phba, ulp_num);
-+	def_data_id = (unsigned short)HWI_GET_DEF_BUFQ_ID(phba, ulp_num);
+-	req->chute = chute;
+-	req->hdr_ring_id = cpu_to_le16(HWI_GET_DEF_HDRQ_ID(phba, 0));
+-	req->data_ring_id = cpu_to_le16(HWI_GET_DEF_BUFQ_ID(phba, 0));
++	req->chute = (1 << ulp_num);
++	req->hdr_ring_id = cpu_to_le16(HWI_GET_DEF_HDRQ_ID(phba, ulp_num));
++	req->data_ring_id = cpu_to_le16(HWI_GET_DEF_BUFQ_ID(phba, ulp_num));
  
- 	ptemplate_address = &template_address;
- 	ISCSI_GET_PDU_TEMPLATE_ADDRESS(phba, ptemplate_address);
+ 	status =  be_mcc_notify_wait(phba);
+ 	if (status)
 -- 
 1.7.10.4
 
