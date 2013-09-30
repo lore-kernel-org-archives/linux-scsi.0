@@ -1,31 +1,47 @@
-From: Rasesh Mody <rmody@brocade.com>
-Subject: RE: [PATCH 1/1] linux-firmware: Add Brocade FC/FCOE Adapter
- firmware files
-Date: Mon, 30 Sep 2013 11:07:13 -0700
-Message-ID: <E5313AF6F2BFD14293E5FD0F94750F86B68E7B4608@HQ1-EXCH01.corp.brocade.com>
-References: <1378854654-11398-1-git-send-email-rmody@brocade.com>
- <1380513458.1441.20.camel@deadeye.wl.decadent.org.uk>
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: [PATCH] [SCSI] mpt3sas: don't leak 'fw_event' in
+ mpt3sas_send_trigger_data_event()
+Date: Mon, 30 Sep 2013 22:01:23 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1309302158340.4992@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1380513458.1441.20.camel@deadeye.wl.decadent.org.uk>
-Content-Language: en-US
-Sender: netdev-owner@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: "dwmw2@infradead.org" <dwmw2@infradead.org>, netdev <netdev@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, DL-MPTFusionLinux@lsi.com, support@lsi.com, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-PkZyb206IEJlbiBIdXRjaGluZ3MgW21haWx0bzpiZW5AZGVjYWRlbnQub3JnLnVrXQ0KPlNlbnQ6
-IFN1bmRheSwgU2VwdGVtYmVyIDI5LCAyMDEzIDg6NTggUE0NCj4NCj5PbiBUdWUsIDIwMTMtMDkt
-MTAgYXQgMTY6MTAgLTA3MDAsIFJhc2VzaCBNb2R5IHdyb3RlOg0KPj4gVGhpcyBwYXRjaCBhZGRz
-IGZpcm13YXJlIGZpbGVzIGZvciBCcm9jYWRlIEhCQSBhbmQgQ05BIGRyaXZlcnMoQkZBIGFuZA0K
-PkJOQSkuDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogUmFzZXNoIE1vZHkgPHJtb2R5QGJyb2NhZGUu
-Y29tPg0KPj4gLS0tDQo+PiAgV0hFTkNFICAgICAgICAgICAgfCAgMjcgKysrKysrKysrKysrKysr
-KysrKysrKysrKysrDQo+PiAgY2Jmdy0zLjIuMS4xLmJpbiAgfCBCaW4gMCAtPiA0MTI1MjggYnl0
-ZXMgIGN0MmZ3LTMuMi4xLjEuYmluIHwgQmluIDANCj4+IC0+IDU4MjQ0MCBieXRlcyAgY3Rmdy0z
-LjIuMS4xLmJpbiAgfCBCaW4gMCAtPiA1MzcxNjAgYnl0ZXMNCj4+ICA0IGZpbGVzIGNoYW5nZWQs
-IDI3IGluc2VydGlvbnMoKykNCj4+ICBjcmVhdGUgbW9kZSAxMDA2NDQgY2Jmdy0zLjIuMS4xLmJp
-bg0KPj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBjdDJmdy0zLjIuMS4xLmJpbg0KPj4gIGNyZWF0ZSBt
-b2RlIDEwMDY0NCBjdGZ3LTMuMi4xLjEuYmluDQo+Wy4uLl0NCj4NCj5BcHBsaWVkLCB0aGFua3Mu
-ICBTb3JyeSBmb3IgdGhlIGRlbGF5Lg0KDQpUaGFuayB5b3UuDQotLVJhc2VzaA0K
+If we successfully allocate 'fw_event' but subsequently fail to
+allocate 'fw_event->event_data' then we'll return from the function
+without properly freeing 'fw_event'.
+This patch takes care of that leak.
+
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index a961fe1..e90fbf3 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2518,8 +2518,10 @@ mpt3sas_send_trigger_data_event(struct MPT3SAS_ADAPTER *ioc,
+ 	if (!fw_event)
+ 		return;
+ 	fw_event->event_data = kzalloc(sizeof(*event_data), GFP_ATOMIC);
+-	if (!fw_event->event_data)
++	if (!fw_event->event_data) {
++		kfree(fw_event);
+ 		return;
++	}
+ 	fw_event->event = MPT3SAS_PROCESS_TRIGGER_DIAG;
+ 	fw_event->ioc = ioc;
+ 	memcpy(fw_event->event_data, event_data, sizeof(*event_data));
+-- 
+1.7.1
+
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
