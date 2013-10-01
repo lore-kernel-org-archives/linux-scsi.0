@@ -1,12 +1,12 @@
 From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH 3/4] esas2r: Remove superfluous mask of pcie_cap_reg
-Date: Tue, 1 Oct 2013 14:26:03 -0400
-Message-ID: <1380651964-8124-3-git-send-email-bgrove@attotech.com>
+Subject: [PATCH 4/4] esas2r: Cleanup snprinf formatting of firmware version
+Date: Tue, 1 Oct 2013 14:26:04 -0400
+Message-ID: <1380651964-8124-4-git-send-email-bgrove@attotech.com>
 References: <1380651964-8124-1-git-send-email-bgrove@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from sw.attotech.com ([208.69.85.34]:51974 "EHLO
 	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752440Ab3JASf0 (ORCPT
+	with ESMTP id S1752572Ab3JASf0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2013 14:35:26 -0400
 In-Reply-To: <1380651964-8124-1-git-send-email-bgrove@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,22 +16,26 @@ Cc: jseba@attotech.com, Bradley Grove <bgrove@attotech.com>
 
 Signed-off-by: Bradley Grove <bgrove@attotech.com>
 ---
- drivers/scsi/esas2r/esas2r_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/esas2r/esas2r_vda.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 8278819..b9750e2 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -807,7 +807,7 @@ static void esas2r_init_pci_cfg_space(struct esas2r_adapter *a)
- 	int pcie_cap_reg;
+diff --git a/drivers/scsi/esas2r/esas2r_vda.c b/drivers/scsi/esas2r/esas2r_vda.c
+index 27e9721..30028e5 100644
+--- a/drivers/scsi/esas2r/esas2r_vda.c
++++ b/drivers/scsi/esas2r/esas2r_vda.c
+@@ -310,9 +310,9 @@ static void esas2r_complete_vda_ioctl(struct esas2r_adapter *a,
+ 				le32_to_cpu(rsp->vda_version);
+ 			cfg->data.init.fw_build = rsp->fw_build;
  
- 	pcie_cap_reg = pci_find_capability(a->pcid, PCI_CAP_ID_EXP);
--	if (0xffff & pcie_cap_reg) {
-+	if (pcie_cap_reg) {
- 		u16 devcontrol;
+-			snprintf(buf, sizeof(buf), "%1d.%02d",
+-				(int)LOBYTE(le16_to_cpu(rsp->fw_release)),
+-				(int)HIBYTE(le16_to_cpu(rsp->fw_release)));
++			snprintf(buf, sizeof(buf), "%1.1u.%2.2u",
++				 (int)LOBYTE(le16_to_cpu(rsp->fw_release)),
++				 (int)HIBYTE(le16_to_cpu(rsp->fw_release)));
  
- 		pci_read_config_word(a->pcid, pcie_cap_reg + PCI_EXP_DEVCTL,
+ 			memcpy(&cfg->data.init.fw_release, buf,
+ 			       sizeof(cfg->data.init.fw_release));
 -- 
 1.8.3.1
 
