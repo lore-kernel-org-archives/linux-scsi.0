@@ -1,24 +1,24 @@
 From: Anand <anandkumar_santhanam@pmc-sierra.com>
-Subject: [PATCH V3 10/10] pm80xx: Firmware logging support.
-Date: Mon, 30 Sep 2013 23:44:21 -0700
-Message-ID: <524A6F45.7010702@pmc-sierra.com>
+Subject: [PATCH V3 10/10 RESEND] pm80xx: Firmware logging support.
+Date: Tue, 01 Oct 2013 04:04:09 -0700
+Message-ID: <524AAC29.7040800@pmc-sierra.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55418 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750934Ab3JAGlv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2013 02:41:51 -0400
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:45870 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752610Ab3JALBg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2013 07:01:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Sangeetha.Gnanasekaran@pmcs.com, Viswas.G@pmcs.com, Nikith.Ganigarakoppal@pmcs.com, xjtuwjp@gmail.com
+Cc: xjtuwjp@gmail.com, Sangeetha.Gnanasekaran@pmcs.com, Nikith.Ganigarakoppal@pmcs.com, Viswas.G@pmcs.com
 
->From 883408c14e7757557c14f455df8bba934b79c17a Mon Sep 17 00:00:00 2001
+>From 04613f7a890f4a3d4bcf3dcd9f7b001b03acc1ec Mon Sep 17 00:00:00 2001
 From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
 Date: Wed, 4 Sep 2013 12:57:00 +0530
-Subject: [PATCH V3 10/10] pm80xx: Firmware logging support.
+Subject: [PATCH V3 10/10 RESEND] pm80xx: Firmware logging support.
 
 Supports below logging facilities,
 Inbound outbound queues dump.
@@ -27,8 +27,9 @@ Fatal dump in case of firmware failure.
 
 Signed-off-by: Anandkumar.Santhanam@pmcs.com
 Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
+
 ---
- drivers/scsi/pm8001/pm8001_ctl.c  |  119 +++++++++++++++++++
+ drivers/scsi/pm8001/pm8001_ctl.c  |  113 +++++++++++++++++++
  drivers/scsi/pm8001/pm8001_ctl.h  |    4 +
  drivers/scsi/pm8001/pm8001_defs.h |    3 +-
  drivers/scsi/pm8001/pm8001_hwi.c  |   83 ++++++++++++++
@@ -37,13 +38,13 @@ Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
  drivers/scsi/pm8001/pm8001_sas.h  |   68 +++++++++++
  drivers/scsi/pm8001/pm80xx_hwi.c  |  225 +++++++++++++++++++++++++++++++++++++
  drivers/scsi/pm8001/pm80xx_hwi.h  |    2 +
- 9 files changed, 510 insertions(+), 1 deletions(-)
+ 9 files changed, 504 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 5a19e19..a04b4ff 100644
+index 5a19e19..247cb1c 100644
 --- a/drivers/scsi/pm8001/pm8001_ctl.c
 +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -309,6 +309,84 @@ static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
+@@ -309,6 +309,78 @@ static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
  }
  static DEVICE_ATTR(aap_log, S_IRUGO, pm8001_ctl_aap_log_show, NULL);
  /**
@@ -67,10 +68,7 @@ index 5a19e19..a04b4ff 100644
 +		pm8001_ha->evtlog_ib_offset + (c)))
 +
 +	for (offset = 0; offset < IB_OB_READ_TIMES; offset++) {
-+		if (pm8001_ha->chip_id != chip_8001)
-+			str += sprintf(str, "0x%08x\n", IB_MEMMAP(start));
-+		else
-+			str += sprintf(str, "0x%08x\n", IB_MEMMAP(start));
++		str += sprintf(str, "0x%08x\n", IB_MEMMAP(start));
 +		start = start + 4;
 +	}
 +	pm8001_ha->evtlog_ib_offset += SYSFS_OFFSET;
@@ -107,10 +105,7 @@ index 5a19e19..a04b4ff 100644
 +		pm8001_ha->evtlog_ob_offset + (c)))
 +
 +	for (offset = 0; offset < IB_OB_READ_TIMES; offset++) {
-+		if (pm8001_ha->chip_id != chip_8001)
-+			str += sprintf(str, "0x%08x\n", OB_MEMMAP(start));
-+		else
-+			str += sprintf(str, "0x%08x\n", OB_MEMMAP(start));
++		str += sprintf(str, "0x%08x\n", OB_MEMMAP(start));
 +		start = start + 4;
 +	}
 +	pm8001_ha->evtlog_ob_offset += SYSFS_OFFSET;
@@ -128,7 +123,7 @@ index 5a19e19..a04b4ff 100644
   * pm8001_ctl_bios_version_show - Bios version Display
   * @cdev:pointer to embedded class device
   * @buf:the buffer returned
-@@ -377,6 +455,43 @@ static ssize_t pm8001_ctl_iop_log_show(struct device *cdev,
+@@ -377,6 +449,43 @@ static ssize_t pm8001_ctl_iop_log_show(struct device *cdev,
  }
  static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
  
@@ -172,7 +167,7 @@ index 5a19e19..a04b4ff 100644
  #define FLASH_CMD_NONE      0x00
  #define FLASH_CMD_UPDATE    0x01
  #define FLASH_CMD_SET_NVMD    0x02
-@@ -636,6 +751,8 @@ struct device_attribute *pm8001_host_attrs[] = {
+@@ -636,6 +745,8 @@ struct device_attribute *pm8001_host_attrs[] = {
  	&dev_attr_update_fw,
  	&dev_attr_aap_log,
  	&dev_attr_iop_log,
@@ -181,7 +176,7 @@ index 5a19e19..a04b4ff 100644
  	&dev_attr_max_out_io,
  	&dev_attr_max_devices,
  	&dev_attr_max_sg_list,
-@@ -643,6 +760,8 @@ struct device_attribute *pm8001_host_attrs[] = {
+@@ -643,6 +754,8 @@ struct device_attribute *pm8001_host_attrs[] = {
  	&dev_attr_logging_level,
  	&dev_attr_host_sas_address,
  	&dev_attr_bios_version,
