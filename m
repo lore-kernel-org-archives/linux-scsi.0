@@ -1,75 +1,215 @@
 From: Anand <anandkumar_santhanam@pmc-sierra.com>
-Subject: [PATCH V3 08/10] pm80xx: IButton feature support for motherboard
- controllers.
-Date: Mon, 30 Sep 2013 23:42:10 -0700
-Message-ID: <524A6EC2.9020108@pmc-sierra.com>
+Subject: [PATCH V3 09/10] pm80xx: Phy settings support for motherboard controller.
+Date: Mon, 30 Sep 2013 23:43:05 -0700
+Message-ID: <524A6EF9.8030308@pmc-sierra.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:52682 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750871Ab3JAGji (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2013 02:39:38 -0400
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:52272 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751771Ab3JAGke (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2013 02:40:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Sangeetha.Gnanasekaran@pmcs.com, xjtuwjp@gmail.com, Nikith.Ganigarakoppal@pmcs.com, Viswas.G@pmcs.com
+Cc: xjtuwjp@gmail.com, Sangeetha.Gnanasekaran@pmcs.com, Nikith.Ganigarakoppal@pmcs.com, Viswas.G@pmcs.com
 
->From c7a47a0376361a82ff1c67b3af6c23c9191266d6 Mon Sep 17 00:00:00 2001
+>From 8dd505680728f054ebca875e00cf4218e1105ab5 Mon Sep 17 00:00:00 2001
 From: Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>
-Date: Tue, 17 Sep 2013 14:32:20 +0530
-Subject: [PATCH V3 08/10] pm80xx: IButton feature support for motherboard controllers.
+Date: Wed, 18 Sep 2013 13:02:44 +0530
+Subject: [PATCH V3 09/10] pm80xx: Phy settings support for motherboard controller.
 
-IButton security feature support for motherboard controllers.
+Phy profile implementation to support phy settings feature
+for motherboard controllers.
 
 Signed-off-by: Anandkumar.Santhanam@pmcs.com
 Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c |   23 ++++++++++++++++++++++-
- 1 files changed, 22 insertions(+), 1 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c  |   10 ++++++
+ drivers/scsi/pm8001/pm8001_init.c |   29 +++++++++++++++++
+ drivers/scsi/pm8001/pm8001_sas.h  |    3 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c  |   61 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/pm8001/pm80xx_hwi.h  |    4 ++
+ 5 files changed, 104 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 600e61e..d1d52e2 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -4831,6 +4831,16 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+ 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_lo);
+ 		break;
+ 	}
++	case IOP_RDUMP: {
++		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | IOP_RDUMP);
++		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
++		nvmd_req.vpd_offset = cpu_to_le32(ioctl_payload->offset);
++		nvmd_req.resp_addr_hi =
++		cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
++		nvmd_req.resp_addr_lo =
++		cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_lo);
++		break;
++	}
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index a862fd1..87d3a2e 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -667,6 +667,31 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+ #endif
+ }
+ 
++/*
++ * pm8001_get_phy_settings_info : Read phy setting values.
++ * @pm8001_ha : our hba.
++ */
++void pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
++{
++
++#ifdef PM8001_READ_VPD
++	/*OPTION ROM FLASH read for the SPC cards */
++	DECLARE_COMPLETION_ONSTACK(completion);
++	struct pm8001_ioctl_payload payload;
++
++	pm8001_ha->nvmd_completion = &completion;
++	/* SAS ADDRESS read from flash / EEPROM */
++	payload.minor_function = 6;
++	payload.offset = 0;
++	payload.length = 4096;
++	payload.func_specific = kzalloc(4096, GFP_KERNEL);
++	/* Read phy setting values from flash */
++	PM8001_CHIP_DISP->get_nvmd_req(pm8001_ha, &payload);
++	wait_for_completion(&completion);
++	pm8001_set_phy_profile(pm8001_ha, sizeof(u8), payload.func_specific);
++#endif
++}
++
+ #ifdef PM8001_USE_MSIX
+ /**
+  * pm8001_setup_msix - enable MSI-X interrupt
+@@ -847,6 +872,10 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	pm8001_init_sas_add(pm8001_ha);
++	/* phy setting support for motherboard controller */
++	if (pdev->subsystem_vendor != PCI_VENDOR_ID_ADAPTEC2 &&
++		pdev->subsystem_vendor != 0)
++		pm8001_get_phy_settings_info(pm8001_ha);
+ 	pm8001_post_sas_ha_init(shost, chip);
+ 	rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
+ 	if (rc)
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index 68e1147..cbde11a 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -632,7 +632,8 @@ struct pm8001_device *pm8001_find_dev(struct pm8001_hba_info *pm8001_ha,
+ int pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha);
+ 
+ int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
+-
++void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
++	u32 length, u8 *buf);
+ /* ctl shared API */
+ extern struct device_attribute *pm8001_host_attrs[];
+ 
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 5a357d1..4e1284e 100644
+index 4e1284e..fe57597 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -967,6 +967,7 @@ pm80xx_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
+@@ -3183,9 +3183,27 @@ static int mpi_flash_op_ext_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ static int mpi_set_phy_profile_resp(struct pm8001_hba_info *pm8001_ha,
+ 			void *piomb)
  {
- 	u32 regval;
- 	u32 bootloader_state;
-+	u32 ibutton0, ibutton1;
+-	PM8001_MSG_DBG(pm8001_ha,
+-			pm8001_printk(" pm80xx_addition_functionality\n"));
++	u8 page_code;
++	struct set_phy_profile_resp *pPayload =
++		(struct set_phy_profile_resp *)(piomb + 4);
++	u32 ppc_phyid = le32_to_cpu(pPayload->ppc_phyid);
++	u32 status = le32_to_cpu(pPayload->status);
  
- 	/* Check if MPI is in ready state to reset */
- 	if (mpi_uninit_check(pm8001_ha) != 0) {
-@@ -1025,7 +1026,27 @@ pm80xx_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
- 	if (-1 == check_fw_ready(pm8001_ha)) {
- 		PM8001_FAIL_DBG(pm8001_ha,
- 			pm8001_printk("Firmware is not ready!\n"));
--		return -EBUSY;
-+		/* check iButton feature support for motherboard controller */
-+		if (pm8001_ha->pdev->subsystem_vendor !=
-+			PCI_VENDOR_ID_ADAPTEC2 &&
-+			pm8001_ha->pdev->subsystem_vendor != 0) {
-+			ibutton0 = pm8001_cr32(pm8001_ha, 0,
-+					MSGU_HOST_SCRATCH_PAD_6);
-+			ibutton1 = pm8001_cr32(pm8001_ha, 0,
-+					MSGU_HOST_SCRATCH_PAD_7);
-+			if (!ibutton0 && !ibutton1) {
-+				PM8001_FAIL_DBG(pm8001_ha,
-+					pm8001_printk("iButton Feature is"
-+					" not Available!!!\n"));
-+				return -EBUSY;
-+			}
-+			if (ibutton0 == 0xdeadbeef && ibutton1 == 0xdeadbeef) {
-+				PM8001_FAIL_DBG(pm8001_ha,
-+					pm8001_printk("CRC Check for iButton"
-+					" Feature Failed!!!\n"));
-+				return -EBUSY;
-+			}
++	page_code = (u8)((ppc_phyid & 0xFF00) >> 8);
++	if (status) {
++		/* status is FAILED */
++		PM8001_FAIL_DBG(pm8001_ha,
++			pm8001_printk("PhyProfile command failed  with status "
++			"0x%08X \n", status));
++		return -1;
++	} else {
++		if (page_code != SAS_PHY_ANALOG_SETTINGS_PAGE) {
++			PM8001_FAIL_DBG(pm8001_ha,
++				pm8001_printk("Invalid page code 0x%X\n",
++					page_code));
++			return -1;
 +		}
- 	}
- 	PM8001_INIT_DBG(pm8001_ha,
- 		pm8001_printk("SPCv soft reset Complete\n"));
++	}
+ 	return 0;
+ }
+ 
+@@ -4281,6 +4299,45 @@ pm80xx_chip_isr(struct pm8001_hba_info *pm8001_ha, u8 vec)
+ 	return IRQ_HANDLED;
+ }
+ 
++void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
++	u32 operation, u32 phyid, u32 length, u32 *buf)
++{
++	u32 tag , i, j = 0;
++	int rc;
++	struct set_phy_profile_req payload;
++	struct inbound_queue_table *circularQ;
++	u32 opc = OPC_INB_SET_PHY_PROFILE;
++
++	memset(&payload, 0, sizeof(payload));
++	rc = pm8001_tag_alloc(pm8001_ha, &tag);
++	if (rc)
++		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("Invalid tag\n"));
++	circularQ = &pm8001_ha->inbnd_q_tbl[0];
++	payload.tag = cpu_to_le32(tag);
++	payload.ppc_phyid = (((operation & 0xF) << 8) | (phyid  & 0xFF));
++	PM8001_INIT_DBG(pm8001_ha,
++		pm8001_printk(" phy profile command for phy %x ,length is %d\n",
++			payload.ppc_phyid, length));
++	for (i = length ; i < (length + PHY_DWORD_LENGTH - 1) ; i++) {
++		payload.reserved[j] =  cpu_to_le32(*((u32 *)buf + i));
++		j++;
++	}
++	pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
++}
++
++void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
++	u32 length, u8 *buf)
++{
++	u32 page_code, i;
++
++	page_code = SAS_PHY_ANALOG_SETTINGS_PAGE;
++	for (i = 0 ; i < pm8001_ha->chip->n_phy ; i++) {
++		mpi_set_phy_profile_req(pm8001_ha,
++			SAS_PHY_ANALOG_SETTINGS_PAGE, i, length, (u32 *)buf);
++		length = length + PHY_DWORD_LENGTH;
++	}
++	PM8001_INIT_DBG(pm8001_ha, pm8001_printk("phy settings completed\n"));
++}
+ const struct pm8001_dispatch pm8001_80xx_dispatch = {
+ 	.name			= "pmc80xx",
+ 	.chip_init		= pm80xx_chip_init,
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index 9a9116d..872d5cf 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -170,6 +170,10 @@
+ #define LINKRATE_60			(0x06 << 8)
+ #define LINKRATE_120			(0x08 << 8)
+ 
++/* phy_profile */
++#define SAS_PHY_ANALOG_SETTINGS_PAGE	0x04
++#define PHY_DWORD_LENGTH		0xC
++
+ /* Thermal related */
+ #define	THERMAL_ENABLE			0x1
+ #define	THERMAL_LOG_ENABLE		0x1
 -- 
 1.7.1
 
