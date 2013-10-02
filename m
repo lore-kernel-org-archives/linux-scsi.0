@@ -1,7 +1,7 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH RFC 49/77] mlx5: Fix minimum number of MSI-Xs
-Date: Wed,  2 Oct 2013 12:49:05 +0200
-Message-ID: <ca7fd594d9c5fb86d1f19cd9090730fb31c0dccf.1380703263.git.agordeev@redhat.com>
+Subject: [PATCH RFC 53/77] ntb: Fix missed call to pci_enable_msix()
+Date: Wed,  2 Oct 2013 12:49:09 +0200
+Message-ID: <0590d63c3432229a3824bada71e07a08fb955498.1380703263.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
 Return-path: <linux-mips-bounce@linux-mips.org>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
@@ -18,27 +18,30 @@ To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, stable@vger.kernel.org, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-de
 List-Id: linux-scsi@vger.kernel.org
 
-The minimum number of MSI-Xs is (MLX5_EQ_VEC_COMP_BASE + 1) in
-one check and 2 in another check. Make the checks consistent and
-assume the minimum number is (MLX5_EQ_VEC_COMP_BASE + 1).
+Current MSI-X enablement code assumes MSI-Xs were successfully
+allocated in case less than requested vectors were available.
+That assumption is wrong, since MSI-Xs should be enabled with
+a repeated call to pci_enable_msix(). This update fixes this.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/net/ethernet/mellanox/mlx5/core/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/ntb/ntb_hw.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-index 5e5c9a3..adf0e5d 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-@@ -136,7 +136,7 @@ retry:
- 	err = pci_enable_msix(dev->pdev, table->msix_arr, nvec);
- 	if (err <= 0) {
- 		return err;
--	} else if (err > 2) {
-+	} else if (err > MLX5_EQ_VEC_COMP_BASE) {
- 		nvec = err;
- 		goto retry;
+diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+index 1cb6e51..de2062c 100644
+--- a/drivers/ntb/ntb_hw.c
++++ b/drivers/ntb/ntb_hw.c
+@@ -1075,6 +1075,10 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+ 			 rc);
+ 		msix_entries = rc;
++
++		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
++		if (rc)
++			goto err1;
  	}
+ 
+ 	for (i = 0; i < msix_entries; i++) {
 -- 
 1.7.7.6
