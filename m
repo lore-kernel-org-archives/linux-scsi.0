@@ -1,57 +1,62 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 1/3] target: Reset data_length for COMPARE_AND_WRITE to NoLB * block_size
-Date: Wed,  2 Oct 2013 00:13:14 +0000
-Message-ID: <1380672796-437-2-git-send-email-nab@daterainc.com>
+Subject: [PATCH 3/3] target: Fail on non zero scsi_status in compare_and_write_callback
+Date: Wed,  2 Oct 2013 00:13:16 +0000
+Message-ID: <1380672796-437-4-git-send-email-nab@daterainc.com>
 References: <1380672796-437-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:57800 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601Ab3JBAab (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2013 20:30:31 -0400
-Received: by mail-oa0-f48.google.com with SMTP id m6so102920oag.35
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Oct 2013 17:30:31 -0700 (PDT)
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1380672796-437-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch resets se_cmd->data_length for COMPARE_AND_WRITE emulation
-within sbc_compare_and_write() to NoLB * block_size in order to address
-a bug with FILEIO backends where a I/O failure will occur when data_length
-does not match the I/O size being actually dispatched for the individual
-per block READs + WRITEs.
+This patch addresses a bug for backends such as IBLOCK that perform
+asynchronous completion via transport_complete_cmd(), that will call
+target_complete_failure_work() -> transport_generic_request_failure(),
+upon exception status and invoke cmd->transport_complete_callback()
+-> compare_and_write_callback() incorrectly during the failure case.
 
-This is done late enough in sbc_compare_and_write() after the memory
-allocations have occured in transport_generic_new_cmd() to not cause
-any unwanted side-effects.
+It adds a check for a non zero se_cmd->scsi_status within the first
+invocation of compare_and_write_callback(), and will jump to out plus
+up se_device->caw_sem before exiting the callback.
 
 Reported-by: Thomas Glanzmann <thomas@glanzmann.de>
 Cc: Thomas Glanzmann <thomas@glanzmann.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_sbc.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/target/target_core_sbc.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 6c17295..a9dca11 100644
+index 1393d0e..4714c6f 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -508,6 +508,12 @@ sbc_compare_and_write(struct se_cmd *cmd)
- 		cmd->transport_complete_callback = NULL;
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
+@@ -372,7 +372,7 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct scatterlist *write_sg = NULL, *sg;
+-	unsigned char *buf, *addr;
++	unsigned char *buf = NULL, *addr;
+ 	struct sg_mapping_iter m;
+ 	unsigned int offset = 0, len;
+ 	unsigned int nlbas = cmd->t_task_nolb;
+@@ -387,6 +387,15 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd)
+ 	 */
+ 	if (!cmd->t_data_sg || !cmd->t_bidi_data_sg)
+ 		return TCM_NO_SENSE;
 +	/*
-+	 * Reset cmd->data_length to individual block_size in order to not
-+	 * confuse backend drivers that depend on this value matching the
-+	 * size of the I/O being submitted.
++	 * Immediately exit + release dev->caw_sem if command has already
++	 * been failed with a non-zero SCSI status.
 +	 */
-+	cmd->data_length = cmd->t_task_nolb * dev->dev_attrib.block_size;
++	if (cmd->scsi_status) {
++		pr_err("compare_and_write_callback: non zero scsi_status:"
++			" 0x%02x\n", cmd->scsi_status);
++		goto out;
++	}
  
- 	ret = cmd->execute_rw(cmd, cmd->t_bidi_data_sg, cmd->t_bidi_data_nents,
- 			      DMA_FROM_DEVICE);
+ 	buf = kzalloc(cmd->data_length, GFP_KERNEL);
+ 	if (!buf) {
 -- 
 1.8.4.rc3
-
