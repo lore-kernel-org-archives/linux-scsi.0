@@ -1,81 +1,62 @@
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 0/26] get_user_pages() cleanup
-Date: Wed,  2 Oct 2013 16:27:41 +0200
-Message-ID: <1380724087-13927-1-git-send-email-jack@suse.cz>
-Return-path: <owner-linux-aio@kvack.org>
-Sender: owner-linux-aio@kvack.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: linux-mm@kvack.org, Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <andreas.dilger@intel.com>, Andy Walls <awalls@md.metrocast.net>, Arnd Bergmann <arnd@arndb.de>, Benjamin LaHaise <bcrl@kvack.org>, ceph-devel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, Gleb Natapov <gleb@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, hpdd-discuss@lists.01.org, Jarod Wilson <jarod@wilsonet.com>, Jayant Mangalampalli <jayant.mangalampalli@intel.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Jesper Nilsson <jesper.nilsson@axis.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, kvm@vger.kernel.org, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, linux-aio@kvack.org, linux-cris-kernel@axis.com, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: SCSI core patches for kernel 3.12
+Date: Wed, 2 Oct 2013 15:15:20 +0000
+Message-ID: <1380726918.2081.43.camel@dabdike>
+References: <52135B99.2000102@acm.org> <20131002074006.GA8994@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:50697 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753050Ab3JBPQo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Oct 2013 11:16:44 -0400
+In-Reply-To: <20131002074006.GA8994@infradead.org>
+Content-Language: en-US
+Content-ID: <397660E3A69B97489DCC58A52039A3F7@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bart Van Assche <bvanassche@acm.org>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-  Hello,
+And I thought the world was ending when Linus started top posting ...
 
-  In my quest for changing locking around page faults to make things easier for
-filesystems I found out get_user_pages() users could use a cleanup.  The
-knowledge about necessary locking for get_user_pages() is in tons of places in
-drivers and quite a few of them actually get it wrong (don't have mmap_sem when
-calling get_user_pages() or hold mmap_sem when calling copy_from_user() in the
-surrounding code). Rather often this actually doesn't seem necessary. This
-patch series converts lots of places to use either get_user_pages_fast()
-or a new simple wrapper get_user_pages_unlocked() to remove the knowledge
-of mmap_sem from the drivers. I'm still looking into converting a few remaining
-drivers (most notably v4l2) which are more complex.
+On Wed, 2013-10-02 at 00:40 -0700, Christoph Hellwig wrote:
+> James, and comments on this?
 
-As I already wrote, in some cases I actually think drivers were buggy (and I
-note that in corresponding changelogs). I would really like to ask respective
-maintainers to have a look at the patches in their area. Also any other
-comments are welcome. Thanks.
+You mean apart from the fact that it's a long series which seems to self
+confess to providing not much value and therefore not rating itself high
+on the review list?
 
-								Honza
+So if I get the gist, the only real value is removing a pair of get/put
+calls in the critical path, so produce a single patch doing that and it
+will all go a lot faster than having to review seven code movement and
+pointless rename patches.
 
-PS: Sorry for the huge recipient list but I don't really know how to trim it
-    down...
+James
 
-CC: Alexander Viro <viro@zeniv.linux.org.uk>
-CC: Andreas Dilger <andreas.dilger@intel.com>
-CC: Andy Walls <awalls@md.metrocast.net>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Benjamin LaHaise <bcrl@kvack.org>
-CC: ceph-devel@vger.kernel.org
-CC: Dan Williams <dan.j.williams@intel.com>
-CC: David Airlie <airlied@linux.ie>
-CC: dri-devel@lists.freedesktop.org
-CC: Gleb Natapov <gleb@redhat.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: hpdd-discuss@lists.01.org
-CC: Jarod Wilson <jarod@wilsonet.com>
-CC: Jayant Mangalampalli <jayant.mangalampalli@intel.com>
-CC: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-CC: Jesper Nilsson <jesper.nilsson@axis.com>
-CC: Kai Makisara <Kai.Makisara@kolumbus.fi>
-CC: kvm@vger.kernel.org
-CC: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-CC: linux-aio@kvack.org
-CC: linux-cris-kernel@axis.com
-CC: linux-fbdev@vger.kernel.org
-CC: linux-fsdevel@vger.kernel.org
-CC: linux-ia64@vger.kernel.org
-CC: linux-media@vger.kernel.org
-CC: linux-nfs@vger.kernel.org
-CC: linux-rdma@vger.kernel.org
-CC: linux-scsi@vger.kernel.org
-CC: Manu Abraham <abraham.manu@gmail.com>
-CC: Mark Allyn <mark.a.allyn@intel.com>
-CC: Mikael Starvik <starvik@axis.com>
-CC: Mike Marciniszyn <infinipath@intel.com>
-CC: Naren Sankar <nsankar@broadcom.com>
-CC: Paolo Bonzini <pbonzini@redhat.com>
-CC: Peng Tao <tao.peng@emc.com>
-CC: Roland Dreier <roland@kernel.org>
-CC: Sage Weil <sage@inktank.com>
-CC: Scott Davilla <davilla@4pi.com>
-CC: Timur Tabi <timur@freescale.com>
-CC: Tomi Valkeinen <tomi.valkeinen@ti.com>
-CC: Tony Luck <tony.luck@intel.com>
-CC: Trond Myklebust <Trond.Myklebust@netapp.com>
+> On Tue, Aug 20, 2013 at 02:05:45PM +0200, Bart Van Assche wrote:
+> > This patch series consists of four patches that address device
+> > removal issues and three patches that improve performance of the
+> > SCSI mid-layer.
+> > 
+> > The individual patches are.
+> > 0001-Introduce-scsi_device_being_removed.patch
+> > 0002-Rework-scsi_internal_device_unblock.patch
+> > 0003-Avoid-re-enabling-I-O-after-the-transport-became-off.patch
+> > 0004-Disallow-changing-the-device-state-via-sysfs-into-de.patch
+> > 0005-Micro-optimize-scsi_request_fn.patch
+> > 0006-Rename-scsi_get_command-and-scsi_put_command.patch
+> > 0007-Micro-optimize-scsi_next_command.patch
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---end quoted text---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
+
