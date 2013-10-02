@@ -1,7 +1,7 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH RFC 71/77] vmxnet3: Return -EINVAL if number of requested MSI-Xs is not enough
-Date: Wed,  2 Oct 2013 12:49:27 +0200
-Message-ID: <e97bde9008434668e2c3f35d43056a4bd1d69ad1.1380703263.git.agordeev@redhat.com>
+Subject: [PATCH RFC 17/77] cciss: Update a misleading comment on interrupt usage
+Date: Wed,  2 Oct 2013 12:48:33 +0200
+Message-ID: <3607cede809d07e1d1d6548a5f249d1ac2f9094c.1380703262.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
 Return-path: <linux-mips-bounce@linux-mips.org>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
@@ -20,21 +20,24 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/net/vmxnet3/vmxnet3_drv.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/block/cciss.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-index 7e2788c..5b8ea71 100644
---- a/drivers/net/vmxnet3/vmxnet3_drv.c
-+++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-@@ -2738,7 +2738,7 @@ static int
- vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
- 			     int vectors)
- {
--	int err = 0, vector_threshold;
-+	int err = -EINVAL, vector_threshold;
- 	vector_threshold = VMXNET3_LINUX_MIN_MSIX_VECT;
- 
- 	while (vectors >= vector_threshold) {
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 80068a0..bf11540 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -4103,7 +4103,10 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
+ 	}
+ default_int_mode:
+ #endif				/* CONFIG_PCI_MSI */
+-	/* if we get here we're going to use the default interrupt mode */
++	/*
++	 * If we get here we're going to use either the
++	 * default interrupt mode or single MSI mode
++	 */
+ 	h->intr[h->intr_mode] = h->pdev->irq;
+ 	return;
+ }
 -- 
 1.7.7.6
