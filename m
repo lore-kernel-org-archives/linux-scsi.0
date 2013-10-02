@@ -1,40 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/26] get_user_pages() cleanup
-Date: Wed, 2 Oct 2013 09:20:09 -0700
-Message-ID: <20131002162009.GA5778@infradead.org>
-References: <1380724087-13927-1-git-send-email-jack@suse.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1380724087-13927-1-git-send-email-jack@suse.cz>
-Sender: owner-linux-mm@kvack.org
-To: Jan Kara <jack@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <andreas.dilger@intel.com>, Andy Walls <awalls@md.metrocast.net>, Arnd Bergmann <arnd@arndb.de>, Benjamin LaHaise <bcrl@kvack.org>, ceph-devel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, Gleb Natapov <gleb@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, hpdd-discuss@ml01.01.org, Jarod Wilson <jarod@wilsonet.com>, Jayant Mangalampalli <jayant.mangalampalli@intel.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Jesper Nilsson <jesper.nilsson@axis.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, kvm@vger.kernel.org, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, linux-aio@kvack.org, linux-cris-kernel@axis.com, linux-fbdev@vger.kernel.org, linux-fs
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH RFC 11/77] benet: Return -ENOSPC when not enough MSI-Xs available
+Date: Wed,  2 Oct 2013 12:48:27 +0200
+Message-ID: <4c73b38e38e37857e85e28a38279a2917bfcc01b.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.ne
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 02, 2013 at 04:27:41PM +0200, Jan Kara wrote:
->   Hello,
-> 
->   In my quest for changing locking around page faults to make things easier for
-> filesystems I found out get_user_pages() users could use a cleanup.  The
-> knowledge about necessary locking for get_user_pages() is in tons of places in
-> drivers and quite a few of them actually get it wrong (don't have mmap_sem when
-> calling get_user_pages() or hold mmap_sem when calling copy_from_user() in the
-> surrounding code). Rather often this actually doesn't seem necessary. This
-> patch series converts lots of places to use either get_user_pages_fast()
-> or a new simple wrapper get_user_pages_unlocked() to remove the knowledge
-> of mmap_sem from the drivers. I'm still looking into converting a few remaining
-> drivers (most notably v4l2) which are more complex.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/emulex/benet/be_main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Even looking over the kerneldoc comment next to it I still fail to
-understand when you'd want to use get_user_pages_fast and when not.
-
-This isn't meant as an argument against your series, but maybe a hint
-that we'd need further work in this direction.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/drivers/net/ethernet/emulex/benet/be_main.c b/drivers/net/ethernet/emulex/benet/be_main.c
+index 100b528..3e2c834 100644
+--- a/drivers/net/ethernet/emulex/benet/be_main.c
++++ b/drivers/net/ethernet/emulex/benet/be_main.c
+@@ -2378,6 +2378,8 @@ static int be_msix_enable(struct be_adapter *adapter)
+ 					 num_vec);
+ 		if (!status)
+ 			goto done;
++	} else (status > 0) {
++		status = -ENOSPC;
+ 	}
+ 
+ 	dev_warn(dev, "MSIx enable failed\n");
+-- 
+1.7.7.6
