@@ -1,73 +1,70 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: Drivers: scsi: FLUSH timeout
-Date: Wed, 2 Oct 2013 18:29:00 +0000
-Message-ID: <ff6a93ed5d234c14874d03415812a3ec@SN2PR03MB061.namprd03.prod.outlook.com>
-References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
- <20130920203222.GA14306@kroah.com>
- <a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com>
- <524180B7.7090307@gmail.com>
- <3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
- <5241C9E7.2000404@cs.wisc.edu>
- <bf168ab724a140f989ab3dfe877b750f@SN2PR03MB061.namprd03.prod.outlook.com>
- <CAMuHMdV-BsKc-c1YhzqFrUGJhw+jMZEXXTcT2xyDLnw-JQuVaQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <CAMuHMdV-BsKc-c1YhzqFrUGJhw+jMZEXXTcT2xyDLnw-JQuVaQ@mail.gmail.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, "ohering@suse.com" <ohering@suse.com>, Jack Wang <xjtuwjp@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH RFC 01/77] PCI/MSI: Fix return value when populate_msi_sysfs() failed
+Date: Wed,  2 Oct 2013 12:48:17 +0200
+Message-ID: <3ff5236944aae69f2cd934b5b6da7c1c269df7c1.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, stable@vger.kernel.org, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-de
 List-Id: linux-scsi@vger.kernel.org
 
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/pci/msi.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-
-> -----Original Message-----
-> From: geert.uytterhoeven@gmail.com [mailto:geert.uytterhoeven@gmail.com]
-> On Behalf Of Geert Uytterhoeven
-> Sent: Wednesday, September 25, 2013 1:40 AM
-> To: KY Srinivasan
-> Cc: Mike Christie; Jack Wang; Greg KH; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com; jbottomley@parallels.com;
-> hch@infradead.org; linux-scsi@vger.kernel.org
-> Subject: Re: Drivers: scsi: FLUSH timeout
-> 
-> On Tue, Sep 24, 2013 at 11:53 PM, KY Srinivasan <kys@microsoft.com> wrote:
-> > I am not sure how that magic number was arrived at (the 60HZ number). We
-> want this to be little higher -
-> 
-> "60 * HZ" means "60 seconds".
-> 
-> > would there be any issues raising this to say  180 seconds. This is the value we
-> currently have for I/O
-> > timeout.
-> 
-> So you want to replace it by "180 * HZ", which is ... another magic number?
-
-Ideally, I want this to be adjustable like the way we can change the I/O timeout.
-Since that has been attempted earlier and rejected (not clear what the reasons were),
-I was suggesting that we pick a larger number. James, let me know how I should proceed here.
-
-Regards,
-
-K. Y
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..b43f391 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -719,7 +719,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 
+ 	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+ 	if (ret)
+-		goto error;
++		goto out_avail;
+ 
+ 	/*
+ 	 * Some devices require MSI-X to be enabled before we can touch the
+@@ -732,10 +732,8 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	msix_program_entries(dev, entries);
+ 
+ 	ret = populate_msi_sysfs(dev);
+-	if (ret) {
+-		ret = 0;
+-		goto error;
+-	}
++	if (ret)
++		goto out_free;
+ 
+ 	/* Set MSI-X enabled bits and unmask the function */
+ 	pci_intx_for_msi(dev, 0);
+@@ -746,7 +744,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 
+ 	return 0;
+ 
+-error:
++out_avail:
+ 	if (ret < 0) {
+ 		/*
+ 		 * If we had some success, report the number of irqs
+@@ -763,6 +761,7 @@ error:
+ 			ret = avail;
+ 	}
+ 
++out_free:
+ 	free_msi_irqs(dev);
+ 
+ 	return ret;
+-- 
+1.7.7.6
