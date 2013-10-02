@@ -1,64 +1,49 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH RFC 36/77] ipr: Enable MSI-X when IPR_USE_MSIX type is
- set, not IPR_USE_MSI
-Date: Wed, 02 Oct 2013 14:31:25 -0500
-Message-ID: <524C748D.8080803@linux.vnet.ibm.com>
-References: <cover.1380703262.git.agordeev@redhat.com> <2d4272136269f3cb3b1a5ac53b12aa45c7ea65c0.1380703263.git.agordeev@redhat.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 0/26] get_user_pages() cleanup
+Date: Wed, 2 Oct 2013 22:29:41 +0200
+Message-ID: <20131002202941.GF16998@quack.suse.cz>
+References: <1380724087-13927-1-git-send-email-jack@suse.cz>
+ <20131002162009.GA5778@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:50779 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753580Ab3JBTbu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Oct 2013 15:31:50 -0400
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Wed, 2 Oct 2013 13:31:49 -0600
-In-Reply-To: <2d4272136269f3cb3b1a5ac53b12aa45c7ea65c0.1380703263.git.agordeev@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-aio@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20131002162009.GA5778@infradead.org>
+Sender: owner-linux-aio@kvack.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <andreas.dilger@intel.com>, Andy Walls <awalls@md.metrocast.net>, Arnd Bergmann <arnd@arndb.de>, Benjamin LaHaise <bcrl@kvack.org>, ceph-devel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, Gleb Natapov <gleb@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, hpdd-discuss@ml01.01.org, Jarod Wilson <jarod@wilsonet.com>, Jayant Mangalampalli <jayant.mangalampalli@intel.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Jesper Nilsson <jesper.nilsson@axis.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, kvm@vger.kernel.org, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, linux-aio@kvack.org, linux-cris-kernel@axis.com, linux-fbdev@
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org, "VMware, Inc." <pv-drivers@vmware.com>, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, stable@vger.kernel.org, linux-s390@vger.kernel.org, Andy King <acking@vmware.com>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, iss_storagedev@hp.com, linux-driver@qlogic.com, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <dan.j.williams@intel.com>, Jon Mason <jon.mason@intel.com>, Ingo Molnar <mingo@redhat.com>, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, netdev@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, e1000-devel@lists.sourceforge.net, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux390@de.ibm.com, linuxppc-dev@lists.ozlabs.org, Wendy Xiong <wenxiong@linux.vnet.ibm.com>
 
-On 10/02/2013 05:48 AM, Alexander Gordeev wrote:
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/scsi/ipr.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+On Wed 02-10-13 09:20:09, Christoph Hellwig wrote:
+> On Wed, Oct 02, 2013 at 04:27:41PM +0200, Jan Kara wrote:
+> >   Hello,
+> > 
+> >   In my quest for changing locking around page faults to make things easier for
+> > filesystems I found out get_user_pages() users could use a cleanup.  The
+> > knowledge about necessary locking for get_user_pages() is in tons of places in
+> > drivers and quite a few of them actually get it wrong (don't have mmap_sem when
+> > calling get_user_pages() or hold mmap_sem when calling copy_from_user() in the
+> > surrounding code). Rather often this actually doesn't seem necessary. This
+> > patch series converts lots of places to use either get_user_pages_fast()
+> > or a new simple wrapper get_user_pages_unlocked() to remove the knowledge
+> > of mmap_sem from the drivers. I'm still looking into converting a few remaining
+> > drivers (most notably v4l2) which are more complex.
 > 
-> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-> index fb57e21..762a93e 100644
-> --- a/drivers/scsi/ipr.c
-> +++ b/drivers/scsi/ipr.c
-> @@ -9527,7 +9527,7 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
->  		ipr_number_of_msix = IPR_MAX_MSIX_VECTORS;
->  	}
-> 
-> -	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
-> +	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSIX &&
->  			ipr_enable_msix(ioa_cfg) == 0)
->  		ioa_cfg->intr_flag = IPR_USE_MSIX;
->  	else if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
-> 
+> Even looking over the kerneldoc comment next to it I still fail to
+> understand when you'd want to use get_user_pages_fast and when not.
+  AFAIU get_user_pages_fast() should be used
+1) if you don't need any special get_user_pages() arguments (like calling
+   it for mm of a different process, forcing COW, or similar).
+2) you don't expect pages to be unmapped (then get_user_pages_fast() is
+actually somewhat slower because it walks page tables twice).
 
-Nack. ioa_cfg->ipr_chip->intr_type gets initialized from the ipr_chip table
-at the top of the driver which never sets intr_type to IPR_USE_MSIX, so this
-will break MSI-X support for ipr. 
-
-We indicate at the chip level only whether we want to force LSI or whether
-we want to enable MSI / MSI-X and then try enabling MSI-X and fall back to
-MSI if MSI-X is not available or does not work. We then set intr_flag to indicate
-what we are actually using on the specific adapter.
-
-Thanks,
-
-Brian
-
+								Honza
 -- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-aio' in
+the body to majordomo@kvack.org.  For more info on Linux AIO,
+see: http://www.kvack.org/aio/
+Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
