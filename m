@@ -1,41 +1,43 @@
-From: Bradley Grove <bgrove@attotech.com>
-Subject: [PATCH 4/4] esas2r: Cleanup snprinf formatting of firmware version
-Date: Tue, 1 Oct 2013 14:26:04 -0400
-Message-ID: <1380651964-8124-4-git-send-email-bgrove@attotech.com>
-References: <1380651964-8124-1-git-send-email-bgrove@attotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:51974 "EHLO
-	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752572Ab3JASf0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2013 14:35:26 -0400
-In-Reply-To: <1380651964-8124-1-git-send-email-bgrove@attotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 0/3] target: Fixes for COMPARE_AND_WRITE backend I/O failure cases
+Date: Wed,  2 Oct 2013 00:13:13 +0000
+Message-ID: <1380672796-437-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, jbottomley@parallels.com
-Cc: jseba@attotech.com, Bradley Grove <bgrove@attotech.com>
 
-Signed-off-by: Bradley Grove <bgrove@attotech.com>
----
- drivers/scsi/esas2r/esas2r_vda.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-diff --git a/drivers/scsi/esas2r/esas2r_vda.c b/drivers/scsi/esas2r/esas2r_vda.c
-index 27e9721..30028e5 100644
---- a/drivers/scsi/esas2r/esas2r_vda.c
-+++ b/drivers/scsi/esas2r/esas2r_vda.c
-@@ -310,9 +310,9 @@ static void esas2r_complete_vda_ioctl(struct esas2r_adapter *a,
- 				le32_to_cpu(rsp->vda_version);
- 			cfg->data.init.fw_build = rsp->fw_build;
- 
--			snprintf(buf, sizeof(buf), "%1d.%02d",
--				(int)LOBYTE(le16_to_cpu(rsp->fw_release)),
--				(int)HIBYTE(le16_to_cpu(rsp->fw_release)));
-+			snprintf(buf, sizeof(buf), "%1.1u.%2.2u",
-+				 (int)LOBYTE(le16_to_cpu(rsp->fw_release)),
-+				 (int)HIBYTE(le16_to_cpu(rsp->fw_release)));
- 
- 			memcpy(&cfg->data.init.fw_release, buf,
- 			       sizeof(cfg->data.init.fw_release));
+Hi folks,
+
+This series addresses a handful of COMPARE_AND_WRITE backend I/O failure
+handling bugs reported recently by Thomas Glanzmann.
+
+This includes a data_length handling bug that was specific to FILEIO
+backends, and recursive callback bug that ended up triggered a double
+complete OOPs, and another compare_and_write_callback() specific check
+to avoid a bug with asychronous IBLOCK bio completion failures.
+
+With these fixes in place, COMPARE_AND_WRITE emulation should now be
+handling all backend specific I/O failure cases correctly.
+
+Thomas, these are all fairly obvious fixes to me, and I've been able
+to confirm them on my setup.  Please confirm on your end, and I'll
+plan to push them for v3.12-rc4 by the end of the week.
+
+Thanks!
+
+--nab
+
+Nicholas Bellinger (3):
+  target: Reset data_length for COMPARE_AND_WRITE to NoLB * block_size
+  target: Fix recursive COMPARE_AND_WRITE callback failure
+  target: Fail on non zero scsi_status in compare_and_write_callback
+
+ drivers/target/target_core_sbc.c | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
+
 -- 
-1.8.3.1
-
+1.8.4.rc3
