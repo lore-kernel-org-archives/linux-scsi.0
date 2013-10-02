@@ -1,7 +1,7 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH RFC 20/77] csiostor: Return -ENOSPC when not enough MSI-X vectors available
-Date: Wed,  2 Oct 2013 12:48:36 +0200
-Message-ID: <db7d3fc15ca0d902ea354d0aa293416563c440c3.1380703262.git.agordeev@redhat.com>
+Subject: [PATCH RFC 47/77] mlx5: Fix memory leak in case not enough MSI-X vectors available
+Date: Wed,  2 Oct 2013 12:49:03 +0200
+Message-ID: <7cb36bb9a3ebfe79d42b9c287c2fe89d616b3190.1380703263.git.agordeev@redhat.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
 Return-path: <linux-mips-bounce@linux-mips.org>
 In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
@@ -20,21 +20,20 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/scsi/csiostor/csio_isr.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/ethernet/mellanox/mlx5/core/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 91ba91d..abf20ab 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -533,7 +533,7 @@ csio_enable_msix(struct csio_hw *hw)
- 			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
- 
- 		kfree(entries);
--		return -ENOMEM;
-+		return -ENOSPC;
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index b47739b..3573ba4 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -142,6 +142,7 @@ retry:
  	}
  
- 	/* Save off vectors */
+ 	mlx5_core_dbg(dev, "received %d MSI vectors out of %d requested\n", err, nvec);
++	kfree(table->msix_arr);
+ 
+ 	return 0;
+ }
 -- 
 1.7.7.6
