@@ -1,61 +1,44 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 2/3] target: Fix recursive COMPARE_AND_WRITE callback failure
-Date: Wed,  2 Oct 2013 00:13:15 +0000
-Message-ID: <1380672796-437-3-git-send-email-nab@daterainc.com>
+From: Thomas Glanzmann <thomas@glanzmann.de>
+Subject: Re: [PATCH 0/3] target: Fixes for COMPARE_AND_WRITE backend I/O
+ failure cases
+Date: Wed, 2 Oct 2013 06:31:58 +0200
+Message-ID: <20131002043157.GA3057@glanzmann.de>
 References: <1380672796-437-1-git-send-email-nab@daterainc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <1380672796-437-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Hello Nab,
 
-This patch addresses a bug when compare_and_write_callback() invoked from
-target_complete_ok_work() hits an failure from __target_execute_cmd() ->
-cmd->execute_cmd(), that ends up calling transport_generic_request_failure()
--> compare_and_write_post(), thus causing SCF_COMPARE_AND_WRITE_POST to
-incorrectly be set.
+> Thomas, these are all fairly obvious fixes to me, and I've been able
+> to confirm them on my setup.  Please confirm on your end, and I'll
+> plan to push them for v3.12-rc4 by the end of the week.
 
-The result of this bug is that target_complete_ok_work() no longer hits
-the if (!rc && !(cmd->se_cmd_flags & SCF_COMPARE_AND_WRITE_POST) check
-that forces an immediate return, and instead double completes the se_cmd
-in question, triggering an OOPs in the process.
+I confirm that the fixes work. Thank you for fixing this. I did the
+following:
 
-This patch changes compare_and_write_post() to only set this bit when a
-failure has not already occured to ensure the immediate return from within
-target_complete_ok_work(), and thus allow transport_generic_request_failure()
-to handle the sending of the CHECK_CONDITION exception status.
+        - Applied the patches on top of your for-next, recompiled,
+          installed modules and kernel got rid of
+          '/lib/modules/3.11.0-rc5+/extra/' which contained target
+          modules with an unknown symbol __dynamic_pr_debug (from the
+          debug build, I assume)
 
-Reported-by: Thomas Glanzmann <thomas@glanzmann.de>
-Cc: Thomas Glanzmann <thomas@glanzmann.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_sbc.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+        - Started the target, discovered from two esx servers, created
+          VMFS (no error), deployed one VM, used XCOPY to clone it three
+          times, powered it on and did 4 svmotion in parallel.
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index a9dca11..1393d0e 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -349,7 +349,16 @@ static sense_reason_t compare_and_write_post(struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
- 
--	cmd->se_cmd_flags |= SCF_COMPARE_AND_WRITE_POST;
-+	/*
-+	 * Only set SCF_COMPARE_AND_WRITE_POST to force a response fall-through
-+	 * within target_complete_ok_work() if the command was successfully
-+	 * sent to the backend driver.
-+	 */
-+	spin_lock_irq(&cmd->t_state_lock);
-+	if ((cmd->transport_state & CMD_T_SENT) && !cmd->scsi_status)
-+		cmd->se_cmd_flags |= SCF_COMPARE_AND_WRITE_POST;
-+	spin_unlock_irq(&cmd->t_state_lock);
-+
- 	/*
- 	 * Unlock ->caw_sem originally obtained during sbc_compare_and_write()
- 	 * before the original READ I/O submission.
--- 
-1.8.4.rc3
+So the fix works. I also have the feeling that the xcopy code became
+faster, but I first have to meassure it.
+
+I'll today some more testing with rescans from 12 ESX and svmotion
+(XCOPY) of 24 VMs in parallel. But everything is looking good from my
+site. I'm also working on the discovery patch.
+
+Cheers,
+        Thomas
