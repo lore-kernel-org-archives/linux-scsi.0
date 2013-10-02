@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 3/3] target: Fail on non zero scsi_status in compare_and_write_callback
-Date: Wed,  2 Oct 2013 00:13:16 +0000
-Message-ID: <1380672796-437-4-git-send-email-nab@daterainc.com>
+Subject: [PATCH 2/3] target: Fix recursive COMPARE_AND_WRITE callback failure
+Date: Wed,  2 Oct 2013 00:13:15 +0000
+Message-ID: <1380672796-437-3-git-send-email-nab@daterainc.com>
 References: <1380672796-437-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1380672796-437-1-git-send-email-nab@daterainc.com>
@@ -12,15 +12,21 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch addresses a bug for backends such as IBLOCK that perform
-asynchronous completion via transport_complete_cmd(), that will call
-target_complete_failure_work() -> transport_generic_request_failure(),
-upon exception status and invoke cmd->transport_complete_callback()
--> compare_and_write_callback() incorrectly during the failure case.
+This patch addresses a bug when compare_and_write_callback() invoked from
+target_complete_ok_work() hits an failure from __target_execute_cmd() ->
+cmd->execute_cmd(), that ends up calling transport_generic_request_failure()
+-> compare_and_write_post(), thus causing SCF_COMPARE_AND_WRITE_POST to
+incorrectly be set.
 
-It adds a check for a non zero se_cmd->scsi_status within the first
-invocation of compare_and_write_callback(), and will jump to out plus
-up se_device->caw_sem before exiting the callback.
+The result of this bug is that target_complete_ok_work() no longer hits
+the if (!rc && !(cmd->se_cmd_flags & SCF_COMPARE_AND_WRITE_POST) check
+that forces an immediate return, and instead double completes the se_cmd
+in question, triggering an OOPs in the process.
+
+This patch changes compare_and_write_post() to only set this bit when a
+failure has not already occured to ensure the immediate return from within
+target_complete_ok_work(), and thus allow transport_generic_request_failure()
+to handle the sending of the CHECK_CONDITION exception status.
 
 Reported-by: Thomas Glanzmann <thomas@glanzmann.de>
 Cc: Thomas Glanzmann <thomas@glanzmann.de>
@@ -30,33 +36,26 @@ Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
  1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 1393d0e..4714c6f 100644
+index a9dca11..1393d0e 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -372,7 +372,7 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd)
+@@ -349,7 +349,16 @@ static sense_reason_t compare_and_write_post(struct se_cmd *cmd)
  {
  	struct se_device *dev = cmd->se_dev;
- 	struct scatterlist *write_sg = NULL, *sg;
--	unsigned char *buf, *addr;
-+	unsigned char *buf = NULL, *addr;
- 	struct sg_mapping_iter m;
- 	unsigned int offset = 0, len;
- 	unsigned int nlbas = cmd->t_task_nolb;
-@@ -387,6 +387,15 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd)
- 	 */
- 	if (!cmd->t_data_sg || !cmd->t_bidi_data_sg)
- 		return TCM_NO_SENSE;
-+	/*
-+	 * Immediately exit + release dev->caw_sem if command has already
-+	 * been failed with a non-zero SCSI status.
-+	 */
-+	if (cmd->scsi_status) {
-+		pr_err("compare_and_write_callback: non zero scsi_status:"
-+			" 0x%02x\n", cmd->scsi_status);
-+		goto out;
-+	}
  
- 	buf = kzalloc(cmd->data_length, GFP_KERNEL);
- 	if (!buf) {
+-	cmd->se_cmd_flags |= SCF_COMPARE_AND_WRITE_POST;
++	/*
++	 * Only set SCF_COMPARE_AND_WRITE_POST to force a response fall-through
++	 * within target_complete_ok_work() if the command was successfully
++	 * sent to the backend driver.
++	 */
++	spin_lock_irq(&cmd->t_state_lock);
++	if ((cmd->transport_state & CMD_T_SENT) && !cmd->scsi_status)
++		cmd->se_cmd_flags |= SCF_COMPARE_AND_WRITE_POST;
++	spin_unlock_irq(&cmd->t_state_lock);
++
+ 	/*
+ 	 * Unlock ->caw_sem originally obtained during sbc_compare_and_write()
+ 	 * before the original READ I/O submission.
 -- 
 1.8.4.rc3
