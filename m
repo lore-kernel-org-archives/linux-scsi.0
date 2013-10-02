@@ -1,65 +1,106 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/3] target: Fixes for COMPARE_AND_WRITE backend I/O
- failure cases
-Date: Tue, 01 Oct 2013 22:17:14 -0700
-Message-ID: <1380691034.19256.36.camel@haakon3.risingtidesystems.com>
-References: <1380672796-437-1-git-send-email-nab@daterainc.com>
-	 <20131002043157.GA3057@glanzmann.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCHv6 0/3] New EH command timeout handler
+Date: Wed, 2 Oct 2013 00:25:43 -0700
+Message-ID: <20131002072543.GA24881@infradead.org>
+References: <1378123118-111972-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20131002043157.GA3057@glanzmann.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Thomas Glanzmann <thomas@glanzmann.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:42362 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752784Ab3JBHZy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Oct 2013 03:25:54 -0400
+Content-Disposition: inline
+In-Reply-To: <1378123118-111972-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Ren Mingxin <renmx@cn.fujitsu.com>, Joern Engel <joern@logfs.org>, James Smart <james.smart@emulex.com>, Bart Van Assche <bvanassche@acm.org>, Roland Dreier <roland@purestorage.com>
 
-On Wed, 2013-10-02 at 06:31 +0200, Thomas Glanzmann wrote:
-> Hello Nab,
+James, and comments on this?
+
+It would be really good if we could make some progress getting various
+infrastructure merged.
+
+On Mon, Sep 02, 2013 at 01:58:35PM +0200, Hannes Reinecke wrote:
+> Hi all,
 > 
-> > Thomas, these are all fairly obvious fixes to me, and I've been able
-> > to confirm them on my setup.  Please confirm on your end, and I'll
-> > plan to push them for v3.12-rc4 by the end of the week.
+> this patchset implements a new SCSI EH command timeout handler
+> which will be sending command aborts inline without actually
+> engaging SCSI EH.
+> SCSI EH will only be invoked if command abort fails.
 > 
-> I confirm that the fixes work. Thank you for fixing this. I did the
-> following:
+> In addition the commands will be returned directly
+> if the command abort succeeded, cutting down recovery
+> times dramatically.
 > 
->         - Applied the patches on top of your for-next, recompiled,
->           installed modules and kernel got rid of
->           '/lib/modules/3.11.0-rc5+/extra/' which contained target
->           modules with an unknown symbol __dynamic_pr_debug (from the
->           debug build, I assume)
+> With the original SCSI EH I got:
+> # time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+> 4096+0 records in
+> 4096+0 records out
+> 16777216 bytes (17 MB) copied, 142.652 s, 118 kB/s
 > 
->         - Started the target, discovered from two esx servers, created
->           VMFS (no error), deployed one VM, used XCOPY to clone it three
->           times, powered it on and did 4 svmotion in parallel.
+> real	2m22.657s
+> user	0m0.013s
+> sys	0m0.145s
 > 
-> So the fix works. I also have the feeling that the xcopy code became
-> faster, but I first have to meassure it.
+> With this patchset I got:
+> # time dd if=/dev/zero of=/dev/dm-2 bs=4k count=4k oflag=direct
+> 4096+0 records in
+> 4096+0 records out
+> 16777216 bytes (17 MB) copied, 52.1579 s, 322 kB/s
 > 
-
-Great, thanks for the confirmation here.
-
-> I'll today some more testing with rescans from 12 ESX and svmotion
-> (XCOPY) of 24 VMs in parallel. But everything is looking good from my
-> site. I'm also working on the discovery patch.
+> real	0m52.163s
+> user	0m0.012s
+> sys	0m0.145s
 > 
-
-There is one other regression wrt to the struct iscsi_cmd pre-allocation
-changes in v3.12-rc1 code that I'm still tracking down, that you may end
-up encountering during stress testing.
-
-It's currently caused by tag starvation under heavy (remotely generated)
-I/O load, and manifests itself as percpu_ida_alloc() sleeping
-indefinitely in iscsit_allocate_cmd() waiting for new tag(s) to become
-available while StatSN acknowledgement is (AFAICT) being blocked
-elsewhere.
-
-FYI, the output of 'echo w > /proc/sysrq-trigger', and/or the hung task
-checker should produce a stack-trace to this effect.
-
-Please let me know if you encounter any issues, and a patch to address
-this bit should be along in the next 24-48 hours.
-
---nab
+> Test was to disable RSCN on the target port, disable the
+> target port, and then start the 'dd' command as indicated.
+> 
+> Changes to the original version:
+> - Use a private list in scsi_eh_abort_handler to avoid
+>   list starvation (pointed out by Joern Engel)
+> - Terminate command aborts when the first abort fails
+> - Do not attempt command aborts if the host is already in recovery
+>   or if the device is removed.
+> - Flush abort workqueue if the device is removed.
+> 
+> Changes to v2:
+> - Removed eh_entry initialisation
+> - Convert to per-command workqueue
+> 
+> Changes to v3:
+> - Use delayed_work
+> - Enable new eh timeout handler for virtio, SAS, and FC
+> - Modify logging messages to include scmd pointer
+> 
+> Changes to v4:
+> - Remove stubs when enabling new eh timeout handler
+>   for other drivers
+> 
+> Changes to v5:
+> - Enable new eh timeout handler per default
+> - Update documentation
+> 
+> Hannes Reinecke (3):
+>   scsi: Fix erratic device offline during EH
+>   scsi: improved eh timeout handler
+>   scsi_error: Update documentation
+> 
+>  Documentation/scsi/scsi_eh.txt          |  69 +++++++------
+>  Documentation/scsi/scsi_mid_low_api.txt |   9 +-
+>  drivers/scsi/scsi.c                     |   9 +-
+>  drivers/scsi/scsi_error.c               | 177 ++++++++++++++++++++++++++++----
+>  drivers/scsi/scsi_priv.h                |   2 +
+>  include/scsi/scsi_cmnd.h                |   1 +
+>  include/scsi/scsi_host.h                |   5 +
+>  7 files changed, 214 insertions(+), 58 deletions(-)
+> 
+> -- 
+> 1.7.12.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
