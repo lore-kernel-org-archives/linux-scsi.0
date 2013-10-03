@@ -1,56 +1,27 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/3] target: Fixes for COMPARE_AND_WRITE backend I/O
- failure cases
-Date: Thu, 03 Oct 2013 05:14:24 -0700
-Message-ID: <1380802464.19256.99.camel@haakon3.risingtidesystems.com>
-References: <1380672796-437-1-git-send-email-nab@daterainc.com>
-	 <20131002043157.GA3057@glanzmann.de>
-	 <1380691034.19256.36.camel@haakon3.risingtidesystems.com>
-	 <20131003113859.GB541@glanzmann.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20131003113859.GB541@glanzmann.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Thomas Glanzmann <thomas@glanzmann.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: <ChiMingPan@dantonweimer.onmicrosoft.com>
+Subject: Sometimes things happen much quicker than you would love to.
+Date: Thu, 3 Oct 2013 13:48:29 +0000
+Message-ID: <441a5412-3c1e-4b8d-9d1f-f4a3a453f99d@DBXPR04MB109.eurprd04.prod.outlook.com>
+Mime-Version: 1.1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emea01-am1-ndr.ptr.protection.outlook.com ([157.56.116.100]:20202
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752421Ab3JCNsa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Oct 2013 09:48:30 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2013-10-03 at 13:38 +0200, Thomas Glanzmann wrote:
-> Hallo Nab,
-> 
-> > Please let me know if you encounter any issues, and a patch to address
-> > this bit should be along in the next 24-48 hours.
-> 
-> I just did a little bit of stress testing:
-> 
->         - Rescan from 12 Initiators at the same time - PASS
->         - Deployed 24 VMs over 12 Initiators at the same time 200 MB/s
->           frontend traffic - PASS
->         - Booted 24 VMs on 12 ESX servers at the same time - 120 MB/s
->           frontend traffic - PASS
->         - Did 24 svMotion at the same time - 400 MB/s backend traffic -
->           10 MB/s frontend traffic using XCOPY. - PASS
->         - Unloaded the target in production, ran 'grep se_tmr
->           /proc/slabinfo' and loaded it again. And made sure that the
->           VMs continued to run. - PASS
-> 
-> It looks pretty stable to me. I'll use it next week in a class and
-> report back if I had any issues whatsoever. This was with:
-> 
-> v3.12-rc3-4-g8a77fe9
-> 
 
-Excellent, thanks for the additional testing feedback.  :-)
+		Dear Customer,
 
-Btw, the tag starvation regression mentioned in the last mail only seems
-to be triggered on 10 Gb/sec links, and the patches that I'm testing now
-seem to address this issue.
+Sometimes things happen much quicker than you would love to.
 
-These patches will be going out to the list later today, and I'd very
-much appreciate if you could include these in your ESX client testing.
+Let the moment last as much as you want.
 
-Thanks again!
+http://translate.googleusercontent.com/translate_c?depth=1&hl=auto&sl=de&url=www.google.cd&u=http://myonlineshop2.yolasite.com/store&usg=ALkJrhjuuBC9SIdn3nj6vfQ7-8vR_Bt35g
 
---nab
+Best Regards, 
+		
