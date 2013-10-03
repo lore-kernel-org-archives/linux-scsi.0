@@ -1,53 +1,39 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 0/3] iscsi-target: percpu_ida tag starvation regression fixes
-Date: Thu,  3 Oct 2013 21:01:09 +0000
-Message-ID: <1380834072-25309-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Ben Hutchings <bhutchings@solarflare.com>
+Subject: Re: [PATCH RFC 01/77] PCI/MSI: Fix return value when
+ populate_msi_sysfs() failed
+Date: Thu, 3 Oct 2013 22:46:21 +0100
+Message-ID: <1380836781.3419.17.camel@bwh-desktop.uk.level5networks.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	 <3ff5236944aae69f2cd934b5b6da7c1c269df7c1.1380703262.git.agordeev@redhat.com>
+	 <20131003003905.GK6768@jonmason-lab>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20131003003905.GK6768@jonmason-lab>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jon Mason <jon.mason@intel.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Matt Porter <mporter@kernel.crashing.org>, stable@vger.kernel.org, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux mai
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Wed, 2013-10-02 at 17:39 -0700, Jon Mason wrote:
+> On Wed, Oct 02, 2013 at 12:48:17PM +0200, Alexander Gordeev wrote:
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> 
+> Since you are changing the behavior of the msix_capability_init
+> function on populate_msi_sysfs error, a comment describing why in this
+> commit would be nice.
+[...]
 
-Hi folks,
+This function was already treating that error as fatal, and freeing the
+MSIs.  The change in behaviour is that it now returns the error code in
+this case, rather than 0.  This is obviously correct and properly
+described by the one-line summary.
 
-This series addresses a v3.12 starvation regression in iscsi-target
-after the conversion to use percpu_ida tag preallocation for all
-iscsi_cmd descriptors.
-
-The first patch addresses an unnecessary overhead during iscsi_cmd
-acknowledgement -> release, that could end up causing an extra
-context switch to occur for WRITEs.  With the advent of proper
-se_cmd->cmd_kref handling in v3.10, this is no longer required
-in the acknowledgement fast path.
-
-The second patch converts iscsit_ack_from_expstatsn() to populate
-a local list of acknowledged iscsi_cmd descriptors, and releases
-them as quickly as possible (and the associated percpu_ida tags)
-directly from RX thread context.
-
-The third patch adds another (tag_num / 2) extra pre-allocated tags,
-in order to prevent percpu_ida_alloc() from needing to steal tags
-when the number of acknowledged tags in use is large, seperate from
-the tags for the CmdSN window depth.
-
-I'll be including into target-pending/master shortly, and sending
-off a PULL request to include for v3.12-rc4 over the next days.
-
-Thanks,
-
---nab
-
-Nicholas Bellinger (3):
-  iscsi-target: Only perform wait_for_tasks when performing shutdown
-  iscsi-target: Perform release of acknowledged tags from RX context
-  iscsi-target; Allow an extra tag_num / 2 number of percpu_ida tags
-
- drivers/target/iscsi/iscsi_target.c      |   13 +++++++++----
- drivers/target/iscsi/iscsi_target_nego.c |    2 +-
- drivers/target/iscsi/iscsi_target_util.c |    4 ++--
- 3 files changed, 12 insertions(+), 7 deletions(-)
+Ben.
 
 -- 
-1.7.10.4
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
