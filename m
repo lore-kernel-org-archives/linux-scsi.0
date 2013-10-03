@@ -1,10 +1,8 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 3/3] iscsi-target; Allow an extra tag_num / 2 number of percpu_ida tags
-Date: Thu,  3 Oct 2013 21:01:12 +0000
-Message-ID: <1380834072-25309-4-git-send-email-nab@daterainc.com>
-References: <1380834072-25309-1-git-send-email-nab@daterainc.com>
+Subject: [PATCH 0/3] iscsi-target: percpu_ida tag starvation regression fixes
+Date: Thu,  3 Oct 2013 21:01:09 +0000
+Message-ID: <1380834072-25309-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1380834072-25309-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Nicholas Bellinger <nab@linux-iscsi.org>
@@ -12,36 +10,44 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch bumps the default number of tags allocated per session by
-iscsi-target via transport_alloc_session_tags() -> percpu_ida_init()
-by another (tag_num / 2).
+Hi folks,
 
-This is done to take into account the tags waiting to be acknowledged
-and released in iscsit_ack_from_expstatsn(), but who's number are not
-directly limited by the CmdSN Window queue_depth being enforced by
-the target.
+This series addresses a v3.12 starvation regression in iscsi-target
+after the conversion to use percpu_ida tag preallocation for all
+iscsi_cmd descriptors.
 
-Using a larger value here is also useful to prevent percpu_ida_alloc()
-from having to steal tags from other CPUs when no tags are available
-on the local CPU, while waiting for unacknowledged tags to be released.
+The first patch addresses an unnecessary overhead during iscsi_cmd
+acknowledgement -> release, that could end up causing an extra
+context switch to occur for WRITEs.  With the advent of proper
+se_cmd->cmd_kref handling in v3.10, this is no longer required
+in the acknowledgement fast path.
 
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
+The second patch converts iscsit_ack_from_expstatsn() to populate
+a local list of acknowledged iscsi_cmd descriptors, and releases
+them as quickly as possible (and the associated percpu_ida tags)
+directly from RX thread context.
+
+The third patch adds another (tag_num / 2) extra pre-allocated tags,
+in order to prevent percpu_ida_alloc() from needing to steal tags
+when the number of acknowledged tags in use is large, seperate from
+the tags for the CmdSN window depth.
+
+I'll be including into target-pending/master shortly, and sending
+off a PULL request to include for v3.12-rc4 over the next days.
+
+Thanks,
+
+--nab
+
+Nicholas Bellinger (3):
+  iscsi-target: Only perform wait_for_tasks when performing shutdown
+  iscsi-target: Perform release of acknowledged tags from RX context
+  iscsi-target; Allow an extra tag_num / 2 number of percpu_ida tags
+
+ drivers/target/iscsi/iscsi_target.c      |   13 +++++++++----
  drivers/target/iscsi/iscsi_target_nego.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/iscsi/iscsi_target_util.c |    4 ++--
+ 3 files changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index 14d1aed..ef6d836 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -1192,7 +1192,7 @@ get_target:
- 	 */
- alloc_tags:
- 	tag_num = max_t(u32, ISCSIT_MIN_TAGS, queue_depth);
--	tag_num += ISCSIT_EXTRA_TAGS;
-+	tag_num += (tag_num / 2) + ISCSIT_EXTRA_TAGS;
- 	tag_size = sizeof(struct iscsi_cmd) + conn->conn_transport->priv_size;
- 
- 	ret = transport_alloc_session_tags(sess->se_sess, tag_num, tag_size);
 -- 
 1.7.10.4
