@@ -1,53 +1,74 @@
-From: Eric Seppanen <eric@purestorage.com>
-Subject: Re: Drivers: scsi: FLUSH timeout
-Date: Thu, 3 Oct 2013 13:48:42 -0700
-Message-ID: <CADOQvuPWaSntci+4pNCbsP-Ug6P=xf1_5ZqqoaA+fXumgfHmeA@mail.gmail.com>
-References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
- <20130920203222.GA14306@kroah.com>
- <a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com>
- <524180B7.7090307@gmail.com>
- <3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
- <5241C9E7.2000404@cs.wisc.edu>
- <bf168ab724a140f989ab3dfe877b750f@SN2PR03MB061.namprd03.prod.outlook.com>
- <CAMuHMdV-BsKc-c1YhzqFrUGJhw+jMZEXXTcT2xyDLnw-JQuVaQ@mail.gmail.com>
- <ff6a93ed5d234c14874d03415812a3ec@SN2PR03MB061.namprd03.prod.outlook.com>
- <1380802143.19256.95.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1380802143.19256.95.camel@haakon3.risingtidesystems.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 2/3] iscsi-target: Perform release of acknowledged tags from RX context
+Date: Thu,  3 Oct 2013 21:01:11 +0000
+Message-ID: <1380834072-25309-3-git-send-email-nab@daterainc.com>
+References: <1380834072-25309-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1380834072-25309-1-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 3, 2013 at 5:09 AM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
->
-> On Wed, 2013-10-02 at 18:29 +0000, KY Srinivasan wrote:
-> > Ideally, I want this to be adjustable like the way we can change the I/O timeout.
-> > Since that has been attempted earlier and rejected (not clear what the reasons were),
-> > I was suggesting that we pick a larger number. James, let me know how I should proceed here.
-> >
->
-> I think the objection was to making a module parameter for doing this
-> globally for all struct scsi_disk, and not the idea of making it
-> adjustable on an individual basis per-say..
->
-> What about adding a /sys/class/scsi_disk/$HCTL/flush_timeout..?
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Do I/O timeouts and flush timeouts need to be independently adjusted?
-If you're having trouble with slow operations, it seems likely to be
-across the board.
+This patch converts iscsit_ack_from_expstatsn() to populate a local
+ack_list of commands, and call iscsit_free_cmd() directly from RX
+thread context, instead of using iscsit_add_cmd_to_immediate_queue()
+to queue the acknowledged commands to be released from TX thread
+context.
 
-Flush timeout could be defined as 2x the read/write timeout.  Any
-other command-specific timeouts could be scaled the same way.
+It is helpful to release the acknowledge commands as quickly as
+possible, along with the associated percpu_ida tags, in order to
+prevent percpu_ida_alloc() from having to steal tags from other
+CPUs while waiting for iscsit_free_cmd() to happen from TX thread
+context.
+
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/iscsi/iscsi_target.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 35b61f7..38e44b9 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -753,7 +753,8 @@ static void iscsit_unmap_iovec(struct iscsi_cmd *cmd)
+ 
+ static void iscsit_ack_from_expstatsn(struct iscsi_conn *conn, u32 exp_statsn)
+ {
+-	struct iscsi_cmd *cmd;
++	LIST_HEAD(ack_list);
++	struct iscsi_cmd *cmd, *cmd_p;
+ 
+ 	conn->exp_statsn = exp_statsn;
+ 
+@@ -761,19 +762,23 @@ static void iscsit_ack_from_expstatsn(struct iscsi_conn *conn, u32 exp_statsn)
+ 		return;
+ 
+ 	spin_lock_bh(&conn->cmd_lock);
+-	list_for_each_entry(cmd, &conn->conn_cmd_list, i_conn_node) {
++	list_for_each_entry_safe(cmd, cmd_p, &conn->conn_cmd_list, i_conn_node) {
+ 		spin_lock(&cmd->istate_lock);
+ 		if ((cmd->i_state == ISTATE_SENT_STATUS) &&
+ 		    iscsi_sna_lt(cmd->stat_sn, exp_statsn)) {
+ 			cmd->i_state = ISTATE_REMOVE;
+ 			spin_unlock(&cmd->istate_lock);
+-			iscsit_add_cmd_to_immediate_queue(cmd, conn,
+-						cmd->i_state);
++			list_move_tail(&cmd->i_conn_node, &ack_list);
+ 			continue;
+ 		}
+ 		spin_unlock(&cmd->istate_lock);
+ 	}
+ 	spin_unlock_bh(&conn->cmd_lock);
++
++	list_for_each_entry_safe(cmd, cmd_p, &ack_list, i_conn_node) {
++		list_del(&cmd->i_conn_node);
++		iscsit_free_cmd(cmd, false);
++	}
+ }
+ 
+ static int iscsit_allocate_iovecs(struct iscsi_cmd *cmd)
+-- 
+1.7.10.4
