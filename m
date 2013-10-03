@@ -1,70 +1,87 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 1/2] qla2xxx: Fix request queue null dereference.
-Date: Thu, 3 Oct 2013 03:21:13 -0400
-Message-ID: <1380784874-15457-2-git-send-email-saurav.kashyap@qlogic.com>
-References: <1380784874-15457-1-git-send-email-saurav.kashyap@qlogic.com>
+From: Jack Morgenstein <jackm@dev.mellanox.co.il>
+Subject: Re: [PATCH RFC 46/77] mlx4: Update MSI/MSI-X interrupts enablement
+ code
+Date: Thu, 3 Oct 2013 11:02:54 +0300
+Message-ID: <20131003110254.5f10fbb8@jpm-OptiPlex-GX620>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	<b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:38414 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751374Ab3JCHwL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Oct 2013 03:52:11 -0400
-In-Reply-To: <1380784874-15457-1-git-send-email-saurav.kashyap@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, "VMware, Inc." <pv-dr>
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+On Wed,  2 Oct 2013 12:49:02 +0200
+Alexander Gordeev <agordeev@redhat.com> wrote:
 
-If an invalid IOCB is returned on the response queue then the index into the
-request queue map could be invalid and could return to us a bogus value. This
-could cause us to try to deference an invalid pointer and cause an exception.
+NACK.  This change does not do anything logically as far as I can tell.
+pci_enable_msix in the current upstream kernel itself calls
+pci_msix_table_size.  The current code yields the same results
+as the code suggested below. (i.e., the suggested code has no effect on
+optimality).
 
-If we encounter this condition, simply return as no context can be established
-for this response.
+BTW, pci_msix_table_size never returns a value < 0 (if msix is not
+enabled, it returns 0 for the table size), so the (err < 0) check here
+is not correct. (I also do not like using "err" here anyway for the
+value returned by pci_msix_table_size().  There is no error here, and
+it is simply confusing.
 
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
- drivers/scsi/qla2xxx/qla_isr.c |    9 +++++++++
- 2 files changed, 10 insertions(+), 1 deletions(-)
+-Jack
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 2ef497e..ee5c183 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -20,7 +20,7 @@
-  * | Device Discovery             |       0x2095       | 0x2020-0x2022, |
-  * |                              |                    | 0x2011-0x2012, |
-  * |                              |                    | 0x2016         |
-- * | Queue Command and IO tracing |       0x3058       | 0x3006-0x300b  |
-+ * | Queue Command and IO tracing |       0x3059       | 0x3006-0x300b  |
-  * |                              |                    | 0x3027-0x3028  |
-  * |                              |                    | 0x303d-0x3041  |
-  * |                              |                    | 0x302d,0x3033  |
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index df1b30b..ff9c86b 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1957,6 +1957,15 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
- 	que = MSW(sts->handle);
- 	req = ha->req_q_map[que];
- 
-+	/* Check for invalid queue pointer */
-+	if (req == NULL ||
-+	    que >= find_first_zero_bit(ha->req_qid_map, ha->max_req_queues)) {
-+		ql_dbg(ql_dbg_io, vha, 0x3059,
-+		    "Invalid status handle (0x%x): Bad req pointer. req=%p, "
-+		    "que=%u.\n", sts->handle, req, que);
-+		return;
-+	}
-+
- 	/* Validate handle. */
- 	if (handle < req->num_outstanding_cmds)
- 		sp = req->outstanding_cmds[handle];
--- 
-1.7.7
+> As result of recent re-design of the MSI/MSI-X interrupts enabling
+> pattern this driver has to be updated to use the new technique to
+> obtain a optimal number of MSI/MSI-X interrupts required.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/net/ethernet/mellanox/mlx4/main.c |   17 ++++++++---------
+>  1 files changed, 8 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c
+> b/drivers/net/ethernet/mellanox/mlx4/main.c index 60c9f4f..377a5ea
+> 100644 --- a/drivers/net/ethernet/mellanox/mlx4/main.c
+> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+> @@ -1852,8 +1852,16 @@ static void mlx4_enable_msi_x(struct mlx4_dev
+> *dev) int i;
+>  
+>  	if (msi_x) {
+> +		err = pci_msix_table_size(dev->pdev);
+> +		if (err < 0)
+> +			goto no_msi;
+> +
+> +		/* Try if at least 2 vectors are available */
+>  		nreq = min_t(int, dev->caps.num_eqs -
+> dev->caps.reserved_eqs, nreq);
+> +		nreq = min_t(int, nreq, err);
+> +		if (nreq < 2)
+> +			goto no_msi;
+>  
+>  		entries = kcalloc(nreq, sizeof *entries, GFP_KERNEL);
+>  		if (!entries)
+> @@ -1862,17 +1870,8 @@ static void mlx4_enable_msi_x(struct mlx4_dev
+> *dev) for (i = 0; i < nreq; ++i)
+>  			entries[i].entry = i;
+>  
+> -	retry:
+>  		err = pci_enable_msix(dev->pdev, entries, nreq);
+>  		if (err) {
+> -			/* Try again if at least 2 vectors are
+> available */
+> -			if (err > 1) {
+> -				mlx4_info(dev, "Requested %d
+> vectors, "
+> -					  "but only %d MSI-X vectors
+> available, "
+> -					  "trying again\n", nreq,
+> err);
+> -				nreq = err;
+> -				goto retry;
+> -			}
+>  			kfree(entries);
+>  			goto no_msi;
+>  		}
 
