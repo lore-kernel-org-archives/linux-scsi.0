@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 2/2] qla2xxx: Remove entry in outstanding_cmds array if we fail to abort a request.
-Date: Thu, 3 Oct 2013 03:21:14 -0400
-Message-ID: <1380784874-15457-3-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 1/2] qla2xxx: Fix request queue null dereference.
+Date: Thu, 3 Oct 2013 03:21:13 -0400
+Message-ID: <1380784874-15457-2-git-send-email-saurav.kashyap@qlogic.com>
 References: <1380784874-15457-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:38417 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:38414 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751561Ab3JCHwL (ORCPT
+	by vger.kernel.org with ESMTP id S1751374Ab3JCHwL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Oct 2013 03:52:11 -0400
 In-Reply-To: <1380784874-15457-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,43 +18,53 @@ Cc: giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlog
 
 From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-If the call to abort a request fails we need to clear it's entry in the in-flight
-commands array as it won't be cleared in interrupt context.  Not doing so could
-potentially lead to a double completion.
+If an invalid IOCB is returned on the response queue then the index into the
+request queue map could be invalid and could return to us a bogus value. This
+could cause us to try to deference an invalid pointer and cause an exception.
+
+If we encounter this condition, simply return as no context can be established
+for this response.
 
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
+ drivers/scsi/qla2xxx/qla_isr.c |    9 +++++++++
+ 2 files changed, 10 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 9f01bbb..66ed1c9 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -951,6 +951,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 	unsigned long flags;
- 	int wait = 0;
- 	struct qla_hw_data *ha = vha->hw;
-+	uint32_t handle = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 2ef497e..ee5c183 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -20,7 +20,7 @@
+  * | Device Discovery             |       0x2095       | 0x2020-0x2022, |
+  * |                              |                    | 0x2011-0x2012, |
+  * |                              |                    | 0x2016         |
+- * | Queue Command and IO tracing |       0x3058       | 0x3006-0x300b  |
++ * | Queue Command and IO tracing |       0x3059       | 0x3006-0x300b  |
+  * |                              |                    | 0x3027-0x3028  |
+  * |                              |                    | 0x303d-0x3041  |
+  * |                              |                    | 0x302d,0x3033  |
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index df1b30b..ff9c86b 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1957,6 +1957,15 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 	que = MSW(sts->handle);
+ 	req = ha->req_q_map[que];
  
- 	if (!CMD_SP(cmd))
- 		return SUCCESS;
-@@ -989,7 +990,14 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 	}
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	handle = sp->handle;
- 	sp->done(ha, sp, 0);
-+	/*
-+	 * If the mailbox command failed, clear the entry in the in-flight
-+	 * commands array as the entry won't be cleared in interrupt context.
-+	 */
-+	if (ret == FAILED)
-+		vha->req->outstanding_cmds[handle] = NULL;
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	/* Did the command return during mailbox execution? */
++	/* Check for invalid queue pointer */
++	if (req == NULL ||
++	    que >= find_first_zero_bit(ha->req_qid_map, ha->max_req_queues)) {
++		ql_dbg(ql_dbg_io, vha, 0x3059,
++		    "Invalid status handle (0x%x): Bad req pointer. req=%p, "
++		    "que=%u.\n", sts->handle, req, que);
++		return;
++	}
++
+ 	/* Validate handle. */
+ 	if (handle < req->num_outstanding_cmds)
+ 		sp = req->outstanding_cmds[handle];
 -- 
 1.7.7
 
