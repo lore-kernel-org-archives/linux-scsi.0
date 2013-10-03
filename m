@@ -1,13 +1,13 @@
 From: Jack Morgenstein <jackm@dev.mellanox.co.il>
 Subject: Re: [PATCH RFC 46/77] mlx4: Update MSI/MSI-X interrupts enablement
  code
-Date: Thu, 3 Oct 2013 11:02:54 +0300
-Message-ID: <20131003110254.5f10fbb8@jpm-OptiPlex-GX620>
+Date: Thu, 3 Oct 2013 11:27:02 +0300
+Message-ID: <20131003112702.6f3210b0@jpm-OptiPlex-GX620>
 References: <cover.1380703262.git.agordeev@redhat.com>
-	<b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
+ <b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <b0a9f6f455aa03b7769e6d9cc2e7fdbc06732b2f.1380703263.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -18,9 +18,19 @@ List-Id: linux-scsi@vger.kernel.org
 On Wed,  2 Oct 2013 12:49:02 +0200
 Alexander Gordeev <agordeev@redhat.com> wrote:
 
+UPDATING THIS REPLY.
+Your change log confused me. The change below is not from a "recent
+re-design", it is required due to an earlier patch in this patch set.
+>From the log, I assumed that the change you are talking about is already
+upstream.
+
+I will re-review.
+
+-Jack
+
 NACK.  This change does not do anything logically as far as I can tell.
 pci_enable_msix in the current upstream kernel itself calls
-pci_msix_table_size.  The current code yields the same results
+pci_msix_table_size.  The current code yields the same resultswill
 as the code suggested below. (i.e., the suggested code has no effect on
 optimality).
 
