@@ -1,70 +1,97 @@
-From: KOSAKI Motohiro <kosaki.motohiro@gmail.com>
-Subject: Re: [PATCH 0/26] get_user_pages() cleanup
-Date: Fri, 04 Oct 2013 16:42:19 -0400
-Message-ID: <524F282B.2080809@gmail.com>
-References: <1380724087-13927-1-git-send-email-jack@suse.cz> <20131002162009.GA5778@infradead.org> <20131002202941.GF16998@quack.suse.cz> <524F2592.1040305@gmail.com>
+From: Ben Hutchings <bhutchings@solarflare.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Fri, 4 Oct 2013 22:29:16 +0100
+Message-ID: <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	 <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+	 <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <524F2592.1040305@gmail.com>
-Sender: owner-linux-mm@kvack.org
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <andreas.dilger@intel.com>, Andy Walls <awalls@md.metrocast.net>, Arnd Bergmann <arnd@arndb.de>, Benjamin LaHaise <bcrl@kvack.org>, ceph-devel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, Gleb Natapov <gleb@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, hpdd-discuss@ml01.01.org, Jarod Wilson <jarod@wilsonet.com>, Jayant Mangalampalli <jayant.mangalampalli@intel.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Jesper Nilsson <jesper.nilsson@axis.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, kvm@vger.kernel.org, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, linux-aio@kvack.org, linux-cris-kernel@
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux maintainers <linux-net-drivers@solarfla>
 List-Id: linux-scsi@vger.kernel.org
 
-(10/4/13 4:31 PM), KOSAKI Motohiro wrote:
-> (10/2/13 4:29 PM), Jan Kara wrote:
->> On Wed 02-10-13 09:20:09, Christoph Hellwig wrote:
->>> On Wed, Oct 02, 2013 at 04:27:41PM +0200, Jan Kara wrote:
->>>>     Hello,
->>>>
->>>>     In my quest for changing locking around page faults to make things easier for
->>>> filesystems I found out get_user_pages() users could use a cleanup.  The
->>>> knowledge about necessary locking for get_user_pages() is in tons of places in
->>>> drivers and quite a few of them actually get it wrong (don't have mmap_sem when
->>>> calling get_user_pages() or hold mmap_sem when calling copy_from_user() in the
->>>> surrounding code). Rather often this actually doesn't seem necessary. This
->>>> patch series converts lots of places to use either get_user_pages_fast()
->>>> or a new simple wrapper get_user_pages_unlocked() to remove the knowledge
->>>> of mmap_sem from the drivers. I'm still looking into converting a few remaining
->>>> drivers (most notably v4l2) which are more complex.
->>>
->>> Even looking over the kerneldoc comment next to it I still fail to
->>> understand when you'd want to use get_user_pages_fast and when not.
->>     AFAIU get_user_pages_fast() should be used
->> 1) if you don't need any special get_user_pages() arguments (like calling
->>      it for mm of a different process, forcing COW, or similar).
->> 2) you don't expect pages to be unmapped (then get_user_pages_fast() is
->> actually somewhat slower because it walks page tables twice).
+On Fri, 2013-10-04 at 10:29 +0200, Alexander Gordeev wrote:
+> On Thu, Oct 03, 2013 at 11:49:45PM +0100, Ben Hutchings wrote:
+> > On Wed, 2013-10-02 at 12:48 +0200, Alexander Gordeev wrote:
+> > > This update converts pci_enable_msix() and pci_enable_msi_block()
+> > > interfaces to canonical kernel functions and makes them return a
+> > > error code in case of failure or 0 in case of success.
+> > [...]
+> > 
+> > I think this is fundamentally flawed: pci_msix_table_size() and
+> > pci_get_msi_cap() can only report the limits of the *device* (which the
+> > driver usually already knows), whereas MSI allocation can also be
+> > constrained due to *global* limits on the number of distinct IRQs.
+> 
+> Even the current implementation by no means addresses it. Although it
+> might seem a case for architectures to report the number of IRQs available
+> for a driver to retry, in fact they all just fail. The same applies to
+> *any* other type of resource involved: irq_desc's, CPU interrupt vector
+> space, msi_desc's etc. No platform cares about it and just bails out once
+> a constrain met (please correct me if I am wrong here). Given that Linux
+> has been doing well even on embedded I think we should not change it.
 >
-> If target page point to anon or private mapping pages, get_user_pages_fast()
-> is fork unsafe. O_DIRECT man pages describe a bit about this.
->
->
-> see http://man7.org/linux/man-pages/man2/open.2.html
->
->>        O_DIRECT I/Os should never be run concurrently with the fork(2)
->>        system call, if the memory buffer is a private mapping (i.e., any
->>        mapping created with the mmap(2) MAP_PRIVATE flag; this includes
->>        memory allocated on the heap and statically allocated buffers).  Any
->>        such I/Os, whether submitted via an asynchronous I/O interface or
->>        from another thread in the process, should be completed before
->>        fork(2) is called.  Failure to do so can result in data corruption
->>        and undefined behavior in parent and child processes.  This
->>        restriction does not apply when the memory buffer for the O_DIRECT
->>        I/Os was created using shmat(2) or mmap(2) with the MAP_SHARED flag.
->>        Nor does this restriction apply when the memory buffer has been
->>        advised as MADV_DONTFORK with madvise(2), ensuring that it will not
->>        be available to the child after fork(2).
+> The only exception to the above is pSeries platform which takes advantage
+> of the current design (to implement MSI quota). There are indications we
+> can satisfy pSeries requirements, but the design proposed in this RFC
+> is not going to change drastically anyway. The start of the discusstion
+> is here: https://lkml.org/lkml/2013/9/5/293
 
-IMHO, get_user_pages_fast() should be renamed to get_user_pages_quirk(). Its
-semantics is not equal to get_user_pages(). When someone simply substitute
-get_user_pages() to get_user_pages_fast(), they might see huge trouble.
+All I can see there is that Tejun didn't think that the global limits
+and positive return values were implemented by any architecture.  But
+you have a counter-example, so I'm not sure what your point is.
 
+It has been quite a while since I saw this happen on x86.  But I just
+checked on a test system running RHEL 5 i386 (Linux 2.6.18).  If I ask
+for 16 MSI-X vectors on a device that supports 1024, the return value is
+8, and indeed I can then successfully allocate 8.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Now that's going quite a way back, and it may be that global limits
+aren't a significant problem any more.  With the x86_64 build of RHEL 5
+on an identical system, I can allocate 16 or even 32, so this is
+apparently not a hardware limit in this case.
+
+> > Currently pci_enable_msix() will report a positive value if it fails due
+> > to the global limit.  Your patch 7 removes that.  pci_enable_msi_block()
+> > unfortunately doesn't appear to do this.
+> 
+> pci_enable_msi_block() can do more than one MSI only on x86 (with IOMMU),
+> but it does not bother to return positive numbers, indeed.
+> 
+> > It seems to me that a more useful interface would take a minimum and
+> > maximum number of vectors from the driver.  This wouldn't allow the
+> > driver to specify that it could only accept, say, any even number within
+> > a certain range, but you could still leave the current functions
+> > available for any driver that needs that.
+> 
+> Mmmm.. I am not sure I am getting it. Could you please rephrase?
+
+Most drivers seem to either:
+(a) require exactly a certain number of MSI vectors, or
+(b) require a minimum number of MSI vectors, usually want to allocate
+more, and work with any number in between
+
+We can support drivers in both classes by adding new allocation
+functions that allow specifying a minimum (required) and maximum
+(wanted) number of MSI vectors.  Those in class (a) would just specify
+the same value for both.  These new functions can take account of any
+global limit or allocation policy without any further changes to the
+drivers that use them.
+
+The few drivers with more specific requirements would still need to
+implement the currently recommended loop, using the old allocation
+functions.
+
+Ben.
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
