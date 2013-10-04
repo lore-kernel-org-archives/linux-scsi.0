@@ -1,44 +1,48 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RFC 06/77] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Fri, 4 Oct 2013 07:13:24 +0200
-Message-ID: <20131004051322.GA3577@dhcp-26-207.brq.redhat.com>
+From: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Subject: Re: [PATCH RFC 03/77] PCI/MSI/s390: Fix single MSI only check
+Date: Fri, 4 Oct 2013 09:39:56 +0200
+Message-ID: <20131004093956.183f6901@mschwide>
 References: <cover.1380703262.git.agordeev@redhat.com>
- <9c282c4ab92731c719d161d2db6fc54ce33891d9.1380703262.git.agordeev@redhat.com>
- <1380837174.3419.21.camel@bwh-desktop.uk.level5networks.com>
+	<8c9811b13fd93e73641dab8e3bd1bd5b2dc37a61.1380703262.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <1380837174.3419.21.camel@bwh-desktop.uk.level5networks.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-dr
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <8c9811b13fd93e73641dab8e3bd1bd5b2dc37a61.1380703262.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, stable@vger.kernel.org, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, "VMware, Inc." <pv-drivers@vmware.com>lin
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 03, 2013 at 10:52:54PM +0100, Ben Hutchings wrote:
-> On Wed, 2013-10-02 at 12:48 +0200, Alexander Gordeev wrote:
-> >  #ifndef CONFIG_PCI_MSI
-> > +static inline int pci_get_msi_cap(struct pci_dev *dev)
-> > +{
-> > +	return -1;
-> [...]
+On Wed,  2 Oct 2013 12:48:19 +0200
+Alexander Gordeev <agordeev@redhat.com> wrote:
+
+> Multiple MSIs have never been supported on s390 architecture,
+> but the platform code fails to report single MSI only.
 > 
-> Shouldn't this also return -EINVAL?
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  arch/s390/pci/pci.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index f17a834..c79c6e4 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -427,6 +427,8 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>  	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
+>  	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
+>  		return -EINVAL;
+> +	if (type == PCI_CAP_ID_MSI && nvec > 1)
+> +		return 1;
+>  	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
+>  	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
+> 
 
-Yep, all inliners here are better to return -EINVAL.
-Will do unless someone speaks out against.
-
-> Ben.
+Acked-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+blue skies,
+   Martin.
+
+"Reality continues to ruin my life." - Calvin.
