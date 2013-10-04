@@ -1,72 +1,56 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Date: Fri, 4 Oct 2013 10:29:20 +0200
-Message-ID: <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts
+	enablement pattern
+Date: Fri, 4 Oct 2013 09:31:49 +0100
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B7371@saturn3.aculab.com>
 References: <cover.1380703262.git.agordeev@redhat.com>
- <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+	<1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+	<20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-dr
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <e1000-devel-bounces@lists.sourceforge.net>
+Content-class: urn:content-classes:message
+In-Reply-To: <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=e1000-devel>
+List-Post: <mailto:e1000-devel@lists.sourceforge.net>
+List-Help: <mailto:e1000-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: e1000-devel-bounces@lists.sourceforge.net
+To: Alexander Gordeev <agordeev@redhat.com>, Ben Hutchings <bhutchings@solarflare.com>
+Cc: linux-mips@linux-mips.org, "VMware, Inc." <pv-drivers@vmware.com>, linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-s390@vger.kernel.org, Andy King <acking@vmware.com>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, iss_storagedev@hp.com, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <dan.j.williams@intel.com>, Jon Mason <jon.mason@intel.com>, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, linux-rdma@vger.kernel.org, linux-driver@qlogic.com, linux390@de.ibm.com, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 03, 2013 at 11:49:45PM +0100, Ben Hutchings wrote:
-> On Wed, 2013-10-02 at 12:48 +0200, Alexander Gordeev wrote:
-> > This update converts pci_enable_msix() and pci_enable_msi_block()
-> > interfaces to canonical kernel functions and makes them return a
-> > error code in case of failure or 0 in case of success.
-> [...]
+> > It seems to me that a more useful interface would take a minimum and
+> > maximum number of vectors from the driver.  This wouldn't allow the
+> > driver to specify that it could only accept, say, any even number within
+> > a certain range, but you could still leave the current functions
+> > available for any driver that needs that.
 > 
-> I think this is fundamentally flawed: pci_msix_table_size() and
-> pci_get_msi_cap() can only report the limits of the *device* (which the
-> driver usually already knows), whereas MSI allocation can also be
-> constrained due to *global* limits on the number of distinct IRQs.
+> Mmmm.. I am not sure I am getting it. Could you please rephrase?
 
-Even the current implementation by no means addresses it. Although it
-might seem a case for architectures to report the number of IRQs available
-for a driver to retry, in fact they all just fail. The same applies to
-*any* other type of resource involved: irq_desc's, CPU interrupt vector
-space, msi_desc's etc. No platform cares about it and just bails out once
-a constrain met (please correct me if I am wrong here). Given that Linux
-has been doing well even on embedded I think we should not change it.
+One possibility is for drivers than can use a lot of interrupts to
+request a minimum number initially and then request the additional
+ones much later on.
+That would make it less likely that none will be available for
+devices/drivers that need them but are initialised later.
 
-The only exception to the above is pSeries platform which takes advantage
-of the current design (to implement MSI quota). There are indications we
-can satisfy pSeries requirements, but the design proposed in this RFC
-is not going to change drastically anyway. The start of the discusstion
-is here: https://lkml.org/lkml/2013/9/5/293
+	David
 
-> Currently pci_enable_msix() will report a positive value if it fails due
-> to the global limit.  Your patch 7 removes that.  pci_enable_msi_block()
-> unfortunately doesn't appear to do this.
 
-pci_enable_msi_block() can do more than one MSI only on x86 (with IOMMU),
-but it does not bother to return positive numbers, indeed.
 
-> It seems to me that a more useful interface would take a minimum and
-> maximum number of vectors from the driver.  This wouldn't allow the
-> driver to specify that it could only accept, say, any even number within
-> a certain range, but you could still leave the current functions
-> available for any driver that needs that.
 
-Mmmm.. I am not sure I am getting it. Could you please rephrase?
-
-> Ben.
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+------------------------------------------------------------------------------
+October Webinars: Code for Performance
+Free Intel webinars can help you accelerate application performance.
+Explore tips for MPI, OpenMP, advanced profiling, and more. Get the most from 
+the latest Intel processors and coprocessors. See abstracts and register >
+http://pubads.g.doubleclick.net/gampad/clk?id=60134791&iu=/4140/ostg.clktrk
+_______________________________________________
+E1000-devel mailing list
+E1000-devel@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/e1000-devel
+To learn more about Intel&#174; Ethernet, visit http://communities.intel.com/community/wired
