@@ -1,7 +1,7 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: Drivers: scsi: FLUSH timeout
-Date: Fri, 04 Oct 2013 08:18:56 -0400
-Message-ID: <1380889136.4010.313.camel@localhost.localdomain>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: Drivers: scsi: FLUSH timeout
+Date: Fri, 4 Oct 2013 15:02:18 +0000
+Message-ID: <2cc1bcb3a157418eb66bd2d91cf911c1@SN2PR03MB061.namprd03.prod.outlook.com>
 References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
  <20130920203222.GA14306@kroah.com>
  <a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com>
@@ -13,33 +13,37 @@ References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
  <ff6a93ed5d234c14874d03415812a3ec@SN2PR03MB061.namprd03.prod.outlook.com>
  <1380802143.19256.95.camel@haakon3.risingtidesystems.com>
  <CADOQvuPWaSntci+4pNCbsP-Ug6P=xf1_5ZqqoaA+fXumgfHmeA@mail.gmail.com>
-Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <CADOQvuPWaSntci+4pNCbsP-Ug6P=xf1_5ZqqoaA+fXumgfHmeA@mail.gmail.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Eric Seppanen <eric@purestorage.com>
-Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Eric Seppanen <eric@purestorage.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2013-10-03 at 13:48 -0700, Eric Seppanen wrote:
+
+
+> -----Original Message-----
+> From: Eric Seppanen [mailto:eric@purestorage.com]
+> Sent: Thursday, October 03, 2013 1:49 PM
+> To: Nicholas A. Bellinger
+> Cc: KY Srinivasan; linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> linux-scsi@vger.kernel.org
+> Subject: Re: Drivers: scsi: FLUSH timeout
+> 
 > On Thu, Oct 3, 2013 at 5:09 AM, Nicholas A. Bellinger
 > <nab@linux-iscsi.org> wrote:
 > >
 > > On Wed, 2013-10-02 at 18:29 +0000, KY Srinivasan wrote:
-> > > Ideally, I want this to be adjustable like the way we can change the I/O timeout.
-> > > Since that has been attempted earlier and rejected (not clear what the reasons were),
-> > > I was suggesting that we pick a larger number. James, let me know how I should proceed here.
+> > > Ideally, I want this to be adjustable like the way we can change the I/O
+> timeout.
+> > > Since that has been attempted earlier and rejected (not clear what the
+> reasons were),
+> > > I was suggesting that we pick a larger number. James, let me know how I
+> should proceed here.
 > > >
 > >
 > > I think the objection was to making a module parameter for doing this
@@ -55,16 +59,9 @@ On Thu, 2013-10-03 at 13:48 -0700, Eric Seppanen wrote:
 > Flush timeout could be defined as 2x the read/write timeout.  Any
 > other command-specific timeouts could be scaled the same way.
 
-It seems to me that there isn't any reason to expect that the maximum
-amount of time a device might take to perform various operations are
-related by any coefficient.  And, an HBA (particularly iSCSI or FC)
-could very well have different device types connected at different
-target IDs.  So I think the flush timeout should be adjustable on
-a per-device basis.  It's probably related more to the cache size
-on the device than anything else...
+I like this idea and would result in minimal changes. James, if it ok with you,
+I could send you the patch.
 
-Also note that there is a SD_WRITE_SAME_TIMEOUT value that is currently
-4x the default SD_TIMEOUT value.  That should probably be adjustable
-as well.
+Regards,
 
--Ewan
+K. Y
