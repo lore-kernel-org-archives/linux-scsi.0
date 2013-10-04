@@ -1,47 +1,70 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Date: Fri, 4 Oct 2013 11:21:09 +0200
-Message-ID: <20131004092108.GB4536@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
- <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
- <AE90C24D6B3A694183C094C60CF0A2F6026B7371@saturn3.aculab.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: Drivers: scsi: FLUSH timeout
+Date: Fri, 04 Oct 2013 08:18:56 -0400
+Message-ID: <1380889136.4010.313.camel@localhost.localdomain>
+References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
+ <20130920203222.GA14306@kroah.com>
+ <a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com>
+ <524180B7.7090307@gmail.com>
+ <3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
+ <5241C9E7.2000404@cs.wisc.edu>
+ <bf168ab724a140f989ab3dfe877b750f@SN2PR03MB061.namprd03.prod.outlook.com>
+ <CAMuHMdV-BsKc-c1YhzqFrUGJhw+jMZEXXTcT2xyDLnw-JQuVaQ@mail.gmail.com>
+ <ff6a93ed5d234c14874d03415812a3ec@SN2PR03MB061.namprd03.prod.outlook.com>
+ <1380802143.19256.95.camel@haakon3.risingtidesystems.com>
+ <CADOQvuPWaSntci+4pNCbsP-Ug6P=xf1_5ZqqoaA+fXumgfHmeA@mail.gmail.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B7371@saturn3.aculab.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: Ben Hutchings <bhutchings@solarflare.com>, linux-mips@linux-mips.org, "VMware, Inc." <pv-drivers@vmware.com>, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, linux-s390@vger.kernel.org, Andy King <acking@vmware.com>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, linux-pci@vger.kernel.org, iss_storagedev@hp.com, linux-driver@qlogic.com, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <dan.j.williams@intel.com>, Jon Mason <jon.mason@intel.com>, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, e1000-devel@lists.sourceforge.net, Martin Schwidefsky <schwidefsky@de.ibm.co>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <CADOQvuPWaSntci+4pNCbsP-Ug6P=xf1_5ZqqoaA+fXumgfHmeA@mail.gmail.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: Eric Seppanen <eric@purestorage.com>
+Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 04, 2013 at 09:31:49AM +0100, David Laight wrote:
-> > Mmmm.. I am not sure I am getting it. Could you please rephrase?
+On Thu, 2013-10-03 at 13:48 -0700, Eric Seppanen wrote:
+> On Thu, Oct 3, 2013 at 5:09 AM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> >
+> > On Wed, 2013-10-02 at 18:29 +0000, KY Srinivasan wrote:
+> > > Ideally, I want this to be adjustable like the way we can change the I/O timeout.
+> > > Since that has been attempted earlier and rejected (not clear what the reasons were),
+> > > I was suggesting that we pick a larger number. James, let me know how I should proceed here.
+> > >
+> >
+> > I think the objection was to making a module parameter for doing this
+> > globally for all struct scsi_disk, and not the idea of making it
+> > adjustable on an individual basis per-say..
+> >
+> > What about adding a /sys/class/scsi_disk/$HCTL/flush_timeout..?
 > 
-> One possibility is for drivers than can use a lot of interrupts to
-> request a minimum number initially and then request the additional
-> ones much later on.
-> That would make it less likely that none will be available for
-> devices/drivers that need them but are initialised later.
+> Do I/O timeouts and flush timeouts need to be independently adjusted?
+> If you're having trouble with slow operations, it seems likely to be
+> across the board.
+> 
+> Flush timeout could be defined as 2x the read/write timeout.  Any
+> other command-specific timeouts could be scaled the same way.
 
-It sounds as a whole new topic for me. Isn't it?
+It seems to me that there isn't any reason to expect that the maximum
+amount of time a device might take to perform various operations are
+related by any coefficient.  And, an HBA (particularly iSCSI or FC)
+could very well have different device types connected at different
+target IDs.  So I think the flush timeout should be adjustable on
+a per-device basis.  It's probably related more to the cache size
+on the device than anything else...
 
-Anyway, what prevents the above from being done with pci_enable_msix(nvec1) -
-pci_disable_msix() - pci_enable_msix(nvec2) where nvec1 < nvec2?
+Also note that there is a SD_WRITE_SAME_TIMEOUT value that is currently
+4x the default SD_TIMEOUT value.  That should probably be adjustable
+as well.
 
-> 	David
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+-Ewan
