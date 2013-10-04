@@ -1,175 +1,71 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 2/2] qla2xxx: Remove entry in outstanding_cmds array if
- we fail to abort a request.
-Date: Fri, 4 Oct 2013 17:12:57 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D8983064F@AVMB1.qlogic.org>
-References: <1380784874-15457-3-git-send-email-saurav.kashyap@qlogic.com>
+From: Eric Seppanen <eric@purestorage.com>
+Subject: Re: Drivers: scsi: FLUSH timeout
+Date: Fri, 4 Oct 2013 11:12:34 -0700
+Message-ID: <CADOQvuMY6NMY4U9jpbR+oi5N6=bLGFez0d5_PEf-G85_VWMZuA@mail.gmail.com>
+References: <1379705547-15028-1-git-send-email-kys@microsoft.com>
+ <20130920203222.GA14306@kroah.com>
+ <a97d266e2c284d688d2dd7ad43f179b8@SN2PR03MB061.namprd03.prod.outlook.com>
+ <524180B7.7090307@gmail.com>
+ <3413dbd7fa254fd380a84fe6d9cd87e1@SN2PR03MB061.namprd03.prod.outlook.com>
+ <5241C9E7.2000404@cs.wisc.edu>
+ <bf168ab724a140f989ab3dfe877b750f@SN2PR03MB061.namprd03.prod.outlook.com>
+ <CAMuHMdV-BsKc-c1YhzqFrUGJhw+jMZEXXTcT2xyDLnw-JQuVaQ@mail.gmail.com>
+ <ff6a93ed5d234c14874d03415812a3ec@SN2PR03MB061.namprd03.prod.outlook.com>
+ <1380802143.19256.95.camel@haakon3.risingtidesystems.com>
+ <CADOQvuPWaSntci+4pNCbsP-Ug6P=xf1_5ZqqoaA+fXumgfHmeA@mail.gmail.com>
+ <1380889136.4010.313.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D8983064FAVMB1qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:46954 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751174Ab3JDRNA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Oct 2013 13:13:00 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id r94H9WiD023512
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Oct 2013 10:12:59 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1f9y9g88gg-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 04 Oct 2013 10:12:59 -0700
-In-Reply-To: <1380784874-15457-3-git-send-email-saurav.kashyap@qlogic.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
-
---_000_F5D084D6342F9B479C34599BB0A03E4D8983064FAVMB1qlogicorg_
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <682C5BD669869540B74CE7325DA6A3A7@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1380889136.4010.313.camel@localhost.localdomain>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: emilne@redhat.com
+Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Hi James,
-After further review of this patch please do not include it for 3.12-rc.
-
-Thanks,
-~Saurav
-
->From: Chad Dupuis <chad.dupuis@qlogic.com>
+On Fri, Oct 4, 2013 at 5:18 AM, Ewan Milne <emilne@redhat.com> wrote:
+> On Thu, 2013-10-03 at 13:48 -0700, Eric Seppanen wrote:
+>> Do I/O timeouts and flush timeouts need to be independently adjusted?
+>> If you're having trouble with slow operations, it seems likely to be
+>> across the board.
+>>
+>> Flush timeout could be defined as 2x the read/write timeout.  Any
+>> other command-specific timeouts could be scaled the same way.
 >
->If the call to abort a request fails we need to clear it's entry in the
->in-flight
->commands array as it won't be cleared in interrupt context.  Not doing so
->could
->potentially lead to a double completion.
->
->Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
->Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
->---
-> drivers/scsi/qla2xxx/qla_os.c |    8 ++++++++
-> 1 files changed, 8 insertions(+), 0 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
->index 9f01bbb..66ed1c9 100644
->--- a/drivers/scsi/qla2xxx/qla_os.c
->+++ b/drivers/scsi/qla2xxx/qla_os.c
->@@ -951,6 +951,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
-> 	unsigned long flags;
-> 	int wait =3D 0;
-> 	struct qla_hw_data *ha =3D vha->hw;
->+	uint32_t handle =3D 0;
->=20
-> 	if (!CMD_SP(cmd))
-> 		return SUCCESS;
->@@ -989,7 +990,14 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
-> 	}
->=20
-> 	spin_lock_irqsave(&ha->hardware_lock, flags);
->+	handle =3D sp->handle;
-> 	sp->done(ha, sp, 0);
->+	/*
->+	 * If the mailbox command failed, clear the entry in the in-flight
->+	 * commands array as the entry won't be cleared in interrupt context.
->+	 */
->+	if (ret =3D=3D FAILED)
->+		vha->req->outstanding_cmds[handle] =3D NULL;
-> 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
->=20
-> 	/* Did the command return during mailbox execution? */
->--=20
->1.7.7
->
+> It seems to me that there isn't any reason to expect that the maximum
+> amount of time a device might take to perform various operations are
+> related by any coefficient.  And, an HBA (particularly iSCSI or FC)
+> could very well have different device types connected at different
+> target IDs.  So I think the flush timeout should be adjustable on
+> a per-device basis.  It's probably related more to the cache size
+> on the device than anything else...
 
+There are two possible delays: how long the device might possibly
+take, and how long the storage fabric might take.
 
---_000_F5D084D6342F9B479C34599BB0A03E4D8983064FAVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+On a local device, only the first matters.  But there are environments
+where the second dominates (e.g. a virtual machine, where the
+hypervisor's storage uses multipath with a long failover delay).
 
-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
-AE0AVABQAAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAB8AAl0BAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAfAOVfAQAAADwAAABzAGkAcAA6AHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEA
-cABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBz
-AGgAeQBhAHAAAAAAAB8AHwwBAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHQAAAAA
-AAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAABTAE0A
-VABQAAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AB8AAV0BAAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4A
-YwBvAG0AAAAfAPg/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAAAB8AI0AB
-AAAANAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHQAAAAAAAAAgSsfpL6jEBmdbgDdAQ9U
-AgAAAIBTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAABTAE0AVABQAAAAcwBhAHUAcgBhAHYA
-LgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANAAAAHMAYQB1
-AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAALAEA6AQAAAB8A
-GgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgEL
-MAEAAAAQAAAAREDN3llU60aMgMekFVaqlAMAFwABAAAAQAA5AICyWvgkwc4BQAAIMIFqrfgkwc4B
-CwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAe
-AAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsA
-AIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAAC+AAAAUgBlADoAIABbAFAAQQBU
-AEMASAAgADIALwAyAF0AIABxAGwAYQAyAHgAeAB4ADoAIABSAGUAbQBvAHYAZQAgAGUAbgB0AHIA
-eQAgAGkAbgAgAG8AdQB0AHMAdABhAG4AZABpAG4AZwBfAGMAbQBkAHMAIABhAHIAcgBhAHkAIABp
-AGYAIAB3AGUAIABmAGEAaQBsACAAdABvACAAYQBiAG8AcgB0ACAAYQAgAHIAZQBxAHUAZQBzAHQA
-LgAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAHwAAAA8ADEAMwA4
-ADAANwA4ADQAOAA3ADQALQAxADUANAA1ADcALQAzAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEA
-aQBsAC0AcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+
-AAAAAgFxAAEAAAAbAAAAAQHOwA1VvwgFaG67ukeUQu2X0AZRkZnlm1wAAB8AcAABAAAAtgAAAFsA
-UABBAFQAQwBIACAAMgAvADIAXQAgAHEAbABhADIAeAB4AHgAOgAgAFIAZQBtAG8AdgBlACAAZQBu
-AHQAcgB5ACAAaQBuACAAbwB1AHQAcwB0AGEAbgBkAGkAbgBnAF8AYwBtAGQAcwAgAGEAcgByAGEA
-eQAgAGkAZgAgAHcAZQAgAGYAYQBpAGwAIAB0AG8AIABhAGIAbwByAHQAIABhACAAcgBlAHEAdQBl
-AHMAdAAuAAAAAAAfADUQAQAAAHgAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcA
-OQBDADMANAA1ADkAOQBCAEIAMABBADAAMwBFADQARAA4ADkAOAAzADAANgA0AEYAQABBAFYATQBC
-ADEALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAADAN4/n04AAEAABzBmRqb4JMHOAQMAJgAAAAAA
-AgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMS0xMzEwMDQxNzEyNTdaLTE5ODk0
-AAAAHwAVEAEAAABYAAAANgA4ADIAQwA1AEIARAA2ADYAOQA4ADYAOQA1ADQAMABCADcANABDAEUA
-NwAzADIANQBEAEEANgBBADMAQQA3AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIBFDABAAAADAAA
-AJgAAAAIGXgLSAAAAB8A+j8BAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAA
-HwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABI
-AAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMQAwAC4A
-MAAuADEAMQAwADMAMQAwAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQBy
-AHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAE4BAABJAEkA
-PQAwADEAMAAxAEMARQBDADEAMgA0AEYAOAA5AEEARQAzAEIAQwA5AEQAMwA4ADkAMgBDADkANAA2
-AEIANQAxADYAQQA1ADcARAA3ADUAMgBGADcANwA5ADgAOwBTAEIATQBJAEQAPQAyADMAOwBTADEA
-PQA8ADEAMwA4ADAANwA4ADQAOAA3ADQALQAxADUANAA1ADcALQAzAC0AZwBpAHQALQBzAGUAbgBk
-AC0AZQBtAGEAaQBsAC0AcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMA
-LgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABC
-AHUAaQBsAGQAIAAzADEAOAAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAAADAA00/T8AAB8A
-AICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAA
-AAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4A
-YQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGgAAAFsAMQAwAC4AMwA1AC4ANwAuADcANgBdAAAAAABT
-gw==
+If somebody wants to set flush timeouts > 60 seconds, I would like to
+know if they're trying to address a slow device or a slow fabric.  If
+it's the fabric, then it's kind of silly to make them set three
+different timeouts to address the same problem.
 
---_000_F5D084D6342F9B479C34599BB0A03E4D8983064FAVMB1qlogicorg_--
+An alternate way of handling long fabric delays would be to have a
+fabric_timeout that gets added to all the other timeouts... could be a
+scsi_host parameter but that's probably overengineering the problem.
+
+There are already VM vendors that tell customers to adjust the current
+sysfs timeout, so the least amount of work would be to make all of the
+other timeouts track that one in some way (additive or
+multiplicative).
