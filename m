@@ -1,40 +1,69 @@
-From: Matthew Whitehead <tedheadster@gmail.com>
-Subject: [PATCH] scsi: scsi_scan.c fix formatting
-Date: Fri,  4 Oct 2013 14:30:18 -0400
-Message-ID: <1380911418-3700-1-git-send-email-tedheadster@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:44237 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753491Ab3JDSab (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Oct 2013 14:30:31 -0400
-Received: by mail-qc0-f170.google.com with SMTP id m20so3109744qcx.1
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Oct 2013 11:30:30 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] Drivers: scsi: Derive the FLUSH_TIMEOUT from the basic
+ I/O timeout
+Date: Fri,  4 Oct 2013 12:38:36 -0700
+Message-ID: <1380915516-28720-1-git-send-email-kys@microsoft.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, eric@purestorage.com, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Matthew Whitehead <tedheadster@gmail.com>
 
-Change output of the form "Sequential scan oftarget7:0:5"
-to the more readable "Sequential scan of target7:0:5".
+Rather than having a separate constant for specifying the timeout on FLUSH
+operations, use the basic I/O timeout value that is already configurable
+on a per target basis to derive the FLUSH timeout. Looking at the current
+definitions of these timeout values, the FLUSH operation is supposed to have
+a value that is twice the normal timeout value. This patch preserves this
+relationship while leveraging the flexibility of specifying the I/O timeout.
 
-Signed-off-by: Matthew Whitehead <tedheadster@gmail.com>
+I would like to thank Eric Seppanen <eric@purestorage.com> and 
+Nicholas A. Bellinger <nab@linux-iscsi.org> for their help in resolving
+this issue.
+
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 ---
- drivers/scsi/scsi_scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/sd.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 307a811..3cf21db 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1162,7 +1162,7 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index e62d17d..8aff306 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -829,7 +829,7 @@ static int sd_setup_write_same_cmnd(struct scsi_device *sdp, struct request *rq)
  
- 	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: Sequential scan of"
--				    "%s\n", dev_name(&starget->dev)));
-+				    " %s\n", dev_name(&starget->dev)));
+ static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
+ {
+-	rq->timeout = SD_FLUSH_TIMEOUT;
++	rq->timeout *= 2;
+ 	rq->retries = SD_MAX_RETRIES;
+ 	rq->cmd[0] = SYNCHRONIZE_CACHE;
+ 	rq->cmd_len = 10;
+@@ -1433,6 +1433,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+ {
+ 	int retries, res;
+ 	struct scsi_device *sdp = sdkp->device;
++	unsigned int timeout = sdp->request_queue->rq_timeout;
+ 	struct scsi_sense_hdr sshdr;
  
- 	max_dev_lun = min(max_scsi_luns, shost->max_lun);
- 	/*
+ 	if (!scsi_device_online(sdp))
+@@ -1448,7 +1449,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+ 		 * flush everything.
+ 		 */
+ 		res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0,
+-					     &sshdr, SD_FLUSH_TIMEOUT,
++					     &sshdr, timeout * 2,
+ 					     SD_MAX_RETRIES, NULL, REQ_PM);
+ 		if (res == 0)
+ 			break;
 -- 
-1.7.2.5
-
+1.7.4.1
