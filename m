@@ -1,81 +1,65 @@
-From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Subject: [PATCH] [SCSI]: ARM: remove deprecated IRQF_DISABLED
-Date: Sun,  6 Oct 2013 07:58:56 +0200
-Message-ID: <1381039136-11749-1-git-send-email-michael.opdenacker@free-electrons.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:51124 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751256Ab3JFF7A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Oct 2013 01:59:00 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Sun, 6 Oct 2013 08:02:44 +0200
+Message-ID: <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <1381009586.645.141.camel@pasglop>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Ben Hutchings <bhutchings@solarflare.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlo
 List-Id: linux-scsi@vger.kernel.org
-To: linux@arm.linux.org.uk, JBottomley@parallels.com
-Cc: linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Opdenacker <michael.opdenacker@free-electrons.com>
 
-This patch proposes to remove the use of the IRQF_DISABLED flag
+On Sun, Oct 06, 2013 at 08:46:26AM +1100, Benjamin Herrenschmidt wrote:
+> On Sat, 2013-10-05 at 16:20 +0200, Alexander Gordeev wrote:
+> > So my point is - drivers should first obtain a number of MSIs they *can*
+> > get, then *derive* a number of MSIs the device is fine with and only then
+> > request that number. Not terribly different from memory or any other type
+> > of resource allocation ;)
+> 
+> What if the limit is for a group of devices ? Your interface is racy in
+> that case, another driver could have eaten into the limit in between the
+> calls.
 
-It's a NOOP since 2.6.35 and it will be removed one day.
+Well, the another driver has had a better karma ;) But seriously, the
+current scheme with a loop is not race-safe wrt to any other type of
+resource which might exhaust. What makes the quota so special so we
+should care about it and should not care i.e. about lack of msi_desc's?
 
-Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
----
- drivers/scsi/arm/acornscsi.c | 2 +-
- drivers/scsi/arm/cumana_1.c  | 2 +-
- drivers/scsi/arm/cumana_2.c  | 2 +-
- drivers/scsi/arm/powertec.c  | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+Yeah, I know the quota might hit more likely. But why it is not addressed
+right now then? Not a single function in chains...
+  rtas_msi_check_device() -> msi_quota_for_device() -> traverse_pci_devices()
+  rtas_setup_msi_irqs() -> msi_quota_for_device() -> traverse_pci_devices()
+...is race-safe. So if it has not been bothering anyone until now then
+no reason to start worrying now :)
 
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index 09ba186..059ff47 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -2971,7 +2971,7 @@ static int acornscsi_probe(struct expansion_card *ec, const struct ecard_id *id)
- 	ec->irqaddr	= ashost->fast + INT_REG;
- 	ec->irqmask	= 0x0a;
- 
--	ret = request_irq(host->irq, acornscsi_intr, IRQF_DISABLED, "acornscsi", ashost);
-+	ret = request_irq(host->irq, acornscsi_intr, 0, "acornscsi", ashost);
- 	if (ret) {
- 		printk(KERN_CRIT "scsi%d: IRQ%d not free: %d\n",
- 			host->host_no, ashost->scsi.irq, ret);
-diff --git a/drivers/scsi/arm/cumana_1.c b/drivers/scsi/arm/cumana_1.c
-index b679778..f8e0609 100644
---- a/drivers/scsi/arm/cumana_1.c
-+++ b/drivers/scsi/arm/cumana_1.c
-@@ -262,7 +262,7 @@ static int cumanascsi1_probe(struct expansion_card *ec,
- 		goto out_unmap;
- 	}
- 
--	ret = request_irq(host->irq, cumanascsi_intr, IRQF_DISABLED,
-+	ret = request_irq(host->irq, cumanascsi_intr, 0,
- 			  "CumanaSCSI-1", host);
- 	if (ret) {
- 		printk("scsi%d: IRQ%d not free: %d\n",
-diff --git a/drivers/scsi/arm/cumana_2.c b/drivers/scsi/arm/cumana_2.c
-index 58915f2..abc66f5 100644
---- a/drivers/scsi/arm/cumana_2.c
-+++ b/drivers/scsi/arm/cumana_2.c
-@@ -431,7 +431,7 @@ static int cumanascsi2_probe(struct expansion_card *ec,
- 		goto out_free;
- 
- 	ret = request_irq(ec->irq, cumanascsi_2_intr,
--			  IRQF_DISABLED, "cumanascsi2", info);
-+			  0, "cumanascsi2", info);
- 	if (ret) {
- 		printk("scsi%d: IRQ%d not free: %d\n",
- 		       host->host_no, ec->irq, ret);
-diff --git a/drivers/scsi/arm/powertec.c b/drivers/scsi/arm/powertec.c
-index abc9593..5e1b73e 100644
---- a/drivers/scsi/arm/powertec.c
-+++ b/drivers/scsi/arm/powertec.c
-@@ -358,7 +358,7 @@ static int powertecscsi_probe(struct expansion_card *ec,
- 		goto out_free;
- 
- 	ret = request_irq(ec->irq, powertecscsi_intr,
--			  IRQF_DISABLED, "powertec", info);
-+			  0, "powertec", info);
- 	if (ret) {
- 		printk("scsi%d: IRQ%d not free: %d\n",
- 		       host->host_no, ec->irq, ret);
+In fact, in the current design to address the quota race decently the
+drivers would have to protect the *loop* to prevent the quota change
+between a pci_enable_msix() returned a positive number and the the next
+call to pci_enable_msix() with that number. Is it doable?
+
+> Ben.
+> 
+> 
+
 -- 
-1.8.1.2
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
