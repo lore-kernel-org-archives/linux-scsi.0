@@ -1,57 +1,82 @@
-From: Jon Mason <jon.mason@intel.com>
-Subject: Re: [PATCH RFC 54/77] ntb: Ensure number of MSIs on SNB is enough
- for the link interrupt
-Date: Mon, 7 Oct 2013 09:50:57 -0700
-Message-ID: <20131007165056.GA24536@jonmason-lab>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Mon, 7 Oct 2013 14:01:11 -0400
+Message-ID: <20131007180111.GC2481@htj.dyndns.org>
 References: <cover.1380703262.git.agordeev@redhat.com>
- <5d9c5b2d3bbc444ff32bddeece7a239d046bd79c.1380703263.git.agordeev@redhat.com>
- <20131003004805.GL6768@jonmason-lab>
- <20131005214303.GA21589@dhcp-26-207.brq.redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
+ <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+ <1381040386.645.143.camel@pasglop>
+ <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20131005214303.GA21589@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Matt Porter <mporter@kernel.crashing.org>, stable@vger.kernel.org, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, "VMware, Inc." <pv-drivers@vmw>
+In-Reply-To: <20131006071027.GA29143-hdGaXg0bp3uRXgp2RCiI5R/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Ben Hutchings <bhutchings-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, Michael Ellerman <michael-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>, Martin Schwidefsky <schwidefsky-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andy King <acking-pghWNbHTmq7QT0dZR+AlfA@public.gmane.org>, Jon Mason <jon.mason-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Matt Porter <mporter-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, linux390-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iss_storagedev-VXdhtT5mjnY@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, e1000-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-driver-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, Solarflare linux maintainers <linux-net-drivers-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, VMw
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Oct 05, 2013 at 11:43:04PM +0200, Alexander Gordeev wrote:
-> On Wed, Oct 02, 2013 at 05:48:05PM -0700, Jon Mason wrote:
-> > On Wed, Oct 02, 2013 at 12:49:10PM +0200, Alexander Gordeev wrote:
-> > > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > > ---
-> > >  drivers/ntb/ntb_hw.c |    2 +-
-> > >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > > 
-> > > diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-> > > index de2062c..eccd5e5 100644
-> > > --- a/drivers/ntb/ntb_hw.c
-> > > +++ b/drivers/ntb/ntb_hw.c
-> > > @@ -1066,7 +1066,7 @@ static int ntb_setup_msix(struct ntb_device *ndev)
-> > >  		/* On SNB, the link interrupt is always tied to 4th vector.  If
-> > >  		 * we can't get all 4, then we can't use MSI-X.
-> > >  		 */
-> > > -		if (ndev->hw_type != BWD_HW) {
-> > > +		if ((rc < SNB_MSIX_CNT) && (ndev->hw_type != BWD_HW)) {
+Hey, guys.
+
+On Sun, Oct 06, 2013 at 09:10:30AM +0200, Alexander Gordeev wrote:
+> On Sun, Oct 06, 2013 at 05:19:46PM +1100, Benjamin Herrenschmidt wrote:
+> > On Sun, 2013-10-06 at 08:02 +0200, Alexander Gordeev wrote:
+> > > In fact, in the current design to address the quota race decently the
+> > > drivers would have to protect the *loop* to prevent the quota change
+> > > between a pci_enable_msix() returned a positive number and the the next
+> > > call to pci_enable_msix() with that number. Is it doable?
 > > 
-> > Nack, this check is unnecessary.
-> 
-> If SNB can do more than SNB_MSIX_CNT MSI-Xs then this check is needed
-> to enable less than maximum MSI-Xs in case the maximum was not allocated.
-> Otherwise SNB will fallback to single MSI instead of multiple MSI-Xs.
+> > I am not advocating for the current design, simply saying that your
+> > proposal doesn't address this issue while Ben's does.
 
-Per the comment in the code snippet above, "If we can't get all 4,
-then we can't use MSI-X".  There is already a check to see if more
-than 4 were acquired.  So it's not possible to hit this.  Even if it
-was, don't use SNB_MSIX_CNT here (limits.msix_cnt is the preferred
-variable).  Also, the "()" are unnecessary.
+Hmmm... yean, the race condition could be an issue as multiple msi
+allocation might fail even if the driver can and explicitly handle
+multiple allocation if the quota gets reduced inbetween.
 
-Thanks,
-Jon
+> There is one major flaw in min-max approach - the generic MSI layer
+> will have to take decisions on exact number of MSIs to request, not
+> device drivers.
 
-> -- 
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
+The min-max approach would actually be pretty nice for the users which
+actually care about this.
+
+> This will never work for all devices, because there might be specific
+> requirements which are not covered by the min-max. That is what Ben
+> described "...say, any even number within a certain range". Ben suggests
+> to leave the existing loop scheme to cover such devices, which I think is
+> not right.
+
+if it could work.
+
+> What about introducing pci_lock_msi() and pci_unlock_msi() and let device
+> drivers care about their ranges and specifics in race-safe manner?
+> I do not call to introduce it right now (since it appears pSeries has not
+> been hitting the race for years) just as a possible alternative to Ben's
+> proposal.
+
+I don't think the same race condition would happen with the loop.  The
+problem case is where multiple msi(x) allocation fails completely
+because the global limit went down before inquiry and allocation.  In
+the loop based interface, it'd retry with the lower number.
+
+As long as the number of drivers which need this sort of adaptive
+allocation isn't too high and the common cases can be made simple, I
+don't think the "complex" part of interface is all that important.
+Maybe we can have reserve / cancel type interface or just keep the
+loop with more explicit function names (ie. try_enable or something
+like that).
+
+Thanks.
+
+-- 
+tejun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
