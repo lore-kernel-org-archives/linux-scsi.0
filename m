@@ -1,37 +1,21 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: sg3_utils-1.37 and ddpt-0.93 betas; xcopy work
-Date: Tue, 08 Oct 2013 11:06:47 -0400
-Message-ID: <52541F87.3020407@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: "=?windows-1251?Q?=CC=E0=F0=F4=F3=EB=FF_=D1=E0=F5=E0=F0=EE=E2=F1=EA=E0=FF?="
+	<kick@paralax.org>
+Subject: =?windows-1251?Q?3__=E4_=EF=EF=F0=E8=ED=F2=E5=F0=FB_=E8_=F4=F0=E5=E7=E5=F0=ED=EE..=E3=F0=E0=E2=E8=F0=EE=E2=E0=EB=FC=ED=FB=E5_=F1=F2=E0=ED=ED=EA=E8?=
+Date: Mon, 7 Oct 2013 19:36:47 +0200
+Message-ID: <1299672102.20131007193647@paralax.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53849 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755203Ab3JHPH2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Oct 2013 11:07:28 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.infotech.no (Postfix) with ESMTP id DA69C204241
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2013 17:07:25 +0200 (CEST)
-Received: from smtp.infotech.no ([127.0.0.1])
-	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 0NIYdkUY5m5Z for <linux-scsi@vger.kernel.org>;
-	Tue,  8 Oct 2013 17:07:25 +0200 (CEST)
-Received: from [10.7.0.30] (unknown [10.7.0.30])
-	by smtp.infotech.no (Postfix) with ESMTPA id 6BEEE2041F5
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2013 17:07:24 +0200 (CEST)
+Received: from darkhost.paralax.org ([193.151.23.234]:34440 "EHLO
+	darkhost.paralax.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752547Ab3JHRfQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Oct 2013 13:35:16 -0400
+Received: from paralax.org (unknown [62.174.86.34])
+	by darkhost.paralax.org (Postfix) with ESMTPA id E5569F5F7BF0E
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Oct 2013 20:36:09 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Since several people are working on xcopy; I have collected
-various fixes, improved documentation and debug to sg_xcopy
-(in sg3_utils) and ddpt into new betas dated today. They
-can be found in the News section at the top of:
-   http://sg.danny.cz/sg
-
-There are a lot of other fixes to sg3_utils (see its ChangeLog)
-so I intend to release version 1.37 soon.
-
-Doug Gilbert
+http://gentlemensoutfitters.net.au/r4.php
