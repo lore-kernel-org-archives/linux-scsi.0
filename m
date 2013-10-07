@@ -1,54 +1,88 @@
-From: Ben Hutchings <bhutchings-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Date: Mon, 7 Oct 2013 21:48:01 +0100
-Message-ID: <1381178881.1536.28.camel@bwh-desktop.uk.level5networks.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
-	 <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
-	 <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
-	 <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
-	 <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
-	 <1381009586.645.141.camel@pasglop>
-	 <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
-	 <1381040386.645.143.camel@pasglop>
-	 <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 0/26] get_user_pages() cleanup
+Date: Mon, 7 Oct 2013 23:18:22 +0200
+Message-ID: <20131007211822.GF30441@quack.suse.cz>
+References: <1380724087-13927-1-git-send-email-jack@suse.cz>
+ <20131002162009.GA5778@infradead.org>
+ <20131002202941.GF16998@quack.suse.cz>
+ <524F2592.1040305@gmail.com>
+ <524F282B.2080809@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20131006071027.GA29143-hdGaXg0bp3uRXgp2RCiI5R/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, Michael Ellerman <michael-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>, Martin Schwidefsky <schwidefsky-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andy King <acking-pghWNbHTmq7QT0dZR+AlfA@public.gmane.org>, Jon Mason <jon.mason-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Matt Porter <mporter-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, linux390-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iss_storagedev-VXdhtT5mjnY@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, e1000-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-driver-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, Solarflare linux maintainers <linux-net-drivers@solarfla>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-aio@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <524F282B.2080809@gmail.com>
+Sender: owner-linux-aio@kvack.org
+To: KOSAKI Motohiro <kosaki.motohiro@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <andreas.dilger@intel.com>, Andy Walls <awalls@md.metrocast.net>, Arnd Bergmann <arnd@arndb.de>, Benjamin LaHaise <bcrl@kvack.org>, ceph-devel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, Gleb Natapov <gleb@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, hpdd-discuss@ml01.01.org, Jarod Wilson <jarod@wilsonet.com>, Jayant Mangalampalli <jayant.mangalampalli@intel.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Jesper Nilsson <jesper.nilsson@axis.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, kvm@vger.kernel.org, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, linux-aio@kvack.orgl
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2013-10-06 at 09:10 +0200, Alexander Gordeev wrote:
-> On Sun, Oct 06, 2013 at 05:19:46PM +1100, Benjamin Herrenschmidt wrote:
-> > On Sun, 2013-10-06 at 08:02 +0200, Alexander Gordeev wrote:
-> > > In fact, in the current design to address the quota race decently the
-> > > drivers would have to protect the *loop* to prevent the quota change
-> > > between a pci_enable_msix() returned a positive number and the the next
-> > > call to pci_enable_msix() with that number. Is it doable?
-> > 
-> > I am not advocating for the current design, simply saying that your
-> > proposal doesn't address this issue while Ben's does.
+On Fri 04-10-13 16:42:19, KOSAKI Motohiro wrote:
+> (10/4/13 4:31 PM), KOSAKI Motohiro wrote:
+> >(10/2/13 4:29 PM), Jan Kara wrote:
+> >>On Wed 02-10-13 09:20:09, Christoph Hellwig wrote:
+> >>>On Wed, Oct 02, 2013 at 04:27:41PM +0200, Jan Kara wrote:
+> >>>>    Hello,
+> >>>>
+> >>>>    In my quest for changing locking around page faults to make things easier for
+> >>>>filesystems I found out get_user_pages() users could use a cleanup.  The
+> >>>>knowledge about necessary locking for get_user_pages() is in tons of places in
+> >>>>drivers and quite a few of them actually get it wrong (don't have mmap_sem when
+> >>>>calling get_user_pages() or hold mmap_sem when calling copy_from_user() in the
+> >>>>surrounding code). Rather often this actually doesn't seem necessary. This
+> >>>>patch series converts lots of places to use either get_user_pages_fast()
+> >>>>or a new simple wrapper get_user_pages_unlocked() to remove the knowledge
+> >>>>of mmap_sem from the drivers. I'm still looking into converting a few remaining
+> >>>>drivers (most notably v4l2) which are more complex.
+> >>>
+> >>>Even looking over the kerneldoc comment next to it I still fail to
+> >>>understand when you'd want to use get_user_pages_fast and when not.
+> >>    AFAIU get_user_pages_fast() should be used
+> >>1) if you don't need any special get_user_pages() arguments (like calling
+> >>     it for mm of a different process, forcing COW, or similar).
+> >>2) you don't expect pages to be unmapped (then get_user_pages_fast() is
+> >>actually somewhat slower because it walks page tables twice).
+> >
+> >If target page point to anon or private mapping pages, get_user_pages_fast()
+> >is fork unsafe. O_DIRECT man pages describe a bit about this.
+> >
+> >
+> >see http://man7.org/linux/man-pages/man2/open.2.html
+> >
+> >>       O_DIRECT I/Os should never be run concurrently with the fork(2)
+> >>       system call, if the memory buffer is a private mapping (i.e., any
+> >>       mapping created with the mmap(2) MAP_PRIVATE flag; this includes
+> >>       memory allocated on the heap and statically allocated buffers).  Any
+> >>       such I/Os, whether submitted via an asynchronous I/O interface or
+> >>       from another thread in the process, should be completed before
+> >>       fork(2) is called.  Failure to do so can result in data corruption
+> >>       and undefined behavior in parent and child processes.  This
+> >>       restriction does not apply when the memory buffer for the O_DIRECT
+> >>       I/Os was created using shmat(2) or mmap(2) with the MAP_SHARED flag.
+> >>       Nor does this restriction apply when the memory buffer has been
+> >>       advised as MADV_DONTFORK with madvise(2), ensuring that it will not
+> >>       be available to the child after fork(2).
 > 
-> There is one major flaw in min-max approach - the generic MSI layer
-> will have to take decisions on exact number of MSIs to request, not
-> device drivers.
-[...
+> IMHO, get_user_pages_fast() should be renamed to get_user_pages_quirk(). Its
+> semantics is not equal to get_user_pages(). When someone simply substitute
+> get_user_pages() to get_user_pages_fast(), they might see huge trouble.
+  I forgot about this speciality (and actually comments didn't remind me
+:(). But thinking about this some more get_user_pages_fast() seems as save
+as get_user_pages() in presence of threads sharing mm, doesn't it? Because
+while get_user_pages() are working, other thread can happilly trigger COW
+on some of the pages and thus get_user_pages() can return pages some of
+which are invisible in our mm by the time get_user_pages() returns. So
+although in practice I agree problems of get_user_pages_fast() with fork(2)
+are more visible, in essence they are still present with clone(2) and
+get_user_pages().
 
-No, the min-max functions should be implemented using the same loop that
-drivers are expected to use now.
-
-Ben.
-
+								Honza
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-aio' in
+the body to majordomo@kvack.org.  For more info on Linux AIO,
+see: http://www.kvack.org/aio/
+Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
