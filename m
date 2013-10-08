@@ -1,117 +1,104 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: xcopy testing with ddpt
-Date: Mon, 07 Oct 2013 17:24:26 -0700
-Message-ID: <1381191866.19256.341.camel@haakon3.risingtidesystems.com>
-References: <20131003160033.GC5273@glanzmann.de>
-	 <524DA6EC.6000900@interlog.com> <20131005182206.GA9781@glanzmann.de>
-	 <5250E0D6.8000404@interlog.com> <20131006090005.GB12340@glanzmann.de>
-	 <52519FA8.9050905@interlog.com> <20131006184355.GC27090@glanzmann.de>
-	 <5251D179.8020405@interlog.com> <20131006213213.GA30637@glanzmann.de>
-	 <5251EAF3.8090500@interlog.com> <20131007040328.GA1439@glanzmann.de>
-	 <1381184324.19256.311.camel@haakon3.risingtidesystems.com>
-	 <1381185489.19256.315.camel@haakon3.risingtidesystems.com>
-	 <52533EB5.9060505@bootc.net>
+From: KOSAKI Motohiro <kosaki.motohiro@gmail.com>
+Subject: Re: [PATCH 0/26] get_user_pages() cleanup
+Date: Mon, 07 Oct 2013 20:27:16 -0400
+Message-ID: <52535164.30201@gmail.com>
+References: <1380724087-13927-1-git-send-email-jack@suse.cz> <20131002162009.GA5778@infradead.org> <20131002202941.GF16998@quack.suse.cz> <524F2592.1040305@gmail.com> <524F282B.2080809@gmail.com> <20131007211822.GF30441@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <52533EB5.9060505@bootc.net>
-Sender: target-devel-owner@vger.kernel.org
-To: Chris Boot <bootc@bootc.net>
-Cc: Thomas Glanzmann <thomas@glanzmann.de>, Douglas Gilbert <dgilbert@interlog.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <mail@hannes-reinecke.de>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20131007211822.GF30441@quack.suse.cz>
+Sender: owner-linux-mm@kvack.org
+To: Jan Kara <jack@suse.cz>
+Cc: KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <andreas.dilger@intel.com>, Andy Walls <awalls@md.metrocast.net>, Arnd Bergmann <arnd@arndb.de>, Benjamin LaHaise <bcrl@kvack.org>, ceph-devel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, Gleb Natapov <gleb@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, hpdd-discuss@ml01.01.org, Jarod Wilson <jarod@wilsonet.com>, Jayant Mangalampalli <jayant.mangalampalli@intel.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Jesper Nilsson <jesper.nilsson@axis.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, kvm@vger.kernel.org, Laurent Pinchart <laurent.pinchart@ideasonboard>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2013-10-08 at 00:07 +0100, Chris Boot wrote:
-> On 07/10/2013 23:38, Nicholas A. Bellinger wrote:
-> > On Mon, 2013-10-07 at 15:18 -0700, Nicholas A. Bellinger wrote:
-> >> On Mon, 2013-10-07 at 06:03 +0200, Thomas Glanzmann wrote:
-> >>> Hello Doug,
-> >>>
-> >>> * Douglas Gilbert <dgilbert@interlog.com> [2013-10-07 00:58]:
-> >>>> Great, another one working.
-> >>
-> >> (CC'ing Hannes)
-> >>
-> >>>> BTW list_id=0 has a special meaning in some context
-> >>>> (buried deep in T10 documents: spc4r36j.pdf). That is
-> >>>> probably why Hannes Reinecke defaulted that list_id to
-> >>>> 1. I could understand the target XCOPY implementation
-> >>>> only accepting one xcopy sequence at a time, but why
-> >>>> restrict it to list_id=0 ? A question for NaB ...
-> >>>
-> >>> Nab, do you have any input for us?
-> >>>
-> >>
-> >> It was my original understanding that when OPERATING_PARAMETERS is
-> >> reporting SNLID=1 (Supports No ListID), the initiator is expected to
-> >> send EXTENDED_COPY parameter lists with ListID Usage 11b + ListID=0.
-> >> Since we're ignoring the value of ListID for now anyways, I agree that
-> >> it doesn't make much sense to fail for a non zero value here..
-> >>
-> >> However, the main concern that made me add this check to begin with was
-> >> the case with ListID Usage 00b + 10b, where the copy server is expected
-> >> to keep a per I_T list of in-use ListIDs, and return CHECK_CONDITION +
-> >> ILLEGAL REQUEST/OPERATION IN PROGRESS for a ListID for a copy sequence
-> >> already in progress.
-> >>
-> > 
-> > How about the following patch to allow non zero ListIDs, but only when
-> > ListID Usage is set to 11b..?
-> > 
-> > diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-> > index 6b9774c..3a3ea31 100644
-> > --- a/drivers/target/target_core_xcopy.c
-> > +++ b/drivers/target/target_core_xcopy.c
-> > @@ -911,11 +911,12 @@ sense_reason_t target_do_xcopy(struct se_cmd *se_cmd)
-> >         }
-> >  
-> >         list_id = p[0];
-> > -       if (list_id != 0x00) {
-> > -               pr_err("XCOPY with non zero list_id: 0x%02x\n", list_id);
-> > +       list_id_usage = (p[1] & 0x18);
-> > +       if (list_id != 0x00 && list_id_usage != 0x11) {
-> > +               pr_err("XCOPY with non zero list_id: 0x%02x, and list_id_usage:"
-> > +                      " 0x%02x\n", list_id, list_id_usage);
-> >                 goto out;
-> >         }
-> > -       list_id_usage = (p[1] & 0x18);
-> >         /*
-> >          * Determine TARGET DESCRIPTOR LIST LENGTH + SEGMENT DESCRIPTOR LIST LENGTH
-> >          */
-> > 
-> > AFAICT this should make ddpt happy, as it's already be setting ListID
-> > Usage = 11b when it gets OPERATING PARAMETERS -> HELD_DATA = 0.
-> 
-> 0x11 != 11b (but == 11h)
-> 
-> If 0x18 is the correct mask I think you want to compare against 0x18,
-> otherwise you probably want to shift down by 3 bits and compare against
-> 0x03 or 0b11...
-> 
+(10/7/13 5:18 PM), Jan Kara wrote:
+> On Fri 04-10-13 16:42:19, KOSAKI Motohiro wrote:
+>> (10/4/13 4:31 PM), KOSAKI Motohiro wrote:
+>>> (10/2/13 4:29 PM), Jan Kara wrote:
+>>>> On Wed 02-10-13 09:20:09, Christoph Hellwig wrote:
+>>>>> On Wed, Oct 02, 2013 at 04:27:41PM +0200, Jan Kara wrote:
+>>>>>>     Hello,
+>>>>>>
+>>>>>>     In my quest for changing locking around page faults to make things easier for
+>>>>>> filesystems I found out get_user_pages() users could use a cleanup.  The
+>>>>>> knowledge about necessary locking for get_user_pages() is in tons of places in
+>>>>>> drivers and quite a few of them actually get it wrong (don't have mmap_sem when
+>>>>>> calling get_user_pages() or hold mmap_sem when calling copy_from_user() in the
+>>>>>> surrounding code). Rather often this actually doesn't seem necessary. This
+>>>>>> patch series converts lots of places to use either get_user_pages_fast()
+>>>>>> or a new simple wrapper get_user_pages_unlocked() to remove the knowledge
+>>>>>> of mmap_sem from the drivers. I'm still looking into converting a few remaining
+>>>>>> drivers (most notably v4l2) which are more complex.
+>>>>>
+>>>>> Even looking over the kerneldoc comment next to it I still fail to
+>>>>> understand when you'd want to use get_user_pages_fast and when not.
+>>>>     AFAIU get_user_pages_fast() should be used
+>>>> 1) if you don't need any special get_user_pages() arguments (like calling
+>>>>      it for mm of a different process, forcing COW, or similar).
+>>>> 2) you don't expect pages to be unmapped (then get_user_pages_fast() is
+>>>> actually somewhat slower because it walks page tables twice).
+>>>
+>>> If target page point to anon or private mapping pages, get_user_pages_fast()
+>>> is fork unsafe. O_DIRECT man pages describe a bit about this.
+>>>
+>>>
+>>> see http://man7.org/linux/man-pages/man2/open.2.html
+>>>
+>>>>        O_DIRECT I/Os should never be run concurrently with the fork(2)
+>>>>        system call, if the memory buffer is a private mapping (i.e., any
+>>>>        mapping created with the mmap(2) MAP_PRIVATE flag; this includes
+>>>>        memory allocated on the heap and statically allocated buffers).  Any
+>>>>        such I/Os, whether submitted via an asynchronous I/O interface or
+>>>>        from another thread in the process, should be completed before
+>>>>        fork(2) is called.  Failure to do so can result in data corruption
+>>>>        and undefined behavior in parent and child processes.  This
+>>>>        restriction does not apply when the memory buffer for the O_DIRECT
+>>>>        I/Os was created using shmat(2) or mmap(2) with the MAP_SHARED flag.
+>>>>        Nor does this restriction apply when the memory buffer has been
+>>>>        advised as MADV_DONTFORK with madvise(2), ensuring that it will not
+>>>>        be available to the child after fork(2).
+>>
+>> IMHO, get_user_pages_fast() should be renamed to get_user_pages_quirk(). Its
+>> semantics is not equal to get_user_pages(). When someone simply substitute
+>> get_user_pages() to get_user_pages_fast(), they might see huge trouble.
+>    I forgot about this speciality (and actually comments didn't remind me
+> :(). But thinking about this some more get_user_pages_fast() seems as save
+> as get_user_pages() in presence of threads sharing mm, doesn't it?
 
-Er, duh, yes..   Looking at what sg_xcopy and ddpt are doing here again,
-they are in fact using list_id_usage=10b (0x02) by default, so enforcing
-a check for 11b (0x03) is not going to work as originally expected..
+It depends.
 
-How about the following to simply ignore the list_id..?
+If there is any guarantee that other threads don't touch the same page which
+retrieved get_user_pages(), get_user_pages_fast() give us brilliant fast way.
+Example, as far as I heard form IB guys, the userland library of the infiniband
+stack uses madvise(MADV_DONTFORK), and then they don't need to care COW issue
+and can choose fastest way. An another example is a futex. futex doesn't use
+the contents of the pages, it uses vaddr only for looking up key. Then, it
+also doesn't have COW issue.
 
---nab
+I don't know other cases. But as far as I know, everything is case-by-case.
 
- diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 6b9774c..fe98555 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -911,11 +911,8 @@ sense_reason_t target_do_xcopy(struct se_cmd *se_cmd)
-        }
- 
-        list_id = p[0];
--       if (list_id != 0x00) {
--               pr_err("XCOPY with non zero list_id: 0x%02x\n", list_id);
--               goto out;
--       }
--       list_id_usage = (p[1] & 0x18);
-+       list_id_usage = (p[1] & 0x18) >> 3;
-+
-        /*
-         * Determine TARGET DESCRIPTOR LIST LENGTH + SEGMENT DESCRIPTOR LIST LENGTH
-         */
+> Because
+> while get_user_pages() are working, other thread can happilly trigger COW
+> on some of the pages and thus get_user_pages() can return pages some of
+> which are invisible in our mm by the time get_user_pages() returns.
+
+If you are talking about get_user_pages() instead of get_user_pages_fast(), this
+can't be happen because page-fault takes mmap_sem too.
+
+I would say, mmap_sem has too fat responsibility really.
+
+> So
+> although in practice I agree problems of get_user_pages_fast() with fork(2)
+> are more visible, in essence they are still present with clone(2) and
+> get_user_pages().
+>
+> 								Honza
+>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
