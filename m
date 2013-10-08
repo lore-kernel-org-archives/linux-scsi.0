@@ -1,70 +1,74 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Date: Tue, 8 Oct 2013 14:22:16 +0200
-Message-ID: <20131008122215.GA14389@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
- <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
- <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
- <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
- <1381009586.645.141.camel@pasglop>
- <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
- <1381040386.645.143.camel@pasglop>
- <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
- <20131007180111.GC2481@htj.dyndns.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [Bug] 12.864681  BUG: lock held when returning to user space!
+Date: Tue, 08 Oct 2013 09:45:35 -0400
+Message-ID: <52540C7F.8050207@interlog.com>
+References: <8761tilrl0.fsf@redhat.com> <874n8s2tjz.fsf@redhat.com> <5253A9E7.5030707@oracle.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <20131007180111.GC2481@htj.dyndns.org>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Tejun Heo <tj@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ben Hutchings <bhutchings@solarflare.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourcefor
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5253A9E7.5030707@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vaughan <vaughan.cao@oracle.com>, Madper Xie <cxie@redhat.com>
+Cc: linux-kernel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 07, 2013 at 02:01:11PM -0400, Tejun Heo wrote:
-> > What about introducing pci_lock_msi() and pci_unlock_msi() and let device
-> > drivers care about their ranges and specifics in race-safe manner?
-> > I do not call to introduce it right now (since it appears pSeries has not
-> > been hitting the race for years) just as a possible alternative to Ben's
-> > proposal.
-> 
-> I don't think the same race condition would happen with the loop.
+On 13-10-08 02:44 AM, vaughan wrote:
+> Hi Madper,
+>
+> CC to Douglas to get comments.
+> I use the rw_semaphore o_sem to protect excl open, introduced in commit
+> 15b06f9a02406e5460001db6d5af5c738cd3d4e7 since v3.12-rc1.
+> Is it forbidden to do like that in kernel?...
 
-We need to distinguish the contexts we're discussing.
+It appears you can not (allow sg_open() to hold a semaphore
+then return to the user space). So you will need to do some
+rework on that patch or revert it.
 
-If we talk about pSeries quota, then the current pSeries pci_enable_msix()
-implementation is racy internally and could fail if the quota went down
-*while* pci_enable_msix() is executing. In this case the loop will have to
-exit rather than retry with a lower number (what number?).
+Doug Gilbert
 
-In this regard the new scheme does not bring anything new and relies on
-the fact this race does not hit and therefore does not worry.
+Reference: scsi-linux + kernel lists, title:
+   [PATCH v6 0/4][SCSI] sg: fix race condition in sg_open
+   20130828
 
-If we talk about quota as it has to be, then yes - the loop scheme seems
-more preferable.
-
-Overall, looks like we just need to fix the pSeries implementation,
-if the guys want it, he-he :)
-
-> The problem case is where multiple msi(x) allocation fails completely
-> because the global limit went down before inquiry and allocation.  In
-> the loop based interface, it'd retry with the lower number.
-
-I am probably missing something here. If the global limit went down before
-inquiry then the inquiry will get what is available and try to allocate with
-than number.
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+> On 10/08/2013 01:57 PM, Madper Xie wrote:
+>> Howdy Vaughan Cao,
+>>     I can't meet this issue on both 3.11 and 3.11.4. There are only four
+>>     patches between 3.11 and 3.12-rc2 and you are the author. Will you
+>>     please check them if you have time.
+>>
+>> cxie@redhat.com writes:
+>>
+>>> Hi all,
+>>>     With kernel3.12-rc2 the dmesg shows following logs:
+>>> [   12.864680] ================================================
+>>> [   12.864681] [ BUG: lock held when returning to user space! ]
+>>> [   12.864682] 3.12.0-rc2 #1 Not tainted
+>>> [   12.864683] ------------------------------------------------
+>>> [   12.864684] iprinit/719 is leaving the kernel with locks still held!
+>>> [   12.864685] 1 lock held by iprinit/719:
+>>> [   12.864686]  #0:  (&sdp->o_sem){.+.+..}, at: [<ffffffffa050de05>] sg_open+0x4b5/0x644 [sg]
+>>> [   12.934954] ath9k 0000:01:00.0: enabling device (0000 -> 0002)
+>>> [   12.940346] ath: phy0: timeout (1000 us) on reg 0x15f18: 0x00000000 & 0x00000007 != 0x00000004
+>>> [   12.943125] ath: EEPROM regdomain: 0x60
+>>> [   12.943127] ath: EEPROM indicates we should expect a direct regpair map
+>>> [   12.943129] ath: Country alpha2 being used: 00
+>>> [   12.943130] ath: Regpair used: 0x60
+>>> [   12.960202] r8169 0000:02:00.0 p3p1: link down
+>>> [   12.960236] r8169 0000:02:00.0 p3p1: link down
+>>> [   12.960256] IPv6: ADDRCONF(NETDEV_UP): p3p1: link is not ready
+>>> [   13.003523] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+>>> [   13.003886] ieee80211 phy0: Atheros AR9485 Rev:1 mem=0xffffc9000bc80000, irq=16
+>>> [   13.012120] ip6_tables: (C) 2000-2006 Netfilter Core Team
+>>> [   13.023667] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>>> [   13.055802] Ebtables v2.0 registered
+>>> [   13.192291] nf_conntrack version 0.5.0 (16384 buckets, 65536 max)
+>>> [   15.906392] r8169 0000:02:00.0 p3p1: link up
+>>> [   15.906416] IPv6: ADDRCONF(NETDEV_CHANGE): p3p1: link becomes ready
+>>> [   17.121989] systemd-udevd (334) used greatest stack depth: 3352 bytes left
+>>>
+>>> I'm working on finding which version bring this bug in.
+>>
+>
+>
