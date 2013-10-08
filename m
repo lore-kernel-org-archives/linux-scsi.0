@@ -1,108 +1,70 @@
-From: Sarah Brofeldt <sbrofeldt@gmail.com>
-Subject: Fwd: mpt2sas fault_state(0x5851) with WD20EARX drives on LSI 9211 8i
-Date: Tue, 8 Oct 2013 11:36:58 +0200
-Message-ID: <CAJXHQe_E_DL8E2aCL8g_axgRPyHExf03XY5D6+F6W=i49V8KoA@mail.gmail.com>
-References: <CAJXHQe9tHgP0TiEeRcKWKDZreQE6vJ2V8k+QPVP3ubDKB4zcsA@mail.gmail.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Tue, 8 Oct 2013 14:22:16 +0200
+Message-ID: <20131008122215.GA14389@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
+ <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+ <1381040386.645.143.camel@pasglop>
+ <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+ <20131007180111.GC2481@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:56478 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755288Ab3JHJhA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Oct 2013 05:37:00 -0400
-Received: by mail-we0-f176.google.com with SMTP id w62so6641980wes.21
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Oct 2013 02:36:59 -0700 (PDT)
-In-Reply-To: <CAJXHQe9tHgP0TiEeRcKWKDZreQE6vJ2V8k+QPVP3ubDKB4zcsA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <20131007180111.GC2481@htj.dyndns.org>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: Tejun Heo <tj@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ben Hutchings <bhutchings@solarflare.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourcefor
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi!
+On Mon, Oct 07, 2013 at 02:01:11PM -0400, Tejun Heo wrote:
+> > What about introducing pci_lock_msi() and pci_unlock_msi() and let device
+> > drivers care about their ranges and specifics in race-safe manner?
+> > I do not call to introduce it right now (since it appears pSeries has not
+> > been hitting the race for years) just as a possible alternative to Ben's
+> > proposal.
+> 
+> I don't think the same race condition would happen with the loop.
 
-I'm wondering where to find information on the specific error codes
-mpt2sas spits out. I'm experiencing fault_state(0x5851) which is
-rendering my system unusable whenever I try to write to any of the
-WD20EARX drives. I've appended a dmesg snippet of the problem to this
-message.
+We need to distinguish the contexts we're discussing.
 
-I apologize if this is the completely wrong place to ask this kind of
-question - I've been unable to find any information on the issue
-elsewhere.
+If we talk about pSeries quota, then the current pSeries pci_enable_msix()
+implementation is racy internally and could fail if the quota went down
+*while* pci_enable_msix() is executing. In this case the loop will have to
+exit rather than retry with a lower number (what number?).
 
-Thanks!
-Sarah
+In this regard the new scheme does not bring anything new and relies on
+the fact this race does not hit and therefore does not worry.
 
--- dmesg --
-Sep 19 01:22:28 pantheon kernel: [ 1879.320056] mpt2sas0: fault_state(0x5851)!
-Sep 19 01:22:28 pantheon kernel: [ 1879.320534] mpt2sas0: sending diag reset !!
-Sep 19 01:22:29 pantheon kernel: [ 1880.264573] mpt2sas0: diag reset: SUCCESS
-Sep 19 01:22:30 pantheon kernel: [ 1880.497398] mpt2sas0: LSISAS2008:
-FWVersion(17.00.01.00), ChipRevision(0x03), BiosVersion(07.24.01.00)
-Sep 19 01:22:30 pantheon kernel: [ 1880.497403] mpt2sas0:
-Protocol=(Initiator,Target), Capabilities=(TLR,EEDP,Snapshot
-Buffer,Diag Trace Buffer,Task Set Full,NCQ)
-Sep 19 01:22:30 pantheon kernel: [ 1880.497467] mpt2sas0: sending port enable !!
-Sep 19 01:22:37 pantheon kernel: [ 1888.182686] mpt2sas0: port enable: SUCCESS
-Sep 19 01:22:37 pantheon kernel: [ 1888.182904] mpt2sas0: search for
-end-devices: start
-Sep 19 01:22:37 pantheon kernel: [ 1888.183901] scsi target0:0:0:
-handle(0x0009), sas_addr(0x4433221101000000), enclosure logical
-id(0x500605b0054dd3c0), slot(2)
-Sep 19 01:22:37 pantheon kernel: [ 1888.183987] scsi target0:0:2:
-handle(0x000a), sas_addr(0x4433221102000000), enclosure logical
-id(0x500605b0054dd3c0), slot(1)
-Sep 19 01:22:37 pantheon kernel: [ 1888.183991]         handle changed
-from(0x000b)!!!
-Sep 19 01:22:37 pantheon kernel: [ 1888.184074] scsi target0:0:1:
-handle(0x000b), sas_addr(0x4433221103000000), enclosure logical
-id(0x500605b0054dd3c0), slot(0)
-Sep 19 01:22:37 pantheon kernel: [ 1888.184077]         handle changed
-from(0x000a)!!!
-Sep 19 01:22:37 pantheon kernel: [ 1888.184159] scsi target0:0:3:
-handle(0x000c), sas_addr(0x4433221106000000), enclosure logical
-id(0x500605b0054dd3c0), slot(5)
-Sep 19 01:22:37 pantheon kernel: [ 1888.184243] scsi target0:0:4:
-handle(0x000d), sas_addr(0x4433221107000000), enclosure logical
-id(0x500605b0054dd3c0), slot(4)
-Sep 19 01:22:37 pantheon kernel: [ 1888.184322] mpt2sas0: search for
-end-devices: complete
-Sep 19 01:22:37 pantheon kernel: [ 1888.184325] mpt2sas0: search for
-expanders: start
-Sep 19 01:22:37 pantheon kernel: [ 1888.184327] mpt2sas0: search for
-expanders: complete
-Sep 19 01:22:37 pantheon kernel: [ 1888.184336] mpt2sas0: search for
-end-devices: start
-Sep 19 01:22:37 pantheon kernel: [ 1888.185249] scsi target0:0:0:
-handle(0x0009), sas_addr(0x4433221101000000), enclosure logical
-id(0x500605b0054dd3c0), slot(2)
-Sep 19 01:22:37 pantheon kernel: [ 1888.185334] scsi target0:0:2:
-handle(0x000a), sas_addr(0x4433221102000000), enclosure logical
-id(0x500605b0054dd3c0), slot(1)
-Sep 19 01:22:37 pantheon kernel: [ 1888.185416] scsi target0:0:1:
-handle(0x000b), sas_addr(0x4433221103000000), enclosure logical
-id(0x500605b0054dd3c0), slot(0)
-Sep 19 01:22:37 pantheon kernel: [ 1888.185500] scsi target0:0:3:
-handle(0x000c), sas_addr(0x4433221106000000), enclosure logical
-id(0x500605b0054dd3c0), slot(5)
-Sep 19 01:22:37 pantheon kernel: [ 1888.185583] scsi target0:0:4:
-handle(0x000d), sas_addr(0x4433221107000000), enclosure logical
-id(0x500605b0054dd3c0), slot(4)
-Sep 19 01:22:37 pantheon kernel: [ 1888.185662] mpt2sas0: search for
-end-devices: complete
-Sep 19 01:22:37 pantheon kernel: [ 1888.185665] mpt2sas0: search for
-expanders: start
-Sep 19 01:22:37 pantheon kernel: [ 1888.185667] mpt2sas0: search for
-expanders: complete
-Sep 19 01:22:37 pantheon kernel: [ 1888.185674] mpt2sas0:
-_base_fault_reset_work: hard reset: success
-Sep 19 01:22:37 pantheon kernel: [ 1888.185679] mpt2sas0: removing
-unresponding devices: start
-Sep 19 01:22:37 pantheon kernel: [ 1888.185681] mpt2sas0: removing
-unresponding devices: end-devices
-Sep 19 01:22:37 pantheon kernel: [ 1888.185683] mpt2sas0: removing
-unresponding devices: expanders
-Sep 19 01:22:37 pantheon kernel: [ 1888.185686] mpt2sas0: removing
-unresponding devices: complete
-Sep 19 01:22:37 pantheon kernel: [ 1888.185694] mpt2sas0: scan devices: start
-Sep 19 01:22:37 pantheon kernel: [ 1888.187320] mpt2sas0: scan devices: complete
-Sep 19 01:22:38 pantheon kernel: [ 1889.185534] mpt2sas0: fault_state(0x5851)!
+If we talk about quota as it has to be, then yes - the loop scheme seems
+more preferable.
+
+Overall, looks like we just need to fix the pSeries implementation,
+if the guys want it, he-he :)
+
+> The problem case is where multiple msi(x) allocation fails completely
+> because the global limit went down before inquiry and allocation.  In
+> the loop based interface, it'd retry with the lower number.
+
+I am probably missing something here. If the global limit went down before
+inquiry then the inquiry will get what is available and try to allocate with
+than number.
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
