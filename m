@@ -1,52 +1,61 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 2/3] target: Allow non zero ListID in EXTENDED_COPY parameter list
-Date: Tue,  8 Oct 2013 19:56:32 +0000
-Message-ID: <1381262193-19797-3-git-send-email-nab@daterainc.com>
+Subject: [PATCH 3/3] target: Reject EXTENDED_COPY when emulate_3pc is disabled
+Date: Tue,  8 Oct 2013 19:56:33 +0000
+Message-ID: <1381262193-19797-4-git-send-email-nab@daterainc.com>
 References: <1381262193-19797-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1381262193-19797-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Thomas Glanzmann <thomas@glanzmann.de>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch changes target_do_xcopy() to allow processing of non-zero
-ListIDs in EXTENDED_COPY parameter list data, instead of returning
-CHECK_CONDITION status.
+This patch rejects EXTENDED_COPY when the emulate_3pc attribute has
+been explicitly disabled for the receiving device.
 
-As the copy offload implementation reports SNLID=1 (Supports No ListID)
-in OPERATING PARAMETERS, any ListID value presented by the client is
-currently ignored.
+It also adds a similar check in target_xcopy_locate_se_dev_e4() to
+ignore these devices when doing a search based upon the identifier
+WWN provided by EXTENDED_COPY parameter list target descriptors.
 
-Also, properly extract list_id_usage for informational purposes.
-
-Reported-by: Thomas Glanzmann <thomas@glanzmann.de>
-Reported-by: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_xcopy.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/target/target_core_xcopy.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 6b9774c..fe98555 100644
+index fe98555..eeeaf99 100644
 --- a/drivers/target/target_core_xcopy.c
 +++ b/drivers/target/target_core_xcopy.c
-@@ -911,11 +911,8 @@ sense_reason_t target_do_xcopy(struct se_cmd *se_cmd)
- 	}
+@@ -82,6 +82,9 @@ static int target_xcopy_locate_se_dev_e4(struct se_cmd *se_cmd, struct xcopy_op
+ 	mutex_lock(&g_device_mutex);
+ 	list_for_each_entry(se_dev, &g_device_list, g_dev_node) {
  
- 	list_id = p[0];
--	if (list_id != 0x00) {
--		pr_err("XCOPY with non zero list_id: 0x%02x\n", list_id);
--		goto out;
--	}
--	list_id_usage = (p[1] & 0x18);
-+	list_id_usage = (p[1] & 0x18) >> 3;
++		if (!se_dev->dev_attrib.emulate_3pc)
++			continue;
 +
- 	/*
- 	 * Determine TARGET DESCRIPTOR LIST LENGTH + SEGMENT DESCRIPTOR LIST LENGTH
- 	 */
+ 		memset(&tmp_dev_wwn[0], 0, XCOPY_NAA_IEEE_REGEX_LEN);
+ 		target_xcopy_gen_naa_ieee(se_dev, &tmp_dev_wwn[0]);
+ 
+@@ -884,12 +887,18 @@ out:
+ 
+ sense_reason_t target_do_xcopy(struct se_cmd *se_cmd)
+ {
++	struct se_device *dev = se_cmd->se_dev;
+ 	struct xcopy_op *xop = NULL;
+ 	unsigned char *p = NULL, *seg_desc;
+ 	unsigned int list_id, list_id_usage, sdll, inline_dl, sa;
+ 	int rc;
+ 	unsigned short tdll;
+ 
++	if (!dev->dev_attrib.emulate_3pc) {
++		pr_err("EXTENDED_COPY operation explicitly disabled\n");
++		return TCM_UNSUPPORTED_SCSI_OPCODE;
++	}
++
+ 	sa = se_cmd->t_task_cdb[1] & 0x1f;
+ 	if (sa != 0x00) {
+ 		pr_err("EXTENDED_COPY(LID4) not supported\n");
 -- 
 1.7.10.4
