@@ -1,10 +1,9 @@
-From: Alexander Gordeev <agordeev@redhat.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
  pattern
-Date: Wed, 9 Oct 2013 14:57:16 +0200
-Message-ID: <20131009125715.GC32733@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+Date: Wed, 9 Oct 2013 11:41:17 -0400
+Message-ID: <20131009154117.GA22495@htj.dyndns.org>
+References: <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
  <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
  <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
  <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
@@ -13,36 +12,51 @@ References: <cover.1380703262.git.agordeev@redhat.com>
  <1381040386.645.143.camel@pasglop>
  <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
  <20131007180111.GC2481@htj.dyndns.org>
+ <20131008122215.GA14389@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20131007180111.GC2481@htj.dyndns.org>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Tejun Heo <tj@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ben Hutchings <bhutchings@solarflare.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourcefor
+In-Reply-To: <20131008122215.GA14389@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ben Hutchings <bhutchings@solarflare.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, VMw
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 07, 2013 at 02:01:11PM -0400, Tejun Heo wrote:
-> Hmmm... yean, the race condition could be an issue as multiple msi
-> allocation might fail even if the driver can and explicitly handle
-> multiple allocation if the quota gets reduced inbetween.
+Hello,
 
-BTW, should we care about the quota getting increased inbetween?
-That would entail.. kind of pci_get_msi_limit() :), but IMHO it is
-not worth it.
+On Tue, Oct 08, 2013 at 02:22:16PM +0200, Alexander Gordeev wrote:
+> If we talk about pSeries quota, then the current pSeries pci_enable_msix()
+> implementation is racy internally and could fail if the quota went down
+> *while* pci_enable_msix() is executing. In this case the loop will have to
+> exit rather than retry with a lower number (what number?).
 
-> tejun
+Ah, okay, so that one is already broken.
+
+> In this regard the new scheme does not bring anything new and relies on
+> the fact this race does not hit and therefore does not worry.
+> 
+> If we talk about quota as it has to be, then yes - the loop scheme seems
+> more preferable.
+> 
+> Overall, looks like we just need to fix the pSeries implementation,
+> if the guys want it, he-he :)
+
+If we can't figure out a better interface for the retry case, I think
+what can really help is having a simple interface for the simpler
+cases.
+
+> > The problem case is where multiple msi(x) allocation fails completely
+> > because the global limit went down before inquiry and allocation.  In
+> > the loop based interface, it'd retry with the lower number.
+> 
+> I am probably missing something here. If the global limit went down before
+> inquiry then the inquiry will get what is available and try to allocate with
+> than number.
+
+Oh, I should have written between inquiry and allocation.  Sorry.
+
+Thanks.
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+tejun
