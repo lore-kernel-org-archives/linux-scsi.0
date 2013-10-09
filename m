@@ -1,29 +1,33 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: scsi-mq updated to latest linux-block/new-queue
-Date: Wed, 09 Oct 2013 12:12:51 -0700
-Message-ID: <1381345971.19256.461.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCHv2 0/4] target: macro cleanups
+Date: Wed, 09 Oct 2013 12:22:45 -0700
+Message-ID: <1381346565.19256.462.camel@haakon3.risingtidesystems.com>
+References: <1381341959-22254-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Alexander Gordeev <agordeev@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:33305 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756112Ab3JITON (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Oct 2013 15:14:13 -0400
+In-Reply-To: <1381341959-22254-1-git-send-email-agrover@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi folks,
+On Wed, 2013-10-09 at 11:05 -0700, Andy Grover wrote:
+> Hi nab, please apply.
+> 
+> Changes from v1:
+> - Drop #4, whose value was debatable
+> - Add hch reviewed-by's
+> 
 
-Just a heads up that the scsi-mq alpha branch has been updated to Jen's
-latest linux-block/new-queue containing hch's recent blk-mq
-improvements, along with Alexander's patch for the is_flush_fua +
-queue_depth=1 bug.
+Applied to target-pending/for-next.
 
-The branch @ v3.12-rc3 is available here:
-
-https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/log/?h=scsi-mq
-
-The main changes include dropping all of the blk_mq_alloc_request() +
-blk_mq_free_request() changes that are now unnecessary with hch's
-improvements in place, along with other miscellaneous cleanups.
+Thanks,
 
 --nab
+
